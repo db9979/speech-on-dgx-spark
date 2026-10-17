@@ -589,6 +589,9 @@ NEED_TOOLS = [  # tool that has to be offered, words in the question: one place 
     ("parcels", re.compile(r"(?i)\b(paket\w*|päckchen|lieferung\w*|sendung\w*|parcels?|packages?|deliver\w*)\b")),
     ("transit", re.compile(r"(?i)\b(bus|busse|bahn|s-?bahn|zug|züge|tram|straßenbahn|abfahrt\w*|verbindung\w*|"
                            r"fahrplan|train|departures?)\b")),
+    # Reddit und Feeds (feeds.py): the person's own inbox, subreddits and feeds
+    ("feeds_news", re.compile(r"(?i)(\breddit\w*|\bsubreddits?\b|(?<![\w/])r/[a-z0-9_]{2,21}\b|\b(meine[nm]?|deine[nm]?) feeds?\b|"
+                              r"\b(rss|news)-?feeds?\b|\bfeeds\b)")),
     ("wikipedia", re.compile(r"(?i)\b(wikipedia|wiki|lexikon|enzyklopädie|encyclopedia)\b")),
     ("archive_search", re.compile(r"(?i)\b(kiwix|offline-?archiv\w*|(mein|dein|unser|euer|eur)(em|e|er|en)? archiv|im archiv|"
                                   r"archiv (nach|durch)\w*|nachschlagewerk\w*)\b")),

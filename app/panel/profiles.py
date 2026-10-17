@@ -894,6 +894,7 @@ SETTINGS = {
     "pro_bday": (True, lambda v: isinstance(v, bool)),
     "pro_parcel": (True, lambda v: isinstance(v, bool)),
     "pro_transit": (True, lambda v: isinstance(v, bool)),
+    "pro_feeds": (True, lambda v: isinstance(v, bool)),     # replies and keyword hits from Reddit und Feeds (feeds.py)
     "pro_tips": (True, lambda v: isinstance(v, bool)),     # one hint on a function a week (tipps.py, chat.feature_tips_push)
     "voice_tips": (True, lambda v: isinstance(v, bool)),   # one example sentence a day at speakers (saetze.py, chat.feature_sentences_voice)
     # Telegram (see telegram.py): what this profile allows over Telegram, all off until it says so

@@ -453,6 +453,7 @@ LIVE_WORDS = {
     "profile_mfa_reset": ("Sicherheit", "zweiter Schritt eines Profils zurückgesetzt"),
     "notaus_key_new": ("Sicherheit", "Notaus-Schlüssel angelegt"), "notaus_key_delete": ("Sicherheit", "Notaus-Schlüssel gelöscht"),
     "report_token": ("Sicherheit", "Token für Meldungen geändert"), "github_token": ("Sicherheit", "GitHub-Token für Updates geändert"), "ha_code_set": ("Sicherheit", "Home-Assistant-Codewort geändert"),
+    "feeds_inbox": ("Sicherheit", "Reddit-Posteingang verbunden"),
     "invite_pin": ("Eingang", "Einladung mit PIN geöffnet"), "handoff_ok": ("Eingang", "Übergabe-Code bestätigt"),
     "handoff_wrong": ("Eingang", "Übergabe-Code falsch"), "live_monitor_code": ("Eingang", "Code für einen Live-Monitor"),
     "live_monitor_paired": ("Eingang", "Live-Monitor gekoppelt"), "live_monitor_deleted": ("Eingang", "Live-Monitor gelöscht"),
@@ -534,7 +535,8 @@ RATE = {"chat": (30, 120), "asr": (60, 240), "logs": (1, 60), "pair": (10, 10), 
         "makedl": (20, 30), "svcwatch": (0, 30), "svcwatchnow": (0, 4), "wartung": (0, 20),
         "rate": (0, 30), "zuordnung": (0, 60), "zuordnungset": (0, 30), "berater": (0, 60), "beraterset": (0, 30), "beraterrun": (0, 4),
         "storage": (0, 60), "storagenow": (0, 6), "ghtoken": (0, 20), "memory": (0, 60), "technik": (0, 30), "modelle": (0, 30), "modelle_wechsel": (0, 6), "modelle_messen": (0, 6), "gehaeuse": (0, 60), "gehaeuse_wunsch": (0, 6), "modelle_eigen": (0, 10), "praxistest": (0, 60), "technikseite": (0, 90),
-        "aufgaben": (0, 60), "aufgabenrun": (0, 6), "telefon": (0, 60), "telefonsuchen": (0, 6), "telefonich": (0, 20), "verbrauch": (0, 60), "verbrauchset": (0, 20)}  # per minute: (guest, profile or admin)
+        "aufgaben": (0, 60), "aufgabenrun": (0, 6), "telefon": (0, 60), "telefonsuchen": (0, 6), "telefonich": (0, 20), "verbrauch": (0, 60), "verbrauchset": (0, 20),
+        "feeds": (0, 30), "feedsadd": (0, 10), "feedsnow": (0, 4)}  # per minute: (guest, profile or admin)
 BUSY = {"chat": 4, "asr": 3}  # at once, guests together
 
 

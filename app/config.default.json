@@ -220,6 +220,7 @@
     "telegram": false,
     "tasks": true,
     "transit": false,
+    "feeds": false,
     "transit_url": "",
     "wiki": false,
     "wiki_url": "",

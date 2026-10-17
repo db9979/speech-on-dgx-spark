@@ -46,7 +46,7 @@ ME_PAGES = (("overbox", "Überblick", "Overview"), ("bgbox", "Mein Zustand", "My
             ("setbox", "Gespräch", "Conversation"), ("loginbox", "Anmelden", "Sign in"), ("factbox", "Gedächtnis", "Memory"),
             ("docbox", "Dokumente", "Documents"), ("bildbox", "Bilder", "Pictures"), ("musikbox", "Musik", "Music"), ("rmbox", "reMarkable", "reMarkable"), ("storebox", "Speicher", "Storage"),
             ("logbox", "Werkzeug-Verlauf", "Tool history"), ("calbox", "Kalender", "Calendar"), ("taskbox", "Aufgaben", "Tasks"),
-            ("agentbox", "Aufträge", "Jobs"), ("mymcpbox", "Meine MCP-Dienste", "My MCP services"), ("wxbox", "Wetter", "Weather"),
+            ("agentbox", "Aufträge", "Jobs"), ("mymcpbox", "Meine MCP-Dienste", "My MCP services"), ("wxbox", "Wetter", "Weather"), ("feedbox", "Reddit und Feeds", "Reddit and feeds"),
             ("probox", "Von selbst", "Proactive"), ("notebox", "Mitteilungen", "Notifications"), ("mailbox", "E-Mail", "E-mail"),
             ("parbox", "Pakete", "Parcels"), ("writebox", "Schreibhilfe", "Writing help"), ("conbox", "Kontakte", "Contacts"),
             ("habox", "Smart Home", "Smart home"), ("roombox", "Raum-Modus", "Room mode"), ("espbox", "Lautsprecher", "Speakers"), ("telbox", "Telefon", "Phone"),
@@ -260,6 +260,10 @@ FEATURES = (
       guide="anrufeturn"),
     F("calendar", "Kalender", "Calendar", "day", ("calendar",), me="calbox", guide="calendar"),
     F("weather", "Wetter", "Weather", "day", ("weather",), me="wxbox", guide="weather"),
+    # feeds.py (Dominik 2026-10-17, plan reddit/plan.md): own Reddit inbox, subreddits and other feeds, read only
+    F("feeds", "Reddit und Feeds", "Reddit and feeds", "day", ("feeds",), me="feedbox", guide="feeds"),
+    F("feedsmelden", "Neues aus Feeds melden", "Telling news from feeds", "day", ("feeds", "proactive"),
+      pref="pro_feeds", parent="proactive", me="probox", guide="feeds"),
     # mail and contacts
     F("mail", "E-Mail lesen", "Reading e-mail", "post", ("mail",), me="mailbox", guide="mail"),
     F("tidy", "Postfach aufräumen", "Inbox tidying", "post", ("mail_tidy",), parent="mail", me="mailbox", guide="tidy"),

@@ -146,6 +146,7 @@ MODULE = {
     "tasks": ("dienste", "Aufgaben und Einkaufsliste"),
     "weather": ("dienste", "Wetter von Open-Meteo als feste Sätze"),
     "transit": ("dienste", "Bus und Bahn"),
+    "feeds": ("dienste", "Reddit und Feeds: eigener Reddit-Posteingang, Subreddits und RSS, nur lesen"),
     "extras": ("dienste", "Kleine Zusatzdienste mit ihren Werkzeugen"),
     "mcp": ("dienste", "Werkzeuge von MCP-Servern, die der Admin einträgt"),
     "meinmcp": ("dienste", "Eigene MCP-Dienste pro Profil"),

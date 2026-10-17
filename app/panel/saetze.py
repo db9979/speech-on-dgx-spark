@@ -55,7 +55,7 @@ router = APIRouter()
 # the areas of „Was kannst du?“ and Ich → Was ich kann; every tool of SENTENCES in exactly one (test_saetze)
 AREAS = (
     ("alltag", "Alltag", "Everyday", ("reminder_set", "reminder_list", "reminder_cancel", "anruf_planen", "weather",
-                                      "transit", "tasks_show", "tasks_add", "tasks_change", "parcels")),
+                                      "transit", "tasks_show", "tasks_add", "tasks_change", "parcels", "feeds_news")),
     ("termine", "Kalender und Mail", "Calendar and mail", ("daily_briefing", "calendar_events", "calendar_add",
                                                            "calendar_change", "mail_list", "mail_read",
                                                            "mail_tidy_overview", "contacts_search")),
@@ -127,7 +127,7 @@ NEAR = (
 # a tool only some channels can use
 ONLY = {"iphone_action": {"iphone"}}
 # what a spoken channel can do without a screen (plan 7)
-VOICE = {"reminder_set", "reminder_list", "anruf_planen", "weather", "transit", "tasks_show", "tasks_add", "parcels",
+VOICE = {"reminder_set", "reminder_list", "anruf_planen", "weather", "transit", "tasks_show", "tasks_add", "parcels", "feeds_news",
          "daily_briefing", "calendar_events", "calendar_add", "mail_list", "mail_read", "contacts_search",
          "message_send", "message_read", "message_announce", "home_assistant", "home_assistant_states",
          "home_assistant_history", "web_search", "wikipedia", "document_search", "history_search", "memory_save",

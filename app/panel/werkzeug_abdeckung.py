@@ -66,6 +66,7 @@ TOOLS = {
     "rueckgaengig": ("undo_last",),
     "messages_announce": ("message_announce",),
     "transit": ("transit",),
+    "feeds": ("feeds_news",),
     "begleiter": ("pc_action", "pc_send"),
     "begleitertun": ("pc_action",),
     "iphone": ("iphone_action",),
@@ -142,6 +143,7 @@ WITHOUT = {
     "halive": "meldet sich von selbst",
     "haloud": "meldet sich von selbst",
     "haevent": "meldet sich von selbst",
+    "feedsmelden": "meldet sich von selbst",
     "mailwichtig": "meldet sich von selbst",
     "mystatus": "Seite Ich → Mein Zustand",
     "verbrauch": "Seiten Zustand → Verbrauch und Ich → Verbrauch, nur Zahlen",
@@ -289,6 +291,7 @@ SENTENCES = {
     "agent_change": ("Pausiere den Agenten mit dem Wochenbericht", "Pause the agent with the weekly report"),
     "agent_watch": ("Beobachte den Preis der Bauknecht B6R 88", "Watch the price of the Bauknecht B6R 88"),
     "transit": ("Wann fährt die nächste S-Bahn?", "When does the next S-Bahn leave?"),
+    "feeds_news": ("Was gibt's Neues auf Reddit?", "What's new on Reddit?"),
     "spark_zustand": ("Wann wurde zuletzt gesichert?", "When was the last backup?"),
     "iphone_action": ("Ruf Mama an", "Call Mum"),
 }

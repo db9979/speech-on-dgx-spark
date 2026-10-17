@@ -77,6 +77,9 @@ AREAS = {
     "app_auto": ((("GET", "PUT"), r"/api/profile/weather"), (("POST",), r"/api/profile/weather/test"),
                  (("GET", "PUT"), r"/api/profile/transit"), (("POST",), r"/api/profile/transit/(?:find|test)"),
                  (("GET",), r"/api/profile/parcels"), (("GET",), r"/api/profile/agent"),
+                 # Reddit und Feeds (feeds.py): look, add a subreddit or feed, keywords, fetch now, remove
+                 (("GET", "DELETE"), r"/api/profile/feeds"), (("POST",), r"/api/profile/feeds/(?:source|now)"),
+                 (("PUT",), r"/api/profile/feeds/words"), (("DELETE",), r"/api/profile/feeds/source/[0-9a-f]{8}"),
                  (("GET",), rf"/api/profile/agent/jobs/{_ID}"), (("POST",), rf"/api/profile/agent/jobs/{_ID}/cancel"),
                  # own tasks (plan „Eigene Aufgaben“): pause, run again or delete a watch or scheduled job
                  (("POST",), rf"/api/profile/agent/plans/{_ID}/pause"), (("DELETE",), rf"/api/profile/agent/plans/{_ID}"),
@@ -93,7 +96,8 @@ AREAS = {
                      (("DELETE",), rf"/api/profile/(?:mail|calendar|contacts)/{_ACC}"),
                      (("POST",), r"/api/profile/mail/test"),
                      (("GET", "PUT", "DELETE"), r"/api/profile/homeassistant"),   # the code word stays in the browser
-                     (("GET", "DELETE"), r"/api/profile/telegram"), (("POST",), r"/api/profile/telegram/link")),
+                     (("GET", "DELETE"), r"/api/profile/telegram"), (("POST",), r"/api/profile/telegram/link"),
+                     (("POST",), r"/api/profile/feeds/inbox")),   # the private Reddit link carries Reddit's feed token
 }
 # "Meine Sachen" in the app (Dominik 2026-10-17, plan app-meine-sachen/plan.md): each part opens with the admin
 # release of its own function (the key is its features.py key), no panel switch and no profile switch: what the
@@ -358,7 +362,7 @@ async def app_doc(request: Request, prof=Depends(own_profile)):
 # The app's "Mein Profil": only these fields, each checked by the same rule as in the panel. What the app
 # may do (app_*), Telegram, the smart home and the tone ("style", told to the model) stay in the panel.
 APP_FIELDS = ("voice", "speed", "length", "pro_on", "pro_quiet", "pro_max", "pro_events", "pro_lead",
-              "pro_weather", "pro_place", "pro_weather_at", "pro_parcel", "pro_bday", "pro_transit",
+              "pro_weather", "pro_place", "pro_weather_at", "pro_parcel", "pro_bday", "pro_transit", "pro_feeds",
               "pro_greet", "pro_mail", "briefing_at",
               "hands", "barge",   # Freihändig and Ins Wort fallen: the same values as in the browser (Vereinheitlichen Phase 6)
               "face",             # Einstellungen → Gesicht: the profile's own face, the same as Ich → Gespräch → Anzeige

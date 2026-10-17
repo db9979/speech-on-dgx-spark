@@ -53,6 +53,7 @@ ITEMS = (
     ("remarkable", "remarkable", "services", "rmbox", "reMarkable verbinden", "Connect the reMarkable"),
     ("weather", "weather", "services", "wxbox", "Wetterort wählen", "Pick a weather place"),
     ("transit", "transit", "services", "trbox", "Haltestelle wählen", "Pick a stop"),
+    ("feeds", "feeds", "services", "feedbox", "Reddit oder Feeds verbinden", "Connect Reddit or feeds"),
     ("ha", "ha", "services", "habox", "Smart Home verbinden", "Connect the smart home"),
 )
 KEYS = tuple(x[0] for x in ITEMS)
@@ -131,6 +132,9 @@ def done(key, uid):
         if key == "transit":
             import transit
             return bool((transit.get(uid).get("home") or {}).get("id"))
+        if key == "feeds":
+            import feeds
+            return bool(feeds.get(uid).get("sources"))
         if key == "ha":
             import homeassistant
             return bool(homeassistant.public(uid).get("has_token"))

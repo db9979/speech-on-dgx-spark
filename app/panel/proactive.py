@@ -45,6 +45,7 @@ KINDS = {"events": ("Termin-Vorlauf", 10, "pro_events"), "ha": ("Smart Home", 10
          "tidy": ("Postfach aufräumen", 2, "pro_tidy"), "bday": ("Geburtstag", 1, "pro_bday"),
          "parcel": ("Paket kommt heute", 3, "pro_parcel"), "transit": ("Bus und Bahn", 1, "pro_transit"),
          "tipp": ("Funktion vorschlagen", 1, "pro_tips"),
+         "feeds": ("Neues aus Feeds", 10, "pro_feeds"),   # feeds.py: replies at once, keyword hits at most feeds.WORD_DAY
          "meldung": ("Neue Problem-Meldung", 10, "pro_meldung"),
          "berater": ("Einstellungs-Assistent", 3, "pro_berater")}   # only forced (meldung.tell_admins), own switches
 PAGE_ACTIVE = 75            # seconds since the page last asked: it is open, no push needed
@@ -1091,6 +1092,7 @@ def status(uid):
     import parcels
     import transit
     import weather
+    import feeds
     import homeassistant
     import hamelden
     import mail
@@ -1111,7 +1113,8 @@ def status(uid):
                     "search": bool(cc.get("search_url") and features.allowed("search", uid, cc)),
                     "history": features.allowed("history", uid, cc), "reminders": features.allowed("reminders", uid, cc),
                     "weather": weather.usable(uid), "contacts": contacts.usable(uid), "parcels": parcels.usable(uid),
-                    "transit": bool(transit.usable(uid) and transit.get(uid).get("commute"))}}
+                    "transit": bool(transit.usable(uid) and transit.get(uid).get("commute")),
+                    "feeds": feeds.usable(uid)}}
 
 
 @router.get("/api/proactive", dependencies=[Depends(assistant), Depends(_on)])

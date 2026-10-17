@@ -249,6 +249,7 @@ Home Assistant, mail, calendar, tasks, weather, reMarkable, MCP and what the Spa
 | `app/panel/calendars.py` | Calendar and daily briefing per profile (guests have neither). |
 | `app/panel/contacts.py` | Contacts per profile, read only (CardDAV: iCloud, Nextcloud, others). |
 | `app/panel/extras.py` | Small services the assistant can use besides the big ones in chat.py (weather, contacts, parcels ...). |
+| `app/panel/feeds.py` | Reddit und Feeds: each profile connects its own Reddit inbox (the private RSS link from reddit.com → Settings → RSS-Feeds), subreddits and any other RSS or A … |
 | `app/panel/hamelden.py` | Home Assistant tells the Spark. |
 | `app/panel/homeassistant.py` | Home Assistant per profile: each profile connects its own Home Assistant (address and long-lived access token); only that profile's requests can use it, gues … |
 | `app/panel/mail.py` | Reading e-mail per profile over IMAP (read only; guests have none). |
@@ -464,6 +465,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `users/ID/speicher.json` | Own storage targets | Settings | key sealed | yes | – |
 | `users/ID/speicher-stand.json` | Sync state | State | – | yes | – |
 | `users/ID/transit.json` | Stop | Settings | – | yes | – |
+| `users/ID/feeds.json` | Reddit and feeds: sources, keywords, latest titles | Login | feed addresses sealed | yes | – |
 | `users/ID/weather.json` | Weather place | Settings | – | yes | – |
 | `users/ID/proactive.json` | Speak up by itself | Settings | – | yes | – |
 | `users/ID/proactive-rules.json` | Own notice rules | Settings | – | yes | – |
@@ -1589,7 +1591,7 @@ Self-tests: `test_klaeren`, `test_features`, `test_notaus`, `test_hardening`, `t
 
 ### Switch
 
-The switch puts the own latest message into a group (smart home, calendar, weather, mail and so on, today 22 groups) and so narrows the tools the language model sees in this turn. It works with fixed word lists; the model may at most pick once from a fixed list when no rule fits, and that too can only narrow.
+The switch puts the own latest message into a group (smart home, calendar, weather, mail and so on, today 23 groups) and so narrows the tools the language model sees in this turn. It works with fixed word lists; the model may at most pick once from a fixed list when no rule fits, and that too can only narrow.
 
 **Why:** Few fitting tools make the model faster and more accurate: it reads less and misses less often. Because the switch only takes away from what rights and locks left, a wrongly sorted sentence can never allow more, at most leave a tool out.
 
@@ -1666,21 +1668,21 @@ Applies at: [step 9](#kn-weiche-s9)
 
 #### Everyday score
 
-- The test sentences (150) hold every reported wrong turn and must all pass. The everyday sentences (211) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up.
+- The test sentences (156) hold every reported wrong turn and must all pass. The everyday sentences (211) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up.
 
 #### Tool names
 
-- Wherever a tool shows, a readable name comes from one table (82 tools), for example „Mailbox overview“ instead of mail_tidy_overview.
+- Wherever a tool shows, a readable name comes from one table (83 tools), for example „Mailbox overview“ instead of mail_tidy_overview.
 
 #### Numbers (from the code)
 
-- **22** groups of the switch ([step 4](#kn-weiche-s4), [step 6](#kn-weiche-s6))
+- **23** groups of the switch ([step 4](#kn-weiche-s4), [step 6](#kn-weiche-s6))
 - **2** groups at most that still narrow ([step 6](#kn-weiche-s6))
 - **80** characters at most for a follow-up ([step 8](#kn-weiche-s8))
 - **4** seconds at most for the model's pick ([step 10](#kn-weiche-s10))
 - **300 ms** waiting with „Fast answer start“ ([step 10](#kn-weiche-s10))
 - **80 %** default threshold of the classification ([step 10](#kn-weiche-s10))
-- **150** built-in test sentences ([step 4](#kn-weiche-s4), [step 5](#kn-weiche-s5))
+- **156** built-in test sentences ([step 4](#kn-weiche-s4), [step 5](#kn-weiche-s5))
 - **211** everyday sentences for measuring ([step 14](#kn-weiche-s14))
 - **20** versions for undo ([step 4](#kn-weiche-s4))
 
@@ -1894,7 +1896,7 @@ Applies at: [step 4](#kn-werkzeuge-s4)
 - **3** memory notes per answer ([step 1](#kn-werkzeuge-s1))
 - **13** tools locked after outside text ([step 4](#kn-werkzeuge-s4))
 - **7** tools without internet with the kill switch ([step 3](#kn-werkzeuge-s3))
-- **82** tools with a readable name ([step 11](#kn-werkzeuge-s11))
+- **83** tools with a readable name ([step 11](#kn-werkzeuge-s11))
 
 #### Settings
 
@@ -2098,12 +2100,12 @@ flowchart TD
   s12 -.->|redirect| s2
 ```
 
-1. <a id="kn-waechter-s1"></a>**A tool wants out**: Everything that goes to an address from settings or from outside text gets its access through netguard.client with a level (today 29 modules). Fixed own services like the language model go directly; which ones and why is listed in netguard.DIRECT_OK, a self-test keeps that list complete.
+1. <a id="kn-waechter-s1"></a>**A tool wants out**: Everything that goes to an address from settings or from outside text gets its access through netguard.client with a level (today 30 modules). Fixed own services like the language model go directly; which ones and why is listed in netguard.DIRECT_OK, a self-test keeps that list complete.
 2. <a id="kn-waechter-s2"></a>**Resolve the name once**: resolve() looks the name up exactly once. If it has several addresses, each one must be allowed, else it stops.
 3. <a id="kn-waechter-s3"></a>**Own service?**: The ports of the own services are closed on this machine: on loopback and on every own address in the LAN or VPN (own_addresses reads them again every minute). When the models run on another computer (models.host), its addresses count the same (model_addresses).
 4. <a id="kn-waechter-s4"></a>**Internet and kill switch on?**: If the address is public and the kill switch is at stage 1 or higher, nothing goes to the internet, whatever level the tool has. The home network stays reachable as the level allows.
 5. <a id="kn-waechter-s5"></a>**Public address?**: A public address is allowed at every level.
-6. <a id="kn-waechter-s6"></a>**Level „internet only“?**: What comes from search results or answers may never go to the home network (chat, geraeteupdate, ghtoken, meldung, modellseite, remarkable, verbund).
+6. <a id="kn-waechter-s6"></a>**Level „internet only“?**: What comes from search results or answers may never go to the home network (chat, feeds, geraeteupdate, ghtoken, meldung, modellseite, remarkable, verbund).
 7. <a id="kn-waechter-s7"></a>**Never allowed?**: Link-local addresses (169.254.x, where cloud metadata answers), multicast, unspecified and reserved addresses are allowed at no level.
 8. <a id="kn-waechter-s8"></a>**Home network allowed?**: Home Assistant and other services in the home network (doclingdienst, esp32, hamelden, homeassistant, kiwix, offsite) always may. Calendars, contacts, mail and MCP (calendars, contacts, mail, mcp, meinmcp, tasks) only when Settings → Security → Allow home network addresses is on.
 9. <a id="kn-waechter-s9"></a>**Connect to exactly this address**: The connection goes to the checked address, not to the name again. A second look-up could answer differently (DNS rebinding). The certificate is still checked for the name.
@@ -2119,7 +2121,7 @@ Applies at: [step 6](#kn-waechter-s6), [step 8](#kn-waechter-s8)
 
 | Level | Who uses it (from the code) | Internet | Home network |
 |---|---|---|---|
-| internet only | chat, geraeteupdate, ghtoken, meldung, modellseite, remarkable, verbund | ✓ | ✕ |
+| internet only | chat, feeds, geraeteupdate, ghtoken, meldung, modellseite, remarkable, verbund | ✓ | ✕ |
 | user | calendars, contacts, mail, mcp, meinmcp, tasks | ✓ | only with switch |
 | home | doclingdienst, esp32, hamelden, homeassistant, kiwix, offsite | ✓ | ✓ |
 | by target | anrufe, dienstwacht, nas, nasquelle, speicher, telefon, zertpin | as the target is set | – |

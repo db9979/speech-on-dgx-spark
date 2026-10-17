@@ -301,6 +301,7 @@ ADMIN_ON_OK = {
     "telefon_anruf.py:alarm_tick": "Spark-wide early out; the admin who gets the call is picked with features.allowed telefonalarm (_admin)",
     "verbrauch.py:quota_on": "Spark-wide early out; each profile then features.allowed kontingent (verbrauch.limit)",
     "account.py:whoami": "page flags: admin switch and not features.blocked for the profile",
+    "feeds.py:admin_on": "Spark-wide early out (due_once, routes); each profile then features.allowed feeds (due, usable, block check in _on)",
     "account.py:profile_voice": "display flag: admin switch and not features.blocked",
     "account.py:_allow": "display flags: admin switch and not features.blocked",
     "account.py:_locked": "„Daten löschen“ card: only released functions that are features.blocked for the profile",

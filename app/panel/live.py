@@ -60,7 +60,7 @@ TOOLS = {
     "archive_search": "kiwix", "article_more": "wiki", "wikipedia": "wiki", "mail_draft": "mail", "mail_list": "mail",
     "mail_read": "mail", "mail_search": "mail", "mail_tidy_overview": "mail", "mail_tidy_propose": "mail",
     "contacts_search": "contacts", "remarkable_note": "rm", "remarkable_page": "rm", "remarkable_attachment": "rm", "remarkable_sent": "rm", "remarkable_sheet": "rm", "remarkable_library": "rm", "iphone_action": "push", "weather": "weather",
-    "parcels": "parcels", "transit": "transit", "document_search": "mem", "document_list": "mem", "history_search": "mem", "local_search": "mem",
+    "parcels": "parcels", "transit": "transit", "feeds_news": "feeds", "document_search": "mem", "document_list": "mem", "history_search": "mem", "local_search": "mem",
     "memory_forget": "mem", "memory_save": "mem", "reminder_cancel": "mem", "reminder_list": "mem", "reminder_set": "mem",
     "message_announce": "mem", "message_read": "mem", "message_send": "mem", "agent_list": "mem",
     "agent_schedule": "mem", "agent_task": "mem", "routine_save": "mem", "agent_watch": "mem",
@@ -70,7 +70,7 @@ TOOLS = {
     # notes the Spark sends (push.py) and what it says by itself (proactive.py, live.note)
     "reMarkable": "rm",
     # what the Spark does by itself with services (live.job): update check, backup to the NAS
-    "GitHub": "github", "NAS-Sicherung": "nas", "Geräte-Updates": "geraete",
+    "GitHub": "github", "NAS-Sicherung": "nas", "Feeds": "feeds", "Geräte-Updates": "geraete",
     "Speicher-Abgleich": "speicher", "Speicher holen": "speicher", "Wissensordner-Abgleich": "nasquelle",
     "Ablage-Eingang": "nasablage", "Ablegen": "nasablage", "nas_ablegen": "nasablage", "nas_zustand": "naszustand",
     # Docling-Server (doclingdienst.py): a document read a second time in a quiet moment
@@ -111,6 +111,7 @@ TARGETS = {
     "weather": ("Wetter", "HTTPS · Internet", "net", False),
     "transit": ("Bahn", "HTTPS · Internet", "net", False),
     "parcels": ("Pakete", "HTTPS · Internet", "net", False),
+    "feeds": ("Feeds", "Reddit und RSS · Internet", "net", False),
     "rm": ("reMarkable", "Cloud · Internet", "net", True),
     "push": ("Apple Push", "APNs · Internet", "net", True),
     "hilfe": ("Spark-Hilfe", "Anleitungen · auf dem Spark", "spark", False),
@@ -174,7 +175,7 @@ TARGETS = {
 }
 RETURNS = {"cal": "Termine oder Aufgaben", "ha": "Zustände oder Schaltung", "web": "Suchergebnisse", "pages": "Seitentext", "kiwix": "Archiv-Treffer",
            "wiki": "Artikel", "mail": "Mails (nur Anzahl und Größe)", "contacts": "Kontakte", "rm": "Ablage", "push": "Zustellung",
-           "weather": "Wetterwerte", "parcels": "Sendungen", "transit": "Verbindungen", "mem": "eigene Daten",
+           "weather": "Wetterwerte", "parcels": "Sendungen", "transit": "Verbindungen", "feeds": "Beiträge", "mem": "eigene Daten",
            "hilfe": "Anleitungen oder Vorschlagskarte", "webpush": "Zustellung", "tg": "Zustellung",
            "android": "liegt bereit", "desk": "liegt bereit", "page": "liegt bereit",
            "github": "Stand und Testergebnis", "nas": "Ablage bestätigt", "speicher": "Ablage bestätigt oder Datei geholt", "nasquelle": "Ordnerliste und Dateien", "nasablage": "Ablage bestätigt oder Datei geholt", "naszustand": "Belegung und Zustand in Zahlen", "docling": "Text des Dokuments", "mcp": "Antwort des Dienstes",
@@ -921,8 +922,8 @@ def _num(v):
 # Dominik 2026-10-12: a target that is not set up (its function off, no address, no profile connected) is not shown
 # at all, not even in "+ N ruhig"; once a request goes there it shows like any used target
 SETUP = {"web": "search", "cal": "calendar", "mail": "mail", "ha": "ha", "kiwix": "kiwix", "rm": "remarkable",
-         "push": "iphonepush", "wiki": "wiki", "weather": "weather", "transit": "transit", "parcels": "parcels", "tg": "telegram"}
-SETUP_FILE = {"cal": "calendar.json", "mail": "mail.json", "ha": "homeassistant.json", "rm": "remarkable.json"}
+         "push": "iphonepush", "wiki": "wiki", "weather": "weather", "transit": "transit", "parcels": "parcels", "feeds": "feeds", "tg": "telegram"}
+SETUP_FILE = {"cal": "calendar.json", "mail": "mail.json", "ha": "homeassistant.json", "rm": "remarkable.json", "feeds": "feeds.json"}
 _unset = [0.0, frozenset()]
 
 

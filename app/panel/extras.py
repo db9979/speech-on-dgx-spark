@@ -18,6 +18,7 @@ import parcels
 import roomfar
 import tasks
 import transit
+import feeds
 import weather
 import remarkable
 import wiki
@@ -34,7 +35,7 @@ import naszustand
 import aendern
 import telefon_anruf
 
-SERVICES = [roomfar, weather, contacts, parcels, tasks, transit, wiki, agent, messages, remarkable, hamelden, hilfe, begleiter, meinmcp, docmake, bilder, musik, tagebuch, zustand_wz, rmliste, aendern, nasablage, naszustand, telefon_anruf]
+SERVICES = [roomfar, weather, contacts, parcels, tasks, transit, feeds, wiki, agent, messages, remarkable, hamelden, hilfe, begleiter, meinmcp, docmake, bilder, musik, tagebuch, zustand_wz, rmliste, aendern, nasablage, naszustand, telefon_anruf]
 
 
 def offer(ctx):
@@ -97,3 +98,4 @@ async def briefing(uid, zone=None, private=True):
 
 async def due_once():
     await contacts.due_once()
+    await feeds.due_once()

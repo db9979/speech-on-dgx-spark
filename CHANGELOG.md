@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.739** · 2026-10-17 · Reddit und Feeds: eigener Reddit-Posteingang über den privaten RSS-Link, Subreddits und andere Feeds mit Stichwörtern; Antworten sofort, Stichwort-Treffer höchstens 3 am Tag, das Wichtigste im Tagesbrief, „Was gibt's Neues auf Reddit?“ im Chat; nur lesen, nie posten
 - **V01.0.738** · 2026-10-16 · Steuerzentrale farbiger (Entwurf 1): Kästen mit Farbfläche und runden Ecken; läuft gerade nichts, zeigt der Kasten Werkzeuge die zuletzt benutzten Werkzeuge mit ✓ oder ✗ (4K mit Uhrzeit) statt „Suchen · Schalten · Lesen“
 - **V01.0.737** · 2026-10-17 · Pebble-Uhr Paket 3: Chats auf der Uhr lesen und mit festen Sätzen, Diktat oder Antwortvorschlägen antworten, Fernbedienung für selbst gewählte Home-Assistant-Geräte und eigene Lautsprecher, Schritte, Puls und Schlaf versiegelt im Profil (je ein Admin-Schalter, aus)
 - **V01.0.736** · 2026-10-17 · Pebble-Uhr Paket 2: eigenes Spark-Zifferblatt (Uhrzeit, nächster Termin, Erinnerung, Wetter, Admin-Meldung, Tipp), „Mein Tag“ und „Meine Woche“ aus festen Sätzen, Schnell merken mit Ort (je ein Admin-Schalter, aus)

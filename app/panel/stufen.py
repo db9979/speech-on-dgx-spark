@@ -58,6 +58,7 @@ LIST = {
     ("PUT", "/api/profile/homeassistant"): (CONFIRM, "Konten", "Home Assistant verbinden", "Connect Home Assistant"),
     ("POST", "/api/profile/telegram/link"): (CONFIRM, "Konten", "Telegram verbinden", "Connect Telegram"),
     ("POST", "/api/profile/remarkable/pair"): (CONFIRM, "Konten", "reMarkable verbinden", "Connect reMarkable"),
+    ("POST", "/api/profile/feeds/inbox"): (CONFIRM, "Konten", "Reddit-Posteingang verbinden", "Connect the Reddit inbox"),
     ("PUT", "/api/profile/tidy"): (CONFIRM, "Konten", "Postfach aufräumen einstellen", "Set up mailbox tidying"),
     ("POST", "/api/profile/mymcp"): (CONFIRM, "Konten", "Eigenen Dienst verbinden", "Connect an own service"),
     ("PUT", "/api/profile/mymcp/{sid}"): (CONFIRM, "Konten", "Adresse oder Schlüssel eines eigenen Dienstes", "Address or key of an own service"),

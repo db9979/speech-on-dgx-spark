@@ -118,6 +118,8 @@ LIST_OF = re.compile(r"(?i)\bliste (der|von|mit|aller|über)\b")
 COMPARE = re.compile(r"(?i)\bunterschied(e)? zwischen\b")
 TRANSIT_WORDS = re.compile(dict(chat.NEED_TOOLS)["transit"].pattern + r"|(?i:\b(ice|ic|regionalbahn|regionalexpress|"
                            r"u-?bahn|bahnhof|gleis)\b)")
+# Reddit und Feeds (feeds.py): „Was gibt's Neues auf Reddit?“, „Hat mir jemand auf Reddit geantwortet?“
+FEED_WORDS = dict(chat.NEED_TOOLS)["feeds_news"]
 # a job that comes back by itself („Schick mir jeden Morgen die Schlagzeilen“) or a watch („Pass auf, wann …“):
 # the group agent, not a search now (a reminder „jeden Montag“ stays a reminder)
 RECUR = re.compile(r"(?i)\b(jeden|jede[nr]?) (morgen|abend|tag|früh|woche|montag|dienstag|mittwoch|donnerstag|freitag|"
@@ -166,6 +168,7 @@ GROUPS = {
     "liste": ({"tasks_show", "tasks_add", "tasks_change", "home_assistant_todo"}, LIST_WORDS),
     "wetter": ({"weather"}, WEATHER_WORDS),
     "bahn": ({"transit"}, TRANSIT_WORDS),
+    "feeds": ({"feeds_news"}, FEED_WORDS),
     "paket": ({"parcels", "mail_list", "mail_search"}, PARCEL_WORDS),
     "kontakt": ({"contacts_search", "iphone_action"}, CONTACT_WORDS),
     "gedaechtnis": ({"memory_save", "memory_forget", "history_search"}, MEMORY_WORDS),
@@ -322,6 +325,11 @@ def classify(text, extra_words="", group_words="", not_words=""):
     # a parcel question is about parcels, not about the mail it is read from
     if "paket" in why:
         why.pop("mail", None)
+    # „Was gibt's Neues auf Reddit?“ and „Nachrichten in meinem Reddit-Posteingang“ are the own feeds, not the web,
+    # the mailbox or messages between the people of this Spark
+    if "feeds" in why:
+        for name in ("websuche", "mail", "nachricht"):
+            why.pop(name, None)
     # "Schreib einen Brief wegen der Heizung" is a file about the heating, not switching it
     if "erstellen" in why and "smarthome" in why and not homeassistant.is_command(text):
         why.pop("smarthome")
@@ -607,6 +615,7 @@ GROUP_SAYS = {
     "wetter": "Wetter oder Vorhersage",
     "bahn": "Bus- und Bahnverbindungen, Abfahrten, Verspätungen",
     "paket": "Pakete und Sendungen verfolgen",
+    "feeds": "Neues aus dem eigenen Reddit, Subreddits oder abonnierten Feeds",
     "kontakt": "Telefonnummer, Adresse oder Geburtstag aus den Kontakten",
     "gedaechtnis": "sich etwas merken, vergessen oder an frühere Gespräche erinnern",
     "dokument": "in eigenen Dokumenten, Verträgen oder Unterlagen nachsehen",
@@ -798,13 +807,14 @@ LABELS = {"smarthome": "Smart Home", "kalender": "Kalender und Briefing", "mail"
           "paket": "Pakete", "kontakt": "Kontakte", "gedaechtnis": "Gedächtnis und frühere Gespräche",
           "dokument": "Dokumente", "nachricht": "Nachrichten an andere (Chats)", "agent": "Agenten", "iphone": "iPhone",
           "spark": "Fragen zum Spark", "wikipedia": "Wikipedia", "erstellen": "Dokumente erstellen",
-          "bild": "Bilder malen", "musik": "Musik machen", "archiv": "Eigenes Archiv"}
+          "bild": "Bilder malen", "musik": "Musik machen", "archiv": "Eigenes Archiv",
+          "feeds": "Reddit und Feeds"}
 MAX_TEST = 500
 # "Erklären statt Schweigen" (plan „Bedienung gesamt“ B4, V01.0.286): the function behind each group (features.py)
 FEATURE = {"smarthome": "ha", "kalender": "calendar", "mail": "mail", "websuche": "search", "erinnerung": "reminders",
            "liste": "tasks", "wetter": "weather", "bahn": "transit", "paket": "parcels", "kontakt": "contacts",
            "gedaechtnis": "memory", "dokument": "documents", "nachricht": "chats", "agent": "agent",
-           "iphone": "iphone", "wikipedia": "wiki", "archiv": "kiwix", "bild": "bilder", "musik": "musik"}
+           "iphone": "iphone", "wikipedia": "wiki", "archiv": "kiwix", "bild": "bilder", "musik": "musik", "feeds": "feeds"}
 
 
 def explain(route, offered, who, stranger, c=None):

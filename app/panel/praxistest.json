@@ -1604,6 +1604,13 @@
 "titel": "Steuerzentrale: Farbflächen und zuletzt benutzte Werkzeuge",
 "text": "A: Am Bildschirm des Panel-Rechners nach dem Wetter fragen und warten, bis die Anfrage ausgeblendet ist. Im Kasten Werkzeuge steht dann „zuletzt ✓ Websuche 09:12“ (Full HD: „✓ Websuche“), nicht mehr „Suchen · Schalten · Lesen“. Nach einem Neustart des Panels steht wieder „Suchen · Schalten · Lesen“, bis ein Werkzeug lief. Die Kästen haben dunkle Farbflächen und runde Ecken, der aktive Kasten gelb, jedes Gerät in der Farbe seiner Anfrage; die Rahmen tars und pi bleiben dunkel.",
 "thread": "Panel und Dienste auf Raspberry Pi 5"
+},
+{
+"id": "P253",
+"v": 739,
+"titel": "Reddit und Feeds verbinden",
+"text": "A: Funktionen → Reddit und Feeds einschalten. P: Ich → Reddit und Feeds öffnen, auf reddit.com unter Einstellungen → RSS-Feeds den privaten Link „Posteingang“ kopieren, einfügen, „Verbinden“ (Code eingeben): der Posteingang steht mit „zuletzt geholt“ da. r/LocalLLaMA hinzufügen und ein Stichwort wie „DGX Spark“ eintragen. Unter „Zuletzt gekommen“ stehen Titel mit Link. Im Chat „Was gibt's Neues auf Reddit?“ fragen: kurze Zusammenfassung. Jemanden auf einen eigenen Kommentar antworten lassen: höchstens 30 Minuten später kommt „Neu in deinem Reddit-Posteingang …“ als Mitteilung. „Alles löschen“ leert die Seite.",
+"thread": "Reddit-Konto verbinden"
 }
 ]
 }

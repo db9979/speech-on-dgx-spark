@@ -249,6 +249,7 @@ Home Assistant, Mail, Kalender, Aufgaben, Wetter, reMarkable, MCP und was der Sp
 | `app/panel/calendars.py` | Kalender und Tagesbriefing |
 | `app/panel/contacts.py` | Kontakte per CardDAV, nur lesen |
 | `app/panel/extras.py` | Kleine Zusatzdienste mit ihren Werkzeugen |
+| `app/panel/feeds.py` | Reddit und Feeds: eigener Reddit-Posteingang, Subreddits und RSS, nur lesen |
 | `app/panel/hamelden.py` | Home Assistant meldet Ereignisse an den Spark |
 | `app/panel/homeassistant.py` | Home Assistant pro Profil |
 | `app/panel/mail.py` | Mail lesen per IMAP |
@@ -464,6 +465,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `users/ID/speicher.json` | Ziele des eigenen Speichers | Einstellungen | Schlüssel versiegelt | ja | – |
 | `users/ID/speicher-stand.json` | Stand des Abgleichs | Zustand | – | ja | – |
 | `users/ID/transit.json` | Haltestelle | Einstellungen | – | ja | – |
+| `users/ID/feeds.json` | Reddit und Feeds: Quellen, Stichwörter, zuletzt gekommene Titel | Login | Feed-Adressen versiegelt | ja | – |
 | `users/ID/weather.json` | Wetter-Ort | Einstellungen | – | ja | – |
 | `users/ID/proactive.json` | Von selbst melden | Einstellungen | – | ja | – |
 | `users/ID/proactive-rules.json` | Eigene Melde-Regeln | Einstellungen | – | ja | – |
@@ -1589,7 +1591,7 @@ Selbsttests: `test_klaeren`, `test_features`, `test_notaus`, `test_hardening`, `
 
 ### Weiche
 
-Die Weiche ordnet die eigene letzte Nachricht einer Gruppe zu (Smart Home, Kalender, Wetter, Mail und so weiter, heute 22 Gruppen) und grenzt damit die Werkzeuge ein, die das Sprachmodell in diesem Zug sieht. Sie arbeitet mit festen Wortlisten; das Modell darf höchstens einmal aus einer festen Liste wählen, wenn keine Regel passt, und auch das kann nur eingrenzen.
+Die Weiche ordnet die eigene letzte Nachricht einer Gruppe zu (Smart Home, Kalender, Wetter, Mail und so weiter, heute 23 Gruppen) und grenzt damit die Werkzeuge ein, die das Sprachmodell in diesem Zug sieht. Sie arbeitet mit festen Wortlisten; das Modell darf höchstens einmal aus einer festen Liste wählen, wenn keine Regel passt, und auch das kann nur eingrenzen.
 
 **Warum:** Wenige passende Werkzeuge machen das Modell schneller und treffsicherer: es liest weniger und greift seltener daneben. Weil die Weiche nur wegnimmt, was die Rechte und Sperren übrig gelassen haben, kann ein falsch zugeordneter Satz nie mehr erlauben, höchstens ein Werkzeug fehlen lassen.
 
@@ -1666,21 +1668,21 @@ Gilt bei: [Schritt 9](#kn-weiche-s9)
 
 #### Alltagsquote
 
-- Die Testsätze (150) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (211) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt.
+- Die Testsätze (156) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (211) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt.
 
 #### Werkzeugnamen
 
-- Überall, wo ein Werkzeug sichtbar wird, steht ein lesbarer Name aus einer Tabelle (82 Werkzeuge), zum Beispiel „Postfach-Überblick“ statt mail_tidy_overview.
+- Überall, wo ein Werkzeug sichtbar wird, steht ein lesbarer Name aus einer Tabelle (83 Werkzeuge), zum Beispiel „Postfach-Überblick“ statt mail_tidy_overview.
 
 #### Zahlen (aus dem Code)
 
-- **22** Gruppen der Weiche ([Schritt 4](#kn-weiche-s4), [Schritt 6](#kn-weiche-s6))
+- **23** Gruppen der Weiche ([Schritt 4](#kn-weiche-s4), [Schritt 6](#kn-weiche-s6))
 - **2** Gruppen höchstens, die noch eingrenzen ([Schritt 6](#kn-weiche-s6))
 - **80** Zeichen höchstens für eine Folgefrage ([Schritt 8](#kn-weiche-s8))
 - **4** Sekunden höchstens für die Wahl des Modells ([Schritt 10](#kn-weiche-s10))
 - **300 ms** Wartezeit mit „Schneller Antwortbeginn“ ([Schritt 10](#kn-weiche-s10))
 - **80 %** Standard-Schwelle der Einordnung ([Schritt 10](#kn-weiche-s10))
-- **150** eingebaute Testsätze ([Schritt 4](#kn-weiche-s4), [Schritt 5](#kn-weiche-s5))
+- **156** eingebaute Testsätze ([Schritt 4](#kn-weiche-s4), [Schritt 5](#kn-weiche-s5))
 - **211** Alltagssätze zum Messen ([Schritt 14](#kn-weiche-s14))
 - **20** Versionen für Rückgängig ([Schritt 4](#kn-weiche-s4))
 
@@ -1894,7 +1896,7 @@ Gilt bei: [Schritt 4](#kn-werkzeuge-s4)
 - **3** Gedächtnis-Notizen pro Antwort ([Schritt 1](#kn-werkzeuge-s1))
 - **13** Werkzeuge gesperrt nach fremdem Text ([Schritt 4](#kn-werkzeuge-s4))
 - **7** Werkzeuge ohne Internet bei Notaus ([Schritt 3](#kn-werkzeuge-s3))
-- **82** Werkzeuge mit verständlichem Namen ([Schritt 11](#kn-werkzeuge-s11))
+- **83** Werkzeuge mit verständlichem Namen ([Schritt 11](#kn-werkzeuge-s11))
 
 #### Einstellen
 
@@ -2098,12 +2100,12 @@ flowchart TD
   s12 -.->|Weiterleitung| s2
 ```
 
-1. <a id="kn-waechter-s1"></a>**Werkzeug will nach außen**: Alles, was eine Adresse aus Einstellungen oder aus fremdem Text ansteuert, holt sich seinen Zugang über netguard.client mit einer Stufe (heute 29 Module). Feste eigene Dienste wie das Sprachmodell laufen direkt; welche das sind und warum, steht in netguard.DIRECT_OK, ein Selbsttest hält die Liste vollständig.
+1. <a id="kn-waechter-s1"></a>**Werkzeug will nach außen**: Alles, was eine Adresse aus Einstellungen oder aus fremdem Text ansteuert, holt sich seinen Zugang über netguard.client mit einer Stufe (heute 30 Module). Feste eigene Dienste wie das Sprachmodell laufen direkt; welche das sind und warum, steht in netguard.DIRECT_OK, ein Selbsttest hält die Liste vollständig.
 2. <a id="kn-waechter-s2"></a>**Name einmal auflösen**: resolve() fragt den Namen genau einmal ab. Hat er mehrere Adressen, muss jede erlaubt sein, sonst ist Schluss.
 3. <a id="kn-waechter-s3"></a>**Eigener Dienst?**: Die Ports der eigenen Dienste sind auf dieser Maschine gesperrt: auf Loopback und auf jeder eigenen Adresse im LAN oder VPN (own_addresses liest sie jede Minute neu). Laufen die Modelle auf einem anderen Rechner (models.host), gelten seine Adressen genauso (model_addresses).
 4. <a id="kn-waechter-s4"></a>**Internet und Notaus an?**: Ist die Adresse öffentlich und der Notaus mindestens auf Stufe 1, geht nichts ins Internet, egal welche Stufe das Werkzeug hat. Das Heimnetz bleibt erreichbar, wie die Stufe es erlaubt.
 5. <a id="kn-waechter-s5"></a>**Öffentliche Adresse?**: Eine öffentliche Adresse ist auf jeder Stufe erlaubt.
-6. <a id="kn-waechter-s6"></a>**Stufe „nur Internet“?**: Was aus Suchergebnissen oder Antworten kommt, darf nie ins Heimnetz (chat, geraeteupdate, ghtoken, meldung, modellseite, remarkable, verbund).
+6. <a id="kn-waechter-s6"></a>**Stufe „nur Internet“?**: Was aus Suchergebnissen oder Antworten kommt, darf nie ins Heimnetz (chat, feeds, geraeteupdate, ghtoken, meldung, modellseite, remarkable, verbund).
 7. <a id="kn-waechter-s7"></a>**Nie erlaubt?**: Link-lokale Adressen (169.254.x, dort antworten Cloud-Metadaten), Multicast, unbestimmte und reservierte Adressen sind auf keiner Stufe erlaubt.
 8. <a id="kn-waechter-s8"></a>**Heimnetz erlaubt?**: Home Assistant und andere Dienste im Heimnetz (doclingdienst, esp32, hamelden, homeassistant, kiwix, offsite) dürfen immer. Kalender, Kontakte, Mail und MCP (calendars, contacts, mail, mcp, meinmcp, tasks) nur, wenn unter Einstellungen → Sicherheit → Heimnetz-Adressen erlauben eingeschaltet ist.
 9. <a id="kn-waechter-s9"></a>**Verbinden mit genau dieser Adresse**: Die Verbindung geht an die geprüfte Adresse, nicht noch einmal an den Namen. Ein zweites Nachschlagen könnte anders antworten (DNS-Rebinding). Das Zertifikat wird trotzdem für den Namen geprüft.
@@ -2119,7 +2121,7 @@ Gilt bei: [Schritt 6](#kn-waechter-s6), [Schritt 8](#kn-waechter-s8)
 
 | Stufe | Wer sie nutzt (aus dem Code) | Internet | Heimnetz |
 |---|---|---|---|
-| nur Internet | chat, geraeteupdate, ghtoken, meldung, modellseite, remarkable, verbund | ✓ | ✕ |
+| nur Internet | chat, feeds, geraeteupdate, ghtoken, meldung, modellseite, remarkable, verbund | ✓ | ✕ |
 | Nutzer | calendars, contacts, mail, mcp, meinmcp, tasks | ✓ | nur mit Schalter |
 | Heimnetz | doclingdienst, esp32, hamelden, homeassistant, kiwix, offsite | ✓ | ✓ |
 | je nach Ziel | anrufe, dienstwacht, nas, nasquelle, speicher, telefon, zertpin | wie das Ziel eingestellt ist | – |

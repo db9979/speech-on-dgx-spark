@@ -299,6 +299,7 @@
         <label>Adresse der Ortssuche</label><input id="chat.geocode_url" placeholder="https://geocoding-api.open-meteo.com/v1/search" autocomplete="off"><div class="fh">Nur ändern, wenn du Open-Meteo selbst betreibst.</div></div>
       <div class="setrow"><div class="lbl"><b>Bus und Bahn</b><span>Abfahrten und Verspätungen an der eigenen Haltestelle.</span></div><label class="tgl"><input type="checkbox" id="chat.transit"><i></i></label></div>
       <div data-show="chat.transit" style="margin-left:18px"><label>Adresse des Fahrplandienstes</label><input id="chat.transit_url" placeholder="https://v6.db.transport.rest" autocomplete="off"><div class="fh">Leer = v6.db.transport.rest. Auch ein eigener db-rest oder ein regionaler Dienst (z. B. v6.vbb.transport.rest).</div></div>
+      <div class="setrow"><div class="lbl"><b>Reddit und Feeds</b><span>Eigener Reddit-Posteingang, Subreddits und RSS-Feeds lesen, nie posten.</span></div><label class="tgl"><input type="checkbox" id="chat.feeds"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Kontakte</b><span>Telefonnummern, E-Mail-Adressen und Geburtstage aus dem eigenen Adressbuch.</span></div><label class="tgl"><input type="checkbox" id="chat.contacts"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Home Assistant</b><span>Licht, Geräte und Heizung per Sprache, jedes Profil mit seinem eigenen Home Assistant.</span></div><label class="tgl"><input type="checkbox" id="chat.homeassistant"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Home Assistant Assist (Wyoming)</b><span>Home Assistant nutzt Spracherkennung und Stimme des Spark (Voice PE, HA-App), nur von erlaubten Adressen.</span></div><label class="tgl"><input type="checkbox" id="chat.wyoming"><i></i></label></div>
@@ -1158,6 +1159,7 @@
     <div id="wxbox" class="ptab"></div>
     <div id="conbox" class="ptab"></div>
     <div id="trbox" class="ptab"></div>
+    <div id="feedbox" class="ptab"></div>
     <div id="parbox" class="ptab"></div>
     <div id="writebox" class="ptab"></div>
     <div id="roombox" class="ptab"></div>

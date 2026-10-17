@@ -70,6 +70,7 @@ DATEIEN = [
     profil("speicher.json", "Ziele des eigenen Speichers", "Own storage targets", art="Einstellungen", schutz=("Schlüssel versiegelt", "key sealed")),
     profil("speicher-stand.json", "Stand des Abgleichs", "Sync state", art="Zustand"),
     profil("transit.json", "Haltestelle", "Stop", art="Einstellungen"),
+    profil("feeds.json", "Reddit und Feeds: Quellen, Stichwörter, zuletzt gekommene Titel", "Reddit and feeds: sources, keywords, latest titles", art="Login", schutz=("Feed-Adressen versiegelt", "feed addresses sealed")),
     profil("weather.json", "Wetter-Ort", "Weather place", art="Einstellungen"),
     profil("proactive.json", "Von selbst melden", "Speak up by itself", art="Einstellungen"),
     profil("proactive-rules.json", "Eigene Melde-Regeln", "Own notice rules", art="Einstellungen"),

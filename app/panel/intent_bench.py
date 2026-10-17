@@ -28,6 +28,13 @@ BENCH = [
     ("Mach mir eine Malvorlage mit einem Dinosaurier", "bild"),
     ("Mal mir ein Haus mit Garten", "bild"),
     ("Was ist auf dem Bild?", ""),
+    # Reddit und Feeds (feeds.py): the own feeds, never the web search, the mailbox or chat messages
+    ("Was gibt's Neues auf Reddit?", "feeds"),
+    ("Hat mir jemand auf Reddit geantwortet?", "feeds"),
+    ("Was ist heute in r/LocalLLaMA los?", "feeds"),
+    ("Gibt es neue Nachrichten in meinem Reddit-Posteingang?", "feeds"),
+    ("Was steht Neues in meinen Feeds?", "feeds"),
+    ("Lies mir die neuesten Beiträge aus meinen Subreddits vor", "feeds"),
     # Musik machen (musik.py): a song to make, never a document or a search
     ("Mach mir ein Lied über unsere Katze", "musik"),
     ("Komponier mir was Ruhiges zum Einschlafen", "musik"),
