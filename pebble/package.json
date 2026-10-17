@@ -1,7 +1,7 @@
 {
   "name": "speech-spark",
   "author": "Speech on DGX Spark",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "keywords": [
     "pebble-app"
   ],
@@ -19,7 +19,8 @@
     ],
     "capabilities": [
       "configurable",
-      "location"
+      "location",
+      "health"
     ],
     "watchapp": {
       "watchface": false
@@ -56,7 +57,13 @@
       "SYNC",
       "NOTE",
       "BRIEF_ASK",
-      "BRIEF"
+      "BRIEF",
+      "LIST",
+      "LIST_ASK",
+      "REPLY",
+      "REPLYTO",
+      "HEALTH",
+      "HEALTH_ON"
     ],
     "resources": {
       "media": []

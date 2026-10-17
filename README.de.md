@@ -40,6 +40,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.737** Pebble-Uhr: Nachrichten lesen und beantworten, Fernbedienung, Schritte, Puls und Schlaf
 - **V01.0.736** Pebble-Uhr: eigenes Spark-Zifferblatt, Mein Tag und Meine Woche, Schnell merken mit Ort
 - **V01.0.735** Pebble-Uhr 2.0: unterwegs über https, Nachfragen zum Antippen, eigene Schnellbefehle, Erinnerungen und Timer am Handgelenk
 - **V01.0.734** CarPlay: Zuhören bricht im Auto nicht mehr mitten im Satz ab (leisere Stimme zählt, 1,6 s Pause, 15 s ohne Stimme)
@@ -49,7 +50,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.730** Fix Doku: englischer Menüname bei „Lange Gespräche“
 - **V01.0.729** Begleiter aufgeräumt: Fenster mit Fragefeld und Kacheln, Einstellungen mit Seitenmenü
 - **V01.0.728** „Lange Gespräche“ unter Zustand → Modelle (4 Gespräche mit je 64K oder eines mit 256K); Messen zeigt, dass es läuft und was es tut
-- **V01.0.727** Selbsttest-Fix: die Bilder-Tests kennen „Meine Sachen“ in der iPhone-App
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

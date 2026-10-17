@@ -44,6 +44,14 @@ Source of `app/pebble/speech-spark.pbw`, which the panel serves at `/pebble/spee
   with a setup code of its own). Every 15 minutes it sends `REFRESH`; the phone fetches `GET /api/watch/blick` and
   sends `NEXT_T`/`NEXT`, `REM_T`/`REM`, `WX`, `TIP`, `ALERT` (admins; a new one buzzes twice) and `WHERE`. The parts
   are kept in persistent storage. The workflow builds both and puts both files on `pebble-build`.
+- App 2.2: two more fixed entries, C Nachrichten and F Fernbedienung. They send `LIST_ASK` ("C"/"F"); the phone
+  answers with `LIST` ("C" or "F", then one line per chat or per device as "name|letters", one letter per button:
+  u toggle, a on, o off, p play/pause, w next, l louder, s quieter, f up, z down) and the watch opens an ActionMenu.
+  A pick goes back as `LIST_ASK` "c3" or "f2:l", only the place and the letter; the phone keeps the list and calls
+  `GET /api/watch/chat` or `POST /api/watch/fern`. A chat comes as `BRIEF` with `FOLLOW` (the replies, "\x01D" is
+  dictation) and `REPLYTO`; a tapped or dictated reply goes as `REPLY` (`POST /api/watch/chat`). With `HEALTH_ON` 1
+  (sync) the watch adds `HEALTH` "steps|bpm|sleep" (Pebble Health, -1 unknown) to each `SYNC`, and the phone sends it
+  to `POST /api/watch/gesundheit` with the phone's date.
 
 Platforms: emery (Pebble Time 2) and flint (Core 2 Duo) with speaker, gabbro (Pebble Round 2)
 text only.

@@ -110,6 +110,8 @@ DATEIEN = [
     profil("messages-pending.json", "Wartet auf Ja", "Waiting for yes", art="Warteschlange"),
     profil("tasks-pending.json", "Wartet auf Ja", "Waiting for yes", art="Warteschlange"),
     profil("tagebuch.json", "Spark-Tagebuch", "Spark diary", art="Zustand"),
+    profil("gesundheit.json", "Schritte, Puls und Schlaf von der Pebble-Uhr (30 Tage)", "Steps, pulse and sleep from the Pebble watch (30 days)",
+           art="Gesundheit", schutz=("versiegelt", "sealed")),
     profil("docling-wait", "Dateien, bis Docling sie gelesen hat", "Files until Docling has read them", art="Warteschlange"),
     # users/<id>/: written through their own helper, not through profiles._path (never copied)
     profil("mfa.json", "Zweiter Schritt des Profils", "Profile's second step", art="Schlüssel", helfer=True, schutz=("versiegelt", "sealed")),

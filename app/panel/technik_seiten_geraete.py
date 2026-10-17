@@ -404,7 +404,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Telegram, Siri, Uhr
     "kanaele": {
-        "stand": "443e7b4b76",
+        "stand": "62df25be63",
         "bezug": {
             "watch.JOB_TTL": ["s9"], "telegram.loop": ["s1"], "telegram.handle": ["s2", "s3", "s4"],
             "telegram.ask": ["s7", "s8", "s11"], "telegram.transcribe": ["s5"], "chat.siri_ask": ["s1", "s3"],
@@ -412,7 +412,8 @@ SEITEN = {
             "watch.run": ["s8"], "watch.poll": ["s9"], "regeln": ["s1", "s9", "s11"],
             "watch.follow_ups": ["s9"], "watch.follow_clean": ["s9"], "pebblewatch.watch_sync": ["s9"],
             "pebblewatch.watch_reminder": ["s9"], "pebblewatch.watch_blick": ["s9"], "pebblewatch.watch_brief": ["s9"],
-            "pebblewatch.watch_note": ["s9"],
+            "pebblewatch.watch_note": ["s9"], "pebblewatch.watch_chat": ["s9"], "pebblewatch.watch_chat_send": ["s9"],
+            "pebblewatch.reply_clean": ["s9"], "pebblewatch.watch_remote_act": ["s9"], "pebblewatch.watch_health": ["s9"],
         },
         "kurz": ("Telegram, der Siri-Kurzbefehl und die Pebble-Uhr stellen kurze Fragen ohne Browser. Jeder Kanal baut "
                  "daraus eine Anfrage an /api/chat wie ein Gerät, sammelt die Antwort aus dem Strom ein und gibt sie "
@@ -509,7 +510,11 @@ SEITEN = {
                "Minuten über /api/watch/blick den nächsten Termin, die nächste Erinnerung, das Wetter, einen Tipp und "
                "für Admins einen Ausfall; /api/watch/brief baut Mein Tag und Meine Woche aus festen Sätzen, "
                "/api/watch/merken legt einen diktierten Satz ins Gedächtnis (mit Ort auf etwa 100 m nur mit eigenem "
-               "Schalter).",
+               "Schalter). /api/watch/chats und /api/watch/chat zeigen die letzten Chats (ohne private) und schicken "
+               "eine angetippte oder diktierte Antwort über chats.send; bis zu {pebblewatch.REPLY_MAX} Vorschläge "
+               "des Modells prüft pebblewatch.reply_clean fest. /api/watch/fern schaltet nur Geräte der eigenen Liste "
+               "mit festen Tasten (nie mit Smart-Home-Codewort), /api/watch/gesundheit legt Schritte, Puls und Schlaf "
+               "versiegelt ins Profil, nie für das Modell.",
                "Telegram gets plain text and, if the profile wants it, a voice message in its voice. Siri gets "
                "speakable text without passwords and codes. The watch fetches text and sound (packed for its small "
                "speaker, {watch.MAX_AUDIO} bytes per fetch) through /api/watch/poll; at most {watch.MAX_RUNNING} watch "
@@ -521,7 +526,12 @@ SEITEN = {
                "which it rings itself as wake-ups; push waits for it first. The Spark watchface fetches the next appointment, "
                "reminder, weather, a hint and for admins an outage through /api/watch/blick every 15 minutes; "
                "/api/watch/brief builds My day and My week from fixed sentences, /api/watch/merken keeps a dictated "
-               "sentence in memory (with the place to about 100 m only with its own switch).")),
+               "sentence in memory (with the place to about 100 m only with its own switch). /api/watch/chats and "
+               "/api/watch/chat show the latest chats (no private ones) and send a tapped or dictated reply through "
+               "chats.send; up to {pebblewatch.REPLY_MAX} suggestions of the model pass the fixed check "
+               "pebblewatch.reply_clean. /api/watch/fern switches only devices on the own list with fixed buttons "
+               "(never with a smart home code word), /api/watch/gesundheit keeps steps, pulse and sleep sealed in the "
+               "profile, never for the model.")),
             S("s10", "schritt", ("Codewort schwärzen", "Black out the code word"),
               ("Smart-Home-Codewort nie im Verlauf", "smart home code word never in the history"),
               ("Vor dem Speichern wird das Smart-Home-Codewort durch [Codewort] ersetzt. In Telegram löscht der Bot die "
@@ -574,12 +584,16 @@ SEITEN = {
             ("Ich → Telegram: den eigenen Chat verknüpfen; Sprachnachrichten, private Daten, Smart Home und Mitteilungen "
              "einzeln erlauben.",
              "Me → Telegram: link the own chat; allow voice messages, private data, smart home and notes one by one."),
-            ("Ich → Pebble-Uhr: die Uhr koppeln, die Adresse unterwegs (nur https) und die Schnellbefehle.",
-             "Me → Pebble watch: pair the watch, the address on the road (https only) and the quick commands."),
+            ("Ich → Pebble-Uhr: die Uhr koppeln, die Adresse unterwegs (nur https), die Schnellbefehle, die Geräte der "
+             "Fernbedienung und die eigenen Schritte, Puls und Schlaf (ansehen, löschen).",
+             "Me → Pebble watch: pair the watch, the address on the road (https only), the quick commands, the devices of "
+             "the remote and the own steps, pulse and sleep (see, delete)."),
             ("Funktionen → Pebble-Uhr: Nachfragen, Schnellbefehle, Erinnerungen am Handgelenk, Spark-Zifferblatt, Mein Tag "
-             "und meine Woche, Meldungen für Admins, Schnell merken und Ort beim Merken, je ein Schalter (Standard aus).",
+             "und meine Woche, Meldungen für Admins, Schnell merken und Ort beim Merken, Nachrichten, Antwortvorschläge, "
+             "Fernbedienung, Schritte, Puls und Schlaf, je ein Schalter (Standard aus).",
              "Features → Pebble watch: follow-ups, quick commands, reminders on the wrist, Spark watchface, my day and my "
-             "week, notes for admins, quick notes and place with a note, one switch each (default off)."),
+             "week, notes for admins, quick notes and place with a note, messages, reply suggestions, remote, steps, pulse "
+             "and sleep, one switch each (default off)."),
             ("Funktionen → Ein Gespräch für alle Kanäle: alle Kanäle schreiben ins Hauptgespräch des Tages.",
              "Features → One conversation for all channels: every channel writes into the day's main conversation."),
         ],
@@ -609,6 +623,11 @@ SEITEN = {
             ("pebblewatch.watch_blick", ("was das Spark-Zifferblatt zeigt", "what the Spark watchface shows")),
             ("pebblewatch.watch_brief", ("Mein Tag und Meine Woche, feste Sätze", "My day and My week, fixed sentences")),
             ("pebblewatch.watch_note", ("Schnell merken ins Gedächtnis", "quick note into memory")),
+            ("pebblewatch.watch_chat", ("ein Chat auf der Uhr, mit Antworten", "one chat on the watch, with replies")),
+            ("pebblewatch.watch_chat_send", ("Antwort von der Uhr in den Chat", "reply from the watch into the chat")),
+            ("pebblewatch.reply_clean", ("feste Prüfung der Antwortvorschläge", "fixed check of the reply suggestions")),
+            ("pebblewatch.watch_remote_act", ("Fernbedienung: eigene Liste, feste Tasten", "remote: own list, fixed buttons")),
+            ("pebblewatch.watch_health", ("Schritte, Puls, Schlaf versiegelt ins Profil", "steps, pulse, sleep sealed into the profile")),
             ("verlauf.keep", ("Tagesgespräch des Kanals oder Hauptgespräch", "the channel's day conversation or the main one")),
         ],
         "tests": ["test_telegram_tasks", "test_pebble", "test_verlauf_sync", "test_notaus"],

@@ -340,6 +340,15 @@ FEATURES = (
       parent="pebble", me="pebbox", guide="pebblemerken"),
     F("pebbleort", "Uhr: Ort beim Merken", "Watch: place with a note", "go", ("pebble_place", "pebble_note", "memory"),
       parent="pebble", me="pebbox", guide="pebbleort"),
+    # Paket 3: the chats on the watch (with reply suggestions), a remote for picked devices, steps, pulse and sleep
+    F("pebblechat", "Uhr: Nachrichten", "Watch: messages", "go", ("pebble_chat", "chats"),
+      parent="pebble", me="pebbox", guide="pebblechat"),
+    F("pebbleantwort", "Uhr: Antwortvorschläge", "Watch: reply suggestions", "go", ("pebble_reply", "pebble_chat", "chats"),
+      parent="pebble", me="pebbox", guide="pebbleantwort"),
+    F("pebblefern", "Uhr: Fernbedienung", "Watch: remote", "go", ("pebble_remote",),
+      parent="pebble", me="pebbox", guide="pebblefern"),
+    F("pebblegesund", "Uhr: Schritte, Puls und Schlaf", "Watch: steps, pulse and sleep", "go", ("pebble_health",),
+      parent="pebble", me="pebbox", guide="pebblegesund"),
     # spark-tui in a terminal (terminal.py): chat, conversations, Heute and the agent's jobs, paired by a setup line
     F("terminal", "Terminal-Client", "Terminal client", "go", ("terminal",), me="termbox", guide="terminal"),
     # new firmware and app versions for the devices (geraeteupdate.py): overview, notes, speakers at night, XiaoZhi

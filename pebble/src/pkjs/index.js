@@ -14,7 +14,7 @@ var keys = require('message_keys');
 var CHUNK_MAX = 3800;  // audio bytes per AppMessage (fewer Bluetooth round trips)
 var CHUNK_OLD = 1500;  // for watch apps that do not tell their inbox size
 var TEXT_CHUNK = 400;  // answer characters per AppMessage
-var APP_VERSION = '2.1.0';  // same as package.json; the Spark says when it serves a newer one
+var APP_VERSION = '2.2.0';  // same as package.json; the Spark says when it serves a newer one
 var MAX_TURNS = 6;     // earlier question/answer pairs sent along as context
 var TRIES = 10;        // attempts per message before the answer is given up
 var KEEPALIVE = 10000; // ms: tell the watch the answer is still coming
@@ -389,6 +389,7 @@ function setFace(name, always) {
 
 var syncing = false;
 var place = false;   // the admin released "Ort beim Merken": the phone asks for its place (the person allows it)
+var health = false;  // the admin released "Schritte, Puls und Schlaf": the numbers the watch sends go to the Spark
 
 // The watch keeps the quick commands and the next reminders itself (agenda.c): fetched at the start, after an
 // answer that set or cancelled one, when a list opens and after each button on a reminder.
@@ -403,7 +404,11 @@ function sync() {
     var fixed = [];
     if (d.day) fixed.push('\x01TMein Tag', '\x01WMeine Woche');
     if (d.note) fixed.push('\x01MMerken');
+    if (d.chat) fixed.push('\x01CNachrichten');
+    if (d.fern) fixed.push('\x01FFernbedienung');
     place = !!d.place;
+    health = !!d.health;
+    m[keys.HEALTH_ON] = health ? 1 : 0;
     m[keys.QUICK] = fixed.concat((d.quick || []).slice(0, 12).map(function (x) {
       return String(x).replace(/[\x00-\x1f]/g, ' ').substr(0, 60);
     })).join('\n');
@@ -456,6 +461,88 @@ function note(text) {
   navigator.geolocation.getCurrentPosition(go, function () { go(null); }, {timeout: 5000, maximumAge: 300000});
 }
 
+// ------------------------------------------------------------ Nachrichten, Fernbedienung, Pebble Health (Paket 3)
+
+var lists = {C: [], F: []};   // the last list sent to the watch: the watch only answers with a place in it
+var chatOpen = '';            // the chat on the watch's screen, for a reply
+var CODES = {um: 'u', an: 'a', aus: 'o', play: 'p', weiter: 'w', lauter: 'l', leiser: 's', auf: 'f', zu: 'z'};
+
+function flat(v, n) {
+  return String(v || '').replace(/[\x00-\x1f|]/g, ' ').substr(0, n);
+}
+
+function brieflyBack(text) {
+  var m = {};
+  m[keys.BRIEF] = text;
+  send(m);
+}
+
+function listAsk(what) {
+  if (what === 'C') {
+    return request('GET', '/api/watch/chats', null, function (err, d, st) {
+      if (err || !d) return brieflyBack(st === 403 ? 'Im Panel ausgeschaltet.' : 'Gerade nicht erreichbar.');
+      lists.C = (d.chats || []).slice(0, 16);
+      var m = {};
+      m[keys.LIST] = ['C'].concat(lists.C.map(function (c) {
+        return flat(c.title, 24) + (c.unread ? ' (' + (c.unread | 0) + ')' : '');
+      })).join('\n');
+      send(m);
+    });
+  }
+  if (what === 'F') {
+    return request('GET', '/api/watch/fern', null, function (err, d, st) {
+      if (err || !d) return brieflyBack(st === 403 ? 'Im Panel ausgeschaltet.' : 'Gerade nicht erreichbar.');
+      lists.F = (d.items || []).slice(0, 16);
+      var m = {};
+      m[keys.LIST] = ['F'].concat(lists.F.map(function (x) {
+        return flat(x.name, 30) + '|' + (x.acts || []).map(function (a) { return CODES[a] || ''; }).join('').substr(0, 6);
+      })).join('\n');
+      send(m);
+    });
+  }
+  var c = /^c(\d{1,2})$/.exec(what);
+  if (c && lists.C[c[1] | 0]) return openChat(lists.C[c[1] | 0].id);
+  var f = /^f(\d{1,2}):([a-z])$/.exec(what);
+  if (f && lists.F[f[1] | 0]) {
+    var act = Object.keys(CODES).filter(function (k) { return CODES[k] === f[2]; })[0];
+    return request('POST', '/api/watch/fern', {id: lists.F[f[1] | 0].id, act: act}, function (err, d, st) {
+      brieflyBack(err || !d ? (st === 423 ? 'Der Notaus ist an.' : 'Nicht geschaltet.') : flat(d.text, 120));
+    });
+  }
+}
+
+function openChat(id) {
+  request('GET', '/api/watch/chat?id=' + encodeURIComponent(id), null, function (err, d) {
+    if (err || !d) return brieflyBack('Gerade nicht erreichbar.');
+    chatOpen = d.id;
+    var m = {};
+    m[keys.BRIEF] = ((d.items || []).map(function (x) {
+      return flat(x.name, 20) + ': ' + String(x.text || '').replace(/[\x00-\x1f]/g, ' ');
+    }).join('\n\n') || 'Noch keine Nachrichten.').substr(0, 1500);
+    // the replies to tap: the fixed ones, the model's suggestions, and dictation (\x01: a fixed entry, not a text)
+    m[keys.FOLLOW] = (d.replies || []).concat(d.ideas || []).slice(0, 7).map(function (x) {
+      return flat(x, 50);
+    }).concat(['\x01DDiktieren …']).join('\n');
+    m[keys.REPLYTO] = 1;
+    send(m);
+  });
+}
+
+function reply(text) {
+  if (!chatOpen) return brieflyBack('Kein Chat offen.');
+  request('POST', '/api/watch/chat', {id: chatOpen, text: String(text).substr(0, 300)}, function (err, d) {
+    brieflyBack(err || !d || !d.ok ? 'Nicht geschickt. ' + flat(err, 120) : 'Geschickt: ' + String(text).substr(0, 200));
+  });
+}
+
+function healthSend(line) {
+  var v = String(line || '').split('|').map(function (x) { var n = parseInt(x, 10); return isNaN(n) || n < 0 ? null : n; });
+  if (!health || v.length !== 3 || (v[0] === null && v[1] === null && v[2] === null)) return;
+  var now = new Date();
+  var day = now.getFullYear() + '-' + ('0' + (now.getMonth() + 1)).slice(-2) + '-' + ('0' + now.getDate()).slice(-2);
+  request('POST', '/api/watch/gesundheit', {day: day, steps: v[0], bpm: v[1], sleep: v[2]}, function () {});
+}
+
 function reminderAct(id, act, text) {
   var word = ACTS[act];
   if (!word || !/^[0-9a-f]{1,16}$/.test(id)) return;
@@ -495,7 +582,18 @@ Pebble.addEventListener('appmessage', function (e) {
     return;
   }
   if (val(p, 'SYNC') !== undefined) {
+    if (val(p, 'HEALTH') !== undefined) healthSend(val(p, 'HEALTH'));
     sync();
+    return;
+  }
+  var la = val(p, 'LIST_ASK');
+  if (la !== undefined) {
+    listAsk(String(la));
+    return;
+  }
+  var rp = val(p, 'REPLY');
+  if (rp !== undefined) {
+    reply(String(rp));
     return;
   }
   var ba = val(p, 'BRIEF_ASK');

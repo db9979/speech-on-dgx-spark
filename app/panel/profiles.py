@@ -916,6 +916,9 @@ SETTINGS = {
     # Uhr: Schnellbefehle (pebblewatch.py, admin chat.pebble_quick): the profile's own fixed sentences on the watch
     "peb_cmds": ([], lambda v: isinstance(v, list) and len(v) <= 12 and all(
         isinstance(x, str) and 0 < len(x) <= 60 and x == x.strip() and not re.search(r"[\x00-\x1f\x7f]", x) for x in v)),
+    # Uhr: Fernbedienung (pebblewatch.py, admin chat.pebble_remote): the Home Assistant devices picked for the watch
+    "peb_fern": ([], lambda v: isinstance(v, list) and len(v) <= 12 and all(
+        isinstance(x, str) and re.fullmatch(r"[a-z0-9_]{1,64}\.[a-z0-9_]{1,200}", x) for x in v)),
     "report_notify": (True, lambda v: isinstance(v, bool)),   # an admin profile hears of a new report (meldung.tell_admins)
     # iPhone app (iphone.py): pairing for this profile, and switching the smart home from it, both off
     "app_ha": (False, lambda v: isinstance(v, bool)),

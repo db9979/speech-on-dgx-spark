@@ -1,7 +1,9 @@
 // Spark: voice assistant on the watch. SELECT asks (dictation via the phone), the phone
 // fetches the answer from the DGX Spark and sends text plus 8 kHz IMA ADPCM audio,
 // which plays on the watch speaker. Since 2.0: follow-ups to tap (DOWN at the end of an answer), ✓ and ✕ for a
-// proposal, quick commands (UP held) and reminders and timers kept on the watch (DOWN held, agenda.c).
+// proposal, quick commands (UP held) and reminders and timers kept on the watch (DOWN held, agenda.c). Since 2.2:
+// Nachrichten (read a chat, reply with a tap or dictation), Fernbedienung (picked devices, fixed buttons) and the
+// numbers of Pebble Health (only when the admin released them).
 #include <pebble.h>
 #include "face.h"
 #include "agenda.h"
@@ -18,11 +20,15 @@
 #define PERSIST_VOLUME 2
 #define PERSIST_AUTOLISTEN 3
 #define PERSIST_FACE 4
+#define PERSIST_HEALTH 5
+#define PICK_MAX 16            // chats or devices in one list
+#define PICK_LEN 32
+#define ACTS_MAX 6
 #define ANSWER_TIMEOUT 30      // seconds without any message from the phone: give up
 #define SEND_TRIES 6           // attempts for a message to the phone
 #define FREED_EVERY 2          // seconds: repeat the buffer report (it may get lost)
 #define INBOX_MAX 4096
-#define FOLLOW_MAX 3
+#define FOLLOW_MAX 8           // follow-ups (3) or replies in a chat (4 fixed, 3 suggested, dictation)
 #define FOLLOW_LEN 52
 #define PROPOSAL_LEN 300
 
@@ -54,10 +60,14 @@ static AppTimer *s_watchdog;
 typedef enum { OutNone, OutQuestion, OutCancel, OutReset, OutFreed, OutRem, OutSync, OutExtra } OutKind;
 static OutKind s_out;          // what is on its way right now
 static bool s_q_pending, s_cancel_pending, s_reset_pending, s_freed_due, s_sync_pending;
-// Mein Tag, Meine Woche (BRIEF_ASK) or a sentence to keep (NOTE): one at a time, the answer comes as BRIEF
-static char s_extra;               // 'T', 'W', 'N' or 0
+// Mein Tag, Meine Woche (BRIEF_ASK), a sentence to keep (NOTE), a list or a pick of one (LIST_ASK: "C", "F", "c3",
+// "f2:l") or a reply into the open chat (REPLY): one at a time, the answer comes as BRIEF or LIST
+static char s_extra;               // 'T', 'W', 'N', 'L', 'R' or 0
 static char s_note[200];
 static bool s_note_mode;           // the next dictation is a sentence to keep, not a question
+static bool s_reply_mode;          // the text shows a chat: the follow-ups are replies to it
+static bool s_reply_dict;          // the next dictation is a reply into that chat
+static bool s_health_on;           // the admin released steps, pulse and sleep (the phone says so at each sync)
 static int32_t s_cancel_seq;
 static int s_tries;
 static AppTimer *s_retry;
@@ -124,6 +134,23 @@ static void update_text(void) {
 
 static void flush_out(void);
 
+// Pebble Health: today's steps, the last pulse and today's sleep in minutes, "steps|bpm|sleep" (-1: not known)
+static void health_write(DictionaryIterator *it) {
+#if defined(PBL_HEALTH)
+  static char line[40];
+  time_t start = time_start_of_today(), now = time(NULL);
+  int32_t steps = -1, bpm = -1, sleep = -1;
+  if (health_service_metric_accessible(HealthMetricStepCount, start, now) & HealthServiceAccessibilityMaskAvailable)
+    steps = (int32_t)health_service_sum_today(HealthMetricStepCount);
+  if (health_service_metric_accessible(HealthMetricHeartRateBPM, now - 3600, now) & HealthServiceAccessibilityMaskAvailable)
+    bpm = (int32_t)health_service_peek_current_value(HealthMetricHeartRateBPM);
+  if (health_service_metric_accessible(HealthMetricSleepSeconds, start, now) & HealthServiceAccessibilityMaskAvailable)
+    sleep = (int32_t)(health_service_sum_today(HealthMetricSleepSeconds) / 60);
+  snprintf(line, sizeof(line), "%ld|%ld|%ld", (long)steps, (long)bpm, (long)sleep);
+  dict_write_cstring(it, MESSAGE_KEY_HEALTH, line);
+#endif
+}
+
 static void retry_fired(void *ctx) {
   s_retry = NULL;
   flush_out();
@@ -172,9 +199,12 @@ static void flush_out(void) {
       break;
     case OutSync:
       dict_write_int32(it, MESSAGE_KEY_SYNC, 1);
+      if (s_health_on) health_write(it);
       break;
     case OutExtra:
       if (s_extra == 'N') dict_write_cstring(it, MESSAGE_KEY_NOTE, s_note);
+      else if (s_extra == 'L') dict_write_cstring(it, MESSAGE_KEY_LIST_ASK, s_note);
+      else if (s_extra == 'R') dict_write_cstring(it, MESSAGE_KEY_REPLY, s_note);
       else dict_write_cstring(it, MESSAGE_KEY_BRIEF_ASK, s_extra == 'W' ? "woche" : "tag");
       break;
     default:
@@ -424,6 +454,7 @@ static void watchdog_tick(void *ctx) {
 }
 
 static void ask(const char *text) {
+  s_reply_mode = false;
   audio_reset();
   snprintf(s_question, sizeof(s_question), "%s", text);
   s_answer[0] = 0;
@@ -455,6 +486,7 @@ static void extra_send(char kind, const char *title, const char *status) {
   update_text();
   scroll_layer_set_content_offset(s_scroll_layer, GPointZero, false);
   s_extra = kind;
+  if (kind != 'R') s_reply_mode = false;
   s_tries = 0;
   flush_out();
   set_status(status);
@@ -532,6 +564,8 @@ static void confirm_show(void) {
 
 // ---------------------------------------------------------------- follow-ups to tap
 
+static void listen(void);
+
 static int s_follow_pick = -1;
 
 static void follow_perform(ActionMenu *menu, const ActionMenuItem *item, void *ctx) {
@@ -543,7 +577,15 @@ static void follow_closed(ActionMenu *menu, const ActionMenuItem *performed, voi
   if (performed && s_follow_pick >= 0 && s_follow_pick < s_follow_n) {
     static char q[FOLLOW_LEN];
     snprintf(q, sizeof(q), "%s", s_follow[s_follow_pick]);
-    ask(q);   // a new question like a spoken one: the Spark checks it as always
+    if (s_reply_mode && q[0] == 1) {   // "Diktieren …": the next dictation goes into the chat
+      s_reply_dict = true;
+      listen();
+    } else if (s_reply_mode) {
+      snprintf(s_note, sizeof(s_note), "%s", q);
+      extra_send('R', "Antwort", "Schicke …");
+    } else {
+      ask(q);   // a new question like a spoken one: the Spark checks it as always
+    }
   }
   s_follow_pick = -1;
 }
@@ -551,7 +593,8 @@ static void follow_closed(ActionMenu *menu, const ActionMenuItem *performed, voi
 static void follow_open(void) {
   ActionMenuLevel *root = action_menu_level_create(s_follow_n);
   for (int i = 0; i < s_follow_n; i++) {
-    action_menu_level_add_action(root, s_follow[i], follow_perform, (void *)(intptr_t)i);
+    const char *label = s_follow[i][0] == 1 && s_follow[i][1] ? s_follow[i] + 2 : s_follow[i];
+    action_menu_level_add_action(root, label, follow_perform, (void *)(intptr_t)i);
   }
   ActionMenuConfig cfg = {
     .root_level = root,
@@ -561,6 +604,104 @@ static void follow_open(void) {
   };
   s_follow_pick = -1;
   action_menu_open(&cfg);
+}
+
+// ---------------------------------------------------------------- Nachrichten and Fernbedienung: a list to pick from
+
+// The phone sends LIST: "C" or "F", then one line per chat ("title (2)") or per device ("name|codes", one letter per
+// button). The watch only sends back the place in the list and the button's letter; the phone and the Spark know
+// what it means and check it again.
+static char s_pick_kind;
+static char s_pick[PICK_MAX][PICK_LEN];
+static char s_pick_acts[PICK_MAX][ACTS_MAX + 1];
+static int s_pick_n;
+static int s_pick_sel = -1;
+
+static const char *act_word(char c) {
+  switch (c) {
+    case 'u': return "Umschalten";
+    case 'a': return "An";
+    case 'o': return "Aus";
+    case 'p': return "Play/Pause";
+    case 'w': return "Weiter";
+    case 'l': return "Lauter";
+    case 's': return "Leiser";
+    case 'f': return "Auf";
+    case 'z': return "Zu";
+    default: return "?";
+  }
+}
+
+static void pick_perform(ActionMenu *menu, const ActionMenuItem *item, void *ctx) {
+  s_pick_sel = (int)(intptr_t)action_menu_item_get_action_data(item);
+}
+
+static void pick_closed(ActionMenu *menu, const ActionMenuItem *performed, void *ctx) {
+  action_menu_hierarchy_destroy(action_menu_get_root_level(menu), NULL, NULL);
+  int sel = s_pick_sel;
+  s_pick_sel = -1;
+  if (!performed || sel < 0) return;
+  int i = sel / 16, a = sel % 16;
+  if (i >= s_pick_n) return;
+  if (s_pick_kind == 'C') {
+    snprintf(s_note, sizeof(s_note), "c%d", i);
+    extra_send('L', s_pick[i], "Hole den Chat …");
+  } else if (a < (int)strlen(s_pick_acts[i])) {
+    snprintf(s_note, sizeof(s_note), "f%d:%c", i, s_pick_acts[i][a]);
+    extra_send('L', s_pick[i], "Schalte …");
+  }
+}
+
+static void pick_open(void) {
+  if (!s_pick_n) {
+    set_status(s_pick_kind == 'C' ? "Keine Chats" : "Keine Geräte");
+    return;
+  }
+  ActionMenuLevel *root = action_menu_level_create(s_pick_n);
+  for (int i = 0; i < s_pick_n; i++) {
+    if (s_pick_kind == 'C') {
+      action_menu_level_add_action(root, s_pick[i], pick_perform, (void *)(intptr_t)(i * 16));
+      continue;
+    }
+    int n = strlen(s_pick_acts[i]);
+    ActionMenuLevel *sub = action_menu_level_create(n ? n : 1);
+    for (int a = 0; a < n; a++) {
+      action_menu_level_add_action(sub, act_word(s_pick_acts[i][a]), pick_perform, (void *)(intptr_t)(i * 16 + a));
+    }
+    action_menu_level_add_child(root, sub, s_pick[i]);
+  }
+  ActionMenuConfig cfg = {
+    .root_level = root,
+    .colors = {.background = PBL_IF_COLOR_ELSE(GColorJaegerGreen, GColorBlack), .foreground = GColorWhite},
+    .align = ActionMenuAlignTop,
+    .did_close = pick_closed,
+  };
+  s_pick_sel = -1;
+  action_menu_open(&cfg);
+}
+
+static void pick_set(const char *p) {
+  s_pick_kind = *p;
+  s_pick_n = 0;
+  p = strchr(p, '\n');
+  while (p && *++p && s_pick_n < PICK_MAX) {
+    const char *end = strchr(p, '\n');
+    size_t len = end ? (size_t)(end - p) : strlen(p);
+    const char *bar = memchr(p, '|', len);
+    size_t name = bar ? (size_t)(bar - p) : len;
+    if (name >= PICK_LEN) name = PICK_LEN - 1;
+    memcpy(s_pick[s_pick_n], p, name);
+    s_pick[s_pick_n][name] = 0;
+    size_t acts = bar ? len - name - 1 : 0;
+    if (bar && acts > ACTS_MAX) acts = ACTS_MAX;
+    if (bar) memcpy(s_pick_acts[s_pick_n], bar + 1, acts);
+    s_pick_acts[s_pick_n][acts] = 0;
+    if (name) s_pick_n++;
+    p = end;
+  }
+  idle_status();
+  face_set_mode(FaceIdle);
+  pick_open();
 }
 
 // The answer is complete when the text is in and, if speech was coming, its end too.
@@ -580,9 +721,15 @@ static void finish_if_done(void) {
 static void dictation_done(DictationSession *session, DictationSessionStatus status,
                            char *transcription, void *ctx) {
   s_dict_ms = (int32_t)(time(NULL) - s_dict_start) * 1000;
-  bool note = s_note_mode;
+  bool note = s_note_mode, reply = s_reply_dict;
   s_note_mode = false;
+  s_reply_dict = false;
   if (status == DictationSessionStatusSuccess && transcription && transcription[0]) {
+    if (reply) {   // a reply into the chat on the screen
+      snprintf(s_note, sizeof(s_note), "%s", transcription);
+      extra_send('R', "Antwort", "Schicke …");
+      return;
+    }
     if (note) {   // Schnell merken: the sentence goes to the memory, not to the chat
       snprintf(s_note, sizeof(s_note), "%s", transcription);
       extra_send('N', "Merken", "Wird gemerkt …");
@@ -773,7 +920,15 @@ static void inbox_received(DictionaryIterator *it, void *context) {
   if ((t = dict_find(it, MESSAGE_KEY_PROPOSAL))) {
     snprintf(s_proposal, sizeof(s_proposal), "%s", t->value->cstring);
   }
+  if ((t = dict_find(it, MESSAGE_KEY_HEALTH_ON))) {
+    s_health_on = t->value->int32 != 0;
+    persist_write_bool(PERSIST_HEALTH, s_health_on);
+  }
+  if ((t = dict_find(it, MESSAGE_KEY_LIST))) {
+    pick_set(t->value->cstring);
+  }
   if ((t = dict_find(it, MESSAGE_KEY_BRIEF))) {
+    s_reply_mode = dict_find(it, MESSAGE_KEY_REPLYTO) != NULL;   // a chat: DOWN at its end replies
     snprintf(s_answer, sizeof(s_answer), "%s", t->value->cstring);
     update_text();
     idle_status();
@@ -865,6 +1020,10 @@ static void ask_from_list(const char *text) {
       s_note_mode = true;
       listen();
     }
+    else if (text[1] == 'C' || text[1] == 'F') {
+      snprintf(s_note, sizeof(s_note), "%c", text[1]);
+      extra_send('L', text[1] == 'C' ? "Nachrichten" : "Fernbedienung", "Hole die Liste …");
+    }
     return;
   }
   ask(text);   // a quick command goes like a spoken question
@@ -875,6 +1034,7 @@ static void init(void) {
   if (persist_exists(PERSIST_VOLUME)) s_volume = persist_read_int(PERSIST_VOLUME);
   if (persist_exists(PERSIST_AUTOLISTEN)) s_autolisten = persist_read_bool(PERSIST_AUTOLISTEN);
   if (persist_exists(PERSIST_FACE)) face_set_kind(persist_read_int(PERSIST_FACE));
+  if (persist_exists(PERSIST_HEALTH)) s_health_on = persist_read_bool(PERSIST_HEALTH);
 #if defined(PBL_SPEAKER)
   s_ring = malloc(RING_SIZE);
 #endif

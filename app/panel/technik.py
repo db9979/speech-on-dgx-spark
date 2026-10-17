@@ -452,7 +452,7 @@ SCHRITTE = [
 INHALT, VERSCHLUESSELT, USERS_SONST = dateien.INHALT, dateien.VERSCHLUESSELT, dateien.USERS_SONST
 USERS_GLOBAL, STATE_SONST = dateien.USERS_GLOBAL, dateien.STATE_SONST
 # the kinds of dateien.LOCAL and USERS_SONST in English
-KAT_EN = {"Einstellungen": "Settings", "Zustand": "State", "Login": "Login", "Gerät": "Device", "Stimmabdruck": "Voiceprint",
+KAT_EN = {"Einstellungen": "Settings", "Gesundheit": "Health", "Zustand": "State", "Login": "Login", "Gerät": "Device", "Stimmabdruck": "Voiceprint",
           "Schlüssel": "Key", "noch nicht angeboten": "not offered yet", "Warteschlange": "Queue",
           "alte Sprachnachrichten (bis zur Übernahme in die Chats)": "old voice messages (until moved into the chats)"}
 # the Spark's own places outside state/ and users/

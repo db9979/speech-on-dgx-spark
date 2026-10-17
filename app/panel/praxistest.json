@@ -1590,6 +1590,13 @@
 "titel": "Spark-Zifferblatt, Tag, Woche und Merken",
 "text": "A: Unter Funktionen → Pebble-Uhr die Unterschalter Zifferblatt, Mein Tag und Meine Woche, Meldungen am Handgelenk, Schnell merken und Ort beim Merken einschalten. Unter Ich → Pebble-Uhr den QR-Code „Zifferblatt“ laden, in den Zifferblatt-Einstellungen einen neuen Einrichtungscode einfügen. Das Zifferblatt zeigt Uhrzeit, nächsten Termin, nächste Erinnerung und Wetter. In der Uhr-App oben „Mein Tag“ öffnen: einige Sätze zu Terminen, Erinnerungen und Wetter erscheinen, die Uhr vibriert. „Merken“ öffnen, „Schlüssel liegt im Flur“ diktieren: unter Ich → Gedächtnis steht der Satz mit Ort.",
 "thread": "Pebble-Uhr erweitern"
+},
+{
+"id": "P251",
+"v": 737,
+"titel": "Pebble-Uhr: Nachrichten, Fernbedienung, Schritte",
+"text": "A: Unter Funktionen → Pebble-Uhr die Unterschalter Nachrichten, Antwortvorschläge, Fernbedienung sowie Schritte, Puls und Schlaf einschalten und die Uhr-App 2.2 über den QR-Code unter Ich → Pebble-Uhr laden. Unter Ich → Pebble-Uhr den Fernseher und ein Licht anhaken, „Geräte speichern“. Auf der Uhr lang OBEN, „Nachrichten“, einen Chat öffnen: die letzten Nachrichten stehen da, UNTEN am Ende „Bin unterwegs“ antippen; im Panel steht die Antwort im Chat. „Fernbedienung“, Fernseher, „Aus“: der Fernseher geht aus. Nach dem nächsten Öffnen der App stehen unter Ich → Pebble-Uhr die Schritte des Tages; „Alle löschen“ leert sie.",
+"thread": "Pebble-Uhr erweitern"
 }
 ]
 }

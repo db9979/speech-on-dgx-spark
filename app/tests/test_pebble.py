@@ -43,7 +43,8 @@ class Pebble(unittest.TestCase):
     def tearDown(self):
         helpers.set_config(pebble=False, face="robot", deny={}, pebble_follow=False, pebble_quick=False,
                            pebble_remind=False, pebble_face=False, pebble_day=False, pebble_alerts=False,
-                           pebble_note=False, pebble_place=False)
+                           pebble_note=False, pebble_place=False, pebble_chat=False, pebble_reply=False,
+                           pebble_remote=False, pebble_health=False, chats=False)
 
     def watch_of(self, name):
         """A paired watch of a new profile: (its client, the key header, the profile's id)."""
@@ -63,7 +64,7 @@ class Pebble(unittest.TestCase):
         with open(helpers.APP + "/config.default.json") as f:
             chat = json.load(f)["chat"]
         for key in ("pebble_follow", "pebble_quick", "pebble_remind", "pebble_face", "pebble_day", "pebble_alerts",
-                    "pebble_note", "pebble_place"):   # each extra its own admin switch, off
+                    "pebble_note", "pebble_place", "pebble_chat", "pebble_reply", "pebble_remote", "pebble_health"):   # each extra its own admin switch, off
             self.assertIs(chat[key], False, key)
             self.assertNotIn(key, profiles.SETTINGS)
 
@@ -80,7 +81,8 @@ class Pebble(unittest.TestCase):
     def test_sync_sends_only_what_the_admin_released(self):
         a, app, h, uid = self.watch_of("Pebline")
         r = app.get("/api/watch/sync", headers=h).json()
-        self.assertEqual(r, {"quick": [], "agenda": None, "follow": False, "day": False, "note": False, "place": False})   # all off: nothing on the watch
+        self.assertEqual(r, {"quick": [], "agenda": None, "follow": False, "day": False, "note": False, "place": False,
+                             "chat": False, "fern": False, "health": False})   # all off: nothing on the watch
         self.assertEqual(a.put("/api/profile/pebble/quick", json={"quick": ["Licht an"]}).status_code, 403)
         helpers.set_config(pebble_quick=True, pebble_remind=True, pebble_follow=True)
         for bad in ({"quick": "Licht an"}, {"quick": ["x" * 61]}, {"quick": [f"Satz {i}" for i in range(13)]}):
@@ -263,6 +265,110 @@ class Pebble(unittest.TestCase):
             self.assertEqual(app.post("/api/watch/merken", json=body, headers=h).status_code, 403)
         finally:
             helpers.set_config(memory=True)
+
+    def test_chats_on_the_watch_read_and_reply(self):
+        a, app, h, uid = self.watch_of("Pebcha")
+        b = profile("Pebchb")
+        helpers.set_config(chats=True)
+        cid = b.post("/api/chats/open", json={"to": uid}).json()["id"]
+        self.assertEqual(b.post("/api/chats/send", json={"id": cid, "text": "Kommst du heute?"}).status_code, 200)
+        self.assertEqual(app.get("/api/watch/chats", headers=h).status_code, 403)   # its own switch, off
+        self.assertFalse(app.get("/api/watch/sync", headers=h).json()["chat"])
+        helpers.set_config(pebble_chat=True)
+        self.assertTrue(app.get("/api/watch/sync", headers=h).json()["chat"])
+        lst = app.get("/api/watch/chats", headers=h).json()["chats"]
+        self.assertEqual([(x["id"], x["unread"], x["last"]) for x in lst], [(cid, 1, "Kommst du heute?")])
+        r = app.get("/api/watch/chat", params={"id": cid}, headers=h).json()
+        self.assertEqual([(x["name"], x["text"]) for x in r["items"]], [("Pebchb", "Kommst du heute?")])
+        self.assertEqual((r["replies"], r["ideas"]), (list(pebblewatch.REPLIES), []))   # suggestions: own switch
+        self.assertEqual(app.get("/api/watch/chats", headers=h).json()["chats"][0]["unread"], 0)   # read now
+        self.assertEqual(app.get("/api/watch/chat", params={"id": "c" + "0" * 12}, headers=h).status_code, 404)
+        self.assertEqual(app.post("/api/watch/chat", json={"id": cid, "text": " "}, headers=h).status_code, 400)
+        self.assertEqual(app.post("/api/watch/chat", json={"id": cid, "text": "Bin unterwegs"}, headers=h).json(), {"ok": True})
+        self.assertEqual(b.get("/api/chats/items", params={"id": cid}).json()["items"][-1]["text"], "Bin unterwegs")
+        helpers.set_config(chats=False)   # the chats themselves off: nothing on the watch either
+        self.assertEqual(app.get("/api/watch/chats", headers=h).status_code, 403)
+        self.assertEqual(app.post("/api/watch/chat", json={"id": cid, "text": "x"}, headers=h).status_code, 403)
+
+    def test_reply_suggestions_are_checked_by_the_panel(self):
+        raw = ["Gern, bis gleich", "Klick https://x.example", "Ruf 01701234567 an", "Schick mir 50 €", "Okay",
+               "Gern, bis gleich", "**Bin da**", "Dein Code bitte", "x" * 41, 7, "Klar!"]
+        self.assertEqual(pebblewatch.reply_clean(raw), ["Gern, bis gleich", "Bin da", "Klar!"])
+        self.assertEqual(pebblewatch.reply_clean("kein Array"), [])
+
+    def test_remote_only_picked_devices_and_fixed_buttons(self):
+        a, app, h, uid = self.watch_of("Pebfern")
+        self.assertEqual(app.get("/api/watch/fern", headers=h).status_code, 403)
+        helpers.set_config(pebble_remote=True)
+        self.assertEqual(app.get("/api/watch/fern", headers=h).json(), {"items": []})   # no HA, no speakers
+        r = a.put("/api/profile/pebble/fern", json={"ids": ["media_player.tv", "light.flur", "media_player.tv", "rm -rf"]})
+        self.assertEqual(r.json()["picked"], ["media_player.tv", "light.flur"])   # the form is checked, doubles dropped
+        self.assertEqual(a.put("/api/profile/pebble/fern", json={"ids": [f"light.l{i}" for i in range(13)]}).status_code, 400)
+        self.assertEqual(pebblewatch.remote_of(uid), ["media_player.tv", "light.flur"])
+        for body in ({"id": "lock.haustuer", "act": "auf"}, {"id": "light.flur", "act": "play"},
+                     {"id": "media_player.tv", "act": "unlock"}, {"id": "spk:nix", "act": "lauter"}):
+            self.assertEqual(app.post("/api/watch/fern", json=body, headers=h).status_code, 400, body)
+        # a picked device without Home Assistant: refused, nothing called
+        self.assertEqual(app.post("/api/watch/fern", json={"id": "light.flur", "act": "um"}, headers=h).status_code, 403)
+        self.assertEqual(pebblewatch._acts("media_player.tv"), ("an", "aus", "play", "weiter", "lauter", "leiser"))
+        self.assertEqual(pebblewatch._acts("cover.wohnzimmer"), ("auf", "zu"))
+        self.assertTrue(all(a in pebblewatch.ACTIONS for v in pebblewatch.DOMAIN_ACTS.values() for a in v))
+        from unittest import mock
+        import homeassistant
+        calls = []
+
+        async def targets(u):
+            return [{"id": "light.flur", "name": "Flur", "room": "", "info": "off"}]
+
+        async def action(item, eid, service, data=None):
+            calls.append((eid, service))
+            return True, "ok"
+        with mock.patch.object(homeassistant, "get", lambda u: {"url": "http://ha"}), \
+                mock.patch.object(homeassistant, "targets_for", targets), mock.patch.object(homeassistant, "action", action), \
+                mock.patch.object(homeassistant, "diary", lambda *a, **k: False):
+            helpers.set_config(homeassistant=True)   # the test default, said here
+            try:
+                # only what is picked AND still switchable in Home Assistant, with its fixed buttons
+                self.assertEqual(app.get("/api/watch/fern", headers=h).json()["items"],
+                                 [{"id": "light.flur", "name": "Flur", "acts": ["um", "an", "aus"],
+                                   "words": ["Umschalten", "An", "Aus"]}])
+                r = app.post("/api/watch/fern", json={"id": "light.flur", "act": "um"}, headers=h).json()
+                self.assertEqual((r["ok"], calls), (True, [("light.flur", "toggle")]))
+                with mock.patch.object(homeassistant, "needs_code", lambda item: True):   # a code word: never from the watch
+                    self.assertEqual(app.post("/api/watch/fern", json={"id": "light.flur", "act": "an"}, headers=h).status_code, 403)
+                    self.assertEqual(app.get("/api/watch/fern", headers=h).json()["items"], [])
+                self.assertEqual(len(calls), 1)
+            finally:
+                helpers.set_config(homeassistant=True)
+        helpers.set_config(deny={"pebblefern": [uid]})   # blocked: the own list is still the profile's to delete
+        import features
+        self.assertEqual(features.OWN["pebblefern"][0](uid), 2)
+        features.OWN["pebblefern"][1](uid)
+        self.assertEqual(pebblewatch.remote_of(uid), [])
+
+    def test_health_numbers_sealed_seen_and_deleted(self):
+        a, app, h, uid = self.watch_of("Pebgesu")
+        body = {"day": "2026-03-04", "steps": 8123, "bpm": 61, "sleep": 431}
+        self.assertEqual(app.post("/api/watch/gesundheit", json=body, headers=h).status_code, 403)
+        self.assertFalse(app.get("/api/watch/sync", headers=h).json()["health"])
+        helpers.set_config(pebble_health=True)
+        self.assertTrue(app.get("/api/watch/sync", headers=h).json()["health"])
+        for bad in ({"day": "gestern", "steps": 1}, {"day": "2026-03-04"}, {"day": "2026-03-04", "bpm": 999}):
+            self.assertEqual(app.post("/api/watch/gesundheit", json=bad, headers=h).status_code, 400, bad)
+        self.assertEqual(app.post("/api/watch/gesundheit", json=body, headers=h).json(), {"ok": True})
+        self.assertEqual(app.post("/api/watch/gesundheit", json={"day": "2026-03-04", "steps": 9000}, headers=h).status_code, 200)
+        self.assertEqual(app.post("/api/watch/gesundheit", json={"day": "2026-03-05", "steps": 12}, headers=h).status_code, 200)
+        days = a.get("/api/profile/pebble/gesundheit").json()["days"]
+        self.assertEqual(days, [{"day": "2026-03-05", "steps": 12, "bpm": None, "sleep": None},
+                                {"day": "2026-03-04", "steps": 9000, "bpm": 61, "sleep": 431}])   # one line per day
+        with open(profiles._path(uid, pebblewatch.HEALTH_FILE)) as f:
+            stored = f.read()
+        self.assertNotIn("9000", stored)   # sealed at rest
+        self.assertIn(app.get("/api/profile/pebble/gesundheit", headers=h).status_code, (401, 403))   # never with the watch key
+        helpers.set_config(pebble_health=False)   # off: still seen and deleted
+        self.assertEqual(len(a.get("/api/profile/pebble/gesundheit").json()["days"]), 2)
+        self.assertEqual(a.delete("/api/profile/pebble/gesundheit/alle").json()["days"], [])
+        self.assertEqual(pebblewatch.health(uid), [])
 
     def test_run_keeps_proposal_and_reminder_marks(self):
         class Stream:

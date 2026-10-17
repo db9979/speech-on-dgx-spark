@@ -49,6 +49,8 @@ OHNE = {
     "pebblemeldung": "keine eigenen Daten: die Meldungen gehören zum Dienst-Wächter",
     "pebblemerken": "keine eigenen Daten: das Gemerkte liegt im Gedächtnis (Ich → Gedächtnis)",
     "pebbleort": "keine eigenen Daten: der Ort steht im gemerkten Satz im Gedächtnis",
+    "pebblechat": "keine eigenen Daten: die Nachrichten gehören zu den Chats",
+    "pebbleantwort": "keine eigenen Daten: die Vorschläge leben nur mit dem Abruf im Speicher",
     "iphonepanel": "keine eigenen Daten (Unterschalter der iPhone-App)",
     "schreibapps": "keine eigenen Daten (Unterschalter der Schreibhilfe)",
     "begleitertun": "keine eigenen Daten (Unterschalter des Begleiters)",
