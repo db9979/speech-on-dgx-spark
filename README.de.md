@@ -40,6 +40,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.740** Rot-Fix: der Kiwix-Selbsttest stellt die Weiche selbst ab
 - **V01.0.739** Reddit und Feeds: eigenen Reddit-Posteingang, Subreddits und Feeds verbinden, Neues kommt sofort oder im Tagesbrief
 - **V01.0.738** Steuerzentrale farbiger: Kästen mit Farbfläche und runden Ecken, Werkzeuge nennt die zuletzt benutzten
 - **V01.0.737** Pebble-Uhr: Nachrichten lesen und beantworten, Fernbedienung, Schritte, Puls und Schlaf
@@ -49,7 +50,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.733** Anrufe im Chat stehen auf Live, Monitoring und der Steuerzentrale jetzt auch unter Geräte (Browser oder iPhone-App, „Anruf“), vom Klingeln bis zum Auflegen
 - **V01.0.732** Android-App wie die iPhone-App: Spark als Assistent über jeder App, Widget, Kachel, Kurzbefehle, Fotos und Dateien teilen, Fingerabdruck für Admins
 - **V01.0.731** Telefon: ein laufendes Gespräch steht unter den Geräten in Live, Monitoring und Steuerzentrale
-- **V01.0.730** Fix Doku: englischer Menüname bei „Lange Gespräche“
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

@@ -40,6 +40,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.740** Self-test fix: the Kiwix test switches the Weiche off itself
 - **V01.0.739** Reddit and feeds: connect your own Reddit inbox, subreddits and feeds, news comes at once or in the daily briefing
 - **V01.0.738** Control centre in colour: boxes with a surface and round corners, the tools box names the tools used last
 - **V01.0.737** Pebble watch: read and answer messages, remote, steps, pulse and sleep
@@ -49,7 +50,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.733** Chat calls now also show under devices on Live, monitoring and the Steuerzentrale (browser or iPhone app, "Anruf"), from ringing to hanging up
 - **V01.0.732** Android app like the iPhone app: Spark as assistant over any app, widget, tile, shortcuts, sharing photos and files, fingerprint for admins
 - **V01.0.731** Phone: a running call shows under the devices in Live, Monitoring and the control centre
-- **V01.0.730** Docs fix: English menu name for "Long conversations"
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

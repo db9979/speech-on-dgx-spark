@@ -237,6 +237,9 @@ class Tools(unittest.TestCase):
 
     def test_wikipedia_from_the_kiwix_without_internet(self):
         a = profile("Archiv2")
+        # shipped on (Grundausstattung): the Weiche would narrow "wikipedia" to wikipedia + article_more only
+        helpers.keep_chat(self, "routing")
+        helpers.set_config(routing=False)
         # online Wikipedia stays off (chat.wiki)
         helpers.LLM_CALLS.clear()
         out = ask(a, "TOOL wikipedia {\"query\": \"Quasar\"}")
