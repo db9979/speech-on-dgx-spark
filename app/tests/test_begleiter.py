@@ -1584,9 +1584,32 @@ class Labels(unittest.TestCase):
             self.assertIn(".fixedSize(horizontal: true, vertical: false)", body, style)
         tray = self.src("mac", "Sources", "TrayPanel.swift")
         foot = tray[tray.index("private var footer"):tray.index("private func go(")]
-        self.assertIn("ViewThatFits(in: .horizontal)", foot)               # narrow: the coffee pill moves down
+        self.assertEqual(foot.count(".fixedSize()"), 2, foot)             # "Panel öffnen" and "Notaus …" never break
+
+    def test_coffee_only_under_about(self):
+        """Dominik 2026-10-17 ("Begleiter aufpolieren" 3a): the coffee is no longer in the tray window, only quietly
+        in Einstellungen → Über und Update, on Windows and on the Mac."""
+        self.assertNotIn("Coffee", self.src("mac", "Sources", "TrayPanel.swift"))
+        self.assertNotIn("Coffee", self.src("windows", "TrayPanel.cs"))
+        mac = self.src("mac", "Sources", "SettingsView.swift")
+        about = mac[mac.index("private var about: some View"):]
+        self.assertEqual(mac.count("CoffeePill("), 1)
+        self.assertIn("CoffeePill(", about[:about.index("\n    }\n")])
+        win = self.src("windows", "SettingsForm.cs")
+        about = [line for line in win.splitlines() if "_coffee," in line or "_coffee }" in line]
+        self.assertEqual(len(about), 1, about)
+        self.assertIn("_pageAbout.Controls.AddRange(", about[0])
+
+    def test_settings_have_a_side_menu(self):
+        """2a: the settings window has a side menu like the panel instead of tabs on top."""
+        mac = self.src("mac", "Sources", "SettingsView.swift")
+        self.assertIn("NavRow(", mac)
+        self.assertNotIn(".pickerStyle(.segmented)", mac[:mac.index("private var sidebar")])
+        win = self.src("windows", "SettingsForm.cs")
+        self.assertIn("ButtonKind.Nav", win)
+        self.assertNotIn("TabControl", win)
 
     def test_windows_panel_grows_with_its_footer(self):
         tray = self.src("windows", "TrayPanel.cs")
         self.assertIn("width = Math.Max(width, foot + (2 * pad));", tray)
-        self.assertIn("_settings.Preferred().Width", tray)
+        self.assertIn("_panel.Preferred().Width", tray)

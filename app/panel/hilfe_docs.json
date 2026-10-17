@@ -4508,6 +4508,14 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Begleiter aufgeräumt (V01.0.729, Dominik 2026-10-17)",
+"text": "Begleiter aufgeräumt (V01.0.729, Dominik 2026-10-17): Das Fenster beim Klick aufs Gesicht ist neu geordnet: oben Gruß, Gerät und Zustand als Punkt, rechts Zahnrad (Einstellungen) und ✕ bzw. Ein/Aus; darunter das Feld „Frag Spark …“ (Enter fragt, das Mikrofon fragt per Sprache), die Befehle als Kacheln mit Tastenkürzel und Abschnitte wie im Panel: Als Nächstes, Meldungen (Windows), Zuhause und „Dieser Rechner“ bzw. „Dieser Mac“ mit Schaltern für Mikrofon und Weckwort und, wenn „Am PC handeln“ an ist, der Zeile „Am PC handeln … Einstellen“ (eine laufende Bildschirm-Sitzung lässt sich am PC dort auch beenden). Unten „Panel öffnen“ und „Notaus …“. Die Einstellungen haben links ein Seitenmenü wie das Panel (Übersicht mit Zustand und den im Panel eingeschalteten Teilen, Frag Spark, Tastenkürzel, Tagesstart, Wissen-Ordner, darunter „Gerät“ mit Kopplung und Über und Update; am Mac zusätzlich Berechtigungen); Seiten von Teilen, die aus sind, fehlen. Der Kaffee-Knopf steht nur noch leise unter Über und Update. An den Teilen, Rechten und Daten ändert sich nichts."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Raum-Modus",
 "text": "Raum-Modus (Funktionen → „Raum-Modus“, standardmäßig aus; nur Profile): Der Schalter „Raum“ unter dem Gesicht lässt den Assistenten an diesem Gerät für eine gewählte Zeit (15 Minuten bis 4 Stunden, endet von selbst) dem Gespräch im Raum zuhören; ein oranger Punkt zeigt es an. In einer Pause hilft er, wenn ein fester Auslöser fiel: eine offene Frage („Wann wurde eigentlich …?“, mit Websuche, im Zweifel nichts), ein Termin („Freitag um 10 zum Zahnarzt“ → „Soll ich das eintragen?“), „kalt“, „zu warm“ oder „zu dunkel“ (die echte Temperatur des Raums aus Home Assistant und das Angebot, die Heizung um ein Grad zu ändern oder das Licht anzumachen) und Einkäufe („Wir brauchen noch Milch“ → Einkaufsliste in Home Assistant). Geändert wird nur nach einem „Ja“, bei Smart Home mit Codewort, wenn eines gesetzt ist. Im Fenster „Ich“ unter „Raum-Modus“ stellt jedes Gerät ein: Dauer, wie viel er sagen darf (nur Fragen, auch Hinweise, auch Kommentare), jede Art einzeln, den Raum des Geräts in Home Assistant und „Nur als Text“ (still im Verlauf statt gesprochen). Das Gehörte bleibt nur fünf Minuten im Arbeitsspeicher des Panels und wird nie gespeichert; Gedächtnis, Mails und frühere Gespräche nutzt d"
 },
@@ -11758,6 +11766,14 @@
 "head": "Voice chat",
 "title": "Speaking into the companion windows (V01.0.466)",
 "text": "Speaking into the companion windows (V01.0.466): with the part \"Dictation\" on, every free text field in the companion windows has a mic button: \"Draft a reply\" (notes and mail text), \"Improve text\" (wish, source text, result), \"Ask about the screen\" (question) and, as before, \"Ask Spark\". First click starts, the second (■) stops the recording (at most 60 seconds); the Spark recognizes the text, it goes to the cursor or the end and is never run. So the Outlook classic buttons \"Draft a reply\" and \"Improve text\" can be used by voice too. Never in code word or password fields. The Office add-ins in Word, Excel and new Outlook have no mic button. Button labels never break inside a word; if the Mac panel is too narrow, \"Spark unterstützen\" moves to its own line."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Companion tidied up (V01.0.729, Dominik 2026-10-17)",
+"text": "Companion tidied up (V01.0.729, Dominik 2026-10-17): the window on clicking the face is reordered: at the top a greeting, device and state as a dot, on the right a gear (settings) and ✕ or power; below the field \"Frag Spark …\" (Enter asks, the microphone asks by voice), the commands as tiles with their hotkey and sections like in the panel: next up, notes (Windows), home and \"this computer\" or \"this Mac\" with switches for microphone and wake word and, when \"act on the PC\" is on, the row \"act on the PC … set up\" (a running screen session can also be ended there on the PC). At the bottom \"Open panel\" and \"Notaus …\". The settings have a side menu like the panel (overview with the state and the parts switched on in the panel, Ask Spark, hotkeys, start of the day, knowledge folder, below \"device\" with pairing and About and update; on the Mac also permissions); pages of parts that are off are left out. The coffee button is only in About and update now, quietly. Parts, rights and data are unchanged."
 },
 {
 "lang": "en",

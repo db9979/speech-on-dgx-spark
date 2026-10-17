@@ -8,12 +8,12 @@ internal sealed class ActSettingsForm : ThemedForm
 {
     private readonly AppConfig _config;
     private readonly Action _changed;
-    private readonly TLabel _autoHeading = new(TextRole.Heading, "Ohne Rückfrage");
+    private readonly TLabel _autoHeading = new(TextRole.Section, "OHNE RÜCKFRAGE");
     private readonly TLabel _autoNote = new(TextRole.SmallMuted,
         "Eingeschaltete Arten führt der Begleiter sofort aus, wenn du den Spark darum bittest, und zeigt danach einen Hinweis. " +
         "Seiten öffnen, Text tippen und Text zeigen fragen immer.");
     private readonly List<(string Kind, ToggleSwitch Switch)> _autos = new();
-    private readonly TLabel _scriptHeading = new(TextRole.Heading, "Kurzbefehle");
+    private readonly TLabel _scriptHeading = new(TextRole.Section, "KURZBEFEHLE");
     private readonly TLabel _scriptNote = new(TextRole.SmallMuted,
         "Skripte (.ps1, .bat, .cmd), Verknüpfungen oder Programme, die der Spark auf Zuruf starten darf („Führ am PC den Kurzbefehl Feierabend aus“). " +
         "Der Spark kennt nur den Namen.");

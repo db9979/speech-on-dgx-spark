@@ -539,6 +539,22 @@ final class AppModel: ObservableObject {
         AskController.open()
     }
 
+    /// The field "Frag Spark …" in the tray panel: open Frag Spark and ask the typed question right away (empty = only open).
+    func askFromPanel(_ question: String) {
+        openAsk()
+        guard paired, part("ask"), !question.isEmpty else { return }
+        let c = AskController.shared
+        c.input = question
+        c.send()
+    }
+
+    /// The microphone in that field: open Frag Spark and listen there at once (only with part "dictate", mic open).
+    func askByVoice() {
+        openAsk()
+        guard paired, part("ask"), part("dictate"), !MicSwitch.shared.closed, !Dictation.shared.recording else { return }
+        Dictation.shared.toggle(.ask)
+    }
+
     func confirmNotaus() {
         guard part("notaus"), let client else { return }
         NSApp.activate(ignoringOtherApps: true)

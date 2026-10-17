@@ -629,15 +629,13 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
         bool paired = _config.IsPaired;
         string profile = _desk?.Profile ?? _config.Profile ?? "";
         string device = _config.Device ?? "";
-        string subtitle = !paired ? "Nicht gekoppelt"
-            : profile.Length > 0 && device.Length > 0 ? $"{profile} · {device}"
-            : profile.Length > 0 ? profile : device;
+        string subtitle = !paired ? "" : device;
 
         (string statusText, StatusKind status) = _connection switch
         {
             Connection.Unpaired => ("nicht gekoppelt", StatusKind.Off),
             Connection.Unknown => ("verbinde …", StatusKind.Off),
-            Connection.Online => ("verbunden", StatusKind.Ok),
+            Connection.Online => ("alles läuft", StatusKind.Ok),
             Connection.Notaus => ("Notaus", StatusKind.Bad),
             _ => ("nicht erreichbar", StatusKind.Off),
         };
@@ -646,7 +644,8 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
         string? hint = null;
         if (!paired)
         {
-            items.Add(new PanelItem("Koppeln …", Glyph.Plus, null, () => Pair(null)));
+            items.Add(new PanelItem("Mit dem Spark koppeln", Glyph.Plus, null, () => Pair(null),
+                Kind: PanelItemKind.Row, Detail: "Einmal verbinden, dann geht alles hier.", Verb: "Koppeln …"));
         }
         else
         {
@@ -655,14 +654,9 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
                 items.Add(new PanelItem("Text verbessern", Glyph.Pencil, _config.GetHotkey(Parts.Write).ToString(), OpenWriteWindow));
             }
 
-            if (IsOn(Parts.Ask))
-            {
-                items.Add(new PanelItem("Frag Spark", Glyph.Chat, _config.GetHotkey(Parts.Ask).ToString(), OpenAsk));
-            }
-
             if (IsOn(Parts.Dictate))
             {
-                items.Add(new PanelItem(_recorder is not null ? "Diktat beenden" : "Diktieren (in die Zwischenablage)", Glyph.Mic,
+                items.Add(new PanelItem(_recorder is not null ? "Diktat beenden" : "Diktieren", Glyph.Mic,
                     _config.GetHotkey(Parts.Dictate).ToString(), () => _ = ToggleDictationAsync(IntPtr.Zero), Enabled: !_dictateBusy));
             }
 
@@ -670,7 +664,7 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
 
             if (IsOn(Parts.Notaus))
             {
-                items.Add(new PanelItem("Mein Notaus …", Glyph.Octagon, null, () => _ = TriggerNotausAsync(), Danger: true));
+                items.Add(new PanelItem("Notaus …", Glyph.Octagon, null, () => _ = TriggerNotausAsync(), Danger: true, Kind: PanelItemKind.Footer));
             }
 
             if (QuietHint() is { } quiet)
@@ -679,7 +673,7 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
             }
             else if (_desk is not null && Parts.All.Any(p => !_desk.IsOn(p)))
             {
-                hint = items.Count > 0 ? "Weitere Teile im Panel unter Ich → Begleiter." : "Teile im Panel unter Ich → Begleiter einschalten.";
+                hint = items.Count > 0 || IsOn(Parts.Ask) ? "Weitere Teile im Panel unter Ich → Begleiter." : "Teile im Panel unter Ich → Begleiter einschalten.";
             }
             else if (_desk is null)
             {
@@ -687,8 +681,10 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
             }
         }
 
+        bool ask = paired && IsOn(Parts.Ask);
         return new PanelModel
         {
+            Title = paired && profile.Length > 0 ? Greeting(DateTime.Now.Hour) + ", " + profile : Title,
             Subtitle = subtitle,
             StatusText = statusText,
             Status = status,
@@ -697,6 +693,9 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
                 : null,
             Update = BuildBanner(),
             Items = items,
+            Ask = ask ? AskFromPanel : null,
+            AskHotkey = ask ? _config.GetHotkey(Parts.Ask).ToString() : null,
+            AskVoice = ask && IsOn(Parts.Dictate) && !MicSwitch.Closed ? AskByVoice : null,
             Notes = BuildPanelNotes(),
             Agenda = BuildAgendaLines(),
             AgendaEmpty = AgendaEmptyText(),
@@ -705,8 +704,42 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
             Hint = hint,
             Settings = () => OpenSettings(),
             OpenPanel = string.IsNullOrEmpty(_config.Base) ? null : OpenPanel,
-            Coffee = OpenCoffee,
         };
+    }
+
+    /// <summary>Gruß im Kopf des Begleiter-Fensters nach der Tageszeit.</summary>
+    internal static string Greeting(int hour) => hour switch
+    {
+        >= 5 and < 11 => "Guten Morgen",
+        >= 11 and < 18 => "Hallo",
+        >= 18 and < 23 => "Guten Abend",
+        _ => "Hallo",
+    };
+
+    /// <summary>Fragefeld im Begleiter-Fenster: „Frag Spark“ öffnen und die getippte Frage gleich stellen (leer = nur öffnen).</summary>
+    private void AskFromPanel(string question)
+    {
+        if (!IsOn(Parts.Ask))
+        {
+            return;
+        }
+
+        AskForm form = EnsureAsk();
+        if (question.Length > 0)
+        {
+            _ = form.AskQuestionAsync(question, spoken: false);
+        }
+    }
+
+    /// <summary>Mikrofon im Fragefeld: „Frag Spark“ öffnen und dort gleich zuhören.</summary>
+    private void AskByVoice()
+    {
+        if (!IsOn(Parts.Ask) || MicSwitch.Closed)
+        {
+            return;
+        }
+
+        EnsureAsk().StartVoice();
     }
 
     /// <summary>Der Update-Hinweis im Tray-Fenster (nur, wenn eine neue Version da ist).</summary>

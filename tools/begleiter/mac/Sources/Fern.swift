@@ -243,16 +243,17 @@ struct ActSettingsView: View {
             GradientBar()
             ScrollView {
                 VStack(alignment: .leading, spacing: 10) {
-                    Text(verbatim: "Ohne Rückfrage").font(.system(size: 14, weight: .semibold))
+                    SectionLabel(text: "Ohne Rückfrage")
                     Text(verbatim: "Eingeschaltete Arten führt der Begleiter sofort aus, wenn du den Spark darum bittest, und zeigt danach einen Hinweis. Seiten öffnen, Text tippen und Text zeigen fragen immer.")
                         .font(.system(size: 12)).foregroundColor(Theme.muted).fixedSize(horizontal: false, vertical: true)
                     ForEach(ActLocal.autoOk, id: \.self) { k in
                         Toggle(isOn: Binding(get: { m.auto.contains(k) }, set: { m.setAuto(k, $0) })) {
                             Text(verbatim: ActLocal.labels[k] ?? k).font(.system(size: 13))
                         }
+                        .toggleStyle(.switch)
                     }
                     Rectangle().fill(Theme.line).frame(height: 1).padding(.vertical, 4)
-                    Text(verbatim: "Kurzbefehle").font(.system(size: 14, weight: .semibold))
+                    SectionLabel(text: "Kurzbefehle")
                     Text(verbatim: "Kurzbefehle aus der App Kurzbefehle, die der Spark auf Zuruf starten darf („Führ am Mac den Kurzbefehl Feierabend aus“). Der Spark kennt nur den Namen.")
                         .font(.system(size: 12)).foregroundColor(Theme.muted).fixedSize(horizontal: false, vertical: true)
                     if m.loading {
@@ -265,6 +266,7 @@ struct ActSettingsView: View {
                         Toggle(isOn: Binding(get: { m.shortcuts.contains(n) }, set: { m.setShortcut(n, $0) })) {
                             Text(verbatim: n).font(.system(size: 13))
                         }
+                        .toggleStyle(.switch)
                     }
                 }
                 .padding(16)

@@ -26,8 +26,10 @@ final class PanelWindow {
     }
 }
 
-/// Click on the face in the menu bar (design A): gradient bar, face with state, update banner, the parts that are
-/// on with their hotkeys, "Mein Notaus …", and Einstellungen, Panel öffnen, Kaffee. Closes on focus loss and Esc.
+/// Click on the face in the menu bar ("Begleiter aufpolieren" 1a, Dominik 2026-10-17): gradient bar, face with greeting
+/// and state, settings and quit; the update banner; the field "Frag Spark …"; the commands as tiles; then sections
+/// like in the panel (Als Nächstes, Zuhause, Dieser Mac with switches); at the bottom "Panel öffnen" and Notaus.
+/// The coffee is only in Einstellungen → Über und Update. Closes on focus loss and Esc.
 struct TrayPanel: View {
     @ObservedObject var model: AppModel
     @ObservedObject var dictation: Dictation
@@ -42,10 +44,13 @@ struct TrayPanel: View {
     @ObservedObject var home = HomeCenter.shared
     @State private var holder = PanelWindow()
 
+    private static let tileColumns = [GridItem(.flexible(), spacing: 7), GridItem(.flexible(), spacing: 7),
+                                      GridItem(.flexible(), spacing: 7)]
+
     var body: some View {
         VStack(spacing: 0) {
             GradientBar()
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 10) {
                 header
                 if !detail.isEmpty {
                     Text(verbatim: detail)
@@ -58,22 +63,31 @@ struct TrayPanel: View {
                     UpdateBanner(info: info, updater: updater)
                 }
                 if model.paired {
-                    items
+                    if model.part("ask") {
+                        PanelAskField(key: model.hotkeyLabel(.ask),
+                                      voice: model.part("dictate") && !mic.closed,
+                                      submit: { q in go { model.askFromPanel(q) } },
+                                      speak: { go { model.askByVoice() } })
+                    }
+                    tiles
                     if model.part("agenda") { agendaSection }
                     if model.part("home") { homeSection }
-                } else {
-                    HStack {
-                        Text(verbatim: "Noch nicht mit einem Spark gekoppelt.")
-                            .font(.system(size: 13))
+                    thisMac
+                    if !moreHint.isEmpty {
+                        Text(Wege.text(moreHint))
+                            .font(.system(size: 11))
                             .foregroundColor(Theme.muted)
-                        Spacer()
-                        Button("Koppeln …") { go { Windows.showPairing() } }
-                            .buttonStyle(PrimaryButtonStyle())
+                            .padding(.horizontal, 2)
+                    }
+                } else {
+                    PanelBox {
+                        PanelRow(title: "Mit dem Spark koppeln", detail: "Einmal verbinden, dann geht alles hier.",
+                                 symbol: "link", verb: "Koppeln …") { go { Windows.showPairing() } }
                     }
                 }
-                footer
             }
             .padding(14)
+            footer
         }
         .frame(width: 360)
         .background(Theme.card)
@@ -88,9 +102,19 @@ struct TrayPanel: View {
 
     // ------------------------------------------------------------------ parts of the panel
 
-    private var subtitle: String {
+    /// "Guten Morgen, Dominik" (or the program's name before pairing)
+    private var greeting: String {
         let p = model.config?.profile ?? ""
-        return p.isEmpty ? model.deviceName : p + " · " + model.deviceName
+        guard model.paired, !p.isEmpty else { return "Spark-Begleiter" }
+        return Self.greeting(hour: Calendar.current.component(.hour, from: Date())) + ", " + p
+    }
+
+    static func greeting(hour: Int) -> String {
+        switch hour {
+        case 5..<11: return "Guten Morgen"
+        case 18..<23: return "Guten Abend"
+        default: return "Hallo"
+        }
     }
 
     /// the reason when the Spark is not reachable or a Notaus holds
@@ -99,135 +123,158 @@ struct TrayPanel: View {
         return model.reachText
     }
 
+    private var stateLine: String {
+        let pill = model.reachPill
+        let text = model.reach == .ok && model.paired ? "alles läuft" : pill.text
+        return model.paired ? model.deviceName + " · " + text : text
+    }
+
     private var header: some View {
-        HStack(spacing: 12) {
-            FaceView(size: 44)
+        HStack(spacing: 11) {
+            FaceView(size: 40)
             VStack(alignment: .leading, spacing: 1) {
-                Text(verbatim: "Spark-Begleiter")
+                Text(verbatim: greeting)
                     .font(.system(size: 14, weight: .semibold))
-                Text(verbatim: subtitle)
-                    .font(.system(size: 12))
-                    .foregroundColor(Theme.muted)
                     .lineLimit(1)
-                    .truncationMode(.middle)
+                HStack(spacing: 6) {
+                    Circle().fill(model.reachPill.color).frame(width: 7, height: 7)
+                    Text(verbatim: stateLine)
+                        .font(.system(size: 12))
+                        .foregroundColor(model.reach == .notaus ? Theme.bad : Theme.muted)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                }
             }
             .frame(minWidth: 0)
             Spacer(minLength: 4)
-            let pill = model.reachPill
-            StatusPill(text: pill.text, color: pill.color)
-            Button {
-                NSApp.terminate(nil)
-            } label: {
-                Image(systemName: "power")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(Theme.muted)
-                    .frame(width: 22, height: 22)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .help(Text(verbatim: "Spark-Begleiter beenden"))
-            .accessibilityLabel(Text(verbatim: "Spark-Begleiter beenden"))
+            headerIcon("gearshape", "Einstellungen") { go { Windows.showSettings() } }
+            headerIcon("power", "Spark-Begleiter beenden") { NSApp.terminate(nil) }
         }
     }
 
-    private var items: some View {
-        VStack(spacing: 2) {
-            partRow("write", "Text verbessern", symbol: "pencil", hotkey: .write) {
-                Task { await model.startWrite(fromMenu: true) }
-            }
-            partRow("ask", "Frag Spark", symbol: "bubble.left", hotkey: .ask) {
-                model.openAsk()
-            }
-            partRow("dictate", dictation.recording ? "Diktat beenden" : "Diktieren",
-                    symbol: dictation.recording ? "stop.circle" : "mic", hotkey: .dictate) {
-                dictation.toggle(.cursor(nil))
-            }
-            partRow("screen", "Bildschirm fragen", symbol: "viewfinder", hotkey: .screen) {
-                ScreenAsk.start()
-            }
-            partRow("mail", "Antwort entwerfen", symbol: "envelope", hotkey: .mail) {
-                MailDraft.start(front: nil)
-            }
-            partRow("office", "Office-Add-ins einrichten", symbol: "square.grid.2x2", hotkey: nil,
-                    note: "Word, Excel und Outlook") {
-                OfficeSetup.start(model: model)
-            }
-            partRow("act", "Am PC handeln einstellen", symbol: "hand.tap", hotkey: nil,
-                    note: "Ohne Rückfrage, Kurzbefehle") {
-                ActSettings.show()
-            }
-            partRow("folder", "Spark-Wissen-Ordner", symbol: "folder", hotkey: nil,
-                    note: folder.lastText.isEmpty ? folder.path.lastPathComponent : folder.lastText) {
-                folder.reveal()
-            }
-            partRow("speak", speaker.active ? "Vorlesen stoppen" : "Zwischenablage vorlesen",
-                    symbol: speaker.active ? "stop.circle" : "speaker.wave.2", hotkey: .speak,
-                    note: speaker.active ? "" : "Markierten Text: \(model.hotkeyLabel(.speak))") {
-                if speaker.active { speaker.stop() } else { speaker.readClipboard() }
-            }
-            partRow("meeting", meeting.running ? "Besprechung beenden" : "Besprechung mitschreiben",
-                    symbol: meeting.running ? "stop.circle" : "record.circle", hotkey: .meeting) {
-                meeting.toggle()
-            }
-            partRow("inbox", "Vom Spark", symbol: "tray.and.arrow.down", hotkey: nil,
-                    note: "Text, Links und Dateien vom Handy · Downloads/\(InboxCenter.folderName)") {
-                InboxCenter.revealFolder()
-            }
-            partRow("quiet", "Nicht stören erkennen", symbol: quiet.busy ? "moon.fill" : "moon", hotkey: nil,
-                    note: quiet.text) {
-                quiet.check()
-            }
-            if model.usesMic {
-                Button {
-                    go { mic.toggle() }
-                } label: {
-                    HStack(spacing: 10) {
-                        IconTile(symbol: mic.closed ? "mic.slash" : "mic", color: mic.closed ? Theme.bad : Theme.accent)
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text(verbatim: mic.closed ? "Mikrofon öffnen" : "Mikrofon schließen")
-                                .font(.system(size: 13))
-                            Text(verbatim: mic.closed ? "ist zu: nichts hört mit" : "ist offen")
-                                .font(.system(size: 11))
-                                .foregroundColor(mic.closed ? Theme.bad : Theme.muted)
-                        }
-                        Spacer()
-                    }
+    private func headerIcon(_ symbol: String, _ label: String, run: @escaping () -> Void) -> some View {
+        Button(action: run) {
+            Image(systemName: symbol)
+                .font(.system(size: 13, weight: .medium))
+                .foregroundColor(Theme.muted)
+                .frame(width: 26, height: 26)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .help(Text(verbatim: label))
+        .accessibilityLabel(Text(verbatim: label))
+    }
+
+    /// the commands as tiles, three in a row (only the parts that are on)
+    private var tiles: some View {
+        LazyVGrid(columns: Self.tileColumns, alignment: .leading, spacing: 7) {
+            if model.part("write") {
+                PanelTile(title: "Text verbessern", symbol: "pencil", color: Theme.accent, key: model.hotkeyLabel(.write)) {
+                    go { Task { await model.startWrite(fromMenu: true) } }
                 }
-                .buttonStyle(RowButtonStyle())
             }
-            partRow("wake", wake.paused ? "Weckwort fortsetzen" : "Weckwort pausieren",
-                    symbol: wake.paused ? "ear" : "pause.circle", hotkey: nil, note: wakeNote) {
-                wake.togglePause()
-            }
-            if model.part("notaus") {
-                Button {
-                    go { model.confirmNotaus() }
-                } label: {
-                    HStack(spacing: 10) {
-                        IconTile(symbol: "octagon", color: Theme.bad)
-                        Text(verbatim: "Mein Notaus …")
-                            .font(.system(size: 13))
-                            .foregroundColor(Theme.bad)
-                        Spacer()
-                    }
+            if model.part("dictate") {
+                PanelTile(title: dictation.recording ? "Diktat beenden" : "Diktieren",
+                          symbol: dictation.recording ? "stop.circle" : "mic", color: Theme.accent2,
+                          key: model.hotkeyLabel(.dictate), danger: dictation.recording) {
+                    go { dictation.toggle(.cursor(nil)) }
                 }
-                .buttonStyle(RowButtonStyle())
+            }
+            if model.part("screen") {
+                PanelTile(title: "Bildschirm fragen", symbol: "viewfinder", color: Theme.accent, key: model.hotkeyLabel(.screen)) {
+                    go { ScreenAsk.start() }
+                }
+            }
+            if model.part("mail") {
+                PanelTile(title: "Antwort entwerfen", symbol: "envelope", color: Theme.accent2, key: model.hotkeyLabel(.mail)) {
+                    go { MailDraft.start(front: nil) }
+                }
+            }
+            if model.part("speak") {
+                PanelTile(title: speaker.active ? "Vorlesen stoppen" : "Vorlesen",
+                          symbol: speaker.active ? "stop.circle" : "speaker.wave.2", color: Theme.ok,
+                          key: model.hotkeyLabel(.speak)) {
+                    go { if speaker.active { speaker.stop() } else { speaker.readClipboard() } }
+                }
+            }
+            if model.part("meeting") {
+                PanelTile(title: meeting.running ? "Mitschreiben beenden" : "Mitschreiben",
+                          symbol: meeting.running ? "stop.circle" : "record.circle", color: Theme.bad,
+                          key: model.hotkeyLabel(.meeting), danger: meeting.running) {
+                    go { meeting.toggle() }
+                }
             }
         }
+    }
+
+    /// "Dieser Mac": switches (microphone, wake word) and rows with a word on the right; switches keep the panel open
+    @ViewBuilder
+    private var thisMac: some View {
+        let rows = macRows
+        if !rows.isEmpty {
+            VStack(alignment: .leading, spacing: 6) {
+                SectionLabel(text: "Dieser Mac")
+                PanelBox {
+                    ForEach(Array(rows.enumerated()), id: \.offset) { i, row in
+                        if i > 0 { RowLine() }
+                        row
+                    }
+                }
+            }
+        }
+    }
+
+    private var macRows: [AnyView] {
+        var rows: [AnyView] = []
+        if model.usesMic {
+            rows.append(AnyView(PanelRow(title: "Mikrofon", detail: mic.closed ? "Zu: nichts hört mit." : "Offen für Diktat, Fragen und Weckwort.",
+                                         symbol: mic.closed ? "mic.slash" : "mic", on: !mic.closed) { mic.toggle() }))
+        }
+        if model.part("wake") {
+            rows.append(AnyView(PanelRow(title: "Weckwort „\(wake.word)“", detail: wakeNote, symbol: "waveform",
+                                         on: !wake.paused && !mic.closed) { wake.togglePause() }
+                .disabled(mic.closed)))
+        }
+        if model.part("act") {
+            rows.append(AnyView(PanelRow(title: "Am Mac handeln", detail: "Ohne Rückfrage, Kurzbefehle",
+                                         symbol: "hand.tap", verb: "Einstellen") { go { ActSettings.show() } }))
+        }
+        if model.part("folder") {
+            rows.append(AnyView(PanelRow(title: "Wissen-Ordner",
+                                         detail: folder.lastText.isEmpty ? folder.path.lastPathComponent : folder.lastText,
+                                         symbol: "folder", verb: "Öffnen") { go { folder.reveal() } }))
+        }
+        if model.part("inbox") {
+            rows.append(AnyView(PanelRow(title: "Vom Spark", detail: "Vom Handy · Downloads/\(InboxCenter.folderName)",
+                                         symbol: "tray.and.arrow.down", verb: "Öffnen") { go { InboxCenter.revealFolder() } }))
+        }
+        if model.part("quiet") {
+            rows.append(AnyView(PanelRow(title: "Nicht stören erkennen", detail: quiet.text,
+                                         symbol: quiet.busy ? "moon.fill" : "moon", verb: "Prüfen") { quiet.check() }))
+        }
+        if model.part("office") {
+            rows.append(AnyView(PanelRow(title: "Office-Add-ins", detail: "Schreibhilfe in Word, Excel und Outlook.",
+                                         symbol: "square.grid.2x2", verb: "Einrichten") { go { OfficeSetup.start(model: model) } }))
+        }
+        return rows
+    }
+
+    /// parts the admin released that are still off on this device
+    private var moreHint: String {
+        guard let cfg = model.config else { return "" }
+        let off = DeskConfig.partNames.contains { cfg.parts[$0] != true && cfg.allowed[$0] == true }
+        return off ? "Weitere Teile im Panel unter Ich → Begleiter." : ""
     }
 
     // ------------------------------------------------------------------ Version 4 sections
 
     private func sectionTitle(_ t: String) -> some View {
-        Text(verbatim: t)
-            .font(.system(size: 11, weight: .semibold))
-            .foregroundColor(Theme.muted)
-            .padding(.horizontal, 10)
+        SectionLabel(text: t)
     }
 
-    /// "Als Nächstes": the next events and reminders (part agenda)
+    /// "Als Nächstes": the next events and reminders (part agenda), in a box like in the panel
     private var agendaSection: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 6) {
             sectionTitle("Als Nächstes")
             let now = Date()
             let lines = agenda.agenda.upcoming(now: now)
@@ -235,30 +282,36 @@ struct TrayPanel: View {
                 Text(verbatim: agenda.problem)
                     .font(.system(size: 12))
                     .foregroundColor(Theme.muted)
-                    .padding(.horizontal, 10)
+                    .padding(.horizontal, 2)
                     .fixedSize(horizontal: false, vertical: true)
             } else if lines.isEmpty {
                 Text(verbatim: agenda.loaded ? "Nichts in den nächsten 24 Stunden." : "Lädt …")
                     .font(.system(size: 12))
                     .foregroundColor(Theme.muted)
-                    .padding(.horizontal, 10)
+                    .padding(.horizontal, 2)
             } else {
-                ForEach(lines) { l in
-                    HStack(alignment: .top, spacing: 10) {
-                        IconTile(symbol: l.isReminder ? "bell" : "calendar")
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text(verbatim: l.title)
-                                .font(.system(size: 13))
-                                .lineLimit(2)
-                            Text(verbatim: IsoDate.short(l.when, now: now) + (l.detail.isEmpty ? "" : " · " + l.detail))
-                                .font(.system(size: 11))
-                                .foregroundColor(Theme.muted)
-                                .lineLimit(1)
+                PanelBox {
+                    ForEach(Array(lines.enumerated()), id: \.element.id) { i, l in
+                        if i > 0 { RowLine() }
+                        HStack(alignment: .top, spacing: 10) {
+                            Image(systemName: l.isReminder ? "bell" : "calendar")
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundColor(Theme.accent)
+                                .frame(width: 20)
+                            VStack(alignment: .leading, spacing: 1) {
+                                Text(verbatim: l.title)
+                                    .font(.system(size: 13))
+                                    .lineLimit(2)
+                                Text(verbatim: IsoDate.short(l.when, now: now) + (l.detail.isEmpty ? "" : " · " + l.detail))
+                                    .font(.system(size: 11))
+                                    .foregroundColor(Theme.muted)
+                                    .lineLimit(1)
+                            }
+                            Spacer(minLength: 0)
                         }
-                        Spacer(minLength: 0)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 7)
                     }
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 3)
                 }
             }
         }
@@ -266,13 +319,13 @@ struct TrayPanel: View {
 
     /// "Zuhause": the Smart-Home buttons with their state (part home); the panel stays open
     private var homeSection: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 6) {
             sectionTitle("Zuhause")
             if home.buttons.isEmpty {
                 Text(Wege.text(home.problem.isEmpty ? "Keine Knöpfe – im Panel unter Ich → Begleiter festlegen." : home.problem))
                     .font(.system(size: 12))
                     .foregroundColor(Theme.muted)
-                    .padding(.horizontal, 10)
+                    .padding(.horizontal, 2)
                     .fixedSize(horizontal: false, vertical: true)
             } else {
                 FlowLayout(spacing: 6) {
@@ -280,12 +333,11 @@ struct TrayPanel: View {
                         homeButton(b)
                     }
                 }
-                .padding(.horizontal, 10)
                 if !home.problem.isEmpty {
                     Text(verbatim: home.problem)
                         .font(.system(size: 11))
                         .foregroundColor(Theme.bad)
-                        .padding(.horizontal, 10)
+                        .padding(.horizontal, 2)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
@@ -339,73 +391,41 @@ struct TrayPanel: View {
         return wake.listening ? "hört auf „\(wake.word)“" : "startet …"
     }
 
-    @ViewBuilder
-    private func partRow(_ part: String, _ title: String, symbol: String, hotkey: HotAction?, note: String = "",
-                         run: @escaping () -> Void) -> some View {
-        if model.part(part) {
-            Button {
-                go(run)
-            } label: {
-                HStack(spacing: 10) {
-                    IconTile(symbol: symbol)
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text(verbatim: title)
-                            .font(.system(size: 13))
-                        if !note.isEmpty {
-                            Text(Wege.text(note))
-                                .font(.system(size: 11))
-                                .foregroundColor(Theme.muted)
-                                .lineLimit(2)
-                        }
-                    }
-                    Spacer()
-                    let key = hotkey.map { model.hotkeyLabel($0) } ?? ""
-                    if !key.isEmpty { KeyChip(text: key) }
-                }
-            }
-            .buttonStyle(RowButtonStyle())
-        } else if model.allowedPart(part) {
-            HStack(spacing: 10) {
-                IconTile(symbol: symbol, color: Theme.muted)
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(verbatim: title)
-                        .font(.system(size: 13))
-                        .foregroundColor(Theme.muted)
-                    Text(Wege.text("Im Panel unter Ich → Begleiter einschalten"))
-                        .font(.system(size: 11))
-                        .foregroundColor(Theme.muted)
-                }
-                Spacer()
-            }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 6)
-        }
-    }
-
+    /// the foot on the soft surface: "Panel öffnen" on the left, Notaus in red on the right
     private var footer: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 0) {
             Rectangle().fill(Theme.line).frame(height: 1)
-            // Labels never break inside a word: if the panel is too narrow, the coffee pill goes to its own line.
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: 6) {
-                    footerButtons
-                    Spacer(minLength: 4)
-                    CoffeePill(title: "Spark unterstützen", url: model.coffee)
+            HStack(spacing: 8) {
+                Button {
+                    go { model.openPanel() }
+                } label: {
+                    Label { Text(verbatim: "Panel öffnen") } icon: { Image(systemName: "arrow.up.right.square") }
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(Theme.accent)
+                        .lineLimit(1)
+                        .fixedSize()
                 }
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack(spacing: 6) { footerButtons }
-                    CoffeePill(title: "Spark unterstützen", url: model.coffee)
+                .buttonStyle(.plain)
+                .disabled(model.base == nil)
+                Spacer(minLength: 4)
+                if model.paired && model.part("notaus") {
+                    Button {
+                        go { model.confirmNotaus() }
+                    } label: {
+                        Label { Text(verbatim: "Notaus …") } icon: { Image(systemName: "exclamationmark.octagon") }
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(Theme.bad)
+                        .lineLimit(1)
+                        .fixedSize()
+                    }
+                    .buttonStyle(.plain)
+                    .help(Text(verbatim: "Mein Notaus auslösen (mit Rückfrage)"))
                 }
             }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .background(Theme.soft)
         }
-    }
-
-    @ViewBuilder private var footerButtons: some View {
-        Button("Einstellungen") { go { Windows.showSettings() } }
-            .buttonStyle(SoftButtonStyle())
-        Button("Panel öffnen") { go { model.openPanel() } }
-            .buttonStyle(SoftButtonStyle())
-            .disabled(model.base == nil)
     }
 
     /// closes the panel, then runs the action (an alert or another window must not fight with the panel)
@@ -464,5 +484,51 @@ struct UpdateBanner: View {
         case .failed(let m): return m
         default: return "Geprüft vom Spark · \(info.sizeText)"
         }
+    }
+}
+
+/// The field "Frag Spark …" at the top of the tray panel; its text lives here, not in the panel's state (typing comes
+/// first). Return asks, the microphone opens Frag Spark listening.
+struct PanelAskField: View {
+    let key: String
+    let voice: Bool
+    let submit: (String) -> Void
+    let speak: () -> Void
+    @State private var text = ""
+    @FocusState private var focused: Bool
+
+    var body: some View {
+        HStack(spacing: 8) {
+            TextField(text: $text, prompt: Text(verbatim: "Frag Spark …")) { Text(verbatim: "Frag Spark") }
+                .textFieldStyle(.plain)
+                .font(.system(size: 13))
+                .focused($focused)
+                .onSubmit { submit(text.trimmingCharacters(in: .whitespacesAndNewlines)) }
+            if !key.isEmpty && text.isEmpty {
+                Text(verbatim: key)
+                    .font(.system(size: 11))
+                    .foregroundColor(Theme.muted)
+            }
+            if voice {
+                Button(action: speak) {
+                    Image(systemName: "mic")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(.white)
+                        .frame(width: 26, height: 26)
+                        .background(RoundedRectangle(cornerRadius: 8).fill(Theme.diagonal))
+                        .contentShape(RoundedRectangle(cornerRadius: 8))
+                }
+                .buttonStyle(.plain)
+                .help(Text(verbatim: "Frage sprechen"))
+                .accessibilityLabel(Text(verbatim: "Frag Spark: sprechen"))
+            }
+        }
+        .padding(.leading, 11)
+        .padding(.trailing, 6)
+        .padding(.vertical, 6)
+        .frame(minHeight: 38)
+        .background(RoundedRectangle(cornerRadius: 10).fill(Theme.soft))
+        .overlay(RoundedRectangle(cornerRadius: 10).stroke(focused ? Theme.accent : Theme.line, lineWidth: focused ? 1.5 : 1))
+        .onAppear { DispatchQueue.main.async { focused = true } }
     }
 }

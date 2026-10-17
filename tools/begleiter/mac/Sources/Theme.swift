@@ -538,3 +538,240 @@ enum MenuIcon {
         }
     }
 }
+
+// ------------------------------------------------------------------ building blocks of "Begleiter aufpolieren" (Dominik 2026-10-17)
+
+/// Small section title in capitals above a box, like the panel's sections.
+struct SectionLabel: View {
+    let text: String
+    var count = 0
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Text(verbatim: text.uppercased())
+                .font(.system(size: 10.5, weight: .semibold))
+                .kerning(0.5)
+                .foregroundColor(Theme.muted)
+            if count > 0 {
+                Text(verbatim: "\(count)")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundColor(Theme.warn)
+                    .padding(.horizontal, 6)
+                    .background(Capsule().fill(Theme.warn.opacity(0.16)))
+            }
+        }
+        .padding(.horizontal, 2)
+        .accessibilityAddTraits(.isHeader)
+    }
+}
+
+/// The on/off switch: gradient when on, line colour when off, white knob.
+struct SwitchKnob: View {
+    let on: Bool
+
+    var body: some View {
+        ZStack(alignment: on ? .trailing : .leading) {
+            Capsule().fill(Theme.line)
+            if on { Capsule().fill(Theme.diagonal) }
+            Circle()
+                .fill(Color.white)
+                .frame(width: 16, height: 16)
+                .shadow(color: .black.opacity(0.2), radius: 1, y: 0.5)
+                .padding(2)
+        }
+        .frame(width: 36, height: 20)
+        .accessibilityHidden(true)
+    }
+}
+
+/// A command as a tile in the tray panel: tinted symbol, name (two lines), hotkey small below.
+struct PanelTile: View {
+    let title: String
+    let symbol: String
+    var color: Color = Theme.accent
+    var key = ""
+    var danger = false
+    let run: () -> Void
+    @State private var hover = false
+    @Environment(\.isEnabled) private var enabled
+
+    var body: some View {
+        Button(action: run) {
+            VStack(alignment: .leading, spacing: 6) {
+                Image(systemName: symbol)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(danger ? Theme.bad : color)
+                    .frame(width: 28, height: 28)
+                    .background(RoundedRectangle(cornerRadius: 8).fill((danger ? Theme.bad : color).opacity(0.14)))
+                Text(verbatim: title)
+                    .font(.system(size: 12, weight: .semibold))
+                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 0)
+                if !key.isEmpty {
+                    Text(verbatim: key)
+                        .font(.system(size: 10.5))
+                        .foregroundColor(Theme.muted)
+                }
+            }
+            .padding(9)
+            .frame(maxWidth: .infinity, minHeight: 82, alignment: .topLeading)
+            .background(RoundedRectangle(cornerRadius: 10)
+                .fill(danger ? Theme.bad.opacity(0.06) : (hover && enabled ? Theme.soft : Theme.card)))
+            .overlay(RoundedRectangle(cornerRadius: 10).stroke(danger ? Theme.bad.opacity(0.4) : Theme.line, lineWidth: 1))
+            .opacity(enabled ? 1 : 0.5)
+            .contentShape(RoundedRectangle(cornerRadius: 10))
+        }
+        .buttonStyle(.plain)
+        .onHover { hover = $0 }
+        .help(Text(verbatim: key.isEmpty ? title : title + " (" + key + ")"))
+        .accessibilityLabel(Text(verbatim: title))
+    }
+}
+
+/// A row in a box: symbol, name and one sentence; on the right a switch (`on` set) or a word like "Öffnen".
+struct PanelRow: View {
+    let title: String
+    var detail = ""
+    let symbol: String
+    var on: Bool? = nil
+    var verb = ""
+    let run: () -> Void
+    @State private var hover = false
+    @Environment(\.isEnabled) private var enabled
+
+    var body: some View {
+        Button(action: run) {
+            HStack(spacing: 10) {
+                Image(systemName: symbol)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(Theme.muted)
+                    .frame(width: 20)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(verbatim: title)
+                        .font(.system(size: 13, weight: .semibold))
+                        .lineLimit(1)
+                    if !detail.isEmpty {
+                        Text(Wege.text(detail))
+                            .font(.system(size: 11))
+                            .foregroundColor(Theme.muted)
+                            .lineLimit(2)
+                    }
+                }
+                Spacer(minLength: 6)
+                if let on {
+                    SwitchKnob(on: on)
+                } else if !verb.isEmpty {
+                    Text(verbatim: verb)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(Theme.accent)
+                }
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+            .background(RoundedRectangle(cornerRadius: 9).fill(hover && enabled ? Theme.soft : Color.clear))
+            .opacity(enabled ? 1 : 0.5)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .onHover { hover = $0 }
+        .accessibilityLabel(Text(verbatim: title + (on.map { $0 ? ", an" : ", aus" } ?? "")))
+    }
+}
+
+/// A box with rows separated by thin lines (the rows are passed in order; nil rows are left out).
+struct PanelBox<Content: View>: View {
+    @ViewBuilder let content: () -> Content
+
+    var body: some View {
+        VStack(spacing: 0) {
+            content()
+        }
+        .padding(3)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 12).fill(Theme.card))
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.line, lineWidth: 1))
+    }
+}
+
+/// The thin line between two rows of a PanelBox.
+struct RowLine: View {
+    var body: some View {
+        Rectangle().fill(Theme.line).frame(height: 1).padding(.horizontal, 10)
+    }
+}
+
+/// A point in a side menu: chosen = card with line and accent text.
+struct NavRow: View {
+    let title: String
+    let symbol: String
+    let selected: Bool
+    var badge = ""
+    let action: () -> Void
+    @State private var hover = false
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 9) {
+                Image(systemName: symbol)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(selected ? Theme.accent : Theme.muted)
+                    .frame(width: 18)
+                Text(verbatim: title)
+                    .font(.system(size: 13, weight: selected ? .semibold : .regular))
+                    .foregroundColor(selected ? Theme.accent : Theme.fg)
+                    .lineLimit(1)
+                Spacer(minLength: 0)
+                if !badge.isEmpty {
+                    Text(verbatim: badge)
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundColor(Theme.accent)
+                        .padding(.horizontal, 6)
+                        .background(Capsule().fill(Theme.accent.opacity(0.14)))
+                }
+            }
+            .padding(.horizontal, 9)
+            .padding(.vertical, 7)
+            .background(RoundedRectangle(cornerRadius: 9).fill(selected ? Theme.card : (hover ? Theme.line.opacity(0.5) : Color.clear)))
+            .overlay(RoundedRectangle(cornerRadius: 9).stroke(selected ? Theme.line : Color.clear, lineWidth: 1))
+            .contentShape(RoundedRectangle(cornerRadius: 9))
+        }
+        .buttonStyle(.plain)
+        .onHover { hover = $0 }
+        .accessibilityAddTraits(selected ? .isSelected : [])
+    }
+}
+
+/// The state as a sentence in a lightly tinted card with a round colour symbol ("Alles läuft").
+struct StatusCard: View {
+    let title: String
+    let detail: String
+    let color: Color
+    let good: Bool
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: good ? "checkmark" : "exclamationmark")
+                .font(.system(size: 14, weight: .bold))
+                .foregroundColor(color)
+                .frame(width: 36, height: 36)
+                .background(Circle().fill(color.opacity(0.18)))
+            VStack(alignment: .leading, spacing: 2) {
+                Text(verbatim: title)
+                    .font(.system(size: 14, weight: .semibold))
+                Text(Wege.text(detail))
+                    .font(.system(size: 12))
+                    .foregroundColor(Theme.muted)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .textSelection(.enabled)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(12)
+        .background(RoundedRectangle(cornerRadius: 14).fill(color.opacity(0.07))
+            .background(RoundedRectangle(cornerRadius: 14).fill(Theme.card)))
+        .overlay(RoundedRectangle(cornerRadius: 14).stroke(color.opacity(0.35), lineWidth: 1))
+        .accessibilityElement(children: .combine)
+    }
+}

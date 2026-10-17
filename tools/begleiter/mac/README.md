@@ -41,11 +41,16 @@ graue Schrift kräftiger.
 
 - **Menüleiste:** das Gesicht als Symbol. Ein farbiger Punkt unten rechts sagt, wenn etwas ist (siehe
   „Zustandspunkt“).
-- **Klick aufs Gesicht** öffnet ein kleines Fenster: oben ein Farbverlauf, das Gesicht mit Profil, Gerätename und
-  Zustand („verbunden“, „nicht erreichbar“, „Notaus“), darunter gegebenenfalls der Hinweis auf eine neue Version,
-  dann die Teile, die an sind, jeweils mit ihrem Tastenkürzel, „Mein Notaus …“ in Rot und unten
-  **Einstellungen**, **Panel öffnen** und der gelbe Knopf **☕ Spark unterstützen**. Der Knopf mit dem
-  Ein/Aus-Zeichen oben rechts beendet den Begleiter. Esc oder ein Klick daneben schließt das Fenster.
+- **Klick aufs Gesicht** öffnet ein kleines Fenster: oben ein Farbverlauf, das Gesicht mit Gruß („Guten Morgen,
+  Dominik“), Gerätename und Zustand als Punkt, rechts das Zahnrad für die **Einstellungen** und das
+  Ein/Aus-Zeichen (beendet den Begleiter). Darunter gegebenenfalls der Hinweis auf eine neue Version, dann das Feld
+  **„Frag Spark …“** (Enter fragt, das Mikrofon fragt per Sprache), die Befehle als **Kacheln** mit Tastenkürzel
+  und Abschnitte wie im Panel: **Als Nächstes**, **Zuhause** und **Dieser Mac** mit Schaltern für Mikrofon und
+  Weckwort und Zeilen für Wissen-Ordner, Vom Spark, Nicht stören und Office-Add-ins. Unten **Panel öffnen** und
+  „Notaus …“ in Rot. Esc oder ein Klick daneben schließt das Fenster.
+- **Einstellungen** haben links ein Seitenmenü wie das Panel: Übersicht (Zustand und was im Panel an ist),
+  Frag Spark, Tastenkürzel, Tagesstart, Wissen-Ordner und unter „Gerät“ Berechtigungen, Kopplung, Über und Update.
+  Seiten von Teilen, die aus sind, fehlen.
 - **Text verbessern**, **Frag Spark**, **Einstellungen** und **Koppeln** haben denselben Farbverlauf oben, runde
   Ecken und die Spark-Knöpfe.
 
@@ -108,7 +113,7 @@ schickt nichts an andere Stellen (keine Telemetrie).
 
 ### Frag Spark
 
-⌥⌘A (oder Klick aufs Gesicht → „Frag Spark“) öffnet ein kleines Fenster wie ein Chat: Frage eintippen, **Senden**
+⌥⌘A (oder Klick aufs Gesicht → Feld „Frag Spark …“) öffnet ein kleines Fenster wie ein Chat: Frage eintippen, **Senden**
 (oder ↩ bzw. ⌘↩). Die eigene Frage steht rechts in einer farbigen Blase, die Antwort des Spark links mit dem Gesicht
 daneben, als einfacher Text, der sich markieren und mit **Kopieren** übernehmen lässt. Folgefragen kennen den
 Zusammenhang, **Neu** fängt von vorn an. Ist Diktieren an, gibt es einen runden **Mikrofon-Knopf**, um die Frage zu
@@ -267,7 +272,7 @@ für den ganzen Spark eingestellt). Er schneidet dafür nur Sätze heraus, die l
   geht sie an den Spark.
 
 Solange das Weckwort hört, zeigt macOS den **orangen Mikrofon-Punkt** in der Menüleiste, und das Gesicht hat unten
-rechts einen **türkisen Ring**. Klick aufs Gesicht → **„Weckwort pausieren“** schaltet das Mikrofon ab, bis man
+rechts einen **türkisen Ring**. Klick aufs Gesicht → Schalter **„Weckwort“** unter „Dieser Mac“ schaltet das Mikrofon ab, bis man
 „Weckwort fortsetzen“ wählt (das merkt sich der Begleiter auch über einen Neustart). Ganz aus geht es im Panel.
 Während eines Diktats wird nichts ans Weckwort geschickt.
 
@@ -355,7 +360,7 @@ Im Fenster hinter dem Gesicht steht der Zustand auch in Worten.
 
 ### Mein-Notaus-Knopf
 
-Klick aufs Gesicht → **„Mein Notaus …“**, nach einer Rückfrage. Danach hält der Spark für das eigene Profil an, und
+Klick aufs Gesicht → unten **„Notaus …“**, nach einer Rückfrage. Danach hält der Spark für das eigene Profil an, und
 auch der Begleiter bekommt keine Antworten mehr (Symbol rot). **Aufheben geht nur im Panel im Browser mit der PIN** –
 dafür gibt es „Panel öffnen“.
 
@@ -427,7 +432,7 @@ an einem versteckten Ort), legt er die geprüfte neue Version in
 `~/Library/Application Support/Spark Begleiter/update/bereit/` und zeigt sie im Finder: Begleiter beenden und sie
 selbst in „Programme“ ziehen.
 
-**Einstellungen → Über** zeigt die eigene Version, Mac-Typ (Apple-Chip oder Intel), mit welchem Spark er gekoppelt
+**Einstellungen → Über und Update** zeigt die eigene Version, Mac-Typ (Apple-Chip oder Intel), mit welchem Spark er gekoppelt
 ist und den Stand der Updates; **„Nach Updates suchen“** fragt den Spark sofort. Ein selbst gebautes Programm ohne
 Versionsnummer („Entwicklungsversion“, 0.0.0) bietet nie ein Update an.
 
@@ -439,8 +444,8 @@ Bedienungshilfen bzw. dem Schlüsselbund (siehe „Freigaben“).
 
 ## Spark unterstützen
 
-Der Spark ist kostenlos. Wer mag, kann dem Entwickler einen Kaffee spendieren: der gelbe Knopf **„☕ Spark
-unterstützen“** im Fenster hinter dem Gesicht bzw. **„☕ Buy me a coffee“** unter Einstellungen → Über. Erst der
+Der Spark ist kostenlos. Wer mag, kann dem Entwickler einen Kaffee spendieren: der gelbe Knopf **„☕ Buy me a coffee“**
+unter Einstellungen → Über und Update (Abschnitt „Spark unterstützen“). Erst der
 Klick öffnet die Seite auf buymeacoffee.com im Browser; der Begleiter selbst ruft dort nichts auf. Die Adresse kommt
 vom Spark, angenommen wird aber nur eine `https://buymeacoffee.com/…`-Adresse, sonst nimmt er die feste
 `https://buymeacoffee.com/zquu1xu570`.

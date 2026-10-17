@@ -1548,6 +1548,13 @@
 "titel": "Lange Gespräche",
 "text": "A: Nach dem Update unter Zustand → Modelle im Kasten „Lange Gespräche“ „4 Gespräche gleichzeitig mit je 64K“ wählen, „Übernehmen“ und bestätigen. Oben steht, dass ein Wechsel läuft; nach ein paar Minuten antwortet das Sprachmodell wieder und die Wahl ist mit „jetzt“ markiert. B: „1 sehr langes Gespräch mit 256K“ wählen und ein langes Dokument fragen (die erste Antwort dauert dann länger). C: Zurück auf „Standard“. In der iPhone-App unter Zustand → Modelle dasselbe.",
 "thread": "Eigene Modell-Installation statt qwen38"
+},
+{
+"id": "P245",
+"v": 729,
+"titel": "Begleiter-Fenster und Einstellungen neu",
+"text": "A: Am PC aufs Spark-Gesicht in der Taskleiste klicken (am Mac in der Menüleiste). Oben stehen Gruß, Gerät und ein grüner Punkt „alles läuft“, darunter das Feld „Frag Spark …“: eine Frage tippen und Enter, sie erscheint in „Frag Spark“ mit Antwort. Die Befehle sind Kacheln mit Tastenkürzel, unten „Dieser Rechner“ mit Schaltern für Mikrofon und Weckwort; der Schalter wechselt, das Fenster bleibt offen. Kein gelber Kaffee-Knopf mehr. Zahnrad oben rechts: die Einstellungen haben links ein Seitenmenü (Übersicht, Tastenkürzel, … , Kopplung, Über und Update); der Kaffee steht nur unter Über und Update.",
+"thread": "Begleiter-App aufpolieren"
 }
 ]
 }

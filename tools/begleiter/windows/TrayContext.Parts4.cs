@@ -230,13 +230,13 @@ internal sealed partial class TrayContext
         if (IsOn(Parts.Speak))
         {
             bool active = _speaker is not null || _speakCts is not null;
-            items.Add(new PanelItem(active ? "Vorlesen stoppen" : "Zwischenablage vorlesen", Glyph.Speaker,
+            items.Add(new PanelItem(active ? "Vorlesen stoppen" : "Vorlesen", Glyph.Speaker,
                 _config.GetHotkey(Parts.Speak).ToString(), () => _ = SpeakAsync(fromHotkey: false)));
         }
 
         if (IsOn(Parts.Meeting))
         {
-            items.Add(new PanelItem(_meeting is null ? "Besprechung mitschreiben" : "Besprechung beenden", Glyph.Record,
+            items.Add(new PanelItem(_meeting is null ? "Mitschreiben" : "Mitschreiben beenden", Glyph.Record,
                 _config.GetHotkey(Parts.Meeting).ToString(), () => _ = ToggleMeetingAsync(),
                 Danger: _meeting is not null, Enabled: !_meetingStarting && _meeting?.Ending != true));
         }

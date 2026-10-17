@@ -155,6 +155,24 @@ internal enum ButtonKind
 
     /// <summary>Runder Symbolknopf (Mikrofon).</summary>
     Round,
+
+    /// <summary>Kachel im Begleiter-Fenster: getöntes Symbol, Name (zweizeilig), Tastenkürzel klein darunter.</summary>
+    Tile,
+
+    /// <summary>Zeile mit Schalter rechts (an = <see cref="SparkButton.Checked"/>), darunter ein Satz.</summary>
+    Toggle,
+
+    /// <summary>Zeile mit Tätigkeit rechts in Akzentfarbe (<see cref="SparkButton.Verb"/>), darunter ein Satz.</summary>
+    Row,
+
+    /// <summary>Textlink ohne Rahmen in Akzentfarbe (rot mit <see cref="SparkButton.Danger"/>).</summary>
+    Link,
+
+    /// <summary>Kleiner quadratischer Symbolknopf (Einstellungen, Schließen).</summary>
+    Icon,
+
+    /// <summary>Punkt im Seitenmenü (gewählt = Karte mit Schatten, Akzent-Text).</summary>
+    Nav,
 }
 
 /// <summary>Selbst gezeichneter Knopf in den Formen des Entwurfs; Tastatur und Barrierefreiheit wie ein Button.</summary>
@@ -187,6 +205,15 @@ internal sealed class SparkButton : Button, IThemed
     /// <summary>Rot (Mein Notaus).</summary>
     public bool Danger { get; set; }
 
+    /// <summary>Ein Satz unter dem Namen (nur <see cref="ButtonKind.Toggle"/> und <see cref="ButtonKind.Row"/>).</summary>
+    public string? Detail { get; set; }
+
+    /// <summary>Tätigkeit rechts in der Zeile, z. B. „Öffnen“ (nur <see cref="ButtonKind.Row"/>).</summary>
+    public string? Verb { get; set; }
+
+    /// <summary>Farbe des Symbols einer Kachel (sonst der Akzent).</summary>
+    public Color? Tint { get; set; }
+
     /// <summary>Gewählt (Chip) bzw. aktiv (Mikrofon nimmt auf).</summary>
     public bool Checked
     {
@@ -194,7 +221,12 @@ internal sealed class SparkButton : Button, IThemed
         set
         {
             _checked = value;
-            AccessibleRole = Kind == ButtonKind.Chip ? AccessibleRole.RadioButton : AccessibleRole.PushButton;
+            AccessibleRole = Kind switch
+            {
+                ButtonKind.Chip or ButtonKind.Nav => AccessibleRole.RadioButton,
+                ButtonKind.Toggle => AccessibleRole.CheckButton,
+                _ => AccessibleRole.PushButton,
+            };
             Invalidate();
         }
     }
@@ -219,7 +251,8 @@ internal sealed class SparkButton : Button, IThemed
     public void ApplyTheme(int dpi)
     {
         _dpi = dpi;
-        FontStyle style = Kind is ButtonKind.Primary or ButtonKind.Coffee ? FontStyle.Bold : FontStyle.Regular;
+        FontStyle style = Kind is ButtonKind.Primary or ButtonKind.Coffee or ButtonKind.Tile or ButtonKind.Toggle or ButtonKind.Row
+            ? FontStyle.Bold : FontStyle.Regular;
         Font = Theme.UiFont(dpi, Kind is ButtonKind.Coffee or ButtonKind.Chip ? FontSize - 0.5f : FontSize, style);
         Invalidate();
     }
@@ -234,13 +267,22 @@ internal sealed class SparkButton : Button, IThemed
             return new Size(S(34), S(34));
         }
 
+        if (Kind == ButtonKind.Icon)
+        {
+            return new Size(S(30), S(30));
+        }
+
         Size t = Draw.Measure(Text, Font);
-        int glyph = Glyph != Glyph.None && Kind != ButtonKind.Item ? S(16 + 6) : 0;
+        int glyph = Glyph != Glyph.None && Kind is not (ButtonKind.Item or ButtonKind.Tile or ButtonKind.Toggle or ButtonKind.Row or ButtonKind.Nav) ? S(16 + 6) : 0;
         return Kind switch
         {
             ButtonKind.Coffee => new Size(t.Width + glyph + S(20), Math.Max(S(28), t.Height + S(10))),
             ButtonKind.Chip => new Size(t.Width + glyph + S(20), Math.Max(S(28), t.Height + S(8))),
             ButtonKind.Item => new Size(t.Width + S(80), S(44)),
+            ButtonKind.Tile => new Size(t.Width + S(20), S(84)),
+            ButtonKind.Toggle or ButtonKind.Row => new Size(t.Width + S(120), Math.Max(S(48), t.Height + (Detail is { Length: > 0 } ? S(30) : S(20)))),
+            ButtonKind.Link => new Size(t.Width + glyph + S(12), Math.Max(S(28), t.Height + S(8))),
+            ButtonKind.Nav => new Size(t.Width + S(16 + 10 + 22), Math.Max(S(34), t.Height + S(14))),
             _ => new Size(t.Width + glyph + S(24), Math.Max(S(32), t.Height + S(14))),
         };
     }
@@ -324,14 +366,28 @@ internal sealed class SparkButton : Button, IThemed
             case ButtonKind.Round:
                 PaintRound(g, r, p);
                 break;
+            case ButtonKind.Tile:
+                PaintTile(g, r, p);
+                break;
+            case ButtonKind.Toggle:
+            case ButtonKind.Row:
+                PaintRow(g, r, p, focus);
+                break;
+            case ButtonKind.Link:
+            case ButtonKind.Icon:
+                PaintQuiet(g, r, p);
+                break;
+            case ButtonKind.Nav:
+                PaintNav(g, r, p);
+                break;
             default:
                 PaintSecondary(g, r, p);
                 break;
         }
 
-        if (focus && Kind != ButtonKind.Item)
+        if (focus && Kind is not (ButtonKind.Item or ButtonKind.Toggle or ButtonKind.Row))
         {
-            float radius = Kind is ButtonKind.Coffee or ButtonKind.Chip or ButtonKind.Round ? r.Height / 2f : S(9);
+            float radius = Kind is ButtonKind.Coffee or ButtonKind.Chip or ButtonKind.Round ? r.Height / 2f : Kind == ButtonKind.Tile ? S(12) : S(9);
             Draw.StrokeRound(g, Kind == ButtonKind.Primary ? p.Fg : p.Accent, r, radius, Math.Max(2f, S(2)));
         }
     }
@@ -443,6 +499,141 @@ internal sealed class SparkButton : Button, IThemed
         Draw.Text(g, Text, Font, new Rectangle(x, 0, Math.Max(0, right - x), Height), !Enabled ? p.Muted : Danger ? p.Bad : p.Fg);
     }
 
+    /// <summary>Kachel: Karte mit Rand, oben das getönte Symbol, darunter der Name (bis zwei Zeilen), unten das Kürzel.</summary>
+    private void PaintTile(Graphics g, RectangleF r, Palette p)
+    {
+        Color tint = p.HighContrast ? p.Fg : Danger ? p.Bad : Tint ?? p.Accent;
+        Color back = !Enabled ? p.Card : _pressed ? p.Line : _hover ? p.Soft : Danger ? Palette.Mix(p.Card, p.Bad, 0.06f) : p.Card;
+        Draw.FillRound(g, back, r, S(12));
+        Draw.StrokeRound(g, Danger ? Palette.Mix(p.Line, p.Bad, 0.45f) : p.Line, r, S(12));
+
+        int box = S(28);
+        var boxRect = new RectangleF(S(10), S(10), box, box);
+        Draw.FillRound(g, p.HighContrast ? p.Card : Palette.Mix(p.Card, tint, 0.14f), boxRect, S(8));
+        float gs = S(16);
+        Glyphs.Draw(g, Glyph, new RectangleF(boxRect.X + ((box - gs) / 2f), boxRect.Y + ((box - gs) / 2f), gs, gs), Enabled ? tint : p.Muted);
+
+        int x = S(10);
+        int w = Math.Max(1, Width - S(20));
+        int hotH = string.IsNullOrEmpty(Hotkey) ? 0 : S(16);
+        var name = new Rectangle(x, S(44), w, Math.Max(1, Height - S(44) - hotH - S(6)));
+        Draw.Text(g, Text, Font, name, Enabled ? p.Fg : p.Muted, Draw.Wrap | TextFormatFlags.EndEllipsis);
+        if (hotH > 0)
+        {
+            Draw.Text(g, Hotkey!, Theme.UiFont(_dpi, 7.5f), new Rectangle(x, Height - hotH - S(6), w, hotH), p.Muted);
+        }
+    }
+
+    /// <summary>Zeile: Symbol, Name und ein Satz; rechts der Schalter (<see cref="ButtonKind.Toggle"/>) oder die Tätigkeit.</summary>
+    private void PaintRow(Graphics g, RectangleF r, Palette p, bool focus)
+    {
+        if ((_hover || focus || _pressed) && Enabled)
+        {
+            Draw.FillRound(g, _pressed ? p.Line : p.Soft, r, S(10));
+        }
+
+        if (focus)
+        {
+            Draw.StrokeRound(g, p.Accent, r, S(10), Math.Max(1.5f, S(1.5f)));
+        }
+
+        float gs = S(16);
+        Glyphs.Draw(g, Glyph, new RectangleF(S(12), (r.Height - gs) / 2f, gs, gs), !Enabled ? p.Muted : Danger ? p.Bad : p.Muted);
+
+        int right = Width - S(12);
+        if (Kind == ButtonKind.Toggle)
+        {
+            var track = new RectangleF(right - S(36), (r.Height - S(20)) / 2f, S(36), S(20));
+            if (Checked && Enabled)
+            {
+                using Brush brush = Draw.AccentBrush(track, p, 45f);
+                using GraphicsPath path = Draw.Round(track, track.Height / 2f);
+                g.FillPath(brush, path);
+            }
+            else
+            {
+                Draw.FillRound(g, p.Line, track, track.Height / 2f);
+            }
+
+            float knob = S(16);
+            float kx = Checked ? track.Right - knob - S(2) : track.X + S(2);
+            using (var knobBrush = new SolidBrush(p.HighContrast ? p.Fg : Color.White))
+            {
+                g.FillEllipse(knobBrush, kx, track.Y + S(2), knob, knob);
+            }
+
+            right = (int)track.X - S(10);
+        }
+        else if (!string.IsNullOrEmpty(Verb))
+        {
+            Font verb = Theme.UiFont(_dpi, 9f, FontStyle.Bold);
+            Size v = Draw.Measure(Verb, verb);
+            Draw.Text(g, Verb, verb, new Rectangle(right - v.Width, 0, v.Width, Height), Enabled ? (Danger ? p.Bad : p.Accent) : p.Muted);
+            right -= v.Width + S(10);
+        }
+
+        int x = S(40);
+        int w = Math.Max(1, right - x);
+        Font small = Theme.UiFont(_dpi, 8f);
+        int nameH = Draw.Measure("Ag", Font).Height;
+        int detailH = string.IsNullOrEmpty(Detail) ? 0 : Draw.Measure("Ag", small).Height;
+        int top = (Height - nameH - detailH) / 2;
+        Draw.Text(g, Text, Font, new Rectangle(x, top, w, nameH), !Enabled ? p.Muted : Danger ? p.Bad : p.Fg);
+        if (detailH > 0)
+        {
+            Draw.Text(g, Detail!, small, new Rectangle(x, top + nameH, w, detailH), p.Muted);
+        }
+    }
+
+    /// <summary>Textlink bzw. Symbolknopf: ohne Rand, beim Überfahren eine weiche Fläche.</summary>
+    private void PaintQuiet(Graphics g, RectangleF r, Palette p)
+    {
+        if ((_hover || _pressed) && Enabled)
+        {
+            Draw.FillRound(g, _pressed ? p.Line : p.Soft, r, S(8));
+        }
+
+        Color color = !Enabled ? p.Muted : Danger ? p.Bad : Kind == ButtonKind.Icon ? p.Muted : p.Accent;
+        if (Kind == ButtonKind.Icon)
+        {
+            float gs = S(16);
+            Glyphs.Draw(g, Glyph, new RectangleF((r.Width - gs) / 2f, (r.Height - gs) / 2f, gs, gs), _hover && Enabled ? p.Fg : color);
+            return;
+        }
+
+        PaintLabel(g, r, color, color);
+    }
+
+    /// <summary>Seitenmenü: gewählt = Karte mit Rand und Akzent-Text, sonst nur Text auf der weichen Fläche.</summary>
+    private void PaintNav(Graphics g, RectangleF r, Palette p)
+    {
+        if (_checked)
+        {
+            Draw.FillRound(g, p.Card, r, S(9));
+            Draw.StrokeRound(g, p.Line, r, S(9));
+        }
+        else if (_hover && Enabled)
+        {
+            Draw.FillRound(g, Palette.Mix(p.Soft, p.Line, 0.6f), r, S(9));
+        }
+
+        Color color = !Enabled ? p.Muted : _checked ? p.Accent : p.Fg;
+        float gs = S(16);
+        Glyphs.Draw(g, Glyph, new RectangleF(S(10), (r.Height - gs) / 2f, gs, gs), _checked ? p.Accent : p.Muted);
+        Font font = _checked ? Theme.UiFont(_dpi, FontSize, FontStyle.Bold) : Font;
+        int x = S(10) + (int)gs + S(10);
+        Draw.Text(g, Text, font, new Rectangle(x, 0, Math.Max(1, Width - x - S(6)), Height), color);
+        if (!string.IsNullOrEmpty(Hotkey))
+        {
+            // kleines Abzeichen rechts (z. B. „neu“)
+            Font badge = Theme.UiFont(_dpi, 7.5f, FontStyle.Bold);
+            Size b = Draw.Measure(Hotkey, badge);
+            var br = new Rectangle(Width - S(8) - b.Width - S(10), (Height - b.Height - S(2)) / 2, b.Width + S(10), b.Height + S(2));
+            Draw.FillRound(g, Palette.Mix(p.Card, p.Accent, 0.16f), br, br.Height / 2f);
+            Draw.Text(g, Hotkey, badge, br, p.Accent, Draw.Line | TextFormatFlags.HorizontalCenter);
+        }
+    }
+
     /// <summary>Text (und optional Symbol) mittig.</summary>
     private void PaintLabel(Graphics g, RectangleF r, Color color, Color glyphColor)
     {
@@ -469,6 +660,9 @@ internal enum TextRole
     Title,
     Heading,
     Error,
+
+    /// <summary>Kleine Abschnittsüberschrift in Großbuchstaben (wie im Panel).</summary>
+    Section,
 }
 
 /// <summary>Beschriftung in den Farben und Größen des Entwurfs. Höhe setzt das Fenster (umbrechend).</summary>
@@ -508,13 +702,14 @@ internal sealed class TLabel : Label, IThemed
         {
             TextRole.Title => Theme.UiFont(dpi, 11f, FontStyle.Bold),
             TextRole.Heading => Theme.UiFont(dpi, 9.5f, FontStyle.Bold),
+            TextRole.Section => Theme.UiFont(dpi, 7.5f, FontStyle.Bold),
             TextRole.Small or TextRole.SmallMuted => Theme.UiFont(dpi, 8.5f),
             _ => Theme.UiFont(dpi, 9.5f),
         };
         BackColor = p.Card;
         ForeColor = CustomColor ?? Role switch
         {
-            TextRole.Muted or TextRole.SmallMuted => p.Muted,
+            TextRole.Muted or TextRole.SmallMuted or TextRole.Section => p.Muted,
             TextRole.Error => p.Bad,
             _ => p.Fg,
         };
@@ -687,8 +882,17 @@ internal sealed class ToggleSwitch : CheckBox, IThemed
         Draw.HighQuality(g);
 
         var track = new RectangleF(S(1), S(2), S(34), S(18));
-        Color trackColor = !Enabled ? p.Line : Checked ? p.Accent : p.Line;
-        Draw.FillRound(g, trackColor, track, track.Height / 2f);
+        if (Checked && Enabled)
+        {
+            using Brush brush = Draw.AccentBrush(track, p, 45f);
+            using GraphicsPath path = Draw.Round(track, track.Height / 2f);
+            g.FillPath(brush, path);
+        }
+        else
+        {
+            Draw.FillRound(g, p.Line, track, track.Height / 2f);
+        }
+
         if (!Checked)
         {
             Draw.StrokeRound(g, p.Muted, track, track.Height / 2f);

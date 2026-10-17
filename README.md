@@ -40,6 +40,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.729** Companion tidied up: window with a question field and tiles, settings with a side menu
 - **V01.0.728** "Long conversations" under Zustand → Modelle (4 conversations of 64K each or one of 256K); measuring shows that it runs and what it does
 - **V01.0.727** Self-test fix: the picture tests know "My things" in the iPhone app
 - **V01.0.726** New page "My things" in the iPhone app: documents with filters and selection, plus pictures, music and memory
@@ -49,7 +50,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.722** Measure whether Qwen3.8 handles 2 to 4 questions at once with 64K context, plus two faster kinds (FP8 store, DSpark)
 - **V01.0.721** Basic set for newcomers: 16 conversation functions are on in new installations; existing ones get the card "Take them all" on Features, the question "May the Spark use the internet?" and the filter "Recommended", new profiles first see where to set things
 - **V01.0.720** Cleanup: the speech output of an answer lives in a file of its own, chat.py is another 160 lines shorter
-- **V01.0.719** Measure models right in the panel (Status → Models "Measure")
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

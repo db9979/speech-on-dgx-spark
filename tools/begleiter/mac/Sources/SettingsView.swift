@@ -9,7 +9,7 @@ extension Windows {
             return
         }
         let recorder = HotkeyRecorder()
-        Windows.shared.show("settings", title: "Spark-Begleiter – Einstellungen", size: NSSize(width: 580, height: 600)) {
+        Windows.shared.show("settings", title: "Spark-Begleiter – Einstellungen", size: NSSize(width: 760, height: 600)) {
             SettingsView(model: AppModel.shared, recorder: recorder, updater: Updater.shared)
         }
         Windows.shared.whenClosed("settings") { recorder.stop() }
@@ -17,13 +17,48 @@ extension Windows {
 }
 
 /// The program's own settings: the connection, the hotkeys (only here, never on the Spark), the permissions.
-/// Which parts are on is set in the panel.
+/// Which parts are on is set in the panel. A side menu like in the panel ("Begleiter aufpolieren" 2a,
+/// Dominik 2026-10-17); a page only shows when its part is on.
 struct SettingsView: View {
     enum Tab: String, CaseIterable, Identifiable {
-        case allgemein = "Allgemein"
+        case uebersicht = "Übersicht"
+        case frag = "Frag Spark"
         case kuerzel = "Tastenkürzel"
-        case ueber = "Über"
+        case tagesstart = "Tagesstart"
+        case ordner = "Wissen-Ordner"
+        case rechte = "Berechtigungen"
+        case kopplung = "Kopplung"
+        case ueber = "Über und Update"
         var id: String { rawValue }
+
+        var symbol: String {
+            switch self {
+            case .uebersicht: return "square.grid.2x2"
+            case .frag: return "bubble.left"
+            case .kuerzel: return "keyboard"
+            case .tagesstart: return "sun.max"
+            case .ordner: return "folder"
+            case .rechte: return "lock.shield"
+            case .kopplung: return "link"
+            case .ueber: return "info.circle"
+            }
+        }
+
+        var intro: String {
+            switch self {
+            case .uebersicht: return "Wie es dem Begleiter geht und was im Panel für ihn eingeschaltet ist."
+            case .frag: return "Wie „Frag Spark“ auf diesem Mac antwortet."
+            case .kuerzel: return "Die Tastenkürzel gelten nur auf diesem Mac."
+            case .tagesstart: return "Ein kurzer Überblick am Morgen und zum Feierabend."
+            case .ordner: return "Dateien aus diesem Ordner kommen ins Wissen des Spark."
+            case .rechte: return "Was macOS dem Begleiter erlaubt."
+            case .kopplung: return "Mit welchem Spark und Profil dieser Mac verbunden ist."
+            case .ueber: return "Version, Updates und Unterstützung."
+            }
+        }
+
+        /// the pages under the heading "GERÄT" in the side menu
+        var device: Bool { self == .rechte || self == .kopplung || self == .ueber }
     }
 
     @ObservedObject var model: AppModel
@@ -35,36 +70,58 @@ struct SettingsView: View {
     @ObservedObject private var folder = FolderWatch.shared
     @ObservedObject private var daily = Daily.shared
     @AppStorage(AskSpeak.key) private var speakMode = "voice"
-    @State private var tab: Tab = .allgemein
+    @State private var tab: Tab = .uebersicht
+    @State private var allParts = false
+
+    /// pages of parts that are off stay out of the menu
+    private var tabs: [Tab] {
+        Tab.allCases.filter { t in
+            switch t {
+            case .frag: return model.part("speak")
+            case .tagesstart: return model.part("daily")
+            case .ordner: return model.part("folder")
+            default: return true
+            }
+        }
+    }
+
+    private var current: Tab { tabs.contains(tab) ? tab : .uebersicht }
 
     var body: some View {
         VStack(spacing: 0) {
             GradientBar()
-            Picker("", selection: $tab) {
-                ForEach(Tab.allCases) { t in
-                    Text(verbatim: t.rawValue).tag(t)
-                }
-            }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-            .frame(maxWidth: 360)
-            .padding(.top, 12)
-            .padding(.horizontal, 16)
-            ScrollView {
-                VStack(alignment: .leading, spacing: 14) {
-                    switch tab {
-                    case .allgemein: general
-                    case .kuerzel: shortcuts
-                    case .ueber: about
+            HStack(spacing: 0) {
+                sidebar
+                Rectangle().fill(Theme.line).frame(width: 1)
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 14) {
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(verbatim: current.rawValue)
+                                .font(.system(size: 20, weight: .semibold))
+                                .accessibilityAddTraits(.isHeader)
+                            Text(verbatim: current.intro)
+                                .font(.system(size: 12))
+                                .foregroundColor(Theme.muted)
+                        }
+                        switch current {
+                        case .uebersicht: overview
+                        case .frag: speakSettings
+                        case .kuerzel: shortcuts
+                        case .tagesstart: dailySettings
+                        case .ordner: folderSettings
+                        case .rechte: permissions
+                        case .kopplung: general
+                        case .ueber: about
+                        }
                     }
+                    .padding(20)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .padding(16)
-                .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
         .background(Theme.bg)
         .foregroundColor(Theme.fg)
-        .frame(minWidth: 500, minHeight: 460)
+        .frame(minWidth: 660, minHeight: 460)
         .onAppear { refreshPermissions() }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             refreshPermissions()
@@ -72,7 +129,54 @@ struct SettingsView: View {
         .onChange(of: tab) { _ in recorder.stop() }
     }
 
-    // ------------------------------------------------------------------ Allgemein
+    private var sidebar: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack(spacing: 8) {
+                FaceView(size: 26)
+                Text(verbatim: "Begleiter")
+                    .font(.system(size: 14, weight: .semibold))
+            }
+            .padding(.horizontal, 6)
+            .padding(.bottom, 10)
+            ForEach(tabs.filter { !$0.device }) { t in
+                NavRow(title: t.rawValue, symbol: t.symbol, selected: current == t) { tab = t }
+            }
+            SectionLabel(text: "Gerät")
+                .padding(.top, 12)
+                .padding(.bottom, 4)
+                .padding(.horizontal, 6)
+            ForEach(tabs.filter { $0.device }) { t in
+                NavRow(title: t.rawValue, symbol: t.symbol, selected: current == t,
+                       badge: t == .ueber && updater.dot ? "neu" : "") { tab = t }
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(12)
+        .frame(width: 200, alignment: .topLeading)
+        .frame(maxHeight: .infinity, alignment: .top)
+        .background(Theme.soft)
+    }
+
+    // ------------------------------------------------------------------ Übersicht
+
+    private var status: (title: String, color: Color, good: Bool) {
+        guard model.paired else { return ("Nicht gekoppelt", Theme.muted, false) }
+        switch model.reach {
+        case .ok: return ("Alles läuft", Theme.ok, true)
+        case .unknown: return ("Verbinde …", Theme.accent, true)
+        case .offline: return ("Spark nicht erreichbar", Theme.warn, false)
+        case .notaus: return ("Notaus ist an", Theme.bad, false)
+        }
+    }
+
+    @ViewBuilder
+    private var overview: some View {
+        let s = status
+        StatusCard(title: s.title, detail: model.statusLine, color: s.color, good: s.good)
+        panelSettings
+    }
+
+    // ------------------------------------------------------------------ Kopplung
 
     @ViewBuilder
     private var general: some View {
@@ -89,24 +193,34 @@ struct SettingsView: View {
             } else {
                 Text(verbatim: "Nicht gekoppelt.")
             }
-            HStack {
+            HStack(spacing: 8) {
                 Button("Panel öffnen") { model.openPanel() }
+                    .buttonStyle(SoftButtonStyle())
                     .disabled(model.base == nil)
                 Button("Problem melden …") { model.openPanel("#melden") }
+                    .buttonStyle(SoftButtonStyle())
                     .disabled(model.base == nil)
                 Button("Neu koppeln …") { Windows.showPairing() }
-                Button("Entkoppeln …") { confirmUnpair() }
-                    .disabled(!model.paired)
+                    .buttonStyle(SoftButtonStyle())
             }
         }
-        generalRest
+        section("Entkoppeln") {
+            Text(verbatim: "Löscht den Schlüssel auf diesem Mac. Danach braucht der Begleiter einen neuen Kopplungscode.")
+                .font(.caption)
+                .foregroundColor(Theme.muted)
+                .fixedSize(horizontal: false, vertical: true)
+            Button("Entkoppeln …") { confirmUnpair() }
+                .buttonStyle(SoftButtonStyle())
+                .foregroundColor(Theme.bad)
+                .disabled(!model.paired)
+        }
     }
 
     // ------------------------------------------------------------------ Tastenkürzel
 
     @ViewBuilder
     private var shortcuts: some View {
-        section("Tastenkürzel") {
+        section("Kürzel") {
             ForEach(HotAction.allCases) { a in
                 HStack {
                     Text(verbatim: a.title)
@@ -143,15 +257,6 @@ struct SettingsView: View {
                 .foregroundColor(Theme.muted)
         }
 
-    }
-
-    @ViewBuilder
-    private var generalRest: some View {
-        permissions
-        if model.part("folder") { folderSettings }
-        if model.part("daily") { dailySettings }
-        if model.part("speak") { speakSettings }
-        panelSettings
     }
 
     @ViewBuilder
@@ -312,37 +417,55 @@ struct SettingsView: View {
 
     }
 
+    /// what is set in the panel: the first six parts, the rest after "Weitere N zeigen"
     @ViewBuilder
     private var panelSettings: some View {
-        section("Im Panel eingestellt") {
-            if let cfg = model.config {
-                ForEach(DeskConfig.partNames, id: \.self) { p in
-                    HStack {
+        SectionLabel(text: "Im Panel eingestellt")
+        if let cfg = model.config {
+            let names = DeskConfig.partNames
+            let shown = allParts ? names : Array(names.prefix(6))
+            PanelBox {
+                ForEach(Array(shown.enumerated()), id: \.element) { i, p in
+                    if i > 0 { RowLine() }
+                    HStack(spacing: 10) {
                         Image(systemName: cfg.parts[p] == true ? "checkmark.circle.fill" : "circle")
                             .foregroundColor(cfg.parts[p] == true ? Theme.ok : Theme.muted)
+                            .frame(width: 20)
                         Text(verbatim: Self.partTitle(p))
+                            .font(.system(size: 13))
+                        Spacer(minLength: 6)
                         if cfg.parts[p] != true && cfg.allowed[p] != true {
-                            Text(verbatim: "(nicht freigegeben)")
+                            Text(verbatim: "nicht freigegeben")
+                                .font(.caption)
+                                .foregroundColor(Theme.muted)
+                        } else {
+                            Text(verbatim: cfg.parts[p] == true ? "an" : "aus")
                                 .font(.caption)
                                 .foregroundColor(Theme.muted)
                         }
                     }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 7)
                 }
-                Text(verbatim: model.autostartOn ? "Autostart: an" : "Autostart: aus")
-                if !model.autostartProblem.isEmpty {
-                    Text(verbatim: model.autostartProblem)
-                        .font(.caption)
-                        .foregroundColor(Theme.bad)
-                }
-                Text(Wege.text("Ändern im Panel unter Ich → Begleiter; der Begleiter übernimmt es beim nächsten Abruf."))
-                    .font(.caption)
-                    .foregroundColor(Theme.muted)
-            } else {
-                Text(verbatim: "Noch keine Einstellungen vom Spark.")
-                    .foregroundColor(Theme.muted)
             }
+            if names.count > 6 {
+                Button(allParts ? "Weniger zeigen" : "Weitere \(names.count - 6) zeigen") { allParts.toggle() }
+                    .buttonStyle(.link)
+            }
+            Text(verbatim: model.autostartOn ? "Autostart: an" : "Autostart: aus")
+                .font(.system(size: 12))
+            if !model.autostartProblem.isEmpty {
+                Text(verbatim: model.autostartProblem)
+                    .font(.caption)
+                    .foregroundColor(Theme.bad)
+            }
+            Text(Wege.text("Ändern im Panel unter Ich → Begleiter; der Begleiter übernimmt es beim nächsten Abruf."))
+                .font(.caption)
+                .foregroundColor(Theme.muted)
+        } else {
+            Text(verbatim: "Noch keine Einstellungen vom Spark.")
+                .foregroundColor(Theme.muted)
         }
-
     }
 
     // ------------------------------------------------------------------ Über
@@ -404,6 +527,8 @@ struct SettingsView: View {
                 .foregroundColor(Theme.muted)
                 .fixedSize(horizontal: false, vertical: true)
         }
+        SectionLabel(text: "Spark unterstützen")
+            .padding(.top, 4)
         CardBox {
             Text(verbatim: "Der Spark ist kostenlos. Wenn er dir hilft, freut sich der Entwickler über einen Kaffee.")
                 .font(.system(size: 12))
@@ -462,11 +587,12 @@ struct SettingsView: View {
         }
     }
 
+    /// a small title in capitals above a card, like the panel's sections
+    @ViewBuilder
     private func section<Content: View>(_ title: String, @ViewBuilder _ content: () -> Content) -> some View {
         let inner = content()
-        return CardBox {
-            Text(verbatim: title)
-                .font(.headline)
+        SectionLabel(text: title)
+        CardBox {
             inner
         }
     }

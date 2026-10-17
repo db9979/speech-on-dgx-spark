@@ -148,6 +148,15 @@ internal enum Glyph
     Speaker,
     Record,
     MicOff,
+    Gear,
+    Close,
+    Eye,
+    External,
+    Grid,
+    Key,
+    Sun,
+    Link,
+    Info,
 }
 
 internal static class Glyphs
@@ -248,6 +257,76 @@ internal static class Glyphs
                         g.FillEllipse(dot, 5.5f, 5.5f, 5, 5);
                     }
 
+                    break;
+                case Glyph.Gear:
+                    g.DrawEllipse(pen, 5.5f, 5.5f, 5, 5);
+                    for (int i = 0; i < 8; i++)
+                    {
+                        double a = i * Math.PI / 4;
+                        g.DrawLine(pen, 8 + (float)(4.6 * Math.Cos(a)), 8 + (float)(4.6 * Math.Sin(a)), 8 + (float)(6.4 * Math.Cos(a)), 8 + (float)(6.4 * Math.Sin(a)));
+                    }
+
+                    break;
+                case Glyph.Close:
+                    g.DrawLine(pen, 4, 4, 12, 12);
+                    g.DrawLine(pen, 12, 4, 4, 12);
+                    break;
+                case Glyph.Eye:
+                    g.DrawBezier(pen, 1.5f, 8, 4.5f, 3, 11.5f, 3, 14.5f, 8);
+                    g.DrawBezier(pen, 1.5f, 8, 4.5f, 13, 11.5f, 13, 14.5f, 8);
+                    g.DrawEllipse(pen, 6, 6, 4, 4);
+                    break;
+                case Glyph.External:
+                    g.DrawLines(pen, new PointF[] { new(9, 3), new(13, 3), new(13, 7) });
+                    g.DrawLine(pen, 13, 3, 7.5f, 8.5f);
+                    g.DrawLines(pen, new PointF[] { new(11, 9.5f), new(11, 13), new(3, 13), new(3, 5), new(6.5f, 5) });
+                    break;
+                case Glyph.Grid:
+                    using (GraphicsPath a = SparkBegleiter.Draw.Round(new RectangleF(2.5f, 2.5f, 4.5f, 4.5f), 1.2f))
+                    using (GraphicsPath b = SparkBegleiter.Draw.Round(new RectangleF(9, 2.5f, 4.5f, 4.5f), 1.2f))
+                    using (GraphicsPath c = SparkBegleiter.Draw.Round(new RectangleF(2.5f, 9, 4.5f, 4.5f), 1.2f))
+                    using (GraphicsPath d = SparkBegleiter.Draw.Round(new RectangleF(9, 9, 4.5f, 4.5f), 1.2f))
+                    {
+                        g.DrawPath(pen, a);
+                        g.DrawPath(pen, b);
+                        g.DrawPath(pen, c);
+                        g.DrawPath(pen, d);
+                    }
+
+                    break;
+                case Glyph.Key:
+                    using (GraphicsPath board = SparkBegleiter.Draw.Round(new RectangleF(1.5f, 4, 13, 8.5f), 1.5f))
+                    {
+                        g.DrawPath(pen, board);
+                    }
+
+                    g.DrawLine(pen, 4.5f, 7, 5, 7);
+                    g.DrawLine(pen, 7.75f, 7, 8.25f, 7);
+                    g.DrawLine(pen, 11, 7, 11.5f, 7);
+                    g.DrawLine(pen, 5, 9.75f, 11, 9.75f);
+                    break;
+                case Glyph.Sun:
+                    g.DrawEllipse(pen, 5, 5, 6, 6);
+                    for (int i = 0; i < 8; i++)
+                    {
+                        double a = i * Math.PI / 4;
+                        g.DrawLine(pen, 8 + (float)(5 * Math.Cos(a)), 8 + (float)(5 * Math.Sin(a)), 8 + (float)(6.6 * Math.Cos(a)), 8 + (float)(6.6 * Math.Sin(a)));
+                    }
+
+                    break;
+                case Glyph.Link:
+                    g.DrawArc(pen, 1.5f, 5, 7, 6, 90, 180);
+                    g.DrawLine(pen, 5, 5, 7.5f, 5);
+                    g.DrawLine(pen, 5, 11, 7.5f, 11);
+                    g.DrawArc(pen, 7.5f, 5, 7, 6, 270, 180);
+                    g.DrawLine(pen, 8.5f, 5, 11, 5);
+                    g.DrawLine(pen, 8.5f, 11, 11, 11);
+                    g.DrawLine(pen, 5.5f, 8, 10.5f, 8);
+                    break;
+                case Glyph.Info:
+                    g.DrawEllipse(pen, 2, 2, 12, 12);
+                    g.DrawLine(pen, 8, 7.5f, 8, 11);
+                    g.DrawLine(pen, 8, 5, 8, 5.2f);
                     break;
                 case Glyph.Bell:
                     g.DrawBezier(pen, 4, 11, 4, 4, 12, 4, 12, 11);

@@ -8,8 +8,27 @@ internal enum StatusKind
     Busy,
 }
 
-/// <summary>Eine Zeile im Tray-Fenster (ein eingeschalteter Teil).</summary>
-internal sealed record PanelItem(string Text, Glyph Glyph, string? Hotkey, Action Action, bool Danger = false, bool Enabled = true);
+/// <summary>Wo ein Teil im Begleiter-Fenster steht (Dominik 2026-10-17 „Begleiter aufpolieren“, Entwurf 1a).</summary>
+internal enum PanelItemKind
+{
+    /// <summary>Befehl als Kachel im Raster (Text verbessern, Diktieren, …).</summary>
+    Tile,
+
+    /// <summary>Schalter unter „Dieser Rechner“ (Mikrofon, Weckwort); das Fenster bleibt offen.</summary>
+    Toggle,
+
+    /// <summary>Zeile unter „Dieser Rechner“ mit einer Tätigkeit rechts (Wissen-Ordner „Öffnen“).</summary>
+    Row,
+
+    /// <summary>Link unten rechts im Fuß (Notaus, rot).</summary>
+    Footer,
+}
+
+/// <summary>Ein eingeschalteter Teil im Tray-Fenster: Kachel, Schalter, Zeile oder Link im Fuß.</summary>
+/// <param name="On">Nur <see cref="PanelItemKind.Toggle"/>: der Schalter steht auf an.</param>
+/// <param name="Verb">Nur <see cref="PanelItemKind.Row"/>: die Tätigkeit rechts, z. B. „Öffnen“.</param>
+internal sealed record PanelItem(string Text, Glyph Glyph, string? Hotkey, Action Action, bool Danger = false, bool Enabled = true,
+    PanelItemKind Kind = PanelItemKind.Tile, string? Detail = null, bool On = false, string? Verb = null);
 
 /// <summary>Teil "actions": eine Meldung im Tray-Fenster mit ihren Knöpfen (nur die angebotenen sind gesetzt).</summary>
 /// <param name="Done">„OK“: die Meldung ist gesehen und verschwindet; das Fenster bleibt offen (Dominik 2026-10-16).</param>
@@ -27,6 +46,10 @@ internal sealed record UpdateBanner(string Title, string Detail, string? Button,
 /// <summary>Was das Tray-Fenster zeigt; baut <see cref="TrayContext"/> bei jeder Änderung neu.</summary>
 internal sealed class PanelModel
 {
+    /// <summary>Überschrift im Kopf, z. B. „Guten Morgen, Dominik“.</summary>
+    public string Title { get; init; } = TrayContext.Title;
+
+    /// <summary>Zeile unter der Überschrift (Gerät); der Zustand steht mit Punkt dahinter.</summary>
     public string Subtitle { get; init; } = "";
 
     public string StatusText { get; init; } = "";
@@ -39,6 +62,15 @@ internal sealed class PanelModel
     public UpdateBanner? Update { get; init; }
 
     public IReadOnlyList<PanelItem> Items { get; init; } = Array.Empty<PanelItem>();
+
+    /// <summary>Teil "ask": das Fragefeld oben; der Text (auch leer) geht an „Frag Spark“. <c>null</c> = kein Feld.</summary>
+    public Action<string>? Ask { get; init; }
+
+    /// <summary>Tastenkürzel von „Frag Spark“ (steht im leeren Fragefeld).</summary>
+    public string? AskHotkey { get; init; }
+
+    /// <summary>Mikrofon im Fragefeld (nur mit Teil "dictate"): „Frag Spark“ öffnen und gleich zuhören.</summary>
+    public Action? AskVoice { get; init; }
 
     /// <summary>Meldungen mit Knöpfen (Teil "actions").</summary>
     public IReadOnlyList<PanelNote> Notes { get; init; } = Array.Empty<PanelNote>();
@@ -62,8 +94,6 @@ internal sealed class PanelModel
 
     public Action? OpenPanel { get; init; }
 
-    public Action? Coffee { get; init; }
-
     public static Color StatusColor(StatusKind kind, Palette p) => kind switch
     {
         StatusKind.Ok => p.Ok,
@@ -74,14 +104,17 @@ internal sealed class PanelModel
 }
 
 /// <summary>
-/// Entwurf A: eigenes randloses Fenster beim Linksklick aufs Symbol, an der Taskleiste verankert.
-/// Oben Farbverlauf, Kopf mit Gesicht, Name, Profil · Gerät und Zustands-Pille; darunter der Update-Hinweis,
-/// die eingeschalteten Teile mit Tastenkürzel, „Mein Notaus …“ in Rot; unten Einstellungen, Panel öffnen
-/// und die gelbe Kaffee-Pille. Schließt bei Fokusverlust und mit Esc.
+/// Begleiter-Fenster beim Linksklick aufs Symbol, an der Taskleiste verankert (Entwurf „Begleiter aufpolieren“ 1a,
+/// Dominik 2026-10-17): oben Farbverlauf und Kopf mit Gesicht, Gruß, Gerät und Zustandspunkt, rechts Einstellungen
+/// und Schließen; darunter der Update-Hinweis, das Fragefeld „Frag Spark …“, die Befehle als Kacheln, dann Abschnitte
+/// wie im Panel (Als Nächstes, Meldungen, Zuhause, Dieser Rechner mit Schaltern); unten „Panel öffnen“ und Notaus.
+/// Der Kaffee steht nur noch unter Einstellungen → Über und Update. Schließt bei Fokusverlust und mit Esc.
 /// </summary>
 internal sealed class TrayPanel : ThemedForm
 {
     private const float Width96 = 360;
+    private const int Columns = 3;
+    private const int MaxQuestion = 2000;
 
     private readonly Action<Action> _post;
     private readonly List<SparkButton> _items = new();
@@ -92,14 +125,23 @@ internal sealed class TrayPanel : ThemedForm
     private readonly List<SparkButton> _home = new();
     private readonly List<Action> _homeActions = new();
     private Rectangle _agendaHeading;
+    private Rectangle _agendaBox;
     private readonly List<(Rectangle When, Rectangle Text, Rectangle Detail)> _agendaRects = new();
+    private readonly List<int> _agendaLines = new();
     private Rectangle _agendaEmpty;
     private Rectangle _homeHeading;
     private Rectangle _homeNote;
+    private Rectangle _rowsHeading;
+    private Rectangle _rowsBox;
+    private readonly List<int> _rowLines = new();
     private readonly SparkButton _update = new(ButtonKind.Primary, "Aktualisieren");
-    private readonly SparkButton _settings = new(ButtonKind.Secondary, "Einstellungen");
-    private readonly SparkButton _panel = new(ButtonKind.Secondary, "Panel öffnen");
-    private readonly SparkButton _coffee = new(ButtonKind.Coffee, "☕ Spark unterstützen");
+    private readonly SparkButton _settings = new(ButtonKind.Icon) { Glyph = Glyph.Gear, AccessibleName = "Einstellungen" };
+    private readonly SparkButton _close = new(ButtonKind.Icon) { Glyph = Glyph.Close, AccessibleName = "Schließen" };
+    private readonly SparkButton _panel = new(ButtonKind.Link, "Panel öffnen") { Glyph = Glyph.External, AccessibleName = "Panel öffnen (im Browser)" };
+    private readonly TextBox _ask = new() { MaxLength = MaxQuestion, AccessibleName = "Frag Spark" };
+    private readonly RoundedHost _askHost;
+    private readonly SparkButton _askMic = new(ButtonKind.Primary) { Glyph = Glyph.Mic, AccessibleName = "Frag Spark: sprechen" };
+    private readonly ToolTip _tips = new();
 
     private PanelModel _model;
     private bool _closing;
@@ -108,7 +150,6 @@ internal sealed class TrayPanel : ThemedForm
     private Rectangle _face;
     private Rectangle _title;
     private Rectangle _subtitle;
-    private Rectangle _pill;
     private Rectangle _notice;
     private Rectangle _banner;
     private Rectangle _bannerIcon;
@@ -121,6 +162,7 @@ internal sealed class TrayPanel : ThemedForm
     {
         _model = model;
         _post = post;
+        _askHost = new RoundedHost(_ask) { Accessory = _askMic };
 
         FormBorderStyle = FormBorderStyle.None;
         ShowInTaskbar = false;
@@ -132,13 +174,25 @@ internal sealed class TrayPanel : ThemedForm
 
         _update.Click += (_, _) => Run(_model.Update?.Action);
         _settings.Click += (_, _) => Run(_model.Settings);
+        _close.Click += (_, _) => Close();
         _panel.Click += (_, _) => Run(_model.OpenPanel);
-        _coffee.Click += (_, _) => Run(_model.Coffee);
-        _coffee.AccessibleName = "Spark unterstützen (Buy me a coffee, öffnet den Browser)";
+        _askMic.Click += (_, _) => Run(_model.AskVoice);
+        _ask.KeyDown += (_, e) =>
+        {
+            if (e.KeyCode == Keys.Enter && e.Modifiers == Keys.None)
+            {
+                e.SuppressKeyPress = true;
+                SendAsk();
+            }
+        };
+        _tips.SetToolTip(_settings, "Einstellungen");
+        _tips.SetToolTip(_close, "Schließen (Esc)");
+        _ask.TabIndex = 0;
         Controls.Add(_update);
         Controls.Add(_settings);
+        Controls.Add(_close);
         Controls.Add(_panel);
-        Controls.Add(_coffee);
+        Controls.Add(_askHost);
         BuildItems();
         BuildNotes();
         BuildHome();
@@ -209,7 +263,11 @@ internal sealed class TrayPanel : ThemedForm
             _ = NativeMethods.SetForegroundWindow(Handle);
         }
 
-        if (_items.Count > 0)
+        if (_model.Ask is not null)
+        {
+            _ask.Focus(); // gleich lostippen
+        }
+        else if (_items.Count > 0)
         {
             _items[0].Focus();
         }
@@ -217,6 +275,18 @@ internal sealed class TrayPanel : ThemedForm
         {
             _settings.Focus();
         }
+    }
+
+    private void SendAsk()
+    {
+        if (_model.Ask is not { } ask)
+        {
+            return;
+        }
+
+        string question = _ask.Text.Trim();
+        Close();
+        _post(() => ask(question));
     }
 
     private void BuildItems()
@@ -229,17 +299,33 @@ internal sealed class TrayPanel : ThemedForm
 
         _items.Clear();
         _actions.Clear();
-        int index = 0;
+        int index = 1;
         foreach (PanelItem item in _model.Items)
         {
-            var button = new SparkButton(ButtonKind.Item, item.Text)
+            ButtonKind kind = item.Kind switch
+            {
+                PanelItemKind.Toggle => ButtonKind.Toggle,
+                PanelItemKind.Row => ButtonKind.Row,
+                PanelItemKind.Footer => ButtonKind.Link,
+                _ => ButtonKind.Tile,
+            };
+            var button = new SparkButton(kind, item.Text)
             {
                 Glyph = item.Glyph,
                 Hotkey = item.Hotkey,
                 Danger = item.Danger,
                 Enabled = item.Enabled,
-                TabIndex = index++,
+                Detail = item.Detail,
+                Verb = item.Verb,
+                Tint = TintFor(item.Glyph),
+                TabIndex = item.Kind == PanelItemKind.Footer ? 104 : item.Kind == PanelItemKind.Tile ? index++ : 90 + index++,
             };
+            button.Checked = item.Kind == PanelItemKind.Toggle && item.On;
+            if (item.Kind == PanelItemKind.Toggle)
+            {
+                button.AccessibleName = $"{item.Text}, {(item.On ? "an" : "aus")}";
+            }
+
             if (item.Hotkey is { Length: > 0 } hotkey)
             {
                 button.AccessibleDescription = "Tastenkürzel " + hotkey;
@@ -247,15 +333,42 @@ internal sealed class TrayPanel : ThemedForm
 
             int slot = _actions.Count;
             _actions.Add(item.Action);
-            button.Click += (_, _) => Run(slot < _actions.Count ? _actions[slot] : null);
+            bool stay = item.Kind == PanelItemKind.Toggle; // Schalter: das Fenster bleibt offen und zeigt den neuen Stand
+            button.Click += (_, _) =>
+            {
+                Action? action = slot < _actions.Count ? _actions[slot] : null;
+                if (stay && action is not null)
+                {
+                    _post(action);
+                }
+                else
+                {
+                    Run(action);
+                }
+            };
             _items.Add(button);
             Controls.Add(button);
         }
 
         _update.TabIndex = 100;
-        _settings.TabIndex = 101;
-        _panel.TabIndex = 102;
-        _coffee.TabIndex = 103;
+        _panel.TabIndex = 103;
+        _settings.TabIndex = 110;
+        _close.TabIndex = 111;
+    }
+
+    /// <summary>Farbe des Kachel-Symbols: je Befehl eine eigene, aus den Panel-Farben gemischt.</summary>
+    private static Color? TintFor(Glyph glyph)
+    {
+        Palette p = Theme.Current;
+        return glyph switch
+        {
+            Glyph.Mic => p.Accent2,
+            Glyph.Screen => Palette.Mix(p.Accent, p.Accent2, 0.35f),
+            Glyph.Mail => Palette.Mix(p.Accent, p.Accent2, 0.6f),
+            Glyph.Speaker => Palette.Mix(p.Accent2, p.Ok, 0.5f),
+            Glyph.Record => p.Bad,
+            _ => null,
+        };
     }
 
     private void BuildNotes()
@@ -354,6 +467,18 @@ internal sealed class TrayPanel : ThemedForm
         _post(action);
     }
 
+    /// <summary>Kleine Großbuchstaben-Überschrift eines Abschnitts (wie im Panel).</summary>
+    private Font SectionFont => F(7.5f, FontStyle.Bold);
+
+    private int Section(ref int y, int pad, int inner, out Rectangle heading)
+    {
+        int h = Draw.Measure("AG", SectionFont).Height;
+        y += S(6);
+        heading = new Rectangle(pad + S(2), y, inner - S(2), h);
+        y += h + S(6);
+        return h;
+    }
+
     protected override void LayoutContent()
     {
         PanelModel m = _model;
@@ -361,22 +486,23 @@ internal sealed class TrayPanel : ThemedForm
         int width = S(Width96);
 
         // Breite nach dem Fuß richten, falls Schrift/Text breiter ist.
-        int foot = _settings.Preferred().Width + S(6) + (m.OpenPanel is not null ? _panel.Preferred().Width + S(6) : 0)
-                   + S(12) + (m.Coffee is not null ? _coffee.Preferred().Width : 0);
+        int foot = (m.OpenPanel is not null ? _panel.Preferred().Width : 0)
+                   + _items.Where(b => b.Kind == ButtonKind.Link).Sum(b => b.Preferred().Width + S(8)) + S(16);
         width = Math.Max(width, foot + (2 * pad));
         int inner = width - (2 * pad);
 
         int y = BarHeight + pad;
 
-        // Kopf
-        int face = S(44);
+        // Kopf: Gesicht, Gruß, Gerät mit Zustandspunkt; rechts Einstellungen und Schließen
+        int face = S(40);
         _face = new Rectangle(pad, y, face, face);
-        Font pillFont = F(8.5f, FontStyle.Bold);
-        Size pill = Draw.PillSize(m.StatusText, pillFont, DeviceDpi);
-        _pill = new Rectangle(width - pad - pill.Width, y + ((face - pill.Height) / 2), pill.Width, pill.Height);
-        int textX = pad + face + S(12);
-        int textW = Math.Max(10, _pill.X - S(8) - textX);
-        int titleH = Draw.Measure("Ag", F(10.5f, FontStyle.Bold)).Height;
+        Size icon = _close.Preferred();
+        _close.Bounds = new Rectangle(width - pad + S(4) - icon.Width, y + ((face - icon.Height) / 2), icon.Width, icon.Height);
+        _settings.Visible = m.Settings is not null;
+        _settings.Bounds = new Rectangle(_close.Left - S(2) - icon.Width, _close.Top, icon.Width, icon.Height);
+        int textX = pad + face + S(11);
+        int textW = Math.Max(10, (m.Settings is not null ? _settings.Left : _close.Left) - S(6) - textX);
+        int titleH = Draw.Measure("Ag", F(11f, FontStyle.Bold)).Height;
         int subH = Draw.Measure("Ag", F(8.5f)).Height;
         int top = y + ((face - titleH - subH) / 2);
         _title = new Rectangle(textX, top, textW, titleH);
@@ -400,17 +526,17 @@ internal sealed class TrayPanel : ThemedForm
         {
             Size button = _update.Preferred();
             int bannerPad = S(10);
-            int icon = S(28);
-            int textLeft = pad + bannerPad + icon + S(10);
+            int bannerIcon = S(28);
+            int textLeft = pad + bannerPad + bannerIcon + S(10);
             int textRight = u.Button is not null ? width - pad - bannerPad - button.Width - S(10) : width - pad - bannerPad;
             int tw = Math.Max(10, textRight - textLeft);
             int th = Draw.Measure("Ag", F(9f, FontStyle.Bold)).Height;
             int dh = Math.Min(Draw.TextHeight(u.Detail, F(8.5f), tw), subH * 3);
-            int contentH = Math.Max(Math.Max(icon, button.Height), th + dh);
+            int contentH = Math.Max(Math.Max(bannerIcon, button.Height), th + dh);
             int bannerH = contentH + (2 * bannerPad) + (u.Progress is not null ? S(6) : 0);
             _banner = new Rectangle(pad, y, inner, bannerH);
             int cy = y + bannerPad;
-            _bannerIcon = new Rectangle(pad + bannerPad, cy + ((contentH - icon) / 2), icon, icon);
+            _bannerIcon = new Rectangle(pad + bannerPad, cy + ((contentH - bannerIcon) / 2), bannerIcon, bannerIcon);
             int textTop = cy + ((contentH - th - dh) / 2);
             _bannerTitle = new Rectangle(textLeft, textTop, tw, th);
             _bannerDetail = new Rectangle(textLeft, textTop + th, tw, dh);
@@ -427,45 +553,74 @@ internal sealed class TrayPanel : ThemedForm
             _update.Visible = false;
         }
 
-        // Teile
-        foreach (SparkButton item in _items)
+        // Fragefeld „Frag Spark …“
+        _askHost.Visible = m.Ask is not null;
+        if (m.Ask is not null)
         {
-            int h = S(44);
-            item.Bounds = new Rectangle(pad - S(4), y, inner + S(8), h);
-            y += h + S(2);
+            _ask.PlaceholderText = string.IsNullOrEmpty(m.AskHotkey) ? "Frag Spark …" : $"Frag Spark …   ({m.AskHotkey})";
+            _ask.Font = F(10f);
+            _askMic.Visible = m.AskVoice is not null;
+            int h = S(42);
+            _askHost.Bounds = new Rectangle(pad, y, inner, h);
+            y += h + S(10);
         }
 
-        if (_items.Count > 0)
+        // Befehle als Kacheln, drei nebeneinander
+        var tiles = _items.Where(b => b.Kind == ButtonKind.Tile).ToList();
+        if (tiles.Count > 0)
         {
-            y += S(4);
+            int gap = S(7);
+            int tw = (inner - ((Columns - 1) * gap)) / Columns;
+            int th = tiles.Any(t => !string.IsNullOrEmpty(t.Hotkey)) ? S(86) : S(70);
+            for (int i = 0; i < tiles.Count; i++)
+            {
+                int col = i % Columns;
+                int row = i / Columns;
+                tiles[i].Bounds = new Rectangle(pad + (col * (tw + gap)), y + (row * (th + gap)), tw, th);
+            }
+
+            int rows = (tiles.Count + Columns - 1) / Columns;
+            y += (rows * th) + ((rows - 1) * gap) + S(6);
         }
 
         // Als Nächstes (Teil "agenda")
         _agendaRects.Clear();
+        _agendaLines.Clear();
         _agendaEmpty = Rectangle.Empty;
+        _agendaBox = Rectangle.Empty;
         if (m.Agenda is { } agenda)
         {
-            int headH = Draw.Measure("Ag", F(8.5f, FontStyle.Bold)).Height;
-            _agendaHeading = new Rectangle(pad, y, inner, headH);
-            y += headH + S(6);
+            Section(ref y, pad, inner, out _agendaHeading);
+            int boxTop = y;
+            int cell = S(12);
             int lineH = Draw.Measure("Ag", F(9f)).Height;
             int smallH = Draw.Measure("Ag", F(8f)).Height;
-            int whenW = S(74);
-            foreach (PanelLine line in agenda)
+            int whenW = S(52);
+            int lineW = inner - (2 * cell) - whenW;
+            y += S(8);
+            for (int i = 0; i < agenda.Count; i++)
             {
+                PanelLine line = agenda[i];
+                if (i > 0)
+                {
+                    _agendaLines.Add(y);
+                    y += S(8);
+                }
+
                 int dh = line.Detail.Length > 0 ? smallH : 0;
-                _agendaRects.Add((new Rectangle(pad, y, whenW, lineH), new Rectangle(pad + whenW, y, inner - whenW, lineH),
-                    new Rectangle(pad + whenW, y + lineH, inner - whenW, dh)));
-                y += lineH + dh + S(6);
+                _agendaRects.Add((new Rectangle(pad + cell, y, whenW, lineH), new Rectangle(pad + cell + whenW, y, lineW, lineH),
+                    new Rectangle(pad + cell + whenW, y + lineH, lineW, dh)));
+                y += lineH + dh + S(8);
             }
 
             if (agenda.Count == 0 && !string.IsNullOrEmpty(m.AgendaEmpty))
             {
-                int h = Draw.TextHeight(m.AgendaEmpty, F(8.5f), inner);
-                _agendaEmpty = new Rectangle(pad, y, inner, h);
-                y += h + S(6);
+                int h = Draw.TextHeight(m.AgendaEmpty, F(8.5f), inner - (2 * cell));
+                _agendaEmpty = new Rectangle(pad + cell, y, inner - (2 * cell), h);
+                y += h + S(8);
             }
 
+            _agendaBox = new Rectangle(pad, boxTop, inner, y - boxTop);
             y += S(6);
         }
         else
@@ -473,12 +628,55 @@ internal sealed class TrayPanel : ThemedForm
             _agendaHeading = Rectangle.Empty;
         }
 
+        // Meldungen mit Knöpfen
+        _noteRects.Clear();
+        if (_notes.Count > 0)
+        {
+            Section(ref y, pad, inner, out _notesHeading);
+            foreach (var (note, buttons) in _notes)
+            {
+                int cardPad = S(12);
+                int tw = inner - (2 * cardPad);
+                int th = Draw.Measure("Ag", F(9f, FontStyle.Bold)).Height;
+                int lineH = Draw.Measure("Ag", F(8.5f)).Height;
+                int bh = note.Body.Length > 0 ? Math.Min(Draw.TextHeight(note.Body, F(8.5f), tw), lineH * 2) : 0;
+                int by = y + cardPad + th + (bh > 0 ? S(2) + bh : 0) + S(8);
+                int bx = pad + cardPad;
+                int rowH = 0;
+                foreach (SparkButton b in buttons)
+                {
+                    Size size = b.Preferred();
+                    size.Height = Math.Min(size.Height, S(28));
+                    if (bx > pad + cardPad && bx + size.Width > pad + cardPad + tw)
+                    {
+                        bx = pad + cardPad;
+                        by += rowH + S(6);
+                        rowH = 0;
+                    }
+
+                    b.Bounds = new Rectangle(bx, by, size.Width, size.Height);
+                    b.Surface = P.Card;
+                    bx += size.Width + S(6);
+                    rowH = Math.Max(rowH, size.Height);
+                }
+
+                int cardH = (by - y) + rowH + cardPad;
+                _noteRects.Add((new Rectangle(pad, y, inner, cardH), new Rectangle(pad + cardPad, y + cardPad, tw, th),
+                    new Rectangle(pad + cardPad, y + cardPad + th + S(2), tw, bh)));
+                y += cardH + S(8);
+            }
+
+            y += S(2);
+        }
+        else
+        {
+            _notesHeading = Rectangle.Empty;
+        }
+
         // Zuhause (Teil "home")
         if (m.Home is not null)
         {
-            int headH = Draw.Measure("Ag", F(8.5f, FontStyle.Bold)).Height;
-            _homeHeading = new Rectangle(pad, y, inner, headH);
-            y += headH + S(6);
+            Section(ref y, pad, inner, out _homeHeading);
             int hx = pad;
             int rowH = 0;
             foreach (SparkButton b in _home)
@@ -509,7 +707,7 @@ internal sealed class TrayPanel : ThemedForm
                 _homeNote = Rectangle.Empty;
             }
 
-            y += S(6);
+            y += S(4);
         }
         else
         {
@@ -517,51 +715,35 @@ internal sealed class TrayPanel : ThemedForm
             _homeNote = Rectangle.Empty;
         }
 
-        // Meldungen mit Knöpfen
-        _noteRects.Clear();
-        if (_notes.Count > 0)
+        // Dieser Rechner: Schalter und Zeilen in einem Kasten
+        _rowLines.Clear();
+        var rows2 = _items.Where(b => b.Kind is ButtonKind.Toggle or ButtonKind.Row).ToList();
+        if (rows2.Count > 0)
         {
-            int headH = Draw.Measure("Ag", F(8.5f, FontStyle.Bold)).Height;
-            _notesHeading = new Rectangle(pad, y, inner, headH);
-            y += headH + S(6);
-            foreach (var (note, buttons) in _notes)
+            Section(ref y, pad, inner, out _rowsHeading);
+            int boxTop = y;
+            y += S(3);
+            for (int i = 0; i < rows2.Count; i++)
             {
-                int cardPad = S(10);
-                int tw = inner - (2 * cardPad);
-                int th = Draw.Measure("Ag", F(9f, FontStyle.Bold)).Height;
-                int lineH = Draw.Measure("Ag", F(8.5f)).Height;
-                int bh = note.Body.Length > 0 ? Math.Min(Draw.TextHeight(note.Body, F(8.5f), tw), lineH * 2) : 0;
-                int by = y + cardPad + th + (bh > 0 ? S(2) + bh : 0) + S(8);
-                int bx = pad + cardPad;
-                int rowH = 0;
-                foreach (SparkButton b in buttons)
+                if (i > 0)
                 {
-                    Size size = b.Preferred();
-                    size.Height = Math.Min(size.Height, S(28));
-                    if (bx > pad + cardPad && bx + size.Width > pad + cardPad + tw)
-                    {
-                        bx = pad + cardPad;
-                        by += rowH + S(6);
-                        rowH = 0;
-                    }
-
-                    b.Bounds = new Rectangle(bx, by, size.Width, size.Height);
-                    b.Surface = P.Soft;
-                    bx += size.Width + S(6);
-                    rowH = Math.Max(rowH, size.Height);
+                    _rowLines.Add(y);
+                    y += S(2);
                 }
 
-                int cardH = (by - y) + rowH + cardPad;
-                _noteRects.Add((new Rectangle(pad, y, inner, cardH), new Rectangle(pad + cardPad, y + cardPad, tw, th),
-                    new Rectangle(pad + cardPad, y + cardPad + th + S(2), tw, bh)));
-                y += cardH + S(8);
+                int h = rows2[i].Preferred().Height;
+                rows2[i].Bounds = new Rectangle(pad + S(3), y, inner - S(6), h);
+                y += h + S(1);
             }
 
             y += S(2);
+            _rowsBox = new Rectangle(pad, boxTop, inner, y - boxTop);
+            y += S(8);
         }
         else
         {
-            _notesHeading = Rectangle.Empty;
+            _rowsHeading = Rectangle.Empty;
+            _rowsBox = Rectangle.Empty;
         }
 
         if (!string.IsNullOrEmpty(m.Hint))
@@ -575,29 +757,28 @@ internal sealed class TrayPanel : ThemedForm
             _hint = Rectangle.Empty;
         }
 
-        // Fuß
+        // Fuß auf weicher Fläche: links „Panel öffnen“, rechts Notaus
         _footLine = y;
-        y += S(10);
-        Size settings = _settings.Preferred();
-        _settings.Bounds = new Rectangle(pad, y, settings.Width, settings.Height);
-        // Hinweis: Visible eines Kindes liest sich vor dem Anzeigen als false – daher das Modell fragen.
-        _settings.Visible = m.Settings is not null;
-        int x = m.Settings is not null ? _settings.Right + S(6) : pad;
+        y += S(8);
         _panel.Visible = m.OpenPanel is not null;
+        Size panel = _panel.Preferred();
         if (m.OpenPanel is not null)
         {
-            Size panel = _panel.Preferred();
-            _panel.Bounds = new Rectangle(x, y, panel.Width, panel.Height);
+            _panel.Bounds = new Rectangle(pad - S(6), y, panel.Width, panel.Height);
+            _panel.Surface = P.Soft;
         }
 
-        _coffee.Visible = m.Coffee is not null;
-        if (m.Coffee is not null)
+        int fx = width - pad + S(6);
+        foreach (SparkButton link in _items.Where(b => b.Kind == ButtonKind.Link).Reverse())
         {
-            Size coffee = _coffee.Preferred();
-            _coffee.Bounds = new Rectangle(width - pad - coffee.Width, y + ((settings.Height - coffee.Height) / 2), coffee.Width, coffee.Height);
+            Size size = link.Preferred();
+            fx -= size.Width;
+            link.Bounds = new Rectangle(fx, y, size.Width, size.Height);
+            link.Surface = P.Soft;
+            fx -= S(8);
         }
 
-        y += settings.Height + pad;
+        y += panel.Height + S(8);
         ClientSize = new Size(width, y);
     }
 
@@ -606,6 +787,17 @@ internal sealed class TrayPanel : ThemedForm
         Draw.HighQuality(g);
         Palette p = P;
         PanelModel m = _model;
+
+        // Fuß: weiche Fläche mit Linie darüber
+        using (var foot = new SolidBrush(p.Soft))
+        {
+            g.FillRectangle(foot, 0, _footLine, ClientSize.Width, ClientSize.Height - _footLine);
+        }
+
+        using (var line = new Pen(p.Line))
+        {
+            g.DrawLine(line, 0, _footLine, ClientSize.Width, _footLine);
+        }
 
         if (!p.HighContrast)
         {
@@ -620,9 +812,20 @@ internal sealed class TrayPanel : ThemedForm
         }
 
         Face.Draw(g, _face, p);
-        Draw.Text(g, TrayContext.Title, F(10.5f, FontStyle.Bold), _title, p.Fg);
-        Draw.Text(g, m.Subtitle, F(8.5f), _subtitle, p.Muted);
-        Draw.Pill(g, _pill, m.StatusText, F(8.5f, FontStyle.Bold), PanelModel.StatusColor(m.Status, p), p, DeviceDpi);
+        Draw.Text(g, m.Title, F(11f, FontStyle.Bold), _title, p.Fg);
+        if (!_subtitle.IsEmpty)
+        {
+            // Zustandspunkt, dann „Gerät · Zustand“
+            int d = S(7);
+            using (var dot = new SolidBrush(PanelModel.StatusColor(m.Status, p)))
+            {
+                g.FillEllipse(dot, _subtitle.X, _subtitle.Y + ((_subtitle.Height - d) / 2f), d, d);
+            }
+
+            string sub = m.Subtitle.Length > 0 ? m.Subtitle + " · " + m.StatusText : m.StatusText;
+            Draw.Text(g, sub, F(8.5f), Rectangle.FromLTRB(_subtitle.X + d + S(6), _subtitle.Y, _subtitle.Right, _subtitle.Bottom),
+                m.Status == StatusKind.Bad ? p.Bad : p.Muted);
+        }
 
         if (!_notice.IsEmpty && m.Notice is { } notice)
         {
@@ -631,8 +834,8 @@ internal sealed class TrayPanel : ThemedForm
 
         if (!_banner.IsEmpty && m.Update is { } u)
         {
-            Draw.FillRound(g, p.BannerBack, _banner, S(10));
-            Draw.StrokeRound(g, u.Error ? p.Bad : p.BannerLine, _banner, S(10));
+            Draw.FillRound(g, p.BannerBack, _banner, S(12));
+            Draw.StrokeRound(g, u.Error ? p.Bad : p.BannerLine, _banner, S(12));
             Draw.FillRound(g, p.Card, _bannerIcon, S(8));
             float gs = S(16);
             Glyphs.Draw(g, Glyph.Download, new RectangleF(_bannerIcon.X + ((_bannerIcon.Width - gs) / 2f), _bannerIcon.Y + ((_bannerIcon.Height - gs) / 2f), gs, gs), u.Error ? p.Bad : p.Accent);
@@ -656,12 +859,13 @@ internal sealed class TrayPanel : ThemedForm
 
         if (!_agendaHeading.IsEmpty && m.Agenda is { } agenda)
         {
-            Draw.Text(g, "Als Nächstes", F(8.5f, FontStyle.Bold), _agendaHeading, p.Muted);
-            Font mono = Theme.MonoFont(DeviceDpi, 8.5f);
+            PaintHeading(g, "Als Nächstes", _agendaHeading, 0);
+            PaintBox(g, _agendaBox, _agendaLines);
+            Font when = F(9f, FontStyle.Bold);
             for (int i = 0; i < _agendaRects.Count && i < agenda.Count; i++)
             {
-                var (when, text, detail) = _agendaRects[i];
-                Draw.Text(g, agenda[i].When, mono, when, p.Accent);
+                var (whenRect, text, detail) = _agendaRects[i];
+                Draw.Text(g, agenda[i].When, when, whenRect, p.Accent);
                 Draw.Text(g, agenda[i].Text, F(9f), text, p.Fg);
                 if (detail.Height > 0)
                 {
@@ -675,24 +879,15 @@ internal sealed class TrayPanel : ThemedForm
             }
         }
 
-        if (!_homeHeading.IsEmpty)
-        {
-            Draw.Text(g, "Zuhause", F(8.5f, FontStyle.Bold), _homeHeading, p.Muted);
-            if (!_homeNote.IsEmpty && m.HomeNote is { } homeNote)
-            {
-                Draw.Text(g, homeNote, F(8.5f), _homeNote, p.Muted, Draw.Wrap);
-            }
-        }
-
         if (!_notesHeading.IsEmpty)
         {
-            Draw.Text(g, "Meldungen", F(8.5f, FontStyle.Bold), _notesHeading, p.Muted);
+            PaintHeading(g, "Meldungen", _notesHeading, _notes.Count);
             for (int i = 0; i < _noteRects.Count && i < _notes.Count; i++)
             {
                 var (card, title, body) = _noteRects[i];
                 PanelNote note = _notes[i].Note;
-                Draw.FillRound(g, p.Soft, card, S(10));
-                Draw.StrokeRound(g, p.Line, card, S(10));
+                Draw.FillRound(g, p.Card, card, S(12));
+                Draw.StrokeRound(g, p.Line, card, S(12));
                 Draw.Text(g, note.Title, F(9f, FontStyle.Bold), title, p.Fg);
                 if (body.Height > 0)
                 {
@@ -701,14 +896,59 @@ internal sealed class TrayPanel : ThemedForm
             }
         }
 
+        if (!_homeHeading.IsEmpty)
+        {
+            PaintHeading(g, "Zuhause", _homeHeading, 0);
+            if (!_homeNote.IsEmpty && m.HomeNote is { } homeNote)
+            {
+                Draw.Text(g, homeNote, F(8.5f), _homeNote, p.Muted, Draw.Wrap);
+            }
+        }
+
+        if (!_rowsHeading.IsEmpty)
+        {
+            PaintHeading(g, "Dieser Rechner", _rowsHeading, 0);
+            PaintBox(g, _rowsBox, _rowLines);
+        }
+
         if (!_hint.IsEmpty && m.Hint is { } hint)
         {
             Draw.Text(g, hint, F(8.5f), _hint, p.Muted, Draw.Wrap);
         }
+    }
 
-        using (var line = new Pen(p.Line))
+    /// <summary>Abschnittsüberschrift in kleinen Großbuchstaben, dahinter optional die Anzahl als Abzeichen.</summary>
+    private void PaintHeading(Graphics g, string text, Rectangle r, int count)
+    {
+        Palette p = P;
+        string upper = text.ToUpperInvariant();
+        Draw.Text(g, upper, SectionFont, r, p.Muted);
+        if (count > 0)
         {
-            g.DrawLine(line, S(14), _footLine, ClientSize.Width - S(14), _footLine);
+            Font badge = F(7.5f, FontStyle.Bold);
+            string n = count.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            Size t = Draw.Measure(n, badge);
+            int x = r.X + Draw.Measure(upper, SectionFont).Width + S(4);
+            var b = new Rectangle(x, r.Y + ((r.Height - t.Height) / 2) - S(1), Math.Max(t.Width + S(10), t.Height + S(2)), t.Height + S(2));
+            Draw.FillRound(g, p.HighContrast ? p.Card : Palette.Mix(p.Card, p.Warn, 0.18f), b, b.Height / 2f);
+            Draw.Text(g, n, badge, b, p.HighContrast ? p.Fg : p.Warn, Draw.Line | TextFormatFlags.HorizontalCenter);
+        }
+    }
+
+    /// <summary>Gruppenkasten mit Rand und Trennlinien zwischen den Zeilen.</summary>
+    private void PaintBox(Graphics g, Rectangle box, List<int> lines)
+    {
+        if (box.IsEmpty)
+        {
+            return;
+        }
+
+        Palette p = P;
+        Draw.StrokeRound(g, p.Line, box, S(12));
+        using var pen = new Pen(p.Line);
+        foreach (int y in lines)
+        {
+            g.DrawLine(pen, box.X + S(12), y, box.Right - S(12), y);
         }
     }
 

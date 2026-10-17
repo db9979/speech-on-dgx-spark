@@ -225,22 +225,39 @@ internal sealed partial class TrayContext
 
         if (IsOn(Parts.Folder))
         {
-            items.Add(new PanelItem("Wissen-Ordner öffnen", Glyph.Folder, null, OpenWissenFolder));
+            items.Add(new PanelItem("Wissen-Ordner", Glyph.Folder, null, OpenWissenFolder,
+                Kind: PanelItemKind.Row, Detail: "Neue Dateien darin gehen ins Wissen.", Verb: "Öffnen"));
         }
 
         if (UsesMic())
         {
-            items.Add(new PanelItem(MicItemText(), MicSwitch.Closed ? Glyph.MicOff : Glyph.Mic, null, ToggleMic));
+            items.Add(new PanelItem("Mikrofon", MicSwitch.Closed ? Glyph.MicOff : Glyph.Mic, null, ToggleMic,
+                Kind: PanelItemKind.Toggle, On: !MicSwitch.Closed,
+                Detail: MicSwitch.Closed ? "Zu: der Begleiter hört nichts." : "Offen für Diktat, Fragen und Weckwort."));
         }
 
         if (IsOn(Parts.Wake) && !MicSwitch.Closed)
         {
-            items.Add(new PanelItem(WakeItemText(), Glyph.Wave, null, ToggleWakePause, Enabled: _wake is not null));
+            items.Add(new PanelItem($"Weckwort „{_desk?.WakeWord ?? "Hey Spark"}“", Glyph.Wave, null, ToggleWakePause, Enabled: _wake is not null,
+                Kind: PanelItemKind.Toggle, On: _wake is not null && !_wakePaused,
+                Detail: _wake is null ? "Kein Mikrofon gefunden." : _wakePaused ? "Pausiert." : "Hört zu."));
         }
 
         if (IsOn(Parts.Office))
         {
-            items.Add(new PanelItem("Office-Add-ins einrichten", Glyph.Mail, null, () => _ = SetupOfficeAsync()));
+            items.Add(new PanelItem("Office-Add-ins", Glyph.Mail, null, () => _ = SetupOfficeAsync(),
+                Kind: PanelItemKind.Row, Detail: "Schreibhilfe in Word, Excel und Outlook.", Verb: "Einrichten"));
+        }
+
+        if (IsOn(Parts.Act))
+        {
+            items.Add(new PanelItem("Am PC handeln", Glyph.Gear, null, OpenActSettings,
+                Kind: PanelItemKind.Row, Detail: "Ohne Rückfrage, Kurzbefehle.", Verb: "Einstellen"));
+        }
+
+        if (_view is not null)
+        {
+            items.Add(new PanelItem("Bildschirm-Sitzung beenden", Glyph.Stop, null, () => _view?.Stop(tell: true), Danger: true));
         }
 
         AddPanelItems4(items);
@@ -301,6 +318,7 @@ internal sealed partial class TrayContext
 
         UpdateIcon();
         BuildMenu();
+        RefreshPanel(); // der Schalter im Begleiter-Fenster zeigt den neuen Stand
         Changed?.Invoke(this, EventArgs.Empty);
     }
 

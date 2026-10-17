@@ -291,8 +291,8 @@ internal sealed class AskForm : ThemedForm
         await SendTextAsync(question, spoken);
     }
 
-    /// <summary>Weckwort: die gehörte Frage stellen und die Antwort zeigen.</summary>
-    public async Task AskQuestionAsync(string question)
+    /// <summary>Weckwort (gesprochen) bzw. Fragefeld im Begleiter-Fenster (getippt): die Frage stellen und die Antwort zeigen.</summary>
+    public async Task AskQuestionAsync(string question, bool spoken = true)
     {
         await WaitIdleAsync();
         if (IsDisposed)
@@ -308,7 +308,7 @@ internal sealed class AskForm : ThemedForm
 
         if (question.Length > 0)
         {
-            await SendTextAsync(question, spoken: true); // Weckwort: gesprochene Frage
+            await SendTextAsync(question, spoken); // Weckwort: gesprochene Frage, Fragefeld: getippt
         }
     }
 
@@ -471,6 +471,15 @@ internal sealed class AskForm : ThemedForm
         SetStatus(ClipboardHelper.TrySetText(normalized, keepOutOfHistory: false)
             ? "Antwort kopiert."
             : "Die Zwischenablage ist gerade gesperrt. Bitte noch einmal versuchen.", error: false);
+    }
+
+    /// <summary>Mikrofon im Fragefeld des Begleiter-Fensters: gleich zuhören, wie ein Klick auf den Mikrofon-Knopf.</summary>
+    public void StartVoice()
+    {
+        if (_mic.Visible && _mic.Enabled && _recorder is null)
+        {
+            _ = ToggleMicAsync();
+        }
     }
 
     /// <summary>Mikrofon: erster Klick startet, zweiter beendet; der erkannte Text kommt ins Fragefeld.</summary>

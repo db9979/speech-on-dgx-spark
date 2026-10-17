@@ -46,10 +46,14 @@ Der Begleiter trägt die Farben und das Gesicht des Panels („Spark-Gesicht“)
   bereitsteht. Das Symbol wird für die Bildschirmauflösung der Taskleiste gezeichnet und bleibt
   auch bei 150 % oder 200 % scharf.
 - **Linksklick aufs Symbol** öffnet ein kleines Fenster direkt an der Taskleiste: oben das Gesicht
-  mit Profil, Gerät und Zustand, darunter (falls vorhanden) der Update-Hinweis, die eingeschalteten
-  Teile mit ihren Tastenkürzeln, „Mein Notaus …“ in Rot, unten **Einstellungen**, **Panel öffnen**
-  und **☕ Spark unterstützen**. Es schließt sich, sobald man woanders hinklickt, oder mit **Esc**;
-  mit Tab bzw. ↑/↓ und Enter geht alles auch per Tastatur.
+  mit Gruß („Guten Morgen, Dominik“), Gerät und Zustand als Punkt („alles läuft“), rechts das Zahnrad
+  für die **Einstellungen** und ✕. Darunter (falls vorhanden) der Update-Hinweis, dann das Feld
+  **„Frag Spark …“** (Enter schickt die Frage ab, der Mikrofon-Knopf fragt per Sprache), die Befehle
+  als **Kacheln** mit ihrem Tastenkürzel (Text verbessern, Diktieren, Bildschirm fragen, Vorlesen …)
+  und Abschnitte wie im Panel: **Als Nächstes** (Termine), **Meldungen** (mit Anzahl), **Zuhause**
+  und **Dieser Rechner** mit Schaltern für Mikrofon und Weckwort und Zeilen für Wissen-Ordner und
+  Office-Add-ins. Unten **Panel öffnen** und rechts „Notaus …“ in Rot. Es schließt sich, sobald man
+  woanders hinklickt, oder mit **Esc**; mit Tab bzw. ↑/↓ und Enter geht alles auch per Tastatur.
 - **Rechtsklick aufs Symbol** zeigt weiter das schlichte Menü (Zustand, Teile, Einstellungen, Beenden).
 - Die Fenster für **Text verbessern**, **Frag Spark** und die **Einstellungen** haben oben den
   Farbverlauf des Panels; Frag Spark zeigt Fragen und Antworten als Sprechblasen.
@@ -204,8 +208,8 @@ Symbol**. Erst wenn es lauter als das Grundrauschen wird, nimmt er den Satz auf 
 höchstens 5 Sekunden) und lässt den Spark prüfen, ob das Weckwort darin war; sonst wird nichts geschickt
 oder gespeichert. „Hey Spark, wie wird das Wetter?“ → die Antwort erscheint in „Frag Spark“. Nur „Hey Spark“
 → kurzer Ton und die Pille „Ich höre zu“, dann die Frage sprechen (bis zur Pause, höchstens 15 Sekunden).
-Im Begleiter-Fenster **Weckwort pausieren** schaltet das Zuhören ab (Ring verschwindet), bis
-**Weckwort fortsetzen**. Während eines Diktats hört das Weckwort nicht mit.
+Im Begleiter-Fenster schaltet der Schalter **Weckwort** unter „Dieser Rechner“ das Zuhören ab (Ring
+verschwindet), bis man ihn wieder einschaltet. Während eines Diktats hört das Weckwort nicht mit.
 
 **Vorlesen:** Text markieren, **Strg+Alt+L**. Der Spark liest ihn in der Stimme des Profils vor (höchstens 5000
 Zeichen); unten rechts erscheint die Pille „Spark liest vor“ mit **Stop**. **Strg+Alt+L** noch einmal stoppt ebenfalls.
@@ -291,7 +295,7 @@ Neue Versionen holt der Spark selbst (von GitHub) und merkt sich ihre Prüfsumme
 2. Hat der Spark eine neuere Version, bekommt das Symbol einen Punkt in der Akzentfarbe und das
    Begleiter-Fenster zeigt „Neue Version … · Geprüft vom Spark · NN MB“ mit **Aktualisieren**.
 3. Ist **„Updates automatisch laden, vor dem Installieren fragen“** an (Standard, unter
-   Einstellungen → Über), lädt der Begleiter die Datei schon im Hintergrund; dann steht dort
+   Einstellungen → Über und Update), lädt der Begleiter die Datei schon im Hintergrund; dann steht dort
    „Bereit zum Installieren“. Installiert wird **nie ohne Klick** auf „Aktualisieren“.
 4. Vor dem Installieren werden Größe **und** SHA-256 der Datei mit den Angaben des Spark verglichen.
    Passt etwas nicht, wird die Datei gelöscht („Update beschädigt, nichts geändert.“) und die alte
@@ -305,26 +309,29 @@ in den das eigene Konto nicht schreiben darf (z. B. `C:\Program Files`), öffnet
 Update-Ordner und sagt Bescheid – dann die alte .exe von Hand ersetzen. Deshalb am besten einen
 eigenen Ordner wie `%LOCALAPPDATA%\Spark Begleiter\` verwenden.
 
-**Einstellungen → Über** zeigt Version, Bauart, den gekoppelten Spark und den Update-Zustand;
+**Einstellungen → Über und Update** zeigt Version, Bauart, den gekoppelten Spark und den Update-Zustand;
 **Nach Updates suchen** fragt den Spark sofort. Ein selbst gebautes Programm (Version 1.0.0) heißt
 dort „Entwicklungsversion“ und bekommt keine Updates angeboten.
 
 ## Kaffee
 
-Der Spark ist kostenlos. Wer ihn unterstützen möchte: **☕ Spark unterstützen** im Begleiter-Fenster
-bzw. **☕ Buy me a coffee** unter Einstellungen → Über öffnet die Seite des Entwicklers bei
+Der Spark ist kostenlos. Wer ihn unterstützen möchte: **☕ Buy me a coffee** unter Einstellungen →
+Über und Update (Abschnitt „Spark unterstützen“) öffnet die Seite des Entwicklers bei
 buymeacoffee.com im Standardbrowser – nur auf Klick, sonst wird nichts geladen. Die Adresse kann der
 Spark vorgeben; angenommen werden nur Adressen der Form `https://buymeacoffee.com/…`.
 
 ## Tastenkürzel ändern
 
-Klick aufs Symbol → **Einstellungen** → Reiter **Tastenkürzel** → in das Feld des Teils klicken und die neue
+Klick aufs Symbol → Zahnrad (**Einstellungen**) → im Seitenmenü **Tastenkürzel** → in das Feld des Teils klicken und die neue
 Kombination drücken. Sie muss Strg oder Alt enthalten. Ist sie schon von einem anderen Programm
 belegt, steht das daneben und die alte bleibt. **Standard** stellt Strg+Alt+S / A / D / B / M / L / R wieder her.
 Ausgeschaltete Teile haben kein aktives Tastenkürzel.
 
-Im Reiter **Kopplung** gibt es außerdem **Panel öffnen**, **Neu koppeln …** und **Entkoppeln …**
-sowie die Liste, welche Teile das Panel eingeschaltet hat.
+Das Einstellungsfenster hat links ein Seitenmenü wie das Panel: **Übersicht** (Zustand als Satz und
+die Liste, welche Teile das Panel eingeschaltet hat; sechs Zeilen, der Rest hinter „Weitere … zeigen“),
+**Frag Spark**, **Tastenkürzel**, **Tagesstart**, **Wissen-Ordner** und unter „Gerät“ **Kopplung**
+(**Panel öffnen**, **Neu koppeln …**, **Entkoppeln …** in Rot) und **Über und Update**. Seiten von
+Teilen, die aus sind, fehlen im Menü.
 
 ## Entfernen
 
