@@ -40,6 +40,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.730** Fix Doku: englischer Menüname bei „Lange Gespräche“
 - **V01.0.729** Begleiter aufgeräumt: Fenster mit Fragefeld und Kacheln, Einstellungen mit Seitenmenü
 - **V01.0.728** „Lange Gespräche“ unter Zustand → Modelle (4 Gespräche mit je 64K oder eines mit 256K); Messen zeigt, dass es läuft und was es tut
 - **V01.0.727** Selbsttest-Fix: die Bilder-Tests kennen „Meine Sachen“ in der iPhone-App
@@ -49,7 +50,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.723** Fix Selbsttests: Tests setzen die neu eingeschalteten Schalter selbst
 - **V01.0.722** Messen, ob Qwen3.8 2 bis 4 Fragen gleichzeitig mit 64K Kontext schafft, dazu zwei schnellere Arten (FP8-Speicher, DSpark)
 - **V01.0.721** Grundausstattung für Neulinge: 16 Gesprächsfunktionen sind bei neuen Installationen an; bestehende bekommen auf Funktionen die Karte „Alle übernehmen“, die Frage „Darf der Spark ins Internet?“ und den Filter „Empfohlen“, neue Profile sehen zuerst, wo man etwas einstellt
-- **V01.0.720** Aufräumen: die Sprachausgabe einer Antwort liegt jetzt in einer eigenen Datei, chat.py wird um weitere 160 Zeilen kürzer
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
