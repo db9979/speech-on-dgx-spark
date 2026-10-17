@@ -7,7 +7,7 @@ function picsOn(){return !!(PROFILE&&ALLOW.images)}
 function picsShow(){const on=picsOn();$('chatpic').hidden=!on;$('mpic').hidden=!on;if(!on&&pics.list.length)picsClear();picsRender()}
 function picsRender(){const box=$('chatpics');picsPrune();box.hidden=!pics.list.length;
   document.querySelector('.composer').classList.toggle('haspic',!!pics.list.length);
-  box.innerHTML=pics.list.map((p,i)=>`<span class="pic"><img alt="" src="${esc(p.url)}"><button type="button" class="picx" data-picx="${i}" title="${t('Bild entfernen','Remove picture')}">✕</button></span>`).join('')+
+  box.innerHTML=pics.list.map((p,i)=>`<span class="pic">${p.url?`<img alt="" src="${esc(p.url)}">`:'<span class="picnone">🖼</span>'}<button type="button" class="picx" data-picx="${i}" title="${t('Bild entfernen','Remove picture')}">✕</button></span>`).join('')+
     (pics.list.length?`<span class="mut">${t('Bleibt für Rückfragen, bis du es entfernst (höchstens 10 Minuten ohne Frage).','Kept for follow-up questions until you remove it (at most 10 minutes without a question).')}</span>`:'')}
 function picsPrune(){const now=Date.now();for(const p of pics.list.filter(p=>now-p.used>pics.keep*1000))picDrop(p,true)}
 function picDrop(p,quiet){pics.list=pics.list.filter(x=>x!==p);try{URL.revokeObjectURL(p.url)}catch{}
@@ -15,7 +15,7 @@ function picDrop(p,quiet){pics.list=pics.list.filter(x=>x!==p);try{URL.revokeObj
 function picsClear(quiet){for(const p of pics.list.slice())picDrop(p,quiet);picsRender()}
 // the ids for the next question; the Spark counts the 10 minutes from each use
 function picIds(){picsPrune();const now=Date.now();pics.list.forEach(p=>p.used=now);return pics.list.map(p=>p.id)}
-function picThumbs(){return pics.list.map(p=>p.url)}
+function picThumbs(){return pics.list.map(p=>p.url).filter(Boolean)}
 async function picSmall(file){
   const bmp=await createImageBitmap(file,{imageOrientation:'from-image'});
   const k=Math.min(1,pics.side/Math.max(bmp.width,bmp.height)),c=document.createElement('canvas');
@@ -32,6 +32,11 @@ async function picAdd(file){if(!picsOn()||!file)return;
     if(typeof MVIEW!=='undefined'&&MVIEW==='face'&&MOBILE.matches)setView('log');   // phone: the chip and the text field are in the conversation view
     chatSay(t('Bild angehängt. Jetzt fragen, getippt oder gesprochen.','Picture attached. Now ask, typed or spoken.'));$('chattext').focus()}
   catch(e){chatSay(t('Bild nicht angenommen: ','Picture not accepted: ')+e.message)}}
+// photos shared to the Android app: the app made them smaller and put them on the Spark itself (Share.kt), here only
+// their ids (no picture to show, so a sign stands for it)
+function picTake(ids){if(!picsOn())return;for(const id of ids.slice(0,pics.max-pics.list.length))pics.list.push({id,url:'',used:Date.now()});picsRender();
+  if(typeof MVIEW!=='undefined'&&MVIEW==='face'&&MOBILE.matches)setView('log');
+  chatSay(t('Bild angehängt. Jetzt fragen, getippt oder gesprochen.','Picture attached. Now ask, typed or spoken.'));$('chattext').focus()}
 // a question about a picture that the Spark no longer has: say so and drop the chips
 function picsGone(){picsClear(true);chatSay(t('Das Bild ist nicht mehr da (nach 10 Minuten). Bitte neu anhängen.','The picture is gone (after 10 minutes). Please attach it again.'))}
 // the answer to a picture under "Meine Dokumente", only on the person's click (images.py keeps no picture)

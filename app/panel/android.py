@@ -23,6 +23,13 @@ SHA-256, package name, version code and signing certificate itself and hands it 
 which checks the signature against the installed app once more and asks the person. Only the own Spark, never
 GitHub. The version each profile's app runs (from its user agent) is kept in memory for Zustand → Geräte-Updates.
 
+"Android: Spark als Assistent" (chat.android_assist, off; plan android-integriert/plan.md stage 1): the app (from
+1.4.0) opens its own sheet over any app (assistant button, tile, widget, shortcuts), records the question itself and
+asks /api/test/asr and /api/chat as client "android" (assist_gate: refused when not released, never guests), with
+short spoken answers (chat.ANDROID_HINT). "Android: Fingerabdruck für Admins" (chat.android_lock, off): a login with
+an admin role unlocks the app with the phone's fingerprint, face or code (Android checks it, the Spark learns
+nothing). Both reach the app as flags in /api/profile/android and every notes answer.
+
 Admin switch chat.android, off at first; released it works for every profile the admin did not block (chat.deny);
 never guests.
 """
@@ -335,7 +342,8 @@ def profile_get(request: Request, prof=Depends(own_profile)):
         waiting = bool(_waiters.get(uid))
     return {"enabled": admin_on(), "on": profile_on(uid), "app": meta() if admin_on() else None,
             "minutes": TOKEN_SECONDS // 60, "notes": reachable(uid), "live_enabled": features.admin_on("androidlive") and not features.blocked("androidlive", uid),
-            "live": features.allowed("androidlive", uid), "connected": waiting, "update": features.allowed("androidupdate", uid)}
+            "live": features.allowed("androidlive", uid), "connected": waiting,
+            "update": features.allowed("androidupdate", uid), **flags(uid)}
 
 
 @router.post("/api/profile/android/link", dependencies=[Depends(assistant)])
@@ -374,7 +382,26 @@ def _answer(uid, after):
     return {"notes": [{"n": x["n"], "title": x["title"], "body": x["body"], "tag": x["tag"]} for x in items],
             "last": last, "app": {"version": m["version"], "code": m["code"]} if m else None,
             "live": features.allowed("androidlive", uid),
-            "update": features.allowed("androidupdate", uid)}
+            "update": features.allowed("androidupdate", uid), **flags(uid)}
+
+
+def flags(uid):
+    """What the app (from 1.4.0) switches on by itself: the assistant sheet, widget, tile and shortcuts (assist) and
+    the phone's own unlock before the Spark shows (lock, only for a login with an admin role)."""
+    import coadmin
+    return {"assist": features.allowed("androidassist", uid), "lock": features.allowed("androidlock", uid),
+            "admin": bool(coadmin.role(uid))}
+
+
+def assist_gate(request: Request, prof):
+    """A question from the app's assistant sheet (client "android") only while "Android: Spark als Assistent" is released
+    for this profile; never for guests. The page inside the app asks as client "app" and is not touched."""
+    if not prof or not prof.get("id"):
+        print("android: assistant refused for guest reason guest", flush=True)
+        raise HTTPException(403, "Der Assistent in der Android-App ist nur für Profile da.")
+    if not features.allowed("androidassist", prof["id"]):
+        print("android: assistant refused for", profiles.log_name(prof), "reason off", flush=True)
+        raise HTTPException(403, "Vom Admin nicht freigegeben (Funktionen → Android: Spark als Assistent).")
 
 
 @router.get("/api/android/wait", dependencies=[Depends(assistant)])

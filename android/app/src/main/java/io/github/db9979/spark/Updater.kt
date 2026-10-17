@@ -67,6 +67,7 @@ object Updater {
         try {
             if (conn.responseCode != 200) return null
             val d = JSONObject(conn.inputStream.use { NotePoll.readSome(it) })
+            Store(ctx).flags(d)   // assistant and lock (TalkActivity, Lock)
             val a = d.optJSONObject("app")
             val offer = a?.let {
                 val v = it.optString("version")

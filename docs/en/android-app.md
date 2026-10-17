@@ -17,9 +17,31 @@ since V01.0.296) and adds only what a page cannot do:
   After the phone restarts the connection starts when the app is opened first; until then the app asks every
   15 minutes. Switch off or signed out: the app ends the connection by itself. Live shows "Android-App (sofort)"
   under connections, with the number only.
-- **Assistant button:** Settings → Apps → Default apps → Digital assistant → "Spark"; holding the button opens the
-  app and it listens.
-- **Share to Spark:** share text in another app → Spark. The text is put into the text field, you send it yourself.
+- **Spark as assistant** (1.4.0 and later, V01.0.732): admin: Features → Android app → "Android: Spark as assistant"
+  (off). Once released the assistant button (Settings → Apps → Default apps → Digital assistant → "Spark", then hold
+  power or home) opens a sheet over whatever app is open: the Spark's face, what it heard, the answer to read along, a
+  field to type and "Ganze App" (whole app). The app records the question itself (the phone's echo and noise
+  suppression, a pause of just under a second ends the question), sends it to the Spark (`/api/test/asr`, then
+  `/api/chat` as device "android") and plays the answer itself, short and without lists. Speaking during the answer
+  makes it quieter; it only stops once the Spark recognizes a real question. With "hands-free" in the chat it
+  listens again afterwards. On the lock screen the phone wants to be unlocked first. The conversation is then under
+  Chats like any other.
+  Also: the **widget** "Spark" for the home screen (face, microphone, numbers only: "Heute: 2 Termine · 1 Erinnerung ·
+  3 ungelesen", and where a device listens in room mode), the tile **"Spark zuhören"** in quick settings and the
+  **shortcuts** on the app icon (long press: listen, write a question, Today, Chats). When the Spark cannot be reached,
+  a typed question waits (at most 10, one day) and goes out by itself once it is back; the answer comes as the
+  notification "Antwort vom Spark".
+  Without the release the button opens the app listening, as before.
+- **Share to Spark:** share text in another app → Spark: the text is put into the text field, you send it yourself.
+  From 1.4.0 also **photos, PDFs and Office files** (at most 3): the app asks "Dazu fragen" (ask about it) or "Nur
+  ablegen" (just store). A photo is made smaller on the phone (1280 pixels) and drawn anew (no place or camera data),
+  then attached to the conversation (needs "Recognize images") or stored under "Meine Dokumente"; other files go to
+  "Meine Dokumente" (needs "Documents"), then "Fass das Dokument … kurz zusammen." is put into the text field. Nothing
+  is ever sent by itself.
+- **Fingerprint for admins** (1.4.0 and later, V01.0.732): admin: Features → Android app → "Android: fingerprint for
+  admins" (off). When the app is signed in with a profile with an admin role, it asks for the phone's fingerprint,
+  face or screen lock when opened and after 5 minutes in the background (like Face ID before "Spark verwalten" in the
+  iPhone app). Android checks it; the app learns only yes or no, the Spark nothing.
 - **Emergency stop tile** (1.1.0 and later): edit quick settings → add "Notaus". Admins choose "Ganzer Spark" (stage 2) or "Mein Notaus", everyone else "Mein Notaus", always behind a question; lifting only in the browser (see [Security and operation](security-and-operation.md)).
 - **New version:** the app shows a notification when the Spark has a newer APK.
 - **Calm during a Spark update** (from 1.3.2, V01.0.570): when the Spark restarts (an update), the app shows "Spark startet neu … Die Seite kommt gleich wieder." (Spark restarting … the page is back in a moment) and tries again by itself instead of jumping to the address screen (only after about five minutes without the Spark the address screen comes back, "Adresse ändern" works any time). A notification, sharing or the assistant button no longer reload the open page: the page only jumps to the place.
@@ -72,6 +94,16 @@ since V01.0.296) and adds only what a page cannot do:
   only when the signing key matches. The page hands the app nothing: the button is the fixed link `sparkapp:update`
   the app catches. Log: `android: app update … sent to …` or `… refused … reason …`.
 - Notes stay in memory only (24 hours, at most 30 per profile) and only go to the profile's own login.
+- Spark as assistant: its own admin switch `chat.android_assist` (off), blockable per profile, never guests. The Spark
+  checks every question of the sheet itself (device "android"); without the release it answers 403 and logs
+  `android: assistant refused for … reason …`. The app learns the release only from `/api/profile/android` and shows
+  or hides widget, tile and shortcuts by it. The microphone runs only while the sheet is open and the question lasts
+  (at most 30 seconds); on the lock screen only after unlocking. The widget shows numbers only, never titles or names
+  of appointments and messages. Waiting questions stay in the app only (at most 10, one day).
+- Shared files go through the Spark's normal ways (`/api/chat/image`, `/api/profile/docs`) with their rights, size and
+  rate limits; the app reads only content addresses (`content://`), no file paths.
+- Fingerprint for admins: its own admin switch `chat.android_lock` (off); it applies only to a login with an admin
+  role. A phone without any screen lock has nothing to check: the app says so and opens.
 
 ## New version
 

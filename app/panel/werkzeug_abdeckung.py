@@ -172,6 +172,8 @@ WITHOUT = {
     "android": "Kanal",
     "androidlive": "Kanal",
     "androidupdate": "macht die App selbst",
+    "androidassist": "Kanal",
+    "androidlock": "macht die App selbst",
     "pebble": "Kanal",
     "terminal": "Kanal",
     "wyoming": "Kanal für Home Assistant Assist",

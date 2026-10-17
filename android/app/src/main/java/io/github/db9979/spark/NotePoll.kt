@@ -97,6 +97,8 @@ class NotePoll : JobService() {
                 val text = conn.inputStream.use { s -> readSome(s) }
                 val d = JSONObject(text)
                 handle(ctx, store, base, d)
+                Talk.flush(ctx)          // the Spark answers again: questions that waited go out
+                SparkWidget.refresh(ctx)
                 return d.optBoolean("live", false)
             } finally {
                 conn.disconnect()
@@ -116,6 +118,7 @@ class NotePoll : JobService() {
                     if (num > last) last = num
                 }
             }
+            if (d.has("assist")) store.flags(d)
             // the Spark started over (restart): its numbers begin at 1 again
             val serverLast = d.optLong("last")
             store.lastNote = if (serverLast < store.lastNote) serverLast else last

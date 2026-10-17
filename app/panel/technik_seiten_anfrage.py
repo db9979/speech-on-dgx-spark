@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "vorbereiten": {
-        "stand": "6bdfce8814",
+        "stand": "4a88822e61",
         "bezug": {
             "klaeren.MAX_BUTTONS": ["s7"], "chat_turn.prepare": ["s1", "s13"], "chat_turn.shared_stranger": ["s3"],
             "chat.left_out": ["s2", "s4"], "notaus.locked_tools": ["s11"], "chat_turn.notaus_note": ["s8", "s11"],
@@ -28,9 +28,11 @@ SEITEN = {
               ("nur Text · je {chat.MAX_TURN_CHARS} Zeichen", "text only · {chat.MAX_TURN_CHARS} characters each"),
               ("Übernommen werden nur Textnachrichten von Nutzer und Assistent, jede auf {chat.MAX_TURN_CHARS} "
                "Zeichen gekürzt. Eine Antwort, die der Browser als aus Mail oder fremdem Text gemacht markiert hat, "
-               "behält diese Marke.",
+               "behält diese Marke. Eine Frage vom Assistenten-Blatt der Android-App kommt nur durch, wenn „Android: Spark "
+               "als Assistent“ für das Profil freigegeben ist (sonst 403).",
                "Only text messages of user and assistant are taken, each cut at {chat.MAX_TURN_CHARS} characters. An "
-               "answer the browser marked as made from mail or outside text keeps that mark."),
+               "answer the browser marked as made from mail or outside text keeps that mark. A question from the Android "
+               "app's assistant sheet only passes when „Android: Spark as assistant“ is released for the profile (else 403)."),
               ("stop", ("leer", "empty"), ("Keine Nachricht (400)", "No message (400)"))),
             S("s2", "schritt", ("Verlauf kürzen, Sperre übernehmen", "Trim history, carry the lock"),
               ("chat.trim_history", "chat.trim_history"),

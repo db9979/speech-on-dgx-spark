@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- the Spark widget (SparkWidget): face, today's numbers, room mode and the microphone -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/w_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_bg"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:padding="10dp">
+
+    <ImageView
+        android:id="@+id/w_face"
+        android:layout_width="52dp"
+        android:layout_height="52dp"
+        android:contentDescription="Spark"
+        android:src="@drawable/ic_face" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:layout_marginStart="8dp"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/w_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Spark"
+            android:textColor="#1d2330"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/w_line"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxLines="2"
+            android:textColor="#445066"
+            android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/w_room"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:textColor="#2d6cdf"
+            android:textSize="13sp"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <ImageView
+        android:id="@+id/w_mic"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:background="@drawable/widget_mic_bg"
+        android:contentDescription="Spark zuhören"
+        android:padding="12dp"
+        android:src="@drawable/ic_mic" />
+</LinearLayout>

@@ -38,13 +38,19 @@ async function andAdmin(){if(!$('andadmin'))return;let d={};try{d=await (await a
   st.textContent=(d.app?t('App ','App ')+d.app.version+t(' auf dem Spark.',' on the Spark.'):t('Noch keine App auf dem Spark.','No app on the Spark yet.'))+(d.error?' '+d.error:'');
   $('andfetch').onclick=async()=>{st.textContent=t('Hole die App von GitHub …','Fetching the app from GitHub …');
     try{await api('/api/admin/android/fetch',xjson('POST'));andAdmin()}catch(e){st.textContent=e.message}}}
-// jumps from the app (only inside it): shared text into the text field, the assistant button starts listening
-function andJump(){if(!IN_ANDROID)return;const h=location.hash;let ask=null;
+// jumps from the app (only inside it): shared text into the text field, the assistant button starts listening,
+// shared photos (#pic=<ids>, already on the Spark through the app, pics.js) attached to the next question, and a tab
+// of the app view from the shortcuts on the app icon (#tab=today, #tab=chats). Only moving and filling in, never sending.
+function andJump(){if(!IN_ANDROID)return;const h=location.hash;let ask=null,pic=null,tab=null;
   if(h.startsWith('#ask=')){try{ask=decodeURIComponent(h.slice(5)).slice(0,4000)}catch{ask=null}}
+  else if(h.startsWith('#pic=')){pic=h.slice(5).split(',').filter(x=>/^[A-Za-z0-9_-]{22}$/.test(x)).slice(0,3)}
+  else if(/^#tab=(spark|chats|today|docs|me)$/.test(h))tab=h.slice(5);
   else if(h!=='#talk')return;
   try{history.replaceState(history.state,'',location.pathname+location.search)}catch{}
   const go=()=>{if(typeof PROFILE==='undefined'||!$('chattext'))return setTimeout(go,300);
+    if(tab){const b=document.querySelector(`#aptabs button[data-tab=${tab}]`);if(b&&!b.hidden)b.click();return}
     const chat=document.querySelector('nav button[data-s=chat]');if(chat)chat.click();
+    if(pic){if(typeof picTake==='function')picTake(pic);return}
     if(ask!==null){$('chattext').value=ask;$('chattext').focus()}else if($('talk'))$('talk').click()};
   setTimeout(go,600)}
 addEventListener('load',andJump);addEventListener('hashchange',andJump);

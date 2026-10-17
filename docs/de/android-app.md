@@ -17,9 +17,31 @@ Die App ist eine schlanke Hülle um die Spark-Seite: Sie zeigt den Spark so, wie
   Nach einem Neustart des Handys startet die Verbindung beim ersten Öffnen der App; bis dahin fragt die App alle
   15 Minuten. Schalter aus oder abgemeldet: Die App beendet die Verbindung von selbst. Live zeigt unter Verbindungen
   „Android-App (sofort)“ nur mit der Anzahl.
-- **Assistenten-Taste:** Unter Einstellungen → Apps → Standard-Apps → Digitaler Assistent „Spark“ wählen; langes
-  Drücken öffnet die App und sie hört zu.
-- **Teilen an Spark:** Text in einer anderen App teilen → Spark. Der Text steht im Tippfeld, abschicken tust du selbst.
+- **Spark als Assistent** (ab 1.4.0, V01.0.732): Admin: Funktionen → Android-App → „Android: Spark als Assistent“ (aus).
+  Freigegeben öffnet die Assistenten-Taste (Einstellungen → Apps → Standard-Apps → Digitaler Assistent „Spark“, dann
+  lange auf Ein/Aus oder Home drücken) ein Blatt über der App, die gerade offen ist: das Gesicht des Spark, was er
+  gehört hat, die Antwort zum Mitlesen, ein Feld zum Tippen und „Ganze App“. Die App nimmt die Frage selbst auf
+  (Echo- und Rauschunterdrückung des Handys, Pause von knapp einer Sekunde beendet die Frage), schickt sie an den
+  Spark (`/api/test/asr`, dann `/api/chat` als Gerät „android“) und spielt die Antwort selbst ab, kurz und ohne
+  Listen. Reinsprechen während der Antwort macht sie leiser; erst wenn der Spark eine echte Frage erkennt, hört sie
+  auf. Mit „Freihändig“ im Chat hört sie danach wieder zu. Auf dem Sperrbildschirm will das Handy zuerst
+  entsperrt werden. Das Gespräch steht danach unter Chats wie jedes andere.
+  Dazu: das **Widget** „Spark“ für den Startbildschirm (Gesicht, Mikrofon, nur Zahlen: „Heute: 2 Termine ·
+  1 Erinnerung · 3 ungelesen“, und wo ein Gerät im Raum-Modus zuhört), die Kachel **„Spark zuhören“** in den
+  Schnelleinstellungen und die **Kurzbefehle** am App-Symbol (lange drücken: Spark zuhören, Frage schreiben, Heute,
+  Chats). Ist der Spark gerade nicht erreichbar, wartet eine getippte Frage (höchstens 10, einen Tag) und geht von
+  selbst raus, sobald er wieder da ist; die Antwort kommt als Mitteilung „Antwort vom Spark“.
+  Ohne Freigabe öffnet die Taste wie bisher die App, die zuhört.
+- **Teilen an Spark:** Text in einer anderen App teilen → Spark: Der Text steht im Tippfeld, abschicken tust du selbst.
+  Ab 1.4.0 auch **Fotos, PDFs und Office-Dateien** (höchstens 3): Die App fragt „Dazu fragen“ oder „Nur ablegen“.
+  Ein Foto wird auf dem Handy auf 1280 Pixel verkleinert und neu gezeichnet (ohne Ort und Kameradaten) und hängt dann
+  am Gespräch (braucht „Bilder erkennen“) oder liegt unter „Meine Dokumente“; andere Dateien gehen nach „Meine
+  Dokumente“ (braucht „Dokumente“), danach steht „Fass das Dokument … kurz zusammen.“ im Tippfeld. Abgeschickt wird nie
+  von selbst.
+- **Fingerabdruck für Admins** (ab 1.4.0, V01.0.732): Admin: Funktionen → Android-App → „Android: Fingerabdruck für
+  Admins“ (aus). Ist die App mit einem Profil mit Admin-Rolle angemeldet, fragt sie beim Öffnen und nach 5 Minuten im
+  Hintergrund nach Fingerabdruck, Gesicht oder Displaysperre des Handys (wie Face ID vor „Spark verwalten“ in der
+  iPhone-App). Android prüft das; die App erfährt nur ja oder nein, der Spark gar nichts.
 - **Notaus-Kachel** (ab 1.1.0): Schnelleinstellungen bearbeiten → „Notaus“ hinzufügen. Admins wählen „Ganzer Spark“ (Stufe 2) oder „Mein Notaus“, alle anderen „Mein Notaus“, immer mit Rückfrage; aufheben nur im Browser (siehe [Sicherheit und Betrieb](sicherheit-und-betrieb.md)).
 - **Neue Version:** Die App meldet sich mit einer Mitteilung, wenn der Spark eine neuere APK hat.
 - **Ruhig beim Update des Spark** (ab 1.3.2, V01.0.570): Startet der Spark neu (ein Update), zeigt die App „Spark startet neu … Die Seite kommt gleich wieder.“ und versucht es von selbst wieder, statt zur Adresseingabe zu springen (erst nach etwa fünf Minuten ohne Spark kommt die Adresseingabe, „Adresse ändern“ geht jederzeit). Eine Mitteilung, Teilen oder die Assistenten-Taste laden die offene Seite nicht neu: die Seite springt nur an die Stelle.
@@ -74,6 +96,17 @@ Die App ist eine schlanke Hülle um die Spark-Seite: Sie zeigt den Spark so, wie
   nur über die installierte App, wenn der Signierschlüssel passt. Die Seite gibt der App nichts mit: der Knopf ist der
   feste Link `sparkapp:update`, den die App abfängt. Log: `android: app update … sent to …` oder `… refused … reason …`.
 - Mitteilungen liegen nur im Speicher (24 Stunden, höchstens 30 pro Profil) und gehen nur an die eigene Anmeldung.
+- Spark als Assistent: eigener Admin-Schalter `chat.android_assist` (aus), sperrbar je Profil, nie Gäste. Der Spark
+  prüft jede Frage des Blatts selbst (Gerät „android“); ohne Freigabe antwortet er 403 und schreibt
+  `android: assistant refused for … reason …` ins Log. Die App erfährt die Freigabe nur aus `/api/profile/android`
+  und blendet Widget, Kachel und Kurzbefehle danach aus oder ein. Das Mikrofon läuft nur, solange das Blatt offen ist
+  und die Frage dauert (höchstens 30 Sekunden); auf dem Sperrbildschirm erst nach dem Entsperren. Das Widget zeigt
+  nur Zahlen, nie Titel oder Namen von Terminen und Nachrichten. Wartende Fragen liegen nur in der App (höchstens 10,
+  einen Tag).
+- Geteilte Dateien gehen über die normalen Wege des Spark (`/api/chat/image`, `/api/profile/docs`) mit ihren Rechten,
+  Größen- und Ratenlimits; die App liest nur Inhalts-Adressen (`content://`), keine Dateipfade.
+- Fingerabdruck für Admins: eigener Admin-Schalter `chat.android_lock` (aus); er greift nur bei einer Anmeldung mit
+  Admin-Rolle. Das Handy ohne jede Displaysperre kann nichts prüfen: dann sagt die App das und öffnet.
 
 ## Neue Version
 

@@ -42,6 +42,8 @@ import org.json.JSONObject
  * (#ask=…, only into the text field) and notes while closed (NotePoll). Links to other sites open in the
  * browser; the app never loads anything but its own Spark. "Update in der App" (Updater): a strip on top when the
  * Spark keeps a newer app, the fixed link sparkapp:update on the page and the note "Neue Spark-App" start it.
+ * Shared photos and files go through Share; the assistant sheet is TalkActivity; with "Fingerabdruck für Admins" a
+ * cover hides the page until Android's own prompt says yes (Lock).
  */
 class MainActivity : Activity() {
     private lateinit var store: Store
@@ -52,6 +54,9 @@ class MainActivity : Activity() {
     private lateinit var hint: TextView
     private lateinit var strip: LinearLayout
     private lateinit var wait: LinearLayout
+    private lateinit var cover: LinearLayout
+    private lateinit var coverText: TextView
+    private var unlocking = false
     /** the page loaded once: a later load error is the Spark restarting (an update), not a wrong address */
     private var loadedOnce = false
     private var failedNow = false
@@ -78,6 +83,8 @@ class MainActivity : Activity() {
         root.addView(setup, FrameLayout.LayoutParams(-1, -1))
         wait = makeWait()
         root.addView(wait, FrameLayout.LayoutParams(-1, -1))
+        cover = makeCover()
+        root.addView(cover, FrameLayout.LayoutParams(-1, -1))
         setContentView(root)
         // Android 15 draws behind the system bars: keep the page clear of them and of the keyboard
         if (Build.VERSION.SDK_INT >= 35) {
@@ -119,6 +126,7 @@ class MainActivity : Activity() {
             web.onResume()
             web.resumeTimers()
         }
+        lockCheck()
         if (waitingForPermission && packageManager.canRequestPackageInstalls()) {
             waitingForPermission = false
             startUpdate()   // back from "Unbekannte Apps installieren" with the permission: go on
@@ -130,6 +138,7 @@ class MainActivity : Activity() {
         super.onPause()
         CookieManager.getInstance().flush()
         front = false
+        if (cover.visibility != View.VISIBLE) store.leftAt = System.currentTimeMillis()   // the lock counts from here
         if (!::web.isInitialized) return
         // anrufe.js: AN.call is set while a call rings or runs; then the page keeps its sound and picture
         web.evaluateJavascript("typeof AN!=='undefined'&&!!AN.call") { r ->
@@ -166,9 +175,15 @@ class MainActivity : Activity() {
                 if (web.url == null) load("$base/") else showWeb()
                 startUpdate()
             }
-            Intent.ACTION_SEND -> {
-                val text = intent.getStringExtra(Intent.EXTRA_TEXT).orEmpty().take(4000)
-                load(if (text.isBlank()) "$base/" else "$base/#ask=" + Uri.encode(text))
+            Intent.ACTION_SEND, Intent.ACTION_SEND_MULTIPLE -> {
+                val files = Share.files(this, intent)
+                if (files.isNotEmpty()) {   // photos and documents: the person picks what happens (Share)
+                    if (web.url == null) load("$base/") else showWeb()
+                    Share.offer(this, files) { url -> load(url) }
+                } else {
+                    val text = intent.getStringExtra(Intent.EXTRA_TEXT).orEmpty().take(4000)
+                    load(if (text.isBlank()) "$base/" else "$base/#ask=" + Uri.encode(text))
+                }
             }
             // a tapped note: only pages of the own Spark (another app may send anything here)
             Intent.ACTION_VIEW -> {
@@ -180,6 +195,7 @@ class MainActivity : Activity() {
         NotePoll.schedule(this)
         askNotes()
         LiveConn.check(this)
+        Thread { Talk.flush(this); SparkWidget.refresh(this) }.start()   // waiting questions, the widget's numbers
     }
 
     /**
@@ -362,10 +378,12 @@ class MainActivity : Activity() {
         if (store.base == null || (!now && System.currentTimeMillis() - askedAt < 10 * 60 * 1000L)) return
         askedAt = System.currentTimeMillis()
         Thread {
-            val a = Updater.ask(this)
+            val a = Updater.ask(this)   // also takes the flags of the assistant and the lock (Store.flags)
             runOnUiThread {
                 answer = a
                 showStrip()
+                SparkWidget.shortcuts(this)
+                lockCheck()
             }
         }.start()
     }
@@ -442,6 +460,45 @@ class MainActivity : Activity() {
                 }
             }
         }.start()
+    }
+
+    // ------------------------------------------------------------ Fingerabdruck für Admins (Lock)
+    private fun makeCover(): LinearLayout {
+        val box = LinearLayout(this)
+        box.orientation = LinearLayout.VERTICAL
+        box.gravity = Gravity.CENTER
+        box.setBackgroundColor(Color.rgb(29, 43, 83))
+        box.isClickable = true
+        coverText = TextView(this)
+        coverText.text = "🔒 Spark"
+        coverText.textSize = 18f
+        coverText.setTextColor(Color.WHITE)
+        coverText.gravity = Gravity.CENTER
+        box.addView(coverText)
+        box.setOnClickListener { unlock() }
+        box.visibility = View.GONE
+        return box
+    }
+
+    /** Covers the page and asks for the fingerprint when the lock is due (Lock.needed). */
+    private fun lockCheck() {
+        if (cover.visibility == View.VISIBLE || !Lock.needed(store)) return
+        cover.visibility = View.VISIBLE
+        unlock()
+    }
+
+    private fun unlock() {
+        if (unlocking) return
+        unlocking = true
+        coverText.text = "🔒 Spark"
+        Lock.ask(this, {
+            unlocking = false
+            cover.visibility = View.GONE
+            store.leftAt = System.currentTimeMillis()
+        }, { why ->
+            unlocking = false
+            coverText.text = "🔒 $why"
+        })
     }
 
     // ------------------------------------------------------------ the address screen

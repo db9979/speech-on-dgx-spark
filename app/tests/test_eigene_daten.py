@@ -40,6 +40,8 @@ OHNE = {
     "android": "kein eigener Löschweg der Funktion: die App-Schlüssel stehen unter Ich → Sicherheit (Geräte)",
     "androidlive": "keine eigenen Daten (Unterschalter der Android-App)",
     "androidupdate": "keine eigenen Daten: nur die App-Version im Speicher (Unterschalter der Android-App)",
+    "androidassist": "keine eigenen Daten: Fragen und Antworten landen im Verlauf (Gespräche), dort löschbar",
+    "androidlock": "keine eigenen Daten: die App fragt Android, der Spark speichert nichts",
     "iphonepanel": "keine eigenen Daten (Unterschalter der iPhone-App)",
     "schreibapps": "keine eigenen Daten (Unterschalter der Schreibhilfe)",
     "begleitertun": "keine eigenen Daten (Unterschalter des Begleiters)",

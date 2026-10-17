@@ -798,7 +798,7 @@ flowchart TD
 6. <a id="kn-apps-s6"></a>**Every request with the key**: profiles.current looks up the key's hash in the device list. A device key comes before the cookie; the profile always comes from the key, never from what the app writes.
 7. <a id="kn-apps-s7"></a>**Path allowed for the app?**: An app key only works for the 68 paths in profiles.APP_PATHS (chat, speech recognition, conversations, reminders, chats, calls …), a few read patterns, the panel areas (admin switch iPhone app with panel) and "My things" (iphone.THINGS, each part only with the release of its own function). Everything else it sees without a profile.
 8. <a id="kn-apps-s8"></a>**App off right now or My kill switch?**: If the app is switched off by the admin or blocked for the profile, or the profile has My kill switch on, this request has no profile. The app gets „not now“ (503), keeps its pairing and works again as soon as the switch is back.
-9. <a id="kn-apps-s9"></a>**Like a browser of the profile**: The app asks through the same endpoints as the page, with the same limits. What it may do on top (smart home, CarPlay, listening, documents, pictures) the Spark tells it in /api/iphone/hello; the app only shows it and follows it. Calls between profiles ring through a VoIP push from Apple that carries only the call's random number; the app asks the Spark who calls. For private chats the app makes its own key in the Secure Enclave; the Spark only gets the public half.
+9. <a id="kn-apps-s9"></a>**Like a browser of the profile**: The app asks through the same endpoints as the page, with the same limits. What it may do on top (smart home, CarPlay, listening, documents, pictures) the Spark tells it in /api/iphone/hello; the app only shows it and follows it. Calls between profiles ring through a VoIP push from Apple that carries only the call's random number; the app asks the Spark who calls. For private chats the app makes its own key in the Secure Enclave; the Spark only gets the public half. The Android app's sheet over other apps asks as device „android“ only while „Android: Spark as assistant“ is released (android.assist_gate).
 10. <a id="kn-apps-s10"></a>**Account, devices or security?**: Endpoints that change the profile's connections, devices or security only take the own browser login (core.browser_profile). They refuse a device key, except in an area the profile opened for the app; secrets need a fresh code there as well.
 11. <a id="kn-apps-s11"></a>**Removing works at once**: When the iPhone is removed in the panel, its hash leaves the device list. The app's next request finds no profile any more.
 
@@ -837,7 +837,7 @@ Applies at: [step 6](#kn-apps-s6), [step 7](#kn-apps-s7)
 #### What you see
 
 - Status → Live: a line under events when an iPhone is paired or removed.
-- Logs → Requests: the app's questions with the input „iPhone-App“ or „CarPlay“.
+- Logs → Requests: the app's questions with the input „iPhone-App“ or „CarPlay“, from the Android sheet „Android-App“.
 - Status → Live: open terminals as a number under connections. Status → Logs: the „terminal:“ lines in the area „Apps“.
 
 #### In the code
@@ -853,6 +853,8 @@ Applies at: [step 6](#kn-apps-s6), [step 7](#kn-apps-s7)
 - `app/panel/core.py` `browser_profile`: only the own browser login ([step 10](#kn-apps-s10))
 - `app/panel/account.py` `profile_remove_device`: remove a device ([step 11](#kn-apps-s11))
 - `app/panel/android.py` `apk_response`: app file only with a valid link ([step 3](#kn-apps-s3))
+- `app/panel/android.py` `flags`: what the Android app switches on itself: assistant, fingerprint ([step 9](#kn-apps-s9))
+- `app/panel/android.py` `assist_gate`: questions of the Android sheet only when released, never guests ([step 9](#kn-apps-s9))
 - `app/panel/terminal.py` `profile_pair`: terminal pairing line only from the own browser ([step 1](#kn-apps-s1), [step 2](#kn-apps-s2))
 - `app/panel/terminal.py` `setup_base`: pinned at home, outside https only ([step 3](#kn-apps-s3))
 - `app/panel/terminal.py` `program_pair`: the terminal's first contact ([step 4](#kn-apps-s4), [step 5](#kn-apps-s5))
@@ -1506,7 +1508,7 @@ flowchart TD
   s11 -->|yes| s11x
 ```
 
-1. <a id="kn-vorbereiten-s1"></a>**Read the messages**: Only text messages of user and assistant are taken, each cut at 20000 characters. An answer the browser marked as made from mail or outside text keeps that mark.
+1. <a id="kn-vorbereiten-s1"></a>**Read the messages**: Only text messages of user and assistant are taken, each cut at 20000 characters. An answer the browser marked as made from mail or outside text keeps that mark. A question from the Android app's assistant sheet only passes when „Android: Spark as assistant“ is released for the profile (else 403).
 2. <a id="kn-vorbereiten-s2"></a>**Trim history, carry the lock**: The history is trimmed to its budget. If an answer from outside text is among the last three messages, this turn starts locked; older ones are not sent at all. When the person asks for a song in their own words, such an answer up to 7 messages back stays along as data (chords, style).
 3. <a id="kn-vorbereiten-s3"></a>**Guest or unknown voice?**: Without a profile, or at an own speaker or phone when speech recognition did not clearly hear the profile's voice (on the phone: and no phone PIN was typed), there is only question and answer: no tool, no memory, no history. Whose voice it was only the panel itself sets, never the request.
 4. <a id="kn-vorbereiten-s4"></a>**The switch reads the question**: Fixed rules put the own latest message into a group. A new own request that does not point back at the answer from outside text leaves that answer and its lock out. If no rule knows the question, the model may pick once from a fixed list in parallel (when the admin has that on). A follow-up like „And tomorrow?“ takes the group of the own question before (intent.follow_up); hint words add their groups, also beside the model's pick. A photo with a wish to change it (bilder.wants_change) is the group pictures, without the model's pick.

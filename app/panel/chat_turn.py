@@ -121,6 +121,9 @@ async def prepare(request):
     # Guests (no profile) and a voice the shared speaker did not recognize only ask and get answers: no tool, no
     # memory, no history, no timers, no web search (Dominik 2026-10-13: "einfach bloß Frage, Antwort"). Fixed rule.
     me0 = profiles.current(request)
+    if body.get("client") == "android":   # the Android app's assistant sheet: only while released, never guests
+        import android
+        android.assist_gate(request, me0)
     guest = not me0 or bool(shared_stranger(request, body, me0))
     search = bool(ccfg.get("search") and ccfg.get("search_url")) and not guest and features.allowed("search", me0["id"], ccfg)
     # The answer before came from mail (also a mail note the assistant made by itself): kept in this
@@ -357,6 +360,8 @@ async def prepare(request):
         system = (system + "\n\n" + chat.WATCH_HINT).strip()
     if body.get("client") == "siri":
         system = (system + "\n\n" + chat.SIRI_HINT).strip()
+    if body.get("client") == "android":
+        system = (system + "\n\n" + chat.ANDROID_HINT).strip()
     if body.get("client") == "speaker":
         system = (system + "\n\n" + chat.SPEAKER_HINT).strip()
     if body.get("client") == "telefon":

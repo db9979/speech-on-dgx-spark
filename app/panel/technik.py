@@ -163,7 +163,7 @@ MODULE = {
     # Geräte und Kanäle
     "telegram": ("geraete", "Telegram-Bot für Text und Sprachnachrichten"),
     "iphone": ("geraete", "iPhone-App: Kopplung und Rechte"),
-    "android": ("geraete", "Android-App: Download, Mitteilungen und Update in der App"),
+    "android": ("geraete", "Android-App: Download, Mitteilungen, Update, Assistent und Fingerabdruck"),
     "apns": ("geraete", "Mitteilungen an die iPhone-App"),
     "push": ("geraete", "Web-Push für Erinnerungen"),
     "appupdate": ("geraete", "Spark-Update aus der iPhone-App"),

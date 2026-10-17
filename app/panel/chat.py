@@ -478,6 +478,9 @@ IPHONE_HINT = ("Die Frage kommt aus der iPhone-App, die deine Antwort vorliest: 
                "Links. Timer und Erinnerungen stellst du mit reminder_set, das iPhone klingelt dann.")
 IPHONE_ACT_HINT = ("Mit iphone_action öffnest du auf dem iPhone eine Route in Karten oder rufst einen Kontakt an; "
                    "das iPhone fragt vorher nach.")
+# the assistant sheet of the Android app (android.py, "Android: Spark als Assistent"): read aloud over another app
+ANDROID_HINT = ("Die Frage kommt über den Assistenten der Android-App, der deine Antwort vorliest und kurz einblendet. "
+                "Antworte kurz, meist in ein bis drei Sätzen, ohne Listen, Tabellen oder Links.")
 CAR_HINT = ("Der Nutzer fährt gerade Auto (CarPlay) und hört nur zu: antworte in höchstens zwei bis drei kurzen "
             "Sätzen, ohne Aufzählungen, Zahlenkolonnen, Links oder Rückfragen mit vielen Möglichkeiten.")
 REMINDER_HINT = ("Mit reminder_set stellst du Timer und Erinnerungen, mit reminder_list und reminder_cancel "
@@ -1448,9 +1451,9 @@ def prompt_parts(ccfg):
         import roles
         parts.append({"label": "Gewählte Rolle (je Profil unter Ich → Gespräch, per Sprache gewechselt)",
                       "text": roles.INTRO + "(Name und Text der aktiven Rolle)", "fixed": False})
-    parts.append({"label": "Nur je nach Gerät (Chat im Panel, Uhr, Siri, Lautsprecher, Telefon, Telegram)",
+    parts.append({"label": "Nur je nach Gerät (Chat im Panel, Uhr, Siri, Android-Assistent, Lautsprecher, Telefon, Telegram)",
                   "text": "\n".join((WEB_HINT + " " + WEB_SPOKEN_HINT + " / " + WEB_TEXT_HINT, WATCH_HINT, SIRI_HINT,
-                                     SPEAKER_HINT, PHONE_HINT, TELEGRAM_HINT)), "fixed": True})
+                                     ANDROID_HINT, SPEAKER_HINT, PHONE_HINT, TELEGRAM_HINT)), "fixed": True})
     parts.append({"label": "Je nach Profil und eingeschalteten Funktionen",
                   "text": "(Gemerktes, frühere Gespräche, Smart Home, Erinnerungen, Kalender, Mails, Wetter … "
                           "mit ihren festen Werkzeughinweisen)", "fixed": True})

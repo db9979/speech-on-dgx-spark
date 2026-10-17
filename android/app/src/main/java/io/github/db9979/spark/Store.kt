@@ -35,6 +35,38 @@ class Store(ctx: Context) {
         get() = prefs.getLong("live_short_since", 0)
         set(v) = prefs.edit().putLong("live_short_since", v).apply()
 
+    /** What the Spark released for this profile's app (from /api/profile/android and every note answer): the
+     *  assistant (TalkActivity, widget, tile, shortcuts) and the lock for admins. The Spark checks again itself. */
+    var assist: Boolean
+        get() = prefs.getBoolean("assist", false)
+        set(v) = prefs.edit().putBoolean("assist", v).apply()
+
+    var lock: Boolean
+        get() = prefs.getBoolean("lock", false)
+        set(v) = prefs.edit().putBoolean("lock", v).apply()
+
+    /** The login in the app has admin rights (a profile with a role, or the panel password). */
+    var admin: Boolean
+        get() = prefs.getBoolean("admin", false)
+        set(v) = prefs.edit().putBoolean("admin", v).apply()
+
+    /** When the app went to the background unlocked (the lock asks again after Lock.AFTER). */
+    var leftAt: Long
+        get() = prefs.getLong("left_at", 0)
+        set(v) = prefs.edit().putLong("left_at", v).apply()
+
+    /** Typed questions that wait for the Spark (Talk.queue): a JSON list of {"q", "t"}, at most Talk.QUEUE_MAX. */
+    var queue: String
+        get() = prefs.getString("queue", "[]") ?: "[]"
+        set(v) = prefs.edit().putString("queue", v).apply()
+
+    /** Takes the flags of an answer of the Spark (keys missing in an older Spark: off). */
+    fun flags(d: org.json.JSONObject) {
+        assist = d.optBoolean("assist", false)
+        lock = d.optBoolean("lock", false)
+        admin = d.optBoolean("admin", false)
+    }
+
     companion object {
         private val BASE = Regex("https://[A-Za-z0-9.\\-]+(:\\d{1,5})?")
 

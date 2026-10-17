@@ -375,5 +375,102 @@ class Update(unittest.TestCase):
         self.assertIn('android:name=".InstallDone"\n            android:exported="false"', man)
 
 
+class Assist(unittest.TestCase):
+    """"Android: Spark als Assistent" and "Android: Fingerabdruck für Admins" (android.flags, android.assist_gate,
+    TalkActivity.kt, Lock.kt): both off by default, the Spark checks every question of the sheet itself."""
+    def setUp(self):
+        Android.setUp(self)
+
+    def tearDown(self):
+        helpers.set_config(android_assist=False, android_lock=False, deny={})
+        Android.tearDown(self)
+
+    def test_off_by_default_and_no_profile_switch(self):
+        with open(helpers.APP + "/config.default.json") as f:
+            c = json.load(f)["chat"]
+        self.assertIs(c["android_assist"], False)
+        self.assertIs(c["android_lock"], False)
+        self.assertNotIn("android_assist", profiles.SETTINGS)
+        self.assertNotIn("android_lock", profiles.SETTINGS)
+
+    def test_flags_reach_the_app_and_follow_the_admin(self):
+        a = profile("Ansgar")
+        uid = uid_of("Ansgar")
+        for path in ("/api/profile/android", "/api/android/notes"):
+            d = a.get(path).json()
+            self.assertEqual((d["assist"], d["lock"], d["admin"]), (False, False, False), path)
+        helpers.set_config(android_assist=True, android_lock=True)
+        d = a.get("/api/android/notes").json()
+        self.assertEqual((d["assist"], d["lock"], d["admin"]), (True, True, False))   # no admin role: no lock asked
+        from unittest import mock
+        import coadmin
+        with mock.patch.object(coadmin, "role", lambda u: "admin" if u == uid else ""):
+            self.assertTrue(a.get("/api/profile/android").json()["admin"])
+        helpers.set_config(deny={"androidassist": [uid]})                       # the admin blocks this profile
+        self.assertFalse(a.get("/api/profile/android").json()["assist"])
+        helpers.set_config(deny={"android": [uid]})                             # ... or the app it builds on
+        self.assertFalse(a.get("/api/profile/android").json()["assist"])
+
+    def test_the_sheet_asks_only_while_released_and_never_as_guest(self):
+        a = profile("Yara")
+        uid = uid_of("Yara")
+        q = {"messages": [{"role": "user", "content": "Wie spät ist es?"}], "client": "android", "speak": False}
+        import contextlib
+        import io
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            r = a.post("/api/chat", json=q)
+        self.assertEqual(r.status_code, 403)
+        self.assertIn("Android: Spark als Assistent", r.json()["detail"])
+        self.assertIn("android: assistant refused for", out.getvalue())
+        self.assertIn("reason off", out.getvalue())
+        self.assertIn(TestClient(panel.app).post("/api/chat", json=q).status_code, (401, 403))   # guests never
+        helpers.set_config(android_assist=True)
+        android.assist_gate(None, {"id": uid, "name": "Yara"})                 # released: passes
+        helpers.set_config(android_assist=True, deny={"androidassist": [uid]})
+        self.assertEqual(a.post("/api/chat", json=q).status_code, 403)
+        with self.assertRaises(Exception):
+            android.assist_gate(None, None)
+
+    def test_the_spoken_hint_for_the_sheet(self):
+        import chat
+        import chat_turn
+        import inspect
+        self.assertIn("ohne Listen", chat.ANDROID_HINT)
+        src = inspect.getsource(chat_turn.prepare)
+        self.assertLess(src.index("android.assist_gate"), src.index("guest = "))   # before anything else is worked out
+        self.assertIn("chat.ANDROID_HINT", src)
+        import live
+        import tracelog
+        self.assertIn("android", tracelog.CLIENTS)
+        self.assertEqual(live.CLIENT["android"], "Android-App")
+
+    def test_the_app_unlocks_before_it_talks(self):
+        root = os.path.join(helpers.APP, "..", "android", "app", "src", "main")
+        if not os.path.isdir(root):   # a copy with only app/
+            return
+        kt = os.path.join(root, "java", "io", "github", "db9979", "spark")
+        def read(n):
+            with open(os.path.join(kt, n), encoding="utf-8") as f:
+                return f.read()
+        talk = read("TalkActivity.kt")
+        self.assertIn("requestDismissKeyguard", talk)                          # lock screen: unlock first
+        self.assertLess(talk.index("requestDismissKeyguard"), talk.index("talk.listen()"))
+        self.assertIn('"client", "android"', read("Talk.kt"))
+        lock = read("Lock.kt")
+        self.assertIn("BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL", lock)
+        self.assertIn("BIOMETRIC_ERROR_NO_DEVICE_CREDENTIAL ->", lock)          # only a phone without any lock opens
+        share = read("Share.kt")
+        self.assertIn('it.scheme == "content"', share)                        # no file paths
+        self.assertIn("MAX_FILES", share)
+        for n in ("Api.kt", "Talk.kt", "TalkActivity.kt", "Share.kt", "Widget.kt", "Lock.kt"):
+            self.assertNotIn("github.com", read(n), n)                         # only the own Spark
+        with open(os.path.join(root, "AndroidManifest.xml")) as f:
+            man = f.read()
+        i = man.index('android:name=".TalkActivity"')
+        self.assertIn("android.intent.action.ASSIST", man[i:i + 900])
+        self.assertIn('android:name=".SparkWidget"\n            android:exported="false"', man)
+
+
 if __name__ == "__main__":
     unittest.main()

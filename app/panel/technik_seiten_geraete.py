@@ -201,7 +201,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Apps
     "apps": {
-        "stand": "8e8de25741",
+        "stand": "b589998d9e",
         "bezug": {
             "android.TOKEN_SECONDS": ["s3"], "android.TOKEN_USES": ["s3"], "iphone.profile_pair": ["s1", "s2"],
             "kopplung.Codes.new": ["s3"], "kopplung.Codes.take": ["s4"], "iphone.app_pair": ["s4", "s5"],
@@ -209,7 +209,7 @@ SEITEN = {
             "android.apk_response": ["s3"], "regeln": ["s6", "s7"], "regel:ohne": ["s10"],
             "terminal.profile_pair": ["s1", "s2"], "terminal.setup_base": ["s3"], "terminal.program_pair": ["s4", "s5"],
             "terminal.reaches": ["s7"], "terminal.CODE_SECONDS": ["s3"], "terminal.MAX_DEVICES": ["s2"],
-            "regel:tui": ["s7"],
+            "regel:tui": ["s7"], "android.assist_gate": ["s9"], "android.flags": ["s9"],
         },
         "kurz": ("Die iPhone-App bekommt beim Koppeln einen eigenen Geräteschlüssel des Profils und spricht damit "
                  "dieselben Endpunkte an wie der Browser. Der Schlüssel öffnet nur eine feste Liste von Pfaden. Die "
@@ -297,12 +297,15 @@ SEITEN = {
                "(Smart Home, CarPlay, Zuhören, Dokumente, Bilder), sagt ihr der Spark in /api/iphone/hello; die App "
                "zeigt es nur an und hält sich daran. Anrufe zwischen Profilen klingeln über einen VoIP-Push von Apple, "
                "der nur die zufällige Nummer des Anrufs trägt; wer anruft, fragt die App beim Spark nach. Für private "
-               "Chats macht die App ihren eigenen Schlüssel im Secure Enclave; der Spark bekommt nur die öffentliche Hälfte.",
+               "Chats macht die App ihren eigenen Schlüssel im Secure Enclave; der Spark bekommt nur die öffentliche Hälfte. "
+               "Das Blatt der Android-App über anderen Apps fragt als Gerät „android“, nur solange „Android: Spark als "
+               "Assistent“ freigegeben ist (android.assist_gate).",
                "The app asks through the same endpoints as the page, with the same limits. What it may do on top "
                "(smart home, CarPlay, listening, documents, pictures) the Spark tells it in /api/iphone/hello; the app "
                "only shows it and follows it. Calls between profiles ring through a VoIP push from Apple that carries "
                "only the call's random number; the app asks the Spark who calls. For private chats the app makes its own "
-               "key in the Secure Enclave; the Spark only gets the public half."),
+               "key in the Secure Enclave; the Spark only gets the public half. The Android app's sheet over other apps asks as "
+               "device „android“ only while „Android: Spark as assistant“ is released (android.assist_gate)."),
               ("info", ("Terminal", "Terminal"),
                ("Terminal-Client: Schlüssel-Bereich „tui“, nur {terminal.TUI_RULES|anzahl} Regeln (Chat, Gespräche, Heute, Aufträge)",
                 "terminal client: key scope „tui“, only {terminal.TUI_RULES|anzahl} rules (chat, conversations, Today, jobs)"))),
@@ -370,8 +373,8 @@ SEITEN = {
         "sehen": [
             ("Zustand → Live: eine Zeile unter Ereignisse, wenn ein iPhone gekoppelt oder entfernt wird.",
              "Status → Live: a line under events when an iPhone is paired or removed."),
-            ("Logs → Anfragen: Fragen der App mit Eingang „iPhone-App“ oder „CarPlay“.",
-             "Logs → Requests: the app's questions with the input „iPhone-App“ or „CarPlay“."),
+            ("Logs → Anfragen: Fragen der App mit Eingang „iPhone-App“ oder „CarPlay“, vom Android-Blatt „Android-App“.",
+             "Logs → Requests: the app's questions with the input „iPhone-App“ or „CarPlay“, from the Android sheet „Android-App“."),
             ("Zustand → Live: offene Terminals als Anzahl unter Verbindungen. Zustand → Logs: im Bereich „Apps“ die „terminal:“-Zeilen.",
              "Status → Live: open terminals as a number under connections. Status → Logs: the „terminal:“ lines in the area „Apps“."),
         ],
@@ -388,6 +391,8 @@ SEITEN = {
             ("core.browser_profile", ("nur die eigene Browser-Anmeldung", "only the own browser login")),
             ("account.profile_remove_device", ("Gerät entfernen", "remove a device")),
             ("android.apk_response", ("App-Datei nur mit gültigem Link", "app file only with a valid link")),
+            ("android.flags", ("was die Android-App selbst einschaltet: Assistent, Fingerabdruck", "what the Android app switches on itself: assistant, fingerprint")),
+            ("android.assist_gate", ("Fragen des Android-Blatts nur mit Freigabe, nie Gäste", "questions of the Android sheet only when released, never guests")),
             ("terminal.profile_pair", ("Kopplungszeile fürs Terminal nur aus dem eigenen Browser", "terminal pairing line only from the own browser")),
             ("terminal.setup_base", ("zu Hause gepinnt, extern nur https", "pinned at home, outside https only")),
             ("terminal.program_pair", ("der erste Kontakt des Terminals", "the terminal's first contact")),

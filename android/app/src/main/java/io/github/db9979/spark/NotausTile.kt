@@ -10,10 +10,7 @@ import android.os.Handler
 import android.os.Looper
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
-import android.webkit.CookieManager
 import org.json.JSONObject
-import java.net.HttpURLConnection
-import java.net.URL
 
 /**
  * The Notaus as a quick settings tile. It uses the login of the app's page (the WebView's cookie), like NotePoll:
@@ -41,7 +38,7 @@ class NotausTile : TileService() {
 
     /** GET /api/notaus with the page's login: {level, may, mine:{on}}; null when signed out or away. */
     private fun state(): JSONObject? = try {
-        request("GET", "/api/notaus", null)?.takeIf { it.first == 200 }?.let { JSONObject(it.second) }
+        Api.call(this, "GET", "/api/notaus").takeIf { it.code == 200 }?.json()
     } catch (_: Exception) {
         null
     }
@@ -86,58 +83,34 @@ class NotausTile : TileService() {
         }
     }
 
-    private fun openPanel(url: String) {
-        val i = Intent(this, MainActivity::class.java).setAction(Intent.ACTION_VIEW).setData(Uri.parse(url))
-            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-        if (Build.VERSION.SDK_INT >= 34) {
-            startActivityAndCollapse(PendingIntent.getActivity(this, 1, i, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT))
-        } else {
-            @Suppress("DEPRECATION")
-            startActivityAndCollapse(i)
-        }
-    }
+    private fun openPanel(url: String) =
+        collapseTo(this, Intent(this, MainActivity::class.java).setAction(Intent.ACTION_VIEW).setData(Uri.parse(url)))
 
     private fun send(path: String, body: String) {
         Thread {
-            val r = try { request("POST", path, body) } catch (_: Exception) { null }
-            val text = when (r?.first) {
+            val r = try { Api.call(this, "POST", path, body.toByteArray()) } catch (_: Exception) { null }
+            val text = when (r?.code) {
                 200 -> if (path.endsWith("/mine")) "Mein Notaus ist an." else "Notaus Stufe 2 ist an."
                 409 -> "Steht schon so."
                 403 -> "Das dürfen nur Admins."
                 401, null -> "Nicht angemeldet oder der Spark ist nicht erreichbar."
-                else -> "Ging nicht (${r?.first})."
+                else -> "Ging nicht (${r?.code})."
             }
             main.post { toast(text) }
             state()?.let { s -> main.post { show(s) } }
         }.start()
     }
 
-    /** One request to the own Spark with the page's login; (status, body) or null without an address or login. */
-    private fun request(method: String, path: String, body: String?): Pair<Int, String>? {
-        val base = Store(this).base ?: return null
-        val c = NotePoll.cookie(base) ?: return null
-        val conn = URL(base + path).openConnection() as HttpURLConnection
-        conn.connectTimeout = 10000
-        conn.readTimeout = 10000
-        conn.instanceFollowRedirects = false
-        conn.requestMethod = method
-        conn.setRequestProperty("Cookie", c)
-        conn.setRequestProperty("User-Agent", "SparkAndroid/${BuildConfig.VERSION_NAME}")
-        try {
-            if (body != null) {
-                conn.doOutput = true
-                conn.setRequestProperty("Content-Type", "application/json")
-                conn.outputStream.use { it.write(body.toByteArray()) }
-            }
-            val code = conn.responseCode
-            // Mein Notaus ends every login of the profile and hands this one a fresh cookie: give it to the page
-            conn.headerFields["Set-Cookie"]?.forEach { v -> main.post { CookieManager.getInstance().setCookie(base, v) } }
-            val stream = if (code < 400) conn.inputStream else conn.errorStream
-            return code to (stream?.use { NotePoll.readSome(it) } ?: "")
-        } finally {
-            conn.disconnect()
-        }
-    }
-
     private fun toast(text: String) = android.widget.Toast.makeText(this, text, android.widget.Toast.LENGTH_LONG).show()
+}
+
+/** Opens [i] from a quick settings tile and closes the panel (Android 14 wants a PendingIntent for it). */
+internal fun collapseTo(t: TileService, i: Intent) {
+    i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+    if (Build.VERSION.SDK_INT >= 34) {
+        t.startActivityAndCollapse(PendingIntent.getActivity(t, 1, i, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT))
+    } else {
+        @Suppress("DEPRECATION")
+        t.startActivityAndCollapse(i)
+    }
 }

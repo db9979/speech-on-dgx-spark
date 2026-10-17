@@ -182,9 +182,9 @@ RETURNS = {"cal": "Termine oder Aufgaben", "ha": "Zustände oder Schaltung", "we
            "musik": "Lied (Länge und Sekunden)",
            "geraete": "Versionsnummern und geprüfte Dateien", "telefon": "Anruf und Ton"}
 CLIENT = {"web": "Browser", "speaker": "Lautsprecher", "telefon": "Telefon", "watch": "Uhr", "siri": "Siri", "telegram": "Telegram",
-          "app": "iPhone-App", "car": "CarPlay", "mcp": "MCP-Client", "ha": "Home Assistant", "auto": "Von selbst", "desk": "Spark-Begleiter",
+          "app": "iPhone-App", "android": "Android-App", "car": "CarPlay", "mcp": "MCP-Client", "ha": "Home Assistant", "auto": "Von selbst", "desk": "Spark-Begleiter",
           "tui": "Terminal", "other": "Gerät"}
-VOICE = ("speaker", "telefon", "watch", "siri", "app", "car", "ha")
+VOICE = ("speaker", "telefon", "watch", "siri", "app", "android", "car", "ha")
 LEVEL = {"public": "Öffentlich (Seiten aus Suchergebnissen)", "user": "Nutzer-Dienst", "home": "Heimnetz"}
 
 _run = {}                         # request id -> tracelog.Rec while it runs and FADE seconds after
