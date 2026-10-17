@@ -238,50 +238,71 @@ final class ActSettingsModel: ObservableObject {
 struct ActSettingsView: View {
     @ObservedObject var m: ActSettingsModel
 
+    private static let symbols: [String: String] = [
+        "app": "app", "media": "music.note", "volume": "speaker.wave.2", "lock": "lock", "focus": "macwindow",
+        "window": "macwindow.on.rectangle", "key": "keyboard", "folder": "folder", "power": "moon",
+        "shortcut": "square.stack.3d.up",
+    ]
+
     var body: some View {
         VStack(spacing: 0) {
             GradientBar()
             ScrollView {
-                VStack(alignment: .leading, spacing: 10) {
+                VStack(alignment: .leading, spacing: 8) {
                     SectionLabel(text: "Ohne Rückfrage")
-                    Text(verbatim: "Eingeschaltete Arten führt der Begleiter sofort aus, wenn du den Spark darum bittest, und zeigt danach einen Hinweis. Seiten öffnen, Text tippen und Text zeigen fragen immer.")
-                        .font(.system(size: 12)).foregroundColor(Theme.muted).fixedSize(horizontal: false, vertical: true)
-                    ForEach(ActLocal.autoOk, id: \.self) { k in
-                        Toggle(isOn: Binding(get: { m.auto.contains(k) }, set: { m.setAuto(k, $0) })) {
-                            Text(verbatim: ActLocal.labels[k] ?? k).font(.system(size: 13))
+                    PanelBox {
+                        ForEach(Array(ActLocal.autoOk.enumerated()), id: \.element) { i, k in
+                            if i > 0 { RowLine() }
+                            SwitchRow(title: ActLocal.labels[k] ?? k, symbol: Self.symbols[k] ?? "circle",
+                                      isOn: Binding(get: { m.auto.contains(k) }, set: { m.setAuto(k, $0) }))
                         }
-                        .toggleStyle(.switch)
                     }
-                    Rectangle().fill(Theme.line).frame(height: 1).padding(.vertical, 4)
+                    note("Eingeschaltete Arten führt der Begleiter sofort aus und zeigt danach einen Hinweis. Seiten öffnen, Text tippen und Text zeigen fragen immer.")
                     SectionLabel(text: "Kurzbefehle")
-                    Text(verbatim: "Kurzbefehle aus der App Kurzbefehle, die der Spark auf Zuruf starten darf („Führ am Mac den Kurzbefehl Feierabend aus“). Der Spark kennt nur den Namen.")
-                        .font(.system(size: 12)).foregroundColor(Theme.muted).fixedSize(horizontal: false, vertical: true)
+                        .padding(.top, 12)
                     if m.loading {
-                        Text(verbatim: "Lade die Kurzbefehle …").font(.system(size: 12)).foregroundColor(Theme.muted)
+                        note("Lade die Kurzbefehle …")
                     } else if m.available.isEmpty {
-                        Text(verbatim: "Keine Kurzbefehle gefunden (oder ihre Namen enthalten Zeichen wie / oder \").")
-                            .font(.system(size: 12)).foregroundColor(Theme.muted)
-                    }
-                    ForEach(m.available, id: \.self) { n in
-                        Toggle(isOn: Binding(get: { m.shortcuts.contains(n) }, set: { m.setShortcut(n, $0) })) {
-                            Text(verbatim: n).font(.system(size: 13))
+                        note("Keine Kurzbefehle gefunden (oder ihre Namen enthalten Zeichen wie / oder \").")
+                    } else {
+                        PanelBox {
+                            ForEach(Array(m.available.enumerated()), id: \.element) { i, n in
+                                if i > 0 { RowLine() }
+                                SwitchRow(title: n, symbol: "square.stack.3d.up",
+                                          isOn: Binding(get: { m.shortcuts.contains(n) }, set: { m.setShortcut(n, $0) }))
+                            }
                         }
-                        .toggleStyle(.switch)
                     }
+                    note("Aus der App Kurzbefehle. Der Spark darf eingeschaltete auf Zuruf starten („Führ am Mac den Kurzbefehl Feierabend aus“) und kennt nur den Namen.")
                 }
-                .padding(16)
+                .padding(18)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
-            HStack {
-                Spacer()
-                Button("Fertig") { Windows.shared.close("act-settings") }
-                    .buttonStyle(PrimaryButtonStyle())
-                    .keyboardShortcut(.defaultAction)
+            .background(Theme.bg)
+            VStack(spacing: 0) {
+                Rectangle().fill(Theme.line).frame(height: 1)
+                HStack {
+                    Spacer()
+                    Button("Fertig") { Windows.shared.close("act-settings") }
+                        .buttonStyle(PrimaryButtonStyle())
+                        .keyboardShortcut(.defaultAction)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
             }
-            .padding(12)
+            .background(Theme.soft)
         }
         .background(Theme.card)
         .foregroundColor(Theme.fg)
         .frame(minWidth: 420, minHeight: 420)
+    }
+
+    private func note(_ text: String) -> some View {
+        Text(verbatim: text)
+            .font(.system(size: 11.5))
+            .foregroundColor(Theme.muted)
+            .fixedSize(horizontal: false, vertical: true)
+            .padding(.horizontal, 2)
     }
 }
 
@@ -291,7 +312,7 @@ enum ActSettings {
         let m = ActSettingsModel()
         m.load()
         Windows.shared.show("act-settings", title: "Spark-Begleiter – Am PC handeln einstellen",
-                            size: NSSize(width: 460, height: 560)) {
+                            size: NSSize(width: 460, height: 640)) {
             ActSettingsView(m: m)
         }
     }

@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.745** · 2026-10-17 · Begleiter am Mac: „Am PC handeln einstellen“ aufgeräumt, Schalter rechts in einer Spalte, in Karten wie im Panel, Farbleiste unter dem Titel schmaler
 - **V01.0.744** · 2026-10-17 · Aufträge mit Plan, Rückfrage und Vorschlag: ein Auftrag zeigt seine Schritte als Liste, fragt einmal nach, schlägt am Ende eine Erinnerung, einen Termin oder einen Listeneintrag vor, ausgeführt erst nach deinem Ja auf genau diesen Vorschlag, und lässt sich während er läuft ergänzen (Panel, Android, iPhone)
 - **V01.0.743** · 2026-10-17 · Ablauf und Freigabe zeigen: unter jeder Antwort zugeklappt, welche Werkzeuge der Assistent benutzt hat, und ein Vorschlag, der auf dein Ja wartet, als Karte mit „Ja“ und „Nein“ (Panel, Android, iPhone)
 - **V01.0.742** · 2026-10-17 · Rot-Fix: Profile sehen beim Seitenstart kein Admin-Anmeldefenster mehr; die Karte „Grundausstattung“ fragt ihre Daten nur noch als Admin ab (seit V01.0.721 bekam jedes Profil 401 und das Anmeldefenster verdeckte die Seite, test_mailstil rot); Selbsttest in test_grundausstattung

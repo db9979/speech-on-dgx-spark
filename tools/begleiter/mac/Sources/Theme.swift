@@ -131,7 +131,7 @@ struct FaceView: View {
 /// The 6 px gradient bar on top of every window.
 struct GradientBar: View {
     var body: some View {
-        Rectangle().fill(Theme.gradient).frame(height: 6)
+        Rectangle().fill(Theme.gradient).frame(height: 3)
     }
 }
 
@@ -773,5 +773,50 @@ struct StatusCard: View {
             .background(RoundedRectangle(cornerRadius: 14).fill(Theme.card)))
         .overlay(RoundedRectangle(cornerRadius: 14).stroke(color.opacity(0.35), lineWidth: 1))
         .accessibilityElement(children: .combine)
+    }
+}
+
+/// A row with a name (and a sentence) on the left and the switch always in one column on the right, for lists of
+/// switches in a PanelBox (Dominik 2026-10-17: switches right after the label looked ragged).
+struct SwitchRow: View {
+    let title: String
+    var detail = ""
+    var symbol = ""
+    @Binding var isOn: Bool
+
+    var body: some View {
+        Button {
+            isOn.toggle()
+        } label: {
+            HStack(spacing: 10) {
+                if !symbol.isEmpty {
+                    Image(systemName: symbol)
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(Theme.muted)
+                        .frame(width: 20)
+                }
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(verbatim: title)
+                        .font(.system(size: 13))
+                        .fixedSize(horizontal: false, vertical: true)
+                    if !detail.isEmpty {
+                        Text(verbatim: detail)
+                            .font(.system(size: 11))
+                            .foregroundColor(Theme.muted)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                Spacer(minLength: 12)
+                SwitchKnob(on: isOn)
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(verbatim: title))
+        .accessibilityValue(Text(verbatim: isOn ? "an" : "aus"))
+        .accessibilityAddTraits(.isButton)
     }
 }

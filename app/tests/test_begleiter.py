@@ -1600,6 +1600,19 @@ class Labels(unittest.TestCase):
         self.assertEqual(len(about), 1, about)
         self.assertIn("_pageAbout.Controls.AddRange(", about[0])
 
+    def test_mac_switch_lists_line_up(self):
+        """Dominik 2026-10-17 ("siet nicht professionel aus", Am PC handeln einstellen): lists of switches are rows in
+        a card with the switch in one column on the right (SwitchRow in a PanelBox), never a bare Toggle(.switch)
+        whose switch sits right after its label."""
+        import glob
+        for path in sorted(glob.glob(os.path.join(self.ROOT, "mac", "Sources", "*.swift"))):
+            with open(path, encoding="utf-8") as f:
+                self.assertNotIn(".toggleStyle(.switch)", f.read(), os.path.basename(path))
+        fern = self.src("mac", "Sources", "Fern.swift")
+        view = fern[fern.index("struct ActSettingsView"):fern.index("enum ActSettings {")]
+        self.assertIn("PanelBox {", view)
+        self.assertEqual(view.count("SwitchRow("), 2)
+
     def test_settings_have_a_side_menu(self):
         """2a: the settings window has a side menu like the panel instead of tabs on top."""
         mac = self.src("mac", "Sources", "SettingsView.swift")
