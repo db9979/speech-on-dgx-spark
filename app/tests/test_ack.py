@@ -159,12 +159,10 @@ class Rules(unittest.TestCase):
 
 class InTheAnswer(unittest.TestCase):
     def setUp(self):
+        helpers.keep_chat(self, "routing", "instant_ack")
         helpers.set_config(routing=True, instant_ack=True)
         helpers.LLM_CALLS.clear()
         record_all()
-
-    def tearDown(self):
-        helpers.set_config(routing=False, instant_ack=False)
 
     def audio(self, evs):
         return [base64.b64decode(e["audio"]) for e in evs if e["type"] == "audio"]

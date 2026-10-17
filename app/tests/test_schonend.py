@@ -173,6 +173,8 @@ class QuieterLogs(unittest.TestCase):
             android.fetch_apk = real
 
     def test_tasks_switched_off_say_when_to_ask_again(self):
+        helpers.keep_chat(self, "tasks")                         # shipped on since the Grundausstattung
+        helpers.set_config(tasks=False)
         r = ADMIN.post("/api/admin/profiles", json={"name": "Retry", "pin": "1234"})
         self.assertIn(r.status_code, (200, 409))
         c = TestClient(panel.app)

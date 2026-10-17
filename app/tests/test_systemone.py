@@ -75,6 +75,7 @@ def block(tc, uid, key="einordnung", on=False):
 
 class Base(unittest.TestCase):
     def setUp(self):
+        helpers.keep_chat(self, "routing")
         SEEN.clear()
         REPLY[0] = lambda b: answer(absicht={"wetter": 0.9, "unklar": 0.1})
         systemone._transport = httpx.MockTransport(handler)
@@ -83,7 +84,7 @@ class Base(unittest.TestCase):
         systemone._transport = None
         helpers.set_config(systemone=False, systemone_tidy=False, systemone_mail=False, systemone_quality=False,
                            systemone_berater=False, systemone_check=False, systemone_klage=False, systemone_min=0.8,
-                           route_model="off", routing=False, mail=False, mail_tidy=False, proactive=False)
+                           route_model="off", mail=False, mail_tidy=False, proactive=False)
 
 
 class Contract(Base):

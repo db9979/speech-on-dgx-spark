@@ -71,6 +71,7 @@ class Tipps(unittest.TestCase):
         cls.o, cls.ouid = profile("Tippandere")
 
     def setUp(self):
+        helpers.keep_chat(self, "spark_help", "feature_tips", "tasks")
         helpers.set_config(spark_help=True, feature_tips=True, tasks=False, weather=False, routing=False, direct_read=False,
                            proactive=False)
         for uid in (self.uid, self.auid, self.ouid):
@@ -82,13 +83,14 @@ class Tipps(unittest.TestCase):
             os.remove(notaus.FILE)
         except FileNotFoundError:
             pass
-        helpers.set_config(spark_help=False, feature_tips=False, feature_tips_push=False, tasks=False, proactive=False)
+        helpers.set_config(feature_tips_push=False, proactive=False)
 
     # ---------------------------------------------------------------- switches
     def test_off_by_default_and_never_for_guests(self):
         with open(os.path.join(os.path.dirname(__file__), "..", "config.default.json")) as f:
             chat = json.load(f)["chat"]
-        self.assertIs(chat["feature_tips"], False)
+        self.assertIs(chat["feature_tips"], True)  # Grundausstattung (2026-10-17)
+        self.assertIn("chat.feature_tips", features.GRUNDAUSSTATTUNG)
         self.assertIs(chat["feature_tips_push"], False)
         self.assertNotIn("tips_on", profiles.SETTINGS)                 # no release switch per profile any more
         self.assertIs(profiles.SETTINGS["pro_tips"][0], True)          # the note by itself: a preference, on unless off

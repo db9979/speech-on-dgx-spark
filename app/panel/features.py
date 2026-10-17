@@ -484,6 +484,44 @@ DEFAULT_ON = {
     "chat.calendar": "Grundfunktion von Anfang an, braucht trotzdem einen eigenen Kalender des Profils",
     "chat.esp32_ota_http": "Dominik 2026-10-11: Lautsprecher-Updates über http bleiben erlaubt (sonst nur per USB)",
 }
+# Grundausstattung (Dominik 2026-10-17, plan grundeinstellungen/plan.md): what makes a newcomer's chat good from the
+# first question. Only what needs no setup, stays in the Spark (no host outside, netguard), loads no extra model and
+# concerns only the profile itself (test_grundausstattung); guests still only ask and get answers. A new installation
+# starts with it on (config.default.json, each with its reason here instead of DEFAULT_ON); an existing one keeps its
+# switches until the admin takes it over on Funktionen („Alle übernehmen“, POST /api/admin/grundausstattung).
+GRUNDAUSSTATTUNG = {
+    "chat.routing": "Gespräch: feste Regeln zeigen dem Modell nur die passenden Werkzeuge",
+    "chat.direct_read": "Gespräch: klare Lesefragen holt das Panel selbst, eine Runde weniger",
+    "chat.instant_ack": "Gespräch: ein kurzer Satz sofort statt Stille bis zur Antwort",
+    "chat.prefetch": "Gespräch: bei einer Rückfrage liegen die Daten für die nächste Antwort schon bereit",
+    "chat.klaeren": "Gespräch: bei mehreren passenden Geräten fragt er statt zu raten",
+    "chat.klaeren_merken": "Gespräch: die Auswahl aus einer Rückfrage gilt beim nächsten Mal",
+    "chat.follow_up": "Gespräch: „Und morgen?“ geht ohne neues Weckwort",
+    "chat.undo_voice": "Gespräch: „Mach das rückgängig“ nimmt die letzte Tat nach einem Ja zurück",
+    "chat.learn_fixes": "Gespräch: aus Korrekturen wird ein Gedächtnis-Eintrag, erst nach dem Ja",
+    "chat.face_life": "Gespräch: das Gesicht zeigt, was der Spark gerade tut",
+    "chat.spark_help": "Finden: Fragen zum Spark beantwortet er aus Anleitung und Schaltern, mit dem Weg",
+    "chat.spark_drawer": "Finden: „Frag Spark“ auf jeder Seite",
+    "chat.feature_tips": "Finden: er nennt Funktionen, die zur Frage passen",
+    "chat.feature_sentences": "Finden: „Probier mal“ und „Das kannst du auch sagen“ mit Sätzen, die bei dir gehen",
+    "chat.tasks": "Alltag: Einkaufsliste und Aufgaben auf dem Spark, ohne Konto",
+    "chat.history_live": "Alltag: der Verlauf steht sofort auf allen eigenen Geräten",
+}
+# the part that needs the internet: never shipped on, only by the admin's answer to „Darf der Spark ins Internet?“
+# on Funktionen (chat.grund_internet keeps the answer); the web search only once a SearXNG address is stored
+GRUND_INTERNET = ("chat.weather", "chat.wiki", "chat.search", "chat.svc_watch")
+
+
+def grund_state(c=None):
+    """The card on Funktionen and the app's Funktionen page: which switches of each part are on, and the answer to
+    the internet question. Switch names only, never a value from the settings."""
+    c = c if c is not None else chat_cfg()
+    on = lambda keys: [k for k in keys if _switch(c, k.split(".", 1)[1])]   # noqa: E731
+    return {"basis": {"keys": list(GRUNDAUSSTATTUNG), "on": on(GRUNDAUSSTATTUNG)},
+            "internet": {"keys": list(GRUND_INTERNET), "on": on(GRUND_INTERNET),
+                         "frage": c.get("grund_internet") if c.get("grund_internet") in ("ja", "nein") else "offen",
+                         "search_url": bool(str(c.get("search_url") or "").strip())},
+            "names": {k: list(switch_name(k.split(".", 1)[1])) for k in (*GRUNDAUSSTATTUNG, *GRUND_INTERNET)}}
 # names for the Spark-wide switches that are no function of their own (the app's Funktionen page shows them under "Spark")
 SPARK_NAMES = {"public": ("Gastzugang", "Guest access"), "thinking": ("Vorher nachdenken", "Think first"),
                "prompt_cache": ("Schneller Antwortbeginn", "Faster first words"),

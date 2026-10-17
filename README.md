@@ -40,6 +40,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.721** Basic set for newcomers: 16 conversation functions are on in new installations; existing ones get the card "Take them all" on Features, the question "May the Spark use the internet?" and the filter "Recommended", new profiles first see where to set things
 - **V01.0.720** Cleanup: the speech output of an answer lives in a file of its own, chat.py is another 160 lines shorter
 - **V01.0.719** Measure models right in the panel (Status → Models "Measure")
 - **V01.0.718** Two fast models to measure: Gemma 4 26B A4B and Qwen3-VL 30B A3B
@@ -49,7 +50,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.714** Music: "Musik stück" and "… Track" are recognised, after a web search the own wish makes the song with the chords from before
 - **V01.0.713** Cleanup: the model side of an answer lives in a file of its own, chat.py is 450 lines shorter
 - **V01.0.712** iPhone app: calling failed at once ("Call failed.") because the app registered with Apple's CallKit only on the first incoming call; now at start and dialing. Running and ringing calls show as connections on Live, monitoring and the Steuerzentrale (only the count)
-- **V01.0.711** Speaker firmware 2.5.2.8: now builds on XiaoZhi 2.5.2, all own patches unchanged
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

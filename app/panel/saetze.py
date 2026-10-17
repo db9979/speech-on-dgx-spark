@@ -132,6 +132,8 @@ VOICE = {"reminder_set", "reminder_list", "anruf_planen", "weather", "transit", 
          "message_send", "message_read", "message_announce", "home_assistant", "home_assistant_states",
          "home_assistant_history", "web_search", "wikipedia", "document_search", "history_search", "memory_save",
          "spark_tagebuch", "spark_zustand", "agent_list"}
+# the first example in an empty chat until the profile asked the Spark about itself (start, Grundausstattung)
+HELP_START = ("Wo stelle ich die Stimme ein?", "Where do I set the voice?")
 # never as a first example in an empty chat: they need something from before (plan 2)
 NOT_START = {"reminder_cancel", "tasks_change", "memory_forget", "calendar_change", "agent_change", "spark_vorschlag",
              "spark_hilfe", "iphone_action"}
@@ -417,11 +419,14 @@ def start(uid, org="panel", now=None, n=MAX_START):
     st = tipps._st(uid)
     c = features.chat_cfg()
     pool = [t for t in wa.SENTENCES if t not in NOT_START and t not in st["used"] and usable(uid, t, c, org)]
-    if not pool:
-        return []
     week = int(now // (7 * 86400))
     pool.sort(key=lambda t: hashlib.sha256(f"{uid}|{week}|{t}".encode()).hexdigest())
-    return [_item(t, *wa.SENTENCES[t], kind="start") for t in pool[:n]]
+    items = [_item(t, *wa.SENTENCES[t], kind="start") for t in pool[:n]]
+    # Grundausstattung (Dominik 2026-10-17): until the profile has asked the Spark about itself once, the first
+    # example says where the settings are found (only with more than one example: never the sentence of the week)
+    if n > 1 and "spark_hilfe" not in st["used"] and usable(uid, "spark_hilfe", c, org):
+        items = [_item("spark_hilfe", *HELP_START, kind="start")] + items[:n - 1]
+    return items
 
 
 def week_text(uid, now=None):

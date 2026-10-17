@@ -11,6 +11,7 @@ from tests import helpers
 
 helpers.start()
 import panel  # noqa: E402
+import features  # noqa: E402
 import intent  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
@@ -115,16 +116,18 @@ class Rules(unittest.TestCase):
 
 class Turns(unittest.TestCase):
     def setUp(self):
+        helpers.keep_chat(self, "routing")
         helpers.set_config(routing=True, route_model="off")
         helpers.LLM_CALLS.clear()
 
     def tearDown(self):
-        helpers.set_config(routing=False, route_model="off", public=False, deny={})
+        helpers.set_config(route_model="off", public=False, deny={})
 
     def test_off_by_default_and_per_profile(self):
         with open(helpers.os.path.join(helpers.APP, "config.default.json")) as f:
             ch = json.load(f)["chat"]
-        self.assertIs(ch["routing"], False)
+        self.assertIs(ch["routing"], True)  # Grundausstattung (2026-10-17)
+        self.assertIn("chat.routing", features.GRUNDAUSSTATTUNG)
         self.assertEqual(ch["route_model"], "off")
         q = [{"role": "user", "content": "Erinnere mich in 10 Minuten an den Herd"}]
         full = {"memory_save", "memory_forget", "history_search", "reminder_set", "reminder_list", "reminder_cancel"}

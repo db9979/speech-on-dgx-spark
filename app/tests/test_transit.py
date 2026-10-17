@@ -136,6 +136,8 @@ class Transit(unittest.TestCase):
         so the panel asks with buttons instead of taking the first; the choice runs the same request with that
         station, and after a yes the word stands for it. Without the switch the first hit is taken as before."""
         import klaeren
+        helpers.keep_chat(self, "klaeren", "klaeren_merken")         # shipped on (Grundausstattung): off to start
+        helpers.set_config(klaeren=False, klaeren_merken=False)
         a = profile("Pendler Rueck")
         a.put("/api/profile/transit", json={"home": {"id": "8003204", "name": "Karlsbad-Langensteinbach Bahnhof"}})
         self.assertIn("Abfahrt", ask(a, 'TOOL transit {"to": "Bahnhof"}') + "Abfahrt")   # switch off: no question

@@ -179,8 +179,11 @@ def uid_of(client):
 
 
 class Stream(unittest.TestCase):
+    def setUp(self):
+        helpers.keep_chat(self, "history_live")
+
     def tearDown(self):
-        helpers.set_config(history_live=False, history_one=False, history_offline=False)
+        helpers.set_config(history_one=False, history_offline=False)
         verlauf._subs.clear()
         verlauf._busy.clear()
 
@@ -262,8 +265,11 @@ class Stream(unittest.TestCase):
 
 
 class OneConversation(unittest.TestCase):
+    def setUp(self):
+        helpers.keep_chat(self, "history_live")
+
     def tearDown(self):
-        helpers.set_config(history_live=False, history_one=False, history_offline=False)
+        helpers.set_config(history_one=False, history_offline=False)
 
     def test_channels_keep_their_own_until_switched_on(self):
         a = profile("Vsole")
@@ -319,8 +325,11 @@ class Cards(unittest.TestCase):
 
 
 class Offline(unittest.TestCase):
+    def setUp(self):
+        helpers.keep_chat(self, "history_live")
+
     def tearDown(self):
-        helpers.set_config(history_live=False, history_one=False, history_offline=False)
+        helpers.set_config(history_one=False, history_offline=False)
 
     def test_only_a_trusted_browser_keeps_a_copy(self):
         a = profile("Vsolga")
@@ -355,13 +364,16 @@ class Offline(unittest.TestCase):
 class InTheBrowser(unittest.TestCase):
     """The page with all three switches on: the stream opens, another device answering shows only its kind and goes
     again, a channel's message carries its mark, and a browser the profile does not trust keeps no copy."""
+    def setUp(self):
+        helpers.keep_chat(self, "history_live")
+
     @classmethod
     def setUpClass(cls):
         cls.port = helpers._port()
         helpers.serve_panel(cls, cls.port)
 
     def tearDown(self):
-        helpers.set_config(history_live=False, history_one=False, history_offline=False)
+        helpers.set_config(history_one=False, history_offline=False)
 
     def test_busy_mark_and_no_copy(self):
         async def go():

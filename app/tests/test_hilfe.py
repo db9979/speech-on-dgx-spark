@@ -57,6 +57,7 @@ class Hilfe(unittest.TestCase):
         cls.o, cls.ouid = profile("Hilfeandere")
 
     def setUp(self):
+        helpers.keep_chat(self, "spark_help", "spark_drawer", "routing")
         helpers.set_config(spark_help=True, spark_suggest=True, spark_drawer=True, routing=False, direct_read=False,
                            prefetch=False, search=False)
         hilfe._cards.clear()
@@ -72,7 +73,7 @@ class Hilfe(unittest.TestCase):
             os.remove(notaus.FILE)
         except FileNotFoundError:
             pass
-        helpers.set_config(spark_help=False, spark_suggest=False, spark_drawer=False, routing=False)
+        helpers.set_config(spark_suggest=False)
 
     # ---------------------------------------------------------------- off, guests, own switch
     def test_off_without_the_switch_blocked_and_never_for_guests(self):

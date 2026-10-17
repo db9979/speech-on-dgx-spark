@@ -10,6 +10,7 @@ from tests import helpers
 
 helpers.start()
 import panel  # noqa: E402
+import features  # noqa: E402
 import profiles  # noqa: E402
 from fastapi import FastAPI, Request  # noqa: E402
 from fastapi.responses import Response  # noqa: E402
@@ -363,7 +364,8 @@ class Telegram(unittest.TestCase):
     def test_switches_off_by_default(self):
         with open(helpers.APP + "/config.default.json") as f:
             d = json.load(f)["chat"]
-        self.assertEqual((d["telegram"], d["tasks"]), (False, False))
+        self.assertEqual((d["telegram"], d["tasks"]), (False, True))  # Grundausstattung (2026-10-17)
+        self.assertIn("chat.tasks", features.GRUNDAUSSTATTUNG)
         for k in ("tg_voice", "tg_private", "tg_ha", "tg_push", "tg_images"):
             self.assertIs(profiles.SETTINGS[k][0], False)
         self.assertNotIn("tasks_on", profiles.SETTINGS)   # no profile switch: the admin's release counts
@@ -371,10 +373,8 @@ class Telegram(unittest.TestCase):
 
 class Tasks(unittest.TestCase):
     def setUp(self):
+        helpers.keep_chat(self, "tasks")
         helpers.set_config(tasks=True, calendar=True)
-
-    def tearDown(self):
-        helpers.set_config(tasks=False)
 
     def test_spark_list_yes_before_ticking_off_and_the_shortcut(self):
         a = profile("Lisa")

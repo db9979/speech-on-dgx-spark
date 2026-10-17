@@ -103,10 +103,11 @@ class Rules(unittest.TestCase):
         _, cls.other = profile("VorabOtto")
 
     def setUp(self):
+        helpers.keep_chat(self, "prefetch")
         helpers.set_config(routing=True, prefetch=True)
 
     def tearDown(self):
-        helpers.set_config(prefetch=False, deny={})
+        helpers.set_config(deny={})
 
     def test_asks_back(self):
         self.assertTrue(vorab.asks_back("Gern. Für welchen Tag?"))

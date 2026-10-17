@@ -431,7 +431,7 @@ async def profile_quality_case(request: Request, prof=Depends(browser_profile)):
     """A question the assistant got wrong goes to the admin's quality test (fixes.py, quality.py). Only the
     profile's own browser login; the text comes from the profile's own log, not from the request."""
     guard.limit(request, "chat", uid=prof["id"])
-    if not load_config().get("chat", {}).get("learn_fixes", False) or features.blocked("fixes", prof["id"]):
+    if not load_config().get("chat", {}).get("learn_fixes") or features.blocked("fixes", prof["id"]):
         raise HTTPException(403, "learning from corrections is off")
     body = await request.json()
     t = body.get("t") if isinstance(body, dict) else None

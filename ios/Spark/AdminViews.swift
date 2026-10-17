@@ -981,7 +981,17 @@ struct FeaturesView: View {
     @State private var on: [String: Bool] = [:]
     @State private var names: [String: String] = [:]
     @State private var groups: [SwitchGroup] = []
+    @State private var grund = Grund()
     @State private var error: String?
+
+    /// the Grundausstattung (features.GRUNDAUSSTATTUNG): what is still off and the internet question, as the Spark sends it
+    struct Grund {
+        var basis: [String] = []
+        var off: [String] = []
+        var internet: [String] = []
+        var ask = false
+        var names: [String: String] = [:]
+    }
 
     /// a group of switches as the Spark sends it (features.py: names and groups, no list of its own in the app)
     struct SwitchGroup: Identifiable {
@@ -993,6 +1003,7 @@ struct FeaturesView: View {
     var body: some View {
         Form {
             if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if !grund.off.isEmpty || grund.ask { grundSection }
             ForEach(groups) { g in
                 let keys = g.keys.filter { on[$0] != nil }
                 if !keys.isEmpty {
@@ -1011,8 +1022,55 @@ struct FeaturesView: View {
 
     private func toggle(_ key: String) -> some View {
         Toggle(isOn: Binding(get: { on[key] ?? false }, set: { v in on[key] = v; Task { await save(key, v) } })) {
-            Text(verbatim: names[key] ?? key)
+            if grund.basis.contains("chat." + key) {
+                VStack(alignment: .leading) {
+                    Text(verbatim: names[key] ?? key)
+                    Text("Empfohlen").font(.caption).foregroundStyle(.green)
+                }
+            } else {
+                Text(verbatim: names[key] ?? key)
+            }
         }
+    }
+
+    /// the card of the panel's Funktionen page: take the whole list, answer the internet question
+    @ViewBuilder private var grundSection: some View {
+        Section {
+            if !grund.off.isEmpty {
+                Text("Geht ohne Einrichtung, bleibt im Spark und braucht kein Zusatzmodell. Gäste bekommen davon nichts.")
+                    .font(.footnote)
+                Text(verbatim: grund.off.compactMap { grund.names[$0] }.joined(separator: ", ")).font(.footnote).foregroundStyle(.secondary)
+                Button("Alle übernehmen") { Task { await take(["teil": "basis", "on": true]) } }
+            }
+            if grund.ask {
+                Text("Darf der Spark ins Internet? Für Wetter, Wikipedia, die Websuche über dein SearXNG und den Dienst-Wächter. Mails und Dokumente gehen nie hinaus.")
+                    .font(.footnote)
+                Button("Ja") { Task { await take(["teil": "internet", "on": true]) } }
+                Button("Nein, nur im Heimnetz") { Task { await take(["teil": "internet", "on": false]) } }
+            }
+        } header: {
+            Text("Grundausstattung für ein gutes Gespräch")
+        } footer: {
+            Text(SparkAPI.way(String(localized: "Zurücknehmen im Browser unter Zustand → Logs → Admin-Protokoll.")))
+        }
+    }
+
+    static func parseGrund(_ x: Any?) -> Grund {
+        guard let d = x as? [String: Any] else { return Grund() }
+        let b = d["basis"] as? [String: Any] ?? [:], i = d["internet"] as? [String: Any] ?? [:]
+        let keys = ((b["keys"] as? [String]) ?? []).prefix(60).map { $0 }, ons = Set((b["on"] as? [String]) ?? [])
+        return Grund(basis: keys, off: keys.filter { !ons.contains($0) }, internet: (i["keys"] as? [String]) ?? [],
+                     ask: (i["frage"] as? String) == "offen",
+                     names: ((d["names"] as? [String: Any]) ?? [:]).compactMapValues { pick($0) })
+    }
+
+    private func take(_ body: [String: Any]) async {
+        do {
+            let d = try await s.object("POST", "api/admin/grundausstattung", body: body)
+            grund = Self.parseGrund(d)
+            error = nil
+            await load()
+        } catch { self.error = error.localizedDescription }
     }
 
     static func pick(_ x: Any?) -> String? {
@@ -1025,6 +1083,7 @@ struct FeaturesView: View {
             let d = try await s.object("GET", "api/admin/switches")
             on = ((d["switches"] as? [String: Any]) ?? [:]).compactMapValues { $0 as? Bool }
             names = ((d["names"] as? [String: Any]) ?? [:]).compactMapValues { Self.pick($0) }
+            grund = Self.parseGrund(d["grund"])
             groups = ((d["groups"] as? [[String: Any]]) ?? []).prefix(20).compactMap { g in
                 guard let k = g["key"] as? String, let n = Self.pick(g["name"]) else { return nil }
                 return SwitchGroup(id: k, name: n, keys: (g["switches"] as? [String]) ?? [])

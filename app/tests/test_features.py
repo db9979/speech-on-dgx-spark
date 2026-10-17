@@ -114,8 +114,11 @@ class Registry(unittest.TestCase):
 
 
 class Check(unittest.TestCase):
+    def setUp(self):
+        helpers.keep_chat(self, "learn_fixes")
+
     def tearDown(self):
-        helpers.set_config(weather=False, mail=False, parcels=False, memory=True, learn_fixes=False, room=False,
+        helpers.set_config(weather=False, mail=False, parcels=False, memory=True, room=False,
                            room_remote=False, esp32=False, iphone=False, iphone_push=False, search=False)
 
     def test_spark_profile_and_guest(self):

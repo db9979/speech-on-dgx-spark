@@ -59,11 +59,12 @@ def text_of(evs):
 
 class StableStart(unittest.TestCase):
     def setUp(self):
+        helpers.keep_chat(self, "routing", "direct_read")
         helpers.set_config(prompt_cache=True, routing=True)
         helpers.LLM_CALLS.clear()
 
     def tearDown(self):
-        helpers.set_config(prompt_cache=False, routing=False, direct_read=False, public=False)
+        helpers.set_config(prompt_cache=False, public=False)
 
     def test_same_start_for_different_questions(self):
         p = profile("Anfang1")
@@ -154,11 +155,12 @@ class Anchor(unittest.TestCase):
 
 class Direct(unittest.TestCase):
     def setUp(self):
+        helpers.keep_chat(self, "direct_read")
         helpers.set_config(direct_read=True, reminders=True)
         helpers.LLM_CALLS.clear()
 
     def tearDown(self):
-        helpers.set_config(direct_read=False, public=False, deny={})
+        helpers.set_config(public=False, deny={})
 
     def test_rules(self):
         offered = {"mail_list", "reminder_list", "weather", "parcels"}

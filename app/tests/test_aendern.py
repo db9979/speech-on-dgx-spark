@@ -13,6 +13,7 @@ helpers.start()
 import agent  # noqa: E402
 import aendern  # noqa: E402
 import calendars  # noqa: E402
+import features  # noqa: E402
 import chat  # noqa: E402
 import chat_tools  # noqa: E402
 import hamelden  # noqa: E402
@@ -281,7 +282,8 @@ class PauseVolumeUndo(unittest.TestCase):
     def test_undo_off_by_default(self):
         import json
         with open(helpers.APP + "/config.default.json") as f:
-            self.assertIs(json.load(f)["chat"]["undo_voice"], False)
+            self.assertIs(json.load(f)["chat"]["undo_voice"], True)  # Grundausstattung (2026-10-17)
+        self.assertIn("chat.undo_voice", features.GRUNDAUSSTATTUNG)
         self.assertNotIn("undo_voice", profiles.SETTINGS)      # the admin's switch holds for every profile
 
 

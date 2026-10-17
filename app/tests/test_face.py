@@ -12,6 +12,7 @@ from tests import helpers
 
 helpers.start()
 import panel  # noqa: E402
+import features  # noqa: E402
 from core import FACES  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
@@ -123,13 +124,15 @@ class FacesInTheApps(unittest.TestCase):
 
 
 class FaceLife(unittest.TestCase):
-    """"Gesicht zeigt, was es tut" (chat.face_life): admin switch, off by default, only from the panel's own events."""
-    def tearDown(self):
-        helpers.set_config(face_life=False)
+    """"Gesicht zeigt, was es tut" (chat.face_life): admin switch, on in the Grundausstattung, only from the panel's own events."""
+    def setUp(self):
+        helpers.keep_chat(self, "face_life")
 
     def test_off_by_default(self):
         with open(os.path.join(os.path.dirname(__file__), "..", "config.default.json")) as f:
-            self.assertIs(json.load(f)["chat"]["face_life"], False)
+            self.assertIs(json.load(f)["chat"]["face_life"], True)  # Grundausstattung (2026-10-17)
+        self.assertIn("chat.face_life", features.GRUNDAUSSTATTUNG)
+        helpers.set_config(face_life=False)
         self.assertIs(TestClient(panel.app).get("/api/whoami").json()["face_life"], False)
 
     def test_admin_switch_takes_only_true_or_false(self):

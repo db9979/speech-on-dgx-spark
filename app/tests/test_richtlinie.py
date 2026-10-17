@@ -53,11 +53,14 @@ class DefaultOn(unittest.TestCase):
                 elif v is True:
                     on.add(key)
         walk(cfg, "")
-        self.assertEqual(sorted(on - set(features.DEFAULT_ON)), [],
+        # the Grundausstattung (Dominik 2026-10-17) carries its reasons in its own list
+        why = {**features.DEFAULT_ON, **features.GRUNDAUSSTATTUNG}
+        self.assertEqual(sorted(set(features.DEFAULT_ON) & set(features.GRUNDAUSSTATTUNG)), [], "in both lists")
+        self.assertEqual(sorted(on - set(why)), [],
                          "shipped on without a reason: add it to features.DEFAULT_ON or ship it off")
-        self.assertEqual(sorted(set(features.DEFAULT_ON) - on), [], "listed in features.DEFAULT_ON but shipped off")
-        for key, why in features.DEFAULT_ON.items():
-            self.assertGreater(len(why.strip()), 10, key)
+        self.assertEqual(sorted(set(why) - on), [], "listed in features.DEFAULT_ON or GRUNDAUSSTATTUNG but shipped off")
+        for key, text in why.items():
+            self.assertGreater(len(text.strip()), 10, key)
 
 
 class JournalNames(unittest.TestCase):

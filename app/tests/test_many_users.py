@@ -210,6 +210,8 @@ class SpokenNames(Base):
     def test_names_as_buttons_with_rueckfrage(self):
         """Rückfrage statt Raten (klaeren.py, Stufe C): with the switch on, "Meinst du …?" carries the names as
         buttons; a tap sends the full name, which picks like a typed answer. Off: no buttons."""
+        helpers.keep_chat(self, "klaeren")                       # shipped on (Grundausstattung): off to start
+        helpers.set_config(klaeren=False)
         r = self.a.post("/api/chat", json={"messages": [{"role": "user", "content": "Schreib Quirin, dass ich gleich komme"}],
                                            "convo": "q3"})
         self.assertFalse([e for e in helpers.events(r) if e["type"] == "choice"])
@@ -242,6 +244,7 @@ class SpokenNames(Base):
         real = (telegram.call, telegram.owner)
         telegram.call = call
         telegram.owner = lambda cid: self.ua if cid == 78 else None
+        helpers.keep_chat(self, "klaeren")
         helpers.set_config(klaeren=True)
         self.a.put("/api/profile/settings", json={"klaeren": True, "tg_private": True})
         try:

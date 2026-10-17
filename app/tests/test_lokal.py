@@ -159,8 +159,10 @@ class Turn(unittest.TestCase):
         kiwix._cache.clear()
         SEARCHES.clear()
         SLOW[0] = 0.0
+        helpers.keep_chat(self, "routing", "direct_read", "prefetch")   # shipped on (Grundausstattung)
         helpers.set_config(local_first=True, local_first_ms=1500, documents=True, doc_semantic=False,
-                           search=True, search_url=f"http://127.0.0.1:{SEARX_PORT}", search_pages=0)
+                           search=True, search_url=f"http://127.0.0.1:{SEARX_PORT}", search_pages=0,
+                           routing=False, direct_read=False, prefetch=False)
         for k in [k for k in guard._rate if k[0] in ("doc", "lokal", "chat")]:
             guard._rate.pop(k, None)
         helpers.LLM_CALLS.clear()

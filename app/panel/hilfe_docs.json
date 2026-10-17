@@ -5284,24 +5284,40 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
-"title": "Das kannst du auch sagen (V01.0.684, standardmäßig aus)",
-"text": "Das kannst du auch sagen (V01.0.684, standardmäßig aus): Funktionen, die bei dir schon an sind, die du aber nie benutzt, weil du das Wort nicht kennst („Mal mir …“, „Ruf mich morgen um sieben an“), zeigt der Spark mit einem Beispielsatz zum Antippen. Ein Tipp setzt den Satz nur ins Eingabefeld, du schickst ihn selbst ab; er läuft dann wie getippt durch die Weiche und jede Regel. Welche Sätze kommen, entscheiden feste Regeln im Panel (saetze.py), nie das Modell; die Sätze stehen fest im Code, deutsch und englisch, in derselben Liste, die test_werkzeug_abdeckung prüft (werkzeug_abdeckung.SENTENCES, jeder Satz landet wirklich beim Werkzeug). Vorgeschlagen wird nur, was features.allowed für dein Profil erlaubt, was eingerichtet ist (Kalender, Postfach) und was am Gerät geht. Wo es auftaucht: (1) unter der Antwort bis zu drei passende Folgesätze (feste Tabelle, z. B. nach dem Wetter „Erinnere mich morgen früh an den Schirm“, nach einem Bild „Mach den Hintergrund blau“), nur Werkzeuge, die du noch nie benutzt hast; (2) „Probier mal“ im leeren Chat: drei Sätze, jede Woche andere; (3) „Meintest du …?“ bei Wörtern, die die Weiche nicht kennt, aber nahe liegen (z. B. „klingel mich“ → Anruf, "
+"title": "Das kannst du auch sagen (V01.0.684, Grundausstattung)",
+"text": "Das kannst du auch sagen (V01.0.684, Grundausstattung): Funktionen, die bei dir schon an sind, die du aber nie benutzt, weil du das Wort nicht kennst („Mal mir …“, „Ruf mich morgen um sieben an“), zeigt der Spark mit einem Beispielsatz zum Antippen. Ein Tipp setzt den Satz nur ins Eingabefeld, du schickst ihn selbst ab; er läuft dann wie getippt durch die Weiche und jede Regel. Welche Sätze kommen, entscheiden feste Regeln im Panel (saetze.py), nie das Modell; die Sätze stehen fest im Code, deutsch und englisch, in derselben Liste, die test_werkzeug_abdeckung prüft (werkzeug_abdeckung.SENTENCES, jeder Satz landet wirklich beim Werkzeug). Vorgeschlagen wird nur, was features.allowed für dein Profil erlaubt, was eingerichtet ist (Kalender, Postfach) und was am Gerät geht. Wo es auftaucht: (1) unter der Antwort bis zu drei passende Folgesätze (feste Tabelle, z. B. nach dem Wetter „Erinnere mich morgen früh an den Schirm“, nach einem Bild „Mach den Hintergrund blau“), nur Werkzeuge, die du noch nie benutzt hast; (2) „Probier mal“ im leeren Chat: drei Sätze, jede Woche andere; (3) „Meintest du …?“ bei Wörtern, die die Weiche nicht kennt, aber nahe liegen (z. B. „klingel mich“ → Anruf, „"
 },
 {
 "lang": "de",
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
-"title": "Das kannst du auch sagen (V01.0.684, standardmäßig aus)",
-"text": "„denk an …“ → Erinnerung); das ist nur ein Vorschlag, die Weiche schaltet dadurch nichts; (4) „Was kannst du?“ nennt Beispielsätze, die bei dir gehen; (5) Ich → Was ich kann: alle Sätze nach Bereichen, mit Suchfeld, „neu“ und „noch nie benutzt“, auch in den Apps; (6) neu freigegeben ohne Einrichten: einmal „Neu bei dir: …“ unter der nächsten Antwort; (7) beim Sprechen (Lautsprecher, Telefon, Uhr, Siri, CarPlay) höchstens ein kurzer Satz am Ende einer Antwort pro Tag, nur Funktionen, die per Stimme gehen (eigener Schalter „Tipps beim Sprechen“, je Profil unter Ich → Gespräch abschaltbar); (8) Telegram als Antworttasten, TUI als Zeile „Tipp: …“ und /tipps; (9) der Wochenhinweis unter Von selbst bringt einen „Satz der Woche“, wenn es nichts einzurichten gibt; (10) für den Admin zeigt Funktionen → Weiche „Was keiner findet“: freigegebene Funktionen, die 30 Tage niemand benutzt hat, und wie oft Vorschläge gezeigt und getippt wurden. Sparsam: eine Zeile pro Antwort, ein Satz pro Werkzeug höchstens alle 14 Tage, sechs am Tag, nie nach Text aus Mail oder Web, nie im Notaus, nie für Gäste. Gespeichert wird pro Profil nur, welches Werkzeug wann benutzt und welcher Satz gezeigt wurde (tipps.j"
+"title": "Das kannst du auch sagen (V01.0.684, Grundausstattung)",
+"text": "denk an …“ → Erinnerung); das ist nur ein Vorschlag, die Weiche schaltet dadurch nichts; (4) „Was kannst du?“ nennt Beispielsätze, die bei dir gehen; (5) Ich → Was ich kann: alle Sätze nach Bereichen, mit Suchfeld, „neu“ und „noch nie benutzt“, auch in den Apps; (6) neu freigegeben ohne Einrichten: einmal „Neu bei dir: …“ unter der nächsten Antwort; (7) beim Sprechen (Lautsprecher, Telefon, Uhr, Siri, CarPlay) höchstens ein kurzer Satz am Ende einer Antwort pro Tag, nur Funktionen, die per Stimme gehen (eigener Schalter „Tipps beim Sprechen“, je Profil unter Ich → Gespräch abschaltbar); (8) Telegram als Antworttasten, TUI als Zeile „Tipp: …“ und /tipps; (9) der Wochenhinweis unter Von selbst bringt einen „Satz der Woche“, wenn es nichts einzurichten gibt; (10) für den Admin zeigt Funktionen → Weiche „Was keiner findet“: freigegebene Funktionen, die 30 Tage niemand benutzt hat, und wie oft Vorschläge gezeigt und getippt wurden. Sparsam: eine Zeile pro Antwort, ein Satz pro Werkzeug höchstens alle 14 Tage, sechs am Tag, nie nach Text aus Mail oder Web, nie im Notaus, nie für Gäste. Gespeichert wird pro Profil nur, welches Werkzeug wann benutzt und welcher Satz gezeigt wurde (tipps.js"
 },
 {
 "lang": "de",
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
-"title": "Das kannst du auch sagen (V01.0.684, standardmäßig aus)",
-"text": "son, Namen und Zahlen, nie Fragen); Ich → Was ich kann → „Meine Zählung löschen“ löscht es. Schalter: Funktionen → unter „Funktionen vorschlagen“ „Das kannst du auch sagen“ und darunter „Tipps beim Sprechen“. Protokoll: Zeilen tipps:; Zustand → Live Ereignisse „Funktionen vorschlagen“ (gezeigt, getippt), nie Inhalte. Plan: plaene/funktionen-zeigen.md; Tests: app/tests/test_saetze.py."
+"title": "Das kannst du auch sagen (V01.0.684, Grundausstattung)",
+"text": "on, Namen und Zahlen, nie Fragen); Ich → Was ich kann → „Meine Zählung löschen“ löscht es. Schalter: Funktionen → unter „Funktionen vorschlagen“ „Das kannst du auch sagen“ und darunter „Tipps beim Sprechen“. Protokoll: Zeilen tipps:; Zustand → Live Ereignisse „Funktionen vorschlagen“ (gezeigt, getippt), nie Inhalte. Plan: plaene/funktionen-zeigen.md; Tests: app/tests/test_saetze.py."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Grundausstattung für Neulinge (V01.0.721, Dominik 2026-10-17)",
+"text": "Grundausstattung für Neulinge (V01.0.721, Dominik 2026-10-17): Damit ein neues Profil von der ersten Frage an gut chattet, ist bei einer neuen Installation eine feste Liste an (features.GRUNDAUSSTATTUNG, jeder Eintrag mit Grund): Gezielte Werkzeugwahl, Eindeutiges direkt abrufen, Sofortige Rückmeldung, Vorab holen bei Rückfrage, Rückfrage statt Raten mit Auswahl merken, Rückfrage ohne Weckwort, Rückgängig per Sprache, Aus Korrekturen lernen, Gesicht zeigt, was es tut, Hilfe zum Spark mit „Frag Spark auf jeder Seite“, Funktionen vorschlagen, Das kannst du auch sagen, Aufgaben und Einkaufsliste und Verlauf sofort abgleichen. Hinein darf nur, was keine eigene Einrichtung braucht, nichts Neues aus dem Haus schickt, kein Zusatzmodell lädt und keinen Code des Admins verlangt; Gäste bekommen weiter nur Frage und Antwort. Eine bestehende Installation ändert sich nicht von selbst: oben auf Funktionen steht die Karte „Grundausstattung für ein gutes Gespräch“ mit dem, was noch aus ist, „Alle übernehmen“ und „Einzeln ansehen“ (Filter „Empfohlen“; jede Zeile der Liste trägt „Empfohlen“). Zurücknehmen geht unter Zustand → Logs → Admin-Protokoll mit „Rückgängig“. Darunter fragt die Karte einmal „"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Grundausstattung für Neulinge (V01.0.721, Dominik 2026-10-17)",
+"text": "Darf der Spark ins Internet?“: Ja schaltet Wetter, Wikipedia direkt, den Dienst-Wächter (prüft zwei feste öffentliche Adressen) und die Websuche ein, die Websuche nur, wenn eine SearXNG-Adresse eingetragen ist; Nein merkt sich die Antwort (chat.grund_internet), nichts wird eingeschaltet. Ist alles an und die Frage beantwortet, verschwindet die Karte. Dasselbe steht in der iPhone-App unter Spark verwalten → Funktionen. Im leeren Chat ist der erste „Probier mal“-Satz „Wo stelle ich die Stimme ein?“, bis das Profil den Spark einmal nach sich selbst gefragt hat. Schnittstelle GET/POST /api/admin/grundausstattung (nur der Admin, nie der Verwalter, Anfragegrenze, 256 Byte); jede Übernahme steht im Admin-Protokoll („Schalter geändert“, auch unter Zustand → Live bei den Ereignissen). Plan: grundeinstellungen/plan.md; Tests: app/tests/test_grundausstattung.py."
 },
 {
 "lang": "de",
@@ -12428,24 +12444,40 @@
 "src": "assistant",
 "file": "Assistant and panel",
 "head": "Voice chat",
-"title": "You can also say (V01.0.684, off by default)",
-"text": "You can also say (V01.0.684, off by default): functions that are already on for you but that you never use because you do not know the word (\"Draw me …\", \"Call me tomorrow at seven\") are shown with an example sentence to tap. A tap only puts the sentence into the input field; you send it yourself, and it then goes through the Weiche and every rule like a typed question. Which sentences come is decided by fixed rules in the panel (saetze.py), never by the model; the sentences are fixed in the code, German and English, in the same list test_werkzeug_abdeckung checks (werkzeug_abdeckung.SENTENCES, every sentence really reaches its tool). Only what features.allowed permits for your profile, what is set up (calendar, mailbox) and what works on the device is suggested. Where it shows: (1) under the answer up to three matching follow-up sentences (a fixed table, e.g. after the weather \"Remind me of the umbrella tomorrow morning\", after a picture \"Make the background blue\"), only tools you never used; (2) \"Try this\" in an empty chat: three sentences, different ones each week; (3) \"Did you mean …?\" for words the Weiche does not know but that are close (e.g. \"ring me\" → call, \"think of …\" → "
+"title": "You can also say (V01.0.684, basic set)",
+"text": "You can also say (V01.0.684, basic set): functions that are already on for you but that you never use because you do not know the word (\"Draw me …\", \"Call me tomorrow at seven\") are shown with an example sentence to tap. A tap only puts the sentence into the input field; you send it yourself, and it then goes through the Weiche and every rule like a typed question. Which sentences come is decided by fixed rules in the panel (saetze.py), never by the model; the sentences are fixed in the code, German and English, in the same list test_werkzeug_abdeckung checks (werkzeug_abdeckung.SENTENCES, every sentence really reaches its tool). Only what features.allowed permits for your profile, what is set up (calendar, mailbox) and what works on the device is suggested. Where it shows: (1) under the answer up to three matching follow-up sentences (a fixed table, e.g. after the weather \"Remind me of the umbrella tomorrow morning\", after a picture \"Make the background blue\"), only tools you never used; (2) \"Try this\" in an empty chat: three sentences, different ones each week; (3) \"Did you mean …?\" for words the Weiche does not know but that are close (e.g. \"ring me\" → call, \"think of …\" → remin"
 },
 {
 "lang": "en",
 "src": "assistant",
 "file": "Assistant and panel",
 "head": "Voice chat",
-"title": "You can also say (V01.0.684, off by default)",
-"text": "reminder); this is only a suggestion, the Weiche switches nothing because of it; (4) \"What can you do?\" names example sentences that work for you; (5) Me → What I can do: all sentences by area, with a search field, \"new\" and \"never used\", in the apps too; (6) newly released without setup: once \"New for you: …\" under the next answer; (7) while talking (speaker, phone, watch, Siri, CarPlay) at most one short sentence at the end of an answer per day, only functions that work by voice (own switch \"Tips while talking\", each profile can switch it off under Me → Conversation); (8) Telegram as reply buttons, TUI as a line \"Tip: …\" and /tipps; (9) the weekly note under On its own brings a \"sentence of the week\" when there is nothing to set up; (10) for the admin Features → Weiche shows \"Nobody finds it\": released functions nobody used for 30 days, and how often suggestions were shown and tapped. Sparing: one row per answer, one sentence per tool at most every 14 days, six a day, never after text from mail or web, never in the emergency stop, never for guests. Stored per profile is only which tool was used when and which sentence was shown (tipps.json, names and numbers, never questions); Me"
+"title": "You can also say (V01.0.684, basic set)",
+"text": "der); this is only a suggestion, the Weiche switches nothing because of it; (4) \"What can you do?\" names example sentences that work for you; (5) Me → What I can do: all sentences by area, with a search field, \"new\" and \"never used\", in the apps too; (6) newly released without setup: once \"New for you: …\" under the next answer; (7) while talking (speaker, phone, watch, Siri, CarPlay) at most one short sentence at the end of an answer per day, only functions that work by voice (own switch \"Tips while talking\", each profile can switch it off under Me → Conversation); (8) Telegram as reply buttons, TUI as a line \"Tip: …\" and /tipps; (9) the weekly note under On its own brings a \"sentence of the week\" when there is nothing to set up; (10) for the admin Features → Weiche shows \"Nobody finds it\": released functions nobody used for 30 days, and how often suggestions were shown and tapped. Sparing: one row per answer, one sentence per tool at most every 14 days, six a day, never after text from mail or web, never in the emergency stop, never for guests. Stored per profile is only which tool was used when and which sentence was shown (tipps.json, names and numbers, never questions); Me → Wh"
 },
 {
 "lang": "en",
 "src": "assistant",
 "file": "Assistant and panel",
 "head": "Voice chat",
-"title": "You can also say (V01.0.684, off by default)",
-"text": " → What I can do → \"Delete my count\" deletes it. Switches: Features → below \"Suggesting functions\" \"You can also say\" and below it \"Tips while talking\". Log: lines tipps:; Status → Live events \"Funktionen vorschlagen\" (shown, tapped), never contents. Plan: plaene/funktionen-zeigen.md; tests: app/tests/test_saetze.py."
+"title": "You can also say (V01.0.684, basic set)",
+"text": "at I can do → \"Delete my count\" deletes it. Switches: Features → below \"Suggesting functions\" \"You can also say\" and below it \"Tips while talking\". Log: lines tipps:; Status → Live events \"Funktionen vorschlagen\" (shown, tapped), never contents. Plan: plaene/funktionen-zeigen.md; tests: app/tests/test_saetze.py."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Basic set for newcomers (V01.0.721, Dominik 2026-10-17)",
+"text": "Basic set for newcomers (V01.0.721, Dominik 2026-10-17): so a new profile chats well from the first question, a new installation has a fixed list on (features.GRUNDAUSSTATTUNG, each entry with its reason): targeted tool choice, fetch clear questions directly, instant acknowledgement, fetch ahead on a question back, ask instead of guessing with remember the choice, follow-up without wake word, undo by voice, learning from corrections, face shows what it does, help with the Spark with \"Ask Spark on every page\", suggesting functions, you can also say, tasks and shopping list and instant history sync. Only what needs no setup of its own, sends nothing new out of the house, loads no extra model and wants no admin code may go in; guests still only ask and get answers. An existing installation never changes by itself: at the top of Features the card \"Basic set for a good conversation\" lists what is still off, with \"Take them all\" and \"Look at each\" (filter \"Recommended\"; every row of the list carries \"Recommended\"). Taking it back works under Status → Logs → Admin-Protokoll with \"Undo\". Below, the card asks once \"May the Spark use the internet?\": yes switches on the weather, Wikipedia str"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Basic set for newcomers (V01.0.721, Dominik 2026-10-17)",
+"text": "aight away, the service watch (checks two fixed public addresses) and the web search, the web search only when a SearXNG address is stored; no keeps the answer (chat.grund_internet) and switches nothing on. Once everything is on and the question answered, the card goes away. The same is in the iPhone app under Manage Spark → Funktionen. In an empty chat the first \"Try this\" sentence is \"Where do I set the voice?\" until the profile has asked the Spark about itself once. Endpoint GET/POST /api/admin/grundausstattung (admin only, never the Verwalter, rate limited, 256 bytes); every take-over is in the admin log (\"Schalter geändert\", also under Status → Live with the events). Plan: grundeinstellungen/plan.md; tests: app/tests/test_grundausstattung.py."
 },
 {
 "lang": "en",

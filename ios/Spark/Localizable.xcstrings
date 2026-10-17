@@ -9470,6 +9470,76 @@
           }
         }
       }
+    },
+    "Empfohlen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recommended"
+          }
+        }
+      }
+    },
+    "Geht ohne Einrichtung, bleibt im Spark und braucht kein Zusatzmodell. Gäste bekommen davon nichts.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Needs no setup, stays in the Spark and loads no extra model. Guests get none of it."
+          }
+        }
+      }
+    },
+    "Alle übernehmen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Take them all"
+          }
+        }
+      }
+    },
+    "Darf der Spark ins Internet? Für Wetter, Wikipedia, die Websuche über dein SearXNG und den Dienst-Wächter. Mails und Dokumente gehen nie hinaus.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "May the Spark use the internet? For the weather, Wikipedia, the web search through your SearXNG and the service watch. Mails and documents never go out."
+          }
+        }
+      }
+    },
+    "Nein, nur im Heimnetz": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No, home network only"
+          }
+        }
+      }
+    },
+    "Grundausstattung für ein gutes Gespräch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Basic set for a good conversation"
+          }
+        }
+      }
+    },
+    "Zurücknehmen im Browser unter Zustand → Logs → Admin-Protokoll.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Take it back in the browser under Zustand → Logs → Admin-Protokoll."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

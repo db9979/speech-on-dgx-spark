@@ -625,6 +625,8 @@ def validate(new):
         raise HTTPException(400, "chat defaults: invalid value")
     if ch.get("speaker_strictness") not in speakers.STRICTNESS:
         raise HTTPException(400, "speaker_strictness: low, normal or high")
+    if ch.get("grund_internet", "offen") not in ("offen", "ja", "nein"):
+        raise HTTPException(400, "grund_internet: offen, ja or nein")
     if not (isinstance(ch.get("search_results"), int) and 1 <= ch["search_results"] <= 10
             and isinstance(ch.get("search_pages"), int) and 0 <= ch["search_pages"] <= 5):
         raise HTTPException(400, "search: 1..10 results, 0..5 pages to read")
@@ -953,7 +955,8 @@ def admin_switches():
     cfg = get_config()["chat"]
     keys = app_switches()
     names, groups = features.switch_names(set(keys))
-    return {"switches": {k: bool(cfg.get(k)) for k in keys}, "names": names, "groups": groups}
+    return {"switches": {k: bool(cfg.get(k)) for k in keys}, "names": names, "groups": groups,
+            "grund": features.grund_state(cfg)}
 
 
 @router.put("/api/admin/switches", dependencies=[Depends(auth)])
@@ -970,6 +973,42 @@ async def admin_switch(request: Request):
     undo.record(old, new, _by(request), SENSITIVE)
     guard.log("config_switch", detail=f"chat.{key}={'on' if on else 'off'}")
     return {"key": key, "on": on}
+
+
+# Grundausstattung (features.GRUNDAUSSTATTUNG, Dominik 2026-10-17): the card on Funktionen and in the iPhone app.
+# "basis" switches the whole list on (back off only through Rückgängig in the Admin-Protokoll, like every saved
+# change); "internet" answers „Darf der Spark ins Internet?“: yes switches features.GRUND_INTERNET on (the web search
+# only with a stored SearXNG address), no only keeps the answer. Only the admin, like every switch (coadmin.MANAGER).
+@router.get("/api/admin/grundausstattung", dependencies=[Depends(auth)])
+def grund_get(request: Request):
+    guard.limit(request, "features", admin=True)
+    return features.grund_state(get_config()["chat"])
+
+
+@router.post("/api/admin/grundausstattung", dependencies=[Depends(auth)])
+async def grund_take(request: Request):
+    guard.limit(request, "features", admin=True)
+    body = await json_body(request, 256)
+    teil, on = body.get("teil"), body.get("on")
+    if teil not in ("basis", "internet") or not isinstance(on, bool) or (teil == "basis" and not on):
+        raise HTTPException(400, "teil: basis (on: true) or internet (on: true or false)")
+    with _save_lock:   # one config write at a time (_save)
+        new = get_config()
+        ch = new["chat"]
+        if teil == "basis":
+            keys = list(features.GRUNDAUSSTATTUNG)
+        else:
+            ch["grund_internet"] = "ja" if on else "nein"
+            url = str(ch.get("search_url") or "").strip()
+            keys = [k for k in features.GRUND_INTERNET if on and (k != "chat.search" or url)]
+        turned = [k for k in keys if ch.get(k.split(".", 1)[1]) is not True]
+        for k in turned:
+            ch[k.split(".", 1)[1]] = True
+        old = validate(new)
+        write_json(CONFIG_PATH, new, indent=2)
+    undo.record(old, new, _by(request), SENSITIVE)
+    guard.log("config_switch", detail=f"Grundausstattung {teil}: {'ja' if on else 'nein'}, {len(turned)} eingeschaltet")
+    return dict(features.grund_state(new["chat"]), turned=turned)
 
 
 # Rückgängig (undo.py, plan „Bedienung gesamt“ C5): the last 50 saved changes with their old values. The main admin

@@ -1499,6 +1499,13 @@
 "titel": "Modell im Panel messen",
 "text": "A: Funktionen → Modelle wechseln an. Unter Zustand → Modelle bei „Gemma 4 26B A4B“ auf „Messen“ tippen und bestätigen. Oben steht „Eine Messung läuft“, Live zeigt beim Sprachmodell „Messung läuft“, „Wechseln“ ist so lange weg. Nach etwa 10 bis 25 Minuten stehen beim Modell Tempo, erstes Wort, Werkzeug und Testbilder, und das eigene Sprachmodell antwortet wieder. Dasselbe in der iPhone-App unter Zustand → Modelle.",
 "thread": "Eigene Modell-Installation statt qwen38"
+},
+{
+"id": "P238",
+"v": 721,
+"titel": "Grundausstattung übernehmen",
+"text": "A: Funktionen öffnen. Oben steht die Karte „Grundausstattung für ein gutes Gespräch“ mit dem, was noch aus ist. „Alle übernehmen“ tippen: die Karte meldet die Zahl, die Zeilen tragen „Empfohlen“ und sind an, der Filter „Empfohlen“ zeigt nur sie. „Darf der Spark ins Internet?“ mit Ja oder Nein beantworten, dann verschwindet die Karte. Unter Zustand → Logs → Admin-Protokoll steht die Änderung mit „Rückgängig“. Ein neues Profil sieht im leeren Chat zuerst „Wo stelle ich die Stimme ein?“.",
+"thread": "Gute Grundeinstellungen für Neulinge"
 }
 ]
 }

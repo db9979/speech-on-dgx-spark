@@ -405,6 +405,10 @@ a.b{text-decoration:none;color:inherit;display:inline-flex;align-items:center}
 .fexp::before{content:"";width:7px;height:7px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(-45deg);transition:transform .15s}
 .fitem.open .fexp::before{transform:rotate(45deg)}
 .setrow .lbl b .fneed{display:inline-block;margin-left:8px;font-size:11px;font-weight:600;line-height:1.6;padding:0 7px;border-radius:9px;vertical-align:1px;background:color-mix(in srgb,var(--warn,#b7791f) 16%,transparent);color:var(--warn,#b7791f)}
+.grundcard{margin:12px 0 6px;padding:12px 14px;border:1px solid color-mix(in srgb,var(--ok,#18a06b) 40%,var(--line));border-radius:14px;background:color-mix(in srgb,var(--ok,#18a06b) 7%,var(--card))}
+.grundcard .gcpart+.gcpart{margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}.grundcard .gcn{font-size:12px;color:var(--mut)}
+.grundcard .fh{margin:4px 0 6px}.grundcard .row{margin-top:8px}.grundcard .gcmsg:empty{display:none}
+.setrow .lbl b .frec{display:inline-block;margin-left:8px;font-size:11px;font-weight:600;line-height:1.6;padding:0 7px;border-radius:9px;vertical-align:1px;background:color-mix(in srgb,var(--ok,#18a06b) 16%,transparent);color:var(--ok,#18a06b)}
 .fbar{margin:10px 0 4px}.ffilt,.fjump{display:flex;flex-wrap:wrap;gap:6px}.fjump{margin-top:8px}
 .ffilt button{border:1px solid var(--line);background:var(--card);color:var(--fg,inherit);border-radius:16px;padding:5px 12px;font:inherit;font-size:13px;cursor:pointer}
 .ffilt button i{font-style:normal;color:var(--mut)}.ffilt button.on{background:var(--acc);border-color:var(--acc);color:#fff}.ffilt button.on i{color:inherit;opacity:.85}

@@ -397,6 +397,11 @@ class Browser(unittest.TestCase):
         asyncio.run(go())
 
     def test_remarkable_tree_and_save_bar(self):
+        # the face of "Frag Spark auf jeder Seite" (shipped on since the Grundausstattung) takes 104 px on the right,
+        # the tree then folds away like on a phone (container under 700 px); here the wide view with its tree
+        helpers.keep_chat(self, "spark_drawer")
+        helpers.set_config(spark_drawer=False)
+
         async def go():
             async with async_playwright() as p:
                 br, pg, errors, uid = await self.page(p, 1280, 900)

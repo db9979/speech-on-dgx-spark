@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.721** · 2026-10-17 · Grundausstattung für Neulinge: 16 Gesprächsfunktionen sind bei neuen Installationen an; bestehende bekommen auf Funktionen die Karte „Alle übernehmen“, die Frage „Darf der Spark ins Internet?“ und den Filter „Empfohlen“, neue Profile sehen zuerst, wo man etwas einstellt
 - **V01.0.720** · 2026-10-16 · Aufräumen chat.py: die Sprachausgabe einer Antwort in eigene Datei chat_ton.py
 - **V01.0.719** · 2026-10-17 · Zustand → Modelle: „Messen“ je Modell im Panel und in der iPhone-App, auch für tars; Live zeigt „Messung läuft“
 - **V01.0.718** · 2026-10-17 · `modelle messen gemma vl30`: Gemma 4 26B A4B und neu Qwen3-VL 30B A3B FP8 als schnelles Hauptmodell messen

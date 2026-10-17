@@ -13,6 +13,7 @@ from tests import helpers
 
 helpers.start()
 import panel  # noqa: E402
+import features  # noqa: E402
 import profiles  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
@@ -35,12 +36,14 @@ def read(name):
 
 
 class FollowUp(unittest.TestCase):
-    def tearDown(self):
-        helpers.set_config(follow_up=False)
+    def setUp(self):
+        helpers.keep_chat(self, "follow_up")
 
     def test_off_by_default_and_only_for_profiles(self):
         with open(os.path.join(os.path.dirname(__file__), "..", "config.default.json")) as f:
-            self.assertIs(json.load(f)["chat"]["follow_up"], False)
+            self.assertIs(json.load(f)["chat"]["follow_up"], True)  # Grundausstattung (2026-10-17)
+        self.assertIn("chat.follow_up", features.GRUNDAUSSTATTUNG)
+        helpers.set_config(follow_up=False)
         self.assertEqual(profiles.SETTINGS["follow"][0], "0")
         a = profile("Fia")
         self.assertFalse(a.get("/api/profile/settings").json()["allow"]["follow"])

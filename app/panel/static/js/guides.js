@@ -1555,7 +1555,7 @@ function guidesFeat(){const pane=$('pane-feat');if(!pane||pane.dataset.grouped)r
       to.appendChild(d);const inner=d.querySelector('.tgl input[id]');if(inner)take(inner.id,to)});
     rows.forEach(([g,row])=>{featTags(g,row);if(row.parentNode===box||row.closest('.fitem')||(row.dataset.show&&rows.some(([x])=>x.sw===row.dataset.show)))return;
       const it=document.createElement('div');it.className='fitem';it.dataset.sw=g.sw;box.appendChild(it);it.appendChild(row);take(g.sw,it);featItem(it,row)})});
-  featBar(pane);guidesCount()}
+  featBar(pane);guidesCount();grundLoad()}
 function featItem(it,row){const btn=document.createElement('button');btn.type='button';btn.className='fexp';btn.setAttribute('aria-expanded','false');
   btn.setAttribute('aria-label',t('Details','Details'));row.prepend(btn);
   const nm=row.querySelector('.lbl>b');if(nm){const n=document.createElement('span');n.className='fneed';n.hidden=true;n.textContent=t('braucht dich','needs you');nm.appendChild(n)}
@@ -1567,7 +1567,7 @@ function featOpen(it,on){it.classList.toggle('open',on);const b=it.querySelector
 // (fdetail.js: while the item shows on the right, its rows sit there)
 const featNeed=it=>{const sw=$(it.dataset.sw),q=sel=>[...it.querySelectorAll(sel),...(it.classList.contains('fside')&&$('fdet')?$('fdet').querySelectorAll(sel):[])];
   return !!(sw&&sw.checked&&(q('[data-req]').some(x=>!x.value.trim())||q('[data-need="1"]').length))};
-const FFILT=[['all','Alle','All'],['on','An','On'],['off','Aus','Off'],['need','Braucht dich','Needs you']];
+const FFILT=[['all','Alle','All'],['on','An','On'],['off','Aus','Off'],['rec','Empfohlen','Recommended'],['need','Braucht dich','Needs you']];
 let featF='all';try{featF=localStorage.getItem('featfilter')||'all'}catch(e){}
 function featBar(pane){const top=document.createElement('div');top.className='fbar';
   top.innerHTML=`<div class="ffilt" role="group">${FFILT.map(([k,de,en])=>`<button type="button" data-f="${k}"><span>${esc(t(de,en))}</span> <i></i></button>`).join('')}</div>`+
@@ -1576,14 +1576,50 @@ function featBar(pane){const top=document.createElement('div');top.className='fb
   top.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{featF=b.dataset.f;try{localStorage.setItem('featfilter',featF)}catch(e){}guidesCount()});
   top.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>{const g=pane.querySelector(`.fgrp[data-grp="${b.dataset.g}"]`);if(!g)return;
     if(g.hidden){featF='all';guidesCount()}g.open=true;g.scrollIntoView({block:'start',behavior:'smooth'})})}
+// Grundausstattung (features.GRUNDAUSSTATTUNG, Dominik 2026-10-17): a card above the list while some of it is off or
+// the internet question is open, „Empfohlen“ behind its names and as a filter. The lists come from the panel only.
+let GRUND=null;
+async function grundLoad(){try{GRUND=await (await api('/api/admin/grundausstattung')).json()}catch{GRUND=null}grundDraw()}
+function grundDraw(done){const pane=$('pane-feat');if(!pane)return;const g=GRUND,rec=new Set(g?g.basis.keys:[]);
+  pane.querySelectorAll('.fitem').forEach(it=>{const b=it.querySelector('.setrow .lbl>b');if(!b)return;let m=b.querySelector('.frec');
+    if(!rec.has(it.dataset.sw)){if(m)m.remove();return}
+    if(!m){m=document.createElement('span');m.className='frec';m.textContent=t('Empfohlen','Recommended');b.appendChild(m)}});
+  guidesCount();let card=$('grundcard');
+  const off=g?g.basis.keys.filter(k=>!g.basis.on.includes(k)):[],ask=!!(g&&g.internet.frage==='offen');
+  if(!g||(!off.length&&!ask&&!done)){if(card)card.remove();return}
+  if(!card){card=document.createElement('div');card.id='grundcard';card.className='grundcard';pane.insertBefore(card,pane.querySelector('.fbar')||pane.querySelector('.fgrp'))}
+  const nm=k=>esc(t(...((g.names||{})[k]||[k,k]))),n=g.basis.keys.length;let h='';
+  if(off.length)h+=`<div class="gcpart"><b>${esc(t('Grundausstattung für ein gutes Gespräch','Basic set for a good conversation'))}</b> <span class="gcn">${esc(t(`${n-off.length} von ${n} an`,`${n-off.length} of ${n} on`))}</span>`+
+    `<div class="fh">${esc(t('Geht ohne Einrichtung, bleibt im Spark und braucht kein Zusatzmodell. Gäste bekommen davon nichts. Noch aus:','Needs no setup, stays in the Spark and loads no extra model. Guests get none of it. Still off:'))}</div>`+
+    `<div class="ftags">${off.map(k=>`<span class="ftag">${nm(k)}</span>`).join('')}</div>`+
+    `<div class="row"><button class="b p" type="button" data-grund="basis">${esc(t('Alle übernehmen','Take them all'))}</button><button class="b" type="button" data-grund="zeigen">${esc(t('Einzeln ansehen','Look at each'))}</button></div></div>`;
+  if(ask)h+=`<div class="gcpart"><b>${esc(t('Darf der Spark ins Internet?','May the Spark use the internet?'))}</b>`+
+    `<div class="fh">${esc(t('Ja schaltet ein: ','Yes switches on: ')+g.internet.keys.filter(k=>k!=='chat.search'||g.internet.search_url).map(k=>t(...((g.names||{})[k]||[k,k]))).join(', ')+'. '+
+      t('Hinaus gehen nur dein Ort fürs Wetter, Suchwörter und zwei feste Adressen, mit denen der Dienst-Wächter das Internet prüft; nie Mails oder Dokumente.','Only your place for the weather, search words and two fixed addresses the service watch checks the internet with go out; never mails or documents.')+
+      (g.internet.search_url?'':' '+t('Die Websuche kommt dazu, sobald unter Funktionen → Websuche eine SearXNG-Adresse steht.','The web search joins once Funktionen → Websuche has a SearXNG address.')))}</div>`+
+    `<div class="row"><button class="b" type="button" data-grund="ja">${esc(t('Ja','Yes'))}</button><button class="b" type="button" data-grund="nein">${esc(t('Nein, nur im Heimnetz','No, home network only'))}</button></div></div>`;
+  card.innerHTML=h+`<div class="fh gcmsg" role="status">${done?esc(done):''}</div>`;
+  card.querySelectorAll('[data-grund]').forEach(b=>b.onclick=()=>grundTake(b.dataset.grund,b))}
+async function grundTake(w,btn){
+  if(w==='zeigen'){featF='rec';try{localStorage.setItem('featfilter',featF)}catch(e){}guidesCount();const bar=$('pane-feat').querySelector('.fbar');if(bar)bar.scrollIntoView({block:'start',behavior:'smooth'});return}
+  btn.disabled=true;
+  try{const r=await (await api('/api/admin/grundausstattung',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(w==='basis'?{teil:'basis',on:true}:{teil:'internet',on:w==='ja'})})).json();
+    // the form and its copy of the settings take the new values, so a later save keeps them (no reload: other edits stay)
+    (r.turned||[]).forEach(k=>{const el=$(k),[s,x]=k.split('.');if(el)el.checked=true;if(typeof CFG!=='undefined'&&CFG&&CFG[s])CFG[s][x]=true});
+    if(typeof CFG!=='undefined'&&CFG&&CFG.chat)CFG.chat.grund_internet=r.internet.frage;
+    GRUND=r;if(typeof cfgDeps==='function')cfgDeps();
+    grundDraw(w==='nein'?t('Gemerkt: der Spark bleibt im Heimnetz.','Noted: the Spark stays in the home network.'):
+      t(`${(r.turned||[]).length} eingeschaltet. Zurücknehmen unter Zustand → Logs → Admin-Protokoll.`,`${(r.turned||[]).length} switched on. Take it back under Zustand → Logs → Admin-Protokoll.`))}
+  catch(e){btn.disabled=false;const m=$('grundcard')&&$('grundcard').querySelector('.gcmsg');if(m)m.textContent=e.message}}
 // a search hit inside a closed or filtered-out item: show and open it
 function featShow(el){const it=el&&el.closest&&(el.closest('#pane-feat .fitem')||(el.closest('#fdet')&&window.featCur&&featCur()));if(!it)return;if(it.hidden){featF='all';guidesCount()}featOpen(it,true)}
 function guidesCount(){const pane=$('pane-feat');if(!pane)return;const items=[...pane.querySelectorAll('.fitem')];
   const st=items.map(it=>{const sw=$(it.dataset.sw),on=!!(sw&&sw.checked),need=featNeed(it);it.querySelector('.fneed').hidden=!need;return {it,on,need}});
-  const n={all:st.length,on:st.filter(x=>x.on).length,off:st.filter(x=>!x.on).length,need:st.filter(x=>x.need).length};
-  if(featF==='need'&&!n.need)featF='all';
-  pane.querySelectorAll('.ffilt [data-f]').forEach(b=>{const k=b.dataset.f;b.querySelector('i').textContent=n[k];b.classList.toggle('on',k===featF);b.hidden=k==='need'&&!n.need;b.classList.toggle('need',k==='need')});
-  st.forEach(x=>{x.it.hidden=featF==='on'?!x.on:featF==='off'?x.on:featF==='need'?!x.need:false});
+  const rec=x=>!!(GRUND&&GRUND.basis.keys.includes(x.it.dataset.sw));
+  const n={all:st.length,on:st.filter(x=>x.on).length,off:st.filter(x=>!x.on).length,rec:st.filter(rec).length,need:st.filter(x=>x.need).length};
+  if((featF==='need'&&!n.need)||(featF==='rec'&&!n.rec))featF='all';
+  pane.querySelectorAll('.ffilt [data-f]').forEach(b=>{const k=b.dataset.f;b.querySelector('i').textContent=n[k];b.classList.toggle('on',k===featF);b.hidden=(k==='need'||k==='rec')&&!n[k];b.classList.toggle('need',k==='need')});
+  st.forEach(x=>{x.it.hidden=featF==='on'?!x.on:featF==='off'?x.on:featF==='rec'?!rec(x):featF==='need'?!x.need:false});
   pane.querySelectorAll('.fgrp').forEach(b=>{const s=[...b.querySelectorAll('.setrow input[type=checkbox]')];
     b.hidden=![...b.querySelectorAll('.fitem')].some(x=>!x.hidden);
     const j=pane.querySelector(`.fjump [data-g="${b.dataset.grp}"]`);if(j)j.hidden=b.hidden;

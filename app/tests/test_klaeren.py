@@ -31,6 +31,7 @@ def state(eid):
 
 class Klaeren(unittest.TestCase):
     def setUp(self):
+        helpers.keep_chat(self, "klaeren", "klaeren_merken")
         homeassistant._VERIFY_WAIT = 0.05
         helpers.set_config(klaeren=True, klaeren_merken=True)
         self.box = {"entity_id": "media_player.wz_appletv", "state": "off", "attributes": {"friendly_name": "Apple TV Wohnzimmer"}}
@@ -41,7 +42,7 @@ class Klaeren(unittest.TestCase):
         helpers.HA_STATES.remove(self.box)
         for x in helpers.HA_STATES:
             x["state"] = self.saved.get(x["entity_id"], x["state"])
-        helpers.set_config(klaeren=False, klaeren_merken=False, deny={})
+        helpers.set_config(deny={})
         klaeren._waiting.clear()
         klaeren._last.clear()
 

@@ -122,7 +122,8 @@ class Rows(unittest.TestCase):
     def test_off_by_default_and_never_for_guests(self):
         with open(os.path.join(os.path.dirname(__file__), "..", "config.default.json")) as f:
             chat = json.load(f)["chat"]
-        self.assertIs(chat["feature_sentences"], False)
+        self.assertIs(chat["feature_sentences"], True)  # Grundausstattung (2026-10-17)
+        self.assertIn("chat.feature_sentences", features.GRUNDAUSSTATTUNG)
         self.assertIs(chat["feature_sentences_voice"], False)
         self.assertIs(profiles.SETTINGS["voice_tips"][0], True)   # unasked at a speaker: a preference, on unless off
         self.assertIsNone(saetze.row(Turn(None), calls("memory_save"), now=T0))
@@ -195,6 +196,9 @@ class Rows(unittest.TestCase):
         self.assertNotIn("bild_malen", {x["tool"] for a in areas["areas"] for x in a["items"]})
 
     def test_start_changes_by_the_week_and_skips_what_needs_a_before(self):
+        # the Grundausstattung's help sentence comes first until it was used once (test_grundausstattung.FirstChat)
+        self.assertEqual(saetze.start(self.uid, now=T0)[0]["tool"], "spark_hilfe")
+        tipps._mut(self.uid, lambda st: st["used"].update(spark_hilfe=T0))
         a = [x["tool"] for x in saetze.start(self.uid, now=T0)]
         self.assertEqual(a, [x["tool"] for x in saetze.start(self.uid, now=T0 + 3600)])
         self.assertTrue(a and not set(a) & saetze.NOT_START)
