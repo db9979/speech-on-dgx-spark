@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.733** · 2026-10-17 · Anrufe im Chat stehen auf Live, Monitoring und der Steuerzentrale jetzt auch unter Geräte (Browser oder iPhone-App, „Anruf“), vom Klingeln bis zum Auflegen
 - **V01.0.732** · 2026-10-17 · Android-App 1.4.0: Spark als Assistent über jeder App (eigenes Blatt, eigene Aufnahme, kurze vorgelesene Antworten), Widget, Kachel „Spark zuhören“, Kurzbefehle, Fotos und Dateien teilen, Fingerabdruck für Admins; zwei Admin-Schalter, aus
 - **V01.0.731** · 2026-10-17 · Telefon: jedes Gespräch steht vom Abheben bis zum Auflegen als Anfrage „Telefon“ unter den Geräten in Live, Monitoring und Steuerzentrale (Grund „Anruf“ oder „Spark ruft an“, nie eine Nummer)
 - **V01.0.730** · 2026-10-17 · Rot-Fix: die englische Doku zu „Long conversations“ nennt das englische Menü (Status → Models)

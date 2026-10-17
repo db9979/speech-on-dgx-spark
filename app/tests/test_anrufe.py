@@ -325,10 +325,26 @@ class Visible(Base):
     def test_running_calls_show_as_connections_in_live_monitoring_and_the_steuerzentrale(self):
         import live
         import time
+        with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
+            c = json.load(f)
+        before = dict(c.get("logs") or {})
+        c.setdefault("logs", {})["live"] = True
+        helpers.write_config(c)
+
+        def back():
+            with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
+                c = json.load(f)
+            c["logs"] = before
+            helpers.write_config(c)
+        self.addCleanup(back)
         a, b = profile("Anwalda"), profile("Anrolf")
         cid = open_with(a, b)
         with contextlib.redirect_stdout(io.StringIO()):
             call = self.call(a, cid).json()["call"]
+            rec = anrufe._calls[call]["rec"]     # under Geräte like a request, from ringing to the end
+            self.assertIsNotNone(rec)
+            self.assertEqual((rec.intent, rec.done), ("Anruf", False))
+            self.assertIn(rec, live._run.values())
             n = {c["name"]: c["n"] for c in live._conns(time.time())}
             self.assertEqual((n.get("Anruf klingelt"), n.get("Anruf im Chat")), (1, None))
             b.post("/api/anrufe/answer", json={"call": call, "dev": DEV_B})
@@ -336,6 +352,7 @@ class Visible(Base):
             self.assertEqual([(c["name"], c["n"]) for c in rows], [("Anruf im Chat", 1)])
             self.assertNotIn("Anwalda", json.dumps(rows))
             a.post("/api/anrufe/end", json={"call": call, "dev": DEV_A})
+        self.assertTrue(rec.done)
         self.assertFalse([c for c in live._conns(time.time()) if c["name"].startswith("Anruf")])
 
 

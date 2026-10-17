@@ -40,6 +40,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.733** Chat calls now also show under devices on Live, monitoring and the Steuerzentrale (browser or iPhone app, "Anruf"), from ringing to hanging up
 - **V01.0.732** Android app like the iPhone app: Spark as assistant over any app, widget, tile, shortcuts, sharing photos and files, fingerprint for admins
 - **V01.0.731** Phone: a running call shows under the devices in Live, Monitoring and the control centre
 - **V01.0.730** Docs fix: English menu name for "Long conversations"
@@ -49,7 +50,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.726** New page "My things" in the iPhone app: documents with filters and selection, plus pictures, music and memory
 - **V01.0.725** Remote control of the computer: more fixed voice orders on the PC, view and operate the screen from the phone or panel, and the Spark does tasks on the computer step by step, each step confirmed there
 - **V01.0.724** OLED page "Aktiv 10 min": how many people were here in the last 10 minutes, as one big number with profiles and guests; the same number in Monitoring, Live, the Steuerzentrale and the iPhone app
-- **V01.0.723** Self-test fix: tests set the switches now shipped on themselves
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

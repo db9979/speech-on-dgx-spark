@@ -99,6 +99,18 @@ def _log(what, **nums):
     chats._log("call " + what, **nums)
 
 
+def _seen(client, uid):
+    """Live, Monitoring and the Steuerzentrale show a call under Geräte like a request, from ringing to the end
+    (live.begin, the caller's profile, the fixed word "Anruf"; never the other person or the chat)."""
+    import live
+    return live.begin(client if client in ("web", "app") else "web", "", uid=uid, why="Anruf")
+
+
+def _gone(x):
+    import live
+    live.end((x or {}).get("rec"))
+
+
 def for_live():
     if not admin_on():
         return {"on": False}
@@ -163,8 +175,8 @@ def _rate(uid, now):
     return True
 
 
-async def start(uid, cid, video, dev, now=None):
-    """A new call from uid's device dev in chat cid; returns its id. Raises PermissionError/ValueError/OverflowError."""
+async def start(uid, cid, video, dev, now=None, client="web"):
+    """A new call from uid's device dev in chat cid (client "web" or "app": the iPhone app); returns its id. Raises PermissionError/ValueError/OverflowError."""
     import chats
     now = time.time() if now is None else now
     if not usable(uid):
@@ -186,6 +198,7 @@ async def start(uid, cid, video, dev, now=None):
              "talk": 0.0}
         _calls[call] = x
         busy = any(y["state"] in ("ring", "talk") and other in (y["a"], y["b"]) for k, y in _calls.items() if k != call)
+    x["rec"] = _seen(client, uid)
     _count.today()["calls"] += 1
     _live("📞 Anruf beginnt")
     if busy or _quiet(other):
@@ -335,6 +348,7 @@ async def end(uid, call, why="hangup", now=None):
         talked = x["state"] == "talk"
         x["state"] = "end"
         _calls.pop(call, None)
+    _gone(x)
     secs = int(now - x["talk"]) if talked else 0
     if talked:
         _count.today()["secs"] += secs
@@ -378,7 +392,7 @@ def forget(uid):
     """A deleted profile: its calls end without a line."""
     with _lock:
         for k in [k for k, x in _calls.items() if uid in (x["a"], x["b"])]:
-            _calls.pop(k, None)
+            _gone(_calls.pop(k, None))
         _started.pop(uid, None)
 
 
@@ -585,7 +599,9 @@ async def api_start(request: Request, prof=Depends(_on)):
     body = await json_body(request, 1024)
     dev = _ids(body, call=False)
     try:
-        call, state = await start(prof["id"], chats._cid(body.get("id")), body.get("video") is True, dev)
+        app = (profiles.device(request) or {}).get("scope") == "app" if request.headers.get(profiles.DEVICE_HEADER) else False
+        call, state = await start(prof["id"], chats._cid(body.get("id")), body.get("video") is True, dev,
+                                  client="app" if app else "web")
     except (PermissionError, ValueError, OverflowError, LookupError) as e:
         if isinstance(e, LookupError):
             _log("refused", why="no chat")

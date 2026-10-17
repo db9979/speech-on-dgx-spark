@@ -40,6 +40,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.733** Anrufe im Chat stehen auf Live, Monitoring und der Steuerzentrale jetzt auch unter Geräte (Browser oder iPhone-App, „Anruf“), vom Klingeln bis zum Auflegen
 - **V01.0.732** Android-App wie die iPhone-App: Spark als Assistent über jeder App, Widget, Kachel, Kurzbefehle, Fotos und Dateien teilen, Fingerabdruck für Admins
 - **V01.0.731** Telefon: ein laufendes Gespräch steht unter den Geräten in Live, Monitoring und Steuerzentrale
 - **V01.0.730** Fix Doku: englischer Menüname bei „Lange Gespräche“
@@ -49,7 +50,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.726** Neue Seite „Meine Sachen“ in der iPhone-App: Dokumente übersichtlich mit Filtern und Auswahl, dazu Bilder, Musik und Gedächtnis
 - **V01.0.725** Rechner fernsteuern: mehr feste Sprachbefehle am PC, den Bildschirm vom Handy oder Panel aus ansehen und bedienen, und der Spark erledigt Aufträge am Rechner Schritt für Schritt, jeden Schritt bestätigst du dort
 - **V01.0.724** OLED-Seite „Aktiv 10 min“: wie viele Menschen in den letzten 10 Minuten da waren, als große Zahl mit Profilen und Gästen; dieselbe Zahl in Monitoring, Live, Steuerzentrale und iPhone-App
-- **V01.0.723** Fix Selbsttests: Tests setzen die neu eingeschalteten Schalter selbst
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
