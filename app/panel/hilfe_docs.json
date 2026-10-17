@@ -941,7 +941,15 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/admin.py test_asr: Rate-Limit, Gast-Plätze, dann die Erkennung (Schritt 4) - app/panel/admin.py _test_asr: Spracherkennung mit Stille-, Echo- und Fremdstimmen-Prüfung (Schritt 4, Schritt 5) - app/panel/admin.py read_audio: liest die Aufnahme mit Größengrenze (Schritt 4) - app/panel/stille.py check: Stille wird nie zu Worten (Schritt 5) - app/panel/echo.py check: die eigene Stimme des Spark ist keine Frage (Schritt 5) - app/panel/chat.py chat: Grenzen, Vorrang, „antwortet gerade“, dann der Strom (Schritt 6, Schritt 7) - app/panel/account.py profile_save_convo: speichert nur die neuen Nachrichten (Schritt 10) - app/panel/account.py profile_convos: Liste und Änderungen seit ?since= (Schritt 11) - app/panel/profiles.py append_convo: hängt unter Sperre an (Schritt 10) - app/panel/profiles.py _clean_convo: prüft und kürzt ein Gespräch (Schritt 10) - app/panel/verlauf.py stream: der Sofort-Abgleich je offener Seite (Schritt 11) - app/panel/sse.py Hub.stream: ein Strom je Seite: Warteschlange, Lebenszeichen, Aufräumen (Schritt 11) - app/panel/verlauf.py begin: „antwortet gerade“ für die anderen Seiten (Schritt 6, Schritt 11)"
+"text": "- app/panel/admin.py test_asr: Rate-Limit, Gast-Plätze, dann die Erkennung (Schritt 4) - app/panel/admin.py _test_asr: Spracherkennung mit Stille-, Echo- und Fremdstimmen-Prüfung (Schritt 4, Schritt 5) - app/panel/admin.py read_audio: liest die Aufnahme mit Größengrenze (Schritt 4) - app/panel/stille.py check: Stille wird nie zu Worten (Schritt 5) - app/panel/echo.py check: die eigene Stimme des Spark ist keine Frage (Schritt 5) - app/panel/chat.py chat: Grenzen, Vorrang, „antwortet gerade“, dann der Strom (Schritt 6, Schritt 7) - app/panel/account.py profile_save_convo: speichert nur die neuen Nachrichten (Schritt 10) - app/panel/account.py profile_convos: Liste und Änderungen seit ?since= (Schritt 11) - app/panel/profiles.py append_convo: hängt unter Sperre an (Schritt 10) - app/panel/profiles.py _clean_convo: prüft und kürzt ein Gespräch; eine Beschreibung des Bildschirms (bedienen.look) wird nur als Hinweis gespeichert (Schritt 10) - app/panel/verlauf.py stream: der Sofort-Abgleich je offener Seite (Schritt 11) - app/panel/sse.py Hub.stream: ein Strom je Seite: Warteschlange, Lebenszeichen, Aufräumen (Schritt 11) - app/panel/verlauf.py begin: „antwortet gerade“ für die anderen "
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Im Code",
+"title": "Im Code",
+"text": "Seiten (Schritt 6, Schritt 11)"
 },
 {
 "lang": "de",
@@ -1693,7 +1701,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ene Frage, nie die Antwort. Im Journal steht „weiche: Folgefrage“. 9. Gezielte Werkzeugwahl an?: Nur mit diesem Schalter grenzt die Weiche ein, und nicht bei einem Bild oder einem direkten Smart-Home-Befehl. Ohne ihn bleibt die Gruppe nur für Journal und Statistik; das Modell sieht alle Werkzeuge, die die Rechte erlauben. 10. Modell ordnet ein?: Hat keine Regel eine Gruppe gefunden und steht „Fragen, die keine Regel erkennt“ auf „Modell“, wählt das Sprachmodell einmal eine Gruppe aus der festen Liste (nur JSON, nur die eigene Nachricht). Die Frage läuft schon ab dem Beginn der Vorbereitung nebenher; gewartet wird höchstens 4 Sekunden, mit „Schneller Antwortbeginn“ nur 300 ms nach der Vorbereitung. Mit der Einordnung mit Wahrscheinlichkeit zählt die Wahl erst ab der Schwelle (Standard 80 %). Die Hinweis-Gruppen bleiben neben der Wahl. In einer Wartungspause des Sprachmodells wird es nicht gefragt. 11. Eingrenzen: Bei einer klaren Gruppe bleiben ihre Werkzeuge, dazu immer 4 feste (sich etwas merken, eigene Dokumente, PC), die Werkzeuge der Hinweise, die zusätzlichen Werkzeuge des Admins für diese Gruppe (höchstens 6) und was die eigenen Worte ausdrücklich nennen („aufs reMarkable“). "
+"text": "ene Frage, nie die Antwort. Im Journal steht „weiche: Folgefrage“. 9. Gezielte Werkzeugwahl an?: Nur mit diesem Schalter grenzt die Weiche ein, und nicht bei einem Bild oder einem direkten Smart-Home-Befehl. Ohne ihn bleibt die Gruppe nur für Journal und Statistik; das Modell sieht alle Werkzeuge, die die Rechte erlauben. 10. Modell ordnet ein?: Hat keine Regel eine Gruppe gefunden und steht „Fragen, die keine Regel erkennt“ auf „Modell“, wählt das Sprachmodell einmal eine Gruppe aus der festen Liste (nur JSON, nur die eigene Nachricht). Die Frage läuft schon ab dem Beginn der Vorbereitung nebenher; gewartet wird höchstens 4 Sekunden, mit „Schneller Antwortbeginn“ nur 300 ms nach der Vorbereitung. Mit der Einordnung mit Wahrscheinlichkeit zählt die Wahl erst ab der Schwelle (Standard 80 %). Die Hinweis-Gruppen bleiben neben der Wahl. In einer Wartungspause des Sprachmodells wird es nicht gefragt. 11. Eingrenzen: Bei einer klaren Gruppe bleiben ihre Werkzeuge, dazu immer 5 feste (sich etwas merken, eigene Dokumente, PC), die Werkzeuge der Hinweise, die zusätzlichen Werkzeuge des Admins für diese Gruppe (höchstens 6) und was die eigenen Worte ausdrücklich nennen („aufs reMarkable“). "
 },
 {
 "lang": "de",
@@ -1725,7 +1733,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Werkzeugnamen",
 "title": "Werkzeugnamen",
-"text": "- Überall, wo ein Werkzeug sichtbar wird, steht ein lesbarer Name aus einer Tabelle (83 Werkzeuge), zum Beispiel „Postfach-Überblick“ statt mail_tidy_overview."
+"text": "- Überall, wo ein Werkzeug sichtbar wird, steht ein lesbarer Name aus einer Tabelle (84 Werkzeuge), zum Beispiel „Postfach-Überblick“ statt mail_tidy_overview."
 },
 {
 "lang": "de",
@@ -1925,7 +1933,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 4 Aufrufe pro Runde (Schritt 1) - 3 Gedächtnis-Notizen pro Antwort (Schritt 1) - 13 Werkzeuge gesperrt nach fremdem Text (Schritt 4) - 7 Werkzeuge ohne Internet bei Notaus (Schritt 3) - 83 Werkzeuge mit verständlichem Namen (Schritt 11)"
+"text": "- 4 Aufrufe pro Runde (Schritt 1) - 3 Gedächtnis-Notizen pro Antwort (Schritt 1) - 13 Werkzeuge gesperrt nach fremdem Text (Schritt 4) - 7 Werkzeuge ohne Internet bei Notaus (Schritt 3) - 84 Werkzeuge mit verständlichem Namen (Schritt 11)"
 },
 {
 "lang": "de",
@@ -4582,6 +4590,14 @@
 "head": "Sprach-Chat",
 "title": "Rechner fernsteuern, Stufe 3: Spark bedient den Rechner (V01.0.739)",
 "text": "nis kommt als Meldung mit festen Wörtern („Am Rechner: erledigt (4 Schritte)“); Bilder und Bildschirmtext landen nie im Gedächtnis, im Verlauf oder im Chat. Eigener Admin-Schalter (Funktionen → Spark bedient den Rechner), aus, bis man ihn einschaltet; beim Gerät müssen „Am PC handeln“ und „Bildschirm zeigen und bedienen“ an sein. Braucht ein Sprachmodell, das Bilder sieht."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Bildschirm beschreiben (V01.0.741)",
+"text": "Bildschirm beschreiben (V01.0.741): „Was siehst du gerade auf meinem Mac?“ oder „Was ist auf meinem PC offen?“ – der Rechner fragt (Ablehnen vorgewählt, 60 Sekunden ohne Antwort gelten als Ablehnen), nimmt nach „Erlauben“ ein einziges Bild auf, und der Spark beschreibt es in wenigen Sätzen. Text auf dem Bildschirm bleibt Inhalt, nie Befehl; Passwörter, Codes und Kontonummern nennt er nicht, und in derselben Antwort ändert er danach nichts mehr. Liegt vorn ein geschütztes Programm (Anmeldung, Passwort-Manager, Einstellungen, Terminal), beschreibt er nichts. Die Beschreibung siehst und hörst du nur: im Verlauf, auf anderen Geräten und im Gedächtnis steht statt ihr nur „Hier stand eine Beschreibung deines Bildschirms“. Eingeschaltet mit Funktionen → Spark bedient den Rechner; beim Gerät muss „Bildschirm zeigen und bedienen“ an sein. Ist etwas davon aus, sagt der Spark genau, was fehlt."
 },
 {
 "lang": "de",
@@ -8485,7 +8501,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/admin.py test_asr: rate limit, guest places, then recognition (step 4) - app/panel/admin.py _test_asr: recognition with silence, echo and foreign voice checks (step 4, step 5) - app/panel/admin.py read_audio: reads the recording with a size limit (step 4) - app/panel/stille.py check: silence never becomes words (step 5) - app/panel/echo.py check: the Spark's own voice is no question (step 5) - app/panel/chat.py chat: limits, priority, „answering“, then the stream (step 6, step 7) - app/panel/account.py profile_save_convo: stores only the new messages (step 10) - app/panel/account.py profile_convos: list and changes since ?since= (step 11) - app/panel/profiles.py append_convo: appends under a lock (step 10) - app/panel/profiles.py _clean_convo: checks and trims a conversation (step 10) - app/panel/verlauf.py stream: instant sync per open page (step 11) - app/panel/sse.py Hub.stream: one stream per page: queue, keep-alive, cleanup (step 11) - app/panel/verlauf.py begin: „answering“ for the other pages (step 6, step 11)"
+"text": "- app/panel/admin.py test_asr: rate limit, guest places, then recognition (step 4) - app/panel/admin.py _test_asr: recognition with silence, echo and foreign voice checks (step 4, step 5) - app/panel/admin.py read_audio: reads the recording with a size limit (step 4) - app/panel/stille.py check: silence never becomes words (step 5) - app/panel/echo.py check: the Spark's own voice is no question (step 5) - app/panel/chat.py chat: limits, priority, „answering“, then the stream (step 6, step 7) - app/panel/account.py profile_save_convo: stores only the new messages (step 10) - app/panel/account.py profile_convos: list and changes since ?since= (step 11) - app/panel/profiles.py append_convo: appends under a lock (step 10) - app/panel/profiles.py _clean_convo: checks and trims a conversation; a description of the screen (bedienen.look) is stored only as a note (step 10) - app/panel/verlauf.py stream: instant sync per open page (step 11) - app/panel/sse.py Hub.stream: one stream per page: queue, keep-alive, cleanup (step 11) - app/panel/verlauf.py begin: „answering“ for the other pages (step 6, step 11)"
 },
 {
 "lang": "en",
@@ -9229,7 +9245,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "and. Without it the group only goes to the journal and statistics; the model sees every tool the rights allow. 10. Model sorts?: If no rule found a group and „Questions no rule recognizes“ is set to the model, the language model picks one group from the fixed list once (JSON only, only the own message). The question already runs beside the preparation from its start; the wait is at most 4 seconds, with „Fast answer start“ only 300 ms after the preparation. With classification with probabilities the pick only counts from the threshold (default 80 %). The hint groups stay beside the pick. During a maintenance pause of the language model it is not asked. 11. Narrow: With a clear group its tools stay, plus always 4 fixed ones (remembering something, own documents, PC), the hints' tools, the admin's extra tools for this group (at most 6) and what the own words name explicitly („onto the reMarkable“). All only as far as already offered. If nothing of the group is offered or the group is set to „do not narrow“, all stay. 12. Lean?: If the question stays without a group, the setting is „Lean“ and no must word requires a tool, the model only gets the short list: web search, Wikipedia, archi"
+"text": "and. Without it the group only goes to the journal and statistics; the model sees every tool the rights allow. 10. Model sorts?: If no rule found a group and „Questions no rule recognizes“ is set to the model, the language model picks one group from the fixed list once (JSON only, only the own message). The question already runs beside the preparation from its start; the wait is at most 4 seconds, with „Fast answer start“ only 300 ms after the preparation. With classification with probabilities the pick only counts from the threshold (default 80 %). The hint groups stay beside the pick. During a maintenance pause of the language model it is not asked. 11. Narrow: With a clear group its tools stay, plus always 5 fixed ones (remembering something, own documents, PC), the hints' tools, the admin's extra tools for this group (at most 6) and what the own words name explicitly („onto the reMarkable“). All only as far as already offered. If nothing of the group is offered or the group is set to „do not narrow“, all stay. 12. Lean?: If the question stays without a group, the setting is „Lean“ and no must word requires a tool, the model only gets the short list: web search, Wikipedia, archi"
 },
 {
 "lang": "en",
@@ -9261,7 +9277,7 @@
 "file": "Architecture and data flow",
 "head": "Tool names",
 "title": "Tool names",
-"text": "- Wherever a tool shows, a readable name comes from one table (83 tools), for example „Mailbox overview“ instead of mail_tidy_overview."
+"text": "- Wherever a tool shows, a readable name comes from one table (84 tools), for example „Mailbox overview“ instead of mail_tidy_overview."
 },
 {
 "lang": "en",
@@ -9453,7 +9469,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 4 calls per round (step 1) - 3 memory notes per answer (step 1) - 13 tools locked after outside text (step 4) - 7 tools without internet with the kill switch (step 3) - 83 tools with a readable name (step 11)"
+"text": "- 4 calls per round (step 1) - 3 memory notes per answer (step 1) - 13 tools locked after outside text (step 4) - 7 tools without internet with the kill switch (step 3) - 84 tools with a readable name (step 11)"
 },
 {
 "lang": "en",
@@ -11982,6 +11998,14 @@
 "head": "Voice chat",
 "title": "Remote control of the computer, stage 3: Spark operates the computer (V01.0.739)",
 "text": " screen text never go to memory, history or chat. Own admin switch (Features → Spark operates the computer), off until switched on; on the device both \"Act on the PC\" and \"Show and operate the screen\" must be on. Needs a language model that sees pictures."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Describe the screen (V01.0.741)",
+"text": "Describe the screen (V01.0.741): \"What do you see on my Mac right now?\" or \"What is open on my PC?\" – the computer asks (Decline preselected, 60 seconds without an answer count as Decline), takes one single picture after \"Allow\", and the Spark describes it in a few sentences. Text on the screen stays content, never an order; it never names passwords, codes or account numbers, and in the same answer it changes nothing afterwards. If a protected program is in front (login, password manager, settings, terminal), it describes nothing. You only see and hear the description: in the history, on other devices and in memory there is only \"Here was a description of your screen\" instead. Switched on with Features → Spark operates the computer; on the device \"Show and operate the screen\" must be on. If something is off, the Spark says exactly what is missing."
 },
 {
 "lang": "en",

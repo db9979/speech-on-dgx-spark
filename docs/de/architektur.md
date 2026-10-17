@@ -739,7 +739,7 @@ Gilt bei: [Schritt 6](#kn-geraet-s6), [Schritt 10](#kn-geraet-s10)
 - `app/panel/account.py` `profile_save_convo`: speichert nur die neuen Nachrichten ([Schritt 10](#kn-geraet-s10))
 - `app/panel/account.py` `profile_convos`: Liste und Änderungen seit ?since= ([Schritt 11](#kn-geraet-s11))
 - `app/panel/profiles.py` `append_convo`: hängt unter Sperre an ([Schritt 10](#kn-geraet-s10))
-- `app/panel/profiles.py` `_clean_convo`: prüft und kürzt ein Gespräch ([Schritt 10](#kn-geraet-s10))
+- `app/panel/profiles.py` `_clean_convo`: prüft und kürzt ein Gespräch; eine Beschreibung des Bildschirms (bedienen.look) wird nur als Hinweis gespeichert ([Schritt 10](#kn-geraet-s10))
 - `app/panel/verlauf.py` `stream`: der Sofort-Abgleich je offener Seite ([Schritt 11](#kn-geraet-s11))
 - `app/panel/sse.py` `Hub.stream`: ein Strom je Seite: Warteschlange, Lebenszeichen, Aufräumen ([Schritt 11](#kn-geraet-s11))
 - `app/panel/verlauf.py` `begin`: „antwortet gerade“ für die anderen Seiten ([Schritt 6](#kn-geraet-s6), [Schritt 11](#kn-geraet-s11))
@@ -1648,7 +1648,7 @@ flowchart TD
 8. <a id="kn-weiche-s8"></a>**Folgefrage?**: Ist die Nachricht kurz (höchstens 80 Zeichen), zeigt zurück („und“, „das“, „es“) und hatte die eigene Frage direkt davor eine klare Gruppe, gilt diese Gruppe wieder. Es zählt nur die eigene Frage, nie die Antwort. Im Journal steht „weiche: Folgefrage“.
 9. <a id="kn-weiche-s9"></a>**Gezielte Werkzeugwahl an?**: Nur mit diesem Schalter grenzt die Weiche ein, und nicht bei einem Bild oder einem direkten Smart-Home-Befehl. Ohne ihn bleibt die Gruppe nur für Journal und Statistik; das Modell sieht alle Werkzeuge, die die Rechte erlauben.
 10. <a id="kn-weiche-s10"></a>**Modell ordnet ein?**: Hat keine Regel eine Gruppe gefunden und steht „Fragen, die keine Regel erkennt“ auf „Modell“, wählt das Sprachmodell einmal eine Gruppe aus der festen Liste (nur JSON, nur die eigene Nachricht). Die Frage läuft schon ab dem Beginn der Vorbereitung nebenher; gewartet wird höchstens 4 Sekunden, mit „Schneller Antwortbeginn“ nur 300 ms nach der Vorbereitung. Mit der Einordnung mit Wahrscheinlichkeit zählt die Wahl erst ab der Schwelle (Standard 80 %). Die Hinweis-Gruppen bleiben neben der Wahl. In einer Wartungspause des Sprachmodells wird es nicht gefragt.
-11. <a id="kn-weiche-s11"></a>**Eingrenzen**: Bei einer klaren Gruppe bleiben ihre Werkzeuge, dazu immer 4 feste (sich etwas merken, eigene Dokumente, PC), die Werkzeuge der Hinweise, die zusätzlichen Werkzeuge des Admins für diese Gruppe (höchstens 6) und was die eigenen Worte ausdrücklich nennen („aufs reMarkable“). Alles nur, soweit schon angeboten. Ist von der Gruppe nichts angeboten oder steht die Gruppe auf „nicht eingrenzen“, bleiben alle.
+11. <a id="kn-weiche-s11"></a>**Eingrenzen**: Bei einer klaren Gruppe bleiben ihre Werkzeuge, dazu immer 5 feste (sich etwas merken, eigene Dokumente, PC), die Werkzeuge der Hinweise, die zusätzlichen Werkzeuge des Admins für diese Gruppe (höchstens 6) und was die eigenen Worte ausdrücklich nennen („aufs reMarkable“). Alles nur, soweit schon angeboten. Ist von der Gruppe nichts angeboten oder steht die Gruppe auf „nicht eingrenzen“, bleiben alle.
 12. <a id="kn-weiche-s12"></a>**Knapp?**: Bleibt die Frage ohne Gruppe, steht die Einstellung auf „Knapp“ und verlangt kein Pflicht-Wort ein Werkzeug, bekommt das Modell nur die kurze Liste: Websuche, Wikipedia, Archiv, frühere Gespräche, die festen Werkzeuge und die Werkzeuge der Hinweis-Gruppen. Es liest weniger und beginnt früher.
 13. <a id="kn-weiche-s13"></a>**Erstes Werkzeug festlegen**: Eine einzige klare Gruppe, ein Pflicht-Werkzeug und nur dieses aus der Gruppe angeboten: die erste Runde muss genau dieses rufen („Wie wird das Wetter?“). Ein kurzer, eindeutiger Lesesatz („Wie ist das Wetter heute?“) wird mit „Eindeutiges direkt abrufen“ vom Panel selbst abgerufen, für morgen und übermorgen mit dem Datum, das das Panel ausrechnet.
 14. <a id="kn-weiche-s14"></a>**Journal und Zählung**: Jeder Zug schreibt eine Zeile „weiche: Absicht … | Grund … | Hinweis … | Werkzeuge x von y | Pflicht … | gesperrt … | eingrenzen an/aus“; ein Grundwort steht nur da, wenn es noch in der Nachricht steht. Gezählt werden je Tag und Gruppe nur Anzahlen (8 Tage), nie ein Wort der Frage. Dann geht die Liste an die Antwort.
@@ -1672,7 +1672,7 @@ Gilt bei: [Schritt 9](#kn-weiche-s9)
 
 #### Werkzeugnamen
 
-- Überall, wo ein Werkzeug sichtbar wird, steht ein lesbarer Name aus einer Tabelle (83 Werkzeuge), zum Beispiel „Postfach-Überblick“ statt mail_tidy_overview.
+- Überall, wo ein Werkzeug sichtbar wird, steht ein lesbarer Name aus einer Tabelle (84 Werkzeuge), zum Beispiel „Postfach-Überblick“ statt mail_tidy_overview.
 
 #### Zahlen (aus dem Code)
 
@@ -1896,7 +1896,7 @@ Gilt bei: [Schritt 4](#kn-werkzeuge-s4)
 - **3** Gedächtnis-Notizen pro Antwort ([Schritt 1](#kn-werkzeuge-s1))
 - **13** Werkzeuge gesperrt nach fremdem Text ([Schritt 4](#kn-werkzeuge-s4))
 - **7** Werkzeuge ohne Internet bei Notaus ([Schritt 3](#kn-werkzeuge-s3))
-- **83** Werkzeuge mit verständlichem Namen ([Schritt 11](#kn-werkzeuge-s11))
+- **84** Werkzeuge mit verständlichem Namen ([Schritt 11](#kn-werkzeuge-s11))
 
 #### Einstellen
 

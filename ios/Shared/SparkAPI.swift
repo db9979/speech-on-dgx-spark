@@ -11,7 +11,7 @@ enum ChatEvent {
     case text(String)
     case drop(Int)          // the last characters were taken back
     case audio(Data)        // 16-bit PCM, 24 kHz, mono
-    case mark(String)       // "mail" or "outside": the answer rests on text from outside
+    case mark(String)       // "mail", "outside" or "screen": the answer rests on text from outside
     case error(String)
     case reminderSet(Reminder)
     case reminderCancel([String])
@@ -827,6 +827,8 @@ struct SparkAPI {
                         case "home_done": cont.yield(.face(ev["ok"] as? Bool == true ? "happy" : "error"))
                         case "memory" where ev["action"] as? String == "saved": cont.yield(.face("memory"))
                         case "outside": cont.yield(.mark("outside"))
+                        // a described screen (bedienen.look): sent back as "screen", the Spark keeps only a note
+                        case "screen": cont.yield(.mark("screen"))
                         case "error": cont.yield(.error(ev["message"] as? String ?? String(localized: "Fehler beim Spark.")))
                         case "reminder" where ev["foreign"] as? Bool != true:
                             if ev["action"] as? String == "set" { cont.yield(.face("memory")) }

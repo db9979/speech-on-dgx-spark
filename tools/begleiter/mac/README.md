@@ -254,6 +254,10 @@ im Auftrag stand, steht als Warnung darüber; „Spark fragt nach“ (Nein / Wei
 wie eine Anweisung stand. Mit jedem Bild schickt er Name und Pfad des Programms vorn, der Spark prüft es gegen die
 freigegebenen. Die Frage ist ein Hinweisfenster, der rote Ring klickt durch; beide und die Leiste sind aus den Bildern ausgenommen (`sharingType = .none`). Braucht „Bildschirmaufnahme“ und „Bedienungshilfen“.
 
+**Bildschirm beschreiben** (gleicher Schalter, Teil `view`): Fragt man „Was siehst du auf meinem Mac?“, kommt die
+Anfrage mit `want` `look` und der Frage; der Begleiter fragt **Ablehnen** (vorgewählt) oder **Erlauben**, schickt danach
+ein Bild, und der Spark beendet die Sitzung selbst. Ältere Begleiter zeigen dafür die gewöhnliche Frage „Bildschirm zeigen“.
+
 Damit man die Programme im Panel **auswählen** kann statt Name und Pfad zu tippen, schickt der Begleiter, solange
 dieser Teil an ist, die Liste der installierten Programme an den Spark: beim Start, wenn der Teil eingeschaltet
 wird, und einmal am Tag. Darin stehen nur Name und Pfad der `.app`-Programme aus `/Applications`,

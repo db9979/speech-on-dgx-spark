@@ -657,7 +657,7 @@ final class Conversation: ObservableObject {
                 case .audio(let pcm):
                     audio.play(pcm)
                     phase = .speaking
-                case .mark(let m): edit { $0.mark = $0.mark == "mail" ? "mail" : m }
+                case .mark(let m): edit { $0.mark = $0.mark == "mail" ? "mail" : $0.mark == "screen" ? "screen" : m }
                 case .error(let e): error = e
                 case .reminderSet(let r):
                     if !allowed.push { Task { await Alarms.add(r) } }

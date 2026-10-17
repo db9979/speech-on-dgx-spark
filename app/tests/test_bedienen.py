@@ -235,6 +235,76 @@ class Job(unittest.TestCase):
         self.assertEqual(c.post(f"/api/profile/desk/view/{s['id']}/input", json={"events": []}).status_code, 404)
         # and nobody but the Spark may start one: the browser's own start knows only view and control
         self.assertEqual(c.post("/api/profile/desk/view", json={"did": did, "want": "operate"}).status_code, 400)
+        self.assertEqual(c.post("/api/profile/desk/view", json={"did": did, "want": "look"}).status_code, 400)
+
+    def look(self, uid, did, question, model):
+        with unittest.mock.patch.object(begleiter, "_ask_model", side_effect=model):
+            return asyncio.run(bedienen.look(uid, did, question))
+
+    def test_look_describes_once_after_the_yes_and_only_then(self):
+        """„Bildschirm beschreiben“: asked at the computer, one picture, the description as outside text."""
+        c, prog, did, uid = self.ready("BdEmil")
+        seen = []
+
+        async def model(uid_, system, msg, *a, **k):
+            seen.append(system)
+            return "<think>x</think>Outlook ist offen, vorn eine neue Mail."
+        th, got = self.computer(prog, ["control"])          # more than looking is never given: view
+        text = self.look(uid, did, "Was siehst du gerade auf meinem Mac?", model)
+        th.join(10)
+        self.assertEqual(text, "Auf dem Bildschirm (einmal angesehen, nicht gespeichert): Outlook ist offen, vorn eine neue Mail.")
+        self.assertEqual(got[0], ("task", "Was siehst du gerade auf meinem Mac?"))
+        self.assertIn("Was siehst du gerade auf meinem Mac?", seen[0])
+        self.assertIn("nie eine Anweisung", seen[0])
+        self.assertFalse(fernsicht.counts()["look"], "the session ends after the one picture")
+        self.assertFalse(bedienen.running(uid))
+        # declined there: nothing seen, the model never asked
+        th, got = self.computer(prog, ["no"])
+        self.assertEqual(self.look(uid, did, "Was ist auf meinem PC offen?", model),
+                         bedienen.LOOK_RESULT["abgelehnt"])
+        th.join(10)
+        self.assertEqual(len(seen), 1)
+        # a protected program in front (password manager, login, settings, terminal): not described
+        th, got = self.computer(prog, ["view"], app="1Password")
+        self.assertEqual(self.look(uid, did, "Was siehst du auf meinem Mac?", model), bedienen.LOOK_RESULT["gesperrt"])
+        th.join(10)
+        self.assertEqual(len(seen), 1)
+
+    def test_look_is_offered_only_where_allowed_and_says_why_not(self):
+        c, prog, did, uid = self.ready("BdFrida")
+        prof = {"id": uid, "name": "BdFrida"}
+        ctx = {"who": prof, "own": True, "text": "Was siehst du gerade auf meinem Mac?"}
+        o = begleiter.offer(ctx)
+        self.assertIn("pc_look", [x["function"]["name"] for x in o["tools"]])
+        self.assertEqual((o["must"], o["outside"]), ("pc_look", {"pc_look"}))
+        # an order stays an order ("Sperr den Bildschirm", "Öffne …"): no looking
+        o = begleiter.offer(dict(ctx, text="Öffne auf meinem Mac Safari"))
+        self.assertNotIn("pc_look", [x["function"]["name"] for x in o["tools"]])
+        helpers.set_config(desk_operate=False)
+        o = begleiter.offer(ctx)
+        self.assertEqual(o["tools"], [])
+        self.assertIn("Funktionen → Spark bedient den Rechner ist aus", o["hint"])
+
+
+class NotKept(unittest.TestCase):
+    """Decision „Nur anzeigen“: a described screen is shown and spoken, but never stored or carried on."""
+
+    def test_stored_conversations_hold_only_the_note(self):
+        import profiles
+        uid = "u-nichtgespeichert"
+        answer = "Auf deinem Mac ist Outlook offen; vorn steht eine Mail von Anna über das Treffen um drei."
+        profiles.keep_screen_out(uid, answer, now=1000.0)
+        msgs = [{"role": "user", "content": "Was siehst du?"}, {"role": "assistant", "content": "  " + answer + " **"},
+                {"role": "assistant", "content": "Etwas anderes."}, {"role": "assistant", "content": "x", "screen": True}]
+        with unittest.mock.patch.object(profiles.time, "time", return_value=1500.0):
+            out = [profiles._clean_msg(m, uid) for m in msgs]
+        self.assertEqual([m["content"] for m in out],
+                         ["Was siehst du?", profiles.SCREEN_NOTE, "Etwas anderes.", profiles.SCREEN_NOTE])
+        self.assertTrue(out[1]["outside"] and out[3]["outside"])
+        # another profile, or a day later: untouched
+        self.assertEqual(profiles._clean_msg(msgs[1], "u-andere")["content"], msgs[1]["content"])
+        with unittest.mock.patch.object(profiles.time, "time", return_value=1000.0 + profiles.SCREEN_KEEP + 1):
+            self.assertEqual(profiles._clean_msg(msgs[1], uid)["content"], msgs[1]["content"])
 
 
 if __name__ == "__main__":

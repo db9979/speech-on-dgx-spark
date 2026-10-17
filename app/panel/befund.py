@@ -75,7 +75,7 @@ BY_KIND = {"unklar": "keine_regel", "absage": "absage", "doppelt": "doppelt", "p
            "abbruch": "abbruch", "aussetzer": "aussetzer", "melder": "melder"}
 ORDER = list(KLASSEN)
 # tools of no group of their own: offered next to every group (memory, own documents, the computer, help)
-ALLGEMEIN = {"memory_save", "memory_forget", "history_search", "document_search", "pc_action", "pc_send",
+ALLGEMEIN = {"memory_save", "memory_forget", "history_search", "document_search", "pc_action", "pc_send", "pc_look",
              "remarkable_note", "remarkable_page", "remarkable_attachment", "remarkable_sheet", "local_search", "spark_hilfe",
              "spark_vorschlag", "article_more", "routine_save",
              # offered when the person's own words name them, kept whatever the Weiche's group (werkzeug_abdeckung.BY_WORD)

@@ -96,8 +96,11 @@ async def prepare(request):
     # other outside text keeps that mark (the browser is the person's own and has no reason to lie)
     # every message (the latest too, which the trimming always keeps) is cut at chat.MAX_TURN_CHARS:
     # the word rules below run over it on the event loop
-    messages = [dict({"role": m["role"], "content": m["content"][:chat.MAX_TURN_CHARS]},
-                     **({"mark": "mail" if m.get("mail") else "outside"} if m.get("mail") or m.get("outside") else {}))
+    # a described screen (bedienen.look) is never carried on: later turns see only profiles.SCREEN_NOTE
+    messages = [dict({"role": m["role"], "content": profiles.SCREEN_NOTE if m.get("screen") and m["role"] == "assistant"
+                      else m["content"][:chat.MAX_TURN_CHARS]},
+                     **({"mark": "mail" if m.get("mail") else "outside"} if m.get("mail") or m.get("outside") or m.get("screen")
+                        else {}))
                 for m in (body.get("messages") if isinstance(body.get("messages"), list) else [])
                 if isinstance(m, dict) and m.get("role") in ("user", "assistant") and isinstance(m.get("content"), str)
                 and m["content"].strip()]

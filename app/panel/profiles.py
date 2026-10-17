@@ -1036,7 +1036,7 @@ def convos(uid):
 
 def save_convo(uid, c):
     """Adds or replaces one conversation (newest first); returns it, or None if invalid."""
-    item = _clean_convo(c)
+    item = _clean_convo(c, uid)
     if item:
         with _lock:
             _store_convo(uid, item)
@@ -1079,23 +1079,51 @@ def _att(a):
     return out
 
 
-def _clean_msg(m):
+# „Bildschirm beschreiben“ (bedienen.look, Dominik 2026-10-17 „Nur anzeigen“): an answer that described the own
+# screen is shown and spoken, but every stored conversation holds SCREEN_NOTE instead, whatever device saves it
+SCREEN_NOTE = "(Hier stand eine Beschreibung deines Bildschirms. Sie wird nicht gespeichert.)"
+SCREEN_KEEP = 86400       # that long a described screen's answer is recognised when a device saves it
+_screen_out = {}          # uid -> [(time, normalized start of such an answer)], memory only
+
+
+def _norm_start(text):
+    return "".join(c for c in str(text or "").casefold() if c.isalnum())[:80]
+
+
+def keep_screen_out(uid, answer, now=None):
+    """chat.py: this answer described the screen; it is never stored (_clean_msg)."""
+    n, now = _norm_start(answer), time.time() if now is None else now
+    if uid and len(n) >= 12:
+        _screen_out[uid] = [x for x in _screen_out.get(uid, []) if now - x[0] < SCREEN_KEEP][-20:] + [(now, n)]
+
+
+def _screen(uid, m, now=None):
+    if m.get("screen"):    # the browser marks it itself (chat.js)
+        return True
+    now = time.time() if now is None else now
+    n = _norm_start(m["content"])
+    return bool(uid and n) and any(now - t < SCREEN_KEEP and n.startswith(k) for t, k in _screen_out.get(uid, []))
+
+
+def _clean_msg(m, uid=None):
     # "mail": an answer made from e-mails (kept out of what the background learner reads)
-    d = dict({"role": m["role"], "content": str(m["content"])[:MAX_MSG_LEN]}, **({"mail": True} if m.get("mail") else {}),
-             **({"outside": True} if m.get("outside") and not m.get("mail") else {}))
+    screen = m["role"] == "assistant" and _screen(uid, m)
+    d = dict({"role": m["role"], "content": SCREEN_NOTE if screen else str(m["content"])[:MAX_MSG_LEN]},
+             **({"mail": True} if m.get("mail") else {}),
+             **({"outside": True} if (m.get("outside") or screen) and not m.get("mail") else {}))
     if m.get("via") in VIA:
         d["via"] = m["via"]
-    att = _att(m.get("att")) if m["role"] == "assistant" else []
+    att = _att(m.get("att")) if m["role"] == "assistant" and not screen else []
     if att:
         d["att"] = att
     return d
 
 
-def _clean_convo(c):
+def _clean_convo(c, uid=None):
     cid = str(c.get("id", ""))
     if not re.fullmatch(r"[\w\-]{1,40}", cid) or not isinstance(c.get("msgs"), list):
         return None
-    msgs = [_clean_msg(m) for m in c["msgs"][-MAX_MSGS:]
+    msgs = [_clean_msg(m, uid) for m in c["msgs"][-MAX_MSGS:]
             if isinstance(m, dict) and m.get("role") in ("user", "assistant") and m.get("content")]
     item = {"id": cid, "title": str(c.get("title", ""))[:80], "msgs": msgs,
             "updated": int(c["updated"]) if isinstance(c.get("updated"), (int, float)) else int(time.time() * 1000)}
@@ -1122,7 +1150,7 @@ def append_convo(uid, cid, title, msgs):
     with _lock:
         old = next((x for x in convos(uid) if x.get("id") == cid), None)
         c = {"id": cid, "title": title, "updated": int(time.time() * 1000), "msgs": (old["msgs"] if old else []) + list(msgs)}
-        item = _clean_convo(c)
+        item = _clean_convo(c, uid)
         if item:
             _store_convo(uid, item)
     return item

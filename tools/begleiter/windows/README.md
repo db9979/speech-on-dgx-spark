@@ -203,6 +203,10 @@ im Auftrag stand, steht als Warnung darüber; „Spark fragt nach“ (Nein / Wei
 wie eine Anweisung stand. Mit jedem Bild schickt er Name und Pfad des Programms vorn, der Spark prüft es gegen die
 freigegebenen. Die Frage ist ein eigenes Fenster (`StepForm`), der rote Ring (`ViewMarker`) klickt durch; beide und die Leiste sind aus den Bildern ausgenommen (`WDA_EXCLUDEFROMCAPTURE`).
 
+**Bildschirm beschreiben** (gleicher Schalter, Teil `view`): Fragt man „Was siehst du auf meinem Mac?“, kommt die
+Anfrage mit `want` `look` und der Frage; der Begleiter fragt **Ablehnen** (vorgewählt) oder **Erlauben**, schickt danach
+ein Bild, und der Spark beendet die Sitzung selbst. Ältere Begleiter zeigen dafür die gewöhnliche Frage „Bildschirm zeigen“.
+
 **Weckwort:** Ist der Teil an, hört der Begleiter am Standard-Mikrofon mit – sichtbar am **Ring um das
 Symbol**. Erst wenn es lauter als das Grundrauschen wird, nimmt er den Satz auf (bis zu einer kurzen Pause,
 höchstens 5 Sekunden) und lässt den Spark prüfen, ob das Weckwort darin war; sonst wird nichts geschickt

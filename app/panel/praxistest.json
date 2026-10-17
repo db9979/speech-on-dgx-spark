@@ -1611,6 +1611,13 @@
 "titel": "Reddit und Feeds verbinden",
 "text": "A: Funktionen → Reddit und Feeds einschalten. P: Ich → Reddit und Feeds öffnen, auf reddit.com unter Einstellungen → RSS-Feeds den privaten Link „Posteingang“ kopieren, einfügen, „Verbinden“ (Code eingeben): der Posteingang steht mit „zuletzt geholt“ da. r/LocalLLaMA hinzufügen und ein Stichwort wie „DGX Spark“ eintragen. Unter „Zuletzt gekommen“ stehen Titel mit Link. Im Chat „Was gibt's Neues auf Reddit?“ fragen: kurze Zusammenfassung. Jemanden auf einen eigenen Kommentar antworten lassen: höchstens 30 Minuten später kommt „Neu in deinem Reddit-Posteingang …“ als Mitteilung. „Alles löschen“ leert die Seite.",
 "thread": "Reddit-Konto verbinden"
+},
+{
+"id": "P254",
+"v": 741,
+"titel": "Bildschirm beschreiben",
+"text": "A: Funktionen → Spark bedient den Rechner ist an, unter Ich → Begleiter ist beim Gerät „Bildschirm zeigen und bedienen“ an; der Begleiter am Mac (oder PC) ist verbunden. P: In der iPhone-App „Was siehst du gerade auf meinem Mac?“ fragen. Am Mac erscheint „Spark hinsehen lassen?“ mit der Frage; „Erlauben“ drücken. Nach wenigen Sekunden beschreibt der Spark kurz, was offen ist, ohne Passwörter oder Zahlen vorzulesen. Den Chat schließen und wieder öffnen: an der Stelle steht nur noch „(Hier stand eine Beschreibung deines Bildschirms. Sie wird nicht gespeichert.)“. Noch einmal fragen und am Mac „Ablehnen“ drücken: der Spark sagt, dass er nicht hinsehen durfte.",
+"thread": "Rechner fernsteuern"
 }
 ]
 }

@@ -40,6 +40,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.741** Describe the screen: ask "What do you see on my Mac?", the computer asks first, the description is shown but never stored
 - **V01.0.740** Self-test fix: the Kiwix test switches the Weiche off itself
 - **V01.0.739** Reddit and feeds: connect your own Reddit inbox, subreddits and feeds, news comes at once or in the daily briefing
 - **V01.0.738** Control centre in colour: boxes with a surface and round corners, the tools box names the tools used last
@@ -49,7 +50,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.734** CarPlay: listening in the car no longer stops in mid-sentence (quieter voice counts, 1.6 s pause, 15 s without a voice)
 - **V01.0.733** Chat calls now also show under devices on Live, monitoring and the Steuerzentrale (browser or iPhone app, "Anruf"), from ringing to hanging up
 - **V01.0.732** Android app like the iPhone app: Spark as assistant over any app, widget, tile, shortcuts, sharing photos and files, fingerprint for admins
-- **V01.0.731** Phone: a running call shows under the devices in Live, Monitoring and the control centre
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

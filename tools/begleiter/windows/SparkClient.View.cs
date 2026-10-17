@@ -5,8 +5,9 @@ using System.Text.Json.Nodes;
 namespace SparkBegleiter;
 
 /// <summary>Eine Anfrage, den Bildschirm zu zeigen (Teil "view"): Kennung, ob auch bedient werden soll, und bei
-/// Stufe 3 („Spark bedient den Rechner“, <see cref="Operate"/>) der Auftrag in den Worten der Person.</summary>
-internal sealed record ViewAsk(string Id, bool Control, bool Operate = false, string Task = "");
+/// Stufe 3 („Spark bedient den Rechner“, <see cref="Operate"/>) der Auftrag in den Worten der Person; bei
+/// <see cref="Look"/> („Bildschirm beschreiben“: der Spark sieht einmal hin) die Frage der Person.</summary>
+internal sealed record ViewAsk(string Id, bool Control, bool Operate = false, string Task = "", bool Look = false);
 
 /// <summary>Eine Eingabe aus dem Panel (fernsicht.py prüft sie, der Begleiter noch einmal). Stufe 3: Kind "step"
 /// mit <see cref="Step"/> (click, double, right, scroll, key, type, ask), Nummer, Grund und Warnung.</summary>
@@ -31,12 +32,12 @@ internal static partial class SparkClient
                 {
                     string want = Json.Str(o["want"]) ?? "view";
                     string task = Plain(Json.Str(o["task"]) ?? "", 300);
-                    if (want == "operate" && task.Length == 0)
+                    if (want is "operate" or "look" && task.Length == 0)
                     {
-                        continue; // ohne Auftrag kein Bedienen
+                        continue; // ohne Auftrag kein Bedienen, ohne Frage kein Hinsehen
                     }
 
-                    views.Add(new ViewAsk(id!, want is "control" or "operate", want == "operate", task));
+                    views.Add(new ViewAsk(id!, want is "control" or "operate", want == "operate", task, want == "look"));
                 }
             }
         }

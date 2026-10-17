@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "geraet": {
-        "stand": "816156a673",
+        "stand": "7349d962e1",
         "bezug": {
             "account.CONVO_BODY": ["s10"], "admin.test_asr": ["s4"], "admin._test_asr": ["s4", "s5"],
             "admin.read_audio": ["s4"], "chat.chat": ["s6", "s7"], "account.profile_save_convo": ["s10"],
@@ -189,7 +189,7 @@ SEITEN = {
             ("account.profile_save_convo", ("speichert nur die neuen Nachrichten", "stores only the new messages")),
             ("account.profile_convos", ("Liste und Änderungen seit ?since=", "list and changes since ?since=")),
             ("profiles.append_convo", ("hängt unter Sperre an", "appends under a lock")),
-            ("profiles._clean_convo", ("prüft und kürzt ein Gespräch", "checks and trims a conversation")),
+            ("profiles._clean_convo", ("prüft und kürzt ein Gespräch; eine Beschreibung des Bildschirms (bedienen.look) wird nur als Hinweis gespeichert", "checks and trims a conversation; a description of the screen (bedienen.look) is stored only as a note")),
             ("verlauf.stream", ("der Sofort-Abgleich je offener Seite", "instant sync per open page")),
             ("sse.Hub.stream", ("ein Strom je Seite: Warteschlange, Lebenszeichen, Aufräumen",
                                 "one stream per page: queue, keep-alive, cleanup")),

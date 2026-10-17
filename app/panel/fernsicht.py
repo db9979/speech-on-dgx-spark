@@ -27,7 +27,7 @@ them again before it does anything.
 
 Stufe 3 (bedienen.py, "Spark bedient den Rechner") uses the same session with want "operate": nobody watches in a
 browser, the panel's own job reads the pictures and hands the computer one step at a time ("step" in the inputs),
-each confirmed there.
+each confirmed there. Want "look" („Bildschirm beschreiben“) is one picture the panel's job describes, then it ends.
 """
 import asyncio
 import collections
@@ -67,8 +67,9 @@ KEYS = ("enter", "escape", "tab", "backspace", "delete", "space", "up", "down", 
         "pageup", "pagedown", "undo", "redo", "copy", "paste", "save", "reload", "find")
 BUTTONS = ("left", "right", "double")
 MODES = ("view", "control")
-WANTS = MODES + ("operate",)
-MODE_NAMES = {"view": "ansehen", "control": "bedienen", "operate": "Spark bedient"}
+WANTS = MODES + ("operate", "look")
+SPARK = ("operate", "look")   # sessions the Spark itself runs (bedienen.py): never in a browser
+MODE_NAMES = {"view": "ansehen", "control": "bedienen", "operate": "Spark bedient", "look": "Spark sieht"}
 APP_MAX = 200             # the front program's name and path the computer reports with a picture (Stufe 3)
 STATES = ("asked", "view", "control", "no", "ended")
 STEP_ANSWERS = ("done", "skip", "stop", "failed")
@@ -129,7 +130,7 @@ def _ended_line(s, why, prof=None):
     prof = prof or profiles.by_id(s["uid"]) or {"id": s["uid"]}
     secs = int(time.time() - (s["since"] or s["t"]))
     _log("ende", prof, f"({why}, {secs} s, {s['seq']} Bilder, {s['events']} Eingaben)")
-    _live(f"{MODE_NAMES[s['want'] if s['want'] == 'operate' else s['mode'] or s['want']]} beendet ({why})")
+    _live(f"{MODE_NAMES[s['want'] if s['want'] in SPARK else s['mode'] or s['want']]} beendet ({why})")
 
 
 def sweep(now=None):
@@ -141,7 +142,7 @@ def sweep(now=None):
             why = ("nicht beantwortet" if s["state"] == "asked" and now - s["t"] > ASK_SECONDS else
                    "zu lange" if now - s["t"] > VIEW_MAX + ASK_SECONDS else
                    # Stufe 3: the panel's own job looks, with its own limits (bedienen.py)
-                   "niemand schaut" if s["state"] in MODES and s["want"] != "operate" and now - s["viewer"] > VIEWER_IDLE else
+                   "niemand schaut" if s["state"] in MODES and s["want"] not in SPARK and now - s["viewer"] > VIEWER_IDLE else
                    "Rechner still" if s["state"] in MODES and now - s["program"] > PROGRAM_IDLE * (4 if s["want"] == "operate" else 1)
                    else "")
             if why and _end(s, why):
@@ -156,9 +157,10 @@ def counts():
     """Running sessions by kind for Zustand → Live (only numbers)."""
     sweep()
     with _lock:
-        return {m: sum(1 for s in _sessions.values() if s["state"] == m and s["want"] != "operate") for m in MODES} | \
+        return {m: sum(1 for s in _sessions.values() if s["state"] == m and s["want"] not in SPARK) for m in MODES} | \
             {"asked": sum(1 for s in _sessions.values() if s["state"] == "asked"),
-             "operate": sum(1 for s in _sessions.values() if s["state"] == "control" and s["want"] == "operate")}
+             "operate": sum(1 for s in _sessions.values() if s["state"] == "control" and s["want"] == "operate"),
+             "look": sum(1 for s in _sessions.values() if s["state"] == "view" and s["want"] == "look")}
 
 
 def asked_for(did, mark=True):
@@ -213,7 +215,7 @@ def _mine(sid, uid, browser=False):
     with _lock:
         s = _sessions.get(str(sid or "")[:40])
     # a session the Spark itself runs (Stufe 3) is never shown in or steered from a browser
-    if not s or s["uid"] != uid or (browser and s["want"] == "operate"):
+    if not s or s["uid"] != uid or (browser and s["want"] in SPARK):
         raise HTTPException(404, "Diese Sitzung gibt es nicht mehr.")
     return s
 
@@ -360,7 +362,7 @@ async def program_answer(request: Request):
     mode = body.get("mode")
     if mode not in ("no",) + MODES:
         raise HTTPException(400, "mode: no, view oder control")
-    if mode == "control" and s["want"] == "view":
+    if mode == "control" and s["want"] in ("view", "look"):
         mode = "view"              # nobody asked for more than looking
     if mode == "view" and s["want"] == "operate":
         mode = "no"                # the Spark operating: allowed or not, looking alone makes no sense
@@ -377,7 +379,7 @@ async def program_answer(request: Request):
         _log("abgelehnt", prof)
         _live("am Rechner abgelehnt")
     else:
-        name = MODE_NAMES["operate" if s["want"] == "operate" else mode]
+        name = MODE_NAMES[s["want"] if s["want"] in SPARK else mode]
         _log("start", prof, f"({name})")
         _live(f"{name} läuft")
     return {"state": s["state"]}

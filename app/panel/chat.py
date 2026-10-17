@@ -1798,6 +1798,10 @@ async def _answer(request, turn):
         elif (st["mail"], st["outside"]) != was or name in READS_OUTSIDE or name in ex["outside"] or name in ex["mail"]:
             if name in st["offered"] and not result.startswith("Not done"):
                 result = wrap_outside(result)
+        if name == "pc_look" and name in st["offered"] and result.startswith("Auf dem Bildschirm"):
+            # „Bildschirm beschreiben“ (bedienen.look, decision „Nur anzeigen“): shown and spoken, never kept
+            turn.screen = True
+            await out.put({"type": "screen"})
         if st["mail"] and not was[0] and not name.startswith("mail_"):
             await out.put({"type": "mail"})
         elif st["outside"] and not was[1] and not st["mail"]:
@@ -2099,6 +2103,10 @@ async def _answer(request, turn):
             if tm["on"]:
                 for line in timing_lines(tm, t0, time.time()):
                     logfilter.detail("chat", line)
+            screen = bool(getattr(turn, "screen", False))
+            if screen:
+                # the described screen stays out of every stored conversation (profiles._clean_msg)
+                profiles.keep_screen_out(who and who["id"], trace["said"])
             if tr:
                 try:
                     await asyncio.to_thread(tracelog.finish, tr)
@@ -2108,10 +2116,12 @@ async def _answer(request, turn):
                 # The tool names this turn offered and had to call go along for the Befund (befund.py), never words
                 tr.offered = sorted({t["function"]["name"] for t in (turn.tools or [])})
                 tr.need = list(turn.need or [])
-                rid = await asyncio.to_thread(faelle.turn_end, tr, who, turn.ask_text, trace["said"], outside,
+                said = profiles.SCREEN_NOTE if screen else trace["said"]
+                rid = await asyncio.to_thread(faelle.turn_end, tr, who, turn.ask_text, said, outside,
                                               None, bool(getattr(turn, "explain", None)))
                 # Antworten im Hintergrund prüfen (systemone.py): after the answer, never before it is spoken
-                systemone.check_later(ccfg, tr, who, turn.ask_text, trace["said"], trace["calls"], outside)
+                if not screen:
+                    systemone.check_later(ccfg, tr, who, turn.ask_text, trace["said"], trace["calls"], outside)
                 if rid:
                     yield f"data: {json.dumps({'type': 'rate', 'id': rid})}\n\n"
             # „Das kannst du auch sagen“ (saetze.py): the panel's fixed sentences under the answer, never the model's

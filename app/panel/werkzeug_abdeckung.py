@@ -68,6 +68,7 @@ TOOLS = {
     "transit": ("transit",),
     "feeds": ("feeds_news",),
     "begleiter": ("pc_action", "pc_send"),
+    "begleiterbedienen": ("pc_look",),
     "begleitertun": ("pc_action",),
     "iphone": ("iphone_action",),
 }
@@ -205,7 +206,6 @@ WITHOUT = {
     "schreibapps": "Kanal in anderen Programmen",
     "begleitermeeting": "startet am Begleiter",
     "begleiterschirm": "startet unter Ich → Begleiter, bedient wird mit Maus und Tastatur, nicht per Sprache",
-    "begleiterbedienen": "wirkt über pc_action (action task), nur wo erlaubt angeboten",
     "roomtv": "Verhalten im Raum-Modus",
     "roomha": "Verhalten im Raum-Modus",
     "chatgroups": "Gruppen in der Oberfläche",

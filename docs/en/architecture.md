@@ -739,7 +739,7 @@ Applies at: [step 6](#kn-geraet-s6), [step 10](#kn-geraet-s10)
 - `app/panel/account.py` `profile_save_convo`: stores only the new messages ([step 10](#kn-geraet-s10))
 - `app/panel/account.py` `profile_convos`: list and changes since ?since= ([step 11](#kn-geraet-s11))
 - `app/panel/profiles.py` `append_convo`: appends under a lock ([step 10](#kn-geraet-s10))
-- `app/panel/profiles.py` `_clean_convo`: checks and trims a conversation ([step 10](#kn-geraet-s10))
+- `app/panel/profiles.py` `_clean_convo`: checks and trims a conversation; a description of the screen (bedienen.look) is stored only as a note ([step 10](#kn-geraet-s10))
 - `app/panel/verlauf.py` `stream`: instant sync per open page ([step 11](#kn-geraet-s11))
 - `app/panel/sse.py` `Hub.stream`: one stream per page: queue, keep-alive, cleanup ([step 11](#kn-geraet-s11))
 - `app/panel/verlauf.py` `begin`: „answering“ for the other pages ([step 6](#kn-geraet-s6), [step 11](#kn-geraet-s11))
@@ -1648,7 +1648,7 @@ flowchart TD
 8. <a id="kn-weiche-s8"></a>**Follow-up?**: If the message is short (at most 80 characters), points back („and“, „that“, „it“) and the own question just before had a clear group, that group holds again. Only the own question counts, never the answer. The journal says „weiche: Folgefrage“.
 9. <a id="kn-weiche-s9"></a>**Targeted tool choice on?**: Only with this switch does the switch narrow, and not with a picture or a direct smart home command. Without it the group only goes to the journal and statistics; the model sees every tool the rights allow.
 10. <a id="kn-weiche-s10"></a>**Model sorts?**: If no rule found a group and „Questions no rule recognizes“ is set to the model, the language model picks one group from the fixed list once (JSON only, only the own message). The question already runs beside the preparation from its start; the wait is at most 4 seconds, with „Fast answer start“ only 300 ms after the preparation. With classification with probabilities the pick only counts from the threshold (default 80 %). The hint groups stay beside the pick. During a maintenance pause of the language model it is not asked.
-11. <a id="kn-weiche-s11"></a>**Narrow**: With a clear group its tools stay, plus always 4 fixed ones (remembering something, own documents, PC), the hints' tools, the admin's extra tools for this group (at most 6) and what the own words name explicitly („onto the reMarkable“). All only as far as already offered. If nothing of the group is offered or the group is set to „do not narrow“, all stay.
+11. <a id="kn-weiche-s11"></a>**Narrow**: With a clear group its tools stay, plus always 5 fixed ones (remembering something, own documents, PC), the hints' tools, the admin's extra tools for this group (at most 6) and what the own words name explicitly („onto the reMarkable“). All only as far as already offered. If nothing of the group is offered or the group is set to „do not narrow“, all stay.
 12. <a id="kn-weiche-s12"></a>**Lean?**: If the question stays without a group, the setting is „Lean“ and no must word requires a tool, the model only gets the short list: web search, Wikipedia, archive, earlier conversations, the fixed tools and the tools of the hint groups. It reads less and starts sooner.
 13. <a id="kn-weiche-s13"></a>**Fix the first tool**: One single clear group, one required tool and only that one of the group offered: the first round must call exactly that one („What will the weather be?“). A short, clear reading sentence („What is the weather today?“) is fetched by the panel itself with „Fetch clear questions directly“, for tomorrow and the day after with the date the panel works out.
 14. <a id="kn-weiche-s14"></a>**Journal and count**: Every turn writes a line „weiche: Absicht … | Grund … | Hinweis … | Werkzeuge x von y | Pflicht … | gesperrt … | eingrenzen an/aus“; a reason word only shows when it is still in the message. Per day and group only counts are kept (8 days), never a word of the question. Then the list goes to the answer.
@@ -1672,7 +1672,7 @@ Applies at: [step 9](#kn-weiche-s9)
 
 #### Tool names
 
-- Wherever a tool shows, a readable name comes from one table (83 tools), for example „Mailbox overview“ instead of mail_tidy_overview.
+- Wherever a tool shows, a readable name comes from one table (84 tools), for example „Mailbox overview“ instead of mail_tidy_overview.
 
 #### Numbers (from the code)
 
@@ -1896,7 +1896,7 @@ Applies at: [step 4](#kn-werkzeuge-s4)
 - **3** memory notes per answer ([step 1](#kn-werkzeuge-s1))
 - **13** tools locked after outside text ([step 4](#kn-werkzeuge-s4))
 - **7** tools without internet with the kill switch ([step 3](#kn-werkzeuge-s3))
-- **83** tools with a readable name ([step 11](#kn-werkzeuge-s11))
+- **84** tools with a readable name ([step 11](#kn-werkzeuge-s11))
 
 #### Settings
 

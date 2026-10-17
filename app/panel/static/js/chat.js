@@ -240,7 +240,7 @@ async function ask(text,asrS,spk){const spoken=!!chat.nextSpoken;chat.nextSpoken
   if(S.daily&&chat.cid&&!chat.picked){const c=convos.load().find(x=>x.id===chat.cid);if(c&&c.updated<today0())openConvo(null)}   // past midnight
 const pids=typeof picIds==='function'?picIds():[],thumbs=pids.length?picThumbs():[];   // attached pictures (pics.js)
 const ub=chatLog('user',text);const um={role:'user',content:text};
-  if(thumbs.length){const w=document.createElement('div');w.className='picrow';w.innerHTML=thumbs.map(u=>`<img alt="" src="${esc(u)}">`).join('');ub.appendChild(w)}chat.msgs.push(um);deletable(ub,um);let foreign=false,ttsErr=false,mailUsed=false,outsideUsed=false,why=null;
+  if(thumbs.length){const w=document.createElement('div');w.className='picrow';w.innerHTML=thumbs.map(u=>`<img alt="" src="${esc(u)}">`).join('');ub.appendChild(w)}chat.msgs.push(um);deletable(ub,um);let foreign=false,ttsErr=false,mailUsed=false,outsideUsed=false,screenUsed=false,why=null;
   // the conversation is named from its first question on, so the panel's own question (klaeren.py) is answered in the same one
   if(!chat.cid)chat.cid=Date.now().toString(36);
   const el=chatLog('assistant','');$('fabtext').textContent='';
@@ -249,7 +249,7 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
   const show=(x,now)=>{drawn=x;if(now){if(frame)cancelAnimationFrame(frame);draw()}else if(!frame)frame=requestAnimationFrame(draw)};let full='',llmS=null,audioS=null,ackS=null,err='';const searches=[],sources=[],mems=[],docs=[],drefs=[],hcards=[],mkcards=[],chcards=[],blcards=[];let rateId='',more=null;const moreTool=typeof moreTake==='function'?moreTake(text):undefined;if(typeof moreStartGone==='function')moreStartGone();
   const ctrl=new AbortController();chat.ctrl=ctrl;chat.firstPlay=null;chat.gaps=[];chat.blocks=[];chat.t0b=null;chat.stalls=0;chat.pieceStart=true;setTalk();chatSay(t('Antwort kommt …','Answer coming …'));
   try{const r=await api('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},signal:ctrl.signal,
-      body:JSON.stringify({speak:voiceOn()?undefined:false,messages:chat.msgs.slice(-20).map(m=>({role:m.role,content:m.content,...(m.mail?{mail:true}:{}),...(m.outside?{outside:true}:{})})),tab:TAB,tz:(()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone}catch{return ''}})(),voice:PROFILE&&S.voice||undefined,speed:S.speed,length:S.length,convo:chat.cid||undefined,speaker:spk&&spk.token||undefined,images:pids.length?pids:undefined,page:typeof hilfeNow==='function'?hilfeNow():undefined,focus:typeof hilfeFocusTake==='function'?hilfeFocusTake():undefined,view:document.body.classList.contains('appview')?'app':undefined,more:moreTool})});
+      body:JSON.stringify({speak:voiceOn()?undefined:false,messages:chat.msgs.slice(-20).map(m=>({role:m.role,content:m.content,...(m.mail?{mail:true}:{}),...(m.outside?{outside:true}:{}),...(m.screen?{screen:true}:{})})),tab:TAB,tz:(()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone}catch{return ''}})(),voice:PROFILE&&S.voice||undefined,speed:S.speed,length:S.length,convo:chat.cid||undefined,speaker:spk&&spk.token||undefined,images:pids.length?pids:undefined,page:typeof hilfeNow==='function'?hilfeNow():undefined,focus:typeof hilfeFocusTake==='function'?hilfeFocusTake():undefined,view:document.body.classList.contains('appview')?'app':undefined,more:moreTool})});
     const rd=r.body.getReader(),dec=new TextDecoder();let buf='';
     for(;;){const{value,done}=await rd.read();if(done)break;buf+=dec.decode(value,{stream:true});let i;
       while((i=buf.indexOf('\n\n'))>=0){const line=buf.slice(0,i).split('\n').find(l=>l.startsWith('data:'));buf=buf.slice(i+2);if(!line)continue;
@@ -264,6 +264,7 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
         else if(ev.type==='proposal'){mems.push('📥 '+t('Vorschlag: ','Proposal: ')+ev.text)}
         else if(ev.type==='mail'){mailUsed=true;chatSay(t('Lese deine E-Mails …','Reading your e-mail …'))}
         else if(ev.type==='outside'){outsideUsed=true}
+        else if(ev.type==='screen'){screenUsed=true;outsideUsed=true}  // described screen: shown here, never stored (profiles.SCREEN_NOTE)
         else if(ev.type==='calendar'){chatSay(t('Schaue in deinen Kalender …','Checking your calendar …'))}
         else if(ev.type==='briefing'){chatSay(t('Stelle dein Tagesbriefing zusammen …','Putting your daily briefing together …'))}
         else if(ev.type==='home'){chatSay('🏠 '+ev.command)}
@@ -290,7 +291,7 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
   const att=attOf(searches,sources,docs,drefs,mkcards,blcards);   // what stands under the answer, kept with it
   // another person's voice: the exchange is theirs, so it stays out of this browser's history and context
   if(foreign){const i=chat.msgs.indexOf(um);if(i>=0)chat.msgs.splice(i,1)}
-  else if(full.trim()){chat.msgs.push({role:'assistant',content:full.trim(),...(mailUsed?{mail:true}:outsideUsed?{outside:true}:{}),...(att.length?{att}:{})});deletable(el,chat.msgs.at(-1))}else chat.msgs.pop();saveConvo();
+  else if(full.trim()){chat.msgs.push({role:'assistant',content:full.trim(),...(mailUsed?{mail:true}:outsideUsed?{outside:true}:{}),...(screenUsed?{screen:true}:{}),...(att.length?{att}:{})});deletable(el,chat.msgs.at(-1))}else chat.msgs.pop();saveConvo();
   el.classList.remove('typing');if(!full.trim())el.textContent=aborted?t('(abgebrochen)','(cancelled)'):'–';
   attRender(el,att,true);
   if(mems.length){const d=document.createElement('div');d.className='mem';d.textContent=mems.join(' · ');el.appendChild(d)}
@@ -489,7 +490,7 @@ function saveConvo(whole){if(!chat.msgs.length)return;
 // The Spark's copy of the open conversation has messages this page does not show (another device asked in
 // it): shown, unless an answer or a recording is running right now (then at the next look).
 function convoAdopt(c){if(chat.ctrl||chat.rec||!c||!Array.isArray(c.msgs))return;const loc=chat.msgs.slice(-60),a=c.msgs.at(-1),b=loc.at(-1);
-  if(c.msgs.length===loc.length&&(!a||!b||(a.role===b.role&&a.content===b.content)))return;
+  if(c.msgs.length===loc.length&&(!a||!b||(a.role===b.role&&(a.content===b.content||b.screen))))return;  // a described screen stays on this page, stored only as a note
   const top=$('chatlog').scrollTop;openConvo(c.id,chat.picked);if(c.msgs.length<loc.length)$('chatlog').scrollTop=top}
 // Coming back to this page (and every 30 s while it is in front): conversations from other devices appear
 // without reloading; the open conversation shows what was added elsewhere.

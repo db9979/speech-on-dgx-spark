@@ -559,6 +559,7 @@ internal sealed class ViewAskForm : ThemedForm
     private readonly SparkButton _allow = new(ButtonKind.Primary, "Erlauben");
     private readonly bool _control;
     private readonly bool _operate;
+    private readonly bool _look;
     private readonly System.Windows.Forms.Timer _timer = new() { Interval = 1000 };
     private readonly DateTime _deadline = DateTime.UtcNow.AddSeconds(TimeoutSeconds);
     private Rectangle _face;
@@ -578,16 +579,26 @@ internal sealed class ViewAskForm : ThemedForm
         ShowInTaskbar = true;
         StartPosition = FormStartPosition.CenterScreen;
         KeyPreview = true;
+        _look = ask.Look;
         _question.Text = _operate
             ? "Spark möchte an diesem Rechner deinen Auftrag Schritt für Schritt erledigen: „" + ask.Task + "“"
+            : _look
+            ? "Spark möchte einmal auf diesen Bildschirm sehen, um deine Frage zu beantworten: „" + ask.Task + "“"
             : control
                 ? "Dein Profil möchte diesen Bildschirm vom Handy oder Panel aus ansehen und bedienen."
                 : "Dein Profil möchte diesen Bildschirm vom Handy oder Panel aus ansehen.";
         _detail.Text = _operate
             ? "Nur, wenn du das gerade selbst gesagt hast. Jeden Schritt zeigt der Begleiter mit markiertem Ziel und fragt; " +
               "„Stopp“ beendet es sofort. Der Spark sieht dafür den Bildschirm, gespeichert wird nichts."
+            : _look
+            ? "Nur, wenn du das gerade selbst gefragt hast. Der Spark nimmt ein einziges Bild auf und beschreibt es dir; " +
+              "gespeichert wird nichts, auch nicht im Verlauf."
             : "Nur, wenn du das gerade selbst angestoßen hast. Solange es läuft, siehst du einen roten Rahmen und oben „Beenden“. " +
               "Es wird nichts aufgezeichnet.";
+        if (_look)
+        {
+            _view.Text = "Erlauben";
+        }
         Controls.AddRange(new Control[] { _question, _detail, _countdown, _deny });
         if (!_operate)
         {
@@ -678,7 +689,7 @@ internal sealed class ViewAskForm : ThemedForm
     protected override void PaintContent(Graphics g)
     {
         Face.Draw(g, _face, P);
-        Draw.Text(g, _operate ? "Spark den Rechner bedienen lassen?" : "Bildschirm zeigen?", F(11f, FontStyle.Bold), _title, P.Fg);
+        Draw.Text(g, _operate ? "Spark den Rechner bedienen lassen?" : _look ? "Spark hinsehen lassen?" : "Bildschirm zeigen?", F(11f, FontStyle.Bold), _title, P.Fg);
     }
 
     protected override void Dispose(bool disposing)

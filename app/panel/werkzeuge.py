@@ -54,6 +54,7 @@ NAMES = {
     "nas_ablegen": ("Auf der NAS ablegen", "Save to the NAS"),
     "nas_zustand": ("Zustand der NAS", "NAS status"),
     "pc_action": ("Rechner-Aktion", "Computer action"), "pc_send": ("An den Rechner", "Send to computer"),
+    "pc_look": ("Bildschirm ansehen", "Look at the screen"),
     # tools outside the switch's groups, the panel's own steps and tools only programs call over MCP
     "get_time": ("Uhrzeit", "Time"), "read_page": ("Webseite lesen", "Read web page"),
     "local_search": ("Erst in eigenen Quellen", "Own sources first"), "remarkable": ("reMarkable", "reMarkable"),

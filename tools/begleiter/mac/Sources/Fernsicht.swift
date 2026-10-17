@@ -12,12 +12,15 @@ import UniformTypeIdentifiers
 // No ⌘-Tab, no ⌘-Space, no free key combination.
 // Stufe 3 (bedienen.py, "operate"): nobody watches; the Spark hands one step at a time ("step"), each shown here
 // with its target marked and done only after „Erlauben“. Our own windows are left out of the pictures.
+// „Bildschirm beschreiben“ ("look"): asked like the rest; the panel takes one picture and ends the session.
 
 struct ViewAsk: Equatable {
     let id: String
     let control: Bool
     var operate = false
     var task = ""
+    /// „Bildschirm beschreiben“: the Spark looks once (task holds the person's question)
+    var look = false
 
     /// the "views" of GET /api/desk/wait, every value checked
     static func list(_ raw: Any?) -> [ViewAsk] {
@@ -27,8 +30,9 @@ struct ViewAsk: Equatable {
                   id.allSatisfy({ $0.isASCII && ($0.isLetter || $0.isNumber || $0 == "-" || $0 == "_") }) else { return nil }
             let want = d["want"] as? String ?? "view"
             let task = DeskConfig.plain(d["task"] as? String ?? "", max: 300)
-            if want == "operate" && task.isEmpty { return nil }          // no task, no operating
-            return ViewAsk(id: id, control: want == "control" || want == "operate", operate: want == "operate", task: task)
+            if (want == "operate" || want == "look") && task.isEmpty { return nil }   // no task, no operating or looking
+            return ViewAsk(id: id, control: want == "control" || want == "operate", operate: want == "operate", task: task,
+                           look: want == "look")
         }
     }
 }
@@ -138,6 +142,14 @@ final class ViewCenter {
 
                 Ohne Antwort gilt nach 60 Sekunden „Ablehnen“.
                 """
+        } else if ask.look {
+            a.messageText = "Spark möchte einmal auf diesen Bildschirm sehen, um deine Frage zu beantworten: „\(ask.task)“"
+            a.informativeText = """
+                Nur, wenn du das gerade selbst gefragt hast. Der Spark nimmt ein einziges Bild auf und beschreibt es dir; \
+                gespeichert wird nichts, auch nicht im Verlauf.
+
+                Ohne Antwort gilt nach 60 Sekunden „Ablehnen“.
+                """
         } else {
             a.messageText = ask.control
                 ? "Dein Profil möchte diesen Bildschirm vom Handy oder Panel aus ansehen und bedienen."
@@ -150,7 +162,7 @@ final class ViewCenter {
                 """
         }
         a.addButton(withTitle: "Ablehnen")
-        if ask.operate {
+        if ask.operate || ask.look {
             a.addButton(withTitle: "Erlauben")
         } else {
             a.addButton(withTitle: "Nur ansehen")
@@ -163,7 +175,8 @@ final class ViewCenter {
         RunLoop.main.add(timer, forMode: .modalPanel)
         let r = a.runModal()
         timer.invalidate()
-        var mode = ask.operate ? (r == .alertSecondButtonReturn ? "control" : "no")
+        var mode = ask.look ? (r == .alertSecondButtonReturn ? "view" : "no")
+            : ask.operate ? (r == .alertSecondButtonReturn ? "control" : "no")
             : r == .alertSecondButtonReturn ? "view" : (r == .alertThirdButtonReturn && ask.control ? "control" : "no")
         if mode != "no" && !CGPreflightScreenCaptureAccess() {
             _ = CGRequestScreenCaptureAccess()
