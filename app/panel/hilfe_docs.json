@@ -1741,7 +1741,15 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/chat.py chat: Rate-Limit, Sprache zuerst, „antwortet gerade“ (Schritt 1) - app/panel/chat.py _answer: Sprachausgabe und Ereignisse als ein Strom (Schritt 4, Schritt 5, Schritt 11) - app/panel/chat_modell.py model_turn: Runden mit dem Modell, Werkzeuge, Prüfungen (Schritt 4, Schritt 11) - app/panel/chat.py split_sentences: schneidet fertige Sätze ab (Schritt 5) - app/panel/chat.py said_key: erkennt einen schon gesagten Satz (Schritt 8) - app/panel/chat.py no_code: Codeblöcke nur zeigen, nie sprechen (Schritt 8) - app/panel/chat.py loop_count: zählt Fehlschläge für Fehlerschleife stoppen (Schritt 11) - app/panel/answercheck.py known: alle Angaben, die das Modell bekommen hat (Schritt 6) - app/panel/answercheck.py unsupported: Angaben im Satz ohne Beleg (Schritt 6) - app/panel/answercheck.py fresh: nach dem Kalender nur Angaben dieser Antwort (Schritt 6) - app/panel/taten.py check: Tat behauptet, aber kein Werkzeug hat es geschafft (Schritt 7) - app/panel/taten.py announces: Werkzeugaufruf oder Tat nur angekündigt (Schritt 7, Schritt 12) - app/panel/taten.py sentence: der feste ehrliche Satz (Schritt 12)"
+"text": "- app/panel/chat.py chat: Rate-Limit, Sprache zuerst, „antwortet gerade“ (Schritt 1) - app/panel/chat.py _answer: führt Modellseite, Sprachausgabe und Ereignisse zu einem Strom zusammen (Schritt 4, Schritt 5, Schritt 11) - app/panel/chat_ton.py speech_out: Sätze an die Sprachausgabe, Ton als Strom (Schritt 8) - app/panel/chat_modell.py model_turn: Runden mit dem Modell, Werkzeuge, Prüfungen (Schritt 4, Schritt 11) - app/panel/chat.py split_sentences: schneidet fertige Sätze ab (Schritt 5) - app/panel/chat.py said_key: erkennt einen schon gesagten Satz (Schritt 8) - app/panel/chat.py no_code: Codeblöcke nur zeigen, nie sprechen (Schritt 8) - app/panel/chat.py loop_count: zählt Fehlschläge für Fehlerschleife stoppen (Schritt 11) - app/panel/answercheck.py known: alle Angaben, die das Modell bekommen hat (Schritt 6) - app/panel/answercheck.py unsupported: Angaben im Satz ohne Beleg (Schritt 6) - app/panel/answercheck.py fresh: nach dem Kalender nur Angaben dieser Antwort (Schritt 6) - app/panel/taten.py check: Tat behauptet, aber kein Werkzeug hat es geschafft (Schritt 7) - app/panel/taten.py announces: Werkzeugaufruf oder Tat nur angekündigt (Schritt 7, Schritt 12) - app/panel/taten."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Im Code",
+"title": "Im Code",
+"text": "py sentence: der feste ehrliche Satz (Schritt 12)"
 },
 {
 "lang": "de",
@@ -9045,7 +9053,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/chat.py chat: rate limit, speech first, „answering“ (step 1) - app/panel/chat.py _answer: speech output and events as one stream (step 4, step 5, step 11) - app/panel/chat_modell.py model_turn: rounds with the model, tools, checks (step 4, step 11) - app/panel/chat.py split_sentences: cuts finished sentences off (step 5) - app/panel/chat.py said_key: spots a sentence already said (step 8) - app/panel/chat.py no_code: code blocks only shown, never spoken (step 8) - app/panel/chat.py loop_count: counts failures for stop error loops (step 11) - app/panel/answercheck.py known: every figure the model was given (step 6) - app/panel/answercheck.py unsupported: figures in the sentence without proof (step 6) - app/panel/answercheck.py fresh: after the calendar only this answer's figures (step 6) - app/panel/taten.py check: deed claimed, no tool managed it (step 7) - app/panel/taten.py announces: tool call or deed only announced (step 7, step 12) - app/panel/taten.py sentence: the fixed honest sentence (step 12)"
+"text": "- app/panel/chat.py chat: rate limit, speech first, „answering“ (step 1) - app/panel/chat.py _answer: joins model side, speech output and events into one stream (step 4, step 5, step 11) - app/panel/chat_ton.py speech_out: sentences to the speech output, sound as a stream (step 8) - app/panel/chat_modell.py model_turn: rounds with the model, tools, checks (step 4, step 11) - app/panel/chat.py split_sentences: cuts finished sentences off (step 5) - app/panel/chat.py said_key: spots a sentence already said (step 8) - app/panel/chat.py no_code: code blocks only shown, never spoken (step 8) - app/panel/chat.py loop_count: counts failures for stop error loops (step 11) - app/panel/answercheck.py known: every figure the model was given (step 6) - app/panel/answercheck.py unsupported: figures in the sentence without proof (step 6) - app/panel/answercheck.py fresh: after the calendar only this answer's figures (step 6) - app/panel/taten.py check: deed claimed, no tool managed it (step 7) - app/panel/taten.py announces: tool call or deed only announced (step 7, step 12) - app/panel/taten.py sentence: the fixed honest sentence (step 12)"
 },
 {
 "lang": "en",

@@ -40,6 +40,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.720** Aufräumen: die Sprachausgabe einer Antwort liegt jetzt in einer eigenen Datei, chat.py wird um weitere 160 Zeilen kürzer
 - **V01.0.719** Modelle direkt im Panel messen (Zustand → Modelle „Messen“)
 - **V01.0.718** Zwei schnelle Modelle messbar: Gemma 4 26B A4B und Qwen3-VL 30B A3B
 - **V01.0.717** Kolibri-1 misst mit genug Speicher (liegt schon in FP8 vor, 78B)
@@ -49,7 +50,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.713** Aufräumen: die Modellseite einer Antwort liegt jetzt in einer eigenen Datei, chat.py wird um 450 Zeilen kürzer
 - **V01.0.712** iPhone-App: Anrufen ging gar nicht („Anruf ging nicht.“), weil die App sich erst beim ersten eingehenden Anruf bei Apples CallKit anmeldete; jetzt beim Start und Wählen. Laufende und klingelnde Anrufe stehen als Verbindung auf Live, Monitoring und der Steuerzentrale (nur die Anzahl)
 - **V01.0.711** Lautsprecher-Firmware 2.5.2.8: baut jetzt auf XiaoZhi 2.5.2, alle eigenen Patches unverändert
-- **V01.0.710** Lautsprecher: steht im Board noch die alte DGX-Adresse, nennt die Diagnose die richtige des Pi
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

@@ -178,6 +178,7 @@ Bereitet eine Anfrage vor, fragt das Sprachmodell in Runden und prüft, was gesa
 | `app/panel/answercheck.py` | Antwort-Prüfung: das Panel entscheidet, ob ein Satz gesagt werden darf |
 | `app/panel/chat.py` | Der Assistent: /api/chat, Runden mit dem Modell, Text und Ton als Strom |
 | `app/panel/chat_modell.py` | Die Modellseite einer Antwort: fragt das Sprachmodell, ruft Werkzeuge, schreibt Sätze |
+| `app/panel/chat_ton.py` | Die Sprachausgabe einer Antwort: Satz für Satz an die Sprachausgabe, Ton als Strom |
 | `app/panel/chat_tools.py` | Führt die Werkzeugaufrufe des Modells aus und prüft die Sperren erneut |
 | `app/panel/chat_turn.py` | Bereitet eine Anfrage vor: Rechte, Sperren, Systemprompt, Werkzeuge |
 | `app/panel/echo.py` | Der Assistent antwortet nicht auf seine eigene Stimme |
@@ -1774,7 +1775,8 @@ flowchart TD
 #### Im Code
 
 - `app/panel/chat.py` `chat`: Rate-Limit, Sprache zuerst, „antwortet gerade“ ([Schritt 1](#kn-antwort-s1))
-- `app/panel/chat.py` `_answer`: Sprachausgabe und Ereignisse als ein Strom ([Schritt 4](#kn-antwort-s4), [Schritt 5](#kn-antwort-s5), [Schritt 11](#kn-antwort-s11))
+- `app/panel/chat.py` `_answer`: führt Modellseite, Sprachausgabe und Ereignisse zu einem Strom zusammen ([Schritt 4](#kn-antwort-s4), [Schritt 5](#kn-antwort-s5), [Schritt 11](#kn-antwort-s11))
+- `app/panel/chat_ton.py` `speech_out`: Sätze an die Sprachausgabe, Ton als Strom ([Schritt 8](#kn-antwort-s8))
 - `app/panel/chat_modell.py` `model_turn`: Runden mit dem Modell, Werkzeuge, Prüfungen ([Schritt 4](#kn-antwort-s4), [Schritt 11](#kn-antwort-s11))
 - `app/panel/chat.py` `split_sentences`: schneidet fertige Sätze ab ([Schritt 5](#kn-antwort-s5))
 - `app/panel/chat.py` `said_key`: erkennt einen schon gesagten Satz ([Schritt 8](#kn-antwort-s8))

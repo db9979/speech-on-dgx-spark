@@ -40,7 +40,7 @@ class Rule(unittest.TestCase):
 
     def test_chat_asks_the_rule_not_taten_directly(self):
         src = ""
-        for name in ("chat.py", "chat_modell.py"):   # the model side of an answer lives in chat_modell.py
+        for name in ("chat.py", "chat_modell.py", "chat_ton.py"):   # model side and speech output have their own files
             with open(os.path.join(PANEL, name), encoding="utf-8") as f:
                 src += f.read()
         self.assertIn("answercheck.action_check(piece,", src)

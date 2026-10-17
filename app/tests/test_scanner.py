@@ -149,7 +149,7 @@ class Scanner(unittest.TestCase):
 
     def test_every_tool_is_sorted(self):
         text = ""
-        for name in ("chat.py", "chat_modell.py"):   # the model side of an answer lives in chat_modell.py
+        for name in ("chat.py", "chat_modell.py", "chat_ton.py"):   # model side and speech output have their own files
             with open(os.path.join(PANEL, name), encoding="utf-8") as f:
                 text += f.read()
         import chat

@@ -38,9 +38,10 @@ class Margin(unittest.TestCase):
             src = f.read()
         end = src.index('tm["written"] = True')
         self.assertLess(end, src.index("await sentences.put(None)", end))
-        with open(chat.__file__) as f:
+        import chat_ton   # the speech output of an answer (cut out of chat._answer)
+        with open(chat_ton.__file__) as f:
             src = f.read()
-        self.assertIn('piece_margin(ttfa, not tm.get("written"), tts_body.get("speed"))', src)
+        self.assertIn('chat.piece_margin(ttfa, not tm.get("written"), tts_body.get("speed"))', src)
 
 
 class IPhone(unittest.TestCase):

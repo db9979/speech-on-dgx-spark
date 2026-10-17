@@ -473,9 +473,9 @@ SEITEN = {
         "heute": [],
     },
     "antwort": {
-        "stand": "1d194533c6",
+        "stand": "b174667074",
         "bezug": {
-            "chat.MAX_SAVES": ["s11"], "chat.LOOP_SAME": ["s11"], "chat._answer": ["s4", "s5", "s11"], "chat_modell.model_turn": ["s4", "s11"],
+            "chat.MAX_SAVES": ["s11"], "chat.LOOP_SAME": ["s11"], "chat._answer": ["s4", "s5", "s11"], "chat_modell.model_turn": ["s4", "s11"], "chat_ton.speech_out": ["s8"],
             "chat.split_sentences": ["s5"], "chat.said_key": ["s8"], "chat.no_code": ["s8"],
             "chat.loop_count": ["s11"], "answercheck.known": ["s6"], "answercheck.unsupported": ["s6"],
             "answercheck.fresh": ["s6"], "taten.announces": ["s7", "s12"],
@@ -661,7 +661,8 @@ SEITEN = {
         ],
         "code": [
             ("chat.chat", ("Rate-Limit, Sprache zuerst, „antwortet gerade“", "rate limit, speech first, „answering“")),
-            ("chat._answer", ("Sprachausgabe und Ereignisse als ein Strom", "speech output and events as one stream")),
+            ("chat._answer", ("führt Modellseite, Sprachausgabe und Ereignisse zu einem Strom zusammen", "joins model side, speech output and events into one stream")),
+            ("chat_ton.speech_out", ("Sätze an die Sprachausgabe, Ton als Strom", "sentences to the speech output, sound as a stream")),
             ("chat_modell.model_turn", ("Runden mit dem Modell, Werkzeuge, Prüfungen", "rounds with the model, tools, checks")),
             ("chat.split_sentences", ("schneidet fertige Sätze ab", "cuts finished sentences off")),
             ("chat.said_key", ("erkennt einen schon gesagten Satz", "spots a sentence already said")),
