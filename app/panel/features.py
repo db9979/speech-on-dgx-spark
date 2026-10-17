@@ -106,6 +106,8 @@ FEATURES = (
     F("hoeren", "Namen fürs Hören", "Names for listening", "speed", ("hoer_namen",), guide="hoeren"),
     F("ack", "Sofortige Rückmeldung", "Instant acknowledgement", "speed", ("instant_ack",),
       parent="routing", me="setbox", guide="ack"),
+    # weiche_abstimmen.py (plan opencode-werkstatt, point 1): the model proposes words, fixed rules keep what helps
+    F("weicheabstimmen", "Weiche abstimmen", "Tune the switch", "speed", ("route_tune",), parent="routing", guide="weicheabstimmen"),
     F("vorab", "Vorab holen bei Rückfrage", "Fetch ahead on a question back", "speed", ("prefetch",),
       parent="routing", me="setbox", guide="vorab"),
     F("hilfe", "Hilfe zum Spark", "Help with the Spark", "talk", ("spark_help",), me="setbox", guide="hilfe"),
@@ -417,6 +419,10 @@ FEATURES = (
     F("modellwechsel", "Modelle wechseln", "Switch models", "sec", ("modelle_wechseln",), guide="modellwechsel"),
     # modelle.py stage E5: the admin adds own Hugging Face models (language model, image understanding) under fixed rules
     F("modelleeigen", "Eigene Modelle", "Own models", "sec", ("modelle_eigene",), parent="modellwechsel", guide="modelleeigen"),
+    # werkstattseite.py + werkstatt.py (plan opencode-werkstatt): test run, code measurement, diagnosis and repairs in a
+    # sandbox on the model computer (OpenCode, no data, no internet, no push); admins only, the patch goes to a person
+    F("werkstatt", "Werkstatt", "Workshop", "sec", ("werkstatt",), guide="werkstatt"),
+    F("werkstattnacht", "Jede Nacht testen", "Test every night", "sec", ("werkstatt_nacht",), parent="werkstatt", guide="werkstattnacht"),
     # nas.py (plan plaene/synology-bauplan.md): the places of a profile (NAS or cloud connected once), Ich → Speicher
     F("nas", "Speicher und NAS", "Storage and NAS", "data", ("nas_on",), me="storebox", guide="nas"),
     # speicher.py: a copy of the profile's data at one of its places (WebDAV, SFTP, SMB) or a folder the admin mounted
@@ -516,7 +522,7 @@ DUTY = None
 REVIEW = None
 
 # chat.* switches that are no function a profile uses (how the Spark itself works)
-SPARK_ONLY = {"public", "thinking", "prompt_cache", "answer_check", "action_check", "loop_stop", "datetime", "face_life", "esp32_ota_http", "wartung", "wartungauto", "notbetriebasr", "gehaeuse", "schirm", "rundlauf", "modellwechsel", "modelleeigen"}
+SPARK_ONLY = {"public", "thinking", "prompt_cache", "answer_check", "action_check", "loop_stop", "datetime", "face_life", "esp32_ota_http", "wartung", "wartungauto", "notbetriebasr", "gehaeuse", "schirm", "rundlauf", "modellwechsel", "modelleeigen", "werkstatt", "werkstattnacht", "weicheabstimmen"}
 # Everything starts off (Dominik 2026-10-08). The only values shipped on in config.default.json are protection and
 # stability rules and the basic functions the Spark had from the start, each with its reason here (Dominik 2026-10-12,
 # docs/de/richtlinien.md, part 3). tests/test_richtlinie.py fails for a value shipped on that is not listed.

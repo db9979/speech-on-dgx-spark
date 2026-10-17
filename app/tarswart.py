@@ -24,6 +24,10 @@ a time (at most WINDOW seconds off) and a one-time number (each is taken once).
     weiter                      ends this computer's Wartungspause ("Weiter" on the panel)
     update                      starts this computer's own update (speech-spark-update with its own rules: the newest
                                 version with passed GitHub tests, never a version the panel names)
+    werkstatt                   what Funktionen → Werkstatt needs from here (werkstatt.daten: results without patches)
+    werkstatt_auftrag {art, text}   an order with the fixed rules (werkstatt.anfragen), then speech-spark-werkstatt
+    werkstatt_eins <id>         one order with its text and patch
+    werkstatt_weg <id>          deletes one order
 
 Every action writes one log line ("waerter:" with the command and the result word, never content); the reads
 status and modelle only when refused.
@@ -41,6 +45,7 @@ from fastapi.responses import JSONResponse
 
 import modelle
 import rechner
+import werkstatt
 from common import (CONFIG_PATH, ON_DEMAND_UNITS, OWN_LLM_UNITS, UNITS, WAERTER_PORT, BodyLimit, gpu_stats, journal, load_config,
                     WARTUNG_FILE, installed_version, mem_available_gib, model_choice, model_settings_hash, model_settings_take, qwen38_lanes, read_json,
                     run, shipped, waerter_key, waerter_sign, write_json)
@@ -52,10 +57,10 @@ MAX_SEEN = 5000        # one-time numbers kept (each lives WINDOW * 2 seconds)
 RATE = (40, 10)        # at most 40 requests in 10 seconds (the panel asks for the status every few seconds)
 ACTIONS = ("start", "stop", "restart")
 COMMANDS = ("status", "einheit", "einstellen", "logs", "modelle", "wechseln", "messen", "platz", "eigen_dazu", "eigen_weg",
-            "weiter", "update")
+            "weiter", "update", "werkstatt", "werkstatt_auftrag", "werkstatt_eins", "werkstatt_weg")
 UPDATE_UNIT = "speech-spark-update"
 PAUSE_KEYS = ("on", "parts", "since", "until", "channel")   # what the panel needs of the pause (never who)
-WITH_DATA = ("einstellen", "eigen_dazu")
+WITH_DATA = ("einstellen", "eigen_dazu", "werkstatt_auftrag")
 # what status reports: the units the panel shows and watches
 WATCHED = dict(UNITS, **OWN_LLM_UNITS, **ON_DEMAND_UNITS)
 
@@ -278,6 +283,40 @@ def eigen_weg(mid):
     return {"ok": True, "dateien": weg}
 
 
+def _werkstatt_laeuft():
+    return werkstatt.im_gang(run(["systemctl", "is-active", werkstatt.UNIT, werkstatt.LAUF_UNIT])[1])
+
+
+def werkstatt_daten():
+    """Read only, asked by the page and the Live view: no line, like status."""
+    laeuft = _werkstatt_laeuft()
+    return werkstatt.daten(laeuft, werkstatt.stand(journal(werkstatt.UNIT, 60)) if laeuft else [])
+
+
+def werkstatt_auftrag(daten):
+    def starten():
+        return run(["sudo", "-n", "/usr/bin/systemctl", "start", "--no-block", werkstatt.UNIT], timeout=20)[0] == 0
+    try:
+        art = werkstatt.anfragen(daten.get("art"), daten.get("text", ""), starten, _werkstatt_laeuft())
+    except werkstatt.Fehler as e:
+        print(f"waerter: werkstatt abgelehnt {e}", flush=True)
+        return {"ok": False, "fehler": str(e)}
+    print(f"waerter: werkstatt {art} ok", flush=True)
+    return {"ok": True}
+
+
+def werkstatt_eins(aid):
+    a = werkstatt.eins(aid)
+    print(f"waerter: werkstatt_eins {'ok' if a else 'keins'}", flush=True)
+    return {"ok": bool(a), "auftrag": a}
+
+
+def werkstatt_weg(aid):
+    ok = werkstatt.weg(aid)
+    print(f"waerter: werkstatt_weg {'ok' if ok else 'keins'}", flush=True)
+    return {"ok": ok}
+
+
 def einheit(action, teil):
     if action not in ACTIONS or teil not in UNITS:
         raise ValueError("befehl")
@@ -342,11 +381,18 @@ async def wart(request: Request):
         return JSONResponse(status())
     if cmd == "modelle":
         return JSONResponse(modelle_daten())
+    if cmd == "werkstatt":
+        return JSONResponse(werkstatt_daten())
     try:
         if cmd == "einstellen":
             return JSONResponse(einstellen(daten))
         if cmd == "eigen_dazu":
             return JSONResponse(eigen_dazu(daten))
+        if cmd == "werkstatt_auftrag":
+            return JSONResponse(werkstatt_auftrag(daten))
+        if cmd in ("werkstatt_eins", "werkstatt_weg"):
+            one = werkstatt_eins if cmd == "werkstatt_eins" else werkstatt_weg
+            return JSONResponse(one(*args) if len(args) == 1 else one(""))
         if cmd == "weiter":
             return JSONResponse(weiter())
         if cmd == "update":

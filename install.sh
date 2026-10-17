@@ -49,7 +49,7 @@ DEFAULT_REMOTE=https://github.com/db9979/speech-on-dgx-spark
 SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 SMALL=0; WITH_ASR=1; WITH_TTS=1; PASSWORD=""; DOWNLOAD=1; SMOKE=1; FROM_UPDATE=0; TTS_BACKEND=""; ASR_BACKEND=""
-TEILEN_PICK=0; MODELLE_PICK=""; PANEL_PICK=0; GEHAEUSE_PICK=""
+TEILEN_PICK=0; MODELLE_PICK=""; PANEL_PICK=0; GEHAEUSE_PICK=""; WERKSTATT_PICK=0
 MODE=""; ASR_PICK=""; TTS_PICK=""; VD_PICK=""; BILD_PICK=""; MUSIK_PICK=""; NET_PICK=""; YES=0; CHOOSE_MODELS=0; LLM_PICK=0; KOLIBRI_PICK=0
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -73,6 +73,7 @@ while [ $# -gt 0 ]; do
     --llm) LLM_PICK=1 ;;
     --gehaeuse) GEHAEUSE_PICK="${2:-}"; shift ;;
     --kolibri) LLM_PICK=1; KOLIBRI_PICK=1 ;;
+    --werkstatt) WERKSTATT_PICK=1 ;;      # the Werkstatt: OpenCode and its sandbox (app/werkstatt.py)
     --local) NET_PICK=local ;;
     --network) NET_PICK=network ;;
     --yes|-y) YES=1 ;;
@@ -720,6 +721,40 @@ if [ "$WITH_BILD" = 1 ]; then
   fi
 fi
 
+# ---------------------------------------------------------------- Werkstatt (optional, plan opencode-werkstatt)
+# OpenCode (MIT) for the Werkstatt's diagnosis, repairs and code measurement (app/werkstatt.py): one binary from the
+# npm registry, version and SHA-512 pinned in werkstatt.py (OPENCODE_VERSION, OPENCODE_SHA512), checked before it is
+# unpacked, never updated by itself. Its sandbox runs as the user spark-werkstatt with only its own folder writable.
+# Without the option nothing of this is fetched or made; once there, an update keeps it.
+WITH_WERKSTATT=$WERKSTATT_PICK; [ -x "$PREFIX/werkstatt/bin/opencode" ] && WITH_WERKSTATT=1
+[ "$PANEL_ONLY" = 1 ] && WITH_WERKSTATT=0
+if [ "$WITH_WERKSTATT" = 1 ]; then
+  OC_VERSION=$(sed -n 's/^OPENCODE_VERSION = "\([0-9.]*\)".*$/\1/p' "$INSTALL_FROM/app/werkstatt.py")
+  case "$(uname -m)" in aarch64|arm64) OC_ARCH=arm64 ;; x86_64) OC_ARCH=x64 ;; *) die "Werkstatt: no OpenCode for $(uname -m)" ;; esac
+  OC_SHA=$(sed -n "s/^    \"$OC_ARCH\": \"\([A-Za-z0-9+\/=]*\)\",\$/\1/p" "$INSTALL_FROM/app/werkstatt.py")
+  [ -n "$OC_VERSION" ] && [ -n "$OC_SHA" ] || die "app/werkstatt.py names no OpenCode version or hash"
+  if [ -L "$PREFIX/werkstatt" ] || [ "$(cat "$PREFIX/werkstatt/.version" 2>/dev/null)" != "$OC_VERSION $OC_ARCH" ] || [ ! -x "$PREFIX/werkstatt/bin/opencode" ]; then
+    say "Werkstatt: OpenCode $OC_VERSION ($OC_ARCH, checked with SHA-512)"
+    otmp=$(mktemp -d)
+    curl -fsSL --proto '=https' --max-filesize 300000000 -o "$otmp/oc.tgz" \
+      "https://registry.npmjs.org/opencode-linux-$OC_ARCH/-/opencode-linux-$OC_ARCH-$OC_VERSION.tgz" \
+      || { rm -rf -- "$otmp"; die "could not fetch OpenCode $OC_VERSION"; }
+    got=$(python3 -c 'import base64, hashlib, sys; print(base64.b64encode(hashlib.sha512(open(sys.argv[1], "rb").read()).digest()).decode())' "$otmp/oc.tgz")
+    [ "$got" = "$OC_SHA" ] || { rm -rf -- "$otmp"; die "OpenCode download does not match its SHA-512 (app/werkstatt.py)"; }
+    tar -xzf "$otmp/oc.tgz" -C "$otmp" --no-same-owner package/bin/opencode || { rm -rf -- "$otmp"; die "OpenCode package has no binary"; }
+    rm -rf -- "$PREFIX/werkstatt.new"
+    install -d -m 755 "$PREFIX/werkstatt.new/bin" && install -m 755 "$otmp/package/bin/opencode" "$PREFIX/werkstatt.new/bin/opencode"
+    printf '%s\n' "$OC_VERSION $OC_ARCH" >"$PREFIX/werkstatt.new/.version"
+    rm -rf -- "$otmp" "$PREFIX/werkstatt" && mv -- "$PREFIX/werkstatt.new" "$PREFIX/werkstatt"
+  fi
+  # the sandbox's user (no login, no other groups) and its folder: root owns the base, the user only arbeit/
+  id -u spark-werkstatt >/dev/null 2>&1 || useradd --system --user-group --home-dir /var/lib/spark-werkstatt/arbeit \
+    --no-create-home --shell /usr/sbin/nologin spark-werkstatt || die "could not add the user spark-werkstatt"
+  [ ! -L /var/lib/spark-werkstatt ] && [ ! -L /var/lib/spark-werkstatt/arbeit ] || die "/var/lib/spark-werkstatt is a link"
+  install -d -m 755 -o root -g root /var/lib/spark-werkstatt
+  install -d -m 700 -o spark-werkstatt -g spark-werkstatt /var/lib/spark-werkstatt/arbeit
+fi
+
 # ---------------------------------------------------------------- Musik machen (optional, plan musik)
 # The engine is acestep.cpp's ace-server, built here once per pinned commit (musikmodell.ACECPP_COMMIT) for the GB10
 # (CUDA, sm_121), no Docker, no torch; the model files are pinned by revision and SHA-256 (musikmodell.py). Without
@@ -929,6 +964,7 @@ fi
   printf ', /usr/bin/systemctl start --no-block speech-spark-gehaeuse'   # B7: the case, from the panel's checked wish
   printf ', /usr/bin/systemctl enable --now speech-spark-schirm, /usr/bin/systemctl disable --now speech-spark-schirm, /usr/bin/systemctl start getty@tty1.service'   # B9
   printf ', /usr/bin/systemctl start --no-block speech-spark-wechsel'   # stage E4: takes the panel's checked wish
+  printf ', /usr/bin/systemctl start --no-block speech-spark-werkstatt'   # Funktionen → Werkstatt: takes the checked wish
   printf ', /usr/bin/systemctl start --no-block speech-spark-messen-wunsch\n'   # Zustand → Modelle „Messen“: the same
 } >/etc/sudoers.d/speech-spark
 chmod 440 /etc/sudoers.d/speech-spark
@@ -1312,6 +1348,26 @@ ExecStart=/bin/bash $PREFIX/app/speech-spark.sh modelle messen-wunsch-intern
 TimeoutStartSec=4h
 TimeoutStopSec=180
 EOF
+
+# Werkstatt (plan opencode-werkstatt): one order of Funktionen → Werkstatt or of speech-spark werkstatt. It takes only
+# the wish werkstatt.py checked, starts the sandbox (user spark-werkstatt) and hands the result to the panel's user.
+if [ "$WITH_WERKSTATT" = 1 ]; then
+cat >/etc/systemd/system/speech-spark-werkstatt.service <<EOF
+[Unit]
+Description=Speech on DGX Spark: one order of the Werkstatt (sandbox)
+After=network-online.target
+
+[Service]
+LogNamespace=speech-spark
+Type=oneshot
+MemoryMax=512M
+PrivateTmp=yes
+Environment=SPEECH_SPARK_PREFIX=$PREFIX SPEECH_SPARK_ETC=$ETC SPEECH_SPARK_VAR=$VAR
+ExecStart=/bin/bash $PREFIX/app/speech-spark.sh werkstatt intern
+TimeoutStartSec=5h
+TimeoutStopSec=60
+EOF
+fi
 
 # Plan raspberry-split B7: sets up or removes the case of the panel computer (Funktionen → Gehäuse). It takes only the
 # wish gehaeuse.py checked and writes the config.txt block itself from two numbers; nothing else can be passed in.

@@ -112,6 +112,13 @@ sudo ./install.sh --musik none       # wieder aus (die Dateien bleiben in /var/l
 
 Sie baut einmal acestep.cpp (`ace-server`, fester Commit, ggml fest eingebunden, CUDA für den GB10, ohne torch und ohne Docker, braucht `nvcc` und `cmake`) nach `/opt/speech-spark/acestep`, lädt die GGUF-Dateien mit SHA-256-Prüfung nach `/var/lib/speech-spark/models/musik` und richtet den Dienst `speech-spark-musik` ein (nur `127.0.0.1`, beim Teilen über das TLS-Tor; Ports `music.port` 31004 und `music.engine_port` 31014). Die Engine lädt nur für ein Lied und gibt den Speicher nach 10 Minuten ohne Lied wieder frei; fehlt Speicher, lädt sie nicht. Mehrere Modelle nacheinander installieren geht, die Dateien bleiben alle. Zustand → Prüfen → „Musik testen“ misst jedes installierte Modell mit zwei festen Probestücken (30 s Klavier, 60 s mit deutschem Gesang) und zeigt Zeit, Speicher und die Stücke zum Anhören. Danach Funktionen → Musik machen einschalten und dort das Modell wählen; jedes freigegebene Profil macht dann Lieder im Gespräch und unter Ich → Musik. Logs: `sudo speech-spark logs musik`, Wartungspause: `sudo speech-spark pause musik 30`.
 
+Mit `--werkstatt` (auf dem Modell-Rechner) kommt die Werkstatt dazu: OpenCode als eine Datei aus der npm-Registry, Version und SHA-512 fest in `app/werkstatt.py`, nach `/opt/speech-spark/werkstatt`; dazu der Nutzer `spark-werkstatt` mit dem Ordner `/var/lib/spark-werkstatt/arbeit` und die Einheit `speech-spark-werkstatt`. Ohne die Option wird nichts davon geladen; einmal da, behält ein Update sie. Danach Funktionen → Werkstatt einschalten.
+
+```bash
+sudo ./install.sh --werkstatt
+sudo speech-spark werkstatt status
+```
+
 ## Deinstallieren
 
 ```bash

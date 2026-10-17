@@ -18,7 +18,7 @@ const whJoin=o=>Object.entries(o).filter(([,w])=>w.length).map(([n,w])=>`${n}: $
 function whChange(f){if(!WH.edit)WH.edit=JSON.parse(JSON.stringify(WH.d.rules));f(WH.edit);whRender()}
 async function loadWeiche(){if(!$('whbox'))return;try{const keep=whDirty()?WH.edit:null;WH.d=await (await api('/api/admin/weiche'+(L==='en'?'?lang=en':''))).json();WH.edit=keep;   // unsaved edits stay while the page is left and opened again
 
-  if(!WH.sel)WH.sel=WH.d.groups[0].name;whRender()}catch(e){$('whbox').textContent=e.message}}
+  if(!WH.sel)WH.sel=WH.d.groups[0].name;whRender();if(window.wtLoad)wtLoad()}catch(e){$('whbox').textContent=e.message}}
 function whRender(){const d=WH.d;if(!d)return;
   const tests=d.tests,ownOk=tests.own.filter(x=>x.ok).length,allOk=tests.builtin_ok===tests.builtin&&ownOk===tests.own.length;
   const model={off:t('Unklare Fragen: alle Werkzeuge','Unclear questions: all tools'),on:t('Unklare Fragen: Modell ordnet ein','Unclear questions: the model sorts'),

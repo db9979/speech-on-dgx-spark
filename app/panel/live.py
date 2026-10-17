@@ -138,6 +138,8 @@ TARGETS = {
     "gehaeuse": ("Gehäuse", "Pironman 5 · am Panel-Rechner", "spark", False),
     # Steuerzentrale (schirm.py, steuerzentrale.py): the text screen on the panel computer's HDMI output; status only
     "schirm": ("Steuerzentrale", "Bildschirm am Panel-Rechner", "spark", False),
+    # Werkstatt (werkstattseite.py): test runs, code measurement, diagnosis and repairs in the sandbox; kinds and counts
+    "werkstatt": ("Werkstatt", "Sandbox · auf dem Modell-Rechner", "spark", False),
     # Rundlauf-Wächter (rundlauf.py): speaks, hears and asks the model every few minutes; times and fixed words only
     "rundlauf": ("Rundlauf", "Sprechen → Hören → Sprachmodell", "spark", False),
     # Docling-Server (doclingdienst.py): shown while it is on, the line with waiting and read files in numbers
@@ -1312,6 +1314,13 @@ def snapshot(view="admin", now=None):
         szr = {"on": False}
     if szr.get("on"):
         used.add("schirm")
+    try:
+        import werkstattseite
+        wks = werkstattseite.for_live(now)
+    except Exception:
+        wks = {"on": False}
+    if wks.get("on"):
+        used.add("werkstatt")
     if rdl.get("on"):
         used.add("rundlauf")
     cc = load_config().get("chat", {})
@@ -1382,6 +1391,8 @@ def snapshot(view="admin", now=None):
         if x["id"] == "gehaeuse" and geh.get("on"):   # Gehäuse: display, LEDs, temperature, fan (no page content)
             x["sub"] = (f"Display {geh.get('oled', '-')} · LEDs {geh.get('led', '-')} · {geh.get('temp', '?')} °C"
                         + f" · Lüfter {geh.get('luefter', '?')}" + (" · Neustart nötig" if geh.get("neustart") else ""))
+        if x["id"] == "werkstatt" and wks.get("on"):   # Werkstatt: what runs, last night, the measurement (no text, no patch)
+            x["sub"] = werkstattseite.live_sub(wks)
         if x["id"] == "rundlauf" and rdl.get("on"):   # Rundlauf: pace, the last run's times, what it waits for
             x["sub"] = rdl["sub"]
         if x["id"] == "schirm" and szr.get("on"):   # Steuerzentrale: shows or not, on or dark by the times (no content)

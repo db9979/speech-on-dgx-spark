@@ -159,6 +159,8 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 - Packages with fixed version and hash (`--require-hashes`). Nothing from the configuration ends up unchecked in a root script. (C; 🧪 test_lock)
 - Security headers on every response (X-Frame-Options, nosniff, Referrer-Policy, CSP, Permissions-Policy). (🧪 test_bedienung)
 - Rollback only to the remembered previous version. Signatures fail closed. (🧪 test_hardening, test_lieferkette)
+- **Code a model writes or starts runs only in the workshop's sandbox** (V01.0.757, `app/werkstatt.py`): its own user, its own copy, no network but the own LLM-Tor, no data, keys or settings of the Spark, a fixed time limit. Never in the panel, never in the agent, never as a tool in a conversation. The only result is a patch; it is never installed by itself, only by a person. An outside tool comes with a fixed version and checksum and never updates itself. (🧪 test_werkstatt)
+- Any caller of this computer may put itself last (`x-spark-stufe: 0`); only the panel with its key may go first. (🧪 test_stufe)
 
 ---
 

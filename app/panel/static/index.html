@@ -245,6 +245,17 @@
       <div class="setrow" data-teilen="1"><div class="lbl"><b>Notbetrieb mit Parakeet</b><span>Panel auf eigenem Rechner, DGX weg: Parakeet hört, feste Befehle (Licht, Uhrzeit, Erinnerungen) gehen ohne Sprachmodell.</span></div><label class="tgl"><input type="checkbox" id="chat.notbetrieb_asr"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Modelle wechseln</b><span>Admins wechseln unter Zustand → Modelle das Modell einer Art; das alte bleibt 7 Tage zum Zurückholen.</span></div><label class="tgl"><input type="checkbox" id="chat.modelle_wechseln"><i></i></label></div>
       <div class="setrow" data-show="chat.modelle_wechseln" style="margin-left:18px"><div class="lbl"><b>Eigene Modelle</b><span>Admins fügen Sprach- und Bildverständnis-Modelle von Hugging Face hinzu, nur nach festen Regeln (safetensors, kein fremder Code).</span></div><label class="tgl"><input type="checkbox" id="chat.modelle_eigene"><i></i></label></div>
+      <div class="setrow"><div class="lbl"><b>Werkstatt</b><span>Tests, Code-Messung, Diagnose und Reparatur in einer abgeschotteten Kopie auf dem Modell-Rechner: ohne Daten, ohne Internet.</span></div><label class="tgl"><input type="checkbox" id="chat.werkstatt"><i></i></label></div>
+      <div class="setrow" data-show="chat.werkstatt" style="margin-left:18px"><div class="lbl"><b>Jede Nacht testen</b><span>Einmal pro Nacht alle Selbsttests wie auf GitHub; nach einem Modellwechsel danach die Code-Messung.</span></div><label class="tgl"><input type="checkbox" id="chat.werkstatt_nacht"><i></i></label></div>
+      <div data-show="chat.werkstatt" style="margin-left:36px">
+        <div data-show="chat.werkstatt_nacht"><label for="chat.werkstatt_stunde">Start ab (Uhr)</label><input class="num" id="chat.werkstatt_stunde" type="number" min="0" max="23"><div class="fh">0 bis 23, Standard 3. Die Messung startet bis 5 Stunden danach.</div></div>
+        <div id="wkbox" data-nodirty><div class="fh" id="wkstand" role="status"></div>
+          <div class="row"><button class="b" id="wktests" type="button">Testlauf</button><button class="b" id="wkmessen" type="button">Code-Messung</button></div>
+          <label for="wktext">Problem für Diagnose oder Reparatur</label><textarea id="wktext" rows="3" maxlength="2000" placeholder="Was passiert, was sollte passieren?"></textarea>
+          <div class="row"><button class="b" id="wkdiag" type="button">Diagnose</button><button class="b" id="wkrep" type="button">Reparatur</button></div>
+          <div class="fh">Diagnose liest nur. Reparatur ändert die Kopie und zeigt den Patch mit den Tests der geänderten Dateien; übernehmen tut ihn ein Mensch. Beides und die Code-Messung fragen nach dem Code.</div>
+          <div id="wkmess" class="fh"></div><div id="wklist"></div><pre id="wkpatch" class="wkpatch" hidden></pre></div>
+      </div>
       <div class="setrow"><div class="lbl"><b>Einstellungs-Assistent</b><span>Fehler, 👎 und unklare Fragen werden Fälle mit Vorschlägen aus einem festen Katalog. Übernehmen nur du, unter Zustand → Verbessern.</span></div><label class="tgl"><input type="checkbox" id="chat.berater"><i></i></label></div>
       <div class="setrow" data-show="chat.berater" style="margin-left:18px"><div class="lbl"><b>👍/👎 unter Antworten</b><span>Profile können eine Antwort bewerten (fünf Gründe, kurzer Text) oder „Das war falsch“ sagen.</span></div><label class="tgl"><input type="checkbox" id="chat.bewerten"><i></i></label></div>
       <div class="setrow" data-show="chat.bewerten" style="margin-left:36px"><div class="lbl"><b>Rückmeldung, wenn es behoben ist</b><span>Wer 👎 gemeldet hat, hört nach der Nachkontrolle, dass eine Änderung geholfen hat.</span></div><label class="tgl"><input type="checkbox" id="chat.bewerten_back"><i></i></label></div>
@@ -437,6 +448,7 @@
       <div class="setrow"><div class="lbl"><b>Eindeutiges direkt abrufen</b><span>Bei kurzen, eindeutigen Lesefragen holt das Panel die Daten selbst, ohne erste Runde des Sprachmodells.</span></div><label class="tgl"><input type="checkbox" id="chat.direct_read"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Gezielte Werkzeugwahl</b><span>Feste Regeln erkennen, worum es geht; das Sprachmodell sieht nur die passenden Werkzeuge.</span></div><label class="tgl"><input type="checkbox" id="chat.routing"><i></i></label></div>
       <div data-show="chat.routing"><div class="fh">Was Fragen bekommen, die keine Regel erkennt, dazu Gruppen, eigene Wörter, Pflicht-Wörter, Testsätze und den Weg einzelner Sätze siehst und änderst du unter Funktionen → Weiche.</div></div>
+      <div class="setrow" data-show="chat.routing" style="margin-left:18px"><div class="lbl"><b>Weiche abstimmen</b><span>Das Sprachmodell schlägt Wörter für die Gruppen vor; das Panel misst jedes und behält nur, was hilft.</span></div><label class="tgl"><input type="checkbox" id="chat.route_tune"><i></i></label></div>
       <div class="setrow" data-show="chat.routing" style="margin-left:18px"><div class="lbl"><b>Vorab holen bei Rückfrage</b><span>Fragt der Assistent zurück, holt das Panel schon Kalender, Mails, Wetter oder Pakete. Nur lesen.</span></div><label class="tgl"><input type="checkbox" id="chat.prefetch"><i></i></label></div>
       <div class="setrow" data-show="chat.routing" style="margin-left:18px"><div class="lbl"><b>Sofortige Rückmeldung</b><span>Gleich nach der Frage ein kurzer, fertig aufgenommener Satz, was der Spark tut.</span></div><label class="tgl"><input type="checkbox" id="chat.instant_ack"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Einordnung mit Wahrscheinlichkeit</b><span>Das Sprachmodell (/v1/systemone des LLM-Tors oder von qwen38) liefert Wahrscheinlichkeiten, das Panel entscheidet mit festen Schwellen.</span></div><label class="tgl"><input type="checkbox" id="chat.systemone"><i></i></label></div>
@@ -891,6 +903,8 @@
       <div class="card"><h3 data-wht="tests"></h3><div id="whtests"></div></div>
       <div class="card"><h3 data-wht="stats"></h3><div id="whstats"></div></div>
     </div>
+    <div class="card" id="wtbox" hidden><h3>Weiche abstimmen</h3><div class="fh">Das Sprachmodell schlägt Wörter vor, die Übungshälfte der Alltagssätze zeigt, ob sie helfen, die Prüfhälfte, dass nichts schlechter wird. Kein Testsatz darf kippen; gespeichert wird erst mit „Übernehmen“.</div>
+      <div class="row"><button class="b p" type="button" id="wtgo">Abstimmen</button><span id="wtmsg" class="mut" role="status"></span></div><div id="wtres"></div></div>
     <div class="card"><h3 data-wht="locks"></h3><div id="whlocks"></div></div>
   </div>
 </section>
@@ -1271,9 +1285,11 @@
 <script src="/static/js/changelog.js"></script>
 <script src="/static/js/melden.js"></script>
 <script src="/static/js/weiche.js"></script>
+<script src="/static/js/weicheabstimmen.js"></script>
 <script src="/static/js/technik.js"></script>
 <script src="/static/js/verbrauch.js"></script>
 <script src="/static/js/modelle.js"></script>
+<script src="/static/js/werkstatt.js"></script>
 <script src="/static/js/praxistest.js"></script>
 <script src="/static/js/seite.js"></script>
 <script src="/static/js/way.js"></script>

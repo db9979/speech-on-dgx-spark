@@ -112,6 +112,13 @@ sudo ./install.sh --musik none       # off again (the files stay in /var/lib/spe
 
 It builds acestep.cpp once (`ace-server`, pinned commit, ggml linked in, CUDA for the GB10, no torch and no Docker, needs `nvcc` and `cmake`) into `/opt/speech-spark/acestep`, downloads the GGUF files with a SHA-256 check into `/var/lib/speech-spark/models/musik` and sets up the service `speech-spark-musik` (only `127.0.0.1`, with a split install through the TLS-Tor; ports `music.port` 31004 and `music.engine_port` 31014). The engine loads only for a song and frees the memory after 10 minutes without one; without enough free memory it does not load. Several models can be installed one after the other; all files stay. State → Checks → "Test music" measures every installed model with two fixed samples (30 s of piano, 60 s with German vocals) and shows time, memory and the samples to listen to. Then switch on Features → Making music and pick the model there; every released profile then makes songs in the conversation and under Me → Music. Logs: `sudo speech-spark logs musik`, maintenance pause: `sudo speech-spark pause musik 30`.
 
+With `--werkstatt` (on the model computer) the workshop comes along: OpenCode as one file from the npm registry, version and SHA-512 fixed in `app/werkstatt.py`, into `/opt/speech-spark/werkstatt`; plus the user `spark-werkstatt` with the folder `/var/lib/spark-werkstatt/arbeit` and the unit `speech-spark-werkstatt`. Without the option nothing of it is fetched; once there, an update keeps it. Then switch on Features → Workshop.
+
+```bash
+sudo ./install.sh --werkstatt
+sudo speech-spark werkstatt status
+```
+
 ## Uninstalling
 
 ```bash

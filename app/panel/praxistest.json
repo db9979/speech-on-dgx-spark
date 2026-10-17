@@ -1681,6 +1681,13 @@
 "titel": "Modelle einfacher",
 "text": "A: Zustand → Modelle öffnen: oben der Speicherbalken, darunter eine Kachel je Art mit dem laufenden Modell. B: Beim Sprachmodell „Wechseln“: die Modelle als Karten; bei „…mit DSpark“ „Ausprobieren“ und bestätigen. Die Messung läuft sichtbar; danach steht oben „… ist gemessen: … tok/s (jetzt …)“ mit „Wechseln“ und „Verwerfen“. C: Mit Eigene Modelle an unter „Bei Hugging Face suchen“ z. B. „qwen coder“ suchen: Treffer mit Größe und Lizenz, nicht passende grau mit Grund; bei einem „Hinzufügen“, das neue Modell erscheint mit „Ausprobieren“. D: „Mehr“ zeigt Lange Gespräche, Messwerte und Zurückholen. In der iPhone-App unter Zustand → Modelle dasselbe.",
 "thread": "Eigene Modell-Installation statt qwen38"
+},
+{
+"id": "P264",
+"v": 757,
+"titel": "Werkstatt und Weiche abstimmen",
+"text": "A: Auf dem Modell-Rechner einmal sudo ./install.sh --werkstatt, dann sudo speech-spark werkstatt status: OpenCode 1.18.34 da. Im Panel Funktionen → Werkstatt einschalten, „Testlauf“ antippen: die Zeile zeigt „Testlauf läuft“, Zustand → Live hat den Kasten Werkstatt, Monitoring die Einheit Werkstatt beim Modell-Rechner; danach steht der Testlauf mit grün, rot und wackelig da. „Code-Messung“ (fragt nach dem Code) läuft mehrere Stunden, danach steht beim Sprachmodell „n von 10 Reparaturen grün“. Ein Problem eintippen und „Diagnose“: eine Antwort in Worten, kein Patch. „Reparatur“: ein Patch mit den geänderten Dateien und ihren Tests, „Verwerfen“ löscht ihn. Funktionen → unter Gezielte Werkzeugwahl „Weiche abstimmen“ an, dann Funktionen → Weiche → „Abstimmen“: ein Vorschlag mit Übungs- und Prüfhälfte, „Übernehmen“ speichert die Wörter, „Rückgängig“ nimmt sie zurück.",
+"thread": "OpenCode-Werkstatt"
 }
 ]
 }

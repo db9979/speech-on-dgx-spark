@@ -105,6 +105,7 @@ flowchart TB
 | `speech-spark-wechsel` | – | Switch one model (Status → Models), only on request |
 | `speech-spark-messen-wunsch` | – | Measure one model (Status → Models "Measure"), only on request |
 | `speech-spark-gehaeuse` | – | Set up the panel computer's case (Pironman 5: fan, OLED), only with `--gehaeuse` |
+| `speech-spark-werkstatt` | – (the sandbox asks only 127.0.0.1:31006) | One order of the workshop (Features → Workshop): test run, code measurement, diagnosis, repair in the sandbox `speech-spark-werkstatt-lauf`, only with `--werkstatt` |
 | `speech-spark-schirm` | – (asks only 127.0.0.1:31080) | Control centre as text on the panel computer's screen (tty1), only with the switch on |
 
 **Model computer (V01.0.606, plan "Splitting the Spark" stage B1):** the panel reaches speech recognition, speech output, pictures and the LLM-Tor through one address only: `common.model_url(art, path)` with the setting `models.host`. The default is `127.0.0.1`, and then everything runs on one Spark over `http://127.0.0.1:<port>` as before. With another computer there (a name or IP, never a path or `http://`), every request goes over `https` and the API key is a must (`admin.validate`); a broken entry stays on the Spark. The LLM-Tor on the model computer gets the key like the own one (`llm.own_tor`), and the guard (`netguard.model_addresses`) treats the model computer's ports 30000–31099 like its own: no MCP, calendar or Home Assistant address can point at them. The model computer is set only by the split install (stage B6); the pairing pins the certificate (B3). Self-test `test_modell_rechner`.
@@ -209,6 +210,7 @@ Fixed rules for which tools the model sees for a question. Never gives more than
 | `app/panel/intent_alltag.py` | The Weiche's everyday check: sentences as people say them, never used to set the rules up. |
 | `app/panel/intent_bench.py` | The Weiche's test bench (intent.py): sentence -> expected group ("" = no rule fits, "+" = two at once). |
 | `app/panel/weiche.py` | Features → Switch: the switch of intent.py, shown and set up in the panel. |
+| `app/panel/weiche_abstimmen.py` | Features → Switch → „Weiche abstimmen“: the language model proposes words for the groups, the panel measures every word with fixed rules and keeps only those … |
 | `app/panel/werkzeug_abdeckung.py` | Which function the assistant reaches how. |
 | `app/panel/werkzeuge.py` | The readable name of every tool. |
 
@@ -370,6 +372,8 @@ Live overview, logs, watchers, backup, update, help and the admin pages.
 | `app/panel/verbrauch.py` | Verbrauchszähler. |
 | `app/panel/wartung.py` | Wartungspause: while the language model (own or qwen38), the speech recognition or the speech output is updated, the Spark pauses on purpose instead of failing. |
 | `app/panel/wege.py` | Ways into the panel in texts that leave it ("Einschalten unter Me → Telegram"): Telegram messages, push notes. |
+| `app/werkstatt.py` | Werkstatt: the model computer's workshop, a copy of the installed code in a sandbox. |
+| `app/panel/werkstattseite.py` | Features → Workshop: the panel's side of app/werkstatt.py, for admins only, default off (chat.werkstatt). |
 
 ### Speech services
 
@@ -624,6 +628,8 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `state/wartung.json` | Maintenance pause | – | no |
 | `state/weiche-history.json` | Switch changes | – | no |
 | `state/weiche-stats.json` | Switch statistics | – | no |
+| `state/werkstatt-wunsch.json` | The panel's wish for the Workshop's next order (kind, the admin's text), seconds | – | no |
+| `state/werkstatt.json` | The Workshop's results: last 20 orders with answer and patch, code measurement per language model, last test run | – | no |
 <!-- /technik:speicher -->
 
 ### Keys and encryption
@@ -2950,7 +2956,7 @@ flowchart TD
 
 - **600 s** a pairing code lives ([step 2](#kn-teilen-s2))
 - **60 s** a command's time may be off ([step 7](#kn-teilen-s7))
-- **12** fixed commands of the Wärter ([step 7](#kn-teilen-s7))
+- **16** fixed commands of the Wärter ([step 7](#kn-teilen-s7))
 - **30 s** without an answer until Notbetrieb ([step 10](#kn-teilen-s8))
 - **80 °C** note, the panel computer is warm ([step 8](#kn-teilen-s9))
 - **10 %** disk free, below it a note ([step 8](#kn-teilen-s9))
@@ -3034,7 +3040,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Seal**: vault.seal turns the value into „enc1:“ and a Fernet token (encrypted and protected against change). A value already sealed stays as it is.
 5. <a id="kn-state-s5"></a>**Write atomically**: common.write_json writes into a fresh temporary file next to it, never through a link, gives it the rights of the old file (a new one is readable for the service only) and then swaps it in one step. A crash in the middle leaves the old file whole.
 6. <a id="kn-state-s6"></a>**Read**: A sealed value is opened with the key. If the key does not fit (backup from another Spark), an empty value comes back and the account has to be entered again. Older unsealed values are read and sealed the next time they are saved.
-7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 32), otherwise the line gives its reason (dateien.STATE_LOCAL, 72). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
+7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 32), otherwise the line gives its reason (dateien.STATE_LOCAL, 74). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
 8. <a id="kn-state-s8"></a>**Move backup?**: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup.
 9. <a id="kn-state-s9"></a>**Fine when restoring?**: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays.
 10. <a id="kn-state-s10"></a>**Put in place with a way back**: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back.
@@ -3045,7 +3051,7 @@ flowchart TD
 #### Numbers (from the code)
 
 - **32** files in every backup ([step 7](#kn-state-s7))
-- **72** files and folders that stay out with a reason ([step 7](#kn-state-s7))
+- **74** files and folders that stay out with a reason ([step 7](#kn-state-s7))
 - **8 MB** largest file when restoring ([step 9](#kn-state-s9))
 - **12** characters the move password has at least ([step 8](#kn-state-s8))
 

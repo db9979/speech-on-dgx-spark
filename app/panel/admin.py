@@ -594,6 +594,10 @@ def validate(new):
     why = gehaeuse.check(ch)
     if why:
         raise HTTPException(400, why)
+    import werkstattseite
+    why = werkstattseite.check(ch)
+    if why:
+        raise HTTPException(400, why)
     import schirm
     why = schirm.check(ch)
     if why:

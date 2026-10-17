@@ -122,6 +122,8 @@ DIRECT_OK = {
     "tlstor": ("lokal", "das TLS-Tor reicht nur an die eigenen Dienste auf 127.0.0.1 weiter (asr, tts, llm, image.port, music.port)"),
     "steuer": ("lokal", "der Wärter des eigenen Modell-Rechners (common.model_url, gepinntes Zertifikat, Wärter-Schlüssel)"),
     "teilen": ("lokal", "die Kopplung mit dem eigenen anderen Rechner (Port 31008, nur von root auf Befehl, Beweis mit dem Code)"),
+    "weiche_abstimmen": ("sprachmodell", "Sprachmodell für Wortvorschläge der Weiche-Abstimmung (llm.py, über vorrang)"),
+    "werkstatt": ("lokal", "die Sandbox fragt nur das eigene LLM-Tor auf 127.0.0.1 (llm.port, ganz hinten); sonst ist ihr jedes Netz gesperrt (IPAddressDeny)"),
     "modelle": ("lokal", "misst die eigene Engine auf 127.0.0.1 (modelle.MESS_PORT) und malt dabei über den Bild-Dienst auf 127.0.0.1"),
     "esp32": ("fest", "eigene Sprachdienste auf localhost, Firmware-Release von GitHub (SHA-256 geprüft), Lautsprecher nach resolve()"),
     "hamelden": ("sprachmodell", "Sprachmodell; Home Assistant geht über client()"),

@@ -33,7 +33,7 @@ PLATTE_MIN_PCT = 10    # % free disk on either computer
 RAM_MIN_GIB = 0.5      # GiB available memory on the panel computer (the model computer has its own 8 GiB rule)
 DIENSTE_S = 15         # seconds the panel computer's unit states are kept
 # the model computer's parts shown as chips (its status "einheiten"), the panel computer's own units
-MODELL_TEILE = ("asr", "tts", "llm", "llmtor", "sehen", "bild", "musik")
+MODELL_TEILE = ("asr", "tts", "llm", "llmtor", "sehen", "bild", "musik", "werkstatt")
 PANEL_UNITS = {"turn": "speech-spark-turn", "notasr": "speech-spark-notasr", "gehaeuse": "speech-spark-gehaeuse",
                "schirm": "speech-spark-schirm"}
 ZAHLEN = {"cpu": (0, 100), "kerne": (0, 4096), "last": (0, 10000), "ram_total": (0, 65536), "ram_frei": (0, 65536),

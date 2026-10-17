@@ -159,6 +159,8 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
 - Pakete mit fester Version und Hash (`--require-hashes`). Nichts aus der Konfiguration landet ungeprüft in einem root-Skript. (C; 🧪 test_lock)
 - Sicherheitsheader auf jeder Antwort (X-Frame-Options, nosniff, Referrer-Policy, CSP, Permissions-Policy). (🧪 test_bedienung)
 - Rücksprung nur auf die gemerkte vorige Version. Unterschriften scheitern geschlossen. (🧪 test_hardening, test_lieferkette)
+- **Code, den ein Modell schreibt oder startet, läuft nur in der Werkstatt-Sandbox** (V01.0.757, `app/werkstatt.py`): eigener Nutzer, eigene Kopie, kein Netz außer dem eigenen LLM-Tor, keine Daten, Schlüssel oder Einstellungen des Sparks, feste Höchstzeit. Nie im Panel, nie im Agenten, nie als Werkzeug im Gespräch. Heraus kommt nur ein Patch; eingespielt wird er nie von selbst, nur von einem Menschen. Ein fremdes Werkzeug kommt mit fester Version und Prüfsumme und aktualisiert sich nie selbst. (🧪 test_werkstatt)
+- Nach hinten stellen darf sich jeder Aufrufer dieses Rechners selbst (`x-spark-stufe: 0`), nach vorn nur das Panel mit seinem Schlüssel. (🧪 test_stufe)
 
 ---
 

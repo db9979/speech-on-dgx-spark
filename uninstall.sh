@@ -30,7 +30,7 @@ if [ "$YES" = 0 ]; then
   case "$ans" in y|Y|j|J|yes|ja) ;; *) echo "Aborted."; exit 1 ;; esac
 fi
 
-for s in asr asr-engine tts tts-engine tts-design turn bild musik llm llmtor sehen panel watch update wechsel messen-wunsch gehaeuse tlstor waerter teilen-fw notasr schirm; do
+for s in asr asr-engine tts tts-engine tts-design turn bild musik llm llmtor sehen panel watch update wechsel messen-wunsch gehaeuse tlstor waerter teilen-fw notasr schirm werkstatt; do
   systemctl disable --now "speech-spark-$s.service" 2>/dev/null || true
   rm -f "/etc/systemd/system/speech-spark-$s.service"
 done
@@ -46,6 +46,9 @@ systemctl stop systemd-journald@speech-spark.service systemd-journald@speech-spa
 # plan raspberry-split B7: the case's block in the Raspberry Pi's config.txt goes (active after a restart)
 [ -x /opt/speech-spark/app/speech-spark.sh ] && bash /opt/speech-spark/app/speech-spark.sh gehaeuse aus >/dev/null 2>&1 || true
 rm -rf /opt/speech-spark   # code, Python envs and the update clone
+# the Werkstatt's sandbox: its copies and its user (its results lie in /var/lib/speech-spark/state)
+rm -rf /var/lib/spark-werkstatt
+userdel spark-werkstatt 2>/dev/null || true
 
 if [ "$PURGE" = 1 ]; then
   rm -rf /etc/speech-spark /var/lib/speech-spark /var/log/journal/*.speech-spark

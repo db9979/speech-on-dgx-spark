@@ -214,7 +214,9 @@ class SpeechMark:
 # Priority for people (panel stufe.py, plan plaene/vorrang-personen.md): the panel tells the ASR/TTS
 # services how urgent a request is. Only the panel can: it sends the stage together with a key from
 # STATE/vorrang-key (made by the panel, readable only by the service user) and only from this machine.
-# Anybody else (Open WebUI, apps with the API key, other machines) is always "normal".
+# Anybody else (Open WebUI, apps with the API key, other machines) is always "normal", except that any caller of this
+# machine may put itself last ("0" without the key: going down never takes anything from anyone; the Werkstatt's
+# sandbox, werkstatt.py, asks the LLM-Tor that way).
 STAGE_LOW, STAGE_NORMAL, STAGE_HIGH = 0, 1, 2
 STAGE_HEADER, STAGE_KEY_HEADER = "x-spark-stufe", "x-spark-vorrang"
 _stage_key = [None]
@@ -252,7 +254,7 @@ def stage_key(create=False):
 
 
 def stage_of(request):
-    """The stage of a request to a speech service: what the panel says, else normal."""
+    """The stage of a request to a speech service: what the panel says, last for any local caller that asks, else normal."""
     import hmac
     import ipaddress
     h = request.headers
@@ -263,6 +265,8 @@ def stage_of(request):
         local = ipaddress.ip_address(request.client.host if request.client else "").is_loopback
     except ValueError:
         local = False
+    if local and got == "0":
+        return STAGE_LOW
     key = stage_key()
     if not local or not key or not hmac.compare_digest(h.get(STAGE_KEY_HEADER, "").encode(), key.encode()):
         return STAGE_NORMAL
@@ -613,9 +617,10 @@ SERVICES = {"asr": "speech-spark-asr", "tts": "speech-spark-tts"}
 UNITS = dict(SERVICES, **{"asr-engine": "speech-spark-asr-engine", "tts-engine": "speech-spark-tts-engine",
                           "tts-design": "speech-spark-tts-design"})
 OWN_LLM_UNITS = {"llm": "speech-spark-llm", "llmtor": "speech-spark-llmtor", "sehen": "speech-spark-sehen"}
-# the optional services that load their engine only on demand (install.sh --bild, --musik): watched and shown on the
-# model computer's card (Monitoring, Steuerzentrale), never started or stopped by the panel
-ON_DEMAND_UNITS = {"bild": "speech-spark-bild", "musik": "speech-spark-musik"}
+# the optional services that load their engine only on demand (install.sh --bild, --musik), and the Werkstatt's order
+# unit (install.sh --werkstatt, only werkstatt.py's checked wish starts it): watched and shown on the model computer's
+# card (Monitoring, Steuerzentrale), never started or stopped by the panel's `einheit`
+ON_DEMAND_UNITS = {"bild": "speech-spark-bild", "musik": "speech-spark-musik", "werkstatt": "speech-spark-werkstatt"}
 # Units installed by github.com/hasso5703/dgx-spark-qwen38; only one lane runs at a time.
 QWEN38_UNITS = ["qwen38-sglang", "qwen38-sglang-1m", "qwen38-flash", "qwen38-image",
                 "qwen38-video", "qwen38-llamacpp", "qwen38-keepalive", "qwen38-dashboard"]

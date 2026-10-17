@@ -161,6 +161,12 @@ class StageHeader(unittest.TestCase):
         self.assertEqual(common.stage_of(request(dict(good, **{"x-spark-stufe": "5"}))), 1)
         self.assertEqual(common.stage_of(request({})), 1)
 
+    def test_anyone_here_may_go_last(self):
+        """The Werkstatt's sandbox (werkstatt.py) has no key: going down to 0 needs none, but only from this machine."""
+        self.assertEqual(common.stage_of(request({"x-spark-stufe": "0"})), 0)
+        self.assertEqual(common.stage_of(request({"x-spark-stufe": "0"}, host="192.168.1.9")), 1)
+        self.assertEqual(common.stage_of(request({"x-spark-stufe": "2", "x-spark-vorrang": "0" * 64})), 1)
+
     def test_both_services_use_the_gate(self):
         for fn in ("tts_proxy.py", "asr_proxy.py"):
             with open(os.path.join(helpers.APP, fn)) as f:
