@@ -25,7 +25,7 @@ jobs:
       variants: ${{ steps.p.outputs.variants }}
       version: ${{ steps.p.outputs.version }}
     steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - id: p
@@ -48,7 +48,7 @@ jobs:
       matrix:
         include: ${{ fromJson(needs.plan.outputs.variants) }}
     steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Build ${{ matrix.id }}
@@ -105,7 +105,7 @@ jobs:
           python scripts/build.py "${{ matrix.board }}" --name "${{ matrix.name }}" --language "$lang" --wake-word "$wake"
           cd ..
           python3 firmware/package.py variant xz "${{ matrix.id }}" "${{ matrix.label }}" "out/${{ matrix.id }}"
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: fw-${{ matrix.id }}
           path: out/${{ matrix.id }}
@@ -120,10 +120,10 @@ jobs:
     env:
       HAS_UPDKEY: ${{ secrets.UPDATE_SIGNING_KEY != '' }}
     steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           path: built
       - name: Manifest
