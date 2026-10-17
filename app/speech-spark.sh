@@ -18,7 +18,7 @@
 #   speech-spark pause status      is a Wartungspause running, how long still
 #   speech-spark weiter            end the Wartungspause
 #   speech-spark modelle liste     the model catalog (app/modelle.json)
-#   speech-spark modelle messen [llm] [sehen] [fp8] [gemma] [kolibri] [vl30] [dspark] [eigen-…] [--yes]  measure catalog models; the running language model pauses meanwhile
+#   speech-spark modelle messen [llm] [sehen] [fp8] [gemma] [kolibri] [vl30] [dspark] [flash] [eigen-…] [--yes]  measure catalog models; the running language model pauses meanwhile
 #   speech-spark modelle llm uebernehmen|zurueck [--yes]  move the chat to the own language model, or back to qwen38
 #   speech-spark modelle qwen38-aufraeumen  after the move: qwen38's own uninstall (asks first; never automatic)
 #   speech-spark teilen [status]   split install (panel on another computer): door, panel computers, fingerprint
@@ -150,6 +150,7 @@ cmd_status() {
   echo "TTS: $(tts_model)"
   free=$(awk '/^MemAvailable:/ {printf "%.1f", $2 / 1048576}' /proc/meminfo)
   echo "Free memory: $free GiB (DGX OS starts killing processes at about 8 GiB)"
+  command -v docker >/dev/null && echo "Docker: $(docker version --format '{{.Server.Version}}' 2>/dev/null || echo "?") (only for models in Docker)"
   echo
   for u in asr asr-engine tts tts-engine tts-design bild musik panel watch; do
     st=$(systemctl is-active "speech-spark-$u.service" 2>/dev/null || true)
@@ -293,6 +294,7 @@ cmd_pause() {
 # the terminal never leaves qwen38 stopped: the unit's trap always starts the qwen38 lanes again.
 MESS_UNIT=speech-spark-messen
 MESS_ENGINE=speech-spark-messen-engine
+MESS_TOR=speech-spark-messen-tor              # an engine in Docker: its socket on 127.0.0.1 (dockertor.py)
 MESS_WUNSCH_UNIT=speech-spark-messen-wunsch   # Zustand → Modelle „Messen“: a fixed root unit takes the panel's wish
 MESS_PORT=31016
 UMZUG_UNIT=speech-spark-umzug
@@ -345,9 +347,38 @@ hf_from_qwen38() {  # $1 = id, $2 = repo, $3 = revision
   runuser -u "$svc" -- rm -rf -- "$VAR/hf/hub/$dir"   # a bad blob would stay in the cache otherwise
 }
 
+# an engine in Docker (Dominik 2026-10-17: only on tars, only for model engines): modelle.py builds the whole
+# `docker run` (pinned image, no network, the panel's user, no capabilities, the model cache read-only); root starts
+# it in its own unit, the door dockertor.py (as the panel's user) puts its socket on 127.0.0.1:$MESS_PORT
+docker_weg() { local d; d=$(command -v docker) && "$d" rm -f "$MESS_ENGINE" >/dev/null 2>&1 || true; }
+
+mess_docker() {  # $1 = id, $2 = commit, $3 = --ohne-mtp or empty
+  local svc rc=0 args=() extra=() base dk
+  svc=$(panel_user)
+  [ -n "${3:-}" ] && extra=("$3")
+  dk=$(command -v docker) || { echo "modelle: messung $1 abgelehnt docker fehlt"; return 2; }
+  base="$VAR/state/docker-modelle/$1"
+  runuser -u "$svc" -- mkdir -p -- "$base/cache" "$base/sock" && runuser -u "$svc" -- rm -f -- "$base/sock/engine.sock" \
+    || { echo "modelle: messung $1 abgelehnt ordner"; return 2; }
+  mapfile -t args < <(as_panel_user ../modelle.py docker-args "$1" --revision "$2" --name "$MESS_ENGINE" \
+    --uid "$(id -u "$svc")" --gid "$(id -g "$svc")" "${extra[@]}")
+  [ "${#args[@]}" -gt 20 ] && [ "${args[0]}" = run ] || { echo "modelle: messung $1 abgelehnt"; return 2; }
+  docker_weg
+  echo "modelle: messung $1 start docker${3:+ ohne mtp}"
+  systemd-run --quiet --collect --unit="$MESS_TOR" -p LogNamespace=speech-spark -p User="$svc" -p Group="$svc" \
+    -p WorkingDirectory="$VAR" "$PREFIX/venv-panel/bin/python" "$PREFIX/app/dockertor.py" "$MESS_PORT" "$base/sock/engine.sock"
+  systemd-run --quiet --collect --unit="$MESS_ENGINE" -p LogNamespace=speech-spark -p TimeoutStopSec=60 "$dk" "${args[@]}"
+  as_panel_user ../modelle.py messen-lauf "$1" --port "$MESS_PORT" --einheit "$MESS_ENGINE" --revision "$2" "${extra[@]}" || rc=$?
+  systemctl stop "$MESS_ENGINE" "$MESS_TOR" 2>/dev/null || true
+  docker_weg
+  mem_settle
+  return "$rc"
+}
+
 # one catalog model in its own engine unit, measured, stopped again; returns 3 when it did not work
 mess_engine() {  # $1 = id, $2 = commit, $3 = --ohne-mtp or empty
   local svc rc=0 args=() extra=() venv kv env=()
+  [ -n "$(as_panel_user ../modelle.py docker-bild "$1")" ] && { mess_docker "$@"; return; }
   svc=$(panel_user)
   [ -n "${3:-}" ] && extra=("$3")
   # a few kernel compilers at a time (modelle.KOMPILIEREN), else the first start fills the memory
@@ -374,7 +405,8 @@ mess_engine() {  # $1 = id, $2 = commit, $3 = --ohne-mtp or empty
 
 mess_restore() {
   local u
-  systemctl stop "$MESS_ENGINE" 2>/dev/null || true
+  systemctl stop "$MESS_ENGINE" "$MESS_TOR" 2>/dev/null || true
+  docker_weg
   for u in "${MESS_QWEN[@]}"; do systemctl start --no-block "$u" || echo "modelle: qwen38 start fehler"; done
   [ "${#MESS_QWEN[@]}" -gt 0 ] && echo "modelle: sprachmodell wieder an (${#MESS_QWEN[@]} dienste)"
   [ "$MESS_PAUSE" = 1 ] && { as_panel_user wartung.py weiter || true; }
@@ -384,7 +416,7 @@ mess_restore() {
 
 # inside the unit $MESS_UNIT (or $MESS_WUNSCH_UNIT), as root: $@ = catalog ids
 cmd_messen_intern() {
-  local mid repo rev commit out rc minutes ids=() commits=()
+  local mid repo rev commit out rc minutes image ids=() commits=()
   MESS_QWEN=(); MESS_PAUSE=0
   for mid in "$@"; do
     repo=$(as_panel_user ../modelle.py feld "$mid" repo) && rev=$(as_panel_user ../modelle.py feld "$mid" revision) \
@@ -393,6 +425,13 @@ cmd_messen_intern() {
     echo "modelle: lade $mid (falls noch nicht da)"
     out=$(as_panel_user ../modelle.py vorbereiten "$mid") || true
     commit=$(tail -n1 <<<"$out")
+    # an engine in Docker: its pinned image too, while the language model still runs (it is large)
+    image=$(as_panel_user ../modelle.py docker-bild "$mid") || image=""
+    if [ -n "$image" ] && [[ "$commit" =~ ^[0-9a-f]{40}$ ]]; then
+      if ! command -v docker >/dev/null; then echo "modelle: messung $mid abgelehnt docker fehlt"; commit=""
+      elif ! docker pull -q "$image" >/dev/null; then echo "modelle: messung $mid image fehler"; commit=""
+      else echo "modelle: image $mid geladen"; fi
+    fi
     if [[ "$commit" =~ ^[0-9a-f]{40}$ ]]; then
       ids+=("$mid"); commits+=("$commit")
     else
@@ -688,7 +727,7 @@ cmd_modelle() {
         || die "vLLM is not installed ($PREFIX/venv-llm); run sudo ./install.sh --llm first"
       im_gang "$MESS_UNIT" "$MESS_WUNSCH_UNIT" && die "a measurement is running already: sudo speech-spark logs messen"
       im_gang speech-spark-update && die "an update is running; measure afterwards"
-      ids=$(as_panel_user ../modelle.py messliste "${was[@]}") || die "speech-spark modelle messen [llm] [sehen] [fp8] [gemma] [kolibri] [vl30] [dspark] [eigen-…] [--yes]"
+      ids=$(as_panel_user ../modelle.py messliste "${was[@]}") || die "speech-spark modelle messen [llm] [sehen] [fp8] [gemma] [kolibri] [vl30] [dspark] [flash] [eigen-…] [--yes]"
       echo "Messen: $ids"
       echo "Das lädt fehlende Modelle, stoppt das laufende Sprachmodell (eigenes oder qwen38) für die Messung (pro Modell etwa 10 bis 25 Minuten) und startet es danach wieder."
       if [ "$yes" != 1 ]; then
@@ -728,7 +767,7 @@ cmd_modelle() {
     zurueckholen) [ $# -ge 2 ] || die "speech-spark modelle zurueckholen llm|sehen|asr|tts|bild"; run_wechsel "$2" zurueck ;;
     entfernen) [ $# -ge 2 ] || die "speech-spark modelle entfernen <id> [--yes]"; cmd_entfernen "$2" "${3:-}" ;;
     wunsch-intern) [ "${INVOCATION_ID:-}" ] || die "only inside its own unit"; cmd_wunsch_intern ;;
-    *) die "speech-spark modelle liste|messen [llm] [sehen] [fp8] [gemma] [kolibri] [vl30] [dspark] [eigen-…] [--yes]|llm uebernehmen|zurueck|qwen38-aufraeumen|wechseln <art> <id>|zurueckholen <art>|entfernen <id>" ;;
+    *) die "speech-spark modelle liste|messen [llm] [sehen] [fp8] [gemma] [kolibri] [vl30] [dspark] [flash] [eigen-…] [--yes]|llm uebernehmen|zurueck|qwen38-aufraeumen|wechseln <art> <id>|zurueckholen <art>|entfernen <id>" ;;
   esac
 }
 

@@ -56,6 +56,7 @@ GRUND = {"art": "Diese Art lässt sich nicht wechseln.", "unbekannt": "Das Model
          "budget": "Zu knapp: mit diesem Modell bleibt weniger als die Reserve frei.",
          "keins": "Es gibt kein voriges Modell zum Zurückholen.", "frist": "Das vorige Modell ist älter als 7 Tage.",
          "wunsch": "ungültig", "ungeprueft": "Erst messen: sudo speech-spark modelle messen <id>",
+         "docker": "Modelle in Docker werden vorerst nur gemessen; Wechseln kommt im nächsten Schritt.",
          # stage E5: an own model
          "repo": "Name wie besitzer/modell.", "antwort": "Hugging Face kennt dieses Modell nicht.",
          "zugang": "Das Modell ist privat oder braucht eine Freigabe; nur offene Modelle gehen.",

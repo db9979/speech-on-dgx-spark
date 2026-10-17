@@ -159,6 +159,50 @@
       "betrieb": "resident"
     },
     {
+      "id": "qwen38-flash-next-fp4",
+      "art": "llm",
+      "name": {
+        "de": "Qwen3.8 Flash Next FP4 (Docker, sieht, nur privat)",
+        "en": "Qwen3.8 Flash Next FP4 (Docker, can see, private use only)"
+      },
+      "engine": "vllm",
+      "repo": "nvidia/Qwen3.8-Flash-Next-FP4-Local",
+      "revision": "b9ce18a6887e18c089fdea8509a33e63429a3300",
+      "lizenz": "NVIDIA Open Model Agreement, Basismodell: Qwen Community License 1.0",
+      "gewerblich": false,
+      "platte_gb": 103,
+      "need_gib": 85,
+      "gemessen": false,
+      "anteil": 0.7,
+      "kontext": 131072,
+      "kontext_max": 262144,
+      "kann_sehen": true,
+      "werkzeuge": true,
+      "vllm": {
+        "reasoning_parser": "qwen3",
+        "tool_call_parser": "qwen3_xml",
+        "mtp": 4,
+        "max_seqs": 8,
+        "quantization": "modelopt_mixed",
+        "kv_cache_dtype": "fp8",
+        "bilder_pro_frage": 2,
+        "docker": "b12x"
+      },
+      "anfrage": {},
+      "messen": "auf_wunsch",
+      "betrieb": "resident"
+    },
+    {
+      "id": "qwen38-flash-next-fp4-065",
+      "basis": "qwen38-flash-next-fp4",
+      "name": {
+        "de": "Qwen3.8 Flash Next FP4, Anteil 0,65 (Docker, nur privat)",
+        "en": "Qwen3.8 Flash Next FP4, share 0.65 (Docker, private use only)"
+      },
+      "need_gib": 79,
+      "anteil": 0.65
+    },
+    {
       "revision": "",
       "gewerblich": true,
       "gemessen": false,

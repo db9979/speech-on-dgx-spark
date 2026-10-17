@@ -1,6 +1,16 @@
 {
   "sourceLanguage": "de",
   "strings": {
+    "Docker: vorerst nur messen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Docker: measuring only for now"
+          }
+        }
+      }
+    },
     "Ausprobieren": {
       "localizations": {
         "en": {
