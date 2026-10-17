@@ -1695,6 +1695,13 @@
 "titel": "Symbole auf Funktionen und Personen",
 "text": "A: Am Rechner Funktionen öffnen: links Funktionen, Weiche und Anleitungen mit farbigen Symbolen, die Gruppen der Liste (Gespräch, Tempo und Genauigkeit …) haben ihr Symbol wie unter Ich. Personen und Geräte: Personen und Geräte, Apps und Schnittstellen mit Symbolen. Am Handy in Verwalten dasselbe in der Liste.",
 "thread": "Webanwendung schöner und schneller"
+},
+{
+"id": "P266",
+"v": 759,
+"titel": "Einstellungen als Admin-Profil ohne 403",
+"text": "A: Mit dem eigenen Profil (Rolle Admin, nicht mit dem Panel-Passwort) anmelden, Entwicklertools → Konsole öffnen, Einstellungen und Einstellungen → Sicherheit öffnen. Kein „GET /api/mfa 403“ mehr; der Teil „Notzugang (Panel-Passwort)“ bleibt ausgeblendet. Meldungen aus „content.js“ kommen von einer Browser-Erweiterung.",
+"thread": "Webanwendung schöner und schneller"
 }
 ]
 }

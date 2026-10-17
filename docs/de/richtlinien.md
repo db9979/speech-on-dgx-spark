@@ -98,7 +98,7 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
   - Einzige Ausnahme: der iPhone-App-Schlüssel mit dem Bereichsschalter (`secret_profile`).
 - „Frisch“ heißt: richtiger Code derselben Anmeldung in den letzten 10 Minuten.
   - Wirklich jedes Mal gefragt wird bei `*_fresh` bzw. `fresh=True`. Das sind Passwort, zweiter Schritt, Rollen und Haupt-Admin, Sicherungen, Codewort und Spark-Update aus der App.
-  - Admins (Panel-Passwort oder Profil mit Rolle, angemeldet mit dem zweiten Schritt) fragt die Stufe „Bestätigen“ nie, nur „Schutz ändern“ (`core.admin_login`). Admin-Rechte kommen nur aus einer Anmeldung mit zweitem Schritt, nie aus PIN oder Übergabe. Neue Admin-Endpunkte nehmen `core.auth`, eine zweite Admin-Stufe gibt es nicht.
+  - Admins (Panel-Passwort oder Profil mit Rolle, angemeldet mit dem zweiten Schritt) fragt die Stufe „Bestätigen“ nie, nur „Schutz ändern“ (`core.admin_login`). Admin-Rechte kommen nur aus einer Anmeldung mit zweitem Schritt, nie aus PIN oder Übergabe. Neue Admin-Endpunkte nehmen `core.auth`, eine zweite Admin-Stufe gibt es nicht. Was nur das Panel-Passwort lesen darf (`core.main_auth`), fragen die Seiten erst nach `elevated()` ab, sonst sieht ein Admin-Profil 403 in der Konsole (`test_coadmin`).
   - Ein Passkey zählt wie ein Code. Code-Abfragen laufen deshalb immer über `confirm_code`, nie über ein eigenes `mfa.verify`.
   - (C; 🧪 test_stufen, test_zweiter_schritt, test_passkey)
 - Im Browser immer `api()` bzw. `apiTry()` verwenden, nie ein rohes `fetch` an Code-Endpunkte. In der iPhone-App immer `SparkAPI.confirmed`. (C)

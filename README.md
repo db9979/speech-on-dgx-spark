@@ -40,6 +40,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.759** Fix: Settings without "/api/mfa 403" for admin profiles
 - **V01.0.758** Features and People with symbols like Status and Settings
 - **V01.0.757** Workshop: test run, code measurement, diagnosis and repair in a sealed-off copy on the model computer (OpenCode, no data, no internet, nothing installed), a test run every night; plus "Tune the switch"
 - **V01.0.756** Simpler models page: one tile per kind, "Try" and search at Hugging Face
@@ -49,7 +50,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.752** Remote control: follow-ups like "Bring the Terminal to the front" or "Again" go to the computer named just before
 - **V01.0.751** Fix: the cards under Status load again when it opens
 - **V01.0.750** Faster, tidier web app: an admin's start on slow phones from 11.5 to about 2 s (jump links once per frame, Status cards only while Status is open, guides when opened), start page gzipped, after updates only changed files load again; wider chat on computers, pages end with room for the floating face, Status menu with symbols and blocks, whole back button on phones
-- **V01.0.749** Typing in the chat is smooth again, also with a long conversation
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

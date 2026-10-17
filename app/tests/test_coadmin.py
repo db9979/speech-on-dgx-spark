@@ -118,6 +118,29 @@ class CoAdmin(unittest.TestCase):
         self.assertEqual(TestClient(panel.app).post("/api/login", json={"password": "secret-admin"},
                                                     headers={profiles.DEVICE_HEADER: "x" * 40}).status_code, 403)
 
+    def test_pages_never_ask_an_admin_profile_for_the_passwords_things(self):
+        """Dominik 2026-10-17: GET /api/mfa 403 in the console of an admin profile. Every place in the pages that
+        reads what only the panel password may read (main_auth) asks elevated() first; mfa.js gets the path passed in."""
+        import re
+        here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        paths = set()
+        for f in os.listdir(os.path.join(here, "panel")):
+            if f.endswith(".py"):
+                with open(os.path.join(here, "panel", f), encoding="utf-8") as fh:
+                    paths |= set(re.findall(r'router\.get\("([^"{]+)", dependencies=\[Depends\(main_auth\)', fh.read()))
+        self.assertIn("/api/mfa", paths)
+        js = os.path.join(here, "panel", "static", "js")
+        bad = []
+        for f in sorted(os.listdir(js)):
+            if not f.endswith(".js") or f in ("mfa.js", "i18n.js"):
+                continue
+            with open(os.path.join(js, f), encoding="utf-8") as fh:
+                for n, line in enumerate(fh, 1):
+                    for p in paths:
+                        if re.search(r"['\"`]" + re.escape(p) + r"['\"`]", line) and "elevated()" not in line:
+                            bad.append(f"{f}:{n} {p}")
+        self.assertEqual(bad, [])
+
     def test_confirm_never_asks_admins_protect_always(self):
         c, uid = self.give("KoTara")
         profile("KoUdo")

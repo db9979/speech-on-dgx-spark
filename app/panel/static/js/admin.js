@@ -376,7 +376,8 @@ window.goCfg=p=>{if(p==='feat'){goSec('feat');return}goSec('cfg');const b=docume
 const GL={};
 const short=m=>String(m||'').split('/').pop();
 async function glanceLoad(){const get=async(u,f)=>{try{GL[f]=await (await api(u)).json()}catch{}};
-  await Promise.all([get('/api/clone-voices','voices'),get('/api/backups','bak'),get('/api/mfa','mfa')]);glance()}
+  // the panel password's second step only with the panel password: an admin profile has its own under Ich → Sicherheit
+  await Promise.all([get('/api/clone-voices','voices'),get('/api/backups','bak'),typeof elevated==='function'&&elevated()?(GL.mfa=null):get('/api/mfa','mfa')]);glance()}
 function glanceText(p){const c=CFG||{},ch=c.chat||{},svc=((ZLAST||{}).services)||{},run=n=>svc[n]&&(svc[n].state==='active');
   const pill=(cls,txt)=>({cls,txt});
   if(p==='feat'){const it=[...document.querySelectorAll('#pane-feat .fitem')],on=it.filter(x=>{const s=$(x.dataset.sw);return s&&s.checked}).length,need=it.filter(featNeed).length;
