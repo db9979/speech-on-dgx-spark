@@ -102,6 +102,8 @@ FEATURES = (
     F("routing", "Gezielte Werkzeugwahl", "Targeted tool choice", "speed", ("routing",), me="setbox", guide="routing"),
     F("direct", "Eindeutiges direkt abrufen", "Fetch clear questions directly", "speed", ("direct_read",),
       me="setbox", guide="direct"),
+    # hoerwoerter.py (plan genauer-und-schneller, 5): the speech recognition gets the names of rooms, devices, people
+    F("hoeren", "Namen fürs Hören", "Names for listening", "speed", ("hoer_namen",), guide="hoeren"),
     F("ack", "Sofortige Rückmeldung", "Instant acknowledgement", "speed", ("instant_ack",),
       parent="routing", me="setbox", guide="ack"),
     F("vorab", "Vorab holen bei Rückfrage", "Fetch ahead on a question back", "speed", ("prefetch",),

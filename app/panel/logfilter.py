@@ -24,7 +24,7 @@ router = APIRouter()
 # Every journal line of the panel starts with one of these words (test_log_luecken.Structure): one place to
 # filter it under Zustand → Logs → Diagnose. A new word goes into an area here, in the same commit.
 AREAS = (("search", r"^chat: web search"), ("werkzeug", r"^chat: tool "),
-         ("chat", r"^(chat|vorab|ack|latency|rolle|briefing|extras|images|schreib|quality|hilfe|aendern):"),
+         ("chat", r"^(chat|vorab|ack|latency|rolle|briefing|extras|images|schreib|quality|hilfe|aendern|hoeren):"),
          ("weiche", r"^(weiche|systemone|taten):"), ("ha", r"^(homeassistant|hamelden):"),
          ("room", r"^room:"), ("esp32", r"^(esp32|wyoming):"), ("telefon", r"^telefon:"), ("watch", r"^(watch|pebble):"), ("telegram", r"^telegram:"),
          ("mail", r"^(mail|tidy|imap|mailstil)\b"), ("vorrang", r"^(vorrang|hintergrund|sampler):"),

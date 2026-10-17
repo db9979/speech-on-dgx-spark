@@ -305,6 +305,39 @@ class Speaker:
         return o + "n" if self.lang == "de" and dative and o.endswith("e") else o
 
 
+# Units after a number, spoken in full (plan genauer-und-schneller, 10): "12 km/h" -> "zwölf Kilometer pro Stunde".
+# Longest first, so "km/h" wins over "km" and "kWh" over "kW"; a letter unit counts only as a whole word.
+UNITS = {"km/h": (" Kilometer pro Stunde", " kilometres per hour"), "m/s": (" Meter pro Sekunde", " metres per second"),
+         "kWh": (" Kilowattstunden", " kilowatt hours"), "°C": (" Grad Celsius", " degrees Celsius"),
+         "°F": (" Grad Fahrenheit", " degrees Fahrenheit"), "kW": (" Kilowatt", " kilowatts"),
+         "km": (" Kilometer", " kilometres"), "cm": (" Zentimeter", " centimetres"), "mm": (" Millimeter", " millimetres"),
+         "kg": (" Kilogramm", " kilograms"), "GB": (" Gigabyte", " gigabytes"), "MB": (" Megabyte", " megabytes"),
+         "TB": (" Terabyte", " terabytes"), "min": (" Minuten", " minutes"), "Std.": (" Stunden", " hours"),
+         "%": (" Prozent", " percent"), "‰": (" Promille", " per mille"), "°": (" Grad", " degrees"),
+         "W": (" Watt", " watts"), "g": (" Gramm", " grams"), "l": (" Liter", " litres"), "h": (" Stunden", " hours")}
+
+# Abbreviations spoken in full (German only; English ones read fine). Each needs its dot(s), so a plain word stays.
+ABBREV_DE = [(r"z\.\s?B\.", "zum Beispiel"), (r"d\.\s?h\.", "das heißt"), (r"u\.\s?a\.", "unter anderem"),
+             (r"u\.\s?U\.", "unter Umständen"), (r"ca\.", "circa"), (r"usw\.", "und so weiter"),
+             (r"bzw\.", "beziehungsweise"), (r"evtl\.", "eventuell"), (r"ggf\.", "gegebenenfalls"),
+             (r"inkl\.", "inklusive"), (r"zzgl\.", "zuzüglich"), (r"vgl\.", "vergleiche"), (r"Nr\.", "Nummer"),
+             (r"Str\.", "Straße"), (r"Tel\.", "Telefon"), (r"Dr\.", "Doktor"), (r"Mio\.", "Millionen"),
+             (r"Mrd\.", "Milliarden"), (r"Jh\.", "Jahrhundert")]
+_ABBREV_DE = [(re.compile(r"(?<![\w.])" + a + r"(?=\s|$|[,;:!?)])"), b) for a, b in ABBREV_DE] + [
+    (re.compile(r"(?<=[a-zäöüß])str\.(?=\s+\d)"), "straße")]   # "Hauptstr. 3"
+PER = re.compile(r"(?<=[\d€$£])\s?/\s?(Monat|Jahr|Woche|Tag|Stunde|Person|Stück)\b")
+
+
+def speak_abbreviations(text, language):
+    """'z. B.' -> 'zum Beispiel', '30 €/Monat' -> '30 € pro Monat' (German; other languages unchanged). Runs before
+    speak_numbers, which then reads the number."""
+    if number_language(language, text) != "de":
+        return text
+    for rx, word in _ABBREV_DE:
+        text = rx.sub(word, text)
+    return PER.sub(lambda m: " pro " + m.group(1), text)
+
+
 def speak_numbers(text, language, mode="words"):
     """Write numbers out as words in German or English, see the module docstring."""
     if mode not in NUMBER_MODES or mode == "off" or num2words is None or not re.search(r"\d", text):
@@ -430,12 +463,10 @@ def speak_numbers(text, language, mode="words"):
         else:
             out = sp.integer(digits)
         return ("minus " if sign in ("-", "−") else "") + out
-    unit = {"%": (" Prozent", " percent"), "‰": (" Promille", " per mille"),
-            "°C": (" Grad Celsius", " degrees Celsius"), "°F": (" Grad Fahrenheit", " degrees Fahrenheit"),
-            "°": (" Grad", " degrees")}
     n_re = r"(?<![\w.,])([-−]?)(\d{1,3}(?:" + THOU + r"\d{3})+|\d+)(?:" + DEC + r"(\d+))?"
-    for u, (ude, uen) in unit.items():
-        sub(n_re + r"\s?" + re.escape(u), lambda m, s=(ude if de else uen): number(m) + s)
+    for u, (ude, uen) in UNITS.items():   # longest first (km/h before km), a letter unit only as a whole word
+        sub(n_re + r"\s?" + re.escape(u) + (r"(?![\w/])" if u[-1].isalnum() else ""),
+            lambda m, s=(ude if de else uen): number(m) + s)
     # ranges 3-5, 10–12 Uhr
     sub(r"(?<![\w.,-])(\d+)\s?[-–]\s?(\d+)(?![\w.,]?\d)",
         lambda m: f"{sp.integer(m.group(1))} {'bis' if de else 'to'} {sp.integer(m.group(2))}")

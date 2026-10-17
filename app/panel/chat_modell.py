@@ -64,12 +64,12 @@ async def model_turn(*, acked, body, c, came_from, carry, ccfg, cfg, check_on, e
         model = await llm.model(c, ccfg, lheaders)
         fix_task = asyncio.create_task(fixes.extract(
             ccfg, model, who["name"], messages[-1]["content"], said_before, bool(came_from))) if fix_fix else None
-        base = {"model": model, "stream": True, "max_tokens": int(ccfg.get("max_tokens") or 4096),
+        base = {"model": model, "stream": True, "max_tokens": chat.answer_tokens(ccfg, body, getattr(turn, "car", False)),
                 "temperature": float(ccfg.get("temperature", 0.3)), **chat.sampling(ccfg)}
         if not ccfg.get("thinking"):
             base["chat_template_kwargs"] = {"enable_thinking": False}
-        if tm["on"] or tr or verbrauch.on(ccfg):   # the server says how much it read, from its cache and wrote
-            base["stream_options"] = {"include_usage": True}
+        # the server says how much it read, from its cache and wrote (Logs, Verbrauchszähler, Zustand → Prüfen per group)
+        base["stream_options"] = {"include_usage": True}
         st = {"buf": "", "first": not acked, "think": False, "n": 0, "mail": carry == "mail", "outside": carry == "outside",
               "offered": set(), "saves": 0, "shown": 0, "check": bool(need) and check_on, "hold": None, "dropped": [], "msgs": None,
               "cal": bool(set(need or []) & chat.CAL_READS),

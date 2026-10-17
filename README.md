@@ -40,6 +40,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.755** More precise and faster: times per kind of question, names for listening, units and abbreviations spoken in full
 - **V01.0.754** iPhone app: review code for Apple's review and demo "Look without a Spark"
 - **V01.0.753** Fix: technical page "Prepare" follows the code of .752 again
 - **V01.0.752** Remote control: follow-ups like "Bring the Terminal to the front" or "Again" go to the computer named just before
@@ -49,7 +50,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.748** The apps show the last state as soon as they open and load visibly instead of staying blank
 - **V01.0.747** Chat calls show both sides on Live, monitoring and the Steuerzentrale: devices, voice or video, ringing or connected and both people (names only with consent)
 - **V01.0.746** iPhone app: every tile under "My things" opens its own part
-- **V01.0.745** Companion on the Mac: "Act on the PC" settings tidied up, switches on the right in cards
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

@@ -16,8 +16,8 @@ from fastapi.responses import Response
 from pydantic import BaseModel
 
 from common import BodyLimit, KeyedCORS, inside, outside_view, ServiceState, api_key_dependency, api_key_ok, check_memory, estimate_gib, load_config, quiet_access_log, SpeechMark, torch_dtype
-from textnorm import (MAX_INPUT, apply_pronunciations, clean_text, hide_secrets, parse_pronunciations, speak_numbers,
-                      speech_markdown)
+from textnorm import (MAX_INPUT, apply_pronunciations, clean_text, hide_secrets, parse_pronunciations,
+                      speak_abbreviations, speak_numbers, speech_markdown)
 
 VOICES_DIR = os.environ.get("SPEECH_SPARK_VOICES", "/var/lib/speech-spark/voices")
 
@@ -155,7 +155,7 @@ def speech(req: SpeechRequest):
         text = apply_pronunciations(text, PRONUNCIATION)
     if cfg.get("numbers", "words") != "off":
         try:
-            text = speak_numbers(text, lang, cfg.get("numbers", "words"))
+            text = speak_numbers(speak_abbreviations(text, lang), lang, cfg.get("numbers", "words"))
         except Exception as e:  # never fail a request over number formatting
             print(f"speak_numbers failed: {type(e).__name__}: {e}", flush=True)
     if not text.strip():

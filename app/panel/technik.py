@@ -95,6 +95,7 @@ MODULE = {
     "ack": ("gespraech", "Sofortige Rückmeldung aus aufgenommenen Sätzen"),
     "klaeren": ("gespraech", "Rückfrage, Korrektur und Merken von Zuordnungen"),
     "vorab": ("gespraech", "Holt bei einer Rückfrage die Antwort schon vorab"),
+    "hoerwoerter": ("gespraech", "Namen fürs Hören: Räume, Geräte und Personen als Kontext für die Spracherkennung"),
     "fixes": ("gespraech", "Lernt aus Korrekturen der Person"),
     "roles": ("gespraech", "Rollen: wie der Assistent antworten soll"),
     "stille": ("gespraech", "Aus Stille werden nie Wörter"),

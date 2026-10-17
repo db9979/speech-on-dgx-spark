@@ -536,14 +536,24 @@ def louder(pcm: bytes) -> bytes:
     return np.clip(x * min(20.0, 23000.0 / peak), -32768, 32767).astype("<i2").tobytes()
 
 
+def _asr_form(cfg):
+    """The speaker's recognition: the admin's language (Einstellungen → Spracherkennung), and with Namen fürs Hören
+    the profile names of the house (a shared device: never contacts, hoerwoerter.py)."""
+    import hoerwoerter
+    form = {"language": (cfg.get("asr") or {}).get("default_language") or "auto", "response_format": "json"}
+    ctx = hoerwoerter.prompt(cfg, shared=True) if hoerwoerter.on(cfg) else ""
+    if ctx:
+        form["prompt"] = ctx
+    return form
+
+
 async def transcribe(pcm: bytes) -> str:
     from core import api_headers
     pcm = louder(pcm)
     cfg = load_config()
     async with httpx.AsyncClient(timeout=120) as c:
         r = await c.post(model_url("asr", "/v1/audio/transcriptions", cfg),
-                         files={"file": ("speaker.wav", wav16k(pcm))}, data={"language": "auto", "response_format": "json"},
-                         headers=api_headers())
+                         files={"file": ("speaker.wav", wav16k(pcm))}, data=_asr_form(cfg), headers=api_headers())
     verbrauch.heard("Lautsprecher", r)
     r.raise_for_status()
     return str(r.json().get("text", "")).strip()

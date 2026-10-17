@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "asr": {
-        "stand": "b686651624",
+        "stand": "9b63a3c5c5",
         "bezug": {
             "parakeet.MAX_AUDIO_S": ["s9"], "common.NOTASR_PORT": ["s9"], "common.NOTASR_IDLE": ["s9"], "admin.test_asr": ["s1"], "admin._test_asr": ["s2", "s4"],
             "common.BodyLimit": ["s5"], "common.PrioGate": ["s7"], "common.audio_rate_ok": ["s8"],
@@ -32,9 +32,13 @@ SEITEN = {
             S("s2", "schritt", ("Höchstens {admin.MAX_AUDIO|mb}", "At most {admin.MAX_AUDIO|mb}"),
               ("Weckwort nur für Profile", "wake word for profiles only"),
               ("read_audio liest die Aufnahme in Stücken und bricht bei {admin.MAX_AUDIO|mb} ab. Ein Weckwort darf "
-               "nur ein angemeldetes Profil mitschicken; es geht dann als Hinweis an das Modell.",
+               "nur ein angemeldetes Profil mitschicken; es geht dann als Hinweis an das Modell. Mit „Namen fürs "
+               "Hören“ legt hoerwoerter.prompt die Namen der Profile, Kontakte, Räume und Geräte des Profils bei "
+               "(höchstens {hoerwoerter.MAX_WORDS}, geteilte Lautsprecher nur Profilnamen).",
                "read_audio reads the recording in pieces and stops at {admin.MAX_AUDIO|mb}. Only a signed-in profile "
-               "may send a wake word; it then goes to the model as a hint."),
+               "may send a wake word; it then goes to the model as a hint. With „Names for listening“ "
+               "hoerwoerter.prompt adds the names of the profiles and the profile's contacts, rooms and devices (at "
+               "most {hoerwoerter.MAX_WORDS}, shared speakers only profile names)."),
               ("stop", ("größer", "larger"), ("Abgelehnt (413)", "Refused (413)"))),
             S("s3", "schritt", ("Nebenbei auf dem Prozessor", "Alongside on the CPU"),
               ("Stimme, Stille, fremde Stimme", "voice, silence, other voice"),
@@ -185,7 +189,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Sprachausgabe
     "tts": {
-        "stand": "836b6f0dc0",
+        "stand": "e2df6d18e6",
         "bezug": {
             "textnorm.NUMBER_MODES": ["s7"], "tts_proxy.speech": ["s1"], "tts_proxy.check_reference": ["s8"],
             "tts_proxy.engine_status": ["s4"], "tts_proxy.apply_clone": ["s8"], "textnorm.speech_markdown": ["s5"],
@@ -253,10 +257,12 @@ SEITEN = {
               ("feste Regeln vor dem Modell", "fixed rules before the model"),
               ("Steht die Sprache auf Auto, rät guess_language an häufigen Wörtern Deutsch oder Englisch, damit ein "
                "einzelnes englisches Wort nicht den Ton der ganzen Antwort ändert. Dann gilt die eigene "
-               "Aussprache-Liste, danach schreibt speak_numbers Datum, Uhrzeit, Geld und Zahlen aus.",
+               "Aussprache-Liste, danach schreibt speak_abbreviations Abkürzungen aus („z. B.“, „ca.“, „€/Monat“) und "
+               "speak_numbers Datum, Uhrzeit, Geld, Zahlen und Einheiten (km/h, kWh, kg, GB …).",
                "When the language is Auto, guess_language guesses German or English from frequent words, so a single "
                "English word does not change the tone of the whole answer. Then the own pronunciation list applies, "
-               "after that speak_numbers writes out date, time, money and numbers.")),
+               "after that speak_abbreviations writes out abbreviations („z. B.“, „ca.“, „€/Monat“) and speak_numbers "
+               "date, time, money, numbers and units (km/h, kWh, kg, GB …).")),
             S("s8", "schritt", ("Stimme wählen", "Pick the voice"),
               ("eingebaut, geklont oder beschrieben", "built in, cloned or described"),
               ("Temperatur, top_p und ein fester Seed aus den Einstellungen halten die Stimme von Satz zu Satz gleich. "

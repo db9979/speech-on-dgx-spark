@@ -480,7 +480,7 @@ SEITEN = {
         "heute": [],
     },
     "antwort": {
-        "stand": "ab58f7d77a",
+        "stand": "16689222cc",
         "bezug": {
             "chat.MAX_SAVES": ["s11"], "chat.LOOP_SAME": ["s11"], "chat._answer": ["s4", "s5", "s11"], "chat_modell.model_turn": ["s4", "s11"], "chat_ton.speech_out": ["s8"],
             "chat.split_sentences": ["s5"], "chat.said_key": ["s8"], "chat.no_code": ["s8"],
@@ -532,10 +532,14 @@ SEITEN = {
               ("höchstens vier Werkzeug-Runden", "at most four tool rounds"),
               ("Angeboten wird die Liste ohne gesperrte, wegen Fehlern gestoppte oder zu oft genutzte Werkzeuge. "
                "Verlangt die Frage ein Werkzeug, muss das Modell eines wählen (tool_choice), mit eigener Temperatur. "
-               "Die fünfte Runde hat keine Liste mehr: das Modell hört, dass es jetzt antworten soll.",
+               "Die fünfte Runde hat keine Liste mehr: das Modell hört, dass es jetzt antworten soll. Geräte ohne "
+               "Bildschirm (Lautsprecher, Telefon, Uhr, Siri, Android-Assistent, CarPlay) bekommen höchstens "
+               "{chat.SPOKEN_MAX_TOKENS} Tokens; eine längere Antwort endet am letzten ganzen Satz.",
                "Offered is the list without locked tools, tools stopped after errors or used too often. When the "
                "question needs a tool, the model must choose one (tool_choice), with its own temperature. The fifth "
-               "round has no list: the model is told to answer now.")),
+               "round has no list: the model is told to answer now. Devices without a screen (speaker, phone, watch, "
+               "Siri, Android assistant, CarPlay) get at most {chat.SPOKEN_MAX_TOKENS} tokens; a longer answer ends at "
+               "its last full sentence.")),
             S("s5", "schritt", ("Streamen und in Sätze schneiden", "Stream and cut into sentences"),
               ("erster Satz ab {chat.FIRST_CUT} Zeichen am Komma", "first sentence cut at a comma after {chat.FIRST_CUT} characters"),
               ("Die Antwort kommt Stück für Stück. Denktext und als Text geschriebene Werkzeugaufrufe werden nie "
@@ -692,7 +696,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Werkzeuge (chat_tools.run)
     "werkzeuge": {
-        "stand": "a73290f5d0",
+        "stand": "5cc823cfab",
         "bezug": {
             "chat.LOCKED_OUTSIDE": ["s4"], "notaus.INTERNET_TOOLS": ["s3"], "werkzeuge.NAMES": ["s11"],
             "chat_tools.run": ["s2", "s7"], "chat.wrap_outside": ["s9"], "chat.LOCKED_MAIL": ["s4"],

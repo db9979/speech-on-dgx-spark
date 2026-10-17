@@ -52,7 +52,7 @@ import vorab  # noqa: E402  (fetching ahead when the answer asks back)
 import ack  # noqa: E402  (the instant ready-made sentence)
 import verbrauch  # noqa: E402  (Verbrauchszähler: tokens per task and profile)
 from common import load_config, model_url  # noqa: E402
-from core import admin_cookie_ok, api_headers, assistant, json_body  # noqa: E402
+from core import admin_cookie_ok, api_headers, app_version, assistant, json_body  # noqa: E402
 
 router = APIRouter()
 
@@ -210,6 +210,37 @@ def timing_lines(tm, t0, end):
     out.append(f"zeit: erster Ton nach {s(tm['audio'])}, alles nach {s(end)}" if tm["audio"]
                else f"zeit: kein Ton, alles nach {s(end)}")
     return out
+
+
+def wait_measure(turn, tm, t0, end):
+    """For Zustand → Prüfen (latency.py): what one spoken answer kept, fixed words and numbers only (latency.MEASURE)."""
+    route = getattr(turn, "route", None)
+    firsts = [r["first"] for r in tm["rounds"] if r.get("first")]
+    read = cached = 0
+    for r in tm["rounds"]:
+        u = r.get("usage") or {}
+        if isinstance(u.get("prompt_tokens"), int):
+            read += u["prompt_tokens"]
+            c = (u.get("prompt_tokens_details") or {}).get("cached_tokens")
+            cached += c if isinstance(c, int) else 0
+    m = {"g": route.label() if route else "unklar", "n": len(getattr(turn, "tools", None) or []), "r": len(tm["rounds"]),
+         "e": end - t0, "v": app_version()}
+    if firsts:
+        m["f"] = firsts[0] - t0
+    if read:
+        m["h"] = round(100 * cached / read)
+    return m
+
+
+def note_wait(turn, tm, t0, client, end=None):
+    """Notes a spoken answer once (latency.add with its measure); nothing when it brought no sound."""
+    if tm.get("noted") or not tm.get("audio"):
+        return
+    tm["noted"] = True
+    try:
+        latency.add(tm["audio"] - t0, client, measure=wait_measure(turn, tm, t0, time.time() if end is None else end))
+    except (OSError, ValueError) as e:
+        print("latency:", type(e).__name__, flush=True)
 
 
 def trim_piece(text, st):
@@ -1476,6 +1507,19 @@ def own_style(ccfg, who, pset, own_browser):
     return text.strip()[:STYLE_MAX] if isinstance(text, str) else ""
 
 
+# Clients without a screen only hear the answer (plan genauer-und-schneller, 4): their hints already ask for one to three
+# sentences, this caps a runaway answer (an answer cut here ends at its last full sentence, chat_modell).
+SPOKEN_ONLY = ("speaker", "telefon", "watch", "siri", "android")
+SPOKEN_MAX_TOKENS = 700
+
+
+def answer_tokens(ccfg, body, car=False):
+    """max_tokens of one answer: chat.max_tokens, for a client that is only heard at most SPOKEN_MAX_TOKENS."""
+    n = int(ccfg.get("max_tokens") or 4096)
+    spoken = car or (isinstance(body, dict) and body.get("client") in SPOKEN_ONLY)
+    return min(n, SPOKEN_MAX_TOKENS) if spoken else n
+
+
 def sampling(ccfg):
     """top_p and presence_penalty from the admin page; 0 = the server's own default (not sent)."""
     out = {}
@@ -2106,6 +2150,7 @@ async def _answer(request, turn):
                     ev = {"type": "error", "code": ev.get("code") or "error"}
                 outside = outside or ev.get("type") in ("outside", "mail")
                 yield f"data: {json.dumps(ev)}\n\n"
+            await asyncio.to_thread(note_wait, turn, tm, t0, body.get("client") or "web")
             if tm["on"]:
                 for line in timing_lines(tm, t0, time.time()):
                     logfilter.detail("chat", line)
@@ -2147,6 +2192,7 @@ async def _answer(request, turn):
         finally:  # also runs when the browser aborts (barge-in): stop LLM and TTS
             for t in tasks:
                 t.cancel()
+            note_wait(turn, tm, t0, body.get("client") or "web")   # interrupted after its first sound: still counted
             if tr and not tr.done:   # ended early (barge-in, browser gone): kept as far as it came
                 tr.step("err", "abgebrochen", time.time())
                 try:

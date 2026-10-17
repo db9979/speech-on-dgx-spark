@@ -1667,6 +1667,13 @@
 "titel": "iPhone-App: Prüf-Code und Vorführung",
 "text": "A: Funktionen → Prüfzugang für die iPhone-App an. Unter Personen und Geräte → Prüfzugang für die iPhone-App ein Testprofil wählen und „Prüfzugang erstellen“: Adresse und Code erscheinen einmal. Auf einem nicht gekoppelten iPhone „Mit Prüf-Code verbinden“, beides eintippen, Koppeln bestätigen: die App ist im Testprofil, Smart Home und Chats sind dort gesperrt. Prüfzugang löschen: die App ist wieder entkoppelt. B: Auf dem Kopplungs-Bildschirm „Ohne Spark ansehen“: Beispielgespräch erscheint, eine geschriebene Frage bekommt eine Beispielantwort, „Vorführung beenden“ führt zurück.",
 "thread": "iPhone-App aufpäppeln"
+},
+{
+"id": "P262",
+"v": 755,
+"titel": "Genauer und schneller, Paket A",
+"text": "A: Funktionen → Namen fürs Hören an, Einstellungen → Spracherkennung → Standardsprache auf Deutsch. P: per Sprache „Mach das Licht im <Raum> an“ mit einem Raumnamen aus Home Assistant und „Ruf <Kontakt> an“ sagen: der Name steht richtig geschrieben im Chat. Admin: Zustand → Logs, Bereich Gespräch: „hoeren: Namen gelesen, … Räume, … Geräte“. Am Lautsprecher eine lange Frage stellen („Erzähl mir alles über Rom“): die Antwort bleibt kurz. Eine Antwort mit „z. B.“, „ca. 30 €/Monat“ und „50 km/h“ anhören: alles ausgesprochen. Nach einigen Fragen Zustand → Prüfen: „Je Fragenart, letzte 7 Tage“ und „Je Version“ aufklappen, die Zeilen zeigen Antworten, ersten Ton und den Anteil aus dem Speicher.",
+"thread": "Assistent genauer und schneller"
 }
 ]
 }

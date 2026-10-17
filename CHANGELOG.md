@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.755** · 2026-10-17 · Genauer und schneller, Paket A: Zustand → Prüfen zeigt die Zeiten je Fragenart und je Version, Antworten ohne Bildschirm sind gedeckelt, „Namen fürs Hören“ gibt der Spracherkennung Räume, Geräte und Personen, Einheiten und Abkürzungen werden ausgesprochen
 - **V01.0.754** · 2026-10-17 · iPhone-App für Apples Prüfung: Prüfzugang mit Adresse und getipptem Code (14 Tage, höchstens 5 iPhones, Smart Home, Mail, Anrufe, Chats und mehr für das Profil gesperrt, Löschen entfernt die iPhones) und Vorführung „Ohne Spark ansehen“ mit Beispielen ohne Netz
 - **V01.0.753** · 2026-10-17 · Rot-Fix: Fingerabdruck der Knoten-Seite „Vorbereiten“ (Zustand → Technik) mit .752 nachgezogen, test_technik grün
 - **V01.0.752** · 2026-10-17 · Rechner fernsteuern: Folgebitten wie „Das Terminal in den Vordergrund.“ oder „Nochmal“ gehen an den Rechner, den eine der zwei Nachrichten davor genannt hat; „in den Vordergrund“/„nach vorne“ ist ein klarer Auftrag (der Spark muss am Rechner nachfragen statt es nur anzukündigen); eine Bildschirm-Beschreibung sperrt die nächste Bitte nicht mehr, und eine abgelehnte oder fehlgeschlagene sperrt gar nichts

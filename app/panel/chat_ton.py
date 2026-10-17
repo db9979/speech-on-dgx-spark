@@ -5,7 +5,6 @@ import chat
 import echo
 import httpx
 import json
-import latency
 import re
 import time
 import verbrauch
@@ -121,10 +120,7 @@ async def speech_out(*, body, c, device_owner, messages, out, play_clip, request
                                     if tr:
                                         tr.mark("sound", now)
                                     await out.put({"type": "timing", "first_audio": round(now - t0, 3)})
-                                    try:  # for Zustand → Prüfen: how long people wait (latency.py)
-                                        await asyncio.to_thread(latency.add, now - t0, body.get("client") or "web")
-                                    except (OSError, ValueError) as e:
-                                        print("latency:", type(e).__name__, flush=True)
+                                    # (Zustand → Prüfen: kept with its measure at the end, chat.note_wait)
                                 elif now > played_until + 0.3:
                                     # the listener ran out of audio (Zustand → Logs, "chat:"): before a piece it is a
                                     # pause between sentences (the text was not there yet: tool, search, slow LLM),

@@ -1438,7 +1438,7 @@ class FasterStart(unittest.TestCase):
                     contextlib.redirect_stdout(buf):
                 answer(ask(g, "Hallo"))
             call = [x for x in helpers.LLM_CALLS if x.get("stream")][-1]
-            self.assertEqual("stream_options" in call, on)
+            self.assertIn("stream_options", call)   # always since V01.0.751 (cache share per group, latency.MEASURE)
             lines = [x for x in buf.getvalue().splitlines() if "detail zeit:" in x]
             if not on:
                 self.assertEqual(lines, [])

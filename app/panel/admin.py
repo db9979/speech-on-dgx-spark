@@ -1124,8 +1124,11 @@ async def _test_asr(request, file, language, wake, room, opened=""):
     form = {"language": language, "response_format": "verbose_json"}
     if wake and not me and not admin_cookie_ok(request):
         raise HTTPException(403, "the wake word is for profiles only")
-    if wake:  # wake-word check: tell the model to expect the phrase, besides the usual context
-        form["prompt"] = f"{wake[:40]}. {cfg['asr'].get('context') or ''}".strip()
+    # Namen fürs Hören (hoerwoerter.py): the names this profile may use, the wake phrase and the admin's own context
+    import hoerwoerter
+    ctx = hoerwoerter.prompt(cfg, me and me["id"], extra=f"{wake[:40]}." if wake else "")
+    if ctx and (wake or hoerwoerter.on(cfg)):
+        form["prompt"] = ctx
     # speaker identification runs on the CPU while the GPU transcribes
     spk = None
     th = speakers.STRICTNESS.get(cfg.get("chat", {}).get("speaker_strictness"), 0.75)

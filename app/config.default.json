@@ -123,6 +123,7 @@
     "tool_thinking": false,
     "routing": true,
     "direct_read": true,
+    "hoer_namen": false,
     "route_model": "off",
     "systemone": false,
     "systemone_tidy": false,

@@ -22,7 +22,7 @@ from fastapi.responses import Response, StreamingResponse
 from common import (BodyLimit, GateFull, KeyedCORS, PrioGate, inside, outside_view, api_key_dependency, api_key_ok,
                     engine_crash_reason, load_config, quiet_access_log, SpeechMark, stage_of, STATE)
 from textnorm import (MAX_INPUT, apply_pronunciations, clean_text, guess_language, hide_secrets, parse_pronunciations,
-                      speak_numbers, speech_markdown)
+                      speak_abbreviations, speak_numbers, speech_markdown)
 
 VOICES_DIR = os.environ.get("SPEECH_SPARK_VOICES", "/var/lib/speech-spark/voices")  # panel tab "Stimmen"
 LANGUAGES = ["auto", "Chinese", "English", "Japanese", "Korean", "German", "French",
@@ -328,6 +328,7 @@ async def speech(request: Request):
         body["input"] = apply_pronunciations(body["input"], PRONUNCIATION)
     if cfg.get("numbers", "words") != "off":
         try:
+            body["input"] = speak_abbreviations(body["input"], body["language"])   # "z. B." and "€/Monat" in full
             body["input"] = speak_numbers(body["input"], body["language"], cfg.get("numbers", "words"))
         except Exception as e:  # never fail a request over number formatting
             print(f"speak_numbers failed: {type(e).__name__}: {e}", flush=True)

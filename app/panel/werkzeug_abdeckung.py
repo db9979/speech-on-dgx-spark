@@ -112,6 +112,7 @@ WITHOUT = {
     "toolthink": "Einstellung, wie Antworten entstehen",
     "routing": "Einstellung, wie Antworten entstehen",
     "direct": "Einstellung, wie Antworten entstehen",
+    "hoeren": "Einstellung, wie die Spracherkennung hört",
     "ack": "Einstellung, wie Antworten entstehen",
     "vorab": "Einstellung, wie Antworten entstehen",
     "einordnung": "Signal fürs Panel, keine Bitte",
