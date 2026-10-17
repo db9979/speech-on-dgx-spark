@@ -202,16 +202,23 @@ class QuickStart(unittest.TestCase):
     def test_zustand_cards_ask_only_while_zustand_is_seen(self):
         import re
         start = self.js("start.js")
-        cards = re.search(r"zCards\(\[(.*?)\]\);", start).group(1)
+        cards = re.search(r"zPoll\(\[(.*?)\]\);", start).group(1)
         names = re.findall(r"'(z[A-Z]\w*)'", cards)
         self.assertGreaterEqual(len(names), 10)
         for n in names:
             self.assertNotRegex(start, r"\b" + n + r"\(\)", n + " is called at the start again: zCards only")
             self.assertNotIn("setInterval(" + n, start)
         admin_js = self.js("admin.js")
-        body = admin_js[admin_js.index("function zCards("):]
+        body = admin_js[admin_js.index("function zPoll("):]
         self.assertIn("if(zSeen())f()", body[:300])    # the timer asks only while Zustand is seen
-        self.assertIn("zCardsNow()", admin_js[:admin_js.index("async function refresh(")])   # at once when it opens
+        self.assertIn("zPollNow()", admin_js[:admin_js.index("async function refresh(")])   # at once when it opens
+        # one global namespace for every panel script: a second "function zPoll" would replace this one silently
+        # (V01.0.750 was red: its first name zCards was already the Heute tiles in admin.js)
+        import os
+        d = os.path.dirname(os.path.join(os.path.dirname(panel.__file__), "static", "js", "x"))
+        for fn in ("zPoll", "zPollNow", "zSeen", "wayFrame"):
+            n = sum(len(re.findall(r"(?:function |const )" + fn + r"\b", self.js(f))) for f in os.listdir(d) if f.endswith(".js"))
+            self.assertEqual(n, 1, fn)
 
     def test_jump_links_look_at_the_menu_once_per_frame(self):
         way = self.js("way.js")

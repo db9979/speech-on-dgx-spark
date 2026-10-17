@@ -7,16 +7,16 @@ window.act=act;ON.act=(b,n,a)=>act(n,a,b);ON.copyPrev=b=>copyString(b.previousEl
 // is open. Tables are written only when their content changed, so marking, focus and hover stay (setHtml, base.js).
 let REFRESH_AT=0;
 // Zustand opened (or the tab back in front): at once, not up to 3 s later
-if($('mon')){let was=false;new MutationObserver(()=>{const on=$('mon').classList.contains('on');if(on&&!was&&ADMIN){REFRESH_AT=0;refresh();zCardsNow()}was=on}).observe($('mon'),{attributes:true,attributeFilter:['class']})}
-document.addEventListener('visibilitychange',()=>{if(!document.hidden&&ADMIN&&zSeen()){REFRESH_AT=0;refresh();zCardsNow()}});
+if($('mon')){let was=false;new MutationObserver(()=>{const on=$('mon').classList.contains('on');if(on&&!was&&ADMIN){REFRESH_AT=0;refresh();zPollNow()}was=on}).observe($('mon'),{attributes:true,attributeFilter:['class']})}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&ADMIN&&zSeen()){REFRESH_AT=0;refresh();zPollNow()}});
 // The cards on Zustand (Hört gerade zu, Dienste, NAS, Verbrauch …) ask the panel only while Zustand is seen, all at
 // once when it opens, then each at its own pace. At the start on the assistant they asked 13 times for nothing
 // (V01.0.749). The dot beside Zustand in the menu comes from refresh(), not from these cards.
-const ZCARDS=[];
+const ZPOLL=[];
 const zSeen=()=>!!$('mon')&&$('mon').classList.contains('on')&&!document.hidden;
-function zCardsNow(){for(const [f] of ZCARDS)f()}
-function zCards(list){for(const [n,ms] of list){const f=window[n];if(typeof f!=='function')continue;ZCARDS.push([f,ms]);setInterval(()=>{if(zSeen())f()},ms)}
-  if(zSeen())zCardsNow()}
+function zPollNow(){for(const [f] of ZPOLL)f()}
+function zPoll(list){for(const [n,ms] of list){const f=window[n];if(typeof f!=='function')continue;ZPOLL.push([f,ms]);setInterval(()=>{if(zSeen())f()},ms)}
+  if(zSeen())zPollNow()}
 async function refresh(){const seen=$('mon')&&$('mon').classList.contains('on')&&!document.hidden;
   if(updBusy()||!seen&&Date.now()-REFRESH_AT<30e3)return;REFRESH_AT=Date.now();
   let s;try{s=await (await api('/api/status')).json()}catch(e){$('hdr').textContent=t('Panel nicht erreichbar','Panel not reachable');return}

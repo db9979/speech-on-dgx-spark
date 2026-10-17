@@ -460,7 +460,8 @@ class Pages(unittest.TestCase):
                 self.assertEqual((await pg.request.post(base + "/api/profile/login", data={"name": "Vbseite", "pin": "1234"})).status, 200)
                 await pg.goto(base + "/")
                 await self._until(pg, "typeof ADMIN!=='undefined'&&ADMIN===true&&!!PROFILE&&document.body.classList.contains('adm')")
-                # the card under Monitoring
+                # the card under Monitoring (asks the panel once Zustand is open, V01.0.750)
+                await pg.evaluate("goSec('mon')")
                 await self._until(pg, "!document.getElementById('zverbrauch').hidden")
                 self.assertIn("Tokens", await pg.inner_text("#zverbrauch"))
                 # Zustand → Verbrauch

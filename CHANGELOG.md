@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.751** · 2026-10-17 · ROT-FIX für .750: die Karten unter Zustand laden wieder (der neue Abruf hieß wie die Heute-Kacheln und wurde von ihnen überschrieben), Selbsttest prüft die Namen
 - **V01.0.750** · 2026-10-17 · Webanwendung schneller und aufgeräumter: Admin-Start auf langsamen Handys von 11,5 auf etwa 2 s (Sprung-Links einmal pro Bild, Zustand-Karten nur bei offenem Zustand, Anleitungen beim Öffnen), Startseite gepackt, nach Updates nur geänderte Dateien neu; Chat am PC breiter, Seiten enden mit Platz fürs schwebende Gesicht, Zustand-Menü mit Symbolen und Blöcken, ganzer Zurück-Knopf am Handy
 - **V01.0.749** · 2026-10-17 · Tippen im Chat wieder flüssig: am Eingabefeld liefen die Warte-Punkte der Antwort unsichtbar mit und zeichneten die Seite 60-mal pro Sekunde neu; das Lade-Rad im Gesicht dreht nur noch, wenn es zu sehen ist; ein langer Verlauf wird beim Tippen nicht mehr neu gesetzt
 - **V01.0.748** · 2026-10-17 · Apps merken sich den letzten Stand: iPhone- und Android-App zeigen Verlauf, Chats und Einstellungen sofort vom letzten Mal, laden sichtbar (Platzhalter, „Verbinde mit dem Spark …“, „Noch einmal“), holen im Hintergrund vor und melden langsame Seiten ins Log; Android-App 1.4.1
