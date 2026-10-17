@@ -42,6 +42,18 @@ class Static(unittest.TestCase):
         for gid in re.findall(r"\['([a-z]+)','[^']+','[^']+'\]", guides[guides.index("const GGROUPS="):guides.index("const GSECT=")]):
             self.assertRegex(meg, r"\b" + gid + r":\[", gid)
         self.assertIn("featGroupIcons();", seite)
+
+    def test_people_list_is_tidy(self):
+        """Personen und Geräte as a list like the others (Dominik 2026-10-17 „sieht nicht professionell aus“): initials
+        on a colour, counts in words (no „Gerät(e)“), setup as a bar, a chevron with a label instead of „Details“."""
+        users = read("js", "users.js")
+        rows = users[users.index("$('proflist').innerHTML="):users.index("const pages=")]
+        self.assertIn("pAvatar(u.name)", rows)
+        self.assertIn("pSetup(u.setup)", rows)
+        self.assertIn('class="b pchev"', rows)
+        self.assertIn("aria-label=", rows)
+        self.assertNotIn("Gerät(e)", rows)
+        self.assertIn("pDevIcon(x)", users)
     def test_frame_only_changes_the_look(self):
         js = read("js", "seite.js")
         # no new requests, no HTML from data: buttons get their text with textContent

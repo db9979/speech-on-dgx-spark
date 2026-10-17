@@ -267,10 +267,23 @@ class Browser(unittest.TestCase):
                     await pg.evaluate("openMe('calbox');0")   # not awaited: the page goes on loading
                     await pg.wait_for_selector("#lzband:not([hidden])")
                     self.assertIn("Spark antwortet nicht.", await pg.evaluate("document.getElementById('lzband').textContent"))
+                    # back, but only the button's probe may bring the band away: a poll that answers first would
+                    # hide the band before the click (flaky in the full run); after the probe everything goes through
+                    back = {"pinged": False}
+
+                    async def only_ping(route):
+                        if "/api/whoami" in route.request.url:
+                            back["pinged"] = True
+                        if back["pinged"]:
+                            await route.continue_()
+                        else:
+                            await route.abort("failed")
                     await pg.unroute("**/api/**")
+                    await pg.route("**/api/**", only_ping)
                     await pg.click("#lzband button[data-on=lzPing]")
                     await pg.wait_for_selector("#lzband", state="hidden")
                     await pg.wait_for_function("document.getElementById('calbox').dataset.lzok==='1'")
+                    self.assertTrue(back["pinged"])
                     self.assertEqual(errors, [])
                 finally:
                     await br.close()

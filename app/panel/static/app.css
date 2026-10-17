@@ -1613,3 +1613,30 @@ body.inchats:not(.appview):not(.kbd) .cx-comp{padding-right:96px}
 .mdkarte .mdkopf{min-width:0;overflow-wrap:anywhere}.mdkarte .mdtun{grid-row:1/span 2;grid-column:2;display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
 .mdkarte.aus{opacity:.6}.mdwahl h4{margin:14px 0 4px}.mdwahl #mdq{flex:1;min-width:140px}.mdmehr{margin-top:12px}.mdmehr>summary{cursor:pointer;font-weight:600;margin-bottom:10px}
 .wkpatch{max-height:360px;overflow:auto;font-size:12px;background:var(--bg2,transparent);border:1px solid var(--line);border-radius:6px;padding:8px;white-space:pre}.wkitem{border-top:1px solid var(--line);padding:6px 0;display:flex;flex-wrap:wrap;gap:6px;align-items:center}.wkitem .wkwas{flex:1;min-width:180px}.wkitem .chip.rot{color:var(--bad)}.wkitem .chip.ok{color:var(--ok)}
+/* Personen und Geräte as a tidy list (Dominik 2026-10-17 „sieht nicht professionell aus“): initials in the colours of the
+   symbols, one short line of counts, setup as a small bar, a chevron instead of „Details“, toolbar fields of one height */
+#pfilter input,#pfilter select{height:40px;box-sizing:border-box;margin:0}
+#proflist td{padding:10px 8px;vertical-align:middle}
+#proflist .prow,#devlist .prow{display:flex;align-items:center;gap:12px;min-width:0}
+#proflist .pav,#devlist .pav{width:36px;height:36px;border-radius:50%;font-size:13px;font-weight:700;letter-spacing:.02em;order:0}
+#proflist .pmid,#devlist .pmid{flex:1;min-width:0}
+#proflist .pname,#devlist .pname{display:flex;align-items:center;gap:6px;flex-wrap:wrap}#proflist .pname b{font-size:15px}
+#proflist .pname .pill{font-size:11.5px;padding:1px 8px}
+#proflist .pmeta,#devlist .pmeta{color:var(--mut);font-size:12.5px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.psetup{display:flex;align-items:center;gap:8px;flex:none;font-size:12px;color:var(--mut);font-variant-numeric:tabular-nums}
+.psbar{width:64px;height:6px;border-radius:99px;background:color-mix(in srgb,var(--line) 85%,transparent);overflow:hidden}
+.psbar i{display:block;height:100%;border-radius:99px;background:#e09a14}.psetup.ok .psbar i{background:#22a35a}
+#proflist td.pgo{width:44px;text-align:right;white-space:nowrap}
+.b.pchev{width:34px;height:34px;padding:0;display:inline-grid;place-items:center;border-radius:50%;border-color:transparent;background:none}
+.b.pchev:hover{background:color-mix(in srgb,var(--line) 60%,transparent)}
+.b.pchev svg{width:18px;height:18px;fill:none;stroke:var(--mut);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.pfoot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin-top:10px}
+.pfoot>.pnew{margin:0}.pfoot>.pnew[open]{flex-basis:100%}.pfoot>.pnew[open]>summary{margin-bottom:8px}
+.pcard.split .pside:has(.fdempty){border-style:dashed;background:none;padding:10px 16px}
+.pcard.split .pside .fdempty{padding:6px 0}
+#devlist .pav{border-radius:10px}#devlist .pav svg{width:18px;height:18px}
+.plist>table{table-layout:fixed;width:100%}
+.plist{container-type:inline-size}
+@container (max-width:520px){#proflist .prow{flex-wrap:wrap;row-gap:4px}#proflist .pmid{flex:1 1 calc(100% - 48px)}#proflist .psetup{margin-left:48px}#proflist .pmeta{white-space:normal}}
+@media (max-width:760px){#pfilter input{flex:1 1 100%!important}#pfilter select{flex:1 1 40%!important}}
+#proflist td.pgo{flex:0 0 auto}#proflist td:first-child,#devlist td:first-child{flex:1 1 0}

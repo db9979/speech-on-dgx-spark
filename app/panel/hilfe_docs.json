@@ -3373,7 +3373,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Schneller Start und aufgeräumte Seiten (V01.0.750)",
-"text": "n, die Breite der Seiten bleibt gleich. Zustand hat sein Menü wie Einstellungen: Symbole und die Blöcke Beobachten (Monitoring, Live, Logs), Prüfen (Prüfen, Verbessern, Praxistest) und Technik (Verbrauch, Modelle, Technik); die Fußzeile steht unten am Fenster. Am Handy steht „Verwalten“ ganz im Zurück-Knopf. Seit V01.0.755 haben auch Funktionen und Personen und Geräte ihre Symbole: jede Seite im Menü daneben, und jede Gruppe der Funktionen trägt das Symbol derselben Gruppe unter Ich."
+"text": "n, die Breite der Seiten bleibt gleich. Zustand hat sein Menü wie Einstellungen: Symbole und die Blöcke Beobachten (Monitoring, Live, Logs), Prüfen (Prüfen, Verbessern, Praxistest) und Technik (Verbrauch, Modelle, Technik); die Fußzeile steht unten am Fenster. Am Handy steht „Verwalten“ ganz im Zurück-Knopf. Seit V01.0.758 haben auch Funktionen und Personen und Geräte ihre Symbole: jede Seite im Menü daneben, und jede Gruppe der Funktionen trägt das Symbol derselben Gruppe unter Ich. Seit V01.0.764 ist die Liste der Profile aufgeräumt: ein farbiger Kreis mit Kürzel, eine kurze Zeile „zuletzt … · 2 Geräte · 30 Fakten“, Einrichten als schmaler Balken mit „14/15“, ein Pfeil statt „Details“ (die ganze Zeile öffnet die Person), Suchfeld und Auswahl gleich hoch, „+ Neues Profil“ neben der Anzahl; Geräte zeigen ihre Art als Symbol (Lautsprecher, iPhone-App, Uhr, Terminal, Home Assistant, eigener Schlüssel)."
 },
 {
 "lang": "de",
@@ -11101,7 +11101,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Quick start and tidier pages (V01.0.750)",
-"text": "), Check (Checks, Improve, Hands-on test) and Technology (Usage, Models, Architecture); the footer stands at the bottom of the window. On phones „Manage“/„Verwalten“ fits whole into the back button. Since V01.0.755 Features and People and devices have their symbols too: every page in the menu beside them, and every group of Features carries the symbol of the same group under Me."
+"text": "), Check (Checks, Improve, Hands-on test) and Technology (Usage, Models, Architecture); the footer stands at the bottom of the window. On phones „Manage“/„Verwalten“ fits whole into the back button. Since V01.0.758 Features and People and devices have their symbols too: every page in the menu beside them, and every group of Features carries the symbol of the same group under Me. Since V01.0.764 the list of profiles is tidy: a coloured circle with initials, one short line \"last … · 2 devices · 30 facts\", setup as a thin bar with \"14/15\", a chevron instead of \"Details\" (the whole line opens the person), search field and selects of one height, \"+ New profile\" beside the count; devices show their kind as a symbol (speaker, iPhone app, watch, terminal, Home Assistant, own key)."
 },
 {
 "lang": "en",

@@ -3,6 +3,17 @@
 // For many profiles: search, filter, sort and pages of 25 (the Spark does it); details open per profile.
 const PL={q:'',show:'',sort:'name',page:0,open:'',names:[],timer:null};
 const pwhen=s=>s?new Date(s*1000).toLocaleString([], {dateStyle:'short',timeStyle:'short'}):t('noch nie','never');
+// a row of the list: initials on a colour of the name (the same colours as the symbols), counts in words, setup as a bar
+const PAVC=['blue','violet','teal','green','amber','red'];
+const pAvatar=n=>{const w=String(n||'?').trim().split(/\s+/),i=(w.length>1?w[0][0]+w[1][0]:String(n||'?').slice(0,2)).toUpperCase();
+  let h=0;for(const c of String(n))h=(h*31+c.charCodeAt(0))>>>0;return `<span class="cic c-${PAVC[h%PAVC.length]} pav" aria-hidden="true">${esc(i)}</span>`};
+const pCount=(n,one,many)=>`${n} ${n===1?one:many}`;
+const pSetup=s=>`<span class="psetup${s.done>=s.total?' ok':''}" title="${esc(t('Einrichten','Setup'))}"><span class="psbar"><i style="width:${Math.round(100*s.done/s.total)}%"></i></span>${s.done}/${s.total}</span>`;
+// the kind of a device as a symbol: speaker, iPhone app, watch, terminal, Home Assistant, own program (key)
+const PDEV={speaker:['teal','M4 9h4l5-4v14l-5-4H4zM16 9a4 4 0 010 6'],app:['blue','M7 2h10v20H7zM11 18h2'],watch:['violet','M8 6h8v12H8zM9 2h6v4M9 18v4h6v-4'],
+  tui:['gray','M3 4h18v16H3zM7 9l3 3-3 3M12 15h5'],room:['amber','M3 11l9-7 9 7M5 10v10h14V10'],key:['green','M14 10a4 4 0 10-1.2 2.8L20 20M17 17l2-2']};
+const pDevIcon=x=>{const d=PDEV[x.speaker?'speaker':x.kind==='app'||x.app?'app':PDEV[x.kind]?x.kind:'key'];
+  return `<span class="cic c-${d[0]} pav" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="${d[1]}"/></svg></span>`};
 const perr=(id,e)=>{$(id).innerHTML=`<span class="err">${esc(e.message)}</span>`};
 // The profile of a device: a list of all profiles, sorted by name. Keys a profile set up itself under Ich
 // (speaker, iPhone app, Pebble watch, terminal, Home Assistant) stay with it: they show the name and where they are managed.
@@ -25,13 +36,15 @@ async function loadProf(){profFilter();let d;const keep=window.lzKeep?lzKeep($('
   PL.page=d.page;PL.names=d.names;const name=id=>(d.names.find(u=>u.id===id)||{}).name||'?';
   $('duser').innerHTML=popts($('duser').value,t('Profil wählen …','Pick a profile …'));
   const side=pSide();
-  $('proflist').innerHTML=d.users.map(u=>`<tr data-prow="${esc(u.id)}"${PL.open===u.id?' class="pon"':''}><td><b>${esc(u.name)}</b>${u.call?` <span class="mut">(${esc(u.call)})</span>`:''}${u.role?` <span class="pill">${esc(PROLE()[u.role]||u.role)}</span>`:''}${u.room?` <span class="pill ok">${t('hört zu','listening')}</span>`:''}<div class="intro sm">${t('zuletzt','last used')}: ${esc(pwhen(u.last))} · ${u.devices} ${t('Gerät(e)','device(s)')} · ${u.facts} ${t('gemerkte Fakten','remembered facts')}${u.mfa?' · '+t('mit zweitem Anmeldeschritt','with second login step'):''}${u.msg?' · '+t('Nachrichten an','messages on'):''}${typeof joinSetupLine==='function'&&u.setup&&u.setup.total?' · '+joinSetupLine(u.setup):''}</div></td>
-    <td style="text-align:right;white-space:nowrap"><button class="b" type="button" data-popen="${esc(u.id)}">${PL.open===u.id?t('Schließen','Close'):t('Details','Details')}</button></td></tr>${PL.open===u.id&&!side?`<tr><td colspan="2"><div id="pdetail" class="mut">…</div></td></tr>`:''}`).join('')
+  $('proflist').innerHTML=d.users.map(u=>`<tr data-prow="${esc(u.id)}"${PL.open===u.id?' class="pon"':''}><td><div class="prow">${pAvatar(u.name)}<div class="pmid"><div class="pname"><b>${esc(u.name)}</b>${u.call?` <span class="mut">${esc(u.call)}</span>`:''}${u.role?` <span class="pill">${esc(PROLE()[u.role]||u.role)}</span>`:''}${u.mfa?` <span class="pill ok" title="${esc(t('mit zweitem Anmeldeschritt','with second login step'))}">2FA</span>`:''}${u.room?` <span class="pill ok">${t('hört zu','listening')}</span>`:''}</div>
+    <div class="pmeta">${u.last?esc(t('zuletzt ','last ')+pwhen(u.last)):t('noch nie benutzt','never used')} · ${pCount(u.devices,t('Gerät','device'),t('Geräte','devices'))} · ${pCount(u.facts,t('Fakt','fact'),t('Fakten','facts'))}${u.msg?' · '+t('Nachrichten an','messages on'):''}</div></div>
+    ${u.setup&&u.setup.total?pSetup(u.setup):''}</div></td>
+    <td class="pgo"><button class="b pchev" type="button" data-popen="${esc(u.id)}" aria-label="${esc(PL.open===u.id?t('Schließen','Close'):t('Details','Details'))}" title="${esc(PL.open===u.id?t('Schließen','Close'):t('Details','Details'))}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="${PL.open===u.id?'M6 15l6-6 6 6':'M9 6l6 6-6 6'}"/></svg></button></td></tr>${PL.open===u.id&&!side?`<tr><td colspan="2"><div id="pdetail" class="mut">…</div></td></tr>`:''}`).join('')
     ||`<tr><td class="mut">${d.all?t('Kein Profil passt.','No profile matches.'):t('Noch keine.','None yet.')}</td></tr>`;
   // Gäste as the first row: who talks without a profile, and what they get
-  if(d.guests&&!PL.q&&!PL.show&&!d.page)$('proflist').insertAdjacentHTML('afterbegin',`<tr class="pguest"><td><b>${t('Gäste','Guests')}</b> <span class="pill${d.guests.public?' ok':''}">${d.guests.public?t('Gastzugang an','guest access on'):t('Gastzugang aus','guest access off')}</span><div class="intro sm">${d.guests.public
-      ?t('Nur Fragen und Antworten, keine Funktionen und keine Werkzeuge, nie persönliche Daten','Questions and answers only, no functions and no tools, never personal data'):t('Ohne Profil spricht niemand mit dem Assistenten.','Without a profile nobody talks to the assistant.')}</div></td>
-    <td></td></tr>`);
+  if(d.guests&&!PL.q&&!PL.show&&!d.page)$('proflist').insertAdjacentHTML('afterbegin',`<tr class="pguest"><td><div class="prow"><span class="cic c-gray pav" aria-hidden="true">?</span><div class="pmid"><div class="pname"><b>${t('Gäste','Guests')}</b> <span class="pill${d.guests.public?' ok':''}">${d.guests.public?t('Gastzugang an','guest access on'):t('Gastzugang aus','guest access off')}</span></div><div class="pmeta">${d.guests.public
+      ?t('Nur Fragen und Antworten, keine Funktionen und keine Werkzeuge, nie persönliche Daten','Questions and answers only, no functions and no tools, never personal data'):t('Ohne Profil spricht niemand mit dem Assistenten.','Without a profile nobody talks to the assistant.')}</div></div></div></td>
+    <td class="pgo"></td></tr>`);
   const pages=Math.max(1,Math.ceil(d.total/d.per));
   $('ppager').innerHTML=`<span class="mut">${d.total===d.all?d.all+' '+t('Profile','profiles'):d.total+' '+t('von','of')+' '+d.all+' '+t('Profilen','profiles')}${pages>1?' · '+t('Seite','page')+' '+(d.page+1)+'/'+pages:''}</span>${pages>1?`<button class="b" type="button" data-ppage="${d.page-1}"${d.page?'':' disabled'}>‹</button><button class="b" type="button" data-ppage="${d.page+1}"${d.page+1<pages?'':' disabled'}>›</button>`:''}`;
   $('ppager').querySelectorAll('[data-ppage]').forEach(b=>b.onclick=()=>{PL.page=+b.dataset.ppage;loadProf()});
@@ -47,7 +60,7 @@ async function loadProf(){profFilter();let d;const keep=window.lzKeep?lzKeep($('
       const sp=document.createElement('span');sp.textContent=t('Hier stehen dann Zugang, Geräte, Funktionen, Rechte mit dem Platz für Uploads und Löschen.','Access, devices, functions, rights with the space for uploads, and delete then show here.');e.append(b,sp);ps.appendChild(e)}}
   $('dadd').disabled=!d.all;
   const mid='style="vertical-align:middle"';
-  $('devlist').innerHTML=d.devices.map(x=>{const k=dkind(x);return `<tr><td ${mid}>${esc(x.name)}${x.room?` <span class="pill ok">${t('hört zu','listening')}</span>`:''}<div class="intro sm">${k?esc(k)+' · ':''}${t('zuletzt','last used')}: ${x.last?esc(pwhen(x.last.t))+' · '+esc(x.last.ip||''):t('noch nie','never')}</div></td>
+  $('devlist').innerHTML=d.devices.map(x=>{const k=dkind(x);return `<tr><td ${mid}><div class="prow">${pDevIcon(x)}<div class="pmid"><div class="pname"><b>${esc(x.name)}</b>${x.room?` <span class="pill ok">${t('hört zu','listening')}</span>`:''}</div><div class="pmeta">${k?esc(k)+' · ':''}${t('zuletzt','last used')}: ${x.last?esc(pwhen(x.last.t))+' · '+esc(x.last.ip||''):t('noch nie','never')}</div></div></div></td>
     <td style="vertical-align:middle;width:150px">${k?`<span title="${esc(t('Fest bei diesem Profil. Zum Wechseln dort entfernen und unter dem anderen Profil neu einrichten.','Fixed to this profile. To change it, remove it there and set it up again under the other profile.'))}">${esc(name(x.user))} <small class="mut">🔒 ${t('fest','fixed')}</small></span>`
       :`<select data-dmove="${esc(x.id)}" aria-label="${esc(t('Profil','Profile'))}" style="width:100%">${popts(x.user)}</select>`}</td>
     <td style="text-align:right;vertical-align:middle"><button class="b" type="button" data-ddel="${esc(x.id)}" data-dname="${esc(x.name)}" data-dspk="${x.speaker?'1':''}">${t('Löschen','Delete')}</button></td></tr>`}).join('')

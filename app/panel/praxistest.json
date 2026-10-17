@@ -1730,6 +1730,13 @@
 "titel": "OLED: CPU und RAM",
 "text": "A: Funktionen → Gehäuse: die Seiten „CPU und RAM Pi“ und „CPU und RAM TARS“ sind in der Reihe. Am Display steht „Pi“ bzw. „TARS“ mit zwei großen Zahlen, links CPU %, rechts RAM %. Die Werte passen ungefähr zu Zustand → Monitoring → Rechner. Ist TARS aus, zeigt seine Seite „TARS weg“.",
 "thread": "Neue OLED-Seite mit aktiven Nutzern"
+},
+{
+"id": "P271",
+"v": 764,
+"titel": "Personen und Geräte aufgeräumt",
+"text": "A: Personen und Geräte öffnen: jede Person mit farbigem Kreis und Kürzel, darunter „zuletzt … · n Geräte · n Fakten“, rechts ein schmaler Balken „Einrichten 14/15“ und ein Pfeil. Klick auf die Zeile öffnet die Person rechts. Suchfeld und die zwei Auswahlen gleich hoch, „+ Neues Profil“ unten neben der Anzahl. Geräte mit Symbol ihrer Art. Am Handy: Liste ohne Abschneiden, Pfeil rechts.",
+"thread": "Webanwendung schöner und schneller"
 }
 ]
 }

@@ -40,6 +40,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.764** People and devices as a tidy list with initials, bar and chevron
 - **V01.0.763** OLED pages "Pi" and "TARS": CPU and RAM load as two big numbers
 - **V01.0.762** Measure Qwen3.8 Flash Next in Docker (only on tars, no network, measuring only for now)
 - **V01.0.761** More precise and faster, package C: simple things answered at once, faster web search, extended answer check, measuring the word choice
@@ -49,7 +50,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.757** Workshop: test run, code measurement, diagnosis and repair in a sealed-off copy on the model computer (OpenCode, no data, no internet, nothing installed), a test run every night; plus "Tune the switch"
 - **V01.0.756** Simpler models page: one tile per kind, "Try" and search at Hugging Face
 - **V01.0.755** More precise and faster: times per kind of question, names for listening, units and abbreviations spoken in full
-- **V01.0.754** iPhone app: review code for Apple's review and demo "Look without a Spark"
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
