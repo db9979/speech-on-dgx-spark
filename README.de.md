@@ -40,6 +40,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.754** iPhone-App: Prüf-Code für Apples Prüfung und Vorführung „Ohne Spark ansehen“
 - **V01.0.753** Rot-Fix: Technik-Seite „Vorbereiten“ wieder auf dem Stand von .752
 - **V01.0.752** Rechner fernsteuern: Folgebitten wie „Das Terminal in den Vordergrund“ oder „Nochmal“ gehen an den Rechner von eben
 - **V01.0.751** Fix: die Karten unter Zustand laden wieder beim Öffnen
@@ -49,7 +50,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.747** Anrufe im Chat zeigen auf Live, Monitoring und der Steuerzentrale beide Seiten: Geräte, Sprache oder Video, klingelt oder verbunden und beide Personen (Namen nur mit Zustimmung)
 - **V01.0.746** iPhone-App: jede Kachel unter „Meine Sachen“ öffnet ihren eigenen Teil
 - **V01.0.745** Begleiter am Mac: „Am PC handeln einstellen“ aufgeräumt, Schalter rechts in Karten
-- **V01.0.744** Aufträge mit Plan, Rückfrage und Vorschlag: ein Auftrag zeigt seine Schritte, fragt einmal nach, schlägt eine Erinnerung, einen Termin oder einen Listeneintrag vor, den erst dein Ja ausführt, und lässt sich ergänzen, während er läuft
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

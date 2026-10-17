@@ -201,7 +201,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Apps
     "apps": {
-        "stand": "75d6a899f7",
+        "stand": "3878d34798",
         "bezug": {
             "android.TOKEN_SECONDS": ["s3"], "android.TOKEN_USES": ["s3"], "iphone.profile_pair": ["s1", "s2"],
             "kopplung.Codes.new": ["s3"], "kopplung.Codes.take": ["s4"], "iphone.app_pair": ["s4", "s5"],
@@ -251,10 +251,14 @@ SEITEN = {
               ("POST /api/iphone/pair", "POST /api/iphone/pair"),
               ("Die App schickt den Code. Der Spark prüft das Rate-Limit ({guard.RATE.pair.0} pro Minute und Adresse), "
                "vergleicht den Hash zeitkonstant und löscht den Code beim ersten Treffer. Ein abgelaufener oder schon "
-               "benutzter Code passt nie.",
+               "benutzter Code passt nie. Ist es kein Link-Code, prüft pruefzugang.py einen getippten Prüf-Code für "
+               "Apples Prüfung ({pruefzugang.LENGTH} Zeichen, {pruefzugang.DAYS} Tage, höchstens {pruefzugang.MAX_USES} "
+               "iPhones, nur bei eingeschaltetem Prüfzugang); falsche Prüf-Codes sperren die Adresse wie falsche PINs.",
                "The app sends the code. The Spark checks the rate limit ({guard.RATE.pair.0} per minute and address), "
                "compares the hash in constant time and deletes the code at the first hit. An expired or used code "
-               "never fits."),
+               "never fits. If it is no link code, pruefzugang.py checks a typed review code for Apple's review "
+               "({pruefzugang.LENGTH} signs, {pruefzugang.DAYS} days, at most {pruefzugang.MAX_USES} iPhones, only "
+               "with the review access on); wrong review codes lock the address like wrong PINs."),
               ("stop", "nein", ("Link passt nicht oder ist abgelaufen", "Link does not fit or has expired"))),
             S("s5", "schritt", ("Eigener Geräteschlüssel", "Own device key"),
               ("Bereich „app“, nur der Hash bleibt", "scope „app“, only the hash stays"),

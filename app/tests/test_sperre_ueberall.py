@@ -385,6 +385,8 @@ ADMIN_ON_OK = {
     "iphone.py:admin_on": "Spark switch (pairing); per profile iphone.allowed, endpoints add features.blocked",
     "join.py:mfa_due": "the second step is a protection, never released or blocked per profile",
     "join.py:admin_get": "admin page",
+    "pruefzugang.py:on": "Spark switch (review codes pair); the paired profile then needs iphone.allowed in app_pair",
+    "pruefzugang.py:admin_get": "admin page",
     "join.py:admin_invite": "admin endpoint (invitation before the profile exists)",
     "join.py:join_check": "invitation before the profile exists",
     "join.py:app_join": "invitation before the profile exists",

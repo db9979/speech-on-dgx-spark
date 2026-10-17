@@ -296,6 +296,7 @@ Apps, Telegram, watch, speakers, room mode, chats and the history on all devices
 | `app/panel/messages.py` | The assistant's way into the chats (chats.py) and what the chats bring along from the old "Nachrichten": "Sag Anna, das Essen ist fertig", "Habe ich neue Nac … |
 | `app/panel/onboard.py` | Einrichten an der Hand. |
 | `app/panel/pebblewatch.py` | Pairing the Pebble watch app "Spark" (pebble/ in the repo) with a profile. |
+| `app/panel/pruefzugang.py` | Prüfzugang für die iPhone-App: Apple's app review gets in without the 10-minute link. |
 | `app/panel/push.py` | Reminders as push notifications, also while no page of the panel is open (Web Push, RFC 8030/ 8291/8292, without extra libraries: the encryption comes from t … |
 | `app/panel/room.py` | Room mode: the assistant listens to the conversation in the room and helps in a pause. |
 | `app/panel/roomfar.py` | Room mode on another device of the profile, by voice or chat: "Raummodus im Wohnzimmer an". |
@@ -549,6 +550,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `state/guard-xff-hinted.json` | Proxy hint shown | – | no |
 | `state/guard.json` | Lockouts | – | no |
 | `state/gut-saetze.json` | Questions confirmed with 👍 | – | yes |
+| `state/iphone-pruef.json` | Review accesses for the iPhone app (hashes) | hashes only | yes |
 | `state/iphone-update.json` | Update from the iPhone app | – | no |
 | `state/join.json` | Invitations (hashes) | hashes only | yes |
 | `state/latency.json` | Waiting times | – | no |
@@ -799,7 +801,7 @@ flowchart TD
 1. <a id="kn-apps-s1"></a>**Ask for pairing**: Only the profile's own browser login may pair, never a device key. If the profile has a second sign-in step it needs a code for this, because a new way into the profile is made.
 2. <a id="kn-apps-s2"></a>**App allowed and room left?**: The app must be switched on by the admin and not blocked for the profile, and the profile may have at most 5 iPhones. The panel address must start with https and have no path.
 3. <a id="kn-apps-s3"></a>**One-time link as QR code**: kopplung.py makes a random code (144 bits); only its hash is kept in memory. A profile has at most 3 open codes, the Spark at most 20. The link spark-app://pair opens the app with address and code.
-4. <a id="kn-apps-s4"></a>**Code valid?**: The app sends the code. The Spark checks the rate limit (10 per minute and address), compares the hash in constant time and deletes the code at the first hit. An expired or used code never fits.
+4. <a id="kn-apps-s4"></a>**Code valid?**: The app sends the code. The Spark checks the rate limit (10 per minute and address), compares the hash in constant time and deletes the code at the first hit. An expired or used code never fits. If it is no link code, pruefzugang.py checks a typed review code for Apple's review (12 signs, 14 days, at most 5 iPhones, only with the review access on); wrong review codes lock the address like wrong PINs.
 5. <a id="kn-apps-s5"></a>**Own device key**: profiles.add_device makes the key and stores only its SHA-256 hash in profiles.json. The app gets it exactly once and keeps it in the keychain.
 6. <a id="kn-apps-s6"></a>**Every request with the key**: profiles.current looks up the key's hash in the device list. A device key comes before the cookie; the profile always comes from the key, never from what the app writes.
 7. <a id="kn-apps-s7"></a>**Path allowed for the app?**: An app key only works for the 69 paths in profiles.APP_PATHS (chat, speech recognition, conversations, reminders, chats, calls …), a few read patterns, the panel areas (admin switch iPhone app with panel) and "My things" (iphone.THINGS, each part only with the release of its own function). Everything else it sees without a profile.
@@ -3030,7 +3032,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Seal**: vault.seal turns the value into „enc1:“ and a Fernet token (encrypted and protected against change). A value already sealed stays as it is.
 5. <a id="kn-state-s5"></a>**Write atomically**: common.write_json writes into a fresh temporary file next to it, never through a link, gives it the rights of the old file (a new one is readable for the service only) and then swaps it in one step. A crash in the middle leaves the old file whole.
 6. <a id="kn-state-s6"></a>**Read**: A sealed value is opened with the key. If the key does not fit (backup from another Spark), an empty value comes back and the account has to be entered again. Older unsealed values are read and sealed the next time they are saved.
-7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 31), otherwise the line gives its reason (dateien.STATE_LOCAL, 71). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
+7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 32), otherwise the line gives its reason (dateien.STATE_LOCAL, 71). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
 8. <a id="kn-state-s8"></a>**Move backup?**: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup.
 9. <a id="kn-state-s9"></a>**Fine when restoring?**: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays.
 10. <a id="kn-state-s10"></a>**Put in place with a way back**: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back.
@@ -3040,7 +3042,7 @@ flowchart TD
 
 #### Numbers (from the code)
 
-- **31** files in every backup ([step 7](#kn-state-s7))
+- **32** files in every backup ([step 7](#kn-state-s7))
 - **71** files and folders that stay out with a reason ([step 7](#kn-state-s7))
 - **8 MB** largest file when restoring ([step 9](#kn-state-s9))
 - **12** characters the move password has at least ([step 8](#kn-state-s8))

@@ -15,7 +15,7 @@ struct ContentView: View {
 
     var body: some View {
         Group {
-            if app.paired || Demo.scene != nil { ChatView() } else { PairView() }
+            if app.paired || app.demo || Demo.scene != nil { ChatView() } else { PairView() }
         }
         .alert(item: $app.offered) { link in
             if let old = link.replacing {
@@ -129,6 +129,8 @@ struct JoinView: View {
 struct PairView: View {
     @EnvironmentObject var app: AppState
     @State private var pasted = ""
+    @State private var address = ""
+    @State private var code = ""
 
     var body: some View {
         NavigationStack {
@@ -148,6 +150,28 @@ struct PairView: View {
                         if let url = URL(string: pasted.trimmingCharacters(in: .whitespacesAndNewlines)) { app.open(url) }
                     }
                     .disabled(pasted.isEmpty || app.busy)
+                }
+                // Apple's app review and anyone with a code from the admin (panel: Prüfzugang für die iPhone-App)
+                Section {
+                    TextField("Adresse, z. B. https://spark.example.de", text: $address)
+                        .keyboardType(.URL)
+                        .textContentType(.URL)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                    TextField("Prüf-Code, z. B. ABCD-EFGH-JKMN", text: $code)
+                        .textInputAutocapitalization(.characters)
+                        .autocorrectionDisabled()
+                    Button("Mit Prüf-Code verbinden") { app.review(address: address, code: code) }
+                        .disabled(address.isEmpty || code.isEmpty || app.busy)
+                } header: {
+                    Text("Mit Prüf-Code verbinden")
+                } footer: {
+                    Text("Den Code gibt dir der Admin des Spark. Er gilt 14 Tage.")
+                }
+                Section {
+                    Button("Ohne Spark ansehen") { app.startDemo() }
+                } footer: {
+                    Text("Eine Vorführung mit Beispielen. Nichts verlässt dieses iPhone.")
                 }
                 if app.busy {
                     Section { ProgressView("Kopple …") }
@@ -189,6 +213,11 @@ struct ChatView: View {
             .navigationTitle("Spark")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                if app.demo {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button("Vorführung beenden") { app.endDemo() }
+                    }
+                }
                 ToolbarItem(placement: .topBarLeading) {
                     Button { talk.restart() } label: { Image(systemName: "square.and.pencil") }
                         .accessibilityLabel("Neues Gespräch")

@@ -10420,6 +10420,106 @@
           }
         }
       }
+    },
+    "Adresse, z. B. https://spark.example.de": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Address, e.g. https://spark.example.de"
+          }
+        }
+      }
+    },
+    "Prüf-Code, z. B. ABCD-EFGH-JKMN": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review code, e.g. ABCD-EFGH-JKMN"
+          }
+        }
+      }
+    },
+    "Mit Prüf-Code verbinden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect with a review code"
+          }
+        }
+      }
+    },
+    "Den Code gibt dir der Admin des Spark. Er gilt 14 Tage.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Spark's admin gives you the code. It is valid for 14 days."
+          }
+        }
+      }
+    },
+    "Ohne Spark ansehen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Look without a Spark"
+          }
+        }
+      }
+    },
+    "Eine Vorführung mit Beispielen. Nichts verlässt dieses iPhone.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A demo with examples. Nothing leaves this iPhone."
+          }
+        }
+      }
+    },
+    "Vorführung beenden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "End the demo"
+          }
+        }
+      }
+    },
+    "Die Adresse muss mit https:// beginnen, zum Beispiel https://spark.example.de": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The address must start with https://, for example https://spark.example.de"
+          }
+        }
+      }
+    },
+    "Der Prüf-Code hat zwölf Buchstaben und Ziffern.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The review code has twelve letters and digits."
+          }
+        }
+      }
+    },
+    "In der Vorführung geht nur Schreiben. Sprechen braucht deinen Spark.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In the demo you can only write. Speaking needs your Spark."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

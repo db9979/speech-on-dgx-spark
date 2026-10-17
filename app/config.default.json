@@ -372,6 +372,7 @@
     "mcp_server_act": false,
     "iphone_push": false,
     "iphone_update": false,
+    "iphone_review": false,
     "esp32_url": "",
     "esp32_ota_http": true,
     "esp32_stop": false,

@@ -578,7 +578,7 @@ const AUDIT={admin_login:t('Admin angemeldet','admin signed in'),admin_login_fai
   profile_device_removed:t('Gerät gesperrt','device blocked'),foreign_page_refused:t('fremde Seite abgewiesen','foreign page refused'),
   invite_made:t('Einladung erstellt','invitation created'),invite_used:t('neue Person über Einladung','new person by invitation'),
   invite_app:t('neue Person über Einladung (iPhone-App)','new person by invitation (iPhone app)'),invite_pin:t('neue PIN über Einladungslink','new PIN through an invitation link'),
-  invite_revoked:t('Einladung zurückgezogen','invitation withdrawn'),handoff_login:t('Handy über QR-Code angemeldet','phone signed in by QR code'),
+  invite_revoked:t('Einladung zurückgezogen','invitation withdrawn'),review_made:t('Prüfzugang erstellt','review access made'),review_used:t('iPhone mit Prüf-Code gekoppelt','iPhone paired with a review code'),review_deleted:t('Prüfzugang gelöscht','review access deleted'),handoff_login:t('Handy über QR-Code angemeldet','phone signed in by QR code'),
   backup:t('Sicherung','backup'),restore:t('Wiederherstellung','restore'),watchdog:t('Wächter','watchdog')};
 $('tts.model').addEventListener('change',()=>instrHint(true));
 

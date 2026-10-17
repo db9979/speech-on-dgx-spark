@@ -429,6 +429,8 @@ LIVE_WORDS = {
     "verbund_peer_allow": ("Eingang", "Anderen Spark erlaubt"), "verbund_peer_block": ("Eingang", "Anderen Spark gesperrt"),
     "verbund_peer_remove": ("Eingang", "Anderen Spark entfernt"),
     "invite_made": ("Eingang", "Einladung erstellt"), "invite_revoked": ("Eingang", "Einladung zurückgezogen"),
+    "review_made": ("Eingang", "Prüfzugang für die iPhone-App erstellt"), "review_deleted": ("Eingang", "Prüfzugang gelöscht"),
+    "review_used": ("Eingang", "iPhone mit Prüf-Code gekoppelt"),
     "invite_app": ("Eingang", "Einladung in der App angenommen"), "profile_device_removed": ("Eingang", "Gerät entfernt"),
     "profile_logout_all": ("Eingang", "Profil überall abgemeldet"), "profile_session_end": ("Eingang", "Sitzung beendet"),
     "mcp_connect": ("Eingang", "Programm per MCP verbunden"), "mcp_remove": ("Eingang", "MCP-Zugang entfernt"),

@@ -1660,6 +1660,13 @@
 "titel": "Programm am Mac nach vorn holen",
 "text": "A: Funktionen → Spark bedient den Rechner ist an, unter Ich → Begleiter beim Mac „Am PC handeln“ an und das Terminal unter den freigegebenen Programmen. P: In der iPhone-App „Was läuft auf meinem Mac?“ fragen, dann „Das Terminal in den Vordergrund.“: am Mac erscheint die Rückfrage, nach dem Ja kommt das Terminal nach vorn. „Nochmal“ fragt wieder am Mac. Danach „Wie wird das Wetter?“: keine Rückfrage am Mac.",
 "thread": "Rechner fernsteuern"
+},
+{
+"id": "P261",
+"v": 754,
+"titel": "iPhone-App: Prüf-Code und Vorführung",
+"text": "A: Funktionen → Prüfzugang für die iPhone-App an. Unter Personen und Geräte → Prüfzugang für die iPhone-App ein Testprofil wählen und „Prüfzugang erstellen“: Adresse und Code erscheinen einmal. Auf einem nicht gekoppelten iPhone „Mit Prüf-Code verbinden“, beides eintippen, Koppeln bestätigen: die App ist im Testprofil, Smart Home und Chats sind dort gesperrt. Prüfzugang löschen: die App ist wieder entkoppelt. B: Auf dem Kopplungs-Bildschirm „Ohne Spark ansehen“: Beispielgespräch erscheint, eine geschriebene Frage bekommt eine Beispielantwort, „Vorführung beenden“ führt zurück.",
+"thread": "iPhone-App aufpäppeln"
 }
 ]
 }

@@ -378,6 +378,9 @@ FEATURES = (
       parent="iphone", me="appbox", guide="iphonepanel"),
     # appmerken.py: the iPhone and the Android app keep the last state of their profile on the phone (no files, no keys)
     F("appmerken", "Apps merken sich den letzten Stand", "Apps keep the last state", "go", ("app_cache",), guide="appmerken"),
+    # pruefzugang.py: Apple's app review pairs with a typed code instead of the 10-minute link
+    F("iphonepruef", "Prüfzugang für die iPhone-App", "Review access for the iPhone app", "go", ("iphone_review",),
+      parent="iphone", guide="iphonepruef"),
     F("iphoneupdate", "Spark-Update über die iPhone-App", "Spark update from the iPhone app", "go", ("iphone_update",),
       parent="iphone", guide="iphoneupdate"),
     # security
@@ -507,6 +510,8 @@ OWN = {}
 # the second step a profile still owes before using a function (join.py, new profiles by invitation):
 # function(uid, key) -> bool, set by join.py
 DUTY = None
+# pruefzugang.py: uid -> the functions blocked for a profile with a review access for Apple (features.blocked)
+REVIEW = None
 
 # chat.* switches that are no function a profile uses (how the Spark itself works)
 SPARK_ONLY = {"public", "thinking", "prompt_cache", "answer_check", "action_check", "loop_stop", "datetime", "face_life", "esp32_ota_http", "wartung", "wartungauto", "notbetriebasr", "gehaeuse", "schirm", "rundlauf", "modellwechsel", "modelleeigen"}
@@ -642,7 +647,8 @@ def blocked(key, uid, c=None):
     one it builds on. A profile can never change this itself, it is not in its settings."""
     c = chat_cfg() if c is None else c
     deny = c.get("deny") if isinstance(c.get("deny"), dict) else {}
-    return any(uid in (deny.get(k) or ()) for k in chain(key) if k not in NO_BLOCK)
+    review = REVIEW(uid) if REVIEW else ()
+    return any(uid in (deny.get(k) or ()) or k in review for k in chain(key) if k not in NO_BLOCK)
 
 
 # never blocked for a single profile: a profile must always be able to set up its second step (Dominik 2026-10-13)

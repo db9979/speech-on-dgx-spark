@@ -55,7 +55,7 @@ Zusätzlich zu Schritt 1–2 in App Store Connect unter der App:
 - **Datenschutzrichtlinie (URL)**: fertig in [app-datenschutz.md](app-datenschutz.md), englisch in [app-privacy.md](../en/app-privacy.md). Als URL den GitHub-Link der Datei eintragen.
 - **App-Datenschutz**: „Keine Daten erfasst“ (alles geht an den Spark des Nutzers, nicht an dich). Mitteilungen über Apple enthalten nur einen festen Satz.
 - **Altersfreigabe**: Fragebogen ausfüllen (keine Inhalte der Kategorien → 4+; wegen freier Antworten eines Sprachmodells eher 12+).
-- **Hinweise für die Prüfung**: Apples Prüfer brauchen einen Spark. Ein eigenes Testprofil anlegen, einen Kopplungs-Link erzeugen (gilt nur 10 Minuten, daher besser ein kurzes Video der App beilegen und anbieten, auf Zuruf einen Link zu schicken) und die Adresse deines Reverse Proxys nennen.
+- **Hinweise für die Prüfung**: Apples Prüfer brauchen einen Spark. Ein eigenes Testprofil wie „App Review“ anlegen und unter Personen und Geräte → Prüfzugang für die iPhone-App einen Prüfzugang erstellen (gilt 14 Tage). Bei den Anmeldedaten die Adresse deines Reverse Proxys als Benutzername und den Prüf-Code als Passwort eintragen und dazuschreiben: „Auf dem ersten Bildschirm ‚Mit Prüf-Code verbinden‘ antippen, Adresse und Code eintippen. Ohne Zugang zeigt ‚Ohne Spark ansehen‘ eine Vorführung.“ Ein kurzes Video der App hilft zusätzlich.
 - **Verfügbarkeit**: „Nicht gelistet“ (nur per Link) bei Apple beantragen, wenn die App nicht in der Suche im App Store auftauchen soll.
 
 

@@ -276,6 +276,13 @@ final class Conversation: ObservableObject {
         flushNext()
     }
 
+    /// The demo ended: its examples go.
+    func endDemo() {
+        restart()
+        offer = nil
+        allowed = Allowed()
+    }
+
     /// Quick start (Action button, Control Center, lock screen, "Spark zuhören"): listen right away.
     func listenNow() {
         notice = nil
@@ -405,6 +412,10 @@ final class Conversation: ObservableObject {
     func tap() {
         notice = nil
         lastActivity = Date()
+        if Demo.live {   // speech recognition runs on the Spark
+            error = String(localized: "In der Vorführung geht nur Schreiben. Sprechen braucht deinen Spark.")
+            return
+        }
         switch phase {
         case .idle, .waiting:
             guard !unreachable else {
@@ -603,6 +614,11 @@ final class Conversation: ObservableObject {
     // ---------------------------------------------------------------- asking
     func write(_ text: String) {
         let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        if Demo.live, !text.isEmpty {   // the demo answers here with an example (Demo.swift), nothing goes out
+            messages.append(Message(role: "user", text: text))
+            messages.append(Message(role: "assistant", text: Demo.answer(text)))
+            return
+        }
         guard !text.isEmpty, let api = SparkAPI.current else { return }
         lastActivity = Date()
         if unreachable {

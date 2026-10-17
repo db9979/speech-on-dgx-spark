@@ -263,15 +263,23 @@ async def app_pair(request: Request):
     """The app's first contact: the one-time code from the link gives it its own key (scope "app")."""
     guard.limit(request, "pair")
     body = await json_body(request, MAX_BODY, lenient=True)
-    uid = take_code(body.get("code"))
+    uid, review = take_code(body.get("code")), None
+    if not uid:   # a typed review code for Apple's app review (pruefzugang.py): 12 signs, never a link code
+        import pruefzugang
+        review, uid = pruefzugang.take(request, body.get("code")) or (None, None)
     prof = uid and profiles.by_id(uid)
     if not prof or not allowed(uid):
-        raise HTTPException(400, "Der Kopplungs-Link passt nicht oder ist abgelaufen. Im Panel einen neuen holen.")
+        print("iphone: pairing refused", flush=True)
+        raise HTTPException(400, "Der Kopplungs-Link oder Prüf-Code passt nicht oder ist abgelaufen. Im Panel einen neuen holen.")
     if len(phones(uid)) >= MAX_PHONES:
+        print("iphone: pairing refused, too many iPhones", flush=True)
         raise HTTPException(409, "Zu viele iPhones für dieses Profil.")
     token = profiles.add_device(_name(body.get("name")), uid, scope="app")
-    print("iphone: paired for", profiles.log_name(prof), flush=True)
-    _live_mark("Eingang", "iPhone-App gekoppelt")
+    if review:
+        pruefzugang.paired(review, profiles.device_by_token(token)["id"])
+        guard.log("review_used", uid=uid, review=review)
+    print("iphone: paired for", profiles.log_name(prof), "with review code" if review else "", flush=True)
+    _live_mark("Eingang", "iPhone-App mit Prüf-Code gekoppelt" if review else "iPhone-App gekoppelt")
     return {"token": token, "profile": prof["name"], "version": app_version(), "language": _language()}
 
 
@@ -284,6 +292,8 @@ def _admin_role(uid):
 @router.get("/api/iphone/hello", dependencies=[Depends(assistant)])
 def app_hello(prof=Depends(own_profile), request: Request = None):
     """The app checks its key: whose it is and which Spark."""
+    import pruefzugang
+    pruefzugang.tidy()   # an expired review access loses its iPhones (this very key at the next request)
     s = profiles.settings(prof["id"])
     import apns
     import proactive

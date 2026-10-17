@@ -453,7 +453,7 @@ def refused(request, what, locked=0):
         if not on():
             return
         word = {"login": "Anmeldung", "handoff_code": "Übergabe-Code", "live_code": "Monitor-Code", "profile_login": "Profil-Anmeldung",
-                "mfa": "zweiter Schritt", "pin": "PIN"}.get(what, "Anmeldung")
+                "mfa": "zweiter Schritt", "pin": "PIN", "review_code": "Prüf-Code"}.get(what, "Anmeldung")
         steps = [("kam aus dem Internet" if shown_outside(request) else "kam aus dem Heimnetz"), f"{word} falsch"]
         if locked:
             steps.append(f"→ Absender {int(locked) // 60 or 1} min gesperrt, steht im Admin-Protokoll")

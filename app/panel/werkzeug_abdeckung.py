@@ -198,6 +198,7 @@ WITHOUT = {
     "iphonepush": "Kanal",
     "iphonepanel": "Kanal",
     "iphoneupdate": "nur mit Code in der App",
+    "iphonepruef": "Zugang für Apples Prüfung in der Oberfläche",
     "mcpserver": "Schnittstelle für andere Programme",
     "mcpextern": "Schnittstelle für andere Programme",
     "mcpact": "Schnittstelle für andere Programme",

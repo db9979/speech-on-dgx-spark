@@ -55,7 +55,7 @@ In addition to steps 1–2, in App Store Connect under the app:
 - **Privacy policy (URL)**: ready in [app-privacy.md](app-privacy.md), German in [app-datenschutz.md](../de/app-datenschutz.md). Enter the GitHub link of the file as the URL.
 - **App Privacy**: "Data Not Collected" (everything goes to the user's own Spark, not to you). Notifications through Apple carry only a fixed sentence.
 - **Age rating**: fill in the questionnaire (no content of the categories → 4+; because of the free answers of a language model rather 12+).
-- **Notes for the review**: Apple's reviewers need a Spark. Create a test profile of its own, make a pairing link (it lasts only 10 minutes, so better add a short video of the app and offer to send a link on request) and name the address of your reverse proxy.
+- **Notes for the review**: Apple's reviewers need a Spark. Create a test profile of its own such as "App Review" and make a review access under People and devices → Review access for the iPhone app (valid 14 days). In the sign-in details put the address of your reverse proxy as the user name and the review code as the password, and add: "On the first screen tap 'Connect with a review code', type address and code. Without access, 'Look without a Spark' shows a demo." A short video of the app helps as well.
 - **Availability**: request "Unlisted" (by link only) at Apple when the app should not show up in the App Store search.
 
 ### Fill in the texts automatically

@@ -647,10 +647,13 @@ TUI_REACH = [lambda request: None]
 
 def _device(d, request):
     token = request.headers.get(DEVICE_HEADER, "")
-    if not token:
-        return None
-    h = hashlib.sha256(token.encode()).hexdigest()
-    return next((x for x in d["devices"] if secrets.compare_digest(x["token"], h)), None)
+    return device_by_token(token, d) if token else None
+
+
+def device_by_token(token, d=None):
+    """The device entry behind a key (also one just handed out by add_device), or None."""
+    h = hashlib.sha256(str(token).encode()).hexdigest()
+    return next((x for x in (_load() if d is None else d)["devices"] if secrets.compare_digest(x["token"], h)), None)
 
 
 def device(request):

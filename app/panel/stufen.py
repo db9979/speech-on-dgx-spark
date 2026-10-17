@@ -98,6 +98,7 @@ LIST = {
     ("PUT", "/api/admin/devices/{did}"): (CONFIRM, "Personen", "Geräte-Schlüssel ändern", "Change a device key"),
     ("PUT", "/api/admin/join"): (CONFIRM, "Personen", "Einladungen erlauben", "Allow invitations"),
     ("POST", "/api/admin/join/invites"): (CONFIRM, "Personen", "Person einladen", "Invite a person"),
+    ("POST", "/api/admin/pruefzugang"): (CONFIRM, "Personen", "Prüfzugang für die iPhone-App erstellen", "Make a review access for the iPhone app"),
     ("POST", "/api/logout-everywhere"): (CONFIRM, "Personen", "Notzugang überall abmelden", "Sign the emergency access out everywhere"),
     ("PUT", "/api/config"): (CONFIRM, "Spark", "Einstellungen, die Daten nach außen schicken oder Anmeldungen ändern", "Settings that send data elsewhere or change logins"),
     ("POST", "/api/hilfe/karte/{cid}"): (CONFIRM, "Spark", "Spark-Schalter aus einer Hilfe-Karte", "Spark switches from a help card"),

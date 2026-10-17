@@ -182,3 +182,33 @@ async function handPc(){const box=$('gohand');clearTimeout(GO.timer);
 // after the first sign-in through an invitation (or a phone that continues): straight to "Los geht's"
 async function goStart(who){SETUP=who&&who.setup||null;let first=false;try{first=sessionStorage.getItem('golets')==='1';sessionStorage.removeItem('golets')}catch{}
   if(!PROFILE||!SETUP||!SETUP.total)return;if(first||SETUP.fresh){if(SETUP.fresh)goPut({fresh:false});await openMe('gobox')}}
+// ---------------------------------------------------------------- Personen und Geräte → Prüfzugang für die iPhone-App
+// Apple's app review (pruefzugang.py): address and a typed code instead of the 10-minute link; the code is shown only once
+const PZ={made:null};
+async function pruefAdmin(){const box=$('pruefadmin');if(!box)return;let d;
+  const head=`<h2>${t('Prüfzugang für die iPhone-App','Review access for the iPhone app')}</h2>`;
+  try{d=await (await api('/api/admin/pruefzugang')).json()}catch(e){box.innerHTML=`${head}<div class="err">${esc(e.message)}</div>`;return}
+  const https=location.protocol==='https:',st={open:['ok',t('offen','open')],gone:['',t('abgelaufen','expired')]};
+  box.innerHTML=`${head}
+    <div class="intro">${t('Für Apples Prüfung im App Store: Adresse und Code tippt der Prüfer in der App unter „Mit Prüf-Code verbinden“. Am besten ein eigenes Profil wie „App Review“ nehmen. Gilt ','For Apple\'s App Store review: the reviewer types address and code in the app under "Connect with a review code". Best use a profile of its own such as "App Review". Valid ')}${d.days}${t(' Tage, für höchstens ',' days, for at most ')}${d.max_uses}${t(' iPhones. Smart Home, Mail, Kalender, Kontakte, Anrufe, Chats, Telegram, Aufträge, Lautsprecher und Updates sind für das Profil dann gesperrt.',' iPhones. Smart home, mail, calendars, contacts, calls, chats, Telegram, jobs, speakers and updates are then blocked for the profile.')}</div>
+    ${d.on?`<div class="jline"><select id="pzuid" aria-label="${esc(t('Profil','Profile'))}">${d.profiles.map(p=>`<option value="${esc(p.id)}"${/review|prüf/i.test(p.name)?' selected':''}>${esc(p.name)}</option>`).join('')}</select>
+      <button class="b p" type="button" id="pznew"${https&&d.profiles.length?'':' disabled'}>+ ${t('Prüfzugang erstellen','Make a review access')}</button></div>
+      ${https?'':`<div class="fh">${t('Der Prüfzugang braucht die https-Adresse des Panels. Diese Seite über https öffnen.','The review access needs the panel\'s https address. Open this page over https.')}</div>`}`
+      :`<div class="fh">${d.iphone_on?t('Erst Funktionen → Prüfzugang für die iPhone-App einschalten.','First switch on Features → Review access for the iPhone app.'):t('Erst Funktionen → iPhone-App einschalten.','First switch on Features → iPhone app.')}</div>`}
+    <div id="pzmade"></div>
+    <ul class="facts jlist">${d.codes.map(c=>`<li><span><b>${esc(c.profile||'?')}</b><br><small class="mut">${esc(st[c.state][1])} · ${t('bis ','until ')}${esc(jwhen(c.until))} · ${c.used}/${c.max} ${t('benutzt','used')} · ${c.phones} iPhone · ${t('von ','by ')}${esc(c.by)}</small></span>
+      <button class="b" type="button" data-pzdel="${esc(c.id)}">${t('Löschen','Delete')}</button></li>`).join('')}</ul>
+    <div class="fh" id="pzmsg"></div>`;
+  const msg=x=>{$('pzmsg').className='fh err';$('pzmsg').textContent=x};
+  if($('pznew'))$('pznew').onclick=async()=>{try{PZ.made=await (await api('/api/admin/pruefzugang',xjson('POST',{uid:$('pzuid').value,base:location.origin}))).json();pruefAdmin()}catch(e){msg(e.message)}};
+  box.querySelectorAll('[data-pzdel]').forEach(b=>b.onclick=async()=>{if(!confirm(t('Prüfzugang löschen? Der Code geht nicht mehr, gekoppelte iPhones werden entfernt.','Delete the review access? The code stops working, paired iPhones are removed.')))return;
+    try{await api('/api/admin/pruefzugang/'+encodeURIComponent(b.dataset.pzdel),{method:'DELETE'});pruefAdmin()}catch(e){msg(e.message)}});
+  if(PZ.made)pruefShow(PZ.made)}
+function pruefShow(r){const box=$('pzmade');if(!box)return;
+  const text=`${t('Adresse','Address')}: ${r.base}\n${t('Prüf-Code','Review code')}: ${r.code}`;
+  box.innerHTML=`<div class="jmade"><div class="sp"><b>${t('Für App Store Connect → App-Prüfung','For App Store Connect → App Review')}</b>
+    <div class="fh">${t('Wird nur jetzt angezeigt. In die Anmeldedaten der App-Prüfung eintragen (Benutzername: die Adresse, Passwort: der Code).','Shown only now. Put it into the App Review sign-in details (user name: the address, password: the code).')}</div>
+    <textarea readonly class="token" rows="2" aria-label="${esc(t('Prüf-Code','Review code'))}">${esc(text)}</textarea>
+    <div class="row"><button class="b" type="button" data-pzcopy>${t('Kopieren','Copy')}</button><button class="b" type="button" data-pzdone>${t('Fertig','Done')}</button></div></div></div>`;
+  box.querySelector('[data-pzcopy]').onclick=async()=>{try{await navigator.clipboard.writeText(text)}catch{box.querySelector('textarea').select()}};
+  box.querySelector('[data-pzdone]').onclick=()=>{PZ.made=null;box.innerHTML=''}}

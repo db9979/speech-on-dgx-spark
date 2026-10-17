@@ -1,17 +1,23 @@
 import Foundation
 
-/// Example screens for the App Store pictures (workflow "App Store screenshots").
-/// Only in Debug builds and only with the launch argument `-SparkDemo <scene>`; the App Store build
-/// never has it. Nothing goes to a Spark: no pairing, no network, made-up example content.
+/// Example screens for the App Store pictures (workflow "App Store screenshots"), and the demo "Ohne Spark ansehen"
+/// on the pairing screen (scene "live"): for Apple's review and anyone without a Spark yet. The pictures need a Debug
+/// build and the launch argument `-SparkDemo <scene>`. Nothing goes to a Spark: no pairing, no network (the app is not
+/// paired, so it has no key and no address), made-up example content, typed questions answered here (answer).
 enum Demo {
-    /// chat, photo, remind, profile, history
-    static let scene: String? = {
+    /// chat, photo, remind, profile, history; "live" while the demo runs
+    static var scene: String? { launch ?? (live ? "live" : nil) }
+
+    private static let launch: String? = {
         #if DEBUG
         let a = ProcessInfo.processInfo.arguments
         if let i = a.firstIndex(of: "-SparkDemo"), i + 1 < a.count { return a[i + 1] }
         #endif
         return nil
     }()
+
+    /// "Ohne Spark ansehen" is running (AppState.startDemo / endDemo)
+    static var live = false
 
     private static var en: Bool { Locale.preferredLanguages.first?.hasPrefix("en") ?? false }
     private static func t(_ de: String, _ en: String) -> String { Self.en ? en : de }
@@ -51,6 +57,12 @@ enum Demo {
         case "profile", "history":
             say("user", t("Wie wird das Wetter morgen?", "What's the weather like tomorrow?"))
             say("assistant", t("Morgen wird es sonnig und bis 19 Grad warm.", "Tomorrow will be sunny, up to 19 degrees."))
+        case "live":
+            say("assistant", t("Das ist eine Vorführung ohne Spark. Ich zeige dir mit Beispielen, wie die App aussieht; nichts verlässt dieses iPhone. Schreib mir etwas, zum Beispiel „Wie wird das Wetter?“ oder „Was kannst du?“.",
+                               "This is a demo without a Spark. I show you with examples what the app looks like; nothing leaves this iPhone. Write me something, for example \"What's the weather like?\" or \"What can you do?\"."))
+            say("user", t("Wie wird das Wetter morgen?", "What's the weather like tomorrow?"))
+            say("assistant", t("Morgen wird es sonnig und bis 19 Grad warm. (Beispiel)", "Tomorrow will be sunny, up to 19 degrees. (Example)"))
+            c.phase = .idle
         default:
             say("user", t("Wie wird das Wetter morgen?", "What's the weather like tomorrow?"))
             say("assistant", t("Morgen wird es sonnig und bis 19 Grad warm. Am Nachmittag frischt der Wind auf, für den Abend reicht eine leichte Jacke.",
@@ -60,6 +72,26 @@ enum Demo {
                                "The dentist at 9, the call with the tax office at 2 pm. Nothing in the evening."))
             c.phase = .speaking
         }
+    }
+
+    /// The demo's answer to a typed question: a fixed example, never a model and never the network.
+    static func answer(_ text: String) -> String {
+        let q = text.lowercased()
+        func has(_ words: String...) -> Bool { words.contains { q.contains($0) } }
+        if has("wetter", "weather", "regen", "rain") {
+            return t("Morgen wird es sonnig und bis 19 Grad warm, am Abend frischt der Wind auf. (Beispiel)",
+                     "Tomorrow will be sunny, up to 19 degrees, the wind picks up in the evening. (Example)")
+        }
+        if has("erinner", "remind", "timer", "wecker") {
+            return t("Mit deinem Spark stelle ich Timer und Erinnerungen, auch auf dem Sperrbildschirm und in CarPlay. (Beispiel)",
+                     "With your Spark I set timers and reminders, also on the lock screen and in CarPlay. (Example)")
+        }
+        if has("kannst", "can you", "hilfe", "help", "was ist", "what is") {
+            return t("Mit deinem eigenen Spark beantworte ich Fragen per Sprache und Text, lese Fotos und Dokumente, erinnere dich und spreche im Auto mit dir. Alles läuft bei dir zu Hause, nicht in einer Cloud.",
+                     "With your own Spark I answer questions by voice and text, read photos and documents, remind you and talk to you in the car. Everything runs at your home, not in a cloud.")
+        }
+        return t("In der Vorführung antworte ich nur mit Beispielen. Mit deinem eigenen Spark beantworte ich hier jede Frage.",
+                 "In the demo I only answer with examples. With your own Spark I answer any question here.")
     }
 
     /// "Mein Profil" as /api/iphone/settings would bring it

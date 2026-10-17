@@ -21,6 +21,8 @@ final class AppState: ObservableObject {
     @Published var message: String?
     @Published var offered: Link?
     @Published var invited: Link?
+    /// "Ohne Spark ansehen": the demo with examples (Demo.swift), only while not paired
+    @Published var demo = false
 
     /// spark-app://pair?url=https://...&code=... (from the panel: QR code or link)
     /// spark-app://join?url=https://...&code=... (an invitation: a new profile and this iPhone's key in one step)
@@ -58,6 +60,36 @@ final class AppState: ObservableObject {
             link.replacing = Self.label(now)
         }
         offered = link
+    }
+
+    /// "Mit Prüf-Code verbinden" (Apple's app review, panel: Personen und Geräte → Prüfzugang für die iPhone-App): the
+    /// panel's https address and the twelve signs typed by hand. Asks first like a link, then pairs as usual.
+    func review(address: String, code: String) {
+        var raw = address.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !raw.contains("://") { raw = "https://" + raw }
+        while raw.hasSuffix("/") { raw.removeLast() }
+        guard let base = Self.checked(raw) else {
+            message = String(localized: "Die Adresse muss mit https:// beginnen, zum Beispiel https://spark.example.de")
+            return
+        }
+        let typed = code.uppercased().filter { $0.isLetter || $0.isNumber }
+        guard typed.count == 12 else {
+            message = String(localized: "Der Prüf-Code hat zwölf Buchstaben und Ziffern.")
+            return
+        }
+        message = nil
+        offered = Link(base: base, code: typed)
+    }
+
+    func startDemo() {
+        Demo.live = true
+        demo = true
+    }
+
+    func endDemo() {
+        Demo.live = false
+        demo = false
+        Conversation.shared.endDemo()
     }
 
     /// Same scheme, host and port (the panel's links carry no path).

@@ -238,6 +238,8 @@ def admin_delete_profile(uid: str, request: Request):
     coadmin.forget(uid)
     import join
     join.forget(uid)
+    import pruefzugang
+    pruefzugang.forget(uid)   # its review accesses for Apple
     import tipps
     tipps.forget(uid)   # its hints and counts (tipps.json)
     import chats
