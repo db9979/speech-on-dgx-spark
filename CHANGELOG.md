@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.760** · 2026-10-17 · Genauer und schneller, Paket B: eine erkannte Fragenart bekommt immer dieselbe Werkzeugliste (der Server liest den Anfang aus dem Zwischenspeicher), „Großes Gedächtnis kürzen“ gibt dem Modell bei vielen Fakten nur die neuesten und die passenden
 - **V01.0.759** · 2026-10-17 · Fix: Einstellungen fragen bei einem Admin-Profil nicht mehr nach dem zweiten Schritt des Panel-Passworts (kein „/api/mfa 403“ mehr in der Konsole)
 - **V01.0.758** · 2026-10-17 · Funktionen und Personen und Geräte mit Symbolen wie Zustand und Einstellungen: jede Seite im Menü daneben und jede Gruppe der Funktionen hat ihr farbiges Symbol
 - **V01.0.757** · 2026-10-17 · Werkstatt (Funktionen → Werkstatt): Testlauf, Code-Messung mit 10 Reparaturen, Diagnose und Reparatur mit OpenCode in einer Sandbox auf dem Modell-Rechner (eigener Nutzer, kein Netz außer dem eigenen LLM-Tor ganz hinten, keine Daten), jede Nacht testen, Live/Monitoring/Steuerzentrale; Weiche abstimmen: Wortvorschläge des Sprachmodells, mit festen Regeln an Übungs- und Prüfhälfte gemessen

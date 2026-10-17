@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "vorbereiten": {
-        "stand": "6fce97e170",
+        "stand": "6104283016",
         "bezug": {
             "klaeren.MAX_BUTTONS": ["s7"], "chat_turn.prepare": ["s1", "s13"], "chat_turn.shared_stranger": ["s3"],
             "chat.left_out": ["s2", "s4"], "notaus.locked_tools": ["s11"], "chat_turn.notaus_note": ["s8", "s11"],
@@ -73,10 +73,16 @@ SEITEN = {
               ("Admin-Text, Zeit, Länge, Stil, Kanal", "admin text, time, length, style, channel"),
               ("Der Systemprompt des Admins, dazu Länge und Stil des Profils und ein Hinweis je Kanal (Uhr, Siri, "
                "Lautsprecher, Telefon, Telegram, App, Browser). Mit „Schneller Antwortbeginn“ geht, was nur für diesen Zug "
-               "gilt, mit der Frage statt in den Systemprompt, damit der Server ihn aus dem Cache liest.",
+               "gilt, mit der Frage statt in den Systemprompt, damit der Server ihn aus dem Cache liest. Mit „Großes "
+               "Gedächtnis kürzen“ stehen bei einem langen Gedächtnis nur die neuesten Fakten fest darin (höchstens "
+               "{chat.MEMORY_CORE} Zeichen), dazu bis zu {chat.MEMORY_EXTRA} ältere, die Wörter mit der Frage teilen, "
+               "nur für diesen Zug (chat.memory_split).",
                "The admin's system prompt, plus the profile's length and style and a note per channel (watch, Siri, "
                "speaker, phone, Telegram, app, browser). With „Fast answer start“ what holds for this turn only goes with the "
-               "question instead of the system prompt, so the server reads it from its cache.")),
+               "question instead of the system prompt, so the server reads it from its cache. With „Trim a large "
+               "memory“ a long memory keeps only the newest facts fixed in it (at most {chat.MEMORY_CORE} characters), "
+               "plus up to {chat.MEMORY_EXTRA} older ones that share words with the question, for this turn only "
+               "(chat.memory_split).")),
             S("s6", "frage", ("Fester Satz?", "Fixed sentence?"),
               ("Rolle · Notaus · Problem melden · Bewertung", "role · kill switch · report · rating"),
               ("Sätze wie „Spark Notaus“, „Problem melden: …“ oder „Das war falsch“ führt das Panel selbst aus, nur aus "
@@ -140,9 +146,13 @@ SEITEN = {
               ("intent.narrow · nie mehr als die Rechte", "intent.narrow · never more than the rights"),
               ("Mit „Gezielte Werkzeugwahl“ bleibt nur die Gruppe der Frage übrig. Danach entscheidet das Panel, ob "
                "erst lokal gesucht wird, ob es ein eindeutiges Abrufen selbst macht und welches Werkzeug die erste "
-               "Runde rufen muss.",
+               "Runde rufen muss. Mit „Schneller Antwortbeginn“ bekommt eine erkannte Gruppe immer dieselbe Liste in "
+               "derselben Reihenfolge, so hält der Server je Gruppe einen Anfang im Cache; nur eine unklare Frage sieht "
+               "die volle Liste.",
                "With „Targeted tool choice“ only the question's group stays. Then the panel decides whether to search "
-               "locally first, whether it does a clear fetch itself and which tool the first round must call.")),
+               "locally first, whether it does a clear fetch itself and which tool the first round must call. With „Fast "
+               "answer start“ a recognized group always gets the same list in the same order, so the server keeps one "
+               "start per group in its cache; only an unclear question sees the full list.")),
             S("s13", "ende", ("Gesprächszug fertig", "Turn ready"),
               ("an chat._answer", "to chat._answer"),
               ("Der Systemprompt steht vorn, dazu die Werkzeuge und die Sperrregel. Der Notaus wird bei jedem "

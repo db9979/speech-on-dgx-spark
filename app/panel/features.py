@@ -104,6 +104,8 @@ FEATURES = (
       me="setbox", guide="direct"),
     # hoerwoerter.py (plan genauer-und-schneller, 5): the speech recognition gets the names of rooms, devices, people
     F("hoeren", "Namen fürs Hören", "Names for listening", "speed", ("hoer_namen",), guide="hoeren"),
+    # chat.memory_split (plan genauer-und-schneller, 4): a long memory keeps a fixed core, older facts only when they fit
+    F("gedkurz", "Großes Gedächtnis kürzen", "Trim a large memory", "speed", ("memory_trim",), guide="gedkurz"),
     F("ack", "Sofortige Rückmeldung", "Instant acknowledgement", "speed", ("instant_ack",),
       parent="routing", me="setbox", guide="ack"),
     # weiche_abstimmen.py (plan opencode-werkstatt, point 1): the model proposes words, fixed rules keep what helps

@@ -57,6 +57,29 @@ def text_of(evs):
     return "".join(e.get("delta", "") for e in evs if e["type"] == "text")
 
 
+class LargeMemory(unittest.TestCase):
+    """Großes Gedächtnis kürzen (plan genauer-und-schneller, 4): a fixed core in the system prompt, the matching
+    older facts only with this turn's question."""
+    def setUp(self):
+        helpers.keep_chat(self, "memory_trim", "prompt_cache")
+        helpers.set_config(prompt_cache=True, memory_trim=True)
+        helpers.LLM_CALLS.clear()
+
+    def test_old_matching_fact_goes_with_the_question(self):
+        p = profile("Gedaechtnis9")
+        uid = p.get("/api/whoami").json()["profile"]["id"]
+        facts = [{"id": "old1", "text": "Der Zahnarzt heißt Doktor Wurzelbaum", "created": 1, "src": "said"}]
+        facts += [{"id": f"f{i}", "text": f"Notiz {i}: ein langer Satz, damit das Gedächtnis groß genug wird",
+                   "created": 2 + i, "src": "said"} for i in range(150)]
+        chat.profiles._write(chat.profiles._path(uid, "memory.json"), facts)
+        self.addCleanup(chat.profiles._write, chat.profiles._path(uid, "memory.json"), [])
+        ask(p, [{"role": "user", "content": "Wie heißt mein Zahnarzt?"}])
+        call = streamed()[0]
+        self.assertNotIn("Wurzelbaum", system_of(call))            # not in the fixed core ...
+        self.assertIn("Notiz 149", system_of(call))
+        self.assertIn("Wurzelbaum", call["messages"][-1]["content"])   # ... but with the question
+
+
 class StableStart(unittest.TestCase):
     def setUp(self):
         helpers.keep_chat(self, "routing", "direct_read")
@@ -74,17 +97,31 @@ class StableStart(unittest.TestCase):
         ask(p, [{"role": "user", "content": "Erzähl mir einen Witz"}])
         b = streamed()[0]
         self.assertEqual(system_of(a), system_of(b))
-        self.assertEqual(names(a), names(b))                      # the same list, though the rules narrowed one
-        self.assertIn("reminder_set", names(b))
-        last = a["messages"][-1]["content"]
-        self.assertIn(chat.TOOLS_NOW, last)                       # what is left for this question goes with it
-        self.assertIn("reminder_set", last.split(chat.TOOLS_NOW, 1)[1])
-        self.assertNotIn("history_search", last.split(chat.TOOLS_NOW, 1)[1])
+        self.assertIn("reminder_set", names(b))                    # no rule recognized it: the full list
+        self.assertIn("history_search", names(b))
+
+    def test_a_fixed_tool_set_per_group(self):
+        """Plan genauer-und-schneller (3): a clear group always gets the same list in the same order, so the server
+        keeps one start per group in its cache, and the model only chooses among the tools that fit."""
+        p = profile("Anfang5")
+        ask(p, [{"role": "user", "content": "Erinnere mich in 10 Minuten an den Herd"}])
+        a = streamed()[0]
+        helpers.LLM_CALLS.clear()
+        ask(p, [{"role": "user", "content": "Stell einen Timer auf 5 Minuten"}])
+        b = streamed()[0]
+        self.assertEqual(system_of(a), system_of(b))
+        self.assertEqual(names(a), names(b))                       # same group, the very same list
+        self.assertIn("reminder_set", names(a))
+        self.assertNotIn("history_search", names(a))               # only what fits the group
+        self.assertNotIn(chat.TOOLS_NOW, a["messages"][-1]["content"])   # nothing left out, nothing to say
 
     def test_panel_still_runs_only_what_the_rules_left(self):
+        # a question no rule recognizes keeps the full list visible; "lean" offers only the LEAN tools of it
+        helpers.keep_chat(self, "route_model")
+        helpers.set_config(route_model="lean")
         p = profile("Anfang2")
-        evs = ask(p, [{"role": "user", "content": "TOOL history_search {} Erinnere mich in 10 Minuten an den Herd"}])
-        self.assertIn("history_search", names(streamed()[0]))      # visible to the model ...
+        evs = ask(p, [{"role": "user", "content": "TOOL reminder_set {} Erzähl mir einen Witz"}])
+        self.assertIn("reminder_set", names(streamed()[0]))        # visible to the model ...
         self.assertIn("Not done: this tool is not available", text_of(evs))   # ... but not run
 
     def test_smalltalk_gets_the_short_request(self):

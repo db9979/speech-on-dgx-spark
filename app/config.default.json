@@ -125,6 +125,7 @@
     "route_tune": false,
     "direct_read": true,
     "hoer_namen": false,
+    "memory_trim": false,
     "route_model": "off",
     "systemone": false,
     "systemone_tidy": false,

@@ -1073,8 +1073,53 @@ def _brief_hint(prof, docs, shared, question):
               "Knopf „Erinnern“ gibt.")
 
 
-def memory_hint(prof):
+# Großes Gedächtnis kürzen (chat.memory_trim, plan genauer-und-schneller, 4): up to 200 facts make every request long and
+# the model picks the wrong one more often. With the admin switch, a memory longer than MEMORY_CORE characters keeps the
+# newest facts that fit as a fixed core in the system prompt (it stays the same from turn to turn, so the LLM server keeps
+# reading it from its cache) and adds at most MEMORY_EXTRA older facts that share words with the question, as a note for
+# this turn only. The panel picks them with a fixed rule (shared words), never the model; nothing is deleted.
+MEMORY_CORE = 6000
+MEMORY_EXTRA = 5
+_MEM_WORD = re.compile(r"[^\W\d_]{4,}")
+_MEM_SKIP = {"bitte", "kannst", "könntest", "nicht", "habe", "hast", "eine", "einen", "einer", "dass", "wann", "warum",
+             "welche", "welcher", "wieder", "heute", "morgen", "gerade", "noch", "mein", "meine", "meinen", "meiner",
+             "deine", "sind", "wird", "werden", "haben", "mich", "dich", "doch", "also", "aber", "oder", "über", "what",
+             "with", "that", "this", "have", "when", "your", "please"}
+
+
+def _mem_words(text):
+    return {w.lower() for w in _MEM_WORD.findall(text or "")} - _MEM_SKIP
+
+
+def memory_split(facts, question, ccfg=None):
+    """(core facts, extra facts for this turn). Without the switch or for a short memory: (all, [])."""
+    ccfg = features.chat_cfg() if ccfg is None else ccfg
+    if not ccfg.get("memory_trim") or sum(len(x["text"]) + 3 for x in facts) <= MEMORY_CORE:
+        return facts, []
+    core, used = set(), 0
+    for i in range(len(facts) - 1, -1, -1):   # newest last in the file: fill the core from the end
+        used += len(facts[i]["text"]) + 3
+        if used > MEMORY_CORE:
+            break
+        core.add(i)
+    asked = _mem_words(question)
+    hits = sorted(((len(asked & _mem_words(f["text"])), i) for i, f in enumerate(facts) if i not in core),
+                  reverse=True)
+    extra = sorted(i for n, i in hits[:MEMORY_EXTRA] if n)
+    return [f for i, f in enumerate(facts) if i in core], [facts[i] for i in extra]
+
+
+def memory_hint(prof, question="", extra_out=None):
+    """The memory part of the system prompt. With Großes Gedächtnis kürzen, the matching older facts go into
+    extra_out (a list) as one note for this turn."""
     facts = profiles.memory(prof["id"])
+    every = len(facts)
+    facts, extra = memory_split(facts, question)
+    if len(facts) < every:   # counts only, never a fact
+        print(f"chat: Gedächtnis gekürzt, {len(facts)} von {every} Fakten fest, {len(extra)} passende dazu", flush=True)
+    if extra and extra_out is not None:
+        extra_out.append(f"Dazu passt aus dem, was du über {prof['name']} weißt:\n"
+                         + "\n".join("- " + x["text"] for x in extra))
     hint = (f"Du sprichst mit {prof['name']}. Mit memory_save merkst du dir dauerhaft, was {prof['name']} dir "
             "zum Merken sagt oder was für spätere Gespräche nützlich ist, mit memory_forget vergisst du es "
             "auf Wunsch. Sag kurz, dass du es dir gemerkt hast.")

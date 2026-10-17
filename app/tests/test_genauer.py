@@ -73,6 +73,32 @@ class SpokenAnswers(unittest.TestCase):
         self.assertEqual(chat.answer_tokens({"max_tokens": 300}, {"client": "speaker"}), 300)   # never more than the admin's
 
 
+class LargeMemory(unittest.TestCase):
+    FACTS = [{"text": f"Fakt Nummer {i} mit etwas Text, damit es lang wird und Platz braucht"} for i in range(150)]
+
+    def test_off_or_short_keeps_everything(self):
+        self.assertEqual(chat.memory_split(self.FACTS, "Hallo", {"memory_trim": False}), (self.FACTS, []))
+        short = self.FACTS[:5]
+        self.assertEqual(chat.memory_split(short, "Hallo", {"memory_trim": True}), (short, []))
+
+    def test_core_is_newest_and_extra_matches_the_question(self):
+        facts = [{"text": "Mein Bruder Klaus wohnt in Hamburg"}] + self.FACTS + [{"text": "Der Hund heißt Bello"}]
+        core, extra = chat.memory_split(facts, "Wo wohnt eigentlich Klaus?", {"memory_trim": True})
+        self.assertLessEqual(sum(len(x["text"]) + 3 for x in core), chat.MEMORY_CORE)
+        self.assertIs(core[-1], facts[-1])                         # the newest are the fixed core
+        self.assertNotIn(facts[0], core)
+        self.assertEqual(extra, [facts[0]])                        # the old fact only because the question names it
+        core2, _ = chat.memory_split(facts, "Was gibt es Neues?", {"memory_trim": True})
+        self.assertEqual(core, core2)                              # the core does not depend on the question
+
+    def test_at_most_a_few_extra_and_only_with_shared_words(self):
+        facts = [{"text": f"Garten Fakt {i}"} for i in range(20)] + self.FACTS
+        _, extra = chat.memory_split(facts, "Was weißt du über den Garten?", {"memory_trim": True})
+        self.assertEqual(len(extra), chat.MEMORY_EXTRA)
+        _, none = chat.memory_split(facts, "Bitte noch einen Witz", {"memory_trim": True})
+        self.assertEqual(none, [])                                 # "bitte", "noch", "einen" are no shared words
+
+
 class Names(unittest.TestCase):
     def setUp(self):
         self.saved = (profiles.names, features.allowed, hoerwoerter._contacts)

@@ -388,7 +388,10 @@ async def prepare(request):
     prof = who if who and ccfg.get("memory", True) and own_browser and not mcp and features.allowed("memory", who["id"], ccfg) else None
     memcheck = None
     if prof:  # guests get no memory at all
-        system = (system + "\n\n" + chat.memory_hint(prof)).strip()
+        mem_extra = []
+        system = (system + "\n\n" + chat.memory_hint(prof, str(messages[-1].get("content") or ""), mem_extra)).strip()
+        for note in mem_extra:   # Großes Gedächtnis kürzen: the matching older facts only for this turn
+            system = per_turn(system, note)
         memcheck = chat.gedaechtnis.for_turn(prof["id"]) if features.allowed("gedpruefen", prof["id"], ccfg) else None
     past = bool(prof and ccfg.get("history", True) and features.allowed("history", prof["id"], ccfg))
     if past:
@@ -819,8 +822,9 @@ async def prepare(request):
     # rule recognizes may go to the model once as a pick from a fixed list (chat.route_model)
     all_tools = len(tools)
     all_names = {t["function"]["name"] for t in tools}   # before the Weiche narrows them (a choice runs its own tool)
-    # "Schneller Antwortbeginn": the model always sees this list; what the rules below leave for this turn is
-    # what the panel runs (st["offered"], chat_tools.run), and the model is told so with the question
+    # "Schneller Antwortbeginn": the model sees this list (for a clear group its fixed set, below); what the rules
+    # leave for this turn is what the panel runs (st["offered"], chat_tools.run), and the model is told so with the
+    # question
     tools_stable = list(tools) if cache_on else None
     offered_all = {t["function"]["name"] for t in tools}
     if route_on and tools and not pics and not ha_direct and not ha_wait:
@@ -838,6 +842,11 @@ async def prepare(request):
             pick_state = "gewählt" if pick else "zu spät" if pick_task.cancelled() else \
                 "unsicher" if pick_info.get("p") is not None else "keine"
         tools = intent.narrow(route, tools, ccfg, ex.get("keep", set()))
+        if tools_stable is not None and route.names:
+            # a fixed tool set per group (plan genauer-und-schneller, 3): a clear group always gets the same list in
+            # the same order, so the server keeps one start per group in its cache, and the model chooses only among
+            # the tools that fit; a question no rule recognizes keeps the full list
+            tools_stable = list(tools)
         if ccfg.get("route_model") == "lean" and not route.names and not chat.needed(
                 messages[-1]["content"] if messages[-1]["role"] == "user" else "",
                 {t["function"]["name"] for t in tools}, ccfg.get("tool_words", "")):
