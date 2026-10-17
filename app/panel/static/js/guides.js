@@ -1715,7 +1715,9 @@ function featBar(pane){const top=document.createElement('div');top.className='fb
 // Grundausstattung (features.GRUNDAUSSTATTUNG, Dominik 2026-10-17): a card above the list while some of it is off or
 // the internet question is open, „Empfohlen“ behind its names and as a filter. The lists come from the panel only.
 let GRUND=null;
-async function grundLoad(){try{GRUND=await (await api('/api/admin/grundausstattung')).json()}catch{GRUND=null}grundDraw()}
+// admins only (start.js calls it again once whoami named the admin): before, every profile asked at the page start, got 401
+// and the admin sign-in window covered the page
+async function grundLoad(){if(!ADMIN)return;try{GRUND=await (await api('/api/admin/grundausstattung')).json()}catch{GRUND=null}grundDraw()}
 function grundDraw(done){const pane=$('pane-feat');if(!pane)return;const g=GRUND,rec=new Set(g?g.basis.keys:[]);
   pane.querySelectorAll('.fitem').forEach(it=>{const b=it.querySelector('.setrow .lbl>b');if(!b)return;let m=b.querySelector('.frec');
     if(!rec.has(it.dataset.sw)){if(m)m.remove();return}

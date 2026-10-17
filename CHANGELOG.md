@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.742** · 2026-10-17 · Rot-Fix: Profile sehen beim Seitenstart kein Admin-Anmeldefenster mehr; die Karte „Grundausstattung“ fragt ihre Daten nur noch als Admin ab (seit V01.0.721 bekam jedes Profil 401 und das Anmeldefenster verdeckte die Seite, test_mailstil rot); Selbsttest in test_grundausstattung
 - **V01.0.741** · 2026-10-17 · Bildschirm beschreiben: „Was siehst du gerade auf meinem Mac?“ – der Rechner fragt, nach dem Ja sieht der Spark den Bildschirm einmal an und beschreibt ihn kurz; Text auf dem Bildschirm gilt nie als Befehl, Passwörter und Codes werden nie vorgelesen, die Beschreibung wird nur angezeigt und nie im Verlauf oder Gedächtnis gespeichert (Funktionen → Spark bedient den Rechner)
 - **V01.0.740** · 2026-10-17 · Rot-Fix: test_kiwix stellt die ab Werk eingeschaltete Weiche für den Wikipedia-Test selbst ab (lief allein schon seit V01.0.721 rot, auf GitHub erst mit neuem Zuschnitt der Teile sichtbar)
 - **V01.0.739** · 2026-10-17 · Reddit und Feeds: eigener Reddit-Posteingang über den privaten RSS-Link, Subreddits und andere Feeds mit Stichwörtern; Antworten sofort, Stichwort-Treffer höchstens 3 am Tag, das Wichtigste im Tagesbrief, „Was gibt's Neues auf Reddit?“ im Chat; nur lesen, nie posten

@@ -57,7 +57,7 @@ async function startPage(){let who=null;try{who=await (await /*raw: the first wh
     // one shell for everybody (plan „Vereinheitlichen“ Phase 7): a signed-in profile gets the same menu as the admin,
     // with only what it may (Assistent, Ich); guests keep the plain page with the assistant
     if(who.profile){document.body.classList.remove('guest');document.body.classList.add('adm','prof')}}
-  else{$('logoutbtn').style.display='inline-block';document.body.classList.add('adm');hdrH()}
+  else{$('logoutbtn').style.display='inline-block';document.body.classList.add('adm');hdrH();if(typeof grundLoad==='function')grundLoad()}
   document.querySelector('nav button[data-s=chat]').click();       // the assistant is the start page
   placeBack();   // a reload the page did itself: back to the same place (base.js placeNow)
   // "Im Panel öffnen" in the iPhone app: #go=<page>, #cfg=<settings page> or #me=<Ich area>, only known names

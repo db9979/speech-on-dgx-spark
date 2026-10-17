@@ -150,6 +150,16 @@ class Card(unittest.TestCase):
         self.assertFalse(any(p.fullmatch("/api/admin/grundausstattung") for _, p in coadmin.MANAGER),
                          "a Verwalter never switches functions (Dominik 2026-10-14)")
 
+    def test_the_page_asks_for_the_card_only_as_admin(self):
+        """A profile's page start never asks the admin endpoint: its 401 opened the admin sign-in over the page (V01.0.742)."""
+        with open(os.path.join(PANEL, "static", "js", "guides.js"), encoding="utf-8") as f:
+            guides = f.read()
+        with open(os.path.join(PANEL, "static", "js", "start.js"), encoding="utf-8") as f:
+            start = f.read()
+        self.assertIn("async function grundLoad(){if(!ADMIN)return;", guides)
+        admin = re.search(r"else\{\$\('logoutbtn'\)[^\n]*", start)
+        self.assertTrue(admin and "grundLoad()" in admin.group(0), "start.js loads the card once whoami named the admin")
+
 
 class FirstChat(unittest.TestCase):
     def setUp(self):
