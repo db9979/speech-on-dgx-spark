@@ -1583,6 +1583,13 @@
 "titel": "Pebble-Uhr 2.0 unterwegs und am Handgelenk",
 "text": "A: Unter Funktionen → Pebble-Uhr die drei Unterschalter Nachfragen, Schnellbefehle und Erinnerungen am Handgelenk einschalten. Die neue Uhr-App über den QR-Code unter Ich → Pebble-Uhr laden, dort „Adresse unterwegs“ (https des Reverse-Proxy) eintragen, neu koppeln und zwei Schnellbefehle speichern. Im WLAN fragen: unter der Antwort öffnet UNTEN bis zu drei Nachfragen, antippen fragt weiter. „Stell einen Timer auf 2 Minuten“: lang UNTEN zeigt ihn mit Ring, nach 2 Minuten vibriert die Uhr auch mit Handy im Flugmodus, das Handy klingelt nicht zusätzlich. Lang OBEN zeigt die Schnellbefehle. Mit WLAN aus über Mobilfunk fragen: die Uhr zeigt „unterwegs“ und antwortet.",
 "thread": "Pebble-Uhr erweitern"
+},
+{
+"id": "P250",
+"v": 736,
+"titel": "Spark-Zifferblatt, Tag, Woche und Merken",
+"text": "A: Unter Funktionen → Pebble-Uhr die Unterschalter Zifferblatt, Mein Tag und Meine Woche, Meldungen am Handgelenk, Schnell merken und Ort beim Merken einschalten. Unter Ich → Pebble-Uhr den QR-Code „Zifferblatt“ laden, in den Zifferblatt-Einstellungen einen neuen Einrichtungscode einfügen. Das Zifferblatt zeigt Uhrzeit, nächsten Termin, nächste Erinnerung und Wetter. In der Uhr-App oben „Mein Tag“ öffnen: einige Sätze zu Terminen, Erinnerungen und Wetter erscheinen, die Uhr vibriert. „Merken“ öffnen, „Schlüssel liegt im Flur“ diktieren: unter Ich → Gedächtnis steht der Satz mit Ort.",
+"thread": "Pebble-Uhr erweitern"
 }
 ]
 }

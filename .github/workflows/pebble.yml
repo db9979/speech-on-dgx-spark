@@ -1,7 +1,7 @@
 name: Pebble watch app
 
-# Builds the watch app "Spark" (pebble/) with the Pebble SDK, keeps it as the artifact speech-spark-pbw and puts
-# it on the branch pebble-build (only that file, replaced each time). The panel serves app/pebble/speech-spark.pbw
+# Builds the watch app "Spark" (pebble/) and the watchface "Spark-Zifferblatt" (pebble/zifferblatt/) with the Pebble SDK, keeps them as the artifact speech-spark-pbw and puts
+# it on the branch pebble-build (only those two files, replaced each time). The panel serves app/pebble/speech-spark.pbw
 # from main: copy the built file there in a normal commit (pebble/README.md), so the Tests run and tars' update gate
 # see it. The app declares SDK minor 0x5e (the speaker API), so older watch firmware runs it too.
 on:
@@ -66,22 +66,40 @@ jobs:
           print("built", label)
           PY
           cp build/pebble.pbw speech-spark.pbw
+      - name: Build the watchface
+        working-directory: pebble/zifferblatt
+        run: |
+          set -e
+          pebble build
+          python3 - <<'PY'
+          import json, zipfile
+          z = zipfile.ZipFile("build/zifferblatt.pbw")
+          info = json.loads(z.read("appinfo.json"))
+          assert info["watchapp"]["watchface"] is True, info["watchapp"]
+          for p in ("emery", "flint", "gabbro"):
+              head = z.read(p + "/pebble-app.bin")[:12]
+              assert head[:6] == b"PBLAPP" and head[10:12] == bytes([5, 0x5e]), (p, list(head[8:12]))
+          print("built watchface", info["versionLabel"])
+          PY
+          cp build/zifferblatt.pbw ../spark-zifferblatt.pbw
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: speech-spark-pbw
-          path: pebble/speech-spark.pbw
+          path: |
+            pebble/speech-spark.pbw
+            pebble/spark-zifferblatt.pbw
           if-no-files-found: error
       - name: Branch pebble-build
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -e
-          mkdir out && cp pebble/speech-spark.pbw out/
+          mkdir out && cp pebble/speech-spark.pbw pebble/spark-zifferblatt.pbw out/
           cd out
           git init -q -b pebble-build
           git config user.name "github-actions"
           git config user.email "github-actions@users.noreply.github.com"
-          git add speech-spark.pbw
+          git add speech-spark.pbw spark-zifferblatt.pbw
           git commit -q -m "speech-spark.pbw from ${GITHUB_SHA}"
           # the token comes from the environment through a credential helper: never in the URL, the
           # command line or .git/config

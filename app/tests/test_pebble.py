@@ -42,7 +42,8 @@ class Pebble(unittest.TestCase):
 
     def tearDown(self):
         helpers.set_config(pebble=False, face="robot", deny={}, pebble_follow=False, pebble_quick=False,
-                           pebble_remind=False)
+                           pebble_remind=False, pebble_face=False, pebble_day=False, pebble_alerts=False,
+                           pebble_note=False, pebble_place=False)
 
     def watch_of(self, name):
         """A paired watch of a new profile: (its client, the key header, the profile's id)."""
@@ -61,7 +62,8 @@ class Pebble(unittest.TestCase):
         self.assertNotIn("pebble_on", profiles.SETTINGS)   # no profile switch: released by the admin, it works
         with open(helpers.APP + "/config.default.json") as f:
             chat = json.load(f)["chat"]
-        for key in ("pebble_follow", "pebble_quick", "pebble_remind"):   # each extra its own admin switch, off
+        for key in ("pebble_follow", "pebble_quick", "pebble_remind", "pebble_face", "pebble_day", "pebble_alerts",
+                    "pebble_note", "pebble_place"):   # each extra its own admin switch, off
             self.assertIs(chat[key], False, key)
             self.assertNotIn(key, profiles.SETTINGS)
 
@@ -78,7 +80,7 @@ class Pebble(unittest.TestCase):
     def test_sync_sends_only_what_the_admin_released(self):
         a, app, h, uid = self.watch_of("Pebline")
         r = app.get("/api/watch/sync", headers=h).json()
-        self.assertEqual(r, {"quick": [], "agenda": None, "follow": False})   # all off: nothing on the watch
+        self.assertEqual(r, {"quick": [], "agenda": None, "follow": False, "day": False, "note": False, "place": False})   # all off: nothing on the watch
         self.assertEqual(a.put("/api/profile/pebble/quick", json={"quick": ["Licht an"]}).status_code, 403)
         helpers.set_config(pebble_quick=True, pebble_remind=True, pebble_follow=True)
         for bad in ({"quick": "Licht an"}, {"quick": ["x" * 61]}, {"quick": [f"Satz {i}" for i in range(13)]}):
@@ -191,6 +193,76 @@ class Pebble(unittest.TestCase):
             job2.done_at = time.time() - watch.FOLLOW_TIMEOUT - 3
             self.assertTrue((await watch.poll(job2, 1, 0, wait=0.2))["done"])
         asyncio.run(go())
+
+    def test_face_shows_only_released_parts(self):
+        a, app, h, uid = self.watch_of("Pebfa")
+        self.assertEqual(app.get("/api/watch/blick", headers=h).status_code, 403)
+        self.assertEqual(a.get("/api/profile/pebble/qr", params={"base": BASE, "app": "face"}).status_code, 403)
+        helpers.set_config(pebble_face=True)
+        self.assertTrue(a.get("/api/profile/pebble/qr", params={"base": BASE, "app": "face"}).json()["url"]
+                        .endswith("/pebble/spark-zifferblatt.pbw"))
+        now = time.time() * 1000
+        profiles.add_reminder(uid, "Tee\x07 fertig " + "x" * 80, now + 600_000)
+        import dienstwacht
+        orig = dienstwacht.alerts, dienstwacht.recipients
+        dienstwacht.alerts = lambda now=None: [{"kind": "service", "level": "bad", "go": "",
+                                                "text": "Gerade eingeschränkt: Sprachmodell antwortet seit 10:00 nicht."}]
+        dienstwacht.recipients = lambda: [uid]
+        try:
+            r = app.get("/api/watch/blick", headers=h).json()
+            self.assertIsNone(r["alert"])   # notes for admins are their own switch
+            self.assertTrue(r["rem"]["text"].startswith("Tee fertig"))
+            self.assertLessEqual(len(r["rem"]["text"]), pebblewatch.BLICK_TITLE)
+            helpers.set_config(pebble_alerts=True, svc_watch=True)
+            self.assertEqual(app.get("/api/watch/blick", headers=h).json()["alert"],
+                             "Sprachmodell antwortet seit 10:00 nicht.")
+            dienstwacht.recipients = lambda: []   # not an admin who gets the notes: nothing
+            self.assertIsNone(app.get("/api/watch/blick", headers=h).json()["alert"])
+        finally:
+            dienstwacht.alerts, dienstwacht.recipients = orig
+            helpers.set_config(svc_watch=False)
+            profiles.remove_reminders(uid, {x["id"] for x in profiles.reminders(uid)})
+        self.assertEqual(TestClient(panel.app).get("/api/watch/blick").status_code, 401)
+        self.assertEqual(TestClient(panel.app).get("/pebble/spark-zifferblatt.pbw").status_code, 200)
+
+    def test_day_and_week_are_fixed_sentences(self):
+        _, app, h, uid = self.watch_of("Pebta")
+        self.assertEqual(app.get("/api/watch/brief", params={"art": "tag"}, headers=h).status_code, 403)
+        helpers.set_config(pebble_day=True)
+        self.assertEqual(app.get("/api/watch/brief", params={"art": "jahr"}, headers=h).status_code, 400)
+        now = time.time()
+        profiles.add_reminder(uid, "Müll raus", (now + 120) * 1000)
+        profiles.remember(uid, "Das Auto steht auf Ebene 3", src="said")
+        try:
+            day = app.get("/api/watch/brief", params={"art": "tag", "tz": "Europe/Berlin"}, headers=h).json()["lines"]
+            self.assertTrue(any("Müll raus" in x and x.startswith("⏰ ") for x in day), day)
+            week = app.get("/api/watch/brief", params={"art": "woche"}, headers=h).json()["lines"]
+            self.assertTrue(week[0].startswith("Letzte 7 Tage: "), week)
+            self.assertIn("1 neue Dinge gemerkt.", week)
+            self.assertIn("1 Erinnerungen in den nächsten 7 Tagen.", week)
+        finally:
+            profiles.remove_reminders(uid, {x["id"] for x in profiles.reminders(uid)})
+
+    def test_quick_note_goes_to_memory(self):
+        _, app, h, uid = self.watch_of("Pebme")
+        body = {"text": "Das Fahrrad steht am Bahnhof", "lat": 48.13743, "lon": 11.57549}
+        self.assertEqual(app.post("/api/watch/merken", json=body, headers=h).status_code, 403)
+        helpers.set_config(pebble_note=True)
+        self.assertEqual(app.post("/api/watch/merken", json={"text": " "}, headers=h).status_code, 400)
+        self.assertEqual(app.post("/api/watch/merken", content="x" * 2000, headers=h).status_code, 413)
+        r = app.post("/api/watch/merken", json=body, headers=h).json()
+        self.assertEqual(r["text"], "Das Fahrrad steht am Bahnhof")   # the place is its own switch
+        helpers.set_config(pebble_place=True)
+        r = app.post("/api/watch/merken", json=dict(body, text="Schlüssel liegt unter der Matte"), headers=h).json()
+        self.assertEqual(r["text"], "Schlüssel liegt unter der Matte (Ort 48.137, 11.575)")
+        r = app.post("/api/watch/merken", json={"text": "Ohne Ort", "lat": "x", "lon": 999}, headers=h).json()
+        self.assertEqual(r["text"], "Ohne Ort")
+        self.assertIn("Schlüssel liegt unter der Matte (Ort 48.137, 11.575)", [x["text"] for x in profiles.memory(uid)])
+        helpers.set_config(memory=False)   # the memory itself off: nothing kept
+        try:
+            self.assertEqual(app.post("/api/watch/merken", json=body, headers=h).status_code, 403)
+        finally:
+            helpers.set_config(memory=True)
 
     def test_run_keeps_proposal_and_reminder_marks(self):
         class Stream:

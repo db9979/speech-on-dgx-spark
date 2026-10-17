@@ -14,7 +14,7 @@ var keys = require('message_keys');
 var CHUNK_MAX = 3800;  // audio bytes per AppMessage (fewer Bluetooth round trips)
 var CHUNK_OLD = 1500;  // for watch apps that do not tell their inbox size
 var TEXT_CHUNK = 400;  // answer characters per AppMessage
-var APP_VERSION = '2.0.0';  // same as package.json; the Spark says when it serves a newer one
+var APP_VERSION = '2.1.0';  // same as package.json; the Spark says when it serves a newer one
 var MAX_TURNS = 6;     // earlier question/answer pairs sent along as context
 var TRIES = 10;        // attempts per message before the answer is given up
 var KEEPALIVE = 10000; // ms: tell the watch the answer is still coming
@@ -388,6 +388,7 @@ function setFace(name, always) {
 // ------------------------------------------------------------ quick commands and reminders on the watch
 
 var syncing = false;
+var place = false;   // the admin released "Ort beim Merken": the phone asks for its place (the person allows it)
 
 // The watch keeps the quick commands and the next reminders itself (agenda.c): fetched at the start, after an
 // answer that set or cancelled one, when a list opens and after each button on a reminder.
@@ -398,7 +399,14 @@ function sync() {
     syncing = false;
     if (err || !d) return;
     var m = {};
-    m[keys.QUICK] = (d.quick || []).slice(0, 12).map(function (x) { return String(x).substr(0, 60); }).join('\n');
+    // fixed entries first (\x01 and a letter; a sentence of the profile never starts so, the Spark drops such signs)
+    var fixed = [];
+    if (d.day) fixed.push('\x01TMein Tag', '\x01WMeine Woche');
+    if (d.note) fixed.push('\x01MMerken');
+    place = !!d.place;
+    m[keys.QUICK] = fixed.concat((d.quick || []).slice(0, 12).map(function (x) {
+      return String(x).replace(/[\x00-\x1f]/g, ' ').substr(0, 60);
+    })).join('\n');
     if (d.agenda === null || d.agenda === undefined) {
       m[keys.REMIND] = 0;
     } else {
@@ -414,6 +422,38 @@ function agendaLines(list) {
     return [String(x.id).replace(/[^0-9a-f]/g, ''), x.due | 0, x.made | 0, x.rep ? 1 : 0,
             String(x.text || '').replace(/[|\n]/g, ' ').substr(0, 60)].join('|');
   }).join('\n');
+}
+
+function zone() {
+  try { return Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) { return ''; }
+}
+
+// Mein Tag / Meine Woche: fixed sentences from the Spark, shown like an answer
+function brief(art) {
+  request('GET', '/api/watch/brief?art=' + (art === 'woche' ? 'woche' : 'tag') + '&tz=' + encodeURIComponent(zone()), null,
+    function (err, d) {
+      var m = {};
+      m[keys.BRIEF] = err || !d ? 'Gerade nicht erreichbar.' : (d.lines || []).join('\n').substr(0, 900);
+      send(m);
+    });
+}
+
+// Schnell merken: the dictated sentence into the profile's memory, with the place when released and allowed
+function note(text) {
+  function go(pos) {
+    var body = {text: String(text).substr(0, 200)};
+    if (pos) {
+      body.lat = Math.round(pos.coords.latitude * 1000) / 1000;
+      body.lon = Math.round(pos.coords.longitude * 1000) / 1000;
+    }
+    request('POST', '/api/watch/merken', body, function (err, d) {
+      var m = {};
+      m[keys.BRIEF] = err || !d || !d.ok ? 'Nicht gemerkt.' : 'Gemerkt: ' + String(d.text).substr(0, 220);
+      send(m);
+    });
+  }
+  if (!place || !navigator.geolocation) return go(null);
+  navigator.geolocation.getCurrentPosition(go, function () { go(null); }, {timeout: 5000, maximumAge: 300000});
 }
 
 function reminderAct(id, act, text) {
@@ -456,6 +496,16 @@ Pebble.addEventListener('appmessage', function (e) {
   }
   if (val(p, 'SYNC') !== undefined) {
     sync();
+    return;
+  }
+  var ba = val(p, 'BRIEF_ASK');
+  if (ba !== undefined) {
+    brief(String(ba));
+    return;
+  }
+  var nt = val(p, 'NOTE');
+  if (nt !== undefined) {
+    note(String(nt));
     return;
   }
   var seq = val(p, 'SEQ');

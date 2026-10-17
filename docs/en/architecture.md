@@ -909,7 +909,7 @@ flowchart TD
 6. <a id="kn-kanaele-s6"></a>**Short history**: For follow-ups the last eight messages go along while the last question is no older than 30 minutes (Telegram) or 10 minutes (Siri). The watch sends its history itself; the panel recognizes answers made from outside text in it again (watch.mark_of).
 7. <a id="kn-kanaele-s7"></a>**Request to /api/chat**: The channel calls the chat inside the panel. For Telegram the panel puts the profile into the request, which no request from outside can do; Siri and the watch carry their key. Rights, switch, limits and request history are the same as in the browser.
 8. <a id="kn-kanaele-s8"></a>**Collect the answer**: From the stream, pieces of text and retractions count. If the answer came from mail or outside text it is marked so, so the next question starts locked. A question back from the panel becomes buttons in Telegram that come back like a typed answer; without one, the example sentences of „You can also say“ become reply buttons.
-9. <a id="kn-kanaele-s9"></a>**Output per channel**: Telegram gets plain text and, if the profile wants it, a voice message in its voice. Siri gets speakable text without passwords and codes. The watch fetches text and sound (packed for its small speaker, 6000 bytes per fetch) through /api/watch/poll; at most 8 watch answers run at once. The companion gets text without Markdown and also the answer with Markdown (at most 60000 characters) when it hides no fewer secrets. With its switches the watch also gets up to 3 follow-ups to tap (the model only suggests, watch.follow_clean keeps short questions without yes, no, links or numbers; never after mail, web or a proposal), a proposal as ✓ and ✕, and through /api/watch/sync the quick commands and the next 8 reminders, which it rings itself as wake-ups; push waits for it first.
+9. <a id="kn-kanaele-s9"></a>**Output per channel**: Telegram gets plain text and, if the profile wants it, a voice message in its voice. Siri gets speakable text without passwords and codes. The watch fetches text and sound (packed for its small speaker, 6000 bytes per fetch) through /api/watch/poll; at most 8 watch answers run at once. The companion gets text without Markdown and also the answer with Markdown (at most 60000 characters) when it hides no fewer secrets. With its switches the watch also gets up to 3 follow-ups to tap (the model only suggests, watch.follow_clean keeps short questions without yes, no, links or numbers; never after mail, web or a proposal), a proposal as ✓ and ✕, and through /api/watch/sync the quick commands and the next 8 reminders, which it rings itself as wake-ups; push waits for it first. The Spark watchface fetches the next appointment, reminder, weather, a hint and for admins an outage through /api/watch/blick every 15 minutes; /api/watch/brief builds My day and My week from fixed sentences, /api/watch/merken keeps a dictated sentence in memory (with the place to about 100 m only with its own switch).
 10. <a id="kn-kanaele-s10"></a>**Black out the code word**: Before storing, the smart home code word is replaced by [Codewort]. In Telegram the bot deletes the message with the code word or asks the person to delete it.
 11. <a id="kn-kanaele-s11"></a>**In the profile's history**: verlauf.keep puts question and answer into the channel's conversation of the day („Telegram“, „Siri“, „Uhr“ with the date). With „One conversation for all channels“ they go into the day's main conversation, marked with their channel.
 
@@ -941,7 +941,7 @@ Applies at: [step 1](#kn-kanaele-s1), [step 9](#kn-kanaele-s9), [step 11](#kn-ka
 - Features → Telegram: bot token and switch (default off).
 - Me → Telegram: link the own chat; allow voice messages, private data, smart home and notes one by one.
 - Me → Pebble watch: pair the watch, the address on the road (https only) and the quick commands.
-- Features → Pebble watch: follow-ups, quick commands, reminders on the wrist, one switch each (default off).
+- Features → Pebble watch: follow-ups, quick commands, reminders on the wrist, Spark watchface, my day and my week, notes for admins, quick notes and place with a note, one switch each (default off).
 - Features → One conversation for all channels: every channel writes into the day's main conversation.
 
 #### What you see
@@ -966,6 +966,9 @@ Applies at: [step 1](#kn-kanaele-s1), [step 9](#kn-kanaele-s9), [step 11](#kn-ka
 - `app/panel/watch.py` `follow_clean`: fixed check of the follow-ups ([step 9](#kn-kanaele-s9))
 - `app/panel/pebblewatch.py` `watch_sync`: quick commands and reminders for the watch ([step 9](#kn-kanaele-s9))
 - `app/panel/pebblewatch.py` `watch_reminder`: reminder on the watch: played, later, end, +1, stop ([step 9](#kn-kanaele-s9))
+- `app/panel/pebblewatch.py` `watch_blick`: what the Spark watchface shows ([step 9](#kn-kanaele-s9))
+- `app/panel/pebblewatch.py` `watch_brief`: My day and My week, fixed sentences ([step 9](#kn-kanaele-s9))
+- `app/panel/pebblewatch.py` `watch_note`: quick note into memory ([step 9](#kn-kanaele-s9))
 - `app/panel/verlauf.py` `keep`: the channel's day conversation or the main one ([step 11](#kn-kanaele-s11))
 
 Self-tests: `test_telegram_tasks`, `test_pebble`, `test_verlauf_sync`, `test_notaus`

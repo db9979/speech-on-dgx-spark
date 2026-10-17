@@ -64,6 +64,7 @@ OPEN = {
     "/apple-touch-icon.png": "page files",
     "/favicon.ico": "page files",
     "/pebble/speech-spark.pbw": "the watch app",
+    "/pebble/spark-zifferblatt.pbw": "the Spark watchface (Paket 2), a public app file like the watch app",
     "/tui/spark-tui.py": "the terminal client program; no data, its SHA-256 is shown under Ich → Terminal",
     "/android/spark.apk": "the Android app file; only with a download link (one-time token, 30 minutes) from a profile's own login",
     "/sw.js": "the page's service worker",

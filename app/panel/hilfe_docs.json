@@ -492,8 +492,32 @@
 "src": "apis-und-einbinden",
 "file": "APIs und Einbinden",
 "head": "Pebble-Uhr",
+"title": "Paket 2 (Uhr-App 2.1, Spark-Zifferblatt 1.0)",
+"text": "Paket 2 (Uhr-App 2.1, Spark-Zifferblatt 1.0): fünf weitere Unterschalter unter *Funktionen → Pebble-Uhr*, alle aus."
+},
+{
+"lang": "de",
+"src": "apis-und-einbinden",
+"file": "APIs und Einbinden",
+"head": "Pebble-Uhr",
 "title": "Pebble-Uhr",
-"text": "Logs im Bereich „Uhr“: watch: sync | n Schnellbefehle · n Erinnerungen, watch: reminder played|snooze|stop|plus|cancel | ok, watch: Nachfragen | n | ms, watch: Nachfragen weggelassen | why …, nur Zahlen und feste Wörter."
+"text": "- *Spark-Zifferblatt*: ein eigenes Zifferblatt (/pebble/spark-zifferblatt.pbw, Quellcode pebble/zifferblatt/) mit Uhrzeit, Datum, nächstem Termin, nächster Erinnerung („in 12 Min“), Wetter und einem Tipp. Es fragt alle 15 Minuten über das Handy GET /api/watch/blick und hält das Letzte im Speicher der Uhr. Unter *Ich → Pebble-Uhr* steht ein zweiter QR-Code; das Zifferblatt bekommt mit „Pebble koppeln“ einen eigenen Schlüssel (gleicher Bereich wie die Uhr-App, nur /api/watch/). - *Uhr: Mein Tag und meine Woche*: Oben in der Liste (lang OBEN) stehen „Mein Tag“ und „Meine Woche“ (GET /api/watch/brief?art=tag|woche). Mein Tag: heutige Termine, Erinnerungen, Wetter, ungelesene Nachrichten. Meine Woche: Fragen und neu Gemerktes der letzten 7 Tage, Termine und Erinnerungen der nächsten 7 Tage. Feste Sätze aus den eigenen Daten, nie das Sprachmodell, nie Mail- oder Nachrichtentext; jeder Teil nur, wenn seine Funktion für das Profil an ist. - *Uhr: Meldungen für Admins* (braucht den Dienst-Wächter): Antwortet ein Dienst nicht, zeigt das Zifferblatt der Admins, die die Meldungen bekommen, oben einen roten Streifen mit demselben festen Satz wie das Banner und vibriert einmal. - *Uhr: Schnell m"
+},
+{
+"lang": "de",
+"src": "apis-und-einbinden",
+"file": "APIs und Einbinden",
+"head": "Pebble-Uhr",
+"title": "Pebble-Uhr",
+"text": "erken* (braucht das Gedächtnis): „Merken“ in der Liste, einen Satz sagen; er geht über POST /api/watch/merken ins Gedächtnis wie „Merk dir …“, ohne Sprachmodell. *Uhr: Ort beim Merken* (eigener Schalter): Das Handy hängt den Ort auf drei Nachkommastellen (etwa 100 m) an, nur wenn man der Pebble-App den Standort erlaubt."
+},
+{
+"lang": "de",
+"src": "apis-und-einbinden",
+"file": "APIs und Einbinden",
+"head": "Pebble-Uhr",
+"title": "Pebble-Uhr",
+"text": "Logs im Bereich „Uhr“: watch: sync | n Schnellbefehle · n Erinnerungen, watch: reminder played|snooze|stop|plus|cancel | ok, watch: Nachfragen | n | ms, watch: Nachfragen weggelassen | why …, watch: blick | n Teile, watch: brief tag|woche | n Zeilen, watch: merken | ok, nur Zahlen und feste Wörter."
 },
 {
 "lang": "de",
@@ -1037,7 +1061,15 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": " je Abruf, für ihren kleinen Lautsprecher gepackt) über /api/watch/poll; höchstens 8 Uhr-Antworten laufen gleichzeitig. Der Begleiter bekommt Text ohne Markdown und zusätzlich die Antwort mit Markdown (höchstens 60000 Zeichen), wenn darin nicht weniger Geheimnisse verdeckt sind. Mit ihren Schaltern bekommt die Uhr außerdem bis zu 3 Nachfragen zum Antippen (das Modell schlägt nur vor, watch.follow_clean lässt nur kurze Fragen ohne Ja, Nein, Links oder Zahlen durch; nie nach Mail, Web oder einem Vorschlag), einen Vorschlag als ✓ und ✕ und über /api/watch/sync die Schnellbefehle und die nächsten 8 Erinnerungen, die sie selbst als Wecker klingeln lässt; Push wartet zuerst auf sie. 10. Codewort schwärzen: Vor dem Speichern wird das Smart-Home-Codewort durch [Codewort] ersetzt. In Telegram löscht der Bot die Nachricht mit dem Codewort oder bittet darum, sie zu löschen. 11. Im Verlauf des Profils: verlauf.keep legt Frage und Antwort in das Tagesgespräch des Kanals („Telegram“, „Siri“, „Uhr“ mit Datum). Mit „Ein Gespräch für alle Kanäle“ landen sie im Hauptgespräch des Tages, markiert mit ihrem Kanal."
+"text": " je Abruf, für ihren kleinen Lautsprecher gepackt) über /api/watch/poll; höchstens 8 Uhr-Antworten laufen gleichzeitig. Der Begleiter bekommt Text ohne Markdown und zusätzlich die Antwort mit Markdown (höchstens 60000 Zeichen), wenn darin nicht weniger Geheimnisse verdeckt sind. Mit ihren Schaltern bekommt die Uhr außerdem bis zu 3 Nachfragen zum Antippen (das Modell schlägt nur vor, watch.follow_clean lässt nur kurze Fragen ohne Ja, Nein, Links oder Zahlen durch; nie nach Mail, Web oder einem Vorschlag), einen Vorschlag als ✓ und ✕ und über /api/watch/sync die Schnellbefehle und die nächsten 8 Erinnerungen, die sie selbst als Wecker klingeln lässt; Push wartet zuerst auf sie. Das Spark-Zifferblatt holt alle 15 Minuten über /api/watch/blick den nächsten Termin, die nächste Erinnerung, das Wetter, einen Tipp und für Admins einen Ausfall; /api/watch/brief baut Mein Tag und Meine Woche aus festen Sätzen, /api/watch/merken legt einen diktierten Satz ins Gedächtnis (mit Ort auf etwa 100 m nur mit eigenem Schalter). 10. Codewort schwärzen: Vor dem Speichern wird das Smart-Home-Codewort durch [Codewort] ersetzt. In Telegram löscht der Bot die Nachricht mit dem Codewort oder bittet darum, "
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Ablauf",
+"title": "Ablauf",
+"text": "sie zu löschen. 11. Im Verlauf des Profils: verlauf.keep legt Frage und Antwort in das Tagesgespräch des Kanals („Telegram“, „Siri“, „Uhr“ mit Datum). Mit „Ein Gespräch für alle Kanäle“ landen sie im Hauptgespräch des Tages, markiert mit ihrem Kanal."
 },
 {
 "lang": "de",
@@ -1061,7 +1093,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Einstellen",
 "title": "Einstellen",
-"text": "- Funktionen → Telegram: Bot-Token und Schalter (Standard aus). - Ich → Telegram: den eigenen Chat verknüpfen; Sprachnachrichten, private Daten, Smart Home und Mitteilungen einzeln erlauben. - Ich → Pebble-Uhr: die Uhr koppeln, die Adresse unterwegs (nur https) und die Schnellbefehle. - Funktionen → Pebble-Uhr: Nachfragen, Schnellbefehle, Erinnerungen am Handgelenk, je ein Schalter (Standard aus). - Funktionen → Ein Gespräch für alle Kanäle: alle Kanäle schreiben ins Hauptgespräch des Tages."
+"text": "- Funktionen → Telegram: Bot-Token und Schalter (Standard aus). - Ich → Telegram: den eigenen Chat verknüpfen; Sprachnachrichten, private Daten, Smart Home und Mitteilungen einzeln erlauben. - Ich → Pebble-Uhr: die Uhr koppeln, die Adresse unterwegs (nur https) und die Schnellbefehle. - Funktionen → Pebble-Uhr: Nachfragen, Schnellbefehle, Erinnerungen am Handgelenk, Spark-Zifferblatt, Mein Tag und meine Woche, Meldungen für Admins, Schnell merken und Ort beim Merken, je ein Schalter (Standard aus). - Funktionen → Ein Gespräch für alle Kanäle: alle Kanäle schreiben ins Hauptgespräch des Tages."
 },
 {
 "lang": "de",
@@ -1085,7 +1117,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": " auf der Uhr: gespielt, später, beenden, +1, Stopp (Schritt 9) - app/panel/verlauf.py keep: Tagesgespräch des Kanals oder Hauptgespräch (Schritt 11)"
+"text": " auf der Uhr: gespielt, später, beenden, +1, Stopp (Schritt 9) - app/panel/pebblewatch.py watch_blick: was das Spark-Zifferblatt zeigt (Schritt 9) - app/panel/pebblewatch.py watch_brief: Mein Tag und Meine Woche, feste Sätze (Schritt 9) - app/panel/pebblewatch.py watch_note: Schnell merken ins Gedächtnis (Schritt 9) - app/panel/verlauf.py keep: Tagesgespräch des Kanals oder Hauptgespräch (Schritt 11)"
 },
 {
 "lang": "de",
@@ -7964,8 +7996,32 @@
 "src": "apis-and-integration",
 "file": "APIs and integration",
 "head": "Pebble watch",
+"title": "Package 2 (watch app 2.1, Spark watchface 1.0)",
+"text": "Package 2 (watch app 2.1, Spark watchface 1.0): five more sub-switches under *Features → Pebble watch*, all off."
+},
+{
+"lang": "en",
+"src": "apis-and-integration",
+"file": "APIs and integration",
+"head": "Pebble watch",
 "title": "Pebble watch",
-"text": "Logs in the area \"Watch\": watch: sync | n Schnellbefehle · n Erinnerungen, watch: reminder played|snooze|stop|plus|cancel | ok, watch: Nachfragen | n | ms, watch: Nachfragen weggelassen | why …, numbers and fixed words only."
+"text": "- *Spark watchface*: a watchface of its own (/pebble/spark-zifferblatt.pbw, source pebble/zifferblatt/) with time, date, next appointment, next reminder (\"in 12 Min\"), weather and a hint. Every 15 minutes it asks GET /api/watch/blick through the phone and keeps the last state on the watch. *Me → Pebble watch* shows a second QR code; with \"Pair a Pebble\" the watchface gets a key of its own (same scope as the watch app, only /api/watch/). - *Watch: my day and my week*: at the top of the list (hold UP) are \"Mein Tag\" and \"Meine Woche\" (GET /api/watch/brief?art=tag|woche). My day: today's appointments, reminders, weather, unread messages. My week: questions and new notes of the last 7 days, appointments and reminders of the next 7 days. Fixed sentences from the own data, never the language model, never mail or message text; each part only when its function is on for the profile. - *Watch: notes for admins* (needs the service watch): when a service does not answer, the watchface of the admins who get the notes shows a red bar with the same fixed sentence as the banner and vibrates once. - *Watch: quick notes* (needs memory): \"Merken\" in the list, say a sentence; it goes through POST /ap"
+},
+{
+"lang": "en",
+"src": "apis-and-integration",
+"file": "APIs and integration",
+"head": "Pebble watch",
+"title": "Pebble watch",
+"text": "i/watch/merken into memory like \"Remember …\", without the language model. *Watch: place with a note* (own switch): the phone adds the place with three decimals (about 100 m), only when the Pebble app may use the location."
+},
+{
+"lang": "en",
+"src": "apis-and-integration",
+"file": "APIs and integration",
+"head": "Pebble watch",
+"title": "Pebble watch",
+"text": "Logs in the area \"Watch\": watch: sync | n Schnellbefehle · n Erinnerungen, watch: reminder played|snooze|stop|plus|cancel | ok, watch: Nachfragen | n | ms, watch: Nachfragen weggelassen | why …, watch: blick | n Teile, watch: brief tag|woche | n Zeilen, watch: merken | ok, numbers and fixed words only."
 },
 {
 "lang": "en",
@@ -8509,7 +8565,15 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "nd also the answer with Markdown (at most 60000 characters) when it hides no fewer secrets. With its switches the watch also gets up to 3 follow-ups to tap (the model only suggests, watch.follow_clean keeps short questions without yes, no, links or numbers; never after mail, web or a proposal), a proposal as ✓ and ✕, and through /api/watch/sync the quick commands and the next 8 reminders, which it rings itself as wake-ups; push waits for it first. 10. Black out the code word: Before storing, the smart home code word is replaced by [Codewort]. In Telegram the bot deletes the message with the code word or asks the person to delete it. 11. In the profile's history: verlauf.keep puts question and answer into the channel's conversation of the day („Telegram“, „Siri“, „Uhr“ with the date). With „One conversation for all channels“ they go into the day's main conversation, marked with their channel."
+"text": "nd also the answer with Markdown (at most 60000 characters) when it hides no fewer secrets. With its switches the watch also gets up to 3 follow-ups to tap (the model only suggests, watch.follow_clean keeps short questions without yes, no, links or numbers; never after mail, web or a proposal), a proposal as ✓ and ✕, and through /api/watch/sync the quick commands and the next 8 reminders, which it rings itself as wake-ups; push waits for it first. The Spark watchface fetches the next appointment, reminder, weather, a hint and for admins an outage through /api/watch/blick every 15 minutes; /api/watch/brief builds My day and My week from fixed sentences, /api/watch/merken keeps a dictated sentence in memory (with the place to about 100 m only with its own switch). 10. Black out the code word: Before storing, the smart home code word is replaced by [Codewort]. In Telegram the bot deletes the message with the code word or asks the person to delete it. 11. In the profile's history: verlauf.keep puts question and answer into the channel's conversation of the day („Telegram“, „Siri“, „Uhr“ with the date). With „One conversation for all channels“ they go into the day's main conversation, m"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Way",
+"title": "Way",
+"text": "arked with their channel."
 },
 {
 "lang": "en",
@@ -8533,7 +8597,7 @@
 "file": "Architecture and data flow",
 "head": "Settings",
 "title": "Settings",
-"text": "- Features → Telegram: bot token and switch (default off). - Me → Telegram: link the own chat; allow voice messages, private data, smart home and notes one by one. - Me → Pebble watch: pair the watch, the address on the road (https only) and the quick commands. - Features → Pebble watch: follow-ups, quick commands, reminders on the wrist, one switch each (default off). - Features → One conversation for all channels: every channel writes into the day's main conversation."
+"text": "- Features → Telegram: bot token and switch (default off). - Me → Telegram: link the own chat; allow voice messages, private data, smart home and notes one by one. - Me → Pebble watch: pair the watch, the address on the road (https only) and the quick commands. - Features → Pebble watch: follow-ups, quick commands, reminders on the wrist, Spark watchface, my day and my week, notes for admins, quick notes and place with a note, one switch each (default off). - Features → One conversation for all channels: every channel writes into the day's main conversation."
 },
 {
 "lang": "en",
@@ -8557,7 +8621,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/verlauf.py keep: the channel's day conversation or the main one (step 11)"
+"text": "- app/panel/pebblewatch.py watch_blick: what the Spark watchface shows (step 9) - app/panel/pebblewatch.py watch_brief: My day and My week, fixed sentences (step 9) - app/panel/pebblewatch.py watch_note: quick note into memory (step 9) - app/panel/verlauf.py keep: the channel's day conversation or the main one (step 11)"
 },
 {
 "lang": "en",

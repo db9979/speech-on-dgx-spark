@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.736** · 2026-10-17 · Pebble-Uhr Paket 2: eigenes Spark-Zifferblatt (Uhrzeit, nächster Termin, Erinnerung, Wetter, Admin-Meldung, Tipp), „Mein Tag“ und „Meine Woche“ aus festen Sätzen, Schnell merken mit Ort (je ein Admin-Schalter, aus)
 - **V01.0.735** · 2026-10-17 · Pebble-Uhr 2.0: zweite Adresse für unterwegs (nur https), Nachfragen zum Antippen und Vorschläge mit ✓/✕, eigene Schnellbefehle, Erinnerungen und Timer klingeln auf der Uhr auch ohne Handy (je ein Admin-Schalter, aus)
 - **V01.0.734** · 2026-10-17 · CarPlay: Zuhören bricht im Auto nicht mehr mitten im Satz ab (leisere Stimme zählt, 1,6 s Pause, 15 s ohne Stimme)
 - **V01.0.733** · 2026-10-17 · Anrufe im Chat stehen auf Live, Monitoring und der Steuerzentrale jetzt auch unter Geräte (Browser oder iPhone-App, „Anruf“), vom Klingeln bis zum Auflegen

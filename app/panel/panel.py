@@ -634,6 +634,15 @@ def pebble_app():
     return FileResponse(path, media_type="application/octet-stream", filename="speech-spark.pbw")
 
 
+@app.get("/pebble/spark-zifferblatt.pbw")
+def pebble_face():
+    """The Spark-Zifferblatt, a watchface of its own (public: it holds no data; it only works with a paired key)."""
+    path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "pebble", "spark-zifferblatt.pbw")
+    if not os.path.exists(path):
+        raise HTTPException(404, "not built")
+    return FileResponse(path, media_type="application/octet-stream", filename="spark-zifferblatt.pbw")
+
+
 @app.get("/tui/spark-tui.py")
 def terminal_program():
     """The terminal client (terminal.py), to fetch with curl on the terminal (public: it holds no data; Ich → Terminal

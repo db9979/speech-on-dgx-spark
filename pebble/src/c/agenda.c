@@ -9,7 +9,7 @@
 
 #define AG_MAX 8               // wake-ups an app may hold
 #define AG_TEXT 64
-#define Q_MAX 12
+#define Q_MAX 15            // 12 own sentences and up to 3 fixed entries (Mein Tag, Meine Woche, Merken)
 #define Q_TEXT 64
 #define OUT_MAX 3
 #define SNOOZE_S 600
@@ -471,7 +471,7 @@ static Window *s_list_win;
 static MenuLayer *s_menu;
 static ListKind s_list;
 static AppTimer *s_list_tick;
-static char s_sub[32];
+static char s_sub[40];
 
 static uint16_t rows(MenuLayer *m, uint16_t section, void *ctx) {
   int n = s_list == ListAgenda ? s_ag_n : s_q_n;
@@ -494,7 +494,9 @@ static void draw_row(GContext *ctx, const Layer *cell, MenuIndex *idx, void *dat
       menu_cell_basic_draw(ctx, cell, "Keine Befehle", "Ich > Pebble-Uhr", NULL);
       return;
     }
-    menu_cell_basic_draw(ctx, cell, s_q[idx->row], NULL, NULL);
+    // a fixed entry starts with \x01 and its letter (the phone puts it there, never a sentence of the profile)
+    const char *q = s_q[idx->row];
+    menu_cell_basic_draw(ctx, cell, q[0] == 1 && q[1] ? q + 2 : q, NULL, NULL);
   }
 }
 

@@ -208,7 +208,14 @@ The phone must reach the Spark, at home over Wi-Fi, on the road through a VPN su
 - *Watch: quick commands*: up to 12 own sentences per profile (at most 60 characters each) under *Me → Pebble watch*. Long UP on the watch shows the list, SELECT sends one as a question.
 - *Watch: reminders and timers on the wrist* (needs *Timers and reminders* too): the next 8 reminders of the next 30 days sit on the watch as wake-ups and ring without the phone (yellow window, three vibrations). UP closes, SELECT "later" (10 minutes), DOWN ends a series. A timer shows a ring; UP adds a minute, long DOWN stops it. Long DOWN shows the list. The watch reports what it rang (`POST /api/watch/reminder`), so a reminder rings only once for the profile; push waits 90 seconds for the watch when the watch holds it. The phone fetches the list through `GET /api/watch/sync` at start, after each reminder set and after saving the settings.
 
-Logs in the area "Watch": `watch: sync | n Schnellbefehle · n Erinnerungen`, `watch: reminder played|snooze|stop|plus|cancel | ok`, `watch: Nachfragen | n | ms`, `watch: Nachfragen weggelassen | why …`, numbers and fixed words only.
+**Package 2 (watch app 2.1, Spark watchface 1.0):** five more sub-switches under *Features → Pebble watch*, all off.
+
+- *Spark watchface*: a watchface of its own (`/pebble/spark-zifferblatt.pbw`, source `pebble/zifferblatt/`) with time, date, next appointment, next reminder ("in 12 Min"), weather and a hint. Every 15 minutes it asks `GET /api/watch/blick` through the phone and keeps the last state on the watch. *Me → Pebble watch* shows a second QR code; with "Pair a Pebble" the watchface gets a key of its own (same scope as the watch app, only `/api/watch/`).
+- *Watch: my day and my week*: at the top of the list (hold UP) are "Mein Tag" and "Meine Woche" (`GET /api/watch/brief?art=tag|woche`). My day: today's appointments, reminders, weather, unread messages. My week: questions and new notes of the last 7 days, appointments and reminders of the next 7 days. Fixed sentences from the own data, never the language model, never mail or message text; each part only when its function is on for the profile.
+- *Watch: notes for admins* (needs the service watch): when a service does not answer, the watchface of the admins who get the notes shows a red bar with the same fixed sentence as the banner and vibrates once.
+- *Watch: quick notes* (needs memory): "Merken" in the list, say a sentence; it goes through `POST /api/watch/merken` into memory like "Remember …", without the language model. *Watch: place with a note* (own switch): the phone adds the place with three decimals (about 100 m), only when the Pebble app may use the location.
+
+Logs in the area "Watch": `watch: sync | n Schnellbefehle · n Erinnerungen`, `watch: reminder played|snooze|stop|plus|cancel | ok`, `watch: Nachfragen | n | ms`, `watch: Nachfragen weggelassen | why …`, `watch: blick | n Teile`, `watch: brief tag|woche | n Zeilen`, `watch: merken | ok`, numbers and fixed words only.
 
 ### Terminal client (spark-tui)
 

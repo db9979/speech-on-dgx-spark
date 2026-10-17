@@ -9,6 +9,7 @@ A key with scope "watch" only asks (profiles.WATCH_PREFIX: /api/watch/...) and o
 switch chat.pebble is on and the profile is not blocked. Removing the watch in the panel stops its key.
 Keys made by hand in the admin's device list keep working as before.
 """
+import asyncio
 import json
 import os
 import re
@@ -120,13 +121,19 @@ def profile_get(prof=Depends(own_profile)):
             "minutes": CODE_SECONDS // 60, "app": app_version(),
             # what the watch does besides asking (each its own admin switch): Ich → Pebble-Uhr shows only those
             "quick_on": features.allowed("pebbleschnell", uid), "quick": quick_of(uid), "remind_on": remind_on(uid), "follow_on": features.allowed("pebblefolge", uid),
-            "max": QUICK_MAX, "len": QUICK_LEN}
+            "max": QUICK_MAX, "len": QUICK_LEN,
+            "face_on": features.allowed("pebblezifferblatt", uid), "day_on": features.allowed("pebbletag", uid),
+            "note_on": features.allowed("pebblemerken", uid), "place_on": features.allowed("pebbleort", uid)}
 
 
 @router.get("/api/profile/pebble/qr", dependencies=[Depends(assistant)])
-def profile_qr(base: str, prof=Depends(_on)):
-    """QR code of the app file's address, to scan with the phone that is paired with the watch."""
-    url = _base({"base": base}) + "/pebble/speech-spark.pbw"
+def profile_qr(base: str, app: str = "", prof=Depends(_on)):
+    """QR code of the app file's address, to scan with the phone that is paired with the watch (app=face: the
+    Spark-Zifferblatt, only while the admin released it)."""
+    face = app == "face"
+    if face and not features.allowed("pebblezifferblatt", prof["id"]):
+        raise HTTPException(403, "the Spark watchface is turned off")
+    url = _base({"base": base}) + ("/pebble/spark-zifferblatt.pbw" if face else "/pebble/speech-spark.pbw")
     try:
         import mfa
         svg = mfa._qr_svg(url)
@@ -264,7 +271,10 @@ def watch_sync(request: Request):
         _held.pop(uid, None)
     print(f"watch: sync | {len(quick)} Schnellbefehle · {len(items) if items is not None else 'aus'} Erinnerungen"
           f" | {profiles.log_name(prof)}", flush=True)
-    return {"quick": quick, "agenda": items, "follow": features.allowed("pebblefolge", uid)}
+    return {"quick": quick, "agenda": items, "follow": features.allowed("pebblefolge", uid),
+            # the fixed entries of the list (Mein Tag, Meine Woche, Merken) and whether the phone may add the place
+            "day": features.allowed("pebbletag", uid), "note": features.allowed("pebblemerken", uid),
+            "place": features.allowed("pebbleort", uid)}
 
 
 @router.post("/api/watch/reminder", dependencies=[Depends(assistant)])
@@ -337,6 +347,205 @@ async def profile_quick(request: Request, prof=Depends(_on)):
     profiles.save_settings(prof["id"], {"peb_cmds": lines})
     print(f"watch: quick commands saved | {len(lines)} | {profiles.log_name(prof)}", flush=True)
     return profile_get(prof)
+
+
+# ---------------------------------------------------------------- Paket 2 (plan pebble-ideen/plan.md)
+# Spark-Zifferblatt: a watchface of its own fetches GET /api/watch/blick every 15 minutes (next appointment, next
+# reminder, weather, a hint, for admins an outage). Mein Tag / Meine Woche: GET /api/watch/brief, fixed sentences from
+# the profile's own data, never the model. Schnell merken: POST /api/watch/merken keeps a fact like "merk dir".
+# Everything only from functions the profile may use; fixed words, own titles, never mail or message text.
+BLICK_TITLE = 32          # an appointment's title on the face
+BRIEF_LINES = 12
+NOTE_LEN = 200            # profiles.MAX_FACT_LEN is the hard limit
+WEEK_DAYS = 7
+WEEKDAYS = ("Mo", "Di", "Mi", "Do", "Fr", "Sa", "So")
+_wx = {}                  # uid -> (time, weather for the face); the weather service has its own 15-minute cache
+
+
+async def _weather(uid):
+    """Temperature and the weather word for the face, or None (switch off, no place, service not reachable)."""
+    import weather
+    if not weather.usable(uid):
+        return None
+    hit = _wx.get(uid)
+    if hit and time.time() - hit[0] < 600:
+        return hit[1]
+    place = weather.get(uid) or {}
+    try:
+        d = await asyncio.wait_for(weather.forecast(place["lat"], place["lon"], 2), 4)
+        cur = d.get("current") or {}
+        out = {"temp": int(round(float(cur["temperature_2m"]))),
+               "word": weather.CODES.get(int(cur.get("weather_code") or 0), "wechselhaft")}
+    except Exception as e:   # the face shows the rest without the weather
+        print("watch: blick Wetter nicht erreicht |", type(e).__name__, flush=True)
+        out = None
+    if len(_wx) > 500:
+        _wx.clear()
+    _wx[uid] = (time.time(), out)
+    return out
+
+
+def _alert(uid):
+    """For an admin who gets the outage notes: the first open outage as fixed words, else None."""
+    if not features.allowed("pebblemeldung", uid):
+        return None
+    import dienstwacht
+    if uid not in dienstwacht.recipients():
+        return None
+    first = next(iter(dienstwacht.alerts()), None)
+    return _short(re.sub(r"^Gerade eingeschränkt: ", "", first["text"]), 60) if first else None
+
+
+def _tip(uid):
+    if not features.allowed("tipps", uid):
+        return None
+    import tipps
+    first = next(iter(tipps.listing(uid)), None)
+    return _short("Tipp: " + first["name"][0], 40) if first else None
+
+
+def _zone(tz):
+    from chat import user_zone
+    return user_zone(str(tz or "")[:64])
+
+
+@router.get("/api/watch/blick", dependencies=[Depends(assistant)])
+async def watch_blick(request: Request, tz: str = ""):
+    """What the Spark watchface shows (Spark-Zifferblatt): small, without the model."""
+    prof = _watch_prof(request)
+    uid = prof["id"]
+    guard.limit(request, "watchsync", uid)
+    if not features.allowed("pebblezifferblatt", uid):
+        print(f"watch: blick refused | why off | {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(403, "the Spark watchface is turned off")
+    out = {"next": None, "rem": None, "wx": None, "alert": _alert(uid), "tip": _tip(uid)}
+    if features.allowed("calendar", uid):
+        import today
+        ev = next(iter((await today._events(uid, _zone(tz))).get("next") or []), None)
+        if ev:
+            out["next"] = {"start": ev["start"], "allday": ev["allday"], "title": _short(ev["title"], BLICK_TITLE)}
+    if features.allowed("reminders", uid):
+        rem = agenda(uid)
+        if rem:
+            out["rem"] = {"due": rem[0]["due"], "text": _short(rem[0]["text"], BLICK_TITLE)}
+    out["wx"] = await _weather(uid)
+    print(f"watch: blick | {sum(1 for v in out.values() if v)} Teile | {profiles.log_name(prof)}", flush=True)
+    return out
+
+
+def _clock(ts, zone):
+    import datetime
+    return datetime.datetime.fromtimestamp(ts, zone).strftime("%H:%M")
+
+
+async def _day_lines(uid, zone):
+    import datetime
+    lines = []
+    if features.allowed("calendar", uid):
+        import today
+        r = await today._events(uid, zone)
+        end = datetime.datetime.now(zone).replace(hour=23, minute=59).timestamp()
+        evs = [x for x in r.get("next") or [] if x["start"] <= end]
+        if r.get("error"):
+            lines.append("Kalender gerade nicht erreicht.")
+        elif not evs:
+            lines.append("Heute keine Termine.")
+        for x in evs:
+            lines.append(("ganztägig" if x["allday"] else _clock(x["start"], zone)) + " " + _short(x["title"], 40))
+    if features.allowed("reminders", uid):
+        end = datetime.datetime.now(zone).replace(hour=23, minute=59).timestamp() * 1000
+        rems = [x for x in profiles.reminders(uid) if time.time() * 1000 <= x.get("due", 0) <= end]
+        for x in sorted(rems, key=lambda x: x["due"])[:4]:
+            lines.append("⏰ " + _clock(x["due"] / 1000, zone) + " " + _short(x.get("text"), 40))
+    w = await _weather(uid)
+    if w:
+        lines.append(f"{w['temp']} Grad, {w['word']}.")
+    if features.allowed("chats", uid):
+        import chats
+        n = chats.unread_total(uid)
+        if n:
+            lines.append(f"{n} ungelesene Nachrichten.")
+    return lines
+
+
+async def _week_lines(uid, zone):
+    import datetime
+    now = time.time()
+    since = (now - WEEK_DAYS * 86400) * 1000
+    asked = sum(1 for c in profiles.convos(uid) if c.get("updated", 0) >= since
+                for m in c.get("messages") or [] if isinstance(m, dict) and m.get("role") == "user"
+                and (m.get("t") or c.get("updated", 0)) >= since)
+    lines = [f"Letzte 7 Tage: {asked} Fragen."]
+    if features.allowed("memory", uid):
+        new = sum(1 for x in profiles.memory(uid) if x.get("created", 0) >= now - WEEK_DAYS * 86400)
+        lines.append(f"{new} neue Dinge gemerkt.")
+    if features.allowed("calendar", uid):
+        import calendars
+        start = datetime.datetime.now(zone)
+        try:
+            r = await asyncio.wait_for(calendars.events(uid, start, start + datetime.timedelta(days=WEEK_DAYS), zone), 4)
+        except (asyncio.TimeoutError, OSError, ValueError):
+            r = None
+            lines.append("Kalender gerade nicht erreicht.")
+        if r:
+            evs = r[0]
+            lines.append(f"Nächste 7 Tage: {len(evs)} Termine.")
+            for x in evs[:4]:
+                lines.append(WEEKDAYS[x["start"].weekday()] + x["start"].strftime(" %d.%m. ") + _short(x["title"], 36))
+    if features.allowed("reminders", uid):
+        end = (now + WEEK_DAYS * 86400) * 1000
+        n = sum(1 for x in profiles.reminders(uid) if now * 1000 <= x.get("due", 0) <= end)
+        lines.append(f"{n} Erinnerungen in den nächsten 7 Tagen.")
+    return lines
+
+
+@router.get("/api/watch/brief", dependencies=[Depends(assistant)])
+async def watch_brief(request: Request, art: str = "tag", tz: str = ""):
+    """Mein Tag / Meine Woche on the watch: fixed sentences, at most BRIEF_LINES."""
+    prof = _watch_prof(request)
+    uid = prof["id"]
+    guard.limit(request, "watchsync", uid)
+    if art not in ("tag", "woche"):
+        print(f"watch: brief refused | why invalid | {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(400, "art: tag or woche")
+    if not features.allowed("pebbletag", uid):
+        print(f"watch: brief refused | why off | {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(403, "day and week on the watch are turned off")
+    zone = _zone(tz)
+    lines = (await (_day_lines if art == "tag" else _week_lines)(uid, zone))[:BRIEF_LINES]
+    print(f"watch: brief {art} | {len(lines)} Zeilen | {profiles.log_name(prof)}", flush=True)
+    return {"art": art, "lines": lines or ["Nichts Neues."]}
+
+
+@router.post("/api/watch/merken", dependencies=[Depends(assistant)])
+async def watch_note(request: Request):
+    """Schnell merken: one sentence (dictated on the watch) into the profile's memory, optionally with the place the
+    phone gave (its own switch, coarse to about 100 m)."""
+    prof = _watch_prof(request)
+    uid = prof["id"]
+    guard.limit(request, "watchrem", uid)
+    if not (features.allowed("pebblemerken", uid) and features.allowed("memory", uid)):
+        print(f"watch: merken refused | why off | {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(403, "quick notes from the watch are turned off")
+    body = await core.json_body(request, MAX_BODY, lenient=True)
+    text = _short(body.get("text"), NOTE_LEN)
+    if len(text) < 2:
+        print(f"watch: merken refused | why invalid | {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(400, "text is required")
+    place = ""
+    if features.allowed("pebbleort", uid):
+        try:
+            lat, lon = float(body.get("lat")), float(body.get("lon"))
+            if -90 <= lat <= 90 and -180 <= lon <= 180:
+                place = f" (Ort {lat:.3f}, {lon:.3f})"
+        except (TypeError, ValueError):
+            pass
+    kept = profiles.remember(uid, text + place, src="said")
+    print(f"watch: merken | {'ok' if kept else 'nothing to do'}{' · mit Ort' if place else ''} | "
+          f"{profiles.log_name(prof)}", flush=True)
+    if kept:
+        _live_mark("Eingang", "Uhr: etwas gemerkt")
+    return {"ok": bool(kept), "text": kept or ""}
 
 
 # own data while blocked (features.OWN): the quick commands of the profile

@@ -51,9 +51,13 @@ static int32_t s_dict_ms;
 static AppTimer *s_watchdog;
 
 // messages to the phone: one at a time, repeated when they fail
-typedef enum { OutNone, OutQuestion, OutCancel, OutReset, OutFreed, OutRem, OutSync } OutKind;
+typedef enum { OutNone, OutQuestion, OutCancel, OutReset, OutFreed, OutRem, OutSync, OutExtra } OutKind;
 static OutKind s_out;          // what is on its way right now
 static bool s_q_pending, s_cancel_pending, s_reset_pending, s_freed_due, s_sync_pending;
+// Mein Tag, Meine Woche (BRIEF_ASK) or a sentence to keep (NOTE): one at a time, the answer comes as BRIEF
+static char s_extra;               // 'T', 'W', 'N' or 0
+static char s_note[200];
+static bool s_note_mode;           // the next dictation is a sentence to keep, not a question
 static int32_t s_cancel_seq;
 static int s_tries;
 static AppTimer *s_retry;
@@ -138,7 +142,7 @@ static void flush_out(void) {
                : (s_busy && s_expect_audio && (s_freed_due || s_freed_total - s_freed_sent >= CREDIT_STEP))
                  ? OutFreed
                : agenda_out_peek(rem_id, sizeof(rem_id), &rem_act, rem_text, sizeof(rem_text)) ? OutRem
-               : s_sync_pending ? OutSync : OutNone;
+               : s_sync_pending ? OutSync : s_extra ? OutExtra : OutNone;
   if (kind == OutNone) return;
   DictionaryIterator *it;
   if (app_message_outbox_begin(&it) != APP_MSG_OK) {
@@ -169,6 +173,10 @@ static void flush_out(void) {
     case OutSync:
       dict_write_int32(it, MESSAGE_KEY_SYNC, 1);
       break;
+    case OutExtra:
+      if (s_extra == 'N') dict_write_cstring(it, MESSAGE_KEY_NOTE, s_note);
+      else dict_write_cstring(it, MESSAGE_KEY_BRIEF_ASK, s_extra == 'W' ? "woche" : "tag");
+      break;
     default:
       s_freed_out = s_freed_total;
       s_freed_due = false;
@@ -192,6 +200,7 @@ static void outbox_sent(DictionaryIterator *it, void *context) {
     case OutFreed: if (s_freed_out > s_freed_sent) s_freed_sent = s_freed_out; break;
     case OutRem: agenda_out_sent(); break;
     case OutSync: s_sync_pending = false; break;
+    case OutExtra: s_extra = 0; break;
     default: break;
   }
   s_out = OutNone;
@@ -215,6 +224,11 @@ static void outbox_failed(DictionaryIterator *it, AppMessageResult reason, void 
     if (kind == OutCancel) s_cancel_pending = false;
     if (kind == OutReset) s_reset_pending = false;
     if (kind == OutSync) s_sync_pending = false;
+    if (kind == OutExtra) {
+      s_extra = 0;
+      set_status("Handy nicht erreichbar");
+      face_set_mode(FaceSad);
+    }
     if (kind == OutRem) {   // no phone now: the action stays queued (and stored) for the next start
       if (s_retry) {
         app_timer_cancel(s_retry);
@@ -430,6 +444,23 @@ static void ask(const char *text) {
   face_set_mode(FaceThink);
 }
 
+// Mein Tag, Meine Woche, Merken: no answer of the model, only fixed sentences from the Spark (BRIEF)
+static void extra_send(char kind, const char *title, const char *status) {
+  cancel_answer();
+  audio_reset();
+  snprintf(s_question, sizeof(s_question), "%s", title);
+  s_answer[0] = 0;
+  s_follow_n = 0;
+  s_proposal[0] = 0;
+  update_text();
+  scroll_layer_set_content_offset(s_scroll_layer, GPointZero, false);
+  s_extra = kind;
+  s_tries = 0;
+  flush_out();
+  set_status(status);
+  face_set_mode(FaceThink);
+}
+
 // ---------------------------------------------------------------- yes or no for a proposal
 
 static Window *s_confirm;
@@ -549,7 +580,14 @@ static void finish_if_done(void) {
 static void dictation_done(DictationSession *session, DictationSessionStatus status,
                            char *transcription, void *ctx) {
   s_dict_ms = (int32_t)(time(NULL) - s_dict_start) * 1000;
+  bool note = s_note_mode;
+  s_note_mode = false;
   if (status == DictationSessionStatusSuccess && transcription && transcription[0]) {
+    if (note) {   // Schnell merken: the sentence goes to the memory, not to the chat
+      snprintf(s_note, sizeof(s_note), "%s", transcription);
+      extra_send('N', "Merken", "Wird gemerkt …");
+      return;
+    }
     ask(transcription);
     return;
   }
@@ -735,6 +773,13 @@ static void inbox_received(DictionaryIterator *it, void *context) {
   if ((t = dict_find(it, MESSAGE_KEY_PROPOSAL))) {
     snprintf(s_proposal, sizeof(s_proposal), "%s", t->value->cstring);
   }
+  if ((t = dict_find(it, MESSAGE_KEY_BRIEF))) {
+    snprintf(s_answer, sizeof(s_answer), "%s", t->value->cstring);
+    update_text();
+    idle_status();
+    face_set_mode(FaceIdle);
+    vibes_short_pulse();
+  }
   if ((t = dict_find(it, MESSAGE_KEY_ANSWER))) {
     size_t have = strlen(s_answer);
     snprintf(s_answer + have, sizeof(s_answer) - have, "%s", t->value->cstring);
@@ -813,6 +858,15 @@ static void start_listening(void *ctx) {
 }
 
 static void ask_from_list(const char *text) {
+  if (text[0] == 1) {   // a fixed entry of the list (the phone adds it when the admin released it)
+    if (text[1] == 'T') extra_send('T', "Mein Tag", "Hole den Tag …");
+    else if (text[1] == 'W') extra_send('W', "Meine Woche", "Hole die Woche …");
+    else if (text[1] == 'M') {
+      s_note_mode = true;
+      listen();
+    }
+    return;
+  }
   ask(text);   // a quick command goes like a spoken question
 }
 

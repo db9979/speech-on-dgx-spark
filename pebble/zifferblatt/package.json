@@ -1,0 +1,42 @@
+{
+  "name": "spark-zifferblatt",
+  "author": "Speech on DGX Spark",
+  "version": "1.0.0",
+  "keywords": [
+    "pebble-app"
+  ],
+  "private": true,
+  "dependencies": {},
+  "pebble": {
+    "displayName": "Spark-Zifferblatt",
+    "uuid": "5c1a9e2b-7d43-4f0e-9b6a-3e8d2f71c0a4",
+    "sdkVersion": "3",
+    "enableMultiJS": true,
+    "targetPlatforms": [
+      "emery",
+      "flint",
+      "gabbro"
+    ],
+    "capabilities": [
+      "configurable"
+    ],
+    "watchapp": {
+      "watchface": true
+    },
+    "messageKeys": [
+      "NEXT_T",
+      "NEXT",
+      "REM_T",
+      "REM",
+      "WX",
+      "ALERT",
+      "TIP",
+      "STATUS",
+      "WHERE",
+      "REFRESH"
+    ],
+    "resources": {
+      "media": []
+    }
+  }
+}

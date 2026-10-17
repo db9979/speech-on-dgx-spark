@@ -1,7 +1,7 @@
 {
   "name": "speech-spark",
   "author": "Speech on DGX Spark",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "keywords": [
     "pebble-app"
   ],
@@ -18,7 +18,8 @@
       "gabbro"
     ],
     "capabilities": [
-      "configurable"
+      "configurable",
+      "location"
     ],
     "watchapp": {
       "watchface": false
@@ -52,7 +53,10 @@
       "REM_ID",
       "REM_ACT",
       "REM_TEXT",
-      "SYNC"
+      "SYNC",
+      "NOTE",
+      "BRIEF_ASK",
+      "BRIEF"
     ],
     "resources": {
       "media": []

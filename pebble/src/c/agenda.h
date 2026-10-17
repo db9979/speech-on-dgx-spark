@@ -17,7 +17,7 @@ bool agenda_launch(void);
 
 void agenda_set(const char *lines);   // "id|due|made|rep|text" per line; "" = none
 void agenda_off(void);                // the admin switched it off: no wake-ups
-void quick_set(const char *lines);    // one command per line
+void quick_set(const char *lines);    // one command per line; "\x01" + letter + title is a fixed entry (T, W, M)
 
 void agenda_show_list(void);
 void quick_show_list(void);

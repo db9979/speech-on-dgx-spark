@@ -36,6 +36,15 @@ Source of `app/pebble/speech-spark.pbw`, which the panel serves at `/pebble/spee
   home does not answer within 4 s it uses that one for 5 minutes. `GET /api/watch/sync` fills the watch at start,
   after a reminder was set and after saving the settings.
 
+- App 2.1: the list (long UP) starts with fixed entries the phone adds when the admin released them ("\x01" and a
+  letter: T Mein Tag, W Meine Woche, M Merken). Tag/Woche send `BRIEF_ASK`, Merken dictates and sends `NOTE`; the
+  phone answers with `BRIEF` (fixed sentences from `GET /api/watch/brief`, or "Gemerkt: …" from `POST
+  /api/watch/merken`, with the place when `place` is on and the person allowed location).
+- `zifferblatt/`: the Spark-Zifferblatt, a watchface of its own (served as `/pebble/spark-zifferblatt.pbw`, paired
+  with a setup code of its own). Every 15 minutes it sends `REFRESH`; the phone fetches `GET /api/watch/blick` and
+  sends `NEXT_T`/`NEXT`, `REM_T`/`REM`, `WX`, `TIP`, `ALERT` (admins; a new one buzzes twice) and `WHERE`. The parts
+  are kept in persistent storage. The workflow builds both and puts both files on `pebble-build`.
+
 Platforms: emery (Pebble Time 2) and flint (Core 2 Duo) with speaker, gabbro (Pebble Round 2)
 text only.
 

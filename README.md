@@ -40,6 +40,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.736** Pebble watch: own Spark watchface, my day and my week, quick notes with place
 - **V01.0.735** Pebble watch 2.0: on the road over https, follow-ups to tap, own quick commands, reminders and timers on the wrist
 - **V01.0.734** CarPlay: listening in the car no longer stops in mid-sentence (quieter voice counts, 1.6 s pause, 15 s without a voice)
 - **V01.0.733** Chat calls now also show under devices on Live, monitoring and the Steuerzentrale (browser or iPhone app, "Anruf"), from ringing to hanging up
@@ -49,7 +50,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.729** Companion tidied up: window with a question field and tiles, settings with a side menu
 - **V01.0.728** "Long conversations" under Status → Models (4 conversations of 64K each or one of 256K); measuring shows that it runs and what it does
 - **V01.0.727** Self-test fix: the picture tests know "My things" in the iPhone app
-- **V01.0.726** New page "My things" in the iPhone app: documents with filters and selection, plus pictures, music and memory
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
