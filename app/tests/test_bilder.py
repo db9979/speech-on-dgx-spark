@@ -319,11 +319,14 @@ class Jobs(On):
             f = app.get(f"/api/bilder/{j['pic']['id']}/datei", headers=h)
             self.assertEqual(f.status_code, 200)
             self.assertTrue(f.content.startswith(bilder.PNG_SIG))
-            self.assertEqual(app.get("/api/bilder", headers=h).status_code, 401)            # the list is an area
+            # the list is Meine Sachen → Bilder (iphone.THINGS): only with the release of Bilder malen for the profile
+            self.assertEqual(app.get("/api/bilder", headers=h).status_code, 200)
+            helpers.set_config(deny={"bilder": [prof["id"]]})
+            self.assertEqual(app.get("/api/bilder", headers=h).status_code, 401)
             self.assertEqual(app.delete(f"/api/bilder/{j['pic']['id']}", headers=h).status_code, 401)
             self.assertEqual(app.post("/api/bilder", json={"wunsch": "x"}, headers=h).status_code, 401)
         finally:
-            helpers.set_config(iphone=False)
+            helpers.set_config(iphone=False, deny={})
             bilder.clear(prof["id"])
 
     def test_page_paints_the_persons_own_sentence(self):
@@ -669,7 +672,7 @@ class Change(On):
         import guard
         import iphone
         import re as re_
-        mine = iphone.AREAS["app_mine"]
+        mine = iphone.THINGS["bilder"]                                  # Meine Sachen → Bilder
         for method, path in (("POST", "/api/bilder/0123456789ab/aendern"), ("POST", "/api/bilder/0123456789ab/schnell"),
                              ("POST", "/api/bilder/foto")):
             self.assertTrue(any(method in m and re_.fullmatch(rx, path) for m, rx in mine), path)

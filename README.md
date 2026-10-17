@@ -40,6 +40,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.727** Self-test fix: the picture tests know "My things" in the iPhone app
 - **V01.0.726** New page "My things" in the iPhone app: documents with filters and selection, plus pictures, music and memory
 - **V01.0.725** Remote control of the computer: more fixed voice orders on the PC, view and operate the screen from the phone or panel, and the Spark does tasks on the computer step by step, each step confirmed there
 - **V01.0.724** OLED page "Aktiv 10 min": how many people were here in the last 10 minutes, as one big number with profiles and guests; the same number in Monitoring, Live, the Steuerzentrale and the iPhone app
@@ -49,7 +50,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.720** Cleanup: the speech output of an answer lives in a file of its own, chat.py is another 160 lines shorter
 - **V01.0.719** Measure models right in the panel (Status → Models "Measure")
 - **V01.0.718** Two fast models to measure: Gemma 4 26B A4B and Qwen3-VL 30B A3B
-- **V01.0.717** Kolibri-1 measures with enough memory (already FP8, 78B)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
