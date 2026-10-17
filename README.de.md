@@ -40,6 +40,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.717** Kolibri-1 misst mit genug Speicher (liegt schon in FP8 vor, 78B)
 - **V01.0.716** Fix Selbsttest: die Prüfungen am Quelltext lesen die Modellseite jetzt in ihrer eigenen Datei
 - **V01.0.715** `modelle messen` klappt neben dem eigenen Sprachmodell; Kolibri-1 lädt als FP8
 - **V01.0.714** Musik: „Musik stück“ und „… Track“ werden erkannt, nach einer Websuche macht der eigene Wunsch das Lied mit den Akkorden von davor
@@ -49,7 +50,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.710** Lautsprecher: steht im Board noch die alte DGX-Adresse, nennt die Diagnose die richtige des Pi
 - **V01.0.709** Aufräumen: die Vorschläge unter „Verbessern“ entstehen aus drei kleineren Teilen, gleiche Bausteine nur noch einmal
 - **V01.0.708** Telefon hinter einem Router mit NAT: der Spark lernt die Adresse, die die Anlage sieht, und sagt, welche Ports weiterzuleiten sind
-- **V01.0.707** Hinweise oben auf den Admin-Seiten: schmale Zeilen, ab zwei zugeklappt in einer Zeile mit der Anzahl (rote bleiben offen); auch in der iPhone-App
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

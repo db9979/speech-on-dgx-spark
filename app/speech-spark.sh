@@ -361,7 +361,7 @@ mess_restore() {
   local u
   systemctl stop "$MESS_ENGINE" 2>/dev/null || true
   for u in "${MESS_QWEN[@]}"; do systemctl start --no-block "$u" || echo "modelle: qwen38 start fehler"; done
-  [ "${#MESS_QWEN[@]}" -gt 0 ] && echo "modelle: qwen38 wieder an (${#MESS_QWEN[@]} dienste)"
+  [ "${#MESS_QWEN[@]}" -gt 0 ] && echo "modelle: sprachmodell wieder an (${#MESS_QWEN[@]} dienste)"
   [ "$MESS_PAUSE" = 1 ] && { as_panel_user wartung.py weiter || true; }
   as_panel_user ../modelle.py ergebnis || true
   echo "modelle: messung ende"
