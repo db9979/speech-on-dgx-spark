@@ -458,7 +458,7 @@ class Everywhere(Base):
         with open(os.path.join(root, "ios", "Spark", "DocumentsView.swift"), encoding="utf-8") as f:
             view = f.read()
         self.assertIn('source: String((d["source"] as? String', api)
-        self.assertIn('if d.source == "nas"', view)
+        self.assertIn('doc.source == "nas" ? "NAS · " + (doc.place.isEmpty ? "/" : doc.place)', view)   # the folder, never more
         self.assertIn('if doc.file || doc.source == "nas" { original = try? await api.docOriginal(doc.id) }', view)
 
     def test_logs_without_paths_names_or_profiles(self):

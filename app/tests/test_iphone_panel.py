@@ -1,8 +1,10 @@
 """Panel areas in the iPhone app (iphone.AREAS, V01.0.246): the admin switch chat.iphone_panel opens every area
 for every profile at once, only the admin blocks single profiles (App-Gleichstand, Dominik 2026-10-14: no switch
 per area any more); the app's key reaches only the areas' paths; "Spark verwalten" stays the profile's own
-choice, set in the browser only, never from the app; a closed area opens nothing."""
+choice, set in the browser only, never from the app; a closed area opens nothing. The parts of Meine Sachen
+(iphone.THINGS, Dominik 2026-10-17) open with the admin release of their own function instead."""
 import json
+import os
 import unittest
 
 from tests import helpers
@@ -51,21 +53,22 @@ class Areas(unittest.TestCase):
 
     def test_areas_follow_the_admin_release(self):
         c, a = self.app("Pia")
-        self.assertEqual(a.get("/api/profile/memory").status_code, 200)
+        cal = ("/api/profile/calendar/test", {"tz": "Europe/Berlin"})
+        self.assertNotEqual(a.post(cal[0], json=cal[1]).status_code, 401)
         self.assertTrue(a.get("/api/iphone/hello").json()["areas"]["app_mine"])
         self.assertNotIn("app_admin", a.get("/api/iphone/hello").json()["areas"])   # no area, the role decides
         # an old switch from the browser or an old app changes nothing
         c.put("/api/profile/settings", json={"app_mine": False})
         self.assertNotIn("app_mine", profiles.settings(self.uid("Pia")))
-        self.assertEqual(a.get("/api/profile/memory").status_code, 200)
+        self.assertNotEqual(a.post(cal[0], json=cal[1]).status_code, 401)
         helpers.set_config(deny={"iphonepanel": [self.uid("Pia")]})
         try:
-            self.assertEqual(a.get("/api/profile/memory").status_code, 401)
+            self.assertEqual(a.post(cal[0], json=cal[1]).status_code, 401)
             self.assertFalse(a.get("/api/iphone/hello").json()["areas"]["app_mine"])
         finally:
             helpers.set_config(deny={})
         helpers.set_config(iphone_panel=False)
-        self.assertEqual(a.get("/api/profile/memory").status_code, 401)
+        self.assertEqual(a.post(cal[0], json=cal[1]).status_code, 401)
         self.assertFalse(a.get("/api/iphone/hello").json()["areas"]["app_mine"])
         helpers.set_config(iphone_panel=True)
 
@@ -110,8 +113,7 @@ class Areas(unittest.TestCase):
 
     def test_every_area_opens_with_the_release_and_closes_with_it(self):
         c, a = self.app("Uli")
-        probe = ("/api/profile/wissen", "/api/profile/voice", "/api/profile/weather", "/api/profile/security",
-                 "/api/profile/calendar")
+        probe = ("/api/profile/voice", "/api/profile/weather", "/api/profile/security", "/api/profile/calendar")
         for path in probe:
             self.assertEqual(a.get(path).status_code, 200, path)
         helpers.set_config(iphone_panel=False)
@@ -168,10 +170,18 @@ class Areas(unittest.TestCase):
         self.assertNotIn("app_docs_edit", profiles.settings(self.uid("Xena")))
         helpers.set_config(iphone_panel=False)
         try:
-            for k in iphone.MINE_FIELDS + iphone.DOC_FIELDS:
+            for k in iphone.MINE_FIELDS:
                 self.assertEqual(a.put("/api/iphone/settings", json={k: True}).status_code, 400, k)
+            for k in iphone.DOC_FIELDS:      # Meine Sachen → Dokumente: with Eigene Dokumente, not the panel switch
+                self.assertEqual(a.put("/api/iphone/settings", json={k: True}).status_code, 200, k)
         finally:
             helpers.set_config(iphone_panel=True)
+        helpers.set_config(deny={"documents": [self.uid("Xena")]})
+        try:
+            for k in iphone.DOC_FIELDS:
+                self.assertEqual(a.put("/api/iphone/settings", json={k: True}).status_code, 400, k)
+        finally:
+            helpers.set_config(deny={})
 
     def test_feature_switches_from_the_app_only_plain_ones(self):
         """Einstellungen → Funktionen in "Spark verwalten": the admin's login; only chat on/off switches,
@@ -219,6 +229,81 @@ class Areas(unittest.TestCase):
             mfa.enabled, mfa.verify = real
             guard._fails.clear()
             guard._locks.clear()
+
+
+class Things(unittest.TestCase):
+    """Meine Sachen (Dominik 2026-10-17, plan app-meine-sachen/plan.md): documents, memory, pictures and music open
+    for the app's key with the admin release of their own function, not with the panel switch; the admin's block for
+    the profile closes them at once; forgetting everything at once stays in the browser."""
+    PROBE = {"documents": ("GET", "/api/profile/wissen"), "memory": ("GET", "/api/profile/memory"),
+             "bilder": ("GET", "/api/bilder"), "musik": ("GET", "/api/musik")}
+
+    app, uid = Areas.app, Areas.uid
+
+    @staticmethod
+    def section(name, **kw):
+        """Switches a part of the config ("image", "music") and gives back how it was."""
+        with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
+            c = json.load(f)
+        old = dict(c.get(name) or {})
+        c.setdefault(name, {}).update(kw)
+        helpers.write_config(c)
+        return old
+
+    def setUp(self):
+        helpers.keep_chat(self, "iphone", "iphone_panel", "bilder", "musik", "deny")
+        helpers.set_config(iphone=True, iphone_panel=False, bilder=True, musik=True, deny={})
+        for name in ("image", "music"):     # the picture and music models count as installed
+            old = self.section(name, enabled=True)
+            self.addCleanup(lambda n=name, o=old: self.section(n, **dict({"enabled": False}, **o)))
+        iphone._pending.clear()
+        for k in [k for k in guard._rate if k[0] == "pair"]:
+            guard._rate.pop(k, None)
+
+    def test_every_part_has_its_function_and_a_probe(self):
+        import features
+        self.assertEqual(set(iphone.THINGS), set(self.PROBE))
+        for k in iphone.THINGS:
+            self.assertIn(k, features.BY_KEY, k)           # the key is the function's own key in features.py
+            self.assertNotIn(k, profiles.SETTINGS, k)       # never a profile switch
+        self.assertEqual(set(iphone.THINGS) & set(iphone.AREAS), set())
+
+    def test_each_part_opens_with_its_own_release_only(self):
+        c, a = self.app("Thea")
+        hello = a.get("/api/iphone/hello").json()["areas"]
+        for k, (method, path) in self.PROBE.items():
+            self.assertTrue(hello[k], k)
+            self.assertEqual(a.request(method, path).status_code, 200, k)   # without the panel switch
+        for k, (method, path) in self.PROBE.items():
+            helpers.set_config(deny={k: [self.uid("Thea")]})
+            try:
+                self.assertFalse(a.get("/api/iphone/hello").json()["areas"][k], k)
+                self.assertEqual(a.request(method, path).status_code, 401, k)
+                for other, (m2, p2) in self.PROBE.items():   # the others stay open
+                    if other != k:
+                        self.assertEqual(a.request(m2, p2).status_code, 200, (k, other))
+            finally:
+                helpers.set_config(deny={})
+        helpers.set_config(bilder=False)
+        self.assertEqual(a.get("/api/bilder").status_code, 401)
+        self.assertFalse(a.get("/api/iphone/hello").json()["areas"]["bilder"])
+
+    def test_memory_from_the_app(self):
+        c, a = self.app("Theo")
+        uid = self.uid("Theo")
+        for t in ("Mag Tee", "Wohnt in Kiel", "Hat einen Hund"):
+            profiles.remember(uid, t)
+        ids = {f["text"]: f["id"] for f in profiles.memory(uid)}
+        r = a.put(f"/api/profile/memory/{ids['Mag Tee']}", json={"text": "Mag grünen Tee"})
+        self.assertEqual(r.status_code, 200, r.text)
+        r = a.post("/api/profile/memory/forget", json={"ids": [ids["Wohnt in Kiel"]]})
+        self.assertEqual((r.status_code, r.json()["removed"]), (200, 1), r.text)
+        self.assertEqual({f["text"] for f in profiles.memory(uid)}, {"Mag grünen Tee", "Hat einen Hund"})
+        # forgetting everything at once stays in the browser, and other profiles' facts are never reached
+        self.assertEqual(a.delete("/api/profile/memory").status_code, 401)
+        d, b = self.app("Thilo")
+        self.assertEqual(b.delete(f"/api/profile/memory/{ids['Hat einen Hund']}").json()["removed"], 0)
+        self.assertIn("Hat einen Hund", {f["text"] for f in profiles.memory(uid)})
 
 
 if __name__ == "__main__":

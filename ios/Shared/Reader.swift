@@ -13,7 +13,7 @@ enum Reader {
     static var sendPictures = false
     static let pictureSide: CGFloat = 1280
     static let chatChars = 20000        // as much as a question takes along (chat.MAX_ATTACH)
-    static let maxChars = 1_000_000     // as much as "Meine Dokumente" takes from the app (iphone.DOC_CHARS)
+    static let maxChars = 1_000_000     // as much as the profile's documents take from the app (iphone.DOC_CHARS)
     static let maxPages = 500
     static let maxScans = 30            // scanned pages read by text recognition (slow)
     static let maxBytes = 20 * 1024 * 1024

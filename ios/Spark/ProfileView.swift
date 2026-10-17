@@ -203,7 +203,6 @@ struct ProfileView: View {
             right("Route und Anrufe", "app_act")
             right("Dauerhaft zuhören", "app_listen")
             right("Meldungen aufs iPhone", "app_push")
-            right("Dokumente ablegen", "app_docs")
             if let base = Store.baseURL {
                 Link("Panel öffnen", destination: base)
             }

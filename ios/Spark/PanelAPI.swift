@@ -84,6 +84,7 @@ struct Fact: Identifiable, Hashable {
     let id: String
     let text: String
     let learned: Bool
+    var created = Date(timeIntervalSince1970: 0)
 }
 
 /// The assistant's proposal to tidy up the memory: facts to merge and facts to drop.
@@ -99,7 +100,9 @@ extension SparkAPI {
         let d = try await object("GET", "api/profile/memory")
         let facts = (d["facts"] as? [[String: Any]] ?? []).compactMap { f -> Fact? in
             guard let id = f["id"] as? String, Self.id(id) else { return nil }
-            return Fact(id: id, text: f["text"] as? String ?? "", learned: f["auto"] as? Bool ?? false)
+            return Fact(id: id, text: String((f["text"] as? String ?? "").prefix(600)),
+                        learned: f["auto"] as? Bool ?? (f["src"] as? String == "auto"),
+                        created: Date(timeIntervalSince1970: (f["created"] as? NSNumber)?.doubleValue ?? 0))
         }
         return (facts.reversed(), Self.tidy(d["tidy"]))
     }
@@ -115,6 +118,19 @@ extension SparkAPI {
     func forget(_ id: String) async throws {
         guard Self.id(id) else { return }
         _ = try await call("DELETE", "api/profile/memory/\(id)")
+    }
+
+    /// Meine Sachen → Gedächtnis: the profile's own new wording of a fact
+    func changeFact(_ id: String, _ text: String) async throws {
+        guard Self.id(id) else { return }
+        _ = try await call("PUT", "api/profile/memory/\(id)", body: ["text": String(text.prefix(600))])
+    }
+
+    /// several facts at once (Auswählen)
+    func forgetFacts(_ ids: [String]) async throws {
+        let ok = ids.filter { Self.id($0) }
+        guard !ok.isEmpty else { return }
+        _ = try await call("POST", "api/profile/memory/forget", body: ["ids": Array(ok.prefix(200))])
     }
 
     /// "check" asks the language model for a proposal, "accept" carries it out, "reject" drops it.

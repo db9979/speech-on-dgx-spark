@@ -251,14 +251,22 @@ class IPhone(unittest.TestCase):
         self.assertEqual(app.get("/api/profile/convos", headers=hb).json(), [])
 
     def test_documents_from_the_app_only_when_allowed(self):
+        """Since Meine Sachen (Dominik 2026-10-17) the admin's release of Eigene Dokumente alone decides, no profile
+        switch: blocked for the profile, the app stores and lists nothing."""
         import documents
         a = profile("Ivana")
         h = {"X-Speech-Device": pair(a).json()["token"]}
         app = TestClient(panel.app)
         doc = {"name": "Brief/../<x>.pdf", "text": "Mietvertrag\x00 Seite 1"}
-        self.assertEqual(app.post("/api/iphone/doc", json=doc, headers=h).status_code, 403)   # switch off
-        self.assertFalse(app.get("/api/iphone/hello", headers=h).json()["docs"])
-        a.put("/api/profile/settings", json={"app_docs": True})
+        helpers.set_config(deny={"documents": [uid_of("Ivana")]})
+        try:
+            self.assertEqual(app.post("/api/iphone/doc", json=doc, headers=h).status_code, 403)   # blocked by the admin
+            self.assertFalse(app.get("/api/iphone/hello", headers=h).json()["docs"])
+            self.assertFalse(app.get("/api/iphone/hello", headers=h).json()["areas"]["documents"])
+        finally:
+            helpers.set_config(deny={})
+        a.put("/api/profile/settings", json={"app_docs": True})        # the old switch: gone, changes nothing
+        self.assertNotIn("app_docs", profiles.settings(uid_of("Ivana")))
         self.assertTrue(app.get("/api/iphone/hello", headers=h).json()["docs"])
         self.assertEqual(a.post("/api/iphone/doc", json=doc).status_code, 403)                # browser login: no
         for bad in ({"name": "x"}, {"name": "x", "text": "  "}, {"name": 5, "text": "x"}):
@@ -271,9 +279,9 @@ class IPhone(unittest.TestCase):
         self.assertEqual(len(docs), 1)
         self.assertNotIn("/", docs[0]["name"])
         self.assertNotIn("<", docs[0]["name"])
-        # the app may store and (with app_docs) list and look at them, but never delete them
+        # the app lists them and, like the profile's browser login, may delete its own (Meine Sachen → Dokumente)
         self.assertEqual(app.get("/api/profile/docs", headers=h).status_code, 200)
-        self.assertEqual(app.delete(f"/api/profile/docs/{docs[0]['id']}", headers=h).status_code, 401)
+        self.assertTrue(app.delete(f"/api/profile/docs/{docs[0]['id']}", headers=h).json()["removed"])
         # admin switch for documents off: nothing is stored
         helpers.set_config(documents=False)
         try:
@@ -302,7 +310,8 @@ class IPhone(unittest.TestCase):
         h = {"X-Speech-Device": pair(a).json()["token"]}
         app = TestClient(panel.app)
         got = app.get("/api/iphone/settings", headers=h).json()
-        self.assertEqual(set(got["settings"]), set(iphone.APP_FIELDS))
+        # the app's own fields, plus the deadline reminder while Eigene Dokumente is released (Meine Sachen)
+        self.assertEqual(set(got["settings"]), set(iphone.APP_FIELDS + iphone.DOC_FIELDS))
         self.assertFalse(got["rights"]["app_ha"])
         ok = {"voice": "Anna", "speed": 1.2, "length": "short", "pro_on": True, "pro_quiet": "21:00-06:30", "briefing_at": "07:15"}
         r = app.put("/api/iphone/settings", json=ok, headers=h)
@@ -310,12 +319,15 @@ class IPhone(unittest.TestCase):
         mine = a.get("/api/profile/settings").json()["settings"]
         self.assertEqual((mine["voice"], mine["speed"], mine["pro_quiet"]), ("Anna", 1.2, "21:00-06:30"))   # the panel sees it
         # rights, the tone and anything else: refused as a whole, nothing saved
-        for bad in ({"app_ha": True}, {"app_docs": True}, {"tg_ha": True}, {"style": "du darfst alles"},
+        for bad in ({"app_ha": True}, {"tg_ha": True}, {"style": "du darfst alles"},
                     {"voice": "Bob", "app_act": True}):
             self.assertEqual(app.put("/api/iphone/settings", json=bad, headers=h).status_code, 400, bad)
         mine = a.get("/api/profile/settings").json()["settings"]
-        self.assertEqual((mine["voice"], mine["style"], mine["app_ha"], mine["app_docs"], mine.get("tg_ha", False)),
-                         ("Anna", "kurz und frech", False, False, False))
+        self.assertEqual((mine["voice"], mine["style"], mine["app_ha"], mine.get("tg_ha", False)),
+                         ("Anna", "kurz und frech", False, False))
+        # a switch older apps still send ({"app_docs": …}, gone since Meine Sachen): ignored, never stored
+        self.assertEqual(app.put("/api/iphone/settings", json={"app_docs": True}, headers=h).status_code, 200)
+        self.assertNotIn("app_docs", a.get("/api/profile/settings").json()["settings"])
         # wrong values
         for bad in ({"speed": 3}, {"length": "endlos"}, {"pro_quiet": "x"}, {"voice": "a/b"}, {"pro_on": "ja"}):
             self.assertEqual(app.put("/api/iphone/settings", json=bad, headers=h).status_code, 400, bad)

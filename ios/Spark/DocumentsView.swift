@@ -1,20 +1,26 @@
 import QuickLook
 import SwiftUI
 
-/// "Meine Dokumente": the profile's documents on the Spark, to look at again (only with the profile's
-/// switch "Dokumente aus der App"). A kept PDF or picture opens in Apple's viewer; otherwise, and always
-/// as a second tab, the text the Spark stored. With "Dokumente verwalten in der App" (app_docs_edit) also
-/// delete, "Für alle", searchable, tags, read again and a deadline reminder; the Spark checks each of them.
+/// Meine Sachen → Dokumente: the profile's documents on the Spark, the same as Ich → Dokumente in the panel
+/// (Dominik 2026-10-17): one row per document with the Steckbrief's title, quick filters with their numbers,
+/// source, sort and tag, groups by time, a search in titles, senders and tags (Enter also searches the content),
+/// "Auswählen" for several at once and a page per document. Only while Eigene Dokumente is released for the
+/// profile; the Spark checks every change (iphone.THINGS "documents").
 @MainActor
 final class DocumentsModel: ObservableObject {
     @Published var docs: [SparkDoc] = []
+    /// what the admin released for the profile (GET /api/profile/wissen "allow": shared, brief, originals …)
+    @Published var allow: [String: Bool] = [:]
     @Published var loading = true
     @Published var off = false
     @Published var error: String?
     @Published var note: String?
+    /// the content search (Enter in the search field): hits with the document and a piece of its text
+    @Published var hits: [ContentHit] = []
+    @Published var searching = false
 
-    /// one change to a document, then the list again
-    func change(_ d: SparkDoc, _ what: @escaping (SparkAPI) async throws -> String?) async {
+    /// one change, then the list again
+    func change(_ what: @escaping (SparkAPI) async throws -> String?) async {
         guard let api = SparkAPI.current else { return }
         do {
             note = try await what(api)
@@ -27,134 +33,483 @@ final class DocumentsModel: ObservableObject {
         guard let api = SparkAPI.current else { return }
         do {
             if let d = try await api.docs() { docs = d; off = false } else { off = true }
+            if !off, let w = try? await api.object("GET", "api/profile/wissen") { allow = (w["allow"] as? [String: Bool]) ?? [:] }
             error = nil
         } catch {
             self.error = error.localizedDescription
         }
         loading = false
     }
+
+    /// several documents at once (POST /api/profile/wissen/batch): delete, use, unuse, share, unshare, reread
+    func batch(_ what: String, _ ids: Set<String>) async {
+        await change { api in
+            let r = try await api.object("POST", "api/profile/wissen/batch", body: ["do": what, "ids": Array(ids.prefix(200))], timeout: 180)
+            let done = (r["done"] as? NSNumber)?.intValue ?? 0, failed = (r["failed"] as? NSNumber)?.intValue ?? 0
+            return failed > 0 ? String(localized: "\(done) erledigt, \(failed) nicht.") : String(localized: "\(done) erledigt.")
+        }
+    }
+
+    func searchContent(_ q: String) async {
+        let q = q.trimmingCharacters(in: .whitespaces)
+        guard let api = SparkAPI.current, q.count >= 2 else { hits = []; return }
+        searching = true
+        defer { searching = false }
+        do {
+            let r = try await api.object("POST", "api/profile/wissen/search", body: ["q": String(q.prefix(300))], timeout: 60)
+            hits = (r["hits"] as? [[String: Any]] ?? []).compactMap { h in
+                guard let id = h["id"] as? String, SparkAPI.isDoc(id) else { return nil }
+                return ContentHit(id: id, page: (h["page"] as? NSNumber)?.intValue, text: String((h["text"] as? String ?? "").prefix(300)))
+            }
+            error = nil
+        } catch { self.error = error.localizedDescription }
+    }
+}
+
+/// A place in a document the content search found (Enter in the search field).
+struct ContentHit: Identifiable {
+    let id: String
+    let page: Int?
+    let text: String
+}
+
+/// The quick filters above the list, each with its number.
+enum DocFilter: String, CaseIterable, Identifiable {
+    case all, due, reading, shared, unused, broken
+    var id: String { rawValue }
+
+    var name: LocalizedStringKey {
+        switch self {
+        case .all: "Alle"
+        case .due: "Frist offen"
+        case .reading: "Wird gelesen"
+        case .shared: "Für alle"
+        case .unused: "Suche aus"
+        case .broken: "Nicht lesbar"
+        }
+    }
+
+    func has(_ d: SparkDoc) -> Bool {
+        switch self {
+        case .all: true
+        case .due: !d.due.isEmpty && d.due >= ThingsView.today
+        case .reading: d.todo > 0 || d.state == "reading"
+        case .shared: d.shared
+        case .unused: !d.use
+        case .broken: d.state == "error"
+        }
+    }
+}
+
+enum DocSort: String, CaseIterable, Identifiable {
+    case newest, name, due, size
+    var id: String { rawValue }
+
+    var name: LocalizedStringKey {
+        switch self {
+        case .newest: "Neueste zuerst"
+        case .name: "Nach Name"
+        case .due: "Nach Frist"
+        case .size: "Nach Größe"
+        }
+    }
 }
 
 struct DocumentsView: View {
-    var manage = false
     @StateObject private var m = DocumentsModel()
     @State private var search = ""
-    @State private var removing: SparkDoc?
-    @State private var tagging: SparkDoc?
-    @State private var tagText = ""
+    @State private var filter = DocFilter.all
+    @AppStorage("docSort") private var sort = DocSort.newest
+    @AppStorage("docSource") private var source = ""
+    @State private var tag = ""
+    @State private var picked = Set<String>()
+    @State private var edit: EditMode = .inactive
+    @State private var removing = false
+
+    /// where a document came from, as the panel names it (me.js DOCSRC)
+    static let sources: [(String, LocalizedStringKey)] = [
+        ("upload", "Hochgeladen"), ("app", "iPhone-App"), ("begleiter", "Begleiter"), ("remarkable", "reMarkable"),
+        ("agent", "Aufträge"), ("spark", "Vom Spark erstellt"), ("nas", "Wissensordner"), ("eingang", "NAS-Eingang"),
+    ]
+
+    static func source(_ d: SparkDoc) -> String { sources.contains { $0.0 == d.source } ? d.source : "upload" }
 
     private var shown: [SparkDoc] {
         let q = search.trimmingCharacters(in: .whitespaces).lowercased()
-        return q.isEmpty ? m.docs : m.docs.filter { $0.name.lowercased().contains(q) }
+        var l = m.docs.filter { d in
+            filter.has(d) && (source.isEmpty || Self.source(d) == source)
+                && (tag.isEmpty || d.tags.contains { $0.caseInsensitiveCompare(tag) == .orderedSame })
+                && (q.isEmpty || [d.shown, d.name, d.sender, d.art, d.tags.joined(separator: " ")].contains { $0.lowercased().contains(q) })
+        }
+        switch sort {
+        case .newest: break
+        case .name: l.sort { $0.shown.localizedStandardCompare($1.shown) == .orderedAscending }
+        case .due: l.sort { ($0.due.isEmpty ? "9999" : $0.due) < ($1.due.isEmpty ? "9999" : $1.due) }
+        case .size: l.sort { $0.size > $1.size }
+        }
+        return l
+    }
+
+    /// the groups by time (only for "Neueste zuerst"): this week, this month, older
+    private var groups: [(LocalizedStringKey, [SparkDoc])] {
+        let l = shown
+        guard sort == .newest else { return [("", l)] }
+        let now = Date(), cal = Calendar.current
+        let week = cal.date(byAdding: .day, value: -7, to: now) ?? now, month = cal.date(byAdding: .day, value: -31, to: now) ?? now
+        return [("Diese Woche", l.filter { $0.created >= week }), ("Diesen Monat", l.filter { $0.created < week && $0.created >= month }),
+                ("Älter", l.filter { $0.created < month })].filter { !$0.1.isEmpty }
+    }
+
+    private var tags: [(String, Int)] {
+        var n: [String: Int] = [:]
+        for d in m.docs { for t in d.tags { n[t, default: 0] += 1 } }
+        return n.sorted { $0.value == $1.value ? $0.key < $1.key : $0.value > $1.value }.prefix(30).map { ($0.key, $0.value) }
     }
 
     var body: some View {
-        List {
+        List(selection: $picked) {
             if m.loading {
                 ProgressView()
             } else if m.off {
-                Text(SparkAPI.way(String(localized: "Dafür im Panel unter Ich → iPhone-App „Dokumente aus der App“ einschalten.")))
+                Text(SparkAPI.way(String(localized: "Der Admin hat Eigene Dokumente noch nicht freigegeben (Funktionen → Eigene Dokumente).")))
             } else if m.docs.isEmpty {
                 Text("Noch keine Dokumente.").foregroundStyle(.secondary)
+            } else {
+                Section { chips }
+                    .listRowInsets(EdgeInsets()).listRowBackground(Color.clear)
             }
-            ForEach(shown) { d in
-                NavigationLink { DocumentView(doc: d) } label: {
-                    HStack {
-                        Image(systemName: d.kind == "picture" ? "photo" : d.kind == "scan" ? "doc.viewfinder" : "doc.text")
-                            .foregroundStyle(.secondary)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(verbatim: d.name).lineLimit(2)
-                            HStack(spacing: 6) {
-                                Text(d.created, format: .dateTime.day().month().year())
-                                if d.pages > 1 { Text("\(d.pages) Seiten") }
-                                if d.state == "reading" && d.pages > 0 { Text("Seite \(d.pages - d.todo) von \(d.pages) gelesen") }
-                                else if d.state != "ready" || d.todo > 0 { Text("wird noch gelesen") }
+            if !m.hits.isEmpty || m.searching {
+                Section("Im Inhalt gefunden") {
+                    if m.searching { ProgressView() }
+                    ForEach(m.hits) { h in
+                        if let d = m.docs.first(where: { $0.id == h.id }) {
+                            NavigationLink { DocumentView(doc: d) } label: {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(verbatim: d.shown).lineLimit(1)
+                                    // the document's own words: plain text, nothing in it is a link or a command
+                                    Text(verbatim: h.text).font(.caption).foregroundStyle(.secondary).lineLimit(3)
+                                }
                             }
-                            .font(.caption).foregroundStyle(.secondary)
-                            if d.source == "nas" {      // from a knowledge folder: where it lies on the NAS (the folder, never more)
-                                Label { Text(verbatim: "NAS · " + (d.place.isEmpty ? "/" : d.place)) } icon: { Image(systemName: "externaldrive") }
-                                    .font(.caption2).foregroundStyle(.secondary).lineLimit(1)
-                            }
-                            if manage { badges(d) }
                         }
                     }
                 }
-                .swipeActions(edge: .trailing) {
-                    if manage { Button(role: .destructive) { removing = d } label: { Label("Löschen", systemImage: "trash") } }
-                }
-                .contextMenu { if manage { menu(d) } }
+            }
+            ForEach(groups, id: \.1.first?.id) { g in
+                Section {
+                    ForEach(g.1) { d in
+                        NavigationLink { DocDetailView(doc: d, changed: { Task { await m.load() } }) } label: { DocRow(doc: d) }
+                            .tag(d.id)
+                            .swipeActions(edge: .trailing) {
+                                Button(role: .destructive) { picked = [d.id]; removing = true } label: { Label("Löschen", systemImage: "trash") }
+                            }
+                    }
+                } header: { HStack { Text(g.0); Spacer(); Text(verbatim: String(g.1.count)) } }
+            }
+            if !m.loading && !m.off && !m.docs.isEmpty && shown.isEmpty {
+                Text("Kein Dokument passt zum Filter.").foregroundStyle(.secondary)
             }
             if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
             if let n = m.note { Text(verbatim: n).foregroundStyle(.secondary) }
-            if manage && !m.off {
-                Section {
-                    NavigationLink("Schalter für Dokumente") { DocSwitchesView() }
-                } footer: { Text("Lange drücken für „Für alle“, Tags, Neu einlesen und Frist-Erinnerung. Wischen zum Löschen.") }
+            if !m.off && !m.loading {
+                Section { NavigationLink("Schalter für Dokumente") { DocSwitchesView() } }
             }
         }
-        .navigationTitle("Meine Dokumente")
-        .searchable(text: $search)
+        .environment(\.editMode, $edit)
+        .navigationTitle("Dokumente")
+        .searchable(text: $search, prompt: Text("Titel, Absender, Tag"))
+        .onSubmit(of: .search) { Task { await m.searchContent(search) } }
+        .onChange(of: search) { _, v in if v.isEmpty { m.hits = [] } }
+        .toolbar { toolbar }
         .refreshable { await m.load() }
         .task { await m.load() }
-        .confirmationDialog("Dokument löschen?", isPresented: Binding(get: { removing != nil }, set: { if !$0 { removing = nil } }),
-                            titleVisibility: .visible, presenting: removing) { d in
+        .confirmationDialog("Dokumente löschen?", isPresented: $removing, titleVisibility: .visible) {
             Button("Löschen", role: .destructive) {
-                Task { await m.change(d) { try await $0.deleteDoc(d.id); return nil } }
+                let ids = picked
+                Task { await m.batch("delete", ids); picked = []; edit = .inactive }
             }
-        } message: { d in Text(verbatim: d.name) }
-        .alert("Tags", isPresented: Binding(get: { tagging != nil }, set: { if !$0 { tagging = nil } })) {
-            TextField("Rechnung, Auto, Steuer", text: $tagText)
-            Button("Speichern") {
-                guard let d = tagging else { return }
-                let tags = tagText.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
-                Task { await m.change(d) { try await $0.setDoc(d.id, ["tags": Array(tags.prefix(12))]); return nil } }
-            }
-            Button("Automatische Tags") {
-                guard let d = tagging else { return }
-                Task { await m.change(d) { try await $0.setDoc(d.id, ["tags": NSNull()]); return nil } }
-            }
-            Button("Abbrechen", role: .cancel) {}
-        } message: { Text("Mit Komma getrennt. Geht nur, wenn „Steckbrief und Tags“ an ist.") }
+        } message: { Text(verbatim: String(picked.count)) }
     }
 
-    @ViewBuilder private func badges(_ d: SparkDoc) -> some View {
-        HStack(spacing: 6) {
-            if d.shared { Label("Für alle", systemImage: "person.2").labelStyle(.titleAndIcon) }
-            if !d.use { Text("wird nicht durchsucht") }
-            if !d.due.isEmpty { Label(d.due, systemImage: "calendar.badge.exclamationmark") }
-        }
-        .font(.caption2).foregroundStyle(.secondary)
-        if !d.tags.isEmpty {
-            Text(verbatim: d.tags.map { "#" + $0 }.joined(separator: " ")).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
-        }
-    }
-
-    @ViewBuilder private func menu(_ d: SparkDoc) -> some View {
-        Button {
-            Task { await m.change(d) { try await $0.setDoc(d.id, ["shared": !d.shared]); return nil } }
-        } label: { d.shared ? Label("Nur für mich", systemImage: "person") : Label("Für alle freigeben", systemImage: "person.2") }
-        Button {
-            Task { await m.change(d) { try await $0.setDoc(d.id, ["use": !d.use]); return nil } }
-        } label: { d.use ? Label("Nicht mehr durchsuchen", systemImage: "eye.slash") : Label("Wieder durchsuchen", systemImage: "eye") }
-        Button {
-            tagText = d.tags.joined(separator: ", ")
-            tagging = d
-        } label: { Label("Tags bearbeiten", systemImage: "tag") }
-        if d.file {
-            Button {
-                Task { await m.change(d) { _ = try await $0.docAction(d.id, "reread"); return String(localized: "Wird neu eingelesen.") } }
-            } label: { Label("Neu einlesen", systemImage: "arrow.clockwise") }
-        }
-        if !d.due.isEmpty {
-            Button {
-                Task {
-                    await m.change(d) { api in
-                        let r = try await api.docAction(d.id, "remind")
-                        let when = Date(timeIntervalSince1970: ((r["due"] as? NSNumber)?.doubleValue ?? 0) / 1000)
-                        return String(localized: "Erinnerung am \(when.formatted(date: .abbreviated, time: .shortened)).")
+    private var chips: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 6) {
+                ForEach(DocFilter.allCases) { f in
+                    let n = m.docs.filter { f.has($0) }.count
+                    if f == .all || n > 0 {
+                        Button { filter = f } label: {
+                            HStack(spacing: 4) { Text(f.name); Text(verbatim: String(n)).foregroundStyle(filter == f ? .white : .secondary) }
+                                .font(.footnote).padding(.horizontal, 10).padding(.vertical, 6)
+                                .background(filter == f ? Color.accentColor : Color(.secondarySystemGroupedBackground), in: Capsule())
+                                .foregroundStyle(filter == f ? .white : .primary)
+                        }
+                        .buttonStyle(.plain)
                     }
                 }
-            } label: { Label("An die Frist erinnern", systemImage: "bell") }
+            }
+            .padding(.horizontal, 16).padding(.vertical, 4)
+        }
+    }
+
+    @ToolbarContentBuilder private var toolbar: some ToolbarContent {
+        ToolbarItem(placement: .primaryAction) {
+            Button(edit.isEditing ? "Fertig" : "Auswählen") { edit = edit.isEditing ? .inactive : .active; picked = [] }
+        }
+        ToolbarItem(placement: .topBarTrailing) {
+            Menu {
+                Picker("Sortieren", selection: $sort) { ForEach(DocSort.allCases) { Text($0.name).tag($0) } }
+                Picker("Quelle", selection: $source) {
+                    Text("Alle Quellen").tag("")
+                    ForEach(Self.sources.filter { s in m.docs.contains { Self.source($0) == s.0 } }, id: \.0) { Text($0.1).tag($0.0) }
+                }
+                if !tags.isEmpty {
+                    Picker("Tag", selection: $tag) {
+                        Text("Alle Tags").tag("")
+                        ForEach(tags, id: \.0) { t in Text(verbatim: "#\(t.0) (\(t.1))").tag(t.0) }
+                    }
+                }
+            } label: {
+                Image(systemName: source.isEmpty && tag.isEmpty && sort == .newest ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill")
+            }
+            .accessibilityLabel(Text("Sortieren und filtern"))
+        }
+        if edit.isEditing && !picked.isEmpty {
+            ToolbarItemGroup(placement: .bottomBar) {
+                Button(role: .destructive) { removing = true } label: { Label("Löschen", systemImage: "trash") }
+                Spacer()
+                Menu {
+                    if m.allow["shared"] == true {
+                        Button { act("share") } label: { Label("Für alle freigeben", systemImage: "person.2") }
+                        Button { act("unshare") } label: { Label("Nur für mich", systemImage: "person") }
+                    }
+                    Button { act("use") } label: { Label("Wieder durchsuchen", systemImage: "eye") }
+                    Button { act("unuse") } label: { Label("Nicht mehr durchsuchen", systemImage: "eye.slash") }
+                    if picked.count <= 20 {
+                        Button { act("reread") } label: { Label("Neu einlesen", systemImage: "arrow.clockwise") }
+                    }
+                } label: { Label("Mehr", systemImage: "ellipsis.circle") }
+                Text(verbatim: String(picked.count)).foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    private func act(_ what: String) {
+        let ids = picked
+        Task { await m.batch(what, ids); picked = []; edit = .inactive }
+    }
+}
+
+/// One document in the list: symbol, title, kind · sender · source, date, and a mark only where something matters.
+struct DocRow: View {
+    let doc: SparkDoc
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: ThingsView.docIcon(doc)).foregroundStyle(.white).frame(width: 30, height: 30)
+                .background(doc.source == "remarkable" ? Color.purple : Color.blue, in: RoundedRectangle(cornerRadius: 7))
+            VStack(alignment: .leading, spacing: 2) {
+                Text(verbatim: doc.shown).lineLimit(1)
+                Text(verbatim: sub).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+            }
+            Spacer(minLength: 4)
+            VStack(alignment: .trailing, spacing: 3) {
+                Text(doc.created, format: .dateTime.day().month()).font(.caption).foregroundStyle(.secondary)
+                mark
+            }
+        }
+    }
+
+    private var sub: String {
+        [doc.art, doc.sender, doc.source == "nas" ? "NAS · " + (doc.place.isEmpty ? "/" : doc.place) : Self.sourceName(doc)]
+            .filter { !$0.isEmpty }.joined(separator: " · ")
+    }
+
+    static func sourceName(_ d: SparkDoc) -> String {
+        switch DocumentsView.source(d) {
+        case "app": String(localized: "iPhone-App")
+        case "begleiter": String(localized: "Begleiter")
+        case "remarkable": "reMarkable"
+        case "agent": String(localized: "Aufträge")
+        case "spark": String(localized: "Vom Spark erstellt")
+        case "nas": String(localized: "Wissensordner")
+        case "eingang": String(localized: "NAS-Eingang")
+        default: String(localized: "Hochgeladen")
+        }
+    }
+
+    @ViewBuilder private var mark: some View {
+        if !doc.due.isEmpty && doc.due >= ThingsView.today {
+            badge(Text("Frist \(Self.day(doc.due))"), .red)
+        } else if doc.state == "error" {
+            badge(Text("nicht lesbar"), .red)
+        } else if doc.todo > 0 && doc.pages > 0 {
+            badge(Text(verbatim: "\(doc.pages - doc.todo)/\(doc.pages)"), .blue)
+        } else if doc.todo > 0 || doc.state == "reading" {
+            badge(Text("wird gelesen"), .blue)
+        } else if doc.shared {
+            badge(Text("für alle"), .green)
+        } else if !doc.use {
+            badge(Text("Suche aus"), .gray)
+        }
+    }
+
+    /// "2026-10-30" as "30.10."
+    static func day(_ iso: String) -> String {
+        let p = iso.split(separator: "-")
+        return p.count == 3 ? "\(p[2]).\(p[1])." : iso
+    }
+
+    private func badge(_ t: Text, _ c: Color) -> some View {
+        t.font(.caption2.weight(.semibold)).padding(.horizontal, 6).padding(.vertical, 2)
+            .background(c.opacity(0.15), in: Capsule()).foregroundStyle(c)
+    }
+}
+
+/// One document on its own page: its Steckbrief, open it, tags, the switches and the actions, instead of a menu
+/// behind a long press. Every change goes to the Spark, which checks it.
+struct DocDetailView: View {
+    @State var doc: SparkDoc
+    var changed: () -> Void = {}
+    @State private var allow: [String: Bool] = [:]
+    @State private var newTag = ""
+    @State private var removing = false
+    @State private var note: String?
+    @State private var error: String?
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        Form {
+            Section {
+                VStack(alignment: .leading, spacing: 4) {
+                    // what the language model read from the document: plain text, nothing in it is a link or a command
+                    Text(verbatim: [doc.art, doc.sender].filter { !$0.isEmpty }.joined(separator: " · ")).font(.subheadline.bold())
+                    HStack(spacing: 4) {
+                        Text(verbatim: DocRow.sourceName(doc))
+                        Text(verbatim: "·")
+                        Text(doc.created, format: .dateTime.day().month().year())
+                        if doc.pages > 0 { Text(verbatim: "·"); Text("\(doc.pages) Seiten") }
+                        if doc.size > 0 { Text(verbatim: "·"); Text(verbatim: ByteCountFormatter.string(fromByteCount: Int64(doc.size), countStyle: .file)) }
+                    }
+                    .font(.caption).foregroundStyle(.secondary)
+                    if !doc.brief.isEmpty { Text(verbatim: doc.brief).font(.callout) }
+                    if !doc.due.isEmpty { Label { Text("Frist \(DocRow.day(doc.due))") } icon: { Image(systemName: "calendar.badge.exclamationmark") }.foregroundStyle(.red) }
+                    if doc.state == "error" && !doc.note.isEmpty { Text(SparkAPI.way(doc.note)).foregroundStyle(.red).font(.caption) }
+                    if doc.title != "" && doc.title != doc.name { Text(verbatim: doc.name).font(.caption2).foregroundStyle(.secondary) }
+                }
+            }
+            Section("Öffnen") {
+                NavigationLink { DocumentView(doc: doc) } label: {
+                    Label(doc.file || doc.source == "nas" ? LocalizedStringKey("Original und Text") : LocalizedStringKey("Gelesener Text"),
+                          systemImage: "doc.richtext")
+                }
+            }
+            if allow["brief"] == true {
+                Section {
+                    FlowTags(tags: doc.tags) { t in Task { await setTags(doc.tags.filter { $0 != t }) } }
+                    HStack {
+                        TextField("Neuer Tag", text: $newTag).onSubmit { addTag() }
+                        Button("Dazu") { addTag() }.disabled(newTag.trimmingCharacters(in: .whitespaces).isEmpty)
+                    }
+                    Button("Automatische Tags") { Task { await save(["tags": NSNull()]) } }
+                } header: { Text("Tags") }
+            }
+            Section("Einstellen") {
+                Toggle("Assistent sucht darin", isOn: Binding(get: { doc.use }, set: { v in Task { await save(["use": v]) } }))
+                if allow["shared"] == true {
+                    Toggle("Für alle", isOn: Binding(get: { doc.shared }, set: { v in Task { await save(["shared": v]) } }))
+                }
+                if !doc.due.isEmpty {
+                    Button { Task { await remind() } } label: { Label("An die Frist erinnern", systemImage: "bell") }
+                }
+            }
+            Section {
+                if doc.file {
+                    Button { Task { await reread() } } label: { Label("Neu einlesen", systemImage: "arrow.clockwise") }
+                }
+                Button(role: .destructive) { removing = true } label: { Label("Löschen", systemImage: "trash") }
+            }
+            if let n = note { Text(verbatim: n).foregroundStyle(.secondary) }
+            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+        }
+        .navigationTitle(Text(verbatim: doc.shown))
+        .navigationBarTitleDisplayMode(.inline)
+        .task {
+            if let w = try? await SparkAPI.current?.object("GET", "api/profile/wissen") { allow = (w["allow"] as? [String: Bool]) ?? [:] }
+        }
+        .confirmationDialog("Dokument löschen?", isPresented: $removing, titleVisibility: .visible) {
+            Button("Löschen", role: .destructive) {
+                Task {
+                    do { try await SparkAPI.current?.deleteDoc(doc.id); changed(); dismiss() }
+                    catch { self.error = error.localizedDescription }
+                }
+            }
+        } message: { Text(verbatim: doc.shown) }
+    }
+
+    private func addTag() {
+        let t = newTag.trimmingCharacters(in: .whitespaces).trimmingCharacters(in: CharacterSet(charactersIn: "#"))
+        guard !t.isEmpty, !doc.tags.contains(where: { $0.caseInsensitiveCompare(t) == .orderedSame }) else { newTag = ""; return }
+        newTag = ""
+        Task { await setTags(Array((doc.tags + [String(t.prefix(24))]).prefix(12))) }
+    }
+
+    private func setTags(_ tags: [String]) async {
+        await save(["tags": tags.isEmpty ? NSNull() as Any : tags as Any])
+    }
+
+    private func save(_ body: [String: Any]) async {
+        guard let api = SparkAPI.current else { return }
+        do {
+            try await api.setDoc(doc.id, body)
+            if let v = body["use"] as? Bool { doc.use = v }
+            if let v = body["shared"] as? Bool { doc.shared = v }
+            if let fresh = try await api.docs()?.first(where: { $0.id == doc.id }) { doc = fresh }
+            error = nil
+            changed()
+        } catch { self.error = error.localizedDescription }
+    }
+
+    private func remind() async {
+        do {
+            guard let r = try await SparkAPI.current?.docAction(doc.id, "remind") else { return }
+            let when = Date(timeIntervalSince1970: ((r["due"] as? NSNumber)?.doubleValue ?? 0) / 1000)
+            note = String(localized: "Erinnerung am \(when.formatted(date: .abbreviated, time: .shortened)).")
+            error = nil
+        } catch { self.error = error.localizedDescription }
+    }
+
+    private func reread() async {
+        do {
+            _ = try await SparkAPI.current?.docAction(doc.id, "reread")
+            note = String(localized: "Wird neu eingelesen.")
+            error = nil
+            changed()
+        } catch { self.error = error.localizedDescription }
+    }
+}
+
+/// The tags of a document as small buttons; a tap takes one away.
+struct FlowTags: View {
+    let tags: [String]
+    let remove: (String) -> Void
+
+    var body: some View {
+        if tags.isEmpty {
+            Text("Noch keine Tags.").foregroundStyle(.secondary)
+        } else {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 6) {
+                    ForEach(tags, id: \.self) { t in
+                        Button { remove(t) } label: {
+                            Label { Text(verbatim: "#" + t) } icon: { Image(systemName: "xmark") }
+                                .labelStyle(.titleAndIcon).font(.footnote)
+                                .padding(.horizontal, 8).padding(.vertical, 4)
+                                .background(Color(.secondarySystemFill), in: Capsule())
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel(Text("Tag \(t) entfernen"))
+                    }
+                }
+            }
         }
     }
 }

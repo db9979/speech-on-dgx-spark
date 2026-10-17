@@ -172,6 +172,8 @@ struct ChatView: View {
     @State private var files = false
     @State private var photo: PhotosPickerItem?
     @State private var chatsOpen = false
+    /// Meine Sachen (ThingsView.swift): documents, made documents, pictures, music and memory in one place
+    @State private var things = false
     @StateObject private var chats = ChatsModel()
     @Environment(\.scenePhase) private var scene
 
@@ -194,6 +196,12 @@ struct ChatView: View {
                 ToolbarItem(placement: .topBarLeading) {
                     Button { history = true } label: { Image(systemName: "clock.arrow.circlepath") }
                         .accessibilityLabel("Verlauf")
+                }
+                if ThingsView.any(talk.allowed) {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button { things = true } label: { Image(systemName: "square.grid.2x2") }
+                            .accessibilityLabel("Meine Sachen")
+                    }
                 }
                 if chats.state.on {   // Chats (ChatsView.swift): only when the Spark and the profile have them on
                     ToolbarItem(placement: .topBarTrailing) {
@@ -222,6 +230,7 @@ struct ChatView: View {
             .sheet(isPresented: $today) { TodayView() }
             .sheet(isPresented: $settings, onDismiss: { talk.settingsChanged() }) { SettingsView() }
             .sheet(isPresented: $history) { HistoryView() }
+            .sheet(isPresented: $things) { ThingsSheet() }
             .sheet(isPresented: $chatsOpen, onDismiss: { Task { await chats.load() } }) { ChatsView() }
             .task {
                 guard Demo.scene == nil else { return }
@@ -490,7 +499,7 @@ struct AttachmentChip: View {
             if storing {
                 ProgressView()
             } else if let store {
-                Button(action: store) { Label("In „Meine Dokumente“ speichern", systemImage: "tray.and.arrow.down") }
+                Button(action: store) { Label("Bei „Meine Sachen“ speichern", systemImage: "tray.and.arrow.down") }
                     .buttonStyle(.bordered)
             }
         }
@@ -908,11 +917,8 @@ struct SettingsView: View {
                 }
                 Section {
                     NavigationLink("Mein Profil") { ProfileView() }
-                    if talk.allowed.docs || openPages.contains("docs") {
-                        NavigationLink("Meine Dokumente") { DocumentsView(manage: talk.allowed.areas.contains("app_docs_edit")).keepOpen("docs", talk.allowed.docs, $openPages) }
-                    }
-                    if talk.allowed.make || openPages.contains("make") {
-                        NavigationLink("Vom Spark erstellt") { MadeDocsView().keepOpen("make", talk.allowed.make, $openPages) }
+                    if ThingsView.any(talk.allowed) || openPages.contains("things") {
+                        NavigationLink("Meine Sachen") { ThingsView().keepOpen("things", ThingsView.any(talk.allowed), $openPages) }
                     }
                     if talk.allowed.areas.contains("app_mine") || openPages.contains("mine") {
                         NavigationLink("Mein Alltag") { MineView().keepOpen("mine", talk.allowed.areas.contains("app_mine"), $openPages) }

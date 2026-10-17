@@ -1527,6 +1527,13 @@
 "titel": "Rechner fernsteuern",
 "text": "A: Funktionen → Bildschirm zeigen und bedienen und Funktionen → Spark bedient den Rechner einschalten; beim eigenen Rechner unter Ich → Begleiter „Am PC handeln“ (mit Outlook oder einem anderen Programm freigegeben) und „Bildschirm zeigen und bedienen“ an. 1) „Wechsel zu Outlook“ sagen: Outlook kommt nach vorn. 2) Ich → Begleiter → „Bedienen“: am Rechner erscheint die Frage (Ablehnen vorgewählt), nach „Erlauben“ roter Rahmen, im Panel das Bild; ein Tipp klickt am Rechner, „Beenden“ hört auf. 3) „Spark, schreib in Outlook eine neue Mail an mich mit Test“: am Rechner kommt die Frage mit dem Auftrag, danach jeder Schritt mit rotem Ring und Stopp/Überspringen/Erlauben; „Stopp“ beendet sofort, am Ende kommt „Am Rechner: …“ als Meldung. Auf dem Mac braucht der Begleiter „Bildschirmaufnahme“ und „Bedienungshilfen“.",
 "thread": "Rechner fernsteuern"
+},
+{
+"id": "P242",
+"v": 726,
+"titel": "Meine Sachen in der iPhone-App",
+"text": "A: Im Chat oben links auf das Kachel-Symbol tippen: „Meine Sachen“ zeigt Dokumente, Vom Spark erstellt, Bilder, Musik und Gedächtnis mit Zahlen und die Suche über alles. Bei Dokumente die Filter „Frist offen“ und „Wird gelesen“, Sortieren nach Name und „Auswählen“ probieren, ein Dokument öffnen, einen Tag dazugeben und an die Frist erinnern lassen. Bei Bilder etwas malen lassen, bei Musik ein Stück abspielen, beim Gedächtnis einen Eintrag ändern und löschen. Unter Funktionen eine davon sperren: die Kachel verschwindet in der App.",
+"thread": "Dokumente und Sachen in der iPhone-App"
 }
 ]
 }

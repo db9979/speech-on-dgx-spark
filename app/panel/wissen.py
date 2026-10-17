@@ -631,12 +631,11 @@ async def set_use(doc_id: str, request: Request, prof=Depends(browser_profile)):
 
 
 def reader(request: Request, prof=Depends(own_profile)):
-    """Who may read a document again: the profile's own browser login, or its iPhone app with
-    "Dokumente aus der App" (app_docs); speakers and other device keys never."""
+    """Who may read a document again: the profile's own browser login, or its iPhone app while Eigene
+    Dokumente is released for the profile; speakers and other device keys never."""
     dev = profiles.device(request)
     if dev:
-        import iphone
-        if dev.get("scope") != "app" or not iphone.docs_on(prof["id"]):
+        if dev.get("scope") != "app" or not features.allowed("documents", prof["id"]):
             raise HTTPException(403, "only in the profile's own login or its iPhone app")
     return prof
 

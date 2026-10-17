@@ -111,7 +111,7 @@ final class Conversation: ObservableObject {
     @Published var suggestion: String?
     private var suggested: MoreItem?
     @Published var reading = false
-    /// the attachment was stored under "Meine Dokumente" (or is being stored)
+    /// the attachment was stored under "Meine Sachen" (or is being stored)
     @Published var stored = false
     @Published var storing = false
     /// the Spark cannot be reached (no network, Spark or proxy down): typed questions wait in the outbox
@@ -457,7 +457,7 @@ final class Conversation: ObservableObject {
         error = nil
     }
 
-    /// The attached document's whole text into the profile's "Meine Dokumente" (only with the panel switch).
+    /// The attached document's whole text into the profile's documents (only while Eigene Dokumente is released).
     func storeAttachment() async {
         guard let a = attachment, allowed.docs, !storing, let api = SparkAPI.current else { return }
         storing = true
@@ -465,7 +465,7 @@ final class Conversation: ObservableObject {
         do {
             try await api.storeDoc(name: a.name, text: a.text)
             stored = true
-            notice = String(localized: "Unter „Meine Dokumente“ gespeichert. Der Spark findet es auch später.")
+            notice = String(localized: "Unter „Meine Sachen“ gespeichert. Der Spark findet es auch später.")
         } catch {
             fail(error)
         }

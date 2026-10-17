@@ -79,11 +79,11 @@ struct RemindIntent: AppIntent {
     }
 }
 
-/// Shortcuts: a file into "Meine Dokumente" (profile switch "Dokumente aus der App ablegen").
+/// Shortcuts: a file into the profile's documents (only while Eigene Dokumente is released for the profile).
 /// The iPhone reads the text itself, as in the app.
 struct StoreDocumentIntent: AppIntent {
     static var title: LocalizedStringResource = "Dokument beim Spark ablegen"
-    static var description = IntentDescription("Liest den Text einer Datei und legt ihn unter „Meine Dokumente“ ab.")
+    static var description = IntentDescription("Liest den Text einer Datei und legt ihn unter „Meine Sachen“ ab.")
 
     @Parameter(title: "Datei")
     var file: IntentFile
@@ -98,7 +98,7 @@ struct StoreDocumentIntent: AppIntent {
         defer { try? FileManager.default.removeItem(at: dir) }
         let url = dir.appendingPathComponent((name as NSString).lastPathComponent)
         try file.data.write(to: url)
-        let a = try await Reader.file(url, picture: false)   // "Meine Dokumente" keeps text
+        let a = try await Reader.file(url, picture: false)   // the profile's documents keep text
         try await api.storeDoc(name: a.name, text: a.text)
         return .result(dialog: "Abgelegt.")
     }

@@ -201,7 +201,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Apps
     "apps": {
-        "stand": "9b76a0bdcc",
+        "stand": "8e8de25741",
         "bezug": {
             "android.TOKEN_SECONDS": ["s3"], "android.TOKEN_USES": ["s3"], "iphone.profile_pair": ["s1", "s2"],
             "kopplung.Codes.new": ["s3"], "kopplung.Codes.take": ["s4"], "iphone.app_pair": ["s4", "s5"],
@@ -274,11 +274,13 @@ SEITEN = {
             S("s7", "frage", ("Pfad für die App erlaubt?", "Path allowed for the app?"),
               ("{profiles.APP_PATHS|anzahl} feste Pfade und freigegebene Bereiche", "{profiles.APP_PATHS|anzahl} fixed paths and opened areas"),
               ("Ein App-Schlüssel gilt nur für die {profiles.APP_PATHS|anzahl} Pfade in profiles.APP_PATHS (Chat, "
-               "Spracherkennung, Gespräche, Erinnerungen, Chats, Anrufe …), ein paar Lese-Muster und die Panel-Bereiche, die "
-               "das Profil für die App einzeln freigegeben hat. Alles andere sieht er ohne Profil.",
+               "Spracherkennung, Gespräche, Erinnerungen, Chats, Anrufe …), ein paar Lese-Muster, die Panel-Bereiche (Admin-Schalter "
+               "iPhone-App mit Panel) und „Meine Sachen“ (iphone.THINGS, je Teil nur mit der Freigabe seiner eigenen Funktion). "
+               "Alles andere sieht er ohne Profil.",
                "An app key only works for the {profiles.APP_PATHS|anzahl} paths in profiles.APP_PATHS (chat, speech "
-               "recognition, conversations, reminders, chats, calls …), a few read patterns and the panel areas the profile "
-               "opened for the app one by one. Everything else it sees without a profile."),
+               "recognition, conversations, reminders, chats, calls …), a few read patterns, the panel areas (admin switch "
+               "iPhone app with panel) and \"My things\" (iphone.THINGS, each part only with the release of its own function). "
+               "Everything else it sees without a profile."),
               ("stop", "nein", ("Kein Profil (401)", "No profile (401)"))),
             S("s8", "frage", ("App gerade aus oder Mein Notaus?", "App off right now or My kill switch?"),
               ("503 statt 401: die Kopplung bleibt", "503 instead of 401: the pairing stays"),

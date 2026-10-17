@@ -802,7 +802,8 @@ async def profile_fact_topic(fact_id: str, request: Request, prof=Depends(browse
 @router.post("/api/profile/memory/tidy", dependencies=[Depends(assistant)])
 async def profile_tidy(request: Request, prof=Depends(browser_profile)):
     """{"do": "check"} asks for a proposal now, "accept" carries it out, "reject" drops it."""
-    do = (await request.json()).get("do")
+    guard.limit(request, "memory", uid=prof["id"])
+    do = (await json_body(request, 256)).get("do")
     if do == "check":
         if not profiles.memory(prof["id"]):
             return {"tidy": None}
@@ -822,13 +823,15 @@ async def profile_tidy(request: Request, prof=Depends(browser_profile)):
 
 
 @router.delete("/api/profile/memory/{fact_id}", dependencies=[Depends(assistant)])
-def profile_forget(fact_id: str, prof=Depends(browser_profile)):
+def profile_forget(fact_id: str, request: Request, prof=Depends(browser_profile)):
+    guard.limit(request, "memory", uid=prof["id"])
     return {"removed": profiles.forget(prof["id"], fact_id=fact_id)}
 
 
 @router.put("/api/profile/memory/{fact_id}", dependencies=[Depends(assistant)])
 async def profile_change_fact(fact_id: str, request: Request, prof=Depends(browser_profile)):
     """Ich → Gedächtnis → Ändern: the person's own wording replaces the fact (no model involved)."""
+    guard.limit(request, "memory", uid=prof["id"])
     b = await json_body(request, 4096)
     text = profiles.change_fact(prof["id"], str(fact_id)[:40], str((b or {}).get("text", ""))[:4000])
     if text is None:
@@ -839,6 +842,7 @@ async def profile_change_fact(fact_id: str, request: Request, prof=Depends(brows
 @router.post("/api/profile/memory/forget", dependencies=[Depends(assistant)])
 async def profile_forget_some(request: Request, prof=Depends(browser_profile)):
     """Ich → Gedächtnis → Auswählen: several facts at once (at most 500)."""
+    guard.limit(request, "memory", uid=prof["id"])
     b = await json_body(request, 32768)
     ids = [str(x)[:40] for x in (b or {}).get("ids", []) if isinstance(x, str)][:500] if isinstance((b or {}).get("ids"), list) else []
     if not ids:
@@ -902,9 +906,8 @@ def profile_delete_convo(cid: str, prof=Depends(own_profile)):
 @router.get("/api/profile/docs", dependencies=[Depends(assistant)])
 def profile_docs(request: Request, prof=Depends(own_profile)):
     dev = profiles.device(request)
-    if dev:   # only the profile's iPhone app with "Dokumente aus der App" (app_docs), never other keys
-        import iphone
-        if dev.get("scope") != "app" or not iphone.docs_on(prof["id"]):
+    if dev:   # only the profile's iPhone app while Eigene Dokumente is released for it, never other keys
+        if dev.get("scope") != "app" or not features.allowed("documents", prof["id"]):
             raise HTTPException(403, "only in the profile's own login or its iPhone app")
     return documents.list_docs(prof["id"])
 

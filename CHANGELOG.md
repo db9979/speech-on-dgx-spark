@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.726** · 2026-10-17 · iPhone-App: neue Seite „Meine Sachen“ mit Dokumenten (Filter, Sortieren, Zeitgruppen, Auswählen, Detailseite), Vom Spark erstellt, Bildern, Musik und Gedächtnis samt Suche über alles; jede Kachel folgt nur der Freigabe ihrer Funktion, der Profilschalter „Dokumente aus der App“ entfällt
 - **V01.0.725** · 2026-10-17 · Rechner fernsteuern in drei Stufen: mehr feste Befehle am PC (Programm nach vorn, Fenster, Tasten, Ordner, Rechner), Bildschirm zeigen und bedienen aus Panel und Apps (fernsicht.py), und der Spark bedient den Rechner Schritt für Schritt, jeder Schritt am Rechner bestätigt (bedienen.py); beides eigene Admin-Schalter, aus
 - **V01.0.724** · 2026-10-17 · OLED-Seite „Aktiv 10 min“: wie viele Menschen in den letzten 10 Minuten da waren, als große Zahl mit Profilen und Gästen; dieselbe Zahl in Monitoring, Live, Steuerzentrale und iPhone-App
 - **V01.0.723** · 2026-10-17 · Rot-Fix nach der Grundausstattung: Selbsttests setzen die jetzt ab Werk eingeschalteten Schalter selbst (Weiche, Rückfrage), test_join lässt „Eigene Dokumente“ nicht mehr aus, der Profil-Test sucht sein Profil statt Seite 1 anzunehmen

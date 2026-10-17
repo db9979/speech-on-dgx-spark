@@ -911,16 +911,6 @@
         }
       }
     },
-    "Dafür im Panel unter Ich → iPhone-App „Dokumente aus der App“ einschalten.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "For this, turn on “Documents from the app” in the panel under Me → iPhone app."
-          }
-        }
-      }
-    },
     "Das Dokument gibt es nicht.": {
       "localizations": {
         "en": {
@@ -1567,16 +1557,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Documents"
-          }
-        }
-      }
-    },
-    "Dokumente ablegen": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Store documents"
           }
         }
       }
@@ -2801,12 +2781,12 @@
         }
       }
     },
-    "In „Meine Dokumente“ speichern": {
+    "Bei „Meine Sachen“ speichern": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Save to “My documents”"
+            "value": "Save to “My things”"
           }
         }
       }
@@ -3181,16 +3161,6 @@
         }
       }
     },
-    "Lange drücken für „Für alle“, Tags, Neu einlesen und Frist-Erinnerung. Wischen zum Löschen.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Long-press for \"For everyone\", tags, read again and deadline reminder. Swipe to delete."
-          }
-        }
-      }
-    },
     "Lautsprecher": {
       "localizations": {
         "en": {
@@ -3231,12 +3201,12 @@
         }
       }
     },
-    "Liest den Text einer Datei und legt ihn unter „Meine Dokumente“ ab.": {
+    "Liest den Text einer Datei und legt ihn unter „Meine Sachen“ ab.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reads the text of a file and stores it under “My documents”."
+            "value": "Reads the text of a file and stores it under “My things”."
           }
         }
       }
@@ -3331,16 +3301,6 @@
         }
       }
     },
-    "Meine Dokumente": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "My documents"
-          }
-        }
-      }
-    },
     "Meine Geräte": {
       "localizations": {
         "en": {
@@ -3367,16 +3327,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Unlock with Face ID"
-          }
-        }
-      }
-    },
-    "Mit Komma getrennt. Geht nur, wenn „Steckbrief und Tags“ an ist.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Separated by commas. Works only while \"Profile and tags\" is on."
           }
         }
       }
@@ -4291,16 +4241,6 @@
         }
       }
     },
-    "Rechnung, Auto, Steuer": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Invoice, car, tax"
-          }
-        }
-      }
-    },
     "Roboter": {
       "localizations": {
         "en": {
@@ -4437,16 +4377,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Page %lld"
-          }
-        }
-      }
-    },
-    "Seite %lld von %lld gelesen": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "page %1$lld of %2$lld read"
           }
         }
       }
@@ -4901,16 +4831,6 @@
         }
       }
     },
-    "Tags bearbeiten": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Edit tags"
-          }
-        }
-      }
-    },
     "Teilen": {
       "localizations": {
         "en": {
@@ -5031,12 +4951,12 @@
         }
       }
     },
-    "Unter „Meine Dokumente“ gespeichert. Der Spark findet es auch später.": {
+    "Unter „Meine Sachen“ gespeichert. Der Spark findet es auch später.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Saved under “My documents”. The Spark finds it later too."
+            "value": "Saved under “My things”. The Spark finds it later too."
           }
         }
       }
@@ -5571,16 +5491,6 @@
         }
       }
     },
-    "Wischen zum Löschen. Aufräumen fasst doppelte Einträge zusammen, erst nach deinem Übernehmen.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Swipe to delete. A tidy-up merges duplicate entries, only after you apply it."
-          }
-        }
-      }
-    },
     "Woran soll ich dich wann erinnern?": {
       "localizations": {
         "en": {
@@ -5897,26 +5807,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "waiting"
-          }
-        }
-      }
-    },
-    "wird nicht durchsucht": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "not searched"
-          }
-        }
-      }
-    },
-    "wird noch gelesen": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "still being read"
           }
         }
       }
@@ -9557,6 +9447,716 @@
           "stringUnit": {
             "state": "translated",
             "value": "Take it back in the browser under Zustand → Logs → Admin-Protokoll."
+          }
+        }
+      }
+    },
+    "Alle Quellen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All sources"
+          }
+        }
+      }
+    },
+    "Alle Tags": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All tags"
+          }
+        }
+      }
+    },
+    "Assistent sucht darin": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Assistant searches it"
+          }
+        }
+      }
+    },
+    "Dazu": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add"
+          }
+        }
+      }
+    },
+    "Einstellen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings"
+          }
+        }
+      }
+    },
+    "Frist %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Due %@"
+          }
+        }
+      }
+    },
+    "Gelesener Text": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text read"
+          }
+        }
+      }
+    },
+    "Im Inhalt gefunden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Found in the content"
+          }
+        }
+      }
+    },
+    "Kein Dokument passt zum Filter.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No document matches the filter."
+          }
+        }
+      }
+    },
+    "Mehr": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "More"
+          }
+        }
+      }
+    },
+    "Noch keine Tags.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No tags yet."
+          }
+        }
+      }
+    },
+    "Original und Text": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original and text"
+          }
+        }
+      }
+    },
+    "Sortieren und filtern": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sort and filter"
+          }
+        }
+      }
+    },
+    "Suche aus": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search off"
+          }
+        }
+      }
+    },
+    "Tag %@ entfernen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove tag %@"
+          }
+        }
+      }
+    },
+    "Titel, Absender, Tag": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Title, sender, tag"
+          }
+        }
+      }
+    },
+    "für alle": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "for everyone"
+          }
+        }
+      }
+    },
+    "nicht lesbar": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "not readable"
+          }
+        }
+      }
+    },
+    "wird gelesen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "being read"
+          }
+        }
+      }
+    },
+    "Öffnen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open"
+          }
+        }
+      }
+    },
+    "Abspielen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Play"
+          }
+        }
+      }
+    },
+    "Bilder": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pictures"
+          }
+        }
+      }
+    },
+    "Fristen: %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deadlines: %lld"
+          }
+        }
+      }
+    },
+    "In allem suchen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search everything"
+          }
+        }
+      }
+    },
+    "Machen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make"
+          }
+        }
+      }
+    },
+    "Malen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paint"
+          }
+        }
+      }
+    },
+    "Meine Sachen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "My things"
+          }
+        }
+      }
+    },
+    "Musik": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Music"
+          }
+        }
+      }
+    },
+    "Noch keine Bilder.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No pictures yet."
+          }
+        }
+      }
+    },
+    "Noch keine Musik.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No music yet."
+          }
+        }
+      }
+    },
+    "Ohne Gesang. Gesang und eigener Text gehen im Panel unter Ich → Musik.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Without singing. Singing and your own lyrics work in the panel under Me → Music."
+          }
+        }
+      }
+    },
+    "Vorschlag zum Aufräumen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tidy-up proposal"
+          }
+        }
+      }
+    },
+    "Vorschläge zum Aufräumen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tidy-up proposals"
+          }
+        }
+      }
+    },
+    "Wird gelesen: %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Being read: %lld"
+          }
+        }
+      }
+    },
+    "Wird gemacht …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Being made …"
+          }
+        }
+      }
+    },
+    "Wird gemalt …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Being painted …"
+          }
+        }
+      }
+    },
+    "Zuletzt dazugekommen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recently added"
+          }
+        }
+      }
+    },
+    "%lld löschen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete %lld"
+          }
+        }
+      }
+    },
+    "Frist offen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deadline open"
+          }
+        }
+      }
+    },
+    "Wird gelesen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Being read"
+          }
+        }
+      }
+    },
+    "Nicht lesbar": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not readable"
+          }
+        }
+      }
+    },
+    "Neueste zuerst": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Newest first"
+          }
+        }
+      }
+    },
+    "Nach Name": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "By name"
+          }
+        }
+      }
+    },
+    "Nach Frist": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "By deadline"
+          }
+        }
+      }
+    },
+    "Nach Größe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "By size"
+          }
+        }
+      }
+    },
+    "Hochgeladen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uploaded"
+          }
+        }
+      }
+    },
+    "Begleiter": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Companion"
+          }
+        }
+      }
+    },
+    "Wissensordner": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Knowledge folder"
+          }
+        }
+      }
+    },
+    "NAS-Eingang": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NAS inbox"
+          }
+        }
+      }
+    },
+    "Diese Woche": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This week"
+          }
+        }
+      }
+    },
+    "Diesen Monat": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This month"
+          }
+        }
+      }
+    },
+    "Älter": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Older"
+          }
+        }
+      }
+    },
+    "Sortieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sort"
+          }
+        }
+      }
+    },
+    "Quelle": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source"
+          }
+        }
+      }
+    },
+    "Tag": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tag"
+          }
+        }
+      }
+    },
+    "Neuer Tag": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New tag"
+          }
+        }
+      }
+    },
+    "Was soll ich malen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What shall I paint?"
+          }
+        }
+      }
+    },
+    "Was für Musik?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What kind of music?"
+          }
+        }
+      }
+    },
+    "mit Gesang": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "with singing"
+          }
+        }
+      }
+    },
+    "ohne Gesang": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "without singing"
+          }
+        }
+      }
+    },
+    "Lied löschen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete song?"
+          }
+        }
+      }
+    },
+    "Bild löschen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete picture?"
+          }
+        }
+      }
+    },
+    "Das Lied gibt es nicht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That song does not exist."
+          }
+        }
+      }
+    },
+    "Dokumente löschen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete documents?"
+          }
+        }
+      }
+    },
+    "Der Admin hat dafür noch nichts freigegeben (Funktionen → Eigene Dokumente, Bilder malen, Musik machen, Gedächtnis).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The admin has not released anything for this yet (Features → Own documents, Painting pictures, Making music, Memory)."
+          }
+        }
+      }
+    },
+    "Der Admin hat Eigene Dokumente noch nicht freigegeben (Funktionen → Eigene Dokumente).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The admin has not released own documents yet (Features → Own documents)."
+          }
+        }
+      }
+    },
+    "Was der Spark sich merkt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What the Spark remembers"
+          }
+        }
+      }
+    },
+    "Auswählen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select"
+          }
+        }
+      }
+    },
+    "selbst gesagt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "said yourself"
+          }
+        }
+      }
+    },
+    "%lld erledigt, %lld nicht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld done, %lld not."
+          }
+        }
+      }
+    },
+    "%lld erledigt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld done."
           }
         }
       }

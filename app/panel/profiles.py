@@ -540,7 +540,7 @@ APP_PATHS = ("/api/chat", "/api/test/asr", "/api/siri/ask", "/api/iphone/hello",
              "/api/proactive", "/api/proactive/greet", "/api/proactive/played", "/api/assistant/say",
              "/api/iphone/push-token", "/api/iphone/note",
              "/api/profile/convos",   # the conversations, the same list as in the panel
-             "/api/iphone/doc",       # a document's text into the profile's documents (app_docs)
+             "/api/iphone/doc",       # a document's text into the profile's documents (Eigene Dokumente)
              "/api/chat/image",       # a picture for the next question (app_images, images.py)
              "/api/chat/rate",        # 👍/👎 on an answer of the own profile (faelle.py, Einstellungs-Assistent)
              "/api/iphone/settings",  # the profile's own voice, answers and "Von selbst" (iphone.APP_FIELDS only)
@@ -561,7 +561,7 @@ APP_PATHS = ("/api/chat", "/api/test/asr", "/api/siri/ask", "/api/iphone/hello",
              "/api/anrufe/end",
              # where room mode listens and ending it (roomlive.py, only with app_room; never starting or extending)
              "/api/room/active", "/api/room/end",
-             "/api/profile/docs",     # the list of the own documents (GET only for the app, with app_docs)
+             "/api/profile/docs",     # the list of the own documents (GET only for the app, with Eigene Dokumente)
              "/api/features",         # what the Spark and the profile allow (features.py, read only; "Im Panel öffnen")
              "/api/profile/hintergrund",   # Ich → Mein Zustand (hintergrund.py, read only, own switch my_status)
              "/api/vorrang/spricht",       # "recording starts" for a profile with Vorrang (stufe.py)
@@ -572,7 +572,7 @@ APP_PATHS = ("/api/chat", "/api/test/asr", "/api/siri/ask", "/api/iphone/hello",
              "/api/report", "/api/report/draft", "/api/report/preview", "/api/report/send", "/api/report/thread", "/api/report/delete",
              "/api/make",             # Dokumente erstellen (docmake.py): the list of made documents, read only
              "/api/write", "/api/write/assist")   # Schreibhilfe (schreib.py, only with "In anderen Programmen")
-# looking at an own document again (wissen.reader: only with app_docs); reading only, never changing
+# looking at an own document again (wissen.reader: only with Eigene Dokumente); reading only, never changing
 APP_PATTERNS = (re.compile(r"/api/profile/wissen/[0-9a-f]{12}/(?:text|file)"),
                 # a made document (docmake.py), its preview and its file: reading only, never changing or sending
                 re.compile(r"/api/make/doc/[0-9a-f]{12}(?:/file)?"), re.compile(r"/api/make/job/[0-9a-f]{12}"),
@@ -920,7 +920,6 @@ SETTINGS = {
     "app_act": (False, lambda v: isinstance(v, bool)),      # routes and calls on the iPhone (iphone_action)
     "app_push": (True, lambda v: isinstance(v, bool)),     # notes as Apple push to the closed app (apns.py)
     "app_car_ha": (False, lambda v: isinstance(v, bool)),   # smart home from CarPlay
-    "app_docs": (False, lambda v: isinstance(v, bool)),     # documents from the app into "Meine Dokumente"
     "app_ios": (False, lambda v: isinstance(v, bool)),      # Apple Reminders and the lists on the iPhone (tasks.py)
     "app_images": (False, lambda v: isinstance(v, bool)),   # pictures from the app to the model (images.py)
     "app_room": (False, lambda v: isinstance(v, bool)),     # where room mode listens, in the app (roomlive.py)
@@ -958,7 +957,7 @@ def face_of(uid, chat):
 # profile keys that are gone (Freigabe vereinfachen, App-Gleichstand …): the one list; never stored again, and what
 # older apps or pages still send is ignored (iphone.py). A key removed from SETTINGS comes here (Richtlinie Teil 17).
 GONE = frozenset((
-    "agent_on", "android_on", "app_accounts", "app_admin", "app_auto", "app_docs_edit", "app_mine", "app_on",
+    "agent_on", "android_on", "app_accounts", "app_admin", "app_auto", "app_docs", "app_docs_edit", "app_mine", "app_on",
     "app_security", "app_voice", "berater_ask", "berater_me", "chats_on", "con_on", "desk_on", "devup_on",
     "direct_read", "doc_brief", "doc_make", "doc_make_templates", "doc_make_wikipics", "doc_originals",
     "doc_pictures", "doc_semantic", "doc_shared", "esp_on", "esp_stop", "fix_learn", "images_on", "instant_ack",

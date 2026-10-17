@@ -80,22 +80,18 @@ struct PanelPage: UIViewControllerRepresentable {
     func updateUIViewController(_ controller: SFSafariViewController, context: Context) {}
 }
 
-/// "Mein Alltag": what the assistant remembers, the next appointments and the Spark's own reminders.
+/// "Mein Alltag": the next appointments and the Spark's own reminders (the memory is under Meine Sachen).
 @MainActor
 final class MineModel: ObservableObject {
-    @Published var facts: [Fact] = []
-    @Published var tidy: MemoryTidy?
     @Published var events: [String] = []
     @Published var calendarNote: String?
     @Published var reminders: [Reminder] = []
     @Published var loading = true
-    @Published var asking = false
     @Published var error: String?
 
     func load() async {
         guard let api = SparkAPI.current else { return }
         do {
-            (facts, tidy) = try await api.memory()
             reminders = try await api.reminders().sorted { $0.due < $1.due }
             error = nil
         } catch { self.error = error.localizedDescription }
@@ -110,25 +106,9 @@ final class MineModel: ObservableObject {
         }
     }
 
-    func forget(_ f: Fact) async {
-        do { try await SparkAPI.current?.forget(f.id); facts.removeAll { $0.id == f.id } }
-        catch { self.error = error.localizedDescription }
-    }
-
     func done(_ r: Reminder) async {
         do { try await SparkAPI.current?.deleteReminder(r.id); reminders.removeAll { $0.id == r.id } }
         catch { self.error = error.localizedDescription }
-    }
-
-    func tidyStep(_ step: String) async {
-        guard let api = SparkAPI.current else { return }
-        asking = true
-        defer { asking = false }
-        do {
-            tidy = try await api.tidyMemory(step)
-            if step == "check" && tidy == nil { error = String(localized: "Nichts aufzuräumen.") }
-            if step == "accept" { (facts, tidy) = try await api.memory() }
-        } catch { self.error = error.localizedDescription }
     }
 }
 
@@ -155,54 +135,9 @@ struct MineView: View {
                     .swipeActions { Button(role: .destructive) { Task { await m.done(r) } } label: { Label("Löschen", systemImage: "trash") } }
                 }
             } header: { Text("Erinnerungen") }
-            memory
         }
         .navigationTitle("Mein Alltag")
         .refreshable { await m.load() }
         .task { await m.load() }
-    }
-
-    private var memory: some View {
-        Section {
-            if m.facts.isEmpty && !m.loading { Text("Noch nichts gemerkt.").foregroundStyle(.secondary) }
-            ForEach(m.facts) { f in
-                VStack(alignment: .leading, spacing: 2) {
-                    // what the assistant noted: plain text, nothing in it is a link or a command
-                    Text(verbatim: f.text)
-                    if f.learned { Text("aus einem Gespräch gelernt").font(.caption).foregroundStyle(.secondary) }
-                }
-                .swipeActions { Button(role: .destructive) { Task { await m.forget(f) } } label: { Label("Löschen", systemImage: "trash") } }
-            }
-            if let t = m.tidy {
-                ForEach(Array(t.merge.enumerated()), id: \.offset) { _, x in
-                    VStack(alignment: .leading) {
-                        Text("Zusammenfassen:").font(.caption.bold())
-                        ForEach(x.old, id: \.self) { Text(verbatim: "– " + $0).font(.caption).foregroundStyle(.secondary) }
-                        Text(verbatim: "→ " + x.text)
-                    }
-                }
-                ForEach(Array(t.drop.enumerated()), id: \.offset) { _, x in
-                    VStack(alignment: .leading) {
-                        Text("Weglassen:").font(.caption.bold())
-                        Text(verbatim: x.old).strikethrough()
-                        if !x.why.isEmpty { Text(verbatim: x.why).font(.caption).foregroundStyle(.secondary) }
-                    }
-                }
-                HStack {
-                    Button("Übernehmen") { Task { await m.tidyStep("accept") } }.buttonStyle(.borderedProminent)
-                    Button("Verwerfen") { Task { await m.tidyStep("reject") } }.buttonStyle(.bordered)
-                }
-                .disabled(m.asking)
-            } else if !m.facts.isEmpty {
-                Button {
-                    Task { await m.tidyStep("check") }
-                } label: {
-                    if m.asking { ProgressView() } else { Text("Aufräumen vorschlagen") }
-                }
-                .disabled(m.asking)
-            }
-        } header: { Text("Gedächtnis") } footer: {
-            Text("Wischen zum Löschen. Aufräumen fasst doppelte Einträge zusammen, erst nach deinem Übernehmen.")
-        }
     }
 }

@@ -351,12 +351,12 @@
         }
       }
     },
-    "In „Meine Dokumente“ speichern": {
+    "Bei „Meine Sachen“ speichern": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Save to “My documents”"
+            "value": "Save to “My things”"
           }
         }
       }
@@ -461,12 +461,12 @@
         }
       }
     },
-    "Unter „Meine Dokumente“ gespeichert. Der Spark findet es auch später.": {
+    "Unter „Meine Sachen“ gespeichert. Der Spark findet es auch später.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Saved under “My documents”. The Spark finds it later too."
+            "value": "Saved under “My things”. The Spark finds it later too."
           }
         }
       }

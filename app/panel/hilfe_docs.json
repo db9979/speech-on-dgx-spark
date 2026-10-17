@@ -885,7 +885,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "Geräteschlüssel geht vor dem Cookie; das Profil kommt so immer aus dem Schlüssel, nie aus dem, was die App schreibt. 7. Pfad für die App erlaubt?: Ein App-Schlüssel gilt nur für die 68 Pfade in profiles.APP_PATHS (Chat, Spracherkennung, Gespräche, Erinnerungen, Chats, Anrufe …), ein paar Lese-Muster und die Panel-Bereiche, die das Profil für die App einzeln freigegeben hat. Alles andere sieht er ohne Profil. 8. App gerade aus oder Mein Notaus?: Ist die App vom Admin aus- oder für das Profil gesperrt, oder hat das Profil Mein Notaus an, gibt es für diese Anfrage kein Profil. Die App bekommt „gerade nicht“ (503), behält ihre Kopplung und geht wieder, sobald der Schalter zurück ist. 9. Wie ein Browser des Profils: Die App fragt über dieselben Endpunkte wie die Seite, mit denselben Grenzen. Was sie zusätzlich darf (Smart Home, CarPlay, Zuhören, Dokumente, Bilder), sagt ihr der Spark in /api/iphone/hello; die App zeigt es nur an und hält sich daran. Anrufe zwischen Profilen klingeln über einen VoIP-Push von Apple, der nur die zufällige Nummer des Anrufs trägt; wer anruft, fragt die App beim Spark nach. Für private Chats macht die App ihren eigenen Schlüssel im Secure Enclave; der Spark "
+"text": "Geräteschlüssel geht vor dem Cookie; das Profil kommt so immer aus dem Schlüssel, nie aus dem, was die App schreibt. 7. Pfad für die App erlaubt?: Ein App-Schlüssel gilt nur für die 68 Pfade in profiles.APP_PATHS (Chat, Spracherkennung, Gespräche, Erinnerungen, Chats, Anrufe …), ein paar Lese-Muster, die Panel-Bereiche (Admin-Schalter iPhone-App mit Panel) und „Meine Sachen“ (iphone.THINGS, je Teil nur mit der Freigabe seiner eigenen Funktion). Alles andere sieht er ohne Profil. 8. App gerade aus oder Mein Notaus?: Ist die App vom Admin aus- oder für das Profil gesperrt, oder hat das Profil Mein Notaus an, gibt es für diese Anfrage kein Profil. Die App bekommt „gerade nicht“ (503), behält ihre Kopplung und geht wieder, sobald der Schalter zurück ist. 9. Wie ein Browser des Profils: Die App fragt über dieselben Endpunkte wie die Seite, mit denselben Grenzen. Was sie zusätzlich darf (Smart Home, CarPlay, Zuhören, Dokumente, Bilder), sagt ihr der Spark in /api/iphone/hello; die App zeigt es nur an und hält sich daran. Anrufe zwischen Profilen klingeln über einen VoIP-Push von Apple, der nur die zufällige Nummer des Anrufs trägt; wer anruft, fragt die App beim Spark nach. Für private C"
 },
 {
 "lang": "de",
@@ -893,7 +893,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "bekommt nur die öffentliche Hälfte. 10. Konto, Geräte oder Sicherheit?: Endpunkte, die Verbindungen, Geräte oder Sicherheit des Profils ändern, nehmen nur die eigene Browser-Anmeldung (core.browser_profile). Einen Geräteschlüssel lehnen sie ab, außer in einem Bereich, den das Profil der App freigegeben hat; Geheimnisse brauchen dort zusätzlich einen frischen Code. 11. Entfernen wirkt sofort: Wird das iPhone im Panel entfernt, verschwindet der Hash aus der Geräteliste. Die nächste Anfrage der App findet kein Profil mehr."
+"text": "hats macht die App ihren eigenen Schlüssel im Secure Enclave; der Spark bekommt nur die öffentliche Hälfte. 10. Konto, Geräte oder Sicherheit?: Endpunkte, die Verbindungen, Geräte oder Sicherheit des Profils ändern, nehmen nur die eigene Browser-Anmeldung (core.browser_profile). Einen Geräteschlüssel lehnen sie ab, außer in einem Bereich, den das Profil der App freigegeben hat; Geheimnisse brauchen dort zusätzlich einen frischen Code. 11. Entfernen wirkt sofort: Wird das iPhone im Panel entfernt, verschwindet der Hash aus der Geräteliste. Die nächste Anfrage der App findet kein Profil mehr."
 },
 {
 "lang": "de",
@@ -3797,7 +3797,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Wissen aus Uploads (V01.0.224, Plan `plaene/wissen-aus-uploads.md`)",
-"text": "e Websuche gesperrt (ein Dokument könnte seinen Inhalt sonst nach außen tragen). Dateinamen gehen nur in Anführungszeichen, gekürzt und ohne Datenmarken an das Modell. Schnittstelle: GET /api/profile/wissen, PUT /api/profile/wissen/{id} (use), GET /api/profile/wissen/{id}/file (?view=1 für Bilder und PDFs), GET /api/profile/wissen/{id}/text (auch für die iPhone-App mit „Dokumente aus der App“), POST /api/profile/wissen/search, POST /api/profile/wissen/picture; alle mit Profil-Anmeldung, die ändernden nur im eigenen Browser, Rate-Limit doc. Selbsttests: app/tests/test_wissen.py."
+"text": "e Websuche gesperrt (ein Dokument könnte seinen Inhalt sonst nach außen tragen). Dateinamen gehen nur in Anführungszeichen, gekürzt und ohne Datenmarken an das Modell. Schnittstelle: GET /api/profile/wissen, PUT /api/profile/wissen/{id} (use), GET /api/profile/wissen/{id}/file (?view=1 für Bilder und PDFs), GET /api/profile/wissen/{id}/text (auch für die iPhone-App unter Meine Sachen → Dokumente), POST /api/profile/wissen/search, POST /api/profile/wissen/picture; alle mit Profil-Anmeldung, die ändernden nur im eigenen Browser, Rate-Limit doc. Selbsttests: app/tests/test_wissen.py."
 },
 {
 "lang": "de",
@@ -4069,7 +4069,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Bilder malen (V01.0.567, standardmäßig aus, Plan `plaene/bildgenerierung.md`)",
-"text": "lt „Bild: <Prompt>“ und den Auftrag, so zeigt der Chat das Bild auch nach dem Neuladen, in jedem gespeicherten Gespräch und auf jedem Gerät wieder. Die Karte fragt erst nach, wenn sie in der Antwort steht (seit V01.0.683; vorher blieb sie manchmal bei „wartet …“ stehen, obwohl das Bild unter *Ich → Bilder* fertig war). Fragt der Assistent nach einem Bildwunsch zurück (etwa „echte Personen male ich nicht, lieber erfundene?“), reicht als Antwort ein kurzes „ja“ oder „passt“: bis 10 Minuten nach dem eigenen Wunsch bleibt das Malen dafür angeboten, ohne Websuche. Die iPhone-App zeigt das Bild ebenso direkt unter der Antwort (gedrückt halten: sichern oder teilen); ihr Schlüssel darf dafür nur den Auftrag und die Bilddatei des eigenen Profils lesen, die ganze Liste, Malen und Löschen bleiben beim Bereich „Mein Alltag“. *Ich → Bilder* zeigt die Bilder als Galerie mit Wunsch, Prompt, Zeit, Größe, Dauer, Herunterladen und Löschen, oben „Alle Bilder löschen“. Fertig über die iPhone-App oder Telegram: Push „Bild“. „Bild testen“ unter dem Schalter malt ein Testbild und zeigt Ladezeit, Malzeit und Speicher (Stufe 0, Messung). Zustand → Live: Ziel „Bilder malen“ mit Anzahlen (läuft, wartet, heut"
+"text": "lt „Bild: <Prompt>“ und den Auftrag, so zeigt der Chat das Bild auch nach dem Neuladen, in jedem gespeicherten Gespräch und auf jedem Gerät wieder. Die Karte fragt erst nach, wenn sie in der Antwort steht (seit V01.0.683; vorher blieb sie manchmal bei „wartet …“ stehen, obwohl das Bild unter *Ich → Bilder* fertig war). Fragt der Assistent nach einem Bildwunsch zurück (etwa „echte Personen male ich nicht, lieber erfundene?“), reicht als Antwort ein kurzes „ja“ oder „passt“: bis 10 Minuten nach dem eigenen Wunsch bleibt das Malen dafür angeboten, ohne Websuche. Die iPhone-App zeigt das Bild ebenso direkt unter der Antwort (gedrückt halten: sichern oder teilen); ihr Schlüssel darf dafür nur den Auftrag und die Bilddatei des eigenen Profils lesen, die ganze Liste, Malen und Löschen gehen unter Meine Sachen → Bilder (seit V01.0.723 mit der Freigabe von Bilder malen). *Ich → Bilder* zeigt die Bilder als Galerie mit Wunsch, Prompt, Zeit, Größe, Dauer, Herunterladen und Löschen, oben „Alle Bilder löschen“. Fertig über die iPhone-App oder Telegram: Push „Bild“. „Bild testen“ unter dem Schalter malt ein Testbild und zeigt Ladezeit, Malzeit und Speicher (Stufe 0, Messung). Zustand → Live: Zie"
 },
 {
 "lang": "de",
@@ -4077,7 +4077,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Bilder malen (V01.0.567, standardmäßig aus, Plan `plaene/bildgenerierung.md`)",
-"text": "e fertig, fehlgeschlagen, abgelehnt), nie Wünsche oder Prompts; Dienst-Wächter-Teil „Bilder malen“; Logs (Bereich „Bild“): bilder: auftrag 1024x1024 quadrat chat fuer …, bilder: gemalt …, bilder: nicht gemalt <grund> fuer …, bild: engine gestartet 38 s 11.2 gib, bild: engine beendet leerlauf. API (Profil): GET|POST|DELETE /api/bilder, GET /api/bilder/job/{id}, GET /api/bilder/{id}/datei[?dl=1], DELETE /api/bilder/{id}; Admin: GET|POST /api/admin/bild-test. Später: Schnellknöpfe, Hintergrund entfernen und Vergrößern (Stufe 2b), Telegram-Foto und Open-WebUI-Schnittstelle (2d)."
+"text": "l „Bilder malen“ mit Anzahlen (läuft, wartet, heute fertig, fehlgeschlagen, abgelehnt), nie Wünsche oder Prompts; Dienst-Wächter-Teil „Bilder malen“; Logs (Bereich „Bild“): bilder: auftrag 1024x1024 quadrat chat fuer …, bilder: gemalt …, bilder: nicht gemalt <grund> fuer …, bild: engine gestartet 38 s 11.2 gib, bild: engine beendet leerlauf. API (Profil): GET|POST|DELETE /api/bilder, GET /api/bilder/job/{id}, GET /api/bilder/{id}/datei[?dl=1], DELETE /api/bilder/{id}; Admin: GET|POST /api/admin/bild-test. Später: Schnellknöpfe, Hintergrund entfernen und Vergrößern (Stufe 2b), Telegram-Foto und Open-WebUI-Schnittstelle (2d)."
 },
 {
 "lang": "de",
@@ -4101,7 +4101,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "isch zuschneiden, halb so groß; auch das ein neues Bild, die KI-Kennzeichnung eines gemalten Bildes bleibt, ein eigenes Foto bekommt keine; zählt nicht zu den Bildern pro Tag; Live „schnell bearbeitet“, Log bilder: schnell heller 1024x768 fuer …. API (Profil, auch App-Bereich „Mein Alltag“): POST /api/bilder/{id}/aendern ({wunsch}), POST /api/bilder/{id}/schnell ({was}), POST /api/bilder/foto (das Bild als Körper)."
+"text": "isch zuschneiden, halb so groß; auch das ein neues Bild, die KI-Kennzeichnung eines gemalten Bildes bleibt, ein eigenes Foto bekommt keine; zählt nicht zu den Bildern pro Tag; Live „schnell bearbeitet“, Log bilder: schnell heller 1024x768 fuer …. API (Profil, auch die App unter Meine Sachen → Bilder): POST /api/bilder/{id}/aendern ({wunsch}), POST /api/bilder/{id}/schnell ({was}), POST /api/bilder/foto (das Bild als Körper)."
 },
 {
 "lang": "de",
@@ -5917,7 +5917,7 @@
 "file": "iPhone-App „Spark“",
 "head": "Schnellstart, Verlauf, Fotos, ohne Netz",
 "title": "Schnellstart, Verlauf, Fotos, ohne Netz",
-"text": " der Admin-Schalter für Bilder), geht bei Fotos das Bild selbst an den Spark, verkleinert auf 1280 px. Er erkennt dann auch Dinge, Pflanzen oder eine Fehleranzeige. Rückfragen zum selben Foto gehen 10 Minuten lang. Ist das aus, liest das iPhone wie bisher nur den Text. PDFs und Dokumente bleiben immer beim Text. - In „Meine Dokumente“ speichern: Ist im Panel unter Ich → iPhone-App „Dokumente aus der App ablegen“ an, zeigt der Anhang einen Knopf dafür. Dann findet der Spark das Dokument auch später, wie ein Upload im Panel. - Ohne Netz: Ist der Spark nicht erreichbar, zeigt die App das oben an. Geschriebene Fragen warten (höchstens 10, einen Tag lang) und gehen raus, sobald der Spark wieder da ist. Sprechen geht dann nicht, weil der Spark die Sprache erkennt. - Ruhig, nichts springt (seit V01.0.570): Der Hinweis „Spark nicht erreichbar“ kommt erst nach 3 Sekunden ohne Spark, ein kurzer Netzwechsel oder der Neustart beim Update lässt ihn nicht blinken. Kommen Nachrichten von einem anderen Gerät dazu, hängt die App nur die neuen an; der Verlauf baut sich nicht neu auf. Eine offene Seite unter Einstellungen bleibt offen, auch wenn der Admin sie gerade sperrt (mit Hinweis oben; Zurück s"
+"text": " der Admin-Schalter für Bilder), geht bei Fotos das Bild selbst an den Spark, verkleinert auf 1280 px. Er erkennt dann auch Dinge, Pflanzen oder eine Fehleranzeige. Rückfragen zum selben Foto gehen 10 Minuten lang. Ist das aus, liest das iPhone wie bisher nur den Text. PDFs und Dokumente bleiben immer beim Text. - Bei „Meine Sachen“ speichern: Ist Eigene Dokumente für dein Profil freigegeben, zeigt der Anhang einen Knopf dafür. Dann findet der Spark das Dokument auch später, wie ein Upload im Panel. Einen eigenen Profilschalter dafür gibt es seit V01.0.723 nicht mehr. - Ohne Netz: Ist der Spark nicht erreichbar, zeigt die App das oben an. Geschriebene Fragen warten (höchstens 10, einen Tag lang) und gehen raus, sobald der Spark wieder da ist. Sprechen geht dann nicht, weil der Spark die Sprache erkennt. - Ruhig, nichts springt (seit V01.0.570): Der Hinweis „Spark nicht erreichbar“ kommt erst nach 3 Sekunden ohne Spark, ein kurzer Netzwechsel oder der Neustart beim Update lässt ihn nicht blinken. Kommen Nachrichten von einem anderen Gerät dazu, hängt die App nur die neuen an; der Verlauf baut sich nicht neu auf. Eine offene Seite unter Einstellungen bleibt offen, auch wenn der Admin"
 },
 {
 "lang": "de",
@@ -5925,7 +5925,7 @@
 "file": "iPhone-App „Spark“",
 "head": "Schnellstart, Verlauf, Fotos, ohne Netz",
 "title": "Schnellstart, Verlauf, Fotos, ohne Netz",
-"text": "chließt sie). Monitoring und Prüfen zeigen einen Fehler erst beim zweiten Fehlversuch und unten in der Liste, Zeilen in Logs und Hinweisen behalten ihren Platz. Beim Ladekabel bleibt der Verlauf hinter der Ständer-Ansicht stehen. - Akku schonen (seit V01.0.668): Im Hintergrund stoppt die App ihre Audio-Engine, sobald nichts mehr zuhört, spricht oder telefoniert; eine laufende Antwort spricht sie noch zu Ende. So kann iOS die App schlafen legen. Ausnahmen: das Weckwort hört zu (am Ladekabel oder die Zeit unter „Am Akku“) oder CarPlay läuft. - Englisch: Steht das iPhone auf Englisch, ist die App englisch, auch das Weckwort und Siri („Ask Spark“, „Start Spark“)."
+"text": " sie gerade sperrt (mit Hinweis oben; Zurück schließt sie). Monitoring und Prüfen zeigen einen Fehler erst beim zweiten Fehlversuch und unten in der Liste, Zeilen in Logs und Hinweisen behalten ihren Platz. Beim Ladekabel bleibt der Verlauf hinter der Ständer-Ansicht stehen. - Akku schonen (seit V01.0.668): Im Hintergrund stoppt die App ihre Audio-Engine, sobald nichts mehr zuhört, spricht oder telefoniert; eine laufende Antwort spricht sie noch zu Ende. So kann iOS die App schlafen legen. Ausnahmen: das Weckwort hört zu (am Ladekabel oder die Zeit unter „Am Akku“) oder CarPlay läuft. - Englisch: Steht das iPhone auf Englisch, ist die App englisch, auch das Weckwort und Siri („Ask Spark“, „Start Spark“)."
 },
 {
 "lang": "de",
@@ -5973,7 +5973,7 @@
 "file": "iPhone-App „Spark“",
 "head": "Panel-Bereiche in der App",
 "title": "Panel-Bereiche in der App",
-"text": "- Im Panel öffnen (Einstellungen): Alles, was die App noch nicht selbst zeigt, öffnet das Panel hier in der App an der richtigen Stelle (beim ersten Mal meldest du dich an wie im Browser). Die Liste zeigt jede Seite von Ich, die dein Profil gerade nutzen kann, auch reMarkable, Speicher, Schreibhilfe, Begleiter und MCP; sie kommt vom Spark (/api/features, Liste pages aus features.ME_PAGES), eine neue Seite steht also ohne App-Update drin. Nur Überblick, Los geht's, Anmelden und Android-App fehlen mit Grund (features.APP_SKIP). Mit „Spark verwalten“ auch Monitoring, Logs, Funktionen und Profile. - Funktionen und Personen und Geräte unter Spark verwalten (seit V01.0.276): Die Namen und Gruppen der Schalter kommen vom Spark, die App hat keine eigene Liste mehr. Ein Profil zeigt zusätzlich seine Funktionen „n von m an“ zum Schalten, seine Admin-Rolle und die angemeldeten Browser (Wischen meldet ab). - Mein Alltag: die nächsten Termine aus deinen Kalendern, die Erinnerungen des Spark (wischen zum Löschen) und das Gedächtnis (ansehen, einzeln löschen, Aufräumen vorschlagen lassen und übernehmen). Unter Mein Profil kommen die Gesprächsschalter dazu: aus Gesprächen lernen, jeden Tag neues G"
+"text": "- Im Panel öffnen (Einstellungen): Alles, was die App noch nicht selbst zeigt, öffnet das Panel hier in der App an der richtigen Stelle (beim ersten Mal meldest du dich an wie im Browser). Die Liste zeigt jede Seite von Ich, die dein Profil gerade nutzen kann, auch reMarkable, Speicher, Schreibhilfe, Begleiter und MCP; sie kommt vom Spark (/api/features, Liste pages aus features.ME_PAGES), eine neue Seite steht also ohne App-Update drin. Nur Überblick, Los geht's, Anmelden und Android-App fehlen mit Grund (features.APP_SKIP). Mit „Spark verwalten“ auch Monitoring, Logs, Funktionen und Profile. - Funktionen und Personen und Geräte unter Spark verwalten (seit V01.0.276): Die Namen und Gruppen der Schalter kommen vom Spark, die App hat keine eigene Liste mehr. Ein Profil zeigt zusätzlich seine Funktionen „n von m an“ zum Schalten, seine Admin-Rolle und die angemeldeten Browser (Wischen meldet ab). - Mein Alltag: die nächsten Termine aus deinen Kalendern und die Erinnerungen des Spark (wischen zum Löschen). Unter Mein Profil kommen die Gesprächsschalter dazu: aus Gesprächen lernen, jeden Tag neues Gespräch und, wenn der Admin sie erlaubt, aus Korrekturen lernen, bei Werkzeugen nachdenk"
 },
 {
 "lang": "de",
@@ -5981,7 +5981,7 @@
 "file": "iPhone-App „Spark“",
 "head": "Panel-Bereiche in der App",
 "title": "Panel-Bereiche in der App",
-"text": "espräch und, wenn der Admin sie erlaubt, aus Korrekturen lernen, bei Werkzeugen nachdenken und gezielte Werkzeugwahl. Alles auf einmal vergessen geht weiter nur im Browser. - Spark verwalten (nur für Profile mit Rolle Admin oder Verwalter): Nach Face ID gilt die App so, wie dein Profil angemeldet ist, ohne eigene Admin-Anmeldung (seit V01.0.541). Der App-Schlüssel zählt nur, wenn er nach dem Einschalten deines zweiten Anmeldeschritts angelegt wurde; das Panel-Passwort geht nur im Browser. Darin: Monitoring („Braucht dich“, Speicher, CPU/GPU, Dienste), Logs (Diagnose wie im Panel mit Bereichen und Zeitraum, „Kopieren für Thread“ und Teilen) und Prüfen (Funktionsprüfung, Qualitätstest, Vorrang prüfen). Unter Ändern: Funktionen (die einfachen Ein/Aus-Schalter; heikle wie „Port“, zweiter Anmeldeschritt für Profile und die iPhone-Schalter selbst bleiben im Browser), Personen und Geräte (Profil anlegen, Geräte entfernen, neue PIN, zweiten Schritt zurücksetzen, Profil löschen; Code nur bei „Schutz ändern“) und Sicherungen (jetzt sichern; alte löschen nur als Admin; Zurückspielen und Herunterladen im Browser). Ein Verwalter sieht nur Monitoring, Logs und Personen und Geräte; dort hebt er S"
+"text": "en und gezielte Werkzeugwahl. Das Gedächtnis steht seit V01.0.723 unter Meine Sachen. - Spark verwalten (nur für Profile mit Rolle Admin oder Verwalter): Nach Face ID gilt die App so, wie dein Profil angemeldet ist, ohne eigene Admin-Anmeldung (seit V01.0.541). Der App-Schlüssel zählt nur, wenn er nach dem Einschalten deines zweiten Anmeldeschritts angelegt wurde; das Panel-Passwort geht nur im Browser. Darin: Monitoring („Braucht dich“, Speicher, CPU/GPU, Dienste), Logs (Diagnose wie im Panel mit Bereichen und Zeitraum, „Kopieren für Thread“ und Teilen) und Prüfen (Funktionsprüfung, Qualitätstest, Vorrang prüfen). Unter Ändern: Funktionen (die einfachen Ein/Aus-Schalter; heikle wie „Port“, zweiter Anmeldeschritt für Profile und die iPhone-Schalter selbst bleiben im Browser), Personen und Geräte (Profil anlegen, Geräte entfernen, neue PIN, zweiten Schritt zurücksetzen, Profil löschen; Code nur bei „Schutz ändern“) und Sicherungen (jetzt sichern; alte löschen nur als Admin; Zurückspielen und Herunterladen im Browser). Ein Verwalter sieht nur Monitoring, Logs und Personen und Geräte; dort hebt er Sperren eines Profils auf, schaltet aber keine Funktion und sperrt nichts (das macht nur"
 },
 {
 "lang": "de",
@@ -5989,23 +5989,39 @@
 "file": "iPhone-App „Spark“",
 "head": "Panel-Bereiche in der App",
 "title": "Panel-Bereiche in der App",
-"text": "perren eines Profils auf, schaltet aber keine Funktion und sperrt nichts (das macht nur der Admin, seit V01.0.551). - Dokumente verwalten (V01.0.250): In „Meine Dokumente“ wischen zum Löschen, lange drücken für „Für alle“, Durchsuchen an/aus, Tags, Neu einlesen und „An die Frist erinnern“. Unten „Schalter für Dokumente“ mit den Schaltern von Ich → Dokumente, soweit der Admin sie erlaubt. - Stimme einlernen: Die App zeigt drei Sätze, du liest sie vor, gespeichert wird mit dem Code aus der Authenticator-App. Darunter „Anlernen“ für jeden deiner Lautsprecher (der Lautsprecher fragt dann nach fünf Sätzen). Braucht die Sprechererkennung vom Admin und den zweiten Anmeldeschritt deines Profils. - Von selbst: Wetter-Ort, Pakete aus E-Mails, Bus und Bahn (Haltestelle suchen und setzen), deine Aufträge ansehen und stoppen, Raum-Modus „+30 Min.“ (höchstens vier Stunden ab jetzt). Die Schalter Wetter, Pakete, Bus und Bahn, Aufträge gibt es hier auch. - Sicherheit: deine Geräte (wischen zum Entfernen), letzte Anmeldungen, überall abmelden, zweiten Schritt ausschalten oder neue Wiederherstellungscodes (mit Code). Einrichten geht nur im Browser mit PIN: sonst könnte jemand mit deinem entsperrten "
+"text": " der Admin, seit V01.0.551). - Stimme einlernen: Die App zeigt drei Sätze, du liest sie vor, gespeichert wird mit dem Code aus der Authenticator-App. Darunter „Anlernen“ für jeden deiner Lautsprecher (der Lautsprecher fragt dann nach fünf Sätzen). Braucht die Sprechererkennung vom Admin und den zweiten Anmeldeschritt deines Profils. - Von selbst: Wetter-Ort, Pakete aus E-Mails, Bus und Bahn (Haltestelle suchen und setzen), deine Aufträge ansehen und stoppen, Raum-Modus „+30 Min.“ (höchstens vier Stunden ab jetzt). Die Schalter Wetter, Pakete, Bus und Bahn, Aufträge gibt es hier auch. - Sicherheit: deine Geräte (wischen zum Entfernen), letzte Anmeldungen, überall abmelden, zweiten Schritt ausschalten oder neue Wiederherstellungscodes (mit Code). Einrichten geht nur im Browser mit PIN: sonst könnte jemand mit deinem entsperrten iPhone allein einen eigenen zweiten Schritt setzen. - Konten verbinden: E-Mail, Kalender, Kontakte, Smart Home und Telegram. Nur mit dem zweiten Anmeldeschritt deines Profils und frischem Code. Der Spark prüft die Verbindung, speichert Passwort oder Token verschlüsselt und gibt es nie heraus; das iPhone behält es nicht."
 },
 {
 "lang": "de",
 "src": "iphone-app",
 "file": "iPhone-App „Spark“",
-"head": "Panel-Bereiche in der App",
-"title": "Panel-Bereiche in der App",
-"text": "iPhone allein einen eigenen zweiten Schritt setzen. - Konten verbinden: E-Mail, Kalender, Kontakte, Smart Home und Telegram. Nur mit dem zweiten Anmeldeschritt deines Profils und frischem Code. Der Spark prüft die Verbindung, speichert Passwort oder Token verschlüsselt und gibt es nie heraus; das iPhone behält es nicht."
+"head": "Meine Sachen",
+"title": "Meine Sachen",
+"text": "Seit V01.0.723 (Dominik 2026-10-17, Plan app-meine-sachen/plan.md) liegt alles, was der Spark für dich aufhebt, auf einer Seite: das Symbol mit den vier Kästchen oben links neben dem Gespräch oder Einstellungen → Meine Sachen. Kacheln mit Anzahl zeigen Dokumente, Vom Spark erstellt, Bilder, Musik und Gedächtnis, darunter „Zuletzt dazugekommen“. Die Suche oben geht über alles: Titel, Dateinamen, Absender, Tags, Bildwünsche, Lieder und gemerkte Fakten (sie läuft auf dem iPhone, an den Spark geht dabei nichts)."
 },
 {
 "lang": "de",
 "src": "iphone-app",
 "file": "iPhone-App „Spark“",
-"head": "Meine Dokumente ansehen",
-"title": "Meine Dokumente ansehen",
-"text": "Mit „Dokumente aus der App“ (Ich → iPhone-App) steht unter Einstellungen → Meine Dokumente die Liste deiner Dokumente auf dem Spark, mit Suche. Ein Tippen öffnet eines: Ist das Original aufbewahrt und ein PDF oder Bild, zeigt es Apples Vorschau (zoomen, suchen, teilen), daneben gibt es den Reiter „Text“ mit dem Text, den der Spark gespeichert hat. Andere Dateiarten zeigt die App nur als Text. Lange Texte kommen stückweise: unten „Weiterlesen“ hängt das nächste Stück an. Löschen und mehr geht unter „Dokumente verwalten“ (oben)."
+"head": "Meine Sachen",
+"title": "Meine Sachen",
+"text": "Jede Kachel richtet sich nur nach der Freigabe ihrer Funktion durch den Admin (Eigene Dokumente, Dokumente erstellen, Bilder malen, Musik machen, Gedächtnis), ohne Profilschalter und ohne den Schalter „Panel-Bereiche in der iPhone-App“. Sperrt der Admin eine Funktion für dein Profil, verschwindet ihre Kachel, und der App-Schlüssel erreicht ihre Pfade nicht mehr (iphone.THINGS). Gäste bekommen nichts davon."
+},
+{
+"lang": "de",
+"src": "iphone-app",
+"file": "iPhone-App „Spark“",
+"head": "Meine Sachen",
+"title": "Meine Sachen",
+"text": "- Dokumente: eine Zeile pro Dokument mit Titel aus dem Steckbrief, darunter Art, Absender und Quelle, rechts Datum und ein Schild nur, wenn etwas wichtig ist (Frist, wird gelesen, nicht lesbar, für alle, Suche aus). Schnellfilter mit Anzahl (Alle, Frist offen, Wird gelesen, Für alle, Suche aus, Nicht lesbar), dazu Sortieren (Neueste, Name, Frist, Größe), Quelle und Tag im Filter-Menü; die App merkt sich Sortierung und Quelle. Bei „Neueste zuerst“ stehen die Dokumente in Gruppen: Diese Woche, Diesen Monat, Älter. Die Suche findet Titel, Absender und Tags sofort, Enter sucht zusätzlich im Inhalt („Im Inhalt gefunden“). „Auswählen“ markiert mehrere: Löschen (mit Rückfrage), Für alle, Nur für mich, Durchsuchen an oder aus, Neu einlesen (höchstens 20), über POST /api/profile/wissen/batch. Ein Tippen öffnet die Seite des Dokuments: Steckbrief, „Original und Text“ (ein aufbewahrtes PDF oder Bild in Apples Vorschau, daneben der gespeicherte Text, lange Texte stückweise mit „Weiterlesen“), Tags antippen zum Entfernen und neue dazuschreiben, „Assistent sucht darin“, „Für alle“, an die Frist erinnern, Neu einlesen und Löschen. Unten „Schalter für Dokumente“ mit den Schaltern von Ich → Dokumen"
+},
+{
+"lang": "de",
+"src": "iphone-app",
+"file": "iPhone-App „Spark“",
+"head": "Meine Sachen",
+"title": "Meine Sachen",
+"text": "te, soweit der Admin sie erlaubt. - Vom Spark erstellt: die Dokumente, die der Spark gemacht hat, wie bisher. - Bilder: alle gemalten Bilder als Raster, ein Tippen zeigt eines groß mit Wunsch und Zeit, Teilen und Löschen. Oben ein Feld „Was soll ich malen?“; solange gemalt wird, schaut die App alle 4 Sekunden nach. Ändern, Schnellknöpfe und eigene Fotos gehen weiter im Panel unter Ich → Bilder. - Musik: alle Lieder mit Abspielen direkt in der App, Länge, mit oder ohne Gesang, wischen zum Löschen. Oben „Was für Musik?“ macht ein Stück ohne Gesang; Gesang und eigener Liedtext gehen im Panel unter Ich → Musik. - Gedächtnis: alle gemerkten Fakten mit Suche, „aus einem Gespräch gelernt“ oder „selbst gesagt“ mit Datum. Wischen zum Ändern oder Löschen, „Auswählen“ löscht mehrere, „Aufräumen vorschlagen“ fragt das Sprachmodell nach doppelten Einträgen, erst nach deinem „Übernehmen“ ändert sich etwas. Alles auf einmal vergessen geht weiter nur im Browser."
 },
 {
 "lang": "de",
@@ -8269,7 +8285,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "rites. 7. Path allowed for the app?: An app key only works for the 68 paths in profiles.APP_PATHS (chat, speech recognition, conversations, reminders, chats, calls …), a few read patterns and the panel areas the profile opened for the app one by one. Everything else it sees without a profile. 8. App off right now or My kill switch?: If the app is switched off by the admin or blocked for the profile, or the profile has My kill switch on, this request has no profile. The app gets „not now“ (503), keeps its pairing and works again as soon as the switch is back. 9. Like a browser of the profile: The app asks through the same endpoints as the page, with the same limits. What it may do on top (smart home, CarPlay, listening, documents, pictures) the Spark tells it in /api/iphone/hello; the app only shows it and follows it. Calls between profiles ring through a VoIP push from Apple that carries only the call's random number; the app asks the Spark who calls. For private chats the app makes its own key in the Secure Enclave; the Spark only gets the public half. 10. Account, devices or security?: Endpoints that change the profile's connections, devices or security only take the own browser "
+"text": "rites. 7. Path allowed for the app?: An app key only works for the 68 paths in profiles.APP_PATHS (chat, speech recognition, conversations, reminders, chats, calls …), a few read patterns, the panel areas (admin switch iPhone app with panel) and \"My things\" (iphone.THINGS, each part only with the release of its own function). Everything else it sees without a profile. 8. App off right now or My kill switch?: If the app is switched off by the admin or blocked for the profile, or the profile has My kill switch on, this request has no profile. The app gets „not now“ (503), keeps its pairing and works again as soon as the switch is back. 9. Like a browser of the profile: The app asks through the same endpoints as the page, with the same limits. What it may do on top (smart home, CarPlay, listening, documents, pictures) the Spark tells it in /api/iphone/hello; the app only shows it and follows it. Calls between profiles ring through a VoIP push from Apple that carries only the call's random number; the app asks the Spark who calls. For private chats the app makes its own key in the Secure Enclave; the Spark only gets the public half. 10. Account, devices or security?: Endpoints that cha"
 },
 {
 "lang": "en",
@@ -8277,7 +8293,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "login (core.browser_profile). They refuse a device key, except in an area the profile opened for the app; secrets need a fresh code there as well. 11. Removing works at once: When the iPhone is removed in the panel, its hash leaves the device list. The app's next request finds no profile any more."
+"text": "nge the profile's connections, devices or security only take the own browser login (core.browser_profile). They refuse a device key, except in an area the profile opened for the app; secrets need a fresh code there as well. 11. Removing works at once: When the iPhone is removed in the panel, its hash leaves the device list. The app's next request finds no profile any more."
 },
 {
 "lang": "en",
@@ -11101,7 +11117,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Knowledge from uploads (V01.0.224, plan `plaene/wissen-aus-uploads.md`)",
-"text": "api/profile/wissen/{id}/file (?view=1 for pictures and PDFs), GET /api/profile/wissen/{id}/text (also for the iPhone app with \"documents from the app\"), POST /api/profile/wissen/search, POST /api/profile/wissen/picture; all need a profile login, changes only from the own browser, rate limit doc. Self-tests: app/tests/test_wissen.py."
+"text": "api/profile/wissen/{id}/file (?view=1 for pictures and PDFs), GET /api/profile/wissen/{id}/text (also for the iPhone app under My things → Documents), POST /api/profile/wissen/search, POST /api/profile/wissen/picture; all need a profile login, changes only from the own browser, rate limit doc. Self-tests: app/tests/test_wissen.py."
 },
 {
 "lang": "en",
@@ -11357,7 +11373,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Painting pictures (V01.0.567, off by default, plan `plaene/bildgenerierung.md`)",
-"text": "e chat shows the picture again after a reload, in every saved conversation and on every device. The card only asks once it stands in the answer (since V01.0.683; before, it sometimes stayed at \"waiting …\" although the picture was ready under *Me → Pictures*). When the assistant asks back after a picture wish (say \"I do not paint real people, fictional ones instead?\"), a short \"yes\" or \"fine\" is enough: up to 10 minutes after the own wish painting stays offered for it, without a web search. The iPhone app shows the picture right under the answer as well (touch and hold: save or share); for that its key may only read the job and the picture file of its own profile, the whole list, painting and deleting stay with the area \"Mein Alltag\". *Me → Pictures* shows them as a gallery with wish, prompt, time, size, duration, download and delete, \"Delete all pictures\" on top. Finished through the iPhone app or Telegram: push \"Bild\". \"Bild testen\" below the switch paints a test picture and shows load time, paint time and memory (stage 0, measuring). State → Live: target \"Painting pictures\" with counts (running, waiting, done, failed and refused today), never wishes or prompts; service guard part"
+"text": "e chat shows the picture again after a reload, in every saved conversation and on every device. The card only asks once it stands in the answer (since V01.0.683; before, it sometimes stayed at \"waiting …\" although the picture was ready under *Me → Pictures*). When the assistant asks back after a picture wish (say \"I do not paint real people, fictional ones instead?\"), a short \"yes\" or \"fine\" is enough: up to 10 minutes after the own wish painting stays offered for it, without a web search. The iPhone app shows the picture right under the answer as well (touch and hold: save or share); for that its key may only read the job and the picture file of its own profile, the whole list, painting and deleting work under My things → Pictures (since V01.0.723 with the release of Painting pictures). *Me → Pictures* shows them as a gallery with wish, prompt, time, size, duration, download and delete, \"Delete all pictures\" on top. Finished through the iPhone app or Telegram: push \"Bild\". \"Bild testen\" below the switch paints a test picture and shows load time, paint time and memory (stage 0, measuring). State → Live: target \"Painting pictures\" with counts (running, waiting, done, failed and refu"
 },
 {
 "lang": "en",
@@ -11365,7 +11381,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Painting pictures (V01.0.567, off by default, plan `plaene/bildgenerierung.md`)",
-"text": " \"Painting pictures\"; logs (area \"Bild\"): bilder: auftrag 1024x1024 quadrat chat fuer …, bilder: gemalt …, bilder: nicht gemalt <reason> fuer …, bild: engine gestartet 38 s 11.2 gib, bild: engine beendet leerlauf. API (profile): GET|POST|DELETE /api/bilder, GET /api/bilder/job/{id}, GET /api/bilder/{id}/datei[?dl=1], DELETE /api/bilder/{id}; admin: GET|POST /api/admin/bild-test. Later: quick buttons, background removal and upscaling (stage 2b), Telegram photo and Open WebUI interface (2d)."
+"text": "sed today), never wishes or prompts; service guard part \"Painting pictures\"; logs (area \"Bild\"): bilder: auftrag 1024x1024 quadrat chat fuer …, bilder: gemalt …, bilder: nicht gemalt <reason> fuer …, bild: engine gestartet 38 s 11.2 gib, bild: engine beendet leerlauf. API (profile): GET|POST|DELETE /api/bilder, GET /api/bilder/job/{id}, GET /api/bilder/{id}/datei[?dl=1], DELETE /api/bilder/{id}; admin: GET|POST /api/admin/bild-test. Later: quick buttons, background removal and upscaling (stage 2b), Telegram photo and Open WebUI interface (2d)."
 },
 {
 "lang": "en",
@@ -11389,7 +11405,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": " mirror, brighter, darker, more contrast, black and white, crop to a square, half the size; again a new picture, a painted picture keeps its AI marks, an own photo gets none; does not count towards pictures per day; Live \"schnell bearbeitet\", log bilder: schnell heller 1024x768 fuer …. API (profile, also the app area \"Mein Alltag\"): POST /api/bilder/{id}/aendern ({wunsch}), POST /api/bilder/{id}/schnell ({was}), POST /api/bilder/foto (the picture as the body)."
+"text": " mirror, brighter, darker, more contrast, black and white, crop to a square, half the size; again a new picture, a painted picture keeps its AI marks, an own photo gets none; does not count towards pictures per day; Live \"schnell bearbeitet\", log bilder: schnell heller 1024x768 fuer …. API (profile, also the app under My things → Pictures): POST /api/bilder/{id}/aendern ({wunsch}), POST /api/bilder/{id}/schnell ({was}), POST /api/bilder/foto (the picture as the body)."
 },
 {
 "lang": "en",
@@ -13085,7 +13101,7 @@
 "file": "iPhone app \"Spark\"",
 "head": "Quick start, history, photos, offline",
 "title": "Quick start, history, photos, offline",
-"text": "to 1280 px, so it also recognises things, plants or an error display. Follow-up questions about the same photo work for 10 minutes. With it off, the iPhone reads only the text as before. PDFs and documents always stay text. - Save to \"My documents\": With \"Store documents from the app\" on under Me → iPhone app in the panel, the attachment shows a button for it. The Spark then finds the document later, like an upload in the panel. - Offline: When the Spark cannot be reached, the app says so at the top. Typed questions wait (at most 10, for one day) and go out once the Spark is back. Speaking does not work then, because the Spark recognises the speech. - Calm, nothing jumps (since V01.0.570): the note \"Spark not reachable\" comes only after 3 seconds without the Spark, so a short network change or the restart during an update does not make it blink. When messages arrive from another device, the app only appends the new ones; the history is not drawn anew. An open page under Settings stays open even when the admin blocks it right then (with a note on top; Back closes it). Monitoring and Checks show an error only on the second failed try and at the end of the list, rows in Logs and hints"
+"text": "to 1280 px, so it also recognises things, plants or an error display. Follow-up questions about the same photo work for 10 minutes. With it off, the iPhone reads only the text as before. PDFs and documents always stay text. - Save to \"My things\": With own documents released for your profile, the attachment shows a button for it. The Spark then finds the document later, like an upload in the panel. Since V01.0.723 there is no profile switch for it any more. - Offline: When the Spark cannot be reached, the app says so at the top. Typed questions wait (at most 10, for one day) and go out once the Spark is back. Speaking does not work then, because the Spark recognises the speech. - Calm, nothing jumps (since V01.0.570): the note \"Spark not reachable\" comes only after 3 seconds without the Spark, so a short network change or the restart during an update does not make it blink. When messages arrive from another device, the app only appends the new ones; the history is not drawn anew. An open page under Settings stays open even when the admin blocks it right then (with a note on top; Back closes it). Monitoring and Checks show an error only on the second failed try and at the end of the "
 },
 {
 "lang": "en",
@@ -13093,7 +13109,7 @@
 "file": "iPhone app \"Spark\"",
 "head": "Quick start, history, photos, offline",
 "title": "Quick start, history, photos, offline",
-"text": " keep their place. With the charger, the history stays in place behind the stand view. - Save the battery (since V01.0.668): in the background the app stops its audio engine as soon as nothing listens, speaks or calls any more; an answer still playing is finished first. iOS can then put the app to sleep. Exceptions: the wake word listens (on the charger, or for the time under \"On battery\") or CarPlay runs. - English: On an iPhone set to English the app is in English, including the wake word and Siri (\"Ask Spark\", \"Start Spark\")."
+"text": "list, rows in Logs and hints keep their place. With the charger, the history stays in place behind the stand view. - Save the battery (since V01.0.668): in the background the app stops its audio engine as soon as nothing listens, speaks or calls any more; an answer still playing is finished first. iOS can then put the app to sleep. Exceptions: the wake word listens (on the charger, or for the time under \"On battery\") or CarPlay runs. - English: On an iPhone set to English the app is in English, including the wake word and Siri (\"Ask Spark\", \"Start Spark\")."
 },
 {
 "lang": "en",
@@ -13133,7 +13149,7 @@
 "file": "iPhone app \"Spark\"",
 "head": "Panel areas in the app",
 "title": "Panel areas in the app",
-"text": "- Open in the panel (Settings): whatever the app does not show itself opens the panel right here in the app at the right place (the first time you sign in as in the browser). The list shows every page of Me your profile can use now, reMarkable, storage, writing help, companion and MCP too; it comes from the Spark (/api/features, list pages from features.ME_PAGES), so a new page shows up without an app update. Only overview, let's go, sign in and Android app are left out, with a reason (features.APP_SKIP). With \"Manage the Spark\" also monitoring, logs, features and profiles. - Features and People and devices under Manage the Spark (since V01.0.276): the names and groups of the switches come from the Spark, the app keeps no list of its own. A profile also shows its functions \"n of m on\" to switch, its admin role and the signed-in browsers (swipe to sign out). - My day: the next appointments of your calendars, the Spark's reminders (swipe to delete) and the memory (look at it, delete single entries, ask for a tidy-up and apply it). Under My profile the conversation switches join: learn from conversations, a new conversation every day and, when the admin allows them, learn from correct"
+"text": "- Open in the panel (Settings): whatever the app does not show itself opens the panel right here in the app at the right place (the first time you sign in as in the browser). The list shows every page of Me your profile can use now, reMarkable, storage, writing help, companion and MCP too; it comes from the Spark (/api/features, list pages from features.ME_PAGES), so a new page shows up without an app update. Only overview, let's go, sign in and Android app are left out, with a reason (features.APP_SKIP). With \"Manage the Spark\" also monitoring, logs, features and profiles. - Features and People and devices under Manage the Spark (since V01.0.276): the names and groups of the switches come from the Spark, the app keeps no list of its own. A profile also shows its functions \"n of m on\" to switch, its admin role and the signed-in browsers (swipe to sign out). - My day: the next appointments of your calendars and the Spark's reminders (swipe to delete). Under My profile the conversation switches join: learn from conversations, a new conversation every day and, when the admin allows them, learn from corrections, think when choosing tools and targeted tool choice. Since V01.0.723 the me"
 },
 {
 "lang": "en",
@@ -13141,7 +13157,7 @@
 "file": "iPhone app \"Spark\"",
 "head": "Panel areas in the app",
 "title": "Panel areas in the app",
-"text": "ions, think when choosing tools and targeted tool choice. Forgetting everything at once stays in the browser. - Manage the Spark (only for profiles with the Admin or Manager role): after Face ID the app counts the way your profile is signed in, without an admin sign-in of its own (since V01.0.541). The app key only counts if it was created after your second login step was switched on; the panel password works only in the browser. Inside: Monitoring (\"Needs you\", memory, CPU/GPU, services), Logs (diagnosis as in the panel with areas and time span, \"Copy for thread\" and share) and Checks (function check, quality test, priority check). Under Change: Features (the plain on/off switches; sensitive ones like \"Port\", the second login step for profiles and the iPhone switches themselves stay in the browser), People and devices (create a profile, remove devices, new PIN, reset the second step, delete a profile; a code only at \"change protection\") and Backups (back up now; deleting old ones only as admin; restoring and downloading in the browser). A manager sees only monitoring, logs and people and devices; there they lift a profile's blocks but switch no function and block nothing (only the"
+"text": "mory is under My things. - Manage the Spark (only for profiles with the Admin or Manager role): after Face ID the app counts the way your profile is signed in, without an admin sign-in of its own (since V01.0.541). The app key only counts if it was created after your second login step was switched on; the panel password works only in the browser. Inside: Monitoring (\"Needs you\", memory, CPU/GPU, services), Logs (diagnosis as in the panel with areas and time span, \"Copy for thread\" and share) and Checks (function check, quality test, priority check). Under Change: Features (the plain on/off switches; sensitive ones like \"Port\", the second login step for profiles and the iPhone switches themselves stay in the browser), People and devices (create a profile, remove devices, new PIN, reset the second step, delete a profile; a code only at \"change protection\") and Backups (back up now; deleting old ones only as admin; restoring and downloading in the browser). A manager sees only monitoring, logs and people and devices; there they lift a profile's blocks but switch no function and block nothing (only the admin does, since V01.0.551). - Teach your voice: the app shows three sentences, you"
 },
 {
 "lang": "en",
@@ -13149,23 +13165,39 @@
 "file": "iPhone app \"Spark\"",
 "head": "Panel areas in the app",
 "title": "Panel areas in the app",
-"text": " admin does, since V01.0.551). - Manage documents (V01.0.250): in \"My documents\" swipe to delete, long-press for \"For everyone\", searching on/off, tags, read again and \"Remind me of the deadline\". At the bottom \"Document switches\" with the switches of Me → Documents, as far as the admin allows them. - Teach your voice: the app shows three sentences, you read them aloud, saving needs the code from the authenticator app. Below, \"Teach\" for each of your speakers (the speaker then asks for five sentences). Needs speaker recognition from the admin and your profile's second login step. - Proactive: weather place, parcels from e-mails, bus and train (search and set a stop), look at and stop your jobs, room mode \"+30 min\" (at most four hours from now). The switches weather, parcels, bus and train and jobs are here too. - Security: your devices (swipe to remove), recent logins, log out everywhere, turn the second step off or new recovery codes (with a code). Setting it up works only in the browser with the PIN: otherwise someone with your unlocked iPhone alone could set their own second step. - Connect accounts: mail, calendar, contacts, smart home and Telegram. Only with your profile's sec"
+"text": " read them aloud, saving needs the code from the authenticator app. Below, \"Teach\" for each of your speakers (the speaker then asks for five sentences). Needs speaker recognition from the admin and your profile's second login step. - Proactive: weather place, parcels from e-mails, bus and train (search and set a stop), look at and stop your jobs, room mode \"+30 min\" (at most four hours from now). The switches weather, parcels, bus and train and jobs are here too. - Security: your devices (swipe to remove), recent logins, log out everywhere, turn the second step off or new recovery codes (with a code). Setting it up works only in the browser with the PIN: otherwise someone with your unlocked iPhone alone could set their own second step. - Connect accounts: mail, calendar, contacts, smart home and Telegram. Only with your profile's second login step and a fresh code. The Spark checks the connection, stores password or token encrypted and never hands it out; the iPhone does not keep it."
 },
 {
 "lang": "en",
 "src": "iphone-app",
 "file": "iPhone app \"Spark\"",
-"head": "Panel areas in the app",
-"title": "Panel areas in the app",
-"text": "ond login step and a fresh code. The Spark checks the connection, stores password or token encrypted and never hands it out; the iPhone does not keep it."
+"head": "My things",
+"title": "My things",
+"text": "Since V01.0.723 (Dominik 2026-10-17, plan app-meine-sachen/plan.md) everything the Spark keeps for you is on one page: the icon with four squares at the top left beside the conversation, or Settings → My things. Tiles with their numbers show Documents, Made by the Spark, Pictures, Music and Memory, below them \"Recently added\". The search at the top covers everything: titles, file names, senders, tags, picture wishes, songs and remembered facts (it runs on the iPhone, nothing goes to the Spark for it)."
 },
 {
 "lang": "en",
 "src": "iphone-app",
 "file": "iPhone app \"Spark\"",
-"head": "Looking at my documents",
-"title": "Looking at my documents",
-"text": "With \"Documents from the app\" (Me → iPhone app), Settings → My documents lists your documents on the Spark, with search. Tap one to open it: a kept PDF or picture opens in Apple's preview (zoom, search, share), and the \"Text\" tab shows the text the Spark stored. Other file types show as text only. Long texts come in parts: \"Read on\" at the bottom adds the next one. Deleting and more work under \"Manage documents\" (above)."
+"head": "My things",
+"title": "My things",
+"text": "Each tile follows only the admin's release of its function (Own documents, Creating documents, Painting pictures, Making music, Memory), without a profile switch and without the switch \"Panel areas in the iPhone app\". When the admin blocks a function for your profile, its tile goes away and the app's key no longer reaches its paths (iphone.THINGS). Guests get none of it."
+},
+{
+"lang": "en",
+"src": "iphone-app",
+"file": "iPhone app \"Spark\"",
+"head": "My things",
+"title": "My things",
+"text": "- Documents: one row per document with the title from the profile card, below it kind, sender and source, on the right the date and a mark only when something matters (deadline, being read, not readable, for everyone, search off). Quick filters with their numbers (All, Deadline open, Being read, For everyone, Search off, Not readable), plus sort (newest, name, deadline, size), source and tag in the filter menu; the app remembers sort and source. With \"Newest first\" the documents stand in groups: This week, This month, Older. The search finds titles, senders and tags at once, Enter also searches the content (\"Found in the content\"). \"Select\" marks several: delete (with a question first), for everyone, only for me, searching on or off, read again (at most 20), through POST /api/profile/wissen/batch. A tap opens the document's page: profile card, \"Original and text\" (a kept PDF or picture in Apple's preview, beside it the stored text, long texts in parts with \"Read on\"), tap a tag to remove it and type new ones, \"Assistant searches it\", \"For everyone\", remind of the deadline, read again and delete. At the bottom \"Switches for documents\" with the switches of Me → Documents, as far as t"
+},
+{
+"lang": "en",
+"src": "iphone-app",
+"file": "iPhone app \"Spark\"",
+"head": "My things",
+"title": "My things",
+"text": "he admin allows them. - Made by the Spark: the documents the Spark made, as before. - Pictures: all painted pictures as a grid; a tap shows one large with wish and time, share and delete. At the top a field \"What shall I paint?\"; while painting, the app looks again every 4 seconds. Changing, quick buttons and own photos stay in the panel under Me → Pictures. - Music: all songs, played right in the app, with length, with or without singing, swipe to delete. At the top \"What kind of music?\" makes a piece without singing; singing and own lyrics work in the panel under Me → Music. - Memory: all remembered facts with search, \"learned from a conversation\" or \"said yourself\" with the date. Swipe to change or delete, \"Select\" deletes several, \"Suggest tidying up\" asks the language model about double entries, and only your \"Accept\" changes anything. Forgetting everything at once stays in the browser."
 },
 {
 "lang": "en",

@@ -4,7 +4,7 @@ import UniformTypeIdentifiers
 
 /// "Teilen → Spark" from any app: a text, a web page, a PDF or a photo. The iPhone reads the text
 /// (a web page is fetched here, like Safari would), then you ask about it or store it under
-/// "Meine Dokumente". The Spark gets only text and treats it as outside text (actions stay locked).
+/// "Meine Sachen" (the profile's documents). The Spark gets only text and treats it as outside text (actions stay locked).
 final class ShareViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -166,7 +166,7 @@ final class ShareModel: ObservableObject {
         Task {
             do {
                 try await api.storeDoc(name: a.name, text: a.text)
-                notice = String(localized: "Unter „Meine Dokumente“ gespeichert. Der Spark findet es auch später.")
+                notice = String(localized: "Unter „Meine Sachen“ gespeichert. Der Spark findet es auch später.")
             } catch {
                 self.error = error.localizedDescription
             }
@@ -197,7 +197,7 @@ struct ShareView: View {
                         TextField("Frage", text: $m.question, axis: .vertical)
                         Button("Fragen") { m.ask() }.disabled(m.asking)
                         if m.docs && a.image == nil {
-                            Button("In „Meine Dokumente“ speichern") { m.store() }.disabled(m.asking)
+                            Button("Bei „Meine Sachen“ speichern") { m.store() }.disabled(m.asking)
                         }
                     }
                 }

@@ -213,7 +213,7 @@ class CheckWrapper(Ratchet, unittest.TestCase):
     # kept on purpose (big cleanup step 9): handed over as a gate callback (profiles.*_GATE), or a test patches it.
     # Wrappers of features.admin_on are not counted: they are the audited places of test_sperre_ueberall.ADMIN_ON_OK.
     ALT = {"panel/begleiter.py": 1,       # allowed: profiles.DESK_GATE
-           "panel/iphone.py": 2,          # allowed, area_on: profiles.APP_GATE, profiles.APP_AREA_GATE
+           "panel/iphone.py": 1,          # allowed: profiles.APP_GATE
            "panel/kiwix.py": 1,           # usable: test_folien patches it
            "panel/pebblewatch.py": 1,     # allowed: profiles.WATCH_GATE
            "panel/rmliste.py": 1,         # on: test_werkzeug_abdeckung patches it

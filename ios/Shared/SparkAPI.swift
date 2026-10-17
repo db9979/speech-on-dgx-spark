@@ -183,6 +183,14 @@ struct SparkDoc: Identifiable, Equatable {
     /// "nas": read from a knowledge folder (Synology S8); place is its folder there, the file is fetched when opened
     var source = ""
     var place = ""
+    /// the Steckbrief: what kind of paper, from whom, and its short summary
+    var art = ""
+    var sender = ""
+    var brief = ""
+    /// why it could not be read (state "error"), a fixed sentence of the Spark
+    var note = ""
+    /// the title of the Steckbrief, else the file name
+    var shown: String { title.isEmpty ? name : title }
 }
 
 /// A document the Spark made (GET /api/make): its newest version and the small preview of the first part.
@@ -496,7 +504,7 @@ struct SparkAPI {
     }
 
     // ---------------------------------------------------------------- looking at the own documents
-    /// The profile's documents (only with "Dokumente aus der App"); nil when that is off.
+    /// The profile's documents (only while Eigene Dokumente is released for the profile); nil when it is not.
     func docs() async throws -> [SparkDoc]? {
         let (data, response) = try await URLSession.shared.data(for: request("api/profile/docs"))
         if [401, 403].contains((response as? HTTPURLResponse)?.statusCode ?? 0) { return nil }
@@ -512,7 +520,9 @@ struct SparkAPI {
                             use: d["use"] as? Bool ?? true, shared: d["shared"] as? Bool ?? false,
                             title: String((d["title"] as? String ?? "").prefix(200)), due: String((d["due"] as? String ?? "").prefix(10)),
                             tags: (d["tags"] as? [String] ?? []).prefix(12).map { String($0.prefix(24)) },
-                            source: String((d["source"] as? String ?? "").prefix(12)), place: String((d["place"] as? String ?? "").prefix(300)))
+                            source: String((d["source"] as? String ?? "").prefix(12)), place: String((d["place"] as? String ?? "").prefix(300)),
+                            art: String((d["art"] as? String ?? "").prefix(60)), sender: String((d["sender"] as? String ?? "").prefix(80)),
+                            brief: String((d["brief"] as? String ?? "").prefix(600)), note: String((d["note"] as? String ?? "").prefix(200)))
         }
     }
 
@@ -624,7 +634,7 @@ struct SparkAPI {
         return url
     }
 
-    /// A document's text into the profile's "Meine Dokumente" (only with the profile's switch).
+    /// A document's text into the profile's documents (only while Eigene Dokumente is released).
     func storeDoc(name: String, text: String) async throws {
         var r = request("api/iphone/doc", method: "POST")
         r.setValue("application/json", forHTTPHeaderField: "Content-Type")

@@ -259,7 +259,9 @@ class ReadAgain(Base):
 
 
 class FromTheApp(Base):
-    def test_app_looks_at_own_documents_only_with_app_docs(self):
+    def test_app_looks_at_own_documents_only_with_the_release(self):
+        """Meine Sachen → Dokumente (Dominik 2026-10-17): the app's key reaches the own documents while Eigene
+        Dokumente is released for the profile, no profile switch; the admin's block closes them at once."""
         from tests.test_iphone import pair
         helpers.set_config(iphone=True)
         self.addCleanup(helpers.set_config, iphone=False)
@@ -269,23 +271,35 @@ class FromTheApp(Base):
         app = TestClient(panel.app)
         doc = upload(c, "vertrag.txt", b"Kuendigungsfrist drei Monate zum Quartalsende. " * 3).json()["id"]
         pic = upload(c, "foto.jpg", jpeg()).json()["id"]
-        for path in ("/api/profile/docs", f"/api/profile/wissen/{doc}/text", f"/api/profile/wissen/{pic}/file?view=1"):
-            self.assertEqual(app.get(path, headers=h).status_code, 403, path)      # app_docs off
-        c.put("/api/profile/settings", json={"app_docs": True})
+        helpers.set_config(deny={"documents": [uid_of("Wapp")]})
+        try:
+            for path in ("/api/profile/docs", f"/api/profile/wissen/{doc}/text", f"/api/profile/wissen/{pic}/file?view=1"):
+                self.assertIn(app.get(path, headers=h).status_code, (401, 403), path)      # blocked by the admin
+            self.assertEqual(app.put(f"/api/profile/wissen/{doc}", json={"use": False}, headers=h).status_code, 401)
+            self.assertEqual(app.delete(f"/api/profile/docs/{doc}", headers=h).status_code, 401)
+        finally:
+            helpers.set_config(deny={})
+        c.put("/api/profile/settings", json={"app_docs": True})        # the old switch is gone and changes nothing
+        self.assertNotIn("app_docs", profiles.settings(uid_of("Wapp")))
         listed = app.get("/api/profile/docs", headers=h)
         self.assertEqual(listed.status_code, 200, listed.text)
         self.assertEqual({d["id"] for d in listed.json()}, {doc, pic})
         self.assertIn("Kuendigungsfrist", app.get(f"/api/profile/wissen/{doc}/text", headers=h).json()["parts"][0]["text"])
         v = app.get(f"/api/profile/wissen/{pic}/file?view=1", headers=h)
         self.assertEqual((v.status_code, v.headers["content-type"]), (200, "image/jpeg"))
-        # reading only: the app key changes, uploads or deletes nothing, and never reaches other paths
-        self.assertEqual(app.put(f"/api/profile/wissen/{doc}", json={"use": False}, headers=h).status_code, 401)
+        # the own documents: switches, the content search, several at once and deleting, like the browser login
+        self.assertEqual(app.put(f"/api/profile/wissen/{doc}", json={"use": False}, headers=h).status_code, 200)
+        self.assertEqual(app.post("/api/profile/wissen/search", json={"q": "Kuendigungsfrist"}, headers=h).status_code, 200)
+        r = app.post("/api/profile/wissen/batch", json={"do": "use", "ids": [doc]}, headers=h)
+        self.assertEqual((r.status_code, r.json().get("done")), (200, 1), r.text)
+        # never uploading through the browser path, never other paths
         self.assertIn(app.post("/api/profile/docs", files={"file": ("x.txt", b"x")}, headers=h).status_code, (401, 403))
-        self.assertEqual(app.delete(f"/api/profile/docs/{doc}", headers=h).status_code, 401)
         self.assertIn(app.get(f"/api/profile/wissen/{doc}/text/x", headers=h).status_code, (401, 404))
+        self.assertEqual(app.delete(f"/api/profile/docs/{doc}", headers=h).status_code, 200)
         # another profile's id: not found, a speaker key: never
         other = profile("Wother")
-        self.assertEqual(other.get(f"/api/profile/wissen/{doc}/text").status_code, 404)
+        self.assertEqual(other.get(f"/api/profile/wissen/{pic}/text").status_code, 404)
+        self.assertFalse(app.delete(f"/api/profile/docs/{doc}", headers=h).json()["removed"])
         tok = ADMIN.post("/api/admin/devices", json={"name": "Lautsprecher", "user": uid_of("Wapp")}).json()["token"]
         self.assertEqual(app.get("/api/profile/docs", headers={"X-Speech-Device": tok}).status_code, 403)
 

@@ -67,22 +67,8 @@ _DOC = r"[0-9a-f]{12}"
 _DEV = r"d_[0-9a-f]{12}"
 _ACC = r"[mck][0-9a-f]{8}"
 AREAS = {
-    # Mein Alltag: memory, the next appointments, the Spark's own reminders, the painted pictures
-    "app_mine": ((("GET",), r"/api/profile/memory"), (("DELETE",), rf"/api/profile/memory/{_ID}"),
-                 (("POST",), r"/api/profile/memory/tidy"), (("POST",), r"/api/profile/calendar/test"),
-                 (("DELETE",), rf"/api/profile/reminders/{_ID}"),
-                 # Ich → Bilder (bilder.py): look, paint from a wish, delete one or all
-                 (("GET", "POST", "DELETE"), r"/api/bilder"), (("GET",), rf"/api/bilder/job/{_DOC}"),
-                 (("GET",), rf"/api/bilder/{_DOC}/datei"), (("DELETE",), rf"/api/bilder/{_DOC}"),
-                 # Bilder ändern: change an own picture (FLUX or a quick button), upload an own photo to change
-                 (("POST",), rf"/api/bilder/{_DOC}/(?:aendern|schnell)"), (("POST",), r"/api/bilder/foto"),
-                 # Ich → Musik (musik.py): listen, make from a wish, delete one or all
-                 (("GET", "POST", "DELETE"), r"/api/musik"), (("GET",), rf"/api/musik/job/{_DOC}"),
-                 (("GET",), rf"/api/musik/{_DOC}/datei"), (("DELETE",), rf"/api/musik/{_DOC}")),
-    # Dokumente verwalten: switches, "Für alle", tags, read again, deadline reminder, delete (own documents only)
-    "app_docs_edit": ((("GET",), r"/api/profile/wissen"), (("PUT",), rf"/api/profile/wissen/{_DOC}"),
-                      (("POST",), rf"/api/profile/wissen/{_DOC}/(?:reread|remind)"),
-                      (("DELETE",), rf"/api/profile/docs/{_DOC}")),
+    # Mein Alltag: the next appointments and the Spark's own reminders
+    "app_mine": ((("POST",), r"/api/profile/calendar/test"), (("DELETE",), rf"/api/profile/reminders/{_ID}")),
     # Stimme einlernen: the speaker ID sample from the iPhone's microphone (with a fresh code), and
     # "Stimme hier anlernen" at one of the profile's own speakers
     "app_voice": ((("GET", "POST", "DELETE"), r"/api/profile/voice"), (("GET",), r"/api/profile/esp32"),
@@ -109,33 +95,56 @@ AREAS = {
                      (("GET", "PUT", "DELETE"), r"/api/profile/homeassistant"),   # the code word stays in the browser
                      (("GET", "DELETE"), r"/api/profile/telegram"), (("POST",), r"/api/profile/telegram/link")),
 }
+# "Meine Sachen" in the app (Dominik 2026-10-17, plan app-meine-sachen/plan.md): each part opens with the admin
+# release of its own function (the key is its features.py key), no panel switch and no profile switch: what the
+# admin released for the profile, the app shows. Each path keeps its own checks (EDIT_KEY for changing pictures,
+# DOC_FEATURE switches, the day limits); forgetting everything at once stays in the browser.
+THINGS = {
+    # Dokumente: the list, the switches, "Für alle", tags, read again, deadline reminder, several at once, the
+    # content search, delete (own documents only; the list and reading are APP_PATHS/APP_PATTERNS)
+    "documents": ((("GET",), r"/api/profile/wissen"), (("PUT",), rf"/api/profile/wissen/{_DOC}"),
+                  (("POST",), rf"/api/profile/wissen/{_DOC}/(?:reread|remind)"),
+                  (("POST",), r"/api/profile/wissen/(?:batch|search)"), (("DELETE",), rf"/api/profile/docs/{_DOC}")),
+    # Gedächtnis: look, change the wording, forget one or several, the tidy-up proposal
+    "memory": ((("GET",), r"/api/profile/memory"), (("DELETE", "PUT"), rf"/api/profile/memory/{_ID}"),
+               (("POST",), r"/api/profile/memory/(?:tidy|forget)")),
+    # Bilder (bilder.py): look, paint from a wish, delete one or all; change an own picture (FLUX or a quick
+    # button) and upload an own photo to change only with Bilder ändern (bilder.EDIT_KEY, checked there)
+    "bilder": ((("GET", "POST", "DELETE"), r"/api/bilder"), (("GET",), rf"/api/bilder/job/{_DOC}"),
+               (("GET",), rf"/api/bilder/{_DOC}/datei"), (("DELETE",), rf"/api/bilder/{_DOC}"),
+               (("POST",), rf"/api/bilder/{_DOC}/(?:aendern|schnell)"), (("POST",), r"/api/bilder/foto")),
+    # Musik (musik.py): listen, make from a wish, delete one or all
+    "musik": ((("GET", "POST", "DELETE"), r"/api/musik"), (("GET",), rf"/api/musik/job/{_DOC}"),
+              (("GET",), rf"/api/musik/{_DOC}/datei"), (("DELETE",), rf"/api/musik/{_DOC}")),
+}
 # what hello tells the app (the app shows an area where it is true)
-RIGHTS_PANEL = ("app_mine", "app_docs_edit", "app_voice", "app_auto", "app_security", "app_accounts")
+RIGHTS_PANEL = ("app_mine", "app_voice", "app_auto", "app_security", "app_accounts")
 # conversation settings the app may change with "Mein Alltag" (each still needs its admin switch to matter)
 MINE_FIELDS = ("daily", "learn")
-# document settings (Ich -> Dokumente) with "Dokumente verwalten"; the functions themselves follow the admin release
+# document settings (Ich -> Dokumente) with Meine Sachen → Dokumente; the functions themselves follow the admin release
 DOC_FIELDS = ("doc_due",)
 AUTO_FIELDS = ()
 # switches older apps still send although the admin release alone decides now: ignored. Only the keys the old
 # apps sent, all out of profiles.GONE (the one list); app_on and the other rights stay refused (400).
 GONE = frozenset(("fix_learn", "tool_think", "route", "doc_pictures", "doc_semantic", "doc_originals", "doc_shared",
                   "doc_brief", "wx_on", "par_on", "transit_on", "agent_on", "con_on",
-                  "app_mine", "app_docs_edit", "app_voice", "app_auto", "app_security", "app_accounts",
+                  "app_mine", "app_docs_edit", "app_docs", "app_voice", "app_auto", "app_security", "app_accounts",
                   "app_admin"))
 
 
 def area_on(uid, right):
-    return features.allowed("iphonepanel", uid)
+    """A panel area opens with chat.iphone_panel, a part of Meine Sachen with its own function (THINGS)."""
+    return features.allowed(right if right in THINGS else "iphonepanel", uid)
 
 
 profiles.APP_AREAS.update({right: tuple((frozenset(m), re.compile(p)) for m, p in rules)
-                           for right, rules in AREAS.items()})
+                           for right, rules in (AREAS | THINGS).items()})
 profiles.APP_AREA_GATE[0] = area_on
 
 
 def panel_rights(uid):
-    """What hello tells the app: which panel areas it shows."""
-    return {r: area_on(uid, r) for r in RIGHTS_PANEL}
+    """What hello tells the app: which panel areas and which parts of Meine Sachen it shows."""
+    return {r: area_on(uid, r) for r in RIGHTS_PANEL + tuple(THINGS)}
 
 
 def phones(uid):
@@ -290,7 +299,7 @@ def app_hello(prof=Depends(own_profile)):
             # "Spark verwalten" with the profile's own role (coadmin.py): "admin", "manager" or "" (none, or its second step off)
             "admin_role": _admin_role(prof["id"]),
             # documents from the app into "Meine Dokumente"
-            "docs": docs_on(prof["id"]),
+            "docs": features.allowed("documents", prof["id"]),
             # Apple Reminders: Spark reminders and list entries may be written into the iPhone's Reminders
             "ios": bool(s.get("app_ios")),
             # pictures go to the model itself (images.py); without it the app reads text on the phone (OCR)
@@ -318,21 +327,17 @@ DOC_BODY = 3 * 1024 * 1024     # the text of one document as JSON (the iPhone re
 DOC_CHARS = 1_000_000
 
 
-def docs_on(uid):
-    return bool(features.allowed("documents", uid) and profiles.settings(uid).get("app_docs"))
-
-
 @router.post("/api/iphone/doc", dependencies=[Depends(assistant)])
 async def app_doc(request: Request, prof=Depends(own_profile)):
-    """A document from the app into the profile's documents. Only the app's own key, only with app_docs;
-    the text is stored as it is, like an upload in the panel (it is data, never an instruction)."""
+    """A document from the app into the profile's documents. Only the app's own key, only while Eigene
+    Dokumente is released for the profile; the text is stored as it is, like an upload in the panel (it is data, never an instruction)."""
     import asyncio
     import documents
     dev = profiles.device(request)
     if not dev or dev.get("scope") != "app":
         raise HTTPException(403, "only the iPhone app")
-    if not docs_on(prof["id"]):
-        raise HTTPException(403, "documents from the app are off (Ich -> iPhone-App)")
+    if not features.allowed("documents", prof["id"]):
+        raise HTTPException(403, "Eigene Dokumente sind aus (Funktionen → Eigene Dokumente)")
     guard.limit(request, "doc", prof["id"], False)
     body = await json_body(request, DOC_BODY, lenient=True)
     name, text = body.get("name"), body.get("text")
@@ -358,7 +363,7 @@ APP_FIELDS = ("voice", "speed", "length", "pro_on", "pro_quiet", "pro_max", "pro
               "hands", "barge",   # Freihändig and Ins Wort fallen: the same values as in the browser (Vereinheitlichen Phase 6)
               "face",             # Einstellungen → Gesicht: the profile's own face, the same as Ich → Gespräch → Anzeige
               "speak")            # Antworten vorlesen: the profile's switch, every device of it follows (chat_turn.quiet)
-RIGHTS = ("app_ha", "app_car_ha", "app_act", "app_listen", "app_push", "app_docs", "app_ios", "app_images",
+RIGHTS = ("app_ha", "app_car_ha", "app_act", "app_listen", "app_push", "app_ios", "app_images",
           "app_room")
 SETTINGS_BODY = 8192
 
@@ -411,7 +416,7 @@ async def app_settings_save(request: Request, prof=Depends(own_profile)):
 
 
 def _fields(uid):
-    return APP_FIELDS + sum((f for right, f in (("app_mine", MINE_FIELDS), ("app_docs_edit", DOC_FIELDS),
+    return APP_FIELDS + sum((f for right, f in (("app_mine", MINE_FIELDS), ("documents", DOC_FIELDS),
                                                 ("app_auto", AUTO_FIELDS)) if area_on(uid, right)), ())
 
 
