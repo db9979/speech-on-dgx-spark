@@ -428,13 +428,28 @@ def _git(ordner, *args, timeout=300):
     return p.returncode, p.stdout
 
 
+def git_umgebung(quelle, ordner):
+    """The clone belongs to root: git reads another user's repository only when it is named safe. git 2.43 (Ubuntu
+    24.04) takes that only from the global config, not from -c, so the sandbox gets its own global file in `ordner`
+    (its writable folder) naming exactly the installer's clone and nothing else; the caller's config is never read."""
+    datei = os.path.join(ordner, "git-sicher.conf")
+    with open(datei, "w", encoding="utf-8") as f:
+        f.write(f"[safe]\n\tdirectory = {quelle}\n\tdirectory = {quelle}/.git\n")
+    return {"PATH": "/usr/bin:/bin", "LANG": "C.UTF-8", "HOME": ordner, "GIT_CONFIG_GLOBAL": datei,
+            "GIT_CONFIG_NOSYSTEM": "1", "GIT_TERMINAL_PROMPT": "0"}
+
+
 def kopie(quelle, ziel, rev=""):
     """A fresh copy of the installed code (git clone of the installer's own clone, nothing from the network)."""
     shutil.rmtree(ziel, ignore_errors=True)
-    # the clone belongs to root: git reads another user's repository only when it is named safe (command line counts)
-    p = subprocess.run(["git", "-c", f"safe.directory={quelle}", "-c", f"safe.directory={quelle}/.git", "clone", "--quiet",
-                        "--no-hardlinks", quelle, ziel], capture_output=True, timeout=600)
+    if not os.path.isdir(os.path.join(quelle, ".git")):
+        _log("kopie quelle fehlt")
+        raise Fehler("quelle")
+    env = git_umgebung(quelle, os.path.dirname(ziel))
+    p = subprocess.run(["git", "clone", "--quiet", "--no-hardlinks", quelle, ziel], capture_output=True, text=True,
+                       timeout=600, env=env)
     if p.returncode != 0:
+        _log("kopie abgelehnt besitzer" if "dubious ownership" in p.stderr else f"kopie git {p.returncode}")
         raise Fehler("quelle")
     if rev and _git(ziel, "checkout", "--quiet", "--detach", rev)[0] != 0:
         raise Fehler("quelle")

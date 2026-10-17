@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.765** · 2026-10-17 · Werkstatt: „Code-Kopie fehlt“ behoben; die Sandbox bekommt eine eigene globale git-Datei, die genau den Klon des Installers als sicher nennt (git 2.43 nimmt safe.directory nicht von -c)
 - **V01.0.764** · 2026-10-17 · Personen und Geräte als aufgeräumte Liste: farbiger Kreis mit Kürzel, kurze Zeile mit Geräten und Fakten, Einrichten als Balken, Pfeil statt „Details“, Geräte mit Symbol ihrer Art
 - **V01.0.763** · 2026-10-17 · OLED-Seiten „Pi“ und „TARS“: CPU- und RAM-Auslastung als zwei große Zahlen
 - **V01.0.762** · 2026-10-17 · Qwen3.8 Flash Next in Docker messen: Docker nur auf tars und nur für Modell-Engines (Image mit Digest, kein Netz, Benutzer des Panels, Modelldateien nur lesend, Socket über das neue Docker-Tor); `sudo speech-spark modelle messen flash` oder „Ausprobieren“ misst es mit Anteil 0,70 und 0,65, Wechseln kommt nach den Zahlen

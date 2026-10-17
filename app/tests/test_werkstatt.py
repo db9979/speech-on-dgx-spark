@@ -244,6 +244,52 @@ class OpenCodeRechte(unittest.TestCase):
             self.assertNotIn("systemd-run", s[s.index("/etc/sudoers.d/speech-spark") - 4000:s.index("/etc/sudoers.d/speech-spark")])
 
 
+class Kopie(unittest.TestCase):
+    """The copy comes from root's clone while the sandbox runs as its own user: git 2.43 reads safe.directory only
+    from the global config (-c is ignored), which made every order end in „Code-Kopie fehlt“ (V01.0.757 on tars)."""
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp(prefix="werkstatt-kopie-")
+        self.addCleanup(shutil.rmtree, self.tmp, True)
+        self.quelle = os.path.join(self.tmp, "src")
+        subprocess.run(["git", "init", "-q", self.quelle], check=True)
+        with open(os.path.join(self.quelle, "a.txt"), "w") as f:
+            f.write("a\n")
+        subprocess.run(["git", "-C", self.quelle, "add", "a.txt"], check=True)
+        subprocess.run(["git", "-C", self.quelle, "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-qm", "a"], check=True)
+        self.arbeit = os.path.join(self.tmp, "arbeit")
+        os.makedirs(self.arbeit)
+
+    def test_safe_directory_in_its_own_global_file(self):
+        env = werkstatt.git_umgebung(self.quelle, self.arbeit)
+        self.assertEqual(os.path.dirname(env["GIT_CONFIG_GLOBAL"]), self.arbeit, "a file of the sandbox, not the caller's")
+        self.assertEqual(env["GIT_CONFIG_NOSYSTEM"], "1")
+        self.assertEqual(env["HOME"], self.arbeit)
+        got = subprocess.run(["git", "config", "--global", "--get-all", "safe.directory"], env=env, capture_output=True,
+                             text=True).stdout.split()
+        self.assertEqual(got, [self.quelle, self.quelle + "/.git"], "exactly the installer's clone, never *")
+
+    def test_the_clone_uses_it(self):
+        ziel = os.path.join(self.arbeit, "kopie")
+        with mock.patch.object(werkstatt.subprocess, "run", wraps=subprocess.run) as run:
+            werkstatt.kopie(self.quelle, ziel)
+        self.assertTrue(os.path.isfile(os.path.join(ziel, "a.txt")))
+        self.assertEqual(run.call_args_list[0].kwargs["env"]["GIT_CONFIG_GLOBAL"], os.path.join(self.arbeit, "git-sicher.conf"))
+
+    def test_a_missing_or_refused_source_says_why(self):
+        err = io.StringIO()
+        with mock.patch.object(sys, "stderr", err):
+            with self.assertRaises(werkstatt.Fehler) as e:
+                werkstatt.kopie(os.path.join(self.tmp, "nichts"), os.path.join(self.arbeit, "kopie"))
+            self.assertEqual(str(e.exception), "quelle")
+            nein = mock.Mock(returncode=128, stderr="fatal: detected dubious ownership in repository at '/x'")
+            with mock.patch.object(werkstatt.subprocess, "run", return_value=nein), self.assertRaises(werkstatt.Fehler):
+                werkstatt.kopie(self.quelle, os.path.join(self.arbeit, "kopie"))
+        lines = err.getvalue().splitlines()
+        self.assertEqual(lines, ["werkstatt: kopie quelle fehlt", "werkstatt: kopie abgelehnt besitzer"])
+        for z in lines:
+            self.assertRegex(z, werkstatt.STAND)
+
+
 class Aufgaben(unittest.TestCase):
     def test_ten_known_repairs(self):
         self.assertEqual(len(werkstatt.AUFGABEN), 10)
