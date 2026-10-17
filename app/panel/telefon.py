@@ -681,7 +681,8 @@ class Call:
         self.ours = 0                                     # CSeq of our own requests in this dialog
         self.tasks = []
         self.rest = b""
-        self.pkts = {"raus": 0, "sprache": 0, "rein": 0}   # RTP packets sent, of them with speech, received (log at the end)
+        self.pkts = {"raus": 0, "sprache": 0, "rein": 0}
+        self.live = None                                  # the call as one request in Live, Monitoring and Steuerzentrale   # RTP packets sent, of them with speech, received (log at the end)
 
     # ------------------------------------------------------------ start and end
     @staticmethod
@@ -976,6 +977,7 @@ class Call:
                 if why:
                     return
             _bump("angerufen" if self.out else "angenommen")
+            self._watch()
             if self.out:                        # the Spark called: the kind and the profile, never the number
                 print(f"telefon: anruf raus angenommen ({self.mode}) von {_log_name(self.uid)}, ton {self.codec.name}", flush=True)
             elif self.mode == "bestaetigen":      # an external number: never in the log
@@ -1015,6 +1017,12 @@ class Call:
                 self.sock.close()
             a.calls.pop(self.cid, None)
             a.watch.pop(self.cid, None)
+            if self.live is not None:
+                import live
+                if self.live.cur:
+                    self.live.step(self.live.cur[0], self.live.cur[1], self.live.cur[2], time.time())
+                live.end(self.live)
+                self.live = None
             if self.answered and self.acked.is_set():
                 secs = int(time.time() - self.t0)
                 _bump("sekunden", secs)
@@ -1024,6 +1032,18 @@ class Call:
                       f"davon {k['sprache']} mit sprache, rein {k['rein']} pakete", flush=True)
             elif why == "abgebrochen":
                 print("telefon: anruf vor dem abheben beendet", flush=True)
+
+    def _watch(self):
+        """The call as one request from picking up to hanging up (live.begin): the phone stands under the devices of
+        Live, Monitoring and the Steuerzentrale while it talks. Device name only of an assigned handset (shown with
+        the profile's consent, live._who), never a number; the questions in it are requests of their own (chat)."""
+        import live
+        name = (nummern().get(self.number) or {}).get("name", "") if self.mode not in ("extern", "bestaetigen") and internal(self.number) else ""
+        self.live = live.begin("telefon", str(name)[:30], t=self.t0, uid=self.uid or None,
+                               why="Spark ruft an" if self.out else "Anruf")
+        if self.live is not None:
+            self.live.step("in", "Eingang", self.t0)
+            self.live.now("asr", "Gespräch")
 
     # ------------------------------------------------------------ sound in
     def rtp_in(self, data, addr):

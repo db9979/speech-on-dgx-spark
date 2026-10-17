@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.731** · 2026-10-17 · Telefon: jedes Gespräch steht vom Abheben bis zum Auflegen als Anfrage „Telefon“ unter den Geräten in Live, Monitoring und Steuerzentrale (Grund „Anruf“ oder „Spark ruft an“, nie eine Nummer)
 - **V01.0.730** · 2026-10-17 · Rot-Fix: die englische Doku zu „Long conversations“ nennt das englische Menü (Status → Models)
 - **V01.0.729** · 2026-10-17 · Begleiter aufgeräumt: Fenster mit Fragefeld, Kacheln und Abschnitten wie im Panel, Einstellungen mit Seitenmenü, Kaffee nur noch unter Über und Update (Windows und Mac)
 - **V01.0.728** · 2026-10-17 · Zustand → Modelle „Lange Gespräche“: feste Auswahl für den Gesprächsspeicher des eigenen Sprachmodells (Standard, 4 × 64K, 1 × 256K), im Panel und in der iPhone-App, mit Budget-Prüfung, Neustart durch root und Rückfall, wenn das Modell nicht antwortet. Dazu: Zustand → Modelle: nach „Messen“ steht sofort „Eine Messung läuft“ mit den letzten Zeilen der Messung (laufende oneshot-Einheiten zählen jetzt als „läuft“); DSpark misst mit 38 % Speicher, die Variante `kv8` fällt weg (Qwen3.8 NVFP4 hat schon FP8-Gesprächsspeicher)

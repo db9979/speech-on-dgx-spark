@@ -1555,6 +1555,13 @@
 "titel": "Begleiter-Fenster und Einstellungen neu",
 "text": "A: Am PC aufs Spark-Gesicht in der Taskleiste klicken (am Mac in der Menüleiste). Oben stehen Gruß, Gerät und ein grüner Punkt „alles läuft“, darunter das Feld „Frag Spark …“: eine Frage tippen und Enter, sie erscheint in „Frag Spark“ mit Antwort. Die Befehle sind Kacheln mit Tastenkürzel, unten „Dieser Rechner“ mit Schaltern für Mikrofon und Weckwort; der Schalter wechselt, das Fenster bleibt offen. Kein gelber Kaffee-Knopf mehr. Zahnrad oben rechts: die Einstellungen haben links ein Seitenmenü (Übersicht, Tastenkürzel, … , Kopplung, Über und Update); der Kaffee steht nur unter Über und Update.",
 "thread": "Begleiter-App aufpolieren"
+},
+{
+"id": "P246",
+"v": 731,
+"titel": "Anruf steht unter Geräte",
+"text": "A: Zustand → Live und Monitoring offen lassen (oder auf die Steuerzentrale schauen), dann vom Mobilteil den Spark anrufen. Solange das Gespräch läuft, steht links unter den Geräten „Telefon“ mit Grund „Anruf“; nach dem Auflegen blendet es aus. Ebenso beim Testanruf „Spark ruft mich an“ mit Grund „Spark ruft an“. Nirgends steht eine Rufnummer.",
+"thread": "Assistent per Telefon anrufen"
 }
 ]
 }

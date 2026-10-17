@@ -10,6 +10,7 @@ import random
 import re
 import socket
 import struct
+import time
 import unittest
 from unittest import mock
 
@@ -436,6 +437,56 @@ class Calls(unittest.TestCase):
         self.assertIn("gemeinsames telefon", log.text)
         self.assertIn("aufgelegt nach", log.text)
         self.assertTrue(any("Noch etwas" in t for t in helpers.TTS_TEXT))
+
+    def test_a_call_stands_as_a_device_in_live_while_it_talks(self):
+        """Live, Monitoring and the Steuerzentrale show a running call under the devices (Dominik 2026-10-17): one
+        request from picking up to hanging up, client telefon, the handset's name, never a number."""
+        import live
+        seen = {"begin": [], "end": [], "during": None}
+        real_begin = live.begin
+
+        class Rec:
+            cur = None
+
+            def step(self, *a, **k):
+                seen.setdefault("steps", []).append(a[:2])
+
+            def now(self, kind, name, t=None):
+                self.cur = (kind, name, time.time())
+
+        def begin(client, device, **kw):
+            seen["begin"].append((client, device, kw.get("why"), kw.get("uid")))
+            return Rec()
+
+        async def body(a, pbx, port):
+            loop = asyncio.get_running_loop()
+            ph = Phone()
+            pt_, _ = await loop.create_datagram_endpoint(lambda: ph, local_addr=("127.0.0.1", 0))
+            rport = pt_.get_extra_info("sockname")[1]
+            to = ("127.0.0.1", a.port)
+            pbx.t.sendto(invite(a.port, "**612", rport, "call7", pts="8 101"), to)
+            await self._answer(pbx, "call7")
+            pbx.t.sendto(ack_or_bye("ACK", "call7", a.port, 1), to)
+            for _ in range(60):
+                if seen["begin"]:
+                    break
+                await asyncio.sleep(0.05)
+            seen["during"] = (list(seen["begin"]), list(seen["end"]))
+            pbx.t.sendto(ack_or_bye("BYE", "call7", a.port, 2), to)
+            for _ in range(60):
+                if "call7" not in a.calls:
+                    break
+                await asyncio.sleep(0.05)
+            pt_.close()
+        with mock.patch.object(live, "begin", begin), mock.patch.object(live, "end", lambda rec, ok=True, code="": seen["end"].append(rec)), \
+                _quiet():
+            self.run_with_pbx(body)
+        self.assertIsNot(live.begin, begin)
+        self.assertEqual(real_begin, live.begin)
+        self.assertEqual(seen["during"][0], [("telefon", "Flur", "Anruf", None)])   # the shared phone: no profile
+        self.assertEqual(seen["during"][1], [])                                       # still running while it talks
+        self.assertEqual(len(seen["end"]), 1)                                         # ended with the call
+        self.assertIn(("in", "Eingang"), seen["steps"])
 
     def test_unassigned_handset_hears_a_sentence_and_the_call_ends(self):
         async def body(a, pbx, port):
