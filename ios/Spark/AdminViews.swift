@@ -649,7 +649,8 @@ struct ModelsView: View {
     /// Why a model or a hit cannot be picked (the panel's fixed words).
     static let nein = ["revision": "noch nicht gemessen", "aus": "erst umziehen", "budget": "zu knapp", "engine": "nicht wählbar",
                        "ungeprueft": "erst messen", "schon": "schon in der Liste", "zugang": "privat oder mit Freigabe",
-                       "code": "braucht eigenen Code", "format": "keine safetensors", "architektur": "Bauart unbekannt"]
+                       "code": "braucht eigenen Code", "format": "keine safetensors", "architektur": "Bauart unbekannt",
+                       "docker": "Docker: vorerst nur messen"]
 
     /// One line: measured tempo, memory, on demand.
     static func kurz(_ m: [String: Any]) -> String {

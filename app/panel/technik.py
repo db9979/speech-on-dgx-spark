@@ -265,6 +265,7 @@ MODULE = {
     "tempo": ("sprache", "Sprechtempo für gestreamte Sprache"),
     "bild_server": ("sprache", "Bild-Dienst: startet FLUX.2 klein bei Bedarf, prüft und kennzeichnet jedes Bild"),
     "modelle": ("sprache", "Modell-Katalog (modelle.json): Regeln je Eintrag, Prüfung der Dateien, Messen, Regeln für Wechsel und eigene Modelle"),
+    "dockertor": ("sprache", "Docker-Tor: legt den Socket einer Engine in Docker (ohne Netz) auf 127.0.0.1, nur beim Messen"),
     "llm_tor": ("sprache", "LLM-Tor: Tür zum eigenen Sprachmodell mit Schlüssel, Feldgrenzen, System One und Lebensprobe"),
     "tlstor": ("teilen", "TLS-Tor: Tür des Modell-Rechners für ein Panel auf einem anderen Rechner (TLS 1.3, nur vom Panel-Rechner)"),
     "teilen": ("teilen", "Spark teilen: Firewall-Regeln für die Tür des Modell-Rechners, Fingerabdruck des Zertifikats"),
@@ -332,9 +333,12 @@ KNOTEN = {
                 "Request history, live overview, watchers, backup. Only fixed words and numbers.", []),
     "llm": (896, 326, "Sprachmodell", "Language model", ":31006 → :31016", "",
             "Das eigene Modell (vLLM) hinter dem LLM-Tor (:31006 → :31016, Bildverständnis :31017 bei Bedarf), eingeschaltet mit "
-            "speech-spark modelle llm uebernehmen; bis dahin oder nach … zurueck Qwen3.8 aus dgx-spark-qwen38 (:30001).",
+            "speech-spark modelle llm uebernehmen; bis dahin oder nach … zurueck Qwen3.8 aus dgx-spark-qwen38 (:30001). Ein Modell "
+            "in Docker (Qwen3.8 Flash Next) läuft vorerst nur zum Messen: festes Image, ohne Netz, Socket über das Docker-Tor.",
             "The own model (vLLM) behind the LLM-Tor (:31006 → :31016, image understanding :31017 on demand), switched on with "
-            "speech-spark modelle llm uebernehmen; until then or after … zurueck Qwen3.8 from dgx-spark-qwen38 (:30001).", ["llm_tor.py", "einordnung.py", "modelle.py"]),
+            "speech-spark modelle llm uebernehmen; until then or after … zurueck Qwen3.8 from dgx-spark-qwen38 (:30001). A model in "
+            "Docker (Qwen3.8 Flash Next) runs only to be measured for now: pinned image, no network, socket through the Docker-Tor.",
+            ["llm_tor.py", "einordnung.py", "modelle.py", "dockertor.py"]),
     "asr": (896, 196, "Spracherkennung", "Speech recognition", ":31001 → :31011", "sprache",
             "Proxy nimmt an, die Engine läuft nur lokal.", "The proxy accepts, the engine runs locally only.", []),
     "tts": (896, 388, "Sprachausgabe", "Speech output", ":31002 → :31012", "",

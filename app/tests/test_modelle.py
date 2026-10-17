@@ -173,6 +173,11 @@ class VllmArgs(unittest.TestCase):
                     modelle.vllm_args(kat, revision="a" * 40)   # the other kinds run in their own services
                 continue
             rev = kat["revision"] or "a" * 40
+            if modelle.docker_bild(kat):          # an engine in Docker answers only on its socket, never natively
+                with self.assertRaises(modelle.Fehler):
+                    modelle.vllm_args(kat, revision=rev)
+                self.assertNotIn("--trust-remote-code", modelle.vllm_args(kat, revision=rev, uds=modelle.DOCKER_SOCK))
+                continue
             self.assertNotIn("--trust-remote-code", modelle.vllm_args(kat, revision=rev))
 
     def test_revision_and_port_rules(self):

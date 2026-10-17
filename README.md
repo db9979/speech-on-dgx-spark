@@ -40,6 +40,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.762** Measure Qwen3.8 Flash Next in Docker (only on tars, no network, measuring only for now)
 - **V01.0.761** More precise and faster, package C: simple things answered at once, faster web search, extended answer check, measuring the word choice
 - **V01.0.760** More precise and faster, package B: a fixed tool list per kind of question, trim a large memory
 - **V01.0.759** Fix: Settings without "/api/mfa 403" for admin profiles
@@ -49,7 +50,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.755** More precise and faster: times per kind of question, names for listening, units and abbreviations spoken in full
 - **V01.0.754** iPhone app: review code for Apple's review and demo "Look without a Spark"
 - **V01.0.753** Fix: technical page "Prepare" follows the code of .752 again
-- **V01.0.752** Remote control: follow-ups like "Bring the Terminal to the front" or "Again" go to the computer named just before
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

@@ -147,6 +147,13 @@ if [ "$gpu_needed" = 1 ]; then
   command -v nvidia-smi >/dev/null || die "nvidia-smi not found; is the NVIDIA driver installed? (panel on another computer: --mode panel --modelle <dgx>)"
   nvidia-smi --query-gpu=name --format=csv,noheader | head -1 | grep -qi gb10 \
     || warn "GPU is not a GB10: $(nvidia-smi --query-gpu=name --format=csv,noheader | head -1)"
+  # Docker only for model engines (Dominik 2026-10-17 „2a“): the one DGX OS brings; this script never installs or
+  # changes it, it only says whether a model in Docker (modelle.DOCKER, Qwen3.8 Flash Next) can be measured
+  if command -v docker >/dev/null && docker info --format '{{json .Runtimes}}' 2>/dev/null | grep -q nvidia; then
+    echo "Docker with the NVIDIA runtime found (only for models in Docker)"
+  else
+    warn "Docker with the NVIDIA runtime not found: models in Docker (Qwen3.8 Flash Next) cannot be measured"
+  fi
 fi
 
 # Spark teilen: the panel computer (Raspberry Pi 5 or another) needs a 64-bit system and Python 3.11 or newer; the

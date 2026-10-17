@@ -390,6 +390,7 @@ Speech recognition and speech output as their own services, ahead of everything 
 | `app/bild_server.py` | Bilder malen: the image service. |
 | `app/bildmodell.py` | Bilder malen: the one list of the image models, where they lie and how they are fetched and checked. |
 | `app/common.py` | Shared helpers for the ASR and TTS services: config, model state, request stats. |
+| `app/dockertor.py` | Docker-Tor: puts an engine in Docker on 127.0.0.1. |
 | `app/einordnung.py` | Einordnung mit Wahrscheinlichkeit, the shared rules of a question (System One): the panel's systemone.py builds questions with them, and the LLM-Tor (llm_tor … |
 | `app/llm_tor.py` | LLM-Tor: the one door to the language model this installation runs itself. |
 | `app/modelle.py` | Modell-Katalog: the models this installation runs itself, one line each in modelle.json, read only here. |
@@ -546,6 +547,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `state/doc-embed.json` | Vector model | – | no |
 | `state/doc-quotas.json` | Document quotas | – | yes |
 | `state/doc-rank.json` | Re-ranking model | – | no |
+| `state/docker-modelle` | Models in Docker: the engine's cache (kernels) and its socket, per model | – | no |
 | `state/docling.json` | Docling server: address, certificate, counts | key sealed | yes |
 | `state/esp32.json` | Speakers and firmware | partly sealed | yes |
 | `state/faelle.json` | Cases | – | yes |
@@ -3041,7 +3043,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Seal**: vault.seal turns the value into „enc1:“ and a Fernet token (encrypted and protected against change). A value already sealed stays as it is.
 5. <a id="kn-state-s5"></a>**Write atomically**: common.write_json writes into a fresh temporary file next to it, never through a link, gives it the rights of the old file (a new one is readable for the service only) and then swaps it in one step. A crash in the middle leaves the old file whole.
 6. <a id="kn-state-s6"></a>**Read**: A sealed value is opened with the key. If the key does not fit (backup from another Spark), an empty value comes back and the account has to be entered again. Older unsealed values are read and sealed the next time they are saved.
-7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 32), otherwise the line gives its reason (dateien.STATE_LOCAL, 74). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
+7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 32), otherwise the line gives its reason (dateien.STATE_LOCAL, 75). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
 8. <a id="kn-state-s8"></a>**Move backup?**: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup.
 9. <a id="kn-state-s9"></a>**Fine when restoring?**: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays.
 10. <a id="kn-state-s10"></a>**Put in place with a way back**: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back.
@@ -3052,7 +3054,7 @@ flowchart TD
 #### Numbers (from the code)
 
 - **32** files in every backup ([step 7](#kn-state-s7))
-- **74** files and folders that stay out with a reason ([step 7](#kn-state-s7))
+- **75** files and folders that stay out with a reason ([step 7](#kn-state-s7))
 - **8 MB** largest file when restoring ([step 9](#kn-state-s9))
 - **12** characters the move password has at least ([step 8](#kn-state-s8))
 

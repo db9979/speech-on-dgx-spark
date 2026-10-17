@@ -2,7 +2,7 @@
 installation runs itself, one line each in modelle.json, read only here.
 
 Stage E0 measures before anything switches: `sudo speech-spark modelle messen [llm] [sehen] [fp8] [gemma] [kolibri] [vl30]
-[dspark]` stops the
+[dspark] [flash]` stops the
 qwen38 lanes for a while (with a Wartungspause), starts one catalog model at a time natively with vLLM on
 127.0.0.1:MESS_PORT and measures it with fixed German questions, one tool call and fixed test pictures, then
 starts qwen38 again. The result goes to STATE/modelle-messung.json and into the journal ("modelle:" lines with
@@ -23,7 +23,11 @@ Hugging Face cache (SHA-256 for large files, the git blob hash for small ones).
 Command line (as the panel's service user, from speech-spark.sh): liste · feld <id> repo|revision · messliste <was …> · vorbereiten <id> ·
 pruefen <id> [revision] · vllm-args <id> [--port N] [--revision R] [--ohne-mtp] · messen-lauf <id> [--port N]
 [--einheit unit] [--revision R] · ergebnis · venv <id>|llm|sehen · start-args llm|sehen (engine.sh) · signatur llm|sehen
-(install.sh).
+(install.sh) · docker-bild <id> · docker-args <id> --revision R --name N --uid U --gid G [--ohne-mtp] (mess_docker).
+
+An entry with a Docker recipe (vllm "docker", DOCKER) runs as a container only while it is measured (Dominik
+2026-10-17: Docker only on tars, only for model engines): pinned image, no network, its socket put on 127.0.0.1 by
+dockertor.py; switching to it is the next stage.
 
 Stage E2 starts the own language model: speech-spark-llm (engine.sh llm) and, on demand, speech-spark-sehen
 (engine.sh sehen) run `vllm serve` with start_args(): config llm.modell / llm.sehen_modell, a pinned commit only
@@ -60,7 +64,7 @@ MESSEN = ("immer", "auf_wunsch")
 ANTEIL_MAX = 0.80
 MESS_PORT = 31016
 VLLM_KEYS = ("reasoning_parser", "tool_call_parser", "mtp", "max_seqs", "quantization", "bilder_pro_frage", "kv_cache_dtype", "entwurf",
-             "venv")
+             "venv", "docker")
 VENVS = ("llm", "kolibri")       # $PREFIX/venv-<name>: venv-llm (install.sh --llm), venv-kolibri (install.sh --kolibri)
 KV = ("fp8",)
 # speculative decoding with a helper model (vllm "entwurf"): the method and its fixed extra settings for vLLM
@@ -75,13 +79,36 @@ REPO = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,95}/[A-Za-z0-9][A-Za-z0-9._-]{0
 REV = re.compile(r"^[0-9a-f]{40}$")
 ID = re.compile(r"^[a-z0-9][a-z0-9.-]{1,47}$")
 PARSER = re.compile(r"^[a-z0-9_]{2,32}$")
-QUANT = ("fp8",)
+QUANT = ("fp8", "modelopt_mixed")
 CHAT = "/v1/chat/completions"   # the engine itself on its measuring port, never the panel's model (llm.py)
 GESUND_S = 1200                  # an engine has this long to load (first start compiles kernels)
 # the first start compiles CUDA kernels for the GB10 (FlashInfer, torch); unbounded it runs one compiler (cicc, about
 # 6 GB each) per CPU core at once and fills the unified memory (Dominik 2026-10-15: OOM kill of cicc while measuring).
 # The engine units and the measurement take these; the compiled kernels stay in the cache under HOME, so it is once.
 KOMPILIEREN = {"MAX_JOBS": "4", "NVCC_THREADS": "1", "TORCHINDUCTOR_COMPILE_THREADS": "4"}
+# Docker only on the model computer and only for a model engine (Dominik 2026-10-17 „1a 2a 3a“, Richtlinie Teil 1):
+# a model whose engine needs a community image (vllm "docker": the recipe's name). The image is pinned by its digest,
+# the container has no network at all (the engine answers on a Unix socket in its own folder, dockertor.py puts that
+# on 127.0.0.1), the Hugging Face cache is read-only, the only writable folder is its own cache under STATE, no
+# capabilities, no new privileges, the panel's user inside. The flags and settings come from the model card, fixed
+# here; nothing of them comes from the panel or the model. Stage 1: measured only (wechsel_pruefen says "docker").
+DOCKER = {"b12x": {
+    "image": "eugr/spark-vllm-b12x@sha256:03a956544e9f9b4b7ba91690469fbe7848bdbef29a7d2e0f5788368467bb3595",
+    "umgebung": {"VLLM_PLE_TABLE_MEMORY": "disk", "B12X_DISK_BACKEND": "io_uring", "CUTE_DSL_ARCH": "sm_121a",
+                 "SAFETENSORS_FAST_GPU": "1", "VLLM_WORKER_MULTIPROC_METHOD": "spawn", "VLLM_SSM_CONV_STATE_LAYOUT": "DS",
+                 "VLLM_USE_AOT_COMPILE": "1", "VLLM_USE_MEGA_AOT_ARTIFACT": "1", "VLLM_USE_V2_MODEL_RUNNER": "1",
+                 "B12X_POLICY_MODE": "auto", "VLLM_MXFP8_LM_HEAD": "1", "VLLM_B12X_MOE_FP4_LAYER_MAX_INPUT_SCALE": "w13",
+                 "VLLM_B12X_MOE_FP4_FORCE_A16": "1", "B12X_W4A16_A4_PREFILL": "1",
+                 "VLLM_ENGINE_READY_TIMEOUT_S": "3600"},     # the first start loads and tunes for well over 10 minutes
+    "args": ["--dtype", "bfloat16", "--block-size", "16", "--load-format", "b12x", "--enable-prefix-caching",
+             "--enable-chunked-prefill", "--mamba-cache-mode", "align", "--max-num-batched-tokens", "4096",
+             "--gdn-decode-kernel", "b12x", "--linear-backend", "b12x", "--moe-backend", "b12x",
+             "--mm-encoder-tp-mode", "data", "--compilation-config", '{"pass_config":{"fuse_act_quant":true}}'],
+    "laden_s": 3600}}
+IMAGE = re.compile(r"^[a-z0-9][a-z0-9._/-]{0,127}@sha256:[0-9a-f]{64}$")
+DOCKER_NAME = re.compile(r"^speech-spark-[a-z0-9-]{1,40}$")
+DOCKER_ORDNER = os.path.join(STATE, "docker-modelle")   # <id>/cache (writable) and <id>/sock (the engine's socket)
+DOCKER_SOCK = "/sock/engine.sock"                          # inside the container
 
 # fixed German questions (TTFT and tokens per second), one tool call, two test pictures
 FRAGEN = ("Erkläre in vier Sätzen, warum der Himmel blau ist.",
@@ -176,6 +203,8 @@ def _pruefe_vllm(m):
         raise Fehler("kv_cache_dtype")
     if v.get("venv", "llm") not in VENVS:
         raise Fehler("venv")
+    if "docker" in v and (v["docker"] not in DOCKER or m["art"] != "llm" or "venv" in v or "entwurf" in v):
+        raise Fehler("docker")
     if "entwurf" in v:
         e = v["entwurf"]
         if not isinstance(e, dict) or set(e) != {"methode", "repo", "revision", "tokens"} or e["methode"] not in ENTWURF:
@@ -382,31 +411,36 @@ def wahl_zeilen(art, kat=None):
 
 def messliste(was, kat=None):
     """The ids to measure, in catalog order: was = words llm, sehen (the entries marked "immer"), fp8, gemma, kolibri,
-    vl30, dspark (one entry each that is measured only on request); no word means llm and sehen."""
+    vl30, dspark (one entry each that is measured only on request), flash (Qwen3.8 Flash Next in Docker at both memory
+    shares); no word means llm and sehen."""
     kat = katalog() if kat is None else kat
     was = list(was) or ["llm", "sehen"]
-    wunsch = {"fp8": "qwen38-27b-fp8", "gemma": "gemma-4-26b-a4b", "kolibri": "kolibri-1-nvfp4", "vl30": "qwen3-vl-30b-a3b-fp8",
-              "dspark": "qwen38-27b-nvfp4-dspark"}
-    wunsch.update({i: i for i, m in kat.items() if m.get("eigen")})     # stage E5: an own model by its id
+    wunsch = {"fp8": ("qwen38-27b-fp8",), "gemma": ("gemma-4-26b-a4b",), "kolibri": ("kolibri-1-nvfp4",),
+              "vl30": ("qwen3-vl-30b-a3b-fp8",), "dspark": ("qwen38-27b-nvfp4-dspark",),
+              "flash": ("qwen38-flash-next-fp4", "qwen38-flash-next-fp4-065")}     # Docker, both memory shares
+    wunsch.update({i: (i,) for i, m in kat.items() if m.get("eigen") or docker_bild(m)})   # an own model by its id
     if any(w not in ("llm", "sehen") and w not in wunsch for w in was):
         raise Fehler("was")
-    ids = [w for w in (wunsch.get(x) for x in was) if w]
+    ids = [i for x in was for i in wunsch.get(x, ())]
     return [i for i, m in kat.items() if m["engine"] == "vllm" and (i in ids or (m["art"] in was and m["messen"] == "immer"))]
 
 
-def vllm_args(m, port=MESS_PORT, revision="", mtp=True):
+def vllm_args(m, port=MESS_PORT, revision="", mtp=True, uds=""):
     """The arguments after `vllm serve`: only from the catalog's checked fields, never trust_remote_code, always
-    on 127.0.0.1. revision may stand in only for an entry without one (a measurement after the download)."""
+    on 127.0.0.1 (an engine in Docker: only on its Unix socket uds, and only there). revision may stand in only for
+    an entry without one (a measurement after the download)."""
     pruefe_eintrag(m)
     if m["engine"] != "vllm":
         raise Fehler("engine")
+    if bool(m["vllm"].get("docker")) != bool(uds) or uds not in ("", DOCKER_SOCK):
+        raise Fehler("docker")
     rev = m["revision"] or revision
     if not REV.match(rev or "") or (m["revision"] and revision and revision != m["revision"]):
         raise Fehler("revision")
     if isinstance(port, bool) or not isinstance(port, int) or not 31000 <= port <= 31099:
         raise Fehler("port")
     v = m["vllm"]
-    a = [m["repo"], "--revision", rev, "--host", "127.0.0.1", "--port", str(port),
+    a = [m["repo"], "--revision", rev, *(["--uds", uds] if uds else ["--host", "127.0.0.1", "--port", str(port)]),
          "--served-model-name", m["id"], "--max-model-len", str(m["kontext"]),
          "--gpu-memory-utilization", f"{m['anteil']:.2f}", "--max-num-seqs", str(v.get("max_seqs", 8)),
          "--generation-config", "vllm", "--no-enable-flashinfer-autotune",
@@ -432,7 +466,51 @@ def vllm_args(m, port=MESS_PORT, revision="", mtp=True):
         e = v["entwurf"]
         a += ["--speculative-config", json.dumps({"method": e["methode"], "model": e["repo"], "revision": e["revision"],
                                                   "num_speculative_tokens": e["tokens"], **ENTWURF[e["methode"]]})]
-    return a
+    return a + (DOCKER[v["docker"]]["args"] if uds else [])
+
+
+def docker_bild(m):
+    """The pinned image of an entry that runs in Docker, "" for every other one."""
+    d = DOCKER.get((m.get("vllm") or {}).get("docker")) if m["engine"] == "vllm" else None
+    if d is None:
+        return ""
+    if not IMAGE.match(d["image"]):
+        raise Fehler("docker")
+    return d["image"]
+
+
+def _id_nr(x):
+    if isinstance(x, bool) or not isinstance(x, int) or not 1 <= x <= 65533:
+        raise Fehler("nutzer")
+    return str(x)
+
+
+def docker_args(m, revision, name, uid, gid, mtp=True, hf_home=None, ordner=None):
+    """The arguments after `docker` for an entry with a recipe (DOCKER): `run` of the pinned image, no network, only
+    the panel's user, no capabilities, the Hugging Face cache read-only, its own cache and socket folders, the card's
+    settings, then `vllm serve` with vllm_args() on the socket. Root runs it (speech-spark.sh mess_docker)."""
+    bild = docker_bild(m)
+    if not bild:
+        raise Fehler("docker")
+    if not DOCKER_NAME.match(str(name)):
+        raise Fehler("name")
+    d = DOCKER[m["vllm"]["docker"]]
+    hf = os.path.realpath(hf_home or os.environ.get("HF_HOME") or os.path.expanduser("~/.cache/huggingface"))
+    base = os.path.join(os.path.realpath(ordner or DOCKER_ORDNER), m["id"])
+    umgebung = {"HF_HOME": "/hf", "HOME": "/cache", "HF_HUB_OFFLINE": "1", "VLLM_NO_USAGE_STATS": "1", "DO_NOT_TRACK": "1",
+                **KOMPILIEREN, **d["umgebung"]}
+    a = ["run", "--rm", "--name", name, "--network", "none", "--gpus", "all", "--user", f"{_id_nr(uid)}:{_id_nr(gid)}",
+         "--cap-drop", "ALL", "--security-opt", "no-new-privileges", "--shm-size", "16g",
+         "--ulimit", "memlock=-1", "--ulimit", "stack=67108864",
+         "-v", f"{hf}:/hf:ro", "-v", f"{base}/cache:/cache", "-v", f"{base}/sock:/sock"]
+    for k, v in umgebung.items():
+        a += ["-e", f"{k}={v}"]
+    return a + ["--entrypoint", "vllm", bild, "serve"] + vllm_args(m, MESS_PORT, revision, mtp, uds=DOCKER_SOCK)
+
+
+def laden_frist(m):
+    """Seconds an engine has to load: the recipe's for one in Docker, else GESUND_S."""
+    return DOCKER[m["vllm"]["docker"]]["laden_s"] if docker_bild(m) else GESUND_S
 
 
 def venv(m):
@@ -528,6 +606,8 @@ def rolle(art, cfg, kat=None):
     port = c.get(port_feld, port_std)
     if m["engine"] != "vllm" or m["art"] != art or isinstance(port, bool) or not isinstance(port, int) or port == MESS_PORT and art != "llm":
         raise Fehler("art")
+    if docker_bild(m):        # stage 1: an engine in Docker is measured only, never started by speech-spark-llm
+        raise Fehler("docker")
     return (_platz(m, cfg) if art == "llm" else m), port
 
 
@@ -941,7 +1021,7 @@ def messen_lauf(m, port=MESS_PORT, einheit="", log=print):
     r = {"art": m["art"], "repo": m["repo"], "anteil": m["anteil"], "kontext": m["kontext"], "zeit": int(time.time()),
          "frei_start_gib": round(frei_start, 1)}
     try:
-        r["laden_s"] = warte_bereit(m, port, einheit)
+        r["laden_s"] = warte_bereit(m, port, einheit, laden_frist(m))
         r["frei_geladen_gib"] = round(mem_available_gib(), 1)
         r["belegt_gib"] = round(frei_start - r["frei_geladen_gib"], 1)
         log(f"modelle: messung {mid} bereit nach {r['laden_s']} s, belegt {r['belegt_gib']} GiB")
@@ -1230,6 +1310,9 @@ def wechsel_pruefen(art, mid, cfg, total_gib, lanes=(), kat=None, messung=None):
         if m["engine"] != "vllm":
             raise Fehler("engine")
         fest_revision(m, messung)
+        if docker_bild(m):    # stage 1: measure first („Ausprobieren“); switching to it comes with stage 2
+            messung = read_json(MESSUNG, {}) if messung is None else messung
+            raise Fehler("docker" if ((messung.get("modelle") or {}).get(mid) or {}).get("ok") else "ungeprueft")
         if art == "llm" and not cfg.get("llm", {}).get("enabled"):
             raise Fehler("aus")
     elif not m.get("wahl"):
@@ -1411,7 +1494,7 @@ def eigen_ok(m):
     pruefe_eintrag(m)
     if not (m.get("eigen") is True and str(m["id"]).startswith("eigen-") and m["engine"] == "vllm"
             and m["art"] in VLLM_ARCH and REV.match(m["revision"]) and m.get("messen") == "auf_wunsch"
-            and m.get("vllm", {}).get("venv", "llm") == "llm" and "quantization" not in m.get("vllm", {})):
+            and m.get("vllm", {}).get("venv", "llm") == "llm" and not {"quantization", "docker"} & set(m.get("vllm", {}))):
         raise Fehler("eigen")
     return m
 
@@ -1655,6 +1738,15 @@ def cli(args, log=print):
         if cmd == "vllm-args":
             for a in vllm_args(eintrag(args[1]), int(_opt(args, "--port", MESS_PORT)), _opt(args, "--revision"),
                                mtp="--ohne-mtp" not in args):
+                log(a)
+            return 0
+        if cmd == "docker-bild":
+            log(docker_bild(eintrag(args[1])))
+            return 0
+        if cmd == "docker-args":
+            m = eintrag(args[1])
+            for a in docker_args(m, _opt(args, "--revision"), _opt(args, "--name"), int(_opt(args, "--uid")),
+                                 int(_opt(args, "--gid")), mtp="--ohne-mtp" not in args):
                 log(a)
             return 0
         if cmd == "vorbereiten":
