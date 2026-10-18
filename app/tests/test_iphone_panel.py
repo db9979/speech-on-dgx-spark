@@ -305,6 +305,26 @@ class Things(unittest.TestCase):
         self.assertEqual(b.delete(f"/api/profile/memory/{ids['Hat einen Hund']}").json()["removed"], 0)
         self.assertIn("Hat einen Hund", {f["text"] for f in profiles.memory(uid)})
 
+    def test_left_out_folders_from_the_app(self):
+        """Ordner auslassen, Stufe C: the app shows the list, adds and removes name rules and lets folders in again
+        with the release of Eigene Dokumente; the folder tree stays in the browser."""
+        import auslassen
+        c, a = self.app("Theodor")
+        uid = self.uid("Theodor")
+        self.assertEqual(a.get("/api/profile/auslassen").status_code, 200)
+        r = a.post("/api/profile/auslassen", json={"name": "Archiv", "probe": True})
+        self.assertEqual((r.status_code, r.json()["docs"]), (200, 0), r.text)
+        self.assertEqual(a.post("/api/profile/auslassen", json={"name": "Archiv"}).status_code, 200)
+        self.assertEqual(auslassen.load(uid)["names"], ["Archiv"])
+        self.assertEqual(a.delete("/api/profile/auslassen", params={"name": "Archiv"}).status_code, 200)
+        self.assertEqual(auslassen.load(uid)["names"], [])
+        self.assertEqual(a.get("/api/profile/auslassen/tree?ort=pc").status_code, 401)
+        helpers.set_config(deny={"documents": [uid]})
+        try:
+            self.assertEqual(a.get("/api/profile/auslassen").status_code, 401)
+        finally:
+            helpers.set_config(deny={})
+
 
 if __name__ == "__main__":
     unittest.main()

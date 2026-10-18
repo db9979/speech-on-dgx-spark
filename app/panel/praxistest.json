@@ -1800,6 +1800,13 @@
 "titel": "Ordner auslassen: reMarkable und Begleiter",
 "text": "A: Begleiter auf dem Mac und unter Windows auf die neue Version bringen, Teil „Ordner Spark-Wissen“ an. B: In Spark-Wissen einen Unterordner „Alt“ mit einer Datei anlegen, warten bis sie unter Ich → Dokumente steht (Quelle PC · Spark-Wissen · /Alt). C: Ich → Dokumente → Ausgelassene Ordner: Ort „PC · Spark-Wissen“ wählen, der Baum zeigt „Alt“ (nach höchstens 10 Minuten); „Auslassen“ → die Datei verschwindet sofort aus der Suche, im Ordner am PC bleibt sie. D: Eine neue Datei in „Alt“ legen: sie kommt nicht ins Wissen. E: „Wieder zulassen“: nach kurzer Zeit sind beide Dateien wieder da. F: reMarkable: einen gewählten Ordner mit Unterordner nehmen, den Unterordner im Baum „reMarkable“ auslassen; seine Notizbücher verschwinden aus Ich → Dokumente, auf dem reMarkable bleibt alles. G: Namensregel „Alt*“ gilt auch am PC und auf dem reMarkable.",
 "thread": "Ordner ausschließen"
+},
+{
+"id": "P281",
+"v": 778,
+"titel": "Ordner auslassen in der iPhone-App",
+"text": "A: iPhone-App aus TestFlight aktualisieren. B: Meine Sachen → Dokumente → ganz unten „Ausgelassene Ordner“: die Liste stimmt mit Ich → Dokumente → Ausgelassene Ordner im Panel überein. C: Namensregel „Archiv“ hinzufügen: die Rückfrage nennt die Zahl der Dokumente, danach stehen sie nicht mehr in der Liste der Dokumente. D: Die Regel wegwischen: sie verschwindet auch im Panel. E: Bei einem ausgelassenen Ordner „Wieder zulassen“: nach dem nächsten Abgleich sind seine Dokumente wieder da. F: Der Hinweis zum Ordnerbaum öffnet das Panel an der richtigen Stelle. G: Android: Ich → Dokumente zeigt „Ausgelassene Ordner“ mit Ordnerbaum.",
+"thread": "Ordner ausschließen"
 }
 ]
 }

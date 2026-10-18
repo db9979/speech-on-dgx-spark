@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.778** iPhone app: see left-out folders, let them in again and keep name rules
 - **V01.0.777** Left-out folders also for the reMarkable and the companion's folder Spark-Wissen (new companion version)
 - **V01.0.776** Pictures and music: one queue, never two models at once, a notice with place and waiting time
 - **V01.0.775** Fix: no engine starts next to a model measurement anymore; measuring Qwen3.6 35B A3B
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.771** Leave out folders: unimportant folders under Me → Documents → Left-out folders are no longer read and leave the search at once
 - **V01.0.770** Fix: measuring models paints alongside only when enough memory stays free
 - **V01.0.769** Status → Models: memory bar colored per model, tiles in the same color
-- **V01.0.768** Knowledge book stage A: the search check measures multi-document questions (yardstick for the knowledge book)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

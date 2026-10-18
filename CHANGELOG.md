@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.778** · 2026-10-18 · Ordner auslassen, Stufe C: die iPhone-App zeigt unter Meine Sachen → Dokumente → Ausgelassene Ordner die Liste, lässt Ordner wieder zu und legt Namensregeln an oder entfernt sie; Android zeigt die Panel-Seite samt Ordnerbaum
 - **V01.0.777** · 2026-10-18 · Ordner auslassen, Stufe B: auch reMarkable-Ordner und Unterordner von „Spark-Wissen“ am PC lassen sich unter Ich → Dokumente → Ausgelassene Ordner auslassen; der reMarkable-Abgleich liest sie nicht, der Begleiter (neue Version Mac und Windows) schickt nichts von dort und nennt zu jeder Datei ihren Ordner, das Panel lehnt solche Dateien ab; schon Gelesenes verlässt sofort die Suche
 - **V01.0.776** · 2026-10-18 · Schwere Aufträge: Bilder und Lieder in einer Warteschlange, immer nur ein Modell geladen (Sperre auch auf dem Modell-Rechner), Warten auf Speicher statt Absage, fester Hinweis mit Platz und Dauer
 - **V01.0.775** · 2026-10-18 · Fix: keine Engine startet, solange eine Modell-Messung läuft (die Sprachausgabe belegte nach einem Neustart während der Flash-Next-Messung 83 statt 5 GiB, das Sprachmodell fand keinen Platz); Qwen3.6 35B A3B NVFP4 im Katalog, messen mit `modelle messen qwen36` (mit und ohne MTP)

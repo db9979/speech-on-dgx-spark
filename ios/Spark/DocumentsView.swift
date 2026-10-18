@@ -211,7 +211,10 @@ struct DocumentsView: View {
             if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
             if let n = m.note { Text(verbatim: n).foregroundStyle(.secondary) }
             if !m.off && !m.loading {
-                Section { NavigationLink("Schalter für Dokumente") { DocSwitchesView() } }
+                Section {
+                    NavigationLink("Schalter für Dokumente") { DocSwitchesView() }
+                    NavigationLink("Ausgelassene Ordner") { LeftOutView() }
+                }
             }
         }
         .environment(\.editMode, $edit)
@@ -574,6 +577,121 @@ struct DocSwitchesView: View {
             self.error = error.localizedDescription
             due = !value
         }
+    }
+}
+
+/// Ich → Dokumente → Ausgelassene Ordner (auslassen.py): folders and names the Spark never reads. The app shows the
+/// list, lets a folder in again and adds or removes name rules; leaving out one folder happens in the panel's tree.
+/// What the Spark sends is shown as text, never as a link or a command.
+struct LeftOutView: View {
+    struct Folder: Identifiable {
+        let ort: String
+        let path: String
+        let place: String
+        var id: String { ort + "\u{0}" + path }
+    }
+
+    @State private var folders: [Folder] = []
+    @State private var names: [String] = []
+    @State private var always: [String] = []
+    @State private var loaded = false
+    @State private var newName = ""
+    @State private var askName = ""
+    @State private var askDocs = 0
+    @State private var asking = false
+    @State private var note: String?
+    @State private var error: String?
+
+    var body: some View {
+        Form {
+            Section {
+                Text("Ordner, die der Spark nie liest. Was schon gelesen war, verschwindet sofort aus der Suche. Am Ort ändert sich nichts; „Wieder zulassen“ liest neu.")
+                    .font(.callout).foregroundStyle(.secondary)
+            }
+            Section {
+                if loaded && folders.isEmpty { Text("Noch keiner.").foregroundStyle(.secondary) }
+                ForEach(folders) { f in
+                    LabeledContent {
+                        Button("Wieder zulassen") { Task { await letIn(["ort": f.ort, "path": f.path]) } }
+                    } label: {
+                        Text(verbatim: f.path)
+                        Text(verbatim: f.place)
+                    }
+                }
+            } header: { Text("Ausgelassene Ordner") } footer: {
+                Text(SparkAPI.way(String(localized: "Einen Ordner auslassen: im Panel unter Ich → Dokumente → Ausgelassene Ordner im Ordnerbaum.")))
+            }
+            Section {
+                ForEach(names, id: \.self) { n in
+                    Text(verbatim: n).swipeActions {
+                        Button(role: .destructive) { Task { await letIn(["name": n]) } } label: { Label("Entfernen", systemImage: "trash") }
+                    }
+                }
+                HStack {
+                    TextField("Name, z. B. Archiv oder Alt*", text: $newName)
+                        .textInputAutocapitalization(.never).autocorrectionDisabled()
+                    Button("Hinzufügen") { Task { await probe() } }
+                        .disabled(newName.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
+            } header: { Text("Ordnernamen, die überall ausgelassen werden") } footer: {
+                Text("Groß und klein egal, * am Ende heißt „beginnt mit“.")
+            }
+            if !always.isEmpty {
+                Section { Text(verbatim: always.joined(separator: " · ")).foregroundStyle(.secondary) } header: { Text("Immer ausgelassen") }
+            }
+            if let n = note { Text(verbatim: n).foregroundStyle(.secondary) }
+            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+        }
+        .navigationTitle("Ausgelassene Ordner")
+        .task { await load() }
+        .refreshable { await load() }
+        .confirmationDialog("Überall auslassen?", isPresented: $asking, titleVisibility: .visible) {
+            Button("Auslassen", role: .destructive) { Task { await add(askName) } }
+        } message: {
+            Text("Dokumente, die sofort aus der Suche verschwinden: \(askDocs). Am Ort bleibt alles.")
+        }
+    }
+
+    private func load() async {
+        guard let api = SparkAPI.current else { return }
+        do {
+            let d = try await api.object("GET", "api/profile/auslassen")
+            folders = ((d["folders"] as? [[String: Any]]) ?? []).compactMap { f in
+                guard let o = f["ort"] as? String, let p = f["path"] as? String else { return nil }
+                return Folder(ort: o, path: p, place: (f["place"] as? String) ?? "")
+            }
+            names = (d["names"] as? [String]) ?? []
+            always = (d["always"] as? [String]) ?? []
+            loaded = true
+            error = nil
+        } catch { self.error = error.localizedDescription }
+    }
+
+    private func probe() async {
+        let v = newName.trimmingCharacters(in: .whitespaces)
+        do {
+            let r = try await SparkAPI.current?.object("POST", "api/profile/auslassen", body: ["name": v, "probe": true]) ?? [:]
+            askName = v
+            askDocs = (r["docs"] as? Int) ?? 0
+            if askDocs > 0 { asking = true } else { await add(v) }
+        } catch { self.error = error.localizedDescription }
+    }
+
+    private func add(_ name: String) async {
+        do {
+            let r = try await SparkAPI.current?.object("POST", "api/profile/auslassen", body: ["name": name]) ?? [:]
+            newName = ""
+            note = String(localized: "Ausgelassen, Dokumente aus der Suche: \((r["removed"] as? Int) ?? 0)")
+            await load()
+        } catch { self.error = error.localizedDescription }
+    }
+
+    private func letIn(_ q: [String: String]) async {
+        do {
+            _ = try await SparkAPI.current?.call("DELETE", "api/profile/auslassen", query: q)
+            note = String(localized: "Wieder zugelassen. Der nächste Abgleich liest den Ordner neu.")
+            await load()
+        } catch { self.error = error.localizedDescription }
     }
 }
 

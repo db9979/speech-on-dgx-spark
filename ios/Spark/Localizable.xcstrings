@@ -1,6 +1,146 @@
 {
   "sourceLanguage": "de",
   "strings": {
+    "Ausgelassene Ordner": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Left-out folders"
+          }
+        }
+      }
+    },
+    "Ordner, die der Spark nie liest. Was schon gelesen war, verschwindet sofort aus der Suche. Am Ort ändert sich nichts; „Wieder zulassen“ liest neu.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Folders the Spark never reads. What was already read leaves the search at once. Nothing changes at the place; \"Let in again\" reads anew."
+          }
+        }
+      }
+    },
+    "Noch keiner.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "None yet."
+          }
+        }
+      }
+    },
+    "Wieder zulassen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Let in again"
+          }
+        }
+      }
+    },
+    "Einen Ordner auslassen: im Panel unter Ich → Dokumente → Ausgelassene Ordner im Ordnerbaum.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To leave out a folder: in the panel under Me → Documents → Left-out folders, in the folder tree."
+          }
+        }
+      }
+    },
+    "Name, z. B. Archiv oder Alt*": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name, e.g. Archive or Old*"
+          }
+        }
+      }
+    },
+    "Ordnernamen, die überall ausgelassen werden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Folder names left out everywhere"
+          }
+        }
+      }
+    },
+    "Groß und klein egal, * am Ende heißt „beginnt mit“.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Case does not matter, * at the end means \"begins with\"."
+          }
+        }
+      }
+    },
+    "Immer ausgelassen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Always left out"
+          }
+        }
+      }
+    },
+    "Überall auslassen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave out everywhere?"
+          }
+        }
+      }
+    },
+    "Auslassen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave out"
+          }
+        }
+      }
+    },
+    "Dokumente, die sofort aus der Suche verschwinden: %lld. Am Ort bleibt alles.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Documents that leave the search at once: %lld. Everything stays at the place."
+          }
+        }
+      }
+    },
+    "Ausgelassen, Dokumente aus der Suche: %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Left out, documents out of the search: %lld"
+          }
+        }
+      }
+    },
+    "Wieder zugelassen. Der nächste Abgleich liest den Ordner neu.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Let in again. The next reading reads the folder anew."
+          }
+        }
+      }
+    },
     "Grau: System und Reserve · heller: bei Bedarf": {
       "localizations": {
         "en": {
