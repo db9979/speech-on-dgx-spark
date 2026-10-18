@@ -25,6 +25,23 @@ RANK = {"klein": ("onnx/model_qint8_arm64.onnx", 384), "gross": ("onnx/model_qua
 REPO_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,95}/[A-Za-z0-9][A-Za-z0-9._-]{0,95}")
 REV_RE = re.compile(r"[0-9a-f]{40}")
 RANK_TEXTS = 40
+# Pi stabil (Dominik 2026-10-18 "der Sprachassistent muss immer Vorrang haben"): the worker is a child of the panel and
+# shares its CPU limit (install.sh CPUQuota), so it computes on at most half of the cores and only in time nobody else wants
+THREADS = max(1, (os.cpu_count() or 2) // 2)
+
+
+def hinten(idle):
+    """Background work: nice 10, and with idle the Linux class SCHED_IDLE (the catch-up of thousands of passages runs
+    only on cores the panel, speech and everything else leave free; threads started later inherit both)."""
+    try:
+        os.nice(10)
+    except OSError:
+        pass
+    if idle and hasattr(os, "SCHED_IDLE"):
+        try:
+            os.sched_setscheduler(0, os.SCHED_IDLE, os.sched_param(0))
+        except OSError:
+            pass
 
 
 def say(d):
@@ -63,10 +80,7 @@ def hole(repo, rev, f):
 
 def rank_main(size, repo, rev):
     """The cross-encoder: question and passage read together, one score per passage."""
-    try:
-        os.nice(10)
-    except OSError:
-        pass
+    hinten(False)        # answers a question someone waits for: nice only
     try:
         import numpy as np
         import onnxruntime as ort
@@ -78,7 +92,7 @@ def rank_main(size, repo, rev):
         tok.enable_truncation(most)
         tok.enable_padding()
         opts = ort.SessionOptions()
-        opts.intra_op_num_threads = 4
+        opts.intra_op_num_threads = THREADS
         opts.inter_op_num_threads = 1
         sess = ort.InferenceSession(model, opts, providers=["CPUExecutionProvider"])
         names = {i.name for i in sess.get_inputs()}
@@ -109,10 +123,7 @@ def main():
         say({"ready": False, "error": "usage: embed_worker.py embed REPO COMMIT | rank klein|gross REPO COMMIT"})
         return
     repo, rev = a[1], a[2]
-    try:
-        os.nice(10)      # background work: the panel, speech and the language model go first
-    except OSError:
-        pass
+    hinten(True)         # background work: the panel, speech and the language model go first
     try:
         import numpy as np
         import onnxruntime as ort
@@ -123,7 +134,7 @@ def main():
         tok.enable_truncation(MAX_TOKENS)
         tok.enable_padding()
         opts = ort.SessionOptions()
-        opts.intra_op_num_threads = 4
+        opts.intra_op_num_threads = THREADS
         opts.inter_op_num_threads = 1
         sess = ort.InferenceSession(paths["onnx/model_quantized.onnx"], opts, providers=["CPUExecutionProvider"])
         names = {i.name for i in sess.get_inputs()}

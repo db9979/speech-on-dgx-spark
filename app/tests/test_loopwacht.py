@@ -277,6 +277,28 @@ class Watcher(unittest.TestCase):
         self.assertIn("loopwacht.start()", serve)
 
 
+class Background(unittest.TestCase):
+    """The search's embedding worker is a child of the panel and shares its CPU limit: half of the cores at most,
+    the catch-up only in time nobody else wants (htop 2026-10-18: four threads at ~60 % during 46000 passages)."""
+
+    def test_embed_worker_computes_behind_speech(self):
+        import embed_worker
+        import subprocess
+        self.assertLessEqual(embed_worker.THREADS, max(1, (os.cpu_count() or 2) // 2))
+        src = open(embed_worker.__file__, encoding="utf-8").read()
+        self.assertNotRegex(src, r"intra_op_num_threads = \d")
+        self.assertEqual(src.count("intra_op_num_threads = THREADS"), 2)
+        self.assertIn("hinten(True)", src)
+        self.assertIn("hinten(False)", src)
+        code = ("import os, sys; sys.path.insert(0, sys.argv[1]); import embed_worker; n = os.nice(0); "
+                "embed_worker.hinten(True); print(os.nice(0) - n, getattr(os, 'SCHED_IDLE', -1) == os.sched_getscheduler(0))")
+        out = subprocess.run([sys.executable, "-c", code, os.path.dirname(embed_worker.__file__)],
+                             capture_output=True, text=True, timeout=60).stdout.split()
+        self.assertGreater(int(out[0]), 0)
+        if hasattr(os, "SCHED_IDLE"):
+            self.assertEqual(out[1], "True")
+
+
 class Limits(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

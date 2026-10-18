@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.801** · 2026-10-18 · Suche bremst den Pi nicht mehr: der Worker der Bedeutungssuche rechnet auf höchstens der Hälfte der Kerne und als SCHED_IDLE nur in freier Rechenzeit, Sprache und Panel gehen vor (htop: vier Fäden mit je 60 % beim Nachholen von 46000 Stücken)
 - **V01.0.800** · 2026-10-18 · Sprachausgabe bei mehreren gleichzeitig: Leistung messen zeigt 2 gleichzeitig, kurzen Satz und Warteschlange; schaltbar (aus): Referenz der eigenen Stimme kürzen, Decoder bündelt 2 oder 4 Stimmen, gleichen Anfang merken
 - **V01.0.799** · 2026-10-18 · Fix Eigene Dokumente: Seiten aus Wissensordnern sperren keinen Upload mehr („at most 600 pages may wait to be read“); eigene und Ordner-Seiten zählen getrennt, eigene werden zuerst gelesen, die Meldung ist deutsch und sagt, was man tun kann
 - **V01.0.798** · 2026-10-17 · OLED zeigt ein laufendes Update erzwungen: große Prozentzahl mit Balken, erst TARS, dann der Pi, auch nachts; LEDs blau; Prozent auch in Live und Steuerzentrale

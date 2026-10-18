@@ -1939,6 +1939,13 @@
 "titel": "Sprachausgabe: mehrere Stimmen gleichzeitig",
 "text": "A: Zustand → Prüfen → Leistung messen und das Ergebnis notieren (erster Ton bei 4 und bei 2 gleichzeitig, kurzer Satz bei 4, „Davon in der Warteschlange“). B: Einstellungen → Sprachausgabe → Erweitert → „Referenz der eigenen Stimme kürzen“ auf 10 s, speichern, nach dem Neustart wieder messen; Zustand → Logs (Sprachausgabe) zeigt „tts: referenz gekuerzt … s auf … s“ oder warum nicht. Die Stimme anhören: klingt sie gleich? C: „Mehrere Stimmen gleichzeitig“ auf „bis zu 4 gebündelt“, speichern (die Sprachausgabe startet neu), messen. D: „Gleichen Anfang merken“ an, messen. E: Was nichts bringt oder die Stimme verändert, wieder ausschalten.",
 "thread": "Sprachausgabe bei 4 gleichzeitigen Anfragen"
+},
+{
+"id": "P301",
+"v": 801,
+"titel": "Bedeutungssuche im Hintergrund",
+"text": "A: Auf dem Pi sudo speech-spark update. B: Während die Bedeutungssuche Stücke nachholt, zeigt htop beim embed_worker.py höchstens zwei Fäden mit Last (NI 10); die anderen Kerne bleiben frei. C: chrt -p <PID des embed_worker> zeigt SCHED_IDLE. D: Währenddessen antwortet der Sprachassistent ohne Verzögerung, Panel und Steuerzentrale bleiben flüssig.",
+"thread": "Pi stabilisieren"
 }
 ]
 }

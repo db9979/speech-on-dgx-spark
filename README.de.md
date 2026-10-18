@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.801** Die Bedeutungssuche rechnet nur noch in freier Zeit auf höchstens der Hälfte der Kerne; Sprache geht vor
 - **V01.0.800** Sprachausgabe bei mehreren gleichzeitig: genauer messen, drei Einstellungen zum Ausprobieren
 - **V01.0.799** Fix: Upload von Scans nicht mehr durch Seiten aus Wissensordnern gesperrt, eigene Dokumente zuerst gelesen
 - **V01.0.798** OLED zeigt ein laufendes Update erzwungen: große Prozentzahl mit Balken, erst TARS, dann der Pi, auch nachts; LEDs blau; Prozent auch in Live und Steuerzentrale
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.794** Fix: Selbsttest Wächter-Umgehung wieder grün
 - **V01.0.793** Modellwechsel und Start des Sprachmodells sichtbar: Schritte, Banner, Live, Satz im Chat
 - **V01.0.792** Sprachmodelle vor jedem Start geprüft, Such-Modelle nach dem Festpinnen nicht mehr abgelehnt
-- **V01.0.791** Telefon: Tschüss oder „Nein danke“ nach „Noch etwas?“ beendet das Gespräch, der Spark legt selbst auf; ohne BYE nach 8 Sekunden ohne Ton
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
