@@ -5493,7 +5493,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Aufgabenblatt zum Ankreuzen (V01.0.491, Paket D, Dominik 2b)",
-"text": "Aufgabenblatt zum Ankreuzen (V01.0.491, Paket D, Dominik 2b): Admin-Unterschalter „Aufgabenblatt zum Ankreuzen“ unter „Papier fürs reMarkable“ (chat.remarkable_tasks, aus, nie Gäste; code: app/panel/rmaufgaben.py); nach Dominiks Freigaberegel ohne eigenen Profil-Schalter: das erste Blatt holt jedes Profil selbst (Ich → reMarkable → Papier → „Aufgabenblatt schicken“ oder per Sprache), danach erneuert es sich, bis „Kann weg“ darauf angekreuzt oder es auf dem Gerät gelöscht ist. Ein lebendes PDF im Ordner „Spark/Aufgaben“ mit dem, was offen ist, je Punkt Kästchen mit festen Antworten: Aufgaben aus der Handschrift (Erinnern morgen 9 Uhr / Weg / Später, rm_todo), Gedächtnis-Einträge „vielleicht veraltet“ oder „Widerspruch“ (Stimmt / Stimmt nicht / Später, „Gedächtnis prüfen“), Vorschläge für die eigenen Einstellungen (Übernehmen / Nein). Nur für ein Admin-Profil (Rolle Admin): offene Vorschläge des Einstellungs-Assistenten außer Stufe C, U, I und P (Übernehmen / Ablehnen / Später, angekreuzt = direkt ausgeführt, Dominik 2b; Rolle und Schalter werden beim Ausführen erneut geprüft) und der Praxistest nach einem Update (die neuen Zeilen aus CHANGELOG.md, Klappt / Klappt nicht; „Klappt nich"
+"text": "Aufgabenblatt zum Ankreuzen (V01.0.491, Paket D, Dominik 2b): Admin-Unterschalter „Aufgabenblatt zum Ankreuzen“ unter „Papier fürs reMarkable“ (chat.remarkable_tasks, aus, nie Gäste; code: app/panel/rmaufgaben.py); nach Dominiks Freigaberegel ohne eigenen Profil-Schalter: das erste Blatt kommt von selbst, danach liegt immer eins da (seit V01.0.784, siehe „Immer ein Aufgabenblatt“ unten); „Aufgabenblatt schicken“ unter Ich → reMarkable → Papier oder per Sprache holt sofort eine neue Version. Ein lebendes PDF im Ordner „Spark/Aufgaben“ mit dem, was offen ist, je Punkt Kästchen mit festen Antworten: Aufgaben aus der Handschrift (Erinnern morgen 9 Uhr / Weg / Später, rm_todo), Gedächtnis-Einträge „vielleicht veraltet“ oder „Widerspruch“ (Stimmt / Stimmt nicht / Später, „Gedächtnis prüfen“), Vorschläge für die eigenen Einstellungen (Übernehmen / Nein). Nur für ein Admin-Profil (Rolle Admin): offene Vorschläge des Einstellungs-Assistenten außer Stufe C, U, I und P (Übernehmen / Ablehnen / Später, angekreuzt = direkt ausgeführt, Dominik 2b; Rolle und Schalter werden beim Ausführen erneut geprüft) und der Praxistest nach einem Update (die neuen Zeilen aus CHANGELOG.md, Klappt / Klappt nich"
 },
 {
 "lang": "de",
@@ -5501,7 +5501,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Aufgabenblatt zum Ankreuzen (V01.0.491, Paket D, Dominik 2b)",
-"text": "t“ wird ein Fall unter Zustand → Verbessern). Was jede Antwort tut, legt das Panel beim Bauen fest (rmaufgaben.OPTS, _do); das Papier wählt nur. Ausgewertet wird sofort, wenn „Fertig – bitte auswerten“ angekreuzt ist, sonst nach 15 Minuten ohne Änderung am Blatt; zwei Kreuze in einem Punkt = unklar, nichts passiert, der Punkt kommt wieder; jeder Punkt wirkt einmal. Der Notaus hält alles an. Danach eine neue Version mit „Erledigt seit Version N“ (frühestens nach 10 Minuten, sonst täglich ab der Morgenblatt-Zeit, wenn sich Offenes geändert hat); die alte mit den Kreuzen geht ins Archiv. „Zurücknehmen“ unter Papier für Erinnerung, gelöschten Gedächtnis-Eintrag, Einstellung und Assistent-Vorschlag (POST /api/profile/remarkable/papier/aufgaben/zurueck, Body 1 KB, Rate-Limit rm); „Aufgabenblatt schicken“ POST /api/profile/remarkable/papier/aufgaben (Rate-Limit rmsend), beide Browser-Anmeldung des Profils, CSRF, guard.log. Auch per Sprache: „Leg mir das Aufgabenblatt aufs reMarkable“ (remarkable_sheet). Journal nur Zahlen („remarkable: task sheet read | 1 done, 0 unclear“), Live „Aufgabenblatt“ als Hintergrund-Arbeit."
+"text": "t; „Klappt nicht“ wird ein Fall unter Zustand → Verbessern). Was jede Antwort tut, legt das Panel beim Bauen fest (rmaufgaben.OPTS, _do); das Papier wählt nur. Ausgewertet wird sofort, wenn „Fertig – bitte auswerten“ angekreuzt ist, sonst nach 15 Minuten ohne Änderung am Blatt; zwei Kreuze in einem Punkt = unklar, nichts passiert, der Punkt kommt wieder; jeder Punkt wirkt einmal. Der Notaus hält alles an. Danach eine neue Version mit „Erledigt seit Version N“ (frühestens nach 10 Minuten, sonst jeden Morgen ab der Morgenblatt-Zeit); die alte mit den Kreuzen geht ins Archiv. „Zurücknehmen“ unter Papier für Erinnerung, gelöschten Gedächtnis-Eintrag, Einstellung und Assistent-Vorschlag (POST /api/profile/remarkable/papier/aufgaben/zurueck, Body 1 KB, Rate-Limit rm); „Aufgabenblatt schicken“ POST /api/profile/remarkable/papier/aufgaben (Rate-Limit rmsend), beide Browser-Anmeldung des Profils, CSRF, guard.log. Auch per Sprache: „Leg mir das Aufgabenblatt aufs reMarkable“ (remarkable_sheet). Journal nur Zahlen („remarkable: task sheet read | 1 done, 0 unclear“), Live „Aufgabenblatt“ als Hintergrund-Arbeit."
 },
 {
 "lang": "de",
@@ -5541,7 +5541,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "esene Mails der letzten zwei Tage (mail.find) mit Gelesen / Antwort entwerfen / Später. „Gelesen“ nimmt die Mail nur vom Blatt, im Postfach bleibt sie, wie sie ist. „Antwort entwerfen“ gibt es nur, wenn das Profil Entwürfe ablegen darf (schreib.draft_ok): Die Schreibhilfe schreibt die Antwort (die Mail ist für sie Daten, nie ein Auftrag), der Entwurf liegt danach im Entwürfe-Ordner des Postfachs (tidy.make_draft) und wird nie gesendet. Schnell notieren: drei Linien und ein Kreuz, was es ist: Erinnerung heute (18 Uhr, nach 17 Uhr in einer Stunde), Morgen (9 Uhr), Aufgabe oder Einkauf (die beiden nur mit freigegebenen Listen). Gelesen wird wie die Anmerkung (read_new, nur mit „Bilder und Scans lesen“); jede Zeile wird ein Eintrag, höchstens 6. Das Kreuz ist das Ja: ohne Kreuz passiert nichts, zwei Kreuze = unklar; „Zurücknehmen“ entfernt die Erinnerungen oder Listeneinträge wieder. Anmerkung: wie bisher. Antwortet ein Dienst nicht, fehlt nur sein Teil in dieser Version (Journal „remarkable: task sheet mails not read: …“). Weil Termine, Listen und Mails sich täglich ändern, kommt mit einem dieser Teile jeden Morgen ab der Morgenblatt-Zeit eine neue Version (solange das Blatt nicht weg"
+"text": "esene Mails der letzten zwei Tage (mail.find) mit Gelesen / Antwort entwerfen / Später. „Gelesen“ nimmt die Mail nur vom Blatt, im Postfach bleibt sie, wie sie ist. „Antwort entwerfen“ gibt es nur, wenn das Profil Entwürfe ablegen darf (schreib.draft_ok): Die Schreibhilfe schreibt die Antwort (die Mail ist für sie Daten, nie ein Auftrag), der Entwurf liegt danach im Entwürfe-Ordner des Postfachs (tidy.make_draft) und wird nie gesendet. Schnell notieren: drei Linien und ein Kreuz, was es ist: Erinnerung heute (18 Uhr, nach 17 Uhr in einer Stunde), Morgen (9 Uhr), Aufgabe oder Einkauf (die beiden nur mit freigegebenen Listen). Gelesen wird wie die Anmerkung (read_new, nur mit „Bilder und Scans lesen“); jede Zeile wird ein Eintrag, höchstens 6. Das Kreuz ist das Ja: ohne Kreuz passiert nichts, zwei Kreuze = unklar; „Zurücknehmen“ entfernt die Erinnerungen oder Listeneinträge wieder. Anmerkung: wie bisher. Antwortet ein Dienst nicht, fehlt nur sein Teil in dieser Version (Journal „remarkable: task sheet mails not read: …“). Weil Termine, Listen und Mails sich täglich ändern, kommt mit einem dieser Teile jeden Morgen ab der Morgenblatt-Zeit eine neue Version (seit V01.0.784 immer, siehe"
 },
 {
 "lang": "de",
@@ -5549,7 +5549,23 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "geworfen ist). Die Quittung zeigt „gelesen“ statt des Zeichens ✎, das die Schrift nicht kennt. mail.message ist jetzt die eine Stelle, die eine Mail nach ihrer Kennung holt (auch für mail.read). Journal nur feste Wörter und Zahlen („remarkable: task sheet quick note read | 2 line(s)“). Selbsttests test_rmpapier.TaskParts."
+"text": " unten). Die Quittung zeigt „gelesen“ statt des Zeichens ✎, das die Schrift nicht kennt. mail.message ist jetzt die eine Stelle, die eine Mail nach ihrer Kennung holt (auch für mail.read). Journal nur feste Wörter und Zahlen („remarkable: task sheet quick note read | 2 line(s)“). Selbsttests test_rmpapier.TaskParts."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Immer ein Aufgabenblatt (V01.0.784, Dominik 2026-10-18 „1a 2a 3a 4a“)",
+"text": "Immer ein Aufgabenblatt (V01.0.784, Dominik 2026-10-18 „1a 2a 3a 4a“): Im Ordner „Aufgaben“ liegt immer ein Blatt, auch wenn nichts offen ist. Das erste kommt von selbst, sobald das Aufgabenblatt für das Profil freigegeben und ein reMarkable gekoppelt ist (rmaufgaben.due „erst“). „Kann weg“ oder Löschen auf dem Gerät legt nur diese Version weg (Papierkorb, mit Handschrift Archiv); beim nächsten Abgleich, frühestens 10 Minuten nach der letzten Version, liegt eine neue im Ordner „Aufgaben“ („fehlt“). Jeden Morgen ab der Morgenblatt-Zeit kommt eine neue Version, auch wenn sich nichts geändert hat („morgen“), damit Datum und Stand stimmen; nach dem Auswerten wie bisher („neu“). Wer gar kein Blatt will, schaltet die Funktion aus. Ist nichts offen, zeigt das Blatt (rmaufgaben.calm): „Alles erledigt“ mit den Karten „0 offen · Stand TT.MM. HH:MM“ und „n erledigt · seit Version N“, wonach der Spark weiter schaut (die eingeschalteten Teile Termine, Listen, Mails und die Quellen Notizen, Gedächtnis, Vorschläge), „Zuletzt erledigt“ (die Quittung), „Als Nächstes“ (der erste Termin morgen, nur mit dem Teil Termine; „Neue Version spätestens morgen um …“) und weiter Schnell notieren und Anmerkung."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Immer ein Aufgabenblatt (V01.0.784, Dominik 2026-10-18 „1a 2a 3a 4a“)",
+"text": " Der Kalendertext ist Daten und wird wie jeder Punkt gekürzt und bereinigt. Journal nur feste Wörter („remarkable: task sheet | version 5, 0 point(s), why fehlt“, Grund aus rmaufgaben.WHY). Selbsttests test_rmpapier.Tasks.test_kann_weg_puts_only_this_version_away_a_new_one_comes, test_a_new_version_every_morning_also_when_nothing_changed, test_nothing_open_says_so_with_the_time_and_what_comes_next."
 },
 {
 "lang": "de",
@@ -13325,7 +13341,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Task sheet to tick (V01.0.491, package D, Dominik 2b)",
-"text": "Task sheet to tick (V01.0.491, package D, Dominik 2b): admin sub-switch \"Task sheet to tick\" below \"Paper for the reMarkable\" (chat.remarkable_tasks, off, never guests; code: app/panel/rmaufgaben.py); following Dominik's release rule there is no profile switch of its own: each profile fetches its first sheet itself (Me → reMarkable → Paper → \"Send task sheet\" or by voice), after that it renews itself until \"Kann weg\" is ticked on it or it is deleted on the device. A living PDF in the folder \"Spark/Aufgaben\" with what is open, each point with boxes for fixed answers: tasks from the handwriting (remind tomorrow 9:00 / remove / later, rm_todo), memory entries \"maybe outdated\" or \"contradiction\" (true / not true / later, \"Check memory\"), proposals for the profile's own settings (take / no). Only for an admin profile (Admin role): open proposals of the settings assistant except stages C, U, I and P (take / reject / later, ticked = done directly, Dominik 2b; role and switches are checked again when acting) and the field test after an update (the new lines from CHANGELOG.md, works / does not work; \"does not work\" becomes a case under Status → Improve). The panel fixes what each answer doe"
+"text": "Task sheet to tick (V01.0.491, package D, Dominik 2b): admin sub-switch \"Task sheet to tick\" below \"Paper for the reMarkable\" (chat.remarkable_tasks, off, never guests; code: app/panel/rmaufgaben.py); following Dominik's release rule there is no profile switch of its own: the first sheet comes by itself, after that there is always one (since V01.0.784, see \"Always a task sheet\" below); \"Send task sheet\" under Me → reMarkable → Paper or by voice fetches a new version at once. A living PDF in the folder \"Spark/Aufgaben\" with what is open, each point with boxes for fixed answers: tasks from the handwriting (remind tomorrow 9:00 / remove / later, rm_todo), memory entries \"maybe outdated\" or \"contradiction\" (true / not true / later, \"Check memory\"), proposals for the profile's own settings (take / no). Only for an admin profile (Admin role): open proposals of the settings assistant except stages C, U, I and P (take / reject / later, ticked = done directly, Dominik 2b; role and switches are checked again when acting) and the field test after an update (the new lines from CHANGELOG.md, works / does not work; \"does not work\" becomes a case under Status → Improve). The panel fixes what each"
 },
 {
 "lang": "en",
@@ -13333,7 +13349,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Task sheet to tick (V01.0.491, package D, Dominik 2b)",
-"text": "s when it builds the sheet (rmaufgaben.OPTS, _do); the paper only picks. It is evaluated at once when \"Fertig – bitte auswerten\" is ticked, else after 15 minutes without a change on the sheet; two ticks in one point = unclear, nothing happens, the point comes again; each point acts once. The emergency stop holds everything. Then a new version with \"Erledigt seit Version N\" (at the earliest after 10 minutes, else daily from the morning sheet's time when what is open changed); the old one with the ticks goes to the archive. \"Take back\" under Paper for a reminder, a deleted memory entry, a setting and an assistant proposal (POST /api/profile/remarkable/papier/aufgaben/zurueck, body 1 KB, rate limit rm); \"Send task sheet\" POST /api/profile/remarkable/papier/aufgaben (rate limit rmsend), both with the profile's browser login, CSRF, guard.log. Also by voice: \"Leg mir das Aufgabenblatt aufs reMarkable\" (remarkable_sheet). Journal numbers only (\"remarkable: task sheet read | 1 done, 0 unclear\"), live \"Aufgabenblatt\" as background work."
+"text": " answer does when it builds the sheet (rmaufgaben.OPTS, _do); the paper only picks. It is evaluated at once when \"Fertig – bitte auswerten\" is ticked, else after 15 minutes without a change on the sheet; two ticks in one point = unclear, nothing happens, the point comes again; each point acts once. The emergency stop holds everything. Then a new version with \"Erledigt seit Version N\" (at the earliest after 10 minutes, else every morning from the morning sheet's time); the old one with the ticks goes to the archive. \"Take back\" under Paper for a reminder, a deleted memory entry, a setting and an assistant proposal (POST /api/profile/remarkable/papier/aufgaben/zurueck, body 1 KB, rate limit rm); \"Send task sheet\" POST /api/profile/remarkable/papier/aufgaben (rate limit rmsend), both with the profile's browser login, CSRF, guard.log. Also by voice: \"Leg mir das Aufgabenblatt aufs reMarkable\" (remarkable_sheet). Journal numbers only (\"remarkable: task sheet read | 1 done, 0 unclear\"), live \"Aufgabenblatt\" as background work."
 },
 {
 "lang": "en",
@@ -13373,7 +13389,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "lesen / Antwort entwerfen / Später. \"Gelesen\" only takes the mail off the sheet, the mailbox stays as it is. \"Antwort entwerfen\" is only offered when the profile may put drafts (schreib.draft_ok): the writing help writes the answer (the mail is data for it, never an order), the draft then lies in the mailbox's drafts folder (tidy.make_draft) and is never sent. Quick note: three lines and one tick for what it is: reminder today (18:00, after 17:00 in an hour), tomorrow (9:00), task or shopping (the last two only with released lists). It is read like the note (read_new, only with \"Read pictures and scans\"); each line becomes one entry, at most 6. The tick is the yes: without a tick nothing happens, two ticks = unclear; \"Take back\" removes the reminders or list entries again. Note: as before. When a service does not answer, only its part is missing from this version (journal \"remarkable: task sheet mails not read: …\"). Since appointments, lists and mails change daily, with one of these parts a new version comes every morning from the morning sheet's time (as long as the sheet is not thrown away). The receipt shows \"gelesen\" instead of the sign ✎ the font does not have. mail.message is"
+"text": "lesen / Antwort entwerfen / Später. \"Gelesen\" only takes the mail off the sheet, the mailbox stays as it is. \"Antwort entwerfen\" is only offered when the profile may put drafts (schreib.draft_ok): the writing help writes the answer (the mail is data for it, never an order), the draft then lies in the mailbox's drafts folder (tidy.make_draft) and is never sent. Quick note: three lines and one tick for what it is: reminder today (18:00, after 17:00 in an hour), tomorrow (9:00), task or shopping (the last two only with released lists). It is read like the note (read_new, only with \"Read pictures and scans\"); each line becomes one entry, at most 6. The tick is the yes: without a tick nothing happens, two ticks = unclear; \"Take back\" removes the reminders or list entries again. Note: as before. When a service does not answer, only its part is missing from this version (journal \"remarkable: task sheet mails not read: …\"). Since appointments, lists and mails change daily, with one of these parts a new version comes every morning from the morning sheet's time (since V01.0.784 always, see below). The receipt shows \"gelesen\" instead of the sign ✎ the font does not have. mail.message is now t"
 },
 {
 "lang": "en",
@@ -13381,7 +13397,23 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": " now the one place that fetches a mail by its id (also for mail.read). Journal fixed words and numbers only (\"remarkable: task sheet quick note read | 2 line(s)\"). Self-tests test_rmpapier.TaskParts."
+"text": "he one place that fetches a mail by its id (also for mail.read). Journal fixed words and numbers only (\"remarkable: task sheet quick note read | 2 line(s)\"). Self-tests test_rmpapier.TaskParts."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Always a task sheet (V01.0.784, Dominik 2026-10-18 \"1a 2a 3a 4a\")",
+"text": "Always a task sheet (V01.0.784, Dominik 2026-10-18 \"1a 2a 3a 4a\"): there is always a sheet in the folder \"Aufgaben\", also when nothing is open. The first one comes by itself once the task sheet is released for the profile and a reMarkable is paired (rmaufgaben.due \"erst\"). \"Kann weg\" or deleting it on the device puts only this version away (trash, with handwriting the archive); at the next check, at the earliest 10 minutes after the last version, a new one lies in the folder \"Aufgaben\" (\"fehlt\"). Every morning from the morning sheet's time a new version comes, also when nothing changed (\"morgen\"), so date and time are right; after the ticks were acted on as before (\"neu\"). Whoever wants no sheet at all switches the function off. With nothing open the sheet shows (rmaufgaben.calm): \"Alles erledigt\" with the cards \"0 offen · Stand DD.MM. HH:MM\" and \"n erledigt · seit Version N\", what the Spark keeps an eye on (the parts switched on: appointments, lists, mail, and the sources notes, memory, proposals), \"Zuletzt erledigt\" (the receipt), \"Als Nächstes\" (tomorrow's first appointment, only with the part appointments; \"Neue Version spätestens morgen um …\") and still Schnell notieren and An"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Always a task sheet (V01.0.784, Dominik 2026-10-18 \"1a 2a 3a 4a\")",
+"text": "merkung. The calendar text is data and is cut and cleaned like every point. Journal only fixed words (\"remarkable: task sheet | version 5, 0 point(s), why fehlt\", reason from rmaufgaben.WHY). Self-tests test_rmpapier.Tasks.test_kann_weg_puts_only_this_version_away_a_new_one_comes, test_a_new_version_every_morning_also_when_nothing_changed, test_nothing_open_says_so_with_the_time_and_what_comes_next."
 },
 {
 "lang": "en",

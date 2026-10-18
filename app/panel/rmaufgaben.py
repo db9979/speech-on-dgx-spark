@@ -33,6 +33,13 @@ When it acts: at once when "Fertig – bitte auswerten" is ticked, else after QU
 sheet. Exactly one answer per point; two ticked = unclear, nothing happens and the point comes again. Afterwards a new
 version with the receipt ("Erledigt seit Version N"); the old one, with the person's ticks, goes to "Archiv"
 (remarkable.place: a sheet with ink is never filled again). Logs: numbers only.
+
+Always a sheet there (Dominik 2026-10-18 "1a 2a 3a 4a"): the first one comes by itself once the function is released
+for the profile; ticked "Kann weg" or deleted on the device, the next check puts a new version there ("Kann weg" only
+puts that one version away; to have none, the function goes off); a new version every morning from the morning sheet's
+time, also when nothing changed. With nothing open the sheet says so: "0 offen" with the time, what the Spark keeps an
+eye on, what was done last and what comes next (tomorrow's first appointment, when the next version comes at the
+latest), and the writing parts stay.
 """
 import asyncio
 import datetime
@@ -90,6 +97,7 @@ RES_DE = {"erledigt": "✓ erledigt", "abgelehnt": "✓ abgelehnt", "spaeter": "
           "vorbei": "schon vorbei", "neu": "✓ eingetragen"}
 DONE = ("erledigt", "abgelehnt", "passt", "erinnert", "entwurf", "neu")
 OUTSIDE = ("termin", "liste", "mail")      # points asked from other services (gather): not in due()'s signature
+WHY = ("erst", "fehlt", "neu", "morgen", "knopf")   # why a new version came (log)
 ORDER = ("termin", "liste", "mail", "notiz", "todo", "ged", "mich", "berater", "praxis")
 
 
@@ -167,20 +175,26 @@ def _hid(*parts):
     return hashlib.sha256("|".join(str(x) for x in parts).encode()).hexdigest()[:12]
 
 
+async def _events(uid, now, days=0):
+    """The appointments of today (days=0) or a later day, [] when the calendar does not answer (a line in the log)."""
+    import calendars
+    zone = _zone(uid)
+    start = datetime.datetime.fromtimestamp(now, zone).replace(hour=0, minute=0, second=0, microsecond=0)
+    start += datetime.timedelta(days=days)
+    try:
+        got = await asyncio.wait_for(calendars.events(uid, start, start + datetime.timedelta(days=1), zone), 30)
+    except Exception as e:
+        got = None
+        print("remarkable: task sheet appointments not read:", type(e).__name__, flush=True)
+    return got[0] if got else []
+
+
 async def gather(uid, now):
     """The points of the parts that ask other services (calendar, lists, mailbox), each with what acting needs ("x").
     A service that does not answer leaves its part out of this version (a line in the log); the others still come."""
     out = []
-    zone = _zone(uid)
     if part(uid, "termine"):
-        import calendars
-        start = datetime.datetime.fromtimestamp(now, zone).replace(hour=0, minute=0, second=0, microsecond=0)
-        try:
-            got = await asyncio.wait_for(calendars.events(uid, start, start + datetime.timedelta(days=1), zone), 30)
-        except Exception as e:
-            got = None
-            print("remarkable: task sheet appointments not read:", type(e).__name__, flush=True)
-        for ev in (got[0] if got else [])[:MAX_CAL * 3]:
+        for ev in (await _events(uid, now))[:MAX_CAL * 3]:
             if not ev["allday"] and ev["end"].timestamp() <= now:
                 continue          # over already
             when = "ganztägig" if ev["allday"] else ev["start"].strftime("%H:%M")
@@ -248,22 +262,47 @@ def praxis_lines(uid):
     return [e for e in new if e["version"] not in done][:MAX_PRAXIS]
 
 
-def _sig(its):
-    return "|".join(sorted(x["key"] for x in its))
+async def calm(uid, now, receipt):
+    """What the sheet says when nothing is open: the time, what the Spark keeps an eye on, how much was done since the
+    last version, and what comes next (tomorrow's first appointment, the next version at the latest)."""
+    import rmplus
+    local = datetime.datetime.fromtimestamp(now, _zone(uid))
+    watch = [de for p, _, de, _, _ in PARTS if p in ("termine", "listen", "mails") and part(uid, p)]
+    watch += [SECTION[s] for s, ok in (("todo", rmplus.on("rmtodo", uid)), ("ged", features.allowed("gedpruefen", uid)),
+                                       ("mich", features.allowed("beratermich", uid))) if ok]
+    nxt = []
+    if part(uid, "termine"):
+        evs = await _events(uid, now, 1)
+        ev = next((e for e in evs if not e["allday"]), evs[0] if evs else None)
+        if ev:
+            when = "ganztägig" if ev["allday"] else ev["start"].strftime("%H:%M")
+            nxt.append(f"Morgen {when} {rmpapier.clean(ev['title'], 120)}")     # outside text: data, cut and cleaned
+    at = profiles.settings(uid).get("rm_morning_at") or "06:30"
+    nxt.append(f"Neue Version spätestens morgen um {at}")
+    return {"at": local.strftime("%d.%m. %H:%M"), "watch": watch, "next": nxt,
+            "done": sum(1 for r in receipt if r.get("res") in DONE)}
 
 
 # ---------------------------------------------------------------- the sheet
-def build(m, its, version, receipt, day, areas=("anmerkung",), kinds=NEW_KINDS):
+def build(m, its, version, receipt, day, areas=("anmerkung",), kinds=NEW_KINDS, quiet=None):
     """areas: the writing parts on this sheet ("neu" Schnell notieren, "anmerkung"); kinds: the answers of "Schnell
-    notieren" (Aufgabe and Einkauf only with the lists)."""
+    notieren" (Aufgabe and Einkauf only with the lists); quiet: calm() for a sheet with nothing open."""
     sh = rmpapier.Sheet(m, "Aufgaben", "Deine Aufgaben", f"Version {version} · {day}", rmpapier._code("aufgaben", version, time.time()))
+    if not its:
+        q = quiet or {}
+        sh.section("Alles erledigt")
+        if q:
+            sh.cards([("0 offen", f"Stand {q['at']}")] + ([(f"{q['done']} erledigt", f"seit Version {version - 1}")] if q["done"] else []))
+        seen = f" Der Spark schaut weiter nach: {', '.join(q['watch'])}." if q.get("watch") else ""
+        sh.para(f"Gerade ist nichts zu tun.{seen} Kommt etwas dazu, liegt hier von selbst eine neue Version.", 9.5)
     if receipt:
-        sh.section(f"Erledigt seit Version {version - 1}")
+        sh.section("Zuletzt erledigt" if not its else f"Erledigt seit Version {version - 1}")
         for r in receipt[:12]:
             sh.bullet(f"{RES_DE.get(r['res'], r['res'])}: {r['text']}")
-    if not its:
-        sh.section("Alles erledigt")
-        sh.para("Gerade ist nichts offen. Kommt etwas dazu, liegt hier eine neue Version.", 9.5)
+    if not its and (quiet or {}).get("next"):
+        sh.section("Als Nächstes")
+        for n in quiet["next"]:
+            sh.bullet(n)
     src_seen = set()
     for x in its:
         if x["src"] not in src_seen:
@@ -290,9 +329,14 @@ def build(m, its, version, receipt, day, areas=("anmerkung",), kinds=NEW_KINDS):
     return sh.finish()
 
 
-async def send(uid, now=None):
-    """Puts a new version there (also when nothing is open: "Alles erledigt"). Returns the place() result."""
+async def send(uid, now=None, why="knopf"):
+    """Puts a new version there (also when nothing is open: "Alles erledigt"). why: a word of due() or "knopf".
+    Returns the place() result."""
     now = now or time.time()
+    if gone(uid):
+        d = remarkable.load(uid)
+        (d.get("own") or {}).pop("aufgaben", None)     # put away or deleted: a new document, the old one stays where it is
+        remarkable.save(uid, d)
     d = remarkable.load(uid)
     t = d.get("tasks") if isinstance(d.get("tasks"), dict) else {}
     its = _keyed(await gather(uid, now) + items(uid))
@@ -301,7 +345,8 @@ async def send(uid, now=None):
     local = datetime.datetime.fromtimestamp(now, _zone(uid))
     m = rmpapier.model(rmpapier.model_key(uid, d))
     kinds = NEW_KINDS if features.allowed("tasks", uid) else NEW_KINDS[:2]
-    built = build(m, its, version, t.get("receipt") or [], local.strftime("%d.%m.%Y"), areas, kinds)
+    quiet = None if its else await calm(uid, now, t.get("receipt") or [])
+    built = build(m, its, version, t.get("receipt") or [], local.strftime("%d.%m.%Y"), areas, kinds, quiet)
     r = await rmpapier.place(uid, "aufgaben", "Aufgaben", built, "aufgaben", own="aufgaben", auto=True)
     d = remarkable.load(uid)
     pp = d["papers"][r["id"]]
@@ -310,42 +355,41 @@ async def send(uid, now=None):
                                   **({"x": x["x"]} if x.get("x") else {})) for x in its}
     pp["v"] = version
     t = d.get("tasks") if isinstance(d.get("tasks"), dict) else {}
-    t.update(v=version, receipt=[], renew=False, last=int(now), sig=_sig([x for x in its if x["src"] not in OUTSIDE]),
-             day=local.strftime("%Y-%m-%d"))
+    t.update(v=version, receipt=[], renew=False, last=int(now), day=local.strftime("%Y-%m-%d"))
+    t.pop("sig", None)
     pr = [x["id"] for x in its if x["src"] == "praxis"]
     if pr:
         t["praxis"] = pr[0]
     d["tasks"] = t
     remarkable.save(uid, d)
-    print(f"remarkable: task sheet | version {version}, {len(its)} point(s)", flush=True)
+    print(f"remarkable: task sheet | version {version}, {len(its)} point(s), why {why if why in WHY else 'knopf'}", flush=True)
     return r
 
 
-def thrown_away(uid):
-    """The newest task sheet is gone from the device ("Kann weg" or deleted there): the Spark stops renewing it."""
+def gone(uid):
+    """The newest task sheet is gone ("Kann weg" or deleted on the device): the next check puts a new one there."""
     mine = [pp for pp in (remarkable.load(uid).get("papers") or {}).values() if pp.get("k") == "aufgaben"]
     return bool(mine) and bool(max(mine, key=lambda pp: int(pp.get("v", 0))).get("gone"))
 
 
 def due(uid, now):
-    """A new version is due: after the ticks were acted on, or once a day from the morning sheet's time when what
-    is open changed. Never more often than RENEW_GAP."""
+    """Why a new version is due (a word of WHY), or "": the first one, the newest gone, after the ticks were acted
+    on, or each morning from the morning sheet's time. Never more often than RENEW_GAP (Dominik 2026-10-18: always a
+    sheet there)."""
     t = remarkable.load(uid).get("tasks") or {}
     if not t.get("v"):
-        return False          # the first one comes from the person (button or "Leg mir das Aufgabenblatt …")
-    if thrown_away(uid):
-        return False          # "Kann weg" ticked or deleted on the device: none by itself until the person asks again
+        return "erst"         # the first one comes by itself once the function is released (3a)
     if now - int(t.get("last", 0)) < RENEW_GAP:
-        return False
+        return ""
+    if gone(uid):
+        return "fehlt"        # "Kann weg" ticked or deleted on the device: a new one (1a)
     if t.get("renew"):
-        return True
+        return "neu"
     local = datetime.datetime.fromtimestamp(now, _zone(uid))
     at = profiles.settings(uid).get("rm_morning_at") or "06:30"
     if t.get("day") == local.strftime("%Y-%m-%d") or local.strftime("%H:%M") < at:
-        return False
-    if any(part(uid, p) for p in ("termine", "listen", "mails")):
-        return True           # today's appointments, the lists and the mailbox change by the day: a new one each morning
-    return _sig(items(uid)) != t.get("sig")
+        return ""
+    return "morgen"           # a new one each morning, also when nothing changed: the date and the "Stand" are today's (4a)
 
 
 # ---------------------------------------------------------------- reading it back (from rmpapier.check)

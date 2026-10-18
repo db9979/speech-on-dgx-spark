@@ -525,7 +525,7 @@ class Tasks(Paper):
         self.assertEqual(features.BY_KEY["rmaufgaben"].pref, "")
         c, uid = self.on("Ptoff")
         self.assertTrue(rmaufgaben.on(uid))
-        self.assertFalse(rmaufgaben.due(uid, 2_000_000_000))       # nothing comes by itself before the first sheet
+        self.assertEqual(rmaufgaben.due(uid, 2_000_000_000), "erst")   # the first one comes by itself (Dominik 2026-10-18 3a)
         helpers.set_config(remarkable_tasks=False)
         self.assertFalse(rmaufgaben.on(uid))
         self.assertEqual(c.post("/api/profile/remarkable/papier/aufgaben").status_code, 403)
@@ -671,18 +671,61 @@ class Tasks(Paper):
         self.assertEqual((t["v"], t["receipt"], t["renew"]), (2, [], False))
         self.assertEqual(remarkable.load(uid)["papers"][r["id"]]["items"], {})        # nothing open: "Alles erledigt"
 
-    def test_kann_weg_stops_the_renewing_until_asked_again(self):
+    def test_kann_weg_puts_only_this_version_away_a_new_one_comes(self):
+        """Dominik 2026-10-18 "1a": there is always a task sheet; "Kann weg" or deleting it on the device puts that
+        one version away, the next check puts a new one into "Aufgaben"."""
         import rmaufgaben
         c, uid = self.prepared("Ptweg")
         did, pp = self.sheet(c, uid)
         m = rmpapier.model("move")
         ink(did, [page_mm(m, tick(self.box(pp, "weg")))])
         run(rmpapier.check(uid))
-        self.assertTrue(rmaufgaben.thrown_away(uid))
-        self.assertFalse(rmaufgaben.due(uid, 2_000_000_000))
-        did2, _ = self.sheet(c, uid)                               # the person asks again: it renews again
-        self.assertNotEqual(did2, did)
-        self.assertFalse(rmaufgaben.thrown_away(uid))
+        self.assertTrue(rmaufgaben.gone(uid))
+        last = remarkable.load(uid)["tasks"]["last"]
+        self.assertEqual(rmaufgaben.due(uid, last + 60), "")                       # never more often than RENEW_GAP
+        self.assertEqual(rmaufgaben.due(uid, last + rmaufgaben.RENEW_GAP + 1), "fehlt")
+        r = run(rmaufgaben.send(uid, last + rmaufgaben.RENEW_GAP + 1, "fehlt"))
+        self.assertNotEqual(r["id"], did)
+        self.assertIsNone(where(uid, did))                                          # the old one stays in the trash
+        self.assertEqual(where(uid, r["id"]), "Spark/Aufgaben")
+        self.assertFalse(rmaufgaben.gone(uid))
+
+    def test_a_new_version_every_morning_also_when_nothing_changed(self):
+        """Dominik 2026-10-18 "4a": the date and the "Stand" on the sheet are always today's."""
+        import datetime
+        import rmaufgaben
+        c, uid = self.prepared("Ptmorgen")
+        self.sheet(c, uid)
+        zone = rmaufgaben._zone(uid)
+        day = datetime.datetime.fromtimestamp(remarkable.load(uid)["tasks"]["last"], zone)
+        same = day.replace(hour=23, minute=0)
+        early = (day + datetime.timedelta(days=1)).replace(hour=5, minute=0)
+        late = (day + datetime.timedelta(days=1)).replace(hour=12, minute=0)
+        d = remarkable.load(uid)
+        d["tasks"]["last"] = int(day.replace(hour=0, minute=1).timestamp())
+        remarkable.save(uid, d)
+        self.assertEqual(rmaufgaben.due(uid, same.timestamp()), "")
+        self.assertEqual(rmaufgaben.due(uid, early.timestamp()), "")                # before the morning sheet's time
+        self.assertEqual(rmaufgaben.due(uid, late.timestamp()), "morgen")
+
+    def test_nothing_open_says_so_with_the_time_and_what_comes_next(self):
+        """Dominik 2026-10-18 "2a": "0 offen" with the time, what the Spark keeps an eye on, what was done and comes next."""
+        import rmaufgaben
+        c, uid = self.prepared("Ptleer")
+        import rmplus
+        rmplus._mut(uid, lambda p: p.update(todos=[]))
+        q = run(rmaufgaben.calm(uid, 1_800_000_000, [{"text": "A", "res": "erledigt"}, {"text": "B", "res": "spaeter"}]))
+        self.assertEqual(q["done"], 1)
+        self.assertIn(rmaufgaben.SECTION["todo"], q["watch"])
+        self.assertEqual(q["next"][-1], "Neue Version spätestens morgen um 06:30")
+        for key in rmpapier.MODELS:
+            m = rmpapier.model(key)
+            pdf, fields, pages = rmaufgaben.build(m, [], 4, [{"text": "A", "res": "erledigt"}], "13.10.2026", quiet=q)
+            self.assertTrue(pdf.startswith(b"%PDF"))
+            for f in fields:
+                self.assertTrue(0 < f["x"] and f["x"] + f["w"] < m["mm"][0] and 0 < f["y"] and f["y"] + f["h"] < m["mm"][1], (key, f))
+        r = run(rmaufgaben.send(uid))
+        self.assertEqual(remarkable.load(uid)["papers"][r["id"]]["items"], {})
 
     def note(self, pp, rows=2):
         """Handwriting on the Anmerkung's lines."""

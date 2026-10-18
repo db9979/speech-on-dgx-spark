@@ -1835,6 +1835,12 @@
 "titel": "Wechsel wartet auf das neue Modell",
 "text": "A: Auf tars `sudo speech-spark modelle wechseln llm qwen36-35b-a3b-nvfp4`: „modelle: rundlauf bereit nach … s“ nennt mehrere Minuten (nicht 0 s), danach „rundlauf satz ok“, „werkzeug ok“, „bild ok“, „systemone ok“ und „umgeschaltet llm qwen36-35b-a3b-nvfp4“. B: Zustand → Modelle zeigt Qwen3.6 als laufendes Sprachmodell, eine Chatfrage wird beantwortet.",
 "thread": "Eigene Modell-Installation statt qwen38"
+},
+{
+"id": "P286",
+"v": 784,
+"titel": "Immer ein Aufgabenblatt",
+"text": "A: Auf dem reMarkable im Ordner „Aufgaben“ liegt ein Aufgabenblatt (kam es noch nie, kommt das erste nach dem Update von selbst). B: Alle Punkte ankreuzen, „Fertig“: nach etwa 10 Minuten liegt eine neue Version mit „Alles erledigt“, „0 offen“ mit Stand, „Zuletzt erledigt“ und „Als Nächstes“. C: Auf dem Blatt „Kann weg“ ankreuzen: es verschwindet, beim nächsten Abgleich (spätestens nach etwa 15 Minuten) liegt eine neue Version im Ordner. D: Am nächsten Morgen nach der Morgenblatt-Zeit trägt das Blatt das neue Datum."
 }
 ]
 }

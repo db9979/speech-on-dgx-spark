@@ -520,7 +520,8 @@ GUIDE = (
      "Gedächtnis, die vielleicht nicht mehr stimmen, und Vorschläge für deine Einstellungen (als Admin auch die des "
      "Einstellungs-Assistenten und der Praxistest nach einem Update). Kreuz je Punkt eine Antwort an und dann "
      "„Fertig“; der Spark erledigt es und legt eine neue Version mit der Quittung hin, die alte kommt ins Archiv. "
-     "Zurücknehmen geht unter Ich → reMarkable → Papier."),
+     "Es liegt immer ein Blatt da, jeden Morgen neu; ist nichts offen, steht darauf „Alles erledigt“ und was als "
+     "Nächstes kommt. „Kann weg“ legt nur diese Version weg. Zurücknehmen geht unter Ich → reMarkable → Papier."),
     ("rmguide", "Diese Anleitung",
      "Der Spark hält diese Anleitung selbst aktuell: Kommt eine Funktion dazu oder schaltest du etwas um, ersetzt er "
      "sie. Deine Markierungen darin bleiben, wenn sich nur der Text ändert."),
@@ -623,8 +624,9 @@ async def due_once(idle=True, now=None, uids=None):
             jobs.append(("pages", lambda: from_pages(uid, now)))
         if on("rmpapier", uid) and now - _last.get((uid, "paper"), 0) >= remarkable.PEEK:
             jobs.append(("paper", lambda: rmpapier.check(uid, now)))
-        if rmaufgaben.on(uid) and now - _last.get((uid, "tasks"), 0) >= 60 and rmaufgaben.due(uid, now):
-            jobs.append(("tasks", lambda: rmaufgaben.send(uid, now)))
+        why = rmaufgaben.due(uid, now) if rmaufgaben.on(uid) and now - _last.get((uid, "tasks"), 0) >= 60 else ""
+        if why:
+            jobs.append(("tasks", lambda why=why: rmaufgaben.send(uid, now, why)))
         if on("rmaufraeumen", uid) and remarkable.load(uid).get("tidied") != local.strftime("%Y-%m-%d") \
                 and now - _last.get((uid, "tidy"), 0) >= 3600:
             jobs.append(("tidy", lambda: _tidy(uid, now)))
