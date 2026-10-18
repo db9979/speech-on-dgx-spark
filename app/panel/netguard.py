@@ -131,6 +131,8 @@ DIRECT_OK = {
     "images": ("sprachmodell", "Sprachmodell"),
     "intent": ("sprachmodell", "Sprachmodell für unklare Fragen der Weiche"),
     "llm": ("sprachmodell", "Sprachmodell (llm.complete für Hintergrundaufgaben; Adresse aus chat.llm_url)"),
+    "llmstart": ("lokal", "/health der eigenen Sprachmodell-Engine auf 127.0.0.1 (Port aus dem Katalog)"),
+    "loopwacht": ("lokal", "nur die Meldung an systemd über den Unix-Socket aus $NOTIFY_SOCKET (Watchdog), kein Netz"),
     "mcpserver": ("lokal", "eigene Sprachdienste auf localhost"),
     "monitor": ("lokal", "Gesundheitsabfrage der eigenen Dienste auf localhost"),
     "proactive": ("sprachmodell", "Sprachmodell und SearXNG"),
