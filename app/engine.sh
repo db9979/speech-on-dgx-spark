@@ -84,6 +84,15 @@ case "$ROLE" in
   sehen) others=("$own_llm" "speech-spark-asr-engine $(jq -r .asr.engine_port "$CONFIG")"
                  "speech-spark-tts-engine $(jq -r .tts.engine_port "$CONFIG")") ;;
 esac
+# Never next to a model measurement (speech-spark.sh MESS_ENGINE): tars 2026-10-18 the speech output engine restarted
+# while the measured engine broke off; the memory that engine gave back during the start was counted as the speech
+# output's own, which then took 83 GiB instead of 5 and left the language model no room. Wait until it has stopped,
+# at most an hour, like the order below.
+for _ in $(seq 1 720); do
+  case "$(systemctl is-active speech-spark-messen-engine 2>/dev/null)" in active|activating|deactivating|reloading) ;; *) break ;; esac
+  state loading "waiting for the model measurement to finish"
+  sleep 5
+done
 for o in "${others[@]}"; do
   read -r ounit oport <<<"$o"
   for _ in $(seq 1 720); do

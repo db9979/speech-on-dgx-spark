@@ -1779,6 +1779,13 @@
 "titel": "Wissensbuch",
 "text": "A: Admin: Funktionen → Eigene Dokumente → Wissensbuch an. B: Einige zusammengehörige Dokumente hochladen (z. B. Rechnungen und Versicherung des Autos) und ein paar ruhige Minuten warten. C: Ich → Dokumente → Wissensbuch: Seiten nach Art (Themen, Personen, Firmen …), „Lesen“ zeigt Sätze mit Dokument und Seite; ein Klick auf die Quelle öffnet das Dokument. D: Prüfen, ob jede Zahl in einem Satz wirklich im Dokument steht. E: „Stimmt nicht“ an einem Satz: er verschwindet und kommt nicht wieder. F: Im Chat „Was hat das Auto dieses Jahr gekostet?“: die Antwort nennt die Dokumente. G: Zustand → Live zeigt bei Wissensbuch Seiten, Sätze und wartende Dokumente, nie Titel.",
 "thread": "Wissensbuch nach Karpathy"
+},
+{
+"id": "P278",
+"v": 775,
+"titel": "Qwen3.6 messen, keine Engine daneben",
+"text": "A: Auf tars `sudo speech-spark modelle messen qwen36`: in Zustand → Logs (System) stehen zwei Ergebnisse, „qwen36-35b-a3b-nvfp4“ mit „mtp … %“ und „…-ohne-mtp“ mit „mtp aus“, je mit tok/s, werkzeug, text, szene. B: Währenddessen `sudo systemctl restart speech-spark-tts-engine`: Zustand → Dienste zeigt bei der Sprachausgabe „waiting for the model measurement to finish“. C: Nach dem Ende der Messung startet die Sprachausgabe und belegt wieder etwa 5 GiB (nvidia-smi), das Sprachmodell läuft.",
+"thread": "Eigene Modell-Installation statt qwen38"
 }
 ]
 }

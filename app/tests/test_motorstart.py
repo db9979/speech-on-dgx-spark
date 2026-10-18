@@ -115,6 +115,30 @@ others=("speech-spark-llm 31016")
         self.assertEqual(len(open(os.path.join(tmp, "looks")).read().split()), 305)
 
 
+    def test_no_start_next_to_a_measurement(self):
+        """tars 2026-10-18: the speech output engine restarted while the measured engine broke off and counted the
+        memory freed meanwhile as its own (83 GiB). Every engine waits until the measurement's engine has stopped."""
+        with open(os.path.join(helpers.APP, "engine.sh"), encoding="utf-8") as f:
+            sh = f.read()
+        start = sh.index("for _ in $(seq 1 720); do\n  case \"$(systemctl is-active speech-spark-messen-engine")
+        loop = sh[start:sh.index("done\n", start) + 4]
+        self.assertLess(start, sh.index("# Memory guard"))
+        with open(os.path.join(helpers.APP, "speech-spark.sh"), encoding="utf-8") as f:
+            self.assertIn("\nMESS_ENGINE=speech-spark-messen-engine\n", f.read())     # the same unit name
+        tmp = tempfile.mkdtemp()
+        with open(os.path.join(tmp, "states"), "w") as f:
+            f.write("\n".join(["active"] * 4 + ["deactivating"] * 2 + ["inactive"]) + "\n")
+        script = f"""echo 0 >{tmp}/n
+systemctl() {{ local n; n=$(( $(cat {tmp}/n) + 1 )); echo "$n" >{tmp}/n; sed -n "${{n}}p" {tmp}/states; }}
+state() {{ echo "$1" >>{tmp}/looks; }}
+sleep() {{ :; }}
+{loop}
+"""
+        subprocess.run(["bash", "-c", script], check=True, timeout=60)
+        self.assertEqual(open(os.path.join(tmp, "n")).read().strip(), "7")                # until it was gone
+        self.assertEqual(len(open(os.path.join(tmp, "looks")).read().split()), 6)
+
+
 class Estimate(unittest.TestCase):
     """Zustand → Dienste: what an engine reserves, of the memory of the computer it runs on."""
 

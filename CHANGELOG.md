@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.775** · 2026-10-18 · Fix: keine Engine startet, solange eine Modell-Messung läuft (die Sprachausgabe belegte nach einem Neustart während der Flash-Next-Messung 83 statt 5 GiB, das Sprachmodell fand keinen Platz); Qwen3.6 35B A3B NVFP4 im Katalog, messen mit `modelle messen qwen36` (mit und ohne MTP)
 - **V01.0.774** · 2026-10-18 · ROT-FIX: das „?“ für „Frag Spark zu diesem Schalter“ steht jetzt neben dem Titel einer Einstellung statt darin (Titeltext bleibt der Name, unabhängig davon, wann die Liste der Schalter ankommt); Höchsthöhe von Funktionen für die neuen Zeilen angepasst
 - **V01.0.773** · 2026-10-18 · ROT-FIX Wissensbuch: Datenattribut „data-wbwrong“ umbenannt, damit die Prüfung auf Inline-Handler (test_hardening) es nicht für „onG…“ hält
 - **V01.0.772** · 2026-10-18 · Wissensbuch Stufe B: eigene Dokumente werden in ruhigen Minuten zu Seiten mit Quelle je Satz (Zahlenprobe, Widerspruch statt Überschreiben, „Stimmt nicht“), document_search bringt zuerst die passende Seite; Ich → Dokumente → Wissensbuch, Admin-Schalter ab Werk aus

@@ -145,6 +145,13 @@ class Katalog(unittest.TestCase):
         self.assertIn("qwen38-27b-fp8", modelle.messliste(["fp8"]))
         # the two fast MoE candidates for the main model (Dominik 2026-10-17 "ja 1+2"), in catalog order
         self.assertEqual(modelle.messliste(["gemma", "vl30"]), ["qwen3-vl-30b-a3b-fp8", "gemma-4-26b-a4b"])
+        # Dominik 2026-10-18 „ja 1“: Qwen3.6 35B A3B NVFP4 natively, with and without MTP
+        self.assertEqual(modelle.messliste(["qwen36"]), ["qwen36-35b-a3b-nvfp4", "qwen36-35b-a3b-nvfp4-ohne-mtp"])
+        q36, ohne = (modelle.katalog()[i] for i in ("qwen36-35b-a3b-nvfp4", "qwen36-35b-a3b-nvfp4-ohne-mtp"))
+        self.assertIn("--speculative-config", modelle.vllm_args(q36, revision=q36["revision"]))
+        self.assertNotIn("--speculative-config", modelle.vllm_args(ohne, revision=ohne["revision"]))
+        self.assertNotIn("--trust-remote-code", modelle.vllm_args(q36, revision=q36["revision"]))
+        self.assertEqual((q36["gewerblich"], ohne["revision"], modelle.docker_bild(q36)), (True, q36["revision"], ""))
         m = modelle.katalog()["qwen3-vl-30b-a3b-fp8"]
         self.assertEqual((m["art"], m["kann_sehen"], m["werkzeuge"]), ("llm", True, True))
         a = modelle.vllm_args(m, revision="c" * 40)

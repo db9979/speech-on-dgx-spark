@@ -159,6 +159,46 @@
       "betrieb": "resident"
     },
     {
+      "id": "qwen36-35b-a3b-nvfp4",
+      "art": "llm",
+      "name": {
+        "de": "Qwen3.6 35B A3B NVFP4 (schnell, sieht)",
+        "en": "Qwen3.6 35B A3B NVFP4 (fast, can see)"
+      },
+      "engine": "vllm",
+      "repo": "nvidia/Qwen3.6-35B-A3B-NVFP4",
+      "revision": "491c2f1ea524c639598bf8fa787a93fed5a6fbce",
+      "lizenz": "Apache-2.0",
+      "gewerblich": true,
+      "platte_gb": 24,
+      "need_gib": 38,
+      "gemessen": false,
+      "anteil": 0.3,
+      "kontext": 131072,
+      "kontext_max": 262144,
+      "kann_sehen": true,
+      "werkzeuge": true,
+      "vllm": {
+        "reasoning_parser": "qwen3",
+        "tool_call_parser": "qwen3_coder",
+        "mtp": 3,
+        "max_seqs": 8,
+        "bilder_pro_frage": 4
+      },
+      "anfrage": {"chat_template_kwargs": {"enable_thinking": false}, "top_k": 20},
+      "messen": "auf_wunsch",
+      "betrieb": "resident"
+    },
+    {
+      "id": "qwen36-35b-a3b-nvfp4-ohne-mtp",
+      "basis": "qwen36-35b-a3b-nvfp4",
+      "name": {
+        "de": "Qwen3.6 35B A3B NVFP4 ohne MTP",
+        "en": "Qwen3.6 35B A3B NVFP4 without MTP"
+      },
+      "vllm": {"mtp": 0}
+    },
+    {
       "id": "qwen38-flash-next-fp4",
       "art": "llm",
       "name": {

@@ -415,12 +415,13 @@ def wahl_zeilen(art, kat=None):
 
 def messliste(was, kat=None):
     """The ids to measure, in catalog order: was = words llm, sehen (the entries marked "immer"), fp8, gemma, kolibri,
-    vl30, dspark (one entry each that is measured only on request), flash (Qwen3.8 Flash Next in Docker at both memory
-    shares); no word means llm and sehen."""
+    vl30, dspark (one entry each that is measured only on request), qwen36 (Qwen3.6 35B A3B NVFP4 with and without MTP),
+    flash (Qwen3.8 Flash Next in Docker at both memory shares); no word means llm and sehen."""
     kat = katalog() if kat is None else kat
     was = list(was) or ["llm", "sehen"]
     wunsch = {"fp8": ("qwen38-27b-fp8",), "gemma": ("gemma-4-26b-a4b",), "kolibri": ("kolibri-1-nvfp4",),
               "vl30": ("qwen3-vl-30b-a3b-fp8",), "dspark": ("qwen38-27b-nvfp4-dspark",),
+              "qwen36": ("qwen36-35b-a3b-nvfp4", "qwen36-35b-a3b-nvfp4-ohne-mtp"),     # Dominik 2026-10-18 „ja 1“
               "flash": ("qwen38-flash-next-fp4", "qwen38-flash-next-fp4-065")}     # Docker, both memory shares
     wunsch.update({i: (i,) for i, m in kat.items() if m.get("eigen") or docker_bild(m)})   # an own model by its id
     if any(w not in ("llm", "sehen") and w not in wunsch for w in was):
