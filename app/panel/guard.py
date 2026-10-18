@@ -18,8 +18,15 @@ Foreign pages: a page from another site (also another port on the same host, e.g
 on the Spark) must not use the browser's login cookies to change anything here. Changing requests
 that carry a login cookie must come from the panel's own page (Origin or Sec-Fetch-Site).
 
-Change log: STATE/audit.log, one JSON line per event, rotated at AUDIT_MAX bytes (one old file).
+Change log: STATE/audit.log, one JSON line per event (plan plaene/sicheres-ki-system, Dominik 2026-10-18 "1-3").
+Every line carries "p", the SHA-256 of the line before it (also across files), so a line changed, taken out or put
+in breaks the chain; verify() walks it, chain_daily() checks it once a day (journal line with the head, an alert
+on the admin pages when it breaks) and offsite.py puts a sealed copy on the NAS next to the daily backup, which
+"Protokoll prüfen" compares (offsite.compare_audit). At AUDIT_MAX bytes the file moves to audit.log.1, .2, …;
+rotated files go after AUDIT_DAYS days, and never more than AUDIT_FILES are kept.
 """
+import fcntl
+import hashlib
 import ipaddress
 import json
 import os
@@ -44,7 +51,11 @@ ADMIN = "\0admin"
 _lock = threading.Lock()
 
 AUDIT = os.path.join(STATE, "audit.log")
-AUDIT_MAX = 1_000_000
+AUDIT_MAX = 1_000_000   # one file; then it moves to audit.log.1 and the chain goes on in a new one
+AUDIT_DAYS = 366        # a rotated file whose last line is older than this goes
+AUDIT_FILES = 60        # and never more rotated files than this (60 MB)
+GENESIS = "0" * 64      # "p" of the very first line
+AUDIT_LOCK = os.path.join(STATE, "audit.log.lock")   # one writer at a time, also from the command line
 SAVED = os.path.join(STATE, "guard.json")
 
 
@@ -191,7 +202,6 @@ def _browser(request):
     raw = request.cookies.get(KNOWN_COOKIE, "")
     if not raw or len(raw) > 100:
         return None
-    import hashlib
     return "b:" + hashlib.sha256(raw.encode()).hexdigest()
 
 
@@ -261,7 +271,6 @@ def succeeded(request, name=None, response=None):
     ip = client_ip(request)
     browser = _browser(request)
     if response is not None and name and name != BASIC:
-        import hashlib
         import secrets
         raw = request.cookies.get(KNOWN_COOKIE, "")
         if not browser:
@@ -303,7 +312,6 @@ def _rev():
 
 
 def revoke(raw, ttl):
-    import hashlib
     if not raw:
         return
     now = time.time()
@@ -319,7 +327,6 @@ def revoke(raw, ttl):
 
 
 def revoked(raw):
-    import hashlib
     r = _rev()
     return bool(r) and hashlib.sha256(raw.encode()).hexdigest() in r
 
@@ -395,19 +402,136 @@ QUIET_WHY = {
 QUIET = tuple(QUIET_WHY)
 
 
+def line_hash(line):
+    """The chain value of one line (bytes, without its line end)."""
+    return hashlib.sha256(line.rstrip(b"\n")).hexdigest()
+
+
+def audit_files():
+    """The files of the change log that exist, oldest first (audit.log.N … audit.log.1, audit.log)."""
+    rotated = [f"{AUDIT}.{i}" for i in range(AUDIT_FILES, 0, -1)]
+    return [p for p in rotated + [AUDIT] if os.path.exists(p)]
+
+
+def _last_line(path):
+    """The last full line of a file (bytes) or None; reads only the end."""
+    try:
+        with open(path, "rb") as f:
+            f.seek(0, os.SEEK_END)
+            size = f.tell()
+            f.seek(max(0, size - 65536))
+            lines = [x for x in f.read().split(b"\n") if x.strip()]
+    except OSError:
+        return None
+    return lines[-1] if lines else None
+
+
+def _rotate(now):
+    """audit.log → .1, .1 → .2 …; drops files beyond AUDIT_FILES and older than AUDIT_DAYS (called under the lock)."""
+    for i in range(AUDIT_FILES, 0, -1):
+        src = f"{AUDIT}.{i}"
+        if not os.path.exists(src):
+            continue
+        if i == AUDIT_FILES or now - os.path.getmtime(src) > AUDIT_DAYS * 86400:
+            os.remove(src)
+        else:
+            os.replace(src, f"{AUDIT}.{i + 1}")
+    os.replace(AUDIT, AUDIT + ".1")
+
+
 def log(event, **detail):
     item = {"t": int(time.time()), "event": event}
-    item.update({k: v for k, v in detail.items() if v not in (None, "")})
+    item.update({k: v for k, v in detail.items() if v not in (None, "") and k != "p"})
     try:
         with _audit_lock:
             os.makedirs(STATE, exist_ok=True)
-            if os.path.exists(AUDIT) and os.path.getsize(AUDIT) > AUDIT_MAX:
-                os.replace(AUDIT, AUDIT + ".1")
-            with open(os.open(AUDIT, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600), "a") as f:
-                f.write(json.dumps(item, ensure_ascii=False) + "\n")
+            # the command line (speech-spark notzugang) writes here too: one writer at a time across processes;
+            # a lock file that cannot be opened never keeps an entry out
+            try:
+                lk = os.open(AUDIT_LOCK, os.O_WRONLY | os.O_CREAT, 0o600)
+                fcntl.flock(lk, fcntl.LOCK_EX)
+            except OSError:
+                lk = None
+            try:
+                if os.path.exists(AUDIT) and os.path.getsize(AUDIT) > AUDIT_MAX:
+                    _rotate(time.time())
+                prev = _last_line(AUDIT) or _last_line(AUDIT + ".1")
+                item["p"] = line_hash(prev) if prev else GENESIS
+                with open(os.open(AUDIT, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600), "a") as f:
+                    f.write(json.dumps(item, ensure_ascii=False) + "\n")
+            finally:
+                if lk is not None:
+                    os.close(lk)
     except OSError as e:
-        print("audit:", e, flush=True)
+        print("audit:", type(e).__name__, flush=True)
     _to_live(event)
+
+
+def verify():
+    """Walks the whole chain, oldest first. Lines from before the chain (no "p") count as "old" as long as no chained
+    line came before them. The first line of the oldest kept file starts the chain (older files went by age).
+    {"ok", "lines", "old", "files", "first", "last", "head", "broken": None | {"file", "line", "t"}}"""
+    out = {"ok": True, "lines": 0, "old": 0, "files": 0, "first": None, "last": None, "head": "", "broken": None}
+    prev, chained = None, False
+    for path in audit_files():
+        out["files"] += 1
+        try:
+            with open(path, "rb") as f:
+                data = f.read()
+        except OSError:
+            continue
+        for no, line in enumerate(data.split(b"\n"), 1):
+            if not line.strip():
+                continue
+            try:
+                item = json.loads(line)
+                p = item.get("p") if isinstance(item, dict) else None
+                t = int(item.get("t") or 0)
+            except (ValueError, TypeError, AttributeError):
+                p, t, item = None, 0, None
+            bad = item is None or (p is None and chained) or (p is not None and prev is not None and p != line_hash(prev))
+            if bad and out["broken"] is None:
+                out["ok"] = False
+                out["broken"] = {"file": os.path.basename(path), "line": no, "t": t}
+            chained = chained or p is not None
+            out["old"] += p is None and not chained
+            out["lines"] += 1
+            out["first"] = out["first"] or t or None
+            out["last"] = t or out["last"]
+            prev = line
+    out["head"] = line_hash(prev)[:16] if prev else ""
+    return out
+
+
+_chain = {"t": 0, "bad": None}
+
+
+def chain_due(now=None):
+    return (time.time() if now is None else now) - _chain["t"] >= 86400
+
+
+def chain_daily(now=None):
+    """Once a day (and after a start): the chain checked, one journal line with its head (an anchor outside the file),
+    and when it breaks one entry and an alert on the admin pages until it is whole again."""
+    _chain["t"] = time.time() if now is None else now
+    r = verify()
+    print(f"audit: chain {'ok' if r['ok'] else 'broken'} | {r['lines']} lines {r['files']} files | head {r['head']}",
+          flush=True)
+    was = _chain["bad"]
+    _chain["bad"] = r["broken"]
+    if r["broken"] and r["broken"] != was:
+        log("audit_chain_broken", detail=f"{r['broken']['file']} Zeile {r['broken']['line']}")
+    return r
+
+
+def alerts():
+    """For health.alerts: the change log was changed afterwards (found by chain_daily)."""
+    b = _chain["bad"]
+    if not b:
+        return []
+    return [{"kind": "audit", "level": "bad", "go": "Zustand → Logs → Änderungen",
+             "text": f"Das Änderungsprotokoll wurde nachträglich verändert: die Kette bricht in {b['file']}, Zeile "
+                     f"{b['line']}. Unter Zustand → Logs → Änderungen „Protokoll prüfen“ zeigt mehr."}]
 
 
 # What the audit log notes shows on Zustand → Live under "Ereignisse" (live.py), in fixed words: never who,
@@ -446,6 +570,8 @@ LIVE_WORDS = {
     "backup": ("Sicherung", "Sicherung erstellt"), "backup_failed": ("Sicherung", "Sicherung fehlgeschlagen"),
     "backup_download": ("Sicherung", "Sicherung heruntergeladen"), "restore": ("Sicherung", "Sicherung eingespielt"),
     "offsite_backup": ("Sicherung", "Sicherung nach außen übertragen"), "offsite_failed": ("Sicherung", "Sicherung nach außen fehlgeschlagen"),
+    "offsite_log_failed": ("Sicherung", "Kopie des Änderungsprotokolls nicht auf den NAS gekommen"),
+    "audit_chain_broken": ("Sicherheit", "Änderungsprotokoll nachträglich verändert"),
     "rollback": ("Update", "Rückkehr zur vorigen Version gestartet"), "update_from_app": ("Update", "Update aus der App gestartet"),
     "livecheck_failed": ("Dienste", "Funktionsprüfung fehlgeschlagen"), "memory_low": ("Dienste", "Speicher knapp"),
     "room_end": ("Raum-Modus", "Zuhören beendet"), "foreign_page_refused": ("Wächter", "fremde Seite abgewiesen"),
@@ -496,7 +622,7 @@ def _to_live(event):
 def read(limit=300, user=None):
     """Newest first; with user only the entries about that profile id."""
     out = []
-    for path in (AUDIT, AUDIT + ".1"):
+    for path in reversed(audit_files()):
         try:
             with open(path) as f:
                 lines = f.readlines()
@@ -509,6 +635,7 @@ def read(limit=300, user=None):
                 continue
             if user and item.get("uid") != user:
                 continue
+            item.pop("p", None)   # the chain value is for verify(), not for the pages
             out.append(item)
             if len(out) >= limit:
                 return out

@@ -59,6 +59,7 @@ Go through before every commit. In the answer to Dominik briefly name which poin
 - [ ] Secrets live only in the vault and are never returned after saving.
 - [ ] Logs and error texts contain no tokens. Bot tokens and keys are redacted, so do not output `str(e)` from httpx with a token in the URL.
 - [ ] `/health` and similar open pages show only a status, no error texts and no names.
+- [ ] The change log is written only by `guard.log` (hash chain); nothing writes, shortens or deletes `audit.log` another way.
 
 ## root boundary and update
 - [ ] root follows no symlinks in folders owned by `speech` (`chown -h`, delete beforehand).

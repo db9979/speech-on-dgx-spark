@@ -152,6 +152,7 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 - Passwords, codes, PINs and keys are **never spoken** (`textnorm.hide_secrets`). This is a fixed rule without a switch. (M [[secrets-never-spoken]]; 🧪 test_units.Secrets)
 - **Silence never becomes words:** whatever the speech recognition makes of a recording without voice, of a typical silence sentence ("Untertitel im Auftrag des ZDF") or as a lone short word from an almost voiceless recording is no question (`stille.check` in `/api/test/asr`). A new path that turns recordings into text and passes it on uses `stille.measure`/`stille.check`. Fixed rule without a switch. (Dominik 2026-10-13; 🧪 test_stille)
 - Code words never go to the model, never into the history, the diagnostics or the journal. (C)
+- **The change log only through `guard.log`** (Dominik 2026-10-18, plan `sicheres-ki-system`): every line carries the hash chain (`p`, SHA-256 of the line before); no other code writes or shortens `audit.log`, not even clean-up. It is checked daily (`guard.chain_daily`, a hint on top of the admin pages) and with “Check the log” under Status → Logs → Changes against the sealed copy on the NAS (`offsite.compare_audit`). (🧪 test_protokoll)
 - Passwords and keys are only typed into the form, never into the chat. (P funktionen-entdecken)
 
 ### 2.8 root boundary, update, supply chain

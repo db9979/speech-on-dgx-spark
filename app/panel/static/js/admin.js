@@ -580,7 +580,8 @@ const AUDIT={admin_login:t('Admin angemeldet','admin signed in'),admin_login_fai
   invite_made:t('Einladung erstellt','invitation created'),invite_used:t('neue Person über Einladung','new person by invitation'),
   invite_app:t('neue Person über Einladung (iPhone-App)','new person by invitation (iPhone app)'),invite_pin:t('neue PIN über Einladungslink','new PIN through an invitation link'),
   invite_revoked:t('Einladung zurückgezogen','invitation withdrawn'),review_made:t('Prüfzugang erstellt','review access made'),review_used:t('iPhone mit Prüf-Code gekoppelt','iPhone paired with a review code'),review_deleted:t('Prüfzugang gelöscht','review access deleted'),handoff_login:t('Handy über QR-Code angemeldet','phone signed in by QR code'),
-  backup:t('Sicherung','backup'),restore:t('Wiederherstellung','restore'),watchdog:t('Wächter','watchdog')};
+  backup:t('Sicherung','backup'),restore:t('Wiederherstellung','restore'),watchdog:t('Wächter','watchdog'),
+  audit_chain_broken:t('Änderungsprotokoll nachträglich verändert','change log changed afterwards'),offsite_log_failed:t('Protokoll-Kopie nicht auf den NAS gekommen','log copy did not reach the NAS')};
 $('tts.model').addEventListener('change',()=>instrHint(true));
 
 

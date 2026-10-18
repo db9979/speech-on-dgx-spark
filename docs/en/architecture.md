@@ -539,7 +539,8 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `state/android` | Android app for download | – | no |
 | `state/apns-tokens.json` | iPhones for push | – | yes |
 | `state/apns.json` | Apple push key | key sealed | yes |
-| `state/audit.log` | Admin log, 1 MB | – | no |
+| `state/audit.log` | Change log with hash chain, 1 MB per file, one year (audit.log.1 …) | hash chain (SHA-256) | no |
+| `state/audit.log.lock` | Write lock of the change log (empty) | – | no |
 | `state/bedarf.lock` | Lock: only one model on demand at a time (pictures or music) | – | no |
 | `state/begleiter` | Companion updates | – | no |
 | `state/begleiter-inbox` | Phone to PC, 24 h | – | no |
@@ -599,6 +600,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `state/notbetrieb-saetze` | Fixed sentences and building blocks for emergency mode as sound | – | no |
 | `state/notbetrieb-satz-de.pcm` | Emergency sentence as sound | – | no |
 | `state/notbetrieb-satz-en.pcm` | Emergency sentence as sound (English) | – | no |
+| `state/offsite-protokoll.enc.part` | Sealed change log copy on its way to the NAS | – | no |
 | `state/offsite.json` | Offsite backup | sealed | yes |
 | `state/panel-password` | Admin password (hash) | hash | yes |
 | `state/personen-vorrang.json` | Priority per profile | – | yes |
@@ -3072,7 +3074,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Seal**: vault.seal turns the value into „enc1:“ and a Fernet token (encrypted and protected against change). A value already sealed stays as it is.
 5. <a id="kn-state-s5"></a>**Write atomically**: common.write_json writes into a fresh temporary file next to it, never through a link, gives it the rights of the old file (a new one is readable for the service only) and then swaps it in one step. A crash in the middle leaves the old file whole.
 6. <a id="kn-state-s6"></a>**Read**: A sealed value is opened with the key. If the key does not fit (backup from another Spark), an empty value comes back and the account has to be entered again. Older unsealed values are read and sealed the next time they are saved.
-7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 32), otherwise the line gives its reason (dateien.STATE_LOCAL, 76). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
+7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 32), otherwise the line gives its reason (dateien.STATE_LOCAL, 78). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
 8. <a id="kn-state-s8"></a>**Move backup?**: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup.
 9. <a id="kn-state-s9"></a>**Fine when restoring?**: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays.
 10. <a id="kn-state-s10"></a>**Put in place with a way back**: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back.
@@ -3083,7 +3085,7 @@ flowchart TD
 #### Numbers (from the code)
 
 - **32** files in every backup ([step 7](#kn-state-s7))
-- **76** files and folders that stay out with a reason ([step 7](#kn-state-s7))
+- **78** files and folders that stay out with a reason ([step 7](#kn-state-s7))
 - **8 MB** largest file when restoring ([step 9](#kn-state-s9))
 - **12** characters the move password has at least ([step 8](#kn-state-s8))
 

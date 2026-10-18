@@ -78,6 +78,27 @@ def audit(limit: int = 300):
     return {"events": guard.read(max(1, min(limit, 2000))), "names": names}
 
 
+@router.get("/api/audit/check", dependencies=[Depends(main_auth)])
+async def audit_check(request: Request, nas: int = 0):
+    """„Protokoll prüfen“: the change log's chain (guard.verify) and, with nas=1, the newest sealed copy on the NAS
+    against it (offsite.compare_audit). Numbers and file names only."""
+    guard.limit(request, "offsite", admin=True)
+    res = await asyncio.to_thread(guard.verify)
+    out = {"chain": res, "nas": None, "nas_error": ""}
+    if nas:
+        import offsite
+        import zertpin
+        try:
+            out["nas"] = await offsite.compare_audit()
+        except Exception as e:   # noqa: BLE001 - shown as a fixed word, the chain result stands on its own
+            out["nas_error"] = "zertifikat" if zertpin.problem(e) else type(e).__name__
+        print(f"audit: check | chain {'ok' if res['ok'] else 'broken'} | nas "
+              f"{'none' if out['nas'] is None else out['nas']['missing']} missing", flush=True)
+    else:
+        print(f"audit: check | chain {'ok' if res['ok'] else 'broken'}", flush=True)
+    return out
+
+
 @router.get("/api/admin/wyoming/suggest", dependencies=[Depends(auth)])
 async def wyoming_suggest():
     """Addresses to allow for Wyoming: from the Home Assistant URLs of the profiles and from refused knocks."""

@@ -16,7 +16,12 @@ never sent to with the check switched off: the admin compares its fingerprint an
 (zertpin.py, "cert"); a new address forgets it.
 
     STATE/offsite.json  {"on", "nas" (the Spark's NAS connection, nas.py), "path", "key" (sealed),
-                         "last": {...}, "sent": [names]}
+                         "last": {...}, "sent": [names], "sent_log": [names]}
+
+With every copy goes the change log (guard.audit_files, all kept files in one, sealed the same way) as
+speech-spark-protokoll-<stamp>.log.enc, the newest KEEP stay. "Protokoll prüfen" (compare_audit) fetches the newest
+of them and looks whether every line in it that is still in the kept time stands unchanged in the Spark's own log:
+so a line taken out or changed on the Spark shows even when its chain was rebuilt.
                         (before V01.0.4xx "url", "user", "password" (sealed) and "cert" stood here; such a file is
                         read as before and moved onto a NAS connection the next time it is written)
 
@@ -51,6 +56,8 @@ from core import spawn, admin_code, admin_code_fresh, auth
 router = APIRouter()
 FILE = os.path.join(STATE, "offsite.json")
 KEEP = 7
+LOG_PREFIX = "speech-spark-protokoll-"
+LOG_MOST = 80 * 1048576      # the change log copy read back for the comparison: at most this much
 DAILY = 86400
 RETRY = 6 * 3600          # after a failed upload the next try waits six hours
 MAGIC = b"SPARKENC1\n"
@@ -259,8 +266,9 @@ async def run(reason="daily"):
                     await c.delete(url + quote(old), auth=auth)
                 except Exception:   # noqa: BLE001 - an old copy that stays is no error
                     pass
+            logged = await _send_log(c, url, auth, key, item["name"])
         last = {"t": int(time.time()), "ok": True, "name": name, "bytes": size, "seconds": round(time.time() - t0),
-                "why": reason}
+                "why": reason, "log": logged}
         _update(last=last, sent=sent[-KEEP:])
         guard.log("offsite_backup", detail=f"{name} {size // 1048576} MB")
         import live
@@ -286,6 +294,110 @@ async def run(reason="daily"):
                 os.remove(p)   # the local copy: the daily backups stay as they are
             except OSError:
                 pass
+
+
+async def _send_log(c, url, auth, key, stamp):
+    """The change log, sealed, next to the backup; True when it arrived. A failure here never fails the backup."""
+    name = LOG_PREFIX + stamp.removeprefix("speech-spark-").removesuffix(".tar.gz") + ".log.enc"
+    enc = os.path.join(STATE, "offsite-protokoll.enc.part")
+
+    def pack():
+        with open(os.open(enc, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600), "wb") as b:
+            encrypt(_LogReader(guard.audit_files()), b, key)
+    try:
+        await vorrang.in_thread("Protokoll verschlüsseln", pack)
+        with open(enc, "rb") as f:
+            r = await c.put(url + quote(name), content=f.read(), auth=auth,
+                            headers={"Content-Type": "application/octet-stream"})
+        if r.status_code not in (200, 201, 204):
+            raise ValueError(f"HTTP {r.status_code}")
+        sent = [x for x in (_read().get("sent_log") or []) if isinstance(x, str)] + [name]
+        for old in sent[:-KEEP]:
+            try:
+                await c.delete(url + quote(old), auth=auth)
+            except Exception:   # noqa: BLE001 - an old copy that stays is no error
+                pass
+        _update(sent_log=sent[-KEEP:])
+        print("offsite: change log copy sent", flush=True)
+        return True
+    except Exception as e:   # noqa: BLE001 - the backup itself went through; the page shows the log copy apart
+        print("offsite: change log copy failed -", type(e).__name__, flush=True)
+        guard.log("offsite_log_failed", detail=type(e).__name__)
+        return False
+    finally:
+        try:
+            os.remove(enc)
+        except OSError:
+            pass
+
+
+class _LogReader:
+    """The kept files of the change log read one after the other, like one file (for encrypt)."""
+    def __init__(self, paths):
+        self.paths, self.f = list(paths), None
+
+    def read(self, n):
+        while True:
+            if self.f is None:
+                if not self.paths:
+                    return b""
+                self.f = open(self.paths.pop(0), "rb")
+            b = self.f.read(n)
+            if b:
+                return b
+            self.f.close()
+            self.f = None
+
+
+def compare_lines(copy, own_files):
+    """copy: the lines of the NAS copy (bytes); own_files: the Spark's files. Every line of the copy from the Spark's
+    oldest kept line on must stand in the Spark's log unchanged; lines before it went by age (AUDIT_DAYS), not by
+    hand. Without that line in the copy, its time decides. {"lines", "missing", "since"}"""
+    order = []
+    for path in own_files:
+        try:
+            with open(path, "rb") as f:
+                order += [x for x in f.read().split(b"\n") if x.strip()]
+        except OSError:
+            continue
+    own = {guard.line_hash(x) for x in order}
+
+    def t_of(line):
+        try:
+            return int(json.loads(line).get("t") or 0)
+        except (ValueError, TypeError, AttributeError):
+            return 0
+    copy = [x for x in copy if x.strip()]
+    first = guard.line_hash(order[0]) if order else None
+    since = t_of(order[0]) if order else None
+    start = next((i for i, x in enumerate(copy) if guard.line_hash(x) == first), None)
+    if start is None:
+        start = next((i for i, x in enumerate(copy) if since is None or t_of(x) >= since), len(copy))
+    rest = copy[start:]
+    return {"lines": len(rest), "missing": sum(guard.line_hash(x) not in own for x in rest), "since": since}
+
+
+async def compare_audit():
+    """The newest change log copy on the NAS against the Spark's own log. None when there is no copy to compare."""
+    d = _read()
+    names = [x for x in (d.get("sent_log") or []) if isinstance(x, str)]
+    key, url = vault.open_(d.get("key") or ""), d.get("url") or ""
+    if not names or not key or not url:
+        return None
+    auth = (d.get("user") or "", vault.open_(d.get("password") or "")) if d.get("user") else None
+    async with netguard.client(netguard.HOME, origin=url, timeout=120, verify=zertpin.verify(d.get("cert"))) as c:
+        r = await c.get(url + quote(names[-1]), auth=auth)
+        if r.status_code != 200 or len(r.content) > LOG_MOST + 65536:
+            raise ValueError(f"HTTP {r.status_code}")
+        raw = r.content
+
+    def work():
+        import io
+        out = io.BytesIO()
+        decrypt(io.BytesIO(raw), out, key, most=LOG_MOST)
+        return compare_lines(out.getvalue().split(b"\n"), guard.audit_files())
+    res = await vorrang.in_thread("Protokoll vergleichen", work)
+    return dict(res, name=names[-1])
 
 
 def _exists(name):

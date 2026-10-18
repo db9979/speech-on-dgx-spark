@@ -118,7 +118,12 @@ class Upload(unittest.TestCase):
         last = asyncio.run(offsite.run("manual"))
         self.assertTrue(last["ok"], last)
         puts = [x for x in self.seen if x[0] == "PUT"]
-        self.assertEqual(len(puts), 1)
+        self.assertEqual(len(puts), 2)   # the backup, then the sealed change log (test_protokoll)
+        logcopy = puts.pop()
+        self.assertTrue(logcopy[1].startswith("/dav/" + offsite.LOG_PREFIX) and logcopy[1].endswith("-offsite.log.enc"),
+                        logcopy[1])
+        self.assertIn(b'"event"', dec(logcopy[2]))
+        self.assertTrue(last["log"])
         self.assertTrue(puts[0][1].startswith("/dav/speech-spark-") and puts[0][1].endswith("-offsite.tar.gz.enc"))
         self.assertTrue(puts[0][3].startswith("Basic "))
         plain = dec(puts[0][2])
@@ -263,7 +268,7 @@ class Certificate(unittest.TestCase):
         self.assertEqual(r.json()["cert"], c["sha256"])
         last = asyncio.run(offsite.run("manual"))
         self.assertTrue(last["ok"], last)
-        self.assertEqual([x[0] for x in NAS["got"]], ["PUT"])
+        self.assertEqual([x[0] for x in NAS["got"]], ["PUT", "PUT"])   # the backup and the sealed change log
         self.assertTrue(NAS["got"][0][2].startswith("Basic "))
         self.assertTrue(ADMIN.post("/api/admin/offsite/cert", json={}).json()["pinned"])
         # the NAS shows another certificate: nothing goes there until it is accepted again

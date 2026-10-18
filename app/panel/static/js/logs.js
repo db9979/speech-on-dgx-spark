@@ -19,6 +19,19 @@ async function auditRows(){const d=await (await api('/api/audit?limit=500')).jso
     const what=e.event==='change'?`${e.method} ${e.path} → ${e.status}`:(AUDIT[e.event]||e.event)+(e.locked?t(` – gesperrt für ${e.locked} s`,` – locked for ${e.locked} s`):'')+(e.detail?' – '+e.detail:'');
     const msg=`${who?who+': ':''}${what}`+(e.ip?`  (${e.ip})`:'');
     return {t:dt.toTimeString().slice(0,8),area:'',level:/fail|locked|refused/.test(e.event)?'warn':'',msg,raw:`${dt.toLocaleString()}  ${msg}`}})}
+// „Protokoll prüfen“ : the chain of the change log and the sealed copy on the NAS (guard.verify, offsite.compare_audit)
+function auditChain(){const box=$('logkette');if(!box||box.childElementCount)return;
+  const b=el('button','b',t('Protokoll prüfen','Check the log'));b.type='button';const out=el('span','lsub',t('Prüft die Kette aller Einträge und vergleicht mit der Kopie auf dem NAS.','Checks the chain of all entries and compares with the copy on the NAS.'));
+  box.append(b,out);b.onclick=async()=>{b.disabled=true;out.textContent=t('prüft …','checking …');
+    try{out.textContent=chainSay(await (await api('/api/audit/check?nas=1')).json())}catch(e){out.textContent=e.message}finally{b.disabled=false}}}
+function chainSay(d){const c=d.chain,n=d.nas,day=x=>x?new Date(x*1000).toLocaleDateString():'–';
+  let s=c.ok?t(`Kette heil: ${c.lines} Einträge seit ${day(c.first)}.`,`Chain whole: ${c.lines} entries since ${day(c.first)}.`)
+    :t(`Kette bricht in ${c.broken.file}, Zeile ${c.broken.line} (${day(c.broken.t)}): danach wurde etwas verändert.`,`Chain breaks in ${c.broken.file}, line ${c.broken.line} (${day(c.broken.t)}): something was changed from there.`);
+  if(c.old)s+=t(` ${c.old} ältere Einträge ohne Kette.`,` ${c.old} older entries without chain.`);
+  if(n)s+=n.missing?t(` NAS-Kopie: ${n.missing} von ${n.lines} Einträgen fehlen hier oder sind verändert.`,` NAS copy: ${n.missing} of ${n.lines} entries are missing here or changed.`)
+    :t(` NAS-Kopie stimmt (${n.lines} Einträge).`,` NAS copy matches (${n.lines} entries).`);
+  else s+=d.nas_error?t(' NAS-Kopie nicht erreichbar.',' NAS copy not reachable.'):t(' Noch keine NAS-Kopie: Einstellungen → Sicherung → Sicherung nach außen.',' No NAS copy yet: Settings → Backup → Backup to the outside.');
+  return s}
 async function loadLogs(){
   if(LG.tab==='req'&&!TRACE_ON)LG.tab='diag';
   const tab=LG.tab;let rows=[],head='';LAT=Date.now();
@@ -37,7 +50,7 @@ function lshow(){
   document.querySelectorAll('#logtabs button').forEach(b=>b.classList.toggle('on',b.dataset.lt===LG.tab));
   document.querySelectorAll('#logmin button').forEach(b=>b.classList.toggle('on',+b.dataset.v===LG.min));
   const diag=LG.tab==='diag';$('logmin').hidden=!(diag||LG.tab==='update'||req);$('logsum').hidden=!diag;$('logchips').hidden=!(diag||req);
-  if(!diag)$('lasterr').hidden=true;if(LG.tab!=='adm')$('logundo').hidden=true;$('logsvcbar').hidden=LG.tab!=='svc';$('logsvc').value=LG.svc;$('loglines').value=String(LG.lines);
+  if(!diag)$('lasterr').hidden=true;if(LG.tab!=='adm')$('logundo').hidden=true;$('logkette').hidden=LG.tab!=='audit';if(LG.tab==='audit')auditChain();$('logsvcbar').hidden=LG.tab!=='svc';$('logsvc').value=LG.svc;$('loglines').value=String(LG.lines);
   $('loglive').classList.toggle('on',LG.live);$('loglive').setAttribute('aria-pressed',LG.live?'true':'false')}
 function ltile(key,label,color,count,spark,sub){
   const b=el('button','ltile'+(key==='errors'?' err':'')+(LG.f.length===1&&LG.f[0]===key?' on':''));b.type='button';b.style.setProperty('--c',color);

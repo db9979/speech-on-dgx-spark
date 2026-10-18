@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.780** Tamper-evident change log: hash chain, one year, copy on the NAS, "Check the log"
 - **V01.0.779** Knowledge book checks itself at night; you settle contradictions and out-of-date sentences with one click
 - **V01.0.778** iPhone app: see left-out folders, let them in again and keep name rules
 - **V01.0.777** Left-out folders also for the reMarkable and the companion's folder Spark-Wissen (new companion version)
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.773** Fix: knowledge book tab without a false alarm of the inline handler check
 - **V01.0.772** Knowledge book: documents become pages with a source per sentence, answers from them first
 - **V01.0.771** Leave out folders: unimportant folders under Me → Documents → Left-out folders are no longer read and leave the search at once
-- **V01.0.770** Fix: measuring models paints alongside only when enough memory stays free
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

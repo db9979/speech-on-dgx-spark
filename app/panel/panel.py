@@ -330,8 +330,10 @@ async def stability():
                 if backup.due():   # packing is CPU and disk work: in a pause, with low priority
                     item = await vorrang.in_thread("Sicherung", backup.create, "daily")
                     print("backup:", item["name"], flush=True)
-                if offsite.due():  # the encrypted copy to the NAS (off unless switched on)
+                if offsite.due():  # the encrypted copy to the NAS (off unless switched on), with the change log
                     await offsite.run("daily")
+                if guard.chain_due():   # the change log's chain, once a day and after a start
+                    await vorrang.in_thread("Protokoll prüfen", guard.chain_daily)
             except Exception as e:
                 guard.log("backup_failed", detail=f"{type(e).__name__}: {e}"[:200])
             await asyncio.sleep(3600)

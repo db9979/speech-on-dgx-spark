@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.780** Änderungsprotokoll fälschungssicher: Prüfkette, ein Jahr, Kopie auf dem NAS, „Protokoll prüfen“
 - **V01.0.779** Wissensbuch prüft nachts, Widersprüche und veraltete Sätze klärst du mit einem Klick
 - **V01.0.778** iPhone-App: Ausgelassene Ordner ansehen, wieder zulassen und Namensregeln pflegen
 - **V01.0.777** Ordner auslassen auch für reMarkable und den Begleiter-Ordner Spark-Wissen (neue Begleiter-Version)
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.773** Fix: Wissensbuch-Reiter ohne Fehlalarm der Inline-Handler-Prüfung
 - **V01.0.772** Wissensbuch: Dokumente werden zu Seiten mit Quelle je Satz, Antworten zuerst daraus
 - **V01.0.771** Ordner auslassen: unwichtige Ordner unter Ich → Dokumente → Ausgelassene Ordner werden nicht mehr gelesen und verlassen sofort die Suche
-- **V01.0.770** Fix: Modelle messen malt nebenher nur noch, wenn genug Speicher frei bleibt
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

@@ -152,6 +152,7 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
 - Passwörter, Codes, PINs und Schlüssel werden **nie gesprochen** (`textnorm.hide_secrets`). Das ist eine feste Regel ohne Schalter. (M [[secrets-never-spoken]]; 🧪 test_units.Secrets)
 - **Stille wird nie zu Wörtern:** Was die Spracherkennung aus einer Aufnahme ohne Stimme, aus einem typischen Stille-Satz („Untertitel im Auftrag des ZDF“) oder als einzelnes kurzes Wort aus fast stimmloser Aufnahme macht, ist keine Frage (`stille.check` in `/api/test/asr`). Ein neuer Weg, der Aufnahmen in Text verwandelt und weitergibt, nutzt `stille.measure`/`stille.check`. Feste Regel ohne Schalter. (Dominik 2026-10-13; 🧪 test_stille)
 - Codewörter gehen nie ans Modell, nie in den Verlauf, die Diagnose oder das Journal. (C)
+- **Änderungsprotokoll nur über `guard.log`** (Dominik 2026-10-18, Plan `sicheres-ki-system`): Jede Zeile trägt die Prüfkette (`p`, SHA-256 der Zeile davor); kein anderer Code schreibt oder kürzt `audit.log`, auch Aufräumen nicht. Geprüft wird täglich (`guard.chain_daily`, Hinweis oben auf den Admin-Seiten) und mit „Protokoll prüfen“ unter Zustand → Logs → Änderungen gegen die versiegelte Kopie auf dem NAS (`offsite.compare_audit`). (🧪 test_protokoll)
 - Passwörter und Schlüssel werden nur ins Formular getippt, nie in den Chat. (P funktionen-entdecken)
 
 ### 2.8 root-Grenze, Update, Lieferkette

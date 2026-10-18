@@ -59,6 +59,7 @@ Vor jedem Commit durchgehen. In der Antwort an Dominik kurz nennen, welche Punkt
 - [ ] Geheimnisse liegen nur im vault und werden nach dem Speichern nie zurückgegeben.
 - [ ] Logs und Fehlertexte enthalten keine Tokens. Bot-Tokens und Schlüssel werden geschwärzt, also nicht `str(e)` von httpx mit Token in der URL ausgeben.
 - [ ] `/health` und ähnliche offene Seiten zeigen nur einen Status, keine Fehlertexte und keine Namen.
+- [ ] Das Änderungsprotokoll schreibt nur `guard.log` (Prüfkette); nichts schreibt, kürzt oder löscht `audit.log` anders.
 
 ## root-Grenze und Update
 - [ ] root folgt keinen Symlinks in Ordnern, die `speech` gehören (`chown -h`, vorher löschen).

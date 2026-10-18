@@ -374,6 +374,7 @@ def alerts():
     out += praxistest.alerts()       # points of the hands-on test still open (level info, Zustand → Praxistest)
     import rundlauf
     out += rundlauf.alerts()         # the round trip through the models: the step that hakt, a step much slower
+    out += guard.alerts()            # the change log changed afterwards (its chain breaks, guard.chain_daily)
     return out
 
 

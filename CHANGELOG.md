@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.780** · 2026-10-18 · Änderungsprotokoll fälschungssicher: jede Zeile mit Prüfkette (SHA-256 der Zeile davor), ein Jahr aufbewahrt, täglich geprüft mit Hinweis bei einem Bruch, versiegelte Kopie mit der Sicherung nach außen auf dem NAS, Knopf „Protokoll prüfen“ unter Zustand → Logs → Änderungen vergleicht beides
 - **V01.0.779** · 2026-10-18 · Wissensbuch Stufe C: Nachtprüfung (neu gelesene Dokumente neu einarbeiten, verschwundene entfernen, „veraltet?“ nach R1/R2, Stichprobe Ja/Nein durch das Sprachmodell), gelöschte und ausgelassene Dokumente gehen sofort (documents.on_gone), Widersprüche mit „Stimmt“ klären
 - **V01.0.778** · 2026-10-18 · Ordner auslassen, Stufe C: die iPhone-App zeigt unter Meine Sachen → Dokumente → Ausgelassene Ordner die Liste, lässt Ordner wieder zu und legt Namensregeln an oder entfernt sie; Android zeigt die Panel-Seite samt Ordnerbaum
 - **V01.0.777** · 2026-10-18 · Ordner auslassen, Stufe B: auch reMarkable-Ordner und Unterordner von „Spark-Wissen“ am PC lassen sich unter Ich → Dokumente → Ausgelassene Ordner auslassen; der reMarkable-Abgleich liest sie nicht, der Begleiter (neue Version Mac und Windows) schickt nichts von dort und nennt zu jeder Datei ihren Ordner, das Panel lehnt solche Dateien ab; schon Gelesenes verlässt sofort die Suche
