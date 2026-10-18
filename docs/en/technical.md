@@ -40,6 +40,8 @@ Since V01.0.163 every value gets a level (very good, good, tight, too slow) and 
 | Speed of the voice | from 2× real time | from 1.3× | from 1× (below it stutters) |
 | Several at once (total / count) | from 1.5 | from 1 | from 0.7 |
 | First audio with several (latest) | up to 1 s | up to 1.5 s | up to 3 s |
+| First audio with 2 at once, short sentence with several (latest) | up to 1 s | up to 1.5 s | up to 3 s |
+| Of it in the queue (longest wait) | up to 0.1 s | up to 0.5 s | up to 2 s |
 | Test sentence recognised in | up to 1.5 s | up to 3 s | up to 5 s |
 | Understood correctly (words of the test sentence) | from 95 % | from 90 % | from 85 % |
 | Free on the Spark | | from 14 GiB | from 10 GiB (below it critical) |
@@ -47,6 +49,18 @@ Since V01.0.163 every value gets a level (very good, good, tight, too slow) and 
 "Words understood" is missing with `--audio` (the text of your own recording is unknown). The last ten runs' key numbers are kept in `bench-history.json`.
 
 The benchmark goes through the public ports, so it measures what apps see. The last result is stored in `/var/lib/speech-spark/state/bench-latest.json`. The memory shares of the engines (configuration) are starting values: set them to fit after the measurement.
+
+Since V01.0.800 speech output measures several at once three times: the long test text with the set number (`--parallel`, default 4) and with 2, and when streaming one short answer sentence with the set number, like the first sentence of a real answer. Each request brings along how long it waited in the TTS service (`X-Spark-Wait-Ms` from `common.PrioGate`); "Davon in der Warteschlange" (of it in the queue) thus separates waiting for a slot (`tts.engine_max_seqs`) from the engine's computing. The console shows `engine_max_seqs` with it.
+
+### Several voices at once
+
+Three settings under **Settings → Speech output → Advanced** are meant to make the first audio faster when several answers run at once. All are off (as before); switch each on alone and measure performance before and after.
+
+- **Shorten the reference of your own voice** (`tts.ref_max_s`: off, 8, 10 or 15 s): with a Base model every sentence carries the cloned voice's whole reference recording, and the engine reads all of it before the first audio. When the recording is more than 2 s longer than the limit, the TTS service cuts it once at the quietest point between 60 % of the limit (at least 3 s) and the limit (`kurzref.cut_at`), has speech recognition on this computer write the piece down and keeps as many words of the voice's own text as it heard (`kurzref.keep_words`, at least 70 % alike). When it does not fit, the whole recording stays. The piece is kept with its text in `voices/kurz/` and applies until the recording or the limit changes; the recording itself stays unchanged. Every result writes a line `tts: referenz …` to the speech output's log (shortened with seconds, already short, format, speech recognition, does not fit, error), without names or text.
+- **Several voices at once** (`tts.engine_decode_batch`: 1, 2 or 4): the decoder (Code2Wav) computes up to 2 or 4 voices together, with CUDA graphs for 1 to n voices (`decode_batch_max_size`, `decode_cudagraph_batch_sizes`, like vllm-omni's profiles for many requests). Takes a little more memory and time at start.
+- **Remember the same beginning** (`tts.engine_prefix_cache`): the talker remembers the part of the prompt that is the same in every sentence of the same voice (`enable_prefix_caching` for stage 0).
+
+`engine.sh` writes both engine values into the deploy file (`state/tts-deploy-main.yaml`) and the stage values; a change restarts speech output. vllm-omni 0.30 already bounds the decoder's reference context to 72 frames itself (`ref_code_context_frames` follows `codec_left_context_frames`).
 
 ## Language model: own or dgx-spark-qwen38
 

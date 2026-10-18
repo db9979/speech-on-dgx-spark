@@ -40,6 +40,8 @@ Seit V01.0.163 bekommt jeder Wert eine Stufe (sehr gut, gut, knapp, zu langsam) 
 | Tempo der Stimme | ab 2× Echtzeit | ab 1,3× | ab 1× (darunter stockt sie) |
 | Mehrere gleichzeitig (gesamt / Anzahl) | ab 1,5 | ab 1 | ab 0,7 |
 | Erster Ton bei mehreren (spätester) | bis 1 s | bis 1,5 s | bis 3 s |
+| Erster Ton bei 2 gleichzeitig, kurzer Satz bei mehreren (spätester) | bis 1 s | bis 1,5 s | bis 3 s |
+| Davon in der Warteschlange (längste Wartezeit) | bis 0,1 s | bis 0,5 s | bis 2 s |
 | Testsatz erkannt in | bis 1,5 s | bis 3 s | bis 5 s |
 | Richtig verstanden (Wörter des Testsatzes) | ab 95 % | ab 90 % | ab 85 % |
 | Frei auf dem Spark | | ab 14 GiB | ab 10 GiB (darunter kritisch) |
@@ -47,6 +49,18 @@ Seit V01.0.163 bekommt jeder Wert eine Stufe (sehr gut, gut, knapp, zu langsam) 
 „Richtig verstanden“ fehlt bei `--audio`, weil der Text der eigenen Aufnahme unbekannt ist. Die Kennzahlen der letzten zehn Messungen stehen in `bench-history.json`.
 
 Die Messung geht über die öffentlichen Ports, misst also das, was Apps sehen. Das letzte Ergebnis steht in `/var/lib/speech-spark/state/bench-latest.json`. Die Speicheranteile der Engines (Konfiguration) sind Startwerte: nach der Messung passend einstellen.
+
+Seit V01.0.800 misst die Sprachausgabe mehrere gleichzeitig dreimal: den langen Testtext mit der eingestellten Zahl (`--parallel`, Standard 4) und mit 2, dazu beim Streamen einen kurzen Antwortsatz mit der eingestellten Zahl, wie der erste Satz einer echten Antwort. Jede Anfrage bringt mit, wie lange sie im TTS-Dienst gewartet hat (`X-Spark-Wait-Ms` von `common.PrioGate`); „Davon in der Warteschlange“ trennt so das Warten auf einen Platz (`tts.engine_max_seqs`) vom Rechnen der Engine. In der Konsole steht `engine_max_seqs` dabei.
+
+### Mehrere Stimmen gleichzeitig
+
+Drei Einstellungen unter **Einstellungen → Sprachausgabe → Erweitert** sollen den ersten Ton beschleunigen, wenn mehrere Antworten gleichzeitig laufen. Alle stehen auf aus (so wie bisher); jede einzeln einschalten und vorher und nachher Leistung messen.
+
+- **Referenz der eigenen Stimme kürzen** (`tts.ref_max_s`: aus, 8, 10 oder 15 s): Mit einem Base-Modell geht bei jedem Satz die ganze Referenzaufnahme der geklonten Stimme mit, und die Engine liest sie vor dem ersten Ton ganz. Ist die Aufnahme mehr als 2 s länger als die Grenze, schneidet der TTS-Dienst sie einmal an der leisesten Stelle zwischen 60 % der Grenze (mindestens 3 s) und der Grenze (`kurzref.cut_at`), lässt das Stück von der Spracherkennung auf diesem Rechner aufschreiben und behält vom eigenen Text der Stimme so viele Wörter, wie sie gehört hat (`kurzref.keep_words`, mindestens 70 % gleich). Passt es nicht, bleibt die ganze Aufnahme. Das Stück liegt mit Text in `voices/kurz/` und gilt, bis sich die Aufnahme oder die Grenze ändert; die Aufnahme selbst bleibt unverändert. Jedes Ergebnis schreibt eine Zeile `tts: referenz …` ins Log der Sprachausgabe (gekürzt mit Sekunden, schon kurz, Format, Spracherkennung, passt nicht, Fehler), ohne Namen oder Text.
+- **Mehrere Stimmen gleichzeitig** (`tts.engine_decode_batch`: 1, 2 oder 4): Der Decoder (Code2Wav) rechnet bis zu 2 oder 4 Stimmen zusammen, mit CUDA-Graphen für 1 bis n Stimmen (`decode_batch_max_size`, `decode_cudagraph_batch_sizes`, wie die Profile von vllm-omni für viele Anfragen). Braucht beim Start etwas mehr Speicher und Zeit.
+- **Gleichen Anfang merken** (`tts.engine_prefix_cache`): Der Talker merkt sich den Teil des Prompts, der bei jedem Satz derselben Stimme gleich ist (`enable_prefix_caching` für Stufe 0).
+
+Die beiden Engine-Werte schreibt `engine.sh` in die Deploy-Datei (`state/tts-deploy-main.yaml`) und in die Stufen-Werte; eine Änderung startet die Sprachausgabe neu. Den Referenz-Kontext des Decoders begrenzt vllm-omni 0.30 schon selbst auf 72 Takte (`ref_code_context_frames` folgt `codec_left_context_frames`).
 
 ## Sprachmodell: eigenes oder dgx-spark-qwen38
 

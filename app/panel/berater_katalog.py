@@ -199,8 +199,9 @@ OHNE = {
     ),
     "tts": (
         "backend", "calm", "clean_text", "default_instruct", "default_language", "default_voice", "dtype",
-        "enabled", "engine_max_model_len", "engine_max_seqs", "engine_mem_code2wav", "engine_mem_talker",
-        "engine_port", "host", "model", "numbers", "port", "seed", "temperature", "top_p", "voicedesign_enabled",
+        "enabled", "engine_decode_batch", "engine_max_model_len", "engine_max_seqs", "engine_mem_code2wav",
+        "engine_mem_talker", "engine_port", "engine_prefix_cache", "host", "model", "numbers", "port", "ref_max_s",
+        "seed", "temperature", "top_p", "voicedesign_enabled",
         "voicedesign_model", "voicedesign_port",
     ),
     "watch": (

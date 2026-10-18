@@ -685,6 +685,12 @@ def validate(new):
         raise HTTPException(400, "top_p must be 0.05..1")
     if not isinstance(t.get("initial_chunk_frames"), int) or not 0 <= t["initial_chunk_frames"] <= 25:
         raise HTTPException(400, "Speech output start (first audio block): a whole number of frames from 0 to 25")
+    if t.get("engine_decode_batch") not in (1, 2, 4) or isinstance(t.get("engine_decode_batch"), bool):
+        raise HTTPException(400, "Several voices at once (decoder): 1, 2 or 4")
+    if not isinstance(t.get("engine_prefix_cache"), bool):
+        raise HTTPException(400, "engine_prefix_cache must be true or false")
+    if t.get("ref_max_s") not in (0, 8, 10, 15) or isinstance(t.get("ref_max_s"), bool):
+        raise HTTPException(400, "Shorten the voice reference: 0 (off), 8, 10 or 15 seconds")
     if t.get("numbers") not in ("off", "words", "blocks", "digits"):
         raise HTTPException(400, "numbers must be off, words, blocks or digits")
     if not isinstance(t.get("seed"), int) or t["seed"] < -1:
@@ -1404,8 +1410,8 @@ def clone_voice_audio(name: str):
 def delete_clone_voice(name: str):
     if not re.fullmatch(r"[A-Za-z0-9_\-]{1,40}", name):
         raise HTTPException(400, "bad name")
-    for ext in (".wav", ".txt"):
-        p = os.path.join(VOICES_DIR, name + ext)
+    for p in [os.path.join(VOICES_DIR, name + ext) for ext in (".wav", ".txt")] + \
+            [os.path.join(VOICES_DIR, "kurz", name + ext) for ext in (".wav", ".txt", ".json")]:   # kurzref.py
         if os.path.exists(p):
             os.remove(p)
     return {"ok": True}

@@ -2525,7 +2525,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "rufe und setzt ans Zeilenende einen Punkt, damit die Stimme absetzt. Bleibt nichts übrig, kommt keine Anfrage an die Engine. 7. Sprache, Aussprache, Zahlen: Steht die Sprache auf Auto, rät guess_language an häufigen Wörtern Deutsch oder Englisch, damit ein einzelnes englisches Wort nicht den Ton der ganzen Antwort ändert. Dann gilt die eigene Aussprache-Liste, danach schreibt speak_abbreviations Abkürzungen aus („z. B.“, „ca.“, „€/Monat“) und speak_numbers Datum, Uhrzeit, Geld, Zahlen und Einheiten (km/h, kWh, kg, GB …). 8. Stimme wählen: Temperatur, top_p und ein fester Seed aus den Einstellungen halten die Stimme von Satz zu Satz gleich. Ein Base-Modell spricht mit einer geklonten Stimme aus voices/ (apply_clone); ein unbekannter Name fällt auf die Standardstimme zurück. 9. Gestreamt mit anderem Tempo?: vllm-omni nimmt beim Streamen kein Tempo an. Dann streckt tempo.Stretcher den Ton Stück für Stück selbst (WSOLA, die Tonhöhe bleibt). 10. Warten nach Vorrang: PrioGate lässt so viele Sätze durch, wie die Engine gleichzeitig nimmt (engine_max_seqs); die anderen warten nach Stufe, dann nach Ankunft. 11. Engine spricht: Die Engine erzeugt den Ton. Gestreamt kommt er als Stücke zurück"
+"text": "rufe und setzt ans Zeilenende einen Punkt, damit die Stimme absetzt. Bleibt nichts übrig, kommt keine Anfrage an die Engine. 7. Sprache, Aussprache, Zahlen: Steht die Sprache auf Auto, rät guess_language an häufigen Wörtern Deutsch oder Englisch, damit ein einzelnes englisches Wort nicht den Ton der ganzen Antwort ändert. Dann gilt die eigene Aussprache-Liste, danach schreibt speak_abbreviations Abkürzungen aus („z. B.“, „ca.“, „€/Monat“) und speak_numbers Datum, Uhrzeit, Geld, Zahlen und Einheiten (km/h, kWh, kg, GB …). 8. Stimme wählen: Temperatur, top_p und ein fester Seed aus den Einstellungen halten die Stimme von Satz zu Satz gleich. Ein Base-Modell spricht mit einer geklonten Stimme aus voices/ (apply_clone); ein unbekannter Name fällt auf die Standardstimme zurück. Mit „Referenz der eigenen Stimme kürzen“ (tts.ref_max_s) nimmt es statt einer langen Aufnahme ein Stück davon: kurzref.cut_at schneidet einmal an der leisesten Stelle vor der Grenze, die Spracherkennung schreibt das Stück auf, kurzref.keep_words behält davon die Wörter des eigenen Textes (mindestens 70 % gleich, sonst bleibt die ganze Aufnahme). Bis das Stück fertig ist, gilt die ganze Aufnahme. 9. Gestreamt mit "
 },
 {
 "lang": "de",
@@ -2533,7 +2533,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "; das erste Stück ist absichtlich klein (initial_chunk_frames), damit der Ton schnell beginnt, auch wenn mehrere Anfragen laufen. 12. Ton zurück: Der Proxy reicht den Ton unverändert weiter und zählt nur Dauer, Länge und Fehler für das Monitoring, nie den Text."
+"text": "anderem Tempo?: vllm-omni nimmt beim Streamen kein Tempo an. Dann streckt tempo.Stretcher den Ton Stück für Stück selbst (WSOLA, die Tonhöhe bleibt). 10. Warten nach Vorrang: PrioGate lässt so viele Sätze durch, wie die Engine gleichzeitig nimmt (engine_max_seqs); die anderen warten nach Stufe, dann nach Ankunft. 11. Engine spricht: Die Engine erzeugt den Ton. Gestreamt kommt er als Stücke zurück; das erste Stück ist absichtlich klein (initial_chunk_frames), damit der Ton schnell beginnt, auch wenn mehrere Anfragen laufen. „Mehrere Stimmen gleichzeitig“ (tts.engine_decode_batch) bündelt im Decoder bis zu 2 oder 4 Stimmen mit CUDA-Graphen, „Gleichen Anfang merken“ (tts.engine_prefix_cache) lässt die Engine den gleichen Anfang der Sätze einer Stimme wiederverwenden; beide stehen auf aus (Standard von vllm-omni). 12. Ton zurück: Der Proxy reicht den Ton unverändert weiter und zählt nur Dauer, Länge und Fehler für das Monitoring, nie den Text."
 },
 {
 "lang": "de",
@@ -2549,7 +2549,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 20000 Zeichen pro Anfrage höchstens (Schritt 3) - „nur schriftlich sichtbar“ sagt die Stimme statt eines Geheimnisses (Schritt 5) - 4 Arten, Zahlen vorzulesen (Schritt 7)"
+"text": "- 20000 Zeichen pro Anfrage höchstens (Schritt 3) - „nur schriftlich sichtbar“ sagt die Stimme statt eines Geheimnisses (Schritt 5) - 4 Arten, Zahlen vorzulesen (Schritt 7) - 3.0 s bleiben von einer gekürzten Referenz mindestens (Schritt 8) - 2.0 s länger als die Grenze, erst dann wird gekürzt (Schritt 8)"
 },
 {
 "lang": "de",
@@ -2557,7 +2557,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Einstellen",
 "title": "Einstellen",
-"text": "- Einstellungen → Sprachausgabe: Modell, Standardstimme, Sprache, Text bereinigen, Zahlen vorlesen und die eigene Aussprache-Liste. - Einstellungen → Stimmen: eigene Stimmen aufnehmen, anhören und sichern (für ein Base-Modell)."
+"text": "- Einstellungen → Sprachausgabe: Modell, Standardstimme, Sprache, Text bereinigen, Zahlen vorlesen und die eigene Aussprache-Liste. - Einstellungen → Stimmen: eigene Stimmen aufnehmen, anhören und sichern (für ein Base-Modell). - Einstellungen → Sprachausgabe → Erweitert: „Referenz der eigenen Stimme kürzen“, „Mehrere Stimmen gleichzeitig“ und „Gleichen Anfang merken“ (alle aus); vorher und nachher Zustand → Prüfen → Leistung messen."
 },
 {
 "lang": "de",
@@ -2573,7 +2573,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/tts_proxy.py speech: der Weg eines Satzes durch den Proxy (Schritt 1) - app/tts_proxy.py check_reference: Vorlage nur eingebettet (Schritt 8) - app/tts_proxy.py engine_status: bereit, lädt, Fehler oder aus (Schritt 4) - app/tts_proxy.py apply_clone: geklonte Stimme aus voices/ (Schritt 8) - app/textnorm.py speech_markdown: Markdown-Zeichen weg (Schritt 5) - app/textnorm.py hide_secrets: Geheimnisse nie sprechen (Schritt 5) - app/textnorm.py clean_text: Emojis, Lachen, Links, Code (Schritt 6) - app/textnorm.py guess_language: Deutsch oder Englisch raten (Schritt 7) - app/textnorm.py speak_numbers: Zahlen ausschreiben (Schritt 7) - app/tempo.py Stretcher: Tempo beim Streamen (Schritt 9) - app/common.py PrioGate: Warten nach Vorrang (Schritt 10)"
+"text": "- app/tts_proxy.py speech: der Weg eines Satzes durch den Proxy (Schritt 1) - app/tts_proxy.py check_reference: Vorlage nur eingebettet (Schritt 8) - app/tts_proxy.py engine_status: bereit, lädt, Fehler oder aus (Schritt 4) - app/tts_proxy.py apply_clone: geklonte Stimme aus voices/ (Schritt 8) - app/textnorm.py speech_markdown: Markdown-Zeichen weg (Schritt 5) - app/textnorm.py hide_secrets: Geheimnisse nie sprechen (Schritt 5) - app/textnorm.py clean_text: Emojis, Lachen, Links, Code (Schritt 6) - app/textnorm.py guess_language: Deutsch oder Englisch raten (Schritt 7) - app/textnorm.py speak_numbers: Zahlen ausschreiben (Schritt 7) - app/tempo.py Stretcher: Tempo beim Streamen (Schritt 9) - app/tts_proxy.py shorten: Referenz einmal kürzen (Schritt 8) - app/kurzref.py cut_at: leiseste Stelle vor der Grenze (Schritt 8) - app/kurzref.py keep_words: Wörter des eigenen Textes behalten (Schritt 8) - app/common.py PrioGate: Warten nach Vorrang (Schritt 10)"
 },
 {
 "lang": "de",
@@ -2581,7 +2581,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "Selbsttests: test_units, test_markdown, test_hardening, test_stufe, test_tempo"
+"text": "Selbsttests: test_units, test_markdown, test_hardening, test_stufe, test_tempo, test_kurzref"
 },
 {
 "lang": "de",
@@ -3133,7 +3133,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "1. Admin nimmt eine Stimme auf: Unter Einstellungen → Stimmen lädt der Admin eine Aufnahme hoch, mit Namen und am besten mit dem gesprochenen Text. 2. Name erlaubt?: Der Name wird zum Dateinamen; deshalb nur Buchstaben, Ziffern, Unterstrich und Bindestrich. Die Aufnahme darf höchstens sechzig MB groß sein. 3. Kein WAV?: Die Engine erwartet WAV. Alles andere wandelt ffmpeg in Mono-WAV um, höchstens zwei Minuten lang. 4. Ablegen: Die Aufnahme wird voices/Name.wav, der Text voices/Name.txt. Ohne Text nutzt die Engine nur die Klangfarbe. 5. Mit der Stimme sprechen: Ist ein Base-Modell eingestellt, liest der TTS-Dienst die Stimme als eingebettete Aufnahme (apply_clone) und merkt sie sich, bis sich die Datei ändert. 6. Stimmen als ZIP: Ein Import nimmt nur flache Name.wav und Name.txt, prüft die Größe jeder Datei, bevor etwas entpackt wird, und benennt bei Gleichstand um, überschreibt oder überspringt, wie gewählt. 7. Einmal am Tag: Das Panel schaut jede Stunde, ob die letzte Sicherung älter als ein Tag ist. Dann packt es in einer Pause (vorrang.in_thread), mit niedriger Priorität. Dazu kommen Sicherungen vor jedem Update, Zurücksetzen und Wiederherstellen. 8. Packen: backup.create schre"
+"text": "1. Admin nimmt eine Stimme auf: Unter Einstellungen → Stimmen lädt der Admin eine Aufnahme hoch, mit Namen und am besten mit dem gesprochenen Text. 2. Name erlaubt?: Der Name wird zum Dateinamen; deshalb nur Buchstaben, Ziffern, Unterstrich und Bindestrich. Die Aufnahme darf höchstens sechzig MB groß sein. 3. Kein WAV?: Die Engine erwartet WAV. Alles andere wandelt ffmpeg in Mono-WAV um, höchstens zwei Minuten lang. 4. Ablegen: Die Aufnahme wird voices/Name.wav, der Text voices/Name.txt. Ohne Text nutzt die Engine nur die Klangfarbe. 5. Mit der Stimme sprechen: Ist ein Base-Modell eingestellt, liest der TTS-Dienst die Stimme als eingebettete Aufnahme (apply_clone) und merkt sie sich, bis sich die Datei ändert. Mit „Referenz der eigenen Stimme kürzen“ legt er ein gekürztes Stück mit seinem Text in voices/kurz/ ab; die Aufnahme bleibt. 6. Stimmen als ZIP: Ein Import nimmt nur flache Name.wav und Name.txt, prüft die Größe jeder Datei, bevor etwas entpackt wird, und benennt bei Gleichstand um, überschreibt oder überspringt, wie gewählt. 7. Einmal am Tag: Das Panel schaut jede Stunde, ob die letzte Sicherung älter als ein Tag ist. Dann packt es in einer Pause (vorrang.in_thread), mit ni"
 },
 {
 "lang": "de",
@@ -3141,7 +3141,15 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ibt in backups/ (nur für den Dienst) erst eine .part-Datei, dann den fertigen Namen: backup.json, users/ ohne users/secret und Nachrichten, voices/, config.json, das Panel-Passwort und die Dateien aus STATE_FILES. SQLite-Dateien kommen als stimmige Kopie hinein. 9. Umzugs-Sicherung?: Mit einem Passwort (12 bis 200 Zeichen) trägt die Sicherung auch secret.key, versiegelt mit diesem Passwort. Nur der Haupt-Admin mit frischem Code kann sie anlegen. 10. Alte aufräumen: _prune behält die neuesten 7 täglichen und manuellen Sicherungen und die neuesten 5 anderen (Update, Wiederherstellen, Umzug). So verdrängen ein paar Updates nie die täglichen. 11. Herunterladen nur mit Code: Eine Sicherung enthält alle Profile. Der Browser holt mit dem Code ein Ticket, das eine Minute gilt und einmal benutzbar ist, und lädt damit die Datei. 12. Wiederherstellen: restore entpackt nur bekannte Pfade, höchstens 8192 MB und nur bei genug freiem Platz, prüft die Einstellungen wie die Einstellungsseite, legt eine Sicherung des jetzigen Stands an und tauscht dann users/, voices/, Einstellungen und state-Dateien, mit Rückweg bei einem Fehler."
+"text": "edriger Priorität. Dazu kommen Sicherungen vor jedem Update, Zurücksetzen und Wiederherstellen. 8. Packen: backup.create schreibt in backups/ (nur für den Dienst) erst eine .part-Datei, dann den fertigen Namen: backup.json, users/ ohne users/secret und Nachrichten, voices/, config.json, das Panel-Passwort und die Dateien aus STATE_FILES. SQLite-Dateien kommen als stimmige Kopie hinein. 9. Umzugs-Sicherung?: Mit einem Passwort (12 bis 200 Zeichen) trägt die Sicherung auch secret.key, versiegelt mit diesem Passwort. Nur der Haupt-Admin mit frischem Code kann sie anlegen. 10. Alte aufräumen: _prune behält die neuesten 7 täglichen und manuellen Sicherungen und die neuesten 5 anderen (Update, Wiederherstellen, Umzug). So verdrängen ein paar Updates nie die täglichen. 11. Herunterladen nur mit Code: Eine Sicherung enthält alle Profile. Der Browser holt mit dem Code ein Ticket, das eine Minute gilt und einmal benutzbar ist, und lädt damit die Datei. 12. Wiederherstellen: restore entpackt nur bekannte Pfade, höchstens 8192 MB und nur bei genug freiem Platz, prüft die Einstellungen wie die Einstellungsseite, legt eine Sicherung des jetzigen Stands an und tauscht dann users/, voices/, Einste"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Ablauf",
+"title": "Ablauf",
+"text": "llungen und state-Dateien, mit Rückweg bei einem Fehler."
 },
 {
 "lang": "de",
@@ -7723,6 +7731,46 @@
 "lang": "de",
 "src": "technik",
 "file": "Technik und Fehlersuche",
+"head": "Leistung messen",
+"title": "Leistung messen",
+"text": "Seit V01.0.800 misst die Sprachausgabe mehrere gleichzeitig dreimal: den langen Testtext mit der eingestellten Zahl (--parallel, Standard 4) und mit 2, dazu beim Streamen einen kurzen Antwortsatz mit der eingestellten Zahl, wie der erste Satz einer echten Antwort. Jede Anfrage bringt mit, wie lange sie im TTS-Dienst gewartet hat (X-Spark-Wait-Ms von common.PrioGate); „Davon in der Warteschlange“ trennt so das Warten auf einen Platz (tts.engine_max_seqs) vom Rechnen der Engine. In der Konsole steht engine_max_seqs dabei."
+},
+{
+"lang": "de",
+"src": "technik",
+"file": "Technik und Fehlersuche",
+"head": "Mehrere Stimmen gleichzeitig",
+"title": "Mehrere Stimmen gleichzeitig",
+"text": "Drei Einstellungen unter Einstellungen → Sprachausgabe → Erweitert sollen den ersten Ton beschleunigen, wenn mehrere Antworten gleichzeitig laufen. Alle stehen auf aus (so wie bisher); jede einzeln einschalten und vorher und nachher Leistung messen."
+},
+{
+"lang": "de",
+"src": "technik",
+"file": "Technik und Fehlersuche",
+"head": "Mehrere Stimmen gleichzeitig",
+"title": "Mehrere Stimmen gleichzeitig",
+"text": "- Referenz der eigenen Stimme kürzen (tts.ref_max_s: aus, 8, 10 oder 15 s): Mit einem Base-Modell geht bei jedem Satz die ganze Referenzaufnahme der geklonten Stimme mit, und die Engine liest sie vor dem ersten Ton ganz. Ist die Aufnahme mehr als 2 s länger als die Grenze, schneidet der TTS-Dienst sie einmal an der leisesten Stelle zwischen 60 % der Grenze (mindestens 3 s) und der Grenze (kurzref.cut_at), lässt das Stück von der Spracherkennung auf diesem Rechner aufschreiben und behält vom eigenen Text der Stimme so viele Wörter, wie sie gehört hat (kurzref.keep_words, mindestens 70 % gleich). Passt es nicht, bleibt die ganze Aufnahme. Das Stück liegt mit Text in voices/kurz/ und gilt, bis sich die Aufnahme oder die Grenze ändert; die Aufnahme selbst bleibt unverändert. Jedes Ergebnis schreibt eine Zeile tts: referenz … ins Log der Sprachausgabe (gekürzt mit Sekunden, schon kurz, Format, Spracherkennung, passt nicht, Fehler), ohne Namen oder Text. - Mehrere Stimmen gleichzeitig (tts.engine_decode_batch: 1, 2 oder 4): Der Decoder (Code2Wav) rechnet bis zu 2 oder 4 Stimmen zusammen, mit CUDA-Graphen für 1 bis n Stimmen (decode_batch_max_size, decode_cudagraph_batch_sizes, wie die Pr"
+},
+{
+"lang": "de",
+"src": "technik",
+"file": "Technik und Fehlersuche",
+"head": "Mehrere Stimmen gleichzeitig",
+"title": "Mehrere Stimmen gleichzeitig",
+"text": "ofile von vllm-omni für viele Anfragen). Braucht beim Start etwas mehr Speicher und Zeit. - Gleichen Anfang merken (tts.engine_prefix_cache): Der Talker merkt sich den Teil des Prompts, der bei jedem Satz derselben Stimme gleich ist (enable_prefix_caching für Stufe 0)."
+},
+{
+"lang": "de",
+"src": "technik",
+"file": "Technik und Fehlersuche",
+"head": "Mehrere Stimmen gleichzeitig",
+"title": "Mehrere Stimmen gleichzeitig",
+"text": "Die beiden Engine-Werte schreibt engine.sh in die Deploy-Datei (state/tts-deploy-main.yaml) und in die Stufen-Werte; eine Änderung startet die Sprachausgabe neu. Den Referenz-Kontext des Decoders begrenzt vllm-omni 0.30 schon selbst auf 72 Takte (ref_code_context_frames folgt codec_left_context_frames)."
+},
+{
+"lang": "de",
+"src": "technik",
+"file": "Technik und Fehlersuche",
 "head": "Sprachmodell: eigenes oder dgx-spark-qwen38",
 "title": "Sprachmodell: eigenes oder dgx-spark-qwen38",
 "text": "Das Sprachmodell läuft entweder als eigenes vLLM hinter dem LLM-Tor (sudo ./install.sh --llm, dann sudo speech-spark modelle llm uebernehmen, zurück mit … zurueck) oder wie früher aus dgx-spark-qwen38. Beim Spark teilen geht nur das eigene, weil der Panel-Rechner qwen38 nicht erreicht. Die Punkte unten zu Lanes und Cockpit gelten nur, solange qwen38 läuft."
@@ -10525,7 +10573,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "t, no request goes to the engine. 7. Language, pronunciation, numbers: When the language is Auto, guess_language guesses German or English from frequent words, so a single English word does not change the tone of the whole answer. Then the own pronunciation list applies, after that speak_abbreviations writes out abbreviations („z. B.“, „ca.“, „€/Monat“) and speak_numbers date, time, money, numbers and units (km/h, kWh, kg, GB …). 8. Pick the voice: Temperature, top_p and a fixed seed from the settings keep the voice the same from sentence to sentence. A Base model speaks with a cloned voice from voices/ (apply_clone); an unknown name falls back to the default voice. 9. Streamed at another tempo?: vllm-omni takes no tempo when streaming. Then tempo.Stretcher stretches the sound piece by piece itself (WSOLA, the pitch stays). 10. Wait by priority: PrioGate lets as many sentences through as the engine takes at once (engine_max_seqs); the others wait by stage, then by arrival. 11. The engine speaks: The engine makes the sound. Streamed it comes back in pieces; the first piece is small on purpose (initial_chunk_frames) so the sound starts fast, also when several requests run. 12. Sound "
+"text": "t, no request goes to the engine. 7. Language, pronunciation, numbers: When the language is Auto, guess_language guesses German or English from frequent words, so a single English word does not change the tone of the whole answer. Then the own pronunciation list applies, after that speak_abbreviations writes out abbreviations („z. B.“, „ca.“, „€/Monat“) and speak_numbers date, time, money, numbers and units (km/h, kWh, kg, GB …). 8. Pick the voice: Temperature, top_p and a fixed seed from the settings keep the voice the same from sentence to sentence. A Base model speaks with a cloned voice from voices/ (apply_clone); an unknown name falls back to the default voice. With „Shorten the reference of your own voice“ (tts.ref_max_s) it takes a piece of a long recording instead: kurzref.cut_at cuts once at the quietest point before the limit, speech recognition writes the piece down, kurzref.keep_words keeps the words of the own text (at least 70 % alike, else the whole recording stays). Until the piece is ready, the whole recording applies. 9. Streamed at another tempo?: vllm-omni takes no tempo when streaming. Then tempo.Stretcher stretches the sound piece by piece itself (WSOLA, the p"
 },
 {
 "lang": "en",
@@ -10533,7 +10581,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "back: The proxy passes the sound on unchanged and counts only time, length and errors for monitoring, never the text."
+"text": "itch stays). 10. Wait by priority: PrioGate lets as many sentences through as the engine takes at once (engine_max_seqs); the others wait by stage, then by arrival. 11. The engine speaks: The engine makes the sound. Streamed it comes back in pieces; the first piece is small on purpose (initial_chunk_frames) so the sound starts fast, also when several requests run. „Several voices at once“ (tts.engine_decode_batch) batches up to 2 or 4 voices in the decoder with CUDA graphs, „Remember the same beginning“ (tts.engine_prefix_cache) lets the engine reuse the same beginning of a voice's sentences; both are off (vllm-omni's default). 12. Sound back: The proxy passes the sound on unchanged and counts only time, length and errors for monitoring, never the text."
 },
 {
 "lang": "en",
@@ -10549,7 +10597,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 20000 characters per request at most (step 3) - „nur schriftlich sichtbar“ the voice says instead of a secret (step 5) - 4 ways to read numbers (step 7)"
+"text": "- 20000 characters per request at most (step 3) - „nur schriftlich sichtbar“ the voice says instead of a secret (step 5) - 4 ways to read numbers (step 7) - 3.0 s a shortened reference keeps at least (step 8) - 2.0 s longer than the limit before it is cut (step 8)"
 },
 {
 "lang": "en",
@@ -10557,7 +10605,7 @@
 "file": "Architecture and data flow",
 "head": "Settings",
 "title": "Settings",
-"text": "- Settings → Speech output: model, default voice, language, clean text, reading numbers and the own pronunciation list. - Settings → Voices: record, play and save own voices (for a Base model)."
+"text": "- Settings → Speech output: model, default voice, language, clean text, reading numbers and the own pronunciation list. - Settings → Voices: record, play and save own voices (for a Base model). - Settings → Speech output → Advanced: „Shorten the reference of your own voice“, „Several voices at once“ and „Remember the same beginning“ (all off); before and after Status → Checks → Measure performance."
 },
 {
 "lang": "en",
@@ -10573,7 +10621,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/tts_proxy.py speech: the way of a sentence through the proxy (step 1) - app/tts_proxy.py check_reference: reference only embedded (step 8) - app/tts_proxy.py engine_status: ready, loading, error or off (step 4) - app/tts_proxy.py apply_clone: cloned voice from voices/ (step 8) - app/textnorm.py speech_markdown: markdown signs off (step 5) - app/textnorm.py hide_secrets: never speak secrets (step 5) - app/textnorm.py clean_text: emojis, laughter, links, code (step 6) - app/textnorm.py guess_language: guess German or English (step 7) - app/textnorm.py speak_numbers: write out numbers (step 7) - app/tempo.py Stretcher: tempo while streaming (step 9) - app/common.py PrioGate: waiting by priority (step 10)"
+"text": "- app/tts_proxy.py speech: the way of a sentence through the proxy (step 1) - app/tts_proxy.py check_reference: reference only embedded (step 8) - app/tts_proxy.py engine_status: ready, loading, error or off (step 4) - app/tts_proxy.py apply_clone: cloned voice from voices/ (step 8) - app/textnorm.py speech_markdown: markdown signs off (step 5) - app/textnorm.py hide_secrets: never speak secrets (step 5) - app/textnorm.py clean_text: emojis, laughter, links, code (step 6) - app/textnorm.py guess_language: guess German or English (step 7) - app/textnorm.py speak_numbers: write out numbers (step 7) - app/tempo.py Stretcher: tempo while streaming (step 9) - app/tts_proxy.py shorten: shorten the reference once (step 8) - app/kurzref.py cut_at: quietest point before the limit (step 8) - app/kurzref.py keep_words: keep the words of the own text (step 8) - app/common.py PrioGate: waiting by priority (step 10)"
 },
 {
 "lang": "en",
@@ -10581,7 +10629,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "Self-tests: test_units, test_markdown, test_hardening, test_stufe, test_tempo"
+"text": "Self-tests: test_units, test_markdown, test_hardening, test_stufe, test_tempo, test_kurzref"
 },
 {
 "lang": "en",
@@ -11101,7 +11149,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "1. The admin records a voice: Under Settings → Voices the admin uploads a recording, with a name and best with the spoken text. 2. Name allowed?: The name becomes the file name; so only letters, digits, underscore and hyphen. The recording may be at most sixty MB. 3. Not a WAV?: The engine expects WAV. ffmpeg turns anything else into mono WAV, at most two minutes long. 4. Store: The recording becomes voices/name.wav, the text voices/name.txt. Without text the engine uses only the timbre. 5. Speak with the voice: When a Base model is set, the TTS service reads the voice as an embedded recording (apply_clone) and keeps it until the file changes. 6. Voices as a ZIP: An import takes only flat name.wav and name.txt, checks the size of each file before anything is unpacked and renames, overwrites or skips on a clash, as chosen. 7. Once a day: The panel looks every hour whether the last backup is older than a day. Then it packs in a pause (vorrang.in_thread), with low priority. Backups before every update, rollback and restore come on top. 8. Pack: backup.create writes into backups/ (for the service only) first a .part file, then the final name: backup.json, users/ without users/secret an"
+"text": "1. The admin records a voice: Under Settings → Voices the admin uploads a recording, with a name and best with the spoken text. 2. Name allowed?: The name becomes the file name; so only letters, digits, underscore and hyphen. The recording may be at most sixty MB. 3. Not a WAV?: The engine expects WAV. ffmpeg turns anything else into mono WAV, at most two minutes long. 4. Store: The recording becomes voices/name.wav, the text voices/name.txt. Without text the engine uses only the timbre. 5. Speak with the voice: When a Base model is set, the TTS service reads the voice as an embedded recording (apply_clone) and keeps it until the file changes. With „Shorten the reference of your own voice“ it keeps a shortened piece with its text in voices/kurz/; the recording stays. 6. Voices as a ZIP: An import takes only flat name.wav and name.txt, checks the size of each file before anything is unpacked and renames, overwrites or skips on a clash, as chosen. 7. Once a day: The panel looks every hour whether the last backup is older than a day. Then it packs in a pause (vorrang.in_thread), with low priority. Backups before every update, rollback and restore come on top. 8. Pack: backup.create wr"
 },
 {
 "lang": "en",
@@ -11109,7 +11157,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "d messages, voices/, config.json, the panel password and the files of STATE_FILES. SQLite files go in as a consistent copy. 9. Move backup?: With a password (12 to 200 characters) the backup also carries secret.key, sealed with that password. Only the main admin with a fresh code can make one. 10. Remove old ones: _prune keeps the newest 7 daily and manual backups and the newest 5 others (update, restore, move). So a few updates never push the daily ones out. 11. Download only with a code: A backup holds every profile. With the code the browser gets a ticket that is valid for a minute and usable once, and downloads the file with it. 12. Restore: restore unpacks only known paths, at most 8192 MB and only with enough free space, checks the settings like the settings page, makes a backup of the current state and then swaps users/, voices/, settings and state files, with a way back on an error."
+"text": "ites into backups/ (for the service only) first a .part file, then the final name: backup.json, users/ without users/secret and messages, voices/, config.json, the panel password and the files of STATE_FILES. SQLite files go in as a consistent copy. 9. Move backup?: With a password (12 to 200 characters) the backup also carries secret.key, sealed with that password. Only the main admin with a fresh code can make one. 10. Remove old ones: _prune keeps the newest 7 daily and manual backups and the newest 5 others (update, restore, move). So a few updates never push the daily ones out. 11. Download only with a code: A backup holds every profile. With the code the browser gets a ticket that is valid for a minute and usable once, and downloads the file with it. 12. Restore: restore unpacks only known paths, at most 8192 MB and only with enough free space, checks the settings like the settings page, makes a backup of the current state and then swaps users/, voices/, settings and state files, with a way back on an error."
 },
 {
 "lang": "en",
@@ -15454,6 +15502,46 @@
 "head": "Measuring performance",
 "title": "Measuring performance",
 "text": "The benchmark goes through the public ports, so it measures what apps see. The last result is stored in /var/lib/speech-spark/state/bench-latest.json. The memory shares of the engines (configuration) are starting values: set them to fit after the measurement."
+},
+{
+"lang": "en",
+"src": "technical",
+"file": "Technical details and troubleshooting",
+"head": "Measuring performance",
+"title": "Measuring performance",
+"text": "Since V01.0.800 speech output measures several at once three times: the long test text with the set number (--parallel, default 4) and with 2, and when streaming one short answer sentence with the set number, like the first sentence of a real answer. Each request brings along how long it waited in the TTS service (X-Spark-Wait-Ms from common.PrioGate); \"Davon in der Warteschlange\" (of it in the queue) thus separates waiting for a slot (tts.engine_max_seqs) from the engine's computing. The console shows engine_max_seqs with it."
+},
+{
+"lang": "en",
+"src": "technical",
+"file": "Technical details and troubleshooting",
+"head": "Several voices at once",
+"title": "Several voices at once",
+"text": "Three settings under Settings → Speech output → Advanced are meant to make the first audio faster when several answers run at once. All are off (as before); switch each on alone and measure performance before and after."
+},
+{
+"lang": "en",
+"src": "technical",
+"file": "Technical details and troubleshooting",
+"head": "Several voices at once",
+"title": "Several voices at once",
+"text": "- Shorten the reference of your own voice (tts.ref_max_s: off, 8, 10 or 15 s): with a Base model every sentence carries the cloned voice's whole reference recording, and the engine reads all of it before the first audio. When the recording is more than 2 s longer than the limit, the TTS service cuts it once at the quietest point between 60 % of the limit (at least 3 s) and the limit (kurzref.cut_at), has speech recognition on this computer write the piece down and keeps as many words of the voice's own text as it heard (kurzref.keep_words, at least 70 % alike). When it does not fit, the whole recording stays. The piece is kept with its text in voices/kurz/ and applies until the recording or the limit changes; the recording itself stays unchanged. Every result writes a line tts: referenz … to the speech output's log (shortened with seconds, already short, format, speech recognition, does not fit, error), without names or text. - Several voices at once (tts.engine_decode_batch: 1, 2 or 4): the decoder (Code2Wav) computes up to 2 or 4 voices together, with CUDA graphs for 1 to n voices (decode_batch_max_size, decode_cudagraph_batch_sizes, like vllm-omni's profiles for many requests). "
+},
+{
+"lang": "en",
+"src": "technical",
+"file": "Technical details and troubleshooting",
+"head": "Several voices at once",
+"title": "Several voices at once",
+"text": "Takes a little more memory and time at start. - Remember the same beginning (tts.engine_prefix_cache): the talker remembers the part of the prompt that is the same in every sentence of the same voice (enable_prefix_caching for stage 0)."
+},
+{
+"lang": "en",
+"src": "technical",
+"file": "Technical details and troubleshooting",
+"head": "Several voices at once",
+"title": "Several voices at once",
+"text": "engine.sh writes both engine values into the deploy file (state/tts-deploy-main.yaml) and the stage values; a change restarts speech output. vllm-omni 0.30 already bounds the decoder's reference context to 72 frames itself (ref_code_context_frames follows codec_left_context_frames)."
 },
 {
 "lang": "en",

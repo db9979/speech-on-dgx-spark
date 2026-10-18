@@ -40,6 +40,9 @@
     "engine_max_seqs": 2,
     "engine_max_model_len": 4096,
     "initial_chunk_frames": 10,
+    "engine_decode_batch": 1,
+    "engine_prefix_cache": false,
+    "ref_max_s": 0,
     "voicedesign_enabled": false,
     "voicedesign_model": "Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign",
     "voicedesign_port": 31013

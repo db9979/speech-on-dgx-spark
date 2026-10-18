@@ -399,6 +399,7 @@ Spracherkennung und Sprachausgabe als eigene Dienste, mit Vorrang vor allem ande
 | `app/common.py` | Gemeinsame Helfer für die Dienste: Einstellungen, Zustand |
 | `app/dockertor.py` | Docker-Tor: legt den Socket einer Engine in Docker (ohne Netz) auf 127.0.0.1, nur beim Messen |
 | `app/einordnung.py` | Regeln für System-One-Fragen, gemeinsam für Panel und LLM-Tor |
+| `app/kurzref.py` | Kürzere Referenz einer geklonten Stimme: schneidet an einer Pause, behält die Wörter des eigenen Textes |
 | `app/llm_tor.py` | LLM-Tor: Tür zum eigenen Sprachmodell mit Schlüssel, Feldgrenzen, System One und Lebensprobe |
 | `app/llmstart.py` | Was das eigene Sprachmodell beim Wechseln und Starten tut: feste Schritte, Zeiten, Phase der Engine, Satz für den Chat |
 | `app/modelle.py` | Modell-Katalog (modelle.json): Regeln je Eintrag, Prüfung der Dateien, Messen, Regeln für Wechsel und eigene Modelle |
@@ -445,7 +446,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `/opt/speech-spark/` | Code, venvs, installierte Version | – | nein |
 | `/var/lib/speech-spark/hf/` | Modell-Cache (HuggingFace) | – | nein |
 | `/var/lib/speech-spark/firmware/` | ESP32-Firmware | signiert | nein |
-| `/var/lib/speech-spark/voices/` | Geklonte Stimmen (WAV und Text) | – | ja |
+| `/var/lib/speech-spark/voices/` | Geklonte Stimmen (WAV und Text), in kurz/ gekürzte Referenzen | – | ja |
 | `/var/lib/speech-spark/backups/` | Sicherungen: 7 neueste plus 5 Ereignis-Sicherungen | – | – |
 | `journald (Namespace speech-spark)` | Logs aller Dienste, Dauer und Größe nach Einstellung | – | nein |
 
@@ -2608,10 +2609,10 @@ flowchart TD
 5. <a id="kn-tts-s5"></a>**Markdown weg, Geheimnisse verdeckt**: speech_markdown nimmt die Zeichen der Formatierung heraus, dann ersetzt hide_secrets Passwörter, Codewörter, Einmal-Codes und Schlüssel durch „nur schriftlich sichtbar“. Das läuft auf jeder Anfrage, auch wenn „Text bereinigen“ aus ist; die geschriebene Antwort behält den Wert.
 6. <a id="kn-tts-s6"></a>**Text bereinigen**: clean_text nimmt Emojis, „haha“, *lacht*, Codeblöcke und Links heraus, beruhigt auf Wunsch Ausrufe und setzt ans Zeilenende einen Punkt, damit die Stimme absetzt. Bleibt nichts übrig, kommt keine Anfrage an die Engine.
 7. <a id="kn-tts-s7"></a>**Sprache, Aussprache, Zahlen**: Steht die Sprache auf Auto, rät guess_language an häufigen Wörtern Deutsch oder Englisch, damit ein einzelnes englisches Wort nicht den Ton der ganzen Antwort ändert. Dann gilt die eigene Aussprache-Liste, danach schreibt speak_abbreviations Abkürzungen aus („z. B.“, „ca.“, „€/Monat“) und speak_numbers Datum, Uhrzeit, Geld, Zahlen und Einheiten (km/h, kWh, kg, GB …).
-8. <a id="kn-tts-s8"></a>**Stimme wählen**: Temperatur, top_p und ein fester Seed aus den Einstellungen halten die Stimme von Satz zu Satz gleich. Ein Base-Modell spricht mit einer geklonten Stimme aus voices/ (apply_clone); ein unbekannter Name fällt auf die Standardstimme zurück.
+8. <a id="kn-tts-s8"></a>**Stimme wählen**: Temperatur, top_p und ein fester Seed aus den Einstellungen halten die Stimme von Satz zu Satz gleich. Ein Base-Modell spricht mit einer geklonten Stimme aus voices/ (apply_clone); ein unbekannter Name fällt auf die Standardstimme zurück. Mit „Referenz der eigenen Stimme kürzen“ (tts.ref_max_s) nimmt es statt einer langen Aufnahme ein Stück davon: kurzref.cut_at schneidet einmal an der leisesten Stelle vor der Grenze, die Spracherkennung schreibt das Stück auf, kurzref.keep_words behält davon die Wörter des eigenen Textes (mindestens 70 % gleich, sonst bleibt die ganze Aufnahme). Bis das Stück fertig ist, gilt die ganze Aufnahme.
 9. <a id="kn-tts-s9"></a>**Gestreamt mit anderem Tempo?**: vllm-omni nimmt beim Streamen kein Tempo an. Dann streckt tempo.Stretcher den Ton Stück für Stück selbst (WSOLA, die Tonhöhe bleibt).
 10. <a id="kn-tts-s10"></a>**Warten nach Vorrang**: PrioGate lässt so viele Sätze durch, wie die Engine gleichzeitig nimmt (engine_max_seqs); die anderen warten nach Stufe, dann nach Ankunft.
-11. <a id="kn-tts-s11"></a>**Engine spricht**: Die Engine erzeugt den Ton. Gestreamt kommt er als Stücke zurück; das erste Stück ist absichtlich klein (initial_chunk_frames), damit der Ton schnell beginnt, auch wenn mehrere Anfragen laufen.
+11. <a id="kn-tts-s11"></a>**Engine spricht**: Die Engine erzeugt den Ton. Gestreamt kommt er als Stücke zurück; das erste Stück ist absichtlich klein (initial_chunk_frames), damit der Ton schnell beginnt, auch wenn mehrere Anfragen laufen. „Mehrere Stimmen gleichzeitig“ (tts.engine_decode_batch) bündelt im Decoder bis zu 2 oder 4 Stimmen mit CUDA-Graphen, „Gleichen Anfang merken“ (tts.engine_prefix_cache) lässt die Engine den gleichen Anfang der Sätze einer Stimme wiederverwenden; beide stehen auf aus (Standard von vllm-omni).
 12. <a id="kn-tts-s12"></a>**Ton zurück**: Der Proxy reicht den Ton unverändert weiter und zählt nur Dauer, Länge und Fehler für das Monitoring, nie den Text.
 
 **Beispiele:** Antwortsatz im Chat: Gesprochen, gestreamt, mit fester Stimme. · Passwort in der Antwort: Gesprochen wird „nur schriftlich sichtbar“, geschrieben bleibt der Wert. · Nur ein Emoji: Nichts zu sagen, nichts geht an die Engine. · Schneller sprechen: Der Proxy streckt den gestreamten Ton.
@@ -2621,11 +2622,14 @@ flowchart TD
 - **20000** Zeichen pro Anfrage höchstens ([Schritt 3](#kn-tts-s3))
 - **„nur schriftlich sichtbar“** sagt die Stimme statt eines Geheimnisses ([Schritt 5](#kn-tts-s5))
 - **4** Arten, Zahlen vorzulesen ([Schritt 7](#kn-tts-s7))
+- **3.0 s** bleiben von einer gekürzten Referenz mindestens ([Schritt 8](#kn-tts-s8))
+- **2.0 s** länger als die Grenze, erst dann wird gekürzt ([Schritt 8](#kn-tts-s8))
 
 #### Einstellen
 
 - Einstellungen → Sprachausgabe: Modell, Standardstimme, Sprache, Text bereinigen, Zahlen vorlesen und die eigene Aussprache-Liste.
 - Einstellungen → Stimmen: eigene Stimmen aufnehmen, anhören und sichern (für ein Base-Modell).
+- Einstellungen → Sprachausgabe → Erweitert: „Referenz der eigenen Stimme kürzen“, „Mehrere Stimmen gleichzeitig“ und „Gleichen Anfang merken“ (alle aus); vorher und nachher Zustand → Prüfen → Leistung messen.
 
 #### Was du siehst
 
@@ -2644,9 +2648,12 @@ flowchart TD
 - `app/textnorm.py` `guess_language`: Deutsch oder Englisch raten ([Schritt 7](#kn-tts-s7))
 - `app/textnorm.py` `speak_numbers`: Zahlen ausschreiben ([Schritt 7](#kn-tts-s7))
 - `app/tempo.py` `Stretcher`: Tempo beim Streamen ([Schritt 9](#kn-tts-s9))
+- `app/tts_proxy.py` `shorten`: Referenz einmal kürzen ([Schritt 8](#kn-tts-s8))
+- `app/kurzref.py` `cut_at`: leiseste Stelle vor der Grenze ([Schritt 8](#kn-tts-s8))
+- `app/kurzref.py` `keep_words`: Wörter des eigenen Textes behalten ([Schritt 8](#kn-tts-s8))
 - `app/common.py` `PrioGate`: Warten nach Vorrang ([Schritt 10](#kn-tts-s10))
 
-Selbsttests: `test_units`, `test_markdown`, `test_hardening`, `test_stufe`, `test_tempo`
+Selbsttests: `test_units`, `test_markdown`, `test_hardening`, `test_stufe`, `test_tempo`, `test_kurzref`
 
 ### Bilder und Musik
 
@@ -3272,7 +3279,7 @@ flowchart TD
 2. <a id="kn-ablage-s2"></a>**Name erlaubt?**: Der Name wird zum Dateinamen; deshalb nur Buchstaben, Ziffern, Unterstrich und Bindestrich. Die Aufnahme darf höchstens sechzig MB groß sein.
 3. <a id="kn-ablage-s3"></a>**Kein WAV?**: Die Engine erwartet WAV. Alles andere wandelt ffmpeg in Mono-WAV um, höchstens zwei Minuten lang.
 4. <a id="kn-ablage-s4"></a>**Ablegen**: Die Aufnahme wird voices/Name.wav, der Text voices/Name.txt. Ohne Text nutzt die Engine nur die Klangfarbe.
-5. <a id="kn-ablage-s5"></a>**Mit der Stimme sprechen**: Ist ein Base-Modell eingestellt, liest der TTS-Dienst die Stimme als eingebettete Aufnahme (apply_clone) und merkt sie sich, bis sich die Datei ändert.
+5. <a id="kn-ablage-s5"></a>**Mit der Stimme sprechen**: Ist ein Base-Modell eingestellt, liest der TTS-Dienst die Stimme als eingebettete Aufnahme (apply_clone) und merkt sie sich, bis sich die Datei ändert. Mit „Referenz der eigenen Stimme kürzen“ legt er ein gekürztes Stück mit seinem Text in voices/kurz/ ab; die Aufnahme bleibt.
 6. <a id="kn-ablage-s6"></a>**Stimmen als ZIP**: Ein Import nimmt nur flache Name.wav und Name.txt, prüft die Größe jeder Datei, bevor etwas entpackt wird, und benennt bei Gleichstand um, überschreibt oder überspringt, wie gewählt.
 7. <a id="kn-ablage-s7"></a>**Einmal am Tag**: Das Panel schaut jede Stunde, ob die letzte Sicherung älter als ein Tag ist. Dann packt es in einer Pause (vorrang.in_thread), mit niedriger Priorität. Dazu kommen Sicherungen vor jedem Update, Zurücksetzen und Wiederherstellen.
 8. <a id="kn-ablage-s8"></a>**Packen**: backup.create schreibt in backups/ (nur für den Dienst) erst eine .part-Datei, dann den fertigen Namen: backup.json, users/ ohne users/secret und Nachrichten, voices/, config.json, das Panel-Passwort und die Dateien aus STATE_FILES. SQLite-Dateien kommen als stimmige Kopie hinein.

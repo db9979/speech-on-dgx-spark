@@ -399,6 +399,7 @@ Speech recognition and speech output as their own services, ahead of everything 
 | `app/common.py` | Shared helpers for the ASR and TTS services: config, model state, request stats. |
 | `app/dockertor.py` | Docker-Tor: puts an engine in Docker on 127.0.0.1. |
 | `app/einordnung.py` | Einordnung mit Wahrscheinlichkeit, the shared rules of a question (System One): the panel's systemone.py builds questions with them, and the LLM-Tor (llm_tor … |
+| `app/kurzref.py` | A shorter reference for a cloned voice (tts.ref_max_s, 0 = off). |
 | `app/llm_tor.py` | LLM-Tor: the one door to the language model this installation runs itself. |
 | `app/llmstart.py` | What the own language model is doing while it switches, restarts or loads. |
 | `app/modelle.py` | Modell-Katalog: the models this installation runs itself, one line each in modelle.json, read only here. |
@@ -445,7 +446,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `/opt/speech-spark/` | Code, venvs, installed version | – | no |
 | `/var/lib/speech-spark/hf/` | Model cache (HuggingFace) | – | no |
 | `/var/lib/speech-spark/firmware/` | ESP32 firmware | signed | no |
-| `/var/lib/speech-spark/voices/` | Cloned voices (WAV and text) | – | yes |
+| `/var/lib/speech-spark/voices/` | Cloned voices (WAV and text), shortened references in kurz/ | – | yes |
 | `/var/lib/speech-spark/backups/` | Backups: newest 7 plus 5 event backups | – | – |
 | `journald (Namespace speech-spark)` | Logs of all services, time and size as set | – | no |
 
@@ -2608,10 +2609,10 @@ flowchart TD
 5. <a id="kn-tts-s5"></a>**Markdown off, secrets hidden**: speech_markdown takes out the formatting signs, then hide_secrets replaces passwords, code words, one-time codes and keys with „shown in writing only“. This runs on every request, also when „Clean text“ is off; the written answer keeps the value.
 6. <a id="kn-tts-s6"></a>**Clean the text**: clean_text takes out emojis, „haha“, *laughs*, code blocks and links, calms exclamations if wanted and puts a full stop at the end of a line so the voice settles. If nothing is left, no request goes to the engine.
 7. <a id="kn-tts-s7"></a>**Language, pronunciation, numbers**: When the language is Auto, guess_language guesses German or English from frequent words, so a single English word does not change the tone of the whole answer. Then the own pronunciation list applies, after that speak_abbreviations writes out abbreviations („z. B.“, „ca.“, „€/Monat“) and speak_numbers date, time, money, numbers and units (km/h, kWh, kg, GB …).
-8. <a id="kn-tts-s8"></a>**Pick the voice**: Temperature, top_p and a fixed seed from the settings keep the voice the same from sentence to sentence. A Base model speaks with a cloned voice from voices/ (apply_clone); an unknown name falls back to the default voice.
+8. <a id="kn-tts-s8"></a>**Pick the voice**: Temperature, top_p and a fixed seed from the settings keep the voice the same from sentence to sentence. A Base model speaks with a cloned voice from voices/ (apply_clone); an unknown name falls back to the default voice. With „Shorten the reference of your own voice“ (tts.ref_max_s) it takes a piece of a long recording instead: kurzref.cut_at cuts once at the quietest point before the limit, speech recognition writes the piece down, kurzref.keep_words keeps the words of the own text (at least 70 % alike, else the whole recording stays). Until the piece is ready, the whole recording applies.
 9. <a id="kn-tts-s9"></a>**Streamed at another tempo?**: vllm-omni takes no tempo when streaming. Then tempo.Stretcher stretches the sound piece by piece itself (WSOLA, the pitch stays).
 10. <a id="kn-tts-s10"></a>**Wait by priority**: PrioGate lets as many sentences through as the engine takes at once (engine_max_seqs); the others wait by stage, then by arrival.
-11. <a id="kn-tts-s11"></a>**The engine speaks**: The engine makes the sound. Streamed it comes back in pieces; the first piece is small on purpose (initial_chunk_frames) so the sound starts fast, also when several requests run.
+11. <a id="kn-tts-s11"></a>**The engine speaks**: The engine makes the sound. Streamed it comes back in pieces; the first piece is small on purpose (initial_chunk_frames) so the sound starts fast, also when several requests run. „Several voices at once“ (tts.engine_decode_batch) batches up to 2 or 4 voices in the decoder with CUDA graphs, „Remember the same beginning“ (tts.engine_prefix_cache) lets the engine reuse the same beginning of a voice's sentences; both are off (vllm-omni's default).
 12. <a id="kn-tts-s12"></a>**Sound back**: The proxy passes the sound on unchanged and counts only time, length and errors for monitoring, never the text.
 
 **Examples:** Answer sentence in the chat: Spoken, streamed, with a steady voice. · Password in the answer: The voice says „shown in writing only“, the written answer keeps the value. · Only an emoji: Nothing to say, nothing goes to the engine. · Speak faster: The proxy stretches the streamed sound.
@@ -2621,11 +2622,14 @@ flowchart TD
 - **20000** characters per request at most ([step 3](#kn-tts-s3))
 - **„nur schriftlich sichtbar“** the voice says instead of a secret ([step 5](#kn-tts-s5))
 - **4** ways to read numbers ([step 7](#kn-tts-s7))
+- **3.0 s** a shortened reference keeps at least ([step 8](#kn-tts-s8))
+- **2.0 s** longer than the limit before it is cut ([step 8](#kn-tts-s8))
 
 #### Settings
 
 - Settings → Speech output: model, default voice, language, clean text, reading numbers and the own pronunciation list.
 - Settings → Voices: record, play and save own voices (for a Base model).
+- Settings → Speech output → Advanced: „Shorten the reference of your own voice“, „Several voices at once“ and „Remember the same beginning“ (all off); before and after Status → Checks → Measure performance.
 
 #### What you see
 
@@ -2644,9 +2648,12 @@ flowchart TD
 - `app/textnorm.py` `guess_language`: guess German or English ([step 7](#kn-tts-s7))
 - `app/textnorm.py` `speak_numbers`: write out numbers ([step 7](#kn-tts-s7))
 - `app/tempo.py` `Stretcher`: tempo while streaming ([step 9](#kn-tts-s9))
+- `app/tts_proxy.py` `shorten`: shorten the reference once ([step 8](#kn-tts-s8))
+- `app/kurzref.py` `cut_at`: quietest point before the limit ([step 8](#kn-tts-s8))
+- `app/kurzref.py` `keep_words`: keep the words of the own text ([step 8](#kn-tts-s8))
 - `app/common.py` `PrioGate`: waiting by priority ([step 10](#kn-tts-s10))
 
-Self-tests: `test_units`, `test_markdown`, `test_hardening`, `test_stufe`, `test_tempo`
+Self-tests: `test_units`, `test_markdown`, `test_hardening`, `test_stufe`, `test_tempo`, `test_kurzref`
 
 ### Pictures and music
 
@@ -3272,7 +3279,7 @@ flowchart TD
 2. <a id="kn-ablage-s2"></a>**Name allowed?**: The name becomes the file name; so only letters, digits, underscore and hyphen. The recording may be at most sixty MB.
 3. <a id="kn-ablage-s3"></a>**Not a WAV?**: The engine expects WAV. ffmpeg turns anything else into mono WAV, at most two minutes long.
 4. <a id="kn-ablage-s4"></a>**Store**: The recording becomes voices/name.wav, the text voices/name.txt. Without text the engine uses only the timbre.
-5. <a id="kn-ablage-s5"></a>**Speak with the voice**: When a Base model is set, the TTS service reads the voice as an embedded recording (apply_clone) and keeps it until the file changes.
+5. <a id="kn-ablage-s5"></a>**Speak with the voice**: When a Base model is set, the TTS service reads the voice as an embedded recording (apply_clone) and keeps it until the file changes. With „Shorten the reference of your own voice“ it keeps a shortened piece with its text in voices/kurz/; the recording stays.
 6. <a id="kn-ablage-s6"></a>**Voices as a ZIP**: An import takes only flat name.wav and name.txt, checks the size of each file before anything is unpacked and renames, overwrites or skips on a clash, as chosen.
 7. <a id="kn-ablage-s7"></a>**Once a day**: The panel looks every hour whether the last backup is older than a day. Then it packs in a pause (vorrang.in_thread), with low priority. Backups before every update, rollback and restore come on top.
 8. <a id="kn-ablage-s8"></a>**Pack**: backup.create writes into backups/ (for the service only) first a .part file, then the final name: backup.json, users/ without users/secret and messages, voices/, config.json, the panel password and the files of STATE_FILES. SQLite files go in as a consistent copy.

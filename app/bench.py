@@ -38,6 +38,8 @@ LLM_TOKENS = 200
 TEXT = ("Guten Morgen. Dies ist ein Test der Sprachausgabe auf der DGX Spark. Wir messen, wie schnell "
         "der erste Ton kommt, wie lange der ganze Satz braucht und wie viele Anfragen gleichzeitig "
         "flüssig laufen. Danach hört die Spracherkennung zu und schreibt alles wieder auf.")
+# one short answer sentence, like the first piece the panel sends while the answer is still being written
+SATZ = "Gern, ich schaue kurz nach, wie das Wetter morgen wird."
 PCM_BYTES_PER_S = 24000 * 2
 UNITS = ["speech-spark-asr", "speech-spark-asr-engine", "speech-spark-tts", "speech-spark-tts-engine",
          "speech-spark-tts-design"]
@@ -116,14 +118,15 @@ class Bench:
             return "unreachable"
 
     # ------------------------------------------------------------ TTS
-    async def tts_stream(self):
-        body = {"input": TEXT, "language": "German", "stream": True, "response_format": "pcm"}
+    async def tts_stream(self, text=TEXT):
+        body = {"input": text, "language": "German", "stream": True, "response_format": "pcm"}
         t0 = time.time()
         first, pcm = None, 0
         async with self.client.stream("POST", self.url("tts", "/v1/audio/speech"), json=body,
                                       headers=self.headers) as r:
             if r.status_code != 200:
                 raise RuntimeError(f"TTS {r.status_code}: {(await r.aread())[:200]!r}")
+            wait = r.headers.get("X-Spark-Wait-Ms", "")   # how long it waited in the TTS service's queue (PrioGate)
             buf = b""
             async for chunk in r.aiter_raw():
                 buf += chunk
@@ -135,7 +138,8 @@ class Bench:
                             first = time.time() - t0
                         pcm += n
         total = time.time() - t0
-        return {"ttfa_s": first, "total_s": total, "audio_s": pcm / PCM_BYTES_PER_S}
+        return {"ttfa_s": first, "total_s": total, "audio_s": pcm / PCM_BYTES_PER_S,
+                "wait_s": int(wait) / 1000 if wait.isdigit() else None}
 
     async def tts_wav(self, text=TEXT):
         t0 = time.time()
@@ -157,21 +161,27 @@ class Bench:
             singles.append(r)
             self.log(f"TTS {i + 1}/{self.repeats}: first audio {fmt(r['ttfa_s'])} s, "
                      f"{fmt(r['audio_s'])} s audio in {fmt(r['total_s'])} s")
-        self.log(f"TTS: {self.parallel} requests at once")
-        t0 = time.time()
-        par = await asyncio.gather(*[one() for _ in range(self.parallel)])
-        wall = time.time() - t0
-        return {
-            "streaming": streaming,
-            "single": {"ttfa_s": avg(r["ttfa_s"] for r in singles),
-                       "total_s": avg(r["total_s"] for r in singles),
-                       "audio_s": avg(r["audio_s"] for r in singles),
-                       "rtf": avg(r["total_s"] / r["audio_s"] for r in singles if r["audio_s"])},
-            "parallel": {"n": self.parallel, "wall_s": round(wall, 3),
-                         "ttfa_s": avg(r["ttfa_s"] for r in par),
-                         "ttfa_max_s": max((r["ttfa_s"] for r in par if r["ttfa_s"] is not None), default=None),
-                         "x_realtime": round(sum(r["audio_s"] or 0 for r in par) / wall, 2)},
-        }
+        out = {"streaming": streaming,
+               "single": {"ttfa_s": avg(r["ttfa_s"] for r in singles),
+                          "total_s": avg(r["total_s"] for r in singles),
+                          "audio_s": avg(r["audio_s"] for r in singles),
+                          "rtf": avg(r["total_s"] / r["audio_s"] for r in singles if r["audio_s"])}}
+        # the long text with several at once, also with 2 when more are asked; with streaming one short answer
+        # sentence each, like the panel's first piece. The wait in the TTS service's queue shows apart from the engine.
+        runs = [("parallel", self.parallel, TEXT)] + ([("pair", 2, TEXT)] if self.parallel > 2 else [])
+        if streaming:
+            runs.append(("short", self.parallel, SATZ))
+        for key, n, text in runs:
+            self.log(f"TTS: {n} requests at once" + (" (short sentence)" if text is SATZ else ""))
+            t0 = time.time()
+            par = await asyncio.gather(*[one(text) for _ in range(n)])
+            wall = time.time() - t0
+            out[key] = {"n": n, "wall_s": round(wall, 3),
+                        "ttfa_s": avg(r["ttfa_s"] for r in par),
+                        "ttfa_max_s": max((r["ttfa_s"] for r in par if r["ttfa_s"] is not None), default=None),
+                        "wait_max_s": max((r["wait_s"] for r in par if r.get("wait_s") is not None), default=None),
+                        "x_realtime": round(sum(r["audio_s"] or 0 for r in par) / wall, 2)}
+        return out
 
     # ------------------------------------------------------------ ASR
     async def asr_once(self, wav, name="bench.wav"):
@@ -261,7 +271,8 @@ class Bench:
                                                                "engine_max_seqs")},
                           "tts": {k: c["tts"].get(k) for k in ("enabled", "model", "backend", "engine_mem_talker",
                                                                "engine_mem_code2wav", "engine_max_seqs",
-                                                               "voicedesign_enabled")}},
+                                                               "voicedesign_enabled", "engine_decode_batch",
+                                                               "engine_prefix_cache", "ref_max_s")}},
                "qwen38_active": [u for u in run(["systemctl", "list-units", "qwen38-*", "--state=active",
                                                  "--no-legend", "--plain"]).split() if u.endswith(".service")],
                "tts": None, "asr": None, "errors": []}
@@ -352,9 +363,12 @@ def values(r):
     """The numbers that get a rating, by key (also kept in the history for the comparison)."""
     t, a, m, lm = r.get("tts") or {}, r.get("asr") or {}, r.get("memory_after") or {}, r.get("llm") or {}
     ts, tp, as_, ap = t.get("single") or {}, t.get("parallel") or {}, a.get("single") or {}, a.get("parallel") or {}
+    t2, tk = t.get("pair") or {}, t.get("short") or {}
     v = {"tts_first": ts.get("ttfa_s"),
          "tts_speed": round(1 / ts["rtf"], 2) if ts.get("rtf") else None,
          "tts_par": tp.get("x_realtime"), "tts_par_n": tp.get("n"), "tts_par_first": tp.get("ttfa_max_s"),
+         "tts_two_first": t2.get("ttfa_max_s"), "tts_short_first": tk.get("ttfa_max_s"), "tts_short_n": tk.get("n"),
+         "tts_wait": tp.get("wait_max_s"),
          "asr_time": as_.get("total_s"), "asr_audio": a.get("audio_s"), "asr_acc": a.get("accuracy"),
          "asr_par": ap.get("x_realtime"), "asr_par_n": ap.get("n"),
          "llm_first": (lm.get("single") or {}).get("first_s"), "llm_speed": (lm.get("single") or {}).get("tok_s"),
@@ -416,6 +430,25 @@ def rate(r, previous=None):
                     "value": f"bis {_num(x)} s", "level": level,
                     "word": {"warn": "spürbar", "bad": "zäh"}.get(level),
                     "why": "So lange wartet der, der als Letzter drankommt. Bis 1,5 s fällt das kaum auf."})
+    if "tts_wait" in v and v.get("tts_par_n"):
+        x, seqs = v["tts_wait"], ((r.get("config") or {}).get("tts") or {}).get("engine_max_seqs")
+        tts.append({"key": "tts_wait", "label": "Davon in der Warteschlange", "value": f"bis {_num(x)} s",
+                    "level": _step(x, (0.1, 0.5, 2.0), False),
+                    "why": (f"Die Sprachausgabe gibt höchstens {seqs} Sätze gleichzeitig an die Engine, die anderen warten. "
+                            if isinstance(seqs, int) else "So lange warteten Sätze, bevor die Engine sie nahm. ")
+                           + "Der Rest bis zum ersten Ton ist die Engine selbst."})
+    if "tts_two_first" in v:
+        x = v["tts_two_first"]
+        level = _step(x, (1.0, 1.5, 3.0), False)
+        tts.append({"key": "tts_two_first", "n": 2, "label": "Erster Ton bei 2 gleichzeitig", "value": f"bis {_num(x)} s",
+                    "level": level, "word": {"warn": "spürbar", "bad": "zäh"}.get(level),
+                    "why": "Zwei Antworten zugleich sind häufig, etwa ein Satz und der nächste auf Vorrat."})
+    if "tts_short_first" in v and v.get("tts_short_n"):
+        x, n = v["tts_short_first"], v["tts_short_n"]
+        level = _step(x, (1.0, 1.5, 3.0), False)
+        tts.append({"key": "tts_short_first", "n": n, "label": f"Kurzer Satz bei {n} gleichzeitig",
+                    "value": f"bis {_num(x)} s", "level": level, "word": {"warn": "spürbar", "bad": "zäh"}.get(level),
+                    "why": "So beginnt eine echte Antwort: mit einem kurzen ersten Satz. Bis 1,5 s fällt das kaum auf."})
     if "asr_time" in v:
         x, sec = v["asr_time"], v.get("asr_audio")
         why = "Unter 1,5 s für einen langen Satz fühlt sich sofort an, ab 3 s wartet man."
@@ -477,7 +510,9 @@ def _before(row, old):
 
 SINGLE = ("tts_first", "tts_speed", "asr_time", "asr_acc", "llm_first", "llm_speed")
 SHORT = {"tts_first": "erster Ton", "tts_speed": "Tempo der Stimme", "tts_par": "Stimmen gleichzeitig",
-         "tts_par_first": "erster Ton bei mehreren", "asr_time": "Tempo der Erkennung", "asr_acc": "Verständnis",
+         "tts_par_first": "erster Ton bei mehreren", "tts_wait": "Warteschlange der Stimme",
+         "tts_two_first": "erster Ton bei zweien", "tts_short_first": "kurzer Satz bei mehreren",
+         "asr_time": "Tempo der Erkennung", "asr_acc": "Verständnis",
          "asr_par": "Erkennung gleichzeitig", "llm_first": "erstes Wort", "llm_speed": "Tempo des Sprachmodells",
          "llm_par": "Sprachmodell gleichzeitig", "mem_free": "freier Speicher"}
 # what is missing when a part was not measured (errors start with the part's name)
@@ -547,6 +582,13 @@ def report(r):
                   f"{fmt(s['total_s'])} s (RTF {fmt(s['rtf'])}, below 1 = faster than real time)",
                   f"  {p['n']} at once:      first audio avg {fmt(p['ttfa_s'])} s / max {fmt(p['ttfa_max_s'])} s, "
                   f"{fmt(p['x_realtime'], 1)}x real time in total"]
+        for key, what in (("pair", "at once:     "), ("short", "short sentence at once:")):
+            q = t.get(key)
+            if q:
+                lines.append(f"  {q['n']} {what} first audio avg {fmt(q['ttfa_s'])} s / max {fmt(q['ttfa_max_s'])} s")
+        if p.get("wait_max_s") is not None:
+            lines.append(f"  waited in the queue: up to {fmt(p['wait_max_s'])} s with {p['n']} at once "
+                         f"(engine_max_seqs {r['config']['tts'].get('engine_max_seqs')})")
     a = r.get("asr")
     if a:
         s, p = a["single"], a["parallel"]

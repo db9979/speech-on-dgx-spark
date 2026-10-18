@@ -364,9 +364,11 @@ SEITEN = {
             S("s5", "schritt", ("Mit der Stimme sprechen", "Speak with the voice"),
               ("nur mit einem Base-Modell", "only with a Base model"),
               ("Ist ein Base-Modell eingestellt, liest der TTS-Dienst die Stimme als eingebettete Aufnahme "
-               "(apply_clone) und merkt sie sich, bis sich die Datei ändert.",
+               "(apply_clone) und merkt sie sich, bis sich die Datei ändert. Mit „Referenz der eigenen Stimme "
+               "kürzen“ legt er ein gekürztes Stück mit seinem Text in voices/kurz/ ab; die Aufnahme bleibt.",
                "When a Base model is set, the TTS service reads the voice as an embedded recording (apply_clone) and "
-               "keeps it until the file changes.")),
+               "keeps it until the file changes. With „Shorten the reference of your own voice“ it keeps a shortened "
+               "piece with its text in voices/kurz/; the recording stays.")),
             S("s6", "schritt", ("Stimmen als ZIP", "Voices as a ZIP"),
               ("Export und Import", "export and import"),
               ("Ein Import nimmt nur flache Name.wav und Name.txt, prüft die Größe jeder Datei, bevor etwas entpackt "

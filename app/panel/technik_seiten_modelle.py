@@ -189,12 +189,13 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Sprachausgabe
     "tts": {
-        "stand": "e2df6d18e6",
+        "stand": "78a22c423b",
         "bezug": {
             "textnorm.NUMBER_MODES": ["s7"], "tts_proxy.speech": ["s1"], "tts_proxy.check_reference": ["s8"],
             "tts_proxy.engine_status": ["s4"], "tts_proxy.apply_clone": ["s8"], "textnorm.speech_markdown": ["s5"],
             "textnorm.hide_secrets": ["s5"], "textnorm.clean_text": ["s6"], "textnorm.guess_language": ["s7"],
-            "textnorm.speak_numbers": ["s7"], "common.PrioGate": ["s10"],
+            "textnorm.speak_numbers": ["s7"], "common.PrioGate": ["s10"], "kurzref.cut_at": ["s8"],
+            "kurzref.keep_words": ["s8"], "tts_proxy.shorten": ["s8"], "kurzref.MIN_S": ["s8"], "kurzref.SLACK_S": ["s8"],
         },
         "kurz": ("Die Sprachausgabe macht aus Text Ton. Der TTS-Dienst nimmt einen Satz an, räumt ihn auf, verdeckt "
                  "Geheimnisse, wählt Sprache und Stimme und gibt ihn an die Engine (Qwen3-TTS über vllm-omni), die nur "
@@ -267,10 +268,18 @@ SEITEN = {
               ("eingebaut, geklont oder beschrieben", "built in, cloned or described"),
               ("Temperatur, top_p und ein fester Seed aus den Einstellungen halten die Stimme von Satz zu Satz gleich. "
                "Ein Base-Modell spricht mit einer geklonten Stimme aus voices/ (apply_clone); ein unbekannter Name "
-               "fällt auf die Standardstimme zurück.",
+               "fällt auf die Standardstimme zurück. Mit „Referenz der eigenen Stimme kürzen“ (tts.ref_max_s) nimmt "
+               "es statt einer langen Aufnahme ein Stück davon: kurzref.cut_at schneidet einmal an der leisesten "
+               "Stelle vor der Grenze, die Spracherkennung schreibt das Stück auf, kurzref.keep_words behält davon "
+               "die Wörter des eigenen Textes (mindestens {kurzref.MATCH|prozent} gleich, sonst bleibt die ganze "
+               "Aufnahme). Bis das Stück fertig ist, gilt die ganze Aufnahme.",
                "Temperature, top_p and a fixed seed from the settings keep the voice the same from sentence to "
                "sentence. A Base model speaks with a cloned voice from voices/ (apply_clone); an unknown name falls "
-               "back to the default voice.")),
+               "back to the default voice. With „Shorten the reference of your own voice“ (tts.ref_max_s) it takes a "
+               "piece of a long recording instead: kurzref.cut_at cuts once at the quietest point before the limit, "
+               "speech recognition writes the piece down, kurzref.keep_words keeps the words of the own text "
+               "(at least {kurzref.MATCH|prozent} alike, else the whole recording stays). Until the piece is ready, "
+               "the whole recording applies.")),
             S("s9", "frage", ("Gestreamt mit anderem Tempo?", "Streamed at another tempo?"),
               ("die Engine kann das beim Streamen nicht", "the engine cannot do that while streaming"),
               ("vllm-omni nimmt beim Streamen kein Tempo an. Dann streckt tempo.Stretcher den Ton Stück für Stück "
@@ -288,9 +297,15 @@ SEITEN = {
             S("s11", "schritt", ("Engine spricht", "The engine speaks"),
               ("nur auf dieser Maschine, gestreamt", "on this machine only, streamed"),
               ("Die Engine erzeugt den Ton. Gestreamt kommt er als Stücke zurück; das erste Stück ist absichtlich "
-               "klein (initial_chunk_frames), damit der Ton schnell beginnt, auch wenn mehrere Anfragen laufen.",
+               "klein (initial_chunk_frames), damit der Ton schnell beginnt, auch wenn mehrere Anfragen laufen. "
+               "„Mehrere Stimmen gleichzeitig“ (tts.engine_decode_batch) bündelt im Decoder bis zu 2 oder 4 Stimmen "
+               "mit CUDA-Graphen, „Gleichen Anfang merken“ (tts.engine_prefix_cache) lässt die Engine den gleichen "
+               "Anfang der Sätze einer Stimme wiederverwenden; beide stehen auf aus (Standard von vllm-omni).",
                "The engine makes the sound. Streamed it comes back in pieces; the first piece is small on purpose "
-               "(initial_chunk_frames) so the sound starts fast, also when several requests run.")),
+               "(initial_chunk_frames) so the sound starts fast, also when several requests run. „Several voices at "
+               "once“ (tts.engine_decode_batch) batches up to 2 or 4 voices in the decoder with CUDA graphs, "
+               "„Remember the same beginning“ (tts.engine_prefix_cache) lets the engine reuse the same beginning of "
+               "a voice's sentences; both are off (vllm-omni's default).")),
             S("s12", "ende", ("Ton zurück", "Sound back"),
               ("Zähler fürs Monitoring", "counters for monitoring"),
               ("Der Proxy reicht den Ton unverändert weiter und zählt nur Dauer, Länge und Fehler für das "
@@ -317,6 +332,10 @@ SEITEN = {
             ("„{textnorm.SECRET_HINT.de}“", ("sagt die Stimme statt eines Geheimnisses", "the voice says instead of a secret"),
              "textnorm.SECRET_HINT"),
             ("{textnorm.NUMBER_MODES|anzahl}", ("Arten, Zahlen vorzulesen", "ways to read numbers"), "textnorm.NUMBER_MODES"),
+            ("{kurzref.MIN_S} s", ("bleiben von einer gekürzten Referenz mindestens", "a shortened reference keeps at least"),
+             "kurzref.MIN_S"),
+            ("{kurzref.SLACK_S} s", ("länger als die Grenze, erst dann wird gekürzt", "longer than the limit before it is cut"),
+             "kurzref.SLACK_S"),
         ],
         "einstellen": [
             ("Einstellungen → Sprachausgabe: Modell, Standardstimme, Sprache, Text bereinigen, Zahlen vorlesen und "
@@ -325,6 +344,12 @@ SEITEN = {
              "pronunciation list."),
             ("Einstellungen → Stimmen: eigene Stimmen aufnehmen, anhören und sichern (für ein Base-Modell).",
              "Settings → Voices: record, play and save own voices (for a Base model)."),
+            ("Einstellungen → Sprachausgabe → Erweitert: „Referenz der eigenen Stimme kürzen“, „Mehrere Stimmen "
+             "gleichzeitig“ und „Gleichen Anfang merken“ (alle aus); vorher und nachher Zustand → Prüfen → Leistung "
+             "messen.",
+             "Settings → Speech output → Advanced: „Shorten the reference of your own voice“, „Several voices at "
+             "once“ and „Remember the same beginning“ (all off); before and after Status → Checks → Measure "
+             "performance."),
         ],
         "sehen": [
             ("Zustand → Verbrauch: gesprochene Sekunden je Tag, Aufgabe und Profil.",
@@ -344,9 +369,12 @@ SEITEN = {
             ("textnorm.guess_language", ("Deutsch oder Englisch raten", "guess German or English")),
             ("textnorm.speak_numbers", ("Zahlen ausschreiben", "write out numbers")),
             ("tempo.Stretcher", ("Tempo beim Streamen", "tempo while streaming")),
+            ("tts_proxy.shorten", ("Referenz einmal kürzen", "shorten the reference once")),
+            ("kurzref.cut_at", ("leiseste Stelle vor der Grenze", "quietest point before the limit")),
+            ("kurzref.keep_words", ("Wörter des eigenen Textes behalten", "keep the words of the own text")),
             ("common.PrioGate", ("Warten nach Vorrang", "waiting by priority")),
         ],
-        "tests": ["test_units", "test_markdown", "test_hardening", "test_stufe", "test_tempo"],
+        "tests": ["test_units", "test_markdown", "test_hardening", "test_stufe", "test_tempo", "test_kurzref"],
         "heute": [("vb_tts_calls", ("Ausgaben", "outputs")), ("vb_tts_amount", ("Sekunden gesprochen", "seconds spoken"))],
     },
 

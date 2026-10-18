@@ -552,6 +552,12 @@
         <div class="setrow"><div class="lbl"><b>Temperatur</b><span>Kleiner = ruhiger und gleichmäßiger, größer = lebendiger; Qwen-Standard 0.9.</span></div><input class="num" id="tts.temperature" type="number" step="0.05" min="0.05" max="2"></div>
         <div class="setrow"><div class="lbl"><b>Wortwahl (top_p)</b><span>Kleiner = weniger Ausreißer; Qwen-Standard 1.0.</span></div><input class="num" id="tts.top_p" type="number" step="0.05" min="0.05" max="1"></div>
         <div class="setrow"><div class="lbl"><b>Seed</b><span>Feste Zahl = gleiche Stimmführung über alle Sätze; -1 = zufällig.</span></div><input class="num" id="tts.seed" type="number" step="1" min="-1"></div>
+        <div class="setrow"><div class="lbl"><b>Referenz der eigenen Stimme kürzen</b><span>Nur für geklonte Stimmen: eine kürzere Aufnahme macht den ersten Ton schneller.<button class="mlink" type="button">Mehr</button></span></div><select class="wide" id="tts.ref_max_s" data-num="1">
+          <option value="0">aus: die ganze Aufnahme</option>
+          <option value="8">auf etwa 8 s</option>
+          <option value="10">auf etwa 10 s</option>
+          <option value="15">auf etwa 15 s</option></select></div>
+        <div class="fh more" hidden>Bei jedem Satz verarbeitet die Sprachausgabe die ganze Referenzaufnahme der Stimme mit. Ist sie länger, schneidet der Spark sie einmal an einer Sprechpause ab, lässt das Stück von der Spracherkennung neu aufschreiben und nimmt dann dieses Stück. Die Aufnahme selbst bleibt unverändert; aus schaltet zurück.</div>
         <div id="enginecfg">
           <h3 class="sec">Engine (vllm-omni)</h3>
           <div class="setrow"><div class="lbl"><b>Speicheranteil Talker</b><span>Anteil am ganzen 128-GB-Pool, z. B. 0.04 ≈ 4,8 GiB.</span></div><input class="num" id="tts.engine_mem_talker" type="number" step="0.01"></div>
@@ -566,6 +572,12 @@
             <option value="18">sehr ruhig: erster Ton spürbar später</option>
             <option value="0">automatisch: vllm-omni entscheidet nach Auslastung</option></select></div>
           <div class="fh more" hidden>Die Sprachausgabe liefert den Ton in Blöcken. Ein kleiner erster Block ist früher hörbar, ein größerer läuft gleichmäßiger an; danach werden die Blöcke stufenweise größer, damit die Wiedergabe nicht abreißt. Eine Änderung startet die Sprachausgabe neu, das dauert ein paar Minuten.</div>
+          <div class="setrow"><div class="lbl"><b>Mehrere Stimmen gleichzeitig</b><span>Bündelt mehrere Stimmen im Decoder, damit bei mehreren Anfragen der erste Ton früher kommt.<button class="mlink" type="button">Mehr</button></span></div><select class="wide" id="tts.engine_decode_batch" data-num="1">
+            <option value="1">einzeln (Standard von vllm-omni)</option>
+            <option value="2">bis zu 2 gebündelt</option>
+            <option value="4">bis zu 4 gebündelt</option></select></div>
+          <div class="fh more" hidden>Laufen mehrere Antworten gleichzeitig, rechnet der Decoder sie zusammen und mit vorbereiteten CUDA-Graphen. Das braucht beim Start etwas mehr Speicher und Zeit. Vorher und nachher unter Zustand → Prüfen → Leistung messen vergleichen. Eine Änderung startet die Sprachausgabe neu, das dauert ein paar Minuten.</div>
+          <div class="setrow"><div class="lbl"><b>Gleichen Anfang merken</b><span>Die Engine merkt sich den Teil, der bei jedem Satz derselben Stimme gleich ist (Präfix-Cache).</span></div><label class="tgl"><input type="checkbox" id="tts.engine_prefix_cache"><i></i></label></div>
           <div class="setrow"><div class="lbl"><b>VoiceDesign zusätzlich bereitstellen</b><span>Zweite Engine, braucht den gleichen Speicher noch einmal.</span></div><label class="tgl"><input type="checkbox" id="tts.voicedesign_enabled"><i></i></label></div>
           <div class="setrow"><div class="lbl"><b>VoiceDesign-Modell</b><span>Stimme per Beschreibung.</span></div><select class="wide" id="tts.voicedesign_model"><option>Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign</option></select></div>
         </div>

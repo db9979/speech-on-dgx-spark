@@ -1,5 +1,6 @@
 """Leistung messen (V01.0.163): every number gets a level and a sentence from fixed rules in bench.rate(),
 the ASR part counts the words it got right, and the last ten runs are kept for the comparison."""
+import asyncio
 import json
 import os
 import unittest
@@ -12,6 +13,7 @@ import bench  # noqa: E402
 import common  # noqa: E402
 import panel  # noqa: E402
 import steuer  # noqa: E402
+import httpx  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
 
@@ -105,6 +107,42 @@ class Rating(unittest.TestCase):
         for g in bench.rate(result(free=9, rtf=0.9, qwen38=()))["groups"]:
             for x in g["rows"]:
                 self.assertNotIn("qwen38", x["why"], "the texts speak of the language model, not of qwen38")
+
+    def test_several_voices_at_once(self):
+        """V01.0.800: 2 at once, a short answer sentence at once and the wait in the TTS service's queue apart from
+        the engine (X-Spark-Wait-Ms), with engine_max_seqs in the sentence and the console report."""
+        r = result()
+        r["config"]["tts"]["engine_max_seqs"] = 2
+        r["tts"]["parallel"]["wait_max_s"] = 3.2
+        r["tts"]["pair"] = {"n": 2, "wall_s": 8, "ttfa_s": 0.8, "ttfa_max_s": 0.9, "wait_max_s": 0, "x_realtime": 3.9}
+        r["tts"]["short"] = {"n": 4, "wall_s": 4, "ttfa_s": 1.9, "ttfa_max_s": 2.4, "wait_max_s": 1.1, "x_realtime": 2.0}
+        got = rows(r)
+        self.assertEqual((got["tts_two_first"]["level"], got["tts_short_first"]["level"], got["tts_wait"]["level"]),
+                         ("top", "warn", "bad"))
+        self.assertEqual(got["tts_short_first"]["label"], "Kurzer Satz bei 4 gleichzeitig")
+        self.assertIn("höchstens 2 Sätze gleichzeitig", got["tts_wait"]["why"])
+        self.assertIn("warteschlange der stimme", bench.rate(r)["verdict"]["detail"].lower())
+        text = bench.report(r)
+        self.assertIn("2 at once:      first audio avg 0.80 s / max 0.90 s", text)
+        self.assertIn("4 short sentence at once: first audio avg 1.90 s / max 2.40 s", text)
+        self.assertIn("waited in the queue: up to 3.20 s with 4 at once (engine_max_seqs 2)", text)
+        self.assertNotIn("tts_wait", rows(result()))     # an older result without the numbers: no rows for them
+
+    def test_wait_comes_from_the_tts_service(self):
+        async def go():
+            seen = []
+
+            def answer(request):
+                seen.append(json.loads(request.content)["input"])
+                body = 'data: {"type": "speech.audio.delta", "audio": "AAAA"}\n\n'
+                return httpx.Response(200, headers={"X-Spark-Wait-Ms": "1250"}, stream=httpx.ByteStream(body.encode()))
+            b = bench.Bench(log=lambda m: None)
+            b.client = httpx.AsyncClient(transport=httpx.MockTransport(answer))
+            got = await b.tts_stream(bench.SATZ)
+            await b.client.aclose()
+            return got, seen
+        got, seen = asyncio.run(go())
+        self.assertEqual((got["wait_s"], seen), (1.25, [bench.SATZ]))
 
     def test_measures_the_ways_the_panel_takes(self):
         """With the models on another computer speech goes to its TLS-Tor (common.model_url), not to 127.0.0.1."""

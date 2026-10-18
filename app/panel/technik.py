@@ -267,6 +267,7 @@ MODULE = {
     "tts_proxy": ("sprache", "Sprachausgabe: nimmt an und reicht an die Engine durch"),
     "tts_server": ("sprache", "Sprachausgabe als eigener kleiner Dienst"),
     "tempo": ("sprache", "Sprechtempo für gestreamte Sprache"),
+    "kurzref": ("sprache", "Kürzere Referenz einer geklonten Stimme: schneidet an einer Pause, behält die Wörter des eigenen Textes"),
     "bild_server": ("sprache", "Bild-Dienst: startet FLUX.2 klein bei Bedarf, prüft und kennzeichnet jedes Bild"),
     "llmstart": ("sprache", "Was das eigene Sprachmodell beim Wechseln und Starten tut: feste Schritte, Zeiten, Phase der Engine, Satz für den Chat"),
     "modelle": ("sprache", "Modell-Katalog (modelle.json): Regeln je Eintrag, Prüfung der Dateien, Messen, Regeln für Wechsel und eigene Modelle"),
@@ -348,7 +349,7 @@ KNOTEN = {
     "asr": (896, 196, "Spracherkennung", "Speech recognition", ":31001 → :31011", "sprache",
             "Proxy nimmt an, die Engine läuft nur lokal.", "The proxy accepts, the engine runs locally only.", []),
     "tts": (896, 388, "Sprachausgabe", "Speech output", ":31002 → :31012", "",
-            "Qwen3-TTS mit eigenen Stimmen.", "Qwen3-TTS with own voices.", ["tts_proxy.py", "tts_server.py", "tempo.py", "textnorm.py"]),
+            "Qwen3-TTS mit eigenen Stimmen.", "Qwen3-TTS with own voices.", ["tts_proxy.py", "tts_server.py", "tempo.py", "kurzref.py", "textnorm.py"]),
     "bild": (896, 450, "Bilder und Musik", "Pictures and music", ":31005→:31015 · :31004→:31014", "",
              "FLUX.2 klein (:31005 → :31015) und ACE-Step 1.5 (:31004 → :31014) auf dem Spark, nur lokal; jede Engine lädt "
              "beim ersten Auftrag und entlädt nach Ruhe. Immer nur eine zur Zeit: eine Warteschlange im Panel, die Sperre "
@@ -493,7 +494,7 @@ SYSTEM = [
     ("/opt/speech-spark/", ("Code, venvs, installierte Version", "Code, venvs, installed version"), "nein", ("", "")),
     ("/var/lib/speech-spark/hf/", ("Modell-Cache (HuggingFace)", "Model cache (HuggingFace)"), "nein", ("", "")),
     ("/var/lib/speech-spark/firmware/", ("ESP32-Firmware", "ESP32 firmware"), "nein", ("signiert", "signed")),
-    ("/var/lib/speech-spark/voices/", ("Geklonte Stimmen (WAV und Text)", "Cloned voices (WAV and text)"), "ja", ("", "")),
+    ("/var/lib/speech-spark/voices/", ("Geklonte Stimmen (WAV und Text), in kurz/ gekürzte Referenzen", "Cloned voices (WAV and text), shortened references in kurz/"), "ja", ("", "")),
     ("/var/lib/speech-spark/backups/", ("Sicherungen: 7 neueste plus 5 Ereignis-Sicherungen", "Backups: newest 7 plus 5 event backups"), "–", ("", "")),
     ("journald (Namespace speech-spark)", ("Logs aller Dienste, Dauer und Größe nach Einstellung", "Logs of all services, time and size as set"), "nein", ("", "")),
 ]

@@ -1932,6 +1932,13 @@
 "titel": "OLED: Update-Fortschritt",
 "text": "A: Ein Update starten (Zustand → Update oder sudo speech-spark update). Das Display hört auf zu wechseln und zeigt „Update TARS“ mit Prozent und Balken bis 30 %, dann „Update Pi“ bis 100 %; die LEDs leuchten blau. Live und Steuerzentrale zeigen dieselben Prozente. Am Ende steht eine Minute „Update fertig“, dann wechselt das Display wieder.",
 "thread": "Neue OLED-Seite mit aktiven Nutzern"
+},
+{
+"id": "P300",
+"v": 800,
+"titel": "Sprachausgabe: mehrere Stimmen gleichzeitig",
+"text": "A: Zustand → Prüfen → Leistung messen und das Ergebnis notieren (erster Ton bei 4 und bei 2 gleichzeitig, kurzer Satz bei 4, „Davon in der Warteschlange“). B: Einstellungen → Sprachausgabe → Erweitert → „Referenz der eigenen Stimme kürzen“ auf 10 s, speichern, nach dem Neustart wieder messen; Zustand → Logs (Sprachausgabe) zeigt „tts: referenz gekuerzt … s auf … s“ oder warum nicht. Die Stimme anhören: klingt sie gleich? C: „Mehrere Stimmen gleichzeitig“ auf „bis zu 4 gebündelt“, speichern (die Sprachausgabe startet neu), messen. D: „Gleichen Anfang merken“ an, messen. E: Was nichts bringt oder die Stimme verändert, wieder ausschalten.",
+"thread": "Sprachausgabe bei 4 gleichzeitigen Anfragen"
 }
 ]
 }

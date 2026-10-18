@@ -31,9 +31,10 @@ LOG_UNITS = dict(UNITS, panel="speech-spark-panel", update="speech-spark-update"
 ASR_ENGINE_KEYS = ("model", "engine_port", "engine_mem", "engine_max_seqs")
 # tts keys that only the vllm-omni engine reads; changing them restarts the engine
 ENGINE_KEYS = ("model", "engine_port", "engine_mem_talker", "engine_mem_code2wav", "engine_max_seqs",
-               "engine_max_model_len", "initial_chunk_frames")
+               "engine_max_model_len", "initial_chunk_frames", "engine_decode_batch", "engine_prefix_cache")
 DESIGN_KEYS = ("voicedesign_enabled", "voicedesign_model", "voicedesign_port",
-               "engine_mem_talker", "engine_mem_code2wav", "engine_max_seqs", "engine_max_model_len", "initial_chunk_frames")
+               "engine_mem_talker", "engine_mem_code2wav", "engine_max_seqs", "engine_max_model_len", "initial_chunk_frames",
+               "engine_decode_batch", "engine_prefix_cache")
 LANGS = ["auto", "Chinese", "English", "German", "French", "Spanish", "Italian", "Portuguese",
          "Russian", "Japanese", "Korean", "Dutch", "Polish", "Turkish", "Arabic"]
 security = HTTPBasic(auto_error=False)

@@ -19,6 +19,8 @@ import uvicorn
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import Response, StreamingResponse
 
+import kurzref
+
 from common import (BodyLimit, GateFull, KeyedCORS, PrioGate, inside, outside_view, api_key_dependency, api_key_ok,
                     engine_crash_reason, load_config, quiet_access_log, SpeechMark, stage_of, STATE)
 from textnorm import (MAX_INPUT, apply_pronunciations, clean_text, guess_language, hide_secrets, parse_pronunciations,
@@ -113,21 +115,102 @@ def clone_voices():
 
 
 _ref_cache = {}  # voice -> (mtime, data URL, transcript)
+_short = {}      # voice -> (mtime, ref_max_s, data URL, transcript): the shorter reference (kurzref.py)
+_short_tried = {}  # voice -> (mtime, ref_max_s, time, for good): not shortened, why is in the log
+_short_busy = set()
+SHORT_RETRY_S = 600
+
+
+def wav_url(data):
+    return "data:audio/wav;base64," + base64.b64encode(data).decode()
+
+
+def ref_limit():
+    m = cfg.get("ref_max_s", 0)
+    return m if m in (8, 10, 15) and not isinstance(m, bool) else 0
 
 
 def clone_reference(name):
-    """The recorded reference of a cloned voice as vllm-omni's Base task wants it."""
+    """The recorded reference of a cloned voice as vllm-omni's Base task wants it; with tts.ref_max_s the shorter
+    piece once it is cut (until then, and when it cannot be cut, the whole recording)."""
     wav = os.path.join(VOICES_DIR, name + ".wav")
     mtime = os.path.getmtime(wav)
+    lim = ref_limit()
+    if lim:
+        s = _short.get(name)
+        if s and s[:2] == (mtime, lim):
+            return s[2], s[3]
+        tried = _short_tried.get(name)
+        if name not in _short_busy and not (tried and tried[:2] == (mtime, lim)
+                                            and (tried[3] or time.time() - tried[2] < SHORT_RETRY_S)):
+            try:
+                asyncio.get_running_loop().create_task(shorten(name))
+            except RuntimeError:   # no loop (a plain call): the whole recording this time
+                pass
     cached = _ref_cache.get(name)
     if cached and cached[0] == mtime:
         return cached[1], cached[2]
     with open(wav, "rb") as f:
-        url = "data:audio/wav;base64," + base64.b64encode(f.read()).decode()
+        url = wav_url(f.read())
     txt = os.path.join(VOICES_DIR, name + ".txt")
     text = open(txt).read().strip() if os.path.exists(txt) else ""
     _ref_cache[name] = (mtime, url, text)
     return url, text
+
+
+async def transcribe(wav):
+    """What the local speech recognition hears in wav (this machine's ASR service), None when it cannot say."""
+    full = load_config()
+    if not full["asr"].get("enabled"):
+        return None
+    key = full.get("api", {}).get("key", "")
+    r = await client.post(f"http://127.0.0.1:{full['asr']['port']}/v1/audio/transcriptions", timeout=60,
+                          headers={"Authorization": f"Bearer {key}"} if key else {},
+                          files={"file": ("referenz.wav", wav)})
+    text = r.json().get("text") if r.status_code == 200 else None
+    return text if isinstance(text, str) and text.strip() else None
+
+
+async def shorten(name):
+    """Cuts the reference of a voice once (kurzref.py) and keeps the piece; every result writes one log line."""
+    lim = ref_limit()
+    path = os.path.join(VOICES_DIR, name + ".wav")
+    if not lim or name in _short_busy:
+        return
+    _short_busy.add(name)
+
+    def gave_up(why, for_good=False):
+        _short_tried[name] = (mtime, lim, time.time(), for_good)
+        print(f"tts: referenz nicht gekuerzt {why}", flush=True)
+    mtime = None
+    try:
+        mtime = os.path.getmtime(path)
+        hit = await asyncio.to_thread(kurzref.cached, VOICES_DIR, name, mtime, lim)
+        if hit:
+            _short[name] = (mtime, lim, wav_url(hit[0]), hit[1])
+            print("tts: referenz kurz geladen", flush=True)
+            return
+        got = await asyncio.to_thread(kurzref.piece, path, lim)   # up to 60 MB: never in the event loop
+        if isinstance(got, str):
+            return gave_up(got, True)
+        piece, full_s, kept_s = got
+        txt = os.path.join(VOICES_DIR, name + ".txt")
+        own = open(txt).read().strip() if os.path.exists(txt) else ""
+        text = ""
+        if own:   # without a transcript only the timbre is used (x_vector_only_mode): no words to match
+            heard = await transcribe(piece)
+            if heard is None:
+                return gave_up("spracherkennung")
+            text = kurzref.keep_words(own, heard)
+            if not text:
+                return gave_up("passt nicht", True)
+        await asyncio.to_thread(kurzref.store, VOICES_DIR, name, mtime, lim, piece, text, full_s, kept_s)
+        _short[name] = (mtime, lim, wav_url(piece), text)
+        print(f"tts: referenz gekuerzt {full_s:.1f} s auf {kept_s:.1f} s", flush=True)
+    except (OSError, ValueError, httpx.HTTPError) as e:
+        gave_up(f"fehler {type(e).__name__}")
+    finally:
+        _short_busy.discard(name)
 
 
 MAX_REF = 15 * 1024 * 1024  # characters of a data: URL (about 11 MB of audio)
@@ -192,6 +275,9 @@ async def warm_up(role):
     if kind == "base":
         if not clone_voices():
             return  # nothing to clone yet
+        if ref_limit():   # the shorter references first, so already the first sentence gets them
+            for name in clone_voices():
+                await shorten(name)
         apply_clone(body)
     elif kind == "voice_design":
         body.update(task_type="VoiceDesign", instructions="ruhige Stimme")

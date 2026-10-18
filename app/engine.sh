@@ -170,30 +170,44 @@ fi
 
 [[ "$MAXLEN" =~ ^[0-9]{3,6}$ ]] || fail "invalid engine_max_model_len '$MAXLEN'"
 # A short talker context keeps its KV cache small; 4096 talker steps are minutes of audio.
-overrides=$(jq -cn --argjson m0 "$MEM0" --argjson m1 "$MEM1" --argjson s "$SEQS" --argjson l "$MAXLEN" \
-  '{"0": {gpu_memory_utilization: $m0, max_num_seqs: $s, max_model_len: $l}, "1": {gpu_memory_utilization: $m1, max_num_seqs: $s}}')
+# Several voices at once (tts.engine_decode_batch, tts.engine_prefix_cache; both off = vllm-omni's own defaults):
+# the decoder batches up to n voices with CUDA graphs for 1..n (vllm-omni's high-concurrency profiles), and the
+# talker reuses the part of the prompt that is the same for every sentence of a cloned voice (its reference)
+DB=$(jq -r '.tts.engine_decode_batch // 1' "$CONFIG"); PC=$(jq -r '.tts.engine_prefix_cache // false' "$CONFIG")
+[[ "$DB" =~ ^[124]$ ]] || fail "invalid engine_decode_batch '$DB' (1, 2 or 4)"
+[[ "$PC" =~ ^(true|false)$ ]] || fail "invalid engine_prefix_cache '$PC'"
+overrides=$(jq -cn --argjson m0 "$MEM0" --argjson m1 "$MEM1" --argjson s "$SEQS" --argjson l "$MAXLEN" --argjson pc "$PC" \
+  '{"0": ({gpu_memory_utilization: $m0, max_num_seqs: $s, max_model_len: $l} + (if $pc then {enable_prefix_caching: true} else {} end)),
+    "1": {gpu_memory_utilization: $m1, max_num_seqs: $s}}')
 
 # Stream in growing blocks: after the first block (tts.initial_chunk_frames) each block is only a
 # little longer than the audio already queued, so playback does not run dry while the talker is
 # slower, e.g. while the LLM shares the GPU. vllm-omni's default jumps from the first block
 # straight to 25 frames (2 s of audio), which stalled playback after the first block on GB10.
-deploy=()
+deploy=(); extra=""
 ic=$(jq -r '.tts.initial_chunk_frames // 8' "$CONFIG")
 if [[ "$ic" =~ ^[0-9]+$ ]] && [ "$ic" -gt 0 ]; then
+  # e.g. 10 -> [10, 8, 9, 10, 11, 12, 13, 15, 17, 19, 21, 24, 25]: the first block as configured,
+  # then from 8 frames each block ~12 % longer than the one before. Measured on GB10 while qwen38
+  # generates, the talker makes only ~14.8 frames/s (1.2x real time); steeper steps ran dry.
+  ramp=$(jq -nc --argjson ic "$ic" '[$ic, ([8] | until(last >= 25; . + [[25, ([last + 1, (last * 1.12 | round)] | max)] | min]))[]]')
+  echo "streaming blocks (codec_chunk_ramp): $ramp"
+  extra+="      codec_chunk_ramp: $ramp"$'\n'
+fi
+if [ "$DB" -gt 1 ]; then
+  echo "decoder batches up to $DB voices with CUDA graphs"
+  extra+="      decode_batch_max_size: $DB"$'\n'"      decode_cudagraph_batch_sizes: $(jq -nc --argjson n "$DB" '[range(1; $n + 1)]')"$'\n'
+fi
+[ "$PC" = true ] && echo "talker prefix cache on"
+if [ -n "$extra" ]; then
   # find_spec locates the package without importing it (importing prints INFO lines to stdout)
   base=$("$VENV/bin/python" -c 'import importlib.util as u, os; print(os.path.join(u.find_spec("vllm_omni").submodule_search_locations[0], "deploy", "qwen3_tts.yaml"))' 2>/dev/null | tail -n1 || true)
   if [ -f "$base" ]; then
-    # e.g. 10 -> [10, 8, 9, 10, 11, 12, 13, 15, 17, 19, 21, 24, 25]: the first block as configured,
-    # then from 8 frames each block ~12 % longer than the one before. Measured on GB10 while qwen38
-    # generates, the talker makes only ~14.8 frames/s (1.2x real time); steeper steps ran dry.
-    ramp=$(jq -nc --argjson ic "$ic" '[$ic, ([8] | until(last >= 25; . + [[25, ([last + 1, (last * 1.12 | round)] | max)] | min]))[]]')
-    echo "streaming blocks (codec_chunk_ramp): $ramp"
     deploy_file="$STATE_DIR/tts-deploy-$ROLE.yaml"
-    printf 'base_config: %s\nconnectors:\n  connector_of_shared_memory:\n    extra:\n      codec_chunk_ramp: %s\n' \
-      "$base" "$ramp" >"$deploy_file"
+    printf 'base_config: %s\nconnectors:\n  connector_of_shared_memory:\n    extra:\n%s' "$base" "$extra" >"$deploy_file"
     deploy=(--deploy-config "$deploy_file")
   else
-    echo "WARNING: vllm-omni deploy config not found ('$base'); streaming uses the engine's default blocks" >&2
+    echo "WARNING: vllm-omni deploy config not found ('$base'); the engine runs with its default blocks and batches" >&2
   fi
 fi
 
