@@ -1024,3 +1024,31 @@ def api_key_ok(scope):
 
 
 _pin_models()
+
+
+# ---------------------------------------------------------------- update progress (update.sh, install.sh)
+# Both computers write it to STATE/update-progress.json; the panel shows it (update.py), the model computer's Wärter
+# reports its own share (tarswart.status "update_pct") so the case's display can show one bar for both.
+UPDATE_PROGRESS = os.path.join(STATE, "update-progress.json")
+# install.sh sections -> (share of the bar, German label)
+UPDATE_STEPS = [("Neue Version", 5, "Neue Version geladen"), ("System packages", 10, "Systempakete"),
+                ("Service user", 14, "Dienstkonto und Ordner"), ("Git clone", 16, "Git-Kopie"),
+                ("config.json", 20, "Einstellungen übernehmen"), ("qwen38 API key", 22, "Schlüssel für das Sprachmodell"),
+                ("certificate", 24, "Zertifikat"), ("Checking ports", 26, "Ports prüfen"),
+                ("Python env for Qwen3", 32, "Python-Umgebung Spracherkennung/-ausgabe"),
+                ("Python env for the panel", 38, "Python-Umgebung Panel"),
+                ("Python env for the engines", 48, "Python-Umgebung Engines (vLLM)"),
+                ("Downloading", 62, "Modelle prüfen"), ("Installing application files", 72, "Programmdateien installieren"),
+                ("Self-test", 76, "Selbsttest"),
+                ("systemd units", 80, "Dienste einrichten"), ("Starting services", 86, "Dienste neu starten und laden"),
+                ("Smoke test", 95, "Kurztest"), ("Fertig", 100, "Fertig")]
+
+
+def update_anteil(text):
+    """(percent, German label) of an update step text: the last of UPDATE_STEPS it names, else 3 % and the text."""
+    pct, label = 3, str(text)
+    for key, share, name in UPDATE_STEPS:
+        if key.lower() in str(text).lower():
+            pct, label = share, name
+    return pct, label
+

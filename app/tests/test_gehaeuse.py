@@ -429,5 +429,85 @@ class Root(unittest.TestCase):
         self.assertIn("gehaeuse: abgelehnt kein raspberry pi", self.run_sh("gehaeuse_ein 55 48").stdout)
 
 
+
+class UpdateAnzeige(Base):
+    """Dominik 2026-10-18 "1a 2a 3a 4a": a running update stops the rotation and shows its share as one big number with
+    a bar (TARS up to 30 %, then the Pi), also at night (dimmed) and with "nur bei Problemen"; the LEDs are blue."""
+
+    def gesamt(self, **kw):
+        u = {"run": True, "teil": "Pi", "pct": 72, "step": "Programmdateien installieren", "done": False, "ok": None}
+        u.update(kw)
+        return mock.patch.object(gehaeuse, "_update", return_value=u)
+
+    def test_forced_with_its_share_and_blue_leds(self):
+        c = self.on(gehaeuse_anzeige="probleme", gehaeuse_nacht="aus")
+        with self.gesamt():
+            out = self.tick(NIGHT, c)
+        self.assertEqual(gehaeuse._st["seite"], "update")
+        self.assertIn("gehaeuse: update anzeige an", out)
+        self.assertEqual(self.hw.leds[-1], gehaeuse.led_bytes(gehaeuse.led_farbe("blau", 5)), "blue, dimmed at night")
+        self.assertIn(bytes([0x00, 0x81, round(5 * 255 / 100)]), self.hw.i2c, "the display dimmed at night")
+        with self.gesamt():
+            self.assertEqual(gehaeuse.update_zeilen(gehaeuse._update(T0)), ["Update Pi", "72%", "Programmdateien"])
+        n = len(self.hw.i2c)
+        with self.gesamt():
+            self.tick(NIGHT + 1, c)
+        self.assertEqual(len(self.hw.i2c), n, "the same picture is not sent again")
+        with mock.patch.object(gehaeuse, "_update", return_value=None):
+            out = self.tick(T0 + 5, self.on())
+        self.assertIn("gehaeuse: update anzeige aus", out)
+        self.assertNotEqual(gehaeuse._st["seite"], "update", "back to the rotation")
+
+    def test_the_update_goes_before_a_model_switch_and_a_gone_dgx(self):
+        """A fixed order: an update restarts the models, so "LLM wechselt" and "DGX weg" come up while it runs; the
+        update page and the blue LEDs stay first (Update > DGX weg > LLM wechselt > Pause > Dienste > Hinweise)."""
+        c = self.on()
+        with self.gesamt(teil="TARS", pct=12, step="TARS aktualisiert"), \
+                mock.patch.object(gehaeuse, "_llm_start", return_value="LLM wechselt (4/6)"), \
+                mock.patch.object(steuer, "remote", return_value=True), mock.patch.object(steuer, "weg", return_value=True):
+            self.tick(T0, c)
+        self.assertEqual(gehaeuse._st["seite"], "update")
+        self.assertEqual(self.hw.leds[-1], gehaeuse.led_bytes(gehaeuse.led_farbe("blau", 30)))
+
+    def test_the_picture_shows_the_share(self):
+        def balken(pct):
+            img = gehaeuse.bild(["Update TARS", f"{pct}%", "TARS aktualisiert"], key="update")
+            return sum(1 for x in range(gehaeuse.W) if img.getpixel((x, 45)))
+        self.assertLess(balken(10), balken(50))
+        self.assertLess(balken(50), balken(100))
+        self.assertEqual(gehaeuse.update_zeilen({"run": False, "teil": "Pi", "pct": 100, "step": "Fertig", "done": True, "ok": True})[0],
+                         "Update fertig")
+        self.assertEqual(gehaeuse.update_zeilen({"run": False, "teil": "Pi", "pct": 40, "step": "x", "done": True, "ok": False})[1],
+                         "Fehler")
+        self.assertEqual(gehaeuse.update_zeilen({"run": True, "teil": "", "pct": 3, "step": "Prüfen", "done": False, "ok": None}),
+                         ["Update", "3%", "Pruefen"])
+
+    def test_one_bar_for_both_computers(self):
+        import update
+        p = {"percent": 5, "text": "Neue Version geladen", "started": 100, "updated": 100, "done": False, "ok": None}
+        with mock.patch.object(update, "update_running", return_value=True), \
+                mock.patch.object(update, "update_progress", side_effect=lambda: dict(p)), \
+                mock.patch.object(steuer, "remote", return_value=True):
+            with mock.patch.object(steuer, "cached", return_value={"update": True, "update_pct": 50}):
+                g = update.gesamt(T0)
+                self.assertEqual((g["teil"], g["pct"]), ("TARS", 15))
+            with mock.patch.object(steuer, "cached", return_value={"update": True, "update_pct": "viel"}):
+                self.assertEqual(update.gesamt(T0)["pct"], 0, "only a number 0-100 counts")
+            with mock.patch.object(steuer, "cached", return_value={"update": False}):
+                self.assertEqual((update.gesamt(T0)["teil"], update.gesamt(T0)["pct"]), ("Pi", 30), "TARS done")
+            p.update(percent=72, text="Programmdateien installieren")
+            with mock.patch.object(steuer, "cached", return_value={"update": False}):
+                self.assertEqual(update.gesamt(T0)["pct"], 30 + round(72 * 70 / 100))
+        with mock.patch.object(update, "update_running", return_value=True), \
+                mock.patch.object(update, "update_progress", return_value=dict(p)), \
+                mock.patch.object(steuer, "remote", return_value=False):
+            self.assertEqual((update.gesamt(T0)["teil"], update.gesamt(T0)["pct"]), ("", 72), "one Spark: its own share")
+        p.update(done=True, ok=True, updated=T0 - 30)
+        with mock.patch.object(update, "update_running", return_value=False), \
+                mock.patch.object(update, "update_progress", return_value=dict(p)), \
+                mock.patch.object(steuer, "remote", return_value=True), mock.patch.object(steuer, "cached", return_value={}):
+            self.assertTrue(update.gesamt(T0)["done"])
+            self.assertIsNone(update.gesamt(T0 + update.NACH_S), "after a minute the rotation comes back")
+
 if __name__ == "__main__":
     unittest.main()

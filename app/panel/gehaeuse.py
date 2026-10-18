@@ -76,7 +76,7 @@ GROSS = ("aktiv",)
 # pages drawn with two big numbers, CPU left and RAM right in % (Dominik 2026-10-17 "1a, Namen Pi und TARS");
 # "TARS" only while the models run on another computer
 ZWEI = ("lastpi", "lasttars")
-FARBEN = {"gruen": (0, 255, 0), "gelb": (255, 150, 0), "rot": (255, 0, 0), "aus": (0, 0, 0)}
+FARBEN = {"gruen": (0, 255, 0), "gelb": (255, 150, 0), "rot": (255, 0, 0), "blau": (0, 90, 255), "aus": (0, 0, 0)}
 NACHT = ("aus", "dunkel", "an")
 ANZEIGE = ("immer", "probleme")   # "probleme": dark while everything is green
 # the settings (chat.*): key -> (default, lowest, highest) for numbers; admin.validate checks them with these
@@ -528,6 +528,9 @@ def bild(lines, drehen=False, versatz=(0, 0), key=""):
     draw = ImageDraw.Draw(img)
     font = ImageFont.load_default()
     dx, dy = versatz
+    if key == "update":
+        _update_bild(draw, font, lines, dx, dy)
+        return img.rotate(180) if drehen else img
     if key in ZWEI and len(lines) >= 3:
         _zwei(draw, font, lines, dx, dy)
         return img.rotate(180) if drehen else img
@@ -582,6 +585,39 @@ def _zwei(draw, font, lines, dx, dy):
                   stroke_width=1, stroke_fill=1)
         w = draw.textlength(wort, font=font)
         draw.text((x0 + (62 - w) // 2, dy + 52), wort, fill=1, font=font)
+
+
+def update_zeilen(u):
+    """The update page: a title, the share as a big number (or a fixed word at the end) and the step."""
+    titel = "Update " + u["teil"] if u["teil"] else "Update"
+    if u["done"]:
+        return ["Update fertig", "100%", "neue Version laeuft"] if u["ok"] else ["Update", "Fehler", "fehlgeschlagen"]
+    step = _ascii(u["step"])
+    if len(step) > 21:            # whole words only: "Programmdateien installieren" -> "Programmdateien"
+        step = step[:22].rsplit(" ", 1)[0][:21]
+    return [titel, f"{u['pct']}%", step]
+
+
+def _ascii(text):
+    """The display's built-in font has no umlauts: ä → ae and so on."""
+    for a, b in (("ä", "ae"), ("ö", "oe"), ("ü", "ue"), ("Ä", "Ae"), ("Ö", "Oe"), ("Ü", "Ue"), ("ß", "ss")):
+        text = text.replace(a, b)
+    return text
+
+
+def _update_bild(draw, font, lines, dx, dy):
+    """The update page (update_zeilen): title, a big share, a bar under it (from the number) and the step."""
+    from PIL import ImageFont
+    draw.text((dx, dy), lines[0][:21], fill=1, font=font)
+    draw.line((0, dy + 11, W - 1, dy + 11), fill=1)
+    big = ImageFont.load_default(size=26)
+    a, b, c, d = draw.textbbox((0, 0), lines[1][:6], font=big, stroke_width=1)
+    draw.text((dx + (W - (c - a)) // 2 - a, dy + 14 - b), lines[1][:6], fill=1, font=big, stroke_width=1, stroke_fill=1)
+    pct = int(lines[1][:-1]) if lines[1].endswith("%") and lines[1][:-1].isdigit() else None
+    if pct is not None:
+        draw.rectangle((dx, dy + 41, dx + W - 2, dy + 48), outline=1)
+        draw.rectangle((dx, dy + 41, dx + round((W - 2) * min(100, pct) / 100), dy + 48), fill=1)
+    draw.text((dx, dy + 51), lines[2][:21] if len(lines) > 2 else "", fill=1, font=font)
 
 
 def versatz(now):
@@ -661,13 +697,25 @@ def tick(now=None, c=None):
         farbe, _ = lage(now)
         dark = nacht(c, now) and c.get("gehaeuse_nacht", "aus") != "an"
         night_off = dark and c.get("gehaeuse_nacht", "aus") == "aus"
-        _oled(c, now, farbe, dark, night_off)
+        upd = _update(now)
+        if upd and upd["run"]:   # the LEDs while an update runs (Dominik 2026-10-18 "4a"); the update goes first:
+            farbe = "blau"       # it restarts the models, so "LLM wechselt" and "DGX weg" come up meanwhile
+        _oled(c, now, farbe, dark, night_off, upd)
         if now - _st["led_t"] >= LED_EVERY:
             _st["led_t"] = now
-            _led(c, now, farbe, dark, night_off)
+            _led(c, now, farbe, dark, night_off and farbe != "blau")   # an update shows also at night, dimmed
 
 
-def _oled(c, now, farbe, dark, night_off):
+def _update(now):
+    """The running update of both computers (update.gesamt), or None."""
+    try:
+        import update
+        return update.gesamt(now)
+    except Exception:
+        return None
+
+
+def _oled(c, now, farbe, dark, night_off, upd=None):
     if _st["fail"].get("oled") and now - _st["fail"]["oled"] < RETRY:
         return
     try:
@@ -684,6 +732,21 @@ def _oled(c, now, farbe, dark, night_off):
             _wieder("oled")
             print(f"gehaeuse: oled an 0x{a:02x}", flush=True)
         a = _st["addr"]
+        if upd:      # an update stops the rotation and shows itself, also at night and with "nur bei Problemen" (3a)
+            if _st["seite"] == "-":
+                _cmd(a, 0xAF)
+            lines = update_zeilen(upd)
+            roh = "\n".join(lines).encode()
+            if _st["seite"] != "update" or roh != _st["roh"]:
+                oled_hell(a, 5 if dark else zahl(c, "gehaeuse_hell"))
+                oled_zeigen(a, bild(lines, c.get("gehaeuse_drehung") == 180, versatz(now), "update"))
+                if _st["seite"] != "update":
+                    print("gehaeuse: update anzeige an", flush=True)
+                _st.update(seite="update", roh=roh, gleich=now, next=0.0, bild=bild(lines, key="update"))
+            return
+        if _st["seite"] == "update":
+            print("gehaeuse: update anzeige aus", flush=True)
+            _st["seite"] = ""
         quiet = night_off or (c.get("gehaeuse_anzeige") == "probleme" and farbe == "gruen")
         if quiet:
             if _st["seite"] != "-":

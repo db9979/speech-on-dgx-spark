@@ -49,7 +49,7 @@ import rechner
 import werkstatt
 from common import (CONFIG_PATH, ON_DEMAND_UNITS, OWN_LLM_UNITS, UNITS, WAERTER_PORT, BodyLimit, gpu_stats, journal, load_config,
                     WARTUNG_FILE, installed_version, mem_available_gib, model_choice, model_settings_hash, model_settings_take, qwen38_lanes, read_json,
-                    run, shipped, waerter_key, waerter_sign, write_json)
+                    UPDATE_PROGRESS, run, shipped, update_anteil, waerter_key, waerter_sign, write_json)
 
 WINDOW = 60            # seconds a request's time may be off
 MAX_BODY = 64 * 1024     # the speech settings (pronunciation, context) fit easily
@@ -142,7 +142,16 @@ def status():
     cfg = load_config()
     return {"version": version(), "einheiten": _states(list(WATCHED.values())), "gpu": gpu_stats(),
             "mem_avail_gib": mem, "mem_total_gib": total, "einstellungen": model_settings_hash(cfg), "modellwahl": model_choice(cfg), "pause": pause(),
-            "commit": str(installed_version().get("commit") or "")[:40], "update": _update_laeuft(), "rechner": _rechner()}
+            "commit": str(installed_version().get("commit") or "")[:40], "update": _update_laeuft(), "update_pct": _update_pct(), "rechner": _rechner()}
+
+
+def _update_pct():
+    """How far this computer's own update is (common.UPDATE_STEPS), while it runs: the panel computer shows one bar for
+    both (gehaeuse.py, Dominik 2026-10-18 "2a"). A number only, None when no update runs."""
+    if not _update_laeuft():
+        return None
+    p = read_json(UPDATE_PROGRESS, {}) or {}
+    return update_anteil(p.get("text", ""))[0] if isinstance(p, dict) else None
 
 
 def _rechner():

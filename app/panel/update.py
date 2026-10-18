@@ -12,7 +12,7 @@ from fastapi.security import HTTPBasicCredentials
 from fastapi.responses import Response
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from common import PREFIX, STATE, installed_version, journal, write_json  # noqa: E402
+from common import PREFIX, UPDATE_PROGRESS, installed_version, journal, update_anteil, write_json  # noqa: E402
 from core import admin_code, app_version, auth, browser_profile, is_admin, run, security  # noqa: E402
 import backup  # noqa: E402
 import ghtoken  # noqa: E402
@@ -225,21 +225,7 @@ async def _remote_state(force=False):
 # ---------------------------------------------------------------- update lock
 # update.sh writes its progress to this file; while it runs the panel refuses changes (all
 # mutating requests except the ones the assistant needs) and the page shows a locked progress bar.
-UPDATE_PROGRESS = os.path.join(STATE,
-                               "update-progress.json")
 UPDATE_TIMEOUT = 45 * 60  # then the page offers to wait or cancel (the unit itself may run 2 h)
-# install.sh sections -> (share of the bar, German label)
-UPDATE_STEPS = [("Neue Version", 5, "Neue Version geladen"), ("System packages", 10, "Systempakete"),
-                ("Service user", 14, "Dienstkonto und Ordner"), ("Git clone", 16, "Git-Kopie"),
-                ("config.json", 20, "Einstellungen übernehmen"), ("qwen38 API key", 22, "Schlüssel für das Sprachmodell"),
-                ("certificate", 24, "Zertifikat"), ("Checking ports", 26, "Ports prüfen"),
-                ("Python env for Qwen3", 32, "Python-Umgebung Spracherkennung/-ausgabe"),
-                ("Python env for the panel", 38, "Python-Umgebung Panel"),
-                ("Python env for the engines", 48, "Python-Umgebung Engines (vLLM)"),
-                ("Downloading", 62, "Modelle prüfen"), ("Installing application files", 72, "Programmdateien installieren"),
-                ("Self-test", 76, "Selbsttest"),
-                ("systemd units", 80, "Dienste einrichten"), ("Starting services", 86, "Dienste neu starten und laden"),
-                ("Smoke test", 95, "Kurztest"), ("Fertig", 100, "Fertig")]
 _upd_cache = {"t": 0.0, "running": False}
 
 
@@ -258,16 +244,54 @@ def update_progress():
     except (OSError, ValueError):
         return None
     text = str(p.get("text", ""))
-    pct, label = 3, text
-    for key, share, name in UPDATE_STEPS:
-        if key.lower() in text.lower():
-            pct, label = share, name
+    pct, label = update_anteil(text)
     if p.get("done"):
         pct = 100 if p.get("ok") else pct
         label = text
     return {"percent": pct, "text": label, "step": p.get("step"), "started": p.get("started"),
             "updated": p.get("updated"), "done": bool(p.get("done")), "ok": p.get("ok"),
             "version": p.get("version"), "now": int(time.time()), "timeout": UPDATE_TIMEOUT}
+
+
+TARS_ANTEIL = 30      # one bar for both computers (Dominik 2026-10-18 "2a"): the model computer up to 30 %, this one the rest
+NACH_S = 60           # "Update fertig" / "fehlgeschlagen" stays this long on the case's display
+
+
+def gesamt(now=None):
+    """The update of both computers as one bar, for the case's display, Live and the Steuerzentrale: {"run", "teil"
+    ("TARS", "Pi" or "" on one Spark), "pct", "step", "done", "ok"}; None when no update runs or ended in the last
+    NACH_S seconds. While update.sh waits for the model computer (its first step) the share comes from the Wärter's
+    status ("update_pct", a number 0-100 only), else from this computer's progress file. Numbers and fixed words only."""
+    now = time.time() if now is None else now
+    p = update_progress()
+    run = update_running()
+    if not p or not (run or (p.get("done") and isinstance(p.get("updated"), (int, float)) and 0 <= now - p["updated"] < NACH_S)):
+        return None
+    try:
+        import steuer
+        geteilt = steuer.remote()
+        d = (steuer.cached() or {}) if geteilt else {}
+    except Exception:
+        geteilt, d = False, {}
+    pct = int(p.get("percent") or 0)
+    out = {"run": run and not p.get("done"), "teil": "Pi" if geteilt else "", "pct": pct, "step": str(p.get("text") or "")[:40],
+           "done": bool(p.get("done")), "ok": p.get("ok") if p.get("done") else None}
+    if geteilt:
+        out["pct"] = TARS_ANTEIL + round(pct * (100 - TARS_ANTEIL) / 100) if pct > 5 or p.get("done") else TARS_ANTEIL
+        if p.get("done") and p.get("ok"):
+            out["pct"] = 100
+        if out["run"] and pct <= 5:      # update.sh waits for the model computer (its first step)
+            lauf = p.get("started")
+            if d.get("update") is True:
+                _tars_lauf["seen"] = lauf
+            if d.get("update") is True or _tars_lauf["seen"] != lauf:   # running, or not started yet in this update
+                t = d.get("update_pct") if d.get("update") is True else 0
+                t = t if isinstance(t, int) and not isinstance(t, bool) and 0 <= t <= 100 else 0
+                out.update(teil="TARS", pct=round(t * TARS_ANTEIL / 100), step="TARS aktualisiert")
+    return out
+
+
+_tars_lauf = {"seen": None}     # the update (its start time) in which the model computer was seen updating
 
 
 UNLOCKED = ("/api/chat", "/api/test/asr", "/api/assistant/", "/api/watch/", "/api/esp32/", "/api/iphone/", "/api/login", "/api/logout",

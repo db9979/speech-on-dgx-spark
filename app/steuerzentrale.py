@@ -533,7 +533,8 @@ def rechts(R, d, x, w, top, bot):
     y += 5
     upd, wart, tag = live.get("upd") or {}, live.get("wartung") or {}, d.get("tag") or {}
     R.box(x, y, w, 3, "d", "Wartung", "W")
-    R.put(x + 2, y + 1, kurz(" · ".join(p for p in ("Update läuft" if upd.get("run") else "",
+    R.put(x + 2, y + 1, kurz(" · ".join(p for p in ((f"Update {upd.get('pct')} % · {upd.get('step')}" if isinstance(upd.get("pct"), int) else "Update läuft")
+                                                     if upd.get("run") else "",
                                                     "Wartungspause" if wart.get("on") else "",
                                                     "Sicherung " + uhr(tag.get("backup"), False) if tag.get("backup") else "keine Sicherung") if p), w - 4),
           "b" if upd.get("run") or wart.get("on") else "m")

@@ -308,6 +308,17 @@ class Pause(Base):
         self.assertIn("waerter: weiter ok", out.getvalue())
         self.assertIn("waerter: weiter keine", out.getvalue())
 
+    def test_its_update_share_only_while_it_runs(self):
+        """Dominik 2026-10-18 "2a": the panel computer shows one bar for both, so the Wärter reports how far its own
+        update is (a number from common.UPDATE_STEPS, never the text), None while no update runs."""
+        with open(common.UPDATE_PROGRESS, "w") as f:
+            json.dump({"step": 4, "text": "Installing application files", "started": 1, "updated": 2, "done": False}, f)
+        self.addCleanup(os.remove, common.UPDATE_PROGRESS)
+        with mock.patch.object(tarswart, "_update_laeuft", return_value=True):
+            self.assertEqual(tarswart._update_pct(), 72)
+        with mock.patch.object(tarswart, "_update_laeuft", return_value=False):
+            self.assertIsNone(tarswart._update_pct())
+
     def test_a_pause_whose_time_is_over_ends_on_the_model_computer(self):
         # tars 2026-10-15: a pause left behind (aborted `modelle messen`) stayed on for 150 minutes; no panel there ends
         # it after its time, and `modelle llm uebernehmen` then neither set nor ended one

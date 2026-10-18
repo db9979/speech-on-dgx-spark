@@ -358,6 +358,12 @@ class Bild(unittest.TestCase):
         del d["live"]["aktiv"]
         self.assertIn("Aktiv 10 min – (– Profile · – Gäste)", sz.bild(d, 200, 60, T0).text().splitlines()[1])
 
+    def test_update_with_its_share(self):
+        """Dominik 2026-10-18: a running update shows its share and step (live._upd, one bar for both computers)."""
+        d = beispiel()
+        d["live"]["upd"] = {"run": True, "pct": 15, "step": "TARS: TARS aktualisiert"}
+        self.assertIn("Update 15 % · TARS", sz.bild(d, 200, 60, T0).text())
+
     def test_curve_and_numbers(self):
         self.assertEqual(sz.linie([0, 100], 4, 0, 100), "▁▁██")
         self.assertEqual(sz.linie([], 3), "   ")

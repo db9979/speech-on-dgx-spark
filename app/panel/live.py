@@ -1042,6 +1042,9 @@ def _upd(now):
             out.update(pct=int(p.get("percent") or 0), step=str(p.get("text") or "")[:60],
                        ver=str(p.get("version") or "")[:20], ok=p.get("ok") if p.get("done") else None,
                        secs=int(now - p["started"]) if isinstance(p.get("started"), (int, float)) else None)
+        g = update.gesamt(now)     # both computers as one bar (Dominik 2026-10-18): TARS first, then this one
+        if g and g["run"]:
+            out.update(pct=g["pct"], step=(g["teil"] + ": " if g["teil"] else "") + g["step"], teil=g["teil"])
         return out
     except Exception:
         return {"run": False}

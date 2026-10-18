@@ -1925,6 +1925,13 @@
 "titel": "Sprachmodell wechselt: Apps und Mitteilung",
 "text": "A: Im Panel Zustand → Modelle → Sprachmodell → anderes Modell → Wechseln. B: iPhone-App, Zustand → Modelle: oben stehen dieselben sechs Schritte mit Zeiten und „Erwartet: noch etwa … min“, die Seite aktualisiert sich alle paar Sekunden. C: Android: dieselbe Karte über die Panel-Ansicht. D: Am Ende kommt auf jedes Admin-Gerät die Mitteilung „🧠 Sprachmodell umgeschaltet“ mit Name und Dauer (oder „Wechsel zurückgenommen“ mit Grund), genau einmal. E: Ein Update-Neustart in der Nacht schickt keine Mitteilung.",
 "thread": "Eigene Modell-Installation statt qwen38"
+},
+{
+"id": "P299",
+"v": 798,
+"titel": "OLED: Update-Fortschritt",
+"text": "A: Ein Update starten (Zustand → Update oder sudo speech-spark update). Das Display hört auf zu wechseln und zeigt „Update TARS“ mit Prozent und Balken bis 30 %, dann „Update Pi“ bis 100 %; die LEDs leuchten blau. Live und Steuerzentrale zeigen dieselben Prozente. Am Ende steht eine Minute „Update fertig“, dann wechselt das Display wieder.",
+"thread": "Neue OLED-Seite mit aktiven Nutzern"
 }
 ]
 }
