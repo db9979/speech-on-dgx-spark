@@ -420,7 +420,8 @@ Panel on its own computer, models on the DGX: pairing, TLS-Tor, Wärter and the 
 |---|---|
 | `app/panel/gehaeuse.py` | Gehäuse. |
 | `app/panel/notbetrieb.py` | Notbetrieb mit Parakeet. |
-| `app/rechner.py` | The values of one computer for Status → Monitoring → Computers: CPU, memory, disk, network, temperature, fan, power flags, running time, device and system name. |
+| `app/panel/rechenteile.py` | Status → Monitoring → Computers, „Wer rechnet gerade“: which part inside the panel takes the CPU, next to the services of both computers (rechner.dienste_cpu). |
+| `app/rechner.py` | The values of one computer for Status → Monitoring → Computers: CPU, memory, disk, network, temperature, fan, power flags, running time, device and system na … |
 | `app/panel/rechnerblick.py` | Status → Monitoring → Computers: when the panel and the models run on two computers (Spark teilen), both side by side: a tile each on top and a card each und … |
 | `app/panel/schirm.py` | Steuerzentrale am Bildschirm. |
 | `app/panel/steuer.py` | Steuer: the model units and the GPU, here or on the model computer. |
@@ -2995,7 +2996,7 @@ flowchart TD
 5. <a id="kn-teilen-s5"></a>**Connection to the TLS-Tor allowed?**: Every request to speech recognition, speech output, the language model, pictures and the Wärter goes through the door. It speaks TLS 1.3 only and lets only the panel computer in; it never reads the content.
 6. <a id="kn-teilen-s6"></a>**Command to the Wärter**: steuer.call sends a command with a time stamp and a number that counts only once, signed with the Wärter key.
 7. <a id="kn-teilen-s7"></a>**Signature, time, number, command valid?**: tarswart.check checks the signature, a time at most 60 s off, the number only once and a command from the fixed list. No shell, no free names.
-8. <a id="kn-teilen-s9"></a>**Values of both computers**: rechner.messen measures CPU, memory, disk, network, temperature and power; the Wärter sends the DGX's values with its status. rechnerblick.warnungen warns by fixed rules: the panel computer from 80 °C, throttled or short of power, less than 0.5 GiB free; on either computer less than 10 % disk free; the DGX not answering.
+8. <a id="kn-teilen-s9"></a>**Values of both computers**: rechner.messen measures CPU, memory, disk, network, temperature and power; the Wärter sends the DGX's values with its status. rechnerblick.warnungen warns by fixed rules: the panel computer from 80 °C, throttled or short of power, less than 0.5 GiB free; on either computer less than 10 % disk free; the DGX not answering. „Who is computing now“: rechner.dienste_cpu takes each service's share of the CPU from systemd's counters, rechenteile.messen the panel's parts from its threads and worker processes; rechnerblick.spitze names the biggest from 5 % on, below that it is idle.
 9. <a id="kn-teilen-s10"></a>**Control centre on the screen**: When Features → Control centre on the screen is on, schirm.abgleich starts the unit and lets it start at boot by itself, without signing in. steuerzentrale.py asks schirm.schirm_zustand every second, only from 127.0.0.1 and with its own key, and draws the flow, both computers, services and curves as text; only kind, place, time and numbers. steuerzentrale.schrift picks the font by the resolution for at enough columns and rows, schirm.an_jetzt makes it dark by the times. Switched off, schirm.anmeldung starts the sign-in on tty1 again; a restart of the screen never stops an update.
 10. <a id="kn-teilen-s8"></a>**Notbetrieb when the DGX is missing**: When the DGX no longer answers, chats, reminders and logs go on on the panel computer, and speech questions get a fixed sentence.
 
@@ -3010,6 +3011,7 @@ flowchart TD
 - **80 °C** note, the panel computer is warm ([step 8](#kn-teilen-s9))
 - **10 %** disk free, below it a note ([step 8](#kn-teilen-s9))
 - **0.5 GiB** memory free on the panel computer, below it a note ([step 8](#kn-teilen-s9))
+- **5 %** CPU from which the biggest service counts as „computing now“ ([step 8](#kn-teilen-s9))
 - **15 s** without a question from the control centre, then the screen counts as dark ([step 9](#kn-teilen-s10))
 
 #### Settings
@@ -3020,7 +3022,7 @@ flowchart TD
 #### What you see
 
 - Status → Live: box „Model computer“ with reachable, services, version and pause.
-- Status → Monitoring → Computers: both computers side by side with curves of the last 20 minutes; Live adds the box „Panel computer“.
+- Status → Monitoring → Computers: both computers side by side with curves of the last 20 minutes and „Who is computing now“ (services and the panel's parts with their share of the CPU, strip of the last 20 minutes); Live adds the box „Panel computer“, both boxes with „am meisten …“.
 - The screen on the panel computer itself; Status → Live shows in the box „Control centre“ whether it shows right now.
 
 #### In the code
@@ -3036,6 +3038,9 @@ flowchart TD
 - `app/panel/steuer.py` `weg`: spot Notbetrieb ([step 10](#kn-teilen-s8))
 - `app/rechner.py` `messen`: values of one computer ([step 8](#kn-teilen-s9))
 - `app/panel/rechnerblick.py` `warnungen`: notes by fixed rules ([step 8](#kn-teilen-s9))
+- `app/rechner.py` `dienste_cpu`: CPU per service from systemd ([step 8](#kn-teilen-s9))
+- `app/panel/rechenteile.py` `messen`: CPU per part of the panel ([step 8](#kn-teilen-s9))
+- `app/panel/rechnerblick.py` `spitze`: who computes most ([step 8](#kn-teilen-s9))
 - `app/panel/schirm.py` `schirm_zustand`: local only and with a key ([step 9](#kn-teilen-s10))
 - `app/panel/schirm.py` `abgleich`: unit follows the switch ([step 9](#kn-teilen-s10))
 - `app/panel/schirm.py` `an_jetzt`: dark by the times ([step 9](#kn-teilen-s10))

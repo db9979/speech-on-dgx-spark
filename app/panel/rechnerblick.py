@@ -10,6 +10,12 @@ minutes. On one Spark nothing changes (the page shows what it showed before).
     alerts()          the warnings for „Braucht dich“ (health.alerts), each with the way to the cards
     for_live()        Zustand → Live: the boxes „Modell-Rechner“ and „Panel-Rechner“, numbers only
 
+„Wer rechnet gerade“ (Dominik 2026-10-18 „1a 2a 3a 4b“): each card lists the services by their share of the
+computer's CPU (rechner.dienste_cpu, systemd's counters), the panel with its parts (rechenteile.py), and the rest of
+the system; „spitze“ names the biggest for the tile, Live and the Steuerzentrale, the curve „top“ keeps it every 3 s
+for the strip of the last 20 minutes (below LEERLAUF_PCT nobody: idle). Names come only from DIENST_NAMEN and
+TEIL_NAMEN (de/en, also for the chips „Dienste“), the model computer's ids are data like its other values.
+
 The warnings follow fixed rules (never a model): the panel computer TEMP_WARN °C or warmer (back below TEMP_OK),
 throttled or under-voltage now (the Raspberry Pi's firmware flags), less than RAM_MIN_GIB available memory; on either
 computer less than PLATTE_MIN_PCT % free disk; the model computer not answering (steuer.weg). One log line per
@@ -17,6 +23,7 @@ change ("rechner: hinweis <art> an|aus"). The model computer's values are data: 
 their range are taken, words only from fixed lists.
 """
 import os
+import re
 import sys
 import threading
 import time
@@ -42,6 +49,28 @@ ZAHLEN = {"cpu": (0, 100), "kerne": (0, 4096), "last": (0, 10000), "ram_total": 
           "platte_frei": (0, 1e6), "platte_pct": (0, 100), "netz_rx": (0, 1e18), "netz_tx": (0, 1e18),
           "netz_mbit": (0, 1e6), "laeuft_s": (0, 1e10), "temp": (-50, 150), "strom": (0, 2 ** 32), "t": (0, 1e12)}
 WORTE = ("name", "geraet", "system")
+LEERLAUF_PCT = 5       # % of the whole CPU: below it the biggest service does not count as working (grey in the strip)
+ZEILEN = 6             # services listed per card, the others count for the rest
+REST_MIN = 0.5         # % below which no rest line is shown
+DIENST_ID = re.compile(r"[a-z][a-z0-9-]{0,23}")
+# the services' names (de, en): the ids rechner.dienste_cpu gives (speech-spark-<id>.service, qwen38, docker) and the
+# chips „Dienste“; an unknown own unit shows its id
+DIENST_NAMEN = {"asr": ("Spracherkennung", "Speech recognition"), "asr-engine": ("Spracherkennung (Engine)", "Speech recognition (engine)"),
+                "tts": ("Sprachausgabe", "Speech output"), "tts-engine": ("Sprachausgabe (Engine)", "Speech output (engine)"),
+                "tts-design": ("Stimmen gestalten", "Voice design"), "llm": ("Sprachmodell", "Language model"),
+                "llmtor": ("LLM-Tor", "LLM-Tor"), "sehen": ("Bildverständnis", "Image understanding"),
+                "bild": ("Bilder malen", "Painting pictures"), "musik": ("Musik machen", "Making music"),
+                "werkstatt": ("Werkstatt", "Werkstatt"), "waerter": ("Wärter", "Wärter"), "panel": ("Panel", "Panel"),
+                "turn": ("Anrufe (TURN)", "Calls (TURN)"), "notasr": ("Notbetrieb-Erkennung", "Emergency recognition"),
+                "gehaeuse": ("Gehäuse", "Case"), "schirm": ("Steuerzentrale", "Control centre"), "tlstor": ("TLS-Tor", "TLS gate"),
+                "watch": ("API-Wächter", "API watchdog"), "update": ("Update", "Update"), "wechsel": ("Modellwechsel", "Model switch"),
+                "messen-wunsch": ("Modelle messen", "Measuring models"), "qwen38": ("qwen38", "qwen38"),
+                "docker": ("Modell in Docker", "Model in Docker"), "rest": ("System und Rest", "System and rest")}
+# the parts inside the panel (rechenteile.py); a background job („bg:<job>“) shows its fixed name from the code
+TEIL_NAMEN = {"anfragen": ("Anfragen und Seiten", "Requests and pages"), "bedeutungssuche": ("Bedeutungssuche", "Meaning search"),
+              "nachsortieren": ("Nachsortieren", "Re-ranking"), "auslassen": ("Ordner auslassen", "Leaving out folders"),
+              "loopwacht": ("Hänge-Wächter", "Stall watch"), "aufraeumen": ("Chat löschen", "Deleting a chat"),
+              "weitere": ("Weitere Threads", "Other threads"), "uebrig": ("Kurze Programme und Rest", "Short programs and rest")}
 # the warnings: kind -> (computer, level)
 ARTEN = {"heiss": ("panel", "warn"), "drossel": ("panel", "warn"), "strom": ("panel", "bad"), "ram": ("panel", "bad"),
          "platte_panel": ("panel", "warn"), "platte_modell": ("modell", "warn"), "weg": ("modell", "bad")}
@@ -71,7 +100,51 @@ def pruefen(m):
     for k in WORTE:
         out[k] = rechner._sauber(m.get(k), 24 if k == "name" else 40) if isinstance(m.get(k), str) else ""
     out["luefter"] = m.get("luefter") if isinstance(m.get("luefter"), bool) else None
+    d = m.get("dienste_cpu")
+    out["dienste_cpu"] = {k: v for k, v in list(d.items())[:rechner.DIENSTE_MAX]
+                          if isinstance(k, str) and DIENST_ID.fullmatch(k) and isinstance(v, (int, float))
+                          and not isinstance(v, bool) and 0 <= v <= 100} if isinstance(d, dict) else None
     return out
+
+
+def _name(namen, i):
+    if i.startswith("bg:"):
+        return {"name": i[3:], "en": i[3:]}
+    de, en = namen.get(i, (i, i))
+    return {"name": de, "en": en}
+
+
+def rechnen(k, m):
+    """„Wer rechnet gerade“: the biggest services first (at most ZEILEN), the panel with its parts, then the rest of
+    the computer's CPU; [] while not measured (first round, an older Wärter)."""
+    d = (m or {}).get("dienste_cpu")
+    if not isinstance(d, dict):
+        return []
+    liste = [{"id": i, **_name(DIENST_NAMEN, i), "pct": v} for i, v in sorted(d.items(), key=lambda x: -x[1])[:ZEILEN]]
+    teile = m.get("teile") if k == "panel" else None
+    for x in liste:
+        if x["id"] == "panel" and isinstance(teile, dict):
+            x["teile"] = [{"id": i, **_name(TEIL_NAMEN, i), "pct": v} for i, v in teile.items()]
+            uebrig = round(x["pct"] - sum(teile.values()), 1)
+            if uebrig >= REST_MIN:
+                x["teile"].append({"id": "uebrig", **_name(TEIL_NAMEN, "uebrig"), "pct": uebrig})
+    cpu = m.get("cpu")
+    rest = round(cpu - sum(x["pct"] for x in liste), 1) if isinstance(cpu, (int, float)) else None
+    if rest is not None and rest >= REST_MIN:
+        liste.append({"id": "rest", **_name(DIENST_NAMEN, "rest"), "pct": rest})
+    return liste
+
+
+def spitze(k, m):
+    """The biggest service (the panel: its biggest part) when it takes at least LEERLAUF_PCT % of the CPU, else None."""
+    liste = [x for x in rechnen(k, m) if x["id"] != "rest"]
+    if not liste or liste[0]["pct"] < LEERLAUF_PCT:
+        return None
+    x = liste[0]
+    t = max(x.get("teile") or [], key=lambda y: y["pct"], default=None)
+    if t is None:
+        return {"id": x["id"], "name": x["name"], "en": x["en"], "pct": x["pct"]}
+    return {"id": "panel/" + t["id"], "name": "Panel · " + t["name"], "en": "Panel · " + t["en"], "pct": t["pct"]}
 
 
 def _rate(alt, neu):
@@ -94,9 +167,11 @@ def _nehmen(k, m, now, gpu=None):
             _netz[k] = _rate(alt, m)
         _letzt[k] = m
         rx, tx = _netz[k]
+        sp = spitze(k, m)
         _verlauf[k].append({"t": now, "cpu": m.get("cpu"), "frei": m.get("ram_frei"), "temp": m.get("temp"),
                             "netz": round(rx + tx, 2) if rx is not None else None,
-                            "gpu": (gpu or {}).get("util") if k == "modell" else None})
+                            "gpu": (gpu or {}).get("util") if k == "modell" else None,
+                            "top": sp and sp["id"], "top_name": sp and (sp["name"], sp["en"])})
     return True
 
 
@@ -114,7 +189,10 @@ def probe(now=None, mono=None):
         return False
     import steuer
     now = time.time() if now is None else now
-    _nehmen("panel", rechner.messen(), now)
+    import rechenteile
+    p = rechner.messen()
+    p["teile"] = rechenteile.messen()        # the parts inside the panel (only this computer)
+    _nehmen("panel", p, now)
     d = steuer.cached(now=mono)
     m = pruefen((d or {}).get("rechner"))
     if m is not None:
@@ -181,7 +259,7 @@ def _dienste_panel(now):
     with _lock:
         if now - _dienste["t"] < DIENSTE_S:
             return list(_dienste["d"])
-    out = [{"id": "panel", "state": "active"}]
+    out = [{"id": "panel", "state": "active", **_name(DIENST_NAMEN, "panel")}]
     code, txt = run(["systemctl", "show", *PANEL_UNITS.values(), "-p", "Id,ActiveState,LoadState"])
     seen = {}
     for block in txt.split("\n\n") if code == 0 else []:
@@ -191,7 +269,7 @@ def _dienste_panel(now):
         props = seen.get(unit) or {}
         st = props.get("ActiveState", "")
         if props.get("LoadState") == "loaded" and st.replace("-", "").isalpha() and len(st) <= 20:
-            out.append({"id": teil, "state": st})
+            out.append({"id": teil, "state": st, **_name(DIENST_NAMEN, teil)})
     with _lock:
         _dienste.update(t=now, d=out)
     return out
@@ -203,8 +281,8 @@ def _dienste_modell(d):
     for teil in MODELL_TEILE:
         st = (units.get(UNITS.get(teil) or OWN_LLM_UNITS.get(teil) or ON_DEMAND_UNITS.get(teil)) or {}).get("state")
         if isinstance(st, str) and st != "unknown" and st.replace("-", "").isalpha() and len(st) <= 20:
-            out.append({"id": teil, "state": st})
-    return out + ([{"id": "waerter", "state": "active"}] if d else [])
+            out.append({"id": teil, "state": st, **_name(DIENST_NAMEN, teil)})
+    return out + ([{"id": "waerter", "state": "active", **_name(DIENST_NAMEN, "waerter")}] if d else [])
 
 
 def kurven(k):
@@ -212,8 +290,15 @@ def kurven(k):
         v = list(_verlauf[k])
     v = [x for x in v if x["t"] >= v[-1]["t"] - FENSTER_S] if v else v
     v = v[::max(1, -(-len(v) // PUNKTE))]
-    keys = ("cpu", "frei", "temp", "netz") + (("gpu",) if k == "modell" else ())
+    keys = ("cpu", "frei", "temp", "netz", "top") + (("gpu",) if k == "modell" else ())
     return {key: [x.get(key) for x in v] for key in keys}
+
+
+def namen(k):
+    """The names (de, en) of the ids in the strip „top“ of the last 20 minutes."""
+    with _lock:
+        v = list(_verlauf[k])
+    return {x["top"]: list(x["top_name"]) for x in v if x.get("top") and x.get("top_name")}
 
 
 def karte(k, now=None, mono=None):
@@ -226,7 +311,8 @@ def karte(k, now=None, mono=None):
         w = {a for a in _warn if ARTEN.get(a, ("", ""))[0] == k}
         gpu = dict(_gpu)
     out = {"id": k, **{x: m.get(x) for x in (*ZAHLEN, *WORTE, "luefter") if x not in ("t", "netz_rx", "netz_tx", "strom")},
-           "netz_rx_mbs": rx, "netz_tx_mbs": tx, "hinweise": sorted(w), "kurven": kurven(k)}
+           "netz_rx_mbs": rx, "netz_tx_mbs": tx, "hinweise": sorted(w), "kurven": kurven(k),
+           "rechnen": rechnen(k, m), "spitze": spitze(k, m), "namen": namen(k)}
     flags = m.get("strom")
     out["strom"] = None if flags is None else dict(zip(("spannung", "drossel"), rechner.strom_worte(flags)))
     if k == "modell":
@@ -274,5 +360,5 @@ def for_live():
     belegt = (p["ram_total"] - p["ram_frei"]) if p.get("ram_total") is not None and p.get("ram_frei") is not None else None
     import loopwacht
     return {"on": True, "panel": {"cpu": p.get("cpu"), "belegt": belegt, "total": p.get("ram_total"), "temp": p.get("temp"),
-                                  "platte": p.get("platte_pct"), "haenger": loopwacht.view()["n"]},
-            "modell": {"gpu": g.get("util"), "frei": m.get("ram_frei"), "cpu": m.get("cpu")}}
+                                  "platte": p.get("platte_pct"), "haenger": loopwacht.view()["n"], "spitze": spitze("panel", p)},
+            "modell": {"gpu": g.get("util"), "frei": m.get("ram_frei"), "cpu": m.get("cpu"), "spitze": spitze("modell", m)}}

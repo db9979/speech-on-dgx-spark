@@ -1,6 +1,7 @@
 """The values of one computer for Zustand → Monitoring → Rechner (Dominik 2026-10-16, both computers when the panel
 and the models run apart): CPU, memory, disk, network, temperature, fan, power flags, running time, device and system
-name. Numbers and fixed words only, never a process, a path, an address or a file name.
+name, and how much of the CPU each own service takes (dienste_cpu, Dominik 2026-10-18 "woran gerade gearbeitet wird").
+Numbers and fixed words only, never a process, a path, an address or a file name.
 
 The Wärter on the model computer sends messen() with its status (tarswart.status "rechner"); the panel computer
 measures itself (panel/rechnerblick.py). The case driver reads temperature, fan and power flags from here too
@@ -21,6 +22,12 @@ VIRTUELL = ("lo", "docker", "veth", "br-", "virbr", "tailscale", "wg", "tun", "t
 _NAME = re.compile(r"[^A-Za-z0-9 .()+_-]")
 _fest = {}
 _cpu = {}              # the CPU times of the last measurement (its own, psutil.cpu_percent(None) is shared)
+# every service's CPU time in systemd's counters (cgroup v2, always on): own units by their name, the units of
+# dgx-spark-qwen38 and Docker's model containers each together; everything else counts as "rest" (computed by the panel)
+CGROUP = "/sys/fs/cgroup/system.slice"
+_EIGEN = re.compile(r"speech-spark-([a-z][a-z0-9-]{0,23})\.service")
+DIENSTE_MAX = 24       # entries at most (more own units do not exist)
+_dienst = {}           # the counters of the last measurement: {"t": monotonic, "u": {part: µs}}
 
 
 def lesen(path):
@@ -78,6 +85,54 @@ def cpu_pct():
     busy = lambda x: sum(x) - x.idle - getattr(x, "iowait", 0)   # noqa: E731
     total = sum(t) - sum(alt)
     return round(max(0.0, min(100.0, 100 * (busy(t) - busy(alt)) / total)), 1) if total > 0 else None
+
+
+def _dienst_von(name):
+    """The part a unit of system.slice counts for: own units by their name, qwen38 and Docker together, else None."""
+    m = _EIGEN.fullmatch(name)
+    if m:
+        return m.group(1)
+    if name.startswith("qwen38-") and name.endswith(".service"):
+        return "qwen38"
+    if name.startswith("docker-") and name.endswith(".scope"):   # only model engines run in Docker (modelle.DOCKER)
+        return "docker"
+    return None
+
+
+def dienste_cpu(base=CGROUP, read=lesen, now=None, kerne=None):
+    """The CPU share in % of the whole computer each service took since the last call ({} on the first, None without
+    the counters): usage_usec from the service's cpu.stat. A service that started again in between counts 0."""
+    now = time.monotonic() if now is None else now
+    kerne = kerne or os.cpu_count() or 1
+    try:
+        namen = sorted(os.listdir(base))
+    except OSError:
+        return None
+    u = {}
+    for n in namen:
+        teil = _dienst_von(n)
+        if teil is None:
+            continue
+        try:
+            for z in read(f"{base}/{n}/cpu.stat").splitlines():
+                k, _, v = z.partition(" ")
+                if k == "usage_usec":
+                    u[teil] = u.get(teil, 0) + int(v)
+                    break
+        except (OSError, ValueError):
+            continue
+    alt = dict(_dienst)
+    _dienst.update(t=now, u=u)
+    dt = now - alt["t"] if alt else 0
+    if dt <= 0:
+        return {}
+    out = {}
+    for teil, v in u.items():
+        d = v - alt["u"].get(teil, v)
+        pct = round(min(100.0, 100 * d / (dt * 1e6 * kerne)), 1) if d > 0 else 0.0
+        if pct >= 0.1:
+            out[teil] = pct
+    return dict(sorted(out.items(), key=lambda x: -x[1])[:DIENSTE_MAX])
 
 
 def laeuft_s():
@@ -149,4 +204,8 @@ def messen(platte=None, read=lesen):
     except OSError:
         out["laeuft_s"] = None
     out.update(temp=temp(read), luefter=luefter(read), strom=strom_flags(read))
+    try:
+        out["dienste_cpu"] = dienste_cpu()
+    except OSError:
+        out["dienste_cpu"] = None
     return out

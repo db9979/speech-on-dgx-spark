@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.802** Monitoring zeigt, wer gerade rechnet: CPU je Dienst auf beiden Rechnern, im Panel je Teil, Streifen der letzten 20 Minuten; auch in Live, Steuerzentrale und iPhone
 - **V01.0.801** Die Bedeutungssuche rechnet nur noch in freier Zeit auf höchstens der Hälfte der Kerne; Sprache geht vor
 - **V01.0.800** Sprachausgabe bei mehreren gleichzeitig: genauer messen, drei Einstellungen zum Ausprobieren
 - **V01.0.799** Fix: Upload von Scans nicht mehr durch Seiten aus Wissensordnern gesperrt, eigene Dokumente zuerst gelesen
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.795** Fix: Bedeutungssuche bricht nicht mehr mit „does not match its commit“ ab
 - **V01.0.794** Fix: Selbsttest Wächter-Umgehung wieder grün
 - **V01.0.793** Modellwechsel und Start des Sprachmodells sichtbar: Schritte, Banner, Live, Satz im Chat
-- **V01.0.792** Sprachmodelle vor jedem Start geprüft, Such-Modelle nach dem Festpinnen nicht mehr abgelehnt
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

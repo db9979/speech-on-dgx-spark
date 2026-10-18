@@ -191,6 +191,11 @@ struct StatusView: View {
                             LabeledContent("GPU") { Text(verbatim: Self.num(cg["util"]) + " % · " + Self.num(cg["temp"]) + " °C") }
                         }
                         LabeledContent("CPU") { Text(verbatim: Self.num(c["cpu"]) + " %") }
+                        // „Wer rechnet gerade“ (rechnerblick.rechnen): services by their share of the CPU, the panel's
+                        // parts indented; names (de/en) only from the panel
+                        ForEach(Self.wer(c), id: \.0) { key, name, pct in
+                            LabeledContent { Text(verbatim: Self.num(pct) + " %") } label: { Text(verbatim: name).font(key.contains("/") ? .caption : .body) }
+                        }
                         LabeledContent("Speicher frei") { Text(verbatim: Self.num(c["ram_frei"]) + " / " + Self.num(c["ram_total"]) + " GiB") }
                         if c["temp"] is NSNumber { LabeledContent("Temperatur") { Text(verbatim: Self.num(c["temp"]) + " °C") } }
                         LabeledContent("Platte frei") { Text(verbatim: Self.num(c["platte_frei"]) + " GB · " + Self.num(c["platte_pct"]) + " %") }
@@ -291,6 +296,22 @@ struct StatusView: View {
     static func num(_ v: Any?) -> String {
         guard let n = (v as? NSNumber)?.doubleValue else { return "–" }
         return n == n.rounded() ? String(Int(n)) : String(format: "%.1f", n)
+    }
+
+    /// „Wer rechnet gerade“ of a computer: (key, name, %) of each service, a part of the panel as "panel/<id>" with
+    /// "   " before its name; the panel sends the names in German and English
+    static func wer(_ c: [String: Any]) -> [(String, String, Any?)] {
+        let de = Locale.current.language.languageCode?.identifier == "de"
+        let nm = { (x: [String: Any]) in (de ? x["name"] : x["en"]) as? String ?? x["name"] as? String ?? "" }
+        var out: [(String, String, Any?)] = []
+        for x in c["rechnen"] as? [[String: Any]] ?? [] {
+            let id = x["id"] as? String ?? ""
+            out.append((id, nm(x), x["pct"]))
+            for y in x["teile"] as? [[String: Any]] ?? [] {
+                out.append(("panel/" + (y["id"] as? String ?? ""), "   " + nm(y), y["pct"]))
+            }
+        }
+        return out
     }
 
     /// a computer of Zustand → Monitoring → Rechner: its host name and its role

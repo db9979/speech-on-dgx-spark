@@ -870,6 +870,12 @@ a.zcard,button.zcard{cursor:pointer}a.zcard:hover,button.zcard:hover{border-colo
 .zrchips span::before{content:"";position:absolute;left:8px;top:50%;width:7px;height:7px;margin-top:-3.5px;border-radius:50%;background:var(--mut)}
 .zrchips span[data-lvl=ok]::before{background:var(--ok)}.zrchips span[data-lvl=warn]::before{background:var(--warn)}.zrchips span[data-lvl=bad]::before{background:var(--bad)}
 .zrstale .zrrow{opacity:.5}
+.zrwer{grid-template-columns:1fr}.zrl{display:grid;grid-template-columns:minmax(0,10em) minmax(0,1fr) 3.4em;gap:8px;align-items:center;font-size:13.5px;margin:2px 0}
+.zrl>span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.zrl.zrsub{padding-left:14px;font-size:12.5px;color:var(--mut)}
+.zrb{height:9px;background:var(--line);border-radius:5px;overflow:hidden}.zrb>i{display:block;height:100%;border-radius:5px}.zrl.zrsub .zrb{height:6px}
+.zrl>.p{text-align:right;font-variant-numeric:tabular-nums}.zrwer>div>small+small{margin-top:8px}
+.zrstrip{display:flex;height:14px;border-radius:4px;overflow:hidden;background:var(--line);margin-top:4px}.zrstrip>i{flex:1 1 0;min-width:0}
+.zrleg{display:flex;flex-wrap:wrap;gap:2px 12px;font-size:11.5px;color:var(--mut);margin-top:4px}.zrleg i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px;vertical-align:-1px}
 .zareas{columns:2 380px;column-gap:12px}.zareas>.card{break-inside:avoid;margin:0 0 12px}
 #zneed>h2,.zareas>.card>h2{display:flex;align-items:center;gap:10px}
 details.ztech{margin-top:4px}details.ztech>summary{cursor:pointer;font-weight:650;font-size:15px;padding:8px 2px;color:var(--mut)}details.ztech[open]>summary{margin-bottom:10px;color:var(--fg)}

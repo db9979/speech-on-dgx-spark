@@ -1946,6 +1946,13 @@
 "titel": "Bedeutungssuche im Hintergrund",
 "text": "A: Auf dem Pi sudo speech-spark update. B: Während die Bedeutungssuche Stücke nachholt, zeigt htop beim embed_worker.py höchstens zwei Fäden mit Last (NI 10); die anderen Kerne bleiben frei. C: chrt -p <PID des embed_worker> zeigt SCHED_IDLE. D: Währenddessen antwortet der Sprachassistent ohne Verzögerung, Panel und Steuerzentrale bleiben flüssig.",
 "thread": "Pi stabilisieren"
+},
+{
+"id": "P302",
+"v": 802,
+"titel": "Wer rechnet gerade (CPU je Dienst)",
+"text": "A: Zustand → Monitoring → Rechner: in beiden Karten unter CPU die Zeile „Wer rechnet gerade“ mit Balken je Dienst und „System und Rest“; beim Panel eingerückt seine Teile (z. B. Anfragen und Seiten). B: Eine Frage stellen oder Dokumente einlesen lassen: oben in der Kachel steht „am meisten: …“ mit dem Dienst, der gerade rechnet (z. B. Sprachmodell oder Panel · Bedeutungssuche). C: Nach ein paar Minuten zeigt der Farbstreifen darunter, wer wann am meisten rechnete (grau = Leerlauf). D: Zustand → Live: die Kästen Modell-Rechner und Panel-Rechner nennen „am meisten …“. E: Steuerzentrale am Bildschirm: die letzte Zeile jedes Rechners beginnt mit „▶ Dienst N %“. F: iPhone-App, Zustand → Monitoring: dieselbe Liste in der Rechner-Karte.",
+"thread": "CPU je Dienst im Monitoring"
 }
 ]
 }

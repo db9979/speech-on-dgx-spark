@@ -243,7 +243,11 @@ def bahn(R, x, w, top, bot, k, karte, live):
         rest = " · ".join(p for p in (lu, f"Platte {zahl(c.get('platte_pct'))} %",
                                       f"Strom {strom.get('spannung')}" if strom else "",
                                       f"hing {hg['n']}-mal" if hg.get("n") else "") if p)
-        R.put(i, top + 3, kurz("nicht erreichbar" if weg_ else rest, w - 4), "r" if weg_ else "m")
+        sp = c.get("spitze") or {}   # „Wer rechnet gerade“ (rechnerblick.spitze): the biggest service first
+        if weg_ or not sp.get("name"):
+            R.put(i, top + 3, kurz("nicht erreichbar" if weg_ else rest, w - 4), "r" if weg_ else "m")
+        else:
+            R.segs(i, top + 3, [(f"▶ {sp['name']} {zahl(sp.get('pct'))} %", "y"), ("  " + rest, "m")], x + w - 1)
         hist = (c.get("kurven") or {}).get("gpu" if k == "modell" else "cpu")
     R.put(i, top + 4, "20 min ", "m")
     R.put(i + 7, top + 4, linie(hist, w - 11, 0, 100), "g")

@@ -420,7 +420,8 @@ Panel auf einem eigenen Rechner, Modelle auf dem DGX: Kopplung, TLS-Tor, Wärter
 |---|---|
 | `app/panel/gehaeuse.py` | Gehäuse des Panel-Rechners (Pironman 5): OLED-Seiten für den Admin, Status-LEDs, Lüftergrenzen |
 | `app/panel/notbetrieb.py` | Notbetrieb mit Parakeet: feste Befehle ohne Sprachmodell, wenn der Modell-Rechner fehlt |
-| `app/rechner.py` | Werte eines Rechners: CPU, Speicher, Platte, Netz, Temperatur, Strom (für beide Rechner gleich) |
+| `app/panel/rechenteile.py` | Wer rechnet gerade: CPU je Teil des Panels aus seinen Threads und Hilfsprozessen |
+| `app/rechner.py` | Werte eines Rechners: CPU (auch je Dienst), Speicher, Platte, Netz, Temperatur, Strom (für beide Rechner gleich) |
 | `app/panel/rechnerblick.py` | Zustand → Monitoring → Rechner: beide Rechner nebeneinander, Kurven, Hinweise nach festen Regeln |
 | `app/panel/schirm.py` | Steuerzentrale am Bildschirm: was die Textanzeige zeigt, nur lokal mit Schlüssel; der Dienst folgt dem Schalter |
 | `app/panel/steuer.py` | Einheiten der Modelle und GPU: hier oder über den Wärter des Modell-Rechners |
@@ -2995,7 +2996,7 @@ flowchart TD
 5. <a id="kn-teilen-s5"></a>**Verbindung zum TLS-Tor erlaubt?**: Jede Anfrage an Spracherkennung, Sprachausgabe, Sprachmodell, Bilder und Wärter geht durch das Tor. Es spricht nur TLS 1.3 und lässt nur den Panel-Rechner herein; den Inhalt liest es nie.
 6. <a id="kn-teilen-s6"></a>**Befehl an den Wärter**: steuer.call schickt einen Befehl mit Zeitstempel und einer Nummer, die nur einmal gilt, unterschrieben mit dem Wärter-Schlüssel.
 7. <a id="kn-teilen-s7"></a>**Unterschrift, Zeit, Nummer, Befehl gültig?**: tarswart.check prüft die Unterschrift, eine Zeit höchstens 60 s daneben, die Nummer nur einmal und einen Befehl aus der festen Liste. Keine Shell, keine freien Namen.
-8. <a id="kn-teilen-s9"></a>**Werte beider Rechner**: rechner.messen misst CPU, Speicher, Platte, Netz, Temperatur und Strom; der Wärter schickt die Werte des DGX mit seinem Zustand. rechnerblick.warnungen meldet mit festen Regeln: Panel-Rechner ab 80 °C, gedrosselt oder zu wenig Strom, weniger als 0.5 GiB frei; auf jedem Rechner weniger als 10 % Platte frei; der DGX antwortet nicht.
+8. <a id="kn-teilen-s9"></a>**Werte beider Rechner**: rechner.messen misst CPU, Speicher, Platte, Netz, Temperatur und Strom; der Wärter schickt die Werte des DGX mit seinem Zustand. rechnerblick.warnungen meldet mit festen Regeln: Panel-Rechner ab 80 °C, gedrosselt oder zu wenig Strom, weniger als 0.5 GiB frei; auf jedem Rechner weniger als 10 % Platte frei; der DGX antwortet nicht. „Wer rechnet gerade“: rechner.dienste_cpu nimmt den Anteil jedes Dienstes an der CPU aus den Zählern von systemd, rechenteile.messen die Teile des Panels aus seinen Threads und Hilfsprozessen; rechnerblick.spitze nennt den größten ab 5 %, darunter ist Leerlauf.
 9. <a id="kn-teilen-s10"></a>**Steuerzentrale am Bildschirm**: Ist Funktionen → Steuerzentrale am Bildschirm an, startet schirm.abgleich den Dienst und lässt ihn beim Booten von selbst starten, ohne Anmeldung. steuerzentrale.py fragt jede Sekunde schirm.schirm_zustand, nur von 127.0.0.1 und mit dem eigenen Schlüssel, und zeichnet Fluss, beide Rechner, Dienste und Kurven als Text; nur Art, Ort, Zeit und Zahlen. steuerzentrale.schrift wählt die Schrift nach der Auflösung für genug Spalten und Zeilen, schirm.an_jetzt schaltet nach den Zeiten dunkel. Aus geschaltet, startet schirm.anmeldung die Anmeldung auf tty1 wieder; ein Neustart der Anzeige hält ein Update nie an.
 10. <a id="kn-teilen-s8"></a>**Notbetrieb, wenn der DGX fehlt**: Antwortet der DGX nicht mehr, laufen Chats, Erinnerungen und Logs auf dem Panel-Rechner weiter, und Sprachfragen bekommen einen festen Satz.
 
@@ -3010,6 +3011,7 @@ flowchart TD
 - **80 °C** Hinweis, der Panel-Rechner ist warm ([Schritt 8](#kn-teilen-s9))
 - **10 %** Platte frei, darunter ein Hinweis ([Schritt 8](#kn-teilen-s9))
 - **0.5 GiB** Arbeitsspeicher frei am Panel-Rechner, darunter ein Hinweis ([Schritt 8](#kn-teilen-s9))
+- **5 %** CPU, ab der der größte Dienst als „rechnet gerade“ gilt ([Schritt 8](#kn-teilen-s9))
 - **15 s** ohne Frage der Steuerzentrale, dann gilt der Bildschirm als dunkel ([Schritt 9](#kn-teilen-s10))
 
 #### Einstellen
@@ -3020,7 +3022,7 @@ flowchart TD
 #### Was du siehst
 
 - Zustand → Live: Kasten „Modell-Rechner“ mit erreichbar, Dienste, Version und Pause.
-- Zustand → Monitoring → Rechner: beide Rechner nebeneinander mit Kurven der letzten 20 Minuten; Live zeigt dazu den Kasten „Panel-Rechner“.
+- Zustand → Monitoring → Rechner: beide Rechner nebeneinander mit Kurven der letzten 20 Minuten und „Wer rechnet gerade“ (Dienste und Teile des Panels mit ihrem Anteil an der CPU, Streifen der letzten 20 Minuten); Live zeigt dazu den Kasten „Panel-Rechner“, beide Kästen mit „am meisten …“.
 - Der Bildschirm am Panel-Rechner selbst; Zustand → Live zeigt im Kasten „Steuerzentrale“, ob er gerade zeigt.
 
 #### Im Code
@@ -3036,6 +3038,9 @@ flowchart TD
 - `app/panel/steuer.py` `weg`: Notbetrieb erkennen ([Schritt 10](#kn-teilen-s8))
 - `app/rechner.py` `messen`: Werte eines Rechners ([Schritt 8](#kn-teilen-s9))
 - `app/panel/rechnerblick.py` `warnungen`: Hinweise nach festen Regeln ([Schritt 8](#kn-teilen-s9))
+- `app/rechner.py` `dienste_cpu`: CPU je Dienst aus systemd ([Schritt 8](#kn-teilen-s9))
+- `app/panel/rechenteile.py` `messen`: CPU je Teil des Panels ([Schritt 8](#kn-teilen-s9))
+- `app/panel/rechnerblick.py` `spitze`: wer am meisten rechnet ([Schritt 8](#kn-teilen-s9))
 - `app/panel/schirm.py` `schirm_zustand`: nur lokal und mit Schlüssel ([Schritt 9](#kn-teilen-s10))
 - `app/panel/schirm.py` `abgleich`: Dienst folgt dem Schalter ([Schritt 9](#kn-teilen-s10))
 - `app/panel/schirm.py` `an_jetzt`: dunkel nach den Zeiten ([Schritt 9](#kn-teilen-s10))

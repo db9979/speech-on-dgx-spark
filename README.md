@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.802** Monitoring shows who is computing now: CPU per service on both computers, per part inside the panel, strip of the last 20 minutes; also in Live, the control centre and the iPhone
 - **V01.0.801** The meaning search computes only in spare time on at most half of the cores; speech comes first
 - **V01.0.800** Speech output with several at once: finer measurement, three settings to try
 - **V01.0.799** Fix: scans upload again while pages from knowledge folders wait, own documents are read first
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.795** Fix: meaning search no longer stops with "does not match its commit"
 - **V01.0.794** Fix: self-test for bypassing the guard green again
 - **V01.0.793** Language model switch and start visible: steps, banner, Live, a sentence in the chat
-- **V01.0.792** Speech models checked before every start, search models no longer refused after the pinning
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

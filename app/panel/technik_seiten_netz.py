@@ -284,13 +284,15 @@ SEITEN = {
         "heute": [("guard_ok", ("verbunden", "connected")), ("guard_bad", ("gesperrt", "blocked"))],
     },
     "teilen": {
-        "stand": "8e5df78e11",
+        "stand": "5f12ce10ff",
         "bezug": {
             "teilen.CODE_SECS": ["s2"], "teilen.schluessel": ["s3"], "teilen.regeln": ["s4"], "tlstor.server_context": ["s5"],
             "tlstor.allowed": ["s5"], "steuer.call": ["s6"], "tarswart.check": ["s7"], "tarswart.COMMANDS": ["s7"],
             "steuer.weg": ["s8"], "steuer.GONE": ["s8"], "tarswart.WINDOW": ["s7"],
             "rechner.messen": ["s9"], "rechnerblick.warnungen": ["s9"], "rechnerblick.TEMP_WARN": ["s9"],
             "rechnerblick.PLATTE_MIN_PCT": ["s9"], "rechnerblick.RAM_MIN_GIB": ["s9"],
+            "rechner.dienste_cpu": ["s9"], "rechenteile.messen": ["s9"], "rechnerblick.spitze": ["s9"],
+            "rechnerblick.LEERLAUF_PCT": ["s9"],
             "schirm.schirm_zustand": ["s10"], "schirm.abgleich": ["s10"], "schirm.an_jetzt": ["s10"],
             "steuerzentrale.schrift": ["s10"], "schirm.SIEHT_S": ["s10"],
         },
@@ -358,11 +360,17 @@ SEITEN = {
               ("rechner.messen misst CPU, Speicher, Platte, Netz, Temperatur und Strom; der Wärter schickt die Werte des "
                "DGX mit seinem Zustand. rechnerblick.warnungen meldet mit festen Regeln: Panel-Rechner ab "
                "{rechnerblick.TEMP_WARN} °C, gedrosselt oder zu wenig Strom, weniger als {rechnerblick.RAM_MIN_GIB} GiB "
-               "frei; auf jedem Rechner weniger als {rechnerblick.PLATTE_MIN_PCT} % Platte frei; der DGX antwortet nicht.",
+               "frei; auf jedem Rechner weniger als {rechnerblick.PLATTE_MIN_PCT} % Platte frei; der DGX antwortet nicht. "
+               "„Wer rechnet gerade“: rechner.dienste_cpu nimmt den Anteil jedes Dienstes an der CPU aus den Zählern von "
+               "systemd, rechenteile.messen die Teile des Panels aus seinen Threads und Hilfsprozessen; rechnerblick.spitze "
+               "nennt den größten ab {rechnerblick.LEERLAUF_PCT} %, darunter ist Leerlauf.",
                "rechner.messen measures CPU, memory, disk, network, temperature and power; the Wärter sends the DGX's "
                "values with its status. rechnerblick.warnungen warns by fixed rules: the panel computer from "
                "{rechnerblick.TEMP_WARN} °C, throttled or short of power, less than {rechnerblick.RAM_MIN_GIB} GiB free; "
-               "on either computer less than {rechnerblick.PLATTE_MIN_PCT} % disk free; the DGX not answering.")),
+               "on either computer less than {rechnerblick.PLATTE_MIN_PCT} % disk free; the DGX not answering. „Who is "
+               "computing now“: rechner.dienste_cpu takes each service's share of the CPU from systemd's counters, "
+               "rechenteile.messen the panel's parts from its threads and worker processes; rechnerblick.spitze names "
+               "the biggest from {rechnerblick.LEERLAUF_PCT} % on, below that it is idle.")),
             S("s10", "schritt", ("Steuerzentrale am Bildschirm", "Control centre on the screen"),
               ("tty1, nur lokal mit Schlüssel", "tty1, local only with a key"),
               ("Ist Funktionen → Steuerzentrale am Bildschirm an, startet schirm.abgleich den Dienst und lässt ihn beim "
@@ -400,6 +408,7 @@ SEITEN = {
             ("{rechnerblick.TEMP_WARN} °C", ("Hinweis, der Panel-Rechner ist warm", "note, the panel computer is warm"), "rechnerblick.TEMP_WARN"),
             ("{rechnerblick.PLATTE_MIN_PCT} %", ("Platte frei, darunter ein Hinweis", "disk free, below it a note"), "rechnerblick.PLATTE_MIN_PCT"),
             ("{rechnerblick.RAM_MIN_GIB} GiB", ("Arbeitsspeicher frei am Panel-Rechner, darunter ein Hinweis", "memory free on the panel computer, below it a note"), "rechnerblick.RAM_MIN_GIB"),
+            ("{rechnerblick.LEERLAUF_PCT} %", ("CPU, ab der der größte Dienst als „rechnet gerade“ gilt", "CPU from which the biggest service counts as „computing now“"), "rechnerblick.LEERLAUF_PCT"),
             ("{schirm.SIEHT_S} s", ("ohne Frage der Steuerzentrale, dann gilt der Bildschirm als dunkel", "without a question from the control centre, then the screen counts as dark"), "schirm.SIEHT_S"),
         ],
         "einstellen": [
@@ -413,10 +422,12 @@ SEITEN = {
         "sehen": [
             ("Zustand → Live: Kasten „Modell-Rechner“ mit erreichbar, Dienste, Version und Pause.",
              "Status → Live: box „Model computer“ with reachable, services, version and pause."),
-            ("Zustand → Monitoring → Rechner: beide Rechner nebeneinander mit Kurven der letzten 20 Minuten; Live zeigt "
-             "dazu den Kasten „Panel-Rechner“.",
-             "Status → Monitoring → Computers: both computers side by side with curves of the last 20 minutes; Live "
-             "adds the box „Panel computer“."),
+            ("Zustand → Monitoring → Rechner: beide Rechner nebeneinander mit Kurven der letzten 20 Minuten und „Wer "
+             "rechnet gerade“ (Dienste und Teile des Panels mit ihrem Anteil an der CPU, Streifen der letzten 20 Minuten); "
+             "Live zeigt dazu den Kasten „Panel-Rechner“, beide Kästen mit „am meisten …“.",
+             "Status → Monitoring → Computers: both computers side by side with curves of the last 20 minutes and „Who is "
+             "computing now“ (services and the panel's parts with their share of the CPU, strip of the last 20 minutes); "
+             "Live adds the box „Panel computer“, both boxes with „am meisten …“."),
             ("Der Bildschirm am Panel-Rechner selbst; Zustand → Live zeigt im Kasten „Steuerzentrale“, ob er gerade zeigt.",
              "The screen on the panel computer itself; Status → Live shows in the box „Control centre“ whether it shows right now."),
         ],
@@ -432,6 +443,9 @@ SEITEN = {
             ("steuer.weg", ("Notbetrieb erkennen", "spot Notbetrieb")),
             ("rechner.messen", ("Werte eines Rechners", "values of one computer")),
             ("rechnerblick.warnungen", ("Hinweise nach festen Regeln", "notes by fixed rules")),
+            ("rechner.dienste_cpu", ("CPU je Dienst aus systemd", "CPU per service from systemd")),
+            ("rechenteile.messen", ("CPU je Teil des Panels", "CPU per part of the panel")),
+            ("rechnerblick.spitze", ("wer am meisten rechnet", "who computes most")),
             ("schirm.schirm_zustand", ("nur lokal und mit Schlüssel", "local only and with a key")),
             ("schirm.abgleich", ("Dienst folgt dem Schalter", "unit follows the switch")),
             ("schirm.an_jetzt", ("dunkel nach den Zeiten", "dark by the times")),

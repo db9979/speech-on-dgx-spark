@@ -160,8 +160,30 @@ function zCards(s){const box=$('zcards');if(!box)return;const g=s.glance||{},sv=
 // computers side by side, a tile each in „Jetzt“ and a card each under „Rechner“ with curves of the last 20 minutes.
 // Level and warnings come from fixed rules in rechnerblick.py; a model computer that does not answer keeps its card,
 // red and with its last values greyed out. Numbers and fixed words only (no address, no process).
-const ZR_DIENST={asr:t('Spracherkennung','Speech recognition'),tts:t('Sprachausgabe','Speech output'),llm:t('Sprachmodell','Language model'),llmtor:'LLM-Tor',
-  sehen:t('Bildverständnis','Image understanding'),bild:t('Bilder malen','Painting pictures'),musik:t('Musik machen','Making music'),werkstatt:'Werkstatt',waerter:'Wärter',panel:'Panel',turn:t('Anrufe (TURN)','Calls (TURN)'),notasr:t('Notbetrieb-Erkennung','Emergency recognition'),gehaeuse:t('Gehäuse','Case'),schirm:t('Steuerzentrale','Control centre')};
+// „Wer rechnet gerade“ (Dominik 2026-10-18 „1a 2a 3a 4b“): services by their share of the CPU (the panel with its parts),
+// the biggest in the tile, the strip of who worked most in the last 20 minutes; names (de/en) only from rechnerblick.py.
+const zNm=x=>x?(L==='en'?x.en:x.name)||x.name||'':'';
+const ZR_FARBE=['#3b6fd8','#0d9488','#7c3aed','#d97706','#db2777','#65a30d','#0891b2','#9333ea'];
+function zRFarben(c){const f={};let i=0;const add=id=>{if(id&&!(id in f))f[id]=ZR_FARBE[i++%ZR_FARBE.length]};
+  for(const x of c.rechnen||[]){if(x.id==='rest')continue;add(x.id);for(const y of x.teile||[])add('panel/'+y.id)}
+  for(const id of (c.kurven||{}).top||[])add(id);return f}
+function zRWer(c){const R=c.rechnen||[],T=((c.kurven||{}).top||[]),f=zRFarben(c);if(!R.length&&!T.some(Boolean))return null;
+  const r=document.createElement('div');r.className='zrrow zrwer';const w=document.createElement('div'),k=document.createElement('small');
+  k.textContent=t('Wer rechnet gerade','Who is computing now');w.appendChild(k);
+  const line=(x,sub,col)=>{const l=document.createElement('div');l.className='zrl'+(sub?' zrsub':'');const n=document.createElement('span');n.textContent=zNm(x);
+    const b=document.createElement('span');b.className='zrb';const i=document.createElement('i');i.style.width=Math.max(1,Math.min(100,Math.round(100*x.pct/Math.max(1,c.cpu||0))))+'%';
+    i.style.background=col||'var(--mut)';b.appendChild(i);const p=document.createElement('span');p.className='p';p.textContent=fmt(x.pct,' %',x.pct<1?1:0);l.append(n,b,p);w.appendChild(l)};
+  if(!R.length){const m=document.createElement('small');m.textContent=t('wird gemessen …','being measured …');w.appendChild(m)}
+  for(const x of R){line(x,false,f[x.id]);for(const y of x.teile||[])line(y,true,f['panel/'+y.id])}
+  if(T.some(Boolean)){const h=document.createElement('small');h.textContent=t('Wer am meisten rechnete (20 min)','Who computed most (20 min)');
+    const st=document.createElement('div');st.className='zrstrip';st.setAttribute('aria-hidden','true');
+    for(const id of T){const i=document.createElement('i');if(id)i.style.background=f[id];st.appendChild(i)}
+    const lg=document.createElement('div');lg.className='zrleg';const N=c.namen||{};
+    const g=document.createElement('span');g.textContent=t('grau = Leerlauf (unter 5 %)','grey = idle (below 5 %)');lg.appendChild(g);
+    for(const id of [...new Set(T.filter(Boolean))]){const s2=document.createElement('span'),q=document.createElement('i');q.style.background=f[id];
+      s2.append(q,zNm({name:(N[id]||[id])[0],en:(N[id]||[id,id])[1]}));lg.appendChild(s2)}
+    w.append(h,st,lg)}
+  r.appendChild(w);return r}
 const ZR_STROM={ok:'ok','zu niedrig':t('Spannung zu niedrig','voltage too low'),'war niedrig':t('Spannung war niedrig','voltage was low'),
   nein:t('nie gedrosselt','never throttled'),jetzt:t('drosselt gerade','throttling now'),'war an':t('war gedrosselt','was throttled')};
 const zRRole=c=>c.id==='modell'?t('Modell-Rechner','Model computer'):t('Panel-Rechner','Panel computer');
@@ -172,7 +194,8 @@ const zDur=s=>s==null?'–':s>=86400?Math.floor(s/86400)+t(' T ',' d ')+Math.flo
 const zUsed=c=>c.ram_total!=null&&c.ram_frei!=null?c.ram_total-c.ram_frei:null;
 function zRTile(c){const bel=zUsed(c);
   const b=zCard(c.stufe,'mem',zRName(c),bel==null?'–':fmt(bel,'',1),bel==null?'':t(' GiB belegt',' GiB used'),
-    ['CPU '+fmt(c.cpu,' %'),c.temp!=null?fmt(c.temp,' °C'):'',c.platte_pct!=null?t('Platte ','Disk ')+fmt(c.platte_pct,' %'):''].filter(Boolean).join(' · '),zRGo);
+    ['CPU '+fmt(c.cpu,' %'),c.temp!=null?fmt(c.temp,' °C'):'',c.platte_pct!=null?t('Platte ','Disk ')+fmt(c.platte_pct,' %'):'',
+     c.spitze?t('am meisten: ','most: ')+zNm(c.spitze)+' '+fmt(c.spitze.pct,' %'):c.rechnen&&c.rechnen.length?t('Leerlauf','idle'):''].filter(Boolean).join(' · '),zRGo);
   if(bel!=null&&c.ram_total){const bar=document.createElement('span');bar.className='zbar';const f=document.createElement('i');
     f.style.width=Math.max(2,Math.min(100,Math.round(100*bel/c.ram_total)))+'%';bar.appendChild(f);b.appendChild(bar)}
   return b}
@@ -193,6 +216,7 @@ function zRCard(c){const card=document.createElement('div');card.className='card
     row('GPU',fmt(g.util,' %'),[fmt(g.temp,' °C'),fmt(g.power,' W')].join(' · '),K.gpu,100);
     row('Unified Memory',c.ram_frei==null?'–':fmt(c.ram_frei,t(' GiB frei',' GiB free'),1),c.ram_total!=null?t('von ','of ')+fmt(c.ram_total,' GiB',1)+t(' · Grenze 8 GiB',' · limit 8 GiB'):'',K.frei,c.ram_total)}
   row('CPU',fmt(c.cpu,' %'),[c.kerne?c.kerne+t(' Kerne',' cores'):'',c.last!=null?t('Last ','load ')+fmt(c.last,'',2):''].filter(Boolean).join(' · '),K.cpu,100);
+  const wer=zRWer(c);if(wer)card.appendChild(wer);
   if(c.id==='panel'){const bel=zUsed(c);
     row(t('Arbeitsspeicher','Memory'),bel==null?'–':fmt(bel,t(' GiB belegt',' GiB used'),1),[c.ram_frei!=null?fmt(c.ram_frei,t(' GiB verfügbar',' GiB available'),1):'',
       c.ram_cache!=null?t('Cache ','cache ')+fmt(c.ram_cache,' GiB',1):'',c.swap?t('Swap ','swap ')+fmt(c.swap,' GiB',1):''].filter(Boolean).join(' · '),
@@ -212,7 +236,7 @@ function zRCard(c){const card=document.createElement('div');card.className='card
   if((c.dienste||[]).length){const r=document.createElement('div');r.className='zrrow zrsvc';const k=document.createElement('small');k.textContent=t('Dienste','Services');
     const w=document.createElement('div');w.className='zrchips';
     for(const x of c.dienste){const sp=document.createElement('span');sp.dataset.lvl=x.state==='active'?'ok':x.state==='failed'?'bad':x.state==='activating'?'warn':'';
-      sp.textContent=ZR_DIENST[x.id]||x.id;w.appendChild(sp)}
+      sp.textContent=zNm(x)||x.id;w.appendChild(sp)}
     r.append(k,w);card.appendChild(r)}
   return card}
 function zRechner(R){const box=$('zrechner'),h=$('zrechnerh');if(!box)return;box.hidden=h.hidden=!R.length;box.textContent='';

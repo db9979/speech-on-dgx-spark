@@ -364,6 +364,17 @@ class Bild(unittest.TestCase):
         d["live"]["upd"] = {"run": True, "pct": 15, "step": "TARS: TARS aktualisiert"}
         self.assertIn("Update 15 % · TARS", sz.bild(d, 200, 60, T0).text())
 
+    def test_the_biggest_service_in_each_frame(self):
+        """„Wer rechnet gerade“ (rechnerblick.spitze, Dominik 2026-10-18): the service that takes the most CPU leads the
+        frame's last line, the panel with its part; idle shows the line as before."""
+        d = beispiel()
+        d["rechner"]["liste"][0]["spitze"] = {"id": "llm", "name": "Sprachmodell", "en": "Language model", "pct": 29.0}
+        d["rechner"]["liste"][1]["spitze"] = {"id": "panel/bedeutungssuche", "name": "Panel · Bedeutungssuche", "en": "", "pct": 31.4}
+        t = sz.bild(d, 240, 67).text()
+        self.assertIn("▶ Sprachmodell 29 %", t)
+        self.assertIn("▶ Panel · Bedeutungssuche 31 %", t)
+        self.assertNotIn("▶ Sprachmodell", sz.bild(beispiel(), 240, 67).text())
+
     def test_curve_and_numbers(self):
         self.assertEqual(sz.linie([0, 100], 4, 0, 100), "▁▁██")
         self.assertEqual(sz.linie([], 3), "   ")

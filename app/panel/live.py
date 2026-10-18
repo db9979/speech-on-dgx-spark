@@ -849,6 +849,11 @@ _bg = {}        # job name (fixed words from the code) -> (state wait|run, since
 BG_MAX = 12
 
 
+def _spitze(sp):
+    """Rechner boxes: the service (the panel: its part) that takes the most CPU (rechnerblick.spitze), fixed names."""
+    return f" · am meisten {sp['name']} {_n(sp.get('pct'))} %" if isinstance(sp, dict) and sp.get("name") else ""
+
+
 def bg(job, state, now=None):
     """vorrang.py: a background job waits for a pause (wait), runs (run) or is gone (None)."""
     now = time.time() if now is None else now
@@ -1478,6 +1483,7 @@ def snapshot(view="admin", now=None):
             rm = rb.get("modell") or {}   # Rechner: GPU, free memory and CPU of the model computer (numbers only)
             if mr.get("ok") and rm.get("frei") is not None:
                 x["sub"] += f" · GPU {_n(rm.get('gpu'))} % · {_n(rm['frei'], 1)} GiB frei · CPU {_n(rm.get('cpu'))} %"
+                x["sub"] += _spitze(rm.get("spitze"))
             if nbl.get("on"):   # Notbetrieb mit Parakeet: hearing or not, fixed commands, speaker files (numbers only)
                 x["sub"] += ((f" · Parakeet hört · {nbl.get('commands', 0)} Befehle · {nbl.get('fixed', 0)} feste Sätze")
                              if nbl.get("hoert") else f" · Notbetrieb-Sätze {nbl.get('files', 0)} von {nbl.get('need', 0)}")
@@ -1485,7 +1491,7 @@ def snapshot(view="admin", now=None):
             rp = rb.get("panel") or {}
             x["sub"] = (f"CPU {_n(rp.get('cpu'))} % · RAM {_n(rp.get('belegt'), 1)} von {_n(rp.get('total'), 1)} GiB"
                         f" · {_n(rp.get('temp'))} °C · Platte {_n(rp.get('platte'))} %"
-                        + (f" · Panel hing {rp['haenger']}-mal in 24 Std." if rp.get("haenger") else ""))
+                        + (f" · Panel hing {rp['haenger']}-mal in 24 Std." if rp.get("haenger") else "") + _spitze(rp.get("spitze")))
         if x["id"] == "telefon":   # Telefon: signed in, calls in numbers (never a number, a name or a word)
             x["sub"] = (("angemeldet" if tel.get("ok") else "nicht angemeldet") + f" · {tel.get('calls', 0)} Gespräche jetzt · heute "
                         f"{tel.get('angenommen', 0)} angenommen, {tel.get('abgelehnt', 0)} abgelehnt, {tel.get('fragen', 0)} Fragen, "
