@@ -1758,6 +1758,13 @@
 "titel": "Farbiger Speicherbalken",
 "text": "A: Zustand → Modelle öffnen: der Speicherbalken ist in farbige Stücke geteilt, je laufendes Modell eines (Sprachmodell blau, Spracherkennung grün, Sprachausgabe türkis …), danach System und Reserve grau, dann Bilder und Musik gestreift (bei Bedarf). B: Mit der Maus auf ein Stück zeigen: Name und GiB erscheinen. C: Die Kacheln darunter haben links einen Rand in derselben Farbe, „bei Bedarf“ gestrichelt. D: Im dunklen Design sind alle Stücke gut zu sehen. E: iPhone-App, Zustand → Modelle: derselbe Balken, bei Bedarf heller, vor jedem Modell ein farbiger Punkt.",
 "thread": "Eigene Modell-Installation statt qwen38"
+},
+{
+"id": "P275",
+"v": 770,
+"titel": "Messen ohne Bild in die Reserve",
+"text": "A: Auf tars `sudo speech-spark modelle messen flash` laufen lassen. B: In Zustand → Logs (System) steht bei Flash Next 0,70 „bild gleichzeitig uebersprungen, frei … GiB“ statt eines gemalten Bildes. C: Der „tiefste stand frei“ bleibt deutlich über 0,1 GiB. D: Bei Qwen 27B (`modelle messen llm`) wird das Bild weiter nebenher gemalt.",
+"thread": "Eigene Modell-Installation statt qwen38"
 }
 ]
 }

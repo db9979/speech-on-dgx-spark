@@ -1019,6 +1019,13 @@ def warte_bereit(m, port, einheit="", frist=GESUND_S, now=time.monotonic, sleep=
     raise Fehler("zeit")
 
 
+def bild_platz(cfg, frei_gib, kat=None):
+    """Whether a picture painted during the measurement still leaves the reserve free: the picture model's need plus
+    memory.reserve_gib must fit in what is available now. A fixed rule from numbers."""
+    m = zur_variante("bild", cfg.get("image", {}).get("variant"), kat) or zur_variante("bild", "4b-q8", kat)
+    return frei_gib >= m["need_gib"] + float(cfg.get("memory", {}).get("reserve_gib", 10))
+
+
 def _bild_malen(cfg, ergebnis):
     """Paints one picture with the picture service while the language model writes (does both fit?)."""
     img = cfg.get("image", {})
@@ -1085,7 +1092,10 @@ def messen_lauf(m, port=MESS_PORT, einheit="", log=print):
                 f"szene {'ok' if r['bild_szene'] else 'falsch'}")
         cfg = load_config()
         # a picture painted meanwhile: for every candidate main model, also one filed to see that takes tools (Gemma 4)
-        if (m["art"] == "llm" or m["werkzeuge"]) and cfg.get("image", {}).get("enabled"):
+        if (m["art"] == "llm" or m["werkzeuge"]) and cfg.get("image", {}).get("enabled") and not bild_platz(cfg, mem_available_gib()):
+            # tars 2026-10-18: Flash Next left 8 GiB, the picture took it down to 0.1 GiB; never paint into the reserve
+            log(f"modelle: messung {mid} bild gleichzeitig uebersprungen, frei {round(mem_available_gib(), 1)} GiB")
+        elif (m["art"] == "llm" or m["werkzeuge"]) and cfg.get("image", {}).get("enabled"):
             maler = threading.Thread(target=_bild_malen, args=(cfg, r), daemon=True)
             maler.start()
             a, n, t = stream_messen(port, _body(m, [{"role": "user", "content": LANG}], 600))

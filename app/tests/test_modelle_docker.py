@@ -98,6 +98,18 @@ class Rezept(unittest.TestCase):
             if m["engine"] == "vllm" and m["art"] == "llm" and m["vllm"].get("reasoning_parser"):
                 self.assertIs(m["anfrage"].get("chat_template_kwargs", {}).get("enable_thinking"), False, mid)
 
+    def test_no_picture_into_the_reserve(self):
+        """tars 2026-10-18: Flash Next at 0.70 left about 8 GiB, the picture painted meanwhile took it to 0.1 GiB. The
+        measurement paints only when the picture model's need plus the reserve is free."""
+        c = {"image": {"enabled": True, "variant": "9b-q4"}, "memory": {"reserve_gib": 10}}     # 13 GiB + 10
+        self.assertFalse(modelle.bild_platz(c, 8.0))
+        self.assertFalse(modelle.bild_platz(c, 22.9))
+        self.assertTrue(modelle.bild_platz(c, 23.0))
+        self.assertTrue(modelle.bild_platz({"image": {"enabled": True}}, 21.0))                  # default 4B Q8: 11 + 10
+        with open(os.path.join(APP, "modelle.py"), encoding="utf-8") as f:
+            src = f.read()
+        self.assertLess(src.index("not bild_platz(cfg, mem_available_gib())"), src.index("target=_bild_malen"))
+
     def test_wrong_calls_are_refused(self):
         m = modelle.eintrag(FN)
         for name, uid in (("messen", 990), ("speech-spark-Engine", 990), ("speech-spark-x;rm", 990),
