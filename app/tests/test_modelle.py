@@ -543,9 +543,15 @@ class Seite(unittest.TestCase):
         self.assertEqual(q["messung"], {"ok": True, "tok_s": 24.7})     # only the fixed numbers, nothing else
         self.assertTrue(next(m for m in arten["llm"]["modelle"] if m["id"] == "qwen38-extern")["aktiv"])
         self.assertEqual((d["budget"]["frei"], d["budget"]["regel"]), (2.8, "alle"))
-        self.assertNotIn("teile", d["budget"])
+        # the bar's pieces (Dominik 2026-10-18): only id, name, kind, GiB and mode, the same sum as the fixed part
+        teile = d["budget"]["teile"]
+        self.assertTrue(teile)
+        self.assertTrue(all(set(x) == {"id", "name", "art", "gib", "betrieb"} for x in teile))
+        self.assertAlmostEqual(sum(x["gib"] for x in teile if x["betrieb"] == "resident"), d["budget"]["fest"], places=0)
+        self.assertEqual(teile[0]["name"], modelle.katalog()[teile[0]["id"]]["name"]["de"])
         en = modellseite.seite(Budget.CFG, 120, [], {}, lang="en")
         self.assertEqual(en["arten"][0]["name"], "Language model")
+        self.assertEqual(en["budget"]["teile"][0]["name"], modelle.katalog()[en["budget"]["teile"][0]["id"]]["name"]["en"])
 
     def test_admin_only(self):
         import panel

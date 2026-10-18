@@ -90,6 +90,14 @@ class Rezept(unittest.TestCase):
             modelle.seccomp_profil({"seccomp": ("../etc/x.json", sha)})
         self.assertEqual(modelle.seccomp_profil({}), "")
 
+    def test_measured_without_thinking(self):
+        """tars 2026-10-18: with thinking on, the cache measurement's 16 tokens all went to the reasoning and the answer
+        came back empty ("leer"), and tok/s counted the thinking after the first visible word. Every language model with a
+        reasoning parser is asked without thinking, like the 27B."""
+        for mid, m in modelle.katalog().items():
+            if m["engine"] == "vllm" and m["art"] == "llm" and m["vllm"].get("reasoning_parser"):
+                self.assertIs(m["anfrage"].get("chat_template_kwargs", {}).get("enable_thinking"), False, mid)
+
     def test_wrong_calls_are_refused(self):
         m = modelle.eintrag(FN)
         for name, uid in (("messen", 990), ("speech-spark-Engine", 990), ("speech-spark-x;rm", 990),

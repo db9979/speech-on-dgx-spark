@@ -1,6 +1,16 @@
 {
   "sourceLanguage": "de",
   "strings": {
+    "Grau: System und Reserve · heller: bei Bedarf": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grey: system and reserve · lighter: on demand"
+          }
+        }
+      }
+    },
     "Docker: vorerst nur messen": {
       "localizations": {
         "en": {

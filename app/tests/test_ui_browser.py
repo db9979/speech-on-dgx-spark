@@ -1722,7 +1722,11 @@ class Browser(unittest.TestCase):
                  {"art": "klein", "name": "Kleine Modelle", "modelle": []}]
         probe = {"id": "qwen38-27b-nvfp4-dspark", "art": "llm", "fertig": True, "ok": True, "tok_s": 31.2, "jetzt_id": "qwen38-27b-nvfp4",
                  "jetzt_tok_s": 24.7, "name": "Qwen3.8 27B NVFP4 mit DSpark", "jetzt_name": "Qwen3.8 27B NVFP4", "waehlbar": True}
-        d = {"arten": arten, "budget": {"gesamt": 121.7, "system": 8, "reserve": 10, "fest": 56.4, "bedarf": 12, "bedarf_max": 12, "frei": 47.3, "regel": "alle"},
+        d = {"arten": arten, "budget": {"gesamt": 121.7, "system": 8, "reserve": 10, "fest": 56.4, "bedarf": 12, "bedarf_max": 12, "frei": 47.3, "regel": "alle",
+                        "teile": [{"id": "qwen38-27b-nvfp4", "name": "Qwen3.8 27B NVFP4", "art": "llm", "gib": 36.3, "betrieb": "resident"},
+                                  {"id": "qwen3-vl-8b-fp8", "name": "Qwen3-VL 8B", "art": "sehen", "gib": 12, "betrieb": "bei_bedarf"},
+                                  {"id": "qwen3-asr-1.7b", "name": "Qwen3-ASR 1.7B", "art": "asr", "gib": 8.8, "betrieb": "resident"},
+                                  {"id": "qwen3-tts-0.6b", "name": "Qwen3-TTS 0.6B", "art": "tts", "gib": 11.3, "betrieb": "resident"}]},
              "messung_zeit": 1800000000, "wechsel": {"an": True, "laeuft": False, "misst": False, "stand": [], "platz": None, "probe": None,
                                                      "alte": {}, "tage": 7, "eigene": True}}
         treffer = [{"repo": "Qwen/Qwen3-Coder-30B-A3B-Instruct-FP8", "downloads": 1200000, "lizenz": "apache-2.0", "gewerblich": True, "gb": 31.0, "need_gib": 41, "nein": ""},
@@ -1739,6 +1743,13 @@ class Browser(unittest.TestCase):
                     await pg.wait_for_timeout(500)
                     await pg.evaluate(f"loadModelle({json.dumps(d)})")
                     self.assertEqual(await pg.evaluate("document.querySelectorAll('#mdmain .mdkachel').length"), 4)   # empty kinds have no tile
+                    # Dominik 2026-10-18: one colored piece per model (resident, system, reserve, then on demand striped), tiles in the same color
+                    self.assertEqual(await pg.evaluate("[...document.querySelectorAll('.mdbar > i')].map(i=>i.className)"),
+                                     ["mdf-llm", "mdf-asr", "mdf-tts", "mdf-sys", "mdf-res", "mdf-sehen mdbb"])
+                    self.assertEqual(await pg.evaluate("[...document.querySelectorAll('#mdmain .mdkachel')].map(k=>getComputedStyle(k).borderLeftColor)"),
+                                     await pg.evaluate("['.mdf-llm','.mdf-sehen','.mdf-asr','.mdf-tts'].map(c=>getComputedStyle(document.querySelector('.mdbar > i'+c)).getPropertyValue('--md').trim())"
+                                                       ".map(h=>{const e=document.createElement('b');e.style.color=h;document.body.append(e);const c=getComputedStyle(e).color;e.remove();return c})"))
+                    self.assertIn("Qwen3.8 27B NVFP4 · 36,3 GiB", await pg.evaluate("document.querySelector('.mdbar > i.mdf-llm').title"))
                     self.assertEqual(await pg.evaluate("document.querySelectorAll('#mdmain [data-mdo]').length"), 3)  # llm, sehen (search), asr; not tts
                     self.assertFalse(await pg.evaluate("$('mdmehr').open"))
                     await pg.evaluate("document.querySelector('[data-mdo=llm]').click()")

@@ -193,7 +193,10 @@ def seite(cfg=None, total_gib=None, lanes=None, messung=None, lang="de", gestart
     wechsel = {"an": an, "laeuft": laeuft, "misst": misst or gestartet, "stand": stand, "platz": platz, "probe": probe,
                "alte": modelle.alte(cfg, kat=kat, daten=wechsel) if an else {},
                "tage": modelle.ALT_TAGE, "eigene": _eigen_an(cfg)}
-    return {"arten": arten, "budget": {k: v for k, v in b.items() if k != "teile"}, "messung_zeit": messung.get("zeit"),
+    # the bar's parts (Dominik 2026-10-18: one colored piece per model, the tiles below in the same color)
+    teile = [{"id": x["id"], "name": kat[x["id"]]["name"]["en" if i else "de"], "art": x["art"], "gib": x["gib"],
+              "betrieb": x["betrieb"]} for x in b["teile"]]
+    return {"arten": arten, "budget": dict(b, teile=teile), "messung_zeit": messung.get("zeit"),
             "wechsel": wechsel}
 
 

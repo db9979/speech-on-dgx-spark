@@ -188,7 +188,7 @@
         "bilder_pro_frage": 2,
         "docker": "b12x"
       },
-      "anfrage": {},
+      "anfrage": {"chat_template_kwargs": {"enable_thinking": false}, "top_k": 20},
       "messen": "auf_wunsch",
       "betrieb": "resident"
     },

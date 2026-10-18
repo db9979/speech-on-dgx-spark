@@ -1751,6 +1751,13 @@
 "titel": "Suchprüfung: Sammelfragen",
 "text": "A: Ich → Dokumente → Suchprüfung → Prüffrage hinzufügen: eine Frage, die zwei Dokumente braucht (z. B. Versicherung und Werkstattrechnung des Autos), erstes Dokument wählen, unter „Weitere richtige Dokumente“ das zweite. B: „Jetzt prüfen“: unter den Balken steht „Sammelfragen (1)“ mit Anteil und „alle gefunden“. C: Bei „Ausprobieren“ steht „x von 2 unter den ersten 5“. D: Mit „Prüffragen vom Spark“ und Dokumenten mit gleichem Absender oder Tag tauchen nach einigen ruhigen Minuten Fragen „Sammelfrage · Dokument A, Dokument B“ auf. E: Zustand → Live zeigt bei Suchprüfung „Sammelfragen … % ganz gefunden“.",
 "thread": "Wissensbuch nach Karpathy"
+},
+{
+"id": "P274",
+"v": 769,
+"titel": "Farbiger Speicherbalken",
+"text": "A: Zustand → Modelle öffnen: der Speicherbalken ist in farbige Stücke geteilt, je laufendes Modell eines (Sprachmodell blau, Spracherkennung grün, Sprachausgabe türkis …), danach System und Reserve grau, dann Bilder und Musik gestreift (bei Bedarf). B: Mit der Maus auf ein Stück zeigen: Name und GiB erscheinen. C: Die Kacheln darunter haben links einen Rand in derselben Farbe, „bei Bedarf“ gestrichelt. D: Im dunklen Design sind alle Stücke gut zu sehen. E: iPhone-App, Zustand → Modelle: derselbe Balken, bei Bedarf heller, vor jedem Modell ein farbiger Punkt.",
+"thread": "Eigene Modell-Installation statt qwen38"
 }
 ]
 }

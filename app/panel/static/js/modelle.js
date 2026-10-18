@@ -57,15 +57,20 @@ async function mdPost(url,body,frage,method='POST'){if(!confirm(frage))return;co
     let d=null;try{d=await r.json()}catch(_){}loadModelle(d&&d.arten?d:null)}catch(e){msg.textContent=e.message}}
 // „Läuft jetzt“: the memory bar and one tile per kind with the model it runs
 let MD_OFFEN='',MD_MEHR=false;const MD_TREFFER={};
-function mdBalken(b){const pct=v=>Math.max(0,Math.min(100,Math.round(100*v/(b.gesamt||1))));
-  const belegt=b.fest+b.system+b.reserve;
+// one colored piece per running model (resident first, then system and reserve, then the models on demand striped)
+function mdBalken(b){const teile=b.teile||[],belegt=b.fest+b.system+b.reserve,skala=Math.max(b.gesamt||0,belegt+(b.bedarf||0))||1;
+  const seg=(gib,cls,name)=>gib>0?`<i class="${cls}" style="width:${(100*gib/skala).toFixed(2)}%" title="${esc(name+' · '+mdGib(gib))}"></i>`:'';
+  const teil=x=>seg(x.gib,'mdf-'+x.art+(x.betrieb==='resident'?'':' mdbb'),x.name);
+  const zeichen=(cls,text)=>`<span><i class="${cls}"></i>${esc(text)}</span>`;
   return `<div class="card mdbalken"><div class="row mdzeile"><b>${esc(t('Speicher','Memory'))}</b><span class="mut">${esc(mdGib(belegt)+t(' von ',' of ')+mdGib(b.gesamt)+t(' fest belegt',' taken'))}</span></div>`+
-    `<div class="vb-hb vb-qbar"><i class="${b.regel==='zu_knapp'?'full':b.regel==='ein_platz'?'warn':''}" style="width:${pct(belegt)}%"></i></div>`+
+    `<div class="mdbar ${b.regel==='zu_knapp'?'full':b.regel==='ein_platz'?'warn':''}">${teile.filter(x=>x.betrieb==='resident').map(teil).join('')}`+
+    seg(b.system,'mdf-sys',t('System','System'))+seg(b.reserve,'mdf-res',t('Reserve','Reserve'))+teile.filter(x=>x.betrieb!=='resident').map(teil).join('')+`</div>`+
+    `<div class="mut mdlegende">${zeichen('mdf-sys',t('System','System'))}${zeichen('mdf-res',t('Reserve','Reserve'))}${zeichen('mdf-llm mdbb',t('gestreift: bei Bedarf','striped: on demand'))}</div>`+
     `<div class="mut vb-note">${esc(t('Frei für Modelle bei Bedarf: ','Free for models on demand: ')+mdGib(b.frei))} · ${esc(t(...(MD_REGEL[b.regel]||['',''])))}</div></div>`}
 function mdKurz(m){const x=m.messung||{};return [x.tok_s!=null?x.tok_s+' tok/s':'',mdGib(m.aktiv&&m.gib!=null?m.gib:m.need_gib),m.betrieb==='resident'?'':t('bei Bedarf','on demand')].filter(Boolean).join(' · ')}
 function mdKachel(a,w){const m=a.modelle.find(x=>x.aktiv);
   const wahl=w.an&&!w.laeuft&&!w.misst&&(a.modelle.some(x=>!x.aktiv&&(x.waehlbar||x.messbar))||(w.eigene&&['llm','sehen'].includes(a.art)));
-  return `<div class="mdkachel${MD_OFFEN===a.art?' offen':''}"><span class="mut">${esc(a.name)}</span><b>${esc(m?m.name:t('keins','none'))}</b>`+
+  return `<div class="mdkachel${m?' mdf-'+a.art+(m.betrieb==='resident'?'':' mdbb'):''}${MD_OFFEN===a.art?' offen':''}"><span class="mut">${esc(a.name)}</span><b>${esc(m?m.name:t('keins','none'))}</b>`+
     `<span class="mut mdzahl">${esc(m?mdKurz(m):'')}</span>`+
     (wahl?`<span><button type="button" class="b sm" data-mdo="${esc(a.art)}" aria-expanded="${MD_OFFEN===a.art}">${esc(MD_OFFEN===a.art?t('Schließen','Close'):t('Wechseln','Switch'))}</button></span>`:'')+`</div>`}
 // „Wechseln“: the kind's models as cards

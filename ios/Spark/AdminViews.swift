@@ -379,7 +379,10 @@ struct ModelsView: View {
             Section {
                 let ges = (b["gesamt"] as? NSNumber)?.doubleValue ?? 0
                 let belegt = ["fest", "system", "reserve"].reduce(0.0) { $0 + ((b[$1] as? NSNumber)?.doubleValue ?? 0) }
-                if ges > 0 { ProgressView(value: min(belegt, ges), total: ges).tint(b["regel"] as? String == "alle" ? .accentColor : .orange) }
+                if ges > 0 {
+                    Self.balken(b, ges: ges)
+                    Text("Grau: System und Reserve · heller: bei Bedarf").font(.caption).foregroundStyle(.secondary)
+                }
                 LabeledContent("Fest belegt") { Text(verbatim: Self.gib(belegt) + " / " + Self.gib(ges)) }
                 LabeledContent("Frei für Modelle bei Bedarf") { Text(verbatim: Self.gib(b["frei"])) }
                 ForEach(Array(arten.enumerated()), id: \.offset) { _, a in
@@ -389,6 +392,7 @@ struct ModelsView: View {
                     let wahl = an && !laeuft && (rows.contains { $0["aktiv"] as? Bool != true && ($0["waehlbar"] as? Bool == true || $0["messbar"] as? Bool == true) }
                                                  || (eigene && (art == "llm" || art == "sehen")))
                     HStack {
+                        if let m { Circle().fill(Self.farbe(art).opacity(m["betrieb"] as? String == "resident" ? 1 : 0.4)).frame(width: 10, height: 10) }
                         VStack(alignment: .leading, spacing: 2) {
                             Text(verbatim: a["name"] as? String ?? "").font(.caption).foregroundStyle(.secondary)
                             Text(verbatim: m?["name"] as? String ?? "–")
@@ -653,6 +657,34 @@ struct ModelsView: View {
                        "docker": "Docker: vorerst nur messen"]
 
     /// One line: measured tempo, memory, on demand.
+    /// The memory bar like the panel's: one colored piece per running model, system and reserve grey, on demand lighter.
+    static func farbe(_ art: String) -> Color {
+        let rgb: [String: (Double, Double, Double)] = ["llm": (0.36, 0.42, 0.94), "sehen": (0.66, 0.33, 0.97), "asr": (0.06, 0.73, 0.51),
+                                                       "tts": (0.02, 0.71, 0.83), "bild": (0.93, 0.28, 0.6), "musik": (0.96, 0.62, 0.04),
+                                                       "klein": (0.52, 0.8, 0.09)]
+        guard let c = rgb[art] else { return .gray }
+        return Color(red: c.0, green: c.1, blue: c.2)
+    }
+
+    static func balken(_ b: [String: Any], ges: Double) -> some View {
+        let num = { (x: Any?) in (x as? NSNumber)?.doubleValue ?? 0 }
+        let teile = b["teile"] as? [[String: Any]] ?? []
+        let teil = { (x: [String: Any]) in (farbe(x["art"] as? String ?? "").opacity(x["betrieb"] as? String == "resident" ? 1 : 0.4), num(x["gib"])) }
+        let seg = teile.filter { $0["betrieb"] as? String == "resident" }.map(teil)
+            + [(Color.gray, num(b["system"])), (Color.gray.opacity(0.5), num(b["reserve"]))]
+            + teile.filter { $0["betrieb"] as? String != "resident" }.map(teil)
+        let skala = max(ges, seg.reduce(0) { $0 + $1.1 })
+        return GeometryReader { g in
+            HStack(spacing: 1) {
+                ForEach(Array(seg.enumerated()), id: \.offset) { _, s in
+                    Rectangle().fill(s.0).frame(width: max(0, g.size.width * s.1 / skala - 1))
+                }
+                Spacer(minLength: 0)
+            }
+        }
+        .frame(height: 12).background(Color.secondary.opacity(0.15)).clipShape(RoundedRectangle(cornerRadius: 4))
+    }
+
     static func kurz(_ m: [String: Any]) -> String {
         var out: [String] = []
         if let t = ((m["messung"] as? [String: Any])?["tok_s"] as? NSNumber)?.doubleValue { out.append(String(format: "%.1f tok/s", t)) }

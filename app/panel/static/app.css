@@ -1609,6 +1609,13 @@ body.inchats:not(.appview):not(.kbd) .cx-comp{padding-right:96px}
 .mdbalken .mdzeile{justify-content:space-between}.mdkacheln{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin:12px 0}
 .mdkachel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:grid;gap:3px;align-content:start;min-width:0}
 .mdkachel.offen{border-color:var(--acc)}.mdkachel b{overflow-wrap:anywhere}.mdzahl{font-size:12px;font-variant-numeric:tabular-nums}
+/* the memory bar's colors per kind, the tiles carry the same one as their legend (Dominik 2026-10-18) */
+.mdf-llm{--md:#5b6cf0}.mdf-sehen{--md:#a855f7}.mdf-asr{--md:#10b981}.mdf-tts{--md:#06b6d4}.mdf-bild{--md:#ec4899}.mdf-musik{--md:#f59e0b}.mdf-klein{--md:#84cc16}
+.mdf-sys{--md:#8b95ab}.mdf-res{--md:#c3cad8}:root[data-theme=dark] .mdf-res{--md:#4a536a}@media (prefers-color-scheme:dark){:root:not([data-theme=light]) .mdf-res{--md:#4a536a}}
+.mdbar{display:flex;height:14px;margin-top:6px;border-radius:5px;overflow:hidden;background:var(--line)}.mdbar.warn{outline:2px solid var(--warn)}.mdbar.full{outline:2px solid var(--bad)}
+.mdbar i{display:block;height:100%;flex:none;background:var(--md);box-shadow:inset -1px 0 var(--card)}.mdbar i.mdbb,.mdlegende i.mdbb{background:repeating-linear-gradient(135deg,var(--md) 0 3px,transparent 3px 6px)}
+.mdlegende{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:6px;font-size:12px}.mdlegende span{display:inline-flex;align-items:center;gap:5px}.mdlegende i{width:12px;height:10px;border-radius:2px;background:var(--md)}
+.mdkachel[class*=mdf-]{border-left:5px solid var(--md)}.mdkachel.mdbb{border-left-style:dashed}
 .mdkarten{display:grid;gap:8px;margin:8px 0}.mdkarte{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:8px 10px}
 .mdkarte .mdkopf{min-width:0;overflow-wrap:anywhere}.mdkarte .mdtun{grid-row:1/span 2;grid-column:2;display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
 .mdkarte.aus{opacity:.6}.mdwahl h4{margin:14px 0 4px}.mdwahl #mdq{flex:1;min-width:140px}.mdmehr{margin-top:12px}.mdmehr>summary{cursor:pointer;font-weight:600;margin-bottom:10px}
