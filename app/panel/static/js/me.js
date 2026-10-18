@@ -201,7 +201,7 @@ function docBadges(d,today){const b=[];
   if(!d.owner&&d.use===false)b.push(`<span class="ld-badge off">${esc(t('Suche aus','search off'))}</span>`);
   return b.join('')}
 function docRow(d,today){const [c,l]=docIco(d),pk=DOCV.pick,brief=docBrief();
-  const sub=[brief&&d.art,brief&&d.sender,d.owner?t('von ','from ')+d.owner:d.place?'NAS · '+d.place:DOCSRC[docSrc(d)],brief&&d.title?d.name:''].filter(Boolean).join(' · ');
+  const sub=[brief&&d.art,brief&&d.sender,d.owner?t('von ','from ')+d.owner:d.place?(d.source==='nas'?'NAS · ':DOCSRC[docSrc(d)]+' · ')+d.place:DOCSRC[docSrc(d)],brief&&d.title?d.name:''].filter(Boolean).join(' · ');
   const when=d.owner?'':[docAdded(d),d.size?docSize(d.size):''].filter(Boolean).join(' · ');
   return `<div class="ld-row${DOCV.sel===d.id&&!pk?' on':''}" data-doc="${esc(d.id)}" role="button" tabindex="0">`+
     (pk?d.owner?'<span class="ld-pick"></span>':`<input type="checkbox" class="ld-pick" data-pick="${esc(d.id)}"${pk.has(d.id)?' checked':''} aria-label="${esc(t('auswählen','select'))}">`:'')+
@@ -255,7 +255,7 @@ function docDetail(){const box=$('docdetail'),d=DOCV.pick?null:docFind(DOCV.sel)
   info.dataset.id=d.id;
   const brief=docBrief(),own=!d.owner,today=docToday(),[st,pct]=own?docState(d):['',null];
   const meta=[[t('Datei','File'),d.name],brief&&[t('Art','Kind'),d.art],brief&&[t('Absender','Sender'),d.sender],brief&&[t('Datum','Date'),docDay(d.date)],
-    brief&&[t('Frist','Deadline'),docDay(d.due)],brief&&[t('Nummer','Number'),d.ref],[t('Quelle','Source'),d.owner?t('von ','from ')+d.owner:d.place?t('Wissensordner','Knowledge folder')+' · NAS · '+d.place:DOCSRC[docSrc(d)]],
+    brief&&[t('Frist','Deadline'),docDay(d.due)],brief&&[t('Nummer','Number'),d.ref],[t('Quelle','Source'),d.owner?t('von ','from ')+d.owner:d.place?(d.source==='nas'?t('Wissensordner','Knowledge folder')+' · NAS · ':DOCSRC[docSrc(d)]+' · ')+d.place:DOCSRC[docSrc(d)]],
     own&&[t('Hinzugefügt','Added'),docAdded(d)],own&&[t('Größe','Size'),docSize(d.size||0)],own&&[t('Zustand','State'),st]].filter(x=>x&&x[1]);
   const pdf=/\.pdf$/i.test(d.name),pic=d.kind==='picture',href='/api/profile/wissen/'+encodeURIComponent(d.id)+'/file'+(pdf||pic?'?view=1':'');
   info.innerHTML=`<button class="b ld-back" type="button" data-dact="back">‹ ${esc(t('Zurück zur Liste','Back to the list'))}</button>`+
@@ -270,7 +270,7 @@ function docDetail(){const box=$('docdetail'),d=DOCV.pick?null:docFind(DOCV.sel)
     `<button class="b" type="button" data-dact="view">${esc(t('Text lesen','Read text'))}</button>`+
     (own&&brief&&DOCINFO.on.due&&docDue(d,today)?`<button class="b" type="button" data-docremind="${esc(d.id)}" title="${esc(t('Erinnerung sechs Wochen vor der Frist (oder am Tag davor)','Reminder six weeks before the deadline (or the day before)'))}">${esc(t('Erinnern','Remind'))}</button>`:'')+
     (own&&d.file&&d.state!=='reading'?`<button class="b" type="button" data-docreread="${esc(d.id)}" title="${esc(t('Aus dem aufbewahrten Original neu einlesen','Read again from the kept original'))}">${esc(t('Neu einlesen','Read again'))}</button>`:'')+
-    (own?`<button class="b danger" type="button" data-docdel="${esc(d.id)}" data-name="${esc(d.name)}"${d.place?' data-nas="1"':''}>${esc(d.place?t('Nicht mehr finden','Stop finding'):t('Löschen','Delete'))}</button>`:'')+`</div>`+
+    (own?`<button class="b danger" type="button" data-docdel="${esc(d.id)}" data-name="${esc(d.name)}"${d.source==='nas'?' data-nas="1"':''}>${esc(d.source==='nas'?t('Nicht mehr finden','Stop finding'):t('Löschen','Delete'))}</button>`:'')+`</div>`+
     (own&&!d.file?`<p class="mut ld-note">${esc(t('Original nicht aufbewahrt: Zum Neu-Einlesen die Datei neu hochladen.','Original not kept: to read it again, upload the file again.'))}</p>`:'')}
 function docOpen(id){DOCV.sel=id;const v=$('docview');if(v.dataset.id!==id){v.hidden=true;v.textContent=''}docRender();
   if($('docbox').classList.contains('ld-sel'))$('docdetail').scrollIntoView({block:'nearest'})}

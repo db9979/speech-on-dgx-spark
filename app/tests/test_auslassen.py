@@ -4,7 +4,9 @@ search at once (documents.on_gone), nothing changes at the place; letting it in 
 everywhere, case-blind, "*" only at the end; the tree marks what is left out; only the profile's own places, guests
 never, a blocked profile keeps seeing and changing its list; the old per-folder field moves to the list once; the
 Haushaltsordner follows the list of the admin profile that chose it; logs carry no path, no name and no profile.
-No test reads the clock."""
+Stufe B: the reMarkable reads no notebook below a left-out folder and drops what it read from one; the Begleiter gets
+the list with its config (the rev goes up), reports its sub folders for the tree, names the folder of each file, and
+the panel refuses a file from a left-out folder. No test reads the clock."""
 import contextlib
 import io
 import json
@@ -208,6 +210,116 @@ class Haushalt(Base):
         self.assertEqual(documents.count_source(nasquelle.HAUS, "nas"), 1)
         run(nasquelle.sync_once(nasquelle.HAUS, sid))
         self.assertEqual(documents.count_source(nasquelle.HAUS, "nas"), 1)
+
+
+class Remarkable(Base):
+    ITEMS = {"f": {"name": "Arbeit", "parent": "", "folder": True},
+             "g": {"name": "Alt", "parent": "f", "folder": True},
+             "a": {"name": "Plan", "parent": "f", "folder": False, "kind": "notebook"},
+             "b": {"name": "Notiz 2019", "parent": "g", "folder": False, "kind": "notebook"},
+             "c": {"name": "Lose", "parent": "", "folder": False, "kind": "notebook"}}
+
+    def test_no_notebook_below_a_left_out_folder(self):
+        import remarkable
+        _, uid = profile("AuRm")
+        d = {"picked": ["f", "c"], "all": False, "docs": {}}
+        self.assertEqual(sorted(remarkable.wanted(uid, self.ITEMS, d)), ["a", "b", "c"])
+        auslassen.add_folders(uid, [("rm", "/Arbeit/Alt")])
+        self.assertEqual(sorted(remarkable.wanted(uid, self.ITEMS, d)), ["a", "c"])
+        self.assertEqual(sorted(remarkable.wanted(uid, self.ITEMS, dict(d, picked=["b"]))), [])   # the list wins
+        with auslassen._lock:
+            auslassen._save(uid, {"folders": [], "names": ["arb*"]})
+        self.assertEqual(sorted(remarkable.wanted(uid, self.ITEMS, dict(d, all=True))), ["c"])
+
+    def test_what_was_read_leaves_at_once(self):
+        import remarkable
+        c, uid = profile("AuRmWeg")
+        remarkable._save_library(uid, self.ITEMS)
+        doc = documents.add(uid, "Notiz 2019.txt", b"Steuer Notiz von damals", source="remarkable")
+        remarkable.save(uid, {"picked": ["f"], "all": False, "docs": {"b": {"doc": doc["id"], "h": "x"}}})
+        p = c.post("/api/profile/auslassen", json={"ort": "rm", "path": "/Arbeit/Alt", "probe": True}).json()
+        self.assertEqual(p["docs"], 1)
+        r = c.post("/api/profile/auslassen", json={"ort": "rm", "path": "/Arbeit/Alt"})
+        self.assertEqual((r.status_code, r.json()["removed"]), (200, 1), r.text)
+        self.assertFalse(documents.has_doc(uid, doc["id"]))
+        self.assertEqual(remarkable.load(uid)["docs"], {})
+        self.assertEqual(remarkable.load(uid)["picked"], ["f"])               # nothing changes at the reMarkable
+        self.assertEqual(c.get("/api/profile/auslassen/tree?ort=rm&path=/").status_code, 403)   # not connected
+
+
+class Desk(Base):
+    def setUp(self):
+        super().setUp()
+        helpers.set_config(desk=True)
+        import guard
+        for k in [k for k in guard._rate if k[0] in ("desk", "deskfile", "deskapps", "pair")]:
+            guard._rate.pop(k, None)
+
+    def tearDown(self):
+        helpers.set_config(desk=False)
+        super().tearDown()
+
+    def program(self, name):
+        c, uid = profile(name)
+        r = c.post("/api/profile/desk/pair", json={"base": "http://192.168.178.171:31080"})
+        self.assertEqual(r.status_code, 200, r.text)
+        prog = TestClient(panel.app, client=("192.168.178.20", 50000))
+        r2 = prog.post("/api/desk/pair", json={"code": r.json()["code"], "name": "Laptop", "kind": "mac"})
+        self.assertEqual(r2.status_code, 200, r2.text)
+        prog.headers[profiles.DEVICE_HEADER] = r2.json()["key"]
+        did = c.get("/api/profile/desk").json()["devices"][0]["id"]
+        cfg = prog.get("/api/desk/config").json()
+        r = c.put(f"/api/profile/desk/devices/{did}", json={"cfg": {"parts": dict(cfg["parts"], folder=True)}})
+        self.assertEqual(r.status_code, 200, r.text)
+        return c, uid, prog
+
+    def send(self, prog, name, text, **data):
+        return prog.post("/api/desk/file", files={"file": (name, text.encode(), "text/plain")}, data=dict(what="wissen", **data))
+
+    def test_the_program_gets_the_list_and_the_panel_refuses_too(self):
+        c, uid, prog = self.program("AuDesk")
+        cfg = prog.get("/api/desk/config").json()
+        self.assertEqual(cfg["auslassen"], {"names": [], "folders": []})
+        self.assertEqual(self.send(prog, "plan.txt", "Projektplan Brücke", ordner="Projekte/Alt").status_code, 200)
+        self.assertEqual(self.send(prog, "lies.txt", "Lies mich zuerst", ordner="/").status_code, 200)
+        places = {d["name"]: d.get("place") for d in documents.list_docs(uid) if d["source"] == "begleiter"}
+        self.assertEqual(places, {"plan.txt": "/Projekte/Alt", "lies.txt": "/"})
+        r = c.post("/api/profile/auslassen", json={"ort": "pc", "path": "/Projekte/Alt"})
+        self.assertEqual((r.status_code, r.json()["removed"]), (200, 1), r.text)
+        self.assertEqual([d["name"] for d in documents.list_docs(uid) if d["source"] == "begleiter"], ["lies.txt"])
+        cfg2 = prog.get("/api/desk/config").json()
+        self.assertEqual(cfg2["auslassen"], {"names": [], "folders": ["Projekte/Alt"]})
+        self.assertGreater(cfg2["rev"], cfg["rev"])                          # the program hears of it with the next poll
+        self.assertEqual(self.send(prog, "plan.txt", "Projektplan", ordner="Projekte/Alt/2019").status_code, 409)
+        self.assertEqual(self.send(prog, "x.txt", "x", ordner="../etc").status_code, 400)
+        c.post("/api/profile/auslassen", json={"name": "Entwurf*"})
+        self.assertEqual(self.send(prog, "e.txt", "Entwurf", ordner="/Briefe/entwurf 2").status_code, 409)
+        self.assertEqual(self.send(prog, "r.txt", "Rechtsklick ohne Ordner").status_code, 200)   # right-click: no folder
+
+    def test_an_older_send_without_folder_is_replaced(self):
+        _, uid, prog = self.program("AuDeskAlt")
+        self.assertEqual(self.send(prog, "notiz.txt", "Erste Fassung").status_code, 200)        # program before V01.0.777
+        self.assertEqual(self.send(prog, "notiz.txt", "Erste Fassung", ordner="/Ablage").status_code, 200)
+        self.assertEqual(self.send(prog, "notiz.txt", "Andere Datei", ordner="/").status_code, 200)
+        got = sorted(d.get("place") for d in documents.list_docs(uid) if d["name"] == "notiz.txt")
+        self.assertEqual(got, ["/", "/Ablage"])
+
+    def test_sub_folders_for_the_tree(self):
+        c, uid, prog = self.program("AuDeskBaum")
+        self.assertEqual([s["nas"] for s in c.get("/api/profile/auslassen").json()["sources"]], [])
+        r = prog.post("/api/desk/ordner", json={"dirs": ["Projekte", "Projekte/Alt", "../x", 7, "Fotos"]})
+        self.assertEqual((r.status_code, r.json()), (200, {"dirs": 3}), r.text)
+        self.assertEqual(prog.post("/api/desk/ordner", json={"dirs": "Projekte"}).status_code, 400)
+        v = c.get("/api/profile/auslassen").json()
+        self.assertEqual([(s["nas"], s["place"]) for s in v["sources"]], [("pc", "PC · Spark-Wissen")])
+        c.post("/api/profile/auslassen", json={"ort": "pc", "path": "/Projekte/Alt"})
+        d = c.get("/api/profile/auslassen/tree?ort=pc&path=/Projekte").json()
+        self.assertEqual((d["dirs"], d["out"]), (["Alt"], {"Alt": "ordner"}))
+        self.assertEqual(c.get("/api/profile/auslassen/tree?ort=pc&path=/../x").status_code, 400)
+        self.assertEqual(c.get("/api/profile/auslassen/tree?ort=zz").status_code, 400)
+        guest = TestClient(panel.app, client=("192.168.178.20", 50000))
+        self.assertIn(guest.get("/api/profile/auslassen/tree?ort=pc").status_code, (401, 403))
+        self.assertIn(prog.get("/api/profile/auslassen").status_code, (401, 403))   # the program's key: not the list
 
 
 if __name__ == "__main__":

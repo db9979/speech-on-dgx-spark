@@ -300,9 +300,12 @@ extension SparkClient {
     }
 
     /// POST /api/desk/file: "text" for zusammenfassen/uebersetzen/erklaeren; for wissen the stored name.
-    func file(_ data: Data, name: String, type: String, what: String, sprache: String?) async throws -> String {
+    /// ordner: the sub folder of the watched folder the file lies in ("/a/b", "/" = right in it), only for wissen.
+    func file(_ data: Data, name: String, type: String, what: String, sprache: String?,
+              ordner: String? = nil) async throws -> String {
         var form = Multipart()
         form.field("what", what)
+        if let ordner, what == "wissen" { form.field("ordner", String(ordner.prefix(500))) }
         if let sprache, what == "uebersetzen" { form.field("sprache", sprache) }
         form.file("file", filename: FileKinds.safeName(name), type: type, data: data)
         let d = try await postMultipart("api/desk/file", form, timeout: 300)

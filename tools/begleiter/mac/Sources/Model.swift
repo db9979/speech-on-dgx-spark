@@ -66,6 +66,8 @@ struct DeskConfig: Equatable {
     var aloud = true
     /// config.office.web: Word, Excel and Outlook can be set up (the panel knows its https address)
     var officeWeb = false
+    /// config.auslassen: sub folders of the watched folder the Spark never reads (Ich → Dokumente → Ausgelassene Ordner)
+    var leftOut = LeftOut()
 
     init() {}
 
@@ -111,6 +113,7 @@ struct DeskConfig: Equatable {
         face = FaceKind(d["face"])
         aloud = d["aloud"] as? Bool ?? true
         officeWeb = (d["office"] as? [String: Any])?["web"] as? Bool ?? false
+        leftOut = LeftOut(d["auslassen"])
         FaceKind.saved = face
     }
 

@@ -597,13 +597,19 @@ internal static partial class SparkClient
 
     /// <summary>POST /api/desk/file – Datei zusammenfassen/übersetzen/erklären lassen oder ins Wissen übernehmen.</summary>
     public static async Task<FileResult> FileAsync(
-        string baseUrl, string key, byte[] data, string fileName, string contentType, string what, string? sprache, CancellationToken ct)
+        string baseUrl, string key, byte[] data, string fileName, string contentType, string what, string? sprache, CancellationToken ct,
+        string? ordner = null)
     {
         using var form = new MultipartFormDataContent();
         var file = new ByteArrayContent(data);
         file.Headers.ContentType = new MediaTypeHeaderValue(contentType);
         form.Add(file, "file", fileName);
         form.Add(new StringContent(what, Encoding.UTF8), "what");
+        if (ordner is not null && what == "wissen")
+        {
+            // der Unterordner von Spark-Wissen („/a/b“, „/“ = direkt darin): das Panel lässt ausgelassene Ordner aus
+            form.Add(new StringContent(ordner.Length > 500 ? ordner[..500] : ordner, Encoding.UTF8), "ordner");
+        }
         if (!string.IsNullOrEmpty(sprache))
         {
             form.Add(new StringContent(sprache, Encoding.UTF8), "sprache");
@@ -669,6 +675,14 @@ internal static partial class SparkClient
         using var request = new HttpRequestMessage(HttpMethod.Get, baseUrl + "/api/desk/wait");
         JsonNode json = await SendAsync(request, key, pairing: false, MediumTimeout, ct).ConfigureAwait(true);
         return (ParseAsks(json), ParseViews(json));
+    }
+
+    /// <summary>POST /api/desk/ordner – die Unterordner von Spark-Wissen (nur Namen, „a/b“), für den Ordnerbaum im Panel.</summary>
+    public static async Task DirsAsync(string baseUrl, string key, IEnumerable<string> dirs, CancellationToken ct)
+    {
+        var body = new JsonObject { ["dirs"] = new JsonArray(dirs.Take(2000).Select(d => (JsonNode?)JsonValue.Create(d)).ToArray()) };
+        using var request = new HttpRequestMessage(HttpMethod.Post, baseUrl + "/api/desk/ordner") { Content = JsonContent(body) };
+        _ = await SendAsync(request, key, pairing: false, ShortTimeout, ct).ConfigureAwait(true);
     }
 
     /// <summary>POST /api/desk/local – was die Person hier am PC eingestellt hat: Namen der Kurzbefehle und „ohne Rückfrage“.</summary>

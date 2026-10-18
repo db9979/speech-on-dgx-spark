@@ -592,7 +592,7 @@ def _row(r, todo):
     return {"id": r["id"], "name": r["name"], "size": r["size"], "created": r["created"], "chunks": r["nchunks"],
             "kind": r["kind"], "state": r["state"], "note": r["note"], "pages": r["pages"], "todo": todo.get(r["id"], 0),
             "vecs": r["nvecs"], "use": bool(r["use"]), "shared": bool(r["shared"]), "file": bool(r["file"]), "source": r["source"],
-            **({"place": r["place"]} if r["source"] == "nas" else {}), **card(r)}
+            **({"place": r["place"]} if r["source"] == "nas" or r["source"] == "begleiter" and r["place"] else {}), **card(r)}
 
 
 def _tags(v):

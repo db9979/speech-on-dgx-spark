@@ -82,6 +82,11 @@ internal sealed partial class TrayContext
             _folder = null;
         }
 
+        if (_folder is not null && _desk is not null)
+        {
+            _folder.SetLeftOut(_desk.LeftOut);
+        }
+
         // wake (nie bei „Mikrofon zu“)
         if (IsOn(Parts.Wake) && !MicSwitch.Closed)
         {

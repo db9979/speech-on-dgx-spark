@@ -442,16 +442,20 @@ def path_of(items, i):
 
 def wanted(uid, items=None, d=None):
     """{rm id: path} of the documents to read: picked ones, those in picked folders, or with "all" every
-    notebook; never the trash."""
+    notebook; never the trash, never a left-out folder (Ich → Dokumente → Ausgelassene Ordner, auslassen.py)."""
+    import auslassen
     items = library(uid) if items is None else items
     d = load(uid) if d is None else d
     picked = set(d.get("picked") or [])
+    mine = auslassen.load(uid)
     out = {}
     for i, it in items.items():
         if it.get("folder"):
             continue
         p = path_of(items, i)
         if p is None:
+            continue
+        if "/" in p and auslassen.why(uid, "rm", "/" + p.rsplit("/", 1)[0], mine):
             continue
         hit = i in picked or (d.get("all") and it.get("kind") == "notebook")
         j, seen = it.get("parent"), set()

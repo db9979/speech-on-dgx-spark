@@ -380,6 +380,8 @@ struct FolderLedger: Codable, Equatable {
     var files: [String: Entry] = [:]
     var day = ""
     var countToday = 0
+    /// true once every file was sent with its folder (since V01.0.777, Ordner auslassen); older lists send all once more
+    var placed: Bool?
 
     static let perDay = 50
 
@@ -418,6 +420,20 @@ struct FolderLedger: Codable, Equatable {
     mutating func done(_ path: String, size: Int, mtime: Double, sha256: String, counts: Bool) {
         files[path] = Entry(size: size, mtime: mtime, sha256: sha256)
         if counts { countToday += 1 }
+    }
+
+    /// a list from before the folder was sent along: every file once more (not counted), so the panel learns where
+    /// it lies and can take it out when that folder is left out
+    mutating func needPlaces() {
+        guard placed != true else { return }
+        placed = true
+        for k in Array(files.keys) { files[k]?.size = -1 }
+    }
+
+    /// sent before without its folder and unchanged since: goes once more, does not count for the day
+    func resend(_ path: String, sha256: String) -> Bool {
+        guard let e = files[path] else { return false }
+        return e.size == -1 && e.sha256 == sha256
     }
 
     /// files that no longer exist leave the list

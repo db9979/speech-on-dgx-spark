@@ -1,6 +1,8 @@
 using System.Globalization;
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace SparkBegleiter;
 
@@ -9,12 +11,18 @@ namespace SparkBegleiter;
 /// Durchgang beim Start. Neue oder geänderte Dateien (Größe + Änderungszeit + SHA-256, Liste in
 /// %LOCALAPPDATA%\Spark Begleiter\wissen.json) gehen nach 10 Sekunden Ruhe an /api/desk/file mit what=wissen.
 /// Höchstens 50 am Tag; 409 (schon da) zählt als erledigt. Versteckte und Zwischendateien werden übersprungen.
+/// Im Panel ausgelassene Ordner (config.auslassen, <see cref="LeftOut"/>) schaut er nicht an; was aus ihnen geschickt
+/// war, vergisst er, damit „Wieder zulassen“ es neu schickt. Die Namen der Unterordner gehen an /api/desk/ordner
+/// (nur Namen), damit das Panel sie als Baum zeigt.
 /// </summary>
 internal sealed class FolderWatcher : IDisposable
 {
     public const int MaxPerDay = 50;
     private static readonly TimeSpan Quiet = TimeSpan.FromSeconds(10);
     private static readonly TimeSpan RetryAfter = TimeSpan.FromMinutes(5);
+    private static readonly TimeSpan Rewalk = TimeSpan.FromMinutes(10);
+    private const int MaxFiles = 5000;
+    private const int MaxDirs = 2000; // auslassen.MAX_PC_DIRS im Panel
     private static readonly string[] TempExtensions = { ".tmp", ".part", ".crdownload", ".partial", ".download" };
 
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = false };
@@ -34,6 +42,11 @@ internal sealed class FolderWatcher : IDisposable
     private bool _busy;
     private bool _limitNotified;
     private bool _disposed;
+    private LeftOut _leftOut = new();
+    private List<string> _dirs = new();
+    private List<string>? _reportedDirs;
+    private DateTime _reportedAt = DateTime.MinValue;
+    private DateTime _walkedAt = DateTime.MinValue;
 
     public FolderWatcher(string folder, Func<(string Base, string Key)?> credentials, Action<string> notify, Action<SparkException> report)
     {
@@ -70,6 +83,29 @@ internal sealed class FolderWatcher : IDisposable
 
     public string Folder => _folder;
 
+    /// <summary>Neue Liste aus dem Panel: vergisst, was aus nun ausgelassenen Ordnern geschickt war, und schaut neu durch.</summary>
+    public void SetLeftOut(LeftOut rules)
+    {
+        lock (_lock)
+        {
+            if (rules.SameAs(_leftOut))
+            {
+                return;
+            }
+
+            _leftOut = rules;
+            foreach (string key in _state.Files.Keys.Where(k => rules.Covers(Rel(Path.GetDirectoryName(k) ?? _folder))).ToList())
+            {
+                _state.Files.Remove(key);
+            }
+
+            _rescan = true;
+            _lastEvent = DateTime.UtcNow - Quiet;
+        }
+
+        _state.Save();
+    }
+
     private void Touch(string path)
     {
         lock (_lock)
@@ -98,6 +134,11 @@ internal sealed class FolderWatcher : IDisposable
         List<string> paths;
         lock (_lock)
         {
+            if (DateTime.UtcNow - _walkedAt > Rewalk)
+            {
+                _rescan = true; // neue Unterordner fürs Panel, und was der FileSystemWatcher verpasst hat
+            }
+
             if (DateTime.UtcNow - _lastEvent < Quiet || DateTime.UtcNow < _retryAt || (_dirty.Count == 0 && !_rescan))
             {
                 return;
@@ -108,13 +149,17 @@ internal sealed class FolderWatcher : IDisposable
             if (_rescan)
             {
                 _rescan = false;
-                paths.AddRange(SafeEnumerate(_folder));
+                _walkedAt = DateTime.UtcNow;
+                var dirs = new List<string>();
+                paths.AddRange(Walk(_folder, dirs));
+                _dirs = dirs;
             }
         }
 
         _busy = true;
         try
         {
+            await ReportAsync();
             await ProcessAsync(paths.Distinct(StringComparer.OrdinalIgnoreCase).ToList());
         }
         finally
@@ -123,20 +168,88 @@ internal sealed class FolderWatcher : IDisposable
         }
     }
 
-    private static IEnumerable<string> SafeEnumerate(string folder)
+    /// <summary>
+    /// Dateien unter folder (höchstens 5000); ausgelassene Ordner samt allem darunter nicht, Verknüpfungen auf andere
+    /// Ordner auch nicht. dirs bekommt die Unterordner („a/b“, ausgelassene auch, aber nicht was darunter liegt).
+    /// </summary>
+    private List<string> Walk(string folder, List<string>? dirs)
     {
+        var options = new EnumerationOptions
+        {
+            IgnoreInaccessible = true,
+            AttributesToSkip = FileAttributes.Hidden | FileAttributes.System | FileAttributes.Temporary,
+        };
+        var files = new List<string>();
+        var todo = new Stack<string>();
+        todo.Push(folder);
+        while (todo.Count > 0 && files.Count < MaxFiles)
+        {
+            string dir = todo.Pop();
+            if (_leftOut.Covers(Rel(dir)))
+            {
+                continue;
+            }
+
+            try
+            {
+                files.AddRange(Directory.EnumerateFiles(dir, "*", options).Take(MaxFiles - files.Count));
+                foreach (DirectoryInfo sub in new DirectoryInfo(dir).EnumerateDirectories("*", options))
+                {
+                    if ((sub.Attributes & FileAttributes.ReparsePoint) != 0)
+                    {
+                        continue;
+                    }
+
+                    if (dirs is not null && dirs.Count < MaxDirs)
+                    {
+                        dirs.Add(Rel(sub.FullName));
+                    }
+
+                    todo.Push(sub.FullName);
+                }
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                // nicht lesbar: auslassen
+            }
+        }
+
+        return files;
+    }
+
+    /// <summary>Ein Ordner unter dem beobachteten als „a/b“ („“ = der beobachtete selbst oder etwas außerhalb).</summary>
+    private string Rel(string dir)
+    {
+        string r = Path.GetRelativePath(_folder, dir);
+        return r == "." || r.StartsWith("..", StringComparison.Ordinal) || Path.IsPathRooted(r)
+            ? "" : r.Replace('\\', '/').Normalize(NormalizationForm.FormC);
+    }
+
+    /// <summary>Die Unterordner ans Panel, wenn sie sich geändert haben, sonst alle 10 Minuten (das Panel hält sie nur im Speicher).</summary>
+    private async Task ReportAsync()
+    {
+        List<string> dirs = _dirs;
+        TimeSpan since = DateTime.UtcNow - _reportedAt;
+        bool same = _reportedDirs is not null && _reportedDirs.SequenceEqual(dirs);
+        if ((same || since < TimeSpan.FromMinutes(1)) && since < Rewalk)
+        {
+            return;
+        }
+
+        if (_credentials() is not { } creds)
+        {
+            return;
+        }
+
+        _reportedAt = DateTime.UtcNow;
         try
         {
-            return Directory.EnumerateFiles(folder, "*", new EnumerationOptions
-            {
-                RecurseSubdirectories = true,
-                IgnoreInaccessible = true,
-                AttributesToSkip = FileAttributes.Hidden | FileAttributes.System | FileAttributes.Temporary,
-            }).Take(5000).ToList();
+            await SparkClient.DirsAsync(creds.Base, creds.Key, dirs, CancellationToken.None);
+            _reportedDirs = dirs;
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        catch (SparkException)
         {
-            return Array.Empty<string>();
+            // ein älterer Spark ohne /api/desk/ordner, oder gerade nicht erreichbar: später noch einmal
         }
     }
 
@@ -148,11 +261,11 @@ internal sealed class FolderWatcher : IDisposable
             string path = paths[i];
             if (Directory.Exists(path))
             {
-                paths.AddRange(SafeEnumerate(path).Where(p => !paths.Contains(p, StringComparer.OrdinalIgnoreCase)));
+                paths.AddRange(Walk(path, null).Where(p => !paths.Contains(p, StringComparer.OrdinalIgnoreCase)));
                 continue;
             }
 
-            if (Skip(path) || !File.Exists(path))
+            if (_leftOut.Covers(Rel(Path.GetDirectoryName(path) ?? _folder)) || Skip(path) || !File.Exists(path))
             {
                 continue;
             }
@@ -256,7 +369,9 @@ internal sealed class FolderWatcher : IDisposable
         }
 
         string sha = Convert.ToHexString(await Task.Run(() => SHA256.HashData(data)));
-        if (known is not null && known.Sha256 == sha)
+        // vor V01.0.777 ohne seinen Ordner geschickt: noch einmal mit Ordner, zählt nicht für den Tag
+        bool again = known is not null && known.Size == -1 && known.Sha256 == sha;
+        if (known is not null && known.Sha256 == sha && !again)
         {
             _state.Files[key] = new Entry { Size = info.Length, Mtime = mtime, Sha256 = sha };
             return Outcome.Skipped; // nur die Zeit hat sich geändert
@@ -270,7 +385,7 @@ internal sealed class FolderWatcher : IDisposable
             _limitNotified = false;
         }
 
-        if (_state.Count >= MaxPerDay)
+        if (_state.Count >= MaxPerDay && !again)
         {
             if (!_limitNotified)
             {
@@ -294,8 +409,14 @@ internal sealed class FolderWatcher : IDisposable
 
         try
         {
-            _ = await SparkClient.FileAsync(creds.Base, creds.Key, data, info.Name, FileMenu.ContentType(info.Extension), "wissen", null, CancellationToken.None);
-            _state.Count++;
+            string ordner = "/" + Rel(info.DirectoryName ?? _folder); // „/“ = direkt in Spark-Wissen
+            _ = await SparkClient.FileAsync(creds.Base, creds.Key, data, info.Name, FileMenu.ContentType(info.Extension), "wissen", null,
+                                            CancellationToken.None, ordner);
+            if (!again)
+            {
+                _state.Count++;
+            }
+
             _state.Files[key] = new Entry { Size = info.Length, Mtime = mtime, Sha256 = sha };
             return Outcome.Uploaded;
         }
@@ -349,6 +470,9 @@ internal sealed class FolderWatcher : IDisposable
 
         public int Count { get; set; }
 
+        /// <summary>Jede Datei mit ihrem Ordner geschickt (seit V01.0.777); ältere Listen schicken alles einmal neu.</summary>
+        public bool Placed { get; set; }
+
         public static State Load()
         {
             try
@@ -356,6 +480,15 @@ internal sealed class FolderWatcher : IDisposable
                 if (File.Exists(FilePath) && JsonSerializer.Deserialize<State>(File.ReadAllText(FilePath), JsonOptions) is { } state)
                 {
                     state.Files = new Dictionary<string, Entry>(state.Files, StringComparer.OrdinalIgnoreCase);
+                    if (!state.Placed)
+                    {
+                        state.Placed = true;
+                        foreach (Entry e in state.Files.Values)
+                        {
+                            e.Size = -1;
+                        }
+                    }
+
                     return state;
                 }
             }
@@ -364,7 +497,7 @@ internal sealed class FolderWatcher : IDisposable
                 // neu anfangen
             }
 
-            return new State();
+            return new State { Placed = true };
         }
 
         public void Save()
@@ -382,4 +515,69 @@ internal sealed class FolderWatcher : IDisposable
             }
         }
     }
+}
+
+/// <summary>
+/// Ich → Dokumente → Ausgelassene Ordner (config.auslassen): dieselben Regeln wie im Panel (auslassen.py). Ein Ordner
+/// („a/b“ unter dem beobachteten) mit allem darunter; ein Name für jeden Ordner im Pfad, Groß und klein egal, ein „*“ am
+/// Ende heißt „beginnt mit“.
+/// </summary>
+internal sealed class LeftOut
+{
+    public List<string> Names { get; set; } = new();
+
+    public List<string> Folders { get; set; } = new();
+
+    public static LeftOut Parse(JsonNode? node)
+    {
+        var rules = new LeftOut();
+        if (node is not JsonObject o)
+        {
+            return rules;
+        }
+
+        foreach (JsonNode? n in (o["names"] as JsonArray ?? new JsonArray()).Take(50))
+        {
+            if (n is JsonValue v && v.TryGetValue(out string? s) && s.Normalize(NormalizationForm.FormC).Trim() is { Length: > 0 } name)
+            {
+                rules.Names.Add(name.Length > 81 ? name[..81] : name);
+            }
+        }
+
+        foreach (JsonNode? n in (o["folders"] as JsonArray ?? new JsonArray()).Take(200))
+        {
+            if (n is JsonValue v && v.TryGetValue(out string? s) &&
+                string.Join('/', s.Normalize(NormalizationForm.FormC).Split('/', StringSplitOptions.RemoveEmptyEntries)) is { Length: > 0 } p)
+            {
+                rules.Folders.Add(p);
+            }
+        }
+
+        return rules;
+    }
+
+    public bool SameAs(LeftOut other) => Names.SequenceEqual(other.Names) && Folders.SequenceEqual(other.Folders);
+
+    /// <summary>Ist der Ordner rel („a/b“) ausgelassen? „“ (der beobachtete Ordner selbst) nie.</summary>
+    public bool Covers(string rel)
+    {
+        string[] segs = rel.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        if (segs.Length == 0)
+        {
+            return false;
+        }
+
+        string p = string.Join('/', segs);
+        if (Folders.Any(f => p == f || p.StartsWith(f + "/", StringComparison.Ordinal)))
+        {
+            return true;
+        }
+
+        return segs.Any(seg => Names.Any(rule => Hit(rule, seg)));
+    }
+
+    private static bool Hit(string rule, string seg) =>
+        rule.EndsWith('*')
+            ? seg.StartsWith(rule[..^1], StringComparison.OrdinalIgnoreCase)
+            : string.Equals(seg, rule, StringComparison.OrdinalIgnoreCase);
 }

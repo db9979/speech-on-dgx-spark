@@ -66,6 +66,7 @@ import httpx
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, Response
 
+import auslassen
 import features
 import geraeteupdate
 import guard
@@ -196,6 +197,7 @@ PROG_NAME = re.compile(r"[^\x00-\x1f\x7f-\x9f\"'`/\\<>|]{1,40}")
 MAX_APPS = 20
 MAX_INSTALLED = 600
 MAX_APPS_BODY = 128 * 1024
+MAX_DIRS_BODY = 512 * 1024      # the sub folders of "Spark-Wissen" (POST /api/desk/ordner), at most auslassen.MAX_PC_DIRS
 
 
 def _app(a):
@@ -283,6 +285,8 @@ def program_rev(did, uid):
     mask = "".join("1" if v else "0" for v in may(uid).values())
     mask += ":" + profiles.face_of(uid, load_config().get("chat", {}))   # another face: the program draws it now
     mask += ":" + ("1" if aloud(uid) else "0")   # Antworten vorlesen switched: the program hears of it now
+    # Ausgelassene Ordner changed (auslassen.py): the program stops sending from them with its next poll
+    mask += ":" + hashlib.sha256(json.dumps(auslassen.for_desk(uid), sort_keys=True).encode()).hexdigest()[:12]
     with _lock:
         d = _load()
         e = d.get(did) or {"uid": uid, "cfg": clean(DEFAULT), "rev": 1}
@@ -614,6 +618,8 @@ async def program_config(request: Request, version: str = "", arch: str = ""):
             # Antworten vorlesen (profile switch speak): off = Frag Spark answers as text only, never spoken by itself
             "aloud": aloud(prof["id"]),
             "update": newer(arch, version), "parts": parts, "allowed": ok,
+            # Ich → Dokumente → Ausgelassene Ordner: the program sends nothing from these (names, folders "a/b")
+            "auslassen": auslassen.for_desk(prof["id"]) if parts["folder"] else {"names": [], "folders": []},
             "write": cfg["write"], "dictate": cfg["dictate"], "autostart": cfg["autostart"],
             "act": {"apps": cfg["act"]["apps"] if parts["act"] else [], "wait": parts["act"] or parts["view"],
                     "auto_ok": list(ACT_AUTO_OK) if parts["act"] else []}, "wake": {"word": WAKE_WORD},
@@ -797,16 +803,21 @@ async def _upload(file, limit):
     return data
 
 
-def _to_wissen(uid, name, data):
-    """The file as an own document; one sent before under the same name from the Begleiter is replaced."""
+def _to_wissen(uid, name, data, place=""):
+    """The file as an own document; one sent before from the Begleiter under the same name from the same folder
+    ("place" below "Spark-Wissen": "/" right in it, "/a/b"; "" = right-click or a program before V01.0.777) is
+    replaced, and so is one without a folder (sent before the program named it; it sends everything once more)."""
     import documents
     import wissen
     if not _docs(uid):
         raise HTTPException(403, "Eigene Dokumente sind aus (Funktionen → Eigene Dokumente).")
     try:
         name = os.path.basename(str(name or "Datei"))[:120]
-        old = [d for d in documents.list_docs(uid) if d.get("name") == name and d.get("source") == "begleiter"]
+        old = [d for d in documents.list_docs(uid) if d.get("name") == name and d.get("source") == "begleiter"
+               and (d.get("place") or "") in (place, "")]
         doc = wissen.add(uid, name, data, source="begleiter")
+        if doc and place:
+            documents.set_place(uid, doc["id"], "pc", place)
         for d in old:
             documents.delete(uid, d["id"])
         return doc
@@ -817,13 +828,24 @@ def _to_wissen(uid, name, data):
 @router.post("/api/desk/file", dependencies=[Depends(assistant)])
 @shown("Datei fragen")
 async def program_file(request: Request, file: UploadFile = File(...), what: str = Form("zusammenfassen"),
-                       sprache: str = Form("")):
-    """Right-click on a file (part files) or the watched folder (part folder, only what=wissen)."""
+                       sprache: str = Form(""), ordner: str | None = Form(None)):
+    """Right-click on a file (part files) or the watched folder (part folder, only what=wissen; "ordner" = the
+    sub folder it lies in below "Spark-Wissen", "/a/b", "/" = right in it; missing on a right-click). A file from a
+    left-out folder is refused (409, auslassen.py); the program itself sends none."""
     prof, dev = _program(request)
     uid = prof["id"]
+    place = ""
     if what == "wissen":
         if not (part_on(uid, dev["id"], "files") or part_on(uid, dev["id"], "folder")):
             _part(prof, dev, "files")
+        import nasquelle
+        try:
+            place = "" if ordner is None else nasquelle.clean_path(ordner) or "/"
+        except ValueError:
+            raise HTTPException(400, "ordner: ungültig")
+        if place and auslassen.why(uid, "pc", place):
+            print(f"begleiter: datei abgelehnt | ausgelassen | {profiles.log_name(prof)}", flush=True)
+            raise HTTPException(409, "Der Ordner ist ausgelassen (Ich → Dokumente → Ausgelassene Ordner).")
     elif what in FILE_WHAT:
         _part(prof, dev, "files")
     else:
@@ -832,7 +854,7 @@ async def program_file(request: Request, file: UploadFile = File(...), what: str
     data = await _upload(file, MAX_UPLOAD)
     profiles.used(uid, "desk")
     if what == "wissen":
-        doc = await asyncio.to_thread(_to_wissen, uid, file.filename, data)
+        doc = await asyncio.to_thread(_to_wissen, uid, file.filename, data, place)
         _live("Datei ins Wissen übernommen")
         return {"id": (doc or {}).get("id", ""), "name": (doc or {}).get("name", "")}
     notaus.stop("gespraech")
@@ -1139,6 +1161,21 @@ async def program_apps(request: Request):
     n = save_installed(dev["id"], prof["id"], body["apps"][:MAX_INSTALLED * 2])
     _live(f"Programmliste vom Rechner ({n})")
     return {"apps": n}
+
+
+@router.post("/api/desk/ordner", dependencies=[Depends(assistant)])
+async def program_dirs(request: Request):
+    """The sub folders of "Spark-Wissen" (part folder), so Ich → Dokumente → Ausgelassene Ordner can show them as a
+    tree; names only, kept in memory (auslassen.PC_DIRS), nothing is read from them here."""
+    prof, dev = _program(request)
+    _part(prof, dev, "folder")
+    guard.limit(request, "deskapps", prof["id"])
+    body = await json_body(request, MAX_DIRS_BODY)
+    if not isinstance(body.get("dirs"), list):
+        raise HTTPException(400, "dirs: Liste")
+    n = auslassen.pc_dirs(prof["id"], body["dirs"])
+    print(f"begleiter: ordnerliste | {n} ordner | {profiles.log_name(prof)}", flush=True)
+    return {"dirs": n}
 
 
 @router.post("/api/desk/local", dependencies=[Depends(assistant)])

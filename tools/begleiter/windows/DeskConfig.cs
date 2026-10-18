@@ -128,6 +128,9 @@ internal sealed class DeskConfig
     /// <summary>Word, Excel und das neue Outlook lassen sich einrichten (das Panel kennt seine https-Adresse).</summary>
     public bool OfficeWeb { get; set; }
 
+    /// <summary>Im Panel ausgelassene Unterordner von Spark-Wissen (config.auslassen, Ich → Dokumente → Ausgelassene Ordner).</summary>
+    public LeftOut LeftOut { get; set; } = new();
+
     public bool IsOn(string part) => Parts.TryGetValue(part, out bool on) && on;
 
     public bool IsAllowed(string part) => Allowed.TryGetValue(part, out bool on) && on;
@@ -264,6 +267,8 @@ internal sealed class DeskConfig
         {
             config.OfficeWeb = Json.Bool(office["web"]) ?? false;
         }
+
+        config.LeftOut = LeftOut.Parse(json["auslassen"]);
 
         if (json["arts"] is JsonArray artList)
         {

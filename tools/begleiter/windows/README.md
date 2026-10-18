@@ -158,7 +158,11 @@ Einstellungen → **Kopplung** → **Ordner wählen …**). Neue oder geänderte
 gehen nach 10 Sekunden Ruhe ins Wissen des Spark – höchstens 50 am Tag; danach ein Hinweis „n Dateien ins
 Wissen übernommen“. Versteckte Dateien, Office-Sperrdateien (`~$…`) und halbe Downloads (`.tmp`, `.part`,
 `.crdownload`) werden übersprungen. Welche Dateien schon übernommen sind (Pfad, Größe, Zeit, SHA-256), steht
-in `%LOCALAPPDATA%\Spark Begleiter\wissen.json`.
+in `%LOCALAPPDATA%\Spark Begleiter\wissen.json`. Unterordner, die im Panel unter **Ich → Dokumente → Ausgelassene
+Ordner** stehen (ein Ordner oder eine Namensregel wie „Archiv“ oder „Alt*“), schaut der Begleiter nicht an und vergisst,
+was er von dort geschickt hatte; „Wieder zulassen“ schickt es neu. Zu jeder Datei nennt er ihren Unterordner, die Namen
+der Unterordner (nur Namen) gehen alle 10 Minuten ans Panel für den Ordnerbaum. Nach dem Update geht jede schon
+übernommene Datei einmal mit ihrem Ordner neu (zählt nicht für die 50 am Tag).
 
 **Knöpfe in Meldungen:** Meldungen mit Knöpfen erscheinen zusätzlich im Begleiter-Fenster (Klick aufs Symbol
 oder auf den Hinweis) unter „Meldungen“: **Antworten** öffnet „Frag Spark“ mit der Meldung als Zitat – die

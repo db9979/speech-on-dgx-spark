@@ -194,6 +194,12 @@ Welche Dateien schon geschickt wurden, merkt sich der Begleiter in
 Datei, die nur angefasst, aber nicht verändert wurde, geht nicht noch einmal; eine, die der Spark schon kennt, zählt
 als erledigt.
 
+Unterordner, die im Panel unter **Ich → Dokumente → Ausgelassene Ordner** stehen (ein Ordner oder eine Namensregel
+wie „Archiv“ oder „Alt*“), schaut der Begleiter nicht an; was er von dort geschickt hatte, vergisst er, damit „Wieder
+zulassen“ es neu schickt. Zu jeder Datei nennt er ihren Unterordner, und die Namen der Unterordner (nur Namen) gehen
+ans Panel, damit es sie als Baum zeigt. Nach dem Update auf diese Fassung geht jede schon geschickte Datei einmal mit
+ihrem Ordner neu (zählt nicht für die 50 am Tag).
+
 ### Knöpfe in Meldungen
 
 Mit diesem Teil haben Meldungen des Spark (sofern der Spark sie anbietet) Knöpfe – in der Mitteilung auf „Optionen“
