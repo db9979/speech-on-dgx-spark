@@ -131,6 +131,7 @@ WITHOUT = {
     "docnight": "wirkt beim Einlesen",
     "docling": "wirkt beim Einlesen (liest im Hintergrund)",
     "suchpruefung": "misst im Hintergrund, wie gut die Suche trifft (Ich → Dokumente)",
+    "wissensbuch": "arbeitet im Hintergrund, Fragen beantwortet document_search aus den Seiten",
     "suchfragen": "schreibt im Hintergrund Prüffragen für die Suchprüfung",
     "nachsortieren": "wirkt beim Suchen in den Dokumenten",
     "rmfresh": "wirkt beim Abgleich",

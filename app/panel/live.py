@@ -170,6 +170,8 @@ TARGETS = {
     "taten": ("Taten-Prüfung", "zurückgehalten und gestoppt · auf dem Spark", "spark", False),
     # Suchprüfung (suchpruefung.py): shown while it is on, test questions and the share found in the first five
     "pruef": ("Suchprüfung", "Prüffragen und Trefferquote · auf dem Spark", "spark", False),
+    # Wissensbuch (wissensbuch.py): shown while it is on, pages, sentences and documents waiting (numbers only)
+    "wbuch": ("Wissensbuch", "Seiten aus den eigenen Dokumenten · auf dem Spark", "spark", False),
     # Den Spark anrufen (telefon.py): the PBX in the home network; signed in, calls now and today in numbers, never a number
     "telefon": ("Telefonanlage", "SIP · Heimnetz", "lan", False),
     # Spark teilen (steuer.py): the DGX with the models while the panel runs on another computer; reachable, counts
@@ -1259,6 +1261,13 @@ def snapshot(view="admin", now=None):
     if spr.get("on"):
         used.add("pruef")
     try:
+        import wissensbuch
+        wbk = wissensbuch.for_live()
+    except Exception:
+        wbk = {"on": False}
+    if wbk.get("on"):
+        used.add("wbuch")
+    try:
         import telefon
         tel = telefon.for_live()
     except Exception:
@@ -1445,6 +1454,9 @@ def snapshot(view="admin", now=None):
                         + (f" · {spr['top5']} % unter den ersten 5" if spr.get("top5") is not None else " · noch kein Lauf")
                         + (f" · Sammelfragen {spr['sammel']} % ganz gefunden" if spr.get("sammel") is not None else "")
                         + (" · prüft gerade" if spr.get("running") else ""))
+        if x["id"] == "wbuch":     # Wissensbuch: pages, sentences, documents waiting, numbers only (never a title)
+            x["sub"] = (f"{wbk.get('seiten', 0)} Seiten · {wbk.get('saetze', 0)} Sätze · {wbk.get('warten', 0)} Dokumente warten"
+                        + (" · arbeitet" if wbk.get("running") else ""))
         if x["id"] == "modell" and mr.get("on"):   # Modell-Rechner: reachable, units active, version (no address)
             x["sub"] = (("nicht erreichbar" + (" · Notbetrieb" if mr.get("notbetrieb") else "")) if not mr.get("ok") else
                         f"{mr.get('aktiv', 0)} von {mr.get('n', 0)} Diensten aktiv" + (f" · {mr['version']}" if mr.get("version") else "")

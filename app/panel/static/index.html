@@ -168,6 +168,8 @@
       <div class="setrow" data-show="chat.documents" style="margin-left:18px"><div class="lbl"><b>Treffer nachsortieren</b><span>Ein kleines Modell auf dem Prozessor liest Frage und Fundstellen zusammen und stellt die passendsten nach vorn.</span></div><label class="tgl"><input type="checkbox" id="chat.rerank"><i></i></label></div>
       <div data-show="chat.rerank" style="margin-left:36px"><label>Modell</label><select id="chat.rerank_model"><option value="klein">klein, etwa 120 MB (empfohlen)</option><option value="gross">groß, etwa 570 MB, genauer und langsamer</option></select>
         <label>Höchstens warten (ms)</label><input class="num" id="chat.rerank_ms" type="number" min="300" max="2000"><div class="fh">300 bis 2000, Standard 800. Länger wartet keine Antwort; die Suchprüfung zeigt, ob es sich lohnt.</div></div>
+      <div class="setrow" data-show="chat.documents" style="margin-left:18px"><div class="lbl"><b>Wissensbuch</b><span>Eigene Dokumente werden in ruhigen Minuten zu Seiten, jeder Satz mit Quelle und nach festen Regeln geprüft.</span></div><label class="tgl"><input type="checkbox" id="chat.knowledge_book"><i></i></label></div>
+      <div data-show="chat.knowledge_book" style="margin-left:36px"><label>Dokumente pro Tag und Profil</label><input class="num" id="chat.knowledge_book_day" type="number" min="5" max="200"><div class="fh">5 bis 200, Standard 40. Höchstens 300 Seiten pro Profil, 5 Seiten pro Dokument.</div></div>
       <div class="setrow" data-show="chat.documents" style="margin-left:18px"><div class="lbl"><b>Dokumente erstellen</b><span>Der Spark schreibt auf Bitte Briefe, Präsentationen und Tabellen als Word, PDF, PowerPoint oder Excel; erst die Gliederung, nach deinem Ja.</span></div><label class="tgl"><input type="checkbox" id="chat.doc_make"><i></i></label></div>
       <div class="setrow" data-show="chat.doc_make" style="margin-left:36px"><div class="lbl"><b>Eigene Vorlagen</b><span>Profile laden eigene Word- oder PowerPoint-Vorlagen hoch (ohne Makros, höchstens 10 MB); der Spark füllt sie.</span></div><label class="tgl"><input type="checkbox" id="chat.doc_make_templates"><i></i></label></div>
       <div class="setrow" data-show="chat.doc_make" style="margin-left:36px"><div class="lbl"><b>Bilder aus dem Kiwix</b><span>Titelfolie und „Bild und Text“-Folien bekommen ein Bild aus der Wikipedia im eigenen Kiwix, mit Quelle. Braucht das Kiwix-Archiv.</span></div><label class="tgl"><input type="checkbox" id="chat.doc_make_wikipics"><i></i></label></div>
@@ -1120,6 +1122,7 @@
       <div class="ld-split"><div id="doclist" class="ld-list"></div><div id="docdetail" class="ld-detail" hidden><div id="docdinfo"></div><div id="docview" class="docview" hidden></div></div></div>
       <div id="docbulk" class="ld-bulk" hidden></div>
       <div id="mkbox" class="mkbox" hidden></div>
+      <details class="docopts" id="wbbox" hidden><summary>Wissensbuch</summary><div id="wbin"></div></details>
       <details class="docopts" id="sprbox" hidden><summary>Suchprüfung</summary><div id="sprin"></div></details>
       <details class="docopts" id="auslbox" hidden><summary>Ausgelassene Ordner</summary><div id="auslin"></div></details>
       <details class="docopts" id="docopts"><summary>Einstellungen für Dokumente</summary><div class="intro">PDF bis 100 MB (der Admin kann mehr erlauben); Word, Excel, PowerPoint, OpenDocument, Text, Markdown, HTML, CSV oder E-Mail (.eml) je bis 20 MB. Der Assistent sucht darin, wenn eine Frage dazu passt. Nur du kannst sie nutzen, außer du gibst ein Dokument „Für alle“ frei.</div><div id="docsw"></div><div class="mut" id="docuse"></div></details></div>
@@ -1285,6 +1288,7 @@
 <script src="/static/js/musik.js"></script>
 <script src="/static/js/suchpruefung.js"></script>
 <script src="/static/js/auslassen.js"></script>
+<script src="/static/js/wissensbuch.js"></script>
 <script src="/static/js/tipps.js"></script>
 <script src="/static/js/saetze.js"></script>
 <script src="/static/js/schreib.js"></script>

@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "vorbereiten": {
-        "stand": "6104283016",
+        "stand": "2fb29a38cf",
         "bezug": {
             "klaeren.MAX_BUTTONS": ["s7"], "chat_turn.prepare": ["s1", "s13"], "chat_turn.shared_stranger": ["s3"],
             "chat.left_out": ["s2", "s4"], "notaus.locked_tools": ["s11"], "chat_turn.notaus_note": ["s8", "s11"],
@@ -76,13 +76,16 @@ SEITEN = {
                "gilt, mit der Frage statt in den Systemprompt, damit der Server ihn aus dem Cache liest. Mit „Großes "
                "Gedächtnis kürzen“ stehen bei einem langen Gedächtnis nur die neuesten Fakten fest darin (höchstens "
                "{chat.MEMORY_CORE} Zeichen), dazu bis zu {chat.MEMORY_EXTRA} ältere, die Wörter mit der Frage teilen, "
-               "nur für diesen Zug (chat.memory_split).",
+               "nur für diesen Zug (chat.memory_split). Ist das Wissensbuch an und hat Seiten, kommen bis zu "
+               "{wissensbuch.HINT_PAGES} Seitentitel dazu, die am besten zur Frage passen, als fremder Text "
+               "(wissensbuch.hint).",
                "The admin's system prompt, plus the profile's length and style and a note per channel (watch, Siri, "
                "speaker, phone, Telegram, app, browser). With „Fast answer start“ what holds for this turn only goes with the "
                "question instead of the system prompt, so the server reads it from its cache. With „Trim a large "
                "memory“ a long memory keeps only the newest facts fixed in it (at most {chat.MEMORY_CORE} characters), "
                "plus up to {chat.MEMORY_EXTRA} older ones that share words with the question, for this turn only "
-               "(chat.memory_split).")),
+               "(chat.memory_split). When the knowledge book is on and has pages, up to {wissensbuch.HINT_PAGES} page "
+               "titles that fit the question best come along, as outside text (wissensbuch.hint).")),
             S("s6", "frage", ("Fester Satz?", "Fixed sentence?"),
               ("Rolle · Notaus · Problem melden · Bewertung", "role · kill switch · report · rating"),
               ("Sätze wie „Spark Notaus“, „Problem melden: …“ oder „Das war falsch“ führt das Panel selbst aus, nur aus "
@@ -722,7 +725,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Werkzeuge (chat_tools.run)
     "werkzeuge": {
-        "stand": "a5a36ccf20",
+        "stand": "8a032b2d91",
         "bezug": {
             "chat.LOCKED_OUTSIDE": ["s4"], "notaus.INTERNET_TOOLS": ["s3"], "werkzeuge.NAMES": ["s11"],
             "chat_tools.run": ["s2", "s7"], "chat.wrap_outside": ["s9"], "chat.LOCKED_MAIL": ["s4"],
@@ -787,9 +790,12 @@ SEITEN = {
             S("s6", "schritt", ("Lesen markieren", "Mark reading"),
               ("ab hier gilt die Antwort als fremd", "from here the answer counts as outside"),
               ("Werkzeuge, die fremden Text bringen (Websuche, Dokumente, Kalender, frühere Gespräche, Kamera), setzen "
-               "die Marke schon vor dem Lauf. Ab dann sind die Sperren aus Schritt 4 für den Rest der Antwort aktiv.",
+               "die Marke schon vor dem Lauf. Ab dann sind die Sperren aus Schritt 4 für den Rest der Antwort aktiv. "
+               "document_search bringt mit dem Wissensbuch zuerst die passende Seite, dann die Stellen; beides ist "
+               "fremder Text.",
                "Tools that bring outside text (web search, documents, calendar, earlier conversations, camera) set the "
-               "mark before they run. From then on the locks of step 4 hold for the rest of the answer.")),
+               "mark before they run. From then on the locks of step 4 hold for the rest of the answer. With the "
+               "knowledge book document_search brings the fitting page first, then the passages; both are outside text.")),
             S("s7", "schritt", ("Werkzeug ausführen", "Run the tool"),
               ("Erweiterung oder eingebautes Werkzeug", "extension or built-in tool"),
               ("Erweiterungen bekommen Profil, Gerät und Herkunft vom Panel, nie vom Modell. Smart-Home-Änderungen "

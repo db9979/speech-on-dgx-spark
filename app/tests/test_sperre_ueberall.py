@@ -437,6 +437,7 @@ ADMIN_ON_OK = {
     "speicher.py:folder_ok": "Spark-wide option",
     "stufe.py:on": "Spark switch; per profile stufe.level checks features.blocked",
     "suchpruefung.py:admin_on": "Spark switch for the background step, Live and the admin page; per profile suchpruefung.allowed",
+    "wissensbuch.py:admin_on": "Spark switch for the background step, Live and the admin page; per profile wissensbuch.allowed",
     "tasks.py:admin_on": "Spark switch; per profile features.allowed tasks, endpoints add features.blocked",
     "telegram.py:admin_on": "Spark-wide bot; per profile features.allowed / features.blocked",
     "tidy.py:admin_on": "Spark switch; per profile features.allowed tidy",

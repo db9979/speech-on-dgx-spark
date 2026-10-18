@@ -243,6 +243,7 @@ Own documents, memory, earlier conversations, Kiwix and Wikipedia, created docum
 | `app/panel/tagebuch.py` | Spark-Tagebuch: what the Spark itself did for a profile. |
 | `app/panel/wiki.py` | Wikipedia straight away: for "Was ist ...?" or "Wer war ...?" the panel asks Wikipedia for the best matching article and hands its short intro to the model, … |
 | `app/panel/wissen.py` | Knowledge from one's own uploads. |
+| `app/panel/wissensbuch.py` | Wissensbuch: the language model works each own document once into a few pages ("Auto", "Versicherungen", "Werkstatt Müller"), sentence by sentence and each s … |
 
 ### Connections
 
@@ -1551,7 +1552,7 @@ flowchart TD
 2. <a id="kn-vorbereiten-s2"></a>**Trim history, carry the lock**: The history is trimmed to its budget. If an answer from outside text is among the last three messages, this turn starts locked; older ones are not sent at all. When the person asks for a song in their own words, such an answer up to 7 messages back stays along as data (chords, style). A screen description only comes along as a fixed note and locks nothing.
 3. <a id="kn-vorbereiten-s3"></a>**Guest or unknown voice?**: Without a profile, or at an own speaker or phone when speech recognition did not clearly hear the profile's voice (on the phone: and no phone PIN was typed), there is only question and answer: no tool, no memory, no history. Whose voice it was only the panel itself sets, never the request.
 4. <a id="kn-vorbereiten-s4"></a>**The switch reads the question**: Fixed rules put the own latest message into a group. A new own request that does not point back at the answer from outside text leaves that answer and its lock out. If no rule knows the question, the model may pick once from a fixed list in parallel (when the admin has that on). A follow-up like „And tomorrow?“ takes the group of the own question before (intent.follow_up); hint words add their groups, also beside the model's pick. A photo with a wish to change it (bilder.wants_change) is the group pictures, without the model's pick.
-5. <a id="kn-vorbereiten-s5"></a>**Build the system prompt**: The admin's system prompt, plus the profile's length and style and a note per channel (watch, Siri, speaker, phone, Telegram, app, browser). With „Fast answer start“ what holds for this turn only goes with the question instead of the system prompt, so the server reads it from its cache. With „Trim a large memory“ a long memory keeps only the newest facts fixed in it (at most 6000 characters), plus up to 5 older ones that share words with the question, for this turn only (chat.memory_split).
+5. <a id="kn-vorbereiten-s5"></a>**Build the system prompt**: The admin's system prompt, plus the profile's length and style and a note per channel (watch, Siri, speaker, phone, Telegram, app, browser). With „Fast answer start“ what holds for this turn only goes with the question instead of the system prompt, so the server reads it from its cache. With „Trim a large memory“ a long memory keeps only the newest facts fixed in it (at most 6000 characters), plus up to 5 older ones that share words with the question, for this turn only (chat.memory_split). When the knowledge book is on and has pages, up to 40 page titles that fit the question best come along, as outside text (wissensbuch.hint).
 6. <a id="kn-vorbereiten-s6"></a>**Fixed sentence?**: Sentences like „Spark Notaus“, „report a problem: …“ or „that was wrong“ the panel carries out itself, only from the profile's own words and never over MCP. The model only says the result and gets no tool in this turn.
 7. <a id="kn-vorbereiten-s7"></a>**Answer to a question back?**: If the panel asked which device is meant, a button, a number or the name counts as the answer, only in the same conversation, from the own profile and within 2 minutes. „None of these“ brings the whole list, „No, the other one“ corrects the last choice. The panel carries out the choice and offers to remember it; a „yes“ to that counts for 15 minutes.
 8. <a id="kn-vorbereiten-s8"></a>**Kill switch or my kill switch?**: From kill switch stage 2 or with the profile's own kill switch every waiting proposal is dropped; no „yes“ carries anything out. Reading and answering go on.
@@ -1890,7 +1891,7 @@ flowchart TD
 3. <a id="kn-werkzeuge-s3"></a>**Kill switch holds it?**: The kill switch is read for every call, so it also applies in the middle of an answer. From stage 1 the tools that go to the internet by themselves are locked; from stage 2 or with the profile's own kill switch every tool that changes something.
 4. <a id="kn-werkzeuge-s4"></a>**Outside text read?**: When this answer already read text from outside, nothing may change the home, the memory, appointments or reminders any more. After a mail web search is closed too, also after own documents (except with „search locally first“, then only with the question's own words). A song the person asks for stays open after outside text (own), not after mail.
 5. <a id="kn-werkzeuge-s5"></a>**Service gone right now?**: When the service watch sees this tool's service down (and its switch is on), a fixed sentence with the time of the outage comes at once instead of a try. Web search checks further down and then can fall back to the own archive.
-6. <a id="kn-werkzeuge-s6"></a>**Mark reading**: Tools that bring outside text (web search, documents, calendar, earlier conversations, camera) set the mark before they run. From then on the locks of step 4 hold for the rest of the answer.
+6. <a id="kn-werkzeuge-s6"></a>**Mark reading**: Tools that bring outside text (web search, documents, calendar, earlier conversations, camera) set the mark before they run. From then on the locks of step 4 hold for the rest of the answer. With the knowledge book document_search brings the fitting page first, then the passages; both are outside text.
 7. <a id="kn-werkzeuge-s7"></a>**Run the tool**: Extensions get profile, device and origin from the panel, never from the model. Smart home changes need the code word in the latest message when one is set. Connections to outside services go through the guard.
 8. <a id="kn-werkzeuge-s8"></a>**Errors as a sentence**: When a service cannot be reached, it becomes a short result text („not reachable“, „search failed, do not guess“). An offered tool without a matching setup answers „unknown“.
 9. <a id="kn-werkzeuge-s9"></a>**Wrap the result as data**: Outside text gets a fixed note in front and stands between markers it cannot close itself. Home Assistant states with free text (titles, lists) count as outside too. With „Faster web search“ the long note stands once per answer, before every further block a short one with the same rule (chat.OUTSIDE_AGAIN); the markers always stay.
@@ -2027,6 +2028,13 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 | Earlier conversations | history_search by words | own profile |
 | Kiwix | archive_search and wikipedia via the own Kiwix in the home network | all profiles, never guests |
 | Look locally first | full text without waiting for models, before the first round | as the request's tools |
+| Knowledge book | document_search: fitting pages before the passages | own profile, own documents only |
+
+#### Knowledge book
+
+- In quiet minutes the language model gets an own document in numbered passages and at most 5 existing pages the panel picks by words shared with title, sender and tags. The model proposes sentences as JSON, each with the number of its passage.
+- The panel keeps a sentence only when its passage exists, every number and date in it stands in the passage, it has at most 400 characters and holds neither link nor command. If it says the same as a sentence of the page with another number, both stay as a contradiction. One document changes at most 5 pages.
+- On a question document_search puts the best fitting pages before the passages, each sentence with its source. The pages are outside text like the documents.
 
 #### Look locally first
 
@@ -2046,6 +2054,8 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - **8.5 GiB** free memory for the vector model to start ([step 3](#kn-wissen-s3))
 - **1.5 GiB** the same on a panel computer (Spark teilen) ([step 3](#kn-wissen-s3))
 - **3** hits at most with „Look locally first“ ([step 5](#kn-wissen-s5))
+- **5** pages one document may change in the knowledge book ([step 13](#kn-wissen-s13))
+- **300** pages in the knowledge book per profile ([step 13](#kn-wissen-s13))
 
 #### Settings
 
@@ -2053,6 +2063,7 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - Features → Own documents and below it Re-rank hits on: with model size and the longest wait.
 - Features → Own documents and below it Document card and tags on: search by tags and kind.
 - Features → Own documents and below it Shared documents on: documents „for everyone“.
+- Features → Own documents and below it Knowledge book on: pages from the own documents, with how many documents a day.
 
 #### What you see
 
@@ -2071,9 +2082,10 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - `app/panel/wissen.py` `recent_window`: „noted lately“ as a fixed rule ([step 11](#kn-wissen-s11))
 - `app/panel/wissen.py` `where`: source of a passage for the model ([step 13](#kn-wissen-s13))
 - `app/panel/lokal.py` `look`: the quick look before the answer ([step 5](#kn-wissen-s5))
+- `app/panel/wissensbuch.py` `answer_block`: fitting pages of the knowledge book with sources ([step 13](#kn-wissen-s13))
 - `app/panel/gedaechtnis.py` `hint_lines`: facts in three blocks ([step 13](#kn-wissen-s13))
 
-Self-tests: `test_wissen`, `test_nachsortieren`, `test_abschnitte`, `test_lokal`, `test_kiwix`, `test_gedaechtnis`, `test_suchpruefung`
+Self-tests: `test_wissen`, `test_nachsortieren`, `test_abschnitte`, `test_lokal`, `test_kiwix`, `test_gedaechtnis`, `test_suchpruefung`, `test_wissensbuch`
 
 ### Guard
 

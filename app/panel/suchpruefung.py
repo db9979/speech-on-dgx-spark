@@ -67,7 +67,7 @@ MORE_MAX = 3           # more right documents of a Sammelfrage
 SAMMEL_TOP = 5         # pieces the assistant gets from one search (wissen.search k=5)
 MAX_SAMMEL = 60        # Sammelfragen the model writes per profile
 SAMMEL_EVERY = 3       # every third attempt of the day tries a Sammelfrage first
-MODES = ("wort", "bedeutung", "gemischt", "nachsortiert")
+MODES = ("wort", "bedeutung", "gemischt", "nachsortiert")   # Sammelfragen also "wissensbuch" (the pages plus the mix)
 SOURCES = ("spark", "eigen", "antwort")
 _running = set()       # profiles being measured right now
 _last_click = {}       # uid or "admin" -> when "Jetzt prüfen" ran last
@@ -331,8 +331,10 @@ def _measure(uid, qs, vecs, fresh, embed_ms, mixed=None):
     """Every question through documents.search once per kind. Returns ({question id: result}, summary).
     A single question's result is the place of its document; a Sammelfrage's is how many of its documents were
     among the first SAMMEL_TOP ("von": how many it has). mixed: a dict that gets the mixed hits per question."""
+    import wissensbuch
     out, ms = {}, []
     modes = MODES if vecs is not None else ("wort", "gemischt")
+    book = wissensbuch.allowed(uid)
     for i, q in enumerate(qs):
         vec = vecs[i] if vecs is not None else None
         res = {"von": len(all_docs(q))} if is_sammel(q) else {}
@@ -344,6 +346,9 @@ def _measure(uid, qs, vecs, fresh, embed_ms, mixed=None):
             res[m] = _found(hits, q) if is_sammel(q) else _place(hits, q["doc"])
             if m == "gemischt" and mixed is not None:
                 mixed[q["id"]] = hits
+            if m == "gemischt" and book and is_sammel(q):     # what the assistant gets with the Wissensbuch on
+                cited = {s["doc"] for _, p in wissensbuch.search_pages(uid, q["q"]) for s in p["saetze"]}
+                res["wissensbuch"] = sum(1 for x in all_docs(q) if x in cited or x in {h["id"] for h in hits[:SAMMEL_TOP]})
             if m == "gemischt":
                 ms.append(took + (embed_ms if vec is not None else 0))
                 if q.get("page") and not is_sammel(q):
@@ -353,7 +358,7 @@ def _measure(uid, qs, vecs, fresh, embed_ms, mixed=None):
     many = [q for q in qs if is_sammel(q)]
     summary = {"n": len(one), "modes": {}}
     if many:
-        summary["sammel"] = {"n": len(many), "modes": {m: _sammel_sums(many, out, m) for m in modes}}
+        summary["sammel"] = {"n": len(many), "modes": {m: _sammel_sums(many, out, m) for m in modes + (("wissensbuch",) if book else ())}}
     for m in modes:
         places = [out[q["id"]][m] for q in one]
         summary["modes"][m] = {"top5": _pct(sum(1 for p in places if 0 < p <= 5), len(places)),
@@ -647,7 +652,7 @@ def admin_state():
         return {"on": False}
     profs = n = 0
     agg = {m: [0.0, 0.0, 0] for m in MODES}     # found in five, found first, questions measured
-    sagg = {m: [0.0, 0.0, 0] for m in MODES}    # Sammelfragen: all found, share found, questions measured
+    sagg = {m: [0.0, 0.0, 0] for m in MODES + ("wissensbuch",)}    # Sammelfragen: all found, share found, questions measured
     ms, last = [], 0
     for uid in profiles.user_ids():
         if not allowed(uid) or not os.path.exists(_path(uid)):

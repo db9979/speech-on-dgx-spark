@@ -465,6 +465,10 @@ async def due_once(idle=True, now=None):
             await asyncio.to_thread(documents.set_card, uid, doc, None, True)
             print("wissen: no steckbrief:", type(e).__name__, flush=True)
         return "brief"
+    import wissensbuch      # Wissensbuch (plan wissensbuch): one own document worked into the pages
+    got = await wissensbuch.due_once(now)
+    if got:
+        return got
     # context lines of the pieces (Stufe 2 of plan suche-schaerfen): before the vectors, which read them
     for uid in _readers():
         if not _docs_ok(uid) or not await asyncio.to_thread(documents.heads_left, uid):

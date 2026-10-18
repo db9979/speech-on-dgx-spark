@@ -240,11 +240,14 @@ async def run(t, name, args, st):
             if found:
                 return ("No passage matches the words, but these documents fit (their profiles):\n"
                         + "\n".join("- " + wissen.card_line(d) for d in found[:20]))
-        if hits:
-            refs = list({(h["id"], h["page"]): {"id": h["id"], "name": h["name"], "page": h["page"], "file": h["file"]} for h in hits}.values())
-            await t.out.put({"type": "docsources", "items": sorted({h["name"] for h in hits}), "refs": refs[:8]})
+        import wissensbuch      # Wissensbuch: the fitting pages first, each sentence with its source
+        book, brefs = await asyncio.to_thread(wissensbuch.answer_block, t.who["id"], query) if win is None else ("", [])
+        if hits or brefs:
+            refs = list({(h["id"], h["page"]): {"id": h["id"], "name": h["name"], "page": h["page"], "file": h["file"]}
+                         for h in brefs + hits}.values())
+            await t.out.put({"type": "docsources", "items": sorted({h["name"] for h in brefs + hits}), "refs": refs[:8]})
         dated = any(h.get("changed") for h in hits)
-        return ("\n\n".join(f"[{wissen.where(h)}]\n{h['text']}" for h in hits)
+        return ((book + "\n\n" if book else "") + "\n\n".join(f"[{wissen.where(h)}]\n{h['text']}" for h in hits)
                 + ("\n\n(Each passage names when it last changed; where passages disagree, the newer one counts, and say its date.)"
                    if dated and hits else "")) or "No matching passages in the documents. Say so; do not guess."
     if name == "document_list" and t.docs and t.who:

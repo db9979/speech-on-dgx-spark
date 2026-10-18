@@ -241,14 +241,15 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Wissen: how a question finds passages
     "wissen": {
-        "stand": "236ed4a86a",
+        "stand": "8886fc54a1",
         "bezug": {
             "lokal.MAX_HITS": ["s5"], "wissen.search": ["s1", "s8", "s9"], "documents.search": ["s5", "s6"],
             "documents._terms": ["s5"], "documents.match_docs": ["s4"], "docembed.query": ["s3"],
             "docembed._call": ["s3"], "nachsortieren.rank": ["s10"], "wissen.recent_window": ["s11"],
             "wissen.where": ["s13"], "lokal.look": ["s5"], "gedaechtnis.hint_lines": ["s13"],
             "regeln": ["s1", "s8"], "regel:Geteilte Dokumente": ["s8"], "regel:Gedächtnis": ["s13"],
-            "regel:Erst lokal suchen": ["s5"],
+            "regel:Erst lokal suchen": ["s5"], "regel:Wissensbuch": ["s13"], "wissensbuch.answer_block": ["s13"],
+            "wissensbuch.PAGES_PER_DOC": ["s13"], "wissensbuch.MAX_PAGES": ["s13"],
         },
         "kurz": ("Wissen ist alles, was der Spark selbst weiß, ohne ins Internet zu gehen: die hochgeladenen Dokumente "
                  "jedes Profils (eine SQLite-Datei wissen.db pro Profil), das Gedächtnis, frühere Gespräche, das eigene "
@@ -397,6 +398,7 @@ SEITEN = {
             [("Frühere Gespräche", "Earlier conversations"), ("history_search über Wörter", "history_search by words"), ("eigenes Profil", "own profile")],
             [("Kiwix", "Kiwix"), ("archive_search und wikipedia über das eigene Kiwix im Heimnetz", "archive_search and wikipedia via the own Kiwix in the home network"), ("alle Profile, nie Gäste", "all profiles, never guests")],
             [("Erst lokal suchen", "Look locally first"), ("Volltext ohne Warten auf Modelle, vor der ersten Runde", "full text without waiting for models, before the first round"), ("wie die Werkzeuge der Anfrage", "as the request's tools")],
+            [("Wissensbuch", "Knowledge book"), ("document_search: passende Seiten vor den Stellen", "document_search: fitting pages before the passages"), ("eigenes Profil, nur eigene Dokumente", "own profile, own documents only")],
         ],
         "zahlen": [
             ("{nachsortieren.CANDIDATES}", ("Kandidaten für das Nachsortieren", "candidates for re-ranking"), "nachsortieren.CANDIDATES"),
@@ -406,6 +408,8 @@ SEITEN = {
             ("{docembed.MIN_FREE_GIB} GiB", ("freier Speicher, damit das Vektormodell startet", "free memory for the vector model to start"), "docembed.MIN_FREE_GIB"),
             ("{docembed.MIN_FREE_PANEL_GIB} GiB", ("dasselbe auf einem Panel-Rechner (Spark teilen)", "the same on a panel computer (Spark teilen)"), "docembed.MIN_FREE_PANEL_GIB"),
             ("{lokal.MAX_HITS}", ("Treffer höchstens bei „Erst lokal suchen“", "hits at most with „Look locally first“"), "lokal.MAX_HITS"),
+            ("{wissensbuch.PAGES_PER_DOC}", ("Seiten, die ein Dokument im Wissensbuch ändern darf", "pages one document may change in the knowledge book"), "wissensbuch.PAGES_PER_DOC"),
+            ("{wissensbuch.MAX_PAGES}", ("Seiten im Wissensbuch pro Profil", "pages in the knowledge book per profile"), "wissensbuch.MAX_PAGES"),
         ],
         "einstellen": [
             ("Funktionen → Eigene Dokumente und darunter Bedeutungssuche an: Stellen bekommen einen Bedeutungsvektor "
@@ -418,6 +422,10 @@ SEITEN = {
              "Features → Own documents and below it Document card and tags on: search by tags and kind."),
             ("Funktionen → Eigene Dokumente und darunter Gemeinsame Dokumente an: Dokumente „Für alle“.",
              "Features → Own documents and below it Shared documents on: documents „for everyone“."),
+            ("Funktionen → Eigene Dokumente und darunter Wissensbuch an: Seiten aus den eigenen Dokumenten, dazu "
+             "wie viele Dokumente am Tag.",
+             "Features → Own documents and below it Knowledge book on: pages from the own documents, with how many "
+             "documents a day."),
         ],
         "sehen": [
             ("Zustand → Logs → Anfragen: der Schritt „Nachsortieren“ mit Zahl der Kandidaten, behaltenen Stellen und "
@@ -430,6 +438,26 @@ SEITEN = {
              "numbers only."),
         ],
         "mehr": [
+            (("Wissensbuch", "Knowledge book"), [
+                ("In ruhigen Minuten bekommt das Sprachmodell ein eigenes Dokument in nummerierten Stellen und höchstens "
+                 "{wissensbuch.CANDIDATES} bestehende Seiten, die das Panel nach gemeinsamen Wörtern mit Titel, "
+                 "Absender und Tags auswählt. Das Modell schlägt Sätze als JSON vor, jeden mit der Nummer seiner Stelle.",
+                 "In quiet minutes the language model gets an own document in numbered passages and at most "
+                 "{wissensbuch.CANDIDATES} existing pages the panel picks by words shared with title, sender and tags. "
+                 "The model proposes sentences as JSON, each with the number of its passage."),
+                ("Das Panel behält einen Satz nur, wenn seine Stelle existiert, jede Zahl und jedes Datum darin in der "
+                 "Stelle steht, er höchstens {wissensbuch.MAX_LEN} Zeichen hat und weder Link noch Befehl enthält. Sagt "
+                 "er dasselbe wie ein Satz der Seite mit anderer Zahl, bleiben beide als Widerspruch stehen. Ein Dokument "
+                 "ändert höchstens {wissensbuch.PAGES_PER_DOC} Seiten.",
+                 "The panel keeps a sentence only when its passage exists, every number and date in it stands in the "
+                 "passage, it has at most {wissensbuch.MAX_LEN} characters and holds neither link nor command. If it "
+                 "says the same as a sentence of the page with another number, both stay as a contradiction. One "
+                 "document changes at most {wissensbuch.PAGES_PER_DOC} pages."),
+                ("Bei einer Frage legt document_search die passendsten Seiten vor die Stellen, jeder Satz mit Quelle. "
+                 "Die Seiten sind Text von außen wie die Dokumente.",
+                 "On a question document_search puts the best fitting pages before the passages, each sentence with "
+                 "its source. The pages are outside text like the documents."),
+            ]),
             (("Erst lokal suchen", "Look locally first"), [
                 ("Vor der ersten Runde schaut das Panel selbst in Dokumente, Kiwix und frühere Gespräche, gleichzeitig "
                  "und nur kurz. Die Bedeutungssuche fährt nur mit, wenn ihr Modell schon läuft und frei ist; es wird "
@@ -460,10 +488,11 @@ SEITEN = {
             ("wissen.recent_window", ("„zuletzt notiert“ als feste Regel", "„noted lately“ as a fixed rule")),
             ("wissen.where", ("Herkunft einer Stelle für das Modell", "source of a passage for the model")),
             ("lokal.look", ("der kurze Blick vor der Antwort", "the quick look before the answer")),
+            ("wissensbuch.answer_block", ("passende Seiten des Wissensbuchs mit Quellen", "fitting pages of the knowledge book with sources")),
             ("gedaechtnis.hint_lines", ("Fakten in drei Blöcken", "facts in three blocks")),
         ],
         "tests": ["test_wissen", "test_nachsortieren", "test_abschnitte", "test_lokal", "test_kiwix", "test_gedaechtnis",
-                  "test_suchpruefung"],
+                  "test_suchpruefung", "test_wissensbuch"],
         "heute": [],
     },
 

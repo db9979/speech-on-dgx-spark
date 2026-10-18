@@ -216,6 +216,10 @@ FEATURES = (
       guide="suchpruefung"),
     F("nachsortieren", "Treffer nachsortieren", "Re-rank hits", "data", ("rerank",), parent="documents", me="docbox",
       guide="nachsortieren"),
+    # Wissensbuch (wissensbuch.py, plan wissensbuch after Karpathy's LLM Wiki): own documents worked once into pages
+    # with a source per sentence; the panel's fixed rules decide what stays, never the model
+    F("wissensbuch", "Wissensbuch", "Knowledge book", "data", ("knowledge_book",), parent="documents", me="docbox",
+      guide="wissensbuch"),
     F("suchfragen", "Prüffragen vom Spark", "Test questions by the Spark", "data", ("search_check_auto",),
       parent="suchpruefung", me="docbox", guide="suchfragen"),
     # everyday

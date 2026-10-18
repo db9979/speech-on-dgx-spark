@@ -552,6 +552,10 @@ async def prepare(request):
     if docs or shared_docs:
         system = per_turn(system, chat.docs_hint(who, docs, shared_docs, str(messages[-1].get("content") or ""),
                                                  wissen.on(who["id"], "brief")))
+        import wissensbuch
+        book = wissensbuch.hint(who["id"], str(messages[-1].get("content") or "")) if docs else ""
+        if book:
+            system = per_turn(system, book)
     docs = docs + shared_docs
     timers = bool(ccfg.get("reminders", True)) and not guest and bool(who) and features.allowed("reminders", who["id"], ccfg)
     if timers:

@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.772** · 2026-10-18 · Wissensbuch Stufe B: eigene Dokumente werden in ruhigen Minuten zu Seiten mit Quelle je Satz (Zahlenprobe, Widerspruch statt Überschreiben, „Stimmt nicht“), document_search bringt zuerst die passende Seite; Ich → Dokumente → Wissensbuch, Admin-Schalter ab Werk aus
 - **V01.0.771** · 2026-10-18 · Ordner auslassen, Stufe A: unter Ich → Dokumente → Ausgelassene Ordner unwichtige Ordner im Ordnerbaum auslassen oder Namen für überall festlegen („Archiv“, „Alt*“); der Spark liest sie nicht mehr, schon Gelesenes verlässt sofort Suche, „Erst lokal“ und Wissensbuch, am Ort bleibt alles; ersetzt „Unterordner auslassen“ je Wissensordner
 - **V01.0.770** · 2026-10-18 · Modelle messen: das Bild nebenher nur, wenn Bildmodell plus Reserve noch frei sind (bei Flash Next fiel der freie Speicher sonst auf 0,1 GiB)
 - **V01.0.769** · 2026-10-18 · Zustand → Modelle: Speicherbalken farbig pro Modell (Farbe je Art, System und Reserve grau, bei Bedarf gestreift), die Kacheln tragen dieselbe Farbe als Legende; iPhone-App mit demselben Balken; Fix: Qwen3.8 Flash Next wird ohne Denken gemessen (vorher „abgebrochen leer“)

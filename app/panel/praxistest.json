@@ -1772,6 +1772,13 @@
 "titel": "Ordner auslassen",
 "text": "A: Ich → Dokumente → Ausgelassene Ordner aufklappen (nur sichtbar mit Wissensordner): oben die Namensregeln, darunter die ausgelassenen Ordner, der Ordnerbaum und „Immer ausgelassen“. B: Im Ordnerbaum bei einem unwichtigen Unterordner „Auslassen“: die Rückfrage nennt die Zahl der Dokumente; „Nur diesen Ordner“. Danach fehlen seine Dokumente unter Ich → Dokumente und eine Frage dazu findet sie nicht mehr; auf der NAS ist alles noch da. C: Beim Wissensordner unter Ich → Speicher steht „Ordner ausgelassen“ unter „Ausgelassen“, und „Jetzt abgleichen“ liest ihn nicht. D: Namensregel „Alt*“ hinzufügen: jeder Ordner, der mit Alt beginnt, ist im Baum als „Namensregel“ markiert. E: „Wieder zulassen“: nach dem nächsten Abgleich sind die Dokumente wieder da. F: Hatte ein Wissensordner früher „Unterordner auslassen“, stehen diese Ordner jetzt in der Liste. G: Zustand → Live zeigt beim Wissensordner „… ausgelassen“ nur als Zahl.",
 "thread": "Ordner ausschließen"
+},
+{
+"id": "P277",
+"v": 772,
+"titel": "Wissensbuch",
+"text": "A: Admin: Funktionen → Eigene Dokumente → Wissensbuch an. B: Einige zusammengehörige Dokumente hochladen (z. B. Rechnungen und Versicherung des Autos) und ein paar ruhige Minuten warten. C: Ich → Dokumente → Wissensbuch: Seiten nach Art (Themen, Personen, Firmen …), „Lesen“ zeigt Sätze mit Dokument und Seite; ein Klick auf die Quelle öffnet das Dokument. D: Prüfen, ob jede Zahl in einem Satz wirklich im Dokument steht. E: „Stimmt nicht“ an einem Satz: er verschwindet und kommt nicht wieder. F: Im Chat „Was hat das Auto dieses Jahr gekostet?“: die Antwort nennt die Dokumente. G: Zustand → Live zeigt bei Wissensbuch Seiten, Sätze und wartende Dokumente, nie Titel.",
+"thread": "Wissensbuch nach Karpathy"
 }
 ]
 }
