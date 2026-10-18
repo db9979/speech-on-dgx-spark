@@ -1462,6 +1462,11 @@ def snapshot(view="admin", now=None):
                            f"{cht.get('call_minutes', 0)} min, {cht.get('call_iphone', 0)} auf dem iPhone geklingelt)"
                            + (" · Vermittler " + ("läuft" if cht.get("call_turn_ok") else "aus: " + (cht.get("call_turn_why") or "startet"))
                               if cht.get("call_turn") else "")
+                           + (f" · per Assistent heute {cht.get('call_assist_asked', 0)} gefragt, {cht.get('call_assist_started', 0)} "
+                              f"gestartet, {cht.get('call_assist_sent', 0)} aufs Handy, {cht.get('call_assist_phone', 0)} übers Telefon, "
+                              f"{cht.get('call_assist_refused', 0)} abgelehnt" + (f", {cht['call_assist_waiting']} wartet"
+                                                                                 if cht.get("call_assist_waiting") else "")
+                              if cht.get("call_assist") else "")
                            if cht.get("call_on") else ""))
         if x["id"] == "taten":  # Taten prüfen, Fehlerschleife: counts of today, never a sentence
             x["sub"] = (f"{tat.get('held', 0)} Sätze zurückgehalten · {tat.get('loop', 0)} Schleifen gestoppt heute"

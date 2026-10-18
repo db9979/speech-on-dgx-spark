@@ -1953,6 +1953,13 @@
 "titel": "Wer rechnet gerade (CPU je Dienst)",
 "text": "A: Zustand → Monitoring → Rechner: in beiden Karten unter CPU die Zeile „Wer rechnet gerade“ mit Balken je Dienst und „System und Rest“; beim Panel eingerückt seine Teile (z. B. Anfragen und Seiten). B: Eine Frage stellen oder Dokumente einlesen lassen: oben in der Kachel steht „am meisten: …“ mit dem Dienst, der gerade rechnet (z. B. Sprachmodell oder Panel · Bedeutungssuche). C: Nach ein paar Minuten zeigt der Farbstreifen darunter, wer wann am meisten rechnete (grau = Leerlauf). D: Zustand → Live: die Kästen Modell-Rechner und Panel-Rechner nennen „am meisten …“. E: Steuerzentrale am Bildschirm: die letzte Zeile jedes Rechners beginnt mit „▶ Dienst N %“. F: iPhone-App, Zustand → Monitoring: dieselbe Liste in der Rechner-Karte.",
 "thread": "CPU je Dienst im Monitoring"
+},
+{
+"id": "P303",
+"v": 803,
+"titel": "Anrufe per Assistent",
+"text": "A: Funktionen → Chats → „Anrufe per Assistent“ an (braucht „Anrufe (Sprache und Video)“). B: Im Panel dem Assistenten „Videoanruf mit <Name>“ sagen: er fragt „Soll ich <Name> per Spark-Videoanruf anrufen?“, darunter die Karte „Wartet auf dein Ja: Anruf“. „Ja“: Chats öffnet sich und der Videoanruf klingelt bei der anderen Person. C: Dasselbe mit „Nein“: nichts passiert. D: Am Lautsprecher „Ruf <Name> an“, dann „Ja“: aufs Handy kommt „📞 <Name> anrufen“; antippen, unten steht „<Name> anrufen? · Anrufen · Nicht jetzt“, „Anrufen“ startet den Anruf. E: iPhone-App (neuer TestFlight-Build): „Ruf <Name> an“, „Ja“: Apples Anruf-Fenster startet den Anruf. F: Android-App 1.4.2: „Ruf <Kontakt> übers Telefon an“ (Kontakt aus Ich → Kontakte), „Ja“: die Telefon-App öffnet sich mit der Nummer. G: Zustand → Live, Kachel Chats: „per Assistent heute … gefragt, … gestartet …“; Zustand → Logs, Bereich chats: „call assistant …“ ohne Namen.",
+"thread": "Anrufe, Videoanrufe, Nachrichten an andere Nutzer"
 }
 ]
 }

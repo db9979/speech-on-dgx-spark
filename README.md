@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.803** · 2026-10-18 · Calls by the assistant: "Call Sabine" or "Video call Sabine" calls through Chats after your yes; from a speaker, the phone or Telegram the call comes to your phone as a note (one tap calls); on Android also "Call Mum by phone" with your own contacts (app 1.4.2); switch off
 - **V01.0.802** Monitoring shows who is computing now: CPU per service on both computers, per part inside the panel, strip of the last 20 minutes; also in Live, the control centre and the iPhone
 - **V01.0.801** The meaning search computes only in spare time on at most half of the cores; speech comes first
 - **V01.0.800** Speech output with several at once: finer measurement, three settings to try
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.796** Language model switch also on the control centre and the case display
 - **V01.0.795** Fix: meaning search no longer stops with "does not match its commit"
 - **V01.0.794** Fix: self-test for bypassing the guard green again
-- **V01.0.793** Language model switch and start visible: steps, banner, Live, a sentence in the chat
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

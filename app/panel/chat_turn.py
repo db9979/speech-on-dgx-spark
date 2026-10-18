@@ -86,7 +86,8 @@ def waiting_mods():
     import messages as inbox   # (messages is the conversation in prepare)
     import tasks
     import roomfar
-    return (calendars, tidy, tasks, fixes, agent, inbox, roomfar, meinmcp, hamelden, aendern, nasablage)
+    import rufen
+    return (calendars, tidy, tasks, fixes, agent, inbox, roomfar, meinmcp, hamelden, aendern, nasablage, rufen)
 
 
 class Turn:
@@ -659,8 +660,10 @@ async def prepare(request):
     # ticking off a list entry ... (extras.py): the module waiting for a yes in this conversation
     xprop = None
     if who and messages[-1]["role"] == "user" and not prop and not mprop and not mcp and not act_held and not kl_took:
+        import android as android_app   # its user agent: the Android app's page (rufen.py dials a number only there)
         xprop = await extras.answer({"who": who, "own": own_browser, "src": src, "client": body.get("client"), "private": private_ok,
                                      "app": app_key, "device": (profiles.device_name(request) or "")[:40],
+                                     "android": bool(android_app.UA.search(request.headers.get("user-agent", ""))),
                                      "ha": ha, "ha_code": ha_code, "ha_code_ok": ha_code_ok}, messages[-1]["content"])
         if xprop:
             if xprop.get("event"):
@@ -750,7 +753,8 @@ async def prepare(request):
         import agent
         import messages as inbox   # (messages is the conversation here)
         import tasks
-        for mod in (calendars, tidy, tasks, fixes, agent, inbox, roomfar, hamelden, meinmcp, gedaechtnis, aendern, nasablage):
+        import rufen
+        for mod in (calendars, tidy, tasks, fixes, agent, inbox, roomfar, hamelden, meinmcp, gedaechtnis, aendern, nasablage, rufen):
             if xprop and xprop.get("proposed") == mod.__name__:
                 continue   # the panel made this proposal from this very message (agent: „Sag mir Bescheid, wenn …“)
             p = mod.pending(who["id"])
@@ -792,6 +796,9 @@ async def prepare(request):
     if mcp:   # only what the connection was given (mcpserver.ASK_TOOLS), never more than the rights above left
         tools = [t for t in tools if t["function"]["name"] in mcp["tools"]]
     if pics or role_cmd:
+        tools = []
+    if xprop and xprop.get("quiet") and tools:   # the panel answered by a fixed rule (rufen.py): the model only says it
+        print(f"chat: fester Weg {xprop.get('proposed', '')} - {len(tools)} Werkzeuge nicht angeboten", flush=True)
         tools = []
     if guest and tools:   # the fixed rule above, once more as a net: whatever offered something, a guest gets no tool
         print(f"chat: guest - {len(tools)} tools withheld, only questions and answers", flush=True)

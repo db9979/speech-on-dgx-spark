@@ -1742,8 +1742,15 @@ def _call_live():
         a = anrufe.for_live()
     except Exception:
         a = {}
+    try:
+        import rufen
+        r = rufen.for_live()
+    except Exception:
+        r = {}
     return {"call_on": bool(a.get("on")), **{"call_" + k: a[k] for k in ("talking", "ringing", "today", "talked", "missed",
-                                                                         "minutes", "iphone", "turn", "turn_ok", "turn_why") if k in a}}
+                                                                         "minutes", "iphone", "turn", "turn_ok", "turn_why") if k in a},
+            "call_assist": bool(r.get("on")), **{"call_assist_" + k: r[k] for k in ("asked", "started", "sent", "phone", "refused",
+                                                                                     "waiting") if k in r}}
 
 
 def _private_live():
@@ -2082,7 +2089,7 @@ def _state(uid):
             "receipts": s.get("chat_receipts", True) is not False, "push_text": s.get("chat_push_text") is True,
             "max_members": MAX_MEMBERS, "media": media_ok(uid), "invite": invite_on(), "private": _private_ok(uid),
             "invite_switch": features._switch(features.chat_cfg(), "chats_invite"),
-            **_far_state(uid), "calls": _calls_ok(uid),
+            **_far_state(uid), "calls": _calls_ok(uid), "ruf": _ruf(uid),
             "limits": {"photo_mb": MAX_PHOTO_IN // 1024**2, "file_mb": MAX_FILE // 1024**2, "voice_secs": MAX_VOICE_SECS,
                        "used_mb": round(used(uid) / 1024**2), "quota_mb": QUOTA // 1024**2}}
 
@@ -2108,6 +2115,12 @@ def _far_people(uid):
 def _calls_ok(uid):
     import anrufe
     return anrufe.admin_on() and anrufe.usable(uid)
+
+
+def _ruf(uid):
+    """A call the assistant kept for this profile (rufen.py): the page and the apps show „Anrufen“ for it."""
+    import rufen
+    return rufen.ready_for(uid)
 
 
 def _private_ok(uid):

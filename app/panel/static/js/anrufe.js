@@ -59,6 +59,17 @@ window.anStart=async video=>{if(AN.call)return;const cid=CX.cur,d=CX.data;if(!ci
     if(r.state!=='ring'){anClean(r.state==='busy'?t('Besetzt.','Busy.'):t('Nimmt gerade nicht ab.','Not answering right now.'));return}
     AN.call=r.call;anState(t('Klingelt …','Ringing …'));anTone('out')}
   catch(e){anClean();cxSay(cxTr(e.message))}};
+// ---------------------------------------------------------------- Anrufe per Assistent (rufen.py)
+// After the person's yes the answer brings {type:'anruf', id, name, video}: Chats opens that chat and the ordinary call
+// starts there (its news come over the Chats stream). A call the assistant sent from a device without a screen waits on
+// the Spark (/api/chats "ruf"): a bar with „Anrufen“ (one tap starts it) and „Nicht jetzt“ (gone on every device).
+const anCid=/^c[0-9a-f]{12}$/;
+window.anFromAssistant=async ev=>{if(AN.call||!ev||!anCid.test(String(ev.id||'')))return;anBar(null);
+  showSec('chats');await cxOpen(ev.id);if(CX.cur!==ev.id||!CX.data)return;anStart(!!ev.video)};
+window.anBar=r=>{const b=anEl('anbar');if(!r||AN.call||!anCid.test(String(r.id||''))){b.hidden=true;AN.bar=null;return}
+  AN.bar=r;anEl('anbartext').textContent=(r.video?'🎥 ':'📞 ')+String(r.name||'').slice(0,60)+t(' anrufen?',': call now?');b.hidden=false};
+anEl('anbargo').addEventListener('click',()=>{const r=AN.bar;if(r)anFromAssistant(r)});
+anEl('anbarno').addEventListener('click',async()=>{anBar(null);try{await api('/api/anrufe/bereit',{method:'DELETE'})}catch{}});
 async function anAnswer(video){const call=AN.call;if(!call||AN.pc)return;anToneStop();
   try{AN.servers=(await cxApi('/api/anrufe/ice')).servers||[];AN.local=await anMedia(video);AN.video=video&&AN.local.getVideoTracks().length>0;
     if(AN.call!==call)return;anPc();anShow(t('Verbinde …','Connecting …'));

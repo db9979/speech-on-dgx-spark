@@ -448,6 +448,7 @@ ADMIN_ON_OK = {
     "verbund.py:admin_on": "Spark switch; per profile verbund.usable (features.allowed)",
     "verbund.py:media_on": "Spark switch: whether this Spark takes files from other Sparks at all; per profile verbund.media_ok (features.allowed)",
     "anrufe.py:admin_on": "Spark switch; per profile anrufe.usable (features.allowed)",
+    "rufen.py:admin_on": "Spark switch: whether the panel looks for „Ruf … an“ at all (Live, answer); per profile rufen.usable (features.allowed)",
     "verbundgruppe.py:admin_on": "Spark switch: whether this Spark takes group requests of other Sparks at all; per profile verbundgruppe.usable (features.allowed)",
     "anrufe.py:turn_on": "Spark-wide: the Vermittler (coturn) runs for the whole Spark, no profile",
     "vorab.py:admin_on": "Spark switch; per profile vorab.on (features.allowed)",

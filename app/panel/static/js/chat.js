@@ -281,6 +281,9 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
         else if(ev.type==='choice'){chcards.push(ev)}   // the panel asks which one (klaeren.py)
         else if(ev.type==='step'){steps.push(ev)}   // Ablauf zeigen (ablauf.py): tool name, ok and time, never what it found
         else if(ev.type==='confirm'){confirms.push(ev)}   // Freigabe-Karte: a proposal of this answer waits for "Ja"
+        else if(ev.type==='anruf'){if(window.anFromAssistant)setTimeout(()=>anFromAssistant(ev),1500)}   // Anrufe per Assistent (rufen.py): after the yes
+        else if(ev.type==='waehlen'){const n=String(ev.number||'');   // „übers Telefon“: only inside the Android app, the phone app dials after a tap
+          if(/SparkAndroid\//.test(navigator.userAgent)&&/^\+?[0-9][0-9 \/()\-]{2,28}$/.test(n))location.href='tel:'+n.replace(/[^0-9+]/g,'')}
         else if(ev.type==='rate'){rateId=ev.id}
         else if(ev.type==='wbuch'){wbId=ev.id}
         else if(ev.type==='more'){more=ev}   // the panel's sentences under the answer (saetze.js)   // 👍/👎 for this answer (faelle.py, bewerten.js)

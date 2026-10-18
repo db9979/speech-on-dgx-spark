@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "vorbereiten": {
-        "stand": "2fb29a38cf",
+        "stand": "22ef7aeda9",
         "bezug": {
             "klaeren.MAX_BUTTONS": ["s7"], "chat_turn.prepare": ["s1", "s13"], "chat_turn.shared_stranger": ["s3"],
             "chat.left_out": ["s2", "s4"], "notaus.locked_tools": ["s11"], "chat_turn.notaus_note": ["s8", "s11"],
@@ -115,11 +115,11 @@ SEITEN = {
                "proposal is dropped; no „yes“ carries anything out. Reading and answering go on."),
               ("info", "ja", ("nur lesen, kein Ja", "read only, no yes"))),
             S("s9", "schritt", ("Ja zu einem Vorschlag", "Yes to a proposal"),
-              ("Kalender, Postfach, Listen, Gedächtnis", "calendar, mailbox, lists, memory"),
+              ("Kalender, Postfach, Listen, Gedächtnis, Anruf", "calendar, mailbox, lists, memory, call"),
               ("Wartet ein Vorschlag aus diesem Gespräch (ein Termin, eine Mail-Änderung, ein Listeneintrag, eine "
-               "Korrektur), entscheidet das Panel über das „Ja“. Ein Ja bestätigt genau eine Sache; jede Antwort "
+               "Korrektur, ein Anruf), entscheidet das Panel über das „Ja“. Ein Ja bestätigt genau eine Sache; jede Antwort "
                "erledigt alle anderen wartenden Vorschläge dieses Gesprächs.",
-               "If a proposal of this conversation waits (an appointment, a mail change, a list entry, a correction), "
+               "If a proposal of this conversation waits (an appointment, a mail change, a list entry, a correction, a call), "
                "the panel decides on the „yes“. One yes confirms exactly one thing; every answer settles all other "
                "waiting proposals of this conversation.")),
             S("s10", "schritt", ("Werkzeuge nach Rechten", "Tools by rights"),
@@ -139,10 +139,12 @@ SEITEN = {
             S("s11", "frage", ("Etwas nimmt Werkzeuge weg?", "Something takes tools away?"),
               ("Notaus · MCP · Bild · Gast", "kill switch · MCP · picture · guest"),
               ("Der Notaus nimmt Werkzeuge ins Internet oder ändernde weg, „Spark fragen“ über MCP behält nur die "
-               "Werkzeuge der Verbindung, ein Bild oder ein fester Satz lässt keines übrig. Für einen Gast wird die "
+               "Werkzeuge der Verbindung, ein Bild, ein fester Satz oder ein fester Weg des Panels "
+               "(Anrufe per Assistent, rufen.py) lässt keines übrig. Für einen Gast wird die "
                "Liste noch einmal geleert, egal was sie gefüllt hat.",
                "The kill switch takes away tools to the internet or that change things, „Ask Spark“ over MCP keeps "
-               "only the connection's tools, a picture or a fixed sentence leaves none. For a guest the list is "
+               "only the connection's tools, a picture, a fixed sentence or a fixed panel path "
+               "(calls by the assistant, rufen.py) leaves none. For a guest the list is "
                "emptied once more, whatever filled it."),
               ("info", "ja", ("weniger oder keine Werkzeuge", "fewer or no tools"))),
             S("s12", "schritt", ("Weiche grenzt ein", "The switch narrows"),

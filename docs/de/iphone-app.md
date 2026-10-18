@@ -125,6 +125,8 @@ Seit V01.0.654 können die Chats in der App so viel wie im Panel: Änderungen ko
 
 Seit V01.0.652 telefoniert die App selbst: Im Chat zu zweit auf diesem Spark stehen oben 📞 und 🎥. Kommt ein Anruf, klingelt das iPhone wie bei einem normalen Anruf, auch gesperrt und bei geschlossener App (Apples Anruf-Bildschirm mit „Spark“). Im Gespräch: Stumm, Kamera aus, Kamera wechseln, Lautsprecher, Auflegen. Der Anruf steht danach im Chat („📞 Anruf · 3:12“, „Verpasster Anruf“, „Anruf abgelehnt“); in die Anrufliste der Telefon-App kommt er bewusst nicht. Ist die App offen, klingelt sie auch ohne Apples VoIP-Push (seit V01.0.705): Sie hört die Nachrichten des Spark selbst mit. Es gelten dieselben festen Regeln wie im Browser (nur wer Nachrichten von dir annimmt, nicht in der Ruhezeit, 45 Sekunden Klingeln); das andere Ende kann ein Browser, die Android-App oder ein iPhone sein. Nimmt ein anderes Gerät desselben Profils ab, hört das iPhone auf zu klingeln.
 
+Mit **Anrufe per Assistent** (V01.0.803) startet „Ruf Sabine an“ und das „Ja“ im Assistenten der App den Anruf gleich über Apples Anruf-Fenster. Hat man vom Lautsprecher oder Telefon aus angerufen, fragt die App beim Öffnen „Sabine anrufen?“. „Ruf Mama übers Telefon an“ geht wie bisher über die iPhone-Kontakte.
+
 Braucht: **Funktionen → Chats → Anrufe (Sprache und Video)** (Admin, von unterwegs zusätzlich „Anrufe von unterwegs“) und **Push an die iPhone-App** (sonst klingelt es nur bei offener App), außerdem den nächsten TestFlight-Build. Beim ersten Anruf fragt das iPhone nach Mikrofon und Kamera.
 
 ## Wo gerade zugehört wird (Raum-Modus)

@@ -278,6 +278,10 @@ FEATURES = (
       guide="anrufe"),
     F("anrufeturn", "Anrufe von unterwegs", "Calls when away", "day", ("calls_turn",), parent="anrufe",
       guide="anrufeturn"),
+    # rufen.py (Dominik 2026-10-18): „Ruf Sabine an“ to the assistant, a call after the person's yes; on Android also
+    # „übers Telefon“ with the own address book
+    F("anrufassistent", "Anrufe per Assistent", "Calls by the assistant", "day", ("calls_assistant",), parent="anrufe",
+      guide="anrufassistent"),
     F("calendar", "Kalender", "Calendar", "day", ("calendar",), me="calbox", guide="calendar"),
     F("weather", "Wetter", "Weather", "day", ("weather",), me="wxbox", guide="weather"),
     # feeds.py (Dominik 2026-10-17, plan reddit/plan.md): own Reddit inbox, subreddits and other feeds, read only

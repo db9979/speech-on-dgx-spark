@@ -302,6 +302,7 @@
     "chats_calls": false,
     "calls_turn": false,
     "calls_turn_host": "",
+    "calls_assistant": false,
     "history_one": false,
     "history_offline": false,
     "app_cache": true,

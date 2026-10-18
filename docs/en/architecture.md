@@ -310,6 +310,7 @@ Apps, Telegram, watch, speakers, room mode, chats and the history on all devices
 | `app/panel/room.py` | Room mode: the assistant listens to the conversation in the room and helps in a pause. |
 | `app/panel/roomfar.py` | Room mode on another device of the profile, by voice or chat: "Raummodus im Wohnzimmer an". |
 | `app/panel/roomlive.py` | Where room mode listens right now. |
+| `app/panel/rufen.py` | Anrufe per Assistent: „Ruf Sabine an“, „Videoanruf mit Sabine“, „Ruf Mama übers Telefon an“. |
 | `app/panel/speakers.py` | Speaker identification for profiles (optional; off unless the admin enables it). |
 | `app/panel/spkcode.py` | Code word at an own speaker in a room. |
 | `app/panel/sse.py` | Server-sent events to open pages and apps (one source for chats.py and verlauf.py): per key (a profile) a few streams, each with its own queue on its own eve … |
@@ -525,6 +526,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `users/ID/mail-pending.json` | Waiting for yes | Queue | – | yes | – |
 | `users/ID/mcp-dienste-pending.json` | Waiting for yes | Queue | – | yes | – |
 | `users/ID/messages-pending.json` | Waiting for yes | Queue | – | no | – |
+| `users/ID/rufen-pending.json` | Call waiting for yes | Queue | – | yes | – |
 | `users/ID/tasks-pending.json` | Waiting for yes | Queue | – | yes | – |
 | `users/ID/tagebuch.json` | Spark diary | State | – | yes | – |
 | `users/ID/gesundheit.json` | Steps, pulse and sleep from the Pebble watch (30 days) | Health | sealed | yes | – |
@@ -1569,9 +1571,9 @@ flowchart TD
 6. <a id="kn-vorbereiten-s6"></a>**Fixed sentence?**: Sentences like „Spark Notaus“, „report a problem: …“ or „that was wrong“ the panel carries out itself, only from the profile's own words and never over MCP. The model only says the result and gets no tool in this turn.
 7. <a id="kn-vorbereiten-s7"></a>**Answer to a question back?**: If the panel asked which device is meant, a button, a number or the name counts as the answer, only in the same conversation, from the own profile and within 2 minutes. „None of these“ brings the whole list, „No, the other one“ corrects the last choice. The panel carries out the choice and offers to remember it; a „yes“ to that counts for 15 minutes.
 8. <a id="kn-vorbereiten-s8"></a>**Kill switch or my kill switch?**: From kill switch stage 2 or with the profile's own kill switch every waiting proposal is dropped; no „yes“ carries anything out. Reading and answering go on.
-9. <a id="kn-vorbereiten-s9"></a>**Yes to a proposal**: If a proposal of this conversation waits (an appointment, a mail change, a list entry, a correction), the panel decides on the „yes“. One yes confirms exactly one thing; every answer settles all other waiting proposals of this conversation.
+9. <a id="kn-vorbereiten-s9"></a>**Yes to a proposal**: If a proposal of this conversation waits (an appointment, a mail change, a list entry, a correction, a call), the panel decides on the „yes“. One yes confirms exactly one thing; every answer settles all other waiting proposals of this conversation.
 10. <a id="kn-vorbereiten-s10"></a>**Tools by rights**: Each tool group comes only with the admin's switch, the release for the profile and its own data: search, memory, history, documents, smart home, reminders, calendar, mail. Telegram, the iPhone app and CarPlay can only make it narrower, never wider. Another recognized voice at this device gets nothing personal. A message that only asks („Do you know my brother's name?“: one sentence with a question mark, nothing to remember) gets no memory_save (chat.offer_memory), so no made-up fact is saved.
-11. <a id="kn-vorbereiten-s11"></a>**Something takes tools away?**: The kill switch takes away tools to the internet or that change things, „Ask Spark“ over MCP keeps only the connection's tools, a picture or a fixed sentence leaves none. For a guest the list is emptied once more, whatever filled it.
+11. <a id="kn-vorbereiten-s11"></a>**Something takes tools away?**: The kill switch takes away tools to the internet or that change things, „Ask Spark“ over MCP keeps only the connection's tools, a picture, a fixed sentence or a fixed panel path (calls by the assistant, rufen.py) leaves none. For a guest the list is emptied once more, whatever filled it.
 12. <a id="kn-vorbereiten-s12"></a>**The switch narrows**: With „Targeted tool choice“ only the question's group stays. Then the panel decides whether to search locally first, whether it does a clear fetch itself and which tool the first round must call. With „Fast answer start“ a recognized group always gets the same list in the same order, so the server keeps one start per group in its cache; only an unclear question sees the full list.
 13. <a id="kn-vorbereiten-s13"></a>**Turn ready**: The system prompt goes first, with the tools and the lock rule. The kill switch is read again for every tool call: triggered during an answer, it holds the next call off.
 

@@ -1,6 +1,26 @@
 {
   "sourceLanguage": "de",
   "strings": {
+    "%@ anrufen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Call %@?"
+          }
+        }
+      }
+    },
+    "%@ per Videoanruf anrufen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Video call %@?"
+          }
+        }
+      }
+    },
     "Solange antwortet das Sprachmodell nicht; der Chat sagt das mit der erwarteten Zeit.": {
       "localizations": {
         "en": {

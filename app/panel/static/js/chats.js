@@ -45,6 +45,7 @@ function cxBadge(){const n=(CX.S&&CX.S.chats||[]).reduce((a,c)=>a+(c.mute?0:c.un
 async function cxLoad(){const t0=performance.now();if(!CX.S){const k=merkGet('chats');if(k&&k.d&&k.d.on){CX.S=k.d;cxBadge();if(CX.shown){cxEl('cxoff').hidden=true;cxEl('cxsplit').hidden=false;cxList()}}}
   try{CX.S=await cxApi('/api/chats')}catch(e){return}
   merkPut('chats',CX.S);merkTime('chats',t0);
+  if(window.anBar)anBar(CX.S.ruf);   // a call the assistant kept for this profile (rufen.py)
   cxBadge();if(!CX.shown)return;
   if(!CX.S.on){cxOff();return}
   cxEl('cxoff').hidden=true;cxEl('cxsplit').hidden=false;cxList()}

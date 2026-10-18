@@ -199,6 +199,7 @@ MODULE = {
     "verbund": ("geraete", "Spark-Verbund: Chats mit Menschen auf anderen Sparks, signiert, mit Fotos und Dateien"),
     "verbundgruppe": ("geraete", "Gruppen mit anderen Sparks: die Gruppe gehört ihrem Spark, der sie an die anderen weiterreicht"),
     "anrufe": ("geraete", "Anrufe mit Sprache und Video in Chats zu zweit, Vermittler (TURN) für unterwegs"),
+    "rufen": ("geraete", "Anrufe per Assistent: „Ruf Sabine an“ nach festen Regeln, erst nach Ja; Android auch übers Telefon"),
     "chatsec": ("geraete", "Private Chats mit Ende-zu-Ende-Verschlüsselung"),
     "messages": ("geraete", "Der Weg des Assistenten in die Chats"),
     "verlauf": ("geraete", "Verlauf auf allen Geräten gleich"),

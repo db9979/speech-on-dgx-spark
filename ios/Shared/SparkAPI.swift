@@ -16,6 +16,7 @@ enum ChatEvent {
     case reminderSet(Reminder)
     case reminderCancel([String])
     case action(kind: String, target: String)   // iphone_action: "navigate" or "call"
+    case sparkCall(chat: String, name: String, video: Bool)   // Anrufe per Assistent (rufen.py): after the yes, start this call
     case face(String)       // what the answer is doing, for the face: search, calendar, mail, home, memory, happy, error
     case rate(String)       // 👍/👎 may go under this answer (only when the profile's switch is on): its id
     case picture(job: String, prompt: String)   // a picture is painted for this answer (bilder.py): its job
@@ -857,6 +858,11 @@ struct SparkAPI {
                             }
                         case "iphone":
                             if let kind = ev["kind"] as? String, let target = ev["target"] as? String { cont.yield(.action(kind: kind, target: target)) }
+                        case "anruf":
+                            // only a chat id of the Spark ("c" and 12 hex digits); the name is shown as plain text
+                            if let c = ev["id"] as? String, c.range(of: "^c[0-9a-f]{12}$", options: .regularExpression) != nil {
+                                cont.yield(.sparkCall(chat: c, name: String((ev["name"] as? String ?? "").prefix(60)), video: ev["video"] as? Bool == true))
+                            }
                         case "bild":
                             // only a job id of 12 hex digits; the prompt is shown as plain text, never as markup
                             if let j = ev["job"] as? String, Self.isJob(j) {

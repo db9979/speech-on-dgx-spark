@@ -152,7 +152,7 @@ OHNE = {
         "telegram_panel_url",
         "agent", "agent_mcp", "agent_plan", "agent_watch", "app_cache", "android", "android_assist", "android_live", "android_lock", "android_update", "berater", "berater_auto", "berater_calls", "berater_chat",
         "berater_check_h", "berater_env", "berater_explain", "berater_ideas", "berater_analyse", "berater_auto_undo", "berater_issue", "berater_me", "berater_notify",
-        "berater_off", "bewerten", "bewerten_back", "calendar", "chats", "chats_groups", "chats_media", "chats_invite", "chats_private", "chats_verbund", "verbund_media", "verbund_groups", "verbund_mode", "verbund_domain", "chats_calls", "calls_turn", "calls_turn_host", "contacts", "datetime", "defaults", "desk",
+        "berater_off", "bewerten", "bewerten_back", "calendar", "chats", "chats_groups", "chats_media", "chats_invite", "chats_private", "chats_verbund", "verbund_media", "verbund_groups", "verbund_mode", "verbund_domain", "chats_calls", "calls_turn", "calls_turn_host", "calls_assistant", "contacts", "datetime", "defaults", "desk",
         "desk_act", "desk_meeting", "desk_view", "desk_operate", "dev_updates_night", "dev_updates_night_at", "dev_updates_upstream",
         "direct_read", "hoer_namen", "memory_trim", "sofort", "search_fast", "doc_brief", "doc_make", "doc_make_templates", "doc_make_wikipics", "bilder", "bilder_aendern", "musik", "doc_max_mb", "doc_night", "doc_night_from", "docling", "search_check", "search_check_auto", "search_check_day", "knowledge_book", "knowledge_book_day", "knowledge_book_sample", "rerank", "rerank_model", "rerank_ms",
         "doc_night_to", "doc_originals", "doc_pictures", "doc_quota_mb", "doc_semantic", "doc_shared", "documents",

@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.803** · 2026-10-18 · Anrufe per Assistent: „Ruf Sabine an“ oder „Videoanruf mit Sabine“ ruft nach deinem Ja über die Chats an; vom Lautsprecher, Telefon oder Telegram kommt der Anruf als Mitteilung aufs Handy (ein Tipp ruft an); auf Android auch „Ruf Mama übers Telefon an“ mit den eigenen Kontakten (App 1.4.2); Schalter aus
 - **V01.0.802** · 2026-10-18 · Zustand → Monitoring → Rechner: „Wer rechnet gerade“ zeigt die CPU je Dienst auf beiden Rechnern (aus den Zählern von systemd), beim Panel je Teil (Anfragen, Bedeutungssuche, Hintergrundaufträge …), oben „am meisten: …“ und einen Farbstreifen der letzten 20 Minuten; dazu Live, Steuerzentrale und iPhone-App
 - **V01.0.801** · 2026-10-18 · Suche bremst den Pi nicht mehr: der Worker der Bedeutungssuche rechnet auf höchstens der Hälfte der Kerne und als SCHED_IDLE nur in freier Rechenzeit, Sprache und Panel gehen vor (htop: vier Fäden mit je 60 % beim Nachholen von 46000 Stücken)
 - **V01.0.800** · 2026-10-18 · Sprachausgabe bei mehreren gleichzeitig: Leistung messen zeigt 2 gleichzeitig, kurzen Satz und Warteschlange; schaltbar (aus): Referenz der eigenen Stimme kürzen, Decoder bündelt 2 oder 4 Stimmen, gleichen Anfang merken

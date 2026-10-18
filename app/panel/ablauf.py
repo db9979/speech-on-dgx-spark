@@ -26,6 +26,7 @@ KINDS = {
     "hamelden": ("Smart-Home-Meldung", "Smart home alert"),
     "aendern": ("Rückgängig", "Undo"),
     "nasablage": ("NAS-Ablage", "NAS filing"),
+    "rufen": ("Anruf", "Call"),
 }
 
 

@@ -1570,6 +1570,11 @@ body.inchats:not(.appview):not(.kbd) .cx-comp{padding-right:96px}
 .an-b.off{background:#fff;color:#141824}
 .an-b.an-ok{background:var(--ok)}.an-b.an-no{background:var(--bad)}
 .an-b:focus-visible{outline:3px solid #fff;outline-offset:2px}
+/* Anrufe per Assistent (rufen.py): a call the assistant sent to this device waits for one tap */
+.an-bar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom));z-index:89;width:min(560px,calc(100% - 32px));box-sizing:border-box;display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:12px 14px;border-radius:16px;background:#141824;color:#fff;box-shadow:0 6px 24px rgba(0,0,0,.35)}
+.an-bar[hidden]{display:none}
+.an-bar>span{flex:1 1 180px;min-width:0;overflow-wrap:anywhere;font-weight:600}
+.an-bar .an-b{min-width:0;flex:none}
 /* Verbrauchszähler (verbrauch.js): tiles, bars per area, tables */
 .vb-tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:12px}.vb-tiles.vb-me{grid-template-columns:repeat(2,minmax(0,1fr))}
 .vb-tile{margin:0}.vb-tile .k{color:var(--mut);font-size:12px}.vb-tile .v{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}.vb-tile .mut{font-size:12px}

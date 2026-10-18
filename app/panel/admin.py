@@ -271,6 +271,8 @@ def admin_delete_profile(uid: str, request: Request):
     verbund.forget(uid)   # its contacts on other Sparks, its address, what still waited to go out from it
     import anrufe
     anrufe.forget(uid)    # its calls end
+    import rufen
+    rufen.forget(uid)     # a call the assistant still kept for it (Anrufe per Assistent)
     telefon.forget(uid)   # its handsets are no longer assigned
     return {"ok": True}
 

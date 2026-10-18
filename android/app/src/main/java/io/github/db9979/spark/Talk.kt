@@ -279,6 +279,11 @@ class Talk(private val ctx: Context, private val ui: Ui) {
                                 "calendar", "briefing" -> main.post { ui.face("calendar") }
                                 "home" -> main.post { ui.face("home") }
                                 "memory" -> main.post { ui.face("memory") }
+                                // Anrufe per Assistent (rufen.py), after the person's yes: a Spark call opens the app,
+                                // whose page shows the call with „Anrufen“; „übers Telefon“ opens the phone app with the
+                                // number, the person still taps the green button there
+                                "anruf" -> main.post { openApp() }
+                                "waehlen" -> ev.optString("number").takeIf { NUMBER.matches(it) }?.let { n -> main.post { dial(n) } }
                                 "error" -> if (err.isEmpty()) err = ev.optString("message").take(200)
                             }
                         }
@@ -314,6 +319,21 @@ class Talk(private val ctx: Context, private val ui: Ui) {
             }
         }
         if (p != null) p.whenDone { main.post(done) } else main.post(done)
+    }
+
+    private fun openApp() {
+        val base = Store(ctx).base ?: return
+        try {
+            ctx.startActivity(Intent(ctx, MainActivity::class.java).setAction(Intent.ACTION_VIEW).setData(Uri.parse("$base/"))
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP))
+        } catch (_: Exception) {}
+    }
+
+    private fun dial(number: String) {
+        try {
+            ctx.startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + number.filter { it.isDigit() || it == '+' }))
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        } catch (_: Exception) {}
     }
 
     private fun show(text: String) {
@@ -434,6 +454,8 @@ class Talk(private val ctx: Context, private val ui: Ui) {
         const val PAUSE_MS = 900
         const val MAX_SECONDS = 30
         const val NEW_AFTER_MS = 10 * 60 * 1000L
+        // a phone number from the Spark for „übers Telefon“ (rufen.NUMBER)
+        val NUMBER = Regex("\\+?[0-9][0-9 /()\\-]{2,28}")
         const val QUEUE_MAX = 10
         const val QUEUE_DAY = 24 * 3600 * 1000L
         private const val CHANNEL = "answers"

@@ -225,6 +225,8 @@ async def start(uid, cid, video, dev, now=None, client="web"):
         _calls[call] = x
         busy = any(y["state"] in ("ring", "talk") and other in (y["a"], y["b"]) for k, y in _calls.items() if k != call)
     x["rec"] = _seen(x, client)
+    import rufen
+    rufen.taken(uid, cid)   # a call the assistant kept for this chat (Anrufe per Assistent) is done
     _count.today()["calls"] += 1
     _live("📞 Anruf beginnt")
     if busy or _quiet(other):
@@ -633,6 +635,13 @@ async def api_start(request: Request, prof=Depends(_on)):
             _log("refused", why="no chat")
         raise _err(e)
     return {"call": call, "state": state, "servers": ice(prof["id"])}
+
+
+@router.delete("/api/anrufe/bereit", dependencies=[Depends(assistant)])
+def api_ready_off(request: Request, prof=Depends(_on)):
+    """„Nein“ on the bar of a call the assistant kept for the person (rufen.py): it goes away on every device."""
+    import rufen
+    return {"ok": rufen.decline(prof["id"])}
 
 
 @router.post("/api/anrufe/answer", dependencies=[Depends(assistant)])

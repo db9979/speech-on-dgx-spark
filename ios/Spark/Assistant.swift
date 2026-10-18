@@ -319,6 +319,7 @@ final class Conversation: ObservableObject {
         foreground = p == .active
         if foreground {
             CallCenter.shared.foreground()
+            Task { await callWaiting() }
             lastActivity = Date()
             Task { await catchUp() }
             // what the profile may has possibly changed meanwhile (Gesperrte Funktionen in the panel): ask the Spark again
@@ -360,6 +361,18 @@ final class Conversation: ObservableObject {
         if allowed.push && !before.push, await Alarms.allow() { UIApplication.shared.registerForRemoteNotifications() }
         if allowed.ios && !before.ios { await AppleReminders.syncLists() }
         if phase == .idle || phase == .waiting { base() }
+    }
+
+    /// Anrufe per Assistent (rufen.py): a call the assistant sent here from a speaker, the phone or Telegram waits a
+    /// few minutes on the Spark (/api/chats "ruf"); coming to the front asks once with „Anrufen?“.
+    private func callWaiting() async {
+        guard offer == nil, !CallCenter.shared.active, let api = SparkAPI.current, Demo.scene == nil,
+              let d = try? await api.object("GET", "api/chats"), let r = d["ruf"] as? [String: Any],
+              let chat = r["id"] as? String, chat.range(of: "^c[0-9a-f]{12}$", options: .regularExpression) != nil else { return }
+        let name = String((r["name"] as? String ?? "").prefix(60))
+        let video = r["video"] as? Bool == true
+        offer = PhoneAction.Offer(question: video ? String(localized: "\(name) per Videoanruf anrufen?") : String(localized: "\(name) anrufen?"),
+                                  url: nil, call: PhoneAction.SparkCall(chat: chat, name: name, video: video))
     }
 
     private var ticks = 0
@@ -613,7 +626,7 @@ final class Conversation: ObservableObject {
                 // a route or a call waits for "Ja": decided here on the iPhone, nothing else counts as yes
                 if let o = offer {
                     if Self.yes(text) { offer = nil; PhoneAction.run(o); base(); return }
-                    if Self.no(text) { offer = nil; base(); return }
+                    if Self.no(text) { PhoneAction.decline(o); offer = nil; base(); return }
                 }
                 await send(text, api)
             } catch {
@@ -705,6 +718,8 @@ final class Conversation: ObservableObject {
                     Alarms.remove(ids)
                     AppleReminders.remove(ids)
                 case .action(let kind, let target): Task { await propose(kind, target) }
+                case .sparkCall(let chat, let name, let video):   // the person said yes on this iPhone: CallKit starts it
+                    CallCenter.shared.dial(chat: chat, name: name, video: video)
                 case .rate(let id): edit { $0.rateId = id }
                 case .picture(let job, let prompt): edit { $0.picJob = job; $0.picPrompt = prompt }
                 case .more(let kind, let items): edit { $0.more = items; $0.moreKind = kind }

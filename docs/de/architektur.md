@@ -310,6 +310,7 @@ Apps, Telegram, Uhr, Lautsprecher, Raummodus, Chats und der Verlauf auf allen Ge
 | `app/panel/room.py` | Raummodus: hört zu und hilft in einer Pause |
 | `app/panel/roomfar.py` | Raummodus auf einem anderen Gerät schalten |
 | `app/panel/roomlive.py` | Wo der Raummodus gerade zuhört |
+| `app/panel/rufen.py` | Anrufe per Assistent: „Ruf Sabine an“ nach festen Regeln, erst nach Ja; Android auch übers Telefon |
 | `app/panel/speakers.py` | Sprechererkennung pro Profil |
 | `app/panel/spkcode.py` | Codewort am geteilten Lautsprecher |
 | `app/panel/sse.py` | Sofort-Ereignisse an offene Seiten und Apps (Chats, Verlauf): ein Strom pro Seite |
@@ -525,6 +526,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `users/ID/mail-pending.json` | Wartet auf Ja | Warteschlange | – | ja | – |
 | `users/ID/mcp-dienste-pending.json` | Wartet auf Ja | Warteschlange | – | ja | – |
 | `users/ID/messages-pending.json` | Wartet auf Ja | Warteschlange | – | nein | – |
+| `users/ID/rufen-pending.json` | Anruf wartet auf Ja | Warteschlange | – | ja | – |
 | `users/ID/tasks-pending.json` | Wartet auf Ja | Warteschlange | – | ja | – |
 | `users/ID/tagebuch.json` | Spark-Tagebuch | Zustand | – | ja | – |
 | `users/ID/gesundheit.json` | Schritte, Puls und Schlaf von der Pebble-Uhr (30 Tage) | Gesundheit | versiegelt | ja | – |
@@ -1569,9 +1571,9 @@ flowchart TD
 6. <a id="kn-vorbereiten-s6"></a>**Fester Satz?**: Sätze wie „Spark Notaus“, „Problem melden: …“ oder „Das war falsch“ führt das Panel selbst aus, nur aus den eigenen Worten des Profils und nie über MCP. Das Modell sagt nur das Ergebnis und bekommt in diesem Zug kein Werkzeug.
 7. <a id="kn-vorbereiten-s7"></a>**Antwort auf eine Rückfrage?**: Hat das Panel gefragt, welches Gerät gemeint ist, gilt als Antwort ein Knopf, eine Zahl oder der Name, nur im selben Gespräch, vom eigenen Profil und innerhalb von 2 Minuten. „Keins davon“ bringt die ganze Liste, „Nein, den anderen“ korrigiert die letzte Wahl. Das Panel führt die Wahl aus und bietet an, sie sich zu merken; ein „Ja“ dazu zählt 15 Minuten.
 8. <a id="kn-vorbereiten-s8"></a>**Notaus oder Mein Notaus?**: Ab Notaus-Stufe 2 oder mit dem eigenen Notaus des Profils werden alle wartenden Vorschläge verworfen; kein „Ja“ führt etwas aus. Lesen und Antworten gehen weiter.
-9. <a id="kn-vorbereiten-s9"></a>**Ja zu einem Vorschlag**: Wartet ein Vorschlag aus diesem Gespräch (ein Termin, eine Mail-Änderung, ein Listeneintrag, eine Korrektur), entscheidet das Panel über das „Ja“. Ein Ja bestätigt genau eine Sache; jede Antwort erledigt alle anderen wartenden Vorschläge dieses Gesprächs.
+9. <a id="kn-vorbereiten-s9"></a>**Ja zu einem Vorschlag**: Wartet ein Vorschlag aus diesem Gespräch (ein Termin, eine Mail-Änderung, ein Listeneintrag, eine Korrektur, ein Anruf), entscheidet das Panel über das „Ja“. Ein Ja bestätigt genau eine Sache; jede Antwort erledigt alle anderen wartenden Vorschläge dieses Gesprächs.
 10. <a id="kn-vorbereiten-s10"></a>**Werkzeuge nach Rechten**: Jede Werkzeuggruppe kommt nur mit Schalter des Admins, Freigabe für das Profil und den eigenen Daten dazu: Suche, Gedächtnis, Verlauf, Dokumente, Smart Home, Erinnerungen, Kalender, Mail. Telegram, die iPhone-App und CarPlay können das nur enger machen, nie weiter. Eine fremde erkannte Stimme an diesem Gerät bekommt nichts Persönliches. Eine Nachricht, die nur fragt („Weißt du, wie mein Bruder heißt?“: ein Satz mit Fragezeichen, nichts zum Merken), bekommt kein memory_save (chat.offer_memory), damit kein erfundener Fakt gespeichert wird.
-11. <a id="kn-vorbereiten-s11"></a>**Etwas nimmt Werkzeuge weg?**: Der Notaus nimmt Werkzeuge ins Internet oder ändernde weg, „Spark fragen“ über MCP behält nur die Werkzeuge der Verbindung, ein Bild oder ein fester Satz lässt keines übrig. Für einen Gast wird die Liste noch einmal geleert, egal was sie gefüllt hat.
+11. <a id="kn-vorbereiten-s11"></a>**Etwas nimmt Werkzeuge weg?**: Der Notaus nimmt Werkzeuge ins Internet oder ändernde weg, „Spark fragen“ über MCP behält nur die Werkzeuge der Verbindung, ein Bild, ein fester Satz oder ein fester Weg des Panels (Anrufe per Assistent, rufen.py) lässt keines übrig. Für einen Gast wird die Liste noch einmal geleert, egal was sie gefüllt hat.
 12. <a id="kn-vorbereiten-s12"></a>**Weiche grenzt ein**: Mit „Gezielte Werkzeugwahl“ bleibt nur die Gruppe der Frage übrig. Danach entscheidet das Panel, ob erst lokal gesucht wird, ob es ein eindeutiges Abrufen selbst macht und welches Werkzeug die erste Runde rufen muss. Mit „Schneller Antwortbeginn“ bekommt eine erkannte Gruppe immer dieselbe Liste in derselben Reihenfolge, so hält der Server je Gruppe einen Anfang im Cache; nur eine unklare Frage sieht die volle Liste.
 13. <a id="kn-vorbereiten-s13"></a>**Gesprächszug fertig**: Der Systemprompt steht vorn, dazu die Werkzeuge und die Sperrregel. Der Notaus wird bei jedem Werkzeugaufruf neu gelesen: wird er während einer Antwort ausgelöst, hält er den nächsten Aufruf an.
 

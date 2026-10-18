@@ -75,6 +75,14 @@ enum PhoneAction {
         var url: URL?
         /// a Spark reminder to put into Apple's Reminders app
         var remind: Reminder?
+        /// a call the assistant kept for this profile (rufen.py): "Ja" starts it here
+        var call: SparkCall?
+    }
+
+    struct SparkCall {
+        let chat: String
+        let name: String
+        let video: Bool
     }
 
     static func remindOffer(_ r: Reminder) -> Offer {
@@ -120,8 +128,16 @@ enum PhoneAction {
                 do { try await AppleReminders.add(r); Conversation.shared.notice = String(localized: "In der Erinnerungen-App eingetragen (Liste „Spark“).") }
                 catch { Conversation.shared.error = error.localizedDescription }
             }
+        } else if let c = offer.call {
+            CallCenter.shared.dial(chat: c.chat, name: c.name, video: c.video)
         } else if let url = offer.url {
             UIApplication.shared.open(url)
         }
+    }
+
+    /// "Nein" to a call the assistant kept: it goes away on every device of the profile.
+    static func decline(_ offer: Offer) {
+        guard offer.call != nil else { return }
+        Task { _ = try? await SparkAPI.current?.call("DELETE", "api/anrufe/bereit") }
     }
 }

@@ -308,7 +308,7 @@ struct ChatView: View {
             .onChange(of: talk.standing, initial: true) { UIApplication.shared.isIdleTimerDisabled = talk.standing }
             .alert(talk.offer?.question ?? "", isPresented: Binding(get: { talk.offer != nil }, set: { if !$0 { talk.offer = nil } })) {
                 Button("Ja") { if let o = talk.offer { talk.offer = nil; PhoneAction.run(o) } }
-                Button("Nein", role: .cancel) { talk.offer = nil }
+                Button("Nein", role: .cancel) { if let o = talk.offer { PhoneAction.decline(o) }; talk.offer = nil }
             } message: {
                 Text("Du kannst auch „Ja“ oder „Nein“ sagen.")
             }
