@@ -589,6 +589,9 @@ async def prepare(request):
                                  "berater": "Einstellungs-Assistent (Panel)"}.get(role_cmd[0], "Rolle (Panel)"), "args": role_cmd[1], "result": role_note})
     cal = calendars.get(who["id"]) if who and briefing and private_ok and (not mcp or "calendar_events" in mcp["tools"]) \
         else {"calendars": [], "topics": []}
+    # Kalender teilen: the levels of the calendars others share with this profile (read with calendar_events,
+    # "add" also for a named calendar_add); the briefing stays with the own calendars
+    cal["shared"] = [lvl for _, _, _, lvl in calendars.shared_to(who["id"])] if who and briefing and private_ok and not mcp else []
     # new appointments: only the profile's own login or device key, and only after a yes (see calendars.py)
     # Notaus stage 2 (notaus.py): no "Ja" carries anything out, every proposal waiting in this conversation is
     # dropped, and below no tool that changes something is offered (stage 1: none that goes to the internet)
@@ -605,8 +608,11 @@ async def prepare(request):
             if mod.pending(who["id"]):
                 mod.drop_pending(who["id"])
         print(f"notaus: {'Stufe ' + str(held) if held >= 2 else 'Mein Notaus'} - keine Aktion, kein Ja, nur lesen", flush=True)
-    cal_write = bool(cal["calendars"] and own_browser and not mcp and not act_held)
+    cal_write = bool((cal["calendars"] or "add" in cal["shared"]) and own_browser and not mcp and not act_held)
     prop = None
+    if cal["shared"]:
+        system = (system + "\n\n" + chat.CALENDAR_SHARED_HINT
+                  + (" " + chat.CALENDAR_SHARED_ADD_HINT if "add" in cal["shared"] and cal_write else "")).strip()
     if cal_write:
         system = (system + "\n\n" + chat.CALENDAR_ADD_HINT).strip()
         prop = calendars.pending(who["id"]) if not kl_took else None
@@ -791,7 +797,7 @@ async def prepare(request):
              else [chat.HA_TOOL, chat.HA_STATES_TOOL, chat.HA_ACTION_TOOL, chat.HA_HISTORY_TOOL, chat.HA_TODO_TOOL]) if ha else []) \
         + ([chat.CAMERA_TOOL] if ha and hamelden.camera_on(who["id"]) else []) \
         + (chat.REMINDER_TOOLS if timers and own_browser else []) + ([chat.BRIEFING_TOOL] if briefing else []) \
-        + ([chat.CALENDAR_TOOL] if cal["calendars"] else []) + ([chat.CALENDAR_ADD_TOOL, chat.CALENDAR_CHANGE_TOOL] if cal_write else []) \
+        + ([chat.CALENDAR_TOOL] if cal["calendars"] or cal["shared"] else []) + ([chat.CALENDAR_ADD_TOOL, chat.CALENDAR_CHANGE_TOOL] if cal_write else []) \
         + (chat.MAIL_TOOLS if mailbox else []) + (chat.TIDY_TOOLS if tidy_on else []) + ([chat.DRAFT_TOOL] if drafts_on else []) \
         + ([chat.IPHONE_TOOL] if phone_act else [])
     # weather, contacts, parcels ... (extras.py): each offers its tools only when the profile switched it on

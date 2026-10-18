@@ -289,6 +289,10 @@ FEATURES = (
     F("anrufassistent", "Anrufe per Assistent", "Calls by the assistant", "day", ("calls_assistant",), parent="anrufe",
       guide="anrufassistent"),
     F("calendar", "Kalender", "Calendar", "day", ("calendar",), me="calbox", guide="calendar"),
+    # calendars.py (Dominik 2026-10-18 „1a 2a“): share one calendar with another profile, see or see and enter;
+    # private appointments only as „belegt“
+    F("calshare", "Kalender teilen", "Share calendars", "day", ("calendar_share", "calendar"), parent="calendar",
+      me="calbox", guide="calshare"),
     F("weather", "Wetter", "Weather", "day", ("weather",), me="wxbox", guide="weather"),
     # feeds.py (Dominik 2026-10-17, plan reddit/plan.md): own Reddit inbox, subreddits and other feeds, read only
     F("feeds", "Reddit und Feeds", "Reddit and feeds", "day", ("feeds",), me="feedbox", guide="feeds"),

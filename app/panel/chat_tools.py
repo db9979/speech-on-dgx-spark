@@ -296,7 +296,7 @@ async def run(t, name, args, st):
             if ids:
                 await t.out.put({"type": "reminder", "action": "cancel", "ids": sorted(ids), "foreign": not t.own_browser})
             return f"Cancelled {len(ids)}."
-    if name == "calendar_events" and t.cal["calendars"]:
+    if name == "calendar_events" and (t.cal["calendars"] or t.cal.get("shared")):
         zone = chat.user_zone(t.body.get("tz"))
         try:
             day = datetime.date.fromisoformat(str(args.get("date") or "")[:10])
@@ -309,7 +309,8 @@ async def run(t, name, args, st):
         await t.out.put({"type": "calendar"})
         start = datetime.datetime.combine(day, datetime.time(), zone)
         try:
-            evs, errors = await calendars.events(t.who["id"], start, start + datetime.timedelta(days=days), zone)
+            evs, errors = await calendars.events(t.who["id"], start, start + datetime.timedelta(days=days), zone, shared=True) \
+                or ([], [])
         except (ValueError, httpx.HTTPError) as e:
             return f"Calendar not reachable: {e}"
         now = datetime.datetime.now(zone)

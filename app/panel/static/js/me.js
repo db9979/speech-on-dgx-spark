@@ -417,8 +417,20 @@ function calKind(){const k=CALKIND[$('calkind').value];$('calhint').textContent=
   if(!$('calname').value||Object.values(CALKIND).some(x=>x.name&&x.name===$('calname').value))$('calname').value=k.name;
   $('caluser').closest('.two2').style.display=k.user?'':'none';if(!k.user){$('caluser').value='';$('calpw').value=''}}
 $('calkind').onchange=calKind;
-function calRender(d){$('callist').innerHTML=d.calendars.map(c=>`<li><span><b>${esc(c.name)}</b><br><small class="mut">${esc(c.url.replace(/^\w+:\/\//,'').slice(0,48))}</small></span><button class="b" ${onAttr('calRemove',c.id,c.name)}>${t('Entfernen','Remove')}</button></li>`).join('')||`<li class="mut">${t('Noch kein Kalender verbunden.','No calendar connected yet.')}</li>`;
+// Kalender teilen (calendars.py, Dominik 2026-10-18 „1a 2a“): per calendar and other profile nothing, see or see and
+// enter; only when the function is released (d.people comes then)
+const CALLEVEL=[['',t('Nicht geteilt','Not shared')],['see',t('Nur sehen','See only')],['add',t('Sehen und eintragen','See and add')]];
+function calShare(c,people){const sh=c.shares||{},n=Object.keys(sh).length;
+  return `<details class="calshare"><summary>${esc(t('Teilen','Share'))}${n?` · ${n}`:''}</summary>`+
+    people.map(p=>`<div class="rowin"><span>${esc(p.name)}</span><select data-cal="${esc(c.id)}" data-to="${esc(p.id)}" aria-label="${esc(p.name)}">${CALLEVEL.map(([v,l])=>`<option value="${v}"${(sh[p.id]||'')===v?' selected':''}>${esc(l)}</option>`).join('')}</select></div>`).join('')+
+    `<div class="fh">${esc(t('Private Termine sehen andere nur als „belegt“ mit der Uhrzeit. Ändern und löschen kannst nur du.','Others see private appointments only as "belegt" with the time. Only you can change or delete.'))}</div></details>`}
+function calRender(d){const people=d.people||[];$('callist').innerHTML=d.calendars.map(c=>`<li><span><b>${esc(c.name)}</b><br><small class="mut">${esc(c.url.replace(/^\w+:\/\//,'').slice(0,48))}</small>${people.length?calShare(c,people):''}</span><button class="b" ${onAttr('calRemove',c.id,c.name)}>${t('Entfernen','Remove')}</button></li>`).join('')||`<li class="mut">${t('Noch kein Kalender verbunden.','No calendar connected yet.')}</li>`;
+  $('callist').querySelectorAll('select[data-cal]').forEach(s=>s.onchange=()=>calShareSet(s));
+  $('calshared').innerHTML=(d.shared||[]).length?`<div class="mgrp">${esc(t('Mit dir geteilt','Shared with you'))}</div><ul class="facts">`+d.shared.map(x=>`<li><span><b>${esc(x.owner)} · ${esc(x.name)}</b><br><small class="mut">${esc(x.level==='add'?CALLEVEL[2][1]:CALLEVEL[1][1])}</small></span></li>`).join('')+'</ul>':'';
   $('caltopics').value=(d.topics||[]).join(', ');calKind();$('caltest').style.display=d.calendars.length?'':'none';$('caladd').open=!d.calendars.length}
+async function calShareSet(s){const {r,d}=await apiTry('/api/profile/calendar/'+encodeURIComponent(s.dataset.cal)+'/share',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:s.dataset.to,level:s.value})});
+  if(!r.ok){calMsg(t('Nicht geteilt: ','Not shared: ')+errSay(r.status,d.detail,''),true);showCal();return}
+  calRender(d);if(typeof KAL!=='undefined')KAL.data=null;calMsg(s.value?t('Geteilt.','Shared.'):t('Nicht mehr geteilt.','No longer shared.'))}
 async function showCal(){if(!CAL_ON)return;calRender(await (await api('/api/profile/calendar')).json());$('calmsg').textContent='';$('calmsg').className=''}
 async function calRemove(id,name){if(!confirm(t('Kalender „','Remove calendar "')+name+t('“ entfernen?','"?')))return;calRender(await (await api('/api/profile/calendar/'+encodeURIComponent(id),{method:'DELETE'})).json())}
 const calMsg=(x,err,list)=>{const m=$('calmsg');m.className=err?'err':'';m.innerHTML=esc(x)+(list&&list.length?'<ul class="facts small">'+list.map(e=>`<li>${esc(e)}</li>`).join('')+'</ul>':'')};

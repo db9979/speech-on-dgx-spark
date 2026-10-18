@@ -77,9 +77,9 @@ class View(unittest.TestCase):
         got = []
         orig = calendars.events
 
-        async def spy(uid, start, end, zone):
+        async def spy(uid, start, end, zone, **kw):
             got.append((end - start).days)
-            return await orig(uid, start, end, zone)
+            return await orig(uid, start, end, zone, **kw)
         calendars.events = spy
         try:
             asyncio.run(calendars.view(self.uid, day, 500, ZoneInfo("Europe/Berlin")))

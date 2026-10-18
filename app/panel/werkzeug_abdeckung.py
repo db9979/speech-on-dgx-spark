@@ -96,6 +96,7 @@ RULES = {
     "beraterchat": "berater.py: nach Vorschlägen fragen",
     "beraterwarum": "berater.py: „Warum?“ für alle Profile",
     "bewerten": "faelle.py: „Das war falsch“, „Gut so“",
+    "calshare": "calendars.py: calendar_events liest geteilte Kalender mit („Was hat Sabine morgen?“), calendar_add trägt in einen genannten ein, erst nach Ja",
     "anrufassistent": "rufen.py: „Ruf Sabine an“, „Videoanruf mit Sabine“, „Ruf Mama übers Telefon an“, erst nach Ja",
 }
 

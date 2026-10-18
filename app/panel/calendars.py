@@ -9,6 +9,13 @@ iCal subscription link (.ics, webcal:// or webcals://, Google's "secret address 
 a shared iCloud calendar). iCloud's CalDAV is https://caldav.icloud.com with the Apple ID and an
 app-specific password. The password never leaves the Spark again: the panel only learns whether
 one is stored. Topics are a few search phrases for the briefing.
+
+Sharing (Dominik 2026-10-18 „1a 2a“, function Kalender teilen, off): the owner shares one connected calendar with
+another profile, "see" or "add" (see and enter), kept in the owner's file as {"shares": {profile id: level}}. The
+other profile reads it with the owner's access (the password never leaves the owner's file), on the page Kalender
+and through the assistant, named "<owner> · <calendar>". A private appointment (CLASS PRIVATE or CONFIDENTIAL)
+shows there only as „belegt“ with its time, never title or place. "add" lets the other profile's assistant propose
+a new appointment there, saved only after its yes; changing and deleting stay with the owner. Guests never.
 """
 import asyncio
 import datetime
@@ -62,11 +69,20 @@ def get(uid):
 
 
 def public(uid):
-    """What the panel may see: everything but the passwords."""
+    """What the panel may see: everything but the passwords. With Kalender teilen also with whom each calendar is
+    shared, the other profiles to choose from and what others share with this profile (names only, never their
+    addresses)."""
     d = get(uid)
-    return {"calendars": [{"id": x["id"], "name": x.get("name", ""), "url": x["url"], "user": x.get("user", ""),
-                           "has_password": bool(x.get("password"))} for x in d["calendars"]],
-            "topics": d["topics"]}
+    out = {"calendars": [{"id": x["id"], "name": x.get("name", ""), "url": x["url"], "user": x.get("user", ""),
+                          "has_password": bool(x.get("password"))} for x in d["calendars"]],
+           "topics": d["topics"]}
+    if _sharing(uid):
+        have = set(profiles.user_ids())
+        for x, c in zip(out["calendars"], d["calendars"]):
+            x["shares"] = {k: v for k, v in (c.get("shares") or {}).items() if k in have and v in LEVELS}
+        out["people"] = [{"id": p["id"], "name": p["name"]} for p in profiles.names() if p["id"] != uid]
+        out["shared"] = [{"owner": n, "name": c.get("name", ""), "level": lvl} for _, n, c, lvl in shared_to(uid)]
+    return out
 
 
 def _store(uid, d):
@@ -88,6 +104,86 @@ def entry(body):
     pw = body.get("password")
     return {"id": "c" + os.urandom(4).hex(), "name": name, "url": url, "user": str(body.get("user", "")).strip()[:200],
             "password": pw[:500] if isinstance(pw, str) else ""}
+
+
+LEVELS = ("see", "add")
+BUSY = "belegt"
+
+
+def _sharing(uid):
+    import features   # late: features reads the profiles' settings
+    return bool(uid) and features.allowed("calshare", uid)
+
+
+def set_share(uid, cid, to, level):
+    """Shares the calendar cid of uid with the profile to ("see", "add"), or takes it back (level "")."""
+    if level not in LEVELS + ("",):
+        raise ValueError("level must be see, add or empty")
+    if to == uid or to not in profiles.user_ids():
+        raise ValueError("no such other profile")
+    d = get(uid)
+    cal = next((x for x in d["calendars"] if x["id"] == cid), None)
+    if cal is None:
+        raise KeyError(cid)
+    sh = {k: v for k, v in (cal.get("shares") or {}).items() if v in LEVELS and k != to}
+    if level:
+        sh[to] = level
+    cal["shares"] = sh
+    _store(uid, d)
+    _drop_shared(cid)
+    _live[0] = 0.0
+    return public(uid)
+
+
+def shared_to(uid):
+    """[(owner id, owner name, calendar entry, level)] of the calendars other profiles share with uid; only while
+    the function is allowed for both."""
+    if not _sharing(uid):
+        return []
+    out = []
+    for p in profiles.names():
+        if p["id"] == uid or not os.path.exists(_file(p["id"])):
+            continue
+        for c in get(p["id"])["calendars"]:
+            lvl = (c.get("shares") or {}).get(uid)
+            if lvl in LEVELS and _sharing(p["id"]):
+                out.append((p["id"], p["name"], c, lvl))
+    return out
+
+
+_live = [0.0, {}]
+
+
+def for_live(now=None):
+    """Live and Monitoring: how many shares there are, between how many profiles, in numbers only (never a name,
+    a calendar or an appointment); counted at most every 30 s."""
+    import features
+    now = time.time() if now is None else now
+    if not features.admin_on("calshare"):
+        return {"on": False}
+    if 0 <= now - _live[0] < 30:
+        return _live[1]
+    n, owners = 0, 0
+    for u in profiles.user_ids():
+        if not os.path.exists(_file(u)):
+            continue
+        k = sum(len([v for v in (c.get("shares") or {}).values() if v in LEVELS]) for c in get(u)["calendars"])
+        n, owners = n + k, owners + (1 if k else 0)
+    _live[:] = [now, {"on": True, "shares": n, "owners": owners}]
+    return _live[1]
+
+
+def shared_name(owner, cal):
+    return f"{owner} · {cal.get('name') or 'Kalender'}"
+
+
+def reading(uid):
+    """get(uid) plus the calendars shared with uid, each marked with owner, level and its shown name: what the
+    page and the assistant read. Writing and the briefing use get(uid) (only the own calendars)."""
+    d = get(uid)
+    d["calendars"] = d["calendars"] + [dict(c, name=shared_name(n, c), owner=o, level=lvl)
+                                       for o, n, c, lvl in shared_to(uid)]
+    return d
 
 
 def add(uid, item):
@@ -138,6 +234,11 @@ def forget(uid):
 
 def _drop(uid):
     for k in [k for k in _cache if k[0] == uid]:
+        _cache.pop(k, None)
+
+
+def _drop_shared(cid):
+    for k in [k for k in _cache if k[1] == cid]:
         _cache.pop(k, None)
 
 
@@ -308,7 +409,8 @@ def _expand(texts, start, end, zone, name=""):
                     if isinstance(e, datetime.datetime) else s
             out.append({"start": s, "end": e, "allday": allday,
                         "title": str(ev.get("SUMMARY", "") or "(ohne Titel)").strip()[:200],
-                        "location": str(ev.get("LOCATION", "") or "").strip()[:200], "calendar": name})
+                        "location": str(ev.get("LOCATION", "") or "").strip()[:200], "calendar": name,
+                        "private": str(ev.get("CLASS", "") or "").upper() in ("PRIVATE", "CONFIDENTIAL")})
     uniq = {(x["start"], x["title"]): x for x in out}
     return sorted(uniq.values(), key=lambda x: (x["start"], not x["allday"]))
 
@@ -331,23 +433,28 @@ async def _one(uid, cal, start, end, zone):
         texts, _ = await _fetch(cal, day0, day1)
         _cache[key] = (now, texts)
     # expanding runs outside the event loop, so a heavy calendar never stalls the panel
-    return await asyncio.to_thread(_expand, texts, start, end, zone, cal.get("name", ""))
+    evs = await asyncio.to_thread(_expand, texts, start, end, zone, cal.get("name", ""))
+    if cal.get("owner"):   # shared by another profile (2a): a private appointment is only „belegt“ with its time
+        evs = [dict(x, title=BUSY, location="") if x["private"] else x for x in evs]
+    return evs
 
 
-async def events(uid, start, end, zone):
+async def events(uid, start, end, zone, shared=False):
     """(events of all the profile's calendars from start to end, sorted; [(name, error)] of the
-    calendars that could not be read). None when no calendar is connected."""
-    cals = get(uid)["calendars"]
+    calendars that could not be read). None when no calendar is connected. shared: also the calendars other
+    profiles share with it (the page and the assistant's calendar_events; never the briefing or Von selbst)."""
+    cals = (reading(uid) if shared else get(uid))["calendars"]
     if not cals:
         return None
-    res = await asyncio.gather(*(_one(uid, c, start, end, zone) for c in cals), return_exceptions=True)
+    # a shared calendar is cached under its owner (the same fetch serves the owner and everyone it is shared with)
+    res = await asyncio.gather(*(_one(c.get("owner") or uid, c, start, end, zone) for c in cals), return_exceptions=True)
     evs, errors = [], []
     for c, r in zip(cals, res):
         if isinstance(r, Exception):
             errors.append((c.get("name", ""), str(r) if isinstance(r, ValueError) else f"not reachable ({type(r).__name__})"))
         else:
             evs += r
-    many = len(cals) > 1
+    many = len(cals) > 1 or any(c.get("owner") for c in cals)   # a shared one always says whose it is
     uniq = {}
     for x in evs:   # the same appointment in two calendars (e.g. shared ones) is read out once
         k = (x["start"], x["title"].lower())
@@ -372,20 +479,22 @@ async def view(uid, day, days, zone):
     days = max(1, min(int(days), VIEW_DAYS))
     t0 = datetime.datetime.combine(day, datetime.time(), zone)
     t1 = t0 + datetime.timedelta(days=days)
-    names = [c.get("name", "") for c in get(uid)["calendars"]]
+    cals = reading(uid)["calendars"]
+    names = [c.get("name", "") for c in cals]
     if not names:
         return {"connected": False, "calendars": [], "events": [], "errors": []}
+    shared = [i for i, c in enumerate(cals) if c.get("owner")]
     try:
-        r = await asyncio.wait_for(events(uid, t0, t1, zone), VIEW_BUDGET)
+        r = await asyncio.wait_for(events(uid, t0, t1, zone, shared=True), VIEW_BUDGET)
     except asyncio.TimeoutError:
-        return {"connected": True, "calendars": names, "events": [], "errors": names, "slow": True}
+        return {"connected": True, "calendars": names, "shared": shared, "events": [], "errors": names, "slow": True}
     evs, errors = r if r else ([], [])
     out = []
     for x in evs[:VIEW_MAX]:
         first = (x.get("calendar") or "").split(", ")[0]
         out.append({"start": int(x["start"].timestamp()), "end": int(x["end"].timestamp()), "allday": bool(x["allday"]),
                     "title": x["title"], "location": x["location"], "cal": names.index(first) if first in names else 0})
-    return {"connected": True, "calendars": names, "events": out, "errors": [n for n, _ in errors]}
+    return {"connected": True, "calendars": names, "shared": shared, "events": out, "errors": [n for n, _ in errors]}
 
 
 async def check(item, zone):
@@ -472,7 +581,8 @@ def describe(item):
     else:
         when = f"{WEEKDAYS[s.weekday()]} {s:%d.%m.%Y} {s:%H:%M}–{e:%H:%M}"
     return f"„{item['title']}“ am {when}" + (f", Ort: {item['location']}" if item.get("location") else "") \
-        + (f", Erinnerung {item['alarm']} Minuten vorher" if item.get("alarm") else "")
+        + (f", Erinnerung {item['alarm']} Minuten vorher" if item.get("alarm") else "") \
+        + (f", Kalender: {item['calendar']}" if item.get("calendar") else "")
 
 
 def ical(item, uid_text):
@@ -522,12 +632,17 @@ async def _add_event(uid, item, out=None):
     """Writes the appointment to a writable CalDAV calendar: the one named in item "calendar" (its exact name
     first, then a name containing the words, across all connected accounts), else the first one. A named
     calendar that no account has is never swapped for another one: ValueError with the names there are
-    (before it silently went into the first calendar; plan Rückfrage, Stufe C). Returns the calendar's name."""
+    (before it silently went into the first calendar; plan Rückfrage, Stufe C). A calendar another profile shares
+    with "add" (Kalender teilen) only when it is named („in Sabines Kalender“), never as the first one.
+    Returns the calendar's name."""
     notaus.stop("aktion", uid)   # the Notaus (or the profile's own) holds every action off (notaus.py)
     wanted = str(item.get("calendar") or "").strip().lower()
     last_error = "no CalDAV calendar connected (iCal links are read only)"
     found = []   # (account, (href, name)) of every writable calendar, in the accounts' order
-    for d in get(uid)["calendars"]:
+    cals = get(uid)["calendars"]
+    if wanted:
+        cals += [x for x in reading(uid)["calendars"] if x.get("owner") and x.get("level") == "add"]
+    for d in cals:
         if re.match(r"webcals?://", d["url"], re.I) or re.search(r"\.ics(\?|$)", d["url"], re.I):
             continue
         async with _cal_client(d) as c:
@@ -538,8 +653,11 @@ async def _add_event(uid, item, out=None):
     if not found:
         raise ValueError(last_error)
     named = lambda x: (x[1][1] or x[0].get("name") or "").strip().lower()
+    # a shared one also by its shown name and its owner („Sabine · Familie“, „Sabines Kalender“)
+    owner = lambda x: (x[0].get("name") or "").strip().lower() if x[0].get("owner") else ""
     if wanted:
-        hits = [x for x in found if named(x) == wanted] or [x for x in found if wanted in named(x)]
+        hits = [x for x in found if wanted in (named(x), owner(x))] or [x for x in found if wanted in named(x) or (
+            owner(x) and (wanted in owner(x) or owner(x).split(" · ")[0].rstrip("s") in wanted))]
         if not hits:
             raise ValueError(f"there is no calendar called '{item.get('calendar')}'; the calendars are: "
                              + ", ".join(dict.fromkeys(x[1][1] or x[0].get("name", "Kalender") for x in found)))
@@ -552,7 +670,9 @@ async def _add_event(uid, item, out=None):
         r = await c.put(url, content=ical(item, uid_text),
                         headers={"Content-Type": "text/calendar; charset=utf-8", "If-None-Match": "*"})
         if r.status_code in (200, 201, 204):
-            _drop(uid)
+            _drop(d.get("owner") or uid)
+            if d.get("owner"):   # in another profile's calendar: undo and changes stay with its owner
+                return d.get("name") or "Kalender"
             if out is not None:   # where it went, for „Mach das rückgängig“ (aendern.py)
                 out.update(account=d.get("id"), href=url)
             return pick[1] or d.get("name", "Kalender")

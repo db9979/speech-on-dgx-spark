@@ -86,7 +86,7 @@ DATEIEN = [
     profil("fuerdich.json", "Für dich: was du als erledigt oder uninteressant markiert hast (nur Prüfsummen)",
            "For you: what you marked as done or not interesting (only checksums)", art="Einstellungen"),
     profil("mailstil.json", "Mailstil (nur die Zusammenfassung, keine Mail)", "Mail style (only the summary, never a mail)", art="Einstellungen"),
-    profil("calendar.json", "Kalender-Zugang", "Calendar account", art="Login", schutz=("Passwort versiegelt", "password sealed")),
+    profil("calendar.json", "Kalender-Zugang und Freigaben an andere Profile", "Calendar account and shares with other profiles", art="Login", schutz=("Passwort versiegelt", "password sealed")),
     profil("homeassistant.json", "Home-Assistant-Zugang", "Home Assistant account", art="Login", schutz=("Token versiegelt", "token sealed")),
     profil("telegram.json", "Telegram-Kopplung", "Telegram link", art="Login"),
     profil("push.json", "Push-Abos der Browser", "Browser push subscriptions", art="Gerät"),

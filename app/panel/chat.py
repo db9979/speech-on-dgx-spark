@@ -539,6 +539,12 @@ BRIEFING_HINT = ("Wenn der Nutzer um ein Tagesbriefing bittet, wissen will, was 
                  "kurz als schon vorbei.")
 CALENDAR_HINT = ("Für Fragen zu Terminen an bestimmten Tagen nutze calendar_events. Termine aus früheren Antworten "
                  "im Gespräch sind veraltet: nenne Termine nur aus einem Werkzeugergebnis dieser Antwort.")
+# Kalender teilen (calendars.py): only when another profile shares a calendar with this one
+CALENDAR_SHARED_HINT = ("calendar_events liest auch Kalender, die andere Profile mit dem Nutzer teilen; ihre Termine "
+                        "stehen mit [Name · Kalender]. Bei „Was hat Sabine morgen?“ nenne nur die Termine mit ihrem "
+                        "Namen. „belegt“ ist ein privater Termin: nenne nur die Zeit und rate nie, was es ist.")
+CALENDAR_SHARED_ADD_HINT = ("In einen geteilten Kalender trägst du nur ein, wenn der Nutzer ihn nennt: calendar_add mit "
+                            "calendar wie „Sabine · Familie“. Ändern oder löschen kann dort nur die Besitzerin oder der Besitzer.")
 CALENDAR_ADD_TOOL = {"type": "function", "function": {
     "name": "calendar_add",
     "description": "Propose a new appointment in the user's calendar. It is NOT saved by this call: the panel "

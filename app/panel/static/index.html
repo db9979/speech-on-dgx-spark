@@ -279,6 +279,7 @@
       <div data-show="chat.berater" style="margin-left:18px"><label>Fragen ans Sprachmodell pro Tag</label><input id="chat.berater_calls" type="number" min="1" max="100"><div class="fh">1 bis 100. Nur ein Sprachmodell im Heimnetz wird gefragt; es wählt nur aus fertigen Vorschlägen.</div>
         <label>Nachkontrolle nach Stunden</label><input id="chat.berater_check_h" type="number" min="6" max="72"><div class="fh">6 bis 72.</div></div>
       <div class="setrow"><div class="lbl"><b>Kalender und Tagesbriefing</b><span>Termine vorlesen, nach „Ja“ eintragen, und auf „Guten Morgen“ das Tagesbriefing.</span></div><label class="tgl"><input type="checkbox" id="chat.calendar"><i></i></label></div>
+      <div class="setrow" data-show="chat.calendar" style="margin-left:18px"><div class="lbl"><b>Kalender teilen</b><span>Ein Profil teilt einen Kalender mit einem anderen, nur sehen oder sehen und eintragen. Private Termine nur als „belegt“.</span></div><label class="tgl"><input type="checkbox" id="chat.calendar_share"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Aufgaben und Einkaufsliste</b><span>„Setz Milch auf die Einkaufsliste“: Liste auf dem Spark oder in einer CalDAV-Aufgabenliste.</span></div><label class="tgl"><input type="checkbox" id="chat.tasks"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Agent-Funktionen</b><span>„Recherchiere …, sag mir Bescheid“: Aufträge im Hintergrund, geplante Aufträge und eigene Abläufe, nur für freigeschaltete Profile.</span></div><label class="tgl"><input type="checkbox" id="chat.agent"><i></i></label></div>
       <div data-show="chat.agent" style="margin-left:18px" id="agentadmin"></div>
@@ -789,6 +790,7 @@
 <section id="cal"><div class="card kalcard" id="kalroot"></div>
     <div id="calbox" class="kalset" hidden><div class="intro">„Guten Morgen“ oder „Was steht heute an?“: Der Assistent liest Termine, Erinnerungen und deine Themen vor. Du kannst mehrere Kalender verbinden. „Trag Zahnarzt Dienstag 10 Uhr ein“ legt einen Termin im ersten CalDAV-Kalender an, aber erst, wenn du den Vorschlag mit Ja bestätigst; Abo-Links bleiben nur lesend.</div>
       <ul class="facts" id="callist"></ul>
+      <div id="calshared"></div>
       <details id="caladd"><summary>Kalender hinzufügen</summary>
         <label>Anbieter</label><select id="calkind"><option value="icloud">iCloud (CalDAV)</option><option value="nextcloud">Nextcloud (CalDAV)</option><option value="caldav">anderer CalDAV-Server</option><option value="ics">Abo-Link (webcal://, webcals://, .ics, Google)</option></select>
         <div class="fh" id="calhint"></div>

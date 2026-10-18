@@ -369,6 +369,7 @@ ADMIN_ON_OK = {
     "esp32.py:profile_speaker_code": "endpoint: admin switch, then features.blocked",
     "faelle.py:wanted": "Spark-wide: turns are summed up at all",
     "gedaechtnis.py:for_live": "Spark-wide numbers for Live; each profile then features.allowed gedpruefen",
+    "calendars.py:for_live": "Spark-wide count of calendar shares for Live; reading a share asks features.allowed calshare for both profiles",
     "gedaechtnis.py:topics_once": "Spark-wide early out; each profile then topics_on (features.allowed)",
     "geraeteupdate.py:admin_on": "Spark-wide version checks; notes per profile features.allowed",
     "geraeteupdate.py:night_on": "Spark-wide night round; each speaker features.allowed geraetenacht",

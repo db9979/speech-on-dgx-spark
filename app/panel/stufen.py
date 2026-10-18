@@ -53,6 +53,7 @@ LIST = {
     ("PUT", "/api/admin/ghtoken"): (PROTECT, "Daten", "GitHub-Token für Updates", "GitHub token for updates"),
     # ------------------------------------------------------------------ accounts, devices, keys (confirm)
     ("POST", "/api/profile/calendar"): (CONFIRM, "Konten", "Kalender verbinden", "Connect a calendar"),
+    ("PUT", "/api/profile/calendar/{cid}/share"): (CONFIRM, "Konten", "Kalender mit einem anderen Profil teilen", "Share a calendar with another profile"),
     ("POST", "/api/profile/mail"): (CONFIRM, "Konten", "Mail-Konto verbinden", "Connect a mail account"),
     ("POST", "/api/profile/contacts"): (CONFIRM, "Konten", "Adressbuch verbinden", "Connect an address book"),
     ("PUT", "/api/profile/homeassistant"): (CONFIRM, "Konten", "Home Assistant verbinden", "Connect Home Assistant"),

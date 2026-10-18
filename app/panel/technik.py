@@ -147,7 +147,7 @@ MODULE = {
     "fuerdich": ("dienste", "Für dich: findet Rechnungen, Verträge, Bestellungen, Angebote, offene Antworten und Phishing in den eigenen Mails"),
     "mailstil": ("dienste", "Mailstil: lernt aus gesendeten Mails, wie das Profil schreibt, für Mail-Entwürfe"),
     "parcels": ("dienste", "Pakete aus Versand-Mails"),
-    "calendars": ("dienste", "Kalender und Tagesbriefing"),
+    "calendars": ("dienste", "Kalender und Tagesbriefing, einzelne Kalender mit anderen Profilen geteilt"),
     "contacts": ("dienste", "Kontakte per CardDAV, nur lesen"),
     "tasks": ("dienste", "Aufgaben und Einkaufsliste"),
     "weather": ("dienste", "Wetter von Open-Meteo als feste Sätze"),

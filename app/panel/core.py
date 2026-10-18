@@ -472,6 +472,10 @@ def calendar_on(request: Request):
     _gate("calendar", "calendar and daily briefing are turned off", request)
 
 
+def calshare_on(request: Request):
+    _gate("calshare", "sharing calendars is turned off", request)
+
+
 # Home Assistant: each profile connects its own; the token is never sent back.
 def ha_on(request: Request):
     _gate("ha", "Home Assistant is turned off", request)

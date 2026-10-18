@@ -1302,6 +1302,11 @@ def snapshot(view="admin", now=None):
     if nasl.get("on"):
         used.add("nas")
     try:
+        import calendars
+        kal = calendars.for_live()
+    except Exception:
+        kal = {"on": False}
+    try:
         import nasquelle
         nql = nasquelle.for_live()
     except Exception:
@@ -1406,6 +1411,8 @@ def snapshot(view="admin", now=None):
             x["sub"] = (f"{nasl.get('conns', 0)} Verbindungen · {nasl.get('profiles', 0)} Profile"
                         + (f" · {nasl['bad']} mit Fehler" if nasl.get("bad") else "")
                         + (" · Sicherung" if nasl.get("backup") else ""))
+        if x["id"] == "cal" and kal.get("on"):   # Kalender teilen: shares in numbers (never a name or an appointment)
+            x["sub"] += f" · {kal.get('shares', 0)} geteilt von {kal.get('owners', 0)} Profilen"
         if x["id"] == "nasquelle" and nql.get("on"):   # Wissensordner: folders, documents, failing (no path, no name)
             x["sub"] = (f"{nql.get('folders', 0)} Ordner · {nql.get('profiles', 0)} Profile · {nql.get('docs', 0)} Dokumente"
                         + (f" · {nql['bad']} mit Fehler" if nql.get("bad") else "")

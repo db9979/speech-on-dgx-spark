@@ -63,6 +63,7 @@ from core import (  # noqa: E402
     app_version,
     assistant,
     calendar_on,
+    calshare_on,
     check_password,
     confirm_code,
     ha_on,
@@ -996,6 +997,27 @@ async def profile_calendar_add(request: Request, prof=Depends(secret_profile)):
 @router.delete("/api/profile/calendar/{cid}", dependencies=[Depends(assistant)])
 def profile_calendar_remove(cid: str, prof=Depends(browser_profile)):
     return calendars.remove(prof["id"], cid)
+
+
+@router.put("/api/profile/calendar/{cid}/share", dependencies=[Depends(assistant), Depends(calendar_on), Depends(calshare_on)])
+async def profile_calendar_share(cid: str, request: Request, prof=Depends(secret_profile)):
+    """Kalender teilen (calendars.set_share): {"to": profile id, "level": "see" | "add" | ""}; "" takes it back.
+    Only the own browser login with the code (Bestätigen, stufen.LIST), never a device key; the other profile only
+    by its id from the list."""
+    guard.limit(request, "kalenderteilen", prof["id"])
+    body = await request.json()
+    body = body if isinstance(body, dict) else {}
+    level = str(body.get("level") or "")[:8]
+    try:
+        out = calendars.set_share(prof["id"], cid[:40], str(body.get("to") or "")[:40], level)
+    except KeyError:
+        print(f"calendar: share refused, no such calendar | {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(404, "no such calendar")
+    except ValueError as e:
+        print(f"calendar: share refused | {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(400, str(e))
+    print(f"calendar: share {'set ' + level if level else 'taken back'} | {profiles.log_name(prof)}", flush=True)
+    return out
 
 
 @router.put("/api/profile/calendar/topics", dependencies=[Depends(assistant), Depends(calendar_on)])

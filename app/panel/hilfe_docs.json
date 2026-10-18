@@ -1749,7 +1749,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Alltagsquote",
 "title": "Alltagsquote",
-"text": "- Die Testsätze (156) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (211) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt."
+"text": "- Die Testsätze (158) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (211) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt."
 },
 {
 "lang": "de",
@@ -1765,7 +1765,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 23 Gruppen der Weiche (Schritt 4, Schritt 6) - 2 Gruppen höchstens, die noch eingrenzen (Schritt 6) - 80 Zeichen höchstens für eine Folgefrage (Schritt 8) - 4 Sekunden höchstens für die Wahl des Modells (Schritt 10) - 300 ms Wartezeit mit „Schneller Antwortbeginn“ (Schritt 10) - 80 % Standard-Schwelle der Einordnung (Schritt 10) - 156 eingebaute Testsätze (Schritt 4, Schritt 5) - 211 Alltagssätze zum Messen (Schritt 14) - 20 Versionen für Rückgängig (Schritt 4)"
+"text": "- 23 Gruppen der Weiche (Schritt 4, Schritt 6) - 2 Gruppen höchstens, die noch eingrenzen (Schritt 6) - 80 Zeichen höchstens für eine Folgefrage (Schritt 8) - 4 Sekunden höchstens für die Wahl des Modells (Schritt 10) - 300 ms Wartezeit mit „Schneller Antwortbeginn“ (Schritt 10) - 80 % Standard-Schwelle der Einordnung (Schritt 10) - 158 eingebaute Testsätze (Schritt 4, Schritt 5) - 211 Alltagssätze zum Messen (Schritt 14) - 20 Versionen für Rückgängig (Schritt 4)"
 },
 {
 "lang": "de",
@@ -4598,6 +4598,22 @@
 "head": "Sprach-Chat",
 "title": "Tagesbriefing und Kalender",
 "text": "Tagesbriefing und Kalender: „Guten Morgen“ oder „Was steht heute an?“, und der Assistent liest die Termine von heute und morgen, die heutigen Erinnerungen und ein paar Sätze zu deinen Themen vor (z. B. „Wetter Berlin“, über deine SearXNG). „Was habe ich am Freitag?“ geht auch. Jedes Profil verbindet auf der Seite Kalender, Reiter Einstellungen, einen oder mehrere Kalender (bis zu 8); ein Termin, der in zwei Kalendern steht, wird einmal vorgelesen. Jeder ist eine CalDAV-Adresse mit Benutzer und App-Passwort (iCloud: https://caldav.icloud.com mit Apple-ID und app-spezifischem Passwort von appleid.apple.com; Nextcloud: …/remote.php/dav; Radicale …) oder ein Abo-Link mit webcal://, webcals:// oder https:// (Google: „Privatadresse im iCal-Format“, ein öffentlicher iCloud-Kalender). Neue Termine: „Trag Zahnarzt Dienstag 10 Uhr ein“, und der Assistent liest einen Vorschlag vor; erst wenn du im selben Gespräch schlicht mit Ja antwortest, schreibt das Panel selbst ihn in den ersten CalDAV-Kalender (auf Wunsch mit Erinnerung). Abo-Links bleiben nur lesend. Das Passwort bleibt auf dem Spark und wird nie wieder angezeigt. Gäste haben keinen Kalender. Abschaltbar unter Funktionen."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Kalender teilen (V01.0.811, Dominik 2026-10-18 „1a 2a“)",
+"text": "Kalender teilen (V01.0.811, Dominik 2026-10-18 „1a 2a“): Funktionen → Kalender und Tagesbriefing → „Kalender teilen“ (standardmäßig aus, freigegeben gilt es sofort für jedes Profil; nur der Admin sperrt einzelne Profile; Gäste nie). Unter Kalender → Einstellungen hat jeder verbundene Kalender „Teilen“: für jedes andere Profil „Nicht geteilt“, „Nur sehen“ oder „Sehen und eintragen“, mit dem eigenen Code (Stufe Bestätigen, PUT /api/profile/calendar/{id}/share, Rate-Limit kalenderteilen); „Nicht geteilt“ nimmt es sofort zurück. Beim anderen Profil steht der Kalender auf der Seite Kalender in eigener Farbe als „Name · Kalender“ und unter Einstellungen bei „Mit dir geteilt“; sein Assistent liest ihn mit calendar_events („Was hat Sabine morgen?“, „Hat Tom am Freitag Zeit?“, die Weiche nimmt solche Fragen zum Kalender). Gelesen wird mit dem Zugang des Besitzers, Adresse und Passwort bleiben in dessen Datei. Ein privater Termin (CLASS PRIVATE oder CONFIDENTIAL) erscheint beim anderen nur als „belegt“ mit der Uhrzeit, ohne Titel und Ort. Mit „Sehen und eintragen“ trägt der Assistent des anderen dort nur ein, wenn der Kalender genannt wird („Trag in Sabines Kalender … ein“), und erst nach de"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Kalender teilen (V01.0.811, Dominik 2026-10-18 „1a 2a“)",
+"text": "ssen Ja; ändern, löschen und rückgängig machen bleibt beim Besitzer. Tagesbriefing, Von selbst und Heute zeigen nur die eigenen Kalender. Live zeigt beim Kalender nur, wie viele Freigaben es von wie vielen Profilen gibt. Log: calendar: share set see|add, share taken back, share refused."
 },
 {
 "lang": "de",
@@ -9917,7 +9933,7 @@
 "file": "Architecture and data flow",
 "head": "Everyday score",
 "title": "Everyday score",
-"text": "- The test sentences (156) hold every reported wrong turn and must all pass. The everyday sentences (211) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up."
+"text": "- The test sentences (158) hold every reported wrong turn and must all pass. The everyday sentences (211) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up."
 },
 {
 "lang": "en",
@@ -9933,7 +9949,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 23 groups of the switch (step 4, step 6) - 2 groups at most that still narrow (step 6) - 80 characters at most for a follow-up (step 8) - 4 seconds at most for the model's pick (step 10) - 300 ms waiting with „Fast answer start“ (step 10) - 80 % default threshold of the classification (step 10) - 156 built-in test sentences (step 4, step 5) - 211 everyday sentences for measuring (step 14) - 20 versions for undo (step 4)"
+"text": "- 23 groups of the switch (step 4, step 6) - 2 groups at most that still narrow (step 6) - 80 characters at most for a follow-up (step 8) - 4 seconds at most for the model's pick (step 10) - 300 ms waiting with „Fast answer start“ (step 10) - 80 % default threshold of the classification (step 10) - 158 built-in test sentences (step 4, step 5) - 211 everyday sentences for measuring (step 14) - 20 versions for undo (step 4)"
 },
 {
 "lang": "en",
@@ -12670,6 +12686,22 @@
 "head": "Voice chat",
 "title": "Daily briefing and calendar",
 "text": "Daily briefing and calendar: say \"good morning\" or \"what's on today?\" and the assistant reads out today's and tomorrow's appointments, today's reminders and a few lines on your own topics (e.g. \"weather Berlin\", via your SearXNG). \"What do I have on Friday?\" works too. Each profile connects one or more calendars (up to 8) on the page Calendar, tab Settings; an appointment found in two calendars is read out once. Each one is a CalDAV address with user and app password (iCloud: https://caldav.icloud.com with the Apple ID and an app-specific password from appleid.apple.com; Nextcloud: …/remote.php/dav; Radicale …), or a subscription link with webcal://, webcals:// or https:// (Google: \"secret address in iCal format\", a public iCloud calendar). New appointments: \"put dentist on Tuesday 10 am in my calendar\" makes the assistant read out a proposal; only when you answer with a plain yes in the same conversation does the panel itself write it to the first CalDAV calendar (optionally with an alarm). Subscription links stay read only. The password stays on the Spark and is never shown again. Guests get no calendar. Can be turned off under Features."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Sharing calendars (V01.0.811, Dominik 2026-10-18 \"1a 2a\")",
+"text": "Sharing calendars (V01.0.811, Dominik 2026-10-18 \"1a 2a\"): Features → Calendar and daily briefing → \"Kalender teilen\" (off by default; once released it applies to every profile at once, only the admin blocks single profiles; never guests). Under Calendar → Settings every connected calendar has \"Share\": for each other profile \"Not shared\", \"See only\" or \"See and add\", with the own code (level Confirm, PUT /api/profile/calendar/{id}/share, rate limit kalenderteilen); \"Not shared\" takes it back at once. The other profile sees the calendar on its Calendar page in its own colour as \"Name · Calendar\" and under Settings in \"Shared with you\"; its assistant reads it with calendar_events (\"Was hat Sabine morgen?\", \"Hat Tom am Freitag Zeit?\", the Weiche sends such questions to the calendar). It is read with the owner's access, address and password stay in the owner's file. A private appointment (CLASS PRIVATE or CONFIDENTIAL) shows at the other profile only as \"belegt\" with its time, without title and place. With \"See and add\" the other profile's assistant enters an appointment there only when the calendar is named (\"put … in Sabine's calendar\") and only after that profile's yes; changing, de"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Sharing calendars (V01.0.811, Dominik 2026-10-18 \"1a 2a\")",
+"text": "leting and undo stay with the owner. The daily briefing, Proactive and Today show only the own calendars. Live shows at the calendar only how many shares there are from how many profiles. Log: calendar: share set see|add, share taken back, share refused."
 },
 {
 "lang": "en",

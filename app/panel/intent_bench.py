@@ -70,6 +70,8 @@ BENCH = [
     ("Was steht morgen in meinem Kalender?", "kalender"),
     ("Verschieb den Termin beim Friseur", "kalender"),
     ("Bin ich am Freitag mit Tom verabredet?", "kalender"),
+    ("Was hat Sabine morgen?", "kalender"),
+    ("Hat Tom am Freitag Zeit?", "kalender"),
     ("Habe ich neue Mails?", "mail"),
     ("Was steht im Posteingang?", "mail"),
     ("Lies mir die letzte Mail vor", "mail"),

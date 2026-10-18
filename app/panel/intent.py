@@ -56,7 +56,12 @@ CALENDAR_WORDS = re.compile(chat.NEED_CALENDAR.pattern + "|" + chat.MORNING.patt
                             r"hab(e)? ich (heute|morgen|übermorgen|am \w+|\w+tag)\b.{0,20}\bnoch (was|etwas|einen termin)\b|"
                             # everyday ways to ask for the own days (plan weiche-intelligenter 2: „Hab ich am Freitag Zeit?“)
                             r"meeting\w*|elternabend\w*|verplant|(das|dem|ein|unser|mein|nächste[ns]?) treffen|treffe? ich mich|"
-                            r"hab(e)? ich .{0,30}\bvor|bin ich .{0,30}\b(frei|verplant|verabredet)|hab(e)? ich .{0,25}\b(zeit|frei))\b)")
+                            r"hab(e)? ich .{0,30}\bvor|bin ich .{0,30}\b(frei|verplant|verabredet)|hab(e)? ich .{0,25}\b(zeit|frei))\b)"
+                            # a calendar another profile shares (Kalender teilen): „Was hat Sabine morgen?“, „Hat Tom am
+                            # Freitag Zeit?“; a name starts with a capital letter and the question ends there or with Zeit/frei/vor, so
+                            # „was hat das Wetter morgen“ or „Hat Lidl heute offen?“ is none
+                            r"|(?-i:\b([Ww]as hat|[Hh]at) (?!der |die |das |es |man )[A-ZÄÖÜ][a-zäöüß]+ (heute|morgen|übermorgen|am [A-Z][a-z]+|diese Woche)\b"
+                            r"( noch)?( (vor|frei|Zeit|Termine|einen Termin|verplant))?\W*$)")
 LIST_WORDS = re.compile(r"(?i)(einkaufsliste|einkaufszettel|aufgabenliste|to-?do|\b(auf|von) (die|der|meine[rn]?) "
                         r"liste\b|\bliste\b|shopping list|\bhak\w* .{1,40}\bab\b|\babhaken\b|\bstreich\w* .{1,40}\b(von|durch)\b|"
                         r"\b(muss|müssen|soll|sollen) (ich|wir) .{0,25}einkaufen\b|^\W*schreib \w+( und \w+)? auf\W*$|"

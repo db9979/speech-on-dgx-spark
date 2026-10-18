@@ -222,6 +222,7 @@
     "documents": true,
     "reminders": true,
     "calendar": true,
+    "calendar_share": false,
     "mail": false,
     "mail_tidy": false,
     "mail_style": false,
