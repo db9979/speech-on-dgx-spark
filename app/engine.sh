@@ -59,6 +59,14 @@ fi
 # models run without it, from the catalog's checked entries only
 [ "${#LLM_ARGS[@]}" -gt 0 ] || [[ "$MODEL" =~ ^Qwen/Qwen3-(ASR|TTS|ForcedAligner)-[A-Za-z0-9._-]+$ ]] \
   || fail "model '$MODEL' is not one of Qwen's speech models"
+# the speech models on their pinned commit from the catalog (modelle.py fest), like the language models; the
+# download checked every file (install.sh dl), vLLM loads exactly that commit
+REV=""
+if [ "${#LLM_ARGS[@]}" -eq 0 ]; then
+  PREFIX="${SPEECH_SPARK_PREFIX:-$(dirname "$VENV")}"
+  read -r _ REV < <("$PREFIX/venv-panel/bin/python" "$(dirname "$(readlink -f "$0")")/modelle.py" fest "$MODEL" | tail -n1) || true
+  [[ "$REV" =~ ^[0-9a-f]{40}$ ]] || fail "model '$MODEL' has no pinned commit in the model catalog"
+fi
 [[ "$PORT" =~ ^[0-9]{4,5}$ ]] || fail "invalid port '$PORT'"
 [[ "$SEQS" =~ ^[0-9]{1,3}$ ]] || fail "invalid engine_max_seqs '$SEQS'"
 for m in "$MEM0" "$MEM1"; do
@@ -143,7 +151,7 @@ if [ "$ROLE" = asr ]; then
   # Plain vLLM: OpenAI /v1/audio/transcriptions incl. streaming, batches parallel requests.
   # Audio is cut into model-sized clips, so a short max length keeps the KV cache small.
   export VLLM_MAX_AUDIO_CLIP_FILESIZE_MB=200
-  exec "$VENV/bin/vllm" serve "$MODEL" \
+  exec "$VENV/bin/vllm" serve "$MODEL" --revision "$REV" \
     --host 127.0.0.1 --port "$PORT" \
     --disable-uvicorn-access-log \
     --served-model-name "$MODEL" \
@@ -184,7 +192,7 @@ fi
 
 # --disable-log-stats: vllm-omni otherwise logs a statistics table after every spoken sentence
 # (~12,000 journal lines a day on tars); nothing here reads them
-exec "$VENV/bin/vllm" serve "$MODEL" --omni \
+exec "$VENV/bin/vllm" serve "$MODEL" --revision "$REV" --omni \
   --host 127.0.0.1 --port "$PORT" \
   --disable-uvicorn-access-log \
   --disable-log-stats \

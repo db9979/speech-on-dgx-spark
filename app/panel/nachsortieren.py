@@ -139,7 +139,9 @@ async def _start():
         print("wissen: nachsortieren modell wartet | arbeitsspeicher", flush=True)
         return
     _status.update(state="starting", error="")
-    _proc = await asyncio.create_subprocess_exec(sys.executable, "-I", WORKER, "rank", sz, stdin=asyncio.subprocess.PIPE,
+    m = modelle.zur_variante("klein", sz)    # its repository and pinned commit (the worker checks every file)
+    _proc = await asyncio.create_subprocess_exec(sys.executable, "-I", WORKER, "rank", sz, m["repo"], m["revision"],
+                                                 stdin=asyncio.subprocess.PIPE,
                                                  stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.DEVNULL,
                                                  limit=4 * 1024**2)
     _size = sz

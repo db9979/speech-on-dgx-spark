@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.785** Every model on a pinned commit with hash check, speech, search and picture filter too
 - **V01.0.784** reMarkable: always a task sheet there, also when nothing is open
 - **V01.0.783** Fix: leaving out many documents no longer holds the Pi (in the background with progress); the button "Every folder …" explains the name rule
 - **V01.0.782** Fix: a model switch waits for the new model before it checks it
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.778** iPhone app: see left-out folders, let them in again and keep name rules
 - **V01.0.777** Left-out folders also for the reMarkable and the companion's folder Spark-Wissen (new companion version)
 - **V01.0.776** Pictures and music: one queue, never two models at once, a notice with place and waiting time
-- **V01.0.775** Fix: no engine starts next to a model measurement anymore; measuring Qwen3.6 35B A3B
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

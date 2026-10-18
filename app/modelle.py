@@ -23,7 +23,8 @@ Hugging Face cache (SHA-256 for large files, the git blob hash for small ones).
 Command line (as the panel's service user, from speech-spark.sh): liste · feld <id> repo|revision · messliste <was …> · vorbereiten <id> ·
 pruefen <id> [revision] · vllm-args <id> [--port N] [--revision R] [--ohne-mtp] · messen-lauf <id> [--port N]
 [--einheit unit] [--revision R] · ergebnis · venv <id>|llm|sehen · start-args llm|sehen (engine.sh) · signatur llm|sehen
-(install.sh) · docker-bild <id> · docker-args <id> --revision R --name N --uid U --gid G [--ohne-mtp] (mess_docker).
+(install.sh) · docker-bild <id> · docker-args <id> --revision R --name N --uid U --gid G [--ohne-mtp] (mess_docker) ·
+fest <repo> · erlaubt (install.sh dl, engine.sh: the pinned commit of a speech model and the file kinds to fetch).
 
 An entry with a Docker recipe (vllm "docker", DOCKER) runs as a container only while it is measured (Dominik
 2026-10-17: Docker only on tars, only for model engines): pinned image, no network, its socket put on 127.0.0.1 by
@@ -231,6 +232,9 @@ def _aus_bildmodell(m):
         return dict(m, name={"de": v["name"], "en": v["name"]}, lizenz=musikmodell.LICENSE, gewerblich=True,
                     need_gib=v["need_gib"], repo=v["dit"].repo, revision=v["dit"].revision,
                     platte_gb=musikmodell.disk_gb(m["variante"]))
+    if m.get("rolle") == "bildpruefung":         # the picture check's file, commit and SHA-256 live in bildmodell.CHECKER
+        import bildmodell
+        return dict(m, repo=bildmodell.CHECKER.repo, revision=bildmodell.CHECKER.revision)
     if m.get("engine") != "sdcpp":
         return m
     import bildmodell
@@ -742,6 +746,24 @@ def _laden(repo, rev, ordner):
         raise Fehler("revision")
     pruefen(ordner, commit)
     return commit
+
+
+def fest(repo, kat=None):
+    """The catalog entry of a speech, search or picture check model with its pinned commit (Dominik 2026-10-18,
+    Abgleich sichere KI-Architektur Punkt 2: every model on a fixed commit like the language models). Raises Fehler
+    for a repository the catalog lacks or that has no pinned commit."""
+    m = zum_repo(repo, kat)
+    if not m or not REV.match(m["revision"] or ""):
+        raise Fehler("revision")
+    return m
+
+
+def lokal(repo, hf_home=None, kat=None):
+    """The checked folder of a pinned speech model for asr_server.py / tts_server.py: its pinned commit in the cache,
+    every file a checked kind and link (the hashes were checked at the download, install.sh dl)."""
+    m = fest(repo, kat)
+    pruefen(hf_ordner(m, hf_home), m["revision"], hashes=False)
+    return os.path.join(hf_ordner(m, hf_home), "snapshots", m["revision"])
 
 
 def vorbereiten(m, hf_home=None):
@@ -1803,6 +1825,13 @@ def cli(args, log=print):
                 return 3
             print(f"modelle: geladen {m['id']} geprueft", file=sys.stderr, flush=True)
             log(rev)
+            return 0
+        if cmd == "fest":                   # install.sh dl, engine.sh: "<id> <commit>" of a pinned repository
+            m = fest(args[1])
+            log(f"{m['id']} {m['revision']}")
+            return 0
+        if cmd == "erlaubt":                # install.sh dl: the file kinds a download may take
+            log(json.dumps(list(ERLAUBT)))
             return 0
         if cmd == "pruefen":
             m = eintrag(args[1])

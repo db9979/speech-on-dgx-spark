@@ -1841,6 +1841,13 @@
 "v": 784,
 "titel": "Immer ein Aufgabenblatt",
 "text": "A: Auf dem reMarkable im Ordner „Aufgaben“ liegt ein Aufgabenblatt (kam es noch nie, kommt das erste nach dem Update von selbst). B: Alle Punkte ankreuzen, „Fertig“: nach etwa 10 Minuten liegt eine neue Version mit „Alles erledigt“, „0 offen“ mit Stand, „Zuletzt erledigt“ und „Als Nächstes“. C: Auf dem Blatt „Kann weg“ ankreuzen: es verschwindet, beim nächsten Abgleich (spätestens nach etwa 15 Minuten) liegt eine neue Version im Ordner. D: Am nächsten Morgen nach der Morgenblatt-Zeit trägt das Blatt das neue Datum."
+},
+{
+"id": "P287",
+"v": 785,
+"titel": "Alle Modelle mit festem Stand",
+"text": "A: Pi und tars mit `sudo speech-spark update` aktualisieren: install.sh lädt Spracherkennung und Sprachausgabe einmal neu (fester Stand), ohne Warnung „Modelle“. B: Danach eine Sprachfrage stellen: erkannt und vorgelesen wie vorher; Zustand → Dienste zeigt Spracherkennung und Sprachausgabe grün. C: In Ich → Dokumente suchen: Treffer kommen wie vorher (Einbettung und Nachsortieren laden mit festem Stand).",
+"thread": "Eigene Modell-Installation statt qwen38"
 }
 ]
 }

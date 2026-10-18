@@ -321,7 +321,7 @@
       "betrieb": "bei_bedarf"
     },
     {
-      "revision": "",
+      "revision": "7278e1e70fe206f11671096ffdd38061171dd6e5",
       "gewerblich": true,
       "gemessen": false,
       "id": "qwen3-asr-1.7b",
@@ -343,7 +343,7 @@
       }
     },
     {
-      "revision": "",
+      "revision": "5eb144179a02acc5e5ba31e748d22b0cf3e303b0",
       "gewerblich": true,
       "gemessen": false,
       "id": "qwen3-asr-0.6b",
@@ -387,7 +387,7 @@
       }
     },
     {
-      "revision": "",
+      "revision": "c7cbfc2048c462b0d63a45797104fc9db3ad62b7",
       "gewerblich": true,
       "gemessen": false,
       "id": "qwen3-forcedaligner-0.6b",
@@ -405,7 +405,7 @@
       "betrieb": "resident"
     },
     {
-      "revision": "",
+      "revision": "85e237c12c027371202489a0ec509ded67b5e4b5",
       "gewerblich": true,
       "gemessen": false,
       "id": "qwen3-tts-0.6b",
@@ -427,7 +427,7 @@
       }
     },
     {
-      "revision": "",
+      "revision": "0c0e3051f131929182e2c023b9537f8b1c68adfe",
       "gewerblich": true,
       "gemessen": false,
       "id": "qwen3-tts-1.7b",
@@ -449,7 +449,7 @@
       }
     },
     {
-      "revision": "",
+      "revision": "5d83992436eae1d760afd27aff78a71d676296fc",
       "gewerblich": true,
       "gemessen": false,
       "id": "qwen3-tts-0.6b-base",
@@ -467,7 +467,7 @@
       "betrieb": "resident"
     },
     {
-      "revision": "",
+      "revision": "fd4b254389122332181a7c3db7f27e918eec64e3",
       "gewerblich": true,
       "gemessen": false,
       "id": "qwen3-tts-1.7b-base",
@@ -485,7 +485,7 @@
       "betrieb": "resident"
     },
     {
-      "revision": "",
+      "revision": "5ecdb67327fd37bb2e042aab12ff7391903235d3",
       "gewerblich": true,
       "gemessen": false,
       "id": "qwen3-tts-1.7b-voicedesign",
@@ -594,7 +594,7 @@
       }
     },
     {
-      "revision": "",
+      "revision": "761b726dd34fb83930e26aab4e9ac3899aa1fa78",
       "gewerblich": true,
       "gemessen": false,
       "id": "e5-small",
@@ -612,7 +612,7 @@
       "betrieb": "resident"
     },
     {
-      "revision": "",
+      "revision": "1427fd652930e4ba29e8149678df786c240d8825",
       "gewerblich": true,
       "gemessen": false,
       "id": "rerank-klein",
@@ -631,7 +631,7 @@
       "betrieb": "bei_bedarf"
     },
     {
-      "revision": "",
+      "revision": "6f5ff65298512715a1e669753bc754d2bc8f367b",
       "gewerblich": true,
       "gemessen": false,
       "id": "rerank-gross",

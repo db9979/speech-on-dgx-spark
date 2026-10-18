@@ -36,7 +36,7 @@ _Q4 = "unsloth/Qwen3-4B-GGUF", "22c9fc8a8c7700b76a1789366280a6a5a1ad1120"
 _Q8 = "unsloth/Qwen3-8B-GGUF", "a6adef130ffb23ddaf1a62fec9dced968c9bc482"
 VAE = File("Comfy-Org/flux2-klein-4B", "main", "split_files/vae/flux2-vae.safetensors",
            "868fe7b343cc8f3a19dbcfcafbc3d5f888802be3f89bd81b65b3621a066ce8f3", 336211292)
-CHECKER = File("AdamCodd/vit-base-nsfw-detector", "main", "onnx/model_quantized.onnx",
+CHECKER = File("AdamCodd/vit-base-nsfw-detector", "8587de998f441aac03fdd57a85d2e4cb808c7d64", "onnx/model_quantized.onnx",
                "432763a6899ebc418c55f784b98f90565e5fc694c778d2ffcb0294b12f6a7404", 88500985)
 CHECK_SIDE = 384           # the classifier's input (ViTImageProcessor: 384 x 384, mean 0.5, std 0.5)
 

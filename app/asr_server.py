@@ -10,6 +10,7 @@ import uvicorn
 from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import PlainTextResponse
 
+import modelle
 from common import ASR_ISO as ISO, RATE_MAX, RATE_MIN, BodyLimit, KeyedCORS, inside, outside_view, ServiceState, api_key_dependency, api_key_ok, check_memory, estimate_gib, load_config, quiet_access_log, SpeechMark, torch_dtype
 
 cfg = load_config("asr")
@@ -36,9 +37,10 @@ def load_model(cfg):
         max_new_tokens=cfg["max_new_tokens"],
     )
     if cfg.get("timestamps"):
-        kwargs["forced_aligner"] = cfg["aligner_model"]
+        kwargs["forced_aligner"] = modelle.lokal(cfg["aligner_model"])
         kwargs["forced_aligner_kwargs"] = dict(dtype=dtype, device_map="cuda:0", attn_implementation="sdpa")
-    model = Qwen3ASRModel.from_pretrained(cfg["model"], **kwargs)
+    # the pinned commit from the catalog, its files checked (modelle.lokal), never whatever the repository holds now
+    model = Qwen3ASRModel.from_pretrained(modelle.lokal(cfg["model"]), **kwargs)
     # warm-up: the first transcription after loading is much slower than the rest
     try:
         import numpy as np

@@ -20,6 +20,7 @@ import os
 import sys
 import time
 
+import modelle
 from common import STATE, read_json, write_json
 
 PINS = os.path.join(STATE, "doc-embed.json")
@@ -111,7 +112,9 @@ async def _start(timeout):
         _status.update(state="waiting", error="zu wenig freier Arbeitsspeicher")
         raise RuntimeError("not enough free memory for the embedding model")
     _status.update(state="starting", error="")
-    _proc = await asyncio.create_subprocess_exec(sys.executable, "-I", WORKER, stdin=asyncio.subprocess.PIPE,
+    m = modelle.eintrag("e5-small")         # its repository and pinned commit (the worker checks every file)
+    _proc = await asyncio.create_subprocess_exec(sys.executable, "-I", WORKER, "embed", m["repo"], m["revision"],
+                                                 stdin=asyncio.subprocess.PIPE,
                                                  stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.DEVNULL,
                                                  limit=4 * 1024**2)
     try:

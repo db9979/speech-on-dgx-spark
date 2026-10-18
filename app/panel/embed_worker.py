@@ -1,28 +1,28 @@
-"""The embedding model in its own process (started by docembed.py with python -I, never by hand).
+"""The embedding model in its own process (started by docembed.py with python -I as `embed_worker.py embed REPO
+COMMIT`, never by hand; repository and pinned commit from the model catalog, every file checked against it).
 
 Reads one JSON line per request from stdin: {"kind": "query" | "passage", "texts": [...]}, writes one
 JSON line per answer: {"vecs": base64 of float16 values, DIM per text, length 1} or {"error": "..."}.
 The first line it writes says whether it is ready, with the SHA-256 of the model files.
 
-Started as `embed_worker.py rank klein|gross` (nachsortieren.py) it holds a cross-encoder instead: requests
+Started as `embed_worker.py rank klein|gross REPO COMMIT` (nachsortieren.py) it holds a cross-encoder instead: requests
 {"query": "...", "texts": [...]}, answers {"scores": [...]} (one raw score per text, higher fits better).
 """
 import base64
 import hashlib
 import json
 import os
+import re
 import sys
 
-REPO = "Xenova/multilingual-e5-small"     # intfloat/multilingual-e5-small as quantized ONNX
-FILES = ("onnx/model_quantized.onnx", "tokenizer.json")
+FILES = ("onnx/model_quantized.onnx", "tokenizer.json")     # the embedding model: multilingual-e5-small as quantized ONNX
 MAX_TOKENS = 512
 MAX_TEXTS = 16
-# the re-ranking models (Stufe 3 of plan suche-schaerfen): (repository, ONNX file) tried in this order, the
-# first that downloads is used; its SHA-256 is pinned the first time like the embedding model's
-RANK = {"klein": ((("cross-encoder/mmarco-mMiniLMv2-L12-H384-v1", "onnx/model_qint8_arm64.onnx"),
-                   ("cross-encoder/mmarco-mMiniLMv2-L12-H384-v1", "onnx/model.onnx")), 384),
-        "gross": ((("onnx-community/bge-reranker-v2-m3-ONNX", "onnx/model_quantized.onnx"),
-                   ("BAAI/bge-reranker-v2-m3", "onnx/model.onnx")), 512)}
+# the re-ranking models (Stufe 3 of plan suche-schaerfen): size -> (ONNX file, most tokens). Repository and pinned
+# commit come from the model catalog through the caller (docembed.py, nachsortieren.py: modelle.fest), never "main"
+RANK = {"klein": ("onnx/model_qint8_arm64.onnx", 384), "gross": ("onnx/model_quantized.onnx", 512)}
+REPO_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,95}/[A-Za-z0-9][A-Za-z0-9._-]{0,95}")
+REV_RE = re.compile(r"[0-9a-f]{40}")
 RANK_TEXTS = 40
 
 
@@ -39,7 +39,26 @@ def _sha(path):
     return h.hexdigest()
 
 
-def rank_main(size):
+def hole(repo, rev, f):
+    """One file of the pinned commit, checked against its name in the cache (SHA-256 of a large file, git blob hash of
+    a small one; like modelle.pruefen, which this process cannot import under python -I). Returns (path, SHA-256)."""
+    from huggingface_hub import hf_hub_download
+    p = hf_hub_download(repo, f, revision=rev)
+    blob, sha = os.path.basename(os.path.realpath(p)), _sha(p)
+    if re.fullmatch(r"[0-9a-f]{40}", blob):
+        h = hashlib.sha1(b"blob %d\0" % os.path.getsize(p))
+        with open(p, "rb") as fh:
+            for block in iter(lambda: fh.read(1 << 20), b""):
+                h.update(block)
+        ok = h.hexdigest() == blob
+    else:
+        ok = sha == blob
+    if not ok:
+        raise RuntimeError(f"{f} does not match its commit")
+    return p, sha
+
+
+def rank_main(size, repo, rev):
     """The cross-encoder: question and passage read together, one score per passage."""
     try:
         os.nice(10)
@@ -48,20 +67,10 @@ def rank_main(size):
     try:
         import numpy as np
         import onnxruntime as ort
-        from huggingface_hub import hf_hub_download
         from tokenizers import Tokenizer
-        tries, most = RANK[size]
-        got, last = None, None
-        for repo, f in tries:
-            try:
-                got = (repo, f, hf_hub_download(repo, f), hf_hub_download(repo, "tokenizer.json"))
-                break
-            except Exception as e:      # this file is not there (another build of the model): the next one
-                last = e
-        if not got:
-            raise last or RuntimeError("no model file")
-        repo, f, model, tokfile = got
-        sha = {f"{repo}/{f}": _sha(model), f"{repo}/tokenizer.json": _sha(tokfile)}
+        f, most = RANK[size]
+        (model, sha_m), (tokfile, sha_t) = hole(repo, rev, f), hole(repo, rev, "tokenizer.json")
+        sha = {f"{repo}/{f}": sha_m, f"{repo}/tokenizer.json": sha_t}
         tok = Tokenizer.from_file(tokfile)
         tok.enable_truncation(most)
         tok.enable_padding()
@@ -90,8 +99,13 @@ def rank_main(size):
 
 
 def main():
-    if len(sys.argv) == 3 and sys.argv[1] == "rank" and sys.argv[2] in RANK:
-        return rank_main(sys.argv[2])
+    a = sys.argv[1:]
+    if len(a) == 4 and a[0] == "rank" and a[1] in RANK and REPO_RE.fullmatch(a[2]) and REV_RE.fullmatch(a[3]):
+        return rank_main(*a[1:])
+    if not (len(a) == 3 and a[0] == "embed" and REPO_RE.fullmatch(a[1]) and REV_RE.fullmatch(a[2])):
+        say({"ready": False, "error": "usage: embed_worker.py embed REPO COMMIT | rank klein|gross REPO COMMIT"})
+        return
+    repo, rev = a[1], a[2]
     try:
         os.nice(10)      # background work: the panel, speech and the language model go first
     except OSError:
@@ -99,16 +113,9 @@ def main():
     try:
         import numpy as np
         import onnxruntime as ort
-        from huggingface_hub import hf_hub_download
         from tokenizers import Tokenizer
-        paths = {f: hf_hub_download(REPO, f) for f in FILES}
-        sha = {}
-        for f, p in paths.items():
-            h = hashlib.sha256()
-            with open(p, "rb") as fh:
-                for block in iter(lambda: fh.read(1 << 20), b""):
-                    h.update(block)
-            sha[f] = h.hexdigest()
+        got = {f: hole(repo, rev, f) for f in FILES}
+        paths, sha = {f: p for f, (p, _) in got.items()}, {f: h for f, (_, h) in got.items()}
         tok = Tokenizer.from_file(paths["tokenizer.json"])
         tok.enable_truncation(MAX_TOKENS)
         tok.enable_padding()

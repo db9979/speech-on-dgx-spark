@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.785** Alle Modelle mit festem Stand und Prüfsumme, auch Sprache, Suche und Bildfilter
 - **V01.0.784** reMarkable: immer ein Aufgabenblatt da, auch wenn nichts offen ist
 - **V01.0.783** Fix: viele Dokumente auslassen hält den Pi nicht mehr an (im Hintergrund mit Fortschritt); Knopf „Jeden Ordner …“ erklärt die Namensregel
 - **V01.0.782** Fix: Modellwechsel wartet auf das neue Modell, bevor er es prüft
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.778** iPhone-App: Ausgelassene Ordner ansehen, wieder zulassen und Namensregeln pflegen
 - **V01.0.777** Ordner auslassen auch für reMarkable und den Begleiter-Ordner Spark-Wissen (neue Begleiter-Version)
 - **V01.0.776** Bilder und Musik: eine Warteschlange, nie zwei Modelle zugleich, Hinweis mit Platz und Wartezeit
-- **V01.0.775** Fix: keine Engine startet mehr neben einer Modell-Messung; Qwen3.6 35B A3B messen
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

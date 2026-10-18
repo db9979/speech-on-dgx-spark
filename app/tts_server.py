@@ -15,6 +15,7 @@ from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import Response
 from pydantic import BaseModel
 
+import modelle
 from common import BodyLimit, KeyedCORS, inside, outside_view, ServiceState, api_key_dependency, api_key_ok, check_memory, estimate_gib, load_config, quiet_access_log, SpeechMark, torch_dtype
 from textnorm import (MAX_INPUT, apply_pronunciations, clean_text, hide_secrets, parse_pronunciations,
                       speak_abbreviations, speak_numbers, speech_markdown)
@@ -42,7 +43,7 @@ def load_model(cfg):
     check_memory(estimate_gib(cfg["model"]))
     from qwen_tts import Qwen3TTSModel
     model = Qwen3TTSModel.from_pretrained(
-        cfg["model"],
+        modelle.lokal(cfg["model"]),      # the pinned commit from the catalog, its files checked
         device_map="cuda:0",
         dtype=torch_dtype(cfg["dtype"]),
         attn_implementation="sdpa",  # flash-attn does not build for GB10 (sm_121)

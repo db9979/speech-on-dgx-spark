@@ -808,7 +808,7 @@ fi
 # ---------------------------------------------------------------- models (ASR / transformers TTS)
 # An update downloads only when the chosen models changed since the last complete download
 # ($PREFIX/.models, root's file); the services fetch a model that went missing themselves.
-MODELS_SIG="models-r1 $WITH_ASR $WITH_TTS $ASR_BACKEND $BACKEND $(cfgq -c '{a: .asr.model, b: .asr.aligner_model, c: .asr.timestamps, d: .asr.recognizer, e: .tts.model, f: .tts.voicedesign_enabled, g: .tts.voicedesign_model}')"
+MODELS_SIG="models-r2 $(sha256sum "$INSTALL_FROM/app/modelle.json" | cut -c1-16) $WITH_ASR $WITH_TTS $ASR_BACKEND $BACKEND $(cfgq -c '{a: .asr.model, b: .asr.aligner_model, c: .asr.timestamps, d: .asr.recognizer, e: .tts.model, f: .tts.voicedesign_enabled, g: .tts.voicedesign_model}')"
 if [ "$DOWNLOAD" = 1 ] && [ "$FROM_UPDATE" = 1 ] && [ -f "$PREFIX/.models" ] && [ ! -L "$PREFIX/.models" ] \
    && [ "$(cat "$PREFIX/.models")" = "$MODELS_SIG" ]; then
   say "Downloading skipped: the models are the same as before"
@@ -822,9 +822,18 @@ if [ "$PANEL_ONLY" = 1 ]; then   # Notbetrieb mit Parakeet: the model is there b
     || warn "Parakeet download failed; run sudo ./install.sh --mode panel again for the emergency mode"
 fi
 if [ "$DOWNLOAD" = 1 ]; then
+  # every speech model on its pinned commit from the catalog, only the allowed file kinds, then each file checked
+  # against its hash (modelle.py fest / erlaubt / pruefen; Abgleich sichere KI-Architektur Punkt 2, 2026-10-18)
   dl() {
+    local id rev
+    read -r id rev < <(python3 "$INSTALL_FROM/app/modelle.py" fest "$2") \
+      || { warn "$2 has no pinned commit in the model catalog; not downloaded"; MODELS_OK=0; return 0; }
     sudo -u "$SVC_USER" HF_HOME="$VAR/hf" "$PREFIX/venv-$1/bin/python" -c \
-      "import sys; from huggingface_hub import snapshot_download; snapshot_download(sys.argv[1])" "$2"
+      "import json, sys; from huggingface_hub import snapshot_download; snapshot_download(sys.argv[1], revision=sys.argv[2], allow_patterns=json.loads(sys.argv[3]))" \
+      "$2" "$rev" "$(python3 "$INSTALL_FROM/app/modelle.py" erlaubt)" \
+      || { warn "download of $2 failed"; MODELS_OK=0; return 0; }
+    HF_HOME="$VAR/hf" python3 "$INSTALL_FROM/app/modelle.py" pruefen "$id" >/dev/null \
+      || { warn "the files of $2 do not match their commit; not used"; MODELS_OK=0; }
   }
   if [ "$WITH_ASR" = 1 ] && [ "$ASR_BACKEND" = transformers ]; then
     say "Downloading ASR model"
