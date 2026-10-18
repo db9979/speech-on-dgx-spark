@@ -1837,7 +1837,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "hon vorab. Ist „Das kannst du auch sagen“ an, hängt das Panel feste Beispielsätze an (saetze.row, am Bildschirm als Zeile vor dem Ende; saetze.spoken, beim Sprechen höchstens ein Satz am Tag). Das Werkzeug-Log des Profils wird geschrieben. 14. Strom endet: Der Anfrage-Verlauf wird abgeschlossen, Fälle und die Prüfung im Hintergrund laufen erst nach dem Sprechen. Bricht das Gerät ab (Unterbrechen), stoppen Modell und Sprachausgabe sofort."
+"text": "hon vorab. Ist „Das kannst du auch sagen“ an, hängt das Panel feste Beispielsätze an (saetze.row, am Bildschirm als Zeile vor dem Ende; saetze.spoken, beim Sprechen höchstens ein Satz am Tag). Das Werkzeug-Log des Profils wird geschrieben. 14. Strom endet: Der Anfrage-Verlauf wird abgeschlossen, Fälle und die Prüfung im Hintergrund laufen erst nach dem Sprechen. Bricht das Gerät ab (Unterbrechen), stoppen Modell und Sprachausgabe sofort. Stützt sich die Antwort auf mindestens zwei eigene Dokumente oder Kiwix-Artikel, merkt wissensbuch.keep_offer sie und das Gerät zeigt „Ins Wissensbuch“; nur der Klick des Besitzers legt sie ab."
 },
 {
 "lang": "de",
@@ -2045,7 +2045,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Wissensbuch",
 "title": "Wissensbuch",
-"text": "ments.on_gone)."
+"text": "ments.on_gone). - Stützt sich eine Antwort auf mindestens 2 Quellen (Dokumente oder Kiwix-Artikel), merkt sich das Panel sie eine Stunde im Speicher; erst der Klick „Ins Wissensbuch“ legt sie als Seite „Antwort“ ab. Jeder Satz braucht eine Stelle aus diesen Quellen mit allen seinen Zahlen und genug gemeinsamen Wörtern. Export als Obsidian-Ordner (ZIP); nachts eine Kopie in den Ablage-Ordner, wenn das Profil automatisch ablegt und sich das Buch geändert hat."
 },
 {
 "lang": "de",
@@ -4286,6 +4286,22 @@
 "head": "Sprach-Chat",
 "title": "Wissensbuch prüfen (V01.0.779, Plan *wissensbuch*, Stufe C)",
 "text": "sagt, „Stimmt nicht“ entfernt). Antworten aus dem Buch tragen „(vielleicht veraltet)“. Verlauf, Zustand → Live (Anzahl Widersprüche und veraltete Sätze) und Protokoll (wissen: wissensbuch geprueft | …, … stichprobe bestaetigt|entfernt|unklar, … quelle weg | …) nur mit Zahlen."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Antworten ablegen, Kiwix, Obsidian und NAS (V01.0.781, Plan *wissensbuch*, Stufe D): Stützt sich eine Antwort auf mindestens zwei Quellen (eigene Dokumente aus document_search oder Kiwix-Artikel aus archive_search/article_more), zeigt der Chat darunter „Ins Wissensbuch“. Das Panel merkt sich die Antwort eine Stunde lang nur im Speicher (höchstens 200, je Profil gebunden); erst der Klick des Besitzers legt sie ab, nie das Modell. Beim Ablegen braucht jeder Satz eine Stelle aus genau diesen Quellen, die alle seine Zahlen enthält und mindestens 40 % seiner Wörter teilt (wissensbuch.match), dazu dieselben Prüfungen wie beim Einarbeiten; Sätze ohne Stelle fallen weg. Die Seite hat die Art „Antwort“, Kiwix-Artikel stehen als Quelle „Kiwix: Titel“ (ohne Link, Tabelle wb_kiwix) und werden bei der Nachtprüfung wie Dokumente behandelt. *Als Obsidian-Ordner herunterladen* (GET /api/profile/wissensbuch/export) liefert eine ZIP mit einer Notiz je Seite, [[Links]] zwischen Seiten, Quellen als Fußnoten und Wissensbuch.md als Übersicht. Hat das Profil einen Ablage-Ordner (*Ich → Speicher*, „Hier ablegen“) und legt Erstelltes automatisch ab, kommt nachts nach der Prüfung eine Kopie „Wissensbuch JJJ"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "J-MM-TT.zip“ nach spark_ablage/Erstellt/, nur wenn sich das Buch seit der letzten Kopie geändert hat. Protokoll: wissen: wissensbuch abgelegt | …, … ablegen abgelehnt | …, … export | 1 datei, … nas abgelegt | 1 datei."
 },
 {
 "lang": "de",
@@ -9813,7 +9829,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "and the background check run only after speaking. When the device aborts (barge-in), model and speech output stop at once."
+"text": "and the background check run only after speaking. When the device aborts (barge-in), model and speech output stop at once. When the answer rests on at least two own documents or Kiwix articles, wissensbuch.keep_offer keeps it and the device shows „To the knowledge book“; only the owner's click files it."
 },
 {
 "lang": "en",
@@ -10005,7 +10021,15 @@
 "file": "Architecture and data flow",
 "head": "Knowledge book",
 "title": "Knowledge book",
-"text": "- In quiet minutes the language model gets an own document in numbered passages and at most 5 existing pages the panel picks by words shared with title, sender and tags. The model proposes sentences as JSON, each with the number of its passage. - The panel keeps a sentence only when its passage exists, every number and date in it stands in the passage, it has at most 400 characters and holds neither link nor command. If it says the same as a sentence of the page with another number, both stay as a contradiction. One document changes at most 5 pages. - On a question document_search puts the best fitting pages before the passages, each sentence with its source. The pages are outside text like the documents. - At night (in the search check's window, once per profile) the panel checks by fixed rules: a document read again is worked in again, sentences of vanished documents go, gedaechtnis.check marks passed dates and old time words as „out of date?“. Then the model answers for up to 50 sentences only „does the passage say so?“; a no removes the sentence. Deleted or left-out documents take their sentences at once (documents.on_gone)."
+"text": "- In quiet minutes the language model gets an own document in numbered passages and at most 5 existing pages the panel picks by words shared with title, sender and tags. The model proposes sentences as JSON, each with the number of its passage. - The panel keeps a sentence only when its passage exists, every number and date in it stands in the passage, it has at most 400 characters and holds neither link nor command. If it says the same as a sentence of the page with another number, both stay as a contradiction. One document changes at most 5 pages. - On a question document_search puts the best fitting pages before the passages, each sentence with its source. The pages are outside text like the documents. - At night (in the search check's window, once per profile) the panel checks by fixed rules: a document read again is worked in again, sentences of vanished documents go, gedaechtnis.check marks passed dates and old time words as „out of date?“. Then the model answers for up to 50 sentences only „does the passage say so?“; a no removes the sentence. Deleted or left-out documents take their sentences at once (documents.on_gone). - When an answer rests on at least 2 sources (documen"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Knowledge book",
+"title": "Knowledge book",
+"text": "ts or Kiwix articles), the panel keeps it in memory for an hour; only the click „To the knowledge book“ files it as a page „Answer“. Every sentence needs a passage from these sources with all its numbers and enough shared words. Export as Obsidian folder (ZIP); at night a copy into the filing folder when the profile files automatically and the book changed."
 },
 {
 "lang": "en",
@@ -12174,6 +12198,22 @@
 "head": "Voice chat",
 "title": "Checking the knowledge book (V01.0.779, plan *wissensbuch*, stage C)",
 "text": "ers from the book carry \"(maybe out of date)\". History, Status → Live (number of contradictions and out-of-date sentences) and journal (wissen: wissensbuch geprueft | …, … stichprobe bestaetigt|entfernt|unklar, … quelle weg | …) only with numbers."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Filing answers, Kiwix, Obsidian and NAS (V01.0.781, plan *wissensbuch*, stage D)",
+"text": "Filing answers, Kiwix, Obsidian and NAS (V01.0.781, plan *wissensbuch*, stage D): when an answer rests on at least two sources (own documents from document_search or Kiwix articles from archive_search/article_more), the chat shows \"To the knowledge book\" below it. The panel keeps the answer for one hour in memory only (at most 200, bound to the profile); only the owner's click files it, never the model. When filing, every sentence needs a passage from exactly these sources that holds all its numbers and shares at least 40 % of its words (wissensbuch.match), plus the same checks as when working in; sentences without a passage are dropped. The page has the kind \"Answer\", Kiwix articles stand as source \"Kiwix: title\" (no link, table wb_kiwix) and the nightly check treats them like documents. *Download as an Obsidian folder* (GET /api/profile/wissensbuch/export) returns a ZIP with one note per page, [[links]] between pages, sources as footnotes and Wissensbuch.md as index. When the profile has a filing folder (*Me → Storage*, \"File here\") and files what it makes automatically, a copy \"Wissensbuch YYYY-MM-DD.zip\" goes to spark_ablage/Erstellt/ at night after the check, only when the boo"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Filing answers, Kiwix, Obsidian and NAS (V01.0.781, plan *wissensbuch*, stage D)",
+"text": "k changed since the last copy. Journal: wissen: wissensbuch abgelegt | …, … ablegen abgelehnt | …, … export | 1 datei, … nas abgelegt | 1 datei."
 },
 {
 "lang": "en",

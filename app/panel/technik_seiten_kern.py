@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "llm": {
-        "stand": "4dddcf232f",
+        "stand": "88f35afd12",
         "bezug": {
             "chat.chat": ["s1"], "chat._answer": ["s2", "s4", "s6"], "llm.model": ["s3"], "llm.url": ["s1"], "llm.complete": ["s1"],
             "chat.sampling": ["s4"], "chat.first_within": ["s8"], "chat.ContextFull": ["s7"],
@@ -241,7 +241,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Wissen: how a question finds passages
     "wissen": {
-        "stand": "32be3eb065",
+        "stand": "5dc792f25c",
         "bezug": {
             "lokal.MAX_HITS": ["s5"], "wissen.search": ["s1", "s8", "s9"], "documents.search": ["s5", "s6"],
             "documents._terms": ["s5"], "documents.match_docs": ["s4"], "docembed.query": ["s3"],
@@ -469,6 +469,16 @@ SEITEN = {
                  "dates and old time words as „out of date?“. Then the model answers for up to {wissensbuch.SAMPLE} "
                  "sentences only „does the passage say so?“; a no removes the sentence. Deleted or left-out documents "
                  "take their sentences at once (documents.on_gone)."),
+                ("Stützt sich eine Antwort auf mindestens {wissensbuch.OFFER_MIN} Quellen (Dokumente oder Kiwix-Artikel), "
+                 "merkt sich das Panel sie eine Stunde im Speicher; erst der Klick „Ins Wissensbuch“ legt sie als Seite "
+                 "„Antwort“ ab. Jeder Satz braucht eine Stelle aus diesen Quellen mit allen seinen Zahlen und genug "
+                 "gemeinsamen Wörtern. Export als Obsidian-Ordner (ZIP); nachts eine Kopie in den Ablage-Ordner, wenn "
+                 "das Profil automatisch ablegt und sich das Buch geändert hat.",
+                 "When an answer rests on at least {wissensbuch.OFFER_MIN} sources (documents or Kiwix articles), the "
+                 "panel keeps it in memory for an hour; only the click „To the knowledge book“ files it as a page "
+                 "„Answer“. Every sentence needs a passage from these sources with all its numbers and enough shared "
+                 "words. Export as Obsidian folder (ZIP); at night a copy into the filing folder when the profile files "
+                 "automatically and the book changed."),
             ]),
             (("Erst lokal suchen", "Look locally first"), [
                 ("Vor der ersten Runde schaut das Panel selbst in Dokumente, Kiwix und frühere Gespräche, gleichzeitig "

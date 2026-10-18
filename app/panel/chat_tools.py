@@ -246,6 +246,7 @@ async def run(t, name, args, st):
             refs = list({(h["id"], h["page"]): {"id": h["id"], "name": h["name"], "page": h["page"], "file": h["file"]}
                          for h in brefs + hits}.values())
             await t.out.put({"type": "docsources", "items": sorted({h["name"] for h in brefs + hits}), "refs": refs[:8]})
+            wissensbuch.note_sources(t.who["id"], docs=[(h["id"], h["page"]) for h in hits])   # Stufe D: may be filed
         dated = any(h.get("changed") for h in hits)
         return ((book + "\n\n" if book else "") + "\n\n".join(f"[{wissen.where(h)}]\n{h['text']}" for h in hits)
                 + ("\n\n(Each passage names when it last changed; where passages disagree, the newer one counts, and say its date.)"

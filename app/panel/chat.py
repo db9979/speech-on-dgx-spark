@@ -2295,6 +2295,10 @@ async def _answer(request, turn):
                     systemone.check_later(ccfg, tr, who, turn.ask_text, trace["said"], trace["calls"], outside)
                 if rid:
                     yield f"data: {json.dumps({'type': 'rate', 'id': rid})}\n\n"
+                import wissensbuch   # "Ins Wissensbuch" under an answer resting on own documents or Kiwix
+                fid = "" if screen else wissensbuch.keep_offer(who and who["id"], turn.ask_text, trace["said"])
+                if fid:
+                    yield f"data: {json.dumps({'type': 'wbuch', 'id': fid})}\n\n"
             # „Das kannst du auch sagen“ (saetze.py): the panel's fixed sentences under the answer, never the model's
             try:
                 import saetze

@@ -389,9 +389,19 @@ def _path(p):
     return p
 
 
+def ref_key(book, path):
+    """The short id of one article; the same for article_more and for the Wissensbuch's sources."""
+    return "k" + hashlib.sha1(f"{book}/{path}".encode()).hexdigest()[:10]
+
+
+def ref_of(k):
+    """(book, path, title) of a short id the panel handed out, or None."""
+    return _refs.get(k)
+
+
 def ref(book, path, title):
     """A short id the model can hand back to article_more (never a free address)."""
-    k = "k" + hashlib.sha1(f"{book}/{path}".encode()).hexdigest()[:10]
+    k = ref_key(book, path)
     if k not in _refs and len(_refs) >= MAX_REFS:
         for x in list(_refs)[:MAX_REFS // 4]:
             _refs.pop(x, None)

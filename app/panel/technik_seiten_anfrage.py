@@ -499,7 +499,7 @@ SEITEN = {
         "heute": [],
     },
     "antwort": {
-        "stand": "fa82583b99",
+        "stand": "a3084013f0",
         "bezug": {
             "chat.MAX_SAVES": ["s11"], "chat.LOOP_SAME": ["s11"], "chat._answer": ["s4", "s5", "s11"], "chat_modell.model_turn": ["s4", "s11"], "chat_ton.speech_out": ["s8"],
             "chat.split_sentences": ["s5"], "chat.said_key": ["s8"], "chat.no_code": ["s8"],
@@ -655,9 +655,13 @@ SEITEN = {
             S("s14", "ende", ("Strom endet", "Stream ends"),
               ("Anfrage-Verlauf, Fälle, „done“", "request trace, cases, „done“"),
               ("Der Anfrage-Verlauf wird abgeschlossen, Fälle und die Prüfung im Hintergrund laufen erst nach dem "
-               "Sprechen. Bricht das Gerät ab (Unterbrechen), stoppen Modell und Sprachausgabe sofort.",
+               "Sprechen. Bricht das Gerät ab (Unterbrechen), stoppen Modell und Sprachausgabe sofort. Stützt sich die "
+               "Antwort auf mindestens zwei eigene Dokumente oder Kiwix-Artikel, merkt wissensbuch.keep_offer sie und "
+               "das Gerät zeigt „Ins Wissensbuch“; nur der Klick des Besitzers legt sie ab.",
                "The request trace is closed; cases and the background check run only after speaking. When the device "
-               "aborts (barge-in), model and speech output stop at once.")),
+               "aborts (barge-in), model and speech output stop at once. When the answer rests on at least two own "
+               "documents or Kiwix articles, wissensbuch.keep_offer keeps it and the device shows „To the knowledge "
+               "book“; only the owner's click files it.")),
         ],
         "beispiele": [
             (("Plaudern ohne Werkzeug", "Small talk without a tool"),
@@ -725,7 +729,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Werkzeuge (chat_tools.run)
     "werkzeuge": {
-        "stand": "8a032b2d91",
+        "stand": "c1ba500dfd",
         "bezug": {
             "chat.LOCKED_OUTSIDE": ["s4"], "notaus.INTERNET_TOOLS": ["s3"], "werkzeuge.NAMES": ["s11"],
             "chat_tools.run": ["s2", "s7"], "chat.wrap_outside": ["s9"], "chat.LOCKED_MAIL": ["s4"],

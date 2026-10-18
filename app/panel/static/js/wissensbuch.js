@@ -2,11 +2,12 @@
 // documents, every sentence with its source. The contents by kind, one page with its sentences, "Stimmt nicht" per
 // sentence, "Neu schreiben" and "Löschen" per page; the nightly check's open items: contradictions ("Stimmt" keeps one
 // value) and sentences marked "veraltet?" ("Stimmt noch"). Titles and sentences come from documents: shown as text only.
-const WBART={Thema:['Themen','Topics'],Person:['Personen','People'],Firma:['Firmen','Companies'],Ding:['Dinge','Things'],Ort:['Orte','Places']};
+const WBART={Thema:['Themen','Topics'],Person:['Personen','People'],Firma:['Firmen','Companies'],Ding:['Dinge','Things'],Ort:['Orte','Places'],Antwort:['Abgelegte Antworten','Filed answers']};
 const WBWORD={eingearbeitet:['eingearbeitet','worked in'],nichts:['nichts Neues','nothing new'],fehler:['nicht eingearbeitet','not worked in'],
   geloescht:['Seite gelöscht','page deleted'],neu:['Seite neu geschrieben','page written again'],falsch:['Satz entfernt','sentence removed'],
   quelle:['Dokumente weg','documents gone'],geprueft:['nachts geprüft','checked at night'],probe:['Stichprobe: Satz entfernt','sample: sentence removed'],
-  stimmt:['Widerspruch geklärt','contradiction settled'],noch:['stimmt noch','still right']};
+  stimmt:['Widerspruch geklärt','contradiction settled'],noch:['stimmt noch','still right'],abgelegt:['Antwort abgelegt','answer filed'],
+  nas:['auf den NAS kopiert','copied to the NAS']};
 let WB=null,WBSEL='';
 const wbWhen=s=>s?new Date(s*1000).toLocaleString(L==='en'?'en-GB':'de-DE',{dateStyle:'short',timeStyle:'short'}):'';
 const wbSay=(x,err)=>{const m=$('wbmsg');if(m){m.className=err?'err':'mut';m.textContent=String(x||'').slice(0,300)}};
@@ -25,9 +26,11 @@ function wbDraw(){const box=$('wbin'),W=WB;if(!box||!W)return;
     ${wbOpenItems(W)}
     ${groups.map(([a,l])=>`<h3>${esc(t(...WBART[a]))} (${l.length})</h3><ul class="facts">${l.map(p=>`<li><span><b>${esc(p.title)}</b><br><small class="mut">${esc(t(`${p.n} Sätze aus ${p.docs} Dokumenten`,`${p.n} sentences from ${p.docs} documents`))}${p.widerspruch?' · '+esc(t(`${p.widerspruch} Widersprüche`,`${p.widerspruch} contradictions`)):''}</small></span><button type="button" class="b" data-wbopen="${esc(p.id)}">${esc(t('Lesen','Read'))}</button></li><li hidden data-wbpage="${esc(p.id)}"></li>`).join('')}</ul>`).join('')}
     ${(W.verlauf||[]).length?`<details class="mkmore"><summary>${esc(t('Verlauf','History'))}</summary><ul class="facts small">${W.verlauf.map(v=>`<li><span>${esc(wbWhen(v.at))} · ${esc(t(...(WBWORD[v.word]||[v.word,v.word])))}</span><b>${v.word==='eingearbeitet'?esc(t(`${v.n} Seiten, ${v.m} Sätze`,`${v.n} pages, ${v.m} sentences`)):''}</b></li>`).join('')}</ul></details>`:''}
+    ${pages.length?`<div class="row"><a class="b" href="/api/profile/wissensbuch/export" download="Wissensbuch.zip">${esc(t('Als Obsidian-Ordner herunterladen','Download as an Obsidian folder'))}</a></div>`:''}
     <div id="wbmsg" class="mut" role="status"></div>`;
   if(WBSEL)wbOpen(WBSEL)}
-function wbSrc(s){return `<small class="mut"><a href="#" data-wbdoc="${esc(s.doc)}">${esc(s.name+(s.page?t(' · S. ',' · p. ')+s.page:''))}</a></small>`}
+function wbSrcIn(s){const n=esc(s.name+(s.page?t(' · S. ',' · p. ')+s.page:''));return s.kiwix?n:`<a href="#" data-wbdoc="${esc(s.doc)}">${n}</a>`}
+function wbSrc(s){return `<small class="mut">${wbSrcIn(s)}</small>`}
 function wbOpenItems(W){const c=W.widersprueche||[],v=W.veraltet||[];if(!c.length&&!v.length)return'';
   return (c.length?`<h3>${esc(t(`Widersprüche (${c.length})`,`Contradictions (${c.length})`))}</h3><div class="mut">${esc(t('Zwei Dokumente sagen verschiedene Werte. Welcher stimmt? Die anderen fallen weg.','Two documents say different values. Which is right? The others go.'))}</div>
     <ul class="facts">${c.map(g=>`<li><span><b>${esc(g.seite)}</b>${g.werte.map(s=>`<br>${esc(s.text)} ${wbSrc(s)} <button type="button" class="b" data-wbright="${esc(String(s.id))}">${esc(t('Stimmt','Right'))}</button>`).join('')}</span></li>`).join('')}</ul>`:'')
@@ -36,7 +39,7 @@ function wbOpenItems(W){const c=W.widersprueche||[],v=W.veraltet||[];if(!c.lengt
 async function wbOpen(id){const at=document.querySelector(`#wbbox [data-wbpage="${CSS.escape(id)}"]`);if(!at)return;
   const r=await apiTry('/api/profile/wissensbuch/'+encodeURIComponent(id));if(!r.r.ok){wbSay(r.d.detail,true);return}
   WBSEL=id;const p=r.d;at.hidden=false;
-  at.innerHTML=`<div class="wbpage"><ul class="facts">${p.saetze.map(s=>`<li><span>${esc(s.text)}<br><small class="mut"><a href="#" data-wbdoc="${esc(s.doc)}">${esc(s.name+(s.page?t(' · S. ',' · p. ')+s.page:''))}</a>${s.mark==='widerspruch'?' · <b class="err">'+esc(t('Widerspruch','Contradiction'))+'</b>':''}${s.flag==='veraltet'?' · <span class="pill warn">'+esc(t('veraltet?','out of date?'))+'</span>':''}</small></span><button type="button" class="b" data-wbbad="${esc(String(s.id))}">${esc(t('Stimmt nicht','Wrong'))}</button></li>`).join('')}</ul>
+  at.innerHTML=`<div class="wbpage"><ul class="facts">${p.saetze.map(s=>`<li><span>${esc(s.text)}<br><small class="mut">${wbSrcIn(s)}${s.mark==='widerspruch'?' · <b class="err">'+esc(t('Widerspruch','Contradiction'))+'</b>':''}${s.flag==='veraltet'?' · <span class="pill warn">'+esc(t('veraltet?','out of date?'))+'</span>':''}</small></span><button type="button" class="b" data-wbbad="${esc(String(s.id))}">${esc(t('Stimmt nicht','Wrong'))}</button></li>`).join('')}</ul>
     <div class="row"><button type="button" class="b" data-wbagain="${esc(p.id)}">${esc(t('Neu schreiben','Write again'))}</button><button type="button" class="b" data-wbdel="${esc(p.id)}">${esc(t('Seite löschen','Delete page'))}</button><button type="button" class="b" data-wbclose="${esc(p.id)}">${esc(t('Schließen','Close'))}</button></div></div>`}
 {document.body.addEventListener('click',async e=>{const b=e.target.closest('#wbbox [data-wbopen],#wbbox [data-wbbad],#wbbox [data-wbagain],#wbbox [data-wbdel],#wbbox [data-wbclose],#wbbox [data-wbdoc],#wbbox [data-wbright],#wbbox [data-wbstill]');if(!b)return;const D=b.dataset;
   if(D.wbopen){await wbOpen(D.wbopen);return}
@@ -51,3 +54,8 @@ async function wbOpen(id){const at=document.querySelector(`#wbbox [data-wbpage="
     const r=await apiTry('/api/profile/wissensbuch/'+encodeURIComponent(id)+(again?'/neu':''),{method:again?'POST':'DELETE'});
     if(!r.r.ok){wbSay(r.d.detail,true);return}WBSEL='';await wbShow();
     wbSay(again?t('Die Seite entsteht in ruhigen Minuten neu.','The page is written again in quiet minutes.'):t('Seite gelöscht.','Page deleted.'))}})}
+// "Ins Wissensbuch" under an answer (chat.js): the panel kept the answer and its sources; the click only names its id
+async function wbFile(id,b){b.disabled=true;const r=await apiTry('/api/profile/wissensbuch/ablegen',xjson('POST',{id}));
+  if(!r.r.ok){b.textContent=t('Nicht mehr möglich','No longer possible');return}
+  b.textContent=r.d.saetze?t(`Im Wissensbuch: ${r.d.saetze} Sätze`,`In the knowledge book: ${r.d.saetze} sentences`):t('Kein Satz mit Quelle gefunden','No sentence with a source found');
+  if(typeof wbShow==='function'&&$('wbbox'))wbShow()}

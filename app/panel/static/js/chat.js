@@ -246,7 +246,7 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
   const el=chatLog('assistant','');$('fabtext').textContent='';
   // shown formatted while it streams (md.js), at most once per frame; the small answer line gets the plain text
   let drawn=null,frame=0;const draw=()=>{frame=0;md.render(el,drawn);$('fabtext').textContent=md.plain(drawn);$('chatlog').scrollTop=1e9};
-  const show=(x,now)=>{drawn=x;if(now){if(frame)cancelAnimationFrame(frame);draw()}else if(!frame)frame=requestAnimationFrame(draw)};let full='',llmS=null,audioS=null,ackS=null,err='';const searches=[],sources=[],mems=[],docs=[],drefs=[],hcards=[],mkcards=[],chcards=[],blcards=[],steps=[],confirms=[];let rateId='',more=null;const moreTool=typeof moreTake==='function'?moreTake(text):undefined;if(typeof moreStartGone==='function')moreStartGone();
+  const show=(x,now)=>{drawn=x;if(now){if(frame)cancelAnimationFrame(frame);draw()}else if(!frame)frame=requestAnimationFrame(draw)};let full='',llmS=null,audioS=null,ackS=null,err='';const searches=[],sources=[],mems=[],docs=[],drefs=[],hcards=[],mkcards=[],chcards=[],blcards=[],steps=[],confirms=[];let rateId='',wbId='',more=null;const moreTool=typeof moreTake==='function'?moreTake(text):undefined;if(typeof moreStartGone==='function')moreStartGone();
   const ctrl=new AbortController();chat.ctrl=ctrl;chat.firstPlay=null;chat.gaps=[];chat.blocks=[];chat.t0b=null;chat.stalls=0;chat.pieceStart=true;setTalk();chatSay(t('Antwort kommt …','Answer coming …'));
   try{const r=await api('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},signal:ctrl.signal,
       body:JSON.stringify({speak:voiceOn()?undefined:false,messages:chat.msgs.slice(-20).map(m=>({role:m.role,content:m.content,...(m.mail?{mail:true}:{}),...(m.outside?{outside:true}:{}),...(m.screen?{screen:true}:{})})),tab:TAB,tz:(()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone}catch{return ''}})(),voice:PROFILE&&S.voice||undefined,speed:S.speed,length:S.length,convo:chat.cid||undefined,speaker:spk&&spk.token||undefined,images:pids.length?pids:undefined,page:typeof hilfeNow==='function'?hilfeNow():undefined,focus:typeof hilfeFocusTake==='function'?hilfeFocusTake():undefined,view:document.body.classList.contains('appview')?'app':undefined,more:moreTool})});
@@ -282,6 +282,7 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
         else if(ev.type==='step'){steps.push(ev)}   // Ablauf zeigen (ablauf.py): tool name, ok and time, never what it found
         else if(ev.type==='confirm'){confirms.push(ev)}   // Freigabe-Karte: a proposal of this answer waits for "Ja"
         else if(ev.type==='rate'){rateId=ev.id}
+        else if(ev.type==='wbuch'){wbId=ev.id}
         else if(ev.type==='more'){more=ev}   // the panel's sentences under the answer (saetze.js)   // 👍/👎 for this answer (faelle.py, bewerten.js)
         else if(ev.type==='reminder'){rem.event(ev);mems.push(ev.action==='set'?t('Erinnerung: ','Reminder: ')+rem.when(ev.item.due)+' '+ev.item.text:t('Erinnerung gelöscht','Reminder cancelled'))}
         else if(ev.type==='memory'){mems.push((ev.action==='saved'?t('Gemerkt: ','Remembered: '):t('Vergessen: ','Forgotten: '))+ev.text)}
@@ -312,6 +313,8 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
   if(pids.length&&full.trim()&&PROFILE&&!err&&ALLOW.docpics){const b=document.createElement('button');b.type='button';b.className='b picsave';   // the picture itself, read by the model later
     b.textContent=t('Bild in „Meine Dokumente“','Picture to "My documents"');const ids=pids.slice();b.onclick=()=>picKeep(ids,b);el.appendChild(b)}
   if(full.trim()&&PROFILE&&!err&&RMSEND_ON&&typeof rmSend==='function'){const b=document.createElement('button');b.type='button';b.className='b picsave';   // only on a click
+  if(wbId&&full.trim()&&!err&&typeof wbFile==='function'){const b=document.createElement('button');b.type='button';b.className='b picsave';   // Wissensbuch: only the click files it
+    b.textContent=t('Ins Wissensbuch','To the knowledge book');b.onclick=()=>wbFile(wbId,b);el.appendChild(b)}
     b.textContent=t('Aufs reMarkable','To the reMarkable');const said=full.trim();b.onclick=()=>rmSend(said,b);el.appendChild(b)}
   const f=v=>v==null?'–':v.toFixed(2)+' s';
   const chip=(k,v,hi)=>`<span class="chip${hi?' hi':''}">${k} <b>${f(v)}</b></span>`;

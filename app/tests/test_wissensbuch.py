@@ -66,7 +66,7 @@ class Base(unittest.TestCase):
         for d in documents.list_docs(uid):
             documents.delete(uid, d["id"])
         with wissensbuch._Db(uid) as con:
-            for t in ("wb_pages", "wb_sent", "wb_docs", "wb_block", "wb_log", "wb_check", "wb_state"):
+            for t in ("wb_pages", "wb_sent", "wb_docs", "wb_block", "wb_log", "wb_check", "wb_state", "wb_kiwix"):
                 con.execute(f"DELETE FROM {t}")
         a = documents.add(uid, "Versicherung.txt", CAR.encode(), text=CAR)["id"]
         b = documents.add(uid, "Werkstatt.txt", GARAGE.encode(), text=GARAGE)["id"]
@@ -386,3 +386,87 @@ class Checking(Base):
         for word in ("Golf", "Kennzeichen", "Wbprobe", uid):
             self.assertNotIn(word, log)
 
+
+class Filing(Base):
+    ANSWER = ("Der Jahresbeitrag für den Golf ist 684,20 Euro. Die Inspektion kostete 289,50 Euro. "
+              "Insgesamt kostet das Auto viel Geld und 999 Nerven.")
+
+    def offer(self, uid, a, b, said=None):
+        wissensbuch.note_sources(uid, docs=[(a, 0), (b, 0)])
+        return wissensbuch.keep_offer(uid, "Was kostet mein Auto?", said or self.ANSWER)
+
+    def test_only_a_click_files_an_answer_and_only_sentences_with_a_source(self):
+        c, uid, a, b = self.fresh("Wbablage")
+        wissensbuch.note_sources(uid, docs=[(a, 0)])
+        self.assertEqual(wissensbuch.keep_offer(uid, "Was kostet mein Auto?", self.ANSWER), "")   # one source: no button
+        self.assertEqual(wissensbuch.keep_offer(uid, "Was kostet mein Auto?", self.ANSWER), "")   # nothing read this turn
+        fid = self.offer(uid, a, b)
+        self.assertRegex(fid, r"^[0-9a-f]{16}$")
+        self.assertEqual(wissensbuch.index(uid), [])                         # nothing filed without the click
+        other, ouid, _, _ = self.fresh("Wbablage2")
+        self.assertEqual(other.post("/api/profile/wissensbuch/ablegen", json={"id": fid}).status_code, 404)   # not theirs
+        self.assertEqual(c.post("/api/profile/wissensbuch/ablegen", json={"id": "../x"}).status_code, 400)
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            r = c.post("/api/profile/wissensbuch/ablegen", json={"id": fid})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(r.json(), {"saetze": 2, "verworfen": 1})          # "999 Nerven" stands in no document
+        self.assertIn("wissen: wissensbuch abgelegt | 2 saetze | 1 verworfen", out.getvalue())
+        idx = wissensbuch.index(uid)
+        self.assertEqual([(p["title"], p["art"], p["docs"]) for p in idx], [("Was kostet mein Auto", "Antwort", 2)])
+        p = wissensbuch.page(uid, idx[0]["id"])
+        self.assertEqual({s["doc"] for s in p["saetze"]}, {a, b})
+        self.assertEqual(c.post("/api/profile/wissensbuch/ablegen", json={"id": fid}).status_code, 404)   # once
+        guest = TestClient(panel.app)
+        self.assertIn(guest.post("/api/profile/wissensbuch/ablegen", json={"id": fid}).status_code, (401, 403))
+        self.assertEqual(wissensbuch.keep_offer(None, "x", self.ANSWER), "")    # guests never
+
+    def test_kiwix_articles_become_sources(self):
+        c, uid, a, b = self.fresh("Wbkiwix")
+        import kiwix
+        art = ["Der VW Golf ist ein Kompaktwagen von Volkswagen, gebaut seit 1974."]
+        wissensbuch.note_sources(uid, docs=[(a, 0)], kiwix=[("wikipedia_de", "A/VW_Golf", "VW Golf")])
+        fid = wissensbuch.keep_offer(uid, "Was ist ein Golf?", "Der VW Golf ist ein Kompaktwagen von Volkswagen, gebaut seit 1974.")
+        with mock.patch.object(kiwix, "article", mock.AsyncMock(return_value=art)):
+            got = run(wissensbuch.file_answer(uid, fid))
+        self.assertEqual(got["saetze"], 1)
+        p = wissensbuch.page(uid, wissensbuch.index(uid)[0]["id"])
+        s0 = p["saetze"][0]
+        self.assertTrue(s0["kiwix"])
+        self.assertEqual((s0["doc"], s0["name"]), (kiwix.ref_key("wikipedia_de", "A/VW_Golf"), "Kiwix: VW Golf"))
+        self.assertEqual(wissensbuch.check_rules(uid, DAY)["weg"], 0)       # a Kiwix source is not a missing document
+        self.assertEqual(wissensbuch.answer_block(uid, "Golf Kompaktwagen Volkswagen")[1], [])   # never a document link
+
+    def test_the_obsidian_folder(self):
+        c, uid, a, b = self.fresh("Wbobsidian")
+        self.work(uid, proposal(("Auto", "Ding", [("Der Golf hat das Kennzeichen HB-DB 482.", 1)])))
+        self.work(uid, proposal(("Werkstatt Weserblick", "Firma", [("Das Auto war am 18.03.2026 in der Inspektion.", 1)])))
+        files = wissensbuch.export_files(uid)
+        self.assertEqual(set(files), {"Auto.md", "Werkstatt Weserblick.md", "Wissensbuch.md"})
+        self.assertIn("- Der Golf hat das Kennzeichen HB-DB 482. [^1]", files["Auto.md"])
+        self.assertIn("[^1]: Versicherung.txt", files["Auto.md"])
+        self.assertIn("[[Auto|Auto]] war am 18.03.2026", files["Werkstatt Weserblick.md"])      # a link to the other page
+        self.assertIn("## Firma\n\n- [[Werkstatt Weserblick]]", files["Wissensbuch.md"])
+        r = c.get("/api/profile/wissensbuch/export")
+        self.assertEqual((r.status_code, r.headers["content-type"]), (200, "application/zip"))
+        import zipfile
+        names = zipfile.ZipFile(io.BytesIO(r.content)).namelist()
+        self.assertIn("Wissensbuch/Auto.md", names)
+        self.assertTrue(all(n.startswith("Wissensbuch/") and ".." not in n for n in names))
+
+    def test_the_nightly_copy_to_the_nas(self):
+        c, uid, a, b = self.fresh("Wbnas")
+        self.work(uid, proposal(("Auto", "Ding", [("Der Golf hat das Kennzeichen HB-DB 482.", 1)])))
+        import nasablage
+        put = mock.AsyncMock(return_value="Wissensbuch 2027-01-06.zip")
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out), mock.patch.object(nasablage, "put", put), \
+                mock.patch.object(nasablage, "allowed", return_value=True):
+            with mock.patch.object(nasablage, "get", return_value={"nas": "x", "auto": False}):
+                self.assertIsNone(run(wissensbuch.to_nas(uid, NIGHT)))         # the profile does not file automatically
+            with mock.patch.object(nasablage, "get", return_value={"nas": "x", "auto": True}):
+                self.assertEqual(run(wissensbuch.to_nas(uid, NIGHT)), "ok")
+                self.assertIsNone(run(wissensbuch.to_nas(uid, NIGHT + 86400)))   # unchanged since: no second copy
+        self.assertEqual(put.await_count, 1)
+        self.assertEqual(put.await_args.args[1], "Wissensbuch 2027-01-06.zip")
+        self.assertIn("wissen: wissensbuch nas abgelegt | 1 datei", out.getvalue())

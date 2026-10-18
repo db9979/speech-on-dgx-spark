@@ -210,6 +210,21 @@ def offer(ctx):
 
 
 async def tool(name, args, ctx):
+    out = await _tool(name, args, ctx)
+    # Wissensbuch (Stufe D): which Kiwix articles this turn read, so an answer resting on them can be filed
+    uid = (ctx.get("who") or {}).get("id")
+    if uid and isinstance(out, str):
+        keys = set(re.findall(r"\[article: (k[0-9a-f]{10})\]", out))
+        if name == "article_more":
+            keys.add(str(args.get("article") or "").strip()[:20])
+        found = [kiwix.ref_of(k) for k in keys]
+        if any(found):
+            import wissensbuch
+            wissensbuch.note_sources(uid, kiwix=[f for f in found if f])
+    return out
+
+
+async def _tool(name, args, ctx):
     uid = (ctx.get("who") or {}).get("id")
     try:
         if name == "article_more":

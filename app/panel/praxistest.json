@@ -1821,6 +1821,13 @@
 "titel": "Fälschungssicheres Änderungsprotokoll",
 "text": "A: Nach dem Update unter Zustand → Logs → Änderungen „Protokoll prüfen“ tippen: „Kette heil“ mit Anzahl der Einträge; ältere Einträge von vor dem Update stehen als „ohne Kette“ da. B: Ist die Sicherung nach außen an (Einstellungen → Sicherung), am nächsten Tag noch einmal prüfen: „NAS-Kopie stimmt“. Auf dem NAS liegt neben der Sicherung eine Datei speech-spark-protokoll-….log.enc. C: Zustand → Logs → Diagnose, Bereich System: einmal am Tag eine Zeile „audit: chain ok“. D: Zustand → Live zeigt keine neuen Inhalte, nur das Ereignis, falls die Kette einmal bricht.",
 "thread": "Sicheres KI-System"
+},
+{
+"id": "P284",
+"v": 781,
+"titel": "Wissensbuch: Antworten ablegen, Obsidian, NAS",
+"text": "A: Wissensbuch an, eine Frage stellen, die zwei eigene Dokumente oder einen Kiwix-Artikel und ein Dokument braucht. B: Unter der Antwort steht „Ins Wissensbuch“; Tippen legt sie ab, unter Ich → Dokumente → Wissensbuch erscheint eine Seite unter „Abgelegte Antworten“, jeder Satz mit Quelle (Kiwix ohne Link). C: Eine Antwort ohne Quellen zeigt den Knopf nicht. D: „Als Obsidian-Ordner herunterladen“ gibt eine ZIP; in Obsidian öffnen: eine Notiz je Seite, Links, Fußnoten. E: Mit Ablage-Ordner auf dem NAS (Ich → Speicher, automatisch ablegen) liegt nach einer Nacht „Wissensbuch JJJJ-MM-TT.zip“ in spark_ablage/Erstellt. F: Zustand → Logs, Bereich Wissen: „abgelegt“, „export“, „nas abgelegt“ nur mit Zahlen.",
+"thread": "Wissensbuch nach Karpathy"
 }
 ]
 }
