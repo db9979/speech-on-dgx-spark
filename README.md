@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.797** Language model switch in the apps and a note when it is done
 - **V01.0.796** Language model switch also on the control centre and the case display
 - **V01.0.795** Fix: meaning search no longer stops with "does not match its commit"
 - **V01.0.794** Fix: self-test for bypassing the guard green again
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.790** Steadier Pi: a stalled panel restarts by itself and names the place in the log; the voice assistant keeps priority
 - **V01.0.789** Sentry: push to the admins on lockouts, new ways in, changed protection or a broken change log
 - **V01.0.788** The „basic set“ card on Features is one line
-- **V01.0.787** Knowledge book on the iPhone, „To the knowledge book“ in the app's conversation too
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

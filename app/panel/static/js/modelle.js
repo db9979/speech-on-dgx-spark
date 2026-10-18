@@ -40,20 +40,12 @@ function mdArt(a,w,d){if(!a.modelle.length)return '';
     `<th>${esc(t('Betrieb','Runs'))}</th><th>${esc(t('Lizenz','Licence'))}</th><th>${esc(t('Messung','Measurement'))}</th>${w.an?'<th></th>':''}</tr></thead><tbody>${rows}</tbody></table></div>${mdAlt(a,w,d)}</div>`}
 // „Sprachmodell wechselt“ (Dominik 2026-10-18 „1a“): the six fixed steps of a switch or restart with their times, the
 // engine's phase while it starts and the minutes still expected (llmstart; fixed words and numbers only)
-const mdDauer=s=>s>=60?Math.floor(s/60)+':'+String(s%60).padStart(2,'0')+' min':s+' s';
-function mdStart(x){if(!x)return '';const fertig=x.ende,zur=x.ergebnis==='zurueck';
-  const grund={speicher:t('zu wenig Speicher','not enough memory'),fehler:t('Fehler','error'),'nicht bereit':t('nicht rechtzeitig bereit','not ready in time'),abgelehnt:t('abgelehnt','refused'),dateien:t('Dateien nicht geprüft','files not checked'),einstellung:t('Einstellung nicht geschrieben','setting not written')}[x.grund]||x.grund;
-  const kopf=fertig?(zur?t('Wechsel zurückgenommen','Switch taken back')+(x.grund?': '+grund:''):t('Umgeschaltet','Switched')+(x.name?t(' auf ',' to ')+x.name:'')+' · '+mdDauer(x.dauer_s))
-    :x.titel+(x.name?': '+x.name:'')+' · '+t('Schritt ','step ')+x.n+t(' von ',' of ')+x.schritte.length+' · '+t('seit ','for ')+mdDauer(x.dauer_s);
-  const zeilen=x.schritte.map((s,k)=>{const n=k+1,da=s.wort in x.seit,jetzt=n===x.n&&!fertig;
-    const ab=da?x.seit[s.wort]:null,bis=x.schritte.slice(k+1).map(z=>x.seit[z.wort]).find(v=>v!=null);
-    const zeit=jetzt?mdDauer(x.schritt_s):da&&bis!=null?mdDauer(bis-ab):'';
-    const zeichen=jetzt?'mdst-jetzt':da||(fertig&&!zur&&n<=x.n)?'mdst-ok':'mdst-offen';
-    const unter=jetzt&&x.teil_name?' · '+esc(x.teil_name)+' …':'';
-    return `<li class="${zeichen}"><span>${esc(s.name)}${unter}</span><span class="mut">${esc(zeit)}</span></li>`}).join('');
-  const rest=!fertig&&x.rest_min?`<div class="mut">${esc(t('Erwartet: noch etwa ','Expected: about ')+x.rest_min+t(' min',' min more'))}${x.erwartet_s?' · '+esc(t('letzter Start ','last start ')+mdDauer(x.erwartet_s)):''}</div>`:'';
+function mdStart(x){if(!x)return '';const fertig=x.ende;     // the texts come from the panel (llmstart.zeigen), the same as in the apps
+  const cls={ok:'mdst-ok',jetzt:'mdst-jetzt',offen:'mdst-offen'};
+  const zeilen=x.zeilen.map(z=>`<li class="${cls[z.zustand]||'mdst-offen'}"><span>${esc(z.name)}</span><span class="mut">${esc(z.zeit)}</span></li>`).join('');
+  const rest=x.rest?`<div class="mut">${esc(x.rest)}</div>`:'';
   const hin=!fertig?`<div class="mut">${esc(t('Solange antwortet das Sprachmodell nicht; der Chat sagt das mit der erwarteten Zeit. Einzelheiten: Zustand → Logs (Modellwechsel).','Meanwhile the language model does not answer; the chat says so with the expected time. Details: Status → Logs (model switch).'))}</div>`:'';
-  return `<div class="card mdstart" id="mdstart"><b>${esc(kopf)}</b><ol class="mdschritte">${zeilen}</ol>${rest}${hin}</div>`}
+  return `<div class="card mdstart" id="mdstart"><b>${esc(x.kopf)}</b><ol class="mdschritte">${zeilen}</ol>${rest}${hin}</div>`}
 function mdWechsel(w){if(!w.an)return mdStart(w.start)+`<div class="mut vb-note">${esc(t('Wechseln: Funktionen → Modelle wechseln einschalten.','Switching: switch on Features → Switch models.'))}</div>`;
   if(w.start)return mdStart(w.start)+(w.misst?mdMisst(w):'');
   return (w.laeuft?`<div class="card"><b>${esc(t('Ein Modellwechsel läuft.','A model switch is running.'))}</b> <span class="mut">${esc(t('Fortschritt unter Zustand → Logs (Modellwechsel); die Seite zeigt das Ergebnis, sobald er fertig ist.','Progress under Status → Logs (model switch); the page shows the result once it is done.'))}</span></div>`:'')+

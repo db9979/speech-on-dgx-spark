@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.797** Sprachmodell-Wechsel in den Apps und Mitteilung, wenn er fertig ist
 - **V01.0.796** Sprachmodell-Wechsel auch in Steuerzentrale und am Gehäuse-Display
 - **V01.0.795** Fix: Bedeutungssuche bricht nicht mehr mit „does not match its commit“ ab
 - **V01.0.794** Fix: Selbsttest Wächter-Umgehung wieder grün
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.790** Pi stabiler: ein hängendes Panel startet von selbst neu und nennt im Log die Stelle; der Sprachassistent behält Vorrang
 - **V01.0.789** Wachposten: Push an die Admins bei Sperren, neuen Zugängen, geändertem Schutz oder gebrochenem Protokoll
 - **V01.0.788** Karte „Grundausstattung“ auf Funktionen ist eine Zeile
-- **V01.0.787** Wissensbuch auf dem iPhone, „Ins Wissensbuch“ auch im App-Gespräch
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

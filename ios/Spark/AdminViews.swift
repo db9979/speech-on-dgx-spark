@@ -367,6 +367,7 @@ struct ModelsView: View {
         let arten = (d["arten"] as? [[String: Any]] ?? []).filter { !($0["modelle"] as? [[String: Any]] ?? []).isEmpty }
         List {
             if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if let st = w["start"] as? [String: Any] { startSection(st) }
             if misst {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Eine Messung läuft. Das Sprachmodell pausiert so lange; die Zahlen erscheinen hier, sobald sie fertig ist.").foregroundStyle(.secondary)
@@ -375,7 +376,7 @@ struct ModelsView: View {
                         Text(verbatim: stand.joined(separator: "\n")).font(.caption.monospaced()).foregroundStyle(.secondary)
                     }
                 }
-            } else if laeuft {
+            } else if laeuft && w["start"] == nil {
                 Text(SparkAPI.way(String(localized: "Ein Modellwechsel läuft. Fortschritt unter Zustand → Logs."))).foregroundStyle(.secondary)
             }
             if let p = w["probe"] as? [String: Any], !laeuft || misst { probeSection(p) }
@@ -471,11 +472,11 @@ struct ModelsView: View {
         .navigationTitle("Modelle")
         .refreshable { await load() }
         .task { await load() }
-        .task(id: misst) {      // while a measurement runs: its progress every few seconds
-            while misst && !Task.isCancelled {
+        .task(id: misst || startet) {      // while a measurement runs or the language model starts: every few seconds
+            while (misst || startet) && !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(8))
                 await load()
-                if (d["wechsel"] as? [String: Any])?["misst"] as? Bool != true { break }
+                if (d["wechsel"] as? [String: Any])?["misst"] as? Bool != true && !startet { break }
             }
         }
         .confirmationDialog(LocalizedStringKey(ask?["probe"] != nil ? "Modell ausprobieren?" : ask?["verwerfen"] != nil
@@ -502,6 +503,34 @@ struct ModelsView: View {
                                       Self.gib(v["need_gib"]), v["lizenz"] as? String ?? ""))
             } else {
                 Text("Der Spark lädt und prüft das Modell; das alte bleibt 7 Tage zum Zurückholen.")
+            }
+        }
+    }
+
+    /// The language model switches or starts and has not ended yet (llmstart).
+    private var startet: Bool {
+        ((d["wechsel"] as? [String: Any])?["start"] as? [String: Any])?["ende"] as? Bool == false
+    }
+
+    /// Dominik 2026-10-18 „5a“: the same six steps as the panel's card; the texts come from the panel (llmstart.zeigen).
+    /// When it is done, the heading says so and every admin gets a note.
+    @ViewBuilder private func startSection(_ x: [String: Any]) -> some View {
+        let zeilen = x["zeilen"] as? [[String: Any]] ?? []
+        Section {
+            ForEach(Array(zeilen.enumerated()), id: \.offset) { _, z in
+                let zustand = z["zustand"] as? String ?? "offen"
+                HStack {
+                    Image(systemName: zustand == "ok" ? "checkmark.circle.fill" : zustand == "jetzt" ? "circle.dotted" : "circle")
+                        .foregroundStyle(zustand == "ok" ? Color.green : zustand == "jetzt" ? Color.accentColor : Color.secondary)
+                    Text(verbatim: z["name"] as? String ?? "")
+                    Spacer()
+                    Text(verbatim: z["zeit"] as? String ?? "").font(.caption).foregroundStyle(.secondary)
+                }
+            }
+            if let r = x["rest"] as? String, !r.isEmpty { Text(verbatim: r).foregroundStyle(.secondary) }
+        } header: { Text(verbatim: x["kopf"] as? String ?? "") } footer: {
+            if x["ende"] as? Bool == false {
+                Text("Solange antwortet das Sprachmodell nicht; der Chat sagt das mit der erwarteten Zeit.")
             }
         }
     }

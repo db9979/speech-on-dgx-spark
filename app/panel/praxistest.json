@@ -1918,6 +1918,13 @@
 "titel": "Sprachmodell wechselt: Steuerzentrale und Display",
 "text": "A: Zustand → Modelle → Sprachmodell → anderes Modell → Wechseln. B: Steuerzentrale am Bildschirm: in der Zeile des Sprachmodells steht vorn „wechselt (4/6)“. C: Pironman-Display: die Seite Spark kommt zuerst, unten „LLM wechselt (4/6)“, die LEDs leuchten gelb, auch während der Pause. D: Nach dem Ende wieder „bereit“ und grün.",
 "thread": "Eigene Modell-Installation statt qwen38"
+},
+{
+"id": "P298",
+"v": 797,
+"titel": "Sprachmodell wechselt: Apps und Mitteilung",
+"text": "A: Im Panel Zustand → Modelle → Sprachmodell → anderes Modell → Wechseln. B: iPhone-App, Zustand → Modelle: oben stehen dieselben sechs Schritte mit Zeiten und „Erwartet: noch etwa … min“, die Seite aktualisiert sich alle paar Sekunden. C: Android: dieselbe Karte über die Panel-Ansicht. D: Am Ende kommt auf jedes Admin-Gerät die Mitteilung „🧠 Sprachmodell umgeschaltet“ mit Name und Dauer (oder „Wechsel zurückgenommen“ mit Grund), genau einmal. E: Ein Update-Neustart in der Nacht schickt keine Mitteilung.",
+"thread": "Eigene Modell-Installation statt qwen38"
 }
 ]
 }

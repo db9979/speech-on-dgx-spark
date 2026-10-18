@@ -415,6 +415,7 @@ async def stability():
     spawn(dienstwacht.loop())
     spawn(rundlauf.loop())
     spawn(wachposten.loop())
+    spawn(modellseite.melde_loop())
     spawn(wartung.loop())
     spawn(berater.loop())
     spawn(speicher.loop())

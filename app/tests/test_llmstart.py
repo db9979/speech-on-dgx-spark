@@ -175,8 +175,10 @@ class Panel(unittest.TestCase):
         with mock.patch.object(modellseite, "lage", side_effect=RuntimeError("weg")):
             self.assertEqual(asyncio.run(chat_modell.llm_start_satz(False)), "")
         z = modellseite._start_zeigen(dict(self.X), {"qwen36-35b-a3b-nvfp4": {"name": {"de": "Qwen3.6", "en": "Qwen3.6"}}}, 0)
-        self.assertEqual((z["titel"], z["name"], z["teil_name"], len(z["schritte"]), z["rest_min"]),
-                         ("Sprachmodell wechselt", "Qwen3.6", "Kernel übersetzen", 6, 14))
+        self.assertTrue(z["kopf"].startswith("Sprachmodell wechselt: Qwen3.6 · Schritt "), z["kopf"])
+        self.assertEqual(len(z["zeilen"]), 6)
+        self.assertIn("Kernel übersetzen", " ".join(r["name"] for r in z["zeilen"]))
+        self.assertIn("noch etwa 14 min", z["rest"])
         self.assertIsNone(modellseite._start_zeigen(None, {}, 0))
         src = read("panel", "chat_modell.py")
         self.assertIn("note = await llm_start_satz(en_q) or note", src)            # not reachable while it starts
@@ -211,6 +213,81 @@ class Panel(unittest.TestCase):
         self.assertEqual(len(q), 1)
         self.assertTrue(q[0]["sub"].startswith("wechselt (4/6) · "), q[0]["sub"])   # the Steuerzentrale cuts the end
         self.assertNotIn("Modellwechsel läuft", q[0]["sub"])
+
+
+    def _x(self, **kw):
+        x = {"vorgang": "wechsel", "ziel": "qwen36-35b-a3b-nvfp4", "schritt": "probe", "n": 5, "seit": {"pruefen": 10, "probe": 900},
+             "dauer_s": 1000, "schritt_s": 100, "erwartet_s": 1020, "teil": "", "ende": False, "ergebnis": "", "grund": ""}
+        x.update(kw)
+        return x
+
+    def test_a_switch_that_ended_is_told_once(self):
+        lief, fertig = self._x(), self._x(ende=True, ergebnis="ok", schritt="fertig", n=6)
+        self.assertIs(llmstart.fertig(lief, fertig), fertig)
+        self.assertIs(llmstart.fertig(None, fertig), fertig, "it ran between two looks")
+        self.assertIsNone(llmstart.fertig(fertig, fertig), "the same end again: no second note")
+        self.assertIsNone(llmstart.fertig(fertig, None))
+        self.assertIsNone(llmstart.fertig(lief, lief))
+        self.assertIsNone(llmstart.fertig(lief, self._x(vorgang="neustart", ende=True, ergebnis="ok")),
+                          "an update or a crash restart: no note")
+        neu = self._x(ende=True, ergebnis="ok", seit={"pruefen": 5000})
+        self.assertIs(llmstart.fertig(fertig, neu), neu, "a later switch is told again")
+
+    def test_the_notice_has_fixed_words_the_name_and_minutes(self):
+        t, b = llmstart.meldung(self._x(ende=True, ergebnis="ok", dauer_s=1000), "Qwen3.6 35B")
+        self.assertEqual(t, "🧠 Sprachmodell umgeschaltet")
+        self.assertEqual(b, "Jetzt läuft Qwen3.6 35B, nach 17 min. Mehr unter Zustand → Modelle.")
+        t, b = llmstart.meldung(self._x(ende=True, ergebnis="zurueck", grund="nicht bereit"))
+        self.assertEqual((t, b), ("🧠 Sprachmodell-Wechsel zurückgenommen",
+                                  "Grund: nicht rechtzeitig bereit. Das vorige Modell läuft weiter. Mehr unter Zustand → Modelle."))
+        self.assertIn("httperror", llmstart.meldung(self._x(ende=True, ergebnis="zurueck", grund="httperror"))[1])
+        self.assertEqual(llmstart.meldung(self._x(vorgang="platz", ende=True, ergebnis="ok", dauer_s=200))[0],
+                         "🧠 Lange Gespräche eingestellt")
+        self.assertEqual(llmstart.grund_name("speicher", 1), "not enough memory")
+
+    def test_every_admin_with_a_device_gets_the_notice(self):
+        import modellseite
+        import notaus
+        import push
+        fertig = self._x(ende=True, ergebnis="ok", n=6)
+        sent = []
+
+        async def send(uid, title, body, tag="", private=True, **kw):
+            sent.append((uid, title, tag, private))
+            return 1
+        import common
+        self.addCleanup(helpers.write_config, common.load_config())
+        helpers.set_config(modelle_wechseln=True)
+        kat = {"qwen36-35b-a3b-nvfp4": {"name": {"de": "Qwen3.6 35B"}}}
+        with mock.patch.object(modellseite, "lage", return_value={"start": fertig, "misst": False}), \
+                mock.patch.object(modellseite, "_quelle", return_value=(0, 0, None, None, kat, {}, None, None, fertig)), \
+                mock.patch.object(notaus, "admin_uids", return_value=["a1", "a2"]), \
+                mock.patch.object(push, "reachable", side_effect=lambda uid, private: uid == "a1"), \
+                mock.patch.object(push, "send", side_effect=send):
+            self.assertIs(asyncio.run(modellseite.melde_tick(self._x())), fertig)
+            self.assertEqual(sent, [("a1", "🧠 Sprachmodell umgeschaltet", "modell", False)])
+            asyncio.run(modellseite.melde_tick(fertig))
+            self.assertEqual(len(sent), 1, "told once")
+            helpers.set_config(modelle_wechseln=False)
+            asyncio.run(modellseite.melde_tick(self._x()))
+            self.assertEqual(len(sent), 1, "Modelle wechseln off: no note")
+
+
+    def test_the_card_texts_are_built_once_for_panel_and_apps(self):
+        x = self._x(schritt="starten", n=4, seit={"pruefen": 0, "dateien": 2, "anhalten": 40, "starten": 55},
+                    dauer_s=355, schritt_s=300, teil="kernel")
+        z = llmstart.zeigen(x, "Gemma")
+        self.assertEqual(z["kopf"], "Sprachmodell wechselt: Gemma · Schritt 4 von 6 · seit 5:55 min")
+        self.assertEqual([r["zustand"] for r in z["zeilen"]], ["ok", "ok", "ok", "jetzt", "offen", "offen"])
+        self.assertEqual([r["zeit"] for r in z["zeilen"]], ["2 s", "38 s", "15 s", "5:00 min", "", ""])
+        self.assertIn("Kernel übersetzen", z["zeilen"][3]["name"])
+        self.assertTrue(z["rest"].startswith("Erwartet: noch etwa "))
+        en = llmstart.zeigen(self._x(ende=True, ergebnis="zurueck", grund="speicher"), "", 1)
+        self.assertEqual(en["kopf"], "Switch taken back: not enough memory")
+        self.assertEqual(en["rest"], "")
+        ok = llmstart.zeigen(self._x(ende=True, ergebnis="ok", n=6, dauer_s=1000), "Qwen")
+        self.assertEqual(ok["kopf"], "Umgeschaltet auf Qwen · 16:40 min")
+        self.assertEqual({r["zustand"] for r in ok["zeilen"]}, {"ok"})
 
 
 if __name__ == "__main__":

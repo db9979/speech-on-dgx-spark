@@ -212,10 +212,7 @@ def _start_zeigen(x, kat, i):
     if not x:
         return None
     m = kat.get(x["ziel"])
-    teil = next((t[1 + i] for t in llmstart.TEILE if t[0] == x["teil"]), "")
-    return dict(x, titel=llmstart.VORGAENGE[x["vorgang"]][i], name=m["name"]["en" if i else "de"] if m else "",
-                schritte=[{"wort": w, "name": (de, en)[i]} for w, de, en in llmstart.SCHRITTE],
-                teil_name=teil, rest_min=llmstart.rest_min(x))
+    return dict(x, **llmstart.zeigen(x, m["name"]["en" if i else "de"] if m else "", i))
 
 
 def lage(now=None):
@@ -231,6 +228,50 @@ def lage(now=None):
             _lage["v"] = {"start": None, "misst": False}
         _lage["t"] = now
     return _lage["v"]
+
+
+MELDE_S = 20             # seconds between two looks for a switch that ended (the notice for the admins)
+
+
+async def melde_loop():
+    """Dominik „5a“: when a switch of the language model ends, every admin gets one note on the iPhone, Android or the
+    browser. What had already ended before the panel started is not told again."""
+    vorher = (await asyncio.to_thread(lage))["start"]
+    while True:
+        await asyncio.sleep(MELDE_S)
+        try:
+            vorher = await melde_tick(vorher)
+        except Exception as e:   # noqa: BLE001 - the loop goes on
+            print("modelle: meldung fehler", type(e).__name__, flush=True)
+
+
+async def melde_tick(vorher):
+    """One look: tells the admins about a switch that ended since vorher; returns what it saw."""
+    import notaus
+    import push
+    jetzt = (await asyncio.to_thread(lage))["start"]
+    x = llmstart.fertig(vorher, jetzt)
+    if not x:
+        return jetzt
+    cfg = load_config()
+    if not _an(cfg):
+        print("modelle: meldung aus", flush=True)
+        return jetzt
+    kat = (await asyncio.to_thread(_quelle, cfg))[4]
+    title, body = llmstart.meldung(x, (kat.get(x["ziel"]) or {}).get("name", {}).get("de", ""))
+    reached = 0
+    for uid in notaus.admin_uids():
+        if not push.reachable(uid, False):
+            continue
+        try:
+            reached += 1 if await push.send(uid, title, body, tag="modell", private=False) else 0
+        except Exception as e:   # noqa: BLE001 - one admin's device must not stop the others
+            print("modelle: meldung push", type(e).__name__, flush=True)
+    if reached:
+        print(f"modelle: meldung gesendet | {x['ergebnis'] or 'ok'} | {reached} Admin(s)", flush=True)
+    else:
+        print("modelle: meldung keine Admins mit Gerät", flush=True)
+    return jetzt
 
 
 def for_live(now=None):

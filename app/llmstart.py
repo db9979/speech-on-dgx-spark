@@ -232,6 +232,80 @@ def rest_min(x):
     return max(1, -(-(x["erwartet_s"] - lauf + (60 if x["n"] <= 4 else 30)) // 60))
 
 
+# rundlauf's and the shell's words for why a switch went back -> what a person reads (the page, the apps, the notice)
+GRUENDE = {"speicher": ("zu wenig Speicher", "not enough memory"), "fehler": ("Fehler", "error"),
+           "nicht bereit": ("nicht rechtzeitig bereit", "not ready in time"), "abgelehnt": ("abgelehnt", "refused"),
+           "dateien": ("Dateien nicht geprüft", "files not checked"),
+           "einstellung": ("Einstellung nicht geschrieben", "setting not written")}
+
+
+def grund_name(grund, i=0):
+    """A reason word in words (GRUENDE); another checked word (pruefen: GRUND) as it is."""
+    return GRUENDE[grund][i] if grund in GRUENDE else grund
+
+
+def _wer(x):
+    return x["vorgang"], x["ziel"], tuple(sorted(x["seit"].items()))
+
+
+def fertig(vorher, jetzt):
+    """The switch that just ended (Dominik „5a“: a notice when it is done): jetzt when it ended and vorher (the last
+    look) did not know that end, else None. A plain restart (update, crash) gets no notice."""
+    if not jetzt or not jetzt["ende"] or jetzt["vorgang"] == "neustart":
+        return None
+    if vorher and vorher["ende"] and _wer(vorher) == _wer(jetzt):
+        return None
+    return jetzt
+
+
+def meldung(x, name=""):
+    """The notice for the admins when a switch ended: (title, body), fixed words, the catalog name and minutes only."""
+    weg = "Mehr unter Zustand → Modelle."
+    minuten = max(1, round(x["dauer_s"] / 60))
+    if x["ergebnis"] != "ok":
+        grund = grund_name(x["grund"])
+        return ("🧠 Sprachmodell-Wechsel zurückgenommen",
+                (f"Grund: {grund}. " if grund else "") + f"Das vorige Modell läuft weiter. {weg}")
+    if x["vorgang"] == "platz":
+        return "🧠 Lange Gespräche eingestellt", f"Das Sprachmodell antwortet wieder, nach {minuten} min. {weg}"
+    return "🧠 Sprachmodell umgeschaltet", f"Jetzt läuft {name or 'das neue Modell'}, nach {minuten} min. {weg}"
+
+
+def dauer(s):
+    """Seconds as the page shows them: "12:05 min" or "40 s"."""
+    s = int(s or 0)
+    return f"{s // 60}:{s % 60:02d} min" if s >= 60 else f"{s} s"
+
+
+def zeigen(x, name="", i=0):
+    """The card's texts, the same for the panel and the apps (i: 0 German, 1 English): the heading, one row per step
+    {name, zeit, zustand: ok | jetzt | offen} and the expected time; numbers, fixed words and the catalog name only."""
+    t = lambda de, en: (de, en)[i]   # noqa: E731
+    fertig, zurueck, seit = x["ende"], x["ergebnis"] == "zurueck", x["seit"]
+    if fertig and zurueck:
+        grund = grund_name(x["grund"], i)
+        kopf = t("Wechsel zurückgenommen", "Switch taken back") + (": " + grund if grund else "")
+    elif fertig:
+        kopf = t("Umgeschaltet", "Switched") + (t(" auf ", " to ") + name if name else "") + " · " + dauer(x["dauer_s"])
+    else:
+        kopf = (VORGAENGE[x["vorgang"]][i] + (": " + name if name else "") + " · " + t("Schritt ", "step ") + str(x["n"])
+                + t(" von ", " of ") + str(len(SCHRITTE)) + " · " + t("seit ", "for ") + dauer(x["dauer_s"]))
+    teil = next((tt[1 + i] for tt in TEILE if tt[0] == x["teil"]), "")
+    zeilen = []
+    for k, (wort, de, en) in enumerate(SCHRITTE):
+        n, jetzt = k + 1, k + 1 == x["n"] and not fertig
+        bis = next((seit[w] for w, *_ in SCHRITTE[k + 1:] if w in seit), None)
+        zeit = dauer(x["schritt_s"]) if jetzt else dauer(bis - seit[wort]) if wort in seit and bis is not None else ""
+        zustand = "jetzt" if jetzt else "ok" if wort in seit or (fertig and not zurueck and n <= x["n"]) else "offen"
+        zeilen.append({"name": (de, en)[i] + (" · " + teil + " …" if jetzt and teil else ""), "zeit": zeit, "zustand": zustand})
+    rest = ""
+    if not fertig and rest_min(x):
+        rest = t("Erwartet: noch etwa ", "Expected: about ") + str(rest_min(x)) + t(" min", " min more")
+        if x["erwartet_s"]:
+            rest += " · " + t("letzter Start ", "last start ") + dauer(x["erwartet_s"])
+    return {"kopf": kopf, "zeilen": zeilen, "rest": rest}
+
+
 def kurz(st):
     """The short line for Live, Monitoring, Steuerzentrale and the case display: "wechselt (4/6)" (st: modellseite.for_live's
     start, vorgang and step numbers only)."""

@@ -1775,14 +1775,11 @@ class Browser(unittest.TestCase):
                     self.assertTrue(await pg.evaluate("!!$('mdpv')&&!!document.querySelector('.card [data-mdid=\"qwen38-27b-nvfp4-dspark\"]')"))
                     d["wechsel"]["probe"] = None
                     # Dominik 2026-10-18 „1a 2a“: the six steps of a switch on the page, the banner on top of every page
-                    schritte = [{"wort": x, "name": n} for x, n in (("pruefen", "Prüfen"), ("dateien", "Dateien prüfen"),
-                                ("anhalten", "Altes Modell anhalten"), ("starten", "Neues Modell startet"),
-                                ("probe", "Probefrage"), ("fertig", "Umgeschaltet"))]
-                    d["wechsel"]["start"] = {"vorgang": "wechsel", "ziel": "gemma-4-26b-a4b", "schritt": "starten", "n": 4,
-                                             "seit": {"pruefen": 0, "dateien": 2, "anhalten": 40, "starten": 55}, "dauer_s": 355,
-                                             "schritt_s": 300, "erwartet_s": 1041, "teil": "kernel", "ende": False, "ergebnis": "",
-                                             "grund": "", "titel": "Sprachmodell wechselt", "name": "Gemma 4 26B A4B mit langem Namen",
-                                             "schritte": schritte, "teil_name": "Kernel übersetzen", "rest_min": 14}
+                    import llmstart                   # the card's texts come from the panel, as for the apps
+                    x = {"vorgang": "wechsel", "ziel": "gemma-4-26b-a4b", "schritt": "starten", "n": 4,
+                         "seit": {"pruefen": 0, "dateien": 2, "anhalten": 40, "starten": 55}, "dauer_s": 355,
+                         "schritt_s": 300, "erwartet_s": 1041, "teil": "kernel", "ende": False, "ergebnis": "", "grund": ""}
+                    d["wechsel"]["start"] = dict(x, **llmstart.zeigen(x, "Gemma 4 26B A4B mit langem Namen"))
                     await pg.evaluate(f"loadModelle({json.dumps(d)})")
                     self.assertEqual(await pg.evaluate("document.querySelectorAll('#mdstart li').length"), 6)
                     self.assertEqual(await pg.evaluate("[...document.querySelectorAll('#mdstart li')].map(x=>x.className).join(' ')"),
