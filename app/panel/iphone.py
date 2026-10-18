@@ -121,6 +121,12 @@ THINGS = {
     "bilder": ((("GET", "POST", "DELETE"), r"/api/bilder"), (("GET",), rf"/api/bilder/job/{_DOC}"),
                (("GET",), rf"/api/bilder/{_DOC}/datei"), (("DELETE",), rf"/api/bilder/{_DOC}"),
                (("POST",), rf"/api/bilder/{_DOC}/(?:aendern|schnell)"), (("POST",), r"/api/bilder/foto")),
+    # Wissensbuch (wissensbuch.py): read the pages, "Stimmt nicht", settle contradictions and out-of-date sentences,
+    # file a kept answer, the Obsidian folder; writing a page again and deleting one stay in the browser
+    "wissensbuch": ((("GET",), r"/api/profile/wissensbuch(?:/export)?"), (("GET",), rf"/api/profile/wissensbuch/{_DOC}"),
+                    (("DELETE",), r"/api/profile/wissensbuch/satz/[0-9]{1,12}"),
+                    (("POST",), r"/api/profile/wissensbuch/satz/[0-9]{1,12}/(?:stimmt|noch)"),
+                    (("POST",), r"/api/profile/wissensbuch/ablegen")),
     # Musik (musik.py): listen, make from a wish, delete one or all
     "musik": ((("GET", "POST", "DELETE"), r"/api/musik"), (("GET",), rf"/api/musik/job/{_DOC}"),
               (("GET",), rf"/api/musik/{_DOC}/datei"), (("DELETE",), rf"/api/musik/{_DOC}")),

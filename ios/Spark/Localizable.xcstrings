@@ -10980,6 +10980,246 @@
           }
         }
       }
+    },
+    "Themen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Topics"
+          }
+        }
+      }
+    },
+    "Personen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "People"
+          }
+        }
+      }
+    },
+    "Firmen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Companies"
+          }
+        }
+      }
+    },
+    "Dinge": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Things"
+          }
+        }
+      }
+    },
+    "Orte": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Places"
+          }
+        }
+      }
+    },
+    "Abgelegte Antworten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filed answers"
+          }
+        }
+      }
+    },
+    "Stimmt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Right"
+          }
+        }
+      }
+    },
+    "Widersprüche": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contradictions"
+          }
+        }
+      }
+    },
+    "„Stimmt“ behält diesen Wert, die anderen kommen aus ihren Dokumenten nie wieder.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“Right” keeps this value; the others never come back from their documents."
+          }
+        }
+      }
+    },
+    "Veraltet?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Out of date?"
+          }
+        }
+      }
+    },
+    "Stimmt noch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Still right"
+          }
+        }
+      }
+    },
+    "Stimmt nicht": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wrong"
+          }
+        }
+      }
+    },
+    "Widerspruch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contradiction"
+          }
+        }
+      }
+    },
+    "Noch keine Seiten. Sie entstehen nur, wenn niemand mit dem Spark spricht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No pages yet. They are only made while nobody talks to the Spark."
+          }
+        }
+      }
+    },
+    "Noch nicht eingearbeitet:": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not worked in yet:"
+          }
+        }
+      }
+    },
+    "Als Obsidian-Ordner teilen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share as an Obsidian folder"
+          }
+        }
+      }
+    },
+    "Als Obsidian-Ordner laden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Load as an Obsidian folder"
+          }
+        }
+      }
+    },
+    "Eine Notiz je Seite, Links zwischen den Seiten, die Quellen als Fußnoten.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One note per page, links between the pages, the sources as footnotes."
+          }
+        }
+      }
+    },
+    "Wissensbuch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Knowledge book"
+          }
+        }
+      }
+    },
+    "S.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "p."
+          }
+        }
+      }
+    },
+    "Im Wissensbuch abgelegt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filed in the knowledge book."
+          }
+        }
+      }
+    },
+    "Kein Satz hatte eine Stelle in den Quellen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No sentence had a passage in the sources."
+          }
+        }
+      }
+    },
+    "Im Wissensbuch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In the knowledge book"
+          }
+        }
+      }
+    },
+    "Ins Wissensbuch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To the knowledge book"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

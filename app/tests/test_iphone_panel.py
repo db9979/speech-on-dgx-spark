@@ -236,7 +236,8 @@ class Things(unittest.TestCase):
     for the app's key with the admin release of their own function, not with the panel switch; the admin's block for
     the profile closes them at once; forgetting everything at once stays in the browser."""
     PROBE = {"documents": ("GET", "/api/profile/wissen"), "memory": ("GET", "/api/profile/memory"),
-             "bilder": ("GET", "/api/bilder"), "musik": ("GET", "/api/musik")}
+             "bilder": ("GET", "/api/bilder"), "musik": ("GET", "/api/musik"),
+             "wissensbuch": ("GET", "/api/profile/wissensbuch")}
 
     app, uid = Areas.app, Areas.uid
 
@@ -251,8 +252,9 @@ class Things(unittest.TestCase):
         return old
 
     def setUp(self):
-        helpers.keep_chat(self, "iphone", "iphone_panel", "bilder", "musik", "deny")
-        helpers.set_config(iphone=True, iphone_panel=False, bilder=True, musik=True, deny={})
+        helpers.keep_chat(self, "iphone", "iphone_panel", "bilder", "musik", "deny", "documents", "knowledge_book")
+        helpers.set_config(iphone=True, iphone_panel=False, bilder=True, musik=True, deny={}, documents=True,
+                           knowledge_book=True)
         for name in ("image", "music"):     # the picture and music models count as installed
             old = self.section(name, enabled=True)
             self.addCleanup(lambda n=name, o=old: self.section(n, **dict({"enabled": False}, **o)))
@@ -269,6 +271,7 @@ class Things(unittest.TestCase):
         self.assertEqual(set(iphone.THINGS) & set(iphone.AREAS), set())
 
     def test_each_part_opens_with_its_own_release_only(self):
+        import features
         c, a = self.app("Thea")
         hello = a.get("/api/iphone/hello").json()["areas"]
         for k, (method, path) in self.PROBE.items():
@@ -279,8 +282,8 @@ class Things(unittest.TestCase):
             try:
                 self.assertFalse(a.get("/api/iphone/hello").json()["areas"][k], k)
                 self.assertEqual(a.request(method, path).status_code, 401, k)
-                for other, (m2, p2) in self.PROBE.items():   # the others stay open
-                    if other != k:
+                for other, (m2, p2) in self.PROBE.items():   # the others stay open (the Wissensbuch hangs on Dokumente)
+                    if other != k and features.BY_KEY[other].parent != k:
                         self.assertEqual(a.request(m2, p2).status_code, 200, (k, other))
             finally:
                 helpers.set_config(deny={})
@@ -324,6 +327,19 @@ class Things(unittest.TestCase):
             self.assertEqual(a.get("/api/profile/auslassen").status_code, 401)
         finally:
             helpers.set_config(deny={})
+
+    def test_knowledge_book_from_the_app(self):
+        """Wissensbuch Stufe E: the app reads the book, settles sentences and files a kept answer; writing a page
+        again and deleting one stay in the browser."""
+        c, a = self.app("Tara")
+        self.assertEqual(a.get("/api/profile/wissensbuch").status_code, 200)
+        self.assertEqual(a.post("/api/profile/wissensbuch/satz/99999/stimmt").status_code, 404)   # through, no such sentence
+        self.assertEqual(a.post("/api/profile/wissensbuch/satz/99999/noch").status_code, 404)
+        self.assertEqual(a.delete("/api/profile/wissensbuch/satz/99999").status_code, 404)
+        self.assertEqual(a.post("/api/profile/wissensbuch/ablegen", json={"id": "0" * 16}).status_code, 404)
+        self.assertEqual(a.get("/api/profile/wissensbuch/export").status_code, 200)
+        self.assertEqual(a.delete("/api/profile/wissensbuch/" + "a" * 12).status_code, 401)
+        self.assertEqual(a.post("/api/profile/wissensbuch/" + "a" * 12 + "/neu").status_code, 401)
 
 
 if __name__ == "__main__":

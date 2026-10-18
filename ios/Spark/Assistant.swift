@@ -27,6 +27,9 @@ final class Conversation: ObservableObject {
         /// Ablauf und Freigabe zeigen (ablauf.py): the tools of this answer, and the kind of a proposal waiting for "Ja"
         var steps: [StepItem]?
         var confirm: String?
+        /// Ins Wissensbuch (wissensbuch.py): the id the Spark kept this answer by, and whether it was filed
+        var wbId: String?
+        var filed: Bool?
     }
 
     /// The painted picture kept with an answer ("att" "bild" on the Spark, profiles._att): its job and prompt.
@@ -81,6 +84,21 @@ final class Conversation: ObservableObject {
             self.error = error.localizedDescription
         }
     }
+    /// "Ins Wissensbuch": only the owner's tap files the answer the Spark kept; the Spark checks every sentence
+    /// against the answer's own sources and drops the ones without a passage.
+    func file(_ id: UUID) async {
+        guard let i = messages.firstIndex(where: { $0.id == id }), let wid = messages[i].wbId,
+              let api = SparkAPI.current else { return }
+        do {
+            let r = try await api.post("api/profile/wissensbuch/ablegen", ["id": wid])
+            if let j = messages.firstIndex(where: { $0.id == id }) { messages[j].filed = true }
+            let n = (r["saetze"] as? NSNumber)?.intValue ?? 0
+            notice = n > 0 ? String(localized: "Im Wissensbuch abgelegt.") : String(localized: "Kein Satz hatte eine Stelle in den Quellen.")
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
+
     enum Phase: Equatable { case idle, waiting, listening, transcribing, thinking, speaking }
 
     static let newAfter: TimeInterval = 600     // a pause this long starts a new conversation
@@ -379,6 +397,7 @@ final class Conversation: ObservableObject {
             guard i < mine.count, mine[i].role == m.role else { return m }
             var k = m
             k.id = mine[i].id; k.label = mine[i].label; k.rateId = mine[i].rateId; k.rated = mine[i].rated
+            k.wbId = mine[i].wbId; k.filed = mine[i].filed
             if k.picJob == nil { k.picJob = mine[i].picJob; k.picPrompt = mine[i].picPrompt }   // the painted picture stays
             return k
         }
@@ -691,6 +710,7 @@ final class Conversation: ObservableObject {
                 case .more(let kind, let items): edit { $0.more = items; $0.moreKind = kind }
                 case .step(let x): edit { $0.steps = ($0.steps ?? []) + [x] }
                 case .confirm(let kind): edit { $0.confirm = kind }
+                case .wbuch(let id): edit { $0.wbId = id }
                 }
             }
             streamDone = true

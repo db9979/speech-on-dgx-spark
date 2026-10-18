@@ -6573,7 +6573,7 @@
 "file": "iPhone-App „Spark“",
 "head": "Meine Sachen",
 "title": "Meine Sachen",
-"text": "te, soweit der Admin sie erlaubt, und „Ausgelassene Ordner“ (seit V01.0.778): die Liste der Ordner und Namen, die der Spark nie liest, mit „Wieder zulassen“, Namensregeln hinzufügen (mit Rückfrage, wie viele Dokumente die Suche verlassen) und per Wischen entfernen; einen einzelnen Ordner auslassen geht im Ordnerbaum im Panel. - Vom Spark erstellt: die Dokumente, die der Spark gemacht hat, wie bisher. - Bilder: alle gemalten Bilder als Raster, ein Tippen zeigt eines groß mit Wunsch und Zeit, Teilen und Löschen. Oben ein Feld „Was soll ich malen?“; solange gemalt wird, schaut die App alle 4 Sekunden nach. Ändern, Schnellknöpfe und eigene Fotos gehen weiter im Panel unter Ich → Bilder. - Musik: alle Lieder mit Abspielen direkt in der App, Länge, mit oder ohne Gesang, wischen zum Löschen. Oben „Was für Musik?“ macht ein Stück ohne Gesang; Gesang und eigener Liedtext gehen im Panel unter Ich → Musik. - Gedächtnis: alle gemerkten Fakten mit Suche, „aus einem Gespräch gelernt“ oder „selbst gesagt“ mit Datum. Wischen zum Ändern oder Löschen, „Auswählen“ löscht mehrere, „Aufräumen vorschlagen“ fragt das Sprachmodell nach doppelten Einträgen, erst nach deinem „Übernehmen“ ändert sich etwas. "
+"text": "te, soweit der Admin sie erlaubt, und „Ausgelassene Ordner“ (seit V01.0.778): die Liste der Ordner und Namen, die der Spark nie liest, mit „Wieder zulassen“, Namensregeln hinzufügen (mit Rückfrage, wie viele Dokumente die Suche verlassen) und per Wischen entfernen; einen einzelnen Ordner auslassen geht im Ordnerbaum im Panel. - Wissensbuch (seit V01.0.787, Plan *wissensbuch* Stufe E, nur wenn der Admin das Wissensbuch freigegeben hat): unter Dokumente die Zeile „Wissensbuch“ mit den Seiten nach Art, oben Widersprüche („Stimmt“ behält einen Wert) und veraltete Sätze („Stimmt noch“, „Stimmt nicht“). Eine Seite zeigt jeden Satz mit seiner Quelle; nach links wischen ist „Stimmt nicht“. „Als Obsidian-Ordner laden“ holt das Buch als ZIP zum Teilen. Im Gespräch steht unter einer Antwort aus mindestens zwei Quellen „Ins Wissensbuch“; erst dein Tippen legt sie ab. Neu schreiben und Seiten löschen gehen im Panel unter Ich → Dokumente → Wissensbuch. Android zeigt das alles über die Panel-Ansicht. - Vom Spark erstellt: die Dokumente, die der Spark gemacht hat, wie bisher. - Bilder: alle gemalten Bilder als Raster, ein Tippen zeigt eines groß mit Wunsch und Zeit, Teilen und Löschen. Oben ein Fe"
 },
 {
 "lang": "de",
@@ -6581,7 +6581,7 @@
 "file": "iPhone-App „Spark“",
 "head": "Meine Sachen",
 "title": "Meine Sachen",
-"text": "Alles auf einmal vergessen geht weiter nur im Browser."
+"text": "ld „Was soll ich malen?“; solange gemalt wird, schaut die App alle 4 Sekunden nach. Ändern, Schnellknöpfe und eigene Fotos gehen weiter im Panel unter Ich → Bilder. - Musik: alle Lieder mit Abspielen direkt in der App, Länge, mit oder ohne Gesang, wischen zum Löschen. Oben „Was für Musik?“ macht ein Stück ohne Gesang; Gesang und eigener Liedtext gehen im Panel unter Ich → Musik. - Gedächtnis: alle gemerkten Fakten mit Suche, „aus einem Gespräch gelernt“ oder „selbst gesagt“ mit Datum. Wischen zum Ändern oder Löschen, „Auswählen“ löscht mehrere, „Aufräumen vorschlagen“ fragt das Sprachmodell nach doppelten Einträgen, erst nach deinem „Übernehmen“ ändert sich etwas. Alles auf einmal vergessen geht weiter nur im Browser."
 },
 {
 "lang": "de",
@@ -14357,7 +14357,15 @@
 "file": "iPhone app \"Spark\"",
 "head": "My things",
 "title": "My things",
-"text": "he admin allows them, and \"Left-out folders\" (since V01.0.778): the list of folders and names the Spark never reads, with \"Let in again\", adding name rules (asking first how many documents leave the search) and removing them with a swipe; leaving out a single folder happens in the folder tree in the panel. - Made by the Spark: the documents the Spark made, as before. - Pictures: all painted pictures as a grid; a tap shows one large with wish and time, share and delete. At the top a field \"What shall I paint?\"; while painting, the app looks again every 4 seconds. Changing, quick buttons and own photos stay in the panel under Me → Pictures. - Music: all songs, played right in the app, with length, with or without singing, swipe to delete. At the top \"What kind of music?\" makes a piece without singing; singing and own lyrics work in the panel under Me → Music. - Memory: all remembered facts with search, \"learned from a conversation\" or \"said yourself\" with the date. Swipe to change or delete, \"Select\" deletes several, \"Suggest tidying up\" asks the language model about double entries, and only your \"Accept\" changes anything. Forgetting everything at once stays in the browser."
+"text": "he admin allows them, and \"Left-out folders\" (since V01.0.778): the list of folders and names the Spark never reads, with \"Let in again\", adding name rules (asking first how many documents leave the search) and removing them with a swipe; leaving out a single folder happens in the folder tree in the panel. - Knowledge book (since V01.0.787, plan *wissensbuch* stage E, only when the admin released the knowledge book): below Documents the row \"Knowledge book\" with the pages by kind, on top contradictions (\"Right\" keeps one value) and out-of-date sentences (\"Still right\", \"Wrong\"). A page shows every sentence with its source; swiping left is \"Wrong\". \"Load as an Obsidian folder\" fetches the book as a ZIP to share. In the conversation, an answer from at least two sources shows \"To the knowledge book\"; only your tap files it. Writing a page again and deleting pages stay in the panel under Me → Documents → Knowledge book. Android shows all of it through the panel view. - Made by the Spark: the documents the Spark made, as before. - Pictures: all painted pictures as a grid; a tap shows one large with wish and time, share and delete. At the top a field \"What shall I paint?\"; while painting"
+},
+{
+"lang": "en",
+"src": "iphone-app",
+"file": "iPhone app \"Spark\"",
+"head": "My things",
+"title": "My things",
+"text": ", the app looks again every 4 seconds. Changing, quick buttons and own photos stay in the panel under Me → Pictures. - Music: all songs, played right in the app, with length, with or without singing, swipe to delete. At the top \"What kind of music?\" makes a piece without singing; singing and own lyrics work in the panel under Me → Music. - Memory: all remembered facts with search, \"learned from a conversation\" or \"said yourself\" with the date. Swipe to change or delete, \"Select\" deletes several, \"Suggest tidying up\" asks the language model about double entries, and only your \"Accept\" changes anything. Forgetting everything at once stays in the browser."
 },
 {
 "lang": "en",

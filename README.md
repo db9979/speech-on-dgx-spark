@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.787** Knowledge book on the iPhone, „To the knowledge book“ in the app's conversation too
 - **V01.0.786** Status → Models: pictures and music share one place in memory
 - **V01.0.785** Every model on a pinned commit with hash check, speech, search and picture filter too
 - **V01.0.784** reMarkable: always a task sheet there, also when nothing is open
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.780** Tamper-evident change log: hash chain, one year, copy on the NAS, "Check the log"
 - **V01.0.779** Knowledge book checks itself at night; you settle contradictions and out-of-date sentences with one click
 - **V01.0.778** iPhone app: see left-out folders, let them in again and keep name rules
-- **V01.0.777** Left-out folders also for the reMarkable and the companion's folder Spark-Wissen (new companion version)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

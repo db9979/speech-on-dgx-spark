@@ -22,6 +22,7 @@ enum ChatEvent {
     case more(kind: String, items: [MoreItem])  // the Spark's fixed sentences under the answer (saetze.py)
     case step(StepItem)     // Ablauf zeigen (ablauf.py): one tool of this answer, its readable name, ok and time
     case confirm(String)    // Freigabe-Karte (ablauf.py): the kind of a proposal waiting for "Ja", in fixed words
+    case wbuch(String)      // "Ins Wissensbuch" may go under this answer (wissensbuch.keep_offer): the id the Spark kept it by
 }
 
 /// One tool of an answer (ablauf.py): only its readable name, whether it worked and its time, never what it found.
@@ -889,6 +890,10 @@ struct SparkAPI {
                             // only a short id of letters and digits (faelle.py), never other text from the event
                             if let id = ev["id"] as? String, (4...40).contains(id.count),
                                id.allSatisfy({ $0.isASCII && ($0.isLetter || $0.isNumber) }) { cont.yield(.rate(id)) }
+                        case "wbuch":
+                            // only the 16 hex digits the Spark kept the answer by; the click names nothing else
+                            if let id = ev["id"] as? String, id.count == 16,
+                               id.allSatisfy({ $0.isHexDigit && !$0.isUppercase }) { cont.yield(.wbuch(id)) }
                         default: break
                         }
                     }

@@ -340,6 +340,7 @@ struct ChatView: View {
                             if m.role != "user", let steps = m.steps, !steps.isEmpty { StepsFold(steps: steps) }
                             if m.role != "user", m.id == talk.messages.last?.id, let kind = m.confirm { ConfirmCard(kind: kind) }
                             if m.role != "user", m.rateId != nil { RateBar(message: m) }
+                            if m.role != "user", m.wbId != nil { WbFileButton(message: m) }
                             if m.role != "user", m.id == talk.messages.last?.id, let more = m.more, !more.isEmpty {
                                 MoreRow(kind: m.moreKind ?? "", items: more)
                             }
@@ -844,6 +845,27 @@ struct ConfirmCard: View {
         .padding(10)
         .background(Color.orange.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
         .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.orange, lineWidth: 1.5))
+    }
+}
+
+/// "Ins Wissensbuch" under an answer that rests on at least two sources (wissensbuch.keep_offer)
+struct WbFileButton: View {
+    let message: Conversation.Message
+
+    var body: some View {
+        HStack {
+            if message.filed == true {
+                Label("Im Wissensbuch", systemImage: "checkmark").foregroundStyle(.secondary)
+            } else {
+                Button { Task { await Conversation.shared.file(message.id) } } label: {
+                    Label("Ins Wissensbuch", systemImage: "books.vertical")
+                }
+            }
+            Spacer()
+        }
+        .buttonStyle(.borderless)
+        .font(.footnote)
+        .padding(.leading, 6)
     }
 }
 

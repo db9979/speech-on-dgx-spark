@@ -212,6 +212,10 @@ struct DocumentsView: View {
             if let n = m.note { Text(verbatim: n).foregroundStyle(.secondary) }
             if !m.off && !m.loading {
                 Section {
+                    // only while the admin released the knowledge book for this profile (hello "areas")
+                    if Conversation.shared.allowed.areas.contains("wissensbuch") {
+                        NavigationLink("Wissensbuch") { WissensbuchView() }
+                    }
                     NavigationLink("Schalter für Dokumente") { DocSwitchesView() }
                     NavigationLink("Ausgelassene Ordner") { LeftOutView() }
                 }
@@ -938,5 +942,236 @@ struct MadeDocView: View {
         guard let api = SparkAPI.current, file == nil else { return }
         do { file = try await api.madeFile(doc) } catch { self.error = error.localizedDescription }
         loading = false
+    }
+}
+
+// ---------------------------------------------------------------- Wissensbuch (wissensbuch.py, plan wissensbuch Stufe E)
+/// One sentence of the knowledge book with its source: the text is the model's from an own document or a Kiwix
+/// article, so it is shown as plain text only (Text(verbatim:)), never as a link or a command.
+struct WbSentence: Identifiable, Hashable {
+    let id: Int
+    let text: String
+    let source: String
+    let page: Int?
+    let contradiction: Bool
+    let stale: Bool
+
+    static func from(_ d: [String: Any]) -> WbSentence? {
+        guard let id = (d["id"] as? NSNumber)?.intValue, id > 0 else { return nil }
+        let p = (d["page"] as? NSNumber)?.intValue ?? 0
+        return WbSentence(id: id, text: String((d["text"] as? String ?? "").prefix(400)),
+                          source: String((d["name"] as? String ?? "").prefix(120)), page: p > 0 ? p : nil,
+                          contradiction: d["mark"] as? String == "widerspruch", stale: d["flag"] as? String == "veraltet")
+    }
+}
+
+struct WbPage: Identifiable, Hashable {
+    let id: String
+    let title: String
+    let kind: String
+    let count: Int
+    let contradictions: Int
+}
+
+/// Meine Sachen → Dokumente → Wissensbuch: the pages by kind, what waits for the owner (contradictions and
+/// out-of-date sentences) and the Obsidian folder, the same as Ich → Dokumente → Wissensbuch in the panel. Only
+/// while the admin released it for the profile; the Spark checks every change (iphone.THINGS "wissensbuch").
+@MainActor
+final class WissensbuchModel: ObservableObject {
+    @Published var pages: [WbPage] = []
+    @Published var contradictions: [(String, [WbSentence])] = []
+    /// out-of-date sentences with the title of their page
+    @Published var stale: [(page: String, s: WbSentence)] = []
+    @Published var waiting = 0
+    @Published var loading = true
+    @Published var error: String?
+
+    static let kinds: [(String, LocalizedStringKey)] = [
+        ("Thema", LocalizedStringKey("Themen")), ("Person", LocalizedStringKey("Personen")), ("Firma", LocalizedStringKey("Firmen")),
+        ("Ding", LocalizedStringKey("Dinge")), ("Ort", LocalizedStringKey("Orte")), ("Antwort", LocalizedStringKey("Abgelegte Antworten")),
+    ]
+
+    static func isPage(_ s: String) -> Bool { s.count == 12 && s.allSatisfy { $0.isHexDigit && !$0.isUppercase } }
+
+    func load() async {
+        guard let api = SparkAPI.current else { return }
+        do {
+            let d = try await api.object("GET", "api/profile/wissensbuch")
+            pages = (d["seiten"] as? [[String: Any]] ?? []).prefix(500).compactMap { p in
+                guard let id = p["id"] as? String, Self.isPage(id), (p["n"] as? NSNumber)?.intValue ?? 0 > 0 else { return nil }
+                return WbPage(id: id, title: String((p["title"] as? String ?? "").prefix(120)), kind: p["art"] as? String ?? "Thema",
+                              count: (p["n"] as? NSNumber)?.intValue ?? 0, contradictions: (p["widerspruch"] as? NSNumber)?.intValue ?? 0)
+            }
+            contradictions = (d["widersprueche"] as? [[String: Any]] ?? []).prefix(50).map { g in
+                (String((g["seite"] as? String ?? "").prefix(120)), (g["werte"] as? [[String: Any]] ?? []).prefix(10).compactMap(WbSentence.from))
+            }
+            stale = (d["veraltet"] as? [[String: Any]] ?? []).prefix(50).compactMap { s in
+                WbSentence.from(s).map { (page: String((s["seite"] as? String ?? "").prefix(120)), s: $0) }
+            }
+            waiting = (d["wait"] as? NSNumber)?.intValue ?? 0
+            error = nil
+        } catch { self.error = error.localizedDescription }
+        loading = false
+    }
+
+    /// "Stimmt nicht" (DELETE), "Stimmt" for one value of a contradiction, "Stimmt noch" for an out-of-date sentence
+    func sentence(_ id: Int, _ what: String) async {
+        guard let api = SparkAPI.current else { return }
+        do {
+            switch what {
+            case "stimmt", "noch": _ = try await api.object("POST", "api/profile/wissensbuch/satz/\(id)/\(what)")
+            default: _ = try await api.object("DELETE", "api/profile/wissensbuch/satz/\(id)")
+            }
+            error = nil
+        } catch { self.error = error.localizedDescription }
+        await load()
+    }
+
+    /// The whole book as an Obsidian folder (ZIP), written to the app's temporary folder for "Teilen".
+    func export() async -> URL? {
+        guard let api = SparkAPI.current else { return nil }
+        do {
+            var r = api.request("api/profile/wissensbuch/export")
+            r.timeoutInterval = 120
+            let (data, response) = try await URLSession.shared.data(for: r)
+            try SparkAPI.check(data, response)
+            guard data.count <= 25 * 1024 * 1024 else { throw SparkError(message: String(localized: "Die Datei ist zu groß.")) }
+            let url = FileManager.default.temporaryDirectory.appendingPathComponent("Wissensbuch.zip")
+            try data.write(to: url, options: [.atomic, .completeFileProtection])
+            return url
+        } catch { self.error = error.localizedDescription; return nil }
+    }
+}
+
+struct WissensbuchView: View {
+    @StateObject private var m = WissensbuchModel()
+    @State private var file: URL?
+    @State private var exporting = false
+
+    var body: some View {
+        List {
+            if m.loading { ProgressView() }
+            if !m.contradictions.isEmpty {
+                Section {
+                    ForEach(Array(m.contradictions.enumerated()), id: \.offset) { _, g in
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(verbatim: g.0).font(.subheadline.bold())
+                            ForEach(g.1) { s in
+                                HStack(alignment: .top) {
+                                    WbSentenceText(s: s)
+                                    Spacer()
+                                    Button("Stimmt") { Task { await m.sentence(s.id, "stimmt") } }.buttonStyle(.bordered)
+                                }
+                            }
+                        }
+                    }
+                } header: { Text("Widersprüche") } footer: { Text("„Stimmt“ behält diesen Wert, die anderen kommen aus ihren Dokumenten nie wieder.") }
+            }
+            if !m.stale.isEmpty {
+                Section("Veraltet?") {
+                    ForEach(m.stale.map { $0.s }) { x in
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(verbatim: m.stale.first { $0.s.id == x.id }?.page ?? "").font(.caption).foregroundStyle(.secondary)
+                            WbSentenceText(s: x)
+                            HStack {
+                                Button("Stimmt noch") { Task { await m.sentence(x.id, "noch") } }.buttonStyle(.bordered)
+                                Button("Stimmt nicht", role: .destructive) { Task { await m.sentence(x.id, "weg") } }.buttonStyle(.bordered)
+                            }
+                        }
+                    }
+                }
+            }
+            ForEach(WissensbuchModel.kinds, id: \.0) { k in
+                let l = m.pages.filter { $0.kind == k.0 }
+                if !l.isEmpty {
+                    Section {
+                        ForEach(l) { p in
+                            NavigationLink { WbPageView(page: p, model: m) } label: {
+                                LabeledContent {
+                                    Text(verbatim: String(p.count))
+                                } label: {
+                                    Text(verbatim: p.title)
+                                    if p.contradictions > 0 { Text("Widerspruch").foregroundStyle(.orange) }
+                                }
+                            }
+                        }
+                    } header: { Text(k.1) }
+                }
+            }
+            if !m.loading && m.pages.isEmpty && m.error == nil {
+                Text("Noch keine Seiten. Sie entstehen nur, wenn niemand mit dem Spark spricht.").foregroundStyle(.secondary)
+            }
+            if m.waiting > 0 { Text(verbatim: String(localized: "Noch nicht eingearbeitet:") + " " + String(m.waiting)).foregroundStyle(.secondary) }
+            if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if !m.pages.isEmpty {
+                Section {
+                    if let file {
+                        ShareLink(item: file) { Label("Als Obsidian-Ordner teilen", systemImage: "square.and.arrow.up") }
+                    } else {
+                        Button {
+                            exporting = true
+                            Task { file = await m.export(); exporting = false }
+                        } label: {
+                            if exporting { ProgressView() } else { Label("Als Obsidian-Ordner laden", systemImage: "arrow.down.doc") }
+                        }
+                    }
+                } footer: { Text("Eine Notiz je Seite, Links zwischen den Seiten, die Quellen als Fußnoten.") }
+            }
+        }
+        .navigationTitle("Wissensbuch")
+        .refreshable { await m.load() }
+        .task { await m.load() }
+        .onDisappear { if let file { try? FileManager.default.removeItem(at: file) } }
+    }
+}
+
+/// A sentence and below it its source in small letters (document and page, or "Kiwix: title").
+struct WbSentenceText: View {
+    let s: WbSentence
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(verbatim: s.text).textSelection(.enabled)
+            Text(verbatim: s.page.map { s.source + " · " + String(localized: "S.") + " " + String($0) } ?? s.source)
+                .font(.caption).foregroundStyle(.secondary)
+        }
+    }
+}
+
+/// One page with its sentences; "Stimmt nicht" removes a sentence for good from its document.
+struct WbPageView: View {
+    let page: WbPage
+    @ObservedObject var model: WissensbuchModel
+    @State private var sentences: [WbSentence] = []
+    @State private var error: String?
+
+    var body: some View {
+        List {
+            ForEach(sentences) { s in
+                VStack(alignment: .leading, spacing: 4) {
+                    WbSentenceText(s: s)
+                    if s.contradiction { Text("Widerspruch").font(.caption).foregroundStyle(.orange) }
+                    if s.stale { Text("Veraltet?").font(.caption).foregroundStyle(.orange) }
+                }
+                .swipeActions(edge: .trailing) {
+                    Button(role: .destructive) { Task { await model.sentence(s.id, "weg"); await load() } } label: {
+                        Label("Stimmt nicht", systemImage: "xmark")
+                    }
+                }
+            }
+            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+        }
+        .navigationTitle(Text(verbatim: page.title))
+        .navigationBarTitleDisplayMode(.inline)
+        .task { await load() }
+    }
+
+    private func load() async {
+        guard let api = SparkAPI.current, WissensbuchModel.isPage(page.id) else { return }
+        do {
+            let d = try await api.object("GET", "api/profile/wissensbuch/\(page.id)")
+            sentences = (d["saetze"] as? [[String: Any]] ?? []).prefix(300).compactMap(WbSentence.from)
+            error = nil
+        } catch { self.error = error.localizedDescription }
     }
 }

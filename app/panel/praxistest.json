@@ -1855,6 +1855,13 @@
 "titel": "Bilder und Musik ein Platz",
 "text": "A: Bilder und Musik einschalten, dann Zustand → Modelle öffnen: rechts im Balken steht ein gemeinsames Stück in Pink und Orange, so breit wie das größere der beiden Modelle (nicht beide zusammen). B: Mit der Maus darauf zeigen: „FLUX… oder ACE-Step… · 20 GiB“. C: Unter dem Balken steht „Bilder oder Musik: ein Platz, nie beide“. D: „Frei für Modelle bei Bedarf“ und der Hinweis darunter rechnen nur mit dem größeren. E: iPhone-App: derselbe Balken mit einem Stück in beiden Farben.",
 "thread": "Eigene Modell-Installation statt qwen38"
+},
+{
+"id": "P289",
+"v": 787,
+"titel": "Wissensbuch in der iPhone-App",
+"text": "A: Wissensbuch freigegeben, iPhone-App nach dem nächsten TestFlight-Build öffnen. B: Meine Sachen → Dokumente → „Wissensbuch“: Seiten nach Art, oben Widersprüche mit „Stimmt“ und veraltete Sätze mit „Stimmt noch“/„Stimmt nicht“. C: Eine Seite öffnen, einen Satz nach links wischen: „Stimmt nicht“ entfernt ihn (auch im Panel weg). D: „Als Obsidian-Ordner laden“, dann teilen (z. B. in Dateien sichern). E: Im Gespräch eine Frage aus zwei Dokumenten: unter der Antwort „Ins Wissensbuch“, Tippen zeigt „Im Wissensbuch“. F: Admin sperrt das Wissensbuch für das Profil: die Zeile verschwindet. G: Android: dasselbe über die Panel-Ansicht.",
+"thread": "Wissensbuch nach Karpathy"
 }
 ]
 }
