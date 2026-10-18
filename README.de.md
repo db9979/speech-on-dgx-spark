@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.804** Fix: „Ja“ zu „Soll ich das aufs reMarkable legen?“ legt die Antwort ab; „Ja“ zum Termin antwortet richtig
 - **V01.0.803** · 2026-10-18 · Anrufe per Assistent: „Ruf Sabine an“ oder „Videoanruf mit Sabine“ ruft nach deinem Ja über die Chats an; vom Lautsprecher, Telefon oder Telegram kommt der Anruf als Mitteilung aufs Handy (ein Tipp ruft an); auf Android auch „Ruf Mama übers Telefon an“ mit den eigenen Kontakten (App 1.4.2); Schalter aus
 - **V01.0.802** Monitoring zeigt, wer gerade rechnet: CPU je Dienst auf beiden Rechnern, im Panel je Teil, Streifen der letzten 20 Minuten; auch in Live, Steuerzentrale und iPhone
 - **V01.0.801** Die Bedeutungssuche rechnet nur noch in freier Zeit auf höchstens der Hälfte der Kerne; Sprache geht vor
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.797** Sprachmodell-Wechsel in den Apps und Mitteilung, wenn er fertig ist
 - **V01.0.796** Sprachmodell-Wechsel auch in Steuerzentrale und am Gehäuse-Display
 - **V01.0.795** Fix: Bedeutungssuche bricht nicht mehr mit „does not match its commit“ ab
-- **V01.0.794** Fix: Selbsttest Wächter-Umgehung wieder grün
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

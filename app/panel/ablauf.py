@@ -27,6 +27,7 @@ KINDS = {
     "aendern": ("Rückgängig", "Undo"),
     "nasablage": ("NAS-Ablage", "NAS filing"),
     "rufen": ("Anruf", "Call"),
+    "remarkable": ("reMarkable", "reMarkable"),
 }
 
 

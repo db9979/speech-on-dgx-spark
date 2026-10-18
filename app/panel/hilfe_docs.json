@@ -1613,7 +1613,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": ", als fremder Text (wissensbuch.hint). 6. Fester Satz?: Sätze wie „Spark Notaus“, „Problem melden: …“ oder „Das war falsch“ führt das Panel selbst aus, nur aus den eigenen Worten des Profils und nie über MCP. Das Modell sagt nur das Ergebnis und bekommt in diesem Zug kein Werkzeug. 7. Antwort auf eine Rückfrage?: Hat das Panel gefragt, welches Gerät gemeint ist, gilt als Antwort ein Knopf, eine Zahl oder der Name, nur im selben Gespräch, vom eigenen Profil und innerhalb von 2 Minuten. „Keins davon“ bringt die ganze Liste, „Nein, den anderen“ korrigiert die letzte Wahl. Das Panel führt die Wahl aus und bietet an, sie sich zu merken; ein „Ja“ dazu zählt 15 Minuten. 8. Notaus oder Mein Notaus?: Ab Notaus-Stufe 2 oder mit dem eigenen Notaus des Profils werden alle wartenden Vorschläge verworfen; kein „Ja“ führt etwas aus. Lesen und Antworten gehen weiter. 9. Ja zu einem Vorschlag: Wartet ein Vorschlag aus diesem Gespräch (ein Termin, eine Mail-Änderung, ein Listeneintrag, eine Korrektur, ein Anruf), entscheidet das Panel über das „Ja“. Ein Ja bestätigt genau eine Sache; jede Antwort erledigt alle anderen wartenden Vorschläge dieses Gesprächs. 10. Werkzeuge nach Rechten: Jede Werkzeuggr"
+"text": ", als fremder Text (wissensbuch.hint). 6. Fester Satz?: Sätze wie „Spark Notaus“, „Problem melden: …“ oder „Das war falsch“ führt das Panel selbst aus, nur aus den eigenen Worten des Profils und nie über MCP. Das Modell sagt nur das Ergebnis und bekommt in diesem Zug kein Werkzeug. 7. Antwort auf eine Rückfrage?: Hat das Panel gefragt, welches Gerät gemeint ist, gilt als Antwort ein Knopf, eine Zahl oder der Name, nur im selben Gespräch, vom eigenen Profil und innerhalb von 2 Minuten. „Keins davon“ bringt die ganze Liste, „Nein, den anderen“ korrigiert die letzte Wahl. Das Panel führt die Wahl aus und bietet an, sie sich zu merken; ein „Ja“ dazu zählt 15 Minuten. 8. Notaus oder Mein Notaus?: Ab Notaus-Stufe 2 oder mit dem eigenen Notaus des Profils werden alle wartenden Vorschläge verworfen; kein „Ja“ führt etwas aus. Lesen und Antworten gehen weiter. 9. Ja zu einem Vorschlag: Wartet ein Vorschlag aus diesem Gespräch (ein Termin, eine Mail-Änderung, ein Listeneintrag, eine Korrektur, ein Anruf, eine Antwort fürs reMarkable), entscheidet das Panel über das „Ja“. Ein Ja bestätigt genau eine Sache; jede Antwort erledigt alle anderen wartenden Vorschläge dieses Gesprächs. 10. Werkzeuge"
 },
 {
 "lang": "de",
@@ -1621,7 +1621,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "uppe kommt nur mit Schalter des Admins, Freigabe für das Profil und den eigenen Daten dazu: Suche, Gedächtnis, Verlauf, Dokumente, Smart Home, Erinnerungen, Kalender, Mail. Telegram, die iPhone-App und CarPlay können das nur enger machen, nie weiter. Eine fremde erkannte Stimme an diesem Gerät bekommt nichts Persönliches. Eine Nachricht, die nur fragt („Weißt du, wie mein Bruder heißt?“: ein Satz mit Fragezeichen, nichts zum Merken), bekommt kein memory_save (chat.offer_memory), damit kein erfundener Fakt gespeichert wird. 11. Etwas nimmt Werkzeuge weg?: Der Notaus nimmt Werkzeuge ins Internet oder ändernde weg, „Spark fragen“ über MCP behält nur die Werkzeuge der Verbindung, ein Bild, ein fester Satz oder ein fester Weg des Panels (Anrufe per Assistent, rufen.py) lässt keines übrig. Für einen Gast wird die Liste noch einmal geleert, egal was sie gefüllt hat. 12. Weiche grenzt ein: Mit „Gezielte Werkzeugwahl“ bleibt nur die Gruppe der Frage übrig. Danach entscheidet das Panel, ob erst lokal gesucht wird, ob es ein eindeutiges Abrufen selbst macht und welches Werkzeug die erste Runde rufen muss. Mit „Schneller Antwortbeginn“ bekommt eine erkannte Gruppe immer dieselbe Liste in derse"
+"text": " nach Rechten: Jede Werkzeuggruppe kommt nur mit Schalter des Admins, Freigabe für das Profil und den eigenen Daten dazu: Suche, Gedächtnis, Verlauf, Dokumente, Smart Home, Erinnerungen, Kalender, Mail. Telegram, die iPhone-App und CarPlay können das nur enger machen, nie weiter. Eine fremde erkannte Stimme an diesem Gerät bekommt nichts Persönliches. Eine Nachricht, die nur fragt („Weißt du, wie mein Bruder heißt?“: ein Satz mit Fragezeichen, nichts zum Merken), bekommt kein memory_save (chat.offer_memory), damit kein erfundener Fakt gespeichert wird. 11. Etwas nimmt Werkzeuge weg?: Der Notaus nimmt Werkzeuge ins Internet oder ändernde weg, „Spark fragen“ über MCP behält nur die Werkzeuge der Verbindung, ein Bild, ein fester Satz oder ein fester Weg des Panels (Anrufe per Assistent, rufen.py) lässt keines übrig. Für einen Gast wird die Liste noch einmal geleert, egal was sie gefüllt hat. 12. Weiche grenzt ein: Mit „Gezielte Werkzeugwahl“ bleibt nur die Gruppe der Frage übrig. Danach entscheidet das Panel, ob erst lokal gesucht wird (nie bei einem schlichten „Ja“ oder „Nein“ und nie, wenn es in diesem Zug schon etwas bestätigt ausgeführt hat), ob es ein eindeutiges Abrufen selbst m"
 },
 {
 "lang": "de",
@@ -1629,7 +1629,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "lben Reihenfolge, so hält der Server je Gruppe einen Anfang im Cache; nur eine unklare Frage sieht die volle Liste. 13. Gesprächszug fertig: Der Systemprompt steht vorn, dazu die Werkzeuge und die Sperrregel. Der Notaus wird bei jedem Werkzeugaufruf neu gelesen: wird er während einer Antwort ausgelöst, hält er den nächsten Aufruf an."
+"text": "acht und welches Werkzeug die erste Runde rufen muss. Mit „Schneller Antwortbeginn“ bekommt eine erkannte Gruppe immer dieselbe Liste in derselben Reihenfolge, so hält der Server je Gruppe einen Anfang im Cache; nur eine unklare Frage sieht die volle Liste. 13. Gesprächszug fertig: Der Systemprompt steht vorn, dazu die Werkzeuge und die Sperrregel. Der Notaus wird bei jedem Werkzeugaufruf neu gelesen: wird er während einer Antwort ausgelöst, hält er den nächsten Aufruf an."
 },
 {
 "lang": "de",
@@ -1845,7 +1845,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "orrektur zum Merken anbieten oder ein Fakt aus dem Gedächtnis nachfragen (nach festen Regeln). Danach legt das Panel die Antwort aufs reMarkable, wenn gewünscht, und holt bei einer Rückfrage schon vorab. Ist „Das kannst du auch sagen“ an, hängt das Panel feste Beispielsätze an (saetze.row, am Bildschirm als Zeile vor dem Ende; saetze.spoken, beim Sprechen höchstens ein Satz am Tag). Das Werkzeug-Log des Profils wird geschrieben. 14. Strom endet: Der Anfrage-Verlauf wird abgeschlossen, Fälle und die Prüfung im Hintergrund laufen erst nach dem Sprechen. Bricht das Gerät ab (Unterbrechen), stoppen Modell und Sprachausgabe sofort. Stützt sich die Antwort auf mindestens zwei eigene Dokumente oder Kiwix-Artikel, merkt wissensbuch.keep_offer sie und das Gerät zeigt „Ins Wissensbuch“; nur der Klick des Besitzers legt sie ab."
+"text": "orrektur zum Merken anbieten oder ein Fakt aus dem Gedächtnis nachfragen (nach festen Regeln). Danach legt das Panel die Antwort aufs reMarkable, wenn gewünscht; bietet die Antwort selbst an, sich dort hinzulegen, wartet sie auf ein „Ja“ (remarkable.propose). Es holt bei einer Rückfrage schon vorab. Ist „Das kannst du auch sagen“ an, hängt das Panel feste Beispielsätze an (saetze.row, am Bildschirm als Zeile vor dem Ende; saetze.spoken, beim Sprechen höchstens ein Satz am Tag). Das Werkzeug-Log des Profils wird geschrieben. 14. Strom endet: Der Anfrage-Verlauf wird abgeschlossen, Fälle und die Prüfung im Hintergrund laufen erst nach dem Sprechen. Bricht das Gerät ab (Unterbrechen), stoppen Modell und Sprachausgabe sofort. Stützt sich die Antwort auf mindestens zwei eigene Dokumente oder Kiwix-Artikel, merkt wissensbuch.keep_offer sie und das Gerät zeigt „Ins Wissensbuch“; nur der Klick des Besitzers legt sie ab."
 },
 {
 "lang": "de",
@@ -5606,6 +5606,22 @@
 "head": "Sprach-Chat",
 "title": "Antwort aufs reMarkable (V01.0.279)",
 "text": "Antwort aufs reMarkable (V01.0.279): „Fass die politische Lage zusammen und leg es aufs reMarkable“ legt die ganze Antwort als neues Dokument in den Ordner „Spark“. Das entscheidet eine feste Regel auf den eigenen Worten der Frage (ablegen, schicken, speichern … plus „aufs/auf dem/meinem reMarkable“, ohne Doppelpunkt), nicht das Sprachmodell: Das Modell schreibt nur die Antwort, danach schickt das Panel sie und sagt „Die Antwort liegt jetzt auf deinem reMarkable …“ (oder warum nicht). So geht es auch nach einer Websuche, nach der das Werkzeug remarkable_note gesperrt ist; das Ziel ist fest, fremder Text kann nur den Inhalt der Antwort prägen, nie wohin sie geht. Gleiche Schalter und Tagesgrenze wie oben, nur im eigenen Browser bzw. am Lautsprecher mit erkannter Stimme, nie Gäste. Logs → Anfragen zeigt „remarkable (Panel)“."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "„Ja“ zu „Soll ich das aufs reMarkable legen?“ (V01.0.804, Dominik 2026-10-18)",
+"text": "„Ja“ zu „Soll ich das aufs reMarkable legen?“ (V01.0.804, Dominik 2026-10-18): Bietet eine Antwort an, sich aufs reMarkable zu legen (feste Regel remarkable.offered auf ihren eigenen Satz: „Soll ich/Möchtest du/Willst du … reMarkable …?“), hebt das Panel den Text vor dieser Frage als den einen wartenden Vorschlag des Profils auf (remarkable.propose, profiles.pending_set, 15 Minuten, dasselbe Gerät und Gespräch). Ein schlichtes „Ja“ (calendars.confirms) legt ihn dann wie „… und leg es aufs reMarkable“ ab (send_answer, Ordner „Antworten“); das Modell sagt nur das Ergebnis. Jede andere Antwort verwirft den Vorschlag, ebenso der Notaus. Nie nach Mail oder anderem fremden Text, nie für Gäste, nur mit „Aufs reMarkable schicken“ und gekoppeltem Gerät. Mit „Ablauf und Freigabe zeigen“ steht darunter die Karte Ja/Nein („reMarkable“). Dazu zählen „erstellen“, „anlegen“ und „machen“ jetzt als Wunsch, die Antwort abzulegen („Erstell eine Notiz auf dem reMarkable mit dem Rezept für Kirschkuchen“), auch mit der Schreibweise „Remarkabel“. Werkzeugregel 5 (chat.TOOL_RULES): Hat der Nutzer schon gesagt, was er will, und gibt es das Werkzeug, tut das Modell es gleich, statt zu fragen, und bietet nie"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "„Ja“ zu „Soll ich das aufs reMarkable legen?“ (V01.0.804, Dominik 2026-10-18)",
+"text": " etwas an, wofür es kein Werkzeug hat. Journal nur feste Wörter („remarkable: answer proposed | waiting for yes“, „remarkable: answer sent | after yes“, „remarkable: answer not sent | no yes“). Selbsttest test_remarkable.AnswerToRemarkable.test_an_offered_answer_waits_for_a_plain_yes. Dazu „Erst lokal suchen“: Ein schlichtes „Ja“ oder „Nein (danke)“ ist nie eine Wissensfrage (lokal.classify → „Antwort auf Rückfrage“), und hat das Panel in diesem Zug schon etwas bestätigt ausgeführt (Termin, Mail, reMarkable …), sucht es nicht lokal. Vorher fand ein „Ja“ zu einem vorgeschlagenen Termin alte Gespräche, der Termin wurde eingetragen, aber die Antwort sprach von diesen („keine Funktion für Notizen auf dem reMarkable“). Selbsttest test_lokal.Rule.test_a_short_answer_to_a_question_before_looks_nothing_up."
 },
 {
 "lang": "de",
@@ -9709,7 +9725,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "om the profile's own words and never over MCP. The model only says the result and gets no tool in this turn. 7. Answer to a question back?: If the panel asked which device is meant, a button, a number or the name counts as the answer, only in the same conversation, from the own profile and within 2 minutes. „None of these“ brings the whole list, „No, the other one“ corrects the last choice. The panel carries out the choice and offers to remember it; a „yes“ to that counts for 15 minutes. 8. Kill switch or my kill switch?: From kill switch stage 2 or with the profile's own kill switch every waiting proposal is dropped; no „yes“ carries anything out. Reading and answering go on. 9. Yes to a proposal: If a proposal of this conversation waits (an appointment, a mail change, a list entry, a correction, a call), the panel decides on the „yes“. One yes confirms exactly one thing; every answer settles all other waiting proposals of this conversation. 10. Tools by rights: Each tool group comes only with the admin's switch, the release for the profile and its own data: search, memory, history, documents, smart home, reminders, calendar, mail. Telegram, the iPhone app and CarPlay can only mak"
+"text": "om the profile's own words and never over MCP. The model only says the result and gets no tool in this turn. 7. Answer to a question back?: If the panel asked which device is meant, a button, a number or the name counts as the answer, only in the same conversation, from the own profile and within 2 minutes. „None of these“ brings the whole list, „No, the other one“ corrects the last choice. The panel carries out the choice and offers to remember it; a „yes“ to that counts for 15 minutes. 8. Kill switch or my kill switch?: From kill switch stage 2 or with the profile's own kill switch every waiting proposal is dropped; no „yes“ carries anything out. Reading and answering go on. 9. Yes to a proposal: If a proposal of this conversation waits (an appointment, a mail change, a list entry, a correction, a call, an answer for the reMarkable), the panel decides on the „yes“. One yes confirms exactly one thing; every answer settles all other waiting proposals of this conversation. 10. Tools by rights: Each tool group comes only with the admin's switch, the release for the profile and its own data: search, memory, history, documents, smart home, reminders, calendar, mail. Telegram, the iPhon"
 },
 {
 "lang": "en",
@@ -9717,7 +9733,15 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "e it narrower, never wider. Another recognized voice at this device gets nothing personal. A message that only asks („Do you know my brother's name?“: one sentence with a question mark, nothing to remember) gets no memory_save (chat.offer_memory), so no made-up fact is saved. 11. Something takes tools away?: The kill switch takes away tools to the internet or that change things, „Ask Spark“ over MCP keeps only the connection's tools, a picture, a fixed sentence or a fixed panel path (calls by the assistant, rufen.py) leaves none. For a guest the list is emptied once more, whatever filled it. 12. The switch narrows: With „Targeted tool choice“ only the question's group stays. Then the panel decides whether to search locally first, whether it does a clear fetch itself and which tool the first round must call. With „Fast answer start“ a recognized group always gets the same list in the same order, so the server keeps one start per group in its cache; only an unclear question sees the full list. 13. Turn ready: The system prompt goes first, with the tools and the lock rule. The kill switch is read again for every tool call: triggered during an answer, it holds the next call off."
+"text": "e app and CarPlay can only make it narrower, never wider. Another recognized voice at this device gets nothing personal. A message that only asks („Do you know my brother's name?“: one sentence with a question mark, nothing to remember) gets no memory_save (chat.offer_memory), so no made-up fact is saved. 11. Something takes tools away?: The kill switch takes away tools to the internet or that change things, „Ask Spark“ over MCP keeps only the connection's tools, a picture, a fixed sentence or a fixed panel path (calls by the assistant, rufen.py) leaves none. For a guest the list is emptied once more, whatever filled it. 12. The switch narrows: With „Targeted tool choice“ only the question's group stays. Then the panel decides whether to search locally first (never for a plain „yes“ or „no“ and never when it already carried out something confirmed in this turn), whether it does a clear fetch itself and which tool the first round must call. With „Fast answer start“ a recognized group always gets the same list in the same order, so the server keeps one start per group in its cache; only an unclear question sees the full list. 13. Turn ready: The system prompt goes first, with the too"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Way",
+"title": "Way",
+"text": "ls and the lock rule. The kill switch is read again for every tool call: triggered during an answer, it holds the next call off."
 },
 {
 "lang": "en",
@@ -9925,7 +9949,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "o the last sentence end, the rest is dropped. 11. Run the tools: Half words before the call are taken back, a finished sentence stays. Every call goes through chat_tools.run; the result comes back as a tool message. A tool that fails twice the same way is stopped for this answer. When no rule recognized the question, the switch counts the group of the first tool and the fixed hint word (weiche.learn), never a word of the question. 12. Honest closing sentences: When a sentence fell out because of a figure, the panel says „I have no more precise details on that.“; when a deed fell out, a fixed sentence from taten.sentence. Both come from the panel, never from the model. When the language model does not answer because it is switching, restarting or being measured, the panel says so with the expected time (llmstart.satz, also during a switch's maintenance pause). 13. The panel's own questions: Only when nothing from outside was read: offer to remember a learned correction or ask about a fact in memory (by fixed rules). Then the panel puts the answer on the reMarkable when asked and fetches ahead for a question back. When „You can also say“ is on, the panel adds fixed example sentences "
+"text": "o the last sentence end, the rest is dropped. 11. Run the tools: Half words before the call are taken back, a finished sentence stays. Every call goes through chat_tools.run; the result comes back as a tool message. A tool that fails twice the same way is stopped for this answer. When no rule recognized the question, the switch counts the group of the first tool and the fixed hint word (weiche.learn), never a word of the question. 12. Honest closing sentences: When a sentence fell out because of a figure, the panel says „I have no more precise details on that.“; when a deed fell out, a fixed sentence from taten.sentence. Both come from the panel, never from the model. When the language model does not answer because it is switching, restarting or being measured, the panel says so with the expected time (llmstart.satz, also during a switch's maintenance pause). 13. The panel's own questions: Only when nothing from outside was read: offer to remember a learned correction or ask about a fact in memory (by fixed rules). Then the panel puts the answer on the reMarkable when asked; when the answer itself offers to go there, it waits for a „yes“ (remarkable.propose). It fetches ahead for a"
 },
 {
 "lang": "en",
@@ -9933,7 +9957,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "(saetze.row, on a screen as a row before the end; saetze.spoken, while talking at most one sentence a day). The profile's tool log is written. 14. Stream ends: The request trace is closed; cases and the background check run only after speaking. When the device aborts (barge-in), model and speech output stop at once. When the answer rests on at least two own documents or Kiwix articles, wissensbuch.keep_offer keeps it and the device shows „To the knowledge book“; only the owner's click files it."
+"text": " question back. When „You can also say“ is on, the panel adds fixed example sentences (saetze.row, on a screen as a row before the end; saetze.spoken, while talking at most one sentence a day). The profile's tool log is written. 14. Stream ends: The request trace is closed; cases and the background check run only after speaking. When the device aborts (barge-in), model and speech output stop at once. When the answer rests on at least two own documents or Kiwix articles, wissensbuch.keep_offer keeps it and the device shows „To the knowledge book“; only the owner's click files it."
 },
 {
 "lang": "en",
@@ -13534,6 +13558,22 @@
 "head": "Voice chat",
 "title": "Answer onto the reMarkable (V01.0.279)",
 "text": "Answer onto the reMarkable (V01.0.279): \"Summarize the political situation and put it on my reMarkable\" puts the whole answer as a new document into the folder \"Spark\". A fixed rule on the question's own words decides this (put, send, save … plus \"on/to my reMarkable\", no colon), not the language model: the model only writes the answer, then the panel sends it and says \"The answer is now on your reMarkable …\" (or why not). This also works after a web search, after which the tool remarkable_note is locked; the destination is fixed, outside text can only shape the content of the answer, never where it goes. Same switches and daily limit as above, only in the own browser or at a speaker with the recognised voice, never guests. Logs → Requests shows \"remarkable (Panel)\"."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "\"Yes\" to \"Shall I put it on the reMarkable?\" (V01.0.804, Dominik 2026-10-18)",
+"text": "\"Yes\" to \"Shall I put it on the reMarkable?\" (V01.0.804, Dominik 2026-10-18): when an answer offers to put itself on the reMarkable (fixed rule remarkable.offered on its own sentence: \"Soll ich/Möchtest du/Willst du … reMarkable …?\", \"shall I … reMarkable?\"), the panel keeps the text before that question as the profile's one waiting proposal (remarkable.propose, profiles.pending_set, 15 minutes, same device and conversation). A plain \"yes\" (calendars.confirms) then puts it there like \"… and put it on my reMarkable\" (send_answer, folder \"Antworten\"); the model only says the result. Any other answer drops the proposal, so does the Notaus. Never after mail or other outside text, never for guests, only with \"Send to the reMarkable\" and a paired device. With \"Show steps and approvals\" the yes/no card (\"reMarkable\") stands below. Also \"erstellen\", \"anlegen\" and \"machen\" now count as asking for the answer there (\"Create a note on the reMarkable with the recipe for cherry cake\"), also spelled \"Remarkabel\". Tool rule 5 (chat.TOOL_RULES): when the user already said what they want and the tool is there, the model does it at once instead of asking, and never offers anything it has no tool for."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "\"Yes\" to \"Shall I put it on the reMarkable?\" (V01.0.804, Dominik 2026-10-18)",
+"text": " Journal only fixed words (\"remarkable: answer proposed | waiting for yes\", \"remarkable: answer sent | after yes\", \"remarkable: answer not sent | no yes\"). Self-test test_remarkable.AnswerToRemarkable.test_an_offered_answer_waits_for_a_plain_yes. And \"Look locally first\": a plain \"yes\" or \"no (thanks)\" is never a knowledge question (lokal.classify → \"Antwort auf Rückfrage\"), and when the panel already carried out something confirmed in this turn (appointment, mail, reMarkable …) it does not look locally. Before, a \"yes\" to a proposed appointment found old conversations; the appointment was saved, but the answer spoke of those (\"no function for notes on the reMarkable\"). Self-test test_lokal.Rule.test_a_short_answer_to_a_question_before_looks_nothing_up."
 },
 {
 "lang": "en",

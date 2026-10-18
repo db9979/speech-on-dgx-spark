@@ -587,6 +587,44 @@ class AnswerToRemarkable(Base):
         g.post("/api/chat", json={"messages": [{"role": "user", "content": self.ASK}], "convo": "neu"})
         self.assertEqual(len(CLOUD[0].files), before)
 
+    OFFER = ("SAY | | Hier ist das Rezept: 200 Gramm Butter, vier Eier, 500 Gramm Kirschen. Achte darauf, dass die Butter "
+             "weich ist. Soll ich das jetzt als Notiz auf dein reMarkable legen? Genauere Angaben habe ich nicht.")
+
+    def test_an_offered_answer_waits_for_a_plain_yes(self):
+        """Dominik 2026-10-18: the answer offered the reMarkable, "Ja" met no tool. The panel keeps the answer as the
+        one waiting proposal; a plain yes from the same conversation puts it there, anything else drops it."""
+        self.assertEqual(remarkable.offered("Kurz. Soll ich das aufs reMarkable legen?"), "")       # nothing to put there
+        self.assertEqual(remarkable.offered("Morgen regnet es den ganzen Tag. Soll ich dich erinnern?"), "")
+        self.assertTrue(remarkable.answer_wanted("Erstell mir eine Notiz auf dem reMarkable mit dem Rezept für Kirschkuchen"))
+        c, uid = self.paired("Rmoffer")
+        helpers.set_config(remarkable_send=True)
+        msgs = [{"role": "user", "content": self.OFFER}]
+        r = c.post("/api/chat", json={"messages": msgs, "convo": "k1"})
+        said = "".join(e.get("delta", "") for e in helpers.events(r) if e["type"] == "text")
+        p = remarkable.pending(uid)
+        self.assertEqual(p["text"], "Hier ist das Rezept: 200 Gramm Butter, vier Eier, 500 Gramm Kirschen. Achte darauf, "
+                                    "dass die Butter weich ist.")
+        before = len(CLOUD[0].files)
+        nein = msgs + [{"role": "assistant", "content": said}, {"role": "user", "content": "Nein, lieber nicht"}]
+        c.post("/api/chat", json={"messages": nein, "convo": "k1"})
+        self.assertIsNone(remarkable.pending(uid))
+        self.assertEqual(len(CLOUD[0].files), before)                          # no yes: nothing
+        c.post("/api/chat", json={"messages": msgs, "convo": "k1"})
+        c.post("/api/chat", json={"messages": msgs + [{"role": "assistant", "content": said},
+                                                      {"role": "user", "content": "Ja"}], "convo": "k2"})
+        self.assertEqual(len(CLOUD[0].files), before)                          # another conversation: not for it
+        c.post("/api/chat", json={"messages": msgs, "convo": "k1"})
+        helpers.LLM_CALLS.clear()
+        c.post("/api/chat", json={"messages": msgs + [{"role": "assistant", "content": said},
+                                                      {"role": "user", "content": "Ja"}], "convo": "k1"})
+        self.assertIsNone(remarkable.pending(uid))
+        self.assertIn("liegt jetzt auf deinem reMarkable", helpers.LLM_CALLS[0]["messages"][0]["content"])
+        book = next(d for h, d in CLOUD[0].files.items() if d[:2] == b"PK" and b"Kirschen" in zipfile.ZipFile(io.BytesIO(d)).read("text.xhtml"))
+        self.assertNotIn(b"Soll ich", zipfile.ZipFile(io.BytesIO(book)).read("text.xhtml"))   # the question stays off
+        g = TestClient(panel.app)                                              # a guest never gets a proposal
+        g.post("/api/chat", json={"messages": msgs, "convo": "k1"})
+        self.assertIsNone(remarkable.pending(uid))
+
     def test_failure_is_said(self):
         c, uid = self.paired("Rmanswerfail")
         helpers.set_config(remarkable_send=True)

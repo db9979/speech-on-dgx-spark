@@ -1554,6 +1554,8 @@ TOOL_RULES = ("Regeln für deine Werkzeuge:\n"
               "2. Sag nur, was im Ergebnis steht: keine eigenen Uhrzeiten, Daten, Namen, Zahlen oder Gründe.\n"
               "3. Leeres Ergebnis oder Fehler: sag das offen. Erledigt ist nur, was ein Ergebnis bestätigt.\n"
               "4. Unklare Frage: kurz nachfragen statt raten.\n"
+              "5. Hat der Nutzer schon gesagt, was er will, und hast du das Werkzeug dafür, tu es gleich, statt erst "
+              "zu fragen. Biete nie etwas an, wofür du kein Werkzeug hast.\n"
               "Beispiele: „Welche Erinnerungen habe ich?“ → reminder_list, nicht „Du hast eine Erinnerung um "
               "13:30“ ohne Ergebnis. „Wie hat Bayern gespielt?“ → web_search, auch wenn du glaubst, es gab kein "
               "Spiel. „Trag Zahnarzt am Dienstag ein“ → calendar_add, dann den Vorschlag aus dem Ergebnis vorlesen.")

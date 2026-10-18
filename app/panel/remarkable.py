@@ -1095,8 +1095,8 @@ INSIDE = {"remarkable_sent"}
 
 # after the web search (outside text), and the destination is fixed anyway (a new document in "Spark").
 ANSWER_ASK = re.compile(r"\b(?:aufs|auf(?:\s+(?:das|dem|den|mein(?:em|en)?|dein(?:em)?))?|ins|an(?:s|\s+(?:das|mein(?:en)?))?|on(?:to)?|to)"
-                        r"\s+(?:(?:my|the)\s+)?re\s?markable\b", re.I)
-ANSWER_VERB = re.compile(r"\b(?:leg|ableg|abzuleg|speicher|schick|send|pack|tu|stell|kopier|übertrag|bring|put|sav|stor)\w*"
+                        r"\s+(?:(?:my|the)\s+)?re\s?markab(?:le|el)\b", re.I)
+ANSWER_VERB = re.compile(r"\b(?:leg|ableg|abzuleg|speicher|schick|send|pack|tu|stell|erstell|anleg|anzuleg|mach|kopier|übertrag|bring|put|sav|stor|creat|mak)\w*"
                          r"|\bschreib\w*\s+(?:es|das|sie|die\s+\w+)\b", re.I)
 DICTATE = re.compile(r"re\s?markable\W{0,3}:|notier|diktier|\bdass\b", re.I)
 
@@ -1130,19 +1130,54 @@ def answer_ok(who, own, private):
     return bool(who and own and private is not False and features.allowed("rmsend", who["id"]) and load(who["id"]).get("token"))
 
 
-async def send_answer(uid, question, answer):
+async def send_answer(uid, question, answer, title=""):
     """After the answer: the panel puts it on the reMarkable. Returns (ok, sentence to say)."""
     if not features.allowed("rmsend", uid):
         return False, "Aufs reMarkable schicken ist aus."
     if not str(answer or "").strip():
         return False, "Es gab keine Antwort zum Ablegen."
     try:
-        r = await send(uid, answer_title(question), answer)
+        r = await send(uid, title or answer_title(question), answer)
         return True, "Die Antwort liegt jetzt auf deinem reMarkable " + _told(r)
     except (CloudError, ValueError, httpx.HTTPError, netguard.Blocked, netguard.TooLarge) as e:
         why = _redact(e if isinstance(e, (ValueError, CloudError)) else type(e).__name__)
         print("remarkable: sending failed:", why, flush=True)
         return False, "Aufs reMarkable ging es nicht: " + why
+
+
+# "Soll ich das als Notiz auf dein reMarkable legen?" (Dominik 2026-10-18): when an answer offers to put itself there,
+# the panel keeps it as the profile's one waiting proposal; a plain "Ja" from the same device and conversation within
+# PENDING_SECONDS puts it there (chat_turn), so the yes never meets a missing tool. Found by a fixed rule on the
+# answer's own sentence; the stored text is the answer before that question, nothing the question says is carried out.
+PENDING_SECONDS = 15 * 60
+OFFER_Q = re.compile(r"(?:^|(?<=[.!?:\n]))\s*([^.!?\n]*\b(?:soll(?:en)? (?:ich|wir)|möchtest du|willst du|magst du|"
+                     r"shall i|should i|do you want|want me to)\b[^.!?\n]*re\s?markab(?:le|el)[^.!?\n]*\?)", re.I)
+OFFER_MIN = 20       # characters of answer before the question at least
+
+
+def offered(answer):
+    """The answer before its question offering the reMarkable, or "" when it offers nothing (or nothing to put)."""
+    m = OFFER_Q.search(str(answer or "")[-MAX_SEND:])
+    text = str(answer or "")[-MAX_SEND:][:m.start(1)].strip() if m else ""
+    return text if len(text) >= OFFER_MIN else ""
+
+
+def propose(uid, question, answer, src):
+    """Keeps this answer as the waiting proposal when it offers the reMarkable. Returns True when it did."""
+    text = offered(answer)
+    if not text:
+        return False
+    profiles.pending_set(uid, "remarkable", {"title": answer_title(question), "text": text}, src)
+    print("remarkable: answer proposed | waiting for yes", flush=True)
+    return True
+
+
+def pending(uid):
+    return profiles.pending_get(uid, "remarkable", PENDING_SECONDS)
+
+
+def drop_pending(uid):
+    profiles.pending_drop(uid, "remarkable")
 
 
 ANSWER_HINT = ("Der Nutzer will diese Antwort auf seinem reMarkable haben. Das erledigt der Spark nach deiner Antwort "

@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.804** · 2026-10-18 · Fix reMarkable: „Soll ich das aufs reMarkable legen?“ ist jetzt ein Vorschlag, ein „Ja“ legt die Antwort ab (vorher „keine Funktion“); „erstellen/anlegen/machen“ und „Remarkabel“ zählen als Wunsch; Werkzeugregel 5: nichts anbieten, wofür es kein Werkzeug gibt; ein schlichtes „Ja“ sucht nicht mehr in alten Gesprächen (Termin eingetragen, Antwort sprach vom reMarkable)
 - **V01.0.803** · 2026-10-18 · Anrufe per Assistent: „Ruf Sabine an“ oder „Videoanruf mit Sabine“ ruft nach deinem Ja über die Chats an; vom Lautsprecher, Telefon oder Telegram kommt der Anruf als Mitteilung aufs Handy (ein Tipp ruft an); auf Android auch „Ruf Mama übers Telefon an“ mit den eigenen Kontakten (App 1.4.2); Schalter aus
 - **V01.0.802** · 2026-10-18 · Zustand → Monitoring → Rechner: „Wer rechnet gerade“ zeigt die CPU je Dienst auf beiden Rechnern (aus den Zählern von systemd), beim Panel je Teil (Anfragen, Bedeutungssuche, Hintergrundaufträge …), oben „am meisten: …“ und einen Farbstreifen der letzten 20 Minuten; dazu Live, Steuerzentrale und iPhone-App
 - **V01.0.801** · 2026-10-18 · Suche bremst den Pi nicht mehr: der Worker der Bedeutungssuche rechnet auf höchstens der Hälfte der Kerne und als SCHED_IDLE nur in freier Rechenzeit, Sprache und Panel gehen vor (htop: vier Fäden mit je 60 % beim Nachholen von 46000 Stücken)

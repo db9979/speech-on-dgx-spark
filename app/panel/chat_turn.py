@@ -86,8 +86,9 @@ def waiting_mods():
     import messages as inbox   # (messages is the conversation in prepare)
     import tasks
     import roomfar
+    import remarkable
     import rufen
-    return (calendars, tidy, tasks, fixes, agent, inbox, roomfar, meinmcp, hamelden, aendern, nasablage, rufen)
+    return (calendars, tidy, tasks, fixes, agent, inbox, roomfar, meinmcp, hamelden, aendern, nasablage, rufen, remarkable)
 
 
 class Turn:
@@ -747,6 +748,19 @@ async def prepare(request):
             cal_note.append({"name": "Nachfrage (Panel)", "args": "", "result": {"yes": "bestätigt", "forget": "vergessen",
                              "no": "stimmt nicht mehr", "fix": "Korrektur"}[kind]})
             print(f"gedaechtnis: nachfrage beantwortet {profiles.log_name(who)} | antwort={kind}", flush=True)
+    # "Ja" to „Soll ich das aufs reMarkable legen?“ (remarkable.propose): the panel puts the kept answer there and the
+    # model only says the result; anything else drops the proposal (the loop below)
+    import remarkable
+    rprop = remarkable.pending(who["id"]) if who and own_browser and not mcp and messages[-1]["role"] == "user" else None
+    if rprop and rprop.get("src", src) == src:
+        remarkable.drop_pending(who["id"])
+        if calendars.confirms(messages[-1]["content"]) and not act_held and remarkable.answer_ok(who, own_browser, private_ok):
+            ok, note = await remarkable.send_answer(who["id"], "", rprop.get("text", ""), rprop.get("title", ""))
+            print("remarkable: answer", "sent" if ok else "not sent", "| after yes", flush=True)
+            cal_note.append({"name": "remarkable (bestätigt)", "args": rprop.get("title", ""), "result": note})
+            system = per_turn(system, "reMarkable: " + note + " Sag dem Nutzer genau das in einem Satz.")
+        else:
+            print("remarkable: answer not sent | no yes", flush=True)
     if who and own_browser and messages[-1]["role"] == "user" and not mcp:
         # one answer settles every proposal waiting in this conversation: a later "ja" meant for
         # something else never carries out an old one
@@ -754,7 +768,8 @@ async def prepare(request):
         import messages as inbox   # (messages is the conversation here)
         import tasks
         import rufen
-        for mod in (calendars, tidy, tasks, fixes, agent, inbox, roomfar, hamelden, meinmcp, gedaechtnis, aendern, nasablage, rufen):
+        for mod in (calendars, tidy, tasks, fixes, agent, inbox, roomfar, hamelden, meinmcp, gedaechtnis, aendern, nasablage, rufen,
+                    remarkable):
             if xprop and xprop.get("proposed") == mod.__name__:
                 continue   # the panel made this proposal from this very message (agent: „Sag mir Bescheid, wenn …“)
             p = mod.pending(who["id"])
@@ -871,7 +886,7 @@ async def prepare(request):
     # naming an own source leaves the web out of this answer; anything current goes out as before.
     local_task, web_own = None, ""
     import lokal
-    if lokal.on(ccfg, who) and own_browser and private_ok and messages[-1]["role"] == "user" and tools \
+    if lokal.on(ccfg, who) and own_browser and private_ok and messages[-1]["role"] == "user" and tools and not cal_note \
             and not pics and not role_cmd and not room_far and not ha_direct and not ha_wait:
         lk_text = messages[-1]["content"]
         lk_kind, lk_why = lokal.classify(lk_text, route, ccfg.get("tool_words", ""))

@@ -463,6 +463,13 @@ async def model_turn(*, acked, body, c, came_from, carry, ccfg, cfg, check_on, e
             await out.put({"type": "text", "delta": (" " if st["shown"] else "") + note})
             trace["said"] += " " + note
             await sentences.put(note)
+        elif who and trace["said"].strip() and not st["mail"] and not st["outside"] and not getattr(turn, "act_held", False) \
+                and not any((m.pending(who["id"]) or {}).get("src") == src for m in (calendars, tidy, fixes)):
+            # „Soll ich das aufs reMarkable legen?“ (remarkable.offered): the panel keeps the answer as the waiting
+            # proposal, so a plain „Ja“ puts it there (chat_turn) instead of meeting a missing tool
+            import remarkable
+            if remarkable.answer_ok(who, getattr(turn, "own_browser", False), getattr(turn, "private_ok", None)):
+                remarkable.propose(who["id"], turn.ask_text, trace["said"].strip(), src)
         # "Vorab holen bei Rückfrage" (vorab.py): the answer asks back, the panel already fetches by fixed rules
         # what the next answer will most likely read, while the question is being spoken
         vorab.after(turn, trace["said"], st, trace["calls"], tr)

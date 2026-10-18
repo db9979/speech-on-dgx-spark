@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "vorbereiten": {
-        "stand": "22ef7aeda9",
+        "stand": "328b70e864",
         "bezug": {
             "klaeren.MAX_BUTTONS": ["s7"], "chat_turn.prepare": ["s1", "s13"], "chat_turn.shared_stranger": ["s3"],
             "chat.left_out": ["s2", "s4"], "notaus.locked_tools": ["s11"], "chat_turn.notaus_note": ["s8", "s11"],
@@ -115,11 +115,11 @@ SEITEN = {
                "proposal is dropped; no „yes“ carries anything out. Reading and answering go on."),
               ("info", "ja", ("nur lesen, kein Ja", "read only, no yes"))),
             S("s9", "schritt", ("Ja zu einem Vorschlag", "Yes to a proposal"),
-              ("Kalender, Postfach, Listen, Gedächtnis, Anruf", "calendar, mailbox, lists, memory, call"),
+              ("Kalender, Postfach, Listen, Gedächtnis, Anruf, reMarkable", "calendar, mailbox, lists, memory, call, reMarkable"),
               ("Wartet ein Vorschlag aus diesem Gespräch (ein Termin, eine Mail-Änderung, ein Listeneintrag, eine "
-               "Korrektur, ein Anruf), entscheidet das Panel über das „Ja“. Ein Ja bestätigt genau eine Sache; jede Antwort "
+               "Korrektur, ein Anruf, eine Antwort fürs reMarkable), entscheidet das Panel über das „Ja“. Ein Ja bestätigt genau eine Sache; jede Antwort "
                "erledigt alle anderen wartenden Vorschläge dieses Gesprächs.",
-               "If a proposal of this conversation waits (an appointment, a mail change, a list entry, a correction, a call), "
+               "If a proposal of this conversation waits (an appointment, a mail change, a list entry, a correction, a call, an answer for the reMarkable), "
                "the panel decides on the „yes“. One yes confirms exactly one thing; every answer settles all other "
                "waiting proposals of this conversation.")),
             S("s10", "schritt", ("Werkzeuge nach Rechten", "Tools by rights"),
@@ -150,12 +150,14 @@ SEITEN = {
             S("s12", "schritt", ("Weiche grenzt ein", "The switch narrows"),
               ("intent.narrow · nie mehr als die Rechte", "intent.narrow · never more than the rights"),
               ("Mit „Gezielte Werkzeugwahl“ bleibt nur die Gruppe der Frage übrig. Danach entscheidet das Panel, ob "
-               "erst lokal gesucht wird, ob es ein eindeutiges Abrufen selbst macht und welches Werkzeug die erste "
+               "erst lokal gesucht wird (nie bei einem schlichten „Ja“ oder „Nein“ und nie, wenn es in diesem Zug schon "
+               "etwas bestätigt ausgeführt hat), ob es ein eindeutiges Abrufen selbst macht und welches Werkzeug die erste "
                "Runde rufen muss. Mit „Schneller Antwortbeginn“ bekommt eine erkannte Gruppe immer dieselbe Liste in "
                "derselben Reihenfolge, so hält der Server je Gruppe einen Anfang im Cache; nur eine unklare Frage sieht "
                "die volle Liste.",
                "With „Targeted tool choice“ only the question's group stays. Then the panel decides whether to search "
-               "locally first, whether it does a clear fetch itself and which tool the first round must call. With „Fast "
+               "locally first (never for a plain „yes“ or „no“ and never when it already carried out something confirmed "
+               "in this turn), whether it does a clear fetch itself and which tool the first round must call. With „Fast "
                "answer start“ a recognized group always gets the same list in the same order, so the server keeps one "
                "start per group in its cache; only an unclear question sees the full list.")),
             S("s13", "ende", ("Gesprächszug fertig", "Turn ready"),
@@ -501,7 +503,7 @@ SEITEN = {
         "heute": [],
     },
     "antwort": {
-        "stand": "36177d2171",
+        "stand": "9921967dd0",
         "bezug": {
             "chat.MAX_SAVES": ["s11"], "chat.LOOP_SAME": ["s11"], "chat._answer": ["s4", "s5", "s11"], "chat_modell.model_turn": ["s4", "s11"], "chat_ton.speech_out": ["s8"],
             "chat.split_sentences": ["s5"], "chat.said_key": ["s8"], "chat.no_code": ["s8"],
@@ -650,11 +652,13 @@ SEITEN = {
               ("Korrektur, Gedächtnis, reMarkable, Vorab holen", "correction, memory, reMarkable, fetch ahead"),
               ("Nur wenn nichts Fremdes gelesen wurde: eine gelernte Korrektur zum Merken anbieten oder ein Fakt aus "
                "dem Gedächtnis nachfragen (nach festen Regeln). Danach legt das Panel die Antwort aufs reMarkable, wenn "
-               "gewünscht, und holt bei einer Rückfrage schon vorab. Ist „Das kannst du auch sagen“ an, hängt das Panel "
+               "gewünscht; bietet die Antwort selbst an, sich dort hinzulegen, wartet sie auf ein „Ja“ "
+               "(remarkable.propose). Es holt bei einer Rückfrage schon vorab. Ist „Das kannst du auch sagen“ an, hängt das Panel "
                "feste Beispielsätze an (saetze.row, am Bildschirm als Zeile vor dem Ende; saetze.spoken, beim Sprechen "
                "höchstens ein Satz am Tag). Das Werkzeug-Log des Profils wird geschrieben.",
                "Only when nothing from outside was read: offer to remember a learned correction or ask about a fact in "
-               "memory (by fixed rules). Then the panel puts the answer on the reMarkable when asked and fetches ahead "
+               "memory (by fixed rules). Then the panel puts the answer on the reMarkable when asked; when the answer itself offers to "
+               "go there, it waits for a „yes“ (remarkable.propose). It fetches ahead "
                "for a question back. When „You can also say“ is on, the panel adds fixed example sentences (saetze.row, "
                "on a screen as a row before the end; saetze.spoken, while talking at most one sentence a day). The "
                "profile's tool log is written.")),
@@ -735,7 +739,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Werkzeuge (chat_tools.run)
     "werkzeuge": {
-        "stand": "f710b6ceeb",
+        "stand": "c527916f24",
         "bezug": {
             "chat.LOCKED_OUTSIDE": ["s4"], "notaus.INTERNET_TOOLS": ["s3"], "werkzeuge.NAMES": ["s11"],
             "chat_tools.run": ["s2", "s7"], "chat.wrap_outside": ["s9"], "chat.LOCKED_MAIL": ["s4"],

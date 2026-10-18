@@ -1960,6 +1960,12 @@
 "titel": "Anrufe per Assistent",
 "text": "A: Funktionen → Chats → „Anrufe per Assistent“ an (braucht „Anrufe (Sprache und Video)“). B: Im Panel dem Assistenten „Videoanruf mit <Name>“ sagen: er fragt „Soll ich <Name> per Spark-Videoanruf anrufen?“, darunter die Karte „Wartet auf dein Ja: Anruf“. „Ja“: Chats öffnet sich und der Videoanruf klingelt bei der anderen Person. C: Dasselbe mit „Nein“: nichts passiert. D: Am Lautsprecher „Ruf <Name> an“, dann „Ja“: aufs Handy kommt „📞 <Name> anrufen“; antippen, unten steht „<Name> anrufen? · Anrufen · Nicht jetzt“, „Anrufen“ startet den Anruf. E: iPhone-App (neuer TestFlight-Build): „Ruf <Name> an“, „Ja“: Apples Anruf-Fenster startet den Anruf. F: Android-App 1.4.2: „Ruf <Kontakt> übers Telefon an“ (Kontakt aus Ich → Kontakte), „Ja“: die Telefon-App öffnet sich mit der Nummer. G: Zustand → Live, Kachel Chats: „per Assistent heute … gefragt, … gestartet …“; Zustand → Logs, Bereich chats: „call assistant …“ ohne Namen.",
 "thread": "Anrufe, Videoanrufe, Nachrichten an andere Nutzer"
+},
+{
+"id": "P304",
+"v": 804,
+"titel": "Ja zum reMarkable",
+"text": "A: Im Chat „Erstell eine Notiz auf dem reMarkable mit dem Rezept für Kirschkuchen“: das Rezept kommt als Antwort und liegt danach im Ordner „Antworten“ auf dem reMarkable. B: Fragt der Spark bei einer anderen Antwort „Soll ich das aufs reMarkable legen?“, „Ja“ sagen: er sagt, wo es liegt, und es liegt dort ohne die Frage. C: Mit „Ablauf und Freigabe zeigen“ an steht unter der Frage die Karte Ja/Nein „reMarkable“. D: Auf eine solche Frage „Nein“: nichts wird abgelegt. E: „Trag mir morgen um 17 Uhr einen Termin ein“, dann „Ja“: der Termin steht im Kalender und die Antwort sagt genau das (nichts von alten Gesprächen)."
 }
 ]
 }

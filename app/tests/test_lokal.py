@@ -134,6 +134,12 @@ class Rule(unittest.TestCase):
                            ("Mach das Licht im Wohnzimmer an", ""), ("Danke", ""), ("Setz Milch auf die Einkaufsliste", "")):
             self.assertEqual(self.cls(text), want, text)
 
+    def test_a_short_answer_to_a_question_before_looks_nothing_up(self):
+        # V01.0.803: „Ja“ to a proposed appointment searched old conversations, the answer spoke of those
+        for text in ("Ja", "ja gerne", "Okay", "Nein", "Nein danke", "Yes", "no thanks"):
+            self.assertEqual(self.cls(text), "", text)
+        self.assertEqual(self.cls("Ja, wie heißt der Hund von Oma?"), "wissen")
+
     def test_words_and_titles(self):
         self.assertEqual(lokal.terms("Wie hoch ist die Zugspitze?"), ["zugspitz"])
         self.assertEqual(lokal.query("Wer war eigentlich Albert Einstein?"), "Albert Einstein")
