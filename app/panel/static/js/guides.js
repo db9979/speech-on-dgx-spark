@@ -1826,10 +1826,12 @@ function grundDraw(done){const pane=$('pane-feat');if(!pane)return;const g=GRUND
   if(!g||(!off.length&&!ask&&!done)){if(card)card.remove();return}
   if(!card){card=document.createElement('div');card.id='grundcard';card.className='grundcard';pane.insertBefore(card,pane.querySelector('.fbar')||pane.querySelector('.fgrp'))}
   const nm=k=>esc(t(...((g.names||{})[k]||[k,k]))),n=g.basis.keys.length;let h='';
-  if(off.length)h+=`<div class="gcpart"><b>${esc(t('Grundausstattung für ein gutes Gespräch','Basic set for a good conversation'))}</b> <span class="gcn">${esc(t(`${n-off.length} von ${n} an`,`${n-off.length} of ${n} on`))}</span>`+
-    `<div class="fh">${esc(t('Geht ohne Einrichtung, bleibt im Spark und braucht kein Zusatzmodell. Gäste bekommen davon nichts. Noch aus:','Needs no setup, stays in the Spark and loads no extra model. Guests get none of it. Still off:'))}</div>`+
+  // V01.0.788: one line with „Alle übernehmen“; what is still off opens below it (Funktionen stays short)
+  if(off.length)h+=`<div class="gcpart"><div class="gcline"><b>${esc(t('Grundausstattung für ein gutes Gespräch','Basic set for a good conversation'))}</b> <span class="gcn">${esc(t(`${n-off.length} von ${n} an`,`${n-off.length} of ${n} on`))}</span>`+
+    `<button class="b p" type="button" data-grund="basis">${esc(t('Alle übernehmen','Take them all'))}</button><button class="b" type="button" data-grund="mehr" aria-expanded="false">${esc(t('Was fehlt?','What is off?'))}</button></div>`+
+    `<div class="gcmore" hidden><div class="fh">${esc(t('Geht ohne Einrichtung, bleibt im Spark und braucht kein Zusatzmodell. Gäste bekommen davon nichts. Noch aus:','Needs no setup, stays in the Spark and loads no extra model. Guests get none of it. Still off:'))}</div>`+
     `<div class="ftags">${off.map(k=>`<span class="ftag">${nm(k)}</span>`).join('')}</div>`+
-    `<div class="row"><button class="b p" type="button" data-grund="basis">${esc(t('Alle übernehmen','Take them all'))}</button><button class="b" type="button" data-grund="zeigen">${esc(t('Einzeln ansehen','Look at each'))}</button></div></div>`;
+    `<div class="row"><button class="b" type="button" data-grund="zeigen">${esc(t('Einzeln ansehen','Look at each'))}</button></div></div></div>`;
   if(ask)h+=`<div class="gcpart"><b>${esc(t('Darf der Spark ins Internet?','May the Spark use the internet?'))}</b>`+
     `<div class="fh">${esc(t('Ja schaltet ein: ','Yes switches on: ')+g.internet.keys.filter(k=>k!=='chat.search'||g.internet.search_url).map(k=>t(...((g.names||{})[k]||[k,k]))).join(', ')+'. '+
       t('Hinaus gehen nur dein Ort fürs Wetter, Suchwörter und zwei feste Adressen, mit denen der Dienst-Wächter das Internet prüft; nie Mails oder Dokumente.','Only your place for the weather, search words and two fixed addresses the service watch checks the internet with go out; never mails or documents.')+
@@ -1838,6 +1840,7 @@ function grundDraw(done){const pane=$('pane-feat');if(!pane)return;const g=GRUND
   card.innerHTML=h+`<div class="fh gcmsg" role="status">${done?esc(done):''}</div>`;
   card.querySelectorAll('[data-grund]').forEach(b=>b.onclick=()=>grundTake(b.dataset.grund,b))}
 async function grundTake(w,btn){
+  if(w==='mehr'){const m=btn.closest('.gcpart').querySelector('.gcmore');m.hidden=!m.hidden;btn.setAttribute('aria-expanded',String(!m.hidden));return}
   if(w==='zeigen'){featF='rec';try{localStorage.setItem('featfilter',featF)}catch(e){}guidesCount();const bar=$('pane-feat').querySelector('.fbar');if(bar)bar.scrollIntoView({block:'start',behavior:'smooth'});return}
   btn.disabled=true;
   try{const r=await (await api('/api/admin/grundausstattung',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(w==='basis'?{teil:'basis',on:true}:{teil:'internet',on:w==='ja'})})).json();

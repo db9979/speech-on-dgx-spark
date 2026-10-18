@@ -1862,6 +1862,13 @@
 "titel": "Wissensbuch in der iPhone-App",
 "text": "A: Wissensbuch freigegeben, iPhone-App nach dem nächsten TestFlight-Build öffnen. B: Meine Sachen → Dokumente → „Wissensbuch“: Seiten nach Art, oben Widersprüche mit „Stimmt“ und veraltete Sätze mit „Stimmt noch“/„Stimmt nicht“. C: Eine Seite öffnen, einen Satz nach links wischen: „Stimmt nicht“ entfernt ihn (auch im Panel weg). D: „Als Obsidian-Ordner laden“, dann teilen (z. B. in Dateien sichern). E: Im Gespräch eine Frage aus zwei Dokumenten: unter der Antwort „Ins Wissensbuch“, Tippen zeigt „Im Wissensbuch“. F: Admin sperrt das Wissensbuch für das Profil: die Zeile verschwindet. G: Android: dasselbe über die Panel-Ansicht.",
 "thread": "Wissensbuch nach Karpathy"
+},
+{
+"id": "P290",
+"v": 788,
+"titel": "Karte Grundausstattung einzeilig",
+"text": "A: Eine Funktion der Grundausstattung ausschalten (z. B. Gezielte Werkzeugwahl), Funktionen öffnen. B: Oben eine Zeile „Grundausstattung für ein gutes Gespräch“, „x von n an“, „Alle übernehmen“ und „Was fehlt?“. C: „Was fehlt?“ zeigt die Namen und „Einzeln ansehen“, noch einmal klappt es zu. D: Am Handy bricht die Zeile sauber um, nichts steht über. E: „Alle übernehmen“ schaltet wie bisher alles ein.",
+"thread": "Wissensbuch nach Karpathy"
 }
 ]
 }

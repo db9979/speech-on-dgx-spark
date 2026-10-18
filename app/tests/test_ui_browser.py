@@ -3130,6 +3130,27 @@ class Browser(unittest.TestCase):
         finally:
             helpers.set_config(weather=False)
 
+    def test_basic_set_card_is_one_line(self):
+        """V01.0.788: the card "Grundausstattung" on Funktionen is one line with "Alle übernehmen"; what is still off
+        opens below it with "Was fehlt?", so the page stays short."""
+        helpers.keep_chat(self, "routing")
+        helpers.set_config(routing=False)
+        async def go():
+            async with async_playwright() as p:
+                for name, w, h in VIEWS:
+                    br, pg, errors = await self.page(p, w, h)
+                    await pg.evaluate("goSec('cfg');document.querySelector('#cfgnav button[data-p=feat]').click()")
+                    await pg.wait_for_selector("#grundcard .gcline [data-grund=basis]")
+                    self.assertFalse(await pg.is_visible("#grundcard .gcmore"), name)
+                    await pg.click("#grundcard [data-grund=mehr]")
+                    self.assertTrue(await pg.is_visible("#grundcard .gcmore [data-grund=zeigen]"), name)
+                    self.assertEqual(await pg.get_attribute("#grundcard [data-grund=mehr]", "aria-expanded"), "true", name)
+                    over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                    self.assertLessEqual(over, 1, name)
+                    self.assertEqual(errors, [], name)
+                    await br.close()
+        self.run_async(go())
+
     def test_locked_shows_why(self):
         """Phase 4 (V01.0.270): what the admin switched off stays visible under Ich, locked with the reason, and Ich
         names the functions the admin has not switched on."""

@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.788** · 2026-10-18 · Funktionen: die Karte „Grundausstattung“ ist eine Zeile mit „x von n an“ und „Alle übernehmen“; „Was fehlt?“ klappt auf, was noch aus ist, mit „Einzeln ansehen“
 - **V01.0.787** · 2026-10-18 · Wissensbuch Stufe E: iPhone zeigt das Wissensbuch unter Meine Sachen → Dokumente (Widersprüche, veraltete Sätze, „Stimmt nicht“, Obsidian-Ordner zum Teilen) und „Ins Wissensbuch“ unter Antworten im Gespräch; Android über die Panel-Ansicht
 - **V01.0.786** · 2026-10-18 · Zustand → Modelle: Bilder und Musik teilen sich einen Platz im Speicher (das größere zählt, nie beide), der Balken zeigt ein gemeinsames Stück in beiden Farben; auch in der iPhone-App
 - **V01.0.785** · 2026-10-18 · Alle Modelle mit festem Stand: auch Spracherkennung, Sprachausgabe, Einbettung, Nachsortieren und Bildfilter laden nur den Commit aus dem Katalog, nur erlaubte Dateiarten, jede Datei gegen ihre Prüfsumme geprüft (install.sh, Engines, Server, Einbettungs-Helfer)
