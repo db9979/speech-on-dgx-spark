@@ -200,6 +200,7 @@
     "search_check_day": 20,
     "knowledge_book": false,
     "knowledge_book_day": 40,
+    "knowledge_book_sample": 50,
     "rerank": false,
     "rerank_model": "klein",
     "rerank_ms": 800,

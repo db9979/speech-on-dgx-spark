@@ -823,6 +823,9 @@ def validate(new):
     d = ch.get("knowledge_book_day", 40)
     if not isinstance(d, int) or isinstance(d, bool) or not 5 <= d <= 200:
         raise HTTPException(400, "knowledge_book_day: 5 to 200")
+    d = ch.get("knowledge_book_sample", 50)
+    if not isinstance(d, int) or isinstance(d, bool) or not 0 <= d <= 100:
+        raise HTTPException(400, "knowledge_book_sample: 0 to 100")
     r = ch.get("rerank_ms", 800)
     if not isinstance(r, int) or isinstance(r, bool) or not 300 <= r <= 2000:
         raise HTTPException(400, "rerank_ms: 300 to 2000")

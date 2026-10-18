@@ -455,7 +455,8 @@ async def _reranked(uid, qs, mixed, res, summary):
     summary["rank_ms"] = int(statistics.median(ms)) if ms else 0
 
 
-def _night(now):
+def night(now):
+    """In the night window (local hours NIGHT); the Wissensbuch checks in the same window."""
     h = datetime.datetime.fromtimestamp(now).hour
     return NIGHT[0] <= h < NIGHT[1]
 
@@ -473,7 +474,7 @@ async def due_once(now=None):
     if not admin_on():
         return None
     users = [u for u in profiles.user_ids() if allowed(u)]
-    if _night(now):
+    if night(now):
         for uid in users:
             if await asyncio.to_thread(_run_due, uid, now):
                 await run(uid, now)

@@ -2037,6 +2037,7 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - In quiet minutes the language model gets an own document in numbered passages and at most 5 existing pages the panel picks by words shared with title, sender and tags. The model proposes sentences as JSON, each with the number of its passage.
 - The panel keeps a sentence only when its passage exists, every number and date in it stands in the passage, it has at most 400 characters and holds neither link nor command. If it says the same as a sentence of the page with another number, both stay as a contradiction. One document changes at most 5 pages.
 - On a question document_search puts the best fitting pages before the passages, each sentence with its source. The pages are outside text like the documents.
+- At night (in the search check's window, once per profile) the panel checks by fixed rules: a document read again is worked in again, sentences of vanished documents go, gedaechtnis.check marks passed dates and old time words as „out of date?“. Then the model answers for up to 50 sentences only „does the passage say so?“; a no removes the sentence. Deleted or left-out documents take their sentences at once (documents.on_gone).
 
 #### Look locally first
 
@@ -2058,6 +2059,7 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - **3** hits at most with „Look locally first“ ([step 5](#kn-wissen-s5))
 - **5** pages one document may change in the knowledge book ([step 13](#kn-wissen-s13))
 - **300** pages in the knowledge book per profile ([step 13](#kn-wissen-s13))
+- **50** sentences the model checks against their source at night (default) ([step 13](#kn-wissen-s13))
 
 #### Settings
 

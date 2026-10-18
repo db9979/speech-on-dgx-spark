@@ -1,7 +1,9 @@
 """Wissensbuch (wissensbuch.py, plan plaene/wissensbuch.md, Stufe B): off by default and never for guests, the panel's
 fixed rules for every sentence the model proposes (source, Zahlenprobe, length, links, command words), contradictions
 instead of overwriting, the limits per document and page, "Stimmt nicht" for good, pages as outside text in
-document_search, and the journal with fixed words and numbers only. No test depends on the clock."""
+document_search, and the journal with fixed words and numbers only. Stufe C: the nightly check (read again, gone,
+"veraltet?", the model's yes/no sample), documents that leave at once (documents.on_gone), contradictions settled by
+"Stimmt" and "Stimmt noch". No test depends on the clock."""
 import asyncio
 import contextlib
 import datetime
@@ -56,7 +58,7 @@ class Base(unittest.TestCase):
         wissensbuch._live.update(at=0.0, d=None)
 
     def tearDown(self):
-        helpers.set_config(knowledge_book=False, knowledge_book_day=40)
+        helpers.set_config(knowledge_book=False, knowledge_book_day=40, knowledge_book_sample=50)
 
     def fresh(self, name):
         c = profile(name)
@@ -64,7 +66,7 @@ class Base(unittest.TestCase):
         for d in documents.list_docs(uid):
             documents.delete(uid, d["id"])
         with wissensbuch._Db(uid) as con:
-            for t in ("wb_pages", "wb_sent", "wb_docs", "wb_block", "wb_log"):
+            for t in ("wb_pages", "wb_sent", "wb_docs", "wb_block", "wb_log", "wb_check", "wb_state"):
                 con.execute(f"DELETE FROM {t}")
         a = documents.add(uid, "Versicherung.txt", CAR.encode(), text=CAR)["id"]
         b = documents.add(uid, "Werkstatt.txt", GARAGE.encode(), text=GARAGE)["id"]
@@ -86,6 +88,7 @@ class Defaults(Base):
             ch = json.load(f)["chat"]
         self.assertIs(ch["knowledge_book"], False)
         self.assertEqual(ch["knowledge_book_day"], 40)
+        self.assertEqual(ch["knowledge_book_sample"], 50)
         self.assertNotIn("wissensbuch", features.DEFAULT_ON)
         self.assertEqual(features.BY_KEY["wissensbuch"].parent, "documents")
         c, uid, _, _ = self.fresh("Wbaus")
@@ -99,7 +102,8 @@ class Defaults(Base):
         self.assertEqual(c.get("/api/profile/wissensbuch").status_code, 200)
         guest = TestClient(panel.app)
         for r in (guest.get("/api/profile/wissensbuch"), guest.delete("/api/profile/wissensbuch/0123456789ab"),
-                  guest.post("/api/profile/wissensbuch/0123456789ab/neu"), guest.delete("/api/profile/wissensbuch/satz/1")):
+                  guest.post("/api/profile/wissensbuch/0123456789ab/neu"), guest.delete("/api/profile/wissensbuch/satz/1"),
+                  guest.post("/api/profile/wissensbuch/satz/1/stimmt"), guest.post("/api/profile/wissensbuch/satz/1/noch")):
             self.assertIn(r.status_code, (401, 403))
         self.assertIn(TestClient(panel.app).get("/api/admin/wissensbuch").status_code, (401, 403))
 
@@ -107,6 +111,10 @@ class Defaults(Base):
         for bad in (4, 201, "40", True):
             cfg = ADMIN.get("/api/config").json()
             cfg["chat"]["knowledge_book_day"] = bad
+            self.assertEqual(ADMIN.put("/api/config", json=cfg).status_code, 400, bad)
+        for bad in (-1, 101, "50", False):
+            cfg = ADMIN.get("/api/config").json()
+            cfg["chat"]["knowledge_book_sample"] = bad
             self.assertEqual(ADMIN.put("/api/config", json=cfg).status_code, 400, bad)
 
 
@@ -251,7 +259,7 @@ class Asking(Base):
         text = json.dumps(d, ensure_ascii=False)
         for word in ("Werkstatt", "Weserblick", "Wblive", uid, a):
             self.assertNotIn(word, text)
-        self.assertEqual(set(d), {"on", "seiten", "saetze", "warten", "profile", "running"})
+        self.assertEqual(set(d), {"on", "seiten", "saetze", "warten", "profile", "running", "widerspruch", "veraltet"})
         self.assertIn("wbuch", live.TARGETS)
 
     def test_the_search_check_measures_sammelfragen_with_the_pages(self):
@@ -269,3 +277,112 @@ class Asking(Base):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+NIGHT = datetime.datetime(2027, 1, 6, 3, 0).timestamp()
+
+
+class Checking(Base):
+    def contra(self, name):
+        c, uid, a, b = self.fresh(name)
+        self.work(uid, proposal(("Auto", "Ding", [("Der Golf kostet im Jahr 684,20 Euro.", 1)])))
+        self.work(uid, proposal(("Auto", "Ding", [("Der Golf kostet im Jahr 642,30 Euro.", 1)])))
+        return c, uid, a, b
+
+    def test_stimmt_keeps_one_value_for_good(self):
+        c, uid, a, b = self.contra("Wbstimmt")
+        d = c.get("/api/profile/wissensbuch").json()
+        self.assertEqual(d["widerspruch"], 2)
+        g = d["widersprueche"][0]
+        self.assertEqual((g["seite"], len(g["werte"])), ("Auto", 2))
+        keep = next(v for v in g["werte"] if v["doc"] == a)
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.assertEqual(c.post(f"/api/profile/wissensbuch/satz/{keep['id']}/stimmt").status_code, 200)
+        self.assertIn("wissen: wissensbuch widerspruch geklaert | 1 saetze entfernt", out.getvalue())
+        p = wissensbuch.page(uid, g["pid"])
+        self.assertEqual([(s["doc"], s["mark"]) for s in p["saetze"]], [(a, "")])
+        self.assertEqual(c.get("/api/profile/wissensbuch").json()["widersprueche"], [])
+        self.assertEqual(c.post(f"/api/profile/wissensbuch/satz/{keep['id']}/stimmt").status_code, 404)   # none left
+        with wissensbuch._Db(uid) as con:
+            con.execute("DELETE FROM wb_docs WHERE doc=?", (b,))
+        self.work(uid, proposal(("Auto", "Ding", [("Der Golf kostet im Jahr 642,30 Euro.", 1)])))
+        self.assertEqual(len(wissensbuch.page(uid, g["pid"])["saetze"]), 1)       # the other value never comes back
+
+    def test_documents_that_leave_take_their_sentences_at_once(self):
+        c, uid, a, b = self.contra("Wbweg")
+        self.assertIn(wissensbuch.forget, documents.GONE)
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.assertTrue(c.delete(f"/api/profile/docs/{b}").json()["removed"])
+        self.assertIn("wissen: wissensbuch quelle weg | 1 dokumente | 1 saetze | geloescht", out.getvalue())
+        p = wissensbuch.page(uid, wissensbuch.index(uid)[0]["id"])
+        self.assertEqual([(s["doc"], s["mark"]) for s in p["saetze"]], [(a, "")])   # no other value left
+        with contextlib.redirect_stdout(out):
+            documents.on_gone(uid, [a], "ausgelassen")                           # a folder left out (auslassen.py)
+        self.assertIn("| 1 saetze | ausgelassen", out.getvalue())
+        self.assertEqual(wissensbuch.index(uid), [])                              # the page went with its last sentence
+        self.assertEqual(wissensbuch.forget(uid, ["../x", 5], "geloescht"), 0)
+
+    def test_the_night_check_by_fixed_rules(self):
+        c, uid, a, b = self.fresh("Wbnacht")
+        self.work(uid, proposal(("Auto", "Ding", [("Der Golf hat das Kennzeichen HB-DB 482.", 1)])))
+        self.work(uid, proposal(("Werkstatt", "Firma", [("Die Inspektion kostete 289,50 Euro.", 1)])))
+        with wissensbuch._Db(uid) as con:   # a sentence with a date ahead when it was worked in (R1)
+            pid = con.execute("SELECT page FROM wb_sent WHERE doc=?", (a,)).fetchone()[0]
+            con.execute("INSERT INTO wb_sent (page, text, norm, doc, part, dpage, made) VALUES (?, ?, ?, ?, 1, 0, ?)",
+                        (pid, "Kündigung bis zum 30.11.2027.", "kündigung bis zum", a, int(DAY)))
+        later = datetime.datetime(2028, 1, 10, 3, 0).timestamp()
+        c0 = wissensbuch.check_rules(uid, later)
+        self.assertEqual(c0, {"neu_gelesen": 0, "weg": 0, "veraltet": 1})
+        d = c.get("/api/profile/wissensbuch").json()
+        self.assertEqual([v["text"] for v in d["veraltet"]], ["Kündigung bis zum 30.11.2027."])
+        self.assertIn("(vielleicht veraltet)", wissensbuch.answer_block(uid, "Golf Kündigung Kennzeichen")[0])
+        sid = d["veraltet"][0]["id"]
+        self.assertEqual(c.post(f"/api/profile/wissensbuch/satz/{sid}/noch").status_code, 200)
+        self.assertEqual(wissensbuch.check_rules(uid, later)["veraltet"], 1)   # said today, before the date: out of date then
+        self.assertTrue(wissensbuch.still_right(uid, sid, later))      # "Stimmt noch" after the date passed
+        self.assertEqual(wissensbuch.check_rules(uid, later + 86400)["veraltet"], 0)   # said again after the date
+        self.assertEqual(c.post(f"/api/profile/wissensbuch/satz/{sid}/noch").status_code, 404)
+        # read again: other pieces than when it was worked in → its sentences go, it is worked in again
+        with documents._Db(uid) as con:
+            con.execute("UPDATE chunks SET text=? WHERE doc=?", (CAR.replace("684,20", "702,00"), a))
+        self.assertEqual(wissensbuch.check_rules(uid, later)["neu_gelesen"], 1)
+        self.assertEqual({p["title"] for p in wissensbuch.index(uid)}, {"Werkstatt"})
+        self.assertEqual(wissensbuch.next_doc(uid)[0], a)
+        # gone without the hook (another way of deleting): the night takes its sentences
+        with documents._Db(uid) as con:
+            con.execute("DELETE FROM docs WHERE id=?", (b,))
+        self.assertEqual(wissensbuch.check_rules(uid, later)["weg"], 1)
+        self.assertEqual(wissensbuch.index(uid), [])
+
+    def test_the_nightly_sample_asks_yes_or_no(self):
+        c, uid, a, b = self.fresh("Wbprobe")
+        self.work(uid, proposal(("Auto", "Ding", [("Der Golf hat das Kennzeichen HB-DB 482.", 1),
+                                                  ("Der Jahresbeitrag ist 684,20 Euro.", 1)])))
+        asked = []
+
+        async def probe(sentence, source):
+            asked.append(source)
+            return "684,20" not in sentence      # the model says "no" to the second sentence
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out), mock.patch.object(wissensbuch, "ask_probe", probe), \
+                mock.patch.object(wissensbuch.profiles, "user_ids", return_value=[uid]):
+            self.assertEqual(run(wissensbuch.due_once(NIGHT)), "wissensbuch-pruefung")   # the fixed check first
+            self.assertEqual(run(wissensbuch.due_once(NIGHT)), "wissensbuch-probe")
+            self.assertEqual(run(wissensbuch.due_once(NIGHT)), "wissensbuch-probe")
+            helpers.set_config(knowledge_book_sample=0)
+            with mock.patch.object(wissensbuch, "ask_model", mock.AsyncMock(return_value={"seiten": []})):
+                self.assertEqual(run(wissensbuch.due_once(NIGHT + 60)), "wissensbuch")   # no sample: the day's work
+        log = out.getvalue()
+        self.assertIn("wissen: wissensbuch geprueft | 0 neu gelesen | 0 weg | 0 veraltet", log)
+        self.assertIn("wissen: wissensbuch stichprobe bestaetigt | 1 satz", log)
+        self.assertIn("wissen: wissensbuch stichprobe entfernt | 1 satz", log)
+        self.assertEqual(len(asked), 2)
+        self.assertTrue(all("HB-DB 482" in x for x in asked))        # the source piece, never the whole document
+        p = wissensbuch.page(uid, wissensbuch.index(uid)[0]["id"])
+        self.assertEqual([s["text"] for s in p["saetze"]], ["Der Golf hat das Kennzeichen HB-DB 482."])
+        self.assertEqual([v["word"] for v in c.get("/api/profile/wissensbuch").json()["verlauf"][:2]], ["nichts", "probe"])
+        for word in ("Golf", "Kennzeichen", "Wbprobe", uid):
+            self.assertNotIn(word, log)
+

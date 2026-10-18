@@ -2037,6 +2037,7 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - In ruhigen Minuten bekommt das Sprachmodell ein eigenes Dokument in nummerierten Stellen und höchstens 5 bestehende Seiten, die das Panel nach gemeinsamen Wörtern mit Titel, Absender und Tags auswählt. Das Modell schlägt Sätze als JSON vor, jeden mit der Nummer seiner Stelle.
 - Das Panel behält einen Satz nur, wenn seine Stelle existiert, jede Zahl und jedes Datum darin in der Stelle steht, er höchstens 400 Zeichen hat und weder Link noch Befehl enthält. Sagt er dasselbe wie ein Satz der Seite mit anderer Zahl, bleiben beide als Widerspruch stehen. Ein Dokument ändert höchstens 5 Seiten.
 - Bei einer Frage legt document_search die passendsten Seiten vor die Stellen, jeder Satz mit Quelle. Die Seiten sind Text von außen wie die Dokumente.
+- Nachts (im Fenster der Suchprüfung, einmal je Profil) prüft das Panel mit festen Regeln: ein neu gelesenes Dokument wird neu eingearbeitet, Sätze verschwundener Dokumente gehen, gedaechtnis.check markiert vorbeigegangene Daten und alte Zeitwörter als „veraltet?“. Danach beantwortet das Modell für bis zu 50 Sätze nur „steht das so in der Stelle?“; ein Nein entfernt den Satz. Gelöschte oder ausgelassene Dokumente nehmen ihre Sätze sofort mit (documents.on_gone).
 
 #### Erst lokal suchen
 
@@ -2058,6 +2059,7 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - **3** Treffer höchstens bei „Erst lokal suchen“ ([Schritt 5](#kn-wissen-s5))
 - **5** Seiten, die ein Dokument im Wissensbuch ändern darf ([Schritt 13](#kn-wissen-s13))
 - **300** Seiten im Wissensbuch pro Profil ([Schritt 13](#kn-wissen-s13))
+- **50** Sätze, die das Modell nachts gegen ihre Quelle prüft (Standard) ([Schritt 13](#kn-wissen-s13))
 
 #### Einstellen
 

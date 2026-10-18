@@ -241,7 +241,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Wissen: how a question finds passages
     "wissen": {
-        "stand": "8886fc54a1",
+        "stand": "32be3eb065",
         "bezug": {
             "lokal.MAX_HITS": ["s5"], "wissen.search": ["s1", "s8", "s9"], "documents.search": ["s5", "s6"],
             "documents._terms": ["s5"], "documents.match_docs": ["s4"], "docembed.query": ["s3"],
@@ -250,6 +250,7 @@ SEITEN = {
             "regeln": ["s1", "s8"], "regel:Geteilte Dokumente": ["s8"], "regel:Gedächtnis": ["s13"],
             "regel:Erst lokal suchen": ["s5"], "regel:Wissensbuch": ["s13"], "wissensbuch.answer_block": ["s13"],
             "wissensbuch.PAGES_PER_DOC": ["s13"], "wissensbuch.MAX_PAGES": ["s13"],
+            "wissensbuch.SAMPLE": ["s13"],
         },
         "kurz": ("Wissen ist alles, was der Spark selbst weiß, ohne ins Internet zu gehen: die hochgeladenen Dokumente "
                  "jedes Profils (eine SQLite-Datei wissen.db pro Profil), das Gedächtnis, frühere Gespräche, das eigene "
@@ -410,6 +411,7 @@ SEITEN = {
             ("{lokal.MAX_HITS}", ("Treffer höchstens bei „Erst lokal suchen“", "hits at most with „Look locally first“"), "lokal.MAX_HITS"),
             ("{wissensbuch.PAGES_PER_DOC}", ("Seiten, die ein Dokument im Wissensbuch ändern darf", "pages one document may change in the knowledge book"), "wissensbuch.PAGES_PER_DOC"),
             ("{wissensbuch.MAX_PAGES}", ("Seiten im Wissensbuch pro Profil", "pages in the knowledge book per profile"), "wissensbuch.MAX_PAGES"),
+            ("{wissensbuch.SAMPLE}", ("Sätze, die das Modell nachts gegen ihre Quelle prüft (Standard)", "sentences the model checks against their source at night (default)"), "wissensbuch.SAMPLE"),
         ],
         "einstellen": [
             ("Funktionen → Eigene Dokumente und darunter Bedeutungssuche an: Stellen bekommen einen Bedeutungsvektor "
@@ -457,6 +459,16 @@ SEITEN = {
                  "Die Seiten sind Text von außen wie die Dokumente.",
                  "On a question document_search puts the best fitting pages before the passages, each sentence with "
                  "its source. The pages are outside text like the documents."),
+                ("Nachts (im Fenster der Suchprüfung, einmal je Profil) prüft das Panel mit festen Regeln: ein neu "
+                 "gelesenes Dokument wird neu eingearbeitet, Sätze verschwundener Dokumente gehen, gedaechtnis.check "
+                 "markiert vorbeigegangene Daten und alte Zeitwörter als „veraltet?“. Danach beantwortet das Modell für "
+                 "bis zu {wissensbuch.SAMPLE} Sätze nur „steht das so in der Stelle?“; ein Nein entfernt den Satz. "
+                 "Gelöschte oder ausgelassene Dokumente nehmen ihre Sätze sofort mit (documents.on_gone).",
+                 "At night (in the search check's window, once per profile) the panel checks by fixed rules: a document "
+                 "read again is worked in again, sentences of vanished documents go, gedaechtnis.check marks passed "
+                 "dates and old time words as „out of date?“. Then the model answers for up to {wissensbuch.SAMPLE} "
+                 "sentences only „does the passage say so?“; a no removes the sentence. Deleted or left-out documents "
+                 "take their sentences at once (documents.on_gone)."),
             ]),
             (("Erst lokal suchen", "Look locally first"), [
                 ("Vor der ersten Runde schaut das Panel selbst in Dokumente, Kiwix und frühere Gespräche, gleichzeitig "

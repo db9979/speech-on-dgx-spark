@@ -1807,6 +1807,13 @@
 "titel": "Ordner auslassen in der iPhone-App",
 "text": "A: iPhone-App aus TestFlight aktualisieren. B: Meine Sachen → Dokumente → ganz unten „Ausgelassene Ordner“: die Liste stimmt mit Ich → Dokumente → Ausgelassene Ordner im Panel überein. C: Namensregel „Archiv“ hinzufügen: die Rückfrage nennt die Zahl der Dokumente, danach stehen sie nicht mehr in der Liste der Dokumente. D: Die Regel wegwischen: sie verschwindet auch im Panel. E: Bei einem ausgelassenen Ordner „Wieder zulassen“: nach dem nächsten Abgleich sind seine Dokumente wieder da. F: Der Hinweis zum Ordnerbaum öffnet das Panel an der richtigen Stelle. G: Android: Ich → Dokumente zeigt „Ausgelassene Ordner“ mit Ordnerbaum.",
 "thread": "Ordner ausschließen"
+},
+{
+"id": "P282",
+"v": 779,
+"titel": "Wissensbuch: Nachtprüfung und Widersprüche",
+"text": "A: Wissensbuch an, zwei Dokumente mit verschiedenen Werten zur selben Sache hochladen (z. B. alter und neuer Versicherungsbeitrag). B: Ich → Dokumente → Wissensbuch: oben „Widersprüche“ mit beiden Werten und Quellen; „Stimmt“ beim richtigen: der andere verschwindet. C: Ein Dokument löschen: seine Sätze sind sofort aus dem Wissensbuch weg. D: Nach einer Nacht im Verlauf „nachts geprüft“; Zustand → Logs, Bereich Wissen: „wissensbuch geprueft“ und „stichprobe …“ nur mit Zahlen. E: Funktionen → Eigene Dokumente → Wissensbuch: „Stichprobe je Nacht“ 0 bis 100. F: Ein Satz mit einem Datum, das vorbei ist, steht unter „Veraltet?“; „Stimmt noch“ nimmt ihn heraus.",
+"thread": "Wissensbuch nach Karpathy"
 }
 ]
 }

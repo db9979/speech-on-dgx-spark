@@ -933,6 +933,7 @@ def profile_delete_doc(doc_id: str, prof=Depends(browser_profile)):
     if removed:   # a document the Spark made (docmake.py) goes with its file
         import docmake
         docmake.forget(prof["id"], doc_id)
+        documents.on_gone(prof["id"], [doc_id], "geloescht")   # the Wissensbuch drops its sentences at once
     return {"removed": removed}
 
 

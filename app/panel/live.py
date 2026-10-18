@@ -1461,6 +1461,8 @@ def snapshot(view="admin", now=None):
                         + (" · prüft gerade" if spr.get("running") else ""))
         if x["id"] == "wbuch":     # Wissensbuch: pages, sentences, documents waiting, numbers only (never a title)
             x["sub"] = (f"{wbk.get('seiten', 0)} Seiten · {wbk.get('saetze', 0)} Sätze · {wbk.get('warten', 0)} Dokumente warten"
+                        + (f" · {wbk['widerspruch']} Widersprüche" if wbk.get("widerspruch") else "")
+                        + (f" · {wbk['veraltet']} veraltet?" if wbk.get("veraltet") else "")
                         + (" · arbeitet" if wbk.get("running") else ""))
         if x["id"] == "modell" and mr.get("on"):   # Modell-Rechner: reachable, units active, version (no address)
             x["sub"] = (("nicht erreichbar" + (" · Notbetrieb" if mr.get("notbetrieb") else "")) if not mr.get("ok") else
