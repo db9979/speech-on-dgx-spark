@@ -142,6 +142,32 @@ class Worker(unittest.TestCase):
                 with self.assertRaises(RuntimeError):
                     embed_worker.hole("a/b", "c" * 40, "model.onnx")
 
+    def test_the_shared_blob_store_of_newer_huggingface_hub_is_checked_by_the_models_blob(self):
+        # Dominik 2026-10-18: „onnx/model_quantized.onnx does not match its commit“ on the Pi: the snapshot links to
+        # blobs/<sha256>, which links once more into hub/blobs/<2 hex>/<other name>; the check takes the first name
+        with tempfile.TemporaryDirectory() as d:
+            good = b"q" * 500
+            h = hashlib.sha256(good).hexdigest()
+            shared = os.path.join(d, "blobs", h[:2])
+            os.makedirs(shared)
+            with open(os.path.join(shared, h[2:] + ".data"), "wb") as f:
+                f.write(good)
+            model = os.path.join(d, "models--a--b")
+            os.makedirs(os.path.join(model, "blobs"))
+            os.makedirs(os.path.join(model, "snapshots", "c" * 40, "onnx"))
+            os.symlink(os.path.join("..", "..", "blobs", h[:2], h[2:] + ".data"), os.path.join(model, "blobs", h))
+            link = os.path.join(model, "snapshots", "c" * 40, "onnx", "model_quantized.onnx")
+            os.symlink(os.path.join("..", "..", "..", "blobs", h), link)
+            import huggingface_hub
+            with mock.patch.object(huggingface_hub, "hf_hub_download", return_value=link):
+                self.assertEqual(embed_worker.hole("a/b", "c" * 40, "onnx/model_quantized.onnx"), (link, h))
+            plain = os.path.join(d, "copy.onnx")      # a copy outside the cache has no name to check against
+            with open(plain, "wb") as f:
+                f.write(good)
+            with mock.patch.object(huggingface_hub, "hf_hub_download", return_value=plain):
+                with self.assertRaises(RuntimeError):
+                    embed_worker.hole("a/b", "c" * 40, "x.onnx")
+
 
 if __name__ == "__main__":
     unittest.main()

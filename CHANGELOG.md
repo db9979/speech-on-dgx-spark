@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.795** · 2026-10-18 · Fix Bedeutungssuche: „onnx/model_quantized.onnx does not match its commit“ mit neuerem huggingface_hub; der Worker prüft gegen den Blob des Modells, die Suche macht weiter, wo sie stand
 - **V01.0.794** · 2026-10-18 · ROT-FIX Wächter-Umgehung: Hänge-Wächter (Meldung an systemd) und Anzeige des Sprachmodell-Starts (/health auf 127.0.0.1) mit Grund in netguard.DIRECT_OK
 - **V01.0.793** · 2026-10-18 · Sichtbar, was das Sprachmodell beim Wechseln und Starten tut: sechs Schritte mit Zeiten unter Zustand → Modelle, Banner auf jeder Admin-Seite, Zeile in Live, der Chat sagt „startet gerade neu, etwa noch N Minuten“
 - **V01.0.792** · 2026-10-18 · Durchsicht Festpinnen: Spracherkennung und Sprachausgabe prüfen vor jedem Start jede Datei (vLLM lädt nie mehr selbst), neu gewählte Stimmen laden nur geprüft, alter Zwischenspeicher wird bereinigt, Einbettung und Nachsortieren merken ihre Prüfsummen je festem Stand

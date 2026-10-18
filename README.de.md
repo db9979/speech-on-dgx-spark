@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.795** Fix: Bedeutungssuche bricht nicht mehr mit „does not match its commit“ ab
 - **V01.0.794** Fix: Selbsttest Wächter-Umgehung wieder grün
 - **V01.0.793** Modellwechsel und Start des Sprachmodells sichtbar: Schritte, Banner, Live, Satz im Chat
 - **V01.0.792** Sprachmodelle vor jedem Start geprüft, Such-Modelle nach dem Festpinnen nicht mehr abgelehnt
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.788** Karte „Grundausstattung“ auf Funktionen ist eine Zeile
 - **V01.0.787** Wissensbuch auf dem iPhone, „Ins Wissensbuch“ auch im App-Gespräch
 - **V01.0.786** Zustand → Modelle: Bilder und Musik teilen sich einen Platz im Speicher
-- **V01.0.785** Alle Modelle mit festem Stand und Prüfsumme, auch Sprache, Suche und Bildfilter
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

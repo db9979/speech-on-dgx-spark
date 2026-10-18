@@ -45,7 +45,9 @@ def hole(repo, rev, f):
     a small one; like modelle.pruefen, which this process cannot import under python -I). Returns (path, SHA-256)."""
     from huggingface_hub import hf_hub_download
     p = hf_hub_download(repo, f, revision=rev)
-    blob, sha = os.path.basename(os.path.realpath(p)), _sha(p)
+    # the name to check is the model's own blob (blobs/<hash>, where the snapshot's link points); newer huggingface_hub
+    # links that once more into the shared hub/blobs/<2 hex>/, whose file is not named by the hash (as in modelle.pruefen)
+    blob, sha = (os.path.basename(os.readlink(p)) if os.path.islink(p) else ""), _sha(p)
     if re.fullmatch(r"[0-9a-f]{40}", blob):
         h = hashlib.sha1(b"blob %d\0" % os.path.getsize(p))
         with open(p, "rb") as fh:
