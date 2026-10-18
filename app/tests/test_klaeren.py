@@ -272,6 +272,8 @@ class Klaeren(unittest.TestCase):
         self.assertEqual([r[0]["text"] for r in kb["keyboard"]], ["Samsung Wohnzimmer", "TV", "Ja", "Keins davon"])
         self.assertTrue(kb["one_time_keyboard"])
         self.assertIsNone(telegram.keyboard({"options": [], "none": ""}))
+        import ablauf   # Rückfrage-Karten: the same keyboard for Ja/Nein under an answer that asks
+        self.assertEqual(telegram.keyboard(ablauf.asks("Soll ich ihn so eintragen?"))["keyboard"], [[{"text": "Ja"}], [{"text": "Nein"}]])
 
     def test_same_conversation_only(self):
         self.assertFalse(klaeren._same("web:", "web:abc"))

@@ -27,6 +27,8 @@ final class Conversation: ObservableObject {
         /// Ablauf und Freigabe zeigen (ablauf.py): the tools of this answer, and the kind of a proposal waiting for "Ja"
         var steps: [StepItem]?
         var confirm: String?
+        /// Rückfrage-Karte (ablauf.asks): the answers to the question this answer ends with
+        var answers: [String]?
         /// Ins Wissensbuch (wissensbuch.py): the id the Spark kept this answer by, and whether it was filed
         var wbId: String?
         var filed: Bool?
@@ -725,6 +727,7 @@ final class Conversation: ObservableObject {
                 case .more(let kind, let items): edit { $0.more = items; $0.moreKind = kind }
                 case .step(let x): edit { $0.steps = ($0.steps ?? []) + [x] }
                 case .confirm(let kind): edit { $0.confirm = kind }
+                case .answers(let x): edit { $0.answers = x }
                 case .wbuch(let id): edit { $0.wbId = id }
                 }
             }

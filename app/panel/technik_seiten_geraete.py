@@ -410,7 +410,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Telegram, Siri, Uhr
     "kanaele": {
-        "stand": "62df25be63",
+        "stand": "6f13703a64",
         "bezug": {
             "watch.JOB_TTL": ["s9"], "telegram.loop": ["s1"], "telegram.handle": ["s2", "s3", "s4"],
             "telegram.ask": ["s7", "s8", "s11"], "telegram.transcribe": ["s5"], "chat.siri_ask": ["s1", "s3"],
@@ -510,7 +510,8 @@ SEITEN = {
                "zusätzlich die Antwort mit Markdown (höchstens {chat.MD_ANSWER_MAX} Zeichen), wenn darin nicht weniger "
                "Geheimnisse verdeckt sind. Mit ihren Schaltern bekommt die Uhr außerdem bis zu {watch.FOLLOW_MAX} "
                "Nachfragen zum Antippen (das Modell schlägt nur vor, watch.follow_clean lässt nur kurze Fragen ohne Ja, "
-               "Nein, Links oder Zahlen durch; nie nach Mail, Web oder einem Vorschlag), einen Vorschlag als ✓ und ✕ "
+               "Nein, Links oder Zahlen durch; nie nach Mail, Web oder einem Vorschlag; endet die Antwort mit einer Frage, "
+               "sind deren Knöpfe aus ablauf.asks die Nachfragen), einen Vorschlag als ✓ und ✕ "
                "und über /api/watch/sync die Schnellbefehle und die nächsten {pebblewatch.AGENDA_MAX} Erinnerungen, "
                "die sie selbst als Wecker klingeln lässt; Push wartet zuerst auf sie. Das Spark-Zifferblatt holt alle 15 "
                "Minuten über /api/watch/blick den nächsten Termin, die nächste Erinnerung, das Wetter, einen Tipp und "
@@ -527,7 +528,8 @@ SEITEN = {
                "answers run at once. The companion gets text without Markdown and also the answer with Markdown (at "
                "most {chat.MD_ANSWER_MAX} characters) when it hides no fewer secrets. With its switches the watch also "
                "gets up to {watch.FOLLOW_MAX} follow-ups to tap (the model only suggests, watch.follow_clean keeps short "
-               "questions without yes, no, links or numbers; never after mail, web or a proposal), a proposal as ✓ and "
+               "questions without yes, no, links or numbers; never after mail, web or a proposal; when the answer ends with a "
+               "question, its buttons from ablauf.asks are the follow-ups), a proposal as ✓ and "
                "✕, and through /api/watch/sync the quick commands and the next {pebblewatch.AGENDA_MAX} reminders, "
                "which it rings itself as wake-ups; push waits for it first. The Spark watchface fetches the next appointment, "
                "reminder, weather, a hint and for admins an outage through /api/watch/blick every 15 minutes; "

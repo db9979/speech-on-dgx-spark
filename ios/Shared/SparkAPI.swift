@@ -23,6 +23,7 @@ enum ChatEvent {
     case more(kind: String, items: [MoreItem])  // the Spark's fixed sentences under the answer (saetze.py)
     case step(StepItem)     // Ablauf zeigen (ablauf.py): one tool of this answer, its readable name, ok and time
     case confirm(String)    // Freigabe-Karte (ablauf.py): the kind of a proposal waiting for "Ja", in fixed words
+    case answers([String])  // Rückfrage-Karte (ablauf.asks, klaeren.py): the answers to the question this answer asks
     case wbuch(String)      // "Ins Wissensbuch" may go under this answer (wissensbuch.keep_offer): the id the Spark kept it by
 }
 
@@ -892,6 +893,16 @@ struct SparkAPI {
                             let de = Locale.preferredLanguages.first?.hasPrefix("de") ?? true
                             let kind = String(((de ? ev["de"] : ev["en"]) as? String ?? "").prefix(40))
                             if !kind.isEmpty { cont.yield(.confirm(kind)) }
+                        case "choice":
+                            // short plain answers (Ja/Nein, „A oder B“, a device name); a tap sends one like a typed answer.
+                            // The long list with a search field stays in the panel
+                            if ev["list"] as? Bool != true {
+                                let opts = (ev["options"] as? [[String: Any]] ?? []).prefix(8).compactMap { o -> String? in
+                                    let x = String(((o["send"] as? String) ?? (o["label"] as? String) ?? "").prefix(60))
+                                    return x.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : x
+                                }
+                                if !opts.isEmpty { cont.yield(.answers(opts)) }
+                            }
                         case "rate":
                             // only a short id of letters and digits (faelle.py), never other text from the event
                             if let id = ev["id"] as? String, (4...40).contains(id.count),

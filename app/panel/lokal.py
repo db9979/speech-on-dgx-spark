@@ -136,20 +136,17 @@ def title_fits(title, words):
     return bool(both) and len(both) / len(tw) >= 0.5
 
 
-# a short answer to the assistant's question before („Ja“, „Nein danke“): never a knowledge question of its own
-# (V01.0.803: „Ja“ to a proposed appointment looked up old conversations and the answer spoke of those)
-REPLY = re.compile(r"(?i)\W*(nein|nö|nee|no|nope)(\W+\w+){0,2}\W*")
-
-
+# a short answer to the assistant's question before („Ja“, „Nein danke“, ablauf.short_reply) is never a knowledge
+# question of its own (V01.0.804: „Ja“ to a proposed appointment looked up old conversations, the answer spoke of those)
 def classify(text, route, tool_words=""):
     """(class, reason): "extern", "lokal", "wissen" or "" (see the module doc). Only the person's own words;
     the reason names a rule, never words of the question."""
-    import calendars
+    import ablauf
     import chat
     text = str(text or "")[:2000]
     if not text.strip() or chat.SMALLTALK.fullmatch(text):
         return "", "Plaudern"
-    if REPLY.fullmatch(text) or calendars.confirms(text):   # „Ja“ to a question before: nothing to look up
+    if ablauf.short_reply(text):   # „Ja“ to a question before: nothing to look up
         return "", "Antwort auf Rückfrage"
     if chat.needed(text, {"web_search"}, tool_words):
         return "extern", "Websuche verlangt"

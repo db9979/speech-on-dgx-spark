@@ -1973,6 +1973,12 @@
 "titel": "Kalender als eigene Seite",
 "text": "A: Links im Menü unter Assistent steht „Kalender“ (Handy: Heute → Karte „Termine“). B: Reiter Termine: Woche zeigt deine Termine mit Farbe je Kalender; Tag, Monat und Liste umschalten, mit ‹ Heute › blättern; Antippen zeigt Zeit, Ort und Kalender. C: Reiter Einstellungen: Kalender verbinden, entfernen, Themen fürs Briefing wie früher unter Ich. D: Ich zeigt keine Seite „Kalender“ mehr. E: Funktionen → Anleitungen → Kalender: „Kalender → Einstellungen → „Kalender hinzufügen““ ist ein Link und springt dorthin. F: iPhone-App (Liste „Im Panel öffnen“): „Kalender“ öffnet die Seite. G: Am Handy (390 px) Woche und Monat ohne seitliches Scrollen.",
 "thread": "Kalender und E-Mail in Panel und Apps"
+},
+{
+"id": "P306",
+"v": 806,
+"titel": "Rückfrage-Karten",
+"text": "Voraussetzung: Funktionen → „Ablauf und Freigabe zeigen“ an. A: Im Assistenten „Erklär mir kurz Sauerteig und frag mich am Ende, ob du ein Rezept zeigen sollst“: unter der Frage stehen „Ja“ und „Nein“. B: „Ja“ antippen: es geht beim Thema weiter (Zustand → Logs: „weiche: Antwort auf Rückfrage“, wenn die Frage davor eine Gruppe hatte). C: „Frag mich, ob ich Tee oder Kaffee möchte“: Knöpfe „Tee“, „Kaffee“, „Anders …“ (setzt nur den Cursor). D: Dasselbe in der iPhone-App, in Telegram (Antworttasten) und auf der Pebble (Nachfragen). E: Schalter aus: keine Knöpfe."
 }
 ]
 }

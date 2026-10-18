@@ -339,6 +339,9 @@ struct ChatView: View {
                             if m.role != "user", let j = m.picJob { PictureCard(job: j) }
                             if m.role != "user", let steps = m.steps, !steps.isEmpty { StepsFold(steps: steps) }
                             if m.role != "user", m.id == talk.messages.last?.id, let kind = m.confirm { ConfirmCard(kind: kind) }
+                            if m.role != "user", m.id == talk.messages.last?.id, m.confirm == nil, let a = m.answers, !a.isEmpty {
+                                AnswersCard(answers: a)
+                            }
                             if m.role != "user", m.rateId != nil { RateBar(message: m) }
                             if m.role != "user", m.wbId != nil { WbFileButton(message: m) }
                             if m.role != "user", m.id == talk.messages.last?.id, let more = m.more, !more.isEmpty {
@@ -845,6 +848,23 @@ struct ConfirmCard: View {
         .padding(10)
         .background(Color.orange.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
         .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.orange, lineWidth: 1.5))
+    }
+}
+
+/// Rückfrage-Karte (ablauf.asks): the answers to the question the answer ends with; a tap sends one like a typed answer
+struct AnswersCard: View {
+    let answers: [String]
+    @State private var sent = false
+
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(Array(answers.enumerated()), id: \.offset) { _, a in
+                    Button(a) { sent = true; Conversation.shared.write(a) }.buttonStyle(.bordered)
+                }
+            }
+        }
+        .disabled(sent)
     }
 }
 

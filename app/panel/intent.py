@@ -425,17 +425,20 @@ def hint_tools(route):
 FOLLOW_MAX = 80
 
 
-def follow_up(text, before, ccfg=None):
-    """The Route of a follow-up question from the person's own question before, or None."""
+def follow_up(text, before, ccfg=None, answered=False):
+    """The Route of a follow-up question from the person's own question before, or None. answered: the message
+    answers the assistant's question just before (a yes, a no or one of its buttons, ablauf.was_asked), so it needs
+    no word pointing back (Rückfrage-Karten 3a: „Ja“ to „Soll ich ihn so eintragen?“ keeps the calendar tools)."""
     text = str(text or "")
-    if not text.strip() or len(text) > FOLLOW_MAX or not before or not refers_back(text):
+    if not text.strip() or len(text) > FOLLOW_MAX or not before or not (answered or refers_back(text)):
         return None
     if classify_cfg(text, ccfg).names:
         return None
     prev = classify_cfg(str(before)[:2000], ccfg)
     if not prev.clear or prev.names == ["plaudern"]:
         return None
-    return Route(list(prev.names), {n: "Folgefrage" for n in prev.names})
+    why = "Antwort auf Rückfrage" if answered else "Folgefrage"
+    return Route(list(prev.names), {n: why for n in prev.names})
 
 
 FEATURE_VERB = re.compile(r"(?i)^\W*(bitte |kannst du |könntest du |spark,? )?(schalt\w*|mach\w*|aktivier\w*|deaktivier\w*|"

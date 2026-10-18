@@ -346,12 +346,14 @@ function confirmCard(c){const d=document.createElement('div');d.className='confi
   btn(t('Ja','Yes'),'Ja',' on');btn(t('Nein','No'),'Nein','');d.appendChild(row);return d}
 // Rückfrage statt Raten (klaeren.py): the panel's own question as buttons, or the whole list with a search field.
 // A tap sends the name like a typed answer; the panel takes it by fixed rules, the model never picks.
+// Rückfrage-Karte (ablauf.asks, "from":"frage"): Ja/Nein or the parts of „A oder B?“ under an answer that asks.
 function choiceCard(c){const d=document.createElement('div');d.className='choice';const opts=c.options||[];
   const send=(x,btn)=>{if(chat.ctrl)return;d.querySelectorAll('button').forEach(b=>b.disabled=true);if(btn)btn.classList.add('on');ask(x)};
   if(!c.list){for(const o of opts){const b=document.createElement('button');b.type='button';b.className='b chb';b.textContent=o.label;
       if(o.room){const r=document.createElement('span');r.className='mut';r.textContent=' '+o.room;b.appendChild(r)}
       b.onclick=()=>send(o.send||o.label,b);d.appendChild(b)}
     if(c.none){const b=document.createElement('button');b.type='button';b.className='b chb chnone';b.textContent=c.none;b.onclick=()=>send(c.none,b);d.appendChild(b)}
+    if(c.free){const b=document.createElement('button');b.type='button';b.className='b chb chnone';b.textContent=c.free;b.onclick=()=>$('chattext').focus();d.appendChild(b)}   // „Anders …“: only the cursor
     return d}
   d.classList.add('chlist');const f=document.createElement('input');f.type='search';f.maxLength=60;f.placeholder=t('Suchen …','Search …');
   f.setAttribute('aria-label',t('In der Liste suchen','Search the list'));d.appendChild(f);const box=document.createElement('div');box.className='chrows';d.appendChild(box);

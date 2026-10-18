@@ -113,6 +113,7 @@ DATEIEN = [
     profil("rufen-pending.json", "Anruf wartet auf Ja", "Call waiting for yes", art="Warteschlange"),
     profil("tasks-pending.json", "Wartet auf Ja", "Waiting for yes", art="Warteschlange"),
     profil("remarkable-pending.json", "Wartet auf Ja", "Waiting for yes", art="Warteschlange"),
+    profil("rueckfrage-pending.json", "Letzte Rückfrage des Assistenten (10 Minuten, nur ihre Knöpfe)", "The assistant's last question back (10 minutes, only its buttons)", art="Warteschlange"),
     profil("tagebuch.json", "Spark-Tagebuch", "Spark diary", art="Zustand"),
     profil("gesundheit.json", "Schritte, Puls und Schlaf von der Pebble-Uhr (30 Tage)", "Steps, pulse and sleep from the Pebble watch (30 days)",
            art="Gesundheit", schutz=("versiegelt", "sealed")),

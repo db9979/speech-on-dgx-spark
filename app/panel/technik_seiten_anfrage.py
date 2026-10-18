@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "vorbereiten": {
-        "stand": "328b70e864",
+        "stand": "83743dbfdd",
         "bezug": {
             "klaeren.MAX_BUTTONS": ["s7"], "chat_turn.prepare": ["s1", "s13"], "chat_turn.shared_stranger": ["s3"],
             "chat.left_out": ["s2", "s4"], "notaus.locked_tools": ["s11"], "chat_turn.notaus_note": ["s8", "s11"],
@@ -201,9 +201,11 @@ SEITEN = {
             ("Funktionen → Weiche: die festen Regeln, die die Werkzeuge eingrenzen.",
              "Features → Switch: the fixed rules that narrow the tools."),
             ("Funktionen → Ablauf und Freigabe zeigen: Werkzeuge unter der Antwort, ein wartender Vorschlag als Karte mit Ja und Nein "
-             "(nur eigenes Profil und Gerät, Standard aus).",
+             "und eine Frage am Ende der Antwort mit ihren Antworten als Knöpfen (Ja/Nein, A oder B), ein kurzes Ja darauf behält "
+             "das Thema der Frage davor (nur eigenes Profil und Gerät, Standard aus).",
              "Features → Show steps and approvals: tools below the answer, a waiting proposal as a card with Yes and No "
-             "(own profile and device only, default off)."),
+             "and a question at the end of the answer with its answers as buttons (yes/no, A or B); a short yes to it keeps the "
+             "topic of the question before (own profile and device only, default off)."),
         ],
         "sehen": [
             ("Logs → Anfragen: je Frage Gruppe, Werkzeuge „x von y“, Pflichtwerkzeug und Sperre, ohne Inhalt.",
@@ -231,7 +233,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Antwort bauen (chat._answer)
     "weiche": {
-        "stand": "cf74e4420b",
+        "stand": "a0432b0f90",
         "bezug": {
             "intent.GROUPS": ["s4", "s6"], "intent_bench.BENCH": ["s4", "s5"], "intent_alltag.ALLTAG": ["s14"],
             "weiche.KEEP_VERSIONS": ["s4"], "intent.Route": ["s6"], "intent.follow_up": ["s8"],
@@ -325,10 +327,14 @@ SEITEN = {
               ("„Und morgen?“", "„And tomorrow?“"),
               ("Ist die Nachricht kurz (höchstens {intent.FOLLOW_MAX} Zeichen), zeigt zurück („und“, „das“, „es“) "
                "und hatte die eigene Frage direkt davor eine klare Gruppe, gilt diese Gruppe wieder. Es zählt nur die "
-               "eigene Frage, nie die Antwort. Im Journal steht „weiche: Folgefrage“.",
+               "eigene Frage, nie die Antwort. Im Journal steht „weiche: Folgefrage“. Ebenso ein schlichtes „Ja“/„Nein“ "
+               "oder ein Knopf der Rückfrage-Karte auf die Frage der Antwort davor (ablauf.was_asked, zehn Minuten, "
+               "dasselbe Gespräch): „weiche: Antwort auf Rückfrage“.",
                "If the message is short (at most {intent.FOLLOW_MAX} characters), points back („and“, „that“, „it“) "
                "and the own question just before had a clear group, that group holds again. Only the own question "
-               "counts, never the answer. The journal says „weiche: Folgefrage“."),
+               "counts, never the answer. The journal says „weiche: Folgefrage“. So does a plain „yes“/„no“ or a "
+               "button of the question card to the question of the answer before (ablauf.was_asked, ten minutes, same "
+               "conversation): „weiche: Antwort auf Rückfrage“."),
               ("info", "ja", ("Gruppe der Frage davor", "group of the question before"))),
             S("s9", "frage", ("Gezielte Werkzeugwahl an?", "Targeted tool choice on?"),
               ("Schalter des Admins, Freigabe des Profils", "admin's switch, profile release"),
@@ -503,7 +509,7 @@ SEITEN = {
         "heute": [],
     },
     "antwort": {
-        "stand": "9921967dd0",
+        "stand": "d0df3cf883",
         "bezug": {
             "chat.MAX_SAVES": ["s11"], "chat.LOOP_SAME": ["s11"], "chat._answer": ["s4", "s5", "s11"], "chat_modell.model_turn": ["s4", "s11"], "chat_ton.speech_out": ["s8"],
             "chat.split_sentences": ["s5"], "chat.said_key": ["s8"], "chat.no_code": ["s8"],
@@ -713,9 +719,11 @@ SEITEN = {
             ("Zustand → Verbessern: wie oft die eingebauten Regeln heute eingegriffen haben.",
              "Status → Improve: how often the built-in rules stepped in today."),
             ("Unter der Antwort (Funktionen → Ablauf und Freigabe zeigen): jedes Werkzeug mit ✓/⚠ und Zeit, ein wartender "
-             "Vorschlag als Karte mit Ja und Nein; nur Namen und Zahlen, nie Ergebnisse.",
+             "Vorschlag als Karte mit Ja und Nein, sonst eine Rückfrage am Ende mit ihren Antworten als Knöpfen (ablauf.asks); "
+             "nur Namen und Zahlen, nie Ergebnisse.",
              "Below the answer (Features → Show steps and approvals): every tool with ✓/⚠ and time, a waiting proposal as a "
-             "card with Yes and No; only names and numbers, never results."),
+             "card with Yes and No, else a question at the end with its answers as buttons (ablauf.asks); only names and numbers, "
+             "never results."),
         ],
         "code": [
             ("chat.chat", ("Rate-Limit, Sprache zuerst, „antwortet gerade“", "rate limit, speech first, „answering“")),

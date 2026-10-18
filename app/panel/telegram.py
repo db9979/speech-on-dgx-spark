@@ -181,7 +181,8 @@ MAX_KEYS = 24
 
 
 def keyboard(ev):
-    """Rückfrage statt Raten (klaeren.py) in Telegram: the choices as a one-time reply keyboard. A tap sends the
+    """Rückfrage statt Raten (klaeren.py) and Rückfrage-Karten (ablauf.asks: Ja/Nein, „A oder B“) in Telegram: the
+    choices as a one-time reply keyboard. A tap sends the
     name like a typed answer, so the panel takes it by the same fixed rules; no callback, nothing new to trust."""
     rows = []
     for o in (ev.get("options") or [])[:MAX_KEYS]:

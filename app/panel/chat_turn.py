@@ -177,10 +177,15 @@ async def prepare(request):
     if ask0 and not route.names:
         before0 = next((m["content"] for m in reversed(messages[:-1])
                         if m.get("role") == "user" and isinstance(m.get("content"), str)), "")
-        follow = intent.follow_up(ask0, before0, ccfg)
+        # Rückfrage-Karten 3a: the answer before asked the person (ablauf.py, only with „Ablauf und Freigabe zeigen“)
+        import ablauf
+        src0 = f"{body.get('client') or 'web'}:{body.get('convo') if isinstance(body.get('convo'), str) else ''}"
+        answered = bool(before0 and me0 and features.allowed("ablauf", me0["id"], ccfg)
+                        and ablauf.was_asked(me0["id"], src0, ask0))
+        follow = intent.follow_up(ask0, before0, ccfg, answered)
         if follow:
             route = follow
-            print("weiche: Folgefrage -", route.label(), flush=True)
+            print("weiche: Antwort auf Rückfrage -" if answered else "weiche: Folgefrage -", route.label(), flush=True)
     # a photo of this turn with a wish to change it is Bilder ändern (bilder.from_turn decides by its fixed rule
     # further down): the group bild, so no model pick starts and Logs → Anfragen does not show it as „unklar“
     if ask0 and not route.names and images.ids_of(body):

@@ -1101,7 +1101,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": " je Abruf, für ihren kleinen Lautsprecher gepackt) über /api/watch/poll; höchstens 8 Uhr-Antworten laufen gleichzeitig. Der Begleiter bekommt Text ohne Markdown und zusätzlich die Antwort mit Markdown (höchstens 60000 Zeichen), wenn darin nicht weniger Geheimnisse verdeckt sind. Mit ihren Schaltern bekommt die Uhr außerdem bis zu 3 Nachfragen zum Antippen (das Modell schlägt nur vor, watch.follow_clean lässt nur kurze Fragen ohne Ja, Nein, Links oder Zahlen durch; nie nach Mail, Web oder einem Vorschlag), einen Vorschlag als ✓ und ✕ und über /api/watch/sync die Schnellbefehle und die nächsten 8 Erinnerungen, die sie selbst als Wecker klingeln lässt; Push wartet zuerst auf sie. Das Spark-Zifferblatt holt alle 15 Minuten über /api/watch/blick den nächsten Termin, die nächste Erinnerung, das Wetter, einen Tipp und für Admins einen Ausfall; /api/watch/brief baut Mein Tag und Meine Woche aus festen Sätzen, /api/watch/merken legt einen diktierten Satz ins Gedächtnis (mit Ort auf etwa 100 m nur mit eigenem Schalter). /api/watch/chats und /api/watch/chat zeigen die letzten Chats (ohne private) und schicken eine angetippte oder diktierte Antwort über chats.send; bis zu 3 Vorschläge des Mode"
+"text": " je Abruf, für ihren kleinen Lautsprecher gepackt) über /api/watch/poll; höchstens 8 Uhr-Antworten laufen gleichzeitig. Der Begleiter bekommt Text ohne Markdown und zusätzlich die Antwort mit Markdown (höchstens 60000 Zeichen), wenn darin nicht weniger Geheimnisse verdeckt sind. Mit ihren Schaltern bekommt die Uhr außerdem bis zu 3 Nachfragen zum Antippen (das Modell schlägt nur vor, watch.follow_clean lässt nur kurze Fragen ohne Ja, Nein, Links oder Zahlen durch; nie nach Mail, Web oder einem Vorschlag; endet die Antwort mit einer Frage, sind deren Knöpfe aus ablauf.asks die Nachfragen), einen Vorschlag als ✓ und ✕ und über /api/watch/sync die Schnellbefehle und die nächsten 8 Erinnerungen, die sie selbst als Wecker klingeln lässt; Push wartet zuerst auf sie. Das Spark-Zifferblatt holt alle 15 Minuten über /api/watch/blick den nächsten Termin, die nächste Erinnerung, das Wetter, einen Tipp und für Admins einen Ausfall; /api/watch/brief baut Mein Tag und Meine Woche aus festen Sätzen, /api/watch/merken legt einen diktierten Satz ins Gedächtnis (mit Ort auf etwa 100 m nur mit eigenem Schalter). /api/watch/chats und /api/watch/chat zeigen die letzten Chats (ohne private) und schicken"
 },
 {
 "lang": "de",
@@ -1109,7 +1109,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "lls prüft pebblewatch.reply_clean fest. /api/watch/fern schaltet nur Geräte der eigenen Liste mit festen Tasten (nie mit Smart-Home-Codewort), /api/watch/gesundheit legt Schritte, Puls und Schlaf versiegelt ins Profil, nie für das Modell. 10. Codewort schwärzen: Vor dem Speichern wird das Smart-Home-Codewort durch [Codewort] ersetzt. In Telegram löscht der Bot die Nachricht mit dem Codewort oder bittet darum, sie zu löschen. 11. Im Verlauf des Profils: verlauf.keep legt Frage und Antwort in das Tagesgespräch des Kanals („Telegram“, „Siri“, „Uhr“ mit Datum). Mit „Ein Gespräch für alle Kanäle“ landen sie im Hauptgespräch des Tages, markiert mit ihrem Kanal."
+"text": " eine angetippte oder diktierte Antwort über chats.send; bis zu 3 Vorschläge des Modells prüft pebblewatch.reply_clean fest. /api/watch/fern schaltet nur Geräte der eigenen Liste mit festen Tasten (nie mit Smart-Home-Codewort), /api/watch/gesundheit legt Schritte, Puls und Schlaf versiegelt ins Profil, nie für das Modell. 10. Codewort schwärzen: Vor dem Speichern wird das Smart-Home-Codewort durch [Codewort] ersetzt. In Telegram löscht der Bot die Nachricht mit dem Codewort oder bittet darum, sie zu löschen. 11. Im Verlauf des Profils: verlauf.keep legt Frage und Antwort in das Tagesgespräch des Kanals („Telegram“, „Siri“, „Uhr“ mit Datum). Mit „Ein Gespräch für alle Kanäle“ landen sie im Hauptgespräch des Tages, markiert mit ihrem Kanal."
 },
 {
 "lang": "de",
@@ -1653,7 +1653,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Einstellen",
 "title": "Einstellen",
-"text": "- Personen und Geräte → Gesperrte Funktionen: was ein einzelnes Profil nicht bekommt. - Funktionen → Rückfrage statt Raten: das Panel fragt nach, statt zu raten (Standard aus). - Funktionen → Weiche: die festen Regeln, die die Werkzeuge eingrenzen. - Funktionen → Ablauf und Freigabe zeigen: Werkzeuge unter der Antwort, ein wartender Vorschlag als Karte mit Ja und Nein (nur eigenes Profil und Gerät, Standard aus)."
+"text": "- Personen und Geräte → Gesperrte Funktionen: was ein einzelnes Profil nicht bekommt. - Funktionen → Rückfrage statt Raten: das Panel fragt nach, statt zu raten (Standard aus). - Funktionen → Weiche: die festen Regeln, die die Werkzeuge eingrenzen. - Funktionen → Ablauf und Freigabe zeigen: Werkzeuge unter der Antwort, ein wartender Vorschlag als Karte mit Ja und Nein und eine Frage am Ende der Antwort mit ihren Antworten als Knöpfen (Ja/Nein, A oder B), ein kurzes Ja darauf behält das Thema der Frage davor (nur eigenes Profil und Gerät, Standard aus)."
 },
 {
 "lang": "de",
@@ -1717,7 +1717,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ene Frage, nie die Antwort. Im Journal steht „weiche: Folgefrage“. 9. Gezielte Werkzeugwahl an?: Nur mit diesem Schalter grenzt die Weiche ein, und nicht bei einem Bild oder einem direkten Smart-Home-Befehl. Ohne ihn bleibt die Gruppe nur für Journal und Statistik; das Modell sieht alle Werkzeuge, die die Rechte erlauben. 10. Modell ordnet ein?: Hat keine Regel eine Gruppe gefunden und steht „Fragen, die keine Regel erkennt“ auf „Modell“, wählt das Sprachmodell einmal eine Gruppe aus der festen Liste (nur JSON, nur die eigene Nachricht). Die Frage läuft schon ab dem Beginn der Vorbereitung nebenher; gewartet wird höchstens 4 Sekunden, mit „Schneller Antwortbeginn“ nur 300 ms nach der Vorbereitung. Mit der Einordnung mit Wahrscheinlichkeit zählt die Wahl erst ab der Schwelle (Standard 80 %). Die Hinweis-Gruppen bleiben neben der Wahl. In einer Wartungspause des Sprachmodells wird es nicht gefragt. 11. Eingrenzen: Bei einer klaren Gruppe bleiben ihre Werkzeuge, dazu immer 5 feste (sich etwas merken, eigene Dokumente, PC), die Werkzeuge der Hinweise, die zusätzlichen Werkzeuge des Admins für diese Gruppe (höchstens 6) und was die eigenen Worte ausdrücklich nennen („aufs reMarkable“). "
+"text": "ene Frage, nie die Antwort. Im Journal steht „weiche: Folgefrage“. Ebenso ein schlichtes „Ja“/„Nein“ oder ein Knopf der Rückfrage-Karte auf die Frage der Antwort davor (ablauf.was_asked, zehn Minuten, dasselbe Gespräch): „weiche: Antwort auf Rückfrage“. 9. Gezielte Werkzeugwahl an?: Nur mit diesem Schalter grenzt die Weiche ein, und nicht bei einem Bild oder einem direkten Smart-Home-Befehl. Ohne ihn bleibt die Gruppe nur für Journal und Statistik; das Modell sieht alle Werkzeuge, die die Rechte erlauben. 10. Modell ordnet ein?: Hat keine Regel eine Gruppe gefunden und steht „Fragen, die keine Regel erkennt“ auf „Modell“, wählt das Sprachmodell einmal eine Gruppe aus der festen Liste (nur JSON, nur die eigene Nachricht). Die Frage läuft schon ab dem Beginn der Vorbereitung nebenher; gewartet wird höchstens 4 Sekunden, mit „Schneller Antwortbeginn“ nur 300 ms nach der Vorbereitung. Mit der Einordnung mit Wahrscheinlichkeit zählt die Wahl erst ab der Schwelle (Standard 80 %). Die Hinweis-Gruppen bleiben neben der Wahl. In einer Wartungspause des Sprachmodells wird es nicht gefragt. 11. Eingrenzen: Bei einer klaren Gruppe bleiben ihre Werkzeuge, dazu immer 5 feste (sich etwas merken, "
 },
 {
 "lang": "de",
@@ -1725,7 +1725,15 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "Alles nur, soweit schon angeboten. Ist von der Gruppe nichts angeboten oder steht die Gruppe auf „nicht eingrenzen“, bleiben alle. 12. Knapp?: Bleibt die Frage ohne Gruppe, steht die Einstellung auf „Knapp“ und verlangt kein Pflicht-Wort ein Werkzeug, bekommt das Modell nur die kurze Liste: Websuche, Wikipedia, Archiv, frühere Gespräche, die festen Werkzeuge und die Werkzeuge der Hinweis-Gruppen. Es liest weniger und beginnt früher. 13. Erstes Werkzeug festlegen: Eine einzige klare Gruppe, ein Pflicht-Werkzeug und nur dieses aus der Gruppe angeboten: die erste Runde muss genau dieses rufen („Wie wird das Wetter?“). Ein kurzer, eindeutiger Lesesatz („Wie ist das Wetter heute?“) wird mit „Eindeutiges direkt abrufen“ vom Panel selbst abgerufen, für morgen und übermorgen mit dem Datum, das das Panel ausrechnet. 14. Journal und Zählung: Jeder Zug schreibt eine Zeile „weiche: Absicht … | Grund … | Hinweis … | Werkzeuge x von y | Pflicht … | gesperrt … | eingrenzen an/aus“; ein Grundwort steht nur da, wenn es noch in der Nachricht steht. Gezählt werden je Tag und Gruppe nur Anzahlen (8 Tage), nie ein Wort der Frage. Dann geht die Liste an die Antwort."
+"text": "eigene Dokumente, PC), die Werkzeuge der Hinweise, die zusätzlichen Werkzeuge des Admins für diese Gruppe (höchstens 6) und was die eigenen Worte ausdrücklich nennen („aufs reMarkable“). Alles nur, soweit schon angeboten. Ist von der Gruppe nichts angeboten oder steht die Gruppe auf „nicht eingrenzen“, bleiben alle. 12. Knapp?: Bleibt die Frage ohne Gruppe, steht die Einstellung auf „Knapp“ und verlangt kein Pflicht-Wort ein Werkzeug, bekommt das Modell nur die kurze Liste: Websuche, Wikipedia, Archiv, frühere Gespräche, die festen Werkzeuge und die Werkzeuge der Hinweis-Gruppen. Es liest weniger und beginnt früher. 13. Erstes Werkzeug festlegen: Eine einzige klare Gruppe, ein Pflicht-Werkzeug und nur dieses aus der Gruppe angeboten: die erste Runde muss genau dieses rufen („Wie wird das Wetter?“). Ein kurzer, eindeutiger Lesesatz („Wie ist das Wetter heute?“) wird mit „Eindeutiges direkt abrufen“ vom Panel selbst abgerufen, für morgen und übermorgen mit dem Datum, das das Panel ausrechnet. 14. Journal und Zählung: Jeder Zug schreibt eine Zeile „weiche: Absicht … | Grund … | Hinweis … | Werkzeuge x von y | Pflicht … | gesperrt … | eingrenzen an/aus“; ein Grundwort steht nur da, wen"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Ablauf",
+"title": "Ablauf",
+"text": "n es noch in der Nachricht steht. Gezählt werden je Tag und Gruppe nur Anzahlen (8 Tage), nie ein Wort der Frage. Dann geht die Liste an die Antwort."
 },
 {
 "lang": "de",
@@ -1877,7 +1885,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Was du siehst",
 "title": "Was du siehst",
-"text": "- Zustand → Logs → Anfragen: jede Runde, jedes Werkzeug, „Antwort-Prüfung“ und „Taten-Prüfung“ mit Zahlen, nie mit Text. - Zustand → Logs → Erweitert → Gespräch: wo die Zeit einer Antwort blieb, bis zum ersten Ton. - Zustand → Verbessern: wie oft die eingebauten Regeln heute eingegriffen haben. - Unter der Antwort (Funktionen → Ablauf und Freigabe zeigen): jedes Werkzeug mit ✓/⚠ und Zeit, ein wartender Vorschlag als Karte mit Ja und Nein; nur Namen und Zahlen, nie Ergebnisse."
+"text": "- Zustand → Logs → Anfragen: jede Runde, jedes Werkzeug, „Antwort-Prüfung“ und „Taten-Prüfung“ mit Zahlen, nie mit Text. - Zustand → Logs → Erweitert → Gespräch: wo die Zeit einer Antwort blieb, bis zum ersten Ton. - Zustand → Verbessern: wie oft die eingebauten Regeln heute eingegriffen haben. - Unter der Antwort (Funktionen → Ablauf und Freigabe zeigen): jedes Werkzeug mit ✓/⚠ und Zeit, ein wartender Vorschlag als Karte mit Ja und Nein, sonst eine Rückfrage am Ende mit ihren Antworten als Knöpfen (ablauf.asks); nur Namen und Zahlen, nie Ergebnisse."
 },
 {
 "lang": "de",
@@ -5828,6 +5836,22 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Rückfrage-Karten (V01.0.806, Dominik 2026-10-18 „1a 2a 3a 4a 5a“)",
+"text": "Rückfrage-Karten (V01.0.806, Dominik 2026-10-18 „1a 2a 3a 4a 5a“): Teil von „Ablauf und Freigabe zeigen“, kein eigener Schalter. Wartet kein Vorschlag und endet die Antwort mit einer Frage an die Person, stehen ihre Antworten als Knöpfe darunter (ablauf.asks, feste Regeln nur auf den letzten Satz, nie vom Modell gemacht): „Ja“ und „Nein“ bei einem festen Satzanfang („Soll ich“, „Möchtest du“, „Willst du“, „Darf ich“, „Passt das“, „…, oder?“, „Shall I“ …), bei „A oder B?“ bzw. „A, B oder C?“ die kurzen Teile aus den Wörtern der Frage (höchstens 3, je höchstens 30 Zeichen und 4 Wörter, keine Links, Zeichen oder langen Zahlen; ein Verb am Ende wie „ablegen“ fällt weg) und „Anders …“, das nur den Cursor ins Textfeld setzt. Nach Mail- oder anderem fremden Text nie Teile der Frage auf einem Knopf (dann nur Ja/Nein, bei „A oder B?“ gar nichts). Ein Tipp schickt das Wort wie eine getippte Antwort, ausgeführt wird erst danach mit allen Regeln. Die Weiche (3a): Ein schlichtes „Ja“/„Nein“ (ablauf.short_reply) oder ein Knopf auf diese Frage behält die Gruppe der eigenen Frage davor (intent.follow_up(…, answered=True), ablauf.was_asked: dasselbe Gerät und Gespräch, zehn Minuten, einmal); vorher"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Rückfrage-Karten (V01.0.806, Dominik 2026-10-18 „1a 2a 3a 4a 5a“)",
+"text": " bekam ein „Ja“ keine Gruppe und oft nicht die nötigen Werkzeuge. Überall: Panel und Android (choiceCard), iPhone (AnswersCard, Ereignis choice), Telegram als einmalige Antworttasten, Pebble als Nachfragen zum Antippen (dann macht das Modell keine); der Lautsprecher bleibt bei Sprache. Gemerkt wird nur rueckfrage-pending.json (die Knopfwörter, zehn Minuten). Protokoll: chat: rueckfrage-karte gezeigt | n, weiche: Antwort auf Rückfrage - Gruppe. Plan plaene/rueckfrage-karten.md; Tests test_ablauf.Questions, test_ablauf.Chat, test_pebble, test_klaeren."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Das kannst du auch sagen (V01.0.684, Grundausstattung)",
 "text": "Das kannst du auch sagen (V01.0.684, Grundausstattung): Funktionen, die bei dir schon an sind, die du aber nie benutzt, weil du das Wort nicht kennst („Mal mir …“, „Ruf mich morgen um sieben an“), zeigt der Spark mit einem Beispielsatz zum Antippen. Ein Tipp setzt den Satz nur ins Eingabefeld, du schickst ihn selbst ab; er läuft dann wie getippt durch die Weiche und jede Regel. Welche Sätze kommen, entscheiden feste Regeln im Panel (saetze.py), nie das Modell; die Sätze stehen fest im Code, deutsch und englisch, in derselben Liste, die test_werkzeug_abdeckung prüft (werkzeug_abdeckung.SENTENCES, jeder Satz landet wirklich beim Werkzeug). Vorgeschlagen wird nur, was features.allowed für dein Profil erlaubt, was eingerichtet ist (Kalender, Postfach) und was am Gerät geht. Wo es auftaucht: (1) unter der Antwort bis zu drei passende Folgesätze (feste Tabelle, z. B. nach dem Wetter „Erinnere mich morgen früh an den Schirm“, nach einem Bild „Mach den Hintergrund blau“), nur Werkzeuge, die du noch nie benutzt hast; (2) „Probier mal“ im leeren Chat: drei Sätze, jede Woche andere; (3) „Meintest du …?“ bei Wörtern, die die Weiche nicht kennt, aber nahe liegen (z. B. „klingel mich“ → Anruf, „"
 },
@@ -9221,7 +9245,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "nd also the answer with Markdown (at most 60000 characters) when it hides no fewer secrets. With its switches the watch also gets up to 3 follow-ups to tap (the model only suggests, watch.follow_clean keeps short questions without yes, no, links or numbers; never after mail, web or a proposal), a proposal as ✓ and ✕, and through /api/watch/sync the quick commands and the next 8 reminders, which it rings itself as wake-ups; push waits for it first. The Spark watchface fetches the next appointment, reminder, weather, a hint and for admins an outage through /api/watch/blick every 15 minutes; /api/watch/brief builds My day and My week from fixed sentences, /api/watch/merken keeps a dictated sentence in memory (with the place to about 100 m only with its own switch). /api/watch/chats and /api/watch/chat show the latest chats (no private ones) and send a tapped or dictated reply through chats.send; up to 3 suggestions of the model pass the fixed check pebblewatch.reply_clean. /api/watch/fern switches only devices on the own list with fixed buttons (never with a smart home code word), /api/watch/gesundheit keeps steps, pulse and sleep sealed in the profile, never for the model. 10. Black "
+"text": "nd also the answer with Markdown (at most 60000 characters) when it hides no fewer secrets. With its switches the watch also gets up to 3 follow-ups to tap (the model only suggests, watch.follow_clean keeps short questions without yes, no, links or numbers; never after mail, web or a proposal; when the answer ends with a question, its buttons from ablauf.asks are the follow-ups), a proposal as ✓ and ✕, and through /api/watch/sync the quick commands and the next 8 reminders, which it rings itself as wake-ups; push waits for it first. The Spark watchface fetches the next appointment, reminder, weather, a hint and for admins an outage through /api/watch/blick every 15 minutes; /api/watch/brief builds My day and My week from fixed sentences, /api/watch/merken keeps a dictated sentence in memory (with the place to about 100 m only with its own switch). /api/watch/chats and /api/watch/chat show the latest chats (no private ones) and send a tapped or dictated reply through chats.send; up to 3 suggestions of the model pass the fixed check pebblewatch.reply_clean. /api/watch/fern switches only devices on the own list with fixed buttons (never with a smart home code word), /api/watch/gesundh"
 },
 {
 "lang": "en",
@@ -9229,7 +9253,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "out the code word: Before storing, the smart home code word is replaced by [Codewort]. In Telegram the bot deletes the message with the code word or asks the person to delete it. 11. In the profile's history: verlauf.keep puts question and answer into the channel's conversation of the day („Telegram“, „Siri“, „Uhr“ with the date). With „One conversation for all channels“ they go into the day's main conversation, marked with their channel."
+"text": "eit keeps steps, pulse and sleep sealed in the profile, never for the model. 10. Black out the code word: Before storing, the smart home code word is replaced by [Codewort]. In Telegram the bot deletes the message with the code word or asks the person to delete it. 11. In the profile's history: verlauf.keep puts question and answer into the channel's conversation of the day („Telegram“, „Siri“, „Uhr“ with the date). With „One conversation for all channels“ they go into the day's main conversation, marked with their channel."
 },
 {
 "lang": "en",
@@ -9773,7 +9797,7 @@
 "file": "Architecture and data flow",
 "head": "Settings",
 "title": "Settings",
-"text": "- People and devices → Blocked functions: what a single profile does not get. - Features → Ask instead of guessing: the panel asks instead of guessing (default off). - Features → Switch: the fixed rules that narrow the tools. - Features → Show steps and approvals: tools below the answer, a waiting proposal as a card with Yes and No (own profile and device only, default off)."
+"text": "- People and devices → Blocked functions: what a single profile does not get. - Features → Ask instead of guessing: the panel asks instead of guessing (default off). - Features → Switch: the fixed rules that narrow the tools. - Features → Show steps and approvals: tools below the answer, a waiting proposal as a card with Yes and No and a question at the end of the answer with its answers as buttons (yes/no, A or B); a short yes to it keeps the topic of the question before (own profile and device only, default off)."
 },
 {
 "lang": "en",
@@ -9829,7 +9853,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "?“ is a message, „What is in the news?“ the web search; a job that comes back regularly or watches something is an agent; a question about language, nature or a difference is never a device; a price or a strike is the web search, not the iPhone or the train; „Call me“ is the Spark calling back, not the iPhone; „a list of …“ in a file is not the own list. Last, the admin's „Not with“ words take groups out again. 6. Group recognized?: One group or at most 2 count as clear and narrow. More groups at once are not clear enough: then every tool stays. 7. Note hint words: If no rule recognizes a group for sure, the switch looks for weaker hint words: „water the plants“ points to the weather, „Friday“ to the calendar. A hint never narrows; it only makes sure its group's tools stay when something narrows later. 8. Follow-up?: If the message is short (at most 80 characters), points back („and“, „that“, „it“) and the own question just before had a clear group, that group holds again. Only the own question counts, never the answer. The journal says „weiche: Folgefrage“. 9. Targeted tool choice on?: Only with this switch does the switch narrow, and not with a picture or a direct smart home comm"
+"text": "?“ is a message, „What is in the news?“ the web search; a job that comes back regularly or watches something is an agent; a question about language, nature or a difference is never a device; a price or a strike is the web search, not the iPhone or the train; „Call me“ is the Spark calling back, not the iPhone; „a list of …“ in a file is not the own list. Last, the admin's „Not with“ words take groups out again. 6. Group recognized?: One group or at most 2 count as clear and narrow. More groups at once are not clear enough: then every tool stays. 7. Note hint words: If no rule recognizes a group for sure, the switch looks for weaker hint words: „water the plants“ points to the weather, „Friday“ to the calendar. A hint never narrows; it only makes sure its group's tools stay when something narrows later. 8. Follow-up?: If the message is short (at most 80 characters), points back („and“, „that“, „it“) and the own question just before had a clear group, that group holds again. Only the own question counts, never the answer. The journal says „weiche: Folgefrage“. So does a plain „yes“/„no“ or a button of the question card to the question of the answer before (ablauf.was_asked, ten minut"
 },
 {
 "lang": "en",
@@ -9837,7 +9861,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "and. Without it the group only goes to the journal and statistics; the model sees every tool the rights allow. 10. Model sorts?: If no rule found a group and „Questions no rule recognizes“ is set to the model, the language model picks one group from the fixed list once (JSON only, only the own message). The question already runs beside the preparation from its start; the wait is at most 4 seconds, with „Fast answer start“ only 300 ms after the preparation. With classification with probabilities the pick only counts from the threshold (default 80 %). The hint groups stay beside the pick. During a maintenance pause of the language model it is not asked. 11. Narrow: With a clear group its tools stay, plus always 5 fixed ones (remembering something, own documents, PC), the hints' tools, the admin's extra tools for this group (at most 6) and what the own words name explicitly („onto the reMarkable“). All only as far as already offered. If nothing of the group is offered or the group is set to „do not narrow“, all stay. 12. Lean?: If the question stays without a group, the setting is „Lean“ and no must word requires a tool, the model only gets the short list: web search, Wikipedia, archi"
+"text": "es, same conversation): „weiche: Antwort auf Rückfrage“. 9. Targeted tool choice on?: Only with this switch does the switch narrow, and not with a picture or a direct smart home command. Without it the group only goes to the journal and statistics; the model sees every tool the rights allow. 10. Model sorts?: If no rule found a group and „Questions no rule recognizes“ is set to the model, the language model picks one group from the fixed list once (JSON only, only the own message). The question already runs beside the preparation from its start; the wait is at most 4 seconds, with „Fast answer start“ only 300 ms after the preparation. With classification with probabilities the pick only counts from the threshold (default 80 %). The hint groups stay beside the pick. During a maintenance pause of the language model it is not asked. 11. Narrow: With a clear group its tools stay, plus always 5 fixed ones (remembering something, own documents, PC), the hints' tools, the admin's extra tools for this group (at most 6) and what the own words name explicitly („onto the reMarkable“). All only as far as already offered. If nothing of the group is offered or the group is set to „do not narrow“"
 },
 {
 "lang": "en",
@@ -9845,7 +9869,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "ve, earlier conversations, the fixed tools and the tools of the hint groups. It reads less and starts sooner. 13. Fix the first tool: One single clear group, one required tool and only that one of the group offered: the first round must call exactly that one („What will the weather be?“). A short, clear reading sentence („What is the weather today?“) is fetched by the panel itself with „Fetch clear questions directly“, for tomorrow and the day after with the date the panel works out. 14. Journal and count: Every turn writes a line „weiche: Absicht … | Grund … | Hinweis … | Werkzeuge x von y | Pflicht … | gesperrt … | eingrenzen an/aus“; a reason word only shows when it is still in the message. Per day and group only counts are kept (8 days), never a word of the question. Then the list goes to the answer."
+"text": ", all stay. 12. Lean?: If the question stays without a group, the setting is „Lean“ and no must word requires a tool, the model only gets the short list: web search, Wikipedia, archive, earlier conversations, the fixed tools and the tools of the hint groups. It reads less and starts sooner. 13. Fix the first tool: One single clear group, one required tool and only that one of the group offered: the first round must call exactly that one („What will the weather be?“). A short, clear reading sentence („What is the weather today?“) is fetched by the panel itself with „Fetch clear questions directly“, for tomorrow and the day after with the date the panel works out. 14. Journal and count: Every turn writes a line „weiche: Absicht … | Grund … | Hinweis … | Werkzeuge x von y | Pflicht … | gesperrt … | eingrenzen an/aus“; a reason word only shows when it is still in the message. Per day and group only counts are kept (8 days), never a word of the question. Then the list goes to the answer."
 },
 {
 "lang": "en",
@@ -9997,7 +10021,7 @@
 "file": "Architecture and data flow",
 "head": "What you see",
 "title": "What you see",
-"text": "- Status → Logs → Requests: every round, every tool, „answer check“ and „check deeds“ with numbers, never with text. - Status → Logs → Advanced → Conversation: where the time of an answer went, up to the first sound. - Status → Improve: how often the built-in rules stepped in today. - Below the answer (Features → Show steps and approvals): every tool with ✓/⚠ and time, a waiting proposal as a card with Yes and No; only names and numbers, never results."
+"text": "- Status → Logs → Requests: every round, every tool, „answer check“ and „check deeds“ with numbers, never with text. - Status → Logs → Advanced → Conversation: where the time of an answer went, up to the first sound. - Status → Improve: how often the built-in rules stepped in today. - Below the answer (Features → Show steps and approvals): every tool with ✓/⚠ and time, a waiting proposal as a card with Yes and No, else a question at the end with its answers as buttons (ablauf.asks); only names and numbers, never results."
 },
 {
 "lang": "en",
@@ -13774,6 +13798,22 @@
 "head": "Voice chat",
 "title": "Show steps and approvals (V01.0.743, off by default)",
 "text": " in the Android app (which shows the panel) and in the iPhone app (the same events step and confirm). Switch: Features → \"Show steps and approvals\". Log: chat: freigabe-karte gezeigt | n. Plan: plaene/redde-ideen/plan.md (package A); tests: app/tests/test_ablauf.py."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Question cards (V01.0.806, Dominik 2026-10-18 \"1a 2a 3a 4a 5a\")",
+"text": "Question cards (V01.0.806, Dominik 2026-10-18 \"1a 2a 3a 4a 5a\"): part of \"Show steps and approvals\", no switch of its own. When no proposal waits and the answer ends with a question to the person, its answers stand below as buttons (ablauf.asks, fixed rules on the last sentence only, never made by the model): \"Ja\" and \"Nein\" (or \"Yes\"/\"No\") for a fixed sentence start (\"Soll ich\", \"Möchtest du\", \"Willst du\", \"Darf ich\", \"Passt das\", \"…, oder?\", \"Shall I\" …); for \"A or B?\" or \"A, B or C?\" the short parts from the question's own words (at most 3, each at most 30 characters and 4 words, no links, signs or long numbers; a trailing verb like \"ablegen\" is dropped) and \"Something else …\", which only puts the cursor in the text field. After mail or other outside text never parts of the question on a button (then only yes/no, for \"A or B?\" nothing). A tap sends the word like a typed answer; only then is anything done, with all rules. The Weiche (3a): a plain \"yes\"/\"no\" (ablauf.short_reply) or a button for this question keeps the group of the person's own question before (intent.follow_up(…, answered=True), ablauf.was_asked: same device and conversation, ten minutes, once); before, a \"yes\" go"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Question cards (V01.0.806, Dominik 2026-10-18 \"1a 2a 3a 4a 5a\")",
+"text": "t no group and often not the tools it needed. Everywhere: panel and Android (choiceCard), iPhone (AnswersCard, event choice), Telegram as a one-time reply keyboard, Pebble as follow-ups to tap (then the model makes none); the speaker stays with speech. Only rueckfrage-pending.json is kept (the button words, ten minutes). Log: chat: rueckfrage-karte gezeigt | n, weiche: Antwort auf Rückfrage - group. Plan plaene/rueckfrage-karten.md; tests test_ablauf.Questions, test_ablauf.Chat, test_pebble, test_klaeren."
 },
 {
 "lang": "en",

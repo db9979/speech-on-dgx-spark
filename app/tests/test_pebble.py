@@ -178,6 +178,26 @@ class Pebble(unittest.TestCase):
         job.proposal, job.error = "", "Fehler"
         self.assertEqual(watch.follow_skip(job, "x"), "error")
 
+    def test_an_answer_that_asks_brings_its_buttons_as_follow_ups(self):
+        # Rückfrage-Karten (ablauf.asks): Ja/Nein or „A oder B“ on the watch, the model makes none then
+        import ablauf
+
+        class Stream:
+            def __init__(self, evs):
+                self.body_iterator = self.it(evs)
+
+            async def it(self, evs):
+                for ev in evs:
+                    yield "data: " + json.dumps(ev) + "\n\n"
+        job = watch.Job(speak=False)
+        said = "Morgen um 17 Uhr. Soll ich ihn so eintragen?"
+        asyncio.run(watch.run(job, Stream([{"type": "text", "delta": said}, ablauf.asks(said)])))
+        self.assertEqual(job.follow, ["Ja", "Nein"])
+        self.assertEqual(watch.follow_skip(job, "Trag morgen 17 Uhr Zahnarzt ein"), "question card")
+        job = watch.Job(speak=False)
+        asyncio.run(watch.run(job, Stream([{"type": "choice", "list": True, "options": [{"label": "Lampe"}]}])))
+        self.assertEqual(job.follow, [])   # the long list stays in the panel
+
     def test_poll_waits_for_the_follow_ups(self):
         async def go():
             job = watch.Job(speak=False)

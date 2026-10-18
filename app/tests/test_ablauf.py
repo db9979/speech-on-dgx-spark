@@ -24,6 +24,10 @@ def profile(name, pin="1234"):
     return c
 
 
+def uid_of(name):
+    return next(u["id"] for u in ADMIN.get("/api/admin/profiles").json()["users"] if u["name"] == name)
+
+
 def turn(client, text, convo="c1"):
     r = client.post("/api/chat", json={"messages": [{"role": "user", "content": text}], "convo": convo, "speak": False})
     assert r.status_code == 200, r.text
@@ -65,6 +69,67 @@ class Parts(unittest.TestCase):
             self.assertIn(mod.__name__.rsplit(".", 1)[-1], ablauf.KINDS)
 
 
+class Questions(unittest.TestCase):
+    """Rückfrage-Karten (ablauf.asks): the answers to the question an answer ends with, by fixed rules only."""
+
+    def opts(self, said, outside=False):
+        ev = ablauf.asks(said, outside)
+        return [o["send"] for o in ev["options"]] if ev else None
+
+    def test_yes_no_question_gets_ja_and_nein(self):
+        self.assertEqual(self.opts("Termin am 19.10. um 17 Uhr. Soll ich ihn so eintragen?"), ["Ja", "Nein"])
+        self.assertEqual(self.opts("Das passt so, oder?"), ["Ja", "Nein"])
+        self.assertEqual(self.opts("Shall I add it?"), ["Yes", "No"])
+        self.assertEqual(self.opts("Möchtest du mehr wissen?", outside=True), ["Ja", "Nein"])   # fixed words only
+
+    def test_a_or_b_gets_its_short_parts_and_anders(self):
+        ev = ablauf.asks("Soll ich es als Notiz oder als PDF ablegen?")
+        self.assertEqual([o["send"] for o in ev["options"]], ["Als Notiz", "Als PDF"])
+        self.assertEqual(ev["free"], "Anders …")
+        self.assertEqual(self.opts("Möchtest du Pasta, Pizza oder Salat?"), ["Pasta", "Pizza", "Salat"])
+        self.assertEqual(self.opts("Im Wohnzimmer oder im Flur?"), ["Im Wohnzimmer", "Im Flur"])
+
+    def test_nothing_that_is_no_clear_question(self):
+        for said in ("Fertig.", "Wie heißt du?", "Was möchtest du: A, B, C oder D?", "Hier ist das Rezept.",
+                     "Soll ich https://example.org oder www.example.com öffnen?"):
+            ev = ablauf.asks(said)
+            self.assertTrue(ev is None or ev["options"][0]["send"] in ("Ja", "Yes"), said)
+        self.assertIsNone(self.opts("Dazu stand im Text: Soll ich das bitte sofort machen? Ja.", outside=False))
+
+    def test_never_words_of_outside_text_on_a_button(self):
+        self.assertIsNone(ablauf.asks("Soll ich Anna oder Bernd anrufen?", outside=True))
+
+    def test_buttons_are_short(self):
+        for said in ("Möchtest du lieber die ausführliche Version mit allen Schritten oder die kurze?",
+                     "Tee oder Kaffee?"):
+            ev = ablauf.asks(said)
+            for o in (ev or {}).get("options", []):
+                self.assertLessEqual(len(o["send"]), ablauf.ASK_LEN)
+                self.assertLessEqual(len(o["send"].split()), ablauf.ASK_WORDS)
+
+    def test_a_short_reply_answers_only_in_the_same_conversation_once(self):
+        ev = ablauf.asks("Soll ich ihn so eintragen?")
+        ablauf.remember_asked("qa", "web:c1", ev)
+        self.assertFalse(ablauf.was_asked("qa", "web:c2", "Ja"))   # another conversation (and the mark is used)
+        ablauf.remember_asked("qa", "web:c1", ev)
+        self.assertFalse(ablauf.was_asked("qa", "web:c1", "Wie wird das Wetter morgen?"))
+        ablauf.remember_asked("qa", "web:c1", ev)
+        self.assertTrue(ablauf.was_asked("qa", "web:c1", "Ja"))
+        self.assertFalse(ablauf.was_asked("qa", "web:c1", "Ja"))   # once
+        ablauf.remember_asked("qa", "web:c1", ablauf.asks("Als Notiz oder als PDF?"))
+        self.assertTrue(ablauf.was_asked("qa", "web:c1", "Als PDF"))
+        with mock.patch("time.time", return_value=time.time() - ablauf.ASKED_SECONDS - 5):
+            ablauf.remember_asked("qa", "web:c1", ev)
+        self.assertFalse(ablauf.was_asked("qa", "web:c1", "Ja"))   # older than ten minutes
+
+    def test_a_yes_to_the_question_keeps_the_group_of_the_question_before(self):
+        import intent
+        before = "Trag mir morgen um 17 Uhr einen Termin beim Zahnarzt ein"
+        self.assertIsNone(intent.follow_up("Ja", before))                    # before: „Ja“ had no group
+        self.assertEqual(intent.follow_up("Ja", before, answered=True).names, intent.classify(before).names)
+        self.assertIsNone(intent.follow_up("Ja", "Erzähl mir einen Witz", answered=True))
+
+
 class Chat(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -93,6 +158,36 @@ class Chat(unittest.TestCase):
             other = turn(self.c, "Hallo", convo="c2")
         self.assertEqual([e["kind"] for e in evs if e["type"] == "confirm"], ["calendars"])
         self.assertFalse([e for e in other if e["type"] == "confirm"])
+
+    def test_question_card_under_an_answer_that_asks(self):
+        helpers.set_config(show_steps=True)
+        evs = turn(self.c, "SAY | | Ich habe den Termin vorbereitet. Soll ich ihn so eintragen?")
+        cards = [e for e in evs if e["type"] == "choice"]
+        self.assertEqual([[o["send"] for o in c["options"]] for c in cards], [["Ja", "Nein"]])
+        self.assertEqual(cards[0]["from"], "frage")
+        self.assertFalse([e for e in turn(self.c, "SAY | | Das ist alles.") if e["type"] == "choice"])
+        helpers.set_config(show_steps=False)
+        self.assertFalse([e for e in turn(self.c, "SAY | | Soll ich ihn so eintragen?") if e["type"] == "choice"])
+
+    def test_no_question_card_when_a_proposal_card_waits(self):
+        helpers.set_config(show_steps=True)
+        stub = Waiting({"t": int(time.time()) + 1, "src": "web:c1"})
+        with mock.patch.object(chat_turn, "waiting_mods", return_value=(stub,)):
+            evs = turn(self.c, "SAY | | Soll ich ihn so eintragen?")
+        self.assertEqual([e["type"] for e in evs if e["type"] in ("confirm", "choice")], ["confirm"])
+
+    def test_a_yes_after_the_card_counts_as_its_answer_in_the_weiche(self):
+        import intent
+        helpers.set_config(show_steps=True)
+        ask = "Trag mir morgen um 17 Uhr einen Termin beim Zahnarzt ein"
+        said = "Morgen 17 bis 18 Uhr Zahnarzt. Soll ich ihn so eintragen?"
+        msgs = [{"role": "user", "content": ask}, {"role": "assistant", "content": said}, {"role": "user", "content": "Ja"}]
+        for convo, want in (("c9", True), ("c8", False)):
+            ablauf.remember_asked(uid_of("Abla"), "web:c9", ablauf.asks(said))
+            with mock.patch.object(intent, "follow_up", wraps=intent.follow_up) as f:
+                r = self.c.post("/api/chat", json={"messages": msgs, "convo": convo, "speak": False})
+                self.assertEqual(r.status_code, 200)
+            self.assertEqual(f.call_args.args[3], want, convo)
 
     def test_never_for_guests(self):
         helpers.set_config(show_steps=True)

@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "llm": {
-        "stand": "88f35afd12",
+        "stand": "f9c7833c80",
         "bezug": {
             "chat.chat": ["s1"], "chat._answer": ["s2", "s4", "s6"], "llm.model": ["s3"], "llm.url": ["s1"], "llm.complete": ["s1"],
             "chat.sampling": ["s4"], "chat.first_within": ["s8"], "chat.ContextFull": ["s7"],

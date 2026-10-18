@@ -214,6 +214,10 @@ async def run(job: Job, response):
                 elif kind == "reminder":
                     job.agenda = True
                     continue
+                elif kind == "choice" and not ev.get("list"):   # the answer asks (ablauf.asks, klaeren.py): its buttons
+                    job.follow = [str(o.get("send") or o.get("label") or "")[:FOLLOW_LEN] for o in ev.get("options") or []
+                                  if isinstance(o, dict) and (o.get("send") or o.get("label"))][:FOLLOW_MAX]
+                    continue
                 elif kind == "error" and not job.error:
                     job.error = str(ev.get("message", "Fehler"))[:200]
                 else:
@@ -263,7 +267,8 @@ async def poll(job: Job, t: int, a: int, wait: float = 4.0):
 # ---------------------------------------------------------------- follow-ups to tap (Uhr: Nachfragen zum Antippen)
 # The model only suggests text: the person reads it on the watch and taps it, then it goes as a new question through
 # every rule of the panel. Never after an answer from outside text, a proposal, an error or Notaus; the panel keeps
-# only short questions without yes or no, numbers of codes or links.
+# only short questions without yes or no, numbers of codes or links. An answer that asks the person brings its own
+# buttons (ablauf.asks: Ja/Nein or „A oder B“, fixed rules): those are the follow-ups then, the model makes none.
 FOLLOW_MAX = 3
 FOLLOW_LEN = 48
 FOLLOW_TIMEOUT = 6.0
@@ -299,6 +304,8 @@ def follow_skip(job, question):
         return "outside text"
     if job.proposal:
         return "proposal"
+    if job.follow:
+        return "question card"
     if not job.text.strip():
         return "empty"
     if re.search(r"(?i)\bnotaus\b", str(question)) or re.fullmatch(r"(?i)\W*(ja|nein|yes|no)\W*", str(question)):

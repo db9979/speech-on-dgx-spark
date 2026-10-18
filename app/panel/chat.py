@@ -2266,11 +2266,13 @@ async def _answer(request, turn):
 
     async def events():
         outside = carry in ("outside", "mail")
+        asked = False   # the panel's own question (klaeren.py) already has its buttons: no Rückfrage-Karte
         try:
             while (ev := await out.get()) is not None:
                 if guest and ev.get("type") == "error":
                     ev = {"type": "error", "code": ev.get("code") or "error"}
                 outside = outside or ev.get("type") in ("outside", "mail")
+                asked = asked or ev.get("type") == "choice"
                 yield f"data: {json.dumps(ev)}\n\n"
             await asyncio.to_thread(note_wait, turn, tm, t0, body.get("client") or "web")
             if tm["on"]:
@@ -2312,8 +2314,15 @@ async def _answer(request, turn):
                 yield f"data: {json.dumps(more)}\n\n"
             if getattr(turn, "steps_on", False):   # Freigabe-Karte (ablauf.py): a proposal of this answer waits for "Ja"
                 import ablauf
-                for ev in ablauf.waiting(who["id"], chat_turn.waiting_mods(), t0, src):
+                cards = ablauf.waiting(who["id"], chat_turn.waiting_mods(), t0, src)
+                for ev in cards:
                     yield f"data: {json.dumps(ev)}\n\n"
+                # Rückfrage-Karte: the answer ends with a question to the person; its answers as buttons (fixed rules)
+                ask_ev = None if cards or screen or asked else ablauf.asks(trace["said"], outside)
+                if ask_ev:
+                    ablauf.remember_asked(who["id"], src, ask_ev)
+                    print(f"chat: rueckfrage-karte gezeigt | {len(ask_ev['options'])}", flush=True)
+                    yield f"data: {json.dumps(ask_ev)}\n\n"
             yield f"data: {json.dumps({'type': 'done', 'total': round(time.time() - t0, 3)})}\n\n"
         finally:  # also runs when the browser aborts (barge-in): stop LLM and TTS
             for t in tasks:
