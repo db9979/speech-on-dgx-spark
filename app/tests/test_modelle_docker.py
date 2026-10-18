@@ -51,7 +51,7 @@ class Rezept(unittest.TestCase):
         self.assertEqual(a[a.index("--security-opt") + 1], "no-new-privileges")
         self.assertEqual(a[a.index("--user") + 1], "990:990")
         flach = " ".join(a)
-        for nie in ("--privileged", "--network host", "--net=host", "--ipc", "seccomp", "apparmor", "HF_TOKEN",
+        for nie in ("--privileged", "--network host", "--net=host", "--ipc", "unconfined", "apparmor", "HF_TOKEN",
                     "--cap-add", "--pid", "/var/run/docker.sock", "--trust-remote-code", "--host 0.0.0.0", "--port"):
             self.assertNotIn(nie, flach)
         mounts = [a[i + 1] for i, x in enumerate(a) if x == "-v"]
@@ -66,6 +66,29 @@ class Rezept(unittest.TestCase):
         self.assertEqual(a[a.index("--uds") + 1], modelle.DOCKER_SOCK)
         self.assertEqual(a[a.index("--revision") + 1], modelle.eintrag(FN)["revision"])
         self.assertNotIn("--speculative-config", args(mtp=False))
+        opts = [a[i + 1] for i, x in enumerate(a) if x == "--security-opt"]
+        self.assertEqual(opts, ["no-new-privileges", "seccomp=" + os.path.join(APP, "docker-seccomp-b12x.json")])
+
+    def test_own_seccomp_profile_only_adds_io_uring(self):
+        """tars 2026-10-18: b12x reads its PLE table with io_uring, which Docker's default profile blocks. The own profile
+        is that default plus exactly the three io_uring calls, pinned by its hash; seccomp is never switched off."""
+        import json
+        name, sha = modelle.DOCKER["b12x"]["seccomp"]
+        with open(os.path.join(APP, name), encoding="utf-8") as f:
+            prof = json.load(f)
+        self.assertEqual((prof["defaultAction"], prof["defaultErrnoRet"]), ("SCMP_ACT_ERRNO", 1))
+        extra = [r for r in prof["syscalls"] if "io_uring_setup" in r["names"]]
+        self.assertEqual(len(extra), 1)
+        self.assertEqual((sorted(extra[0]["names"]), extra[0]["action"]),
+                         (["io_uring_enter", "io_uring_register", "io_uring_setup"], "SCMP_ACT_ALLOW"))
+        self.assertNotIn("args", extra[0])
+        self.assertFalse(any("io_uring" in n for r in prof["syscalls"] if r is not extra[0] for n in r["names"]))
+        self.assertEqual(modelle.seccomp_profil(modelle.DOCKER["b12x"]), os.path.join(APP, name))
+        with self.assertRaises(modelle.Fehler):
+            modelle.seccomp_profil({"seccomp": (name, "0" * 64)})          # a changed file is refused
+        with self.assertRaises(modelle.Fehler):
+            modelle.seccomp_profil({"seccomp": ("../etc/x.json", sha)})
+        self.assertEqual(modelle.seccomp_profil({}), "")
 
     def test_wrong_calls_are_refused(self):
         m = modelle.eintrag(FN)
@@ -164,7 +187,9 @@ class Skript(unittest.TestCase):
         self.assertNotIn("--privileged", sh)
         self.assertNotIn("--network host", sh)
         self.assertIn('docker-bild "$1")" ] && { mess_docker', sh)  # an entry in Docker never starts natively
-        self.assertIn('docker pull -q "$image"', sh)            # the pinned image, before the language model stops
+        self.assertIn('docker pull -q "$image"', sh)
+        self.assertIn("io_uring_disabled", body)                # the host's own switch is only read, never changed
+        self.assertNotIn("sysctl", body)            # the pinned image, before the language model stops
 
 
 if __name__ == "__main__":

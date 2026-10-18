@@ -104,7 +104,11 @@ DOCKER = {"b12x": {
              "--enable-chunked-prefill", "--mamba-cache-mode", "align", "--max-num-batched-tokens", "4096",
              "--gdn-decode-kernel", "b12x", "--linear-backend", "b12x", "--moe-backend", "b12x",
              "--mm-encoder-tp-mode", "data", "--compilation-config", '{"pass_config":{"fuse_act_quant":true}}'],
-    "laden_s": 3600}}
+    "laden_s": 3600,
+    # the b12x PLE table is read from disk with io_uring, which Docker's default seccomp profile blocks (tars
+    # 2026-10-18: "io_uring initialization failed: Operation not permitted"): seccomp stays on with Docker's default
+    # profile plus exactly io_uring_setup/enter/register, a file next to this one pinned by its SHA-256
+    "seccomp": ("docker-seccomp-b12x.json", "6cc1a680ead8d595450e8b476c0c7624d6fa4aff655f0f95ebbc3b13c9a06cc3")}}
 IMAGE = re.compile(r"^[a-z0-9][a-z0-9._/-]{0,127}@sha256:[0-9a-f]{64}$")
 DOCKER_NAME = re.compile(r"^speech-spark-[a-z0-9-]{1,40}$")
 DOCKER_ORDNER = os.path.join(STATE, "docker-modelle")   # <id>/cache (writable) and <id>/sock (the engine's socket)
@@ -495,17 +499,36 @@ def docker_args(m, revision, name, uid, gid, mtp=True, hf_home=None, ordner=None
     if not DOCKER_NAME.match(str(name)):
         raise Fehler("name")
     d = DOCKER[m["vllm"]["docker"]]
+    profil = seccomp_profil(d)
     hf = os.path.realpath(hf_home or os.environ.get("HF_HOME") or os.path.expanduser("~/.cache/huggingface"))
     base = os.path.join(os.path.realpath(ordner or DOCKER_ORDNER), m["id"])
     umgebung = {"HF_HOME": "/hf", "HOME": "/cache", "HF_HUB_OFFLINE": "1", "VLLM_NO_USAGE_STATS": "1", "DO_NOT_TRACK": "1",
                 **KOMPILIEREN, **d["umgebung"]}
     a = ["run", "--rm", "--name", name, "--network", "none", "--gpus", "all", "--user", f"{_id_nr(uid)}:{_id_nr(gid)}",
-         "--cap-drop", "ALL", "--security-opt", "no-new-privileges", "--shm-size", "16g",
+         "--cap-drop", "ALL", "--security-opt", "no-new-privileges",
+         *(["--security-opt", f"seccomp={profil}"] if profil else []), "--shm-size", "16g",
          "--ulimit", "memlock=-1", "--ulimit", "stack=67108864",
          "-v", f"{hf}:/hf:ro", "-v", f"{base}/cache:/cache", "-v", f"{base}/sock:/sock"]
     for k, v in umgebung.items():
         a += ["-e", f"{k}={v}"]
     return a + ["--entrypoint", "vllm", bild, "serve"] + vllm_args(m, MESS_PORT, revision, mtp, uds=DOCKER_SOCK)
+
+
+def seccomp_profil(d):
+    """The path of a recipe's own seccomp profile ("" = Docker's default), only when the file is unchanged."""
+    if "seccomp" not in d:
+        return ""
+    name, sha = d["seccomp"]
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), name)
+    if not re.fullmatch(r"docker-seccomp-[a-z0-9]+\.json", name):
+        raise Fehler("seccomp")
+    try:
+        ok = _datei_hash(path, "sha256") == sha
+    except OSError:
+        ok = False
+    if not ok:
+        raise Fehler("seccomp")
+    return path
 
 
 def laden_frist(m):

@@ -357,6 +357,10 @@ mess_docker() {  # $1 = id, $2 = commit, $3 = --ohne-mtp or empty
   svc=$(panel_user)
   [ -n "${3:-}" ] && extra=("$3")
   dk=$(command -v docker) || { echo "modelle: messung $1 abgelehnt docker fehlt"; return 2; }
+  # the recipe's own seccomp profile allows io_uring (b12x reads from disk); the host must not switch it off
+  if [ "$(cat /proc/sys/kernel/io_uring_disabled 2>/dev/null || echo 0)" != 0 ]; then
+    echo "modelle: messung $1 abgelehnt io_uring aus"; return 2
+  fi
   base="$VAR/state/docker-modelle/$1"
   runuser -u "$svc" -- mkdir -p -- "$base/cache" "$base/sock" && runuser -u "$svc" -- rm -f -- "$base/sock/engine.sock" \
     || { echo "modelle: messung $1 abgelehnt ordner"; return 2; }

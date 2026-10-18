@@ -40,6 +40,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.766** Fix: Qwen3.8 Flash Next startet in Docker (io_uring im Container erlaubt, seccomp bleibt an)
 - **V01.0.765** Werkstatt-Fix: Testlauf und Code-Messung starten wieder (die Code-Kopie fehlte, weil git 2.43 die Freigabe des Klons nicht annahm)
 - **V01.0.764** Personen und Geräte als aufgeräumte Liste mit Kürzeln, Balken und Pfeil
 - **V01.0.763** OLED-Seiten „Pi“ und „TARS“: CPU- und RAM-Auslastung als zwei große Zahlen
@@ -49,7 +50,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.759** Fix: Einstellungen ohne „/api/mfa 403“ bei Admin-Profilen
 - **V01.0.758** Funktionen und Personen mit Symbolen wie Zustand und Einstellungen
 - **V01.0.757** Werkstatt: Testlauf, Code-Messung, Diagnose und Reparatur in einer abgeschotteten Kopie auf dem Modell-Rechner (OpenCode, ohne Daten und Internet, nichts wird eingespielt), jede Nacht testen; dazu „Weiche abstimmen“
-- **V01.0.756** Modelle einfacher: eine Kachel je Art, „Ausprobieren“ und Suche bei Hugging Face
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

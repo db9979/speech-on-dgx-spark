@@ -40,6 +40,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.766** Fix: Qwen3.8 Flash Next starts in Docker (io_uring allowed in the container, seccomp stays on)
 - **V01.0.765** Workshop fix: test run and code measurement start again (the code copy was missing because git 2.43 refused the clone)
 - **V01.0.764** People and devices as a tidy list with initials, bar and chevron
 - **V01.0.763** OLED pages "Pi" and "TARS": CPU and RAM load as two big numbers
@@ -49,7 +50,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.759** Fix: Settings without "/api/mfa 403" for admin profiles
 - **V01.0.758** Features and People with symbols like Status and Settings
 - **V01.0.757** Workshop: test run, code measurement, diagnosis and repair in a sealed-off copy on the model computer (OpenCode, no data, no internet, nothing installed), a test run every night; plus "Tune the switch"
-- **V01.0.756** Simpler models page: one tile per kind, "Try" and search at Hugging Face
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
