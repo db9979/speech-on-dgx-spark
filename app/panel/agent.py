@@ -1297,7 +1297,7 @@ async def carry_out(uid, p, ctx):
             raise ValueError("„Von selbst melden“ ist für dich aus")
         set_senders(uid, senders(uid) + [p["who"]])
         print("agent: mail sender added by voice after yes", flush=True)
-        extra = "" if profiles.effective(uid).get("pro_mail", True) else " „Wichtige Mail“ ist bei dir noch aus (Ich → Von selbst)."
+        extra = "" if profiles.effective(uid).get("pro_mail", True) else " „Wichtige Mail“ ist bei dir noch aus (E-Mail → Einstellungen)."
         return f"Gespeichert: Ich melde mich, wenn eine Mail von „{p['who']}“ kommt.{extra}"
     if p["kind"] == "plan_edit":
         if not may(uid, "read"):

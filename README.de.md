@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.810** Von selbst melden an einem Ort: die Mail-Zeilen (Wichtige Mails, Aufräumen, Paket heute) stehen unter E-Mail → Einstellungen, der Termin-Vorlauf unter Kalender → Einstellungen.
 - **V01.0.809** E-Mail als eigene Seite im Menü: Posteingang aller Postfächer, Mail lesen als reiner Text; Postfächer, Aufräumen, Mailstil und Pakete unter Einstellungen, nicht mehr unter Ich
 - **V01.0.808** Für dich aus Mails: Rechnungen mit Frist, Verträge, Bestellungen, Angebote, offene Antworten und Phishing aus deinen Mails, nur lesend
 - **V01.0.807** uConsole und Terminal: `spark-tui kalender` und F5 zeigen die Woche aus der Seite Kalender (nur lesen); danach `spark-tui update`
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.803** · 2026-10-18 · Anrufe per Assistent: „Ruf Sabine an“ oder „Videoanruf mit Sabine“ ruft nach deinem Ja über die Chats an; vom Lautsprecher, Telefon oder Telegram kommt der Anruf als Mitteilung aufs Handy (ein Tipp ruft an); auf Android auch „Ruf Mama übers Telefon an“ mit den eigenen Kontakten (App 1.4.2); Schalter aus
 - **V01.0.802** Monitoring zeigt, wer gerade rechnet: CPU je Dienst auf beiden Rechnern, im Panel je Teil, Streifen der letzten 20 Minuten; auch in Live, Steuerzentrale und iPhone
 - **V01.0.801** Die Bedeutungssuche rechnet nur noch in freier Zeit auf höchstens der Hälfte der Kerne; Sprache geht vor
-- **V01.0.800** Sprachausgabe bei mehreren gleichzeitig: genauer messen, drei Einstellungen zum Ausprobieren
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

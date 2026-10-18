@@ -239,7 +239,7 @@ FEATURES = (
       pref="pro_ha_events", parent="proactive", me="probox", guide="haevent"),
     F("havoice", "Smart-Home-Regel per Sprache", "Smart home rule by voice", "day", ("ha_voice_rules", "homeassistant"), parent="proactive", me="probox", guide="havoice"),
     F("mailwichtig", "Wichtige Mails erkennen", "Recognize important mail", "day", ("systemone_mail", "systemone", "mail"),
-      pref="pro_mail_smart", parent="proactive", me="probox", guide="mailwichtig"),
+      pref="pro_mail_smart", parent="proactive", me="mailbox", guide="mailwichtig"),
     F("hacam", "Kamerabild beschreiben", "Describe a camera picture", "day", ("ha_camera", "homeassistant"),
       pref="pro_ha_cam", parent="proactive", me="probox", guide="hacam"),
     F("reminders", "Timer und Erinnerungen", "Timers and reminders", "day", ("reminders",), guide="reminders"),

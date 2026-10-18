@@ -40,7 +40,7 @@ async function kalLoad(){if(!PROFILE||!CAL_ON)return;const [a,n]=kalRange(),seq=
 function kalOpen(){if(!PROFILE)return;if(!KAL.day)KAL.day=kalDay(new Date());if(!KAL.view)KAL.view=NARROW()?'list':'week';
   const root=$('kalroot');root.textContent='';
   root.appendChild(icTabs('cal',[{k:'show',label:OWN_PAGES.calbox[2],body:kalBody},
-    {k:'set',label:t('Einstellungen','Settings'),body:()=>{const b=$('calbox');b.hidden=false;lzb(b,showCal,{auth:true}).catch(()=>{});return b}}]));
+    {k:'set',label:t('Einstellungen','Settings'),body:()=>{const b=$('calbox');b.hidden=false;lzb(b,showCal,{auth:true}).catch(()=>{});proIn('procal').catch(()=>{});return b}}]));
   kalLoad()}
 // the tab „Termine“: tools, the view, the details of the appointment tapped
 function kalBody(){const w=document.createElement('div');w.className='kal';w.id='kalview';kalPaint(w);return w}

@@ -54,7 +54,8 @@ async function showPro(){const box=$('probox');if(!PROFILE||!PRO_ON){box.innerHT
     <div class="fh">${t('In der Ruhezeit kommt nichts. Beide Felder leer: keine Ruhezeit.','Nothing arrives during quiet hours. Both empty: no quiet hours.')}</div>
     <label>${t('Höchstens Meldungen am Tag','At most notes a day')}</label><select id="promax" style="max-width:120px">${[1,2,3,4,6,8,10,15,20,30].map(n=>`<option${n===S.pro_max?' selected':''}>${n}</option>`).join('')}</select>
     <div class="fh">${t('Heute: ','Today: ')}${st.today} ${t('von','of')} ${S.pro_max}${st.paused_until?' · '+t('Pause bis ','paused until ')+new Date(st.paused_until*1000).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})+` <button class="b" type="button" id="proresume">${t('Pause beenden','End pause')}</button>`:''}</div>`+
-    PROK.filter(([k])=>k!=='pro_tips'||(typeof ALLOW!=='undefined'&&ALLOW.pro_tips)).map(([k,need,l,h,miss])=>{const no=need&&!st.has[need]&&!(k==='pro_weather'&&st.has.weather)?`<span class="err" style="display:block">${t('Noch nicht möglich: ','Not possible yet: ')}${esc(miss)}</span>`:'';
+    `<div class="fh">${esc(t('Wichtige Mails, Postfach aufräumen und Paket kommt heute stehen unter E-Mail → Einstellungen, der Termin-Vorlauf unter Kalender → Einstellungen.','Important mail, inbox tidying and parcel comes today are under E-mail → Settings, upcoming appointments under Calendar → Settings.'))}</div>`+
+    PROK.filter(([k])=>!PRO_AT[k]&&(k!=='pro_tips'||(typeof ALLOW!=='undefined'&&ALLOW.pro_tips))).map(([k,need,l,h,miss])=>{const no=proNo(st,k,need,miss);
       // the smart home part is a whole block (sub-switches, rules, form, events): below the row, full width,
       // never inside the row's text column (there the row's own switch floated in its middle)
       if(PROWIDE.includes(k)){const x=PROX[k]?PROX[k](st):'';return proRow(k,l,h,no)+(x?`<div class="protail">${x}</div>`:'')}
@@ -73,6 +74,17 @@ async function showPro(){const box=$('probox');if(!PROFILE||!PRO_ON){box.innerHT
       $('protmsg').textContent=d.item&&d.item.pushed?t('Als Mitteilung geschickt.','Sent as a notification.'):t('Kommt gleich hier im Gespräch.','Arrives here in the conversation shortly.');setTimeout(()=>pro.poll(),300)}
     catch(e){$('protmsg').textContent=e.message}};
   for(const f of Object.values(PROBIND))f()}
+const proNo=(st,k,need,miss)=>need&&!st.has[need]&&!(k==='pro_weather'&&st.has.weather)?`<span class="err" style="display:block">${t('Noch nicht möglich: ','Not possible yet: ')}${esc(miss)}</span>`:'';
+// kinds whose row sits on the page of its kind (Dominik 2026-10-18 „nicht an zu vielen unterschiedlichen Orten“,
+// plan kalender-mail 4a): the box they are drawn into there; the main switch, quiet hours and the daily limit stay here
+const PRO_AT={pro_events:'procal',pro_mail:'promail',pro_tidy:'promail',pro_parcel:'promail'};
+async function proIn(id){const box=$(id);if(!box)return;if(!PROFILE||!PRO_ON){box.innerHTML='';return}await setReady();
+  if(!PROST)PROST=await (await api('/api/proactive/status')).json();const st=PROST;
+  const rows=PROK.filter(([k])=>PRO_AT[k]===id).map(([k,need,l,h,miss])=>proRow(k,l,h,proNo(st,k,need,miss)+(PROX[k]?PROX[k](st):''))).join('');
+  box.innerHTML=`<div class="mgrp">${esc(t('Von selbst melden','Speak up by itself'))}</div>`+
+    (S.pro_on?'':`<div class="fh">${esc(t('Gilt erst, wenn unter Ich → Von selbst der Hauptschalter an ist.','Works once the main switch under Me → Proactive is on.'))}</div>`)+rows;
+  box.querySelectorAll('input[data-k]').forEach(e=>e.onchange=()=>saveSet(e.dataset.k,e.checked));
+  PROBIND.lead();PROBIND.mail()}
 // extra fields under a kind, and their handlers
 const PROX={
   pro_events:()=>`<span style="display:block;margin-top:4px">${t('Wie lange vorher: ','How long before: ')}<select id="prolead" style="width:auto">${(SETC.choices.pro_lead||[]).map(n=>`<option value="${n}"${n===S.pro_lead?' selected':''}>${n} ${t('Minuten','minutes')}</option>`).join('')}</select></span>`,

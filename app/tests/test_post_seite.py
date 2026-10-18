@@ -7,6 +7,8 @@ pages of Ich.
   profile without the function get nothing.
 - The page lists, opens and reads at 320, 390 and 1280 px without sideways scrolling; text from a mail is text, never
   markup; „Einstellungen“ holds #mailbox and #parbox; Ich lists neither; #me=mailbox (the apps) opens the page.
+- The Von-selbst rows for mail sit under E-Mail → Einstellungen, Termin-Vorlauf under Kalender → Einstellungen, not
+  under Ich → Von selbst.
 
 Fixed dates, a fake mailbox; no wall clock, no network.
 """
@@ -191,6 +193,39 @@ class Page(Fake):
                     finally:
                         await br.close()
         asyncio.run(go())
+
+    def test_proactive_rows_sit_on_the_pages(self):
+        """Von selbst: the mail rows under E-Mail → Einstellungen, Termin-Vorlauf under Kalender → Einstellungen, none
+        of them a second time under Ich → Von selbst (one place, Dominik 2026-10-18)."""
+        from tests.test_ui_browser import Browser, async_playwright
+        b = Browser("run")
+        b.port = self.port
+        helpers.set_config(proactive=True)
+
+        async def go():
+            async with async_playwright() as p:
+                br, pg, errors = await b.page(p, 1280, 900)
+                try:
+                    await pg.evaluate("PRO_ON=true;MAIL_ON=true;postStart({profile:PROFILE,mail:true})")
+                    await pg.evaluate("openMe('mailbox')")
+                    await b.until(pg, "!!document.querySelector('#promail input[data-k=pro_parcel]')")
+                    mail_rows = await pg.evaluate("[...document.querySelectorAll('#promail input[data-k]')].map(e=>e.dataset.k)")
+                    self.assertEqual(sorted(mail_rows), ["pro_mail", "pro_parcel", "pro_tidy"])
+                    await pg.evaluate("proIn('procal')")
+                    await b.until(pg, "!!document.querySelector('#procal input[data-k=pro_events]')")
+                    await pg.evaluate("openMe('probox')")
+                    await b.until(pg, "!!document.querySelector('#probox input[data-k=pro_on]')")
+                    here = await pg.evaluate("[...document.querySelectorAll('#probox input[data-k]')].map(e=>e.dataset.k)")
+                    for k in ("pro_events", "pro_mail", "pro_tidy", "pro_parcel"):
+                        self.assertNotIn(k, here)
+                    self.assertIn("E-Mail → Einstellungen", await pg.evaluate("$('probox').textContent"))
+                    self.assertEqual(errors, [])
+                finally:
+                    await br.close()
+        try:
+            asyncio.run(go())
+        finally:
+            helpers.set_config(proactive=False)
 
 
 if __name__ == "__main__":

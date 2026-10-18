@@ -2000,6 +2000,13 @@
 "titel": "E-Mail als eigene Seite",
 "text": "A: Links im Menü unter Kalender steht „E-Mail“ (Handy: unten Heute, dort über die Seite). B: Reiter Posteingang: deine neuesten Mails aus allen Postfächern, ungelesene fett mit Punkt; Suche nach Absender oder Betreff und „Nur ungelesen“ grenzen ein. C: Antippen zeigt die Mail als Text ohne Bilder; danach ist sie im Mailprogramm weiterhin ungelesen. D: Reiter „Für dich“ (wenn freigegeben): die Karten von „Für dich aus Mails“ wie vorher unter Ich. E: Reiter Einstellungen: Postfächer, Aufräumen, Mailstil und Pakete wie früher unter Ich. F: Ich zeigt keine Seiten „E-Mail“ und „Pakete“ mehr. G: Funktionen → Anleitungen → E-Mail lesen: „E-Mail → Einstellungen → …“ ist ein Link und springt dorthin. H: Am Handy (390 px) Liste, Mail und Zurück ohne seitliches Scrollen.",
 "thread": "Kalender und E-Mail in Panel und Apps"
+},
+{
+"id": "P310",
+"v": 810,
+"titel": "Von selbst melden auf den Seiten",
+"text": "A: E-Mail → Einstellungen zeigt unten „Von selbst melden“ mit Neue Mails (samt Wichtige Mails), Postfach aufräumen und Paket kommt heute; Umschalten wirkt wie vorher. B: Kalender → Einstellungen zeigt dort den Termin-Vorlauf mit „Wie lange vorher“. C: Ich → Von selbst zeigt diese vier Zeilen nicht mehr, dafür einen Hinweis, wo sie stehen; Hauptschalter, Ruhezeit und Höchstzahl bleiben dort. D: Ist der Hauptschalter aus, steht auf beiden Seiten der Hinweis „Gilt erst, wenn unter Ich → Von selbst der Hauptschalter an ist“.",
+"thread": "Kalender und E-Mail in Panel und Apps"
 }
 ]
 }

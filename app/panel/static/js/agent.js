@@ -68,7 +68,7 @@ function agDetail(d,r){const back=`<button class="b ld-back" type="button" data-
     <div class="fh">${esc(t('Bedingungen ändern: Ich → Von selbst.','Change the conditions: Me → Proactive.'))}</div>
     <div class="ld-acts"><button class="b danger" type="button" data-agruledel="${esc(x.id)}">${esc(t('Löschen','Delete'))}</button></div>`;
   if(r.k==='mail')return head+`<div class="ld-note">${esc(t('Kommt eine Mail, deren Absender „','When a mail comes whose sender contains "')+x.who+t('“ enthält, melde ich mich (nur Absender und Betreff, nie der Inhalt).','", I tell you (only sender and subject, never the content).'))}</div>
-    ${(d.own||{}).mail_on?'':`<div class="fh">${esc(t('„Wichtige Mail“ ist bei dir aus: Ich → Von selbst.','"Important mail" is off for you: Me → Proactive.'))}</div>`}
+    ${(d.own||{}).mail_on?'':`<div class="fh">${esc(t('„Wichtige Mail“ ist bei dir aus: E-Mail → Einstellungen.','"Important mail" is off for you: E-mail → Settings.'))}</div>`}
     <div class="ld-acts"><button class="b danger" type="button" data-agmaildel="${esc(x.who)}">${esc(t('Entfernen','Remove'))}</button></div>`;
   return head+`<ol class="ag-steps">${x.steps.map(s=>`<li>${esc(s)}</li>`).join('')}</ol><div class="fh">${esc(t('Starten: nur den Namen sagen („','Start: just say the name ("')+x.name+t('“).','").'))}</div>
     <div class="ld-acts"><button class="b danger" type="button" data-agrdel="${esc(x.id)}">${esc(t('Löschen','Delete'))}</button></div>`}
