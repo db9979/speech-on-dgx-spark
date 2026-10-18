@@ -1765,6 +1765,13 @@
 "titel": "Messen ohne Bild in die Reserve",
 "text": "A: Auf tars `sudo speech-spark modelle messen flash` laufen lassen. B: In Zustand → Logs (System) steht bei Flash Next 0,70 „bild gleichzeitig uebersprungen, frei … GiB“ statt eines gemalten Bildes. C: Der „tiefste stand frei“ bleibt deutlich über 0,1 GiB. D: Bei Qwen 27B (`modelle messen llm`) wird das Bild weiter nebenher gemalt.",
 "thread": "Eigene Modell-Installation statt qwen38"
+},
+{
+"id": "P276",
+"v": 771,
+"titel": "Ordner auslassen",
+"text": "A: Ich → Dokumente → Ausgelassene Ordner aufklappen (nur sichtbar mit Wissensordner): oben die Namensregeln, darunter die ausgelassenen Ordner, der Ordnerbaum und „Immer ausgelassen“. B: Im Ordnerbaum bei einem unwichtigen Unterordner „Auslassen“: die Rückfrage nennt die Zahl der Dokumente; „Nur diesen Ordner“. Danach fehlen seine Dokumente unter Ich → Dokumente und eine Frage dazu findet sie nicht mehr; auf der NAS ist alles noch da. C: Beim Wissensordner unter Ich → Speicher steht „Ordner ausgelassen“ unter „Ausgelassen“, und „Jetzt abgleichen“ liest ihn nicht. D: Namensregel „Alt*“ hinzufügen: jeder Ordner, der mit Alt beginnt, ist im Baum als „Namensregel“ markiert. E: „Wieder zulassen“: nach dem nächsten Abgleich sind die Dokumente wieder da. F: Hatte ein Wissensordner früher „Unterordner auslassen“, stehen diese Ordner jetzt in der Liste. G: Zustand → Live zeigt beim Wissensordner „… ausgelassen“ nur als Zahl.",
+"thread": "Ordner ausschließen"
 }
 ]
 }

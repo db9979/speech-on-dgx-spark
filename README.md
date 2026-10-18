@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.771** Leave out folders: unimportant folders under Me → Documents → Left-out folders are no longer read and leave the search at once
 - **V01.0.770** Fix: measuring models paints alongside only when enough memory stays free
 - **V01.0.769** Status → Models: memory bar colored per model, tiles in the same color
 - **V01.0.768** Knowledge book stage A: the search check measures multi-document questions (yardstick for the knowledge book)
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.764** People and devices as a tidy list with initials, bar and chevron
 - **V01.0.763** OLED pages "Pi" and "TARS": CPU and RAM load as two big numbers
 - **V01.0.762** Measure Qwen3.8 Flash Next in Docker (only on tars, no network, measuring only for now)
-- **V01.0.761** More precise and faster, package C: simple things answered at once, faster web search, extended answer check, measuring the word choice
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

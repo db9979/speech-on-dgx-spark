@@ -250,7 +250,9 @@ class Reading(Base):
     def test_groups_and_left_out_sub_folders(self):
         c, uid, nid, sid = self.ready("NqGruppen")
         run(nasquelle.sync_once(uid, sid))
-        r = c.put(f"/api/profile/nasquelle/{sid}", json={"groups": ["text"], "skip": ["Vertraege"]})
+        r = c.put(f"/api/profile/nasquelle/{sid}", json={"groups": ["text"]})
+        self.assertEqual(r.status_code, 200, r.text)
+        r = c.post("/api/profile/auslassen", json={"ort": nid, "path": "/dav/Ablage/Vertraege"})   # auslassen.py
         self.assertEqual(r.status_code, 200, r.text)
         run(nasquelle.sync_once(uid, sid))
         read = sorted(x["p"] for x in nasquelle.state(uid, sid)["files"].values() if x.get("d"))
@@ -485,7 +487,7 @@ class Everywhere(Base):
         n = nasquelle.for_live()
         self.assertTrue(n["on"])
         self.assertGreaterEqual((n["profiles"], n["folders"], n["docs"]), (1, 1, 4))
-        self.assertEqual(set(n), {"on", "profiles", "folders", "bad", "docs", "haus_folders", "haus_bad", "haus_docs"})   # numbers only
+        self.assertEqual(set(n), {"on", "profiles", "folders", "bad", "docs", "left_out", "haus_folders", "haus_bad", "haus_docs"})   # numbers only
         self.assertTrue(all(type(v) is int for k, v in n.items() if k != "on"))
         self.assertIn("nasquelle", live.TARGETS)
         self.assertIn("wissen", dienstwacht.SVC)

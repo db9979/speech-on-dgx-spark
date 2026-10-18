@@ -8,14 +8,15 @@ anything at the place. Originals are not copied; "Öffnen" fetches the file from
     USERS_DIR/<uid>/nasquelle.json        {"sources": [src]}   the profile's folders (Ich → Speicher, nasquelle.js)
     USERS_DIR/<uid>/nasquelle-stand.json  {sid: state}         what was read: per file path hash its path, size,
                                                                 time and document id (or why it was left out)
-    src = {"id", "nas" (connection id), "path" ("/Dokumente"), "groups" ([GROUPS]), "skip" (sub folders), "added"}
+    src = {"id", "nas" (connection id), "path" ("/Dokumente"), "groups" ([GROUPS]), "added"}
 
 Rules (fixed, never decided by the model):
 - What is read: only the kinds of file in the chosen groups (GROUPS, default on: documents, tables, slides, text,
   mails; pictures only on request and with "Bilder und Scans lesen"); never programs, archives, video, music,
   images of disks, databases or backups (everything not in a group). Hidden, system (Synology @eaDir, #recycle,
-  #snapshot), lock and temporary files are always left out. The content must fit the name (magic bytes, as an
-  upload): a ".pdf" that is no PDF is left out.
+  #snapshot), lock and temporary files are always left out, and so is every folder on the profile's own list
+  (auslassen.py, Ich → Dokumente → Ausgelassene Ordner; for the Haushaltsordner the list of the admin profile that
+  chose it). The content must fit the name (magic bytes, as an upload): a ".pdf" that is no PDF is left out.
 - How much: at most MAX_SOURCES folders, MAX_LIST entries looked at per folder, ROUND_FILES files or ROUND_BYTES
   per round (the first round of a big folder spreads over several, one a minute in quiet minutes), and
   chat.nas_max_docs documents from the places per profile (default NAS_DOCS, they do not count against the
@@ -99,7 +100,8 @@ WHY_OUT = {"versteckt": ("System- oder versteckte Datei", "system or hidden file
            "gross": ("zu groß", "too large"),
            "inhalt": ("Inhalt passt nicht zur Endung", "content does not fit the ending"),
            "lesen": ("ließ sich nicht lesen", "could not be read"),
-           "aus": ("unter Dokumente ausgenommen", "left out under Documents")}
+           "aus": ("unter Dokumente ausgenommen", "left out under Documents"),
+           "ausgelassen": ("Ordner ausgelassen", "folder left out")}
 WHY = {"offline": ("nicht erreichbar", "not reachable"), "auth": ("Anmeldung abgelehnt", "sign-in refused"),
        "cert": ("Zertifikat passt nicht", "certificate does not fit"),
        "hostkey": ("Schlüssel des Servers hat sich geändert", "the server's key changed"),
@@ -212,12 +214,11 @@ def _clean(s):
         return None
     try:
         path = clean_path(s.get("path"))
-        skip = sorted({clean_rel(x) for x in s.get("skip") or [] if isinstance(x, str) and x.strip()})[:50]
     except ValueError:
         return None
     groups = [g for g in GROUPS if g in (s.get("groups") or [])]
     out = {"id": s["id"], "nas": s["nas"], "path": path, "groups": groups or [g for g, v in GROUPS.items() if v[3]],
-           "skip": [x for x in skip if x], "added": int(s.get("added") or 0)}
+           "added": int(s.get("added") or 0)}
     if OWNER.fullmatch(str(s.get("owner", ""))):
         out["owner"] = s["owner"]
     return out
@@ -226,7 +227,31 @@ def _clean(s):
 def sources(uid):
     with _lock:
         raw = _json(_file(uid)).get("sources")
+        if isinstance(raw, list) and any(isinstance(s, dict) and s.get("skip") for s in raw):
+            _move_skip(uid, raw)
     return [x for x in (_clean(s) for s in raw if isinstance(raw, list)) if x][:MAX_SOURCES] if isinstance(raw, list) else []
+
+
+def _move_skip(uid, raw):
+    """Until V01.0.770 each folder had its own "Unterordner auslassen"; they move to the profile's list (auslassen.py),
+    for the Haushaltsordner to the list of the admin profile that chose it. Once, then the field is gone."""
+    import auslassen
+    n = 0
+    for s in raw:
+        if not isinstance(s, dict) or not s.get("skip"):
+            continue
+        owner = s.get("owner", "") if uid == HAUS else uid
+        items = []
+        for x in s["skip"] if isinstance(s["skip"], list) else []:
+            try:
+                items.append((s.get("nas"), clean_path(s.get("path")) + "/" + clean_rel(x)))
+            except (ValueError, TypeError):
+                continue
+        if OWNER.fullmatch(str(owner)):
+            n += auslassen.add_folders(owner, items)
+        s.pop("skip", None)
+    profiles._write(_file(uid), {"sources": raw})
+    print(f"nasquelle: unterordner übernommen | {n} ordner | {_log_name(uid)}", flush=True)
 
 
 def _save(uid, items):
@@ -500,11 +525,13 @@ def plan(n, size, room):
             "rounds": max(1, -(-read // ROUND_FILES), -(-part // ROUND_BYTES)) if read else 0}
 
 
-async def walk(rd, skip=(), most=MAX_LIST, secs=LIST_SECS):
-    """Every file below the folder: ([(rel, size, time)], {"versteckt": n} folders left out, complete)."""
+async def walk(rd, skip=lambda rel: False, most=MAX_LIST, secs=LIST_SECS):
+    """Every file below the folder: ([(rel, size, time)], {"versteckt"/"ausgelassen": n} folders left out, complete).
+    skip(rel): the folder is on the profile's list (auslassen.checker)."""
     t_end = time.monotonic() + secs
+    if skip(""):                                   # the chosen folder itself falls under a name on the list
+        return [], {"ausgelassen": 1}, True
     todo, files, out, seen = [""], [], {}, 0
-    skip = tuple(skip)
     while todo:
         rel = todo.pop()
         if time.monotonic() > t_end or seen >= most:
@@ -515,7 +542,9 @@ async def walk(rd, skip=(), most=MAX_LIST, secs=LIST_SECS):
             if isdir:
                 if SKIP_DIRS.match(name):
                     out["versteckt"] = out.get("versteckt", 0) + 1
-                elif not any(sub == s or sub.startswith(s + "/") for s in skip):
+                elif skip(sub):
+                    out["ausgelassen"] = out.get("ausgelassen", 0) + 1
+                else:
                     todo.append(sub)
             else:
                 files.append((sub, size, mtime))
@@ -637,7 +666,7 @@ async def sync_once(uid, sid, why="auto", now=None):
                 raise SourceError("gone")
         c = _conn(_owner(uid, s), s["nas"])
         rd = reader(c, s["path"])
-        files, out, complete = await walk(rd, s["skip"])
+        files, out, complete = await walk(rd, auslassen.checker(_owner(uid, s), s["nas"], s["path"]))
         have = st["files"]
         now_set = {}
         for rel, size, mtime in files:
@@ -816,20 +845,21 @@ def summary(uid):
 
 
 def for_live():
-    """Live: how many profiles and folders, documents, failing (numbers only)."""
+    """Live: how many profiles and folders, documents, failing, entries left out (numbers only)."""
     if not admin_on():
         return {"on": False}
-    profs = folders = bad = docs = 0
+    profs = folders = bad = docs = out = 0
     for uid in profiles.user_ids():
         ss = sources(uid)
         if not ss:
             continue
         profs += 1
         folders += len(ss)
+        out += sum(auslassen.counts(uid))             # entries on the profile's list (Ausgelassene Ordner)
         bad += sum(1 for s in ss if state(uid, s["id"])["fail"])
         docs += nas_docs(uid)
     hs = sources(HAUS) if haus_on() else []
-    return {"on": True, "profiles": profs, "folders": folders, "bad": bad, "docs": docs,    # the Haushaltsordner apart
+    return {"on": True, "profiles": profs, "folders": folders, "bad": bad, "docs": docs, "left_out": out,   # Haushaltsordner apart
             "haus_folders": len(hs), "haus_bad": sum(1 for s in hs if state(HAUS, s["id"])["fail"]), "haus_docs": nas_docs(HAUS) if hs else 0}
 
 
@@ -872,7 +902,7 @@ def overview():
 # ---------------------------------------------------------------- views
 def public(uid, s, st=None):
     st = st or state(uid, s["id"])
-    return {"id": s["id"], "nas": s["nas"], "path": s["path"] or "/", "groups": s["groups"], "skip": s["skip"],
+    return {"id": s["id"], "nas": s["nas"], "path": s["path"] or "/", "groups": s["groups"],
             "added": s["added"], "docs": sum(1 for x in st["files"].values() if x.get("d")), "seen": st["seen"],
             "left": st["left"], "out": st["out"], "last": st["last"], "fail": st["fail"],
             "running": (uid, s["id"]) in _running}
@@ -920,17 +950,6 @@ def _groups(v):
     if not g:
         raise HTTPException(400, "Mindestens eine Gruppe wählen.")
     return g
-
-
-def _skip(v):
-    if v is None:
-        return []
-    if not isinstance(v, list) or len(v) > 50:
-        raise HTTPException(400, "skip: up to 50 folders")
-    try:
-        return sorted({clean_rel(x) for x in v if isinstance(x, str) and x.strip()} - {""})
-    except ValueError:
-        raise HTTPException(400, "invalid folder")
 
 
 def _store(uid, sid, setting=True):
@@ -996,22 +1015,24 @@ async def tree(request: Request, nas: str = "", path: str = "", prof=Depends(_on
         await rd.close()
     dirs = sorted((n for n, d, _, _ in items if d and not SKIP_DIRS.match(n)), key=str.lower)
     files = sum(1 for _, d, _, _ in items if not d)
+    mine = auslassen.load(prof["id"])        # why a folder is left out (Ich → Dokumente → Ausgelassene Ordner)
+    out = {n: w for n in dirs[:500] if (w := auslassen.why(prof["id"], c["id"], f"{path}/{n}", mine))}
     print(f"nasquelle: ordnerliste | {len(dirs)} ordner | {_log_name(prof['id'])}", flush=True)
-    return {"path": path or "/", "dirs": dirs[:500], "more": len(dirs) > 500, "files": files}
+    return {"path": path or "/", "dirs": dirs[:500], "more": len(dirs) > 500, "files": files, "out": out}
 
 
 @router.post("/api/profile/nasquelle/preview")
 async def preview(request: Request, prof=Depends(_on)):
-    """{"nas", "path", "groups", "skip"}: what would be read (numbers per group, left out with reason, size)."""
+    """{"nas", "path", "groups"}: what would be read (numbers per group, left out with reason, size)."""
     guard.limit(request, "storage", prof["id"])
     uid = prof["id"]
     body = await core.json_body(request, 8192, lenient=True)
     who = _want_haus(uid, body)
     c = _place(uid, body.get("nas"))
-    path, groups, skip = _path(body.get("path"), c), _groups(body.get("groups")), _skip(body.get("skip"))
+    path, groups = _path(body.get("path"), c), _groups(body.get("groups"))
     rd = reader(c, path)
     try:
-        files, out, complete = await walk(rd, skip, MAX_LIST, PREVIEW_SECS)
+        files, out, complete = await walk(rd, auslassen.checker(uid, c["id"], path), MAX_LIST, PREVIEW_SECS)
     except SourceError as e:
         print(f"nasquelle: vorschau fehler | art={e.kind} | {_log_name(uid)}", flush=True)
         raise HTTPException(502, _say(e.kind))
@@ -1036,12 +1057,12 @@ async def preview(request: Request, prof=Depends(_on)):
 
 @router.post("/api/profile/nasquelle")
 async def add(request: Request, prof=Depends(_on)):
-    """{"nas", "path", "groups", "skip"}: a new folder; the first round starts at once."""
+    """{"nas", "path", "groups"}: a new folder; the first round starts at once."""
     guard.limit(request, "storage", prof["id"])
     uid = prof["id"]
     body = await core.json_body(request, 8192, lenient=True)
     c = _place(uid, body.get("nas"))
-    path, groups, skip = _path(body.get("path"), c), _groups(body.get("groups")), _skip(body.get("skip"))
+    path, groups = _path(body.get("path"), c), _groups(body.get("groups"))
     who = _want_haus(uid, body)
     items = sources(who)
     if len(items) >= MAX_SOURCES:
@@ -1064,7 +1085,7 @@ async def add(request: Request, prof=Depends(_on)):
         sid = secrets.token_hex(3)
     while find(uid if who == HAUS else HAUS, sid):      # ids stay unique over the profile and the household
         sid = secrets.token_hex(3)
-    item = {"id": sid, "nas": c["id"], "path": path, "groups": groups, "skip": skip, "added": int(time.time())}
+    item = {"id": sid, "nas": c["id"], "path": path, "groups": groups, "added": int(time.time())}
     if who == HAUS:
         item["owner"] = uid
     items.append(item)
@@ -1077,7 +1098,7 @@ async def add(request: Request, prof=Depends(_on)):
 
 @router.put("/api/profile/nasquelle/{sid}")
 async def change(sid: str, request: Request, prof=Depends(_on)):
-    """{"groups"?, "skip"?}: what is read from this folder; the next round follows it."""
+    """{"groups"}: what is read from this folder; the next round follows it (sub folders: auslassen.py)."""
     guard.limit(request, "storage", prof["id"])
     uid = _store(prof["id"], sid)
     body = await core.json_body(request, 8192, lenient=True)
@@ -1087,14 +1108,6 @@ async def change(sid: str, request: Request, prof=Depends(_on)):
         raise HTTPException(404, "no such folder")
     if "groups" in body:
         s["groups"] = _groups(body["groups"])
-    if "skip" in body:
-        s["skip"] = _skip(body["skip"])
-        st = state(uid, sid)          # files below a folder now skipped leave the search at once
-        for h, x in list(st["files"].items()):
-            if any(x.get("p", "") == k or x.get("p", "").startswith(k + "/") for k in s["skip"]):
-                _drop(uid, x.get("d"))
-                st["files"].pop(h, None)
-        _put_state(uid, sid, st)
     _save(uid, items)
     st = state(uid, sid)
     st["last"] = None                 # due again at once
@@ -1154,5 +1167,6 @@ def admin_get():
     return overview()
 
 
+import auslassen  # noqa: E402 - the profile's list of folders never read
 import nas  # noqa: E402 - registers the folders as a use of their place (nas.uses: no removing while used)
 nas.USES["wissen"] = uses

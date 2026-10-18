@@ -1,6 +1,6 @@
 // "Ich → Speicher → Wofür → Wissensordner" (nasquelle.py, plan synology-bauplan.md S2): folders at a place that the
-// Spark reads into Dokumente (only reading; nothing changes there). Per folder: what is read (groups, sub folders
-// left out), numbers, state, "Jetzt abgleichen", "Entfernen". New folders: type or browse the path, preview, add.
+// Spark reads into Dokumente (only reading; nothing changes there). Per folder: what is read (groups; sub folders
+// are left out under Ich → Dokumente → Ausgelassene Ordner, auslassen.js), numbers, state, "Jetzt abgleichen", "Entfernen". New folders: type or browse the path, preview, add.
 // When the admin blocks the profile the folders stay visible and can be removed (own data). Server text is text (esc).
 // An admin profile can mark a new folder "Für alle im Haushalt" (Haushaltsordner, S5): every profile finds it then.
 let NQ=null;
@@ -21,7 +21,7 @@ function nqOne(x){const [cls,word]=nqState(x),on=NQ.on&&(!x.haus||NQ.haus.may);
     ${nqOut(x.out)}
     ${on?`<div class="row" style="margin-top:6px"><button class="b" type="button" data-nqnow="${esc(x.id)}">${esc(t('Jetzt abgleichen','Read now'))}</button></div>
     <details><summary>${esc(t('Was gelesen wird','What is read'))}</summary>${nqGroups(x.id,x.groups)}
-      <label>${esc(t('Unterordner auslassen (einer pro Zeile)','Leave out sub folders (one per line)'))}</label><textarea data-nqskip="${esc(x.id)}" rows="3" maxlength="2000">${esc(x.skip.join('\n'))}</textarea>
+      <div class="fh">${esc(t('Unterordner auslassen: Ich → Dokumente → Ausgelassene Ordner','Leave out sub folders: Me → Documents → Left-out folders'))}</div>
       <div class="row"><button class="b p" type="button" data-nqsave="${esc(x.id)}">${esc(t('Speichern','Save'))}</button></div></details>`:''}
     <div class="row"><button class="b" type="button" data-nqdel="${esc(x.id)}">${esc(t('Entfernen','Remove'))}</button></div></div>`}
 // the Wissensordner part of one place under "Wofür" (nas.js)
@@ -51,7 +51,7 @@ function nqBind(box,after,say){if(!NQ)return;
       const m=document.createElement('div');m.className='fh';m.textContent=t(`${d.files} Dateien direkt hier`,`${d.files} files right here`)+(d.more?' · '+t('nur die ersten 500 Ordner','only the first 500 folders'):'');out.appendChild(m)}
     catch(e){out.textContent='';say(e.message,true)}});
   box.querySelectorAll('[data-nqprev]').forEach(b=>b.onclick=async()=>{const id=b.dataset.nqprev,m=q('data-nqprevmsg',id);m.className='fh';m.textContent=t('Zähle, was gelesen würde …','Counting what would be read …');
-    try{const d=await (await api('/api/profile/nasquelle/preview',xjson('POST',{nas:id,path:q('data-nqpath',id).value.trim(),groups:picked('new-'+id),skip:[],haus:haus(id)}))).json();
+    try{const d=await (await api('/api/profile/nasquelle/preview',xjson('POST',{nas:id,path:q('data-nqpath',id).value.trim(),groups:picked('new-'+id),haus:haus(id)}))).json();
       const per=Object.entries(d.groups).map(([g,n])=>{const x=NQ.groups.find(y=>y.id===g);return (x?t(x.name[0],x.name[1]):g)+' '+n}).join(', ');
       // Dominik 2026-10-14 ("was bedeutet diese info"): what will be read, what stays out and why, how to change it
       m.textContent=t(`${d.files} Dateien passen zur Auswahl (${spSize(d.bytes)})`,`${d.files} files fit the choice (${spSize(d.bytes)})`)+(per?': '+per:'')+'. '
@@ -64,12 +64,12 @@ function nqBind(box,after,say){if(!NQ)return;
         +(d.complete?'':' '+t(`Der Ordner ist sehr groß: gezählt wurde nur bis ${d.seen_most} Einträge oder eine Minute lang, es sind also noch mehr.`,`The folder is very large: only up to ${d.seen_most} entries or one minute were counted, so there are more.`))}
     catch(e){m.className='fh err';m.textContent=e.message}});
   box.querySelectorAll('[data-nqadd]').forEach(b=>b.onclick=async()=>{const id=b.dataset.nqadd;b.disabled=true;say(t('Prüfe den Ordner …','Checking the folder …'));
-    try{await api('/api/profile/nasquelle',xjson('POST',{nas:id,path:q('data-nqpath',id).value.trim(),groups:picked('new-'+id),skip:[],haus:haus(id)}));await after();say(t('Hinzugefügt. Der Spark liest jetzt; große Ordner brauchen mehrere Runden.','Added. The Spark is reading now; large folders take several rounds.'))}
+    try{await api('/api/profile/nasquelle',xjson('POST',{nas:id,path:q('data-nqpath',id).value.trim(),groups:picked('new-'+id),haus:haus(id)}));await after();say(t('Hinzugefügt. Der Spark liest jetzt; große Ordner brauchen mehrere Runden.','Added. The Spark is reading now; large folders take several rounds.'))}
     catch(e){b.disabled=false;say(e.message,true)}});
   box.querySelectorAll('[data-nqnow]').forEach(b=>b.onclick=()=>{b.disabled=true;say(t('Lese den Ordner …','Reading the folder …'));
     go('/api/profile/nasquelle/'+encodeURIComponent(b.dataset.nqnow)+'/now',{method:'POST'},r=>t(`${r.new} neu, ${r.gone} weg, ${r.left} warten.`,`${r.new} new, ${r.gone} gone, ${r.left} waiting.`))});
-  box.querySelectorAll('[data-nqsave]').forEach(b=>b.onclick=()=>{const id=b.dataset.nqsave,skip=q('data-nqskip',id).value.split('\n').map(x=>x.trim()).filter(Boolean);
-    go('/api/profile/nasquelle/'+encodeURIComponent(id),xjson('PUT',{groups:picked(id),skip}),()=>t('Gespeichert. Der nächste Abgleich folgt dem.','Saved. The next reading follows it.'))});
+  box.querySelectorAll('[data-nqsave]').forEach(b=>b.onclick=()=>{const id=b.dataset.nqsave;
+    go('/api/profile/nasquelle/'+encodeURIComponent(id),xjson('PUT',{groups:picked(id)}),()=>t('Gespeichert. Der nächste Abgleich folgt dem.','Saved. The next reading follows it.'))});
   box.querySelectorAll('[data-nqdel]').forEach(b=>b.onclick=()=>{if(!confirm(t('Diesen Wissensordner entfernen? Seine Dokumente verschwinden aus der Suche; am Ort bleibt alles, wie es ist.','Remove this knowledge folder? Its documents leave the search; everything at the place stays as it is.')))return;
     go('/api/profile/nasquelle/'+encodeURIComponent(b.dataset.nqdel),{method:'DELETE'},r=>t(`Entfernt, ${r.removed} Dokumente aus der Suche.`,`Removed, ${r.removed} documents out of the search.`))})}
 // Zustand → Speicher und NAS (admin): per profile numbers and state, never a path or a name of a file

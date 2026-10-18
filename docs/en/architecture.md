@@ -331,6 +331,7 @@ Live overview, logs, watchers, backup, update, help and the admin pages.
 |---|---|
 | `app/panel/admin.py` | Admin pages: status, configuration, services, logs, tests, cloned voices, benchmark, profiles and devices. |
 | `app/panel/aktiv.py` | Aktiv in den letzten 10 Minuten: how many people used the Spark lately. |
+| `app/panel/auslassen.py` | Ordner auslassen. |
 | `app/panel/backup.py` | Backups of everything the panel keeps: profiles (memory, conversations, documents, calendars, mail, Home Assistant, voices of speaker ID), cloned voices, set … |
 | `app/panel/befund.py` | Befund: the cause of a case, worked out before any proposal. |
 | `app/panel/berater.py` | Einstellungs-Assistent: cases become proposals. |
@@ -487,6 +488,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `users/ID/nas.json` | Storage places of the profile (NAS, cloud) | Login | password sealed | yes | – |
 | `users/ID/nasquelle.json` | Knowledge folders of the profile | Settings | – | yes | – |
 | `users/ID/nasquelle-stand.json` | What was read from the knowledge folders | State | – | yes | – |
+| `users/ID/auslassen.json` | Left-out folders and name rules of the profile | Settings | – | yes | – |
 | `users/ID/nasablage.json` | Filing folder of the profile | Settings | – | yes | – |
 | `users/ID/speicher.vor-nas.json` | Copy of my data before the move to storage places | Login | – | yes | – |
 | `users/ID/mail-tidy.json` | Inbox tidy | Settings | – | yes | – |

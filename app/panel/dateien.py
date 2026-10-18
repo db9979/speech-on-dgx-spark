@@ -79,6 +79,7 @@ DATEIEN = [
     profil("nas.json", "Speicherorte des Profils (NAS, Cloud)", "Storage places of the profile (NAS, cloud)", art="Login", schutz=("Passwort versiegelt", "password sealed")),
     profil("nasquelle.json", "Wissensordner des Profils", "Knowledge folders of the profile", art="Einstellungen"),
     profil("nasquelle-stand.json", "Was aus den Wissensordnern gelesen ist", "What was read from the knowledge folders", art="Zustand"),
+    profil("auslassen.json", "Ausgelassene Ordner und Namensregeln des Profils", "Left-out folders and name rules of the profile", art="Einstellungen"),
     profil("nasablage.json", "Ablage-Ordner des Profils", "Filing folder of the profile", art="Einstellungen"),
     profil("speicher.vor-nas.json", "Kopie meiner Daten vor dem Umzug auf Speicherorte", "Copy of my data before the move to storage places", art="Login"),
     profil("mail-tidy.json", "Posteingang aufräumen", "Inbox tidy", art="Einstellungen"),

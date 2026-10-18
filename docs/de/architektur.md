@@ -331,6 +331,7 @@ Live-Übersicht, Logs, Wächter, Sicherung, Update, Hilfe und die Admin-Seiten.
 |---|---|
 | `app/panel/admin.py` | Admin-Seiten: Zustand, Einstellungen, Dienste, Stimmen |
 | `app/panel/aktiv.py` | Aktiv in den letzten 10 Minuten: Profile und Gäste als Zahl, nur im Speicher (OLED, Monitoring, Live) |
+| `app/panel/auslassen.py` | Ordner auslassen: Liste je Profil mit Ordnern und Namen, die der Spark nie liest; schon Gelesenes verlässt die Suche |
 | `app/panel/backup.py` | Sicherungen und Wiederherstellen |
 | `app/panel/befund.py` | Befund: die Ursache eines Falls |
 | `app/panel/berater.py` | Einstellungs-Assistent: Vorschläge aus Fällen |
@@ -487,6 +488,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `users/ID/nas.json` | Speicherorte des Profils (NAS, Cloud) | Login | Passwort versiegelt | ja | – |
 | `users/ID/nasquelle.json` | Wissensordner des Profils | Einstellungen | – | ja | – |
 | `users/ID/nasquelle-stand.json` | Was aus den Wissensordnern gelesen ist | Zustand | – | ja | – |
+| `users/ID/auslassen.json` | Ausgelassene Ordner und Namensregeln des Profils | Einstellungen | – | ja | – |
 | `users/ID/nasablage.json` | Ablage-Ordner des Profils | Einstellungen | – | ja | – |
 | `users/ID/speicher.vor-nas.json` | Kopie meiner Daten vor dem Umzug auf Speicherorte | Login | – | ja | – |
 | `users/ID/mail-tidy.json` | Posteingang aufräumen | Einstellungen | – | ja | – |

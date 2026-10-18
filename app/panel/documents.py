@@ -864,6 +864,20 @@ def delete(uid, doc_id):
     return True
 
 
+# Documents that left for a reason (auslassen.py: "ausgelassen"): what keeps something built from them subscribes
+# here (the Wissensbuch, plan wissensbuch Stufe C: drops their sentences at once). Called after the deleting, one call
+# per batch; a subscriber that fails never stops the others.
+GONE = []
+
+
+def on_gone(uid, ids, why):
+    for f in GONE:
+        try:
+            f(uid, list(ids), why)
+        except Exception as e:   # noqa: BLE001
+            print("documents: weg", type(e).__name__, flush=True)
+
+
 def set_place(uid, doc_id, origin, place):
     """Wissensordner (nasquelle.py): where a document from a place comes from (folder id and path hash, and the
     folder shown in Ich → Dokumente)."""
