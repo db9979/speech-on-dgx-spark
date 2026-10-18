@@ -313,8 +313,8 @@ SEITEN = {
                "device „android“ only while „Android: Spark as assistant“ is released (android.assist_gate). Whether the app may keep the pages' last state, hello says with "
                "„keep“ (appmerken.keep); on no it deletes it."),
               ("info", ("Terminal", "Terminal"),
-               ("Terminal-Client: Schlüssel-Bereich „tui“, nur {terminal.TUI_RULES|anzahl} Regeln (Chat, Gespräche, Heute, Aufträge)",
-                "terminal client: key scope „tui“, only {terminal.TUI_RULES|anzahl} rules (chat, conversations, Today, jobs)"))),
+               ("Terminal-Client: Schlüssel-Bereich „tui“, nur {terminal.TUI_RULES|anzahl} Regeln (Chat, Gespräche, Heute, Kalender, Aufträge)",
+                "terminal client: key scope „tui“, only {terminal.TUI_RULES|anzahl} rules (chat, conversations, Today, calendar, jobs)"))),
             S("s10", "frage", ("Konto, Geräte oder Sicherheit?", "Account, devices or security?"),
               ("nur im eigenen Browser", "only in the own browser"),
               ("Endpunkte, die Verbindungen, Geräte oder Sicherheit des Profils ändern, nehmen nur die eigene "
@@ -346,7 +346,7 @@ SEITEN = {
             [("app", "app"), ("iPhone-App", "iPhone app"), ("profiles.APP_PATHS und freigegebene Bereiche", "profiles.APP_PATHS and opened areas")],
             [("watch", "watch"), ("Pebble-Uhr", "Pebble watch"), ("nur /api/watch/…", "only /api/watch/…")],
             [("tui", "tui"), ("Terminal-Client spark-tui", "terminal client spark-tui"),
-             ("terminal.TUI_RULES: Chat, Gespräche, Heute, Aufträge", "terminal.TUI_RULES: chat, conversations, Today, jobs")],
+             ("terminal.TUI_RULES: Chat, Gespräche, Heute, Kalender, Aufträge", "terminal.TUI_RULES: chat, conversations, Today, calendar, jobs")],
             [("desk, write", "desk, write"), ("Spark-Begleiter, Schreibhilfe", "Spark companion, writing help"),
              ("nur ihre eigenen Pfade", "only their own paths")],
             [("ohne", "none"), ("Lautsprecher, Siri-Kurzbefehl, eigene Skripte", "speakers, Siri shortcut, own scripts"),

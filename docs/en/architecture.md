@@ -825,7 +825,7 @@ flowchart TD
   s7 -->|no| s7x
   s8x(["Not now (503)"])
   s8 -->|yes| s8x
-  s9x(["terminal client: key scope „tui“, only 12 rules (chat, conversations, Today, jobs)"])
+  s9x(["terminal client: key scope „tui“, only 13 rules (chat, conversations, Today, calendar, jobs)"])
   s9 -->|Terminal| s9x
   s10x(["Only in the own browser (403)"])
   s10 -->|yes| s10x
@@ -853,7 +853,7 @@ Applies at: [step 6](#kn-apps-s6), [step 7](#kn-apps-s7)
 |---|---|---|
 | app | iPhone app | profiles.APP_PATHS and opened areas |
 | watch | Pebble watch | only /api/watch/… |
-| tui | terminal client spark-tui | terminal.TUI_RULES: chat, conversations, Today, jobs |
+| tui | terminal client spark-tui | terminal.TUI_RULES: chat, conversations, Today, calendar, jobs |
 | desk, write | Spark companion, writing help | only their own paths |
 | none | speakers, Siri shortcut, own scripts | asking as the profile, never account or security |
 | no key | Android app | sign-in like a browser |

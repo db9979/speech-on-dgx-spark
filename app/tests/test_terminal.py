@@ -5,6 +5,7 @@ import hashlib
 import importlib.util
 import json
 import os
+import time
 import unittest
 
 from tests import helpers
@@ -125,6 +126,10 @@ class Terminal(unittest.TestCase):
         self.assertEqual(hello["sha256"], terminal.program()["sha256"])   # what "spark-tui update" checks against
         self.assertEqual(app.get("/api/profile/convos", headers=h).status_code, 200)
         self.assertEqual(app.get("/api/profile/today", headers=h).status_code, 200)
+        # the page Kalender as text (spark-tui kalender, F5; V01.0.807)
+        helpers.set_config(calendar=True)
+        self.assertEqual(app.get("/api/profile/calendar/view", params={"start": "2026-03-09"}, headers=h).json()["connected"], False)
+        self.assertIn(app.post("/api/profile/calendar", json={}, headers=h).status_code, (401, 403, 405))
         r = app.post("/api/chat", json={"messages": [{"role": "user", "content": "Hallo"}], "speak": False}, headers=h)
         self.assertEqual(r.status_code, 200, r.text)
         self.assertTrue(any(e.get("type") == "done" for e in helpers.events(r)))
@@ -189,6 +194,28 @@ class Terminal(unittest.TestCase):
 
 class Program(unittest.TestCase):
     """spark-tui itself: the pairing line, https only, the pin checked before anything is sent."""
+
+    def test_calendar_as_text(self):
+        """spark-tui kalender: a block per day, the calendar named only when there are several, text from the
+        calendar stays one printable line."""
+        import datetime
+        p = program()
+        start = datetime.date(2026, 3, 9)
+        at = time.mktime(datetime.datetime(2026, 3, 10, 10, 30).timetuple())
+        d = {"connected": True, "calendars": ["Privat", "Arbeit"], "errors": ["Weg"],
+             "events": [{"start": at, "end": at + 5400, "allday": False, "title": "Werkstatt\x1b[31m Auto\n", "location": "Offenburg", "cal": 1}]}
+        lines = p.calendar_lines(d, start)
+        self.assertEqual(lines[0], "Mo 09.03.")
+        self.assertEqual(lines[1], "  –")
+        self.assertIn("Di 10.03.", lines)
+        row = lines[lines.index("Di 10.03.") + 1]
+        self.assertIn("10:30-12:00", row)
+        self.assertIn("Werkstatt[31m Auto · Offenburg [Arbeit]", row)
+        self.assertNotIn("\x1b", row)
+        self.assertEqual(lines[-1], "Nicht erreicht: Weg")
+        self.assertEqual(sum(1 for x in lines if x[:2] in p.DAYS), 7)
+        self.assertIn("Kalender → Einstellungen", p.calendar_lines({"connected": False}, start)[0])
+        self.assertEqual(p.week_start(0, time.mktime(datetime.datetime(2026, 3, 12, 9).timetuple())), start)
 
     def test_line(self):
         p = program()

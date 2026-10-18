@@ -825,7 +825,7 @@ flowchart TD
   s7 -->|nein| s7x
   s8x(["Gerade nicht (503)"])
   s8 -->|ja| s8x
-  s9x(["Terminal-Client: Schlüssel-Bereich „tui“, nur 12 Regeln (Chat, Gespräche, Heute, Aufträge)"])
+  s9x(["Terminal-Client: Schlüssel-Bereich „tui“, nur 13 Regeln (Chat, Gespräche, Heute, Kalender, Aufträge)"])
   s9 -->|Terminal| s9x
   s10x(["Nur im eigenen Browser (403)"])
   s10 -->|ja| s10x
@@ -853,7 +853,7 @@ Gilt bei: [Schritt 6](#kn-apps-s6), [Schritt 7](#kn-apps-s7)
 |---|---|---|
 | app | iPhone-App | profiles.APP_PATHS und freigegebene Bereiche |
 | watch | Pebble-Uhr | nur /api/watch/… |
-| tui | Terminal-Client spark-tui | terminal.TUI_RULES: Chat, Gespräche, Heute, Aufträge |
+| tui | Terminal-Client spark-tui | terminal.TUI_RULES: Chat, Gespräche, Heute, Kalender, Aufträge |
 | desk, write | Spark-Begleiter, Schreibhilfe | nur ihre eigenen Pfade |
 | ohne | Lautsprecher, Siri-Kurzbefehl, eigene Skripte | fragen wie das Profil, nie Konto oder Sicherheit |
 | kein Schlüssel | Android-App | Anmeldung wie ein Browser |

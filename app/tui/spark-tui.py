@@ -6,6 +6,7 @@
     spark-tui                                                                the window (needs Textual)
     spark-tui frage 'Wann fährt der erste Bus?'                              one question, the answer as text
     echo 'Text' | spark-tui frage 'Fasse das zusammen'                       the piped text goes with the question
+    spark-tui kalender [--woche N]                                           the appointments of a week (0 = this one)
     spark-tui status                                                         reachable? what may this terminal do?
     spark-tui update                                                         the newest version from the Spark
 
@@ -29,7 +30,7 @@ import threading
 import time
 import urllib.parse
 
-VERSION = "1.0.2"
+VERSION = "1.0.3"
 HEADER = "X-Speech-Device"
 VENV = os.path.join(os.environ.get("XDG_DATA_HOME") or os.path.expanduser("~/.local/share"), "spark-tui")   # Textual for the window
 SETUP = "python3 -m venv ~/.local/share/spark-tui && ~/.local/share/spark-tui/bin/pip install textual"
@@ -315,6 +316,56 @@ def cmd_ask(args):
         sys.exit(str(e))
 
 
+DAYS = ("Mo", "Di", "Mi", "Do", "Fr", "Sa", "So")
+
+
+def week_start(offset=0, now=None):
+    """The Monday of this week plus offset weeks, as a date."""
+    import datetime
+    today = datetime.date.fromtimestamp(now or time.time())
+    return today - datetime.timedelta(days=today.weekday()) + datetime.timedelta(weeks=offset)
+
+
+def calendar_lines(d, start):
+    """The page Kalender as text, one block per day of the week from start (GET /api/profile/calendar/view).
+    Titles and places come from the calendars: plain text, cut to a line."""
+    import datetime
+    if not d.get("connected"):
+        return ["Kein Kalender verbunden (im Panel unter Kalender → Einstellungen)."]
+    names = d.get("calendars") or []
+    lines = []
+    for i in range(7):
+        day = start + datetime.timedelta(days=i)
+        a = time.mktime(day.timetuple())
+        b = a + 86400
+        evs = [e for e in d.get("events", []) if e.get("start", 0) < b and max(e.get("end", 0), e.get("start", 0) + 60) > a]
+        lines.append(f"{DAYS[day.weekday()]} {day:%d.%m.}")
+        for e in evs:
+            when = "ganztägig  " if e.get("allday") else time.strftime("%H:%M", time.localtime(e["start"])) + "-" + time.strftime("%H:%M", time.localtime(e["end"])) + " "
+            cal = names[e["cal"]] if len(names) > 1 and isinstance(e.get("cal"), int) and e["cal"] < len(names) else ""
+            text = str(e.get("title", "")) + (f" · {e['location']}" if e.get("location") else "") + (f" [{cal}]" if cal else "")
+            lines.append("  " + when + " " + "".join(c for c in text if c.isprintable())[:60])
+        if not evs:
+            lines.append("  –")
+    lines += [f"Nicht erreicht: {n}" for n in d.get("errors", [])]
+    return lines
+
+
+def get_week(sp, offset):
+    start = week_start(offset)
+    q = urllib.parse.urlencode({"start": start.isoformat(), "days": 7, "tz": zone()})
+    return start, sp.call("GET", "/api/profile/calendar/view?" + q)
+
+
+def cmd_calendar(args):
+    conf = need()
+    try:
+        start, d = get_week(Spark(conf), args.woche)
+    except SparkError as e:
+        sys.exit(str(e))
+    print("\n".join(calendar_lines(d, start)))
+
+
 # ---------------------------------------------------------------- the window (Textual)
 def cmd_window(args):
     conf = need()
@@ -377,6 +428,37 @@ def run_window(sp, conf, App):
         def action_drop(self):
             self._do("DELETE", f"/api/profile/agent/jobs/{self.job['id']}", "Gelöscht.")
 
+    class Week(ModalScreen):
+        """F5: the page Kalender as text, a week at a time (← →)."""
+        BINDINGS = [Binding("escape", "dismiss", "zurück"), Binding("left", "move(-1)", "Woche zurück"),
+                    Binding("right", "move(1)", "Woche vor"), Binding("t", "move(0)", "heute")]
+
+        def __init__(self):
+            super().__init__()
+            self.offset = 0
+
+        def compose(self):
+            with VerticalScroll(id="jobbox"):
+                yield Static("…", id="week")
+            yield Footer()
+
+        def on_mount(self):
+            self.load()
+
+        def load(self):
+            def run():
+                try:
+                    start, d = get_week(sp, self.offset)
+                    text = "\n".join(calendar_lines(d, start))
+                except SparkError as e:
+                    text = str(e)
+                self.app.call_from_thread(self.query_one("#week").update, text)
+            threading.Thread(target=run, daemon=True).start()
+
+        def action_move(self, step):
+            self.offset = self.offset + step if step else 0
+            self.load()
+
     class Ask(ModalScreen):
         BINDINGS = [Binding("escape", "dismiss", "zurück")]
 
@@ -409,7 +491,7 @@ def run_window(sp, conf, App):
         JobView, Ask { align: center middle; }
         """
         BINDINGS = [Binding("f2", "focus_convos", "Gespräche"), Binding("f3", "focus_jobs", "Aufträge"),
-                    Binding("f4", "refresh_side", "Heute"), Binding("ctrl+n", "new_convo", "neues Gespräch"),
+                    Binding("f4", "refresh_side", "Heute"), Binding("f5", "calendar", "Kalender"), Binding("ctrl+n", "new_convo", "neues Gespräch"),
                     Binding("escape", "stop", "abbrechen", show=False), Binding("f10", "quit", "Ende")]
 
         def __init__(self):
@@ -647,6 +729,9 @@ def run_window(sp, conf, App):
         def action_refresh_side(self):
             self.refresh_side()
 
+        def action_calendar(self):
+            self.push_screen(Week())
+
     SparkTui().run()
 
 
@@ -661,10 +746,13 @@ def main(argv=None):
     a.add_argument("url")
     f = sub.add_parser("frage", help="eine Frage, die Antwort als Text")
     f.add_argument("text", nargs="*")
+    c = sub.add_parser("kalender", help="die Termine einer Woche")
+    c.add_argument("--woche", type=int, default=0, help="0 diese, 1 nächste, -1 letzte Woche")
     sub.add_parser("status", help="erreichbar? was darf dieses Terminal?")
     sub.add_parser("update", help="die neueste Version vom Spark holen (Prüfsumme geprüft)")
     args = p.parse_args(argv)
-    {"koppeln": cmd_pair, "adresse-dazu": cmd_add, "frage": cmd_ask, "status": cmd_status, "update": cmd_update}.get(args.cmd, cmd_window)(args)
+    {"koppeln": cmd_pair, "adresse-dazu": cmd_add, "frage": cmd_ask, "status": cmd_status, "update": cmd_update,
+     "kalender": cmd_calendar}.get(args.cmd, cmd_window)(args)
 
 
 if __name__ == "__main__":

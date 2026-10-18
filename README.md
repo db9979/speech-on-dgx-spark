@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.807** uConsole and terminal: `spark-tui kalender` and F5 show the week of the page Calendar (read only); then `spark-tui update`
 - **V01.0.806** Question cards: yes/no or "A or B" as buttons under a question of the assistant, everywhere
 - **V01.0.805** Calendar as a page of its own in the menu: day, week, month or list; everything to set up in its tab Settings, no longer under Me
 - **V01.0.804** Fix: "yes" to "Shall I put it on the reMarkable?" puts the answer there; "yes" to an appointment answers right
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.800** Speech output with several at once: finer measurement, three settings to try
 - **V01.0.799** Fix: scans upload again while pages from knowledge folders wait, own documents are read first
 - **V01.0.798** The OLED shows a running update, forced: a big percentage with a bar, first TARS, then the Pi, also at night; LEDs blue; the share also in Live and the Steuerzentrale
-- **V01.0.797** Language model switch in the apps and a note when it is done
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

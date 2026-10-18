@@ -1979,6 +1979,13 @@
 "v": 806,
 "titel": "Rückfrage-Karten",
 "text": "Voraussetzung: Funktionen → „Ablauf und Freigabe zeigen“ an. A: Im Assistenten „Erklär mir kurz Sauerteig und frag mich am Ende, ob du ein Rezept zeigen sollst“: unter der Frage stehen „Ja“ und „Nein“. B: „Ja“ antippen: es geht beim Thema weiter (Zustand → Logs: „weiche: Antwort auf Rückfrage“, wenn die Frage davor eine Gruppe hatte). C: „Frag mich, ob ich Tee oder Kaffee möchte“: Knöpfe „Tee“, „Kaffee“, „Anders …“ (setzt nur den Cursor). D: Dasselbe in der iPhone-App, in Telegram (Antworttasten) und auf der Pebble (Nachfragen). E: Schalter aus: keine Knöpfe."
+},
+{
+"id": "P307",
+"v": 807,
+"titel": "Kalender auf der uConsole",
+"text": "A: Auf der uConsole `spark-tui update`, danach `spark-tui --version` zeigt 1.0.3. B: `spark-tui kalender` druckt Mo bis So dieser Woche mit deinen Terminen (Uhrzeit, Titel, Ort), `--woche 1` die nächste. C: Im Fenster F5: die Woche, ← → blättert, t springt zurück auf heute, Esc schließt. D: Ohne verbundenen Kalender steht der Hinweis auf Kalender → Einstellungen.",
+"thread": "Kalender und E-Mail in Panel und Apps"
 }
 ]
 }
