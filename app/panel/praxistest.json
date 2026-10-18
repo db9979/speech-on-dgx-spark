@@ -1828,6 +1828,13 @@
 "titel": "Wissensbuch: Antworten ablegen, Obsidian, NAS",
 "text": "A: Wissensbuch an, eine Frage stellen, die zwei eigene Dokumente oder einen Kiwix-Artikel und ein Dokument braucht. B: Unter der Antwort steht „Ins Wissensbuch“; Tippen legt sie ab, unter Ich → Dokumente → Wissensbuch erscheint eine Seite unter „Abgelegte Antworten“, jeder Satz mit Quelle (Kiwix ohne Link). C: Eine Antwort ohne Quellen zeigt den Knopf nicht. D: „Als Obsidian-Ordner herunterladen“ gibt eine ZIP; in Obsidian öffnen: eine Notiz je Seite, Links, Fußnoten. E: Mit Ablage-Ordner auf dem NAS (Ich → Speicher, automatisch ablegen) liegt nach einer Nacht „Wissensbuch JJJJ-MM-TT.zip“ in spark_ablage/Erstellt. F: Zustand → Logs, Bereich Wissen: „abgelegt“, „export“, „nas abgelegt“ nur mit Zahlen.",
 "thread": "Wissensbuch nach Karpathy"
+},
+{
+"id": "P285",
+"v": 782,
+"titel": "Wechsel wartet auf das neue Modell",
+"text": "A: Auf tars `sudo speech-spark modelle wechseln llm qwen36-35b-a3b-nvfp4`: „modelle: rundlauf bereit nach … s“ nennt mehrere Minuten (nicht 0 s), danach „rundlauf satz ok“, „werkzeug ok“, „bild ok“, „systemone ok“ und „umgeschaltet llm qwen36-35b-a3b-nvfp4“. B: Zustand → Modelle zeigt Qwen3.6 als laufendes Sprachmodell, eine Chatfrage wird beantwortet.",
+"thread": "Eigene Modell-Installation statt qwen38"
 }
 ]
 }

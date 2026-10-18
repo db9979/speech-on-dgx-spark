@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.782** · 2026-10-18 · Fix: die Probefrage nach einem Modellwechsel wartet auf die neue Engine selbst, nicht nur auf das Tor (der Wechsel auf Qwen3.6 brach mit „rundlauf bereit nach 0 s“ ab, weil das Tor noch „bereit“ vom alten Modell meldete)
 - **V01.0.781** · 2026-10-18 · Wissensbuch Stufe D: „Ins Wissensbuch“ unter Antworten aus mindestens zwei Quellen (nur der Klick legt ab, nur Sätze mit Stelle), Kiwix-Artikel als Quelle, Obsidian-Ordner als ZIP, nachts eine Kopie in den Ablage-Ordner auf dem NAS
 - **V01.0.780** · 2026-10-18 · Änderungsprotokoll fälschungssicher: jede Zeile mit Prüfkette (SHA-256 der Zeile davor), ein Jahr aufbewahrt, täglich geprüft mit Hinweis bei einem Bruch, versiegelte Kopie mit der Sicherung nach außen auf dem NAS, Knopf „Protokoll prüfen“ unter Zustand → Logs → Änderungen vergleicht beides
 - **V01.0.779** · 2026-10-18 · Wissensbuch Stufe C: Nachtprüfung (neu gelesene Dokumente neu einarbeiten, verschwundene entfernen, „veraltet?“ nach R1/R2, Stichprobe Ja/Nein durch das Sprachmodell), gelöschte und ausgelassene Dokumente gehen sofort (documents.on_gone), Widersprüche mit „Stimmt“ klären

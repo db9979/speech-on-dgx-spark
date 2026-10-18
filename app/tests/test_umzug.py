@@ -60,7 +60,7 @@ class Tor(BaseHTTPRequestHandler):
 
 def cfg_with(port, **llm_extra):
     c = copy.deepcopy(modelle.load_config())
-    c["llm"] = dict(c["llm"], port=port, **llm_extra)
+    c["llm"] = dict(c["llm"], port=port, **{"engine_port": port, **llm_extra})
     return c
 
 
@@ -129,6 +129,15 @@ class Rundlauf(unittest.TestCase):
         ok, wort = modelle.rundlauf(c, lambda s: None, sleep=lambda s: None)
         self.assertFalse(ok)
         self.assertEqual(wort, "httperror")
+
+    def test_waits_for_the_new_engine_not_the_door_alone(self):
+        """Dominik 2026-10-18: right after the restart the door still said "ready" from the old engine."""
+        t = iter(range(0, 100000, 400))
+        Tor.seen.clear()
+        c = cfg_with(self.srv.server_port, engine_port=1)         # the door answers, the new engine does not yet
+        ok, wort = modelle.rundlauf(c, lambda s: None, frist=1200, now=lambda: next(t), sleep=lambda s: None)
+        self.assertEqual((ok, wort), (False, "nicht bereit"))
+        self.assertEqual([x for x in Tor.seen if x.startswith("/v1/")], [])   # no question went through the door
 
     def test_a_door_that_never_gets_ready_fails_in_time(self):
         t = iter(range(0, 100000, 400))

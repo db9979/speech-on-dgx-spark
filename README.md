@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.782** Fix: a model switch waits for the new model before it checks it
 - **V01.0.781** File answers into the knowledge book, Kiwix as a source, Obsidian folder and a nightly NAS copy
 - **V01.0.780** Tamper-evident change log: hash chain, one year, copy on the NAS, "Check the log"
 - **V01.0.779** Knowledge book checks itself at night; you settle contradictions and out-of-date sentences with one click
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.775** Fix: no engine starts next to a model measurement anymore; measuring Qwen3.6 35B A3B
 - **V01.0.774** Fix: "?" button next to a setting's title instead of inside it
 - **V01.0.773** Fix: knowledge book tab without a false alarm of the inline handler check
-- **V01.0.772** Knowledge book: documents become pages with a source per sentence, answers from them first
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

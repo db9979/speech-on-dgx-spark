@@ -1225,10 +1225,14 @@ def rundlauf(cfg, log=print, frist=GESUND_S, now=time.monotonic, sleep=time.slee
     (when the model or the image understanding model can see) and one System One question. Returns (ok, word)."""
     c = cfg.get("llm", {})
     port, key = int(c.get("port", 31006)), str(cfg.get("api", {}).get("key") or "")
-    m, _ = rolle("llm", cfg)
+    m, engine = rolle("llm", cfg)
     t0 = now()
+    # first the engine itself, then the door: right after a restart the door still says "ready" from the engine before
+    # (its canary runs only every KANARIE_S quiet seconds), so asking the door alone sent the questions to nobody
+    # (Dominik 2026-10-18: „rundlauf bereit nach 0 s“, then httperror)
     while True:
         try:
+            _get(engine, "/health")
             if json.loads(_get(port, "/health")).get("status") == "ready":
                 break
         except Exception:
