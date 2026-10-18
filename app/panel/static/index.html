@@ -59,7 +59,7 @@
 <button class="b" id="logoutbtn" type="button" style="order:4;display:none">Abmelden</button>
 </div>
 <button class="ib" id="mmenu" type="button" title="Menü" aria-label="Menü"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
-<nav><button type="button" class="navfind" id="findbtn" aria-label="Suchen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><span>Suchen …</span><kbd>Strg K</kbd></button><button data-s="chat"><i class="ni" data-ni="chat"></i>Assistent</button><button data-s="chats" hidden><i class="ni" data-ni="chats"></i>Chats <span class="ncnt" id="cxcnt" hidden></span></button><button type="button" class="navme" id="navme"><i class="ni" data-ni="me"></i>Ich <span class="medot" hidden></span></button><span class="navgrp">Spark verwalten</span><button data-s="mon" class="on"><i class="ni" data-ni="mon"></i>Zustand <span class="hdot" id="hdot"></span></button><button data-s="feat"><i class="ni" data-ni="feat"></i>Funktionen</button><button data-s="prof"><i class="ni" data-ni="prof"></i>Personen und Geräte</button><button data-s="cfg"><i class="ni" data-ni="cfg"></i>Einstellungen <span class="ncnt" id="dirtycnt" hidden></span><span id="updbadge" class="pill warn" style="display:none">Update</span></button></nav></header>
+<nav><button type="button" class="navfind" id="findbtn" aria-label="Suchen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><span>Suchen …</span><kbd>Strg K</kbd></button><button data-s="chat"><i class="ni" data-ni="chat"></i>Assistent</button><button data-s="chats" hidden><i class="ni" data-ni="chats"></i>Chats <span class="ncnt" id="cxcnt" hidden></span></button><button data-s="cal" hidden><i class="ni" data-ni="cal"></i>Kalender</button><button type="button" class="navme" id="navme"><i class="ni" data-ni="me"></i>Ich <span class="medot" hidden></span></button><span class="navgrp">Spark verwalten</span><button data-s="mon" class="on"><i class="ni" data-ni="mon"></i>Zustand <span class="hdot" id="hdot"></span></button><button data-s="feat"><i class="ni" data-ni="feat"></i>Funktionen</button><button data-s="prof"><i class="ni" data-ni="prof"></i>Personen und Geräte</button><button data-s="cfg"><i class="ni" data-ni="cfg"></i>Einstellungen <span class="ncnt" id="dirtycnt" hidden></span><span id="updbadge" class="pill warn" style="display:none">Update</span></button></nav></header>
 <main>
 <div class="ptabs subnav" id="subnav" hidden></div>
 <button class="b cfgback" id="subback" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg><span>Zustand</span></button>
@@ -785,6 +785,21 @@
   </div>
 </section>
 
+<section id="cal"><div class="card kalcard" id="kalroot"></div>
+    <div id="calbox" class="kalset" hidden><div class="intro">„Guten Morgen“ oder „Was steht heute an?“: Der Assistent liest Termine, Erinnerungen und deine Themen vor. Du kannst mehrere Kalender verbinden. „Trag Zahnarzt Dienstag 10 Uhr ein“ legt einen Termin im ersten CalDAV-Kalender an, aber erst, wenn du den Vorschlag mit Ja bestätigst; Abo-Links bleiben nur lesend.</div>
+      <ul class="facts" id="callist"></ul>
+      <details id="caladd"><summary>Kalender hinzufügen</summary>
+        <label>Anbieter</label><select id="calkind"><option value="icloud">iCloud (CalDAV)</option><option value="nextcloud">Nextcloud (CalDAV)</option><option value="caldav">anderer CalDAV-Server</option><option value="ics">Abo-Link (webcal://, webcals://, .ics, Google)</option></select>
+        <div class="fh" id="calhint"></div>
+        <label>Name</label><input id="calname" placeholder="z. B. Arbeit" autocomplete="off">
+        <label>Adresse</label><input id="calurl" placeholder="https://cloud.example.de/remote.php/dav" autocapitalize="off" autocomplete="off">
+        <div class="two2"><div><label>Benutzer</label><input id="caluser" autocapitalize="off" autocomplete="off"></div><div><label>Passwort</label><input type="password" id="calpw" autocomplete="new-password"></div></div>
+        <div class="row" style="margin-top:8px"><button class="b p" id="calsave" type="button">Prüfen und hinzufügen</button></div></details>
+      <label>Themen fürs Briefing (höchstens drei, mit Komma getrennt)</label><div class="rowin"><input id="caltopics" placeholder="Wetter Berlin, Nachrichten"><button class="b" id="caltopsave" type="button">Speichern</button></div>
+      <div class="row" style="margin-top:8px"><button class="b" id="caltest" type="button">Nächste Termine zeigen</button><span id="calmsg"></span></div>
+      <ul class="facts" id="calevents"></ul></div>
+</section>
+
 <section id="chats"><div class="card cx" id="cxbox">
   <div class="cx-off mut" id="cxoff" hidden></div>
   <div class="cx-split" id="cxsplit">
@@ -1146,18 +1161,6 @@
     <div id="voicebox" class="ptab"><div class="intro">Lies drei kurze Sätze vor. Danach erkennt der Assistent dich an der Stimme, auch an anderen Geräten, und antwortet mit deinem Gedächtnis, deinen Dokumenten und Einstellungen.</div>
       <div id="voicestate" class="mut" style="margin-top:8px"></div><div id="voicesay" class="voicesay" style="display:none"></div>
       <div class="row" style="margin-top:8px"><button class="b p" id="voicego" type="button">Stimme einlernen</button><button class="b" id="voicedel" type="button">Stimme löschen</button><span id="voicemsg"></span></div></div>
-    <div id="calbox" class="ptab"><div class="intro">„Guten Morgen“ oder „Was steht heute an?“: Der Assistent liest Termine, Erinnerungen und deine Themen vor. Du kannst mehrere Kalender verbinden. „Trag Zahnarzt Dienstag 10 Uhr ein“ legt einen Termin im ersten CalDAV-Kalender an, aber erst, wenn du den Vorschlag mit Ja bestätigst; Abo-Links bleiben nur lesend.</div>
-      <ul class="facts" id="callist"></ul>
-      <details id="caladd"><summary>Kalender hinzufügen</summary>
-        <label>Anbieter</label><select id="calkind"><option value="icloud">iCloud (CalDAV)</option><option value="nextcloud">Nextcloud (CalDAV)</option><option value="caldav">anderer CalDAV-Server</option><option value="ics">Abo-Link (webcal://, webcals://, .ics, Google)</option></select>
-        <div class="fh" id="calhint"></div>
-        <label>Name</label><input id="calname" placeholder="z. B. Arbeit" autocomplete="off">
-        <label>Adresse</label><input id="calurl" placeholder="https://cloud.example.de/remote.php/dav" autocapitalize="off" autocomplete="off">
-        <div class="two2"><div><label>Benutzer</label><input id="caluser" autocapitalize="off" autocomplete="off"></div><div><label>Passwort</label><input type="password" id="calpw" autocomplete="new-password"></div></div>
-        <div class="row" style="margin-top:8px"><button class="b p" id="calsave" type="button">Prüfen und hinzufügen</button></div></details>
-      <label>Themen fürs Briefing (höchstens drei, mit Komma getrennt)</label><div class="rowin"><input id="caltopics" placeholder="Wetter Berlin, Nachrichten"><button class="b" id="caltopsave" type="button">Speichern</button></div>
-      <div class="row" style="margin-top:8px"><button class="b" id="caltest" type="button">Nächste Termine zeigen</button><span id="calmsg"></span></div>
-      <ul class="facts" id="calevents"></ul></div>
     <div id="mailbox" class="ptab"><div class="intro">Frag „Hab ich neue Mails?“, „Was schreibt Anna?“ oder „Lies mir die Mail von der Telekom vor“. Der Assistent liest nur den Posteingang der letzten 30 Tage und ändert nichts: keine Mail wird gesendet, gelöscht oder als gelesen markiert. Das Passwort bleibt verschlüsselt auf dem Spark.</div>
       <ul class="facts" id="maillist"></ul>
       <details id="mailadd"><summary>Postfach hinzufügen</summary>
@@ -1297,6 +1300,7 @@
 <script src="/static/js/kacheln.js"></script>
 <script src="/static/js/join.js"></script>
 <script src="/static/js/today.js"></script>
+<script src="/static/js/kalender.js"></script>
 <script src="/static/js/android.js"></script>
 <script src="/static/js/appview.js"></script>
 <script src="/static/js/notaus.js"></script>

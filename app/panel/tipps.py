@@ -389,12 +389,13 @@ def steps(guide_id, lang="de", admin=False):
     return [s for s in g["sec"].get("setup", ([], []))[li] if s and (admin or not s.startswith("Admin"))][:8]
 
 
-WAY_ME = re.compile(r"(?<![\w-])(Ich|Me) → ")
+# a way into Ich or into a page of its own (features.OWN_PAGES: „Kalender → Einstellungen → …“)
+WAY_ME = re.compile(r"(?<![\w-])(" + "|".join(["Ich", "Me"] + [n for x in features.OWN_PAGES for n in x[2:]]) + ") → ")
 
 
 def _way(x, todo, lang="de"):
     """Where "Seite öffnen" jumps (way.js wayGo): the first way into Ich in the guide's own steps (the row or part
-    the person fills in, „Ich → Kalender → „Kalender hinzufügen““), else the function's row on its Ich page, else
+    the person fills in, „Kalender → Einstellungen → „Kalender hinzufügen““), else the function's row on its page, else
     the page."""
     for s in todo:
         m = WAY_ME.search(s)

@@ -1966,6 +1966,13 @@
 "v": 804,
 "titel": "Ja zum reMarkable",
 "text": "A: Im Chat „Erstell eine Notiz auf dem reMarkable mit dem Rezept für Kirschkuchen“: das Rezept kommt als Antwort und liegt danach im Ordner „Antworten“ auf dem reMarkable. B: Fragt der Spark bei einer anderen Antwort „Soll ich das aufs reMarkable legen?“, „Ja“ sagen: er sagt, wo es liegt, und es liegt dort ohne die Frage. C: Mit „Ablauf und Freigabe zeigen“ an steht unter der Frage die Karte Ja/Nein „reMarkable“. D: Auf eine solche Frage „Nein“: nichts wird abgelegt. E: „Trag mir morgen um 17 Uhr einen Termin ein“, dann „Ja“: der Termin steht im Kalender und die Antwort sagt genau das (nichts von alten Gesprächen)."
+},
+{
+"id": "P305",
+"v": 805,
+"titel": "Kalender als eigene Seite",
+"text": "A: Links im Menü unter Assistent steht „Kalender“ (Handy: Heute → Karte „Termine“). B: Reiter Termine: Woche zeigt deine Termine mit Farbe je Kalender; Tag, Monat und Liste umschalten, mit ‹ Heute › blättern; Antippen zeigt Zeit, Ort und Kalender. C: Reiter Einstellungen: Kalender verbinden, entfernen, Themen fürs Briefing wie früher unter Ich. D: Ich zeigt keine Seite „Kalender“ mehr. E: Funktionen → Anleitungen → Kalender: „Kalender → Einstellungen → „Kalender hinzufügen““ ist ein Link und springt dorthin. F: iPhone-App (Liste „Im Panel öffnen“): „Kalender“ öffnet die Seite. G: Am Handy (390 px) Woche und Monat ohne seitliches Scrollen.",
+"thread": "Kalender und E-Mail in Panel und Apps"
 }
 ]
 }

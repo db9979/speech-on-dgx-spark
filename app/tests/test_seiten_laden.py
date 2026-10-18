@@ -73,8 +73,10 @@ class Static(unittest.TestCase):
         self.assertIn("auth:true", body)
         self.assertIn("e.status===401)out=true", body)
         self.assertNotIn("catch{setProfile(null)", body)
-        for box in ("factbox", "docbox", "calbox", "mailbox", "habox", "secbox", "logbox"):
+        for box in ("factbox", "docbox", "mailbox", "habox", "secbox", "logbox"):
             self.assertIn(f"['{box}',", body)
+        # the calendar settings moved to the page Kalender (V01.0.805) and load there the same way
+        self.assertIn("lzb(b,showCal,{auth:true})", read("js", "kalender.js"))
         ex = read("js", "extras.js")
         self.assertIn("function extrasJobs()", ex)
         self.assertNotIn("window[", ex[ex.index("function extrasJobs"):ex.index("async function showExtras")])
@@ -190,23 +192,23 @@ class Browser(unittest.TestCase):
             async with async_playwright() as p:
                 br, pg, errors = await self.page(p)
                 try:
-                    go = await self.hold(pg, "**/api/profile/calendar")
-                    await pg.evaluate("openMe('calbox');0")   # not awaited: the page goes on loading
-                    await pg.wait_for_selector("#calbox[aria-busy=true] .lz-sk")
-                    # the other boxes do not wait for the calendar any more
+                    go = await self.hold(pg, "**/api/profile/security")
+                    await pg.evaluate("openMe('secbox');0")   # not awaited: the page goes on loading
+                    await pg.wait_for_selector("#secbox[aria-busy=true] .lz-sk")
+                    # the other boxes do not wait for this one any more
                     await pg.wait_for_function("document.getElementById('factbox').dataset.lzok==='1'")
                     # what the browser tests wait for after opening a page: not idle while one box still loads
                     self.assertFalse(await pg.evaluate("lzIdle()"))
                     go.set()
-                    await pg.wait_for_function("!document.querySelector('#calbox .lz-sk')&&!document.getElementById('calbox').hasAttribute('aria-busy')")
+                    await pg.wait_for_function("!document.querySelector('#secbox .lz-sk')&&!document.getElementById('secbox').hasAttribute('aria-busy')")
                     await pg.wait_for_function("lzIdle()")
                     # opened again: the old data stays, dimmed, with „wird aktualisiert …“
-                    go2 = await self.hold(pg, "**/api/profile/calendar")
-                    await pg.evaluate("openMe('calbox');0")   # not awaited: the page goes on loading
-                    await pg.wait_for_selector("#calbox.lz-stale .lz-chip")
-                    self.assertEqual(await pg.evaluate("document.querySelector('#calbox .lz-chip').textContent"), "wird aktualisiert …")
+                    go2 = await self.hold(pg, "**/api/profile/security")
+                    await pg.evaluate("openMe('secbox');0")   # not awaited: the page goes on loading
+                    await pg.wait_for_selector("#secbox.lz-stale .lz-chip")
+                    self.assertEqual(await pg.evaluate("document.querySelector('#secbox .lz-chip').textContent"), "wird aktualisiert …")
                     go2.set()
-                    await pg.wait_for_function("!document.querySelector('#calbox.lz-stale')")
+                    await pg.wait_for_function("!document.querySelector('#secbox.lz-stale')")
                     self.assertEqual(errors, [])
                 finally:
                     await br.close()
@@ -224,15 +226,15 @@ class Browser(unittest.TestCase):
                             await route.fulfill(status=500, content_type="application/json", body=json.dumps({"detail": "kaputt"}))
                         else:
                             await route.continue_()
-                    await pg.route("**/api/profile/calendar", cal)
-                    await pg.evaluate("openMe('calbox');0")   # not awaited: the page goes on loading
-                    await pg.wait_for_selector("#calbox .lz-err button[data-on=lzAgain]")
+                    await pg.route("**/api/profile/security", cal)
+                    await pg.evaluate("openMe('secbox');0")   # not awaited: the page goes on loading
+                    await pg.wait_for_selector("#secbox .lz-err button[data-on=lzAgain]")
                     # still signed in: the profile's page, not the login (before: any error looked like being signed out)
                     self.assertTrue(await pg.evaluate("!!PROFILE&&document.getElementById('profhead').textContent==='Ladeseite'"))
-                    self.assertIn("kaputt", await pg.evaluate("document.querySelector('#calbox .lz-err p').textContent"))
+                    self.assertIn("kaputt", await pg.evaluate("document.querySelector('#secbox .lz-err p').textContent"))
                     fail["on"] = False
-                    await pg.click("#calbox .lz-err button[data-on=lzAgain]")
-                    await pg.wait_for_function("!document.querySelector('#calbox .lz-err')&&document.getElementById('calbox').dataset.lzok==='1'")
+                    await pg.click("#secbox .lz-err button[data-on=lzAgain]")
+                    await pg.wait_for_function("!document.querySelector('#secbox .lz-err')&&document.getElementById('secbox').dataset.lzok==='1'")
                     self.assertEqual(errors, [])
                 finally:
                     await br.close()
@@ -243,16 +245,16 @@ class Browser(unittest.TestCase):
             async with async_playwright() as p:
                 br, pg, errors = await self.page(p)
                 try:
-                    go = await self.hold(pg, "**/api/profile/calendar")
+                    go = await self.hold(pg, "**/api/profile/security")
                     await pg.evaluate("LZ.slow=50;LZ.wait=400")
-                    await pg.evaluate("openMe('calbox');0")   # not awaited: the page goes on loading
-                    await pg.wait_for_selector("#calbox.lz-slow .lz-chip.w")
-                    await pg.wait_for_selector("#calbox .lz-err")
-                    self.assertIn("30 Sekunden", await pg.evaluate("document.querySelector('#calbox .lz-err p').textContent"))
-                    self.assertFalse(await pg.evaluate("!!document.querySelector('#calbox.lz-slow')"))
+                    await pg.evaluate("openMe('secbox');0")   # not awaited: the page goes on loading
+                    await pg.wait_for_selector("#secbox.lz-slow .lz-chip.w")
+                    await pg.wait_for_selector("#secbox .lz-err")
+                    self.assertIn("30 Sekunden", await pg.evaluate("document.querySelector('#secbox .lz-err p').textContent"))
+                    self.assertFalse(await pg.evaluate("!!document.querySelector('#secbox.lz-slow')"))
                     # the answer comes late after all: it fills the box and the error goes
                     go.set()
-                    await pg.wait_for_function("!document.querySelector('#calbox .lz-err')&&document.getElementById('calbox').dataset.lzok==='1'")
+                    await pg.wait_for_function("!document.querySelector('#secbox .lz-err')&&document.getElementById('secbox').dataset.lzok==='1'")
                     self.assertEqual(errors, [])
                 finally:
                     await br.close()
@@ -264,7 +266,7 @@ class Browser(unittest.TestCase):
                 br, pg, errors = await self.page(p)
                 try:
                     await pg.route("**/api/**", lambda r: r.abort("failed"))   # the whole Spark is gone
-                    await pg.evaluate("openMe('calbox');0")   # not awaited: the page goes on loading
+                    await pg.evaluate("openMe('secbox');0")   # not awaited: the page goes on loading
                     await pg.wait_for_selector("#lzband:not([hidden])")
                     self.assertIn("Spark antwortet nicht.", await pg.evaluate("document.getElementById('lzband').textContent"))
                     # back, but only the button's probe may bring the band away: a poll that answers first would
@@ -282,7 +284,7 @@ class Browser(unittest.TestCase):
                     await pg.route("**/api/**", only_ping)
                     await pg.click("#lzband button[data-on=lzPing]")
                     await pg.wait_for_selector("#lzband", state="hidden")
-                    await pg.wait_for_function("document.getElementById('calbox').dataset.lzok==='1'")
+                    await pg.wait_for_function("document.getElementById('secbox').dataset.lzok==='1'")
                     self.assertTrue(back["pinged"])
                     self.assertEqual(errors, [])
                 finally:
@@ -294,7 +296,7 @@ class Browser(unittest.TestCase):
             async with async_playwright() as p:
                 br, pg, errors = await self.page(p)
                 try:
-                    go = await self.hold(pg, "**/api/profile/calendar")
+                    go = await self.hold(pg, "**/api/profile/security")
                     await pg.click("#navme")
                     await pg.wait_for_selector("#lzbar:not([hidden])")
                     go.set()
@@ -316,22 +318,22 @@ class Browser(unittest.TestCase):
                         async def cal(route):
                             if state["fail"]:
                                 await route.fulfill(status=500, content_type="application/json",
-                                                    body=json.dumps({"detail": "Der Kalender " + "x" * 200 + " antwortet nicht"}))
+                                                    body=json.dumps({"detail": "Die Sicherheit " + "x" * 200 + " antwortet nicht"}))
                             else:
                                 await go.wait()
                                 await route.continue_()
-                        await pg.route("**/api/profile/calendar", cal)
+                        await pg.route("**/api/profile/security", cal)
                         await pg.evaluate("LZ.slow=50")
-                        await pg.evaluate("openMe('calbox');0")   # not awaited: the page goes on loading
-                        await pg.wait_for_selector("#calbox .lz-err")
+                        await pg.evaluate("openMe('secbox');0")   # not awaited: the page goes on loading
+                        await pg.wait_for_selector("#secbox .lz-err")
                         await self.fits(pg, f"{w} Fehler")
                         state["fail"] = False
-                        await pg.click("#calbox .lz-err button[data-on=lzAgain]")
-                        await pg.wait_for_selector("#calbox .lz-chip.w")
-                        await pg.wait_for_selector("#calbox .lz-sk")
+                        await pg.click("#secbox .lz-err button[data-on=lzAgain]")
+                        await pg.wait_for_selector("#secbox .lz-chip.w")
+                        await pg.wait_for_selector("#secbox .lz-sk")
                         await self.fits(pg, f"{w} dauert länger")
                         go.set()
-                        await pg.wait_for_function("document.getElementById('calbox').dataset.lzok==='1'")
+                        await pg.wait_for_function("document.getElementById('secbox').dataset.lzok==='1'")
                         self.assertEqual(errors, [])
                     finally:
                         await br.close()

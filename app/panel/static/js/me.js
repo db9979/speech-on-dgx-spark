@@ -373,7 +373,7 @@ $('meback').onclick=()=>ptab(meLast,false);
 // every page of Ich with whether it shows now (the Sprung-Links in way.js know the names of the hidden ones too)
 function meAll(){return [['overbox',t('Überblick','Overview'),!!PROFILE&&!PHONE.matches],['bgbox',t('Mein Zustand','My status'),PROFILE&&MYST_ON],['gobox',t('Los geht\'s','Let\'s go'),!!PROFILE&&typeof SETUP!=='undefined'&&!!SETUP&&SETUP.open>0],['kannbox',t('Was ich kann','What I can do'),PROFILE&&typeof SATZ_ON!=='undefined'&&SATZ_ON],['setbox',t('Gespräch','Conversation'),!GATE&&!isGuest()],['loginbox',t('Anmelden','Sign in'),!PROFILE],
     ['factbox',t('Gedächtnis','Memory'),!!PROFILE],['docbox',t('Dokumente','Documents'),PROFILE&&DOCS_ON],['bildbox',t('Bilder','Pictures'),PROFILE&&typeof BILD_ON!=='undefined'&&BILD_ON],['musikbox',t('Musik','Music'),PROFILE&&typeof MUSIK_ON!=='undefined'&&MUSIK_ON],['rmbox','reMarkable',PROFILE&&RM_ON],['storebox',t('Speicher','Storage'),PROFILE&&(typeof STORE_ON!=='undefined'&&STORE_ON||typeof NAS_ON!=='undefined'&&NAS_ON)],['logbox',t('Werkzeug-Verlauf','Tool history'),!!PROFILE],
-    ['calbox',t('Kalender','Calendar'),PROFILE&&CAL_ON],['taskbox',t('Aufgaben','Tasks'),PROFILE&&TASK_ON],['agentbox',t('Aufträge','Jobs'),PROFILE&&AGENT_ON],['mymcpbox',t('Meine MCP-Dienste','My MCP services'),PROFILE&&typeof MYMCP_ON!=='undefined'&&MYMCP_ON],['wxbox',t('Wetter','Weather'),PROFILE&&WX_ON],['feedbox',t('Reddit und Feeds','Reddit and feeds'),PROFILE&&typeof FD_ON!=='undefined'&&FD_ON],['probox',t('Von selbst','Proactive'),PROFILE&&PRO_ON],['notebox',t('Mitteilungen','Notifications'),PROFILE&&REM_ON],
+    ['taskbox',t('Aufgaben','Tasks'),PROFILE&&TASK_ON],['agentbox',t('Aufträge','Jobs'),PROFILE&&AGENT_ON],['mymcpbox',t('Meine MCP-Dienste','My MCP services'),PROFILE&&typeof MYMCP_ON!=='undefined'&&MYMCP_ON],['wxbox',t('Wetter','Weather'),PROFILE&&WX_ON],['feedbox',t('Reddit und Feeds','Reddit and feeds'),PROFILE&&typeof FD_ON!=='undefined'&&FD_ON],['probox',t('Von selbst','Proactive'),PROFILE&&PRO_ON],['notebox',t('Mitteilungen','Notifications'),PROFILE&&REM_ON],
     ['mailbox',t('E-Mail','E-mail'),PROFILE&&MAIL_ON],['parbox',t('Pakete','Parcels'),PROFILE&&PAR_ON],['writebox',t('Schreibhilfe','Writing help'),PROFILE&&typeof WRITE_ON!=='undefined'&&WRITE_ON],['conbox',t('Kontakte','Contacts'),PROFILE&&CON_ON],
     ['habox',t('Smart Home','Smart home'),PROFILE&&HA_ON],['roombox',t('Raum-Modus','Room mode'),PROFILE&&ROOM_ON],['espbox',t('Lautsprecher','Speakers'),PROFILE&&ESP_ON],['telbox',t('Telefon','Phone'),PROFILE&&typeof TEL_ON!=='undefined'&&TEL_ON],
     ['trbox',t('Bus und Bahn','Bus and train'),PROFILE&&TR_ON],['tgbox',t('Telegram','Telegram'),PROFILE&&TG_ON],['appbox',t('iPhone-App','iPhone app'),PROFILE&&APP_ON],['andbox',t('Android-App','Android app'),PROFILE&&typeof AND_ON!=='undefined'&&AND_ON],['deskbox',t('Begleiter','Companion'),PROFILE&&typeof DESK_ON!=='undefined'&&DESK_ON],['pebbox',t('Pebble-Uhr','Pebble watch'),PROFILE&&PEB_ON],['termbox',t('Terminal','Terminal'),PROFILE&&typeof TERM_ON!=='undefined'&&TERM_ON],['mcpbox',t('Dienste per MCP','Services over MCP'),PROFILE&&MCPS_ON],
@@ -393,7 +393,6 @@ function meState(){const n=id=>id==='factlist'?FACTS.length:[...document.querySe
   const cnt=(k,de1,deN,en1,enN)=>k?t(k+' '+(k===1?de1:deN),k+' '+(k===1?en1:enN)):t('noch nichts','nothing yet');
   const txt=id=>{const e=$(id);return e?e.textContent.trim():''};
   return {factbox:cnt(n('factlist'),'Eintrag','Einträge','entry','entries'),docbox:cnt(n('doclist'),'Dokument','Dokumente','document','documents'),
-    calbox:n('callist')?cnt(n('callist'),'Kalender verbunden','Kalender verbunden','calendar connected','calendars connected'):t('nicht verbunden','not connected'),
     mailbox:n('maillist')?cnt(n('maillist'),'Postfach','Postfächer','mailbox','mailboxes'):t('nicht verbunden','not connected'),
     habox:$('hadel')&&$('hadel').style.display!=='none'?t('verbunden','connected'):t('nicht verbunden','not connected'),
     voicebox:$('voicedel')&&$('voicedel').style.display!=='none'?t('eingelernt','enrolled'):t('nicht eingelernt','not enrolled'),
@@ -523,7 +522,8 @@ window.tidyDo=async what=>{$('factmsg').textContent=what==='check'?t('Der Assist
 $('facttidy').onclick=()=>tidyDo('check');
 window.forgetFact=async id=>{await api('/api/profile/memory/'+encodeURIComponent(id),{method:'DELETE'});showFacts()};
 ON.forgetFact=(b,id)=>forgetFact(id);ON.tidyDo=(b,w)=>tidyDo(w);ON.calRemove=(b,id,n)=>calRemove(id,n);ON.mailRemove=(b,id,n)=>mailRemove(id,n);ON.secDrop=(b,id,n,s)=>secDrop(id,n,s);
-async function openMe(tab){if(typeof whoPendingGo==='function'&&PROFILE&&whoPendingGo({me:tab||''}))return;   // saved functions wait: Ich opens with them
+async function openMe(tab){if(typeof ownPage==='function'&&ownPage(tab))return;   // a page of its own now (Kalender)
+  if(typeof whoPendingGo==='function'&&PROFILE&&whoPendingGo({me:tab||''}))return;   // saved functions wait: Ich opens with them
   $('profmsg').textContent='';$('profmodal').style.display='grid';
   const tabs=meTabs(),list=tab==='list'&&PHONE.matches&&tabs.length>1;meOwn();ptab(tabs.includes(tab)?tab:tabs.includes(meLast)?meLast:tabs[0],!list);
   $('profhead').textContent=PROFILE?PROFILE.name:GATE?t('Anmelden','Sign in'):t('Gast','Guest');
@@ -546,7 +546,7 @@ function meLoadOnce(){if(!PROFILE)return;return ME_LOAD.p=meLoad().finally(()=>{
 // the profile's login has ended, still signs out (before: any error looked like being signed out).
 // [box, load, quiet]: quiet boxes stay silent on an error, as they were before
 async function meLoad(){let out=false;
-  const jobs=[['factbox',async()=>{await showFacts();if(window.meMaps)await meMaps()}],['docbox',showDocs],['voicebox',showVoice],['calbox',showCal],['mailbox',async()=>{await showMail();await Promise.all([showMailTidy().catch(()=>{}),showMailStil().catch(()=>{})])}],
+  const jobs=[['factbox',async()=>{await showFacts();if(window.meMaps)await meMaps()}],['docbox',showDocs],['voicebox',showVoice],['mailbox',async()=>{await showMail();await Promise.all([showMailTidy().catch(()=>{}),showMailStil().catch(()=>{})])}],
     ['habox',showHa],['secbox',showSecurity],['logbox',showToolLog],['probox',showPro,1],['pushbox',showPush,1]].concat(typeof extrasJobs==='function'?extrasJobs():[]);
   await lzPool(jobs.map(([id,f,quiet])=>()=>lzb($(id),f,{auth:true,quiet:!!quiet}).catch(e=>{if(e&&e.status===401)out=true})),4);
   if(out){setProfile(null);openMe('loginbox');return}

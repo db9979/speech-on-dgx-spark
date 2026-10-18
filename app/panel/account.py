@@ -1,6 +1,7 @@
 """What a browser or device can do for itself: login, whoami and the profile's own data
 (memory, conversations, documents, reminders, calendar, e-mail, Home Assistant, voice, settings)."""
 import asyncio
+import datetime
 import inspect
 import json
 import time
@@ -1009,6 +1010,22 @@ async def profile_calendar_test(request: Request, prof=Depends(browser_profile))
         return await calendars.test(prof["id"], user_zone(body.get("tz")))
     except ValueError as e:
         raise HTTPException(400, str(e))
+
+
+@router.get("/api/profile/calendar/view", dependencies=[Depends(assistant), Depends(calendar_on)])
+async def profile_calendar_view(request: Request, start: str = "", days: int = 7, tz: str = "", prof=Depends(own_profile)):
+    """The page Kalender (kalender.js): the own appointments of a day, a week, a month or the list."""
+    guard.limit(request, "kalender", prof["id"])
+    zone = user_zone(tz[:64])
+    try:
+        day = datetime.date.fromisoformat(start[:10]) if start else datetime.datetime.now(zone).date()
+    except ValueError:
+        raise HTTPException(400, "start must be a date like 2026-10-19")
+    r = await calendars.view(prof["id"], day, days, zone)
+    if r["errors"]:
+        print(f"calendar: view not reachable | {len(r['errors'])} of {len(r['calendars'])} calendars"
+              f"{' slow' if r.get('slow') else ''} | {profiles.log_name(prof)}", flush=True)
+    return r
 
 
 @router.get("/api/profile/mail", dependencies=[Depends(assistant)])

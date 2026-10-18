@@ -359,6 +359,35 @@ async def events(uid, start, end, zone):
     return sorted(uniq.values(), key=lambda x: (x["start"], not x["allday"])), errors
 
 
+# ---------------------------------------------------------------- the page Kalender (kalender.js)
+VIEW_DAYS = 42            # the page asks for at most six weeks at a time (a month with its weeks around it)
+VIEW_BUDGET = 8.0         # seconds; a slow calendar shows "nicht erreicht" on the page, the page never waits longer
+VIEW_MAX = 600            # appointments per answer
+
+
+async def view(uid, day, days, zone):
+    """The appointments of `days` days from the date `day` for the page Kalender, each with the place of its
+    calendar in the profile's list (the colour on the page), and the names of the calendars that could not be
+    read. Only titles, times and places as the calendars give them; nothing is kept beyond the cache."""
+    days = max(1, min(int(days), VIEW_DAYS))
+    t0 = datetime.datetime.combine(day, datetime.time(), zone)
+    t1 = t0 + datetime.timedelta(days=days)
+    names = [c.get("name", "") for c in get(uid)["calendars"]]
+    if not names:
+        return {"connected": False, "calendars": [], "events": [], "errors": []}
+    try:
+        r = await asyncio.wait_for(events(uid, t0, t1, zone), VIEW_BUDGET)
+    except asyncio.TimeoutError:
+        return {"connected": True, "calendars": names, "events": [], "errors": names, "slow": True}
+    evs, errors = r if r else ([], [])
+    out = []
+    for x in evs[:VIEW_MAX]:
+        first = (x.get("calendar") or "").split(", ")[0]
+        out.append({"start": int(x["start"].timestamp()), "end": int(x["end"].timestamp()), "allday": bool(x["allday"]),
+                    "title": x["title"], "location": x["location"], "cal": names.index(first) if first in names else 0})
+    return {"connected": True, "calendars": names, "events": out, "errors": [n for n, _ in errors]}
+
+
 async def check(item, zone):
     """Reads one calendar entry before it is saved: number of calendars found, the next events."""
     now = datetime.datetime.now(zone)

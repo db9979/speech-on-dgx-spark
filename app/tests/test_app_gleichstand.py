@@ -3,6 +3,8 @@ App erhalten, zum Einstellen, angucken und so weiter, dass das der User nicht nu
 
 - features.ME_PAGES is the one list of the Ich pages: me.js meAll and guides.js ME_NAME carry the same ids and
   names, every function's Ich page is in it.
+- Pages of their own in the menu (features.OWN_PAGES: Kalender) hold everything of their kind and are no longer
+  pages of Ich (Dominik 2026-10-18); kalender.js OWN_PAGES carries the same, the apps list them first.
 - Every Ich page reaches the apps: Android shows the panel itself (WebView, appview.js takes the panel's own list),
   the iPhone app lists /api/features "pages" and keeps no list of its own; only features.APP_SKIP leaves a page
   out, with a reason. Every preference (pref=) can be set from the app through its page.
@@ -48,9 +50,13 @@ def js_str(x):
     return x.replace("\\'", "'")
 
 
+# every page an app can list: the pages of their own in the menu (Kalender …) and the Ich pages
+ALL_PAGES = tuple((k, de, en) for k, _, de, en in features.OWN_PAGES) + features.ME_PAGES
+
+
 class OneList(unittest.TestCase):
     def test_pages_are_unique_and_every_function_has_its_page(self):
-        ids = [k for k, _, _ in features.ME_PAGES]
+        ids = [k for k, _, _ in ALL_PAGES]
         self.assertEqual(len(ids), len(set(ids)))
         self.assertEqual(sorted({f.me for f in features.FEATURES if f.me} - set(ids)), [])
         self.assertEqual(sorted(set(features.APP_SKIP) - set(ids)), [])
@@ -63,6 +69,24 @@ class OneList(unittest.TestCase):
         got = [(m.group(1), js_str(m.group(2) or m.group(4)), js_str(m.group(3) or m.group(4))) for m in re.finditer(
             r"\['(\w+)',(?:t\('((?:[^'\\]|\\.)*)','((?:[^'\\]|\\.)*)'\)|'([^']*)')", block)]
         self.assertEqual(got, list(features.ME_PAGES), "me.js meAll: the same pages and names as features.ME_PAGES")
+
+    def test_own_pages_are_the_same_in_the_panel(self):
+        # Dominik 2026-10-18: everything of a kind in one place, out of Ich; the panel's list is the same as features'
+        src = read(JS, "kalender.js")
+        block = src[src.index("const OWN_PAGES={"):]
+        block = block[:block.index("};")]
+        got = [(m.group(1), m.group(2), js_str(m.group(3)), js_str(m.group(4))) for m in re.finditer(
+            r"(\w+):\['(\w+)',t\('((?:[^'\\]|\\.)*)','((?:[^'\\]|\\.)*)'\)", block)]
+        self.assertEqual(got, list(features.OWN_PAGES))
+        html = read(APP, "panel", "static", "index.html")
+        names = read(JS, "guides.js")
+        names = names[names.index("const ME_NAME={"):]
+        names = names[:names.index("};")]
+        for key, sec, de, _ in features.OWN_PAGES:
+            self.assertRegex(html, f'<section id="{sec}">', key)
+            self.assertRegex(html, f'<button data-s="{sec}" hidden><i class="ni" data-ni="{sec}"></i>{de}</button>', key)
+            self.assertNotIn(f"{key}:", names, f"{key}: no longer a page of Ich")
+            self.assertRegex(html, f'id="{key}"', key)
 
     def test_guides_name_the_pages_the_same(self):
         src = read(JS, "guides.js")
@@ -86,7 +110,7 @@ class InTheApps(unittest.TestCase):
         bridge = read(IOS, "Spark", "PanelViews.swift")
         self.assertNotRegex(bridge, r'"me=[a-z]+box"', "the iPhone app takes the Ich pages from /api/features (pages)")
         # a single link to one page elsewhere (a hint, a button) must lead to a page the app may open
-        ids = {k for k, _, _ in features.ME_PAGES} - set(features.APP_SKIP)
+        ids = {k for k, _, _ in ALL_PAGES} - set(features.APP_SKIP)
         for path in glob.glob(os.path.join(IOS, "**", "*.swift"), recursive=True):
             for m in re.finditer(r'"me=([a-z]+)"', read(path)):
                 self.assertIn(m.group(1), ids, os.path.relpath(path, ROOT))
@@ -121,12 +145,12 @@ class PagesFollowTheRelease(unittest.TestCase):
             for k in features.APP_SKIP:
                 self.assertNotIn(k, ids, k)
             self.assertNotIn("wxbox", ids)                  # its function off
-            self.assertEqual(ids, [k for k, _, _ in features.ME_PAGES if k in ids])   # the panel's order
+            self.assertEqual(ids, [k for k, _, _ in ALL_PAGES if k in ids])   # the panel's order
             helpers.set_config(weather=True)
             self.assertIn("wxbox", [p["id"] for p in features.app_pages(uid)])
             helpers.set_config(deny={"weather": [uid]})
             self.assertNotIn("wxbox", [p["id"] for p in features.app_pages(uid)])
-            names = {k: [de, en] for k, de, en in features.ME_PAGES}
+            names = {k: [de, en] for k, de, en in ALL_PAGES}
             for p in features.app_pages(uid):
                 self.assertEqual(p["name"], names[p["id"]])
             self.assertEqual(features.app_pages(None), [])  # guests: only questions and answers

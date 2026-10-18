@@ -996,6 +996,9 @@ def page_name(page, lang="de"):
     if kind == "cfg":
         n = cfg_pages().get(sub)
         return ("Einstellungen → " if li == 0 else "Settings → ") + n if n else None
+    own = next((x for x in features.OWN_PAGES if x[0] == sub), None)
+    if own:   # a page of its own in the menu (Kalender): what is set up sits in its tab „Einstellungen“
+        return own[2 + li] + (" → Einstellungen" if li == 0 else " → Settings")
     n = me_pages().get(sub)
     return ("Ich → " if li == 0 else "Me → ") + n[li] if n else None
 

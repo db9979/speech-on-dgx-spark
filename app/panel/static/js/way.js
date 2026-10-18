@@ -6,8 +6,8 @@
 // the viewer can open is linked (admin pages for an admin, Ich for a profile, nothing for guests and the monitor).
 // A link only moves to the place; it never switches, saves or sends anything.
 const WAY_ROOTS=[['Personen und Geräte','prof'],['People and devices','prof'],['Einstellungen','cfg'],['Settings','cfg'],
-  ['Funktionen','feat'],['Features','feat'],['Zustand','mon'],['Status','mon'],['Ich','me'],['Me','me']];
-const WAY_RX=/(Personen und Geräte|People and devices|Einstellungen|Settings|Funktionen|Features|Zustand|Status|Ich|Me)\s*→/g;
+  ['Funktionen','feat'],['Features','feat'],['Zustand','mon'],['Status','mon'],['Ich','me'],['Me','me'],['Kalender','o:calbox'],['Calendar','o:calbox']];
+const WAY_RX=/(Personen und Geräte|People and devices|Einstellungen|Settings|Funktionen|Features|Zustand|Status|Ich|Me|Kalender|Calendar)\s*→/g;
 const WAY_ARROW=/^\s*→\s*/;
 // the names a step can match inside a page: rows, headings, folded parts, tabs
 const WAY_SEL='.setrow .lbl>b, label, summary, h2, h3, .ptabs button, .ltabs button, .lchips button, [data-tab], [data-area], .mgrp, .fgrp>summary b, .zk';
@@ -21,9 +21,11 @@ const wayWait=ms=>new Promise(r=>setTimeout(r,ms));
 let WAY_MEMO=null;   // the names per step and which menus are seen, kept for one frame (a page can hold many hints)
 const wayFrame=()=>{if(!WAY_MEMO){WAY_MEMO=new Map();requestAnimationFrame(()=>{WAY_MEMO=null})}return WAY_MEMO};
 function wayRootOk(k,all){
-  if(k==='me')return all||(typeof PROFILE!=='undefined'&&!!PROFILE&&!(typeof GATE!=='undefined'&&GATE));
-  if(typeof ADMIN==='undefined'||!ADMIN||typeof KIOSK!=='undefined'&&KIOSK)return false;
-  if(all)return true;
+  // Ich and the pages of their own (kalender.js OWN_PAGES) for a signed-in profile, the rest for an admin
+  const own=k.startsWith('o:');
+  if(own||k==='me'){if(all)return true;if(typeof PROFILE==='undefined'||!PROFILE||typeof GATE!=='undefined'&&GATE)return false;
+    if(!own)return true;k=OWN_PAGES[k.slice(2)][0]}   // a page of its own: only while its menu entry shows
+  else{if(typeof ADMIN==='undefined'||!ADMIN||typeof KIOSK!=='undefined'&&KIOSK)return false;if(all)return true}
   // once per frame: getComputedStyle after each link put in recalculated the whole page (8 s at an admin's start
   // on a slow phone, V01.0.749)
   const M=wayFrame(),key='vis:'+k;if(!M.has(key))M.set(key,wayVis(document.querySelector(`nav button[data-s=${k}]`)));return M.get(key)}
@@ -48,6 +50,9 @@ function wayKids(c,all){const key=JSON.stringify(c)+(all?'+':'');
     inside($('pane-'+p),async e=>{goCfg(p);await wayWait(80);if(e.matches(WAY_TAB))e.click();wayOpen(e);sFlash(wayMark(e))})}
   else if(c.k==='mon'||c.k==='prof'){for(const [id,l] of GROUPS[c.k])add(l,()=>goSec(id),{k:'s',s:id});
     return wayKeep(key,out.concat(wayKids({k:'s',s:c.k},all)))}   // and what the first page shows (cards, lists)
+  else if(c.k.startsWith('o:')){const [sec]=OWN_PAGES[c.k.slice(2)],go=k=>()=>{icTabSet(sec,k);goSec(sec)};
+    add(t('Einstellungen','Settings'),go('set'),{k:'os',id:c.k.slice(2)});add(OWN_PAGES[c.k.slice(2)][2],go('show'),c)}
+  else if(c.k==='os'){const [sec]=OWN_PAGES[c.id];inside($(c.id),async e=>{icTabSet(sec,'set');goSec(sec);await wayWait(120);wayOpen(e);sFlash(wayMark(e))})}
   else if(c.k==='s')inside($(c.s),async e=>{goSec(c.s);await wayWait(120);if(e.matches(WAY_TAB))e.click();wayOpen(e);sFlash(wayMark(e))});
   else if(c.k==='me'){const items=typeof meAll==='function'?meAll():[];
     for(const [id,l,on] of items)if(on||all)add(l,()=>wayMe(id),{k:'mp',id})}

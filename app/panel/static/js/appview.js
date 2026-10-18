@@ -59,7 +59,7 @@ function enter(){ON=true;B.classList.add('appview');
   const sec=document.querySelector('main>section.on');TAB=secTab(sec);
   apFace();render()}
 // which tab a section of the page belongs to (Assistent → Spark, Chats → Chats, the rest → Verwalten)
-function secTab(sec){return !sec||sec.id==='chat'?'spark':sec.id==='chats'?'chats':'manage'}
+function secTab(sec){return !sec||sec.id==='chat'?'spark':sec.id==='chats'?'chats':sec.id==='cal'?'today':'manage'}
 function leave(stillPhone){const page=B.classList.contains('appage');ON=false;B.classList.remove('appview','appage','apmsgs','aptabs','apsub','aptab-docs');sheet.hidden=true;
   // on a wider screen phone.js has put its parts back already: only the face (never touched by phone.js here) moves
   const f=$('face'),fm=marks.get(f);if(fm){fm.parentNode.insertBefore(f,fm);fm.remove();marks.delete(f)}
@@ -87,7 +87,7 @@ tabs.addEventListener('click',e=>{const b=e.target.closest('button[data-tab]');i
 // other code opens a section (search, "Gesperrte Funktionen", the start page): follow it
 const _showSec=showSec;
 showSec=function(s){_showSec(s);if(!ON)return;B.classList.remove('appage');for(const p of [today,manage])p.classList.remove('on');
-  TAB=s==='chat'?'spark':s==='chats'?'chats':'manage';render()};
+  TAB=secTab({id:s});render()};
 // ---------------------------------------------------------------- the top bar
 function manageNav(){const m=mainEl(),cw=document.querySelector('.cfgwrap'),sec=document.querySelector('main>section.on');
   if(sec&&sec.id==='cfg'&&cw.classList.contains('sub')&&!cw.classList.contains('featmode'))

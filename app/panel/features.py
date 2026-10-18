@@ -45,7 +45,7 @@ ME_PAGES = (("overbox", "Überblick", "Overview"), ("bgbox", "Mein Zustand", "My
             ("kannbox", "Was ich kann", "What I can do"),
             ("setbox", "Gespräch", "Conversation"), ("loginbox", "Anmelden", "Sign in"), ("factbox", "Gedächtnis", "Memory"),
             ("docbox", "Dokumente", "Documents"), ("bildbox", "Bilder", "Pictures"), ("musikbox", "Musik", "Music"), ("rmbox", "reMarkable", "reMarkable"), ("storebox", "Speicher", "Storage"),
-            ("logbox", "Werkzeug-Verlauf", "Tool history"), ("calbox", "Kalender", "Calendar"), ("taskbox", "Aufgaben", "Tasks"),
+            ("logbox", "Werkzeug-Verlauf", "Tool history"), ("taskbox", "Aufgaben", "Tasks"),
             ("agentbox", "Aufträge", "Jobs"), ("mymcpbox", "Meine MCP-Dienste", "My MCP services"), ("wxbox", "Wetter", "Weather"), ("feedbox", "Reddit und Feeds", "Reddit and feeds"),
             ("probox", "Von selbst", "Proactive"), ("notebox", "Mitteilungen", "Notifications"), ("mailbox", "E-Mail", "E-mail"),
             ("parbox", "Pakete", "Parcels"), ("writebox", "Schreibhilfe", "Writing help"), ("conbox", "Kontakte", "Contacts"),
@@ -55,6 +55,12 @@ ME_PAGES = (("overbox", "Überblick", "Overview"), ("bgbox", "Mein Zustand", "My
             ("termbox", "Terminal", "Terminal"), ("mcpbox", "Dienste per MCP", "Services over MCP"), ("secbox", "Sicherheit", "Security"),
             ("rpbox", "Probleme melden", "Reporting problems"), ("voicebox", "Sprechererkennung", "Speaker identification"),
             ("usebox", "Verbrauch", "Usage"))
+# pages of their own in the menu, outside Ich (Dominik 2026-10-18: „im richtigen Bereich ersichtlich und einstellbar,
+# nicht an zu vielen unterschiedlichen Orten … in den alten Bereichen dann raus nehmen“, plan kalender-mail/plan.md 4a):
+# each holds everything of its kind, what is set up sits in its tab „Einstellungen“. The id of the box stays the place
+# (me=<id>) of every way, card and app; kalender.js OWN_PAGES carries the same (test_app_gleichstand).
+# (id, section, name de, name en)
+OWN_PAGES = (("calbox", "cal", "Kalender", "Calendar"),)
 # Ich pages every profile has, whatever is switched on (me.js meAll shows them for every profile too)
 ME_ALWAYS = frozenset(("setbox", "factbox", "logbox", "secbox"))
 # Ich pages the iPhone app leaves out, each with its reason; every other page can be opened in the app
@@ -880,14 +886,14 @@ def features_list(request: Request):
 
 
 def app_pages(uid):
-    """The Ich pages an app lists for this profile, in the panel's order: every page but APP_SKIP with at least
-    one function this profile may use, and the pages of ME_ALWAYS.
+    """The pages an app lists for this profile, in the panel's order: the pages of their own (OWN_PAGES) and the
+    Ich pages but APP_SKIP with at least one function this profile may use, and the pages of ME_ALWAYS.
     Guests get none: they only ask and get answers."""
     if not uid:
         return []
     c, s = chat_cfg(), profiles.settings(uid)
     out = []
-    for key, de, en in ME_PAGES:
+    for key, de, en in tuple((k, de, en) for k, _, de, en in OWN_PAGES) + ME_PAGES:
         if key in APP_SKIP:
             continue
         mine = [f for f in FEATURES if f.me == key]

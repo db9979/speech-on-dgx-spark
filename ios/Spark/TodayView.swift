@@ -47,7 +47,7 @@ struct TodayView: View {
     @ViewBuilder private func calendar(_ c: [String: Any]) -> some View {
         let next = c["next"] as? [[String: Any]] ?? []
         if c["connected"] as? Bool == false {
-            row("calendar", String(localized: "Termine"), String(localized: "Kalender verbinden"), String(localized: "Im Panel unter Ich → Kalender"))
+            row("calendar", String(localized: "Termine"), String(localized: "Kalender verbinden"), String(localized: "Im Panel unter Kalender → Einstellungen"))
         } else if next.isEmpty {
             row("calendar", String(localized: "Termine"), String(localized: "Heute und morgen frei"),
                 c["error"] as? Bool == true ? String(localized: "Ein Kalender war nicht erreichbar.") : "")

@@ -318,9 +318,9 @@ class Tipps(unittest.TestCase):
         helpers.set_config(calendar=True, klaeren=True)
         self.addCleanup(helpers.set_config, calendar=was, klaeren=False)
         d = self.p.post("/api/profile/tipps/f:calendar", json={"do": "setup"}).json()
-        self.assertTrue(d["way"].startswith("Ich → Kalender → „Kalender hinzufügen“"), d["way"])
+        self.assertTrue(d["way"].startswith("Kalender → Einstellungen → „Kalender hinzufügen“"), d["way"])
         d = self.p.post("/api/profile/tipps/f:calendar", json={"do": "setup", "lang": "en"}).json()
-        self.assertTrue(d["way"].startswith('Me → Calendar → "Add calendar"'), d["way"])
+        self.assertTrue(d["way"].startswith('Calendar → Settings → "Add calendar"'), d["way"])
         d = self.p.post("/api/profile/tipps/f:klaeren", json={"do": "setup"}).json()
         self.assertEqual(d["way"], features.me_way("klaeren"))
         self.assertEqual(tipps._way({"key": "", "me": "secbox"}, []), "Ich → Sicherheit")
@@ -428,9 +428,9 @@ class Browser(unittest.TestCase):
                 await pg.evaluate("document.getElementById('wizmodal')&&(document.getElementById('wizmodal').style.display='none')")
                 # what way.js marks
                 await pg.evaluate("window.FLASHED=[];const o=sFlash;sFlash=el=>{FLASHED.push(visText(el));o(el)}")
-                # the setup of the calendar lands on „Kalender hinzufügen“ on Ich → Kalender
+                # the setup of the calendar lands on „Kalender hinzufügen“ on Kalender → Einstellungen (a page of its own)
                 await pg.evaluate("tipSetup({id:'f:calendar'})")
-                await self.until(pg, "$('profmodal').style.display==='grid'&&document.querySelector('#ptabs button.on').dataset.t==='calbox'")
+                await self.until(pg, "$('cal').classList.contains('on')&&!$('calbox').hidden&&$('kalroot').contains($('calbox'))")
                 await self.until(pg, "FLASHED.some(x=>x.includes('Kalender hinzufügen'))")
                 # Ich → Überblick lists the new weather; „Prüfen“ after it is set up takes it away
                 await pg.evaluate("$('tipsetup')&&$('tipsetup').remove();openMe('overbox')")

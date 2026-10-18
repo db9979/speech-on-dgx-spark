@@ -2774,8 +2774,9 @@ class Browser(unittest.TestCase):
                         self.assertEqual(await pg.evaluate("document.querySelectorAll('#metoday').length"), 1)
                         self.assertTrue(await pg.evaluate("document.querySelectorAll('#metoday .ttry .chip').length>0"))
                         self.assertLessEqual(await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth"), 1)
+                        # a card opens its place: a page of Ich, or the page Kalender for „Termine“ (V01.0.805)
                         await pg.click("#metoday .tcard")
-                        await pg.wait_for_function("document.getElementById('profmodal').classList.contains('sub')")
+                        await pg.wait_for_function("document.getElementById('profmodal').classList.contains('sub')||document.getElementById('cal').classList.contains('on')")
                         self.assertEqual(errors, [], name)
                         await br.close()
                         continue

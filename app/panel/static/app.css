@@ -56,8 +56,8 @@ body.guest #themebtn{margin-left:auto}
 @media (display-mode:standalone){header{padding-top:max(12px,env(safe-area-inset-top))}main{padding-bottom:max(48px,env(safe-area-inset-bottom))}}
 /* login */
 body.guest nav,body.guest #hdr,body.guest #fab,body.guest #logoutbtn{display:none!important}
-/* a signed-in profile without admin login (start.js): the admin's shell with only Assistent and Ich */
-body.prof #hdr,body.prof #fab,body.prof #logoutbtn,body.prof .navgrp,body.prof nav button[data-s]:not([data-s=chat]):not([data-s=chats]),
+/* a signed-in profile without admin login (start.js): the admin's shell with only Assistent, Chats, Kalender and Ich */
+body.prof #hdr,body.prof #fab,body.prof #logoutbtn,body.prof .navgrp,body.prof nav button[data-s]:not([data-s=chat]):not([data-s=chats]):not([data-s=cal]),
 body.prof #mbar button[data-m=mon],body.prof #mbar button[data-m=more],body.prof #mmenu{display:none!important}
 body.mgr .mainonly,body.coadm .pwonly,nav button[hidden]{display:none!important}   /* an admin profile (coadmin.js): .pwonly only with the panel password; a Verwalter does not see .mainonly */
 .modal{position:fixed;inset:0;z-index:50;display:grid;place-items:center;align-items:safe center;overflow-y:auto;background:rgba(10,12,20,.45);backdrop-filter:blur(4px);padding:16px}
@@ -1667,3 +1667,52 @@ body.inchats:not(.appview):not(.kbd) .cx-comp{padding-right:96px}
 @container (max-width:520px){#proflist .prow{flex-wrap:wrap;row-gap:4px}#proflist .pmid{flex:1 1 calc(100% - 48px)}#proflist .psetup{margin-left:48px}#proflist .pmeta{white-space:normal}}
 @media (max-width:760px){#pfilter input{flex:1 1 100%!important}#pfilter select{flex:1 1 40%!important}}
 #proflist td.pgo{flex:0 0 auto}#proflist td:first-child,#devlist td:first-child{flex:1 1 0}
+/* Kalender (kalender.js, plan kalender-mail): a page of its own; day and week as a grid of hours, month, list.
+   Calendar colours kc0..kc7 mixed from the base colours, no new ones besides two neutral greys and pinks. */
+#cal .kalcard{max-width:1180px}
+.kal .kaltools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 12px}
+.kal .kalnav{display:inline-flex;gap:6px}.kal .kalnav .b{min-width:38px}
+.kal .kaltitle{flex:1 1 auto;font-size:16px;min-width:0}
+.kal .empty{color:var(--mut);text-align:center;padding:28px 12px}.kal .empty .b{margin-top:10px}
+.kal .kalsplit{display:block;min-width:0}
+@media (min-width:1100px){.kal .kalsplit:has(>.kaldet:not([hidden])){display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:14px;align-items:start}
+  .kal .kaldet{position:sticky;top:0}.kal .kaldet .ld-back{display:none}}
+.kal .kaldet{margin-top:12px}
+.kal .kalmain.busy{opacity:.55}
+.kc0{--kc:var(--acc)}.kc1{--kc:var(--acc2)}.kc2{--kc:var(--ok)}.kc3{--kc:var(--warn)}.kc4{--kc:#d946ef}.kc5{--kc:var(--bad)}.kc6{--kc:#64748b}.kc7{--kc:#0d9488}
+.kalgrid{display:grid;grid-template-columns:48px repeat(var(--n),minmax(0,1fr));border:1px solid var(--line);border-radius:14px;background:var(--card);overflow:hidden}
+.kalgrid .kh{border:0;background:none;font:inherit;color:var(--mut);font-size:12px;padding:6px 2px;text-align:center;border-bottom:1px solid var(--line);cursor:pointer;min-width:0}
+.kalgrid div.kh{cursor:default}
+.kalgrid .kh b{display:block;font-size:17px;color:var(--fg);line-height:1.5}
+.kalgrid .kh.now b{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;border-radius:99px;width:30px;margin:0 auto}
+.kalgrid .kad{border-bottom:1px solid var(--line);border-left:1px solid var(--line);padding:3px;min-height:26px;font-size:11px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.kalgrid .kad.mut{border-left:0;justify-content:center;text-align:right;padding-right:6px}
+.kalgrid .khours{display:flex;flex-direction:column}
+.kalgrid .khours span{height:44px;font-size:11px;color:var(--mut);text-align:right;padding-right:6px;transform:translateY(-7px)}
+.kalgrid .khours span:first-child{transform:none}
+.kalgrid .kcol{position:relative;border-left:1px solid var(--line);min-width:0;
+  background:repeating-linear-gradient(to bottom,transparent 0 43px,var(--line) 43px 44px)}
+.kev{position:absolute;box-sizing:border-box;border:0;border-left:3px solid var(--kc);border-radius:7px;padding:3px 6px;text-align:left;font:inherit;font-size:12px;line-height:1.3;
+  color:var(--fg);background:color-mix(in srgb,var(--kc) 15%,var(--card));overflow:hidden;cursor:pointer;z-index:1}
+.kev b{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kev small{display:block;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kev.on,.kchip.on,.kli.on{box-shadow:0 0 0 2px var(--acc)}
+.know{position:absolute;left:0;right:0;height:2px;background:var(--bad);z-index:2;pointer-events:none}
+.kchip{display:block;width:100%;border:0;border-left:3px solid var(--kc);border-radius:6px;padding:1px 5px;text-align:left;font:inherit;font-size:11.5px;color:var(--fg);
+  background:color-mix(in srgb,var(--kc) 14%,var(--card));white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.kalmonth{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border:1px solid var(--line);border-radius:14px;background:var(--card);overflow:hidden}
+.kalmonth .kmh{font-size:11.5px;color:var(--mut);text-align:center;padding:6px 2px;border-bottom:1px solid var(--line)}
+.kalmonth .kmd{min-height:96px;border-top:1px solid var(--line);border-left:1px solid var(--line);padding:3px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.kalmonth .kmd:nth-child(7n+8){border-left:0}
+.kalmonth .kmd.other{background:color-mix(in srgb,var(--bg) 70%,var(--card))}.kalmonth .kmd.other .kmn{color:var(--mut)}
+.kalmonth .kmn{align-self:flex-start;border:0;background:none;font:inherit;font-size:12.5px;font-weight:600;color:var(--fg);padding:1px 6px;border-radius:99px;cursor:pointer}
+.kalmonth .kmd.now .kmn{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff}
+.kalmonth .kmore{border:0;background:none;font:inherit;font-size:11px;color:var(--acc);text-align:left;padding:0 4px;cursor:pointer}
+.kli{display:flex;gap:10px;align-items:stretch;width:100%;border:0;border-bottom:1px solid var(--line);background:var(--card);padding:10px 8px;text-align:left;font:inherit;color:var(--fg);cursor:pointer;border-radius:0}
+.kli .kt{width:52px;flex:none;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}.kli .kt small{display:block;font-weight:400;color:var(--mut)}
+.kli .kbar{width:4px;flex:none;border-radius:4px;background:var(--kc)}
+.kli .kx{min-width:0;flex:1}.kli .kx b{display:block;overflow-wrap:anywhere}.kli .kx small{color:var(--mut);font-size:12.5px}
+.kallegend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;color:var(--mut);margin:10px 2px 0}
+.kallegend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px;background:var(--kc)}
+@media (max-width:760px){.kalgrid{grid-template-columns:34px repeat(var(--n),minmax(0,1fr))}.kalgrid .khours span{font-size:10px;padding-right:3px}
+  .kev{padding:2px 3px;font-size:10.5px}.kev small{display:none}.kalmonth .kmd{min-height:62px}.kalmonth .kchip{font-size:10px;padding:0 3px}}

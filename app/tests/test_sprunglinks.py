@@ -17,8 +17,11 @@ from tests.test_ui_browser import PAGE_READY, async_playwright, browser_ok, chro
 
 APP = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PANEL = os.path.join(APP, "panel")
-DE_ROOTS = ("Personen und Geräte", "Einstellungen", "Funktionen", "Zustand", "Ich")
-EN_ROOTS = ("People and devices", "Settings", "Features", "Status", "Me")
+import features  # noqa: E402  (panel/ is on the path through helpers)
+
+# the menu names, and the pages of their own outside Ich (features.OWN_PAGES: Kalender, V01.0.805)
+DE_ROOTS = ("Personen und Geräte", "Einstellungen", "Funktionen", "Zustand", "Ich") + tuple(x[2] for x in features.OWN_PAGES)
+EN_ROOTS = ("People and devices", "Settings", "Features", "Status", "Me") + tuple(x[3] for x in features.OWN_PAGES)
 HINT = re.compile(r"(?<![\w-])(?<!Mein )(?<!My )(?<!→ )(" + "|".join(DE_ROOTS + EN_ROOTS) + r")\s*→")
 # a way that starts like ours but means another program (the iPhone's or Open WebUI's settings, …): text that
 # names it right before the way. Everything else that starts with one of the names above must be found.

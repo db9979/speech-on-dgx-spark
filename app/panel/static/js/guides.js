@@ -655,15 +655,15 @@ const GUIDES=[
 {id:'calendar',grp:'day',sw:'chat.calendar',me:'calbox',ng:1,t:['Kalender','Calendar'],
  what:[['Der Assistent liest deine Termine vor und trägt neue ein, aber erst nach deinem „Ja“.','The assistant reads your appointments and adds new ones, but only after your "Yes".']],
  need:[['iCloud: Apple-ID und ein app-spezifisches Passwort von appleid.apple.com. Nextcloud oder anderer CalDAV-Server: Adresse und App-Passwort. Oder ein Abo-Link (webcal), dann nur lesen.','iCloud: Apple ID and an app-specific password from appleid.apple.com. Nextcloud or another CalDAV server: address and app password. Or a subscription link (webcal), then read only.']],
- setup:[['Admin: Funktionen → Kalender und Tagesbriefing an.','Admin: Features → Calendar and daily briefing on.'],['Profil: Ich → Kalender → „Kalender hinzufügen“, Anbieter wählen, Zugangsdaten eintragen, „Prüfen und hinzufügen“.','Profile: Me → Calendar → "Add calendar", pick the provider, enter the login, "Check and add".']],
+ setup:[['Admin: Funktionen → Kalender und Tagesbriefing an.','Admin: Features → Calendar and daily briefing on.'],['Profil: Kalender → Einstellungen → „Kalender hinzufügen“, Anbieter wählen, Zugangsdaten eintragen, „Prüfen und hinzufügen“.','Profile: Calendar → Settings → "Add calendar", pick the provider, enter the login, "Check and add".']],
  say:[['„Was steht heute an?“','"What is on today?"'],['„Hab ich am Freitag Zeit?“','"Am I free on Friday?"'],['„Trag Zahnarzt Dienstag 10 Uhr ein.“ Dann „Ja“.','"Add dentist Tuesday 10 am." Then "Yes".']],
  out:[['Der Spark spricht direkt mit deinem Kalenderdienst (z. B. iCloud). Sonst geht nichts raus.','The Spark talks directly to your calendar service (e.g. iCloud). Nothing else leaves.']],
- off:[['Ich → Kalender → „Entfernen“. Das Passwort wird dabei gelöscht.','Me → Calendar → "Remove". The password is deleted with it.']],
+ off:[['Kalender → Einstellungen → „Entfernen“. Das Passwort wird dabei gelöscht.','Calendar → Settings → "Remove". The password is deleted with it.']],
  fix:[['iCloud lehnt ab: neues app-spezifisches Passwort erzeugen, nicht das Apple-ID-Passwort.','iCloud refuses: create a new app-specific password, not the Apple ID password.'],['„Nächste Termine zeigen“ prüft die Verbindung.','"Show next appointments" checks the connection.']]},
 {id:'briefing',grp:'day',me:'calbox',t:['Morgen-Briefing','Morning briefing'],
  what:[['Auf „Guten Morgen“ oder zu einer festen Uhrzeit: Termine, Erinnerungen, Wetter, Geburtstage, Pakete, ungelesene Mails und bis zu drei Themen, kurz zusammengefasst (was davon eingeschaltet ist).','On "Good morning" or at a set time: appointments, reminders, weather, birthdays, parcels, unread mail and up to three topics, briefly (whatever is switched on).']],
  need:[['Einen verbundenen Kalender. Für die feste Uhrzeit: Mitteilungen.','A connected calendar. For the set time: notifications.']],
- setup:[['Profil: Ich → Kalender → Themen eintragen (z. B. „Wetter Ulm, Nachrichten“).','Profile: Me → Calendar → enter topics (e.g. "weather Ulm, news").'],['Profil: Ich → Mitteilungen → Uhrzeit fürs Tagesbriefing.','Profile: Me → Notifications → time for the daily briefing.']],
+ setup:[['Profil: Kalender → Einstellungen → Themen eintragen (z. B. „Wetter Ulm, Nachrichten“).','Profile: Calendar → Settings → enter topics (e.g. "weather Ulm, news").'],['Profil: Ich → Mitteilungen → Uhrzeit fürs Tagesbriefing.','Profile: Me → Notifications → time for the daily briefing.']],
  say:[['„Guten Morgen.“','"Good morning."'],['„Was steht heute an?“','"What is on today?"']],
  out:[['Für die Themen geht eine Suche an deine SearXNG.','For the topics a search goes to your SearXNG.']],
  off:[['Uhrzeit auf „Aus“, Themen leeren.','Set the time to "Off", clear the topics.']],
@@ -1885,11 +1885,12 @@ document.addEventListener('change',e=>{if(e.target.closest&&e.target.closest('#p
 document.addEventListener('input',e=>{if(e.target.closest&&e.target.closest('#pane-feat [data-req]'))guidesCount()});
 // small marks behind a feature's name instead of repeating it in every description
 const ME_NAME={kannbox:['Was ich kann','What I can do'],bgbox:['Mein Zustand','My status'],setbox:['Gespräch','Conversation'],notebox:['Mitteilungen','Notifications'],factbox:['Gedächtnis','Memory'],voicebox:['Sprechererkennung','Speaker identification'],roombox:['Raum-Modus','Room mode'],
-  probox:['Von selbst','Proactive'],taskbox:['Aufgaben','Tasks'],agentbox:['Aufträge','Jobs'],calbox:['Kalender','Calendar'],wxbox:['Wetter','Weather'],conbox:['Kontakte','Contacts'],trbox:['Bus und Bahn','Bus and train'],feedbox:['Reddit und Feeds','Reddit and feeds'],
+  probox:['Von selbst','Proactive'],taskbox:['Aufgaben','Tasks'],agentbox:['Aufträge','Jobs'],wxbox:['Wetter','Weather'],conbox:['Kontakte','Contacts'],trbox:['Bus und Bahn','Bus and train'],feedbox:['Reddit und Feeds','Reddit and feeds'],
   mailbox:['E-Mail','E-mail'],parbox:['Pakete','Parcels'],writebox:['Schreibhilfe','Writing help'],deskbox:['Begleiter','Companion'],docbox:['Dokumente','Documents'],bildbox:['Bilder','Pictures'],musikbox:['Musik','Music'],rmbox:['reMarkable','reMarkable'],habox:['Smart Home','Smart home'],tgbox:['Telegram','Telegram'],appbox:['iPhone-App','iPhone app'],andbox:['Android-App','Android app'],pebbox:['Pebble-Uhr','Pebble watch'],termbox:['Terminal','Terminal'],mcpbox:['Dienste per MCP','Services over MCP'],mymcpbox:['Meine MCP-Dienste','My MCP services'],storebox:['Speicher','Storage'],espbox:['Lautsprecher','Speakers'],secbox:['Sicherheit','Security'],usebox:['Verbrauch','Usage'],telbox:['Telefon','Phone']};
 function featTags(g,row){const lbl=row.querySelector('.lbl');if(!lbl||lbl.querySelector('.ftags'))return;const tags=[];
   const me=g.me||g.mep;   // mep: the profile switch sits on that page, without the guide being shown there
   if(me&&ME_NAME[me])tags.push(['me',t('einrichten unter Ich → ','set up under Me → ')+t(...ME_NAME[me])]);
+  else if(me&&typeof OWN_PAGES!=='undefined'&&OWN_PAGES[me])tags.push(['me',t('einrichten unter ','set up under ')+OWN_PAGES[me][1]+t(' → Einstellungen',' → Settings')]);
   if(g.ng)tags.push(['ng',t('nie für Gäste','never for guests')]);
   if(g.ro)tags.push(['ro',t('nur lesen','read only')]);
   if(g.out&&g.out!==NOTHING_OUT)tags.push(['out',t('verlässt das Haus','leaves the house')]);
