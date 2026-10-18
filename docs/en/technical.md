@@ -16,6 +16,7 @@
 | Watchdog `speech-spark-watch` (only without the panel) | `/opt/speech-spark/venv-panel` | |
 | Command `speech-spark` | `/usr/local/bin` | |
 | Benchmark `speech-spark-bench` | `/usr/local/bin` | |
+| optional workshop `speech-spark-werkstatt` (on request only, sandbox as the user `spark-werkstatt`, `--werkstatt`) | OpenCode in `/opt/speech-spark/werkstatt`, work folder `/var/lib/spark-werkstatt/arbeit` | |
 | Configuration | `/etc/speech-spark/config.json`, install mode in `mode`, connection details in `connection.txt`, password in `panel.env` (a password changed in the panel is stored as a hash in `/var/lib/speech-spark/state/panel-password` and wins) | |
 | Models, cloned voices | `/var/lib/speech-spark/hf`, `/var/lib/speech-spark/voices` | |
 

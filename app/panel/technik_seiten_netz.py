@@ -1,5 +1,5 @@
 """Zustand → Technik, Knoten-Seiten: the pages of outside services, internet and Spark split
-(aussen, internet, teilen). Rules and placeholders as in technik_seiten.py; the engine and the order are in technik_knoten.py."""
+(aussen, internet, teilen, werkstatt). Rules and placeholders as in technik_seiten.py; the engine and the order are in technik_knoten.py."""
 from technik_seiten import S
 
 SEITEN = {
@@ -438,6 +438,142 @@ SEITEN = {
             ("steuerzentrale.schrift", ("Schrift nach Auflösung", "font by resolution")),
         ],
         "tests": ["test_teilen", "test_umziehen", "test_rechner", "test_steuerzentrale"],
+        "heute": [],
+    },
+    # ------------------------------------------------------------------ Werkstatt
+    "werkstatt": {
+        "stand": "2ef9fba300",
+        "bezug": {
+            "werkstattseite.auftrag_geben": ["s1"], "werkstattseite.nacht_art": ["s1"], "werkstattseite.NACHT_FENSTER_H": ["s1"],
+            "werkstatt.pruefen": ["s2"], "werkstatt.TEXT_MAX": ["s2"],
+            "werkstatt.wunsch_nehmen": ["s3"], "werkstatt.WUNSCH_S": ["s3"], "werkstatt.sandbox": ["s4"],
+            "werkstatt.kopie": ["s5"], "werkstatt.git_umgebung": ["s5"],
+            "werkstatt.rechte": ["s7"], "werkstatt.testlauf": ["s8"],
+            "werkstatt.TEILE": ["s8"], "werkstatt.pruefe_ergebnis": ["s9"], "werkstatt.AUFTRAEGE_MAX": ["s9"],
+            "werkstatt.PATCH_MAX": ["s9"],
+        },
+        "kurz": ("Die Werkstatt lässt einen Admin auf dem Modell-Rechner den vollen Testlauf laufen und mit OpenCode den Code "
+                 "messen, ein Problem untersuchen oder eine Reparatur vorschlagen. Alles läuft in einer abgeschotteten Kopie "
+                 "des Codes; heraus kommen nur Zahlen, eine Antwort und ein Patch zum Ansehen. Eingespielt wird nie etwas.",
+                 "The workshop lets an admin run the full test run on the model computer and, with OpenCode, measure the code, "
+                 "look into a problem or propose a repair. Everything runs in a sealed-off copy of the code; only numbers, an "
+                 "answer and a patch to look at come out. Nothing is ever installed."),
+        "warum": ("Code, den ein Modell schreibt oder startet, darf nie an die Daten, die Schlüssel oder ins Internet kommen und "
+                  "nie selbst etwas ändern. Deshalb entscheidet das Panel mit festen Regeln, und die Sandbox kann nichts außer "
+                  "ihrer eigenen Kopie.",
+                  "Code a model writes or starts must never reach the data, the keys or the internet, and never change "
+                  "anything by itself. So the panel decides by fixed rules, and the sandbox can do nothing but its own copy."),
+        "ablauf": [
+            S("s1", "start", ("Auftrag oder Nachtregel", "Order or night rule"),
+              ("Funktionen → Werkstatt, nur Admin", "Features → Workshop, admin only"),
+              ("Ein Admin tippt Testlauf, Code-Messung, Diagnose oder Reparatur an (werkstattseite.auftrag_geben; die drei "
+               "mit Sprachmodell brauchen den Code der zweiten Stufe). Ist „Jede Nacht testen“ an, startet "
+               "werkstattseite.nacht_art in den ersten {werkstattseite.NACHT_FENSTER_H} Stunden nach der eingestellten "
+               "Stunde einen Testlauf und nach einem Modellwechsel eine Code-Messung.",
+               "An admin taps test run, code measurement, diagnosis or repair (werkstattseite.auftrag_geben; the three with "
+               "the language model need the second-step code). With \"Test every night\" on, werkstattseite.nacht_art starts "
+               "a test run in the first {werkstattseite.NACHT_FENSTER_H} hours after the set hour, and a code measurement "
+               "after a model switch.")),
+            S("s2", "frage", ("Feste Regeln erfüllt?", "Fixed rules met?"),
+              ("{werkstatt.ARTEN|anzahl} Arten, Text bis {werkstatt.TEXT_MAX} Zeichen", "{werkstatt.ARTEN|anzahl} kinds, text up to {werkstatt.TEXT_MAX} characters"),
+              ("werkstatt.pruefen nimmt nur eine bekannte Art, nichts läuft schon, OpenCode und das eigene Sprachmodell sind "
+               "da, wo die Art sie braucht. Der Text des Admins wird gesäubert und eingezäunt: er beschreibt nur das Problem.",
+               "werkstatt.pruefen takes only a known kind, nothing runs yet, OpenCode and the own language model are there "
+               "where the kind needs them. The admin's text is cleaned and fenced: it only describes the problem."),
+              ("stop", "nein", ("Abgelehnt mit festem Grund", "Refused with a fixed reason"))),
+            S("s3", "schritt", ("Wunsch an root", "Wish to root"),
+              ("einmal, höchstens {werkstatt.WUNSCH_S} s alt", "once, at most {werkstatt.WUNSCH_S} s old"),
+              ("Das Panel schreibt einen Wunsch und darf per sudo nur die feste Einheit speech-spark-werkstatt starten. "
+               "werkstatt.wunsch_nehmen liest ihn als root genau einmal und prüft alles noch einmal.",
+               "The panel writes a wish and may start only the fixed unit speech-spark-werkstatt through sudo. "
+               "werkstatt.wunsch_nehmen reads it as root exactly once and checks everything again.")),
+            S("s4", "schritt", ("Sandbox", "Sandbox"),
+              ("eigener Nutzer, nur 127.0.0.1", "own user, only 127.0.0.1"),
+              ("werkstatt.sandbox startet den Auftrag mit systemd-run als Nutzer spark-werkstatt: nur sein eigener Ordner "
+               "ist beschreibbar, Daten, Einstellungen und Schlüssel des Spark sind unsichtbar, Netz nur zu diesem Rechner, "
+               "Speicher- und Zeitgrenze je Art (werkstatt.GRENZE_S).",
+               "werkstatt.sandbox starts the order with systemd-run as the user spark-werkstatt: only its own folder is "
+               "writable, the Spark's data, settings and keys are invisible, network only to this computer, a memory and "
+               "time limit per kind (werkstatt.GRENZE_S).")),
+            S("s5", "frage", ("Kopie des Codes gemacht?", "Copy of the code made?"),
+              ("git clone von /opt/speech-spark/src", "git clone of /opt/speech-spark/src"),
+              ("werkstatt.kopie klont den Klon des Installers, nie von GitHub. Weil er root gehört, nennt werkstatt.git_umgebung "
+               "genau diesen Ordner in einer eigenen git-Datei der Sandbox als sicher.",
+               "werkstatt.kopie clones the installer's clone, never from GitHub. Because root owns it, werkstatt.git_umgebung "
+               "names exactly this folder as safe in the sandbox's own git file."),
+              ("stop", "nein", ("Code-Kopie fehlt", "Code copy missing"))),
+            S("s6", "frage", ("Nur ein Testlauf?", "Only a test run?"),
+              ("ohne OpenCode und Sprachmodell", "without OpenCode and language model"),
+              ("Der Testlauf braucht weder OpenCode noch das Sprachmodell; er geht gleich zu den Tests.",
+               "The test run needs neither OpenCode nor the language model; it goes straight to the tests."),
+              ("ok", "ja", "s8")),
+            S("s7", "schritt", ("OpenCode mit festen Rechten", "OpenCode with fixed rights"),
+              ("Version {werkstatt.OPENCODE_VERSION}, Prüfsumme fest", "version {werkstatt.OPENCODE_VERSION}, checksum pinned"),
+              ("werkstatt.rechte: Diagnose liest nur, Reparatur darf Dateien der Kopie ändern und die Selbsttests starten; "
+               "kein Web, kein git push, jeder andere Befehl abgelehnt. Das Sprachmodell fragt OpenCode über das LLM-Tor "
+               "ganz hinten in der Reihe, damit Gespräche vorgehen.",
+               "werkstatt.rechte: diagnosis only reads, repair may change files of the copy and start the self-tests; no "
+               "web, no git push, every other command refused. OpenCode asks the language model through the LLM-Tor at the "
+               "very back of the line, so conversations go first.")),
+            S("s8", "schritt", ("Selbsttests", "Self-tests"),
+              ("in {werkstatt.TEILE} Teilen, zweimal rot ist rot", "in {werkstatt.TEILE} parts, red twice is red"),
+              ("werkstatt.testlauf lässt die Selbsttests der Kopie laufen wie GitHub; wer beim zweiten Versuch grün wird, "
+               "zählt als wackelig.",
+               "werkstatt.testlauf runs the copy's self-tests like GitHub; whatever turns green on the second try counts as "
+               "wobbly.")),
+            S("s9", "schritt", ("Ergebnis als Daten", "Result as data"),
+              ("die letzten {werkstatt.AUFTRAEGE_MAX}", "the last {werkstatt.AUFTRAEGE_MAX}"),
+              ("werkstatt.pruefe_ergebnis nimmt nur bekannte Felder, Zahlen im Rahmen und Wörter aus festen Listen; ein Patch "
+               "über {werkstatt.PATCH_MAX} Zeichen wird gekürzt. Die Seite zeigt alles nur als Text.",
+               "werkstatt.pruefe_ergebnis takes only known fields, numbers in range and words from fixed lists; a patch over "
+               "{werkstatt.PATCH_MAX} characters is cut. The page shows everything as text only.")),
+            S("s10", "ende", ("Der Admin entscheidet", "The admin decides"),
+              ("nichts wird eingespielt", "nothing is installed"),
+              ("Den Patch gibt der Admin einem Claude-Thread oder einem Menschen; die Werkstatt spielt nie etwas ein und "
+               "pusht nie.",
+               "The admin hands the patch to a Claude thread or a person; the workshop never installs or pushes anything.")),
+        ],
+        "beispiele": [
+            (("Testlauf in der Nacht", "Test run at night"), ["s1", "s2", "s3", "s4", "s5", "s6", "s6!", "s8", "s9"],
+             ("Grün, rot und wackelig stehen unter Funktionen → Werkstatt.", "Green, red and wobbly show under Features → Workshop.")),
+            (("Reparatur vorschlagen", "Propose a repair"), ["s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9", "s10"],
+             ("Ein Patch mit Testergebnis zum Ansehen.", "A patch with its test result to look at.")),
+            (("Kein eigenes Sprachmodell", "No own language model"), ["s1", "s2", "s2!"],
+             ("Abgelehnt, bevor etwas startet.", "Refused before anything starts.")),
+        ],
+        "zahlen": [
+            ("{werkstatt.WUNSCH_S} s", ("darf ein Wunsch alt sein", "a wish may be old"), "werkstatt.WUNSCH_S"),
+            ("{werkstatt.TEXT_MAX}", ("Zeichen höchstens im Auftrag", "characters at most in an order"), "werkstatt.TEXT_MAX"),
+            ("{werkstatt.TEILE}", ("Teile des Testlaufs gleichzeitig", "parts of the test run at once"), "werkstatt.TEILE"),
+            ("{werkstatt.AUFTRAEGE_MAX}", ("Ergebnisse bleiben", "results are kept"), "werkstatt.AUFTRAEGE_MAX"),
+            ("{werkstatt.PATCH_MAX}", ("Zeichen eines Patches, mehr wird gekürzt", "characters of a patch, more is cut"), "werkstatt.PATCH_MAX"),
+            ("{werkstattseite.NACHT_FENSTER_H} h", ("nach der Stunde darf die Nacht starten", "after the hour the night may start"), "werkstattseite.NACHT_FENSTER_H"),
+        ],
+        "einstellen": [
+            ("Auf dem Modell-Rechner einmal sudo ./install.sh --werkstatt (OpenCode mit fester Version und Prüfsumme).",
+             "On the model computer once sudo ./install.sh --werkstatt (OpenCode with a pinned version and checksum)."),
+            ("Funktionen → Werkstatt: an und aus, „Jede Nacht testen“ mit der Startstunde.",
+             "Features → Workshop: on and off, \"Test every night\" with the start hour."),
+        ],
+        "sehen": [
+            ("Funktionen → Werkstatt: Stand, letzter Testlauf, Code-Messung je Sprachmodell und die letzten Ergebnisse mit Patch.",
+             "Features → Workshop: status, last test run, code measurement per language model and the last results with patch."),
+            ("Zustand → Live, Monitoring und die Steuerzentrale: Teil „Werkstatt“ mit Art und Status, nie Inhalte.",
+             "Status → Live, Monitoring and the control centre: part \"Workshop\" with kind and status, never contents."),
+        ],
+        "code": [
+            ("werkstattseite.auftrag_geben", ("Auftrag vom Panel", "order from the panel")),
+            ("werkstattseite.nacht_art", ("feste Nachtregel", "fixed night rule")),
+            ("werkstatt.pruefen", ("feste Regeln eines Auftrags", "fixed rules of an order")),
+            ("werkstatt.wunsch_nehmen", ("root nimmt den Wunsch einmal", "root takes the wish once")),
+            ("werkstatt.sandbox", ("Grenzen der Sandbox", "limits of the sandbox")),
+            ("werkstatt.kopie", ("Kopie aus dem Klon des Installers", "copy from the installer's clone")),
+            ("werkstatt.git_umgebung", ("nur dieser Klon gilt als sicher", "only this clone counts as safe")),
+            ("werkstatt.rechte", ("Rechte von OpenCode", "OpenCode's rights")),
+            ("werkstatt.testlauf", ("Selbsttests in Teilen", "self-tests in parts")),
+            ("werkstatt.pruefe_ergebnis", ("Ergebnis als Daten", "result as data")),
+        ],
+        "tests": ["test_werkstatt"],
         "heute": [],
     },
     # ------------------------------------------------------------------ Browser und Handy

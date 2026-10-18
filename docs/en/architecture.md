@@ -33,6 +33,7 @@ flowchart TB
       wissen["Knowledge<br/>documents · wissen"]
       waechter["Guard<br/>netguard.py"]
       betrieb["Logs and live<br/>tracelog · live"]
+      werkstatt["Workshop<br/>werkstatt.py"]
     end
     subgraph z_modelle["Models · on the DGX"]
       llm["Language model<br/>:31006 → :31016"]
@@ -80,6 +81,7 @@ flowchart TB
   zugang --> users
   zugang --> state
   tts --> ablage
+  zugang --> werkstatt
 ```
 <!-- /technik:bild -->
 
@@ -365,7 +367,7 @@ Live overview, logs, watchers, backup, update, help and the admin pages.
 | `app/panel/technik_seiten_geraete.py` | Status → Architecture, Knoten-Seiten: the pages of devices, apps, channels, speakers and MCP (geraet, apps, kanaele, lautsprecher, mcpc). |
 | `app/panel/technik_seiten_kern.py` | Status → Architecture, Knoten-Seiten: the pages of language model, own knowledge and operation (llm, wissen, betrieb). |
 | `app/panel/technik_seiten_modelle.py` | Status → Architecture, Knoten-Seiten: the pages of speech recognition, speech output and pictures (asr, tts, bild). |
-| `app/panel/technik_seiten_netz.py` | Status → Architecture, Knoten-Seiten: the pages of outside services, internet and Spark split (aussen, internet, teilen). |
+| `app/panel/technik_seiten_netz.py` | Status → Architecture, Knoten-Seiten: the pages of outside services, internet and Spark split (aussen, internet, teilen, werkstatt). |
 | `app/panel/technik_seiten_zugang.py` | Status → Architecture, Knoten-Seiten: the pages of the guard, middleware and access (waechter, middleware, zugang). |
 | `app/panel/tracelog.py` | Status → Logs → Requests: the way of each request through the panel, step by step, for the admin: arrival, preparation, the switch (intent.py), every round o … |
 | `app/panel/undo.py` | Rückgängig im Admin-Protokoll. |
@@ -1708,6 +1710,7 @@ Applies at: [step 9](#kn-weiche-s9)
 - Features → Targeted tool choice: without this switch the switch narrows nothing (default off).
 - Features → Switch: own words per group, „Not with“, extra tools, groups without narrowing, must words, own test sentences and what questions no rule recognizes get. Every change runs through all test sentences first; if one changes, it is saved only after confirming. Undo keeps the last 20 versions.
 - Features → Fetch clear questions directly: the panel fetches short reading questions itself (default off).
+- Features → Tune the switch (default off): the language model proposes words per group, the panel keeps a word only when no test sentence flips, the practice half gets better and the check half no worse; it is saved only with "Apply".
 
 #### What you see
 
@@ -3288,6 +3291,89 @@ Applies at: [step 8](#kn-ablage-s8)
 - `app/panel/backup.py` `restore`: check, back up, swap ([step 12](#kn-ablage-s12))
 
 Self-tests: `test_panel`, `test_hardening`, `test_offsite`
+
+### Workshop
+
+The workshop lets an admin run the full test run on the model computer and, with OpenCode, measure the code, look into a problem or propose a repair. Everything runs in a sealed-off copy of the code; only numbers, an answer and a patch to look at come out. Nothing is ever installed.
+
+**Why:** Code a model writes or starts must never reach the data, the keys or the internet, and never change anything by itself. So the panel decides by fixed rules, and the sandbox can do nothing but its own copy.
+
+#### Way
+
+```mermaid
+flowchart TD
+  s1(["1. Order or night rule"])
+  s2{{"2. Fixed rules met?"}}
+  s3["3. Wish to root"]
+  s4["4. Sandbox"]
+  s5{{"5. Copy of the code made?"}}
+  s6{{"6. Only a test run?"}}
+  s7["7. OpenCode with fixed rights"]
+  s8["8. Self-tests"]
+  s9["9. Result as data"]
+  s10(["10. The admin decides"])
+  s1 --> s2
+  s2 -->|yes| s3
+  s3 --> s4
+  s4 --> s5
+  s5 -->|yes| s6
+  s6 -->|no| s7
+  s7 --> s8
+  s8 --> s9
+  s9 --> s10
+  s2x(["Refused with a fixed reason"])
+  s2 -->|no| s2x
+  s5x(["Code copy missing"])
+  s5 -->|no| s5x
+  s6 -.->|yes| s8
+```
+
+1. <a id="kn-werkstatt-s1"></a>**Order or night rule**: An admin taps test run, code measurement, diagnosis or repair (werkstattseite.auftrag_geben; the three with the language model need the second-step code). With "Test every night" on, werkstattseite.nacht_art starts a test run in the first 5 hours after the set hour, and a code measurement after a model switch.
+2. <a id="kn-werkstatt-s2"></a>**Fixed rules met?**: werkstatt.pruefen takes only a known kind, nothing runs yet, OpenCode and the own language model are there where the kind needs them. The admin's text is cleaned and fenced: it only describes the problem.
+3. <a id="kn-werkstatt-s3"></a>**Wish to root**: The panel writes a wish and may start only the fixed unit speech-spark-werkstatt through sudo. werkstatt.wunsch_nehmen reads it as root exactly once and checks everything again.
+4. <a id="kn-werkstatt-s4"></a>**Sandbox**: werkstatt.sandbox starts the order with systemd-run as the user spark-werkstatt: only its own folder is writable, the Spark's data, settings and keys are invisible, network only to this computer, a memory and time limit per kind (werkstatt.GRENZE_S).
+5. <a id="kn-werkstatt-s5"></a>**Copy of the code made?**: werkstatt.kopie clones the installer's clone, never from GitHub. Because root owns it, werkstatt.git_umgebung names exactly this folder as safe in the sandbox's own git file.
+6. <a id="kn-werkstatt-s6"></a>**Only a test run?**: The test run needs neither OpenCode nor the language model; it goes straight to the tests.
+7. <a id="kn-werkstatt-s7"></a>**OpenCode with fixed rights**: werkstatt.rechte: diagnosis only reads, repair may change files of the copy and start the self-tests; no web, no git push, every other command refused. OpenCode asks the language model through the LLM-Tor at the very back of the line, so conversations go first.
+8. <a id="kn-werkstatt-s8"></a>**Self-tests**: werkstatt.testlauf runs the copy's self-tests like GitHub; whatever turns green on the second try counts as wobbly.
+9. <a id="kn-werkstatt-s9"></a>**Result as data**: werkstatt.pruefe_ergebnis takes only known fields, numbers in range and words from fixed lists; a patch over 200000 characters is cut. The page shows everything as text only.
+10. <a id="kn-werkstatt-s10"></a>**The admin decides**: The admin hands the patch to a Claude thread or a person; the workshop never installs or pushes anything.
+
+**Examples:** Test run at night: Green, red and wobbly show under Features → Workshop. · Propose a repair: A patch with its test result to look at. · No own language model: Refused before anything starts.
+
+#### Numbers (from the code)
+
+- **600 s** a wish may be old ([step 3](#kn-werkstatt-s3))
+- **2000** characters at most in an order ([step 2](#kn-werkstatt-s2))
+- **4** parts of the test run at once ([step 8](#kn-werkstatt-s8))
+- **20** results are kept ([step 9](#kn-werkstatt-s9))
+- **200000** characters of a patch, more is cut ([step 9](#kn-werkstatt-s9))
+- **5 h** after the hour the night may start ([step 1](#kn-werkstatt-s1))
+
+#### Settings
+
+- On the model computer once sudo ./install.sh --werkstatt (OpenCode with a pinned version and checksum).
+- Features → Workshop: on and off, "Test every night" with the start hour.
+
+#### What you see
+
+- Features → Workshop: status, last test run, code measurement per language model and the last results with patch.
+- Status → Live, Monitoring and the control centre: part "Workshop" with kind and status, never contents.
+
+#### In the code
+
+- `app/panel/werkstattseite.py` `auftrag_geben`: order from the panel ([step 1](#kn-werkstatt-s1))
+- `app/panel/werkstattseite.py` `nacht_art`: fixed night rule ([step 1](#kn-werkstatt-s1))
+- `app/werkstatt.py` `pruefen`: fixed rules of an order ([step 2](#kn-werkstatt-s2))
+- `app/werkstatt.py` `wunsch_nehmen`: root takes the wish once ([step 3](#kn-werkstatt-s3))
+- `app/werkstatt.py` `sandbox`: limits of the sandbox ([step 4](#kn-werkstatt-s4))
+- `app/werkstatt.py` `kopie`: copy from the installer's clone ([step 5](#kn-werkstatt-s5))
+- `app/werkstatt.py` `git_umgebung`: only this clone counts as safe ([step 5](#kn-werkstatt-s5))
+- `app/werkstatt.py` `rechte`: OpenCode's rights ([step 7](#kn-werkstatt-s7))
+- `app/werkstatt.py` `testlauf`: self-tests in parts ([step 8](#kn-werkstatt-s8))
+- `app/werkstatt.py` `pruefe_ergebnis`: result as data ([step 9](#kn-werkstatt-s9))
+
+Self-tests: `test_werkstatt`
 
 ### journald
 

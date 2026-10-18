@@ -1737,6 +1737,13 @@
 "titel": "Personen und Geräte aufgeräumt",
 "text": "A: Personen und Geräte öffnen: jede Person mit farbigem Kreis und Kürzel, darunter „zuletzt … · n Geräte · n Fakten“, rechts ein schmaler Balken „Einrichten 14/15“ und ein Pfeil. Klick auf die Zeile öffnet die Person rechts. Suchfeld und die zwei Auswahlen gleich hoch, „+ Neues Profil“ unten neben der Anzahl. Geräte mit Symbol ihrer Art. Am Handy: Liste ohne Abschneiden, Pfeil rechts.",
 "thread": "Webanwendung schöner und schneller"
+},
+{
+"id": "P272",
+"v": 767,
+"titel": "Werkstatt unter Technik",
+"text": "A: Zustand → Technik öffnen: links unten im Panel-Bereich steht der Kasten „Werkstatt“, eine Linie führt von „Anmeldung, Profil“ zu ihm. B: Auf den Kasten tippen: die Knoten-Seite zeigt den Weg eines Auftrags in zehn Schritten (Auftrag oder Nachtregel bis „Der Admin entscheidet“) mit Zahlen und Code-Stellen. C: Der Kasten „Weiche“ nennt unter Einstellen „Weiche abstimmen“. D: Hilfe nach „Werkstatt“ fragen: der Abschnitt „Werkstatt“ aus Sicherheit und Betrieb kommt. E: Auf Englisch heißt der Kasten „Workshop“.",
+"thread": "OpenCode-Werkstatt"
 }
 ]
 }

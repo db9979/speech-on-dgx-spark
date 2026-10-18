@@ -31,6 +31,7 @@ Am Ende stehen Adresse, Passwort und API-Schlüssel auf dem Bildschirm, danach s
 | Aktualisieren | Knopf im Portal unter *Einstellungen → Update und Sicherung* oder `sudo speech-spark update` |
 | Adressen und Schlüssel anzeigen | `sudo speech-spark info` |
 | Eigenes Sprachmodell | `sudo ./install.sh --llm`, danach `sudo speech-spark modelle llm uebernehmen` (zurück: `… zurueck`) |
+| Werkstatt (Testlauf, Code-Messung, Diagnose, Reparatur) | auf dem Modell-Rechner `sudo ./install.sh --werkstatt`, dann *Funktionen → Werkstatt* |
 | Portal auf einen anderen Rechner umziehen | `sudo speech-spark umziehen --code`, siehe [Spark teilen](docs/de/spark-teilen.md) |
 | Deinstallieren | `sudo ./uninstall.sh` (Konfiguration, Modelle und Stimmen bleiben; `--purge` löscht alles) |
 
@@ -40,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.767** Werkstatt unter Zustand → Technik als eigener Kasten mit Knoten-Seite, im Schaubild, in den Befehlen und mit eigenem Doku-Abschnitt
 - **V01.0.766** Fix: Qwen3.8 Flash Next startet in Docker (io_uring im Container erlaubt, seccomp bleibt an)
 - **V01.0.765** Werkstatt-Fix: Testlauf und Code-Messung starten wieder (die Code-Kopie fehlte, weil git 2.43 die Freigabe des Klons nicht annahm)
 - **V01.0.764** Personen und Geräte als aufgeräumte Liste mit Kürzeln, Balken und Pfeil
@@ -49,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.760** Genauer und schneller, Paket B: feste Werkzeugliste je Fragenart, großes Gedächtnis kürzen
 - **V01.0.759** Fix: Einstellungen ohne „/api/mfa 403“ bei Admin-Profilen
 - **V01.0.758** Funktionen und Personen mit Symbolen wie Zustand und Einstellungen
-- **V01.0.757** Werkstatt: Testlauf, Code-Messung, Diagnose und Reparatur in einer abgeschotteten Kopie auf dem Modell-Rechner (OpenCode, ohne Daten und Internet, nichts wird eingespielt), jede Nacht testen; dazu „Weiche abstimmen“
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
@@ -77,6 +78,7 @@ flowchart LR
     LLM["LLM-Tor :31006<br/>eigenes Sprachmodell (vLLM)"]
     IMG["Bilder :31005<br/>FLUX.2 klein"]
     MUS["Musik :31004<br/>ACE-Step 1.5"]
+    WS["Werkstatt: Sandbox ohne Netz<br/>und Daten, Tests und OpenCode"]
   end
   subgraph Out["Dienste und Quellen"]
     E["Home Assistant, Kalender,<br/>Mail, Wetter, Pakete, ÖPNV"]

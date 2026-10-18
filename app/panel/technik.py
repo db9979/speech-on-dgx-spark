@@ -252,7 +252,7 @@ MODULE = {
     "technik_seiten_zugang": ("betrieb", "Knoten-Seiten Wächter, Middleware und Zugang, Zahlen als Platzhalter aus dem Code"),
     "technik_seiten_anfrage": ("betrieb", "Knoten-Seiten Vorbereiten, Weiche, Antwort und Werkzeuge, Zahlen als Platzhalter aus dem Code"),
     "technik_seiten_kern": ("betrieb", "Knoten-Seiten Sprachmodell, eigenes Wissen und Betrieb, Zahlen als Platzhalter aus dem Code"),
-    "technik_seiten_netz": ("betrieb", "Knoten-Seiten Dienste außen, Internet und Spark teilen, Zahlen als Platzhalter aus dem Code"),
+    "technik_seiten_netz": ("betrieb", "Knoten-Seiten Dienste außen, Internet, Spark teilen und Werkstatt, Zahlen als Platzhalter aus dem Code"),
     "technik_seiten_geraete": ("betrieb", "Knoten-Seiten Geräte, Apps, Kanäle, Lautsprecher und MCP, Zahlen als Platzhalter aus dem Code"),
     "technik_seiten_modelle": ("betrieb", "Knoten-Seiten Spracherkennung, Sprachausgabe und Bilder, Zahlen als Platzhalter aus dem Code"),
     "technik_seiten_daten": ("betrieb", "Knoten-Seiten Zustand, Nutzerdaten, Ablage und Logs, Zahlen als Platzhalter aus dem Code"),
@@ -372,6 +372,12 @@ KNOTEN = {
               "Everything of one profile; no profile sees another one's folder.", []),
     "ablage": (896, 550, "voices/, backups/", "voices/, backups/", "Stimmen, Sicherungen", "",
                "Geklonte Stimmen und Sicherungen.", "Cloned voices and backups.", []),
+    "werkstatt": (24, 436, "Werkstatt", "Workshop", "werkstatt.py", "",
+                  "Nur für Admins: Testlauf, Code-Messung, Diagnose und Reparatur in einer Sandbox auf dem DGX, ohne Daten und "
+                  "Internet; heraus kommen Zahlen und ein Patch zum Ansehen, eingespielt wird nichts.",
+                  "Admins only: test run, code measurement, diagnosis and repair in a sandbox on the DGX, without data and "
+                  "internet; numbers and a patch to look at come out, nothing is installed.",
+                  ["werkstatt.py", "werkstattseite.py"]),
     "journal": (364, 550, "journald", "journald", "speech-spark", "", "Alle Dienste; wie lange und wie viel, stellt der Admin ein (Standard 14 Tage, 500 MB).",
                 "All services; how long and how much is set by the admin (default 14 days, 500 MB).", []),
 }
@@ -380,7 +386,7 @@ KANTEN = [("geraet", "middleware"), ("apps", "middleware"), ("kanaele", "middlew
           ("vorbereiten", "weiche"), ("weiche", "antwort"), ("antwort", "llm"), ("antwort", "werkzeuge"),
           ("werkzeuge", "waechter"), ("waechter", "aussen"), ("waechter", "internet"), ("werkzeuge", "wissen"), ("antwort", "tts"), ("werkzeuge", "bild"),
           ("antwort", "geraet"), ("antwort", "betrieb"), ("betrieb", "state"), ("betrieb", "journal"),
-          ("wissen", "users"), ("zugang", "users"), ("zugang", "state"), ("tts", "ablage")]
+          ("wissen", "users"), ("zugang", "users"), ("zugang", "state"), ("tts", "ablage"), ("zugang", "werkstatt")]
 # the picture's size and one box (the browser draws from these, test_technik checks every box and line inside)
 BILD = (1084, 802)
 KASTEN = (156, 52)
@@ -422,6 +428,7 @@ LINIEN = {
     "zugang>users": [(330, 274), (330, 300), (527, 300), (527, 538), (560, 538), (560, 550)],
     "wissen>users": [(612, 382), (612, 550)],
     "tts>ablage": [(1052, 414), (1060, 414), (1060, 576), (1052, 576)],
+    "zugang>werkstatt": [(210, 274), (210, 462), (180, 462)],
 }
 
 # where a group lives in the picture (the node that lists it)

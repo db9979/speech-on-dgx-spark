@@ -16,6 +16,7 @@
 | Wächter `speech-spark-watch` (nur ohne Portal) | `/opt/speech-spark/venv-panel` | |
 | Befehl `speech-spark` | `/usr/local/bin` | |
 | Messskript `speech-spark-bench` | `/usr/local/bin` | |
+| optional Werkstatt `speech-spark-werkstatt` (nur auf Wunsch, Sandbox als Nutzer `spark-werkstatt`, `--werkstatt`) | OpenCode in `/opt/speech-spark/werkstatt`, Arbeitsordner `/var/lib/spark-werkstatt/arbeit` | |
 | Konfiguration | `/etc/speech-spark/config.json`, Installationsart in `mode`, Verbindungsdaten in `connection.txt`, Passwort in `panel.env` (ein im Panel geändertes Passwort liegt als Hash in `/var/lib/speech-spark/state/panel-password` und hat Vorrang) | |
 | Modelle, geklonte Stimmen | `/var/lib/speech-spark/hf`, `/var/lib/speech-spark/voices` | |
 

@@ -441,6 +441,12 @@ SEITEN = {
              "{weiche.KEEP_VERSIONS} versions."),
             ("Funktionen → Eindeutiges direkt abrufen: kurze Lesefragen ruft das Panel selbst ab (Standard aus).",
              "Features → Fetch clear questions directly: the panel fetches short reading questions itself (default off)."),
+            ("Funktionen → Weiche abstimmen (Standard aus): das Sprachmodell schlägt Wörter je Gruppe vor, das Panel behält "
+             "ein Wort nur, wenn kein Testsatz kippt, die Übungshälfte besser und die Prüfhälfte nicht schlechter wird; "
+             "gespeichert wird erst mit „Übernehmen“.",
+             "Features → Tune the switch (default off): the language model proposes words per group, the panel keeps a "
+             "word only when no test sentence flips, the practice half gets better and the check half no worse; it is "
+             "saved only with \"Apply\"."),
         ],
         "sehen": [
             ("Funktionen → Weiche: „Satz ausprobieren“ zeigt den ganzen Weg eines Satzes ohne Modell; dazu Testsätze, "

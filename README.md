@@ -31,6 +31,7 @@ At the end it prints the address, password and API key, then TTS speaks a senten
 | Update | button in the panel under *Settings → Update and backup*, or `sudo speech-spark update` |
 | Show addresses and keys | `sudo speech-spark info` |
 | Own language model | `sudo ./install.sh --llm`, then `sudo speech-spark modelle llm uebernehmen` (back: `… zurueck`) |
+| Workshop (test run, code measurement, diagnosis, repair) | on the model computer `sudo ./install.sh --werkstatt`, then *Features → Workshop* |
 | Move the panel to another computer | `sudo speech-spark umziehen --code`, see [Spark split](docs/en/spark-split.md) |
 | Uninstall | `sudo ./uninstall.sh` (config, models and voices stay; `--purge` removes everything) |
 
@@ -40,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.767** Workshop under Status → Architecture as its own box with a node page, in the diagram, in the commands and with its own docs section
 - **V01.0.766** Fix: Qwen3.8 Flash Next starts in Docker (io_uring allowed in the container, seccomp stays on)
 - **V01.0.765** Workshop fix: test run and code measurement start again (the code copy was missing because git 2.43 refused the clone)
 - **V01.0.764** People and devices as a tidy list with initials, bar and chevron
@@ -49,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.760** More precise and faster, package B: a fixed tool list per kind of question, trim a large memory
 - **V01.0.759** Fix: Settings without "/api/mfa 403" for admin profiles
 - **V01.0.758** Features and People with symbols like Status and Settings
-- **V01.0.757** Workshop: test run, code measurement, diagnosis and repair in a sealed-off copy on the model computer (OpenCode, no data, no internet, nothing installed), a test run every night; plus "Tune the switch"
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
@@ -77,6 +78,7 @@ flowchart LR
     LLM["LLM-Tor :31006<br/>own language model (vLLM)"]
     IMG["Pictures :31005<br/>FLUX.2 klein"]
     MUS["Music :31004<br/>ACE-Step 1.5"]
+    WS["Workshop: sandbox without network<br/>or data, tests and OpenCode"]
   end
   subgraph Out["Services and sources"]
     E["Home Assistant, calendars,<br/>mail, weather, parcels, transit"]
