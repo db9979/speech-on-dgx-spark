@@ -53,17 +53,19 @@ function hilfeNow(){if(!(HILFE&&HILFE.page))return undefined;const p=hilfePage()
 const hilfeFabOn=()=>!!(HILFE&&HILFE.page)&&!!hilfeNow();
 // typing a question into the face works for everybody signed in; the page only goes along with "Frag Spark auf jeder Seite"
 const hilfeAsk=()=>!document.body.classList.contains('guest')&&!!((typeof PROFILE!=='undefined'&&PROFILE)||(typeof ADMIN!=='undefined'&&ADMIN));
-// "?" at every switch row (plan hilfe-besser 2): asks the face about exactly this switch; the panel checks the id
+// "?" at every switch row (plan hilfe-besser 2): asks the face about exactly this switch; the panel checks the id.
+// It sits right after the row's title, never inside it: the title's text stays the switch's name (screen readers,
+// the tests), whether the list of ids has arrived yet or not.
 let HFOCUS=null;
 function hilfeFocusTake(){const f=HFOCUS;HFOCUS=null;return f||undefined}
 function hilfeRowId(row){const i=[...row.querySelectorAll('input[id],select[id]')].find(x=>!x.closest('.lbl'));if(!i)return null;   // a field in the sentence is not the row's
   const m=/^set_setform_(\w{1,40})$/.exec(i.id);if(m)return 'me:'+m[1];return /^[\w.]{1,40}$/.test(i.id)&&!i.id.startsWith('set_')?'sw:'+i.id:null}
 function hilfeMarks(){document.querySelectorAll('main section.on .setrow .lbl b, #profmodal .setrow .lbl b').forEach(b=>{
-  if(b.querySelector('.hqbtn'))return;const row=b.closest('.setrow'),id=row&&hilfeRowId(row);if(!id||!HQIDS||!HQIDS.has(id))return;
+  if(b.nextElementSibling&&b.nextElementSibling.classList.contains('hqbtn'))return;const row=b.closest('.setrow'),id=row&&hilfeRowId(row);if(!id||!HQIDS||!HQIDS.has(id))return;
   const q=document.createElement('button');q.type='button';q.className='hqbtn';q.dataset.hq=id;q.textContent='?';
-  q.setAttribute('aria-label',t('Frag Spark zu diesem Schalter','Ask Spark about this switch'));b.appendChild(q)})}
+  q.setAttribute('aria-label',t('Frag Spark zu diesem Schalter','Ask Spark about this switch'));b.after(q)})}
 document.addEventListener('click',e=>{const q=e.target.closest('.hqbtn');if(!q||!hilfeFabOn())return;e.preventDefault();e.stopPropagation();
-  const b=q.closest('b'),name=b?[...b.childNodes].filter(n=>n.nodeType===3).map(n=>n.nodeValue).join('').trim():'';
+  const b=q.previousElementSibling,name=b?[...b.childNodes].filter(n=>n.nodeType===3).map(n=>n.nodeValue).join('').trim():'';
   HFOCUS=q.dataset.hq;$('fab').classList.add('open');if(typeof stopListening==='function')stopListening(true);
   ask(t(`Was macht „${name}“ und wie steht es bei mir?`,`What does "${name}" do and how is it set for me?`))},true);
 function hilfeFab(){const on=hilfeFabOn(),b=document.body;b.classList.toggle('hilfeon',on);if(on)hilfeMarks();

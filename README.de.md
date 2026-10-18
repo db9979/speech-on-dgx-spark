@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.774** Fix: „?“-Knopf neben dem Titel einer Einstellung statt darin
 - **V01.0.773** Fix: Wissensbuch-Reiter ohne Fehlalarm der Inline-Handler-Prüfung
 - **V01.0.772** Wissensbuch: Dokumente werden zu Seiten mit Quelle je Satz, Antworten zuerst daraus
 - **V01.0.771** Ordner auslassen: unwichtige Ordner unter Ich → Dokumente → Ausgelassene Ordner werden nicht mehr gelesen und verlassen sofort die Suche
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.767** Werkstatt unter Zustand → Technik als eigener Kasten mit Knoten-Seite, im Schaubild, in den Befehlen und mit eigenem Doku-Abschnitt
 - **V01.0.766** Fix: Qwen3.8 Flash Next startet in Docker (io_uring im Container erlaubt, seccomp bleibt an)
 - **V01.0.765** Werkstatt-Fix: Testlauf und Code-Messung starten wieder (die Code-Kopie fehlte, weil git 2.43 die Freigabe des Klons nicht annahm)
-- **V01.0.764** Personen und Geräte als aufgeräumte Liste mit Kürzeln, Balken und Pfeil
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
