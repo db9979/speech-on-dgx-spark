@@ -351,6 +351,7 @@ ADMIN_ON_OK = {
     "wartung.py:auto_on": "Spark-wide: the panel pauses a restarting part by itself, no profile involved",
     "gehaeuse.py:admin_on": "admin only: the case of the panel computer (display, LEDs, fans), no profile part",
     "rundlauf.py:an": "admin only: the round trip through the models with fixed words, no profile part",
+    "wachposten.py:an": "admin only: notes to the admins in fixed words, no profile part",
     "schirm.py:admin_on": "admin only: the control centre on the panel computer's screen, no profile part",
     "notbetrieb.py:admin_on": "Spark-wide emergency mode with Parakeet on the panel computer; the fixed commands keep the turn's own rights (HA, reminders)",
     "weiche_abstimmen.py:an": "admin only: tuning the Weiche's words on its page, no profile part",

@@ -465,6 +465,8 @@ def log(event, **detail):
     except OSError as e:
         print("audit:", type(e).__name__, flush=True)
     _to_live(event)
+    import wachposten
+    wachposten.seen(item)   # the Wachposten's fixed rules (wachposten.py): nothing while it is off, never raises
 
 
 def verify():

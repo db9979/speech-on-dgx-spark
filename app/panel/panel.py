@@ -118,6 +118,7 @@ import naszustand  # noqa: E402
 import gehaeuse  # noqa: E402
 import schirm  # noqa: E402
 import rundlauf  # noqa: E402
+import wachposten  # noqa: E402
 import nashilfe  # noqa: E402
 import meldung  # noqa: E402
 import ghtoken  # noqa: E402
@@ -413,6 +414,7 @@ async def stability():
     spawn(geraeteupdate.loop())
     spawn(dienstwacht.loop())
     spawn(rundlauf.loop())
+    spawn(wachposten.loop())
     spawn(wartung.loop())
     spawn(berater.loop())
     spawn(speicher.loop())

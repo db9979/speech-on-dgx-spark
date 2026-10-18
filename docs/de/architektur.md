@@ -169,6 +169,7 @@ Jede Anfrage geht zuerst hier durch: Größe, Herkunft, Notaus, Anmeldung, Profi
 | `app/panel/signatur.py` | Prüft signierte Update-Manifeste (Ed25519) |
 | `app/panel/stufen.py` | Liste, welche Änderung den Code verlangt |
 | `app/panel/vault.py` | Versiegelt Passwörter und Tokens mit state/secret.key |
+| `app/panel/wachposten.py` | Wachposten: feste Regeln auf dem Änderungsprotokoll melden den Admins Sperren, neue Zugänge, geänderten Schutz |
 | `app/panel/zertpin.py` | Zertifikat eines Geräts im Heimnetz festpinnen |
 
 ### Gespräch
@@ -634,6 +635,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `state/verbrauch.json` | Verbrauch je Modell, Aufgabe und Profil (nur Zahlen) | – | nein |
 | `state/vision.json` | Bildfragen, 10 min | – | nein |
 | `state/vorrang-key` | Schlüssel Panel ↔ Sprachdienste | ist ein Schlüssel | nein |
+| `state/wachposten.json` | Wachposten: wartende Meldungen (Regel, feste Wörter, Zeit) und Zeiten der gesendeten | – | ja |
 | `state/waerter.key` | Schlüssel für den Wärter des Modell-Rechners | ist ein Schlüssel | nein |
 | `state/wartung-satz-de.pcm` | Wartungssatz als Ton | – | nein |
 | `state/wartung-satz-en.pcm` | Wartungssatz als Ton (Englisch) | – | nein |
@@ -3075,7 +3077,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Versiegeln**: vault.seal macht aus dem Wert „enc1:“ und ein Fernet-Token (verschlüsselt und gegen Änderung geschützt). Ein schon versiegelter Wert bleibt, wie er ist.
 5. <a id="kn-state-s5"></a>**Atomar schreiben**: common.write_json schreibt in eine frische Zwischendatei daneben, nie durch einen Link, gibt ihr die Rechte der alten Datei (eine neue ist nur für den Dienst lesbar) und tauscht sie dann in einem Schritt aus. Ein Absturz mittendrin lässt die alte Datei ganz.
 6. <a id="kn-state-s6"></a>**Lesen**: Ein versiegelter Wert wird mit dem Schlüssel geöffnet. Passt der Schlüssel nicht (Sicherung von einem anderen Spark), kommt ein leerer Wert zurück und der Zugang muss neu eingetragen werden. Ältere unversiegelte Werte werden gelesen und beim nächsten Speichern versiegelt.
-7. <a id="kn-state-s7"></a>**Kommt in die Sicherung?**: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 32), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 78). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile.
+7. <a id="kn-state-s7"></a>**Kommt in die Sicherung?**: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 33), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 78). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile.
 8. <a id="kn-state-s8"></a>**Umzugs-Sicherung?**: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung.
 9. <a id="kn-state-s9"></a>**Beim Wiederherstellen in Ordnung?**: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt.
 10. <a id="kn-state-s10"></a>**Einsetzen mit Rückweg**: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück.
@@ -3085,7 +3087,7 @@ flowchart TD
 
 #### Zahlen (aus dem Code)
 
-- **32** Dateien in jeder Sicherung ([Schritt 7](#kn-state-s7))
+- **33** Dateien in jeder Sicherung ([Schritt 7](#kn-state-s7))
 - **78** Dateien und Ordner, die mit Grund draußen bleiben ([Schritt 7](#kn-state-s7))
 - **8 MB** größte Datei beim Wiederherstellen ([Schritt 9](#kn-state-s9))
 - **12** Zeichen hat das Umzugs-Passwort mindestens ([Schritt 8](#kn-state-s8))

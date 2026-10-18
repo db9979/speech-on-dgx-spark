@@ -1869,6 +1869,13 @@
 "titel": "Karte Grundausstattung einzeilig",
 "text": "A: Eine Funktion der Grundausstattung ausschalten (z. B. Gezielte Werkzeugwahl), Funktionen öffnen. B: Oben eine Zeile „Grundausstattung für ein gutes Gespräch“, „x von n an“, „Alle übernehmen“ und „Was fehlt?“. C: „Was fehlt?“ zeigt die Namen und „Einzeln ansehen“, noch einmal klappt es zu. D: Am Handy bricht die Zeile sauber um, nichts steht über. E: „Alle übernehmen“ schaltet wie bisher alles ein.",
 "thread": "Wissensbuch nach Karpathy"
+},
+{
+"id": "P291",
+"v": 789,
+"titel": "Wachposten",
+"text": "A: Admin: Funktionen → Wachposten an. Einstellungen → Auf einen Blick zeigt unter Sicherheit „Wachposten“ grün. B: In einem anderen Browser dreimal die falsche PIN eines Testprofils eingeben, bis es gesperrt ist: innerhalb einer Minute kommt eine Mitteilung „🛡️ Wachposten: Sperre nach falschen Anmeldungen“ mit Uhrzeit, ohne Namen und Adresse. C: Einen Passkey anlegen oder einen Browser als vertraut speichern: Mitteilung „Neuer Zugang“. D: Der Weg in der Mitteilung öffnet Zustand → Logs → Änderungen. E: Funktionen → Wachposten aus: dieselben Schritte bringen keine Mitteilung mehr.",
+"thread": "Sicheres KI-System"
 }
 ]
 }

@@ -164,6 +164,7 @@ WITHOUT = {
     "werkstatt": "werkstattseite.py: Aufträge nur vom Admin auf der Seite oder nach der festen Nachtregel; der Agent bekommt kein Werkzeug, das Code laufen lässt",
     "gehaeuse": "gehaeuse.py: Anzeige und LEDs am Panel-Rechner nach festen Regeln, nur Zahlen und Status, kein Werkzeug",
     "rundlauf": "rundlauf.py: ein fester Probelauf durch Sprechen, Hören und Sprachmodell nach festen Regeln, nur Zahlen, kein Werkzeug",
+    "wachposten": "wachposten.py: feste Regeln auf dem Änderungsprotokoll melden den Admins, nichts zu fragen, kein Werkzeug",
     "schirm": "schirm.py und steuerzentrale.py: Textanzeige am Bildschirm des Panel-Rechners, nur Art, Ort, Zeit und Zahlen, kein Werkzeug",
     "notbetriebasr": "notbetrieb.py: feste Befehle nach festen Regeln, nur im Notbetrieb, kein Sprachmodell und kein Werkzeug",
     "modellwechsel": "Zustand → Modelle, nur Admins mit frischem Code; Wechsel und Messen laufen als root in speech-spark-wechsel und speech-spark-messen-wunsch, kein Werkzeug",

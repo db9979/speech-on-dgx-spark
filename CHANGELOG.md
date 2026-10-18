@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.789** · 2026-10-18 · Wachposten: feste Regeln melden den Admins per Push, wenn eine Anmeldung gesperrt wird, ein neuer Zugang dazukommt (vertrauter Browser, Passkey, Agent), sich ein Schutz ändert (MFA, Rollen, Sicherung, Notaus), die Prüfkette des Änderungsprotokolls bricht oder der Qualitätstest schlechter wird; nur feste Wörter, nie Namen oder Adressen, höchstens 12 Meldungen am Tag, der Rest am nächsten Tag (Funktionen → Wachposten, Admin-Schalter, aus); Sicherheit auf einen Blick zeigt Wachposten und Prüfkette
 - **V01.0.788** · 2026-10-18 · Funktionen: die Karte „Grundausstattung“ ist eine Zeile mit „x von n an“ und „Alle übernehmen“; „Was fehlt?“ klappt auf, was noch aus ist, mit „Einzeln ansehen“
 - **V01.0.787** · 2026-10-18 · Wissensbuch Stufe E: iPhone zeigt das Wissensbuch unter Meine Sachen → Dokumente (Widersprüche, veraltete Sätze, „Stimmt nicht“, Obsidian-Ordner zum Teilen) und „Ins Wissensbuch“ unter Antworten im Gespräch; Android über die Panel-Ansicht
 - **V01.0.786** · 2026-10-18 · Zustand → Modelle: Bilder und Musik teilen sich einen Platz im Speicher (das größere zählt, nie beide), der Balken zeigt ein gemeinsames Stück in beiden Farben; auch in der iPhone-App

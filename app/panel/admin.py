@@ -1560,6 +1560,10 @@ def security_glance(request: Request):
     add("public", "warn" if chat.get("public") else "ok")
     add("allow_lan", "warn" if panel_cfg.get("allow_lan") else "ok")
     add("session_days", "ok" if panel_cfg.get("session_days", 30) <= 30 else "warn", days=panel_cfg.get("session_days", 30))
+    import wachposten
+    wp = wachposten.for_status()
+    add("wachposten", "ok" if wp["on"] else "warn", week=wp["week"])
+    add("audit_chain", "bad" if guard.alerts() else "ok")
     for k in ("headers", "updates", "vault", "outside"):   # fixed protections of the panel itself
         add(k, "ok")
     order = {"bad": 0, "warn": 1, "ok": 2}

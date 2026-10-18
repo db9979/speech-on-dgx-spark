@@ -147,6 +147,7 @@ DATEIEN = [
     state("berater.json", "Vorschläge des Assistenten", "Assistant proposals", sicherung="json"),  # Einstellungs-Assistent: proposals, what was there before, Nachkontrolle
     state("faelle.json", "Fälle", "Cases", sicherung="json", sonst=True),  # its cases (fingerprints, counts, at most three examples with consent)
     state("gut-saetze.json", "Mit 👍 bestätigte Fragen", "Questions confirmed with 👍", sicherung="json", sonst=True),  # questions confirmed with 👍 (with consent): protected in the Prüfstand
+    state("wachposten.json", "Wachposten: wartende Meldungen (Regel, feste Wörter, Zeit) und Zeiten der gesendeten", "Sentry: waiting notes (rule, fixed words, time) and times of those sent", sicherung="json"),
     state("dienstwacht.json", "Dienst-Wächter", "Service watcher", sicherung="json"),  # Dienst-Wächter: services taken off the list, their state, outages of 7 days, notes due
     state("mcp-dienste-admin.json", "Erlaubte MCP-Ziele", "Allowed MCP hosts", sicherung="json"),  # own MCP services of profiles: hosts the admin allows, blocked services
     state("mcp-server.json", "MCP-Programme (Token-Hashes)", "MCP programs (token hashes)", sicherung="json", schutz=("nur Hashes", "hashes only")),  # programs connected to the Spark as an MCP server (only hashes of their tokens)
