@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.768** · 2026-10-18 · Wissensbuch Stufe A (Plan wissensbuch): Suchprüfung misst Sammelfragen, deren Antwort mehrere Dokumente braucht (wie viele davon unter den ersten 5 Stellen sind, ob alle); eigene mit weiteren Dokumenten, vom Spark aus zwei Dokumenten mit gleichem Absender oder Tag; Prüfbank 20 Dokumente, 10 Sammelfragen (Wortsuche 80 %, alle 60 %)
 - **V01.0.767** · 2026-10-18 · Werkstatt überall eingebunden: Kasten „Werkstatt“ unter Zustand → Technik mit eigener Knoten-Seite (Weg eines Auftrags, Zahlen, Code), Weiche-Seite nennt „Weiche abstimmen“, Schaubild und Befehlstabelle im README, Zeile in „Was installiert wird“, eigener Abschnitt in Sicherheit und Betrieb
 - **V01.0.766** · 2026-10-18 · Fix Flash Next in Docker: die Engine brach beim Laden ab, weil Dockers Standard-seccomp io_uring sperrt (b12x liest die PLE-Tabelle von der Platte); jetzt Dockers Standardprofil plus genau io_uring_setup/enter/register als feste Datei mit Prüfsumme, seccomp und AppArmor bleiben an, Messung lehnt ab, wenn der Host io_uring abschaltet
 - **V01.0.765** · 2026-10-17 · Werkstatt: „Code-Kopie fehlt“ behoben; die Sandbox bekommt eine eigene globale git-Datei, die genau den Klon des Installers als sicher nennt (git 2.43 nimmt safe.directory nicht von -c)

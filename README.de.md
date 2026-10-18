@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.768** Wissensbuch Stufe A: Suchprüfung misst Sammelfragen über mehrere Dokumente (Vergleichswert fürs Wissensbuch)
 - **V01.0.767** Werkstatt unter Zustand → Technik als eigener Kasten mit Knoten-Seite, im Schaubild, in den Befehlen und mit eigenem Doku-Abschnitt
 - **V01.0.766** Fix: Qwen3.8 Flash Next startet in Docker (io_uring im Container erlaubt, seccomp bleibt an)
 - **V01.0.765** Werkstatt-Fix: Testlauf und Code-Messung starten wieder (die Code-Kopie fehlte, weil git 2.43 die Freigabe des Klons nicht annahm)
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.761** Genauer und schneller, Paket C: Einfaches sofort beantworten, schnellere Websuche, Antwort-Prüfung erweitert, Wortwahl messen
 - **V01.0.760** Genauer und schneller, Paket B: feste Werkzeugliste je Fragenart, großes Gedächtnis kürzen
 - **V01.0.759** Fix: Einstellungen ohne „/api/mfa 403“ bei Admin-Profilen
-- **V01.0.758** Funktionen und Personen mit Symbolen wie Zustand und Einstellungen
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

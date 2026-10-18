@@ -1744,6 +1744,13 @@
 "titel": "Werkstatt unter Technik",
 "text": "A: Zustand → Technik öffnen: links unten im Panel-Bereich steht der Kasten „Werkstatt“, eine Linie führt von „Anmeldung, Profil“ zu ihm. B: Auf den Kasten tippen: die Knoten-Seite zeigt den Weg eines Auftrags in zehn Schritten (Auftrag oder Nachtregel bis „Der Admin entscheidet“) mit Zahlen und Code-Stellen. C: Der Kasten „Weiche“ nennt unter Einstellen „Weiche abstimmen“. D: Hilfe nach „Werkstatt“ fragen: der Abschnitt „Werkstatt“ aus Sicherheit und Betrieb kommt. E: Auf Englisch heißt der Kasten „Workshop“.",
 "thread": "OpenCode-Werkstatt"
+},
+{
+"id": "P273",
+"v": 768,
+"titel": "Suchprüfung: Sammelfragen",
+"text": "A: Ich → Dokumente → Suchprüfung → Prüffrage hinzufügen: eine Frage, die zwei Dokumente braucht (z. B. Versicherung und Werkstattrechnung des Autos), erstes Dokument wählen, unter „Weitere richtige Dokumente“ das zweite. B: „Jetzt prüfen“: unter den Balken steht „Sammelfragen (1)“ mit Anteil und „alle gefunden“. C: Bei „Ausprobieren“ steht „x von 2 unter den ersten 5“. D: Mit „Prüffragen vom Spark“ und Dokumenten mit gleichem Absender oder Tag tauchen nach einigen ruhigen Minuten Fragen „Sammelfrage · Dokument A, Dokument B“ auf. E: Zustand → Live zeigt bei Suchprüfung „Sammelfragen … % ganz gefunden“.",
+"thread": "Wissensbuch nach Karpathy"
 }
 ]
 }

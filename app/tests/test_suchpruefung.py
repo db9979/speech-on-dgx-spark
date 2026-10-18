@@ -30,6 +30,8 @@ ADMIN.post("/api/login", json={"password": "secret-admin"})
 NIGHT = datetime.datetime(2027, 1, 5, 3, 0).timestamp()
 DAY = datetime.datetime(2027, 1, 5, 14, 0).timestamp()
 BANK = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "suchbank.json")
+SAMMEL_FLOOR = 75  # Sammelfragen: share of their documents among the first five, measured 80 % (all found 60 %) words only
+#                    (Stufe A of plan wissensbuch); raised, never lowered
 FLOOR = 85      # measured 84 % words only (V01.0.508), 89 % with the context lines (V01.0.519); raised, never lowered
 
 
@@ -249,8 +251,99 @@ class Runs(Base):
             self.assertNotIn(word, text)
         lv = suchpruefung.for_live()
         self.assertTrue(lv["on"])
-        self.assertEqual(set(lv), {"on", "fragen", "profile", "top5", "running"})
+        self.assertEqual(set(lv), {"on", "fragen", "profile", "top5", "sammel", "running"})
         self.assertIn("pruef", live.TARGETS)
+
+
+class Sammelfragen(Base):
+    """Stufe A of plan wissensbuch: questions whose answer needs several documents."""
+
+    def test_an_own_sammelfrage_names_more_documents_and_counts_apart(self):
+        c, uid, a, b = self.fresh("Spruefmehr")
+        for bad, code in (({"mehr": "x"}, 400), ({"mehr": [a, b, "1", "2"]}, 400), ({"mehr": ["0123456789ab"]}, 404)):
+            r = c.post("/api/profile/suchpruefung", json=dict({"q": "Was steht in Garantie und Rezept?", "doc": a}, **bad))
+            self.assertEqual(r.status_code, code, (bad, r.text))
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            r = c.post("/api/profile/suchpruefung", json={"q": "Kompressor Garantie und Hokkaido Kürbissuppe?", "doc": a,
+                                                           "mehr": [b, a, b], "page": 3})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(r.json()["mehr"], [b])                 # doubles and the first document dropped
+        self.assertIsNone(r.json()["page"])                     # a page belongs to one document only
+        self.assertIn("wissen: pruefrage angelegt | eigen | 2 dokumente", out.getvalue())
+        c.post("/api/profile/suchpruefung", json={"q": "Wie lange gilt die Garantie auf den Kompressor?", "doc": a})
+        with contextlib.redirect_stdout(out):
+            s = run(suchpruefung.run(uid, DAY, "knopf"))
+        self.assertEqual(s["n"], 1)
+        self.assertEqual(s["sammel"]["n"], 1)
+        self.assertEqual(s["sammel"]["modes"]["wort"], {"alle": 100, "teil": 100})
+        self.assertIn("1 sammelfragen alle 100 teil 100", out.getvalue())
+        info = c.get("/api/profile/suchpruefung").json()
+        q = next(x for x in info["fragen"] if x["mehr"])
+        self.assertEqual(q["last"]["von"], 2)
+        self.assertEqual(q["last"]["gemischt"], 2)
+        self.assertEqual(info["laeufe"][-1]["sammel"]["n"], 1)
+        with contextlib.redirect_stdout(out):
+            p = c.post(f"/api/profile/suchpruefung/{q['id']}/probe").json()
+        self.assertEqual((p["found"], p["von"]), (2, 2))
+        self.assertEqual(ADMIN.get("/api/admin/suchpruefung").json()["sammel"]["wort"]["alle"], 100)
+        self.assertEqual(suchpruefung.for_live()["sammel"], 100)
+        documents.delete(uid, b)                               # one of its documents gone: not measured, shown as missing
+        info = c.get("/api/profile/suchpruefung").json()
+        self.assertTrue(next(x for x in info["fragen"] if x["mehr"])["gone"])
+        with contextlib.redirect_stdout(out):
+            s = run(suchpruefung.run(uid, DAY + 1, "knopf"))
+        self.assertNotIn("sammel", s)
+
+    def test_the_model_writes_a_sammelfrage_only_for_documents_that_belong_together(self):
+        c, uid, a, b = self.fresh("Spruefpaar")
+        helpers.set_config(search_check_auto=True)
+        self.assertEqual(suchpruefung.pairs(uid), [])           # no Steckbrief in common: no pair
+        documents.set_card(uid, a, {"titel": "Garantie", "absender": "Kühlwerk AG", "tags": ["Küche"]})
+        documents.set_card(uid, b, {"titel": "Rezept", "absender": "  kühlwerk ag ", "tags": ["Essen"]})
+        self.assertEqual(len(suchpruefung.pairs(uid)), 1)       # the same sender (case and spaces ignored)
+        documents.set_card(uid, b, {"titel": "Rezept", "absender": "Oma", "tags": ["küche"]})
+        self.assertEqual(len(suchpruefung.pairs(uid)), 1)       # a tag in common
+        d = suchpruefung._read(uid)
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out), mock.patch.object(
+                suchpruefung, "ask_model_sammel", mock.AsyncMock(return_value="Was brauche ich aus der Küche für Gerät und Suppe?")):
+            self.assertEqual(run(suchpruefung.make_sammel(uid, DAY, d)), "made")
+        d = suchpruefung._read(uid)
+        q = d["fragen"][-1]
+        self.assertEqual(sorted(suchpruefung.all_docs(q)), sorted([a, b]))
+        self.assertEqual(q["src"], "spark")
+        with contextlib.redirect_stdout(out), mock.patch.object(
+                suchpruefung, "ask_model_sammel", mock.AsyncMock(return_value="Noch eine Frage zu beiden?")):
+            self.assertIsNone(run(suchpruefung.make_sammel(uid, DAY, d)))    # this pair has its question
+        d["fragen"].pop()
+        with contextlib.redirect_stdout(out), mock.patch.object(           # copied from the second piece: dropped
+                suchpruefung, "ask_model_sammel", mock.AsyncMock(return_value="Wie lange den gewürfelten Hokkaido dazugeben?")):
+            self.assertEqual(run(suchpruefung.make_sammel(uid, DAY, d)), "dropped")
+        with contextlib.redirect_stdout(out), mock.patch.object(
+                suchpruefung, "ask_model_sammel", mock.AsyncMock(side_effect=OSError("down"))):
+            self.assertEqual(run(suchpruefung.make_sammel(uid, DAY, d)), "error")
+        log = out.getvalue()
+        for line in ("wissen: sammelfrage gemacht | 2 dokumente", "wissen: sammelfrage verworfen | copied",
+                     "wissen: sammelfrage fehler | OSError"):
+            self.assertIn(line, log)
+        self.assertNotIn("Küche", log)
+
+    def test_every_third_attempt_of_the_day_tries_a_sammelfrage_first(self):
+        c, uid, a, b = self.fresh("Spruefdritte")
+        helpers.set_config(search_check_auto=True)
+        day = datetime.datetime.fromtimestamp(DAY).strftime("%Y-%m-%d")
+        while documents.count_today(uid, day, key="pruef") % suchpruefung.SAMMEL_EVERY != suchpruefung.SAMMEL_EVERY - 1:
+            documents.count_today(uid, day, add=1, key="pruef")
+        with mock.patch.object(suchpruefung, "make_sammel", mock.AsyncMock(return_value="made")) as m:
+            self.assertEqual(run(suchpruefung.make_one(uid, DAY)), "made")
+        m.assert_awaited_once()
+        documents.count_today(uid, day, add=1, key="pruef")
+        with mock.patch.object(suchpruefung, "make_sammel", mock.AsyncMock(return_value="made")) as m, \
+                contextlib.redirect_stdout(io.StringIO()), \
+                mock.patch.object(suchpruefung, "ask_model", mock.AsyncMock(return_value="Wie lange hält die Herstellergarantie?")):
+            self.assertEqual(run(suchpruefung.make_one(uid, DAY)), "made")
+        m.assert_not_awaited()
 
 
 class Suchbank(Base):
@@ -267,6 +360,31 @@ class Suchbank(Base):
         _, s = suchpruefung._measure(uid, qs, None, False, 0)
         self.assertGreaterEqual(s["modes"]["wort"]["top5"], FLOOR, s)
         self.assertEqual(s["modes"]["wort"], s["modes"]["gemischt"])    # without meaning, mixed is words
+
+    def test_sammelfragen_are_measured_apart(self):
+        """Stufe A of plan wissensbuch: questions that need several documents at once. Measured is how many of
+        their documents are among the first five pieces the assistant gets; this is the yardstick the Wissensbuch
+        has to beat. SAMMEL_FLOOR keeps today's value: raised, never lowered."""
+        with open(BANK, encoding="utf-8") as f:
+            bank = json.load(f)
+        self.assertGreaterEqual(len(bank["sammelfragen"]), 10)
+        _, uid, _, _ = self.fresh("Spruefsammel")
+        for d in documents.list_docs(uid):
+            documents.delete(uid, d["id"])
+        ids = {d["name"]: add_doc(uid, d["name"], d["text"]) for d in bank["docs"]}
+        qs = [{"id": str(i), "q": f["q"], "doc": ids[f["doc"]]} for i, f in enumerate(bank["fragen"])]
+        qs += [{"id": f"s{i}", "q": f["q"], "doc": ids[f["docs"][0]], "mehr": [ids[x] for x in f["docs"][1:]]}
+               for i, f in enumerate(bank["sammelfragen"])]
+        res, s = suchpruefung._measure(uid, qs, None, False, 0)
+        self.assertEqual(s["n"], len(bank["fragen"]))            # the single questions count as before
+        self.assertGreaterEqual(s["modes"]["wort"]["top5"], FLOOR, s)
+        sm = s["sammel"]
+        self.assertEqual(sm["n"], len(bank["sammelfragen"]))
+        self.assertGreaterEqual(sm["modes"]["wort"]["teil"], SAMMEL_FLOOR, sm)
+        self.assertGreaterEqual(sm["modes"]["wort"]["teil"], sm["modes"]["wort"]["alle"])
+        for i in range(len(bank["sammelfragen"])):
+            self.assertEqual(res[f"s{i}"]["von"], len(bank["sammelfragen"][i]["docs"]))
+            self.assertLessEqual(res[f"s{i}"]["wort"], res[f"s{i}"]["von"])
 
 
 if __name__ == "__main__":

@@ -4173,7 +4173,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Suchprüfung (V01.0.516, Plan *suche-schaerfen*, Stufe 1)",
-"text": "ht; notiert werden der Platz des richtigen Dokuments unter den ersten 30, ob die richtige Seite unter den ersten 5 war, und die Zeit (Mittel und langsamste 10 %). Das Profil sieht die Anteile unter den ersten 5 und als Erstes, den Verlauf der letzten Läufe und „Schlecht gefunden“ mit „Ausprobieren“ (die ersten 5 Treffer jetzt). Der Admin sieht unter *Zustand → Prüfen → Suche prüfen* nur Summen über alle Profile, die Live-Übersicht die Zahl der Fragen und den Anteil; das Protokoll nur feste Wörter und Zahlen. Die feste Prüfbank app/tests/data/suchbank.json (15 erfundene Unterlagen, 45 Fragen) hält in test_suchpruefung die Wortsuche bei mindestens 80 % unter den ersten 5 (gemessen 84 %)."
+"text": "ht; notiert werden der Platz des richtigen Dokuments unter den ersten 30, ob die richtige Seite unter den ersten 5 war, und die Zeit (Mittel und langsamste 10 %). Das Profil sieht die Anteile unter den ersten 5 und als Erstes, den Verlauf der letzten Läufe und „Schlecht gefunden“ mit „Ausprobieren“ (die ersten 5 Treffer jetzt). Der Admin sieht unter *Zustand → Prüfen → Suche prüfen* nur Summen über alle Profile, die Live-Übersicht die Zahl der Fragen und den Anteil; das Protokoll nur feste Wörter und Zahlen. Die feste Prüfbank app/tests/data/suchbank.json (anfangs 15 erfundene Unterlagen, 45 Fragen; seit V01.0.768 20 Unterlagen und 10 Sammelfragen) hält in test_suchpruefung die Wortsuche bei mindestens 80 % unter den ersten 5 (gemessen 84 %)."
 },
 {
 "lang": "de",
@@ -4206,6 +4206,22 @@
 "head": "Sprach-Chat",
 "title": "Treffer nachsortieren (V01.0.520, Plan *suche-schaerfen*, Stufe 3)",
 "text": "Face; ihre SHA-256 stehen danach in state/doc-rank.json (je Größe), andere Dateien werden abgelehnt. Zustand → Monitoring → Eigene Dokumente zeigt den Zustand des Modells (Arbeitsspeicher, letzte Dauer, Budget), die Live-Übersicht „Nachsortieren“ als Hintergrundarbeit, Logs → Anfragen den Schritt „Nachsortieren“ mit Zahlen, das Protokoll nur wissen: nachsortieren | 30 -> 5 | 250 ms oder wissen: nachsortieren langsam | 30 treffer | reihenfolge der mischung. Die Suchprüfung misst mit dem Schalter eine vierte Zeile „Nachsortiert“, so dass sich der Nutzen auf den eigenen Dokumenten zeigt."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sammelfragen (V01.0.768, Plan *wissensbuch*, Stufe A)",
+"text": "Sammelfragen (V01.0.768, Plan *wissensbuch*, Stufe A): Eine Prüffrage kann bis zu drei weitere richtige Dokumente nennen (mehr), wenn ihre Antwort mehrere Dokumente zugleich braucht („Was kostet das Auto im Jahr für Versicherung und Werkstatt?“). Sie wird getrennt gemessen: wie viele ihrer Dokumente unter den ersten 5 Stellen sind, die der Assistent aus einer Suche bekommt (*Anteil*), und ob alle dabei sind (*alle gefunden*); die übrigen Zahlen zählen nur Fragen mit einem Dokument. Anlegen unter *Ich → Dokumente → Suchprüfung → Prüffrage hinzufügen* mit „Weitere richtige Dokumente“ (eine Seite gilt dann nicht). Mit *Prüffragen vom Spark* versucht jeder dritte Versuch des Tages zuerst eine Sammelfrage: das Panel wählt mit fester Regel zwei Dokumente mit gleichem Absender oder gemeinsamem Tag im Steckbrief (nie das Modell), das Sprachmodell schreibt aus je einer Stelle eine Frage, die beide braucht; dieselben festen Prüfregeln gelten gegen beide Stellen, höchstens 60 Sammelfragen pro Profil und eine pro Dokumentpaar. Sichtbar unter Ich → Dokumente → Suchprüfung (Zeilen „Sammelfragen“, „Schlecht gefunden“ mit „x von y unter den ersten 5“), unter *Zustand → Prüfen → Suche prüfen* als S"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sammelfragen (V01.0.768, Plan *wissensbuch*, Stufe A)",
+"text": "ummen und in der Live-Übersicht als Anteil „ganz gefunden“; Protokoll wissen: sammelfrage gemacht | 2 dokumente, … verworfen | <Grund>, Lauf mit N sammelfragen alle A teil T. Die Prüfbank hat jetzt 20 Dokumente und 10 Sammelfragen; gemessen nur mit Wörtern 80 % Anteil und 60 % alle gefunden, test_suchpruefung verlangt mindestens 75 %. Das ist der Vergleichswert, den das geplante Wissensbuch schlagen muss."
 },
 {
 "lang": "de",
@@ -11957,7 +11973,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Search check (V01.0.516, plan *suche-schaerfen*, stage 1)",
-"text": "right document among the first 30, whether the right page was among the first 5, and the time (median and slowest 10 %). The profile sees the shares among the first 5 and first, the history of the last runs and \"Found badly\" with \"Try\" (the first 5 hits now). The admin sees only sums over all profiles under *Status → Checks → Check the search*, the live overview the number of questions and the share; the journal fixed words and numbers only. The fixed test bank app/tests/data/suchbank.json (15 invented papers, 45 questions) keeps the word search at no less than 80 % among the first 5 in test_suchpruefung (measured 84 %)."
+"text": "right document among the first 30, whether the right page was among the first 5, and the time (median and slowest 10 %). The profile sees the shares among the first 5 and first, the history of the last runs and \"Found badly\" with \"Try\" (the first 5 hits now). The admin sees only sums over all profiles under *Status → Checks → Check the search*, the live overview the number of questions and the share; the journal fixed words and numbers only. The fixed test bank app/tests/data/suchbank.json (at first 15 invented papers, 45 questions; since V01.0.768 20 papers and 10 multi-document questions) keeps the word search at no less than 80 % among the first 5 in test_suchpruefung (measured 84 %)."
 },
 {
 "lang": "en",
@@ -11990,6 +12006,22 @@
 "head": "Voice chat",
 "title": "Re-rank hits (V01.0.520, plan *suche-schaerfen*, stage 3)",
 "text": "ther files are refused. Status → Monitoring → Own documents shows the model's state (memory, last duration, budget), the live overview \"Nachsortieren\" as background work, Logs → Requests the step \"Nachsortieren\" with numbers, the journal only wissen: nachsortieren | 30 -> 5 | 250 ms or wissen: nachsortieren langsam | 30 treffer | reihenfolge der mischung. With the switch the search check measures a fourth line \"Re-ranked\", so the gain shows on the own documents."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Multi-document questions (V01.0.768, plan *wissensbuch*, stage A)",
+"text": "Multi-document questions (V01.0.768, plan *wissensbuch*, stage A): a test question can name up to three more right documents (mehr) when its answer needs several documents at once (\"What does the car cost a year for insurance and garage?\"). It is measured apart: how many of its documents are among the first 5 passages the assistant gets from one search (*share*), and whether all of them are (*all found*); the other numbers count questions with one document only. Add one under *Me → Documents → Search check → Add a test question* with \"More right documents\" (a page then does not apply). With *Test questions by the Spark* every third attempt of the day tries a multi-document question first: the panel picks two documents with the same sender or a tag in common in their document card by a fixed rule (never the model), the language model writes a question from one passage of each that needs both; the same fixed checks apply against both passages, at most 60 such questions per profile and one per pair of documents. Shown under Me → Documents → Search check (rows \"Multi-document questions\", \"Found badly\" with \"x of y among the first 5\"), as sums under *Status → Checks → Check the search* "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Multi-document questions (V01.0.768, plan *wissensbuch*, stage A)",
+"text": "and in the live overview as the share \"all found\"; journal wissen: sammelfrage gemacht | 2 dokumente, … verworfen | <reason>, a run with N sammelfragen alle A teil T. The test bank now has 20 documents and 10 multi-document questions; measured with words only 80 % share and 60 % all found, test_suchpruefung asks for at least 75 %. This is the yardstick the planned knowledge book has to beat."
 },
 {
 "lang": "en",

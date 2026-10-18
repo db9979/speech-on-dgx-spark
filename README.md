@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.768** Knowledge book stage A: the search check measures multi-document questions (yardstick for the knowledge book)
 - **V01.0.767** Workshop under Status → Architecture as its own box with a node page, in the diagram, in the commands and with its own docs section
 - **V01.0.766** Fix: Qwen3.8 Flash Next starts in Docker (io_uring allowed in the container, seccomp stays on)
 - **V01.0.765** Workshop fix: test run and code measurement start again (the code copy was missing because git 2.43 refused the clone)
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.761** More precise and faster, package C: simple things answered at once, faster web search, extended answer check, measuring the word choice
 - **V01.0.760** More precise and faster, package B: a fixed tool list per kind of question, trim a large memory
 - **V01.0.759** Fix: Settings without "/api/mfa 403" for admin profiles
-- **V01.0.758** Features and People with symbols like Status and Settings
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

@@ -1442,6 +1442,7 @@ def snapshot(view="admin", now=None):
         if x["id"] == "pruef":     # Suchprüfung: questions and the share found, numbers only (never a question)
             x["sub"] = (f"{spr.get('fragen', 0)} Prüffragen · {spr.get('profile', 0)} Profile"
                         + (f" · {spr['top5']} % unter den ersten 5" if spr.get("top5") is not None else " · noch kein Lauf")
+                        + (f" · Sammelfragen {spr['sammel']} % ganz gefunden" if spr.get("sammel") is not None else "")
                         + (" · prüft gerade" if spr.get("running") else ""))
         if x["id"] == "modell" and mr.get("on"):   # Modell-Rechner: reachable, units active, version (no address)
             x["sub"] = (("nicht erreichbar" + (" · Notbetrieb" if mr.get("notbetrieb") else "")) if not mr.get("ok") else

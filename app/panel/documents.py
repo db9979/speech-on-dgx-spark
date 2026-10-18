@@ -1517,6 +1517,17 @@ def sample_pieces(uid, skip=(), most=20, least=200):
     return [(r[0], r[1], r[2]) for r in rows if r[0] not in skip][:most]
 
 
+def doc_piece(uid, doc, least=200):
+    """Suchprüfung, Sammelfragen: one random piece (page, text) of this ready document in use, at least `least`
+    characters long (else the longest), or None."""
+    if not os.path.exists(db_path(uid)):
+        return None
+    with _Db(uid) as con:
+        r = con.execute("SELECT c.page, c.text FROM chunks c JOIN docs d ON d.id=c.doc WHERE d.id=? AND d.use=1 "
+                        "AND d.state='ready' ORDER BY length(c.text)>=? DESC, random() LIMIT 1", (doc, int(least))).fetchone()
+    return (r[0], r[1]) if r else None
+
+
 def notebook_pages(uid, since=0, doc=None, most=400):
     """The reMarkable pages changed since then (rmplus.py: @Spark, tasks, meetings, the week), newest first:
     [{"doc", "name", "page", "text", "done", "changed"}]; done False while the handwriting is not read yet.
