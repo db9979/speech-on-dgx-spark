@@ -1270,9 +1270,10 @@ def schalten(was, raw, path=VORHER):
     return raw
 
 
-def rundlauf(cfg, log=print, frist=GESUND_S, now=time.monotonic, sleep=time.sleep):
+def rundlauf(cfg, log=print, frist=GESUND_S, now=time.monotonic, sleep=time.sleep, stufe=lambda wort: None):
     """The check before the chat switches: through the door with the API key a German sentence, a tool call, a picture
-    (when the model or the image understanding model can see) and one System One question. Returns (ok, word)."""
+    (when the model or the image understanding model can see) and one System One question. Returns (ok, word).
+    stufe: told "probe" once the engine answers, then each part that passed (llmstart, what the page shows)."""
     c = cfg.get("llm", {})
     port, key = int(c.get("port", 31006)), str(cfg.get("api", {}).get("key") or "")
     m, engine = rolle("llm", cfg)
@@ -1291,27 +1292,32 @@ def rundlauf(cfg, log=print, frist=GESUND_S, now=time.monotonic, sleep=time.slee
             return False, "nicht bereit"
         sleep(5)
     log(f"modelle: rundlauf bereit nach {int(now() - t0)} s")
+    stufe("probe")
     try:
         satz = _text(_post(port, CHAT, {"messages": [{"role": "user", "content": FRAGEN[0]}], "max_tokens": 200}, key=key))
         if len(re.findall(r"[a-zäöüß]{3,}", satz.lower())) < 5:
             return False, "satz"
         log("modelle: rundlauf satz ok")
+        stufe("satz")
         if m["werkzeuge"] and not werkzeug_ok(_post(port, CHAT, {"messages": [{"role": "user", "content": WERKZEUG_FRAGE}],
                                                                  "max_tokens": 200, "tools": [WERKZEUG], "tool_choice": "auto"},
                                                          key=key)):
             return False, "werkzeug"
         log("modelle: rundlauf werkzeug ok")
+        stufe("werkzeug")
         if m["kann_sehen"] or c.get("sehen_modell"):
             text_url, _ = testbilder()
             if not bild_text_ok(_text(_post(port, CHAT, dict(_bild_frage(m, text_url, BILD_TEXT_FRAGE)), key=key))):
                 return False, "bild"
             log("modelle: rundlauf bild ok")
+            stufe("bild")
         so = _post(port, "/v1/systemone", {"state": "Wie wird das Wetter morgen in Hamburg?", "questions": {
             "wetter": {"type": "noul", "instructions": "Fragt der Text nach dem Wetter?"}}}, key=key, timeout=60)
         p = (so.get("answers") or {}).get("wetter", {}).get("noul")
         if not isinstance(p, (int, float)) or p < 0.5:
             return False, "systemone"
         log("modelle: rundlauf systemone ok")
+        stufe("systemone")
     except Exception as e:
         return False, type(e).__name__.lower()[:24]
     return True, "ok"
@@ -1907,7 +1913,10 @@ def cli(args, log=print):
                 os.replace(VORHER, VORHER + ".alt")
             return 0
         if cmd == "rundlauf":
-            ok, wort = rundlauf(load_config(), log)
+            import llmstart
+            ok, wort = rundlauf(load_config(), log, stufe=llmstart.stufe)
+            if not ok:
+                llmstart.stufe("fehler", grund=wort)
             log(f"modelle: rundlauf {'ok' if ok else 'fehler ' + wort}")
             return 0 if ok else 3
         if cmd == "umzug-modell":

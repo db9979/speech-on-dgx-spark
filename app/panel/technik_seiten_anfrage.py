@@ -499,7 +499,7 @@ SEITEN = {
         "heute": [],
     },
     "antwort": {
-        "stand": "a3084013f0",
+        "stand": "36177d2171",
         "bezug": {
             "chat.MAX_SAVES": ["s11"], "chat.LOOP_SAME": ["s11"], "chat._answer": ["s4", "s5", "s11"], "chat_modell.model_turn": ["s4", "s11"], "chat_ton.speech_out": ["s8"],
             "chat.split_sentences": ["s5"], "chat.said_key": ["s8"], "chat.no_code": ["s8"],
@@ -636,10 +636,14 @@ SEITEN = {
             S("s12", "schritt", ("Ehrliche Schlusssätze", "Honest closing sentences"),
               ("feste Sätze statt der weggelassenen", "fixed sentences instead of the dropped ones"),
               ("Fiel ein Satz wegen einer Zahl weg, sagt das Panel „Genauere Angaben dazu habe ich nicht.“; fiel eine "
-               "Tat weg, einen festen Satz aus taten.sentence. Beide Sätze kommen vom Panel, nie vom Modell.",
+               "Tat weg, einen festen Satz aus taten.sentence. Beide Sätze kommen vom Panel, nie vom Modell. Antwortet das "
+               "Sprachmodell nicht, weil es gerade wechselt, neu startet oder gemessen wird, sagt das Panel das mit der "
+               "erwarteten Zeit (llmstart.satz, auch in der Wartungspause eines Wechsels).",
                "When a sentence fell out because of a figure, the panel says „I have no more precise details on "
                "that.“; when a deed fell out, a fixed sentence from taten.sentence. Both come from the panel, never "
-               "from the model.")),
+               "from the model. When the language model does not answer because it is switching, restarting or "
+               "being measured, the panel says so with the expected time (llmstart.satz, also during a switch's "
+               "maintenance pause).")),
             S("s13", "schritt", ("Nachfragen des Panels", "The panel's own questions"),
               ("Korrektur, Gedächtnis, reMarkable, Vorab holen", "correction, memory, reMarkable, fetch ahead"),
               ("Nur wenn nichts Fremdes gelesen wurde: eine gelernte Korrektur zum Merken anbieten oder ein Fakt aus "
@@ -729,7 +733,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Werkzeuge (chat_tools.run)
     "werkzeuge": {
-        "stand": "c1ba500dfd",
+        "stand": "f710b6ceeb",
         "bezug": {
             "chat.LOCKED_OUTSIDE": ["s4"], "notaus.INTERNET_TOOLS": ["s3"], "werkzeuge.NAMES": ["s11"],
             "chat_tools.run": ["s2", "s7"], "chat.wrap_outside": ["s9"], "chat.LOCKED_MAIL": ["s4"],

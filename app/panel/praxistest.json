@@ -1897,6 +1897,13 @@
 "titel": "Modelle vor jedem Start geprüft",
 "text": "A: Nach dem Update auf tars `sudo speech-spark logs tts` und `logs asr`: vor dem Start steht „modelle: geladen … geprueft“, danach startet vLLM; Zustand → Dienste zeigt beide grün. B: Ich → Dokumente durchsuchen: Treffer wie vorher, Zustand → Logs (Wissen) ohne „Modelldateien anders als beim ersten Mal“. C: Funktionen → Sprachausgabe eine andere Stimme (1.7B) wählen: sie lädt einmal und spricht.",
 "thread": "Eigene Modell-Installation statt qwen38"
+},
+{
+"id": "P295",
+"v": 793,
+"titel": "Sprachmodell wechselt: sichtbar",
+"text": "A: Zustand → Modelle → Sprachmodell → anderes Modell → Wechseln: oben auf jeder Admin-Seite steht ein Banner „Sprachmodell wechselt · Schritt … von 6“, „Ansehen“ springt zu Zustand → Modelle; dort die Karte mit sechs Schritten, Zeiten, beim Start „Kernel übersetzen …“ und „Erwartet: noch etwa … min“. B: Währenddessen im Chat etwas fragen: „Mein Sprachmodell startet gerade neu, etwa noch … Minuten.“ C: Zustand → Live: beim Sprachmodell „wechselt (4/6)“. D: Am Ende „Umgeschaltet auf …“ mit der Dauer (oder „Wechsel zurückgenommen“ mit Grund), das Banner verschwindet. E: `sudo systemctl restart speech-spark-llm` auf tars: die Karte zeigt „Sprachmodell startet neu“.",
+"thread": "Eigene Modell-Installation statt qwen38"
 }
 ]
 }

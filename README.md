@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.793** Language model switch and start visible: steps, banner, Live, a sentence in the chat
 - **V01.0.792** Speech models checked before every start, search models no longer refused after the pinning
 - **V01.0.791** Phone: Tschüss or „Nein danke“ after „Noch etwas?“ ends the call, the Spark hangs up itself; without a BYE after 8 seconds without sound
 - **V01.0.790** Steadier Pi: a stalled panel restarts by itself and names the place in the log; the voice assistant keeps priority
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.786** Status → Models: pictures and music share one place in memory
 - **V01.0.785** Every model on a pinned commit with hash check, speech, search and picture filter too
 - **V01.0.784** reMarkable: always a task sheet there, also when nothing is open
-- **V01.0.783** Fix: leaving out many documents no longer holds the Pi (in the background with progress); the button "Every folder …" explains the name rule
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

@@ -400,6 +400,7 @@ Speech recognition and speech output as their own services, ahead of everything 
 | `app/dockertor.py` | Docker-Tor: puts an engine in Docker on 127.0.0.1. |
 | `app/einordnung.py` | Einordnung mit Wahrscheinlichkeit, the shared rules of a question (System One): the panel's systemone.py builds questions with them, and the LLM-Tor (llm_tor … |
 | `app/llm_tor.py` | LLM-Tor: the one door to the language model this installation runs itself. |
+| `app/llmstart.py` | What the own language model is doing while it switches, restarts or loads. |
 | `app/modelle.py` | Modell-Katalog: the models this installation runs itself, one line each in modelle.json, read only here. |
 | `app/musik_server.py` | Musik machen: the music service. |
 | `app/musikmodell.py` | Musik machen: the one list of the music models, where they lie and how they are fetched and checked. |
@@ -574,6 +575,8 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `state/latency.json` | Waiting times | – | no |
 | `state/live-monitors.json` | Wall monitors | – | no |
 | `state/livecheck.json` | Live check | – | no |
+| `state/llm-start.json` | What the own language model does while it switches or starts: step, seconds, fixed words | – | no |
+| `state/llm-startzeiten.json` | Per model the seconds of its last start (for the expected time) | – | no |
 | `state/mcp-dienste-admin.json` | Allowed MCP hosts | – | yes |
 | `state/mcp-server.json` | MCP programs (token hashes) | hashes only | yes |
 | `state/meldung-token.json` | Report token | sealed | no |
@@ -620,6 +623,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `state/setup.json` | Setup wizard done | – | yes |
 | `state/speech-active` | Time of last speech | – | no |
 | `state/speech-spark-asr-engine.json` | ASR engine state | – | no |
+| `state/speech-spark-llm.json` | Own language model engine state | – | no |
 | `state/speech-spark-tts-*.json` | TTS engine state | – | no |
 | `state/speicher-tmp` | Own storage staging | AES-256-GCM | no |
 | `state/telefon.json` | Phone: access to the PBX, handsets | password sealed | yes |
@@ -1802,7 +1806,7 @@ flowchart TD
 9. <a id="kn-antwort-s9"></a>**Data question without looking?**: When the question needs a tool and the model answers without one, the whole round is never said. The model is asked once more, told to use the tool first.
 10. <a id="kn-antwort-s10"></a>**Tool wanted?**: When the model wrote no tool call or hit the length limit, the answer is done. At the length limit it is spoken up to the last sentence end, the rest is dropped.
 11. <a id="kn-antwort-s11"></a>**Run the tools**: Half words before the call are taken back, a finished sentence stays. Every call goes through chat_tools.run; the result comes back as a tool message. A tool that fails twice the same way is stopped for this answer. When no rule recognized the question, the switch counts the group of the first tool and the fixed hint word (weiche.learn), never a word of the question.
-12. <a id="kn-antwort-s12"></a>**Honest closing sentences**: When a sentence fell out because of a figure, the panel says „I have no more precise details on that.“; when a deed fell out, a fixed sentence from taten.sentence. Both come from the panel, never from the model.
+12. <a id="kn-antwort-s12"></a>**Honest closing sentences**: When a sentence fell out because of a figure, the panel says „I have no more precise details on that.“; when a deed fell out, a fixed sentence from taten.sentence. Both come from the panel, never from the model. When the language model does not answer because it is switching, restarting or being measured, the panel says so with the expected time (llmstart.satz, also during a switch's maintenance pause).
 13. <a id="kn-antwort-s13"></a>**The panel's own questions**: Only when nothing from outside was read: offer to remember a learned correction or ask about a fact in memory (by fixed rules). Then the panel puts the answer on the reMarkable when asked and fetches ahead for a question back. When „You can also say“ is on, the panel adds fixed example sentences (saetze.row, on a screen as a row before the end; saetze.spoken, while talking at most one sentence a day). The profile's tool log is written.
 14. <a id="kn-antwort-s14"></a>**Stream ends**: The request trace is closed; cases and the background check run only after speaking. When the device aborts (barge-in), model and speech output stop at once. When the answer rests on at least two own documents or Kiwix articles, wissensbuch.keep_offer keeps it and the device shows „To the knowledge book“; only the owner's click files it.
 
@@ -3078,7 +3082,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Seal**: vault.seal turns the value into „enc1:“ and a Fernet token (encrypted and protected against change). A value already sealed stays as it is.
 5. <a id="kn-state-s5"></a>**Write atomically**: common.write_json writes into a fresh temporary file next to it, never through a link, gives it the rights of the old file (a new one is readable for the service only) and then swaps it in one step. A crash in the middle leaves the old file whole.
 6. <a id="kn-state-s6"></a>**Read**: A sealed value is opened with the key. If the key does not fit (backup from another Spark), an empty value comes back and the account has to be entered again. Older unsealed values are read and sealed the next time they are saved.
-7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 33), otherwise the line gives its reason (dateien.STATE_LOCAL, 78). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
+7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 33), otherwise the line gives its reason (dateien.STATE_LOCAL, 81). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
 8. <a id="kn-state-s8"></a>**Move backup?**: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup.
 9. <a id="kn-state-s9"></a>**Fine when restoring?**: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays.
 10. <a id="kn-state-s10"></a>**Put in place with a way back**: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back.
@@ -3089,7 +3093,7 @@ flowchart TD
 #### Numbers (from the code)
 
 - **33** files in every backup ([step 7](#kn-state-s7))
-- **78** files and folders that stay out with a reason ([step 7](#kn-state-s7))
+- **81** files and folders that stay out with a reason ([step 7](#kn-state-s7))
 - **8 MB** largest file when restoring ([step 9](#kn-state-s9))
 - **12** characters the move password has at least ([step 8](#kn-state-s8))
 

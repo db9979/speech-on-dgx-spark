@@ -129,7 +129,7 @@ def modellwahl(cfg, got):
 
 def modelle(cfg=None):
     """Zustand → Modelle from the model computer: {gesamt_gib, lanes, messung, wechsel, eigene, laeuft, misst,
-    stand}, checked;
+    stand, start}, checked;
     None when it does not answer or sends something else."""
     d = call("modelle", cfg=cfg, timeout=15)
     try:
@@ -141,6 +141,9 @@ def modelle(cfg=None):
               and isinstance(d.get("stand", []), list))        # its progress lines (before V01.0.724: none)
     except KeyError:
         ok = False
+    if ok:   # what the language model does while it starts (an older Wärter: none); a wrong shape shows nothing
+        import llmstart
+        d["start"] = llmstart.pruefen(d.get("start"))
     return d if ok else None
 
 

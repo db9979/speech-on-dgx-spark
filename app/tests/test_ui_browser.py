@@ -1774,6 +1774,33 @@ class Browser(unittest.TestCase):
                     self.assertIn("31.2 tok/s", await pg.evaluate("$('mdmain').textContent"))
                     self.assertTrue(await pg.evaluate("!!$('mdpv')&&!!document.querySelector('.card [data-mdid=\"qwen38-27b-nvfp4-dspark\"]')"))
                     d["wechsel"]["probe"] = None
+                    # Dominik 2026-10-18 „1a 2a“: the six steps of a switch on the page, the banner on top of every page
+                    schritte = [{"wort": x, "name": n} for x, n in (("pruefen", "Prüfen"), ("dateien", "Dateien prüfen"),
+                                ("anhalten", "Altes Modell anhalten"), ("starten", "Neues Modell startet"),
+                                ("probe", "Probefrage"), ("fertig", "Umgeschaltet"))]
+                    d["wechsel"]["start"] = {"vorgang": "wechsel", "ziel": "gemma-4-26b-a4b", "schritt": "starten", "n": 4,
+                                             "seit": {"pruefen": 0, "dateien": 2, "anhalten": 40, "starten": 55}, "dauer_s": 355,
+                                             "schritt_s": 300, "erwartet_s": 1041, "teil": "kernel", "ende": False, "ergebnis": "",
+                                             "grund": "", "titel": "Sprachmodell wechselt", "name": "Gemma 4 26B A4B mit langem Namen",
+                                             "schritte": schritte, "teil_name": "Kernel übersetzen", "rest_min": 14}
+                    await pg.evaluate(f"loadModelle({json.dumps(d)})")
+                    self.assertEqual(await pg.evaluate("document.querySelectorAll('#mdstart li').length"), 6)
+                    self.assertEqual(await pg.evaluate("[...document.querySelectorAll('#mdstart li')].map(x=>x.className).join(' ')"),
+                                     "mdst-ok mdst-ok mdst-ok mdst-jetzt mdst-offen mdst-offen")
+                    txt = await pg.evaluate("$('mdstart').textContent")
+                    for need in ("Schritt 4 von 6", "Kernel übersetzen", "5:00 min", "38 s", "noch etwa 14 min"):
+                        self.assertIn(need, txt)
+                    await pg.route("**/api/admin/modelle/lage*", lambda r: r.fulfill(status=200, content_type="application/json", body=json.dumps(
+                        {"start": {"vorgang": "wechsel", "n": 4, "dauer_s": 355, "ende": False, "ergebnis": "", "grund": "",
+                                   "titel": "Sprachmodell wechselt", "von": 6, "schritt_name": "Neues Modell startet", "rest_min": 14},
+                         "misst": False})))
+                    await pg.evaluate("llmBanner()")
+                    await pg.wait_for_function("$('llmbanner').style.display==='flex'", timeout=10000)
+                    self.assertEqual(await pg.evaluate("$('llmbtext').textContent"),
+                                     "Sprachmodell wechselt · Schritt 4 von 6: Neues Modell startet · noch etwa 14 min · Antworten pausieren")
+                    over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                    self.assertLessEqual(over, 1, f"{w}: {over}px zu breit (Wechsel)")
+                    del d["wechsel"]["start"]
                     self.assertEqual(errors, [])
                     await br.close()
         self.run_async(go())

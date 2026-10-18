@@ -118,8 +118,10 @@ class Rundlauf(unittest.TestCase):
     def test_round_trip_through_the_door(self):
         Tor.seen.clear()
         lines = []
-        ok, wort = modelle.rundlauf(cfg_with(self.srv.server_port), lines.append, sleep=lambda s: None)
+        stufen = []
+        ok, wort = modelle.rundlauf(cfg_with(self.srv.server_port), lines.append, sleep=lambda s: None, stufe=stufen.append)
         self.assertEqual((ok, wort), (True, "ok"), lines)
+        self.assertEqual((stufen[0], stufen[1], stufen[-1]), ("probe", "satz", "systemone"))   # what Zustand → Modelle shows
         self.assertIn("/v1/systemone", Tor.seen)
         self.assertTrue(all(re.fullmatch(r"modelle: rundlauf [a-z ]+( nach \d+ s)?", x) for x in lines), lines)
 

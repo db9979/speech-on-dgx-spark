@@ -696,6 +696,16 @@ function updBanner(r){const on=ADMIN&&r&&r.behind&&r.behind!==0&&r.latest;let hi
   $('updbtext').textContent=t('Update verfügbar','Update available')+(r.version?': '+r.version:'')+(r.behind>0?t(` (${r.behind} Änderung${r.behind>1?'en':''})`,` (${r.behind} change${r.behind>1?'s':''})`):'');
   $('updbx').onclick=()=>{try{localStorage.setItem('updhide',r.latest)}catch{}$('updbanner').style.display='none'}}
 $('updbgo').onclick=()=>{$('updbanner').style.display='none';goSec('sys')};
+// „Sprachmodell wechselt“ on top of every page for the admin (Dominik 2026-10-18 „2a“): step and minutes while the
+// own language model switches, starts or is measured, a jump link to Zustand → Modelle; nothing otherwise
+async function llmBanner(){if(!ADMIN||document.hidden)return;let d=null;try{const r=await api('/api/admin/modelle/lage'+(L==='en'?'?lang=en':''));if(r.ok)d=await r.json()}catch{}
+  const x=d&&d.start,b=$('llmbanner');let txt='';
+  if(x&&!x.ende)txt=x.titel+' · '+t('Schritt ','step ')+x.n+t(' von ',' of ')+x.von+': '+x.schritt_name+(x.rest_min?t(' · noch etwa ',' · about ')+x.rest_min+t(' min',' min left'):'')+t(' · Antworten pausieren',' · answers pause');
+  else if(x&&x.ergebnis==='zurueck')txt=t('Modellwechsel zurückgenommen, das Modell davor läuft wieder','Model switch taken back, the model before runs again');
+  else if(d&&d.misst)txt=t('Eine Modell-Messung läuft, das Sprachmodell pausiert','A model measurement is running, the language model pauses');
+  b.style.display=txt?'flex':'none';$('llmbtext').textContent=txt}
+$('llmbgo').onclick=()=>wayGo('Zustand → Modelle');
+setInterval(llmBanner,15000);setTimeout(llmBanner,3000);
 function updBadge(r){window.UPD=r;updBanner(r);zustand();if(CFG)glance();const on=r&&r.behind&&r.behind!==0;$('updbadge').style.display=on?'inline-block':'none';
   document.querySelectorAll('.subbadge').forEach(x=>x.style.display=on?'inline-block':'none')}
 // "Jetzt prüfen": the button shows that it is working (asking GitHub takes a few seconds), then when it checked

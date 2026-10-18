@@ -268,6 +268,7 @@ MODULE = {
     "tts_server": ("sprache", "Sprachausgabe als eigener kleiner Dienst"),
     "tempo": ("sprache", "Sprechtempo für gestreamte Sprache"),
     "bild_server": ("sprache", "Bild-Dienst: startet FLUX.2 klein bei Bedarf, prüft und kennzeichnet jedes Bild"),
+    "llmstart": ("sprache", "Was das eigene Sprachmodell beim Wechseln und Starten tut: feste Schritte, Zeiten, Phase der Engine, Satz für den Chat"),
     "modelle": ("sprache", "Modell-Katalog (modelle.json): Regeln je Eintrag, Prüfung der Dateien, Messen, Regeln für Wechsel und eigene Modelle"),
     "dockertor": ("sprache", "Docker-Tor: legt den Socket einer Engine in Docker (ohne Netz) auf 127.0.0.1, nur beim Messen"),
     "llm_tor": ("sprache", "LLM-Tor: Tür zum eigenen Sprachmodell mit Schlüssel, Feldgrenzen, System One und Lebensprobe"),

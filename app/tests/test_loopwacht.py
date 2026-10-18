@@ -39,11 +39,6 @@ LATER = {
     ("nasquelle", "sync_once"): "Ordner von Suche ausschließen: the state of a Wissensordner written per file",
     ("remarkable", "_sync"): "Ordner von Suche ausschließen: notebooks deleted one by one on the loop",
     ("remarkable", "unpair"): "Ordner von Suche ausschließen: forget() deletes every notebook on the loop",
-    ("modellseite", "admin_messen"): "Eigene Modell-Installation: _im_gang asks systemctl on the loop",
-    ("modellseite", "admin_platz"): "Eigene Modell-Installation: _im_gang asks systemctl on the loop",
-    ("modellseite", "admin_wechseln"): "Eigene Modell-Installation: _im_gang asks systemctl on the loop",
-    ("modellseite", "admin_zurueck"): "Eigene Modell-Installation: _im_gang asks systemctl on the loop",
-    ("modellseite", "eigen_dazu"): "Eigene Modell-Installation: _im_gang asks systemctl on the loop",
 }
 
 

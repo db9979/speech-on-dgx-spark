@@ -25,6 +25,18 @@ import vorab
 import wartung
 
 
+async def llm_start_satz(en):
+    """llmstart's sentence while the own language model switches, starts or is measured; "" otherwise or when the
+    model computer cannot be asked (the chat keeps its own sentence)."""
+    try:
+        import llmstart
+        import modellseite
+        d = await asyncio.to_thread(modellseite.lage)
+        return llmstart.satz(d["start"], en, d["misst"])
+    except Exception:
+        return ""
+
+
 async def model_turn(*, acked, body, c, came_from, carry, ccfg, cfg, check_on, ex, fix_fix, fix_prev, fixed=None, ha, ha_direct, ha_read, known,
                      lheaders, llm_round, locked, messages, need, out, own_browser, run_tool, said_before, search, sentences,
                      settle, small, speak, src, t0, think_tools, tm, tool_temp, tools, tr, trace, turn, vip, who):
@@ -49,7 +61,7 @@ async def model_turn(*, acked, body, c, came_from, carry, ccfg, cfg, check_on, e
             en_p = chat.guess_language(messages[-1]["content"]) == "English"
             note = await notbetrieb.antwort(turn, en_p) if notbetrieb.hoert(cfg) else None
             step = "Notbetrieb (Panel)" if note else "Wartungspause (Panel)"
-            note = note or wartung.sentence(en_p)
+            note = note or await llm_start_satz(en_p) or wartung.sentence(en_p)   # a switch pauses, too
             print("chat: wartungspause, fester satz", flush=True)
             if tr:
                 tr.step("prep", step, time.time(), panel=True)
@@ -481,6 +493,8 @@ async def model_turn(*, acked, body, c, came_from, carry, ccfg, cfg, check_on, e
             # said out loud as well: on a speaker, the watch or in the car nobody reads the error
             en_q = chat.guess_language(messages[-1]["content"]) == "English"
             note = verbrauch.quota_text(e.zeit, en_q) if code == "quota" else chat.LLM_GONE[code]["en" if en_q else "de"]
+            if code in chat.LLM_GONE:   # it switches, starts or is measured: say so and for how long (Dominik „3a“)
+                note = await llm_start_satz(en_q) or note
             print("chat: language model " + ("not asked: quota" if code == "quota" else "not reachable:"),
                   e.zeit if code == "quota" else code, flush=True)
             await out.put({"type": "text", "delta": note})

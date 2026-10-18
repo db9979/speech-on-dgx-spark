@@ -577,10 +577,14 @@ install_flag() {
   case "$1" in asr) echo --asr ;; tts) echo --tts ;; bild) echo --bild ;; *) return 1 ;; esac
 }
 
+# Zustand → Modelle shows each step of the language model's switch or restart (app/llmstart.py, Dominik 2026-10-18)
+llmschritt() { as_panel_user ../llmstart.py "$@" >/dev/null 2>&1 || true; }
+
 wechsel() {  # $1 = art, $2 = id
   local art=$1 mid=$2 alt out kind repo rev commit pause=0 ok=0
+  [ "$art" = llm ] && llmschritt schritt wechsel 1 "$mid"
   out=$(as_panel_user ../modelle.py wechsel-pruefen "$art" "$mid") \
-    || { grep '^modelle: ' <<<"$out" || true; echo "modelle: wechsel $art abgelehnt"; return 1; }
+    || { grep '^modelle: ' <<<"$out" || true; echo "modelle: wechsel $art abgelehnt"; [ "$art" = llm ] && llmschritt ende zurueck abgelehnt; return 1; }
   read -r kind repo rev <<<"$(tail -n1 <<<"$out")"
   alt=$(as_panel_user ../modelle.py jetzt "$art")
   echo "modelle: wechsel $art startet"
@@ -595,25 +599,30 @@ wechsel() {  # $1 = art, $2 = id
   else
     [ -x "$PREFIX/venv-$(as_panel_user ../modelle.py venv "$mid")/bin/vllm" ] \
       || { echo "modelle: wechsel $art abgelehnt venv fehlt (sudo ./install.sh --llm, für Kolibri --kolibri)"; return 1; }
+    [ "$art" = llm ] && llmschritt schritt wechsel 2 "$mid"
     hf_from_qwen38 "$mid" "$repo" "$rev"
     out=$(as_panel_user ../modelle.py vorbereiten "$mid" --revision "$rev") || true
     commit=$(tail -n1 <<<"$out")
-    [ "$commit" = "$rev" ] || { grep '^modelle: ' <<<"$out" || true; echo "modelle: wechsel $art abgelehnt nicht geladen"; return 1; }
+    [ "$commit" = "$rev" ] || { grep '^modelle: ' <<<"$out" || true; echo "modelle: wechsel $art abgelehnt nicht geladen"; [ "$art" = llm ] && llmschritt ende zurueck dateien; return 1; }
     if [ "$art" = llm ] && can_pause && as_panel_user wartung.py status | grep -q '^Keine Wartungspause'; then
       as_panel_user wartung.py llm 30 && pause=1 || echo "modelle: wechsel ohne wartungspause"
     fi
-    as_panel_user ../modelle.py wechsel-schalten "$art" "$mid" || { echo "modelle: wechsel $art abgelehnt einstellung"; return 1; }
+    as_panel_user ../modelle.py wechsel-schalten "$art" "$mid" || { echo "modelle: wechsel $art abgelehnt einstellung"; [ "$art" = llm ] && llmschritt ende zurueck einstellung; return 1; }
     if [ "$art" = sehen ]; then
       systemctl stop speech-spark-sehen.service || true    # on demand: the next picture starts the new model
       ok=1
     else
+      llmschritt schritt wechsel 3 "$mid"
       systemctl stop speech-spark-llm.service || true
       mem_settle
+      llmschritt schritt wechsel 4 "$mid"
       systemctl start speech-spark-llm.service || true
       if as_panel_user ../modelle.py rundlauf; then
         ok=1
+        llmschritt ende ok
       else
         echo "modelle: wechsel llm fehler, zurueck"
+        llmschritt ende zurueck
         as_panel_user ../modelle.py wechsel-schalten llm "$alt" || echo "modelle: wechsel llm zurueck fehler"
         systemctl restart speech-spark-llm.service || true
       fi
@@ -628,7 +637,7 @@ wechsel() {  # $1 = art, $2 = id
 # Zustand → Modelle „Lange Gespräche“: root checks the choice again, writes llm.platz and restarts the own language model
 # with its new memory share and context; when it does not answer, back to the choice before
 platz_setzen() {  # $1 = one of modelle.PLATZ
-  local neu=$1 alt out pause=0
+  local neu=$1 alt out jetzt pause=0
   out=$(as_panel_user ../modelle.py platz-pruefen "$neu") \
     || { grep '^modelle: ' <<<"$out" || true; echo "modelle: platz abgelehnt"; return 1; }
   alt=$(as_panel_user ../modelle.py platz-jetzt)
@@ -637,12 +646,17 @@ platz_setzen() {  # $1 = one of modelle.PLATZ
     as_panel_user wartung.py llm 30 && pause=1 || echo "modelle: platz ohne wartungspause"
   fi
   as_panel_user ../modelle.py platz-schalten "$neu" || { echo "modelle: platz abgelehnt einstellung"; return 1; }
+  jetzt=$(as_panel_user ../modelle.py jetzt llm 2>/dev/null | tail -n1); [ "$jetzt" = - ] && jetzt=""
+  llmschritt schritt platz 3 "$jetzt"
   systemctl stop speech-spark-llm.service || true
   mem_settle
+  llmschritt schritt platz 4 "$jetzt"
   systemctl start speech-spark-llm.service || true
   if as_panel_user ../modelle.py rundlauf; then
+    llmschritt ende ok
     echo "modelle: platz $neu ok"
   else
+    llmschritt ende zurueck
     echo "modelle: platz $neu fehler, zurueck"
     as_panel_user ../modelle.py platz-schalten "$alt" || echo "modelle: platz zurueck fehler"
     systemctl restart speech-spark-llm.service || true

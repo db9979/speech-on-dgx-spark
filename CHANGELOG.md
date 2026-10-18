@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.793** · 2026-10-18 · Sichtbar, was das Sprachmodell beim Wechseln und Starten tut: sechs Schritte mit Zeiten unter Zustand → Modelle, Banner auf jeder Admin-Seite, Zeile in Live, der Chat sagt „startet gerade neu, etwa noch N Minuten“
 - **V01.0.792** · 2026-10-18 · Durchsicht Festpinnen: Spracherkennung und Sprachausgabe prüfen vor jedem Start jede Datei (vLLM lädt nie mehr selbst), neu gewählte Stimmen laden nur geprüft, alter Zwischenspeicher wird bereinigt, Einbettung und Nachsortieren merken ihre Prüfsummen je festem Stand
 - **V01.0.791** · 2026-10-18 · Telefon: sagt der Anrufer Tschüss, „Danke, das war's“ oder nach „Noch etwas?“ „Nein danke“, verabschiedet sich der Spark und legt selbst auf, auch mitten in der Antwort; kommt nach dem Auflegen kein BYE an, legt er nach 8 Sekunden ohne Ton auf
 - **V01.0.790** · 2026-10-18 · Pi stabiler: Hänge-Wächter im Panel (Logzeile mit der Stelle nach 5 s, systemd startet ein 90 s stehendes Panel neu, Hinweis, Monitoring, Live, Steuerzentrale), schwere Arbeit aus der Ereignis-Schleife (Auftrag als Dokument, Problem-Meldung, Gehäuse, Firmware, Chat-Medien; Wächter-Test test_loopwacht), Panel und Notbetrieb-ASR mit dem Vorrang der Sprachdienste (nur der letzte Kern bleibt frei, weiche Speichergrenze), Hardware-Watchdog am Raspberry Pi

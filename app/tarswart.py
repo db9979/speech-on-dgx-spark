@@ -43,6 +43,7 @@ import uvicorn
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 
+import llmstart
 import modelle
 import rechner
 import werkstatt
@@ -190,9 +191,11 @@ def _misst():
 
 def modelle_daten():
     """Read only, asked by the page and the Live view: no line, like status."""
+    messung = read_json(modelle.MESSUNG, {})
     return {"gesamt_gib": round(modelle.gesamt_gib(), 1), "lanes": [f for _, f in qwen38_lanes() if f],
-            "messung": read_json(modelle.MESSUNG, {}), "wechsel": read_json(modelle.WECHSEL, {}),
-            "eigene": modelle.eigene(), "laeuft": _wechsel_laeuft(), **_messung_laeuft()}
+            "messung": messung, "wechsel": read_json(modelle.WECHSEL, {}),
+            "eigene": modelle.eigene(), "laeuft": _wechsel_laeuft(), **_messung_laeuft(),
+            "start": llmstart.hier(load_config(), messung)}     # what the language model does while it starts
 
 
 def _messung_laeuft():

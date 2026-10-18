@@ -24,6 +24,7 @@ the own models are that computer's. The page then takes them from its Wärter (s
 Zurückholen and the own models go there (tarswart.py), which checks the same fixed rules again with its own numbers
 and starts its speech-spark-wechsel. The switch Funktionen → Modelle wechseln stays the panel's.
 """
+import asyncio
 import os
 import subprocess
 import sys
@@ -36,6 +37,7 @@ import core  # noqa: E402
 import features  # noqa: E402
 import netguard  # noqa: E402
 import guard  # noqa: E402
+import llmstart  # noqa: E402
 import modelle  # noqa: E402
 import steuer  # noqa: E402
 from common import journal, load_config, read_json  # noqa: E402
@@ -46,6 +48,8 @@ MESSWERTE = ("tok_s", "erste_s", "belegt_gib", "laden_s", "mtp_annahme", "erste_
              "par2_tok_s", "par2_summe", "par2_erste_s", "par4_tok_s", "par4_summe", "par4_erste_s", "lang_tokens",
              "lang_erste_s", "lang_tok_s", "platz_64k", "par2_fehler", "par4_fehler", "lang_fehler")
 _live = {"t": None, "v": None}
+LAGE_S = 10              # seconds the banner and the chat reuse what the language model does (lage)
+_lage = {"t": None, "v": None}
 MAX_BODY = 256
 # why a switch is refused (modelle.Fehler words): a sentence for the page
 GRUND = {"art": "Diese Art lässt sich nicht wechseln.", "unbekannt": "Das Modell steht nicht im Katalog.",
@@ -118,17 +122,19 @@ def _starten(unit=modelle.WECHSEL_UNIT):
 
 
 def _quelle(cfg):
-    """(total_gib, lanes, messung, laeuft, kat, alte switches, misst, stand) of the computer the models run on;
+    """(total_gib, lanes, messung, laeuft, kat, alte switches, misst, stand, start) of the computer the models run on;
     HTTPException 503 when that is another one and it does not answer. laeuft, misst and stand are None here (asked
-    when needed)."""
+    when needed); start is what the language model does while it switches or starts (llmstart)."""
     if steuer.remote(cfg):
         d = steuer.modelle(cfg)
         if d is None:
             raise HTTPException(503, GRUND["rechner"])
         stand = modelle.stand("\n".join(x for x in d.get("stand", []) if isinstance(x, str))) if d.get("misst") else []
         return (d["gesamt_gib"], d["lanes"], d["messung"], d["laeuft"], modelle.katalog(eigene=d["eigene"]), d["wechsel"],
-                d.get("misst", False), stand)
-    return modelle.gesamt_gib(), _lanes(), read_json(modelle.MESSUNG, {}), None, modelle.katalog(), None, None, None
+                d.get("misst", False), stand, d.get("start"))
+    messung = read_json(modelle.MESSUNG, {})
+    return (modelle.gesamt_gib(), _lanes(), messung, None, modelle.katalog(), None, None, None,
+            llmstart.hier(cfg, messung))
 
 
 def _fehler(e, was="wechsel"):
@@ -154,7 +160,7 @@ def _lanes():
 def seite(cfg=None, total_gib=None, lanes=None, messung=None, lang="de", gestartet=False, wechselt=False):
     """What the page shows: {arten: [{art, name, modelle: [...]}], budget, messung_zeit}."""
     cfg = load_config() if cfg is None else cfg
-    q_gib, q_lanes, q_messung, laeuft, kat, wechsel, misst, stand = _quelle(cfg)
+    q_gib, q_lanes, q_messung, laeuft, kat, wechsel, misst, stand, start = _quelle(cfg)
     total_gib = q_gib if total_gib is None else total_gib
     lanes = q_lanes if lanes is None else lanes
     messung = q_messung if messung is None else messung
@@ -191,6 +197,7 @@ def seite(cfg=None, total_gib=None, lanes=None, messung=None, lang="de", gestart
         probe["jetzt_name"] = kat[probe["jetzt_id"]]["name"]["en" if i else "de"] if probe["jetzt_id"] else ""
         probe["waehlbar"] = next((m["waehlbar"] for a in arten for m in a["modelle"] if m["id"] == probe["id"]), False)
     wechsel = {"an": an, "laeuft": laeuft, "misst": misst or gestartet, "stand": stand, "platz": platz, "probe": probe,
+               "start": _start_zeigen(start, kat, i),
                "alte": modelle.alte(cfg, kat=kat, daten=wechsel) if an else {},
                "tage": modelle.ALT_TAGE, "eigene": _eigen_an(cfg)}
     # the bar's parts (Dominik 2026-10-18: one colored piece per model, the tiles below in the same color)
@@ -200,6 +207,32 @@ def seite(cfg=None, total_gib=None, lanes=None, messung=None, lang="de", gestart
             "wechsel": wechsel}
 
 
+def _start_zeigen(x, kat, i):
+    """llmstart's row for the page (Dominik „1a“): with the names of the steps, the kind of start and the model."""
+    if not x:
+        return None
+    m = kat.get(x["ziel"])
+    teil = next((t[1 + i] for t in llmstart.TEILE if t[0] == x["teil"]), "")
+    return dict(x, titel=llmstart.VORGAENGE[x["vorgang"]][i], name=m["name"]["en" if i else "de"] if m else "",
+                schritte=[{"wort": w, "name": (de, en)[i]} for w, de, en in llmstart.SCHRITTE],
+                teil_name=teil, rest_min=llmstart.rest_min(x))
+
+
+def lage(now=None):
+    """What every admin page's banner and the chat need (Dominik „2a 3a“): {start, misst}, asked at most every LAGE_S
+    seconds (the model computer is not asked on every look); never blocks on its own failure."""
+    now = time.monotonic() if now is None else now
+    if _lage["t"] is None or now - _lage["t"] > LAGE_S:
+        try:
+            cfg = load_config()
+            q = _quelle(cfg)
+            _lage["v"] = {"start": q[8], "misst": bool(_misst() if q[6] is None else q[6])}
+        except Exception:
+            _lage["v"] = {"start": None, "misst": False}
+        _lage["t"] = now
+    return _lage["v"]
+
+
 def for_live(now=None):
     """For the Live view's language model box: the memory left for models and the budget's rule (numbers, fixed word),
     after the move (llm.enabled) the catalog name of the own model."""
@@ -207,7 +240,7 @@ def for_live(now=None):
     if _live["t"] is None or now - _live["t"] > LIVE_EVERY:
         try:
             cfg = load_config()
-            total_gib, lanes, _, laeuft, kat, _, misst, _ = _quelle(cfg)
+            total_gib, lanes, _, laeuft, kat, _, misst, _, start = _quelle(cfg)
             b = modelle.budget(cfg, total_gib, lanes, kat)
             _live["v"] = {"on": True, "frei": b["frei"], "regel": b["regel"]}
             if cfg.get("llm", {}).get("enabled"):   # after the move: the own model's catalog name instead of qwen38
@@ -216,6 +249,8 @@ def for_live(now=None):
                 _live["v"]["wechsel"] = True
             if _misst() if misst is None else misst:   # a measurement runs (from the panel or the command line)
                 _live["v"]["messen"] = True
+            if start and not start["ende"]:          # the language model switches or starts: step n of 6 (no name)
+                _live["v"]["start"] = {"n": start["n"], "von": len(llmstart.SCHRITTE), "vorgang": start["vorgang"]}
         except Exception:
             _live["v"] = {"on": False}
         _live["t"] = now
@@ -232,12 +267,31 @@ def admin_modelle(request: Request, lang: str = "de"):
     return seite(lang="en" if lang == "en" else "de")
 
 
+@router.get("/api/admin/modelle/lage", dependencies=[Depends(auth)])
+def admin_lage(request: Request, lang: str = "de"):
+    """The banner on every admin page (Dominik „2a“): only while the language model switches or starts, or a
+    measurement runs; step and minutes, never a line from the engine."""
+    guard.limit(request, "modelle", None, True)
+    i = 1 if lang == "en" else 0
+    d = lage()
+    x = d["start"]
+    if x:
+        x = {k: x[k] for k in ("vorgang", "n", "dauer_s", "ende", "ergebnis", "grund")} | {
+            "titel": llmstart.VORGAENGE[x["vorgang"]][i], "von": len(llmstart.SCHRITTE),
+            "schritt_name": llmstart.SCHRITTE[x["n"] - 1][1 + i], "rest_min": llmstart.rest_min(x)}
+    return {"start": x, "misst": d["misst"]}
+
+
 @router.post("/api/admin/modelle/messen", dependencies=[Depends(auth), Depends(admin_code)])
 async def admin_messen(request: Request):
     """„Messen“: one model measured like `speech-spark modelle messen`, here or on the model computer (Dominik
     2026-10-17). The language model pauses meanwhile; the root unit speech-spark-messen-wunsch does the work."""
     guard.limit(request, "modelle_messen", None, True)
     body = await core.json_body(request, MAX_BODY)
+    return await asyncio.to_thread(_messen, request, body)   # systemctl and the model computer, off the loop
+
+
+def _messen(request, body):
     mid = str(body.get("id", ""))[:48]
     probe = body.get("probe") is True        # „Ausprobieren“: afterwards the page asks whether to switch
     if not _an():
@@ -311,7 +365,10 @@ async def admin_platz(request: Request):
     (speech-spark-wechsel) restarts it with the new memory share and context, here or on the model computer."""
     guard.limit(request, "modelle_wechsel", None, True)
     body = await core.json_body(request, MAX_BODY)
-    was = str(body.get("platz", ""))[:16]
+    return await asyncio.to_thread(_platz, request, str(body.get("platz", ""))[:16])   # off the loop (systemctl)
+
+
+def _platz(request, was):
     if not _an():
         print("modelle: platz abgelehnt aus", flush=True)
         raise HTTPException(409, "Modelle wechseln ist aus (Funktionen → Modelle wechseln).")
@@ -344,7 +401,7 @@ async def admin_wechseln(request: Request):
     guard.limit(request, "modelle_wechsel", None, True)
     body = await core.json_body(request, MAX_BODY)
     art, mid = str(body.get("art", ""))[:16], str(body.get("id", ""))[:48]
-    return _wunsch(request, art, mid)
+    return await asyncio.to_thread(_wunsch, request, art, mid)   # systemctl and the model computer, off the loop
 
 
 @router.post("/api/admin/modelle/zurueck", dependencies=[Depends(auth), Depends(admin_code)])
@@ -356,7 +413,7 @@ async def admin_zurueck(request: Request):
     if art not in modelle.TAUSCH:
         print("modelle: zurueck abgelehnt art", flush=True)
         raise HTTPException(400, GRUND["art"])
-    return _wunsch(request, art, "zurueck")
+    return await asyncio.to_thread(_wunsch, request, art, "zurueck")
 
 
 @router.delete("/api/admin/modelle/probe", dependencies=[Depends(auth)])
@@ -425,7 +482,7 @@ async def eigen_suche(request: Request):
             items = r.json()
         except ValueError:
             raise modelle.Fehler("antwort")
-        q = _quelle(load_config())
+        q = await asyncio.to_thread(_quelle, load_config())
         treffer = modelle.such_treffer(items, art, q[0], q[4])
     except modelle.Fehler as e:
         print(f"modelle: suche abgelehnt {e}", flush=True)
@@ -441,7 +498,7 @@ async def eigen_pruefen(request: Request):
     _eigen_tor(request)
     body = await core.json_body(request, EIGEN_BODY)
     art, repo = str(body.get("art", ""))[:16], str(body.get("repo", "")).strip()[:200]
-    total_gib = _quelle(load_config())[0]
+    total_gib = (await asyncio.to_thread(_quelle, load_config()))[0]
     try:
         m = modelle.eigen_vorschlag(await _hf_info(repo), art, repo, total_gib)
     except modelle.Fehler as e:
@@ -459,7 +516,7 @@ async def eigen_dazu(request: Request):
     body = await core.json_body(request, EIGEN_BODY)
     art, repo, rev = str(body.get("art", ""))[:16], str(body.get("repo", "")).strip()[:200], str(body.get("revision", ""))[:40]
     cfg = load_config()
-    total_gib = _quelle(cfg)[0]
+    total_gib = (await asyncio.to_thread(_quelle, cfg))[0]
     try:
         if not modelle.REV.match(rev):
             raise modelle.Fehler("repo")
@@ -478,7 +535,7 @@ async def eigen_dazu(request: Request):
     print(f"modelle: eigenes hinzugefuegt {m['art']}", flush=True)
     guard.log("modelle_eigen", detail=f"hinzugefügt: {m['name']['de']}")
     _live["t"] = None
-    return seite(lang="en" if request.query_params.get("lang") == "en" else "de")
+    return await asyncio.to_thread(seite, lang="en" if request.query_params.get("lang") == "en" else "de")
 
 
 @router.delete("/api/admin/modelle/eigen/{mid}", dependencies=[Depends(auth), Depends(admin_code)])
