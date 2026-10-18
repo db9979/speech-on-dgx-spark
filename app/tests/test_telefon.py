@@ -438,6 +438,112 @@ class Calls(unittest.TestCase):
         self.assertIn("aufgelegt nach", log.text)
         self.assertTrue(any("Noch etwas" in t for t in helpers.TTS_TEXT))
 
+    def test_goodbye_words_end_the_call_by_fixed_rules(self):
+        """Dominik 2026-10-18: when the caller ends the call, the Spark hangs up too. A goodbye always ends it; right
+        after "Noch etwas?" a plain no does as well; questions and sentences with the words inside never do."""
+        for t in ("Tschüss.", "Okay, danke, tschüss!", "Vielen Dank, tschüss", "Danke dir, bis bald!", "Nein danke, das war's.",
+                  "Das wars für heute.", "Ich lege jetzt auf.", "Du kannst auflegen", "Alles klar, dann tschüss",
+                  "Gute Nacht, Spark", "Auf Wiederhören", "Das ist alles, danke", "Ende.", "Bye bye"):
+            self.assertTrue(telefon.BYE_WORDS.match(t), t)
+        for t in ("Wie spät ist es?", "Ich lege die Wäsche auf den Tisch", "Nein", "Danke", "Ende des Monats ist Zahltag",
+                  "Tschüss sagt man in Hamburg nicht", "Was heißt bye auf Deutsch?", "Bis wann hat die Post offen?"):
+            self.assertFalse(telefon.BYE_WORDS.match(t), t)
+        for t in ("Nein.", "Nein danke.", "Nö, passt.", "Danke!", "Nein, das reicht", "Nichts"):
+            self.assertTrue(telefon.NO_MORE.match(t), t)
+        for t in ("Nein, wie wird das Wetter?", "Danke, und wie spät ist es?", "Nicht das Licht"):
+            self.assertFalse(telefon.NO_MORE.match(t), t)
+
+    async def _speak(self, sock, to):
+        """1 s of a loud tone between quiet, as G.722 packets a few ms apart (the Ear hears one question)."""
+        enc = telefon_ton.G722Encoder()
+        speech = b"\0\0" * 8000 + tone(1.0, 16000, 300, 12000) + b"\0\0" * 16000
+        for i in range(0, len(speech), 640):
+            sock.sendto(rtp(i // 640, 9, enc.encode(speech[i:i + 640])), to)
+            await asyncio.sleep(0.004)
+
+    def test_no_after_noch_etwas_says_goodbye_and_hangs_up(self):
+        self.say_next = ["Nein danke."]
+
+        async def body(a, pbx, port):
+            loop = asyncio.get_running_loop()
+            ph = Phone()
+            pt_, _ = await loop.create_datagram_endpoint(lambda: ph, local_addr=("127.0.0.1", 0))
+            rport = pt_.get_extra_info("sockname")[1]
+            to = ("127.0.0.1", a.port)
+            pbx.t.sendto(invite(a.port, "**611", rport, "call7"), to)
+            ok = await self._answer(pbx, "call7")
+            spark_rtp = ("127.0.0.1", telefon.sdp_parse(ok.body)["port"])
+            pbx.t.sendto(ack_or_bye("ACK", "call7", a.port, 1), to)
+            for _ in range(200):
+                if any("Noch etwas" in t for t in helpers.TTS_TEXT):
+                    break
+                await asyncio.sleep(0.05)
+            call = a.calls.get("call7")
+            for _ in range(200):                        # "Noch etwas?" played out: the Spark listens again
+                if call and not call.outq:
+                    break
+                await asyncio.sleep(0.05)
+            await self._speak(pt_, spark_rtp)
+            bye = None
+            while bye is None:
+                m, addr = await asyncio.wait_for(pbx.q.get(), 15)
+                if m and m.method == "BYE":
+                    bye = m
+                    pbx.t.sendto(telefon.response(m, 200, "OK"), addr)
+            for _ in range(60):
+                if "call7" not in a.calls:
+                    break
+                await asyncio.sleep(0.05)
+            pt_.close()
+            return bye, call
+        helpers.TTS_TEXT.clear()
+        with mock.patch.object(telefon, "QUIET_END", 5), _quiet() as log:
+            bye, call = self.run_with_pbx(body)
+        self.assertEqual(bye.get("call-id"), "call7")
+        self.assertIn("Tschüss!", helpers.TTS_TEXT)
+        self.assertNotIn("Ich lege jetzt auf. Tschüss.", helpers.TTS_TEXT)
+        self.assertEqual(call.questions, 0)               # the no never reached the chat
+        self.assertIn("(verabschiedet)", log.text)
+
+    def test_no_more_sound_from_the_phone_hangs_up_without_a_bye(self):
+        """The handset hung up but its BYE got lost (router, line): the Spark ends the call once no sound packet came
+        for RTP_GONE seconds, sends its own BYE and frees the call, instead of talking on into nothing."""
+        async def body(a, pbx, port):
+            loop = asyncio.get_running_loop()
+            ph = Phone()
+            pt_, _ = await loop.create_datagram_endpoint(lambda: ph, local_addr=("127.0.0.1", 0))
+            rport = pt_.get_extra_info("sockname")[1]
+            to = ("127.0.0.1", a.port)
+            pbx.t.sendto(invite(a.port, "**611", rport, "call8"), to)
+            ok = await self._answer(pbx, "call8")
+            spark_rtp = ("127.0.0.1", telefon.sdp_parse(ok.body)["port"])
+            pbx.t.sendto(ack_or_bye("ACK", "call8", a.port, 1), to)
+            quiet = telefon_ton.G722Encoder().encode(b"\0\0" * 320)
+            for i in range(10):
+                pt_.sendto(rtp(i, 9, quiet), spark_rtp)
+                await asyncio.sleep(0.02)
+            t0 = time.monotonic()
+            bye = None
+            while bye is None:
+                m, addr = await asyncio.wait_for(pbx.q.get(), 15)
+                if m and m.method == "BYE":
+                    bye = m
+                    pbx.t.sendto(telefon.response(m, 200, "OK"), addr)
+            secs = time.monotonic() - t0
+            for _ in range(60):
+                if "call8" not in a.calls:
+                    break
+                await asyncio.sleep(0.05)
+            pt_.close()
+            return bye, secs, "call8" in a.calls
+        with mock.patch.object(telefon, "RTP_GONE", 1), mock.patch.object(telefon, "QUIET_ASK", 30), _quiet() as log:
+            bye, secs, still = self.run_with_pbx(body)
+        self.assertEqual(bye.get("call-id"), "call8")
+        self.assertLess(secs, 10)
+        self.assertFalse(still)
+        self.assertIn("telefon: kein ton mehr vom telefon seit 1 s, aufgelegt", log.text)
+        self.assertIn("(kein ton)", log.text)
+
     def test_a_call_stands_as_a_device_in_live_while_it_talks(self):
         """Live, Monitoring and the Steuerzentrale show a running call under the devices (Dominik 2026-10-17): one
         request from picking up to hanging up, client telefon, the handset's name, never a number."""

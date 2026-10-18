@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.791** Telefon: Tschüss oder „Nein danke“ nach „Noch etwas?“ beendet das Gespräch, der Spark legt selbst auf; ohne BYE nach 8 Sekunden ohne Ton
 - **V01.0.790** Pi stabiler: ein hängendes Panel startet von selbst neu und nennt im Log die Stelle; der Sprachassistent behält Vorrang
 - **V01.0.789** Wachposten: Push an die Admins bei Sperren, neuen Zugängen, geändertem Schutz oder gebrochenem Protokoll
 - **V01.0.788** Karte „Grundausstattung“ auf Funktionen ist eine Zeile
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.784** reMarkable: immer ein Aufgabenblatt da, auch wenn nichts offen ist
 - **V01.0.783** Fix: viele Dokumente auslassen hält den Pi nicht mehr an (im Hintergrund mit Fortschritt); Knopf „Jeden Ordner …“ erklärt die Namensregel
 - **V01.0.782** Fix: Modellwechsel wartet auf das neue Modell, bevor er es prüft
-- **V01.0.781** Antworten ins Wissensbuch ablegen, Kiwix als Quelle, Obsidian-Ordner und nächtliche NAS-Kopie
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

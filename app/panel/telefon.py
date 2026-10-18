@@ -82,8 +82,18 @@ GUESTS = 20                     # calls from unknown numbers outside a day at mo
 UA = "Speech-on-DGX-Spark"
 METHODS = ("INVITE", "ACK", "BYE", "CANCEL", "OPTIONS", "INFO", "NOTIFY")
 DTMF = "0123456789*#ABCD"
-BYE_WORDS = re.compile(r"(?i)^\W*(?:(?:ok|okay|gut|danke)\W+)*(?:tschüss|tschüs|ciao|auf wiederhören|auf wiedersehen|bis dann|"
-                       r"bis später|leg auf|auflegen|das war'?s|das wars|ende|bye|goodbye)\W*(?:danke|spark)?\W*$")
+# the caller says goodbye (a fixed rule, never the model): the Spark says "Tschüss!" and hangs up itself
+BYE_WORDS = re.compile(r"(?i)^\W*(?:(?:ok|okay|gut|alles klar|prima|super|perfekt|dann|nein|nee|danke|danke schön|dankeschön|"
+                       r"danke dir|danke sehr|vielen dank|merci)\W+)*"
+                       r"(?:tschüss|tschüs|tschau|ciao|servus|auf wiederhören|auf wiedersehen|bis dann|bis später|bis bald|"
+                       r"bis morgen|gute nacht|schönen tag noch|schönen abend noch|(?:du kannst|ich|ich lege?|ich leg) (?:jetzt )?auf(?:legen)?|"
+                       r"leg (?:jetzt )?auf|auflegen|das war'?s|das wars|das war es|das war alles|das ist alles|nichts mehr|"
+                       r"nichts weiter|ende|schluss|bye|bye bye|goodbye|that'?s all|that'?s it)"
+                       r"(?:\W+(?:danke|danke schön|dir auch|spark|für heute|erstmal|tschüss|tschüs|ciao|bye))*\W*$")
+# right after "Noch etwas?" also a plain no ends the call (the same words elsewhere answer the assistant)
+NO_MORE = re.compile(r"(?i)^\W*(?:nein|nee|ne|nö|nope|no|nichts|danke|passt|passt so|alles gut|das reicht|reicht)"
+                     r"(?:\W+(?:danke|danke schön|vielen dank|thanks|passt|alles gut|das reicht|reicht|spark))*\W*$")
+RTP_GONE = 8                    # seconds without any sound packet from the phone: it hung up without a BYE (line gone)
 CALLBACK_WORDS = re.compile(r"(?i)\b(?:ruf|rufe|rufst)\s+(?:mich|du mich)\s+(?:bitte\s+)?(?:gleich\s+)?zurück|\brückruf\b|\bcall me back\b")
 _lock = threading.Lock()
 
@@ -589,6 +599,8 @@ class Agent(asyncio.DatagramProtocol):
                     if call.last:
                         self.send(call.last, addr)
                 else:                                          # a new offer in the call (hold, other codec): same answer
+                    call.held = bool(re.search(r"(?im)^a=(?:sendonly|inactive)\s*$", msg.body or ""))
+                    call.last_in = time.monotonic()
                     self.send(response(msg, 200, "OK", call.tag, call.contact(), call.sdp), addr)
                 return
             if self.closing:
@@ -682,6 +694,8 @@ class Call:
         self.tasks = []
         self.rest = b""
         self.pkts = {"raus": 0, "sprache": 0, "rein": 0}
+        self.last_in = 0.0                                # when the last sound packet came (monotonic), 0 before the first
+        self.held = False                                 # the phone put the call on hold (no sound comes on purpose)
         self.live = None                                  # the call as one request in Live, Monitoring and Steuerzentrale   # RTP packets sent, of them with speech, received (log at the end)
 
     # ------------------------------------------------------------ start and end
@@ -988,6 +1002,7 @@ class Call:
                 print(f"telefon: anruf intern {self.number} als {_log_name(self.uid) if not self.shared else 'gemeinsames telefon'}"
                       + (", nicht zugeordnet" if not self.known else "") + f", ton {self.codec.name}", flush=True)
             self.tasks.append(asyncio.ensure_future(self._sender()))
+            self.tasks.append(asyncio.ensure_future(self._alive()))
             talk = asyncio.ensure_future(self.converse())
             done, _ = await asyncio.wait([talk, asyncio.ensure_future(self.over.wait())], timeout=MAX_CALL + 60,
                                          return_when=asyncio.FIRST_COMPLETED)
@@ -1052,6 +1067,7 @@ class Call:
         b0, b1 = data[0], data[1]
         if b0 >> 6 != 2:
             return
+        self.last_in = time.monotonic()                # any packet (also comfort noise or a key): the phone is there
         pt = b1 & 0x7F
         off = 12 + 4 * (b0 & 0x0F)
         if b0 & 0x10:                                  # header extension
@@ -1139,6 +1155,16 @@ class Call:
             if delay < -0.2:            # far behind (a busy moment): start the clock anew instead of rushing
                 nxt, delay = loop.time(), 0
             await asyncio.sleep(max(0.0, delay))
+
+    async def _alive(self):
+        """The phone hung up but its BYE never came (line or router gone): after RTP_GONE seconds without any sound
+        packet the call ends, not only after the silence questions. Only once sound came and not on hold."""
+        while not self.over.is_set():
+            await asyncio.sleep(1.0)
+            if self.last_in and not self.held and time.monotonic() - self.last_in > RTP_GONE:
+                print(f"telefon: kein ton mehr vom telefon seit {RTP_GONE} s, aufgelegt", flush=True)
+                self.end("kein ton")
+                return
 
     def _frames(self, pcm24):
         """24 kHz PCM from the speech output to payloads of 20 ms (in a thread: G.722 is pure Python)."""
@@ -1247,8 +1273,8 @@ class Call:
                 await self.say("Noch etwas?")
                 asked = True
                 continue
+            await self.question(pcm, asked)
             asked = False
-            await self.question(pcm)
 
     async def called(self):
         """The Spark called (T4): says what it called for; True when the conversation goes on afterwards."""
@@ -1321,7 +1347,7 @@ class Call:
             break
         return False
 
-    async def question(self, pcm):
+    async def question(self, pcm, asked=False):
         import esp32
         import notaus
         import wartung
@@ -1342,15 +1368,15 @@ class Call:
             if vt:
                 vt.cancel()
             return
-        if esp32.STOP_WORDS.match(text):
-            if vt:
-                vt.cancel()
-            return
-        if BYE_WORDS.match(text):
+        if BYE_WORDS.match(text) or (asked and NO_MORE.match(text)):    # before "das reicht" counts as a stop word
             if vt:
                 vt.cancel()
             await self.say("Tschüss!")
             self.end("verabschiedet")
+            return
+        if esp32.STOP_WORDS.match(text):
+            if vt:
+                vt.cancel()
             return
         if self.mode == "extern" and self.uid and not self.pin_uid and CALLBACK_WORDS.search(text):
             if vt:
@@ -1495,10 +1521,11 @@ class Call:
         return "", "", ""
 
     async def answer(self, text, uid, voice, why):
-        """The chat answers (fixed rules decide what it may: chat_turn); "#" or "Stopp" end the answer."""
+        """The chat answers (fixed rules decide what it may: chat_turn); "#" or "Stopp" end the answer, a goodbye
+        (BYE_WORDS) ends it and the call."""
         import esp32
         talk = asyncio.ensure_future(self._chat(text, uid, voice, why))
-        ear, stop = esp32.Ear(), None
+        ear, stop, bye = esp32.Ear(), None, False
         try:
             while not talk.done():
                 pcm = await self._take(0.1)
@@ -1510,6 +1537,10 @@ class Call:
                 if stop and stop.done():
                     heard = stop.result() if not stop.exception() else ""
                     stop = None
+                    if heard and BYE_WORDS.match(heard):
+                        print("telefon: antwort abgebrochen, verabschiedet", flush=True)
+                        bye = True
+                        break
                     if heard and esp32.STOP_WORDS.match(heard):
                         print("telefon: antwort abgebrochen, stopp-wort", flush=True)
                         break
@@ -1526,6 +1557,9 @@ class Call:
             except (asyncio.CancelledError, Exception) as e:
                 if not isinstance(e, asyncio.CancelledError):
                     print("telefon: antwort", type(e).__name__, str(e)[:120], flush=True)
+        if bye and not self.over.is_set():
+            await self.say("Tschüss!")
+            self.end("verabschiedet")
 
     async def _chat(self, text, uid, voice, why):
         import base64

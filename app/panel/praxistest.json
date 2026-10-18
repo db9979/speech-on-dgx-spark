@@ -1883,6 +1883,13 @@
 "titel": "Pi stabiler: Hänge-Wächter und Grenzen",
 "text": "A: Auf dem Pi sudo speech-spark update, danach systemctl show speech-spark-panel -p WatchdogUSec,CPUQuotaPerSecUSec,MemoryHigh: 1min 30s, 3s, 3221225472 (3 GiB). B: systemctl show -p RuntimeWatchdogUSec zeigt 15s. C: Zustand → Logs → Diagnose, Bereich System: „loopwacht: on | stall 5 s | restart 90 s“. D: Ich → Dokumente → Ausgelassene Ordner einen großen Ordner auslassen: hängt das Panel kurz, steht „loopwacht: stalled | … | 5 s“ und danach „free again“ im Log, oben auf den Admin-Seiten ein Hinweis und unter Zustand → Monitoring → Rechner am Panel-Rechner „Panel hing“. E: Während das Panel arbeitet, bleiben SSH, OLED und Steuerzentrale bedienbar.",
 "thread": "Pi stabilisieren"
+},
+{
+"id": "P293",
+"v": 791,
+"titel": "Spark legt mit auf",
+"text": "A: Vom Mobilteil den Spark anrufen, eine Frage stellen, dann „Danke, tschüss“ sagen: er sagt „Tschüss!“ und legt sofort selbst auf. B: Wieder anrufen, 20 Sekunden schweigen, auf „Noch etwas?“ mit „Nein danke“ antworten: „Tschüss!“, aufgelegt (nicht erst „Ich lege jetzt auf“). C: Wieder anrufen, eine längere Frage stellen und mitten in der Antwort „Tschüss“ sagen: die Antwort bricht ab, „Tschüss!“, aufgelegt. D: Wieder anrufen und am Mobilteil auflegen: Zustand → Live zeigt das Telefon nicht mehr unter Geräte. E: Zustand → Logs, Bereich telefon: „aufgelegt nach … (verabschiedet)“ bzw. „(aufgelegt)“, nie was gesagt wurde.",
+"thread": "Auflegen nach Gesprächsende"
 }
 ]
 }

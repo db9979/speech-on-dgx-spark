@@ -828,12 +828,22 @@ SEITEN = {
                  "Stimmprüfung, Chat mit dem Profil (gesetzt nur vom Panel), Antwort in G.722 oder G.711 zurück. Ein "
                  "Mobilteil eines Profils bekommt Persönliches nur bei sicherer Stimme; am gemeinsamen Telefon wählt die "
                  "Stimme das Profil. Nach {telefon.QUIET_ASK} Sekunden Stille „Noch etwas?“, nach weiteren "
-                 "{telefon.QUIET_END} legt er auf; höchstens {telefon.MAX_CALL|min} Minuten.",
+                 "{telefon.QUIET_END} legt er auf; höchstens {telefon.MAX_CALL|min} Minuten. Ein Abschied („Tschüss“, „Danke, "
+                 "das war's“, „Ich lege auf“, auch mitten in der Antwort) und direkt nach „Noch etwas?“ ein „Nein danke“ "
+                 "beenden das Gespräch: „Tschüss!“, dann legt der Spark selbst auf (feste Wortlisten BYE_WORDS und "
+                 "NO_MORE, nie das Modell). Legt das Telefon auf, beendet sein BYE den Anruf sofort; kommt keins an "
+                 "(Router, Leitung), legt der Spark nach {telefon.RTP_GONE} Sekunden ohne jedes Tonpaket auf, außer "
+                 "das Telefon hat gehalten.",
                  "A call runs like a question at a speaker: end of sentence with the same level check, speech "
                  "recognition, voice check, chat with the profile (set only by the panel), answer back in G.722 or G.711. "
                  "A profile's handset gets personal things only with a sure voice; at the shared phone the voice picks "
                  "the profile. After {telefon.QUIET_ASK} seconds of silence „Noch etwas?“, after another "
-                 "{telefon.QUIET_END} it hangs up; at most {telefon.MAX_CALL|min} minutes."),
+                 "{telefon.QUIET_END} it hangs up; at most {telefon.MAX_CALL|min} minutes. A goodbye („Tschüss“, „Danke, "
+                 "das war's“, „Ich lege auf“, also in the middle of an answer) and right after „Noch etwas?“ a „Nein "
+                 "danke“ end the call: „Tschüss!“, then the Spark hangs up itself (fixed word lists BYE_WORDS and "
+                 "NO_MORE, never the model). When the phone hangs up, its BYE ends the call at once; if none arrives "
+                 "(router, line), the Spark hangs up after {telefon.RTP_GONE} seconds without any sound packet, unless "
+                 "the phone put the call on hold."),
                 ("Von außen: eine eigene Nummer, die unter Ich → Telefon auf ihren Code wartet, tippt ihn "
                  "({telefon_ich.CODE_LEN} Ziffern, {telefon_ich.CODE_SECONDS|min} Minuten, {telefon_ich.CODE_TRIES} "
                  "Versuche), dann legt er auf. Mit „Anrufe von außen“ wählt eine bestätigte Nummer ihr Profil, "
