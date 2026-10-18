@@ -381,7 +381,7 @@ struct ModelsView: View {
                 let belegt = ["fest", "system", "reserve"].reduce(0.0) { $0 + ((b[$1] as? NSNumber)?.doubleValue ?? 0) }
                 if ges > 0 {
                     Self.balken(b, ges: ges)
-                    Text("Grau: System und Reserve · heller: bei Bedarf").font(.caption).foregroundStyle(.secondary)
+                    Text("Grau: System und Reserve · heller: bei Bedarf · Bilder oder Musik: ein Platz, nie beide").font(.caption).foregroundStyle(.secondary)
                 }
                 LabeledContent("Fest belegt") { Text(verbatim: Self.gib(belegt) + " / " + Self.gib(ges)) }
                 LabeledContent("Frei für Modelle bei Bedarf") { Text(verbatim: Self.gib(b["frei"])) }
@@ -669,10 +669,16 @@ struct ModelsView: View {
     static func balken(_ b: [String: Any], ges: Double) -> some View {
         let num = { (x: Any?) in (x as? NSNumber)?.doubleValue ?? 0 }
         let teile = b["teile"] as? [[String: Any]] ?? []
-        let teil = { (x: [String: Any]) in (farbe(x["art"] as? String ?? "").opacity(x["betrieb"] as? String == "resident" ? 1 : 0.4), num(x["gib"])) }
-        let seg = teile.filter { $0["betrieb"] as? String == "resident" }.map(teil)
-            + [(Color.gray, num(b["system"])), (Color.gray.opacity(0.5), num(b["reserve"]))]
-            + teile.filter { $0["betrieb"] as? String != "resident" }.map(teil)
+        let teil = { (x: [String: Any]) in (AnyShapeStyle(farbe(x["art"] as? String ?? "").opacity(x["betrieb"] as? String == "resident" ? 1 : 0.4)), num(x["gib"])) }
+        // pictures and music share one place (never both loaded): one piece of the bigger one in both colors
+        let einPlatz = b["ein_platz"] as? [String] ?? []
+        let platz = teile.filter { $0["betrieb"] as? String != "resident" && einPlatz.contains($0["art"] as? String ?? "") }
+        let geteilt = platz.count > 1
+        let farben = platz.map { farbe($0["art"] as? String ?? "").opacity(0.4) }
+        var seg = teile.filter { $0["betrieb"] as? String == "resident" }.map(teil)
+            + [(AnyShapeStyle(Color.gray), num(b["system"])), (AnyShapeStyle(Color.gray.opacity(0.5)), num(b["reserve"]))]
+            + teile.filter { $0["betrieb"] as? String != "resident" && !(geteilt && einPlatz.contains($0["art"] as? String ?? "")) }.map(teil)
+        if geteilt { seg.append((AnyShapeStyle(LinearGradient(colors: farben, startPoint: .leading, endPoint: .trailing)), platz.map { num($0["gib"]) }.max() ?? 0)) }
         let skala = max(ges, seg.reduce(0) { $0 + $1.1 })
         return GeometryReader { g in
             HStack(spacing: 1) {

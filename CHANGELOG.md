@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.786** · 2026-10-18 · Zustand → Modelle: Bilder und Musik teilen sich einen Platz im Speicher (das größere zählt, nie beide), der Balken zeigt ein gemeinsames Stück in beiden Farben; auch in der iPhone-App
 - **V01.0.785** · 2026-10-18 · Alle Modelle mit festem Stand: auch Spracherkennung, Sprachausgabe, Einbettung, Nachsortieren und Bildfilter laden nur den Commit aus dem Katalog, nur erlaubte Dateiarten, jede Datei gegen ihre Prüfsumme geprüft (install.sh, Engines, Server, Einbettungs-Helfer)
 - **V01.0.784** · 2026-10-18 · reMarkable: im Ordner „Aufgaben“ liegt immer ein Aufgabenblatt: das erste kommt von selbst, „Kann weg“ oder Löschen legt nur diese Version weg, jeden Morgen eine neue; ist nichts offen, zeigt es „0 offen“ mit Stand, was der Spark im Blick behält, zuletzt Erledigtes und was als Nächstes kommt (Dominik 1a 2a 3a 4a)
 - **V01.0.783** · 2026-10-18 · Fix Ausgelassene Ordner: viele Dokumente auf einmal auslassen hält den Pi nicht mehr an (Herausnehmen im Hintergrund in Portionen mit Fortschritt, Liste des Wissensordners nur einmal geschrieben); der Knopf „Jeden Ordner …“ sagt jetzt, dass er eine Namensregel für alle Orte und künftige Ordner anlegt („heute nur dieser“, wenn es nur einen gibt)

@@ -511,6 +511,21 @@ class Budget(unittest.TestCase):
         self.assertEqual(b["regel"], "ein_platz", b)
         self.assertEqual(b["fest"], round(0.66 * 120 + 6 + 4, 1))
 
+    def test_pictures_and_music_share_one_place(self):
+        """Dominik 2026-10-18: only ever one of them is loaded, never both: the bigger one counts, not the sum."""
+        c = self.cfg(image={"enabled": True, "variant": "9b-q4"})
+        c["music"] = {"enabled": True, "variant": "xl"}
+        b = modelle.budget(c, 120, [0.30])
+        rest = sum(x["gib"] for x in b["teile"] if x["betrieb"] == "bei_bedarf" and x["art"] not in ("bild", "musik"))
+        self.assertEqual({x["art"] for x in b["teile"] if x["betrieb"] == "bei_bedarf"} >= {"bild", "musik"}, True)
+        self.assertEqual((b["bedarf"], b["bedarf_max"]), (round(20 + rest, 1), 20))   # 13 and 20 GiB: one place of 20
+        c["chat"]["rerank"] = True                                            # a reranker on demand still adds up
+        self.assertEqual(modelle.budget(c, 120, [0.30])["bedarf"],
+                         round(20 + rest + modelle.zur_variante("klein", "klein")["need_gib"], 1))
+        sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "panel"))
+        import schwer                                                         # the queue that keeps them apart
+        self.assertEqual(sorted(schwer.ARTEN), sorted(modelle.EIN_PLATZ))
+
     def test_install_questions_come_from_the_catalog(self):
         self.assertEqual([m["wahl"] for m in modelle.wahl("asr")], ["1.7b", "0.6b", "parakeet"])
         self.assertEqual([m["wahl"] for m in modelle.wahl("tts")], ["0.6b", "1.7b"])

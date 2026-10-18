@@ -1726,7 +1726,10 @@ class Browser(unittest.TestCase):
                         "teile": [{"id": "qwen38-27b-nvfp4", "name": "Qwen3.8 27B NVFP4", "art": "llm", "gib": 36.3, "betrieb": "resident"},
                                   {"id": "qwen3-vl-8b-fp8", "name": "Qwen3-VL 8B", "art": "sehen", "gib": 12, "betrieb": "bei_bedarf"},
                                   {"id": "qwen3-asr-1.7b", "name": "Qwen3-ASR 1.7B", "art": "asr", "gib": 8.8, "betrieb": "resident"},
-                                  {"id": "qwen3-tts-0.6b", "name": "Qwen3-TTS 0.6B", "art": "tts", "gib": 11.3, "betrieb": "resident"}]},
+                                  {"id": "qwen3-tts-0.6b", "name": "Qwen3-TTS 0.6B", "art": "tts", "gib": 11.3, "betrieb": "resident"},
+                                  {"id": "flux2-klein-9b-q4", "name": "FLUX.2 [klein] 9B Q4", "art": "bild", "gib": 13, "betrieb": "bei_bedarf"},
+                                  {"id": "ace-step-15-xl", "name": "ACE-Step 1.5 XL", "art": "musik", "gib": 20, "betrieb": "bei_bedarf"}],
+                        "ein_platz": ["bild", "musik"]},
              "messung_zeit": 1800000000, "wechsel": {"an": True, "laeuft": False, "misst": False, "stand": [], "platz": None, "probe": None,
                                                      "alte": {}, "tage": 7, "eigene": True}}
         treffer = [{"repo": "Qwen/Qwen3-Coder-30B-A3B-Instruct-FP8", "downloads": 1200000, "lizenz": "apache-2.0", "gewerblich": True, "gb": 31.0, "need_gib": 41, "nein": ""},
@@ -1745,7 +1748,10 @@ class Browser(unittest.TestCase):
                     self.assertEqual(await pg.evaluate("document.querySelectorAll('#mdmain .mdkachel').length"), 4)   # empty kinds have no tile
                     # Dominik 2026-10-18: one colored piece per model (resident, system, reserve, then on demand striped), tiles in the same color
                     self.assertEqual(await pg.evaluate("[...document.querySelectorAll('.mdbar > i')].map(i=>i.className)"),
-                                     ["mdf-llm", "mdf-asr", "mdf-tts", "mdf-sys", "mdf-res", "mdf-sehen mdbb"])
+                                     ["mdf-llm", "mdf-asr", "mdf-tts", "mdf-sys", "mdf-res", "mdf-sehen mdbb", "mdf-platz mdbb"])
+                    # pictures and music share one place (never both loaded): one piece as big as the bigger one
+                    self.assertEqual(await pg.evaluate("document.querySelector('.mdbar > i.mdf-platz').title"),
+                                     "FLUX.2 [klein] 9B Q4 oder ACE-Step 1.5 XL · 20 GiB")
                     self.assertEqual(await pg.evaluate("[...document.querySelectorAll('#mdmain .mdkachel')].map(k=>getComputedStyle(k).borderLeftColor)"),
                                      await pg.evaluate("['.mdf-llm','.mdf-sehen','.mdf-asr','.mdf-tts'].map(c=>getComputedStyle(document.querySelector('.mdbar > i'+c)).getPropertyValue('--md').trim())"
                                                        ".map(h=>{const e=document.createElement('b');e.style.color=h;document.body.append(e);const c=getComputedStyle(e).color;e.remove();return c})"))

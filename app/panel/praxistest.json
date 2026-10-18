@@ -1848,6 +1848,13 @@
 "titel": "Alle Modelle mit festem Stand",
 "text": "A: Pi und tars mit `sudo speech-spark update` aktualisieren: install.sh lädt Spracherkennung und Sprachausgabe einmal neu (fester Stand), ohne Warnung „Modelle“. B: Danach eine Sprachfrage stellen: erkannt und vorgelesen wie vorher; Zustand → Dienste zeigt Spracherkennung und Sprachausgabe grün. C: In Ich → Dokumente suchen: Treffer kommen wie vorher (Einbettung und Nachsortieren laden mit festem Stand).",
 "thread": "Eigene Modell-Installation statt qwen38"
+},
+{
+"id": "P288",
+"v": 786,
+"titel": "Bilder und Musik ein Platz",
+"text": "A: Bilder und Musik einschalten, dann Zustand → Modelle öffnen: rechts im Balken steht ein gemeinsames Stück in Pink und Orange, so breit wie das größere der beiden Modelle (nicht beide zusammen). B: Mit der Maus darauf zeigen: „FLUX… oder ACE-Step… · 20 GiB“. C: Unter dem Balken steht „Bilder oder Musik: ein Platz, nie beide“. D: „Frei für Modelle bei Bedarf“ und der Hinweis darunter rechnen nur mit dem größeren. E: iPhone-App: derselbe Balken mit einem Stück in beiden Farben.",
+"thread": "Eigene Modell-Installation statt qwen38"
 }
 ]
 }

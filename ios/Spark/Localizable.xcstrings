@@ -141,12 +141,12 @@
         }
       }
     },
-    "Grau: System und Reserve · heller: bei Bedarf": {
+    "Grau: System und Reserve · heller: bei Bedarf · Bilder oder Musik: ein Platz, nie beide": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Grey: system and reserve · lighter: on demand"
+            "value": "Grey: system and reserve · lighter: on demand · pictures or music: one place, never both"
           }
         }
       }

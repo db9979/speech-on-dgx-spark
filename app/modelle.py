@@ -367,6 +367,7 @@ def aktiv(cfg, total_gib, lanes=(), kat=None):
     return out
 
 
+EIN_PLATZ = ("bild", "musik")     # loaded one after the other, never both at once (schwer.ARTEN, the queue for pictures and music)
 SYSTEM_GIB = 6     # DGX OS, the panel and the small services next to the models (plan: Speicher-Budget)
 
 
@@ -378,7 +379,11 @@ def budget(cfg, total_gib, lanes=(), kat=None):
     teile = aktiv(cfg, total_gib, lanes, kat)
     reserve = float(cfg.get("memory", {}).get("reserve_gib", 10))
     fest = round(sum(x["gib"] for x in teile if x["betrieb"] == "resident"), 1)
-    bedarf = [x["gib"] for x in teile if x["betrieb"] == "bei_bedarf"]
+    # pictures and music share one place (Dominik 2026-10-18 „immer nur ein Modell, beide nicht gleichzeitig“):
+    # the bigger of the two counts, never both
+    bedarf = [x["gib"] for x in teile if x["betrieb"] == "bei_bedarf" and x["art"] not in EIN_PLATZ]
+    bedarf += [max(x["gib"] for x in teile if x["betrieb"] == "bei_bedarf" and x["art"] in EIN_PLATZ)] \
+        if any(x["betrieb"] == "bei_bedarf" and x["art"] in EIN_PLATZ for x in teile) else []
     frei = round(total_gib - SYSTEM_GIB - reserve - fest, 1)
     if frei >= sum(bedarf):
         regel = "alle"
@@ -388,7 +393,7 @@ def budget(cfg, total_gib, lanes=(), kat=None):
         regel = "zu_knapp"
     return {"gesamt": round(total_gib, 1), "system": SYSTEM_GIB, "reserve": reserve, "fest": fest,
             "bedarf": round(sum(bedarf), 1), "bedarf_max": round(max(bedarf, default=0), 1), "frei": frei,
-            "regel": regel, "teile": teile}
+            "regel": regel, "teile": teile, "ein_platz": list(EIN_PLATZ)}
 
 
 def wahl(art, kat=None):
