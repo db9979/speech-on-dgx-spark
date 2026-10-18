@@ -546,7 +546,7 @@ function meLoadOnce(){if(!PROFILE)return;return ME_LOAD.p=meLoad().finally(()=>{
 // the profile's login has ended, still signs out (before: any error looked like being signed out).
 // [box, load, quiet]: quiet boxes stay silent on an error, as they were before
 async function meLoad(){let out=false;
-  const jobs=[['factbox',async()=>{await showFacts();if(window.meMaps)await meMaps()}],['docbox',showDocs],['voicebox',showVoice],['mailbox',async()=>{await showMail();await Promise.all([showMailTidy().catch(()=>{}),showMailStil().catch(()=>{})])}],
+  const jobs=[['factbox',async()=>{await showFacts();if(window.meMaps)await meMaps()}],['docbox',showDocs],['voicebox',showVoice],['mailbox',async()=>{await showMail();await Promise.all([showMailTidy().catch(()=>{}),showMailStil().catch(()=>{}),showFuerDich().catch(()=>{})])}],
     ['habox',showHa],['secbox',showSecurity],['logbox',showToolLog],['probox',showPro,1],['pushbox',showPush,1]].concat(typeof extrasJobs==='function'?extrasJobs():[]);
   await lzPool(jobs.map(([id,f,quiet])=>()=>lzb($(id),f,{auth:true,quiet:!!quiet}).catch(e=>{if(e&&e.status===401)out=true})),4);
   if(out){setProfile(null);openMe('loginbox');return}

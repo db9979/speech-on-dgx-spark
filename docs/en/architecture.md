@@ -261,6 +261,7 @@ Home Assistant, mail, calendar, tasks, weather, reMarkable, MCP and what the Spa
 | `app/panel/contacts.py` | Contacts per profile, read only (CardDAV: iCloud, Nextcloud, others). |
 | `app/panel/extras.py` | Small services the assistant can use besides the big ones in chat.py (weather, contacts, parcels ...). |
 | `app/panel/feeds.py` | Reddit und Feeds: each profile connects its own Reddit inbox (the private RSS link from reddit.com → Settings → RSS-Feeds), subreddits and any other RSS or A … |
+| `app/panel/fuerdich.py` | Für dich: the Spark looks through the profile's own mailboxes and finds what needs the person or is good to know: rechnung a bill with an amount, with the da … |
 | `app/panel/hamelden.py` | Home Assistant tells the Spark. |
 | `app/panel/homeassistant.py` | Home Assistant per profile: each profile connects its own Home Assistant (address and long-lived access token); only that profile's requests can use it, gues … |
 | `app/panel/mail.py` | Reading e-mail per profile over IMAP (read only; guests have none). |
@@ -500,6 +501,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `users/ID/nasablage.json` | Filing folder of the profile | Settings | – | yes | – |
 | `users/ID/speicher.vor-nas.json` | Copy of my data before the move to storage places | Login | – | yes | – |
 | `users/ID/mail-tidy.json` | Inbox tidy | Settings | – | yes | – |
+| `users/ID/fuerdich.json` | For you: what you marked as done or not interesting (only checksums) | Settings | – | yes | – |
 | `users/ID/mailstil.json` | Mail style (only the summary, never a mail) | Settings | – | yes | – |
 | `users/ID/calendar.json` | Calendar account | Login | password sealed | yes | – |
 | `users/ID/homeassistant.json` | Home Assistant account | Login | token sealed | yes | – |

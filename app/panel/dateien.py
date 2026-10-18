@@ -83,6 +83,8 @@ DATEIEN = [
     profil("nasablage.json", "Ablage-Ordner des Profils", "Filing folder of the profile", art="Einstellungen"),
     profil("speicher.vor-nas.json", "Kopie meiner Daten vor dem Umzug auf Speicherorte", "Copy of my data before the move to storage places", art="Login"),
     profil("mail-tidy.json", "Posteingang aufräumen", "Inbox tidy", art="Einstellungen"),
+    profil("fuerdich.json", "Für dich: was du als erledigt oder uninteressant markiert hast (nur Prüfsummen)",
+           "For you: what you marked as done or not interesting (only checksums)", art="Einstellungen"),
     profil("mailstil.json", "Mailstil (nur die Zusammenfassung, keine Mail)", "Mail style (only the summary, never a mail)", art="Einstellungen"),
     profil("calendar.json", "Kalender-Zugang", "Calendar account", art="Login", schutz=("Passwort versiegelt", "password sealed")),
     profil("homeassistant.json", "Home-Assistant-Zugang", "Home Assistant account", art="Login", schutz=("Token versiegelt", "token sealed")),

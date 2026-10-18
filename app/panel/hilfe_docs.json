@@ -4684,6 +4684,22 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Für dich aus Mails",
+"text": "Für dich aus Mails (fuerdich.py, Plan persoenlicher-assistent/plan.md, Stufe 1; Funktionen → Post und Kontakte → „Für dich aus Mails“, chat.mail_insight, standardmäßig aus; braucht „E-Mail lesen“; freigegeben für jedes Profil, Gäste nie): Unter *Ich → E-Mail → Für dich* (später Reiter „Für dich“ der E-Mail-Seite) zeigt der Spark, was er in den Mails der letzten 30 Tage gefunden hat. Gelesen wird nur lesend (EXAMINE und BODY.PEEK): der Posteingang, die Aufräum-Ordner Werbung, Newsletter und Rechnungen, wenn es sie gibt, und die Kopfzeilen des Ordners „Gesendet“. Feste Regeln, kein Sprachmodell: Rechnung (Betrag, Frist aus „fällig am“, „zahlbar bis“ …, oder „wird abgebucht“), Vertrag (verlängert sich am …, Kündigung bis …), Bestellung (Bestellbestätigung mit Betrag), Angebot (Werbung oder Newsletter mit Gutschein/Rabatt und Ende in den nächsten 14 Tagen, höchstens 5), Antwort offen (jemand, dem du schon geschrieben hast, fragt etwas und hat seit 2 bis 14 Tagen keine Antwort; erkannt über In-Reply-To und spätere Mails an die Adresse), Verdacht (Absender oder Betreff nennt eine bekannte Marke wie Sparkasse, PayPal, DHL, kommt aber nicht von deren Domain und will etwas bestätigt haben, "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Für dich aus Mails",
+"text": "oder die Kopfzeile sagt DMARC-Fehler). Beträge und Tage gelten nur, wenn sie sich lesen lassen; jeder Satz auf einer Karte ist ein fester Satz mit den geprüften Werten. Absendername und Betreff sind Text von außen und erscheinen nur als Text; Links aus Mails werden nie geöffnet oder verlinkt. Je Lauf höchstens 60 Mail-Texte je Postfach, im Hintergrund mit Vorrang für Sprache (vorrang.in_thread(\"Für dich\")), Ergebnis 10 Minuten im Speicher. ✓ (erledigt) und ✕ (nicht interessant / ist echt) merken sich nur eine Prüfsumme der Message-ID in users/<p>/fuerdich.json (bleibt auf dem Spark); „⋯ → Markierungen vergessen“ und „Daten löschen“ entfernen sie. Unter *Ich → Heute* zählt die Karte „Für dich“ nur, wie viele Karten dich brauchen (höchstens 3 Sekunden Warten, sonst „wird gelesen“). Logs nur mit festen Wörtern: fuerdich: gelesen funde=3 fehler=0 sekunden=1.2, fuerdich: markiert als=done Profil …. API (Profil): GET /api/profile/fuerdich (?fresh=1 liest neu), POST /api/profile/fuerdich/mark {\"id\", \"as\": \"done\"|\"no\"|\"open\"}, DELETE /api/profile/fuerdich. Nächste Stufen: Knöpfe (Erinnern, Antwort entwerfen) und Fragen per Stimme, Hinweise von selbst, Interessen, „Was ich über dich weiß“."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Schreibhilfe (V01.0.332, `schreib.py`)",
 "text": "Schreibhilfe (V01.0.332, schreib.py): Mails und andere Texte (auch aus Word, Excel, Pages) verbessern. Schalter: Funktionen → Post und Kontakte → „Schreibhilfe“ (Admin, aus); freigegeben gilt sie für jedes Profil, unter Ich → Schreibhilfe steht, was sie kann; Gäste nie. Auf der Seite Ich → Schreibhilfe: Text hineinkopieren, Art wählen (Korrigieren: nur Rechtschreibung, Grammatik, Zeichensetzung; Glätten; Kürzer; Freundlicher; Förmlicher; Übersetzen in Deutsch, Englisch, Französisch, Spanisch, Italienisch oder Niederländisch; Antwort entwerfen aus der erhaltenen Mail und eigenen Stichpunkten, fehlende Angaben kommen als [eckige Klammern]), optional ein freier Wunsch zur Form („mit Du“, Gruß). Beim Korrigieren, Glätten, Kürzen und Umformulieren zeigt das Panel jede Änderung farbig; die Änderungen rechnet das Panel selbst aus (Wortvergleich), nicht das Modell. „Kopieren“, „Als meinen Text übernehmen“ (für eine zweite Runde). Mit „Bilder erkennen“ liest „Aus Bild lesen“ oder ein mit Strg+V eingefügtes Bildschirmfoto den Text aus einem Bild (das Bild wird danach sofort verworfen). Mit „E-Mail lesen“, „Postfach aufräumen“ und dem Postfach-Schalter „Entwürfe“ legt „Als Entwurf ins Postfac"
 },
@@ -12702,6 +12718,22 @@
 "head": "Voice chat",
 "title": "Learn mail style",
 "text": "summary is kept in users/<p>/mailstil.json (stays on the Spark), recipients only as a salted hash, never a mail. Every field can be adjusted with \"Change\" and stays when it learns again; \"⋯ → Delete mail style\" and \"Delete data\" remove everything. It learns only when you press the button. It works in mail drafts: by voice and in the chat mail_draft reshapes the draft in the style of the recipient's group (on an error the draft stays as it was), and \"Draft a reply\" in the Begleiter (Outlook classic, Mac Mail, the Outlook button \"Antwort\") gets the style as <<<STIL … STIL>>> (form and tone only); the panel finds the group from the \"Von:\" line, unknown senders get \"Unknown\" and the form of address their mail uses. \"stil\": false in /api/write/assist writes once without it. The writing help page, Word, Excel and the browser stay without it. Logs only with fixed words: mailstil: gelernt … postfaecher=1 mails=180 gruppen=3, mailstil: abgebrochen grund=kein_gesendet_ordner, mailstil: benutzt weg=begleiter gruppe=beruflich. API (profile): GET|PUT|DELETE /api/profile/mailstil, POST /api/profile/mailstil/learn. Plan: plaene/mailstil.md."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "For you from mail",
+"text": "For you from mail (fuerdich.py, plan persoenlicher-assistent/plan.md, stage 1; Features → Mail and contacts → \"Für dich aus Mails\", chat.mail_insight, off by default; needs reading e-mail; once released for every profile, never guests): under *Me → E-mail → For you* (later the tab \"For you\" of the mail page) the Spark shows what it found in the mails of the last 30 days. Everything is read read-only (EXAMINE and BODY.PEEK): the inbox, the tidying folders Werbung, Newsletter and Rechnungen when they exist, and the headers of the \"Sent\" folder. Fixed rules, no language model: bill (amount, deadline from \"fällig am\", \"zahlbar bis\" …, or \"wird abgebucht\"), contract (renews on …, cancel by …), order (order confirmation with amount), offer (advertising or newsletter with coupon/discount ending within 14 days, at most 5), reply missing (someone you wrote to before asks something and has had no answer for 2 to 14 days; told by In-Reply-To and later mails to the address), suspicious (sender or subject names a known brand like Sparkasse, PayPal, DHL but does not come from its domain and wants something confirmed, or the header says DMARC failed). Amounts and days count only when they parse; "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "For you from mail",
+"text": "every sentence on a card is a fixed sentence with the checked values. Sender name and subject are outside text and appear only as text; links from mails are never opened or linked. Per run at most 60 mail texts per mailbox, in the background with speech first (vorrang.in_thread(\"Für dich\")), the result kept 10 minutes in memory. ✓ (done) and ✕ (not interesting / is genuine) keep only a checksum of the Message-ID in users/<p>/fuerdich.json (stays on the Spark); \"⋯ → Forget the marks\" and \"Delete data\" remove them. Under *Me → Today* the card \"For you\" only counts how many cards need you (waits at most 3 seconds, else \"being read\"). Logs only with fixed words: fuerdich: gelesen funde=3 fehler=0 sekunden=1.2, fuerdich: markiert als=done Profil …. API (profile): GET /api/profile/fuerdich (?fresh=1 reads again), POST /api/profile/fuerdich/mark {\"id\", \"as\": \"done\"|\"no\"|\"open\"}, DELETE /api/profile/fuerdich. Next stages: buttons (remind, draft a reply) and questions by voice, notes on its own, interests, \"What I know about you\"."
 },
 {
 "lang": "en",

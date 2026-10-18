@@ -74,6 +74,9 @@ async def today(request: Request, tz: str = "", prof=Depends(own_profile)):
         has = os.path.exists(documents.db_path(uid))
         out["cards"]["documents"] = {"count": len(documents.list_docs(uid)) if has else 0,
                                      "waiting": documents.pages_waiting(uid) if has else 0}
+    if may("fuerdich"):   # numbers only; reads the mails with a time budget, the page never waits longer
+        import fuerdich
+        out["cards"]["fuerdich"] = await fuerdich.card(uid)
     if may("memory"):
         out["cards"]["memory"] = {"facts": len(profiles.memory(uid))}
     return out

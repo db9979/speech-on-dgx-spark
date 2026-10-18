@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.808** Für dich aus Mails: Rechnungen mit Frist, Verträge, Bestellungen, Angebote, offene Antworten und Phishing aus deinen Mails, nur lesend
 - **V01.0.807** uConsole und Terminal: `spark-tui kalender` und F5 zeigen die Woche aus der Seite Kalender (nur lesen); danach `spark-tui update`
 - **V01.0.806** Rückfrage-Karten: Ja/Nein oder „A oder B“ als Knöpfe unter einer Frage des Assistenten, überall
 - **V01.0.805** Kalender als eigene Seite im Menü: Tag, Woche, Monat oder Liste; alles zum Einrichten im Reiter Einstellungen, nicht mehr unter Ich
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.801** Die Bedeutungssuche rechnet nur noch in freier Zeit auf höchstens der Hälfte der Kerne; Sprache geht vor
 - **V01.0.800** Sprachausgabe bei mehreren gleichzeitig: genauer messen, drei Einstellungen zum Ausprobieren
 - **V01.0.799** Fix: Upload von Scans nicht mehr durch Seiten aus Wissensordnern gesperrt, eigene Dokumente zuerst gelesen
-- **V01.0.798** OLED zeigt ein laufendes Update erzwungen: große Prozentzahl mit Balken, erst TARS, dann der Pi, auch nachts; LEDs blau; Prozent auch in Live und Steuerzentrale
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

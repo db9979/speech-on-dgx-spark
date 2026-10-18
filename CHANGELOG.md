@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.808** · 2026-10-18 · Für dich aus Mails (Stufe 1): der Spark findet in deinen Mails Rechnungen mit Frist, Verträge mit Kündigungsfrist, Bestellungen, Angebote, Fragen ohne Antwort und Phishing (gibt sich als Bank oder Shop aus); feste Regeln, nur lesend, Karten unter Ich → E-Mail und Zahl unter Heute; Schalter aus
 - **V01.0.807** · 2026-10-18 · uConsole/Terminal: `spark-tui kalender [--woche N]` druckt die Termine einer Woche wie die Seite Kalender, im Fenster F5 mit ← → (spark-tui 1.0.3, nur lesen, eine Regel mehr für den Terminal-Schlüssel); danach `spark-tui update`
 - **V01.0.806** · 2026-10-18 · Rückfrage-Karten: endet eine Antwort mit einer Frage, stehen die Antworten als Knöpfe darunter (Ja/Nein, bei „A oder B?“ die Teile und „Anders …“); ein kurzes „Ja“ darauf behält das Thema der Frage davor; Panel, Android, iPhone, Telegram-Tasten, Pebble; Teil von „Ablauf und Freigabe zeigen“
 - **V01.0.805** · 2026-10-18 · Kalender als eigene Seite im Menü (Dominik „1a 2a 3a 4a 5a“, Stufe 1): Reiter Termine mit Tag, Woche, Monat oder Liste, Farbe je Kalender, Antippen zeigt Zeit und Ort; Reiter Einstellungen mit allem, was vorher unter Ich → Kalender stand. Ich zeigt den Kalender nicht mehr, Wege „Kalender → Einstellungen → …“ und #me=calbox führen zur Seite; nur eigene Termine, höchstens 42 Tage, Titel nur als Text

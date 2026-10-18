@@ -299,6 +299,10 @@ FEATURES = (
     F("tidy", "Postfach aufräumen", "Inbox tidying", "post", ("mail_tidy",), parent="mail", me="mailbox", guide="tidy"),
     F("mailstil", "Mailstil lernen", "Learn mail style", "post", ("mail_style",), parent="mail", me="mailbox", guide="mailstil"),
     F("parcels", "Pakete", "Parcels", "post", ("parcels",), parent="mail", me="parbox", guide="parcels"),
+    # fuerdich.py (plan persoenlicher-assistent, Dominik 2026-10-18): bills, contracts, orders, offers, open replies and
+    # phishing found in the own mails by fixed rules; tab „Für dich“ on the mail page
+    F("fuerdich", "Für dich aus Mails", "For you from mail", "post", ("mail_insight",), parent="mail", me="mailbox",
+      guide="fuerdich"),
     F("schreib", "Schreibhilfe", "Writing help", "post", ("write_help",), me="writebox", guide="schreib"),
     F("schreibapps", "Schreibhilfe in anderen Programmen", "Writing help in other programs", "post", ("write_apps",), parent="schreib", me="writebox", guide="schreibapps"),
     F("contacts", "Kontakte", "Contacts", "post", ("contacts",), me="conbox", guide="contacts"),

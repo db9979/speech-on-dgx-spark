@@ -1287,6 +1287,8 @@ select.segsel{display:none!important}
 .ic-card,.ic-note,.ic-danger{display:flex;gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:11px 14px;margin:0 0 12px;flex-wrap:wrap}
 .ic-mid{flex:1 1 200px;min-width:0}.ic-mid b{display:block;overflow-wrap:anywhere}.ic-mid span{display:block;color:var(--mut);font-size:12.5px;overflow-wrap:anywhere}
 .ic-cico{width:34px;height:34px;flex:none;border-radius:10px;display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,var(--acc),var(--acc2))}
+.fd-ico{display:grid;place-items:center;flex:none;width:28px;height:28px;border-radius:8px;background:color-mix(in srgb,var(--acc) 14%,var(--card));color:var(--acc)}
+.fd-ico.hot{background:color-mix(in srgb,var(--warn) 18%,var(--card));color:var(--warn)}
 .ic-note{border-color:color-mix(in srgb,var(--acc) 40%,var(--line));background:color-mix(in srgb,var(--acc) 8%,var(--card))}.ic-note>svg{color:var(--acc);flex:none}
 .ic-danger{margin-top:22px;background:none;border:1px dashed color-mix(in srgb,var(--bad) 45%,var(--line))}
 .b.ic-red{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 45%,var(--line))}

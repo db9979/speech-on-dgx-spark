@@ -348,6 +348,7 @@
       <div class="setrow"><div class="lbl"><b>E-Mail lesen</b><span>Neue Mails nennen und vorlesen; der Assistent sendet, löscht und markiert nie.</span></div><label class="tgl"><input type="checkbox" id="chat.mail"><i></i></label></div>
       <div class="setrow" data-show="chat.mail" style="margin-left:18px"><div class="lbl"><b>Postfach aufräumen</b><span>Werbung und Newsletter in eigene Ordner sortieren; nie löschen, nie senden, alles umkehrbar.</span></div><label class="tgl"><input type="checkbox" id="chat.mail_tidy"><i></i></label></div>
       <div class="setrow" data-show="chat.mail" style="margin-left:18px"><div class="lbl"><b>Mailstil lernen</b><span>Lernt aus den gesendeten Mails, wie jemand schreibt, damit Mail-Entwürfe nach ihm klingen; nur lesend, keine Mail wird gespeichert.</span></div><label class="tgl"><input type="checkbox" id="chat.mail_style"><i></i></label></div>
+      <div class="setrow" data-show="chat.mail" style="margin-left:18px"><div class="lbl"><b>Für dich aus Mails</b><span>Findet in den eigenen Mails Rechnungen mit Frist, Verträge, Bestellungen, Angebote, offene Antworten und Phishing; feste Regeln, nur lesend.</span></div><label class="tgl"><input type="checkbox" id="chat.mail_insight"><i></i></label></div>
       <div class="setrow" data-show="chat.mail" style="margin-left:18px"><div class="lbl"><b>Pakete</b><span>Was heute kommt, aus den Versandmails im eigenen Postfach.</span></div><label class="tgl"><input type="checkbox" id="chat.parcels"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Schreibhilfe</b><span>Mails und andere Texte korrigieren, kürzen, übersetzen oder eine Antwort entwerfen; nichts wird gespeichert oder gesendet.</span></div><label class="tgl"><input type="checkbox" id="chat.write_help"><i></i></label></div>
       <div class="setrow" data-show="chat.write_help" style="margin-left:18px"><div class="lbl"><b>In anderen Programmen</b><span>Mac-Schnellaktion, Windows-Programm, Office-Add-in, Browser-Erweiterung und iPhone-Kurzbefehl, je mit eigenem Schlüssel.</span></div><label class="tgl"><input type="checkbox" id="chat.write_apps"><i></i></label></div>
@@ -1171,6 +1172,7 @@
         <div class="two2"><div><label>Benutzer</label><input id="mailuser" autocapitalize="off" autocomplete="off"></div><div><label>Passwort</label><input type="password" id="mailpw" autocomplete="new-password"></div></div>
         <div class="row" style="margin-top:8px"><button class="b p" id="mailsave" type="button">Prüfen und hinzufügen</button></div></details>
       <div class="row" style="margin-top:8px"><button class="b" id="mailtest" type="button">Postfächer prüfen</button><span id="mailmsg"></span></div>
+      <div id="fuerbox"></div>
       <div id="mailstil"></div>
       <div id="mailtidy"></div></div>
     <div id="habox" class="ptab"><div class="intro">Verbinde dein Home Assistant, dann sagst du „Mach das Licht im Wohnzimmer an“ oder „Wie warm ist es im Bad?“. Nur dein Profil kann es nutzen. Der Assistent sieht alle Geräte, Zonen und Personen, die dein Home-Assistant-Benutzer sehen darf; Schlösser, Alarmanlage und Updates schaltet er nie. Der Token bleibt auf dem Spark.</div>
@@ -1259,6 +1261,7 @@
 <script src="/static/js/me.js"></script>
 <script src="/static/js/tidy.js"></script>
 <script src="/static/js/mailstil.js"></script>
+<script src="/static/js/fuerdich.js"></script>
 <script src="/static/js/proactive.js"></script>
 <script src="/static/js/room.js"></script>
 <script src="/static/js/extras.js"></script>

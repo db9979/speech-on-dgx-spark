@@ -1986,6 +1986,13 @@
 "titel": "Kalender auf der uConsole",
 "text": "A: Auf der uConsole `spark-tui update`, danach `spark-tui --version` zeigt 1.0.3. B: `spark-tui kalender` druckt Mo bis So dieser Woche mit deinen Terminen (Uhrzeit, Titel, Ort), `--woche 1` die nächste. C: Im Fenster F5: die Woche, ← → blättert, t springt zurück auf heute, Esc schließt. D: Ohne verbundenen Kalender steht der Hinweis auf Kalender → Einstellungen.",
 "thread": "Kalender und E-Mail in Panel und Apps"
+},
+{
+"id": "P308",
+"v": 808,
+"titel": "Für dich aus Mails",
+"text": "A: Funktionen → Post und Kontakte → „Für dich aus Mails“ an (braucht „E-Mail lesen“). B: Ich → E-Mail, Abschnitt „Für dich“: Karten unter „Braucht dich“ (Rechnung mit Betrag und Frist, Vertrag mit Kündigungsfrist, „… wartet seit … Tagen auf deine Antwort“, „Vorsicht: Mail gibt sich als … aus“) und „Gut zu wissen“ (Bestellungen, Angebote mit Ablaufdatum); jede Karte nennt Absender und Betreff. C: Prüfen, ob eine Rechnung der letzten Wochen mit dem richtigen Betrag und der richtigen Frist da ist; im Mailprogramm ist nichts als gelesen markiert oder verschoben. D: ✓ bei einer Karte: sie verschwindet und kommt nach „Neu lesen“ nicht wieder; ⋯ → „Markierungen vergessen“ holt sie zurück. E: Ich → Heute: Karte „Für dich“ mit „N brauchen dich“. F: Zustand → Logs, Bereich mail: „fuerdich: gelesen funde=…“ ohne Namen oder Betreffe. G: Eine echte Mail steht falsch unter Verdacht oder eine Rechnung fehlt: Absender (ohne Inhalt) im Thread melden.",
+"thread": "Persönlicher Assistent aus dem Postfach"
 }
 ]
 }

@@ -144,6 +144,7 @@ MODULE = {
     "hamelden": ("dienste", "Home Assistant meldet Ereignisse an den Spark"),
     "mail": ("dienste", "Mail lesen per IMAP"),
     "tidy": ("dienste", "Posteingang aufräumen"),
+    "fuerdich": ("dienste", "Für dich: findet Rechnungen, Verträge, Bestellungen, Angebote, offene Antworten und Phishing in den eigenen Mails"),
     "mailstil": ("dienste", "Mailstil: lernt aus gesendeten Mails, wie das Profil schreibt, für Mail-Entwürfe"),
     "parcels": ("dienste", "Pakete aus Versand-Mails"),
     "calendars": ("dienste", "Kalender und Tagesbriefing"),

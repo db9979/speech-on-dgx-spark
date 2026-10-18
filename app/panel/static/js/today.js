@@ -30,6 +30,8 @@ async function meToday(){if(!PROFILE)return;const ph=PHONE.matches,host=ph?$('pt
   if(c.reminders)cards.appendChild(tdCard(t('Erinnerungen','Reminders'),String(c.reminders.count),c.reminders.next?tdTime(c.reminders.next.due)+' · '+c.reminders.next.text:t('Keine offen','None open'),'notebox'));
   if(c.messages)cards.appendChild(tdCard(t('Chats','Chats'),String(c.messages.unread),c.messages.unread?t('ungelesen','unread'):t('Alles gelesen','All read'),'chats'));
   if(c.documents)cards.appendChild(tdCard(t('Dokumente','Documents'),String(c.documents.count),c.documents.waiting?c.documents.waiting+t(' Seiten warten aufs Lesen',' pages waiting to be read'):'','docbox'));
+  if(c.fuerdich&&!c.fuerdich.nomail)cards.appendChild(tdCard(t('Für dich','For you'),c.fuerdich.ready?(c.fuerdich.urgent?t(`${c.fuerdich.urgent} brauchen dich`,`${c.fuerdich.urgent} need you`):t('Nichts dringend','Nothing urgent')):t('wird gelesen','being read'),
+    c.fuerdich.suspicious?t(`${c.fuerdich.suspicious} verdächtige Mail`,`${c.fuerdich.suspicious} suspicious mail`):c.fuerdich.ready?t(`${c.fuerdich.total} Funde in deinen Mails`,`${c.fuerdich.total} finds in your mails`):'','mailbox'));
   if(c.memory)cards.appendChild(tdCard(t('Gedächtnis','Memory'),String(c.memory.facts),t('gemerkte Fakten','remembered facts'),'factbox'));
   // Mein Zustand (hintergrund.js): the short line here, the whole card under Ich → Mein Zustand
   if(typeof MYST_ON!=='undefined'&&MYST_ON){try{const r=await api('/api/profile/hintergrund?brief=1',{cache:'no-store'});

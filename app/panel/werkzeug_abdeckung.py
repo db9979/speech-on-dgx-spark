@@ -215,6 +215,7 @@ WITHOUT = {
     "mymcpjobs": "wirkt in Aufträgen",
     "mymcpoauth": "Anmeldung beim Dienst nur in der Oberfläche",
     "schreib": "das Modell formuliert selbst",
+    "fuerdich": "Stufe 1 zeigt die Funde als Karten auf der Seite (Ich → E-Mail, Heute); Fragen per Stimme kommen mit Stufe 2",
     "mailstil": "wirkt in jedem Mail-Entwurf (mail_draft, Begleiter); gelernt wird nur auf Knopfdruck unter Ich → E-Mail",
     "schreibapps": "Kanal in anderen Programmen",
     "begleitermeeting": "startet am Begleiter",

@@ -261,6 +261,7 @@ Home Assistant, Mail, Kalender, Aufgaben, Wetter, reMarkable, MCP und was der Sp
 | `app/panel/contacts.py` | Kontakte per CardDAV, nur lesen |
 | `app/panel/extras.py` | Kleine Zusatzdienste mit ihren Werkzeugen |
 | `app/panel/feeds.py` | Reddit und Feeds: eigener Reddit-Posteingang, Subreddits und RSS, nur lesen |
+| `app/panel/fuerdich.py` | Für dich: findet Rechnungen, Verträge, Bestellungen, Angebote, offene Antworten und Phishing in den eigenen Mails |
 | `app/panel/hamelden.py` | Home Assistant meldet Ereignisse an den Spark |
 | `app/panel/homeassistant.py` | Home Assistant pro Profil |
 | `app/panel/mail.py` | Mail lesen per IMAP |
@@ -500,6 +501,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `users/ID/nasablage.json` | Ablage-Ordner des Profils | Einstellungen | – | ja | – |
 | `users/ID/speicher.vor-nas.json` | Kopie meiner Daten vor dem Umzug auf Speicherorte | Login | – | ja | – |
 | `users/ID/mail-tidy.json` | Posteingang aufräumen | Einstellungen | – | ja | – |
+| `users/ID/fuerdich.json` | Für dich: was du als erledigt oder uninteressant markiert hast (nur Prüfsummen) | Einstellungen | – | ja | – |
 | `users/ID/mailstil.json` | Mailstil (nur die Zusammenfassung, keine Mail) | Einstellungen | – | ja | – |
 | `users/ID/calendar.json` | Kalender-Zugang | Login | Passwort versiegelt | ja | – |
 | `users/ID/homeassistant.json` | Home-Assistant-Zugang | Login | Token versiegelt | ja | – |
