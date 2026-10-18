@@ -18,7 +18,10 @@ Rules (fixed in the panel, never decided by the model):
   matter, a "*" at the end means "begins with"; no other patterns, so nothing unexpected matches.
 - Hidden and system folders stay left out as before (nasquelle.SKIP_DIRS); they are shown, not changeable.
 - What was read from a folder that is now left out leaves the search, Ich → Dokumente, "Erst lokal" and the
-  Wissensbuch at once (documents.on_gone with reason "ausgelassen"). Nothing changes at the place.
+  Wissensbuch at once (documents.on_gone with reason "ausgelassen"). Nothing changes at the place. It runs in a
+  background thread in portions of CHUNK documents (one transaction each, the documents lock free in between), the
+  page shows the progress (view "job"); the request itself only saves the list (V01.0.783: 2051 documents at once
+  on the event loop held the whole Pi).
 - Letting a folder in again makes its Wissensordner due at once, so it is read anew; the reMarkable reads it at
   its next comparison, the Begleiter sends its files again (it forgets what it sent from a left-out folder).
 - No switch of its own: it only narrows what a source reads (5a). The list is the profile's own data: visible and
@@ -26,6 +29,7 @@ Rules (fixed in the panel, never decided by the model):
 
 Logs → Diagnose, area "Wissen": lines "auslassen: ..." with fixed words and numbers, never a path or a name.
 """
+import asyncio
 import re
 import threading
 import time
@@ -45,6 +49,10 @@ MAX_NAMES = 50
 ORT = re.compile(r"[0-9a-f]{6}|rm|pc")
 PLACE = {"rm": "reMarkable", "pc": "PC · Spark-Wissen"}
 MAX_PC_DIRS = 2000
+CHUNK = 100                   # documents per portion when taking them out of the search
+PAUSE = 0.05                  # seconds between portions, so searches and other requests get the documents lock
+JOBS = {}                     # uid -> {"total", "done", "removed", "running"}: the running take-out (memory only)
+_threads = {}
 PC_DIRS = {}                  # uid -> sorted folder paths below the Begleiter's folder, as last reported (memory only)
 NAME = re.compile(r"[^\x00-\x1f\x7f/\\*]{1,80}\*?")
 _lock = threading.RLock()
@@ -207,30 +215,85 @@ def affected(uid, d=None):
     return out
 
 
-def apply(uid):
-    """Takes what falls under the list out of the search now. Returns the number of documents."""
+def apply(uid, progress=None):
+    """Takes what falls under the list out of the search, in portions of CHUNK documents. The places' own lists
+    are written once each, before the documents go. progress(done, total, removed). Returns the number removed."""
     import documents
     import nasquelle
     import remarkable
-    hit = affected(uid)
-    gone, rids = {}, []
-    for kind, store, key, doc in hit:
+    files, rids, docs = {}, [], {}
+    for kind, store, key, doc in affected(uid):
         if kind == "nas":
-            st = nasquelle.state(store, key[0])
-            st["files"].pop(key[1], None)
-            nasquelle._put_state(store, key[0], st)
+            files.setdefault((store, key[0]), []).append(key[1])
         elif kind == "rm":
             rids.append(key)
-        if doc and documents.delete(store, doc):
-            gone.setdefault(store, []).append(doc)
+        if doc:
+            docs.setdefault(store, []).append(doc)
+    for (store, sid), hashes in files.items():     # one write per Wissensordner (was one per file)
+        st = nasquelle.state(store, sid)
+        for h in hashes:
+            st["files"].pop(h, None)
+        nasquelle._put_state(store, sid, st)
     if rids:                         # the comparison reads only what is wanted (remarkable.wanted asks the list)
         rm = remarkable.load(uid)
         for rid in rids:
             rm["docs"].pop(rid, None)
         remarkable.save(uid, rm)
-    for store, ids in gone.items():
-        documents.on_gone(store, ids, "ausgelassen")
-    return sum(len(v) for v in gone.values())
+    total = sum(len(v) for v in docs.values())
+    done = removed = 0
+    if progress:
+        progress(0, total, 0)
+    for store, ids in docs.items():
+        for i in range(0, len(ids), CHUNK):
+            part = ids[i:i + CHUNK]
+            gone = documents.delete_many(store, part)
+            if gone:
+                documents.on_gone(store, gone, "ausgelassen")
+            done, removed = done + len(part), removed + len(gone)
+            if progress:
+                progress(done, total, removed)
+            if done < total:
+                time.sleep(PAUSE)
+    return removed
+
+
+def start(uid):
+    """apply in a background thread, one per profile; a change while it runs makes it run once more after."""
+    with _lock:
+        j = JOBS.get(uid)
+        if j and j["running"]:
+            j["again"] = True
+            return
+        j = JOBS[uid] = {"total": 0, "done": 0, "removed": 0, "running": True, "again": False}
+        t = _threads[uid] = threading.Thread(target=_run, args=(uid, j), daemon=True, name="auslassen")
+    t.start()
+
+
+def _run(uid, j):
+    t0 = time.monotonic()
+    try:
+        while True:
+            base = j["removed"]
+            apply(uid, lambda done, total, removed: j.update(done=done, total=total, removed=base + removed))
+            with _lock:
+                if not j["again"]:
+                    j["running"] = False
+                    break
+                j["again"] = False
+        print(f"auslassen: fertig | {j['removed']} dokumente raus | {time.monotonic() - t0:.0f} s | {_log_name(uid)}",
+              flush=True)
+    except Exception as e:   # noqa: BLE001  (the list is saved; the next change or reading tries again)
+        with _lock:
+            j.update(running=False, error=True)
+        print(f"auslassen: fehler | {type(e).__name__} | {_log_name(uid)}", flush=True)
+
+
+def wait(uid, seconds=60):
+    """Until the take-out of this profile is done (tests, the command line)."""
+    t = _threads.get(uid)
+    if t:
+        t.join(seconds)
+    return JOBS.get(uid, {}).get("removed", 0)
 
 
 def _due_again(uid, ort):
@@ -260,6 +323,7 @@ def view(uid):
              for o, on in (("rm", _rm_on(uid)), ("pc", uid in PC_DIRS)) if on]
     return {"folders": [dict(f, place=places.get(f["ort"], "")) for f in d["folders"]], "names": d["names"],
             "max_folders": MAX_FOLDERS, "max_names": MAX_NAMES, "sources": srcs, "tree": any(x["tree"] for x in srcs),
+            "job": {k: v for k, v in JOBS.get(uid, {}).items() if k in ("total", "done", "removed", "running", "error")},
             "always": ["Versteckte Ordner (.…)", "@eaDir", "#recycle", "#snapshot", "$RECYCLE.BIN", "System Volume Information", "lost+found"]}
 
 
@@ -321,6 +385,16 @@ def tree(request: Request, ort: str = "", path: str = "", prof=Depends(browser_p
     return {"path": here or "/", "dirs": kids[:500], "more": len(kids) > 500, "out": out}
 
 
+def _with(uid, kind, what):
+    """(the list with it, already on it?, list full?)"""
+    d = load(uid)
+    if kind == "name":
+        return ({"folders": d["folders"], "names": d["names"] + [what]},
+                what.casefold() in [x.casefold() for x in d["names"]], len(d["names"]) >= MAX_NAMES)
+    return ({"folders": d["folders"] + [{"ort": what[0], "path": what[1], "t": int(time.time())}], "names": d["names"]},
+            any(x["ort"] == what[0] and x["path"] == what[1] for x in d["folders"]), len(d["folders"]) >= MAX_FOLDERS)
+
+
 @router.post("/api/profile/auslassen")
 async def add(request: Request, prof=Depends(browser_profile)):
     """{"ort", "path"} or {"name"}; with "probe": true only how many documents would leave the search."""
@@ -328,20 +402,13 @@ async def add(request: Request, prof=Depends(browser_profile)):
     uid = prof["id"]
     body = await core.json_body(request, 4096)
     kind, what = _target(uid, body)
+    if body.get("probe") is True:    # reads every file of every place: off the event loop
+        new, known, _ = _with(uid, kind, what)
+        n = await asyncio.to_thread(lambda: sum(1 for x in affected(uid, new) if x[3]))
+        print(f"auslassen: probe | {kind} | {n} dokumente | {_log_name(uid)}", flush=True)
+        return {"docs": n, "known": known}
     with _lock:
-        d = load(uid)
-        if kind == "name":
-            new = {"folders": d["folders"], "names": d["names"] + [what]}
-            known = what.casefold() in [x.casefold() for x in d["names"]]
-            full = len(d["names"]) >= MAX_NAMES
-        else:
-            new = {"folders": d["folders"] + [{"ort": what[0], "path": what[1], "t": int(time.time())}], "names": d["names"]}
-            known = any(x["ort"] == what[0] and x["path"] == what[1] for x in d["folders"])
-            full = len(d["folders"]) >= MAX_FOLDERS
-        if body.get("probe") is True:
-            n = sum(1 for x in affected(uid, new) if x[3])
-            print(f"auslassen: probe | {kind} | {n} dokumente | {_log_name(uid)}", flush=True)
-            return {"docs": n, "known": known}
+        new, known, full = _with(uid, kind, what)
         if known:
             print(f"auslassen: schon da | {kind} | {_log_name(uid)}", flush=True)
             raise HTTPException(409, "Steht schon in der Liste.")
@@ -349,10 +416,10 @@ async def add(request: Request, prof=Depends(browser_profile)):
             print(f"auslassen: abgelehnt | {kind} | voll | {_log_name(uid)}", flush=True)
             raise HTTPException(400, f"Höchstens {MAX_NAMES if kind == 'name' else MAX_FOLDERS} Einträge.")
         _save(uid, new)
-    n = apply(uid)
+    start(uid)                       # the documents leave in the background, the page shows the progress
     guard.log("auslassen_add", detail=kind)
-    print(f"auslassen: ausgelassen | {kind} | {n} dokumente raus | {_log_name(uid)}", flush=True)
-    return {"ok": True, "removed": n}
+    print(f"auslassen: ausgelassen | {kind} | läuft | {_log_name(uid)}", flush=True)
+    return {"ok": True, "running": True}
 
 
 @router.delete("/api/profile/auslassen")

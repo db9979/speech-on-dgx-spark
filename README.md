@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.783** Fix: leaving out many documents no longer holds the Pi (in the background with progress); the button "Every folder …" explains the name rule
 - **V01.0.782** Fix: a model switch waits for the new model before it checks it
 - **V01.0.781** File answers into the knowledge book, Kiwix as a source, Obsidian folder and a nightly NAS copy
 - **V01.0.780** Tamper-evident change log: hash chain, one year, copy on the NAS, "Check the log"
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.776** Pictures and music: one queue, never two models at once, a notice with place and waiting time
 - **V01.0.775** Fix: no engine starts next to a model measurement anymore; measuring Qwen3.6 35B A3B
 - **V01.0.774** Fix: "?" button next to a setting's title instead of inside it
-- **V01.0.773** Fix: knowledge book tab without a false alarm of the inline handler check
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

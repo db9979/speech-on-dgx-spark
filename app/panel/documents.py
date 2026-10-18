@@ -843,25 +843,33 @@ def add(uid, name, data, text=None, pictures=False, keep=0, source="upload", mos
 
 
 def delete(uid, doc_id):
-    if not re.fullmatch(r"[0-9a-f]{12}", doc_id):
-        return False
-    if not os.path.exists(db_path(uid)) and not os.path.isdir(_dir(uid)):
-        return False
+    return bool(delete_many(uid, [doc_id]))
+
+
+def delete_many(uid, ids):
+    """Deletes several documents in one transaction (auslassen.py takes thousands out in portions); returns the ids
+    that were there."""
+    ids = [i for i in ids if isinstance(i, str) and re.fullmatch(r"[0-9a-f]{12}", i)]
+    if not ids or not os.path.exists(db_path(uid)) and not os.path.isdir(_dir(uid)):
+        return []
+    gone = []
     with _Db(uid) as con:
-        r = con.execute("SELECT file FROM docs WHERE id=?", (doc_id,)).fetchone()
-        if not r:
-            return False
-        _drop_chunks(con, doc_id)
-        con.execute("DELETE FROM pages WHERE doc=?", (doc_id,))
-        con.execute("DELETE FROM pagetext WHERE doc=?", (doc_id,))
-        con.execute("DELETE FROM docs WHERE id=?", (doc_id,))
-        _drop_wait(uid, doc_id)
-        if r["file"]:
-            try:
-                os.remove(os.path.join(_files(uid), r["file"]))
-            except OSError:
-                pass
-    return True
+        for doc_id in ids:
+            r = con.execute("SELECT file FROM docs WHERE id=?", (doc_id,)).fetchone()
+            if not r:
+                continue
+            _drop_chunks(con, doc_id)
+            con.execute("DELETE FROM pages WHERE doc=?", (doc_id,))
+            con.execute("DELETE FROM pagetext WHERE doc=?", (doc_id,))
+            con.execute("DELETE FROM docs WHERE id=?", (doc_id,))
+            _drop_wait(uid, doc_id)
+            if r["file"]:
+                try:
+                    os.remove(os.path.join(_files(uid), r["file"]))
+                except OSError:
+                    pass
+            gone.append(doc_id)
+    return gone
 
 
 # Documents that left for a reason (auslassen.py: "ausgelassen"): what keeps something built from them subscribes

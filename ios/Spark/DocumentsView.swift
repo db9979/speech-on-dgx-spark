@@ -679,9 +679,9 @@ struct LeftOutView: View {
 
     private func add(_ name: String) async {
         do {
-            let r = try await SparkAPI.current?.object("POST", "api/profile/auslassen", body: ["name": name]) ?? [:]
+            _ = try await SparkAPI.current?.call("POST", "api/profile/auslassen", body: ["name": name])
             newName = ""
-            note = String(localized: "Ausgelassen, Dokumente aus der Suche: \((r["removed"] as? Int) ?? 0)")
+            note = String(localized: "Ausgelassen. Der Spark nimmt die Dokumente im Hintergrund aus der Suche.")
             await load()
         } catch { self.error = error.localizedDescription }
     }

@@ -859,7 +859,9 @@ def for_live():
         bad += sum(1 for s in ss if state(uid, s["id"])["fail"])
         docs += nas_docs(uid)
     hs = sources(HAUS) if haus_on() else []
+    taking = [j for j in auslassen.JOBS.values() if j.get("running")]   # documents leaving the search right now
     return {"on": True, "profiles": profs, "folders": folders, "bad": bad, "docs": docs, "left_out": out,   # Haushaltsordner apart
+            "taking": sum(j["total"] - j["done"] for j in taking),
             "haus_folders": len(hs), "haus_bad": sum(1 for s in hs if state(HAUS, s["id"])["fail"]), "haus_docs": nas_docs(HAUS) if hs else 0}
 
 

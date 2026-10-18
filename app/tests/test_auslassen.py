@@ -27,6 +27,15 @@ from tests.test_nasquelle import DAV, Base, profile, run  # noqa: E402
 VERTRAEGE = "/dav/Ablage/Vertraege"
 
 
+def out(c, uid, body):
+    """POST /api/profile/auslassen and wait for the take-out in the background: (status, documents removed)."""
+    r = c.post("/api/profile/auslassen", json=body)
+    if r.status_code != 200:
+        return r.status_code, None
+    assert r.json() == {"ok": True, "running": True}, r.text
+    return 200, auslassen.wait(uid)
+
+
 class Folders(Base):
     def test_left_out_is_not_read_and_leaves_the_search_at_once(self):
         c, uid, nid, sid = self.ready("AuOrdner")
@@ -38,8 +47,7 @@ class Folders(Base):
             p = c.post("/api/profile/auslassen", json={"ort": nid, "path": VERTRAEGE, "probe": True}).json()
             self.assertEqual(p, {"docs": 3, "known": False})
             self.assertEqual(auslassen.load(uid)["folders"], [])            # a probe changes nothing
-            r = c.post("/api/profile/auslassen", json={"ort": nid, "path": VERTRAEGE})
-            self.assertEqual((r.status_code, r.json()["removed"]), (200, 3), r.text)
+            self.assertEqual(out(c, uid, {"ort": nid, "path": VERTRAEGE}), (200, 3))
         finally:
             documents.GONE.pop()
         self.assertEqual(documents.count_source(uid, "nas"), 1)
@@ -52,10 +60,29 @@ class Folders(Base):
         self.assertEqual(documents.count_source(uid, "nas"), 1)
         self.assertEqual(c.post("/api/profile/auslassen", json={"ort": nid, "path": VERTRAEGE}).status_code, 409)
 
+    def test_many_documents_leave_in_portions_in_the_background(self):
+        """V01.0.783: leaving out 2051 documents held the whole Pi (all on the event loop, the Wissensordner's state
+        written once per file). Now the request only saves the list; the documents leave in a background thread in
+        portions of CHUNK, one transaction each, and the place's list is written once."""
+        import threading
+        from unittest import mock
+        c, uid, nid, sid = self.ready("AuViele")
+        run(nasquelle.sync_once(uid, sid))
+        writes, parts = [], []
+        put, many = nasquelle._put_state, documents.delete_many
+        with mock.patch.object(auslassen, "CHUNK", 1), mock.patch.object(auslassen, "PAUSE", 0), \
+                mock.patch.object(nasquelle, "_put_state", lambda *a: (writes.append(a[1]), put(*a))[1]), \
+                mock.patch.object(documents, "delete_many", lambda u, ids: (parts.append((len(ids), threading.current_thread().name)), many(u, ids))[1]):
+            self.assertEqual(out(c, uid, {"ort": nid, "path": VERTRAEGE}), (200, 3))
+        self.assertEqual((writes, parts), ([sid], [(1, "auslassen")] * 3))     # never on the request's event loop
+        job = c.get("/api/profile/auslassen").json()["job"]
+        self.assertEqual(job, {"total": 3, "done": 3, "removed": 3, "running": False})
+        self.assertEqual(documents.count_source(uid, "nas"), 1)
+
     def test_let_in_again_reads_it_anew(self):
         c, uid, nid, sid = self.ready("AuZulassen")
         run(nasquelle.sync_once(uid, sid))
-        c.post("/api/profile/auslassen", json={"ort": nid, "path": VERTRAEGE})
+        out(c, uid, {"ort": nid, "path": VERTRAEGE})
         run(nasquelle.sync_once(uid, sid))
         r = c.delete("/api/profile/auslassen", params={"ort": nid, "path": VERTRAEGE})
         self.assertEqual(r.status_code, 200, r.text)
@@ -66,7 +93,7 @@ class Folders(Base):
 
     def test_the_tree_and_the_preview_show_it(self):
         c, uid, nid, sid = self.ready("AuBaum")
-        c.post("/api/profile/auslassen", json={"ort": nid, "path": VERTRAEGE})
+        out(c, uid, {"ort": nid, "path": VERTRAEGE})
         d = c.get(f"/api/profile/nasquelle/tree?nas={nid}&path=/dav/Ablage").json()
         self.assertEqual((d["dirs"], d["out"]), (["Fotos", "Vertraege"], {"Vertraege": "ordner"}))
         p = c.post("/api/profile/nasquelle/preview", json={"nas": nid, "path": "/dav/Ablage"}).json()
@@ -101,16 +128,14 @@ class Names(Base):
         c, uid, nid, sid = self.ready("AuName")
         run(nasquelle.sync_once(uid, sid))
         self.assertEqual(c.post("/api/profile/auslassen", json={"name": "vertr*", "probe": True}).json()["docs"], 3)
-        r = c.post("/api/profile/auslassen", json={"name": "vertr*"})
-        self.assertEqual((r.status_code, r.json()["removed"]), (200, 3), r.text)
+        self.assertEqual(out(c, uid, {"name": "vertr*"}), (200, 3))
         self.assertEqual(c.post("/api/profile/auslassen", json={"name": "VERTR*"}).status_code, 409)
         self.assertEqual(c.post("/api/profile/auslassen", json={"name": "a/b"}).status_code, 400)
         d = c.get(f"/api/profile/nasquelle/tree?nas={nid}&path=/dav/Ablage").json()
         self.assertEqual(d["out"], {"Vertraege": "name"})
         self.assertEqual(c.delete("/api/profile/auslassen", params={"name": "Vertr*"}).status_code, 200)
         self.assertEqual(auslassen.load(uid)["names"], [])
-        r = c.post("/api/profile/auslassen", json={"name": "Ablage"})      # the chosen folder itself: nothing is read
-        self.assertEqual(r.json()["removed"], 1)
+        self.assertEqual(out(c, uid, {"name": "Ablage"}), (200, 1))      # the chosen folder itself: nothing is read
         run(nasquelle.sync_once(uid, sid))
         self.assertEqual(documents.count_source(uid, "nas"), 0)
 
@@ -136,7 +161,7 @@ class Rights(Base):
                 self.assertIn(r.status_code, (401, 403))
         finally:
             helpers.set_config(public=False)
-        c.post("/api/profile/auslassen", json={"ort": nid, "path": VERTRAEGE})
+        out(c, uid, {"ort": nid, "path": VERTRAEGE})
         helpers.set_config(deny={"nasquelle": [uid]})
         v = c.get("/api/profile/auslassen").json()
         self.assertEqual((len(v["folders"]), v["tree"]), (1, False))                  # own data stays visible
@@ -159,22 +184,22 @@ class Rights(Base):
     def test_logs_without_paths_names_or_profiles(self):
         c, uid, nid, sid = self.ready("AuLogZebra")
         run(nasquelle.sync_once(uid, sid))
-        out = io.StringIO()
-        with contextlib.redirect_stdout(out):
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
             c.post("/api/profile/auslassen", json={"ort": nid, "path": VERTRAEGE, "probe": True})
-            c.post("/api/profile/auslassen", json={"ort": nid, "path": VERTRAEGE})
-            c.post("/api/profile/auslassen", json={"ort": nid, "path": VERTRAEGE})
-            c.post("/api/profile/auslassen", json={"name": "Geheimname"})
+            out(c, uid, {"ort": nid, "path": VERTRAEGE})
+            out(c, uid, {"ort": nid, "path": VERTRAEGE})
+            out(c, uid, {"name": "Geheimname"})
             c.delete("/api/profile/auslassen", params={"name": "Geheimname"})
             c.delete("/api/profile/auslassen", params={"name": "Geheimname"})
             c.delete("/api/profile/auslassen", params={"ort": nid, "path": VERTRAEGE})
-        lines = [x for x in out.getvalue().splitlines() if x.startswith("auslassen:")]
-        for want in ("probe | ordner | 3 dokumente", "ausgelassen | ordner | 3 dokumente raus", "schon da | ordner",
-                     "ausgelassen | name | 0 dokumente raus", "zugelassen | name", "zulassen | name | nicht gefunden",
+        lines = [x for x in buf.getvalue().splitlines() if x.startswith("auslassen:")]
+        for want in ("probe | ordner | 3 dokumente", "ausgelassen | ordner | läuft", "fertig | 3 dokumente raus", "schon da | ordner",
+                     "ausgelassen | name | läuft", "fertig | 0 dokumente raus", "zugelassen | name", "zulassen | name | nicht gefunden",
                      "zugelassen | ordner"):
             self.assertTrue(any(want in x for x in lines), (want, lines))
         for word in ("Vertraege", "Geheimname", "AuLogZebra", uid, "Ablage", nid):
-            self.assertNotIn(word, out.getvalue())
+            self.assertNotIn(word, buf.getvalue())
         self.assertTrue(all(logfilter.parse(x)["area"] == "wissen" for x in lines), lines)
 
 
@@ -205,8 +230,7 @@ class Haushalt(Base):
         self.assertEqual(documents.count_source(nasquelle.HAUS, "nas"), 4)
         v = a.get("/api/profile/auslassen").json()
         self.assertEqual([(s["id"], s["haus"]) for s in v["sources"]], [(sid, True)])
-        r = a.post("/api/profile/auslassen", json={"ort": nid, "path": VERTRAEGE})
-        self.assertEqual(r.json()["removed"], 3, r.text)
+        self.assertEqual(out(a, auid, {"ort": nid, "path": VERTRAEGE}), (200, 3))
         self.assertEqual(documents.count_source(nasquelle.HAUS, "nas"), 1)
         run(nasquelle.sync_once(nasquelle.HAUS, sid))
         self.assertEqual(documents.count_source(nasquelle.HAUS, "nas"), 1)
@@ -239,8 +263,7 @@ class Remarkable(Base):
         remarkable.save(uid, {"picked": ["f"], "all": False, "docs": {"b": {"doc": doc["id"], "h": "x"}}})
         p = c.post("/api/profile/auslassen", json={"ort": "rm", "path": "/Arbeit/Alt", "probe": True}).json()
         self.assertEqual(p["docs"], 1)
-        r = c.post("/api/profile/auslassen", json={"ort": "rm", "path": "/Arbeit/Alt"})
-        self.assertEqual((r.status_code, r.json()["removed"]), (200, 1), r.text)
+        self.assertEqual(out(c, uid, {"ort": "rm", "path": "/Arbeit/Alt"}), (200, 1))
         self.assertFalse(documents.has_doc(uid, doc["id"]))
         self.assertEqual(remarkable.load(uid)["docs"], {})
         self.assertEqual(remarkable.load(uid)["picked"], ["f"])               # nothing changes at the reMarkable
@@ -284,15 +307,14 @@ class Desk(Base):
         self.assertEqual(self.send(prog, "lies.txt", "Lies mich zuerst", ordner="/").status_code, 200)
         places = {d["name"]: d.get("place") for d in documents.list_docs(uid) if d["source"] == "begleiter"}
         self.assertEqual(places, {"plan.txt": "/Projekte/Alt", "lies.txt": "/"})
-        r = c.post("/api/profile/auslassen", json={"ort": "pc", "path": "/Projekte/Alt"})
-        self.assertEqual((r.status_code, r.json()["removed"]), (200, 1), r.text)
+        self.assertEqual(out(c, uid, {"ort": "pc", "path": "/Projekte/Alt"}), (200, 1))
         self.assertEqual([d["name"] for d in documents.list_docs(uid) if d["source"] == "begleiter"], ["lies.txt"])
         cfg2 = prog.get("/api/desk/config").json()
         self.assertEqual(cfg2["auslassen"], {"names": [], "folders": ["Projekte/Alt"]})
         self.assertGreater(cfg2["rev"], cfg["rev"])                          # the program hears of it with the next poll
         self.assertEqual(self.send(prog, "plan.txt", "Projektplan", ordner="Projekte/Alt/2019").status_code, 409)
         self.assertEqual(self.send(prog, "x.txt", "x", ordner="../etc").status_code, 400)
-        c.post("/api/profile/auslassen", json={"name": "Entwurf*"})
+        out(c, uid, {"name": "Entwurf*"})
         self.assertEqual(self.send(prog, "e.txt", "Entwurf", ordner="/Briefe/entwurf 2").status_code, 409)
         self.assertEqual(self.send(prog, "r.txt", "Rechtsklick ohne Ordner").status_code, 200)   # right-click: no folder
 
@@ -312,7 +334,7 @@ class Desk(Base):
         self.assertEqual(prog.post("/api/desk/ordner", json={"dirs": "Projekte"}).status_code, 400)
         v = c.get("/api/profile/auslassen").json()
         self.assertEqual([(s["nas"], s["place"]) for s in v["sources"]], [("pc", "PC · Spark-Wissen")])
-        c.post("/api/profile/auslassen", json={"ort": "pc", "path": "/Projekte/Alt"})
+        out(c, uid, {"ort": "pc", "path": "/Projekte/Alt"})
         d = c.get("/api/profile/auslassen/tree?ort=pc&path=/Projekte").json()
         self.assertEqual((d["dirs"], d["out"]), (["Alt"], {"Alt": "ordner"}))
         self.assertEqual(c.get("/api/profile/auslassen/tree?ort=pc&path=/../x").status_code, 400)

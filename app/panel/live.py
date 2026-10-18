@@ -1399,6 +1399,7 @@ def snapshot(view="admin", now=None):
             x["sub"] = (f"{nql.get('folders', 0)} Ordner · {nql.get('profiles', 0)} Profile · {nql.get('docs', 0)} Dokumente"
                         + (f" · {nql['bad']} mit Fehler" if nql.get("bad") else "")
                         + (f" · {nql['left_out']} ausgelassen" if nql.get("left_out") else "")
+                        + (f" · {nql['taking']} gehen gerade raus" if nql.get("taking") else "")
                         + (f" · Haushalt {nql['haus_folders']} Ordner, {nql.get('haus_docs', 0)} Dokumente" if nql.get("haus_folders") else ""))
         if x["id"] == "nasablage" and nab.get("on"):   # Ablage-Ordner: profiles, files put there and taken in (no path, no name)
             x["sub"] = (f"{nab.get('profiles', 0)} Profile · {nab.get('made', 0)} abgelegt · {nab.get('fetched', 0)} aus dem Eingang"

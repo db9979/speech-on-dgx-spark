@@ -487,7 +487,7 @@ class Everywhere(Base):
         n = nasquelle.for_live()
         self.assertTrue(n["on"])
         self.assertGreaterEqual((n["profiles"], n["folders"], n["docs"]), (1, 1, 4))
-        self.assertEqual(set(n), {"on", "profiles", "folders", "bad", "docs", "left_out", "haus_folders", "haus_bad", "haus_docs"})   # numbers only
+        self.assertEqual(set(n), {"on", "profiles", "folders", "bad", "docs", "left_out", "taking", "haus_folders", "haus_bad", "haus_docs"})   # numbers only
         self.assertTrue(all(type(v) is int for k, v in n.items() if k != "on"))
         self.assertIn("nasquelle", live.TARGETS)
         self.assertIn("wissen", dienstwacht.SVC)

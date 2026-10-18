@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.783** · 2026-10-18 · Fix Ausgelassene Ordner: viele Dokumente auf einmal auslassen hält den Pi nicht mehr an (Herausnehmen im Hintergrund in Portionen mit Fortschritt, Liste des Wissensordners nur einmal geschrieben); der Knopf „Jeden Ordner …“ sagt jetzt, dass er eine Namensregel für alle Orte und künftige Ordner anlegt („heute nur dieser“, wenn es nur einen gibt)
 - **V01.0.782** · 2026-10-18 · Fix: die Probefrage nach einem Modellwechsel wartet auf die neue Engine selbst, nicht nur auf das Tor (der Wechsel auf Qwen3.6 brach mit „rundlauf bereit nach 0 s“ ab, weil das Tor noch „bereit“ vom alten Modell meldete)
 - **V01.0.781** · 2026-10-18 · Wissensbuch Stufe D: „Ins Wissensbuch“ unter Antworten aus mindestens zwei Quellen (nur der Klick legt ab, nur Sätze mit Stelle), Kiwix-Artikel als Quelle, Obsidian-Ordner als ZIP, nachts eine Kopie in den Ablage-Ordner auf dem NAS
 - **V01.0.780** · 2026-10-18 · Änderungsprotokoll fälschungssicher: jede Zeile mit Prüfkette (SHA-256 der Zeile davor), ein Jahr aufbewahrt, täglich geprüft mit Hinweis bei einem Bruch, versiegelte Kopie mit der Sicherung nach außen auf dem NAS, Knopf „Protokoll prüfen“ unter Zustand → Logs → Änderungen vergleicht beides

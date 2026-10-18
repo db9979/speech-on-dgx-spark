@@ -4,14 +4,14 @@
 // says how many documents leave the search. Nothing changes at the place. Server text is text (esc).
 // reMarkable ("rm") and the Begleiter's folder "Spark-Wissen" ("pc") show the folders the Spark already knows
 // (/api/profile/auslassen/tree), the Wissensordner ask the place itself (/api/profile/nasquelle/tree).
-let AU=null,AUCUR=null,AUASK=null;
+let AU=null,AUCUR=null,AUASK=null,AUF=0;
 const auSay=(x,err)=>{const m=$('auslmsg');if(m){m.className=err?'err':'mut';m.textContent=String(x||'').slice(0,300)}};
 const auIs=(nas,p)=>AU&&AU.folders.some(f=>f.ort===nas&&f.path===p);
 async function auShow(){const box=$('auslbox');if(!box)return;
   const r=await apiTry('/api/profile/auslassen');if(!r.r.ok){box.hidden=true;return}
   AU=r.d;box.hidden=!(AU.sources.length||AU.folders.length||AU.names.length);if(box.hidden)return;
   if(AUCUR&&!AU.sources.some(s=>s.nas===AUCUR.nas))AUCUR=null;
-  auDraw()}
+  auDraw();if(AU.job&&AU.job.running)auFollow()}
 function auDraw(){const box=$('auslin');if(!box||!AU)return;
   const names=AU.names.map(n=>`<span class="chip"><b>${esc(n)}</b> <button class="b" type="button" data-auname="${esc(n)}" aria-label="${esc(t('Regel entfernen','Remove rule'))}">✕</button></span>`).join('');
   const rows=AU.folders.map(f=>`<div class="zrow"><span class="pill">${esc(f.place||t('Ort','Place'))}</span><span><b>${esc(f.path)}</b></span><button class="b" type="button" data-auort="${esc(f.ort)}" data-aupath="${esc(f.path)}">${esc(t('Wieder zulassen','Let in again'))}</button></div>`).join('');
@@ -56,12 +56,20 @@ async function auAsk(n,row){const p=AUCUR.path+'/'+n;document.querySelectorAll('
     all=(await (await api('/api/profile/auslassen',xjson('POST',{name:n,probe:true}))).json()).docs}catch(e){auSay(e.message,true);return}
   const box=document.createElement('div');box.className='auask use';AUASK={ort:AUCUR.nas,path:p,name:n};
   box.innerHTML=`<b>${esc(t(`„${n}“ auslassen?`,`Leave out "${n}"?`))}</b><div class="mut">${esc(t(`${one} Dokumente aus diesem Ordner verschwinden sofort aus Suche, „Erst lokal“ und Wissensbuch. Neue Dateien darin liest der Spark nicht mehr. Am Ort wird nichts gelöscht.`,`${one} documents from this folder leave the search, "Local first" and the knowledge book at once. The Spark reads no new files in it. Nothing is deleted at the place.`))}</div>
-    <div class="row" style="margin-top:6px"><button class="b p" type="button" data-auyes="ordner">${esc(t('Nur diesen Ordner','Only this folder'))}</button><button class="b" type="button" data-auyes="name">${esc(t(`Jeden Ordner „${n}“ (${all} Dokumente)`,`Every folder "${n}" (${all} documents)`))}</button><button class="b" type="button" data-auyes="">${esc(t('Abbrechen','Cancel'))}</button></div>`;
+    <div class="row" style="margin-top:6px"><button class="b p" type="button" data-auyes="ordner">${esc(t('Nur diesen Ordner','Only this folder'))}</button><button class="b" type="button" data-auyes="name">${esc(all===one?t(`Jeden Ordner „${n}“, auch künftige (heute nur dieser)`,`Every folder "${n}", future ones too (today only this one)`)
+      :t(`Jeden Ordner „${n}“ überall (${all} Dokumente, auch künftige)`,`Every folder "${n}" everywhere (${all} documents, future ones too)`))}</button><button class="b" type="button" data-auyes="">${esc(t('Abbrechen','Cancel'))}</button></div>
+    <div class="fh">${esc(t(`„Jeden Ordner“ legt eine Namensregel an: jeder Ordner „${n}“ an allen Orten bleibt draußen, auch einer, der später dazukommt.`,`"Every folder" adds a name rule: every folder "${n}" at every place stays out, also one added later.`))}</div>`;
   row.after(box);box.querySelectorAll('[data-auyes]').forEach(b=>b.onclick=()=>{const k=b.dataset.auyes;box.remove();
     if(k)auOut(k==='name'?{name:AUASK.name}:{ort:AUASK.ort,path:AUASK.path})})}
-async function auOut(body){try{const r=await (await api('/api/profile/auslassen',xjson('POST',body))).json();await auShow();
-    auSay(t(`Ausgelassen, ${r.removed} Dokumente aus der Suche.`,`Left out, ${r.removed} documents out of the search.`));if(typeof showDocs==='function')showDocs()}
+// the documents leave in the background in portions (auslassen.start): the page follows the job until it is done
+async function auOut(body){try{await api('/api/profile/auslassen',xjson('POST',body));await auShow();auFollow()}
   catch(e){auSay(e.message,true)}}
+async function auFollow(){const j=(AU&&AU.job)||{};
+  if(j.running){if(AUF)return;AUF=1;auSay(t(`Ausgelassen. Nimmt ${j.done||0} von ${j.total||0} Dokumenten aus der Suche …`,`Left out. Taking ${j.done||0} of ${j.total||0} documents out of the search …`));
+    setTimeout(async()=>{AUF=0;const r=await apiTry('/api/profile/auslassen');if(r.r.ok){AU=r.d;auFollow()}},1500);return}
+  auSay(j.error?t('Ausgelassen, aber ein Teil der Dokumente ging noch nicht aus der Suche. Der Admin sieht den Grund in den Logs.','Left out, but some documents have not left the search yet. The admin sees why in the logs.')
+    :t(`Ausgelassen, ${j.removed||0} Dokumente aus der Suche.`,`Left out, ${j.removed||0} documents out of the search.`),!!j.error);
+  if(typeof showDocs==='function')showDocs()}
 async function auIn(q){try{await api('/api/profile/auslassen?'+new URLSearchParams(q),{method:'DELETE'});await auShow();
     auSay(t('Wieder zugelassen. Der nächste Abgleich liest den Ordner neu.','Let in again. The next reading reads the folder anew.'))}
   catch(e){auSay(e.message,true)}}

@@ -1,6 +1,16 @@
 {
   "sourceLanguage": "de",
   "strings": {
+    "Ausgelassen. Der Spark nimmt die Dokumente im Hintergrund aus der Suche.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Left out. The Spark takes the documents out of the search in the background."
+          }
+        }
+      }
+    },
     "Ausgelassene Ordner": {
       "localizations": {
         "en": {
@@ -117,16 +127,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Documents that leave the search at once: %lld. Everything stays at the place."
-          }
-        }
-      }
-    },
-    "Ausgelassen, Dokumente aus der Suche: %lld": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Left out, documents out of the search: %lld"
           }
         }
       }
