@@ -1581,7 +1581,7 @@ def mailboxes(uid):
         return []
 
 
-MAIL_HINT = ("Per Mail: unter Ich → E-Mail → Postfach aufräumen beim Postfach „Antwort-Entwürfe erlauben“ einschalten "
+MAIL_HINT = ("Per Mail: unter E-Mail → Einstellungen → Postfach aufräumen beim Postfach „Antwort-Entwürfe erlauben“ einschalten "
              "(es wird nie gesendet).")
 
 

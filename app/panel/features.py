@@ -47,8 +47,8 @@ ME_PAGES = (("overbox", "Überblick", "Overview"), ("bgbox", "Mein Zustand", "My
             ("docbox", "Dokumente", "Documents"), ("bildbox", "Bilder", "Pictures"), ("musikbox", "Musik", "Music"), ("rmbox", "reMarkable", "reMarkable"), ("storebox", "Speicher", "Storage"),
             ("logbox", "Werkzeug-Verlauf", "Tool history"), ("taskbox", "Aufgaben", "Tasks"),
             ("agentbox", "Aufträge", "Jobs"), ("mymcpbox", "Meine MCP-Dienste", "My MCP services"), ("wxbox", "Wetter", "Weather"), ("feedbox", "Reddit und Feeds", "Reddit and feeds"),
-            ("probox", "Von selbst", "Proactive"), ("notebox", "Mitteilungen", "Notifications"), ("mailbox", "E-Mail", "E-mail"),
-            ("parbox", "Pakete", "Parcels"), ("writebox", "Schreibhilfe", "Writing help"), ("conbox", "Kontakte", "Contacts"),
+            ("probox", "Von selbst", "Proactive"), ("notebox", "Mitteilungen", "Notifications"),
+            ("writebox", "Schreibhilfe", "Writing help"), ("conbox", "Kontakte", "Contacts"),
             ("habox", "Smart Home", "Smart home"), ("roombox", "Raum-Modus", "Room mode"), ("espbox", "Lautsprecher", "Speakers"), ("telbox", "Telefon", "Phone"),
             ("trbox", "Bus und Bahn", "Bus and train"), ("tgbox", "Telegram", "Telegram"), ("appbox", "iPhone-App", "iPhone app"),
             ("andbox", "Android-App", "Android app"), ("deskbox", "Begleiter", "Companion"), ("pebbox", "Pebble-Uhr", "Pebble watch"),
@@ -60,7 +60,7 @@ ME_PAGES = (("overbox", "Überblick", "Overview"), ("bgbox", "Mein Zustand", "My
 # each holds everything of its kind, what is set up sits in its tab „Einstellungen“. The id of the box stays the place
 # (me=<id>) of every way, card and app; kalender.js OWN_PAGES carries the same (test_app_gleichstand).
 # (id, section, name de, name en)
-OWN_PAGES = (("calbox", "cal", "Kalender", "Calendar"),)
+OWN_PAGES = (("calbox", "cal", "Kalender", "Calendar"), ("mailbox", "post", "E-Mail", "E-mail"))
 # Ich pages every profile has, whatever is switched on (me.js meAll shows them for every profile too)
 ME_ALWAYS = frozenset(("setbox", "factbox", "logbox", "secbox"))
 # Ich pages the iPhone app leaves out, each with its reason; every other page can be opened in the app
@@ -298,7 +298,7 @@ FEATURES = (
     F("mail", "E-Mail lesen", "Reading e-mail", "post", ("mail",), me="mailbox", guide="mail"),
     F("tidy", "Postfach aufräumen", "Inbox tidying", "post", ("mail_tidy",), parent="mail", me="mailbox", guide="tidy"),
     F("mailstil", "Mailstil lernen", "Learn mail style", "post", ("mail_style",), parent="mail", me="mailbox", guide="mailstil"),
-    F("parcels", "Pakete", "Parcels", "post", ("parcels",), parent="mail", me="parbox", guide="parcels"),
+    F("parcels", "Pakete", "Parcels", "post", ("parcels",), parent="mail", me="mailbox", guide="parcels"),
     # fuerdich.py (plan persoenlicher-assistent, Dominik 2026-10-18): bills, contracts, orders, offers, open replies and
     # phishing found in the own mails by fixed rules; tab „Für dich“ on the mail page
     F("fuerdich", "Für dich aus Mails", "For you from mail", "post", ("mail_insight",), parent="mail", me="mailbox",

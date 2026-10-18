@@ -422,6 +422,35 @@ def read(uid, ref, zone=None):
                  + "\n\n" + (text or "(no text)"))
 
 
+INBOX_MAX = 50      # messages the page E-Mail lists at once (newest first, all mailboxes together)
+
+
+def inbox(uid, query="", days=14, unread=False, limit=INBOX_MAX):
+    """The page E-Mail (post.js): the newest messages of all the profile's mailboxes, header fields only.
+    Sender, subject and time come from other people: data for esc() on the page, never markup."""
+    accts = get(uid)["accounts"]
+    if not accts:
+        return {"connected": False, "boxes": [], "items": [], "errors": []}
+    found, errors, _ = find(uid, str(query)[:100], max(1, min(DAYS, int(days))), bool(unread), max(1, min(INBOX_MAX, int(limit))))
+    order = [a["id"] for a in accts]
+    return {"connected": True, "boxes": [a.get("name", "") for a in accts], "errors": [n for n, _ in errors],
+            "items": [{"id": f"{aid}:{u}", "from": known(uid, h["from"]), "subject": h["subject"] or "",
+                       "date": int(h["date"].timestamp()), "unread": bool(h["unread"]), "box": order.index(aid)}
+                      for aid, u, h in found if aid in order]}
+
+
+def show(uid, ref):
+    """One message for the page E-Mail as plain text (no HTML, no pictures from outside, long links cut by plain()),
+    fetched with PEEK so it stays unread; None when it is gone, ValueError for an id of no own mailbox."""
+    msg = message(uid, ref)
+    if msg is None:
+        return None
+    text, files = plain(msg)
+    return {"id": str(ref), "from": known(uid, _addr(msg.get("From", ""))), "to": _hdr(msg.get("To", ""))[:200],
+            "date": int(_date(msg.get("Date")).timestamp()), "subject": _hdr(msg.get("Subject", "")),
+            "text": text, "files": files[:20]}
+
+
 def attachment(uid, query="", days=30, most=30 * 1024 * 1024):
     """(file name, bytes, "pdf" | "epub") of the newest PDF or EPUB attached to a message of the last days that
     fits the words, or None (rmplus.py: "Leg den Anhang ... aufs reMarkable"). Only these two kinds, checked by

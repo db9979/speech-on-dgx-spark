@@ -66,7 +66,7 @@ function mkCard(c){const d=document.createElement('div');d.className='hcard mkca
         mkInfo().then(M=>{if(!M||!d.isConnected)return;const x=(M.docs||[]).find(y=>y.id===j.doc);if(x)d.querySelector('.mkpv').innerHTML=mkPeek(x.peek,x.kind,x.style);
           const tg=(M.targets||[]).map(k=>[k,t(...MKTO[k])]),sn=d.querySelector('.mksend');
           if(tg.length)sn.innerHTML=`<div class="mkpick"><label>${esc(t('Schicken','Send'))}<select data-mk="cto">${mkOpts(tg,(M.deliver&&tg.some(z=>z[0]===M.deliver))?'':tg[0][0])}</select></label><button type="button" class="b" data-mkdo="csend" data-doc="${esc(j.doc)}">${esc(t('Schicken','Send'))}</button></div>`;
-          else if(M.mail_hint)sn.innerHTML=`<div class="hwhy">${esc(t(M.mail_hint,'By mail: under Me → E-mail → Tidy up the mailbox, switch on "Allow reply drafts" for the mailbox (nothing is ever sent).'))}</div>`;
+          else if(M.mail_hint)sn.innerHTML=`<div class="hwhy">${esc(t(M.mail_hint,'By mail: under E-mail → Settings → Tidy up the mailbox, switch on "Allow reply drafts" for the mailbox (nothing is ever sent).'))}</div>`;
           if(M.deliver)msg().textContent=t('Wird auch automatisch zugestellt: ','Also delivered on its own: ')+t(...MKTO[M.deliver])})}
       else row.textContent=''})};
   // "Ja" said in the conversation starts it on the panel: look now and then whether this outline started
@@ -109,7 +109,7 @@ async function mkShow(I){const box=$('mkbox');if(!box)return;clearTimeout(mkTime
       <button type="button" class="b" data-mkopen="${esc(d.id)}">${esc(t('Ansehen','View'))}</button>${mkDl(d.id,t('Herunterladen','Download'))}<button type="button" class="b" data-mkdel="${esc(d.id)}" data-name="${esc(d.title)}">${esc(t('Löschen','Delete'))}</button></li>`).join('')||`<li class="mut">${esc(t('Noch nichts erstellt.','Nothing made yet.'))}</li>`}</ul>
     <div id="mkview" class="docview mkview" hidden></div>
     <div class="mkpick"><label>${esc(t('Fertige Dokumente zusätzlich','Finished documents also'))}<select data-mkdeliver>${mkOpts([['',t('nur hier','only here')]].concat((M.targets||[]).map(k=>[k,t(...MKTO[k])])),M.deliver||'')}</select></label></div>
-    ${M.mail_hint?`<div class="fh">${esc(t(M.mail_hint,'By mail: under Me → E-mail → Tidy up the mailbox, switch on "Allow reply drafts" for the mailbox (nothing is ever sent).'))}</div>`:''}
+    ${M.mail_hint?`<div class="fh">${esc(t(M.mail_hint,'By mail: under E-mail → Settings → Tidy up the mailbox, switch on "Allow reply drafts" for the mailbox (nothing is ever sent).'))}</div>`:''}
     <details class="mkmore"><summary>${esc(t('Absender für Briefe','Sender for letters'))}</summary><textarea id="mksender" rows="4" maxlength="300" placeholder="${esc(t('Name\nStraße 1\n12345 Ort','Name\nStreet 1\nTown'))}">${esc(M.sender||'')}</textarea>
       <div class="row"><button type="button" class="b" data-mkdo="sender">${esc(t('Speichern','Save'))}</button></div></details>
     ${M.templates_on?`<details class="mkmore"><summary>${esc(t('Eigene Vorlagen','Own templates'))} (${(M.templates||[]).length})</summary><ul class="facts">${(M.templates||[]).map(x=>`<li><span>${esc(x.name)} <small class="mut">${esc(x.ext==='pptx'?'PowerPoint':'Word')}</small></span><button type="button" class="b" data-mktdel="${esc(x.id)}">${esc(t('Löschen','Delete'))}</button></li>`).join('')}</ul>

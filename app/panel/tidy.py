@@ -334,7 +334,7 @@ def rename(uid, root=None, folders=None):
 
 
 def own_folder(uid, add=None, remove=None):
-    """Ich → E-Mail → Ordner und Ausnahmen: add an own folder by name or take one out of the list."""
+    """E-Mail → Einstellungen → Ordner und Ausnahmen: add an own folder by name or take one out of the list."""
     try:
         if add is not None:
             _mut(uid, lambda d: add_own(d, add))
@@ -1414,7 +1414,7 @@ def plan_draft(uid, ref, to, subject, text):
         raise ValueError("the text of the draft is missing")
     accts = [x for x in mail.get(uid)["accounts"] if acct_state(state(uid), x["id"]).get("drafts")]
     if not accts:
-        raise ValueError("drafts are turned off for every mailbox (Ich → E-Mail → Postfach aufräumen)")
+        raise ValueError("drafts are turned off for every mailbox (E-Mail → Einstellungen → Postfach aufräumen)")
     m = re.fullmatch(r"\[?(m[0-9a-f]{8}):(\d{1,10})\]?", str(ref or "").strip())
     if m:
         acct = next((x for x in accts if x["id"] == m.group(1)), None)
@@ -1590,7 +1590,7 @@ def overview(uid):
     d = state(uid)
     on = [x for x in mail.get(uid)["accounts"] if acct_state(d, x["id"])["mode"] != "off"]
     if not on:
-        return "Tidying is turned off for every mailbox (Ich → E-Mail → Postfach aufräumen)."
+        return "Tidying is turned off for every mailbox (E-Mail → Einstellungen → Postfach aufräumen)."
     since = time.time() - 36 * 3600
     recent = [x for x in d["log"] if x["t"] > since and not x.get("undone")]
     by = {}
@@ -1672,7 +1672,7 @@ async def _notes(uid, d):
             a = acct_state(d, x["id"])
             if a["mode"] == "preview" and time.time() - a.get("since", time.time()) > 7 * 86400 and not a.get("week_noted"):
                 text = (f"Die Vorschau fürs Postfach {x.get('name', '')} läuft seit einer Woche. Wenn die Vorschläge "
-                        "passen, stell unter Ich → E-Mail → Postfach aufräumen auf „sicher automatisch“.")
+                        "passen, stell unter E-Mail → Einstellungen → Postfach aufräumen auf „sicher automatisch“.")
                 _mut(uid, lambda dd, aid=x["id"]: acct_state(dd, aid).update(week_noted=True))
                 break
     if text:

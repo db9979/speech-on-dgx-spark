@@ -6,8 +6,9 @@
 // the viewer can open is linked (admin pages for an admin, Ich for a profile, nothing for guests and the monitor).
 // A link only moves to the place; it never switches, saves or sends anything.
 const WAY_ROOTS=[['Personen und Geräte','prof'],['People and devices','prof'],['Einstellungen','cfg'],['Settings','cfg'],
-  ['Funktionen','feat'],['Features','feat'],['Zustand','mon'],['Status','mon'],['Ich','me'],['Me','me'],['Kalender','o:calbox'],['Calendar','o:calbox']];
-const WAY_RX=/(Personen und Geräte|People and devices|Einstellungen|Settings|Funktionen|Features|Zustand|Status|Ich|Me|Kalender|Calendar)\s*→/g;
+  ['Funktionen','feat'],['Features','feat'],['Zustand','mon'],['Status','mon'],['Ich','me'],['Me','me'],['Kalender','o:calbox'],['Calendar','o:calbox'],
+  ['E-Mail','o:mailbox'],['E-mail','o:mailbox']];   // the pages of their own (kalender.js OWN_PAGES), both languages
+const WAY_RX=/(Personen und Geräte|People and devices|Einstellungen|Settings|Funktionen|Features|Zustand|Status|Ich|Me|Kalender|Calendar|E-Mail|E-mail)\s*→/g;
 const WAY_ARROW=/^\s*→\s*/;
 // the names a step can match inside a page: rows, headings, folded parts, tabs
 const WAY_SEL='.setrow .lbl>b, label, summary, h2, h3, .ptabs button, .ltabs button, .lchips button, [data-tab], [data-area], .mgrp, .fgrp>summary b, .zk';
@@ -51,7 +52,8 @@ function wayKids(c,all){const key=JSON.stringify(c)+(all?'+':'');
   else if(c.k==='mon'||c.k==='prof'){for(const [id,l] of GROUPS[c.k])add(l,()=>goSec(id),{k:'s',s:id});
     return wayKeep(key,out.concat(wayKids({k:'s',s:c.k},all)))}   // and what the first page shows (cards, lists)
   else if(c.k.startsWith('o:')){const [sec]=OWN_PAGES[c.k.slice(2)],go=k=>()=>{icTabSet(sec,k);goSec(sec)};
-    add(t('Einstellungen','Settings'),go('set'),{k:'os',id:c.k.slice(2)});add(OWN_PAGES[c.k.slice(2)][2],go('show'),c)}
+    add(t('Einstellungen','Settings'),go('set'),{k:'os',id:c.k.slice(2)});add(OWN_PAGES[c.k.slice(2)][2],go('show'),c);
+    for(const [k,l,on] of OWN_PAGES[c.k.slice(2)][3]||[])if(all||on())add(l,go(k),{k:'ot',id:k})}
   else if(c.k==='os'){const [sec]=OWN_PAGES[c.id];inside($(c.id),async e=>{icTabSet(sec,'set');goSec(sec);await wayWait(120);wayOpen(e);sFlash(wayMark(e))})}
   else if(c.k==='s')inside($(c.s),async e=>{goSec(c.s);await wayWait(120);if(e.matches(WAY_TAB))e.click();wayOpen(e);sFlash(wayMark(e))});
   else if(c.k==='me'){const items=typeof meAll==='function'?meAll():[];

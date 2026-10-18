@@ -22,7 +22,7 @@ function fuerRender(){const d=FUER,box=$('fuerbox'),E=icEl;if(!box||!d)return;bo
   box.appendChild(E('h3','sec',t('Für dich','For you')));
   box.appendChild(E('div','intro',t('Was der Spark in deinen Mails gefunden hat: Rechnungen mit Frist, Verträge, die sich verlängern, Bestellungen, Angebote, Fragen ohne Antwort und Mails, die sich als Bank oder Shop ausgeben. Feste Regeln, kein Modell; die Mails bleiben ungelesen und unverändert. Links aus Mails öffnet der Spark nie.',
     'What the Spark found in your mails: bills with a deadline, contracts that renew, orders, offers, questions without an answer and mails that pretend to be a bank or shop. Fixed rules, no model; the mails stay unread and unchanged. The Spark never opens links from mails.')));
-  if(d.nomail){box.appendChild(E('div','fh',t('Erst oben ein Postfach verbinden.','Connect a mailbox above first.')));return}
+  if(d.nomail){box.appendChild(E('div','fh',t('Erst unter E-Mail → Einstellungen ein Postfach verbinden.','Connect a mailbox under E-mail → Settings first.')));return}
   const urgent=d.items.filter(x=>x.urgent),rest=d.items.filter(x=>!x.urgent);
   const again=E('button','b',t('Neu lesen','Read again'));again.type='button';again.id='fuerfresh';
   again.onclick=async()=>{again.disabled=true;fuerMsg(t('Lese deine Mails …','Reading your mails …'));await showFuerDich(true);fuerMsg('')};

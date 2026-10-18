@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.809** · 2026-10-18 · E-Mail als eigene Seite im Menü (Dominik „1a 2a 3a 4a 5a“, Stufe 1): Reiter Posteingang mit den neuesten 50 Mails der letzten 14 Tage aus allen Postfächern, Suche, „Nur ungelesen“, Mail als reiner Text (bleibt ungelesen, keine Bilder oder Links von außen); Reiter Einstellungen mit Postfächern, Aufräumen, Mailstil und Pakete, unter Ich entfernt; alle Wege „E-Mail → Einstellungen → …“ springen dorthin
 - **V01.0.808** · 2026-10-18 · Für dich aus Mails (Stufe 1): der Spark findet in deinen Mails Rechnungen mit Frist, Verträge mit Kündigungsfrist, Bestellungen, Angebote, Fragen ohne Antwort und Phishing (gibt sich als Bank oder Shop aus); feste Regeln, nur lesend, Karten unter Ich → E-Mail und Zahl unter Heute; Schalter aus
 - **V01.0.807** · 2026-10-18 · uConsole/Terminal: `spark-tui kalender [--woche N]` druckt die Termine einer Woche wie die Seite Kalender, im Fenster F5 mit ← → (spark-tui 1.0.3, nur lesen, eine Regel mehr für den Terminal-Schlüssel); danach `spark-tui update`
 - **V01.0.806** · 2026-10-18 · Rückfrage-Karten: endet eine Antwort mit einer Frage, stehen die Antworten als Knöpfe darunter (Ja/Nein, bei „A oder B?“ die Teile und „Anders …“); ein kurzes „Ja“ darauf behält das Thema der Frage davor; Panel, Android, iPhone, Telegram-Tasten, Pebble; Teil von „Ablauf und Freigabe zeigen“

@@ -235,7 +235,7 @@ class Tidy(unittest.TestCase):
         self.assertIsNone(r["backlog"])
 
     def test_new_folder_from_a_question(self):
-        """'＋ Neuer Ordner' (Ich → E-Mail → Fragen): the name follows a fixed rule, the folder is made only with the
+        """'＋ Neuer Ordner' (E-Mail → Einstellungen → Fragen): the name follows a fixed rule, the folder is made only with the
         answer, the mail moves there and 'Immer so' makes a rule; removing it keeps folder and mail."""
         tidy.classify = lambda h, text: (None, 0)
         p, aid = self.setup_profile("Frieda")

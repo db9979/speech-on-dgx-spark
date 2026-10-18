@@ -501,7 +501,7 @@ async def write_picture(request: Request, prof=Depends(browser_profile)):
 async def write_draft(request: Request, prof=Depends(browser_profile)):
     _mine(request, prof)
     if not draft_ok(prof["id"]):
-        raise HTTPException(403, "Entwürfe sind aus (Ich → E-Mail → Aufräumen → Entwürfe).")
+        raise HTTPException(403, "Entwürfe sind aus (E-Mail → Einstellungen → Aufräumen → Entwürfe).")
     body = await core.json_body(request, MAX_BODY)
     notaus.stop("aktion")
     import tidy

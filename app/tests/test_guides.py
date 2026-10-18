@@ -157,8 +157,9 @@ class DesignKlar(unittest.TestCase):
         # V01.0.265 plan „Bedienung gesamt“: Funktionen is its own entry, Einbinden is gone (guides under
         # Funktionen, apps under Personen und Geräte), the search comes first
         # Chats (plan messenger.md) right below the assistant, shown only to profiles that may use them;
-        # Kalender (plan kalender-mail.md 1a, V01.0.805) after Chats, shown only with the calendar function
-        self.assertEqual(re.findall(r'data-s="(\w+)"', nav), ["chat", "chats", "cal", "mon", "feat", "prof", "cfg"])
+        # Kalender and E-Mail (plan kalender-mail.md 1a 2a, V01.0.805, V01.0.809) after Chats, shown only with
+        # the calendar or mail function
+        self.assertEqual(re.findall(r'data-s="(\w+)"', nav), ["chat", "chats", "cal", "post", "mon", "feat", "prof", "cfg"])
         self.assertLess(nav.index('id="findbtn"'), nav.index('data-s="chat"'))
         self.assertLess(nav.index('id="navme"'), nav.index("Spark verwalten"))
         self.assertLess(nav.index("Spark verwalten"), nav.index('data-s="mon"'))

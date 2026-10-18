@@ -7,7 +7,8 @@ const KAL_VIEWS=[['day',t('Tag','Day'),1],['week',t('Woche','Week'),7],['month',
 const KAL_H=44;   // pixels per hour in the day and week view
 // pages of their own outside Ich: the id of the old Ich page (still the place in every way, card and app) → section
 // (features.OWN_PAGES, test_app_gleichstand keeps both equal)
-const OWN_PAGES={calbox:['cal',t('Kalender','Calendar'),t('Termine','Appointments')]};
+const OWN_PAGES={calbox:['cal',t('Kalender','Calendar'),t('Termine','Appointments')],mailbox:['post',t('E-Mail','E-mail'),t('Posteingang','Inbox'),[['fuer',t('Für dich','For you'),()=>typeof FUER_ON!=='undefined'&&FUER_ON]]]};
+// [section, name, first tab, [more tabs: key, name, shown?]]; every page ends with the tab „Einstellungen“
 function ownPage(id){const p=OWN_PAGES[id];if(!p)return false;
   if($('profmodal').style.display==='grid'&&window.closeProf)closeProf();
   icTabSet(p[0],'set');goSec(p[0]);return true}
@@ -103,7 +104,7 @@ function kalBind(m){m.querySelectorAll('[data-i]').forEach(b=>b.onclick=e=>{e.st
 function kalDetail(w){const box=w.querySelector('.kaldet'),x=KAL.sel;if(!box)return;box.hidden=!x;if(!x)return;
   const d=KAL.data,when=x.allday?new Date(x.start*1000).toLocaleDateString(kalLoc(),{weekday:'short',day:'numeric',month:'long'})+' · '+t('ganztägig','all day')
     :new Date(x.start*1000).toLocaleDateString(kalLoc(),{weekday:'short',day:'numeric',month:'long'})+', '+kalTime(x.start)+'–'+kalTime(x.end);
-  box.innerHTML=`<button type="button" class="ld-back" data-close="1">‹ ${esc(t('Zurück','Back'))}</button><div class="mut">${esc((d.calendars||[])[x.cal]||'')}</div><h3>${esc(x.title)}</h3>`+
+  box.innerHTML=`<button type="button" class="b ld-back" data-close="1">‹ ${esc(t('Zurück','Back'))}</button><div class="mut">${esc((d.calendars||[])[x.cal]||'')}</div><h3>${esc(x.title)}</h3>`+
     `<dl class="ld-facts"><dt>${esc(t('Wann','When'))}</dt><dd>${esc(when)}</dd>${x.location?`<dt>${esc(t('Wo','Where'))}</dt><dd>${esc(x.location)}</dd>`:''}</dl>`+
     `<div class="fh">${esc(t('Ändern geht mit dem Assistenten: „Verschieb den Termin … auf …“.','Change it with the assistant: "Move the appointment … to …".'))}</div>`;
   box.querySelector('[data-close]').onclick=()=>{KAL.sel=null;kalDraw()}}

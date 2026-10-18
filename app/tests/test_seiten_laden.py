@@ -73,10 +73,11 @@ class Static(unittest.TestCase):
         self.assertIn("auth:true", body)
         self.assertIn("e.status===401)out=true", body)
         self.assertNotIn("catch{setProfile(null)", body)
-        for box in ("factbox", "docbox", "mailbox", "habox", "secbox", "logbox"):
+        for box in ("factbox", "docbox", "habox", "secbox", "logbox"):
             self.assertIn(f"['{box}',", body)
-        # the calendar settings moved to the page Kalender (V01.0.805) and load there the same way
+        # the settings of calendar and mail moved to their pages (V01.0.805, V01.0.809) and load there the same way
         self.assertIn("lzb(b,showCal,{auth:true})", read("js", "kalender.js"))
+        self.assertIn("lzb(b,async()=>{await showMail();", read("js", "post.js"))
         ex = read("js", "extras.js")
         self.assertIn("function extrasJobs()", ex)
         self.assertNotIn("window[", ex[ex.index("function extrasJobs"):ex.index("async function showExtras")])

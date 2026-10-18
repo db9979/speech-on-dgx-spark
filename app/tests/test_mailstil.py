@@ -264,7 +264,7 @@ VIEW = {"on": True, "learned": 1760000000, "mails": 180, "state": "ok", "why": "
 
 @unittest.skipUnless(browser_ok(), "no browser")
 class Browser(unittest.TestCase):
-    """Ich → E-Mail → Mein Mailstil fits at 320, 390 and 1280 px, shows the groups and sends only the changed field."""
+    """E-Mail → Einstellungen → Mein Mailstil fits at 320, 390 and 1280 px, shows the groups and sends only the changed field."""
     @classmethod
     def setUpClass(cls):
         cls.port = helpers._port()

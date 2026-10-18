@@ -564,7 +564,7 @@ async def api_learn(request: Request, prof=Depends(browser_profile)):
     if aids is not None and (not isinstance(aids, list) or not all(isinstance(a, str) for a in aids) or len(aids) > 8):
         raise HTTPException(400, "aids: list of mailbox ids")
     if not mail.public(prof["id"])["accounts"]:
-        raise HTTPException(409, "Erst ein Postfach verbinden (Ich → E-Mail).")
+        raise HTTPException(409, "Erst ein Postfach verbinden (E-Mail → Einstellungen).")
     return await learn(prof["id"], aids or None)
 
 

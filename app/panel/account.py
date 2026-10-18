@@ -2,6 +2,7 @@
 (memory, conversations, documents, reminders, calendar, e-mail, Home Assistant, voice, settings)."""
 import asyncio
 import datetime
+import imaplib
 import inspect
 import json
 import time
@@ -1058,6 +1059,39 @@ def profile_mail_remove(aid: str, prof=Depends(browser_profile)):
 @router.post("/api/profile/mail/test", dependencies=[Depends(assistant), Depends(mail_on)])
 async def profile_mail_test(prof=Depends(browser_profile)):
     return await asyncio.to_thread(mail.test, prof["id"])
+
+
+@router.get("/api/profile/mail/inbox", dependencies=[Depends(assistant), Depends(mail_on)])
+async def profile_mail_inbox(request: Request, q: str = "", days: int = 14, unread: bool = False, prof=Depends(own_profile)):
+    """The page E-Mail (post.js): the newest messages of the own mailboxes, only sender, subject and time."""
+    guard.limit(request, "post", prof["id"])
+    try:
+        r = await asyncio.wait_for(asyncio.to_thread(mail.inbox, prof["id"], q[:100], days, unread), 45)
+    except asyncio.TimeoutError:
+        print(f"mail: inbox too slow | {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(504, "Die Postfächer haben zu lange gebraucht. Bitte gleich noch einmal.")
+    if r["errors"]:
+        print(f"mail: inbox not readable | {len(r['errors'])} of {len(r['boxes'])} mailboxes | {profiles.log_name(prof)}", flush=True)
+    return r
+
+
+@router.get("/api/profile/mail/message", dependencies=[Depends(assistant), Depends(mail_on)])
+async def profile_mail_message(request: Request, id: str = "", prof=Depends(own_profile)):
+    """One message of the own mailboxes as plain text; it stays unread (PEEK)."""
+    guard.limit(request, "post", prof["id"])
+    try:
+        r = await asyncio.wait_for(asyncio.to_thread(mail.show, prof["id"], id[:40]), 45)
+    except ValueError:
+        raise HTTPException(400, "Unbekannte Mail.")
+    except asyncio.TimeoutError:
+        print(f"mail: message too slow | {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(504, "Das Postfach hat zu lange gebraucht. Bitte gleich noch einmal.")
+    except (OSError, imaplib.IMAP4.error):
+        print(f"mail: message not readable | {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(502, "Das Postfach war nicht erreichbar.")
+    if r is None:
+        raise HTTPException(404, "Diese Mail gibt es nicht mehr.")
+    return r
 
 
 @router.get("/api/profile/homeassistant", dependencies=[Depends(assistant)])

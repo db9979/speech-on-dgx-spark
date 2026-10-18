@@ -4,7 +4,8 @@
 // What is still to set up is "Los geht's" (join.js, onboard.py). On computers on top of Überblick, on phones above
 // the list of pages. Only numbers and short titles; a tap opens the page or asks the sentence.
 let TODAY=null;
-const TD_GO=(id)=>()=>{if(id==='chats'){if(window.closeProf)closeProf();goSec('chats');return}if(id==='cal'){icTabSet('cal','show');if(window.closeProf)closeProf();goSec('cal');return}if(typeof ownPage==='function'&&ownPage(id))return;if(ME_ITEMS.some(x=>x[0]===id)){meLast=id;ptab(id)}};
+const TD_GO=(id)=>()=>{if(id.includes(':')){const [s,k]=id.split(':');icTabSet(s,k);if(window.closeProf)closeProf();goSec(s);return}   // a tab of a page of its own
+  if(id==='chats'){if(window.closeProf)closeProf();goSec('chats');return}if(id==='cal'){icTabSet('cal','show');if(window.closeProf)closeProf();goSec('cal');return}if(typeof ownPage==='function'&&ownPage(id))return;if(ME_ITEMS.some(x=>x[0]===id)){meLast=id;ptab(id)}};
 const tdTime=s=>{const d=new Date(s*1000),n=new Date(),tm=new Date(n.getFullYear(),n.getMonth(),n.getDate()+1);
   const day=d.toDateString()===n.toDateString()?t('Heute','Today'):d.toDateString()===tm.toDateString()?t('Morgen','Tomorrow'):d.toLocaleDateString([],{weekday:'short',day:'numeric',month:'numeric'});
   return day+' '+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})};
@@ -31,7 +32,7 @@ async function meToday(){if(!PROFILE)return;const ph=PHONE.matches,host=ph?$('pt
   if(c.messages)cards.appendChild(tdCard(t('Chats','Chats'),String(c.messages.unread),c.messages.unread?t('ungelesen','unread'):t('Alles gelesen','All read'),'chats'));
   if(c.documents)cards.appendChild(tdCard(t('Dokumente','Documents'),String(c.documents.count),c.documents.waiting?c.documents.waiting+t(' Seiten warten aufs Lesen',' pages waiting to be read'):'','docbox'));
   if(c.fuerdich&&!c.fuerdich.nomail)cards.appendChild(tdCard(t('Für dich','For you'),c.fuerdich.ready?(c.fuerdich.urgent?t(`${c.fuerdich.urgent} brauchen dich`,`${c.fuerdich.urgent} need you`):t('Nichts dringend','Nothing urgent')):t('wird gelesen','being read'),
-    c.fuerdich.suspicious?t(`${c.fuerdich.suspicious} verdächtige Mail`,`${c.fuerdich.suspicious} suspicious mail`):c.fuerdich.ready?t(`${c.fuerdich.total} Funde in deinen Mails`,`${c.fuerdich.total} finds in your mails`):'','mailbox'));
+    c.fuerdich.suspicious?t(`${c.fuerdich.suspicious} verdächtige Mail`,`${c.fuerdich.suspicious} suspicious mail`):c.fuerdich.ready?t(`${c.fuerdich.total} Funde in deinen Mails`,`${c.fuerdich.total} finds in your mails`):'','post:fuer'));
   if(c.memory)cards.appendChild(tdCard(t('Gedächtnis','Memory'),String(c.memory.facts),t('gemerkte Fakten','remembered facts'),'factbox'));
   // Mein Zustand (hintergrund.js): the short line here, the whole card under Ich → Mein Zustand
   if(typeof MYST_ON!=='undefined'&&MYST_ON){try{const r=await api('/api/profile/hintergrund?brief=1',{cache:'no-store'});

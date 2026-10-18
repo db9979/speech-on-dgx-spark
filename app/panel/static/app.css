@@ -56,8 +56,8 @@ body.guest #themebtn{margin-left:auto}
 @media (display-mode:standalone){header{padding-top:max(12px,env(safe-area-inset-top))}main{padding-bottom:max(48px,env(safe-area-inset-bottom))}}
 /* login */
 body.guest nav,body.guest #hdr,body.guest #fab,body.guest #logoutbtn{display:none!important}
-/* a signed-in profile without admin login (start.js): the admin's shell with only Assistent, Chats, Kalender and Ich */
-body.prof #hdr,body.prof #fab,body.prof #logoutbtn,body.prof .navgrp,body.prof nav button[data-s]:not([data-s=chat]):not([data-s=chats]):not([data-s=cal]),
+/* a signed-in profile without admin login (start.js): the admin's shell with only Assistent, Chats, Kalender, E-Mail and Ich */
+body.prof #hdr,body.prof #fab,body.prof #logoutbtn,body.prof .navgrp,body.prof nav button[data-s]:not([data-s=chat]):not([data-s=chats]):not([data-s=cal]):not([data-s=post]),
 body.prof #mbar button[data-m=mon],body.prof #mbar button[data-m=more],body.prof #mmenu{display:none!important}
 body.mgr .mainonly,body.coadm .pwonly,nav button[hidden]{display:none!important}   /* an admin profile (coadmin.js): .pwonly only with the panel password; a Verwalter does not see .mainonly */
 .modal{position:fixed;inset:0;z-index:50;display:grid;place-items:center;align-items:safe center;overflow-y:auto;background:rgba(10,12,20,.45);backdrop-filter:blur(4px);padding:16px}
@@ -1718,3 +1718,12 @@ body.inchats:not(.appview):not(.kbd) .cx-comp{padding-right:96px}
 .kallegend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px;background:var(--kc)}
 @media (max-width:760px){.kalgrid{grid-template-columns:34px repeat(var(--n),minmax(0,1fr))}.kalgrid .khours span{font-size:10px;padding-right:3px}
   .kev{padding:2px 3px;font-size:10.5px}.kev small{display:none}.kalmonth .kmd{min-height:62px}.kalmonth .kchip{font-size:10px;padding:0 3px}}
+/* E-Mail (post.js, plan kalender-mail/plan.md 2a): the inbox as an ld list, one message as plain text */
+.post .ld-list.busy{opacity:.55}
+.post .postdot{flex:none;width:8px;height:8px;border-radius:50%}
+.post .ld-row.unread .postdot{background:var(--acc)}
+.post .ld-row.unread .ld-mid b{font-weight:700}
+.post .ld-row:not(.unread) .ld-mid b{font-weight:500}
+.post .posttext{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;line-height:1.5;margin:10px 0;max-height:60vh;overflow:auto}
+.post .postdet .ld-facts{margin-top:4px}
+#parwrap[hidden]{display:none}

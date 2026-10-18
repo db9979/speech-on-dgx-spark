@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "asr": {
-        "stand": "b5b79f7d5b",
+        "stand": "f7242aa087",
         "bezug": {
             "parakeet.MAX_AUDIO_S": ["s9"], "common.NOTASR_PORT": ["s9"], "common.NOTASR_IDLE": ["s9"], "admin.test_asr": ["s1"], "admin._test_asr": ["s2", "s4"],
             "common.BodyLimit": ["s5"], "common.PrioGate": ["s7"], "common.audio_rate_ok": ["s8"],
