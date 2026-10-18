@@ -736,6 +736,26 @@ def pruefen(ordner, rev, hashes=True):
     return n, size
 
 
+def _aufraeumen(ordner, rev):
+    """Takes out of one cached snapshot the links of file kinds a download never takes (VERBOTEN, or outside
+    ERLAUBT): a cache filled before the commits were pinned (a whole repository from "main", with *.py or *.bin) would
+    otherwise fail the check on every update, as a new download never removes a file (security review of V01.0.785).
+    Only links inside snapshots/<rev> go; their blobs and every plain file stay. Returns how many went."""
+    import fnmatch
+    snap = os.path.join(ordner, "snapshots", rev)
+    if not REV.match(rev or "") or not os.path.isdir(snap) or os.path.islink(snap):
+        return 0
+    n = 0
+    for root, _, files in os.walk(snap):
+        for name in files:
+            p = os.path.join(root, name)
+            rel = os.path.relpath(p, snap)
+            if os.path.islink(p) and (VERBOTEN.search(name) or not any(fnmatch.fnmatch(rel, e) for e in ERLAUBT)):
+                os.unlink(p)
+                n += 1
+    return n
+
+
 def _laden(repo, rev, ordner):
     """One repository's commit in the cache, checked; downloads only the ERLAUBT kinds when the check fails."""
     if rev:
@@ -743,7 +763,9 @@ def _laden(repo, rev, ordner):
             pruefen(ordner, rev)
             return rev
         except Fehler:
-            pass
+            weg = _aufraeumen(ordner, rev)
+            if weg:
+                print(f"modelle: {weg} alte dateien entfernt", flush=True)
     from huggingface_hub import snapshot_download
     path = snapshot_download(repo, revision=rev or None, allow_patterns=list(ERLAUBT))
     commit = os.path.basename(os.path.normpath(path))
@@ -765,9 +787,10 @@ def fest(repo, kat=None):
 
 def lokal(repo, hf_home=None, kat=None):
     """The checked folder of a pinned speech model for asr_server.py / tts_server.py: its pinned commit in the cache,
-    every file a checked kind and link (the hashes were checked at the download, install.sh dl)."""
+    fetched when missing (only the ERLAUBT kinds, e.g. after another voice was chosen in the panel), every file a
+    checked kind and link and equal to its hash (security review of V01.0.785), like engine.sh before vLLM starts."""
     m = fest(repo, kat)
-    pruefen(hf_ordner(m, hf_home), m["revision"], hashes=False)
+    vorbereiten(m, hf_home)
     return os.path.join(hf_ordner(m, hf_home), "snapshots", m["revision"])
 
 

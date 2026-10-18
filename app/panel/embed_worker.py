@@ -3,7 +3,8 @@ COMMIT`, never by hand; repository and pinned commit from the model catalog, eve
 
 Reads one JSON line per request from stdin: {"kind": "query" | "passage", "texts": [...]}, writes one
 JSON line per answer: {"vecs": base64 of float16 values, DIM per text, length 1} or {"error": "..."}.
-The first line it writes says whether it is ready, with the SHA-256 of the model files.
+The first line it writes says whether it is ready, with the SHA-256 of the model files and the commit they were
+checked against.
 
 Started as `embed_worker.py rank klein|gross REPO COMMIT` (nachsortieren.py) it holds a cross-encoder instead: requests
 {"query": "...", "texts": [...]}, answers {"scores": [...]} (one raw score per text, higher fits better).
@@ -82,7 +83,7 @@ def rank_main(size, repo, rev):
     except Exception as e:
         say({"ready": False, "error": f"{type(e).__name__}: {str(e)[:200]}"})
         return
-    say({"ready": True, "sha": sha})
+    say({"ready": True, "sha": sha, "commit": rev})   # the commit every file was checked against (hole)
     for line in sys.stdin:
         try:
             req = json.loads(line)
@@ -127,7 +128,7 @@ def main():
     except Exception as e:
         say({"ready": False, "error": f"{type(e).__name__}: {str(e)[:200]}"})
         return
-    say({"ready": True, "sha": sha})
+    say({"ready": True, "sha": sha, "commit": rev})   # the commit every file was checked against (hole)
     for line in sys.stdin:
         try:
             req = json.loads(line)

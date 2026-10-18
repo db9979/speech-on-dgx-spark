@@ -59,13 +59,20 @@ fi
 # models run without it, from the catalog's checked entries only
 [ "${#LLM_ARGS[@]}" -gt 0 ] || [[ "$MODEL" =~ ^Qwen/Qwen3-(ASR|TTS|ForcedAligner)-[A-Za-z0-9._-]+$ ]] \
   || fail "model '$MODEL' is not one of Qwen's speech models"
-# the speech models on their pinned commit from the catalog (modelle.py fest), like the language models; the
-# download checked every file (install.sh dl), vLLM loads exactly that commit
+# the speech models on their pinned commit from the catalog (modelle.py fest), like the language models. Before every
+# start modelle.py vorbereiten fetches what is missing (only the allowed file kinds) and checks every file against
+# its hash; vLLM then loads exactly that checked commit and never downloads by itself (security review of V01.0.785:
+# vLLM fetched the commit on its own, with every file kind and unchecked)
 REV=""
 if [ "${#LLM_ARGS[@]}" -eq 0 ]; then
   PREFIX="${SPEECH_SPARK_PREFIX:-$(dirname "$VENV")}"
-  read -r _ REV < <("$PREFIX/venv-panel/bin/python" "$(dirname "$(readlink -f "$0")")/modelle.py" fest "$MODEL" | tail -n1) || true
+  PY="$PREFIX/venv-panel/bin/python"; APP_DIR="$(dirname "$(readlink -f "$0")")"
+  read -r MID REV < <("$PY" "$APP_DIR/modelle.py" fest "$MODEL" | tail -n1) || true
   [[ "$REV" =~ ^[0-9a-f]{40}$ ]] || fail "model '$MODEL' has no pinned commit in the model catalog"
+  state loading "checking the files of $MODEL"
+  [ "$("$PY" "$APP_DIR/modelle.py" vorbereiten "$MID" --revision "$REV" | tail -n1)" = "$REV" ] \
+    || fail "the files of '$MODEL' do not match its pinned commit (see: speech-spark logs $ROLE)"
+  export HF_HUB_OFFLINE=1
 fi
 [[ "$PORT" =~ ^[0-9]{4,5}$ ]] || fail "invalid port '$PORT'"
 [[ "$SEQS" =~ ^[0-9]{1,3}$ ]] || fail "invalid engine_max_seqs '$SEQS'"

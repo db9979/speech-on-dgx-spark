@@ -48,25 +48,45 @@ class Katalog(unittest.TestCase):
         self.assertEqual(json.loads(out.stdout), list(modelle.ERLAUBT))
 
     def test_lokal_gives_only_the_checked_pinned_snapshot(self):
+        import huggingface_hub
         rev = modelle.eintrag("qwen3-asr-0.6b")["revision"]
         with tempfile.TemporaryDirectory() as hf:
             d = os.path.join(hf, "hub", "models--Qwen--Qwen3-ASR-0.6B")
-            with self.assertRaisesRegex(modelle.Fehler, "fehlt"):
-                modelle.lokal("Qwen/Qwen3-ASR-0.6B", hf_home=hf)
-            os.makedirs(os.path.join(d, "blobs"))
             snap = os.path.join(d, "snapshots", rev)
-            os.makedirs(snap)
-            for name, data in (("model.safetensors", b"x" * 500), ("config.json", b"{}")):
-                blob = hashlib.sha256(data).hexdigest() if len(data) > 100 else \
+
+            def blob(name, data):
+                h = hashlib.sha256(data).hexdigest() if len(data) > 100 else \
                     hashlib.sha1(b"blob %d\0" % len(data) + data).hexdigest()
-                with open(os.path.join(d, "blobs", blob), "wb") as f:
+                with open(os.path.join(d, "blobs", h), "wb") as f:
                     f.write(data)
-                os.symlink(os.path.join("..", "..", "blobs", blob), os.path.join(snap, name))
+                os.symlink(os.path.join("..", "..", "blobs", h), os.path.join(snap, name))
+                return h
+            with mock.patch.object(huggingface_hub, "snapshot_download", side_effect=OSError("offline")) as dl:
+                with self.assertRaises(OSError):                 # missing: fetched, never used unchecked
+                    modelle.lokal("Qwen/Qwen3-ASR-0.6B", hf_home=hf)
+            self.assertEqual((dl.call_args.args[0], dl.call_args.kwargs["revision"]), ("Qwen/Qwen3-ASR-0.6B", rev))
+            self.assertEqual(dl.call_args.kwargs["allow_patterns"], list(modelle.ERLAUBT))
+            os.makedirs(os.path.join(d, "blobs"))
+            os.makedirs(snap)
+            blob("model.safetensors", b"x" * 500)
+            blob("config.json", b"{}")
             self.assertEqual(modelle.lokal("Qwen/Qwen3-ASR-0.6B", hf_home=hf), snap)
-            with open(os.path.join(snap, "x.py"), "w") as f:
+            # a cache from before the pins (a whole repository): forbidden links go, the rest is checked again
+            blob("modeling.py", b"print(1)")
+            with mock.patch.object(huggingface_hub, "snapshot_download", return_value=snap):
+                self.assertEqual(modelle.lokal("Qwen/Qwen3-ASR-0.6B", hf_home=hf), snap)
+            self.assertFalse(os.path.lexists(os.path.join(snap, "modeling.py")))
+            with open(os.path.join(snap, "x.py"), "w") as f:   # a plain file is never removed, and never used
                 f.write("print(1)")
-            with self.assertRaisesRegex(modelle.Fehler, "dateiart"):
-                modelle.lokal("Qwen/Qwen3-ASR-0.6B", hf_home=hf)
+            with mock.patch.object(huggingface_hub, "snapshot_download", return_value=snap):
+                with self.assertRaisesRegex(modelle.Fehler, "dateiart"):
+                    modelle.lokal("Qwen/Qwen3-ASR-0.6B", hf_home=hf)
+            os.remove(os.path.join(snap, "x.py"))
+            with open(os.path.join(d, "blobs", hashlib.sha256(b"x" * 500).hexdigest()), "r+b") as f:
+                f.write(b"y")                                    # a changed weight file: refused, also later
+            with mock.patch.object(huggingface_hub, "snapshot_download", return_value=snap):
+                with self.assertRaisesRegex(modelle.Fehler, "hash"):
+                    modelle.lokal("Qwen/Qwen3-ASR-0.6B", hf_home=hf)
 
 
 class Ladewege(unittest.TestCase):
@@ -82,6 +102,9 @@ class Ladewege(unittest.TestCase):
     def test_engines_and_servers_load_the_pinned_commit(self):
         eng = read("engine.sh")
         self.assertIn('modelle.py" fest "$MODEL"', eng)
+        pre = eng.index('modelle.py" vorbereiten "$MID" --revision "$REV"')      # fetched and checked before vLLM,
+        self.assertLess(pre, eng.index("export HF_HUB_OFFLINE=1\nfi"))          # which then never downloads itself
+        self.assertLess(pre, eng.index('serve "$MODEL" --revision "$REV"'))
         self.assertEqual(eng.count('serve "$MODEL" --revision "$REV"'), 2)    # ASR and TTS engine
         for f in ("asr_server.py", "tts_server.py"):
             src = read(f)

@@ -1890,6 +1890,13 @@
 "titel": "Spark legt mit auf",
 "text": "A: Vom Mobilteil den Spark anrufen, eine Frage stellen, dann „Danke, tschüss“ sagen: er sagt „Tschüss!“ und legt sofort selbst auf. B: Wieder anrufen, 20 Sekunden schweigen, auf „Noch etwas?“ mit „Nein danke“ antworten: „Tschüss!“, aufgelegt (nicht erst „Ich lege jetzt auf“). C: Wieder anrufen, eine längere Frage stellen und mitten in der Antwort „Tschüss“ sagen: die Antwort bricht ab, „Tschüss!“, aufgelegt. D: Wieder anrufen und am Mobilteil auflegen: Zustand → Live zeigt das Telefon nicht mehr unter Geräte. E: Zustand → Logs, Bereich telefon: „aufgelegt nach … (verabschiedet)“ bzw. „(aufgelegt)“, nie was gesagt wurde.",
 "thread": "Auflegen nach Gesprächsende"
+},
+{
+"id": "P294",
+"v": 792,
+"titel": "Modelle vor jedem Start geprüft",
+"text": "A: Nach dem Update auf tars `sudo speech-spark logs tts` und `logs asr`: vor dem Start steht „modelle: geladen … geprueft“, danach startet vLLM; Zustand → Dienste zeigt beide grün. B: Ich → Dokumente durchsuchen: Treffer wie vorher, Zustand → Logs (Wissen) ohne „Modelldateien anders als beim ersten Mal“. C: Funktionen → Sprachausgabe eine andere Stimme (1.7B) wählen: sie lädt einmal und spricht.",
+"thread": "Eigene Modell-Installation statt qwen38"
 }
 ]
 }

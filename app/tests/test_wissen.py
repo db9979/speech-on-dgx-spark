@@ -587,15 +587,23 @@ class Meaning(Base):
     def test_model_files_are_pinned_on_first_use(self):
         if os.path.exists(docembed.PINS):
             os.remove(docembed.PINS)
-        self.assertTrue(docembed._check_pins({"tokenizer.json": "aa"}))
-        self.assertTrue(docembed._check_pins({"tokenizer.json": "aa"}))
-        self.assertFalse(docembed._check_pins({"tokenizer.json": "bb"}))
+        c1, c2 = "c" * 40, "d" * 40
+        self.assertTrue(docembed._check_pins({"tokenizer.json": "aa"}, c1))
+        self.assertTrue(docembed._check_pins({"tokenizer.json": "aa"}, c1))
+        self.assertFalse(docembed._check_pins({"tokenizer.json": "bb"}, c1))    # same commit, other files: refused
+        self.assertTrue(docembed._check_pins({"tokenizer.json": "bb"}, c2))     # a new pinned commit: recorded anew
+        self.assertFalse(docembed._check_pins({"tokenizer.json": "aa"}, c2))
+        with open(docembed.PINS, "w") as f:      # a pin from before the commits were pinned: recorded anew once
+            json.dump({"tokenizer.json": "zz"}, f)
+        self.assertTrue(docembed._check_pins({"tokenizer.json": "aa"}, c1))
+        self.assertFalse(docembed._check_pins({"tokenizer.json": "zz"}, c1))
         os.remove(docembed.PINS)
 
 
 FAKE_WORKER = """
 import base64, json, sys
-sys.stdout.write(json.dumps({"ready": True, "sha": {"tokenizer.json": "ab"}}) + "\\n"); sys.stdout.flush()
+sys.stdout.write(json.dumps({"ready": True, "sha": {"tokenizer.json": "ab"}, "commit": sys.argv[-1]}) + "\\n")
+sys.stdout.flush()
 for line in sys.stdin:
     n = len(json.loads(line)["texts"])
     sys.stdout.write(json.dumps({"vecs": base64.b64encode(bytes(384 * 2 * n)).decode()}) + "\\n"); sys.stdout.flush()
@@ -603,6 +611,24 @@ for line in sys.stdin:
 
 
 class Worker(Base):
+    def test_a_worker_that_checked_another_commit_is_refused(self):
+        """Security review of V01.0.785: the commit to record pins under is the catalog's, never the worker's."""
+        path = os.path.join(helpers.TMP, "fake_worker_anders.py")
+        with open(path, "w") as f:
+            f.write(FAKE_WORKER.replace('"commit": sys.argv[-1]', '"commit": "e" * 40'))
+        old = docembed.WORKER, docembed.MIN_FREE_GIB
+        docembed.WORKER, docembed.MIN_FREE_GIB = path, 0
+        if os.path.exists(docembed.PINS):
+            os.remove(docembed.PINS)
+        try:
+            with self.assertRaisesRegex(RuntimeError, "differ"):
+                run(docembed._start(30))
+            self.assertFalse(os.path.exists(docembed.PINS))                # nothing recorded for it
+            self.assertEqual(docembed.status()["state"], "error")
+        finally:
+            docembed._stop()
+            docembed.WORKER, docembed.MIN_FREE_GIB = old
+
     def test_a_panel_computer_needs_less_free_memory(self):
         """V01.0.660: the Pi (8 GB, models on the model computer) never had 8.5 GiB free; the vector model never
         started and was tried every 20 seconds."""

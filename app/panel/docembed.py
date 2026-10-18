@@ -6,8 +6,9 @@ GPU and all its memory is free again once the process ends:
 
 - it starts only when a profile with the switch on needs vectors (new pieces, or a question), and only
   while at least MIN_FREE_GIB of memory is available; it ends after IDLE_STOP seconds without work;
-- the model files come once from Hugging Face; their SHA-256 is written to state/doc-embed.json the
-  first time, and a later download with other contents is refused (no silent model swap);
+- the model files come once from Hugging Face on the catalog's pinned commit; their SHA-256 is written to
+  state/doc-embed.json with that commit the first time, and other contents for the same commit are refused (no
+  silent model swap; a new commit in the catalog records its files anew);
 - a question waits at most QUERY_TIMEOUT seconds for its vector; without one the search is full-text
   only, never an error.
 
@@ -93,14 +94,18 @@ def _pins():
     return read_json(PINS, {})
 
 
-def _check_pins(sha):
-    """True if these model files are the ones first seen (they are recorded the first time)."""
+def _check_pins(sha, commit):
+    """True if these model files are the ones first seen for this commit (recorded the first time). A new commit in
+    the catalog records its files anew (the catalog pins it, the worker checked every file against its name); a pin
+    from before the commits were pinned has no commit and is recorded anew once."""
     if not isinstance(sha, dict) or not all(isinstance(v, str) for v in sha.values()):
         return False
     old = _pins()
+    if old.get("commit") == commit:
+        return old.get("sha") == sha
+    write_json(PINS, {"commit": commit, "sha": sha}, mode=0o644)
     if old:
-        return old == sha
-    write_json(PINS, sha, mode=0o644)
+        print("docembed: embedding model neuer stand", flush=True)
     return True
 
 
@@ -122,7 +127,8 @@ async def _start(timeout):
         hello = json.loads(line or b"{}")
         if not hello.get("ready"):
             raise RuntimeError(str(hello.get("error") or "the embedding model did not start")[:200])
-        if not _check_pins(hello.get("sha")):
+        # the commit is the catalog's (modelle.json), never the worker's; a worker that checked another one is refused
+        if hello.get("commit") != m["revision"] or not _check_pins(hello.get("sha"), m["revision"]):
             raise RuntimeError("the model files differ from the ones first downloaded (state/doc-embed.json)")
     except BaseException as e:
         _stop()

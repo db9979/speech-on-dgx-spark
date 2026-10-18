@@ -807,7 +807,8 @@ fi
 
 # ---------------------------------------------------------------- models (ASR / transformers TTS)
 # An update downloads only when the chosen models changed since the last complete download
-# ($PREFIX/.models, root's file); the services fetch a model that went missing themselves.
+# ($PREFIX/.models, root's file); the services fetch a model that went missing themselves, only its pinned commit and
+# the allowed file kinds, each file checked before every start (modelle.vorbereiten from engine.sh and modelle.lokal).
 MODELS_SIG="models-r2 $(sha256sum "$INSTALL_FROM/app/modelle.json" | cut -c1-16) $WITH_ASR $WITH_TTS $ASR_BACKEND $BACKEND $(cfgq -c '{a: .asr.model, b: .asr.aligner_model, c: .asr.timestamps, d: .asr.recognizer, e: .tts.model, f: .tts.voicedesign_enabled, g: .tts.voicedesign_model}')"
 if [ "$DOWNLOAD" = 1 ] && [ "$FROM_UPDATE" = 1 ] && [ -f "$PREFIX/.models" ] && [ ! -L "$PREFIX/.models" ] \
    && [ "$(cat "$PREFIX/.models")" = "$MODELS_SIG" ]; then

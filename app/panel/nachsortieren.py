@@ -98,15 +98,20 @@ def _pins():
         return {}
 
 
-def _check_pins(sz, sha):
-    """True if these model files are the ones first seen for this size (recorded the first time)."""
+def _check_pins(sz, sha, commit):
+    """True if these model files are the ones first seen for this size and commit (recorded the first time). A new
+    commit in the catalog records its files anew: the catalog pins it and the worker checked every file against its
+    name (a pin from before the commits were pinned, or of the other file, would refuse the model forever)."""
     if not isinstance(sha, dict) or not sha or not all(isinstance(v, str) for v in sha.values()):
         return False
     pins = _pins()
-    if sz in pins:
-        return pins[sz] == sha
-    pins[sz] = sha
+    alt = pins.get(sz)
+    if isinstance(alt, dict) and alt.get("commit") == commit:
+        return alt.get("sha") == sha
+    pins[sz] = {"commit": commit, "sha": sha}
     write_json(PINS, pins, mode=0o644)
+    if alt:
+        print("wissen: nachsortieren modell neuer stand", flush=True)
     return True
 
 
@@ -140,6 +145,10 @@ async def _start():
         return
     _status.update(state="starting", error="")
     m = modelle.zur_variante("klein", sz)    # its repository and pinned commit (the worker checks every file)
+    if not m:
+        _status.update(state="error", error="Modell nicht im Katalog")
+        print("wissen: nachsortieren modell fehler | katalog", flush=True)
+        return
     _proc = await asyncio.create_subprocess_exec(sys.executable, "-I", WORKER, "rank", sz, m["repo"], m["revision"],
                                                  stdin=asyncio.subprocess.PIPE,
                                                  stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.DEVNULL,
@@ -149,13 +158,14 @@ async def _start():
         hello = json.loads(await asyncio.wait_for(_proc.stdout.readline(), START_TIMEOUT) or b"{}")
         if not hello.get("ready"):
             raise RuntimeError("did not start")
-        if not _check_pins(sz, hello.get("sha")):
+        # the commit is the catalog's (modelle.json), never the worker's; a worker that checked another one is refused
+        if hello.get("commit") != m["revision"] or not _check_pins(sz, hello.get("sha"), m["revision"]):
             raise RuntimeError("model files changed")
     except BaseException as e:
         _stop()
         why = str(e) if isinstance(e, RuntimeError) else type(e).__name__
         _status.update(state="error", error={"did not start": "Modell startet nicht (Download oder Datei fehlt)",
-                                             "model files changed": "Modelldateien anders als beim ersten Mal (state/doc-rank.json)"}.get(why, why))
+                                             "model files changed": "Modelldateien anders als beim ersten Mal für diesen Stand (state/doc-rank.json)"}.get(why, why))
         print(f"wissen: nachsortieren modell fehler | {why if why in ('did not start', 'model files changed') else 'start'}", flush=True)
         return
     _last[0] = time.time()

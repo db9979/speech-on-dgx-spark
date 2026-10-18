@@ -7,6 +7,7 @@ import contextlib
 import io
 import json
 import os
+import tempfile
 import unittest
 from unittest import mock
 
@@ -200,14 +201,40 @@ class Search(Base):
 
 
 class Pins(unittest.TestCase):
+    def test_a_worker_that_checked_another_commit_is_refused(self):
+        """Security review of V01.0.785: pins are recorded only under the catalog's commit, never the worker's."""
+        path = os.path.join(tempfile.mkdtemp(), "fake_rank.py")
+        with open(path, "w") as f:
+            f.write('import json, sys\nsys.stdout.write(json.dumps({"ready": True, "sha": {"a/m.onnx": "1" * 64}, '
+                    '"commit": "e" * 40}) + "\\n")\nsys.stdout.flush()\nsys.stdin.read()\n')
+        with contextlib.suppress(FileNotFoundError):
+            os.remove(nachsortieren.PINS)
+        with mock.patch.object(nachsortieren, "WORKER", path), mock.patch.object(nachsortieren, "_free_gib", return_value=10**6), \
+                mock.patch.object(nachsortieren, "size", return_value="klein"), contextlib.redirect_stdout(io.StringIO()) as out:
+            try:
+                asyncio.run(nachsortieren._start())
+            finally:
+                nachsortieren._stop()
+        self.assertIn("anders als beim ersten Mal", nachsortieren.status()["error"])
+        self.assertIn("wissen: nachsortieren modell fehler | model files changed", out.getvalue())
+        self.assertFalse(os.path.exists(nachsortieren.PINS))
+
     def test_model_files_are_pinned_the_first_time(self):
         with contextlib.suppress(FileNotFoundError):
             os.remove(nachsortieren.PINS)
-        self.assertTrue(nachsortieren._check_pins("klein", {"a/model.onnx": "1" * 64}))
-        self.assertTrue(nachsortieren._check_pins("klein", {"a/model.onnx": "1" * 64}))
-        self.assertFalse(nachsortieren._check_pins("klein", {"a/model.onnx": "2" * 64}))
-        self.assertTrue(nachsortieren._check_pins("gross", {"b/model.onnx": "3" * 64}))   # each size its own
-        self.assertFalse(nachsortieren._check_pins("klein", {}))
+        c1, c2 = "c" * 40, "d" * 40
+        self.assertTrue(nachsortieren._check_pins("klein", {"a/model.onnx": "1" * 64}, c1))
+        self.assertTrue(nachsortieren._check_pins("klein", {"a/model.onnx": "1" * 64}, c1))
+        self.assertFalse(nachsortieren._check_pins("klein", {"a/model.onnx": "2" * 64}, c1))   # same commit, other files
+        self.assertTrue(nachsortieren._check_pins("gross", {"b/model.onnx": "3" * 64}, c1))   # each size its own
+        self.assertFalse(nachsortieren._check_pins("klein", {}, c1))
+        self.assertTrue(nachsortieren._check_pins("klein", {"a/model.onnx": "2" * 64}, c2))    # a new pinned commit
+        self.assertFalse(nachsortieren._check_pins("klein", {"a/model.onnx": "1" * 64}, c2))
+        os.remove(nachsortieren.PINS)
+        with open(nachsortieren.PINS, "w") as f:      # a pin from before the commits were pinned: recorded anew once
+            json.dump({"klein": {"onnx/model.onnx": "9" * 64}}, f)
+        self.assertTrue(nachsortieren._check_pins("klein", {"onnx/model_qint8_arm64.onnx": "1" * 64}, c1))
+        self.assertFalse(nachsortieren._check_pins("klein", {"onnx/model.onnx": "9" * 64}, c1))
         os.remove(nachsortieren.PINS)
 
 
