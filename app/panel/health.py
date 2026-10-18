@@ -375,6 +375,8 @@ def alerts():
     import rundlauf
     out += rundlauf.alerts()         # the round trip through the models: the step that hakt, a step much slower
     out += guard.alerts()            # the change log changed afterwards (its chain breaks, guard.chain_daily)
+    import loopwacht
+    out += loopwacht.alerts()        # the panel's loop stood still (Hänge-Wächter): for an hour after it
     return out
 
 

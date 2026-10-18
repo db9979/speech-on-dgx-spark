@@ -1178,6 +1178,9 @@ PrivateTmp=yes
 WantedBy=multi-user.target
 EOF
 
+# Grenzen pro Dienst (Dominik 2026-10-18 "3a"): the panel never takes the last core, so sshd, the case, the screen and
+# the phone keep answering while it works hard (on a Raspberry Pi 5: 3 of 4 cores)
+PANEL_CPU=$(( $(nproc) > 1 ? ($(nproc) - 1) * 100 : 100 ))%
 cat >/etc/systemd/system/speech-spark-panel.service <<EOF
 [Unit]
 Description=Speech on DGX Spark: web panel
@@ -1196,9 +1199,21 @@ EnvironmentFile=$ETC/panel.env
 ExecStart=$PREFIX/venv-panel/bin/python $PREFIX/app/panel/panel.py
 Restart=always
 RestartSec=5
-# a runaway request restarts the panel instead of taking memory from the LLM lanes
+# Hänge-Wächter (panel/loopwacht.py, Dominik 2026-10-18 "1a"): the panel tells systemd every second that its loop
+# still beats; a loop standing still for WatchdogSec (loopwacht.RESTART_S) gets the panel stopped and started again
+WatchdogSec=90
+NotifyAccess=main
+WatchdogSignal=SIGKILL
+# a runaway request restarts the panel instead of taking memory from the LLM lanes; above MemoryHigh it is slowed down
+# and gives memory back first
+MemoryHigh=3G
 MemoryMax=4G
 OOMScoreAdjust=900
+# the voice assistant always first (Dominik 2026-10-18): the panel answers chats, speakers, Wyoming and the phone, so
+# it gets the CPU and disk share of the speech services; only the last core stays for the system
+CPUQuota=$PANEL_CPU
+CPUWeight=1000
+IOWeight=1000
 PrivateTmp=yes
 
 [Install]
@@ -1536,6 +1551,12 @@ ExecStart=$PREFIX/venv-panel/bin/python $PREFIX/app/asr_proxy.py
 Restart=on-failure
 RestartSec=10
 MemoryMax=2G
+# Parakeet on the CPU is speech recognition: like the speech services first (Dominik 2026-10-18 "der Sprachassistent
+# muss immer Vorrang haben"), only the last core stays for the system (sshd, the case, the screen)
+Nice=-5
+CPUWeight=1000
+IOWeight=1000
+CPUQuota=$PANEL_CPU
 NoNewPrivileges=yes
 PrivateTmp=yes
 
@@ -1546,6 +1567,26 @@ else
   systemctl disable --now speech-spark-notasr.service 2>/dev/null || true
   rm -f /etc/systemd/system/speech-spark-notasr.service
 fi
+# Hardware-Watchdog (Dominik 2026-10-18 "5a"), only on a Raspberry Pi: systemd tells the Pi's watchdog every few
+# seconds that it still runs; if the whole computer freezes, the watchdog restarts it after RuntimeWatchdogSec (15 s,
+# the most the Pi's watchdog can wait). On other computers nothing changes.
+WD_CONF=/etc/systemd/system.conf.d/speech-spark-watchdog.conf
+if [ -c /dev/watchdog ] && tr -d '\0' </proc/device-tree/model 2>/dev/null | grep -q '^Raspberry Pi'; then
+  mkdir -p /etc/systemd/system.conf.d
+  WD_NEW="# written by speech-on-dgx-spark install.sh: restart the Raspberry Pi when the whole computer freezes
+[Manager]
+RuntimeWatchdogSec=15
+RebootWatchdogSec=2min"
+  if [ "$(cat "$WD_CONF" 2>/dev/null)" != "$WD_NEW" ]; then
+    printf '%s\n' "$WD_NEW" >"$WD_CONF"
+    if systemctl daemon-reexec; then say "Hardware watchdog on: the Pi restarts by itself when it freezes (15 s)"
+    else warn "hardware watchdog: systemd did not take it, active after the next restart"; fi
+  fi
+elif [ -e "$WD_CONF" ]; then
+  rm -f "$WD_CONF"
+  systemctl daemon-reexec || true
+fi
+
 # ---------------------------------------------------------------- logs
 # The speech units log into their own journal namespace with a size and age cap, so a chatty
 # engine can never fill the disk (and does not push other logs out of the system journal).

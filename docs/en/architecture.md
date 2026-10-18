@@ -349,6 +349,7 @@ Live overview, logs, watchers, backup, update, help and the admin pages.
 | `app/panel/latency.py` | How long people wait: the time from the question to the first sound of the answer, for every answer of the assistant (chat.py), kept for two weeks in STATE/l … |
 | `app/panel/live.py` | Status → Live: what the Spark does right now, for the admin and for a wall monitor. |
 | `app/panel/logfilter.py` | Diagnose filters for Status → Logs: the journal lines threads usually ask for ("room:", "esp32:", "chat: web search", ...), so nobody has to type journalctl … |
+| `app/panel/loopwacht.py` | Hänge-Wächter des Panels: the panel answers every request on one event loop, so one piece of heavy work on it (2026-10-18: Ordner auslassen with thousands of … |
 | `app/panel/meldung.py` | Probleme melden: a problem report from the panel, the phone apps, Telegram, the voice and the speakers as an issue on GitHub, with anonymized log lines. |
 | `app/panel/modellseite.py` | Status → Models: the model catalog (app/modelle.py) to look at, for admins only. |
 | `app/panel/monitor.py` | Monitoring: GPU, memory and CPU samples, and the health of the speech services. |

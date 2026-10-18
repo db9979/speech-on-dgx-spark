@@ -336,21 +336,25 @@ async def _fetch_firmware(c=None):
                         f.write(data)
             write_json(os.path.join(tmp, "manifest.json"), m, mode=0o644)
         except BaseException:
-            shutil.rmtree(tmp, ignore_errors=True)
+            await asyncio.to_thread(shutil.rmtree, tmp, True)
             raise
-        final = os.path.join(FW_DIR, ver)
-        shutil.rmtree(final, ignore_errors=True)
-        os.replace(tmp, final)
-        write_json(os.path.join(FW_DIR, "current.json"), {"version": ver, "previous": cur["version"] if cur else ""}, mode=0o644)
-        keep = {ver, cur["version"] if cur else ""}
-        for x in os.listdir(FW_DIR):
-            if os.path.isdir(os.path.join(FW_DIR, x)) and x not in keep:
-                shutil.rmtree(os.path.join(FW_DIR, x), ignore_errors=True)
+        await asyncio.to_thread(_take_firmware, tmp, ver, cur["version"] if cur else "")
         print("esp32: firmware", ver, "taken", flush=True)
         return ver
     finally:
         if own:
             await c.aclose()
+
+
+def _take_firmware(tmp, ver, previous):
+    """The downloaded version becomes the current one; older folders go (in a worker thread: deleting folders)."""
+    final = os.path.join(FW_DIR, ver)
+    shutil.rmtree(final, ignore_errors=True)
+    os.replace(tmp, final)
+    write_json(os.path.join(FW_DIR, "current.json"), {"version": ver, "previous": previous}, mode=0o644)
+    for x in os.listdir(FW_DIR):
+        if os.path.isdir(os.path.join(FW_DIR, x)) and x not in (ver, previous):
+            shutil.rmtree(os.path.join(FW_DIR, x), ignore_errors=True)
 
 
 async def notaus_close():

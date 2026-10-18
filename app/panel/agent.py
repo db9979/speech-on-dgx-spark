@@ -676,7 +676,7 @@ async def run_job(uid, jid):
     if plan:
         await watch_done(uid, jid, report, counts)
         return
-    _keep(uid, jid)
+    await asyncio.to_thread(_keep, uid, jid)   # a report as a document is read like an upload: off the loop
     print(f"agent: job {state}, {len(steps)} steps", flush=True)
     await deliver(uid, job(uid, jid), used_private)
 
@@ -756,7 +756,7 @@ async def watch_done(uid, jid, report, counts):
           f"dropped {verdict['dropped'] if verdict else 0} | {profiles.log_name(profiles.by_id(uid))}", flush=True)
     if r == "neu":
         _set_job(uid, jid, finds=verdict["new"][:beobachten.MAX_FINDS], title=p.get("title", ""))
-        _keep(uid, jid)
+        await asyncio.to_thread(_keep, uid, jid)
         title, body = beobachten.push_text(p, verdict["new"])
         try:
             await push.send(uid, title, body, tag="agent", private=True)
@@ -764,7 +764,7 @@ async def watch_done(uid, jid, report, counts):
             print("agent: watch push failed |", type(e).__name__, flush=True)
     elif r == "bericht":
         _set_job(uid, jid, title=p.get("title", ""))
-        _keep(uid, jid)
+        await asyncio.to_thread(_keep, uid, jid)
         await deliver(uid, job(uid, jid), True)
     else:
         _drop_job(uid, jid)      # a quiet run leaves only its line in the history

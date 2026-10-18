@@ -22,6 +22,7 @@ profile only gets its own requests (Logs → Anfragen, fixed words and numbers),
 Limits: text 2000 characters, 200 lines / 32 KB per report, 10 drafts and 3 sent per profile and day, 10 sent per
 day on the whole Spark, one send per minute, 20 open drafts per profile, 200 in all.
 """
+import asyncio
 import hashlib
 import hmac
 import ipaddress
@@ -877,8 +878,8 @@ async def by_phrase(uid, name, text, channel="sprache"):
         return "Probleme melden ist auf diesem Spark ausgeschaltet."
     if not features.allowed("melden", uid):
         return "Probleme melden geht für dich gerade nicht. " + features.missing_text("melden", uid)
-    try:
-        create(uid, name, channel, text, "sonstiges", 30)
+    try:   # a draft reads the journal (journalctl): off the loop
+        await asyncio.to_thread(create, uid, name, channel, text, "sonstiges", 30)
     except HTTPException as e:
         return str(e.detail)
     if channel != "telegram":     # Telegram gets the answer right there
@@ -932,10 +933,11 @@ async def post_draft(request: Request):
     b = await core.json_body(request, MAX_APPLOG + 8192)
     tid = b.get("trace") if isinstance(b.get("trace"), str) and re.fullmatch(r"[0-9a-f]{6}", b.get("trace") or "") else None
     applog = b.get("applog") if isinstance(b.get("applog"), str) and who["channel"] == "app" else ""
-    d = create(who["uid"], who["name"], who["channel"], b.get("text", ""), str(b.get("area") or "sonstiges"),
-               b.get("minutes") if isinstance(b.get("minutes"), int) else 30, logs=b.get("logs") is True,
-               reqs=b.get("requests", True) is True, sysinfo=b.get("system", True) is True, applog=applog,
-               staff=who["staff"] and who["logs"], may_logs=who["logs"], tid=tid)
+    d = await asyncio.to_thread(   # a draft reads the journal (journalctl): off the loop
+        create, who["uid"], who["name"], who["channel"], b.get("text", ""), str(b.get("area") or "sonstiges"),
+        b.get("minutes") if isinstance(b.get("minutes"), int) else 30, logs=b.get("logs") is True,
+        reqs=b.get("requests", True) is True, sysinfo=b.get("system", True) is True, applog=applog,
+        staff=who["staff"] and who["logs"], may_logs=who["logs"], tid=tid)
     return dict(view(d, who["uid"]), preview=preview(d))
 
 

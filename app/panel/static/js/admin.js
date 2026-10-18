@@ -198,7 +198,10 @@ function zRCard(c){const card=document.createElement('div');card.className='card
       c.ram_cache!=null?t('Cache ','cache ')+fmt(c.ram_cache,' GiB',1):'',c.swap?t('Swap ','swap ')+fmt(c.swap,' GiB',1):''].filter(Boolean).join(' · '),
       (K.frei||[]).map(x=>x==null||c.ram_total==null?null:c.ram_total-x),c.ram_total);
     row(t('Temperatur','Temperature'),fmt(c.temp,' °C'),[c.luefter==null?'':c.luefter?t('Lüfter an','fan on'):t('Lüfter aus','fan off'),
-      c.temp_warn?t('Hinweis ab ','note from ')+c.temp_warn+' °C':''].filter(Boolean).join(' · '),K.temp,100)}
+      c.temp_warn?t('Hinweis ab ','note from ')+c.temp_warn+' °C':''].filter(Boolean).join(' · '),K.temp,100);
+    const hg=c.haenger||{};   // the Hänge-Wächter (loopwacht.py): stalls of the panel in the last 24 hours
+    row(t('Panel hing','Panel stalled'),hg.jetzt_s?t('gerade ','now ')+hg.jetzt_s+' s':(hg.n||0)+t('-mal','×'),
+      hg.n?t('in 24 Std., längstens ','in 24 h, longest ')+hg.max_s+' s':t('in 24 Std. nie','never in 24 h'),null,null,hg.jetzt_s?'bad':hg.n?'warn':'ok')}
   row(t('Platte','Disk'),fmt(c.platte_frei,t(' GB frei',' GB free')),c.platte_total!=null?t('von ','of ')+fmt(c.platte_total,' GB')+' · '+fmt(c.platte_pct,t(' % belegt',' % used')):'',
     null,null,c.platte_pct==null?'':hw.includes('platte_'+c.id)?'warn':'ok');
   row(t('Netz','Network'),!c.netz_mbit?'–':c.netz_mbit>=1000?fmt(c.netz_mbit/1000,' Gbit/s',c.netz_mbit%1000?1:0):fmt(c.netz_mbit,' Mbit/s'),

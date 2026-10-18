@@ -239,8 +239,10 @@ def bahn(R, x, w, top, bot, k, karte, live):
                                                               (f"{zahl(c.get('temp'))} °C", "y" if (c.get("temp") or 0) >= (c.get("temp_warn") or 80) else "w")], x + w - 1)
         strom = c.get("strom") or {}
         lu = {True: "Lüfter an", False: "Lüfter aus"}.get(c.get("luefter"), "")
+        hg = c.get("haenger") or {}   # the Hänge-Wächter (loopwacht.py): stalls of the panel in the last 24 hours
         rest = " · ".join(p for p in (lu, f"Platte {zahl(c.get('platte_pct'))} %",
-                                      f"Strom {strom.get('spannung')}" if strom else "") if p)
+                                      f"Strom {strom.get('spannung')}" if strom else "",
+                                      f"hing {hg['n']}-mal" if hg.get("n") else "") if p)
         R.put(i, top + 3, kurz("nicht erreichbar" if weg_ else rest, w - 4), "r" if weg_ else "m")
         hist = (c.get("kurven") or {}).get("gpu" if k == "modell" else "cpu")
     R.put(i, top + 4, "20 min ", "m")

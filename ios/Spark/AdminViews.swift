@@ -195,6 +195,10 @@ struct StatusView: View {
                         if c["temp"] is NSNumber { LabeledContent("Temperatur") { Text(verbatim: Self.num(c["temp"]) + " °C") } }
                         LabeledContent("Platte frei") { Text(verbatim: Self.num(c["platte_frei"]) + " GB · " + Self.num(c["platte_pct"]) + " %") }
                         LabeledContent("Dienste") { Text(verbatim: Self.dienste(c)) }
+                        // the Hänge-Wächter (loopwacht.py): how often the panel stood still in the last 24 hours
+                        if let hg = c["haenger"] as? [String: Any], (hg["n"] as? Int ?? 0) > 0 {
+                            LabeledContent("Panel hing") { Text("\(hg["n"] as? Int ?? 0)-mal · längstens \(hg["max_s"] as? Int ?? 0) s").foregroundStyle(.orange) }
+                        }
                     } header: { Text(verbatim: Self.rechnerName(c)) }
                 }
             }

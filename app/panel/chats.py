@@ -1621,8 +1621,8 @@ def _drop(cid):
         os.remove(_chat_file(cid))
     except OSError:
         pass
-    import shutil
-    shutil.rmtree(_media_dir(cid), ignore_errors=True)
+    import shutil   # a chat's pictures and voice messages can be many: deleted in a thread of their own, never on the loop
+    threading.Thread(target=shutil.rmtree, args=(_media_dir(cid), True), name="chats-drop", daemon=True).start()
 
 
 def forget(uid):

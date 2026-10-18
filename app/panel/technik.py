@@ -214,6 +214,7 @@ MODULE = {
     "notbetrieb": ("teilen", "Notbetrieb mit Parakeet: feste Befehle ohne Sprachmodell, wenn der Modell-Rechner fehlt"),
     "umziehen": ("teilen", "Spark teilen: Umzugs-Sicherung packen und einspielen, wenn das Panel den Rechner wechselt"),
     "health": ("betrieb", "Stabilität: Wächter für hängende Dienste, Echtprüfung"),
+    "loopwacht": ("betrieb", "Hänge-Wächter: Logzeile mit der Stelle, wenn das Panel hängt; systemd startet es neu"),
     "live": ("betrieb", "Live-Übersicht: was der Spark gerade tut"),
     "tracelog": ("betrieb", "Logs → Anfragen: der Weg jeder Anfrage"),
     "aktiv": ("betrieb", "Aktiv in den letzten 10 Minuten: Profile und Gäste als Zahl, nur im Speicher (OLED, Monitoring, Live)"),

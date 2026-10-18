@@ -235,7 +235,8 @@ class Karten(unittest.TestCase):
     def test_live_shows_both_in_numbers(self):
         self.runde(1000.0)
         d = rechnerblick.for_live()
-        self.assertEqual(d["panel"], {"cpu": 3.0, "belegt": 7.9 - 7.2, "total": 7.9, "temp": 52.0, "platte": 11.0})
+        self.assertEqual(d["panel"], {"cpu": 3.0, "belegt": 7.9 - 7.2, "total": 7.9, "temp": 52.0, "platte": 11.0,
+                                      "haenger": 0})   # no stall of the panel (loopwacht.view)
         self.assertEqual(d["modell"], {"gpu": 12.0, "frei": 41.2, "cpu": 4.0})
         self.assertIn("panelrechner", live.TARGETS)
         self.assertEqual(live._n(7.25, 1), "7,2")

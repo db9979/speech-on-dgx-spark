@@ -5,7 +5,8 @@ minutes. On one Spark nothing changes (the page shows what it showed before).
     probe(gpu)        every 3 s from the panel's sampler: measures this computer (rechner.messen), takes the model
                       computer's values from its last status (steuer.cached, the Wärter sends rechner.messen), keeps
                       the curves and checks the warnings
-    fuer_status()     /api/status "rechner": both cards (numbers, fixed words, curves, level, warnings)
+    fuer_status()     /api/status "rechner": both cards (numbers, fixed words, curves, level, warnings; the panel
+                      computer's card also the stalls of the panel's loop, loopwacht.view)
     alerts()          the warnings for „Braucht dich“ (health.alerts), each with the way to the cards
     for_live()        Zustand → Live: the boxes „Modell-Rechner“ and „Panel-Rechner“, numbers only
 
@@ -238,8 +239,10 @@ def karte(k, now=None, mono=None):
                    dienste=_dienste_modell(d))
     else:
         from core import app_version
+        import loopwacht
         out.update(ok=bool(m), stumm_s=None, version=app_version(), temp_warn=TEMP_WARN,
-                   dienste=_dienste_panel(time.monotonic() if mono is None else mono))
+                   dienste=_dienste_panel(time.monotonic() if mono is None else mono),
+                   haenger=loopwacht.view(now))   # the Hänge-Wächter: stalls of the panel's loop, numbers only
     lv = {ARTEN[a][1] for a in w}
     out["stufe"] = "bad" if "bad" in lv or not out["ok"] else "warn" if "warn" in lv else "ok"
     return out
@@ -269,6 +272,7 @@ def for_live():
     with _lock:
         p, m, g = dict(_letzt["panel"] or {}), dict(_letzt["modell"] or {}), dict(_gpu)
     belegt = (p["ram_total"] - p["ram_frei"]) if p.get("ram_total") is not None and p.get("ram_frei") is not None else None
+    import loopwacht
     return {"on": True, "panel": {"cpu": p.get("cpu"), "belegt": belegt, "total": p.get("ram_total"), "temp": p.get("temp"),
-                                  "platte": p.get("platte_pct")},
+                                  "platte": p.get("platte_pct"), "haenger": loopwacht.view()["n"]},
             "modell": {"gpu": g.get("util"), "frei": m.get("ram_frei"), "cpu": m.get("cpu")}}

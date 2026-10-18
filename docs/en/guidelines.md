@@ -117,6 +117,7 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 - Downloads streamed and with a byte limit. Texts for TTS and chat limited, the last message to about 4000 characters. (C, P Prüfung)
 - Rate limit per IP plus a global semaphore for LLM, ASR and TTS (`guard.limit`, `guard.Slot`). Upper limits for jobs, tool calls, searches and memory entries. (C)
 - Caches with expiry and maximum size. Heavy work runs via `to_thread` with a budget, never in the event loop. (C; 🧪 test_tempo.OffTheLoop)
+- **Nothing heavy on the panel's event loop** (Dominik 2026-10-18, after the stall when many folders were left out): programs (`subprocess`), pauses, deleting or walking folder trees, reading documents (`documents.add`, `reread`, …) and writing per document in a loop (`documents.delete`, `nasquelle._put_state`, …) run from an `async` function only via `asyncio.to_thread` or `vorrang.in_thread`. The test finds such ways across all modules; what another thread still moves stands with a reason in `test_loopwacht.LATER` (it only shrinks). What still hangs, the hang guard (`loopwacht.py`) finds: after 5 s a log line with the place, after 90 s systemd restarts the panel. (🧪 test_loopwacht)
 - Background work gives speech priority: `vorrang.run`, `post`, `in_thread`, `quiet` and `hold`. At most one background request at a time to the language model. This is a fixed rule. (M [[vorrang-sprache-plan]]; 🧪 test_vorrang)
 - **Maintenance pause** (Dominik 2026-10-14): background work that asks the language model goes through `vorrang.run`/`post` or waits first with `quiet`/`hold(…, model=True)`; that way it also waits during a maintenance pause. Code that asks the model itself in the foreground checks `wartung.paused("llm")` first and says `wartung.sentence` instead of waiting for a time-out. (🧪 test_wartung)
 
@@ -348,6 +349,7 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 ## 12. Operation, update, resources
 
 - About 10 GiB of free memory on tars. DGX OS kills processes below about 8 GiB. New services need `MemoryMax=`. (M, D; 🧪 test_hardening)
+- **No service brings the computer down** (Dominik 2026-10-18 "1a 2a 3a 5a"): the panel has `WatchdogSec=` (hang guard), never takes the last core (`CPUQuota`) and has a soft memory limit before the hard one (`MemoryHigh`, `MemoryMax`). **The voice assistant always comes first** (Dominik 2026-10-18): the panel and the emergency mode with Parakeet get the same share as the speech services (`CPUWeight=1000`, `IOWeight=1000`, Parakeet `Nice=-5`), never less; a new service that computes a lot and is not part of speech goes behind them (positive `Nice=`, smaller weight). On a Raspberry Pi the hardware watchdog (`RuntimeWatchdogSec=15`) restarts a frozen computer. (🧪 test_loopwacht.Limits)
 - An update interrupts for about 8 seconds. Nightly work does not run during an update (`update.update_running()`). Device rounds run from 05:15. (M)
 - Self-test on tars with `nice 19` and `ionice`. Test priority code with `nice -n 19`. (M)
 - The panel venv is created from the lock only if venv-panel is new. A new library therefore needs an installation path for existing installations. (M)
@@ -401,6 +403,7 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 | test_app_gleichstand | one list of Ich pages, every page reachable in the apps (exceptions with a reason), pages follow the release, app texts with English |
 | test_aufraeumen | no new duplicates: own `<think>` filter, a dict key twice, unused import, own JSON write, own model call, raw `fetch(`, names differing between features.py and guides.js (the legacy list only shrinks) |
 | test_grundausstattung | basic set only without setup, without anything new going out and without a code; internet part never shipped on; card for the admin only, with undo; help sentence in an empty chat |
+| test_loopwacht | nothing heavy on the panel's event loop (the list of open places only shrinks), hang guard with log line and restart, limits of the panel and the emergency mode, hardware watchdog only on a Raspberry Pi |
 | test_richtlinie | values shipped on with a reason, journal without profile names, VERSION/CHANGELOG/README in agreement, guideline de/en present and its test names valid |
 
 **Agreement only (no test):**

@@ -35,7 +35,7 @@ PY = "python3.11"   # the version GitHub "Tests" runs (.github/workflows/tests.y
 # scanner (.682) turned main red although the changed files' own tests were green.
 WAECHTER = ("test_richtlinie", "test_aufraeumen", "test_technik", "test_sperre_ueberall", "test_log_luecken",
             "test_app_gleichstand", "test_sprunglinks", "test_changelog", "test_doku_stand", "test_hilfe",
-            "test_scanner")
+            "test_scanner", "test_loopwacht")
 
 
 def git(*args):

@@ -117,6 +117,7 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
 - Downloads gestreamt und mit Byte-Grenze. Texte für TTS und Chat begrenzt, die letzte Nachricht auf etwa 4000 Zeichen. (C, P Prüfung)
 - Rate-Limit pro IP plus globale Semaphore für LLM, ASR und TTS (`guard.limit`, `guard.Slot`). Obergrenzen für Jobs, Werkzeugaufrufe, Suchen und Speicher-Einträge. (C)
 - Caches mit Ablauf und Maximalgröße. Schwere Arbeit läuft per `to_thread` mit Budget, nie im Event-Loop. (C; 🧪 test_tempo.OffTheLoop)
+- **Nichts Schweres auf der Ereignis-Schleife des Panels** (Dominik 2026-10-18, nach dem Hänger beim Auslassen vieler Ordner): Programme (`subprocess`), Pausen, Ordnerbäume löschen oder ablaufen, Dokumente lesen (`documents.add`, `reread`, …) und Schreiben je Dokument in einer Schleife (`documents.delete`, `nasquelle._put_state`, …) laufen aus einer `async`-Funktion nur über `asyncio.to_thread` oder `vorrang.in_thread`. Der Test findet solche Wege über alle Module; was ein anderer Thread noch umbaut, steht mit Grund in `test_loopwacht.LATER` (wird nur kürzer). Was trotzdem hängt, findet der Hänge-Wächter (`loopwacht.py`): nach 5 s eine Logzeile mit der Stelle, nach 90 s startet systemd das Panel neu. (🧪 test_loopwacht)
 - Hintergrundarbeit gibt der Sprache Vorrang: `vorrang.run`, `post`, `in_thread`, `quiet` und `hold`. Höchstens eine Hintergrund-Anfrage gleichzeitig ans Sprachmodell. Das ist eine feste Regel. (M [[vorrang-sprache-plan]]; 🧪 test_vorrang)
 - **Wartungspause** (Dominik 2026-10-14): Hintergrundarbeit, die das Sprachmodell fragt, läuft über `vorrang.run`/`post` oder wartet vorher mit `quiet`/`hold(…, model=True)`; so wartet sie auch während einer Wartungspause. Wer das Modell im Vordergrund selbst fragt, prüft vorher `wartung.paused("llm")` und sagt `wartung.sentence` statt auf eine Zeitüberschreitung zu warten. (🧪 test_wartung)
 
@@ -348,6 +349,7 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
 ## 12. Betrieb, Update, Ressourcen
 
 - Etwa 10 GiB freier Speicher auf tars. DGX OS beendet unter etwa 8 GiB. Neue Dienste brauchen `MemoryMax=`. (M, D; 🧪 test_hardening)
+- **Kein Dienst legt den Rechner lahm** (Dominik 2026-10-18 „1a 2a 3a 5a“): Das Panel hat `WatchdogSec=` (Hänge-Wächter), nimmt nie den letzten Kern (`CPUQuota`) und hat eine weiche Speichergrenze vor der harten (`MemoryHigh`, `MemoryMax`). **Der Sprachassistent hat immer Vorrang** (Dominik 2026-10-18): Panel und Notbetrieb mit Parakeet bekommen denselben Anteil wie die Sprachdienste (`CPUWeight=1000`, `IOWeight=1000`, Parakeet `Nice=-5`), nie weniger; ein neuer Dienst, der viel rechnet und nicht zur Sprache gehört, kommt dahinter (`Nice=` positiv, kleineres Gewicht). Auf einem Raspberry Pi startet der Hardware-Watchdog (`RuntimeWatchdogSec=15`) einen eingefrorenen Rechner neu. (🧪 test_loopwacht.Limits)
 - Ein Update unterbricht etwa 8 Sekunden. Nächtliche Arbeit läuft nicht während eines Updates (`update.update_running()`). Geräte-Runden laufen ab 05:15. (M)
 - Selbsttest auf tars mit `nice 19` und `ionice`. Prioritäten-Code mit `nice -n 19` testen. (M)
 - Die Panel-venv entsteht aus dem Lock nur, wenn venv-panel neu ist. Eine neue Bibliothek braucht deshalb einen Installationsweg für bestehende Installationen. (M)
@@ -401,6 +403,7 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
 | test_app_gleichstand | eine Liste der Ich-Seiten, jede Seite in den Apps erreichbar (Ausnahmen mit Grund), Seiten folgen der Freigabe, App-Texte mit Englisch |
 | test_aufraeumen | keine neuen Doppel: eigener `<think>`-Filter, doppelter Dict-Schlüssel, ungenutzter Import, eigenes JSON-Schreiben, eigener Modellaufruf, roher `fetch(`, abweichende Namen in features.py und guides.js (Altlastenliste schrumpft nur) |
 | test_grundausstattung | Grundausstattung nur ohne Einrichtung, ohne Neues nach außen und ohne Code; Internet-Teil nie ab Werk; Karte nur für den Admin, mit Rückgängig; Hilfe-Satz im leeren Chat |
+| test_loopwacht | nichts Schweres auf der Ereignis-Schleife des Panels (Liste der noch offenen Stellen wird nur kürzer), Hänge-Wächter mit Logzeile und Neustart, Grenzen von Panel und Notbetrieb, Hardware-Watchdog nur am Raspberry Pi |
 | test_richtlinie | an ausgelieferte Werte mit Grund, Journal ohne Profilnamen, VERSION/CHANGELOG/README im Einklang, Richtlinie de/en vorhanden und ihre Testnamen gültig |
 
 **Nur Absprache (kein Test):**

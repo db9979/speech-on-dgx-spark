@@ -1876,6 +1876,13 @@
 "titel": "Wachposten",
 "text": "A: Admin: Funktionen → Wachposten an. Einstellungen → Auf einen Blick zeigt unter Sicherheit „Wachposten“ grün. B: In einem anderen Browser dreimal die falsche PIN eines Testprofils eingeben, bis es gesperrt ist: innerhalb einer Minute kommt eine Mitteilung „🛡️ Wachposten: Sperre nach falschen Anmeldungen“ mit Uhrzeit, ohne Namen und Adresse. C: Einen Passkey anlegen oder einen Browser als vertraut speichern: Mitteilung „Neuer Zugang“. D: Der Weg in der Mitteilung öffnet Zustand → Logs → Änderungen. E: Funktionen → Wachposten aus: dieselben Schritte bringen keine Mitteilung mehr.",
 "thread": "Sicheres KI-System"
+},
+{
+"id": "P292",
+"v": 790,
+"titel": "Pi stabiler: Hänge-Wächter und Grenzen",
+"text": "A: Auf dem Pi sudo speech-spark update, danach systemctl show speech-spark-panel -p WatchdogUSec,CPUQuotaPerSecUSec,MemoryHigh: 1min 30s, 3s, 3221225472 (3 GiB). B: systemctl show -p RuntimeWatchdogUSec zeigt 15s. C: Zustand → Logs → Diagnose, Bereich System: „loopwacht: on | stall 5 s | restart 90 s“. D: Ich → Dokumente → Ausgelassene Ordner einen großen Ordner auslassen: hängt das Panel kurz, steht „loopwacht: stalled | … | 5 s“ und danach „free again“ im Log, oben auf den Admin-Seiten ein Hinweis und unter Zustand → Monitoring → Rechner am Panel-Rechner „Panel hing“. E: Während das Panel arbeitet, bleiben SSH, OLED und Steuerzentrale bedienbar.",
+"thread": "Pi stabilisieren"
 }
 ]
 }

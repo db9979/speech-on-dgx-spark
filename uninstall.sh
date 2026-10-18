@@ -42,6 +42,10 @@ nft delete table inet speech_spark_teilen 2>/dev/null || true
 rm -f /etc/speech-spark-teilen.nft
 systemctl reset-failed 'speech-spark-*' 2>/dev/null || true
 rm -f /etc/sudoers.d/speech-spark /usr/local/bin/speech-spark-bench /usr/local/bin/speech-spark /etc/systemd/journald@speech-spark.conf
+if [ -e /etc/systemd/system.conf.d/speech-spark-watchdog.conf ]; then   # the Pi's hardware watchdog (install.sh "5a")
+  rm -f /etc/systemd/system.conf.d/speech-spark-watchdog.conf
+  systemctl daemon-reexec || true
+fi
 systemctl stop systemd-journald@speech-spark.service systemd-journald@speech-spark.socket 2>/dev/null || true
 # plan raspberry-split B7: the case's block in the Raspberry Pi's config.txt goes (active after a restart)
 [ -x /opt/speech-spark/app/speech-spark.sh ] && bash /opt/speech-spark/app/speech-spark.sh gehaeuse aus >/dev/null 2>&1 || true

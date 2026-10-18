@@ -1478,7 +1478,8 @@ def snapshot(view="admin", now=None):
         if x["id"] == "panelrechner":   # Panel-Rechner: CPU, memory, temperature, disk (numbers only, no name)
             rp = rb.get("panel") or {}
             x["sub"] = (f"CPU {_n(rp.get('cpu'))} % · RAM {_n(rp.get('belegt'), 1)} von {_n(rp.get('total'), 1)} GiB"
-                        f" · {_n(rp.get('temp'))} °C · Platte {_n(rp.get('platte'))} %")
+                        f" · {_n(rp.get('temp'))} °C · Platte {_n(rp.get('platte'))} %"
+                        + (f" · Panel hing {rp['haenger']}-mal in 24 Std." if rp.get("haenger") else ""))
         if x["id"] == "telefon":   # Telefon: signed in, calls in numbers (never a number, a name or a word)
             x["sub"] = (("angemeldet" if tel.get("ok") else "nicht angemeldet") + f" · {tel.get('calls', 0)} Gespräche jetzt · heute "
                         f"{tel.get('angenommen', 0)} angenommen, {tel.get('abgelehnt', 0)} abgelehnt, {tel.get('fragen', 0)} Fragen, "

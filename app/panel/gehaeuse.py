@@ -19,6 +19,7 @@ line from the panel: I2C and SPI on and the fan overlay between two marker lines
 service user in the groups i2c, spi and gpio; "Entfernen" takes the block out again. A change there needs a restart of the Pi: root leaves NEUSTART in /run (gone after the restart), and only
 then the panel's "Neu starten" restarts the Pi. Logs: "gehaeuse: …" with fixed words and numbers.
 """
+import asyncio
 import fcntl
 import os
 import socket
@@ -832,7 +833,7 @@ async def _wunsch_starten(request, was):
         print("gehaeuse: neustart abgelehnt nicht noetig", flush=True)
         raise HTTPException(409, "Ein Neustart ist gerade nicht nötig.")
     wunsch(was)
-    if not _starten():
+    if not await asyncio.to_thread(_starten):   # sudo and systemctl: off the loop (Hänge-Wächter)
         print(f"gehaeuse: {was} start fehler", flush=True)
         raise HTTPException(503, "Ließ sich nicht starten. Auf dem Pi: sudo speech-spark update, dann noch einmal.")
     print(f"gehaeuse: {was} angefragt", flush=True)

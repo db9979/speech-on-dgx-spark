@@ -349,6 +349,7 @@ Live-Übersicht, Logs, Wächter, Sicherung, Update, Hilfe und die Admin-Seiten.
 | `app/panel/latency.py` | Wartezeit bis zum ersten Ton |
 | `app/panel/live.py` | Live-Übersicht: was der Spark gerade tut |
 | `app/panel/logfilter.py` | Diagnose-Filter und Hinweise für die Logs |
+| `app/panel/loopwacht.py` | Hänge-Wächter: Logzeile mit der Stelle, wenn das Panel hängt; systemd startet es neu |
 | `app/panel/meldung.py` | Probleme melden als GitHub-Issue |
 | `app/panel/modellseite.py` | Zustand → Modelle: Katalog, Speicher-Budget, Messen, Wechseln und Zurückholen, eigene Modelle hinzufügen und löschen |
 | `app/panel/monitor.py` | Messwerte: GPU, Speicher, CPU |

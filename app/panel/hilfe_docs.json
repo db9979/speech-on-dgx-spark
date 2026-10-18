@@ -7621,7 +7621,7 @@
 "file": "Spark teilen: Panel auf einem eigenen Rechner",
 "head": "Beide Rechner im Monitoring",
 "title": "Beide Rechner im Monitoring",
-"text": "- Modell-Rechner: GPU mit Temperatur und Leistung, Unified Memory mit der 8-GiB-Grenze, CPU, Platte, Netz, das laufende Sprachmodell und seine Dienste. Die Werte schickt der Wärter mit seinem Zustand. - Panel-Rechner: CPU, Arbeitsspeicher (belegt, verfügbar, Cache), Temperatur und Lüfter, Speicherkarte oder SSD, Netz, Strom (Unterspannung und Drosselung des Raspberry Pi) und seine Dienste."
+"text": "- Modell-Rechner: GPU mit Temperatur und Leistung, Unified Memory mit der 8-GiB-Grenze, CPU, Platte, Netz, das laufende Sprachmodell und seine Dienste. Die Werte schickt der Wärter mit seinem Zustand. - Panel-Rechner: CPU, Arbeitsspeicher (belegt, verfügbar, Cache), Temperatur und Lüfter, Speicherkarte oder SSD, Netz, Strom (Unterspannung und Drosselung des Raspberry Pi) und seine Dienste, dazu „Panel hing“: wie oft der Hänge-Wächter das Panel in den letzten 24 Stunden stillstehen sah, und wie lange längstens (Sicherheit und Betrieb)."
 },
 {
 "lang": "de",
@@ -15333,7 +15333,7 @@
 "file": "Spark split: the panel on a computer of its own",
 "head": "Both computers in Monitoring",
 "title": "Both computers in Monitoring",
-"text": "- Model computer: GPU with temperature and power, unified memory with the 8 GiB limit, CPU, disk, network, the running language model and its services. The Wärter sends the values with its status. - Panel computer: CPU, memory (used, available, cache), temperature and fan, SD card or SSD, network, power (the Raspberry Pi's under-voltage and throttling) and its services."
+"text": "- Model computer: GPU with temperature and power, unified memory with the 8 GiB limit, CPU, disk, network, the running language model and its services. The Wärter sends the values with its status. - Panel computer: CPU, memory (used, available, cache), temperature and fan, SD card or SSD, network, power (the Raspberry Pi's under-voltage and throttling) and its services, plus \"Panel stalled\": how often the hang guard saw the panel stand still in the last 24 hours, and the longest (Security and operation)."
 },
 {
 "lang": "en",

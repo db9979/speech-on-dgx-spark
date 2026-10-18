@@ -11220,6 +11220,26 @@
           }
         }
       }
+    },
+    "Panel hing": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Panel stalled"
+          }
+        }
+      }
+    },
+    "%lld-mal · längstens %lld s": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld× · longest %lld s"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

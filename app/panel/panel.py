@@ -717,6 +717,8 @@ async def serve():
         # lifespan off: the startup handlers (Telegram poller, reminders, watchdog, backups …) run once, with
         # the http server; before V01.0.214 they ran twice, and two Telegram pollers knocked each other out
         servers.append(Server(https_config(pcfg, cert, key)))
+    import loopwacht   # the Hänge-Wächter: systemd restarts a panel whose loop stands still (WatchdogSec=)
+    loopwacht.start()
     loop = asyncio.get_running_loop()
     for sig in (signal.SIGINT, signal.SIGTERM):
         loop.add_signal_handler(sig, lambda: [setattr(x, "should_exit", True) for x in servers])
