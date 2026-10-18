@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.799** · 2026-10-18 · Fix Eigene Dokumente: Seiten aus Wissensordnern sperren keinen Upload mehr („at most 600 pages may wait to be read“); eigene und Ordner-Seiten zählen getrennt, eigene werden zuerst gelesen, die Meldung ist deutsch und sagt, was man tun kann
 - **V01.0.798** · 2026-10-17 · OLED zeigt ein laufendes Update erzwungen: große Prozentzahl mit Balken, erst TARS, dann der Pi, auch nachts; LEDs blau; Prozent auch in Live und Steuerzentrale
 - **V01.0.797** · 2026-10-18 · Sprachmodell-Wechsel in den Apps: iPhone zeigt unter Zustand → Modelle dieselben sechs Schritte, jeder Admin bekommt eine Mitteilung, wenn der Wechsel fertig oder zurückgenommen ist
 - **V01.0.796** · 2026-10-18 · Sprachmodell-Wechsel auch in Steuerzentrale und am Gehäuse-Display: Schritt vorn in der Zeile, „LLM wechselt (4/6)“, gelbe LEDs, Seite Spark zuerst

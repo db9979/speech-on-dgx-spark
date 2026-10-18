@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.799** Fix: Upload von Scans nicht mehr durch Seiten aus Wissensordnern gesperrt, eigene Dokumente zuerst gelesen
 - **V01.0.798** OLED zeigt ein laufendes Update erzwungen: große Prozentzahl mit Balken, erst TARS, dann der Pi, auch nachts; LEDs blau; Prozent auch in Live und Steuerzentrale
 - **V01.0.797** Sprachmodell-Wechsel in den Apps und Mitteilung, wenn er fertig ist
 - **V01.0.796** Sprachmodell-Wechsel auch in Steuerzentrale und am Gehäuse-Display
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.792** Sprachmodelle vor jedem Start geprüft, Such-Modelle nach dem Festpinnen nicht mehr abgelehnt
 - **V01.0.791** Telefon: Tschüss oder „Nein danke“ nach „Noch etwas?“ beendet das Gespräch, der Spark legt selbst auf; ohne BYE nach 8 Sekunden ohne Ton
 - **V01.0.790** Pi stabiler: ein hängendes Panel startet von selbst neu und nennt im Log die Stelle; der Sprachassistent behält Vorrang
-- **V01.0.789** Wachposten: Push an die Admins bei Sperren, neuen Zugängen, geändertem Schutz oder gebrochenem Protokoll
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

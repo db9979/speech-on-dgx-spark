@@ -4117,7 +4117,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Scans vollständig und neu einlesen (V01.0.238)",
-"text": "Scans vollständig und neu einlesen (V01.0.238): Gescannte PDF-Seiten (weniger als 40 Zeichen Text) rendert der Spark als ganze Seite mit pypdfium2 (feste Version 4.30.0, kurz etwa 30 MB Arbeitsspeicher pro Seite) und gibt sie dem Sprachmodell. Bis V01.0.236 nahm er nur das größte eingebettete Bild; Scanner, die eine Seite als Streifen oder JBIG2 speichern, verloren so Seiten. Pro Dokument werden bis zu 300 Scan-Seiten gelesen (vorher 30), weiterhin höchstens 100 pro Profil und Tag; der Rest folgt an den nächsten Tagen, bis zu 600 Seiten dürfen pro Profil warten. Am Dokument steht, wenn eine Grenze greift („nur die ersten 300 von 412 Seiten ohne Text“, „2 Seiten ohne lesbares Bild übersprungen“, „Seiten ohne Text nicht gelesen (Bilder und Scans lesen ist aus)“). „Neu einlesen“ unter Ich → Dokumente liest ein Dokument aus dem aufbewahrten Original noch einmal (nur der Besitzer, nur mit „Originale aufbewahren“); Platz, „Für alle“ und „Der Assistent sucht darin“ bleiben. Ein Dokument, das in der iPhone-App an eine Frage gehängt wird, nimmt weiter nur die ersten 20.000 Zeichen mit; die Antwort sagt dann, dass nur der Anfang dabei ist und dass es unter „Meine Dokumente“ ganz durchsucht w"
+"text": "Scans vollständig und neu einlesen (V01.0.238): Gescannte PDF-Seiten (weniger als 40 Zeichen Text) rendert der Spark als ganze Seite mit pypdfium2 (feste Version 4.30.0, kurz etwa 30 MB Arbeitsspeicher pro Seite) und gibt sie dem Sprachmodell. Bis V01.0.236 nahm er nur das größte eingebettete Bild; Scanner, die eine Seite als Streifen oder JBIG2 speichern, verloren so Seiten. Pro Dokument werden bis zu 300 Scan-Seiten gelesen (vorher 30), weiterhin höchstens 100 pro Profil und Tag; der Rest folgt an den nächsten Tagen, bis zu 600 Seiten dürfen pro Profil warten. Seiten aus Wissensordnern (NAS) und eigene Seiten (Upload, App, Telegram, Notizbücher) zählen dabei getrennt, je bis zu 600, und eigene werden zuerst gelesen (V01.0.799): ein großer Wissensordner sperrt so keinen Upload mehr. Ist die eigene Warteschlange doch voll, sagt die Meldung, wie viele Seiten warten und was hilft (später wieder hochladen oder ein Dokument löschen, das noch gelesen wird). Am Dokument steht, wenn eine Grenze greift („nur die ersten 300 von 412 Seiten ohne Text“, „2 Seiten ohne lesbares Bild übersprungen“, „Seiten ohne Text nicht gelesen (Bilder und Scans lesen ist aus)“). „Neu einlesen“ unter Ich → Dok"
 },
 {
 "lang": "de",
@@ -4125,7 +4125,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Scans vollständig und neu einlesen (V01.0.238)",
-"text": "ird."
+"text": "umente liest ein Dokument aus dem aufbewahrten Original noch einmal (nur der Besitzer, nur mit „Originale aufbewahren“); Platz, „Für alle“ und „Der Assistent sucht darin“ bleiben. Ein Dokument, das in der iPhone-App an eine Frage gehängt wird, nimmt weiter nur die ersten 20.000 Zeichen mit; die Antwort sagt dann, dass nur der Anfang dabei ist und dass es unter „Meine Dokumente“ ganz durchsucht wird."
 },
 {
 "lang": "de",
@@ -12069,7 +12069,15 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Complete scans and reading again (V01.0.238)",
-"text": "Complete scans and reading again (V01.0.238): scanned PDF pages (less than 40 characters of text) are rendered as whole pages with pypdfium2 (fixed version 4.30.0, about 30 MB of memory for a moment per page) and handed to the language model. Up to V01.0.236 the Spark only took the biggest embedded picture; scanners storing a page as strips or JBIG2 lost pages that way. Up to 300 scanned pages per document are read (30 before), still at most 100 per profile and day; the rest follows on the next days, up to 600 pages may wait per profile. The document names any limit that applies (\"only the first 300 of 412 pages without text\", \"2 pages without a readable picture skipped\", \"pages without text not read (Read pictures and scans is off)\"). \"Read again\" under Me → Documents reads a document once more from its kept original (owner only, only with \"Keep originals\"); place, \"For everyone\" and \"The assistant searches it\" stay. A document attached to a question in the iPhone app still takes along only its first 20,000 characters; the answer then says it is only the beginning and that under \"My documents\" the whole text is searched."
+"text": "Complete scans and reading again (V01.0.238): scanned PDF pages (less than 40 characters of text) are rendered as whole pages with pypdfium2 (fixed version 4.30.0, about 30 MB of memory for a moment per page) and handed to the language model. Up to V01.0.236 the Spark only took the biggest embedded picture; scanners storing a page as strips or JBIG2 lost pages that way. Up to 300 scanned pages per document are read (30 before), still at most 100 per profile and day; the rest follows on the next days, up to 600 pages may wait per profile. Pages from knowledge folders (NAS) and own pages (upload, app, Telegram, notebooks) count apart, up to 600 each, and own pages are read first (V01.0.799): a big knowledge folder no longer blocks an upload. If the own queue is full after all, the message says how many pages wait and what helps (upload again later or delete a document that is still being read). The document names any limit that applies (\"only the first 300 of 412 pages without text\", \"2 pages without a readable picture skipped\", \"pages without text not read (Read pictures and scans is off)\"). \"Read again\" under Me → Documents reads a document once more from its kept original (owner o"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Complete scans and reading again (V01.0.238)",
+"text": "nly, only with \"Keep originals\"); place, \"For everyone\" and \"The assistant searches it\" stay. A document attached to a question in the iPhone app still takes along only its first 20,000 characters; the answer then says it is only the beginning and that under \"My documents\" the whole text is searched."
 },
 {
 "lang": "en",

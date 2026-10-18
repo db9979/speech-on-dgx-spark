@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.799** Fix: scans upload again while pages from knowledge folders wait, own documents are read first
 - **V01.0.798** The OLED shows a running update, forced: a big percentage with a bar, first TARS, then the Pi, also at night; LEDs blue; the share also in Live and the Steuerzentrale
 - **V01.0.797** Language model switch in the apps and a note when it is done
 - **V01.0.796** Language model switch also on the control centre and the case display
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.792** Speech models checked before every start, search models no longer refused after the pinning
 - **V01.0.791** Phone: Tschüss or „Nein danke“ after „Noch etwas?“ ends the call, the Spark hangs up itself; without a BYE after 8 seconds without sound
 - **V01.0.790** Steadier Pi: a stalled panel restarts by itself and names the place in the log; the voice assistant keeps priority
-- **V01.0.789** Sentry: push to the admins on lockouts, new ways in, changed protection or a broken change log
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

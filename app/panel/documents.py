@@ -43,7 +43,7 @@ MAX_UNPACKED = 50 * 1024 * 1024  # an Office file's text parts after unpacking, 
 MAX_PARTS = 300                # slides or sheets read from one Office file
 MAX_PAGES = 1000
 MAX_SCAN_PAGES = 300           # pages per document handed to the language model (100 a day, wissen.DAY_PAGES)
-MAX_QUEUED = 600               # pages per profile waiting for the language model
+MAX_QUEUED = 600               # pages per profile waiting for the language model, own ones and those from places apart
 DOCLING_WAIT_MAX = 30          # files per profile waiting for the Docling server (doclingdienst.py)
 DOCLING_TYPES = (".pdf", ".docx", ".pptx", ".xlsx", ".html", ".htm", ".jpg", ".jpeg", ".png")   # what it reads
 SCAN_TEXT = 40                 # a PDF page with less text than this (and a picture) counts as scanned
@@ -807,8 +807,8 @@ def add(uid, name, data, text=None, pictures=False, keep=0, source="upload", mos
         most_docs = (limit or MAX_DOCS) if source == "nas" else MAX_DOCS
         if con.execute("SELECT COUNT(*) FROM docs WHERE " + ("source='nas'" if source == "nas" else "source<>'nas'")).fetchone()[0] >= most_docs:
             raise ValueError(f"at most {most_docs} documents per profile")
-        if todo and con.execute("SELECT COUNT(*) FROM pages").fetchone()[0] + len(todo) > MAX_QUEUED:
-            raise ValueError(f"at most {MAX_QUEUED} pages may wait to be read; try again later")
+        if todo and (waiting := _waiting(con, source == "nas")) + len(todo) > MAX_QUEUED:
+            raise QueueFull(waiting, len(todo))
         if keep and text is None:
             blob = todo[1] if kind == "picture" else data
             if usage(uid) + len(blob) <= keep:
@@ -932,9 +932,9 @@ def reread(uid, doc_id, pictures=False, docling=False):
     docling = bool(docling) and os.path.splitext(name.lower())[1] in DOCLING_TYPES
     parts, todo, kind, note = _read(name, data, None, pictures, cleaned=r["kind"] == "picture", later=docling)
     with _Db(uid) as con:
-        waiting = con.execute("SELECT COUNT(*) FROM pages WHERE doc<>?", (doc_id,)).fetchone()[0]
-        if todo and waiting + len(todo) > MAX_QUEUED:
-            raise ValueError(f"at most {MAX_QUEUED} pages may wait to be read; try again later")
+        nas = (con.execute("SELECT source FROM docs WHERE id=?", (doc_id,)).fetchone() or [""])[0] == "nas"
+        if todo and (waiting := _waiting(con, nas, but=doc_id)) + len(todo) > MAX_QUEUED:
+            raise QueueFull(waiting, len(todo))
         _drop_chunks(con, doc_id)
         con.execute("DELETE FROM pages WHERE doc=?", (doc_id,))
         state = "reading" if todo or (docling and not parts) else "ready"
@@ -1072,7 +1072,7 @@ def notebook_put(uid, doc_id, name, pages, note="", source="remarkable", changed
         _drop_chunks(con, doc_id)
         con.execute("DELETE FROM pages WHERE doc=?", (doc_id,))
         con.execute("DELETE FROM pagetext WHERE doc=?", (doc_id,))
-        room = MAX_QUEUED - con.execute("SELECT COUNT(*) FROM pages").fetchone()[0]
+        room = MAX_QUEUED - _waiting(con, source == "nas")
         n, size, waiting, left = 0, 0, 0, 0
         changed = int(changed or time.time())
         for row in pages:
@@ -1213,8 +1213,26 @@ def docling_release(uid):
 
 
 # ---------------------------------------------------------------- pages for the language model
+class QueueFull(ValueError):
+    """Too many pages wait for the language model: the message says how many and what the person can do."""
+    def __init__(self, waiting, more):
+        self.waiting, self.more = waiting, more
+        super().__init__(f"Es warten schon {waiting} Seiten darauf, vom Sprachmodell gelesen zu werden; dieses "
+                         f"Dokument bringt {more} weitere mit, zusammen gehen höchstens {MAX_QUEUED}. Lade es wieder "
+                         "hoch, wenn weniger warten, oder lösche ein Dokument, das noch gelesen wird; wie weit das "
+                         "Lesen ist, steht bei jedem Dokument in der Liste.")
+
+
+def _waiting(con, nas, but=None):
+    """Pages waiting for the language model, counted apart for documents from places (nas, nasquelle.py)
+    and for the own ones (uploads, app, Telegram, notebooks): a full Wissensordner never blocks an upload."""
+    return con.execute("SELECT COUNT(*) FROM pages p JOIN docs d ON d.id=p.doc WHERE d.source" + ("=" if nas else "<>")
+                       + "'nas'" + (" AND p.doc<>?" if but else ""), (but,) if but else ()).fetchone()[0]
+
+
 def next_page(uid, most_pages=None):
-    """(doc id, doc name, page, JPEG, tries) of the oldest page still to read, or None.
+    """(doc id, doc name, page, JPEG, tries) of the oldest page still to read, or None. Own documents come
+    first, pages from places (NAS) only when none of them waits.
     most_pages: only documents with at most this many pages to read (short ones by day, wissen.night)."""
     if not os.path.exists(db_path(uid)):
         return None
@@ -1222,7 +1240,7 @@ def next_page(uid, most_pages=None):
         # a document waiting for the Docling server is read by it first (its pages wait until then)
         r = con.execute("SELECT p.doc, d.name, p.page, p.jpeg, p.tries FROM pages p JOIN docs d ON d.id=p.doc "
                         "WHERE d.docling<>'wait' " + ("AND d.pages<=? " if most_pages else "")
-                        + "ORDER BY d.created, p.doc, p.page LIMIT 1",
+                        + "ORDER BY d.source='nas', d.created, p.doc, p.page LIMIT 1",
                         (most_pages,) if most_pages else ()).fetchone()
     return tuple(r) if r else None
 

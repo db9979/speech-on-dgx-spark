@@ -180,8 +180,13 @@ def add(uid, name, data, text=None, source="upload"):
         raise ValueError(f"the space for documents is full ({quota_bytes(uid) // 1024**2} MB): delete documents "
                          "or ask the admin for more")
     import doclingdienst
-    return documents.add(uid, name, data, text=text, pictures=on(uid, "pictures"), keep=keep_bytes(uid), source=source,
-                         most=pdf_bytes(), docling=doclingdienst.wanted(uid, name, text))
+    try:
+        return documents.add(uid, name, data, text=text, pictures=on(uid, "pictures"), keep=keep_bytes(uid), source=source,
+                             most=pdf_bytes(), docling=doclingdienst.wanted(uid, name, text))
+    except documents.QueueFull as e:
+        print(f"wissen: dokument abgelehnt | warteschlange voll | {e.waiting} warten | {e.more} neu |",
+              profiles.log_name(profiles.by_id(uid) or {"id": uid}), flush=True)
+        raise
 
 
 def _sharers(uid):

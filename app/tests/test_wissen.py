@@ -451,6 +451,32 @@ class Pictures(Base):
         d = [x for x in documents.list_docs(uid_of("Wselma")) if x["name"] == "lang.pdf"][0]
         self.assertIn("nur die ersten 2 von 3 Seiten", d["note"])
 
+    def test_pages_from_places_never_block_an_upload_and_wait_behind_it(self):
+        # Dominik 2026-10-18: "at most 600 pages may wait to be read" on an upload while a Wissensordner
+        # had filled the queue; own pages and those from places are counted apart, the own ones read first
+        c = profile("Wquinn")
+        self.switch(c, pictures=True)
+        uid = uid_of("Wquinn")
+        old = documents.MAX_QUEUED
+        documents.MAX_QUEUED = 2
+        try:
+            nas = documents.add(uid, "ordner.pdf", scanned_pdf(((800, 1100),) * 2), pictures=True, source="nas")
+            with self.assertRaises(documents.QueueFull):     # the place's own room is full
+                documents.add(uid, "mehr.pdf", scanned_pdf(), pictures=True, source="nas")
+            r = upload(c, "anleitung.pdf", scanned_pdf(((800, 1100),) * 2))
+            self.assertEqual(r.status_code, 200, r.text)
+            self.assertEqual(documents.next_page(uid)[0], r.json()["id"])      # the upload is read first
+            r = upload(c, "noch.pdf", scanned_pdf())
+            self.assertEqual(r.status_code, 400)
+            msg = r.json()["detail"]
+            self.assertIn("Es warten schon 2 Seiten", msg)
+            self.assertIn("höchstens 2", msg)
+            self.assertNotIn("try again", msg)
+        finally:
+            documents.MAX_QUEUED = old
+        self.assertEqual(documents.pages_waiting(uid), 4)
+        self.assertTrue(nas["id"])
+
     def test_read_again_from_the_original_keeps_place_and_switches(self):
         c, other = profile("Wtilda"), profile("Wudo")
         self.switch(c, pictures=True, originals=True, shared=True)
