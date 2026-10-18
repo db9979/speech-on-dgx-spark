@@ -26,13 +26,13 @@ function wbDraw(){const box=$('wbin'),W=WB;if(!box||!W)return;
 async function wbOpen(id){const at=document.querySelector(`#wbbox [data-wbpage="${CSS.escape(id)}"]`);if(!at)return;
   const r=await apiTry('/api/profile/wissensbuch/'+encodeURIComponent(id));if(!r.r.ok){wbSay(r.d.detail,true);return}
   WBSEL=id;const p=r.d;at.hidden=false;
-  at.innerHTML=`<div class="wbpage"><ul class="facts">${p.saetze.map(s=>`<li><span>${esc(s.text)}<br><small class="mut"><a href="#" data-wbdoc="${esc(s.doc)}">${esc(s.name+(s.page?t(' · S. ',' · p. ')+s.page:''))}</a>${s.mark==='widerspruch'?' · <b class="err">'+esc(t('Widerspruch','Contradiction'))+'</b>':''}</small></span><button type="button" class="b" data-wbwrong="${esc(String(s.id))}">${esc(t('Stimmt nicht','Wrong'))}</button></li>`).join('')}</ul>
+  at.innerHTML=`<div class="wbpage"><ul class="facts">${p.saetze.map(s=>`<li><span>${esc(s.text)}<br><small class="mut"><a href="#" data-wbdoc="${esc(s.doc)}">${esc(s.name+(s.page?t(' · S. ',' · p. ')+s.page:''))}</a>${s.mark==='widerspruch'?' · <b class="err">'+esc(t('Widerspruch','Contradiction'))+'</b>':''}</small></span><button type="button" class="b" data-wbbad="${esc(String(s.id))}">${esc(t('Stimmt nicht','Wrong'))}</button></li>`).join('')}</ul>
     <div class="row"><button type="button" class="b" data-wbagain="${esc(p.id)}">${esc(t('Neu schreiben','Write again'))}</button><button type="button" class="b" data-wbdel="${esc(p.id)}">${esc(t('Seite löschen','Delete page'))}</button><button type="button" class="b" data-wbclose="${esc(p.id)}">${esc(t('Schließen','Close'))}</button></div></div>`}
-{document.body.addEventListener('click',async e=>{const b=e.target.closest('#wbbox [data-wbopen],#wbbox [data-wbwrong],#wbbox [data-wbagain],#wbbox [data-wbdel],#wbbox [data-wbclose],#wbbox [data-wbdoc]');if(!b)return;const D=b.dataset;
+{document.body.addEventListener('click',async e=>{const b=e.target.closest('#wbbox [data-wbopen],#wbbox [data-wbbad],#wbbox [data-wbagain],#wbbox [data-wbdel],#wbbox [data-wbclose],#wbbox [data-wbdoc]');if(!b)return;const D=b.dataset;
   if(D.wbopen){await wbOpen(D.wbopen);return}
   if(D.wbclose){WBSEL='';const at=document.querySelector(`#wbbox [data-wbpage="${CSS.escape(D.wbclose)}"]`);if(at){at.hidden=true;at.innerHTML=''}return}
   if(D.wbdoc){e.preventDefault();if(typeof docView==='function')docView(D.wbdoc);return}
-  if(D.wbwrong){b.disabled=true;const r=await apiTry('/api/profile/wissensbuch/satz/'+encodeURIComponent(D.wbwrong),{method:'DELETE'});
+  if(D.wbbad){b.disabled=true;const r=await apiTry('/api/profile/wissensbuch/satz/'+encodeURIComponent(D.wbbad),{method:'DELETE'});
     if(!r.r.ok){wbSay(r.d.detail,true);b.disabled=false;return}await wbShow();wbSay(t('Satz entfernt; aus diesem Dokument kommt er nicht wieder.','Sentence removed; it does not come back from this document.'));return}
   if(D.wbagain||D.wbdel){const again=!!D.wbagain,id=D.wbagain||D.wbdel;
     if(!again&&!confirm(t('Seite löschen? Ihre Dokumente werden später neu eingearbeitet.','Delete the page? Its documents are worked in again later.')))return;

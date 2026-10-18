@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.773** Fix: knowledge book tab without a false alarm of the inline handler check
 - **V01.0.772** Knowledge book: documents become pages with a source per sentence, answers from them first
 - **V01.0.771** Leave out folders: unimportant folders under Me → Documents → Left-out folders are no longer read and leave the search at once
 - **V01.0.770** Fix: measuring models paints alongside only when enough memory stays free
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.766** Fix: Qwen3.8 Flash Next starts in Docker (io_uring allowed in the container, seccomp stays on)
 - **V01.0.765** Workshop fix: test run and code measurement start again (the code copy was missing because git 2.43 refused the clone)
 - **V01.0.764** People and devices as a tidy list with initials, bar and chevron
-- **V01.0.763** OLED pages "Pi" and "TARS": CPU and RAM load as two big numbers
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
