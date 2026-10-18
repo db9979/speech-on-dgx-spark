@@ -351,6 +351,7 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 - Self-test on tars with `nice 19` and `ionice`. Test priority code with `nice -n 19`. (M)
 - The panel venv is created from the lock only if venv-panel is new. A new library therefore needs an installation path for existing installations. (M)
 - Questions to `api.github.com` only through `ghtoken.get` (read-only token, 401 → on without it), never for reachability probes: without a token all devices at home share 60 per hour. (D; 🧪 test_ghtoken, test_update_check)
+- **One model on demand at a time** (Dominik 2026-10-18: "only one model loaded at a time, never both"): A model that only loads for a job (pictures, music and every new one of that kind) runs in the panel only through `schwer.run` (one queue, one place, a fixed order, waiting for memory instead of giving up) and takes the place in its service with `bedarf.OnDemand.claim` before it loads; when another one holds it, the service answers 503 "belegt". Who waits behind others gets the fixed sentence of `schwer.hint`. New kinds go into `schwer.ARTEN`, `SOURCES` and `STOPS`. (P schwere-auftraege; 🧪 test_schwer)
 
 ---
 

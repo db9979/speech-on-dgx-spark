@@ -352,12 +352,14 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Bilder malen (and Musik machen in the same box)
     "bild": {
-        "stand": "f1ef44e3cb",
+        "stand": "ef280a002f",
         "bezug": {
-            "bilder.MAX_PICS": ["s4"], "bilder.WAITING": ["s4"], "bilder.JOB_SECONDS": ["s5"], "bilder.NSFW_MAX": ["s8"],
+            "bilder.MAX_PICS": ["s4"], "schwer.WAITING": ["s4"], "bilder.JOB_SECONDS": ["s5"], "bilder.NSFW_MAX": ["s8"],
+            "schwer.run": ["s5"], "schwer.pick": ["s5"], "schwer.hint": ["s5"], "schwer.BUNDLE": ["s5"],
+            "schwer.MEM_WAIT_S": ["s6"], "bedarf.OnDemand.claim": ["s6"],
             "bildmodell.STEPS": ["s7"], "bilder.keep": ["s10"], "bild_server.Engine.paint": ["s7"],
             "bedarf.OnDemand": ["s6"], "musik_server.Engine.make": ["s7"], "musik_server.finish": ["s9"],
-            "musik._measure": ["s5"], "musik.start": ["s4"], "musik.keep": ["s10"], "musik.WAITING": ["s4"], "musik._work": ["s5"], "musik.refuse_text": ["s3"],
+            "musik._measure": ["s5"], "musik.start": ["s4"], "musik.keep": ["s10"], "musik._work": ["s5"], "musik.refuse_text": ["s3"],
         },
         "kurz": ("Bilder malen macht aus einem Wunsch ein Bild, auf dem Spark selbst. Das Panel prüft den Wunsch mit "
                  "festen Regeln und gibt ihn an den Bild-Dienst, der nur auf dieser Maschine lauscht. Der lädt FLUX.2 "
@@ -366,7 +368,9 @@ SEITEN = {
                  "wird ein Lied (ohne Angabe instrumental, 2 Minuten). Der Musik-Dienst auf :31004 lädt ACE-Step 1.5 "
                  "nur für ein Lied, im Modell, das der Admin gewählt hat, und gibt den Speicher nach einer Ruhezeit "
                  "frei; „Musik testen“ misst jedes installierte Modell. Beide Dienste teilen die Engine bei Bedarf aus "
-                 "bedarf.py.",
+                 "bedarf.py.\n\nImmer nur eins der beiden Modelle ist geladen (Dominik 2026-10-18): Bilder und Lieder "
+                 "stehen in einer Warteschlange im Panel (schwer.py); wer hinter anderen wartet, hört Platz und "
+                 "ungefähre Dauer.",
                  "Painting pictures turns a wish into a picture, on the Spark itself. The panel checks the wish with "
                  "fixed rules and hands it to the picture service, which listens on this machine only. It loads FLUX.2 "
                  "klein only at the first picture, checks the finished picture and frees the memory after a quiet time.\n\n"
@@ -374,7 +378,9 @@ SEITEN = {
                  "conversation becomes a song (instrumental and 2 minutes unless asked). The music service on :31004 "
                  "loads ACE-Step 1.5 only for a song, in the model the admin picked, and frees the memory after a quiet "
                  "time; \"Test music\" measures every installed model. Both services share the on-demand engine of "
-                 "bedarf.py."),
+                 "bedarf.py.\n\nOnly one of the two models is loaded at a time (Dominik 2026-10-18): pictures and songs "
+                 "stand in one queue in the panel (schwer.py); who waits behind others hears the place and about how "
+                 "long it takes."),
         "warum": ("Ein Bildmodell kann alles malen, auch Nacktes, Gewalt oder echte Menschen. Darüber entscheidet nie das "
                   "Sprachmodell, sondern feste Regeln vor und nach dem Malen. Und das Modell braucht viel gemeinsamen "
                   "Speicher: es darf das Sprachmodell und die Stimme nie verdrängen.",
@@ -415,27 +421,40 @@ SEITEN = {
             S("s4", "frage", ("Innerhalb der Grenzen?", "Within the limits?"),
               ("pro Tag, Platz, Warteschlange", "per day, space, queue"),
               ("Pro Profil gelten Bilder pro Tag (gleitend 24 Stunden), Platz und höchstens {bilder.MAX_PICS} Bilder; "
-               "auf dem ganzen Spark warten höchstens {bilder.WAITING} Aufträge. Lieder: Lieder pro Tag, Platz und "
-               "längstes Lied, auf dem Spark höchstens {musik.WAITING} wartende (musik.start).",
+               "Lieder: Lieder pro Tag, Platz und längstes Lied (musik.start). Auf dem ganzen Spark warten höchstens "
+               "{schwer.WAITING} schwere Aufträge, Bilder und Lieder zusammen.",
                "Per profile there are pictures per day (rolling 24 hours), space and at most {bilder.MAX_PICS} "
-               "pictures; on the whole Spark at most {bilder.WAITING} jobs wait. Songs: songs per day, space and the "
-               "longest song, on the Spark at most {musik.WAITING} waiting (musik.start)."),
+               "pictures; songs: songs per day, space and the longest song (musik.start). On the whole Spark at most "
+               "{schwer.WAITING} heavy jobs wait, pictures and songs together."),
               ("stop", "nein", ("Abgelehnt mit Grund", "Refused with the reason"))),
-            S("s5", "schritt", ("Warten auf eine Pause", "Wait for a pause"),
-              ("Sprache zuerst, ein Bild zugleich", "speech first, one picture at a time"),
-              ("Der Auftrag läuft im Hintergrund (bilder._work): er wartet, bis niemand spricht (vorrang), und malt "
-               "immer nur ein Bild zugleich, höchstens {bilder.JOB_SECONDS} Sekunden lang. Ein Lied genauso "
-               "(musik._work), eins zugleich.",
-               "The job runs in the background (bilder._work): it waits until nobody speaks (vorrang) and paints only "
-               "one picture at a time, for at most {bilder.JOB_SECONDS} seconds. A song the same way (musik._work), "
-               "one at a time.")),
+            S("s5", "schritt", ("Warten auf Pause und Platz", "Wait for a pause and the place"),
+              ("Sprache zuerst, ein Modell zur Zeit", "speech first, one model at a time"),
+              ("Der Auftrag läuft im Hintergrund (bilder._work, musik._work): er wartet, bis niemand spricht (vorrang), "
+               "und stellt sich in die eine Warteschlange für Bilder und Lieder (schwer.run). Die feste Regel "
+               "schwer.pick nimmt den ältesten; solange die geladene Art noch wartet, kommt sie zuerst, aber höchstens "
+               "{schwer.BUNDLE}-mal hintereinander, während die andere Art wartet. Ist eine andere Art dran, beendet das "
+               "Panel zuerst das geladene Modell. Wer hinter anderen steht, bekommt einen festen Satz mit Platz und "
+               "ungefährer Dauer (schwer.hint), die Karte zeigt „Wartet · Platz 2 von 3“. Ein Bild darf höchstens "
+               "{bilder.JOB_SECONDS} Sekunden brauchen.",
+               "The job runs in the background (bilder._work, musik._work): it waits until nobody speaks (vorrang) and "
+               "joins the one queue for pictures and songs (schwer.run). The fixed rule schwer.pick takes the oldest; "
+               "while the loaded kind still waits it goes first, but at most {schwer.BUNDLE} times in a row while the "
+               "other kind waits. When another kind is next, the panel first ends the loaded model. Who stands behind "
+               "others gets a fixed sentence with the place and about how long (schwer.hint), the card shows "
+               "\"Waiting · place 2 of 3\". A picture may take at most {bilder.JOB_SECONDS} seconds.")),
             S("s6", "frage", ("Modell geladen?", "Model loaded?"),
               ("sonst laden, wenn genug Speicher frei ist", "else load, when enough memory is free"),
-              ("bild_server.Engine.start startet sd-server als eigenen Prozess auf 127.0.0.1, aber nur, wenn genug "
-               "gemeinsamer Speicher frei ist; sonst bleibt alles andere ungestört.",
-               "bild_server.Engine.start starts sd-server as its own process on 127.0.0.1, but only when enough shared "
-               "memory is free; otherwise everything else stays undisturbed."),
-              ("stop", "nein", ("Zu wenig Speicher, später nochmal", "Too little memory, try later"))),
+              ("bild_server.Engine.start nimmt zuerst den einen Platz (bedarf.OnDemand.claim, Sperre bedarf.lock: hält "
+               "ihn der Musik-Dienst, antwortet er „belegt“) und startet sd-server als eigenen Prozess auf 127.0.0.1, "
+               "aber nur, wenn genug gemeinsamer Speicher frei ist; sonst bleibt alles andere ungestört. Zu wenig "
+               "Speicher beendet den Auftrag nicht: er behält seinen Platz und versucht es alle 30 Sekunden neu, "
+               "höchstens {schwer.MEM_WAIT_S} Sekunden lang.",
+               "bild_server.Engine.start first takes the one place (bedarf.OnDemand.claim, lock bedarf.lock: when the "
+               "music service holds it, it answers \"belegt\") and starts sd-server as its own process on 127.0.0.1, "
+               "but only when enough shared memory is free; otherwise everything else stays undisturbed. Too little "
+               "memory does not end the job: it keeps its place and tries again every 30 seconds, for at most "
+               "{schwer.MEM_WAIT_S} seconds."),
+              ("stop", "nein", ("Zu lange zu wenig Speicher, abgesagt", "Too little memory for too long, given up"))),
             S("s7", "schritt", ("Malen", "Paint"),
               ("FLUX.2 klein, {bildmodell.STEPS} Schritte", "FLUX.2 klein, {bildmodell.STEPS} steps"),
               ("Die Engine malt das Bild in {bildmodell.STEPS} Schritten in der gewählten Größe; ihre eigene Ausgabe "
@@ -477,8 +496,10 @@ SEITEN = {
         ],
         "zahlen": [
             ("{bilder.MAX_PICS}", ("Bilder pro Profil höchstens", "pictures per profile at most"), "bilder.MAX_PICS"),
-            ("{bilder.WAITING}", ("Aufträge warten höchstens", "jobs wait at most"), "bilder.WAITING"),
-            ("{musik.WAITING}", ("Lieder warten höchstens", "songs wait at most"), "musik.WAITING"),
+            ("{schwer.WAITING}", ("Bilder und Lieder warten höchstens", "pictures and songs wait at most"), "schwer.WAITING"),
+            ("{schwer.BUNDLE}", ("dieselbe Art höchstens hintereinander", "the same kind at most in a row"), "schwer.BUNDLE"),
+            ("{schwer.MEM_WAIT_S}", ("Sekunden Warten auf Speicher höchstens", "seconds of waiting for memory at most"),
+             "schwer.MEM_WAIT_S"),
             ("{bilder.NSFW_MAX}", ("Anteil der Bildprüfung, ab dem verworfen wird", "image check share above which it is discarded"),
              "bilder.NSFW_MAX"),
             ("{bildmodell.STEPS}", ("Schritte pro Bild", "steps per picture"), "bildmodell.STEPS"),
@@ -505,6 +526,10 @@ SEITEN = {
              "Bereich „Musik“.",
              "State → Live: target \"Making music\" with songs and the last measurement in numbers; Logs → Diagnosis, "
              "area \"Musik\"."),
+            ("Zustand → Live: unter „Im Hintergrund“ jedes Bild und Lied mit „wartet auf den Platz“ oder „wartet auf "
+             "Speicher“, an den Zielen „hat den Platz“; Logs → Diagnose, Bereich „Schwere Aufträge“.",
+             "State → Live: under \"In the background\" every picture and song with \"waiting for the place\" or "
+             "\"waiting for memory\", at the targets \"has the place\"; Logs → Diagnosis, area \"Heavy jobs\"."),
         ],
         "code": [
             ("bilder.start", ("Wunsch annehmen", "accept a wish")),
@@ -517,6 +542,10 @@ SEITEN = {
             ("bild_server.nsfw_share", ("Bildprüfung", "image check")),
             ("bild_server.finish", ("Kennzeichnen und neu kodieren", "mark and re-encode")),
             ("bedarf.OnDemand", ("Engine bei Bedarf, für Bild und Musik", "engine on demand, for pictures and music")),
+            ("bedarf.OnDemand.claim", ("Der eine Platz auf dem Spark", "the one place on the Spark")),
+            ("schwer.run", ("Warteschlange: Platz, Wechsel, Speicher", "queue: place, switch, memory")),
+            ("schwer.pick", ("Wer als Nächstes dran ist", "who is next")),
+            ("schwer.hint", ("Fester Satz mit Platz und Dauer", "fixed sentence with place and time")),
             ("musik_server.Engine.make", ("Ein Lied in zwei Schritten", "one song in two steps")),
             ("musik_server.finish", ("MP3 prüfen und als KI-erzeugt kennzeichnen", "check the MP3 and mark it AI-made")),
             ("musik.start", ("Liedwunsch annehmen", "accept a song wish")),
@@ -525,7 +554,7 @@ SEITEN = {
             ("musik.keep", ("Lied ablegen", "store the song")),
             ("musik._measure", ("Musik testen je Modell", "test music per model")),
         ],
-        "tests": ["test_bilder", "test_musik"],
+        "tests": ["test_bilder", "test_musik", "test_schwer"],
         "heute": [],
     },
 

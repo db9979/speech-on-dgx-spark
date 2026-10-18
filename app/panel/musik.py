@@ -4,8 +4,8 @@ the model computer by ACE-Step 1.5 (musik_server.py, music.port 31004, installed
 Ways in: the tool musik_machen in the conversation (the language model writes the English description from the
 person's words and, for a song with singing, the lyrics) and Ich → Musik (the person's own sentence goes as it is).
 The panel decides everything else with fixed rules: instrumental and DEFAULT_S seconds unless the person asks for
-singing or a length, at most music.max_s seconds, one song at a time on the whole Spark, at most WAITING waiting,
-one open job per profile, music.day_limit songs per profile in 24 hours, music.store_mb per profile. The admin
+singing or a length, at most music.max_s seconds, one song at a time on the whole Spark and never beside a picture
+(schwer.py: one place for the models on demand, at most schwer.WAITING heavy jobs waiting), one open job per profile, music.day_limit songs per profile in 24 hours, music.store_mb per profile. The admin
 picks the model (music.model: one of the installed variants, Dominik 2026-10-16 „das größere Modell auch testen
 und auswählen“); „Musik testen“ measures every installed one with two fixed songs.
 
@@ -34,6 +34,7 @@ import features
 import guard
 import notaus
 import profiles
+import schwer
 import wartung
 from common import DayCounter, STATE, load_config, model_url, write_json
 from core import api_headers, assistant, auth, browser_profile, json_body, own_profile
@@ -47,8 +48,7 @@ MAX_CAPTION = 600            # musik_server.MAX_CAPTION
 MAX_LYRICS = 3000
 MAX_SONGS = 200             # songs per profile, whatever the space
 MIN_S, DEFAULT_S = 10, 120   # Dominik 3a: instrumental, 2 minutes unless asked
-WAITING = 10                # open jobs on the whole Spark
-JOB_SECONDS = 20 * 60       # waiting for a pause, loading the model and making the song
+JOB_SECONDS = 20 * 60       # waiting for a pause, loading the model and making the song (plus schwer.WAIT_S in the queue)
 BACK = 7                    # messages back an answer from outside text stays data for a song wish (chat_turn)
 FOLLOW_SECONDS = 10 * 60    # after a wish, „ja, mit Gesang“ is understood without the words
 MAX_MP3 = 40 * 1024**2
@@ -117,7 +117,6 @@ HINT = ("musik_machen macht ein Lied oder Musikstück auf dem Spark. Rufe es nur
         "(im Chat und unter Ich → Musik). „Spiel Musik“ heißt abspielen, nicht machen.")
 
 _lock = threading.Lock()
-_make = []                  # [(loop, asyncio.Lock)] of the running loop: one song at a time
 _jobs = {}                  # jid -> job
 _tasks = set()
 _recent = {}                # uid -> time of the last wish (also a refused one), song start and end (FOLLOW_SECONDS)
@@ -184,6 +183,8 @@ REFUSED = {"wortliste": ("Das mache ich nicht: der Wunsch fällt unter die feste
                       "Passwords, PINs and account numbers go into no song."),
            "memory": ("Gerade ist zu wenig Speicher frei; das Musikmodell startet erst, wenn mehr frei ist.",
                       "Too little memory is free right now; the music model starts once more is free."),
+           "belegt": ("Das Bildmodell gibt den Platz gerade nicht frei; bitte etwas später noch einmal.",
+                      "The picture model does not free the place right now; please try again a little later."),
            "missing": ("Das Musikmodell ist nicht installiert (Admin: sudo ./install.sh --musik 2b).",
                        "The music model is not installed (admin: sudo ./install.sh --musik 2b)."),
            "engine": ("Die Musik-Engine hat das Lied abgebrochen.", "The music engine stopped the song."),
@@ -298,14 +299,6 @@ def stats():
     return {"run": run, "wait": wait, "done": _count["done"], "failed": _count["failed"], "refused": _count["refused"]}
 
 
-def busy(now=None):
-    """Live „Im Hintergrund“: (state, seconds) of every song waiting or being made, oldest first (no wish)."""
-    now = time.time() if now is None else now
-    with _lock:
-        return [("run" if j["state"] == "run" else "wait", int(now - j["t0"])) for j in sorted(_jobs.values(), key=lambda j: j["t0"])
-                if j["state"] in ("wait", "run")]
-
-
 def _live(text_):
     try:
         import live
@@ -315,15 +308,35 @@ def _live(text_):
 
 
 def job_public(j):
+    """The job for its page and card; q: its place among the heavy jobs while it is open (schwer.where)."""
     return {"id": j["id"], "state": j["state"], "error": j.get("error", ""), "error_en": j.get("error_en", ""),
             "song": public(j["song"]) if j.get("song") else None, "caption": j["caption"], "t0": int(j["t0"]),
-            "length_s": j["seconds"], "sung": j["sung"]}
+            "length_s": j["seconds"], "sung": j["sung"], "q": schwer.where(j["id"]) if j["state"] in ("wait", "run") else None}
 
 
 def jobs_of(uid):
     with _lock:
         return [job_public(j) for j in sorted(_jobs.values(), key=lambda j: j["t0"]) if j["uid"] == uid
                 and (j["state"] in ("wait", "run") or time.time() - j.get("end", 0) < 600)]
+
+
+def _open_jobs():
+    """schwer.SOURCES: this module's jobs (no lock: job_public asks schwer while holding _lock)."""
+    return list(_jobs.values())
+
+
+async def _stop_engine():
+    """schwer.STOPS: ends the music model now; False when the music service is not installed."""
+    if not cfg().get("enabled"):
+        return False
+    code, _d = await call("/v1/musik/stop", {}, timeout=30)
+    if code != 200:
+        raise RuntimeError(code)
+    return True
+
+
+schwer.SOURCES["musik"] = _open_jobs
+schwer.STOPS["musik"] = _stop_engine
 
 
 def _sweep(now):
@@ -376,7 +389,7 @@ def start(prof, caption, wish, seconds=None, sung=False, language="", lyrics="",
             _say("laeuft", prof)
             raise ValueError(("Ich mache schon ein Lied für dich; erst wenn es fertig ist.",
                               "I am already making a song for you; once it is done."))
-        if sum(1 for j in _jobs.values() if j["state"] in ("wait", "run")) >= WAITING:
+        if schwer.full():
             _say("warteschlange", prof)
             raise ValueError(("Gerade warten schon viele Lieder; bitte etwas später noch einmal.",
                               "Many songs are waiting already; please try again a little later."))
@@ -418,19 +431,12 @@ def _fail(j, why):
 
 async def _go(j):
     try:
-        await asyncio.wait_for(_work(j), JOB_SECONDS)
+        await asyncio.wait_for(_work(j), JOB_SECONDS + schwer.WAIT_S)
     except asyncio.TimeoutError:
         _fail(j, "zeit")
     except Exception as e:   # noqa: BLE001 - every job ends with a state and a journal line
         print("musik: fehler", type(e).__name__, flush=True)
         _fail(j, "dienst")
-
-
-def _make_lock():
-    loop = asyncio.get_running_loop()
-    if not _make or _make[0][0] is not loop:
-        _make[:] = [(loop, asyncio.Lock())]
-    return _make[0][1]
 
 
 async def call(path, body=None, timeout=JOB_SECONDS):
@@ -454,7 +460,7 @@ async def make(body):
         code, d = await call("/v1/musik", body)
     except httpx.HTTPError:
         raise ValueError("dienst")
-    if code in (502, 503) and d.get("detail") in ("memory", "missing", "engine"):
+    if code in (502, 503) and d.get("detail") in ("memory", "missing", "engine", "belegt"):
         raise ValueError(d["detail"])     # 502 "engine": the engine runs but did not make the song
     if code == 504:
         raise ValueError("zeit")
@@ -480,17 +486,18 @@ def _body(j):
 async def _work(j):
     import vorrang
     await vorrang.quiet("Musik machen")
-    async with _make_lock():
+
+    async def once():   # on the one place of the heavy jobs (schwer.py); again after "memory"
         await vorrang.quiet("Musik machen")
         if wartung.paused("musik"):
-            _fail(j, "pause")
-            return
+            raise ValueError("pause")
         j["state"] = "run"
-        try:
-            mp3, d = await make(_body(j))
-        except ValueError as e:
-            _fail(j, str(e) if str(e) in REFUSED else "dienst")
-            return
+        return await make(_body(j))
+    try:
+        mp3, d = await schwer.run("musik", j.get("id"), j.get("t0"), once)
+    except ValueError as e:
+        _fail(j, str(e) if str(e) in REFUSED else "dienst")
+        return
     row = keep(j["uid"], mp3, {"wish": j["wish"], "caption": j["caption"], "lyrics": j["lyrics"], "sung": j["sung"],
                                "language": j["language"], "length_s": j["seconds"], "seconds": d.get("seconds"),
                                "model": str(d.get("variant") or j.get("model") or "")[:10], "src": j["src"],
@@ -569,6 +576,11 @@ async def tool(name, args, ctx):
     else:
         where = "Es liegt gleich unter Ich → Musik; der Spark sagt Bescheid."
     kind = "with singing" if sung else "instrumental"
+    wait = schwer.hint(j["id"])
+    if wait:   # Dominik 2026-10-18 3a 4a: only when it really waits behind other heavy jobs, a fixed sentence
+        return (f"Started, but waiting in the queue: a {j['length_s']} s song, {kind}, will be made on the Spark. Say "
+                f"this to the user, in their language and without changing the numbers: „{wait}“ {where} Do not "
+                f"describe how it sounds.")
     return (f"Started: a {j['length_s']} s song, {kind}, is being made on the Spark. Tell the user in one short "
             f"sentence that you are making it. {where} Do not describe how it sounds.")
 
@@ -667,7 +679,7 @@ TESTS = (
      "lyrics": "[verse]\nDer Morgen kommt, die Sonne lacht,\nich hab an dich gedacht die ganze Nacht.\n"
                "[chorus]\nHeute ist ein guter Tag,\nweil ich alles mag, was ich mag."},
 )
-REASONS = ("missing", "memory", "engine", "zeit", "dienst", "pause")
+REASONS = ("missing", "memory", "belegt", "engine", "zeit", "dienst", "pause")
 _run = {"run": False, "done": 0, "total": 0, "t": 0}
 _task = []
 
@@ -714,7 +726,8 @@ async def health():
 async def _measure(variants):
     t0 = time.time()
     res = {"t": round(t0), "ok": False, "runs": []}
-    try:
+
+    async def songs():   # the whole measurement on the one place (schwer.py), nothing in between
         for v in variants:
             run = {"variant": v, "tests": []}
             try:   # the engine ends first, so the first song of each model counts its loading too
@@ -731,8 +744,7 @@ async def _measure(variants):
                     body = {k: test[k] for k in ("caption", "seconds", "lyrics", "language", "title")}
                     body.update(seed=42, variant=v)
                     try:
-                        async with _make_lock():
-                            mp3, d = await make(body)
+                        mp3, d = await make(body)
                         with open(mp3_file(v, test["n"]), "wb") as f:
                             f.write(mp3)
                         row.update(ok=True, **{k: d.get(k) for k in ("seconds", "lm_s", "synth_s", "peak_gib", "length_s")})
@@ -746,6 +758,8 @@ async def _measure(variants):
                 run["tests"].append(row)
                 _run["done"] += 1
             res["runs"].append(run)
+    try:
+        await schwer.run("musik", None, None, songs, learn=False)
         res["ok"] = bool(res["runs"]) and all(r["ok"] for run in res["runs"] for r in run["tests"])
         res["total_s"] = round(time.time() - t0, 1)
         res["health"] = await health()

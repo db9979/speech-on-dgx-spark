@@ -182,6 +182,8 @@ DATEIEN = [
     state("live-monitors.json", "Wandmonitore", "Wall monitors", lokal="Wandmonitore dieses Geräts"),
     state("dienste-zustand.json", "Hintergrund-Dienste", "Background services", lokal="Zustand der Hintergrund-Dienste"),
     state("weiche-stats.json", "Weiche-Statistik", "Switch statistics", lokal="Statistik", sonst=True),
+    state("bedarf.lock", "Sperre: nur ein Modell bei Bedarf zur Zeit (Bild oder Musik)",
+          "Lock: only one model on demand at a time (pictures or music)", lokal="leere Sperrdatei, nur auf dem Spark"),
     state("bild-test.json", "Letztes Probebild (Bild testen)", "Last sample picture (Test a picture)", lokal="Messwert dieses Geräts (Bild testen)"),
     state("musik-test.json", "Letzte Messung (Musik testen)", "Last measurement (Test music)", lokal="Messwerte dieses Geräts (Musik testen)"),
     state("musik-test-2b-1.mp3", "Probestück 1 mit 2B (Musik testen)", "Sample 1 with 2B (Test music)", lokal="entsteht beim nächsten Test neu"),

@@ -1786,6 +1786,13 @@
 "titel": "Qwen3.6 messen, keine Engine daneben",
 "text": "A: Auf tars `sudo speech-spark modelle messen qwen36`: in Zustand → Logs (System) stehen zwei Ergebnisse, „qwen36-35b-a3b-nvfp4“ mit „mtp … %“ und „…-ohne-mtp“ mit „mtp aus“, je mit tok/s, werkzeug, text, szene. B: Währenddessen `sudo systemctl restart speech-spark-tts-engine`: Zustand → Dienste zeigt bei der Sprachausgabe „waiting for the model measurement to finish“. C: Nach dem Ende der Messung startet die Sprachausgabe und belegt wieder etwa 5 GiB (nvidia-smi), das Sprachmodell läuft.",
 "thread": "Eigene Modell-Installation statt qwen38"
+},
+{
+"id": "P279",
+"v": 776,
+"titel": "Bilder und Lieder in einer Warteschlange",
+"text": "A: Bilder malen und Musik machen sind an. Im Chat ein Lied wünschen und gleich danach in einem zweiten Fenster (anderes Profil) ein Bild. B: Das Bild sagt „Gerade laufen viele Anfragen, du bist in der Warteschlange auf Platz 2 …“, die Karte zeigt „Wartet · Platz 2 von 2 · etwa … Minuten“. C: Zustand → Live, „Im Hintergrund“: das Lied „läuft“, das Bild „wartet auf den Platz“; am Ziel „Musik machen“ steht „hat den Platz“. D: Erst nach dem Lied steht in Zustand → Logs (Bereich „Schwere Aufträge“) „schwer: entladen musik wechsel“, dann wird das Bild gemalt. E: Auf tars zeigt Zustand → Modelle nie Bild- und Musikmodell gleichzeitig geladen.",
+"thread": "Warteschlange für Bild und Musik"
 }
 ]
 }

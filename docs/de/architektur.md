@@ -238,6 +238,7 @@ Eigene Dokumente, Gedächtnis, frühere Gespräche, Kiwix und Wikipedia, erstell
 | `app/panel/musik.py` | Musik machen: Wunsch prüfen, Modell wählen, Auftrag, Ablage, Liedkarte, Musik testen je Modell |
 | `app/panel/nachsortieren.py` | Treffer nachsortieren: ein Cross-Encoder auf dem Prozessor ordnet die Kandidaten |
 | `app/panel/recall.py` | Suche in früheren Gesprächen, gelernte Fakten |
+| `app/panel/schwer.py` | Schwere Aufträge: eine Warteschlange für Bild und Musik, immer nur ein Modell, Platz und Wartezeit |
 | `app/panel/suchpruefung.py` | Suchprüfung: Prüffragen messen, wie gut die Dokumentensuche trifft |
 | `app/panel/symbole.py` | Feste Symbole für Folien und Dokumente |
 | `app/panel/tagebuch.py` | Spark-Tagebuch: was der Spark selbst getan hat |
@@ -389,7 +390,7 @@ Spracherkennung und Sprachausgabe als eigene Dienste, mit Vorrang vor allem ande
 | `app/api_watchdog.py` | Wächter ohne Panel (Installationsart „api“) |
 | `app/asr_proxy.py` | Spracherkennung: nimmt an und reicht an die Engine durch |
 | `app/asr_server.py` | Spracherkennung als eigener kleiner Dienst |
-| `app/bedarf.py` | Engine nur bei Bedarf: Kindprozess starten, nach Ruhe beenden (Bild- und Musik-Dienst) |
+| `app/bedarf.py` | Engine nur bei Bedarf: Kindprozess starten, nach Ruhe beenden, nur eine zur Zeit (bedarf.lock) |
 | `app/bench.py` | Leistung messen |
 | `app/bild_server.py` | Bild-Dienst: startet FLUX.2 klein bei Bedarf, prüft und kennzeichnet jedes Bild |
 | `app/bildmodell.py` | Bildmodelle: Varianten, Dateien mit festen Prüfsummen, Laden bei der Installation |
@@ -539,6 +540,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `state/apns-tokens.json` | iPhone-Geräte für Push | – | ja |
 | `state/apns.json` | Apple-Push-Schlüssel | Schlüssel versiegelt | ja |
 | `state/audit.log` | Admin-Protokoll, 1 MB | – | nein |
+| `state/bedarf.lock` | Sperre: nur ein Modell bei Bedarf zur Zeit (Bild oder Musik) | – | nein |
 | `state/begleiter` | Begleiter-Updates | – | nein |
 | `state/begleiter-inbox` | Vom Handy auf den PC, 24 h | – | nein |
 | `state/bench-history.json` | Messungen | – | nein |
@@ -2246,7 +2248,7 @@ flowchart TD
 2. <a id="kn-betrieb-s2"></a>**Etwas eingeschaltet?**: Ist weder „Anfragen verfolgen“ noch die Live-Seite noch der Einstellungs-Assistent an, gibt es keinen Datensatz. Übrig bleiben nur die Journal-Zeilen der Module.
 3. <a id="kn-betrieb-s3"></a>**Schritte mit festen Wörtern**: Jeder Schritt (Weiche, Modellrunde, Werkzeug, Prüfung, Sprachausgabe) kommt mit Art, Name und Zeit dazu. Ein Wert geht nur hinein, wenn er eine Zahl oder ein kurzes festes Wort ist; alles andere wird verworfen. Frage, Antwort, Argumente und Ergebnisse kommen nie hinein.
 4. <a id="kn-betrieb-s4"></a>**Live-Seite an?**: Bei eingeschalteter Live-Seite sieht live.py jeden Schritt sofort: welcher Dienst gefragt wird, was der Wächter entscheidet, was zurückkommt. Alles bleibt im Speicher und ist nach einem Neustart weg.
-5. <a id="kn-betrieb-s5"></a>**Journal-Zeilen der Module**: Unabhängig davon schreibt jedes Modul seine Zeilen ins Journal des Spark. Jede Zeile beginnt mit einem Wort aus logfilter.AREAS (31 Bereiche), Profile nur über profiles.log_name. Ein Selbsttest prüft beides.
+5. <a id="kn-betrieb-s5"></a>**Journal-Zeilen der Module**: Unabhängig davon schreibt jedes Modul seine Zeilen ins Journal des Spark. Jede Zeile beginnt mit einem Wort aus logfilter.AREAS (32 Bereiche), Profile nur über profiles.log_name. Ein Selbsttest prüft beides.
 6. <a id="kn-betrieb-s6"></a>**Ende und Bewertung**: Am Ende bekommt der Datensatz seinen Zustand: Fehler, wenn ein Fehlerwort gesetzt ist, langsam, wenn der erste Ton später als 5.0 s kam, sonst gut.
 7. <a id="kn-betrieb-s7"></a>**Anfragen verfolgen an?**: Ist nur Live oder der Einstellungs-Assistent an, endet der Datensatz hier. Er wird nirgends geschrieben.
 8. <a id="kn-betrieb-s8"></a>**Zeile „anfrage:“ ins Journal**: Eine Zeile pro Anfrage: Kennung, Kanal, Einordnung, Werkzeuge mit ok oder nicht ok, Zeit bis zur Rückmeldung, bis zum ersten Ton und bis zum Ende. Ohne Namen.
@@ -2640,6 +2642,8 @@ Bilder malen macht aus einem Wunsch ein Bild, auf dem Spark selbst. Das Panel pr
 
 Musik machen läuft daneben genauso: aus einem Wunsch unter Ich → Musik oder musik_machen im Gespräch wird ein Lied (ohne Angabe instrumental, 2 Minuten). Der Musik-Dienst auf :31004 lädt ACE-Step 1.5 nur für ein Lied, im Modell, das der Admin gewählt hat, und gibt den Speicher nach einer Ruhezeit frei; „Musik testen“ misst jedes installierte Modell. Beide Dienste teilen die Engine bei Bedarf aus bedarf.py.
 
+Immer nur eins der beiden Modelle ist geladen (Dominik 2026-10-18): Bilder und Lieder stehen in einer Warteschlange im Panel (schwer.py); wer hinter anderen wartet, hört Platz und ungefähre Dauer.
+
 **Warum:** Ein Bildmodell kann alles malen, auch Nacktes, Gewalt oder echte Menschen. Darüber entscheidet nie das Sprachmodell, sondern feste Regeln vor und nach dem Malen. Und das Modell braucht viel gemeinsamen Speicher: es darf das Sprachmodell und die Stimme nie verdrängen.
 
 #### Ablauf
@@ -2650,7 +2654,7 @@ flowchart TD
   s2{{"2. Funktion frei?"}}
   s3{{"3. Wunsch erlaubt?"}}
   s4{{"4. Innerhalb der Grenzen?"}}
-  s5["5. Warten auf eine Pause"]
+  s5["5. Warten auf Pause und Platz"]
   s6{{"6. Modell geladen?"}}
   s7["7. Malen"]
   s8{{"8. Bild unbedenklich?"}}
@@ -2671,7 +2675,7 @@ flowchart TD
   s3 -->|nein| s3x
   s4x(["Abgelehnt mit Grund"])
   s4 -->|nein| s4x
-  s6x(["Zu wenig Speicher, später nochmal"])
+  s6x(["Zu lange zu wenig Speicher, abgesagt"])
   s6 -->|nein| s6x
   s8x(["Verworfen, nichts gespeichert"])
   s8 -->|nein| s8x
@@ -2680,9 +2684,9 @@ flowchart TD
 1. <a id="kn-bild-s1"></a>**Ein Bildwunsch**: Ein Profil schreibt einen Wunsch unter Ich → Bilder, oder die Weiche-Gruppe „bild“ bietet im Gespräch das Werkzeug bild_malen an; das Modell schreibt dazu einen englischen Prompt. Bilder ändern startet ohne Werkzeug: bilder.from_turn nimmt nach fester Regel das Foto dieser Nachricht oder das Ergebnis der letzten Änderung, unter Ich → Bilder ein eigenes Bild. Alles landet in bilder.start. Schnellknöpfe (drehen, heller, schwarzweiß …) brauchen kein Modell: bilder.quick_png macht sie sofort im Panel. Ein Liedwunsch kommt genauso über Ich → Musik oder die Gruppe „musik“ mit musik_machen in musik.start.
 2. <a id="kn-bild-s2"></a>**Funktion frei?**: features.allowed fragt die Freigabe: der Admin hat Bilder malen eingeschaltet und dieses Profil nicht gesperrt. Gäste bekommen das Werkzeug nie; nach fremdem Text und bei Notaus Stufe 2 ist es gesperrt.
 3. <a id="kn-bild-s3"></a>**Wunsch erlaubt?**: bilder.refuse_text prüft Wunsch und Prompt gegen eine feste Wortliste (nichts Sexuelles, keine Gewalt, keine Hasssymbole) und gegen die Namen der Profile und Kontakte. Für Lieder prüft musik.refuse_text Wunsch, Beschreibung und Liedtext gegen die Wortliste, dazu „im Stil von“ einem Künstler und Geheimnisse; Namen gehen. Das Modell kann das nicht umgehen.
-4. <a id="kn-bild-s4"></a>**Innerhalb der Grenzen?**: Pro Profil gelten Bilder pro Tag (gleitend 24 Stunden), Platz und höchstens 300 Bilder; auf dem ganzen Spark warten höchstens 10 Aufträge. Lieder: Lieder pro Tag, Platz und längstes Lied, auf dem Spark höchstens 10 wartende (musik.start).
-5. <a id="kn-bild-s5"></a>**Warten auf eine Pause**: Der Auftrag läuft im Hintergrund (bilder._work): er wartet, bis niemand spricht (vorrang), und malt immer nur ein Bild zugleich, höchstens 720 Sekunden lang. Ein Lied genauso (musik._work), eins zugleich.
-6. <a id="kn-bild-s6"></a>**Modell geladen?**: bild_server.Engine.start startet sd-server als eigenen Prozess auf 127.0.0.1, aber nur, wenn genug gemeinsamer Speicher frei ist; sonst bleibt alles andere ungestört.
+4. <a id="kn-bild-s4"></a>**Innerhalb der Grenzen?**: Pro Profil gelten Bilder pro Tag (gleitend 24 Stunden), Platz und höchstens 300 Bilder; Lieder: Lieder pro Tag, Platz und längstes Lied (musik.start). Auf dem ganzen Spark warten höchstens 10 schwere Aufträge, Bilder und Lieder zusammen.
+5. <a id="kn-bild-s5"></a>**Warten auf Pause und Platz**: Der Auftrag läuft im Hintergrund (bilder._work, musik._work): er wartet, bis niemand spricht (vorrang), und stellt sich in die eine Warteschlange für Bilder und Lieder (schwer.run). Die feste Regel schwer.pick nimmt den ältesten; solange die geladene Art noch wartet, kommt sie zuerst, aber höchstens 3-mal hintereinander, während die andere Art wartet. Ist eine andere Art dran, beendet das Panel zuerst das geladene Modell. Wer hinter anderen steht, bekommt einen festen Satz mit Platz und ungefährer Dauer (schwer.hint), die Karte zeigt „Wartet · Platz 2 von 3“. Ein Bild darf höchstens 720 Sekunden brauchen.
+6. <a id="kn-bild-s6"></a>**Modell geladen?**: bild_server.Engine.start nimmt zuerst den einen Platz (bedarf.OnDemand.claim, Sperre bedarf.lock: hält ihn der Musik-Dienst, antwortet er „belegt“) und startet sd-server als eigenen Prozess auf 127.0.0.1, aber nur, wenn genug gemeinsamer Speicher frei ist; sonst bleibt alles andere ungestört. Zu wenig Speicher beendet den Auftrag nicht: er behält seinen Platz und versucht es alle 30 Sekunden neu, höchstens 600 Sekunden lang.
 7. <a id="kn-bild-s7"></a>**Malen**: Die Engine malt das Bild in 4 Schritten in der gewählten Größe; ihre eigene Ausgabe kommt nie ins Journal, weil sie den Prompt nennen würde.
 8. <a id="kn-bild-s8"></a>**Bild unbedenklich?**: bild_server.nsfw_share lässt einen Klassifikator auf der CPU das Bild prüfen. Über 0.5 wird es verworfen; fehlt die Prüfung, zeigt das Panel nichts.
 9. <a id="kn-bild-s9"></a>**Als KI-Bild kennzeichnen**: bild_server.finish kodiert das Bild neu als PNG und schreibt hinein, dass es KI-erzeugt ist, ein geändertes Bild KI-bearbeitet (auch als IPTC-Angabe).
@@ -2693,8 +2697,9 @@ flowchart TD
 #### Zahlen (aus dem Code)
 
 - **300** Bilder pro Profil höchstens ([Schritt 4](#kn-bild-s4))
-- **10** Aufträge warten höchstens ([Schritt 4](#kn-bild-s4))
-- **10** Lieder warten höchstens ([Schritt 4](#kn-bild-s4))
+- **10** Bilder und Lieder warten höchstens ([Schritt 4](#kn-bild-s4))
+- **3** dieselbe Art höchstens hintereinander ([Schritt 5](#kn-bild-s5))
+- **600** Sekunden Warten auf Speicher höchstens ([Schritt 6](#kn-bild-s6))
 - **0.5** Anteil der Bildprüfung, ab dem verworfen wird ([Schritt 8](#kn-bild-s8))
 - **4** Schritte pro Bild ([Schritt 7](#kn-bild-s7))
 - **720** Sekunden pro Auftrag höchstens ([Schritt 5](#kn-bild-s5))
@@ -2709,6 +2714,7 @@ flowchart TD
 
 - Zustand → Live: Ziel „Bilder malen“ nur mit Zahlen; Logs → Diagnose, Bereich „Bild“.
 - Zustand → Live: Ziel „Musik machen“ mit Liedern und der letzten Messung in Zahlen; Logs → Diagnose, Bereich „Musik“.
+- Zustand → Live: unter „Im Hintergrund“ jedes Bild und Lied mit „wartet auf den Platz“ oder „wartet auf Speicher“, an den Zielen „hat den Platz“; Logs → Diagnose, Bereich „Schwere Aufträge“.
 
 #### Im Code
 
@@ -2722,6 +2728,10 @@ flowchart TD
 - `app/bild_server.py` `nsfw_share`: Bildprüfung ([Schritt 8](#kn-bild-s8))
 - `app/bild_server.py` `finish`: Kennzeichnen und neu kodieren ([Schritt 9](#kn-bild-s9))
 - `app/bedarf.py` `OnDemand`: Engine bei Bedarf, für Bild und Musik ([Schritt 6](#kn-bild-s6))
+- `app/bedarf.py` `OnDemand.claim`: Der eine Platz auf dem Spark ([Schritt 6](#kn-bild-s6))
+- `app/panel/schwer.py` `run`: Warteschlange: Platz, Wechsel, Speicher ([Schritt 5](#kn-bild-s5))
+- `app/panel/schwer.py` `pick`: Wer als Nächstes dran ist ([Schritt 5](#kn-bild-s5))
+- `app/panel/schwer.py` `hint`: Fester Satz mit Platz und Dauer ([Schritt 5](#kn-bild-s5))
 - `app/musik_server.py` `Engine.make`: Ein Lied in zwei Schritten ([Schritt 7](#kn-bild-s7))
 - `app/musik_server.py` `finish`: MP3 prüfen und als KI-erzeugt kennzeichnen ([Schritt 9](#kn-bild-s9))
 - `app/panel/musik.py` `start`: Liedwunsch annehmen ([Schritt 1](#kn-bild-s1), [Schritt 4](#kn-bild-s4))
@@ -2730,7 +2740,7 @@ flowchart TD
 - `app/panel/musik.py` `keep`: Lied ablegen ([Schritt 10](#kn-bild-s10))
 - `app/panel/musik.py` `_measure`: Musik testen je Modell ([Schritt 5](#kn-bild-s5))
 
-Selbsttests: `test_bilder`, `test_musik`
+Selbsttests: `test_bilder`, `test_musik`, `test_schwer`
 
 ### Dienste im Heimnetz
 
@@ -3060,7 +3070,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Versiegeln**: vault.seal macht aus dem Wert „enc1:“ und ein Fernet-Token (verschlüsselt und gegen Änderung geschützt). Ein schon versiegelter Wert bleibt, wie er ist.
 5. <a id="kn-state-s5"></a>**Atomar schreiben**: common.write_json schreibt in eine frische Zwischendatei daneben, nie durch einen Link, gibt ihr die Rechte der alten Datei (eine neue ist nur für den Dienst lesbar) und tauscht sie dann in einem Schritt aus. Ein Absturz mittendrin lässt die alte Datei ganz.
 6. <a id="kn-state-s6"></a>**Lesen**: Ein versiegelter Wert wird mit dem Schlüssel geöffnet. Passt der Schlüssel nicht (Sicherung von einem anderen Spark), kommt ein leerer Wert zurück und der Zugang muss neu eingetragen werden. Ältere unversiegelte Werte werden gelesen und beim nächsten Speichern versiegelt.
-7. <a id="kn-state-s7"></a>**Kommt in die Sicherung?**: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 32), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 75). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile.
+7. <a id="kn-state-s7"></a>**Kommt in die Sicherung?**: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 32), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 76). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile.
 8. <a id="kn-state-s8"></a>**Umzugs-Sicherung?**: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung.
 9. <a id="kn-state-s9"></a>**Beim Wiederherstellen in Ordnung?**: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt.
 10. <a id="kn-state-s10"></a>**Einsetzen mit Rückweg**: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück.
@@ -3071,7 +3081,7 @@ flowchart TD
 #### Zahlen (aus dem Code)
 
 - **32** Dateien in jeder Sicherung ([Schritt 7](#kn-state-s7))
-- **75** Dateien und Ordner, die mit Grund draußen bleiben ([Schritt 7](#kn-state-s7))
+- **76** Dateien und Ordner, die mit Grund draußen bleiben ([Schritt 7](#kn-state-s7))
 - **8 MB** größte Datei beim Wiederherstellen ([Schritt 9](#kn-state-s9))
 - **12** Zeichen hat das Umzugs-Passwort mindestens ([Schritt 8](#kn-state-s8))
 
@@ -3429,7 +3439,7 @@ flowchart TD
 ```
 
 1. <a id="kn-journal-s1"></a>**Ein Dienst schreibt eine Zeile**: Panel, ASR, TTS, Engines und Wächter schreiben mit print. systemd gibt die Zeile an das Journal; jede Einheit hat LogNamespace=speech-spark.
-2. <a id="kn-journal-s2"></a>**Feste Wörter und Zahlen**: Jede Zeile des Panels beginnt mit einem Wort aus logfilter.AREAS (31 Bereiche) und trägt nur feste Wörter und Zahlen. Ein Profil steht dort nur über profiles.log_name: sein Name nur mit seiner Zustimmung, sonst „Profil“ und das Ende der ID. test_log_luecken verlangt für jede Aktion eine Zeile je Ergebnis.
+2. <a id="kn-journal-s2"></a>**Feste Wörter und Zahlen**: Jede Zeile des Panels beginnt mit einem Wort aus logfilter.AREAS (32 Bereiche) und trägt nur feste Wörter und Zahlen. Ein Profil steht dort nur über profiles.log_name: sein Name nur mit seiner Zustimmung, sonst „Profil“ und das Ende der ID. test_log_luecken verlangt für jede Aktion eine Zeile je Ergebnis.
 3. <a id="kn-journal-s3"></a>**Ausführlich an?**: Für einige Bereiche kann der Admin zusätzliche Zeilen einschalten, höchstens 240 Minuten. Auch sie tragen nur Zahlen und Entscheidungen; ein Neustart schaltet sie aus.
 4. <a id="kn-journal-s4"></a>**Abfragen still**: Erfolgreiche Statusabfragen, die das Panel alle paar Sekunden stellt, schreiben keine Zeile.
 5. <a id="kn-journal-s5"></a>**Eigener Bereich mit Grenze**: install.sh schreibt die Grenze für Platz und Alter aus logs.max_mb und logs.keep_days. Ältere Zeilen löscht journald selbst. Eine Änderung wirkt nach dem nächsten Update oder install.sh.
@@ -3445,7 +3455,7 @@ flowchart TD
 
 #### Zahlen (aus dem Code)
 
-- **31** Bereiche der Diagnose ([Schritt 2](#kn-journal-s2))
+- **32** Bereiche der Diagnose ([Schritt 2](#kn-journal-s2))
 - **20000** Zeilen pro Abruf höchstens gelesen ([Schritt 8](#kn-journal-s8))
 - **2 MB** Journal-Text pro Abruf höchstens ([Schritt 8](#kn-journal-s8))
 - **1000** Zeilen höchstens angezeigt ([Schritt 7](#kn-journal-s7))

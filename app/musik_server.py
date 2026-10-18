@@ -32,7 +32,7 @@ import uvicorn
 from fastapi import Depends, FastAPI, HTTPException, Request
 
 import musikmodell
-from bedarf import OnDemand, idle_loop
+from bedarf import Belegt, OnDemand, idle_loop
 from common import BodyLimit, api_key_dependency, api_key_ok, check_memory, load_config, mem_available_gib, quiet_access_log
 
 MAX_BODY = 64 * 1024
@@ -52,7 +52,7 @@ app = FastAPI(title="Musik machen (ACE-Step 1.5 via acestep.cpp)")
 app.add_middleware(BodyLimit, default=MAX_BODY, gate=api_key_ok, gated=("/v1/",))
 auth = [Depends(api_key_dependency())]
 started = time.time()
-stats = {"songs": 0, "failures": 0, "refused_memory": 0, "starts": 0, "last_s": None, "last_lm_s": None,
+stats = {"songs": 0, "failures": 0, "refused_memory": 0, "refused_place": 0, "starts": 0, "last_s": None, "last_lm_s": None,
          "last_synth_s": None, "last_len_s": None, "peak_gib": None}
 
 
@@ -89,9 +89,15 @@ class Engine(OnDemand):
         if not musikmodell.installed(v):
             self.state = "error"
             raise HTTPException(503, "missing")
+        try:   # one model on demand at a time (bedarf.py): the place first, then the memory
+            self.claim()
+        except Belegt:
+            stats["refused_place"] += 1
+            raise HTTPException(503, "belegt")
         try:
             check_memory(musikmodell.VARIANTS[v]["need_gib"])
         except MemoryError:
+            self.release()
             stats["refused_memory"] += 1
             print(f"musik: engine nicht gestartet speicher {mem_available_gib():.1f} gib frei", flush=True)
             raise HTTPException(503, "memory")
@@ -104,6 +110,7 @@ class Engine(OnDemand):
             if not self.alive():
                 self.state = "error"
                 print(f"musik: engine beendet beim start code {self.proc.returncode}", flush=True)
+                self.stop("fehler")
                 raise HTTPException(503, "engine")
             try:
                 r = await self.client.get(self.base + "/health")

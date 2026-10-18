@@ -888,9 +888,9 @@ def _bg_now(now):
             out.append({"job": "Nachsortieren", "st": "run", "secs": 0})
     except Exception:
         pass
-    try:   # a song on the model computer (musik.py): waiting for a pause or being made, never its wish
-        import musik
-        out += [{"job": "Musik machen", "st": st, "secs": secs} for st, secs in musik.busy(now)]
+    try:   # pictures and songs on the model computer (schwer.py): waiting for a pause, for the one place or for
+        import schwer   # memory, or being made; never a wish
+        out += schwer.busy(now)
     except Exception:
         pass
     return out
@@ -1224,6 +1224,11 @@ def snapshot(view="admin", now=None):
         mus = {"on": False}
     if mus.get("on") or mus.get("installed"):
         used.add("musik")
+    try:   # Schwere Aufträge (schwer.py): who has the one place, how many wait (numbers only)
+        import schwer
+        heavy = schwer.for_live()
+    except Exception:
+        heavy = {"platz": "", "wait": {}}
     try:
         import berater
         verb = berater.for_live(now)
@@ -1494,13 +1499,14 @@ def snapshot(view="admin", now=None):
                         + (f" · {bild['edited']} geändert" if bild.get("edited") else "")
                         + (f" · {bild['quick']} schnell bearbeitet" if bild.get("quick") else "")
                         + (f" · {bild['refused']} abgelehnt" if bild.get("refused") else "")
-                        + (f" · {bild['failed']} Fehler" if bild.get("failed") else ""))
+                        + (f" · {bild['failed']} Fehler" if bild.get("failed") else "") + _platz(heavy, "bild"))
         if x["id"] == "musik":   # Musik machen: songs and the measurement in numbers (no wish, no lyrics)
             x["sub"] = (f"{mus.get('run', 0)} macht · {mus.get('wait', 0)} wartet · {mus.get('done', 0)} heute gemacht"
                         + (f" · {mus['refused']} abgelehnt" if mus.get("refused") else "")
                         + (f" · {mus['failed']} Fehler" if mus.get("failed") else "")
                         + (" · misst gerade" if mus.get("test_run") else
-                           f" · Messung {mus['test_ok']} von {mus['test_total']} gut" if mus.get("test_total") else ""))
+                           f" · Messung {mus['test_ok']} von {mus['test_total']} gut" if mus.get("test_total") else "")
+                        + _platz(heavy, "musik"))
     svc = dict(watch_svc, **{k: v for k, v in _svc_now(now).items() if k not in watch_svc or watch_svc[k]["st"] == "ok"})
     try:   # Wartungspause (wartung.py): the paused parts in blue, "Pause" (never who or why)
         import wartung
@@ -1525,7 +1531,17 @@ def snapshot(view="admin", now=None):
             "bild": {k: bild.get(k) for k in ("on", "run", "wait", "done", "edited", "quick", "failed", "refused")},
             "musik": {k: mus.get(k) for k in ("on", "installed", "run", "wait", "done", "failed", "refused", "test_run",
                                               "test_ok", "test_total")},
-            "stats": node_stats(now), "aktiv": _aktiv(now)}
+            "schwer": heavy, "stats": node_stats(now), "aktiv": _aktiv(now)}
+
+
+def _platz(heavy, art):
+    """The node line's part for the one place of the heavy jobs (schwer.py): has it, waits for memory, or waits
+    behind the other kind; nothing while nobody waits."""
+    if heavy.get("platz") == art:
+        return " · wartet auf Speicher" if heavy.get("phase") == "speicher" else " · hat den Platz"
+    if heavy.get("platz") and (heavy.get("wait") or {}).get(art):
+        return " · wartet auf den Platz"
+    return ""
 
 
 def _aktiv(now):

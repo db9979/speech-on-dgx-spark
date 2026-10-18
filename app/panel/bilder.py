@@ -4,7 +4,8 @@ wish, painted on the Spark by FLUX.2 [klein] (bild_server.py on 127.0.0.1, image
 Ways in: the tool bild_malen in the conversation (the language model writes the English picture prompt from the
 person's words, Dominik 4a, shown under the picture) and Ich → Bilder (the person's own sentence goes as it is).
 The panel decides everything else with fixed rules: size from the format and image.max_side, 4 steps, one picture
-at a time on the whole Spark, at most WAITING waiting, one open job per profile, image.day_limit pictures per
+at a time on the whole Spark and never beside a song (schwer.py: one place for the models on demand, at most
+schwer.WAITING heavy jobs waiting), one open job per profile, image.day_limit pictures per
 profile in 24 hours, image.store_mb per profile.
 
 Protection (Dominik 5a, fixed rules, no switch): a word list before painting (the wish and the prompt, de and en),
@@ -42,6 +43,7 @@ import features
 import guard
 import notaus
 import profiles
+import schwer
 import wartung
 from common import DayCounter, STATE, load_config, model_url
 from core import api_headers, assistant, auth, browser_profile, json_body, own_profile
@@ -53,8 +55,7 @@ MAX_WISH = 500
 MAX_PROMPT = 1000
 MAX_PICS = 300              # pictures per profile, whatever the space
 NSFW_MAX = 0.5              # the image check's share above which a picture is thrown away (fixed rule)
-WAITING = 10                # open jobs on the whole Spark
-JOB_SECONDS = 12 * 60       # waiting for a pause, loading the model and painting
+JOB_SECONDS = 12 * 60       # waiting for a pause, loading the model and painting (plus schwer.WAIT_S in the queue)
 FOLLOW_SECONDS = 10 * 60    # after a picture wish, "noch einmal in Blau" or "ja, fiktiv" is understood without the words
 MAX_PNG = 40 * 1024 * 1024
 MAX_PHOTO = 8 * 1024 * 1024      # an own photo uploaded to Ich → Bilder (as images.MAX_BYTES)
@@ -147,7 +148,6 @@ HINT = ("bild_malen malt ein Bild auf dem Spark. Rufe es nur auf, wenn die Perso
         "Bilddienst. Erfundene Personen sind erlaubt, echte bekannte Personen nie.")
 
 _lock = threading.Lock()
-_paint = []                 # [asyncio.Lock] of the running loop: one picture at a time
 _jobs = {}                  # jid -> job
 _tasks = set()
 _recent = {}                # uid -> time of the last picture or wish, also a refused one (FOLLOW_SECONDS)
@@ -231,6 +231,8 @@ REFUSED = {"wortliste": ("Das male ich nicht: der Wunsch fällt unter die festen
                              "The image check is missing; without it there is no picture (admin: install.sh --bild)."),
            "memory": ("Gerade ist zu wenig Speicher frei; das Bildmodell startet erst, wenn mehr frei ist.",
                       "Too little memory is free right now; the picture model starts once more is free."),
+           "belegt": ("Das Musikmodell gibt den Platz gerade nicht frei; bitte etwas später noch einmal.",
+                      "The music model does not free the place right now; please try again a little later."),
            "missing": ("Das Bildmodell ist nicht installiert (Admin: sudo ./install.sh --bild 4b-q8).",
                        "The picture model is not installed (admin: sudo ./install.sh --bild 4b-q8)."),
            "dienst": ("Der Bild-Dienst antwortet gerade nicht.", "The picture service does not answer right now."),
@@ -370,15 +372,35 @@ def _live(text_):
 
 
 def job_public(j):
+    """The job for its page and card; q: its place among the heavy jobs while it is open (schwer.where)."""
     return {"id": j["id"], "state": j["state"], "error": j.get("error", ""), "error_en": j.get("error_en", ""),
             "pic": public(j["pic"]) if j.get("pic") else None, "prompt": j["prompt"], "t0": int(j["t0"]),
-            "art": j.get("art", "malen")}
+            "art": j.get("art", "malen"), "q": schwer.where(j["id"]) if j["state"] in ("wait", "run") else None}
 
 
 def jobs_of(uid):
     with _lock:
         return [job_public(j) for j in sorted(_jobs.values(), key=lambda j: j["t0"]) if j["uid"] == uid
                 and (j["state"] in ("wait", "run") or time.time() - j.get("end", 0) < 600)]
+
+
+def _open_jobs():
+    """schwer.SOURCES: this module's jobs (no lock: job_public asks schwer while holding _lock)."""
+    return list(_jobs.values())
+
+
+async def _stop_engine():
+    """schwer.STOPS: ends the picture model now; False when the picture service is not installed."""
+    if not cfg().get("enabled"):
+        return False
+    code, _d = await call("/v1/bild/stop", {}, timeout=30)
+    if code != 200:
+        raise RuntimeError(code)
+    return True
+
+
+schwer.SOURCES["bild"] = _open_jobs
+schwer.STOPS["bild"] = _stop_engine
 
 
 def _sweep(now):
@@ -444,7 +466,7 @@ def start(prof, prompt, wish, fmt, src="chat", client="web", ref=None, von=""):
             _say("laeuft", prof)
             raise ValueError(("Ich male schon ein Bild für dich; erst wenn es fertig ist.",
                               "I am already painting a picture for you; once it is done."))
-        if sum(1 for j in _jobs.values() if j["state"] in ("wait", "run")) >= WAITING:
+        if schwer.full():
             _say("warteschlange", prof)
             raise ValueError(("Gerade warten schon viele Bilder; bitte etwas später noch einmal.",
                               "Many pictures are waiting already; please try again a little later."))
@@ -498,19 +520,12 @@ def _fail(j, why):
 
 async def _run(j):
     try:
-        await asyncio.wait_for(_work(j), JOB_SECONDS)
+        await asyncio.wait_for(_work(j), JOB_SECONDS + schwer.WAIT_S)
     except asyncio.TimeoutError:
         _fail(j, "zeit")
     except Exception as e:   # noqa: BLE001 - every job ends with a state and a journal line
         print("bilder: fehler", type(e).__name__, flush=True)
         _fail(j, "dienst")
-
-
-def _paint_lock():
-    loop = asyncio.get_running_loop()
-    if not _paint or _paint[0][0] is not loop:
-        _paint[:] = [(loop, asyncio.Lock())]
-    return _paint[0][1]
 
 
 async def call(path, body=None, timeout=JOB_SECONDS):
@@ -538,7 +553,7 @@ async def paint(prompt, w, h, refs=None):
         code, d = await call("/v1/bild", body)
     except httpx.HTTPError:
         raise ValueError("dienst")
-    if code == 503 and d.get("detail") in ("memory", "missing"):
+    if code == 503 and d.get("detail") in ("memory", "missing", "belegt"):
         raise ValueError(d["detail"])
     if code == 504:
         raise ValueError("zeit")
@@ -561,17 +576,19 @@ async def paint(prompt, w, h, refs=None):
 async def _work(j):
     import vorrang
     await vorrang.quiet("Bild malen")
-    async with _paint_lock():
+
+    async def once():   # on the one place of the heavy jobs (schwer.py); again after "memory"
         await vorrang.quiet("Bild malen")
         if wartung.paused("bild"):
-            _fail(j, "wartung")
-            return
+            raise ValueError("wartung")
         j["state"] = "run"
-        try:
-            png, d = await paint(j["prompt"], j["w"], j["h"], [j.pop("ref")] if j.get("ref") else None)
-        except ValueError as e:
-            _fail(j, str(e) if str(e) in REFUSED else "dienst")
-            return
+        return await paint(j["prompt"], j["w"], j["h"], [j["ref"]] if j.get("ref") else None)
+    try:
+        png, d = await schwer.run("bild", j.get("id"), j.get("t0"), once)
+    except ValueError as e:
+        _fail(j, str(e) if str(e) in REFUSED else "dienst")
+        return
+    j.pop("ref", None)
     edit = j.get("art") == "aendern"
     row = keep(j["uid"], png, {"w": d.get("w", j["w"]), "h": d.get("h", j["h"]), "prompt": j["prompt"],
                                "wish": j["wish"], "format": j["format"], "seconds": d.get("seconds"), "src": j["src"],
@@ -636,6 +653,11 @@ async def tool(name, args, ctx):
         where = "Es erscheint gleich hier im Chat und unter Ich → Bilder."
     else:
         where = "Es liegt gleich unter Ich → Bilder; der Spark sagt Bescheid."
+    wait = schwer.hint(j["id"])
+    if wait:   # Dominik 2026-10-18 3a 4a: only when it really waits behind other heavy jobs, a fixed sentence
+        return (f"Started, but waiting in the queue: the picture will be painted on the Spark ({j['prompt'][:200]}). "
+                f"Say this to the user, in their language and without changing the numbers: „{wait}“ {where} "
+                f"Do not describe the picture.")
     return (f"Started: the picture is being painted on the Spark ({j['prompt'][:200]}). Tell the user in one short "
             f"sentence that you are painting it. {where} Do not describe the picture.")
 
@@ -704,10 +726,13 @@ async def from_turn(ctx, text, pics):
                 "system": f"Bild ändern: Nicht gestartet. {de} Sag genau das in einem Satz und beschreibe kein Bild."}
     shown = client in ("", "web", "iphone")
     where = "hier im Chat und unter Ich → Bilder" if shown else "unter Ich → Bilder; der Spark sagt Bescheid"
+    wait = schwer.hint(j["id"])
+    say = (f"Sag der Person genau diesen Satz (in ihrer Sprache, die Zahlen unverändert): „{wait}“ Danach, dass das "
+           f"Bild {where} erscheint." if wait else
+           f"Sag in einem kurzen Satz, dass du das Bild änderst und es gleich {where} erscheint.")
     out = {"call": {"name": "Bild ändern (Panel)", "args": "", "result": "gestartet"},
-           "system": f"Bild ändern: Das Panel ändert das Bild jetzt nach dem Wunsch der Person auf dem Spark. Sag in "
-                     f"einem kurzen Satz, dass du das Bild änderst und es gleich {where} erscheint. Beschreibe das Bild "
-                     f"nicht und rufe kein Werkzeug auf."}
+           "system": f"Bild ändern: Das Panel ändert das Bild jetzt nach dem Wunsch der Person auf dem Spark. {say} "
+                     f"Beschreibe das Bild nicht und rufe kein Werkzeug auf."}
     if shown:
         out["event"] = {"type": "bild", "job": j["id"], "prompt": j["prompt"], "art": "aendern"}
     return out
@@ -971,8 +996,7 @@ async def bild_test_run(request: Request):
         res["why"] = "missing"
     else:
         try:
-            async with _paint_lock():
-                _png, d = await paint(TEST_PROMPT, 512, 512)
+            _png, d = await schwer.run("bild", None, None, lambda: paint(TEST_PROMPT, 512, 512))
             res.update(ok=True, seconds=d.get("seconds"), nsfw=round(float(d["nsfw"]), 3))
         except ValueError as e:
             res["why"] = str(e) if str(e) in REFUSED else "dienst"

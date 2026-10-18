@@ -2,12 +2,28 @@
 it as its child process for the first job and ends it after some idle minutes, so it holds no memory while nobody
 uses it (Dominik 2026-10-14 „3a“, 2026-10-16 „nur bei Benutzung laden“). One place for what both services share:
 the child process, its states, the stop and the idle loop. Log lines carry only the service's word and fixed words.
+
+One model at a time (Dominik 2026-10-18 „soll immer nur ein Model geladen sein, beide nicht gleichzeitig“, plan
+plaene/schwere-auftraege.md 6a): before an engine starts, its service takes the lock STATE/bedarf.lock (flock, only
+this machine, released by stop() or when the process ends); while another service holds it, claim() raises Belegt
+and the service answers 503 "belegt". The panel's queue (panel/schwer.py) frees the place first, this lock holds
+the rule even for a call that passes the panel by.
 """
 import asyncio
+import fcntl
+import os
 import subprocess
 import time
 
 import httpx
+
+from common import STATE
+
+LOCK = os.path.join(STATE, "bedarf.lock")
+
+
+class Belegt(Exception):
+    """Another model on demand holds the place (bedarf.lock)."""
 
 
 class OnDemand:
@@ -22,6 +38,28 @@ class OnDemand:
         self.busy = False
         self.lock = asyncio.Lock()
         self.client = httpx.AsyncClient(timeout=httpx.Timeout(30, connect=3))
+        self.held = None           # the open lock file while this engine holds the one place
+
+    def claim(self):
+        """Takes the one place for the models on demand, or raises Belegt (another service holds it)."""
+        if self.held is not None:
+            return
+        f = open(os.open(LOCK, os.O_WRONLY | os.O_CREAT, 0o600), "w")
+        try:
+            fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except OSError:
+            f.close()
+            print(f"{self.word}: engine nicht gestartet belegt", flush=True)
+            raise Belegt()
+        self.held = f
+
+    def release(self):
+        if self.held is not None:
+            try:
+                fcntl.flock(self.held, fcntl.LOCK_UN)
+            finally:
+                self.held.close()
+                self.held = None
 
     def alive(self):
         return self.proc is not None and self.proc.poll() is None
@@ -42,6 +80,7 @@ class OnDemand:
                 self.proc.wait(5)
             print(f"{self.word}: engine beendet {why}", flush=True)
         self.proc = None
+        self.release()
         if self.state != "error" or why != "fehler":
             self.state = "off"
 

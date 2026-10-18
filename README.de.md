@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.776** Bilder und Musik: eine Warteschlange, nie zwei Modelle zugleich, Hinweis mit Platz und Wartezeit
 - **V01.0.775** Fix: keine Engine startet mehr neben einer Modell-Messung; Qwen3.6 35B A3B messen
 - **V01.0.774** Fix: „?“-Knopf neben dem Titel einer Einstellung statt darin
 - **V01.0.773** Fix: Wissensbuch-Reiter ohne Fehlalarm der Inline-Handler-Prüfung
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.769** Zustand → Modelle: Speicherbalken farbig pro Modell, Kacheln in derselben Farbe
 - **V01.0.768** Wissensbuch Stufe A: Suchprüfung misst Sammelfragen über mehrere Dokumente (Vergleichswert fürs Wissensbuch)
 - **V01.0.767** Werkstatt unter Zustand → Technik als eigener Kasten mit Knoten-Seite, im Schaubild, in den Befehlen und mit eigenem Doku-Abschnitt
-- **V01.0.766** Fix: Qwen3.8 Flash Next startet in Docker (io_uring im Container erlaubt, seccomp bleibt an)
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

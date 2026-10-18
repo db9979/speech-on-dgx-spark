@@ -238,6 +238,7 @@ Own documents, memory, earlier conversations, Kiwix and Wikipedia, created docum
 | `app/panel/musik.py` | Musik machen: songs from a wish, made on the model computer by ACE-Step 1.5 (musik_server.py, music.port 31004, installed with `install.sh --musik 2b\|xl`). |
 | `app/panel/nachsortieren.py` | Treffer nachsortieren: a cross-encoder reads the question and each of the mixed search's candidates together and gives a score; the best come first, the ones … |
 | `app/panel/recall.py` | What a profile talked about before: search in its saved conversations, and facts learned from them automatically (profiles only; guests keep their conversati … |
+| `app/panel/schwer.py` | Schwere Aufträge: one queue and one place on the model computer for the models that load on demand. |
 | `app/panel/suchpruefung.py` | Suchprüfung: how often does the document search find the right passage? |
 | `app/panel/symbole.py` | Symbols for slides and documents. |
 | `app/panel/tagebuch.py` | Spark-Tagebuch: what the Spark itself did for a profile. |
@@ -539,6 +540,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `state/apns-tokens.json` | iPhones for push | – | yes |
 | `state/apns.json` | Apple push key | key sealed | yes |
 | `state/audit.log` | Admin log, 1 MB | – | no |
+| `state/bedarf.lock` | Lock: only one model on demand at a time (pictures or music) | – | no |
 | `state/begleiter` | Companion updates | – | no |
 | `state/begleiter-inbox` | Phone to PC, 24 h | – | no |
 | `state/bench-history.json` | Benchmarks | – | no |
@@ -2246,7 +2248,7 @@ flowchart TD
 2. <a id="kn-betrieb-s2"></a>**Anything switched on?**: If neither „Trace requests“ nor the live page nor the settings assistant is on, there is no record. Only the modules' journal lines remain.
 3. <a id="kn-betrieb-s3"></a>**Steps with fixed words**: Each step (switch, model round, tool, check, speech output) is added with kind, name and time. A value goes in only if it is a number or a short fixed word; anything else is dropped. Question, answer, arguments and results never go in.
 4. <a id="kn-betrieb-s4"></a>**Live page on?**: With the live page on, live.py sees each step at once: which service is asked, what the guard decides, what comes back. Everything stays in memory and is gone after a restart.
-5. <a id="kn-betrieb-s5"></a>**Journal lines of the modules**: Independently each module writes its lines into the Spark's journal. Every line starts with a word from logfilter.AREAS (31 areas), profiles only through profiles.log_name. A self-test checks both.
+5. <a id="kn-betrieb-s5"></a>**Journal lines of the modules**: Independently each module writes its lines into the Spark's journal. Every line starts with a word from logfilter.AREAS (32 areas), profiles only through profiles.log_name. A self-test checks both.
 6. <a id="kn-betrieb-s6"></a>**End and verdict**: At the end the record gets its state: error if an error word is set, slow if the first sound came later than 5.0 s, else good.
 7. <a id="kn-betrieb-s7"></a>**Trace requests on?**: If only Live or the settings assistant is on, the record ends here. It is written nowhere.
 8. <a id="kn-betrieb-s8"></a>**Line „anfrage:“ into the journal**: One line per request: id, channel, class, tools with ok or not ok, time to the instant reply, to the first sound and to the end. Without names.
@@ -2640,6 +2642,8 @@ Painting pictures turns a wish into a picture, on the Spark itself. The panel ch
 
 Making music works the same way next to it: a wish under Me → Music or musik_machen in the conversation becomes a song (instrumental and 2 minutes unless asked). The music service on :31004 loads ACE-Step 1.5 only for a song, in the model the admin picked, and frees the memory after a quiet time; "Test music" measures every installed model. Both services share the on-demand engine of bedarf.py.
 
+Only one of the two models is loaded at a time (Dominik 2026-10-18): pictures and songs stand in one queue in the panel (schwer.py); who waits behind others hears the place and about how long it takes.
+
 **Why:** A picture model can paint anything, also nudity, violence or real people. The language model never decides that; fixed rules before and after painting do. And the model needs a lot of shared memory: it must never push out the language model or the voice.
 
 #### Way
@@ -2650,7 +2654,7 @@ flowchart TD
   s2{{"2. Feature released?"}}
   s3{{"3. Wish allowed?"}}
   s4{{"4. Within the limits?"}}
-  s5["5. Wait for a pause"]
+  s5["5. Wait for a pause and the place"]
   s6{{"6. Model loaded?"}}
   s7["7. Paint"]
   s8{{"8. Picture harmless?"}}
@@ -2671,7 +2675,7 @@ flowchart TD
   s3 -->|no| s3x
   s4x(["Refused with the reason"])
   s4 -->|no| s4x
-  s6x(["Too little memory, try later"])
+  s6x(["Too little memory for too long, given up"])
   s6 -->|no| s6x
   s8x(["Discarded, nothing stored"])
   s8 -->|no| s8x
@@ -2680,9 +2684,9 @@ flowchart TD
 1. <a id="kn-bild-s1"></a>**A picture wish**: A profile writes a wish under Me → Pictures, or the router group "bild" offers the tool bild_malen in the conversation; the model writes an English prompt for it. Changing pictures starts without a tool: bilder.from_turn takes by a fixed rule the photo of this message or the result of the last change, under Me → Pictures an own picture. Everything ends in bilder.start. Quick buttons (rotate, brighter, black and white …) need no model: bilder.quick_png does them at once on the panel. A song wish comes the same way through Me → Music or the group "musik" with musik_machen into musik.start.
 2. <a id="kn-bild-s2"></a>**Feature released?**: features.allowed asks the release: the admin switched painting pictures on and did not block this profile. Guests never get the tool; after outside text and at kill switch stage 2 it is locked.
 3. <a id="kn-bild-s3"></a>**Wish allowed?**: bilder.refuse_text checks wish and prompt against a fixed word list (nothing sexual, no violence, no hate symbols) and against the names of profiles and contacts. For songs musik.refuse_text checks wish, description and lyrics against the word list, plus "in the style of" an artist and secrets; names are fine. The model cannot get around it.
-4. <a id="kn-bild-s4"></a>**Within the limits?**: Per profile there are pictures per day (rolling 24 hours), space and at most 300 pictures; on the whole Spark at most 10 jobs wait. Songs: songs per day, space and the longest song, on the Spark at most 10 waiting (musik.start).
-5. <a id="kn-bild-s5"></a>**Wait for a pause**: The job runs in the background (bilder._work): it waits until nobody speaks (vorrang) and paints only one picture at a time, for at most 720 seconds. A song the same way (musik._work), one at a time.
-6. <a id="kn-bild-s6"></a>**Model loaded?**: bild_server.Engine.start starts sd-server as its own process on 127.0.0.1, but only when enough shared memory is free; otherwise everything else stays undisturbed.
+4. <a id="kn-bild-s4"></a>**Within the limits?**: Per profile there are pictures per day (rolling 24 hours), space and at most 300 pictures; songs: songs per day, space and the longest song (musik.start). On the whole Spark at most 10 heavy jobs wait, pictures and songs together.
+5. <a id="kn-bild-s5"></a>**Wait for a pause and the place**: The job runs in the background (bilder._work, musik._work): it waits until nobody speaks (vorrang) and joins the one queue for pictures and songs (schwer.run). The fixed rule schwer.pick takes the oldest; while the loaded kind still waits it goes first, but at most 3 times in a row while the other kind waits. When another kind is next, the panel first ends the loaded model. Who stands behind others gets a fixed sentence with the place and about how long (schwer.hint), the card shows "Waiting · place 2 of 3". A picture may take at most 720 seconds.
+6. <a id="kn-bild-s6"></a>**Model loaded?**: bild_server.Engine.start first takes the one place (bedarf.OnDemand.claim, lock bedarf.lock: when the music service holds it, it answers "belegt") and starts sd-server as its own process on 127.0.0.1, but only when enough shared memory is free; otherwise everything else stays undisturbed. Too little memory does not end the job: it keeps its place and tries again every 30 seconds, for at most 600 seconds.
 7. <a id="kn-bild-s7"></a>**Paint**: The engine paints the picture in 4 steps at the chosen size; its own output never reaches the journal, because it would name the prompt.
 8. <a id="kn-bild-s8"></a>**Picture harmless?**: bild_server.nsfw_share lets a classifier on the CPU check the picture. Above 0.5 it is discarded; without the check the panel shows nothing.
 9. <a id="kn-bild-s9"></a>**Mark as AI picture**: bild_server.finish re-encodes the picture as PNG and writes into it that it is AI-made, a changed picture AI-edited (also as an IPTC entry).
@@ -2693,8 +2697,9 @@ flowchart TD
 #### Numbers (from the code)
 
 - **300** pictures per profile at most ([step 4](#kn-bild-s4))
-- **10** jobs wait at most ([step 4](#kn-bild-s4))
-- **10** songs wait at most ([step 4](#kn-bild-s4))
+- **10** pictures and songs wait at most ([step 4](#kn-bild-s4))
+- **3** the same kind at most in a row ([step 5](#kn-bild-s5))
+- **600** seconds of waiting for memory at most ([step 6](#kn-bild-s6))
 - **0.5** image check share above which it is discarded ([step 8](#kn-bild-s8))
 - **4** steps per picture ([step 7](#kn-bild-s7))
 - **720** seconds per job at most ([step 5](#kn-bild-s5))
@@ -2709,6 +2714,7 @@ flowchart TD
 
 - State → Live: target "Painting pictures" with numbers only; Logs → Diagnosis, area "Bild".
 - State → Live: target "Making music" with songs and the last measurement in numbers; Logs → Diagnosis, area "Musik".
+- State → Live: under "In the background" every picture and song with "waiting for the place" or "waiting for memory", at the targets "has the place"; Logs → Diagnosis, area "Heavy jobs".
 
 #### In the code
 
@@ -2722,6 +2728,10 @@ flowchart TD
 - `app/bild_server.py` `nsfw_share`: image check ([step 8](#kn-bild-s8))
 - `app/bild_server.py` `finish`: mark and re-encode ([step 9](#kn-bild-s9))
 - `app/bedarf.py` `OnDemand`: engine on demand, for pictures and music ([step 6](#kn-bild-s6))
+- `app/bedarf.py` `OnDemand.claim`: the one place on the Spark ([step 6](#kn-bild-s6))
+- `app/panel/schwer.py` `run`: queue: place, switch, memory ([step 5](#kn-bild-s5))
+- `app/panel/schwer.py` `pick`: who is next ([step 5](#kn-bild-s5))
+- `app/panel/schwer.py` `hint`: fixed sentence with place and time ([step 5](#kn-bild-s5))
 - `app/musik_server.py` `Engine.make`: one song in two steps ([step 7](#kn-bild-s7))
 - `app/musik_server.py` `finish`: check the MP3 and mark it AI-made ([step 9](#kn-bild-s9))
 - `app/panel/musik.py` `start`: accept a song wish ([step 1](#kn-bild-s1), [step 4](#kn-bild-s4))
@@ -2730,7 +2740,7 @@ flowchart TD
 - `app/panel/musik.py` `keep`: store the song ([step 10](#kn-bild-s10))
 - `app/panel/musik.py` `_measure`: test music per model ([step 5](#kn-bild-s5))
 
-Self-tests: `test_bilder`, `test_musik`
+Self-tests: `test_bilder`, `test_musik`, `test_schwer`
 
 ### Services at home
 
@@ -3060,7 +3070,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Seal**: vault.seal turns the value into „enc1:“ and a Fernet token (encrypted and protected against change). A value already sealed stays as it is.
 5. <a id="kn-state-s5"></a>**Write atomically**: common.write_json writes into a fresh temporary file next to it, never through a link, gives it the rights of the old file (a new one is readable for the service only) and then swaps it in one step. A crash in the middle leaves the old file whole.
 6. <a id="kn-state-s6"></a>**Read**: A sealed value is opened with the key. If the key does not fit (backup from another Spark), an empty value comes back and the account has to be entered again. Older unsealed values are read and sealed the next time they are saved.
-7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 32), otherwise the line gives its reason (dateien.STATE_LOCAL, 75). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
+7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 32), otherwise the line gives its reason (dateien.STATE_LOCAL, 76). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
 8. <a id="kn-state-s8"></a>**Move backup?**: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup.
 9. <a id="kn-state-s9"></a>**Fine when restoring?**: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays.
 10. <a id="kn-state-s10"></a>**Put in place with a way back**: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back.
@@ -3071,7 +3081,7 @@ flowchart TD
 #### Numbers (from the code)
 
 - **32** files in every backup ([step 7](#kn-state-s7))
-- **75** files and folders that stay out with a reason ([step 7](#kn-state-s7))
+- **76** files and folders that stay out with a reason ([step 7](#kn-state-s7))
 - **8 MB** largest file when restoring ([step 9](#kn-state-s9))
 - **12** characters the move password has at least ([step 8](#kn-state-s8))
 
@@ -3429,7 +3439,7 @@ flowchart TD
 ```
 
 1. <a id="kn-journal-s1"></a>**A service writes a line**: Panel, ASR, TTS, engines and watchers write with print. systemd hands the line to the journal; every unit has LogNamespace=speech-spark.
-2. <a id="kn-journal-s2"></a>**Fixed words and numbers**: Every line of the panel starts with a word from logfilter.AREAS (31 areas) and carries only fixed words and numbers. A profile appears there only through profiles.log_name: its name only with its consent, else „Profil“ and the end of its ID. test_log_luecken wants a line for every outcome of every action.
+2. <a id="kn-journal-s2"></a>**Fixed words and numbers**: Every line of the panel starts with a word from logfilter.AREAS (32 areas) and carries only fixed words and numbers. A profile appears there only through profiles.log_name: its name only with its consent, else „Profil“ and the end of its ID. test_log_luecken wants a line for every outcome of every action.
 3. <a id="kn-journal-s3"></a>**Detail on?**: For some areas the admin can switch on extra lines, at most 240 minutes. They too carry only numbers and decisions; a restart switches them off.
 4. <a id="kn-journal-s4"></a>**Polls quiet**: Successful status polls the panel makes every few seconds write no line.
 5. <a id="kn-journal-s5"></a>**Own part with a limit**: install.sh writes the limit for space and age from logs.max_mb and logs.keep_days. journald deletes older lines itself. A change applies after the next update or install.sh.
@@ -3445,7 +3455,7 @@ flowchart TD
 
 #### Numbers (from the code)
 
-- **31** areas of the diagnosis ([step 2](#kn-journal-s2))
+- **32** areas of the diagnosis ([step 2](#kn-journal-s2))
 - **20000** lines read per call at most ([step 8](#kn-journal-s8))
 - **2 MB** journal text per call at most ([step 8](#kn-journal-s8))
 - **1000** lines shown at most ([step 7](#kn-journal-s7))

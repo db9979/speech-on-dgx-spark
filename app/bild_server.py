@@ -28,7 +28,7 @@ import uvicorn
 from fastapi import Depends, FastAPI, HTTPException, Request
 
 import bildmodell
-from bedarf import OnDemand, idle_loop
+from bedarf import Belegt, OnDemand, idle_loop
 from common import BodyLimit, api_key_dependency, api_key_ok, check_memory, load_config, mem_available_gib, quiet_access_log
 
 MAX_BODY = 16 * 1024**2
@@ -52,7 +52,7 @@ app = FastAPI(title="Bilder malen (FLUX.2 klein via stable-diffusion.cpp)")
 app.add_middleware(BodyLimit, default=MAX_BODY, gate=api_key_ok, gated=("/v1/",))
 auth = [Depends(api_key_dependency())]
 started = time.time()
-stats = {"pictures": 0, "failures": 0, "refused_memory": 0, "starts": 0, "last_s": None, "load_s": None,
+stats = {"pictures": 0, "failures": 0, "refused_memory": 0, "refused_place": 0, "starts": 0, "last_s": None, "load_s": None,
          "engine_gib": None, "peak_gib": None}
 
 
@@ -85,9 +85,15 @@ class Engine(OnDemand):
         if not bildmodell.installed(v):
             self.state = "error"
             raise HTTPException(503, "missing")
+        try:   # one model on demand at a time (bedarf.py): the place first, then the memory
+            self.claim()
+        except Belegt:
+            stats["refused_place"] += 1
+            raise HTTPException(503, "belegt")
         try:
             check_memory(bildmodell.VARIANTS[v]["need_gib"])
         except MemoryError:
+            self.release()
             stats["refused_memory"] += 1
             print(f"bild: engine nicht gestartet speicher {mem_available_gib():.1f} gib frei", flush=True)
             raise HTTPException(503, "memory")
@@ -100,6 +106,7 @@ class Engine(OnDemand):
             if not self.alive():
                 self.state = "error"
                 print(f"bild: engine beendet beim start code {self.proc.returncode}", flush=True)
+                self.stop("fehler")
                 raise HTTPException(503, "engine")
             try:
                 r = await self.client.get(self.base + "/sdcpp/v1/capabilities")

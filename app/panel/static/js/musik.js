@@ -14,7 +14,7 @@ function muFollow(jid,el,tick){const look=async()=>{if(!el.isConnected)return;co
     if(!r.r.ok){tick({state:'error',error:String(r.d.detail||'').slice(0,200)});return}
     tick(r.d);if(r.d.state==='wait'||r.d.state==='run')setTimeout(look,3000)};setTimeout(look,0)}
 const MUSTATE={wait:['wartet auf eine Gesprächspause','waiting for a pause in the conversation'],run:['macht das Lied …','making the song …']};
-function muJobLine(j){return j.state==='error'?(L==='en'&&j.error_en?j.error_en:j.error)||t('Ging nicht.','Did not work.'):t(...(MUSTATE[j.state]||MUSTATE.wait))}
+function muJobLine(j){return schwerZeile(j)||(j.state==='error'?(L==='en'&&j.error_en?j.error_en:j.error)||t('Ging nicht.','Did not work.'):t(...(MUSTATE[j.state]||MUSTATE.wait)))}
 
 // ---------------------------------------------------------------- the card in the chat
 function musikCard(ev){const d=icEl('div','hcard mucard');const h=icEl('h4','',t('Lied','Song'));const st=icEl('div','hmsg mut',t('wartet …','waiting …'));

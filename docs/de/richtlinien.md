@@ -351,6 +351,7 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
 - Selbsttest auf tars mit `nice 19` und `ionice`. Prioritäten-Code mit `nice -n 19` testen. (M)
 - Die Panel-venv entsteht aus dem Lock nur, wenn venv-panel neu ist. Eine neue Bibliothek braucht deshalb einen Installationsweg für bestehende Installationen. (M)
 - Fragen an `api.github.com` nur über `ghtoken.get` (Token nur lesen, 401 → ohne Token weiter), nie für Erreichbarkeits-Proben: ohne Token teilen sich alle Geräte im Heimnetz 60 pro Stunde. (D; 🧪 test_ghtoken, test_update_check)
+- **Ein Modell bei Bedarf zur Zeit** (Dominik 2026-10-18: „soll immer nur ein Model geladen sein, beide nicht gleichzeitig“): Ein Modell, das erst beim Auftrag lädt (Bilder, Musik und jedes neue dieser Art), läuft im Panel nur über `schwer.run` (eine Warteschlange, ein Platz, feste Reihenfolge, Warten auf Speicher statt Absage) und nimmt im Dienst vor dem Laden den Platz mit `bedarf.OnDemand.claim`; hält ihn ein anderer, antwortet der Dienst 503 „belegt“. Wer hinter anderen wartet, bekommt den festen Satz aus `schwer.hint`. Neue Arten kommen in `schwer.ARTEN`, `SOURCES` und `STOPS`. (P schwere-auftraege; 🧪 test_schwer)
 
 ---
 

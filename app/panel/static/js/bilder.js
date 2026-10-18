@@ -15,7 +15,13 @@ function blFollow(jid,el,tick){const look=async()=>{if(!el.isConnected)return;co
     if(!r.r.ok){tick({state:'error',error:String(r.d.detail||'').slice(0,200)});return}
     tick(r.d);if(r.d.state==='wait'||r.d.state==='run')setTimeout(look,2500)};setTimeout(look,0)}
 const BLSTATE={wait:['wartet auf eine Gesprächspause','waiting for a pause in the conversation'],run:['malt …','painting …'],change:['ändert …','changing …']};
-function blJobLine(j){return j.state==='error'?(L==='en'&&j.error_en?j.error_en:j.error)||t('Ging nicht.','Did not work.'):t(...(j.state==='run'&&j.art==='aendern'?BLSTATE.change:BLSTATE[j.state]||BLSTATE.wait))}
+// the place of a heavy job among pictures and songs (schwer.py, j.q; also musik.js): only while it waits behind others
+// or for memory, else '' and the usual line
+function schwerZeile(j){const q=j.q;if(!q||(j.state!=='wait'&&j.state!=='run'))return '';
+  if(q.phase==='speicher')return t('wartet auf freien Speicher …','waiting for free memory …');
+  if(q.platz<2)return '';const m=Math.max(1,Math.round(q.sek/60));
+  return t(`Wartet · Platz ${q.platz} von ${q.von} · etwa ${m===1?'eine Minute':m+' Minuten'}`,`Waiting · place ${q.platz} of ${q.von} · about ${m===1?'a minute':m+' minutes'}`)}
+function blJobLine(j){return schwerZeile(j)||(j.state==='error'?(L==='en'&&j.error_en?j.error_en:j.error)||t('Ging nicht.','Did not work.'):t(...(j.state==='run'&&j.art==='aendern'?BLSTATE.change:BLSTATE[j.state]||BLSTATE.wait)))}
 // sends an own photo (Ich → Bilder „Eigenes Foto hochladen“) as it is; the panel cleans and keeps it as a PNG
 async function blPhoto(file,msg){if(!file)return;if(!/^image\//.test(file.type||'')){msg.textContent=t('Das ist kein Bild.','That is not a picture.');return}
   msg.textContent=t('wird hochgeladen …','uploading …');const r=await apiTry('/api/bilder/foto',{method:'POST',headers:{'Content-Type':file.type},body:file});

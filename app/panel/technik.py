@@ -134,6 +134,7 @@ MODULE = {
     "docmake": ("wissen", "Dokumente erstellen: Aufträge, Vorlagen, Ablage"),
     "bilder": ("wissen", "Bilder malen: Wunsch prüfen, Auftrag, Ablage, Bildkarte"),
     "musik": ("wissen", "Musik machen: Wunsch prüfen, Modell wählen, Auftrag, Ablage, Liedkarte, Musik testen je Modell"),
+    "schwer": ("wissen", "Schwere Aufträge: eine Warteschlange für Bild und Musik, immer nur ein Modell, Platz und Wartezeit"),
     "docrender": ("wissen", "Baut die Dateien (Word, PDF, PowerPoint, Excel) mit festem Code"),
     "folien": ("wissen", "Folientypen und feste Regeln für erstellte Dokumente"),
     "symbole": ("wissen", "Feste Symbole für Folien und Dokumente"),
@@ -282,7 +283,7 @@ MODULE = {
     "bildmodell": ("sprache", "Bildmodelle: Varianten, Dateien mit festen Prüfsummen, Laden bei der Installation"),
     "musik_server": ("sprache", "Musik-Dienst: startet ACE-Step 1.5 bei Bedarf, prüft und kennzeichnet jedes Lied"),
     "musikmodell": ("sprache", "Musikmodelle: Varianten, Dateien mit festen Prüfsummen, Laden bei der Installation"),
-    "bedarf": ("sprache", "Engine nur bei Bedarf: Kindprozess starten, nach Ruhe beenden (Bild- und Musik-Dienst)"),
+    "bedarf": ("sprache", "Engine nur bei Bedarf: Kindprozess starten, nach Ruhe beenden, nur eine zur Zeit (bedarf.lock)"),
     "textnorm": ("sprache", "Text aufräumen vor der Sprachausgabe"),
     "common": ("sprache", "Gemeinsame Helfer für die Dienste: Einstellungen, Zustand"),
     "api_watchdog": ("sprache", "Wächter ohne Panel (Installationsart „api“)"),
@@ -347,10 +348,13 @@ KNOTEN = {
             "Qwen3-TTS mit eigenen Stimmen.", "Qwen3-TTS with own voices.", ["tts_proxy.py", "tts_server.py", "tempo.py", "textnorm.py"]),
     "bild": (896, 450, "Bilder und Musik", "Pictures and music", ":31005→:31015 · :31004→:31014", "",
              "FLUX.2 klein (:31005 → :31015) und ACE-Step 1.5 (:31004 → :31014) auf dem Spark, nur lokal; jede Engine lädt "
-             "beim ersten Auftrag und entlädt nach Ruhe.",
+             "beim ersten Auftrag und entlädt nach Ruhe. Immer nur eine zur Zeit: eine Warteschlange im Panel, die Sperre "
+             "bedarf.lock auf dem Spark.",
              "FLUX.2 klein (:31005 → :31015) and ACE-Step 1.5 (:31004 → :31014) on the Spark, local only; each engine loads "
-             "at the first job and unloads when idle.",
-             ["bilder.py", "bild_server.py", "bildmodell.py", "musik.py", "musik_server.py", "musikmodell.py", "bedarf.py"]),
+             "at the first job and unloads when idle. Only one at a time: one queue in the panel, the lock bedarf.lock on "
+             "the Spark.",
+             ["bilder.py", "bild_server.py", "bildmodell.py", "musik.py", "musik_server.py", "musikmodell.py", "bedarf.py",
+              "schwer.py"]),
     "aussen": (620, 646, "Dienste im Heimnetz", "Services at home", "HA, NAS, Kiwix …", "",
                "Home Assistant, NAS, Kiwix, SearXNG und MCP-Dienste im eigenen Netz. Über den Wächter mit Stufe Heimnetz; "
                "feste Dienste mit Grund in netguard.DIRECT_OK.",

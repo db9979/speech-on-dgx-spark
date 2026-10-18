@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.776** Pictures and music: one queue, never two models at once, a notice with place and waiting time
 - **V01.0.775** Fix: no engine starts next to a model measurement anymore; measuring Qwen3.6 35B A3B
 - **V01.0.774** Fix: "?" button next to a setting's title instead of inside it
 - **V01.0.773** Fix: knowledge book tab without a false alarm of the inline handler check
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.769** Status → Models: memory bar colored per model, tiles in the same color
 - **V01.0.768** Knowledge book stage A: the search check measures multi-document questions (yardstick for the knowledge book)
 - **V01.0.767** Workshop under Status → Architecture as its own box with a node page, in the diagram, in the commands and with its own docs section
-- **V01.0.766** Fix: Qwen3.8 Flash Next starts in Docker (io_uring allowed in the container, seccomp stays on)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
