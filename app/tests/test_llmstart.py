@@ -200,5 +200,18 @@ class Panel(unittest.TestCase):
                       read("modelle.py"))
 
 
+    def test_live_puts_the_step_first_and_never_the_model(self):
+        import live
+        import modellseite
+        self.assertEqual(llmstart.kurz({"n": 4, "von": 6, "vorgang": "wechsel"}), "wechselt (4/6)")
+        self.assertEqual(llmstart.kurz({"n": 5, "von": 6, "vorgang": "neustart"}), "startet (5/6)")
+        mb = {"on": True, "frei": 20.0, "regel": "alle", "start": {"n": 4, "von": 6, "vorgang": "wechsel"}}
+        with mock.patch.object(modellseite, "for_live", return_value=mb):
+            q = [x for x in live.snapshot("monitor", now=1000.0)["targets"] if x["id"] == "qwen"]
+        self.assertEqual(len(q), 1)
+        self.assertTrue(q[0]["sub"].startswith("wechselt (4/6) · "), q[0]["sub"])   # the Steuerzentrale cuts the end
+        self.assertNotIn("Modellwechsel läuft", q[0]["sub"])
+
+
 if __name__ == "__main__":
     unittest.main()

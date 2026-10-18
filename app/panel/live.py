@@ -1387,9 +1387,9 @@ def snapshot(view="admin", now=None):
             if mb.get("eigen"):                  # the own model behind the LLM-Tor (its catalog name, never an address)
                 x["name"] = "Sprachmodell " + mb["eigen"]
                 x["sub"] = x["sub"].replace("LLM · auf dem Spark", "LLM-Tor · auf dem Spark", 1)
-            if mb.get("start"):                  # it switches or starts: step n of 6 (llmstart, never which model)
-                st = mb["start"]
-                x["sub"] += f" · {'wechselt' if st['vorgang'] == 'wechsel' else 'startet'} ({st['n']}/{st['von']})"
+            if mb.get("start"):                  # it switches or starts: step n of 6 first, so the Steuerzentrale's
+                import llmstart
+                x["sub"] = f"{llmstart.kurz(mb['start'])} · {x['sub']}"   # short line keeps it (never which model)
             elif mb.get("wechsel"):              # stage E4: a model switch runs (that it runs, never which model)
                 x["sub"] += " · Modellwechsel läuft"
             if mb.get("messen"):                 # a measurement runs (that it runs, never which model)

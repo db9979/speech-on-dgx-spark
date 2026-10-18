@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.796** Language model switch also on the control centre and the case display
 - **V01.0.795** Fix: meaning search no longer stops with "does not match its commit"
 - **V01.0.794** Fix: self-test for bypassing the guard green again
 - **V01.0.793** Language model switch and start visible: steps, banner, Live, a sentence in the chat
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.789** Sentry: push to the admins on lockouts, new ways in, changed protection or a broken change log
 - **V01.0.788** The „basic set“ card on Features is one line
 - **V01.0.787** Knowledge book on the iPhone, „To the knowledge book“ in the app's conversation too
-- **V01.0.786** Status → Models: pictures and music share one place in memory
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

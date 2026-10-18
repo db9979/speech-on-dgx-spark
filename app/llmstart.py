@@ -232,6 +232,12 @@ def rest_min(x):
     return max(1, -(-(x["erwartet_s"] - lauf + (60 if x["n"] <= 4 else 30)) // 60))
 
 
+def kurz(st):
+    """The short line for Live, Monitoring, Steuerzentrale and the case display: "wechselt (4/6)" (st: modellseite.for_live's
+    start, vorgang and step numbers only)."""
+    return f"{'wechselt' if st['vorgang'] == 'wechsel' else 'startet'} ({st['n']}/{st['von']})"
+
+
 def satz(x, en=False, misst=False):
     """The sentence the chat says when the language model does not answer while it starts or is measured (Dominik
     „3a“); "" when neither (the chat keeps its own sentence)."""

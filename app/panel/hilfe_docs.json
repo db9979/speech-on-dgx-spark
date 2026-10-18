@@ -7589,7 +7589,7 @@
 "file": "Spark teilen: Panel auf einem eigenen Rechner",
 "head": "Gehäuse des Panel-Rechners (Pironman 5)",
 "title": "Gehäuse des Panel-Rechners (Pironman 5)",
-"text": "aus sind). Dazu „Pi“ und „TARS“: CPU- und RAM-Auslastung in Prozent als zwei große Zahlen, CPU links, RAM rechts (die TARS-Seite nur, wenn die Modelle auf einem zweiten Rechner laufen; beim TARS zählt der RAM den gemeinsamen Speicher mit den geladenen Modellen, er steht deshalb oft bei 70 bis 90 %). Die Zahl der Aktiven steht auch unter Zustand → Monitoring („Aktiv (10 min)“), in Zustand → Live, in der Steuerzentrale und im Zustand der iPhone-App. Ist der DGX weg oder pausiert, kommt seine Seite zuerst; bei einem Problem die Dienste. Unter Funktionen → Gehäuse stehen alle Seiten als kleine Bilder mit den Werten von jetzt, genau wie am Display gezeichnet: Antippen schaltet eine Seite an oder aus, Ziehen oder ◀ ▶ ändert die Reihenfolge, das große Bild zeigt, was gerade am Display steht. Das Bild lässt sich um 180° drehen (die Vorschau bleibt aufrecht), „nur bei Problemen“ hält es sonst dunkel. Nachtbetrieb: aus, dunkel oder ganz aus zwischen zwei Stunden. Gegen Einbrennen wandert der Inhalt alle 3 Minuten um ein bis zwei Punkte, und ein Bild, das sich 10 Minuten nicht ändert, wird dunkler. - LEDs: grün = alles läuft, gelb = Pause, Hinweis oder ein Dienst fehlt, rot = DGX nicht erreic"
+"text": "aus sind). Dazu „Pi“ und „TARS“: CPU- und RAM-Auslastung in Prozent als zwei große Zahlen, CPU links, RAM rechts (die TARS-Seite nur, wenn die Modelle auf einem zweiten Rechner laufen; beim TARS zählt der RAM den gemeinsamen Speicher mit den geladenen Modellen, er steht deshalb oft bei 70 bis 90 %). Die Zahl der Aktiven steht auch unter Zustand → Monitoring („Aktiv (10 min)“), in Zustand → Live, in der Steuerzentrale und im Zustand der iPhone-App. Ist der DGX weg oder pausiert, kommt seine Seite zuerst; bei einem Problem die Dienste. Wechselt oder startet das Sprachmodell, kommt die Seite Spark zuerst und zeigt unten den Schritt, etwa „LLM wechselt (4/6)“. Unter Funktionen → Gehäuse stehen alle Seiten als kleine Bilder mit den Werten von jetzt, genau wie am Display gezeichnet: Antippen schaltet eine Seite an oder aus, Ziehen oder ◀ ▶ ändert die Reihenfolge, das große Bild zeigt, was gerade am Display steht. Das Bild lässt sich um 180° drehen (die Vorschau bleibt aufrecht), „nur bei Problemen“ hält es sonst dunkel. Nachtbetrieb: aus, dunkel oder ganz aus zwischen zwei Stunden. Gegen Einbrennen wandert der Inhalt alle 3 Minuten um ein bis zwei Punkte, und ein Bild, das sich 10 Minute"
 },
 {
 "lang": "de",
@@ -7597,7 +7597,7 @@
 "file": "Spark teilen: Panel auf einem eigenen Rechner",
 "head": "Gehäuse des Panel-Rechners (Pironman 5)",
 "title": "Gehäuse des Panel-Rechners (Pironman 5)",
-"text": "hbar. - Lüfter steuert der Kernel selbst (Overlay gpio-fan); die Grenzen gelten nach dem nächsten Einrichten und Neustart."
+"text": "n nicht ändert, wird dunkler. - LEDs: grün = alles läuft, gelb = Pause, Hinweis, ein Dienst fehlt oder das Sprachmodell wechselt, rot = DGX nicht erreichbar. - Lüfter steuert der Kernel selbst (Overlay gpio-fan); die Grenzen gelten nach dem nächsten Einrichten und Neustart."
 },
 {
 "lang": "de",
@@ -15317,7 +15317,15 @@
 "file": "Spark split: the panel on a computer of its own",
 "head": "Case of the panel computer (Pironman 5)",
 "title": "Case of the panel computer (Pironman 5)",
-"text": "cent as two big numbers, CPU left, RAM right (the TARS page only when the models run on a second computer; on TARS the RAM counts the memory shared with the loaded models, so it often reads 70 to 90 %). The number of active people also shows under Status → Monitoring (\"Active (10 min)\"), in Status → Live, in the Steuerzentrale and in the iPhone app's status. When the DGX is gone or paused its page comes first; on a problem the services. Under Funktionen → Gehäuse all pages show as small pictures with the values of now, drawn exactly as on the display: a tap switches a page on or off, dragging or ◀ ▶ changes the order, the big picture shows what is on the display right now. The picture can be turned by 180° (the preview stays upright), \"only on problems\" keeps it dark otherwise. Night mode: off, dim or fully off between two hours. Against burn-in the content moves by one or two points every 3 minutes, and a picture that does not change for 10 minutes gets darker. - LEDs: green = all running, yellow = pause, a hint or a service missing, red = DGX not reachable. - Fans are driven by the kernel itself (overlay gpio-fan); the thresholds apply after the next setup and restart."
+"text": "cent as two big numbers, CPU left, RAM right (the TARS page only when the models run on a second computer; on TARS the RAM counts the memory shared with the loaded models, so it often reads 70 to 90 %). The number of active people also shows under Status → Monitoring (\"Active (10 min)\"), in Status → Live, in the Steuerzentrale and in the iPhone app's status. When the DGX is gone or paused its page comes first; on a problem the services. While the language model switches or starts, the Spark page comes first and shows the step at the bottom, such as \"LLM wechselt (4/6)\". Under Funktionen → Gehäuse all pages show as small pictures with the values of now, drawn exactly as on the display: a tap switches a page on or off, dragging or ◀ ▶ changes the order, the big picture shows what is on the display right now. The picture can be turned by 180° (the preview stays upright), \"only on problems\" keeps it dark otherwise. Night mode: off, dim or fully off between two hours. Against burn-in the content moves by one or two points every 3 minutes, and a picture that does not change for 10 minutes gets darker. - LEDs: green = all running, yellow = pause, a hint, a service missing or the language "
+},
+{
+"lang": "en",
+"src": "spark-split",
+"file": "Spark split: the panel on a computer of its own",
+"head": "Case of the panel computer (Pironman 5)",
+"title": "Case of the panel computer (Pironman 5)",
+"text": "model switching, red = DGX not reachable. - Fans are driven by the kernel itself (overlay gpio-fan); the thresholds apply after the next setup and restart."
 },
 {
 "lang": "en",

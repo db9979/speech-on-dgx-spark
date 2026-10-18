@@ -22,6 +22,7 @@ import steuer  # noqa: E402
 
 APP = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 T0 = time.mktime((2026, 10, 15, 14, 0, 0, 0, 0, -1))      # 14:00 local time
+LLM_START = gehaeuse._llm_start                            # the real one (Base patches it away)
 NIGHT = time.mktime((2026, 10, 15, 23, 30, 0, 0, 0, -1))
 
 
@@ -58,6 +59,9 @@ class Base(unittest.TestCase):
                             roh=b"", gleich=0.0)
         p = mock.patch.object(gehaeuse, "_hinweise", return_value=(0, 0))
         p.start()
+        q = mock.patch.object(gehaeuse, "_llm_start", return_value="")   # no language model start (the test says so)
+        q.start()
+        self.addCleanup(q.stop)
         self.addCleanup(p.stop)
 
     def on(self, **kw):
@@ -151,6 +155,29 @@ class Anzeige(Base):
             self.assertEqual(gehaeuse.zeilen("dgx", T0)[1], "noch 10 min")
         self.assertNotIn("dgx", gehaeuse.seiten(c, T0), "only while it is gone or paused")
         self.assertNotIn("pi", gehaeuse.seiten(dict(c, gehaeuse_seiten_aus=["pi"]), T0))
+
+    def test_a_language_model_start_comes_first_with_its_step(self):
+        c = self.on()
+        with mock.patch.object(gehaeuse, "_llm_start", return_value="LLM wechselt (4/6)"), \
+                mock.patch.object(steuer, "remote", return_value=True), mock.patch.object(steuer, "weg", return_value=False), \
+                mock.patch.object(steuer, "cached", return_value={"pause": {"on": True, "until": T0 + 600}}):
+            self.assertEqual(gehaeuse.lage(T0), ("gelb", "LLM wechselt (4/6)"), "the step, not only the pause")
+            self.assertEqual(gehaeuse.seiten(c, T0)[0], "spark")
+            self.assertEqual(gehaeuse.zeilen("spark", T0)[-1], "LLM wechselt (4/6)")
+        with mock.patch.object(gehaeuse, "_llm_start", return_value="LLM wechselt (4/6)"), \
+                mock.patch.object(steuer, "remote", return_value=True), mock.patch.object(steuer, "weg", return_value=True), \
+                mock.patch.object(steuer, "cached", return_value=None):
+            self.assertEqual(gehaeuse.lage(T0), ("rot", "DGX weg"), "a computer that is gone goes before")
+
+    def test_the_start_line_has_only_the_step(self):
+        import modellseite
+        for live, want in (({"on": True, "start": {"n": 4, "von": 6, "vorgang": "neustart"}}, "LLM startet (4/6)"),
+                           ({"on": True, "start": {"n": 2, "von": 6, "vorgang": "wechsel"}}, "LLM wechselt (2/6)"),
+                           ({"on": True}, ""), ({"on": False}, "")):
+            with mock.patch.object(modellseite, "for_live", return_value=live):
+                self.assertEqual(LLM_START(), want)
+        with mock.patch.object(modellseite, "for_live", side_effect=OSError):
+            self.assertEqual(LLM_START(), "", "the display never breaks on it")
 
     def test_no_profile_on_the_display(self):
         import profiles

@@ -250,11 +250,16 @@ def lage(now=None):
     """The status for the LEDs and the page order: (farbe, Wort)."""
     import steuer
     try:
-        if steuer.remote():
-            if steuer.weg(now):
-                return "rot", "DGX weg"
-            if ((steuer.cached() or {}).get("pause") or {}).get("on"):
-                return "gelb", "DGX in Pause"
+        if steuer.remote() and steuer.weg(now):
+            return "rot", "DGX weg"
+    except Exception:
+        pass
+    start = _llm_start()       # before the pause: a switch pauses the language model while it runs
+    if start:
+        return "gelb", start
+    try:
+        if steuer.remote() and ((steuer.cached() or {}).get("pause") or {}).get("on"):
+            return "gelb", "DGX in Pause"
     except Exception:
         pass
     down, hints = _hinweise()
@@ -263,6 +268,17 @@ def lage(now=None):
     if hints:
         return "gelb", "Hinweis offen"
     return "gruen", "bereit"
+
+
+def _llm_start():
+    """While the language model switches or starts: "LLM wechselt (4/6)" (modellseite.for_live, step numbers only)."""
+    try:
+        import llmstart
+        import modellseite
+        st = modellseite.for_live().get("start")
+        return "LLM " + llmstart.kurz(st) if st else ""
+    except Exception:
+        return ""
 
 
 def _hinweise():
@@ -479,7 +495,7 @@ def seiten(c, now=None):
     """The pages to show, in their order: an open problem brings its page first; "DGX" only while it is gone or paused."""
     aus = set(c.get("gehaeuse_seiten_aus") or [])
     keys = [k for k in reihenfolge(c) if k not in aus]
-    farbe, _ = lage(now)
+    farbe, wort = lage(now)
     try:
         import steuer
         dgx = steuer.remote() and (steuer.weg(now) or bool(((steuer.cached() or {}).get("pause") or {}).get("on")))
@@ -500,6 +516,9 @@ def seiten(c, now=None):
     if farbe != "gruen" and "dienste" in keys and not dgx:
         keys.remove("dienste")
         keys.insert(0, "dienste")
+    if wort.startswith("LLM ") and "spark" in keys:   # the language model switches or starts: its step comes first
+        keys.remove("spark")
+        keys.insert(0, "spark")
     return keys or ["spark"]
 
 

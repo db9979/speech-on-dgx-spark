@@ -1911,6 +1911,13 @@
 "titel": "Bedeutungssuche läuft weiter",
 "text": "A: Update. B: Ich → Dokumente (Eigene Dokumente): kein Fehler „does not match its commit“ mehr, die Zahl der Stücke mit Bedeutung steigt von dort weiter, wo sie stand (nicht von 0). C: Eine Suche nach Bedeutung findet wieder passende Stellen.",
 "thread": "Eigene Modell-Installation statt qwen38"
+},
+{
+"id": "P297",
+"v": 796,
+"titel": "Sprachmodell wechselt: Steuerzentrale und Display",
+"text": "A: Zustand → Modelle → Sprachmodell → anderes Modell → Wechseln. B: Steuerzentrale am Bildschirm: in der Zeile des Sprachmodells steht vorn „wechselt (4/6)“. C: Pironman-Display: die Seite Spark kommt zuerst, unten „LLM wechselt (4/6)“, die LEDs leuchten gelb, auch während der Pause. D: Nach dem Ende wieder „bereit“ und grün.",
+"thread": "Eigene Modell-Installation statt qwen38"
 }
 ]
 }
