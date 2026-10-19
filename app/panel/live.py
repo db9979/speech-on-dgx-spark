@@ -1304,8 +1304,9 @@ def snapshot(view="admin", now=None):
     try:
         import calendars
         kal = calendars.for_live()
+        kal_page = calendars.page_today()
     except Exception:
-        kal = {"on": False}
+        kal, kal_page = {"on": False}, 0
     try:
         import nasquelle
         nql = nasquelle.for_live()
@@ -1413,6 +1414,8 @@ def snapshot(view="admin", now=None):
                         + (" · Sicherung" if nasl.get("backup") else ""))
         if x["id"] == "cal" and kal.get("on"):   # Kalender teilen: shares in numbers (never a name or an appointment)
             x["sub"] += f" · {kal.get('shares', 0)} geteilt von {kal.get('owners', 0)} Profilen"
+        if x["id"] == "cal" and kal_page:        # the page Kalender: appointments added, changed, deleted today (a number)
+            x["sub"] += f" · heute {kal_page} auf der Seite geändert"
         if x["id"] == "nasquelle" and nql.get("on"):   # Wissensordner: folders, documents, failing (no path, no name)
             x["sub"] = (f"{nql.get('folders', 0)} Ordner · {nql.get('profiles', 0)} Profile · {nql.get('docs', 0)} Dokumente"
                         + (f" · {nql['bad']} mit Fehler" if nql.get("bad") else "")

@@ -2014,6 +2014,13 @@
 "titel": "Kalender teilen",
 "text": "A: Admin: Funktionen → Kalender und Tagesbriefing → „Kalender teilen“ an. B: Profil db: Kalender → Einstellungen → beim Kalender „Teilen“, bei sb „Nur sehen“ wählen (Code eingeben). C: Profil sb: Kalender zeigt den Kalender in eigener Farbe als „Dominik · …“, unter Einstellungen steht er bei „Mit dir geteilt“. D: Ein privater Termin von db erscheint bei sb nur als „belegt“ mit Uhrzeit, ohne Titel und Ort. E: sb fragt „Was hat Dominik morgen?“: der Assistent nennt die Termine aus dem geteilten Kalender. F: db stellt auf „Sehen und eintragen“; sb sagt „Trag in Dominiks Kalender Elternabend Dienstag 19 Uhr ein“, dann „Ja“: der Termin steht bei db. G: db wählt „Nicht geteilt“: bei sb ist der Kalender sofort weg. H: Live zeigt beim Kalender nur die Zahl der Freigaben.",
 "thread": "Kalender und E-Mail in Panel und Apps"
+},
+{
+"id": "P312",
+"v": 812,
+"titel": "Termine auf der Seite ändern",
+"text": "A: Kalender → Termine: „+ Termin“, Titel, Tag, Von/Bis und Ort eingeben, „Speichern“: der Termin steht auf der Seite und im iPhone-Kalender. B: Den Termin antippen, „Ändern“, Uhrzeit verschieben, „Speichern“: im iPhone-Kalender an der neuen Stelle. C: „Löschen“ fragt nach und nimmt ihn weg. D: Ein wiederholter Termin (z. B. wöchentlich) zeigt keinen Knopf „Ändern“. E: Am iPhone den Termin ändern, dann auf der Seite ohne Neuladen „Löschen“: die Seite meldet, dass er geändert wurde, und löscht nichts. F: Am Handy (390 px) passt das Formular ohne seitliches Scrollen.",
+"thread": "Kalender und E-Mail in Panel und Apps"
 }
 ]
 }

@@ -1051,6 +1051,68 @@ async def profile_calendar_view(request: Request, start: str = "", days: int = 7
     return r
 
 
+@router.post("/api/profile/calendar/event", dependencies=[Depends(assistant), Depends(calendar_on)])
+async def profile_calendar_event_add(request: Request, prof=Depends(browser_profile)):
+    """The page Kalender: a new appointment from its form („Speichern“ is the yes), into the named calendar (an own
+    CalDAV one or one shared with "add"), else the first own one (calendars.add_event logs every outcome)."""
+    guard.limit(request, "kalenderaendern", prof["id"])
+    body = await request.json()
+    body = body if isinstance(body, dict) else {}
+    try:
+        item = calendars.page_item(body, user_zone(str(body.get("tz") or "")[:64]))
+    except ValueError as e:
+        print(f"calendar: page form refused | {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(400, str(e)[:200])
+    try:
+        where = await calendars.add_event(prof["id"], item)
+    except notaus.NotausAktiv:
+        raise HTTPException(423, "Notaus: gerade wird nichts geändert")
+    except ValueError as e:
+        raise HTTPException(400, str(e)[:200])
+    except httpx.HTTPError:
+        raise HTTPException(502, "Der Kalender ist nicht erreichbar.")
+    calendars.page_done()
+    return {"ok": True, "calendar": where}
+
+
+@router.put("/api/profile/calendar/event", dependencies=[Depends(assistant), Depends(calendar_on)])
+async def profile_calendar_event_change(request: Request, prof=Depends(browser_profile)):
+    """The page Kalender: change or delete one appointment it shows ({cal, title, start (epoch), change "edit" |
+    "delete", for edit the form's fields}). Only an own CalDAV calendar, never a repeating appointment; the
+    server's etag guards against a change meanwhile (calendars.change_event logs every outcome)."""
+    guard.limit(request, "kalenderaendern", prof["id"])
+    body = await request.json()
+    body = body if isinstance(body, dict) else {}
+    change = body.get("change")
+    zone = user_zone(str(body.get("tz") or "")[:64])
+    try:
+        if change not in ("edit", "delete"):
+            raise ValueError("change must be edit or delete")
+        item = calendars.page_item(body.get("new") if isinstance(body.get("new"), dict) else {}, zone) if change == "edit" else None
+        cal, start = int(body.get("cal", -1)), int(body.get("start") or 0)
+    except (ValueError, TypeError, OverflowError) as e:
+        print(f"calendar: page form refused | {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(400, str(e)[:200])
+    try:
+        p = await calendars.page_find(prof["id"], cal, str(body.get("title") or "")[:200], start, zone)
+        p["change"] = change
+        if item:
+            p.update(new_title=item["title"], new_start=item["start"], new_end=item["end"],
+                     new_allday=item["allday"], new_location=item["location"])
+        note = await calendars.change_event(prof["id"], p)
+    except LookupError as e:
+        print(f"calendar: page change refused, not found | {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(409, str(e))
+    except notaus.NotausAktiv:
+        raise HTTPException(423, "Notaus: gerade wird nichts geändert")
+    except (ValueError, TypeError, OverflowError) as e:
+        raise HTTPException(400, str(e)[:200])
+    except httpx.HTTPError:
+        raise HTTPException(502, "Der Kalender ist nicht erreichbar.")
+    calendars.page_done()
+    return {"ok": True, "note": note}
+
+
 @router.get("/api/profile/mail", dependencies=[Depends(assistant)])
 def profile_mail(prof=Depends(own_profile)):
     return mail.public(prof["id"])

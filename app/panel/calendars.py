@@ -152,6 +152,18 @@ def shared_to(uid):
 
 
 _live = [0.0, {}]
+_page = {"day": "", "n": 0}   # changes made on the page Kalender today (Live: a number, never which)
+
+
+def page_done():
+    day = time.strftime("%Y-%m-%d")
+    if _page["day"] != day:
+        _page.update(day=day, n=0)
+    _page["n"] += 1
+
+
+def page_today():
+    return _page["n"] if _page["day"] == time.strftime("%Y-%m-%d") else 0
 
 
 def for_live(now=None):
@@ -388,6 +400,9 @@ def _expand(texts, start, end, zone, name=""):
     for text in texts:
         try:
             cal = _tame(icalendar.Calendar.from_ical(text), start)
+            # every occurrence carries a RECURRENCE-ID after expanding: a repeating one is known by its master
+            rep = {str(v.get("UID", "")) for v in cal.walk("VEVENT")
+                   if v.get("RRULE") is not None or v.get("RDATE") is not None or v.get("RECURRENCE-ID") is not None}
             items = recurring_ical_events.of(cal).between(start, end)
         except Exception:
             continue
@@ -410,7 +425,8 @@ def _expand(texts, start, end, zone, name=""):
             out.append({"start": s, "end": e, "allday": allday,
                         "title": str(ev.get("SUMMARY", "") or "(ohne Titel)").strip()[:200],
                         "location": str(ev.get("LOCATION", "") or "").strip()[:200], "calendar": name,
-                        "private": str(ev.get("CLASS", "") or "").upper() in ("PRIVATE", "CONFIDENTIAL")})
+                        "private": str(ev.get("CLASS", "") or "").upper() in ("PRIVATE", "CONFIDENTIAL"),
+                        "repeat": str(ev.get("UID", "")) in rep})
     uniq = {(x["start"], x["title"]): x for x in out}
     return sorted(uniq.values(), key=lambda x: (x["start"], not x["allday"]))
 
@@ -484,17 +500,70 @@ async def view(uid, day, days, zone):
     if not names:
         return {"connected": False, "calendars": [], "events": [], "errors": []}
     shared = [i for i, c in enumerate(cals) if c.get("owner")]
+    # the page may change an appointment of an own CalDAV calendar (never an iCal link, never a shared one) and add
+    # to those and to a shared one with "add"
+    own = {d["id"] for d in _writable(uid)}
+    edit = [i for i, c in enumerate(cals) if not c.get("owner") and c["id"] in own]
+    add = edit + [i for i, c in enumerate(cals) if c.get("owner") and c.get("level") == "add"
+                  and not re.match(r"webcals?://", c["url"], re.I) and not re.search(r"\.ics(\?|$)", c["url"], re.I)]
     try:
         r = await asyncio.wait_for(events(uid, t0, t1, zone, shared=True), VIEW_BUDGET)
     except asyncio.TimeoutError:
-        return {"connected": True, "calendars": names, "shared": shared, "events": [], "errors": names, "slow": True}
+        return {"connected": True, "calendars": names, "shared": shared, "edit": edit, "add": add, "events": [],
+                "errors": names, "slow": True}
     evs, errors = r if r else ([], [])
     out = []
     for x in evs[:VIEW_MAX]:
         first = (x.get("calendar") or "").split(", ")[0]
+        i = names.index(first) if first in names else 0
         out.append({"start": int(x["start"].timestamp()), "end": int(x["end"].timestamp()), "allday": bool(x["allday"]),
-                    "title": x["title"], "location": x["location"], "cal": names.index(first) if first in names else 0})
-    return {"connected": True, "calendars": names, "shared": shared, "events": out, "errors": [n for n, _ in errors]}
+                    "title": x["title"], "location": x["location"], "cal": i,
+                    "edit": i in edit and not x.get("repeat")})
+    return {"connected": True, "calendars": names, "shared": shared, "edit": edit, "add": add, "events": out,
+            "errors": [n for n, _ in errors]}
+
+
+# ---------------------------------------------------------------- the page Kalender changes (stage 2)
+# A button on the page is the person's own yes: no proposal and no second question, but the same checks as the
+# assistant's way (the Notaus, only own CalDAV calendars, If-Match against a change meanwhile, never a repeating one).
+def page_item(body, zone):
+    """A checked appointment from the page's form: title, local start and end ('YYYY-MM-DDTHH:MM', or dates for
+    all day, end exclusive), place, calendar (its shown name, empty: the first own one)."""
+    title = str(body.get("title") or "").strip()[:200]
+    if not title:
+        raise ValueError("a title is needed")
+    allday = bool(body.get("allday"))
+    try:
+        if allday:
+            s = datetime.datetime.combine(datetime.date.fromisoformat(str(body.get("start") or "")[:10]), datetime.time(), zone)
+            e = datetime.datetime.combine(datetime.date.fromisoformat(str(body.get("end") or "")[:10] or s.date().isoformat()),
+                                          datetime.time(), zone)
+            e = max(e, s + datetime.timedelta(days=1))
+        else:
+            s = datetime.datetime.fromisoformat(str(body.get("start") or "")[:16]).replace(tzinfo=zone)
+            e = datetime.datetime.fromisoformat(str(body.get("end") or "")[:16]).replace(tzinfo=zone)
+    except ValueError:
+        raise ValueError("start and end must be dates like 2026-10-19 or 2026-10-19T10:00")
+    if e <= s or e - s > datetime.timedelta(days=31):
+        raise ValueError("the end must lie after the start, at most 31 days")
+    return {"title": title, "start": s.isoformat(), "end": e.isoformat(), "allday": allday,
+            "location": str(body.get("location") or "").strip()[:200], "alarm": 0,
+            "calendar": str(body.get("calendar") or "").strip()[:120]}
+
+
+async def page_find(uid, cal, title, start, zone):
+    """The one single appointment the page shows: in the own calendar at place cal of reading(uid), with exactly this
+    title and start (epoch seconds). The proposal dict change_event takes, or LookupError."""
+    cals = reading(uid)["calendars"]
+    if not 0 <= cal < len(cals) or cals[cal].get("owner"):
+        raise LookupError("not an own calendar")
+    s = datetime.datetime.fromtimestamp(int(start), zone)
+    found, _ = await find_events(uid, title, s - datetime.timedelta(minutes=1), s + datetime.timedelta(minutes=1), zone)
+    hits = [x for x in found if x["account"] == cals[cal]["id"] and x["title"] == title
+            and int(datetime.datetime.fromisoformat(x["start"]).timestamp()) == int(start)]
+    if len(hits) != 1:
+        raise LookupError("the appointment is not there as a single one (changed meanwhile, or repeating)")
+    return hits[0]
 
 
 async def check(item, zone):
@@ -656,7 +725,8 @@ async def _add_event(uid, item, out=None):
     # a shared one also by its shown name and its owner („Sabine · Familie“, „Sabines Kalender“)
     owner = lambda x: (x[0].get("name") or "").strip().lower() if x[0].get("owner") else ""
     if wanted:
-        hits = [x for x in found if wanted in (named(x), owner(x))] or [x for x in found if wanted in named(x) or (
+        # the page names a calendar by its entry's name (the account), the assistant mostly by the server's name
+        hits = [x for x in found if wanted in (named(x), owner(x), (x[0].get("name") or "").strip().lower())] or [x for x in found if wanted in named(x) or (
             owner(x) and (wanted in owner(x) or owner(x).split(" · ")[0].rstrip("s") in wanted))]
         if not hits:
             raise ValueError(f"there is no calendar called '{item.get('calendar')}'; the calendars are: "
@@ -785,7 +855,7 @@ async def change_event(uid, p, out=None):
     """_change_event with one journal line for every outcome (moved, deleted, refused by the Notaus, failed);
     never the appointment or the calendar's name."""
     who = profiles.log_name(profiles.by_id(uid))
-    what = "deleted" if p.get("change") == "delete" else "moved"
+    what = {"delete": "deleted", "edit": "changed"}.get(p.get("change"), "moved")
     try:
         res = await _change_event(uid, p, out)
     except notaus.NotausAktiv:
@@ -816,6 +886,25 @@ async def _change_event(uid, p, out=None):
         head = {"If-Match": etag} if etag else {}
         if p["change"] == "delete":
             r = await c.delete(p["href"], headers=head)
+        elif p["change"] == "edit":   # the page's form: title, place, start and end at once
+            for k in ("DTSTART", "DTEND", "DURATION", "DTSTAMP", "SUMMARY", "LOCATION"):
+                ev.pop(k, None)
+            s1, e1 = datetime.datetime.fromisoformat(p["new_start"]), datetime.datetime.fromisoformat(p["new_end"])
+            ev.add("summary", p["new_title"])
+            if p.get("new_location"):
+                ev.add("location", p["new_location"])
+            if p.get("new_allday"):
+                ev.add("dtstart", s1.date())
+                ev.add("dtend", e1.date())
+            else:
+                ev.add("dtstart", s1.astimezone(datetime.timezone.utc))
+                ev.add("dtend", e1.astimezone(datetime.timezone.utc))
+            ev.add("dtstamp", datetime.datetime.now(datetime.timezone.utc))
+            seq = int(ev.get("SEQUENCE", 0) or 0)
+            ev.pop("SEQUENCE", None)
+            ev.add("sequence", seq + 1)
+            r = await c.put(p["href"], content=cal.to_ical(),
+                            headers=dict(head, **{"Content-Type": "text/calendar; charset=utf-8"}))
         else:
             s0 = datetime.datetime.fromisoformat(p["start"])
             e0 = datetime.datetime.fromisoformat(p["end"])
@@ -839,6 +928,8 @@ async def _change_event(uid, p, out=None):
     _drop(uid)
     if out is not None:
         out.update(account=p["account"], href=p["href"], ics=old, deleted=p["change"] == "delete")
+    if p["change"] == "edit":
+        return f"Termin „{p['new_title']}“ geändert."
     return f"Termin {_old(p)} gelöscht." if p["change"] == "delete" else f"Termin „{p['title']}“ auf {_new(p)} verschoben."
 
 

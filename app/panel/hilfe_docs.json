@@ -4604,6 +4604,14 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Termine auf der Seite ändern (V01.0.812, Plan `kalender-mail/plan.md` Stufe 2)",
+"text": "Termine auf der Seite ändern (V01.0.812, Plan kalender-mail/plan.md Stufe 2): Auf der Seite Kalender legt „+ Termin“ einen Termin an (Titel, ganztägig oder Von/Bis, Ort, bei mehreren Kalendern die Wahl), in den Details eines Termins stehen „Ändern“ und „Löschen“ (Löschen mit Rückfrage). „Speichern“ ist das eigene Ja, das Panel prüft wie beim Assistenten: Notaus, nur eigene CalDAV-Kalender (nie ein Abo-Link), nie ein wiederholter Termin, beim Ändern und Löschen mit dem Etag des Servers (If-Match), damit eine Änderung von woanders nie überschrieben wird. Gefunden wird genau der Termin, den die Seite zeigt (Kalender, Titel und Beginn); ist er so nicht mehr da, kommt „geändert oder wiederholt“ (409). In einen geteilten Kalender mit „Sehen und eintragen“ legt die Seite nur an, wenn er gewählt ist; ändern und löschen bleibt beim Besitzer. Endpunkte POST und PUT /api/profile/calendar/event (nur die eigene Anmeldung im Browser, Rate-Limit kalenderaendern); Live zeigt beim Kalender nur, wie viele Termine heute auf der Seite geändert wurden; Log calendar: appointment saved|changed|deleted bzw. page change refused, not found."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Kalender teilen (V01.0.811, Dominik 2026-10-18 „1a 2a“)",
 "text": "Kalender teilen (V01.0.811, Dominik 2026-10-18 „1a 2a“): Funktionen → Kalender und Tagesbriefing → „Kalender teilen“ (standardmäßig aus, freigegeben gilt es sofort für jedes Profil; nur der Admin sperrt einzelne Profile; Gäste nie). Unter Kalender → Einstellungen hat jeder verbundene Kalender „Teilen“: für jedes andere Profil „Nicht geteilt“, „Nur sehen“ oder „Sehen und eintragen“, mit dem eigenen Code (Stufe Bestätigen, PUT /api/profile/calendar/{id}/share, Rate-Limit kalenderteilen); „Nicht geteilt“ nimmt es sofort zurück. Beim anderen Profil steht der Kalender auf der Seite Kalender in eigener Farbe als „Name · Kalender“ und unter Einstellungen bei „Mit dir geteilt“; sein Assistent liest ihn mit calendar_events („Was hat Sabine morgen?“, „Hat Tom am Freitag Zeit?“, die Weiche nimmt solche Fragen zum Kalender). Gelesen wird mit dem Zugang des Besitzers, Adresse und Passwort bleiben in dessen Datei. Ein privater Termin (CLASS PRIVATE oder CONFIDENTIAL) erscheint beim anderen nur als „belegt“ mit der Uhrzeit, ohne Titel und Ort. Mit „Sehen und eintragen“ trägt der Assistent des anderen dort nur ein, wenn der Kalender genannt wird („Trag in Sabines Kalender … ein“), und erst nach de"
 },
@@ -12686,6 +12694,14 @@
 "head": "Voice chat",
 "title": "Daily briefing and calendar",
 "text": "Daily briefing and calendar: say \"good morning\" or \"what's on today?\" and the assistant reads out today's and tomorrow's appointments, today's reminders and a few lines on your own topics (e.g. \"weather Berlin\", via your SearXNG). \"What do I have on Friday?\" works too. Each profile connects one or more calendars (up to 8) on the page Calendar, tab Settings; an appointment found in two calendars is read out once. Each one is a CalDAV address with user and app password (iCloud: https://caldav.icloud.com with the Apple ID and an app-specific password from appleid.apple.com; Nextcloud: …/remote.php/dav; Radicale …), or a subscription link with webcal://, webcals:// or https:// (Google: \"secret address in iCal format\", a public iCloud calendar). New appointments: \"put dentist on Tuesday 10 am in my calendar\" makes the assistant read out a proposal; only when you answer with a plain yes in the same conversation does the panel itself write it to the first CalDAV calendar (optionally with an alarm). Subscription links stay read only. The password stays on the Spark and is never shown again. Guests get no calendar. Can be turned off under Features."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "Changing appointments on the page (V01.0.812, plan kalender-mail/plan.md stage 2): on the Calendar page \"+ Appointment\" adds one (title, all day or from/to, place, with several calendars the choice), the details of an appointment hold \"Change\" and \"Delete\" (delete asks first). \"Save\" is the person's own yes; the panel checks as for the assistant: the Notaus, only own CalDAV calendars (never a subscription link), never a repeating appointment, and changing or deleting with the server's etag (If-Match), so a change made elsewhere is never overwritten. It finds exactly the appointment the page shows (calendar, title and start); if it is no longer there like that, the answer is \"changed or repeating\" (409). Into a calendar shared with \"See and add\" the page adds only when it is chosen; changing and deleting stay with the owner. Endpoints POST and PUT /api/profile/calendar/event (own browser login only, rate limit kalenderaendern); Live shows at the calendar only how many appointments were changed on the page today; log calendar: appointment saved|changed|deleted or page change refused, not found."
 },
 {
 "lang": "en",

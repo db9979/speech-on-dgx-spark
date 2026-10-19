@@ -737,26 +737,46 @@ CAL_EVENTS = {}   # path -> iCal text the fake CalDAV server holds
 
 
 def fake_caldav():
-    """One CalDAV calendar "Privat" at /dav/privat/ that answers PROPFIND, REPORT and PUT."""
+    """One CalDAV calendar "Privat" at /dav/privat/ that answers PROPFIND, REPORT, GET, PUT and DELETE (with etags)."""
     from fastapi.responses import Response
     app = FastAPI()
     cal = ('<d:response><d:href>/dav/privat/</d:href><d:propstat><d:prop><d:resourcetype><d:collection/>'
            '<c:calendar/></d:resourcetype><d:displayname>Privat</d:displayname></d:prop></d:propstat></d:response>')
 
-    @app.api_route("/dav/{rest:path}", methods=["PROPFIND", "REPORT", "PUT", "GET"])
+    import hashlib
+    tag = lambda text: '"' + hashlib.sha1(text.encode()).hexdigest()[:12] + '"'
+
+    @app.api_route("/dav/{rest:path}", methods=["PROPFIND", "REPORT", "PUT", "GET", "DELETE"])
     async def dav(rest: str, req: Request):
         body = (await req.body()).decode()
+        path = "/dav/" + rest
         ms = '<?xml version="1.0"?><d:multistatus xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav">'
         if req.method == "PUT":
-            if req.headers.get("if-none-match") != "*" or "BEGIN:VEVENT" not in body:
+            # new: only with If-None-Match *; a change: only with the If-Match of the object as it is now
+            if "BEGIN:VEVENT" not in body:
                 return Response(status_code=412)
-            CAL_EVENTS["/dav/" + rest] = body
+            if req.headers.get("if-none-match") == "*":
+                if path in CAL_EVENTS:
+                    return Response(status_code=412)
+            elif path not in CAL_EVENTS or req.headers.get("if-match") != tag(CAL_EVENTS[path]):
+                return Response(status_code=412)
+            CAL_EVENTS[path] = body
             return Response(status_code=201)
+        if req.method == "GET" and path in CAL_EVENTS:
+            return Response(CAL_EVENTS[path], media_type="text/calendar", headers={"ETag": tag(CAL_EVENTS[path])})
+        if req.method == "DELETE":
+            if path not in CAL_EVENTS:
+                return Response(status_code=404)
+            if req.headers.get("if-match") and req.headers["if-match"] != tag(CAL_EVENTS[path]):
+                return Response(status_code=412)
+            CAL_EVENTS.pop(path)
+            return Response(status_code=204)
         if req.method == "PROPFIND":
             return Response(ms + cal + "</d:multistatus>", status_code=207, media_type="application/xml")
         if req.method == "REPORT":
-            items = "".join(f"<d:response><d:href>{k}</d:href><d:propstat><d:prop><c:calendar-data>{v}"
-                            "</c:calendar-data></d:prop></d:propstat></d:response>" for k, v in CAL_EVENTS.items())
+            items = "".join(f"<d:response><d:href>{k}</d:href><d:propstat><d:prop><d:getetag>{tag(v)}</d:getetag>"
+                            f"<c:calendar-data>{v}</c:calendar-data></d:prop></d:propstat></d:response>"
+                            for k, v in CAL_EVENTS.items())
             return Response(ms + items + "</d:multistatus>", status_code=207, media_type="application/xml")
         return Response("nope", status_code=404)
     return app

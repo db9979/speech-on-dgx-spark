@@ -2,7 +2,7 @@
 // menu. „Termine“ shows a day, a week, a month or a list (GET /api/profile/calendar/view); „Einstellungen“ holds
 // everything set up for calendars (the box #calbox, a page of Ich until V01.0.804). Ich, Heute, the apps and every
 // way „Kalender → …“ lead here. Titles and places come from the calendars: only through esc().
-const KAL={view:'',day:null,data:null,sel:null,seq:0,busy:false};
+const KAL={view:'',day:null,data:null,sel:null,seq:0,busy:false,form:null};
 const KAL_VIEWS=[['day',t('Tag','Day'),1],['week',t('Woche','Week'),7],['month',t('Monat','Month'),42],['list',t('Liste','List'),14]];
 const KAL_H=44;   // pixels per hour in the day and week view
 // pages of their own outside Ich: the id of the old Ich page (still the place in every way, card and app) → section
@@ -47,7 +47,7 @@ function kalBody(){const w=document.createElement('div');w.className='kal';w.id=
 function kalDraw(){const w=$('kalview');if(w)kalPaint(w)}
 function kalPaint(w){const d=KAL.data;
   w.innerHTML=`<div class="kaltools"><span class="kalnav"><button class="b" type="button" data-k="prev" aria-label="${esc(t('Zurück','Back'))}">‹</button><button class="b" type="button" data-k="today">${esc(t('Heute','Today'))}</button><button class="b" type="button" data-k="next" aria-label="${esc(t('Weiter','Next'))}">›</button></span>`+
-    `<b class="kaltitle">${esc(kalTitle())}</b><span class="segc" role="radiogroup">${KAL_VIEWS.map(([k,l])=>`<button type="button" data-v="${k}" class="${k===KAL.view?'on':''}" aria-pressed="${k===KAL.view}">${esc(l)}</button>`).join('')}</span></div>`+
+    `<b class="kaltitle">${esc(kalTitle())}</b>${d&&d.add&&d.add.length?`<button class="b p" type="button" data-k="new">${esc(t('+ Termin','+ Appointment'))}</button>`:''}<span class="segc" role="radiogroup">${KAL_VIEWS.map(([k,l])=>`<button type="button" data-v="${k}" class="${k===KAL.view?'on':''}" aria-pressed="${k===KAL.view}">${esc(l)}</button>`).join('')}</span></div>`+
     (KAL.err?`<div class="note warn">${esc(t('Die Termine kamen nicht an: ','The appointments did not arrive: ')+KAL.err)}</div>`:'')+
     (d&&d.errors&&d.errors.length?`<div class="note warn">${esc((d.slow?t('Zu langsam, nicht gezeigt: ','Too slow, not shown: '):t('Nicht erreicht: ','Not reached: '))+d.errors.join(', '))}</div>`:'')+
     (d&&d.connected===false?`<div class="empty">${esc(t('Noch kein Kalender verbunden. Unter Einstellungen verbindest du iCloud, Nextcloud, einen anderen CalDAV-Server oder einen Abo-Link.','No calendar connected yet. Under Settings you connect iCloud, Nextcloud, another CalDAV server or a subscription link.'))}<div><button class="b p" type="button" data-k="set">${esc(t('Kalender verbinden','Connect a calendar'))}</button></div></div>`
@@ -57,6 +57,7 @@ function kalPaint(w){const d=KAL.data;
   kalDetail(w);
   w.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{const k=b.dataset.k;
     if(k==='set'){icTabSet('cal','set');kalOpen();return}
+    if(k==='new'){KAL.sel=null;KAL.form={mode:'new'};kalDraw();return}
     if(k==='today')KAL.day=kalDay(new Date());
     else{const s=k==='prev'?-1:1;KAL.day=KAL.view==='month'?new Date(KAL.day.getFullYear(),KAL.day.getMonth()+s,1):kalAdd(KAL.day,s*(KAL.view==='week'?7:KAL.view==='list'?14:1))}
     KAL.sel=null;kalLoad()});
@@ -101,10 +102,41 @@ function kalList(m){const [a,n]=kalRange();let html='';
   m.innerHTML=html||(KAL.busy?'':`<div class="empty">${esc(t('In diesen zwei Wochen steht nichts an.','Nothing planned in these two weeks.'))}</div>`);kalBind(m)}
 function kalBind(m){m.querySelectorAll('[data-i]').forEach(b=>b.onclick=e=>{e.stopPropagation();const x=KAL.data.events[Number(b.dataset.i)];KAL.sel=KAL.sel===x?null:x;kalDraw()})}
 // the details of the appointment tapped: beside the view on computers, below it on phones
-function kalDetail(w){const box=w.querySelector('.kaldet'),x=KAL.sel;if(!box)return;box.hidden=!x;if(!x)return;
+function kalDetail(w){const box=w.querySelector('.kaldet'),x=KAL.sel;if(!box)return;
+  if(KAL.form){box.hidden=false;kalForm(box);return}
+  box.hidden=!x;if(!x)return;
   const d=KAL.data,when=x.allday?new Date(x.start*1000).toLocaleDateString(kalLoc(),{weekday:'short',day:'numeric',month:'long'})+' · '+t('ganztägig','all day')
     :new Date(x.start*1000).toLocaleDateString(kalLoc(),{weekday:'short',day:'numeric',month:'long'})+', '+kalTime(x.start)+'–'+kalTime(x.end);
   box.innerHTML=`<button type="button" class="b ld-back" data-close="1">‹ ${esc(t('Zurück','Back'))}</button><div class="mut">${esc((d.calendars||[])[x.cal]||'')}</div><h3>${esc(x.title)}</h3>`+
     `<dl class="ld-facts"><dt>${esc(t('Wann','When'))}</dt><dd>${esc(when)}</dd>${x.location?`<dt>${esc(t('Wo','Where'))}</dt><dd>${esc(x.location)}</dd>`:''}</dl>`+
-    `<div class="fh">${esc(t('Ändern geht mit dem Assistenten: „Verschieb den Termin … auf …“.','Change it with the assistant: "Move the appointment … to …".'))}</div>`;
-  box.querySelector('[data-close]').onclick=()=>{KAL.sel=null;kalDraw()}}
+    (x.edit?`<div class="row"><button class="b" type="button" data-act="edit">${esc(t('Ändern','Change'))}</button><button class="b" type="button" data-act="del">${esc(t('Löschen','Delete'))}</button></div><div class="kalmsg fh"></div>`
+      :`<div class="fh">${esc(x.title==='belegt'&&(d.shared||[]).includes(x.cal)?t('Privater Termin aus einem geteilten Kalender.','Private appointment from a shared calendar.')
+        :t('Dieser Termin lässt sich hier nicht ändern (Abo-Link, geteilter oder wiederholter Termin).','This appointment cannot be changed here (subscription link, shared or repeating).'))}</div>`);
+  box.querySelector('[data-close]').onclick=()=>{KAL.sel=null;kalDraw()};
+  const ed=box.querySelector('[data-act=edit]');if(ed)ed.onclick=()=>{KAL.form={mode:'edit',x};kalDraw()};
+  const del=box.querySelector('[data-act=del]');if(del)del.onclick=async()=>{if(!confirm(t('Termin „','Delete "')+x.title+t('“ löschen?','"?')))return;
+    kalSend('PUT',{change:'delete',cal:x.cal,title:x.title,start:x.start},box.querySelector('.kalmsg'))}}
+// the form for a new appointment or a change: „Speichern“ is the yes (the server checks like the assistant's way)
+const kalHm=s=>{const d=new Date(s*1000);return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')};
+function kalForm(box){const f=KAL.form,x=f.x,d=KAL.data,day=x?new Date(x.start*1000):KAL.day,end=x?new Date(Math.max(x.end-(x.allday?86400:0),x.start)*1000):day;
+  const add=(d.add||[]).map(i=>[i,d.calendars[i]]);
+  box.innerHTML=`<button type="button" class="b ld-back" data-close="1">‹ ${esc(t('Zurück','Back'))}</button><h3>${esc(f.mode==='new'?t('Neuer Termin','New appointment'):t('Termin ändern','Change appointment'))}</h3>`+
+    `<label>${esc(t('Titel','Title'))}</label><input data-f="title" maxlength="200" value="${esc(x?x.title:'')}">`+
+    `<label class="kalad"><input type="checkbox" data-f="allday"${x&&x.allday?' checked':''}> ${esc(t('ganztägig','all day'))}</label>`+
+    `<div class="two2"><div><label>${esc(t('Von','From'))}</label><input type="date" data-f="sd" value="${kalIso(day)}"><input type="time" data-f="st" value="${x?kalHm(x.start):'10:00'}"></div>`+
+    `<div><label>${esc(t('Bis','To'))}</label><input type="date" data-f="ed" value="${kalIso(end)}"><input type="time" data-f="et" value="${x?kalHm(x.end):'11:00'}"></div></div>`+
+    `<label>${esc(t('Ort','Place'))}</label><input data-f="location" maxlength="200" value="${esc(x?x.location||'':'')}">`+
+    (f.mode==='new'&&add.length>1?`<label>${esc(t('Kalender','Calendar'))}</label><select data-f="cal">${add.map(([i,n])=>`<option value="${i}">${esc(n)}</option>`).join('')}</select>`:'')+
+    `<div class="row" style="margin-top:8px"><button class="b p" type="button" data-act="save">${esc(t('Speichern','Save'))}</button></div><div class="kalmsg fh"></div>`;
+  const v=k=>box.querySelector(`[data-f=${k}]`),sync=()=>{const a=v('allday').checked;v('st').hidden=a;v('et').hidden=a};sync();v('allday').onchange=sync;
+  box.querySelector('[data-close]').onclick=()=>{KAL.form=null;kalDraw()};
+  box.querySelector('[data-act=save]').onclick=()=>{const a=v('allday').checked,
+    item={title:v('title').value.trim(),allday:a,location:v('location').value.trim(),
+      start:a?v('sd').value:v('sd').value+'T'+v('st').value,end:a?kalIso(kalAdd(new Date(v('ed').value+'T00:00'),1)):v('ed').value+'T'+v('et').value};
+    if(f.mode==='new'){const c=v('cal')?Number(v('cal').value):add.length?add[0][0]:-1;
+      kalSend('POST',Object.assign(item,{calendar:c>=0&&(c!==add[0][0]||(d.shared||[]).includes(c))?d.calendars[c]:''}),box.querySelector('.kalmsg'))}
+    else kalSend('PUT',{change:'edit',cal:x.cal,title:x.title,start:x.start,new:item},box.querySelector('.kalmsg'))}}
+async function kalSend(method,body,msg){msg.className='kalmsg fh';msg.textContent=t('Speichere im Kalender …','Saving to the calendar …');
+  const {r,d}=await apiTry('/api/profile/calendar/event',{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign(body,{tz:TZ()}))});
+  if(!r.ok){msg.className='kalmsg err';msg.textContent=r.status===409?t('Der Termin ist so nicht mehr da (woanders geändert, oder er wiederholt sich). Die Seite lädt neu.','The appointment is no longer there like this (changed elsewhere, or repeating). The page reloads.'):errSay(r.status,d.detail,'');if(r.status===409)kalLoad();return}
+  KAL.form=null;KAL.sel=null;kalLoad()}

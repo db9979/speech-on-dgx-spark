@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.812** Termine direkt auf der Seite Kalender anlegen, ändern und löschen (eigene CalDAV-Kalender, nie wiederholte, mit Etag gegen fremde Änderungen).
 - **V01.0.811** Kalender mit anderen Profilen teilen (nur sehen oder sehen und eintragen); private Termine nur als „belegt“, der Assistent liest geteilte mit („Was hat Sabine morgen?“).
 - **V01.0.810** Von selbst melden an einem Ort: die Mail-Zeilen (Wichtige Mails, Aufräumen, Paket heute) stehen unter E-Mail → Einstellungen, der Termin-Vorlauf unter Kalender → Einstellungen.
 - **V01.0.809** E-Mail als eigene Seite im Menü: Posteingang aller Postfächer, Mail lesen als reiner Text; Postfächer, Aufräumen, Mailstil und Pakete unter Einstellungen, nicht mehr unter Ich
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.805** Kalender als eigene Seite im Menü: Tag, Woche, Monat oder Liste; alles zum Einrichten im Reiter Einstellungen, nicht mehr unter Ich
 - **V01.0.804** Fix: „Ja“ zu „Soll ich das aufs reMarkable legen?“ legt die Antwort ab; „Ja“ zum Termin antwortet richtig
 - **V01.0.803** · 2026-10-18 · Anrufe per Assistent: „Ruf Sabine an“ oder „Videoanruf mit Sabine“ ruft nach deinem Ja über die Chats an; vom Lautsprecher, Telefon oder Telegram kommt der Anruf als Mitteilung aufs Handy (ein Tipp ruft an); auf Android auch „Ruf Mama übers Telefon an“ mit den eigenen Kontakten (App 1.4.2); Schalter aus
-- **V01.0.802** Monitoring zeigt, wer gerade rechnet: CPU je Dienst auf beiden Rechnern, im Panel je Teil, Streifen der letzten 20 Minuten; auch in Live, Steuerzentrale und iPhone
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
