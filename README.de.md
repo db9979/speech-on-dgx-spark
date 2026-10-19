@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.845** Fix: iPhone-App baut wieder (GitHub-Lauf „iPhone app“ grün, TestFlight wieder möglich); zwei Stellen in E-Mail (Regel sichern, Antwortvorschläge) passten nicht zum Swift-Compiler
 - **V01.0.844** Code-Prüfung: ein eigenes Postfach sendet nur über den Postausgang, den du beim Verbinden einträgst, nie über einen geratenen; Ich → Gespräch klappt seine Gruppen ein; ein Name je Sache (Zustand → Überblick, Funktionen → Aufträge, Funktionen → Telefon, Ich → Spark als MCP-Server, am Handy „Assistent“)
 - **V01.0.843** E-Mail wie ein volles Mailprogramm: alle Ordner aller Postfächer lesen, anlegen, umbenennen, leere entfernen; ★ markieren, Mehrfachauswahl und Ziehen in Ordner mit Rückgängig; Regeln direkt aus einer Mail („Regel daraus …“, Probelauf, vorhandene einsortieren), alle unter E-Mail → Regeln; Suche mit von:, betreff:, hat:anhang; Anhänge laden; Weiterleiten über die Vorschau; auch im iPhone; Teil von „Mails ordnen“ und „Mails senden“, aus, nie wird eine Mail gelöscht
 - **V01.0.842** Fix: GitHub-Lauf „Tests“ wieder grün; der Test für den Weg eines Hinweises oben klickte manchmal den Hinweis zu offenen Praxistests, der alle 3 s neu gezeichnet wird, statt des eigenen
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.838** Kalender: kein Panel-Hänger mehr beim Ausrechnen der Termine (6-8 s Stillstand); jeder Termin wird nur einmal je Monat ausgerechnet und gemerkt, alles in einem Hintergrund-Faden mit niedriger Priorität, nie zwei gleichzeitig
 - **V01.0.837** E-Mail: Antwortvorschläge beim Antworten (Teil von Mails senden): drei kurze Antworten in verschiedene Richtungen liegen bereit, schon vorbereitet, solange die Mail offen ist, im Ton der Mail und mit dem Namen des Profils; die gewählte bleibt frei änderbar, dazu kürzer, freundlicher, förmlicher und auf Englisch; Panel und iPhone
 - **V01.0.836** Das Panel kommt schneller wieder dran, wenn im Hintergrund viel gerechnet wird
-- **V01.0.835** Ich → Musik sieht aus wie Dokumente und E-Mail: Karte für ein neues Lied (Länge als Chips, Schalter „Mit Gesang“), Suche und Filter, Lieder nach Tag mit ▶ in jeder Zeile, Einzelheiten mit Abspieler, „Nochmal machen“ und eingeklappter Beschreibung; iPhone-App nach Tag gruppiert mit wählbarer Länge
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

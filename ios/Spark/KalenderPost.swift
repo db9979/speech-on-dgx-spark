@@ -1246,7 +1246,10 @@ struct MailRuleForm: View {
             busy = false
             error = nil
             let id = d["saved"] as? String ?? ""
-            let n = rule.folder.isEmpty ? 0 : (test ?? (await dryRun()) ?? 0)
+            var n = 0
+            if !rule.folder.isEmpty {
+                if let test { n = test } else { n = await dryRun() ?? 0 }
+            }
             if n > 0 && !id.isEmpty { offer = (id, n) } else { done(String(localized: "Gesichert. Die Regel nimmt ab jetzt neue Mails.")) }
         } catch {
             busy = false
@@ -1533,7 +1536,7 @@ struct MailWrite: View {
                     if !draft.reply.isEmpty {
                         Section {
                             if ideas.isEmpty {
-                                Text(ideasNote.map { SparkAPI.way($0) } ?? String(localized: "Vorschläge kommen …")).foregroundStyle(.secondary)
+                                Text(ideasNote.map { SparkAPI.way($0) } ?? AttributedString(localized: "Vorschläge kommen …")).foregroundStyle(.secondary)
                             }
                             ForEach(Array(ideas.enumerated()), id: \.offset) { i, x in
                                 Button {

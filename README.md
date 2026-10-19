@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.845** Fix: the iPhone app builds again (GitHub run "iPhone app" green, TestFlight possible again); two places in E-mail (saving a rule, reply suggestions) did not suit the Swift compiler
 - **V01.0.844** Code check: an own mailbox sends only through the outgoing server you type in when connecting it, never a guessed one; Me → Conversation folds its groups; one name per thing (Status → Summary, Features → Jobs, Features → Phone, Me → Spark as MCP server, on the phone "Assistant")
 - **V01.0.843** E-mail as a full mail client: read every folder of every mailbox, make, rename, remove empty ones; ★ flag, multiple selection and dragging into folders with undo; rules straight from a mail ("Rule from this …", dry run, sort existing mail), all under E-mail → Rules; search with von:, betreff:, hat:anhang; fetch attachments; forward via the preview; on the iPhone too; part of "Mails ordnen" and "Mails senden", off, a mail is never deleted
 - **V01.0.842** Fix: GitHub run "Tests" green again; the test for the way of a note on top sometimes clicked the note about open hands-on tests, drawn again every 3 s, instead of its own
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.838** Calendar: no more panel stalls while working out appointments (6-8 s standstill); each appointment is worked out once per month and kept, all in one background thread at low priority, never two at once
 - **V01.0.837** E-mail: reply suggestions when answering (part of Send mails): three short answers in different directions are ready, prepared while the mail is open, in the mail's tone and signed with the profile name; the picked one stays freely editable, plus shorter, friendlier, more formal and in English; panel and iPhone
 - **V01.0.836** The panel gets its turn sooner while much is computed in the background
-- **V01.0.835** Me → Music looks like Documents and E-mail: a card for a new song (length as chips, switch "With singing"), search and filters, songs by day with ▶ in every row, details with a player, "Make it again" and the description folded; iPhone app grouped by day with a choice of length
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
