@@ -118,54 +118,91 @@ def _sat(v):
 
 
 class _Band:
-    __slots__ = ("s", "sp", "sz", "r", "a", "ap", "p", "d", "b", "bp", "nb", "det")
+    __slots__ = ("s", "sp", "sz", "r", "a", "p", "d", "b", "nb", "det")
 
     def __init__(self, det):
         self.s = self.sp = self.sz = 0
         self.r = [0, 0, 0]
         self.a = [0, 0, 0]
-        self.ap = [0, 0, 0]
         self.p = [0, 0, 0]
         self.d = [0] * 7
         self.b = [0] * 7
-        self.bp = [0] * 7
         self.nb = 0
         self.det = det
 
     def update(self, dx):
-        """Block 4 of G.722: reconstruction, pole and zero predictor update, the next estimate."""
-        d, b, bp, r, p, a, ap = self.d, self.b, self.bp, self.r, self.p, self.a, self.ap
-        d[0] = dx
-        r[0] = _sat(self.s + dx)
-        p[0] = _sat(self.sz + dx)
-        sg0, sg1, sg2 = p[0] >> 15, p[1] >> 15, p[2] >> 15
-        wd1 = _sat(a[1] << 2)
+        """Block 4 of G.722: reconstruction, pole and zero predictor update, the next estimate (the six zero taps
+        written out: this runs twice per sample pair in pure Python, the loops cost more than the sums)."""
+        d, b, r, p, a = self.d, self.b, self.r, self.p, self.a
+        v = self.s + dx
+        r0 = 32767 if v > 32767 else -32768 if v < -32768 else v
+        v = self.sz + dx
+        p0 = 32767 if v > 32767 else -32768 if v < -32768 else v
+        sg0, sg1, sg2 = p0 >> 15, p[1] >> 15, p[2] >> 15
+        a1, a2 = a[1], a[2]
+        wd1 = a1 << 2
+        wd1 = 32767 if wd1 > 32767 else -32768 if wd1 < -32768 else wd1
         wd2 = -wd1 if sg0 == sg1 else wd1
         if wd2 > 32767:
             wd2 = 32767
-        wd3 = (128 if sg0 == sg2 else -128) + (wd2 >> 7) + ((a[2] * 32512) >> 15)
+        wd3 = (128 if sg0 == sg2 else -128) + (wd2 >> 7) + ((a2 * 32512) >> 15)
         wd3 = 12288 if wd3 > 12288 else -12288 if wd3 < -12288 else wd3
-        ap[2] = wd3
-        ap1 = _sat((192 if sg0 == sg1 else -192) + ((a[1] * 32640) >> 15))
-        lim = _sat(15360 - wd3)
-        ap[1] = lim if ap1 > lim else -lim if ap1 < -lim else ap1
+        v = (192 if sg0 == sg1 else -192) + ((a1 * 32640) >> 15)
+        ap1 = 32767 if v > 32767 else -32768 if v < -32768 else v
+        lim = 15360 - wd3
+        lim = 32767 if lim > 32767 else -32768 if lim < -32768 else lim
+        ap1 = lim if ap1 > lim else -lim if ap1 < -lim else ap1
+        self.p[0] = p0
+        # zero predictor: b[i] follows the sign agreement of the new and the i-th old difference
         step = 0 if dx == 0 else 128
         s0 = dx >> 15
-        for i in range(1, 7):
-            w = step if (d[i] >> 15) == s0 else -step
-            bp[i] = _sat(w + ((b[i] * 32640) >> 15))
-        for i in range(6, 0, -1):
-            d[i] = d[i - 1]
-            b[i] = bp[i]
-        r[2], r[1] = r[1], r[0]
-        p[2], p[1] = p[1], p[0]
-        a[2], a[1] = ap[2], ap[1]
-        self.sp = _sat(((a[1] * _sat(r[1] + r[1])) >> 15) + ((a[2] * _sat(r[2] + r[2])) >> 15))
+        d1, d2, d3, d4, d5, d6 = d[1], d[2], d[3], d[4], d[5], d[6]
+        up, dn = (step, -step) if s0 == 0 else (-step, step)     # same sign as dx: +step, else -step
+        v = (up if d1 >= 0 else dn) + ((b[1] * 32640) >> 15)
+        b1 = 32767 if v > 32767 else -32768 if v < -32768 else v
+        v = (up if d2 >= 0 else dn) + ((b[2] * 32640) >> 15)
+        b2 = 32767 if v > 32767 else -32768 if v < -32768 else v
+        v = (up if d3 >= 0 else dn) + ((b[3] * 32640) >> 15)
+        b3 = 32767 if v > 32767 else -32768 if v < -32768 else v
+        v = (up if d4 >= 0 else dn) + ((b[4] * 32640) >> 15)
+        b4 = 32767 if v > 32767 else -32768 if v < -32768 else v
+        v = (up if d5 >= 0 else dn) + ((b[5] * 32640) >> 15)
+        b5 = 32767 if v > 32767 else -32768 if v < -32768 else v
+        v = (up if d6 >= 0 else dn) + ((b[6] * 32640) >> 15)
+        b6 = 32767 if v > 32767 else -32768 if v < -32768 else v
+        b[1], b[2], b[3], b[4], b[5], b[6] = b1, b2, b3, b4, b5, b6
+        d[0], d[1], d[2], d[3], d[4], d[5], d[6] = dx, dx, d1, d2, d3, d4, d5
+        r[2], r[1], r[0] = r[1], r0, r0
+        p[2], p[1] = p[1], p0
+        a[1], a[2] = ap1, wd3
+        v = r0 + r0
+        t1 = 32767 if v > 32767 else -32768 if v < -32768 else v
+        v = r[2] + r[2]
+        t2 = 32767 if v > 32767 else -32768 if v < -32768 else v
+        v = ((ap1 * t1) >> 15) + ((wd3 * t2) >> 15)
+        sp = 32767 if v > 32767 else -32768 if v < -32768 else v
+        # the differences are 16-bit values doubled: saturate each, then the six products
         sz = 0
-        for i in range(6, 0, -1):
-            sz += (b[i] * _sat(d[i] + d[i])) >> 15
-        self.sz = _sat(sz)
-        self.s = _sat(self.sp + self.sz)
+        for di, bi in ((dx, b1), (d1, b2), (d2, b3), (d3, b4), (d4, b5), (d5, b6)):
+            v = di + di
+            sz += (bi * (32767 if v > 32767 else -32768 if v < -32768 else v)) >> 15
+        sz = 32767 if sz > 32767 else -32768 if sz < -32768 else sz
+        self.sp, self.sz = sp, sz
+        v = sp + sz
+        self.s = 32767 if v > 32767 else -32768 if v < -32768 else v
+
+
+_QMF_A = np.array(_QMF, dtype=np.int64)
+_QMF_B = _QMF_A[::-1].copy()
+
+
+def _qmf(x, tail):
+    """The QMF sums of every sample pair at once (numpy instead of 24 products per pair in Python): x is the kept
+    history of 24 samples, tail the new samples; (sum over the even ones, sum over the odd ones) per pair and the
+    new history. Exactly the integers of the loop in the standard."""
+    xs = np.concatenate([np.array(x, dtype=np.int64), tail.astype(np.int64)])
+    even, odd = xs[0::2], xs[1::2]
+    return np.correlate(even[1:], _QMF_A, "valid"), np.correlate(odd[1:], _QMF_B, "valid"), xs[-24:].tolist()
 
 
 def _scale(nb, base):
@@ -182,19 +219,16 @@ class G722Encoder:
         self.x = [0] * 24
 
     def encode(self, pcm: bytes) -> bytes:
-        amp = _samples(pcm).tolist()
+        amp = _samples(pcm)
+        amp = amp[:len(amp) // 2 * 2]
         out = bytearray()
-        x, low, high = self.x, self.low, self.high
-        for j in range(0, len(amp) - 1, 2):
-            del x[:2]
-            x.append(amp[j])
-            x.append(amp[j + 1])
-            sumodd = sumeven = 0
-            for i in range(12):
-                sumodd += x[2 * i] * _QMF[i]
-                sumeven += x[2 * i + 1] * _QMF[11 - i]
-            xlow = (sumeven + sumodd) >> 14
-            xhigh = (sumeven - sumodd) >> 14
+        if not len(amp):
+            return bytes(out)
+        sodd, seven, self.x = _qmf(self.x, amp)
+        lows = ((seven + sodd) >> 14).tolist()
+        highs = ((seven - sodd) >> 14).tolist()
+        low, high = self.low, self.high
+        for xlow, xhigh in zip(lows, highs):
             # low band: 6 bits
             el = _sat(xlow - low.s)
             wd = el if el >= 0 else -(el + 1)
@@ -230,8 +264,8 @@ class G722Decoder:
         self.x = [0] * 24
 
     def decode(self, data: bytes) -> bytes:
-        out = []
-        x, low, high = self.x, self.low, self.high
+        rows = []
+        low, high = self.low, self.high
         for code in data:
             wd1 = code & 0x3F
             ihigh = (code >> 6) & 0x03
@@ -250,16 +284,14 @@ class G722Decoder:
             high.nb = 0 if nb < 0 else 22528 if nb > 22528 else nb
             high.det = _scale(high.nb, 10)
             high.update(dhigh)
-            del x[:2]
-            x.append(rlow + rhigh)
-            x.append(rlow - rhigh)
-            xout1 = xout2 = 0
-            for i in range(12):
-                xout2 += x[2 * i] * _QMF[i]
-                xout1 += x[2 * i + 1] * _QMF[11 - i]
-            out.append(_sat(xout1 >> 11))
-            out.append(_sat(xout2 >> 11))
-        return np.array(out, dtype="<i2").tobytes()
+            rows.append(rlow + rhigh)
+            rows.append(rlow - rhigh)
+        if not rows:
+            return b""
+        xout2, xout1, self.x = _qmf(self.x, np.array(rows, dtype=np.int64))
+        out = np.empty(2 * len(xout1), dtype=np.int64)
+        out[0::2], out[1::2] = xout1 >> 11, xout2 >> 11
+        return np.clip(out, -32768, 32767).astype("<i2").tobytes()
 
 
 # ---------------------------------------------------------------- sample rates

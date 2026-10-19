@@ -821,11 +821,19 @@ SEITEN = {
                 ("Der Spark meldet sich an der Telefonanlage im Heimnetz als IP-Telefon an (SIP über UDP, Port "
                  "{telefon.SIP_PORT}, Digest-Anmeldung, alle {telefon.REG_EXPIRES|min} Minuten erneuert). Nachrichten nimmt er "
                  "nur von der Adresse der Anlage, höchstens {telefon.MAX_MSG} Bytes und {telefon.PER_SECOND} je Sekunde; "
-                 "Ton (RTP) nur von der Adresse aus deren SDP, die im Heimnetz liegen muss.",
+                 "Ton (RTP) nur von der Adresse aus deren SDP, die im Heimnetz liegen muss. Den Ton hinaus schickt ein eigener "
+                 "Faden im 20-ms-Takt, unabhängig von der Ereignis-Schleife des Panels; Sprache beginnt erst, wenn "
+                 "{telefon.PREBUF} Pakete bereitliegen oder der Satz fertig ist, nach jeder Lücke wartet er auf mehr "
+                 "(höchstens {telefon.PREBUF_MAX}). Die Logzeile am Ende nennt Lücken, verspätete Pakete und die "
+                 "Rechenzeit fürs Kodieren je Sekunde Ton.",
                  "The Spark signs in at the telephone system in the home network as an IP phone (SIP over UDP, port "
                  "{telefon.SIP_PORT}, digest sign-in, renewed every {telefon.REG_EXPIRES|min} minutes). It takes messages "
                  "only from the system's address, at most {telefon.MAX_MSG} bytes and {telefon.PER_SECOND} per second; "
-                 "sound (RTP) only from the address in its SDP, which has to be in the home network."),
+                 "sound (RTP) only from the address in its SDP, which has to be in the home network. The sound out goes from "
+                 "a thread of its own at a 20 ms beat, independent of the panel's event loop; speech starts only once "
+                 "{telefon.PREBUF} packets are ready or the sentence is complete, after every gap it waits for more (at "
+                 "most {telefon.PREBUF_MAX}). The log line at the end names gaps, late packets and the time spent "
+                 "encoding per second of sound."),
                 ("Ein Anruf läuft wie eine Frage am Lautsprecher: Satzende mit derselben Pegelprüfung, Spracherkennung, "
                  "Stimmprüfung, Chat mit dem Profil (gesetzt nur vom Panel), Antwort in G.722 oder G.711 zurück. Ein "
                  "Mobilteil eines Profils bekommt Persönliches nur bei sicherer Stimme; am gemeinsamen Telefon wählt die "

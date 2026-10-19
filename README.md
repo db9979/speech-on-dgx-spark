@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.824** Phone: the voice no longer sounds choppy (own sound beat, small buffer, faster G.722)
 - **V01.0.823** Sharing a calendar releases only the chosen calendar, never the whole iCloud or Nextcloud account (code review C2); the share window asks which one when there are several
 - **V01.0.822** A red main no longer goes unnoticed: the quick test before a push runs every test and stops while main is red, GitHub opens an issue with the red tests, Status → Update shows since when it is red
 - **V01.0.821** Calendar renewed: full width, an appointment opens as a floating card (phone: sheet from below) with change, +1 day, +1 week, delete; "Quick add" in one line with recognised chips; drag appointments with the mouse, undo; share window with a person search; briefing topics as chips
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.817** Calendar fast: appointments cached by month, a slow calendar keeps loading in the background instead of being cut off, refreshed every 5 minutes behind the scenes.
 - **V01.0.816** The panel no longer stalls while syncing big knowledge folders; on a stall the log names the thread that computes
 - **V01.0.815** Calendar and e-mail in the iPhone app: four weeks of appointments (add, change, delete), the inbox with reading, ordering and sending; kept on the phone; CarPlay reads appointments and new mail aloud.
-- **V01.0.814** Send mail from the E-mail page: a new mail or a reply, a preview sheet first, sent only with "Send" there; TLS only, copy in "Sent" (switch off by default).
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

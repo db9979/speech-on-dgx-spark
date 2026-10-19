@@ -3,6 +3,7 @@ and digest, whole calls against a PBX made up here (REGISTER with 401 and digest
 BYE), own numbers confirmed with a code, the Telefon-PIN with its lock, and Ich → Telefon. No telephone, no clock: every
 wait is a few hundred milliseconds, times are passed in."""
 import asyncio
+import collections
 import hashlib
 import json
 import math
@@ -68,6 +69,21 @@ class Codecs(unittest.TestCase):
         out = b"".join(dec.decode(data[i:i + 160]) for i in range(0, len(data), 160))
         self.assertEqual(len(out), len(pcm))
         self.assertGreater(snr(pcm[3200:], out[3200:]), 15)
+
+    def test_g722_bits_stay_the_same_after_the_speed_up(self):
+        """The faster G.722 (QMF with numpy, predictor written out, V01.0.824) gives exactly the bits of the loop
+        from the standard: the fingerprint was taken with the code before."""
+        rng = np.random.default_rng(7)
+        sig = np.concatenate([rng.integers(-32768, 32767, 8000), (np.sin(np.arange(16000) / 5) * 24000).astype(int),
+                              rng.integers(-200, 200, 8000)]).astype("<i2").tobytes()
+        e, d, h = telefon_ton.G722Encoder(), telefon_ton.G722Decoder(), hashlib.sha256()
+        for i in range(0, len(sig), 640):
+            c = e.encode(sig[i:i + 640])
+            h.update(c)
+            h.update(d.decode(c))
+        self.assertEqual(h.hexdigest()[:16], "57556b8a130c82e3")
+        self.assertEqual(e.encode(b""), b"")
+        self.assertEqual(d.decode(b""), b"")
 
     def test_resampler_keeps_tone_across_pieces(self):
         pcm = tone(0.5, 24000, 500)
@@ -231,6 +247,68 @@ def ack_or_bye(meth, cid, spark, cseq):
 
 def rtp(seq, pt, payload, ts=None, marker=0):
     return struct.pack("!BBHII", 0x80, (marker << 7) | pt, seq, ts if ts is not None else seq * 160, 77) + payload
+
+
+class Sender(unittest.TestCase):
+    """The sound thread (Call._sender, Dominik 2026-10-19 „abgehackt“): its own 20 ms clock outside the event loop,
+    speech only after PREBUF packets (or a complete sentence), a gap counted and the buffer grown."""
+
+    def _call(self):
+        import threading
+        c = object.__new__(telefon.Call)
+        c.codec = telefon_ton.Codec(8)
+        c.outq, c.flush, c.stop_send, c.over = collections.deque(), False, threading.Event(), asyncio.Event()
+        c.pkts = {"raus": 0, "sprache": 0, "rein": 0, "luecken": 0, "spaet": 0}
+        self.rx = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.rx.bind(("127.0.0.1", 0))
+        self.rx.settimeout(2)
+        self.addCleanup(self.rx.close)
+        c.remote = {"ip": "127.0.0.1", "port": self.rx.getsockname()[1]}
+        c.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.addCleanup(c.sock.close)
+        t = threading.Thread(target=c._sender, daemon=True)
+        self.addCleanup(lambda: (c.stop_send.set(), t.join(2)))
+        return c, t
+
+    def _payloads(self, n):
+        return [self.rx.recv(2048)[12:] for _ in range(n)]
+
+    def test_a_voice_slower_than_playing_does_not_stutter(self):
+        c, t = self._call()
+        t.start()
+        word = [bytes([i + 1]) * 160 for i in range(30)]
+        for p in word:                               # 22 ms per packet of 20 ms: a bit slower than it plays
+            c.outq.append(p)
+            time.sleep(0.022)
+        c.flush = True
+        got = self._payloads(150)
+        speech = [i for i, p in enumerate(got) if p in word]
+        self.assertEqual([got[i] for i in speech], word)             # all of it, in order
+        self.assertEqual(speech[-1] - speech[0], len(word) - 1)       # and without silence in between
+        self.assertEqual(c.pkts["luecken"], 0)
+
+    def test_a_gap_is_counted_and_the_buffer_grows(self):
+        c, t = self._call()
+        t.start()
+        for i in range(telefon.PREBUF - 1):
+            c.outq.append(b"\x05" * 160)
+        time.sleep(0.3)
+        self.assertEqual(c.pkts["sprache"], 0)        # not yet enough to start
+        c.outq.append(b"\x05" * 160)
+        for _ in range(100):
+            if c.pkts["luecken"]:
+                break
+            time.sleep(0.02)
+        self.assertEqual(c.pkts["sprache"], telefon.PREBUF)
+        self.assertEqual(c.pkts["luecken"], 1)        # it ran dry without the end of the sentence
+        c.outq.extend([b"\x06" * 160] * 3)           # the end of a sentence plays at once, no new gap
+        c.flush = True
+        for _ in range(100):
+            if c.pkts["sprache"] == telefon.PREBUF + 3:
+                break
+            time.sleep(0.02)
+        self.assertEqual(c.pkts["sprache"], telefon.PREBUF + 3)
+        self.assertEqual(c.pkts["luecken"], 1)
 
 
 class Calls(unittest.TestCase):

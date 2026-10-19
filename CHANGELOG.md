@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.824** · 2026-10-19 · Telefon: die Stimme des Spark kommt nicht mehr abgehackt an: der Ton läuft in einem eigenen Takt-Faden unabhängig vom Panel, ein kleiner Puffer vor jedem Satz fängt langsame Sprachausgabe ab, G.722 braucht etwa halb so viel Rechenzeit; das Log nennt Lücken und verspätete Pakete
 - **V01.0.823** · 2026-10-19 · Kalender teilen gibt nur noch den gewählten Kalender frei, nie das ganze iCloud- oder Nextcloud-Konto (Code-Prüfung C2); das Teilen-Fenster fragt bei mehreren Kalendern, welcher
 - **V01.0.822** · 2026-10-19 · Rotes main bleibt nicht mehr unbemerkt: vorpush lässt alle Tests laufen (Browser-Test aller Seiten nur bei geänderten Seiten) und bricht bei rotem main ab (--rotfix für den Fix), GitHub öffnet das Issue „main rot“ mit den roten Tests und zählt wackelnde Tests, Zustand → Update zeigt „Rot seit …“
 - **V01.0.821** · 2026-10-19 · Kalender neu: volle Breite, Termin als schwebende Karte (Handy: Blatt von unten) mit Ändern, +1 Tag, +1 Woche, Löschen; „Schnell eintragen“ in einer Zeile mit erkannten Chips; Termine mit der Maus verschieben, Rückgängig; Teilen-Fenster mit Personensuche; Briefing-Themen als Chips

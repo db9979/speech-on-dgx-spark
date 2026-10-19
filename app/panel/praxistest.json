@@ -2077,6 +2077,13 @@
 "titel": "Kalender teilen: nur der gewählte Kalender",
 "text": "A: Update auf V01.0.823. Mit „Kalender teilen“ und einem iCloud-Konto mit mehreren Kalendern: Kalender → Einstellungen → „Teilen“: oben steht „Welcher Kalender aus diesem Konto“. B: Einen Kalender wählen, eine Person auf „Sehen“, „Speichern“: die andere Person sieht auf ihrer Seite Kalender nur diesen einen, nicht die anderen des Kontos. C: Eine ältere Freigabe von vor diesem Update zeigt bei der anderen Person „Nicht erreicht“, bis du sie neu teilst. D: Danach die Freigabe wieder auf „Nicht“.",
 "thread": "Kalender und E-Mail in Panel und Apps"
+},
+{
+"id": "P321",
+"v": 824,
+"titel": "Stimme am Telefon flüssig",
+"text": "A: Pi aktualisieren, vom Mobilteil den Spark anrufen und eine Frage mit längerer Antwort stellen („Erzähl mir etwas über den Mond“): die Stimme kommt ohne Stocken und Abhacken. B: Gleichzeitig im Panel eine zweite Frage stellen: am Telefon bleibt die Stimme flüssig. C: Auflegen, dann Zustand → Logs, Bereich telefon: „aufgelegt nach …“ endet mit „0 luecken, 0 verspaetet, kodieren … ms je sekunde ton“ (kleine Zahlen sind gut; bei vielen Lücken die Zeile in den Thread kopieren).",
+"thread": "Auflegen nach Gesprächsende"
 }
 ]
 }

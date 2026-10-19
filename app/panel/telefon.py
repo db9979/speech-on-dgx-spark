@@ -93,6 +93,7 @@ BYE_WORDS = re.compile(r"(?i)^\W*(?:(?:ok|okay|gut|alles klar|prima|super|perfek
 # right after "Noch etwas?" also a plain no ends the call (the same words elsewhere answer the assistant)
 NO_MORE = re.compile(r"(?i)^\W*(?:nein|nee|ne|nö|nope|no|nichts|danke|passt|passt so|alles gut|das reicht|reicht)"
                      r"(?:\W+(?:danke|danke schön|vielen dank|thanks|passt|alles gut|das reicht|reicht|spark))*\W*$")
+PREBUF, PREBUF_MAX = 10, 40     # packets of 20 ms that wait before speech plays; more after each gap (at most 0.8 s)
 RTP_GONE = 8                    # seconds without any sound packet from the phone: it hung up without a BYE (line gone)
 CALLBACK_WORDS = re.compile(r"(?i)\b(?:ruf|rufe|rufst)\s+(?:mich|du mich)\s+(?:bitte\s+)?(?:gleich\s+)?zurück|\brückruf\b|\bcall me back\b")
 _lock = threading.Lock()
@@ -693,7 +694,11 @@ class Call:
         self.ours = 0                                     # CSeq of our own requests in this dialog
         self.tasks = []
         self.rest = b""
-        self.pkts = {"raus": 0, "sprache": 0, "rein": 0}
+        self.pkts = {"raus": 0, "sprache": 0, "rein": 0, "luecken": 0, "spaet": 0}
+        self.stop_send = threading.Event()               # ends the sound thread (_sender)
+        self.sender = None
+        self.flush = False                                # the sentence is complete: play what waits, no buffering
+        self.work = [0.0, 0.0]                            # seconds spent encoding, seconds of sound encoded
         self.last_in = 0.0                                # when the last sound packet came (monotonic), 0 before the first
         self.held = False                                 # the phone put the call on hold (no sound comes on purpose)
         self.live = None                                  # the call as one request in Live, Monitoring and Steuerzentrale   # RTP packets sent, of them with speech, received (log at the end)
@@ -1001,7 +1006,8 @@ class Call:
             else:
                 print(f"telefon: anruf intern {self.number} als {_log_name(self.uid) if not self.shared else 'gemeinsames telefon'}"
                       + (", nicht zugeordnet" if not self.known else "") + f", ton {self.codec.name}", flush=True)
-            self.tasks.append(asyncio.ensure_future(self._sender()))
+            self.sender = threading.Thread(target=self._sender, name="telefon-ton", daemon=True)
+            self.sender.start()
             self.tasks.append(asyncio.ensure_future(self._alive()))
             talk = asyncio.ensure_future(self.converse())
             done, _ = await asyncio.wait([talk, asyncio.ensure_future(self.over.wait())], timeout=MAX_CALL + 60,
@@ -1018,6 +1024,7 @@ class Call:
         except Exception as e:
             print("telefon: anruf", type(e).__name__, str(e)[:120], flush=True)
         finally:
+            self.stop_send.set()
             if self.answered and not self.by_peer and not a.closing:
                 try:
                     await self._bye()
@@ -1026,6 +1033,8 @@ class Call:
             for t in self.tasks:
                 if not t.done() and t is not asyncio.current_task():
                     t.cancel()
+            if self.sender is not None:                # the sound thread is gone before its socket closes
+                await asyncio.to_thread(self.sender.join, 1.0)
             if self.rtp and self.rtp.transport:
                 self.rtp.transport.close()
             elif self.sock:
@@ -1043,8 +1052,10 @@ class Call:
                 _bump("sekunden", secs)
                 self.keep(secs)
                 k = self.pkts
+                cpu = int(1000 * self.work[0] / self.work[1]) if self.work[1] else 0
                 print(f"telefon: aufgelegt nach {secs} s, {self.questions} fragen ({why}), ton raus {k['raus']} pakete, "
-                      f"davon {k['sprache']} mit sprache, rein {k['rein']} pakete", flush=True)
+                      f"davon {k['sprache']} mit sprache, rein {k['rein']} pakete, {k['luecken']} luecken, "
+                      f"{k['spaet']} verspaetet, kodieren {cpu} ms je sekunde ton", flush=True)
             elif why == "abgebrochen":
                 print("telefon: anruf vor dem abheben beendet", flush=True)
 
@@ -1134,27 +1145,44 @@ class Call:
         return await asyncio.to_thread(lambda: b"".join(self.codec.decode(p) for p in parts))
 
     # ------------------------------------------------------------ sound out
-    async def _sender(self):
-        """One RTP packet every 20 ms: what is waiting in outq, else silence."""
-        loop = asyncio.get_running_loop()
+    def _sender(self):
+        """One RTP packet every 20 ms, in a thread of its own: a busy event loop (a slow request, a long JSON) never
+        holds the voice back. Speech starts once PREBUF packets wait (or the sentence is complete), so a voice that
+        comes a little slower than it plays does not stutter; after a gap the buffer grows up to PREBUF_MAX."""
         seq, ts, ssrc = random.randint(0, 0xFFFF), random.randint(0, 0xFFFFFFFF), random.randint(1, 0xFFFFFFFF)
         quiet = telefon_ton.Codec(self.codec.pt).encode(b"\x00\x00" * self.codec.samples_per_frame())
         to = (self.remote["ip"], self.remote["port"])
-        nxt, mark = loop.time(), True
-        while not self.over.is_set():
-            payload = self.outq.popleft() if self.outq else None
+        nxt, mark, speaking, pre = time.monotonic(), True, False, PREBUF
+        while not self.stop_send.is_set() and not self.over.is_set():
+            payload = None
+            if not speaking and self.outq and (len(self.outq) >= pre or self.flush):
+                speaking = True
+            if speaking:
+                if self.outq:
+                    payload = self.outq.popleft()
+                else:
+                    speaking = False
+                    if not self.flush:                 # the voice came too slowly: a gap, wait longer next time
+                        self.pkts["luecken"] += 1
+                        pre = min(pre + PREBUF, PREBUF_MAX)
             pkt = struct.pack("!BBHII", 0x80, ((1 if mark and payload else 0) << 7) | self.codec.pt, seq, ts, ssrc) + (payload or quiet)
             mark = payload is None
-            if self.rtp and self.rtp.transport and not self.rtp.transport.is_closing():
-                self.rtp.transport.sendto(pkt, to)
+            try:
+                self.sock.sendto(pkt, to)
                 self.pkts["raus"] += 1
                 self.pkts["sprache"] += payload is not None
+            except BlockingIOError:
+                pass                                   # the send buffer is full for a moment: this packet is lost
+            except (OSError, AttributeError):
+                return                                 # the call is over, the socket closed
             seq, ts = (seq + 1) & 0xFFFF, (ts + self.codec.clock // 50) & 0xFFFFFFFF
             nxt += 0.02
-            delay = nxt - loop.time()
-            if delay < -0.2:            # far behind (a busy moment): start the clock anew instead of rushing
-                nxt, delay = loop.time(), 0
-            await asyncio.sleep(max(0.0, delay))
+            delay = nxt - time.monotonic()
+            if delay < -0.04:
+                self.pkts["spaet"] += 1
+            if delay < -0.2:            # far behind (the computer was busy): start the clock anew instead of rushing
+                nxt, delay = time.monotonic(), 0
+            self.stop_send.wait(max(0.0, delay))
 
     async def _alive(self):
         """The phone hung up but its BYE never came (line or router gone): after RTP_GONE seconds without any sound
@@ -1168,19 +1196,25 @@ class Call:
 
     def _frames(self, pcm24):
         """24 kHz PCM from the speech output to payloads of 20 ms (in a thread: G.722 is pure Python)."""
+        t = time.perf_counter()
         pcm = self.rest + self.codec.out.feed(pcm24)
         size = self.codec.samples_per_frame() * 2
         n = len(pcm) // size
         self.rest = pcm[n * size:]
-        return [self.codec.encode(pcm[i * size:(i + 1) * size]) for i in range(n)]
+        out = [self.codec.encode(pcm[i * size:(i + 1) * size]) for i in range(n)]
+        self.work[0] += time.perf_counter() - t
+        self.work[1] += n * 0.02
+        return out
 
     async def play(self, pcm24):
+        self.flush = False
         for p in await asyncio.to_thread(self._frames, pcm24):
             self.outq.append(p)
         while len(self.outq) > 50 and not self.over.is_set():    # keep at most a second ahead
             await asyncio.sleep(0.05)
 
     async def drain(self):
+        self.flush = True                              # nothing more comes for this sentence: play the rest now
         if self.rest:
             size = self.codec.samples_per_frame() * 2
             last = self.rest + b"\x00" * (size - len(self.rest))
@@ -1190,6 +1224,7 @@ class Call:
             await asyncio.sleep(0.02)
 
     def hush(self):
+        self.flush = True
         self.outq.clear()
         self.rest = b""
 
