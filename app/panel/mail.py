@@ -507,14 +507,22 @@ def keep_fresh(now=None):
             continue
         if not features.allowed("mail", uid) or not get(uid)["accounts"]:
             continue
-        key = (uid, "", 14, False, INBOX_MAX)
-        hit = _cache.get(key)
-        if not hit or now - hit[0] >= CACHE_SECONDS:
-            _start(key, get(uid)["accounts"], [], 14, False, INBOX_MAX).wait(120)
+        bodies += warm(uid, now)
         _used[uid] = seen   # the refresh itself is no reading by the person
-        bodies += prefetch(uid)
         people += 1
     return people, bodies
+
+
+def warm(uid, now=None):
+    """The page's listing of one profile anew when older than CACHE_SECONDS, then its newest messages ahead; kept
+    fresh from now on (keep_fresh, vorwaermen.py at sign-in). Returns how many messages were fetched ahead."""
+    now = time.time() if now is None else now
+    _used.setdefault(uid, now)
+    key = (uid, "", 14, False, INBOX_MAX)
+    hit = _cache.get(key)
+    if not hit or now - hit[0] >= CACHE_SECONDS:
+        _start(key, get(uid)["accounts"], [], 14, False, INBOX_MAX).wait(120)
+    return prefetch(uid)
 
 
 async def keep_fresh_loop():

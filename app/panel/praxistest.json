@@ -2091,6 +2091,27 @@
 "titel": "Eingabefelder wachsen mit",
 "text": "A: Update auf V01.0.829, Seite neu laden. Assistent: eine lange Frage tippen: das Feld wächst bis sechs Zeilen, dann scrollt es; Umschalt+Enter macht eine neue Zeile, Enter schickt ab, danach ist das Feld wieder eine Zeile. B: Ab vier Zeilen ⤢ oben rechts im Feld: die Großansicht zeigt den ganzen Text, Esc oder „Fertig“ behält ihn, „Senden“ schickt ab. C: Am Handy (Panel oder Android-App): die Taste macht eine neue Zeile, der Pfeil schickt ab; ⤢ öffnet den ganzen Bildschirm. D: Einstellungen → Assistent → Systemanweisung: das Feld ist so hoch wie der Text; ein Feld mit Grenze (z. B. Werkzeug-Hinweise) zeigt ab 80 % „n / max“. E: iPhone (TestFlight): das Eingabefeld wächst bis fünf Zeilen, ⤢ öffnet die Großansicht mit Fertig und Senden. F: uConsole nach `spark-tui update`: das Fragefeld hat drei Zeilen, Strg+J macht eine neue Zeile, Enter schickt ab.",
 "thread": "Eingabefelder dynamisch"
+},
+{
+"id": "P323",
+"v": 830,
+"titel": "E-Mail wie ein Mailprogramm",
+"text": "A: Update auf V01.0.830, am Rechner E-Mail öffnen: links die Liste nach Tagen (Heute, Gestern, …) mit Kürzel des Absenders, rechts breit die gewählte Mail. B: Tasten J und K gehen zur nächsten und vorigen Mail, R antwortet, E archiviert, U markiert ungelesen, Esc schließt. C: Am Handy (mit „Mails ordnen“) eine Mail nach links wischen: archiviert; nach rechts: gelesen oder ungelesen. D: Unter einer Mail „Als Termin“: der Kalender öffnet mit dem Betreff in „Schnell eintragen“, „Eintragen“ legt den Termin an.",
+"thread": "Kalender und E-Mail in Panel und Apps"
+},
+{
+"id": "P324",
+"v": 830,
+"titel": "iPhone und uConsole: Kalender und E-Mail wie im Panel",
+"text": "A: Neuer TestFlight-Build nach V01.0.830. Meine Sachen → Kalender: oben „Morgen 15 Uhr Zahnarzt“, Fertig: Titel, Tag, Uhrzeit erscheinen; „Eintragen“ legt den Termin an. B: Den Termin antippen, „+1 Tag“: einen Tag später; „Rückgängig“ holt ihn zurück. C: E-Mail: Liste nach Tagen mit Kürzeln; mit „Mails ordnen“ links wischen archiviert, rechts gelesen/ungelesen. D: Eine Mail öffnen, „Als Termin“, „Eintragen“. E: uConsole: spark-tui update, dann spark-tui neu 'Morgen 15 Uhr Test' (fragt, j trägt ein), spark-tui mails, spark-tui mail 1.",
+"thread": "Kalender und E-Mail in Panel und Apps"
+},
+{
+"id": "P325",
+"v": 830,
+"titel": "Spark-Kalender Kopie und Vorwärmen",
+"text": "A: Update auf V01.0.830, abmelden und neu anmelden, gleich danach Kalender und E-Mail öffnen: beide zeigen sofort Inhalt. B: Zustand → Live, Kasten Kalender: „… Kalender als Kopie, … Termine, abgeglichen vor … min“ und „… Profile vorgewärmt“. C: Auf dem iPhone in der Kalender-App einen Termin anlegen; spätestens nach 2 Minuten steht er auf der Seite Kalender im Panel. D: Zustand → Logs, Bereich Kalender: „calendar: mirror full“ beim ersten Mal, danach „changed“ nur bei Änderungen.",
+"thread": "Kalender und E-Mail in Panel und Apps"
 }
 ]
 }

@@ -1314,6 +1314,16 @@ def snapshot(view="admin", now=None):
     except Exception:
         kal, kal_page, post_page, post_sent = {"on": False}, 0, 0, 0
     try:
+        import vorwaermen
+        warm = vorwaermen.for_live()
+    except Exception:
+        warm = {"profiles": 0}
+    try:
+        import kalenderspiegel
+        kcopy = kalenderspiegel.for_live()
+    except Exception:
+        kcopy = {"calendars": 0}
+    try:
         import nasquelle
         nql = nasquelle.for_live()
     except Exception:
@@ -1426,6 +1436,11 @@ def snapshot(view="admin", now=None):
             x["sub"] += f" · heute {post_sent} gesendet"
         if x["id"] == "cal" and kal_page:        # the page Kalender: appointments added, changed, deleted today (a number)
             x["sub"] += f" · heute {kal_page} auf der Seite geändert"
+        if x["id"] == "cal" and kcopy.get("calendars"):   # Spark-Kalender: copies, appointments, last comparison (numbers)
+            x["sub"] += (f" · {kcopy['calendars']} Kalender als Kopie, {kcopy['items']} Termine"
+                         + (f", abgeglichen vor {kcopy['ago']} min" if kcopy.get("ago") is not None else ""))
+        if x["id"] in ("cal", "mail") and warm.get("profiles"):   # Vorwärmen: how many profiles, how long ago (no name)
+            x["sub"] += f" · {warm['profiles']} Profile vorgewärmt, zuletzt vor {warm['ago']} min"
         if x["id"] == "nasquelle" and nql.get("on"):   # Wissensordner: folders, documents, failing (no path, no name)
             x["sub"] = (f"{nql.get('folders', 0)} Ordner · {nql.get('profiles', 0)} Profile · {nql.get('docs', 0)} Dokumente"
                         + (f" · {nql['bad']} mit Fehler" if nql.get("bad") else "")

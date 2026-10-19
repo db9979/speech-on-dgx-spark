@@ -150,6 +150,8 @@ MODULE = {
     "mailstil": ("dienste", "Mailstil: lernt aus gesendeten Mails, wie das Profil schreibt, für Mail-Entwürfe"),
     "parcels": ("dienste", "Pakete aus Versand-Mails"),
     "calendars": ("dienste", "Kalender und Tagesbriefing, einzelne Kalender mit anderen Profilen geteilt"),
+    "kalenderspiegel": ("dienste", "Spark-Kalender: verschlüsselte Kopie jedes CalDAV-Kalenders, holt nur Änderungen"),
+    "vorwaermen": ("dienste", "Vorwärmen: liest beim Anmelden Kalender, Mails, Für dich und Kontakte vorab in den Speicher"),
     "contacts": ("dienste", "Kontakte per CardDAV, nur lesen"),
     "tasks": ("dienste", "Aufgaben und Einkaufsliste"),
     "weather": ("dienste", "Wetter von Open-Meteo als feste Sätze"),

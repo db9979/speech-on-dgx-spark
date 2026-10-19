@@ -26,6 +26,7 @@ import calendars  # noqa: E402
 import coadmin  # noqa: E402
 import echo  # noqa: E402
 import mail  # noqa: E402
+import vorwaermen  # noqa: E402
 import memtidy  # noqa: E402
 import gedaechtnis  # noqa: E402
 import mfa  # noqa: E402
@@ -134,6 +135,8 @@ def whoami(request: Request, creds: HTTPBasicCredentials | None = Depends(securi
     main = is_main_admin(request, creds)
     elev = None if main else coadmin.session(request)
     prof = profiles.current(request)
+    if prof:   # the panel opened: its calendars and mail are read ahead in the background (vorwaermen.py)
+        vorwaermen.ask(prof["id"])
     own = prof and not request.headers.get(profiles.DEVICE_HEADER) and coadmin.role(prof["id"])
     return {"admin": bool(main or elev), "admin_by": "main" if main else elev["role"] if elev else "",
             "admin_name": elev["name"] if elev else "",
@@ -397,6 +400,7 @@ async def profile_login(request: Request):
         profiles.mark_second_step(value, mfa.mark(uid))
     _trust(r, body, uid, request)
     _admin_signed_in(request, uid, next((u["name"] for u in profiles.names() if u["id"] == uid), name.strip()))
+    vorwaermen.ask(uid)   # signed in: read its calendars and mail ahead (vorwaermen.py)
     return r
 
 

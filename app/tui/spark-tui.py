@@ -7,6 +7,9 @@
     spark-tui frage 'Wann fährt der erste Bus?'                              one question, the answer as text
     echo 'Text' | spark-tui frage 'Fasse das zusammen'                       the piped text goes with the question
     spark-tui kalender [--woche N]                                           the appointments of a week (0 = this one)
+    spark-tui neu 'Morgen 15 Uhr Zahnarzt' [--ja]                            Schnell eintragen: shows, asks, then saves
+    spark-tui mails [--anzahl N]                                             the newest mails by day (sender, subject)
+    spark-tui mail N                                                         mail number N of that list as plain text
     spark-tui status                                                         reachable? what may this terminal do?
     spark-tui update                                                         the newest version from the Spark
 
@@ -365,6 +368,80 @@ def cmd_calendar(args):
     except SparkError as e:
         sys.exit(str(e))
     print("\n".join(calendar_lines(d, start)))
+
+
+def plain(text, width=None):
+    """Text from a calendar or a mail: printable characters only (no terminal escapes), cut to `width`."""
+    t = "".join(c for c in str(text or "") if c.isprintable())
+    return t[:width] if width else t
+
+
+def quick_lines(f):
+    """What the Spark understood from a line for Schnell eintragen (GET /api/profile/calendar/quick)."""
+    when = f.get("start", "") if f.get("allday") else f"{f.get('start', '')} – {str(f.get('end', ''))[-5:]}"
+    lines = ["  " + plain(f.get("title"), 80), "  " + ("ganztägig " if f.get("allday") else "") + when.replace("T", " ")]
+    if f.get("location"):
+        lines.append("  " + plain(f["location"], 80))
+    return lines
+
+
+def cmd_new(args):
+    """Schnell eintragen (Dominik 2026-10-19 „a“): the Spark reads the line with fixed rules; only a yes saves."""
+    conf = need()
+    sp = Spark(conf)
+    text = " ".join(args.text).strip()[:200]
+    if not text:
+        sys.exit("Was soll eingetragen werden? z. B. spark-tui neu 'Morgen 15 Uhr Zahnarzt'")
+    try:
+        f = sp.call("GET", "/api/profile/calendar/quick?" + urllib.parse.urlencode({"text": text, "tz": zone()}))
+        print("\n".join(["Verstanden:"] + quick_lines(f)))
+        if not args.ja and input("Eintragen? [j/N] ").strip().lower() not in ("j", "ja", "y", "yes"):
+            print("Nicht eingetragen.")
+            return
+        body = {k: f[k] for k in ("title", "start", "end", "allday", "location") if k in f}
+        sp.call("POST", "/api/profile/calendar/event", dict(body, tz=zone()))
+    except SparkError as e:
+        sys.exit(str(e))
+    print("Eingetragen.")
+
+
+def mail_items(sp, n):
+    return (sp.call("GET", "/api/profile/mail/inbox").get("items") or [])[:max(1, min(n, 50))]
+
+
+def mail_lines(items):
+    """The list by day, newest first, numbered for spark-tui mail N; * marks unread."""
+    lines, last = [], None
+    for i, x in enumerate(items, 1):
+        t = time.localtime(x.get("date") or 0)
+        day = time.strftime("%d.%m.", t)
+        if day != last:
+            lines.append(f"{DAYS[t.tm_wday]} {day}")
+            last = day
+        who = re.sub(r"\s*<[^>]*>$", "", str(x.get("from", ""))) or str(x.get("from", ""))
+        lines.append(f"{i:>3} {'*' if x.get('unread') else ' '} {time.strftime('%H:%M', t)}  {plain(who, 24):<24}  {plain(x.get('subject'), 50)}")
+    return lines or ["Keine Mail in den letzten 14 Tagen."]
+
+
+def cmd_mails(args):
+    try:
+        print("\n".join(mail_lines(mail_items(Spark(need()), args.anzahl))))
+    except SparkError as e:
+        sys.exit(str(e))
+
+
+def cmd_mail(args):
+    """One mail as plain text (it stays unread); other people's words, never run or opened."""
+    sp = Spark(need())
+    try:
+        items = mail_items(sp, 50)
+        if not 1 <= args.nummer <= len(items):
+            sys.exit(f"Nummer 1 bis {len(items)} (siehe spark-tui mails).")
+        m = sp.call("GET", "/api/profile/mail/message?" + urllib.parse.urlencode({"id": items[args.nummer - 1]["id"]}))
+    except SparkError as e:
+        sys.exit(str(e))
+    print(f"Von: {plain(m.get('from'), 200)}\nBetreff: {plain(m.get('subject'), 200)}\n")
+    print("\n".join(plain(line) for line in str(m.get("text") or "(kein Text)").splitlines()))
 
 
 # ---------------------------------------------------------------- the window (Textual)
@@ -772,11 +849,18 @@ def main(argv=None):
     f.add_argument("text", nargs="*")
     c = sub.add_parser("kalender", help="die Termine einer Woche")
     c.add_argument("--woche", type=int, default=0, help="0 diese, 1 nächste, -1 letzte Woche")
+    n = sub.add_parser("neu", help="Schnell eintragen: eine Zeile wird ein Termin (fragt vorher)")
+    n.add_argument("text", nargs="*")
+    n.add_argument("--ja", action="store_true", help="ohne Rückfrage eintragen")
+    m = sub.add_parser("mails", help="die neuesten Mails nach Tagen")
+    m.add_argument("--anzahl", type=int, default=20)
+    r = sub.add_parser("mail", help="eine Mail aus der Liste als Text")
+    r.add_argument("nummer", type=int)
     sub.add_parser("status", help="erreichbar? was darf dieses Terminal?")
     sub.add_parser("update", help="die neueste Version vom Spark holen (Prüfsumme geprüft)")
     args = p.parse_args(argv)
     {"koppeln": cmd_pair, "adresse-dazu": cmd_add, "frage": cmd_ask, "status": cmd_status, "update": cmd_update,
-     "kalender": cmd_calendar}.get(args.cmd, cmd_window)(args)
+     "kalender": cmd_calendar, "neu": cmd_new, "mails": cmd_mails, "mail": cmd_mail}.get(args.cmd, cmd_window)(args)
 
 
 if __name__ == "__main__":

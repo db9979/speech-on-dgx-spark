@@ -893,6 +893,9 @@ def features_list(request: Request):
     """What may be used here and why not: one list for Ich, the app and the search."""
     prof = profiles.current(request)
     guard.limit(request, "features", prof and prof["id"])
+    if prof:   # the app opened: its calendars and mail are read ahead in the background (vorwaermen.py)
+        import vorwaermen
+        vorwaermen.ask(prof["id"])
     return {"groups": [{"key": k, "name": [de, en]} for k, de, en in GROUPS],
             "features": state(prof["id"] if prof else None), "why": WHY, "stamp": stamp(prof["id"] if prof else None),
             "pages": app_pages(prof["id"] if prof else None)}

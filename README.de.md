@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.830** Kalender und E-Mail schneller und überall gleich: Spark-Kalender Stufe 1 (verschlüsselte Kopie jedes Kalenders, nur Änderungen vom Server), Vorwärmen beim Anmelden, E-Mail wie ein Mailprogramm (nach Tagen, Tasten J/K/R/E/U, Wischen, „Als Termin“), iPhone und uConsole auf dem Stand des Panels
 - **V01.0.829** Eingabefelder wachsen mit dem Text: Frage, Nachricht und jedes Textfeld so hoch wie der Text, Enter schickt ab, Umschalt+Enter neue Zeile, ⤢ Großansicht, Zähler; auch iPhone und Terminal
 - **V01.0.828** Code-Prüfung Tempo: Gespräche werden neben der Ereignisschleife gespeichert und kleiner geschrieben
 - **V01.0.827** Code-Prüfung Bedienung: Suche mit Alltagswörtern und „Frag Spark“, klare Mikrofon-Fehler, Zustand rot nur bei echten Fehlern, einheitliche Zähler, mehr Kontrast und größere Tippflächen, Starthilfe für jedes neue Profil, neue PIN in verdeckten Feldern
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.823** Kalender teilen gibt nur noch den gewählten Kalender frei, nie das ganze iCloud- oder Nextcloud-Konto (Code-Prüfung C2); das Teilen-Fenster fragt bei mehreren Kalendern, welcher
 - **V01.0.822** Rotes main bleibt nicht mehr unbemerkt: der Schnelltest vor dem Push lässt alle Tests laufen und bricht bei rotem main ab, GitHub öffnet ein Issue mit den roten Tests, Zustand → Update zeigt, seit wann es rot ist
 - **V01.0.821** Kalender neu: volle Breite, Termin als schwebende Karte (Handy: Blatt von unten) mit Ändern, +1 Tag, +1 Woche, Löschen; „Schnell eintragen“ in einer Zeile mit erkannten Chips; Termine mit der Maus verschieben, Rückgängig; Teilen-Fenster mit Personensuche; Briefing-Themen als Chips
-- **V01.0.820** Fix: Testlauf test_mail_zeit wieder grün (der Speicher für geöffnete Mails aus .819 gab dem Test die erste Mail zurück; der Test leert ihn jetzt wie ein geändertes Postfach)
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

@@ -98,6 +98,20 @@ extension SparkAPI {
                 "start": allday ? isoDay(start) : isoMinute(start), "end": allday ? isoDay(endDay) : isoMinute(end)]
     }
 
+    /// Schnell eintragen: one line as the form's fields (calendars.quick on the Spark, fixed rules, nothing saved)
+    func quickEvent(_ text: String) async throws -> [String: Any] {
+        try await object("GET", "api/profile/calendar/quick", query: ["text": String(text.prefix(200)), "tz": Self.zone])
+    }
+
+    /// the fields of an appointment as shown, moved by `days` (+1 Tag, +1 Woche; 0 = as it is, for „Rückgängig“)
+    static func moved(_ e: CalEvent, days: Int) -> [String: Any] {
+        let c = Calendar.current
+        let s = c.date(byAdding: .day, value: days, to: e.start) ?? e.start
+        let en = c.date(byAdding: .day, value: days, to: e.end) ?? e.end
+        return calFields(title: e.title, allday: e.allday, start: s,
+                         end: e.allday ? (c.date(byAdding: .day, value: -1, to: en) ?? s) : en, location: e.location)
+    }
+
     func addEvent(_ fields: [String: Any], calendar: String) async throws {
         var b = fields
         b["calendar"] = calendar
@@ -189,6 +203,9 @@ struct KalenderView: View {
     var body: some View {
         List {
             if let at = m.keptAt { StandNote(at: at, loading: m.loading).listRowBackground(Color.clear) }
+            if !m.v.add.isEmpty {
+                Section("Schnell eintragen") { QuickAdd(text: "") { Task { await m.load(true) } } }
+            }
             if !m.v.connected {
                 Text(SparkAPI.way(String(localized: "Noch kein Kalender verbunden. Im Panel unter Kalender → Einstellungen verbindest du iCloud, Nextcloud oder einen Abo-Link.")))
                     .foregroundStyle(.secondary)
@@ -259,15 +276,92 @@ struct CalForm: Identifiable {
     var id: String { event?.id ?? "neu" }
 }
 
+/// Schnell eintragen (Dominik 2026-10-19 „2a“, as on the page Kalender): one line; the Spark reads it with fixed
+/// rules and shows what it understood, only „Eintragen“ saves (into the first own calendar, like the page).
+struct QuickAdd: View {
+    @State var text: String
+    let saved: () -> Void
+    @State private var fields: [String: Any]?
+    @State private var busy = false
+    @State private var done = false
+    @State private var error: String?
+
+    var body: some View {
+        TextField("Morgen 15 Uhr Zahnarzt", text: $text)
+            .submitLabel(.done)
+            .onSubmit { Task { await read() } }
+            .onChange(of: text) { _, _ in fields = nil; done = false }
+            .task { if !text.isEmpty { await read() } }
+        if let f = fields {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(verbatim: f["title"] as? String ?? "").font(.headline)
+                Text(verbatim: Self.when(f)).font(.subheadline).foregroundStyle(.secondary)
+                if let l = f["location"] as? String, !l.isEmpty { Text(verbatim: l).font(.subheadline).foregroundStyle(.secondary) }
+            }
+            Button("Eintragen") { Task { await save(f) } }.disabled(busy)
+        }
+        if done { Text("Eingetragen.").foregroundStyle(.secondary) }
+        if let error { Text(SparkAPI.way(error)).foregroundStyle(.red) }
+    }
+
+    /// the start (and end) the Spark understood, in this iPhone's words
+    static func when(_ f: [String: Any]) -> String {
+        let iso = DateFormatter()
+        iso.locale = Locale(identifier: "en_US_POSIX")
+        let all = f["allday"] as? Bool ?? false
+        iso.dateFormat = all ? "yyyy-MM-dd" : "yyyy-MM-dd'T'HH:mm"
+        guard let s = iso.date(from: f["start"] as? String ?? "") else { return "" }
+        if all { return s.formatted(.dateTime.weekday(.wide).day().month(.wide)) }
+        let e = iso.date(from: f["end"] as? String ?? "") ?? s
+        return s.formatted(.dateTime.weekday(.wide).day().month(.wide).hour().minute()) + " – " + e.formatted(.dateTime.hour().minute())
+    }
+
+    private func read() async {
+        guard let api = SparkAPI.current, !text.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+        do {
+            fields = try await api.quickEvent(text)
+            error = nil
+        } catch {
+            fields = nil
+            self.error = error.localizedDescription
+        }
+    }
+
+    private func save(_ f: [String: Any]) async {
+        guard let api = SparkAPI.current else { return }
+        busy = true
+        defer { busy = false }
+        var b = f
+        b.removeValue(forKey: "found")
+        do {
+            try await api.addEvent(b, calendar: "")
+            fields = nil
+            text = ""
+            done = true
+            saved()
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
+}
+
 struct KalenderDetail: View {
     @Environment(\.dismiss) private var dismiss
-    let e: CalEvent
     let calendar: String
     let change: () -> Void
     let done: () -> Void
+    @State private var e: CalEvent
+    @State private var before: CalEvent?      // after +1 Tag/+1 Woche: the appointment as it was, for „Rückgängig“
     @State private var asking = false
     @State private var busy = false
     @State private var error: String?
+
+    init(e: CalEvent, calendar: String, change: @escaping () -> Void, done: @escaping () -> Void) {
+        _e = State(initialValue: e)
+        self.calendar = calendar
+        self.change = change
+        self.done = done
+    }
 
     var body: some View {
         NavigationStack {
@@ -286,6 +380,14 @@ struct KalenderDetail: View {
                 if e.edit {
                     Section {
                         Button("Ändern") { dismiss(); change() }
+                        HStack {
+                            Button("+1 Tag") { Task { await move(1) } }.buttonStyle(.bordered)
+                            Button("+1 Woche") { Task { await move(7) } }.buttonStyle(.bordered)
+                        }
+                        .disabled(busy)
+                        if before != nil {
+                            Button("Rückgängig") { Task { await undo() } }.disabled(busy)
+                        }
                         Button("Löschen", role: .destructive) { asking = true }.disabled(busy)
                     }
                 } else {
@@ -299,6 +401,40 @@ struct KalenderDetail: View {
             .confirmationDialog("Termin löschen?", isPresented: $asking, titleVisibility: .visible) {
                 Button("Löschen", role: .destructive) { Task { await delete() } }
             }
+        }
+    }
+
+    /// +1 Tag, +1 Woche (Dominik 2026-10-19 „1a“): the Spark changes exactly this appointment; „Rückgängig“ moves it back
+    private func move(_ days: Int) async {
+        guard let api = SparkAPI.current else { return }
+        busy = true
+        defer { busy = false }
+        let c = Calendar.current
+        do {
+            try await api.changeEvent(e, SparkAPI.moved(e, days: days))
+            before = e
+            e = CalEvent(start: c.date(byAdding: .day, value: days, to: e.start) ?? e.start,
+                         end: c.date(byAdding: .day, value: days, to: e.end) ?? e.end, allday: e.allday, title: e.title,
+                         location: e.location, cal: e.cal, edit: e.edit)
+            error = nil
+            done()
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
+
+    private func undo() async {
+        guard let api = SparkAPI.current, let b = before else { return }
+        busy = true
+        defer { busy = false }
+        do {
+            try await api.changeEvent(e, SparkAPI.moved(b, days: 0))
+            e = b
+            before = nil
+            error = nil
+            done()
+        } catch {
+            self.error = error.localizedDescription
         }
     }
 
@@ -419,6 +555,26 @@ final class PostModel: ObservableObject {
         loading = false
     }
 
+    /// the list by day, newest first (Dominik 2026-10-19 „4a“, as on the page)
+    var days: [(Date, [MailItem])] {
+        Dictionary(grouping: items) { Calendar.current.startOfDay(for: $0.date) }
+            .sorted { $0.key > $1.key }
+            .map { ($0.key, $0.value.sorted { $0.date > $1.date }) }
+    }
+
+    /// swipe (Dominik 2026-10-19 „5a“): archive, read or unread; the Spark decides what may happen (postfach.py)
+    func act(_ x: MailItem, _ action: String) async {
+        guard let api = SparkAPI.current else { return }
+        do {
+            _ = try await api.call("POST", "api/profile/mail/act", body: ["id": x.id, "action": action, "folder": "", "mid": ""])
+            if let kept = SparkAPI.keptMail(x.id) { Merken.drop(kept) }
+            error = nil
+            await load(true)
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
+
     private func show(_ d: [String: Any]) {
         let r = SparkAPI.inbox(d)
         items = r.items; boxes = r.boxes; connected = r.connected; errors = r.errors
@@ -439,12 +595,31 @@ struct PostView: View {
             } else if !m.loading && m.items.isEmpty {
                 Text("Keine Mail in den letzten 14 Tagen.").foregroundStyle(.secondary)
             }
-            ForEach(m.items) { x in
-                NavigationLink {
-                    MailView(item: x, box: m.boxes.count > 1 && m.boxes.indices.contains(x.box) ? m.boxes[x.box] : "") {
-                        Task { await m.load(true) }
+            ForEach(m.days, id: \.0) { day, xs in
+                Section {
+                    ForEach(xs) { x in
+                        NavigationLink {
+                            MailView(item: x, box: m.boxes.count > 1 && m.boxes.indices.contains(x.box) ? m.boxes[x.box] : "") {
+                                Task { await m.load(true) }
+                            }
+                        } label: { row(x) }
+                        .swipeActions(edge: .trailing) {
+                            if talk.allowed.areas.contains("mailmanage") {
+                                Button { Task { await m.act(x, "archive") } } label: { Label("Archivieren", systemImage: "archivebox") }.tint(.blue)
+                            }
+                        }
+                        .swipeActions(edge: .leading) {
+                            if talk.allowed.areas.contains("mailmanage") {
+                                Button { Task { await m.act(x, x.unread ? "read" : "unread") } } label: {
+                                    x.unread ? Label("Gelesen", systemImage: "envelope.open") : Label("Ungelesen", systemImage: "envelope.badge")
+                                }
+                                .tint(.orange)
+                            }
+                        }
                     }
-                } label: { row(x) }
+                } header: {
+                    Text(verbatim: Self.day(day))
+                }
             }
             if !m.errors.isEmpty { Text("Nicht erreicht: \(m.errors.joined(separator: ", "))").foregroundStyle(.red) }
             if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
@@ -464,9 +639,29 @@ struct PostView: View {
         .sheet(item: $writing) { d in MailWrite(draft: d) }
     }
 
+    /// Heute, Gestern, else the date
+    static func day(_ d: Date) -> String {
+        let c = Calendar.current
+        if c.isDateInToday(d) { return String(localized: "Heute") }
+        if c.isDateInYesterday(d) { return String(localized: "Gestern") }
+        return d.formatted(.dateTime.weekday(.wide).day().month(.wide))
+    }
+
+    /// two letters for the round mark: of the name, else of the address's part before the @
+    static func initials(_ from: String) -> String {
+        var n = name(from)
+        if n.contains("@") { n = String(n.split(separator: "@").first ?? "") }
+        let words = n.split(whereSeparator: { " .-_\"".contains($0) }).filter { $0.first?.isLetter == true }
+        let s = words.count > 1 ? String(words[0].prefix(1)) + String(words[1].prefix(1)) : String((words.first ?? "?").prefix(2))
+        return s.uppercased()
+    }
+
     private func row(_ x: MailItem) -> some View {
         HStack(alignment: .top, spacing: 8) {
-            Circle().fill(x.unread ? Color.accentColor : .clear).frame(width: 8, height: 8).padding(.top, 6)
+            Circle().fill(x.unread ? Color.accentColor : .clear).frame(width: 8, height: 8).padding(.top, 14)
+            Text(verbatim: Self.initials(x.from)).font(.caption.weight(.semibold)).foregroundStyle(.white)
+                .frame(width: 32, height: 32).background(Circle().fill(KalenderView.tint(x.from.unicodeScalars.reduce(0) { $0 &+ Int($1.value) })))
+                .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
                 HStack {
                     Text(verbatim: Self.name(x.from)).fontWeight(x.unread ? .semibold : .regular).lineLimit(1)
@@ -511,6 +706,7 @@ struct MailView: View {
     @State private var busy = false
     @State private var note: String?
     @State private var writing: MailDraft?
+    @State private var asEvent = false
 
     var body: some View {
         List {
@@ -537,10 +733,26 @@ struct MailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .task { await load() }
         .sheet(item: $writing) { d in MailWrite(draft: d) }
+        .sheet(isPresented: $asEvent) {
+            NavigationStack {
+                List { Section("Als Termin") { QuickAdd(text: Self.topic(m?.subject ?? "")) {} } }
+                    .navigationTitle("Termin aus der Mail")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Fertig") { asEvent = false } } }
+            }
+        }
+    }
+
+    /// the subject without Re:, AW:, Fwd: … as the line for Schnell eintragen
+    static func topic(_ s: String) -> String {
+        String(s.replacingOccurrences(of: #"^((re|aw|antw|fwd?|wg)\s*:\s*)+"#, with: "", options: [.regularExpression, .caseInsensitive]).prefix(200))
     }
 
     @ViewBuilder private var actions: some View {
         let a = talk.allowed.areas
+        if a.contains("calendar") {
+            Section { Button("Als Termin") { asEvent = true } }
+        }
         if a.contains("mailsend") || a.contains("mailmanage") {
             Section {
                 if a.contains("mailsend"), let m {

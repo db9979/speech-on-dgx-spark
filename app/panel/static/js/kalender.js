@@ -186,6 +186,7 @@ function kalDrag(g){g.querySelectorAll('.kev.move').forEach(b=>{const x=KAL.data
 // shows what it understood as chips; saved only with „Eintragen“ (or Enter), into the first own calendar
 let KAL_QT=0;
 function kalQuick(w){const q=w.querySelector('[data-q]');if(!q)return;const had=KAL.qfocus;q.value=KAL.q||'';kalQChips(w);
+  if(KAL.q&&!KAL.qi)kalQRead(w);   // brought along (E-Mail → „Als Termin“): read it at once
   if(had){q.focus();q.setSelectionRange(q.value.length,q.value.length)}
   q.onfocus=()=>{KAL.qfocus=true};q.onblur=()=>{KAL.qfocus=false};
   q.oninput=()=>{KAL.q=q.value;clearTimeout(KAL_QT);KAL_QT=setTimeout(()=>kalQRead(w),280)};

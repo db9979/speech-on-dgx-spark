@@ -264,6 +264,7 @@ Home Assistant, mail, calendar, tasks, weather, reMarkable, MCP and what the Spa
 | `app/panel/fuerdich.py` | Für dich: the Spark looks through the profile's own mailboxes and finds what needs the person or is good to know: rechnung a bill with an amount, with the da … |
 | `app/panel/hamelden.py` | Home Assistant tells the Spark. |
 | `app/panel/homeassistant.py` | Home Assistant per profile: each profile connects its own Home Assistant (address and long-lived access token); only that profile's requests can use it, gues … |
+| `app/panel/kalenderspiegel.py` | Spark-Kalender, Stufe 1: a copy of every CalDAV calendar on the Spark itself. |
 | `app/panel/mail.py` | Reading e-mail per profile over IMAP (read only; guests have none). |
 | `app/panel/mailstil.py` | Mailstil: the Spark learns from the profile's own sent mails how it writes (greeting, sign-off, du or Sie, length, tone, typical phrases) and writes mail dra … |
 | `app/panel/mcp.py` | Outside tools over MCP (Model Context Protocol): the admin adds a tool server (Paperless, Nextcloud, GitHub ...) by its address, and the panel offers single … |
@@ -281,6 +282,7 @@ Home Assistant, mail, calendar, tasks, weather, reMarkable, MCP and what the Spa
 | `app/panel/tasks.py` | Tasks and the shopping list per profile: "Setz Milch auf die Einkaufsliste", "Was steht auf meiner Liste?". |
 | `app/panel/tidy.py` | Tidying the inbox per profile: obvious advertising, newsletters and the like are moved into folders under a main folder ("Spark/" unless the profile names an … |
 | `app/panel/transit.py` | Bus und Bahn: departures from the profile's home stop and connections, from a transport.rest service (https://v6.db.transport.rest by default, the admin can … |
+| `app/panel/vorwaermen.py` | Vorwärmen: when a profile signs in, or the panel or its app opens (GET /api/whoami with a profile), its calendars (this and the next month), its mail listing … |
 | `app/panel/weather.py` | Weather straight from Open-Meteo (no key): the panel turns the numbers into fixed German sentences, the language model only reads them out. |
 | `app/panel/zustand_wz.py` | Zustand per Sprache: the tool spark_zustand. |
 
@@ -583,6 +585,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `state/iphone-pruef.json` | Review accesses for the iPhone app (hashes) | hashes only | yes |
 | `state/iphone-update.json` | Update from the iPhone app | – | no |
 | `state/join.json` | Invitations (hashes) | hashes only | yes |
+| `state/kalender-spiegel` | Spark calendar: copy of every CalDAV calendar (one file per calendar entry) | sealed | no |
 | `state/latency.json` | Waiting times | – | no |
 | `state/live-monitors.json` | Wall monitors | – | no |
 | `state/livecheck.json` | Live check | – | no |
@@ -831,7 +834,7 @@ flowchart TD
   s7 -->|no| s7x
   s8x(["Not now (503)"])
   s8 -->|yes| s8x
-  s9x(["terminal client: key scope „tui“, only 13 rules (chat, conversations, Today, calendar, jobs)"])
+  s9x(["terminal client: key scope „tui“, only 16 rules (chat, conversations, Today, calendar with quick add, reading mail, jobs)"])
   s9 -->|Terminal| s9x
   s10x(["Only in the own browser (403)"])
   s10 -->|yes| s10x
@@ -1450,7 +1453,7 @@ flowchart TD
 2. <a id="kn-zugang-s2"></a>**Locked?**: Locks are kept per address and per name (or the admin password). A name's lock does not hold for a browser that logged in to that name before (cookie speech_known, only its hash is kept). So a stranger guessing cannot lock the owner out.
 3. <a id="kn-zugang-s3"></a>**Password or PIN right?**: The check runs in its own thread. An unknown name costs the same work as a wrong PIN, the answer is the same. A wrong attempt waits a second, counts for the lock and, when it comes from outside, for „Emergency stop by itself“.
 4. <a id="kn-zugang-s4"></a>**Second step?**: If the profile (or the admin) has the second step on and the browser is not trusted, the code from the app or a passkey comes next. A wrong code counts like a wrong PIN.
-5. <a id="kn-zugang-s5"></a>**Set the cookie**: The address's counter is cleared; strangers' wrong attempts for the name keep counting. The profile cookie is signed and stands in the list of signed-in browsers; it holds at most 90 days without use and is renewed while used. The admin cookie is signed with the password, a key of this Spark only and the second step. When the second step was part of it (code, passkey or a trusted browser) the session carries its mark: only then does a profile's admin role count, without an admin sign-in of its own.
+5. <a id="kn-zugang-s5"></a>**Set the cookie**: The address's counter is cleared; strangers' wrong attempts for the name keep counting. The profile cookie is signed and stands in the list of signed-in browsers; it holds at most 90 days without use and is renewed while used. The admin cookie is signed with the password, a key of this Spark only and the second step. When the second step was part of it (code, passkey or a trusted browser) the session carries its mark: only then does a profile's admin role count, without an admin sign-in of its own. Then the panel reads the profile's calendars and mail ahead in the background (vorwaermen.py, at most every 600 seconds), so its pages open at once.
 6. <a id="kn-zugang-s6"></a>**Find the profile**: First what only the panel itself sets (Telegram, „Ask Spark“ over MCP), then the device key (only its hash is stored), then the cookie: signature, age, session still in the list and not logged out.
 7. <a id="kn-zugang-s7"></a>**Key free for this path?**: A key with a scope (app, watch, room, Home Assistant, writing help, companion, terminal) only reaches its own paths and only while the admin and the profile have the function on. If it is off right now or the profile has its own kill switch on, the panel answers 503 instead of 401, so the app keeps its pairing.
 8. <a id="kn-zugang-s8"></a>**No profile and guest access off?**: Without a profile only the admin passes (cookie or HTTP Basic, whose wrong attempts count like on the login page), or anybody when the admin opened the assistant without password. Guests then only get question and answer.
@@ -1510,7 +1513,7 @@ Applies at: [step 6](#kn-zugang-s6), [step 7](#kn-zugang-s7)
 - `app/panel/guard.py` `check`: lock before checking ([step 2](#kn-zugang-s2))
 - `app/panel/guard.py` `failed`: count a wrong attempt, lock ([step 3](#kn-zugang-s3))
 - `app/panel/guard.py` `succeeded`: clear the counter, remember the browser ([step 5](#kn-zugang-s5))
-- `app/panel/account.py` `profile_login`: a profile's login ([step 3](#kn-zugang-s3))
+- `app/panel/account.py` `profile_login`: a profile's login ([step 3](#kn-zugang-s3), [step 5](#kn-zugang-s5))
 - `app/panel/account.py` `second_step`: code or passkey ([step 4](#kn-zugang-s4))
 - `app/panel/core.py` `is_main_admin`: admin by cookie or HTTP Basic ([step 6](#kn-zugang-s6))
 - `app/panel/profiles.py` `current`: the profile behind a request ([step 6](#kn-zugang-s6))
@@ -3104,7 +3107,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Seal**: vault.seal turns the value into „enc1:“ and a Fernet token (encrypted and protected against change). A value already sealed stays as it is.
 5. <a id="kn-state-s5"></a>**Write atomically**: common.write_json writes into a fresh temporary file next to it, never through a link, gives it the rights of the old file (a new one is readable for the service only) and then swaps it in one step. A crash in the middle leaves the old file whole.
 6. <a id="kn-state-s6"></a>**Read**: A sealed value is opened with the key. If the key does not fit (backup from another Spark), an empty value comes back and the account has to be entered again. Older unsealed values are read and sealed the next time they are saved.
-7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 34), otherwise the line gives its reason (dateien.STATE_LOCAL, 81). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
+7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 34), otherwise the line gives its reason (dateien.STATE_LOCAL, 82). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
 8. <a id="kn-state-s8"></a>**Move backup?**: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup.
 9. <a id="kn-state-s9"></a>**Fine when restoring?**: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays.
 10. <a id="kn-state-s10"></a>**Put in place with a way back**: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back.
@@ -3115,7 +3118,7 @@ flowchart TD
 #### Numbers (from the code)
 
 - **34** files in every backup ([step 7](#kn-state-s7))
-- **81** files and folders that stay out with a reason ([step 7](#kn-state-s7))
+- **82** files and folders that stay out with a reason ([step 7](#kn-state-s7))
 - **8 MB** largest file when restoring ([step 9](#kn-state-s9))
 - **12** characters the move password has at least ([step 8](#kn-state-s8))
 

@@ -758,7 +758,7 @@ const GUIDES=[
  off:[['Aus: nur der Hinweis des Dienst-Wächters.','Off: only the service watch\'s note.']],
  fix:[['Im Log stehen die Zeilen unter Zustand → Logs, Bereich „telefon“.','The log lines are under Status → Logs, area "telefon".']]},
 {id:'mail',grp:'post',sw:'chat.mail',me:'mailbox',ng:1,ro:1,t:['E-Mail lesen','Reading e-mail'],
- what:[['Der Assistent liest deinen Posteingang der letzten 30 Tage vor. Er sendet, löscht und markiert nichts.','The assistant reads your inbox of the last 30 days. It sends, deletes and marks nothing.']],
+ what:[['Der Assistent liest deinen Posteingang der letzten 30 Tage vor. Er sendet, löscht und markiert nichts. Auf der Seite E-Mail stehen die Mails nach Tagen, rechts liest du eine; J und K blättern, „Als Termin“ bringt den Betreff in den Kalender.','The assistant reads your inbox of the last 30 days. It sends, deletes and marks nothing. On the E-mail page the mails are listed by day, you read one on the right; J and K browse, "As appointment" takes the subject to the calendar.']],
  need:[['Bis zu 4 Postfächer: iCloud, Gmail, GMX, web.de oder IMAP. Bei iCloud und Gmail ein app-spezifisches Passwort.','Up to 4 mailboxes: iCloud, Gmail, GMX, web.de or IMAP. For iCloud and Gmail an app-specific password.']],
  setup:[['Admin: Funktionen → E-Mail lesen an.','Admin: Features → Reading e-mail on.'],['Profil: E-Mail → Einstellungen → „Postfach hinzufügen“, „Prüfen und hinzufügen“.','Profile: E-mail → Settings → "Add mailbox", "Check and add".']],
  say:[['„Hab ich neue Mails?“','"Do I have new mail?"'],['„Was schreibt Anna?“','"What does Anna write?"'],['„Lies mir die Mail von der Telekom vor.“','"Read me the mail from Telekom."']],

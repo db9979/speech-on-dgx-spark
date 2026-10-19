@@ -130,6 +130,20 @@ class Terminal(unittest.TestCase):
         helpers.set_config(calendar=True)
         self.assertEqual(app.get("/api/profile/calendar/view", params={"start": "2026-03-09"}, headers=h).json()["connected"], False)
         self.assertIn(app.post("/api/profile/calendar", json={}, headers=h).status_code, (401, 403, 405))
+        # spark-tui neu: Schnell eintragen reads the line, saving goes through the page's own rules (no calendar: 400)
+        r = app.get("/api/profile/calendar/quick", params={"text": "Morgen 15 Uhr Zahnarzt", "tz": "Europe/Berlin"}, headers=h)
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(r.json()["title"], "Zahnarzt")
+        self.assertNotIn(app.post("/api/profile/calendar/event", json=dict(r.json(), tz="Europe/Berlin"), headers=h).status_code,
+                         (401, 403))
+        self.assertIn(app.put("/api/profile/calendar/event", json={}, headers=h).status_code, (401, 403))   # changing stays on the page
+        # spark-tui mails / mail N: only with "E-Mail lesen" released, read only
+        helpers.set_config(mail=False)
+        self.assertIn(app.get("/api/profile/mail/inbox", headers=h).status_code, (401, 403, 503))
+        helpers.set_config(mail=True)
+        self.assertEqual(app.get("/api/profile/mail/inbox", headers=h).status_code, 200)
+        self.assertIn(app.post("/api/profile/mail/act", json={}, headers=h).status_code, (401, 403))
+        helpers.set_config(mail=False)
         r = app.post("/api/chat", json={"messages": [{"role": "user", "content": "Hallo"}], "speak": False}, headers=h)
         self.assertEqual(r.status_code, 200, r.text)
         self.assertTrue(any(e.get("type") == "done" for e in helpers.events(r)))
@@ -216,6 +230,24 @@ class Program(unittest.TestCase):
         self.assertEqual(sum(1 for x in lines if x[:2] in p.DAYS), 7)
         self.assertIn("Kalender → Einstellungen", p.calendar_lines({"connected": False}, start)[0])
         self.assertEqual(p.week_start(0, time.mktime(datetime.datetime(2026, 3, 12, 9).timetuple())), start)
+
+    def test_quick_and_mail_as_text(self):
+        """spark-tui neu and mails: what the Spark understood and the mail list as printable lines, numbered by day."""
+        import datetime
+        p = program()
+        lines = p.quick_lines({"title": "Zahnarzt\x1b[2J", "start": "2026-03-10T15:00", "end": "2026-03-10T16:00",
+                               "allday": False, "location": "Praxis"})
+        self.assertEqual(lines, ["  Zahnarzt[2J", "  2026-03-10 15:00 – 16:00", "  Praxis"])
+        at = time.mktime(datetime.datetime(2026, 3, 10, 9, 5).timetuple())
+        rows = p.mail_lines([{"from": "Bank <info@bank.example>", "subject": "Konto\x07 neu", "date": at, "unread": True},
+                             {"from": "x@y.example", "subject": "Alt", "date": at - 86400, "unread": False}])
+        self.assertEqual(rows[0], "Di 10.03.")
+        self.assertIn("  1 * 09:05  Bank", rows[1])
+        self.assertIn("Konto neu", rows[1])
+        self.assertNotIn("\x07", rows[1])
+        self.assertEqual(rows[2], "Mo 09.03.")
+        self.assertTrue(rows[3].startswith("  2   "))
+        self.assertEqual(p.mail_lines([]), ["Keine Mail in den letzten 14 Tagen."])
 
     def test_line(self):
         p = program()

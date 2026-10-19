@@ -15,13 +15,23 @@ const postWhen=s=>{const d=new Date(s*1000),now=new Date();
     :d.toLocaleDateString(kalLoc(),{day:'numeric',month:'short'})};
 // the sender's name without the address, for the list
 const postName=f=>{const m=/^(.*?)\s*<[^>]*>$/.exec(f||'');return (m&&m[1])||f||''};
+// the mail-client look (Dominik 2026-10-19 „4a“): the list by day, the sender's initials in a colour of their own
+const postDay=s=>{const d=new Date(s*1000),n=new Date(),y=new Date(n.getFullYear(),n.getMonth(),n.getDate()-1);
+  return d.toDateString()===n.toDateString()?t('Heute','Today'):d.toDateString()===y.toDateString()?t('Gestern','Yesterday')
+    :d.toLocaleDateString(kalLoc(),{weekday:'long',day:'numeric',month:'long'})};
+const postInit=f=>{const w=postName(f).split('@')[0].replace(/["'„“]/g,'').split(/[\s._-]+/).filter(Boolean);return ((w[0]||'?')[0]+(w.length>1?w[1][0]:'')).toUpperCase()};
+const postKc=f=>{let h=0;for(const c of postAddr(f).toLowerCase())h=(h*31+c.charCodeAt(0))>>>0;return kalKc(h)};
+// what Für dich found in a mail, as a small chip in the list (its own cached reading, only when switched on)
+const postFuer=x=>typeof FUER!=='undefined'&&FUER&&FUER.items?FUER.items.find(i=>i.subject&&i.subject===x.subject&&postName(x.from).includes(i.who||'\u0000')):null;
+async function postFuerLoad(){if(typeof FUER_ON==='undefined'||!FUER_ON||FUER)return;
+  try{const d=await (await api('/api/profile/fuerdich')).json();if(!d.loading&&!FUER){FUER=d;postDraw()}}catch(e){}}
 // again: mailboxes still loading in the background (mail.inbox) are asked for once more after 3 s, at most 5 times
 async function postLoad(again){if(!PROFILE||!MAIL_ON)return;const seq=++POST.seq;POST.busy=!again;POST.tries=again?(POST.tries||0)+1:0;postDraw();
   try{const d=await (await api('/api/profile/mail/inbox?'+new URLSearchParams({q:POST.q,unread:POST.unread?'true':'false'}))).json();
     if(seq!==POST.seq)return;if(!(d.loading&&POST.data&&again))POST.data=d;POST.err='';
     if(d.loading&&POST.tries<5)setTimeout(()=>{if(seq===POST.seq&&$('postview'))postLoad(true)},3000)}
   catch(e){if(seq!==POST.seq)return;POST.err=e.message||t('Nicht erreicht','Not reached')}
-  POST.busy=false;postDraw()}
+  POST.busy=false;postDraw();postFuerLoad()}
 async function postRead(id){POST.sel=id;POST.msg=null;const seq=++POST.mseq;postDraw();
   try{const m=await (await api('/api/profile/mail/message?'+new URLSearchParams({id}))).json();if(seq===POST.mseq)POST.msg=m}
   catch(e){if(seq===POST.mseq)POST.msg={err:e.message||t('Nicht erreicht','Not reached')}}
@@ -57,11 +67,13 @@ function postPaint(w){const d=POST.data;w.classList.toggle('ld-sel',!!POST.sel||
     (d&&d.loading?`<div class="note">${esc(t('Die Postfächer laden noch …','The mailboxes are still loading …'))}</div>`:'');
   const many=d&&d.boxes&&d.boxes.length>1,items=(d&&d.items)||[],list=w.querySelector('.ld-list');
   list.classList.toggle('busy',POST.busy);
-  list.innerHTML=items.map(x=>`<div class="ld-row${POST.sel===x.id?' on':''}${x.unread?' unread':''}" role="button" tabindex="0" data-id="${esc(x.id)}">`+
-      `<span class="postdot" aria-label="${esc(x.unread?t('ungelesen','unread'):'')}"></span><span class="ld-mid"><b>${esc(postName(x.from))}</b><small>${esc(x.subject||t('(ohne Betreff)','(no subject)'))}</small></span>`+
-      `<span class="ld-right">${many?`<span class="ld-badge off">${esc(d.boxes[x.box]||'')}</span>`:''}<span class="ld-when">${esc(postWhen(x.date))}</span></span></div>`).join('')
+  let day='';
+  list.innerHTML=items.map(x=>{const g=postDay(x.date),head=g!==day?`<div class="ld-grp"><span>${esc(g)}</span></div>`:'';day=g;const fd=postFuer(x);
+    return head+`<div class="ld-row${POST.sel===x.id?' on':''}${x.unread?' unread':''}" role="button" tabindex="0" data-id="${esc(x.id)}">`+
+      `<span class="postdot" aria-label="${esc(x.unread?t('ungelesen','unread'):'')}"></span><span class="postav ${postKc(x.from)}" aria-hidden="true">${esc(postInit(x.from))}</span><span class="ld-mid"><b>${esc(postName(x.from))}</b><small>${esc(x.subject||t('(ohne Betreff)','(no subject)'))}</small>${fd?`<span class="postfd${fd.urgent?' hot':''}">${esc(FUER_KIND[fd.kind]||fd.kind)}</span>`:''}</span>`+
+      `<span class="ld-right">${many?`<span class="ld-badge off">${esc(d.boxes[x.box]||'')}</span>`:''}<span class="ld-when">${esc(postWhen(x.date))}</span></span></div>`}).join('')
     ||(POST.busy?'':`<div class="ld-empty mut">${esc(POST.q||POST.unread?t('Keine passende Mail in den letzten 14 Tagen.','No matching mail in the last 14 days.'):t('Keine Mail in den letzten 14 Tagen.','No mail in the last 14 days.'))}</div>`);
-  list.querySelectorAll('[data-id]').forEach(r=>{r.onclick=()=>postRead(r.dataset.id);r.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();postRead(r.dataset.id)}}});
+  list.querySelectorAll('[data-id]').forEach(r=>{r.onclick=()=>{if(POST.swiped){POST.swiped=false;return}postRead(r.dataset.id)};r.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();postRead(r.dataset.id)}};postSwipe(r)});
   postUndo(w);if(POST.sent)w.querySelector('.postundo').insertAdjacentHTML('beforeend',`<div class="note">${esc(POST.sent)}</div>`);
   if(POST.write)postWriteBox(w);else postDetail(w)}
 // one message: plain text, attachments only named (to Dokumente on request through the assistant)
@@ -73,11 +85,12 @@ function postDetail(w){const box=w.querySelector('.postdet'),m=POST.msg;if(!box)
     `<dl class="ld-facts"><dt>${esc(t('Von','From'))}</dt><dd>${esc(m.from)}</dd>${m.to?`<dt>${esc(t('An','To'))}</dt><dd>${esc(m.to)}</dd>`:''}<dt>${esc(t('Wann','When'))}</dt><dd>${esc(new Date(m.date*1000).toLocaleString(kalLoc(),{weekday:'short',day:'numeric',month:'long',hour:'2-digit',minute:'2-digit'}))}</dd>`+
     (m.files&&m.files.length?`<dt>${esc(t('Anhänge','Attachments'))}</dt><dd>${esc(m.files.join(', '))}</dd>`:'')+`</dl>`+
     `<div class="posttext">${esc(m.text||t('(kein Text)','(no text)'))}</div>`+
-    `<div class="fh">${esc(t('Nur als Text, Bilder und Links von außen sind aus. Antworten geht mit dem Assistenten: „Antworte Anna …“.','Text only, pictures and links from outside stay off. Reply with the assistant: "Reply to Anna …".'))}</div>`+
-    (SEND_ON&&!m.err?`<div class="row postord"><button class="b p" type="button" data-w="reply">${esc(t('Antworten','Reply'))}</button></div>`:'')+
+    `<div class="fh">${esc(t('Nur als Text, Bilder und Links von außen sind aus.','Text only, pictures and links from outside stay off.')+' '+(SEND_ON?'':t('Antworten geht mit dem Assistenten: „Antworte Anna …“.','Reply with the assistant: "Reply to Anna …".'))+(NARROW()?'':' '+t('Tasten: J und K blättern','Keys: J and K browse')+(SEND_ON?t(', R antwortet',', R replies'):'')+(ORD_ON?t(', E archiviert, U gelesen oder ungelesen',', E archives, U read or unread'):'')+'.'))}</div>`+
+    (!m.err&&(SEND_ON||(typeof CAL_ON!=='undefined'&&CAL_ON))?`<div class="row postwr">${SEND_ON?`<button class="b p" type="button" data-w="reply">${esc(t('Antworten','Reply'))}</button>`:''}${typeof CAL_ON!=='undefined'&&CAL_ON?`<button class="b" type="button" data-w="cal">${esc(t('Als Termin','As appointment'))}</button>`:''}</div>`:'')+
     (ORD_ON&&!m.err?postOrder():'');
   box.querySelector('[data-close]').onclick=()=>{POST.sel=null;POST.msg=null;postDraw()};
   const rp=box.querySelector('[data-w=reply]');if(rp)rp.onclick=()=>postWrite(m);
+  const ac=box.querySelector('[data-w=cal]');if(ac)ac.onclick=()=>postAsEvent(m);
   if(ORD_ON&&m&&!m.err)postOrderBind(box)}
 // the buttons below a message: never delete, every move can go back right after
 function postOrder(){const x=((POST.data&&POST.data.items)||[]).find(i=>i.id===POST.sel),f=POST.folders[POST.sel.split(':')[0]];
@@ -88,12 +101,12 @@ async function postOrderBind(box){const acct=POST.sel.split(':')[0],sel=box.quer
   if(!POST.folders[acct]){const {r,d}=await apiTry('/api/profile/mail/folders?'+new URLSearchParams({account:acct}));if(r.ok){POST.folders[acct]=d;if($('postview'))postDetail($('postview'))}}
   box.querySelectorAll('button[data-o]').forEach(b=>b.onclick=()=>postAct(b.dataset.o,'',msg));
   if(sel)sel.onchange=()=>{if(sel.value)postAct('move',sel.value,msg)}}
-async function postAct(action,folder,msg,mid){const id=POST.sel;msg.className='postordmsg fh';msg.textContent=t('Einen Moment …','One moment …');
+async function postAct(action,folder,msg,mid,which){const id=which||POST.sel;if(msg){msg.className='postordmsg fh';msg.textContent=t('Einen Moment …','One moment …')}
   const {r,d}=await apiTry('/api/profile/mail/act',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,action,folder,mid:mid||''})});
-  if(!r.ok){msg.className='postordmsg err';msg.textContent=errSay(r.status,d.detail,'');return}
+  if(!r.ok){if(msg){msg.className='postordmsg err';msg.textContent=errSay(r.status,d.detail,'')}else{POST.err=errSay(r.status,d.detail,'');postDraw()}return}
   if(action==='read'||action==='unread'){const x=POST.data.items.find(i=>i.id===id);if(x)x.unread=action==='unread';postDraw();return}
   // archived or moved: off the list, with „Rückgängig“ for a while
-  POST.done={id,acct:id.split(':')[0],mid:d.mid,folder:d.folder};POST.sel=null;POST.msg=null;
+  POST.done={id,acct:id.split(':')[0],mid:d.mid,folder:d.folder};if(POST.sel===id){POST.sel=null;POST.msg=null}
   POST.data.items=POST.data.items.filter(i=>i.id!==id);postDraw()}
 function postUndo(w){const u=POST.done,box=w.querySelector('.postundo');if(!box)return;
   if(!u){box.innerHTML='';return}
@@ -111,7 +124,7 @@ async function postWrite(m){POST.sent='';POST.prev=null;
 // a reply opens below the mail it answers, like a mail client (Dominik 2026-10-19); a new mail fills the pane
 function postWriteBox(w){let box=w.querySelector('.postdet');const f=POST.write,p=POST.prev;if(!box)return;box.hidden=false;
   const inline=!!(f.reply&&POST.sel===f.reply&&POST.msg&&!POST.msg.err);
-  if(inline){postDetail(w);const rp=box.querySelector('[data-w=reply]');if(rp)rp.closest('.row').remove();
+  if(inline){postDetail(w);const rp=box.querySelector('[data-w=reply]');if(rp)rp.remove();
     box.querySelector('.ld-back').onclick=()=>{POST.write=null;POST.prev=null;POST.sel=null;POST.msg=null;postDraw()};
     const h=document.createElement('div');h.className='postreply';box.appendChild(h);box=h}
   const back=inline?`<button type="button" class="b postdrop" data-close="1">✕ ${esc(t('Verwerfen','Discard'))}</button>`
@@ -144,3 +157,27 @@ async function postSend(b,msg){b.disabled=true;msg.className='postordmsg fh';msg
   if(!r.ok){b.disabled=false;msg.className='postordmsg err';msg.textContent=errSay(r.status,d.detail,'');if(r.status===409){POST.prev=null;setTimeout(postDraw,1500)}return}
   POST.sent=t('Gesendet an ','Sent to ')+d.sent+(d.sent===1?t(' Empfänger',' recipient'):t(' Empfänger',' recipients'))+(d.refused?t(', abgelehnt: ',', refused: ')+d.refused:'')+'.';
   POST.write=null;POST.prev=null;postDraw()}
+// „Als Termin“: the page Kalender with the subject in „Schnell eintragen“; the panel reads it there by its fixed
+// rules, nothing is saved before „Eintragen“
+function postAsEvent(m){KAL.q=(m.subject||'').replace(/^(re|aw|antw|fwd?|wg)\s*:\s*/i,'').slice(0,200);KAL.qi=null;KAL.qfocus=true;
+  icTabSet('cal','show');goSec('cal')}
+// keys on the page (Dominik 2026-10-19 „5a“): J/K next and previous, R reply, E archive, U read or unread, Esc closes
+document.addEventListener('keydown',e=>{if(!$('post')||!$('post').classList.contains('on')||!$('postview'))return;
+  if(/^(INPUT|TEXTAREA|SELECT)$/.test((e.target&&e.target.tagName)||'')||e.metaKey||e.ctrlKey||e.altKey)return;
+  const items=(POST.data&&POST.data.items)||[],i=items.findIndex(x=>x.id===POST.sel),k=e.key.toLowerCase();
+  if(k==='j'||k==='k'){const n=items[k==='j'?Math.min(i+1,items.length-1):Math.max(i-1,0)];if(n){e.preventDefault();postRead(n.id)}return}
+  if(k==='escape'&&POST.sel&&!POST.write){POST.sel=null;POST.msg=null;postDraw();return}
+  if(!POST.sel||POST.write)return;
+  if(k==='r'&&SEND_ON&&POST.msg&&!POST.msg.err){e.preventDefault();postWrite(POST.msg);return}
+  if(!ORD_ON)return;
+  if(k==='e'){e.preventDefault();postAct('archive','',null)}
+  else if(k==='u'){const x=items[i];if(x){e.preventDefault();postAct(x.unread?'read':'unread','',null)}}});
+// a phone: swipe a row left to archive, right for read or unread (only with Mails ordnen)
+function postSwipe(r){if(!ORD_ON)return;let x0=0,y0=0,dx=0,on=false;
+  r.addEventListener('touchstart',e=>{const p=e.touches[0];x0=p.clientX;y0=p.clientY;dx=0;on=true},{passive:true});
+  r.addEventListener('touchmove',e=>{if(!on)return;const p=e.touches[0];dx=p.clientX-x0;
+    if(Math.abs(p.clientY-y0)>Math.abs(dx)){on=false;r.style.transform='';return}
+    r.style.transform=`translateX(${Math.max(-120,Math.min(120,dx))}px)`;r.classList.toggle('swl',dx<-60);r.classList.toggle('swr',dx>60)},{passive:true});
+  r.addEventListener('touchend',()=>{if(!on)return;on=false;r.style.transform='';r.classList.remove('swl','swr');
+    if(Math.abs(dx)<80)return;POST.swiped=true;setTimeout(()=>{POST.swiped=false},400);const x=((POST.data&&POST.data.items)||[]).find(i=>i.id===r.dataset.id);if(!x)return;
+    postAct(dx<0?'archive':x.unread?'read':'unread','',null,'',x.id)})}

@@ -585,6 +585,14 @@
 },
 {
 "lang": "de",
+"src": "apis-und-einbinden",
+"file": "APIs und Einbinden",
+"head": "Terminal-Client (spark-tui)",
+"title": "Terminal-Client (spark-tui)",
+"text": "Kalender und E-Mail ohne Fenster (V01.0.830, Dominik 2026-10-19 „a“): spark-tui neu 'Morgen 15 Uhr Zahnarzt' zeigt, was der Spark aus der Zeile liest (Titel, Tag, Uhrzeit, Ort; feste Regeln wie „Schnell eintragen“ auf der Seite Kalender), fragt „Eintragen? [j/N]“ und speichert erst dann in deinen ersten eigenen Kalender (--ja ohne Rückfrage). spark-tui mails listet die neuesten Mails nach Tagen (Nummer, * ungelesen, Uhrzeit, Absender, Betreff), spark-tui mail 3 zeigt die dritte als reinen Text; sie bleibt ungelesen. Ändern, Ordnen und Senden bleiben im Panel und in der App. Texte aus Kalender und Mail zeigt das Terminal nur mit druckbaren Zeichen, nie Steuerzeichen."
+},
+{
+"lang": "de",
 "src": "app-datenschutz",
 "file": "Datenschutzerklärung der iPhone-App „Spark“",
 "head": "Datenschutzerklärung der iPhone-App „Spark“",
@@ -1501,7 +1509,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "n Browser; es gilt höchstens 90 Tage ohne Nutzung und wird erneuert, solange es benutzt wird. Das Admin-Cookie ist mit Passwort, einem eigenen Schlüssel dieses Spark und dem zweiten Schritt signiert. War der zweite Schritt dabei (Code, Passkey oder vertrauter Browser), trägt die Sitzung sein Zeichen: nur dann zählt eine Admin-Rolle des Profils, ohne eigene Admin-Anmeldung. 6. Profil bestimmen: Zuerst, was nur das Panel selbst setzt (Telegram, „Spark fragen“ über MCP), dann der Geräteschlüssel (nur sein Hash ist gespeichert), dann das Cookie: Signatur, Alter, Sitzung noch in der Liste und nicht abgemeldet. 7. Schlüssel für diesen Weg frei?: Ein Schlüssel mit Bereich (App, Uhr, Raum, Home Assistant, Schreibhilfe, Begleiter, Terminal) reicht nur für seine eigenen Pfade und nur, solange Admin und Profil die Funktion anhaben. Ist sie gerade aus oder hat das Profil seinen eigenen Notaus an, antwortet das Panel mit 503 statt 401, damit die App ihre Kopplung behält. 8. Ohne Profil und Gastzugang aus?: Ohne Profil kommt nur durch, wer der Admin ist (Cookie oder HTTP Basic, dessen Fehlversuche wie auf der Anmeldeseite zählen), oder wenn der Admin den Assistenten ohne Passwort freigegeben hat"
+"text": "n Browser; es gilt höchstens 90 Tage ohne Nutzung und wird erneuert, solange es benutzt wird. Das Admin-Cookie ist mit Passwort, einem eigenen Schlüssel dieses Spark und dem zweiten Schritt signiert. War der zweite Schritt dabei (Code, Passkey oder vertrauter Browser), trägt die Sitzung sein Zeichen: nur dann zählt eine Admin-Rolle des Profils, ohne eigene Admin-Anmeldung. Danach liest das Panel Kalender und Mails des Profils im Hintergrund vorab (vorwaermen.py, höchstens alle 600 Sekunden), damit seine Seiten sofort aufgehen. 6. Profil bestimmen: Zuerst, was nur das Panel selbst setzt (Telegram, „Spark fragen“ über MCP), dann der Geräteschlüssel (nur sein Hash ist gespeichert), dann das Cookie: Signatur, Alter, Sitzung noch in der Liste und nicht abgemeldet. 7. Schlüssel für diesen Weg frei?: Ein Schlüssel mit Bereich (App, Uhr, Raum, Home Assistant, Schreibhilfe, Begleiter, Terminal) reicht nur für seine eigenen Pfade und nur, solange Admin und Profil die Funktion anhaben. Ist sie gerade aus oder hat das Profil seinen eigenen Notaus an, antwortet das Panel mit 503 statt 401, damit die App ihre Kopplung behält. 8. Ohne Profil und Gastzugang aus?: Ohne Profil kommt nur durch, wer d"
 },
 {
 "lang": "de",
@@ -1509,7 +1517,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": ". Gäste bekommen dann nur Frage und Antwort. 9. Zu viele Anfragen?: Je Profil, sonst je Adresse, zählt das Panel die Anfragen der letzten Minute: im Chat 120 für ein Profil oder den Admin, 30 für einen Gast. 10. Gast, alle Plätze belegt?: Gäste teilen sich 4 gleichzeitige Plätze im Chat. Ein Platz, den niemand freigibt, gilt nach 10 Minuten wieder als frei. 11. Freigabe je Funktion: Für jede Funktion fragt das Panel in fester Reihenfolge: Schalter des Admins (und der Funktion, auf der sie aufbaut), Gast (bekommt nie eine), vom Admin für das Profil gesperrt, eigener Wunsch des Profils, zweiter Schritt nötig. Gelesen wird bei jeder Anfrage neu, eine Änderung gilt also sofort. 12. Weiter zur Vorbereitung: Die Anfrage geht mit ihrem Profil (oder als Gast) an chat_turn.prepare. Die Sprache bekommt Vorrang vor Hintergrundarbeit, und die anderen offenen Seiten des Profils sehen „antwortet gerade“."
+"text": "er Admin ist (Cookie oder HTTP Basic, dessen Fehlversuche wie auf der Anmeldeseite zählen), oder wenn der Admin den Assistenten ohne Passwort freigegeben hat. Gäste bekommen dann nur Frage und Antwort. 9. Zu viele Anfragen?: Je Profil, sonst je Adresse, zählt das Panel die Anfragen der letzten Minute: im Chat 120 für ein Profil oder den Admin, 30 für einen Gast. 10. Gast, alle Plätze belegt?: Gäste teilen sich 4 gleichzeitige Plätze im Chat. Ein Platz, den niemand freigibt, gilt nach 10 Minuten wieder als frei. 11. Freigabe je Funktion: Für jede Funktion fragt das Panel in fester Reihenfolge: Schalter des Admins (und der Funktion, auf der sie aufbaut), Gast (bekommt nie eine), vom Admin für das Profil gesperrt, eigener Wunsch des Profils, zweiter Schritt nötig. Gelesen wird bei jeder Anfrage neu, eine Änderung gilt also sofort. 12. Weiter zur Vorbereitung: Die Anfrage geht mit ihrem Profil (oder als Gast) an chat_turn.prepare. Die Sprache bekommt Vorrang vor Hintergrundarbeit, und die anderen offenen Seiten des Profils sehen „antwortet gerade“."
 },
 {
 "lang": "de",
@@ -1565,7 +1573,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/guard.py check: Sperre vor dem Prüfen (Schritt 2) - app/panel/guard.py failed: Fehlversuch zählen, sperren (Schritt 3) - app/panel/guard.py succeeded: Zähler löschen, Browser merken (Schritt 5) - app/panel/account.py profile_login: Anmeldung eines Profils (Schritt 3) - app/panel/account.py second_step: Code oder Passkey (Schritt 4) - app/panel/core.py is_main_admin: Admin per Cookie oder HTTP Basic (Schritt 6) - app/panel/profiles.py current: das Profil hinter einer Anfrage (Schritt 6) - app/panel/profiles.py _cookie_user: Cookie prüfen (Schritt 6) - app/panel/core.py assistant: Profil, Gastzugang oder Admin (Schritt 8) - app/panel/guard.py limit: Rate-Limit je Minute (Schritt 9) - app/panel/guard.py Slot: Plätze für Gäste (Schritt 10) - app/panel/features.py reason: warum eine Funktion nicht geht (Schritt 11)"
+"text": "- app/panel/guard.py check: Sperre vor dem Prüfen (Schritt 2) - app/panel/guard.py failed: Fehlversuch zählen, sperren (Schritt 3) - app/panel/guard.py succeeded: Zähler löschen, Browser merken (Schritt 5) - app/panel/account.py profile_login: Anmeldung eines Profils (Schritt 3, Schritt 5) - app/panel/account.py second_step: Code oder Passkey (Schritt 4) - app/panel/core.py is_main_admin: Admin per Cookie oder HTTP Basic (Schritt 6) - app/panel/profiles.py current: das Profil hinter einer Anfrage (Schritt 6) - app/panel/profiles.py _cookie_user: Cookie prüfen (Schritt 6) - app/panel/core.py assistant: Profil, Gastzugang oder Admin (Schritt 8) - app/panel/guard.py limit: Rate-Limit je Minute (Schritt 9) - app/panel/guard.py Slot: Plätze für Gäste (Schritt 10) - app/panel/features.py reason: warum eine Funktion nicht geht (Schritt 11)"
 },
 {
 "lang": "de",
@@ -2989,7 +2997,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 34), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 81). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, v"
+"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 34), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 82). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, v"
 },
 {
 "lang": "de",
@@ -3013,7 +3021,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 34 Dateien in jeder Sicherung (Schritt 7) - 81 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
+"text": "- 34 Dateien in jeder Sicherung (Schritt 7) - 82 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
 },
 {
 "lang": "de",
@@ -4702,6 +4710,38 @@
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
 "text": "ine Mails auf der Seite oder beim Assistenten gelesen hat (Aufräumen und „Für dich“ zählen nicht). Gelesen/ungelesen, Archivieren und Verschieben ändern die gespeicherte Liste sofort, ohne neuen Abruf; ein Abruf, der vorher begann, speichert nichts mehr. Kein Schalter. „Antworten“ öffnet das Antwortfeld direkt unter der Mail wie in einem Mailprogramm; die Mail bleibt darüber stehen, Vorschau und Senden wie bisher. Der Reiter „Für dich“ liest alle Postfächer gleichzeitig, zeigt sofort die letzte Lesung (bis 24 Stunden alt) und liest eine ältere als 10 Minuten dahinter neu; die erste Lesung wartet höchstens 8 Sekunden, danach „Lese deine Mails …“ und die Seite fragt von selbst nach (Log fuerdich: laedt noch). Behoben: Nach einem Besuch im Reiter „Einstellungen“ blieben die Seiten E-Mail und Kalender beim nächsten Öffnen leer, weil das Neuzeichnen die Einstellungen aus der Seite nahm. Logs: mail: inbox loading | n mailboxes, mail: kept fresh | n profiles, m messages ahead, mail: refresh failed (Fehler)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "E-Mail wie ein Mailprogramm (V01.0.830, Dominik 2026-10-19 „Email 4a 5a“)",
+"text": "E-Mail wie ein Mailprogramm (V01.0.830, Dominik 2026-10-19 „Email 4a 5a“): Die Seite E-Mail nutzt die ganze Breite: links die Liste, nach Tagen gruppiert (Heute, Gestern, Wochentag mit Datum), jede Zeile mit den Initialen des Absenders in einer eigenen Farbe; rechts ein breites Lesefeld, auf dem Handy wie bisher die Mail statt der Liste. Hat „Für dich“ in einer Mail etwas gefunden (Rechnung, Vertrag, Verdacht …), steht das als kleiner Chip in der Zeile (aus dessen zwischengespeichertem Stand, nur wenn „Für dich aus Mails“ an ist). Tasten am Computer: J und K blättern durch die Mails, Esc schließt, R antwortet (mit „Mails senden“), E archiviert und U schaltet gelesen/ungelesen (mit „Mails ordnen“, wie die Knöpfe, mit „Rückgängig“). Auf dem Handy wischt man eine Zeile nach links zum Archivieren, nach rechts für gelesen/ungelesen (mit „Mails ordnen“). „Als Termin“ unter einer Mail öffnet den Kalender mit dem Betreff in „Schnell eintragen“; das Panel liest ihn dort mit seinen festen Regeln, eingetragen wird erst mit „Eintragen“. Kein neuer Schalter, kein neuer Endpunkt."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Vorwärmen (V01.0.830, Dominik 2026-10-19 „1a 3a 4a 5a 7a 9“)",
+"text": "Vorwärmen (V01.0.830, Dominik 2026-10-19 „1a 3a 4a 5a 7a 9“): Meldet sich ein Profil an oder öffnet es das Panel oder die App, liest der Spark im Hintergrund vorab, was seine Seiten gleich brauchen: die Termine dieses und des nächsten Monats aus allen Kalendern (auch geteilten), die Liste der E-Mail mit den neuesten Mails, „Für dich“ und das Adressbuch. Die Seiten Kalender, E-Mail und Heute zeigen dann sofort, was da ist; Heute nimmt den Kalender aus demselben Speicher wie die Seite Kalender. Danach halten die bekannten Auffrischungen alle 5 Minuten alles frisch. Regeln: nur Funktionen, die das Profil gerade nutzen darf, nie für Gäste; ein Profil höchstens alle 10 Minuten; höchstens zwei Profile gleichzeitig; jeder Schritt wartet, solange jemand spricht (Stimme zuerst). Alles bleibt im Arbeitsspeicher, nichts Neues auf der Platte. Zustand → Live zeigt bei Kalender und Mail nur, wie viele Profile vorgewärmt sind und wie lange das her ist; das Log (Bereich Vorrang) schreibt eine Zeile „vorwaermen: done“ mit Zahlen."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Spark-Kalender, Stufe 1: eine Kopie auf dem Spark (V01.0.830, Dominik 2026-10-19 „1a 2a“): Jeder CalDAV-Kalender (iCloud, Nextcloud, …) hat jetzt eine Kopie auf dem Spark. Beim ersten Mal holt der Spark ihn ganz, danach fragt er den Server nur noch, was sich geändert hat (WebDAV-Abgleich mit Sync-Token; ein Server ohne diesen Abgleich wird über die Kennzeichen seiner Termine verglichen, einer, der beides nicht kann, wie bisher monatsweise gelesen) und holt nur diese Termine. Die Seite Kalender, Heute, der Assistent und das Briefing lesen aus der Kopie in Millisekunden statt 1 bis 8 Sekunden. Für Profile, die in den letzten 24 Stunden aktiv waren, gleicht der Spark alle 2 Minuten im Hintergrund ab; nach einer eigenen Änderung (Eintragen, Verschieben, Löschen) beim nächsten Blick sofort. Die Kopie liegt nur verschlüsselt auf der Platte (kalender-spiegel/, Schlüssel wie bei den Passwörtern), höchstens 5000 Termine je Kalender, und wird mit dem Kalender oder dem Profil gelöscht. Abo-Links (.ics, webcal://) bleiben wie bisher. Zustand → Live zeigt beim Kalender, wie viele Kalender als Kopie da sind, wie viele Termine und wann zuletzt abgeglichen wurde; das Log schreibt „calendar: mirror"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": " full“ oder „changed“ mit Zahlen."
 },
 {
 "lang": "de",
@@ -6851,6 +6891,14 @@
 "lang": "de",
 "src": "iphone-app",
 "file": "iPhone-App „Spark“",
+"head": "Meine Sachen",
+"title": "Kalender und E-Mail wie im Panel",
+"text": "Kalender und E-Mail wie im Panel (V01.0.830, Dominik 2026-10-19 „a“): Der Kalender hat oben „Schnell eintragen“: eine Zeile wie „Morgen 15 Uhr Zahnarzt bei Dr. Weiß“, der Spark liest sie mit festen Regeln und zeigt Titel, Tag, Uhrzeit und Ort; erst „Eintragen“ speichert, in deinen ersten eigenen Kalender. Ein Termin hat neben „Ändern“ und „Löschen“ jetzt „+1 Tag“ und „+1 Woche“, danach „Rückgängig“, solange das Blatt offen ist. E-Mail zeigt die Liste nach Tagen (Heute, Gestern, …) mit dem Kürzel des Absenders; mit „Mails ordnen“ wischt du nach links zum Archivieren und nach rechts für Gelesen oder Ungelesen. Unter einer Mail legt „Als Termin“ mit dem Betreff eine Zeile für Schnell eintragen an. Teilen von Kalendern bleibt aus Sicherheitsgründen im Browser (Kalender → Einstellungen), wie die Verbindung der Konten."
+},
+{
+"lang": "de",
+"src": "iphone-app",
+"file": "iPhone-App „Spark“",
 "head": "Nachrichten an andere Profile",
 "title": "Nachrichten an andere Profile",
 "text": "Geschrieben wird in Chats (Knopf oben rechts, wenn Chats an sind). Seit V01.0.488 gibt es in der App kein eigenes Nachrichten-Fenster und keine Mitteilung mit Antwortfeld mehr; neue Chat-Nachrichten kommen als „💬 Name“ und öffnen die App. Mit Siri: „Nachricht mit Spark“. Siri fragt nach Empfänger und Text und vor dem Senden noch einmal nach; die Nachricht landet im Chat mit dieser Person, „alle“ in der Gruppe „Alle“. Der Name muss zu einem Profil passen, das deine Nachrichten annimmt (Name oder Rufname). Passen mehrere, fragt Siri „Wen meinst du?“ mit höchstens 4 Namen; bei einem unbekannten Namen nennt sie höchstens 3 ähnliche. Die Heute-Karte „Chats“ zählt ungelesene Chat-Nachrichten. Wer dir schreiben darf, stellst du im Browser ein (Ich → Gespräch → Chats). Braucht den nächsten TestFlight-Build."
@@ -8953,6 +9001,14 @@
 },
 {
 "lang": "en",
+"src": "apis-and-integration",
+"file": "APIs and integration",
+"head": "Terminal client (spark-tui)",
+"title": "Terminal client (spark-tui)",
+"text": "Calendar and e-mail without the window (V01.0.830, Dominik 2026-10-19 \"a\"): spark-tui neu 'Morgen 15 Uhr Zahnarzt' shows what the Spark reads from the line (title, day, time, place; fixed rules like \"Quick add\" on the Calendar page), asks \"Eintragen? [j/N]\" and only then saves into your first own calendar (--ja without asking). spark-tui mails lists the newest mails by day (number, * unread, time, sender, subject), spark-tui mail 3 shows the third as plain text; it stays unread. Changing, ordering and sending stay in the panel and the app. Text from calendars and mail is shown with printable characters only, never control characters."
+},
+{
+"lang": "en",
 "src": "app-privacy",
 "file": "Privacy policy of the iPhone app \"Spark\"",
 "head": "Privacy policy of the iPhone app \"Spark\"",
@@ -9861,7 +9917,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "the second step. When the second step was part of it (code, passkey or a trusted browser) the session carries its mark: only then does a profile's admin role count, without an admin sign-in of its own. 6. Find the profile: First what only the panel itself sets (Telegram, „Ask Spark“ over MCP), then the device key (only its hash is stored), then the cookie: signature, age, session still in the list and not logged out. 7. Key free for this path?: A key with a scope (app, watch, room, Home Assistant, writing help, companion, terminal) only reaches its own paths and only while the admin and the profile have the function on. If it is off right now or the profile has its own kill switch on, the panel answers 503 instead of 401, so the app keeps its pairing. 8. No profile and guest access off?: Without a profile only the admin passes (cookie or HTTP Basic, whose wrong attempts count like on the login page), or anybody when the admin opened the assistant without password. Guests then only get question and answer. 9. Too many requests?: Per profile, else per address, the panel counts the requests of the last minute: in the chat 120 for a profile or the admin, 30 for a guest. 10. Guest, all "
+"text": "the second step. When the second step was part of it (code, passkey or a trusted browser) the session carries its mark: only then does a profile's admin role count, without an admin sign-in of its own. Then the panel reads the profile's calendars and mail ahead in the background (vorwaermen.py, at most every 600 seconds), so its pages open at once. 6. Find the profile: First what only the panel itself sets (Telegram, „Ask Spark“ over MCP), then the device key (only its hash is stored), then the cookie: signature, age, session still in the list and not logged out. 7. Key free for this path?: A key with a scope (app, watch, room, Home Assistant, writing help, companion, terminal) only reaches its own paths and only while the admin and the profile have the function on. If it is off right now or the profile has its own kill switch on, the panel answers 503 instead of 401, so the app keeps its pairing. 8. No profile and guest access off?: Without a profile only the admin passes (cookie or HTTP Basic, whose wrong attempts count like on the login page), or anybody when the admin opened the assistant without password. Guests then only get question and answer. 9. Too many requests?: Per pro"
 },
 {
 "lang": "en",
@@ -9869,7 +9925,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "places taken?: Guests share 4 places at once in the chat. A place nobody frees counts as free again after 10 minutes. 11. Release per function: For every function the panel asks in a fixed order: the admin's switch (and the one of the function it builds on), guest (never gets one), blocked by the admin for the profile, the profile's own wish, second step needed. It is read anew with every request, so a change holds at once. 12. On to preparing: The request goes on with its profile (or as a guest) to chat_turn.prepare. Speech gets priority over background work, and the profile's other open pages see „answering“."
+"text": "file, else per address, the panel counts the requests of the last minute: in the chat 120 for a profile or the admin, 30 for a guest. 10. Guest, all places taken?: Guests share 4 places at once in the chat. A place nobody frees counts as free again after 10 minutes. 11. Release per function: For every function the panel asks in a fixed order: the admin's switch (and the one of the function it builds on), guest (never gets one), blocked by the admin for the profile, the profile's own wish, second step needed. It is read anew with every request, so a change holds at once. 12. On to preparing: The request goes on with its profile (or as a guest) to chat_turn.prepare. Speech gets priority over background work, and the profile's other open pages see „answering“."
 },
 {
 "lang": "en",
@@ -9925,7 +9981,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/guard.py check: lock before checking (step 2) - app/panel/guard.py failed: count a wrong attempt, lock (step 3) - app/panel/guard.py succeeded: clear the counter, remember the browser (step 5) - app/panel/account.py profile_login: a profile's login (step 3) - app/panel/account.py second_step: code or passkey (step 4) - app/panel/core.py is_main_admin: admin by cookie or HTTP Basic (step 6) - app/panel/profiles.py current: the profile behind a request (step 6) - app/panel/profiles.py _cookie_user: check a cookie (step 6) - app/panel/core.py assistant: profile, guest access or admin (step 8) - app/panel/guard.py limit: rate limit per minute (step 9) - app/panel/guard.py Slot: places for guests (step 10) - app/panel/features.py reason: why a function is not available (step 11)"
+"text": "- app/panel/guard.py check: lock before checking (step 2) - app/panel/guard.py failed: count a wrong attempt, lock (step 3) - app/panel/guard.py succeeded: clear the counter, remember the browser (step 5) - app/panel/account.py profile_login: a profile's login (step 3, step 5) - app/panel/account.py second_step: code or passkey (step 4) - app/panel/core.py is_main_admin: admin by cookie or HTTP Basic (step 6) - app/panel/profiles.py current: the profile behind a request (step 6) - app/panel/profiles.py _cookie_user: check a cookie (step 6) - app/panel/core.py assistant: profile, guest access or admin (step 8) - app/panel/guard.py limit: rate limit per minute (step 9) - app/panel/guard.py Slot: places for guests (step 10) - app/panel/features.py reason: why a function is not available (step 11)"
 },
 {
 "lang": "en",
@@ -11309,7 +11365,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 34), otherwise the line gives its reason (dateien.STATE_LOCAL, 81). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe) read it again."
+"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 34), otherwise the line gives its reason (dateien.STATE_LOCAL, 82). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe) read it again."
 },
 {
 "lang": "en",
@@ -11325,7 +11381,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 34 files in every backup (step 7) - 81 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
+"text": "- 34 files in every backup (step 7) - 82 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
 },
 {
 "lang": "en",
@@ -12958,6 +13014,30 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "t). Read/unread, archive and move change the kept list at once without a new fetch; a fetch begun before stores nothing. No switch. \"Reply\" opens the reply form right below the mail, as in a mail program; the mail stays above it, preview and send as before. The tab \"For you\" reads all mailboxes at the same time, shows the last reading at once (up to 24 hours old) and reads one older than 10 minutes anew behind it; the first reading waits at most 8 seconds, then \"Reading your mails …\" and the page asks again by itself (log fuerdich: laedt noch). Fixed: after a visit to the tab \"Settings\" the pages E-mail and Calendar stayed empty on the next opening, because drawing them anew took the settings out of the page. Logs: mail: inbox loading | n mailboxes, mail: kept fresh | n profiles, m messages ahead, mail: refresh failed (error)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "E-mail like a mail client (V01.0.830, Dominik 2026-10-19 \"Email 4a 5a\")",
+"text": "E-mail like a mail client (V01.0.830, Dominik 2026-10-19 \"Email 4a 5a\"): the E-mail page uses the whole width: the list on the left, grouped by day (today, yesterday, weekday with date), each row with the sender's initials in a colour of their own; a wide reading pane on the right, on a phone the mail instead of the list as before. When \"For you\" found something in a mail (bill, contract, suspicious …), a small chip says so in the row (from its cached reading, only with \"For you from mails\" on). Keys on a computer: J and K go through the mails, Esc closes, R replies (with \"Send mail\"), E archives and U toggles read/unread (with \"Order mail\", like the buttons, with \"Undo\"). On a phone a row is swiped left to archive, right for read/unread (with \"Order mail\"). \"As appointment\" below a mail opens the calendar with the subject in \"Quick add\"; the panel reads it there by its fixed rules, it is added only with \"Add\". No new switch, no new endpoint."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Warming up (V01.0.830, Dominik 2026-10-19 \"1a 3a 4a 5a 7a 9\")",
+"text": "Warming up (V01.0.830, Dominik 2026-10-19 \"1a 3a 4a 5a 7a 9\"): when a profile signs in or opens the panel or the app, the Spark reads ahead in the background what its pages will need: this and the next month from all its calendars (shared ones too), the e-mail listing with the newest messages, \"For you\" and the address book. The pages Calendar, E-mail and Today then show at once what is there; Today takes the calendar from the same memory as the page Calendar. From then on the known refreshes every 5 minutes keep it fresh. Rules: only functions the profile may use now, never for guests; a profile at most every 10 minutes; at most two profiles at the same time; every step waits while somebody speaks (voice first). Everything stays in memory, nothing new on the disk. Status → Live shows for Calendar and Mail only how many profiles are warm and how long ago; the log (area Priority) writes one line \"vorwaermen: done\" with numbers."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "Spark calendar, stage 1: a copy on the Spark (V01.0.830, Dominik 2026-10-19 \"1a 2a\"): every CalDAV calendar (iCloud, Nextcloud, …) now has a copy on the Spark. The first time the Spark fetches it whole, after that it asks the server only what changed (WebDAV sync with a sync token; a server without it is compared by the tags of its appointments, one that can do neither is read month by month as before) and fetches just those. The Calendar page, Today, the assistant and the briefing read from the copy in milliseconds instead of 1 to 8 seconds. For profiles active in the last 24 hours the Spark compares every 2 minutes in the background; after an own change (adding, moving, deleting) right at the next look. The copy is on the disk only encrypted (kalender-spiegel/, the same key as for the passwords), at most 5000 appointments per calendar, and is deleted with the calendar or the profile. Subscription links (.ics, webcal://) stay as before. Status → Live shows for Calendar how many calendars have a copy, how many appointments and when they were last compared; the log writes \"calendar: mirror full\" or \"changed\" with numbers."
 },
 {
 "lang": "en",
@@ -14958,6 +15038,14 @@
 "head": "My things",
 "title": "Calendar and e-mail",
 "text": "Calendar and e-mail (since V01.0.815, plan kalender-mail/plan.md stage 4): at the top of My things there are \"Kalender\" and \"E-Mail\" when the admin released the function for you (Calendar, Reading e-mail; without the panel switch). The calendar shows the appointments of four weeks from this week by day, in the colour of their calendar; \"+\" adds an appointment, a tap shows it with \"Change\" and \"Delete\" (only in own CalDAV calendars, never for repeating or shared ones; the Spark checks the rules like on the page). E-mail shows the inbox of all mailboxes (the 50 newest), a tap the mail as plain text (it stays unread); with \"Order mail\" below it read/unread, archive and move, with \"Send mail\" \"Reply\" and \"New mail\" at the top, both with the Spark's preview sheet, sent only with \"Send\" there. With \"Apps keep the last state\" the appointments of the four weeks, the mail list (sender, subject, time) and up to 20 mails opened last with their text stay on the iPhone; when the function is off the app deletes them on the next opening, on unpairing and for another profile at once."
+},
+{
+"lang": "en",
+"src": "iphone-app",
+"file": "iPhone app \"Spark\"",
+"head": "My things",
+"title": "Calendar and e-mail as in the panel",
+"text": "Calendar and e-mail as in the panel (V01.0.830, Dominik 2026-10-19 \"a\"): the calendar has \"Quick add\" on top: one line like \"Tomorrow 3 pm dentist at Dr. White\", the Spark reads it with fixed rules and shows title, day, time and place; only \"Add\" saves, into your first own calendar. An appointment now has \"+1 day\" and \"+1 week\" next to \"Change\" and \"Delete\", then \"Undo\" while the sheet is open. E-mail shows the list by day (Today, Yesterday, …) with the sender's initials; with \"Order mail\" you swipe left to archive and right for read or unread. Below a mail, \"As appointment\" makes a line for Quick add from the subject. Sharing calendars stays in the browser for safety (Calendar → Settings), like connecting accounts."
 },
 {
 "lang": "en",

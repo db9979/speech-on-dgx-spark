@@ -6,6 +6,7 @@ import base64
 import json
 import os
 import queue
+import re
 import shutil
 import socket
 import sys
@@ -738,6 +739,9 @@ class FakeMailbox:
 
 CAL_EVENTS = {}   # path -> iCal text the fake CalDAV server holds
 CAL_SECOND = [False]   # True: the account holds a second calendar "Arbeit" at /dav/arbeit/, each REPORT only its own
+CAL_NOSYNC = [False]   # True: no sync-collection (kalenderspiegel compares etags); 2: no etags either (read by month)
+CAL_SEEN = []          # (method, kind) of every request: what the Spark asked (kind: sync, multiget, etags, query, find)
+_SNAP = {}             # sync-token -> {path: etag} as it was then
 
 
 def fake_caldav():
@@ -776,10 +780,42 @@ def fake_caldav():
                 return Response(status_code=412)
             CAL_EVENTS.pop(path)
             return Response(status_code=204)
+        mine = {k: v for k, v in CAL_EVENTS.items() if not CAL_SECOND[0] or k.startswith(path)}
+        resp = lambda k, inner: f"<d:response><d:href>{k}</d:href><d:propstat><d:prop>{inner}</d:prop></d:propstat></d:response>"
+        if req.method == "PROPFIND" and "getetag" in body and path != "/dav/":
+            CAL_SEEN.append(("PROPFIND", "etags"))
+            if CAL_NOSYNC[0] == 2:   # neither changes nor etags: an old server
+                return Response(status_code=404)
+            return Response(ms + "".join(resp(k, f"<d:getetag>{tag(v)}</d:getetag>") for k, v in mine.items())
+                            + "</d:multistatus>", status_code=207, media_type="application/xml")
         if req.method == "PROPFIND":
+            CAL_SEEN.append(("PROPFIND", "find"))
             return Response(ms + cal + (second if CAL_SECOND[0] else "") + "</d:multistatus>", status_code=207,
                             media_type="application/xml")
+        if req.method == "REPORT" and "sync-collection" in body:
+            CAL_SEEN.append(("REPORT", "sync"))
+            if CAL_NOSYNC[0]:
+                return Response(status_code=403)
+            old = re.search(r"<d:sync-token>(.*?)</d:sync-token>", body).group(1)
+            now = {k: tag(v) for k, v in mine.items()}
+            token = "t" + hashlib.sha1(repr(sorted(now.items())).encode()).hexdigest()[:10]
+            if old and old not in _SNAP:
+                return Response(status_code=403)   # a token this server does not know: the client starts again
+            before = _SNAP.get(old, {})
+            _SNAP[token] = now
+            out = "".join(resp(k, f"<d:getetag>{t}</d:getetag>") for k, t in now.items() if before.get(k) != t)
+            out += "".join(f"<d:response><d:href>{k}</d:href><d:status>HTTP/1.1 404 Not Found</d:status></d:response>"
+                           for k in before if k not in now)
+            return Response(ms + out + f"<d:sync-token>{token}</d:sync-token></d:multistatus>", status_code=207,
+                            media_type="application/xml")
+        if req.method == "REPORT" and "calendar-multiget" in body:
+            CAL_SEEN.append(("REPORT", "multiget"))
+            want = re.findall(r"<d:href>(.*?)</d:href>", body)
+            return Response(ms + "".join(resp(k, f"<d:getetag>{tag(mine[k])}</d:getetag><c:calendar-data>{mine[k]}</c:calendar-data>")
+                                         for k in want if k in mine) + "</d:multistatus>", status_code=207,
+                            media_type="application/xml")
         if req.method == "REPORT":
+            CAL_SEEN.append(("REPORT", "query"))
             items = "".join(f"<d:response><d:href>{k}</d:href><d:propstat><d:prop><d:getetag>{tag(v)}</d:getetag>"
                             f"<c:calendar-data>{v}</c:calendar-data></d:prop></d:propstat></d:response>"
                             for k, v in CAL_EVENTS.items() if not CAL_SECOND[0] or k.startswith(path))

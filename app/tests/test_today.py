@@ -31,7 +31,8 @@ class Today(unittest.TestCase):
         self.assertNotIn("calendar", d["cards"])
         self.assertNotIn("setup", d)                   # what is still to set up is "Los geht's" (onboard.py)
         helpers.set_config(calendar=True)
-        today._cal.clear()
+        import calendars
+        calendars._cache.clear()
         d = c.get("/api/profile/today").json()
         self.assertEqual(d["cards"]["calendar"], {"connected": False, "next": []})
         helpers.set_config(calendar=False)
@@ -42,10 +43,9 @@ class Today(unittest.TestCase):
         import calendars
         real, budget = calendars.events, today.CAL_BUDGET
 
-        async def slow(*a):
+        async def slow(*a, **kw):
             await asyncio.sleep(5)
         calendars.events, today.CAL_BUDGET = slow, 0.2
-        today._cal.clear()
         helpers.set_config(calendar=True)
         try:
             t0 = time.monotonic()

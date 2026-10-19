@@ -20,34 +20,25 @@ from core import assistant, own_profile
 
 router = APIRouter()
 CAL_BUDGET = 3.0          # seconds for the calendars; a slow server shows "nicht erreicht", the page never waits longer
-CAL_CACHE = 300           # the appointments of a profile are read again after 5 minutes at the earliest
 MAX_EVENTS = 3
-_cal = {}                 # uid -> (time, zone name, result)
 
 
 async def _events(uid, zone):
+    """The next appointments from the calendars' own cache (calendars.py, kept warm from sign-in on, vorwaermen.py):
+    an older block at once while it is fetched anew behind (Dominik 2026-10-19 „4a“)."""
     import calendars
-    hit = _cal.get(uid)
-    now = time.time()
-    if hit and now - hit[0] < CAL_CACHE and hit[1] == str(zone):
-        return hit[2]
     start = datetime.datetime.now(zone)
     end = (start + datetime.timedelta(days=1)).replace(hour=23, minute=59)   # today and tomorrow
     try:
-        r = await asyncio.wait_for(calendars.events(uid, start, end, zone), CAL_BUDGET)
+        r = await asyncio.wait_for(calendars.events(uid, start, end, zone, stale=True), CAL_BUDGET)
     except (asyncio.TimeoutError, OSError, ValueError):
         return {"error": True, "next": []}
     if r is None:
-        out = {"connected": False, "next": []}
-    else:
-        evs, errors = r
-        out = {"connected": True, "error": bool(errors), "next": [
-            {"start": int(x["start"].timestamp()), "allday": bool(x["allday"]), "title": str(x["title"])[:80]}
-            for x in evs[:MAX_EVENTS]]}
-    if len(_cal) > 500:
-        _cal.clear()
-    _cal[uid] = (now, str(zone), out)
-    return out
+        return {"connected": False, "next": []}
+    evs, errors = r
+    return {"connected": True, "error": bool(errors), "next": [
+        {"start": int(x["start"].timestamp()), "allday": bool(x["allday"]), "title": str(x["title"])[:80]}
+        for x in evs[:MAX_EVENTS]]}
 
 
 @router.get("/api/profile/today", dependencies=[Depends(assistant)])

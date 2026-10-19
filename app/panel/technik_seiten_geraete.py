@@ -201,7 +201,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Apps
     "apps": {
-        "stand": "3878d34798",
+        "stand": "d6952549f2",
         "bezug": {
             "android.TOKEN_SECONDS": ["s3"], "android.TOKEN_USES": ["s3"], "iphone.profile_pair": ["s1", "s2"],
             "kopplung.Codes.new": ["s3"], "kopplung.Codes.take": ["s4"], "iphone.app_pair": ["s4", "s5"],
@@ -313,8 +313,8 @@ SEITEN = {
                "device „android“ only while „Android: Spark as assistant“ is released (android.assist_gate). Whether the app may keep the pages' last state, hello says with "
                "„keep“ (appmerken.keep); on no it deletes it."),
               ("info", ("Terminal", "Terminal"),
-               ("Terminal-Client: Schlüssel-Bereich „tui“, nur {terminal.TUI_RULES|anzahl} Regeln (Chat, Gespräche, Heute, Kalender, Aufträge)",
-                "terminal client: key scope „tui“, only {terminal.TUI_RULES|anzahl} rules (chat, conversations, Today, calendar, jobs)"))),
+               ("Terminal-Client: Schlüssel-Bereich „tui“, nur {terminal.TUI_RULES|anzahl} Regeln (Chat, Gespräche, Heute, Kalender mit Schnell eintragen, Mails lesen, Aufträge)",
+                "terminal client: key scope „tui“, only {terminal.TUI_RULES|anzahl} rules (chat, conversations, Today, calendar with quick add, reading mail, jobs)"))),
             S("s10", "frage", ("Konto, Geräte oder Sicherheit?", "Account, devices or security?"),
               ("nur im eigenen Browser", "only in the own browser"),
               ("Endpunkte, die Verbindungen, Geräte oder Sicherheit des Profils ändern, nehmen nur die eigene "

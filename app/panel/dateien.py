@@ -185,6 +185,9 @@ DATEIEN = [
     state("verbrauch.json", "Verbrauch je Modell, Aufgabe und Profil (nur Zahlen)", "Usage per model, task and profile (numbers only)", lokal="Statistik des Verbrauchszählers (Tage und Monate, nur Zahlen)"),
     state("verbrauch-stand.json", "Stand der Kontingente (Tag, Woche, Monat; nur Zahlen)", "Running totals of the quotas (day, week, month; numbers only)", lokal="Zählt bis zum Ende des Zeitraums, Löschen der eigenen Zahlen setzt es nicht zurück"),
     state("livecheck.json", "Echtprüfung", "Live check", lokal="letzte Echtprüfung"),
+    state("kalender-spiegel", "Spark-Kalender: Kopie jedes CalDAV-Kalenders (je Kalender-Eintrag eine Datei)",
+          "Spark calendar: copy of every CalDAV calendar (one file per calendar entry)",
+          lokal="Kopie der Kalender, holt sie nach einem Umzug neu vom Server", schutz=("versiegelt", "sealed")),  # kalenderspiegel.py
     state("rundlauf.json", "Probeläufe des Rundlauf-Wächters (Zeiten in ms, feste Wörter)", "Test runs of the round-trip check (times in ms, fixed words)",
           lokal="Messwerte dieses Geräts, ein neuer Rechner misst neu"),
     state("waerter.key", "Schlüssel für den Wärter des Modell-Rechners", "Key for the model computer's Wärter",

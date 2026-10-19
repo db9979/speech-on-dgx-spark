@@ -26,6 +26,7 @@ from update import update_lock  # noqa: E402
 import account  # noqa: E402
 import calendars  # noqa: E402
 import mail  # noqa: E402
+import vorwaermen  # noqa: E402
 import coadmin  # noqa: E402
 import guard  # noqa: E402
 import homeassistant  # noqa: E402
@@ -518,6 +519,12 @@ async def mail_fresh():
 async def calendar_fresh():
     """Kalender (calendars.keep_fresh): the appointments of whoever read them lately are fetched anew in the background."""
     spawn(calendars.keep_fresh_loop())
+
+
+@app.on_event("startup")
+async def warm_start():
+    """Vorwärmen (vorwaermen.py): a profile that signs in or opens the panel or its app is read ahead from here."""
+    vorwaermen.start(asyncio.get_running_loop())
 
 
 @app.on_event("startup")

@@ -65,6 +65,9 @@ TUI_RULES = (
     (("DELETE",), r"/api/profile/convos/[\w\-]{1,40}"),
     (("GET",), r"/api/profile/today"),
     (("GET",), r"/api/profile/calendar/view"),   # the page Kalender as text (spark-tui kalender, F5)
+    (("GET",), r"/api/profile/calendar/quick"),  # spark-tui neu: Schnell eintragen reads the line (saves nothing)
+    (("POST",), r"/api/profile/calendar/event"),  # … and saves it after the yes (the Spark's rules as on the page)
+    (("GET",), r"/api/profile/mail/(?:inbox|message)"),   # spark-tui mails / mail N: read only, plain text
     (("GET",), r"/api/profile/saetze"),   # /tipps: what this profile can say (saetze.py)
     (("GET",), r"/api/features"),
     (("GET",), r"/api/tui/hello"),
@@ -87,7 +90,8 @@ def reaches(request):
     path, method = request.scope.get("path") or "", request.method
     if not any(method in m and p.fullmatch(path) for m, p in _RULES):
         return None
-    return "agent" if AGENT.fullmatch(path) else "panel"
+    # the agent's pages and saving a Schnell-eintragen appointment want the browser login: the key counts like it there
+    return "agent" if AGENT.fullmatch(path) or (method == "POST" and path == "/api/profile/calendar/event") else "panel"
 
 
 profiles.TUI_GATE[0] = lambda uid: features.allowed("terminal", uid)

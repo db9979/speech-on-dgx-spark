@@ -1757,6 +1757,22 @@ main:has(>#cal.on){max-width:none}   /* the calendar takes the whole width (Domi
 .caltopchips .chip button{border:0;background:none;color:inherit;font:inherit;cursor:pointer;padding:0 4px;border-radius:99px}
 .caltopchips .caltopnew{flex:1 1 180px;min-width:0}
 /* E-Mail (post.js, plan kalender-mail/plan.md 2a): the inbox as an ld list, one message as plain text */
+/* E-Mail like a mail client (Dominik 2026-10-19 „4a“ „5a“): the whole width, the list beside a wide reading pane,
+   the list by day with the sender's initials; a phone swipes a row (left archive, right read) */
+main:has(>#post.on){max-width:none}
+@container (min-width:900px){
+  .post .ld-split:has(>.ld-detail:not([hidden])){grid-template-columns:minmax(300px,400px) minmax(0,1fr);gap:16px}
+  .post .ld-detail{max-height:calc(100vh - 140px);padding:18px 22px}
+  .post .ld-detail h3{font-size:19px}
+  .post .posttext{max-height:none}
+}
+.post .postav{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:12.5px;font-weight:700;letter-spacing:.02em;
+  color:var(--kc);background:color-mix(in srgb,var(--kc) 16%,var(--card))}
+.post .ld-mid .postfd{display:inline-block;margin-top:3px;font-size:11px;font-weight:600;padding:1px 8px;border-radius:99px;
+  background:color-mix(in srgb,var(--acc) 12%,transparent);color:var(--acc)}
+.post .ld-mid .postfd.hot{background:color-mix(in srgb,var(--bad,#d33) 14%,transparent);color:var(--bad,#d33)}
+.post .ld-row{transition:transform .12s ease}
+.post .ld-row.swl{box-shadow:inset -4px 0 0 var(--acc)}.post .ld-row.swr{box-shadow:inset 4px 0 0 var(--acc)}
 .post .ld-list.busy{opacity:.55}
 .post .postdot{flex:none;width:8px;height:8px;border-radius:50%}
 .post .ld-row.unread .postdot{background:var(--acc)}
@@ -1764,7 +1780,7 @@ main:has(>#cal.on){max-width:none}   /* the calendar takes the whole width (Domi
 .post .ld-row:not(.unread) .ld-mid b{font-weight:500}
 .post .posttext{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;line-height:1.5;margin:10px 0;max-height:60vh;overflow:auto}
 .post .postdet .ld-facts{margin-top:4px}
-.post .postord{flex-wrap:wrap;gap:6px;margin-top:10px}.post .postord select{width:auto;max-width:100%}
+.post .postord,.post .postwr{flex-wrap:wrap;gap:6px;margin-top:10px}.post .postord select{width:auto;max-width:100%}
 .post .postreply{margin-top:14px;padding-top:10px;border-top:1px solid var(--line)}.post .postreply .postdrop{float:right}.post .postform{display:grid;gap:4px;margin-top:8px}.post .postform input,.post .postform select,.post .postform textarea{width:100%;max-width:100%;box-sizing:border-box}.post .postform label{margin-top:6px}
 #parwrap[hidden]{display:none}
 /* touch screens: small marks keep their look, but a finger hits at least 44 px (code check 19.10. D11) */

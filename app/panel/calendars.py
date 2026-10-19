@@ -35,6 +35,7 @@ import icalendar
 import recurring_ical_events
 
 import hintergrund
+import kalenderspiegel
 import netguard
 import notaus
 import profiles
@@ -42,7 +43,7 @@ import vault
 
 MAX_TOPICS = 3
 MAX_CALENDARS = 8
-CACHE_SECONDS = 300         # a calendar block younger than this is used as it is
+CACHE_SECONDS = kalenderspiegel.SYNC_SECONDS   # a calendar block younger than this is used as it is (then the copy asks for changes)
 STALE_SECONDS = 24 * 3600   # the page shows an older block at once and fetches it anew in the background
 FOUND_SECONDS = 6 * 3600    # where the calendars of an address are (CalDAV discovery), asked again after this
 WARM_SECONDS = 24 * 3600    # profiles that read their calendars in this time are kept fresh in the background
@@ -232,6 +233,7 @@ def remove(uid, cid):
     d = get(uid)
     d["calendars"] = [x for x in d["calendars"] if x["id"] != cid]
     _store(uid, d)
+    kalenderspiegel.forget([cid])
     return public(uid)
 
 
@@ -257,6 +259,7 @@ def seal_stored(uid):
 
 
 def forget(uid):
+    kalenderspiegel.forget([c["id"] for c in get(uid)["calendars"]])
     with _lock:
         try:
             os.remove(_file(uid))
@@ -266,6 +269,7 @@ def forget(uid):
 
 
 def _drop(uid):
+    kalenderspiegel.stale([c["id"] for c in get(uid)["calendars"]])
     _epoch[0] += 1
     _found.clear()
     for k in [k for k in _cache if k[0] == uid]:
@@ -378,6 +382,17 @@ async def parts(uid, cid):
         return (await _calendars(c, d["url"]))[:20]
 
 
+async def _read(c, d, url, start, end):
+    """One CalDAV calendar's texts for [start, end): from the Spark's copy (kalenderspiegel, only the changes come
+    from the server); an entry not saved yet (the check before it is added) asks the server directly."""
+    if kalenderspiegel.CID.fullmatch(str(d.get("id") or "")) and not d.get("unsaved"):
+        try:
+            return await kalenderspiegel.texts(c, d["id"], url, start, end)
+        except kalenderspiegel.Unsupported:
+            pass
+    return await _report(c, url, start, end)
+
+
 async def _fetch(d, start, end):
     """iCal texts of all events overlapping [start, end) (UTC datetimes); number of calendars."""
     url = d["url"]
@@ -392,7 +407,7 @@ async def _fetch(d, start, end):
             known = (known[0], _only(d, known[1]))
             # the calendars of this address were found before: straight to them, without the discovery round trips
             texts, ok, last = [], 0, None
-            for part in await asyncio.gather(*(_report(c, u, start, end) for u, _ in known[1][:20]), return_exceptions=True):
+            for part in await asyncio.gather(*(_read(c, d, u, start, end) for u, _ in known[1][:20]), return_exceptions=True):
                 if isinstance(part, Exception):
                     last = part
                     continue
@@ -430,7 +445,7 @@ async def _fetch(d, start, end):
         _found[where] = (time.time(), cals)
         cals = _only(d, cals)
         texts = []
-        for part in await asyncio.gather(*(_report(c, u, start, end) for u, _ in cals[:20]), return_exceptions=True):
+        for part in await asyncio.gather(*(_read(c, d, u, start, end) for u, _ in cals[:20]), return_exceptions=True):
             if isinstance(part, Exception):
                 if len(cals) == 1:
                     raise part
@@ -609,13 +624,15 @@ async def _collect(uid, start, end, zone, shared, stale, budget=None):
     return sorted(uniq.values(), key=lambda x: (x["start"], not x["allday"])), errors, loading
 
 
-async def events(uid, start, end, zone, shared=False):
+async def events(uid, start, end, zone, shared=False, stale=False):
     """(events of all the profile's calendars from start to end, sorted; [(name, error)] of the
     calendars that could not be read). None when no calendar is connected. shared: also the calendars other
-    profiles share with it (the page and the assistant's calendar_events; never the briefing or Von selbst)."""
+    profiles share with it (the page and the assistant's calendar_events; never the briefing or Von selbst). stale: an
+    older block (up to STALE_SECONDS) at once while it is fetched anew behind (the card under Heute; the assistant
+    always waits for a fresh one)."""
     if not (reading(uid) if shared else get(uid))["calendars"]:
         return None
-    evs, errors, _ = await _collect(uid, start, end, zone, shared, False)
+    evs, errors, _ = await _collect(uid, start, end, zone, shared, stale)
     return evs, errors
 
 
@@ -633,13 +650,20 @@ async def keep_fresh(now=None):
             continue
         if not features.allowed("calendar", uid):
             continue
-        cals = reading(uid)["calendars"]
-        t0 = datetime.datetime.fromtimestamp(now, datetime.timezone.utc)
-        res = await asyncio.gather(*(_one(c.get("owner") or uid, c, t0, t0 + datetime.timedelta(days=35),
-                                          datetime.timezone.utc) for c in cals), return_exceptions=True)
         people += 1
-        n += sum(1 for r in res if not isinstance(r, BaseException))
+        n += await warm(uid, now)
     return people, n
+
+
+async def warm(uid, now=None):
+    """This and the next month of one profile's calendars (also those shared with it) anew when older than
+    CACHE_SECONDS; kept fresh from now on (keep_fresh, vorwaermen.py at sign-in). Returns the calendars read."""
+    now = time.time() if now is None else now
+    _used.setdefault(uid, now)
+    t0 = datetime.datetime.fromtimestamp(now, datetime.timezone.utc)
+    res = await asyncio.gather(*(_one(c.get("owner") or uid, c, t0, t0 + datetime.timedelta(days=35),
+                                      datetime.timezone.utc) for c in reading(uid)["calendars"]), return_exceptions=True)
+    return sum(1 for r in res if not isinstance(r, BaseException))
 
 
 async def keep_fresh_loop():
@@ -855,7 +879,7 @@ async def check(item, zone):
     now = datetime.datetime.now(zone)
     start = now.replace(hour=0, minute=0, second=0, microsecond=0)
     end = start + datetime.timedelta(days=14)
-    texts, n = await _fetch(item, start.astimezone(datetime.timezone.utc), end.astimezone(datetime.timezone.utc))
+    texts, n = await _fetch(dict(item, unsaved=True), start.astimezone(datetime.timezone.utc), end.astimezone(datetime.timezone.utc))
     evs = [x for x in await asyncio.to_thread(_expand, texts, start, end, zone) if x["end"] >= now or x["allday"]]
     return {"found": n, "events": [line(x) for x in evs[:5]]}
 

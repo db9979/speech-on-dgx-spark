@@ -203,6 +203,43 @@ class Page(Fake):
                         await br.close()
         asyncio.run(go())
 
+    def test_like_a_mail_client_keys_and_as_appointment(self):
+        """Dominik 2026-10-19 „4a 5a“: the list by day with the sender's initials beside a wide reading pane; J/K
+        go through the mails, Esc closes; „Als Termin“ brings the subject to Kalender → Schnell eintragen."""
+        from tests.test_ui_browser import Browser, async_playwright
+        b = Browser("run")
+        b.port = self.port
+
+        async def go():
+            async with async_playwright() as p:
+                br, pg, errors = await b.page(p, 1280, 900)
+                try:
+                    OWNERS[await pg.evaluate("PROFILE.id")] = [ACCT]
+                    await pg.evaluate("MAIL_ON=true;CAL_ON=true;postStart({profile:PROFILE,mail:true});icTabSet('post','show');goSec('post')")
+                    await b.until(pg, "!POST.busy&&!!POST.data&&document.querySelectorAll('#postview .ld-row').length===2")
+                    self.assertEqual(await pg.evaluate("[...document.querySelectorAll('#postview .postav')].map(e=>e.textContent)"), ["AA", "S"])
+                    self.assertEqual(await pg.evaluate("document.querySelectorAll('#postview .ld-grp').length"), 2)   # two days
+                    await pg.keyboard.press("j")
+                    await b.until(pg, "!!POST.msg&&POST.sel===POST.data.items[0].id")
+                    widths = await pg.evaluate("[document.querySelector('#postview .ld-list').getBoundingClientRect().width,document.querySelector('#postview .postdet').getBoundingClientRect().width]")
+                    self.assertGreater(widths[1], widths[0])   # the reading pane is the wide one
+                    await pg.keyboard.press("j")
+                    await b.until(pg, "POST.sel===POST.data.items[1].id")
+                    await pg.keyboard.press("k")
+                    await b.until(pg, "POST.sel===POST.data.items[0].id&&!!POST.msg&&!!document.querySelector('#postview [data-w=cal]')")
+                    await pg.click("#postview [data-w=cal]")
+                    await b.until(pg, "$('cal').classList.contains('on')&&KAL.q==='Werkstatt <b>Auto</b>'")
+                    await pg.evaluate("goSec('post')")
+                    await b.until(pg, "!!document.querySelector('#postview .ld-row')")
+                    await pg.evaluate("document.querySelector('#postview .ld-row').click()")
+                    await b.until(pg, "!!POST.sel")
+                    await pg.keyboard.press("Escape")
+                    await b.until(pg, "!POST.sel")
+                    self.assertEqual(errors, [])
+                finally:
+                    await br.close()
+        asyncio.run(go())
+
     def test_proactive_rows_sit_on_the_pages(self):
         """Von selbst: the mail rows under E-Mail → Einstellungen, Termin-Vorlauf under Kalender → Einstellungen, none
         of them a second time under Ich → Von selbst (one place, Dominik 2026-10-18)."""

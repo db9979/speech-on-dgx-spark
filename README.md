@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.830** Calendar and e-mail faster and the same everywhere: Spark calendar stage 1 (encrypted copy of every calendar, only changes from the server), warming up at sign-in, e-mail like a mail client (by day, keys J/K/R/E/U, swipe, "As appointment"), iPhone and uConsole on par with the panel
 - **V01.0.829** Text fields grow with the text: question, message and every text field as high as the text, Enter sends, Shift+Enter a new line, ⤢ large view, counter; also iPhone and terminal
 - **V01.0.828** Code check, speed: conversations are saved beside the event loop and written smaller
 - **V01.0.827** Code check, ease of use: search with everyday words and "Ask Spark", clear microphone errors, Status red only for real faults, one way of counting, more contrast and larger tap areas, a start guide for every new profile, a new PIN in hidden fields
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.823** Sharing a calendar releases only the chosen calendar, never the whole iCloud or Nextcloud account (code review C2); the share window asks which one when there are several
 - **V01.0.822** A red main no longer goes unnoticed: the quick test before a push runs every test and stops while main is red, GitHub opens an issue with the red tests, Status → Update shows since when it is red
 - **V01.0.821** Calendar renewed: full width, an appointment opens as a floating card (phone: sheet from below) with change, +1 day, +1 week, delete; "Quick add" in one line with recognised chips; drag appointments with the mouse, undo; share window with a person search; briefing topics as chips
-- **V01.0.820** Fix: test run test_mail_zeit green again (the opened-mail memory of .819 handed the test its first mail; the test now drops it like a changed mailbox)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

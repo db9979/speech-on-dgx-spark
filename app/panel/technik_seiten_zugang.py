@@ -396,11 +396,11 @@ SEITEN = {
 
     # ------------------------------------------------------------------ zugang (guard, core, profiles, features)
     "zugang": {
-        "stand": "d558746c68",
+        "stand": "8a36063d52",
         "bezug": {
             "guard.MAX_FAILS": ["s2", "s3"], "guard.MAX_NAME_FAILS": ["s2", "s3"], "guard.LOCK_FIRST": ["s2"],
             "guard.DAY_FAILS": ["s2", "s3"], "guard.failed": ["s3"], "guard.succeeded": ["s5"],
-            "account.profile_login": ["s3"], "account.second_step": ["s4"], "core.is_main_admin": ["s6"],
+            "account.profile_login": ["s3", "s5"], "account.second_step": ["s4"], "core.is_main_admin": ["s6"],
             "profiles._cookie_user": ["s6"], "features.reason": ["s11"], "regeln": ["s6", "s7"],
             "regel:Gast": ["s8", "s10"],
         },
@@ -459,13 +459,17 @@ SEITEN = {
                "{profiles.SESSION_DAYS} Tage ohne Nutzung und wird erneuert, solange es benutzt wird. Das Admin-Cookie "
                "ist mit Passwort, einem eigenen Schlüssel dieses Spark und dem zweiten Schritt signiert. War der "
                "zweite Schritt dabei (Code, Passkey oder vertrauter Browser), trägt die Sitzung sein Zeichen: nur "
-               "dann zählt eine Admin-Rolle des Profils, ohne eigene Admin-Anmeldung.",
+               "dann zählt eine Admin-Rolle des Profils, ohne eigene Admin-Anmeldung. Danach liest das Panel "
+               "Kalender und Mails des Profils im Hintergrund vorab (vorwaermen.py, höchstens alle "
+               "{vorwaermen.WARM_AGAIN} Sekunden), damit seine Seiten sofort aufgehen.",
                "The address's counter is cleared; strangers' wrong attempts for the name keep counting. The profile "
                "cookie is signed and stands in the list of signed-in browsers; it holds at most "
                "{profiles.SESSION_DAYS} days without use and is renewed while used. The admin cookie is signed with "
                "the password, a key of this Spark only and the second step. When the second step was part of it "
                "(code, passkey or a trusted browser) the session carries its mark: only then does a profile's "
-               "admin role count, without an admin sign-in of its own.")),
+               "admin role count, without an admin sign-in of its own. Then the panel reads the profile's calendars "
+               "and mail ahead in the background (vorwaermen.py, at most every {vorwaermen.WARM_AGAIN} seconds), so "
+               "its pages open at once.")),
             S("s6", "schritt", ("Profil bestimmen", "Find the profile"),
               ("profiles.current", "profiles.current"),
               ("Zuerst, was nur das Panel selbst setzt (Telegram, „Spark fragen“ über MCP), dann der Geräteschlüssel "

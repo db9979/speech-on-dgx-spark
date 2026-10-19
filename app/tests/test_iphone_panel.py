@@ -296,6 +296,20 @@ class Things(unittest.TestCase):
         self.assertEqual(a.get("/api/bilder").status_code, 401)
         self.assertFalse(a.get("/api/iphone/hello").json()["areas"]["bilder"])
 
+    def test_quick_add_from_the_app(self):
+        """Schnell eintragen and „Als Termin“ in the app (V01.0.82x catch-up, Dominik 2026-10-19 „a“): the Spark reads
+        the line with its fixed rules for the app's key too, only with the calendar's release; nothing is saved."""
+        c, a = self.app("Quentin")
+        r = a.get("/api/profile/calendar/quick", params={"text": "Morgen 15 Uhr Zahnarzt", "tz": "Europe/Berlin"})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(r.json()["title"], "Zahnarzt")
+        self.assertFalse(r.json()["allday"])
+        helpers.set_config(deny={"calendar": [self.uid("Quentin")]})
+        try:
+            self.assertEqual(a.get("/api/profile/calendar/quick", params={"text": "Morgen Zahnarzt"}).status_code, 401)
+        finally:
+            helpers.set_config(deny={})
+
     @staticmethod
     def body(method):
         return {"json": {}} if method == "POST" else {}
