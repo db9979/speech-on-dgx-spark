@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.819** E-mail fast: mailboxes read at the same time, list and opened mails cached, the page shows the last state at once and refreshes in the background; "Reply" opens right below the mail.
 - **V01.0.818** Fix: the GitHub test run is green again (red since .808, so the update offered only .807); the help finds "read mail aloud" and the Live overview again
 - **V01.0.817** Calendar fast: appointments cached by month, a slow calendar keeps loading in the background instead of being cut off, refreshed every 5 minutes behind the scenes.
 - **V01.0.816** The panel no longer stalls while syncing big knowledge folders; on a stall the log names the thread that computes
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.812** Add, change and delete appointments right on the Calendar page (own CalDAV calendars, never repeating ones, guarded by the server's etag).
 - **V01.0.811** Share calendars with other profiles (see, or see and add); private appointments show only as busy, the assistant reads shared ones ("Was hat Sabine morgen?").
 - **V01.0.810** Speaking up by itself in one place: the mail rows (important mail, tidying, parcel today) moved to E-mail → Settings, appointments ahead to Calendar → Settings.
-- **V01.0.809** E-mail as a page of its own in the menu: inbox of every mailbox, read a message as plain text; mailboxes, tidying, mail style and parcels under Settings, no longer under Me
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

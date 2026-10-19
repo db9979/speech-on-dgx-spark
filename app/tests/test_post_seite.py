@@ -133,9 +133,9 @@ class Api(Fake):
         seen = []
         orig = mail.find
 
-        def spy(uid, query="", days=7, unread=False, limit=8):
+        def spy(uid, query="", days=7, unread=False, limit=8, **kw):
             seen.append((len(query), days, limit))
-            return orig(uid, query, days, unread, limit)
+            return orig(uid, query, days, unread, limit, **kw)
         mail.find = spy
         try:
             mail.inbox(self.uid, "x" * 500, 900, False, 900)
@@ -174,6 +174,15 @@ class Page(Fake):
                         # the old place opens the settings of the page
                         await pg.evaluate("openMe('mailbox')")
                         await b.until(pg, "$('post').classList.contains('on')&&$('postroot').contains($('mailbox'))&&!$('mailbox').hidden&&$('mailbox').contains($('parbox'))")
+                        # a second visit with „Einstellungen“ open: the settings are there again, never an empty card
+                        # (Dominik 2026-10-19: clearing the card took the box out of the page), the same for Kalender
+                        await pg.evaluate("goSec('cal')")
+                        await pg.evaluate("goSec('post')")
+                        await b.until(pg, "$('postroot').contains($('mailbox'))&&!$('mailbox').hidden")
+                        await pg.evaluate("icTabSet('cal','set');goSec('cal')")
+                        await pg.evaluate("goSec('post')")
+                        await pg.evaluate("goSec('cal')")
+                        await b.until(pg, "$('kalroot').contains($('calbox'))&&!$('calbox').hidden")
                         await pg.evaluate("icTabSet('post','show');goSec('post')")
                         await b.until(pg, "!POST.busy&&!!POST.data&&POST.data.items.length===2")
                         await b.until(pg, "document.querySelectorAll('#postview .ld-row').length===2")

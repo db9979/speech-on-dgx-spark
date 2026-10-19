@@ -91,7 +91,7 @@ def act(uid, ref, action, folder="", mid=""):
         if _today["day"] != day:
             _today.update(day=day, n=0)
         _today["n"] += 1
-    mail._cache.clear()
+    mail.changed(uid, ref, action)   # the cached listing follows at once, no new fetch
     return out
 
 

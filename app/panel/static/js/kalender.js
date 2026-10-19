@@ -39,8 +39,9 @@ async function kalLoad(again){if(!PROFILE||!CAL_ON)return;const [a,n]=kalRange()
     if(d.loading&&d.loading.length&&KAL.tries<5)setTimeout(()=>{if(seq===KAL.seq&&$('kalview'))kalLoad(true)},3000)}
   catch(e){if(seq!==KAL.seq)return;KAL.err=e.message||t('Nicht erreicht','Not reached')}
   KAL.busy=false;kalDraw()}
+const KAL_BOX=$('calbox');   // the tab „Einstellungen“ shows it; kept in the section between visits
 function kalOpen(){if(!PROFILE)return;if(!KAL.day)KAL.day=kalDay(new Date());if(!KAL.view)KAL.view=NARROW()?'list':'week';
-  const root=$('kalroot');root.textContent='';
+  const root=$('kalroot');if(KAL_BOX){KAL_BOX.hidden=true;$('cal').appendChild(KAL_BOX)}root.textContent='';   // see POST_BOXES (post.js)
   root.appendChild(icTabs('cal',[{k:'show',label:OWN_PAGES.calbox[2],body:kalBody},
     {k:'set',label:t('Einstellungen','Settings'),body:()=>{const b=$('calbox');b.hidden=false;lzb(b,showCal,{auth:true}).catch(()=>{});proIn('procal').catch(()=>{});return b}}]));
   kalLoad()}

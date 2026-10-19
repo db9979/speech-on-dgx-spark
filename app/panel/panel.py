@@ -25,6 +25,7 @@ from chat import LEARN_EVERY, learn_once  # noqa: E402
 from update import update_lock  # noqa: E402
 import account  # noqa: E402
 import calendars  # noqa: E402
+import mail  # noqa: E402
 import coadmin  # noqa: E402
 import guard  # noqa: E402
 import homeassistant  # noqa: E402
@@ -505,6 +506,12 @@ def seal_secrets():
 async def anrufe_loop():
     """Anrufe (anrufe.py): the Vermittler as the switches say, every minute; calls nobody ended."""
     spawn(anrufe.loop())
+
+
+@app.on_event("startup")
+async def mail_fresh():
+    """E-Mail (mail.keep_fresh): the inbox of whoever read it lately is fetched anew in the background."""
+    spawn(mail.keep_fresh_loop())
 
 
 @app.on_event("startup")

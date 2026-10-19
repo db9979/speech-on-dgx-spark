@@ -1163,6 +1163,8 @@ async def profile_mail_inbox(request: Request, q: str = "", days: int = 14, unre
         raise HTTPException(504, "Die Postfächer haben zu lange gebraucht. Bitte gleich noch einmal.")
     if r["errors"]:
         print(f"mail: inbox not readable | {len(r['errors'])} of {len(r['boxes'])} mailboxes | {profiles.log_name(prof)}", flush=True)
+    if r.get("loading"):
+        print(f"mail: inbox loading | {len(r['boxes'])} mailboxes | {profiles.log_name(prof)}", flush=True)
     return r
 
 

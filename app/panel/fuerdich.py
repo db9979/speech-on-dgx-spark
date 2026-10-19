@@ -26,6 +26,7 @@ Kept: the found items only in memory (CACHE_SECONDS); in users/<id>/fuerdich.jso
     DELETE /api/profile/fuerdich         forget the pressed marks
 """
 import asyncio
+import concurrent.futures
 import datetime
 import email
 import email.policy
@@ -58,6 +59,8 @@ SCAN = 300                      # newest messages per folder whose headers are r
 BODIES = 60                     # at most this many mail texts are read per mailbox and run
 RAW = 60000                     # bytes of one mail
 CACHE_SECONDS = 600
+STALE_SECONDS = 24 * 3600       # the tab shows an older reading at once and reads anew in the background
+VIEW_BUDGET = 8.0               # seconds the tab waits for a first reading, then „lädt noch“ (fuerdich.js asks again)
 ANSWER_DAYS = 2                 # a question waits this long before it is a card
 ANSWER_MAX = 14                 # and is not one any more after this
 OFFER_AHEAD = 14                # an offer is shown when it ends within these days
@@ -396,19 +399,28 @@ def _account(acct, uid, today, now):
     return out
 
 
-def scan(uid, today=None, now=None):
-    """(items newest first without pressed ones, [(mailbox name, error)])."""
+def scan(uid, today=None, now=None, force=False):
+    """(items newest first without pressed ones, [(mailbox name, error)]). force: read anew whatever the cache holds
+    (the cache stays until the new reading replaces it, so the tab keeps showing the last one meanwhile)."""
     hit = _cache.get(uid)
-    if hit and time.time() - hit[0] < CACHE_SECONDS and today is None:
+    if hit and time.time() - hit[0] < CACHE_SECONDS and today is None and not force:
         return hit[1]
     today = today or datetime.date.today()
     now = now or datetime.datetime.now(datetime.timezone.utc)
     found, errors = [], []
-    for a in mail.get(uid)["accounts"]:
+
+    def one(a):
         try:
-            found += _account(a, uid, today, now)
+            return _account(a, uid, today, now), None
         except (ValueError, OSError, imaplib.IMAP4.error) as e:
-            errors.append((a.get("name", ""), "nicht_lesbar" if isinstance(e, ValueError) else type(e).__name__))
+            return [], (a.get("name", ""), "nicht_lesbar" if isinstance(e, ValueError) else type(e).__name__)
+    accts = mail.get(uid)["accounts"]
+    # all mailboxes at the same time (Dominik 2026-10-19 „dauert länger als sonst“), each its own IMAP session
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, len(accts))) as ex:
+        for got, err in ex.map(one, accts):
+            found += got
+            if err:
+                errors.append(err)
     pressed = marks(uid)
     seen, items = set(), []
     for x in sorted(found, key=lambda x: x["at"], reverse=True):
@@ -480,14 +492,20 @@ CARD_BUDGET = 3.0              # seconds the card under Heute waits for a first 
 _tasks = {}                     # uid -> the reading that runs for the card
 
 
+def _reading(uid, fresh=False):
+    """The one reading that runs for this profile (tab, card under Heute), started if none runs."""
+    t = _tasks.get(uid)
+    if t is None or t.done():
+        t = _tasks[uid] = asyncio.ensure_future(run(uid, fresh))
+        t.add_done_callback(lambda f: f.cancelled() or f.exception())   # an error only shows as "not ready"
+    return t
+
+
 async def card(uid):
     """The card under Ich → Heute: reads (cache first) for at most CARD_BUDGET, then shows what is there."""
     if not mail.get(uid)["accounts"]:
         return {"ready": False, "nomail": True}
-    t = _tasks.get(uid)
-    if t is None or t.done():
-        t = _tasks[uid] = asyncio.ensure_future(run(uid))
-        t.add_done_callback(lambda f: f.cancelled() or f.exception())   # an error only shows as "not ready"
+    t = _reading(uid)
     try:
         await asyncio.wait_for(asyncio.shield(t), CARD_BUDGET)
     except Exception:
@@ -507,12 +525,11 @@ def heute(uid):
 
 async def run(uid, fresh=False):
     """Reads the mailboxes off the event loop; one line in the journal for every outcome."""
-    if fresh:
-        _cache.pop(uid, None)
-    cached = uid in _cache
+    hit = _cache.get(uid)
+    cached = bool(hit and time.time() - hit[0] < CACHE_SECONDS and not fresh)
     t0 = time.time()
     try:
-        items, errors = await vorrang.in_thread("Für dich", scan, uid)
+        items, errors = await vorrang.in_thread("Für dich", scan, uid, None, None, bool(fresh or (hit and not cached)))
     except notaus.NotausAktiv:
         print("fuerdich: gestoppt grund=notaus", flush=True)
         raise HTTPException(503, "Notaus: Postfach lesen ist gerade gestoppt.")
@@ -541,6 +558,26 @@ def _live(n):
         pass
 
 
+async def view(prof, fresh=False):
+    """The tab „Für dich“: the last reading at once (up to STALE_SECONDS old; an older one than CACHE_SECONDS is read
+    anew behind it), the first one waited for at most VIEW_BUDGET, then {"loading": True} while it goes on."""
+    uid, now = prof["id"], time.time()
+    hit = _cache.get(uid)
+    if hit and not fresh and now - hit[0] < STALE_SECONDS:
+        # at once with the last reading (Dominik 2026-10-19 „die fenster sollten direkt reagieren“); an older one is
+        # read anew behind it and shows on the next look
+        if now - hit[0] >= CACHE_SECONDS:
+            _reading(uid)
+        return dict(public(uid, *hit[1]), stand=int(hit[0]))
+    t = _reading(uid, fresh)
+    try:
+        items, errors = await asyncio.wait_for(asyncio.shield(t), VIEW_BUDGET)
+    except asyncio.TimeoutError:
+        print(f"fuerdich: laedt noch {profiles.log_name(prof)}", flush=True)
+        return {"items": [], "counts": {k: 0 for k in KINDS}, "errors": [], "loading": True}
+    return dict(public(uid, items, errors), stand=int(time.time()))
+
+
 # ---------------------------------------------------------------- endpoints
 def _mine(request, prof, rate="fuerdich"):
     if not features.allowed("fuerdich", prof["id"]):
@@ -554,8 +591,7 @@ async def api_get(request: Request, fresh: bool = False, prof=Depends(own_profil
     if not mail.get(prof["id"])["accounts"]:
         print(f"fuerdich: kein postfach {profiles.log_name(prof)}", flush=True)
         return {"items": [], "counts": {k: 0 for k in KINDS}, "errors": [], "nomail": True}
-    items, errors = await run(prof["id"], fresh)
-    return public(prof["id"], items, errors)
+    return await view(prof, fresh)
 
 
 @router.post("/api/profile/fuerdich/mark", dependencies=[Depends(assistant)])

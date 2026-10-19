@@ -15,16 +15,21 @@ const postWhen=s=>{const d=new Date(s*1000),now=new Date();
     :d.toLocaleDateString(kalLoc(),{day:'numeric',month:'short'})};
 // the sender's name without the address, for the list
 const postName=f=>{const m=/^(.*?)\s*<[^>]*>$/.exec(f||'');return (m&&m[1])||f||''};
-async function postLoad(){if(!PROFILE||!MAIL_ON)return;const seq=++POST.seq;POST.busy=true;postDraw();
+// again: mailboxes still loading in the background (mail.inbox) are asked for once more after 3 s, at most 5 times
+async function postLoad(again){if(!PROFILE||!MAIL_ON)return;const seq=++POST.seq;POST.busy=!again;POST.tries=again?(POST.tries||0)+1:0;postDraw();
   try{const d=await (await api('/api/profile/mail/inbox?'+new URLSearchParams({q:POST.q,unread:POST.unread?'true':'false'}))).json();
-    if(seq!==POST.seq)return;POST.data=d;POST.err=''}
+    if(seq!==POST.seq)return;if(!(d.loading&&POST.data&&again))POST.data=d;POST.err='';
+    if(d.loading&&POST.tries<5)setTimeout(()=>{if(seq===POST.seq&&$('postview'))postLoad(true)},3000)}
   catch(e){if(seq!==POST.seq)return;POST.err=e.message||t('Nicht erreicht','Not reached')}
   POST.busy=false;postDraw()}
 async function postRead(id){POST.sel=id;POST.msg=null;const seq=++POST.mseq;postDraw();
   try{const m=await (await api('/api/profile/mail/message?'+new URLSearchParams({id}))).json();if(seq===POST.mseq)POST.msg=m}
   catch(e){if(seq===POST.mseq)POST.msg={err:e.message||t('Nicht erreicht','Not reached')}}
   postDraw()}
-function postOpen(){if(!PROFILE)return;const root=$('postroot');root.textContent='';
+// the boxes a tab shows (Für dich, Einstellungen) live in the section; back there before the tabs are drawn anew,
+// else clearing the card would take them out of the page and a second visit showed an empty card
+const POST_BOXES=['fuerbox','mailbox'].map(id=>$(id));
+function postOpen(){if(!PROFILE)return;const root=$('postroot');for(const b of POST_BOXES)if(b){b.hidden=true;$('post').appendChild(b)}root.textContent='';
   root.appendChild(icTabs('post',[{k:'show',label:OWN_PAGES.mailbox[2],body:postBody},
     // „Für dich“ (fuerdich.js, its own function): what the Spark found in the mails, only when it is switched on
     ...(OWN_PAGES.mailbox[3][0][2]()?[{k:'fuer',label:OWN_PAGES.mailbox[3][0][1],body:()=>{const b=$('fuerbox');b.hidden=false;lzb(b,showFuerDich,{auth:true}).catch(()=>{});return b}}]:[]),
@@ -48,7 +53,8 @@ function postPaint(w){const d=POST.data;w.classList.toggle('ld-sel',!!POST.sel||
     const nw=w.querySelector('[data-k=new]');if(nw)nw.onclick=()=>postWrite(null)}
   const u=w.querySelector('[data-k=unread]');u.classList.toggle('on',POST.unread);u.setAttribute('aria-pressed',String(POST.unread));
   w.querySelector('.postwarn').innerHTML=(POST.err?`<div class="note warn">${esc(t('Die Mails kamen nicht an: ','The mail did not arrive: ')+POST.err)}</div>`:'')+
-    (d&&d.errors&&d.errors.length?`<div class="note warn">${esc(t('Nicht erreicht: ','Not reached: ')+d.errors.join(', '))}</div>`:'');
+    (d&&d.errors&&d.errors.length?`<div class="note warn">${esc(t('Nicht erreicht: ','Not reached: ')+d.errors.join(', '))}</div>`:'')+
+    (d&&d.loading?`<div class="note">${esc(t('Die Postfächer laden noch …','The mailboxes are still loading …'))}</div>`:'');
   const many=d&&d.boxes&&d.boxes.length>1,items=(d&&d.items)||[],list=w.querySelector('.ld-list');
   list.classList.toggle('busy',POST.busy);
   list.innerHTML=items.map(x=>`<div class="ld-row${POST.sel===x.id?' on':''}${x.unread?' unread':''}" role="button" tabindex="0" data-id="${esc(x.id)}">`+
@@ -101,9 +107,15 @@ async function postWrite(m){POST.sent='';POST.prev=null;
   POST.write=m?{reply:POST.sel,to:postAddr(m.from),cc:'',subject:/^(re|aw|antw)\s*:/i.test(m.subject||'')?m.subject:'Re: '+(m.subject||''),text:'',account:''}
     :{reply:'',to:'',cc:'',subject:'',text:'',account:''};
   if(!m&&!POST.accts){const {r,d}=await apiTry('/api/profile/mail');POST.accts=r.ok?(d.accounts||[]):[]}
-  if(!m&&POST.accts&&POST.accts.length)POST.write.account=POST.accts[0].id;postDraw()}
-function postWriteBox(w){const box=w.querySelector('.postdet'),f=POST.write,p=POST.prev;if(!box)return;box.hidden=false;
-  const back=`<button type="button" class="b ld-back" data-close="1">‹ ${esc(t('Verwerfen','Discard'))}</button>`;
+  if(!m&&POST.accts&&POST.accts.length)POST.write.account=POST.accts[0].id;POST.focus=true;postDraw()}
+// a reply opens below the mail it answers, like a mail client (Dominik 2026-10-19); a new mail fills the pane
+function postWriteBox(w){let box=w.querySelector('.postdet');const f=POST.write,p=POST.prev;if(!box)return;box.hidden=false;
+  const inline=!!(f.reply&&POST.sel===f.reply&&POST.msg&&!POST.msg.err);
+  if(inline){postDetail(w);const rp=box.querySelector('[data-w=reply]');if(rp)rp.closest('.row').remove();
+    box.querySelector('.ld-back').onclick=()=>{POST.write=null;POST.prev=null;POST.sel=null;POST.msg=null;postDraw()};
+    const h=document.createElement('div');h.className='postreply';box.appendChild(h);box=h}
+  const back=inline?`<button type="button" class="b postdrop" data-close="1">✕ ${esc(t('Verwerfen','Discard'))}</button>`
+    :`<button type="button" class="b ld-back" data-close="1">‹ ${esc(t('Verwerfen','Discard'))}</button>`;
   if(p){box.innerHTML=back+`<h3>${esc(t('So geht die Mail raus','This is the mail that goes out'))}</h3><dl class="ld-facts postprev">`+
       `<dt>${esc(t('Von','From'))}</dt><dd>${esc(p.from)}</dd><dt>${esc(t('An','To'))}</dt><dd>${esc(p.to.join(', '))}</dd>`+
       (p.cc.length?`<dt>${esc(t('Kopie','Copy'))}</dt><dd>${esc(p.cc.join(', '))}</dd>`:'')+`<dt>${esc(t('Betreff','Subject'))}</dt><dd>${esc(p.subject||t('(ohne Betreff)','(no subject)'))}</dd></dl>`+
@@ -120,7 +132,8 @@ function postWriteBox(w){const box=w.querySelector('.postdet'),f=POST.write,p=PO
       `<div class="row postord"><button class="b p" type="button" data-s="prev">${esc(t('Vorschau','Preview'))}</button></div><div class="postordmsg fh">${esc(t('Erst die Vorschau zeigt, was rausgeht. Gesendet wird nur dort.','Only the preview shows what goes out. It is sent only there.'))}</div></div>`;
     for(const k of ['to','cc','subject','text']){const el=box.querySelector(`[data-f=${k}]`);el.value=f[k]||'';el.oninput=()=>{f[k]=el.value}}
     const ac=box.querySelector('[data-f=account]');if(ac)ac.onchange=()=>{f.account=ac.value};
-    box.querySelector('[data-s=prev]').onclick=()=>postPreview(box.querySelector('.postordmsg'))}
+    box.querySelector('[data-s=prev]').onclick=()=>postPreview(box.querySelector('.postordmsg'));
+    if(POST.focus){POST.focus=false;const ta=box.querySelector(f.reply?'[data-f=text]':'[data-f=to]');ta.focus({preventScroll:true});box.scrollIntoView({block:'nearest'})}}
   box.querySelector('[data-close]').onclick=()=>{POST.write=null;POST.prev=null;postDraw()}}
 async function postPreview(msg){const f=POST.write;msg.className='postordmsg fh';msg.textContent=t('Einen Moment …','One moment …');
   const {r,d}=await apiTry('/api/profile/mail/send/preview',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(f)});

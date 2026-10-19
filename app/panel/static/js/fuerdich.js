@@ -1,15 +1,20 @@
 // „Für dich“ (fuerdich.py, plan persoenlicher-assistent, stage 1): what the Spark found in the own mails by fixed
 // rules (bill, contract, order, offer, open reply, phishing). Every card names the mail it comes from; nothing happens
 // until the person presses. Sender names and subjects are outside text: shown with textContent only, never as a link.
-let FUER_ON=false,FUER=null;
+let FUER_ON=false,FUER=null,FUER_TRIES=0;
 const FUER_ICON={verdacht:'x',rechnung:'pdf',vertrag:'pen',antwort:'mail',bestellung:'folder',angebot:'spark'};
 const FUER_KIND={verdacht:t('Verdacht','Suspicious'),rechnung:t('Rechnung','Bill'),vertrag:t('Vertrag','Contract'),
   antwort:t('Antwort offen','Reply missing'),bestellung:t('Bestellung','Order'),angebot:t('Angebot','Offer')};
 const fuerMsg=(x,err)=>{const m=$('fuermsg');if(m){m.textContent=x||'';m.className='fh'+(err?' err':'')}};
-async function showFuerDich(fresh){const box=$('fuerbox');if(!box)return;if(!PROFILE||!FUER_ON){box.textContent='';return}
+// the server answers at once with the last reading; the first one ever may still be loading: then asked again after
+// 3 s (at most 5 times) while it reads in the background (fuerdich.api_get)
+async function showFuerDich(fresh,again){const box=$('fuerbox');if(!box)return;if(!PROFILE||!FUER_ON){box.textContent='';return}
   if(!FUER){box.textContent='';box.appendChild(icEl('div','fh',t('Lese deine Mails …','Reading your mails …')))}
-  try{FUER=await (await api('/api/profile/fuerdich'+(fresh?'?fresh=1':''))).json()}catch(e){FUER=null;box.textContent='';box.appendChild(icEl('div','fh err',e.message));return}
-  fuerRender()}
+  let d;try{d=await (await api('/api/profile/fuerdich'+(fresh?'?fresh=1':''))).json()}catch(e){FUER=null;box.textContent='';box.appendChild(icEl('div','fh err',e.message));return}
+  FUER_TRIES=again?FUER_TRIES+1:0;
+  if(d.loading){if(FUER_TRIES<5)setTimeout(()=>{if(box.isConnected&&!box.hidden)showFuerDich(false,true)},3000);
+    if(FUER)return;box.textContent='';box.appendChild(icEl('div','fh',t('Lese deine Mails … das dauert beim ersten Mal etwas, die Seite zeigt sie von selbst.','Reading your mails … the first time takes a moment, the page shows them by itself.')));return}
+  FUER=d;fuerRender()}
 async function fuerMark(id,as){try{await api('/api/profile/fuerdich/mark',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,as})})}
   catch(e){fuerMsg(e.message,true);return}
   FUER.items=FUER.items.filter(x=>x.id!==id);fuerRender();fuerMsg(as==='done'?t('Als erledigt markiert.','Marked as done.'):t('Kommt nicht wieder.','Will not come back.'))}

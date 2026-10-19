@@ -4661,6 +4661,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "E-Mail schnell und Antworten unter der Mail (V01.0.819, Dominik 2026-10-19 „email muss auch gecached werden“, „die fenster sollten direkt reagieren und im hintergrund die aktualisierungen machen“, „antworten direkt unterhalb der ausgewählten email“): Alle Postfächer eines Profils werden gleichzeitig gelesen statt nacheinander. Die Liste der Seite E-Mail liegt im Arbeitsspeicher des Panels (mail.py, nie auf der Platte): Die Seite zeigt sofort den letzten Stand (bis 24 Stunden alt) und holt dahinter neu, wenn er älter als 2 Minuten ist. Ohne gespeicherten Stand wartet sie höchstens 8 Sekunden, zeigt dann „Die Postfächer laden noch …“ und fragt nach 3 Sekunden von selbst noch einmal (höchstens 5-mal); der Abruf läuft im Hintergrund weiter. Mehrere gleichzeitige Fragen nach derselben Liste lösen einen Abruf aus; die kürzere Liste des Assistenten („ungelesene Mails der Woche“) kommt aus der längeren der Seite, wenn die alles davon enthält. Geöffnete Mails bleiben 30 Minuten im Speicher (höchstens 40 je Profil), die 10 neuesten holt das Panel im Hintergrund vorab (mit PEEK, sie bleiben ungelesen). Alle 5 Minuten holt das Panel die Liste jedes Profils neu, das in den letzten 24 Stunden se"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "ine Mails auf der Seite oder beim Assistenten gelesen hat (Aufräumen und „Für dich“ zählen nicht). Gelesen/ungelesen, Archivieren und Verschieben ändern die gespeicherte Liste sofort, ohne neuen Abruf; ein Abruf, der vorher begann, speichert nichts mehr. Kein Schalter. „Antworten“ öffnet das Antwortfeld direkt unter der Mail wie in einem Mailprogramm; die Mail bleibt darüber stehen, Vorschau und Senden wie bisher. Der Reiter „Für dich“ liest alle Postfächer gleichzeitig, zeigt sofort die letzte Lesung (bis 24 Stunden alt) und liest eine ältere als 10 Minuten dahinter neu; die erste Lesung wartet höchstens 8 Sekunden, danach „Lese deine Mails …“ und die Seite fragt von selbst nach (Log fuerdich: laedt noch). Behoben: Nach einem Besuch im Reiter „Einstellungen“ blieben die Seiten E-Mail und Kalender beim nächsten Öffnen leer, weil das Neuzeichnen die Einstellungen aus der Seite nahm. Logs: mail: inbox loading | n mailboxes, mail: kept fresh | n profiles, m messages ahead, mail: refresh failed (Fehler)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "Mails ordnen (V01.0.816, Plan kalender-mail/plan.md Stufe 2; Funktionen → E-Mail lesen → „Mails ordnen“, chat.mail_manage, aus): In einer geöffneten Mail stehen „Gelesen“/„Ungelesen“, „Archivieren“ und eine Ordnerwahl; nach Archivieren oder Verschieben holt „Rückgängig“ die Mail sofort in den Posteingang zurück (gefunden über ihre Message-ID). Der Knopf ist das eigene Ja. postfach.py kennt nur diese vier Dinge: das Flag \\Seen einer Mail im Posteingang, eine Mail ins Archiv (der Ordner mit \\Archive, sonst „Archive“/„Archiv“) oder in einen gewöhnlichen eigenen Ordner, und zurück. Nie in Papierkorb, Spam, Gesendet oder Entwürfe, nie gelöscht, nie ein Ordner angelegt oder umbenannt; ohne IMAP MOVE nur COPY und danach UID EXPUNGE genau des bestätigten Originals (wie beim Aufräumen). Notaus hält jede Aktion an. Endpunkte GET /api/profile/mail/folders und POST /api/profile/mail/act (nur die eigene Anmeldung im Browser, nur eigene Postfächer, Rate-Limit postordnen); Live zeigt bei der Post nur, wie viele Mails heute auf der Seite geordnet wurden; Log mail: page <Aktion> done|refused, not found|refused, notaus|failed, nie Absender, Betreff oder Ordner."
 },
 {
@@ -12830,6 +12846,22 @@
 "head": "Voice chat",
 "title": "Page E-mail (V01.0.809, Dominik 2026-10-18, plan `kalender-mail/plan.md` 2a 4a)",
 "text": "Page E-mail (V01.0.809, Dominik 2026-10-18, plan kalender-mail/plan.md 2a 4a): mail is a page of its own in the menu (on the left below \"Calendar\", only with reading e-mail; on phones through Today), no longer under Me. Tab Inbox: the newest 50 messages of the last 14 days from every mailbox, unread ones bold with a dot, search by sender or subject, \"Unread only\"; a tap shows the message as plain text (HTML becomes text, pictures and links from outside stay off, long links become \"[Link]\"), attachments only by name. It is read with PEEK, so the message stays unread. Tab For you (only when \"For you from mail\" is released): what was found in the mails. Tab Settings: everything that was under Me → E-mail and Me → Parcels (mailboxes, tidying, mail style, parcels). Every way \"E-mail → Settings → …\" jumps there; old links to #me=mailbox open the page. Reading goes only through GET /api/profile/mail/inbox and GET /api/profile/mail/message (own profile, rate limit \"post\", log without contents). Replying, moving and sending come in stages 2 and 3; until then through the assistant."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "E-mail fast and replying below the mail (V01.0.819, Dominik 2026-10-19 \"mail must be cached too\", \"the windows should react at once and refresh in the background\", \"reply right below the selected mail\"): All mailboxes of a profile are read at the same time instead of one after the other. The list of the E-mail page lives in the panel's memory (mail.py, never on disk): the page shows the last state at once (up to 24 hours old) and fetches anew behind it when it is older than 2 minutes. Without a kept state it waits at most 8 seconds, then shows \"The mailboxes are still loading …\" and asks again by itself after 3 seconds (at most 5 times); the fetch goes on in the background. Several requests for the same list at once start one fetch; the assistant's shorter list (\"unread mail of the week\") comes from the page's longer one when that holds all of it. Opened messages stay in memory for 30 minutes (at most 40 per profile), and the panel fetches the 10 newest ahead in the background (with PEEK, they stay unread). Every 5 minutes the panel fetches the list anew for every profile that read its mail on the page or through the assistant in the last 24 hours (tidying and \"For you\" do not coun"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "t). Read/unread, archive and move change the kept list at once without a new fetch; a fetch begun before stores nothing. No switch. \"Reply\" opens the reply form right below the mail, as in a mail program; the mail stays above it, preview and send as before. The tab \"For you\" reads all mailboxes at the same time, shows the last reading at once (up to 24 hours old) and reads one older than 10 minutes anew behind it; the first reading waits at most 8 seconds, then \"Reading your mails …\" and the page asks again by itself (log fuerdich: laedt noch). Fixed: after a visit to the tab \"Settings\" the pages E-mail and Calendar stayed empty on the next opening, because drawing them anew took the settings out of the page. Logs: mail: inbox loading | n mailboxes, mail: kept fresh | n profiles, m messages ahead, mail: refresh failed (error)."
 },
 {
 "lang": "en",

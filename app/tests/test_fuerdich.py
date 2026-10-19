@@ -3,11 +3,13 @@ offers, open replies and phishing found in the own mails by fixed rules. The mai
 BODY.PEEK); only pressed marks are kept, as hashes; a mail cannot make a card say what it wants; never for guests,
 blocked profiles or with the switch off; logs carry no contents. The rules get a fixed day; the end-to-end test puts
 its dates relative to the day it runs, so the time of day never matters."""
+import asyncio
 import contextlib
 import datetime
 import email.utils
 import io
 import os
+import time
 import unittest
 
 from tests import helpers
@@ -194,6 +196,46 @@ class FuerDich(unittest.TestCase):
         # the card under Heute: numbers only
         c = p.get("/api/profile/today").json()["cards"]["fuerdich"]
         self.assertEqual(c, {"ready": True, "urgent": 3, "total": 3, "suspicious": 1})
+
+    def test_the_tab_answers_at_once_and_reads_behind(self):
+        """Dominik 2026-10-19 „dauert länger als sonst“: the last reading at once, an older one read anew behind it;
+        the first reading waits at most VIEW_BUDGET, then "loading" while it goes on."""
+        p, uid = self.setup_profile("Fuedu")
+        prof = {"id": uid, "name": "Fuedu"}
+        saved = (fuerdich.scan, fuerdich.VIEW_BUDGET)
+        calls = []
+
+        def slow(u, today=None, now=None, force=False):
+            calls.append(force)
+            time.sleep(0.3)
+            fuerdich._cache[u] = (time.time(), ([], []))   # as scan keeps its reading
+            return [], []
+        fuerdich.scan = slow
+        fuerdich.VIEW_BUDGET = 0.05
+        fuerdich._cache.pop(uid, None)
+        try:
+            async def go():
+                first = await fuerdich.view(prof)
+                await asyncio.sleep(0.6)
+                second = await fuerdich.view(prof)
+                old = time.time() - fuerdich.CACHE_SECONDS - 5
+                fuerdich._cache[uid] = (old, ([], []))
+                t0 = time.time()
+                third = await fuerdich.view(prof)
+                quick = time.time() - t0
+                await asyncio.sleep(0.6)
+                return first, second, third, quick, old
+            first, second, third, quick, old = asyncio.run(go())
+            self.assertTrue(first["loading"])
+            self.assertNotIn("loading", second)
+            self.assertEqual(third["stand"], int(old))          # the older reading, at once
+            self.assertLess(quick, 0.2)
+            self.assertEqual(len(calls), 2)                     # and read anew behind it, the cache kept meanwhile
+            self.assertTrue(calls[1])
+            self.assertGreater(fuerdich._cache[uid][0], old)
+        finally:
+            fuerdich.scan, fuerdich.VIEW_BUDGET = saved
+            fuerdich._cache.pop(uid, None)
 
     def test_marks_are_kept_as_hashes_and_can_be_forgotten(self):
         p, uid = self.setup_profile("Fuedo")
