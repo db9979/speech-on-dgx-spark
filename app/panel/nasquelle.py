@@ -111,6 +111,10 @@ WHY = {"offline": ("nicht erreichbar", "not reachable"), "auth": ("Anmeldung abg
        "other": ("antwortet nicht wie erwartet", "does not answer as expected")}
 _lock = threading.RLock()
 _running = set()               # (uid, sid)
+# the state file read once and kept while it stays the same (Pi 2026-10-19: 3.4 MB for 20000 files, read every minute
+# and written every 20 files of a round held Python's lock, the panel stood still): path -> (stat key, content)
+_cache = {}
+SAVE_S = 30                    # s between two saves of the state during a round (and always at its end)
 
 
 class SourceError(Exception):
@@ -263,15 +267,34 @@ def find(uid, sid):
     return next((s for s in sources(uid) if s["id"] == sid), None)
 
 
+def _key(path):
+    try:
+        st = os.stat(path)
+        return (st.st_mtime_ns, st.st_size, st.st_ino)
+    except OSError:
+        return None
+
+
 def _states(uid):
+    """All folders' states of the profile, from the cache while the file is unchanged (callers never change it)."""
+    path = _state_file(uid)
     with _lock:
-        return _json(_state_file(uid))
+        key = _key(path)
+        hit = _cache.get(path)
+        if hit and key is not None and hit[0] == key:
+            return hit[1]
+        d = _json(path)
+        if key is not None:
+            _cache[path] = (key, d)
+        else:
+            _cache.pop(path, None)
+        return d
 
 
 def state(uid, sid):
     st = _states(uid).get(sid)
     st = st if isinstance(st, dict) else {}
-    files = st.get("files") if isinstance(st.get("files"), dict) else {}
+    files = dict(st["files"]) if isinstance(st.get("files"), dict) else {}     # a copy: the cache stays as on disk
     return {"files": files, "last": st.get("last") if isinstance(st.get("last"), dict) else None,
             "fail": st.get("fail") if isinstance(st.get("fail"), dict) else None,
             "left": int(st.get("left") or 0), "seen": int(st.get("seen") or 0),
@@ -280,12 +303,16 @@ def state(uid, sid):
 
 def _put_state(uid, sid, st):
     with _lock:
-        all_ = _states(uid)
+        path = _state_file(uid)
+        all_ = dict(_states(uid))
         if st is None:
             all_.pop(sid, None)
         else:
-            all_[sid] = st
-        profiles._write(_state_file(uid), all_)
+            all_[sid] = dict(st, files=dict(st.get("files") or {}))
+        profiles._write(path, all_)
+        key = _key(path)
+        if key is not None:
+            _cache[path] = (key, all_)
 
 
 def _hash(sid, rel):
@@ -647,6 +674,32 @@ def due(uid, s, st, now=None):
     return now - last > every()
 
 
+def _compare(uid, sid, s, files, out, complete, have, pictures):
+    """The folder against the state (in a thread: thousands of files): ({hash: (rel, size, time)} read, number gone,
+    [(hash, (rel, size, time))] to read in order). Changes have and out; documents whose file left go."""
+    now_set = {}
+    for rel, size, mtime in files:
+        h = _hash(sid, rel)
+        reason = classify(rel, size, s["groups"], pictures)
+        if reason:
+            out[reason] = out.get(reason, 0) + 1
+            if h in have and have[h].get("d"):
+                _drop(uid, have[h]["d"])                     # the group was taken away: out of the search
+            continue
+        now_set[h] = (rel, size, mtime)
+    gone = 0
+    if complete:
+        for h in [h for h in have if h not in now_set]:
+            _drop(uid, have[h].get("d"))
+            have.pop(h, None)
+            gone += 1
+    todo = [(h, x) for h, x in now_set.items()
+            if h not in have or (have[h].get("s"), have[h].get("m")) != (x[1], x[2])]
+    todo = [(h, x) for h, x in todo if not (h in have and have[h].get("x") == "aus" and (have[h].get("s"), have[h].get("m")) == (x[1], x[2]))]
+    todo.sort(key=lambda hx: first(hx[1]))      # documents before pictures, the newest first (first)
+    return now_set, gone, todo
+
+
 async def sync_once(uid, sid, why="auto", now=None):
     """One comparison of one folder. Returns {"ok", "new", "gone", "left"} or {"ok": False, "kind"}."""
     s = find(uid, sid)
@@ -668,27 +721,8 @@ async def sync_once(uid, sid, why="auto", now=None):
         rd = reader(c, s["path"])
         files, out, complete = await walk(rd, auslassen.checker(_owner(uid, s), s["nas"], s["path"]))
         have = st["files"]
-        now_set = {}
-        for rel, size, mtime in files:
-            h = _hash(sid, rel)
-            reason = classify(rel, size, s["groups"], pictures)
-            if reason:
-                out[reason] = out.get(reason, 0) + 1
-                if h in have and have[h].get("d"):
-                    _drop(uid, have[h]["d"])                     # the group was taken away: out of the search
-                continue
-            now_set[h] = (rel, size, mtime)
-        gone = 0
-        if complete:
-            for h in [h for h in have if h not in now_set]:
-                _drop(uid, have[h].get("d"))
-                have.pop(h, None)
-                gone += 1
-        todo = [(h, x) for h, x in now_set.items()
-                if h not in have or (have[h].get("s"), have[h].get("m")) != (x[1], x[2])]
-        todo = [(h, x) for h, x in todo if not (h in have and have[h].get("x") == "aus" and (have[h].get("s"), have[h].get("m")) == (x[1], x[2]))]
-        todo.sort(key=lambda hx: first(hx[1]))      # documents before pictures, the newest first (first)
-        new, size_sum, full = 0, 0, False
+        now_set, gone, todo = await asyncio.to_thread(_compare, uid, sid, s, files, out, complete, have, pictures)
+        new, size_sum, full, saved = 0, 0, False, time.monotonic()
         for h, (rel, size, mtime) in todo:
             if new >= ROUND_FILES or size_sum + size > ROUND_BYTES and new:
                 break
@@ -702,19 +736,20 @@ async def sync_once(uid, sid, why="auto", now=None):
                 if e.kind in ("offline", "auth", "cert", "hostkey", "blocked", "notaus"):
                     raise
                 doc, reason = "", "lesen"
-            _drop(uid, old)
+            await asyncio.to_thread(_drop, uid, old)
             have[h] = {"p": rel, "s": size, "m": mtime, "d": doc, "x": reason or ""}
             if reason:
                 out[reason] = out.get(reason, 0) + 1
             new += 1
             size_sum += size
             st["files"] = have
-            if new % 20 == 0:
-                _put_state(uid, sid, dict(st, files=have))
+            if time.monotonic() - saved >= SAVE_S:
+                await asyncio.to_thread(_put_state, uid, sid, dict(st, files=have))
+                saved = time.monotonic()
         left = max(0, len(todo) - new)
         st.update(files=have, left=0 if full else left, seen=len(now_set), out=out, fail=None if not full else {"kind": "voll", "since": int(now), "n": 1},
                   last={"t": int(now), "ok": not full, "n": new, "gone": gone, "why": why, "complete": complete})
-        _put_state(uid, sid, st)
+        await asyncio.to_thread(_put_state, uid, sid, st)
         print(f"nasquelle: abgeglichen | {new} neu | {gone} weg | {left} übrig | {len(now_set)} im ordner"
               + (" | unvollständig" if not complete else "") + (" | höchstzahl" if full else "")
               + f" | {_log_name(uid)}", flush=True)
@@ -724,7 +759,7 @@ async def sync_once(uid, sid, why="auto", now=None):
         f = st["fail"] or {}
         st.update(fail={"kind": e.kind, "since": int(f.get("since") or now), "n": int(f.get("n") or 0) + 1},
                   last={"t": int(now), "ok": False, "kind": e.kind, "why": why})
-        _put_state(uid, sid, st)
+        await asyncio.to_thread(_put_state, uid, sid, st)
         print(f"nasquelle: fehler | art={e.kind} | {_log_name(uid)}", flush=True)
         _live("job", "Wissensordner", "Wissensordner-Abgleich", t0, ok=False, uid=uid)
         return {"ok": False, "kind": e.kind}

@@ -404,7 +404,7 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 | test_app_gleichstand | one list of Ich pages, every page reachable in the apps (exceptions with a reason), pages follow the release, app texts with English |
 | test_aufraeumen | no new duplicates: own `<think>` filter, a dict key twice, unused import, own JSON write, own model call, raw `fetch(`, names differing between features.py and guides.js (the legacy list only shrinks) |
 | test_grundausstattung | basic set only without setup, without anything new going out and without a code; internet part never shipped on; card for the admin only, with undo; help sentence in an empty chat |
-| test_loopwacht | nothing heavy on the panel's event loop (the list of open places only shrinks), hang guard with log line and restart, limits of the panel and the emergency mode, the search worker on at most half of the cores as SCHED_IDLE, hardware watchdog only on a Raspberry Pi |
+| test_loopwacht | nothing heavy on the panel's event loop (the list of open places only shrinks), hang guard with log line, busy thread and restart, limits of the panel and the emergency mode, the search worker on at most half of the cores as SCHED_IDLE, hardware watchdog only on a Raspberry Pi |
 | test_richtlinie | values shipped on with a reason, journal without profile names, VERSION/CHANGELOG/README in agreement, guideline de/en present and its test names valid |
 
 **Agreement only (no test):**

@@ -404,7 +404,7 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
 | test_app_gleichstand | eine Liste der Ich-Seiten, jede Seite in den Apps erreichbar (Ausnahmen mit Grund), Seiten folgen der Freigabe, App-Texte mit Englisch |
 | test_aufraeumen | keine neuen Doppel: eigener `<think>`-Filter, doppelter Dict-Schlüssel, ungenutzter Import, eigenes JSON-Schreiben, eigener Modellaufruf, roher `fetch(`, abweichende Namen in features.py und guides.js (Altlastenliste schrumpft nur) |
 | test_grundausstattung | Grundausstattung nur ohne Einrichtung, ohne Neues nach außen und ohne Code; Internet-Teil nie ab Werk; Karte nur für den Admin, mit Rückgängig; Hilfe-Satz im leeren Chat |
-| test_loopwacht | nichts Schweres auf der Ereignis-Schleife des Panels (Liste der noch offenen Stellen wird nur kürzer), Hänge-Wächter mit Logzeile und Neustart, Grenzen von Panel und Notbetrieb, Worker der Suche auf höchstens der Hälfte der Kerne als SCHED_IDLE, Hardware-Watchdog nur am Raspberry Pi |
+| test_loopwacht | nichts Schweres auf der Ereignis-Schleife des Panels (Liste der noch offenen Stellen wird nur kürzer), Hänge-Wächter mit Logzeile, rechnendem Faden und Neustart, Grenzen von Panel und Notbetrieb, Worker der Suche auf höchstens der Hälfte der Kerne als SCHED_IDLE, Hardware-Watchdog nur am Raspberry Pi |
 | test_richtlinie | an ausgelieferte Werte mit Grund, Journal ohne Profilnamen, VERSION/CHANGELOG/README im Einklang, Richtlinie de/en vorhanden und ihre Testnamen gültig |
 
 **Nur Absprache (kein Test):**

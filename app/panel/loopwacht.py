@@ -6,7 +6,9 @@ speaker until it ends. systemd only restarts a panel that crashed, not one that 
     start()     from panel.serve(): the beat and the watcher thread
     the thread  every second: while the loop beats, it tells systemd "WATCHDOG=1" (speech-spark-panel.service has
                 WatchdogSec=RESTART_S); after STALL_S seconds without a beat one line names where the loop stands
-                (module and function of the panel's code, from the loop thread's stack), after WARN_S a second
+                (module and function of the panel's code, from the loop thread's stack) and the thread that used
+                the most CPU in the second before (Pi 2026-10-19: the loop stood at harmless file reads while one
+                core ran at 100 %, another thread kept Python's lock), after WARN_S a second
                 one; when the loop beats again, a line with the seconds. Without a beat for RESTART_S seconds
                 systemd stops the panel and starts it again (Restart=always). Before the first beat (start-up) it
                 pings for at most START_MAX_S seconds.
@@ -14,7 +16,7 @@ speaker until it ends. systemd only restarts a panel that crashed, not one that 
                 pages (health.alerts) for HINT_S seconds after a stall
 
 Fixed rule without a switch (a protection, like the watchdog of the speech services). Logs → Diagnose, area System:
-"loopwacht: stalled | <module.function> | <s> s", "loopwacht: free again | ... | <s> s": only names from the code
+"loopwacht: stalled | <module.function> | <s> s | busy <module.function or thread name> <%> %", "loopwacht: free again | ... | <s> s": only names from the code
 and numbers, never a request's content.
 """
 import asyncio
@@ -38,7 +40,8 @@ KEEP = 50           # stalls kept in memory
 _HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))   # app/
 _NAME = re.compile(r"[^A-Za-z0-9_.<>]")
 _lock = threading.Lock()
-_st = {"last": None, "tid": None, "since": None, "where": "", "warned": False, "started": None}
+_st = {"last": None, "tid": None, "ntid": None, "since": None, "where": "", "warned": False, "started": None, "cpu": {}}
+_TICK = os.sysconf("SC_CLK_TCK") if hasattr(os, "sysconf") else 100
 _stalls = deque(maxlen=KEEP)   # (end time, seconds, where)
 
 
@@ -60,7 +63,7 @@ def _notify(msg):
 
 async def beat():
     with _lock:
-        _st["tid"] = threading.get_ident()
+        _st["tid"], _st["ntid"] = threading.get_ident(), threading.get_native_id()
     while True:
         with _lock:
             _st["last"] = time.monotonic()
@@ -87,10 +90,41 @@ def where(tid, frames=None):
     return " > ".join(_NAME.sub("", n)[:60] for n in names)
 
 
-def tick(now=None, frames=None):
+def cpu_times():
+    """{native thread id: CPU ticks so far} of this process's threads (Linux /proc; {} elsewhere)."""
+    out = {}
+    try:
+        tasks = os.listdir("/proc/self/task")
+    except OSError:
+        return out
+    for t in tasks:
+        try:
+            with open(f"/proc/self/task/{t}/stat", encoding="ascii", errors="replace") as f:
+                rest = f.read().rsplit(")", 1)[1].split()
+            out[int(t)] = int(rest[11]) + int(rest[12])    # utime, stime
+        except (OSError, IndexError, ValueError):
+            pass
+    return out
+
+
+def busy(before, after, frames=None, skip=None):
+    """The thread (other than the loop) that used the most CPU between two cpu_times(): "<place or name> <%> %",
+    or "" (only names from the code and the thread names the panel gives)."""
+    use = {t: after[t] - before.get(t, after[t]) for t in after if t != skip}
+    if not use or max(use.values()) <= 0:
+        return ""
+    t = max(use, key=use.get)
+    th = next((x for x in threading.enumerate() if x.native_id == t), None)
+    place = (where(th.ident, frames) if th else "") or (_NAME.sub("", th.name)[:40] if th else "") or "thread"
+    return f"{place} {round(use[t] * 100 / _TICK)} %"
+
+
+def tick(now=None, frames=None, cpu=None):
     """One look (every second from the thread; the tests call it with their own times)."""
     now = time.monotonic() if now is None else now
+    cpu = cpu_times() if cpu is None else cpu
     with _lock:
+        before, _st["cpu"] = _st["cpu"], cpu
         last, tid = _st["last"], _st["tid"]
         if _st["started"] is None:
             _st["started"] = now
@@ -123,7 +157,8 @@ def tick(now=None, frames=None):
         if gap >= WARN_S and not warned:
             _st["warned"] = True
     if first:
-        print(f"loopwacht: stalled | {place or 'unknown'} | {int(gap)} s", flush=True)
+        who = busy(before, cpu, frames, _st["ntid"])
+        print(f"loopwacht: stalled | {place or 'unknown'} | {int(gap)} s" + (f" | busy {who}" if who else ""), flush=True)
     elif gap >= WARN_S and not warned:
         print(f"loopwacht: stalled | {place or 'unknown'} | {int(gap)} s | restart after {RESTART_S} s", flush=True)
     return "stalled"

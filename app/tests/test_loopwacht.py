@@ -36,7 +36,6 @@ PER_DOC = {("documents", "delete"), ("nasquelle", "_put_state"), ("documents", "
 # Places another thread still moves off the loop (Dominik's push queue; the coordinator handed them on 2026-10-18).
 # The list only shrinks: an entry that is no longer found is red, so it goes in the same commit.
 LATER = {
-    ("nasquelle", "sync_once"): "Ordner von Suche ausschließen: the state of a Wissensordner written per file",
     ("remarkable", "_sync"): "Ordner von Suche ausschließen: notebooks deleted one by one on the loop",
     ("remarkable", "unpair"): "Ordner von Suche ausschließen: forget() deletes every notebook on the loop",
 }
@@ -174,7 +173,7 @@ class Watcher(unittest.TestCase):
         self.old = dict(loopwacht._st)
         self.old_stalls = list(loopwacht._stalls)
         loopwacht._stalls.clear()
-        loopwacht._st.update(last=None, tid=None, since=None, where="", warned=False, started=None)
+        loopwacht._st.update(last=None, tid=None, ntid=None, since=None, where="", warned=False, started=None, cpu={})
 
     def tearDown(self):
         loopwacht._st.clear()
@@ -182,11 +181,11 @@ class Watcher(unittest.TestCase):
         loopwacht._stalls.clear()
         loopwacht._stalls.extend(self.old_stalls)
 
-    def _tick(self, now, frames=None):
+    def _tick(self, now, frames=None, cpu=None):
         out = io.StringIO()
         sent = []
         with redirect_stdout(out), mock.patch.object(loopwacht, "_notify", lambda m: sent.append(m) or True):
-            r = loopwacht.tick(now, frames)
+            r = loopwacht.tick(now, frames, {} if cpu is None else cpu)
         return r, out.getvalue(), sent
 
     def test_start_up_pings_only_for_a_while(self):
@@ -220,6 +219,23 @@ class Watcher(unittest.TestCase):
                               r"ereignis: Spark \| Panel hing 12 s\n$")   # Live shows it under Ereignisse
         v = loopwacht.view()
         self.assertEqual((v["n"], v["max_s"], v["letzt_s"], v["jetzt_s"]), (1, 12, 12, 0))
+
+    def test_a_stall_names_the_thread_that_keeps_the_cpu(self):
+        """Pi 2026-10-19: the loop stood at harmless file reads (load_config, getmtime) while one core ran at 100 %:
+        another thread of the panel kept Python's lock. The stall line names the busiest other thread."""
+        me = threading.current_thread()
+
+        def hog():
+            return sys._getframe()
+        frames = {7: hog(), me.ident: hog()}
+        loopwacht._st.update(last=100.0, tid=7, ntid=99)
+        tck = loopwacht._TICK
+        self._tick(100.0 + loopwacht.STALL_S - 1, frames, {99: 0, me.native_id: 0})
+        _, out, _ = self._tick(100.0 + loopwacht.STALL_S, frames, {99: 5 * tck, me.native_id: tck * 9 // 10})
+        self.assertRegex(out, r"^loopwacht: stalled \| \S+ > test_loopwacht\.hog \| 5 s \| busy "
+                              r"test_loopwacht\.test_a_stall_names\w* > test_loopwacht\.hog 90 %\n$")
+        self.assertEqual(loopwacht.busy({1: 5}, {1: 5}), "")            # nobody computed: nothing named
+        self.assertIsInstance(loopwacht.cpu_times(), dict)
 
     def test_the_place_names_only_code(self):
         """Outermost and innermost frame of the panel's own code; nothing of a request's content."""
@@ -285,7 +301,8 @@ class Background(unittest.TestCase):
         import embed_worker
         import subprocess
         self.assertLessEqual(embed_worker.THREADS, max(1, (os.cpu_count() or 2) // 2))
-        src = open(embed_worker.__file__, encoding="utf-8").read()
+        with open(embed_worker.__file__, encoding="utf-8") as f:
+            src = f.read()
         self.assertNotRegex(src, r"intra_op_num_threads = \d")
         self.assertEqual(src.count("intra_op_num_threads = THREADS"), 2)
         self.assertIn("hinten(True)", src)
@@ -297,6 +314,54 @@ class Background(unittest.TestCase):
         self.assertGreater(int(out[0]), 0)
         if hasattr(os, "SCHED_IDLE"):
             self.assertEqual(out[1], "True")
+
+
+    def test_catch_up_reads_only_the_pieces_without_vector(self):
+        """Pi 2026-10-19: every batch of 16 read the whole table (46000 pieces); the panel stalled on every file
+        access. The pieces without a vector come from the partial index, so are counted."""
+        import sqlite3
+        import documents
+        with open(documents.__file__, encoding="utf-8") as f:
+            src = f.read()
+        con = sqlite3.connect(":memory:")
+        con.executescript(documents.SCHEMA)
+        for q in ("FROM chunks WHERE vec IS NULL ORDER BY id LIMIT ?", "SELECT COUNT(*) FROM chunks WHERE vec IS NULL"):
+            self.assertIn(q, src)
+            sql = q if q.startswith("SELECT") else "SELECT id, text " + q
+            plan = " ".join(str(r[-1]) for r in con.execute("EXPLAIN QUERY PLAN " + sql, (16,) * sql.count("?")))
+            self.assertIn("chunks_novec", plan, q)
+        self.assertNotIn("COUNT(vec)", src)
+
+
+    def test_folder_state_is_read_once_and_saved_by_time(self):
+        """Pi 2026-10-19: the Wissensordner state (3.4 MB, 20000 files) was parsed every minute and written every
+        20 files of a round; the panel stood still. Read once while unchanged, a copy per caller, saved by time."""
+        import json
+        import nasquelle
+        with tempfile.TemporaryDirectory() as d:
+            path = os.path.join(d, "nasquelle-stand.json")
+            with open(path, "w") as f:
+                json.dump({"s1": {"files": {"h1": {"p": "a.txt"}}}}, f)
+            reads = []
+            real = nasquelle._json
+            with mock.patch.object(nasquelle, "_state_file", lambda uid: path), \
+                    mock.patch.object(nasquelle, "_json", lambda p: reads.append(p) or real(p)):
+                st = nasquelle.state("u", "s1")
+                st["files"]["h2"] = {"p": "b.txt"}                    # a caller's change stays its own
+                self.assertEqual(set(nasquelle.state("u", "s1")["files"]), {"h1"})
+                self.assertEqual(len(reads), 1)
+                nasquelle._put_state("u", "s1", dict(st))
+                self.assertEqual(set(nasquelle.state("u", "s1")["files"]), {"h1", "h2"})
+                self.assertEqual(len(reads), 1)                       # its own save is not read again
+                with open(path, "w") as f:                            # changed from outside: read again
+                    json.dump({"s1": {"files": {}}, "s2": {}}, f)
+                self.assertEqual(nasquelle.state("u", "s1")["files"], {})
+                self.assertEqual(len(reads), 2)
+        with open(nasquelle.__file__, encoding="utf-8") as f:
+            src = f.read()
+        self.assertNotIn("new % 20", src)
+        self.assertIn("time.monotonic() - saved >= SAVE_S", src)
+        self.assertIn("await asyncio.to_thread(_compare,", src)
 
 
 class Limits(unittest.TestCase):

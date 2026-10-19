@@ -2042,6 +2042,13 @@
 "titel": "Kalender und E-Mail in der iPhone-App",
 "text": "A: Neuer TestFlight-Build. Meine Sachen: oben stehen „Kalender“ und „E-Mail“. B: Kalender zeigt die Termine der nächsten vier Wochen nach Tagen; „+“ legt einen Termin an, er steht danach auch im Panel und im iPhone-Kalender. C: Einen Termin antippen, „Ändern“ (Uhrzeit), dann „Löschen“: beides kommt im Panel an; bei einem wiederholten Termin fehlen die Knöpfe. D: E-Mail zeigt den Posteingang; eine Mail antippen zeigt den Text, sie bleibt ungelesen. E: Mit „Mails ordnen“: „Archivieren“ nimmt sie aus dem Posteingang. F: Mit „Mails senden“: „Antworten“, Text, „Vorschau“, „Senden“: die Antwort kommt an. G: Flugmodus, App neu öffnen: Kalender, Mail-Liste und eine schon geöffnete Mail sind mit „Stand …“ da. H: Admin schaltet E-Mail lesen aus: beim nächsten Öffnen ist die Mail-Liste weg. I: CarPlay: „Termine vorlesen“ und „Neue Mails vorlesen“ sprechen die Antwort.",
 "thread": "Kalender und E-Mail in Panel und Apps"
+},
+{
+"id": "P316",
+"v": 816,
+"titel": "Kein Hänger beim Wissensordner-Abgleich",
+"text": "A: Auf dem Pi sudo speech-spark update. B: Zustand → Logs → Diagnose, Bereich System, nach loopwacht filtern: jede Zeile „stalled“ endet jetzt mit „busy <Stelle> <Prozent> %“. C: Während ein großer Wissensordner Runde um Runde gelesen wird, zeigt Zustand → Monitoring → Rechner am Panel-Rechner keine neuen Hänger mehr; kommen doch welche, die Zeilen in den Thread kopieren.",
+"thread": "Pi stabilisieren"
 }
 ]
 }

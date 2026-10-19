@@ -90,6 +90,9 @@ CREATE TABLE IF NOT EXISTS docs (id TEXT PRIMARY KEY, name TEXT NOT NULL, size I
 CREATE TABLE IF NOT EXISTS chunks (id INTEGER PRIMARY KEY, doc TEXT NOT NULL, n INTEGER, page INTEGER,
     text TEXT NOT NULL, vec BLOB);
 CREATE INDEX IF NOT EXISTS chunks_doc ON chunks(doc);
+-- the pieces still without a meaning vector (missing_vectors, vector_state): without it each batch of the catch-up
+-- read the whole table, text and vectors (Pi 2026-10-19: 46000 pieces, the panel stalled on every file access)
+CREATE INDEX IF NOT EXISTS chunks_novec ON chunks(id) WHERE vec IS NULL;
 CREATE VIRTUAL TABLE IF NOT EXISTS fts USING fts5(terms);
 CREATE VIRTUAL TABLE IF NOT EXISTS ftshead USING fts5(terms);
 CREATE TABLE IF NOT EXISTS pages (doc TEXT NOT NULL, page INTEGER NOT NULL, jpeg BLOB NOT NULL,
@@ -1410,14 +1413,15 @@ def vector_state(uid):
     if not os.path.exists(db_path(uid)):
         return 0, 0
     with _Db(uid) as con:
-        r = con.execute("SELECT COUNT(vec), COUNT(*) FROM chunks").fetchone()
-    return r[0], r[1]
+        total = con.execute("SELECT COUNT(*) FROM chunks").fetchone()[0]
+        missing = con.execute("SELECT COUNT(*) FROM chunks WHERE vec IS NULL").fetchone()[0]   # chunks_novec
+    return total - missing, total
 
 
 def _vectors(uid):
     import numpy as np
     with _Db(uid) as con:
-        stamp = (os.path.getmtime(db_path(uid)), con.execute("SELECT COUNT(vec), MAX(id) FROM chunks").fetchone()[:])
+        stamp = (os.path.getmtime(db_path(uid)), con.execute("SELECT (SELECT COUNT(*) FROM chunks WHERE vec IS NULL), MAX(id) FROM chunks").fetchone()[:])
         hit = _vcache.get(uid)
         if hit and hit[0] == stamp:
             return hit[1], hit[2]
