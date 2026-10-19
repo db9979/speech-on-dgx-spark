@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.842** · 2026-10-19 · Fix: GitHub-Lauf „Tests“ wieder grün; der Test für den Weg eines Hinweises oben klickte manchmal den Hinweis zu offenen Praxistests, der alle 3 s neu gezeichnet wird, statt des eigenen
 - **V01.0.841** · 2026-10-19 · Weniger Bildlaufleisten: Ich rollt als Ganzes mit einer Leiste (vorher drei, eine davon rollte nur die verdeckte Seite darunter), E-Mail am Rechner wie ein Mail-Programm (Seite steht, Liste und Lesebereich rollen nebeneinander, der Mailtext nie extra), Listen ohne eigene Leiste in der Seite; ein Wächter-Test prüft alle Seiten mit echten Leisten
 - **V01.0.840** · 2026-10-19 · Spark-Kalender Stufe 4: der Spark als Kalender-Server (CalDAV) für den Kalender des iPhone, Thunderbird oder DAVx5; App-Passwort je Profil unter Kalender → Einstellungen oder im iPhone, im Heimnetz und über den Proxy; Admin-Schalter, aus
 - **V01.0.839** · 2026-10-19 · Spark-Kalender Stufe 3: ein Kalender ganz ohne Konto, der nur auf dem Spark liegt (verschlüsselt im Profil); anlegen unter Ich → Kalender oder im iPhone, Termine per Seite, App oder Sprache, teilen wie jeder Kalender

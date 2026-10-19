@@ -393,8 +393,14 @@ class Browser(unittest.TestCase):
                 async with pg.expect_response(lambda r: r.url.endswith("/api/status")):
                     await pg.evaluate("ALERTS_LAST='';goSec('chat');goSec('mon')")
                 await self.until(pg, "ALERTS_LAST!==''")
-                await pg.evaluate("TRACE_ON=true;showAlerts([{kind:'latency',level:'warn',text:'Antworten sind langsamer geworden.',go:'Zustand → Logs → Anfragen'}])")
-                await pg.click("#alerts .gonote button")
+                # drawn and clicked in one step: the refresh every 3 s draws the real notes again (here the open
+                # hands-on tests, Zustand → Praxistest), between two steps the click hit that note's button
+                shown = await pg.evaluate("""()=>{TRACE_ON=true;showAlerts([{kind:'latency',level:'warn',text:'Antworten sind langsamer geworden.',go:'Zustand → Logs → Anfragen'}]);
+                  const b=document.querySelector('#alerts .gonote button'),r=b&&b.getBoundingClientRect();
+                  const top=r&&document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);
+                  if(!b||b.title!=='Zustand → Logs → Anfragen'||!r.width||!r.height||!(top===b||b.contains(top)))return false;
+                  b.click();return true}""")
+                self.assertTrue(shown, "the note's button is not there, not visible or covered")
                 await self.until(pg, "LG.tab==='req'&&getComputedStyle($('logs')).display!=='none'")
                 self.assertEqual(errors, [])
                 await br.close()

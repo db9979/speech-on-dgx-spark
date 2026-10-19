@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.842** Fix: GitHub run "Tests" green again; the test for the way of a note on top sometimes clicked the note about open hands-on tests, drawn again every 3 s, instead of its own
 - **V01.0.841** Fewer scroll bars: Me scrolls as a whole with one bar (before three, one of them only scrolled the hidden page underneath), E-mail on a computer like a mail program (the page stands, list and reading pane scroll side by side, the mail text never on its own), lists without a bar of their own inside the page; a guard test checks every page with real bars
 - **V01.0.840** Spark calendar stage 4: the Spark as a calendar server (CalDAV) for the iPhone calendar, Thunderbird or DAVx5; an app password per profile under Calendar → Settings or on the iPhone, at home and through the proxy; admin switch, off
 - **V01.0.839** Spark calendar stage 3: a calendar without any account that lives only on the Spark (encrypted in the profile); create it under Me → Calendar or on the iPhone, appointments via page, app or voice, shared like any calendar
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.835** Me → Music looks like Documents and E-mail: a card for a new song (length as chips, switch "With singing"), search and filters, songs by day with ▶ in every row, details with a player, "Make it again" and the description folded; iPhone app grouped by day with a choice of length
 - **V01.0.834** Code check, speed B7: speaker recognition almost twice as fast, the journal measures how long the answer waits for it
 - **V01.0.833** E-mail: an open mail, an answer and a new mail have a visible button to close or discard at every width (it was missing on the computer), Esc closes the answer even from the text field, typed text is asked about first
-- **V01.0.832** Spark calendar stage 2: appointments added, changed or deleted at once on the Calendar page and on the iPhone (first in the copy, the server behind it); if the server refuses, its version stands and the page says so
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
