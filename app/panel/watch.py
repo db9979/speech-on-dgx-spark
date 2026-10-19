@@ -136,6 +136,7 @@ class Job:
         self.t = self.start = time.time()
         self.first_text = self.first_audio = 0.0   # when the Spark had them (for the watch's report)
         self.reported = False
+        self.owner = ""    # the profile that asked ("" for a guest): poll, report and cancel only from it
         self.mark = None   # "mail" / "outside": the answer was made from outside text
         self.proposal = ""        # the Spark proposes something and waits for yes or no: the watch shows ✓ and ✕
         self.agenda = False       # a reminder or timer was set or cancelled: the phone fetches the watch's list again

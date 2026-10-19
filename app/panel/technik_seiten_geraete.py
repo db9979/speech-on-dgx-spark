@@ -410,7 +410,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Telegram, Siri, Uhr
     "kanaele": {
-        "stand": "6f13703a64",
+        "stand": "e7ef39e57b",
         "bezug": {
             "watch.JOB_TTL": ["s9"], "telegram.loop": ["s1"], "telegram.handle": ["s2", "s3", "s4"],
             "telegram.ask": ["s7", "s8", "s11"], "telegram.transcribe": ["s5"], "chat.siri_ask": ["s1", "s3"],
@@ -505,7 +505,7 @@ SEITEN = {
               ("Text ohne Markdown · Ton für die Uhr", "text without Markdown · sound for the watch"),
               ("Telegram bekommt reinen Text und, wenn das Profil es will, eine Sprachnachricht in seiner Stimme. Siri "
                "bekommt vorlesbaren Text ohne Passwörter und Codes. Die Uhr holt Text und Ton (auf {watch.MAX_AUDIO} "
-               "Bytes je Abruf, für ihren kleinen Lautsprecher gepackt) über /api/watch/poll; höchstens "
+               "Bytes je Abruf, für ihren kleinen Lautsprecher gepackt) über /api/watch/poll, nur das Profil, das gefragt hat (fremde Auftrags-Nummern geben 404); höchstens "
                "{watch.MAX_RUNNING} Uhr-Antworten laufen gleichzeitig. Der Begleiter bekommt Text ohne Markdown und "
                "zusätzlich die Antwort mit Markdown (höchstens {chat.MD_ANSWER_MAX} Zeichen), wenn darin nicht weniger "
                "Geheimnisse verdeckt sind. Mit ihren Schaltern bekommt die Uhr außerdem bis zu {watch.FOLLOW_MAX} "
@@ -524,7 +524,7 @@ SEITEN = {
                "versiegelt ins Profil, nie für das Modell.",
                "Telegram gets plain text and, if the profile wants it, a voice message in its voice. Siri gets "
                "speakable text without passwords and codes. The watch fetches text and sound (packed for its small "
-               "speaker, {watch.MAX_AUDIO} bytes per fetch) through /api/watch/poll; at most {watch.MAX_RUNNING} watch "
+               "speaker, {watch.MAX_AUDIO} bytes per fetch) through /api/watch/poll, only for the profile that asked (a foreign job number gives 404); at most {watch.MAX_RUNNING} watch "
                "answers run at once. The companion gets text without Markdown and also the answer with Markdown (at "
                "most {chat.MD_ANSWER_MAX} characters) when it hides no fewer secrets. With its switches the watch also "
                "gets up to {watch.FOLLOW_MAX} follow-ups to tap (the model only suggests, watch.follow_clean keeps short "

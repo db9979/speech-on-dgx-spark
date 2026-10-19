@@ -113,6 +113,8 @@ class Act(unittest.TestCase):
         self.assertEqual(self.act("delete").status_code, 400)
         self.assertEqual(self.act("read", uid=999).status_code, 404)
         self.assertEqual(self.act("back", uid=0, folder="Archive", mid="<gibt-es-nicht@x>").status_code, 404)
+        # code check 19.10. C5: a forged id with a line break never reaches the IMAP command
+        self.assertEqual(self.act("back", uid=0, folder="Archive", mid="<a@x>\r\nA1 DELETE INBOX").status_code, 404)
         other, _ = profile("Ordnen Otto")
         self.assertEqual(self.act("archive", c=other).status_code, 400)      # not his mailbox
         self.assertEqual(len(FMB.boxes["INBOX"]), 2)

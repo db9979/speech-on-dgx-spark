@@ -26,6 +26,13 @@ class OnePoller(unittest.TestCase):
         cfg = panel.https_config({"host": "127.0.0.1", "https_port": 31443}, "c.pem", "k.pem")
         self.assertEqual(cfg.lifespan, "off")
 
+    def test_https_takes_tls_12_or_newer(self):
+        """Code check 19.10. C8: the panel's own https server never speaks TLS 1.0 or 1.1."""
+        import ssl
+        cfg = panel.https_config({"host": "127.0.0.1", "https_port": 31443}, "c.pem", "k.pem")
+        ctx = cfg.ssl_context_factory(cfg, lambda: ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER))
+        self.assertGreaterEqual(ctx.minimum_version, ssl.TLSVersion.TLSv1_2)
+
     def test_second_loop_returns_at_once(self):
         out = io.StringIO()
         with mock.patch.dict(telegram._poller, on=True), contextlib.redirect_stdout(out):

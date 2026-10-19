@@ -126,7 +126,7 @@ class OffTheLoop(unittest.TestCase):
 
 class Rounds(unittest.TestCase):
     def test_shipped_rounds_stay_strong(self):
-        """The self-tests run with fewer rounds (helpers.py); what ships is 200 000."""
+        """The self-tests run with fewer rounds (helpers.py); what ships is OWASP's 600 000 (V01.0.825)."""
         import os
         import re
         here = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "panel")
@@ -134,9 +134,55 @@ class Rounds(unittest.TestCase):
             with open(os.path.join(here, name)) as f:
                 m = re.search(rf"^{const} = ([0-9_]+)", f.read(), re.M)
             self.assertIsNotNone(m, name)
-            self.assertGreaterEqual(int(m.group(1).replace("_", "")), 200_000, name)
+            self.assertGreaterEqual(int(m.group(1).replace("_", "")), 600_000, name)
         with open(os.path.join(here, "profiles.py")) as f:
-            self.assertIn("PIN_ROUNDS).hex()", f.read())
+            self.assertIn("rounds = salt or secrets.token_hex(16), rounds or PIN_ROUNDS", f.read())
+
+
+class RoundsRenewed(unittest.TestCase):
+    """V01.0.825 (code check 19.10. C8): hashes from before keep working and get today's rounds at the next sign-in;
+    a profile's other browsers stay signed in, a new PIN still ends them."""
+
+    def test_admin_password_from_before(self):
+        import hashlib
+        import os
+        import secrets
+        import tempfile
+        from unittest import mock
+        import core
+        with tempfile.TemporaryDirectory() as d, mock.patch.object(core, "PASSWORD_FILE", os.path.join(d, "pw")), \
+                mock.patch.object(core, "OLD_ROUNDS", 500):
+            salt = secrets.token_bytes(16)
+            with open(core.PASSWORD_FILE, "w") as f:
+                f.write(f"{salt.hex()} {hashlib.pbkdf2_hmac('sha256', b'alt-und-gut', salt, 500).hex()}\n")
+            self.assertFalse(core.check_password("falsch"))
+            self.assertEqual(len(open(core.PASSWORD_FILE).read().split()), 2, "a wrong password renews nothing")
+            self.assertTrue(core.check_password("alt-und-gut"))
+            self.assertEqual(open(core.PASSWORD_FILE).read().split()[2], str(core.ROUNDS))
+            self.assertTrue(core.check_password("alt-und-gut"))
+
+    def test_pin_from_before(self):
+        import hashlib
+        from unittest import mock
+        import profiles
+        uid = profiles.add_user("Rundenrolf", "4711")
+        with mock.patch.object(profiles, "OLD_PIN_ROUNDS", 500):
+            with profiles._lock:
+                d = profiles._load()
+                u = next(x for x in d["users"] if x["id"] == uid)
+                salt = "ab" * 16
+                u["pin"] = salt + "$" + hashlib.pbkdf2_hmac("sha256", b"4711", bytes.fromhex(salt), 500).hex()
+                profiles._write(profiles._path("profiles.json"), d)
+                old = profiles._cookie_value(u)
+            self.assertIsNone(profiles.login("Rundenrolf", "0000"))
+            self.assertIsNotNone(profiles.login("Rundenrolf", "4711"))
+            d = profiles._load()
+            u = next(x for x in d["users"] if x["id"] == uid)
+            self.assertEqual(profiles._pin_rounds(u["pin"]), profiles.PIN_ROUNDS)
+            self.assertIsNotNone(profiles._cookie_user(d, old)[0], "the other browser stays signed in")
+            self.assertIsNotNone(profiles.login("Rundenrolf", "4711"))
+            profiles.set_pin(uid, "8888")
+            self.assertIsNone(profiles._cookie_user(profiles._load(), old)[0], "a new PIN ends the old logins")
 
 
 class JsonStore(unittest.TestCase):

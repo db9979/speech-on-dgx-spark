@@ -113,10 +113,8 @@ Jede Änderung wird nicht nur gegen die Fallen oben geprüft, sondern auch dageg
 **Regelmäßige Prüfung**
 - [ ] Vor großen Versionen und mindestens einmal im Monat eine skeptische Gesamtprüfung gegen diese Maßstäbe (wie am 08.10. und 11.10.2026). Jeder Befund bekommt einen Selbsttest.
 
-**Noch nicht erfüllt** (wird beim nächsten Berühren der Stelle nachgezogen; Stand 12.10.2026)
-- PBKDF2-SHA256 mit 200.000 Runden für Admin-Passwort und PIN (`core.ROUNDS`, `profiles.PIN_ROUNDS`); OWASP empfiehlt heute 600.000 oder Argon2id/scrypt. Umstellung mit Neuberechnung beim nächsten Anmelden.
+**Noch nicht erfüllt** (wird beim nächsten Berühren der Stelle nachgezogen; Stand 19.10.2026)
 - Fernet (AES-CBC plus HMAC) im vault und bei Umzugsschlüsseln: sicher, aber kein AEAD; neue Teile nehmen AES-GCM, ein Wechsel nur mit Umzug der vorhandenen Daten.
 - Kein automatischer Schwachstellen-Abgleich der Python-Pakete (z. B. gegen die OSV-Datenbank) in „Tests“.
 - Signierte Geräte-Updates sind gebaut, aber ohne Schlüssel aus (`UPDATE_SIGNING_KEY` fehlt noch).
 - `style-src 'unsafe-inline'` bleibt wegen älterer Safari-Versionen in der iPhone-App.
-- Mindest-TLS-Version des eigenen https-Servers ist nicht ausdrücklich festgelegt (prüfen).

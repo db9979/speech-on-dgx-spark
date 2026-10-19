@@ -33,6 +33,7 @@ import time
 
 import features
 import mail
+from common import STATE, read_json, write_json
 import netguard
 import notaus
 import profiles
@@ -55,6 +56,9 @@ SMTP_SSL = netguard.SMTP_SSL
 _lock = threading.Lock()
 _pending = {}                  # token → {"uid", "acct", "msg", "n", "t"}
 _today = {"day": "", "n": {}}  # mails sent today per profile (MAX_DAY) and for Live (a number, never which)
+# the day's count survives a restart of the panel (V01.0.825, code check 19.10. C3: before, every restart allowed
+# MAX_DAY mails more); only numbers per profile id
+SENT_FILE = os.path.join(STATE, "mail-gesendet.json")
 
 
 def outgoing(acct):
@@ -86,7 +90,10 @@ def _addrs(raw, label):
 def _count(uid):
     day = time.strftime("%Y-%m-%d")
     if _today["day"] != day:
-        _today.update(day=day, n={})
+        kept = read_json(SENT_FILE, {})
+        kept = kept if isinstance(kept, dict) and kept.get("day") == day and isinstance(kept.get("n"), dict) else {}
+        _today.update(day=day, n={str(k): int(v) for k, v in (kept.get("n") or {}).items()
+                                  if isinstance(v, int) and 0 < v <= 10 * MAX_DAY})
     return _today["n"].get(uid, 0)
 
 
@@ -207,6 +214,7 @@ def send(uid, token):
         _pending.pop(token, None)
         _count(uid)
         _today["n"][uid] = _today["n"].get(uid, 0) + 1
+        write_json(SENT_FILE, {"day": _today["day"], "n": dict(_today["n"])}, mode=0o600)
     print(f"mail: sent | {p['n'] - refused} recipients, {refused} refused | {who}", flush=True)
     copy = ""
     if outgoing(acct)[0] not in KEEPS_SENT:

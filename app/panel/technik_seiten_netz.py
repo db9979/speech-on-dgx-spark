@@ -502,13 +502,15 @@ SEITEN = {
                "The panel writes a wish and may start only the fixed unit speech-spark-werkstatt through sudo. "
                "werkstatt.wunsch_nehmen reads it as root exactly once and checks everything again.")),
             S("s4", "schritt", ("Sandbox", "Sandbox"),
-              ("eigener Nutzer, nur 127.0.0.1", "own user, only 127.0.0.1"),
+              ("eigener Nutzer, nur das LLM-Tor", "own user, only the LLM-Tor"),
               ("werkstatt.sandbox startet den Auftrag mit systemd-run als Nutzer spark-werkstatt: nur sein eigener Ordner "
-               "ist beschreibbar, Daten, Einstellungen und Schlüssel des Spark sind unsichtbar, Netz nur zu diesem Rechner, "
-               "Speicher- und Zeitgrenze je Art (werkstatt.GRENZE_S).",
+               "ist beschreibbar, Daten, Einstellungen und Schlüssel des Spark sind unsichtbar, Netz nur zu diesem Rechner und "
+               "dort per nftables nur zum LLM-Tor (prüft den Schlüssel) und zu den freien Ports der eigenen Tests, nie zu einer "
+               "Engine oder zum Panel; ohne diese Sperre startet kein Auftrag. Speicher- und Zeitgrenze je Art (werkstatt.GRENZE_S).",
                "werkstatt.sandbox starts the order with systemd-run as the user spark-werkstatt: only its own folder is "
-               "writable, the Spark's data, settings and keys are invisible, network only to this computer, a memory and "
-               "time limit per kind (werkstatt.GRENZE_S).")),
+               "writable, the Spark's data, settings and keys are invisible, network only to this computer and there, by "
+               "nftables, only to the LLM-Tor (it checks the key) and the free ports of its own tests, never an engine or the "
+               "panel; without this firewall no order starts. A memory and time limit per kind (werkstatt.GRENZE_S).")),
             S("s5", "frage", ("Kopie des Codes gemacht?", "Copy of the code made?"),
               ("git clone von /opt/speech-spark/src", "git clone of /opt/speech-spark/src"),
               ("werkstatt.kopie klont den Klon des Installers, nie von GitHub. Weil er root gehört, nennt werkstatt.git_umgebung "

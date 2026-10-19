@@ -671,7 +671,10 @@ class Box:
         return [int(x) for x in b" ".join(x for x in data if x).split() if x.isdigit()]
 
     def find_mid(self, mid):
-        """UIDs in the selected folder whose Message-ID is exactly mid (SEARCH alone also matches parts)."""
+        """UIDs in the selected folder whose Message-ID is exactly mid (SEARCH alone also matches parts). A value that
+        does not look like a Message-ID finds nothing: it may come from the browser ("Rückgängig" on the E-mail page)
+        and goes into an IMAP command (code check 19.10. C5)."""
+        mid = clean_mid(mid)
         if not mid:
             return []
         hits = self.search("HEADER", "Message-ID", _q(mid))

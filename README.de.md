@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.825** Code-Prüfung Sicherheit: Passwort und PINs mit 600.000 PBKDF2-Runden, https nur TLS 1.2 oder neuer, Wachposten meldet wichtige Änderungen immer sofort, Uhr-Antworten nur fürs fragende Profil, Mail-Tageszähler übersteht Neustart, Werkstatt-Sandbox nur zum LLM-Tor
 - **V01.0.824** Telefon: Stimme nicht mehr abgehackt (eigener Ton-Takt, kleiner Puffer, schnelleres G.722)
 - **V01.0.823** Kalender teilen gibt nur noch den gewählten Kalender frei, nie das ganze iCloud- oder Nextcloud-Konto (Code-Prüfung C2); das Teilen-Fenster fragt bei mehreren Kalendern, welcher
 - **V01.0.822** Rotes main bleibt nicht mehr unbemerkt: der Schnelltest vor dem Push lässt alle Tests laufen und bricht bei rotem main ab, GitHub öffnet ein Issue mit den roten Tests, Zustand → Update zeigt, seit wann es rot ist
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.818** Fix: GitHub-Testlauf wieder grün (rot seit .808, darum bot das Update nur .807 an); die Hilfe findet „Mails vorgelesen“ und die Live-Übersicht wieder
 - **V01.0.817** Kalender schnell: Termine monatsweise zwischengespeichert, ein langsamer Kalender lädt im Hintergrund weiter statt abzubrechen, alle 5 Minuten im Hintergrund aktualisiert.
 - **V01.0.816** Das Panel hängt nicht mehr beim Abgleich großer Wissensordner; das Log nennt bei einem Hänger den rechnenden Faden
-- **V01.0.815** Kalender und E-Mail in der iPhone-App: vier Wochen Termine (anlegen, ändern, löschen), Posteingang mit Lesen, Ordnen und Senden; auf dem Handy zwischengespeichert; CarPlay liest Termine und neue Mails vor.
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

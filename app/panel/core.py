@@ -75,19 +75,26 @@ async def json_body(request: Request, limit, lenient=False):
 
 
 def _stored_hash():
+    """(salt, digest, rounds) of the panel password, or None. A file without a round count is from before
+    V01.0.825 (OLD_ROUNDS); check_password renews it at the next sign-in."""
     try:
         with open(PASSWORD_FILE) as f:
-            salt, digest = f.read().split()
-        return bytes.fromhex(salt), digest
+            parts = f.read().split()
+        if len(parts) not in (2, 3):
+            return None
+        return bytes.fromhex(parts[0]), parts[1], int(parts[2]) if len(parts) == 3 else OLD_ROUNDS
     except (OSError, ValueError):
         return None
 
 
-ROUNDS = 200_000   # PBKDF2 rounds of the admin password (self-tests lower it for speed only, test_tempo checks this)
+# PBKDF2-SHA256 rounds of the admin password: OWASP's 600 000 since V01.0.825 (code check 19.10. C8; self-tests lower it
+# for speed only, test_tempo checks what ships). A hash made with fewer rounds is renewed at the next sign-in.
+ROUNDS = 600_000
+OLD_ROUNDS = 200_000   # hashes without a round count in the file (before V01.0.825)
 
 
-def _hash(password, salt):
-    return hashlib.pbkdf2_hmac("sha256", password.encode(), salt, ROUNDS).hex()
+def _hash(password, salt, rounds=None):
+    return hashlib.pbkdf2_hmac("sha256", password.encode(), salt, rounds or ROUNDS).hex()
 
 
 def password_set():
@@ -100,14 +107,20 @@ def store_password(new):
     os.makedirs(os.path.dirname(PASSWORD_FILE), exist_ok=True)
     tmp = PASSWORD_FILE + ".tmp"
     with open(os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600), "w") as f:
-        f.write(f"{salt.hex()} {_hash(new, salt)}\n")
+        f.write(f"{salt.hex()} {_hash(new, salt)} {ROUNDS}\n")
     os.replace(tmp, PASSWORD_FILE)
 
 
 def check_password(password):
     stored = _stored_hash()
     if stored:
-        return secrets.compare_digest(_hash(password, stored[0]), stored[1])
+        ok = secrets.compare_digest(_hash(password, stored[0], stored[2]), stored[1])
+        if ok and stored[2] != ROUNDS:
+            # renewed with today's rounds; the admin login is signed with the hash, so other admin browsers
+            # sign in once more
+            store_password(password)
+            print(f"guard: Admin-Passwort mit {ROUNDS} Runden neu gespeichert (vorher {stored[2]})", flush=True)
+        return ok
     return bool(PASSWORD) and secrets.compare_digest(password.encode(), PASSWORD.encode())
 
 

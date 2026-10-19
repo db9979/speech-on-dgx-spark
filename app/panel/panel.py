@@ -716,9 +716,18 @@ class Server(uvicorn.Server):
         return contextlib.nullcontext()
 
 
+def tls_context(config, default):
+    """uvicorn's TLS context with TLS 1.2 as the floor (V01.0.825, code check 19.10. C8: security checklist "only
+    TLS 1.2 or newer"; Python's default floor depends on the system's OpenSSL settings)."""
+    import ssl
+    ctx = default()
+    ctx.minimum_version = ssl.TLSVersion.TLSv1_2
+    return ctx
+
+
 def https_config(pcfg, cert, key):
     return uvicorn.Config(app, host=pcfg["host"], port=pcfg["https_port"], ssl_certfile=cert, ssl_keyfile=key,
-                          lifespan="off")
+                          ssl_context_factory=tls_context, lifespan="off")
 
 
 async def serve():

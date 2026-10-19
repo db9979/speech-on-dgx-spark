@@ -450,6 +450,22 @@ class Pebble(unittest.TestCase):
         self.assertEqual(pebblewatch.take_code(code, now=2010.0), uid)
         self.assertIsNone(pebblewatch.take_code("../" * 10))
 
+    def test_an_answer_only_for_the_profile_that_asked(self):
+        """Code check 19.10. C6: poll, report and cancel of a watch answer only from its own profile."""
+        a, b = profile("Polli"), profile("Pebbo")
+        job = watch.Job(speak=False)
+        job.owner = next(u["id"] for u in profiles.names() if u["name"] == "Polli")
+        job.done = True
+        watch.JOBS[job.id] = job
+        try:
+            self.assertEqual(b.get(f"/api/watch/poll?id={job.id}").status_code, 404)
+            self.assertFalse(b.post("/api/watch/report", json={"id": job.id}).json()["ok"])
+            self.assertFalse(job.reported)
+            self.assertEqual(a.get(f"/api/watch/poll?id={job.id}").status_code, 200)
+            self.assertIn(TestClient(panel.app).get(f"/api/watch/poll?id={job.id}").status_code, (401, 403, 404))
+        finally:
+            watch.JOBS.pop(job.id, None)
+
     def test_key_only_reaches_the_watch_paths(self):
         a = profile("Pepe")
         code = code_of(a.post("/api/profile/pebble/pair", json={"base": BASE}).json()["setup"])

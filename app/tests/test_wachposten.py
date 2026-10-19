@@ -2,7 +2,8 @@
 
 Off by default and nothing counted while off; the rules are fixed (lockout, new way in, protection changed, change
 log changed, quality worse) and take only the change log's fixed words, never a name, an address or a detail; one
-note per round to every admin with a device, at most MAX_DAY a day, the rest the next day; a note that reached nobody
+note per round to every admin with a device, at most MAX_DAY a day for lockouts and the quality test (the rest the
+next day), a new way in or changed protection always at once and never dropped; a note that reached nobody
 waits; the quality run is told once; never for a profile without the admin role.
 No test depends on the wall clock: times are passed in.
 """
@@ -103,13 +104,32 @@ class Delivery(Base):
 
     def test_at_most_max_day_notes_then_the_next_day(self):
         for i in range(wachposten.MAX_DAY + 2):
-            guard.log("admin_role")
+            guard.log("profile_login_failed", locked=60)
             asyncio.run(wachposten.tick(NOW + i))
         per_admin = [x for x in self.sent if x[0] == "admin1"]
         self.assertEqual(len(per_admin), wachposten.MAX_DAY)
         self.assertEqual(len(wachposten._read()["queue"]), 2, "the rest waits")
         asyncio.run(wachposten.tick(NOW + 86400 + 60))
         self.assertEqual(len([x for x in self.sent if x[0] == "admin1"]), wachposten.MAX_DAY + 1)
+        self.assertEqual(wachposten._read()["queue"], [])
+
+    def test_lockouts_never_silence_a_new_way_in(self):
+        """Code check 19.10. C1: lockouts from the internet use up the day; a new passkey still goes out at once,
+        and a flood of lockouts never pushes it out of the queue."""
+        for i in range(wachposten.MAX_DAY):
+            guard.log("profile_login_failed", locked=60)
+            asyncio.run(wachposten.tick(NOW + i))
+        guard.log("profile_login_failed", locked=60)
+        self.sent.clear()
+        asyncio.run(wachposten.tick(NOW + 100))
+        self.assertEqual(self.sent, [], "the day is used up for lockouts")
+        guard.log("passkey_added")
+        for _ in range(wachposten.MAX_QUEUE + 20):
+            guard.log("profile_login_failed", locked=60)
+        self.assertIn("zugang", [x["r"] for x in wachposten._read()["queue"]])
+        asyncio.run(wachposten.tick(NOW + 200))
+        self.assertEqual(len(self.sent), 2, "one note per admin despite the cap")
+        self.assertIn(wachposten.RULES["zugang"][0], self.sent[0][1])
         self.assertEqual(wachposten._read()["queue"], [])
 
     def test_a_note_that_reached_nobody_waits(self):

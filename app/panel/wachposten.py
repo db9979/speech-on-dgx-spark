@@ -15,7 +15,10 @@ The Selbst-Notaus (notaus.AUTO) stays what it is: it raises stage 1 and tells th
 warns before, on single events.
 
 Each admin profile (notaus.admin_uids) gets one push note per round (every LOOP_S) with what came together, at
-most MAX_DAY notes a day; what is left waits for the next day and comes as one note. Day and night alike: a
+most MAX_DAY notes a day; what is left waits for the next day and comes as one note. The cap holds back only
+lockouts and the quality test: a new way in, changed protection or a changed change log (URGENT) always goes out
+in the next round and is never dropped for room (V01.0.825, code check 19.10. C1: about twelve lockouts from the
+internet used up the day, and a stolen session could then add a passkey unnoticed until midnight). Day and night alike: a
 security note is not a reminder. Nothing while the switch is off: the rules only count from the moment it is on.
 Admin switch chat.wachposten (Funktionen → Wachposten, off). STATE/wachposten.json keeps the queue (rule, fixed
 words, time), the notes of the day and the newest quality run told. Logs: "wachposten: gemeldet | 2 Einträge |
@@ -35,6 +38,7 @@ MAX_DAY = 12          # notes per day; what is left waits for the next day
 MAX_QUEUE = 200       # entries kept waiting; the oldest go first
 MAX_SENT = 7 * MAX_DAY   # times of the notes sent, for the day's count and the week on Zustand
 SHOW = 6              # entries named in one note, the rest only counted
+URGENT = ("zugang", "schutz", "protokoll")   # never held back by MAX_DAY, never dropped from a full queue
 WAY = "Zustand → Logs → Änderungen"
 RULES = {
     "sperre": ("Sperre nach falschen Anmeldungen", "Lockout after wrong sign-ins"),
@@ -72,7 +76,16 @@ def _read():
     q = [x for x in d.get("queue") or [] if isinstance(x, dict) and x.get("r") in RULES
          and isinstance(x.get("w"), str) and isinstance(x.get("t"), (int, float))]
     sent = [t for t in d.get("sent") or [] if isinstance(t, (int, float))]
-    return {"queue": q[-MAX_QUEUE:], "sent": sent[-MAX_SENT:], "quality": d.get("quality") or 0}
+    return {"queue": _trim(q), "sent": sent[-MAX_SENT:], "quality": d.get("quality") or 0}
+
+
+def _trim(q):
+    """At most MAX_QUEUE entries; when it is full the oldest lockout or quality entry goes, an URGENT one only when
+    nothing else is left (a flood of lockouts never pushes a new passkey out)."""
+    q = list(q)
+    while len(q) > MAX_QUEUE:
+        del q[next((i for i, x in enumerate(q) if x["r"] not in URGENT), 0)]
+    return q
 
 
 def _write(d):
@@ -105,7 +118,7 @@ def seen(item):
         with _lock:
             d = _read()
             d["queue"].append({"r": rule, "w": words_for(item), "t": int(item.get("t") or time.time())})
-            d["queue"] = d["queue"][-MAX_QUEUE:]
+            d["queue"] = _trim(d["queue"])
             _write(d)
     except Exception as e:   # noqa: BLE001 - the change log never fails because of the Wachposten
         print("wachposten: seen", type(e).__name__, flush=True)
@@ -151,7 +164,7 @@ async def tick(now=None):
     if not d["queue"]:
         return 0
     today = [t for t in d["sent"] if _day(t) == _day(now)]
-    if len(today) >= MAX_DAY:
+    if len(today) >= MAX_DAY and not any(x["r"] in URGENT for x in d["queue"]):
         if _capped["day"] != _day(now):
             _capped["day"] = _day(now)
             print(f"wachposten: Tageshöchstzahl erreicht | {len(d['queue'])} wartet bis morgen", flush=True)

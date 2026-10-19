@@ -91,7 +91,17 @@ OPEN = {
     "/api/make/dl": "a made document for whoever holds its download link (random token, only its hash kept, 10 minutes, 5 uses, one file of one profile); 404 once off, rate limit",
     "/api/changelog": "Was ist neu: is_admin, else browser_profile (no guests, no device keys), rate limit; read only",
 }
-LOGIN = re.compile(r"Depends\((auth|main_auth|assistant|own_profile|browser_profile|secret_profile|secret_profile_fresh|_on)\)")
+LOGIN = re.compile(r"Depends\((auth|main_auth|own_profile|browser_profile|secret_profile|secret_profile_fresh)\)")
+# assistant is open while chat.public is on, a module's _on mostly only checks a switch (code check 19.10. C6): a route
+# with only these binds the caller itself, by a parameter (prof=Depends(_on)) or a known call in its body, or stands
+# in WEAK_OK with a reason
+WEAK = re.compile(r"Depends\((assistant|_on)\)")
+BOUND_PARAM = re.compile(r"\b\w+\s*=\s*Depends\([\w.]+\)")
+BOUND_CALL = re.compile(r"\b(profiles\.current|own_profile|browser_profile|_program|writer|_prof|_watch_prof|_watch_job|"
+                        r"caller)\(")
+WEAK_OK = {
+    "/api/stufen": "the fixed list of when the Spark asks for a code (stufen.overview), no profile data, rate limit",
+}
 ROUTE = re.compile(r'@(?:router|app)\.(?:get|post|put|delete|patch|api_route)\("([^"]*)"[^\n]*\n((?:@[^\n]*\n)*)'
                    r'(?:async )?def \w+\((.*?)\):\n', re.S)
 
@@ -109,7 +119,16 @@ class Scanner(unittest.TestCase):
             for m in ROUTE.finditer(text):
                 path, more, sig = m.group(1), m.group(2), m.group(3)
                 head = text[m.start():m.end()]
-                if LOGIN.search(head) or path in OPEN:
+                if path in OPEN:
+                    continue
+                if LOGIN.search(head):
+                    continue
+                if WEAK.search(head):
+                    nxt = re.search(r"\n(@|def |async def |class )", text[m.end():])
+                    body = text[m.end():m.end() + (nxt.start() if nxt else len(text))]
+                    if BOUND_PARAM.search(sig) or BOUND_CALL.search(body) or path in WEAK_OK:
+                        continue
+                    found.append(f"{p}: {path} (only assistant/_on, binds no profile)")
                     continue
                 found.append(f"{p}: {path}")
         self.assertEqual(found, [], "routes without a login check (add one, or add them to OPEN with a reason)")

@@ -2374,6 +2374,7 @@ async def watch_ask(request: Request):
     job = watch.Job(speak=bool(body.get("speak", True)))
     response = await chat(Request(request.scope, receive))
     prof = profiles.current(request)
+    job.owner = prof["id"] if prof else ""
     import pebblewatch
     # Uhr: Nachfragen zum Antippen (its own admin switch): "done" waits for them, at most watch.FOLLOW_TIMEOUT
     job.follow_wait = bool(prof) and features.allowed("pebblefolge", prof["id"]) and not wartung.paused("llm")
@@ -2510,24 +2511,30 @@ async def text_ask(request, prof, body, who="siri"):
     return dict({"answer": plain}, **({"md": md[:MD_ANSWER_MAX]} if hidden(md) >= hidden(plain) else {}))
 
 
-def _watch_job(job_id):
-    job = watch.JOBS.get(job_id)
-    if not job:
+def _watch_job(job_id, request):
+    """The answer, only for the profile that asked for it (code check 19.10. C6: before, the random id alone
+    guarded it); a guest's answer only for a guest."""
+    job = watch.JOBS.get(str(job_id)[:40])
+    prof = profiles.current(request)
+    if not job or job.owner != (prof["id"] if prof else ""):
         raise HTTPException(404, "unknown or expired answer")
     return job
 
 
 @router.get("/api/watch/poll", dependencies=[Depends(assistant)])
-async def watch_poll(id: str, t: int = 0, a: int = 0):
-    return await watch.poll(_watch_job(id), max(0, t), max(0, a))
+async def watch_poll(request: Request, id: str, t: int = 0, a: int = 0):
+    return await watch.poll(_watch_job(id, request), max(0, t), max(0, a))
 
 
 @router.post("/api/watch/report", dependencies=[Depends(assistant)])
 async def watch_report(request: Request):
     """The phone's times for one answer (watch.report_line), once per answer, into the log."""
     body = await json_body(request, 1024, lenient=True)
-    job = watch.JOBS.get(str(body.get("id", ""))[:40])
-    if not job or job.reported:
+    try:
+        job = _watch_job(body.get("id", ""), request)
+    except HTTPException:
+        return {"ok": False}
+    if job.reported:
         return {"ok": False}
     job.reported = True
     print(watch.report_line(job, body), flush=True)
@@ -2535,8 +2542,11 @@ async def watch_report(request: Request):
 
 
 @router.delete("/api/watch/{job_id}", dependencies=[Depends(assistant)])
-async def watch_cancel(job_id: str):
-    job = watch.JOBS.get(job_id)   # kept until watch.cleanup, so the phone's report still finds it
-    if job and job.task:
+async def watch_cancel(job_id: str, request: Request):
+    try:
+        job = _watch_job(job_id, request)   # kept until watch.cleanup, so the phone's report still finds it
+    except HTTPException:
+        return {"ok": True}
+    if job.task:
         job.task.cancel()
     return {"ok": True}

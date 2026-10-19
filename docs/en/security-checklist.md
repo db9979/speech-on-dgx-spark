@@ -113,10 +113,8 @@ Every change is checked not only against the traps above, but also against wheth
 **Regular review**
 - [ ] Before large versions and at least once a month a sceptical overall review against these standards (as on 08.10. and 11.10.2026). Every finding gets a self-test.
 
-**Not yet met** (brought up to date the next time the place is touched; as of 12.10.2026)
-- PBKDF2-SHA256 with 200,000 iterations for admin password and PIN (`core.ROUNDS`, `profiles.PIN_ROUNDS`); OWASP today recommends 600,000 or Argon2id/scrypt. Switch-over with recalculation at the next login.
+**Not yet met** (brought up to date the next time the place is touched; as of 19.10.2026)
 - Fernet (AES-CBC plus HMAC) in the vault and for move keys: secure, but not AEAD; new parts use AES-GCM, a change only with migration of the existing data.
 - No automatic vulnerability check of the Python packages (e.g. against the OSV database) in "Tests".
 - Signed device updates are built, but off without a key (`UPDATE_SIGNING_KEY` is still missing).
 - `style-src 'unsafe-inline'` remains because of older Safari versions in the iPhone app.
-- Minimum TLS version of the own https server is not explicitly set (check).

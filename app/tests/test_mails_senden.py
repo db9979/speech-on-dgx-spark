@@ -112,7 +112,7 @@ class Send(unittest.TestCase):
         fill()
         use_fakes()
         senden._pending.clear()
-        senden._today.update(day="", n={})
+        fresh_day()
         for k in [k for k in guard._rate if k[0] == "mailsenden"]:
             guard._rate.pop(k, None)
 
@@ -205,10 +205,27 @@ class Send(unittest.TestCase):
         senden._today["n"][self.uid] = senden.MAX_DAY
         self.assertEqual(self.preview().status_code, 400)
 
+    def test_day_count_survives_a_restart(self):
+        """Code check 19.10. C3: a restart of the panel never starts the day's count over."""
+        p = self.preview().json()
+        self.assertEqual(self.send(p["token"]).status_code, 200)
+        senden._today.update(day="", n={})          # the panel starts again
+        self.assertEqual(senden._count(self.uid), 1)
+        self.assertEqual(senden.today(), 1)
+
     def test_refused_recipient_is_counted(self):
         FakeSMTP.refuse = {"dora@example.org"}
         p = self.preview(cc="dora@example.org").json()
         self.assertEqual(self.send(p["token"]).json(), {"sent": 1, "refused": 1, "copy": ""})
+
+
+def fresh_day():
+    """A new day for the send limit: nothing counted in memory and none kept on disk."""
+    senden._today.update(day="", n={})
+    try:
+        os.remove(senden.SENT_FILE)
+    except OSError:
+        pass
 
 
 class Voice(unittest.TestCase):
@@ -238,7 +255,7 @@ class Voice(unittest.TestCase):
         use_fakes()
         helpers.set_config(mail_send_voice="answers")
         senden._last_read.clear()
-        senden._today.update(day="", n={})
+        fresh_day()
         senden.drop_pending(self.uid)
         senden.drop_pending(self.uid)
 
@@ -343,7 +360,7 @@ class Page(unittest.TestCase):
                         r = await pg.request.post(f"http://127.0.0.1:{self.port}/api/profile/mail",
                                                   data={"kind": "icloud", "user": helpers.MAIL_USER, "password": helpers.MAIL_PW})
                         self.assertEqual(r.status, 200, await r.text())
-                    senden._today.update(day="", n={})
+                    fresh_day()
                     mail._cache.clear()
                     await pg.evaluate("MAIL_ON=true;SEND_ON=true;POST.accts=null;postStart({profile:PROFILE,mail:true});icTabSet('post','show');goSec('post')")
                     await b.until(pg, "!POST.busy&&!!POST.data&&POST.data.items.length===1")

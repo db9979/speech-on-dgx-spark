@@ -226,6 +226,21 @@ class OpenCodeRechte(unittest.TestCase):
             self.assertIn("MemoryMax", p)
         self.assertNotEqual(werkstatt.USER, "root")
 
+    def test_the_sandbox_reaches_only_the_llm_tor(self):
+        """Code check 19.10. C7: on this computer the sandbox's user reaches only the LLM-Tor (it checks the key), DNS
+        and the free ports its own tests open, never an engine without a key or the panel; no order without it."""
+        inst = os.path.join(APP, "..", "install.sh")
+        if not os.path.exists(inst):
+            self.skipTest("an app/-only copy has no installer")
+        s = open(inst, encoding="utf-8").read()
+        nft = s[s.index('speech-spark-werkstatt.nft" <<EOF'):]
+        nft = nft[:nft.index("\nEOF\n")]
+        self.assertIn(f'meta skuid "{werkstatt.USER}" oifname "lo" tcp dport {{ $WK_LLM, 53, 32768-65535 }} accept', nft)
+        self.assertIn(f'meta skuid "{werkstatt.USER}" oifname "lo" reject', nft)
+        self.assertIn("WK_LLM=$(cfg_int .llm.port 31006)", s)
+        unit = s[s.index("cat >/etc/systemd/system/speech-spark-werkstatt.service"):]
+        self.assertIn("Requires=speech-spark-werkstatt-fw.service", unit[:400])
+
     def test_the_installer_reads_version_and_hash(self):
         """install.sh takes OPENCODE_VERSION and the SHA-512 per architecture with sed from werkstatt.py."""
         src = os.path.join(APP, "werkstatt.py")

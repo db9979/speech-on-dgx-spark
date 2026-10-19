@@ -89,17 +89,27 @@ def _secret():
         return s
 
 
-PIN_ROUNDS = 200_000   # PBKDF2 rounds of a PIN (self-tests lower it for speed only, test_tempo checks this)
+# PBKDF2-SHA256 rounds of a PIN: OWASP's 600 000 since V01.0.825 (code check 19.10. C8; self-tests lower it for speed
+# only, test_tempo checks what ships). Stored as "salt$digest$rounds"; "salt$digest" is from before (OLD_PIN_ROUNDS)
+# and renewed at the next sign-in with the PIN.
+PIN_ROUNDS = 600_000
+OLD_PIN_ROUNDS = 200_000
 
 
-def _pin_hash(pin, salt=None):
-    salt = salt or secrets.token_hex(16)
-    return salt + "$" + hashlib.pbkdf2_hmac("sha256", pin.encode(), bytes.fromhex(salt), PIN_ROUNDS).hex()
+def _pin_hash(pin, salt=None, rounds=None):
+    salt, rounds = salt or secrets.token_hex(16), rounds or PIN_ROUNDS
+    return f"{salt}${hashlib.pbkdf2_hmac('sha256', pin.encode(), bytes.fromhex(salt), rounds).hex()}${rounds}"
+
+
+def _pin_rounds(stored):
+    parts = str(stored).split("$")
+    return int(parts[2]) if len(parts) == 3 and parts[2].isdigit() else OLD_PIN_ROUNDS
 
 
 def _pin_ok(pin, stored):
-    salt, _, _ = stored.partition("$")
-    return secrets.compare_digest(_pin_hash(pin, salt), stored)
+    salt, rounds = str(stored).split("$")[0], _pin_rounds(stored)
+    want = str(stored).split("$")[1] if "$" in str(stored) else ""
+    return secrets.compare_digest(_pin_hash(pin, salt, rounds).split("$")[1], want)
 
 
 def valid_name(name):
@@ -259,12 +269,28 @@ def add_user(name, pin):
         return u["id"]
 
 
+def _renew_pin(uid, pin):
+    """The PIN's hash with today's rounds (V01.0.825). Logins stay: they are signed with the old hash (pin_sig)
+    until the PIN itself changes."""
+    with _lock:
+        d = _load()
+        for u in d["users"]:
+            if u["id"] == uid and _pin_rounds(u["pin"]) != PIN_ROUNDS:
+                u.setdefault("pin_sig", u["pin"])
+                u["pin"] = _pin_hash(pin)
+                _write(_path("profiles.json"), d)
+                print(f"profiles: PIN mit {PIN_ROUNDS} Runden neu gespeichert | {log_name(u)}", flush=True)
+                return u
+    return None
+
+
 def set_pin(uid, pin):
     with _lock:
         d = _load()
         for u in d["users"]:
             if u["id"] == uid:
                 u["pin"] = _pin_hash(pin)  # also ends the logins made with the old PIN
+                u.pop("pin_sig", None)
                 u["short"] = len(str(pin)) < STRONG_PIN
                 _write(_path("profiles.json"), d)
                 return True
@@ -342,7 +368,7 @@ def session_secs():
 
 
 def _sign(u, issued, sid=""):
-    msg = f"{u['id']}|{u['pin']}|{u.get('epoch', 0)}|{issued}" + (f"|{sid}" if sid else "")
+    msg = f"{u['id']}|{u.get('pin_sig') or u['pin']}|{u.get('epoch', 0)}|{issued}" + (f"|{sid}" if sid else "")
     return hmac.new(_secret(), msg.encode(), hashlib.sha256).hexdigest()
 
 
@@ -447,6 +473,8 @@ def login(name, pin, agent=""):
     u = next((u for u in _load()["users"] if u["name"].lower() == name), None)
     if u and _pin_ok(pin, u["pin"]):
         _note_short(u["id"], len(str(pin)) < STRONG_PIN)
+        if _pin_rounds(u["pin"]) != PIN_ROUNDS:
+            u = _renew_pin(u["id"], pin) or u
         return _cookie_value(u, agent=agent)
     if not u:
         _pin_hash(pin)  # same work as a wrong PIN, so timing does not reveal which names exist

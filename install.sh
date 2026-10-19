@@ -1384,10 +1384,41 @@ EOF
 # Werkstatt (plan opencode-werkstatt): one order of Funktionen → Werkstatt or of speech-spark werkstatt. It takes only
 # the wish werkstatt.py checked, starts the sandbox (user spark-werkstatt) and hands the result to the panel's user.
 if [ "$WITH_WERKSTATT" = 1 ]; then
+# The sandbox may reach this computer only on the LLM-Tor (it checks the key) and on the free ports its own tests open
+# (32768 and up), DNS aside; never an engine without a key, the panel or another service (code check 19.10. C7:
+# IPAddressAllow=localhost let model-written code reach everything on 127.0.0.1). Only for the sandbox's user. An
+# order waits for this firewall (Requires=): without it no sandbox starts.
+WK_LLM=$(cfg_int .llm.port 31006)
+cat >"$(dirname "$ETC")/speech-spark-werkstatt.nft" <<EOF
+table inet speech_spark_werkstatt
+delete table inet speech_spark_werkstatt
+table inet speech_spark_werkstatt {
+  chain out {
+    type filter hook output priority 0; policy accept;
+    meta skuid "spark-werkstatt" oifname "lo" tcp dport { $WK_LLM, 53, 32768-65535 } accept
+    meta skuid "spark-werkstatt" oifname "lo" udp dport { 53, 32768-65535 } accept
+    meta skuid "spark-werkstatt" oifname "lo" reject
+  }
+}
+EOF
+chmod 644 "$(dirname "$ETC")/speech-spark-werkstatt.nft"
+cat >/etc/systemd/system/speech-spark-werkstatt-fw.service <<EOF
+[Unit]
+Description=Speech on DGX Spark: firewall of the Werkstatt sandbox (only the LLM-Tor on this computer)
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/sbin/nft -f $(dirname "$ETC")/speech-spark-werkstatt.nft
+
+[Install]
+WantedBy=multi-user.target
+EOF
 cat >/etc/systemd/system/speech-spark-werkstatt.service <<EOF
 [Unit]
 Description=Speech on DGX Spark: one order of the Werkstatt (sandbox)
-After=network-online.target
+After=network-online.target speech-spark-werkstatt-fw.service
+Requires=speech-spark-werkstatt-fw.service
 
 [Service]
 LogNamespace=speech-spark
@@ -1726,6 +1757,11 @@ fi
 # screen: when it does not come back, the update goes on (the Dienst-Wächter reports it), it never stops the update.
 if systemctl is-active -q speech-spark-schirm.service 2>/dev/null; then
   restart_front schirm || warn "Steuerzentrale did not restart (sudo speech-spark logs schirm); the update goes on"
+fi
+if [ "$WITH_WERKSTATT" = 1 ]; then
+  command -v nft >/dev/null || apt_wait install -y -q nftables || warn "nftables missing: the Werkstatt starts no sandbox"
+  systemctl enable speech-spark-werkstatt-fw.service >/dev/null 2>&1
+  systemctl restart speech-spark-werkstatt-fw.service 2>/dev/null || warn "the Werkstatt's firewall did not load: no sandbox starts"
 fi
 if [ "$TEILEN" = 1 ]; then
   systemctl enable speech-spark-teilen-fw.service >/dev/null 2>&1
