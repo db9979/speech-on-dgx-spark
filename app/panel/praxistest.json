@@ -2063,6 +2063,13 @@
 "titel": "E-Mail schnell, Antworten unter der Mail",
 "text": "A: Update auf V01.0.819, Seite E-Mail öffnen: beim ersten Mal kann „Die Postfächer laden noch …“ stehen, die Liste kommt dann von selbst. B: Seite wechseln und zurück: die Liste ist sofort da. C: Eine der neuesten Mails öffnen: der Text ist sofort da (vorab geholt), sie bleibt ungelesen. D: „Als gelesen markieren“ und „Archivieren“: die Liste ändert sich sofort. E: Am iPhone eine Mail an dich schicken: nach höchstens 5 Minuten steht sie in der Liste. F: Mit „Mails senden“: eine Mail öffnen, „Antworten“: das Antwortfeld steht direkt unter der Mail, die Mail bleibt oben; „Verwerfen“ schließt nur das Antwortfeld. G: Den Assistenten fragen „Habe ich neue Mails?“: die Antwort kommt schneller als vorher. H: Reiter „Für dich“: ab dem zweiten Öffnen sofort da. I: E-Mail → Einstellungen, dann Kalender, dann wieder E-Mail: die Seite ist nie leer; dasselbe mit Kalender → Einstellungen.",
 "thread": "Kalender und E-Mail in Panel und Apps"
+},
+{
+"id": "P319",
+"v": 821,
+"titel": "Kalender neu: Karte, Schnell eintragen, Ziehen, Teilen",
+"text": "A: Update auf V01.0.821, Seite Kalender, Woche: die Ansicht nutzt die ganze Breite, rechts keine Spalte mehr. B: Auf einen Termin tippen: eine Karte schwebt daneben (Handy: Blatt von unten); Esc schließt. C: Eigener Termin: „+1 Tag“, dann „Rückgängig“ über der Ansicht: er steht wieder am alten Platz. D: In der Zeile „Schnell eintragen“ „Test Zahnarzt morgen 10 Uhr bei Dr. Weber“ tippen: Chips zeigen Titel, morgen 10:00–11:00 und den Ort; Enter trägt ein, der Termin erscheint (danach wieder löschen). E: Am Computer einen eigenen Termin mit der Maus eine Stunde nach unten ziehen: er bleibt dort, auch im iPhone-Kalender. F: Kalender → Einstellungen: jeder Kalender als Karte, Adresse und „Entfernen“ unter „⋯“. G: Mit „Kalender teilen“: „Teilen“ öffnet das Fenster, im Suchfeld einen Namen tippen: die Liste filtert sofort; „Sehen“ wählen, „Speichern“ (Code): auf der Karte steht „Geteilt mit …“; danach wieder auf „Nicht“. H: Themen fürs Briefing: ein Thema tippen und Enter, mit ✕ entfernen: beides gleich gespeichert.",
+"thread": "Kalender und E-Mail in Panel und Apps"
 }
 ]
 }

@@ -4652,6 +4652,22 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Kalender neu: volle Breite, schwebende Karte, Schnell eintragen, Ziehen, Teilen-Fenster (V01.0.821, Dominik 2026-10-19 „kalender: 1a 2a 3a … 7a“, „ok“): Die Seite Kalender nutzt die ganze Breite, die Spalte rechts ist weg. Ein Tipp auf einen Termin öffnet eine Karte, die neben ihm über der Ansicht schwebt (auf dem Handy ein Blatt von unten): Kalender, Titel, Wann, Wo und bei eigenen CalDAV-Terminen „Ändern“, „+1 Tag“, „+1 Woche“ und „Löschen“. Esc schließt sie, E ändert, Entf löscht (mit Rückfrage). Über der Ansicht steht „Schnell eintragen“: eine Zeile wie „Zahnarzt morgen 10 Uhr bei Dr. Weber“ liest das Panel mit festen Regeln, ohne Sprachmodell (calendars.quick, GET /api/profile/calendar/quick, liest nur): Tag (heute, morgen, übermorgen, ein Wochentag, „nächsten Montag“, „in 3 Tagen“, 24.12. oder 24.12.2026), Uhrzeit (10 Uhr, 10:30, 14-15 Uhr, 3pm), Ort nach „bei“, „in“ oder „im“, der Rest ist der Titel. Ohne Uhrzeit wird der Termin ganztägig, ohne Tag ist es heute oder, wenn die Uhrzeit vorbei ist, morgen; kurze Wochentage (Mo, So) gelten nur als „am So“ oder „So.“. Was erkannt wurde, steht als Chips darunter; gespeichert wird erst mit „Eintragen“ oder Enter, in den ersten eige"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "nen Kalender, über denselben Weg wie das Formular. „Mehr …“ öffnet das Formular schon ausgefüllt. In Woche und Tag zieht man eigene Termine mit der Maus auf eine andere Uhrzeit (Viertelstunden) oder einen anderen Tag; auf dem Handy verschieben „+1 Tag“ und „+1 Woche“, weil der Finger die Ansicht rollt. Nach jedem Verschieben steht eine Minute lang „Rückgängig“ über der Ansicht. Unter Kalender → Einstellungen ist jeder Kalender eine Karte mit Art (CalDAV, iCloud, Abo-Link) und „Geteilt mit …“; die Adresse und „Entfernen“ liegen unter „⋯“. „Teilen“ öffnet ein Fenster mit einer Zeile pro Profil und Nicht · Sehen · Sehen + eintragen; die Suche filtert die Liste beim Tippen, wer schon Zugriff hat, steht oben, „Speichern“ schickt nur die Änderungen (jede mit dem Code wie bisher). „Mit dir geteilt“ ist ein eigener Abschnitt. Die Themen fürs Briefing sind Chips mit ✕, ein neues kommt mit Enter dazu und wird gleich gespeichert (höchstens drei). Kein neuer Schalter."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Seite E-Mail (V01.0.809, Dominik 2026-10-18, Plan `kalender-mail/plan.md` 2a 4a)",
 "text": "Seite E-Mail (V01.0.809, Dominik 2026-10-18, Plan kalender-mail/plan.md 2a 4a): Die Post ist eine eigene Seite im Menü (links unter „Kalender“, nur mit „E-Mail lesen“; auf dem Handy über Heute), nicht mehr unter Ich. Reiter Posteingang: die neuesten 50 Mails der letzten 14 Tage aus allen Postfächern, ungelesene fett mit Punkt, Suche nach Absender oder Betreff, „Nur ungelesen“; Antippen zeigt die Mail als reinen Text (HTML wird Text, Bilder und Links von außen bleiben aus, lange Links werden „[Link]“), Anhänge nur mit Namen. Gelesen wird mit PEEK, die Mail bleibt ungelesen. Reiter Für dich (nur wenn „Für dich aus Mails“ freigegeben ist): die Funde aus den Mails. Reiter Einstellungen: alles, was vorher unter Ich → E-Mail und Ich → Pakete stand (Postfächer, Aufräumen, Mailstil, Pakete). Jeder Weg „E-Mail → Einstellungen → …“ springt dorthin; alte Links auf #me=mailbox öffnen die Seite. Gelesen wird nur über GET /api/profile/mail/inbox und GET /api/profile/mail/message (eigenes Profil, Rate-Limit „post“, Log ohne Inhalte). Antworten, Verschieben und Senden kommen in Stufe 2 und 3; bis dahin per Assistent."
 },
@@ -12838,6 +12854,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "fetch begun before stores nothing. A big calendar is parsed outside the event loop so the panel does not stall. No switch: it is the existing calendar, only faster. Logs: calendar: view loading | n of m calendars, calendar: kept fresh | n calendars of m profiles, calendar: refresh failed (error). The uConsole (spark-tui kalender) shows \"Lädt noch: …\"."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "Calendar renewed: full width, floating card, quick add, drag, share window (V01.0.821, Dominik 2026-10-19 \"kalender: 1a 2a 3a … 7a\", \"ok\"): the Calendar page uses the whole width, the column on the right is gone. A tap on an appointment opens a card floating beside it over the view (on a phone a sheet from below): calendar, title, when, where and, for own CalDAV appointments, \"Change\", \"+1 day\", \"+1 week\" and \"Delete\". Esc closes it, E changes, Del deletes (after asking). Above the view sits \"Quick add\": the panel reads a line like \"Zahnarzt morgen 10 Uhr bei Dr. Weber\" by fixed rules, without the language model (calendars.quick, GET /api/profile/calendar/quick, reads only): day (heute, morgen, übermorgen, today, tomorrow, a weekday, \"nächsten Montag\", \"in 3 Tagen\", 24.12. or 24.12.2026), time (10 Uhr, 10:30, 14-15 Uhr, 3pm), place after \"bei\", \"in\" or \"im\", the rest is the title. Without a time the appointment is all day, without a day it is today or, when the time has passed, tomorrow; short weekdays (Mo, So) only count as \"am So\" or \"So.\". What was understood shows as chips below; it is saved only with \"Add\" or Enter, into the first own calendar, the same way as the form. \"More "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "…\" opens the form already filled in. In week and day own appointments are dragged with the mouse to another time (quarter hours) or day; on a phone \"+1 day\" and \"+1 week\" move them, since the finger scrolls the view. After every move \"Undo\" stays above the view for a minute. Under Calendar → Settings every calendar is a card with its kind (CalDAV, iCloud, subscription) and \"Shared with …\"; the address and \"Remove\" are under \"⋯\". \"Share\" opens a window with one row per profile and Not · See · See + add; the search filters the list while typing, those with access are on top, \"Save\" sends only the changes (each with the code as before). \"Shared with you\" is a section of its own. The briefing topics are chips with ✕, a new one is added with Enter and saved at once (at most three). No new switch."
 },
 {
 "lang": "en",

@@ -679,6 +679,122 @@ def page_item(body, zone):
             "calendar": str(body.get("calendar") or "").strip()[:120]}
 
 
+# Schnell eintragen (Dominik 2026-10-19 „2a“): one line on the page Kalender, e.g. „Zahnarzt morgen 10 Uhr bei
+# Dr. Weber“, becomes the form's fields by fixed rules (no model); the page shows them as chips and saves only on
+# „Eintragen“ through page_item, like the form.
+QUICK_MAX = 200
+QUICK_HOURS = 1   # an appointment with only a start lasts an hour
+# a short day (Mo, Fr …) only as „am Fr“ or „Fr.“, so „so“ or „do“ in a title stay words
+_DAYS = (r"montags?|dienstags?|mittwochs?|donnerstags?|freitags?|samstags?|sonntags?|monday|tuesday|wednesday|"
+         r"thursday|friday|saturday|sunday|(?<=am )(?:mo|di|mi|do|fr|sa|so)|(?:mo|di|mi|do|fr|sa|so)(?=\.)")
+_DAY_ORDER = ("mo", "di", "mi", "do", "fr", "sa", "so")
+_DAY_EN = ("mon", "tue", "wed", "thu", "fri", "sat", "sun")
+_Q_REL = re.compile(r"(?i)(?<!\w)(?:am\s+)?(heute|today|übermorgen|morgen|tomorrow)(?!\w)")
+_Q_IN = re.compile(r"(?i)(?<!\w)in\s+(\d{1,2})\s+(tagen|wochen|days|weeks)(?!\w)")
+_Q_DAY = re.compile(r"(?i)(?<!\w)(?:(?:am|on)\s+)?(?:(nächsten|kommenden|next)\s+)?(" + _DAYS + r")\.?(?!\w)")
+_Q_DATE = re.compile(r"(?<![\w.])(?:am\s+)?(\d{1,2})\.(\d{1,2})\.(\d{2}|\d{4})?(?![\w])")
+_Q_TIME = r"(\d{1,2})(?:[:.](\d{2}))?\s*(am|pm)?"
+_Q_SPAN = re.compile(r"(?i)(?<![\w.:])(?:(?:um|von|at|from)\s+)?" + _Q_TIME + r"\s*(?:-|–|bis|to)\s*" + _Q_TIME +
+                     r"(?:\s*uhr)?(?![\w:])")
+_Q_AT = re.compile(r"(?i)(?<![\w.:])(?:(?:um|at)\s+" + _Q_TIME + r"(?:\s*uhr)?|" + r"(\d{1,2})(?:[:.](\d{2}))?\s*uhr|"
+                   r"(\d{1,2}):(\d{2})|(\d{1,2})\s*(am|pm))(?![\w:])")
+_Q_PLACE = re.compile(r"(?i)\s(?:in|im|bei|beim|@|at)\s+(.+)$")
+
+
+def _hour(h, m, ap):
+    h, m = int(h), int(m or 0)
+    if ap:
+        if not 1 <= h <= 12:
+            raise ValueError
+        h = h % 12 + (12 if ap.lower() == "pm" else 0)
+    if not (0 <= h <= 23 and 0 <= m <= 59):
+        raise ValueError
+    return datetime.time(h, m)
+
+
+def quick(text, now):
+    """The form's fields from one line (page_item takes them): {"title", "start", "end", "allday", "location",
+    "found": [the recognised parts, for the chips]}; ValueError without a title. now: aware datetime (the person's
+    zone). A day without a time is all day; a time without a day is today, or tomorrow when it has passed."""
+    t = " " + " ".join(str(text or "").split())[:QUICK_MAX] + " "
+    found, day, times = [], None, None
+
+    def cut(m):
+        nonlocal t
+        t = t[:m.start()] + " " + t[m.end():]
+    m = _Q_DATE.search(t)
+    if m:
+        y = m.group(3)
+        y = int(y) + (2000 if len(y) == 2 else 0) if y else now.year
+        try:
+            day = datetime.date(y, int(m.group(2)), int(m.group(1)))
+            if not m.group(3) and day < now.date():
+                day = day.replace(year=y + 1)
+            cut(m)
+        except ValueError:
+            day = None
+    if day is None:
+        m = _Q_REL.search(t)
+        if m:
+            w = m.group(1).lower()
+            day = now.date() + datetime.timedelta(days={"heute": 0, "today": 0, "morgen": 1, "tomorrow": 1}.get(w, 2))
+            cut(m)
+    if day is None:
+        m = _Q_IN.search(t)
+        if m:
+            day = now.date() + datetime.timedelta(days=int(m.group(1)) * (7 if m.group(2).lower()[0] == "w" else 1))
+            cut(m)
+    if day is None:
+        m = _Q_DAY.search(t)
+        if m:
+            w = m.group(2).lower()[:3]
+            wd = _DAY_EN.index(w) if w in _DAY_EN else _DAY_ORDER.index(w[:2])
+            ahead = (wd - now.weekday()) % 7   # the coming one; today's weekday is today, „nächsten“ a week on
+            day = now.date() + datetime.timedelta(days=ahead or (7 if m.group(1) else 0))
+            cut(m)
+    m = _Q_SPAN.search(t)
+    try:
+        if m:
+            times = (_hour(*m.group(1, 2, 3)), _hour(*m.group(4, 5, 6)))
+            cut(m)
+        else:
+            m = _Q_AT.search(t)
+            if m:
+                g = m.groups()
+                h, mi, ap = (g[0], g[1], g[2]) if g[0] else (g[3], g[4], None) if g[3] else \
+                    (g[5], g[6], None) if g[5] else (g[7], None, g[8])
+                times = (_hour(h, mi, ap), None)
+                cut(m)
+    except ValueError:
+        times = None
+    location = ""
+    rest = " " + " ".join(t.split())
+    m = _Q_PLACE.search(rest)
+    if m and m.start() > 0:
+        location, rest = m.group(1).strip(" ,.;"), rest[:m.start()]
+    title = re.sub(r"(?i)^(?:(?:am|um|on|at)\s+)+|(?:\s+(?:am|um|on|at))+$", "", " ".join(rest.split())).strip(" ,.;-–")
+    if not title:
+        raise ValueError("a title is needed")
+    if times is None:
+        day = day or now.date()
+        start, end, allday = day.isoformat(), (day + datetime.timedelta(days=1)).isoformat(), True
+        found.append(day.isoformat())
+    else:
+        if day is None:
+            day = now.date() if datetime.datetime.combine(now.date(), times[0], now.tzinfo) > now \
+                else now.date() + datetime.timedelta(days=1)
+        s = datetime.datetime.combine(day, times[0])
+        e = datetime.datetime.combine(day, times[1]) if times[1] else s + datetime.timedelta(hours=QUICK_HOURS)
+        if e <= s:
+            e += datetime.timedelta(days=1)
+        start, end, allday = s.isoformat(timespec="minutes"), e.isoformat(timespec="minutes"), False
+        found.append(start)
+    if location:
+        found.append(location)
+    return {"title": title[:200], "start": start, "end": end, "allday": allday, "location": location[:200],
+            "found": found}
+
+
 async def page_find(uid, cal, title, start, zone):
     """The one single appointment the page shows: in the own calendar at place cal of reading(uid), with exactly this
     title and start (epoch seconds). The proposal dict change_event takes, or LookupError."""

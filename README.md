@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.821** Calendar renewed: full width, an appointment opens as a floating card (phone: sheet from below) with change, +1 day, +1 week, delete; "Quick add" in one line with recognised chips; drag appointments with the mouse, undo; share window with a person search; briefing topics as chips
 - **V01.0.820** Fix: test run test_mail_zeit green again (the opened-mail memory of .819 handed the test its first mail; the test now drops it like a changed mailbox)
 - **V01.0.819** E-mail fast: mailboxes read at the same time, list and opened mails cached, the page shows the last state at once and refreshes in the background; "Reply" opens right below the mail.
 - **V01.0.818** Fix: the GitHub test run is green again (red since .808, so the update offered only .807); the help finds "read mail aloud" and the Live overview again
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.814** Send mail from the E-mail page: a new mail or a reply, a preview sheet first, sent only with "Send" there; TLS only, copy in "Sent" (switch off by default).
 - **V01.0.813** Order mail on the E-mail page: read/unread, archive, move into an own folder, undo right after; never deleted, never into trash or junk (switch off by default); assistant answers get "Show in calendar" and "Open mail" buttons.
 - **V01.0.812** Add, change and delete appointments right on the Calendar page (own CalDAV calendars, never repeating ones, guarded by the server's etag).
-- **V01.0.811** Share calendars with other profiles (see, or see and add); private appointments show only as busy, the assistant reads shared ones ("Was hat Sabine morgen?").
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

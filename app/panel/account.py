@@ -1058,6 +1058,18 @@ async def profile_calendar_view(request: Request, start: str = "", days: int = 7
     return r
 
 
+@router.get("/api/profile/calendar/quick", dependencies=[Depends(assistant), Depends(calendar_on)])
+def profile_calendar_quick(request: Request, text: str = "", tz: str = "", prof=Depends(own_profile)):
+    """The page Kalender, Schnell eintragen: one line as the form's fields (calendars.quick, fixed rules); nothing is
+    saved here, the page saves on „Eintragen“ through POST /api/profile/calendar/event."""
+    guard.limit(request, "kalender", prof["id"])
+    zone = user_zone(tz[:64])
+    try:
+        return calendars.quick(text[:calendars.QUICK_MAX], datetime.datetime.now(zone))
+    except ValueError as e:
+        raise HTTPException(400, str(e)[:200])
+
+
 @router.post("/api/profile/calendar/event", dependencies=[Depends(assistant), Depends(calendar_on)])
 async def profile_calendar_event_add(request: Request, prof=Depends(browser_profile)):
     """The page Kalender: a new appointment from its form („Speichern“ is the yes), into the named calendar (an own

@@ -184,13 +184,26 @@ class Page(unittest.TestCase):
                     if not calendars.get(me)["calendars"]:
                         calendars.add(me, calendars.entry({"name": "Privat", "url": f"http://127.0.0.1:{helpers.CAL_PORT}/dav/"}))
                     cid = calendars.get(me)["calendars"][0]["id"]
-                    await pg.evaluate("CAL_ON=true;showCal()")
-                    sel = f"#callist select[data-cal='{cid}'][data-to='{self.other}']"
-                    await pg.wait_for_selector(sel, state="attached", timeout=20000)
-                    self.assertEqual(await pg.eval_on_selector(sel, "e=>e.value"), "")
-                    await pg.evaluate(f"(()=>{{const s=document.querySelector(\"{sel}\");s.value='add';s.dispatchEvent(new Event('change'))}})()")
-                    await b.until(pg, "$('calmsg').textContent.length>0")
+                    await pg.evaluate("CAL_ON=true;openMe('calbox')")
+                    await b.until(pg, "$('cal').classList.contains('on')&&!$('calbox').hidden")
+                    await pg.evaluate("showCal()")
+                    # the calendar's card opens the window: one row per profile, the search filters while typing
+                    await pg.wait_for_selector(f"#callist [data-share='{cid}']", timeout=20000)
+                    await pg.click(f"#callist [data-share='{cid}']")
+                    row = f".calsharecard [data-to='{self.other}']"
+                    await pg.wait_for_selector(row, timeout=5000)
+                    self.assertEqual(await pg.eval_on_selector(f"{row}.on", "e=>e.dataset.lv"), "")
+                    await pg.fill(".calsharecard .calfind", "zzz-niemand")
+                    self.assertEqual(await pg.evaluate(f"document.querySelectorAll(\"{row}\").length"), 0)
+                    await pg.fill(".calsharecard .calfind", "")
+                    await pg.click(f"{row}[data-lv='add']")
+                    over = await pg.evaluate("document.documentElement.scrollWidth-document.documentElement.clientWidth")
+                    self.assertLessEqual(over, 1)
+                    await pg.click(".calsharecard [data-save]")
+                    await b.until(pg, "!document.querySelector('.calsharecard')&&$('calmsg').textContent.length>0")
                     self.assertEqual(calendars.get(me)["calendars"][0].get("shares"), {self.other: "add"})
+                    # with access: on top and named on the card
+                    self.assertIn("Geteilt mit", await pg.eval_on_selector("#callist .calc", "e=>e.textContent"))
                     over = await pg.evaluate("document.documentElement.scrollWidth-document.documentElement.clientWidth")
                     self.assertLessEqual(over, 1)
                     self.assertEqual(errors, [])

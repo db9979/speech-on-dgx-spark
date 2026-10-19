@@ -790,7 +790,7 @@
   </div>
 </section>
 
-<section id="cal"><div class="card kalcard" id="kalroot"></div>
+<section id="cal"><div class="card" id="kalroot"></div>
     <div id="calbox" class="kalset" hidden><div class="intro">„Guten Morgen“ oder „Was steht heute an?“: Der Assistent liest Termine, Erinnerungen und deine Themen vor. Du kannst mehrere Kalender verbinden. „Trag Zahnarzt Dienstag 10 Uhr ein“ legt einen Termin im ersten CalDAV-Kalender an, aber erst, wenn du den Vorschlag mit Ja bestätigst; Abo-Links bleiben nur lesend.</div>
       <ul class="facts" id="callist"></ul>
       <div id="calshared"></div>
@@ -801,7 +801,7 @@
         <label>Adresse</label><input id="calurl" placeholder="https://cloud.example.de/remote.php/dav" autocapitalize="off" autocomplete="off">
         <div class="two2"><div><label>Benutzer</label><input id="caluser" autocapitalize="off" autocomplete="off"></div><div><label>Passwort</label><input type="password" id="calpw" autocomplete="new-password"></div></div>
         <div class="row" style="margin-top:8px"><button class="b p" id="calsave" type="button">Prüfen und hinzufügen</button></div></details>
-      <label>Themen fürs Briefing (höchstens drei, mit Komma getrennt)</label><div class="rowin"><input id="caltopics" placeholder="Wetter Berlin, Nachrichten"><button class="b" id="caltopsave" type="button">Speichern</button></div>
+      <label>Themen fürs Briefing (höchstens drei)</label><div class="caltopchips" id="caltopchips"></div>
       <div class="row" style="margin-top:8px"><button class="b" id="caltest" type="button">Nächste Termine zeigen</button><span id="calmsg"></span></div>
       <ul class="facts" id="calevents"></ul>
       <div id="procal"></div></div>

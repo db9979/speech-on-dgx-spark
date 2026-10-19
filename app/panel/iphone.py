@@ -129,7 +129,7 @@ THINGS = {
                     (("POST",), r"/api/profile/wissensbuch/ablegen")),
     # Kalender (plan kalender-mail Stufe 4): the page's view (own and shared calendars), add, change, delete; the
     # tap is the yes, calendars.py checks like on the page (own CalDAV, never repeating, with the etag)
-    "calendar": ((("GET",), r"/api/profile/calendar/view"), (("POST", "PUT"), r"/api/profile/calendar/event")),
+    "calendar": ((("GET",), r"/api/profile/calendar/(?:view|quick)"), (("POST", "PUT"), r"/api/profile/calendar/event")),
     # E-Mail: the inbox and one mail as plain text (stays unread); ordering and sending each with their own function
     "mail": ((("GET",), r"/api/profile/mail/(?:inbox|message)"),),
     "mailmanage": ((("GET",), r"/api/profile/mail/folders"), (("POST",), r"/api/profile/mail/act")),

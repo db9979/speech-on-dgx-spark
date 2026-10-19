@@ -1671,16 +1671,34 @@ body.inchats:not(.appview):not(.kbd) .cx-comp{padding-right:96px}
 #proflist td.pgo{flex:0 0 auto}#proflist td:first-child,#devlist td:first-child{flex:1 1 0}
 /* Kalender (kalender.js, plan kalender-mail): a page of its own; day and week as a grid of hours, month, list.
    Calendar colours kc0..kc7 mixed from the base colours, no new ones besides two neutral greys and pinks. */
-#cal .kalcard{max-width:1180px}
+main:has(>#cal.on){max-width:none}   /* the calendar takes the whole width (Dominik 2026-10-19 „1a“) */
+.kal{position:relative}
 .kal .kaltools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 12px}
 .kal .kalnav{display:inline-flex;gap:6px}.kal .kalnav .b{min-width:38px}
 .kal .kaltitle{flex:1 1 auto;font-size:16px;min-width:0}
 .kal .empty{color:var(--mut);text-align:center;padding:28px 12px}.kal .empty .b{margin-top:10px}
-.kal .kalsplit{display:block;min-width:0}
-@media (min-width:1100px){.kal .kalsplit:has(>.kaldet:not([hidden])){display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:14px;align-items:start}
-  .kal .kaldet{position:sticky;top:0}.kal .kaldet .ld-back{display:none}}
-.kal .kaldet{margin-top:12px}
+/* the appointment tapped: a card floating beside it; on a phone a sheet from below */
+.kal .kaldet{position:absolute;z-index:6;text-align:left;width:330px;max-width:calc(100% - 8px);box-sizing:border-box;background:var(--card);border:1px solid var(--line);border-radius:16px;
+  padding:14px 16px;box-shadow:0 18px 50px rgba(10,12,20,.22);animation:pop .16s ease}
+.kal .kaldet[hidden],.kal .kalshade[hidden]{display:none}
+.kal .kaldet h3{margin:4px 30px 8px 0;overflow-wrap:anywhere}
+.kal .kaldet .kalx{position:absolute;top:8px;right:8px;border:0;background:none;font:inherit;font-size:16px;color:var(--mut);cursor:pointer;width:32px;height:32px;border-radius:99px}
+.kal .kaldet .kalx:hover{background:var(--line)}
+.kal .kaldet .kalacts{flex-wrap:wrap;gap:6px}
+.kal .kaldet .kdot{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:6px;background:var(--kc)}
+.kal .kaldet.sheet{position:fixed;left:0;right:0;bottom:0;top:auto;width:auto;max-width:none;border-radius:20px 20px 0 0;z-index:60;
+  padding-bottom:calc(16px + env(safe-area-inset-bottom));max-height:85dvh;overflow:auto;animation:up .22s ease}
+.kal .kalshade{position:fixed;inset:0;z-index:59;background:rgba(10,12,20,.4)}
 .kal .kaldet input[type=date],.kal .kaldet input[type=time]{width:100%;margin-top:4px}.kal .kaldet .kalad{display:flex;gap:6px;align-items:center;margin-top:8px}.kal .kaldet .kalad input{width:auto}
+/* Schnell eintragen: one line, what the panel understood as chips */
+.kal .kalquick{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 12px}
+.kal .kalquick input{flex:1 1 260px;min-width:0}
+.kal .kqchips{display:flex;flex-wrap:wrap;gap:6px;flex:1 1 100%;order:3}.kal .kqchips:empty{display:none}
+.kal .kq{font-size:12.5px;padding:3px 10px;border-radius:99px;background:color-mix(in srgb,var(--acc) 12%,var(--card));border:1px solid color-mix(in srgb,var(--acc) 30%,var(--line))}
+.kal .kq.t{font-weight:600}.kal .kq.d::before{content:"🗓 "}.kal .kq.l::before{content:"📍 "}
+.kal .kalqmsg{flex:1 1 100%;order:4}.kal .kalqmsg:empty{display:none}
+.kal .kalundo:empty{display:none}.kal .kalundo{margin:0 0 10px}
+.kev.move{cursor:grab}.kev.drag{cursor:grabbing;z-index:5;opacity:.9;box-shadow:0 8px 24px rgba(10,12,20,.25)}
 .kal .kalmain.busy{opacity:.55}
 .kc0{--kc:var(--acc)}.kc1{--kc:var(--acc2)}.kc2{--kc:var(--ok)}.kc3{--kc:var(--warn)}.kc4{--kc:#d946ef}.kc5{--kc:var(--bad)}.kc6{--kc:#64748b}.kc7{--kc:#0d9488}
 .kalgrid{display:grid;grid-template-columns:48px repeat(var(--n),minmax(0,1fr));border:1px solid var(--line);border-radius:14px;background:var(--card);overflow:hidden}
@@ -1719,6 +1737,23 @@ body.inchats:not(.appview):not(.kbd) .cx-comp{padding-right:96px}
 .kallegend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px;background:var(--kc)}
 @media (max-width:760px){.kalgrid{grid-template-columns:34px repeat(var(--n),minmax(0,1fr))}.kalgrid .khours span{font-size:10px;padding-right:3px}
   .kev{padding:2px 3px;font-size:10.5px}.kev small{display:none}.kalmonth .kmd{min-height:62px}.kalmonth .kchip{font-size:10px;padding:0 3px}}
+/* Kalender → Einstellungen (me.js, Dominik 2026-10-19 „7a“ „8“): calendars as cards, sharing in a window with a search */
+#callist .calc,#calshared .calc{align-items:center;flex-wrap:wrap}
+#callist .calchips,#calshared .calchips{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px}
+#callist .calchips .chip,#calshared .calchips .chip{flex:none}
+#callist .calbtns{display:flex;gap:6px;align-items:center;flex:none}
+.calmore{position:relative}.calmore>summary{list-style:none;min-width:38px;text-align:center}.calmore>summary::-webkit-details-marker{display:none}
+.calmore .calmenu{position:absolute;right:0;top:calc(100% + 6px);z-index:5;width:min(280px,80vw);background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;
+  box-shadow:0 12px 32px rgba(10,12,20,.18);display:flex;flex-direction:column;gap:8px;overflow-wrap:anywhere}
+.calsharecard{width:min(520px,100%)}.calsharecard .calfind{width:100%;margin:6px 0 8px}
+.calpeople{max-height:46vh;overflow:auto;border-top:1px solid var(--line)}
+.calperson{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;padding:8px 2px;border-bottom:1px solid var(--line)}
+.calperson>span:first-child{min-width:0;overflow-wrap:anywhere}.calperson.has>span:first-child{font-weight:600}
+.calperson .segc button{font-size:12.5px}
+.caltopchips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:4px 0 4px}
+.caltopchips .chip{display:inline-flex;align-items:center;gap:4px;font-size:13px;padding:4px 6px 4px 11px}
+.caltopchips .chip button{border:0;background:none;color:inherit;font:inherit;cursor:pointer;padding:0 4px;border-radius:99px}
+.caltopchips .caltopnew{flex:1 1 180px;min-width:0}
 /* E-Mail (post.js, plan kalender-mail/plan.md 2a): the inbox as an ld list, one message as plain text */
 .post .ld-list.busy{opacity:.55}
 .post .postdot{flex:none;width:8px;height:8px;border-radius:50%}
