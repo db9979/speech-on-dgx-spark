@@ -7604,6 +7604,14 @@
 "src": "sicherheit-und-betrieb",
 "file": "Sicherheit und Betrieb",
 "head": "Selbsttest",
+"title": "Rotes main bleibt nicht unbemerkt",
+"text": "Rotes main bleibt nicht unbemerkt (V01.0.822): Ist der neueste Stand auf GitHub durch die Tests gefallen, nennt *Zustand → Update* seit wann („Rot seit Mo. 23:44“), und die Update-Zeile im Live-Kasten sagt dasselbe. Der Lauf „Tests“ öffnet dann auf GitHub das Issue „main rot“ mit den Namen der roten Tests (GitHub meldet es dem Besitzer des Repos), schreibt jeden weiteren roten Lauf dazu und schließt es beim nächsten grünen. Tests, die erst im zweiten Versuch grün werden, kommen als Kommentar in das Issue „Wackelnde Tests“. Vor jedem Push bricht tools/vorpush.py ab, solange main rot ist (nur der ROT-FIX geht mit --rotfix), und lässt alle Tests laufen, nicht nur die der geänderten Dateien."
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Selbsttest",
 "title": "Heute Nacht einspielen",
 "text": "Heute Nacht einspielen (Einstellungen → Update, aus): Eine neue geprüfte Version wird nachts zwischen 3 und 5 Uhr eingespielt, höchstens einmal pro Nacht, mit Sicherung vorher. Spricht gerade jemand mit dem Spark (in den letzten zwei Minuten), wartet es bis zur nächsten Pause; ist GitHub nicht erreichbar, fragt es nach 15 Minuten wieder. Beim Notaus startet nichts. Einschalten braucht den zweiten Anmeldeschritt, wenn er an ist. Der Knopf „Update installieren“ fragt eigens nach, wenn gerade ein Gespräch läuft. Die Live-Übersicht zeigt unter „Läuft gerade“ ein laufendes Update mit Schritt und Anteil, eine Stunde lang das Ergebnis und ob „nachts“ an ist."
 },
@@ -15598,6 +15606,14 @@
 "head": "Self-test",
 "title": "Gentle updates",
 "text": "est checks the list against the imports. VoiceDesign, like the engines, restarts only when its settings changed. The panel restarts on every update (about 8 s)."
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Self-test",
+"title": "A red main does not go unnoticed",
+"text": "A red main does not go unnoticed (V01.0.822): when the newest state on GitHub failed the tests, *Status → Update* says since when (\"Red since Mon 23:44\"), and the update line in the Live box says the same. The \"Tests\" run then opens the issue \"main rot\" on GitHub with the names of the red tests (GitHub tells the repository's owner), adds every further red run and closes it with the next green one. Tests that pass only the second time go as a comment to the issue \"Wackelnde Tests\". Before every push tools/vorpush.py stops while main is red (only the ROT-FIX passes, with --rotfix) and runs every test, not only those of the changed files."
 },
 {
 "lang": "en",

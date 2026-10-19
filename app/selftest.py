@@ -17,7 +17,9 @@ With --part K/N only the K-th of N parts runs. The parts are cut from the same d
 with entries per test in tests/dauer.json test by test), so together they hold every test exactly once (parts()).
 The durations in tests/dauer.json only decide which part a unit goes to; one missing there counts NEW_UNIT
 seconds. Each part writes what failed the first time to $SELFTEST_REPORT; --sum adds the parts up, so the rule
-"more than MAX_RETRY failures is red" holds for the whole run, not per part.
+"more than MAX_RETRY failures is red" holds for the whole run, not per part. With $SELFTEST_NOTE --sum also writes
+which tests stayed red and which passed only the second time; GitHub opens the issue "main rot" with it (closed
+again by the next green run) and counts the wobbly ones on the issue "Wackelnde Tests" (V01.0.820).
 """
 import json
 import os
@@ -148,13 +150,17 @@ class _Timed(unittest.TextTestResult):
         self._last = now
 
 
-def _report(names, result):
+def _report(names, result, red=None):
+    """$SELFTEST_REPORT: what failed the first time, what stayed red (red; until the second try ran, the same) and
+    what passed only the second time (wobbly), for --sum and the note on GitHub."""
     path = os.environ.get("SELFTEST_REPORT")
     if not path:
         return
     dur = {k: round(v, 1) for k, v in getattr(result, "durations", {}).items()}
+    red = names if red is None else red
     with open(path, "w", encoding="utf-8") as f:
-        json.dump({"failed_first": names, "ran": result.testsRun, "dauer": dur}, f)
+        json.dump({"failed_first": names, "red": red, "wobbly": [n for n in names if n not in red],
+                   "ran": result.testsRun, "dauer": dur}, f)
 
 
 def run_part(argv, k, n):
@@ -178,7 +184,7 @@ def run_part(argv, k, n):
 
 def total(folder, n):
     """Job "Ergebnis": every part reported, and all together had not more than MAX_RETRY first failures."""
-    names, ran, dur = [], 0, {}
+    names, ran, dur, red, wobbly = [], 0, {}, [], []
     for k in range(1, n + 1):
         path = os.path.join(folder, f"teil-{k}", "teil.json")
         try:
@@ -188,6 +194,8 @@ def total(folder, n):
             print(f"selftest: part {k}/{n} sent no result", flush=True)
             return 1
         names += [str(x) for x in data.get("failed_first", [])]
+        red += [str(x) for x in data.get("red", data.get("failed_first", []))]
+        wobbly += [str(x) for x in data.get("wobbly", [])]
         ran += int(data.get("ran", 0))
         part = {str(c): float(v) for c, v in (data.get("dauer") or {}).items()}
         dur.update(part)
@@ -199,12 +207,29 @@ def total(folder, n):
         with open(out, "w", encoding="utf-8") as f:
             json.dump(dict(sorted(dur.items())), f, indent=0, ensure_ascii=False)
             f.write("\n")
+    _note(red if len(names) <= MAX_RETRY else names, wobbly)
     if ran <= 0:
         return 1
     if len(names) > MAX_RETRY:
         print(f"selftest: {len(names)} failed, more than {MAX_RETRY} is a real break: {' '.join(names)}", flush=True)
         return 1
     return 0
+
+
+def _note(red, wobbly):
+    """$SELFTEST_NOTE (GitHub "Tests", job "Ergebnis"): the text of the issue "main rot" or of the comment on
+    "Wackelnde Tests", test names only (V01.0.820). Red first; nothing written when all is green and steady."""
+    out = os.environ.get("SELFTEST_NOTE")
+    if not out or not (red or wobbly):
+        return
+    lines = []
+    if red:
+        lines += ["Rot (auch im zweiten Versuch oder mehr als %d auf einmal):" % MAX_RETRY, ""]
+        lines += ["- `%s`" % x for x in red[:40]] + (["- und %d weitere" % (len(red) - 40)] if len(red) > 40 else [])
+    if wobbly:
+        lines += ([""] if lines else []) + [WARN + ":", ""] + ["- `%s`" % x for x in wobbly[:40]]
+    with open(out, "w", encoding="utf-8") as f:
+        f.write("\n".join(lines) + "\n")
 
 
 def rerun(top, names):
@@ -247,6 +272,7 @@ def main(argv):
     if again.returncode != 0:
         print(f"selftest: failed twice: {' '.join(names)}", flush=True)
         return 1
+    _report(names, result, red=[])
     lines = [f"{WARN}: {n}" for n in names]
     for line in lines:
         print(line, flush=True)

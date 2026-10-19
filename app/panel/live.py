@@ -551,6 +551,8 @@ def update_checked(data, t0):
             pass
         if not err and head in ("running", "red"):
             word += " · neuester Stand: " + ("Tests laufen" if head == "running" else "Tests rot oder abgebrochen")
+            if data.get("red_since"):
+                word += time.strftime(" · rot seit %d.%m. %H:%M", time.localtime(data["red_since"]))
         event("Update", "Prüfung: " + word)
     except Exception:
         pass

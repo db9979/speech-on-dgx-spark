@@ -67,6 +67,10 @@ jobs:
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    # only for the issues "main rot" and "Wackelnde Tests" (V01.0.820): nobody noticed main red for 10 h over night
+    permissions:
+      contents: read
+      issues: write
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
@@ -78,12 +82,44 @@ jobs:
           path: ${{ runner.temp }}/teile
           pattern: teil-*
       - name: All parts
+        id: alle
         env:
           PARTS: ${{ needs.test.result }}
           SELFTEST_DAUER: ${{ runner.temp }}/dauer.json
+          SELFTEST_NOTE: ${{ runner.temp }}/note.md
         run: |
           python3 app/selftest.py --sum "$RUNNER_TEMP/teile" 4
           [ "$PARTS" = "success" ] || { echo "::error::A part of the self-tests is red ($PARTS)"; exit 1; }
+      # main red: one open issue "main rot" with the red tests (GitHub tells the repository's owner), a comment on it
+      # for every further red run, closed by the next green one; tests green only the second time are counted as
+      # comments on "Wackelnde Tests". A cancelled run says nothing. Names of tests only, no output.
+      - name: Note on GitHub
+        continue-on-error: true   # a refused issue never turns a green run red
+        if: always() && github.ref == 'refs/heads/main' && (needs.test.result == 'success' || needs.test.result == 'failure')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          OUTCOME: ${{ steps.alle.outcome }}
+          NOTE: ${{ runner.temp }}/note.md
+          RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          R="$GITHUB_REPOSITORY"
+          open_issue() { gh issue list -R "$R" --state open --search "in:title \"$1\"" --json number,title \
+                           --jq "map(select(.title == \"$1\")) | .[0].number // empty"; }
+          head="Lauf: $RUN (Commit ${GITHUB_SHA:0:7})"
+          red=$(open_issue "main rot")
+          if [ "$OUTCOME" = "success" ]; then
+            [ -z "$red" ] || gh issue close "$red" -R "$R" -c "Wieder grün. $head"
+          else
+            { echo "$head"; echo; cat "$NOTE" 2>/dev/null || echo "Ein Teil lieferte kein Ergebnis."; } > body.md
+            if [ -n "$red" ]; then gh issue comment "$red" -R "$R" -F body.md
+            else gh issue create -R "$R" -t "main rot" -F body.md; fi
+          fi
+          if [ "$OUTCOME" = "success" ] && grep -q "zweiten Versuch" "$NOTE" 2>/dev/null; then
+            { echo "$head"; echo; cat "$NOTE"; } > wackel.md
+            w=$(open_issue "Wackelnde Tests")
+            if [ -n "$w" ]; then gh issue comment "$w" -R "$R" -F wackel.md
+            else gh issue create -R "$R" -t "Wackelnde Tests" -F wackel.md; fi
+          fi
       # the durations measured here, for app/tests/dauer.json when one part gets much longer than the others
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()

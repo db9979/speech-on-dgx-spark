@@ -1,26 +1,34 @@
 #!/usr/bin/env python3
 """Quick test before a push (guideline part 10 point 5): one command instead of a hand-picked list.
 
-    python3 tools/vorpush.py              checks, regenerates the docs, runs the affected and the guard tests
+    python3 tools/vorpush.py              checks, regenerates the docs, runs every test module (see 4.)
     python3 tools/vorpush.py --liste      only shows which tests would run
-    python3 tools/vorpush.py -j 3         three test modules at the same time
+    python3 tools/vorpush.py -j 2         two test modules at the same time (default JOBS)
+    python3 tools/vorpush.py --rotfix     the push repairs a red main: the stop in 0. does not hold
     python3 tools/vorpush.py test_live    adds test modules by name
 
 What it does, in this order, and it stops loudly at the first problem:
+0. PUSH-STOPP: the newest finished GitHub "Tests" run on main is red (V01.0.820, Dominik 2026-10-19 "1b"; main was
+   red 10 h over night and nine pushes landed on it). Only a fix for it passes, with --rotfix. When GitHub cannot
+   be asked, it says so and goes on (the full run on GitHub still decides).
 1. app/VERSION is higher than on origin/main and is the top line of CHANGELOG.md (bump forgotten or stale).
 2. A Python 3.11 venv with the panel's pinned packages (app/requirements-panel.lock, like GitHub "Tests") in
    ~/.cache/speech-spark-vorpush; it is rebuilt when the lock file changes. Without fastapi it stops: with the
    system Python `hilfe.py --docs` fails and hilfe_docs.json stays stale (red V01.0.677).
 3. `app/panel/hilfe.py --docs` with that venv; files it changed are named so they go into the same commit.
-4. The tests: per changed file test_<name>.py and every test that names the file (e.g. "live.js"), plus WAECHTER.
+4. The tests: every test module except SLOW (since V01.0.820: picking by file name missed test_mail_zeit and
+   test_hilfe_quality, which import the changed module, and main went red for .808-.817). A module in SLOW runs
+   when a changed file is one of its own (test_<name>.py, a file it names, or a file under SLOW_WHEN).
    Each module runs as `selftest.py discover -s tests -p test_NAME.py` (a red test gets its second try there).
 Exit code 0 only when everything is green. It changes nothing but the generated docs and its own venv.
 """
 import hashlib
+import json
 import os
 import re
 import subprocess
 import sys
+import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -29,6 +37,14 @@ TESTS = os.path.join(APP, "tests")
 LOCK = os.path.join(APP, "requirements-panel.lock")
 VENV = os.path.join(os.environ.get("XDG_CACHE_HOME") or os.path.expanduser("~/.cache"), "speech-spark-vorpush", "venv")
 PY = "python3.11"   # the version GitHub "Tests" runs (.github/workflows/tests.yml)
+JOBS = 4            # modules at the same time; each runs its own panel in its own state folder
+REPO = "db9979/speech-on-dgx-spark"
+RUNS = "https://api.github.com/repos/%s/actions/workflows/tests.yml/runs?branch=main&event=push&per_page=30"
+
+# the browser test of every page takes more than half of the whole run (tests/dauer.json, ~450 of ~870 s); it runs
+# when the pages could have changed: a file under one of SLOW_WHEN or a file it names (tests_for)
+SLOW = ("test_ui_browser",)
+SLOW_WHEN = ("app/panel/static/", "app/panel/panel.py", "app/panel/guides.py", "app/panel/hilfe.py")
 
 # guard tests that run before every push, whatever changed (the one list; CLAUDE.md and the guideline point here).
 # test_hilfe and test_scanner since 2026-10-16: a stale hilfe_docs.json (.677) and a route missing in the
@@ -95,6 +111,47 @@ def tests_for(files, tests_dir=TESTS):
     return sorted(out)
 
 
+def main_state(runs):
+    """update.main_state, the one copy (the panel shows "rot seit" with it); taken from the file alone, so this
+    script needs none of the panel's packages."""
+    import ast
+    path = os.path.join(APP, "panel", "update.py")
+    with open(path, encoding="utf-8") as f:
+        tree = ast.parse(f.read())
+    node = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == "main_state")
+    space = {}
+    exec(compile(ast.Module(body=[node], type_ignores=[]), path, "exec"), space)
+    return space["main_state"](runs)
+
+
+def check_main(rotfix):
+    """Stop 0.: no push onto a red main (PUSH-STOPP), except the fix itself (--rotfix)."""
+    try:
+        req = urllib.request.Request(RUNS % REPO, headers={"Accept": "application/vnd.github+json"})
+        with urllib.request.urlopen(req, timeout=15) as r:
+            runs = json.load(r).get("workflow_runs") or []
+    except (OSError, ValueError) as e:
+        print("vorpush: main state unknown (GitHub not readable: %s), the full run on GitHub decides" % type(e).__name__,
+              flush=True)
+        return
+    state, since = main_state(runs)
+    running = any(isinstance(r, dict) and r.get("status") != "completed" for r in runs[:5])
+    print("vorpush: main on GitHub " + state + (" since " + since if since else "")
+          + (" (a newer run is still going)" if running else ""), flush=True)
+    if state == "red" and not rotfix:
+        stop("PUSH-STOPP: main is red on GitHub since " + str(since) + ". Only the fix for it is pushed, with "
+             "--rotfix; tell the coordinator, it names who fixes it")
+
+
+def pick(files, extra=(), tests_dir=TESTS):
+    """Every test module, SLOW ones only when a changed file is theirs; WAECHTER and extra always."""
+    have = sorted(f[:-3] for f in os.listdir(tests_dir) if f.startswith("test_") and f.endswith(".py"))
+    own = set(tests_for(files, tests_dir))
+    pages = any(f.startswith(SLOW_WHEN) for f in files)
+    out = {t for t in have if t not in SLOW or t in own or pages}
+    return sorted(out | {w for w in WAECHTER if w in have} | set(extra))
+
+
 def lock_sum():
     with open(LOCK, "rb") as f:
         return hashlib.sha256(f.read()).hexdigest()
@@ -150,7 +207,7 @@ def run_one(py, name):
 
 
 def main(argv):
-    jobs, extra, only_list, base = 1, [], False, "origin/main"
+    jobs, extra, only_list, base, rotfix = JOBS, [], False, "origin/main", False
     i = 0
     while i < len(argv):
         a = argv[i]
@@ -158,6 +215,8 @@ def main(argv):
             jobs, i = max(1, int(argv[i + 1])), i + 1
         elif a == "--liste":
             only_list = True
+        elif a == "--rotfix":
+            rotfix = True
         elif a == "--basis" and i + 1 < len(argv):
             base, i = argv[i + 1], i + 1
         elif re.fullmatch(r"test_\w+", a) and os.path.exists(os.path.join(TESTS, a + ".py")):
@@ -168,13 +227,15 @@ def main(argv):
         i += 1
     if base == "origin/main" and git("fetch", "-q", "origin", "main").returncode:
         stop("git fetch origin main failed: without it the version check would compare against an old main")
+    if base == "origin/main" and not only_list:
+        check_main(rotfix)
     files = changed_files(base)
-    names = sorted(set(tests_for(files)) | set(WAECHTER) | set(extra))
+    names = pick(files, extra)
     print("vorpush: %d changed files, %d test modules: %s" % (len(files), len(names), " ".join(names)), flush=True)
     if only_list:
         return 0
     check_version(base)
-    py = venv_python("test_ui_browser" in names)
+    py = venv_python(True)   # many modules besides test_ui_browser open pages in Chromium
     regen_docs(py)
     red = []
     with ThreadPoolExecutor(max_workers=jobs) as pool:

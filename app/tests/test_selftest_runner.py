@@ -9,6 +9,7 @@ import sys
 import tempfile
 import textwrap
 import unittest
+from unittest import mock
 
 APP = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RUNNER = os.path.join(APP, "selftest.py")
@@ -154,6 +155,28 @@ class Runner(unittest.TestCase):
                     json.dump({"failed_first": [f"t{k}.{i}" for i in range(fails)], "ran": 10}, f)
             self.assertEqual(selftest.total(d, 2), 1)
             self.assertEqual(selftest.total(d, 1), 0)
+
+    def test_note_names_red_and_wobbly_tests(self):
+        """V01.0.820: GitHub opens "main rot" with the tests that stayed red and counts the wobbly ones."""
+        with tempfile.TemporaryDirectory() as d:
+            for k, data in ((1, {"failed_first": ["t.a", "t.b"], "red": ["t.a"], "wobbly": ["t.b"], "ran": 5}),
+                            (2, {"failed_first": [], "ran": 5})):
+                os.makedirs(os.path.join(d, f"teil-{k}"))
+                with open(os.path.join(d, f"teil-{k}", "teil.json"), "w") as f:
+                    json.dump(data, f)
+            note = os.path.join(d, "note.md")
+            with mock.patch.dict(os.environ, {"SELFTEST_NOTE": note}):
+                self.assertEqual(selftest.total(d, 2), 0)
+            with open(note, encoding="utf-8") as f:
+                text = f.read()
+            self.assertIn("- `t.a`", text.split(selftest.WARN)[0])
+            self.assertIn("- `t.b`", text.split(selftest.WARN)[1])
+            os.remove(note)
+            with open(os.path.join(d, "teil-1", "teil.json"), "w") as f:
+                json.dump({"failed_first": [], "ran": 5}, f)
+            with mock.patch.dict(os.environ, {"SELFTEST_NOTE": note}):
+                selftest.total(d, 2)
+            self.assertFalse(os.path.exists(note), "all green and steady: no note")
 
     def test_cut_is_complete_and_the_same_everywhere(self):
         keys = [f"test_x{i}.C{j}" for i in range(30) for j in range(4)]

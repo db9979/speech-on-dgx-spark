@@ -63,6 +63,34 @@ def pick_green(runs, branch, head):
     return green, state
 
 
+def main_state(runs):
+    """From the newest runs of "Tests" on the branch (newest first): (state, since). state is "red" when the newest
+    finished run failed, "green" when it passed, else "unknown" (cancelled runs say nothing); since is the start
+    of the first red run after the last green one (ISO text): Zustand → Update "rot seit", and tools/vorpush.py
+    stops a push onto a red main with it (V01.0.822). Plain Python only: vorpush runs it without the panel's packages."""
+    done = [r for r in runs if isinstance(r, dict) and r.get("status") == "completed"
+            and r.get("conclusion") not in ("cancelled", "skipped", None)]
+    if not done:
+        return "unknown", None
+    if done[0].get("conclusion") == "success":
+        return "green", None
+    since = done[0].get("created_at")
+    for r in done[1:]:
+        if r.get("conclusion") == "success":
+            break
+        since = r.get("created_at") or since
+    return "red", since
+
+
+def iso_time(text):
+    """GitHub's "2026-10-19T08:07:30Z" as seconds, or None."""
+    import calendar
+    try:
+        return calendar.timegm(time.strptime(str(text), "%Y-%m-%dT%H:%M:%SZ"))
+    except (TypeError, ValueError, OverflowError):
+        return None
+
+
 class GitHubRefused(Exception):
     """GitHub answered with an error status; until: when its hourly limit allows the next question."""
 
@@ -160,7 +188,11 @@ async def _remote_state(force=False):
     if repo:
         until, limited, answered, why = now + _FAIL_PAUSE, False, False, "github_unreadable"
         try:
-            green, data["head_state"] = pick_green(await green_runs(repo, branch), branch, data["head"])
+            runs = await green_runs(repo, branch)
+            green, data["head_state"] = pick_green(runs, branch, data["head"])
+            state, since = main_state([r for r in runs or [] if isinstance(r, dict) and r.get("head_branch") == branch])
+            if state == "red" and iso_time(since):
+                data["red_since"] = iso_time(since)
             if not green:
                 green = pick_green(await green_runs(repo, branch, passed=True), branch, None)[0]
             answered = True

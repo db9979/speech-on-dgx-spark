@@ -347,6 +347,12 @@ class Stage1(unittest.TestCase):
         self.assertEqual(update.pick_green([{"head_branch": "main", "conclusion": "success", "head_sha": "x; rm"}],
                                            "main", "a" * 40), (None, "unknown"))
         self.assertEqual(update.pick_green("nonsense", "main", "a" * 40), (None, "unknown"))
+        # Zustand → Stand "rot seit" (V01.0.820): the first red run after the last green one
+        done = [{"status": "completed", "conclusion": c, "created_at": t} for c, t in
+                (("failure", "2026-10-19T07:16:52Z"), ("failure", "2026-10-18T21:44:59Z"), ("success", "2026-10-18T20:00:00Z"))]
+        state, since = update.main_state(done)
+        self.assertEqual((state, update.iso_time(since)), ("red", 1792359899))
+        self.assertIsNone(update.iso_time("gestern"))
 
     def test_units_have_memory_limits(self):
         sh = repo_file("install.sh")

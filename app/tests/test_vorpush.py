@@ -1,5 +1,6 @@
 """The quick test before a push (tools/vorpush.py, guideline part 10 point 5): its guard list is the one list,
-every name in it exists, the docs point to it, and it picks the tests of a changed file.
+every name in it exists, the docs point to it, it runs every module (the slow browser test only for pages) and
+it stops a push onto a red main (V01.0.820).
 
 tools/ is not in a copy with only app/ (install selftest): then these tests are skipped."""
 import importlib.util
@@ -56,6 +57,41 @@ class Vorpush(unittest.TestCase):
             self.assertEqual(self.v.tests_for(["app/panel/static/js/live.js"], d), ["test_live", "test_other"])
             self.assertEqual(self.v.tests_for(["app/tests/test_far.py"], d), ["test_far"])
             self.assertEqual(self.v.tests_for(["app/VERSION"], d), [], "a bare name would match every test")
+
+    def test_every_module_runs_and_the_slow_one_only_for_pages(self):
+        """V01.0.820: picking by file name missed test_mail_zeit/test_hilfe_quality (main red .808-.817)."""
+        with tempfile.TemporaryDirectory() as d:
+            for name, body in (("test_ui_browser.py", "chat.js"), ("test_mail_zeit.py", "import chat_tools"),
+                               ("test_hilfe_quality.py", "import hilfe")):
+                with open(os.path.join(d, name), "w", encoding="utf-8") as f:
+                    f.write(body)
+            self.assertEqual(self.v.pick(["app/panel/chat_tools.py"], (), d), ["test_hilfe_quality", "test_mail_zeit"])
+            self.assertIn("test_ui_browser", self.v.pick(["app/panel/static/js/me.js"], (), d))
+            self.assertIn("test_ui_browser", self.v.pick(["app/panel/x.py"], ("test_ui_browser",), d))
+        self.assertTrue(set(self.v.SLOW) <= {n[:-3] for n in os.listdir(HERE)})
+
+    def test_red_main_stops_the_push_unless_it_is_the_fix(self):
+        def run(c, t, sha="a"):
+            return {"status": "completed" if c else "in_progress", "conclusion": c, "created_at": t, "head_sha": sha}
+        ms = self.v.main_state
+        self.assertEqual(ms([run(None, "T5"), run("failure", "T4"), run("cancelled", "T3"), run("failure", "T2"),
+                             run("success", "T1")]), ("red", "T2"))
+        self.assertEqual(ms([run("failure", "T2"), run("success", "T1")]), ("red", "T2"))
+        self.assertEqual(ms([run(None, "T2"), run("success", "T1")]), ("green", None))
+        self.assertEqual(ms([run("cancelled", "T1")]), ("unknown", None))
+        self.assertEqual(ms("nonsense"), ("unknown", None))
+        # vorpush keeps no copy of its own (rule 12): the one in update.py, read from the file
+        self.assertNotIn('return "red", since', read("tools", "vorpush.py"))
+        import io
+        import json
+        from unittest import mock
+        body = json.dumps({"workflow_runs": [run("failure", "2026-10-18T21:44:59Z")]}).encode()
+        with mock.patch.object(self.v.urllib.request, "urlopen", return_value=io.BytesIO(body)):
+            with self.assertRaises(SystemExit):
+                self.v.check_main(False)
+            self.v.check_main(True)                       # the fix itself passes
+        with mock.patch.object(self.v.urllib.request, "urlopen", side_effect=OSError("offline")):
+            self.v.check_main(False)                      # GitHub not readable: goes on, GitHub's full run decides
 
     def test_version_numbers_compare_as_numbers(self):
         self.assertGreater(self.v.version_num("V01.0.1000"), self.v.version_num("V01.0.999"))
