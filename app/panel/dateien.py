@@ -113,6 +113,7 @@ DATEIEN = [
     profil("mcp-dienste-pending.json", "Wartet auf Ja", "Waiting for yes", art="Warteschlange"),
     profil("messages-pending.json", "Wartet auf Ja", "Waiting for yes", art="Warteschlange"),
     profil("rufen-pending.json", "Anruf wartet auf Ja", "Call waiting for yes", art="Warteschlange"),
+    profil("senden-pending.json", "Mail per Sprache wartet auf Ja", "Mail by voice waiting for yes", art="Warteschlange"),
     profil("tasks-pending.json", "Wartet auf Ja", "Waiting for yes", art="Warteschlange"),
     profil("remarkable-pending.json", "Wartet auf Ja", "Waiting for yes", art="Warteschlange"),
     profil("rueckfrage-pending.json", "Letzte Rückfrage des Assistenten (10 Minuten, nur ihre Knöpfe)", "The assistant's last question back (10 minutes, only its buttons)", art="Warteschlange"),

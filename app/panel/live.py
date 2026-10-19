@@ -1307,8 +1307,10 @@ def snapshot(view="admin", now=None):
         kal_page = calendars.page_today()
         import postfach
         post_page = postfach.today()
+        import senden
+        post_sent = senden.today()
     except Exception:
-        kal, kal_page, post_page = {"on": False}, 0, 0
+        kal, kal_page, post_page, post_sent = {"on": False}, 0, 0, 0
     try:
         import nasquelle
         nql = nasquelle.for_live()
@@ -1418,6 +1420,8 @@ def snapshot(view="admin", now=None):
             x["sub"] += f" · {kal.get('shares', 0)} geteilt von {kal.get('owners', 0)} Profilen"
         if x["id"] == "mail" and post_page:      # Mails ordnen: messages ordered on the page today (a number)
             x["sub"] += f" · heute {post_page} auf der Seite geordnet"
+        if x["id"] == "mail" and post_sent:      # Mails senden: mails sent from the page today (a number, never to whom)
+            x["sub"] += f" · heute {post_sent} gesendet"
         if x["id"] == "cal" and kal_page:        # the page Kalender: appointments added, changed, deleted today (a number)
             x["sub"] += f" · heute {kal_page} auf der Seite geändert"
         if x["id"] == "nasquelle" and nql.get("on"):   # Wissensordner: folders, documents, failing (no path, no name)

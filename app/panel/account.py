@@ -30,6 +30,7 @@ import memtidy  # noqa: E402
 import gedaechtnis  # noqa: E402
 import mfa  # noqa: E402
 import postfach  # noqa: E402
+import senden  # noqa: E402
 import notaus  # noqa: E402
 import passkey  # noqa: E402
 import stufen  # noqa: E402
@@ -66,6 +67,7 @@ from core import (  # noqa: E402
     calendar_on,
     calshare_on,
     mailmanage_on,
+    mailsend_on,
     check_password,
     confirm_code,
     ha_on,
@@ -82,7 +84,7 @@ router = APIRouter()
 
 # whoami flag -> function in features.py
 WHO = {"documents": "documents", "reminders": "reminders", "speaker_id": "speaker", "calendar": "calendar",
-       "homeassistant": "ha", "mail": "mail", "mail_tidy": "tidy", "mail_style": "mailstil", "mail_insight": "fuerdich", "mail_manage": "mailmanage", "proactive": "proactive", "room": "room",
+       "homeassistant": "ha", "mail": "mail", "mail_tidy": "tidy", "mail_style": "mailstil", "mail_insight": "fuerdich", "mail_manage": "mailmanage", "mail_send": "mailsend", "proactive": "proactive", "room": "room",
        "room_voices": "roomtv", "room_ha": "roomha", "room_remote": "roomfar", "weather": "weather", "contacts": "contacts",
        "parcels": "parcels", "telegram": "telegram", "tasks": "tasks", "transit": "transit", "feeds": "feeds",
        "esp32": "esp32", "iphone": "iphone", "iphone_panel": "iphonepanel", "pebble": "pebble", "pebble_chat": "pebblechat", "pebble_reply": "pebbleantwort", "pebble_remote": "pebblefern", "pebble_health": "pebblegesund", "pebble_face": "pebblezifferblatt", "pebble_day": "pebbletag", "pebble_alerts": "pebblemeldung", "pebble_note": "pebblemerken", "pebble_place": "pebbleort", "pebble_follow": "pebblefolge", "pebble_quick": "pebbleschnell", "pebble_remind": "pebbleerinnern", "terminal": "terminal",
@@ -1218,6 +1220,47 @@ async def profile_mail_act(request: Request, prof=Depends(browser_profile)):
         raise HTTPException(504, "Das Postfach hat zu lange gebraucht. Bitte gleich noch einmal.")
     except (OSError, imaplib.IMAP4.error):
         raise HTTPException(502, "Das Postfach war nicht erreichbar.")
+
+
+@router.post("/api/profile/mail/send/preview", dependencies=[Depends(assistant), Depends(mail_on), Depends(mailsend_on)])
+async def profile_mail_send_preview(request: Request, prof=Depends(browser_profile)):
+    """Mails senden (senden.py): {account|reply, to, cc, subject, text} → the finished mail for the preview sheet and
+    its token; nothing goes out here."""
+    guard.limit(request, "mailsenden", prof["id"])
+    body = await request.json()
+    try:
+        return await asyncio.wait_for(asyncio.to_thread(senden.preview, prof["id"], body if isinstance(body, dict) else {}), 45)
+    except LookupError:
+        raise HTTPException(404, "Die Mail, auf die du antwortest, ist nicht mehr da.")
+    except ValueError as e:
+        raise HTTPException(400, str(e)[:200])
+    except asyncio.TimeoutError:
+        print(f"mail: send preview too slow | {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(504, "Das Postfach hat zu lange gebraucht. Bitte gleich noch einmal.")
+    except (OSError, imaplib.IMAP4.error):
+        print(f"mail: send preview not readable | {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(502, "Das Postfach war nicht erreichbar.")
+
+
+@router.post("/api/profile/mail/send", dependencies=[Depends(assistant), Depends(mail_on), Depends(mailsend_on)])
+async def profile_mail_send(request: Request, prof=Depends(browser_profile)):
+    """Mails senden: {token} of the preview sheet; „Senden“ there is the yes, the mail goes out once."""
+    guard.limit(request, "mailsenden", prof["id"])
+    body = await request.json()
+    token = str((body if isinstance(body, dict) else {}).get("token") or "")[:64]
+    try:
+        return await asyncio.wait_for(asyncio.to_thread(senden.send, prof["id"], token), 90)
+    except LookupError:
+        raise HTTPException(409, "Die Vorschau ist abgelaufen. Bitte die Mail noch einmal ansehen.")
+    except notaus.NotausAktiv:
+        raise HTTPException(423, "Notaus: gerade wird nichts gesendet")
+    except ValueError as e:
+        raise HTTPException(400, str(e)[:200])
+    except asyncio.TimeoutError:
+        print(f"mail: send too slow | {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(504, "Der Postausgang hat zu lange gebraucht. Ob die Mail raus ist, steht im Ordner Gesendet.")
+    except OSError:
+        raise HTTPException(502, "Der Postausgang brach ab. Ob die Mail raus ist, steht im Ordner Gesendet.")
 
 
 @router.get("/api/profile/homeassistant", dependencies=[Depends(assistant)])

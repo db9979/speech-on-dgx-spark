@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.814** Send mail from the E-mail page: a new mail or a reply, a preview sheet first, sent only with "Send" there; TLS only, copy in "Sent" (switch off by default).
 - **V01.0.813** Order mail on the E-mail page: read/unread, archive, move into an own folder, undo right after; never deleted, never into trash or junk (switch off by default); assistant answers get "Show in calendar" and "Open mail" buttons.
 - **V01.0.812** Add, change and delete appointments right on the Calendar page (own CalDAV calendars, never repeating ones, guarded by the server's etag).
 - **V01.0.811** Share calendars with other profiles (see, or see and add); private appointments show only as busy, the assistant reads shared ones ("Was hat Sabine morgen?").
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.807** uConsole and terminal: `spark-tui kalender` and F5 show the week of the page Calendar (read only); then `spark-tui update`
 - **V01.0.806** Question cards: yes/no or "A or B" as buttons under a question of the assistant, everywhere
 - **V01.0.805** Calendar as a page of its own in the menu: day, week, month or list; everything to set up in its tab Settings, no longer under Me
-- **V01.0.804** Fix: "yes" to "Shall I put it on the reMarkable?" puts the answer there; "yes" to an appointment answers right
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

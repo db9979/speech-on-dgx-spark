@@ -88,7 +88,8 @@ def waiting_mods():
     import roomfar
     import remarkable
     import rufen
-    return (calendars, tidy, tasks, fixes, agent, inbox, roomfar, meinmcp, hamelden, aendern, nasablage, rufen, remarkable)
+    import senden
+    return (calendars, tidy, tasks, fixes, agent, inbox, roomfar, meinmcp, hamelden, aendern, nasablage, rufen, remarkable, senden)
 
 
 class Turn:
@@ -779,8 +780,9 @@ async def prepare(request):
         import messages as inbox   # (messages is the conversation here)
         import tasks
         import rufen
+        import senden
         for mod in (calendars, tidy, tasks, fixes, agent, inbox, roomfar, hamelden, meinmcp, gedaechtnis, aendern, nasablage, rufen,
-                    remarkable):
+                    remarkable, senden):
             if xprop and xprop.get("proposed") == mod.__name__:
                 continue   # the panel made this proposal from this very message (agent: „Sag mir Bescheid, wenn …“)
             p = mod.pending(who["id"])

@@ -20,6 +20,7 @@ import mail  # noqa: E402
 import notaus  # noqa: E402
 import profiles  # noqa: E402
 import recall  # noqa: E402
+import senden  # noqa: E402
 import tidy  # noqa: E402
 import wiki  # noqa: E402
 import chat  # noqa: E402  (constants and helpers; imported fully before any call)
@@ -427,6 +428,7 @@ async def mail_tool(t, name, args, st):
             ref = str(args.get("id", ""))[:40]
             text = await asyncio.to_thread(mail.read, t.who["id"], ref, chat.user_zone(t.body.get("tz")))
             if text.startswith(mail.UNTRUSTED):   # read, not "unknown" or "no longer exists"
+                senden.note_read(t.who["id"], ref, t.src)   # "Antworte ihr per Mail: …" (senden.py)
                 await t.out.put({"type": "goto", "to": "post", "id": ref})   # Karte „Mail öffnen“ (chat.js)
             return text
     except ValueError as e:

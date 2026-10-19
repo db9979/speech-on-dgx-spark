@@ -226,6 +226,8 @@
     "mail": false,
     "mail_tidy": false,
     "mail_manage": false,
+    "mail_send": false,
+    "mail_send_voice": "off",
     "mail_style": false,
     "mail_insight": false,
     "weather": false,

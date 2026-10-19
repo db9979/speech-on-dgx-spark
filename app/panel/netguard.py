@@ -3,7 +3,7 @@ results, calendars, address books, task lists, mail servers and Home Assistant.
 
 One place decides where such a connection may go (allowed):
 - PUBLIC (pages from search results): public internet addresses only.
-- USER (CalDAV, CardDAV, webcal, IMAP): public addresses; addresses in the home network only when the
+- USER (CalDAV, CardDAV, webcal, IMAP, SMTP): public addresses; addresses in the home network only when the
   admin allows it (panel.allow_lan, Einstellungen -> Sicherheit, default off).
 - HOME (Home Assistant, which lives in the home network): public and home network addresses.
 Never: link-local (169.254.x, cloud metadata), multicast, unspecified, and on this machine the ports
@@ -22,6 +22,7 @@ import contextvars
 import imaplib
 import ipaddress
 import re
+import smtplib
 import socket
 import zlib
 from urllib.parse import urlsplit
@@ -369,3 +370,20 @@ class IMAP4_SSL(imaplib.IMAP4_SSL):
         ip = resolve(self.host, self.port, USER)
         sock = socket.create_connection((ip, self.port), timeout)
         return self.ssl_context.wrap_socket(sock, server_hostname=self.host)
+
+
+class SMTP(smtplib.SMTP):
+    """smtplib's SMTP (then STARTTLS, senden.py requires it) to the checked address of the outgoing server."""
+
+    def _get_socket(self, host, port, timeout):
+        ip = resolve(host, port, USER)
+        return socket.create_connection((ip, port), timeout, self.source_address)
+
+
+class SMTP_SSL(smtplib.SMTP_SSL):
+    """smtplib's SMTP over TLS (port 465) to the checked address of the outgoing server."""
+
+    def _get_socket(self, host, port, timeout):
+        ip = resolve(host, port, USER)
+        sock = socket.create_connection((ip, port), timeout, self.source_address)
+        return self.context.wrap_socket(sock, server_hostname=host)

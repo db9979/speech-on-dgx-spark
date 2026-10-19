@@ -110,7 +110,7 @@ NEVER = (
     ("Updates und Sicherungen", "Updates and backups"),
 )
 NEVER_KEYS = {("chat", k) for k in ("llm_url", "llm_key", "public", "mfa", "report", "report_repo", "mail_send",
-                                    "mcp_server_extern", "dev_updates", "telegram_api")} \
+                                    "mail_send_voice", "mcp_server_extern", "dev_updates", "telegram_api")} \
     | {("api", "key"), ("api", "tls_listen"), ("api", "tls_from"), ("panel", "port"), ("panel", "https_port"),
        ("models", "host"), ("models", "cert")}
 

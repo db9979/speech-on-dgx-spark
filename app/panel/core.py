@@ -476,6 +476,10 @@ def mailmanage_on(request: Request):
     _gate("mailmanage", "ordering mail is turned off", request)
 
 
+def mailsend_on(request: Request):
+    _gate("mailsend", "sending mail is turned off", request)
+
+
 def calshare_on(request: Request):
     _gate("calshare", "sharing calendars is turned off", request)
 

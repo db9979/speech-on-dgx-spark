@@ -2028,6 +2028,13 @@
 "titel": "Mails ordnen",
 "text": "A: Admin: Funktionen → E-Mail lesen → „Mails ordnen“ an. B: E-Mail → eine Mail öffnen: unter der Mail stehen „Gelesen“/„Ungelesen“, „Archivieren“ und eine Ordnerwahl. C: „Gelesen“: am iPhone ist die Mail gelesen. D: „Archivieren“: die Mail ist aus dem Posteingang weg und am iPhone im Archiv; „Rückgängig“ holt sie zurück. E: Einen eigenen Ordner wählen: die Mail liegt am iPhone dort. F: In der Ordnerwahl stehen nie Papierkorb, Spam, Gesendet oder Entwürfe. G: Schalter aus: die Knöpfe sind weg. H: Live zeigt bei der Post nur die Zahl der heute geordneten Mails. I: Im Chat „Was steht morgen an?“: unter der Antwort „Im Kalender ansehen“ öffnet den Kalender an diesem Tag. J: „Lies mir die Mail von Anna vor“: „Mail öffnen“ zeigt genau diese Mail auf der Seite E-Mail.",
 "thread": "Kalender und E-Mail in Panel und Apps"
+},
+{
+"id": "P314",
+"v": 814,
+"titel": "Mails senden",
+"text": "A: Admin: Funktionen → E-Mail lesen → „Mails senden“ an. B: E-Mail → „Neue Mail“, An: deine zweite Adresse, Betreff und Text, „Vorschau“: das Blatt zeigt Von, An, Betreff und Text, noch ist nichts gesendet. C: „Senden“: die Mail kommt an der zweiten Adresse an, im iPhone-Postfach unter „Gesendet“. D: Eine Mail öffnen, „Antworten“: An ist der Absender, Betreff „Re: …“; senden, beim Empfänger hängt sie am Verlauf. E: Im Betreff oder bei An Unsinn („kein Mensch“): die Vorschau lehnt ab. F: Mit einem GMX- oder web.de-Postfach: die Kopie liegt in „Gesendet“. G: Schalter aus: „Neue Mail“ und „Antworten“ sind weg. H: Live zeigt bei der Post nur die Zahl der heute gesendeten Mails. I: Admin: „Senden per Sprache“ auf „nur Antworten“; „Lies mir die Mail von … vor“, dann „Antworte ihr per Mail: komme morgen“: der Spark liest Empfänger und Text vor, erst „Ja“ sendet. J: „Nein“ sendet nichts. K: Auf „alle“: „Schreib eine Mail an <Kontakt>: Hallo“ fragt nach und sendet nach „Ja“; ein Name, der nicht in den Kontakten steht, wird abgelehnt.",
+"thread": "Kalender und E-Mail in Panel und Apps"
 }
 ]
 }
