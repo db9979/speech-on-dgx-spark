@@ -216,6 +216,7 @@ WITHOUT = {
     "mymcpjobs": "wirkt in Aufträgen",
     "mymcpoauth": "Anmeldung beim Dienst nur in der Oberfläche",
     "schreib": "das Modell formuliert selbst",
+    "mailmanage": "nur Knöpfe auf der Seite E-Mail (gelesen, Archiv, Verschieben); per Stimme ordnet Postfach aufräumen",
     "fuerdich": "Stufe 1 zeigt die Funde als Karten auf der Seite (E-Mail → Für dich, Heute); Fragen per Stimme kommen mit Stufe 2",
     "mailstil": "wirkt in jedem Mail-Entwurf (mail_draft, Begleiter); gelernt wird nur auf Knopfdruck unter E-Mail → Einstellungen",
     "schreibapps": "Kanal in anderen Programmen",

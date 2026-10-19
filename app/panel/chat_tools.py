@@ -314,6 +314,7 @@ async def run(t, name, args, st):
         except (ValueError, httpx.HTTPError) as e:
             return f"Calendar not reachable: {e}"
         now = datetime.datetime.now(zone)
+        await t.out.put({"type": "goto", "to": "cal", "day": day.isoformat()})   # Karte „Im Kalender ansehen“ (chat.js)
         return ("\n".join(calendars.line(x, now) for x in evs) or "No appointments in this period. Say so; do not guess any.") \
             + "".join(f"\nCalendar '{n}' could not be read: {e}" for n, e in errors)
     if name == "calendar_add" and t.cal_write:
@@ -423,8 +424,11 @@ async def mail_tool(t, name, args, st):
             return await asyncio.to_thread(mail.listing, t.who["id"], query, num("days", 30), bool(args.get("unread")),
                                            8, chat.user_zone(t.body.get("tz")))
         if name == "mail_read":
-            return await asyncio.to_thread(mail.read, t.who["id"], str(args.get("id", ""))[:40],
-                                           chat.user_zone(t.body.get("tz")))
+            ref = str(args.get("id", ""))[:40]
+            text = await asyncio.to_thread(mail.read, t.who["id"], ref, chat.user_zone(t.body.get("tz")))
+            if text.startswith(mail.UNTRUSTED):   # read, not "unknown" or "no longer exists"
+                await t.out.put({"type": "goto", "to": "post", "id": ref})   # Karte „Mail öffnen“ (chat.js)
+            return text
     except ValueError as e:
         return f"E-mail not readable: {e}"
     except Exception as e:

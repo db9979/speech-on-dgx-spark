@@ -2021,6 +2021,13 @@
 "titel": "Termine auf der Seite ändern",
 "text": "A: Kalender → Termine: „+ Termin“, Titel, Tag, Von/Bis und Ort eingeben, „Speichern“: der Termin steht auf der Seite und im iPhone-Kalender. B: Den Termin antippen, „Ändern“, Uhrzeit verschieben, „Speichern“: im iPhone-Kalender an der neuen Stelle. C: „Löschen“ fragt nach und nimmt ihn weg. D: Ein wiederholter Termin (z. B. wöchentlich) zeigt keinen Knopf „Ändern“. E: Am iPhone den Termin ändern, dann auf der Seite ohne Neuladen „Löschen“: die Seite meldet, dass er geändert wurde, und löscht nichts. F: Am Handy (390 px) passt das Formular ohne seitliches Scrollen.",
 "thread": "Kalender und E-Mail in Panel und Apps"
+},
+{
+"id": "P313",
+"v": 813,
+"titel": "Mails ordnen",
+"text": "A: Admin: Funktionen → E-Mail lesen → „Mails ordnen“ an. B: E-Mail → eine Mail öffnen: unter der Mail stehen „Gelesen“/„Ungelesen“, „Archivieren“ und eine Ordnerwahl. C: „Gelesen“: am iPhone ist die Mail gelesen. D: „Archivieren“: die Mail ist aus dem Posteingang weg und am iPhone im Archiv; „Rückgängig“ holt sie zurück. E: Einen eigenen Ordner wählen: die Mail liegt am iPhone dort. F: In der Ordnerwahl stehen nie Papierkorb, Spam, Gesendet oder Entwürfe. G: Schalter aus: die Knöpfe sind weg. H: Live zeigt bei der Post nur die Zahl der heute geordneten Mails. I: Im Chat „Was steht morgen an?“: unter der Antwort „Im Kalender ansehen“ öffnet den Kalender an diesem Tag. J: „Lies mir die Mail von Anna vor“: „Mail öffnen“ zeigt genau diese Mail auf der Seite E-Mail.",
+"thread": "Kalender und E-Mail in Panel und Apps"
 }
 ]
 }

@@ -472,6 +472,10 @@ def calendar_on(request: Request):
     _gate("calendar", "calendar and daily briefing are turned off", request)
 
 
+def mailmanage_on(request: Request):
+    _gate("mailmanage", "ordering mail is turned off", request)
+
+
 def calshare_on(request: Request):
     _gate("calshare", "sharing calendars is turned off", request)
 

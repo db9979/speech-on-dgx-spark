@@ -225,6 +225,7 @@
     "calendar_share": false,
     "mail": false,
     "mail_tidy": false,
+    "mail_manage": false,
     "mail_style": false,
     "mail_insight": false,
     "weather": false,

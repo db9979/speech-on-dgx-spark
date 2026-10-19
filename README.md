@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.813** Order mail on the E-mail page: read/unread, archive, move into an own folder, undo right after; never deleted, never into trash or junk (switch off by default); assistant answers get "Show in calendar" and "Open mail" buttons.
 - **V01.0.812** Add, change and delete appointments right on the Calendar page (own CalDAV calendars, never repeating ones, guarded by the server's etag).
 - **V01.0.811** Share calendars with other profiles (see, or see and add); private appointments show only as busy, the assistant reads shared ones ("Was hat Sabine morgen?").
 - **V01.0.810** Speaking up by itself in one place: the mail rows (important mail, tidying, parcel today) moved to E-mail → Settings, appointments ahead to Calendar → Settings.
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.806** Question cards: yes/no or "A or B" as buttons under a question of the assistant, everywhere
 - **V01.0.805** Calendar as a page of its own in the menu: day, week, month or list; everything to set up in its tab Settings, no longer under Me
 - **V01.0.804** Fix: "yes" to "Shall I put it on the reMarkable?" puts the answer there; "yes" to an appointment answers right
-- **V01.0.803** · 2026-10-18 · Calls by the assistant: "Call Sabine" or "Video call Sabine" calls through Chats after your yes; from a speaker, the phone or Telegram the call comes to your phone as a note (one tap calls); on Android also "Call Mum by phone" with your own contacts (app 1.4.2); switch off
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

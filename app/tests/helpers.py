@@ -607,7 +607,8 @@ class FakeMailbox:
         return "OK", [" ".join(self.after_login).encode()]
 
     def list(self):
-        special = {"Sent Messages": " \\Sent", "Drafts": " \\Drafts"}
+        special = {"Sent Messages": " \\Sent", "Drafts": " \\Drafts", "Archive": " \\Archive", "Deleted Messages": " \\Trash",
+                   "Junk": " \\Junk"}
         return "OK", [f'(\\HasNoChildren{special.get(n, "")}) "/" "{n}"'.encode() for n in self.boxes]
 
     def create(self, name):
@@ -719,7 +720,9 @@ class FakeMailbox:
                 return "NO", [b"read only"]
             want = {int(x) for x in args[0].split(",")}
             for m in box:
-                if m["uid"] in want:
+                if m["uid"] in want and "Seen" in (args[2] if len(args) > 2 else ""):   # read / unread (postfach.py)
+                    m["seen"] = args[1].startswith("+")
+                elif m["uid"] in want:
                     if args[1].startswith("+") and "\\Deleted" not in m["flags"]:
                         m["flags"].append("\\Deleted")
                     elif args[1].startswith("-") and "\\Deleted" in m["flags"]:

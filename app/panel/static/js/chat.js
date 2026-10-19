@@ -246,7 +246,7 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
   const el=chatLog('assistant','');$('fabtext').textContent='';
   // shown formatted while it streams (md.js), at most once per frame; the small answer line gets the plain text
   let drawn=null,frame=0;const draw=()=>{frame=0;md.render(el,drawn);$('fabtext').textContent=md.plain(drawn);$('chatlog').scrollTop=1e9};
-  const show=(x,now)=>{drawn=x;if(now){if(frame)cancelAnimationFrame(frame);draw()}else if(!frame)frame=requestAnimationFrame(draw)};let full='',llmS=null,audioS=null,ackS=null,err='';const searches=[],sources=[],mems=[],docs=[],drefs=[],hcards=[],mkcards=[],chcards=[],blcards=[],steps=[],confirms=[];let rateId='',wbId='',more=null;const moreTool=typeof moreTake==='function'?moreTake(text):undefined;if(typeof moreStartGone==='function')moreStartGone();
+  const show=(x,now)=>{drawn=x;if(now){if(frame)cancelAnimationFrame(frame);draw()}else if(!frame)frame=requestAnimationFrame(draw)};let full='',llmS=null,audioS=null,ackS=null,err='';const searches=[],sources=[],mems=[],docs=[],drefs=[],hcards=[],mkcards=[],chcards=[],blcards=[],steps=[],confirms=[],gotos=[];let rateId='',wbId='',more=null;const moreTool=typeof moreTake==='function'?moreTake(text):undefined;if(typeof moreStartGone==='function')moreStartGone();
   const ctrl=new AbortController();chat.ctrl=ctrl;chat.firstPlay=null;chat.gaps=[];chat.blocks=[];chat.t0b=null;chat.stalls=0;chat.pieceStart=true;setTalk();chatSay(t('Antwort kommt …','Answer coming …'));
   try{const r=await api('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},signal:ctrl.signal,
       body:JSON.stringify({speak:voiceOn()?undefined:false,messages:chat.msgs.slice(-20).map(m=>({role:m.role,content:m.content,...(m.mail?{mail:true}:{}),...(m.outside?{outside:true}:{}),...(m.screen?{screen:true}:{})})),tab:TAB,tz:(()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone}catch{return ''}})(),voice:PROFILE&&S.voice||undefined,speed:S.speed,length:S.length,convo:chat.cid||undefined,speaker:spk&&spk.token||undefined,images:pids.length?pids:undefined,page:typeof hilfeNow==='function'?hilfeNow():undefined,focus:typeof hilfeFocusTake==='function'?hilfeFocusTake():undefined,view:document.body.classList.contains('appview')?'app':undefined,more:moreTool})});
@@ -281,6 +281,7 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
         else if(ev.type==='choice'){chcards.push(ev)}   // the panel asks which one (klaeren.py)
         else if(ev.type==='step'){steps.push(ev)}   // Ablauf zeigen (ablauf.py): tool name, ok and time, never what it found
         else if(ev.type==='confirm'){confirms.push(ev)}   // Freigabe-Karte: a proposal of this answer waits for "Ja"
+        else if(ev.type==='goto'){if(!gotos.some(x=>x.to===ev.to&&x.day===ev.day&&x.id===ev.id)&&gotos.length<3)gotos.push(ev)}   // Kalender or E-Mail page of what the answer read
         else if(ev.type==='anruf'){if(window.anFromAssistant)setTimeout(()=>anFromAssistant(ev),1500)}   // Anrufe per Assistent (rufen.py): after the yes
         else if(ev.type==='waehlen'){const n=String(ev.number||'');   // „übers Telefon“: only inside the Android app, the phone app dials after a tap
           if(/SparkAndroid\//.test(navigator.userAgent)&&/^\+?[0-9][0-9 \/()\-]{2,28}$/.test(n))location.href='tel:'+n.replace(/[^0-9+]/g,'')}
@@ -308,6 +309,7 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
   for(const c of blcards){if(c.type==='musik'){if(typeof musikCard==='function')el.appendChild(musikCard(c))}else if(typeof bildCard==='function')el.appendChild(bildCard(c))}
   if(!err)for(const c of chcards)el.appendChild(choiceCard(c));
   if(!err&&!foreign)for(const c of confirms)el.appendChild(confirmCard(c));
+  if(!err&&!foreign&&full.trim()){const g=gotoCard(gotos);if(g)el.appendChild(g)}
   if(rateId&&full.trim()&&!err&&typeof rateBar==='function')el.appendChild(rateBar(rateId));
   if(more&&full.trim()&&!err&&!foreign&&typeof moreRow==='function')el.appendChild(moreRow(more));
   if(typeof hilfeFabCards==='function')hilfeFabCards(hcards);
@@ -339,6 +341,16 @@ function stepsFold(steps){const d=document.createElement('details');d.className=
     li.textContent=(x.ok?'✓ ':'⚠ ')+(L==='en'?x.en:x.de)+' · '+sec(x.ms||0);ul.appendChild(li)}
   d.appendChild(ul);return d}
 // Freigabe-Karte (ablauf.py): Ja and Nein send the words like a typed answer; the module that proposed decides by its rules
+// „Im Kalender ansehen“ / „Mail öffnen“ under an answer that read appointments or a mail (chat_tools.py, event "goto"):
+// only a way to the own page, which shows what the server allows; nothing happens without the click
+function gotoCard(list){const row=document.createElement('div');row.className='choice gotoc';
+  const btn=(label,go)=>{const b=document.createElement('button');b.type='button';b.className='b chb';b.textContent=label;b.onclick=go;row.appendChild(b)};
+  for(const c of list){
+    if(c.to==='cal'&&typeof KAL!=='undefined'&&PROFILE&&CAL_ON&&/^\d{4}-\d{2}-\d{2}$/.test(c.day||'')){const [y,m,d]=c.day.split('-').map(Number);
+      btn(t('Im Kalender ansehen','Show in calendar'),()=>{KAL.day=new Date(y,m-1,d);icTabSet('cal','show');goSec('cal')})}
+    else if(c.to==='post'&&typeof postRead==='function'&&PROFILE&&MAIL_ON&&/^m[0-9a-f]{8}:\d{1,10}$/.test(c.id||''))
+      btn(t('Mail öffnen','Open mail'),()=>{icTabSet('post','show');goSec('post');postRead(c.id)})}
+  return row.children.length?row:null}
 function confirmCard(c){const d=document.createElement('div');d.className='confirmc';const h=document.createElement('b');
   h.textContent=t('Wartet auf dein Ja: ','Waiting for your yes: ')+(L==='en'?c.en:c.de);d.appendChild(h);const row=document.createElement('div');row.className='choice';
   const btn=(label,word,cls)=>{const b=document.createElement('button');b.type='button';b.className='b chb'+cls;b.textContent=label;

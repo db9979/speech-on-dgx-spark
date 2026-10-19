@@ -301,6 +301,9 @@ FEATURES = (
     # mail and contacts
     F("mail", "E-Mail lesen", "Reading e-mail", "post", ("mail",), me="mailbox", guide="mail"),
     F("tidy", "Postfach aufräumen", "Inbox tidying", "post", ("mail_tidy",), parent="mail", me="mailbox", guide="tidy"),
+    # postfach.py (plan kalender-mail Stufe 2): on the page E-Mail read/unread, archive, move into an own folder
+    F("mailmanage", "Mails ordnen", "Order mail", "post", ("mail_manage", "mail"), parent="mail", me="mailbox",
+      guide="mailmanage"),
     F("mailstil", "Mailstil lernen", "Learn mail style", "post", ("mail_style",), parent="mail", me="mailbox", guide="mailstil"),
     F("parcels", "Pakete", "Parcels", "post", ("parcels",), parent="mail", me="mailbox", guide="parcels"),
     # fuerdich.py (plan persoenlicher-assistent, Dominik 2026-10-18): bills, contracts, orders, offers, open replies and

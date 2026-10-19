@@ -1727,4 +1727,5 @@ body.inchats:not(.appview):not(.kbd) .cx-comp{padding-right:96px}
 .post .ld-row:not(.unread) .ld-mid b{font-weight:500}
 .post .posttext{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;line-height:1.5;margin:10px 0;max-height:60vh;overflow:auto}
 .post .postdet .ld-facts{margin-top:4px}
+.post .postord{flex-wrap:wrap;gap:6px;margin-top:10px}.post .postord select{width:auto;max-width:100%}
 #parwrap[hidden]{display:none}

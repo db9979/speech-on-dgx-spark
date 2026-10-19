@@ -29,6 +29,7 @@ import mail  # noqa: E402
 import memtidy  # noqa: E402
 import gedaechtnis  # noqa: E402
 import mfa  # noqa: E402
+import postfach  # noqa: E402
 import notaus  # noqa: E402
 import passkey  # noqa: E402
 import stufen  # noqa: E402
@@ -64,6 +65,7 @@ from core import (  # noqa: E402
     assistant,
     calendar_on,
     calshare_on,
+    mailmanage_on,
     check_password,
     confirm_code,
     ha_on,
@@ -80,7 +82,7 @@ router = APIRouter()
 
 # whoami flag -> function in features.py
 WHO = {"documents": "documents", "reminders": "reminders", "speaker_id": "speaker", "calendar": "calendar",
-       "homeassistant": "ha", "mail": "mail", "mail_tidy": "tidy", "mail_style": "mailstil", "mail_insight": "fuerdich", "proactive": "proactive", "room": "room",
+       "homeassistant": "ha", "mail": "mail", "mail_tidy": "tidy", "mail_style": "mailstil", "mail_insight": "fuerdich", "mail_manage": "mailmanage", "proactive": "proactive", "room": "room",
        "room_voices": "roomtv", "room_ha": "roomha", "room_remote": "roomfar", "weather": "weather", "contacts": "contacts",
        "parcels": "parcels", "telegram": "telegram", "tasks": "tasks", "transit": "transit", "feeds": "feeds",
        "esp32": "esp32", "iphone": "iphone", "iphone_panel": "iphonepanel", "pebble": "pebble", "pebble_chat": "pebblechat", "pebble_reply": "pebbleantwort", "pebble_remote": "pebblefern", "pebble_health": "pebblegesund", "pebble_face": "pebblezifferblatt", "pebble_day": "pebbletag", "pebble_alerts": "pebblemeldung", "pebble_note": "pebblemerken", "pebble_place": "pebbleort", "pebble_follow": "pebblefolge", "pebble_quick": "pebbleschnell", "pebble_remind": "pebbleerinnern", "terminal": "terminal",
@@ -1176,6 +1178,46 @@ async def profile_mail_message(request: Request, id: str = "", prof=Depends(own_
     if r is None:
         raise HTTPException(404, "Diese Mail gibt es nicht mehr.")
     return r
+
+
+@router.get("/api/profile/mail/folders", dependencies=[Depends(assistant), Depends(mail_on), Depends(mailmanage_on)])
+async def profile_mail_folders(request: Request, account: str = "", prof=Depends(browser_profile)):
+    """Mails ordnen (postfach.py): the folders of one own mailbox a message may go to, and its archive folder."""
+    guard.limit(request, "postordnen", prof["id"])
+    try:
+        return await asyncio.wait_for(asyncio.to_thread(postfach.folders, prof["id"], account[:20]), 45)
+    except ValueError:
+        raise HTTPException(400, "Unbekanntes Postfach.")
+    except asyncio.TimeoutError:
+        print(f"mail: folders too slow | {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(504, "Das Postfach hat zu lange gebraucht. Bitte gleich noch einmal.")
+    except (OSError, imaplib.IMAP4.error):
+        print(f"mail: folders not readable | {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(502, "Das Postfach war nicht erreichbar.")
+
+
+@router.post("/api/profile/mail/act", dependencies=[Depends(assistant), Depends(mail_on), Depends(mailmanage_on)])
+async def profile_mail_act(request: Request, prof=Depends(browser_profile)):
+    """Mails ordnen (postfach.act): {id, action read|unread|archive|move|back, folder, mid}; the button is the yes,
+    only the own browser login, never deleted (postfach.py logs every outcome)."""
+    guard.limit(request, "postordnen", prof["id"])
+    body = await request.json()
+    body = body if isinstance(body, dict) else {}
+    try:
+        return await asyncio.wait_for(asyncio.to_thread(
+            postfach.act, prof["id"], str(body.get("id") or "")[:40], str(body.get("action") or "")[:10],
+            str(body.get("folder") or "")[:200], str(body.get("mid") or "")[:300]), 45)
+    except LookupError:
+        raise HTTPException(404, "Diese Mail ist dort nicht mehr.")
+    except notaus.NotausAktiv:
+        raise HTTPException(423, "Notaus: gerade wird nichts geändert")
+    except ValueError as e:
+        raise HTTPException(400, str(e)[:200])
+    except asyncio.TimeoutError:
+        print(f"mail: page action too slow | {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(504, "Das Postfach hat zu lange gebraucht. Bitte gleich noch einmal.")
+    except (OSError, imaplib.IMAP4.error):
+        raise HTTPException(502, "Das Postfach war nicht erreichbar.")
 
 
 @router.get("/api/profile/homeassistant", dependencies=[Depends(assistant)])
