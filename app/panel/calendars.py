@@ -41,6 +41,7 @@ import kalenderspiegel
 import netguard
 import notaus
 import profiles
+import sparkkalender
 import vault
 
 MAX_TOPICS = 3
@@ -77,6 +78,10 @@ def get(uid):
         cals = [{"id": "c1", "name": "Kalender", "url": d["url"], "user": d.get("user", ""),
                  "password": d.get("password", "")}]
     cals = [dict(x, password=vault.open_(x.get("password", ""))) for x in cals if isinstance(x, dict) and x.get("url")]
+    for x in cals:   # a Spark calendar is bound to the profile whose file holds it, never to what the file says
+        x.pop("uid", None)
+        if x.get("spark"):
+            x["uid"] = uid
     return {"calendars": cals,
             "topics": d.get("topics", []) if isinstance(d.get("topics"), list) else []}
 
@@ -87,7 +92,7 @@ def public(uid):
     addresses)."""
     d = get(uid)
     out = {"calendars": [{"id": x["id"], "name": x.get("name", ""), "url": x["url"], "user": x.get("user", ""),
-                          "has_password": bool(x.get("password"))} for x in d["calendars"]],
+                          "has_password": bool(x.get("password")), "spark": bool(x.get("spark"))} for x in d["calendars"]],
            "topics": d["topics"]}
     if _sharing(uid):
         have = set(profiles.user_ids())
@@ -101,7 +106,8 @@ def public(uid):
 
 def _store(uid, d):
     with _lock:
-        cals = [dict(x, password=vault.seal(x.get("password", ""))) for x in d["calendars"]]
+        cals = [{k: v for k, v in dict(x, password=vault.seal(x.get("password", ""))).items() if k != "uid"}
+                for x in d["calendars"]]
         profiles._write(_file(uid), {"calendars": cals, "topics": d["topics"], "updated": int(time.time())})
         _drop(uid)
 
@@ -111,6 +117,8 @@ def entry(body):
     url = str(body.get("url", "")).strip()
     if not re.fullmatch(r"(https?|webcals?)://[^\s]{3,500}", url, re.I):
         raise ValueError("the calendar address must start with https://, http://, webcal:// or webcals://")
+    if sparkkalender.is_spark(url):
+        raise ValueError("this address belongs to a Spark calendar; add one with „Spark-Kalender anlegen“")
     name = str(body.get("name", "")).strip()[:60]
     if not name:
         m = re.match(r"\w+://([^/:]+)", url)
@@ -231,11 +239,25 @@ def add(uid, item):
     return public(uid)
 
 
+def add_spark(uid, name):
+    """A new Spark calendar (sparkkalender.py) as an entry of the profile."""
+    if len(get(uid)["calendars"]) >= MAX_CALENDARS:
+        raise ValueError(f"at most {MAX_CALENDARS} calendars")
+    item = sparkkalender.create(uid, name)
+    try:
+        return add(uid, item)
+    except Exception:
+        sparkkalender.forget(uid, [item["id"]])
+        raise
+
+
 def remove(uid, cid):
     d = get(uid)
+    spark = [x["id"] for x in d["calendars"] if x["id"] == cid and x.get("spark")]
     d["calendars"] = [x for x in d["calendars"] if x["id"] != cid]
     _store(uid, d)
     kalenderspiegel.forget([cid])
+    sparkkalender.forget(uid, spark)   # a Spark calendar's appointments live nowhere else: they go with it
     return public(uid)
 
 
@@ -262,6 +284,8 @@ def seal_stored(uid):
 
 def forget(uid):
     kalenderspiegel.forget([c["id"] for c in get(uid)["calendars"]])
+    sparkkalender.forget(uid, [c["id"] for c in get(uid)["calendars"] if c.get("spark")])
+    sparkkalender.drop_profile(uid)
     with _lock:
         try:
             os.remove(_file(uid))
@@ -363,6 +387,8 @@ async def _report(c, cal, start, end):
 async def _parts(c, d):
     """The calendars of an entry's address a reader may see (_only), from the last discovery while it is fresh
     (FOUND_SECONDS), else found anew: a change on the page needs no round trips to find them again."""
+    if d.get("spark"):   # a Spark calendar is one calendar at its own address (sparkkalender.py)
+        return [(d["url"], d.get("name", ""))]
     where = (d.get("id"), d["url"], d.get("user"))
     known = _found.get(where)
     if not (known and known[1] and time.time() - known[0] < FOUND_SECONDS):
@@ -400,7 +426,7 @@ async def parts(uid, cid):
 async def _read(c, d, url, start, end):
     """One CalDAV calendar's texts for [start, end): from the Spark's copy (kalenderspiegel, only the changes come
     from the server); an entry not saved yet (the check before it is added) asks the server directly."""
-    if kalenderspiegel.CID.fullmatch(str(d.get("id") or "")) and not d.get("unsaved"):
+    if kalenderspiegel.CID.fullmatch(str(d.get("id") or "")) and not d.get("unsaved") and not d.get("spark"):
         try:
             return await kalenderspiegel.texts(c, d["id"], url, start, end)
         except kalenderspiegel.Unsupported:
@@ -410,6 +436,9 @@ async def _read(c, d, url, start, end):
 
 async def _fetch(d, start, end):
     """iCal texts of all events overlapping [start, end) (UTC datetimes); number of calendars."""
+    if d.get("spark"):   # lives in the panel: no discovery, no copy, no network (sparkkalender.py)
+        async with _cal_client(d) as c:
+            return await _report(c, d["url"], start, end), 1
     url = d["url"]
     auth = (d["user"], d.get("password", "")) if d.get("user") else None
     web = re.sub(r"^webcals?://", "https://", url, flags=re.I)
@@ -1150,7 +1179,7 @@ def _writable(uid):
 async def _objects(c, cal, start, end, d=None):
     """[(href, etag, ical text)] of the events overlapping [start, end) in one calendar; from the Spark's copy when
     the entry d has one (kalenderspiegel), else asked from the server."""
-    if d is not None and kalenderspiegel.CID.fullmatch(str(d.get("id") or "")):
+    if d is not None and kalenderspiegel.CID.fullmatch(str(d.get("id") or "")) and not d.get("spark"):
         try:
             return [(urljoin(cal, h), tag, text) for h, tag, text in await kalenderspiegel.objects(c, d["id"], cal, start, end)]
         except kalenderspiegel.Unsupported:
@@ -1422,6 +1451,8 @@ async def put_ics(uid, acc, href, ics, new=False):
 
 
 def _cal_client(d):
+    if d.get("spark"):   # answered in the panel itself, bound to this entry of its owner (sparkkalender.client)
+        return sparkkalender.client(d["uid"], d["id"])
     auth = (d["user"], d.get("password", "")) if d.get("user") else None
     return netguard.client(netguard.USER, origin=d["url"], timeout=httpx.Timeout(20, connect=8), auth=auth,
                            follow_redirects=True, headers={"User-Agent": "speech-on-dgx-spark"})

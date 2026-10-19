@@ -411,22 +411,26 @@ const TZ=()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone}catch{
 const CALKIND={icloud:{name:'iCloud',url:'https://caldav.icloud.com',user:1,h:t('Benutzer: deine Apple-ID. Passwort: ein app-spezifisches Passwort von appleid.apple.com.','User: your Apple ID. Password: an app-specific password from appleid.apple.com.')},
   nextcloud:{name:'Nextcloud',url:'',ph:'https://cloud.example.de/remote.php/dav',user:1,h:t('Adresse mit /remote.php/dav, am besten mit App-Passwort.','Address with /remote.php/dav, best with an app password.')},
   caldav:{name:'',url:'',ph:'https://server.example.de/dav/',user:1,h:t('Server-, Konto- oder Kalender-Adresse.','Server, account or calendar address.')},
-  ics:{name:'',url:'',ph:'webcal://… oder https://…/basic.ics',user:0,h:t('Ohne Benutzer. Google: „Privatadresse im iCal-Format“, iCloud: „Öffentlicher Kalender“.','No user. Google: "Secret address in iCal format", iCloud: "Public calendar".')}};
+  ics:{name:'',url:'',ph:'webcal://… oder https://…/basic.ics',user:0,h:t('Ohne Benutzer. Google: „Privatadresse im iCal-Format“, iCloud: „Öffentlicher Kalender“.','No user. Google: "Secret address in iCal format", iCloud: "Public calendar".')},
+  spark:{name:t('Spark-Kalender','Spark calendar'),url:'',user:0,spark:1,h:t('Liegt nur auf dem Spark, verschlüsselt, ohne iCloud oder ein anderes Konto. Entfernen löscht seine Termine.','Lives only on the Spark, encrypted, without iCloud or any other account. Removing it deletes its appointments.')}};
 function calKind(){const k=CALKIND[$('calkind').value];$('calhint').textContent=k.h;$('calurl').placeholder=k.ph||k.url;
   if(!$('calurl').value||Object.values(CALKIND).some(x=>x.url&&x.url===$('calurl').value))$('calurl').value=k.url;
   if(!$('calname').value||Object.values(CALKIND).some(x=>x.name&&x.name===$('calname').value))$('calname').value=k.name;
-  $('caluser').closest('.two2').style.display=k.user?'':'none';if(!k.user){$('caluser').value='';$('calpw').value=''}}
+  $('caluser').closest('.two2').style.display=k.user?'':'none';if(!k.user){$('caluser').value='';$('calpw').value=''}
+  // Spark-Kalender (Stufe 3): no address, nothing to check outside
+  $('calurl').style.display=$('calurl').previousElementSibling.style.display=k.spark?'none':'';
+  $('calsave').textContent=k.spark?t('Anlegen','Create'):t('Prüfen und hinzufügen','Check and add')}
 $('calkind').onchange=calKind;
 // Kalender teilen (calendars.py, Dominik 2026-10-18 „1a 2a“, übersichtlich 2026-10-19 „7a“): each calendar a card with
 // its kind and with whom it is shared; „Teilen“ opens a window with one row per profile (Nicht · Sehen · Sehen +
 // eintragen), a search that filters the list while typing, those with access on top. Only when the function is
 // released (d.people comes then); every change is one PUT with the code like before.
 const CALLEVEL=[['',t('Nicht','Not')],['see',t('Sehen','See')],['add',t('Sehen + eintragen','See + add')]];
-const calKindOf=c=>/^webcals?:|\.ics(\?|$)/i.test(c.url)?t('Abo-Link','Subscription'):/icloud\.com/i.test(c.url)?'iCloud':'CalDAV';
+const calKindOf=c=>c.spark?t('Auf dem Spark','On the Spark'):/^webcals?:|\.ics(\?|$)/i.test(c.url)?t('Abo-Link','Subscription'):/icloud\.com/i.test(c.url)?'iCloud':'CalDAV';
 function calRender(d){const people=d.people||[],name=id=>(people.find(p=>p.id===id)||{}).name||'';CAL_PEOPLE=people;
   $('callist').innerHTML=d.calendars.map(c=>{const sh=Object.entries(c.shares||{});
     return `<li class="calc"><span><b>${esc(c.name)}</b><span class="calchips"><span class="chip">${esc(calKindOf(c))}</span>${sh.length?`<span class="chip hi">${esc(t('Geteilt mit ','Shared with ')+sh.map(([id])=>name(id)).filter(Boolean).join(', '))}</span>`:''}</span></span>`+
-      `<span class="calbtns">${people.length?`<button class="b" type="button" data-share="${esc(c.id)}">${esc(t('Teilen','Share'))}</button>`:''}<details class="calmore"><summary class="b" aria-label="${esc(t('Mehr','More'))}">⋯</summary><div class="calmenu"><small class="mut">${esc(c.url.replace(/^\w+:\/\//,'').slice(0,60))}</small><button class="b" type="button" ${onAttr('calRemove',c.id,c.name)}>${t('Entfernen','Remove')}</button></div></details></span></li>`}).join('')||`<li class="mut">${t('Noch kein Kalender verbunden.','No calendar connected yet.')}</li>`;
+      `<span class="calbtns">${people.length?`<button class="b" type="button" data-share="${esc(c.id)}">${esc(t('Teilen','Share'))}</button>`:''}<details class="calmore"><summary class="b" aria-label="${esc(t('Mehr','More'))}">⋯</summary><div class="calmenu"><small class="mut">${esc(c.url.replace(/^\w+:\/\//,'').slice(0,60))}</small><button class="b" type="button" ${onAttr('calRemove',c.id,c.name,c.spark?1:0)}>${t('Entfernen','Remove')}</button></div></details></span></li>`}).join('')||`<li class="mut">${t('Noch kein Kalender verbunden.','No calendar connected yet.')}</li>`;
   $('callist').querySelectorAll('[data-share]').forEach(b=>b.onclick=()=>calShareOpen(d.calendars.find(c=>c.id===b.dataset.share)));
   $('calshared').innerHTML=(d.shared||[]).length?`<div class="mgrp">${esc(t('Mit dir geteilt','Shared with you'))}</div><ul class="facts">`+d.shared.map(x=>`<li class="calc"><span><b>${esc(x.owner)} · ${esc(x.name)}</b><span class="calchips"><span class="chip">${esc(x.level==='add'?t('Sehen und eintragen','See and add'):t('Nur sehen','See only'))}</span></span></span></li>`).join('')+'</ul>':'';
   CAL_TOPICS=(d.topics||[]).slice();calTopics();calKind();$('caltest').style.display=d.calendars.length?'':'none';$('caladd').open=!d.calendars.length}
@@ -470,11 +474,12 @@ async function calTopSave(again){const {r,d}=await apiTry('/api/profile/calendar
   if(!r.ok){calMsg(errSay(r.status,d.detail,''),true);return}
   calRender(d);calMsg(t('Themen gespeichert.','Topics saved.'));if(again){const n=$('caltopchips').querySelector('.caltopnew');if(n)n.focus()}}
 async function showCal(){if(!CAL_ON)return;calRender(await (await api('/api/profile/calendar')).json());$('calmsg').textContent='';$('calmsg').className=''}
-async function calRemove(id,name){if(!confirm(t('Kalender „','Remove calendar "')+name+t('“ entfernen?','"?')))return;calRender(await (await api('/api/profile/calendar/'+encodeURIComponent(id),{method:'DELETE'})).json())}
+async function calRemove(id,name,spark){if(!confirm(t('Kalender „','Remove calendar "')+name+t('“ entfernen?','"?')+(spark?' '+t('Seine Termine liegen nur auf dem Spark und werden gelöscht.','Its appointments live only on the Spark and are deleted.'):'')))return;calRender(await (await api('/api/profile/calendar/'+encodeURIComponent(id),{method:'DELETE'})).json())}
 const calMsg=(x,err,list)=>{const m=$('calmsg');m.className=err?'err':'';m.innerHTML=esc(x)+(list&&list.length?'<ul class="facts small">'+list.map(e=>`<li>${esc(e)}</li>`).join('')+'</ul>':'')};
-$('calsave').onclick=async()=>{calMsg(t('Prüfe den Kalender …','Checking the calendar …'));
-  const {r,d}=await apiTry('/api/profile/calendar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:$('calname').value,url:$('calurl').value.trim(),user:$('caluser').value.trim(),password:$('calpw').value,tz:TZ()})});
+$('calsave').onclick=async()=>{const spark=!!CALKIND[$('calkind').value].spark;calMsg(spark?t('Lege an …','Creating …'):t('Prüfe den Kalender …','Checking the calendar …'));
+  const {r,d}=await apiTry('/api/profile/calendar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(spark?{spark:true,name:$('calname').value}:{name:$('calname').value,url:$('calurl').value.trim(),user:$('caluser').value.trim(),password:$('calpw').value,tz:TZ()})});
   if(!r.ok){calMsg(t('Nicht hinzugefügt: ','Not added: ')+errSay(r.status,d.detail,""),true);return}
+  if(spark){$('calname').value='';calRender(d);calMsg(t('Angelegt. Termine trägst du auf der Seite Kalender oder per Sprache ein.','Created. Add appointments on the Calendar page or by voice.'));return}
   ['calname','calurl','caluser','calpw'].forEach(i=>$(i).value='');calRender(d);
   calMsg(t('Hinzugefügt. ','Added. ')+(d.check.events.length?t('Die nächsten Termine:','Next appointments:'):t('Keine Termine in den nächsten 14 Tagen.','No appointments in the next 14 days.')),false,d.check.events)};
 $('caltest').onclick=async()=>{calMsg(t('Lese die Kalender …','Reading the calendars …'));

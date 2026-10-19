@@ -280,6 +280,7 @@ Home Assistant, Mail, Kalender, Aufgaben, Wetter, reMarkable, MCP und was der Sp
 | `app/panel/rmpapier.py` | Gestaltete Blätter fürs reMarkable |
 | `app/panel/rmplus.py` | Mehr mit dem reMarkable: Senden, Ordner, Abgleich |
 | `app/panel/senden.py` | Mails senden auf der Seite E-Mail: Vorschau-Blatt, SMTP über TLS, Kopie in Gesendet |
+| `app/panel/sparkkalender.py` | Spark-Kalender ohne Konto: Termine nur auf dem Spark, verschlüsselt im Profil, beantwortet CalDAV im Panel selbst |
 | `app/panel/tasks.py` | Aufgaben und Einkaufsliste |
 | `app/panel/tidy.py` | Posteingang aufräumen |
 | `app/panel/transit.py` | Bus und Bahn |
@@ -508,6 +509,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `users/ID/mail-tidy.json` | Posteingang aufräumen | Einstellungen | – | ja | – |
 | `users/ID/fuerdich.json` | Für dich: was du als erledigt oder uninteressant markiert hast (nur Prüfsummen) | Einstellungen | – | ja | – |
 | `users/ID/mailstil.json` | Mailstil (nur die Zusammenfassung, keine Mail) | Einstellungen | – | ja | – |
+| `users/ID/spark-kalender.json` | Spark-Kalender: Termine der Kalender ohne Konto (nur hier) | Termine | versiegelt | ja | – |
 | `users/ID/calendar.json` | Kalender-Zugang und Freigaben an andere Profile | Login | Passwort versiegelt | ja | – |
 | `users/ID/homeassistant.json` | Home-Assistant-Zugang | Login | Token versiegelt | ja | – |
 | `users/ID/telegram.json` | Telegram-Kopplung | Login | – | ja | – |

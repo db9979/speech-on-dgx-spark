@@ -2154,6 +2154,13 @@
 "titel": "Kalender: kein Panel-Hänger",
 "text": "A: Update auf V01.0.838. Seite Kalender öffnen, durch Wochen und Monate blättern, dabei andere Seiten öffnen: nichts hängt mehr mehrere Sekunden. B: Zustand → Logs, Bereich Panel: keine loopwacht-Zeilen mit „calendars._expand“ mehr. C: Ein Termin ändern: er steht sofort richtig da.",
 "thread": "Kalender und E-Mail in Panel und Apps"
+},
+{
+"id": "P332",
+"v": 839,
+"titel": "Spark-Kalender ohne Konto",
+"text": "A: Update auf V01.0.839. Ich → Kalender → „Kalender hinzufügen“, Anbieter „Spark-Kalender“, Name „Zuhause“, „Anlegen“: er steht in der Liste mit „Auf dem Spark“. B: Seite Kalender: „+ Termin“ in Zuhause, er steht sofort da. C: „Trag Friseur Freitag 9 Uhr in Zuhause ein“, dann Ja. D: Im iPhone unter Konten verbinden → Kalender „Spark-Kalender anlegen“ (mit Code), und die Termine erscheinen im Kalender der App. E: Kalender teilen mit einem anderen Profil: es sieht die Termine. F: „Entfernen“ fragt, dass die Termine gelöscht werden.",
+"thread": "Kalender und E-Mail in Panel und Apps"
 }
 ]
 }

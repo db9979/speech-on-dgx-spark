@@ -280,6 +280,7 @@ Home Assistant, mail, calendar, tasks, weather, reMarkable, MCP and what the Spa
 | `app/panel/rmpapier.py` | Paper for the reMarkable: folders by kind, designed sheets in the device's own page format, ticked boxes read back. |
 | `app/panel/rmplus.py` | More with the reMarkable. |
 | `app/panel/senden.py` | Mails senden auf der Seite E-Mail: a profile writes a new mail or answers one of its inbox, sees the finished mail on a preview sheet and only its „Senden“ t … |
+| `app/panel/sparkkalender.py` | Spark-Kalender, Stufe 3: a calendar that lives only on the Spark, without iCloud, Google or Nextcloud. |
 | `app/panel/tasks.py` | Tasks and the shopping list per profile: "Setz Milch auf die Einkaufsliste", "Was steht auf meiner Liste?". |
 | `app/panel/tidy.py` | Tidying the inbox per profile: obvious advertising, newsletters and the like are moved into folders under a main folder ("Spark/" unless the profile names an … |
 | `app/panel/transit.py` | Bus und Bahn: departures from the profile's home stop and connections, from a transport.rest service (https://v6.db.transport.rest by default, the admin can … |
@@ -508,6 +509,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `users/ID/mail-tidy.json` | Inbox tidy | Settings | – | yes | – |
 | `users/ID/fuerdich.json` | For you: what you marked as done or not interesting (only checksums) | Settings | – | yes | – |
 | `users/ID/mailstil.json` | Mail style (only the summary, never a mail) | Settings | – | yes | – |
+| `users/ID/spark-kalender.json` | Spark calendar: appointments of the calendars without an account (only here) | Appointments | sealed | yes | – |
 | `users/ID/calendar.json` | Calendar account and shares with other profiles | Login | password sealed | yes | – |
 | `users/ID/homeassistant.json` | Home Assistant account | Login | token sealed | yes | – |
 | `users/ID/telegram.json` | Telegram link | Login | – | yes | – |

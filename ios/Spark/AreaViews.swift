@@ -790,6 +790,7 @@ final class AccountsModel: ObservableObject {
     @Published var mail: [(id: String, name: String, user: String)] = []
     @Published var calendars: [(id: String, name: String, user: String)] = []
     @Published var books: [(id: String, name: String, user: String)] = []
+    @Published var sparkIds: Set<String> = []   // Spark-Kalender: its appointments live only on the Spark
     @Published var ha = ""
     @Published var telegram: String?
     @Published var telegramOn = false
@@ -800,14 +801,17 @@ final class AccountsModel: ObservableObject {
     private static func rows(_ d: [String: Any]?, _ key: String) -> [(id: String, name: String, user: String)] {
         ((d?[key] as? [[String: Any]]) ?? []).prefix(20).compactMap { x in
             guard let id = x["id"] as? String, SparkAPI.accId(id) else { return nil }
-            return (id, String((x["name"] as? String ?? "").prefix(60)), String((x["user"] as? String ?? "").prefix(200)))
+            let user = x["spark"] as? Bool == true ? String(localized: "Auf dem Spark, ohne Konto") : String((x["user"] as? String ?? "").prefix(200))
+            return (id, String((x["name"] as? String ?? "").prefix(60)), user)
         }
     }
 
     func load() async {
         guard let api = SparkAPI.current else { return }
         mail = Self.rows(try? await api.object("GET", "api/profile/mail"), "accounts")
-        calendars = Self.rows(try? await api.object("GET", "api/profile/calendar"), "calendars")
+        let cal = try? await api.object("GET", "api/profile/calendar")
+        calendars = Self.rows(cal, "calendars")
+        sparkIds = Set(((cal?["calendars"] as? [[String: Any]]) ?? []).compactMap { $0["spark"] as? Bool == true ? $0["id"] as? String : nil })
         books = Self.rows(try? await api.object("GET", "api/profile/contacts"), "accounts")
         ha = (try? await api.object("GET", "api/profile/homeassistant"))?["url"] as? String ?? ""
         if let t = try? await api.object("GET", "api/profile/telegram") {
@@ -819,7 +823,8 @@ final class AccountsModel: ObservableObject {
     func add(_ path: String, _ body: [String: Any], code: String) async -> Bool {
         do {
             let d = try await SparkAPI.current?.object(path == "api/profile/homeassistant" ? "PUT" : "POST", path, body: body, code: code, timeout: 90)
-            note = (d?["check"] as? NSNumber).map { String(localized: "Verbunden, \($0.intValue) gefunden.") } ?? String(localized: "Verbunden.")
+            note = body["spark"] != nil ? String(localized: "Spark-Kalender angelegt.")
+                : (d?["check"] as? NSNumber).map { String(localized: "Verbunden, \($0.intValue) gefunden.") } ?? String(localized: "Verbunden.")
             error = nil
             await load()
             return true
@@ -847,6 +852,7 @@ final class AccountsModel: ObservableObject {
 struct AccountsView: View {
     @StateObject private var m = AccountsModel()
     @State private var form: String?
+    @State private var dropSpark: String?
 
     var body: some View {
         Form {
@@ -882,6 +888,14 @@ struct AccountsView: View {
         .sheet(item: Binding(get: { form.map { AccountForm.Kind(id: $0) } }, set: { form = $0?.id })) { k in
             NavigationStack { AccountForm(kind: k.id, m: m) }
         }
+        .confirmationDialog("Seine Termine liegen nur auf dem Spark und werden gelöscht.",
+                            isPresented: Binding(get: { dropSpark != nil }, set: { if !$0 { dropSpark = nil } }),
+                            titleVisibility: .visible) {
+            Button("Kalender und Termine löschen", role: .destructive) {
+                if let p = dropSpark { Task { await m.remove(p) } }
+                dropSpark = nil
+            }
+        }
     }
 
     @ViewBuilder private func list(_ title: LocalizedStringKey, _ rows: [(id: String, name: String, user: String)],
@@ -892,9 +906,14 @@ struct AccountsView: View {
                     Text(verbatim: r.name)
                     if !r.user.isEmpty { Text(verbatim: r.user).font(.caption).foregroundStyle(.secondary) }
                 }
-                .swipeActions { Button("Entfernen", role: .destructive) { Task { await m.remove("\(path)/\(r.id)") } } }
+                .swipeActions {
+                    Button("Entfernen", role: .destructive) {
+                        if m.sparkIds.contains(r.id) { dropSpark = "\(path)/\(r.id)" } else { Task { await m.remove("\(path)/\(r.id)") } }
+                    }
+                }
             }
             Button("Hinzufügen") { form = kind }
+            if kind == "calendar" { Button("Spark-Kalender anlegen") { form = "sparkcal" } }
         } header: { Text(title) }
     }
 }
@@ -937,6 +956,8 @@ struct AccountForm: View {
                 if provider.isEmpty { TextField("IMAP-Server, z. B. imap.example.de", text: $host).textInputAutocapitalization(.never).autocorrectionDisabled() }
                 TextField("Benutzer (E-Mail-Adresse)", text: $user).textInputAutocapitalization(.never).autocorrectionDisabled().keyboardType(.emailAddress)
                 SecureField("App-Passwort", text: $secret)
+            case "sparkcal":
+                TextField("Name", text: $name)
             case "ha":
                 TextField("Adresse, z. B. http://homeassistant.local:8123", text: $url).textInputAutocapitalization(.never).autocorrectionDisabled().keyboardType(.URL)
                 SecureField("Langlebiger Zugriffstoken", text: $secret)
@@ -947,11 +968,19 @@ struct AccountForm: View {
                 TextField("Benutzer", text: $user).textInputAutocapitalization(.never).autocorrectionDisabled()
                 SecureField("App-Passwort", text: $secret)
             }
-            Section {
-                Button("Verbinden") { ask = CodeRequest { c in await send(code: c) } }
-                    .disabled(secret.isEmpty || (kind != "mail" && url.isEmpty) || (kind == "mail" && user.isEmpty))
-            } footer: {
-                Text("Der Spark prüft die Verbindung, speichert das Passwort verschlüsselt und gibt es nie wieder heraus. Das iPhone behält es nicht. Bestätigt wird mit dem Code aus der Authenticator-App.")
+            if kind == "sparkcal" {
+                Section {
+                    Button("Anlegen") { ask = CodeRequest { c in await send(code: c) } }
+                } footer: {
+                    Text("Der Kalender liegt nur auf dem Spark, verschlüsselt, ohne iCloud oder ein anderes Konto. Termine trägst du im Kalender oder per Sprache ein. Bestätigt wird mit dem Code aus der Authenticator-App.")
+                }
+            } else {
+                Section {
+                    Button("Verbinden") { ask = CodeRequest { c in await send(code: c) } }
+                        .disabled(secret.isEmpty || (kind != "mail" && url.isEmpty) || (kind == "mail" && user.isEmpty))
+                } footer: {
+                    Text("Der Spark prüft die Verbindung, speichert das Passwort verschlüsselt und gibt es nie wieder heraus. Das iPhone behält es nicht. Bestätigt wird mit dem Code aus der Authenticator-App.")
+                }
             }
             if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
         }
@@ -975,6 +1004,9 @@ struct AccountForm: View {
         case "calendar":
             body = ["name": name, "url": url, "user": user, "password": secret, "tz": TimeZone.current.identifier]
             path = "api/profile/calendar"
+        case "sparkcal":
+            body = ["spark": true, "name": name]
+            path = "api/profile/calendar"
         default:
             body = ["name": name, "url": url, "user": user, "password": secret]
             path = "api/profile/contacts"
@@ -990,6 +1022,7 @@ struct AccountForm: View {
         case "mail": return String(localized: "E-Mail")
         case "ha": return String(localized: "Smart Home")
         case "calendar": return String(localized: "Kalender")
+        case "sparkcal": return String(localized: "Spark-Kalender")
         default: return String(localized: "Kontakte")
         }
     }

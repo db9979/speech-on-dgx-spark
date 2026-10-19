@@ -276,6 +276,8 @@ def admin_delete_profile(uid: str, request: Request):
     import rufen
     rufen.forget(uid)     # a call the assistant still kept for it (Anrufe per Assistent)
     telefon.forget(uid)   # its handsets are no longer assigned
+    import sparkkalender
+    sparkkalender.drop_profile(uid)   # its Spark calendars went with the profile folder
     return {"ok": True}
 
 

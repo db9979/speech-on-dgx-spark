@@ -4789,6 +4789,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "Spark-Kalender, Stufe 3: ein Kalender ohne Konto (V01.0.839, Dominik 2026-10-19 „5a“): Unter Ich → Kalender → „Kalender hinzufügen“ → Anbieter „Spark-Kalender“ (im iPhone: Konten verbinden → Kalender → „Spark-Kalender anlegen“) legst du einen Kalender an, der nur auf dem Spark liegt, ohne iCloud, Google oder Nextcloud. Termine trägst du auf der Seite Kalender, in der iPhone-App oder per Sprache ein („Trag Zahnarzt Dienstag 10 Uhr in Zuhause ein“); Heute, Briefing, Ändern, Löschen, „Mach das rückgängig“ und Kalender teilen gelten wie bei jedem anderen Kalender. Technisch ist er ein Kalender-Eintrag mit der Adresse https://spark.invalid/<id>/, die nie ins Netz geht: sparkkalender.py beantwortet die CalDAV-Anfragen des Panels selbst, gebunden an genau diesen Eintrag dieses Profils. Gespeichert wird nur verschlüsselt im Profilordner (users/<id>/spark-kalender.json); ohne den Schlüssel des Spark wird keiner angelegt. Er zieht mit dem Profil um und ist in dessen Sicherung; Entfernen (mit Nachfrage) löscht seine Termine. Geprüft wird, was hineinkommt: iCalendar mit einem Termin, höchstens 256 KB je Termin und 5000 Termine je Kalender. Als Adresse lässt sich spark.invalid nicht eintragen. "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Logs: calendar: spark calendar made, calendar: spark calendar deleted | Anzahl; Live (Kalender) zählt Spark-Kalender und Termine. Stufe 4 macht ihn für die Kalender-App des iPhone als CalDAV-Server erreichbar."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "Mails ordnen (V01.0.816, Plan kalender-mail/plan.md Stufe 2; Funktionen → E-Mail lesen → „Mails ordnen“, chat.mail_manage, aus): In einer geöffneten Mail stehen „Gelesen“/„Ungelesen“, „Archivieren“ und eine Ordnerwahl; nach Archivieren oder Verschieben holt „Rückgängig“ die Mail sofort in den Posteingang zurück (gefunden über ihre Message-ID). Der Knopf ist das eigene Ja. postfach.py kennt nur diese vier Dinge: das Flag \\Seen einer Mail im Posteingang, eine Mail ins Archiv (der Ordner mit \\Archive, sonst „Archive“/„Archiv“) oder in einen gewöhnlichen eigenen Ordner, und zurück. Nie in Papierkorb, Spam, Gesendet oder Entwürfe, nie gelöscht, nie ein Ordner angelegt oder umbenannt; ohne IMAP MOVE nur COPY und danach UID EXPUNGE genau des bestätigten Originals (wie beim Aufräumen). Notaus hält jede Aktion an. Endpunkte GET /api/profile/mail/folders und POST /api/profile/mail/act (nur die eigene Anmeldung im Browser, nur eigene Postfächer, Rate-Limit postordnen); Live zeigt bei der Post nur, wie viele Mails heute auf der Seite geordnet wurden; Log mail: page <Aktion> done|refused, not found|refused, notaus|failed, nie Absender, Betreff oder Ordner."
 },
 {
@@ -13118,6 +13134,22 @@
 "head": "Voice chat",
 "title": "Spark calendar, stage 2: changes at once (V01.0.832, Dominik 2026-10-19 \"3a\")",
 "text": "Spark calendar, stage 2: changes at once (V01.0.832, Dominik 2026-10-19 \"3a\"): what you add, change or delete on the Calendar page or in the iPhone app is in the copy on the Spark at once and shows without waiting; it goes to the calendar server (iCloud, Nextcloud, …) behind it. To change an appointment the Spark takes it and its tag from the copy instead of the server first. If the server refuses (changed elsewhere meanwhile, not reachable), the Spark takes the change back in the copy, the server's version stands, and the page shows \"Not saved, the calendar refused\" with the title for 10 minutes. What the assistant changes by voice still waits for the server, because a spoken confirmation cannot be taken back. The log writes \"calendar: saved behind\" or \"not saved behind\" with the status."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "Spark calendar, stage 3: a calendar without an account (V01.0.839, Dominik 2026-10-19 \"5a\"): under Me → Calendar → \"Add calendar\" → provider \"Spark calendar\" (in the iPhone: Connect accounts → Calendar → \"Create a Spark calendar\") you create a calendar that lives only on the Spark, without iCloud, Google or Nextcloud. You add appointments on the Calendar page, in the iPhone app or by voice (\"Put dentist Tuesday 10 am into Zuhause\"); Today, the briefing, changing, deleting, \"undo that\" and calendar sharing work as with any other calendar. Technically it is a calendar entry with the address https://spark.invalid/<id>/, which never reaches the network: sparkkalender.py answers the panel's CalDAV requests itself, bound to exactly this entry of this profile. It is stored only encrypted in the profile folder (users/<id>/spark-kalender.json); without the Spark's key none is created. It moves with the profile and is part of its backup; removing it (after a question) deletes its appointments. What goes in is checked: iCalendar with an appointment, at most 256 KB per appointment and 5000 appointments per calendar. spark.invalid cannot be entered as an address. Logs: calendar: spark calendar "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "made, calendar: spark calendar deleted | count; Live (Calendar) counts Spark calendars and appointments. Stage 4 makes it reachable as a CalDAV server for the iPhone's calendar app."
 },
 {
 "lang": "en",

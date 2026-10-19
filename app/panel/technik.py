@@ -151,6 +151,7 @@ MODULE = {
     "mailstil": ("dienste", "Mailstil: lernt aus gesendeten Mails, wie das Profil schreibt, für Mail-Entwürfe"),
     "parcels": ("dienste", "Pakete aus Versand-Mails"),
     "calendars": ("dienste", "Kalender und Tagesbriefing, einzelne Kalender mit anderen Profilen geteilt"),
+    "sparkkalender": ("dienste", "Spark-Kalender ohne Konto: Termine nur auf dem Spark, verschlüsselt im Profil, beantwortet CalDAV im Panel selbst"),
     "kalenderspiegel": ("dienste", "Spark-Kalender: verschlüsselte Kopie jedes CalDAV-Kalenders, holt nur Änderungen, Änderungen der Seite sofort"),
     "vorwaermen": ("dienste", "Vorwärmen: liest beim Anmelden Kalender, Mails, Für dich und Kontakte vorab in den Speicher"),
     "contacts": ("dienste", "Kontakte per CardDAV, nur lesen"),
@@ -492,7 +493,7 @@ INHALT, VERSCHLUESSELT, USERS_SONST = dateien.INHALT, dateien.VERSCHLUESSELT, da
 USERS_GLOBAL, STATE_SONST = dateien.USERS_GLOBAL, dateien.STATE_SONST
 # the kinds of dateien.LOCAL and USERS_SONST in English
 KAT_EN = {"Einstellungen": "Settings", "Gesundheit": "Health", "Zustand": "State", "Login": "Login", "Gerät": "Device", "Stimmabdruck": "Voiceprint",
-          "Schlüssel": "Key", "noch nicht angeboten": "not offered yet", "Warteschlange": "Queue",
+          "Schlüssel": "Key", "noch nicht angeboten": "not offered yet", "Warteschlange": "Queue", "Termine": "Appointments",
           "alte Sprachnachrichten (bis zur Übernahme in die Chats)": "old voice messages (until moved into the chats)"}
 # the Spark's own places outside state/ and users/
 SYSTEM = [

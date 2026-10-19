@@ -996,6 +996,8 @@ async def profile_calendar_add(request: Request, prof=Depends(secret_profile)):
     body = await request.json()
     body = body if isinstance(body, dict) else {}
     try:
+        if body.get("spark") is True:   # Spark-Kalender (Stufe 3): lives on the Spark, nothing to check outside
+            return calendars.add_spark(prof["id"], body.get("name"))
         item = calendars.entry(body)
         found = await calendars.check(item, user_zone(body.get("tz")))
         return dict(calendars.add(prof["id"], item), check=found)

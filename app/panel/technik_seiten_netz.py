@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "aussen": {
-        "stand": "cdb5befef5",
+        "stand": "5404f95eb9",
         "bezug": {
             "dienstwacht.TIMEOUT": ["s5"], "notaus.locked_tools": ["s3"], "dienstwacht.tool_down": ["s5"],
             "netguard.client": ["s8", "s9", "s10"], "netguard.IMAP4_SSL": ["s9"],
@@ -182,7 +182,7 @@ SEITEN = {
         "heute": [("guard_ok", ("verbunden", "connected")), ("guard_bad", ("gesperrt", "blocked"))],
     },
     "internet": {
-        "stand": "db2d8a8548",
+        "stand": "4d03fe572f",
         "bezug": {
             "regeln": ["s3", "s4"], "regel:Seiten aus der Suche": ["s4", "s5"], "regel:Mail, Kalender, Kontakte": ["s4", "s5"],
             "regel:reMarkable": ["s4", "s5"], "regel:Wetter, Fahrplan, Wikipedia": ["s3"], "regel:Telegram": ["s7"],

@@ -11900,6 +11900,86 @@
           }
         }
       }
+    },
+    "Auf dem Spark, ohne Konto": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On the Spark, no account"
+          }
+        }
+      }
+    },
+    "Spark-Kalender angelegt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spark calendar created."
+          }
+        }
+      }
+    },
+    "Seine Termine liegen nur auf dem Spark und werden gelöscht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Its appointments live only on the Spark and are deleted."
+          }
+        }
+      }
+    },
+    "Kalender und Termine löschen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete calendar and appointments"
+          }
+        }
+      }
+    },
+    "Spark-Kalender anlegen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create a Spark calendar"
+          }
+        }
+      }
+    },
+    "Anlegen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create"
+          }
+        }
+      }
+    },
+    "Spark-Kalender": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spark calendar"
+          }
+        }
+      }
+    },
+    "Der Kalender liegt nur auf dem Spark, verschlüsselt, ohne iCloud oder ein anderes Konto. Termine trägst du im Kalender oder per Sprache ein. Bestätigt wird mit dem Code aus der Authenticator-App.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The calendar lives only on the Spark, encrypted, without iCloud or any other account. Add appointments in the calendar or by voice. Confirmed with the code from the authenticator app."
+          }
+        }
+      }
     }
   },
   "version": "1.0"
