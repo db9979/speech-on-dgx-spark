@@ -31,10 +31,10 @@ jobs:
       matrix:
         part: [1, 2, 3, 4]
     steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.11"
           cache: pip
@@ -52,7 +52,7 @@ jobs:
         env:
           SELFTEST_REPORT: ${{ runner.temp }}/teil.json
         run: python selftest.py discover -s tests --part ${{ matrix.part }}/4
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: teil-${{ matrix.part }}
@@ -72,12 +72,12 @@ jobs:
       contents: read
       issues: write
     steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
           sparse-checkout: app/selftest.py
           sparse-checkout-cone-mode: false
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           path: ${{ runner.temp }}/teile
           pattern: teil-*
@@ -121,7 +121,7 @@ jobs:
             else gh issue create -R "$R" -t "Wackelnde Tests" -F wackel.md; fi
           fi
       # the durations measured here, for app/tests/dauer.json when one part gets much longer than the others
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: dauer
