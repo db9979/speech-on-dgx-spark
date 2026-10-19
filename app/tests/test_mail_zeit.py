@@ -45,6 +45,9 @@ class MailZeit(unittest.TestCase):
         mail._Session, mail.get, chat._system_zone[:] = self.saved
 
     def read(self, date, zone=None):
+        # every read is another mailbox under the same id: the opened-mail memory (mail._bodies, V01.0.819) would
+        # hand back the first one, so it is dropped like after a change of the mailbox settings
+        mail._drop("u1")
         mail._Session = lambda acct: _Box(date)
         return mail.read("u1", "m1a2b3c4d:5", zone)
 

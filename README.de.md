@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.820** Fix: Testlauf test_mail_zeit wieder grün (der Speicher für geöffnete Mails aus .819 gab dem Test die erste Mail zurück; der Test leert ihn jetzt wie ein geändertes Postfach)
 - **V01.0.819** E-Mail schnell: Postfächer gleichzeitig, Liste und geöffnete Mails zwischengespeichert, die Seite zeigt sofort den letzten Stand und lädt im Hintergrund nach; „Antworten“ öffnet direkt unter der Mail.
 - **V01.0.818** Fix: GitHub-Testlauf wieder grün (rot seit .808, darum bot das Update nur .807 an); die Hilfe findet „Mails vorgelesen“ und die Live-Übersicht wieder
 - **V01.0.817** Kalender schnell: Termine monatsweise zwischengespeichert, ein langsamer Kalender lädt im Hintergrund weiter statt abzubrechen, alle 5 Minuten im Hintergrund aktualisiert.
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.813** Mails ordnen auf der Seite E-Mail: gelesen/ungelesen, archivieren, in einen eigenen Ordner, gleich wieder zurück; nie gelöscht, nie in Papierkorb oder Spam (Schalter, aus); Antworten des Assistenten haben „Im Kalender ansehen“ und „Mail öffnen“.
 - **V01.0.812** Termine direkt auf der Seite Kalender anlegen, ändern und löschen (eigene CalDAV-Kalender, nie wiederholte, mit Etag gegen fremde Änderungen).
 - **V01.0.811** Kalender mit anderen Profilen teilen (nur sehen oder sehen und eintragen); private Termine nur als „belegt“, der Assistent liest geteilte mit („Was hat Sabine morgen?“).
-- **V01.0.810** Von selbst melden an einem Ort: die Mail-Zeilen (Wichtige Mails, Aufräumen, Paket heute) stehen unter E-Mail → Einstellungen, der Termin-Vorlauf unter Kalender → Einstellungen.
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

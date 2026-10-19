@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.820** · 2026-10-19 · Fix: Testlauf test_mail_zeit wieder grün (der Speicher für geöffnete Mails aus .819 gab dem Test die erste Mail zurück; der Test leert ihn jetzt wie ein geändertes Postfach)
 - **V01.0.819** · 2026-10-19 · E-Mail schnell: Postfächer gleichzeitig, Liste und geöffnete Mails im Zwischenspeicher, die Seite zeigt sofort den letzten Stand und lädt im Hintergrund nach (alle 5 Minuten, 10 neueste Mails vorab); „Antworten“ öffnet das Antwortfeld direkt unter der Mail; „Für dich“ sofort mit der letzten Lesung; Fix: Seiten E-Mail und Kalender blieben nach „Einstellungen“ leer
 - **V01.0.818** · 2026-10-19 · Fix: GitHub-Lauf „Tests“ wieder grün (rot seit .808, darum bot das Update nur .807 an): Hilfe findet „Mails vorgelesen“ und „Live-Übersicht“ wieder, Mail-Werkzeug reicht die Zeitzone wie geprüft
 - **V01.0.817** · 2026-10-19 · Kalender schnell: Termine monatsweise im Zwischenspeicher, langsame Kalender laden im Hintergrund weiter statt abzubrechen, Kalenderliste 6 h gemerkt, alle 5 Minuten im Hintergrund aktualisiert
