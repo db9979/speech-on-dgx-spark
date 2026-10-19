@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.835** Ich → Musik sieht aus wie Dokumente und E-Mail: Karte für ein neues Lied (Länge als Chips, Schalter „Mit Gesang“), Suche und Filter, Lieder nach Tag mit ▶ in jeder Zeile, Einzelheiten mit Abspieler, „Nochmal machen“ und eingeklappter Beschreibung; iPhone-App nach Tag gruppiert mit wählbarer Länge
 - **V01.0.834** Code-Prüfung Tempo B7: Sprechererkennung fast doppelt so schnell, Journal misst die Wartezeit der Antwort
 - **V01.0.833** E-Mail: eine geöffnete Mail, eine Antwort und eine neue Mail haben auf jeder Breite einen sichtbaren Knopf zum Schließen oder Verwerfen (am Rechner fehlte er), Esc schließt die Antwort auch aus dem Textfeld, getippter Text wird vorher nachgefragt
 - **V01.0.832** Spark-Kalender Stufe 2: Termine auf der Seite Kalender und im iPhone sofort eingetragen, geändert oder gelöscht (erst in der Kopie, der Server dahinter); lehnt der Server ab, gilt seine Fassung und die Seite sagt es
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.828** Code-Prüfung Tempo: Gespräche werden neben der Ereignisschleife gespeichert und kleiner geschrieben
 - **V01.0.827** Code-Prüfung Bedienung: Suche mit Alltagswörtern und „Frag Spark“, klare Mikrofon-Fehler, Zustand rot nur bei echten Fehlern, einheitliche Zähler, mehr Kontrast und größere Tippflächen, Starthilfe für jedes neue Profil, neue PIN in verdeckten Feldern
 - **V01.0.826** Code-Prüfung Tempo: Dokumentliste gemerkt und neben der Ereignisschleife geholt, eigene Datenbank-Sperre je Profil, Bedeutungssuche ohne Umrechnen je Suche, Zustandsseite und Hinweise seltener neu berechnet
-- **V01.0.825** Code-Prüfung Sicherheit: Passwort und PINs mit 600.000 PBKDF2-Runden, https nur TLS 1.2 oder neuer, Wachposten meldet wichtige Änderungen immer sofort, Uhr-Antworten nur fürs fragende Profil, Mail-Tageszähler übersteht Neustart, Werkstatt-Sandbox nur zum LLM-Tor
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

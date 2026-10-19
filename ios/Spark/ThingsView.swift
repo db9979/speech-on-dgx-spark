@@ -326,8 +326,8 @@ extension SparkAPI {
         _ = try await call("DELETE", "api/bilder/\(id)")
     }
 
-    /// The profile's songs, newest first, and how many are still being made.
-    func songs() async throws -> (songs: [Song], making: Int) {
+    /// The profile's songs, newest first, how many are still being made and the lengths the admin allows (seconds).
+    func songs() async throws -> (songs: [Song], making: Int, lengths: [Int], length: Int) {
         let d = try await object("GET", "api/musik")
         let songs = (d["songs"] as? [[String: Any]] ?? []).compactMap { s -> Song? in
             guard let id = s["id"] as? String, Self.isJob(id) else { return nil }
@@ -339,12 +339,16 @@ extension SparkAPI {
                         size: (s["bytes"] as? NSNumber)?.intValue ?? 0)
         }
         let jobs = (d["jobs"] as? [[String: Any]] ?? []).filter { ["wait", "run"].contains($0["state"] as? String ?? "") }
-        return (songs.sorted { $0.created > $1.created }, jobs.count)
+        let lim = d["limits"] as? [String: Any] ?? [:]
+        let most = (lim["max_s"] as? NSNumber)?.intValue ?? 120
+        // the same choice as the length chips under Ich → Musik in the panel (musik.js MULENS)
+        let lengths = [30, 60, 120, 180, 240, 300, 420, 600].filter { $0 <= most }
+        return (songs.sorted { $0.created > $1.created }, jobs.count, lengths, (lim["default_s"] as? NSNumber)?.intValue ?? 120)
     }
 
-    /// Make one from the person's own description (instrumental; singing and lyrics stay in the panel).
-    func makeSong(_ wish: String) async throws {
-        _ = try await call("POST", "api/musik", body: ["wunsch": String(wish.prefix(500))])
+    /// Make one from the person's own description and length (instrumental; singing and lyrics stay in the panel).
+    func makeSong(_ wish: String, seconds: Int) async throws {
+        _ = try await call("POST", "api/musik", body: ["wunsch": String(wish.prefix(500)), "sekunden": seconds])
     }
 
     func deleteSong(_ id: String) async throws {
@@ -515,6 +519,8 @@ struct PictureView: View {
 final class SongsModel: NSObject, ObservableObject, AVAudioPlayerDelegate {
     @Published var songs: [Song] = []
     @Published var making = 0
+    @Published var lengths: [Int] = []
+    @Published var length = 120
     @Published var loading = true
     @Published var error: String?
     @Published var playing: String?
@@ -524,7 +530,9 @@ final class SongsModel: NSObject, ObservableObject, AVAudioPlayerDelegate {
     func load() async {
         guard let api = SparkAPI.current else { return }
         do {
-            (songs, making) = try await api.songs()
+            let d = try await api.songs()
+            (songs, making, lengths) = (d.songs, d.making, d.lengths)
+            if !lengths.contains(length) { length = lengths.contains(d.length) ? d.length : (lengths.last ?? d.length) }
             error = nil
         } catch { self.error = error.localizedDescription }
         loading = false
@@ -580,31 +588,42 @@ struct SongsView: View {
                         .buttonStyle(.borderedProminent)
                         .disabled(wish.trimmingCharacters(in: .whitespaces).count < 3)
                 }
+                if !m.lengths.isEmpty {
+                    Picker("Länge", selection: $m.length) {
+                        ForEach(m.lengths, id: \.self) { s in Text(verbatim: Self.clock(s)) }
+                    }
+                }
                 if m.making > 0 { Label("Wird gemacht …", systemImage: "music.note") .foregroundStyle(.secondary) }
             } footer: { Text(SparkAPI.way(String(localized: "Ohne Gesang. Gesang und eigener Text gehen im Panel unter Ich → Musik."))) }
             if !m.loading && m.songs.isEmpty { Text("Noch keine Musik.").foregroundStyle(.secondary) }
-            ForEach(m.songs) { s in
-                HStack(spacing: 12) {
-                    Button { Task { await m.toggle(s) } } label: {
-                        if m.fetching == s.id { ProgressView().frame(width: 32, height: 32) }
-                        else { Image(systemName: m.playing == s.id ? "stop.circle.fill" : "play.circle.fill").font(.largeTitle) }
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel(m.playing == s.id ? Text("Anhalten") : Text("Abspielen"))
-                    VStack(alignment: .leading, spacing: 2) {
-                        // the person's own wish: plain text, nothing in it is a link or a command
-                        Text(verbatim: s.title).lineLimit(2)
-                        HStack(spacing: 4) {
-                            if s.seconds > 0 { Text(verbatim: String(format: "%d:%02d", s.seconds / 60, s.seconds % 60)); Text(verbatim: "·") }
-                            Text(s.sung ? LocalizedStringKey("mit Gesang") : LocalizedStringKey("ohne Gesang"))
-                            Text(verbatim: "·")
-                            Text(s.created, format: .dateTime.day().month())
+            // grouped by day like the list under Ich → Musik in the panel
+            ForEach(Self.days(m.songs), id: \.0) { day, songs in
+                Section(Self.dayNames[day]) {
+                    ForEach(songs) { s in
+                        HStack(spacing: 12) {
+                            Button { Task { await m.toggle(s) } } label: {
+                                if m.fetching == s.id { ProgressView().frame(width: 32, height: 32) }
+                                else { Image(systemName: m.playing == s.id ? "stop.circle.fill" : "play.circle.fill").font(.largeTitle) }
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel(m.playing == s.id ? Text("Anhalten") : Text("Abspielen"))
+                            VStack(alignment: .leading, spacing: 2) {
+                                // the person's own wish: plain text, nothing in it is a link or a command
+                                Text(verbatim: s.title).lineLimit(2)
+                                HStack(spacing: 4) {
+                                    if s.seconds > 0 { Text(verbatim: Self.clock(s.seconds)); Text(verbatim: "·") }
+                                    Text(s.sung ? LocalizedStringKey("mit Gesang") : LocalizedStringKey("ohne Gesang"))
+                                    Text(verbatim: "·")
+                                    if Calendar.current.isDateInToday(s.created) { Text(s.created, format: .dateTime.hour().minute()) }
+                                    else { Text(s.created, format: .dateTime.weekday(.abbreviated).day().month()) }
+                                }
+                                .font(.caption).foregroundStyle(.secondary)
+                            }
                         }
-                        .font(.caption).foregroundStyle(.secondary)
+                        .listRowBackground(s.id == start ? Color.accentColor.opacity(0.08) : nil)
+                        .swipeActions { Button(role: .destructive) { removing = s } label: { Label("Löschen", systemImage: "trash") } }
                     }
                 }
-                .listRowBackground(s.id == start ? Color.accentColor.opacity(0.08) : nil)
-                .swipeActions { Button(role: .destructive) { removing = s } label: { Label("Löschen", systemImage: "trash") } }
             }
             if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
         }
@@ -623,9 +642,25 @@ struct SongsView: View {
         } message: { s in Text(verbatim: s.title) }
     }
 
+    static func clock(_ s: Int) -> String { String(format: "%d:%02d", s / 60, s % 60) }
+
+    /// Heute, Gestern, Letzte 7 Tage, Älter: the groups of the panel's list (musik.js muGroup), in this order.
+    static let dayNames: [LocalizedStringKey] = ["Heute", "Gestern", "Letzte 7 Tage", "Älter"]
+
+    /// The songs by day: the index into dayNames and the songs of that group, empty groups left out.
+    static func days(_ songs: [Song]) -> [(Int, [Song])] {
+        let cal = Calendar.current, today = cal.startOfDay(for: Date())
+        var groups: [[Song]] = [[], [], [], []]
+        for s in songs {
+            let n = cal.dateComponents([.day], from: cal.startOfDay(for: s.created), to: today).day ?? 0
+            groups[n < 1 ? 0 : n < 2 ? 1 : n < 7 ? 2 : 3].append(s)
+        }
+        return groups.indices.filter { !groups[$0].isEmpty }.map { ($0, groups[$0]) }
+    }
+
     private func make() async {
         do {
-            try await SparkAPI.current?.makeSong(wish)
+            try await SparkAPI.current?.makeSong(wish, seconds: m.length)
             wish = ""
             await m.load()
             await m.follow()

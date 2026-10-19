@@ -34,9 +34,9 @@ th{color:var(--mut);font-weight:500;font-size:12px;border-top:0}
 .pill.ok{background:color-mix(in srgb,var(--ok) 16%,transparent);color:var(--okt)}
 .pill.warn{background:color-mix(in srgb,var(--warn) 16%,transparent);color:var(--warnt)}
 .pill.bad{background:color-mix(in srgb,var(--bad) 16%,transparent);color:var(--badt)}
-button.b{background:var(--card);border:1px solid var(--line);color:var(--fg);padding:7px 13px;border-radius:10px;cursor:pointer;font:inherit;font-weight:500;transition:transform .12s,box-shadow .15s,border-color .15s}
-button.b:hover:not(:disabled){border-color:color-mix(in srgb,var(--acc) 45%,var(--line));transform:translateY(-1px)}
-button.b.p{background:linear-gradient(135deg,var(--acc),color-mix(in srgb,var(--acc) 55%,var(--acc2)));border-color:transparent;color:#fff;box-shadow:0 4px 14px color-mix(in srgb,var(--acc) 30%,transparent)}
+button.b,a.b{background:var(--card);border:1px solid var(--line);color:var(--fg);padding:7px 13px;border-radius:10px;cursor:pointer;font:inherit;font-weight:500;transition:transform .12s,box-shadow .15s,border-color .15s}
+button.b:hover:not(:disabled),a.b:hover{border-color:color-mix(in srgb,var(--acc) 45%,var(--line));transform:translateY(-1px)}
+button.b.p,a.b.p{background:linear-gradient(135deg,var(--acc),color-mix(in srgb,var(--acc) 55%,var(--acc2)));border-color:transparent;color:#fff;box-shadow:0 4px 14px color-mix(in srgb,var(--acc) 30%,transparent)}
 button.b:disabled{opacity:.45;cursor:default}
 label{display:block;font-size:12px;color:var(--mut);margin:12px 0 5px}
 input,select,textarea{width:100%;padding:8px 11px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--fg);font:inherit;transition:border-color .15s,box-shadow .15s}
@@ -1091,8 +1091,6 @@ select.ld-chip{width:auto;max-width:180px;padding:3px 8px}
 /* a name only for screen readers (B6): the field keeps its look */
 .srl{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 .mkview{max-height:70vh}
-.mkbox a.b,.mkcard a.b{background:var(--card);border:1px solid var(--line);padding:7px 13px;border-radius:10px;font-weight:500}
-.mkbox a.b.p,.mkcard a.b.p{background:linear-gradient(135deg,var(--acc),color-mix(in srgb,var(--acc) 55%,var(--acc2)));border-color:transparent;color:#fff}
 #mklist li{flex-wrap:wrap}
 #mklist li>span{flex:1 1 220px;min-width:0;overflow-wrap:anywhere}
 .mkview .mksec .dvhead{flex-wrap:wrap}
@@ -1607,7 +1605,26 @@ body.inchats:not(.appview):not(.kbd) .cx-comp{padding-right:96px}
 .blcard .blbig,.blatt .blbig{max-width:420px;margin:8px 0}
 .blnew textarea{width:100%;box-sizing:border-box}.blrow{gap:8px;flex-wrap:wrap;margin-top:6px}.blrow select{width:auto;flex:1 1 140px;min-width:0}
 /* Musik machen (musik.js): the player in the chat card and in Ich → Musik, the lyrics as they were written */
-.muplay{display:block;width:100%;max-width:420px;margin:8px 0}.muchk{display:flex;align-items:center;gap:6px;width:auto}.mulyr{white-space:pre-wrap;font:inherit;margin:8px 0}
+.muplay{display:block;width:100%;max-width:420px;margin:8px 0}.mulyr{white-space:pre-wrap;font:inherit;margin:8px 0}
+/* Ich → Musik laid out like Dokumente and E-Mail (ld- building blocks, musik-seite/plan.md): the form card, ▶ in the rows,
+   one player in the details and the bar "spielt gerade" at the bottom */
+.mu .ld-head{margin-bottom:6px}.mu-hl{min-width:0}.mu-hl b{font-size:15px}.mu-hl span{font-size:13px}
+.mu-new{border:1px solid var(--line);border-radius:14px;background:var(--card);padding:12px 14px;margin:0 0 10px}
+.mu-new textarea{width:100%;box-sizing:border-box}.mu-new .fh:empty{display:none}
+.mu-opts{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin-top:8px}.mu-opts .ld-chips{margin:0;min-width:0}.mu-opts select{width:auto}
+.mu-opts .mu-sp{flex:1}.mu-opts select[hidden]{display:none}.mu-lyr{margin-top:8px}.mu-lyr[hidden]{display:none}.mu-lyr textarea{width:100%;box-sizing:border-box}
+.ld-ico.mu{border:0;padding:0;cursor:pointer;color:#fff;background:linear-gradient(135deg,#e0457b,#b4308f)}.ld-ico.mu.play{background:var(--acc)}
+.ld-ico.mu:focus-visible,.mu-pb:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.mu-ic{display:block;width:11px;height:12px;background:currentColor;clip-path:polygon(10% 0,100% 50%,10% 100%);margin-left:2px}
+.mu-ic.pa{clip-path:none;background:none;border-left:4px solid;border-right:4px solid;box-sizing:border-box;width:12px;margin-left:0}
+.mu-run .ld-ico{background:color-mix(in srgb,var(--acc) 16%,transparent);color:var(--acc);font-size:15px}.mu-run{cursor:default}
+.mu-player{display:flex;align-items:center;gap:10px;background:color-mix(in srgb,var(--line) 45%,transparent);border-radius:99px;padding:6px 14px 6px 6px;margin:10px 0}
+.mu-player input[type=range]{flex:1;min-width:0;width:auto;padding:0;accent-color:var(--acc)}.mu-player small{font-size:12px;color:var(--mut);font-variant-numeric:tabular-nums}
+.mu-pb{width:36px;height:36px;border-radius:99px;border:0;background:var(--acc);color:#fff;display:grid;place-items:center;cursor:pointer;flex:none;padding:0}
+.mu-more{margin-top:10px}.mu-more summary{cursor:pointer;color:var(--acc);font-size:13px}.mu-more p{font-size:13px;color:var(--mut);margin:6px 0;overflow-wrap:anywhere}
+.mu-mini{position:sticky;bottom:0;z-index:2;display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:8px 10px;margin-top:8px}
+.mu-mini[hidden]{display:none}.mu-mt{flex:1;min-width:0;display:flex;align-items:center;gap:8px;border:0;background:none;padding:0;font:inherit;color:inherit;cursor:pointer;text-align:left}
+.mu-mt b{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px}.mu-mt small{font-variant-numeric:tabular-nums}
 .blquick{gap:6px;flex-wrap:wrap;margin:4px 0 8px}
 /* Zustand → Praxistest (praxistest.js) */
 .pt-sum{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 12px}.pt-n{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 12px;min-width:84px}

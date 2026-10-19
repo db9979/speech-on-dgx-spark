@@ -991,6 +991,77 @@ class Browser(unittest.TestCase):
         finally:
             clean()
 
+    def test_musik_page(self):
+        """Ich → Musik (musik.js) laid out like Dokumente and E-Mail: the form card with the length as chips, the songs
+        as ld- rows (▶, title on one line, length and singing below, time on the right) grouped by day, the details with
+        the player, download, „Nochmal machen“ and the folded description; search and filter; on a computer and a
+        phone, with the strict CSP, without sideways scrolling. Wishes and lyrics are text, never HTML."""
+        import musik
+        import profiles
+        me = next(u for u in profiles._load()["users"] if u["name"] == "Uitest")["id"]
+        with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
+            c = json.load(f)
+        c["chat"]["musik"] = True
+        c.setdefault("music", {})["enabled"] = True
+        helpers.write_config(c)
+        musik.clear(me)
+        musik.keep(me, b"ID3" + b"\0" * 64, {"wish": "Reggae <b>über</b> Adi, den braunen Lagotto Romagnolo mit weißer Schnauze und Brust, "
+                                              "der wie ein Teddybär aussieht und weiße Bälle liebt", "caption": "A reggae song about a dog",
+                                              "lyrics": "[verse]\nAdi <i>läuft</i>", "sung": True, "language": "de", "length_s": 120,
+                                              "seconds": 31.5, "model": "ACE-Step 1.5", "src": "seite", "job": "abcdef654321"})
+        for i in range(6):   # from six songs on the search and the filters show
+            musik.keep(me, b"ID3" + b"\0" * 64, {"wish": f"Ruhiges Klavierstück {i}", "caption": "Ruhiges Klavierstück", "sung": False,
+                                                  "length_s": 60, "seconds": 12.0, "src": "seite"})
+
+        async def go():
+            async with async_playwright() as p:
+                for name, w, h in VIEWS:
+                    br, pg, errors = await self.page(p, w, h, csp=True)
+                    try:
+                        await pg.evaluate("openMe('musikbox')")
+                        await pg.wait_for_selector("#musikbox .ld-row", state="visible", timeout=20000)
+                        self.assertEqual(await pg.evaluate("document.querySelectorAll('#musikbox .ld-row .ld-mid b').length"), 7, name)
+                        self.assertEqual(await pg.evaluate("document.querySelectorAll('#musikbox .ld-row button.ld-ico.mu').length"), 7, name)
+                        self.assertEqual(await pg.evaluate("document.querySelectorAll('#musikbox .mu-len .ld-chip.on').length"), 1, name)
+                        # one line per title, however long the wish (the rows were wrapping grey buttons before)
+                        hs = await pg.evaluate("[...document.querySelectorAll('#musikbox .ld-row')].map(r=>r.getBoundingClientRect().height)")
+                        self.assertTrue(all(x < 70 for x in hs), f"{name}: {hs}")
+                        # grouped by day (seconds old: today, or yesterday right after midnight)
+                        self.assertIn(await pg.evaluate("document.querySelector('#musikbox .ld-grp span').textContent"), ("Heute", "Gestern"), name)
+                        # the filter: instrumental shows only the piano pieces, the search finds the reggae song
+                        await pg.click("#musikbox .ld-chips button[data-f=inst]")
+                        self.assertEqual(await pg.evaluate("document.querySelectorAll('#musikbox .ld-row').length"), 6, name)
+                        await pg.fill("#musikbox .ld-tools input[type=search]", "teddy")
+                        self.assertEqual(await pg.evaluate("document.querySelectorAll('#musikbox .ld-row').length"), 0, name)
+                        await pg.fill("#musikbox .ld-tools input[type=search]", "")
+                        await pg.click("#musikbox .ld-chips button[data-f=all]")
+                        await pg.click("#musikbox .ld-row:has-text('Lagotto') .ld-mid")
+                        await pg.wait_for_selector("#musikbox .ld-detail .mu-player", state="visible", timeout=20000)
+                        txt = await pg.inner_text("#musikbox .ld-detail")
+                        if os.environ.get("MU_SHOT"):
+                            await pg.screenshot(path=os.environ["MU_SHOT"] + name + ".png", full_page=True)
+                        self.assertIn("Reggae <b>über</b> Adi", txt)      # the wish as text, never as HTML
+                        self.assertIn("Herunterladen", txt)
+                        self.assertIsNone(await pg.query_selector("#musikbox .ld-detail b b, #musikbox .ld-detail i"))
+                        over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                        self.assertLessEqual(over, 1, f"{name}: {over}px zu breit")
+                        # „Nochmal machen“ fills the form, sends nothing
+                        await pg.click("#musikbox .ld-detail button:has-text('Nochmal machen')")
+                        self.assertIn("Lagotto", await pg.evaluate("document.getElementById('muwish').value"), name)
+                        self.assertTrue(await pg.evaluate("document.getElementById('musung').checked"), name)
+                        self.assertIn("Adi <i>läuft</i>", await pg.evaluate("document.getElementById('mulyrics').value"), name)
+                        self.assertEqual(await pg.evaluate("document.querySelector('#musikbox .mu-len .ld-chip.on').dataset.s"), "120", name)
+                        self.assertEqual(errors, [], name)
+                    finally:
+                        await br.close()
+        try:
+            self.run_async(go())
+        finally:
+            musik.clear(me)
+            c["chat"]["musik"] = False
+            c["music"]["enabled"] = False
+            helpers.write_config(c)
+
     def test_bilder_page(self):
         """Ich → Bilder (bilder.js, Bilder malen): the form, the gallery and a picture's details with download; on a
         computer and a phone, with the strict CSP, without sideways scrolling. The chat shows a painted picture under

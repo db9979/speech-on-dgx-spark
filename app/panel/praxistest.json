@@ -2126,6 +2126,13 @@
 "titel": "E-Mail: immer ein Weg zurück",
 "text": "A: Update auf V01.0.833, am Rechner E-Mail öffnen, eine Mail wählen: oben „✕ Schließen“ schließt sie. B: „Neue Mail“: oben „✕ Verwerfen“ schließt das Formular. C: Unter einer Mail „Antworten“, etwas tippen, Esc drücken: der Spark fragt „Den Entwurf verwerfen?“, OK schließt die Antwort. D: Am Handy dasselbe mit „‹ Zurück“ und „‹ Verwerfen“.",
 "thread": "Kalender und E-Mail in Panel und Apps"
+},
+{
+"id": "P328",
+"v": 835,
+"titel": "Musik-Seite wie die anderen Seiten",
+"text": "A: Update auf V01.0.835, am Rechner Ich → Musik öffnen: oben „N Lieder · … MB“ mit „⋯“, darunter die Karte mit Wunsch, Längen-Chips und Schalter „Mit Gesang“. B: Die Lieder stehen nach Tag (Heute, Gestern, …) je in einer Zeile mit ▶; ▶ spielt das Lied, ein zweites ▶ hält es an, ein anderes Lied beendet das erste. C: Eine Zeile anklicken: rechts Titel, Abspieler mit Schieber, Herunterladen, „Nochmal machen“, Löschen; „Beschreibung des Modells“ und „Liedtext“ klappen auf. D: „Nochmal machen“ füllt oben Wunsch, Länge und Gesang, geschickt wird erst mit „Lied machen“. E: Am Handy öffnet eine Zeile eine eigene Seite mit „‹ Alle Lieder“; spielt ein Lied und die Seite ist zu, zeigt unten eine Leiste Titel und Zeit. F: iPhone-App (nächster TestFlight-Build), Meine Sachen → Musik: Lieder nach Tag, oben die Länge wählbar.",
+"thread": "Musik-Seite ans Layout anpassen"
 }
 ]
 }

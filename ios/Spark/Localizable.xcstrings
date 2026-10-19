@@ -11820,6 +11820,26 @@
           }
         }
       }
+    },
+    "Länge": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Length"
+          }
+        }
+      }
+    },
+    "Letzte 7 Tage": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last 7 days"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
