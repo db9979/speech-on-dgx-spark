@@ -88,6 +88,8 @@ DATEIEN = [
     profil("mailstil.json", "Mailstil (nur die Zusammenfassung, keine Mail)", "Mail style (only the summary, never a mail)", art="Einstellungen"),
     profil("spark-kalender.json", "Spark-Kalender: Termine der Kalender ohne Konto (nur hier)", "Spark calendar: appointments of the calendars without an account (only here)",
            art="Termine", schutz=("versiegelt", "sealed")),  # sparkkalender.py
+    profil("kalender-server.json", "Kalender-Server: Prüfwert des App-Passworts für Kalender-Apps", "Calendar server: check value of the app password for calendar apps",
+           art="Login", schutz=("nur der Hash", "hash only")),  # kalenderserver.py
     profil("calendar.json", "Kalender-Zugang und Freigaben an andere Profile", "Calendar account and shares with other profiles", art="Login", schutz=("Passwort versiegelt", "password sealed")),
     profil("homeassistant.json", "Home-Assistant-Zugang", "Home Assistant account", art="Login", schutz=("Token versiegelt", "token sealed")),
     profil("telegram.json", "Telegram-Kopplung", "Telegram link", art="Login"),

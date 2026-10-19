@@ -1334,6 +1334,11 @@ def snapshot(view="admin", now=None):
     except Exception:
         kspark = {"calendars": 0}
     try:
+        import kalenderserver
+        ksrv = kalenderserver.for_live()
+    except Exception:
+        ksrv = {"on": False}
+    try:
         import nasquelle
         nql = nasquelle.for_live()
     except Exception:
@@ -1453,6 +1458,9 @@ def snapshot(view="admin", now=None):
                          + (f", abgeglichen vor {kcopy['ago']} min" if kcopy.get("ago") is not None else ""))
         if x["id"] == "cal" and kspark.get("calendars"):   # Spark-Kalender ohne Konto (Stufe 3): numbers only
             x["sub"] += f" · {kspark['calendars']} Spark-Kalender ohne Konto, {kspark['items']} Termine"
+        if x["id"] == "cal" and ksrv.get("on"):   # Kalender-Server (Stufe 4): app passwords, requests today (numbers)
+            x["sub"] += (f" · Kalender-Apps: {ksrv['profiles']} Profile, heute {ksrv['requests']} Anfragen,"
+                         f" {ksrv['saved']} Änderungen, {ksrv['refused']} abgelehnt")
         if x["id"] in ("cal", "mail") and warm.get("profiles"):   # Vorwärmen: how many profiles, how long ago (no name)
             x["sub"] += f" · {warm['profiles']} Profile vorgewärmt, zuletzt vor {warm['ago']} min"
         if x["id"] == "nasquelle" and nql.get("on"):   # Wissensordner: folders, documents, failing (no path, no name)

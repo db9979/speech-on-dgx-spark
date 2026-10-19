@@ -293,6 +293,10 @@ FEATURES = (
     # private appointments only as „belegt“
     F("calshare", "Kalender teilen", "Share calendars", "day", ("calendar_share", "calendar"), parent="calendar",
       me="calbox", guide="calshare"),
+    # kalenderserver.py (Dominik 2026-10-19 „1a-5a“, Spark-Kalender Stufe 4): the profile's Spark calendars for the
+    # calendar app of the iPhone (CalDAV, an app password per profile)
+    F("calserver", "Kalender-Server für Kalender-Apps", "Calendar server for calendar apps", "day",
+      ("calendar_server", "calendar"), parent="calendar", me="calbox", guide="calserver"),
     F("weather", "Wetter", "Weather", "day", ("weather",), me="wxbox", guide="weather"),
     # feeds.py (Dominik 2026-10-17, plan reddit/plan.md): own Reddit inbox, subreddits and other feeds, read only
     F("feeds", "Reddit und Feeds", "Reddit and feeds", "day", ("feeds",), me="feedbox", guide="feeds"),

@@ -257,7 +257,8 @@ def _cal_parts():
         d = _json(profiles._path(uid, "calendar.json"))
         cals = d.get("calendars") if isinstance(d.get("calendars"), list) else ([{"url": d["url"]}] if d.get("url") else [])
         for c in cals:
-            o = _origin(c.get("url")) if isinstance(c, dict) else ""
+            # a Spark-Kalender lives in the panel itself (sparkkalender.py, spark.invalid): nothing to reach
+            o = _origin(c.get("url")) if isinstance(c, dict) and not c.get("spark") else ""
             if o:
                 out.setdefault(_key(o), {"url": o + "/", "level": netguard.USER, "verify": True, "uids": []})["uids"].append(uid)
     return out

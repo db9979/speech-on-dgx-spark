@@ -473,7 +473,27 @@ function calTopics(){const box=$('caltopchips');if(!box)return;
 async function calTopSave(again){const {r,d}=await apiTry('/api/profile/calendar/topics',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({topics:CAL_TOPICS})});
   if(!r.ok){calMsg(errSay(r.status,d.detail,''),true);return}
   calRender(d);calMsg(t('Themen gespeichert.','Topics saved.'));if(again){const n=$('caltopchips').querySelector('.caltopnew');if(n)n.focus()}}
-async function showCal(){if(!CAL_ON)return;calRender(await (await api('/api/profile/calendar')).json());$('calmsg').textContent='';$('calmsg').className=''}
+async function showCal(){if(!CAL_ON)return;calRender(await (await api('/api/profile/calendar')).json());$('calmsg').textContent='';$('calmsg').className='';calServer()}
+// Kalender-Server (kalenderserver.py, Spark-Kalender Stufe 4): the Spark calendars in the iPhone's calendar app over
+// CalDAV, with an app password per profile; shown once after making it, only its hash stays on the Spark
+async function calServer(pw){const box=$('calserver');if(!box)return;
+  const {r,d}=await apiTry('/api/profile/calserver');if(!r.ok){box.hidden=true;return}box.hidden=false;
+  const when=x=>x?new Date(x*1000).toLocaleString(L==='en'?'en-GB':'de-DE',{dateStyle:'medium',timeStyle:'short'}):t('noch nie','never');
+  box.innerHTML=`<div class="mgrp">${esc(t('Für Kalender-Apps (CalDAV)','For calendar apps (CalDAV)'))}</div>`+
+    `<div class="fh">${esc(t('Deine Spark-Kalender im Kalender des iPhone (oder Thunderbird, DAVx5): in den iPhone-Einstellungen unter Apps, Kalender, Kalenderaccounts einen CalDAV-Account hinzufügen, mit diesen Angaben. Deine iCloud- und anderen Kalender bleiben, wo sie sind.','Your Spark calendars in the iPhone\'s calendar (or Thunderbird, DAVx5): in the iPhone settings under Apps, Calendar, Calendar accounts add a CalDAV account with these details. Your iCloud and other calendars stay where they are.'))}</div>`+
+    `<ul class="facts small"><li>${esc(t('Server','Server'))}: <b id="calsrvurl">${esc(location.origin+d.path)}</b> <button class="b" type="button" data-cp="calsrvurl">${esc(t('Kopieren','Copy'))}</button></li>`+
+    `<li>${esc(t('Benutzer','User'))}: <b id="calsrvuser">${esc(d.user)}</b> <button class="b" type="button" data-cp="calsrvuser">${esc(t('Kopieren','Copy'))}</button></li>`+
+    (pw?`<li>${esc(t('App-Passwort','App password'))}: <b id="calsrvpw">${esc(pw)}</b> <button class="b" type="button" data-cp="calsrvpw">${esc(t('Kopieren','Copy'))}</button><div class="fh">${esc(t('Wird nur jetzt gezeigt. Verloren? Einfach ein neues erzeugen.','Shown only now. Lost it? Just make a new one.'))}</div></li>`:
+      d.has?`<li>${esc(t('App-Passwort angelegt','App password made'))}: ${esc(when(d.made))} · ${esc(t('zuletzt benutzt','last used'))}: ${esc(when(d.last))}</li>`:'')+`</ul>`+
+    (d.calendars?'':`<div class="fh">${esc(t('Noch kein Spark-Kalender: oben unter „Kalender hinzufügen“ den Anbieter „Spark-Kalender“ wählen.','No Spark calendar yet: pick the provider "Spark calendar" under "Add calendar" above.'))}</div>`)+
+    `<div class="row" style="margin-top:6px"><button class="b${d.has?'':' p'}" type="button" data-srv="make">${esc(d.has?t('Neues App-Passwort','New app password'):t('App-Passwort erzeugen','Make an app password'))}</button>`+
+    (d.has?`<button class="b" type="button" data-srv="drop">${esc(t('Zugang löschen','Delete access'))}</button>`:'')+`<span class="calsrvmsg"></span></div>`;
+  box.querySelectorAll('[data-cp]').forEach(b=>b.onclick=()=>copyEl(b.dataset.cp,b));
+  const msg=box.querySelector('.calsrvmsg');
+  box.querySelector('[data-srv=make]').onclick=async()=>{if(d.has&&!confirm(t('Ein neues App-Passwort ersetzt das alte; Kalender-Apps brauchen dann das neue. Weiter?','A new app password replaces the old one; calendar apps then need the new one. Go on?')))return;
+    const {r:r2,d:d2}=await apiTry('/api/profile/calserver',{method:'POST'});if(!r2.ok){msg.className='err';msg.textContent=errSay(r2.status,d2.detail,'');return}calServer(d2.password)};
+  const drop=box.querySelector('[data-srv=drop]');if(drop)drop.onclick=async()=>{if(!confirm(t('Zugang löschen? Kalender-Apps erreichen deine Spark-Kalender dann nicht mehr.','Delete access? Calendar apps can no longer reach your Spark calendars.')))return;
+    const {r:r2,d:d2}=await apiTry('/api/profile/calserver',{method:'DELETE'});if(!r2.ok){msg.className='err';msg.textContent=errSay(r2.status,d2.detail,'');return}calServer()}}
 async function calRemove(id,name,spark){if(!confirm(t('Kalender „','Remove calendar "')+name+t('“ entfernen?','"?')+(spark?' '+t('Seine Termine liegen nur auf dem Spark und werden gelöscht.','Its appointments live only on the Spark and are deleted.'):'')))return;calRender(await (await api('/api/profile/calendar/'+encodeURIComponent(id),{method:'DELETE'})).json())}
 const calMsg=(x,err,list)=>{const m=$('calmsg');m.className=err?'err':'';m.innerHTML=esc(x)+(list&&list.length?'<ul class="facts small">'+list.map(e=>`<li>${esc(e)}</li>`).join('')+'</ul>':'')};
 $('calsave').onclick=async()=>{const spark=!!CALKIND[$('calkind').value].spark;calMsg(spark?t('Lege an …','Creating …'):t('Prüfe den Kalender …','Checking the calendar …'));

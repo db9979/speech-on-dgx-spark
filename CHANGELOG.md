@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.840** · 2026-10-19 · Spark-Kalender Stufe 4: der Spark als Kalender-Server (CalDAV) für den Kalender des iPhone, Thunderbird oder DAVx5; App-Passwort je Profil unter Kalender → Einstellungen oder im iPhone, im Heimnetz und über den Proxy; Admin-Schalter, aus
 - **V01.0.839** · 2026-10-19 · Spark-Kalender Stufe 3: ein Kalender ganz ohne Konto, der nur auf dem Spark liegt (verschlüsselt im Profil); anlegen unter Ich → Kalender oder im iPhone, Termine per Seite, App oder Sprache, teilen wie jeder Kalender
 - **V01.0.838** · 2026-10-19 · Kalender: kein Panel-Hänger mehr beim Ausrechnen der Termine (6-8 s Stillstand); jeder Termin wird nur einmal je Monat ausgerechnet und gemerkt, alles in einem Hintergrund-Faden mit niedriger Priorität, nie zwei gleichzeitig
 - **V01.0.837** · 2026-10-19 · E-Mail: Antwortvorschläge beim Antworten (Teil von Mails senden): drei kurze Antworten in verschiedene Richtungen liegen bereit, schon vorbereitet, solange die Mail offen ist, im Ton der Mail und mit dem Namen des Profils; die gewählte bleibt frei änderbar, dazu kürzer, freundlicher, förmlicher und auf Englisch; Panel und iPhone

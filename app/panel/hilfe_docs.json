@@ -1501,7 +1501,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "1. Anmelden oder fragen: Beim Anmelden bekommt der Browser ein Cookie; Apps, Uhr und Lautsprecher haben stattdessen einen Geräteschlüssel. Die Schritte 2 bis 5 laufen einmal beim Anmelden, die Schritte ab 6 bei jeder Anfrage. 2. Gesperrt?: Gesperrt wird je Adresse und je Name (oder Admin-Passwort). Die Sperre eines Namens gilt nicht für einen Browser, der sich mit diesem Namen schon angemeldet hat (Cookie speech_known, gespeichert wird nur sein Hash). So kann ein Fremder durch Raten den Besitzer nicht aussperren. 3. Passwort oder PIN richtig?: Geprüft wird in einem eigenen Thread. Ein unbekannter Name kostet dieselbe Arbeit wie eine falsche PIN, die Antwort ist dieselbe. Ein Fehlversuch wartet eine Sekunde, zählt für die Sperre und, wenn er von außen kommt, für „Notaus von selbst“. 4. Zweiter Schritt?: Hat das Profil (oder der Admin) den zweiten Schritt an und ist der Browser nicht als vertraut eingetragen, kommt als Nächstes der Code aus der App oder ein Passkey. Ein falscher Code zählt wie eine falsche PIN. 5. Cookie setzen: Der Zähler der Adresse wird gelöscht; Fehlversuche Fremder für den Namen zählen weiter. Das Profil-Cookie ist signiert und steht in der Liste der angemeldete"
+"text": "1. Anmelden oder fragen: Beim Anmelden bekommt der Browser ein Cookie; Apps, Uhr und Lautsprecher haben stattdessen einen Geräteschlüssel, Kalender-Apps (Kalender-Server, kalenderserver.py) ein App-Passwort, das wie eine PIN sperrt. Die Schritte 2 bis 5 laufen einmal beim Anmelden, die Schritte ab 6 bei jeder Anfrage. 2. Gesperrt?: Gesperrt wird je Adresse und je Name (oder Admin-Passwort). Die Sperre eines Namens gilt nicht für einen Browser, der sich mit diesem Namen schon angemeldet hat (Cookie speech_known, gespeichert wird nur sein Hash). So kann ein Fremder durch Raten den Besitzer nicht aussperren. 3. Passwort oder PIN richtig?: Geprüft wird in einem eigenen Thread. Ein unbekannter Name kostet dieselbe Arbeit wie eine falsche PIN, die Antwort ist dieselbe. Ein Fehlversuch wartet eine Sekunde, zählt für die Sperre und, wenn er von außen kommt, für „Notaus von selbst“. 4. Zweiter Schritt?: Hat das Profil (oder der Admin) den zweiten Schritt an und ist der Browser nicht als vertraut eingetragen, kommt als Nächstes der Code aus der App oder ein Passkey. Ein falscher Code zählt wie eine falsche PIN. 5. Cookie setzen: Der Zähler der Adresse wird gelöscht; Fehlversuche Fremder für "
 },
 {
 "lang": "de",
@@ -1509,7 +1509,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "n Browser; es gilt höchstens 90 Tage ohne Nutzung und wird erneuert, solange es benutzt wird. Das Admin-Cookie ist mit Passwort, einem eigenen Schlüssel dieses Spark und dem zweiten Schritt signiert. War der zweite Schritt dabei (Code, Passkey oder vertrauter Browser), trägt die Sitzung sein Zeichen: nur dann zählt eine Admin-Rolle des Profils, ohne eigene Admin-Anmeldung. Danach liest das Panel Kalender und Mails des Profils im Hintergrund vorab (vorwaermen.py, höchstens alle 600 Sekunden), damit seine Seiten sofort aufgehen. 6. Profil bestimmen: Zuerst, was nur das Panel selbst setzt (Telegram, „Spark fragen“ über MCP), dann der Geräteschlüssel (nur sein Hash ist gespeichert), dann das Cookie: Signatur, Alter, Sitzung noch in der Liste und nicht abgemeldet. 7. Schlüssel für diesen Weg frei?: Ein Schlüssel mit Bereich (App, Uhr, Raum, Home Assistant, Schreibhilfe, Begleiter, Terminal) reicht nur für seine eigenen Pfade und nur, solange Admin und Profil die Funktion anhaben. Ist sie gerade aus oder hat das Profil seinen eigenen Notaus an, antwortet das Panel mit 503 statt 401, damit die App ihre Kopplung behält. 8. Ohne Profil und Gastzugang aus?: Ohne Profil kommt nur durch, wer d"
+"text": "den Namen zählen weiter. Das Profil-Cookie ist signiert und steht in der Liste der angemeldeten Browser; es gilt höchstens 90 Tage ohne Nutzung und wird erneuert, solange es benutzt wird. Das Admin-Cookie ist mit Passwort, einem eigenen Schlüssel dieses Spark und dem zweiten Schritt signiert. War der zweite Schritt dabei (Code, Passkey oder vertrauter Browser), trägt die Sitzung sein Zeichen: nur dann zählt eine Admin-Rolle des Profils, ohne eigene Admin-Anmeldung. Danach liest das Panel Kalender und Mails des Profils im Hintergrund vorab (vorwaermen.py, höchstens alle 600 Sekunden), damit seine Seiten sofort aufgehen. 6. Profil bestimmen: Zuerst, was nur das Panel selbst setzt (Telegram, „Spark fragen“ über MCP), dann der Geräteschlüssel (nur sein Hash ist gespeichert), dann das Cookie: Signatur, Alter, Sitzung noch in der Liste und nicht abgemeldet. 7. Schlüssel für diesen Weg frei?: Ein Schlüssel mit Bereich (App, Uhr, Raum, Home Assistant, Schreibhilfe, Begleiter, Terminal) reicht nur für seine eigenen Pfade und nur, solange Admin und Profil die Funktion anhaben. Ist sie gerade aus oder hat das Profil seinen eigenen Notaus an, antwortet das Panel mit 503 statt 401, damit die Ap"
 },
 {
 "lang": "de",
@@ -1517,7 +1517,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "er Admin ist (Cookie oder HTTP Basic, dessen Fehlversuche wie auf der Anmeldeseite zählen), oder wenn der Admin den Assistenten ohne Passwort freigegeben hat. Gäste bekommen dann nur Frage und Antwort. 9. Zu viele Anfragen?: Je Profil, sonst je Adresse, zählt das Panel die Anfragen der letzten Minute: im Chat 120 für ein Profil oder den Admin, 30 für einen Gast. 10. Gast, alle Plätze belegt?: Gäste teilen sich 4 gleichzeitige Plätze im Chat. Ein Platz, den niemand freigibt, gilt nach 10 Minuten wieder als frei. 11. Freigabe je Funktion: Für jede Funktion fragt das Panel in fester Reihenfolge: Schalter des Admins (und der Funktion, auf der sie aufbaut), Gast (bekommt nie eine), vom Admin für das Profil gesperrt, eigener Wunsch des Profils, zweiter Schritt nötig. Gelesen wird bei jeder Anfrage neu, eine Änderung gilt also sofort. 12. Weiter zur Vorbereitung: Die Anfrage geht mit ihrem Profil (oder als Gast) an chat_turn.prepare. Die Sprache bekommt Vorrang vor Hintergrundarbeit, und die anderen offenen Seiten des Profils sehen „antwortet gerade“."
+"text": "p ihre Kopplung behält. 8. Ohne Profil und Gastzugang aus?: Ohne Profil kommt nur durch, wer der Admin ist (Cookie oder HTTP Basic, dessen Fehlversuche wie auf der Anmeldeseite zählen), oder wenn der Admin den Assistenten ohne Passwort freigegeben hat. Gäste bekommen dann nur Frage und Antwort. 9. Zu viele Anfragen?: Je Profil, sonst je Adresse, zählt das Panel die Anfragen der letzten Minute: im Chat 120 für ein Profil oder den Admin, 30 für einen Gast. 10. Gast, alle Plätze belegt?: Gäste teilen sich 4 gleichzeitige Plätze im Chat. Ein Platz, den niemand freigibt, gilt nach 10 Minuten wieder als frei. 11. Freigabe je Funktion: Für jede Funktion fragt das Panel in fester Reihenfolge: Schalter des Admins (und der Funktion, auf der sie aufbaut), Gast (bekommt nie eine), vom Admin für das Profil gesperrt, eigener Wunsch des Profils, zweiter Schritt nötig. Gelesen wird bei jeder Anfrage neu, eine Änderung gilt also sofort. 12. Weiter zur Vorbereitung: Die Anfrage geht mit ihrem Profil (oder als Gast) an chat_turn.prepare. Die Sprache bekommt Vorrang vor Hintergrundarbeit, und die anderen offenen Seiten des Profils sehen „antwortet gerade“."
 },
 {
 "lang": "de",
@@ -4798,6 +4798,22 @@
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
 "text": "Logs: calendar: spark calendar made, calendar: spark calendar deleted | Anzahl; Live (Kalender) zählt Spark-Kalender und Termine. Stufe 4 macht ihn für die Kalender-App des iPhone als CalDAV-Server erreichbar."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Spark-Kalender, Stufe 4: der Spark als Kalender-Server (V01.0.840, Dominik 2026-10-19 „1a-5a“): Die Spark-Kalender eines Profils erscheinen im Kalender des iPhone (oder in Thunderbird, DAVx5) und lassen sich dort ändern; der Spark ist dafür ein CalDAV-Server unter /caldav/ (kalenderserver.py). Admin-Schalter Funktionen → Kalender und Tagesbriefing → „Kalender-Server für Kalender-Apps“ (chat.calendar_server, aus). Das Profil erzeugt unter Kalender → Einstellungen → „Für Kalender-Apps“ (oder im iPhone unter Konten verbinden) ein App-Passwort, mit seinem Code; es wird einmal gezeigt, der Spark behält nur einen Prüfwert (users/<id>/kalender-server.json). Im iPhone unter Einstellungen, Apps, Kalender, Kalenderaccounts einen CalDAV-Account hinzufügen: Server https://<Adresse>/caldav/, Benutzer = die angezeigte Profil-Kennung, Passwort = das App-Passwort; die Kalender-App findet den Rest selbst (/.well-known/caldav). Es gilt im Heimnetz und über den Proxy. Schutz: nur die eigenen Spark-Kalender unter dem eigenen Pfad (fremde Pfade und Kalender sind 404), falsche Passwörter sperren wie eine PIN, jede Anfrage zählt gegen das Rate-Limit, eine Anfrage einer fremden Webseite (Origin) wird abge"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "lehnt, Mein Notaus und die Sperre des Admins schließen die Tür, jeder Termin wird wie in Stufe 3 geprüft (iCalendar, Größe, Anzahl, Etags). Name und Farbe bleiben auf dem Spark (PROPPATCH und MKCALENDAR werden abgelehnt). „Zugang löschen“ beendet ihn sofort, ein neues App-Passwort ersetzt das alte. Logs: calendar: caldav saved|deleted|not saved (Status), calendar: caldav login refused, calendar: caldav password made|removed; Live (Kalender) zeigt Profile mit App-Passwort, Anfragen, Änderungen und Ablehnungen des Tages."
 },
 {
 "lang": "de",
@@ -9965,7 +9981,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "1. Log in or ask: Logging in gives the browser a cookie; apps, watch and speakers have a device key instead. Steps 2 to 5 run once when logging in, the steps from 6 on with every request. 2. Locked?: Locks are kept per address and per name (or the admin password). A name's lock does not hold for a browser that logged in to that name before (cookie speech_known, only its hash is kept). So a stranger guessing cannot lock the owner out. 3. Password or PIN right?: The check runs in its own thread. An unknown name costs the same work as a wrong PIN, the answer is the same. A wrong attempt waits a second, counts for the lock and, when it comes from outside, for „Emergency stop by itself“. 4. Second step?: If the profile (or the admin) has the second step on and the browser is not trusted, the code from the app or a passkey comes next. A wrong code counts like a wrong PIN. 5. Set the cookie: The address's counter is cleared; strangers' wrong attempts for the name keep counting. The profile cookie is signed and stands in the list of signed-in browsers; it holds at most 90 days without use and is renewed while used. The admin cookie is signed with the password, a key of this Spark only and "
+"text": "1. Log in or ask: Logging in gives the browser a cookie; apps, watch and speakers have a device key instead, calendar apps (calendar server, kalenderserver.py) an app password that locks like a PIN. Steps 2 to 5 run once when logging in, the steps from 6 on with every request. 2. Locked?: Locks are kept per address and per name (or the admin password). A name's lock does not hold for a browser that logged in to that name before (cookie speech_known, only its hash is kept). So a stranger guessing cannot lock the owner out. 3. Password or PIN right?: The check runs in its own thread. An unknown name costs the same work as a wrong PIN, the answer is the same. A wrong attempt waits a second, counts for the lock and, when it comes from outside, for „Emergency stop by itself“. 4. Second step?: If the profile (or the admin) has the second step on and the browser is not trusted, the code from the app or a passkey comes next. A wrong code counts like a wrong PIN. 5. Set the cookie: The address's counter is cleared; strangers' wrong attempts for the name keep counting. The profile cookie is signed and stands in the list of signed-in browsers; it holds at most 90 days without use and is renew"
 },
 {
 "lang": "en",
@@ -9973,7 +9989,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "the second step. When the second step was part of it (code, passkey or a trusted browser) the session carries its mark: only then does a profile's admin role count, without an admin sign-in of its own. Then the panel reads the profile's calendars and mail ahead in the background (vorwaermen.py, at most every 600 seconds), so its pages open at once. 6. Find the profile: First what only the panel itself sets (Telegram, „Ask Spark“ over MCP), then the device key (only its hash is stored), then the cookie: signature, age, session still in the list and not logged out. 7. Key free for this path?: A key with a scope (app, watch, room, Home Assistant, writing help, companion, terminal) only reaches its own paths and only while the admin and the profile have the function on. If it is off right now or the profile has its own kill switch on, the panel answers 503 instead of 401, so the app keeps its pairing. 8. No profile and guest access off?: Without a profile only the admin passes (cookie or HTTP Basic, whose wrong attempts count like on the login page), or anybody when the admin opened the assistant without password. Guests then only get question and answer. 9. Too many requests?: Per pro"
+"text": "ed while used. The admin cookie is signed with the password, a key of this Spark only and the second step. When the second step was part of it (code, passkey or a trusted browser) the session carries its mark: only then does a profile's admin role count, without an admin sign-in of its own. Then the panel reads the profile's calendars and mail ahead in the background (vorwaermen.py, at most every 600 seconds), so its pages open at once. 6. Find the profile: First what only the panel itself sets (Telegram, „Ask Spark“ over MCP), then the device key (only its hash is stored), then the cookie: signature, age, session still in the list and not logged out. 7. Key free for this path?: A key with a scope (app, watch, room, Home Assistant, writing help, companion, terminal) only reaches its own paths and only while the admin and the profile have the function on. If it is off right now or the profile has its own kill switch on, the panel answers 503 instead of 401, so the app keeps its pairing. 8. No profile and guest access off?: Without a profile only the admin passes (cookie or HTTP Basic, whose wrong attempts count like on the login page), or anybody when the admin opened the assistant "
 },
 {
 "lang": "en",
@@ -9981,7 +9997,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "file, else per address, the panel counts the requests of the last minute: in the chat 120 for a profile or the admin, 30 for a guest. 10. Guest, all places taken?: Guests share 4 places at once in the chat. A place nobody frees counts as free again after 10 minutes. 11. Release per function: For every function the panel asks in a fixed order: the admin's switch (and the one of the function it builds on), guest (never gets one), blocked by the admin for the profile, the profile's own wish, second step needed. It is read anew with every request, so a change holds at once. 12. On to preparing: The request goes on with its profile (or as a guest) to chat_turn.prepare. Speech gets priority over background work, and the profile's other open pages see „answering“."
+"text": "without password. Guests then only get question and answer. 9. Too many requests?: Per profile, else per address, the panel counts the requests of the last minute: in the chat 120 for a profile or the admin, 30 for a guest. 10. Guest, all places taken?: Guests share 4 places at once in the chat. A place nobody frees counts as free again after 10 minutes. 11. Release per function: For every function the panel asks in a fixed order: the admin's switch (and the one of the function it builds on), guest (never gets one), blocked by the admin for the profile, the profile's own wish, second step needed. It is read anew with every request, so a change holds at once. 12. On to preparing: The request goes on with its profile (or as a guest) to chat_turn.prepare. Speech gets priority over background work, and the profile's other open pages see „answering“."
 },
 {
 "lang": "en",
@@ -13150,6 +13166,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "made, calendar: spark calendar deleted | count; Live (Calendar) counts Spark calendars and appointments. Stage 4 makes it reachable as a CalDAV server for the iPhone's calendar app."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "Spark calendar, stage 4: the Spark as a calendar server (V01.0.840, Dominik 2026-10-19 \"1a-5a\"): a profile's Spark calendars show in the iPhone's calendar (or in Thunderbird, DAVx5) and can be changed there; the Spark is a CalDAV server for them under /caldav/ (kalenderserver.py). Admin switch Features → Calendar and daily briefing → \"Calendar server for calendar apps\" (chat.calendar_server, off). The profile makes an app password under Calendar → Settings → \"For calendar apps\" (or on the iPhone under Connect accounts), with its code; it is shown once, the Spark keeps only a check value (users/<id>/kalender-server.json). On the iPhone under Settings, Apps, Calendar, Calendar accounts add a CalDAV account: server https://<address>/caldav/, user = the profile id shown, password = the app password; the calendar app finds the rest itself (/.well-known/caldav). It works at home and through the proxy. Protection: only the own Spark calendars under the own path (other paths and calendars are 404), wrong passwords lock like a PIN, every request counts against the rate limit, a request from a foreign web page (Origin) is refused, Mein Notaus and the admin's block close the door, every appoi"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "ntment is checked as in stage 3 (iCalendar, size, count, etags). Name and colour stay on the Spark (PROPPATCH and MKCALENDAR are refused). \"Delete access\" ends it at once, a new app password replaces the old one. Logs: calendar: caldav saved|deleted|not saved (status), calendar: caldav login refused, calendar: caldav password made|removed; Live (Calendar) shows profiles with an app password and the day's requests, changes and refusals."
 },
 {
 "lang": "en",

@@ -666,7 +666,7 @@ RATE = {"chat": (30, 120), "asr": (60, 240), "logs": (1, 60), "pair": (10, 10), 
         "makedl": (20, 30), "svcwatch": (0, 30), "svcwatchnow": (0, 4), "wartung": (0, 20),
         "rate": (0, 30), "zuordnung": (0, 60), "zuordnungset": (0, 30), "berater": (0, 60), "beraterset": (0, 30), "beraterrun": (0, 4),
         "storage": (0, 60), "storagenow": (0, 6), "ghtoken": (0, 20), "memory": (0, 60), "technik": (0, 30), "modelle": (0, 30), "modelle_wechsel": (0, 6), "modelle_messen": (0, 6), "werkstatt": (0, 60), "werkstatt_auftrag": (0, 10), "weiche_abstimmen": (0, 6), "gehaeuse": (0, 60), "gehaeuse_wunsch": (0, 6), "modelle_eigen": (0, 10), "praxistest": (0, 60), "technikseite": (0, 90),
-        "aufgaben": (0, 60), "kalender": (0, 60), "kalenderteilen": (0, 20), "kalenderaendern": (0, 30), "post": (0, 60), "postordnen": (0, 60), "mailsenden": (0, 30), "mailvorschlag": (0, 30), "aufgabenrun": (0, 6), "telefon": (0, 60), "telefonsuchen": (0, 6), "telefonich": (0, 20), "verbrauch": (0, 60), "verbrauchset": (0, 20),
+        "aufgaben": (0, 60), "kalender": (0, 60), "kalenderteilen": (0, 20), "caldav": (0, 240), "kalenderserver": (0, 20), "kalenderaendern": (0, 30), "post": (0, 60), "postordnen": (0, 60), "mailsenden": (0, 30), "mailvorschlag": (0, 30), "aufgabenrun": (0, 6), "telefon": (0, 60), "telefonsuchen": (0, 6), "telefonich": (0, 20), "verbrauch": (0, 60), "verbrauchset": (0, 20),
         "feeds": (0, 30), "feedsadd": (0, 10), "feedsnow": (0, 4)}  # per minute: (guest, profile or admin)
 BUSY = {"chat": 4, "asr": 3}  # at once, guests together
 

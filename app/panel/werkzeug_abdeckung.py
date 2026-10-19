@@ -101,6 +101,7 @@ RULES = {
 }
 
 WITHOUT = {
+    "calserver": "kein Werkzeug: Kalender-Apps erreichen den Spark über CalDAV (kalenderserver.py), Termine per Sprache über calendar_add",
     "ablauf": "Einstellung, wie Antworten gezeigt werden (ablauf.py)",
     "auftragsplan": "Werkzeuge nur innerhalb eines Auftrags (auftragsplan.py), Antworten und Ja unter Ich → Aufträge",
     # Telefon: who may call and when the Spark calls, fixed rules in telefon.py and telefon_anruf.py

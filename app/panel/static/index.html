@@ -280,6 +280,7 @@
         <label>Nachkontrolle nach Stunden</label><input id="chat.berater_check_h" type="number" min="6" max="72"><div class="fh">6 bis 72.</div></div>
       <div class="setrow"><div class="lbl"><b>Kalender und Tagesbriefing</b><span>Termine vorlesen, nach „Ja“ eintragen, und auf „Guten Morgen“ das Tagesbriefing.</span></div><label class="tgl"><input type="checkbox" id="chat.calendar"><i></i></label></div>
       <div class="setrow" data-show="chat.calendar" style="margin-left:18px"><div class="lbl"><b>Kalender teilen</b><span>Ein Profil teilt einen Kalender mit einem anderen, nur sehen oder sehen und eintragen. Private Termine nur als „belegt“.</span></div><label class="tgl"><input type="checkbox" id="chat.calendar_share"><i></i></label></div>
+      <div class="setrow" data-show="chat.calendar" style="margin-left:18px"><div class="lbl"><b>Kalender-Server für Kalender-Apps</b><span>Die Spark-Kalender eines Profils im Kalender des iPhone (CalDAV), mit einem App-Passwort je Profil, im Heimnetz und über den Proxy.</span></div><label class="tgl"><input type="checkbox" id="chat.calendar_server"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Aufgaben und Einkaufsliste</b><span>„Setz Milch auf die Einkaufsliste“: Liste auf dem Spark oder in einer CalDAV-Aufgabenliste.</span></div><label class="tgl"><input type="checkbox" id="chat.tasks"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Agent-Funktionen</b><span>„Recherchiere …, sag mir Bescheid“: Aufträge im Hintergrund, geplante Aufträge und eigene Abläufe, nur für freigeschaltete Profile.</span></div><label class="tgl"><input type="checkbox" id="chat.agent"><i></i></label></div>
       <div data-show="chat.agent" style="margin-left:18px" id="agentadmin"></div>
@@ -804,6 +805,7 @@
       <label>Themen fürs Briefing (höchstens drei)</label><div class="caltopchips" id="caltopchips"></div>
       <div class="row" style="margin-top:8px"><button class="b" id="caltest" type="button">Nächste Termine zeigen</button><span id="calmsg"></span></div>
       <ul class="facts" id="calevents"></ul>
+      <div id="calserver" hidden></div>
       <div id="procal"></div></div>
 </section>
 

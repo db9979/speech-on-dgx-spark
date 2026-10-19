@@ -122,10 +122,11 @@ def client(uid, cid, **kw):
 
 # ---------------------------------------------------------------- the CalDAV answers
 def _ms(responses):
+    """(status, headers, body) of a WebDAV multistatus."""
     body = ('<?xml version="1.0" encoding="utf-8"?><d:multistatus xmlns:d="DAV:" '
             'xmlns:c="urn:ietf:params:xml:ns:caldav" xmlns:cs="http://calendarserver.org/ns/">' + "".join(responses)
             + "</d:multistatus>")
-    return httpx.Response(207, content=body.encode(), headers={"Content-Type": "application/xml; charset=utf-8"})
+    return 207, {"Content-Type": "application/xml; charset=utf-8"}, body.encode()
 
 
 def _resp(href, props):
@@ -160,48 +161,86 @@ def handle(uid, cid, req):
     m = re.fullmatch(r"/([^/]+)/([^/]*)", req.url.path)
     if req.url.host != HOST or not m or m.group(1) != cid:
         return httpx.Response(404)
+    status, head, body = serve(uid, cid, req.method, m.group(2), req.headers, req.content, f"/{cid}/")
+    return httpx.Response(status, headers=head, content=body)
+
+
+PROPS = ("<d:current-user-privilege-set><d:privilege><d:read/></d:privilege><d:privilege><d:write/></d:privilege>"
+         "<d:privilege><d:write-content/></d:privilege><d:privilege><d:bind/></d:privilege><d:privilege><d:unbind/>"
+         "</d:privilege></d:current-user-privilege-set><d:supported-report-set><d:supported-report><d:report>"
+         "<c:calendar-query/></d:report></d:supported-report><d:supported-report><d:report><c:calendar-multiget/>"
+         "</d:report></d:supported-report></d:supported-report-set>")
+
+
+def collection(cal, base, title=""):
+    """The PROPFIND answer for one Spark calendar as a collection (also for the calendar home, kalenderserver.py)."""
+    return _resp(base, "<d:resourcetype><d:collection/><c:calendar/></d:resourcetype>"
+                       f"<d:displayname>{escape(title)}</d:displayname>"
+                       '<c:supported-calendar-component-set><c:comp name="VEVENT"/></c:supported-calendar-component-set>'
+                       f"<cs:getctag>{cal['ctag']}</cs:getctag>" + PROPS)
+
+
+def calendar(uid, cid):
+    """The stored calendar (ctag, items) or None."""
+    return _load(uid).get(cid)
+
+
+def serve(uid, cid, method, name, headers, body, base, title=""):
+    """(status, headers, body) of one CalDAV request to the Spark calendar cid of profile uid; name: the object
+    („x.ics“) or "" for the calendar itself; base: the calendar's path in the answer's hrefs."""
     cal = _load(uid).get(cid)
     if cal is None:
-        return httpx.Response(404)
-    base, name, method = f"/{cid}/", m.group(2), req.method.upper()
+        return 404, {}, b""
+    method = method.upper()
     items = cal["items"]
+    item = lambda n, x, data: _resp(base + n, f"<d:getetag>{escape(x[0])}</d:getetag>"
+                                              '<d:getcontenttype>text/calendar; charset=utf-8</d:getcontenttype>'
+                                              + (f"<c:calendar-data>{escape(x[1])}</c:calendar-data>" if data else ""))
     if not name:
         if method == "PROPFIND":
-            out = [_resp(base, "<d:resourcetype><d:collection/><c:calendar/></d:resourcetype><d:displayname/>"
-                               '<c:supported-calendar-component-set><c:comp name="VEVENT"/>'
-                               f"</c:supported-calendar-component-set><cs:getctag>{cal['ctag']}</cs:getctag>")]
-            if req.headers.get("Depth", "0") == "1":
-                out += [_resp(base + n, f"<d:resourcetype/><d:getetag>{escape(x[0])}</d:getetag>") for n, x in items.items()]
+            out = [collection(cal, base, title)]
+            if headers.get("Depth", "0") == "1":
+                out += [item(n, x, False) for n, x in items.items()]
             return _ms(out)
         if method == "REPORT":
-            a, b = _range(req.content)
-            return _ms([_resp(base + n, f"<d:getetag>{escape(x[0])}</d:getetag><c:calendar-data>{escape(x[1])}"
-                                        "</c:calendar-data>")
-                        for n, x in items.items() if x[2] < b and x[3] > a])
-        return httpx.Response(405)
+            if b"sync-collection" in (body or b""):
+                return 403, {}, b""   # not offered (supported-report-set): the client compares etags instead
+            if b"calendar-multiget" in (body or b""):
+                want = [h.rsplit("/", 1)[-1] for h in re.findall(rb"<(?:\w+:)?href>\s*([^<\s]+)\s*<", body)[:1000]
+                        for h in [h.decode("utf-8", "replace")]]
+                return _ms([item(n, items[n], True) if n in items else
+                            f"<d:response><d:href>{escape(base + n)}</d:href><d:status>HTTP/1.1 404 Not Found</d:status></d:response>"
+                            for n in dict.fromkeys(want) if NAME.fullmatch(n)])
+            a, b = _range(body)
+            return _ms([item(n, x, True) for n, x in items.items() if x[2] < b and x[3] > a])
+        if method == "OPTIONS":
+            return 200, {"DAV": "1, 2, calendar-access", "Allow": "OPTIONS, PROPFIND, REPORT, GET, PUT, DELETE"}, b""
+        return 405, {}, b""
     if not NAME.fullmatch(name):
-        return httpx.Response(404)
+        return 404, {}, b""
     have = items.get(name)
-    if method == "GET":
+    if method in ("GET", "HEAD", "PROPFIND"):
         if have is None:
-            return httpx.Response(404)
-        return httpx.Response(200, content=have[1].encode(), headers={"ETag": have[0], "Content-Type": "text/calendar; charset=utf-8"})
-    match, none = req.headers.get("If-Match"), req.headers.get("If-None-Match")
-    if (match and (have is None or match != have[0])) or (none == "*" and have is not None):
-        return httpx.Response(412)
+            return 404, {}, b""
+        if method == "PROPFIND":
+            return _ms([item(name, have, False)])
+        return 200, {"ETag": have[0], "Content-Type": "text/calendar; charset=utf-8"}, have[1].encode() if method == "GET" else b""
+    match, none = headers.get("If-Match"), headers.get("If-None-Match")
+    if (match and (have is None or match.strip() != have[0])) or (none == "*" and have is not None):
+        return 412, {}, b""
     if method == "DELETE":
         if have is None:
-            return httpx.Response(404)
+            return 404, {}, b""
         items.pop(name, None)
     elif method == "PUT":
-        text = req.content.decode("utf-8", "replace")
+        text = (body or b"").decode("utf-8", "replace")
         if not _valid(text):
-            return httpx.Response(415)
+            return 415, {}, b""
         if have is None and len(items) >= MAX_ITEMS:
-            return httpx.Response(507)
+            return 507, {}, b""
         items[name] = [_etag(text), text, *kalenderspiegel._span(text)]
     else:
-        return httpx.Response(405)
+        return 405, {}, b""
     cal["ctag"] += 1
     try:
         _save(uid)
@@ -210,10 +249,10 @@ def handle(uid, cid, req):
             items.pop(name, None)
         else:
             items[name] = have
-        return httpx.Response(507)
+        return 507, {}, b""
     if method == "DELETE":
-        return httpx.Response(204)
-    return httpx.Response(201 if have is None else 204, headers={"ETag": items[name][0]})
+        return 204, {}, b""
+    return (201 if have is None else 204), {"ETag": items[name][0]}, b""
 
 
 def for_live():

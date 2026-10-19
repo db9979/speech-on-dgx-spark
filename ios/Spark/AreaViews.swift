@@ -791,6 +791,8 @@ final class AccountsModel: ObservableObject {
     @Published var calendars: [(id: String, name: String, user: String)] = []
     @Published var books: [(id: String, name: String, user: String)] = []
     @Published var sparkIds: Set<String> = []   // Spark-Kalender: its appointments live only on the Spark
+    @Published var calServer: [String: Any]?      // Kalender-Server (CalDAV): nil while the function is off for us
+    @Published var calServerPw: String?           // the new app password, shown only right after making it
     @Published var ha = ""
     @Published var telegram: String?
     @Published var telegramOn = false
@@ -812,6 +814,7 @@ final class AccountsModel: ObservableObject {
         let cal = try? await api.object("GET", "api/profile/calendar")
         calendars = Self.rows(cal, "calendars")
         sparkIds = Set(((cal?["calendars"] as? [[String: Any]]) ?? []).compactMap { $0["spark"] as? Bool == true ? $0["id"] as? String : nil })
+        calServer = try? await api.object("GET", "api/profile/calserver")
         books = Self.rows(try? await api.object("GET", "api/profile/contacts"), "accounts")
         ha = (try? await api.object("GET", "api/profile/homeassistant"))?["url"] as? String ?? ""
         if let t = try? await api.object("GET", "api/profile/telegram") {
@@ -832,6 +835,23 @@ final class AccountsModel: ObservableObject {
             self.error = error.localizedDescription
             return false
         }
+    }
+
+    func makeCalServer(code: String) async {
+        do {
+            let d = try await SparkAPI.current?.object("POST", "api/profile/calserver", body: [:], code: code)
+            calServerPw = d?["password"] as? String
+            calServer = d
+            error = nil
+        } catch { self.error = error.localizedDescription }
+    }
+
+    func dropCalServer() async {
+        do {
+            calServer = try await SparkAPI.current?.object("DELETE", "api/profile/calserver")
+            calServerPw = nil
+            error = nil
+        } catch { self.error = error.localizedDescription }
     }
 
     func remove(_ path: String) async {
@@ -860,6 +880,7 @@ struct AccountsView: View {
             if let n = m.note { Text(verbatim: n).foregroundStyle(.secondary) }
             list("E-Mail", m.mail, "mail", "api/profile/mail")
             list("Kalender", m.calendars, "calendar", "api/profile/calendar")
+            if let s = m.calServer { CalServerSection(m: m, s: s) }
             list("Kontakte", m.books, "contacts", "api/profile/contacts")
             Section {
                 if m.ha.isEmpty {
@@ -915,6 +936,47 @@ struct AccountsView: View {
             Button("Hinzufügen") { form = kind }
             if kind == "calendar" { Button("Spark-Kalender anlegen") { form = "sparkcal" } }
         } header: { Text(title) }
+    }
+}
+
+/// Kalender-Server (Spark-Kalender Stufe 4): the Spark calendars in the iPhone's own calendar app over CalDAV.
+/// The app password is shown once right after making it (with a fresh code); the Spark keeps only its hash.
+struct CalServerSection: View {
+    @ObservedObject var m: AccountsModel
+    let s: [String: Any]
+    @State private var ask: CodeRequest?
+    @State private var drop = false
+
+    private var server: String { (Store.baseURL?.absoluteString ?? "").trimmingCharacters(in: CharacterSet(charactersIn: "/")) + "/caldav/" }
+    private var has: Bool { s["has"] as? Bool ?? false }
+
+    var body: some View {
+        Section {
+            row("Server", server)
+            row("Benutzer", s["user"] as? String ?? "")
+            if let pw = m.calServerPw {
+                row("App-Passwort", pw)
+                Text("Wird nur jetzt gezeigt. Verloren? Einfach ein neues erzeugen.").font(.caption).foregroundStyle(.secondary)
+            }
+            if (s["calendars"] as? NSNumber)?.intValue == 0 {
+                Text("Noch kein Spark-Kalender: oben bei Kalender „Spark-Kalender anlegen“.").font(.caption).foregroundStyle(.secondary)
+            }
+            Button(has ? LocalizedStringKey("Neues App-Passwort") : LocalizedStringKey("App-Passwort erzeugen")) { ask = CodeRequest { c in await m.makeCalServer(code: c) } }
+            if has { Button("Zugang löschen", role: .destructive) { drop = true } }
+        } header: { Text("Für Kalender-Apps (CalDAV)") } footer: {
+            Text("Deine Spark-Kalender im Kalender des iPhone: in den Einstellungen unter Apps, Kalender, Kalenderaccounts einen CalDAV-Account hinzufügen, mit Server, Benutzer und App-Passwort von hier.")
+        }
+        .codeAlert($ask)
+        .confirmationDialog("Kalender-Apps erreichen deine Spark-Kalender dann nicht mehr.", isPresented: $drop, titleVisibility: .visible) {
+            Button("Zugang löschen", role: .destructive) { Task { await m.dropCalServer() } }
+        }
+    }
+
+    private func row(_ title: LocalizedStringKey, _ value: String) -> some View {
+        LabeledContent(title) {
+            Text(verbatim: value).textSelection(.enabled).font(.footnote.monospaced())
+        }
+        .contextMenu { Button { UIPasteboard.general.string = value } label: { Label("Kopieren", systemImage: "doc.on.doc") } }
     }
 }
 

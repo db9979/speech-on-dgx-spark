@@ -366,6 +366,22 @@ class Probes(Base):
         finally:
             os.remove(profiles._path(self.anna, "homeassistant.json"))
 
+    def test_a_spark_kalender_is_never_probed(self):
+        """A Spark-Kalender (spark.invalid) answers inside the panel: probing it would always fail and show
+        "Kalender antwortet nicht" although reading and adding work (V01.0.840)."""
+        path = profiles._path(self.anna, "calendar.json")
+        with open(path, "w") as f:
+            json.dump({"calendars": [{"id": "c1", "url": "https://spark.invalid/c1/", "spark": True},
+                                     {"id": "c2", "url": "https://caldav.example/cal/"}]}, f)
+        try:
+            parts = dw._cal_parts()
+            self.assertEqual([p["url"] for p in parts.values()], ["https://caldav.example/"])
+            with open(path, "w") as f:
+                json.dump({"calendars": [{"id": "c1", "url": "https://spark.invalid/c1/", "spark": True}]}, f)
+            self.assertEqual(dw._cal_parts(), {})
+        finally:
+            os.remove(path)
+
     def test_the_spark_s_own_ports_stay_refused_for_outside_probes(self):
         r = run(REAL_PROBE("kiwix", "x", {"url": "http://127.0.0.1:31080/", "level": netguard.HOME}, {}))
         self.assertEqual((r.ok, r.why), (False, "blocked"))

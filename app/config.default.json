@@ -223,6 +223,7 @@
     "reminders": true,
     "calendar": true,
     "calendar_share": false,
+    "calendar_server": false,
     "mail": false,
     "mail_tidy": false,
     "mail_manage": false,

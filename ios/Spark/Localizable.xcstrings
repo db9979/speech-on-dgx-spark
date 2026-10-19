@@ -11980,6 +11980,106 @@
           }
         }
       }
+    },
+    "Server": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server"
+          }
+        }
+      }
+    },
+    "App-Passwort": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App password"
+          }
+        }
+      }
+    },
+    "Wird nur jetzt gezeigt. Verloren? Einfach ein neues erzeugen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shown only now. Lost it? Just make a new one."
+          }
+        }
+      }
+    },
+    "Noch kein Spark-Kalender: oben bei Kalender „Spark-Kalender anlegen“.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Spark calendar yet: \"Create a Spark calendar\" under Calendar above."
+          }
+        }
+      }
+    },
+    "Neues App-Passwort": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New app password"
+          }
+        }
+      }
+    },
+    "App-Passwort erzeugen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make an app password"
+          }
+        }
+      }
+    },
+    "Zugang löschen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete access"
+          }
+        }
+      }
+    },
+    "Für Kalender-Apps (CalDAV)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For calendar apps (CalDAV)"
+          }
+        }
+      }
+    },
+    "Deine Spark-Kalender im Kalender des iPhone: in den Einstellungen unter Apps, Kalender, Kalenderaccounts einen CalDAV-Account hinzufügen, mit Server, Benutzer und App-Passwort von hier.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your Spark calendars in the iPhone's calendar: in Settings under Apps, Calendar, Calendar accounts add a CalDAV account with server, user and app password from here."
+          }
+        }
+      }
+    },
+    "Kalender-Apps erreichen deine Spark-Kalender dann nicht mehr.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Calendar apps can then no longer reach your Spark calendars."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

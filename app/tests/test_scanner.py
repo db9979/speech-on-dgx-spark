@@ -58,6 +58,8 @@ OPEN = {
     "/office/{name}": "the Office add-in's task pane files: static, no data, 404 while the admin has it off",
     "/api/esp32/ping": "\"Netz prüfen\": a random marker of this Spark, nothing else; only while the admin switched speakers on",
     "/": "the page itself",
+    "/.well-known/caldav": "only a redirect to /caldav/ for calendar apps, 404 while the admin has the calendar server off (kalenderserver.py)",
+    "/caldav": "calendar apps log in with HTTP Basic and the profile's app password (kalenderserver.login: lockout, rate limit, own path only), 404 while off",
     "/static/{name}": "page files",
     "/static/js/{name}": "page files",
     "/manifest.webmanifest": "page files",

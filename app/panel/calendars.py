@@ -302,6 +302,12 @@ def _drop(uid):
         _cache.pop(k, None)
 
 
+def changed_outside(uid, cid):
+    """A calendar app changed a Spark calendar (kalenderserver.py): the owner's and every reader's views anew."""
+    _drop(uid)
+    _drop_shared(cid)
+
+
 def _drop_shared(cid):
     _epoch[0] += 1
     for k in [k for k in _cache if k[1] == cid]:
