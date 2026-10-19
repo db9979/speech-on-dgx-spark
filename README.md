@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.836** The panel gets its turn sooner while much is computed in the background
 - **V01.0.835** Me → Music looks like Documents and E-mail: a card for a new song (length as chips, switch "With singing"), search and filters, songs by day with ▶ in every row, details with a player, "Make it again" and the description folded; iPhone app grouped by day with a choice of length
 - **V01.0.834** Code check, speed B7: speaker recognition almost twice as fast, the journal measures how long the answer waits for it
 - **V01.0.833** E-mail: an open mail, an answer and a new mail have a visible button to close or discard at every width (it was missing on the computer), Esc closes the answer even from the text field, typed text is asked about first
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.829** Text fields grow with the text: question, message and every text field as high as the text, Enter sends, Shift+Enter a new line, ⤢ large view, counter; also iPhone and terminal
 - **V01.0.828** Code check, speed: conversations are saved beside the event loop and written smaller
 - **V01.0.827** Code check, ease of use: search with everyday words and "Ask Spark", clear microphone errors, Status red only for real faults, one way of counting, more contrast and larger tap areas, a start guide for every new profile, a new PIN in hidden fields
-- **V01.0.826** Code check, speed: the document list is remembered and fetched beside the event loop, each profile has its own database lock, the meaning search no longer converts per search, the status page and hints are worked out less often
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

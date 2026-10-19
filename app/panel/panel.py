@@ -259,7 +259,9 @@ async def emergency(request: Request, call_next):
 # pattern and the time, never the query, ids or names; one line per route a minute at most (Zustand polls every 3 s).
 SLOW_READ = 1.5
 SLOW_EVERY = 60
-WAITS = ("/api/android/wait",)   # reads that wait on purpose (the Android app's lasting connection, android.py)
+# reads that wait on purpose: the Android app's lasting connection (android.py) and the Begleiter's held request
+# (begleiter.ACT_WAIT, 25 s; Dominik 2026-10-19 saw it as "slow GET /api/desk/wait 25.3 s")
+WAITS = ("/api/android/wait", "/api/desk/wait")
 _slow_said = {}
 
 

@@ -292,6 +292,21 @@ class Watcher(unittest.TestCase):
         serve = src[src.index("async def serve"):]
         self.assertIn("loopwacht.start()", serve)
 
+    def test_the_loop_gets_the_lock_back_soon(self):
+        """Pi 2026-10-19: calendars._expand in two threads (127 %) kept Python's lock; every file read of the loop
+        waited the default 5 ms again, the loop stood 6-8 s. start() shortens the switch interval."""
+        import core
+        old = sys.getswitchinterval()
+        try:
+            with mock.patch.object(core, "spawn", lambda coro, name="": coro.close()), \
+                    mock.patch.object(threading, "Thread"), redirect_stdout(io.StringIO()) as out:
+                loopwacht.start()
+            self.assertAlmostEqual(sys.getswitchinterval(), loopwacht.SWITCH_S)
+            self.assertLessEqual(loopwacht.SWITCH_S, 0.001)
+            self.assertIn("| switch 1 ms", out.getvalue())
+        finally:
+            sys.setswitchinterval(old)
+
 
 class Background(unittest.TestCase):
     """The search's embedding worker is a child of the panel and shares its CPU limit: half of the cores at most,

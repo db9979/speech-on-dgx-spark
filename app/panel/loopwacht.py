@@ -36,6 +36,11 @@ START_MAX_S = 600   # s the thread pings systemd before the loop's first beat (s
 DAY_S = 86400       # the stalls counted in view()
 HINT_S = 3600       # s the hint on the admin pages stays after a stall
 KEEP = 50           # stalls kept in memory
+# s a thread computing in Python keeps the interpreter's lock before the loop gets it back (Python's default 0.005).
+# Every file access of the loop gives the lock up and waits that long again; with two threads computing
+# (Pi 2026-10-19: calendars._expand 127 %) a handful of reads made the loop stand 6-8 s. Shorter: the loop comes
+# back sooner, the computing threads lose a little.
+SWITCH_S = 0.001
 
 _HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))   # app/
 _NAME = re.compile(r"[^A-Za-z0-9_.<>]")
@@ -176,9 +181,10 @@ def _watch():
 def start():
     """From panel.serve(): the beat on the running loop and the watcher thread."""
     from core import spawn
+    sys.setswitchinterval(SWITCH_S)
     spawn(beat(), name="loopwacht")
     threading.Thread(target=_watch, name="loopwacht", daemon=True).start()
-    print(f"loopwacht: on | stall {STALL_S} s | restart {RESTART_S} s", flush=True)
+    print(f"loopwacht: on | stall {STALL_S} s | restart {RESTART_S} s | switch {SWITCH_S * 1000:g} ms", flush=True)
 
 
 def view(now=None, mono=None):

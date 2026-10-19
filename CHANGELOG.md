@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.836** · 2026-10-19 · Panel kommt schneller dran, wenn Fäden in Python rechnen (Sperre nach 1 ms statt 5 ms weitergeben; Kalender-Wiederholungen ließen es 6-8 s stehen); das gewollte 25-s-Warten des Begleiters zählt nicht mehr als langsamer Seitenaufruf
 - **V01.0.835** · 2026-10-19 · Ich → Musik sieht aus wie Dokumente und E-Mail: Karte für ein neues Lied (Länge als Chips, Schalter „Mit Gesang“), Suche und Filter, Lieder nach Tag mit ▶ in jeder Zeile, Einzelheiten mit Abspieler, „Nochmal machen“ und eingeklappter Beschreibung; iPhone-App nach Tag gruppiert mit wählbarer Länge
 - **V01.0.834** · 2026-10-19 · Code-Prüfung Tempo B7: Sprechererkennung rechnet mit halb so vielen Schritten (83 statt 141 ms für 5 s Sprache, gleiche Werte), das Journal nennt bei jeder Stimmprüfung, wie lange die Antwort darauf gewartet hat
 - **V01.0.833** · 2026-10-19 · E-Mail: eine geöffnete Mail, eine Antwort und eine neue Mail haben auf jeder Breite einen sichtbaren Knopf zum Schließen oder Verwerfen (am Rechner fehlte er), Esc schließt die Antwort auch aus dem Textfeld, getippter Text wird vorher nachgefragt

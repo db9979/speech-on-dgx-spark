@@ -124,6 +124,7 @@ class SlowReads(unittest.TestCase):
 
     def test_only_slow_reads_once_a_minute(self):
         self.assertIsNone(panel.slow_read("GET", "/api/status", 0.4, 100.0))
+        self.assertIsNone(panel.slow_read("GET", "/api/desk/wait", 25.3, 100.0))     # held on purpose (begleiter.ACT_WAIT)
         self.assertIsNone(panel.slow_read("POST", "/api/chat", 9.0, 100.0))
         self.assertIsNone(panel.slow_read("GET", "/static/app.css", 9.0, 100.0))
         self.assertEqual(panel.slow_read("GET", "/api/profile/calendar", 4.24, 100.0), "seite: slow GET /api/profile/calendar 4.2 s")

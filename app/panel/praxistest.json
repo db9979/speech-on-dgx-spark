@@ -2133,6 +2133,13 @@
 "titel": "Musik-Seite wie die anderen Seiten",
 "text": "A: Update auf V01.0.835, am Rechner Ich → Musik öffnen: oben „N Lieder · … MB“ mit „⋯“, darunter die Karte mit Wunsch, Längen-Chips und Schalter „Mit Gesang“. B: Die Lieder stehen nach Tag (Heute, Gestern, …) je in einer Zeile mit ▶; ▶ spielt das Lied, ein zweites ▶ hält es an, ein anderes Lied beendet das erste. C: Eine Zeile anklicken: rechts Titel, Abspieler mit Schieber, Herunterladen, „Nochmal machen“, Löschen; „Beschreibung des Modells“ und „Liedtext“ klappen auf. D: „Nochmal machen“ füllt oben Wunsch, Länge und Gesang, geschickt wird erst mit „Lied machen“. E: Am Handy öffnet eine Zeile eine eigene Seite mit „‹ Alle Lieder“; spielt ein Lied und die Seite ist zu, zeigt unten eine Leiste Titel und Zeit. F: iPhone-App (nächster TestFlight-Build), Meine Sachen → Musik: Lieder nach Tag, oben die Länge wählbar.",
 "thread": "Musik-Seite ans Layout anpassen"
+},
+{
+"id": "P329",
+"v": 836,
+"titel": "Panel kommt beim Rechnen schneller dran",
+"text": "A: Auf dem Pi sudo speech-spark update. B: Zustand → Logs → Diagnose, Bereich System: „loopwacht: on | stall 5 s | restart 90 s | switch 1 ms“. C: Im Bereich „Seite lädt“ erscheint keine Zeile „slow GET /api/desk/wait“ mehr. D: Kalender-Seite öffnen und Monate blättern: weniger „stalled“-Zeilen mit „busy calendars._expand“ als vorher (ganz weg erst mit dem Fix des Kalender-Threads).",
+"thread": "Pi stabilisieren"
 }
 ]
 }
