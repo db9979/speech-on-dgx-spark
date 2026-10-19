@@ -127,6 +127,12 @@ def fake_llm():
                 text = said.split("<<<TEXT\n", 1)[1].rsplit("\nTEXT>>>", 1)[0] if "<<<TEXT\n" in said else ""
                 return {"choices": [{"message": {"content": "<think>\n</think>\n" + (text.replace("Feler", "Fehler")
                                                                                      or "Hallo Anna, [Antwort].")}}]}
+            if (b["messages"][0].get("content") or "").startswith("Du hilfst beim Beantworten einer E-Mail"):   # antwortvorschlag
+                return {"choices": [{"message": {"content": "<think>\n</think>\nHier:\n" + json.dumps(
+                    [{"richtung": "Zusagen", "text": "Hallo Anna, gern!"}, {"richtung": "Absagen\x07", "text": "Hallo Anna, leider nicht."},
+                     {"richtung": "Zusagen", "text": "Hallo Anna, gern!"}, "kaputt", {"richtung": "Rückfrage mit sehr vielen Wörtern",
+                                                                                    "text": "Hallo Anna, wann genau?"},
+                     {"richtung": "Vierte", "text": "zu viel"}])}}]}
             if (b["messages"][0].get("content") or "").startswith("Du fasst eine Besprechung zusammen"):   # begleiter.py
                 said = last.get("content") or ""
                 heard = said.split("<<<GESPRAECH\n", 1)[1].rsplit("\nGESPRAECH>>>", 1)[0] if "<<<GESPRAECH\n" in said else ""

@@ -3,7 +3,7 @@
 // text (GET /api/profile/mail/message, it stays unread); „Einstellungen“ holds everything set up for mail (#mailbox
 // with Aufräumen, Mailstil and Pakete in #parbox; pages of Ich until V01.0.807). Sender, subject and text come from
 // other people: only through esc(), no HTML, no pictures, no links that open.
-const POST={data:null,sel:null,msg:null,q:'',unread:false,seq:0,mseq:0,busy:false,err:'',done:null,folders:{},write:null,prev:null,sent:'',accts:null};
+const POST={data:null,sel:null,msg:null,q:'',unread:false,seq:0,mseq:0,busy:false,err:'',done:null,folders:{},write:null,prev:null,sent:'',accts:null,sug:{}};
 // Mails ordnen (postfach.py, admin switch chat.mail_manage, start.js): read/unread, archive, move, back right after
 let ORD_ON=false;
 // Mails senden (senden.py, admin switch chat.mail_send): a new mail or an answer, the preview sheet, only its „Senden“ sends
@@ -32,10 +32,30 @@ async function postLoad(again){if(!PROFILE||!MAIL_ON)return;const seq=++POST.seq
     if(d.loading&&POST.tries<5)setTimeout(()=>{if(seq===POST.seq&&$('postview'))postLoad(true)},3000)}
   catch(e){if(seq!==POST.seq)return;POST.err=e.message||t('Nicht erreicht','Not reached')}
   POST.busy=false;postDraw();postFuerLoad()}
-async function postRead(id){POST.sel=id;POST.msg=null;const seq=++POST.mseq;postDraw();
+async function postRead(id){POST.sel=id;POST.msg=null;if(POST.sug[id]&&POST.sug[id].err)delete POST.sug[id];const seq=++POST.mseq;postDraw();
   try{const m=await (await api('/api/profile/mail/message?'+new URLSearchParams({id}))).json();if(seq===POST.mseq)POST.msg=m}
   catch(e){if(seq===POST.mseq)POST.msg={err:e.message||t('Nicht erreicht','Not reached')}}
-  postDraw()}
+  postDraw();
+  // Antwortvorschläge „1a“: a mail that stays open a moment gets its answers prepared, „Antworten“ finds them ready
+  if(SEND_ON&&POST.msg&&!POST.msg.err)setTimeout(()=>{if(POST.sel===id&&seq===POST.mseq)postSuggest(id)},POST_SUG_MS)}
+// Antwortvorschläge (antwortvorschlag.py): three answers per mail, asked once, kept on the Spark for a while
+const POST_SUG_MS=1200;
+async function postSuggest(id){if(POST.sug[id])return;   // asked once; a failed one again when the mail is opened anew
+  POST.sug[id]={busy:true};
+  const {r,d}=await apiTry('/api/profile/mail/suggest',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});
+  POST.sug[id]=r.ok?{items:d.items||[]}:{err:errSay(r.status,d.detail,'')};
+  if(POST.write&&POST.write.reply===id&&!POST.prev)postDraw()}
+function postSugBox(f){const x=POST.sug[f.reply]||{busy:true};
+  const rows=x.items?x.items.map((v,i)=>`<button type="button" class="postsug${f.picked===i?' on':''}" data-g="${i}"><i>${esc(v.label)}</i>${esc(v.text)}</button>`).join('')
+    :x.err?`<div class="fh err">${esc(x.err)}</div>`:`<div class="fh">${esc(t('Vorschläge kommen …','Suggestions coming …'))}</div>`;
+  return `<label>${esc(t('Vorschläge (nichts wird gesendet)','Suggestions (nothing is sent)'))}</label><div class="postsugs">${rows}</div>`}
+const POST_TONE=[['kuerzer','kürzer','shorter'],['freundlicher','freundlicher','friendlier'],['foermlicher','förmlicher','more formal'],['uebersetzen','auf Englisch','in English']];
+async function postTone(art,box){const f=POST.write,ta=box.querySelector('[data-f=text]'),msg=box.querySelector('.postordmsg');
+  if(!(f.text||'').trim())return;box.querySelectorAll('[data-r]').forEach(b=>b.disabled=true);msg.className='postordmsg fh';msg.textContent=t('Einen Moment …','One moment …');
+  const {r,d}=await apiTry('/api/profile/mail/rewrite',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:f.text,art})});
+  box.querySelectorAll('[data-r]').forEach(b=>b.disabled=false);
+  if(!r.ok){msg.className='postordmsg err';msg.textContent=errSay(r.status,d.detail,'');return}
+  f.text=d.text;ta.value=d.text;ta.dispatchEvent(new Event('input'));msg.textContent=''}
 // the boxes a tab shows (Für dich, Einstellungen) live in the section; back there before the tabs are drawn anew,
 // else clearing the card would take them out of the page and a second visit showed an empty card
 const POST_BOXES=['fuerbox','mailbox'].map(id=>$(id));
@@ -143,10 +163,15 @@ function postWriteBox(w){let box=w.querySelector('.postdet');const f=POST.write,
       `<label>${esc(t('An','To'))}</label><input data-f="to" type="email" multiple maxlength="2000" autocomplete="off">`+
       `<label>${esc(t('Kopie','Copy'))}</label><input data-f="cc" type="email" multiple maxlength="2000" autocomplete="off">`+
       `<label>${esc(t('Betreff','Subject'))}</label><input data-f="subject" maxlength="200">`+
+      (f.reply?postSugBox(f):'')+
       `<label>${esc(t('Text','Text'))}</label><textarea data-f="text" rows="9" maxlength="20000"></textarea>`+
+      (f.reply?`<div class="row posttone">${POST_TONE.map(([a,de,en])=>`<button class="b" type="button" data-r="${a}">${esc(t(de,en))}</button>`).join('')}</div>`:'')+
       `<div class="row postord"><button class="b p" type="button" data-s="prev">${esc(t('Vorschau','Preview'))}</button></div><div class="postordmsg fh">${esc(t('Erst die Vorschau zeigt, was rausgeht. Gesendet wird nur dort.','Only the preview shows what goes out. It is sent only there.'))}</div></div>`;
     for(const k of ['to','cc','subject','text']){const el=box.querySelector(`[data-f=${k}]`);el.value=f[k]||'';el.oninput=()=>{f[k]=el.value}}
     const ac=box.querySelector('[data-f=account]');if(ac)ac.onchange=()=>{f.account=ac.value};
+    if(f.reply){postSuggest(f.reply);
+      box.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>{const v=POST.sug[f.reply].items[+b.dataset.g];f.text=v.text;f.picked=+b.dataset.g;postDraw()});
+      box.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>postTone(b.dataset.r,box))}
     box.querySelector('[data-s=prev]').onclick=()=>postPreview(box.querySelector('.postordmsg'));
     if(POST.focus){POST.focus=false;const ta=box.querySelector(f.reply?'[data-f=text]':'[data-f=to]');ta.focus({preventScroll:true});box.scrollIntoView({block:'nearest'})}}
   box.querySelector('[data-close]').onclick=()=>postDrop()}

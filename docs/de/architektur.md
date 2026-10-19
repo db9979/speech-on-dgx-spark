@@ -255,6 +255,7 @@ Home Assistant, Mail, Kalender, Aufgaben, Wetter, reMarkable, MCP und was der Sp
 |---|---|
 | `app/panel/aendern.py` | Ändern per Sprache: Lautstärke, Termine und anderes nach „Ja“ |
 | `app/panel/agent.py` | Aufträge im Hintergrund, Zeitpläne, Routinen |
+| `app/panel/antwortvorschlag.py` | Antwortvorschläge beim Antworten auf eine Mail: drei Richtungen, umformen, nur im Speicher |
 | `app/panel/auftragsplan.py` | Aufträge mit Plan, Rückfrage, Vorschlag mit Ja und Nachschieben |
 | `app/panel/beobachten.py` | Beobachten: Funde prüfen, nur Neues melden (Eigene Aufgaben) |
 | `app/panel/calendars.py` | Kalender und Tagesbriefing, einzelne Kalender mit anderen Profilen geteilt |

@@ -4740,6 +4740,14 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Antwortvorschläge (V01.0.837, Dominik 2026-10-19 „1a 2a 3a 4a 5b“)",
+"text": "Antwortvorschläge (V01.0.837, Dominik 2026-10-19 „1a 2a 3a 4a 5b“): Wer auf der Seite E-Mail oder in der iPhone-App auf eine Mail antwortet, findet drei kurze Antworten in verschiedene Richtungen (z. B. Zusagen, Absagen, Rückfrage), in Sprache und Anrede der Mail, unterschrieben mit dem Profilnamen. Der Spark bereitet sie schon vor, während die Mail offen ist, und hält sie 15 Minuten im Speicher (nie auf der Platte); „Antworten“ findet sie daher meist sofort. Ein Tippen setzt einen Vorschlag in den Text, dort bleibt er frei änderbar; „kürzer“, „freundlicher“, „förmlicher“ und „auf Englisch“ formen den Text mit den Aufgaben der Schreibhilfe um. Gesendet wird weiter nur mit „Senden“ in der Vorschau. Die Vorschläge gehören zu „Mails senden“ (kein eigener Schalter). Nur das eigene Sprachmodell liest die Mail, hinter der Sprache zurück; die Mail ist Daten, nie Befehl (zwischen festen Marken, die Antwort wird nur als Text übernommen, höchstens drei, gekürzt). Das Log schreibt „mail: suggestions | 3 in 2.1 s“ bzw. „mail: rewrite kuerzer“, Zustand → Live beim Kasten E-Mail die Zahl von heute."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Vorwärmen (V01.0.830, Dominik 2026-10-19 „1a 3a 4a 5a 7a 9“)",
 "text": "Vorwärmen (V01.0.830, Dominik 2026-10-19 „1a 3a 4a 5a 7a 9“): Meldet sich ein Profil an oder öffnet es das Panel oder die App, liest der Spark im Hintergrund vorab, was seine Seiten gleich brauchen: die Termine dieses und des nächsten Monats aus allen Kalendern (auch geteilten), die Liste der E-Mail mit den neuesten Mails, „Für dich“ und das Adressbuch. Die Seiten Kalender, E-Mail und Heute zeigen dann sofort, was da ist; Heute nimmt den Kalender aus demselben Speicher wie die Seite Kalender. Danach halten die bekannten Auffrischungen alle 5 Minuten alles frisch. Regeln: nur Funktionen, die das Profil gerade nutzen darf, nie für Gäste; ein Profil höchstens alle 10 Minuten; höchstens zwei Profile gleichzeitig; jeder Schritt wartet, solange jemand spricht (Stimme zuerst). Alles bleibt im Arbeitsspeicher, nichts Neues auf der Platte. Zustand → Live zeigt bei Kalender und Mail nur, wie viele Profile vorgewärmt sind und wie lange das her ist; das Log (Bereich Vorrang) schreibt eine Zeile „vorwaermen: done“ mit Zahlen."
 },
@@ -13062,6 +13070,14 @@
 "head": "Voice chat",
 "title": "Always a way back (V01.0.833, Dominik 2026-10-19)",
 "text": "Always a way back (V01.0.833, Dominik 2026-10-19): an open mail, an answer and a new mail have a visible button at every width: on the phone \"‹ Back\" or \"‹ Discard\", on the computer beside the list \"✕ Close\" or \"✕ Discard\". Esc closes the answer even from inside the text field. When text was typed, the Spark first asks \"Discard the draft?\"."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Suggested answers (V01.0.837, Dominik 2026-10-19 \"1a 2a 3a 4a 5b\")",
+"text": "Suggested answers (V01.0.837, Dominik 2026-10-19 \"1a 2a 3a 4a 5b\"): whoever answers a mail on the E-mail page or in the iPhone app finds three short answers in different directions (e.g. accept, decline, ask back), in the mail's language and form of address, signed with the profile's name. The Spark prepares them while the mail is open and keeps them 15 minutes in memory (never on the disk), so \"Reply\" mostly finds them at once. A tap puts a suggestion into the text, where it stays free to change; \"shorter\", \"friendlier\", \"more formal\" and \"in English\" rework the text with the Schreibhilfe's tasks. It is still sent only with \"Send\" in the preview. The suggestions belong to \"Send mail\" (no own switch). Only the own language model reads the mail, behind speech; the mail is data, never a command (between fixed marks, the answer is only taken as text, at most three, cut). The log writes \"mail: suggestions | 3 in 2.1 s\" or \"mail: rewrite kuerzer\", Status → Live shows today's number at the E-mail box."
 },
 {
 "lang": "en",

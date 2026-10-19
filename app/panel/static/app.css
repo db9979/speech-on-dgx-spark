@@ -1799,6 +1799,7 @@ main:has(>#post.on){max-width:none}
 .post .postdet .ld-facts{margin-top:4px}
 .post .postord,.post .postwr{flex-wrap:wrap;gap:6px;margin-top:10px}.post .postord select{width:auto;max-width:100%}
 .post .postclose{display:inline-flex}
+.post .postsugs{display:grid;gap:6px}.post .postsug{display:block;width:100%;text-align:left;border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--card);color:inherit;font:inherit;cursor:pointer;white-space:pre-wrap}.post .postsug i{display:block;font-style:normal;font-size:12px;font-weight:600;color:var(--acc)}.post .postsug.on{border-color:var(--acc);box-shadow:0 0 0 2px color-mix(in srgb,var(--acc) 25%,transparent)}.post .posttone{flex-wrap:wrap;gap:6px;margin-top:6px}
 .post .postreply{margin-top:14px;padding-top:10px;border-top:1px solid var(--line)}.post .postreply .postdrop{float:right}.post .postform{display:grid;gap:4px;margin-top:8px}.post .postform input,.post .postform select,.post .postform textarea{width:100%;max-width:100%;box-sizing:border-box}.post .postform label{margin-top:6px}
 #parwrap[hidden]{display:none}
 /* touch screens: small marks keep their look, but a finger hits at least 44 px (code check 19.10. D11) */

@@ -11840,6 +11840,66 @@
           }
         }
       }
+    },
+    "Vorschläge kommen …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggestions coming …"
+          }
+        }
+      }
+    },
+    "Vorschläge (nichts wird gesendet)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggestions (nothing is sent)"
+          }
+        }
+      }
+    },
+    "kürzer": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "shorter"
+          }
+        }
+      }
+    },
+    "freundlicher": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "friendlier"
+          }
+        }
+      }
+    },
+    "förmlicher": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "more formal"
+          }
+        }
+      }
+    },
+    "auf Englisch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "in English"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

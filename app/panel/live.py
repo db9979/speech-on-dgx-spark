@@ -1319,6 +1319,11 @@ def snapshot(view="admin", now=None):
     except Exception:
         warm = {"profiles": 0}
     try:
+        import antwortvorschlag
+        avs = antwortvorschlag.for_live()
+    except Exception:
+        avs = {"suggested": 0}
+    try:
         import kalenderspiegel
         kcopy = kalenderspiegel.for_live()
     except Exception:
@@ -1434,6 +1439,8 @@ def snapshot(view="admin", now=None):
             x["sub"] += f" · heute {post_page} auf der Seite geordnet"
         if x["id"] == "mail" and post_sent:      # Mails senden: mails sent from the page today (a number, never to whom)
             x["sub"] += f" · heute {post_sent} gesendet"
+        if x["id"] == "mail" and (avs.get("suggested") or avs.get("rewritten")):   # Antwortvorschläge: numbers only
+            x["sub"] += f" · heute {avs['suggested']}× Antwortvorschläge, {avs['rewritten']}× umformuliert"
         if x["id"] == "cal" and kal_page:        # the page Kalender: appointments added, changed, deleted today (a number)
             x["sub"] += f" · heute {kal_page} auf der Seite geändert"
         if x["id"] == "cal" and kcopy.get("calendars"):   # Spark-Kalender: copies, appointments, last comparison (numbers)

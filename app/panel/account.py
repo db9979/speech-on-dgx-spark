@@ -32,6 +32,8 @@ import gedaechtnis  # noqa: E402
 import mfa  # noqa: E402
 import postfach  # noqa: E402
 import senden  # noqa: E402
+import antwortvorschlag  # noqa: E402
+import verbrauch  # noqa: E402
 import notaus  # noqa: E402
 import passkey  # noqa: E402
 import stufen  # noqa: E402
@@ -1282,6 +1284,48 @@ async def profile_mail_send_preview(request: Request, prof=Depends(browser_profi
     except (OSError, imaplib.IMAP4.error):
         print(f"mail: send preview not readable | {profiles.log_name(prof)}", flush=True)
         raise HTTPException(502, "Das Postfach war nicht erreichbar.")
+
+
+@router.post("/api/profile/mail/suggest", dependencies=[Depends(assistant), Depends(mail_on), Depends(mailsend_on)])
+async def profile_mail_suggest(request: Request, prof=Depends(browser_profile)):
+    """Antwortvorschläge (antwortvorschlag.py, part of Mails senden): {id} of an own mail → three answers to pick and
+    change in the form; nothing is sent here. The page asks already while the mail is open."""
+    guard.limit(request, "mailvorschlag", prof["id"])
+    body = await request.json()
+    ref = str((body if isinstance(body, dict) else {}).get("id") or "")[:40]
+    try:
+        items, kept = await antwortvorschlag.suggest(prof["id"], ref)
+    except verbrauch.Quota as e:
+        raise HTTPException(429, str(e))
+    except notaus.NotausAktiv:
+        raise HTTPException(423, "Notaus: gerade antwortet der Spark nicht")
+    except LookupError:
+        raise HTTPException(404, "Diese Mail gibt es nicht mehr.")
+    except ValueError:
+        raise HTTPException(400, "Unbekannte Mail.")
+    except (asyncio.TimeoutError, httpx.HTTPError, KeyError):
+        raise HTTPException(502, "Das Sprachmodell hat gerade keine Vorschläge geliefert.")
+    except (OSError, imaplib.IMAP4.error):
+        raise HTTPException(502, "Das Postfach war nicht erreichbar.")
+    return {"items": items, "kept": kept}
+
+
+@router.post("/api/profile/mail/rewrite", dependencies=[Depends(assistant), Depends(mail_on), Depends(mailsend_on)])
+async def profile_mail_rewrite(request: Request, prof=Depends(browser_profile)):
+    """Antwortvorschläge: {text, art kuerzer|freundlicher|foermlicher|uebersetzen} → the answer text changed that way."""
+    guard.limit(request, "mailvorschlag", prof["id"])
+    body = await request.json()
+    body = body if isinstance(body, dict) else {}
+    try:
+        return {"text": await antwortvorschlag.rewrite(prof["id"], body.get("text"), str(body.get("art") or "")[:20])}
+    except verbrauch.Quota as e:
+        raise HTTPException(429, str(e))
+    except notaus.NotausAktiv:
+        raise HTTPException(423, "Notaus: gerade antwortet der Spark nicht")
+    except ValueError as e:
+        raise HTTPException(400, str(e)[:200])
+    except (asyncio.TimeoutError, httpx.HTTPError, KeyError):
+        raise HTTPException(502, "Das Sprachmodell hat gerade keinen Text geliefert.")
 
 
 @router.post("/api/profile/mail/send", dependencies=[Depends(assistant), Depends(mail_on), Depends(mailsend_on)])

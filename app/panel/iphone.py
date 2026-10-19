@@ -133,7 +133,7 @@ THINGS = {
     # E-Mail: the inbox and one mail as plain text (stays unread); ordering and sending each with their own function
     "mail": ((("GET",), r"/api/profile/mail/(?:inbox|message)"),),
     "mailmanage": ((("GET",), r"/api/profile/mail/folders"), (("POST",), r"/api/profile/mail/act")),
-    "mailsend": ((("POST",), r"/api/profile/mail/send(?:/preview)?"),),
+    "mailsend": ((("POST",), r"/api/profile/mail/(?:send(?:/preview)?|suggest|rewrite)"),),
     # Musik (musik.py): listen, make from a wish, delete one or all
     "musik": ((("GET", "POST", "DELETE"), r"/api/musik"), (("GET",), rf"/api/musik/job/{_DOC}"),
               (("GET",), rf"/api/musik/{_DOC}/datei"), (("DELETE",), rf"/api/musik/{_DOC}")),

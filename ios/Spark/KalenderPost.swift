@@ -799,6 +799,11 @@ struct MailView: View {
         } catch {
             if m == nil { self.error = error.localizedDescription }
         }
+        if talk.allowed.areas.contains("mailsend"), m != nil {
+            // Antwortvorschläge „1a“: prepared while the mail is open, „Antworten“ finds them ready on the Spark
+            let id = item.id
+            Task { _ = try? await api.object("POST", "api/profile/mail/suggest", body: ["id": id], timeout: 120) }
+        }
         if talk.allowed.areas.contains("mailmanage"),
            let f = try? await api.object("GET", "api/profile/mail/folders", query: ["account": String(item.id.prefix(9))]) {
             folders = (f["folders"] as? [String] ?? []).prefix(100).map { String($0) }
@@ -843,6 +848,11 @@ struct MailWrite: View {
     @State private var preview: [String: Any]?
     @State private var busy = false
     @State private var error: String?
+    @State private var ideas: [(String, String)] = []   // Antwortvorschläge: (direction, text)
+    @State private var ideasNote: String?
+    @State private var picked: Int?
+    private static let tones: [(String, LocalizedStringKey)] = [("kuerzer", "kürzer"), ("freundlicher", "freundlicher"),
+                                                                ("foermlicher", "förmlicher"), ("uebersetzen", "auf Englisch")]
 
     var body: some View {
         NavigationStack {
@@ -865,7 +875,37 @@ struct MailWrite: View {
                         TextField("Kopie", text: $cc).keyboardType(.emailAddress).textInputAutocapitalization(.never).autocorrectionDisabled()
                         TextField("Betreff", text: $subject)
                     }
-                    Section { TextEditor(text: $text).frame(minHeight: 180) } footer: {
+                    if !draft.reply.isEmpty {
+                        Section {
+                            if ideas.isEmpty {
+                                Text(ideasNote.map { SparkAPI.way($0) } ?? String(localized: "Vorschläge kommen …")).foregroundStyle(.secondary)
+                            }
+                            ForEach(Array(ideas.enumerated()), id: \.offset) { i, x in
+                                Button {
+                                    text = x.1
+                                    picked = i
+                                } label: {
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(verbatim: x.0).font(.caption.weight(.semibold)).foregroundStyle(.tint)
+                                        Text(verbatim: x.1).foregroundStyle(.primary)
+                                    }
+                                }
+                                .listRowBackground(picked == i ? Color.accentColor.opacity(0.12) : Color(.secondarySystemGroupedBackground))
+                            }
+                        } header: { Text("Vorschläge (nichts wird gesendet)") }
+                    }
+                    Section {
+                        TextEditor(text: $text).frame(minHeight: 180)
+                        if !draft.reply.isEmpty {
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack {
+                                    ForEach(Self.tones, id: \.0) { t in
+                                        Button(t.1) { Task { await tone(t.0) } }.buttonStyle(.bordered).disabled(busy || text.isEmpty)
+                                    }
+                                }
+                            }
+                        }
+                    } footer: {
                         Text("Erst die Vorschau zeigt, was rausgeht. Gesendet wird nur dort.")
                     }
                     Section { Button("Vorschau") { Task { await look() } }.disabled(busy || text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty) }
@@ -876,6 +916,7 @@ struct MailWrite: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Verwerfen") { dismiss() } } }
             .onAppear { if to.isEmpty && subject.isEmpty { to = draft.to; subject = draft.subject } }
+            .task { if !draft.reply.isEmpty && ideas.isEmpty { await suggest() } }
             .interactiveDismissDisabled(busy)
         }
     }
@@ -889,6 +930,33 @@ struct MailWrite: View {
         if !draft.reply.isEmpty { b["reply"] = draft.reply }   // a new mail goes from the first mailbox (senden.py)
         do {
             preview = try await api.object("POST", "api/profile/mail/send/preview", body: b)
+            error = nil
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
+
+    /// Antwortvorschläge (antwortvorschlag.py): three answers to pick; the Spark kept them while the mail was open
+    private func suggest() async {
+        guard let api = SparkAPI.current else { return }
+        do {
+            let d = try await api.object("POST", "api/profile/mail/suggest", body: ["id": draft.reply], timeout: 120)
+            ideas = (d["items"] as? [[String: Any]] ?? []).prefix(3).compactMap { x in
+                guard let t = x["text"] as? String, !t.isEmpty else { return nil }
+                return (String((x["label"] as? String ?? "").prefix(24)), String(t.prefix(2000)))
+            }
+        } catch {
+            ideasNote = error.localizedDescription
+        }
+    }
+
+    private func tone(_ art: String) async {
+        guard let api = SparkAPI.current else { return }
+        busy = true
+        defer { busy = false }
+        do {
+            let d = try await api.object("POST", "api/profile/mail/rewrite", body: ["text": String(text.prefix(20000)), "art": art], timeout: 120)
+            if let t = d["text"] as? String, !t.isEmpty { text = String(t.prefix(20000)) }
             error = nil
         } catch {
             self.error = error.localizedDescription

@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.837** E-mail: reply suggestions when answering (part of Send mails): three short answers in different directions are ready, prepared while the mail is open, in the mail's tone and signed with the profile name; the picked one stays freely editable, plus shorter, friendlier, more formal and in English; panel and iPhone
 - **V01.0.836** The panel gets its turn sooner while much is computed in the background
 - **V01.0.835** Me → Music looks like Documents and E-mail: a card for a new song (length as chips, switch "With singing"), search and filters, songs by day with ▶ in every row, details with a player, "Make it again" and the description folded; iPhone app grouped by day with a choice of length
 - **V01.0.834** Code check, speed B7: speaker recognition almost twice as fast, the journal measures how long the answer waits for it
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.830** Calendar and e-mail faster and the same everywhere: Spark calendar stage 1 (encrypted copy of every calendar, only changes from the server), warming up at sign-in, e-mail like a mail client (by day, keys J/K/R/E/U, swipe, "As appointment"), iPhone and uConsole on par with the panel
 - **V01.0.829** Text fields grow with the text: question, message and every text field as high as the text, Enter sends, Shift+Enter a new line, ⤢ large view, counter; also iPhone and terminal
 - **V01.0.828** Code check, speed: conversations are saved beside the event loop and written smaller
-- **V01.0.827** Code check, ease of use: search with everyday words and "Ask Spark", clear microphone errors, Status red only for real faults, one way of counting, more contrast and larger tap areas, a start guide for every new profile, a new PIN in hidden fields
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

@@ -2140,6 +2140,13 @@
 "titel": "Panel kommt beim Rechnen schneller dran",
 "text": "A: Auf dem Pi sudo speech-spark update. B: Zustand → Logs → Diagnose, Bereich System: „loopwacht: on | stall 5 s | restart 90 s | switch 1 ms“. C: Im Bereich „Seite lädt“ erscheint keine Zeile „slow GET /api/desk/wait“ mehr. D: Kalender-Seite öffnen und Monate blättern: weniger „stalled“-Zeilen mit „busy calendars._expand“ als vorher (ganz weg erst mit dem Fix des Kalender-Threads).",
 "thread": "Pi stabilisieren"
+},
+{
+"id": "P330",
+"v": 837,
+"titel": "E-Mail: Antwortvorschläge",
+"text": "A: Update auf V01.0.837, Mails senden ist frei. E-Mail öffnen, eine Mail wählen, kurz warten, dann „Antworten“: drei Vorschläge stehen über dem Text (sonst „Vorschläge kommen …“). B: Einen antippen: sein Text steht im Feld, frei änderbar. C: „kürzer“, „freundlicher“, „förmlicher“, „auf Englisch“ formen den Text um, gesendet wird nichts. D: Ton und Sprache passen zur Mail, unterschrieben mit dem Profilnamen. E: Dasselbe im iPhone unter Mail → Antworten.",
+"thread": "Kalender und E-Mail in Panel und Apps"
 }
 ]
 }
