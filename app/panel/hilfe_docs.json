@@ -4677,6 +4677,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "Kalender ohne Panel-Hänger (V01.0.838, Dominik 2026-10-19, Panel stand 6-8 Sekunden): Termine aus den Kalendertexten auszurechnen (Wiederholungen ausdehnen) ist reines Python und lief bei jedem Blick, jeder Minuten-Prüfung und jedem Auffrischen neu, für jeden Kalender gleichzeitig; zwei solche Rechnungen hielten das Panel so oft an, dass Seiten mehrere Sekunden hingen. Jetzt rechnet der Spark jeden Termin nur einmal je Kalendermonat aus und merkt sich das Ergebnis im Arbeitsspeicher (höchstens 30 000 Einträge, nie auf der Platte); neu gerechnet wird nur ein geänderter Termin oder ein neuer Monat. Alles Ausrechnen läuft in einem einzigen Hintergrund-Faden mit niedriger Priorität, nie zwei gleichzeitig, und gibt nach jedem Termin das Panel frei."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "Kalender neu: volle Breite, schwebende Karte, Schnell eintragen, Ziehen, Teilen-Fenster (V01.0.821, Dominik 2026-10-19 „kalender: 1a 2a 3a … 7a“, „ok“): Die Seite Kalender nutzt die ganze Breite, die Spalte rechts ist weg. Ein Tipp auf einen Termin öffnet eine Karte, die neben ihm über der Ansicht schwebt (auf dem Handy ein Blatt von unten): Kalender, Titel, Wann, Wo und bei eigenen CalDAV-Terminen „Ändern“, „+1 Tag“, „+1 Woche“ und „Löschen“. Esc schließt sie, E ändert, Entf löscht (mit Rückfrage). Über der Ansicht steht „Schnell eintragen“: eine Zeile wie „Zahnarzt morgen 10 Uhr bei Dr. Weber“ liest das Panel mit festen Regeln, ohne Sprachmodell (calendars.quick, GET /api/profile/calendar/quick, liest nur): Tag (heute, morgen, übermorgen, ein Wochentag, „nächsten Montag“, „in 3 Tagen“, 24.12. oder 24.12.2026), Uhrzeit (10 Uhr, 10:30, 14-15 Uhr, 3pm), Ort nach „bei“, „in“ oder „im“, der Rest ist der Titel. Ohne Uhrzeit wird der Termin ganztägig, ohne Tag ist es heute oder, wenn die Uhrzeit vorbei ist, morgen; kurze Wochentage (Mo, So) gelten nur als „am So“ oder „So.“. Was erkannt wurde, steht als Chips darunter; gespeichert wird erst mit „Eintragen“ oder Enter, in den ersten eige"
 },
 {
@@ -13006,6 +13014,14 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "fetch begun before stores nothing. A big calendar is parsed outside the event loop so the panel does not stall. No switch: it is the existing calendar, only faster. Logs: calendar: view loading | n of m calendars, calendar: kept fresh | n calendars of m profiles, calendar: refresh failed (error). The uConsole (spark-tui kalender) shows \"Lädt noch: …\"."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "Calendar without panel stalls (V01.0.838, Dominik 2026-10-19, the panel stood still for 6-8 seconds): working out the appointments from the calendar texts (expanding repetitions) is pure Python and ran anew for every look, every minute check and every refresh, for every calendar at once; two such runs held the panel so often that pages hung for seconds. Now the Spark works out each appointment once per calendar month and keeps the result in memory (at most 30,000 entries, never on disk); only a changed appointment or a new month is computed again. All of it runs in one background thread at low priority, never two at once, and lets the panel go after every appointment."
 },
 {
 "lang": "en",

@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.838** Kalender: kein Panel-Hänger mehr beim Ausrechnen der Termine (6-8 s Stillstand); jeder Termin wird nur einmal je Monat ausgerechnet und gemerkt, alles in einem Hintergrund-Faden mit niedriger Priorität, nie zwei gleichzeitig
 - **V01.0.837** E-Mail: Antwortvorschläge beim Antworten (Teil von Mails senden): drei kurze Antworten in verschiedene Richtungen liegen bereit, schon vorbereitet, solange die Mail offen ist, im Ton der Mail und mit dem Namen des Profils; die gewählte bleibt frei änderbar, dazu kürzer, freundlicher, förmlicher und auf Englisch; Panel und iPhone
 - **V01.0.836** Das Panel kommt schneller wieder dran, wenn im Hintergrund viel gerechnet wird
 - **V01.0.835** Ich → Musik sieht aus wie Dokumente und E-Mail: Karte für ein neues Lied (Länge als Chips, Schalter „Mit Gesang“), Suche und Filter, Lieder nach Tag mit ▶ in jeder Zeile, Einzelheiten mit Abspieler, „Nochmal machen“ und eingeklappter Beschreibung; iPhone-App nach Tag gruppiert mit wählbarer Länge
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.831** Fix: Gesprächszug von Lautsprecher und Telefon geht nicht mehr verloren, wenn das Gerät gleich nach der Antwort trennt; Test test_verlauf_sync verlässlich
 - **V01.0.830** Kalender und E-Mail schneller und überall gleich: Spark-Kalender Stufe 1 (verschlüsselte Kopie jedes Kalenders, nur Änderungen vom Server), Vorwärmen beim Anmelden, E-Mail wie ein Mailprogramm (nach Tagen, Tasten J/K/R/E/U, Wischen, „Als Termin“), iPhone und uConsole auf dem Stand des Panels
 - **V01.0.829** Eingabefelder wachsen mit dem Text: Frage, Nachricht und jedes Textfeld so hoch wie der Text, Enter schickt ab, Umschalt+Enter neue Zeile, ⤢ Großansicht, Zähler; auch iPhone und Terminal
-- **V01.0.828** Code-Prüfung Tempo: Gespräche werden neben der Ereignisschleife gespeichert und kleiner geschrieben
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

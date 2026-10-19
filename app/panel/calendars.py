@@ -21,7 +21,9 @@ shows there only as „belegt“ with its time, never title or place. "add" lets
 a new appointment there, saved only after its yes; changing and deleting stay with the owner. Guests never.
 """
 import asyncio
+import concurrent.futures
 import datetime
+import hashlib
 import json
 import os
 import re
@@ -491,39 +493,88 @@ def _tame(cal, start):
     return cal
 
 
+EXPANDED_MAX = 30000          # (object, month) results kept (a few MB at most)
+_expanded = {}               # (sha1 of one iCal text, month "YYYY-MM-01" UTC, zone) -> [events of that month]
+
+
+def _low():
+    """The expanding thread runs at low priority, so voice and the event loop go first on a busy Pi."""
+    try:
+        os.setpriority(os.PRIO_PROCESS, threading.get_native_id(), 10)
+    except (AttributeError, OSError):
+        pass
+
+
+# One thread for all expanding (Dominik 2026-10-19, panel stalls of 6-8 s): two at once held the GIL so often that
+# the event loop waited; one at a time, nice 10, and it lets go of the GIL after every object it computes.
+_EXPANDER = concurrent.futures.ThreadPoolExecutor(max_workers=1, thread_name_prefix="kalender-ausdehnen",
+                                                  initializer=_low)
+
+
+async def expand(texts, start, end, zone, name=""):
+    """_expand outside the event loop, one at a time (_EXPANDER)."""
+    return await asyncio.get_running_loop().run_in_executor(_EXPANDER, _expand, texts, start, end, zone, name)
+
+
+def _month_events(text, a, b, zone):
+    """The events of one iCal text in the month block [a, b) (UTC) with a day of slack on both sides, as dicts
+    without the calendar's name. Pure Python and slow for long repeating series: kept in _expanded."""
+    out = []
+    try:
+        cal = _tame(icalendar.Calendar.from_ical(text), a)
+        # every occurrence carries a RECURRENCE-ID after expanding: a repeating one is known by its master
+        rep = {str(v.get("UID", "")) for v in cal.walk("VEVENT")
+               if v.get("RRULE") is not None or v.get("RDATE") is not None or v.get("RECURRENCE-ID") is not None}
+        items = recurring_ical_events.of(cal).between(a - datetime.timedelta(days=1), b + datetime.timedelta(days=1))
+    except Exception:
+        return out
+    for ev in items[:MAX_EVENTS]:
+        if ev.name != "VEVENT" or str(ev.get("STATUS", "")).upper() == "CANCELLED":
+            continue
+        s, e = ev.get("DTSTART"), ev.get("DTEND")
+        if s is None:
+            continue
+        s = s.dt
+        e = e.dt if e is not None else s
+        allday = not isinstance(s, datetime.datetime)
+        if allday:
+            s = datetime.datetime.combine(s, datetime.time(), zone)
+            e = datetime.datetime.combine(e if not isinstance(e, datetime.datetime) else e.date(), datetime.time(), zone)
+        else:
+            s = (s if s.tzinfo else s.replace(tzinfo=zone)).astimezone(zone)
+            e = (e if isinstance(e, datetime.datetime) and e.tzinfo else s).astimezone(zone) \
+                if isinstance(e, datetime.datetime) else s
+        out.append({"start": s, "end": e, "allday": allday,
+                    "title": str(ev.get("SUMMARY", "") or "(ohne Titel)").strip()[:200],
+                    "location": str(ev.get("LOCATION", "") or "").strip()[:200],
+                    "private": str(ev.get("CLASS", "") or "").upper() in ("PRIVATE", "CONFIDENTIAL"),
+                    "repeat": str(ev.get("UID", "")) in rep})
+    return out
+
+
 def _expand(texts, start, end, zone, name=""):
+    """The events of the iCal texts in [start, end), sorted. Each object is expanded once per month block and zone
+    and kept (_expanded): a look, the check every minute, keep_fresh and the briefing only compute what changed."""
+    utc = datetime.timezone.utc
+    blocks = _months(start.astimezone(utc), end.astimezone(utc))
+    zkey = getattr(zone, "key", None) or str(zone)
     out = []
     for text in texts:
-        try:
-            cal = _tame(icalendar.Calendar.from_ical(text), start)
-            # every occurrence carries a RECURRENCE-ID after expanding: a repeating one is known by its master
-            rep = {str(v.get("UID", "")) for v in cal.walk("VEVENT")
-                   if v.get("RRULE") is not None or v.get("RDATE") is not None or v.get("RECURRENCE-ID") is not None}
-            items = recurring_ical_events.of(cal).between(start, end)
-        except Exception:
-            continue
-        for ev in items[:MAX_EVENTS]:
-            if ev.name != "VEVENT" or str(ev.get("STATUS", "")).upper() == "CANCELLED":
-                continue
-            s, e = ev.get("DTSTART"), ev.get("DTEND")
-            if s is None:
-                continue
-            s = s.dt
-            e = e.dt if e is not None else s
-            allday = not isinstance(s, datetime.datetime)
-            if allday:
-                s = datetime.datetime.combine(s, datetime.time(), zone)
-                e = datetime.datetime.combine(e if not isinstance(e, datetime.datetime) else e.date(), datetime.time(), zone)
-            else:
-                s = (s if s.tzinfo else s.replace(tzinfo=zone)).astimezone(zone)
-                e = (e if isinstance(e, datetime.datetime) and e.tzinfo else s).astimezone(zone) \
-                    if isinstance(e, datetime.datetime) else s
-            out.append({"start": s, "end": e, "allday": allday,
-                        "title": str(ev.get("SUMMARY", "") or "(ohne Titel)").strip()[:200],
-                        "location": str(ev.get("LOCATION", "") or "").strip()[:200], "calendar": name,
-                        "private": str(ev.get("CLASS", "") or "").upper() in ("PRIVATE", "CONFIDENTIAL"),
-                        "repeat": str(ev.get("UID", "")) in rep})
-    uniq = {(x["start"], x["title"]): x for x in out}
+        h = hashlib.sha1(text.encode("utf-8", "replace") if isinstance(text, str) else bytes(text)).hexdigest()
+        for m in blocks:
+            key = (h, m.date().isoformat(), zkey)
+            got = _expanded.get(key)
+            if got is None:
+                got = _month_events(text, m, (m + datetime.timedelta(days=32)).replace(day=1), zone)
+                if len(_expanded) >= EXPANDED_MAX:
+                    for k in list(_expanded)[:EXPANDED_MAX // 10]:
+                        _expanded.pop(k, None)
+                _expanded[key] = got
+                time.sleep(0)   # let go of the GIL: the event loop waits for nobody
+            out += got
+    keep = [dict(x, calendar=name) for x in out
+            if x["start"] < end and (x["end"] > start or (x["end"] <= x["start"] and x["start"] >= start))]
+    uniq = {(x["start"], x["title"]): x for x in keep}
     return sorted(uniq.values(), key=lambda x: (x["start"], not x["allday"]))
 
 
@@ -599,8 +650,8 @@ async def _one(uid, cal, start, end, zone, stale=False):
         got[key] = r   # also when a change meanwhile kept it out of the cache (_epoch)
     keys = [whole] if whole in _cache else [k for k, _, _ in want]
     texts = list(dict.fromkeys(x for k in keys for x in (_cache.get(k) or (0, got.get(k, [])))[1]))
-    # expanding runs outside the event loop, so a heavy calendar never stalls the panel
-    evs = await asyncio.to_thread(_expand, texts, start, end, zone, cal.get("name", ""))
+    # expanding runs outside the event loop, one at a time, so a heavy calendar never stalls the panel
+    evs = await expand(texts, start, end, zone, cal.get("name", ""))
     if cal.get("owner"):   # shared by another profile (2a): a private appointment is only „belegt“ with its time
         evs = [dict(x, title=BUSY, location="") if x["private"] else x for x in evs]
     return evs
@@ -895,7 +946,7 @@ async def check(item, zone):
     start = now.replace(hour=0, minute=0, second=0, microsecond=0)
     end = start + datetime.timedelta(days=14)
     texts, n = await _fetch(dict(item, unsaved=True), start.astimezone(datetime.timezone.utc), end.astimezone(datetime.timezone.utc))
-    evs = [x for x in await asyncio.to_thread(_expand, texts, start, end, zone) if x["end"] >= now or x["allday"]]
+    evs = [x for x in await expand(texts, start, end, zone) if x["end"] >= now or x["allday"]]
     return {"found": n, "events": [line(x) for x in evs[:5]]}
 
 

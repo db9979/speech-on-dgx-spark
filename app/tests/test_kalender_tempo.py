@@ -8,6 +8,8 @@
   assistant waits for a fresh one. A change (drop) during a fetch never stores the older answer.
 - Where an address's calendars are (CalDAV discovery) is kept FOUND_SECONDS: the next fetch goes straight to them.
 - keep_fresh refreshes this and the next month of the profiles that read their calendars in the last day.
+- Expanding (Dominik 2026-10-19, panel stalls of 6-8 s): each object is expanded once per month block and kept, a
+  changed object anew; all expanding runs in one low-priority thread, never two at once.
 
 Fixed dates and a fake fetch or the fake CalDAV server; times are passed in, no wall clock.
 """
@@ -150,6 +152,68 @@ class Fresh(Base):
         f.calls.clear()
         asyncio.run(calendars.keep_fresh(now))
         self.assertEqual(f.calls, [])
+
+
+class Expanding(unittest.TestCase):
+    WEEKLY = EVENT.replace("SUMMARY:Zahnarzt", "SUMMARY:Chor\r\nRRULE:FREQ=WEEKLY").replace("tempo-1", "tempo-2")
+
+    def setUp(self):
+        calendars._expanded.clear()
+        self.parsed = []
+        real = calendars._month_events
+        self.addCleanup(setattr, calendars, "_month_events", real)
+
+        def counted(text, a, b, zone):
+            self.parsed.append(a.date().isoformat())
+            return real(text, a, b, zone)
+        calendars._month_events = counted
+
+    def test_each_object_once_per_month(self):
+        a = calendars._expand([EVENT, self.WEEKLY], DAY, DAY + datetime.timedelta(days=7), ZONE, "Privat")
+        self.assertEqual([x["title"] for x in a], ["Zahnarzt", "Chor"])
+        self.assertEqual({x["calendar"] for x in a}, {"Privat"})
+        n = len(self.parsed)
+        self.assertEqual(n, 2)
+        # the check every minute and another window in the same month: nothing is computed again
+        b = calendars._expand([EVENT, self.WEEKLY], DAY + datetime.timedelta(days=2), DAY + datetime.timedelta(days=9),
+                              ZONE)
+        self.assertEqual(len(self.parsed), n)
+        self.assertEqual([(x["title"], x["start"].day) for x in b], [("Chor", 17)])   # the exact window still holds
+        # a changed object anew, the other one stays kept
+        calendars._expand([EVENT.replace("Zahnarzt", "Arzt"), self.WEEKLY], DAY, DAY + datetime.timedelta(days=7), ZONE)
+        self.assertEqual(len(self.parsed), n + 1)
+        # a window reaching into the next month only computes that month
+        calendars._expand([EVENT], DAY, DAY + datetime.timedelta(days=30), ZONE)
+        self.assertEqual(self.parsed[-1], "2026-04-01")
+
+    def test_the_kept_events_are_not_changed_by_a_reader(self):
+        a = calendars._expand([EVENT], DAY, DAY + datetime.timedelta(days=2), ZONE, "Privat")
+        a[0]["title"] = "belegt"
+        b = calendars._expand([EVENT], DAY, DAY + datetime.timedelta(days=2), ZONE, "Arbeit")
+        self.assertEqual((b[0]["title"], b[0]["calendar"]), ("Zahnarzt", "Arbeit"))
+
+    def test_one_thread_never_two_at_once(self):
+        import threading
+        seen, busy, most = set(), [0], [0]
+        real = calendars._month_events
+
+        def slow(text, a, b, zone):
+            seen.add(threading.current_thread().name)
+            busy[0] += 1
+            most[0] = max(most[0], busy[0])
+            time.sleep(0.05)
+            busy[0] -= 1
+            return real(text, a, b, zone)
+        calendars._month_events = slow
+
+        async def many():
+            return await asyncio.gather(*(calendars.expand([EVENT.replace("tempo-1", f"t{i}")], DAY,
+                                                           DAY + datetime.timedelta(days=2), ZONE) for i in range(4)))
+        r = asyncio.run(many())
+        self.assertEqual([len(x) for x in r], [1, 1, 1, 1])
+        self.assertEqual(most[0], 1)
+        self.assertEqual(len(seen), 1)
+        self.assertTrue(next(iter(seen)).startswith("kalender-ausdehnen"))
 
 
 class Discovery(unittest.TestCase):
