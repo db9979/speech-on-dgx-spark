@@ -52,6 +52,7 @@ function kalPaint(w){const d=KAL.data;
   w.innerHTML=`<div class="kaltools"><span class="kalnav"><button class="b" type="button" data-k="prev" aria-label="${esc(t('Zurück','Back'))}">‹</button><button class="b" type="button" data-k="today">${esc(t('Heute','Today'))}</button><button class="b" type="button" data-k="next" aria-label="${esc(t('Weiter','Next'))}">›</button></span>`+
     `<b class="kaltitle">${esc(kalTitle())}</b>${d&&d.add&&d.add.length?`<button class="b p" type="button" data-k="new">${esc(t('+ Termin','+ Appointment'))}</button>`:''}<span class="segc" role="radiogroup">${KAL_VIEWS.map(([k,l])=>`<button type="button" data-v="${k}" class="${k===KAL.view?'on':''}" aria-pressed="${k===KAL.view}">${esc(l)}</button>`).join('')}</span></div>`+
     (KAL.err?`<div class="note warn">${esc(t('Die Termine kamen nicht an: ','The appointments did not arrive: ')+KAL.err)}</div>`:'')+
+    (d&&d.notes&&d.notes.length?`<div class="note warn">${esc(t('Nicht gespeichert, der Kalender hat abgelehnt (es gilt die Fassung dort): ','Not saved, the calendar refused (its version stands): ')+d.notes.map(x=>x||t('ein Termin','an appointment')).join(', '))}</div>`:'')+
     (d&&d.errors&&d.errors.length?`<div class="note warn">${esc(t('Nicht erreicht: ','Not reached: ')+d.errors.join(', '))}</div>`:'')+
     (d&&d.loading&&d.loading.length?`<div class="note">${esc(t('Lädt noch: ','Still loading: ')+d.loading.join(', '))}</div>`:'')+
     (d&&d.add&&d.add.length?`<div class="kalquick"><input data-q maxlength="200" autocomplete="off" placeholder="${esc(t('Schnell eintragen, z. B. „Zahnarzt morgen 10 Uhr bei Dr. Weber“','Quick add, e.g. "Dentist tomorrow 10am at Dr. Weber"'))}" aria-label="${esc(t('Schnell eintragen','Quick add'))}"><span class="kqchips"></span><button class="b p" type="button" data-k="quick" disabled>${esc(t('Eintragen','Add'))}</button><button class="b" type="button" data-k="more" hidden>${esc(t('Mehr …','More …'))}</button><div class="kalqmsg fh"></div></div>`:'')+
@@ -226,4 +227,6 @@ function kalForm(box){const f=KAL.form,x=f.x,d=KAL.data,day=x?new Date(x.start*1
 async function kalSend(method,body,msg){const cls=msg.className.split(' ')[0];msg.className=cls+' fh';msg.textContent=t('Speichere im Kalender …','Saving to the calendar …');
   const {r,d}=await apiTry('/api/profile/calendar/event',{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign(body,{tz:TZ()}))});
   if(!r.ok){msg.className=cls+' err';msg.textContent=r.status===409?t('Der Termin ist so nicht mehr da (woanders geändert, oder er wiederholt sich). Die Seite lädt neu.','The appointment is no longer there like this (changed elsewhere, or repeating). The page reloads.'):errSay(r.status,d.detail,'');if(r.status===409)kalLoad();return false}
-  KAL.form=null;KAL.sel=null;kalLoad();return true}
+  // Spark-Kalender Stufe 2: saved in the Spark's copy, the server gets it behind; a look a little later shows a refusal
+  KAL.form=null;KAL.sel=null;kalLoad();setTimeout(()=>{if($('kalview'))kalLoad(true)},KAL_BEHIND_MS);return true}
+const KAL_BEHIND_MS=5000

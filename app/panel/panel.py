@@ -19,6 +19,7 @@ from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from common import TLS_DIR, BodyLimit, load_config, quiet_access_log  # noqa: E402
 from core import spawn, ADMIN_IDLE, COOKIE, SERVICES, STATIC, admin_cookie_ok, app_version, renewed_admin_cookie  # noqa: E402
+from core import main_loop  # noqa: E402
 from monitor import history, service_health, system_stats  # noqa: E402
 import steuer  # noqa: E402
 from chat import LEARN_EVERY, learn_once  # noqa: E402
@@ -519,6 +520,7 @@ async def mail_fresh():
 async def calendar_fresh():
     """Kalender (calendars.keep_fresh): the appointments of whoever read them lately are fetched anew in the background."""
     spawn(calendars.keep_fresh_loop())
+    main_loop[0] = asyncio.get_running_loop()   # core.later: page changes behind the page
 
 
 @app.on_event("startup")

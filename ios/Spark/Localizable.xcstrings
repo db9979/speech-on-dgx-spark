@@ -11810,6 +11810,16 @@
           }
         }
       }
+    },
+    "Nicht gespeichert, der Kalender hat abgelehnt: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not saved, the calendar refused: %@"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -27,6 +27,7 @@ struct CalView {
     var add: [Int] = []
     var events: [CalEvent] = []
     var errors: [String] = []
+    var notes: [String] = []      // changes the calendar refused (the Spark's copy went back; Stufe 2)
 }
 
 struct MailItem: Identifiable, Hashable {
@@ -58,6 +59,7 @@ extension SparkAPI {
         v.calendars = (d["calendars"] as? [String] ?? []).map { String($0.prefix(80)) }
         v.add = d["add"] as? [Int] ?? []
         v.errors = d["errors"] as? [String] ?? []
+        v.notes = (d["notes"] as? [String] ?? []).prefix(10).map { String($0.prefix(80)) }
         v.events = (d["events"] as? [[String: Any]] ?? []).prefix(500).compactMap { e in
             guard let s = (e["start"] as? NSNumber)?.doubleValue, let en = (e["end"] as? NSNumber)?.doubleValue else { return nil }
             return CalEvent(start: Date(timeIntervalSince1970: s), end: Date(timeIntervalSince1970: en),
@@ -223,6 +225,9 @@ struct KalenderView: View {
             }
             if !m.v.errors.isEmpty {
                 Text("Nicht erreicht: \(m.v.errors.joined(separator: ", "))").foregroundStyle(.red)
+            }
+            if !m.v.notes.isEmpty {
+                Text("Nicht gespeichert, der Kalender hat abgelehnt: \(m.v.notes.joined(separator: ", "))").foregroundStyle(.red)
             }
             if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
         }

@@ -68,7 +68,7 @@ class Base(unittest.TestCase):
             cal["at"] -= ks.SYNC_SECONDS + 1
 
     def seen(self):
-        out = [k for _, k in helpers.CAL_SEEN if k != "find"]
+        out = [k for _, k in helpers.CAL_SEEN if k not in ("find", "object")]
         helpers.CAL_SEEN.clear()
         return out
 
@@ -132,6 +132,19 @@ class Sync(Base):
         self.assertEqual(self.read(), ["Zahnarzt"])
         self.assertEqual(self.seen(), ["sync", "etags"])   # refused, compared by etags: nothing to fetch again
 
+    def test_without_a_token_what_the_list_leaves_out_is_gone(self):
+        # after a change made here the copy asks without its token: a server may leave out of its changes an
+        # object made and removed after the old token (RFC 6578 3.5), the whole list cannot
+        helpers.CAL_EVENTS.update({"/dav/privat/a.ics": ev("a", "20260310", "Zahnarzt"),
+                                   "/dav/privat/b.ics": ev("b", "20260312", "Elternabend")})
+        self.read()
+        helpers.CAL_EVENTS.pop("/dav/privat/b.ics")
+        for cal in ks._mem[CID].values():
+            cal["token"] = ""
+        self.older()
+        self.assertEqual(self.read(), ["Zahnarzt"])
+        self.assertIn("1 gone", self.log)
+
     def test_only_what_touches_the_period_and_repeating_always(self):
         helpers.CAL_EVENTS.update({"/dav/privat/a.ics": ev("a", "20260310", "März"),
                                    "/dav/privat/b.ics": ev("b", "20260710", "Juli"),
@@ -187,6 +200,108 @@ class Disk(Base):
         with self.assertRaises(ValueError):
             asyncio.run(ks.texts(None, "../x", "http://x/", datetime.datetime(2026, 3, 1, tzinfo=UTC),
                                  datetime.datetime(2026, 4, 1, tzinfo=UTC)))
+
+
+class Behind(Base):
+    """Stufe 2 (Dominik 2026-10-19 „3a“): a change from the page lands in the copy at once and goes to the server
+    behind it; a refusal puts the copy back, compares anew and leaves a note for the page."""
+
+    def setUp(self):
+        super().setUp()
+        helpers.CAL_REFUSE[0] = 0
+        self.saved_get = (calendars.get, calendars.reading)
+        calendars.get = lambda uid: {"calendars": [dict(self.d)], "topics": []}
+        calendars.reading = calendars.get
+        calendars._notes.clear()
+        helpers.CAL_EVENTS["/dav/privat/a.ics"] = ev("a", "20260310", "Zahnarzt")
+        self.read()
+        self.seen()
+
+    def tearDown(self):
+        helpers.CAL_REFUSE[0] = 0
+        calendars.get, calendars.reading = self.saved_get
+        calendars._notes.clear()
+        super().tearDown()
+
+    def run_page(self, coro_fn):
+        """Runs the page's change and returns (what the copy holds right after, then after the server answered)."""
+        async def go():
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                await coro_fn()
+                now = sorted(re.search(r"SUMMARY:([^\r\n]*)", x[1]).group(1)
+                             for x in ks._mem[CID][self.cal()]["items"].values())
+                server_now = len(helpers.CAL_EVENTS)
+                for _ in range(200):          # the change behind the page
+                    if not ks._pending:
+                        break
+                    await asyncio.sleep(0.01)
+            self.log = out.getvalue()
+            return now, server_now
+        return asyncio.run(go())
+
+    def cal(self):
+        return next(iter(ks._mem[CID]))
+
+    def item(self):
+        return {"title": "Elternabend", "start": "2026-03-12T18:00", "end": "2026-03-12T19:00", "allday": False,
+                "location": "", "calendar": ""}
+
+    def test_a_new_appointment_is_in_the_copy_at_once_and_on_the_server_behind(self):
+        item = calendars.page_item(self.item(), UTC)
+        now, server_now = self.run_page(lambda: calendars.add_event("u-behind", item, wait=False))
+        self.assertEqual(now, ["Elternabend", "Zahnarzt"])           # the page sees it before the server has it
+        self.assertEqual(server_now, 1)
+        self.assertEqual(len(helpers.CAL_EVENTS), 2)                  # … and then the server has it
+        self.assertIn("calendar: saved behind", self.log)
+        self.assertNotIn("PROPFIND", [m for m, k in helpers.CAL_SEEN if k == "find"][1:])   # found once, not per change
+        self.assertEqual(self.read(), ["Elternabend", "Zahnarzt"])
+
+    def test_a_change_takes_the_object_from_the_copy(self):
+        zone = UTC
+        p = asyncio.run(calendars.page_find("u-behind", 0, "Zahnarzt",
+                                            int(datetime.datetime(2026, 3, 10, 9, tzinfo=UTC).timestamp()), zone))
+        self.seen()
+        p.update(change="edit", new_title="Zahnarzt neu", new_start="2026-03-11T09:00+00:00",
+                 new_end="2026-03-11T10:00+00:00", new_allday=False, new_location="")
+        now, _ = self.run_page(lambda: calendars.change_event("u-behind", p, wait=False))
+        self.assertEqual(now, ["Zahnarzt neu"])
+        self.assertEqual([m for m, k in helpers.CAL_SEEN if k == "object"], ["PUT"])   # no GET first
+        self.assertIn("Zahnarzt neu", helpers.CAL_EVENTS["/dav/privat/a.ics"])
+
+    def test_a_refusal_puts_the_copy_back_and_leaves_a_note(self):
+        helpers.CAL_REFUSE[0] = 503
+        item = calendars.page_item(self.item(), UTC)
+        now, _ = self.run_page(lambda: calendars.add_event("u-behind", item, wait=False))
+        self.assertEqual(now, ["Elternabend", "Zahnarzt"])
+        self.assertIn("calendar: not saved behind (503)", self.log)
+        self.assertEqual(calendars.notes("u-behind"), ["Elternabend"])
+        self.assertEqual(calendars.notes("u-behind", now=10 ** 11), [])   # gone after NOTE_SECONDS
+        helpers.CAL_REFUSE[0] = 0
+        self.assertEqual(self.read(), ["Zahnarzt"])                   # the server's version stands
+        self.assertEqual(ks._mem[CID][self.cal()]["token"][:1], "t")  # compared anew from scratch
+
+    def test_a_second_entry_of_the_same_calendar_sees_it_at_once(self):
+        twin = dict(self.d, id="c0ffee123", name="Privat 2")
+        calendars.get = lambda uid: {"calendars": [dict(self.d), twin], "topics": []}
+        calendars.reading = calendars.get
+        asyncio.run(calendars._fetch(twin, datetime.datetime(2026, 3, 1, tzinfo=UTC),
+                                     datetime.datetime(2026, 4, 1, tzinfo=UTC)))
+        try:
+            item = calendars.page_item(self.item(), UTC)
+            self.run_page(lambda: calendars.add_event("u-behind", item, wait=False))
+            self.assertEqual(sorted(re.search(r"SUMMARY:([^\r\n]*)", x[1]).group(1)
+                                    for x in ks._mem["c0ffee123"][self.cal()]["items"].values()),
+                             ["Elternabend", "Zahnarzt"])
+        finally:
+            ks.forget(["c0ffee123"])
+
+    def test_the_assistant_still_waits_for_the_server(self):
+        helpers.CAL_REFUSE[0] = 503
+        item = calendars.page_item(self.item(), UTC)
+        with self.assertRaises(ValueError):
+            asyncio.run(calendars.add_event("u-behind", item))
+        self.assertEqual(self.read(), ["Zahnarzt"])
 
 
 class Live(Base):

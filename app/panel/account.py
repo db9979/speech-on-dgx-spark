@@ -1108,7 +1108,7 @@ async def profile_calendar_event_add(request: Request, prof=Depends(browser_prof
         print(f"calendar: page form refused | {profiles.log_name(prof)}", flush=True)
         raise HTTPException(400, str(e)[:200])
     try:
-        where = await calendars.add_event(prof["id"], item)
+        where = await calendars.add_event(prof["id"], item, wait=False)   # Stufe 2: the copy first, the server behind
     except notaus.NotausAktiv:
         raise HTTPException(423, "Notaus: gerade wird nichts geändert")
     except ValueError as e:
@@ -1143,7 +1143,7 @@ async def profile_calendar_event_change(request: Request, prof=Depends(browser_p
         if item:
             p.update(new_title=item["title"], new_start=item["start"], new_end=item["end"],
                      new_allday=item["allday"], new_location=item["location"])
-        note = await calendars.change_event(prof["id"], p)
+        note = await calendars.change_event(prof["id"], p, wait=False)   # Stufe 2: the copy first, the server behind
     except LookupError as e:
         print(f"calendar: page change refused, not found | {profiles.log_name(prof)}", flush=True)
         raise HTTPException(409, str(e))

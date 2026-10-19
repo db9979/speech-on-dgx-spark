@@ -417,6 +417,21 @@ def spawn(coro, name=None):
     return task
 
 
+main_loop = [None]   # the panel's own event loop (set at its start), which outlives every request
+
+
+def later(coro, name=None):
+    """Work that must finish after the answer went out (a page's change on its way to the calendar server): on the
+    panel's own loop when it runs (it outlives the request), else like spawn."""
+    loop = main_loop[0]
+    try:
+        if loop is not None and not loop.is_closed() and loop is not asyncio.get_running_loop():
+            return asyncio.run_coroutine_threadsafe(coro, loop)
+    except RuntimeError:
+        pass
+    return spawn(coro, name)
+
+
 def _done(task):
     _tasks.discard(task)
     if not task.cancelled() and task.exception() is not None:

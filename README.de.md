@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.832** Spark-Kalender Stufe 2: Termine auf der Seite Kalender und im iPhone sofort eingetragen, geändert oder gelöscht (erst in der Kopie, der Server dahinter); lehnt der Server ab, gilt seine Fassung und die Seite sagt es
 - **V01.0.831** Fix: Gesprächszug von Lautsprecher und Telefon geht nicht mehr verloren, wenn das Gerät gleich nach der Antwort trennt; Test test_verlauf_sync verlässlich
 - **V01.0.830** Kalender und E-Mail schneller und überall gleich: Spark-Kalender Stufe 1 (verschlüsselte Kopie jedes Kalenders, nur Änderungen vom Server), Vorwärmen beim Anmelden, E-Mail wie ein Mailprogramm (nach Tagen, Tasten J/K/R/E/U, Wischen, „Als Termin“), iPhone und uConsole auf dem Stand des Panels
 - **V01.0.829** Eingabefelder wachsen mit dem Text: Frage, Nachricht und jedes Textfeld so hoch wie der Text, Enter schickt ab, Umschalt+Enter neue Zeile, ⤢ Großansicht, Zähler; auch iPhone und Terminal
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.825** Code-Prüfung Sicherheit: Passwort und PINs mit 600.000 PBKDF2-Runden, https nur TLS 1.2 oder neuer, Wachposten meldet wichtige Änderungen immer sofort, Uhr-Antworten nur fürs fragende Profil, Mail-Tageszähler übersteht Neustart, Werkstatt-Sandbox nur zum LLM-Tor
 - **V01.0.824** Telefon: Stimme nicht mehr abgehackt (eigener Ton-Takt, kleiner Puffer, schnelleres G.722)
 - **V01.0.823** Kalender teilen gibt nur noch den gewählten Kalender frei, nie das ganze iCloud- oder Nextcloud-Konto (Code-Prüfung C2); das Teilen-Fenster fragt bei mehreren Kalendern, welcher
-- **V01.0.822** Rotes main bleibt nicht mehr unbemerkt: der Schnelltest vor dem Push lässt alle Tests laufen und bricht bei rotem main ab, GitHub öffnet ein Issue mit den roten Tests, Zustand → Update zeigt, seit wann es rot ist
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

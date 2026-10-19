@@ -742,6 +742,21 @@ CAL_SECOND = [False]   # True: the account holds a second calendar "Arbeit" at /
 CAL_NOSYNC = [False]   # True: no sync-collection (kalenderspiegel compares etags); 2: no etags either (read by month)
 CAL_SEEN = []          # (method, kind) of every request: what the Spark asked (kind: sync, multiget, etags, query, find)
 _SNAP = {}             # sync-token -> {path: etag} as it was then
+CAL_REFUSE = [0]       # a status code every PUT and DELETE answers with (0: as usual)
+
+
+def cal_changed_behind():
+    """A test changed CAL_EVENTS by hand (as another device would): the page's changes still on their way to the
+    fake server arrive first, then every Spark copy asks the server again at the next look (as after SYNC_SECONDS)."""
+    import calendars
+    import kalenderspiegel
+    for _ in range(200):
+        if not kalenderspiegel._pending:
+            break
+        time.sleep(0.02)
+    kalenderspiegel.stale(list(kalenderspiegel._mem))
+    calendars._cache.clear()
+
 
 
 def fake_caldav():
@@ -760,6 +775,10 @@ def fake_caldav():
         body = (await req.body()).decode()
         path = "/dav/" + rest
         ms = '<?xml version="1.0"?><d:multistatus xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav">'
+        if req.method in ("PUT", "DELETE", "GET"):
+            CAL_SEEN.append((req.method, "object"))
+        if req.method in ("PUT", "DELETE") and CAL_REFUSE[0]:
+            return Response(status_code=CAL_REFUSE[0])
         if req.method == "PUT":
             # new: only with If-None-Match *; a change: only with the If-Match of the object as it is now
             if "BEGIN:VEVENT" not in body:
@@ -878,6 +897,10 @@ def start():
         _serve(fake_tts(), TTS_PORT)
         _serve(fake_ha(), HA_PORT)
         _serve(fake_caldav(), CAL_PORT)
+        # the panel's own loop outlives every request (core.later); a TestClient's loop ends with its request
+        loop = asyncio.new_event_loop()
+        threading.Thread(target=loop.run_forever, daemon=True).start()
+        core.main_loop[0] = loop
         # the self-test runs inside the update unit: never ask systemd, or every change gets 423
         import update
         update.update_running = lambda: update._upd_cache["running"]

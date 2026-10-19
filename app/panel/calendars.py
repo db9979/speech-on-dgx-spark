@@ -358,6 +358,19 @@ async def _report(c, cal, start, end):
             if x.text and "BEGIN:VCALENDAR" in x.text]
 
 
+async def _parts(c, d):
+    """The calendars of an entry's address a reader may see (_only), from the last discovery while it is fresh
+    (FOUND_SECONDS), else found anew: a change on the page needs no round trips to find them again."""
+    where = (d.get("id"), d["url"], d.get("user"))
+    known = _found.get(where)
+    if not (known and known[1] and time.time() - known[0] < FOUND_SECONDS):
+        cals = await _calendars(c, d["url"])
+        if cals:
+            _found[where] = (time.time(), cals)
+        known = (0, cals)
+    return _only(d, known[1])
+
+
 def _only(d, cals):
     """The calendars of an address a reader may see: all of them for the owner; for a calendar another profile shares
     (d["owner"]) only the one chosen when it was shared (an address with a single calendar: that one). ValueError
@@ -571,19 +584,21 @@ async def _one(uid, cal, start, end, zone, stale=False):
         want = [(whole, blocks[0], (blocks[-1] + datetime.timedelta(days=32)).replace(day=1))]
     else:
         want = [((uid, cal["id"], m.date().isoformat()), m, (m + datetime.timedelta(days=32)).replace(day=1)) for m in blocks]
-    wait = []
+    wait = {}
     for key, a, b in want:
         hit = _cache.get(key)
         if hit and now - hit[0] < CACHE_SECONDS:
             continue
         task = _block(uid, cal, key, a, b, behind=bool(hit and stale))
         if not (hit and stale):
-            wait.append(task)
-    for r in await asyncio.gather(*(asyncio.shield(t) for t in wait), return_exceptions=True):
+            wait[key] = task
+    got = {}
+    for key, r in zip(wait, await asyncio.gather(*(asyncio.shield(t) for t in wait.values()), return_exceptions=True)):
         if isinstance(r, BaseException):
             raise r
+        got[key] = r   # also when a change meanwhile kept it out of the cache (_epoch)
     keys = [whole] if whole in _cache else [k for k, _, _ in want]
-    texts = list(dict.fromkeys(x for k in keys for x in (_cache.get(k) or (0, []))[1]))
+    texts = list(dict.fromkeys(x for k in keys for x in (_cache.get(k) or (0, got.get(k, [])))[1]))
     # expanding runs outside the event loop, so a heavy calendar never stalls the panel
     evs = await asyncio.to_thread(_expand, texts, start, end, zone, cal.get("name", ""))
     if cal.get("owner"):   # shared by another profile (2a): a private appointment is only „belegt“ with its time
@@ -712,7 +727,7 @@ async def view(uid, day, days, zone):
                     "title": x["title"], "location": x["location"], "cal": i,
                     "edit": i in edit and not x.get("repeat")})
     return {"connected": True, "calendars": names, "shared": shared, "edit": edit, "add": add, "events": out,
-            "errors": [n for n, _ in errors], "loading": loading}
+            "errors": [n for n, _ in errors], "loading": loading, "notes": notes(uid)}
 
 
 # ---------------------------------------------------------------- the page Kalender changes (stage 2)
@@ -989,12 +1004,12 @@ def ical(item, uid_text):
     return cal.to_ical()
 
 
-async def add_event(uid, item, out=None):
+async def add_event(uid, item, out=None, wait=True):
     """_add_event with one journal line for every outcome (saved, refused by the Notaus, failed); never the
     appointment or the calendar's name."""
     who = profiles.log_name(profiles.by_id(uid))
     try:
-        res = await _add_event(uid, item, out)
+        res = await _add_event(uid, item, out, wait)
     except notaus.NotausAktiv:
         print(f"calendar: appointment refused, notaus | {who}", flush=True)
         raise
@@ -1005,7 +1020,7 @@ async def add_event(uid, item, out=None):
     return res
 
 
-async def _add_event(uid, item, out=None):
+async def _add_event(uid, item, out=None, wait=True):
     """Writes the appointment to a writable CalDAV calendar: the one named in item "calendar" (its exact name
     first, then a name containing the words, across all connected accounts), else the first one. A named
     calendar that no account has is never swapped for another one: ValueError with the names there are
@@ -1024,7 +1039,7 @@ async def _add_event(uid, item, out=None):
             continue
         async with _cal_client(d) as c:
             try:
-                found += [(d, x) for x in _only(d, await _calendars(c, d["url"]))]
+                found += [(d, x) for x in await _parts(c, d)]
             except Exception as e:
                 last_error = str(e)
     if not found:
@@ -1042,9 +1057,20 @@ async def _add_event(uid, item, out=None):
     else:
         hits = found
     d, pick = hits[0]
+    uid_text = f"{os.urandom(8).hex()}@speech-spark"
+    url = pick[0].rstrip("/") + f"/{uid_text.split('@')[0]}.ics"
+    if not wait and kalenderspiegel.ready(d.get("id"), pick[0]):
+        # Stufe 2 (the page): into the Spark's copy at once, to the server behind it
+        text = ical(item, uid_text)
+        text = text if isinstance(text, str) else text.decode()
+        import core
+        core.later(_behind(uid, d, pick[0], url, text, _local(uid, d, pick[0], url, text)))
+        if d.get("owner"):
+            return d.get("name") or "Kalender"
+        if out is not None:
+            out.update(account=d.get("id"), href=url)
+        return pick[1] or d.get("name", "Kalender")
     async with _cal_client(d) as c:
-        uid_text = f"{os.urandom(8).hex()}@speech-spark"
-        url = pick[0].rstrip("/") + f"/{uid_text.split('@')[0]}.ics"
         r = await c.put(url, content=ical(item, uid_text),
                         headers={"Content-Type": "text/calendar; charset=utf-8", "If-None-Match": "*"})
         if r.status_code in (200, 201, 204):
@@ -1070,8 +1096,14 @@ def _writable(uid):
             if not re.match(r"webcals?://", d["url"], re.I) and not re.search(r"\.ics(\?|$)", d["url"], re.I)]
 
 
-async def _objects(c, cal, start, end):
-    """[(href, etag, ical text)] of the events overlapping [start, end) in one calendar."""
+async def _objects(c, cal, start, end, d=None):
+    """[(href, etag, ical text)] of the events overlapping [start, end) in one calendar; from the Spark's copy when
+    the entry d has one (kalenderspiegel), else asked from the server."""
+    if d is not None and kalenderspiegel.CID.fullmatch(str(d.get("id") or "")):
+        try:
+            return [(urljoin(cal, h), tag, text) for h, tag, text in await kalenderspiegel.objects(c, d["id"], cal, start, end)]
+        except kalenderspiegel.Unsupported:
+            pass
     fmt = "%Y%m%dT%H%M%SZ"
     q = ('<?xml version="1.0"?><c:calendar-query xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav">'
          '<d:prop><d:getetag/><c:calendar-data/></d:prop><c:filter><c:comp-filter name="VCALENDAR">'
@@ -1122,9 +1154,9 @@ async def find_events(uid, words, start, end, zone):
     found, repeating = [], 0
     for d in _writable(uid):
         async with _cal_client(d) as c:
-            for href, _ in (await _calendars(c, d["url"]))[:20]:
+            for href, _ in (await _parts(c, d))[:20]:
                 for ohref, etag, text in await _objects(c, href, start.astimezone(datetime.timezone.utc),
-                                                        end.astimezone(datetime.timezone.utc)):
+                                                        end.astimezone(datetime.timezone.utc), d):
                     title = re.search(r"(?m)^SUMMARY[^:]*:(.*)$", text)
                     title = (title.group(1).strip() if title else "")[:200]
                     if want and not all(w in title.lower() for w in want):
@@ -1134,7 +1166,7 @@ async def find_events(uid, words, start, end, zone):
                         repeating += 1
                         continue
                     s, e, allday = _when(ev, zone)
-                    found.append({"account": d.get("id"), "href": ohref, "etag": etag, "title": str(ev.get("SUMMARY", "") or title)[:200],
+                    found.append({"account": d.get("id"), "cal": href, "href": ohref, "etag": etag, "title": str(ev.get("SUMMARY", "") or title)[:200],
                                   "start": s.isoformat(), "end": e.isoformat(), "allday": allday})
     return found, repeating
 
@@ -1159,13 +1191,13 @@ def _account(uid, acc):
     return d
 
 
-async def change_event(uid, p, out=None):
+async def change_event(uid, p, out=None, wait=True):
     """_change_event with one journal line for every outcome (moved, deleted, refused by the Notaus, failed);
     never the appointment or the calendar's name."""
     who = profiles.log_name(profiles.by_id(uid))
     what = {"delete": "deleted", "edit": "changed"}.get(p.get("change"), "moved")
     try:
-        res = await _change_event(uid, p, out)
+        res = await _change_event(uid, p, out, wait)
     except notaus.NotausAktiv:
         print(f"calendar: appointment change refused, notaus | {who}", flush=True)
         raise
@@ -1176,69 +1208,145 @@ async def change_event(uid, p, out=None):
     return res
 
 
-async def _change_event(uid, p, out=None):
-    """Moves or deletes the appointment after the yes; out gets the old object for undo. Returns the checked result."""
+async def _change_event(uid, p, out=None, wait=True):
+    """Moves or deletes the appointment after the yes; out gets the old object for undo. Returns the checked result.
+    The object and its etag come from the Spark's copy when it has it, else from the server. wait False (the page,
+    Stufe 2 „3a“): the change lands in the copy at once and goes to the server behind it (_behind)."""
     notaus.stop("aktion", uid)
     d = _account(uid, p["account"])
-    async with _cal_client(d) as c:
-        r = await c.get(p["href"])
+    local = kalenderspiegel.item(d.get("id"), p.get("cal") or "", p["href"]) if p.get("cal") else None
+    if local and local[0] and not (p.get("etag") and p["etag"] != local[0]):
+        etag, old = local
+    else:
+        local = None
+        async with _cal_client(d) as c:
+            r = await c.get(p["href"])
         if r.status_code != 200:
             raise ValueError(f"the calendar server answered {r.status_code}")
         etag = r.headers.get("etag") or p.get("etag") or ""
         if p.get("etag") and etag and etag != p["etag"]:
             raise ValueError("the appointment was changed meanwhile; ask again")
         old = r.text
-        ev, cal = _event_of(old)
-        if ev is None:
-            raise ValueError("a repeating appointment is not changed by voice")
-        head = {"If-Match": etag} if etag else {}
-        if p["change"] == "delete":
-            r = await c.delete(p["href"], headers=head)
-        elif p["change"] == "edit":   # the page's form: title, place, start and end at once
-            for k in ("DTSTART", "DTEND", "DURATION", "DTSTAMP", "SUMMARY", "LOCATION"):
-                ev.pop(k, None)
+    ev, cal = _event_of(old)
+    if ev is None:
+        raise ValueError("a repeating appointment is not changed by voice")
+    if p["change"] == "delete":
+        text = None
+    else:
+        for k in ("DTSTART", "DTEND", "DURATION", "DTSTAMP") + (("SUMMARY", "LOCATION") if p["change"] == "edit" else ()):
+            ev.pop(k, None)
+        if p["change"] == "edit":   # the page's form: title, place, start and end at once
             s1, e1 = datetime.datetime.fromisoformat(p["new_start"]), datetime.datetime.fromisoformat(p["new_end"])
             ev.add("summary", p["new_title"])
             if p.get("new_location"):
                 ev.add("location", p["new_location"])
-            if p.get("new_allday"):
-                ev.add("dtstart", s1.date())
-                ev.add("dtend", e1.date())
-            else:
-                ev.add("dtstart", s1.astimezone(datetime.timezone.utc))
-                ev.add("dtend", e1.astimezone(datetime.timezone.utc))
-            ev.add("dtstamp", datetime.datetime.now(datetime.timezone.utc))
-            seq = int(ev.get("SEQUENCE", 0) or 0)
-            ev.pop("SEQUENCE", None)
-            ev.add("sequence", seq + 1)
-            r = await c.put(p["href"], content=cal.to_ical(),
-                            headers=dict(head, **{"Content-Type": "text/calendar; charset=utf-8"}))
+            allday = p.get("new_allday")
         else:
             s0 = datetime.datetime.fromisoformat(p["start"])
             e0 = datetime.datetime.fromisoformat(p["end"])
             s1 = datetime.datetime.fromisoformat(p["new_start"])
-            for k in ("DTSTART", "DTEND", "DURATION", "DTSTAMP"):
-                ev.pop(k, None)
-            if p.get("allday"):
-                ev.add("dtstart", s1.date())
-                ev.add("dtend", (s1 + (e0 - s0)).date())
+            e1 = s1 + (e0 - s0)
+            allday = p.get("allday")
+        if allday:
+            ev.add("dtstart", s1.date())
+            ev.add("dtend", e1.date())
+        else:
+            ev.add("dtstart", s1.astimezone(datetime.timezone.utc))
+            ev.add("dtend", e1.astimezone(datetime.timezone.utc))
+        ev.add("dtstamp", datetime.datetime.now(datetime.timezone.utc))
+        seq = int(ev.get("SEQUENCE", 0) or 0)
+        ev.pop("SEQUENCE", None)
+        ev.add("sequence", seq + 1)
+        text = cal.to_ical().decode()
+    if not wait and local:
+        import core
+        core.later(_behind(uid, d, p["cal"], p["href"], text, _local(uid, d, p["cal"], p["href"], text), etag))
+    else:
+        head = {"If-Match": etag} if etag else {}
+        async with _cal_client(d) as c:
+            if text is None:
+                r = await c.delete(p["href"], headers=head)
             else:
-                ev.add("dtstart", s1.astimezone(datetime.timezone.utc))
-                ev.add("dtend", (s1 + (e0 - s0)).astimezone(datetime.timezone.utc))
-            ev.add("dtstamp", datetime.datetime.now(datetime.timezone.utc))
-            seq = int(ev.get("SEQUENCE", 0) or 0)
-            ev.pop("SEQUENCE", None)
-            ev.add("sequence", seq + 1)
-            r = await c.put(p["href"], content=cal.to_ical(),
-                            headers=dict(head, **{"Content-Type": "text/calendar; charset=utf-8"}))
+                r = await c.put(p["href"], content=text.encode(),
+                                headers=dict(head, **{"Content-Type": "text/calendar; charset=utf-8"}))
         if r.status_code not in (200, 201, 204):
             raise ValueError(f"the calendar server answered {r.status_code}")
-    _drop(uid)
+        _drop(uid)
     if out is not None:
         out.update(account=p["account"], href=p["href"], ics=old, deleted=p["change"] == "delete")
     if p["change"] == "edit":
         return f"Termin „{p['new_title']}“ geändert."
     return f"Termin {_old(p)} gelöscht." if p["change"] == "delete" else f"Termin „{p['title']}“ auf {_new(p)} verschoben."
+
+
+# ---------------------------------------------------------------- Stufe 2: the page's changes behind the page
+NOTE_SECONDS = 600   # how long the page shows that a change did not reach the server
+_notes = {}          # uid -> [(when, title or "")] of changes the server refused
+
+
+def _blocks(*uids):
+    """After a change in the copy: the month blocks are built anew from it (discovery and the copy stay)."""
+    _epoch[0] += 1
+    for k in [k for k in _cache if k[0] in uids]:
+        _cache.pop(k, None)
+
+
+def _local(uid, d, cal_url, href, text):
+    """A page change into the copy of entry d and of every other entry of the writer (and of the owner of a shared
+    calendar) holding the same calendar, so no view shows the old version meanwhile. {entry id: how it was}."""
+    owner = d.get("owner")
+    ids = [d["id"]] + [x["id"] for x in reading(uid)["calendars"] + (get(owner)["calendars"] if owner else [])]
+    before = {cid: kalenderspiegel.put_local(cid, cal_url, href, text)
+              for cid in dict.fromkeys(ids) if cid == d["id"] or kalenderspiegel.ready(cid, cal_url)}
+    _blocks(uid, owner)
+    return before
+
+
+def notes(uid, now=None):
+    """The page's notes: changes of the last NOTE_SECONDS the server did not take (the copy went back)."""
+    now = time.time() if now is None else now
+    keep = [x for x in _notes.get(uid, []) if now - x[0] < NOTE_SECONDS]
+    if keep:
+        _notes[uid] = keep
+    else:
+        _notes.pop(uid, None)
+    return [x[1] for x in keep]
+
+
+async def _behind(uid, d, cal_url, href, text, before, etag=""):
+    """Sends one change of the page to the server after the copies took it (before: {entry id: how the object was
+    there}, from _local). text None deletes. Refused (changed
+    elsewhere meanwhile, not reachable): the copy goes back, the server's version wins at the next look, and the
+    page shows a note. One journal line for each outcome."""
+    who = profiles.log_name(profiles.by_id(uid))
+    tag, status = "", 0
+    try:
+        async with _cal_client(d) as c:
+            if text is None:
+                r = await c.delete(href, headers={"If-Match": etag} if etag else {})
+                ok = r.status_code in (200, 204, 404)
+            else:
+                head = {"Content-Type": "text/calendar; charset=utf-8"}
+                head.update({"If-Match": etag} if etag else {} if before.get(d["id"]) else {"If-None-Match": "*"})
+                r = await c.put(href, content=text.encode(), headers=head)
+                ok = r.status_code in (200, 201, 204)
+                tag = r.headers.get("etag", "")
+            status = r.status_code
+    except Exception as e:
+        ok, status = False, type(e).__name__
+    for cid, was in before.items():
+        if ok:
+            kalenderspiegel.taken(cid, cal_url, href, tag)
+        else:
+            kalenderspiegel.undo(cid, cal_url, href, was)
+    if ok:
+        print(f"calendar: saved behind | {who}", flush=True)
+    else:
+        was = before.get(d["id"]) or ["", ""]
+        title = re.search(r"(?m)^SUMMARY[^:]*:(.*)$", (text or was[1] or "").replace("\r", ""))
+        _notes.setdefault(uid, []).append((time.time(), (title.group(1).strip() if title else "")[:80]))
+        print(f"calendar: not saved behind ({status}) | {who}", flush=True)
+    _blocks(uid, d.get("owner"))
 
 
 async def delete_href(uid, acc, href):

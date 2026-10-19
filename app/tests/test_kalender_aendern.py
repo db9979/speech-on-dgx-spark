@@ -46,9 +46,10 @@ def connect(uid, name="Privat"):
 
 
 def clean():
+    helpers.cal_changed_behind()
     for k in [k for k, v in helpers.CAL_EVENTS.items() if "Aendern" in v]:
         helpers.CAL_EVENTS.pop(k, None)
-    calendars._cache.clear()
+    helpers.cal_changed_behind()
 
 
 class Api(unittest.TestCase):
@@ -115,6 +116,7 @@ class Api(unittest.TestCase):
         self.assertEqual(self.add(calendar="Gibt es nicht").status_code, 400)
         self.assertEqual(self.c.put("/api/profile/calendar/event", json={"change": "alles", "cal": 0}).status_code, 400)
         helpers.CAL_EVENTS[REPEAT[0]] = REPEAT[1]
+        helpers.cal_changed_behind()
         x = self.mine(self.view())[0]
         self.assertFalse(x["edit"])           # a repeating one is never changed on the page
         r = self.c.put("/api/profile/calendar/event", json={"change": "delete", "cal": x["cal"], "title": x["title"], "start": x["start"], "tz": TZ})

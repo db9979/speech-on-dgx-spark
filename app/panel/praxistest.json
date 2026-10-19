@@ -2112,6 +2112,13 @@
 "titel": "Spark-Kalender Kopie und Vorwärmen",
 "text": "A: Update auf V01.0.830, abmelden und neu anmelden, gleich danach Kalender und E-Mail öffnen: beide zeigen sofort Inhalt. B: Zustand → Live, Kasten Kalender: „… Kalender als Kopie, … Termine, abgeglichen vor … min“ und „… Profile vorgewärmt“. C: Auf dem iPhone in der Kalender-App einen Termin anlegen; spätestens nach 2 Minuten steht er auf der Seite Kalender im Panel. D: Zustand → Logs, Bereich Kalender: „calendar: mirror full“ beim ersten Mal, danach „changed“ nur bei Änderungen.",
 "thread": "Kalender und E-Mail in Panel und Apps"
+},
+{
+"id": "P326",
+"v": 832,
+"titel": "Spark-Kalender: Änderungen sofort",
+"text": "A: Update auf V01.0.832, Seite Kalender, „+ Termin“, speichern: der Termin steht ohne Warten da; nach wenigen Sekunden auch in der Kalender-App des iPhone (iCloud). B: Den Termin ändern (Titel, Uhrzeit): sofort geändert. C: Löschen: sofort weg. D: Denselben Termin vorher auf dem iPhone ändern und dann auf der Seite (ohne neu zu laden) ändern: die Seite zeigt „Nicht gespeichert, der Kalender hat abgelehnt“ mit dem Titel, es gilt die Fassung vom iPhone. E: Zustand → Logs, Bereich Kalender: „calendar: saved behind“ bzw. „not saved behind (412)“.",
+"thread": "Kalender und E-Mail in Panel und Apps"
 }
 ]
 }

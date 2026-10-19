@@ -4748,6 +4748,14 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Spark-Kalender, Stufe 2: Änderungen sofort (V01.0.832, Dominik 2026-10-19 „3a“)",
+"text": "Spark-Kalender, Stufe 2: Änderungen sofort (V01.0.832, Dominik 2026-10-19 „3a“): Was du auf der Seite Kalender oder in der iPhone-App einträgst, änderst oder löschst, steht sofort in der Kopie auf dem Spark und ist ohne Warten zu sehen; zum Kalender-Server (iCloud, Nextcloud, …) geht es dahinter. Für das Ändern holt der Spark den Termin und sein Kennzeichen aus der Kopie statt erst vom Server. Lehnt der Server ab (inzwischen woanders geändert, nicht erreichbar), nimmt der Spark die Änderung in der Kopie zurück, es gilt die Fassung auf dem Server, und die Seite zeigt 10 Minuten lang „Nicht gespeichert, der Kalender hat abgelehnt“ mit dem Titel. Was der Assistent per Sprache ändert, wartet weiter auf den Server, weil eine gesprochene Bestätigung nicht zurückzuholen ist. Das Log schreibt „calendar: saved behind“ oder „not saved behind“ mit dem Status."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Sprach-Chat",
 "text": "Mails ordnen (V01.0.816, Plan kalender-mail/plan.md Stufe 2; Funktionen → E-Mail lesen → „Mails ordnen“, chat.mail_manage, aus): In einer geöffneten Mail stehen „Gelesen“/„Ungelesen“, „Archivieren“ und eine Ordnerwahl; nach Archivieren oder Verschieben holt „Rückgängig“ die Mail sofort in den Posteingang zurück (gefunden über ihre Message-ID). Der Knopf ist das eigene Ja. postfach.py kennt nur diese vier Dinge: das Flag \\Seen einer Mail im Posteingang, eine Mail ins Archiv (der Ordner mit \\Archive, sonst „Archive“/„Archiv“) oder in einen gewöhnlichen eigenen Ordner, und zurück. Nie in Papierkorb, Spam, Gesendet oder Entwürfe, nie gelöscht, nie ein Ordner angelegt oder umbenannt; ohne IMAP MOVE nur COPY und danach UID EXPUNGE genau des bestätigten Originals (wie beim Aufräumen). Notaus hält jede Aktion an. Endpunkte GET /api/profile/mail/folders und POST /api/profile/mail/act (nur die eigene Anmeldung im Browser, nur eigene Postfächer, Rate-Limit postordnen); Live zeigt bei der Post nur, wie viele Mails heute auf der Seite geordnet wurden; Log mail: page <Aktion> done|refused, not found|refused, notaus|failed, nie Absender, Betreff oder Ordner."
 },
@@ -13038,6 +13046,14 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "Spark calendar, stage 1: a copy on the Spark (V01.0.830, Dominik 2026-10-19 \"1a 2a\"): every CalDAV calendar (iCloud, Nextcloud, …) now has a copy on the Spark. The first time the Spark fetches it whole, after that it asks the server only what changed (WebDAV sync with a sync token; a server without it is compared by the tags of its appointments, one that can do neither is read month by month as before) and fetches just those. The Calendar page, Today, the assistant and the briefing read from the copy in milliseconds instead of 1 to 8 seconds. For profiles active in the last 24 hours the Spark compares every 2 minutes in the background; after an own change (adding, moving, deleting) right at the next look. The copy is on the disk only encrypted (kalender-spiegel/, the same key as for the passwords), at most 5000 appointments per calendar, and is deleted with the calendar or the profile. Subscription links (.ics, webcal://) stay as before. Status → Live shows for Calendar how many calendars have a copy, how many appointments and when they were last compared; the log writes \"calendar: mirror full\" or \"changed\" with numbers."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Spark calendar, stage 2: changes at once (V01.0.832, Dominik 2026-10-19 \"3a\")",
+"text": "Spark calendar, stage 2: changes at once (V01.0.832, Dominik 2026-10-19 \"3a\"): what you add, change or delete on the Calendar page or in the iPhone app is in the copy on the Spark at once and shows without waiting; it goes to the calendar server (iCloud, Nextcloud, …) behind it. To change an appointment the Spark takes it and its tag from the copy instead of the server first. If the server refuses (changed elsewhere meanwhile, not reachable), the Spark takes the change back in the copy, the server's version stands, and the page shows \"Not saved, the calendar refused\" with the title for 10 minutes. What the assistant changes by voice still waits for the server, because a spoken confirmation cannot be taken back. The log writes \"calendar: saved behind\" or \"not saved behind\" with the status."
 },
 {
 "lang": "en",

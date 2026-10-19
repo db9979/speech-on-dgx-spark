@@ -9,7 +9,8 @@ for the changes of the profiles active in the last day, and a change made here m
 - On the disk only encrypted (vault, the key stays in STATE and out of a backup); without the key nothing is written
   and the copy lives in memory only. STATE/kalender-spiegel/<calendar entry id>.json, deleted with the entry or
   the profile.
-- Only reading here; writing stays with calendars.put_ics/delete_href (stage 2 writes into the copy first).
+- Stage 2: a change from the page goes into the copy first (put_local) and to the server behind it
+  (calendars._behind); taken() or undo() when the server answered. The assistant's changes still wait for the server.
 - What comes from the server is data: kept and parsed as iCalendar text, never followed or run. At most MAX_ITEMS
   objects of at most MAX_TEXT characters per calendar.
 - Live: how many calendars are mirrored, how many appointments, how long since the last comparison (numbers only).
@@ -157,6 +158,75 @@ async def texts(c, cid, url, start, end):
     return [x[1] for x in cal["items"].values() if x[2] < b and x[3] > a]
 
 
+async def objects(c, cid, url, start, end):
+    """[(href as the server writes it, etag, text)] like texts(), for finding one appointment to change."""
+    await texts(c, cid, url, start, end)
+    a, b = start.timestamp(), end.timestamp()
+    cal = _load(cid).get(url) or {"items": {}}
+    return [(h, x[0], x[1]) for h, x in cal["items"].items() if x[2] < b and x[3] > a]
+
+
+def ready(cid, url):
+    """True when the copy of this calendar is complete (a page change may go into it first)."""
+    cal = _load(cid).get(url) if CID.fullmatch(str(cid or "")) else None
+    return bool(cal and cal.get("done"))
+
+
+def item(cid, url, href):
+    """(etag, text) of one object in the copy, or None (not there, or the copy is not ready)."""
+    cal = _load(cid).get(url) if CID.fullmatch(str(cid)) else None
+    x = cal["items"].get(_path(href)) if cal and cal.get("done") else None
+    return (x[0], x[1]) if x else None
+
+
+# Stufe 2 (Dominik 2026-10-19 „3a“): a change from the page lands in the copy at once and goes to the server behind
+# it (calendars._behind). Until the server took it, the object is "pending": a comparison neither drops it nor
+# overwrites it. If the server refuses, the copy goes back and the next comparison starts from scratch (the
+# server's version wins).
+_pending = set()       # (cid, href) written here, not yet taken by the server
+
+
+def put_local(cid, url, href, text):
+    """The object as the page just saved it (text) or deleted it (None). Returns how it was, for undo()."""
+    cal = _load(cid).setdefault(url, {"token": "", "at": 0.0, "items": {}})
+    h = _path(href)
+    before = cal["items"].get(h)
+    if text is None:
+        cal["items"].pop(h, None)
+    else:
+        cal["items"][h] = ["", text, *_span(text)]
+    _pending.add((cid, h))
+    return before
+
+
+def taken(cid, url, href, tag=""):
+    """The server took the change: the object's new etag (or "" until the next comparison brings it). The next look
+    lists the whole calendar once (etags only): a server may leave out of its changes an object made and removed
+    after the token the copy holds (RFC 6578 3.5), and this one was made here."""
+    h = _path(href)
+    _pending.discard((cid, h))
+    cal = _load(cid).get(url)
+    if cal and h in cal["items"]:
+        cal["items"][h][0] = tag or ""
+    if cal:
+        cal.update(token="", at=0.0)
+        _save(cid)
+
+
+def undo(cid, url, href, before):
+    """The server refused: the copy goes back, and the next look compares everything anew (the server wins)."""
+    h = _path(href)
+    _pending.discard((cid, h))
+    cal = _load(cid).get(url)
+    if not cal:
+        return
+    if before is None:
+        cal["items"].pop(h, None)
+    else:
+        cal["items"][h] = before
+    cal.update(token="", at=0.0)
+
+
 def _status(resp):
     s = resp.findtext("d:status", "", NS) or resp.findtext("d:propstat/d:status", "", NS)
     m = re.search(r"\s(\d{3})\s", s + " ")
@@ -172,6 +242,8 @@ async def _sync(c, cid, url, cal):
         if tags is None:   # no sync-collection (or the token is no longer valid there): compare all etags
             tags, token = await _etags(c, url)
             gone = [h for h in cal["items"] if h not in tags]
+        elif not cal["token"]:   # without a token the server lists every object: what it leaves out is gone
+            gone = sorted(set(gone) | {h for h in cal["items"] if h not in tags})
         want = [h for h, tag in tags.items() if (cal["items"].get(h) or [None])[0] != tag][:MAX_ITEMS]
         got = {}
         for i in range(0, len(want), MULTIGET):
@@ -184,6 +256,8 @@ async def _sync(c, cid, url, cal):
     except Exception as e:
         print(f"calendar: mirror failed ({type(e).__name__})", flush=True)
         raise
+    gone = [h for h in gone if (cid, h) not in _pending]
+    got = {h: v for h, v in got.items() if (cid, h) not in _pending}
     for h in gone:
         cal["items"].pop(h, None)
     for h, (tag, text) in got.items():
@@ -248,12 +322,15 @@ async def _etags(c, url):
     if r.status_code != 207:
         raise Unsupported()
     root = await asyncio.to_thread(_root, r.content)
-    tags = {}
+    tags, members = {}, 0
     for resp in (root.findall("d:response", NS) if root is not None else []):
         href = (resp.findtext("d:href", "", NS) or "").strip()
         tag = (resp.findtext("d:propstat/d:prop/d:getetag", "", NS) or "").strip()
+        members += bool(href) and href.rstrip("/") != _path(url).rstrip("/")
         if href and tag and href.lower().endswith(".ics"):
             tags[href] = tag
+    if not members:   # no sync-collection and no member list either: it cannot be compared, asked by period instead
+        raise Unsupported()
     return tags, ""
 
 
