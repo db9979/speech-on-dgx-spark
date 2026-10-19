@@ -508,6 +508,12 @@ async def anrufe_loop():
 
 
 @app.on_event("startup")
+async def calendar_fresh():
+    """Kalender (calendars.keep_fresh): the appointments of whoever read them lately are fetched anew in the background."""
+    spawn(calendars.keep_fresh_loop())
+
+
+@app.on_event("startup")
 async def verbund_queue():
     """Chats mit anderen Sparks (verbund.py): what waits for another Spark goes out every 30 seconds, new ones at once."""
     spawn(verbund.loop())

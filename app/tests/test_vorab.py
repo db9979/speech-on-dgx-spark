@@ -257,8 +257,8 @@ class CalendarCover(unittest.TestCase):
             asyncio.run(calendars._one("u1", cal, start + datetime.timedelta(days=1), start + datetime.timedelta(days=2), zone))
             self.assertEqual(len(calls), 1)    # tomorrow came from the eight days fetched ahead
             asyncio.run(calendars._one("u2", cal, start + datetime.timedelta(days=1), start + datetime.timedelta(days=2), zone))
-            asyncio.run(calendars._one("u1", cal, start + datetime.timedelta(days=7), start + datetime.timedelta(days=10), zone))
-            self.assertEqual(len(calls), 3)    # another profile, and a period beyond the fetched one: fetched anew
+            asyncio.run(calendars._one("u1", cal, start + datetime.timedelta(days=21), start + datetime.timedelta(days=24), zone))
+            self.assertEqual(len(calls), 3)    # another profile, and a period in the next month: fetched anew
         finally:
             calendars._fetch = saved
             calendars._cache.clear()

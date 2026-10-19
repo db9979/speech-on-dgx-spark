@@ -39,8 +39,15 @@ import vault
 
 MAX_TOPICS = 3
 MAX_CALENDARS = 8
-CACHE_SECONDS = 300
-_cache = {}
+CACHE_SECONDS = 300         # a calendar block younger than this is used as it is
+STALE_SECONDS = 24 * 3600   # the page shows an older block at once and fetches it anew in the background
+FOUND_SECONDS = 6 * 3600    # where the calendars of an address are (CalDAV discovery), asked again after this
+WARM_SECONDS = 24 * 3600    # profiles that read their calendars in this time are kept fresh in the background
+_cache = {}                 # (owner uid, calendar id, month "YYYY-MM-01" or "*" for an iCal file) -> (time, iCal texts)
+_found = {}                 # (calendar id, address, user) -> (time, [(calendar url, name)], or None for an iCal file)
+_inflight = {}              # cache key -> the task fetching that block (one fetch per block, whoever asks)
+_used = {}                  # uid -> when it last read its calendars (keep_fresh)
+_epoch = [0]                # counts drops: a fetch started before a change never stores its older answer
 _lock = threading.Lock()
 NS = {"d": "DAV:", "c": "urn:ietf:params:xml:ns:caldav"}
 WEEKDAYS = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
@@ -245,11 +252,14 @@ def forget(uid):
 
 
 def _drop(uid):
+    _epoch[0] += 1
+    _found.clear()
     for k in [k for k in _cache if k[0] == uid]:
         _cache.pop(k, None)
 
 
 def _drop_shared(cid):
+    _epoch[0] += 1
     for k in [k for k in _cache if k[1] == cid]:
         _cache.pop(k, None)
 
@@ -325,7 +335,7 @@ async def _report(c, cal, start, end):
     r = await c.request("REPORT", cal, content=q, headers={"Depth": "1", "Content-Type": "application/xml"})
     if r.status_code != 207:
         raise ValueError(f"the calendar server answered {r.status_code}")
-    root = _xml(r.content)
+    root = await asyncio.to_thread(_xml, r.content)   # a month of a big calendar: parsed outside the event loop
     return [x.text for x in (root.iter("{urn:ietf:params:xml:ns:caldav}calendar-data") if root is not None else [])
             if x.text and "BEGIN:VCALENDAR" in x.text]
 
@@ -338,6 +348,22 @@ async def _fetch(d, start, end):
     async with netguard.client(netguard.USER, origin=web, timeout=httpx.Timeout(20, connect=8), auth=auth,
                                follow_redirects=True, headers={"User-Agent": "speech-on-dgx-spark"},
                                seen=hintergrund.tracker("cal", d.get("id")) if d.get("id") else None) as c:
+        where = (d.get("id"), url, d.get("user"))
+        known = _found.get(where)
+        if known and known[1] and time.time() - known[0] < FOUND_SECONDS:
+            # the calendars of this address were found before: straight to them, without the discovery round trips
+            texts, ok, last = [], 0, None
+            for part in await asyncio.gather(*(_report(c, u, start, end) for u, _ in known[1][:20]), return_exceptions=True):
+                if isinstance(part, Exception):
+                    last = part
+                    continue
+                texts += part
+                ok += 1
+            if ok:
+                return texts, len(known[1])
+            _found.pop(where, None)   # none answered: find them anew below (the error of a single one stands)
+            if len(known[1]) == 1 and isinstance(last, ValueError) and "401" in str(last):
+                raise last
         if re.match(r"webcals?://", url, re.I):
             # webcal:// is a subscription link; iCloud, Google and most others serve it over https only
             # (plain http only for a link without login data: a password never goes unencrypted)
@@ -357,10 +383,12 @@ async def _fetch(d, start, end):
         if r.status_code == 200 and r.content[:4096].lstrip(b"\xef\xbb\xbf \r\n\t").startswith(b"BEGIN:VCALENDAR"):
             if len(r.content) > 20 * 1024 * 1024:
                 raise ValueError("the calendar file is larger than 20 MB")
+            _found[where] = (time.time(), None)
             return [r.text], 1
         cals = await _calendars(c, str(r.url) if r.status_code == 200 else url)
         if not cals:
             raise ValueError("no calendar found at this address (CalDAV server or iCal link expected)")
+        _found[where] = (time.time(), cals)
         texts = []
         for part in await asyncio.gather(*(_report(c, u, start, end) for u, _ in cals[:20]), return_exceptions=True):
             if isinstance(part, Exception):
@@ -431,23 +459,76 @@ def _expand(texts, start, end, zone, name=""):
     return sorted(uniq.values(), key=lambda x: (x["start"], not x["allday"]))
 
 
-async def _one(uid, cal, start, end, zone):
-    # fetched for whole days (so the check every minute hits the cache instead of adding an entry
-    # and asking the server each time); expanded for the exact period asked
-    utc = datetime.timezone.utc
-    day0 = start.astimezone(utc).replace(hour=0, minute=0, second=0, microsecond=0)
-    day1 = end.astimezone(utc).replace(hour=0, minute=0, second=0, microsecond=0) + datetime.timedelta(days=1)
-    key = (uid, cal["id"], day0.isoformat(), day1.isoformat())
+def _months(start, end):
+    """The first days (UTC) of the months [start, end) touches: the blocks the cache keeps."""
+    m = start.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    out = []
+    while m < end and len(out) < 24:
+        out.append(m)
+        m = (m + datetime.timedelta(days=32)).replace(day=1)
+    return out
+
+
+async def _pull(uid, cal, key, a, b):
+    epoch = _epoch[0]
+    texts, _ = await _fetch(cal, a, b)
+    if epoch == _epoch[0]:
+        ical = (cal.get("id"), cal.get("url"), cal.get("user")) in _found \
+            and _found[(cal.get("id"), cal.get("url"), cal.get("user"))][1] is None
+        _cache[(uid, cal["id"], "*") if ical else key] = (time.time(), texts)
+    return texts
+
+
+def _block(uid, cal, key, a, b, behind=False):
+    """The task fetching one block, started once however many ask. It runs on its own: a page that stops waiting
+    (VIEW_BUDGET) never cancels it, so its answer still lands in the cache for the next look. behind: nobody waits
+    for it (a refresh behind the page), so a failure writes its own line."""
+    task = _inflight.get(key)
+    if task is not None and task.get_loop() is not asyncio.get_running_loop():
+        task = None   # started in another event loop (a thread of its own): this one fetches for itself
+    if task is None:
+        task = asyncio.ensure_future(_pull(uid, cal, key, a, b))
+        task.behind = behind
+        _inflight[key] = task
+        task.add_done_callback(lambda t, k=key, who=uid: _pulled(k, who, t))
+    return task
+
+
+def _pulled(key, uid, task):
+    _inflight.pop(key, None)
+    if task.cancelled():
+        return
+    e = task.exception()   # always read, so no "exception never retrieved"
+    if e is not None and task.behind:
+        print(f"calendar: refresh failed ({type(e).__name__}) | {profiles.log_name(profiles.by_id(uid))}", flush=True)
+
+
+async def _one(uid, cal, start, end, zone, stale=False):
+    # kept per calendar month (UTC), so the check every minute, the assistant, the briefing and the page all hit the
+    # same blocks; expanded for the exact period asked. stale (the page, keep_fresh): a block up to a day old is used
+    # at once and fetched anew in the background.
     now = time.time()
-    for k in [k for k, v in _cache.items() if now - v[0] >= CACHE_SECONDS]:
+    for k in [k for k, v in _cache.items() if now - v[0] >= STALE_SECONDS]:
         _cache.pop(k, None)
-    # a longer period fetched before (e.g. the next days, vorab.py) holds every event of a shorter one in it
-    hit = _cache.get(key) or next((v for k, v in _cache.items() if k[:2] == key[:2] and k[2] <= key[2] and k[3] >= key[3]), None)
-    if hit:
-        texts = hit[1]
+    blocks = _months(start.astimezone(datetime.timezone.utc), end.astimezone(datetime.timezone.utc))
+    whole = (uid, cal["id"], "*")
+    if whole in _cache:   # an iCal file: one text for every period
+        want = [(whole, blocks[0], (blocks[-1] + datetime.timedelta(days=32)).replace(day=1))]
     else:
-        texts, _ = await _fetch(cal, day0, day1)
-        _cache[key] = (now, texts)
+        want = [((uid, cal["id"], m.date().isoformat()), m, (m + datetime.timedelta(days=32)).replace(day=1)) for m in blocks]
+    wait = []
+    for key, a, b in want:
+        hit = _cache.get(key)
+        if hit and now - hit[0] < CACHE_SECONDS:
+            continue
+        task = _block(uid, cal, key, a, b, behind=bool(hit and stale))
+        if not (hit and stale):
+            wait.append(task)
+    for r in await asyncio.gather(*(asyncio.shield(t) for t in wait), return_exceptions=True):
+        if isinstance(r, BaseException):
+            raise r
+    keys = [whole] if whole in _cache else [k for k, _, _ in want]
+    texts = list(dict.fromkeys(x for k in keys for x in (_cache.get(k) or (0, []))[1]))
     # expanding runs outside the event loop, so a heavy calendar never stalls the panel
     evs = await asyncio.to_thread(_expand, texts, start, end, zone, cal.get("name", ""))
     if cal.get("owner"):   # shared by another profile (2a): a private appointment is only „belegt“ with its time
@@ -455,21 +536,27 @@ async def _one(uid, cal, start, end, zone):
     return evs
 
 
-async def events(uid, start, end, zone, shared=False):
-    """(events of all the profile's calendars from start to end, sorted; [(name, error)] of the
-    calendars that could not be read). None when no calendar is connected. shared: also the calendars other
-    profiles share with it (the page and the assistant's calendar_events; never the briefing or Von selbst)."""
+async def _collect(uid, start, end, zone, shared, stale, budget=None):
+    """(events, [(name, error)], [names still loading]) of the profile's calendars. budget: seconds to wait at most;
+    a calendar not done by then keeps loading in the background and is named in the third list."""
     cals = (reading(uid) if shared else get(uid))["calendars"]
-    if not cals:
-        return None
+    _used[uid] = time.time()
     # a shared calendar is cached under its owner (the same fetch serves the owner and everyone it is shared with)
-    res = await asyncio.gather(*(_one(c.get("owner") or uid, c, start, end, zone) for c in cals), return_exceptions=True)
-    evs, errors = [], []
-    for c, r in zip(cals, res):
-        if isinstance(r, Exception):
+    tasks = [asyncio.ensure_future(_one(c.get("owner") or uid, c, start, end, zone, stale)) for c in cals]
+    if budget is not None and tasks:
+        await asyncio.wait(tasks, timeout=budget)
+    else:
+        await asyncio.gather(*tasks, return_exceptions=True)
+    evs, errors, loading = [], [], []
+    for c, t in zip(cals, tasks):
+        if not t.done():
+            t.cancel()   # only this reader; the fetch itself goes on (_block)
+            loading.append(c.get("name", ""))
+        elif t.exception() is not None:
+            r = t.exception()
             errors.append((c.get("name", ""), str(r) if isinstance(r, ValueError) else f"not reachable ({type(r).__name__})"))
         else:
-            evs += r
+            evs += t.result()
     many = len(cals) > 1 or any(c.get("owner") for c in cals)   # a shared one always says whose it is
     uniq = {}
     for x in evs:   # the same appointment in two calendars (e.g. shared ones) is read out once
@@ -479,12 +566,58 @@ async def events(uid, start, end, zone, shared=False):
                 uniq[k]["calendar"] += ", " + x["calendar"]
         else:
             uniq[k] = dict(x, many=many)
-    return sorted(uniq.values(), key=lambda x: (x["start"], not x["allday"])), errors
+    return sorted(uniq.values(), key=lambda x: (x["start"], not x["allday"])), errors, loading
+
+
+async def events(uid, start, end, zone, shared=False):
+    """(events of all the profile's calendars from start to end, sorted; [(name, error)] of the
+    calendars that could not be read). None when no calendar is connected. shared: also the calendars other
+    profiles share with it (the page and the assistant's calendar_events; never the briefing or Von selbst)."""
+    if not (reading(uid) if shared else get(uid))["calendars"]:
+        return None
+    evs, errors, _ = await _collect(uid, start, end, zone, shared, False)
+    return evs, errors
+
+
+async def keep_fresh(now=None):
+    """Background refresh (Dominik 2026-10-19 „caching für einträge und hintergrund aktualisierung“): the blocks of
+    this and the next month of every profile that read its calendars in the last WARM_SECONDS are fetched anew when
+    older than CACHE_SECONDS, so the page and the assistant answer from the cache. Only reading; nothing is said or
+    kept elsewhere. Returns (profiles, calendars refreshed)."""
+    import features
+    now = time.time() if now is None else now
+    people = n = 0
+    for uid, seen in list(_used.items()):
+        if now - seen > WARM_SECONDS:
+            _used.pop(uid, None)
+            continue
+        if not features.allowed("calendar", uid):
+            continue
+        cals = reading(uid)["calendars"]
+        t0 = datetime.datetime.fromtimestamp(now, datetime.timezone.utc)
+        res = await asyncio.gather(*(_one(c.get("owner") or uid, c, t0, t0 + datetime.timedelta(days=35),
+                                          datetime.timezone.utc) for c in cals), return_exceptions=True)
+        people += 1
+        n += sum(1 for r in res if not isinstance(r, BaseException))
+    return people, n
+
+
+async def keep_fresh_loop():
+    """Started with the panel; every CACHE_SECONDS one keep_fresh, one line when it fetched something."""
+    while True:
+        await asyncio.sleep(CACHE_SECONDS)
+        try:
+            people, n = await keep_fresh()
+            if people:
+                print(f"calendar: kept fresh | {n} calendars of {people} profiles", flush=True)
+        except Exception as e:
+            print(f"calendar: keep fresh failed ({type(e).__name__})", flush=True)
 
 
 # ---------------------------------------------------------------- the page Kalender (kalender.js)
 VIEW_DAYS = 42            # the page asks for at most six weeks at a time (a month with its weeks around it)
-VIEW_BUDGET = 8.0         # seconds; a slow calendar shows "nicht erreicht" on the page, the page never waits longer
+VIEW_BUDGET = 8.0         # seconds; a slow calendar shows „lädt noch“ and keeps loading in the background, the page
+                          # never waits longer and asks again (kalender.js)
 VIEW_MAX = 600            # appointments per answer
 
 
@@ -506,12 +639,7 @@ async def view(uid, day, days, zone):
     edit = [i for i, c in enumerate(cals) if not c.get("owner") and c["id"] in own]
     add = edit + [i for i, c in enumerate(cals) if c.get("owner") and c.get("level") == "add"
                   and not re.match(r"webcals?://", c["url"], re.I) and not re.search(r"\.ics(\?|$)", c["url"], re.I)]
-    try:
-        r = await asyncio.wait_for(events(uid, t0, t1, zone, shared=True), VIEW_BUDGET)
-    except asyncio.TimeoutError:
-        return {"connected": True, "calendars": names, "shared": shared, "edit": edit, "add": add, "events": [],
-                "errors": names, "slow": True}
-    evs, errors = r if r else ([], [])
+    evs, errors, loading = await _collect(uid, t0, t1, zone, True, True, VIEW_BUDGET)
     out = []
     for x in evs[:VIEW_MAX]:
         first = (x.get("calendar") or "").split(", ")[0]
@@ -520,7 +648,7 @@ async def view(uid, day, days, zone):
                     "title": x["title"], "location": x["location"], "cal": i,
                     "edit": i in edit and not x.get("repeat")})
     return {"connected": True, "calendars": names, "shared": shared, "edit": edit, "add": add, "events": out,
-            "errors": [n for n, _ in errors]}
+            "errors": [n for n, _ in errors], "loading": loading}
 
 
 # ---------------------------------------------------------------- the page Kalender changes (stage 2)
@@ -772,7 +900,7 @@ async def _objects(c, cal, start, end):
     r = await c.request("REPORT", cal, content=q, headers={"Depth": "1", "Content-Type": "application/xml"})
     if r.status_code != 207:
         raise ValueError(f"the calendar server answered {r.status_code}")
-    root = _xml(r.content)
+    root = await asyncio.to_thread(_xml, r.content)   # a month of a big calendar: parsed outside the event loop
     out = []
     for resp in (root.findall("d:response", NS) if root is not None else []):
         href = _href(cal, resp.find("d:href", NS))

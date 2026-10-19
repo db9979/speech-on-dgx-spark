@@ -348,6 +348,7 @@ def calendar_lines(d, start):
         if not evs:
             lines.append("  –")
     lines += [f"Nicht erreicht: {n}" for n in d.get("errors", [])]
+    lines += [f"Lädt noch: {n}" for n in d.get("loading", [])]
     return lines
 
 

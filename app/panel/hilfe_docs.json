@@ -4629,7 +4629,23 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "Seite Kalender (V01.0.805, Dominik 2026-10-18, Plan kalender-mail/plan.md 1a 4a): Der Kalender ist eine eigene Seite im Menü (links unter „Assistent“, auf dem Handy über die Karte „Termine“ unter Heute), nicht mehr eine Seite unter Ich. Reiter Termine: Tag, Woche, Monat oder Liste, mit ‹ Heute › blättern; ganztägige Termine oben, Termine, die sich überschneiden, nebeneinander; jeder Kalender hat seine Farbe; Antippen zeigt Zeit, Ort und Kalender. Ein Kalender, der nicht antwortet, steht oben als „Nicht erreicht“, nach 8 Sekunden zeigt die Seite den Rest. Reiter Einstellungen: alles, was vorher unter Ich → Kalender stand (Kalender verbinden und entfernen, Themen fürs Briefing, „Nächste Termine zeigen“). Jeder Weg „Kalender → Einstellungen → …“ in Hilfe, Tipps und Apps springt dorthin; alte Links auf #me=calbox öffnen die Seite. Gelesen wird nur über GET /api/profile/calendar/view (eigenes Profil, höchstens 42 Tage, Rate-Limit), Titel und Orte kommen nur als Text auf die Seite. Termine ändern auf der Seite kommt in Stufe 2; bis dahin per Assistent („Verschieb den Termin …“)."
+"text": "Seite Kalender (V01.0.805, Dominik 2026-10-18, Plan kalender-mail/plan.md 1a 4a): Der Kalender ist eine eigene Seite im Menü (links unter „Assistent“, auf dem Handy über die Karte „Termine“ unter Heute), nicht mehr eine Seite unter Ich. Reiter Termine: Tag, Woche, Monat oder Liste, mit ‹ Heute › blättern; ganztägige Termine oben, Termine, die sich überschneiden, nebeneinander; jeder Kalender hat seine Farbe; Antippen zeigt Zeit, Ort und Kalender. Ein Kalender, der nicht antwortet, steht oben als „Nicht erreicht“; einer, der nach 8 Sekunden noch lädt, steht als „Lädt noch“ und erscheint von selbst, sobald er da ist (siehe Zwischenspeicher unten). Reiter Einstellungen: alles, was vorher unter Ich → Kalender stand (Kalender verbinden und entfernen, Themen fürs Briefing, „Nächste Termine zeigen“). Jeder Weg „Kalender → Einstellungen → …“ in Hilfe, Tipps und Apps springt dorthin; alte Links auf #me=calbox öffnen die Seite. Gelesen wird nur über GET /api/profile/calendar/view (eigenes Profil, höchstens 42 Tage, Rate-Limit), Titel und Orte kommen nur als Text auf die Seite. Termine ändern auf der Seite kommt in Stufe 2; bis dahin per Assistent („Verschieb den Termin …“)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Kalender schnell: Zwischenspeicher und Hintergrund (V01.0.817, Dominik 2026-10-19 „kalender langsam, caching für einträge und hintergrund aktualisierung“): Der Spark hält die Termine jedes Kalenders monatsweise im Arbeitsspeicher des Panels (calendars.py), nie auf der Platte. Seite, Assistent, Briefing und „Von selbst“ lesen dieselben Monate; ein Monat wird nur einmal geholt, auch wenn mehrere gleichzeitig fragen. Wo die Kalender einer Adresse liegen (CalDAV-Suche, bei iCloud mehrere Anfragen), merkt sich der Spark 6 Stunden; danach geht jeder Abruf direkt zu den Kalendern. Die Seite wartet höchstens 8 Sekunden: Was dann noch lädt, lädt im Hintergrund weiter und steht im Speicher, die Seite fragt nach 3 Sekunden von selbst noch einmal (höchstens 5-mal). Vorher brach der Abruf nach 8 Sekunden ab und nichts wurde gespeichert, daher „3 of 3 calendars slow“ bei jedem Öffnen. Ein Monat, der älter als 5 Minuten ist, zeigt die Seite sofort und holt ihn dahinter neu (bis 24 Stunden alt); der Assistent wartet auf einen frischen. Alle 5 Minuten holt das Panel diesen und den nächsten Monat neu für jedes Profil, das in den letzten 24 Stunden seine Termine gelesen hat. Ändert sich ein Termin od"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "er eine Einstellung, verfällt der Speicher sofort, und ein Abruf, der vorher begonnen hat, speichert nichts mehr. Ein großer Kalender wird außerhalb der Ereignisschleife gelesen, damit das Panel nicht stockt. Kein Schalter: es ist der bisherige Kalender, nur schneller. Logs: calendar: view loading | n of m calendars, calendar: kept fresh | n calendars of m profiles, calendar: refresh failed (Fehler). Die uConsole (spark-tui kalender) zeigt „Lädt noch: …“."
 },
 {
 "lang": "de",
@@ -12781,7 +12797,23 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "Page Calendar (V01.0.805, Dominik 2026-10-18, plan kalender-mail/plan.md 1a 4a): the calendar is a page of its own in the menu (on the left below \"Assistant\", on phones through the card \"Appointments\" under Today), no longer a page under Me. Tab Appointments: day, week, month or list, paging with ‹ Today ›; all-day appointments on top, overlapping ones side by side; each calendar has its colour; a tap shows time, place and calendar. A calendar that does not answer is named on top as \"Not reached\"; after 8 seconds the page shows the rest. Tab Settings: everything that was under Me → Calendar before (connect and remove calendars, topics for the briefing, \"Show next appointments\"). Every way \"Calendar → Settings → …\" in help, hints and apps leads there; old links to #me=calbox open the page. Read only through GET /api/profile/calendar/view (own profile, at most 42 days, rate limit); titles and places reach the page only as text. Changing appointments on the page comes in stage 2; until then through the assistant (\"Move the appointment …\")."
+"text": "Page Calendar (V01.0.805, Dominik 2026-10-18, plan kalender-mail/plan.md 1a 4a): the calendar is a page of its own in the menu (on the left below \"Assistant\", on phones through the card \"Appointments\" under Today), no longer a page under Me. Tab Appointments: day, week, month or list, paging with ‹ Today ›; all-day appointments on top, overlapping ones side by side; each calendar has its colour; a tap shows time, place and calendar. A calendar that does not answer is named on top as \"Not reached\"; one still loading after 8 seconds is named \"Still loading\" and appears by itself once it is there (see the cache below). Tab Settings: everything that was under Me → Calendar before (connect and remove calendars, topics for the briefing, \"Show next appointments\"). Every way \"Calendar → Settings → …\" in help, hints and apps leads there; old links to #me=calbox open the page. Read only through GET /api/profile/calendar/view (own profile, at most 42 days, rate limit); titles and places reach the page only as text. Changing appointments on the page comes in stage 2; until then through the assistant (\"Move the appointment …\")."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "Calendar fast: cache and background refresh (V01.0.817, Dominik 2026-10-19 \"calendar slow, caching for entries and background refresh\"): The Spark keeps the appointments of each calendar month by month in the panel's memory (calendars.py), never on disk. Page, assistant, briefing and \"On its own\" read the same months; a month is fetched once even when several ask at the same time. Where an address's calendars are (CalDAV discovery, several requests at iCloud) is kept for 6 hours; after that every fetch goes straight to the calendars. The page waits at most 8 seconds: whatever is still loading then keeps loading in the background and lands in the cache, and the page asks again by itself after 3 seconds (at most 5 times). Before, the fetch was cancelled after 8 seconds and nothing was kept, hence \"3 of 3 calendars slow\" on every opening. A month older than 5 minutes is shown on the page at once and fetched anew behind it (up to 24 hours old); the assistant waits for a fresh one. Every 5 minutes the panel fetches this and the next month anew for every profile that read its appointments in the last 24 hours. When an appointment or a setting changes, the cache is dropped at once, and a "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "fetch begun before stores nothing. A big calendar is parsed outside the event loop so the panel does not stall. No switch: it is the existing calendar, only faster. Logs: calendar: view loading | n of m calendars, calendar: kept fresh | n calendars of m profiles, calendar: refresh failed (error). The uConsole (spark-tui kalender) shows \"Lädt noch: …\"."
 },
 {
 "lang": "en",

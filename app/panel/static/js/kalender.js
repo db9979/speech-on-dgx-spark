@@ -32,9 +32,11 @@ function kalTitle(){const [a,n]=kalRange(),o={day:'numeric',month:'long',year:'n
 // the appointments of one day (an all-day one counts on every day it covers)
 function kalOn(day){const a=day.getTime()/1000,b=kalAdd(day,1).getTime()/1000;
   return ((KAL.data&&KAL.data.events)||[]).filter(x=>x.allday?x.start<b&&Math.max(x.end,x.start+1)>a:x.start<b&&Math.max(x.end,x.start+60)>a)}
-async function kalLoad(){if(!PROFILE||!CAL_ON)return;const [a,n]=kalRange(),seq=++KAL.seq;KAL.busy=true;kalDraw();
+// again: a calendar still loading in the background (calendars.view) is asked for once more after 3 s, at most 5 times
+async function kalLoad(again){if(!PROFILE||!CAL_ON)return;const [a,n]=kalRange(),seq=++KAL.seq;KAL.busy=!again;KAL.tries=again?(KAL.tries||0)+1:0;kalDraw();
   try{const d=await (await api('/api/profile/calendar/view?'+new URLSearchParams({start:kalIso(a),days:n,tz:TZ()}))).json();
-    if(seq!==KAL.seq)return;KAL.data=d;KAL.err=''}
+    if(seq!==KAL.seq)return;KAL.data=d;KAL.err='';
+    if(d.loading&&d.loading.length&&KAL.tries<5)setTimeout(()=>{if(seq===KAL.seq&&$('kalview'))kalLoad(true)},3000)}
   catch(e){if(seq!==KAL.seq)return;KAL.err=e.message||t('Nicht erreicht','Not reached')}
   KAL.busy=false;kalDraw()}
 function kalOpen(){if(!PROFILE)return;if(!KAL.day)KAL.day=kalDay(new Date());if(!KAL.view)KAL.view=NARROW()?'list':'week';
@@ -49,7 +51,8 @@ function kalPaint(w){const d=KAL.data;
   w.innerHTML=`<div class="kaltools"><span class="kalnav"><button class="b" type="button" data-k="prev" aria-label="${esc(t('Zurück','Back'))}">‹</button><button class="b" type="button" data-k="today">${esc(t('Heute','Today'))}</button><button class="b" type="button" data-k="next" aria-label="${esc(t('Weiter','Next'))}">›</button></span>`+
     `<b class="kaltitle">${esc(kalTitle())}</b>${d&&d.add&&d.add.length?`<button class="b p" type="button" data-k="new">${esc(t('+ Termin','+ Appointment'))}</button>`:''}<span class="segc" role="radiogroup">${KAL_VIEWS.map(([k,l])=>`<button type="button" data-v="${k}" class="${k===KAL.view?'on':''}" aria-pressed="${k===KAL.view}">${esc(l)}</button>`).join('')}</span></div>`+
     (KAL.err?`<div class="note warn">${esc(t('Die Termine kamen nicht an: ','The appointments did not arrive: ')+KAL.err)}</div>`:'')+
-    (d&&d.errors&&d.errors.length?`<div class="note warn">${esc((d.slow?t('Zu langsam, nicht gezeigt: ','Too slow, not shown: '):t('Nicht erreicht: ','Not reached: '))+d.errors.join(', '))}</div>`:'')+
+    (d&&d.errors&&d.errors.length?`<div class="note warn">${esc(t('Nicht erreicht: ','Not reached: ')+d.errors.join(', '))}</div>`:'')+
+    (d&&d.loading&&d.loading.length?`<div class="note">${esc(t('Lädt noch: ','Still loading: ')+d.loading.join(', '))}</div>`:'')+
     (d&&d.connected===false?`<div class="empty">${esc(t('Noch kein Kalender verbunden. Unter Einstellungen verbindest du iCloud, Nextcloud, einen anderen CalDAV-Server oder einen Abo-Link.','No calendar connected yet. Under Settings you connect iCloud, Nextcloud, another CalDAV server or a subscription link.'))}<div><button class="b p" type="button" data-k="set">${esc(t('Kalender verbinden','Connect a calendar'))}</button></div></div>`
       :`<div class="kalsplit"><div class="kalmain${KAL.busy?' busy':''}"></div><div class="ld-detail kaldet" hidden></div></div>`+
        (d&&d.calendars&&d.calendars.length>1?`<div class="kallegend">${d.calendars.map((n,i)=>`<span><i class="${kalKc(i)}"></i>${esc(n)}</span>`).join('')}</div>`:''));

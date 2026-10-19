@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.817** Calendar fast: appointments cached by month, a slow calendar keeps loading in the background instead of being cut off, refreshed every 5 minutes behind the scenes.
 - **V01.0.816** The panel no longer stalls while syncing big knowledge folders; on a stall the log names the thread that computes
 - **V01.0.815** Calendar and e-mail in the iPhone app: four weeks of appointments (add, change, delete), the inbox with reading, ordering and sending; kept on the phone; CarPlay reads appointments and new mail aloud.
 - **V01.0.814** Send mail from the E-mail page: a new mail or a reply, a preview sheet first, sent only with "Send" there; TLS only, copy in "Sent" (switch off by default).
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.810** Speaking up by itself in one place: the mail rows (important mail, tidying, parcel today) moved to E-mail → Settings, appointments ahead to Calendar → Settings.
 - **V01.0.809** E-mail as a page of its own in the menu: inbox of every mailbox, read a message as plain text; mailboxes, tidying, mail style and parcels under Settings, no longer under Me
 - **V01.0.808** For you from mail: bills with a deadline, contracts, orders, offers, open replies and phishing from your mails, read-only
-- **V01.0.807** uConsole and terminal: `spark-tui kalender` and F5 show the week of the page Calendar (read only); then `spark-tui update`
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

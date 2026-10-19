@@ -75,17 +75,17 @@ class View(unittest.TestCase):
         day = __import__("datetime").date(2026, 3, 9)
         from zoneinfo import ZoneInfo
         got = []
-        orig = calendars.events
+        orig = calendars._collect
 
-        async def spy(uid, start, end, zone, **kw):
+        async def spy(uid, start, end, zone, *a, **kw):
             got.append((end - start).days)
-            return await orig(uid, start, end, zone, **kw)
-        calendars.events = spy
+            return await orig(uid, start, end, zone, *a, **kw)
+        calendars._collect = spy
         try:
             asyncio.run(calendars.view(self.uid, day, 500, ZoneInfo("Europe/Berlin")))
             asyncio.run(calendars.view(self.uid, day, -3, ZoneInfo("Europe/Berlin")))
         finally:
-            calendars.events = orig
+            calendars._collect = orig
         self.assertEqual(got, [calendars.VIEW_DAYS, 1])
 
     def test_only_own_and_never_guests(self):

@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.817** Kalender schnell: Termine monatsweise zwischengespeichert, ein langsamer Kalender lädt im Hintergrund weiter statt abzubrechen, alle 5 Minuten im Hintergrund aktualisiert.
 - **V01.0.816** Das Panel hängt nicht mehr beim Abgleich großer Wissensordner; das Log nennt bei einem Hänger den rechnenden Faden
 - **V01.0.815** Kalender und E-Mail in der iPhone-App: vier Wochen Termine (anlegen, ändern, löschen), Posteingang mit Lesen, Ordnen und Senden; auf dem Handy zwischengespeichert; CarPlay liest Termine und neue Mails vor.
 - **V01.0.814** Mails senden auf der Seite E-Mail: neue Mail oder Antwort, erst ein Vorschau-Blatt, gesendet nur mit „Senden“ dort; nur verschlüsselt, Kopie in „Gesendet“ (Schalter, aus).
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.810** Von selbst melden an einem Ort: die Mail-Zeilen (Wichtige Mails, Aufräumen, Paket heute) stehen unter E-Mail → Einstellungen, der Termin-Vorlauf unter Kalender → Einstellungen.
 - **V01.0.809** E-Mail als eigene Seite im Menü: Posteingang aller Postfächer, Mail lesen als reiner Text; Postfächer, Aufräumen, Mailstil und Pakete unter Einstellungen, nicht mehr unter Ich
 - **V01.0.808** Für dich aus Mails: Rechnungen mit Frist, Verträge, Bestellungen, Angebote, offene Antworten und Phishing aus deinen Mails, nur lesend
-- **V01.0.807** uConsole und Terminal: `spark-tui kalender` und F5 zeigen die Woche aus der Seite Kalender (nur lesen); danach `spark-tui update`
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

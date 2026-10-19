@@ -1050,8 +1050,11 @@ async def profile_calendar_view(request: Request, start: str = "", days: int = 7
         raise HTTPException(400, "start must be a date like 2026-10-19")
     r = await calendars.view(prof["id"], day, days, zone)
     if r["errors"]:
-        print(f"calendar: view not reachable | {len(r['errors'])} of {len(r['calendars'])} calendars"
-              f"{' slow' if r.get('slow') else ''} | {profiles.log_name(prof)}", flush=True)
+        print(f"calendar: view not reachable | {len(r['errors'])} of {len(r['calendars'])} calendars | "
+              f"{profiles.log_name(prof)}", flush=True)
+    if r.get("loading"):
+        print(f"calendar: view loading | {len(r['loading'])} of {len(r['calendars'])} calendars | "
+              f"{profiles.log_name(prof)}", flush=True)
     return r
 
 

@@ -2049,6 +2049,13 @@
 "titel": "Kein Hänger beim Wissensordner-Abgleich",
 "text": "A: Auf dem Pi sudo speech-spark update. B: Zustand → Logs → Diagnose, Bereich System, nach loopwacht filtern: jede Zeile „stalled“ endet jetzt mit „busy <Stelle> <Prozent> %“. C: Während ein großer Wissensordner Runde um Runde gelesen wird, zeigt Zustand → Monitoring → Rechner am Panel-Rechner keine neuen Hänger mehr; kommen doch welche, die Zeilen in den Thread kopieren.",
 "thread": "Pi stabilisieren"
+},
+{
+"id": "P317",
+"v": 817,
+"titel": "Kalender schnell",
+"text": "A: Update auf V01.0.817, Seite Kalender öffnen: das erste Mal darf es dauern; steht oben „Lädt noch: …“, erscheinen die Termine nach ein paar Sekunden von selbst. B: Seite schließen und wieder öffnen, Woche vor und zurück blättern: die Termine sind sofort da. C: Zustand → Logs, Bereich Kalender: keine neuen Zeilen „view not reachable … slow“; alle 5 Minuten höchstens „calendar: kept fresh“. D: Am iPhone einen Termin anlegen, nach höchstens 5 Minuten steht er auf der Seite. E: Einen Termin auf der Seite ändern: die Änderung ist sofort zu sehen. F: Panel bleibt flüssig, während der Kalender lädt (Zustand → Live, keine Stockung).",
+"thread": "Kalender und E-Mail in Panel und Apps"
 }
 ]
 }
