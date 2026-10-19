@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.823** Kalender teilen gibt nur noch den gewählten Kalender frei, nie das ganze iCloud- oder Nextcloud-Konto (Code-Prüfung C2); das Teilen-Fenster fragt bei mehreren Kalendern, welcher
 - **V01.0.822** Rotes main bleibt nicht mehr unbemerkt: der Schnelltest vor dem Push lässt alle Tests laufen und bricht bei rotem main ab, GitHub öffnet ein Issue mit den roten Tests, Zustand → Update zeigt, seit wann es rot ist
 - **V01.0.821** Kalender neu: volle Breite, Termin als schwebende Karte (Handy: Blatt von unten) mit Ändern, +1 Tag, +1 Woche, Löschen; „Schnell eintragen“ in einer Zeile mit erkannten Chips; Termine mit der Maus verschieben, Rückgängig; Teilen-Fenster mit Personensuche; Briefing-Themen als Chips
 - **V01.0.820** Fix: Testlauf test_mail_zeit wieder grün (der Speicher für geöffnete Mails aus .819 gab dem Test die erste Mail zurück; der Test leert ihn jetzt wie ein geändertes Postfach)
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.816** Das Panel hängt nicht mehr beim Abgleich großer Wissensordner; das Log nennt bei einem Hänger den rechnenden Faden
 - **V01.0.815** Kalender und E-Mail in der iPhone-App: vier Wochen Termine (anlegen, ändern, löschen), Posteingang mit Lesen, Ordnen und Senden; auf dem Handy zwischengespeichert; CarPlay liest Termine und neue Mails vor.
 - **V01.0.814** Mails senden auf der Seite E-Mail: neue Mail oder Antwort, erst ein Vorschau-Blatt, gesendet nur mit „Senden“ dort; nur verschlüsselt, Kopie in „Gesendet“ (Schalter, aus).
-- **V01.0.813** Mails ordnen auf der Seite E-Mail: gelesen/ungelesen, archivieren, in einen eigenen Ordner, gleich wieder zurück; nie gelöscht, nie in Papierkorb oder Spam (Schalter, aus); Antworten des Assistenten haben „Im Kalender ansehen“ und „Mail öffnen“.
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

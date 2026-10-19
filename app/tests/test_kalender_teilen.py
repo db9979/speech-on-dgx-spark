@@ -7,6 +7,8 @@
   private appointment (CLASS PRIVATE) shows there only as „belegt“ with its time, without place; the owner still sees
   it in full. A third profile sees nothing, and the briefing (events without shared) stays with the own calendars.
 - "add" lets the other profile's assistant enter an appointment there, only when it names that calendar; "see" never.
+- An address with several calendars (an iCloud account) is never shared whole (Code-Prüfung C2): the owner names the
+  one calendar, the other profile reads and adds only there; an older share without that choice shows nothing.
 - Live counts the shares in numbers only. The Weiche takes „Was hat Sabine morgen?“ to the calendar.
 
 Fixed dates, the fake CalDAV server; no wall clock.
@@ -107,6 +109,50 @@ class Share(unittest.TestCase):
         self.assertTrue(intent.CALENDAR_WORDS.search("Was hat Sabine morgen?"))
         self.assertTrue(intent.CALENDAR_WORDS.search("Hat Tom am Freitag Zeit?"))
         self.assertFalse(intent.CALENDAR_WORDS.search("Hat Lidl heute offen?"))
+
+    def test_an_account_with_two_calendars_shares_only_the_chosen_one(self):
+        work = ("/dav/arbeit/teilen-3.ics", EV.format(uid="teilen-3", h="11", title="Projekt Teilen", where="Büro", cls=""))
+        helpers.CAL_EVENTS.update([work])
+        helpers.CAL_SECOND[0] = True
+        calendars._found.clear()
+        try:
+            parts = self.tina.get(f"/api/profile/calendar/{self.cid}/parts").json()["parts"]
+            self.assertEqual([x["name"] for x in parts], ["Privat", "Arbeit"])
+            # without naming one: refused, nothing shared
+            r = self.share("add")
+            self.assertEqual(r.status_code, 400, r.text)
+            self.assertEqual(calendars.get(self.tina_id)["calendars"][0].get("shares") or {}, {})
+            arbeit = next(x["id"] for x in parts if x["name"] == "Arbeit")
+            r = self.tina.put(f"/api/profile/calendar/{self.cid}/share", json={"to": self.tom_id, "level": "add", "part": arbeit})
+            self.assertEqual(r.status_code, 200, r.text)
+            self.assertEqual(r.json()["calendars"][0]["share_parts"], {self.tom_id: arbeit})
+            calendars._cache.clear()
+            titles = {x["title"] for x in week(self.tom_id)[0]}
+            self.assertIn("Projekt Teilen", titles)
+            self.assertNotIn("Elternabend Teilen", titles)
+            self.assertNotIn(calendars.BUSY, titles)
+            # entering goes there too, never into the owner's other calendar
+            before = set(helpers.CAL_EVENTS)
+            asyncio.run(calendars.add_event(self.tom_id, {"title": "Probe Teilen", "start": "2026-03-12T18:00:00+01:00",
+                                                          "end": "2026-03-12T19:00:00+01:00", "calendar": "Teil Tina · Privat"}))
+            self.assertTrue(all(k.startswith("/dav/arbeit/") for k in set(helpers.CAL_EVENTS) - before))
+            # an older share of the account without the choice: nothing, not the whole account
+            d = calendars.get(self.tina_id)
+            d["calendars"][0].pop("share_parts", None)
+            calendars._store(self.tina_id, d)
+            calendars._cache.clear()
+            evs, errors = week(self.tom_id)
+            self.assertEqual(evs, [])
+            self.assertEqual(len(errors), 1)
+            # the owner still sees both
+            calendars._cache.clear()
+            own = {x["title"] for x in week(self.tina_id)[0]}
+            self.assertTrue({"Projekt Teilen", "Elternabend Teilen"} <= own)
+        finally:
+            helpers.CAL_SECOND[0] = False
+            calendars._found.clear()
+            for k in [k for k in helpers.CAL_EVENTS if k.startswith("/dav/arbeit/")]:
+                helpers.CAL_EVENTS.pop(k, None)
 
     def test_taking_back_works_at_once(self):
         self.share("see")

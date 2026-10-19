@@ -2070,6 +2070,13 @@
 "titel": "Kalender neu: Karte, Schnell eintragen, Ziehen, Teilen",
 "text": "A: Update auf V01.0.821, Seite Kalender, Woche: die Ansicht nutzt die ganze Breite, rechts keine Spalte mehr. B: Auf einen Termin tippen: eine Karte schwebt daneben (Handy: Blatt von unten); Esc schließt. C: Eigener Termin: „+1 Tag“, dann „Rückgängig“ über der Ansicht: er steht wieder am alten Platz. D: In der Zeile „Schnell eintragen“ „Test Zahnarzt morgen 10 Uhr bei Dr. Weber“ tippen: Chips zeigen Titel, morgen 10:00–11:00 und den Ort; Enter trägt ein, der Termin erscheint (danach wieder löschen). E: Am Computer einen eigenen Termin mit der Maus eine Stunde nach unten ziehen: er bleibt dort, auch im iPhone-Kalender. F: Kalender → Einstellungen: jeder Kalender als Karte, Adresse und „Entfernen“ unter „⋯“. G: Mit „Kalender teilen“: „Teilen“ öffnet das Fenster, im Suchfeld einen Namen tippen: die Liste filtert sofort; „Sehen“ wählen, „Speichern“ (Code): auf der Karte steht „Geteilt mit …“; danach wieder auf „Nicht“. H: Themen fürs Briefing: ein Thema tippen und Enter, mit ✕ entfernen: beides gleich gespeichert.",
 "thread": "Kalender und E-Mail in Panel und Apps"
+},
+{
+"id": "P320",
+"v": 823,
+"titel": "Kalender teilen: nur der gewählte Kalender",
+"text": "A: Update auf V01.0.823. Mit „Kalender teilen“ und einem iCloud-Konto mit mehreren Kalendern: Kalender → Einstellungen → „Teilen“: oben steht „Welcher Kalender aus diesem Konto“. B: Einen Kalender wählen, eine Person auf „Sehen“, „Speichern“: die andere Person sieht auf ihrer Seite Kalender nur diesen einen, nicht die anderen des Kontos. C: Eine ältere Freigabe von vor diesem Update zeigt bei der anderen Person „Nicht erreicht“, bis du sie neu teilst. D: Danach die Freigabe wieder auf „Nicht“.",
+"thread": "Kalender und E-Mail in Panel und Apps"
 }
 ]
 }

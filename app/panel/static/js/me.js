@@ -431,9 +431,15 @@ function calRender(d){const people=d.people||[],name=id=>(people.find(p=>p.id===
   $('calshared').innerHTML=(d.shared||[]).length?`<div class="mgrp">${esc(t('Mit dir geteilt','Shared with you'))}</div><ul class="facts">`+d.shared.map(x=>`<li class="calc"><span><b>${esc(x.owner)} · ${esc(x.name)}</b><span class="calchips"><span class="chip">${esc(x.level==='add'?t('Sehen und eintragen','See and add'):t('Nur sehen','See only'))}</span></span></span></li>`).join('')+'</ul>':'';
   CAL_TOPICS=(d.topics||[]).slice();calTopics();calKind();$('caltest').style.display=d.calendars.length?'':'none';$('caladd').open=!d.calendars.length}
 let CAL_PEOPLE=[];
-function calShareOpen(c){if(!c)return;const sh=Object.assign({},c.shares||{}),now=Object.assign({},sh);
+// an address with several calendars (an iCloud account): the window asks which one is shared, never the whole
+// account (C2); each person keeps the one shared with them, the choice applies to the rows changed now
+async function calShareOpen(c){if(!c)return;const sh=Object.assign({},c.shares||{}),now=Object.assign({},sh),was=Object.assign({},c.share_parts||{});
+  const {r:pr,d:pd}=await apiTry('/api/profile/calendar/'+encodeURIComponent(c.id)+'/parts');
+  if(!pr.ok){calMsg(t('Nicht geteilt: ','Not shared: ')+errSay(pr.status,pd.detail,''),true);return}
+  const parts=pd.parts||[],pname=id=>(parts.find(x=>x.id===id)||{}).name||'';
   const ov=document.createElement('div');ov.className='modal';ov.setAttribute('role','dialog');ov.setAttribute('aria-modal','true');
   ov.innerHTML=`<div class="card modalcard calsharecard"><h3>${esc(t('„','"')+c.name+t('“ teilen','" share'))}</h3>`+
+    (parts.length>1?`<label>${esc(t('Welcher Kalender aus diesem Konto','Which calendar of this account'))}</label><select class="calpart">${parts.map(x=>`<option value="${esc(x.id)}">${esc(x.name||x.id)}</option>`).join('')}</select>`:'')+
     `<input type="search" class="calfind" placeholder="${esc(t('Person suchen …','Find a person …'))}" aria-label="${esc(t('Person suchen','Find a person'))}" autocomplete="off">`+
     `<div class="calpeople"></div><div class="fh">${esc(t('Private Termine sehen andere nur als „belegt“ mit der Uhrzeit. Ändern und löschen kannst nur du.','Others see private appointments only as "belegt" with the time. Only you can change or delete.'))}</div>`+
     `<div class="row" style="margin-top:10px"><button class="b p" type="button" data-save="1">${esc(t('Speichern','Save'))}</button><button class="b" type="button" data-close="1">${esc(t('Abbrechen','Cancel'))}</button><span class="calsharemsg"></span></div></div>`;
@@ -443,12 +449,12 @@ function calShareOpen(c){if(!c)return;const sh=Object.assign({},c.shares||{}),no
   const find=ov.querySelector('.calfind'),list=ov.querySelector('.calpeople');
   const draw=()=>{const q=find.value.trim().toLowerCase();
     const rows=CAL_PEOPLE.filter(p=>!q||p.name.toLowerCase().includes(q)).sort((a,b)=>(sh[b.id]?1:0)-(sh[a.id]?1:0)||a.name.localeCompare(b.name));
-    list.innerHTML=rows.map(p=>`<div class="calperson${now[p.id]?' has':''}"><span>${esc(p.name)}</span><span class="segc" role="radiogroup" aria-label="${esc(p.name)}">${CALLEVEL.map(([v,l])=>`<button type="button" data-to="${esc(p.id)}" data-lv="${v}" class="${(now[p.id]||'')===v?'on':''}" aria-pressed="${(now[p.id]||'')===v}">${esc(l)}</button>`).join('')}</span></div>`).join('')||
+    list.innerHTML=rows.map(p=>`<div class="calperson${now[p.id]?' has':''}"><span>${esc(p.name)}${parts.length>1&&sh[p.id]&&was[p.id]?`<small class="mut"> · ${esc(pname(was[p.id]))}</small>`:''}</span><span class="segc" role="radiogroup" aria-label="${esc(p.name)}">${CALLEVEL.map(([v,l])=>`<button type="button" data-to="${esc(p.id)}" data-lv="${v}" class="${(now[p.id]||'')===v?'on':''}" aria-pressed="${(now[p.id]||'')===v}">${esc(l)}</button>`).join('')}</span></div>`).join('')||
       `<div class="mut">${esc(t('Niemand mit diesem Namen.','Nobody with this name.'))}</div>`;
     list.querySelectorAll('[data-lv]').forEach(b=>b.onclick=()=>{if(b.dataset.lv)now[b.dataset.to]=b.dataset.lv;else delete now[b.dataset.to];draw()})};
   find.oninput=draw;draw();setTimeout(()=>find.focus(),0);
   ov.querySelector('[data-save]').onclick=async()=>{const msg=ov.querySelector('.calsharemsg'),ids=[...new Set([...Object.keys(sh),...Object.keys(now)])].filter(id=>(sh[id]||'')!==(now[id]||''));
-    let last=null;for(const id of ids){const {r,d}=await apiTry('/api/profile/calendar/'+encodeURIComponent(c.id)+'/share',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:id,level:now[id]||''})});
+    let last=null;for(const id of ids){const {r,d}=await apiTry('/api/profile/calendar/'+encodeURIComponent(c.id)+'/share',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:id,level:now[id]||'',part:ov.querySelector('.calpart')?ov.querySelector('.calpart').value:''})});
       if(!r.ok){msg.className='err';msg.textContent=t('Nicht geteilt: ','Not shared: ')+errSay(r.status,d.detail,'');if(last)calRender(last);return}
       last=d;sh[id]=now[id]}
     if(last){calRender(last);if(typeof KAL!=='undefined')KAL.data=null;calMsg(t('Teilen gespeichert.','Sharing saved.'))}

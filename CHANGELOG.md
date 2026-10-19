@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.823** · 2026-10-19 · Kalender teilen gibt nur noch den gewählten Kalender frei, nie das ganze iCloud- oder Nextcloud-Konto (Code-Prüfung C2); das Teilen-Fenster fragt bei mehreren Kalendern, welcher
 - **V01.0.822** · 2026-10-19 · Rotes main bleibt nicht mehr unbemerkt: vorpush lässt alle Tests laufen (Browser-Test aller Seiten nur bei geänderten Seiten) und bricht bei rotem main ab (--rotfix für den Fix), GitHub öffnet das Issue „main rot“ mit den roten Tests und zählt wackelnde Tests, Zustand → Update zeigt „Rot seit …“
 - **V01.0.821** · 2026-10-19 · Kalender neu: volle Breite, Termin als schwebende Karte (Handy: Blatt von unten) mit Ändern, +1 Tag, +1 Woche, Löschen; „Schnell eintragen“ in einer Zeile mit erkannten Chips; Termine mit der Maus verschieben, Rückgängig; Teilen-Fenster mit Personensuche; Briefing-Themen als Chips
 - **V01.0.820** · 2026-10-19 · Fix: Testlauf test_mail_zeit wieder grün (der Speicher für geöffnete Mails aus .819 gab dem Test die erste Mail zurück; der Test leert ihn jetzt wie ein geändertes Postfach)

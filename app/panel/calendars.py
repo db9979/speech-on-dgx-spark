@@ -13,7 +13,10 @@ one is stored. Topics are a few search phrases for the briefing.
 Sharing (Dominik 2026-10-18 „1a 2a“, function Kalender teilen, off): the owner shares one connected calendar with
 another profile, "see" or "add" (see and enter), kept in the owner's file as {"shares": {profile id: level}}. The
 other profile reads it with the owner's access (the password never leaves the owner's file), on the page Kalender
-and through the assistant, named "<owner> · <calendar>". A private appointment (CLASS PRIVATE or CONFIDENTIAL)
+and through the assistant, named "<owner> · <calendar>". An address can hold several calendars (an iCloud or
+Nextcloud account): a share holds exactly the one the owner chose ({"share_parts": {profile id: its address}},
+Code-Prüfung C2, 2026-10-19), never the whole account; an older share of such an address without that choice shows
+nothing until it is shared again. A private appointment (CLASS PRIVATE or CONFIDENTIAL)
 shows there only as „belegt“ with its time, never title or place. "add" lets the other profile's assistant propose
 a new appointment there, saved only after its yes; changing and deleting stay with the owner. Guests never.
 """
@@ -87,6 +90,7 @@ def public(uid):
         have = set(profiles.user_ids())
         for x, c in zip(out["calendars"], d["calendars"]):
             x["shares"] = {k: v for k, v in (c.get("shares") or {}).items() if k in have and v in LEVELS}
+            x["share_parts"] = {k: v for k, v in (c.get("share_parts") or {}).items() if k in x["shares"]}
         out["people"] = [{"id": p["id"], "name": p["name"]} for p in profiles.names() if p["id"] != uid]
         out["shared"] = [{"owner": n, "name": c.get("name", ""), "level": lvl} for _, n, c, lvl in shared_to(uid)]
     return out
@@ -122,8 +126,10 @@ def _sharing(uid):
     return bool(uid) and features.allowed("calshare", uid)
 
 
-def set_share(uid, cid, to, level):
-    """Shares the calendar cid of uid with the profile to ("see", "add"), or takes it back (level "")."""
+def set_share(uid, cid, to, level, part="", parts=None):
+    """Shares the calendar cid of uid with the profile to ("see", "add"), or takes it back (level ""). parts: the
+    calendars the address holds ([(address, name)], parts()); with more than one, part names the one shared (one of
+    them, else ValueError), with one it is that one."""
     if level not in LEVELS + ("",):
         raise ValueError("level must be see, add or empty")
     if to == uid or to not in profiles.user_ids():
@@ -133,9 +139,16 @@ def set_share(uid, cid, to, level):
     if cal is None:
         raise KeyError(cid)
     sh = {k: v for k, v in (cal.get("shares") or {}).items() if v in LEVELS and k != to}
+    only = {k: v for k, v in (cal.get("share_parts") or {}).items() if k in sh}
     if level:
+        hrefs = [x[0] for x in parts or []]
+        if len(hrefs) > 1 and part not in hrefs:
+            raise ValueError("choose which calendar of this address is shared")
         sh[to] = level
+        if hrefs:
+            only[to] = part if len(hrefs) > 1 else hrefs[0]
     cal["shares"] = sh
+    cal["share_parts"] = only
     _store(uid, d)
     _drop_shared(cid)
     _live[0] = 0.0
@@ -200,7 +213,8 @@ def reading(uid):
     """get(uid) plus the calendars shared with uid, each marked with owner, level and its shown name: what the
     page and the assistant read. Writing and the briefing use get(uid) (only the own calendars)."""
     d = get(uid)
-    d["calendars"] = d["calendars"] + [dict(c, name=shared_name(n, c), owner=o, level=lvl)
+    d["calendars"] = d["calendars"] + [dict(c, name=shared_name(n, c), owner=o, level=lvl,
+                                            only=(c.get("share_parts") or {}).get(uid, ""))
                                        for o, n, c, lvl in shared_to(uid)]
     return d
 
@@ -340,6 +354,30 @@ async def _report(c, cal, start, end):
             if x.text and "BEGIN:VCALENDAR" in x.text]
 
 
+def _only(d, cals):
+    """The calendars of an address a reader may see: all of them for the owner; for a calendar another profile shares
+    (d["owner"]) only the one chosen when it was shared (an address with a single calendar: that one). ValueError
+    when it is not there (C2: never the whole account)."""
+    if not d.get("owner"):
+        return cals
+    keep = [x for x in cals if x[0] == d.get("only")] if d.get("only") else cals if len(cals) == 1 else []
+    if not keep:
+        raise ValueError("the shared calendar is no longer there; its owner shares it again")
+    return keep
+
+
+async def parts(uid, cid):
+    """[(address, name)] of the calendars an own CalDAV entry holds (the share window offers them); [] for an iCal
+    link (one calendar)."""
+    d = next((x for x in get(uid)["calendars"] if x["id"] == cid), None)
+    if d is None:
+        raise KeyError(cid)
+    if re.match(r"webcals?://", d["url"], re.I) or re.search(r"\.ics(\?|$)", d["url"], re.I):
+        return []
+    async with _cal_client(d) as c:
+        return (await _calendars(c, d["url"]))[:20]
+
+
 async def _fetch(d, start, end):
     """iCal texts of all events overlapping [start, end) (UTC datetimes); number of calendars."""
     url = d["url"]
@@ -351,6 +389,7 @@ async def _fetch(d, start, end):
         where = (d.get("id"), url, d.get("user"))
         known = _found.get(where)
         if known and known[1] and time.time() - known[0] < FOUND_SECONDS:
+            known = (known[0], _only(d, known[1]))
             # the calendars of this address were found before: straight to them, without the discovery round trips
             texts, ok, last = [], 0, None
             for part in await asyncio.gather(*(_report(c, u, start, end) for u, _ in known[1][:20]), return_exceptions=True):
@@ -389,6 +428,7 @@ async def _fetch(d, start, end):
         if not cals:
             raise ValueError("no calendar found at this address (CalDAV server or iCal link expected)")
         _found[where] = (time.time(), cals)
+        cals = _only(d, cals)
         texts = []
         for part in await asyncio.gather(*(_report(c, u, start, end) for u, _ in cals[:20]), return_exceptions=True):
             if isinstance(part, Exception):
@@ -960,7 +1000,7 @@ async def _add_event(uid, item, out=None):
             continue
         async with _cal_client(d) as c:
             try:
-                found += [(d, x) for x in await _calendars(c, d["url"])]
+                found += [(d, x) for x in _only(d, await _calendars(c, d["url"]))]
             except Exception as e:
                 last_error = str(e)
     if not found:

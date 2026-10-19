@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.823** Sharing a calendar releases only the chosen calendar, never the whole iCloud or Nextcloud account (code review C2); the share window asks which one when there are several
 - **V01.0.822** A red main no longer goes unnoticed: the quick test before a push runs every test and stops while main is red, GitHub opens an issue with the red tests, Status → Update shows since when it is red
 - **V01.0.821** Calendar renewed: full width, an appointment opens as a floating card (phone: sheet from below) with change, +1 day, +1 week, delete; "Quick add" in one line with recognised chips; drag appointments with the mouse, undo; share window with a person search; briefing topics as chips
 - **V01.0.820** Fix: test run test_mail_zeit green again (the opened-mail memory of .819 handed the test its first mail; the test now drops it like a changed mailbox)
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.816** The panel no longer stalls while syncing big knowledge folders; on a stall the log names the thread that computes
 - **V01.0.815** Calendar and e-mail in the iPhone app: four weeks of appointments (add, change, delete), the inbox with reading, ordering and sending; kept on the phone; CarPlay reads appointments and new mail aloud.
 - **V01.0.814** Send mail from the E-mail page: a new mail or a reply, a preview sheet first, sent only with "Send" there; TLS only, copy in "Sent" (switch off by default).
-- **V01.0.813** Order mail on the E-mail page: read/unread, archive, move into an own folder, undo right after; never deleted, never into trash or junk (switch off by default); assistant answers get "Show in calendar" and "Open mail" buttons.
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

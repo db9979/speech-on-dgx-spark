@@ -1013,7 +1013,13 @@ async def profile_calendar_share(cid: str, request: Request, prof=Depends(secret
     body = body if isinstance(body, dict) else {}
     level = str(body.get("level") or "")[:8]
     try:
-        out = calendars.set_share(prof["id"], cid[:40], str(body.get("to") or "")[:40], level)
+        # which calendars the address holds, asked anew: a share holds one of them, never the whole account (C2)
+        parts = await calendars.parts(prof["id"], cid[:40]) if level else None
+        out = calendars.set_share(prof["id"], cid[:40], str(body.get("to") or "")[:40], level,
+                                  str(body.get("part") or "")[:600], parts)
+    except httpx.HTTPError:
+        print(f"calendar: share refused, not reachable | {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(502, "Der Kalender ist nicht erreichbar.")
     except KeyError:
         print(f"calendar: share refused, no such calendar | {profiles.log_name(prof)}", flush=True)
         raise HTTPException(404, "no such calendar")
@@ -1022,6 +1028,20 @@ async def profile_calendar_share(cid: str, request: Request, prof=Depends(secret
         raise HTTPException(400, str(e))
     print(f"calendar: share {'set ' + level if level else 'taken back'} | {profiles.log_name(prof)}", flush=True)
     return out
+
+
+@router.get("/api/profile/calendar/{cid}/parts", dependencies=[Depends(assistant), Depends(calendar_on), Depends(calshare_on)])
+async def profile_calendar_parts(cid: str, request: Request, prof=Depends(browser_profile)):
+    """The share window: which calendars this own address holds ([{"id": address, "name"}]), so the owner shares
+    exactly one of them (calendars.set_share, C2). Only reads."""
+    guard.limit(request, "kalenderteilen", prof["id"])
+    try:
+        return {"parts": [{"id": u, "name": n} for u, n in await calendars.parts(prof["id"], cid[:40])]}
+    except KeyError:
+        raise HTTPException(404, "no such calendar")
+    except (httpx.HTTPError, ValueError):
+        print(f"calendar: parts not reachable | {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(502, "Der Kalender ist nicht erreichbar.")
 
 
 @router.put("/api/profile/calendar/topics", dependencies=[Depends(assistant), Depends(calendar_on)])

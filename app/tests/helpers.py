@@ -737,6 +737,7 @@ class FakeMailbox:
 
 
 CAL_EVENTS = {}   # path -> iCal text the fake CalDAV server holds
+CAL_SECOND = [False]   # True: the account holds a second calendar "Arbeit" at /dav/arbeit/, each REPORT only its own
 
 
 def fake_caldav():
@@ -745,6 +746,7 @@ def fake_caldav():
     app = FastAPI()
     cal = ('<d:response><d:href>/dav/privat/</d:href><d:propstat><d:prop><d:resourcetype><d:collection/>'
            '<c:calendar/></d:resourcetype><d:displayname>Privat</d:displayname></d:prop></d:propstat></d:response>')
+    second = cal.replace("/dav/privat/", "/dav/arbeit/").replace(">Privat<", ">Arbeit<")
 
     import hashlib
     tag = lambda text: '"' + hashlib.sha1(text.encode()).hexdigest()[:12] + '"'
@@ -775,11 +777,12 @@ def fake_caldav():
             CAL_EVENTS.pop(path)
             return Response(status_code=204)
         if req.method == "PROPFIND":
-            return Response(ms + cal + "</d:multistatus>", status_code=207, media_type="application/xml")
+            return Response(ms + cal + (second if CAL_SECOND[0] else "") + "</d:multistatus>", status_code=207,
+                            media_type="application/xml")
         if req.method == "REPORT":
             items = "".join(f"<d:response><d:href>{k}</d:href><d:propstat><d:prop><d:getetag>{tag(v)}</d:getetag>"
                             f"<c:calendar-data>{v}</c:calendar-data></d:prop></d:propstat></d:response>"
-                            for k, v in CAL_EVENTS.items())
+                            for k, v in CAL_EVENTS.items() if not CAL_SECOND[0] or k.startswith(path))
             return Response(ms + items + "</d:multistatus>", status_code=207, media_type="application/xml")
         return Response("nope", status_code=404)
     return app
