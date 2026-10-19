@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.831** · 2026-10-19 · Fix: Gesprächszug von Lautsprecher und Telefon geht nicht mehr verloren, wenn das Gerät gleich nach der Antwort trennt (seit .828 unter Last möglich); Test test_verlauf_sync wartet, bis die Seite zuhört, statt fester 600 ms
 - **V01.0.830** · 2026-10-19 · Kalender und E-Mail schneller und überall gleich: Spark-Kalender Stufe 1 (verschlüsselte Kopie jedes Kalenders, nur Änderungen vom Server), Vorwärmen beim Anmelden, E-Mail wie ein Mailprogramm (nach Tagen, Tasten J/K/R/E/U, Wischen, „Als Termin“), iPhone und uConsole auf dem Stand des Panels
 - **V01.0.829** · 2026-10-19 · Eingabefelder wachsen mit dem Text: die Frage an den Assistenten, „Frag etwas zu dieser Seite“, Nachrichten, Aufträge und jedes Textfeld sind so hoch wie ihr Text; Enter schickt ab, Umschalt+Enter macht eine neue Zeile; ab vier Zeilen öffnet ⤢ die Großansicht, ab 80 % der Länge steht ein Zähler; iPhone, Android-Assistent und Terminal ebenso
 - **V01.0.828** · 2026-10-19 · Code-Prüfung Tempo B6: Gesprächszüge von Seite, App, Lautsprecher und Telefon neben der Ereignisschleife gespeichert, Gesprächsdatei ohne Einrückung

@@ -396,8 +396,17 @@ class InTheBrowser(unittest.TestCase):
                         break
                     await pg.wait_for_timeout(100)
                 uid = (await (await pg.request.get(base + "/api/whoami")).json())["profile"]["id"]
+                # begin() only marks while a page listens: wait until the page's stream is open on the panel (a new
+                # profile opens "Los geht's" first, so the stream comes later), then for the mark, not a fixed time
+                for _ in range(100):
+                    if uid in verlauf._subs:
+                        break
+                    await pg.wait_for_timeout(100)
                 tok = verlauf.begin(uid, "phone", "", "other-tab")
-                await pg.wait_for_timeout(600)
+                try:
+                    await pg.wait_for_function("document.querySelector('.msg.elsewhere')", timeout=10000)
+                except Exception:   # noqa: BLE001 - the assertion below says what is missing
+                    pass
                 busy = await pg.evaluate("[...document.querySelectorAll('.msg.elsewhere')].map(x=>x.textContent)")
                 verlauf.keep(uid, "tg-x", "T", datetime.datetime.now(), "telegram", [m("user", "Per Telegram"), m("assistant", "Gut")])
                 verlauf.end(uid, tok)

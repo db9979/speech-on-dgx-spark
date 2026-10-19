@@ -58,7 +58,7 @@ import guard
 import profiles
 import telefon_ton
 import vault
-from common import STATE, DayCounter, load_config, read_json, write_json
+from common import STATE, DayCounter, beside, load_config, read_json, write_json
 from core import admin_code, auth, json_body
 
 router = APIRouter()
@@ -1656,7 +1656,7 @@ class Call:
                     dict({"role": "assistant", "content": answer}, **({"outside": True} if from_outside or not owner else {}))]
             self.history = (self.history + turn)[-16:]
             if uid:   # beside the event loop (code check 19.10. B6)
-                await asyncio.to_thread(self.remember, uid, turn, owner)
+                await beside(self.remember, uid, turn, owner)
 
     def remember(self, uid, turn, owner):
         """The turn as the day's conversation "Telefon dd.mm." of the profile (like a speaker's, esp32.remember)."""

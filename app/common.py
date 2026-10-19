@@ -1,4 +1,6 @@
 """Shared helpers for the ASR and TTS services: config, model state, request stats."""
+import asyncio
+import functools
 import json
 import os
 import re
@@ -99,6 +101,13 @@ def read_json(path, default=None):
     except (OSError, ValueError):
         return copy.deepcopy(default)
     return d if default is None or isinstance(d, type(default)) else copy.deepcopy(default)
+
+
+def beside(fn, *args, **kw):
+    """Awaitable: fn(*args, **kw) in a thread beside the event loop, like asyncio.to_thread, but it still runs when
+    the caller is cancelled (a speaker or a phone call that ends right after the answer): to_thread drops a job that
+    still waits for a free thread, and the turn would be lost (code check 19.10. B6)."""
+    return asyncio.shield(asyncio.get_running_loop().run_in_executor(None, functools.partial(fn, *args, **kw)))
 
 
 def write_json(path, data, indent=None, mode=None, ensure_ascii=True, dir_mode=0o777):

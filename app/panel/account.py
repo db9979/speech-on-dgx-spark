@@ -38,7 +38,7 @@ import stufen  # noqa: E402
 import profiles  # noqa: E402
 import homeassistant  # noqa: E402
 import features  # noqa: E402
-from common import load_config, model_url  # noqa: E402
+from common import beside, load_config, model_url  # noqa: E402
 from core import (  # noqa: E402
     json_body,
     spawn,
@@ -896,13 +896,13 @@ async def profile_save_convo(request: Request, prof=Depends(own_profile)):
         # whole conversation lost it); the answer is the whole conversation as it is now
         msgs = body.get("add")
         # beside the event loop: the profile's conversations are read and written whole (code check 19.10. B6)
-        item = await asyncio.to_thread(profiles.append_convo, prof["id"], str(body.get("id", "")), str(body.get("title", "")), msgs) \
+        item = await beside(profiles.append_convo, prof["id"], str(body.get("id", "")), str(body.get("title", "")), msgs) \
             if isinstance(msgs, list) and any(isinstance(x, dict) and x.get("role") in ("user", "assistant") and x.get("content")
                                               for x in msgs) else None
         if not item:
             raise HTTPException(400, "invalid conversation")
         return {"ok": True, "item": item}
-    item = await asyncio.to_thread(profiles.save_convo, prof["id"], body)
+    item = await beside(profiles.save_convo, prof["id"], body)
     if not item:
         raise HTTPException(400, "invalid conversation")
     return {"ok": True}

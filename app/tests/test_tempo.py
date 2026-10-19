@@ -620,8 +620,34 @@ class ConvoOffLoop(unittest.TestCase):
         src = inspect.getsource(account.profile_save_convo)
         self.assertNotIn("= profiles.append_convo(", src)
         self.assertNotIn("= profiles.save_convo(", src)
-        self.assertIn("asyncio.to_thread(remember,", inspect.getsource(esp32))
-        self.assertIn("asyncio.to_thread(self.remember,", inspect.getsource(telefon))
+        self.assertIn("await beside(remember,", inspect.getsource(esp32))
+        self.assertIn("await beside(self.remember,", inspect.getsource(telefon))
+        self.assertIn("await beside(profiles.save_convo,", src)
+
+    def test_a_cancelled_caller_still_saves(self):
+        """A speaker that disconnects right after the answer cancels the answer task: with every thread busy,
+        asyncio.to_thread dropped the waiting save and the turn was lost (test_esp32 red under load)."""
+        import concurrent.futures
+        import threading
+        import common
+        ran, gate = [], threading.Event()
+
+        async def go():
+            loop = asyncio.get_running_loop()
+            pool = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+            loop.set_default_executor(pool)
+            busy = loop.run_in_executor(None, gate.wait)      # the only thread is taken
+            task = asyncio.ensure_future(common.beside(ran.append, "saved"))
+            await asyncio.sleep(0)
+            task.cancel()                                     # the caller goes away while the save still waits
+            with self.assertRaises(asyncio.CancelledError):
+                await task
+            gate.set()
+            await busy
+            pool.shutdown(wait=True)
+
+        asyncio.run(go())
+        self.assertEqual(ran, ["saved"])
 
     def test_the_file_is_not_indented(self):
         uid = profiles.add_user("Ohne Einrückung", "1234")

@@ -76,7 +76,7 @@ import profiles
 import spkcode
 import vault
 import features
-from common import STATE, load_config, model_url, read_json, write_json
+from common import STATE, beside, load_config, model_url, read_json, write_json
 from textnorm import guess_language, speech_markdown
 
 NOTAUS_WORD = "spark-notaus"   # the fixed wake word of the Notaus button (firmware/patch_notaus.py)
@@ -1557,7 +1557,7 @@ class Session:
             self.note(f"Ton stockte {pace.stalls}-mal: die Sprachausgabe kam nicht schnell genug nach")
         answer = answer.strip()
         if answer:   # beside the event loop: the day's conversation file is read and written whole (code check B6)
-            await asyncio.to_thread(remember, self.dev, history, text, answer, from_mail, from_outside, owner=voice == uid)
+            await beside(remember, self.dev, history, text, answer, from_mail, from_outside, owner=voice == uid)
 
 
 def remember(dev, history, text, answer, from_mail, from_outside=False, owner=True):
