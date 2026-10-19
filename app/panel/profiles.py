@@ -36,6 +36,11 @@ def _path(*parts):
     return os.path.join(USERS_DIR, *parts)
 
 
+def _write_convos(uid, items):
+    """convos.json without indenting: up to 2 MB written on every saved turn, a third less to write (code check B6)."""
+    write_json(_path(uid, "convos.json"), items, mode=0o600, ensure_ascii=False, dir_mode=0o700)
+
+
 def _write(path, data):
     write_json(path, data, indent=1, mode=0o600, ensure_ascii=False, dir_mode=0o700)
 
@@ -1167,7 +1172,7 @@ def _clean_convo(c, uid=None):
 
 def _store_convo(uid, item):
     rest = [x for x in convos(uid) if x["id"] != item["id"]]
-    _write(_path(uid, "convos.json"), sorted([item] + rest, key=lambda x: -x["updated"])[:MAX_CONVOS])
+    _write_convos(uid, sorted([item] + rest, key=lambda x: -x["updated"])[:MAX_CONVOS])
     _tell(uid, item["id"])
 
 
@@ -1193,7 +1198,7 @@ def append_convo(uid, cid, title, msgs):
 
 def delete_convo(uid, cid):
     with _lock:
-        _write(_path(uid, "convos.json"), [x for x in convos(uid) if x["id"] != cid])
+        _write_convos(uid, [x for x in convos(uid) if x["id"] != cid])
     _tell(uid, cid, gone=True)
 
 

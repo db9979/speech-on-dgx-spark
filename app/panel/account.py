@@ -891,13 +891,14 @@ async def profile_save_convo(request: Request, prof=Depends(own_profile)):
         # with them): added to the Spark's copy, so what another device added meanwhile stays (replacing the
         # whole conversation lost it); the answer is the whole conversation as it is now
         msgs = body.get("add")
-        item = profiles.append_convo(prof["id"], str(body.get("id", "")), str(body.get("title", "")), msgs) \
+        # beside the event loop: the profile's conversations are read and written whole (code check 19.10. B6)
+        item = await asyncio.to_thread(profiles.append_convo, prof["id"], str(body.get("id", "")), str(body.get("title", "")), msgs) \
             if isinstance(msgs, list) and any(isinstance(x, dict) and x.get("role") in ("user", "assistant") and x.get("content")
                                               for x in msgs) else None
         if not item:
             raise HTTPException(400, "invalid conversation")
         return {"ok": True, "item": item}
-    item = profiles.save_convo(prof["id"], body)
+    item = await asyncio.to_thread(profiles.save_convo, prof["id"], body)
     if not item:
         raise HTTPException(400, "invalid conversation")
     return {"ok": True}

@@ -1655,8 +1655,8 @@ class Call:
             turn = [dict({"role": "user", "content": text}, **({} if owner else {"outside": True})),
                     dict({"role": "assistant", "content": answer}, **({"outside": True} if from_outside or not owner else {}))]
             self.history = (self.history + turn)[-16:]
-            if uid:
-                self.remember(uid, turn, owner)
+            if uid:   # beside the event loop (code check 19.10. B6)
+                await asyncio.to_thread(self.remember, uid, turn, owner)
 
     def remember(self, uid, turn, owner):
         """The turn as the day's conversation "Telefon dd.mm." of the profile (like a speaker's, esp32.remember)."""

@@ -1556,8 +1556,8 @@ class Session:
             print(f"esp32: sound stalled {pace.stalls}x at {self.dev.get('name', '?')} (speech output slower than playback)", flush=True)
             self.note(f"Ton stockte {pace.stalls}-mal: die Sprachausgabe kam nicht schnell genug nach")
         answer = answer.strip()
-        if answer:
-            remember(self.dev, history, text, answer, from_mail, from_outside, owner=voice == uid)
+        if answer:   # beside the event loop: the day's conversation file is read and written whole (code check B6)
+            await asyncio.to_thread(remember, self.dev, history, text, answer, from_mail, from_outside, owner=voice == uid)
 
 
 def remember(dev, history, text, answer, from_mail, from_outside=False, owner=True):

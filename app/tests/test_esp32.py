@@ -409,7 +409,11 @@ class Speakers(unittest.TestCase):
                 self.assertTrue(said and said[0] >= 16000)
         finally:
             esp32.transcribe = old
-        convo = [x for x in a.get("/api/profile/convos").json() if str(x.get("id", "")).startswith("esp-")]
+        for _ in range(50):   # the turn is saved beside the event loop, just after the answer (code check B6)
+            convo = [x for x in a.get("/api/profile/convos").json() if str(x.get("id", "")).startswith("esp-")]
+            if convo:
+                break
+            time.sleep(0.1)
         self.assertTrue(convo and convo[0]["title"].startswith("Bad "), convo)
         # blocked for the profile by the admin: the key no longer connects
         self.addCleanup(helpers.set_config, deny={})

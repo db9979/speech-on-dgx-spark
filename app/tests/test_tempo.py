@@ -610,5 +610,25 @@ class DocsCheap(unittest.TestCase):
         self.assertNotIn("chat.docs_hint(", src)
 
 
+class ConvoOffLoop(unittest.TestCase):
+    """Code check 19.10. B6: the whole conversation file is read and written beside the event loop, without indenting."""
+    def test_turns_are_saved_in_a_thread(self):
+        import inspect
+        import account
+        import esp32
+        import telefon
+        src = inspect.getsource(account.profile_save_convo)
+        self.assertNotIn("= profiles.append_convo(", src)
+        self.assertNotIn("= profiles.save_convo(", src)
+        self.assertIn("asyncio.to_thread(remember,", inspect.getsource(esp32))
+        self.assertIn("asyncio.to_thread(self.remember,", inspect.getsource(telefon))
+
+    def test_the_file_is_not_indented(self):
+        uid = profiles.add_user("Ohne Einrückung", "1234")
+        profiles.append_convo(uid, "c1", "Test", [{"role": "user", "content": "x"}, {"role": "assistant", "content": "y"}])
+        with open(profiles._path(uid, "convos.json")) as f:
+            self.assertNotIn("\n", f.read().strip())
+
+
 if __name__ == "__main__":
     unittest.main()

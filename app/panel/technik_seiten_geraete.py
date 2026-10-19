@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "geraet": {
-        "stand": "0d014a3a26",
+        "stand": "1a2fcdd184",
         "bezug": {
             "account.CONVO_BODY": ["s10"], "admin.test_asr": ["s4"], "admin._test_asr": ["s4", "s5"],
             "admin.read_audio": ["s4"], "chat.chat": ["s6", "s7"], "account.profile_save_convo": ["s10"],
@@ -644,7 +644,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Lautsprecher, HA
     "lautsprecher": {
-        "stand": "a92920ea2c",
+        "stand": "7fcda33ceb",
         "bezug": {
             "wyoming.MAX_CONNS": ["s5"], "esp32.ota": ["s1"], "esp32._activation": ["s2"],
             "esp32.same_board": ["s3"], "esp32.speaker_ws": ["s5"], "esp32.still_allowed": ["s5"],
