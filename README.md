@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.834** Code check, speed B7: speaker recognition almost twice as fast, the journal measures how long the answer waits for it
 - **V01.0.833** E-mail: an open mail, an answer and a new mail have a visible button to close or discard at every width (it was missing on the computer), Esc closes the answer even from the text field, typed text is asked about first
 - **V01.0.832** Spark calendar stage 2: appointments added, changed or deleted at once on the Calendar page and on the iPhone (first in the copy, the server behind it); if the server refuses, its version stands and the page says so
 - **V01.0.831** Fix: a speaker or phone turn is no longer lost when the device disconnects right after the answer; test test_verlauf_sync reliable
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.827** Code check, ease of use: search with everyday words and "Ask Spark", clear microphone errors, Status red only for real faults, one way of counting, more contrast and larger tap areas, a start guide for every new profile, a new PIN in hidden fields
 - **V01.0.826** Code check, speed: the document list is remembered and fetched beside the event loop, each profile has its own database lock, the meaning search no longer converts per search, the status page and hints are worked out less often
 - **V01.0.825** Code check, security: password and PINs with 600,000 PBKDF2 rounds, https only TLS 1.2 or newer, the Sentry always reports important changes at once, watch answers only for the profile that asked, the daily mail count survives a restart, the Werkstatt sandbox reaches only the LLM-Tor
-- **V01.0.824** Phone: the voice no longer sounds choppy (own sound beat, small buffer, faster G.722)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

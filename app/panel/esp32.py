@@ -1412,7 +1412,7 @@ class Session:
             cc = load_config().get("chat", {})
             return "", ("speaker ID is off" if not cc.get("speaker_id", False) else "the profile has not taught its voice"), None
         try:
-            v = await vt
+            v = await speakers.checked(vt)
         except Exception as e:
             print("esp32: voice check", type(e).__name__, flush=True)
             return "", "voice check failed", None
@@ -1427,22 +1427,23 @@ class Session:
         import speakers
         uid, did, name = self.dev["user"], self.dev["id"], self.dev.get("name", "?")[:40]
         nums = f"({speakers.numbers(v)})" if v and (v["score"] or v["seconds"]) else ""
+        logged = f"{nums[:-1]}, {speakers.timing(v)})" if nums else ""   # the journal also gets the timing (B7)
         if not spkcode.on(uid):
             if voice:
-                print("esp32: owner's voice recognized at", name, nums, "- personal data allowed", flush=True)
+                print("esp32: owner's voice recognized at", name, logged, "- personal data allowed", flush=True)
             return voice, why, False
         lvl, odd = spkcode.level(v, uid, did, getattr(self, "foreign_at", 0.0))
         if lvl in ("sure", "grey") and spkcode.is_open(uid, did):
-            print("esp32: owner's voice at", name, "shortly after a right code word", nums, "- personal data allowed", flush=True)
+            print("esp32: owner's voice at", name, "shortly after a right code word", logged, "- personal data allowed", flush=True)
             return uid, "", False
         if lvl == "sure":
-            print("esp32: owner's voice recognized at", name, nums, "- personal data allowed", flush=True)
+            print("esp32: owner's voice recognized at", name, logged, "- personal data allowed", flush=True)
             return uid, "", False
         if lvl == "grey" and spkcode.locked(uid, did):
             return "", f"code word locked after {spkcode.FAILS} wrong ones {nums}".strip()[:160], False
         if lvl == "grey" and spkcode.personal(text):
             spkcode.ask(uid, did, text, odd)
-            print("esp32: code word asked at", name, "-", odd, nums, flush=True)
+            print("esp32: code word asked at", name, "-", odd, logged, flush=True)
             self.note("Codewort erfragt: " + odd)
             await self.say("Sag bitte dein Codewort.", tone=True)
             self.listen(self.mode)
@@ -1451,7 +1452,7 @@ class Session:
             # a sure voice in an unusual moment (a short question …) asking nothing personal: as without the code
             # word. The code word only ever adds a question before personal things, it never takes the owner's
             # own voice away (Dominik 2026-10-14: every short question at the bedroom speaker came as a guest)
-            print("esp32: owner's voice recognized at", name, f"({odd}, nothing personal asked)", nums,
+            print("esp32: owner's voice recognized at", name, f"({odd}, nothing personal asked)", logged,
                   "- personal data allowed", flush=True)
             return uid, "", False
         if lvl == "grey":

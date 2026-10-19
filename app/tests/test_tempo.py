@@ -656,5 +656,55 @@ class ConvoOffLoop(unittest.TestCase):
             self.assertNotIn("\n", f.read().strip())
 
 
+
+class VoiceFast(unittest.TestCase):
+    """Code check 19.10. B7: the speaker recognition's LSTM with one tanh for all gates gives the same embeddings as
+    the plain form (PyTorch's LSTM, written out), and the journal says how long the answer waited for the check."""
+    def test_same_embeddings_as_the_plain_lstm(self):
+        import numpy as np
+        import speakers
+        w = speakers._weights()
+        sig = lambda x: 1 / (1 + np.exp(-x))                       # noqa: E731
+
+        def plain(mels):
+            h_seq = mels.astype(np.float64)
+            for layer in range(3):
+                wi, wh = w[f"lstm_weight_ih_l{layer}"], w[f"lstm_weight_hh_l{layer}"]
+                b = w[f"lstm_bias_ih_l{layer}"] + w[f"lstm_bias_hh_l{layer}"]
+                h = np.zeros((mels.shape[0], 256))
+                c = np.zeros_like(h)
+                out = []
+                for t in range(mels.shape[1]):
+                    g = h_seq[:, t] @ wi.T + h @ wh.T + b
+                    i, f, gg, o = sig(g[:, :256]), sig(g[:, 256:512]), np.tanh(g[:, 512:768]), sig(g[:, 768:])
+                    c = f * c + i * gg
+                    h = o * np.tanh(c)
+                    out.append(h)
+                h_seq = np.stack(out, axis=1)
+            e = np.maximum(0, h @ w["linear_weight"].T + w["linear_bias"])
+            return e / np.linalg.norm(e, axis=1, keepdims=True)
+
+        mels = np.random.default_rng(7).random((3, speakers.PARTIAL, 40), dtype=np.float32) * 4
+        self.assertLess(float(np.abs(speakers._encode(mels) - plain(mels)).max()), 1e-4)
+
+    def test_the_journal_says_how_long_the_answer_waited(self):
+        import speakers
+        v = {"score": 0.8, "need": 0.75, "other": 0.1, "seconds": 2.0, "here": 1}
+
+        async def go():
+            loop = asyncio.get_running_loop()
+            done = loop.create_future()
+            done.set_result(dict(v, ms=90))
+            first = await speakers.checked(done)
+            late = loop.create_future()
+            loop.call_later(0.05, late.set_result, dict(v, ms=90))
+            return first, await speakers.checked(late)
+
+        first, second = asyncio.run(go())
+        self.assertEqual(first["wait"], 0)
+        self.assertGreaterEqual(second["wait"], 40)
+        self.assertEqual(speakers.timing(first), "check 90 ms, answer waited 0 ms")
+
+
 if __name__ == "__main__":
     unittest.main()

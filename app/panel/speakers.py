@@ -139,30 +139,56 @@ def _weights():
     return _W
 
 
-def _sigmoid(x):
-    return 0.5 * (1 + np.tanh(0.5 * x))
-
-
 def _encode(mels):
-    """Embeddings of a batch of partial utterances (B x 160 x 40) -> B x 256, L2-normed."""
-    w = _weights()
+    """Embeddings of a batch of partial utterances (B x 160 x 40) -> B x 256, L2-normed. One tanh for all four gates
+    (the weights of i, f and o halved once, sigmoid(x) = 0.5 + 0.5 * tanh(x / 2)) and buffers reused: half the numpy
+    calls of the plain form, each holding the GIL (code check 19.10. B7: 141 -> 83 ms for 5 s of speech, x86)."""
+    w = _prepared()
+    B, T = mels.shape[0], mels.shape[1]
     h_seq = mels
-    for layer in range(3):
-        wi, wh = w[f"lstm_weight_ih_l{layer}"], w[f"lstm_weight_hh_l{layer}"]
-        b = w[f"lstm_bias_ih_l{layer}"] + w[f"lstm_bias_hh_l{layer}"]
-        xs = h_seq @ wi.T + b                       # B x T x 1024, gates i, f, g, o
-        h = np.zeros((mels.shape[0], 256), np.float32)
+    for wiT, whT, b in w["layers"]:
+        xs = h_seq @ wiT + b                        # B x T x 1024, gates i, f, o (halved) and g
+        h = np.zeros((B, 256), np.float32)
         c = np.zeros_like(h)
-        out = np.empty((mels.shape[0], mels.shape[1], 256), np.float32)
-        for t in range(mels.shape[1]):
-            g = xs[:, t] + h @ wh.T
-            i, f, gg, o = _sigmoid(g[:, :256]), _sigmoid(g[:, 256:512]), np.tanh(g[:, 512:768]), _sigmoid(g[:, 768:])
-            c = f * c + i * gg
-            h = o * np.tanh(c)
+        g = np.empty((B, 1024), np.float32)
+        ig = np.empty_like(h)
+        out = np.empty((B, T, 256), np.float32)
+        for t in range(T):
+            np.matmul(h, whT, out=g)
+            g += xs[:, t]
+            np.tanh(g, out=g)
+            s = g[:, :768]
+            s *= 0.5
+            s += 0.5                                # sigmoid(x) = 0.5 + 0.5 * tanh(x / 2)
+            np.multiply(s[:, :256], g[:, 768:], out=ig)
+            c *= s[:, 256:512]
+            c += ig
+            np.tanh(c, out=h)
+            h *= s[:, 512:768]
             out[:, t] = h
         h_seq = out
     e = np.maximum(0, h @ w["linear_weight"].T + w["linear_bias"])
     return e / (np.linalg.norm(e, axis=1, keepdims=True) + 1e-9)
+
+
+_P = None
+
+
+def _prepared():
+    """The LSTM weights reordered to the gates i, f, o, g, those of i, f and o halved, transposed once."""
+    global _P
+    if _P is None:
+        w = _weights()
+        order = np.r_[0:256, 256:512, 768:1024, 512:768]            # i, f, o, g
+        half = np.r_[np.full(768, 0.5, np.float32), np.ones(256, np.float32)][:, None]
+        layers = []
+        for layer in range(3):
+            wi = w[f"lstm_weight_ih_l{layer}"][order] * half
+            wh = w[f"lstm_weight_hh_l{layer}"][order] * half
+            b = (w[f"lstm_bias_ih_l{layer}"] + w[f"lstm_bias_hh_l{layer}"])[order] * half[:, 0]
+            layers.append((np.ascontiguousarray(wi.T), np.ascontiguousarray(wh.T), b.astype(np.float32)))
+        _P = {"layers": layers, "linear_weight": w["linear_weight"], "linear_bias": w["linear_bias"]}
+    return _P
 
 
 def embed(x, rate=1.3, min_coverage=0.75):
@@ -331,7 +357,9 @@ def verify(uid, data, threshold=0.75, margin=0.05, did=None):
         return dict(out, why="the profile has not taught its voice")
     x = decode(data)
     out["seconds"] = round(len(preprocess(x)) / SR, 1)
+    t0 = time.monotonic()
     e = embed(x)
+    out["ms"] = int((time.monotonic() - t0) * 1000)
     if e is None:
         return dict(out, why="too little speech to check the voice")
     out["score"] = round(max(float(v @ e) for v in prints[uid]), 2)
@@ -347,6 +375,20 @@ def numbers(v):
     """The journal's short form of verify(): numbers only."""
     return (f"match {v['score']:.2f} of {v['need']:.2f} needed, other profiles {max(v['other'], 0):.2f}, "
             f"{v['seconds']:.1f} s speech, taught here {v['here']}")
+
+
+def timing(v):
+    """For the journal: ms the check itself, wait how long the answer waited for it after the speech recognition
+    (code check B7: measure before moving it into a process of its own)."""
+    return f"check {v.get('ms', 0)} ms, answer waited {v.get('wait', 0)} ms"
+
+
+async def checked(vt):
+    """The result of a running verify() task; "wait" says how long the caller waited for it (0: it was done already)."""
+    t0, early = time.monotonic(), vt.done()
+    v = await vt
+    v["wait"] = 0 if early else int((time.monotonic() - t0) * 1000)
+    return v
 
 
 # ---------------------------------------------------------------- recognized speaker for one chat turn
