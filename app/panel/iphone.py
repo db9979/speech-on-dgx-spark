@@ -134,7 +134,10 @@ THINGS = {
     "calserver": ((("GET", "POST", "DELETE"), r"/api/profile/calserver"),),
     # E-Mail: the inbox and one mail as plain text (stays unread); ordering and sending each with their own function
     "mail": ((("GET",), r"/api/profile/mail/(?:inbox|message)"),),
-    "mailmanage": ((("GET",), r"/api/profile/mail/folders"), (("POST",), r"/api/profile/mail/act")),
+    "mailmanage": ((("GET",), r"/api/profile/mail/(?:folders|tree|folder|file)"),
+                   (("POST",), r"/api/profile/mail/(?:acts?|acts/back|folder/(?:new|rename|remove))"),
+                   (("GET", "POST"), r"/api/profile/mail/rules(?:/test|/order)?"),
+                   (("POST",), r"/api/profile/mail/rules/[0-9a-f]{8}/apply"), (("DELETE",), r"/api/profile/mail/rules/[0-9a-f]{8}")),
     "mailsend": ((("POST",), r"/api/profile/mail/(?:send(?:/preview)?|suggest|rewrite)"),),
     # Musik (musik.py): listen, make from a wish, delete one or all
     "musik": ((("GET", "POST", "DELETE"), r"/api/musik"), (("GET",), rf"/api/musik/job/{_DOC}"),

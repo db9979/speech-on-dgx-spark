@@ -268,12 +268,13 @@ Home Assistant, Mail, Kalender, Aufgaben, Wetter, reMarkable, MCP und was der Sp
 | `app/panel/kalenderserver.py` | Kalender-Server: die Spark-Kalender eines Profils für Kalender-Apps (CalDAV unter /caldav/, App-Passwort) |
 | `app/panel/kalenderspiegel.py` | Spark-Kalender: verschlüsselte Kopie jedes CalDAV-Kalenders, holt nur Änderungen, Änderungen der Seite sofort |
 | `app/panel/mail.py` | Mail lesen per IMAP |
+| `app/panel/mailregeln.py` | Mail-Regeln der Seite E-Mail: wenn Absender/Betreff, dann Ordner, gelesen, markieren; nie löschen |
 | `app/panel/mailstil.py` | Mailstil: lernt aus gesendeten Mails, wie das Profil schreibt, für Mail-Entwürfe |
 | `app/panel/mcp.py` | Werkzeuge von MCP-Servern, die der Admin einträgt |
 | `app/panel/mcpserver.py` | Der Spark als MCP-Server für andere Programme |
 | `app/panel/meinmcp.py` | Eigene MCP-Dienste pro Profil |
 | `app/panel/parcels.py` | Pakete aus Versand-Mails |
-| `app/panel/postfach.py` | Mails ordnen auf der Seite E-Mail: gelesen, Archiv, eigene Ordner, nie löschen |
+| `app/panel/postfach.py` | Mails ordnen auf der Seite E-Mail: gelesen, markieren, Archiv, Ordner, Mehrfachauswahl, nie löschen |
 | `app/panel/proactive.py` | Meldet sich von selbst, wenn etwas Echtes passiert |
 | `app/panel/remarkable.py` | reMarkable-Notizbücher als Wissen |
 | `app/panel/rmaufgaben.py` | Aufgabenblatt zum Ankreuzen aufs reMarkable |
@@ -510,6 +511,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `users/ID/mail-tidy.json` | Posteingang aufräumen | Einstellungen | – | ja | – |
 | `users/ID/fuerdich.json` | Für dich: was du als erledigt oder uninteressant markiert hast (nur Prüfsummen) | Einstellungen | – | ja | – |
 | `users/ID/mailstil.json` | Mailstil (nur die Zusammenfassung, keine Mail) | Einstellungen | – | ja | – |
+| `users/ID/mail-regeln.json` | Mail-Regeln der Seite E-Mail (Absender, Wörter, Ordner; keine Mail) | Einstellungen | – | ja | – |
 | `users/ID/spark-kalender.json` | Spark-Kalender: Termine der Kalender ohne Konto (nur hier) | Termine | versiegelt | ja | – |
 | `users/ID/kalender-server.json` | Kalender-Server: Prüfwert des App-Passworts für Kalender-Apps | Login | nur der Hash | ja | – |
 | `users/ID/calendar.json` | Kalender-Zugang und Freigaben an andere Profile | Login | Passwort versiegelt | ja | – |

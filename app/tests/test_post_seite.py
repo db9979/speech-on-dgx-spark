@@ -101,7 +101,7 @@ class Api(Fake):
         a = d["items"][0]
         self.assertEqual((a["from"], a["subject"], a["unread"], a["box"]), ("Anna Alt <anna@example.de>", "Werkstatt <b>Auto</b>", True, 0))
         self.assertFalse(d["items"][1]["unread"])
-        self.assertEqual(set(a), {"id", "from", "subject", "date", "unread", "box"})   # never the text
+        self.assertEqual(set(a), {"id", "from", "subject", "date", "unread", "flagged", "attach", "box"})   # never the text
         self.assertEqual(self.c.get("/api/profile/mail/inbox", params={"q": "rechnung", "days": 30}).json()["items"][0]["subject"], "Rechnung")
 
     def test_message_as_plain_text(self):

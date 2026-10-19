@@ -12080,6 +12080,656 @@
           }
         }
       }
+    },
+    "Alle Posteingänge": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All inboxes"
+          }
+        }
+      }
+    },
+    "Dieser Ordner ist leer.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This folder is empty."
+          }
+        }
+      }
+    },
+    "Dieses Postfach war nicht erreichbar.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This mailbox was not reachable."
+          }
+        }
+      }
+    },
+    "Eigene Ordner: wischen oder lange drücken zum Umbenennen oder Entfernen (nur leere). Gelöscht wird nie eine Mail.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Own folders: swipe or long-press to rename or remove (empty ones only). A mail is never deleted."
+          }
+        }
+      }
+    },
+    "Mails werden nie gelöscht: einen Ordner mit Mails lässt der Spark stehen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mails are never deleted: a folder holding mails stays."
+          }
+        }
+      }
+    },
+    "Markieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Flag"
+          }
+        }
+      }
+    },
+    "Markierung weg": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unflag"
+          }
+        }
+      }
+    },
+    "Neuer Ordner": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New folder"
+          }
+        }
+      }
+    },
+    "Ordner": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Folders"
+          }
+        }
+      }
+    },
+    "Ordner darin anlegen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New folder inside"
+          }
+        }
+      }
+    },
+    "Ordner umbenennen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rename folder"
+          }
+        }
+      }
+    },
+    "Sichern": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save"
+          }
+        }
+      }
+    },
+    "Umbenennen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rename"
+          }
+        }
+      }
+    },
+    "markiert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "flagged"
+          }
+        }
+      }
+    },
+    "Markiert.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Flagged."
+          }
+        }
+      }
+    },
+    "Markierung entfernt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Flag removed."
+          }
+        }
+      }
+    },
+    "Posteingang": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inbox"
+          }
+        }
+      }
+    },
+    "Den leeren Ordner entfernen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove the empty folder?"
+          }
+        }
+      }
+    },
+    "Regeln": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rules"
+          }
+        }
+      }
+    },
+    "pausiert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "paused"
+          }
+        }
+      }
+    },
+    "Pause": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pause"
+          }
+        }
+      }
+    },
+    "Nach oben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move up"
+          }
+        }
+      }
+    },
+    "Noch keine Regel. Am schnellsten geht es an einer Mail: „Regel daraus …“.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No rule yet. The quickest way is from a mail: “Rule from this …”."
+          }
+        }
+      }
+    },
+    "Neue Regel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New rule"
+          }
+        }
+      }
+    },
+    "Regel ändern": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit rule"
+          }
+        }
+      }
+    },
+    "Die erste passende Regel entscheidet. Regeln nehmen neue Mails; gelöscht wird nie eine Mail.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The first matching rule decides. Rules take new mail; no mail is ever deleted."
+          }
+        }
+      }
+    },
+    "Aus „Mails aufräumen“": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From “Tidy mail”"
+          }
+        }
+      }
+    },
+    "Alle Postfächer (ohne Ordner)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All mailboxes (no folder)"
+          }
+        }
+      }
+    },
+    "Wenn": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When"
+          }
+        }
+      }
+    },
+    "Dann": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Then"
+          }
+        }
+      }
+    },
+    "nur mit Anhang": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "only with attachment"
+          }
+        }
+      }
+    },
+    "– im Posteingang lassen –": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "– keep in inbox –"
+          }
+        }
+      }
+    },
+    "als gelesen markieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "mark as read"
+          }
+        }
+      }
+    },
+    "nicht in „Für dich“": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "not in “For you”"
+          }
+        }
+      }
+    },
+    "Probelauf": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dry run"
+          }
+        }
+      }
+    },
+    "Ja, jetzt einsortieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yes, sort them now"
+          }
+        }
+      }
+    },
+    "Nur neue Mails": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only new mail"
+          }
+        }
+      }
+    },
+    "Regel daraus …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rule from this …"
+          }
+        }
+      }
+    },
+    "Absender (Adresse oder @domain)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sender (address or @domain)"
+          }
+        }
+      }
+    },
+    "Betreff enthält": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subject contains"
+          }
+        }
+      }
+    },
+    "An (Adresse)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To (address)"
+          }
+        }
+      }
+    },
+    "Verschieben nach": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move to"
+          }
+        }
+      }
+    },
+    "Auch die Mails einsortieren, die schon im Posteingang liegen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Also sort the mail already in the inbox?"
+          }
+        }
+      }
+    },
+    "Gesichert. Die Regel nimmt ab jetzt neue Mails.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved. The rule takes new mail from now on."
+          }
+        }
+      }
+    },
+    "Zurück im Posteingang. Die Regel bleibt für neue Mails.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back in the inbox. The rule stays for new mail."
+          }
+        }
+      }
+    },
+    "Diesen Monat %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This month %lld"
+          }
+        }
+      }
+    },
+    "Trifft %lld Mails im Posteingang der letzten 90 Tage.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Matches %lld mails in the inbox of the last 90 days."
+          }
+        }
+      }
+    },
+    "Die Regel passt auf %lld Mails. Danach geht „Rückgängig“.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The rule matches %lld mails. You can undo it afterwards."
+          }
+        }
+      }
+    },
+    "Einsortiert: %lld Mails.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sorted: %lld mails."
+          }
+        }
+      }
+    },
+    "Absender endet auf ": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sender ends with "
+          }
+        }
+      }
+    },
+    "Absender ist ": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sender is "
+          }
+        }
+      }
+    },
+    "Betreff enthält ": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subject contains "
+          }
+        }
+      }
+    },
+    "an ": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "to "
+          }
+        }
+      }
+    },
+    "mit Anhang": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "with attachment"
+          }
+        }
+      }
+    },
+    " und ": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " and "
+          }
+        }
+      }
+    },
+    "Keine passende Mail.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No matching mail."
+          }
+        }
+      }
+    },
+    "Suchen, auch von: betreff: hat:anhang": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search, also von: betreff: hat:anhang"
+          }
+        }
+      }
+    },
+    "Weiterleiten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forward"
+          }
+        }
+      }
+    },
+    "Anhänge mitschicken": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send the attachments along"
+          }
+        }
+      }
+    },
+    "Deine Zeilen stehen über der weitergeleiteten Mail und dürfen leer bleiben. Gesendet wird nur aus der Vorschau.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your lines stand above the forwarded mail and may stay empty. It is sent only from the preview."
+          }
+        }
+      }
+    },
+    "★ Markiert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "★ Flagged"
+          }
+        }
+      }
+    },
+    "📎 Mit Anhang": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "📎 With attachment"
+          }
+        }
+      }
+    },
+    "von: Absender": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "von: sender"
+          }
+        }
+      }
+    },
+    "betreff: Wort": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "betreff: word"
+          }
+        }
+      }
+    },
+    "%lld KB": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld KB"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

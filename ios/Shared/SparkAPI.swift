@@ -593,6 +593,27 @@ struct SparkAPI {
         return url
     }
 
+    /// Anhang laden (Mailclient Stufe C): attachment n of an own mail, written to a file of its own in the app's
+    /// temporary folder for Quick Look; the caller deletes it. The Spark sends it as a plain download (at most 25 MB).
+    func mailFile(_ id: String, folder: String, n: Int, name: String) async throws -> URL? {
+        guard id.range(of: #"^m[0-9a-f]{8}:[0-9]{1,10}$"#, options: .regularExpression) != nil, (0..<20).contains(n) else { return nil }
+        var c = URLComponents(url: base.appendingPathComponent("api/profile/mail/file"), resolvingAgainstBaseURL: false)!
+        c.queryItems = [URLQueryItem(name: "id", value: id), URLQueryItem(name: "folder", value: String(folder.prefix(200))),
+                        URLQueryItem(name: "n", value: String(n))]
+        var r = request("api/profile/mail/file")
+        r.url = c.url
+        r.timeoutInterval = 120
+        let (data, response) = try await URLSession.shared.data(for: r)
+        try Self.check(data, response)
+        guard data.count <= 25 * 1024 * 1024 else { return nil }
+        let safe = String(name.unicodeScalars.filter { CharacterSet.alphanumerics.contains($0) || " ._-".unicodeScalars.contains($0) }.prefix(120))
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("mail-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let url = dir.appendingPathComponent(safe.trimmingCharacters(in: CharacterSet(charactersIn: ". ")).isEmpty ? "Anhang" : safe)
+        try data.write(to: url, options: [.atomic, .completeFileProtection])
+        return url
+    }
+
     // ---------------------------------------------------------------- pictures painted for an answer (bilder.py)
     static func isJob(_ s: String) -> Bool { s.count == 12 && s.allSatisfy { $0.isHexDigit && !$0.isUppercase } }
 

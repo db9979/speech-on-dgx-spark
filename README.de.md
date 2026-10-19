@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.843** E-Mail wie ein volles Mailprogramm: alle Ordner aller Postfächer lesen, anlegen, umbenennen, leere entfernen; ★ markieren, Mehrfachauswahl und Ziehen in Ordner mit Rückgängig; Regeln direkt aus einer Mail („Regel daraus …“, Probelauf, vorhandene einsortieren), alle unter E-Mail → Regeln; Suche mit von:, betreff:, hat:anhang; Anhänge laden; Weiterleiten über die Vorschau; auch im iPhone; Teil von „Mails ordnen“ und „Mails senden“, aus, nie wird eine Mail gelöscht
 - **V01.0.842** Fix: GitHub-Lauf „Tests“ wieder grün; der Test für den Weg eines Hinweises oben klickte manchmal den Hinweis zu offenen Praxistests, der alle 3 s neu gezeichnet wird, statt des eigenen
 - **V01.0.841** Weniger Bildlaufleisten: Ich rollt als Ganzes mit einer Leiste (vorher drei, eine davon rollte nur die verdeckte Seite darunter), E-Mail am Rechner wie ein Mail-Programm (Seite steht, Liste und Lesebereich rollen nebeneinander, der Mailtext nie extra), Listen ohne eigene Leiste in der Seite; ein Wächter-Test prüft alle Seiten mit echten Leisten
 - **V01.0.840** Spark-Kalender Stufe 4: der Spark als Kalender-Server (CalDAV) für den Kalender des iPhone, Thunderbird oder DAVx5; App-Passwort je Profil unter Kalender → Einstellungen oder im iPhone, im Heimnetz und über den Proxy; Admin-Schalter, aus
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.836** Das Panel kommt schneller wieder dran, wenn im Hintergrund viel gerechnet wird
 - **V01.0.835** Ich → Musik sieht aus wie Dokumente und E-Mail: Karte für ein neues Lied (Länge als Chips, Schalter „Mit Gesang“), Suche und Filter, Lieder nach Tag mit ▶ in jeder Zeile, Einzelheiten mit Abspieler, „Nochmal machen“ und eingeklappter Beschreibung; iPhone-App nach Tag gruppiert mit wählbarer Länge
 - **V01.0.834** Code-Prüfung Tempo B7: Sprechererkennung fast doppelt so schnell, Journal misst die Wartezeit der Antwort
-- **V01.0.833** E-Mail: eine geöffnete Mail, eine Antwort und eine neue Mail haben auf jeder Breite einen sichtbaren Knopf zum Schließen oder Verwerfen (am Rechner fehlte er), Esc schließt die Antwort auch aus dem Textfeld, getippter Text wird vorher nachgefragt
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

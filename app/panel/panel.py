@@ -47,6 +47,7 @@ import rechnerblick  # noqa: E402
 import room  # noqa: E402
 import roomlive  # noqa: E402
 import tidy  # noqa: E402
+import mailregeln  # noqa: E402
 import mailstil  # noqa: E402
 import weather  # noqa: E402
 import contacts  # noqa: E402
@@ -458,6 +459,21 @@ async def mail_tidy():
                 await tidy.due_once(idle=not vorrang.speaking())
             except Exception as e:
                 print("mail tidy:", type(e).__name__, e, flush=True)
+    spawn(loop())
+
+
+@app.on_event("startup")
+async def mail_rules():
+    """Mail-Regeln (mailregeln.py): each minute the profiles whose rules are due look at their new inbox mail."""
+    async def loop():
+        while True:
+            await asyncio.sleep(60)
+            if notaus.blocks("auto"):
+                continue
+            try:
+                await mailregeln.due_once()
+            except Exception as e:
+                print("mail: rules loop failed |", type(e).__name__, flush=True)
     spawn(loop())
 
 

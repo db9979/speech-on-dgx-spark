@@ -86,6 +86,8 @@ DATEIEN = [
     profil("fuerdich.json", "Für dich: was du als erledigt oder uninteressant markiert hast (nur Prüfsummen)",
            "For you: what you marked as done or not interesting (only checksums)", art="Einstellungen"),
     profil("mailstil.json", "Mailstil (nur die Zusammenfassung, keine Mail)", "Mail style (only the summary, never a mail)", art="Einstellungen"),
+    profil("mail-regeln.json", "Mail-Regeln der Seite E-Mail (Absender, Wörter, Ordner; keine Mail)", "Mail rules of the E-mail page (senders, words, folders; never a mail)",
+           art="Einstellungen"),  # mailregeln.py
     profil("spark-kalender.json", "Spark-Kalender: Termine der Kalender ohne Konto (nur hier)", "Spark calendar: appointments of the calendars without an account (only here)",
            art="Termine", schutz=("versiegelt", "sealed")),  # sparkkalender.py
     profil("kalender-server.json", "Kalender-Server: Prüfwert des App-Passworts für Kalender-Apps", "Calendar server: check value of the app password for calendar apps",

@@ -346,6 +346,7 @@ def _raw_text(msg):
 
 
 def _account(acct, uid, today, now):
+    import mailregeln
     import parcels
     import tidy
     out = []
@@ -375,6 +376,8 @@ def _account(acct, uid, today, now):
                      "auto": str(m.get("Auto-Submitted") or "no").lower() != "no"}
                 sent_dt = mail._date(m.get("Date"))
                 subj = h["subject"]
+                if mailregeln.quiet(uid, h["from"], subj):   # a mail rule says „nicht in Für dich“ (mailregeln.py)
+                    continue
                 person = asks(h, sent_dt, now, answered, wrote)
                 if not (person or BILL.search(subj) or ORDER.search(subj) or CONTRACT.search(subj) or
                         any(re.search(r"\b" + br + r"\b", f"{h['from']} {subj}".lower()) for br in BRANDS) or

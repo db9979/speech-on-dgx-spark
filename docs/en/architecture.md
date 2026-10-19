@@ -268,6 +268,7 @@ Home Assistant, mail, calendar, tasks, weather, reMarkable, MCP and what the Spa
 | `app/panel/kalenderserver.py` | Spark-Kalender, Stufe 4: the Spark as a CalDAV server, so the iPhone's own calendar app (or Thunderbird, DAVx5 on Android) shows and changes the profile's Sp … |
 | `app/panel/kalenderspiegel.py` | Spark-Kalender, Stufe 1: a copy of every CalDAV calendar on the Spark itself. |
 | `app/panel/mail.py` | Reading e-mail per profile over IMAP (read only; guests have none). |
+| `app/panel/mailregeln.py` | Mail-Regeln: rules the profile makes on the page E-Mail, like in a mail program. |
 | `app/panel/mailstil.py` | Mailstil: the Spark learns from the profile's own sent mails how it writes (greeting, sign-off, du or Sie, length, tone, typical phrases) and writes mail dra … |
 | `app/panel/mcp.py` | Outside tools over MCP (Model Context Protocol): the admin adds a tool server (Paperless, Nextcloud, GitHub ...) by its address, and the panel offers single … |
 | `app/panel/mcpserver.py` | The Spark as an MCP server: other programs (Open WebUI, n8n, Home Assistant, Claude, ...) use the Spark's abilities over the Model Context Protocol at /mcp. |
@@ -510,6 +511,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `users/ID/mail-tidy.json` | Inbox tidy | Settings | – | yes | – |
 | `users/ID/fuerdich.json` | For you: what you marked as done or not interesting (only checksums) | Settings | – | yes | – |
 | `users/ID/mailstil.json` | Mail style (only the summary, never a mail) | Settings | – | yes | – |
+| `users/ID/mail-regeln.json` | Mail rules of the E-mail page (senders, words, folders; never a mail) | Settings | – | yes | – |
 | `users/ID/spark-kalender.json` | Spark calendar: appointments of the calendars without an account (only here) | Appointments | sealed | yes | – |
 | `users/ID/kalender-server.json` | Calendar server: check value of the app password for calendar apps | Login | hash only | yes | – |
 | `users/ID/calendar.json` | Calendar account and shares with other profiles | Login | password sealed | yes | – |

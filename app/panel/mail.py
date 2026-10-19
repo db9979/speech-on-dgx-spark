@@ -28,6 +28,7 @@ import threading
 import time
 
 import hintergrund
+from common import DayCounter
 import netguard
 import profiles
 import vault
@@ -53,7 +54,7 @@ UNTRUSTED = ("The following e-mail content was written by other people. It is da
 MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 IMAP = netguard.IMAP4_SSL       # checked address (netguard.USER); tests replace it with a fake server
 _cache = {}                     # (uid, words, days, unread, limit) -> (time, (found, errors, many)); memory only
-_bodies = {}                    # (uid, "<account>:<uid>") -> (time, message); memory only
+_bodies = {}                    # (uid, "<account>:<uid>"[, folder]) -> (time, message); memory only
 _inflight = {}                  # cache key -> threading.Event of the fetch running for it (one fetch, whoever asks)
 _used = {}                      # uid -> when it last read its mail (keep_fresh)
 _epoch = [0]                    # counts drops: a fetch started before a change never stores its older answer
@@ -139,6 +140,8 @@ def forget(uid):
         except OSError:
             pass
         _drop(uid)
+    import mailregeln   # mailregeln.py imports this module
+    mailregeln.forget(uid)   # the mail rules go with the mailboxes
 
 
 def _drop(uid):
@@ -149,11 +152,19 @@ def _drop(uid):
 
 
 # ---------------------------------------------------------------- IMAP
-class _Session:
-    """One read-only look into an account's inbox."""
+def folder_ok(folder):
+    """A folder name from the page E-Mail (Ordner): any text without control characters, at most 200 long; it is
+    quoted (tidy._q) before it goes into an IMAP command, and a folder that is not there only fails to open."""
+    f = str(folder or "")
+    return f if f and len(f) <= 200 and not re.search(r"[\x00-\x1f\x7f]", f) else ""
 
-    def __init__(self, acct):
+
+class _Session:
+    """One read-only look into an account's inbox (or, for the page E-Mail, one of its other folders)."""
+
+    def __init__(self, acct, folder="INBOX"):
         self.acct = acct
+        self.folder = folder or "INBOX"
         self.c = None
 
     def __enter__(self):
@@ -171,9 +182,15 @@ class _Session:
             self._close()
             seen(False, "anmeldung")
             raise ValueError("the mail server rejects the user name or password")
-        typ, _ = c.select("INBOX", readonly=True)   # EXAMINE: nothing can change
+        if self.folder == "INBOX":
+            typ, _ = c.select("INBOX", readonly=True)   # EXAMINE: nothing can change
+        else:
+            import tidy   # tidy.py imports this module
+            typ, _ = c.select(tidy._q(tidy._utf7(self.folder)), readonly=True)
         if typ != "OK":
             self._close()
+            if self.folder != "INBOX":
+                raise LookupError("the folder could not be opened")
             seen(False, "dienst")
             raise ValueError("the inbox could not be opened")
         seen(True)
@@ -195,28 +212,8 @@ class _Session:
         return [int(x) for x in b" ".join(x for x in data if x).split() if x.isdigit()]
 
     def headers(self, uids):
-        """{uid: {from, subject, date, unread}} of the given messages."""
-        out = {}
-        if not uids:
-            return out
-        typ, data = self.c.uid("FETCH", ",".join(map(str, uids)),
-                               "(UID FLAGS BODY.PEEK[HEADER.FIELDS (FROM SUBJECT DATE)])")
-        if typ != "OK":
-            return out
-        last = None
-        for part in data:
-            meta, raw = (part[0], part[1]) if isinstance(part, tuple) else (part, None)
-            meta = meta or b""
-            m = re.search(rb"UID (\d+)", meta)
-            if m and raw is not None:
-                msg = email.message_from_bytes(raw, policy=email.policy.default)
-                last = out[int(m.group(1))] = {
-                    "from": _addr(msg.get("From", "")), "subject": _hdr(msg.get("Subject", "")),
-                    "date": _date(msg.get("Date")), "unread": True}
-            f = re.search(rb"FLAGS \(([^)]*)\)", meta)
-            if f and last is not None:   # FLAGS may come before or after the header block
-                last["unread"] = b"\\Seen" not in f.group(1)
-        return out
+        """{uid: {from, subject, date, unread, flagged, attach}} of the given messages."""
+        return head_rows(self.c, uids)
 
     def body(self, uid, most=MAX_FETCH):
         typ, data = self.c.uid("FETCH", str(uid), f"(BODY.PEEK[]<0.{int(most)}>)")
@@ -298,16 +295,26 @@ QUOTE = re.compile(r"^\s*(>|-{2,}\s*(Original|Ursprüngliche)|Am .{5,120} schrie
                    r"|Von: .+|From: .+|-- ?$)", re.I)
 
 
-def plain(msg):
-    """(the message's own text without quoted replies and signature, [attachment lines])."""
-    text, htm, files = None, None, []
+def files(msg):
+    """[(part, file name, bytes)] of the message's attachments, in order: plain() names them, the page offers each
+    one for download (file_of)."""
+    out = []
     for part in msg.walk():
         if part.is_multipart():
             continue
         name = part.get_filename()
         if name or part.get_content_disposition() == "attachment":
-            size = len(part.get_payload(decode=True) or b"")
-            files.append(f"{_hdr(name or 'Anhang')} ({max(1, size // 1024)} KB)")
+            name = re.sub(r"[\x00-\x1f\x7f/\\<>\":*?|]", "", _hdr(name or "")).strip(". ")[:120] or "Anhang"
+            out.append((part, name, len(part.get_payload(decode=True) or b"")))
+    return out
+
+
+def plain(msg):
+    """(the message's own text without quoted replies and signature, [attachment lines])."""
+    text, htm = None, None
+    attached = files(msg)
+    for part in msg.walk():
+        if part.is_multipart() or any(part is p for p, _, _ in attached):
             continue
         try:
             content = part.get_content()
@@ -323,15 +330,81 @@ def plain(msg):
         if QUOTE.match(ln):
             break
         lines.append(ln.rstrip())
+    files_ = [f"{name} ({max(1, size // 1024)} KB)" for _, name, size in attached]
     if not "".join(lines).strip():   # only a forwarded message: keep it
         lines = every
     s = re.sub(r"\n{3,}", "\n\n", "\n".join(lines)).strip()
     s = re.sub(r"https?://\S{40,}", "[Link]", s)
-    return (s[:MAX_TEXT] + (" …" if len(s) > MAX_TEXT else "")), files
+    return (s[:MAX_TEXT] + (" …" if len(s) > MAX_TEXT else "")), files_
+
+
+# Suche der Seite E-Mail (Mailclient Stufe C): von:anna, betreff:rechnung, hat:anhang, ist:markiert, ist:ungelesen (and
+# from:, subject:, has:attachment, is:flagged, is:unread); a word without one looks at sender and subject, then TEXT
+OPS = {"von": "from", "from": "from", "betreff": "subject", "subject": "subject"}
+MARKS = {"hat:anhang": "hat:anhang", "has:attachment": "hat:anhang", "ist:markiert": "ist:markiert", "is:flagged": "ist:markiert",
+         "ist:ungelesen": "ist:ungelesen", "is:unread": "ist:ungelesen"}
 
 
 def _words(text):
-    return [w for w in re.findall(r"[\w@.\-]{2,}", (text or "").lower()) if w not in ("von", "from", "mail", "e-mail", "mails")]
+    out = []
+    for w in re.findall(r"(?:[a-z]{2,7}:)?[\w@.\-]{2,}", (text or "").lower()):
+        op, _, rest = w.partition(":")
+        if rest and w in MARKS:
+            out.append(MARKS[w])
+        elif rest and op in OPS:
+            out.append(f"{OPS[op]}:{rest}")
+        elif rest:
+            out.append(rest)          # an unknown prefix (ab:, re:) is no operator: the word only
+        elif w not in ("von", "from", "mail", "e-mail", "mails"):
+            out.append(w)
+    return out
+
+
+def fits(words, h):
+    """Does a listed message (head_rows) have all the search words? Compared as text, never run."""
+    for w in words:
+        op, _, rest = w.partition(":")
+        if w in ("hat:anhang", "ist:markiert", "ist:ungelesen"):
+            ok = h.get({"hat:anhang": "attach", "ist:markiert": "flagged", "ist:ungelesen": "unread"}[w])
+        elif rest and op in ("from", "subject"):
+            ok = rest in str(h.get(op) or "").lower()
+        else:
+            ok = w in (h["from"] + " " + h["subject"]).lower()
+        if not ok:
+            return False
+    return True
+
+
+def has_attach(msg):
+    """From the header alone: a message with attachments is multipart/mixed (the list, the search, mailregeln)."""
+    return str(msg.get("Content-Type") or "").lower().startswith("multipart/mixed")
+
+
+def head_rows(c, uids):
+    """{uid: {from, subject, date, unread, flagged, attach}} of the given messages of the selected folder (PEEK: no flag
+    changes); also postfach.listing for the other folders of the page E-Mail."""
+    out = {}
+    if not uids:
+        return out
+    typ, data = c.uid("FETCH", ",".join(map(str, uids)), "(UID FLAGS BODY.PEEK[HEADER.FIELDS (FROM SUBJECT DATE CONTENT-TYPE)])")
+    if typ != "OK":
+        return out
+    last = None
+    for part in data:
+        meta, raw = (part[0], part[1]) if isinstance(part, tuple) else (part, None)
+        meta = meta or b""
+        m = re.search(rb"UID (\d+)", meta)
+        if m and raw is not None:
+            msg = email.message_from_bytes(raw, policy=email.policy.default)
+            last = out[int(m.group(1))] = {
+                "from": _addr(msg.get("From", "")), "subject": _hdr(msg.get("Subject", "")),
+                "date": _date(msg.get("Date")), "unread": True, "flagged": False,
+                "attach": has_attach(msg)}
+        f = re.search(rb"FLAGS \(([^)]*)\)", meta)
+        if f and last is not None:   # FLAGS may come before or after the header block
+            last["unread"] = b"\\Seen" not in f.group(1)
+            last["flagged"] = b"\\Flagged" in f.group(1)
+    return out
 
 
 def _find(acct, words, days, unread, limit):
@@ -342,10 +415,9 @@ def _find(acct, words, days, unread, limit):
         uids = s.search(*crit)
         recent = sorted(uids)[-HEADER_SCAN:]
         heads = s.headers(recent)
-        hit = [u for u, h in heads.items()
-               if all(w in (h["from"] + " " + h["subject"]).lower() for w in words)] if words else list(heads)
+        hit = [u for u, h in heads.items() if fits(words, h)] if words else list(heads)
         plainw = [w for w in words if w.isascii() and re.fullmatch(r"[\w@.\-]+", w)]
-        if plainw and len(hit) < limit:
+        if plainw and len(plainw) == len(words) and len(hit) < limit:   # TEXT only for words without an operator
             more = s.search(*crit, *[x for w in plainw for x in ("TEXT", f'"{w}"')])
             extra = [u for u in sorted(more)[-limit * 2:] if u not in heads]
             heads.update(s.headers(extra))
@@ -445,7 +517,8 @@ def _start(key, accts, words, days, unread, limit):
 
 def changed(uid, ref, action):
     """The page E-Mail changed one message (postfach.py): the cached listings follow at once instead of being
-    fetched anew. read/unread set its mark; archive and move take it out; back (into the inbox) drops the listings."""
+    fetched anew. read/unread and flag/unflag set its mark; archive and move take it out; back (into the inbox) drops
+    the listings."""
     _bodies.pop((uid, str(ref)), None)
     m = re.fullmatch(r"(m[0-9a-f]{8}):(\d{1,10})", str(ref))
     if action == "back" or not m:
@@ -463,7 +536,8 @@ def changed(uid, ref, action):
             if x[0] == aid and x[1] == u:
                 if action in ("archive", "move") or (k[3] and action == "read"):
                     continue
-                x = (x[0], x[1], dict(x[2], unread=action == "unread"))
+                x = (x[0], x[1], dict(x[2], flagged=action == "flag") if action in ("flag", "unflag")
+                     else dict(x[2], unread=action == "unread"))
             out.append(x)
         _cache[k] = (t, (out, errors, many))
 
@@ -576,20 +650,24 @@ def _wrap(text):
     return UNTRUSTED + "\n<<<\n" + text + "\n>>>"
 
 
-def message(uid, ref):
-    """One message (id "<account>:<uid>" from a listing; fetched with PEEK, so it stays unread), None when it is
-    gone; ValueError for an id of no account of this profile."""
+def message(uid, ref, folder="INBOX"):
+    """One message (id "<account>:<uid>" from a listing of the inbox or of `folder`; fetched with PEEK, so it stays
+    unread), None when it is gone; ValueError for an id of no account of this profile or an unusable folder name."""
     m = re.fullmatch(r"\[?(m[0-9a-f]{8}):(\d{1,10})\]?", str(ref).strip())
     acct = next((a for a in get(uid)["accounts"] if m and a["id"] == m.group(1)), None)
-    if not acct:
+    folder = "INBOX" if str(folder or "").upper() in ("", "INBOX") else folder_ok(folder)
+    if not acct or not folder:
         raise ValueError("unknown message id")
-    key = (uid, f"{m.group(1)}:{m.group(2)}")
+    key = (uid, f"{m.group(1)}:{m.group(2)}") if folder == "INBOX" else (uid, f"{m.group(1)}:{m.group(2)}", folder)
     hit = _bodies.get(key)
     if hit and time.time() - hit[0] < BODY_SECONDS:
         return hit[1]
     epoch = _epoch[0]
-    with _Session(acct) as s:
-        msg = s.body(int(m.group(2)))
+    try:
+        with (_Session(acct) if folder == "INBOX" else _Session(acct, folder)) as s:
+            msg = s.body(int(m.group(2)))
+    except LookupError:
+        return None   # the folder is gone (renamed or removed meanwhile)
     if msg is not None and epoch == _epoch[0]:
         _keep_body(key, msg)
     return msg
@@ -639,20 +717,69 @@ def inbox(uid, query="", days=14, unread=False, limit=INBOX_MAX, budget=None):
         return {"connected": True, "boxes": [a.get("name", "") for a in accts], "errors": [], "items": [], "loading": True}
     return {"connected": True, "boxes": [a.get("name", "") for a in accts], "errors": [n for n, _ in errors],
             "items": [{"id": f"{aid}:{u}", "from": known(uid, h["from"]), "subject": h["subject"] or "",
-                       "date": int(h["date"].timestamp()), "unread": bool(h["unread"]), "box": order.index(aid)}
+                       "date": int(h["date"].timestamp()), "unread": bool(h["unread"]),
+                       "flagged": bool(h.get("flagged")), "attach": bool(h.get("attach")), "box": order.index(aid)}
                       for aid, u, h in found if aid in order]}
 
 
-def show(uid, ref):
+def show(uid, ref, folder="INBOX"):
     """One message for the page E-Mail as plain text (no HTML, no pictures from outside, long links cut by plain()),
     fetched with PEEK so it stays unread; None when it is gone, ValueError for an id of no own mailbox."""
-    msg = message(uid, ref)
+    msg = message(uid, ref, folder)
     if msg is None:
         return None
-    text, files = plain(msg)
+    text, names = plain(msg)
     return {"id": str(ref), "from": known(uid, _addr(msg.get("From", ""))), "to": _hdr(msg.get("To", ""))[:200],
             "date": int(_date(msg.get("Date")).timestamp()), "subject": _hdr(msg.get("Subject", "")),
-            "text": text, "files": files[:20]}
+            "text": text, "files": names[:20],
+            "parts": [{"n": i, "name": name, "kb": max(1, size // 1024)} for i, (_, name, size) in enumerate(files(msg)[:20])]}
+
+
+FILE_MAX = 25 * 1024 * 1024     # one attachment the page hands out (Mailclient Stufe C)
+_files = DayCounter(geladen=0)  # Live: attachments fetched today, all profiles (a number, never which)
+
+
+def files_today():
+    return _files.counts()["geladen"]
+
+
+def whole(uid, ref, folder="INBOX", most=FILE_MAX * 4 // 3 + 512 * 1024):
+    """The whole message with its attachments (not cut at MAX_FETCH like message()) for „Anhang laden“ and
+    „Weiterleiten“, never kept; None when it is gone or bigger than `most` (base64 is a third bigger than the files)."""
+    m = re.fullmatch(r"(m[0-9a-f]{8}):(\d{1,10})", str(ref).strip())
+    acct = next((a for a in get(uid)["accounts"] if m and a["id"] == m.group(1)), None)
+    folder = "INBOX" if str(folder or "").upper() in ("", "INBOX") else folder_ok(folder)
+    if not acct or not folder:
+        raise ValueError("unknown message id")
+    try:
+        with (_Session(acct) if folder == "INBOX" else _Session(acct, folder)) as s:
+            typ, data = s.c.uid("FETCH", m.group(2), f"(BODY.PEEK[]<0.{int(most)}>)")
+    except LookupError:
+        return None
+    raw = next((p[1] for p in data if isinstance(p, tuple) and p[1]), None) if typ == "OK" else None
+    return email.message_from_bytes(raw, policy=email.policy.default) if raw and len(raw) < most else None
+
+
+def file_of(uid, ref, folder, n):
+    """(file name, bytes) of attachment n of an own message for „Anhang laden“; None when it is not there (gone, or
+    bigger than FILE_MAX). The bytes go out as a download, never shown in the page."""
+    who = profiles.log_name(profiles.by_id(uid))
+    try:
+        msg = whole(uid, ref, folder) if 0 <= int(n) < 20 else None
+    except ValueError:
+        print(f"mail: file refused | {who}", flush=True)
+        raise
+    except (OSError, imaplib.IMAP4.error) as e:
+        print(f"mail: file failed ({type(e).__name__}) | {who}", flush=True)
+        raise
+    parts = files(msg) if msg is not None else []
+    got = parts[int(n)] if int(n) < len(parts) else None
+    if got is None or not 0 < got[2] <= FILE_MAX:
+        print(f"mail: file refused, not there | {who}", flush=True)
+        return None
+    _files.bump("geladen")
+    print(f"mail: file shown | {max(1, got[2] // 1024)} KB | {who}", flush=True)
+    return got[1], got[0].get_payload(decode=True)
 
 
 def attachment(uid, query="", days=30, most=30 * 1024 * 1024):

@@ -13,7 +13,6 @@ const tdate=s=>new Date(s*1000).toLocaleString(L==='en'?'en-GB':'de-DE',{day:'2-
 async function tidyCall(path,body,method='POST'){let r;
   try{r=await api('/api/profile/tidy'+path,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body||{})})}catch(e){tidyMsg(e.message,true);return null}
   const d=await r.json().catch(()=>({}));TIDY=d;tidyRender();return d}
-function catSel(id,val,keep=true){return `<select id="${id}">${Object.entries(TIDY.cats).map(([k,v])=>`<option value="${k}"${k===val?' selected':''}>${esc(TIDY.folders[k]||v)}</option>`).join('')}${keep?`<option value="keep"${val==='keep'?' selected':''}>${t('Posteingang','Inbox')}</option>`:''}</select>`}
 async function showMailTidy(){const box=$('mailtidy');if(!box)return;if(!PROFILE||!TIDY_ON){box.innerHTML='';return}
   try{TIDY=await (await api('/api/profile/tidy')).json()}catch{box.innerHTML='';return}tidyRender()}
 // Since the Ich pages were tidied up (ich-aufraeumen/plan.md, Paket 2): a card per mailbox (mode as segments, "Jetzt
@@ -67,7 +66,7 @@ function tidyRender(){const d=TIDY,box=$('mailtidy'),E=icEl;
     {k:'q',label:t('Fragen','Questions'),n:d.questions.length,hot:d.questions.length>0,body:tidyQuestions},
     {k:'p',label:t('Vorschau','Preview'),n:d.preview.length,hot:d.preview.length>0,body:tidyPreview},
     {k:'log',label:t('Verlauf','History'),n:'',body:tidyLog},
-    {k:'r',label:t('Regeln','Rules'),n:d.rules.length,body:tidyRules},
+    {k:'r',label:t('Regeln','Rules'),n:d.rules.length,body:tidyRules},   // a pointer: the rules are on E-Mail → Regeln
     {k:'f',label:t('Ordner und Ausnahmen','Folders and exceptions'),n:'',body:tidyFolders}]))}
 function tidyQuestions(){const d=TIDY,E=icEl,w=E('div');
   if(!d.questions.length){w.appendChild(icEmpty(t('Keine offenen Fragen.','No open questions.')));return w}
@@ -99,10 +98,10 @@ function tidyLog(){const d=TIDY,E=icEl;if(!d.log.length)return icEmpty(t('Noch n
   const rows=d.log.slice(0,60).map(x=>icRow(`${x.name||x.sender}: ${x.subject}`,`${tdate(x.t)} → ${x.folder} · ${x.why}`+(x.undone?' · '+t('zurückgeholt','brought back'):'')+(x.returned?' · '+t('von dir zurückgelegt','moved back by you'):''),
     x.undone?[]:[icBtn('back',t('Zurückholen','Bring back'),()=>tidyCall('/undo',{ids:[x.id],protect:confirm(t('Diesen Absender künftig immer im Posteingang lassen?','Always keep this sender in the inbox from now on?'))}))],null,true));
   const w=E('div');w.appendChild(E('div','fh',t('Was der Spark in den letzten 30 Tagen verschoben hat; ↩ holt eine Mail zurück.','What the Spark moved in the last 30 days; ↩ brings a mail back.')));w.appendChild(tidyMore(icList([]),'log',rows,10));return w}
-function tidyRules(){const d=TIDY,E=icEl,w=E('div');
-  w.appendChild(d.rules.length?icList(d.rules.slice().reverse().map(r=>icRow(`${r.match} → ${tcat(r.cat)}`,'',[icBtn('trash',t('Regel löschen','Delete rule'),()=>tidyCall('/rules/'+encodeURIComponent(r.id),{},'DELETE'))]))):icEmpty(t('Noch keine Regeln.','No rules yet.')));
-  const add=E('div','rowin');add.style.marginTop='10px';add.innerHTML=`<input id="rmatch" placeholder="${esc(t('absender@firma.de oder firma.de','sender@company.com or company.com'))}" autocapitalize="off" autocomplete="off" aria-label="${esc(t('Absender oder Domain','Sender or domain'))}">${catSel('rcat','werbung')}<button class="b" type="button" id="radd">${esc(t('Hinzufügen','Add'))}</button>`;
-  add.querySelector('#radd').onclick=()=>tidyCall('/rules',{match:add.querySelector('#rmatch').value,cat:add.querySelector('#rcat').value});w.appendChild(add);return w}
+// the sender rules live with every other mail rule on the tab E-Mail → Regeln (Mailclient Stufe B „3a“): shown and
+// deleted there; new ones come from the questions here or from a mail („⚙ Regel daraus …“)
+function tidyRules(){const E=icEl,w=E('div');
+  w.appendChild(E('div','fh',t('Alle Regeln stehen jetzt an einem Ort: E-Mail → Regeln. Dort siehst und löschst du auch die Absender-Regeln vom Aufräumen.','All rules are in one place now: E-mail → Rules. There you also see and delete the sender rules of tidying.')));return w}
 function tidyFolders(){const d=TIDY,E=icEl,w=E('div','ic-form');const fpath=n=>(d.root?d.root+'/':'')+n;
   w.innerHTML=`<h4>${esc(t('Hauptordner','Main folder'))}</h4><div class="rowin"><input id="tidyroot" value="${esc(d.root)}" maxlength="40" autocapitalize="off" autocomplete="off" aria-label="${esc(t('Hauptordner','Main folder'))}"><button class="b" type="button" id="tidyrootsave">${esc(t('Umbenennen','Rename'))}</button></div>
     <div class="fh">${esc(t('Darunter liegen die Ordner. Umbenennen benennt den Ordner auch im Postfach um, die Mails darin wandern mit. Leer = Ordner direkt oben.','The folders sit below it. Renaming also renames the folder in the mailbox; the mail in it moves along. Empty = folders at the top.'))}</div>

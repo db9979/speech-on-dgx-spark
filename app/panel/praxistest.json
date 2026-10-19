@@ -2175,6 +2175,27 @@
 "titel": "Eine Bildlaufleiste",
 "text": "A: Update auf V01.0.841. Ich öffnen, mehrere Seiten (Überblick, Musik, Gedächtnis, Gespräch): rechts nur eine Leiste, sie rollt die Ich-Seite; keine Leiste, die nichts tut. B: Seite E-Mail am Rechner, eine lange Mail öffnen: die Seite steht, links rollt die Liste, rechts der Lesebereich, der Mailtext hat keine eigene Leiste. C: Dasselbe am Handy: nur die Seite rollt, der Mailtext steht ganz da. D: Funktionen → Eigenes Kiwix-Archiv, „Bücher auswählen“: 30 Bücher, darunter „Weitere … zeigen“ statt einer Leiste im Kasten.",
 "thread": "Bildlaufleisten"
+},
+{
+"id": "P335",
+"v": 843,
+"titel": "Ordner und Mehrfachauswahl in der E-Mail",
+"text": "A: Update auf V01.0.843, Admin: Funktionen → E-Mail lesen → „Mails ordnen“ an. B: E-Mail, „📁 Posteingang ▾“: alle Ordner mit Zahl ungelesener; einen öffnen, eine Mail darin lesen. C: „+ Neuer Ordner“ anlegen, über „⋯“ umbenennen (Code), leer entfernen; einen Ordner mit Mails entfernen: bleibt stehen. D: Eine Mail „★ Markieren“: Stern in der Liste und im Mailprogramm. E: Drei Häkchen, „Verschieben“ in den neuen Ordner, dann „Rückgängig“: alle drei wieder im Posteingang. F: Dasselbe im iPhone (Ordner-Knopf, „Auswählen“).",
+"thread": "Kalender und E-Mail in Panel und Apps"
+},
+{
+"id": "P336",
+"v": 843,
+"titel": "Mail-Regeln",
+"text": "A: Eine Mail öffnen, „⚙ Regel daraus …“: Absender steht schon da; Ordner wählen, „Probelauf“ nennt eine Zahl und ändert nichts. B: „Sichern“, dann „Ja, jetzt einsortieren“ (Code): die Mails liegen im Ordner; „Rückgängig“: zurück im Posteingang. C: Eine neue Mail von diesem Absender schicken: spätestens nach 5 Minuten im Ordner, unter E-Mail → Regeln „Diesen Monat 1“. D: Regeln: Pause, Nach oben, Löschen; die Absender-Regeln von „Mails aufräumen“ stehen darunter. E: Dasselbe im iPhone (E-Mail ⋯ → Regeln, „Regel daraus …“ in einer Mail).",
+"thread": "Kalender und E-Mail in Panel und Apps"
+},
+{
+"id": "P337",
+"v": 843,
+"titel": "Suchen, Anhänge, Weiterleiten, Ziehen",
+"text": "A: E-Mail, Suche „von:“ mit einem Absender, dann „hat:anhang“ und der Knopf „★ Markiert“: nur passende Mails. B: Eine Mail mit Anhang öffnen, „⬇ Name“: die Datei wird heruntergeladen, nichts öffnet sich in der Seite. C: „Weiterleiten“, eine Adresse eintragen, „Anhänge mitschicken“, „Vorschau“: Fwd-Betreff, die Mail unter deinen Zeilen, Anhänge genannt; „Senden“, beim Empfänger ansehen. D: Am Rechner eine Zeile auf einen Ordner in „Hierher ziehen“ ziehen, dann „Rückgängig“. E: Im iPhone suchen (Vorschläge antippen), Anhang antippen (Vorschau), „Weiterleiten“.",
+"thread": "Kalender und E-Mail in Panel und Apps"
 }
 ]
 }

@@ -389,13 +389,6 @@ def remove_rule(uid, rid):
     return public(uid)
 
 
-def panel_rule(uid, body):
-    def fn(d):
-        add_rule(d, body.get("match"), body.get("cat"))
-    _mut(uid, fn)
-    return public(uid)
-
-
 # ---------------------------------------------------------------- deciding
 def sender_of(msg):
     name, addr = email.utils.parseaddr(mail._hdr(msg.get("From", "")))
@@ -1741,11 +1734,6 @@ async def api_run(request: Request, prof=Depends(browser_profile)):
     b = await _body(request)     # asked for by the person: the model may help right now
     r = await _do(run_account, prof["id"], str(b.get("aid", "")), True)
     return dict(public(prof["id"]), report=r)
-
-
-@router.post("/api/profile/tidy/rules", dependencies=[Depends(assistant), Depends(_on)])
-async def api_rule(request: Request, prof=Depends(browser_profile)):
-    return await _do(panel_rule, prof["id"], await _body(request))
 
 
 @router.delete("/api/profile/tidy/rules/{rid}", dependencies=[Depends(assistant)])

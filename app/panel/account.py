@@ -9,6 +9,7 @@ import time
 import os
 import re
 import sys
+from urllib.parse import quote
 
 import httpx
 from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
@@ -31,6 +32,7 @@ import memtidy  # noqa: E402
 import gedaechtnis  # noqa: E402
 import mfa  # noqa: E402
 import postfach  # noqa: E402
+import mailregeln  # noqa: E402
 import senden  # noqa: E402
 import antwortvorschlag  # noqa: E402
 import verbrauch  # noqa: E402
@@ -1210,11 +1212,14 @@ async def profile_mail_inbox(request: Request, q: str = "", days: int = 14, unre
 
 
 @router.get("/api/profile/mail/message", dependencies=[Depends(assistant), Depends(mail_on)])
-async def profile_mail_message(request: Request, id: str = "", prof=Depends(own_profile)):
-    """One message of the own mailboxes as plain text; it stays unread (PEEK)."""
+async def profile_mail_message(request: Request, id: str = "", folder: str = "", prof=Depends(own_profile)):
+    """One message of the own mailboxes as plain text; it stays unread (PEEK). `folder`: a folder other than the
+    inbox (Ordner, only with Mails ordnen)."""
     guard.limit(request, "post", prof["id"])
+    if folder and folder.upper() != "INBOX" and not features.allowed("mailmanage", prof["id"]):
+        raise HTTPException(403, "Ordner gehören zu „Mails ordnen“.")
     try:
-        r = await asyncio.wait_for(asyncio.to_thread(mail.show, prof["id"], id[:40]), 45)
+        r = await asyncio.wait_for(asyncio.to_thread(mail.show, prof["id"], id[:40], folder[:200] or "INBOX"), 45)
     except ValueError:
         raise HTTPException(400, "Unbekannte Mail.")
     except asyncio.TimeoutError:
@@ -1226,6 +1231,29 @@ async def profile_mail_message(request: Request, id: str = "", prof=Depends(own_
     if r is None:
         raise HTTPException(404, "Diese Mail gibt es nicht mehr.")
     return r
+
+
+@router.get("/api/profile/mail/file", dependencies=[Depends(assistant), Depends(mail_on), Depends(mailmanage_on)])
+async def profile_mail_file(request: Request, id: str = "", folder: str = "", n: int = 0, prof=Depends(own_profile)):
+    """„Anhang laden“ (Mailclient Stufe C): attachment n of an own message as a download. Someone else's file: never
+    shown in the page (octet-stream, nosniff, sandbox), at most mail.FILE_MAX."""
+    guard.limit(request, "post", prof["id"])
+    try:
+        got = await asyncio.wait_for(asyncio.to_thread(mail.file_of, prof["id"], id[:40], folder[:200] or "INBOX", n), 90)
+    except ValueError:
+        raise HTTPException(400, "Unbekannte Mail.")
+    except asyncio.TimeoutError:
+        print(f"mail: file too slow | {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(504, "Das Postfach hat zu lange gebraucht. Bitte gleich noch einmal.")
+    except (OSError, imaplib.IMAP4.error):
+        raise HTTPException(502, "Das Postfach war nicht erreichbar.")
+    if got is None:
+        raise HTTPException(404, "Diesen Anhang gibt es nicht (mehr), oder er ist größer als 25 MB.")
+    name, data = got
+    safe = re.sub(r"[^A-Za-z0-9._ -]", "_", name)[:120] or "Anhang"
+    return Response(data, media_type="application/octet-stream", headers={
+        "Content-Disposition": f"attachment; filename=\"{safe}\"; filename*=UTF-8''{quote(name)}",
+        "X-Content-Type-Options": "nosniff", "Content-Security-Policy": "sandbox", "Cache-Control": "no-store"})
 
 
 @router.get("/api/profile/mail/folders", dependencies=[Depends(assistant), Depends(mail_on), Depends(mailmanage_on)])
@@ -1254,7 +1282,7 @@ async def profile_mail_act(request: Request, prof=Depends(browser_profile)):
     try:
         return await asyncio.wait_for(asyncio.to_thread(
             postfach.act, prof["id"], str(body.get("id") or "")[:40], str(body.get("action") or "")[:10],
-            str(body.get("folder") or "")[:200], str(body.get("mid") or "")[:300]), 45)
+            str(body.get("folder") or "")[:200], str(body.get("mid") or "")[:300], str(body.get("src") or "INBOX")[:200]), 45)
     except LookupError:
         raise HTTPException(404, "Diese Mail ist dort nicht mehr.")
     except notaus.NotausAktiv:
@@ -1268,16 +1296,175 @@ async def profile_mail_act(request: Request, prof=Depends(browser_profile)):
         raise HTTPException(502, "Das Postfach war nicht erreichbar.")
 
 
+async def _ordnen(prof, what, fn, *args):
+    """Mails ordnen: one call into postfach.py with the answers the page understands (it logs every outcome)."""
+    try:
+        return await asyncio.wait_for(asyncio.to_thread(fn, prof["id"], *args), 45)
+    except LookupError:
+        raise HTTPException(404, "Das ist dort nicht mehr.")
+    except notaus.NotausAktiv:
+        raise HTTPException(423, "Notaus: gerade wird nichts geändert")
+    except ValueError as e:
+        raise HTTPException(400, str(e)[:200])
+    except asyncio.TimeoutError:
+        print(f"mail: {what} too slow | {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(504, "Das Postfach hat zu lange gebraucht. Bitte gleich noch einmal.")
+    except (OSError, imaplib.IMAP4.error):
+        print(f"mail: {what} not readable | {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(502, "Das Postfach war nicht erreichbar.")
+
+
+@router.get("/api/profile/mail/tree", dependencies=[Depends(assistant), Depends(mail_on), Depends(mailmanage_on)])
+async def profile_mail_tree(request: Request, fresh: bool = False, prof=Depends(browser_profile)):
+    """Ordner (postfach.tree): the folders of every own mailbox with their unread counts."""
+    guard.limit(request, "postordnen", prof["id"])
+    r = await _ordnen(prof, "tree", postfach.tree, bool(fresh))
+    print(f"mail: tree shown | {sum(len(a['folders']) for a in r['accounts'])} | {profiles.log_name(prof)}", flush=True)
+    return r
+
+
+@router.get("/api/profile/mail/folder", dependencies=[Depends(assistant), Depends(mail_on), Depends(mailmanage_on)])
+async def profile_mail_folder(request: Request, account: str = "", folder: str = "", q: str = "", prof=Depends(browser_profile)):
+    """Ordner: the newest messages of one folder (EXAMINE, header fields only), with a search q like the inbox."""
+    guard.limit(request, "post", prof["id"])
+    return await _ordnen(prof, "folder", postfach.listing, account[:20], folder[:200], q[:100])
+
+
+@router.post("/api/profile/mail/acts", dependencies=[Depends(assistant), Depends(mail_on), Depends(mailmanage_on)])
+async def profile_mail_acts(request: Request, prof=Depends(browser_profile)):
+    """Mehrfachauswahl (postfach.act_many): {ids (at most postfach.MANY), action, folder, src}."""
+    guard.limit(request, "postordnen", prof["id"])
+    b = await json_body(request, 16 * 1024)
+    ids = b.get("ids") if isinstance(b.get("ids"), list) else []
+    if not ids or len(ids) > postfach.MANY:
+        raise HTTPException(400, f"Eine bis {postfach.MANY} Mails auf einmal.")
+    return await _ordnen(prof, "many", postfach.act_many, [str(x)[:40] for x in ids], str(b.get("action") or "")[:10],
+                         str(b.get("folder") or "")[:200], str(b.get("src") or "INBOX")[:200])
+
+
+@router.post("/api/profile/mail/acts/back", dependencies=[Depends(assistant), Depends(mail_on), Depends(mailmanage_on)])
+async def profile_mail_acts_back(request: Request, prof=Depends(browser_profile)):
+    """„Rückgängig“ after a Mehrfachauswahl: {account, folder, mids, src}."""
+    guard.limit(request, "postordnen", prof["id"])
+    b = await json_body(request, 32 * 1024)
+    mids = b.get("mids") if isinstance(b.get("mids"), list) else []
+    return await _ordnen(prof, "back", postfach.back_many, str(b.get("account") or "")[:20], str(b.get("folder") or "")[:200],
+                         [str(m)[:300] for m in mids[:postfach.MANY]], str(b.get("src") or "INBOX")[:200])
+
+
+@router.post("/api/profile/mail/folder/new", dependencies=[Depends(assistant), Depends(mail_on), Depends(mailmanage_on)])
+async def profile_mail_folder_new(request: Request, prof=Depends(browser_profile)):
+    """Ordner anlegen: {account, folder (inside it, or "" at the top), name}."""
+    guard.limit(request, "postordnen", prof["id"])
+    b = await json_body(request, 4096)
+    return await _ordnen(prof, "folder new", postfach.folder_op, str(b.get("account") or "")[:20], "new",
+                         str(b.get("folder") or "")[:200], str(b.get("name") or "")[:80])
+
+
+@router.post("/api/profile/mail/folder/rename", dependencies=[Depends(assistant), Depends(mail_on), Depends(mailmanage_on)])
+async def profile_mail_folder_rename(request: Request, prof=Depends(secret_profile)):
+    """Ordner umbenennen (an own folder, with the code): {account, folder, name}."""
+    guard.limit(request, "postordnen", prof["id"])
+    b = await json_body(request, 4096)
+    return await _ordnen(prof, "folder rename", postfach.folder_op, str(b.get("account") or "")[:20], "rename",
+                         str(b.get("folder") or "")[:200], str(b.get("name") or "")[:80])
+
+
+@router.post("/api/profile/mail/folder/remove", dependencies=[Depends(assistant), Depends(mail_on), Depends(mailmanage_on)])
+async def profile_mail_folder_remove(request: Request, prof=Depends(secret_profile)):
+    """Ordner entfernen (an own, empty folder without folders inside, with the code): {account, folder}."""
+    guard.limit(request, "postordnen", prof["id"])
+    b = await json_body(request, 4096)
+    return await _ordnen(prof, "folder remove", postfach.folder_op, str(b.get("account") or "")[:20], "remove",
+                         str(b.get("folder") or "")[:200])
+
+
+# ---------------------------------------------------------------- Mail-Regeln (mailregeln.py, Mailclient Stufe B)
+@router.get("/api/profile/mail/rules", dependencies=[Depends(assistant), Depends(mail_on), Depends(mailmanage_on)])
+def profile_mail_rules(request: Request, prof=Depends(browser_profile)):
+    """The tab Regeln: own rules and the sender rules of Mails aufräumen."""
+    guard.limit(request, "postordnen", prof["id"])
+    return mailregeln.public(prof["id"])
+
+
+async def _rule(prof, what, fn, *args):
+    try:
+        return await asyncio.wait_for(asyncio.to_thread(fn, prof["id"], *args), 60)
+    except LookupError:
+        raise HTTPException(404, "Diese Regel gibt es nicht mehr.")
+    except notaus.NotausAktiv:
+        raise HTTPException(423, "Notaus: gerade wird nichts geändert")
+    except ValueError as e:
+        print(f"mail: rule {what} refused | {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(400, str(e)[:200])
+    except asyncio.TimeoutError:
+        print(f"mail: rule {what} too slow | {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(504, "Das Postfach hat zu lange gebraucht. Bitte gleich noch einmal.")
+    except (OSError, imaplib.IMAP4.error):
+        print(f"mail: rule {what} not readable | {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(502, "Das Postfach war nicht erreichbar.")
+
+
+@router.post("/api/profile/mail/rules", dependencies=[Depends(assistant), Depends(mail_on), Depends(mailmanage_on)])
+async def profile_mail_rule_save(request: Request, prof=Depends(browser_profile)):
+    """A new rule, or with "id" the rule changed: {id?, account, when: {from, to, subject, attach}, then: {folder,
+    read, flag, quiet}, on}."""
+    guard.limit(request, "postordnen", prof["id"])
+    b = await json_body(request, 8192)
+    r = await _rule(prof, "save", mailregeln.add, b, str(b.get("id") or "")[:20])
+    print(f"mail: rule saved | {profiles.log_name(prof)}", flush=True)
+    return dict(mailregeln.public(prof["id"]), saved=r["id"])
+
+
+@router.post("/api/profile/mail/rules/test", dependencies=[Depends(assistant), Depends(mail_on), Depends(mailmanage_on)])
+async def profile_mail_rule_test(request: Request, prof=Depends(browser_profile)):
+    """Probelauf: how many inbox mails of the last 90 days the rule fits; nothing changes."""
+    guard.limit(request, "postordnen", prof["id"])
+    return await _rule(prof, "preview", mailregeln.preview, await json_body(request, 8192))
+
+
+@router.post("/api/profile/mail/rules/order", dependencies=[Depends(assistant), Depends(mail_on), Depends(mailmanage_on)])
+async def profile_mail_rule_order(request: Request, prof=Depends(browser_profile)):
+    """The order of the rules (the first that fits decides): {ids}."""
+    guard.limit(request, "postordnen", prof["id"])
+    b = await json_body(request, 8192)
+    ids = [str(x)[:20] for x in (b.get("ids") if isinstance(b.get("ids"), list) else [])][:mailregeln.MAX_RULES]
+    mailregeln.order(prof["id"], ids)
+    print(f"mail: rules ordered | {profiles.log_name(prof)}", flush=True)
+    return mailregeln.public(prof["id"])
+
+
+@router.post("/api/profile/mail/rules/{rid}/apply", dependencies=[Depends(assistant), Depends(mail_on), Depends(mailmanage_on)])
+async def profile_mail_rule_apply(request: Request, rid: str, prof=Depends(secret_profile)):
+    """„Auch die vorhandenen“: the rule on the inbox mails it fits now (with the code; „Rückgängig“ brings them back)."""
+    guard.limit(request, "postordnen", prof["id"])
+    return await _rule(prof, "apply", mailregeln.apply, rid[:20])
+
+
+@router.delete("/api/profile/mail/rules/{rid}", dependencies=[Depends(assistant)])
+def profile_mail_rule_remove(request: Request, rid: str, prof=Depends(browser_profile)):
+    """Deletes a rule (also when Mails ordnen is off by now)."""
+    guard.limit(request, "postordnen", prof["id"])
+    gone = mailregeln.remove(prof["id"], rid[:20])
+    print(f"mail: rule {'removed' if gone else 'not there'} | {profiles.log_name(prof)}", flush=True)
+    if not gone:
+        raise HTTPException(404, "Diese Regel gibt es nicht mehr.")
+    return mailregeln.public(prof["id"])
+
+
 @router.post("/api/profile/mail/send/preview", dependencies=[Depends(assistant), Depends(mail_on), Depends(mailsend_on)])
 async def profile_mail_send_preview(request: Request, prof=Depends(browser_profile)):
-    """Mails senden (senden.py): {account|reply, to, cc, subject, text} → the finished mail for the preview sheet and
+    """Mails senden (senden.py): {account|reply|forward (+folder, files), to, cc, subject, text} → the finished mail for the preview sheet and
     its token; nothing goes out here."""
     guard.limit(request, "mailsenden", prof["id"])
-    body = await request.json()
+    body = await json_body(request, 64 * 1024, lenient=True)
+    folder = str(body.get("folder") or "INBOX")
+    if body.get("forward") and folder.upper() != "INBOX" and not features.allowed("mailmanage", prof["id"]):
+        raise HTTPException(403, "Ordner gehören zu „Mails ordnen“.")
     try:
-        return await asyncio.wait_for(asyncio.to_thread(senden.preview, prof["id"], body if isinstance(body, dict) else {}), 45)
+        return await asyncio.wait_for(asyncio.to_thread(senden.preview, prof["id"], body), 90)
     except LookupError:
-        raise HTTPException(404, "Die Mail, auf die du antwortest, ist nicht mehr da.")
+        raise HTTPException(404, "Die Mail, auf die du antwortest oder die du weiterleitest, ist nicht mehr da.")
     except ValueError as e:
         raise HTTPException(400, str(e)[:200])
     except asyncio.TimeoutError:

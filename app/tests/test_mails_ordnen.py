@@ -45,12 +45,14 @@ def fill():
         FMB.boxes[name] = []
 
 
-class Act(unittest.TestCase):
+class Base(unittest.TestCase):
+    NAME = "Ordnen Olga"
+
     @classmethod
     def setUpClass(cls):
         mail.IMAP = FMB
         helpers.set_config(mail=True, mail_manage=True)
-        cls.c, cls.uid = profile("Ordnen Olga")
+        cls.c, cls.uid = profile(cls.NAME)
         fill()
         r = cls.c.post("/api/profile/mail", json={"kind": "icloud", "user": helpers.MAIL_USER, "password": helpers.MAIL_PW})
         assert r.status_code == 200, r.text
@@ -70,6 +72,8 @@ class Act(unittest.TestCase):
     def act(self, action, uid=100, folder="", mid="", c=None):
         return (c or self.c).post("/api/profile/mail/act", json={"id": f"{self.acct}:{uid}", "action": action, "folder": folder, "mid": mid})
 
+
+class Act(Base):
     def test_folders_never_trash_junk_sent_or_drafts(self):
         d = self.c.get("/api/profile/mail/folders", params={"account": self.acct}).json()
         self.assertEqual(d["archive"], "Archive")
@@ -130,6 +134,137 @@ class Act(unittest.TestCase):
         self.assertEqual(len(FMB.boxes["INBOX"]), 2)
 
 
+class Folders(Base):
+    """Mailclient Stufe A (Dominik 2026-10-19 „1a 4a“): every folder read like the inbox, own folders made, renamed
+    and (empty) removed, Markieren and Mehrfachauswahl. Never a message deleted, never a folder of the mail program
+    or of Mails aufräumen renamed or removed."""
+    NAME = "Ordner Ole"
+
+    def setUp(self):
+        super().setUp()
+        FMB.put("Projekte", helpers.box_mail("Bob <bob@example.de>", "Plan", "Hier der Plan.", mid="<ord-3@x>"))
+        postfach._trees.clear()
+
+    def tree(self):
+        r = self.c.get("/api/profile/mail/tree", params={"fresh": "true"})
+        self.assertEqual(r.status_code, 200, r.text)
+        return {f["name"]: f for f in r.json()["accounts"][0]["folders"]}
+
+    def test_tree_roles_counts_and_what_may_change(self):
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            t = self.tree()
+        self.assertEqual(list(t)[0], "INBOX")
+        self.assertEqual({n: f["role"] for n, f in t.items()},
+                         {"INBOX": "inbox", "Drafts": "drafts", "Sent Messages": "sent", "Archive": "archive",
+                          "Projekte": "folder", "Junk": "junk", "Deleted Messages": "trash"})
+        self.assertEqual((t["INBOX"]["unseen"], t["Projekte"]["unseen"]), (2, 1))
+        self.assertEqual([n for n, f in t.items() if f["own"]], ["Projekte"])
+        self.assertIn("mail: tree shown | 7 |", out.getvalue())
+        self.assertNotIn("Projekte", out.getvalue())      # never a folder name in the log
+
+    def test_a_folder_is_read_like_the_inbox(self):
+        r = self.c.get("/api/profile/mail/folder", params={"account": self.acct, "folder": "Projekte"})
+        self.assertEqual(r.status_code, 200, r.text)
+        items = r.json()["items"]
+        self.assertEqual([x["subject"] for x in items], ["Plan"])
+        self.assertTrue(items[0]["unread"])
+        m = self.c.get("/api/profile/mail/message", params={"id": items[0]["id"], "folder": "Projekte"})
+        self.assertEqual(m.status_code, 200, m.text)
+        self.assertIn("Hier der Plan", m.json()["text"])
+        self.assertFalse(FMB.boxes["Projekte"][0]["seen"])   # reading keeps it unread (EXAMINE, PEEK)
+        self.assertEqual(self.c.get("/api/profile/mail/folder", params={"account": self.acct, "folder": "Gibt es nicht"}).status_code, 404)
+        self.assertEqual(self.c.get("/api/profile/mail/message", params={"id": items[0]["id"], "folder": "Pro\r\njekte"}).status_code, 400)
+
+    def test_flag_and_move_out_of_a_folder(self):
+        u = FMB.boxes["Projekte"][0]["uid"]
+        r = self.c.post("/api/profile/mail/act", json={"id": f"{self.acct}:{u}", "action": "flag", "src": "Projekte"})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertIn("\\Flagged", FMB.boxes["Projekte"][0]["flags"])
+        items = self.c.get("/api/profile/mail/folder", params={"account": self.acct, "folder": "Projekte"}).json()["items"]
+        self.assertTrue(items[0]["flagged"])
+        r = self.c.post("/api/profile/mail/act", json={"id": f"{self.acct}:{u}", "action": "move", "folder": "INBOX", "src": "Projekte"})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual((len(FMB.boxes["INBOX"]), FMB.boxes["Projekte"]), (3, []))
+        # never moved out of sent, drafts, trash or junk
+        FMB.put("Deleted Messages", helpers.box_mail("X <x@example.de>", "Alt", "alt", mid="<ord-4@x>"))
+        u = FMB.boxes["Deleted Messages"][0]["uid"]
+        r = self.c.post("/api/profile/mail/act", json={"id": f"{self.acct}:{u}", "action": "move", "folder": "INBOX", "src": "Deleted Messages"})
+        self.assertEqual(r.status_code, 400)
+        self.assertEqual(len(FMB.boxes["Deleted Messages"]), 1)
+
+    def test_many_at_once_and_back(self):
+        ids = [f"{self.acct}:{m['uid']}" for m in FMB.boxes["INBOX"]]
+        r = self.c.post("/api/profile/mail/acts", json={"ids": ids, "action": "read"})
+        self.assertEqual((r.status_code, r.json()["n"]), (200, 2), r.text)
+        self.assertEqual([m["seen"] for m in FMB.boxes["INBOX"]], [True, True])
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            r = self.c.post("/api/profile/mail/acts", json={"ids": ids, "action": "move", "folder": "Projekte"})
+        self.assertEqual(r.status_code, 200, r.text)
+        d = r.json()
+        self.assertEqual((FMB.boxes["INBOX"], len(FMB.boxes["Projekte"])), ([], 3))
+        self.assertIn("mail: page many move done | 2 |", out.getvalue())
+        r = self.c.post("/api/profile/mail/acts/back", json={"account": self.acct, "folder": "Projekte", "mids": d["moved"][0]["mids"]})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual((len(FMB.boxes["INBOX"]), len(FMB.boxes["Projekte"])), (2, 1))
+        self.assertEqual(self.c.post("/api/profile/mail/acts", json={"ids": ["x"] * 51, "action": "read"}).status_code, 400)
+        self.assertEqual(self.c.post("/api/profile/mail/acts", json={"ids": ids, "action": "delete"}).status_code, 400)
+
+    def test_own_folders_made_renamed_removed(self):
+        new = lambda **b: self.c.post("/api/profile/mail/folder/new", json=dict(account=self.acct, **b))
+        self.assertEqual(new(name="Auto").status_code, 200)
+        r = new(folder="Auto", name="Werkstatt")
+        self.assertEqual((r.status_code, r.json()["folder"]), (200, "Auto/Werkstatt"), r.text)
+        self.assertIn("Auto/Werkstatt", FMB.boxes)
+        for bad in ("", "Papierkorb", "Spam", "Archive", "INBOX", "Auto"):
+            self.assertEqual(new(name=bad).status_code, 400, bad)
+        self.assertEqual(new(folder="Deleted Messages", name="X").status_code, 400)   # nothing inside the trash
+        r = self.c.post("/api/profile/mail/folder/rename", json={"account": self.acct, "folder": "Auto/Werkstatt", "name": "Garage"})
+        self.assertEqual((r.status_code, r.json()["folder"]), (200, "Auto/Garage"), r.text)
+        rm = lambda f: self.c.post("/api/profile/mail/folder/remove", json={"account": self.acct, "folder": f})
+        self.assertEqual(rm("Auto").status_code, 400)          # holds a folder
+        self.assertEqual(rm("Projekte").status_code, 400)      # holds a message: never deleted
+        self.assertEqual(len(FMB.boxes["Projekte"]), 1)
+        self.assertEqual(rm("Auto/Garage").status_code, 200)
+        self.assertNotIn("Auto/Garage", FMB.boxes)
+        for special in ("INBOX", "Sent Messages", "Drafts", "Archive", "Deleted Messages", "Junk"):
+            self.assertEqual(rm(special).status_code, 400, special)
+            self.assertIn(special, FMB.boxes)
+            r = self.c.post("/api/profile/mail/folder/rename", json={"account": self.acct, "folder": special, "name": "Neu"})
+            self.assertEqual(r.status_code, 400, special)
+
+    def test_folders_of_mails_aufraeumen_stay(self):
+        FMB.boxes["Spark"] = []
+        FMB.boxes["Spark/Werbung"] = []
+        t = self.tree()
+        self.assertFalse(t["Spark"]["own"] or t["Spark/Werbung"]["own"])
+        r = self.c.post("/api/profile/mail/folder/rename", json={"account": self.acct, "folder": "Spark/Werbung", "name": "Reklame"})
+        self.assertEqual(r.status_code, 400)
+        r = self.c.post("/api/profile/mail/folder/remove", json={"account": self.acct, "folder": "Spark/Werbung"})
+        self.assertEqual(r.status_code, 400)
+        self.assertIn("Spark/Werbung", FMB.boxes)
+
+    def test_off_guests_and_other_profiles(self):
+        other, _ = profile("Ordnen Otto")
+        self.assertEqual(other.get("/api/profile/mail/folder", params={"account": self.acct, "folder": "Projekte"}).status_code, 400)
+        self.assertEqual(other.post("/api/profile/mail/folder/new", json={"account": self.acct, "name": "X"}).status_code, 400)
+        guest = TestClient(panel.app)
+        for path in ("/api/profile/mail/tree", "/api/profile/mail/folder"):
+            self.assertIn(guest.get(path).status_code, (401, 403))
+        for path in ("/api/profile/mail/acts", "/api/profile/mail/folder/new", "/api/profile/mail/folder/remove"):
+            self.assertIn(guest.post(path, json={}).status_code, (401, 403))
+        helpers.set_config(mail_manage=False)
+        try:
+            self.assertEqual(self.c.get("/api/profile/mail/tree").status_code, 403)
+            self.assertEqual(self.c.post("/api/profile/mail/folder/new", json={"account": self.acct, "name": "X"}).status_code, 403)
+            m = self.c.get("/api/profile/mail/message", params={"id": f"{self.acct}:100", "folder": "Projekte"})
+            self.assertEqual(m.status_code, 403)
+        finally:
+            helpers.set_config(mail_manage=True)
+        self.assertNotIn("X", FMB.boxes)
+
+
 @unittest.skipUnless(os.environ.get("SPEECH_UI_TESTS", "1") == "1", "browser tests off")
 class Page(unittest.TestCase):
     @classmethod
@@ -177,6 +312,51 @@ class Page(unittest.TestCase):
                     await pg.evaluate("ORD_ON=false;[...document.querySelectorAll('#postview .ld-row')][0].click()")
                     await b.until(pg, "!!POST.msg&&!!document.querySelector('#postview .posttext')")
                     self.assertEqual(await pg.evaluate("document.querySelectorAll('#postview .postord').length"), 0)
+                    self.assertEqual(errors, [])
+                finally:
+                    await br.close()
+        asyncio.run(go())
+
+    def test_folders_and_many_from_the_page(self):
+        """Mailclient Stufe A: the folder tree in the list's place, a folder opened, two mails ticked and marked read."""
+        from tests.test_ui_browser import Browser, async_playwright
+        b = Browser("run")
+        b.port = self.port
+        fill()
+        FMB.put("Projekte", helpers.box_mail("Bob <bob@example.de>", "Plan", "Hier der Plan.", mid="<ord-3@x>"))
+        postfach._trees.clear()
+
+        async def go():
+            async with async_playwright() as p:
+                br, pg, errors = await b.page(p, 1280, 900)
+                try:
+                    uid = await pg.evaluate("PROFILE.id")
+                    if not mail.get(uid)["accounts"]:
+                        r = await pg.request.post(f"http://127.0.0.1:{self.port}/api/profile/mail",
+                                                  data={"kind": "icloud", "user": helpers.MAIL_USER, "password": helpers.MAIL_PW})
+                        self.assertEqual(r.status, 200, await r.text())
+                    mail._cache.clear()
+                    await pg.evaluate("MAIL_ON=true;ORD_ON=true;POST.box=null;POST.tree=null;POST.pick=[];const v=$('postview');if(v)v.remove();"
+                                      "postStart({profile:PROFILE,mail:true});icTabSet('post','show');goSec('post');postOpen()")
+                    await b.until(pg, "!POST.busy&&!!POST.data&&POST.data.items.length===2")
+                    await pg.click("#postview [data-k=tree]")
+                    await b.until(pg, "!!document.querySelector('#postview .ld-list [data-f=Projekte]')")
+                    self.assertEqual(await pg.evaluate("document.querySelectorAll('#postview .ld-list [data-fa]').length"), 1)
+                    await pg.click("#postview .ld-list [data-f=Projekte]")
+                    await b.until(pg, "!POST.busy&&!!POST.data&&POST.data.folder==='Projekte'&&POST.data.items.length===1")
+                    self.assertIn("Projekte", await pg.inner_text("#postview [data-k=tree]"))
+                    await pg.click("#postview [data-k=tree]")
+                    await b.until(pg, "!!document.querySelector('#postview .ld-list [data-all]')")
+                    await pg.click("#postview .ld-list [data-all]")
+                    await b.until(pg, "!POST.busy&&!!POST.data&&!POST.data.folder&&POST.data.items.length===2")
+                    for i in range(2):
+                        await pg.locator("#postview .ld-list [data-pick]").nth(i).check()
+                        await b.until(pg, f"POST.pick.length==={i + 1}")
+                    await b.until(pg, "!!document.querySelector('#postview .postpick [data-m=read]')")
+                    await pg.click("#postview .postpick [data-m=read]")
+                    await b.until(pg, "POST.pick.length===0&&POST.data.items.every(x=>!x.unread)")
+                    self.assertEqual([m["seen"] for m in FMB.boxes["INBOX"]], [True, True])
+                    self.assertLessEqual(await pg.evaluate("document.documentElement.scrollWidth-document.documentElement.clientWidth"), 1)
                     self.assertEqual(errors, [])
                 finally:
                     await br.close()

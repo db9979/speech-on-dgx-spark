@@ -637,6 +637,24 @@ class FakeMailbox:
     def subscribe(self, name):
         return "OK", [b""]
 
+    def unsubscribe(self, name):
+        return "OK", [b""]
+
+    def delete(self, name):         # like IMAP: only a folder that is there (postfach.py checks it is empty first)
+        n = self._name(name)
+        self.calls.append(("DELETE", (n,)))
+        if n not in self.boxes or n.upper() == "INBOX":
+            return "NO", [b"cannot delete"]
+        del self.boxes[n]
+        return "OK", [b""]
+
+    def status(self, name, what):
+        n = self._name(name)
+        if n not in self.boxes:
+            return "NO", [b"no such folder"]
+        box = self.boxes[n]
+        return "OK", [f'"{n}" (MESSAGES {len(box)} UNSEEN {sum(1 for m in box if not m["seen"])})'.encode()]
+
     def select(self, name, readonly=False):
         n = self._name(name)
         self.calls.append(("select", (n, readonly)))
@@ -698,7 +716,10 @@ class FakeMailbox:
                     part = m["raw"].split(b"\r\n\r\n")[0] + b"\r\n\r\n"
                 else:
                     part = m["raw"]
-                out += [(f"1 (UID {m['uid']} BODY[] {{{len(part)}}}".encode(), part), b")"]
+                fl = ""
+                if "FLAGS" in args[1]:   # the page's listings (mail.head_rows): read and marked
+                    fl = " FLAGS (" + " ".join((["\\Seen"] if m["seen"] else []) + [f for f in m["flags"] if f == "\\Flagged"]) + ")"
+                out += [(f"1 (UID {m['uid']}{fl} BODY[] {{{len(part)}}}".encode(), part), b")"]
             return "OK", out
         if cmd == "MOVE":
             if self.ro:
@@ -729,6 +750,11 @@ class FakeMailbox:
             for m in box:
                 if m["uid"] in want and "Seen" in (args[2] if len(args) > 2 else ""):   # read / unread (postfach.py)
                     m["seen"] = args[1].startswith("+")
+                elif m["uid"] in want and "Flagged" in (args[2] if len(args) > 2 else ""):   # Markieren (postfach.py)
+                    if args[1].startswith("+") and "\\Flagged" not in m["flags"]:
+                        m["flags"].append("\\Flagged")
+                    elif args[1].startswith("-") and "\\Flagged" in m["flags"]:
+                        m["flags"].remove("\\Flagged")
                 elif m["uid"] in want:
                     if args[1].startswith("+") and "\\Deleted" not in m["flags"]:
                         m["flags"].append("\\Deleted")

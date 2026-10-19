@@ -4828,6 +4828,54 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "E-Mail wie ein volles Mailprogramm, Stufe A: Ordner (V01.0.843, Dominik 2026-10-19 „1a 4a 5a“, Plan kalender-mail/mailclient/plan.md; gehört zu „Mails ordnen“, aus): Über der Liste steht „📁 Posteingang ▾“. Es öffnet an der Stelle der Liste (keine eigene Bildlaufleiste) alle Ordner aller Postfächer: Posteingang, Entwürfe, Gesendet, Archiv, die eigenen Ordner eingerückt, Spam und Papierkorb, jeweils mit der Zahl ungelesener Mails. Ein Tipp öffnet den Ordner wie den Posteingang (nur lesen: EXAMINE, BODY.PEEK, die neuesten 50; Suche und „Nur ungelesen“ wirken auf diese Liste). „+ Neuer Ordner“ legt einen Ordner oben im Postfach an, „⋯“ an einem eigenen Ordner bietet „Umbenennen“, „Ordner darin“ und „Entfernen (nur leer)“. Ordner des Mailprogramms (Posteingang, Gesendet, Entwürfe, Papierkorb, Spam, Archiv) und die Ordner von „Mails aufräumen“ werden nie umbenannt oder entfernt; ein Ordner mit Mails oder mit Ordnern darin bleibt stehen, gelöscht wird nie eine Mail. Umbenennen und Entfernen fragen nach dem Code (stufen.LIST, Bestätigen). Neu an jeder Mail: „★ Markieren“ (Flag \\Flagged, ★ in der Liste), aus einem Ordner auch „Verschieben nach … Posteingang“; verschoben wird nur aus Postein"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "gang, eigenen Ordnern und Archiv, nie aus Gesendet, Entwürfen, Papierkorb oder Spam. Mehrfachauswahl: Häkchen vor jeder Zeile, darüber „N gewählt“ mit Gelesen, Ungelesen, Markieren, Archivieren, Verschieben (in einen Ordner eines Postfachs) und „Auswahl aufheben“, höchstens 50 auf einmal, „Rückgängig“ holt verschobene zurück. Endpunkte GET /api/profile/mail/tree (60 s gemerkt), GET /api/profile/mail/folder, POST /api/profile/mail/acts, POST /api/profile/mail/acts/back, POST /api/profile/mail/folder/new|rename|remove; GET /api/profile/mail/message und POST /api/profile/mail/act nehmen den Ordner (folder, src). Alle mit der eigenen Anmeldung, nur eigene Postfächer, Größenlimit, Rate-Limit postordnen/post, Notaus hält jede Änderung an. Live zählt Ordner-Aktionen mit den geordneten Mails (eine Zahl). Log mail: tree shown | <Ordner>, mail: page many <Aktion> done | <Zahl>, mail: folder new|rename|remove done|refused|failed, nie ein Ordnername, Absender oder Betreff. Im iPhone: Ordner-Knopf oben links (Ordner wählen, anlegen, wischen zum Umbenennen oder Entfernen), „Auswählen“ für die Mehrfachauswahl, Markieren per Wischen und in der Mail."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "E-Mail wie ein volles Mailprogramm, Stufe B: Regeln (V01.0.843, Dominik 2026-10-19 „2a 3a“; mailregeln.py, gehört zu „Mails ordnen“, aus): An jeder Mail steht „⚙ Regel daraus …“: ein Formular mit „Wenn“ (Absender als Adresse oder @Domain, dazu wahlweise ein Wort im Betreff, ein Empfänger, nur mit Anhang) und „Dann“ (in einen Ordner dieses Postfachs, als gelesen markieren, ★ markieren, nicht in „Für dich“). Ordner des Mailprogramms wie Papierkorb, Spam, Gesendet und Entwürfe sind nie ein Ziel, gelöscht wird nie eine Mail. „Probelauf“ zählt, wie viele Mails im Posteingang der letzten 90 Tage passen, und ändert nichts. Nach dem Sichern fragt das Panel, ob es auch die vorhandenen Mails einsortieren soll; das fragt nach dem Code (stufen.LIST, Bestätigen), nimmt höchstens 50 je Postfach, und „Rückgängig“ holt sie zurück. Sonst nimmt eine Regel nur Mails, die nach dem Sichern ankommen; das Panel schaut alle 5 Minuten nach (höchstens 200 Mails je Lauf). Die erste passende Regel entscheidet. Der neue Reiter E-Mail → Regeln zeigt alle Regeln an einem Ort mit „Diesen Monat N“, Pause, Nach oben, Ändern und Löschen, darunter die Absender-Regeln von „Mails aufräumen“ (dort nur noch ein Hinweis)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": " Höchstens 100 Regeln je Profil, Datei users/ID/mail-regeln.json. Eine Regel ist feste Daten, nie ein Befehl; das Sprachmodell sieht sie nicht. Endpunkte GET|POST /api/profile/mail/rules, POST /api/profile/mail/rules/test, POST /api/profile/mail/rules/order, POST /api/profile/mail/rules/{id}/apply, DELETE /api/profile/mail/rules/{id}; eigene Anmeldung, nur eigene Regeln und Postfächer, Größenlimit, Rate-Limit postordnen, Notaus hält Regeln an. Live: „N Regeln bei P Profilen, heute X Mails einsortiert“. Log mail: rules run | N taken, E errors, mail: rule apply done|refused|failed, nie ein Absender, Betreff, Ordner oder Wort einer Regel. Im iPhone: „Regeln“ in E-Mail (⋯) und „Regel daraus …“ in jeder Mail, mit Probelauf, Einsortieren und „Rückgängig“."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "E-Mail wie ein volles Mailprogramm, Stufe C: Suchen, Weiterleiten, Anhänge, Ziehen (V01.0.843, Dominik 2026-10-19 „4a 5a“): Die Suche über der Liste kennt neben Wörtern von:anna, betreff:rechnung, hat:anhang, ist:markiert und ist:ungelesen (englisch from:, subject:, has:attachment, is:flagged, is:unread), dazu die Knöpfe „★ Markiert“ und „📎 Anhang“. Das Panel vergleicht diese Wörter als Text mit Absender, Betreff und den Kopfzeilen (mail._words, mail.fits), nie wird etwas davon ausgeführt; im Posteingang wie bisher die letzten 14 Tage, in einem Ordner die neuesten 300 Mails. Mails mit Anhang tragen 📎 in der Liste. Anhang laden (mit „Mails ordnen“): An einer Mail steht jeder Anhang als „⬇ Name (KB)“; ein Tipp lädt ihn herunter (GET /api/profile/mail/file, höchstens 25 MB, nur aus eigenen Postfächern). Er kommt immer als Datei (application/octet-stream, nosniff, sandbox), nie in der Seite angezeigt. Weiterleiten (mit „Mails senden“): „Weiterleiten“ an einer Mail öffnet das Formular mit „Fwd: …“; unter deinen Zeilen (die leer bleiben dürfen) steht die Mail mit Von, Datum, Betreff und An, ihre Anhänge nur mit „Anhänge mitschicken“ und zusammen höchstens 20 MB. Wie jede Mail geht sie er"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "st aus der Vorschau raus. Aus einem Ordner nur mit „Mails ordnen“. Ziehen in einen Ordner (am Rechner, mit „Mails ordnen“): Eine Zeile, oder alle angehakten, in die Leiste „Hierher ziehen“ über der Liste ziehen; das ist dasselbe Verschieben wie mit dem Knopf, mit „Rückgängig“. Live zählt geladene Anhänge (eine Zahl). Log mail: file shown | <KB>, mail: file refused|failed, nie ein Dateiname. Im iPhone: Suchfeld über der Liste mit denselben Wörtern als Vorschlägen, Anhänge in der Mail öffnen sich per Tipp in der Vorschau (Quick Look), „Weiterleiten“ in jeder Mail; Ziehen gibt es im iPhone nicht, dort „Verschieben nach …“."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Karten im Assistenten (V01.0.816, Plan `kalender-mail/plan.md` Stufe 2)",
 "text": "Karten im Assistenten (V01.0.816, Plan kalender-mail/plan.md Stufe 2): Liest der Assistent Termine (calendar_events), steht unter der Antwort „Im Kalender ansehen“ und öffnet die Seite Kalender an diesem Tag; liest er eine Mail (mail_read), öffnet „Mail öffnen“ genau diese Mail auf der Seite E-Mail (Ereignis goto, höchstens drei Knöpfe, nur eine gültige Tagesangabe oder Mail-Id, nur mit der Seite, nie für eine fremde Stimme). Die Karte ist nur ein Weg: was die Seite zeigt, entscheidet der Server; Eintragen, Verschieben und Löschen per Sprache haben weiter ihre Freigabe-Karte mit Ja/Nein."
 },
@@ -6966,6 +7014,30 @@
 "head": "Meine Sachen",
 "title": "Kalender und E-Mail wie im Panel",
 "text": "Kalender und E-Mail wie im Panel (V01.0.830, Dominik 2026-10-19 „a“): Der Kalender hat oben „Schnell eintragen“: eine Zeile wie „Morgen 15 Uhr Zahnarzt bei Dr. Weiß“, der Spark liest sie mit festen Regeln und zeigt Titel, Tag, Uhrzeit und Ort; erst „Eintragen“ speichert, in deinen ersten eigenen Kalender. Ein Termin hat neben „Ändern“ und „Löschen“ jetzt „+1 Tag“ und „+1 Woche“, danach „Rückgängig“, solange das Blatt offen ist. E-Mail zeigt die Liste nach Tagen (Heute, Gestern, …) mit dem Kürzel des Absenders; mit „Mails ordnen“ wischt du nach links zum Archivieren und nach rechts für Gelesen oder Ungelesen. Unter einer Mail legt „Als Termin“ mit dem Betreff eine Zeile für Schnell eintragen an. Teilen von Kalendern bleibt aus Sicherheitsgründen im Browser (Kalender → Einstellungen), wie die Verbindung der Konten."
+},
+{
+"lang": "de",
+"src": "iphone-app",
+"file": "iPhone-App „Spark“",
+"head": "Meine Sachen",
+"title": "Ordner in der E-Mail",
+"text": "Ordner in der E-Mail (Mailclient Stufe A, mit „Mails ordnen“): Oben links in E-Mail öffnet der Ordner-Knopf alle Ordner deiner Postfächer mit der Zahl ungelesener Mails; ein Tipp zeigt den Ordner wie den Posteingang. „Neuer Ordner“ je Postfach, ein eigener Ordner lässt sich per Wischen oder langem Drücken umbenennen oder, wenn er leer ist, entfernen (mit Code). „Auswählen“ (⋯ oben rechts) hakt mehrere Mails an: Gelesen, Markieren, Archivieren, Verschieben. Markieren auch per Wischen und in der Mail; gelöscht wird nie eine Mail."
+},
+{
+"lang": "de",
+"src": "iphone-app",
+"file": "iPhone-App „Spark“",
+"head": "Meine Sachen",
+"title": "Regeln in der E-Mail",
+"text": "Regeln in der E-Mail (Mailclient Stufe B, mit „Mails ordnen“): „Regeln“ in E-Mail zeigt alle Regeln (wischen: Pause, Löschen, Nach oben), „Regel daraus …“ in einer Mail füllt den Absender vor. Wenn Absender, Betreff, Empfänger oder Anhang passen, dann Ordner, gelesen, markieren oder nicht in „Für dich“. „Probelauf“ zählt nur; nach dem Sichern kannst du die vorhandenen Mails einsortieren (mit Code) und mit „Rückgängig“ zurückholen."
+},
+{
+"lang": "de",
+"src": "iphone-app",
+"file": "iPhone-App „Spark“",
+"head": "Meine Sachen",
+"title": "Suchen, Anhänge und Weiterleiten in der E-Mail",
+"text": "Suchen, Anhänge und Weiterleiten in der E-Mail (Mailclient Stufe C): Das Suchfeld über der Liste kennt auch von:, betreff:, hat:anhang, ist:markiert (als Vorschläge zum Antippen). Anhänge einer Mail öffnen sich per Tipp in der Vorschau, von dort teilen oder sichern (mit „Mails ordnen“). „Weiterleiten“ setzt die Mail unter deine Zeilen, die Anhänge auf Wunsch; gesendet wird nur aus der Vorschau."
 },
 {
 "lang": "de",
@@ -13196,6 +13268,54 @@
 "src": "assistant",
 "file": "Assistant and panel",
 "head": "Voice chat",
+"title": "Voice chat",
+"text": "E-mail as a full mail client, stage A: folders (V01.0.843, Dominik 2026-10-19 \"1a 4a 5a\", plan kalender-mail/mailclient/plan.md; part of \"Mails ordnen\", off): above the list stands \"📁 Inbox ▾\". It opens, in the list's place (no scrollbar of its own), every folder of every mailbox: inbox, drafts, sent, archive, own folders indented, junk and trash, each with its number of unread mails. A tap opens the folder like the inbox (reading only: EXAMINE, BODY.PEEK, the newest 50; search and \"Unread only\" work on this list). \"+ New folder\" makes a folder at the top of the mailbox, \"⋯\" on an own folder offers \"Rename\", \"Folder inside\" and \"Remove (empty only)\". Folders of the mail program (inbox, sent, drafts, trash, junk, archive) and the folders of \"Tidy mails\" are never renamed or removed; a folder holding mails or folders stays, a mail is never deleted. Rename and remove ask for the code (stufen.LIST, confirm). New on every mail: \"★ Flag\" (flag \\Flagged, ★ in the list), from a folder also \"Move to … Inbox\"; mails are moved only out of the inbox, own folders and the archive, never out of sent, drafts, trash or junk. Multiple selection: a tick before each row, above it \"N selected\" with Rea"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "d, Unread, Flag, Archive, Move (into a folder of one mailbox) and \"Clear selection\", at most 50 at a time, \"Undo\" brings moved ones back. Endpoints GET /api/profile/mail/tree (kept 60 s), GET /api/profile/mail/folder, POST /api/profile/mail/acts, POST /api/profile/mail/acts/back, POST /api/profile/mail/folder/new|rename|remove; GET /api/profile/mail/message and POST /api/profile/mail/act take the folder (folder, src). All with the own login, own mailboxes only, size limit, rate limit postordnen/post, Notaus holds every change off. Live counts folder actions with the ordered mails (a number). Log mail: tree shown | <folders>, mail: page many <action> done | <number>, mail: folder new|rename|remove done|refused|failed, never a folder name, sender or subject. On the iPhone: folder button top left (pick, make, swipe to rename or remove), \"Select\" for the multiple selection, flag by swipe and in the mail."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "E-mail as a full mail client, stage B: rules (V01.0.843, Dominik 2026-10-19 \"2a 3a\"; mailregeln.py, part of \"Mails ordnen\", off): every mail has \"⚙ Rule from this …\": a form with \"When\" (sender as address or @domain, plus optionally a word in the subject, a recipient, only with attachment) and \"Then\" (into a folder of this mailbox, mark as read, ★ flag, not in \"For you\"). Folders of the mail program such as trash, junk, sent and drafts are never a target, a mail is never deleted. \"Dry run\" counts how many mails in the inbox of the last 90 days match and changes nothing. After saving, the panel asks whether to sort the existing mails too; that asks for the code (stufen.LIST, confirm), takes at most 50 per mailbox, and \"Undo\" brings them back. Otherwise a rule takes only mails arriving after it was saved; the panel looks every 5 minutes (at most 200 mails per run). The first matching rule decides. The new tab E-mail → Rules shows all rules in one place with \"This month N\", Pause, Move up, Edit and Delete, below them the sender rules of \"Tidy mails\" (only a pointer there now). At most 100 rules per profile, file users/ID/mail-regeln.json. A rule is fixed data, never a command; the lan"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "guage model never sees it. Endpoints GET|POST /api/profile/mail/rules, POST /api/profile/mail/rules/test, POST /api/profile/mail/rules/order, POST /api/profile/mail/rules/{id}/apply, DELETE /api/profile/mail/rules/{id}; own login, own rules and mailboxes only, size limit, rate limit postordnen, Notaus holds rules off. Live: \"N rules at P profiles, today X mails sorted\". Log mail: rules run | N taken, E errors, mail: rule apply done|refused|failed, never a sender, subject, folder or word of a rule. On the iPhone: \"Rules\" in E-mail (⋯) and \"Rule from this …\" in every mail, with dry run, sorting and \"Undo\"."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "E-mail as a full mail client, stage C: search, forward, attachments, drag (V01.0.843, Dominik 2026-10-19 \"4a 5a\"): the search above the list knows, besides words, von:anna, betreff:rechnung, hat:anhang, ist:markiert and ist:ungelesen (English from:, subject:, has:attachment, is:flagged, is:unread), plus the buttons \"★ Flagged\" and \"📎 Attachment\". The panel compares these words as text with sender, subject and the header lines (mail._words, mail.fits), nothing of them is ever run; in the inbox the last 14 days as before, in a folder the newest 300 mails. Mails with an attachment show 📎 in the list. Fetch an attachment (with \"Mails ordnen\"): on a mail each attachment stands as \"⬇ name (KB)\"; a tap downloads it (GET /api/profile/mail/file, at most 25 MB, own mailboxes only). It always comes as a file (application/octet-stream, nosniff, sandbox), never shown in the page. Forward (with \"Mails senden\"): \"Forward\" on a mail opens the form with \"Fwd: …\"; below your lines (which may stay empty) stands the mail with From, Date, Subject and To, its attachments only with \"Send the attachments along\" and together at most 20 MB. Like every mail it goes out only from the preview. From a folder on"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "ly with \"Mails ordnen\". Drag into a folder (on a computer, with \"Mails ordnen\"): drag a row, or all ticked ones, onto the \"Drop here\" bar above the list; the same move as with the button, with \"Undo\". Live counts fetched attachments (a number). Log mail: file shown | <KB>, mail: file refused|failed, never a file name. On the iPhone: a search field above the list with the same words as suggestions, attachments in the mail open by a tap in the preview (Quick Look), \"Forward\" in every mail; there is no dragging on the iPhone, there \"Move to …\"."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
 "title": "Cards in the assistant (V01.0.816, plan `kalender-mail/plan.md` stage 2)",
 "text": "Cards in the assistant (V01.0.816, plan kalender-mail/plan.md stage 2): when the assistant reads appointments (calendar_events), \"Show in calendar\" under the answer opens the Calendar page on that day; when it reads a mail (mail_read), \"Open mail\" opens exactly that mail on the E-mail page (event goto, at most three buttons, only a valid day or mail id, only with the page, never for another person's voice). The card is only a way there: the server decides what the page shows; adding, moving and deleting by voice keep their approval card with yes/no."
 },
@@ -15190,6 +15310,30 @@
 "head": "My things",
 "title": "Calendar and e-mail as in the panel",
 "text": "Calendar and e-mail as in the panel (V01.0.830, Dominik 2026-10-19 \"a\"): the calendar has \"Quick add\" on top: one line like \"Tomorrow 3 pm dentist at Dr. White\", the Spark reads it with fixed rules and shows title, day, time and place; only \"Add\" saves, into your first own calendar. An appointment now has \"+1 day\" and \"+1 week\" next to \"Change\" and \"Delete\", then \"Undo\" while the sheet is open. E-mail shows the list by day (Today, Yesterday, …) with the sender's initials; with \"Order mail\" you swipe left to archive and right for read or unread. Below a mail, \"As appointment\" makes a line for Quick add from the subject. Sharing calendars stays in the browser for safety (Calendar → Settings), like connecting accounts."
+},
+{
+"lang": "en",
+"src": "iphone-app",
+"file": "iPhone app \"Spark\"",
+"head": "My things",
+"title": "Folders in e-mail",
+"text": "Folders in e-mail (mail client stage A, with \"Mails ordnen\"): the folder button top left in E-mail opens every folder of your mailboxes with the number of unread mails; a tap shows the folder like the inbox. \"New folder\" per mailbox, an own folder can be renamed or, when empty, removed by swiping or a long press (with the code). \"Select\" (⋯ top right) ticks several mails: Read, Flag, Archive, Move. Flag also by swiping and in the mail; a mail is never deleted."
+},
+{
+"lang": "en",
+"src": "iphone-app",
+"file": "iPhone app \"Spark\"",
+"head": "My things",
+"title": "Rules in e-mail",
+"text": "Rules in e-mail (mail client stage B, with \"Mails ordnen\"): \"Rules\" in E-mail shows every rule (swipe: Pause, Delete, Move up), \"Rule from this …\" in a mail fills in the sender. When sender, subject, recipient or attachment match, then folder, read, flag or not in \"For you\". \"Dry run\" only counts; after saving you can sort the existing mails (with the code) and bring them back with \"Undo\"."
+},
+{
+"lang": "en",
+"src": "iphone-app",
+"file": "iPhone app \"Spark\"",
+"head": "My things",
+"title": "Search, attachments and forwarding in e-mail",
+"text": "Search, attachments and forwarding in e-mail (mail client stage C): the search field above the list also knows von:, betreff:, hat:anhang, ist:markiert (as suggestions to tap). A mail's attachments open by a tap in the preview, from there share or save them (with \"Mails ordnen\"). \"Forward\" puts the mail below your lines, the attachments if wanted; it is sent only from the preview."
 },
 {
 "lang": "en",

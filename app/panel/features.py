@@ -305,7 +305,8 @@ FEATURES = (
     # mail and contacts
     F("mail", "E-Mail lesen", "Reading e-mail", "post", ("mail",), me="mailbox", guide="mail"),
     F("tidy", "Postfach aufräumen", "Inbox tidying", "post", ("mail_tidy",), parent="mail", me="mailbox", guide="tidy"),
-    # postfach.py (plan kalender-mail Stufe 2): on the page E-Mail read/unread, archive, move into an own folder
+    # postfach.py (plan kalender-mail Stufe 2, Mailclient Stufe A): on the page E-Mail read/unread, flag, archive, move
+    # (also several at once), every folder read, own folders made, renamed, removed when empty
     F("mailmanage", "Mails ordnen", "Order mail", "post", ("mail_manage", "mail"), parent="mail", me="mailbox",
       guide="mailmanage"),
     F("mailsend", "Mails senden", "Send mail", "post", ("mail_send", "mail"), parent="mail", me="mailbox",

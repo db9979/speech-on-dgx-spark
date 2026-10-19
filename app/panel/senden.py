@@ -15,9 +15,11 @@ only from the own contacts with exactly one address, or an address said in full)
 back and sends only after the person's plain "Ja" in the next message, on the same device (Freigabe-Karte, ablauf
 kind "senden"); never for guests, another voice or Telegram without the private release.
 
-Never more than MAX_TO recipients, MAX_DAY mails a day per profile, no attachments, no HTML, no header from the form
-(line breaks in a field are refused). An answer takes recipient, subject ("Re: …") and In-Reply-To/References from
-the original in the own inbox. The Notaus holds sending off. Logs carry fixed words, numbers and the profile's log
+Never more than MAX_TO recipients, MAX_DAY mails a day per profile, no HTML, no header from the form (line breaks in a
+field are refused), no attachment except those of a forwarded mail. An answer takes recipient, subject ("Re: …") and
+In-Reply-To/References from the original in the own inbox. Weiterleiten (Mailclient Stufe C): the own words, then the
+original's sender, date, subject and text below a fixed line, with its attachments if wanted (together at most
+FORWARD_FILES), subject "Fwd: …"; the recipients are typed like for a new mail. The Notaus holds sending off. Logs carry fixed words, numbers and the profile's log
 name only, never an address, a subject or the text.
 """
 import email.message
@@ -43,6 +45,7 @@ MAX_TO = 10
 MAX_DAY = 30
 MAX_SUBJECT = 200
 MAX_TEXT = 20000
+FORWARD_FILES = 20 * 1024 * 1024   # the attachments of a forwarded mail together
 PREVIEW_SECONDS = 600
 TIMEOUT = 30
 # the outgoing server of the known providers (host of the incoming one → host, port); 465 = TLS, 587 = STARTTLS
@@ -122,9 +125,10 @@ def _preview(uid, body):
     if _count(uid) >= MAX_DAY:
         raise ValueError(f"at most {MAX_DAY} mails a day")
     ref = str(body.get("reply") or "").strip()[:40]
+    fwd = "" if ref else str(body.get("forward") or "").strip()[:40]
     acct_id = str(body.get("account") or "").strip()[:20]
-    if ref:
-        acct_id = ref.split(":")[0]
+    if ref or fwd:
+        acct_id = (ref or fwd).split(":")[0]
     accts = mail.get(uid)["accounts"]
     # no mailbox named (the iPhone app, a new mail): the first one
     acct = next((a for a in accts if a["id"] == acct_id), None) if acct_id else (accts[0] if accts else None)
@@ -141,7 +145,7 @@ def _preview(uid, body):
     if re.search(r"[\r\n]", subject) or len(subject) > MAX_SUBJECT:
         raise ValueError(f"Subject: one line, at most {MAX_SUBJECT} characters")
     text = str(body.get("text") or "").replace("\r\n", "\n").strip()
-    if not text:
+    if not text and not fwd:
         raise ValueError("the mail has no text")
     if len(text) > MAX_TEXT:
         raise ValueError(f"at most {MAX_TEXT} characters of text")
@@ -163,10 +167,17 @@ def _preview(uid, body):
         if not subject:
             old = mail._hdr(orig.get("Subject", ""))[:MAX_SUBJECT - 4]
             subject = old if re.match(r"(?i)(re|aw|antw)\s*:", old) else "Re: " + old
+    attached = []
+    if fwd:
+        text, subject, attached = _forward(uid, fwd, str(body.get("folder") or "INBOX")[:200], text, subject,
+                                           bool(body.get("files")))
     msg["Subject"] = subject
     msg["Date"] = email.utils.formatdate(localtime=True)
     msg["Message-ID"] = email.utils.make_msgid(domain=acct["user"].rsplit("@", 1)[1])
     msg.set_content(text)
+    for name, ctype, data in attached:
+        main, _, sub = ctype.partition("/")
+        msg.add_attachment(data, maintype=main, subtype=sub, filename=name)
     token = os.urandom(16).hex()
     with _lock:
         now = time.time()
@@ -174,7 +185,31 @@ def _preview(uid, body):
             _pending.pop(k, None)       # one sheet per profile: a new preview replaces the one before
         _pending[token] = {"uid": uid, "acct": acct["id"], "msg": msg, "n": len(to) + len(cc), "t": now}
     return {"token": token, "from": msg["From"], "to": to, "cc": cc, "subject": subject, "text": text,
+            "files": [f"{name} ({max(1, len(data) // 1024)} KB)" for name, _, data in attached],
             "account": acct.get("name", ""), "n": len(to) + len(cc), "seconds": PREVIEW_SECONDS}
+
+
+def _forward(uid, ref, folder, text, subject, with_files):
+    """Weiterleiten: (text with the original below, subject "Fwd: …", [(name, type, bytes)] of its attachments).
+    The original is data: its text is quoted as text, its files are attached as they are, never opened."""
+    orig = mail.whole(uid, ref, folder)
+    if orig is None:
+        raise LookupError("the mail to forward is not there")
+    old = mail._hdr(orig.get("Subject", ""))
+    if not subject:
+        subject = (old if re.match(r"(?i)(fwd?|wg)\s*:", old) else "Fwd: " + old)[:MAX_SUBJECT]
+    own, _ = mail.plain(orig)
+    head = (f"---------- Weitergeleitete Nachricht ----------\nVon: {mail._hdr(orig.get('From', ''))}\n"
+            f"Datum: {mail._hdr(orig.get('Date', ''))}\nBetreff: {old}\nAn: {mail._hdr(orig.get('To', ''))}\n\n")
+    text = ((text + "\n\n") if text else "") + head + own
+    attached = []
+    if with_files:
+        for part, name, size in mail.files(orig):
+            attached.append((name, part.get_content_type() if "/" in part.get_content_type() else "application/octet-stream",
+                             part.get_payload(decode=True) or b""))
+        if sum(len(d) for _, _, d in attached) > FORWARD_FILES:
+            raise ValueError(f"attachments together at most {FORWARD_FILES // (1024 * 1024)} MB; forward without them")
+    return text[:MAX_TEXT * 2], subject, attached
 
 
 def send(uid, token):
