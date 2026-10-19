@@ -4724,6 +4724,14 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Immer ein Weg zurück (V01.0.833, Dominik 2026-10-19)",
+"text": "Immer ein Weg zurück (V01.0.833, Dominik 2026-10-19): Eine geöffnete Mail, eine Antwort und eine neue Mail haben auf jeder Breite einen sichtbaren Knopf: am Handy „‹ Zurück“ bzw. „‹ Verwerfen“, am Rechner neben der Liste „✕ Schließen“ bzw. „✕ Verwerfen“. Esc schließt die Antwort auch aus dem Textfeld heraus. Ist schon Text getippt, fragt der Spark vorher „Den Entwurf verwerfen?“."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Vorwärmen (V01.0.830, Dominik 2026-10-19 „1a 3a 4a 5a 7a 9“)",
 "text": "Vorwärmen (V01.0.830, Dominik 2026-10-19 „1a 3a 4a 5a 7a 9“): Meldet sich ein Profil an oder öffnet es das Panel oder die App, liest der Spark im Hintergrund vorab, was seine Seiten gleich brauchen: die Termine dieses und des nächsten Monats aus allen Kalendern (auch geteilten), die Liste der E-Mail mit den neuesten Mails, „Für dich“ und das Adressbuch. Die Seiten Kalender, E-Mail und Heute zeigen dann sofort, was da ist; Heute nimmt den Kalender aus demselben Speicher wie die Seite Kalender. Danach halten die bekannten Auffrischungen alle 5 Minuten alles frisch. Regeln: nur Funktionen, die das Profil gerade nutzen darf, nie für Gäste; ein Profil höchstens alle 10 Minuten; höchstens zwei Profile gleichzeitig; jeder Schritt wartet, solange jemand spricht (Stimme zuerst). Alles bleibt im Arbeitsspeicher, nichts Neues auf der Platte. Zustand → Live zeigt bei Kalender und Mail nur, wie viele Profile vorgewärmt sind und wie lange das her ist; das Log (Bereich Vorrang) schreibt eine Zeile „vorwaermen: done“ mit Zahlen."
 },
@@ -13030,6 +13038,14 @@
 "head": "Voice chat",
 "title": "E-mail like a mail client (V01.0.830, Dominik 2026-10-19 \"Email 4a 5a\")",
 "text": "E-mail like a mail client (V01.0.830, Dominik 2026-10-19 \"Email 4a 5a\"): the E-mail page uses the whole width: the list on the left, grouped by day (today, yesterday, weekday with date), each row with the sender's initials in a colour of their own; a wide reading pane on the right, on a phone the mail instead of the list as before. When \"For you\" found something in a mail (bill, contract, suspicious …), a small chip says so in the row (from its cached reading, only with \"For you from mails\" on). Keys on a computer: J and K go through the mails, Esc closes, R replies (with \"Send mail\"), E archives and U toggles read/unread (with \"Order mail\", like the buttons, with \"Undo\"). On a phone a row is swiped left to archive, right for read/unread (with \"Order mail\"). \"As appointment\" below a mail opens the calendar with the subject in \"Quick add\"; the panel reads it there by its fixed rules, it is added only with \"Add\". No new switch, no new endpoint."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Always a way back (V01.0.833, Dominik 2026-10-19)",
+"text": "Always a way back (V01.0.833, Dominik 2026-10-19): an open mail, an answer and a new mail have a visible button at every width: on the phone \"‹ Back\" or \"‹ Discard\", on the computer beside the list \"✕ Close\" or \"✕ Discard\". Esc closes the answer even from inside the text field. When text was typed, the Spark first asks \"Discard the draft?\"."
 },
 {
 "lang": "en",

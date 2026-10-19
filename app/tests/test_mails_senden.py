@@ -400,6 +400,50 @@ class Page(unittest.TestCase):
                     await br.close()
         asyncio.run(go())
 
+    def test_a_way_out_on_every_width(self):
+        # Dominik 2026-10-19: an open answer had no way to close it beside the list (the back button is for phones)
+        from tests.test_ui_browser import Browser, async_playwright
+        b = Browser("run")
+        b.port = self.port
+        fill()
+        use_fakes()
+
+        async def go():
+            async with async_playwright() as p:
+                br, pg, errors = await b.page(p, 1300, 900)
+                try:
+                    uid = await pg.evaluate("PROFILE.id")
+                    if not mail.get(uid)["accounts"]:
+                        r = await pg.request.post(f"http://127.0.0.1:{self.port}/api/profile/mail",
+                                                  data={"kind": "icloud", "user": helpers.MAIL_USER, "password": helpers.MAIL_PW})
+                        self.assertEqual(r.status, 200, await r.text())
+                    mail._cache.clear()
+                    await pg.evaluate("MAIL_ON=true;SEND_ON=true;POST.accts=null;postStart({profile:PROFILE,mail:true});icTabSet('post','show');goSec('post')")
+                    await b.until(pg, "!POST.busy&&!!POST.data&&POST.data.items.length>0")
+                    shown = "(()=>{const x=document.querySelector('#postview .postclose');return !!x&&x.offsetParent!==null})()"
+                    # a new mail: „✕ Verwerfen“ is shown and closes it
+                    await pg.click("#postview [data-k=new]")
+                    await b.until(pg, "!!document.querySelector('#postview [data-f=to]')")
+                    self.assertTrue(await pg.evaluate(shown))
+                    await pg.click("#postview .postclose")
+                    await b.until(pg, "!POST.write")
+                    # an answer below the mail: Esc from inside the text closes it, after asking when something was typed
+                    await pg.evaluate("[...document.querySelectorAll('#postview .ld-row')][0].click()")
+                    await b.until(pg, "!!document.querySelector('#postview [data-w=reply]')")
+                    self.assertTrue(await pg.evaluate(shown))            # the mail itself: „✕ Schließen“
+                    await pg.click("#postview [data-w=reply]")
+                    await b.until(pg, "!!document.querySelector('#postview [data-f=text]')")
+                    await pg.fill("#postview [data-f=text]", "Entwurf")
+                    pg.once("dialog", lambda dlg: asyncio.ensure_future(dlg.accept()))
+                    await pg.press("#postview [data-f=text]", "Escape")
+                    await b.until(pg, "!POST.write&&!!POST.sel")
+                    await pg.click("#postview .postclose")
+                    await b.until(pg, "!POST.sel")
+                    self.assertEqual(errors, [])
+                finally:
+                    await br.close()
+        asyncio.run(go())
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -77,8 +77,10 @@ function postPaint(w){const d=POST.data;w.classList.toggle('ld-sel',!!POST.sel||
   postUndo(w);if(POST.sent)w.querySelector('.postundo').insertAdjacentHTML('beforeend',`<div class="note">${esc(POST.sent)}</div>`);
   if(POST.write)postWriteBox(w);else postDetail(w)}
 // one message: plain text, attachments only named (to Dokumente on request through the assistant)
+// the way out is always shown (Dominik 2026-10-19): on the phone „‹ Zurück“, beside the list „✕ Schließen“
+const postOut=(de,en)=>`<button type="button" class="b ld-back postclose" data-close="1">${NARROW()?'‹':'✕'} ${esc(t(de,en))}</button>`;
 function postDetail(w){const box=w.querySelector('.postdet'),m=POST.msg;if(!box)return;box.hidden=!POST.sel;if(!POST.sel)return;
-  const back=`<button type="button" class="b ld-back" data-close="1">‹ ${esc(t('Zurück','Back'))}</button>`;
+  const back=NARROW()?postOut('Zurück','Back'):postOut('Schließen','Close');
   if(!m)box.innerHTML=back+`<div class="mut">${esc(t('Lade die Mail …','Loading the mail …'))}</div>`;
   else if(m.err)box.innerHTML=back+`<div class="note warn">${esc(m.err)}</div>`;
   else box.innerHTML=back+`<h3>${esc(m.subject||t('(ohne Betreff)','(no subject)'))}</h3>`+
@@ -125,10 +127,10 @@ async function postWrite(m){POST.sent='';POST.prev=null;
 function postWriteBox(w){let box=w.querySelector('.postdet');const f=POST.write,p=POST.prev;if(!box)return;box.hidden=false;
   const inline=!!(f.reply&&POST.sel===f.reply&&POST.msg&&!POST.msg.err);
   if(inline){postDetail(w);const rp=box.querySelector('[data-w=reply]');if(rp)rp.remove();
-    box.querySelector('.ld-back').onclick=()=>{POST.write=null;POST.prev=null;POST.sel=null;POST.msg=null;postDraw()};
+    box.querySelector('.ld-back').onclick=()=>postDrop(true);
     const h=document.createElement('div');h.className='postreply';box.appendChild(h);box=h}
   const back=inline?`<button type="button" class="b postdrop" data-close="1">✕ ${esc(t('Verwerfen','Discard'))}</button>`
-    :`<button type="button" class="b ld-back" data-close="1">‹ ${esc(t('Verwerfen','Discard'))}</button>`;
+    :postOut('Verwerfen','Discard');
   if(p){box.innerHTML=back+`<h3>${esc(t('So geht die Mail raus','This is the mail that goes out'))}</h3><dl class="ld-facts postprev">`+
       `<dt>${esc(t('Von','From'))}</dt><dd>${esc(p.from)}</dd><dt>${esc(t('An','To'))}</dt><dd>${esc(p.to.join(', '))}</dd>`+
       (p.cc.length?`<dt>${esc(t('Kopie','Copy'))}</dt><dd>${esc(p.cc.join(', '))}</dd>`:'')+`<dt>${esc(t('Betreff','Subject'))}</dt><dd>${esc(p.subject||t('(ohne Betreff)','(no subject)'))}</dd></dl>`+
@@ -147,7 +149,11 @@ function postWriteBox(w){let box=w.querySelector('.postdet');const f=POST.write,
     const ac=box.querySelector('[data-f=account]');if(ac)ac.onchange=()=>{f.account=ac.value};
     box.querySelector('[data-s=prev]').onclick=()=>postPreview(box.querySelector('.postordmsg'));
     if(POST.focus){POST.focus=false;const ta=box.querySelector(f.reply?'[data-f=text]':'[data-f=to]');ta.focus({preventScroll:true});box.scrollIntoView({block:'nearest'})}}
-  box.querySelector('[data-close]').onclick=()=>{POST.write=null;POST.prev=null;postDraw()}}
+  box.querySelector('[data-close]').onclick=()=>postDrop()}
+// leaving the form: what was typed is asked about first, nothing else is lost
+function postDrop(all){const f=POST.write;
+  if(f&&!POST.prev&&(f.text||'').trim()&&!confirm(t('Den Entwurf verwerfen?','Discard the draft?')))return;
+  POST.write=null;POST.prev=null;if(all){POST.sel=null;POST.msg=null}postDraw()}
 async function postPreview(msg){const f=POST.write;msg.className='postordmsg fh';msg.textContent=t('Einen Moment …','One moment …');
   const {r,d}=await apiTry('/api/profile/mail/send/preview',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(f)});
   if(!r.ok){msg.className='postordmsg err';msg.textContent=errSay(r.status,d.detail,'');return}
@@ -162,7 +168,9 @@ async function postSend(b,msg){b.disabled=true;msg.className='postordmsg fh';msg
 function postAsEvent(m){KAL.q=(m.subject||'').replace(/^(re|aw|antw|fwd?|wg)\s*:\s*/i,'').slice(0,200);KAL.qi=null;KAL.qfocus=true;
   icTabSet('cal','show');goSec('cal')}
 // keys on the page (Dominik 2026-10-19 „5a“): J/K next and previous, R reply, E archive, U read or unread, Esc closes
+// (the mail, or the form being written)
 document.addEventListener('keydown',e=>{if(!$('post')||!$('post').classList.contains('on')||!$('postview'))return;
+  if(e.key==='Escape'&&POST.write){e.preventDefault();postDrop();return}   // also from inside the form
   if(/^(INPUT|TEXTAREA|SELECT)$/.test((e.target&&e.target.tagName)||'')||e.metaKey||e.ctrlKey||e.altKey)return;
   const items=(POST.data&&POST.data.items)||[],i=items.findIndex(x=>x.id===POST.sel),k=e.key.toLowerCase();
   if(k==='j'||k==='k'){const n=items[k==='j'?Math.min(i+1,items.length-1):Math.max(i-1,0)];if(n){e.preventDefault();postRead(n.id)}return}

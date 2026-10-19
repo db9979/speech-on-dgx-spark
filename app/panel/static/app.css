@@ -1781,6 +1781,7 @@ main:has(>#post.on){max-width:none}
 .post .posttext{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;line-height:1.5;margin:10px 0;max-height:60vh;overflow:auto}
 .post .postdet .ld-facts{margin-top:4px}
 .post .postord,.post .postwr{flex-wrap:wrap;gap:6px;margin-top:10px}.post .postord select{width:auto;max-width:100%}
+.post .postclose{display:inline-flex}
 .post .postreply{margin-top:14px;padding-top:10px;border-top:1px solid var(--line)}.post .postreply .postdrop{float:right}.post .postform{display:grid;gap:4px;margin-top:8px}.post .postform input,.post .postform select,.post .postform textarea{width:100%;max-width:100%;box-sizing:border-box}.post .postform label{margin-top:6px}
 #parwrap[hidden]{display:none}
 /* touch screens: small marks keep their look, but a finger hits at least 44 px (code check 19.10. D11) */

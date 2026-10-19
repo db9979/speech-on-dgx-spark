@@ -2119,6 +2119,13 @@
 "titel": "Spark-Kalender: Änderungen sofort",
 "text": "A: Update auf V01.0.832, Seite Kalender, „+ Termin“, speichern: der Termin steht ohne Warten da; nach wenigen Sekunden auch in der Kalender-App des iPhone (iCloud). B: Den Termin ändern (Titel, Uhrzeit): sofort geändert. C: Löschen: sofort weg. D: Denselben Termin vorher auf dem iPhone ändern und dann auf der Seite (ohne neu zu laden) ändern: die Seite zeigt „Nicht gespeichert, der Kalender hat abgelehnt“ mit dem Titel, es gilt die Fassung vom iPhone. E: Zustand → Logs, Bereich Kalender: „calendar: saved behind“ bzw. „not saved behind (412)“.",
 "thread": "Kalender und E-Mail in Panel und Apps"
+},
+{
+"id": "P327",
+"v": 833,
+"titel": "E-Mail: immer ein Weg zurück",
+"text": "A: Update auf V01.0.833, am Rechner E-Mail öffnen, eine Mail wählen: oben „✕ Schließen“ schließt sie. B: „Neue Mail“: oben „✕ Verwerfen“ schließt das Formular. C: Unter einer Mail „Antworten“, etwas tippen, Esc drücken: der Spark fragt „Den Entwurf verwerfen?“, OK schließt die Antwort. D: Am Handy dasselbe mit „‹ Zurück“ und „‹ Verwerfen“.",
+"thread": "Kalender und E-Mail in Panel und Apps"
 }
 ]
 }

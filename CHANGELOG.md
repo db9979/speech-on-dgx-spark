@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.833** · 2026-10-19 · E-Mail: eine geöffnete Mail, eine Antwort und eine neue Mail haben auf jeder Breite einen sichtbaren Knopf zum Schließen oder Verwerfen (am Rechner fehlte er), Esc schließt die Antwort auch aus dem Textfeld, getippter Text wird vorher nachgefragt
 - **V01.0.832** · 2026-10-19 · Spark-Kalender Stufe 2: Termine auf der Seite Kalender und im iPhone sofort eingetragen, geändert oder gelöscht (erst in der Kopie, der Server dahinter); lehnt der Server ab, gilt seine Fassung und die Seite sagt es
 - **V01.0.831** · 2026-10-19 · Fix: Gesprächszug von Lautsprecher und Telefon geht nicht mehr verloren, wenn das Gerät gleich nach der Antwort trennt (seit .828 unter Last möglich); Test test_verlauf_sync wartet, bis die Seite zuhört, statt fester 600 ms
 - **V01.0.830** · 2026-10-19 · Kalender und E-Mail schneller und überall gleich: Spark-Kalender Stufe 1 (verschlüsselte Kopie jedes Kalenders, nur Änderungen vom Server), Vorwärmen beim Anmelden, E-Mail wie ein Mailprogramm (nach Tagen, Tasten J/K/R/E/U, Wischen, „Als Termin“), iPhone und uConsole auf dem Stand des Panels
