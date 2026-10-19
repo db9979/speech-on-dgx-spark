@@ -219,8 +219,8 @@ body[data-face=comic] .av,body[data-face=comic_woman] .av{background:var(--avfac
 .typing::after{content:"";display:inline-block;width:18px;text-align:left;animation:dots 1.2s steps(4) infinite}
 @keyframes dots{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}}
 @keyframes pop{from{opacity:0;transform:translateY(6px) scale(.98)}to{opacity:1;transform:none}}
-.composer{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line)}
-.composer input{border-radius:99px;padding:10px 16px}
+.composer{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line);align-items:flex-end}
+.composer textarea{border-radius:22px;padding:10px 16px}
 .send{flex:none;width:42px;height:42px;border-radius:50%;border:0;cursor:pointer;color:#fff;background:linear-gradient(135deg,var(--acc),var(--acc2));display:grid;place-items:center}
 .send svg{width:18px;height:18px}
 #mmenu,#mslot{display:none}.mic .i-stop{display:none}
@@ -257,8 +257,8 @@ body[data-face=comic] .av,body[data-face=comic_woman] .av{background:var(--avfac
   .mtoggles{display:flex;gap:16px;align-items:center;justify-content:center;padding:6px 12px 0;flex-wrap:wrap}
   .mtoggles .tgl{font-size:13px}.mtoggles #chatset span{display:none}.mtoggles #chatset{padding:8px 10px}
   .mtoggles .chips{margin:0;min-height:0;width:100%}.mtoggles .rems{margin:0;width:100%}
-  body.inchat .composer{padding:8px 10px calc(8px + env(safe-area-inset-bottom));border-top:0;align-items:center}
-  body.inchat .composer input{font-size:16px;min-height:46px}
+  body.inchat .composer{padding:8px 10px calc(8px + env(safe-area-inset-bottom));border-top:0;align-items:flex-end}
+  body.inchat .composer textarea{font-size:16px;min-height:46px}
   body.inchat .composer .mic{width:52px;height:52px;padding:0;justify-content:center;flex:none;border-radius:50%}
   body.inchat .composer .mic #talklbl{display:none}body.inchat .composer .mic svg{width:22px;height:22px}
   body.inchat .composer .mic.ans .i-mic{display:none}body.inchat .composer .mic.ans .i-stop{display:block}
@@ -946,7 +946,7 @@ body.hilfeon:not(.kbd):not(.appview.inchats) #fab,body.hilfeon #fab:focus-within
 body:not(.guest):not(.kbd):not(.inchat):not(.appview.inchats) #fab,body:not(.guest):not(.kbd):has(#profmodal[style*="grid"]) #fab{display:flex!important;z-index:62}
 body.hilfeon .fabpop{max-height:min(70vh,560px);overflow:auto;box-sizing:border-box}
 .fabask{margin-top:10px}.fabask[hidden]{display:none}.fabask .mut{font-size:12px;margin-bottom:6px}
-.fabin{display:flex;gap:6px}.fabin input{flex:1;min-width:0}
+.fabin{display:flex;gap:6px}.fabin textarea{flex:1;min-width:0}
 #fabcards .hcard{margin-top:8px}
 @media (min-width:760px){body.hilfeon #profmodal{padding-right:104px}}   /* the face must not cover "Schließen" */
 /* Schreibhilfe (schreib.js): the changes the panel worked out */
@@ -1050,7 +1050,7 @@ select.ld-chip{width:auto;max-width:180px;padding:3px 8px}
 .ag-h{margin:14px 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--mut)}
 .ag-steps{margin:6px 0;padding-left:20px;font-size:13.5px}
 .ag-todo ol{margin:4px 0;padding-left:4px;list-style:none;font-size:13.5px}.ag-todo li.on{color:var(--mut)}
-.ag-ask,.ag-prop{margin-top:6px}.ag-ask input,.ag-steer input{flex:1;min-width:0}.ag-steer{margin-top:6px}
+.ag-ask,.ag-prop{margin-top:6px}.ag-ask input,.ag-steer textarea{flex:1;min-width:0}.ag-steer{margin-top:6px}
 .ld-more{text-align:center;margin:10px 0}.ld-empty{padding:14px 8px}
 .ld-detail{border:1px solid var(--line);border-radius:14px;padding:14px;background:var(--card);min-width:0}
 .ld-detail[hidden]{display:none}
@@ -1487,7 +1487,7 @@ textarea.factedit{width:100%;margin:0 0 6px}
 .cx-reply{display:flex;align-items:center;gap:8px;padding:6px 12px;border-top:1px solid var(--line);background:var(--card);font-size:13px}.cx-reply[hidden]{display:none}
 .cx-reply span{flex:1;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;border-left:3px solid var(--acc);padding-left:8px}
 .cx-comp{display:flex;align-items:flex-end;gap:8px;padding:8px 10px;border-top:1px solid var(--line);background:var(--card)}.cx-comp[hidden]{display:none}
-.cx-comp textarea{flex:1;min-width:0;width:auto;resize:none;border-radius:20px;padding:9px 14px;max-height:160px;line-height:1.35;font:inherit;overflow-y:hidden}
+.cx-comp textarea{flex:1;min-width:0;width:auto;resize:none;border-radius:20px;padding:9px 14px;line-height:1.35;font:inherit}
 /* the assistant's face stays in the bottom right corner on the Chats page: the composer leaves room for it (computer) */
 body.inchats:not(.appview):not(.kbd) .cx-comp{padding-right:96px}
 .cx-pane{flex:1;overflow:auto;padding:12px 14px;min-height:0;background:var(--card)}.cx-pane[hidden]{display:none}
@@ -1774,3 +1774,12 @@ main:has(>#cal.on){max-width:none}   /* the calendar takes the whole width (Domi
   .ffilt button::after{content:'';position:absolute;inset:-6px 0}
   .wayl::after{content:'';position:absolute;inset:-8px 0}}
 #pinbox{margin:10px 0;display:grid;gap:8px;max-width:420px}
+/* Eingabefelder wachsen mit dem Text (feld.js): kein Ziehgriff, ⤢ und Zähler am Feld mit dem Cursor, Großansicht */
+textarea{resize:none}textarea[data-fest]{resize:vertical}textarea.feldplatz{padding-right:42px}
+#feldgross{position:fixed;z-index:60;width:30px;height:30px;padding:0;display:grid;place-items:center;border-radius:8px;border:1px solid var(--line);background:color-mix(in srgb,var(--card) 92%,transparent);color:var(--mut);box-shadow:var(--shadow);cursor:pointer}
+#feldgross:hover{color:var(--acc);border-color:var(--acc)}#feldgross svg{width:16px;height:16px}#feldgross[hidden],#feldzahl[hidden]{display:none}
+#feldzahl{position:fixed;z-index:60;font-size:12px;color:var(--warn);font-weight:600;background:var(--card);padding:0 6px;border-radius:6px;pointer-events:none}#feldzahl.voll{color:var(--bad)}
+#feldmodal{z-index:70}.feldcard{width:min(860px,100%);height:min(80dvh,900px);display:flex;flex-direction:column;gap:10px}
+.feldkopf{display:flex;align-items:center;gap:8px}.feldkopf b{flex:1;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.feldkopf .b[hidden]{display:none}
+#feldtext{flex:1;min-height:0;font-size:15px;line-height:1.55;padding:12px 14px}.feldfuss{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--mut)}
+@media (max-width:760px){#feldmodal{padding:0;place-items:stretch}#feldmodal .feldcard{width:100%;height:100dvh;border:0;border-radius:0;box-shadow:none;padding:calc(10px + env(safe-area-inset-top)) 12px calc(10px + env(safe-area-inset-bottom))}#feldtext{font-size:16px}}

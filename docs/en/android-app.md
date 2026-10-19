@@ -20,7 +20,7 @@ since V01.0.296) and adds only what a page cannot do:
 - **Spark as assistant** (1.4.0 and later, V01.0.732): admin: Features → Android app → "Android: Spark as assistant"
   (off). Once released the assistant button (Settings → Apps → Default apps → Digital assistant → "Spark", then hold
   power or home) opens a sheet over whatever app is open: the Spark's face, what it heard, the answer to read along, a
-  field to type and "Ganze App" (whole app). The app records the question itself (the phone's echo and noise
+  field to type (grows up to five lines, from 1.4.3) and "Ganze App" (whole app). The app records the question itself (the phone's echo and noise
   suppression, a pause of just under a second ends the question), sends it to the Spark (`/api/test/asr`, then
   `/api/chat` as device "android") and plays the answer itself, short and without lists. Speaking during the answer
   makes it quieter; it only stops once the Spark recognizes a real question. With "hands-free" in the chat it

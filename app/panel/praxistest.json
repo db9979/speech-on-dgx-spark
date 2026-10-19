@@ -2084,6 +2084,13 @@
 "titel": "Stimme am Telefon flüssig",
 "text": "A: Pi aktualisieren, vom Mobilteil den Spark anrufen und eine Frage mit längerer Antwort stellen („Erzähl mir etwas über den Mond“): die Stimme kommt ohne Stocken und Abhacken. B: Gleichzeitig im Panel eine zweite Frage stellen: am Telefon bleibt die Stimme flüssig. C: Auflegen, dann Zustand → Logs, Bereich telefon: „aufgelegt nach …“ endet mit „0 luecken, 0 verspaetet, kodieren … ms je sekunde ton“ (kleine Zahlen sind gut; bei vielen Lücken die Zeile in den Thread kopieren).",
 "thread": "Auflegen nach Gesprächsende"
+},
+{
+"id": "P322",
+"v": 829,
+"titel": "Eingabefelder wachsen mit",
+"text": "A: Update auf V01.0.829, Seite neu laden. Assistent: eine lange Frage tippen: das Feld wächst bis sechs Zeilen, dann scrollt es; Umschalt+Enter macht eine neue Zeile, Enter schickt ab, danach ist das Feld wieder eine Zeile. B: Ab vier Zeilen ⤢ oben rechts im Feld: die Großansicht zeigt den ganzen Text, Esc oder „Fertig“ behält ihn, „Senden“ schickt ab. C: Am Handy (Panel oder Android-App): die Taste macht eine neue Zeile, der Pfeil schickt ab; ⤢ öffnet den ganzen Bildschirm. D: Einstellungen → Assistent → Systemanweisung: das Feld ist so hoch wie der Text; ein Feld mit Grenze (z. B. Werkzeug-Hinweise) zeigt ab 80 % „n / max“. E: iPhone (TestFlight): das Eingabefeld wächst bis fünf Zeilen, ⤢ öffnet die Großansicht mit Fertig und Senden. F: uConsole nach `spark-tui update`: das Fragefeld hat drei Zeilen, Strg+J macht eine neue Zeile, Enter schickt ab.",
+"thread": "Eingabefelder dynamisch"
 }
 ]
 }

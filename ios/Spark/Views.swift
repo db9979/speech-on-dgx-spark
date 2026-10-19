@@ -398,9 +398,10 @@ struct Composer: View {
     @Binding var files: Bool
     @Binding var photo: PhotosPickerItem?
     @State private var typed = ""
+    @State private var gross = false
 
     var body: some View {
-        HStack {
+        HStack(alignment: .bottom) {
             Menu {
                 if UIImagePickerController.isSourceTypeAvailable(.camera) {
                     Button { camera = true } label: { Label("Foto aufnehmen", systemImage: "camera") }
@@ -412,21 +413,74 @@ struct Composer: View {
             }
             .accessibilityLabel("Foto oder Dokument anhängen")
             .disabled(talk.reading)
-            TextField(talk.attachment == nil ? LocalizedStringKey("Oder schreiben …") : LocalizedStringKey("Frage zum Anhang …"), text: $typed)
+            // grows with the text up to 5 lines, then scrolls; the key makes a new line, the arrow sends (like the panel, feld.js)
+            TextField(talk.attachment == nil ? LocalizedStringKey("Oder schreiben …") : LocalizedStringKey("Frage zum Anhang …"), text: $typed, axis: .vertical)
+                .lineLimit(1...5)
                 .textFieldStyle(.roundedBorder)
                 .onChange(of: talk.suggestion) {
                     if let s = talk.suggestion { typed = s; talk.suggestion = nil }
                 }
-                .submitLabel(.send)
-                .onSubmit(send)
+                .overlay(alignment: .topTrailing) {
+                    if GrossAnsicht.lang(typed) {
+                        Button { gross = true } label: { Image(systemName: "arrow.up.left.and.arrow.down.right").font(.caption) }
+                            .padding(6)
+                            .accessibilityLabel("Groß bearbeiten")
+                    }
+                }
             Button(action: send) { Image(systemName: "paperplane.fill") }
-                .disabled(typed.trimmingCharacters(in: .whitespaces).isEmpty)
+                .disabled(typed.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                .padding(.bottom, 6)
+        }
+        .sheet(isPresented: $gross) {
+            GrossAnsicht(text: $typed, title: "Frage bearbeiten", limit: 0) { gross = false; send() }
         }
     }
 
     private func send() {
         talk.write(typed)
         typed = ""
+    }
+}
+
+/// The large view for a long text (Dominik 2026-10-19, plan eingabefelder 3a): the whole screen to read and change it.
+/// "Fertig" keeps the text in the field, "Senden" sends it (only where the field sends); from 80 % of a limit a counter.
+struct GrossAnsicht: View {
+    @Binding var text: String
+    let title: LocalizedStringKey
+    let limit: Int
+    var send: (() -> Void)? = nil
+    @Environment(\.dismiss) private var dismiss
+    @FocusState private var focus: Bool
+
+    /// from 4 lines (or a long single line) the field offers the large view
+    static func lang(_ s: String) -> Bool { s.split(separator: "\n", omittingEmptySubsequences: false).count >= 4 || s.count > 140 }
+
+    var body: some View {
+        NavigationStack {
+            VStack(alignment: .leading, spacing: 6) {
+                TextEditor(text: $text)
+                    .focused($focus)
+                    .font(.body)
+                    .onChange(of: text) { if limit > 0 && text.count > limit { text = String(text.prefix(limit)) } }
+                if limit > 0 && Double(text.count) >= Double(limit) * 0.8 {
+                    Text(verbatim: "\(text.count) / \(limit)").font(.caption).foregroundStyle(.orange)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                }
+            }
+            .padding(.horizontal)
+            .navigationTitle(title)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) { Button("Fertig") { dismiss() } }
+                if let send {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button("Senden", action: send).bold()
+                            .disabled(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    }
+                }
+            }
+            .onAppear { focus = true }
+        }
     }
 }
 

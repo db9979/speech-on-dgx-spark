@@ -20,7 +20,7 @@ Die App ist eine schlanke Hülle um die Spark-Seite: Sie zeigt den Spark so, wie
 - **Spark als Assistent** (ab 1.4.0, V01.0.732): Admin: Funktionen → Android-App → „Android: Spark als Assistent“ (aus).
   Freigegeben öffnet die Assistenten-Taste (Einstellungen → Apps → Standard-Apps → Digitaler Assistent „Spark“, dann
   lange auf Ein/Aus oder Home drücken) ein Blatt über der App, die gerade offen ist: das Gesicht des Spark, was er
-  gehört hat, die Antwort zum Mitlesen, ein Feld zum Tippen und „Ganze App“. Die App nimmt die Frage selbst auf
+  gehört hat, die Antwort zum Mitlesen, ein Feld zum Tippen (wächst bis fünf Zeilen, ab 1.4.3) und „Ganze App“. Die App nimmt die Frage selbst auf
   (Echo- und Rauschunterdrückung des Handys, Pause von knapp einer Sekunde beendet die Frage), schickt sie an den
   Spark (`/api/test/asr`, dann `/api/chat` als Gerät „android“) und spielt die Antwort selbst ab, kurz und ohne
   Listen. Reinsprechen während der Antwort macht sie leiser; erst wenn der Spark eine echte Frage erkennt, hört sie

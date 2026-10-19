@@ -114,7 +114,7 @@ function cxHitsShow(){const box=cxEl('cxlist');
 // ---------------------------------------------------------------- one chat
 const box=()=>cxEl('cxbox');
 async function cxOpen(cid,quiet){if(!cid)return;const first=CX.cur!==cid;
-  if(first){cxRecStop(false);CX.cur=cid;CX.menu='';CX.reply=null;CX.edit=null;CX.pane='';CX.data=null;cxEl('cxtext').value='';cxGrow()}
+  if(first){cxRecStop(false);CX.cur=cid;CX.menu='';CX.reply=null;CX.edit=null;CX.pane='';CX.data=null;cxEl('cxtext').value=''}
   box().classList.add('sel');if(first||!quiet)cxPane('');
   let d;try{d=await cxApi('/api/chats/items?id='+encodeURIComponent(cid))}catch(e){if(!quiet)cxSay(e.message);if(e.status===404)cxClose();return}
   if(d.private&&window.csPrepare)await csPrepare(d,cid);   // private chat (chatsec.js): the boxes opened on this device
@@ -188,7 +188,7 @@ cxEl('cxlog').addEventListener('click',async e=>{const b=e.target.closest('[data
     else if(a==='photo'&&x)x.att?csBig(x):cxBig(x);
     else if(a==='react'){const mine=(x&&x.react||[]).some(r=>r.me&&r.e===b.dataset.e);await cxApi('/api/chats/react',{id:CX.cur,mid,emoji:mine?'':b.dataset.e});cxOpen(CX.cur,true)}
     else if(a==='reply'&&x){CX.edit=null;CX.reply={id:x.id,name:x.mine?t('Du','You'):x.name,text:x.text||cxKindWord(x.kind)};cxReplyBar();cxEl('cxtext').focus()}
-    else if(a==='edit'&&x){CX.reply=null;CX.edit={id:x.id};cxEl('cxtext').value=x.text||'';cxGrow();cxReplyBar();cxEl('cxtext').focus()}
+    else if(a==='edit'&&x){CX.reply=null;CX.edit={id:x.id};cxEl('cxtext').value=x.text||'';cxReplyBar();cxEl('cxtext').focus()}
     else if(a==='copy'&&x){copyString(x.text||'',b)}
     else if(a==='back'&&x){if(!confirm(t('Diese Nachricht für alle zurücknehmen?','Take this message back for everybody?')))return;await cxApi('/api/chats/back',{id:CX.cur,mid});cxOpen(CX.cur,true)}}
   catch(err){cxSay(err.message)}});
@@ -199,20 +199,17 @@ function cxReplyBar(){const r=cxEl('cxreply'),s=r.querySelector('span');
   if(CX.edit){s.textContent=t('Nachricht ändern','Change message');r.hidden=false}
   else if(CX.reply){s.textContent=t('Antwort an ','Reply to ')+(CX.reply.name||'')+': '+CX.reply.text.slice(0,80);r.hidden=false}
   else r.hidden=true}
-cxEl('cxreplyx').addEventListener('click',()=>{if(CX.edit)cxEl('cxtext').value='';CX.reply=null;CX.edit=null;cxReplyBar();cxGrow()});
-// the composer: Enter sends (Shift+Enter a new line; on a phone the key makes a new line, the arrow sends)
-function cxGrow(){const ta=cxEl('cxtext');ta.style.height='auto';const h=ta.scrollHeight+ta.offsetHeight-ta.clientHeight;
-  ta.style.height=Math.min(h,160)+'px';ta.style.overflowY=h>160?'auto':'hidden'}   // a scroll bar only beyond 160 px
-cxEl('cxtext').addEventListener('input',()=>{cxGrow();const now=Date.now();
+cxEl('cxreplyx').addEventListener('click',()=>{if(CX.edit)cxEl('cxtext').value='';CX.reply=null;CX.edit=null;cxReplyBar()});
+// the composer grows and sends with Enter through feld.js (data-zeilen, data-senden; on a phone the key makes a new line)
+cxEl('cxtext').addEventListener('input',()=>{const now=Date.now();
   if(CX.cur&&now-CX.typeSent>4000&&cxEl('cxtext').value.trim()){CX.typeSent=now;cxApi('/api/chats/typing',{id:CX.cur}).catch(()=>{})}});
-cxEl('cxtext').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing&&!matchMedia('(pointer:coarse)').matches){e.preventDefault();cxEl('cxcomp').requestSubmit()}
-  if(e.key==='Escape'&&(CX.reply||CX.edit))cxEl('cxreplyx').click()});
+cxEl('cxtext').addEventListener('keydown',e=>{if(e.key==='Escape'&&(CX.reply||CX.edit))cxEl('cxreplyx').click()});
 cxEl('cxcomp').addEventListener('submit',async e=>{e.preventDefault();if(CX.busy)return;const ta=cxEl('cxtext'),text=ta.value.trim();if(!text||!CX.cur)return;
   CX.busy=true;cxEl('cxsend').disabled=true;
   try{if(CX.edit)await cxApi('/api/chats/edit',{id:CX.cur,mid:CX.edit.id,text});
     else if(CX.data&&CX.data.private)await csSend(CX.cur,text,CX.reply?CX.reply.id:'');
     else await cxApi('/api/chats/send',{id:CX.cur,text,reply:CX.reply?CX.reply.id:''});
-    ta.value='';CX.reply=null;CX.edit=null;cxReplyBar();cxGrow();CX.typeSent=0;
+    ta.value='';CX.reply=null;CX.edit=null;cxReplyBar();CX.typeSent=0;
     await cxOpen(CX.cur,true);const log=cxEl('cxlog');log.scrollTop=log.scrollHeight;cxLoad()}
   catch(err){cxSay(err.message)}finally{CX.busy=false;cxEl('cxsend').disabled=false}});
 // a short line above the composer for what did not work (the panel's sentence)

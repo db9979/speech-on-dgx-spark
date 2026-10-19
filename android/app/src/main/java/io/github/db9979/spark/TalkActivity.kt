@@ -177,11 +177,15 @@ class TalkActivity : Activity(), Talk.Ui {
         sheet.addView(heard, lp(4))
         sheet.addView(scroll, lp(10))
         val row = LinearLayout(this)
-        row.gravity = Gravity.CENTER_VERTICAL
+        row.gravity = Gravity.BOTTOM   // the arrow stays at the last line while the field grows
         input = EditText(this).apply {
             hint = "Frage schreiben"
-            setSingleLine()
-            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
+            // a long question wraps and grows up to 5 lines, then scrolls; the key stays "Senden" (plan eingabefelder 6a)
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES or InputType.TYPE_TEXT_FLAG_MULTI_LINE
+            setHorizontallyScrolling(false)
+            minLines = 1
+            maxLines = 5
+            setRawInputType(InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES)
             imeOptions = EditorInfo.IME_ACTION_SEND
             setTextColor(fg)
             setOnEditorActionListener { _, _, _ -> send(); true }

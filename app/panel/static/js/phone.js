@@ -34,8 +34,7 @@ MOBILE.addEventListener('change',layout);
 {const box=document.querySelector('.composer'),ti=$('chattext');let on=null;
  const sync=v=>{if(v!==on){on=v;box.classList.toggle('hastext',v)}};
  ti.addEventListener('input',()=>sync(!!ti.value.trim()));
- $('chatsend').addEventListener('click',()=>setTimeout(()=>sync(!!ti.value.trim()),0));
- ti.addEventListener('keydown',e=>{if(e.key==='Enter')setTimeout(()=>sync(false),0)})}
+ $('chatsend').addEventListener('click',()=>setTimeout(()=>sync(!!ti.value.trim()),0))}   // Enter sendet über feld.js mit einem Klick auf chatsend
 // menu sheet: conversation actions, admin pages, language, theme, login
 const closeSheet=()=>{$('msheet').style.display='none'};
 $('msheet').onclick=e=>{if(e.target===$('msheet'))closeSheet()};

@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.829** Text fields grow with the text: question, message and every text field as high as the text, Enter sends, Shift+Enter a new line, ⤢ large view, counter; also iPhone and terminal
 - **V01.0.828** Code check, speed: conversations are saved beside the event loop and written smaller
 - **V01.0.827** Code check, ease of use: search with everyday words and "Ask Spark", clear microphone errors, Status red only for real faults, one way of counting, more contrast and larger tap areas, a start guide for every new profile, a new PIN in hidden fields
 - **V01.0.826** Code check, speed: the document list is remembered and fetched beside the event loop, each profile has its own database lock, the meaning search no longer converts per search, the status page and hints are worked out less often
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.822** A red main no longer goes unnoticed: the quick test before a push runs every test and stops while main is red, GitHub opens an issue with the red tests, Status → Update shows since when it is red
 - **V01.0.821** Calendar renewed: full width, an appointment opens as a floating card (phone: sheet from below) with change, +1 day, +1 week, delete; "Quick add" in one line with recognised chips; drag appointments with the mouse, undo; share window with a person search; briefing topics as chips
 - **V01.0.820** Fix: test run test_mail_zeit green again (the opened-mail memory of .819 handed the test its first mail; the test now drops it like a changed mailbox)
-- **V01.0.819** E-mail fast: mailboxes read at the same time, list and opened mails cached, the page shows the last state at once and refreshes in the background; "Reply" opens right below the mail.
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

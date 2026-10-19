@@ -17,7 +17,7 @@ async function showWrite(){const box=$('writebox');if(!box)return;if(!PROFILE||!
     <textarea id="wrtext" rows="8" maxlength="${d.max}"></textarea>
     ${d.pics?`<div class="row" style="margin-top:4px"><button class="b" type="button" data-wrpic="wrtext">${t('Aus Bild lesen','Read from picture')}</button><span class="mut">${t('oder ein Bildschirmfoto einfügen (Strg+V)','or paste a screenshot (Ctrl+V)')}</span></div>`:''}
     <label for="wrwish">${t('Wunsch (frei)','Wish (optional)')}</label>
-    <input id="wrwish" maxlength="300" autocomplete="off" placeholder="${t('z. B. mit Du, kurz halten, Gruß „Viele Grüße, Dominik“','e.g. informal, keep it short, sign "Best, Dominik"')}">
+    <textarea id="wrwish" rows="1" maxlength="300" autocomplete="off" placeholder="${t('z. B. mit Du, kurz halten, Gruß „Viele Grüße, Dominik“','e.g. informal, keep it short, sign "Best, Dominik"')}"></textarea>
     <div class="row" style="margin-top:8px"><button class="b p" type="button" id="wrgo">${t('Los','Go')}</button><button class="b" type="button" id="wrclear">${t('Leeren','Clear')}</button></div>
     <div class="fh" id="wrmsg"></div>
     <div id="wrout" hidden>

@@ -67,7 +67,7 @@ body.appview.kbd #apmic .mic{display:none}
 body.appview.inchat .mtoggles{padding:0}
 body.appview.inchat .composer{gap:6px;padding:6px 12px 8px}
 body.appview.inchat:not(.aptabs) .composer{padding-bottom:calc(8px + env(safe-area-inset-bottom))}
-body.appview.inchat .composer input{border-radius:10px;min-height:40px;background:var(--apcard)}
+body.appview.inchat .composer textarea{border-radius:10px;min-height:40px;background:var(--apcard)}
 body.appview.inchat .composer .send{display:grid!important;width:40px;height:40px;place-items:center;flex:none}
 body.appview.inchat .composer .attach{flex:none}
 /* ---- pages: large titles, inset grouped lists like the iOS settings */

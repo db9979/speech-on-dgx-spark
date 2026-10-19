@@ -390,7 +390,28 @@ def run_window(sp, conf, App):
     from textual.binding import Binding
     from textual.containers import Horizontal, Vertical, VerticalScroll
     from textual.screen import ModalScreen
-    from textual.widgets import Footer, Input, Label, ListItem, ListView, Markdown, Static
+    from textual.message import Message
+    from textual.widgets import Footer, Label, ListItem, ListView, Markdown, Static, TextArea
+
+    class AskArea(TextArea):
+        """Where a question is typed (Dominik 2026-10-19, plan eingabefelder 6a): three lines, grows with the text up to 6,
+        then scrolls. Enter sends, Ctrl+J (or Shift+Enter, where the terminal tells it apart) makes a new line."""
+        class Submitted(Message):
+            def __init__(self, area, value):
+                super().__init__()
+                self.area, self.value = area, value
+
+        async def _on_key(self, event):
+            if event.key == "enter":
+                event.prevent_default()
+                event.stop()
+                self.post_message(self.Submitted(self, self.text))
+            elif event.key in ("ctrl+j", "shift+enter"):
+                event.prevent_default()
+                event.stop()
+                self.insert("\n")
+            else:
+                await super()._on_key(event)
 
     class Answer(Markdown):
         """One message. The Spark's Markdown is shown formatted; links are never opened from here."""
@@ -470,9 +491,9 @@ def run_window(sp, conf, App):
         def compose(self):
             with Vertical(id="askbox"):
                 yield Label(self.head)
-                yield Input(id="askin")
+                yield AskArea(id="askin")
 
-        def on_input_submitted(self, event):
+        def on_ask_area_submitted(self, event):
             self.dismiss(event.value.strip())
 
     class SparkTui(App):
@@ -488,6 +509,7 @@ def run_window(sp, conf, App):
         .who { color: $accent; text-style: bold; }
         .me { color: $secondary; text-style: bold; }
         #head { height: 1; background: $boost; padding: 0 1; }
+        AskArea { height: auto; min-height: 5; max-height: 8; }
         #askbox, #jobbox { width: 90%; height: auto; max-height: 90%; border: round $accent; background: $surface; padding: 1 2; }
         JobView, Ask { align: center middle; }
         """
@@ -509,13 +531,14 @@ def run_window(sp, conf, App):
                     yield Static("", id="today")
                 with Vertical():
                     yield VerticalScroll(id="log")
-                    yield Input(placeholder="Frag den Spark …  (Enter senden)", id="ask")
+                    yield AskArea(id="ask")
             yield Footer()
 
         def on_mount(self):
             self.query_one("#convos").border_title = "Gespräche  F2"
             self.query_one("#jobs").border_title = "Aufträge  F3  (n neu)"
             self.query_one("#today").border_title = "Heute  F4"
+            self.query_one("#ask").border_title = "Frag den Spark …  Enter senden · Strg+J neue Zeile"
             self.query_one("#ask").focus()
             self.hello()
             self.refresh_side()
@@ -643,13 +666,13 @@ def run_window(sp, conf, App):
                 self.call_from_thread(self.refresh_side)
             self.bg(run)
 
-        def on_input_submitted(self, event):
-            if event.input.id != "ask":
+        def on_ask_area_submitted(self, event):
+            if event.area.id != "ask":
                 return
             q = event.value.strip()
             if not q or self.busy:
                 return
-            event.input.value = ""
+            event.area.clear()
             if q.lower() in ("/tipps", "/tips"):   # what this profile can say (Ich → Was ich kann)
                 self.show_tips()
                 return

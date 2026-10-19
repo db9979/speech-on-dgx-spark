@@ -11680,6 +11680,26 @@
           }
         }
       }
+    },
+    "Groß bearbeiten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit in a large view"
+          }
+        }
+      }
+    },
+    "Frage bearbeiten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit the question"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
