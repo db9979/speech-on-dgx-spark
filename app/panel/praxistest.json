@@ -2168,6 +2168,13 @@
 "titel": "Spark-Kalender im Kalender des iPhone",
 "text": "A: Update auf V01.0.840. Admin: Funktionen → Kalender und Tagesbriefing → „Kalender-Server für Kalender-Apps“ an. B: Profil: Kalender → Einstellungen → „Für Kalender-Apps“ → „App-Passwort erzeugen“ (mit Code): Server, Benutzer und App-Passwort stehen da. C: iPhone: Einstellungen, Apps, Kalender, Kalenderaccounts, Account hinzufügen, Andere, CalDAV-Account; Server, Benutzer, App-Passwort eintragen: der Spark-Kalender erscheint im Kalender. D: Im iPhone-Kalender einen Termin anlegen: er steht sofort auf der Seite Kalender; einen auf der Seite anlegen: er erscheint nach dem Abgleich im iPhone. E: Ein falsches Passwort fünfmal: gesperrt. F: „Zugang löschen“: das iPhone meldet keinen Zugriff mehr. G: Auch über die Proxy-Adresse von unterwegs.",
 "thread": "Kalender und E-Mail in Panel und Apps"
+},
+{
+"id": "P334",
+"v": 841,
+"titel": "Eine Bildlaufleiste",
+"text": "A: Update auf V01.0.841. Ich öffnen, mehrere Seiten (Überblick, Musik, Gedächtnis, Gespräch): rechts nur eine Leiste, sie rollt die Ich-Seite; keine Leiste, die nichts tut. B: Seite E-Mail am Rechner, eine lange Mail öffnen: die Seite steht, links rollt die Liste, rechts der Lesebereich, der Mailtext hat keine eigene Leiste. C: Dasselbe am Handy: nur die Seite rollt, der Mailtext steht ganz da. D: Funktionen → Eigenes Kiwix-Archiv, „Bücher auswählen“: 30 Bücher, darunter „Weitere … zeigen“ statt einer Leiste im Kasten.",
+"thread": "Bildlaufleisten"
 }
 ]
 }

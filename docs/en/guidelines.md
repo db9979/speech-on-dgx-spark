@@ -229,6 +229,7 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 - **Width:** no horizontal scrolling at 320, 390 and 1280 px. No element sticks out over the edge on the phone. (🧪 test_ui_browser, test_ich_aufraeumen)
 - **Frame:** every page with a side menu (Zustand, Funktionen, Personen und Geräte, Einstellungen, Ich) uses the one frame from `app.css` (`--frame`, `--sidecol`, `--sidegap`): menu column and content sit in the same place with the same width on every tab, no page sets a width of its own. (D 2026-10-14; 🧪 test_seitenrahmen)
 - **Height:** the Assistant fills the window (only the history scrolls). Height budgets apply to the Features page (< 2450 px at 1280) and People and devices (< 1500 px). (🧪 test_ui_browser, test_einstellungen_neu)
+- **One bar to scroll** (Dominik 2026-10-19, plan `bildlauf/plan.md`): never a scroll bar inside another and never a bar that scrolls nothing. An open window (Me, sign-in, search …) has the only bar, the page under it stands still (`html:has(.modal[style*="grid"])`). Me scrolls as a whole, its menu and page have no height of their own. A list with details as a frame (`.ld-frame`, E-mail) fills the window on a computer, list and details scroll side by side. Boxes inside a page show everything or "Show … more"; a bar of their own only with a reason in `test_bildlauf.FENSTER` (log and code windows, the conversation, popups, a sticky side column). (🧪 test_bildlauf, with the real bars on computer and phone)
 - **Phone:** tap targets at least 44 px, input fields 16 px, respect the safe area. The face or "Ask Spark" ("Frag Spark") never lies over controls. (P handy-wie-app; partly 🧪)
 - **Status colours** green, yellow and red. "Needs you" always has a button leading there. Amber (`--c4`) exists in the live picture only for the internet. (P design-klar, M)
 - **Browser cache:** HTML is `no-store`, CSS and JS are loaded with `?v=VERSION`, `/api` is `no-store`. (🧪 test_panel.Page)
@@ -393,6 +394,7 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 | test_akku | hidden pages do not poll and close the history stream, Android pauses the page in the background (except in a call), the iPhone stops the audio engine in the background |
 | test_app_merken | the apps keep only while the Spark says so (never a browser or a guest), slow pages as fixed words, protected storage, deleted on unpairing and signing out, no private chats |
 | test_ui_browser, test_ich_aufraeumen, test_einstellungen_neu | no width beyond the edge (320/390/1280), height budgets, no inner scroll boxes |
+| test_bildlauf | one bar: never a bar inside a bar, no empty bar, the page under a window stands still, every bar of its own with a reason |
 | test_seitenrahmen | one frame for every page with a side menu: same place and width on every tab, nothing wider than the phone |
 | test_workflows, test_lock, test_lieferkette | pinned actions, permissions, signing environment, package hashes, ffmpeg whitelist |
 | test_selftest_runner | one second attempt, > 5 no attempt, warning |

@@ -784,7 +784,7 @@ $('vrgo').onclick=async()=>{try{vrRender(await (await api('/api/vorrang',{method
 async function kxCheck(){return await (await api('/api/admin/kiwix/check',{method:'POST'})).json()}
 // the picker: chosen books as chips on top (also before the catalog is loaded), below the catalog as a
 // list with search, language and group filter, grouped, each with language, variant, articles, size, date
-const KX={books:null,q:'',lang:'',grp:''};
+const KX={books:null,q:'',lang:'',grp:'',max:30};   // 30 rows, then „Weitere … zeigen“ (no scroll box inside the page)
 // a book is chosen by its name without the date: an updated file (newer date) stays chosen (V01.0.261)
 const kxKey=id=>String(id||'').replace(/_\d{4}-\d{2}(-\d{2})?$/,'')||String(id||'');
 const kxSel=()=>[...new Set($('chat.kiwix_books').value.split(/[\s,;]+/).filter(Boolean).map(kxKey))];
@@ -805,14 +805,14 @@ function kxChips(){const box=$('kxsel'),sel=kxSel(),known=Object.fromEntries((KX
     box.appendChild(c)})}
 function kxPicker(){const box=$('kxpick');box.hidden=false;box.textContent='';const bar=document.createElement('div');bar.className='kxbar';
   const q=document.createElement('input');q.type='search';q.placeholder=t('Suchen: Titel, Name, Beschreibung','Search: title, name, description');q.value=KX.q;q.maxLength=60;
-  q.oninput=()=>{KX.q=q.value;kxList()};
+  q.oninput=()=>{KX.q=q.value;KX.max=30;kxList()};
   const counts=(key)=>{const m={};(KX.books||[]).forEach(b=>{m[b[key]]=(m[b[key]]||0)+1});return m};
   const ls=document.createElement('select'),lc=counts('lang');
   const opt=(sel,v,l)=>{const o=document.createElement('option');o.value=v;o.textContent=l;sel.appendChild(o)};
   opt(ls,'',t('Deutsch und Englisch','German and English'));opt(ls,'*',t('Alle Sprachen','All languages')+` (${(KX.books||[]).length})`);
-  Object.keys(lc).sort((a,b)=>kxLang(a).localeCompare(kxLang(b))).forEach(c=>opt(ls,c,`${kxLang(c)} (${lc[c]})`));ls.value=KX.lang;ls.onchange=()=>{KX.lang=ls.value;kxList()};
+  Object.keys(lc).sort((a,b)=>kxLang(a).localeCompare(kxLang(b))).forEach(c=>opt(ls,c,`${kxLang(c)} (${lc[c]})`));ls.value=KX.lang;ls.onchange=()=>{KX.lang=ls.value;KX.max=30;kxList()};
   const gs=document.createElement('select'),gc=counts('group');opt(gs,'',t('Alle Arten','All kinds'));
-  Object.keys(gc).sort((a,b)=>kxGrp(a).localeCompare(kxGrp(b))).forEach(g=>opt(gs,g,`${kxGrp(g)} (${gc[g]})`));gs.value=KX.grp;gs.onchange=()=>{KX.grp=gs.value;kxList()};
+  Object.keys(gc).sort((a,b)=>kxGrp(a).localeCompare(kxGrp(b))).forEach(g=>opt(gs,g,`${kxGrp(g)} (${gc[g]})`));gs.value=KX.grp;gs.onchange=()=>{KX.grp=gs.value;KX.max=30;kxList()};
   bar.append(q,ls,gs);const list=document.createElement('div');list.className='kxlist';list.id='kxlist';box.append(bar,list);kxList()}
 function kxList(){const list=$('kxlist');if(!list||!KX.books)return;list.textContent='';const sel=kxSel(),full=sel.length>=10;
   const q=KX.q.trim().toLowerCase();
@@ -822,7 +822,7 @@ function kxList(){const list=$('kxlist');if(!list||!KX.books)return;list.textCon
   const order=b=>(sel.includes(b.key)?0:1);
   const groups={};rows.forEach(b=>{(groups[b.group]=groups[b.group]||[]).push(b)});
   const names=Object.keys(groups).sort((a,b)=>(a==='wikipedia'?-1:b==='wikipedia'?1:kxGrp(a).localeCompare(kxGrp(b))));
-  let shown=0;const MAX=150;
+  let shown=0;const MAX=KX.max;
   for(const g of names){if(shown>=MAX)break;const h=document.createElement('div');h.className='kxgrp';h.textContent=`${kxGrp(g)} (${groups[g].length})`;list.appendChild(h);
     groups[g].sort((a,b)=>order(a)-order(b)||(a.lang==='de'?0:1)-(b.lang==='de'?0:1)||(b.count||0)-(a.count||0)||a.title.localeCompare(b.title));
     for(const b of groups[g]){if(shown++>=MAX)break;const on=sel.includes(b.key),r=document.createElement('label');r.className='kxrow'+(!on&&full?' dis':'');r.title=b.id;
@@ -831,7 +831,7 @@ function kxList(){const list=$('kxlist');if(!list||!KX.books)return;list.textCon
       const tx=document.createElement('div'),tt=document.createElement('div'),mm=document.createElement('div');tt.className='kxt';tt.textContent=b.title;mm.className='kxm';mm.textContent=kxMeta(b)+(b.desc?' – '+b.desc:'');
       tx.append(tt,mm);r.append(c,tx);list.appendChild(r)}}
   if(!rows.length){const m=document.createElement('div');m.className='kxmore';m.textContent=t('Nichts gefunden. Andere Sprache oder Art wählen.','Nothing found. Pick another language or kind.');list.appendChild(m)}
-  else if(rows.length>MAX){const m=document.createElement('div');m.className='kxmore';m.textContent=t(`${rows.length-MAX} weitere – Suche oder Filter eingrenzen.`,`${rows.length-MAX} more – narrow the search or filter.`);list.appendChild(m)}
+  else if(rows.length>MAX){const m=document.createElement('button');m.type='button';m.className='b kxmore';m.textContent=t(`Weitere ${rows.length-MAX} zeigen`,`Show ${rows.length-MAX} more`);m.onclick=()=>{KX.max+=30;kxList()};list.appendChild(m)}
   if(full){const m=document.createElement('div');m.className='kxmore';m.textContent=t('10 Bücher gewählt, mehr geht nicht.','10 books chosen, that is the most.');list.prepend(m)}}
 $('kxload').onclick=async()=>{if(KX.books&&!$('kxpick').hidden){$('kxpick').hidden=true;return}
   $('kxmsg').textContent=t('Lade …','Loading …');

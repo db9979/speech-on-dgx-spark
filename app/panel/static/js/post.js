@@ -68,7 +68,7 @@ function postOpen(){if(!PROFILE)return;const root=$('postroot');for(const b of P
       proIn('promail').catch(()=>{});if(PAR_ON)lzb($('parbox'),showPar,{auth:true}).catch(()=>{});return b}}]));
   postLoad()}
 // the tab „Posteingang“: search, the list, the message tapped
-function postBody(){const w=document.createElement('div');w.className='ld-box post';w.id='postview';postPaint(w);return w}
+function postBody(){const w=document.createElement('div');w.className='ld-box ld-frame post';w.id='postview';postPaint(w);return w}
 function postDraw(){const w=$('postview');if(w)postPaint(w)}
 function postPaint(w){const d=POST.data;w.classList.toggle('ld-sel',!!POST.sel||!!POST.write);
   if(d&&d.connected===false){w.innerHTML=`<div class="empty">${esc(t('Noch kein Postfach verbunden. Unter Einstellungen verbindest du iCloud, Gmail, GMX, web.de oder ein anderes IMAP-Postfach.','No mailbox connected yet. Under Settings you connect iCloud, Gmail, GMX, web.de or another IMAP mailbox.'))}<div><button class="b p" type="button" data-k="set">${esc(t('Postfach verbinden','Connect a mailbox'))}</button></div></div>`;

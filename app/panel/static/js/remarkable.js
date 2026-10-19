@@ -57,7 +57,7 @@ function rmDraw(box,d){const E=icEl,lib=d.library||[];
       catch(e){ok.disabled=false;xmsg('rmmsg',e.message,true)}};
     bar.append(m,no,ok);box.appendChild(bar)}
   box.appendChild(Object.assign(E('div','fh'),{id:'rmmsg'}));
-  const redraw=()=>{const y=box.closest('.mebody');const s=y?y.scrollTop:0;rmDraw(box,d);if(y)y.scrollTop=s};
+  const redraw=()=>{const y=box.closest('#profmodal');const s=y?y.scrollTop:0;rmDraw(box,d);if(y)y.scrollTop=s};
   rmDraw.redraw=redraw}
 function rmToggle(x,on){if(on){RMPICK.add(x.id);if(x.folder){const pre=x.path+'/';for(const y of RM.library)if(y.path.startsWith(pre))RMPICK.delete(y.id)}}else RMPICK.delete(x.id);rmDraw.redraw()}
 const RMKIND_IC={folder:'folder',notebook:'nb',pdf:'pdf',epub:'nb'};

@@ -23,8 +23,8 @@ function placeNow(to){const p={};try{const s=document.querySelector('section.on'
     const pane=document.querySelector('#cfg .pane.on');if(pane&&p.sec==='cfg')p.pane=pane.id.slice(5);
     const it=document.querySelector('#pane-feat .fitem.open');if(it&&it.dataset.sw&&p.sec==='feat')p.feat=it.dataset.sw;
     if(typeof PL!=='undefined'&&PL.open&&p.sec==='prof')p.person=PL.open;
-    if(!to&&$('profmodal')&&$('profmodal').style.display==='grid'){const b=document.querySelector('#ptabs button.on'),mb=document.querySelector('#profmodal .mebody');
-      p.me=b?b.dataset.t:'';if(mb)p.mey=Math.round(mb.scrollTop)}
+    if(!to&&$('profmodal')&&$('profmodal').style.display==='grid'){const b=document.querySelector('#ptabs button.on'),mb=$('profmodal');
+      p.me=b?b.dataset.t:'';p.mey=Math.round(mb.scrollTop)}
     if(!to)p.y=Math.round(window.scrollY)}catch{}return p}
 // `to` as an object ({me:'mailbox'}): stay on this page and open that instead
 function verReload(to){LEAVING=true;const o=to&&typeof to==='object';

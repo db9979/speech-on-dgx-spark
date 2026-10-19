@@ -108,8 +108,11 @@ class Static(unittest.TestCase):
 
     def test_no_scroll_box_inside_ich(self):
         css = read("app.css")
-        self.assertIn("#profmodal .facts,#profmodal .tidy ul{max-height:none;overflow:visible}", css)
-        self.assertIn("#profmodal .mebody{overflow-x:hidden", css.replace(";", ";").replace("\n", ""))
+        # no list of Ich keeps a height of its own, and the page itself is no scroll box either: the window
+        # #profmodal is the one that scrolls (test_bildlauf, Dominik 2026-10-19)
+        for rule in re.findall(r"[^{}]*\.(?:facts|tidy ul|mebody)\b[^{}]*\{[^}]*\}", css):
+            self.assertNotRegex(rule, r"max-height:\d|overflow(-y)?:(auto|scroll)", rule.strip())
+        self.assertIn(".mebody{min-width:0;overflow-x:clip}", css)
 
     def test_new_texts_have_english(self):
         js = read("js", "i18n.js")

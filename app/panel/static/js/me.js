@@ -367,7 +367,7 @@ const ME_SUB={setbox:['Einstellungen gelten auf jedem Gerät dieses Profils; „
 function ptab(id,page=true){if(PROFILE&&!GATE&&$('setscope'))$('setscope').textContent=ME_SUB[id]?t(...ME_SUB[id]):'';document.querySelectorAll('#ptabs button').forEach(b=>{b.classList.toggle('on',b.dataset.t===id);if(b.dataset.t===id)$('mepage').textContent=b.firstChild.textContent});
   document.querySelectorAll('#profmodal .ptab').forEach(x=>x.classList.toggle('on',x.id===id));
   if(typeof guidesMe==='function')guidesMe(id);if(id==='gobox'&&typeof goBar==='function')goBar(false);
-  $('profmodal').classList.toggle('sub',page);if(page)document.querySelector('#profmodal .mebody').scrollTop=0}
+  $('profmodal').classList.toggle('sub',page);if(page)$('profmodal').scrollTop=0}
 $('meback').onclick=()=>ptab(meLast,false);
 // every page of Ich with whether it shows now (the Sprung-Links in way.js know the names of the hidden ones too)
 function meAll(){return [['overbox',t('Überblick','Overview'),!!PROFILE&&!PHONE.matches],['bgbox',t('Mein Zustand','My status'),PROFILE&&MYST_ON],['gobox',t('Los geht\'s','Let\'s go'),!!PROFILE&&typeof SETUP!=='undefined'&&!!SETUP&&SETUP.open>0],['kannbox',t('Was ich kann','What I can do'),PROFILE&&typeof SATZ_ON!=='undefined'&&SATZ_ON],['setbox',t('Gespräch','Conversation'),!GATE&&!isGuest()],['loginbox',t('Anmelden','Sign in'),!PROFILE],

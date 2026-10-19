@@ -6,6 +6,7 @@ import asyncio
 import glob
 import json
 import os
+import re
 import sys
 import time
 import unittest
@@ -2468,7 +2469,11 @@ class Browser(unittest.TestCase):
                     self.assertEqual(set(langs_shown), {"Deutsch", "Englisch"}, name)          # German and English first
                     self.assertIn("Wikipedia (", await pg.inner_text("#kxlist .kxgrp"))        # grouped, Wikipedia on top
                     await pg.select_option("#kxpick select >> nth=0", "*")
-                    self.assertGreater(await pg.evaluate("document.querySelectorAll('#kxlist .kxrow').length"), 100)
+                    # every language: 30 rows, then „Weitere … zeigen“ instead of a scroll box in the page (test_bildlauf)
+                    self.assertEqual(await pg.evaluate("document.querySelectorAll('#kxlist .kxrow').length"), 30)
+                    self.assertGreater(int(re.search(r"\d+", await pg.inner_text("#kxlist button.kxmore")).group()), 70)
+                    await pg.click("#kxlist button.kxmore")
+                    self.assertEqual(await pg.evaluate("document.querySelectorAll('#kxlist .kxrow').length"), 60)
                     await pg.fill("#kxpick input[type=search]", "TED talk 103")
                     await pg.wait_for_timeout(100)
                     self.assertEqual(await pg.evaluate("document.querySelectorAll('#kxlist .kxrow').length"), 1)

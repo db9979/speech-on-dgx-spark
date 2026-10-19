@@ -32,7 +32,7 @@ async function placeBack(){let p=null;try{p=JSON.parse(sessionStorage.getItem('p
   for(let i=0;i<50&&!(window.lzIdle&&lzIdle()&&i>2);i++)await new Promise(r=>setTimeout(r,100));
   if(LZ.act!==act)return;
   if(p.feat){const it=[...document.querySelectorAll('#pane-feat .fitem')].find(x=>x.dataset.sw===p.feat);if(it&&!it.classList.contains('open')&&typeof featOpen==='function')featOpen(it,true)}
-  if(p.mey){const mb=document.querySelector('#profmodal .mebody');if(mb)mb.scrollTop=p.mey}
+  if(p.mey)$('profmodal').scrollTop=p.mey
   if(p.y)window.scrollTo(0,p.y)}
 // the start of the page; theme.js (Start-Wächter) learns how it ended: a start that failed loads the page again later
 async function startPage(){let who=null;try{who=await (await /*raw: the first who-am-I, before the login and the bar exist*/fetch('/api/whoami')).json()}catch{}

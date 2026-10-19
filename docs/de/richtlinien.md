@@ -229,6 +229,7 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
 - **Breite:** Kein seitliches Scrollen bei 320, 390 und 1280 px. Kein Element ragt am Handy über den Rand. (🧪 test_ui_browser, test_ich_aufraeumen)
 - **Rahmen:** Alle Seiten mit Seitenleiste (Zustand, Funktionen, Personen und Geräte, Einstellungen, Ich) nutzen den einen Rahmen aus `app.css` (`--frame`, `--sidecol`, `--sidegap`): Seitenleiste und Inhalt stehen auf jedem Reiter an derselben Stelle und gleich breit, keine Seite setzt eine eigene Breite. (D 2026-10-14; 🧪 test_seitenrahmen)
 - **Höhe:** Der Assistent füllt das Fenster (nur der Verlauf scrollt). Höhenbudgets gelten für die Funktionen-Seite (< 2450 px bei 1280) und Personen und Geräte (< 1500 px). (🧪 test_ui_browser, test_einstellungen_neu)
+- **Eine Leiste zum Rollen** (Dominik 2026-10-19, Plan `bildlauf/plan.md`): nie eine Bildlaufleiste in einer anderen und nie eine Leiste, die nichts rollt. Ein offenes Fenster (Ich, Anmelden, Suche …) hat die einzige Leiste, die Seite darunter steht still (`html:has(.modal[style*="grid"])`). Ich rollt als Ganzes, Menü und Seite haben keine eigene Höhe. Eine Liste mit Detail als Rahmen (`.ld-frame`, E-Mail) füllt am Rechner das Fenster, Liste und Detail rollen nebeneinander. Kästen in einer Seite zeigen alles oder „Weitere … zeigen“; eine eigene Leiste nur mit Grund in `test_bildlauf.FENSTER` (Log- und Code-Fenster, Gespräch, Popups, mitlaufende Seitenspalte). (🧪 test_bildlauf, mit echten Leisten auf Rechner und Handy)
 - **Handy:** Tippziele mindestens 44 px, Eingabefelder 16 px, Safe-Area beachten. Das Gesicht bzw. „Frag Spark“ liegt nie über Bedienelementen. (P handy-wie-app; teils 🧪)
 - **Statusfarben** grün, gelb und rot. „Braucht dich“ hat immer einen Knopf dorthin. Bernstein (`--c4`) gibt es im Live-Bild nur für Internet. (P design-klar, M)
 - **Browser-Cache:** HTML ist `no-store`, CSS und JS werden mit `?v=VERSION` geladen, `/api` ist `no-store`. (🧪 test_panel.Page)
@@ -393,6 +394,7 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
 | test_akku | verdeckte Seiten fragen nicht im Takt und schließen den Verlauf-Strom, Android pausiert die Seite im Hintergrund (außer im Anruf), iPhone stoppt die Audio-Engine im Hintergrund |
 | test_app_merken | die Apps merken sich nur, solange der Spark es sagt (nie ein Browser oder Gast), langsame Seiten als feste Wörter, geschützter Speicher, Löschen beim Entkoppeln und Abmelden, keine privaten Chats |
 | test_ui_browser, test_ich_aufraeumen, test_einstellungen_neu | keine Breite über den Rand (320/390/1280), Höhenbudgets, keine inneren Scroll-Kästen |
+| test_bildlauf | eine Leiste: nie Leiste in Leiste, keine leere Leiste, Seite unter einem Fenster steht still, jede eigene Leiste mit Grund |
 | test_seitenrahmen | ein Rahmen für alle Seiten mit Seitenleiste: gleiche Stelle und Breite auf jedem Reiter, nichts breiter als das Handy |
 | test_workflows, test_lock, test_lieferkette | gepinnte Actions, Rechte, Signierumgebung, Paket-Hashes, ffmpeg-Whitelist |
 | test_selftest_runner | ein zweiter Versuch, > 5 kein Versuch, Warnung |

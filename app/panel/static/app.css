@@ -11,6 +11,9 @@
 *{box-sizing:border-box}
 /* keep room for the scrollbar on every page, so short pages (Spracherkennung, Sicherheit) do not move sideways (V01.0.254) */
 html{scrollbar-gutter:stable}
+/* an open window (Ich, sign-in, search …) has the only scroll bar: the page under it stands still, no bar that scrolls
+   a hidden page (test_bildlauf) */
+html:has(.modal[style*="grid"]){overflow:hidden;scrollbar-gutter:auto}
 body{margin:0;min-height:100vh;color:var(--fg);font:14px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased;
   background:radial-gradient(900px 420px at 0% -10%,color-mix(in srgb,var(--acc) 12%,transparent),transparent 70%),
              radial-gradient(800px 400px at 100% -15%,color-mix(in srgb,var(--acc2) 10%,transparent),transparent 70%),var(--bg);background-attachment:fixed}
@@ -182,7 +185,7 @@ body.inchat #fab{display:none}
 }
 /* Webanwendung 5: away from the assistant the page ends with room for the floating face (#fab), so its last rows can
    always be scrolled out from under it; the width of the pages stays the same (Seitenrahmen) */
-@media (min-width:761px){body.adm:not(.inchat):not(.prof):not(.appview) main{padding-bottom:110px}}
+@media (min-width:761px){body.adm:not(.inchat):not(.prof):not(.appview) main:not(:has(>section.on .ld-frame)){padding-bottom:110px}}
 @media (min-width:761px) and (max-width:1100px){
   body.inchat .talkwrap{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr)}
   body.inchat .stage{display:grid;grid-template-columns:140px 1fr;column-gap:22px;align-items:center;justify-items:start;text-align:left;padding:14px 22px}
@@ -288,20 +291,22 @@ details.adv{margin-top:18px;border-top:1px solid var(--line);padding-top:10px}de
 .profchip{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;font-size:13px;white-space:nowrap}.profchip svg{width:14px;height:14px}
 .ptabs{display:flex;gap:4px;margin:4px 0 12px;padding:3px;background:var(--line);border-radius:12px;flex-wrap:wrap}.ptabs button{flex:1;border:0;background:none;color:var(--fg);font:inherit;font-size:13px;padding:7px 8px;border-radius:9px;cursor:pointer;white-space:nowrap}.ptabs button.on{background:var(--card);box-shadow:var(--shadow);font-weight:600}
 .ptab:not(.on){display:none!important}.mebody .ptab{min-height:160px}
-.mecard{width:min(760px,100%);height:min(640px,92vh);display:flex;flex-direction:column;overflow:hidden}.mehead{margin-bottom:12px}.mehead h2{margin:0 0 2px}.mehead .mut{font-size:13px}
-.mewrap{display:grid;grid-template-columns:170px minmax(0,1fr);grid-template-rows:minmax(0,1fr);gap:18px;align-items:stretch;flex:1;min-height:0}
-.mebody{overflow-y:auto;min-height:0;padding-right:4px;scrollbar-gutter:stable}
-.menav{display:flex;flex-direction:column;gap:2px;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}.menav button{flex:none}
+.mecard{width:min(760px,100%);min-width:0;min-height:min(640px,92vh);display:flex;flex-direction:column;overflow:visible}.mehead{margin-bottom:12px}.mehead h2{margin:0 0 2px}.mehead .mut{font-size:13px}
+/* Ich has one scroll bar (Dominik 2026-10-19 „so viele Leisten an der Seite nicht komfortabel“): the window #profmodal
+   scrolls, menu and page inside it grow with their content and never scroll on their own (test_bildlauf) */
+.mewrap{display:grid;grid-template-columns:170px minmax(0,1fr);gap:18px;align-items:start;flex:1}
+.mebody{min-width:0;overflow-x:clip}
+.menav{display:flex;flex-direction:column;gap:2px}.menav button{flex:none}
 .menav button{border:0;background:none;color:var(--fg);text-align:left;padding:8px 12px;border-radius:10px;cursor:pointer;font:inherit;font-size:14px}
 .menav button:hover{background:var(--line)}.menav button.on{background:var(--line);font-weight:600}
 .mefoot{flex:none;margin-top:16px;justify-content:flex-end;border-top:1px solid var(--line);padding-top:12px}.mefoot #proflogout{margin-right:auto}
-@media (max-width:640px){.mecard{height:92vh}.mewrap{grid-template-columns:1fr;grid-template-rows:auto 1fr;gap:10px}.menav{flex-direction:row;flex-wrap:wrap;position:static;padding:3px;background:var(--line);border-radius:12px}
+@media (max-width:640px){.mecard{min-height:92vh}.mewrap{grid-template-columns:1fr;grid-template-rows:auto 1fr;gap:10px}.menav{flex-direction:row;flex-wrap:wrap;position:static;padding:3px;background:var(--line);border-radius:12px}
   .menav button{flex:1 0 auto;text-align:center;padding:7px 10px;font-size:13px}.menav button.on{background:var(--card);box-shadow:var(--shadow)}}
 #caladd{margin-top:10px;border:1px solid var(--line);border-radius:12px;padding:8px 12px}#caladd summary{cursor:pointer;font-weight:600;font-size:14px}
 .two2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.rowin{display:flex;gap:8px}.rowin input{flex:1;min-width:0}
 .facts.small li{font-size:13px;padding:4px 0}
-.facts{list-style:none;padding:0;margin:10px 0 0;max-height:28vh;overflow:auto}.facts li{display:flex;gap:8px;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--line);font-size:14px}.facts li span{flex:1}.facts em.auto{font-style:normal;font-size:11px;color:var(--mut);border:1px solid var(--line);border-radius:8px;padding:0 6px;margin-left:4px}
-.tidy{margin:10px 0 0;padding:10px;border:1px solid var(--line);border-radius:10px;font-size:14px}.tidy ul{margin:6px 0 8px;padding-left:18px;max-height:24vh;overflow:auto}.tidy li{margin:4px 0}
+.facts{list-style:none;padding:0;margin:10px 0 0}.facts li{display:flex;gap:8px;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--line);font-size:14px}.facts li span{flex:1}.facts em.auto{font-style:normal;font-size:11px;color:var(--mut);border:1px solid var(--line);border-radius:8px;padding:0 6px;margin-left:4px}
+.tidy{margin:10px 0 0;padding:10px;border:1px solid var(--line);border-radius:10px;font-size:14px}.tidy ul{margin:6px 0 8px;padding-left:18px}.tidy li{margin:4px 0}
 .bubble .mem{margin-top:8px;padding-top:6px;border-top:1px solid var(--line);font-size:12px;color:var(--mut)}
 /* Verlauf auf allen Geräten (verlauf.js): the channel a message came through, and another device answering right now */
 .bubble .via{display:inline-block;margin:0 6px 2px 0;padding:0 6px;border-radius:8px;font-size:11px;line-height:17px;color:var(--mut);border:1px solid var(--line);vertical-align:1px}
@@ -393,29 +398,29 @@ a.b{text-decoration:none;color:inherit;display:inline-flex;align-items:center}
   .pane .pt{font-size:20px}
   .savebar{position:sticky;bottom:0;z-index:3;margin:20px -16px -16px;padding:12px 84px calc(12px + env(safe-area-inset-bottom)) 16px;background:var(--card);border-radius:0 0 14px 14px;box-shadow:0 -6px 16px -10px rgba(0,0,0,.25)}
   /* windows: no page scrolling behind them */
-  body:has(.modal[style*="grid"]){overflow:hidden}
   .modal{overscroll-behavior:contain}
   #login{place-items:end stretch;padding:0}
   #login .modalcard{width:100%;border-radius:20px 20px 0 0;border:0;padding:20px 16px calc(16px + env(safe-area-inset-bottom));animation:up .22s ease}
   #profmodal,#wizmodal,#findmodal,#clmodal{padding:0;place-items:stretch}
-  .mecard,.wizcard,.findcard{width:100%;height:100dvh;max-height:none;min-height:0;border:0;border-radius:0;box-shadow:none;animation:up .22s ease;
+  .wizcard,.findcard{height:100dvh;min-height:0}
+  .mecard,.wizcard,.findcard{width:100%;max-height:none;border:0;border-radius:0;box-shadow:none;animation:up .22s ease;
     padding:calc(10px + env(safe-area-inset-top)) 16px calc(10px + env(safe-area-inset-bottom))}
   .wizcard .mefoot,.mecard .mefoot{margin-top:10px;padding-top:10px}.mefoot .b{flex:1}
   .findcard .finds{flex:1;max-height:none}
   /* the "Ich" window: its pages as a list, a page with back arrow and its name on top */
   .mehead{margin-bottom:10px}.mehead h2{font-size:20px}.mehrow{min-height:44px}
-  .mewrap{display:flex;flex-direction:column;flex:1;min-height:0;gap:0}
-  .menav{flex-direction:column;gap:0;position:static;overflow-y:auto;padding:0;background:none;border-radius:0}
+  .mecard{min-height:100dvh}
+  .mewrap{display:flex;flex-direction:column;flex:1;gap:0;align-items:stretch}
+  .menav{flex-direction:column;gap:0;position:static;padding:0;background:none;border-radius:0}
   .menav button{position:relative;text-align:left;font-size:16px;padding:15px 34px 15px 4px;border-radius:0;border-bottom:1px solid var(--line);min-height:52px}
   .menav button.on{background:none;font-weight:500;box-shadow:none}
   .menav button::after{content:"";position:absolute;right:10px;top:50%;width:8px;height:8px;margin-top:-5px;border:solid var(--mut);border-width:2px 2px 0 0;transform:rotate(45deg)}
-  .mebody{flex:1;padding-right:0;-webkit-overflow-scrolling:touch}
+  .mebody{flex:1;padding-right:0}
   #profmodal:not(.sub):not(.one) .mebody,#profmodal.sub .menav,#profmodal.one .menav{display:none}
   #profmodal.sub:not(.one) .meback{display:grid;place-items:center;width:40px;height:40px;padding:0;border:0;margin-left:-8px;color:var(--acc)}.meback svg{width:22px;height:22px}
   #profmodal.sub:not(.one) #profhead{display:none}#profmodal.sub:not(.one) #mepage{display:block;margin:0}
   #profmodal.sub:not(.one) #setscope{display:none}
   .mebody .ptab{min-height:0}
-  .facts{max-height:none}
 }
 /* guides (guides.js): groups in Funktionen, an "Anleitung" per service, headers in the "Ich" menu */
 .fgrp{margin-top:14px}.fitem>.fdetail{margin:0 0 10px 18px!important;padding:2px 0 8px 12px;border-left:2px solid var(--line)}.fgrp>summary{display:flex;justify-content:space-between;align-items:center;gap:10px;cursor:pointer;padding:8px 0;border-bottom:2px solid var(--line);font-size:15px}
@@ -542,7 +547,7 @@ body.guest .navme{display:none}
 @media (min-width:761px){body.adm .cfgnav{top:24px}}
 @media (min-width:761px){body.adm header nav{order:5}body.adm .hfoot{order:6}body.adm #hdr{padding-left:48px}}
 @media (max-width:760px){body.adm #mmenu{display:none}body.adm #profbtn{margin-left:auto}}
-@media (max-width:760px){body.adm #profmodal .mecard{height:100%}}
+@media (max-width:760px){body.adm #profmodal .mecard{min-height:100%}}
 /* Zustand (V01.0.146): one sentence on top, then what needs the admin; details folded */
 .zhead{display:flex;align-items:center;gap:14px;margin-bottom:14px}.zhead b{font-size:16px}
 .zicon{width:40px;height:40px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:20px;font-weight:700;color:#fff;background:var(--line)}
@@ -556,7 +561,7 @@ details.zmore{margin-top:14px}details.zmore>summary{cursor:pointer;font-weight:6
 /* Ich as a page beside the sidebar (design „Klar“, V01.0.147): no veil, same list → page as the settings */
 @media (min-width:761px){
   body.adm #profmodal{left:232px;background:var(--bg);backdrop-filter:none;-webkit-backdrop-filter:none;padding:24px 18px;place-items:start center;z-index:6}
-  body.adm #profmodal .mecard{height:calc(100vh - 48px);animation:none}
+  body.adm #profmodal .mecard{min-height:0;animation:none}
 }
 /* Ich → Lautsprecher (esp.js): list → one speaker in sections */
 #espbox .espgrp{padding:16px 0 4px}#espbox .esplist{margin-top:0}#espbox .esplist .overrow b .pill{margin-left:6px;font-size:11px}
@@ -596,7 +601,7 @@ details.qhow{margin-top:6px}details.qhow>summary{cursor:pointer;font-size:13px;f
 .qrow .qa{color:var(--mut);font-size:12.5px;margin-top:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer}
 .qrow .qa.open{display:block}
 #qall .qrow{padding:3px 0;font-size:13px}#qall .qq>span:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.agrep{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px;margin-top:6px;max-height:50vh;overflow:auto;font-size:13px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
+.agrep{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px;margin-top:6px;font-size:13px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
 /* pictures for the assistant (pics.js) */
 .pics{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:10px 12px 0;font-size:12px}.pics[hidden],.attach[hidden],.mbar .b[hidden]{display:none}
 .pics .pic{position:relative;flex:none}.pics img{width:56px;height:56px;object-fit:cover;border-radius:10px;border:1px solid var(--line);display:block}.pics .picnone{width:56px;height:56px;border-radius:10px;border:1px solid var(--line);display:grid;place-items:center;font-size:24px}
@@ -743,7 +748,7 @@ details.adv h3.sec{margin-top:14px}
 @media (max-width:760px){.lreq{grid-template-columns:minmax(0,1fr)}.rlist{max-height:none}.rdet{border-left:0;padding-left:0}.rrow{margin-left:0}}
 
 /* Ich → Dokumente: a document read again (text pieces, kept picture) */
-.docview{margin-top:10px;border:1px solid var(--line);border-radius:10px;padding:10px;max-height:50vh;overflow:auto;font-size:14px}
+.docview{margin-top:10px;border:1px solid var(--line);border-radius:10px;padding:10px;font-size:14px}
 .docview .dvhead{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:6px}
 .docview img{max-width:100%;height:auto;border-radius:6px;margin:6px 0}
 .docview .dvpage{font-size:12px;color:var(--mut);margin-top:8px}
@@ -757,9 +762,9 @@ span.dtag{cursor:default}.dtag.on{background:color-mix(in srgb,var(--acc) 18%,tr
 .gehvor{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin:8px 0}.gehtile{border:2px solid var(--line);border-radius:8px;padding:4px;background:var(--bg2,transparent);cursor:pointer;user-select:none}.gehtile.on{border-color:var(--ok)}.gehtile canvas{display:block;width:100%;height:auto;image-rendering:pixelated;background:#000;border-radius:4px}.gehtile:not(.on) canvas{opacity:.3}.gehtile.now{box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 45%,transparent)}.gehtile.drag{opacity:.5}.gehtile .gehcap{display:flex;align-items:center;gap:4px;font-size:12px;margin-top:4px}.gehtile .gehcap span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.gehtile .gehcap button{border:0;background:none;color:var(--mut);padding:2px 4px;cursor:pointer;font-size:12px}.gehjetzt{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:6px 0 10px}.gehjetzt canvas{width:256px;max-width:100%;height:auto;image-rendering:pixelated;background:#000;border-radius:6px}
 .kxchip small{color:var(--mut)}.kxchip button{border:0;background:none;color:var(--mut);cursor:pointer;font-size:15px;line-height:1;padding:2px 6px;border-radius:99px}.kxchip button:hover{background:var(--line)}
 .kxpick{border:1px solid var(--line);border-radius:12px;padding:10px;margin-top:8px}.kxbar{display:flex;flex-wrap:wrap;gap:8px}.kxbar input{flex:2;min-width:160px}.kxbar select{flex:1;min-width:120px;width:auto}
-.kxlist{max-height:420px;overflow:auto;margin-top:8px}.kxgrp{position:sticky;top:0;background:var(--card);font-weight:600;font-size:12.5px;color:var(--mut);padding:8px 2px 4px;border-bottom:1px solid var(--line)}
+.kxlist{margin-top:8px}.kxgrp{position:sticky;top:0;background:var(--card);font-weight:600;font-size:12.5px;color:var(--mut);padding:8px 2px 4px;border-bottom:1px solid var(--line)}
 .kxrow{display:flex;gap:10px;align-items:flex-start;padding:7px 2px;border-bottom:1px solid var(--line);cursor:pointer}.kxrow:last-child{border-bottom:0}.kxrow input{margin-top:3px;flex:none}
-.kxrow .kxt{font-weight:500}.kxrow .kxm{color:var(--mut);font-size:12px}.kxrow.dis{opacity:.5;cursor:default}.kxmore{color:var(--mut);font-size:12.5px;padding:8px 2px}
+.kxrow .kxt{font-weight:500}.kxrow .kxm{color:var(--mut);font-size:12px}.kxrow.dis{opacity:.5;cursor:default}.kxmore{color:var(--mut);font-size:12.5px;padding:8px 2px}button.kxmore{color:var(--fg);margin:8px 2px;padding:6px 12px}
 
 /* Einstellungen → Sicherheit: Sicherheit auf einen Blick (V01.0.262) */
 .sglance{margin-bottom:6px}.sgsum{font-size:13px;color:var(--mut);margin:2px 0 4px}
@@ -832,7 +837,7 @@ span.dtag{cursor:default}.dtag.on{background:color-mix(in srgb,var(--acc) 18%,tr
 .tcard small{font-size:12px;color:var(--mut);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
 .ttry .tchips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.ttry .chip{border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:99px;padding:6px 12px;font:inherit;font-size:13px;cursor:pointer;text-align:left}
 .mewrap>.metoday{padding:0 4px 8px;border-bottom:1px solid var(--line);flex:none}
-@media (max-width:760px){#profmodal:not(.sub):not(.one) .mewrap{overflow-y:auto;-webkit-overflow-scrolling:touch}#profmodal:not(.sub):not(.one) .menav{overflow:visible;flex:none}}#profmodal.sub .mewrap>.metoday{display:none}
+@media (max-width:760px){#profmodal:not(.sub):not(.one) .menav{flex:none}}#profmodal.sub .mewrap>.metoday{display:none}
 /* Zustand in plain words (C3, V01.0.286), tiles since the plan „Zustand-Übersicht“ 1: chips under the sentence, „Jetzt“
    and „Heute“ as tiles (icon, large value, colour bar), the other cards as „Bereiche“ with an icon, details folded */
 .zht{flex:1;min-width:0}.zgo{flex:none;margin-left:auto}.zgo[hidden]{display:none}
@@ -950,7 +955,7 @@ body.hilfeon .fabpop{max-height:min(70vh,560px);overflow:auto;box-sizing:border-
 #fabcards .hcard{margin-top:8px}
 @media (min-width:760px){body.hilfeon #profmodal{padding-right:104px}}   /* the face must not cover "Schließen" */
 /* Schreibhilfe (schreib.js): the changes the panel worked out */
-.wrdiff{white-space:pre-wrap;overflow-wrap:anywhere;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:4px 0 8px;line-height:1.5;max-height:340px;overflow:auto}
+.wrdiff{white-space:pre-wrap;overflow-wrap:anywhere;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:4px 0 8px;line-height:1.5}
 .wrdiff del{color:var(--bad);text-decoration:line-through}
 .wrdiff ins{color:var(--ok);text-decoration:none;background:color-mix(in srgb,var(--ok) 14%,transparent);border-radius:3px}
 /* Mein Notaus (notaus.py) */
@@ -1063,7 +1068,6 @@ select.ld-chip{width:auto;max-width:180px;padding:3px 8px}
 .ld-acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .ld-box .danger{color:var(--bad)}
 .ld-back{display:none;margin-bottom:10px}
-.ld-detail .docview{max-height:60vh}
 .ld-bulk{position:sticky;bottom:0;z-index:2;display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 10px;border-radius:12px;background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow);margin:8px 0}
 .ld-bulk[hidden]{display:none}.ld-bulk b{margin-right:4px}.ld-bulk .b{padding:5px 10px;font-size:13px}
 .dbtag{display:inline-flex;gap:4px}.dbtag input{width:110px;padding:5px 8px;font-size:13px}
@@ -1074,6 +1078,18 @@ select.ld-chip{width:auto;max-width:180px;padding:3px 8px}
   .ld-detail{position:sticky;top:0;max-height:calc(100vh - 150px);overflow:auto}
 }
 @container (min-width:660px) and (max-width:879.98px){.ld-split:has(>.ld-detail:not([hidden])) .ld-when{display:none}}
+/* „Wie ein Mail-Programm“ (.ld-frame on the box, Dominik 2026-10-19 „2a“): beside the menu the page stands still and
+   fills the window, the list and the details each scroll on their own, side by side, never one bar in another
+   (test_bildlauf). 94 px = the page's padding above and below and the footer line under the card. */
+@media (min-width:761px){
+  main:has(>section.on .ld-frame){padding-bottom:24px}
+  main>section.on:has(.ld-frame)>.card{height:calc(100vh - 94px);min-height:420px;display:flex;flex-direction:column;overflow:hidden}
+  main>section.on:has(.ld-frame)>.card :is(.ic-tabwrap,.ic-tabbody):has(.ld-frame){display:flex;flex-direction:column;flex:1;min-height:0}
+  .ld-frame{display:flex;flex-direction:column;flex:1;min-height:0}
+  .ld-frame>.ld-split{display:grid;flex:1;min-height:0;grid-template-rows:minmax(0,1fr);align-items:stretch}
+  .ld-frame>.ld-split>.ld-list,.ld-frame>.ld-split>.ld-detail{position:static;align-self:stretch;min-height:0;max-height:none;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
+  .ld-frame>.ld-split>.ld-detail{padding-bottom:84px}   /* its end scrolls out from under the floating face */
+}
 @container (max-width:659.98px){
   /* a split one level down (Verbessern: #vbmain) shows too; its neighbours hide like the box's own */
   .ld-box.ld-sel>:not(.ld-split):not(:has(>.ld-split)),.ld-box.ld-sel>:has(>.ld-split)>:not(.ld-split),.ld-box.ld-sel .ld-list{display:none}
@@ -1090,7 +1106,6 @@ select.ld-chip{width:auto;max-width:180px;padding:3px 8px}
 }
 /* a name only for screen readers (B6): the field keeps its look */
 .srl{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
-.mkview{max-height:70vh}
 #mklist li{flex-wrap:wrap}
 #mklist li>span{flex:1 1 220px;min-width:0;overflow-wrap:anywhere}
 .mkview .mksec .dvhead{flex-wrap:wrap}
@@ -1255,8 +1270,6 @@ select.segsel{display:none!important}
 /* Ich-Seiten aufräumen (ich-aufraeumen/plan.md, js/ichteile.js): one look for every "Ich" page. No list scrolls
    inside the page (the page scrolls, long lists show "Weitere … zeigen"), long addresses and paths wrap or end with
    "…" instead of pushing the buttons out, sub-tabs with counts instead of small arrows. */
-#profmodal .facts,#profmodal .tidy ul{max-height:none;overflow:visible}
-#profmodal .mebody{overflow-x:hidden}
 #profmodal .facts li>span,#profmodal .facts li>label,#profmodal .facts li>div{min-width:0;overflow-wrap:anywhere}
 #profmodal .facts li .rowin{flex-wrap:wrap}#profmodal .rowin select{min-width:0}
 #profmodal li.ic-more{display:block;border-bottom:0;padding:6px 0 0;text-align:center}
@@ -1779,9 +1792,8 @@ main:has(>#cal.on){max-width:none}   /* the calendar takes the whole width (Domi
 main:has(>#post.on){max-width:none}
 @container (min-width:900px){
   .post .ld-split:has(>.ld-detail:not([hidden])){grid-template-columns:minmax(300px,400px) minmax(0,1fr);gap:16px}
-  .post .ld-detail{max-height:calc(100vh - 140px);padding:18px 22px}
+  .post .ld-detail{padding:18px 22px}
   .post .ld-detail h3{font-size:19px}
-  .post .posttext{max-height:none}
 }
 .post .postav{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:12.5px;font-weight:700;letter-spacing:.02em;
   color:var(--kc);background:color-mix(in srgb,var(--kc) 16%,var(--card))}
@@ -1795,7 +1807,7 @@ main:has(>#post.on){max-width:none}
 .post .ld-row.unread .postdot{background:var(--acc)}
 .post .ld-row.unread .ld-mid b{font-weight:700}
 .post .ld-row:not(.unread) .ld-mid b{font-weight:500}
-.post .posttext{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;line-height:1.5;margin:10px 0;max-height:60vh;overflow:auto}
+.post .posttext{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;line-height:1.5;margin:10px 0}
 .post .postdet .ld-facts{margin-top:4px}
 .post .postord,.post .postwr{flex-wrap:wrap;gap:6px;margin-top:10px}.post .postord select{width:auto;max-width:100%}
 .post .postclose{display:inline-flex}
