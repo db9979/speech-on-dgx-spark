@@ -46,19 +46,22 @@ async function refresh(){const seen=$('mon')&&$('mon').classList.contains('on')&
 const SVCNAME={asr:t('Spracherkennung','Speech recognition'),tts:t('Sprachausgabe','Speech output'),wyoming:'Wyoming'};
 let ZLAST=null;
 function zustand(s){if(s)ZLAST=s;s=ZLAST;if(!s)return;
-  const need=[],bad=[],sy=s.system||{};
+  const need=[],bad=[],aus=[],sy=s.system||{};
   for(const [n,v] of Object.entries(s.services||{})){const h=v.health||{},name=SVCNAME[n]||n.toUpperCase();
     if(['failed','error'].includes(v.state)||h.error)bad.push(name);
-    else if(v.enabled&&['inactive','deactivating'].includes(v.state))need.push({lvl:'bad',text:t(`${name} ist aus.`,`${name} is off.`),go:'svc',btn:t('Ansehen','View')})}
+    else if(v.enabled&&['inactive','deactivating'].includes(v.state)){aus.push(name);need.push({lvl:'bad',text:t(`${name} ist aus.`,`${name} is off.`),go:'svc',btn:t('Ansehen','View')})}}
   for(const n of bad)need.push({lvl:'bad',text:t(`${n} meldet einen Fehler.`,`${n} reports an error.`),go:'svc',btn:t('Ansehen','View')});
   const u=window.UPD;if(u&&u.behind&&u.behind!==0)need.push({lvl:'warn',text:t('Update bereit','Update ready')+(u.version?': '+u.version:'')+'.',go:'sys',btn:t('Zum Update','To the update')});
-  if(typeof SECNEED!=='undefined')need.push(...SECNEED);   // red points of "Sicherheit auf einen Blick" (secglance.js)
-  const dirty=[...document.querySelectorAll('.pane.dirty')].map(p=>{const b=document.querySelector(`#cfgnav button[data-p="${p.id.slice(5)}"]`);return b?b.firstChild.nodeValue.trim():p.id});
-  if(dirty.length)need.push({lvl:'warn',text:t(`Nicht gespeichert: ${dirty.join(', ')}.`,`Not saved: ${dirty.join(', ')}.`),go:'cfg',btn:t('Öffnen','Open')});
   // running = systemd says active or the service itself answers; neither = no answer (counts as "needs you")
   const ok=([,v])=>v.state==='active'||['ready','ok'].includes((v.health||{}).status),nm=([n])=>SVCNAME[n]||n.toUpperCase();
   const all=Object.entries(s.services||{}).filter(e=>!bad.includes(nm(e))),run=all.filter(ok).map(nm),unk=all.filter(e=>!ok(e)&&e[1].enabled!==false).map(nm);
   const low=sy.mem_avail_gib!=null&&sy.mem_avail_gib<12;
+  // services without an answer before advice and unsaved pages (code check 19.10. D2); one line per service
+  for(const n of unk)if(!aus.includes(n))need.push({lvl:'warn',text:t(`${n} antwortet nicht.`,`${n} does not answer.`),go:'svc',btn:t('Ansehen','View')});
+  // red points of "Sicherheit auf einen Blick" (secglance.js): advice, never "something is not running" (code check 19.10. D2)
+  if(typeof SECNEED!=='undefined')need.push(...SECNEED.map(x=>({...x,lvl:'warn'})));
+  const dirty=[...document.querySelectorAll('.pane.dirty')].map(p=>{const b=document.querySelector(`#cfgnav button[data-p="${p.id.slice(5)}"]`);return b?b.firstChild.nodeValue.trim():p.id});
+  if(dirty.length)need.push({lvl:'warn',text:t(`Nicht gespeichert: ${dirty.join(', ')}.`,`Not saved: ${dirty.join(', ')}.`),go:'cfg',btn:t('Öffnen','Open')});
   const al=(s.alerts||[]).filter(x=>x.level!=='info'),lvl=bad.length||need.some(x=>x.lvl==='bad')||al.some(x=>x.level==='bad')?'bad':need.length||unk.length||low||al.length?'warn':'ok';
   $('ztitle').textContent=lvl==='ok'?t('Alles läuft.','Everything is running.'):lvl==='bad'?t('Etwas läuft nicht.','Something is not running.'):!run.length&&unk.length?t('Die Dienste melden sich nicht.','The services do not answer.'):t('Läuft, aber etwas braucht dich.','Running, but something needs you.');
   $('ztext').textContent=(bad.length?t('Fehler: ','Errors: ')+bad.join(', ')+'. ':'')+(run.length?run.join(t(' und ',' and '))+(run.length>1?t(' laufen. ',' are running. '):t(' läuft. ',' is running. ')):'')+(unk.length?t('Ohne Rückmeldung: ','No answer from: ')+unk.join(', ')+'. ':'')
@@ -71,7 +74,7 @@ function zustand(s){if(s)ZLAST=s;s=ZLAST;if(!s)return;
   $('zneed').hidden=!need.length;const L=$('zlist');L.textContent='';
   for(const x of need){const r=document.createElement('div');r.className='zrow';const sp=document.createElement('span');sp.className='pill '+x.lvl;sp.textContent=x.lvl==='bad'?t('Fehler','Error'):t('Offen','Open');
     const tx=document.createElement('span');tx.textContent=x.text;const b=document.createElement('button');b.type='button';b.className='b';b.textContent=x.btn;
-    b.onclick=()=>{if(x.go.startsWith('sec:'))secGo(x.go.slice(4));else if(x.go==='svc')zTech('svc');else if(x.go==='cfg'){goSec('cfg');const d=document.querySelector('.pane.dirty');if(d){const nb=document.querySelector(`#cfgnav button[data-p="${d.id.slice(5)}"]`);if(nb)nb.click()}}else goSec(x.go)};
+    b.onclick=()=>{if(x.go.startsWith('sec:'))secGo(x.go.slice(4));else if(x.go==='svc')zTech('svc');else if(x.go==='cfg'){const d=document.querySelector('.pane.dirty');goSec(d&&d.id==='pane-feat'?'feat':'cfg');if(d){const nb=document.querySelector(`#cfgnav button[data-p="${d.id.slice(5)}"]`);if(nb)nb.click()}}else goSec(x.go)};
     r.append(sp,tx,b);L.appendChild(r)}}
 window.zustand=zustand;
 // Zustand in plain words (plan „Bedienung gesamt“ C3, V01.0.286; tiles since the plan „Zustand-Übersicht“ 1): under
@@ -467,7 +470,9 @@ $('wysuggest').onclick=()=>wySuggest(false);
 $('chat.wyoming').addEventListener('change',e=>{if(e.target.checked&&!$('chat.wyoming_allow').value.trim())wySuggest(true)});
 const markDirty=(pane,on)=>{const b=document.querySelector(`#cfgnav button[data-p="${pane.id.slice(5)}"]`);if(b)b.classList.toggle('dirty',on);
   pane.classList.toggle('dirty',on);const bar=pane.querySelector('.savebar');if(bar)bar.classList.toggle('dirty',on);
-  const n=document.querySelectorAll('.pane.dirty').length,c=$('dirtycnt');c.hidden=!n;c.textContent=n;zustand()};
+  // unsaved functions show at „Funktionen“, the rest at „Einstellungen“ (code check 19.10. D4)
+  const n=document.querySelectorAll('.pane.dirty:not(#pane-feat)').length,c=$('dirtycnt');c.hidden=!n;c.textContent=n;
+  const f=$('featdirty');if(f)f.hidden=!$('pane-feat').classList.contains('dirty');zustand()};
 // unsaved changes: the save bar says so and offers "Verwerfen"; leaving the page or the settings asks first
 const dirtyPanes=()=>[...document.querySelectorAll('.pane.dirty')];
 const leaveOk=()=>!dirtyPanes().length||confirm(t('Es gibt ungespeicherte Änderungen. Trotzdem verlassen? Sie gehen dann verloren.','There are unsaved changes. Leave anyway? They will be lost.'));
@@ -574,7 +579,7 @@ $('vrec').onclick=async()=>{
   if(!window.isSecureContext||!navigator.mediaDevices){const port=CFG&&CFG.panel&&CFG.panel.https_port,u=`https://${location.hostname}:${port||31443}/`;
     $('vsecure').style.display='block';const a=document.querySelector('.vhttps');a.href=u;a.textContent=u;return}
   try{vr.stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:true,autoGainControl:true,channelCount:1}})}
-  catch(e){$('vmsg').innerHTML=`<span class="err">${esc(t('Kein Zugriff aufs Mikrofon: ','No microphone access: ')+e.message)}</span>`;return}
+  catch(e){$('vmsg').innerHTML=`<span class="err">${esc(micError(e))}</span>`;return}
   const mime=['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/ogg'].find(m=>window.MediaRecorder&&MediaRecorder.isTypeSupported(m))||'';
   const rec=new MediaRecorder(vr.stream,mime?{mimeType:mime}:{}),parts=[];vr.rec=rec;
   const ctx=audioCtx(),src=ctx.createMediaStreamSource(vr.stream),an=ctx.createAnalyser();an.fftSize=1024;src.connect(an);const buf=new Float32Array(an.fftSize);
@@ -1088,7 +1093,10 @@ function alertRow(x){const n=document.createElement('div');n.className='note ano
   if(x.go&&typeof wayGo==='function'){const b=document.createElement('button');b.type='button';b.className='b';b.textContent=t('Ansehen','View');
     b.title=x.go;b.onclick=()=>wayGo(x.go);n.appendChild(b)}
   return n}
-function showAlerts(a){a=a||[];const k=JSON.stringify(a);if(k===ALERTS_LAST)return;ALERTS_LAST=k;const box=$('alerts');box.textContent='';
+// notes only to know (level "info", e.g. open hands-on tests) stand on Zustand only, not above every page (code check 19.10. D12)
+let ALERTS_RAW=[];
+function showAlerts(a){a=a||[];ALERTS_RAW=a;const mon=!!document.querySelector('section#mon.on');if(!mon)a=a.filter(x=>x.level!=='info');
+  const k=JSON.stringify(a);if(k===ALERTS_LAST)return;ALERTS_LAST=k;const box=$('alerts');box.textContent='';
   const bad=a.filter(x=>x.level==='bad'),rest=a.filter(x=>x.level!=='bad');
   for(const x of bad)box.appendChild(alertRow(x));
   if(rest.length===1){box.appendChild(alertRow(rest[0]));return}

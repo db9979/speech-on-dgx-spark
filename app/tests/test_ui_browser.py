@@ -3640,6 +3640,55 @@ class Browser(unittest.TestCase):
                 except OSError:
                     pass
 
+    def test_code_check_plain_words(self):
+        """Code check 19.10. (D1, D2, D4, D7): microphone failures in fixed sentences with the way out, security advice
+        never says "something is not running", unsaved functions show at Funktionen, the search knows everyday words
+        and offers "Frag Spark" when nothing fits."""
+        async def go():
+            async with async_playwright() as p:
+                br, pg, errors = await self.page(p, 1280, 900)
+                try:
+                    await self.loaded(pg)
+                    for name, word in (("NotAllowedError", "gesperrt"), ("NotFoundError", "Kein Mikrofon gefunden"),
+                                       ("NotReadableError", "andere App"), ("TypeError", "nicht öffnen")):
+                        self.assertIn(word, await pg.evaluate(f"micError({{name:'{name}',message:'Requested device not found'}})"))
+                    self.assertNotIn("Requested", await pg.evaluate("micError({name:'NotFoundError',message:'Requested device not found'})"))
+                    await pg.evaluate("SECNEED=[{lvl:'bad',text:'Zweiter Anmeldeschritt aus.',btn:'Öffnen',go:'sec:sec'}];zustand()")
+                    self.assertNotEqual(await pg.evaluate("$('zhead').dataset.lvl"), "bad")
+                    await pg.evaluate("markDirty($('pane-feat'),true)")
+                    self.assertTrue(await pg.evaluate("!$('featdirty').hidden&&$('dirtycnt').hidden"))
+                    await pg.evaluate("markDirty($('pane-feat'),false)")
+                    for word in ("Wecker", "Backup", "Termine", "löschen"):
+                        self.assertTrue(await pg.evaluate(f"palRun('{word}').length>0"), word)
+                    await pg.evaluate("palOpen()")
+                    await pg.fill("#palq", "xqzzyv")
+                    await pg.click("#palres a.wayl")
+                    self.assertEqual(await pg.evaluate("$('chattext').value"), "xqzzyv")
+                    # D12: a note only to know stands on Zustand, not above every page
+                    await pg.evaluate("goSec('cfg');showAlerts([{kind:'praxistest',level:'info',text:'3 Praxistests sind offen.'}])")
+                    self.assertEqual(await pg.evaluate("$('alerts').textContent"), "")
+                    await pg.evaluate("goSec('mon')")
+                    self.assertIn("Praxistests", await pg.evaluate("$('alerts').textContent"))
+                    await pg.evaluate("showAlerts([])")
+                    # D10: a new PIN in hidden fields, typed twice
+                    import profiles
+                    uid = next(u["id"] for u in profiles._load()["users"] if u["name"] == "Uitest")
+                    await pg.evaluate("goSec('prof')")
+                    await pg.evaluate(f"newPin('{uid}','Uitest')")
+                    self.assertEqual(await pg.evaluate("$('pinnew1').type"), "password")
+                    await pg.fill("#pinnew1", "4711")
+                    await pg.fill("#pinnew2", "4712")
+                    await pg.click("#pinok")
+                    self.assertIn("verschieden", await pg.evaluate("$('pinerr').textContent"))
+                    await pg.fill("#pinnew2", "4711")
+                    await pg.click("#pinok")
+                    await self.until(pg, "!$('pinbox')")
+                    self.assertEqual(errors, [])
+                finally:
+                    await br.close()
+        self.run_async(go())
+
+
 @unittest.skipUnless(browser_ok(), "no Playwright/Chromium here")
 class JoinBrowser(unittest.TestCase):
     """V01.0.276: an invitation link opens the welcome page, the new profile lands on "Los geht's", the

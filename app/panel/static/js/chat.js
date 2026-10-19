@@ -127,7 +127,7 @@ function vorSpricht(){if(PROFILE&&VOR_ON)api('/api/vorrang/spricht',{method:'POS
 async function startListening(o={}){stopBarge();stopAnswer();chat.turnWait=null;chat.stopWhy=null;chat.resumeMic=false;
   if(!window.isSecureContext||!navigator.mediaDevices){showSecure();chatSay(t('Mikrofon braucht https, siehe Hinweis oben.','The microphone needs https, see the note above.'));return}
   try{await getMic()}
-  catch(e){chatSay(t('Kein Zugriff aufs Mikrofon: ','No microphone access: ')+e.message);return}
+  catch(e){chatSay(micError(e));return}
   const mime=['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/ogg'].find(m=>window.MediaRecorder&&MediaRecorder.isTypeSupported(m))||'';
   const rec=o.rec||new MediaRecorder(chat.stream,mime?{mimeType:mime}:{}),parts=o.parts||[];
   // how the microphone opened (fremdstimme.py): by itself after an answer it takes only a known voice, never the TV
@@ -440,7 +440,7 @@ async function checkWake(chunks,rate){wake.busy=true;try{
 async function startWake(){if(wake.on)return;
   if(!window.isSecureContext||!navigator.mediaDevices){showSecure();$('chatwake').checked=false;return}
   try{await getMic()}
-  catch(e){chatSay(t('Kein Zugriff aufs Mikrofon: ','No microphone access: ')+e.message);$('chatwake').checked=false;return}
+  catch(e){chatSay(micError(e));$('chatwake').checked=false;return}
   const ctx=audioCtx();wake.on=true;wake.src=ctx.createMediaStreamSource(chat.stream);wake.node=ctx.createScriptProcessor(4096,1,1);
   wake.src.connect(wake.node);wake.node.connect(ctx.destination);
   wake.node.onaudioprocess=e=>{const x=new Float32Array(e.inputBuffer.getChannelData(0)),dt=x.length/ctx.sampleRate;

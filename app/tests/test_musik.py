@@ -486,7 +486,9 @@ class Jobs(On):
     def test_a_failed_song_ends_with_a_reason(self):
         _, prof = profile("Musikerin Fehler")
         call, _ = fake_song(code=503, detail="memory")
-        with mock.patch.object(musik, "call", call), contextlib.redirect_stdout(io.StringIO()) as out:
+        import schwer   # "memory" is waited out for MEM_WAIT_S (10 min of real sleeping); here it ends at once
+        with mock.patch.object(musik, "call", call), mock.patch.object(schwer, "MEM_WAIT_S", 0), \
+                contextlib.redirect_stdout(io.StringIO()) as out:
             j = musik.start(prof, "calm piano", "Klavier")
             run(musik._jobs[j["id"]])
         self.assertEqual(musik._jobs[j["id"]]["error"], musik.REFUSED["memory"][0])

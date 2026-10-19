@@ -172,6 +172,7 @@ function setHtml(el,h){if(el&&el._h!==h){el.innerHTML=h;el._h=h}}
 const lzb=(box,load,o)=>window.ladeBox?ladeBox(box,load,o):load();
 const LZ_CFG={skel:false,stale:false,top:true};
 function showSec(s){const sec=s==='feat'?'cfg':s;document.querySelectorAll('section').forEach(x=>x.classList.toggle('on',x.id===sec));
+  if(typeof showAlerts==='function')showAlerts(ALERTS_RAW);
   document.body.classList.toggle('inchat',s==='chat');if(s!=='tech'&&window.tkFull)tkFull(false);document.body.classList.toggle('inchats',s==='chats');
   const cw=document.querySelector('.cfgwrap');cw.classList.toggle('featmode',s==='feat');
   if(s==='feat'){cw.classList.add('sub');lzb($('cfg'),loadCfg,LZ_CFG);if(typeof cfgPane==='function')cfgPane('feat')}
@@ -251,3 +252,9 @@ function spark(svg,vals,max){const w=300,h=60;svg.setAttribute('viewBox',`0 0 ${
   const m=max??(Math.max(...v)*1.1||1);const pts=vals.map((x,i)=>x==null?null:[i*w/(vals.length-1),h-2-(x/m)*(h-4)]).filter(Boolean);
   const d='M'+pts.map(p=>p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' L');
   svg.innerHTML=`<path d="${d} L${w} ${h} L0 ${h}Z" fill="var(--acc)" opacity=".12"/><path d="${d}" fill="none" stroke="var(--acc)" stroke-width="1.5" vector-effect="non-scaling-stroke"/>`;}
+// a fixed sentence with the way out per kind of failure, never the browser's English text (code check 19.10. D1)
+function micError(e){const n=e&&e.name||'';
+  if(n==='NotAllowedError'||n==='SecurityError')return t('Das Mikrofon ist für diese Seite gesperrt. Erlaube es beim Schloss-Symbol neben der Adresse und lade die Seite neu.','The microphone is blocked for this page. Allow it at the lock symbol next to the address and reload the page.');
+  if(n==='NotFoundError'||n==='OverconstrainedError')return t('Kein Mikrofon gefunden. Schließ eins an oder wähle es in den Einstellungen des Geräts, dann tippe noch einmal „Sprechen“.','No microphone found. Plug one in or pick it in the device settings, then tap "Speak" again.');
+  if(n==='NotReadableError'||n==='AbortError')return t('Eine andere App benutzt gerade das Mikrofon (Anruf, Videokonferenz). Beende sie und tippe noch einmal „Sprechen“.','Another app is using the microphone (a call, a video meeting). Close it and tap "Speak" again.');
+  return t('Das Mikrofon ließ sich nicht öffnen. Lade die Seite neu und versuch es noch einmal.','The microphone could not be opened. Reload the page and try again.')}

@@ -38,7 +38,10 @@ async function needsCfg(el){
     if(!needsAskOn(f,miss))return;
     const here=miss.filter(s=>{const e=$('chat.'+s);return e&&e.type==='checkbox'});set(here,true);
     const away=miss.filter(s=>!here.includes(s));
-    if(away.length)alert(t('Noch selbst einschalten: ','Still switch on yourself: ')+away.map(s=>t('Funktionen → ','Features → ')+needsName(s)).join(', '))
+    // under the switch, where its ways become jump links (way.js), never in a browser box (code check 19.10. D10)
+    const row=el.closest('.setrow')||el.parentElement,old=row&&row.querySelector(':scope .needsnote');if(old)old.remove();
+    if(away.length&&row){const n=document.createElement('div');n.className='fh needsnote';
+      n.textContent=t('Noch selbst einschalten: ','Still switch on yourself: ')+away.map(s=>t('Funktionen → ','Features → ')+needsName(s)).join(', ');row.appendChild(n)}
   }else{
     const aff=needsAffected(sw,s=>s===sw||isOn(s));if(!aff.length)return;
     if(!needsAskOff(sw,aff))set([sw],true)}}

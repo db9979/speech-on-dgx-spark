@@ -145,8 +145,20 @@ async function profDetail(id,keep){keep=keep||(window.lzKeep&&$('pdetail')?lzKee
 const jpost=(m,b)=>({method:m,headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});
 $('padd').onclick=async()=>{try{await api('/api/admin/profiles',jpost('POST',{name:$('pname').value,pin:$('ppin').value}));
     $('pmsg').textContent=t('Angelegt: ','Created: ')+$('pname').value;$('pname').value=$('ppin').value='';$('pnew').open=false;loadProf()}catch(e){perr('pmsg',e)}};
-window.newPin=async(id,n)=>{const pin=prompt(t('Neue PIN für ','New PIN for ')+n+t(' (meldet alle Browser dieses Profils ab):',' (logs out all browsers of this profile):'));if(!pin)return;
-  try{await api('/api/admin/profiles/'+id,jpost('PUT',{pin}));$('pmsg').textContent=t('PIN geändert.','PIN changed.')}catch(e){perr('pmsg',e)}};
+// a new PIN in hidden fields, typed twice, with its rule, never in a browser prompt in plain text (code check 19.10. D10)
+window.newPin=(id,n)=>{const old=$('pinbox');if(old)old.remove();const box=document.createElement('div');box.id='pinbox';box.className='card pinbox';
+  box.innerHTML=`<b></b><div class="fh"></div><input type="password" id="pinnew1" autocomplete="new-password"><input type="password" id="pinnew2" autocomplete="new-password"><div class="row"><button class="b p" type="button" id="pinok"></button><button class="b" type="button" id="pinno"></button><span class="err" id="pinerr"></span></div>`;
+  box.querySelector('b').textContent=t('Neue PIN für ','New PIN for ')+n;
+  box.querySelector('.fh').textContent=t('4 bis 64 Zeichen ohne Leerzeichen. Meldet alle Browser dieses Profils ab.','4 to 64 characters without spaces. Logs out all browsers of this profile.');
+  const a=box.querySelector('#pinnew1'),b=box.querySelector('#pinnew2');a.placeholder=t('Neue PIN','New PIN');b.placeholder=t('Noch einmal','Again');
+  a.setAttribute('aria-label',a.placeholder);b.setAttribute('aria-label',b.placeholder);
+  box.querySelector('#pinok').textContent=t('PIN setzen','Set PIN');box.querySelector('#pinno').textContent=t('Abbrechen','Cancel');
+  box.querySelector('#pinno').onclick=()=>box.remove();
+  box.querySelector('#pinok').onclick=async()=>{const e=box.querySelector('#pinerr'),pin=a.value;
+    if(!/^\S{4,64}$/.test(pin)){e.textContent=t('4 bis 64 Zeichen ohne Leerzeichen.','4 to 64 characters without spaces.');return}
+    if(pin!==b.value){e.textContent=t('Die beiden PINs sind verschieden.','The two PINs differ.');return}
+    try{await api('/api/admin/profiles/'+id,jpost('PUT',{pin}));box.remove();$('pmsg').textContent=t('PIN geändert.','PIN changed.')}catch(err){perr('pinerr',err)}};
+  const at=$('ppinnew');(at?at.closest('.row')||at.parentElement:$('pmsg')).after(box);a.focus()};
 window.resetMfa=async(id,n)=>{if(!confirm(t('Zweiten Anmeldeschritt für „','Switch off the second login step for "')+n+t('“ ausschalten? Danach reicht wieder die PIN.','"? Then the PIN alone is enough again.')))return;
   try{await api('/api/admin/profiles/'+id+'/mfa',{method:'DELETE'});$('pmsg').textContent=t('Zurückgesetzt.','Reset.');loadProf()}catch(e){perr('pmsg',e)}};
 window.delProf=async(id,n)=>{if(!confirm(t('Profil „','Delete profile "')+n+t('“ mit seinem ganzen Gedächtnis und seinen Geräten löschen?','" with all its memory and devices?')))return;

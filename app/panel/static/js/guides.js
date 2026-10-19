@@ -1909,10 +1909,11 @@ function guidesCount(){const pane=$('pane-feat');if(!pane)return;const items=[..
   if((featF==='need'&&!n.need)||(featF==='rec'&&!n.rec))featF='all';
   pane.querySelectorAll('.ffilt [data-f]').forEach(b=>{const k=b.dataset.f;b.querySelector('i').textContent=n[k];b.classList.toggle('on',k===featF);b.hidden=(k==='need'||k==='rec')&&!n[k];b.classList.toggle('need',k==='need')});
   st.forEach(x=>{x.it.hidden=featF==='on'?!x.on:featF==='off'?x.on:featF==='rec'?!rec(x):featF==='need'?!x.need:false});
-  pane.querySelectorAll('.fgrp').forEach(b=>{const s=[...b.querySelectorAll('.setrow input[type=checkbox]')];
-    b.hidden=![...b.querySelectorAll('.fitem')].some(x=>!x.hidden);
+  // a group counts its function rows like the filters above, not every sub-switch (code check 19.10. D3)
+  pane.querySelectorAll('.fgrp').forEach(b=>{const s=st.filter(x=>b.contains(x.it)),on=s.filter(x=>x.on).length;
+    b.hidden=!s.some(x=>!x.it.hidden);
     const j=pane.querySelector(`.fjump [data-g="${b.dataset.grp}"]`);if(j)j.hidden=b.hidden;
-    b.querySelector('.fcount').textContent=t(`${s.filter(x=>x.checked).length} von ${s.length} an`,`${s.filter(x=>x.checked).length} of ${s.length} on`)})}
+    b.querySelector('.fcount').textContent=t(`${on} von ${s.length} an`,`${on} of ${s.length} on`)})}
 document.addEventListener('change',e=>{if(e.target.closest&&e.target.closest('#pane-feat'))guidesCount()});
 document.addEventListener('input',e=>{if(e.target.closest&&e.target.closest('#pane-feat [data-req]'))guidesCount()});
 // small marks behind a feature's name instead of repeating it in every description

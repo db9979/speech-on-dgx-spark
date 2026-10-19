@@ -140,6 +140,8 @@ async def admin_add_profile(request: Request):
         uid = profiles.add_user(name, pin)
     except ValueError as e:
         raise HTTPException(409, str(e))
+    import onboard
+    onboard.save_state(uid, fresh=True)   # "Los geht's" opens at the first sign-in, as after an invitation (code check D6)
     return {"id": uid}
 
 

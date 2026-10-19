@@ -346,7 +346,7 @@ const CXR={rec:null,chunks:[],t0:0,tick:0,send:false};
 async function cxRecStart(){if(CXR.rec||CX.busy||!CX.cur)return;
   if(!navigator.mediaDevices||!window.MediaRecorder){cxSay(t('Dieser Browser kann keine Sprachnachricht aufnehmen.','This browser cannot record a voice message.'));return}
   let st;try{st=await navigator.mediaDevices.getUserMedia({audio:true})}
-  catch{cxSay(t('Kein Mikrofon: Die Seite braucht https und deine Erlaubnis im Browser.','No microphone: the page needs https and your permission in the browser.'));return}
+  catch(e){cxSay(micError(e));return}
   const mt=['audio/webm;codecs=opus','audio/ogg;codecs=opus','audio/mp4'].find(m=>MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(m))||'';
   let r;try{r=new MediaRecorder(st,mt?{mimeType:mt}:undefined)}catch{st.getTracks().forEach(x=>x.stop());cxSay(t('Aufnahme geht hier nicht.','Recording does not work here.'));return}
   CXR.rec=r;CXR.chunks=[];CXR.send=false;

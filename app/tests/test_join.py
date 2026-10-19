@@ -154,6 +154,12 @@ class Invite(unittest.TestCase):
         self.assertEqual(coadmin.role(uid), "")       # never a role
         self.assertEqual([i["state"] for i in join.listing() if i["id"] == made["id"]], ["used"])
 
+    def test_a_profile_the_admin_makes_gets_los_gehts_too(self):
+        """Code check 19.10. D6: not only an invitation, the admin's "+ Neues Profil" opens "Los geht's" at the first sign-in."""
+        r = ADMIN.post("/api/admin/profiles", json={"name": "Vom Admin", "pin": "1234"})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertTrue(onboard.state(r.json()["id"])["fresh"])
+
     def test_only_the_hash_is_kept_and_the_log_has_no_code(self):
         code, made = invite("Hash Test")
         with open(join.FILE) as f:

@@ -6332,6 +6332,22 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Die Oberfläche",
+"title": "Code-Prüfung, Bedienung",
+"text": "Code-Prüfung, Bedienung (V01.0.827, Plan code-pruefung/plan.md, Dominik „4c“): Die Suche findet auch Wörter aus den Beschreibungen (nach den Namen gereiht) und Alltagswörter wie Wecker, Licht, Backup, Termine, PIN oder löschen; ohne Treffer bietet sie „Frag Spark“ an und trägt den Suchtext in den Assistenten ein. Klappt das Mikrofon nicht, steht ein fester Satz mit dem Weg da (gesperrt, keins gefunden, von einer anderen App belegt) statt der englischen Meldung des Browsers. Der Kopf unter Zustand → Monitoring ist nur noch rot, wenn wirklich etwas nicht läuft; Sicherheitsempfehlungen und Dienste ohne Antwort stehen als „Offen“ mit Knopf darunter. Die Gruppen unter Funktionen zählen Funktionszeilen wie die Filter oben. Ungespeichertes unter Funktionen zeigt die Zahl an „Funktionen“, nicht an „Einstellungen“. Pillen und Marken haben mindestens 4,5:1 Kontrast; am Handy treffen die kleinen „?“-Knöpfe, Sprungchips, Filter und Weg-Links mit einer größeren unsichtbaren Fläche. Profile, die der Admin unter Personen und Geräte anlegt, bekommen beim ersten Anmelden „Los geht's“; die Anmeldeseite sagt „PIN vergessen? Ein Admin setzt sie neu.“. Eine neue PIN wird in zwei verdeckten Feldern mit "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Die Oberfläche",
+"title": "Code-Prüfung, Bedienung",
+"text": "ihrer Regel eingegeben, nicht mehr im Browser-Fenster. „Noch selbst einschalten: Funktionen → …“ steht unter dem Schalter als Sprung-Link statt in einem Browser-Fenster. Hinweise nur zur Information (etwa offene Praxistests) stehen nur unter Zustand, nicht über jeder Seite."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Die Oberfläche",
 "title": "Die Oberfläche",
 "text": "Das Menü (seit V01.0.145, Design „Klar“) steht am Rechner als Leiste links, am Handy unten (Assistent, Ich, Zustand, Verwalten). Ganz oben sucht Suchen (Strg K bzw. ⌘ K, seit V01.0.265) in Seiten, Schaltern, Einstellungen, Ich, Prüfen, Logs und Anleitungen; ein Treffer öffnet die Stelle und markiert sie. Seit V01.0.521 steht der Knopf auch für angemeldete Profile in der Leiste, am Handy sitzt eine Lupe oben im Assistenten (Admin und Profil), das Suchfenster passt auf schmale Bildschirme und schließt mit ✕. Steht in einem Hinweis oder einer Antwort ein Weg wie „Einstellungen → Spark → Betrieb“ oder „Ich → Dokumente“, ist er ein Link, der genau dorthin springt (seit V01.0.433). Darunter stehen Assistent und Ich für dich selbst, dann unter *Spark verwalten* die Admin-Seiten Zustand, Funktionen, Personen und Geräte und Einstellungen (seit V01.0.265; „Einbinden“ gibt es nicht mehr). Zustand, Funktionen und Personen und Geräte zeigen ihre Unterseiten wie Einstellungen: am Rechner als zweite Spalte, am Handy als Liste mit einer Zeile Stand, die die Seite öffnet (oben „zurück“); neben „Einstellungen“ zählt eine Zahl die ungespeicherten Seiten. Am Rechner öffnet „Ich“ seit V01.0.147 als Sei"
 },
@@ -14470,6 +14486,22 @@
 "head": "The panel",
 "title": "The panel",
 "text": "On the first admin login a setup wizard walks through password, language model (with a connection test), voice (to listen to), profiles, access and features, and ends with the live check. Start it again: *Status → Checks → Run setup again*."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "The panel",
+"title": "Code check, ease of use",
+"text": "Code check, ease of use (V01.0.827, plan code-pruefung/plan.md, Dominik \"4c\"): the search also finds words from the descriptions (ranked after the names) and everyday words such as alarm clock (Wecker), light, backup, appointments, PIN or delete; without a hit it offers \"Ask Spark\" and puts the search text into the assistant. When the microphone fails, a fixed sentence with the way out stands there (blocked, none found, used by another app) instead of the browser's English message. The head under Status → Monitoring is red only when something really is not running; security advice and services without an answer stand below as \"Open\" with a button. The groups under Features count function rows like the filters on top. Unsaved changes under Features show their number at \"Features\", not at \"Settings\". Pills and marks have at least 4.5:1 contrast; on a phone the small \"?\" buttons, jump chips, filters and way links are hit through a larger invisible area. Profiles the admin creates under People and devices get \"Los geht's\" at their first sign-in; the sign-in page says \"Forgot the PIN? An admin sets a new one.\". A new PIN is typed into two hidden fields with its rule, no longer into a br"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "The panel",
+"title": "Code check, ease of use",
+"text": "owser box. \"Still switch on yourself: Features → …\" stands under the switch as a jump link instead of in a browser box. Notes only to know (such as open hands-on tests) stand only under Status, not above every page."
 },
 {
 "lang": "en",

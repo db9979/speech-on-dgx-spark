@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.827** Code check, ease of use: search with everyday words and "Ask Spark", clear microphone errors, Status red only for real faults, one way of counting, more contrast and larger tap areas, a start guide for every new profile, a new PIN in hidden fields
 - **V01.0.826** Code check, speed: the document list is remembered and fetched beside the event loop, each profile has its own database lock, the meaning search no longer converts per search, the status page and hints are worked out less often
 - **V01.0.825** Code check, security: password and PINs with 600,000 PBKDF2 rounds, https only TLS 1.2 or newer, the Sentry always reports important changes at once, watch answers only for the profile that asked, the daily mail count survives a restart, the Werkstatt sandbox reaches only the LLM-Tor
 - **V01.0.824** Phone: the voice no longer sounds choppy (own sound beat, small buffer, faster G.722)
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.820** Fix: test run test_mail_zeit green again (the opened-mail memory of .819 handed the test its first mail; the test now drops it like a changed mailbox)
 - **V01.0.819** E-mail fast: mailboxes read at the same time, list and opened mails cached, the page shows the last state at once and refreshes in the background; "Reply" opens right below the mail.
 - **V01.0.818** Fix: the GitHub test run is green again (red since .808, so the update offered only .807); the help finds "read mail aloud" and the Live overview again
-- **V01.0.817** Calendar fast: appointments cached by month, a slow calendar keeps loading in the background instead of being cut off, refreshed every 5 minutes behind the scenes.
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
