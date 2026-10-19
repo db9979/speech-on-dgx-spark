@@ -185,6 +185,56 @@ class RoundsRenewed(unittest.TestCase):
             self.assertIsNone(profiles._cookie_user(profiles._load(), old)[0], "a new PIN ends the old logins")
 
 
+class StatusCheap(unittest.TestCase):
+    """Code check 19.10. B4/B5: the latency file is read again only when it changed, summary() is kept a few seconds
+    while no answer came, and the screens that ask every second take the hints from a short cache."""
+
+    def test_latency_reads_the_file_only_when_it_changed(self):
+        import builtins
+        from unittest import mock
+        import latency
+        latency.add(1.5, "web")
+        latency._load()
+        real, opened = builtins.open, []
+
+        def counting(path, *a, **kw):
+            if str(path).endswith("latency.json"):
+                opened.append(path)
+            return real(path, *a, **kw)
+        with mock.patch("builtins.open", counting):
+            for _ in range(5):
+                latency._load()
+                latency.summary()
+        self.assertEqual(opened, [], "unchanged file: no read")
+        n = latency.summary()["day"]["n"]
+        latency.add(2.5, "web")
+        self.assertEqual(latency.summary()["day"]["n"], n + 1, "a new answer shows at once")
+
+    def test_hints_for_screens_are_cached(self):
+        from unittest import mock
+        import health
+        calls = []
+        with mock.patch.object(health, "alerts", lambda: calls.append(1) or [{"kind": "x"}]), \
+                mock.patch.dict(health._alerts_kept, t=0.0, a=[]):
+            for i in range(5):
+                self.assertEqual(health.alerts_cached(now=1000 + i), [{"kind": "x"}])
+            self.assertEqual(len(calls), 1)
+            health.alerts_cached(now=1000 + health.ALERTS_S + 1)
+            self.assertEqual(len(calls), 2)
+
+    def test_write_json_writes_the_same(self):
+        import json
+        import os
+        import tempfile
+        from common import write_json
+        data = {"ä": [1, 2.5, None, True], "b": {"c": "x" * 1000}}
+        with tempfile.TemporaryDirectory() as d:
+            for kw in ({}, {"indent": 1}, {"ensure_ascii": False}):
+                p = os.path.join(d, "x.json")
+                write_json(p, data, **kw)
+                self.assertEqual(open(p, encoding="utf-8").read(), json.dumps(data, **kw))
+
+
 class JsonStore(unittest.TestCase):
     def test_write_json_is_atomic_and_keeps_the_mode(self):
         import os
@@ -453,6 +503,111 @@ class ConvoAppend(unittest.TestCase):
         c = next(x for x in profiles.convos(uid) if x["id"] == "esp-x-1")
         self.assertEqual(len(c["msgs"]), profiles.MAX_MSGS)
         self.assertIsNone(profiles.append_convo(uid, "../bad", "x", []))
+
+
+class DocsCheap(unittest.TestCase):
+    """Code check 19.10. B1-B3: the document list, the database and the meaning vectors cost little per question."""
+    def setUp(self):
+        import documents
+        self.d = documents
+        self.uid = profiles.add_user(f"Dokumente {self._testMethodName[5:30]}", "1234")
+        self.a = documents.add(self.uid, "Rechnung Mai.txt", b"x", text="Die Rechnung vom Mai beträgt 120 Euro.")["id"]
+        documents.add(self.uid, "Notiz.txt", b"x", text="Der Hund heißt Bello.")
+
+    def test_list_is_remembered_until_something_changes(self):
+        with mock.patch.object(self.d, "_list_docs", wraps=self.d._list_docs) as build:
+            first = self.d.list_docs(self.uid)
+            self.d.list_docs(self.uid)
+            self.assertEqual(build.call_count, 1)
+            first[0]["name"] = "verändert"                     # each caller gets its own dicts
+            self.assertNotEqual(self.d.list_docs(self.uid)[0]["name"], "verändert")
+            self.d.count_today(self.uid, "2026-10-19", add=1)   # a counter only: the list stays
+            self.d.list_docs(self.uid)
+            self.assertEqual(build.call_count, 1)
+            self.d.set_use(self.uid, self.a, False)
+            self.assertFalse(next(x for x in self.d.list_docs(self.uid) if x["id"] == self.a)["use"])
+            self.assertEqual(build.call_count, 2)
+            self.assertEqual([x["id"] for x in self.d.list_docs(self.uid, used_only=True)].count(self.a), 0)
+
+    def test_a_replaced_file_is_read_again(self):
+        import os
+        import shutil
+        self.d.list_docs(self.uid)
+        path = self.d.db_path(self.uid)
+        shutil.copyfile(path, path + ".neu")
+        os.replace(path + ".neu", path)                       # what a restore does
+        with mock.patch.object(self.d, "_list_docs", wraps=self.d._list_docs) as build:
+            self.d.list_docs(self.uid)
+        self.assertEqual(build.call_count, 1)
+
+    def test_counts_match_the_pieces(self):
+        row = next(x for x in self.d.list_docs(self.uid) if x["id"] == self.a)
+        with self.d._Db(self.uid) as con:
+            n = con.execute("SELECT COUNT(*), COUNT(vec) FROM chunks WHERE doc=?", (self.a,)).fetchone()
+        self.assertEqual((row["chunks"], row["vecs"]), tuple(n))
+        self.assertEqual(self.d.count_docs(self.uid), 2)
+
+    def test_schema_is_checked_once(self):
+        self.d._open(self.uid).close()
+        con = self.d._open(self.uid)
+        try:
+            self.assertEqual(con.execute("PRAGMA user_version").fetchone()[0], self.d._schema_version())
+        finally:
+            con.close()
+        with mock.patch.object(self.d, "_import_json") as imp:
+            self.d._open(self.uid).close()
+        imp.assert_not_called()
+
+    def test_one_profile_does_not_wait_for_another(self):
+        other = profiles.add_user("Dokumente nebenan", "1234")
+        self.d.add(other, "x.txt", b"x", text="Etwas anderes.")
+        held, done = threading.Event(), threading.Event()
+
+        def hold():
+            with self.d._Db(self.uid):
+                held.set()
+                done.wait(5)
+        th = threading.Thread(target=hold)
+        th.start()
+        try:
+            held.wait(5)
+            t0 = time.time()
+            self.assertEqual(self.d.count_docs(other), 1)
+            self.assertLess(time.time() - t0, 1)
+        finally:
+            done.set()
+            th.join()
+
+    def test_vectors_stay_float32_and_counters_keep_them(self):
+        import numpy as np
+        with self.d._Db(self.uid) as con:
+            ids = [r[0] for r in con.execute("SELECT id FROM chunks")]
+        self.d.set_vectors(self.uid, [(i, np.ones(4, dtype=np.float16).tobytes()) for i in ids])
+        got, mat = self.d._vectors(self.uid, now=1000)
+        self.assertEqual(mat.dtype, np.float32)
+        self.d.count_today(self.uid, "2026-10-19", add=1)
+        self.assertIs(self.d._vectors(self.uid, now=1001)[1], mat)
+        self.d.set_use(self.uid, self.a, False)
+        self.assertIsNot(self.d._vectors(self.uid, now=1002)[1], mat)
+
+    def test_catch_up_builds_at_most_every_few_seconds(self):
+        import numpy as np
+        self.d.add(self.uid, "Dritte.txt", b"x", text="Noch ohne Vektor.")     # one stays missing: the catch-up runs
+        with self.d._Db(self.uid) as con:
+            ids = [r[0] for r in con.execute("SELECT id FROM chunks ORDER BY id")]
+        self.d.set_vectors(self.uid, [(ids[0], np.ones(4, dtype=np.float16).tobytes())])
+        first = self.d._vectors(self.uid, now=2000)[1]
+        self.d.set_vectors(self.uid, [(ids[1], np.ones(4, dtype=np.float16).tobytes())])
+        self.assertIs(self.d._vectors(self.uid, now=2000 + self.d.VEC_CATCHUP_S - 1)[1], first)
+        self.assertEqual(len(self.d._vectors(self.uid, now=2000 + self.d.VEC_CATCHUP_S)[0]), 2)
+
+    def test_the_question_reads_the_lists_beside_the_loop(self):
+        import inspect
+        import chat_turn
+        src = inspect.getsource(chat_turn.prepare)
+        self.assertNotIn("documents.list_docs(", src)
+        self.assertNotIn("wissen.shared_list(", src)
+        self.assertNotIn("chat.docs_hint(", src)
 
 
 if __name__ == "__main__":

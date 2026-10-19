@@ -2333,7 +2333,11 @@ async def _answer(request, turn):
         finally:  # also runs when the browser aborts (barge-in): stop LLM and TTS
             for t in tasks:
                 t.cancel()
-            note_wait(turn, tm, t0, body.get("client") or "web")   # interrupted after its first sound: still counted
+            # interrupted after its first sound: still counted; the file is written off the event loop (code check
+            # 19.10. B4), never awaited here: this also runs while the request is being cancelled
+            if not tm.get("noted") and tm.get("audio"):
+                asyncio.get_running_loop().run_in_executor(None, note_wait, turn, tm, t0, body.get("client") or "web",
+                                                           time.time())
             if tr and not tr.done:   # ended early (barge-in, browser gone): kept as far as it came
                 tr.step("err", "abgebrochen", time.time())
                 try:

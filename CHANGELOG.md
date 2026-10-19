@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.826** · 2026-10-19 · Code-Prüfung Tempo: Dokumentliste je Profil gemerkt und neben der Ereignisschleife geholt (0,4 s weniger je Frage bei 20.000 Dokumenten), eigene Datenbank-Sperre je Profil, Schema nur einmal geprüft, Vektoren der Bedeutungssuche als float32 gemerkt, Wartezeit-Messung im Hintergrund, Zustand und Hinweise höchstens alle 10 s neu berechnet, schnelleres JSON-Schreiben
 - **V01.0.825** · 2026-10-19 · Code-Prüfung Sicherheit: Passwort und PINs mit 600.000 PBKDF2-Runden (alte gelten weiter und werden beim Anmelden erneuert), https nur TLS 1.2 oder neuer, Wachposten meldet neuen Zugang, Schutz und Protokoll immer sofort, Uhr-Antworten nur für das fragende Profil, Mail-Tageszähler übersteht Neustart, Werkstatt-Sandbox erreicht nur das LLM-Tor
 - **V01.0.824** · 2026-10-19 · Telefon: die Stimme des Spark kommt nicht mehr abgehackt an: der Ton läuft in einem eigenen Takt-Faden unabhängig vom Panel, ein kleiner Puffer vor jedem Satz fängt langsame Sprachausgabe ab, G.722 braucht etwa halb so viel Rechenzeit; das Log nennt Lücken und verspätete Pakete
 - **V01.0.823** · 2026-10-19 · Kalender teilen gibt nur noch den gewählten Kalender frei, nie das ganze iCloud- oder Nextcloud-Konto (Code-Prüfung C2); das Teilen-Fenster fragt bei mehreren Kalendern, welcher

@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "llm": {
-        "stand": "f9c7833c80",
+        "stand": "25184cc675",
         "bezug": {
             "chat.chat": ["s1"], "chat._answer": ["s2", "s4", "s6"], "llm.model": ["s3"], "llm.url": ["s1"], "llm.complete": ["s1"],
             "chat.sampling": ["s4"], "chat.first_within": ["s8"], "chat.ContextFull": ["s7"],
@@ -241,7 +241,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Wissen: how a question finds passages
     "wissen": {
-        "stand": "5dc792f25c",
+        "stand": "1dc7a1f1e5",
         "bezug": {
             "lokal.MAX_HITS": ["s5"], "wissen.search": ["s1", "s8", "s9"], "documents.search": ["s5", "s6"],
             "documents._terms": ["s5"], "documents.match_docs": ["s4"], "docembed.query": ["s3"],
@@ -315,10 +315,14 @@ SEITEN = {
               ("Ähnlichkeit ab 0,75 · Rangmischung", "similarity from 0.75 · rank fusion"),
               ("Hat die Frage einen Vektor, werden die Vektoren aller Stellen verglichen. Unter 0,75 Ähnlichkeit gilt "
                "nichts als verwandt; die besten 30 darüber bekommen ebenfalls einen Rang. Beide Ränge werden "
-               "addiert, so steigt eine Stelle, die in beiden Listen weit oben steht.",
+               "addiert, so steigt eine Stelle, die in beiden Listen weit oben steht. Die Vektoren liegen als "
+               "float32 im Speicher und werden nur neu gelesen, wenn sich Stellen oder genutzte Dokumente ändern; "
+               "solange noch Vektoren fehlen, höchstens alle {documents.VEC_CATCHUP_S} Sekunden.",
                "If the question has a vector, it is compared with every passage's vector. Below 0.75 similarity "
                "nothing counts as related; the best 30 above get a rank too. Both ranks are added, so a passage "
-               "high in both lists rises.")),
+               "high in both lists rises. The vectors are kept in memory as float32 and read again only when "
+               "passages or used documents change; while vectors are still missing, at most every "
+               "{documents.VEC_CATCHUP_S} seconds.")),
             S("s7", "frage", ("Neueste zuerst?", "Newest first?"),
               ("bei reMarkable-Notizen", "with reMarkable notes"),
               ("Mit „Neueste zuerst“ bekommt eine kürzlich geänderte Stelle einen kleinen Vorsprung, etwa zwei Plätze, "

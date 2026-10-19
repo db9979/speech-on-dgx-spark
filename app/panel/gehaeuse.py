@@ -292,7 +292,7 @@ def _hinweise():
         pass
     try:
         import health
-        hints = sum(1 for a in health.alerts() if a.get("kind") != "service")
+        hints = sum(1 for a in health.alerts_cached() if a.get("kind") != "service")   # every second: cached
     except Exception:
         pass
     return down, hints

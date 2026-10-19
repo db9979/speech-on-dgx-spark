@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "state": {
-        "stand": "4099a0b7b5",
+        "stand": "db4351c236",
         "bezug": {
             "backup.MOVE_MIN": ["s8"], "backup._seal_keys": ["s8"], "backup._check_state": ["s9"],
             "backup._swap": ["s10"], "backup._forget_cached": ["s11"],

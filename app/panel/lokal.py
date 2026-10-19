@@ -317,7 +317,7 @@ async def lokal_test(request: Request):
                          cfg.get("tool_words", ""))
     who = profiles.current(request)
     srcs = []
-    if who and cfg.get("documents", True) and (documents.list_docs(who["id"], used_only=True) or wissen.shared_list(who["id"])):
+    if who and cfg.get("documents", True) and (documents.count_docs(who["id"], used_only=True) or wissen.shared_list(who["id"])):
         srcs.append("docs")
     if kiwix.admin_on():
         srcs.append("kiwix")

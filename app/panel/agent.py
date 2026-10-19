@@ -382,7 +382,7 @@ def job_tools(uid, private):
             out["calendar_events"] = JOB_TOOLS["calendar_events"]
         if features.allowed("reminders", uid, cfg):
             out["reminder_list"] = JOB_TOOLS["reminder_list"]
-        if features.allowed("documents", uid, cfg) and documents.list_docs(uid):
+        if features.allowed("documents", uid, cfg) and documents.count_docs(uid):
             out["document_search"] = JOB_TOOLS["document_search"]
     extra = {}
     for name, server, t in mcp.tools_for(servers_for(uid), uid, ("read",)):

@@ -340,6 +340,23 @@ def after_update_due(progress):
 
 
 # ---------------------------------------------------------------- what the page shows on top
+ALERTS_S = 10   # alerts_cached: screens that ask every second (Steuerzentrale, the case's display)
+_alerts_kept = {"t": 0.0, "a": []}
+
+
+def alerts_cached(now=None):
+    """alerts() at most every ALERTS_S seconds, for the screens that redraw every second (schirm.py, gehaeuse.py);
+    a failing look keeps the last answer."""
+    now = time.time() if now is None else now
+    if not 0 <= now - _alerts_kept["t"] <= ALERTS_S:
+        try:
+            _alerts_kept["a"] = alerts()
+        except Exception as e:   # noqa: BLE001 - a screen never fails because of a hint
+            print("zustand: hinweise", type(e).__name__, flush=True)
+        _alerts_kept["t"] = now
+    return _alerts_kept["a"]
+
+
 def alerts():
     out = []
     if memory_state.get("low"):

@@ -555,11 +555,12 @@ async def prepare(request):
     # shared speaker does not recognize (private_ok)
     docs_ok = bool(who and private_ok and ccfg.get("documents", True) and (not mcp or "document_search" in mcp["tools"])
                    and features.allowed("documents", who["id"], ccfg))
-    docs = documents.list_docs(who["id"], used_only=True) if docs_ok else []
-    shared_docs = wissen.shared_list(who["id"]) if docs_ok else []
+    # beside the event loop: with many documents the lists cost a noticeable moment (code check 19.10. B1)
+    docs = await asyncio.to_thread(documents.list_docs, who["id"], True) if docs_ok else []
+    shared_docs = await asyncio.to_thread(wissen.shared_list, who["id"]) if docs_ok else []
     if docs or shared_docs:
-        system = per_turn(system, chat.docs_hint(who, docs, shared_docs, str(messages[-1].get("content") or ""),
-                                                 wissen.on(who["id"], "brief")))
+        system = per_turn(system, await asyncio.to_thread(chat.docs_hint, who, docs, shared_docs,
+                                                          str(messages[-1].get("content") or ""), wissen.on(who["id"], "brief")))
         import wissensbuch
         book = wissensbuch.hint(who["id"], str(messages[-1].get("content") or "")) if docs else ""
         if book:

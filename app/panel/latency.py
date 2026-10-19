@@ -21,21 +21,43 @@ from common import STATE, write_json
 
 KEEP_DAYS, MAX_ENTRIES = 14, 5000
 DAY = 86400
+SUMMARY_S = 10        # summary() without a fixed time is worked out again after this many seconds or a new answer
 _lock = threading.Lock()
+# the entries as last read or written, by the file's stamp (code check 19.10. B4: the file of about 600 KB was read
+# whole twice per status question, every second by the case's screen and the Live page); the file always wins
+_mem = {"stamp": None, "items": [], "summary": (0.0, None, None)}
 
 
 def _file():
     return os.path.join(STATE, "latency.json")
 
 
+def _stamp():
+    try:
+        st = os.stat(_file())
+        return (st.st_mtime_ns, st.st_size, st.st_ino)
+    except OSError:
+        return None
+
+
 def _load():
+    stamp = _stamp()
+    if stamp is not None and stamp == _mem["stamp"]:
+        return list(_mem["items"])
     try:
         with open(_file()) as f:
             d = json.load(f)
-        return [x for x in d if isinstance(x, dict) and isinstance(x.get("t"), (int, float))
-                and isinstance(x.get("a"), (int, float))] if isinstance(d, list) else []
+        items = [x for x in d if isinstance(x, dict) and isinstance(x.get("t"), (int, float))
+                 and isinstance(x.get("a"), (int, float))] if isinstance(d, list) else []
     except (OSError, ValueError):
-        return []
+        items = []
+    _mem.update(stamp=stamp, items=items)
+    return list(items)
+
+
+def _save(items):
+    write_json(_file(), items, mode=0o600)
+    _mem.update(stamp=_stamp(), items=items)
 
 
 # what an answer may keep besides its first sound: key -> check (fixed words and numbers only, never text)
@@ -61,8 +83,7 @@ def add(seconds, client="web", now=None, measure=None):
             rec[k] = round(v, 2) if isinstance(v, float) else v
     with _lock:
         items = [x for x in _load() if x["t"] > now - KEEP_DAYS * DAY]
-        items = (items + [rec])[-MAX_ENTRIES:]
-        write_json(_file(), items, mode=0o600)
+        _save((items + [rec])[-MAX_ENTRIES:])
 
 
 def _med(values):
@@ -103,8 +124,7 @@ def add_ack(seconds, now=None):
         return
     with _lock:
         items = [x for x in _load() if x["t"] > now - KEEP_DAYS * DAY]
-        items = (items + [{"t": round(now), "a": round(seconds, 2), "c": "web", "k": "ack"}])[-MAX_ENTRIES:]
-        write_json(_file(), items, mode=0o600)
+        _save((items + [{"t": round(now), "a": round(seconds, 2), "c": "web", "k": "ack"}])[-MAX_ENTRIES:])
 
 
 def _stats(values):
@@ -117,8 +137,19 @@ def _stats(values):
 
 def summary(now=None):
     """The last 24 hours (with answers per hour), the six days before, and a warning sentence when answers got
-    slower."""
-    now = time.time() if now is None else now
+    slower. Without a fixed time the result is kept SUMMARY_S seconds while no answer came (status, case, Live)."""
+    if now is None:
+        t, stamp, res = _mem["summary"]
+        if res is not None and stamp == _stamp() and 0 <= time.time() - t < SUMMARY_S:
+            return res
+        t = time.time()
+        res = _summary(t)
+        _mem["summary"] = (t, _stamp(), res)
+        return res
+    return _summary(now)
+
+
+def _summary(now):
     loaded = _load()
     items = [x for x in loaded if x.get("k") != "ack"]   # the answer's first sound only
     day = [x["a"] for x in items if x["t"] > now - DAY]

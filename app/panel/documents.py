@@ -55,8 +55,13 @@ SIDE = 1600                    # longest side of a page picture for the language
 DB = "wissen.db"
 CTYPE = {".pdf": "application/pdf", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png",
          ".webp": "image/webp"}
-_lock = threading.RLock()
-_vcache = {}                   # uid -> (data_version stamp, ids, matrix)
+_locks = {}                    # uid -> RLock: one profile's work never waits for another's (code check 19.10. B2)
+_locks_guard = threading.Lock()
+_vcache = {}                   # uid -> (stamp, built at, ids, float32 matrix)
+_vgen = {}                     # uid -> how often set_vectors wrote (part of the stamp)
+_gen = {}                      # uid -> how often a _Db changed something (list_docs keeps its list until it moves)
+_lcache = {}                   # (uid, used_only) -> (stamp, list)
+VEC_CATCHUP_S = 30             # while vectors are still missing the matrix is built again at most this often
 
 # added later; old databases get them on first open (V01.0.236 shared, V01.0.244 the profile "Steckbrief")
 NEW_COLUMNS = (("shared", "INTEGER DEFAULT 0"), ("title", "TEXT DEFAULT ''"), ("art", "TEXT DEFAULT ''"),
@@ -120,6 +125,18 @@ def db_path(uid):
     return profiles._path(uid, DB)
 
 
+def _schema_version():
+    """A number for SCHEMA and the added columns, kept in the file's user_version: a database that has it skips the
+    checks on open (they cost a script, three PRAGMAs and a folder listing on every access, code check 19.10. B2)."""
+    import zlib
+    return zlib.crc32(repr((SCHEMA, NEW_COLUMNS, MORE_COLUMNS)).encode()) & 0x7FFFFFFF
+
+
+def _lock(uid):
+    with _locks_guard:
+        return _locks.setdefault(uid, threading.RLock())
+
+
 def _open(uid):
     """The profile's database (created and filled from the old JSON files on first use)."""
     path = db_path(uid)
@@ -129,6 +146,8 @@ def _open(uid):
         os.close(os.open(path, os.O_WRONLY | os.O_CREAT, 0o600))
     con = sqlite3.connect(path, timeout=15)
     con.row_factory = sqlite3.Row
+    if con.execute("PRAGMA user_version").fetchone()[0] == _schema_version():
+        return con
     con.executescript(SCHEMA)
     have = {r[1] for r in con.execute("PRAGMA table_info(docs)")}
     for col, kind in NEW_COLUMNS:       # databases from older versions
@@ -140,20 +159,24 @@ def _open(uid):
             if col not in have:
                 con.execute(f"ALTER TABLE {table} ADD COLUMN {col} {kind}")
     _import_json(uid, con)
+    con.execute(f"PRAGMA user_version={_schema_version()}")
+    con.commit()
     return con
 
 
 class _Db:
-    """with _Db(uid) as con: ... (one connection per use; commits on success)."""
-    def __init__(self, uid):
-        self.uid = uid
+    """with _Db(uid) as con: ... (one connection per use; commits on success). keep=True: only counters change
+    (meta), the remembered document list stays."""
+    def __init__(self, uid, keep=False):
+        self.uid, self.keep = uid, keep
 
     def __enter__(self):
-        _lock.acquire()
+        self.lock = _lock(self.uid)
+        self.lock.acquire()
         try:
             self.con = _open(self.uid)
         except BaseException:
-            _lock.release()
+            self.lock.release()
             raise
         return self.con
 
@@ -161,11 +184,13 @@ class _Db:
         try:
             if kind is None:
                 self.con.commit()
+                if self.con.total_changes and not self.keep:
+                    _gen[self.uid] = _gen.get(self.uid, 0) + 1
             else:
                 self.con.rollback()
             self.con.close()
         finally:
-            _lock.release()
+            self.lock.release()
 
 
 def _import_json(uid, con):
@@ -591,10 +616,11 @@ def _scan_jpegs(data, reader, scans):
 
 
 # ---------------------------------------------------------------- storage
-def _row(r, todo):
-    return {"id": r["id"], "name": r["name"], "size": r["size"], "created": r["created"], "chunks": r["nchunks"],
+def _row(r, todo, pieces, novec):
+    n = pieces.get(r["id"], 0)
+    return {"id": r["id"], "name": r["name"], "size": r["size"], "created": r["created"], "chunks": n,
             "kind": r["kind"], "state": r["state"], "note": r["note"], "pages": r["pages"], "todo": todo.get(r["id"], 0),
-            "vecs": r["nvecs"], "use": bool(r["use"]), "shared": bool(r["shared"]), "file": bool(r["file"]), "source": r["source"],
+            "vecs": n - novec.get(r["id"], 0), "use": bool(r["use"]), "shared": bool(r["shared"]), "file": bool(r["file"]), "source": r["source"],
             **({"place": r["place"]} if r["source"] == "nas" or r["source"] == "begleiter" and r["place"] else {}), **card(r)}
 
 
@@ -717,15 +743,51 @@ def match_docs(uid, tags=None, art=None, used_only=True, shared_only=False):
     return out
 
 
+def _file_id(uid):
+    """The database file itself: a restore puts a new one in place (os.replace), which no _Db counted."""
+    try:
+        s = os.stat(db_path(uid))
+        return s.st_ino, s.st_dev
+    except OSError:
+        return None
+
+
 def list_docs(uid, used_only=False):
+    """The profile's documents, newest first. Remembered until a _Db changes something or the file is replaced:
+    building 20000 rows costs 0.4 s, every question of the profile asks for it (code check 19.10. B1).
+    Each caller gets its own dicts."""
     if not os.path.exists(db_path(uid)) and not os.path.isdir(_dir(uid)):
         return []
+    with _lock(uid):
+        stamp = (_gen.get(uid, 0), _file_id(uid))
+        hit = _lcache.get((uid, used_only))
+        if hit and hit[0] == stamp:
+            return [dict(d) for d in hit[1]]
+        out = _list_docs(uid, used_only)
+        if len(_lcache) > 20:
+            _lcache.clear()
+        _lcache[(uid, used_only)] = ((_gen.get(uid, 0), _file_id(uid)), out)
+        return [dict(d) for d in out]
+
+
+def count_docs(uid, used_only=False):
+    """How many documents the profile has, without building the list (today, agent and lokal only count)."""
+    if not os.path.exists(db_path(uid)):
+        return 0
+    with _Db(uid) as con:
+        return con.execute("SELECT COUNT(*) FROM docs" + (" WHERE use=1" if used_only else "")).fetchone()[0]
+
+
+def _list_docs(uid, used_only):
     with _Db(uid) as con:
         todo = dict(con.execute("SELECT doc, COUNT(*) FROM pages GROUP BY doc").fetchall())
-        rows = con.execute("SELECT d.*, (SELECT COUNT(*) FROM chunks c WHERE c.doc=d.id) AS nchunks, "
-                           "(SELECT COUNT(c.vec) FROM chunks c WHERE c.doc=d.id) AS nvecs FROM docs d "
-                           + ("WHERE d.use=1 " if used_only else "") + "ORDER BY d.created DESC, d.id").fetchall()
-    return [_row(r, todo) for r in rows]
+        # counted once per table through its indexes (chunks_doc, chunks_novec): counting the vectors per document read every
+        # piece with text and vector, 0.4 s per question at 20000 documents (code check 19.10. B1)
+        pieces = dict(con.execute("SELECT doc, COUNT(*) FROM chunks GROUP BY doc").fetchall())
+        novec = dict(con.execute("SELECT doc, COUNT(*) FROM chunks WHERE vec IS NULL GROUP BY doc").fetchall())
+        rows = con.execute("SELECT * FROM docs " + ("WHERE use=1 " if used_only else "")
+                           + "ORDER BY created DESC, id").fetchall()
+    return [_row(r, todo, pieces, novec) for r in rows]
 
 
 def usage_total(uid):
@@ -1311,7 +1373,7 @@ def page_read(uid, doc_id, page, text=None, failed=False, max_tries=2):
 def count_today(uid, day, add=0, key="vision"):
     """Pages read by the language model on this day (day: "YYYY-MM-DD" from the caller); key "night"
     counts the night window apart."""
-    with _Db(uid) as con:
+    with _Db(uid, keep=True) as con:
         r = con.execute("SELECT v FROM meta WHERE k=?", (key,)).fetchone()
         d = json.loads(r[0]) if r else {}
         n = d.get("n", 0) if d.get("day") == day else 0
@@ -1405,6 +1467,7 @@ def set_vectors(uid, pairs):
     """pairs: [(chunk id, float16 bytes)]."""
     with _Db(uid) as con:
         con.executemany("UPDATE chunks SET vec=? WHERE id=?", [(v, i) for i, v in pairs])
+        _vgen[uid] = _vgen.get(uid, 0) + 1
 
 
 
@@ -1418,20 +1481,32 @@ def vector_state(uid):
     return total - missing, total
 
 
-def _vectors(uid):
+def _vectors(uid, now=None):
+    """(chunk ids, float32 matrix) of the used documents' vectors. Kept until the pieces, the vectors or the used
+    documents change; no longer the file's time, which every counter write moved (code check 19.10. B3: 178 ms to
+    rebuild and a 70 MB copy per search). While vectors are still missing it is built again at most every
+    VEC_CATCHUP_S seconds: a piece just read waits that long for the meaning search, its words are found at once."""
     import numpy as np
+    now = time.time() if now is None else now
     with _Db(uid) as con:
-        stamp = (os.path.getmtime(db_path(uid)), con.execute("SELECT (SELECT COUNT(*) FROM chunks WHERE vec IS NULL), MAX(id) FROM chunks").fetchone()[:])
+        n, missing, top, ndocs = con.execute(
+            "SELECT (SELECT COUNT(*) FROM chunks), (SELECT COUNT(*) FROM chunks WHERE vec IS NULL), "
+            "(SELECT MAX(id) FROM chunks), (SELECT COUNT(*) FROM docs)").fetchone()
+        unused = con.execute("SELECT group_concat(id) FROM docs WHERE use=0").fetchone()[0] or ""
+        stamp = (n, missing, top, ndocs, unused, _vgen.get(uid, 0), _file_id(uid))
         hit = _vcache.get(uid)
-        if hit and hit[0] == stamp:
-            return hit[1], hit[2]
+        # the catch-up only adds: same documents, same ones switched off, no piece gone
+        if hit and (hit[0] == stamp or missing and hit[0][3:5] == (ndocs, unused) and hit[0][0] <= n
+                    and hit[0][6] == stamp[6] and now - hit[1] < VEC_CATCHUP_S):
+            return hit[2], hit[3]
         rows = con.execute("SELECT c.id, c.vec FROM chunks c JOIN docs d ON d.id=c.doc "
                            "WHERE c.vec IS NOT NULL AND d.use=1").fetchall()
     ids = [r[0] for r in rows]
-    mat = np.frombuffer(b"".join(r[1] for r in rows), dtype=np.float16).reshape(len(rows), -1) if rows else None
+    mat = np.frombuffer(b"".join(r[1] for r in rows), dtype=np.float16).reshape(len(rows), -1).astype(np.float32) \
+        if rows else None
     if len(_vcache) > 50:
         _vcache.clear()
-    _vcache[uid] = (stamp, ids, mat)
+    _vcache[uid] = (stamp, now, ids, mat)
     return ids, mat
 
 
@@ -1490,7 +1565,7 @@ def search(uid, query, k=5, qvec=None, shared_only=False, only_docs=None, fresh=
         import numpy as np
         ids, mat = _vectors(uid)
         if mat is not None and mat.shape[1] == len(qvec):
-            sims = mat.astype(np.float32) @ np.asarray(qvec, dtype=np.float32)
+            sims = mat @ np.asarray(qvec, dtype=np.float32)
             i = 0
             for j in np.argsort(-sims):
                 if sims[j] < 0.75 or i >= 30:     # e5 vectors: below 0.75 nothing is really related

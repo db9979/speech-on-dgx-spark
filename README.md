@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.826** Code check, speed: the document list is remembered and fetched beside the event loop, each profile has its own database lock, the meaning search no longer converts per search, the status page and hints are worked out less often
 - **V01.0.825** Code check, security: password and PINs with 600,000 PBKDF2 rounds, https only TLS 1.2 or newer, the Sentry always reports important changes at once, watch answers only for the profile that asked, the daily mail count survives a restart, the Werkstatt sandbox reaches only the LLM-Tor
 - **V01.0.824** Phone: the voice no longer sounds choppy (own sound beat, small buffer, faster G.722)
 - **V01.0.823** Sharing a calendar releases only the chosen calendar, never the whole iCloud or Nextcloud account (code review C2); the share window asks which one when there are several
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.819** E-mail fast: mailboxes read at the same time, list and opened mails cached, the page shows the last state at once and refreshes in the background; "Reply" opens right below the mail.
 - **V01.0.818** Fix: the GitHub test run is green again (red since .808, so the update offered only .807); the help finds "read mail aloud" and the Live overview again
 - **V01.0.817** Calendar fast: appointments cached by month, a slow calendar keeps loading in the background instead of being cut off, refreshed every 5 minutes behind the scenes.
-- **V01.0.816** The panel no longer stalls while syncing big knowledge folders; on a stall the log names the thread that computes
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

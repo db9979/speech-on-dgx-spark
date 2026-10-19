@@ -40,10 +40,9 @@ SCHAUEN_S = 10          # how often the loop compares the switch with the unit
 NOCHMAL_S = 300         # after a failed start or stop, the next try
 SIEHT_S = 15            # a screen that asked within this many seconds counts as showing
 GLANCE_S = 30           # the day in numbers is looked up again after this many seconds
-ALERTS_S = 10
 
 _lock = threading.Lock()
-_st = {"gesehen": 0.0, "fehler": 0.0, "glance": (0.0, {}), "alerts": (0.0, [])}
+_st = {"gesehen": 0.0, "fehler": 0.0, "glance": (0.0, {})}
 
 
 def cfg_chat(c=None):
@@ -120,15 +119,8 @@ def _glance(now):
 
 
 def _alerts(now):
-    t, a = _st["alerts"]
-    if now - t > ALERTS_S:
-        try:
-            import health
-            a = [{k: x.get(k) for k in ("kind", "level", "text")} for x in health.alerts()][:12]
-        except Exception as e:
-            print("schirm: hinweise", type(e).__name__, flush=True)
-        _st["alerts"] = (now, a)
-    return a
+    import health
+    return [{k: x.get(k) for k in ("kind", "level", "text")} for x in health.alerts_cached(now)][:12]
 
 
 def zustand(now=None, c=None):

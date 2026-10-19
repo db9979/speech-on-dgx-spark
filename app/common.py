@@ -115,8 +115,11 @@ def write_json(path, data, indent=None, mode=None, ensure_ascii=True, dir_mode=0
             mode = 0o600
     fd, tmp = tempfile.mkstemp(prefix="." + os.path.basename(path) + ".", suffix=".tmp", dir=folder)
     try:
+        # dumps, then one write: json.dump always takes the pure-Python encoder and is about six times slower
+        # (600 KB: 53 against 9 ms; code check 19.10. B4)
+        text = json.dumps(data, indent=indent, ensure_ascii=ensure_ascii)
         with os.fdopen(fd, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=indent, ensure_ascii=ensure_ascii)
+            f.write(text)
         os.chmod(tmp, mode)
         os.replace(tmp, path)
     except BaseException:

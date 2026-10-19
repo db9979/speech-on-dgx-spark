@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.826** Code-Prüfung Tempo: Dokumentliste gemerkt und neben der Ereignisschleife geholt, eigene Datenbank-Sperre je Profil, Bedeutungssuche ohne Umrechnen je Suche, Zustandsseite und Hinweise seltener neu berechnet
 - **V01.0.825** Code-Prüfung Sicherheit: Passwort und PINs mit 600.000 PBKDF2-Runden, https nur TLS 1.2 oder neuer, Wachposten meldet wichtige Änderungen immer sofort, Uhr-Antworten nur fürs fragende Profil, Mail-Tageszähler übersteht Neustart, Werkstatt-Sandbox nur zum LLM-Tor
 - **V01.0.824** Telefon: Stimme nicht mehr abgehackt (eigener Ton-Takt, kleiner Puffer, schnelleres G.722)
 - **V01.0.823** Kalender teilen gibt nur noch den gewählten Kalender frei, nie das ganze iCloud- oder Nextcloud-Konto (Code-Prüfung C2); das Teilen-Fenster fragt bei mehreren Kalendern, welcher
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.819** E-Mail schnell: Postfächer gleichzeitig, Liste und geöffnete Mails zwischengespeichert, die Seite zeigt sofort den letzten Stand und lädt im Hintergrund nach; „Antworten“ öffnet direkt unter der Mail.
 - **V01.0.818** Fix: GitHub-Testlauf wieder grün (rot seit .808, darum bot das Update nur .807 an); die Hilfe findet „Mails vorgelesen“ und die Live-Übersicht wieder
 - **V01.0.817** Kalender schnell: Termine monatsweise zwischengespeichert, ein langsamer Kalender lädt im Hintergrund weiter statt abzubrechen, alle 5 Minuten im Hintergrund aktualisiert.
-- **V01.0.816** Das Panel hängt nicht mehr beim Abgleich großer Wissensordner; das Log nennt bei einem Hänger den rechnenden Faden
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

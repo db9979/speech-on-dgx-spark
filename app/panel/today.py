@@ -72,7 +72,7 @@ async def today(request: Request, tz: str = "", prof=Depends(own_profile)):
     if may("documents"):
         import documents
         has = os.path.exists(documents.db_path(uid))
-        out["cards"]["documents"] = {"count": len(documents.list_docs(uid)) if has else 0,
+        out["cards"]["documents"] = {"count": documents.count_docs(uid) if has else 0,
                                      "waiting": documents.pages_waiting(uid) if has else 0}
     if may("fuerdich"):   # numbers only; reads the mails with a time budget, the page never waits longer
         import fuerdich
