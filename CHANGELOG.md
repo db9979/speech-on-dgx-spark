@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.818** · 2026-10-19 · Fix: GitHub-Lauf „Tests“ wieder grün (rot seit .808, darum bot das Update nur .807 an): Hilfe findet „Mails vorgelesen“ und „Live-Übersicht“ wieder, Mail-Werkzeug reicht die Zeitzone wie geprüft
 - **V01.0.817** · 2026-10-19 · Kalender schnell: Termine monatsweise im Zwischenspeicher, langsame Kalender laden im Hintergrund weiter statt abzubrechen, Kalenderliste 6 h gemerkt, alle 5 Minuten im Hintergrund aktualisiert
 - **V01.0.816** · 2026-10-19 · Panel hing 50-mal am Tag: der Wissensordner-Abgleich hält seinen 3,4-MB-Stand im Speicher, vergleicht im Hintergrund und schreibt höchstens alle 30 s; der Hänge-Wächter nennt den Faden, der gerade rechnet; die Bedeutungssuche findet Stücke ohne Vektor über einen Teilindex statt die ganze Tabelle je Schub zu lesen
 - **V01.0.815** · 2026-10-19 · Kalender und E-Mail in der iPhone-App (Stufe 4): unter Meine Sachen Kalender (vier Wochen, anlegen, ändern, löschen) und E-Mail (Posteingang, Mail lesen, ordnen und senden mit Vorschau-Blatt, je mit Freigabe der Funktion), zwischengespeichert nach den Regeln von „Apps merken sich den letzten Stand“; CarPlay liest Termine und neue Mails vor.

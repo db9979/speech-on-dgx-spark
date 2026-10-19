@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.818** Fix: GitHub-Testlauf wieder grün (rot seit .808, darum bot das Update nur .807 an); die Hilfe findet „Mails vorgelesen“ und die Live-Übersicht wieder
 - **V01.0.817** Kalender schnell: Termine monatsweise zwischengespeichert, ein langsamer Kalender lädt im Hintergrund weiter statt abzubrechen, alle 5 Minuten im Hintergrund aktualisiert.
 - **V01.0.816** Das Panel hängt nicht mehr beim Abgleich großer Wissensordner; das Log nennt bei einem Hänger den rechnenden Faden
 - **V01.0.815** Kalender und E-Mail in der iPhone-App: vier Wochen Termine (anlegen, ändern, löschen), Posteingang mit Lesen, Ordnen und Senden; auf dem Handy zwischengespeichert; CarPlay liest Termine und neue Mails vor.
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.811** Kalender mit anderen Profilen teilen (nur sehen oder sehen und eintragen); private Termine nur als „belegt“, der Assistent liest geteilte mit („Was hat Sabine morgen?“).
 - **V01.0.810** Von selbst melden an einem Ort: die Mail-Zeilen (Wichtige Mails, Aufräumen, Paket heute) stehen unter E-Mail → Einstellungen, der Termin-Vorlauf unter Kalender → Einstellungen.
 - **V01.0.809** E-Mail als eigene Seite im Menü: Posteingang aller Postfächer, Mail lesen als reiner Text; Postfächer, Aufräumen, Mailstil und Pakete unter Einstellungen, nicht mehr unter Ich
-- **V01.0.808** Für dich aus Mails: Rechnungen mit Frist, Verträge, Bestellungen, Angebote, offene Antworten und Phishing aus deinen Mails, nur lesend
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

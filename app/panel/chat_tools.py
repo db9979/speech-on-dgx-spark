@@ -426,7 +426,8 @@ async def mail_tool(t, name, args, st):
                                            8, chat.user_zone(t.body.get("tz")))
         if name == "mail_read":
             ref = str(args.get("id", ""))[:40]
-            text = await asyncio.to_thread(mail.read, t.who["id"], ref, chat.user_zone(t.body.get("tz")))
+            text = await asyncio.to_thread(mail.read, t.who["id"], ref,
+                                           chat.user_zone(t.body.get("tz")))
             if text.startswith(mail.UNTRUSTED):   # read, not "unknown" or "no longer exists"
                 senden.note_read(t.who["id"], ref, t.src)   # "Antworte ihr per Mail: …" (senden.py)
                 await t.out.put({"type": "goto", "to": "post", "id": ref})   # Karte „Mail öffnen“ (chat.js)

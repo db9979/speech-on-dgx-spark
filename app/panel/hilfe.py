@@ -106,12 +106,12 @@ SYN = {"einlad": "einladung registrierung neue personen", "einladen": "einladung
        "handy": "iphone android app", "smartphone": "iphone android app", "passwort": "pin anmeldung", "2fa": "zweiter anmeldeschritt",
        "mfa": "zweiter anmeldeschritt", "weckwort": "aktivierungswort hey spark", "lauter": "lautstaerke", "leiser": "lautstaerke",
        "uhr": "pebble", "lautsprech": "esp32 lautsprecher", "notfall": "notaus", "update": "aktualisier update",
-       "vorles": "mail lesen", "schnell": "schneller antwortbeginn werkzeugwahl", "langsam": "schneller antwortbeginn werkzeugwahl",
+       "vorles": "mail lesen", "vorgeles": "mail lesen", "schnell": "schneller antwortbeginn werkzeugwahl", "langsam": "schneller antwortbeginn werkzeugwahl",
        "stimme": "stimme sprechererkennung", "erkennt": "sprechererkennung", "termin": "kalender", "einkauf": "liste aufgabe",
        "paket": "pakete sendung", "licht": "home assistant", "heizung": "home assistant", "lernen": "korrektur merken gedaechtnis",
        "pin": "pin aendern", "passkey": "passkeys", "passkeys": "passkeys", "raummodus": "raum modus",
        "dazwischen": "hineinreden", "unterbrechen": "hineinreden",
-       "barge": "hineinreden freihaendig"}
+       "barge": "hineinreden freihaendig", "live": "live zustand"}
 # German verbs that split ("Wie lade ich jemanden ein?" = einladen) and phrases that mean one function
 SEPARABLE = ((re.compile(r"(?i)\b(lade|lädt|laden)\b(.{0,40})\bein\b"), "einladen"),
              (re.compile(r"(?i)\b(richte|richtet)\b(.{0,40})\bein\b"), "einrichten"),
