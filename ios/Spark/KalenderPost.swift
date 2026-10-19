@@ -1513,6 +1513,7 @@ struct MailWrite: View {
                 if let p = preview {
                     Section {
                         LabeledContent("Von") { Text(verbatim: p["from"] as? String ?? "") }
+                        if let v = p["server"] as? String, !v.isEmpty { LabeledContent("Über") { Text(verbatim: v) } }
                         LabeledContent("An") { Text(verbatim: (p["to"] as? [String] ?? []).joined(separator: ", ")) }
                         if let c = p["cc"] as? [String], !c.isEmpty { LabeledContent("Kopie") { Text(verbatim: c.joined(separator: ", ")) } }
                         LabeledContent("Betreff") { Text(verbatim: p["subject"] as? String ?? "") }

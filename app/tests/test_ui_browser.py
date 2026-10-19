@@ -662,7 +662,7 @@ class Browser(unittest.TestCase):
         self.run_async(go())
 
     def test_zustand_shows_both_computers_when_split(self):
-        """Zustand → Monitoring → Rechner (Dominik 2026-10-16, Variante 1): with the models on another computer a tile
+        """Zustand → Überblick → Rechner (Dominik 2026-10-16, Variante 1): with the models on another computer a tile
         each in „Jetzt“ and a card each under „Rechner“ with curves; a model computer that does not answer keeps its
         card, red and greyed; on one Spark neither shows. No overflow at 320 and 390 px."""
         card = ("{id:'%s',name:'%s',stufe:'%s',ok:%s,stumm_s:%s,cpu:4,kerne:4,last:0.5,ram_total:7.9,ram_frei:7.2,ram_cache:2,swap:0,"
@@ -889,7 +889,7 @@ class Browser(unittest.TestCase):
         self.run_async(go())
 
     def test_mcp_key_is_made_and_shown(self):
-        """Ich → Dienste per MCP (V01.0.309, Dominik: "Schlüssel erzeugen" did nothing): the button makes a key and
+        """Ich → Spark als MCP-Server (V01.0.309, Dominik: "Schlüssel erzeugen" did nothing): the button makes a key and
         shows it once, on a computer and a phone, without script errors."""
         import mcpserver
         import profiles

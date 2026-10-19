@@ -213,8 +213,8 @@ Fixed rules for which tools the model sees for a question. Never gives more than
 | `app/panel/intent.py` | The switch ("Weiche"): what the person asks for in their own latest message, by fixed rules. |
 | `app/panel/intent_alltag.py` | The Weiche's everyday check: sentences as people say them, never used to set the rules up. |
 | `app/panel/intent_bench.py` | The Weiche's test bench (intent.py): sentence -> expected group ("" = no rule fits, "+" = two at once). |
-| `app/panel/weiche.py` | Features → Switch: the switch of intent.py, shown and set up in the panel. |
-| `app/panel/weiche_abstimmen.py` | Features → Switch → „Weiche abstimmen“: the language model proposes words for the groups, the panel measures every word with fixed rules and keeps only those … |
+| `app/panel/weiche.py` | Features → Routing: the switch of intent.py, shown and set up in the panel. |
+| `app/panel/weiche_abstimmen.py` | Features → Routing → „Weiche abstimmen“: the language model proposes words for the groups, the panel measures every word with fixed rules and keeps only thos … |
 | `app/panel/werkzeug_abdeckung.py` | Which function the assistant reaches how. |
 | `app/panel/werkzeuge.py` | The readable name of every tool. |
 
@@ -325,7 +325,7 @@ Apps, Telegram, watch, speakers, room mode, chats and the history on all devices
 | `app/panel/sse.py` | Server-sent events to open pages and apps (one source for chats.py and verlauf.py): per key (a profile) a few streams, each with its own queue on its own eve … |
 | `app/panel/telefon.py` | Telefon: den Spark anrufen. |
 | `app/panel/telefon_anruf.py` | Der Spark ruft an: the SIP part (telefon.Call.dial) places the call, this module decides with fixed rules whom, when and why; never the model, a mail or the … |
-| `app/panel/telefon_ich.py` | Telefon → Me: what each profile sets up for itself under Me → Telefon. |
+| `app/panel/telefon_ich.py` | Phone → Me: what each profile sets up for itself under Me → Phone. |
 | `app/panel/telefon_ton.py` | Telefon: the sound of a call (telefon.py). |
 | `app/panel/telegram.py` | Telegram bot: profiles talk to the assistant by text or voice message from anywhere, without the web page and without an open port (the panel asks Telegram f … |
 | `app/panel/terminal.py` | Terminal-Client: `spark-tui`, one Python file (app/tui/spark-tui.py, Textual) for a terminal, e.g. |
@@ -430,9 +430,9 @@ Panel on its own computer, models on the DGX: pairing, TLS-Tor, Wärter and the 
 |---|---|
 | `app/panel/gehaeuse.py` | Gehäuse. |
 | `app/panel/notbetrieb.py` | Notbetrieb mit Parakeet. |
-| `app/panel/rechenteile.py` | Status → Monitoring → Computers, „Wer rechnet gerade“: which part inside the panel takes the CPU, next to the services of both computers (rechner.dienste_cpu). |
-| `app/rechner.py` | The values of one computer for Status → Monitoring → Computers: CPU, memory, disk, network, temperature, fan, power flags, running time, device and system na … |
-| `app/panel/rechnerblick.py` | Status → Monitoring → Computers: when the panel and the models run on two computers (Spark teilen), both side by side: a tile each on top and a card each und … |
+| `app/panel/rechenteile.py` | Status → Overview → Computers, „Wer rechnet gerade“: which part inside the panel takes the CPU, next to the services of both computers (rechner.dienste_cpu). |
+| `app/rechner.py` | The values of one computer for Status → Overview → Computers: CPU, memory, disk, network, temperature, fan, power flags, running time, device and system name … |
+| `app/panel/rechnerblick.py` | Status → Overview → Computers: when the panel and the models run on two computers (Spark teilen), both side by side: a tile each on top and a card each under … |
 | `app/panel/schirm.py` | Steuerzentrale am Bildschirm. |
 | `app/panel/steuer.py` | Steuer: the model units and the GPU, here or on the model computer. |
 | `app/steuerzentrale.py` | Steuerzentrale am Bildschirm, the screen half. |
@@ -1141,7 +1141,7 @@ Applies at: [step 5](#kn-lautsprecher-s5), [step 9](#kn-lautsprecher-s9)
 - Features → Own speakers: speakers for every profile (default off).
 - Me → Speakers: set up, type the code, room, volume, check and the own code word.
 - Features → Home Assistant Assist: Wyoming on and the allowed addresses.
-- Features → Calling the Spark: wizard with four steps, assign handsets, test call, calls from outside, unknown callers as guests, the Spark calls, call on outages.
+- Features → Phone: wizard with four steps, assign handsets, test call, calls from outside, unknown callers as guests, the Spark calls, call on outages.
 - Me → Phone: confirm own phone numbers with a code, phone PIN, allow calls from the Spark and delete planned ones, delete calls.
 
 #### What you see
@@ -1237,7 +1237,7 @@ flowchart TD
 8. <a id="kn-mcpc-s8"></a>**Too many at once?**: At most 2 calls of one connection and 6 of all connections run at once.
 9. <a id="kn-mcpc-s9"></a>**Speech and reading**: Speech recognition (at most 10 MB) and speech output (at most 2000 characters) run at the level „hinten“, so people at the Spark always go first. The reading tools only read this profile's data.
 10. <a id="kn-mcpc-s10"></a>**Ask the Spark, read only**: ask_spark (10 per minute) runs as one turn of the assistant for the profile, but only with this connection's reading tools. The question counts as outside text from the start: nothing is switched, stored, learned or sent, no memory, nothing of it in the history. Passwords and codes are removed from the answer.
-11. <a id="kn-mcpc-s11"></a>**Should something change?**: Smart home, reminder and appointment are only proposed (at most 10 open). The profile gets a notice and decides under Me → Services over MCP within 15 minutes; only then the panel carries it out. With the kill switch or a smart home code word set, an MCP program switches nothing.
+11. <a id="kn-mcpc-s11"></a>**Should something change?**: Smart home, reminder and appointment are only proposed (at most 10 open). The profile gets a notice and decides under Me → Spark as MCP server within 15 minutes; only then the panel carries it out. With the kill switch or a smart home code word set, an MCP program switches nothing.
 12. <a id="kn-mcpc-s12"></a>**Answer to the program**: The answer is cut to 12000 characters. The journal only gets which program, which tool, whether it worked and how long, never question or answer.
 
 **Examples:** Claude reads the appointments: The profile's appointments as text, cut. · Home network key through the proxy: Refused: this key only works at home. · n8n wants to switch the light: Only proposed; it switches after the yes in the browser. · Program wants to read mail: Not allowed: mail is never offered over MCP.
@@ -1268,12 +1268,12 @@ Applies at: [step 9](#kn-mcpc-s9)
 - Features → Spark as MCP server: the server for every profile (default off).
 - Features → Spark as MCP server → MCP server from outside: connections through the reverse proxy and OAuth.
 - Features → Spark as MCP server → MCP: acting with confirmation: the tools that propose something.
-- Me → Services over MCP: make connections, pick tools, confirm or decline proposals.
+- Me → Spark as MCP server: make connections, pick tools, confirm or decline proposals.
 
 #### What you see
 
 - Status → Live: every tool call as a request of the program, from outside under „Über das Internet“.
-- Me → Services over MCP: the latest proposals with their state.
+- Me → Spark as MCP server: the latest proposals with their state.
 
 #### In the code
 
@@ -1620,7 +1620,7 @@ Applies at: [step 10](#kn-vorbereiten-s10), [step 11](#kn-vorbereiten-s11)
 
 - People and devices → Blocked functions: what a single profile does not get.
 - Features → Ask instead of guessing: the panel asks instead of guessing (default off).
-- Features → Switch: the fixed rules that narrow the tools.
+- Features → Routing: the fixed rules that narrow the tools.
 - Features → Show steps and approvals: tools below the answer, a waiting proposal as a card with Yes and No and a question at the end of the answer with its answers as buttons (yes/no, A or B); a short yes to it keeps the topic of the question before (own profile and device only, default off).
 
 #### What you see
@@ -1693,7 +1693,7 @@ flowchart TD
   s12 -->|yes| s12x
 ```
 
-1. <a id="kn-weiche-s1"></a>**Only the own message**: Only the person's own latest message is read, never an answer before, outside text or what the model wrote. The words the admin saved under Features → Switch are added.
+1. <a id="kn-weiche-s1"></a>**Only the own message**: Only the person's own latest message is read, never an answer before, outside text or what the model wrote. The words the admin saved under Features → Routing are added.
 2. <a id="kn-weiche-s2"></a>**Only small talk?**: If the whole sentence is a greeting or thanks, the group is „plaudern“ (small talk). The answer then gets no tool at all.
 3. <a id="kn-weiche-s3"></a>**Question about the Spark?**: „How do I connect Home Assistant?“ or „Switch on web search“ ask about the Spark itself, not about a device or a search: group „spark“. A question about words or languages never counts. When „Ask Spark“ was used on a page of the panel, the same group holds by a fixed rule about where it was asked.
 4. <a id="kn-weiche-s4"></a>**Words per group**: Each group has its built-in word list (light, appointment, mailbox, umbrella …). A switching word without a device („all off“) only counts as a whole command. The admin's must words and own words per group (at most 20, whole words only) find a group as well, but replace nothing.
@@ -1744,13 +1744,13 @@ Applies at: [step 9](#kn-weiche-s9)
 #### Settings
 
 - Features → Targeted tool choice: without this switch the switch narrows nothing (default off).
-- Features → Switch: own words per group, „Not with“, extra tools, groups without narrowing, must words, own test sentences and what questions no rule recognizes get. Every change runs through all test sentences first; if one changes, it is saved only after confirming. Undo keeps the last 20 versions.
+- Features → Routing: own words per group, „Not with“, extra tools, groups without narrowing, must words, own test sentences and what questions no rule recognizes get. Every change runs through all test sentences first; if one changes, it is saved only after confirming. Undo keeps the last 20 versions.
 - Features → Fetch clear questions directly: the panel fetches short reading questions itself (default off).
 - Features → Tune the switch (default off): the language model proposes words per group, the panel keeps a word only when no test sentence flips, the practice half gets better and the check half no worse; it is saved only with "Apply".
 
 #### What you see
 
-- Features → Switch: „Try a sentence“ shows the whole way of a sentence without the model; also test sentences, everyday score and statistics (7 days, counts only).
+- Features → Routing: „Try a sentence“ shows the whole way of a sentence without the model; also test sentences, everyday score and statistics (7 days, counts only).
 - Status → Logs: lines „weiche: Absicht …“, „weiche: Folgefrage“, „weiche: Modell-Zuordnung …“ and „weiche: direkt abgerufen“.
 - Logs → Requests: per question group, tools „x of y“ and what became of the model's pick.
 
@@ -1958,7 +1958,7 @@ Applies at: [step 4](#kn-werkzeuge-s4)
 #### Settings
 
 - Settings → Language model: Stop error loops (on by default) and under Advanced the Web searches per answer.
-- Features → Switch: which tools the model sees for a question at all.
+- Features → Routing: which tools the model sees for a question at all.
 
 #### What you see
 
@@ -2556,7 +2556,7 @@ flowchart TD
 #### What you see
 
 - Status → Usage: seconds heard per day, task and profile.
-- Status → Monitoring: engine state, requests, failures, average time and the queue.
+- Status → Summary: engine state, requests, failures, average time and the queue.
 - Status → Logs → Requests: how long a recording waited and how many it overtook.
 
 #### In the code
@@ -2655,7 +2655,7 @@ flowchart TD
 #### What you see
 
 - Status → Usage: seconds spoken per day, task and profile.
-- Status → Monitoring: engine state, requests, failures, time to the first sound and the queue.
+- Status → Summary: engine state, requests, failures, time to the first sound and the queue.
 
 #### In the code
 
@@ -2871,7 +2871,7 @@ Applies at: [step 7](#kn-aussen-s7), [step 8](#kn-aussen-s8)
 #### Settings
 
 - Settings → Security → Allow home network addresses: calendars, contacts, mail and MCP may also go to the home network (default off).
-- Features → Agent functions → Services over MCP: which servers and tools are offered.
+- Features → Jobs → Services over MCP: which servers and tools are offered.
 - Features → Service watch: see outages, below it the note to users when a service is missing.
 
 #### What you see
@@ -3042,7 +3042,7 @@ flowchart TD
 #### What you see
 
 - Status → Live: box „Model computer“ with reachable, services, version and pause.
-- Status → Monitoring → Computers: both computers side by side with curves of the last 20 minutes and „Who is computing now“ (services and the panel's parts with their share of the CPU, strip of the last 20 minutes); Live adds the box „Panel computer“, both boxes with „am meisten …“.
+- Status → Summary → Computers: both computers side by side with curves of the last 20 minutes and „Who is computing now“ (services and the panel's parts with their share of the CPU, strip of the last 20 minutes); Live adds the box „Panel computer“, both boxes with „am meisten …“.
 - The screen on the panel computer itself; Status → Live shows in the box „Control centre“ whether it shows right now.
 
 #### In the code

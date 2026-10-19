@@ -379,7 +379,7 @@ function sheet(){const box=el('lvsheet');if(!box)return;const id=LV.node,d=LV.da
   if(now.length)x+=`<div class="row"><span>${tt('gerade dran','right now')}</span><b>${now.map(r=>lvE(r.dev)).join(', ')}</b></div>`;
   if(window.openTrace)x+=`<button type="button" class="lk" data-evopen="">${tt('Alle Anfragen in Logs → Anfragen','All requests in Logs → Requests')} ↗</button>`;
   box.innerHTML=x;box.hidden=false}
-const GO={mon:tt('Monitoring öffnen','Open monitoring'),logs:tt('Logs öffnen','Open logs'),test:tt('Prüfen öffnen','Open checks'),apps:tt('Apps und Schnittstellen','Apps and interfaces'),
+const GO={mon:tt('Überblick öffnen','Open the summary'),logs:tt('Logs öffnen','Open logs'),test:tt('Prüfen öffnen','Open checks'),apps:tt('Apps und Schnittstellen','Apps and interfaces'),
   prof:tt('Personen und Geräte','People and devices'),feat:tt('Funktionen öffnen','Open features')};
 
 // 5: Zurückspulen: the finished requests of the last 15 minutes played again in the picture (admin page only)

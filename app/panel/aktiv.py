@@ -9,7 +9,7 @@ What the Spark does by itself (rules, schedules, jobs) never counts.
                 keyed hash (a new key at every start)
 
 Kept in memory only (gone after a restart), at most MAX entries, each forgotten FENSTER_S after its last request.
-Shown as numbers only: the OLED page "Aktiv 10 min" (gehaeuse.py), Zustand → Monitoring "Heute", Zustand → Live,
+Shown as numbers only: the OLED page "Aktiv 10 min" (gehaeuse.py), Zustand → Überblick "Heute", Zustand → Live,
 the Steuerzentrale and the iPhone app's Zustand.
 """
 import hashlib

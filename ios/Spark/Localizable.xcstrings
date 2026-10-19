@@ -4131,12 +4131,12 @@
         }
       }
     },
-    "Monitoring": {
+    "Überblick": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Monitoring"
+            "value": "Summary"
           }
         }
       }
@@ -7906,7 +7906,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The admin has not released “Speaking up by itself” yet, or you switched it off under Me → Proactive."
+            "value": "The admin has not released “Speaking up by itself” yet, or you switched it off under Me → By itself."
           }
         }
       }
@@ -10086,7 +10086,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "To switch and measure, turn on Features → Switch models. Measuring also works on the Spark: sudo speech-spark modelle messen"
+            "value": "To switch and measure, turn on Features → Routing models. Measuring also works on the Spark: sudo speech-spark modelle messen"
           }
         }
       }
@@ -12727,6 +12727,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld KB"
+          }
+        }
+      }
+    },
+    "Postausgang, z. B. smtp.example.de": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Outgoing server, e.g. smtp.example.com"
+          }
+        }
+      }
+    },
+    "Port Postausgang": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Outgoing port"
+          }
+        }
+      }
+    },
+    "Über": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Via"
           }
         }
       }

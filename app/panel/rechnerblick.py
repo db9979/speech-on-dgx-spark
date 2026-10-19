@@ -1,4 +1,4 @@
-"""Zustand → Monitoring → Rechner (Dominik 2026-10-16, Variante 1): when the panel and the models run on two computers
+"""Zustand → Überblick → Rechner (Dominik 2026-10-16, Variante 1): when the panel and the models run on two computers
 (Spark teilen), both side by side: a tile each on top and a card each under „Rechner“, with curves of the last 20
 minutes. On one Spark nothing changes (the page shows what it showed before).
 
@@ -250,7 +250,7 @@ def alerts():
         "platte_modell": lambda v: f"Auf dem Modell-Rechner sind nur noch {v[0]:g} GB frei ({v[1]:.0f} % belegt).",
         "weg": lambda v: f"Der Modell-Rechner antwortet seit {max(1, round((v or 0) / 60))} min nicht: Notbetrieb.",
     }
-    return [{"kind": "rechner", "level": ARTEN[a][1], "go": "Zustand → Monitoring → Rechner", "text": texte[a](v)}
+    return [{"kind": "rechner", "level": ARTEN[a][1], "go": "Zustand → Überblick → Rechner", "text": texte[a](v)}
             for a, v in w.items() if a in texte]
 
 

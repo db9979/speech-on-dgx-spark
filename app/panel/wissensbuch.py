@@ -28,7 +28,7 @@ profile and day. The journal gets fixed words and numbers only, never a title or
     POST   /api/profile/wissensbuch/satz/{sid}/noch     "veraltet?": still right
     POST   /api/profile/wissensbuch/ablegen         "Ins Wissensbuch": the answer kept for this rid becomes a page
     GET    /api/profile/wissensbuch/export          the book as an Obsidian folder (ZIP)
-    GET    /api/admin/wissensbuch                   Zustand → Monitoring: sums over all profiles, numbers only
+    GET    /api/admin/wissensbuch                   Zustand → Überblick: sums over all profiles, numbers only
 
 The nightly check (Stufe C, once a night in suchpruefung's night window, fixed rules first, the model only for yes/no):
 - a document read again (other pieces than when it was worked in) is worked in again, its sentences go;
@@ -1153,7 +1153,7 @@ def again(pid: str, request: Request, prof=Depends(browser_profile)):
 
 @router.get("/api/admin/wissensbuch", dependencies=[Depends(auth)])
 def admin_state():
-    """Zustand → Monitoring: sums over all profiles, never a title, a sentence or a name."""
+    """Zustand → Überblick: sums over all profiles, never a title, a sentence or a name."""
     return for_live()
 
 

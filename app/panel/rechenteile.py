@@ -1,4 +1,4 @@
-"""Zustand → Monitoring → Rechner, „Wer rechnet gerade“ (Dominik 2026-10-18 „1a 2a 3a 4b“): which part inside the panel
+"""Zustand → Überblick → Rechner, „Wer rechnet gerade“ (Dominik 2026-10-18 „1a 2a 3a 4b“): which part inside the panel
 takes the CPU, next to the services of both computers (rechner.dienste_cpu).
 
     messen()      every 3 s from rechnerblick.probe (only with the models on another computer): the CPU share in % of

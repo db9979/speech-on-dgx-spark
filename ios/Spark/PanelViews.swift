@@ -13,7 +13,7 @@ struct PanelBridgeView: View {
     @State private var open: PanelPlace?
 
     static let spark: [(LocalizedStringKey, String)] = [
-        (LocalizedStringKey("Monitoring"), "go=mon"), (LocalizedStringKey("Prüfen"), "go=test"), (LocalizedStringKey("Logs"), "go=logs"), (LocalizedStringKey("Einstellungen"), "go=cfg"),
+        (LocalizedStringKey("Überblick"), "go=mon"), (LocalizedStringKey("Prüfen"), "go=test"), (LocalizedStringKey("Logs"), "go=logs"), (LocalizedStringKey("Einstellungen"), "go=cfg"),
         (LocalizedStringKey("Funktionen"), "cfg=feat"), (LocalizedStringKey("Update und Sicherung"), "cfg=upd"), (LocalizedStringKey("Personen und Geräte"), "go=prof"),
         (LocalizedStringKey("Anleitungen"), "go=int"),
     ]

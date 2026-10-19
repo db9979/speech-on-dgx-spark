@@ -221,7 +221,7 @@
       <div class="setrow" data-show="chat.svc_watch" style="margin-left:18px"><div class="lbl"><b>Hinweis an Nutzer, wenn ein Dienst fehlt</b><span>Fragt jemand etwas, das einen gerade fehlenden Dienst braucht, sagt der Assistent das sofort, statt lange zu warten.</span></div><label class="tgl"><input type="checkbox" id="chat.svc_watch_users"><i></i></label></div>
       <div class="setrow" data-show="chat.svc_watch" style="margin-left:18px"><div class="lbl"><b>Rundlauf prüfen</b><span>Alle paar Minuten ein echter Probelauf durch Sprechen, Hören und Sprachmodell. Hakt ein Schritt zweimal, hören die Admins es.</span></div><label class="tgl"><input type="checkbox" id="chat.rundlauf"><i></i></label></div>
       <div data-show="chat.rundlauf" style="margin-left:36px">
-        <label for="chat.rundlauf_min">Abstand</label><select id="chat.rundlauf_min" data-num="1"><option value="2">alle 2 Minuten</option><option value="5">alle 5 Minuten</option><option value="15">alle 15 Minuten</option></select><div class="fh">Ausgelassen, solange jemand spricht, in einer Wartungspause, bei einem Update und während Bilder oder Musik entstehen. Ergebnis unter Zustand → Monitoring.</div>
+        <label for="chat.rundlauf_min">Abstand</label><select id="chat.rundlauf_min" data-num="1"><option value="2">alle 2 Minuten</option><option value="5">alle 5 Minuten</option><option value="15">alle 15 Minuten</option></select><div class="fh">Ausgelassen, solange jemand spricht, in einer Wartungspause, bei einem Update und während Bilder oder Musik entstehen. Ergebnis unter Zustand → Überblick.</div>
       </div>
       <div class="setrow"><div class="lbl"><b>Wachposten</b><span>Feste Regeln melden den Admins, wenn sich an Anmeldung, Zugängen oder Schutz etwas tut oder das Protokoll verändert wurde.</span></div><label class="tgl"><input type="checkbox" id="chat.wachposten"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Wartungspause</b><span>Vor einem Update von Sprachmodell, Spracherkennung oder Sprachausgabe hält der Spark kurz an: fester Satz statt Fehler, Hintergrund wartet.</span></div><label class="tgl"><input type="checkbox" id="chat.wartung"><i></i></label></div>
@@ -282,7 +282,7 @@
       <div class="setrow" data-show="chat.calendar" style="margin-left:18px"><div class="lbl"><b>Kalender teilen</b><span>Ein Profil teilt einen Kalender mit einem anderen, nur sehen oder sehen und eintragen. Private Termine nur als „belegt“.</span></div><label class="tgl"><input type="checkbox" id="chat.calendar_share"><i></i></label></div>
       <div class="setrow" data-show="chat.calendar" style="margin-left:18px"><div class="lbl"><b>Kalender-Server für Kalender-Apps</b><span>Die Spark-Kalender eines Profils im Kalender des iPhone (CalDAV), mit einem App-Passwort je Profil, im Heimnetz und über den Proxy.</span></div><label class="tgl"><input type="checkbox" id="chat.calendar_server"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Aufgaben und Einkaufsliste</b><span>„Setz Milch auf die Einkaufsliste“: Liste auf dem Spark oder in einer CalDAV-Aufgabenliste.</span></div><label class="tgl"><input type="checkbox" id="chat.tasks"><i></i></label></div>
-      <div class="setrow"><div class="lbl"><b>Agent-Funktionen</b><span>„Recherchiere …, sag mir Bescheid“: Aufträge im Hintergrund, geplante Aufträge und eigene Abläufe, nur für freigeschaltete Profile.</span></div><label class="tgl"><input type="checkbox" id="chat.agent"><i></i></label></div>
+      <div class="setrow"><div class="lbl"><b>Aufträge</b><span>„Recherchiere …, sag mir Bescheid“: Aufträge im Hintergrund, geplante Aufträge und eigene Abläufe, nur für freigeschaltete Profile.</span></div><label class="tgl"><input type="checkbox" id="chat.agent"><i></i></label></div>
       <div data-show="chat.agent" style="margin-left:18px" id="agentadmin"></div>
       <div class="setrow" data-show="chat.agent" style="margin-left:18px"><div class="lbl"><b>Beobachten</b><span>Webseiten regelmäßig prüfen lassen, Meldung nur bei Neuem (Firmware, Folge, Preis). Das Panel prüft jeden Fund selbst.</span></div><label class="tgl"><input type="checkbox" id="chat.agent_watch"><i></i></label></div>
       <div class="setrow" data-show="chat.agent" style="margin-left:18px"><div class="lbl"><b>Aufträge mit Plan, Rückfrage und Vorschlag</b><span>Ein Auftrag zeigt seine Schritte, fragt nach und schlägt am Ende etwas vor, ausgeführt erst nach deinem Ja.</span></div><label class="tgl"><input type="checkbox" id="chat.agent_plan"><i></i></label></div>
@@ -328,7 +328,7 @@
         <label>Erlaubte Adressen</label><input id="chat.wyoming_allow" data-req placeholder="192.168.1.20" autocomplete="off"><div class="fh">Die Adresse deines Home Assistant, mehrere mit Komma, auch Netze wie 192.168.1.0/24. Leer = niemand.</div>
         <div class="row" style="margin-top:6px"><button class="b" type="button" id="wysuggest">Adresse von Home Assistant übernehmen</button></div><div class="fh" id="wymsg"></div>
         <div class="two2"><div><label>Port</label><input id="chat.wyoming_port" type="number" min="1024" max="65535"></div><div><label>Stimme</label><input id="chat.wyoming_voice" placeholder="Standardstimme" autocomplete="off"></div></div></div>
-      <div class="setrow"><div class="lbl"><b>Den Spark anrufen</b><span>Vom Telefon im Haus den Spark anrufen und mit ihm sprechen; er meldet sich an deiner Telefonanlage als IP-Telefon an.</span></div><label class="tgl"><input type="checkbox" id="chat.telefon"><i></i></label></div>
+      <div class="setrow"><div class="lbl"><b>Telefon</b><span>Vom Telefon im Haus den Spark anrufen und mit ihm sprechen; er meldet sich an deiner Telefonanlage als IP-Telefon an.</span></div><label class="tgl"><input type="checkbox" id="chat.telefon"><i></i></label></div>
       <div data-show="chat.telefon" style="margin-left:18px" id="teladmin">
         <div class="fh" id="telstate"></div>
         <label>1. Telefonanlage wählen</label><div class="rowin"><select id="telanlage" data-nodirty="1"></select><button class="b" type="button" id="telsuchen">Im Heimnetz suchen</button></div><div class="fh" id="telfound"></div>
@@ -817,7 +817,8 @@
         <label>Anbieter</label><select id="mailkind"><option value="icloud">iCloud</option><option value="gmail">Gmail</option><option value="gmx">GMX</option><option value="webde">web.de</option><option value="other">anderer IMAP-Server</option></select>
         <div class="fh" id="mailhint"></div>
         <label>Name</label><input id="mailname" placeholder="z. B. Privat" autocomplete="off">
-        <div class="two2" id="mailsrv"><div><label>Server</label><input id="mailhost" placeholder="imap.example.de" autocapitalize="off" autocomplete="off"></div><div><label>Port</label><input id="mailport" value="993" inputmode="numeric"></div></div>
+        <div class="two2" id="mailsrv"><div><label>Server</label><input id="mailhost" placeholder="imap.example.de" autocapitalize="off" autocomplete="off"></div><div><label>Port</label><input id="mailport" value="993" inputmode="numeric"></div>
+          <div><label>Postausgang (SMTP)</label><input id="mailsmtp" placeholder="smtp.example.de" autocapitalize="off" autocomplete="off"></div><div><label>Port</label><input id="mailsmtpport" value="465" inputmode="numeric"></div></div>
         <div class="two2"><div><label>Benutzer</label><input id="mailuser" autocapitalize="off" autocomplete="off"></div><div><label>Passwort</label><input type="password" id="mailpw" autocomplete="new-password"></div></div>
         <div class="row" style="margin-top:8px"><button class="b p" id="mailsave" type="button">Prüfen und hinzufügen</button></div></details>
       <div class="row" style="margin-top:8px"><button class="b" id="mailtest" type="button">Postfächer prüfen</button><span id="mailmsg"></span></div>
@@ -1005,7 +1006,7 @@
     <div class="mut" style="margin-top:8px">Läuft der Agent auf einem anderen Rechner, die LAN-IP der Spark nehmen. Ohne API-Schlüssel (Einstellungen → Sicherheit) kann jeder im Heimnetz die Sprachdienste nutzen. Den Agenten nicht auf dieser Spark installieren: Er führt selbst Befehle aus und käme so an Einstellungen und Schlüssel.</div>
   </div>
   <div class="card" data-sw="mcp_server"><h2>Spark als MCP-Server</h2>
-    <div class="mut">Programme wie Open WebUI, n8n, Home Assistant oder Claude verbinden sich unter <b>Ich → Dienste per MCP</b> mit einem eigenen Zugang pro Profil (Adresse <code>/mcp</code>, Streamable HTTP). Hier siehst du alle Zugänge und kannst jeden sofort beenden.</div>
+    <div class="mut">Programme wie Open WebUI, n8n, Home Assistant oder Claude verbinden sich unter <b>Ich → Spark als MCP-Server</b> mit einem eigenen Zugang pro Profil (Adresse <code>/mcp</code>, Streamable HTTP). Hier siehst du alle Zugänge und kannst jeden sofort beenden.</div>
     <div id="int-mcp" style="margin-top:8px"></div>
   </div>
   <div class="card" data-sw="mcp_own"><h2>Eigene MCP-Dienste der Profile</h2>

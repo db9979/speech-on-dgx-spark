@@ -89,7 +89,7 @@ struct AdminView: View {
                 }
             } else {
                 Section {
-                    NavigationLink("Monitoring") { StatusView() }
+                    NavigationLink("Überblick") { StatusView() }
                     NavigationLink("Logs") { LogsView() }
                     if s.role != "manager" { NavigationLink("Prüfen") { ChecksView() } }
                     if s.role != "manager" { NavigationLink("Verbrauch") { UsageView() } }
@@ -115,7 +115,7 @@ struct AdminView: View {
     }
 }
 
-// ---------------------------------------------------------------- Zustand → Monitoring
+// ---------------------------------------------------------------- Zustand → Überblick
 
 /// A timed poll's error, shown only from the second miss in a row (the Spark's restart during an update is one short
 /// miss), at the end of the list: the page keeps its last data and nothing shifts by itself (plaene/ruhige-seiten.md)
@@ -178,7 +178,7 @@ struct StatusView: View {
                 LabeledContent("CPU") { Text(verbatim: Self.num(sys["cpu"]) + " %") }
                 LabeledContent("GPU") { Text(verbatim: Self.num(gpu["util"]) + " % · " + Self.num(gpu["temp"]) + " °C · " + Self.num(gpu["power"]) + " W") }
             }
-            // Zustand → Monitoring → Rechner (rechnerblick.py): with the models on another computer both computers,
+            // Zustand → Überblick → Rechner (rechnerblick.py): with the models on another computer both computers,
             // numbers and fixed words only; the colour follows the panel's fixed rules ("stufe")
             let rech = d["rechner"] as? [String: Any] ?? [:]
             if rech["an"] as? Bool == true {
@@ -207,7 +207,7 @@ struct StatusView: View {
                     } header: { Text(verbatim: Self.rechnerName(c)) }
                 }
             }
-            // Zustand → Monitoring → Rundlauf (rundlauf.py): the last real round trip, each step in ms, the step that
+            // Zustand → Überblick → Rundlauf (rundlauf.py): the last real round trip, each step in ms, the step that
             // hakt with its fixed word; numbers only
             let rd = d["rundlauf"] as? [String: Any] ?? [:]
             if rd["an"] as? Bool == true {
@@ -228,7 +228,7 @@ struct StatusView: View {
                     LabeledContent("Ganzer Weg") { Text(verbatim: bad.isEmpty ? Self.ms(ms["ganz"]) : "–") }
                 }
             }
-            // the "Heute" tiles of Zustand → Monitoring (admin.glance): counts and times only; orange by the panel's rules
+            // the "Heute" tiles of Zustand → Überblick (admin.glance): counts and times only; orange by the panel's rules
             let g = d["glance"] as? [String: Any] ?? [:]
             Section("Heute (24 Std.)") {
                 // answers per hour of the last 24 hours, oldest first (admin.glance "hours"), as small bars
@@ -272,7 +272,7 @@ struct StatusView: View {
             }
             if let e = miss.text { Text(SparkAPI.way(e)).foregroundStyle(.red) }
         }
-        .navigationTitle("Monitoring")
+        .navigationTitle("Überblick")
         .refreshable { await load() }
         .task {
             while !Task.isCancelled {
@@ -314,7 +314,7 @@ struct StatusView: View {
         return out
     }
 
-    /// a computer of Zustand → Monitoring → Rechner: its host name and its role
+    /// a computer of Zustand → Überblick → Rechner: its host name and its role
     static func rechnerName(_ c: [String: Any]) -> String {
         let rolle = c["id"] as? String == "modell" ? String(localized: "Modell-Rechner") : String(localized: "Panel-Rechner")
         let name = c["name"] as? String ?? ""

@@ -82,7 +82,7 @@ function usageInit(){const seg=$('usgseg');if(!seg)return;seg.outerHTML=vbSeg('u
   $('usgclear').onclick=async()=>{if(!confirm(t('Alle Zähler leeren? Die Zahlen aller Tage und Monate sind dann weg.','Empty all counters? The numbers of every day and month are gone then.')))return;
     try{await api('/api/admin/verbrauch/leeren',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});await loadUsage()}catch(e){$('usgmsg').textContent=e.message}}}
 usageInit();
-// ---------------------------------------------------------------- Zustand → Monitoring, card „Verbrauch heute“
+// ---------------------------------------------------------------- Zustand → Überblick, card „Verbrauch heute“
 async function zUsage(){const box=$('zverbrauch');if(!box||document.hidden)return;
   const {r,d}=await apiTry('/api/admin/verbrauch/heute');if(!r.ok)return;box.hidden=!d.on;if(!d.on)return;
   const row=(k,v)=>`<div class="zrow"><span>${esc(k)}</span><b class="vb-r">${esc(v)}</b></div>`;

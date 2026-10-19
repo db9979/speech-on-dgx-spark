@@ -19,7 +19,7 @@ Rules:
   written only for profiles that use the page.
 
     GET /api/profile/hintergrund     {"rows": [...], "sum": {...}, "why": {...}}  own profile, iPhone app too
-    GET /api/admin/hintergrund       counts per state over all profiles, no names (Zustand → Monitoring)
+    GET /api/admin/hintergrund       counts per state over all profiles, no names (Zustand → Überblick)
 """
 import datetime
 import json
@@ -529,7 +529,7 @@ def profile_state(request: Request, brief: bool = False, prof=Depends(own_profil
 
 @router.get("/api/admin/hintergrund", dependencies=[Depends(auth)])
 def admin_state(request: Request):
-    """Zustand → Monitoring: counts over the profiles that use the page, never names or labels."""
+    """Zustand → Überblick: counts over the profiles that use the page, never names or labels."""
     guard.limit(request, "bg", admin=True)
     if not features.admin_on("mystatus"):
         return {"on": False}

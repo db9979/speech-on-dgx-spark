@@ -238,7 +238,7 @@
 "id": "P040",
 "v": 228,
 "titel": "Fortschritt beim Lesen von Dokumenten",
-"text": "(.228, .232): A Funktionen → Eigene Dokumente: „Bilder und Scans lesen“ und „Bedeutungssuche“ an, P Ich → Dokumente beide an. Einen Scan mit mehreren Seiten hochladen und die Liste offen lassen: Steht „Seite x von y gelesen“ mit Balken und Grund („liest gerade Seite …“ bzw. „wartet auf eine ruhige Minute“, solange du sprichst), zählt es ohne Neuladen hoch? Danach „Bedeutung x von y“. Zustand → Monitoring, Karte „Eigene Dokumente“: Modell „läuft“ mit MiB, wartende Seiten. Im iPhone unter Meine Dokumente „Seite x von y gelesen“."
+"text": "(.228, .232): A Funktionen → Eigene Dokumente: „Bilder und Scans lesen“ und „Bedeutungssuche“ an, P Ich → Dokumente beide an. Einen Scan mit mehreren Seiten hochladen und die Liste offen lassen: Steht „Seite x von y gelesen“ mit Balken und Grund („liest gerade Seite …“ bzw. „wartet auf eine ruhige Minute“, solange du sprichst), zählt es ohne Neuladen hoch? Danach „Bedeutung x von y“. Zustand → Überblick, Karte „Eigene Dokumente“: Modell „läuft“ mit MiB, wartende Seiten. Im iPhone unter Meine Dokumente „Seite x von y gelesen“."
 },
 {
 "id": "P041",
@@ -250,7 +250,7 @@
 "id": "P042",
 "v": 236,
 "titel": "Gemeinsame Dokumente",
-"text": "(.236): A Funktionen → Eigene Dokumente → Gemeinsame Dokumente an. P db: Ich → Dokumente „Gemeinsame Dokumente“ an, an einer Anleitung „Für alle“ anhaken. Zweites Profil: Schalter an, steht die Anleitung unter „Von anderen für alle freigegeben“ und lässt sie sich ansehen? Frage dazu stellen: Nennt die Quelle „geteilt von db“? Ohne Schalter im zweiten Profil: nichts. Am Wohnzimmer-Lautsprecher mit fremder Stimme: keine gemeinsamen Dokumente. Zustand → Monitoring: Anleitung steht in der Karte, „Zurücknehmen“ wirkt."
+"text": "(.236): A Funktionen → Eigene Dokumente → Gemeinsame Dokumente an. P db: Ich → Dokumente „Gemeinsame Dokumente“ an, an einer Anleitung „Für alle“ anhaken. Zweites Profil: Schalter an, steht die Anleitung unter „Von anderen für alle freigegeben“ und lässt sie sich ansehen? Frage dazu stellen: Nennt die Quelle „geteilt von db“? Ohne Schalter im zweiten Profil: nichts. Am Wohnzimmer-Lautsprecher mit fremder Stimme: keine gemeinsamen Dokumente. Zustand → Überblick: Anleitung steht in der Karte, „Zurücknehmen“ wirkt."
 },
 {
 "id": "P043",
@@ -274,7 +274,7 @@
 "id": "P046",
 "v": 242,
 "titel": "PDF-Größe und Speicher",
-"text": "(.242): reading_the_marseille_tarot.pdf erneut unter Ich → Dokumente hochladen (bei über 100 MB vorher A Funktionen → Eigene Dokumente → Größte PDF-Datei erhöhen). Kommt es durch? Steht „Belegt: x von y“ mit Balken? A Zustand → Monitoring, Karte „Eigene Dokumente“: Speicher pro Profil sichtbar, für ein Profil einen anderen Wert setzen, wirkt er unter Ich → Dokumente?"
+"text": "(.242): reading_the_marseille_tarot.pdf erneut unter Ich → Dokumente hochladen (bei über 100 MB vorher A Funktionen → Eigene Dokumente → Größte PDF-Datei erhöhen). Kommt es durch? Steht „Belegt: x von y“ mit Balken? A Zustand → Überblick, Karte „Eigene Dokumente“: Speicher pro Profil sichtbar, für ein Profil einen anderen Wert setzen, wirkt er unter Ich → Dokumente?"
 },
 {
 "id": "P047",
@@ -431,7 +431,7 @@
 "id": "P072",
 "v": 303,
 "titel": "Optional: Unterschalter „MCP: Handeln mit Bestätigung“ an, beim Zugang „Handeln“",
-"text": "Optional: Unterschalter „MCP: Handeln mit Bestätigung“ an, beim Zugang „Handeln“ dazunehmen, in Open WebUI „Schalte das Licht im Büro an“: Push kommt, unter Ich → Dienste per MCP „Ja“ (mit Code) schaltet, „Nein“ nicht."
+"text": "Optional: Unterschalter „MCP: Handeln mit Bestätigung“ an, beim Zugang „Handeln“ dazunehmen, in Open WebUI „Schalte das Licht im Büro an“: Push kommt, unter Ich → Spark als MCP-Server „Ja“ (mit Code) schaltet, „Nein“ nicht."
 },
 {
 "id": "P073",
@@ -785,7 +785,7 @@
 "id": "P131",
 "v": 363,
 "titel": "V01.0.363 Eigene MCP-Dienste pro Profil",
-"text": "Funktionen → Agent-Funktionen → Dienste per MCP → „Eigene MCP-Dienste für Profile“ an. Im Profil Ich → Meine MCP-Dienste einschalten, einen MCP-Dienst mit Adresse und Schlüssel anbinden (Code wird verlangt). Erwartet: alle Werkzeuge „Aus“; eines auf „Lesen“ → Frage danach wird beantwortet, Zustand → Live zeigt unter Ereignisse „MCP: Name · Host · ok · … ms“, Ich → Mein Zustand eine Zeile für den Dienst. Ein Werkzeug auf „Handeln mit Ja“ → Assistent fragt „Soll ich …?“, erst „Ja“ führt aus. Apps und Schnittstellen → „Sperren“ → Werkzeug sofort weg. Optional „… mit Anmeldung (OAuth)“ an, Dienst ohne Schlüssel anbinden, „Beim Dienst anmelden“."
+"text": "Funktionen → Aufträge → Dienste per MCP → „Eigene MCP-Dienste für Profile“ an. Im Profil Ich → Meine MCP-Dienste einschalten, einen MCP-Dienst mit Adresse und Schlüssel anbinden (Code wird verlangt). Erwartet: alle Werkzeuge „Aus“; eines auf „Lesen“ → Frage danach wird beantwortet, Zustand → Live zeigt unter Ereignisse „MCP: Name · Host · ok · … ms“, Ich → Mein Zustand eine Zeile für den Dienst. Ein Werkzeug auf „Handeln mit Ja“ → Assistent fragt „Soll ich …?“, erst „Ja“ führt aus. Apps und Schnittstellen → „Sperren“ → Werkzeug sofort weg. Optional „… mit Anmeldung (OAuth)“ an, Dienst ohne Schlüssel anbinden, „Beim Dienst anmelden“."
 },
 {
 "id": "P132",
@@ -1107,7 +1107,7 @@
 "id": "P181",
 "v": 447,
 "titel": "Eigene Aufgaben und Beobachten",
-"text": "A: Funktionen → Agent-Funktionen → „Beobachten“ an (Profil hat eine Agent-Stufe). P: „Sag mir Bescheid, wenn es eine neue Firmware für meine FRITZ!Box gibt.“ → Rückfrage „Soll ich das so anlegen: … täglich um 08:00 …?“, nichts gesucht; „Ja“ → „Angelegt …“. Ich → Aufträge → Eigene Aufgaben: Zeile „Neue Firmware für FRITZ!Box“ mit Schalter; im Detail „Jetzt prüfen“ → nach dem Lauf entweder Mitteilung „🔔 Neu gefunden: …“ mit Version und Adresse oder still, Verlauf zeigt „nichts Neues“. Zweites „Jetzt prüfen“ → still (schon bekannt). „Bekanntes vergessen“, nochmal prüfen → wieder „neu“. „Melde dich, sobald der Flug nach Rom unter 100 Euro kostet“ → Preisgrenze 100 € im Detail. „Beobachte das lieber jeden Montag“ → Rückfrage, „Ja“ → wöchentlich, „Mach das rückgängig“ → wieder täglich. Liste: wiederkehrende Erinnerung („Erinnere mich jeden Montag um 7 an den Müll“) erscheint, Schalter aus → klingelt nirgends, an → kommt wieder; Smart-Home-Regel pausieren; „Sag mir Bescheid, wenn eine Mail von der Sparkasse kommt“ → Ja → Absender unter Mail. iPhone-App (neuer Build) → Von selbst → „Eigene Aufgaben“ mit Schalter und Wischen zum Löschen. Gast und Profil ohne Agent-Stufe: kein Vorschlag. Logs → Diagnose nur „agent: watch run | result still | new 0 | dropped 0 | …“; Live: Lauf als „Beobachten“.",
+"text": "A: Funktionen → Aufträge → „Beobachten“ an (Profil hat eine Agent-Stufe). P: „Sag mir Bescheid, wenn es eine neue Firmware für meine FRITZ!Box gibt.“ → Rückfrage „Soll ich das so anlegen: … täglich um 08:00 …?“, nichts gesucht; „Ja“ → „Angelegt …“. Ich → Aufträge → Eigene Aufgaben: Zeile „Neue Firmware für FRITZ!Box“ mit Schalter; im Detail „Jetzt prüfen“ → nach dem Lauf entweder Mitteilung „🔔 Neu gefunden: …“ mit Version und Adresse oder still, Verlauf zeigt „nichts Neues“. Zweites „Jetzt prüfen“ → still (schon bekannt). „Bekanntes vergessen“, nochmal prüfen → wieder „neu“. „Melde dich, sobald der Flug nach Rom unter 100 Euro kostet“ → Preisgrenze 100 € im Detail. „Beobachte das lieber jeden Montag“ → Rückfrage, „Ja“ → wöchentlich, „Mach das rückgängig“ → wieder täglich. Liste: wiederkehrende Erinnerung („Erinnere mich jeden Montag um 7 an den Müll“) erscheint, Schalter aus → klingelt nirgends, an → kommt wieder; Smart-Home-Regel pausieren; „Sag mir Bescheid, wenn eine Mail von der Sparkasse kommt“ → Ja → Absender unter Mail. iPhone-App (neuer Build) → Von selbst → „Eigene Aufgaben“ mit Schalter und Wischen zum Löschen. Gast und Profil ohne Agent-Stufe: kein Vorschlag. Logs → Diagnose nur „agent: watch run | result still | new 0 | dropped 0 | …“; Live: Lauf als „Beobachten“.",
 "thread": "Eigene Aufgaben finden und verwalten"
 },
 {
@@ -1128,7 +1128,7 @@
 "id": "P184",
 "v": 447,
 "titel": "Treffer nachsortieren",
-"text": "Vorher Ich → Dokumente → Suchprüfung → „Jetzt prüfen“ und die Zahl „Gemischt“ merken. A: Funktionen → Eigene Dokumente → „Treffer nachsortieren“ an, Modell „klein“. Eine Frage zu einem Dokument stellen: die erste Antwort kommt wie bisher (das Modell lädt im Hintergrund, beim ersten Mal von Hugging Face). Zustand → Monitoring → Eigene Dokumente: Zeile „Treffer nachsortieren (CPU-Modell)“ wird „Standby“/„arbeitet“ mit MiB; bei „Fehler“ den Grund notieren (dann gibt es die Modelldatei unter diesem Namen nicht, bitte melden). Nächste Frage: Logs → Anfragen zeigt den Schritt „Nachsortieren“ mit n 30, keep 5, state ok und die Dauer. „Jetzt prüfen“ (10 Minuten später): neue Zeile „Nachsortiert“, besser als „Gemischt“? Logs → Diagnose nur „wissen: nachsortieren | 30 -> 5 | NNN ms“. „Höchstens warten“ auf 300 stellen: bei langen Dokumenten „nachsortieren langsam … reihenfolge der mischung“, die Antwort wartet nicht. Modell „groß“ ausprobieren und vergleichen. Schalter aus → Modell stoppt (Monitoring).",
+"text": "Vorher Ich → Dokumente → Suchprüfung → „Jetzt prüfen“ und die Zahl „Gemischt“ merken. A: Funktionen → Eigene Dokumente → „Treffer nachsortieren“ an, Modell „klein“. Eine Frage zu einem Dokument stellen: die erste Antwort kommt wie bisher (das Modell lädt im Hintergrund, beim ersten Mal von Hugging Face). Zustand → Überblick → Eigene Dokumente: Zeile „Treffer nachsortieren (CPU-Modell)“ wird „Standby“/„arbeitet“ mit MiB; bei „Fehler“ den Grund notieren (dann gibt es die Modelldatei unter diesem Namen nicht, bitte melden). Nächste Frage: Logs → Anfragen zeigt den Schritt „Nachsortieren“ mit n 30, keep 5, state ok und die Dauer. „Jetzt prüfen“ (10 Minuten später): neue Zeile „Nachsortiert“, besser als „Gemischt“? Logs → Diagnose nur „wissen: nachsortieren | 30 -> 5 | NNN ms“. „Höchstens warten“ auf 300 stellen: bei langen Dokumenten „nachsortieren langsam … reihenfolge der mischung“, die Antwort wartet nicht. Modell „groß“ ausprobieren und vergleichen. Schalter aus → Modell stoppt (Monitoring).",
 "thread": "Suche schärfen"
 },
 {
@@ -1237,7 +1237,7 @@
 "id": "P200",
 "v": 550,
 "titel": "Verbrauchszähler und Tageskontingent",
-"text": "A: Funktionen → Zugang → „Verbrauchszähler“ an. P: zwei, drei Fragen im Assistenten stellen, eine per Sprache. Zustand → Verbrauch: Kacheln „Sprachmodell heute“ (Tokens, gelesen/geschrieben), „Aus dem Zwischenspeicher“ (%), „Sprache heute“ zeigen Zahlen; Balken für heute; „Nach Modell“ mit Qwen-Namen, Spracherkennung, Sprachausgabe; „Nach Bereich“ → Gespräch aufklappen zeigt „Gespräch“, „Weiche“ steht als eigener Bereich; „Nach Profil“ nennt P. „24 h“ und „12 Monate“ umschalten. Zustand → Monitoring: Karte „Verbrauch heute“, Zeile antippen springt zu Zustand → Verbrauch. Live: Kasten Sprachmodell „… Tokens/min · heute …“. Technik → Sprachmodell: Zeile „Heute“ mit Anfragen und Tokens. P: Ich → Verbrauch zeigt nur die eigenen Zahlen, „Meine Zahlen löschen“ leert alles außer heute. Kontingent: Funktionen → darunter „Tageskontingent“ an, Wert 1 (= 1000 Tokens). P (kein Admin-Profil) fragt etwas: nach spätestens zwei Fragen kommt „Für heute ist dein Kontingent beim Sprachmodell aufgebraucht …“, Logs → Diagnose „System“: verbrauch: Kontingent erreicht | <Profil> | …. Zustand → Verbrauch bei P „0“ setzen → P bekommt wieder Antworten. iPhone (neuer TestFlight-Build): Spark verwalten → Verbrauch. Danach Kontingent wieder aus.",
+"text": "A: Funktionen → Zugang → „Verbrauchszähler“ an. P: zwei, drei Fragen im Assistenten stellen, eine per Sprache. Zustand → Verbrauch: Kacheln „Sprachmodell heute“ (Tokens, gelesen/geschrieben), „Aus dem Zwischenspeicher“ (%), „Sprache heute“ zeigen Zahlen; Balken für heute; „Nach Modell“ mit Qwen-Namen, Spracherkennung, Sprachausgabe; „Nach Bereich“ → Gespräch aufklappen zeigt „Gespräch“, „Weiche“ steht als eigener Bereich; „Nach Profil“ nennt P. „24 h“ und „12 Monate“ umschalten. Zustand → Überblick: Karte „Verbrauch heute“, Zeile antippen springt zu Zustand → Verbrauch. Live: Kasten Sprachmodell „… Tokens/min · heute …“. Technik → Sprachmodell: Zeile „Heute“ mit Anfragen und Tokens. P: Ich → Verbrauch zeigt nur die eigenen Zahlen, „Meine Zahlen löschen“ leert alles außer heute. Kontingent: Funktionen → darunter „Tageskontingent“ an, Wert 1 (= 1000 Tokens). P (kein Admin-Profil) fragt etwas: nach spätestens zwei Fragen kommt „Für heute ist dein Kontingent beim Sprachmodell aufgebraucht …“, Logs → Diagnose „System“: verbrauch: Kontingent erreicht | <Profil> | …. Zustand → Verbrauch bei P „0“ setzen → P bekommt wieder Antworten. iPhone (neuer TestFlight-Build): Spark verwalten → Verbrauch. Danach Kontingent wieder aus.",
 "thread": "Token-Verbrauch je Sprachmodell"
 },
 {
@@ -1259,7 +1259,7 @@
 "id": "P203",
 "v": 556,
 "titel": "Zustand als Kacheln",
-"text": "Zustand → Monitoring am Rechner: oben der Satz mit Chips (Version, Sicherung, Prüfung), bei offenen Punkten „Zum offenen Punkt“ (springt zu „Braucht dich“ direkt darunter). „Jetzt“: vier Kacheln mit Symbol und Farbleiste, Antippen klappt „Technische Details“ auf bzw. öffnet Prüfen. „Heute“: Kacheln Antworten, Erster Ton, Lautsprecher (gelb, wenn nicht alle online), Hintergrund; jede springt zu ihrer Stelle (Logs → Anfragen, Ich → Lautsprecher, Logs). Darunter „Bereiche“ mit Symbol, am Rechner zweispaltig. Handy (Browser und Android-App): Kacheln zweispaltig, nichts ragt über den Rand. Englisch umschalten: Now, Today, Areas. iPhone (neuer TestFlight-Build): Spark verwalten → Monitoring zeigt den Abschnitt „Heute (24 Std.)“.",
+"text": "Zustand → Überblick am Rechner: oben der Satz mit Chips (Version, Sicherung, Prüfung), bei offenen Punkten „Zum offenen Punkt“ (springt zu „Braucht dich“ direkt darunter). „Jetzt“: vier Kacheln mit Symbol und Farbleiste, Antippen klappt „Technische Details“ auf bzw. öffnet Prüfen. „Heute“: Kacheln Antworten, Erster Ton, Lautsprecher (gelb, wenn nicht alle online), Hintergrund; jede springt zu ihrer Stelle (Logs → Anfragen, Ich → Lautsprecher, Logs). Darunter „Bereiche“ mit Symbol, am Rechner zweispaltig. Handy (Browser und Android-App): Kacheln zweispaltig, nichts ragt über den Rand. Englisch umschalten: Now, Today, Areas. iPhone (neuer TestFlight-Build): Spark verwalten → Monitoring zeigt den Abschnitt „Heute (24 Std.)“.",
 "thread": "Zustand-Übersicht"
 },
 {
@@ -1280,7 +1280,7 @@
 "id": "P206",
 "v": 568,
 "titel": "Säulen „Antworten pro Stunde“",
-"text": "Zustand → Monitoring, Abschnitt „Heute“: über den vier Kacheln eine breite Kachel mit 24 Säulen, rechts „jetzt“; nach einer neuen Frage wächst die rechte Säule (Seite neu laden). Maus über eine Säule zeigt Stunde und Zahl. Antippen öffnet Zustand → Logs → Anfragen. Handy 320/390: Beschriftung in einer Zeile, nichts ragt über den Rand. iPhone (neuer TestFlight-Build): Spark verwalten → Monitoring → „Heute (24 Std.)“ zeigt die Säulen.",
+"text": "Zustand → Überblick, Abschnitt „Heute“: über den vier Kacheln eine breite Kachel mit 24 Säulen, rechts „jetzt“; nach einer neuen Frage wächst die rechte Säule (Seite neu laden). Maus über eine Säule zeigt Stunde und Zahl. Antippen öffnet Zustand → Logs → Anfragen. Handy 320/390: Beschriftung in einer Zeile, nichts ragt über den Rand. iPhone (neuer TestFlight-Build): Spark verwalten → Monitoring → „Heute (24 Std.)“ zeigt die Säulen.",
 "thread": "Zustand-Übersicht"
 },
 {
@@ -1308,14 +1308,14 @@
 "id": "P210",
 "v": 628,
 "titel": "Anrufe von außen, Stufe T3",
-"text": "Erst prüfen, dass sich der Spark jetzt überhaupt anmeldet (bis V01.0.627 griff der Schalter nicht): Funktionen → Den Spark anrufen → Zustand „Angemeldet.“, Zustand → Dienste „Telefon“ grün. FRITZ!Box: beim IP-Telefon „Spark“ die Festnetznummer als ankommende Rufnummer wählen. A: „Anrufe von außen“ an. Vom Handy mit bestätigter Nummer (Stufe T2) die Festnetznummer anrufen: „Hallo, hier ist der Spark.“ ohne Namen; „Wie wird das Wetter?“ geht; „Was steht morgen im Kalender?“ → Hinweis auf die PIN; PIN und # → Termine. Von einem fremden Handy: abgewiesen (besetzt/abgelehnt). „Unbekannte Anrufer als Gast“ an: fremdes Handy bekommt Frage und Antwort, „Mach das Licht an“ geht nicht. Unterdrückte Nummer: wie unbekannt. Ich → Telefon → Meine Telefonate: „Von außen“. Live: „von außen n, davon m Gäste“. Logs → Diagnose: „telefon: anruf extern bekannt als …“, „… unbekannt als gast“, nie eine Nummer. Danach „Anrufe von außen“ wieder aus → Handy wird abgewiesen.",
+"text": "Erst prüfen, dass sich der Spark jetzt überhaupt anmeldet (bis V01.0.627 griff der Schalter nicht): Funktionen → Telefon → Zustand „Angemeldet.“, Zustand → Dienste „Telefon“ grün. FRITZ!Box: beim IP-Telefon „Spark“ die Festnetznummer als ankommende Rufnummer wählen. A: „Anrufe von außen“ an. Vom Handy mit bestätigter Nummer (Stufe T2) die Festnetznummer anrufen: „Hallo, hier ist der Spark.“ ohne Namen; „Wie wird das Wetter?“ geht; „Was steht morgen im Kalender?“ → Hinweis auf die PIN; PIN und # → Termine. Von einem fremden Handy: abgewiesen (besetzt/abgelehnt). „Unbekannte Anrufer als Gast“ an: fremdes Handy bekommt Frage und Antwort, „Mach das Licht an“ geht nicht. Unterdrückte Nummer: wie unbekannt. Ich → Telefon → Meine Telefonate: „Von außen“. Live: „von außen n, davon m Gäste“. Logs → Diagnose: „telefon: anruf extern bekannt als …“, „… unbekannt als gast“, nie eine Nummer. Danach „Anrufe von außen“ wieder aus → Handy wird abgewiesen.",
 "thread": "Assistent per Telefon anrufen"
 },
 {
 "id": "P211",
 "v": 632,
 "titel": "Der Spark ruft an, Stufe T4",
-"text": "FRITZ!Box: beim IP-Telefon „Spark“ ausgehende Anrufe erlauben (nicht „nur interne Anrufe“) und die ausgehende Rufnummer wählen. A: Funktionen → Den Spark anrufen → Schritt 4: **611 eintragen, „Spark ruft an“ → Mobilteil klingelt, „… das ist der Testanruf …“, Seite „Abgehoben …“. „Der Spark ruft an“ an. P (Mobilteil zugeordnet): „Ruf mich in zwei Minuten an“ → Ich → Telefon → Anrufe vom Spark zeigt den Weckruf; nach zwei Minuten klingelt es, „Guten …, hier ist der Spark. Es ist …“, danach weiterfragen. „Erinnere mich per Anruf in 3 Minuten an den Tee“: mit Telefon-PIN fragt er erst nach Stimme oder PIN, dann „Du wolltest erinnert werden: den Tee“; nicht abheben → nach 5 Minuten noch einmal, dann Mitteilung mit dem Text. Einen geplanten Anruf unter Ich → Telefon löschen → kommt nicht. „Der Spark darf mich anrufen“ aus → der Assistent sagt, dass er nicht anrufen darf. Rückruf: „Wen der Spark anruft“ auf „auch bestätigte eigene Nummern“, „Anrufe von außen“ an, vom bestätigten Handy anrufen, „Was steht morgen im Kalender?“ → Hinweis auf PIN oder Rückruf; „Ruf mich zurück“ → er legt auf, ruft das Handy an: „… wie versprochen“, Kalenderfrage wird beantwortet. Alarm: „Anruf bei Dienstausfall“ an, tagsüber einen beobachteten Dienst (z. B. Websuche) 10 Minuten aus → Anruf am Mobilteil des Admins mit dem Dienstnamen; nachts (22–7 Uhr) nur Hinweis, um 7 Uhr der Anruf, falls noch weg. Ich → Telefon → Meine Telefonate: „Der Spark rief an“. Live: „der Spark rief n-mal an, m abgehoben“. Logs → Diagnose: „telefon: anruf raus (weckruf) fuer … angenommen“, „telefon: alarm in ruhezeit, nur push“, nie eine Nummer von außen oder ein Erinnerungstext.",
+"text": "FRITZ!Box: beim IP-Telefon „Spark“ ausgehende Anrufe erlauben (nicht „nur interne Anrufe“) und die ausgehende Rufnummer wählen. A: Funktionen → Telefon → Schritt 4: **611 eintragen, „Spark ruft an“ → Mobilteil klingelt, „… das ist der Testanruf …“, Seite „Abgehoben …“. „Der Spark ruft an“ an. P (Mobilteil zugeordnet): „Ruf mich in zwei Minuten an“ → Ich → Telefon → Anrufe vom Spark zeigt den Weckruf; nach zwei Minuten klingelt es, „Guten …, hier ist der Spark. Es ist …“, danach weiterfragen. „Erinnere mich per Anruf in 3 Minuten an den Tee“: mit Telefon-PIN fragt er erst nach Stimme oder PIN, dann „Du wolltest erinnert werden: den Tee“; nicht abheben → nach 5 Minuten noch einmal, dann Mitteilung mit dem Text. Einen geplanten Anruf unter Ich → Telefon löschen → kommt nicht. „Der Spark darf mich anrufen“ aus → der Assistent sagt, dass er nicht anrufen darf. Rückruf: „Wen der Spark anruft“ auf „auch bestätigte eigene Nummern“, „Anrufe von außen“ an, vom bestätigten Handy anrufen, „Was steht morgen im Kalender?“ → Hinweis auf PIN oder Rückruf; „Ruf mich zurück“ → er legt auf, ruft das Handy an: „… wie versprochen“, Kalenderfrage wird beantwortet. Alarm: „Anruf bei Dienstausfall“ an, tagsüber einen beobachteten Dienst (z. B. Websuche) 10 Minuten aus → Anruf am Mobilteil des Admins mit dem Dienstnamen; nachts (22–7 Uhr) nur Hinweis, um 7 Uhr der Anruf, falls noch weg. Ich → Telefon → Meine Telefonate: „Der Spark rief an“. Live: „der Spark rief n-mal an, m abgehoben“. Logs → Diagnose: „telefon: anruf raus (weckruf) fuer … angenommen“, „telefon: alarm in ruhezeit, nur push“, nie eine Nummer von außen oder ein Erinnerungstext.",
 "thread": "Assistent per Telefon anrufen"
 },
 {
@@ -1385,7 +1385,7 @@
 "id": "P221",
 "v": 673,
 "titel": "Rechner-Karten tars und Pi",
-"text": "Zustand → Monitoring: zwei Karten mit CPU, Speicher, Platte, Temperatur und 20-Minuten-Kurven. Stimmen die Werte mit dem Rechner überein?",
+"text": "Zustand → Überblick: zwei Karten mit CPU, Speicher, Platte, Temperatur und 20-Minuten-Kurven. Stimmen die Werte mit dem Rechner überein?",
 "thread": "Panel und Dienste auf Raspberry Pi 5"
 },
 {
@@ -1441,14 +1441,14 @@
 "id": "P229",
 "v": 699,
 "titel": "Rundlauf-Wächter",
-"text": "A: Funktionen → Dienst-Wächter an, darunter „Rundlauf prüfen“ an, Abstand „alle 2 Minuten“. Nach ein paar Minuten: Zustand → Monitoring zeigt die Karte „Rundlauf“ mit Sprechen, Hören, Sprachmodell in ms und „kommt durch“. Zustand → Live zeigt das Ziel „Rundlauf“ mit den Zeiten. Dann auf tars die Sprachausgabe anhalten (sudo systemctl stop speech-spark-tts): nach zwei Läufen kommt die Mitteilung „Rundlauf: Sprechen antwortet nicht“, Braucht dich ist rot. Wieder starten: „läuft wieder durch“. Während eines Gesprächs steht „wartet: Gespräch läuft“. iPhone: Spark verwalten → Monitoring zeigt den Abschnitt Rundlauf.",
+"text": "A: Funktionen → Dienst-Wächter an, darunter „Rundlauf prüfen“ an, Abstand „alle 2 Minuten“. Nach ein paar Minuten: Zustand → Überblick zeigt die Karte „Rundlauf“ mit Sprechen, Hören, Sprachmodell in ms und „kommt durch“. Zustand → Live zeigt das Ziel „Rundlauf“ mit den Zeiten. Dann auf tars die Sprachausgabe anhalten (sudo systemctl stop speech-spark-tts): nach zwei Läufen kommt die Mitteilung „Rundlauf: Sprechen antwortet nicht“, Braucht dich ist rot. Wieder starten: „läuft wieder durch“. Während eines Gesprächs steht „wartet: Gespräch läuft“. iPhone: Spark verwalten → Monitoring zeigt den Abschnitt Rundlauf.",
 "thread": "Verbesserungsideen"
 },
 {
 "id": "P230",
 "v": 700,
 "titel": "Musik: im Monitor und als neue Fassung",
-"text": "A: Ein Lied wünschen („Mach mir ein Pop-Lied über unseren Hund“). Solange es entsteht, steht es in Zustand → Live unter „Im Hintergrund“, Zustand → Monitoring und die Steuerzentrale zeigen den Musik-Dienst auf der Karte des Modell-Rechners. Ist es fertig, sagen: „geht das in Reggae-Style“. Es entsteht ein zweites Lied mit eigener Liedkarte. Fragt man nur „Wie lang ist das Lied?“, sagt der Spark nie, dass ein neues Lied entsteht.",
+"text": "A: Ein Lied wünschen („Mach mir ein Pop-Lied über unseren Hund“). Solange es entsteht, steht es in Zustand → Live unter „Im Hintergrund“, Zustand → Überblick und die Steuerzentrale zeigen den Musik-Dienst auf der Karte des Modell-Rechners. Ist es fertig, sagen: „geht das in Reggae-Style“. Es entsteht ein zweites Lied mit eigener Liedkarte. Fragt man nur „Wie lang ist das Lied?“, sagt der Spark nie, dass ein neues Lied entsteht.",
 "thread": "Musik erzeugen mit ACE-Step 1.5"
 },
 {
@@ -1476,7 +1476,7 @@
 "id": "P234",
 "v": 708,
 "titel": "Telefon hinter der Dream Machine: Testanruf spricht, Anruf von außen",
-"text": "A: In der UniFi Dream Machine UDP 31060 und 31062-31069 von 192.168.10.1 an das Panel (Pi) weiterleiten, außen und innen dieselben Ports. Funktionen → Den Spark anrufen → „Verbindung prüfen“: „Angemeldet“ und der Hinweis auf NAT. Schritt 4 „Spark ruft mich an“ an das eigene Mobilteil (z. B. **611): abheben, der Testsatz ist zu hören. Unter Zustand → Logs steht „telefon: aufgelegt nach … davon … mit sprache, rein … pakete“ mit Zahlen über null. Dann vom Handy von außen anrufen (Nummer unter Ich → Telefon bestätigt, „Anrufe von außen“ an): der Spark nimmt ab und grüßt; sonst die Zeilen mit „telefon:“ aus dem Log in den Thread kopieren.",
+"text": "A: In der UniFi Dream Machine UDP 31060 und 31062-31069 von 192.168.10.1 an das Panel (Pi) weiterleiten, außen und innen dieselben Ports. Funktionen → Telefon → „Verbindung prüfen“: „Angemeldet“ und der Hinweis auf NAT. Schritt 4 „Spark ruft mich an“ an das eigene Mobilteil (z. B. **611): abheben, der Testsatz ist zu hören. Unter Zustand → Logs steht „telefon: aufgelegt nach … davon … mit sprache, rein … pakete“ mit Zahlen über null. Dann vom Handy von außen anrufen (Nummer unter Ich → Telefon bestätigt, „Anrufe von außen“ an): der Spark nimmt ab und grüßt; sonst die Zeilen mit „telefon:“ aus dem Log in den Thread kopieren.",
 "thread": "Assistent per Telefon anrufen"
 },
 {
@@ -1518,7 +1518,7 @@
 "id": "P240",
 "v": 724,
 "titel": "OLED: Aktiv 10 min",
-"text": "A: Funktionen → Gehäuse: die Seite „Aktiv 10 min“ ist in der Reihe und zeigt eine große Zahl, daneben Profile und Gäste. Am Handy und am Rechner je eine Frage stellen: am Display steht dasselbe Profil nur einmal, ein Gerät ohne Anmeldung zählt als Gast. Dieselbe Zahl steht unter Zustand → Monitoring „Aktiv (10 min)“, in Zustand → Live oben und in der Steuerzentrale. Nach 10 Minuten ohne Frage steht 0.",
+"text": "A: Funktionen → Gehäuse: die Seite „Aktiv 10 min“ ist in der Reihe und zeigt eine große Zahl, daneben Profile und Gäste. Am Handy und am Rechner je eine Frage stellen: am Display steht dasselbe Profil nur einmal, ein Gerät ohne Anmeldung zählt als Gast. Dieselbe Zahl steht unter Zustand → Überblick „Aktiv (10 min)“, in Zustand → Live oben und in der Steuerzentrale. Nach 10 Minuten ohne Frage steht 0.",
 "thread": "Neue OLED-Seite mit aktiven Nutzern"
 },
 {
@@ -1630,7 +1630,7 @@
 "id": "P256",
 "v": 744,
 "titel": "Auftrag mit Plan, Rückfrage und Vorschlag",
-"text": "A: Funktionen → Agent-Funktionen → „Aufträge mit Plan, Rückfrage und Vorschlag“ an. P: unter Ich → Aufträge „Recherchiere zwei leise Geschirrspüler und frag mich nach dem Budget, dann erinnere mich am Samstag um 10 Uhr ans Bestellen“ starten: der Auftrag zeigt seinen Plan mit Häkchen, dann die Frage mit Antworten zum Antippen (die Mitteilung nennt die Frage nicht); eine Antwort tippen. Während er läuft „Nur Bosch“ nachschieben. Unter dem fertigen Bericht steht „Vorschlag: Erinnerung …“ mit Warnung und Ja/Nein; „Ja“ tippen, die Erinnerung steht unter Erinnerungen. Dasselbe in der iPhone-App (Auftrag öffnen) und in der Android-App.",
+"text": "A: Funktionen → Aufträge → „Aufträge mit Plan, Rückfrage und Vorschlag“ an. P: unter Ich → Aufträge „Recherchiere zwei leise Geschirrspüler und frag mich nach dem Budget, dann erinnere mich am Samstag um 10 Uhr ans Bestellen“ starten: der Auftrag zeigt seinen Plan mit Häkchen, dann die Frage mit Antworten zum Antippen (die Mitteilung nennt die Frage nicht); eine Antwort tippen. Während er läuft „Nur Bosch“ nachschieben. Unter dem fertigen Bericht steht „Vorschlag: Erinnerung …“ mit Warnung und Ja/Nein; „Ja“ tippen, die Erinnerung steht unter Erinnerungen. Dasselbe in der iPhone-App (Auftrag öffnen) und in der Android-App.",
 "thread": "Ideen aus Redde"
 },
 {
@@ -1728,7 +1728,7 @@
 "id": "P270",
 "v": 763,
 "titel": "OLED: CPU und RAM",
-"text": "A: Funktionen → Gehäuse: die Seiten „CPU und RAM Pi“ und „CPU und RAM TARS“ sind in der Reihe. Am Display steht „Pi“ bzw. „TARS“ mit zwei großen Zahlen, links CPU %, rechts RAM %. Die Werte passen ungefähr zu Zustand → Monitoring → Rechner. Ist TARS aus, zeigt seine Seite „TARS weg“.",
+"text": "A: Funktionen → Gehäuse: die Seiten „CPU und RAM Pi“ und „CPU und RAM TARS“ sind in der Reihe. Am Display steht „Pi“ bzw. „TARS“ mit zwei großen Zahlen, links CPU %, rechts RAM %. Die Werte passen ungefähr zu Zustand → Überblick → Rechner. Ist TARS aus, zeigt seine Seite „TARS weg“.",
 "thread": "Neue OLED-Seite mit aktiven Nutzern"
 },
 {
@@ -1881,7 +1881,7 @@
 "id": "P292",
 "v": 790,
 "titel": "Pi stabiler: Hänge-Wächter und Grenzen",
-"text": "A: Auf dem Pi sudo speech-spark update, danach systemctl show speech-spark-panel -p WatchdogUSec,CPUQuotaPerSecUSec,MemoryHigh: 1min 30s, 3s, 3221225472 (3 GiB). B: systemctl show -p RuntimeWatchdogUSec zeigt 15s. C: Zustand → Logs → Diagnose, Bereich System: „loopwacht: on | stall 5 s | restart 90 s“. D: Ich → Dokumente → Ausgelassene Ordner einen großen Ordner auslassen: hängt das Panel kurz, steht „loopwacht: stalled | … | 5 s“ und danach „free again“ im Log, oben auf den Admin-Seiten ein Hinweis und unter Zustand → Monitoring → Rechner am Panel-Rechner „Panel hing“. E: Während das Panel arbeitet, bleiben SSH, OLED und Steuerzentrale bedienbar.",
+"text": "A: Auf dem Pi sudo speech-spark update, danach systemctl show speech-spark-panel -p WatchdogUSec,CPUQuotaPerSecUSec,MemoryHigh: 1min 30s, 3s, 3221225472 (3 GiB). B: systemctl show -p RuntimeWatchdogUSec zeigt 15s. C: Zustand → Logs → Diagnose, Bereich System: „loopwacht: on | stall 5 s | restart 90 s“. D: Ich → Dokumente → Ausgelassene Ordner einen großen Ordner auslassen: hängt das Panel kurz, steht „loopwacht: stalled | … | 5 s“ und danach „free again“ im Log, oben auf den Admin-Seiten ein Hinweis und unter Zustand → Überblick → Rechner am Panel-Rechner „Panel hing“. E: Während das Panel arbeitet, bleiben SSH, OLED und Steuerzentrale bedienbar.",
 "thread": "Pi stabilisieren"
 },
 {
@@ -1951,7 +1951,7 @@
 "id": "P302",
 "v": 802,
 "titel": "Wer rechnet gerade (CPU je Dienst)",
-"text": "A: Zustand → Monitoring → Rechner: in beiden Karten unter CPU die Zeile „Wer rechnet gerade“ mit Balken je Dienst und „System und Rest“; beim Panel eingerückt seine Teile (z. B. Anfragen und Seiten). B: Eine Frage stellen oder Dokumente einlesen lassen: oben in der Kachel steht „am meisten: …“ mit dem Dienst, der gerade rechnet (z. B. Sprachmodell oder Panel · Bedeutungssuche). C: Nach ein paar Minuten zeigt der Farbstreifen darunter, wer wann am meisten rechnete (grau = Leerlauf). D: Zustand → Live: die Kästen Modell-Rechner und Panel-Rechner nennen „am meisten …“. E: Steuerzentrale am Bildschirm: die letzte Zeile jedes Rechners beginnt mit „▶ Dienst N %“. F: iPhone-App, Zustand → Monitoring: dieselbe Liste in der Rechner-Karte.",
+"text": "A: Zustand → Überblick → Rechner: in beiden Karten unter CPU die Zeile „Wer rechnet gerade“ mit Balken je Dienst und „System und Rest“; beim Panel eingerückt seine Teile (z. B. Anfragen und Seiten). B: Eine Frage stellen oder Dokumente einlesen lassen: oben in der Kachel steht „am meisten: …“ mit dem Dienst, der gerade rechnet (z. B. Sprachmodell oder Panel · Bedeutungssuche). C: Nach ein paar Minuten zeigt der Farbstreifen darunter, wer wann am meisten rechnete (grau = Leerlauf). D: Zustand → Live: die Kästen Modell-Rechner und Panel-Rechner nennen „am meisten …“. E: Steuerzentrale am Bildschirm: die letzte Zeile jedes Rechners beginnt mit „▶ Dienst N %“. F: iPhone-App, Zustand → Überblick: dieselbe Liste in der Rechner-Karte.",
 "thread": "CPU je Dienst im Monitoring"
 },
 {
@@ -2047,7 +2047,7 @@
 "id": "P316",
 "v": 816,
 "titel": "Kein Hänger beim Wissensordner-Abgleich",
-"text": "A: Auf dem Pi sudo speech-spark update. B: Zustand → Logs → Diagnose, Bereich System, nach loopwacht filtern: jede Zeile „stalled“ endet jetzt mit „busy <Stelle> <Prozent> %“. C: Während ein großer Wissensordner Runde um Runde gelesen wird, zeigt Zustand → Monitoring → Rechner am Panel-Rechner keine neuen Hänger mehr; kommen doch welche, die Zeilen in den Thread kopieren.",
+"text": "A: Auf dem Pi sudo speech-spark update. B: Zustand → Logs → Diagnose, Bereich System, nach loopwacht filtern: jede Zeile „stalled“ endet jetzt mit „busy <Stelle> <Prozent> %“. C: Während ein großer Wissensordner Runde um Runde gelesen wird, zeigt Zustand → Überblick → Rechner am Panel-Rechner keine neuen Hänger mehr; kommen doch welche, die Zeilen in den Thread kopieren.",
 "thread": "Pi stabilisieren"
 },
 {
@@ -2196,6 +2196,20 @@
 "titel": "Suchen, Anhänge, Weiterleiten, Ziehen",
 "text": "A: E-Mail, Suche „von:“ mit einem Absender, dann „hat:anhang“ und der Knopf „★ Markiert“: nur passende Mails. B: Eine Mail mit Anhang öffnen, „⬇ Name“: die Datei wird heruntergeladen, nichts öffnet sich in der Seite. C: „Weiterleiten“, eine Adresse eintragen, „Anhänge mitschicken“, „Vorschau“: Fwd-Betreff, die Mail unter deinen Zeilen, Anhänge genannt; „Senden“, beim Empfänger ansehen. D: Am Rechner eine Zeile auf einen Ordner in „Hierher ziehen“ ziehen, dann „Rückgängig“. E: Im iPhone suchen (Vorschläge antippen), Anhang antippen (Vorschau), „Weiterleiten“.",
 "thread": "Kalender und E-Mail in Panel und Apps"
+},
+{
+"id": "P338",
+"v": 844,
+"titel": "Postausgang beim eigenen Postfach",
+"text": "P: Ich → E-Mail → ein Postfach mit „Anderer IMAP-Server“ verbinden und unter „Postausgang (SMTP)“ den Server samt Port 465 oder 587 eintragen; die Liste zeigt „Postausgang host:port“. Eine Antwort schreiben, „Vorschau“: die Zeile „Über“ nennt genau diesen Server; senden und beim Empfänger ansehen. Ein altes eigenes Postfach ohne eingetragenen Postausgang: die Vorschau sagt, es neu zu verbinden, nichts wird gesendet. Im iPhone dasselbe (Feld „Postausgang“, Port-Auswahl, „Über“ in der Vorschau).",
+"thread": "Code-Prüfung: Tempo, Sicherheit, Bedienung"
+},
+{
+"id": "P339",
+"v": 844,
+"titel": "Gespräch eingeklappt, ein Name je Sache",
+"text": "P: Ich → Gespräch am Handy: nur „Zuhören“ ist offen, die anderen Gruppen sind eingeklappt und nennen in grauer Schrift, was drin ist; ein Sprung-Link wie „Ich → Gespräch → Antwortlänge“ klappt die Gruppe auf. A: Zustand → Überblick heißt nicht mehr Monitoring, am Handy unten „Assistent“ statt „Spark“, Seite „Spark verwalten“. Funktionen → Aufträge (vorher Agent-Funktionen), Funktionen → Telefon (vorher Den Spark anrufen), Ich → Spark als MCP-Server (vorher Dienste per MCP). Englisch: Features → Routing statt Switch, Me → By itself.",
+"thread": "Code-Prüfung: Tempo, Sicherheit, Bedienung"
 }
 ]
 }

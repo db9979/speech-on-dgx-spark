@@ -9,7 +9,7 @@ An own app for the iPhone (source in `ios/`): press the button, ask, the answer 
 3. To switch lights and devices from the app: **"Smart home from the app"** on. The code word applies as everywhere.
 4. For the wake word and stand mode: **"Allow listening all the time"** on.
 5. To start routes and calls by voice: **"Routes and calls on the iPhone"** on.
-6. Notes on its own (morning briefing, reminders) come from the start; they can be switched off under **Me → Proactive**. Reminders and timers ring as iPhone notifications, also with the app closed.
+6. Notes on its own (morning briefing, reminders) come from the start; they can be switched off under **Me → By itself**. Reminders and timers ring as iPhone notifications, also with the app closed.
 
 ## Getting the app onto the iPhone (on a Mac, about 15 minutes once)
 

@@ -745,7 +745,7 @@ def full_count(now=None):
 
 
 def for_zustand(now=None):
-    """Zustand → Monitoring, the card „Verbrauch heute“ (numbers only)."""
+    """Zustand → Überblick, the card „Verbrauch heute“ (numbers only)."""
     if not on():
         return {"on": False}
     r = report("30t", now=now)

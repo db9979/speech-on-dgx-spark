@@ -107,7 +107,7 @@ Other programs use the Spark over the [Model Context Protocol](https://modelcont
 - Each access belongs to one profile and can only use the tools the profile gave it and may use itself right now. Never to the outside: mail, memory, earlier conversations, secrets, settings.
 - "Home network only" (default): the key works only for requests straight from the LAN, without proxy headers and not from a listed reverse proxy.
 - `ask_spark`: the question counts as outside text. Nothing is switched, saved, learned, sent or proposed; nothing of it lands in the conversations.
-- Acting: a program only leaves a proposal. The profile gets a notification and decides under Me → Services over MCP ("Yes, do it" with the code window, or "No"). A proposal waits 15 minutes.
+- Acting: a program only leaves a proposal. The profile gets a notification and decides under Me → Spark as MCP server ("Yes, do it" with the code window, or "No"). A proposal waits 15 minutes.
 - Limits: 60 calls per minute and access (`ask_spark` 10), 2 at once per access, 6 overall; speech runs with the stage "last", people at the Spark go first. Without use an access ends after 90 days.
 - The journal shows each request as `mcp-server:` with program, tool and time, never the content.
 - Status → Live (since V01.0.334) shows each tool call as its own request "MCP-Client" with tool and target (speech as hearing or speaking, a proposal as "Bestätigung anfragen" → push, a confirmed action as its own request); the access's name shows only with the profile's consent ("My name in the request log"), contents never. `ask_spark` shows like a conversation.
@@ -120,7 +120,7 @@ Other programs use the Spark over the [Model Context Protocol](https://modelcont
 
 Since V01.0.363 (plan `plaene/eigene-mcp-dienste.md`) every profile can connect its own MCP services (Streamable HTTP), besides the ones the admin connects for everybody. Only that profile sees and uses them.
 
-**Switching on:** Admin: Features → Agent functions → Services over MCP → *Own MCP services for profiles* (`chat.mcp_own`), below it *… also in background jobs* (`chat.mcp_own_jobs`) and *… with sign-in (OAuth)* (`chat.mcp_own_oauth`); all off. Once released it works for every profile; only the admin blocks single profiles. Setup in the profile: Me → *My MCP services*, enter name, address and key and "Connect service". The profile needs no agent level for this.
+**Switching on:** Admin: Features → Jobs → Services over MCP → *Own MCP services for profiles* (`chat.mcp_own`), below it *… also in background jobs* (`chat.mcp_own_jobs`) and *… with sign-in (OAuth)* (`chat.mcp_own_oauth`); all off. Once released it works for every profile; only the admin blocks single profiles. Setup in the profile: Me → *My MCP services*, enter name, address and key and "Connect service". The profile needs no agent level for this.
 
 **Rules (fixed):**
 - At most 5 services per profile, each with at most 30 tools. Every tool is "Off" until the profile sets it to "Read" or "Act after yes". If the service changes a tool's description or inputs, it is "Off" again after "Fetch tools again".
@@ -153,7 +153,7 @@ Since V01.0.552 (Synology plan S7, guide only, no code in the Spark). If you wou
 2. Enter both digests (the commands are in the files), adjust the folder in `compose.yaml`, replace `SCHLUESSEL` in `nginx.conf` with a long random value (`openssl rand -hex 32`).
 3. Container Manager → Project → Create, choose the path, take `compose.yaml`, build and start.
 4. DSM → Control Panel → Login Portal → Advanced → Reverse Proxy → Create: source HTTPS with its own port or name, destination HTTP `localhost:8765`. Assign a certificate under Security → Certificate.
-5. Spark: the admin turns on Features → Agent functions → Services over MCP → *Own MCP services for profiles* and, since the NAS is in the home network, Settings → Security → *Allow home network addresses*.
+5. Spark: the admin turns on Features → Jobs → Services over MCP → *Own MCP services for profiles* and, since the NAS is in the home network, Settings → Security → *Allow home network addresses*.
 6. Profile: Me → *My MCP services*: name "NAS files", address `https://<NAS>:<port>/mcp`, the key, "Connect service". Under "Release tools" set only the reading tools (`read_text_file`, `list_directory`, `search_files`, `get_file_info` …) to "Read"; everything that writes, moves or creates stays "Off" (the folder is mounted read-only anyway).
 
 **Off:** remove the service in the Spark (the key is deleted), stop the project on the NAS and delete the reverse proxy rule. A new key: change it in `nginx.conf`, restart the doorman, enter the service again in the Spark with the new key.

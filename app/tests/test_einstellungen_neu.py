@@ -341,10 +341,16 @@ class Frame(unittest.TestCase):
                 br, pg, errors = await self.page(p, 1280, 900)
                 try:
                     await pg.evaluate("openMe('setbox')")
-                    await pg.wait_for_selector("#setform .setpane h3.sec")
+                    await pg.wait_for_selector("#setform details.megrp>summary")
                     self.assertEqual(await pg.evaluate("document.querySelectorAll('#setform .ptabs').length"), 0)
-                    heads = await pg.evaluate("[...document.querySelectorAll('#setform .setpane>h3.sec')].filter(h=>h.offsetParent).map(h=>h.textContent)")
-                    self.assertEqual(heads[:2], ["Zuhören", "Antwort"])
+                    # Code-Prüfung D9: every group folds, only the first is open, the summary names what is inside
+                    heads = await pg.evaluate("[...document.querySelectorAll('#setform details.megrp')].filter(d=>!d.hidden).map(d=>[d.querySelector(':scope>summary').firstChild.textContent,d.open,d.querySelector(':scope>summary>span').textContent])")
+                    self.assertEqual([h[0] for h in heads[:2]], ["Zuhören", "Antwort"])
+                    self.assertEqual([h[1] for h in heads], [True] + [False] * (len(heads) - 1))
+                    self.assertTrue(all(h[2] for h in heads), heads)
+                    self.assertEqual(await pg.evaluate("[...document.querySelectorAll('#setform .setrow')].filter(r=>!r.closest('details')).length"), 0)
+                    # a jump to a row in a folded group unfolds it (way.js wayOpen, as Sprung-Links and the search do)
+                    self.assertIs(await pg.evaluate("(()=>{const r=$('set_setform_length').closest('.setrow');const d=r.closest('details.megrp');if(d.open)return 'open';wayOpen(r);return d.open&&r.getBoundingClientRect().height>0})()"), True)
                     loose = await pg.evaluate("[...document.querySelectorAll('#setform .setrow')].filter(r=>!r.closest('.sgrp')).length")
                     self.assertEqual(loose, 0)
                     # Freigabe vereinfachen (Dominik 2026-10-13): what the admin releases works at once, so Ich has

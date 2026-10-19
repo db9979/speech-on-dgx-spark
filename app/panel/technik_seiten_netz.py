@@ -153,8 +153,8 @@ SEITEN = {
              "Heimnetz (Standard aus).",
              "Settings → Security → Allow home network addresses: calendars, contacts, mail and MCP may also go to the "
              "home network (default off)."),
-            ("Funktionen → Agent-Funktionen → Dienste per MCP: welche Server und Werkzeuge angeboten werden.",
-             "Features → Agent functions → Services over MCP: which servers and tools are offered."),
+            ("Funktionen → Aufträge → Dienste per MCP: welche Server und Werkzeuge angeboten werden.",
+             "Features → Jobs → Services over MCP: which servers and tools are offered."),
             ("Funktionen → Dienst-Wächter: Ausfälle sehen, darunter der Hinweis an Nutzer, wenn ein Dienst fehlt.",
              "Features → Service watch: see outages, below it the note to users when a service is missing."),
         ],
@@ -422,10 +422,10 @@ SEITEN = {
         "sehen": [
             ("Zustand → Live: Kasten „Modell-Rechner“ mit erreichbar, Dienste, Version und Pause.",
              "Status → Live: box „Model computer“ with reachable, services, version and pause."),
-            ("Zustand → Monitoring → Rechner: beide Rechner nebeneinander mit Kurven der letzten 20 Minuten und „Wer "
+            ("Zustand → Überblick → Rechner: beide Rechner nebeneinander mit Kurven der letzten 20 Minuten und „Wer "
              "rechnet gerade“ (Dienste und Teile des Panels mit ihrem Anteil an der CPU, Streifen der letzten 20 Minuten); "
              "Live zeigt dazu den Kasten „Panel-Rechner“, beide Kästen mit „am meisten …“.",
-             "Status → Monitoring → Computers: both computers side by side with curves of the last 20 minutes and „Who is "
+             "Status → Summary → Computers: both computers side by side with curves of the last 20 minutes and „Who is "
              "computing now“ (services and the panel's parts with their share of the CPU, strip of the last 20 minutes); "
              "Live adds the box „Panel computer“, both boxes with „am meisten …“."),
             ("Der Bildschirm am Panel-Rechner selbst; Zustand → Live zeigt im Kasten „Steuerzentrale“, ob er gerade zeigt.",

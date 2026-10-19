@@ -107,7 +107,7 @@ Andere Programme nutzen den Spark über das [Model Context Protocol](https://mod
 - Jeder Zugang gehört zu einem Profil und kann nur die Werkzeuge, die das Profil ihm gegeben hat und gerade selbst nutzen darf. Nie nach außen: Mails, Gedächtnis, frühere Gespräche, Geheimnisse, Einstellungen.
 - „Nur im Heimnetz“ (Standard): Der Schlüssel gilt nur, wenn die Anfrage direkt aus dem LAN kommt, ohne Proxy-Kopfzeilen und nicht von einem eingetragenen Reverse-Proxy.
 - `ask_spark`: Die Frage gilt als Text von außen. Nichts wird geschaltet, gespeichert, gelernt, gesendet oder vorgeschlagen; nichts davon landet in den Gesprächen.
-- Handeln: Ein Programm legt nur einen Vorschlag an. Das Profil bekommt eine Mitteilung und entscheidet unter Ich → Dienste per MCP („Ja, ausführen“ mit Code-Fenster, oder „Nein“). Ein Vorschlag wartet 15 Minuten.
+- Handeln: Ein Programm legt nur einen Vorschlag an. Das Profil bekommt eine Mitteilung und entscheidet unter Ich → Spark als MCP-Server („Ja, ausführen“ mit Code-Fenster, oder „Nein“). Ein Vorschlag wartet 15 Minuten.
 - Grenzen: 60 Aufrufe pro Minute und Zugang (`ask_spark` 10), 2 gleichzeitig pro Zugang, 6 insgesamt; Sprache läuft mit der Stufe „hinten“, Menschen am Spark gehen vor. Ohne Nutzung endet ein Zugang nach 90 Tagen.
 - Das Journal zeigt jede Anfrage als `mcp-server:` mit Programm, Werkzeug und Dauer, nie den Inhalt.
 - Zustand → Live (seit V01.0.334) zeigt jeden Werkzeug-Aufruf als eigene Anfrage „MCP-Client“ mit Werkzeug und Ziel (Sprache als Hören oder Sprechen, ein Vorschlag als „Bestätigung anfragen“ → Push, eine bestätigte Aktion als eigene Anfrage); der Name des Zugangs erscheint nur mit der Zustimmung des Profils („Mein Name im Anfragen-Log“), Inhalte nie. `ask_spark` erscheint wie ein Gespräch.
@@ -120,7 +120,7 @@ Andere Programme nutzen den Spark über das [Model Context Protocol](https://mod
 
 Seit V01.0.363 (Plan `plaene/eigene-mcp-dienste.md`) bindet jedes Profil eigene MCP-Dienste an (Streamable HTTP), zusätzlich zu denen, die der Admin für alle anbindet. Nur dieses Profil sieht und nutzt sie.
 
-**Einschalten:** Admin: Funktionen → Agent-Funktionen → Dienste per MCP → *Eigene MCP-Dienste für Profile* (`chat.mcp_own`), darunter *… auch in Hintergrundaufträgen* (`chat.mcp_own_jobs`) und *… mit Anmeldung (OAuth)* (`chat.mcp_own_oauth`); alle aus. Freigegeben gilt es für jedes Profil; einzelne Profile sperrt nur der Admin. Einrichten im Profil: Ich → *Meine MCP-Dienste*, Name, Adresse und Schlüssel eintragen und „Dienst anbinden“. Eine Agent-Stufe braucht das Profil dafür nicht.
+**Einschalten:** Admin: Funktionen → Aufträge → Dienste per MCP → *Eigene MCP-Dienste für Profile* (`chat.mcp_own`), darunter *… auch in Hintergrundaufträgen* (`chat.mcp_own_jobs`) und *… mit Anmeldung (OAuth)* (`chat.mcp_own_oauth`); alle aus. Freigegeben gilt es für jedes Profil; einzelne Profile sperrt nur der Admin. Einrichten im Profil: Ich → *Meine MCP-Dienste*, Name, Adresse und Schlüssel eintragen und „Dienst anbinden“. Eine Agent-Stufe braucht das Profil dafür nicht.
 
 **Regeln (fest):**
 - Höchstens 5 Dienste pro Profil, je höchstens 30 Werkzeuge. Jedes Werkzeug steht auf „Aus“, bis das Profil es auf „Lesen“ oder „Handeln mit Ja“ stellt. Ändert der Dienst Beschreibung oder Eingaben eines Werkzeugs, steht es nach „Werkzeuge neu abrufen“ wieder auf „Aus“.
@@ -153,7 +153,7 @@ Seit V01.0.552 (Synology-Plan S7, nur Anleitung, kein Code im Spark). Wer seine 
 2. Die beiden Digests eintragen (Befehle stehen in den Dateien), in `compose.yaml` den Ordner anpassen, in `nginx.conf` `SCHLUESSEL` durch einen langen Zufallswert ersetzen (`openssl rand -hex 32`).
 3. Container Manager → Projekt → Erstellen, Pfad wählen, `compose.yaml` übernehmen, bauen und starten.
 4. DSM → Systemsteuerung → Anmeldeportal → Erweitert → Reverse Proxy → Erstellen: Quelle HTTPS mit eigenem Port oder Namen, Ziel HTTP `localhost:8765`. Zertifikat unter Sicherheit → Zertifikat zuordnen.
-5. Spark: Admin schaltet Funktionen → Agent-Funktionen → Dienste per MCP → *Eigene MCP-Dienste für Profile* an und, weil die NAS im Heimnetz steht, Einstellungen → Sicherheit → *Heimnetz-Adressen erlauben*.
+5. Spark: Admin schaltet Funktionen → Aufträge → Dienste per MCP → *Eigene MCP-Dienste für Profile* an und, weil die NAS im Heimnetz steht, Einstellungen → Sicherheit → *Heimnetz-Adressen erlauben*.
 6. Profil: Ich → *Meine MCP-Dienste*: Name „NAS-Dateien“, Adresse `https://<NAS>:<Port>/mcp`, den Schlüssel, „Dienst anbinden“. Unter „Werkzeuge freigeben“ nur die lesenden Werkzeuge (`read_text_file`, `list_directory`, `search_files`, `get_file_info` …) auf „Lesen“; alles, was schreibt, verschiebt oder anlegt, bleibt „Aus“ (der Ordner ist ohnehin nur lesend eingebunden).
 
 **Aus:** Im Spark den Dienst entfernen (der Schlüssel wird gelöscht), auf der NAS das Projekt stoppen und die Reverse-Proxy-Regel löschen. Ein neuer Schlüssel: in `nginx.conf` ändern, Türsteher neu starten, im Spark den Dienst mit dem neuen Schlüssel neu eintragen.

@@ -15,7 +15,7 @@ def system_stats():
     """CPU and memory of the computer the models run on: with the models on another computer (steuer.remote) its last
     status (None when it has not answered: the panel computer's memory says nothing about the models, and a Raspberry
     Pi's 8 GB would read as "nur noch 7 GiB frei", tars 2026-10-15). The panel computer's own values are its card
-    under Zustand → Monitoring → Rechner (rechnerblick.py)."""
+    under Zustand → Überblick → Rechner (rechnerblick.py)."""
     import steuer
     if steuer.remote():
         import rechnerblick

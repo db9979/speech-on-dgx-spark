@@ -164,8 +164,8 @@ SEITEN = {
         "sehen": [
             ("Zustand → Verbrauch: gehörte Sekunden je Tag, Aufgabe und Profil.",
              "Status → Usage: seconds heard per day, task and profile."),
-            ("Zustand → Monitoring: Zustand der Engine, Anfragen, Fehler, mittlere Dauer und die Warteschlange.",
-             "Status → Monitoring: engine state, requests, failures, average time and the queue."),
+            ("Zustand → Überblick: Zustand der Engine, Anfragen, Fehler, mittlere Dauer und die Warteschlange.",
+             "Status → Summary: engine state, requests, failures, average time and the queue."),
             ("Zustand → Logs → Anfragen: wie lange eine Aufnahme gewartet hat und wie viele sie überholt hat.",
              "Status → Logs → Requests: how long a recording waited and how many it overtook."),
         ],
@@ -354,9 +354,9 @@ SEITEN = {
         "sehen": [
             ("Zustand → Verbrauch: gesprochene Sekunden je Tag, Aufgabe und Profil.",
              "Status → Usage: seconds spoken per day, task and profile."),
-            ("Zustand → Monitoring: Zustand der Engines, Anfragen, Fehler, Zeit bis zum ersten Ton und die "
+            ("Zustand → Überblick: Zustand der Engines, Anfragen, Fehler, Zeit bis zum ersten Ton und die "
              "Warteschlange.",
-             "Status → Monitoring: engine state, requests, failures, time to the first sound and the queue."),
+             "Status → Summary: engine state, requests, failures, time to the first sound and the queue."),
         ],
         "code": [
             ("tts_proxy.speech", ("der Weg eines Satzes durch den Proxy", "the way of a sentence through the proxy")),

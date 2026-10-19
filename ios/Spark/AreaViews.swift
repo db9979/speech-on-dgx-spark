@@ -999,6 +999,8 @@ struct AccountForm: View {
     @State private var provider = "icloud"
     @State private var name = ""
     @State private var host = ""
+    @State private var smtp = ""
+    @State private var smtpPort = 465
     @State private var url = ""
     @State private var user = ""
     @State private var secret = ""
@@ -1015,7 +1017,15 @@ struct AccountForm: View {
                     Text(verbatim: "web.de").tag("webde")
                     Text("Anderer").tag("")
                 }
-                if provider.isEmpty { TextField("IMAP-Server, z. B. imap.example.de", text: $host).textInputAutocapitalization(.never).autocorrectionDisabled() }
+                if provider.isEmpty {
+                    TextField("IMAP-Server, z. B. imap.example.de", text: $host).textInputAutocapitalization(.never).autocorrectionDisabled()
+                    // never guessed (code check C4): empty = this mailbox only reads
+                    TextField("Postausgang, z. B. smtp.example.de", text: $smtp).textInputAutocapitalization(.never).autocorrectionDisabled()
+                    Picker("Port Postausgang", selection: $smtpPort) {
+                        Text(verbatim: "465 (TLS)").tag(465)
+                        Text(verbatim: "587 (STARTTLS)").tag(587)
+                    }
+                }
                 TextField("Benutzer (E-Mail-Adresse)", text: $user).textInputAutocapitalization(.never).autocorrectionDisabled().keyboardType(.emailAddress)
                 SecureField("App-Passwort", text: $secret)
             case "sparkcal":
@@ -1058,7 +1068,10 @@ struct AccountForm: View {
         switch kind {
         case "mail":
             body = ["kind": provider, "user": user, "password": secret]
-            if provider.isEmpty { body["host"] = host }
+            if provider.isEmpty {
+                body["host"] = host
+                if !smtp.isEmpty { body["smtp_host"] = smtp; body["smtp_port"] = smtpPort }
+            }
             path = "api/profile/mail"
         case "ha":
             body = ["url": url, "token": secret]

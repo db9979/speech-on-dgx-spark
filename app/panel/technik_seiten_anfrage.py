@@ -199,7 +199,7 @@ SEITEN = {
             ("Funktionen → Rückfrage statt Raten: das Panel fragt nach, statt zu raten (Standard aus).",
              "Features → Ask instead of guessing: the panel asks instead of guessing (default off)."),
             ("Funktionen → Weiche: die festen Regeln, die die Werkzeuge eingrenzen.",
-             "Features → Switch: the fixed rules that narrow the tools."),
+             "Features → Routing: the fixed rules that narrow the tools."),
             ("Funktionen → Ablauf und Freigabe zeigen: Werkzeuge unter der Antwort, ein wartender Vorschlag als Karte mit Ja und Nein "
              "und eine Frage am Ende der Antwort mit ihren Antworten als Knöpfen (Ja/Nein, A oder B), ein kurzes Ja darauf behält "
              "das Thema der Frage davor (nur eigenes Profil und Gerät, Standard aus).",
@@ -263,7 +263,7 @@ SEITEN = {
                "das Modell geschrieben hat. Dazu kommen die Wörter, die der Admin unter Funktionen → Weiche gespeichert "
                "hat.",
                "Only the person's own latest message is read, never an answer before, outside text or what the "
-               "model wrote. The words the admin saved under Features → Switch are added.")),
+               "model wrote. The words the admin saved under Features → Routing are added.")),
             S("s2", "frage", ("Nur Plaudern?", "Only small talk?"),
               ("„Danke“, „Hallo“, „Gute Nacht“", "„thanks“, „hello“, „good night“"),
               ("Ist der ganze Satz ein Gruß oder Dank, heißt die Gruppe „plaudern“. Die Antwort bekommt dann gar kein "
@@ -448,7 +448,7 @@ SEITEN = {
              "Pflicht-Wörter, eigene Testsätze und was Fragen bekommen, die keine Regel erkennt. Jede Änderung läuft "
              "vorher durch alle Testsätze; ändert sich einer, wird erst nach Bestätigung gespeichert. Rückgängig hält "
              "die letzten {weiche.KEEP_VERSIONS} Fassungen.",
-             "Features → Switch: own words per group, „Not with“, extra tools, groups without narrowing, must words, "
+             "Features → Routing: own words per group, „Not with“, extra tools, groups without narrowing, must words, "
              "own test sentences and what questions no rule recognizes get. Every change runs through all test "
              "sentences first; if one changes, it is saved only after confirming. Undo keeps the last "
              "{weiche.KEEP_VERSIONS} versions."),
@@ -464,7 +464,7 @@ SEITEN = {
         "sehen": [
             ("Funktionen → Weiche: „Satz ausprobieren“ zeigt den ganzen Weg eines Satzes ohne Modell; dazu Testsätze, "
              "Alltagsquote und Statistik (7 Tage, nur Anzahlen).",
-             "Features → Switch: „Try a sentence“ shows the whole way of a sentence without the model; also test "
+             "Features → Routing: „Try a sentence“ shows the whole way of a sentence without the model; also test "
              "sentences, everyday score and statistics (7 days, counts only)."),
             ("Zustand → Logs: Zeilen „weiche: Absicht …“, „weiche: Folgefrage“, „weiche: Modell-Zuordnung …“ und "
              "„weiche: direkt abgerufen“.",
@@ -901,7 +901,7 @@ SEITEN = {
              "Antwort.",
              "Settings → Language model: Stop error loops (on by default) and under Advanced the Web searches per answer."),
             ("Funktionen → Weiche: welche Werkzeuge das Modell für eine Frage überhaupt sieht.",
-             "Features → Switch: which tools the model sees for a question at all."),
+             "Features → Routing: which tools the model sees for a question at all."),
         ],
         "sehen": [
             ("Zustand → Logs → Anfragen: jeder Aufruf mit verständlichem Namen, ok oder nicht, Länge und ob gesperrt.",

@@ -432,7 +432,7 @@ Panel auf einem eigenen Rechner, Modelle auf dem DGX: Kopplung, TLS-Tor, Wärter
 | `app/panel/notbetrieb.py` | Notbetrieb mit Parakeet: feste Befehle ohne Sprachmodell, wenn der Modell-Rechner fehlt |
 | `app/panel/rechenteile.py` | Wer rechnet gerade: CPU je Teil des Panels aus seinen Threads und Hilfsprozessen |
 | `app/rechner.py` | Werte eines Rechners: CPU (auch je Dienst), Speicher, Platte, Netz, Temperatur, Strom (für beide Rechner gleich) |
-| `app/panel/rechnerblick.py` | Zustand → Monitoring → Rechner: beide Rechner nebeneinander, Kurven, Hinweise nach festen Regeln |
+| `app/panel/rechnerblick.py` | Zustand → Überblick → Rechner: beide Rechner nebeneinander, Kurven, Hinweise nach festen Regeln |
 | `app/panel/schirm.py` | Steuerzentrale am Bildschirm: was die Textanzeige zeigt, nur lokal mit Schlüssel; der Dienst folgt dem Schalter |
 | `app/panel/steuer.py` | Einheiten der Modelle und GPU: hier oder über den Wärter des Modell-Rechners |
 | `app/steuerzentrale.py` | Textanzeige auf tty1: zeichnet die Steuerzentrale, Schrift nach Auflösung, dunkel nach Zeitplan |
@@ -1141,7 +1141,7 @@ Gilt bei: [Schritt 5](#kn-lautsprecher-s5), [Schritt 9](#kn-lautsprecher-s9)
 - Funktionen → Eigene Lautsprecher: Lautsprecher für alle Profile (Standard aus).
 - Ich → Lautsprecher: einrichten, Code eintippen, Raum, Lautstärke, Prüfen und das eigene Codewort.
 - Funktionen → Home Assistant Assist: Wyoming an und die erlaubten Adressen.
-- Funktionen → Den Spark anrufen: Assistent mit vier Schritten, Mobilteile zuordnen, Testanruf, Anrufe von außen, unbekannte Anrufer als Gast, der Spark ruft an, Anruf bei Dienstausfall.
+- Funktionen → Telefon: Assistent mit vier Schritten, Mobilteile zuordnen, Testanruf, Anrufe von außen, unbekannte Anrufer als Gast, der Spark ruft an, Anruf bei Dienstausfall.
 - Ich → Telefon: eigene Rufnummern mit Code bestätigen, Telefon-PIN, Anrufe vom Spark erlauben und geplante löschen, Telefonate löschen.
 
 #### Was du siehst
@@ -1237,7 +1237,7 @@ flowchart TD
 8. <a id="kn-mcpc-s8"></a>**Zu viele gleichzeitig?**: Höchstens 2 Aufrufe einer Verbindung und 6 aller Verbindungen laufen gleichzeitig.
 9. <a id="kn-mcpc-s9"></a>**Sprache und Lesen**: Spracherkennung (höchstens 10 MB) und Sprachausgabe (höchstens 2000 Zeichen) laufen mit der Stufe „hinten“, damit Menschen am Spark immer zuerst dran sind. Die Lese-Werkzeuge lesen nur die Daten dieses Profils.
 10. <a id="kn-mcpc-s10"></a>**Spark fragen, nur lesend**: ask_spark (10 pro Minute) läuft als ein Zug des Assistenten für das Profil, aber nur mit den Lese-Werkzeugen dieser Verbindung. Die Frage gilt von Anfang an als fremder Text: nichts wird geschaltet, gespeichert, gelernt oder gesendet, kein Gedächtnis, nichts davon im Verlauf. Passwörter und Codes werden aus der Antwort entfernt.
-11. <a id="kn-mcpc-s11"></a>**Soll etwas geändert werden?**: Smart Home, Erinnerung und Termin werden nur vorgeschlagen (höchstens 10 offen). Das Profil bekommt eine Mitteilung und entscheidet unter Ich → Dienste per MCP innerhalb von 15 Minuten; erst dann führt das Panel es aus. Bei Notaus oder gesetztem Smart-Home-Codewort schaltet ein MCP-Programm nichts.
+11. <a id="kn-mcpc-s11"></a>**Soll etwas geändert werden?**: Smart Home, Erinnerung und Termin werden nur vorgeschlagen (höchstens 10 offen). Das Profil bekommt eine Mitteilung und entscheidet unter Ich → Spark als MCP-Server innerhalb von 15 Minuten; erst dann führt das Panel es aus. Bei Notaus oder gesetztem Smart-Home-Codewort schaltet ein MCP-Programm nichts.
 12. <a id="kn-mcpc-s12"></a>**Antwort ans Programm**: Die Antwort wird auf 12000 Zeichen gekürzt. Ins Journal kommt nur, welches Programm, welches Werkzeug, ob es ging und wie lange, nie Frage oder Antwort.
 
 **Beispiele:** Claude liest die Termine: Termine des Profils als Text, gekürzt. · Heimnetz-Schlüssel über den Proxy: Abgelehnt: dieser Schlüssel gilt nur im Heimnetz. · n8n will das Licht schalten: Nur vorgeschlagen; es schaltet erst nach dem Ja im Browser. · Programm will Mails lesen: Nicht freigegeben: Mail gibt es über MCP nie.
@@ -1268,12 +1268,12 @@ Gilt bei: [Schritt 9](#kn-mcpc-s9)
 - Funktionen → Spark als MCP-Server: der Server für alle Profile (Standard aus).
 - Funktionen → Spark als MCP-Server → MCP-Server von außen: Verbindungen über den Reverse Proxy und OAuth.
 - Funktionen → Spark als MCP-Server → MCP: Handeln mit Bestätigung: die Werkzeuge, die etwas vorschlagen.
-- Ich → Dienste per MCP: Verbindungen anlegen, Werkzeuge wählen, Vorschläge bestätigen oder ablehnen.
+- Ich → Spark als MCP-Server: Verbindungen anlegen, Werkzeuge wählen, Vorschläge bestätigen oder ablehnen.
 
 #### Was du siehst
 
 - Zustand → Live: jeder Werkzeug-Aufruf als Anfrage des Programms, von außen unter „Über das Internet“.
-- Ich → Dienste per MCP: die letzten Vorschläge mit ihrem Stand.
+- Ich → Spark als MCP-Server: die letzten Vorschläge mit ihrem Stand.
 
 #### Im Code
 
@@ -2556,7 +2556,7 @@ flowchart TD
 #### Was du siehst
 
 - Zustand → Verbrauch: gehörte Sekunden je Tag, Aufgabe und Profil.
-- Zustand → Monitoring: Zustand der Engine, Anfragen, Fehler, mittlere Dauer und die Warteschlange.
+- Zustand → Überblick: Zustand der Engine, Anfragen, Fehler, mittlere Dauer und die Warteschlange.
 - Zustand → Logs → Anfragen: wie lange eine Aufnahme gewartet hat und wie viele sie überholt hat.
 
 #### Im Code
@@ -2655,7 +2655,7 @@ flowchart TD
 #### Was du siehst
 
 - Zustand → Verbrauch: gesprochene Sekunden je Tag, Aufgabe und Profil.
-- Zustand → Monitoring: Zustand der Engines, Anfragen, Fehler, Zeit bis zum ersten Ton und die Warteschlange.
+- Zustand → Überblick: Zustand der Engines, Anfragen, Fehler, Zeit bis zum ersten Ton und die Warteschlange.
 
 #### Im Code
 
@@ -2871,7 +2871,7 @@ Gilt bei: [Schritt 7](#kn-aussen-s7), [Schritt 8](#kn-aussen-s8)
 #### Einstellen
 
 - Einstellungen → Sicherheit → Heimnetz-Adressen erlauben: Kalender, Kontakte, Mail und MCP dürfen auch ins Heimnetz (Standard aus).
-- Funktionen → Agent-Funktionen → Dienste per MCP: welche Server und Werkzeuge angeboten werden.
+- Funktionen → Aufträge → Dienste per MCP: welche Server und Werkzeuge angeboten werden.
 - Funktionen → Dienst-Wächter: Ausfälle sehen, darunter der Hinweis an Nutzer, wenn ein Dienst fehlt.
 
 #### Was du siehst
@@ -3042,7 +3042,7 @@ flowchart TD
 #### Was du siehst
 
 - Zustand → Live: Kasten „Modell-Rechner“ mit erreichbar, Dienste, Version und Pause.
-- Zustand → Monitoring → Rechner: beide Rechner nebeneinander mit Kurven der letzten 20 Minuten und „Wer rechnet gerade“ (Dienste und Teile des Panels mit ihrem Anteil an der CPU, Streifen der letzten 20 Minuten); Live zeigt dazu den Kasten „Panel-Rechner“, beide Kästen mit „am meisten …“.
+- Zustand → Überblick → Rechner: beide Rechner nebeneinander mit Kurven der letzten 20 Minuten und „Wer rechnet gerade“ (Dienste und Teile des Panels mit ihrem Anteil an der CPU, Streifen der letzten 20 Minuten); Live zeigt dazu den Kasten „Panel-Rechner“, beide Kästen mit „am meisten …“.
 - Der Bildschirm am Panel-Rechner selbst; Zustand → Live zeigt im Kasten „Steuerzentrale“, ob er gerade zeigt.
 
 #### Im Code

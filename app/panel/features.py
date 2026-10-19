@@ -47,12 +47,12 @@ ME_PAGES = (("overbox", "Überblick", "Overview"), ("bgbox", "Mein Zustand", "My
             ("docbox", "Dokumente", "Documents"), ("bildbox", "Bilder", "Pictures"), ("musikbox", "Musik", "Music"), ("rmbox", "reMarkable", "reMarkable"), ("storebox", "Speicher", "Storage"),
             ("logbox", "Werkzeug-Verlauf", "Tool history"), ("taskbox", "Aufgaben", "Tasks"),
             ("agentbox", "Aufträge", "Jobs"), ("mymcpbox", "Meine MCP-Dienste", "My MCP services"), ("wxbox", "Wetter", "Weather"), ("feedbox", "Reddit und Feeds", "Reddit and feeds"),
-            ("probox", "Von selbst", "Proactive"), ("notebox", "Mitteilungen", "Notifications"),
+            ("probox", "Von selbst", "By itself"), ("notebox", "Mitteilungen", "Notifications"),
             ("writebox", "Schreibhilfe", "Writing help"), ("conbox", "Kontakte", "Contacts"),
             ("habox", "Smart Home", "Smart home"), ("roombox", "Raum-Modus", "Room mode"), ("espbox", "Lautsprecher", "Speakers"), ("telbox", "Telefon", "Phone"),
             ("trbox", "Bus und Bahn", "Bus and train"), ("tgbox", "Telegram", "Telegram"), ("appbox", "iPhone-App", "iPhone app"),
             ("andbox", "Android-App", "Android app"), ("deskbox", "Begleiter", "Companion"), ("pebbox", "Pebble-Uhr", "Pebble watch"),
-            ("termbox", "Terminal", "Terminal"), ("mcpbox", "Dienste per MCP", "Services over MCP"), ("secbox", "Sicherheit", "Security"),
+            ("termbox", "Terminal", "Terminal"), ("mcpbox", "Spark als MCP-Server", "Spark as MCP server"), ("secbox", "Sicherheit", "Security"),
             ("rpbox", "Probleme melden", "Reporting problems"), ("voicebox", "Sprechererkennung", "Speaker identification"),
             ("usebox", "Verbrauch", "Usage"))
 # pages of their own in the menu, outside Ich (Dominik 2026-10-18: „im richtigen Bereich ersichtlich und einstellbar,
@@ -68,6 +68,12 @@ APP_SKIP = {"overbox": "the app's own start screen shows the overview",
             "gobox": "first steps in the browser after signing up",
             "loginbox": "the app is signed in by its own key",
             "andbox": "the Android app, not for an iPhone"}
+# Code-Prüfung D8 (one name per thing): an Ich page carries the name of its function, or a word of it, so "Funktionen →
+# Telefon" and "Ich → Telefon" are found as the same thing; these pages are named otherwise, each with its reason
+# (test_namen)
+ME_NAME_OWN = {"kannbox": "what one can say, of all functions; its one function only adds tips while talking",
+               "secbox": "sign-in, sessions and keys of the profile; the second sign-in step is one part of it",
+               "habox": "the devices and rules of the home; the function carries the name of the system the admin connects"}
 
 
 class Feature(NamedTuple):
@@ -245,7 +251,7 @@ FEATURES = (
     F("reminders", "Timer und Erinnerungen", "Timers and reminders", "day", ("reminders",), guide="reminders"),
     F("tasks", "Aufgaben und Einkaufsliste", "Tasks and shopping list", "day", ("tasks",), me="taskbox", guide="tasks"),
     F("mystatus", "Mein Zustand", "My status", "day", ("my_status",), me="bgbox", guide="mystatus"),
-    F("agent", "Agent-Funktionen", "Agent functions", "day", ("agent",), me="agentbox", guide="agent"),
+    F("agent", "Aufträge", "Jobs", "day", ("agent",), me="agentbox", guide="agent"),
     # watches (beobachten.py): admin release only, every profile with agent functions, never guests
     F("beobachten", "Beobachten", "Watching", "day", ("agent_watch",), parent="agent", me="agentbox", guide="beobachten"),
     # package F of the redde ideas (auftragsplan.py): plan, question, proposal and Nachschieben inside a job
@@ -334,7 +340,7 @@ FEATURES = (
     F("messages_announce", "Durchsagen auf Lautsprechern", "Announcements on speakers", "home", ("messages_announce",), parent="chats", me="setbox", guide="messages_announce"),
     F("wyoming", "Home Assistant Assist (Wyoming)", "Home Assistant Assist (Wyoming)", "home", ("wyoming",), guide="wyoming"),
     # Den Spark anrufen (telefon.py, plan telefon-anruf.md): the Spark as an IP phone at the home's PBX
-    F("telefon", "Den Spark anrufen", "Calling the Spark", "home", ("telefon",), me="telbox", guide="telefon"),
+    F("telefon", "Telefon", "Phone", "home", ("telefon",), me="telbox", guide="telefon"),
     # handsets nobody assigned get questions and answers as a guest (never a tool); off: a sentence, then hang up
     F("telefongast", "Telefon: Gäste annehmen", "Phone: take guests", "home", ("telefon_gaeste", "telefon"),
       parent="telefon", guide="telefongast"),

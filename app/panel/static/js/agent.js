@@ -64,8 +64,8 @@ function agDetail(d,r){const back=`<button class="b ld-back" type="button" data-
     <div class="fh">${esc(t('Nächstes Mal: ','Next time: ')+(x.paused?t('pausiert','paused'):new Date(x.due).toLocaleString(L==='en'?'en-GB':'de-DE')))}</div>
     <div class="ld-acts">${x.paused?'':`<button class="b p" type="button" data-agremsave="${esc(x.id)}">${esc(t('Speichern','Save'))}</button>`}<button class="b danger" type="button" data-agremdel="${esc(x.id)}">${esc(t('Löschen','Delete'))}</button></div>`;
   if(r.k==='rule')return head+onRow(r.on,t('Aus = meldet nichts, bleibt gespeichert.','Off = says nothing, stays saved.'))+
-    `<div class="ld-note">${esc(t('Ich melde mich, wenn: ','I tell you when: ')+x.line)}</div>${(d.own||{}).rules_on?'':`<div class="fh">${esc(t('Smart-Home-Regeln sind bei dir aus: Ich → Von selbst.','Smart home rules are off for you: Me → Proactive.'))}</div>`}
-    <div class="fh">${esc(t('Bedingungen ändern: Ich → Von selbst.','Change the conditions: Me → Proactive.'))}</div>
+    `<div class="ld-note">${esc(t('Ich melde mich, wenn: ','I tell you when: ')+x.line)}</div>${(d.own||{}).rules_on?'':`<div class="fh">${esc(t('Smart-Home-Regeln sind bei dir aus: Ich → Von selbst.','Smart home rules are off for you: Me → By itself.'))}</div>`}
+    <div class="fh">${esc(t('Bedingungen ändern: Ich → Von selbst.','Change the conditions: Me → By itself.'))}</div>
     <div class="ld-acts"><button class="b danger" type="button" data-agruledel="${esc(x.id)}">${esc(t('Löschen','Delete'))}</button></div>`;
   if(r.k==='mail')return head+`<div class="ld-note">${esc(t('Kommt eine Mail, deren Absender „','When a mail comes whose sender contains "')+x.who+t('“ enthält, melde ich mich (nur Absender und Betreff, nie der Inhalt).','", I tell you (only sender and subject, never the content).'))}</div>
     ${(d.own||{}).mail_on?'':`<div class="fh">${esc(t('„Wichtige Mail“ ist bei dir aus: E-Mail → Einstellungen.','"Important mail" is off for you: E-mail → Settings.'))}</div>`}

@@ -97,10 +97,13 @@ class Send(unittest.TestCase):
         cls.c, cls.uid = profile("Senden Sina")
         fill()
         for body in ({"kind": "icloud", "user": helpers.MAIL_USER, "password": helpers.MAIL_PW},
-                     {"kind": "imap", "host": "imap.example.de", "port": 993, "user": helpers.MAIL_USER, "password": helpers.MAIL_PW}):
+                     {"kind": "imap", "host": "imap.example.de", "port": 993, "user": helpers.MAIL_USER, "password": helpers.MAIL_PW,
+                      "smtp_host": "smtp.example.de", "smtp_port": 465},
+                     {"kind": "imap", "name": "Ohne Postausgang", "host": "imap.example.de", "port": 993,
+                      "user": helpers.MAIL_USER, "password": helpers.MAIL_PW}):
             r = cls.c.post("/api/profile/mail", json=body)
             assert r.status_code == 200, r.text
-        cls.icloud, cls.own = [a["id"] for a in mail.get(cls.uid)["accounts"]]
+        cls.icloud, cls.own, cls.bare = [a["id"] for a in mail.get(cls.uid)["accounts"]]
 
     @classmethod
     def tearDownClass(cls):
@@ -158,6 +161,23 @@ class Send(unittest.TestCase):
         self.assertEqual((FakeSMTP.sent[0]["host"], FakeSMTP.sent[0]["port"]), ("smtp.example.de", 465))
         self.assertEqual(FakeSMTP.sent[0]["to"], ["carla@example.org", "dora@example.org"])
         self.assertEqual(len(FMB.boxes["Sent Messages"]), 1)  # the copy, read
+
+    def test_the_outgoing_server_is_never_guessed(self):
+        """Code check 19.10. C4: before, a mailbox of another provider sent its password to smtp.<domain>:465, a host
+        nobody typed in. Now only the server given with the account; without one nothing is written or sent."""
+        r = self.preview(account=self.bare)
+        self.assertEqual(r.status_code, 400)
+        self.assertIn("no outgoing server", r.json()["detail"])
+        self.assertEqual((FakeSMTP.sent, senden._pending), ([], {}))
+        self.assertEqual(self.preview(account=self.own).json()["server"], "smtp.example.de")
+        pub = {a["id"]: a["smtp"] for a in self.c.get("/api/profile/mail").json()["accounts"]}
+        self.assertEqual((pub[self.own], pub[self.bare], pub[self.icloud]), ("smtp.example.de:465", "", ""))
+        for bad, why in (({"smtp_host": "smtp example"}, "host name"), ({"smtp_host": "smtp.x.de", "smtp_port": 25}, "465")):
+            with self.assertRaises(ValueError) as e:
+                mail.entry(dict({"kind": "imap", "host": "imap.x.de", "user": "u@x.de", "password": "p"}, **bad))
+            self.assertIn(why, str(e.exception))
+        known = mail.entry({"kind": "icloud", "user": "u@x.de", "password": "p", "smtp_host": "evil.example"})
+        self.assertNotIn("smtp_host", known)                  # a known provider keeps its own server
 
     def test_answer(self):
         p = self.preview(account="", reply=f"{self.icloud}:100", to="bernd@example.de", subject="", text="Danke, ich hole ihn ab.").json()

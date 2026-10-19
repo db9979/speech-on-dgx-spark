@@ -141,7 +141,7 @@ class Rundlauf(unittest.TestCase):
             self.assertEqual(rundlauf.record(dict(bad)), "")
         a = rundlauf.alerts()
         self.assertEqual(len(a), 1)
-        self.assertEqual((a[0]["level"], a[0]["go"]), ("bad", "Zustand → Monitoring"))
+        self.assertEqual((a[0]["level"], a[0]["go"]), ("bad", "Zustand → Überblick"))
         self.assertRegex(a[0]["text"], r"^Rundlauf: Hören versteht den Satz nicht \(seit \d\d:\d\d\)\.$")
         self.assertIn(a[0], health.alerts())
         self.assertEqual(told, [("rundlauf", "Hören versteht den Satz nicht", True)])

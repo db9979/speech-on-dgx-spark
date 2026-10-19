@@ -406,8 +406,8 @@ def _status(cfg, healths):
     return {"time": time.time(), "system": sysd, "gpu": steuer.gpu(),
             "services": services, "qwen38": qwen38, "history": list(history),
             "alerts": health.alerts(), "watchdog": health.events[-10:], "glance": glance(cfg),
-            "rechner": rechnerblick.fuer_status(),   # both computers when the models run apart (Zustand → Monitoring → Rechner)
-            "rundlauf": rundlauf.fuer_status()}      # the last round trip through the models (Zustand → Monitoring → Rundlauf)
+            "rechner": rechnerblick.fuer_status(),   # both computers when the models run apart (Zustand → Überblick → Rechner)
+            "rundlauf": rundlauf.fuer_status()}      # the last round trip through the models (Zustand → Überblick → Rundlauf)
 
 
 def glance(cfg):

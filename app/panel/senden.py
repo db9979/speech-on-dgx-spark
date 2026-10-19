@@ -64,14 +64,18 @@ _today = {"day": "", "n": {}}  # mails sent today per profile (MAX_DAY) and for 
 SENT_FILE = os.path.join(STATE, "mail-gesendet.json")
 
 
+NO_OUTGOING = ("this mailbox has no outgoing server: remove it under E-Mail → Einstellungen and connect it again with its "
+               "outgoing server (SMTP)")
+
+
 def outgoing(acct):
-    """(host, port) of the mailbox's outgoing server."""
+    """(host, port) of the mailbox's outgoing server: the known provider's or the one typed in with the account,
+    never guessed (code check 19.10. C4); ValueError(NO_OUTGOING) without one."""
     if acct.get("smtp_host"):
         return acct["smtp_host"], int(acct.get("smtp_port") or 465)
-    host = acct["host"]
-    if host in SMTP_FOR:
-        return SMTP_FOR[host]
-    return ("smtp." + host[5:] if host.startswith("imap.") else host), 465
+    if acct["host"] in SMTP_FOR:
+        return SMTP_FOR[acct["host"]]
+    raise ValueError(NO_OUTGOING)
 
 
 def _addrs(raw, label):
@@ -136,6 +140,7 @@ def _preview(uid, body):
         raise ValueError("unknown mailbox")
     if not ADDR.fullmatch(acct["user"]):
         raise ValueError("this mailbox's user name is not an e-mail address, so it cannot send")
+    server = outgoing(acct)[0]          # shown on the preview sheet; none: refused before anything is written
     to, cc = _addrs(body.get("to"), "To"), _addrs(body.get("cc"), "Copy")
     if not to:
         raise ValueError("To: at least one address")
@@ -186,7 +191,7 @@ def _preview(uid, body):
         _pending[token] = {"uid": uid, "acct": acct["id"], "msg": msg, "n": len(to) + len(cc), "t": now}
     return {"token": token, "from": msg["From"], "to": to, "cc": cc, "subject": subject, "text": text,
             "files": [f"{name} ({max(1, len(data) // 1024)} KB)" for name, _, data in attached],
-            "account": acct.get("name", ""), "n": len(to) + len(cc), "seconds": PREVIEW_SECONDS}
+            "account": acct.get("name", ""), "server": server, "n": len(to) + len(cc), "seconds": PREVIEW_SECONDS}
 
 
 def _forward(uid, ref, folder, text, subject, with_files):

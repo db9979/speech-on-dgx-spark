@@ -12,7 +12,7 @@ speaker until it ends. systemd only restarts a panel that crashed, not one that 
                 one; when the loop beats again, a line with the seconds. Without a beat for RESTART_S seconds
                 systemd stops the panel and starts it again (Restart=always). Before the first beat (start-up) it
                 pings for at most START_MAX_S seconds.
-    view()      the stalls of the last DAY_S seconds in numbers: Zustand → Monitoring, Live, the hint on the admin
+    view()      the stalls of the last DAY_S seconds in numbers: Zustand → Überblick, Live, the hint on the admin
                 pages (health.alerts) for HINT_S seconds after a stall
 
 Fixed rule without a switch (a protection, like the watchdog of the speech services). Logs → Diagnose, area System:

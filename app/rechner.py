@@ -1,4 +1,4 @@
-"""The values of one computer for Zustand → Monitoring → Rechner (Dominik 2026-10-16, both computers when the panel
+"""The values of one computer for Zustand → Überblick → Rechner (Dominik 2026-10-16, both computers when the panel
 and the models run apart): CPU, memory, disk, network, temperature, fan, power flags, running time, device and system
 name, and how much of the CPU each own service takes (dienste_cpu, Dominik 2026-10-18 "woran gerade gearbeitet wird").
 Numbers and fixed words only, never a process, a path, an address or a file name.

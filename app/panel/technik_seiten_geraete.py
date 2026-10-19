@@ -921,9 +921,9 @@ SEITEN = {
              "Me → Speakers: set up, type the code, room, volume, check and the own code word."),
             ("Funktionen → Home Assistant Assist: Wyoming an und die erlaubten Adressen.",
              "Features → Home Assistant Assist: Wyoming on and the allowed addresses."),
-            ("Funktionen → Den Spark anrufen: Assistent mit vier Schritten, Mobilteile zuordnen, Testanruf, Anrufe von "
+            ("Funktionen → Telefon: Assistent mit vier Schritten, Mobilteile zuordnen, Testanruf, Anrufe von "
              "außen, unbekannte Anrufer als Gast, der Spark ruft an, Anruf bei Dienstausfall.",
-             "Features → Calling the Spark: wizard with four steps, assign handsets, test call, calls from outside, "
+             "Features → Phone: wizard with four steps, assign handsets, test call, calls from outside, "
              "unknown callers as guests, the Spark calls, call on outages."),
             ("Ich → Telefon: eigene Rufnummern mit Code bestätigen, Telefon-PIN, Anrufe vom Spark erlauben und geplante "
              "löschen, Telefonate löschen.",
@@ -969,7 +969,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ MCP-Programme
     "mcpc": {
-        "stand": "e793dd3b10",
+        "stand": "b6f6ff1234",
         "bezug": {
             "mcpserver.MAX_CONNS": ["s3"], "mcpserver.mcp_post": ["s1"], "mcpserver.origin_ok": ["s2"],
             "mcpserver.check_conn": ["s3"], "mcpserver.is_local": ["s4"], "mcpserver.find": ["s3"],
@@ -1072,11 +1072,11 @@ SEITEN = {
             S("s11", "frage", ("Soll etwas geändert werden?", "Should something change?"),
               ("nur Vorschlag, das Profil bestätigt", "only a proposal, the profile confirms"),
               ("Smart Home, Erinnerung und Termin werden nur vorgeschlagen (höchstens {mcpserver.MAX_WAITING} offen). "
-               "Das Profil bekommt eine Mitteilung und entscheidet unter Ich → Dienste per MCP innerhalb von "
+               "Das Profil bekommt eine Mitteilung und entscheidet unter Ich → Spark als MCP-Server innerhalb von "
                "{mcpserver.ACTION_SECONDS|min} Minuten; erst dann führt das Panel es aus. Bei Notaus oder gesetztem "
                "Smart-Home-Codewort schaltet ein MCP-Programm nichts.",
                "Smart home, reminder and appointment are only proposed (at most {mcpserver.MAX_WAITING} open). The "
-               "profile gets a notice and decides under Me → Services over MCP within {mcpserver.ACTION_SECONDS|min} "
+               "profile gets a notice and decides under Me → Spark as MCP server within {mcpserver.ACTION_SECONDS|min} "
                "minutes; only then the panel carries it out. With the kill switch or a smart home code word set, an MCP "
                "program switches nothing."),
               ("info", "ja", ("Vorgeschlagen, noch nicht ausgeführt", "Proposed, not carried out yet"))),
@@ -1129,14 +1129,14 @@ SEITEN = {
              "Features → Spark as MCP server → MCP server from outside: connections through the reverse proxy and OAuth."),
             ("Funktionen → Spark als MCP-Server → MCP: Handeln mit Bestätigung: die Werkzeuge, die etwas vorschlagen.",
              "Features → Spark as MCP server → MCP: acting with confirmation: the tools that propose something."),
-            ("Ich → Dienste per MCP: Verbindungen anlegen, Werkzeuge wählen, Vorschläge bestätigen oder ablehnen.",
-             "Me → Services over MCP: make connections, pick tools, confirm or decline proposals."),
+            ("Ich → Spark als MCP-Server: Verbindungen anlegen, Werkzeuge wählen, Vorschläge bestätigen oder ablehnen.",
+             "Me → Spark as MCP server: make connections, pick tools, confirm or decline proposals."),
         ],
         "sehen": [
             ("Zustand → Live: jeder Werkzeug-Aufruf als Anfrage des Programms, von außen unter „Über das Internet“.",
              "Status → Live: every tool call as a request of the program, from outside under „Über das Internet“."),
-            ("Ich → Dienste per MCP: die letzten Vorschläge mit ihrem Stand.",
-             "Me → Services over MCP: the latest proposals with their state."),
+            ("Ich → Spark als MCP-Server: die letzten Vorschläge mit ihrem Stand.",
+             "Me → Spark as MCP server: the latest proposals with their state."),
         ],
         "code": [
             ("mcpserver.mcp_post", ("der Endpunkt: Origin, Schlüssel, Limit, Methode", "the endpoint: origin, key, limit, method")),

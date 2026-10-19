@@ -5,7 +5,7 @@ everybody (agent.py, mcp.py). Only that profile sees and uses them; no other pro
 shared speaker only when the speech recognition clearly heard the profile's own voice (chat_turn sets
 "own" then; a foreign voice is never "own").
 
-Switches (features.py, all off): Funktionen → Agent-Funktionen → Dienste per MCP → "Eigene MCP-Dienste für
+Switches (features.py, all off): Funktionen → Aufträge → Dienste per MCP → "Eigene MCP-Dienste für
 Profile" (chat.mcp_own) with the sub-switches "… in Hintergrundaufträgen" (chat.mcp_own_jobs) and
 "… mit Anmeldung (OAuth)" (chat.mcp_own_oauth); released, it works for every profile the admin did not block.
 

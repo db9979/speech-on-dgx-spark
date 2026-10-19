@@ -1,4 +1,4 @@
-"""Zustand → Monitoring → Rechner (Dominik 2026-10-16, Variante 1): with the panel and the models on two computers,
+"""Zustand → Überblick → Rechner (Dominik 2026-10-16, Variante 1): with the panel and the models on two computers,
 both side by side. The values of a computer are numbers and fixed words only, the model computer's are taken as data
 (unknown keys, wrong kinds and numbers out of range are dropped), the warnings follow fixed rules with one log line
 per change, and on one Spark nothing changes. No test depends on the time of day: every time is given."""
@@ -205,8 +205,8 @@ class Karten(unittest.TestCase):
                                                     "rechner: hinweis ram an", "rechner: hinweis strom an"])
         al = rechnerblick.alerts()
         self.assertEqual({a["kind"] for a in al}, {"rechner"})
-        self.assertEqual({a["go"] for a in al}, {"Zustand → Monitoring → Rechner"})
-        self.assertIn({"kind": "rechner", "level": "bad", "go": "Zustand → Monitoring → Rechner",
+        self.assertEqual({a["go"] for a in al}, {"Zustand → Überblick → Rechner"})
+        self.assertIn({"kind": "rechner", "level": "bad", "go": "Zustand → Überblick → Rechner",
                        "text": "Der Panel-Rechner hat nur noch 0.3 GiB Arbeitsspeicher frei."}, al)
         self.assertEqual(rechnerblick.karte("panel", mono=1009.0)["stufe"], "bad")
         self.assertEqual(rechnerblick.karte("modell", mono=1009.0)["stufe"], "ok")

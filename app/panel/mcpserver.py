@@ -4,7 +4,7 @@ n8n, Home Assistant, Claude, ...) use the Spark's abilities over the Model Conte
 The other direction (the Spark uses outside MCP servers) is mcp.py.
 
 Who may: the admin switch chat.mcp_server (features.py "mcpserver"), every profile the admin did not block,
-never guests. A profile connects a program under Ich → Dienste per MCP; every connection belongs to that
+never guests. A profile connects a program under Ich → Spark als MCP-Server; every connection belongs to that
 profile, has its own token and its own list of tools, and ends after DAYS days without use or when it is
 removed. Connections are made only in the profile's own browser login (with a code when it has the second
 step); only hashes of the tokens are kept (STATE/mcp-server.json).
@@ -22,7 +22,7 @@ Everything from the program is data, never a command (fixed rules, the panel dec
   the question counts as outside text from the start: nothing is switched, saved, learned, sent or proposed,
   no memory and no earlier conversations, and nothing of it is kept in the conversations (chat_turn.py "mcp")
 - tools that change something (group "act", admin switch chat.mcp_server_act) only leave a proposal: the
-  profile gets a push and confirms or declines it in its own browser login (Ich → Dienste per MCP), with its
+  profile gets a push and confirms or declines it in its own browser login (Ich → Spark als MCP-Server), with its
   code window; only then the panel carries it out. Never: mail, memory, earlier conversations, secrets,
   settings, admin, running code (NEVER, checked by a self-test).
 - limits: request size, argument sizes, calls per minute per connection, two calls at a time per connection,
@@ -811,7 +811,7 @@ async def propose(c, name, args, now=None):
     try:
         import push
         await push.send(uid, "Spark: bitte bestätigen", f"„{c['name']}“ möchte: {what}. "
-                        "Bestätigen unter Ich → Dienste per MCP.", tag="mcp")
+                        "Bestätigen unter Ich → Spark als MCP-Server.", tag="mcp")
     except Exception as e:
         print("mcp-server: push", type(e).__name__, flush=True)
     return (f"Vorgeschlagen, noch NICHT ausgeführt: {what}. Die Person entscheidet auf dem Spark "
@@ -984,7 +984,7 @@ async def oauth_register(request: Request):
 
 @router.get("/oauth/authorize")
 def oauth_authorize(request: Request):
-    """Checks the request and hands it to the panel page (Ich → Dienste per MCP), where the signed-in
+    """Checks the request and hands it to the panel page (Ich → Spark als MCP-Server), where the signed-in
     profile sees the warning, picks the tools and confirms with its code."""
     _extern_or_404()
     guard.limit(request, "mcpreg")
@@ -1095,7 +1095,7 @@ async def oauth_token(request: Request):
     return _grant_error("unsupported_grant_type")
 
 
-# ---------------------------------------------------------------- the profile's page (Ich → Dienste per MCP)
+# ---------------------------------------------------------------- the profile's page (Ich → Spark als MCP-Server)
 def _on(prof=Depends(browser_profile)):
     """Only from the profile's own browser login (never with a device key or a token of this server)."""
     if not admin_on():

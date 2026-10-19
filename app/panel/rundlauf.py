@@ -20,7 +20,7 @@ FAIL_N failed runs in a row are a "Störung": the Dienst-Wächter tells the admi
 rules); the banner on every admin page names the step (alerts). A step clearly slower than usual (more than SLOW_X
 times its median of the last DAY, at least SLOW_MS more, with MIN_N runs to compare) is a quiet line (level info).
 
-Shown in the same commit: Zustand → Monitoring (tile "Rundlauf" with the steps and the curve of the last
+Shown in the same commit: Zustand → Überblick (tile "Rundlauf" with the steps and the curve of the last
 CURVE runs), Zustand → Live (the step's time on Sprechen, Hören and Sprachmodell, a hint at the box that hakt),
 the Steuerzentrale and the iPhone app's "Spark verwalten" (both from health.alerts and live.snapshot).
 Admin switch chat.rundlauf (off) below the Dienst-Wächter. Logs: "rundlauf: ok tts 420 asr 310 llm 280 ms",
@@ -47,7 +47,7 @@ SHARE = 0.6                   # share of the sentence's words Hören must bring 
 FAIL_N = 2                    # failed runs in a row before the admins hear of it
 DAY = 86400
 KEEP = 800                    # runs kept (a day at 2 minutes is 720)
-CURVE = 24                    # runs in the curve on Zustand → Monitoring
+CURVE = 24                    # runs in the curve on Zustand → Überblick
 MIN_N, SLOW_X, SLOW_MS = 12, 2.0, 300
 STEPS = ("tts", "asr", "llm")
 NAME = {"tts": ("Sprechen", "Speaking"), "asr": ("Hören", "Listening"), "llm": ("Sprachmodell", "Language model")}
@@ -328,9 +328,9 @@ def alerts(now=None):
     if d["stoerung"]:
         s = d["stoerung"]
         hm = datetime.fromtimestamp(s["seit"]).strftime("%H:%M")
-        return [{"kind": "rundlauf", "level": "bad", "go": "Zustand → Monitoring",
+        return [{"kind": "rundlauf", "level": "bad", "go": "Zustand → Überblick",
                  "text": f"Rundlauf: {NAME[s['step']][0]} {WHY.get(s.get('why'), 'antwortet nicht')} (seit {hm})."}]
-    return [{"kind": "rundlauf", "level": "info", "go": "Zustand → Monitoring",
+    return [{"kind": "rundlauf", "level": "info", "go": "Zustand → Überblick",
              "text": f"Rundlauf: {NAME[s][0]} langsamer als sonst ({_s(cur)} statt {_s(usual)})."} for s, cur, usual in langsam(d, now)]
 
 

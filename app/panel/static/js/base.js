@@ -159,8 +159,8 @@ document.querySelectorAll('i.ni').forEach(e=>e.innerHTML='<svg viewBox="0 0 24 2
 function mbarMark(g){document.querySelectorAll('#mbar button').forEach(x=>x.classList.toggle('on',x.dataset.m===({chat:'chat',chats:'chats',mon:'mon',me:'me'}[g]||'more')))}
 // Main menu: Zustand, Funktionen and Personen und Geräte hold several pages behind a sub-tab bar. Funktionen is the
 // page "feat" of the settings form (saved with it), shown alone without the settings menu (class featmode).
-const GROUPS={chat:[['chat','']],chats:[['chats','']],cal:[['cal','']],post:[['post','']],mon:[['mon',t('Monitoring','Monitoring')],['live',t('Live','Live')],['logs',t('Logs','Logs')],['test',t('Prüfen','Checks')],['verb',t('Verbessern','Improve')],['praxis',t('Praxistest','Hands-on test')],['usage',t('Verbrauch','Usage')],['models',t('Modelle','Models')],['tech',t('Technik','Architecture')]],
-  feat:[['feat',t('Funktionen','Features')],['route',t('Weiche','Switch')],['int',t('Anleitungen','Guides')]],
+const GROUPS={chat:[['chat','']],chats:[['chats','']],cal:[['cal','']],post:[['post','']],mon:[['mon',t('Überblick','Summary')],['live',t('Live','Live')],['logs',t('Logs','Logs')],['test',t('Prüfen','Checks')],['verb',t('Verbessern','Improve')],['praxis',t('Praxistest','Hands-on test')],['usage',t('Verbrauch','Usage')],['models',t('Modelle','Models')],['tech',t('Technik','Architecture')]],
+  feat:[['feat',t('Funktionen','Features')],['route',t('Weiche','Routing')],['int',t('Anleitungen','Guides')]],
   prof:[['prof',t('Personen und Geräte','People and devices')],['apps',t('Apps und Schnittstellen','Apps and interfaces')]],cfg:[['cfg','']]};
 const lastSec={};
 // Seiten sichtbar laden (laden.js): what a page loads when it is opened shows placeholders, „wird aktualisiert …“,

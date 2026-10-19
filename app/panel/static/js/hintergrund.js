@@ -53,7 +53,7 @@ function bgDotSet(s){document.querySelectorAll('.medot').forEach(e=>e.hidden=!(s
 async function bgDot(){if(!PROFILE||!MYST_ON||document.hidden){if(!MYST_ON)bgDotSet(null);return}
   try{const r=await /*raw: timer poll, a 401/503 must stay silent*/fetch('/api/profile/hintergrund?brief=1',{cache:'no-store'});if(r.ok)bgDotSet((await r.json()).sum)}catch{}}
 setInterval(bgDot,60e3);setTimeout(bgDot,3e3);
-// Zustand → Monitoring "Mein Zustand aller Profile" (admin): counts only, shown while the admin switch is on
+// Zustand → Überblick "Mein Zustand aller Profile" (admin): counts only, shown while the admin switch is on
 async function zBg(){const box=$('zbg');if(!box||document.hidden)return;let d={on:false};
   try{const r=await /*raw: timer poll, a 401/503 must stay silent*/fetch('/api/admin/hintergrund',{cache:'no-store'});if(!r.ok)return;d=await r.json()}catch{return}
   box.hidden=!d.on;if(!d.on)return;

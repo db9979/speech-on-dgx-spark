@@ -46,7 +46,7 @@ async function startPage(){let who=null;try{who=await (await /*raw: the first wh
   // Kalender (kalender.js) and E-Mail (post.js): the menu entry only for a profile that may use it
   if(window.kalStart)kalStart(who);
   if(window.postStart)postStart(who);
-  // a program's OAuth sign-in (mcpserver.py): kept until the profile is signed in, then Ich → Dienste per MCP asks
+  // a program's OAuth sign-in (mcpserver.py): kept until the profile is signed in, then Ich → Spark als MCP-Server asks
   try{const m=/^#mcpauth=([A-Za-z0-9_-]{20,48})$/.exec(location.hash);if(m){sessionStorage.setItem('mcpauth',m[1]);history.replaceState(null,'',location.pathname+location.search)}}catch{}
   // an own MCP service's sign-in came back (meinmcp.py /api/mymcp/back): Ich → Meine MCP-Dienste finishes it
   try{const m=/^#mymcpback=([A-Za-z0-9_-]{20,64}\.[A-Za-z0-9._~%-]{1,3100}|error)$/.exec(location.hash);if(m){sessionStorage.setItem('mymcpback',m[1]);history.replaceState(null,'',location.pathname+location.search)}}catch{}

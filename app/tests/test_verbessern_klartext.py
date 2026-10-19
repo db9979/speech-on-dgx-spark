@@ -90,7 +90,7 @@ class Card(Base):
         self.assertEqual(k["woher"]["clients"], ["web"])
         self.assertEqual(k["woher"]["traces"], ["abc123"])
         self.assertTrue(any("Typische Ursache" in x[0] for x in k["warum"]))
-        self.assertTrue(any("Zustand → Monitoring" in x[0] for x in k["hilft"]))
+        self.assertTrue(any("Zustand → Überblick" in x[0] for x in k["hilft"]))
         self.assertNotIn("Geheime Frage", str(k))                # never a question, even when it is kept
         d = ADMIN.get("/api/admin/berater").json()
         self.assertEqual(d["cases"][0]["karte"]["was"], k["was"])

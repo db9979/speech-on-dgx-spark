@@ -1,7 +1,7 @@
 """Agent functions: the assistant works on a task in the background and reports later, runs tasks on a
 schedule, keeps routines of smart home steps, and uses outside tools over MCP (mcp.py).
 
-Who may use it is decided per profile by the admin (Funktionen → Agent-Funktionen):
+Who may use it is decided per profile by the admin (Funktionen → Aufträge):
 
     ""      nothing (default, and always for guests)
     "read"  "nur lesen und berichten": background jobs, scheduled jobs, MCP tools that only read
@@ -265,7 +265,7 @@ async def worker():
             return
         uid, item = nxt
         if not level(uid):   # the admin switched it off or blocked the profile meanwhile
-            _set_job(uid, item["id"], state="cancelled", finished=int(time.time()), error="Agent-Funktionen sind aus.")
+            _set_job(uid, item["id"], state="cancelled", finished=int(time.time()), error="Aufträge sind aus.")
             continue
         # each job is its own task, so "Abbrechen" stops the job and not the worker
         jt = asyncio.ensure_future(run_job(uid, item["id"]))
@@ -1281,7 +1281,7 @@ async def carry_out(uid, p, ctx):
     notaus.stop("aktion", uid)
     if p["kind"] == "plan":
         if not may(uid, "read"):
-            raise ValueError("Agent-Funktionen sind für dich aus")
+            raise ValueError("Aufträge sind für dich aus")
         item = add_plan(uid, p["plan"])
         return "Gespeichert: " + describe_plan(item) + "."
     if p["kind"] == "watch":
@@ -1301,7 +1301,7 @@ async def carry_out(uid, p, ctx):
         return f"Gespeichert: Ich melde mich, wenn eine Mail von „{p['who']}“ kommt.{extra}"
     if p["kind"] == "plan_edit":
         if not may(uid, "read"):
-            raise ValueError("Agent-Funktionen sind für dich aus")
+            raise ValueError("Aufträge sind für dich aus")
         before, after = edit_plan(uid, p["id"], p["changes"])
         import aendern
         aendern.note(uid, "plan", {"restore": before, "edit": True}, f"„{p['line'][:60]}“ wie vorher stellen")
@@ -1310,7 +1310,7 @@ async def carry_out(uid, p, ctx):
         return "Geändert: " + describe_plan(after) + "."
     if p["kind"] == "plan_change":
         if not may(uid, "read"):
-            raise ValueError("Agent-Funktionen sind für dich aus")
+            raise ValueError("Aufträge sind für dich aus")
         before = change_plan(uid, p["id"], p["action"])
         import aendern
         aendern.note(uid, "plan", {"restore": before} if p["action"] == "delete"
@@ -1642,7 +1642,7 @@ def _on(prof=Depends(browser_profile)):
 def _uses(prof, need="read"):
     if not may(prof["id"], need):
         raise HTTPException(403, "Nicht für dieses Profil. " + (features.missing_text("agent", prof["id"])
-                                                                 or "Der Admin gibt die Stufe unter Funktionen → Agent-Funktionen."))
+                                                                 or "Der Admin gibt die Stufe unter Funktionen → Aufträge."))
 
 
 @router.get("/api/profile/agent")

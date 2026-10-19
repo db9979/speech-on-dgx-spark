@@ -82,7 +82,7 @@ async function proIn(id){const box=$(id);if(!box)return;if(!PROFILE||!PRO_ON){bo
   if(!PROST)PROST=await (await api('/api/proactive/status')).json();const st=PROST;
   const rows=PROK.filter(([k])=>PRO_AT[k]===id).map(([k,need,l,h,miss])=>proRow(k,l,h,proNo(st,k,need,miss)+(PROX[k]?PROX[k](st):''))).join('');
   box.innerHTML=`<div class="mgrp">${esc(t('Von selbst melden','Speak up by itself'))}</div>`+
-    (S.pro_on?'':`<div class="fh">${esc(t('Gilt erst, wenn unter Ich → Von selbst der Hauptschalter an ist.','Works once the main switch under Me → Proactive is on.'))}</div>`)+rows;
+    (S.pro_on?'':`<div class="fh">${esc(t('Gilt erst, wenn unter Ich → Von selbst der Hauptschalter an ist.','Works once the main switch under Me → By itself is on.'))}</div>`)+rows;
   box.querySelectorAll('input[data-k]').forEach(e=>e.onchange=()=>saveSet(e.dataset.k,e.checked));
   PROBIND.lead();PROBIND.mail()}
 // extra fields under a kind, and their handlers

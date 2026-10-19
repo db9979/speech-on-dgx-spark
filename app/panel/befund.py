@@ -19,7 +19,7 @@ import faelle
 KLASSEN = {
     "weiche": ("Weiche hat falsch zugeordnet", "The Weiche sorted it wrongly",
                ("Ein eigenes Wort für die richtige Gruppe und ein Testsatz unter Funktionen → Weiche.",
-                "An own word for the right group and a test sentence under Features → Switch.")),
+                "An own word for the right group and a test sentence under Features → Routing.")),
     "nicht_gerufen": ("Richtiges Werkzeug war da, wurde aber nicht gerufen", "The right tool was there but not called",
                       ("Ein Wort, bei dem das Werkzeug Pflicht ist, und ein Testsatz.",
                        "A word that makes the tool a must, and a test sentence.")),
@@ -45,7 +45,7 @@ KLASSEN = {
                             "Have answers checked, lower the temperature, put the question into the quality test.")),
     "keine_regel": ("Keine Regel der Weiche erkannte die Frage", "No rule of the Weiche recognised the question",
                     ("Ein eigenes Wort für die passende Gruppe unter Funktionen → Weiche.",
-                     "An own word for the fitting group under Features → Switch.")),
+                     "An own word for the fitting group under Features → Routing.")),
     "absage": ("Der Spark sagte, dass er das nicht kann", "The Spark said it cannot do that",
                ("Prüfen, ob die Funktion aus oder gesperrt ist; sonst ist es ein Wunsch für eine Meldung.",
                 "Check whether the function is off or locked; else it is a wish for a report.")),

@@ -26,7 +26,7 @@ The text the model reads from a picture is stored as data like any other documen
 says ("ignore your rules …") is never an instruction, it is outside text when the assistant searches
 it (chat.READS_OUTSIDE), and nothing from documents is learned into the memory.
 
-    GET  /api/admin/wissen                   Zustand → Monitoring: model state and what waits, counts only
+    GET  /api/admin/wissen                   Zustand → Überblick: model state and what waits, counts only
     POST /api/admin/wissen/unshare           {"owner", "id"}  the admin takes a "Für alle" back
     GET  /api/profile/wissen                 switches, usage, what is still being read
     PUT  /api/profile/wissen/{id}            {"use": bool} searched or not, {"shared": bool} "Für alle"
@@ -513,7 +513,7 @@ async def due_once(idle=True, now=None):
 # ---------------------------------------------------------------- routes
 @router.get("/api/admin/wissen", dependencies=[Depends(auth)])
 def admin_state():
-    """Zustand → Monitoring: is the meaning model running, how much memory, what still waits.
+    """Zustand → Überblick: is the meaning model running, how much memory, what still waits.
     Sums over all profiles, never names, document names or text."""
     c = _chat()
     on_ = {k: admin_on(k) for k in ("pictures", "semantic", "shared")}

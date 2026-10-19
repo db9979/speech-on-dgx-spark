@@ -54,7 +54,7 @@ HINTS = (
      "Home Assistant token expired or wrong: Me → Smart home."),
     ("room", r"tv check", "Fernseher-Abfrage in Home Assistant klappt nicht: ist Home Assistant erreichbar?",
      "TV check in Home Assistant fails: can the Spark reach Home Assistant?"),
-    (None, r"(?i)tts.*(timeout|broke)|(timeout|broke).*tts", "Sprachausgabe hängt oder ist ausgelastet: Zustand → Monitoring, TTS-Engine.",
+    (None, r"(?i)tts.*(timeout|broke)|(timeout|broke).*tts", "Sprachausgabe hängt oder ist ausgelastet: Zustand → Überblick, TTS-Engine.",
      "Speech output hangs or is busy: State → Monitoring, TTS engine."),
     (None, r"language model not reachable", "Sprachmodell nicht erreichbar: läuft qwen38?",
      "Language model not reachable: is qwen38 running?"),

@@ -159,7 +159,7 @@ function zCards(s){const box=$('zcards');if(!box)return;const g=s.glance||{},sv=
     wayFirst(t('Ich → Lautsprecher','Me → Speakers'),t('Funktionen → Eigene Lautsprecher (ESP32)','Features → Own speakers (ESP32)'))));
   if(bg.held)tb.appendChild(zCard('acc2','pulse',t('Hintergrund','Background'),String(bg.held),t('× gewartet','× waited'),t('auf Sprache gewartet','waited for speech'),null,wayFirst(t('Zustand → Logs','Status → Logs'))));
   tb.hidden=$('ztodayh').hidden=false}
-// Zustand → Monitoring → Rechner (rechnerblick.py, Dominik 2026-10-16): with the models on another computer both
+// Zustand → Überblick → Rechner (rechnerblick.py, Dominik 2026-10-16): with the models on another computer both
 // computers side by side, a tile each in „Jetzt“ and a card each under „Rechner“ with curves of the last 20 minutes.
 // Level and warnings come from fixed rules in rechnerblick.py; a model computer that does not answer keeps its card,
 // red and with its last values greyed out. Numbers and fixed words only (no address, no process).
@@ -244,7 +244,7 @@ function zRCard(c){const card=document.createElement('div');card.className='card
   return card}
 function zRechner(R){const box=$('zrechner'),h=$('zrechnerh');if(!box)return;box.hidden=h.hidden=!R.length;box.textContent='';
   for(const c of R)box.appendChild(zRCard(c))}
-// Zustand → Monitoring → Rundlauf (rundlauf.py, plan verbesserungen 3a): the last real round trip through Sprechen,
+// Zustand → Überblick → Rundlauf (rundlauf.py, plan verbesserungen 3a): the last real round trip through Sprechen,
 // Hören and the language model, each step in ms, the whole way with the curve of the last runs; a step that hakt is
 // red with a fixed word. Shown while Funktionen → Dienst-Wächter → Rundlauf prüfen is on. Numbers and fixed words only.
 const ZRD_WHY={zeit:t('antwortet nicht rechtzeitig','does not answer in time'),fehler:t('antwortet nicht','does not answer'),stumm:t('liefert keinen Ton','gives no sound'),

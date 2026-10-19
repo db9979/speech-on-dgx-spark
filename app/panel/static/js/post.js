@@ -259,7 +259,7 @@ function postWriteBox(w){let box=w.querySelector('.postdet');const f=POST.write,
   const back=inline?`<button type="button" class="b postdrop" data-close="1">✕ ${esc(t('Verwerfen','Discard'))}</button>`
     :postOut('Verwerfen','Discard');
   if(p){box.innerHTML=back+`<h3>${esc(t('So geht die Mail raus','This is the mail that goes out'))}</h3><dl class="ld-facts postprev">`+
-      `<dt>${esc(t('Von','From'))}</dt><dd>${esc(p.from)}</dd><dt>${esc(t('An','To'))}</dt><dd>${esc(p.to.join(', '))}</dd>`+
+      `<dt>${esc(t('Von','From'))}</dt><dd>${esc(p.from)}</dd>${p.server?`<dt>${esc(t('Über','Via'))}</dt><dd>${esc(p.server)}</dd>`:''}<dt>${esc(t('An','To'))}</dt><dd>${esc(p.to.join(', '))}</dd>`+
       (p.cc.length?`<dt>${esc(t('Kopie','Copy'))}</dt><dd>${esc(p.cc.join(', '))}</dd>`:'')+`<dt>${esc(t('Betreff','Subject'))}</dt><dd>${esc(p.subject||t('(ohne Betreff)','(no subject)'))}</dd>`+
       (p.files&&p.files.length?`<dt>${esc(t('Anhänge','Attachments'))}</dt><dd>${esc(p.files.join(', '))}</dd>`:'')+`</dl>`+
       `<div class="posttext">${esc(p.text)}</div><div class="row postord"><button class="b p" type="button" data-s="send">${esc(t('Senden','Send'))}</button><button class="b" type="button" data-s="edit">${esc(t('Ändern','Edit'))}</button></div><div class="postordmsg fh"></div>`;

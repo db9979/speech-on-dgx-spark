@@ -14,7 +14,7 @@ update) are never sent there.
     modelle()                   what Zustand → Modelle needs from the model computer (checked), None without answer
     cached()                    the last status without asking (the Wartungspause reads the model computer's pause)
     weg()                       Notbetrieb: the model computer has not answered for GONE seconds
-    stumm_s()                   seconds since it last answered (Zustand → Monitoring → Rechner)
+    stumm_s()                   seconds since it last answered (Zustand → Überblick → Rechner)
     for_live()                  the Live view's box „Modell-Rechner“: reachable, units active, version, pause
     update_modell_rechner()     its own update first, then this computer's (update.sh: python3 steuer.py update)
     rundlauf()                  after the pairing: Wärter, then TTS speaks a sentence and ASR hears it, through the pin
@@ -159,7 +159,7 @@ def weg(now=None):
 
 
 def stumm_s(now=None):
-    """Seconds since the model computer last answered (None before its first answer): Zustand → Monitoring → Rechner."""
+    """Seconds since the model computer last answered (None before its first answer): Zustand → Überblick → Rechner."""
     now = time.monotonic() if now is None else now
     with _lock:
         ok = _status["ok"]

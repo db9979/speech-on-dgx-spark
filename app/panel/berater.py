@@ -84,10 +84,10 @@ MELDER = {
 # Punkt 7: services outside the Spark -> steps to copy (the panel never runs them)
 UMGEBUNG = {
     "sprachmodell": (("Sprachmodell antwortet langsam oder gar nicht", "Language model slow or not answering"),
-                     ["speech-spark status", "Zustand → Monitoring: Sprachmodell und Speicher ansehen",
+                     ["speech-spark status", "Zustand → Überblick: Sprachmodell und Speicher ansehen",
                       "qwen38 gehört nicht zum Spark: dort nichts ändern, nur nachsehen"]),
     "speicher": (("Speicher auf dem Spark knapp", "Memory on the Spark short"),
-                 ["free -g", "speech-spark status", "Zustand → Monitoring: was belegt den Speicher?"]),
+                 ["free -g", "speech-spark status", "Zustand → Überblick: was belegt den Speicher?"]),
     "websuche": (("Websuche (SearXNG) antwortet schlecht", "Web search (SearXNG) answers badly"),
                  ["Auf dem Rechner mit SearXNG: docker ps (läuft der Container?)", "Zustand → Dienste: „Jetzt prüfen“"]),
     "homeassistant": (("Home Assistant antwortet nicht", "Home Assistant not answering"),
@@ -1118,7 +1118,7 @@ RULE_KEYS = {   # config key -> (German, English, way, catalog key the assistant
     "route_tests": ("Testsätze", "Test sentences", "Funktionen → Weiche", "weiche_test"),
 }
 WEICHE_KEYS = ("route_words", "route_not", "route_extra", "route_tests")
-WAY_EN = {"Einstellungen → Sprachmodell": "Settings → Language model", "Funktionen → Weiche": "Features → Switch"}
+WAY_EN = {"Einstellungen → Sprachmodell": "Settings → Language model", "Funktionen → Weiche": "Features → Routing"}
 
 
 def _rule_items(key, ch):

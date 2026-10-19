@@ -46,7 +46,7 @@ function mdStart(x){if(!x)return '';const fertig=x.ende;     // the texts come f
   const rest=x.rest?`<div class="mut">${esc(x.rest)}</div>`:'';
   const hin=!fertig?`<div class="mut">${esc(t('Solange antwortet das Sprachmodell nicht; der Chat sagt das mit der erwarteten Zeit. Einzelheiten: Zustand → Logs (Modellwechsel).','Meanwhile the language model does not answer; the chat says so with the expected time. Details: Status → Logs (model switch).'))}</div>`:'';
   return `<div class="card mdstart" id="mdstart"><b>${esc(x.kopf)}</b><ol class="mdschritte">${zeilen}</ol>${rest}${hin}</div>`}
-function mdWechsel(w){if(!w.an)return mdStart(w.start)+`<div class="mut vb-note">${esc(t('Wechseln: Funktionen → Modelle wechseln einschalten.','Switching: switch on Features → Switch models.'))}</div>`;
+function mdWechsel(w){if(!w.an)return mdStart(w.start)+`<div class="mut vb-note">${esc(t('Wechseln: Funktionen → Modelle wechseln einschalten.','Switching: switch on Features → Routing models.'))}</div>`;
   if(w.start)return mdStart(w.start)+(w.misst?mdMisst(w):'');
   return (w.laeuft?`<div class="card"><b>${esc(t('Ein Modellwechsel läuft.','A model switch is running.'))}</b> <span class="mut">${esc(t('Fortschritt unter Zustand → Logs (Modellwechsel); die Seite zeigt das Ergebnis, sobald er fertig ist.','Progress under Status → Logs (model switch); the page shows the result once it is done.'))}</span></div>`:'')+
     (w.misst?mdMisst(w):'')}
@@ -149,7 +149,7 @@ async function loadModelle(daten){const main=$('mdmain'),msg=$('mdmsg');if(!main
   main.innerHTML=mdWechsel(w)+mdProbe(w)+mdBalken(d.budget)+`<div class="mdkacheln">${d.arten.filter(a=>a.modelle.length).map(a=>mdKachel(a,w)).join('')}</div>`+mdWahl(d,w)+
     `<details class="mdmehr" id="mdmehr"${MD_MEHR?' open':''}><summary>${esc(t('Mehr: Lange Gespräche, Messwerte, Messen, Zurückholen','More: long conversations, measurements, measuring, bringing back'))}</summary>`+
     `<div class="vb-two">${mdPlatz(w)}${mdBudget(d.budget)}${d.arten.map(a=>mdArt(a,w,d)).join('')}</div>`+
-    `<div class="mut vb-note">${esc(d.messung_zeit?t('Letzte Messung: ','Last measurement: ')+new Date(d.messung_zeit*1000).toLocaleString(L==='en'?'en':'de'):t('Noch keine Messung. „Messen“ beim Modell (mit Funktionen → Modelle wechseln) oder auf dem Spark: sudo speech-spark modelle messen','No measurement yet. „Measure“ at the model (with Features → Switch models) or on the Spark: sudo speech-spark modelle messen'))}`+
+    `<div class="mut vb-note">${esc(d.messung_zeit?t('Letzte Messung: ','Last measurement: ')+new Date(d.messung_zeit*1000).toLocaleString(L==='en'?'en':'de'):t('Noch keine Messung. „Messen“ beim Modell (mit Funktionen → Modelle wechseln) oder auf dem Spark: sudo speech-spark modelle messen','No measurement yet. „Measure“ at the model (with Features → Routing models) or on the Spark: sudo speech-spark modelle messen'))}`+
     ` · ${esc(t('„~“ heißt geschätzt.','“~” means estimated.'))}</div></details>`;
   mdKnoepfe(d);if(typeof labelTables==='function')labelTables();
   clearTimeout(window.mdTick);const st=w.start&&!w.start.ende;if(w.laeuft||w.misst||st)window.mdTick=setTimeout(()=>{if($('mdmain')&&$('mdmain').offsetParent)loadModelle()},w.misst||st?8000:15000)}

@@ -43,7 +43,7 @@ function vbRender(){const d=VB.d;if(!d)return;const L=vbLists(d);
   const rows=L[VB.tab]||[];let html='';
   if(VB.tab==='kat')html=vbKat(d);
   else if(VB.tab==='bericht')html=vbReport(d.bericht||{});
-  else if(VB.tab==='regeln')html=vbBuiltin(d)+(rows.length?vbRules(rows,d):`<div class="ld-empty mut">${esc(t('Noch keine eigene Regel. Sie entstehen hier aus Vorschlägen oder von Hand unter Funktionen → Weiche und Einstellungen → Sprachmodell.','No own rule yet. They come from proposals here or by hand under Features → Switch and Settings → Language model.'))}</div>`);
+  else if(VB.tab==='regeln')html=vbBuiltin(d)+(rows.length?vbRules(rows,d):`<div class="ld-empty mut">${esc(t('Noch keine eigene Regel. Sie entstehen hier aus Vorschlägen oder von Hand unter Funktionen → Weiche und Einstellungen → Sprachmodell.','No own rule yet. They come from proposals here or by hand under Features → Routing and Settings → Language model.'))}</div>`);
   else if(VB.tab==='luecken')html=rows.length?vbGaps(rows):`<div class="ld-empty mut">${esc(t('Keine Lücke: für jede Frage war ein passendes Werkzeug da.','No gap: a fitting tool was there for every question.'))}</div>`;
   else if(!rows.length)html=`<div class="ld-empty mut">${esc({cases:t('Kein neuer Fall.','No new case.'),props:t('Kein offener Vorschlag.','No open proposal.'),
     check:t('Nichts wartet auf die Nachkontrolle.','Nothing waits for the re-check.'),done:t('Noch nichts erledigt.','Nothing done yet.')}[VB.tab])}</div>`;

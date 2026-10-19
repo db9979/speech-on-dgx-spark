@@ -144,7 +144,7 @@ def add_number(uid, nr, name="", now=None):
     if not c:
         raise ValueError("Bitte eine Rufnummer mit Vorwahl eintragen, z. B. 0170 1234567.")
     if telefon.internal(c):
-        raise ValueError("Interne Nummern der Telefonanlage ordnet der Admin zu (Funktionen → Den Spark anrufen).")
+        raise ValueError("Interne Nummern der Telefonanlage ordnet der Admin zu (Funktionen → Telefon).")
     other = owner_of(c)
     if other and other != uid:
         raise ValueError("Diese Nummer ist schon bei einem anderen Profil bestätigt.")
@@ -386,7 +386,7 @@ def view(uid, now=None):
 # ---------------------------------------------------------------- Ich → Telefon
 def _on(uid):
     if not features.allowed("telefon", uid):
-        raise HTTPException(403, ("„Den Spark anrufen“ geht für dich gerade nicht. " + features.missing_text("telefon", uid)).strip())
+        raise HTTPException(403, ("„Telefon“ geht für dich gerade nicht. " + features.missing_text("telefon", uid)).strip())
 
 
 @router.get("/api/profile/telefon", dependencies=[Depends(assistant)])

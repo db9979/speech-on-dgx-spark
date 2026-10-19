@@ -17,7 +17,7 @@ watch's history ("nichts Neues"). After FAILS failed runs in a row the watch pau
 IDLE_DAYS without anything new it pauses as well and says so. The person turns it on again under Ich → Aufträge.
 
 Making and changing a watch: by voice only as a proposal with a fixed sentence and the person's "Ja" (agent.answer),
-or on the page. The Admin allows it (Funktionen → Agent-Funktionen → „Beobachten“, chat.agent_watch, off), for every
+or on the page. The Admin allows it (Funktionen → Aufträge → „Beobachten“, chat.agent_watch, off), for every
 profile that may use agent functions; guests never.
 """
 import re

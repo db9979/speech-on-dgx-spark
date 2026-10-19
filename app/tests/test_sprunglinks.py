@@ -266,7 +266,7 @@ class Outside(unittest.TestCase):
 
 
 # Zahlen mit Ziel (Dominik 14.10.2026: „sollte klickbar sein und direkt hinbringen sonst sucht man sich den Wolf“):
-# cards under Zustand → Monitoring whose rows need no way of their own (they carry their own buttons, or there are none)
+# cards under Zustand → Überblick whose rows need no way of their own (they carry their own buttons, or there are none)
 ROWS_OWN = {"zneed": "jede Zeile hat ihren Knopf zum Ort",
             "zroom": "jede Zeile hat Beenden, die Karte zeigt nur wo und bis wann",
             "znotaus": "zeigt den Notaus selbst, seine Knöpfe stehen auf der Karte",
@@ -519,7 +519,7 @@ class Browser(unittest.TestCase):
         self.assertEqual(bad, [], "Zahlen mit Weg ohne Ziel:\n" + "\n".join(bad))
 
     def test_every_status_card_row_leads_somewhere(self):
-        """A row in any card under Zustand → Monitoring opens its place (a new card without a way turns this red),
+        """A row in any card under Zustand → Überblick opens its place (a new card without a way turns this red),
         the counts of „Mein Zustand aller Profile“ and „Heute“ are links, and a click on one jumps there."""
         async def go():
             async with async_playwright() as p:

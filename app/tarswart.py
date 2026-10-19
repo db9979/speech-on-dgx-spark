@@ -10,7 +10,7 @@ a time (at most WINDOW seconds off) and a one-time number (each is taken once).
     status                      version, state and uptime of the model units, GPU, free memory, settings hash,
                                 the model choice (common.MODEL_CHOICE: which model runs is this computer's), its
                                 Wartungspause (speech-spark pause, modelle messen: the panel pauses those parts too),
-                                this computer's values for Zustand → Monitoring → Rechner (rechner.messen)
+                                this computer's values for Zustand → Überblick → Rechner (rechner.messen)
     einheit <start|stop|restart> <teil>   only parts of common.UNITS (speech and its engines)
     einstellen {settings}       the panel's speech settings (common.model_settings_take: known keys, same kind,
                                 never addresses, ports or backends, model ids only Qwen's)
@@ -155,7 +155,7 @@ def _update_pct():
 
 
 def _rechner():
-    """This computer's values for Zustand → Monitoring → Rechner (rechner.messen): numbers and fixed words only."""
+    """This computer's values for Zustand → Überblick → Rechner (rechner.messen): numbers and fixed words only."""
     try:
         return rechner.messen()
     except Exception as e:

@@ -193,6 +193,9 @@ class Browser(unittest.TestCase):
                         await pg.click("#palx")
                         self.assertTrue(await pg.evaluate("document.getElementById('fpal').hidden"), w)
                         await pg.evaluate("openMe('setbox')")
+                        # the group "Anzeige" is folded (Code-Prüfung D9): open it as a person would
+                        await pg.wait_for_selector("#setform details.megrp .facetiles", state="attached", timeout=10000)
+                        await pg.evaluate("document.querySelector('#setform .facetiles').closest('details.megrp').querySelector(':scope>summary').click()")
                         await pg.wait_for_selector(".facetiles .facetile", timeout=10000)
                         tiles = await pg.evaluate("[...document.querySelectorAll('#setform .facetile')].map(b=>b.dataset.v)")
                         self.assertEqual(tiles, ["", *FACES], w)

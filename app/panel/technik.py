@@ -292,7 +292,7 @@ MODULE = {
     "wachposten": ("zugang", "Wachposten: feste Regeln auf dem Änderungsprotokoll melden den Admins Sperren, neue Zugänge, geänderten Schutz"),
     "schirm": ("teilen", "Steuerzentrale am Bildschirm: was die Textanzeige zeigt, nur lokal mit Schlüssel; der Dienst folgt dem Schalter"),
     "steuerzentrale": ("teilen", "Textanzeige auf tty1: zeichnet die Steuerzentrale, Schrift nach Auflösung, dunkel nach Zeitplan"),
-    "rechnerblick": ("teilen", "Zustand → Monitoring → Rechner: beide Rechner nebeneinander, Kurven, Hinweise nach festen Regeln"),
+    "rechnerblick": ("teilen", "Zustand → Überblick → Rechner: beide Rechner nebeneinander, Kurven, Hinweise nach festen Regeln"),
     "rechenteile": ("teilen", "Wer rechnet gerade: CPU je Teil des Panels aus seinen Threads und Hilfsprozessen"),
     "einordnung": ("sprache", "Regeln für System-One-Fragen, gemeinsam für Panel und LLM-Tor"),
     "bildmodell": ("sprache", "Bildmodelle: Varianten, Dateien mit festen Prüfsummen, Laden bei der Installation"),
@@ -382,10 +382,10 @@ KNOTEN = {
                  "update check. Through the guard or fixed addresses; the kill switch turns them off.", []),
     "teilen": (896, 258, "Spark teilen", "Spark split", "TLS-Tor · :31007", "teilen",
                "Nur wenn das Panel auf einem eigenen Rechner läuft: jeder Weg zu den Modellen geht durch das TLS-Tor "
-               "(TLS 1.3, beim Koppeln angeheftetes Zertifikat), Befehle an den Wärter sind unterschrieben. Zustand → "
-               "Monitoring zeigt dann beide Rechner nebeneinander.",
+               "(TLS 1.3, beim Koppeln angeheftetes Zertifikat), Befehle an den Wärter sind unterschrieben. Zustand → Überblick "
+               "zeigt dann beide Rechner nebeneinander.",
                "Only when the panel runs on its own computer: every way to the models goes through the TLS-Tor "
-               "(TLS 1.3, certificate pinned at the pairing), commands to the Wärter are signed. Status → Monitoring "
+               "(TLS 1.3, certificate pinned at the pairing), commands to the Wärter are signed. Status → Summary "
                "then shows both computers side by side.", ["tlstor.py", "tarswart.py", "teilen.py", "rechner.py"]),
     "state": (194, 550, "state/", "state/", "global", "", "Globaler Zustand: Schlüssel, Statistik, Wächter.",
               "Global state: keys, statistics, watchers.", []),

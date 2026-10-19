@@ -82,7 +82,9 @@ def get(uid):
 def public(uid):
     """What the panel may see: everything but the passwords."""
     return {"accounts": [{"id": x["id"], "name": x.get("name", ""), "host": x["host"], "port": x.get("port", 993),
-                          "user": x["user"], "has_password": bool(x.get("password"))} for x in get(uid)["accounts"]]}
+                          "user": x["user"], "has_password": bool(x.get("password")),
+                          "smtp": f"{x['smtp_host']}:{x.get('smtp_port', 465)}" if x.get("smtp_host") else ""}
+                         for x in get(uid)["accounts"]]}
 
 
 def _store(uid, d):
@@ -110,8 +112,22 @@ def entry(body):
     pw = body.get("password")
     if not user or not isinstance(pw, str) or not pw:
         raise ValueError("user and password are required")
-    return {"id": "m" + os.urandom(4).hex(), "name": (str(body.get("name", "")).strip() or name or host)[:60],
+    item = {"id": "m" + os.urandom(4).hex(), "name": (str(body.get("name", "")).strip() or name or host)[:60],
             "host": host, "port": port, "user": user[:200], "password": pw[:500]}
+    # another provider: the outgoing server only as typed in, never guessed (code check 19.10. C4: smtp.<domain>
+    # could belong to someone else and would get the password); empty = this mailbox reads, it does not send
+    out = str(body.get("smtp_host", "") or "").strip().lower()
+    if out and kind not in PROVIDERS:
+        if not re.fullmatch(r"[a-z0-9]([a-z0-9\-.]{0,250}[a-z0-9])?", out):
+            raise ValueError("the outgoing server must be a host name like smtp.example.de")
+        try:
+            oport = int(body.get("smtp_port") or 465)
+        except (TypeError, ValueError):
+            oport = 0
+        if oport not in (465, 587):
+            raise ValueError("the outgoing port must be 465 (TLS) or 587 (STARTTLS)")
+        item.update(smtp_host=out, smtp_port=oport)
+    return item
 
 
 def add(uid, item):

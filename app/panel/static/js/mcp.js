@@ -1,4 +1,4 @@
-// "Ich → Dienste per MCP" (mcpserver.py, V01.0.303): the Spark as an MCP server for other programs. The profile connects
+// "Ich → Spark als MCP-Server" (mcpserver.py, V01.0.303): the Spark as an MCP server for other programs. The profile connects
 // a program (a key for the home network or from outside, or the OAuth sign-in of claude.ai and the like), gives it tools,
 // and confirms or declines what such a program proposes. The admin sees all connections under Apps und Schnittstellen.
 let MCPS_ON=false,MCP_NEW=null;

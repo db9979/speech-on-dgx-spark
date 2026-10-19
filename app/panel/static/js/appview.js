@@ -23,7 +23,7 @@ const IC={spark:'<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"
   vol:'<path d="M11 5L6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/>',
   mute:'<path d="M11 5L6 9H3v6h3l5 4z"/><path d="M16 9l5 6M21 9l-5 6"/>',
   back:'<path d="M15 5l-7 7 7 7"/>',find:'<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>'};
-const TABS=[['spark',t('Spark','Spark')],['chats',t('Chats','Chats')],['today',t('Heute','Today')],['docs',t('Dokumente','Documents')],['me',t('Ich','Me')],['manage',t('Verwalten','Manage')]];
+const TABS=[['spark',t('Assistent','Assistant')],['chats',t('Chats','Chats')],['today',t('Heute','Today')],['docs',t('Dokumente','Documents')],['me',t('Ich','Me')],['manage',t('Verwalten','Manage')]];
 const mk=(tag,id,cls,html)=>{const e=document.createElement(tag);if(id)e.id=id;if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e};
 const label=b=>b?[...b.childNodes].filter(n=>n.nodeType===3).map(n=>n.textContent).join('').trim():'';
 const navBtn=s=>document.querySelector(`nav button[data-s=${s}]`);
@@ -94,7 +94,7 @@ function manageNav(){const m=mainEl(),cw=document.querySelector('.cfgwrap'),sec=
     return {back:t('Einstellungen','Settings'),title:label(document.querySelector('#cfgnav button.on'))||((document.querySelector('#cfgnav button.on')||{}).textContent||''),act:()=>$('cfgback').click(),deep:2};
   if(m.classList.contains('hassub')&&!m.classList.contains('sublist'))
     return {back:$('subback').querySelector('span').textContent,title:label(document.querySelector('#subnav button.on')),act:()=>$('subback').click(),deep:2};
-  return {back:t('Verwalten','Manage'),title:label(document.querySelector('nav button[data-s].on')),act:()=>tab('manage'),deep:1}}
+  return {back:t('Spark verwalten','Manage the Spark'),title:label(document.querySelector('nav button[data-s].on')),act:()=>tab('manage'),deep:1}}
 function render(){if(!ON)return;if(manage.classList.contains('on')&&manageSig()!==mSig)renderManage();   // rights or Zustand arrived later
   const v=visible(),pm=$('profmodal').style.display==='grid',page=B.classList.contains('appage');
   if(pm&&TAB!=='me'&&TAB!=='docs')TAB='me';
@@ -210,7 +210,7 @@ function renderManage(){mSig=manageSig();const z=$('zhead'),lvl=(z&&z.dataset.lv
     .filter(([s])=>can(s)).map(([s,l])=>row(`data-sec="${s}"`,esc(l),'')).join('')+
     (can('mon')?row('data-go="logs"',esc(t('Logs','Logs'))):'')+
     (can('cfg')?row('data-cfg="upd"',esc(t('Update','Update')),esc(ver))+row('data-cfg="bak"',esc(t('Sicherung','Backup')),''):'');
-  manage.innerHTML=`<h1 class="aplt">${esc(t('Verwalten','Manage'))}</h1>`+
+  manage.innerHTML=`<h1 class="aplt">${esc(t('Spark verwalten','Manage the Spark'))}</h1>`+
     `<button type="button" class="apsearch" data-ax="find">${SV(IC.find)}<span>${esc(t('Seite, Schalter oder Anleitung','Page, switch or guide'))}</span></button>`+
     (zt?`<button type="button" class="apstat" data-sec="mon" data-lvl="${esc(lvl)}"><b>${esc(zt)}</b>${zx?`<span>${esc(zx)}</span>`:''}</button>`:'')+
     (typeof NA!=='undefined'&&NA.s.may?grp('',row('data-ax="notaus"',esc(NA.s.level?t('Notaus: Stufe ändern','Kill switch: change stage'):t('Notaus','Kill switch')),
