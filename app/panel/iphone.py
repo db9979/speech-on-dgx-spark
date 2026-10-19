@@ -127,6 +127,13 @@ THINGS = {
                     (("DELETE",), r"/api/profile/wissensbuch/satz/[0-9]{1,12}"),
                     (("POST",), r"/api/profile/wissensbuch/satz/[0-9]{1,12}/(?:stimmt|noch)"),
                     (("POST",), r"/api/profile/wissensbuch/ablegen")),
+    # Kalender (plan kalender-mail Stufe 4): the page's view (own and shared calendars), add, change, delete; the
+    # tap is the yes, calendars.py checks like on the page (own CalDAV, never repeating, with the etag)
+    "calendar": ((("GET",), r"/api/profile/calendar/view"), (("POST", "PUT"), r"/api/profile/calendar/event")),
+    # E-Mail: the inbox and one mail as plain text (stays unread); ordering and sending each with their own function
+    "mail": ((("GET",), r"/api/profile/mail/(?:inbox|message)"),),
+    "mailmanage": ((("GET",), r"/api/profile/mail/folders"), (("POST",), r"/api/profile/mail/act")),
+    "mailsend": ((("POST",), r"/api/profile/mail/send(?:/preview)?"),),
     # Musik (musik.py): listen, make from a wish, delete one or all
     "musik": ((("GET", "POST", "DELETE"), r"/api/musik"), (("GET",), rf"/api/musik/job/{_DOC}"),
               (("GET",), rf"/api/musik/{_DOC}/datei"), (("DELETE",), rf"/api/musik/{_DOC}")),

@@ -6,7 +6,9 @@ import SwiftUI
 /// The app keeps the last answer of a few pages for its profile on this iPhone and shows it at once the next time,
 /// with the note „Stand 16:05 · wird aktualisiert …“, until the Spark has answered: what the profile may (hello), the
 /// conversations (the 20 newest with their last 50 messages), the chats and the last page of up to 20 of them, the
-/// own settings, the functions and the numbers on the tiles of „Meine Sachen“ (only how many, never a name or a file).
+/// own settings, the functions and the numbers on the tiles of „Meine Sachen“ (only how many, never a name or a file),
+/// the appointments of four weeks around today, the newest 50 mails of the inbox (sender, subject, time) and up to 20
+/// mails opened last with their text (plan kalender-mail 1b; each only while its function is released).
 ///
 /// Only while the Spark says so (hello "keep": the function released for the profile); otherwise everything kept is
 /// deleted at once. Unpairing, another key (another profile or another Spark) delete it too. Never kept: the key and
@@ -19,6 +21,8 @@ enum Merken {
     static let convos = 20
     static let messages = 50
     static let chatPages = 20
+    /// opened mails kept with their text (E-Mail, KalenderPost.swift), the newest ones
+    static let mailPages = 20
     /// from here a page counts as slow and is reported once (appmerken.SLOW_MS on the Spark)
     static let slowMs = 2000
     /// fetching in the background on coming to the front: at most this often
@@ -78,7 +82,8 @@ enum Merken {
     static func keep(_ name: String, _ data: Data) {
         guard on, Demo.scene == nil, data.count <= maxBytes, let url = file(name) else { return }
         try? data.write(to: url, options: [.atomic, .completeFileProtection])
-        if name.hasPrefix("chat-") { tidyChats() }
+        if name.hasPrefix("chat-") { tidy("chat-", chatPages) }
+        if name.hasPrefix("mail-") { tidy("mail-", mailPages) }
     }
 
     /// What was kept for a page and when; nil when nothing (or the function is off).
@@ -93,21 +98,26 @@ enum Merken {
         id.range(of: "^[a-z0-9]{1,34}$", options: .regularExpression) != nil ? "chat-" + id : nil
     }
 
+    /// Every kept page of one kind ("mail-"): the function was switched off for the profile.
+    static func dropAll(_ prefix: String) {
+        tidy(prefix, 0)
+    }
+
     static func drop(_ name: String) {
         guard let url = file(name) else { return }
         try? FileManager.default.removeItem(at: url)
     }
 
-    /// At most chatPages chat pages: the ones looked at longest ago go first.
-    private static func tidyChats() {
+    /// At most `most` pages of one kind (chats, opened mails): the ones looked at longest ago go first.
+    private static func tidy(_ prefix: String, _ most: Int) {
         guard let dir = folder, let all = try? FileManager.default.contentsOfDirectory(
             at: dir, includingPropertiesForKeys: [.contentModificationDateKey]) else { return }
-        let pages = all.filter { $0.lastPathComponent.hasPrefix("chat-") }.sorted {
+        let pages = all.filter { $0.lastPathComponent.hasPrefix(prefix) }.sorted {
             let a = (try? $0.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? .distantPast
             let b = (try? $1.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? .distantPast
             return a > b
         }
-        for old in pages.dropFirst(chatPages) { try? FileManager.default.removeItem(at: old) }
+        for old in pages.dropFirst(most) { try? FileManager.default.removeItem(at: old) }
     }
 
     // ---------------------------------------------------------------- the pages' own kinds

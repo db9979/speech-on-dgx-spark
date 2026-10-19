@@ -16,6 +16,9 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
     private var watch: AnyCancellable?
     private var watchFace: AnyCancellable?
     private var start: CPListItem?
+    private var fresh: CPListItem?
+    private var list: CPListTemplate?
+    private var watchAreas: AnyCancellable?
     /// the face the pictures show; the profile's choice arrives with hello, often only after CarPlay connected
     private var face = ""
     private var faceLater = false
@@ -38,8 +41,15 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
             self?.begin(fresh: true)
             done()
         }
-        let list = CPListTemplate(title: "Spark", sections: [CPListSection(items: [start, fresh])])
+        self.fresh = fresh
+        let list = CPListTemplate(title: "Spark", sections: [CPListSection(items: items(talk.allowed.areas))])
+        self.list = list
         interfaceController.setRootTemplate(list, animated: false, completion: nil)
+        // hello often arrives after the car connected: the rows for Kalender and E-Mail follow it
+        watchAreas = talk.$allowed.map(\.areas).removeDuplicates().receive(on: RunLoop.main).sink { [weak self] a in
+            guard let self, let list = self.list else { return }
+            list.updateSections([CPListSection(items: self.items(a))])
+        }
         watchFace = talk.$allowed.map(\.face).removeDuplicates().receive(on: RunLoop.main).sink { [weak self] f in self?.use(face: f) }
         watch = talk.$phase.receive(on: RunLoop.main).sink { [weak self] p in self?.show(p) }
         // started by the car alone, the phone screen never appeared and nothing asked the Spark yet (hello):
@@ -68,6 +78,9 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
                                   didDisconnectInterfaceController interfaceController: CPInterfaceController) {
         watch = nil
         watchFace = nil
+        watchAreas = nil
+        list = nil
+        fresh = nil
         interface = nil
         start = nil
         voice = nil
@@ -76,6 +89,31 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
         let talk = Conversation.shared
         talk.inCar = false
         talk.stop()
+    }
+
+    /// The rows: talking, a new conversation, and with Kalender and E-Mail released the assistant reads them aloud
+    /// (plan kalender-mail Stufe 4: the car shows no text, the answer is spoken like any other).
+    private func items(_ areas: Set<String>) -> [CPListItem] {
+        var out = [start, fresh].compactMap { $0 }
+        if areas.contains("calendar") {
+            let cal = CPListItem(text: String(localized: "Termine vorlesen"), detailText: String(localized: "Was heute und morgen ansteht"),
+                                 image: UIImage(systemName: "calendar"))
+            cal.handler = { _, done in
+                Conversation.shared.write(String(localized: "Was steht heute und morgen an?"))
+                done()
+            }
+            out.append(cal)
+        }
+        if areas.contains("mail") {
+            let post = CPListItem(text: String(localized: "Neue Mails vorlesen"), detailText: String(localized: "Wer geschrieben hat und worum es geht"),
+                                  image: UIImage(systemName: "envelope"))
+            post.handler = { _, done in
+                Conversation.shared.write(String(localized: "Habe ich neue Mails?"))
+                done()
+            }
+            out.append(post)
+        }
+        return out
     }
 
     private func begin(fresh: Bool) {

@@ -57,10 +57,6 @@ _pending = {}                  # token → {"uid", "acct", "msg", "n", "t"}
 _today = {"day": "", "n": {}}  # mails sent today per profile (MAX_DAY) and for Live (a number, never which)
 
 
-def on(uid):
-    return features.allowed("mailsend", uid)
-
-
 def outgoing(acct):
     """(host, port) of the mailbox's outgoing server."""
     if acct.get("smtp_host"):
@@ -122,7 +118,9 @@ def _preview(uid, body):
     acct_id = str(body.get("account") or "").strip()[:20]
     if ref:
         acct_id = ref.split(":")[0]
-    acct = next((a for a in mail.get(uid)["accounts"] if a["id"] == acct_id), None)
+    accts = mail.get(uid)["accounts"]
+    # no mailbox named (the iPhone app, a new mail): the first one
+    acct = next((a for a in accts if a["id"] == acct_id), None) if acct_id else (accts[0] if accts else None)
     if not acct:
         raise ValueError("unknown mailbox")
     if not ADDR.fullmatch(acct["user"]):
@@ -345,7 +343,7 @@ async def answer(ctx, latest):
     if not who or not ctx.get("own") or not ctx.get("private", True) or level() == "off":
         return None
     uid, src = who["id"], ctx.get("src", "")
-    if not on(uid) or not features.allowed("mail", uid):
+    if not features.allowed("mailsend", uid) or not features.allowed("mail", uid):
         return None
     log_who = profiles.log_name(profiles.by_id(uid))
     got = parse(latest)

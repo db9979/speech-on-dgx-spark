@@ -270,12 +270,14 @@ Home Assistant, mail, calendar, tasks, weather, reMarkable, MCP and what the Spa
 | `app/panel/mcpserver.py` | The Spark as an MCP server: other programs (Open WebUI, n8n, Home Assistant, Claude, ...) use the Spark's abilities over the Model Context Protocol at /mcp. |
 | `app/panel/meinmcp.py` | Eigene MCP-Dienste pro Profil. |
 | `app/panel/parcels.py` | Parcels from the profile's own e-mail: shipping mails of DHL, Hermes, DPD, GLS, UPS and Amazon are recognised by their sender, the status is taken from the m … |
+| `app/panel/postfach.py` | Mails ordnen auf der Seite E-Mail: the profile marks a message of its inbox as read or unread, archives it or moves it into one of its own folders, and takes … |
 | `app/panel/proactive.py` | The assistant speaks up by itself: a short note or question when something real happens. |
 | `app/panel/remarkable.py` | reMarkable notebooks as knowledge. |
 | `app/panel/rmaufgaben.py` | Das Aufgabenblatt aufs reMarkable: one living PDF "Aufgaben" with what the profile could do in the app, each point with answers to tick. |
 | `app/panel/rmliste.py` | „Was liegt auf meinem reMarkable?“ and „Welche Aufgaben hast du dort gefunden?“: the tool remarkable_library. |
 | `app/panel/rmpapier.py` | Paper for the reMarkable: folders by kind, designed sheets in the device's own page format, ticked boxes read back. |
 | `app/panel/rmplus.py` | More with the reMarkable. |
+| `app/panel/senden.py` | Mails senden auf der Seite E-Mail: a profile writes a new mail or answers one of its inbox, sees the finished mail on a preview sheet and only its „Senden“ t … |
 | `app/panel/tasks.py` | Tasks and the shopping list per profile: "Setz Milch auf die Einkaufsliste", "Was steht auf meiner Liste?". |
 | `app/panel/tidy.py` | Tidying the inbox per profile: obvious advertising, newsletters and the like are moved into folders under a main folder ("Spark/" unless the profile names an … |
 | `app/panel/transit.py` | Bus und Bahn: departures from the profile's home stop and connections, from a transport.rest service (https://v6.db.transport.rest by default, the admin can … |
@@ -529,6 +531,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `users/ID/mcp-dienste-pending.json` | Waiting for yes | Queue | – | yes | – |
 | `users/ID/messages-pending.json` | Waiting for yes | Queue | – | no | – |
 | `users/ID/rufen-pending.json` | Call waiting for yes | Queue | – | yes | – |
+| `users/ID/senden-pending.json` | Mail by voice waiting for yes | Queue | – | yes | – |
 | `users/ID/tasks-pending.json` | Waiting for yes | Queue | – | yes | – |
 | `users/ID/remarkable-pending.json` | Waiting for yes | Queue | – | yes | – |
 | `users/ID/rueckfrage-pending.json` | The assistant's last question back (10 minutes, only its buttons) | Queue | – | yes | – |

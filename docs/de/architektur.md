@@ -270,12 +270,14 @@ Home Assistant, Mail, Kalender, Aufgaben, Wetter, reMarkable, MCP und was der Sp
 | `app/panel/mcpserver.py` | Der Spark als MCP-Server für andere Programme |
 | `app/panel/meinmcp.py` | Eigene MCP-Dienste pro Profil |
 | `app/panel/parcels.py` | Pakete aus Versand-Mails |
+| `app/panel/postfach.py` | Mails ordnen auf der Seite E-Mail: gelesen, Archiv, eigene Ordner, nie löschen |
 | `app/panel/proactive.py` | Meldet sich von selbst, wenn etwas Echtes passiert |
 | `app/panel/remarkable.py` | reMarkable-Notizbücher als Wissen |
 | `app/panel/rmaufgaben.py` | Aufgabenblatt zum Ankreuzen aufs reMarkable |
 | `app/panel/rmliste.py` | Werkzeug: was auf dem reMarkable liegt und welche Aufgaben dort stehen |
 | `app/panel/rmpapier.py` | Gestaltete Blätter fürs reMarkable |
 | `app/panel/rmplus.py` | Mehr mit dem reMarkable: Senden, Ordner, Abgleich |
+| `app/panel/senden.py` | Mails senden auf der Seite E-Mail: Vorschau-Blatt, SMTP über TLS, Kopie in Gesendet |
 | `app/panel/tasks.py` | Aufgaben und Einkaufsliste |
 | `app/panel/tidy.py` | Posteingang aufräumen |
 | `app/panel/transit.py` | Bus und Bahn |
@@ -529,6 +531,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `users/ID/mcp-dienste-pending.json` | Wartet auf Ja | Warteschlange | – | ja | – |
 | `users/ID/messages-pending.json` | Wartet auf Ja | Warteschlange | – | nein | – |
 | `users/ID/rufen-pending.json` | Anruf wartet auf Ja | Warteschlange | – | ja | – |
+| `users/ID/senden-pending.json` | Mail per Sprache wartet auf Ja | Warteschlange | – | ja | – |
 | `users/ID/tasks-pending.json` | Wartet auf Ja | Warteschlange | – | ja | – |
 | `users/ID/remarkable-pending.json` | Wartet auf Ja | Warteschlange | – | ja | – |
 | `users/ID/rueckfrage-pending.json` | Letzte Rückfrage des Assistenten (10 Minuten, nur ihre Knöpfe) | Warteschlange | – | ja | – |

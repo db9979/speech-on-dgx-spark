@@ -146,13 +146,13 @@ struct ThingsView: View {
 
     /// whether the profile has any part of Meine Sachen (the button beside the conversation and the row in Einstellungen)
     static func any(_ a: Allowed) -> Bool {
-        a.make || !a.areas.isDisjoint(with: ["documents", "bilder", "musik", "memory"])
+        a.make || !a.areas.isDisjoint(with: ["documents", "bilder", "musik", "memory", "calendar", "mail"])
     }
 
     private var a: Allowed { talk.allowed }
     private var none: Bool {
         !a.areas.contains("documents") && !a.make && !a.areas.contains("bilder") && !a.areas.contains("musik")
-            && !a.areas.contains("memory")
+            && !a.areas.contains("memory") && !a.areas.contains("calendar") && !a.areas.contains("mail")
     }
 
     var body: some View {
@@ -163,6 +163,17 @@ struct ThingsView: View {
                 ForEach(hits) { h in NavigationLink { h.page } label: { row(h) } }
             } else {
                 if let at = m.keptAt { StandNote(at: at, loading: m.loading).listRowBackground(Color.clear) }
+                // Kalender und E-Mail (KalenderPost.swift): pages of their own, like in the panel's menu
+                if a.areas.contains("calendar") || a.areas.contains("mail") {
+                    Section {
+                        if a.areas.contains("calendar") {
+                            NavigationLink { KalenderView() } label: { Label("Kalender", systemImage: "calendar") }
+                        }
+                        if a.areas.contains("mail") {
+                            NavigationLink { PostView() } label: { Label("E-Mail", systemImage: "envelope") }
+                        }
+                    }
+                }
                 Section {
                     LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
                         if a.areas.contains("documents") {
@@ -186,7 +197,7 @@ struct ThingsView: View {
                     .listRowBackground(Color.clear)
                 }
                 if none && !m.loading {
-                    Text(SparkAPI.way(String(localized: "Der Admin hat dafür noch nichts freigegeben (Funktionen → Eigene Dokumente, Bilder malen, Musik machen, Gedächtnis).")))
+                    Text(SparkAPI.way(String(localized: "Der Admin hat dafür noch nichts freigegeben (Funktionen → Eigene Dokumente, Bilder malen, Musik machen, Gedächtnis, Kalender, E-Mail lesen).")))
                         .foregroundStyle(.secondary)
                 }
                 if !m.recent.isEmpty {

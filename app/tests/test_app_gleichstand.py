@@ -168,7 +168,7 @@ class PagesFollowTheRelease(unittest.TestCase):
 class AppTexts(unittest.TestCase):
     """Every German text of the iPhone app has its English one in Localizable.xcstrings."""
     # texts without English on 2026-10-14; this list only gets shorter
-    ALT = {"AreaViews.swift": 1, "ReportView.swift": 12, "Views.swift": 4}
+    ALT = {"AreaViews.swift": 1, "ReportView.swift": 11, "Views.swift": 4}
     RX = re.compile(r'(?:Text|LocalizedStringKey|navigationTitle|Section|Label|Button|Toggle|NavigationLink|'
                     r'String\(localized:)\s*\(\s*"((?:[^"\\]|\\.)*)"')
 

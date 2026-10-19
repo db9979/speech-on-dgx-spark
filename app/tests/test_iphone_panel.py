@@ -235,9 +235,13 @@ class Things(unittest.TestCase):
     """Meine Sachen (Dominik 2026-10-17, plan app-meine-sachen/plan.md): documents, memory, pictures and music open
     for the app's key with the admin release of their own function, not with the panel switch; the admin's block for
     the profile closes them at once; forgetting everything at once stays in the browser."""
-    PROBE = {"documents": ("GET", "/api/profile/wissen"), "memory": ("GET", "/api/profile/memory"),
-             "bilder": ("GET", "/api/bilder"), "musik": ("GET", "/api/musik"),
-             "wissensbuch": ("GET", "/api/profile/wissensbuch")}
+    # (method, path, the answer that shows the request got through to the endpoint): ordering and sending have no
+    # plain GET, an empty request reaches their own checks (400) only with the release
+    PROBE = {"documents": ("GET", "/api/profile/wissen", 200), "memory": ("GET", "/api/profile/memory", 200),
+             "bilder": ("GET", "/api/bilder", 200), "musik": ("GET", "/api/musik", 200),
+             "wissensbuch": ("GET", "/api/profile/wissensbuch", 200),
+             "calendar": ("GET", "/api/profile/calendar/view", 200), "mail": ("GET", "/api/profile/mail/inbox", 200),
+             "mailmanage": ("GET", "/api/profile/mail/folders", 400), "mailsend": ("POST", "/api/profile/mail/send/preview", 400)}
 
     app, uid = Areas.app, Areas.uid
 
@@ -252,9 +256,10 @@ class Things(unittest.TestCase):
         return old
 
     def setUp(self):
-        helpers.keep_chat(self, "iphone", "iphone_panel", "bilder", "musik", "deny", "documents", "knowledge_book")
+        helpers.keep_chat(self, "iphone", "iphone_panel", "bilder", "musik", "deny", "documents", "knowledge_book",
+                          "calendar", "mail", "mail_manage", "mail_send")
         helpers.set_config(iphone=True, iphone_panel=False, bilder=True, musik=True, deny={}, documents=True,
-                           knowledge_book=True)
+                           knowledge_book=True, calendar=True, mail=True, mail_manage=True, mail_send=True)
         for name in ("image", "music"):     # the picture and music models count as installed
             old = self.section(name, enabled=True)
             self.addCleanup(lambda n=name, o=old: self.section(n, **dict({"enabled": False}, **o)))
@@ -274,22 +279,26 @@ class Things(unittest.TestCase):
         import features
         c, a = self.app("Thea")
         hello = a.get("/api/iphone/hello").json()["areas"]
-        for k, (method, path) in self.PROBE.items():
+        for k, (method, path, ok) in self.PROBE.items():
             self.assertTrue(hello[k], k)
-            self.assertEqual(a.request(method, path).status_code, 200, k)   # without the panel switch
-        for k, (method, path) in self.PROBE.items():
+            self.assertEqual(a.request(method, path, **self.body(method)).status_code, ok, k)   # without the panel switch
+        for k, (method, path, ok) in self.PROBE.items():
             helpers.set_config(deny={k: [self.uid("Thea")]})
             try:
                 self.assertFalse(a.get("/api/iphone/hello").json()["areas"][k], k)
-                self.assertEqual(a.request(method, path).status_code, 401, k)
-                for other, (m2, p2) in self.PROBE.items():   # the others stay open (the Wissensbuch hangs on Dokumente)
+                self.assertEqual(a.request(method, path, **self.body(method)).status_code, 401, k)
+                for other, (m2, p2, ok2) in self.PROBE.items():   # the others stay open (the Wissensbuch hangs on Dokumente)
                     if other != k and features.BY_KEY[other].parent != k:
-                        self.assertEqual(a.request(m2, p2).status_code, 200, (k, other))
+                        self.assertEqual(a.request(m2, p2, **self.body(m2)).status_code, ok2, (k, other))
             finally:
                 helpers.set_config(deny={})
         helpers.set_config(bilder=False)
         self.assertEqual(a.get("/api/bilder").status_code, 401)
         self.assertFalse(a.get("/api/iphone/hello").json()["areas"]["bilder"])
+
+    @staticmethod
+    def body(method):
+        return {"json": {}} if method == "POST" else {}
 
     def test_memory_from_the_app(self):
         c, a = self.app("Theo")

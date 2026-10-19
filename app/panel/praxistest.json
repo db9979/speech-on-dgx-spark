@@ -2035,6 +2035,13 @@
 "titel": "Mails senden",
 "text": "A: Admin: Funktionen → E-Mail lesen → „Mails senden“ an. B: E-Mail → „Neue Mail“, An: deine zweite Adresse, Betreff und Text, „Vorschau“: das Blatt zeigt Von, An, Betreff und Text, noch ist nichts gesendet. C: „Senden“: die Mail kommt an der zweiten Adresse an, im iPhone-Postfach unter „Gesendet“. D: Eine Mail öffnen, „Antworten“: An ist der Absender, Betreff „Re: …“; senden, beim Empfänger hängt sie am Verlauf. E: Im Betreff oder bei An Unsinn („kein Mensch“): die Vorschau lehnt ab. F: Mit einem GMX- oder web.de-Postfach: die Kopie liegt in „Gesendet“. G: Schalter aus: „Neue Mail“ und „Antworten“ sind weg. H: Live zeigt bei der Post nur die Zahl der heute gesendeten Mails. I: Admin: „Senden per Sprache“ auf „nur Antworten“; „Lies mir die Mail von … vor“, dann „Antworte ihr per Mail: komme morgen“: der Spark liest Empfänger und Text vor, erst „Ja“ sendet. J: „Nein“ sendet nichts. K: Auf „alle“: „Schreib eine Mail an <Kontakt>: Hallo“ fragt nach und sendet nach „Ja“; ein Name, der nicht in den Kontakten steht, wird abgelehnt.",
 "thread": "Kalender und E-Mail in Panel und Apps"
+},
+{
+"id": "P315",
+"v": 815,
+"titel": "Kalender und E-Mail in der iPhone-App",
+"text": "A: Neuer TestFlight-Build. Meine Sachen: oben stehen „Kalender“ und „E-Mail“. B: Kalender zeigt die Termine der nächsten vier Wochen nach Tagen; „+“ legt einen Termin an, er steht danach auch im Panel und im iPhone-Kalender. C: Einen Termin antippen, „Ändern“ (Uhrzeit), dann „Löschen“: beides kommt im Panel an; bei einem wiederholten Termin fehlen die Knöpfe. D: E-Mail zeigt den Posteingang; eine Mail antippen zeigt den Text, sie bleibt ungelesen. E: Mit „Mails ordnen“: „Archivieren“ nimmt sie aus dem Posteingang. F: Mit „Mails senden“: „Antworten“, Text, „Vorschau“, „Senden“: die Antwort kommt an. G: Flugmodus, App neu öffnen: Kalender, Mail-Liste und eine schon geöffnete Mail sind mit „Stand …“ da. H: Admin schaltet E-Mail lesen aus: beim nächsten Öffnen ist die Mail-Liste weg. I: CarPlay: „Termine vorlesen“ und „Neue Mails vorlesen“ sprechen die Antwort.",
+"thread": "Kalender und E-Mail in Panel und Apps"
 }
 ]
 }

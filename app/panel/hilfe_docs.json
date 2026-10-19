@@ -4644,6 +4644,46 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Mails ordnen (V01.0.813, Plan kalender-mail/plan.md Stufe 2; Funktionen → E-Mail lesen → „Mails ordnen“, chat.mail_manage, aus): In einer geöffneten Mail stehen „Gelesen“/„Ungelesen“, „Archivieren“ und eine Ordnerwahl; nach Archivieren oder Verschieben holt „Rückgängig“ die Mail sofort in den Posteingang zurück (gefunden über ihre Message-ID). Der Knopf ist das eigene Ja. postfach.py kennt nur diese vier Dinge: das Flag \\Seen einer Mail im Posteingang, eine Mail ins Archiv (der Ordner mit \\Archive, sonst „Archive“/„Archiv“) oder in einen gewöhnlichen eigenen Ordner, und zurück. Nie in Papierkorb, Spam, Gesendet oder Entwürfe, nie gelöscht, nie ein Ordner angelegt oder umbenannt; ohne IMAP MOVE nur COPY und danach UID EXPUNGE genau des bestätigten Originals (wie beim Aufräumen). Notaus hält jede Aktion an. Endpunkte GET /api/profile/mail/folders und POST /api/profile/mail/act (nur die eigene Anmeldung im Browser, nur eigene Postfächer, Rate-Limit postordnen); Live zeigt bei der Post nur, wie viele Mails heute auf der Seite geordnet wurden; Log mail: page <Aktion> done|refused, not found|refused, notaus|failed, nie Absender, Betreff oder Ordner."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Karten im Assistenten (V01.0.813, Plan `kalender-mail/plan.md` Stufe 2)",
+"text": "Karten im Assistenten (V01.0.813, Plan kalender-mail/plan.md Stufe 2): Liest der Assistent Termine (calendar_events), steht unter der Antwort „Im Kalender ansehen“ und öffnet die Seite Kalender an diesem Tag; liest er eine Mail (mail_read), öffnet „Mail öffnen“ genau diese Mail auf der Seite E-Mail (Ereignis goto, höchstens drei Knöpfe, nur eine gültige Tagesangabe oder Mail-Id, nur mit der Seite, nie für eine fremde Stimme). Die Karte ist nur ein Weg: was die Seite zeigt, entscheidet der Server; Eintragen, Verschieben und Löschen per Sprache haben weiter ihre Freigabe-Karte mit Ja/Nein."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Mails senden (V01.0.814, Plan kalender-mail/plan.md Stufe 3; Funktionen → E-Mail lesen → „Mails senden“, chat.mail_send, aus): Auf der Seite E-Mail „Neue Mail“ oder unter einer Mail „Antworten“; „Vorschau“ schickt das Formular an POST /api/profile/mail/send/preview, der Server prüft jedes Feld (kein Zeilenumbruch in einem Feld, also kein Kopf aus dem Formular; nur echte Adressen; höchstens 10 Empfänger; Betreff höchstens 200, Text höchstens 20 000 Zeichen; kein Anhang, kein HTML) und hält die fertige Mail 10 Minuten unter einem Zufallsschlüssel, gebunden ans Profil. Das Blatt zeigt genau diese Mail; erst „Senden“ dort (POST /api/profile/mail/send mit dem Schlüssel) sendet sie, einmal. Eine Antwort nimmt Betreff („Re: …“), In-Reply-To und References aus der Mail im eigenen Posteingang. senden.py sendet über den Postausgang des Postfachs (SMTP_FOR: iCloud smtp.mail.me.com 587, Gmail 465, GMX 465, web.de 587, sonst smtp.<Domain> 465) mit demselben Zugang, nur TLS (465) oder Pflicht-STARTTLS (587), über netguard.SMTP/SMTP_SSL (geprüfte Adresse, USER-Regeln). Außer bei iCloud und Gmail legt er eine gelesene Kopie in „Gesendet“. Höchstens 30 Mails am Tag pro Profil, Notaus hält Senden an"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": ", ein falsches Passwort lässt das Blatt für einen zweiten Versuch; bricht der Server mitten drin ab, gilt das Blatt als verbraucht (nie doppelt). Rate-Limit mailsenden; Live zeigt bei der Post nur, wie viele Mails heute gesendet wurden; Log mail: send preview|sent|send refused|send failed|sent copy … mit Zahlen, nie Adresse, Betreff oder Text. Senden per Sprache (chat.mail_send_voice: aus, nur Antworten, alle; Standard aus): kein Werkzeug fürs Modell, feste Sätze des Panels in den eigenen Worten (senden.answer): „Antworte ihr per Mail: …“ bis 15 Minuten, nachdem der Assistent eine Mail gelesen hat (an deren Absender, nur From, nie Reply-To; der Name nur aus den eigenen Kontakten, nie aus der Mail), mit „alle“ auch „Schreib eine Mail an Anna: …“ (Anna nur aus den eigenen Kontakten mit genau einer Adresse, oder eine ganz gesagte Adresse; mehrere passen → Rückfrage). Der Spark liest Empfänger und Text vor, Freigabe-Karte (Art „senden“), gesendet wird erst nach dem schlichten „Ja“ in der nächsten Nachricht auf demselben Gerät, durch dieselben Prüfungen wie das Blatt. Nie für Gäste, eine fremde Stimme oder Telegram ohne Freigabe fürs Private. Log mail: voice proposed|sent|declined|refus"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "ed, <Grund>."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "E-Mail lesen",
 "text": "E-Mail lesen: „Hab ich neue Mails?“, „Was schreibt Anna?“, „Lies mir die Mail von der Telekom vor“. Jedes Profil verbindet im Fenster „Ich“, Reiter E-Mail, bis zu 4 Postfächer per IMAP: iCloud (imap.mail.me.com, deine iCloud-Mailadresse und ein neues app-spezifisches Passwort von appleid.apple.com), Gmail (imap.gmail.com, App-Passwort, braucht die Bestätigung in zwei Schritten), GMX und web.de (vorher in deren Einstellungen IMAP erlauben) oder ein anderer IMAP-Server mit TLS. Outlook/Microsoft 365 geht noch nicht (braucht OAuth). Der Assistent liest nur den Posteingang der letzten 30 Tage und ändert nichts: Das Postfach wird schreibgeschützt geöffnet, keine Mail wird gesendet, gelöscht, verschoben oder als gelesen markiert. Er fasst Mails zusammen und liest sie nur auf Bitte wörtlich vor; im Tagesbriefing nennt er die ungelesenen Mails. Mailtext gilt als fremder Inhalt: Hat der Assistent in einer Antwort eine Mail gelesen, kann er in dieser Antwort keine Smart-Home-Geräte schalten, das Gedächtnis nicht ändern, keine Erinnerungen löschen, nicht im Netz suchen und keine Termine eintragen, damit eine präparierte Mail nichts auslösen kann; Antworten aus Mails lernt er nicht ins Gedächt"
 },
@@ -6715,6 +6755,14 @@
 "lang": "de",
 "src": "iphone-app",
 "file": "iPhone-App „Spark“",
+"head": "Meine Sachen",
+"title": "Kalender und E-Mail",
+"text": "Kalender und E-Mail (seit V01.0.815, Plan kalender-mail/plan.md Stufe 4): Oben in Meine Sachen stehen „Kalender“ und „E-Mail“, wenn der Admin die Funktion für dich freigegeben hat (Kalender, E-Mail lesen; ohne den Panel-Schalter). Der Kalender zeigt die Termine von vier Wochen ab dieser Woche nach Tagen, in der Farbe ihres Kalenders; „+“ legt einen Termin an, ein Tippen zeigt ihn mit „Ändern“ und „Löschen“ (nur in eigenen CalDAV-Kalendern, nie bei wiederholten oder geteilten Terminen, die Regeln prüft der Spark wie auf der Seite). E-Mail zeigt den Posteingang aller Postfächer (die 50 neuesten), ein Tippen die Mail als reinen Text (sie bleibt ungelesen); mit „Mails ordnen“ darunter Gelesen/Ungelesen, Archivieren und Verschieben, mit „Mails senden“ „Antworten“ und oben „Neue Mail“, beides mit dem Vorschau-Blatt des Spark, gesendet wird nur mit „Senden“ dort. Mit „Apps merken sich den letzten Stand“ bleiben die Termine der vier Wochen, die Mail-Liste (Absender, Betreff, Zeit) und bis zu 20 zuletzt geöffnete Mails mit Text auf dem iPhone; ist die Funktion aus, löscht die App sie beim nächsten Öffnen, beim Entkoppeln und bei einem anderen Profil sofort."
+},
+{
+"lang": "de",
+"src": "iphone-app",
+"file": "iPhone-App „Spark“",
 "head": "Nachrichten an andere Profile",
 "title": "Nachrichten an andere Profile",
 "text": "Geschrieben wird in Chats (Knopf oben rechts, wenn Chats an sind). Seit V01.0.488 gibt es in der App kein eigenes Nachrichten-Fenster und keine Mitteilung mit Antwortfeld mehr; neue Chat-Nachrichten kommen als „💬 Name“ und öffnen die App. Mit Siri: „Nachricht mit Spark“. Siri fragt nach Empfänger und Text und vor dem Senden noch einmal nach; die Nachricht landet im Chat mit dieser Person, „alle“ in der Gruppe „Alle“. Der Name muss zu einem Profil passen, das deine Nachrichten annimmt (Name oder Rufname). Passen mehrere, fragt Siri „Wen meinst du?“ mit höchstens 4 Namen; bei einem unbekannten Namen nennt sie höchstens 3 ähnliche. Die Heute-Karte „Chats“ zählt ungelesene Chat-Nachrichten. Wer dir schreiben darf, stellst du im Browser ein (Ich → Gespräch → Chats). Braucht den nächsten TestFlight-Build."
@@ -6846,6 +6894,14 @@
 "head": "CarPlay",
 "title": "CarPlay",
 "text": "Ausprobieren ohne Auto: Xcode → Open Developer Tool → Simulator, dort I/O → External Displays → CarPlay."
+},
+{
+"lang": "de",
+"src": "iphone-app",
+"file": "iPhone-App „Spark“",
+"head": "CarPlay",
+"title": "Termine und Mails vorlesen",
+"text": "Termine und Mails vorlesen (seit V01.0.815): Mit Kalender oder E-Mail lesen freigegeben stehen im Auto zusätzlich „Termine vorlesen“ und „Neue Mails vorlesen“. Ein Tippen stellt dem Assistenten die Frage („Was steht heute und morgen an?“, „Habe ich neue Mails?“), die Antwort kommt gesprochen; das Auto zeigt dabei wie immer keinen Text."
 },
 {
 "lang": "de",
@@ -12740,6 +12796,38 @@
 "src": "assistant",
 "file": "Assistant and panel",
 "head": "Voice chat",
+"title": "Voice chat",
+"text": "Order mail (V01.0.813, plan kalender-mail/plan.md stage 2; Features → Reading e-mail → \"Mails ordnen\", chat.mail_manage, off): an opened mail shows \"Read\"/\"Unread\", \"Archive\" and a folder choice; after archiving or moving, \"Undo\" brings the mail straight back into the inbox (found by its Message-ID). The button is the person's own yes. postfach.py knows only these four things: the \\Seen flag of one inbox mail, one mail into the archive (the folder flagged \\Archive, else \"Archive\"/\"Archiv\") or into an ordinary own folder, and back. Never into trash, junk, sent or drafts, never deleted, never a folder created or renamed; without IMAP MOVE only COPY and then UID EXPUNGE of exactly the confirmed original (as with tidying). Notaus holds every action off. Endpoints GET /api/profile/mail/folders and POST /api/profile/mail/act (own browser login only, own mailboxes only, rate limit postordnen); Live shows at mail only how many mails were ordered on the page today; log mail: page <action> done|refused, not found|refused, notaus|failed, never sender, subject or folder."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Cards in the assistant (V01.0.813, plan `kalender-mail/plan.md` stage 2)",
+"text": "Cards in the assistant (V01.0.813, plan kalender-mail/plan.md stage 2): when the assistant reads appointments (calendar_events), \"Show in calendar\" under the answer opens the Calendar page on that day; when it reads a mail (mail_read), \"Open mail\" opens exactly that mail on the E-mail page (event goto, at most three buttons, only a valid day or mail id, only with the page, never for another person's voice). The card is only a way there: the server decides what the page shows; adding, moving and deleting by voice keep their approval card with yes/no."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "Send mail (V01.0.814, plan kalender-mail/plan.md stage 3; Features → Reading e-mail → \"Mails senden\", chat.mail_send, off): on the E-mail page \"New mail\", or \"Reply\" under a mail; \"Preview\" sends the form to POST /api/profile/mail/send/preview, the server checks every field (no line break in a field, so no header from the form; real addresses only; at most 10 recipients; subject at most 200, text at most 20,000 characters; no attachment, no HTML) and keeps the finished mail for 10 minutes under a random token bound to the profile. The sheet shows exactly that mail; only \"Send\" there (POST /api/profile/mail/send with the token) sends it, once. An answer takes subject (\"Re: …\"), In-Reply-To and References from the mail in the own inbox. senden.py sends through the mailbox's outgoing server (SMTP_FOR: iCloud smtp.mail.me.com 587, Gmail 465, GMX 465, web.de 587, else smtp.<domain> 465) with the same login, TLS only (465) or required STARTTLS (587), through netguard.SMTP/SMTP_SSL (checked address, USER rules). Except for iCloud and Gmail it puts a read copy into \"Sent\". At most 30 mails a day per profile, the Notaus holds sending off, a wrong password keeps the sheet for another try; if"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": " the server breaks off midway the sheet counts as used (never twice). Rate limit mailsenden; Live shows at mail only how many mails were sent today; log mail: send preview|sent|send refused|send failed|sent copy … with numbers, never address, subject or text. Sending by voice (chat.mail_send_voice: off, answers only, all; default off): no tool for the model, fixed rules of the panel on the person's own words (senden.answer): \"Antworte ihr per Mail: …\" up to 15 minutes after the assistant read a mail (to its sender, From only, never Reply-To; the name only from the own contacts, never from the mail), with \"all\" also \"Schreib eine Mail an Anna: …\" (Anna only from the own contacts with exactly one address, or an address said in full; several fit → asked back). The Spark reads recipient and text back, approval card (kind \"senden\"), it is sent only after the plain \"Ja\" in the next message on the same device, through the same checks as the sheet. Never for guests, another voice or Telegram without the private release. Log mail: voice proposed|sent|declined|refused, <reason>."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
 "title": "Reading e-mail",
 "text": "Reading e-mail: \"Any new mail?\", \"What does Anna write?\", \"Read me the mail from the bank\". Each profile connects up to 4 mailboxes over IMAP in the \"Me\" window, tab E-mail: iCloud (imap.mail.me.com, your iCloud mail address and a new app-specific password from appleid.apple.com), Gmail (imap.gmail.com, app password, needs 2-step verification), GMX and web.de (allow IMAP in their settings first) or any other IMAP server with TLS. Outlook/Microsoft 365 is not supported yet (needs OAuth). The assistant only reads the inbox of the last 30 days and changes nothing: the mailbox is opened read only, no mail is sent, deleted, moved or marked as read. It summarizes mails and reads them out word for word only when asked; the daily briefing names the unread ones. Mail text is treated as someone else's words: once the assistant read a mail in an answer, in that answer it cannot switch smart home devices, change memory, cancel reminders, search the web or enter appointments, so a crafted mail cannot trigger anything; answers made from mails are not learned into memory. Guests and another person's voice at a different device get no access. The password is stored encrypted on the Spark and never"
 },
@@ -14675,6 +14763,14 @@
 "lang": "en",
 "src": "iphone-app",
 "file": "iPhone app \"Spark\"",
+"head": "My things",
+"title": "Calendar and e-mail",
+"text": "Calendar and e-mail (since V01.0.815, plan kalender-mail/plan.md stage 4): at the top of My things there are \"Kalender\" and \"E-Mail\" when the admin released the function for you (Calendar, Reading e-mail; without the panel switch). The calendar shows the appointments of four weeks from this week by day, in the colour of their calendar; \"+\" adds an appointment, a tap shows it with \"Change\" and \"Delete\" (only in own CalDAV calendars, never for repeating or shared ones; the Spark checks the rules like on the page). E-mail shows the inbox of all mailboxes (the 50 newest), a tap the mail as plain text (it stays unread); with \"Order mail\" below it read/unread, archive and move, with \"Send mail\" \"Reply\" and \"New mail\" at the top, both with the Spark's preview sheet, sent only with \"Send\" there. With \"Apps keep the last state\" the appointments of the four weeks, the mail list (sender, subject, time) and up to 20 mails opened last with their text stay on the iPhone; when the function is off the app deletes them on the next opening, on unpairing and for another profile at once."
+},
+{
+"lang": "en",
+"src": "iphone-app",
+"file": "iPhone app \"Spark\"",
 "head": "Messages to other profiles",
 "title": "Messages to other profiles",
 "text": "You write in Chats (button at the top right when chats are on). Since V01.0.488 the app has no messages window of its own and no notification with a reply field any more; new chat messages arrive as \"💬 name\" and open the app. With Siri: \"Message with Spark\" asks for recipient and text and confirms before sending; the message lands in the chat with that person, \"everybody\" in the group \"Alle\". The name must match a profile that takes your messages (name or call name). When several fit, Siri asks \"Whom do you mean?\" with at most 4 names; for an unknown name it says at most 3 similar ones. The Today card \"Chats\" counts unread chat messages. Who may write to you is set in the browser (Me → Conversation → Chats). Needs the next TestFlight build."
@@ -14782,6 +14878,14 @@
 "head": "CarPlay",
 "title": "Apple's grant",
 "text": "Apple's grant: Apple granted the CarPlay category \"Voice-based conversational app\"; it is ticked for the App ID io.github.db9979.speechspark under developer.apple.com → Identifiers → Additional Capabilities (CarPlay Voice Based Conversation), and since V01.0.676 ios/Spark.entitlements contains com.apple.developer.carplay-voice-based-conversation. The TestFlight build fetches the matching profile itself; without the tick on the App ID the build cannot be signed. If the icon does not appear: iPhone → Settings → General → CarPlay → your car → Customize, add Spark. Try it without a car: Simulator → I/O → External Displays → CarPlay."
+},
+{
+"lang": "en",
+"src": "iphone-app",
+"file": "iPhone app \"Spark\"",
+"head": "CarPlay",
+"title": "Reading appointments and mail aloud",
+"text": "Reading appointments and mail aloud (since V01.0.815): with Calendar or Reading e-mail released, the car also shows \"Termine vorlesen\" and \"Neue Mails vorlesen\". A tap asks the assistant (\"What is on today and tomorrow?\", \"Do I have new mail?\"), the answer is spoken; as always the car shows no text."
 },
 {
 "lang": "en",

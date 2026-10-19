@@ -11270,6 +11270,416 @@
           }
         }
       }
+    },
+    "In den nächsten vier Wochen steht nichts an.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing in the next four weeks."
+          }
+        }
+      }
+    },
+    "Neuer Termin": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New appointment"
+          }
+        }
+      }
+    },
+    "Diesen Termin änderst du im Kalender, aus dem er kommt (wiederholt oder geteilt).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change this appointment in the calendar it comes from (repeating or shared)."
+          }
+        }
+      }
+    },
+    "Termin": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Appointment"
+          }
+        }
+      }
+    },
+    "Ganztägig": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All day"
+          }
+        }
+      }
+    },
+    "Termin ändern": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change appointment"
+          }
+        }
+      }
+    },
+    "Keine Mail in den letzten 14 Tagen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No mail in the last 14 days."
+          }
+        }
+      }
+    },
+    "Neue Mail": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New mail"
+          }
+        }
+      }
+    },
+    "Archivieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archive"
+          }
+        }
+      }
+    },
+    "Gelöscht wird nie. Im Panel holt „Rückgängig“ eine verschobene Mail sofort zurück.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing is ever deleted. In the panel, \"Undo\" brings a moved mail straight back."
+          }
+        }
+      }
+    },
+    "So geht die Mail raus": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This is the mail that goes out"
+          }
+        }
+      }
+    },
+    "Erst die Vorschau zeigt, was rausgeht. Gesendet wird nur dort.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only the preview shows what goes out. It is sent only there."
+          }
+        }
+      }
+    },
+    "Vorschau": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preview"
+          }
+        }
+      }
+    },
+    "Von": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From"
+          }
+        }
+      }
+    },
+    "Wann": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When"
+          }
+        }
+      }
+    },
+    "Postfach": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mailbox"
+          }
+        }
+      }
+    },
+    "Anhänge": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Attachments"
+          }
+        }
+      }
+    },
+    "Kopie": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy"
+          }
+        }
+      }
+    },
+    "Betreff": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subject"
+          }
+        }
+      }
+    },
+    "Beginn": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start"
+          }
+        }
+      }
+    },
+    "Ende": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "End"
+          }
+        }
+      }
+    },
+    "Titel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Title"
+          }
+        }
+      }
+    },
+    "Als gelesen markieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mark as read"
+          }
+        }
+      }
+    },
+    "Als ungelesen markieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mark as unread"
+          }
+        }
+      }
+    },
+    "Verschieben nach …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move to …"
+          }
+        }
+      }
+    },
+    "Termin löschen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete appointment?"
+          }
+        }
+      }
+    },
+    "(ohne Titel)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "(no title)"
+          }
+        }
+      }
+    },
+    "(ohne Betreff)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "(no subject)"
+          }
+        }
+      }
+    },
+    "(kein Text)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "(no text)"
+          }
+        }
+      }
+    },
+    "Nicht erreicht: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not reached: %@"
+          }
+        }
+      }
+    },
+    "Termine vorlesen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read appointments"
+          }
+        }
+      }
+    },
+    "Was heute und morgen ansteht": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What is on today and tomorrow"
+          }
+        }
+      }
+    },
+    "Neue Mails vorlesen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read new mail"
+          }
+        }
+      }
+    },
+    "Wer geschrieben hat und worum es geht": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Who wrote and what it is about"
+          }
+        }
+      }
+    },
+    "Als gelesen markiert.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marked as read."
+          }
+        }
+      }
+    },
+    "Als ungelesen markiert.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marked as unread."
+          }
+        }
+      }
+    },
+    "Noch kein Kalender verbunden. Im Panel unter Kalender → Einstellungen verbindest du iCloud, Nextcloud oder einen Abo-Link.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No calendar connected yet. In the panel under Calendar → Settings you connect iCloud, Nextcloud or a subscription link."
+          }
+        }
+      }
+    },
+    "Noch kein Postfach verbunden. Im Panel unter E-Mail → Einstellungen verbindest du iCloud, Gmail, GMX, web.de oder IMAP.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No mailbox connected yet. In the panel under E-mail → Settings you connect iCloud, Gmail, GMX, web.de or IMAP."
+          }
+        }
+      }
+    },
+    "Der Admin hat dafür noch nichts freigegeben (Funktionen → Eigene Dokumente, Bilder malen, Musik machen, Gedächtnis, Kalender, E-Mail lesen).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The admin has not released anything for this yet (Features → Own documents, Painting pictures, Making music, Memory, Calendar, Reading e-mail)."
+          }
+        }
+      }
+    },
+    "Was steht heute und morgen an?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What is on today and tomorrow?"
+          }
+        }
+      }
+    },
+    "Habe ich neue Mails?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do I have new mail?"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

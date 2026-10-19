@@ -113,6 +113,8 @@ Jede Kachel richtet sich nur nach der Freigabe ihrer Funktion durch den Admin (E
 - **Musik:** alle Lieder mit Abspielen direkt in der App, Länge, mit oder ohne Gesang, wischen zum Löschen. Oben „Was für Musik?“ macht ein Stück ohne Gesang; Gesang und eigener Liedtext gehen im Panel unter Ich → Musik.
 - **Gedächtnis:** alle gemerkten Fakten mit Suche, „aus einem Gespräch gelernt“ oder „selbst gesagt“ mit Datum. Wischen zum Ändern oder Löschen, „Auswählen“ löscht mehrere, „Aufräumen vorschlagen“ fragt das Sprachmodell nach doppelten Einträgen, erst nach deinem „Übernehmen“ ändert sich etwas. Alles auf einmal vergessen geht weiter nur im Browser.
 
+**Kalender und E-Mail** (seit V01.0.815, Plan `kalender-mail/plan.md` Stufe 4): Oben in Meine Sachen stehen „Kalender“ und „E-Mail“, wenn der Admin die Funktion für dich freigegeben hat (Kalender, E-Mail lesen; ohne den Panel-Schalter). Der Kalender zeigt die Termine von vier Wochen ab dieser Woche nach Tagen, in der Farbe ihres Kalenders; „+“ legt einen Termin an, ein Tippen zeigt ihn mit „Ändern“ und „Löschen“ (nur in eigenen CalDAV-Kalendern, nie bei wiederholten oder geteilten Terminen, die Regeln prüft der Spark wie auf der Seite). E-Mail zeigt den Posteingang aller Postfächer (die 50 neuesten), ein Tippen die Mail als reinen Text (sie bleibt ungelesen); mit „Mails ordnen“ darunter Gelesen/Ungelesen, Archivieren und Verschieben, mit „Mails senden“ „Antworten“ und oben „Neue Mail“, beides mit dem Vorschau-Blatt des Spark, gesendet wird nur mit „Senden“ dort. Mit „Apps merken sich den letzten Stand“ bleiben die Termine der vier Wochen, die Mail-Liste (Absender, Betreff, Zeit) und bis zu 20 zuletzt geöffnete Mails mit Text auf dem iPhone; ist die Funktion aus, löscht die App sie beim nächsten Öffnen, beim Entkoppeln und bei einem anderen Profil sofort.
+
 ## Nachrichten an andere Profile
 
 Geschrieben wird in Chats (Knopf oben rechts, wenn Chats an sind). Seit V01.0.488 gibt es in der App kein eigenes Nachrichten-Fenster und keine Mitteilung mit Antwortfeld mehr; neue Chat-Nachrichten kommen als „💬 Name“ und öffnen die App. Mit Siri: „Nachricht mit Spark“. Siri fragt nach Empfänger und Text und vor dem Senden noch einmal nach; die Nachricht landet im Chat mit dieser Person, „alle“ in der Gruppe „Alle“. Der Name muss zu einem Profil passen, das deine Nachrichten annimmt (Name oder Rufname). Passen mehrere, fragt Siri „Wen meinst du?“ mit höchstens 4 Namen; bei einem unbekannten Namen nennt sie höchstens 3 ähnliche. Die Heute-Karte „Chats“ zählt ungelesene Chat-Nachrichten. Wer dir schreiben darf, stellst du im Browser ein (Ich → Gespräch → Chats). Braucht den nächsten TestFlight-Build.
@@ -164,6 +166,8 @@ Ein eigenes Symbol „Spark“ im Auto. Antippen → **„Mit Spark sprechen“*
 Erscheint das Symbol nicht: iPhone → Einstellungen → Allgemein → CarPlay → dein Auto → **Anpassen**, dort Spark hinzufügen.
 
 Ausprobieren ohne Auto: Xcode → **Open Developer Tool → Simulator**, dort **I/O → External Displays → CarPlay**.
+
+**Termine und Mails vorlesen** (seit V01.0.815): Mit Kalender oder E-Mail lesen freigegeben stehen im Auto zusätzlich „Termine vorlesen“ und „Neue Mails vorlesen“. Ein Tippen stellt dem Assistenten die Frage („Was steht heute und morgen an?“, „Habe ich neue Mails?“), die Antwort kommt gesprochen; das Auto zeigt dabei wie immer keinen Text.
 
 ## Veröffentlichen
 

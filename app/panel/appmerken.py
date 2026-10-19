@@ -1,7 +1,8 @@
 """„Apps merken sich den letzten Stand“ (Dominik 2026-10-17, plan app-zwischenspeicher/entwurf.png).
 
 The iPhone app and the Android app keep the last state of a few pages for their profile on the phone (the
-conversations, the chats, the own settings and functions, the numbers on the tiles of „Meine Sachen“: only how many, no names, no files) and
+conversations, the chats, the own settings and functions, the numbers on the tiles of „Meine Sachen“: only how many, no names, no files;
+the iPhone app also four weeks of appointments, the 50 newest mails and up to 20 opened ones with their text, plan kalender-mail 1b) and
 show it at once on the next start, with a small note „Stand 16:05 · wird aktualisiert …“, until the Spark answers.
 The Spark keeps nothing for this; it only says whether the app on this device may keep (keep), and the apps delete
 what they kept when it says no, on signing out and when another profile or another Spark comes. Never kept: keys,
@@ -20,7 +21,7 @@ from core import assistant, json_body, own_profile
 router = APIRouter()
 
 # the pages an app may name (the iPhone app's lists, the Android app's page start); anything else is refused
-PAGES = ("start", "verlauf", "chats", "chat", "einstellungen", "funktionen", "sachen", "seite")
+PAGES = ("start", "verlauf", "chats", "chat", "einstellungen", "funktionen", "sachen", "seite", "kalender", "post")
 SLOW_MS = 2000            # from here an app reports a page (the same number in Merken.swift and merken.js)
 MAX_MS = 600_000
 BODY = 256

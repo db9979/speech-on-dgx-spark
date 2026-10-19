@@ -17,7 +17,6 @@ import re
 import threading
 import time
 
-import features
 import mail
 import notaus
 import profiles
@@ -30,10 +29,6 @@ NEVER = re.compile(r"(?i)^(trash|papierkorb|gelöscht\w*|deleted( items| message
                    r"sent( items| messages)?|gesendet\w*|drafts?|entwürfe)$")
 _lock = threading.Lock()
 _today = {"day": "", "n": 0}   # Live: how many messages were ordered on the page today (a number, never which)
-
-
-def on(uid):
-    return features.allowed("mailmanage", uid)
 
 
 def _account(uid, ref):
