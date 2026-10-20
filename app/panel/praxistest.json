@@ -2357,6 +2357,13 @@
 "titel": "Alles Offene: Karten im Gespräch und Seite Offen",
 "text": "Admin: Funktionen → Mein Tag → Timer und Erinnerungen → „Alles Offene im Assistenten“ an. Eine Erinnerung in 1 Minute stellen: sie klingelt und steht als Karte mit „Erledigt“ und „Später“ im Gespräch. „Später → Heute Abend“: die Karte steht unter Offen → Später mit der Zeit. Am iPhone unter Meine Sachen → Offen „Erledigt“ drücken: im Browser zeigt die Karte gleich „Erledigt am iPhone“. Eine Rechnung mit Frist morgen aus Für dich steht unter Offen → Braucht dich mit „Erinnern“ und „Eintragen …“.",
 "thread": "Zentraler Assistenten-Chat mit Karten"
+},
+{
+"id": "P361",
+"v": 868,
+"titel": "Musik: Liedtext schreiben lassen",
+"text": "Unter Ich → Musik „Mit Gesang“ an, Liedtext leer, Beschreibung „Big Band Song über einen Systemadministrator im stiel fran sinatra, micael bubele“, 2 min: „Lied machen“ (oder „Text schreiben“) schreibt Strophen und Refrain ins Feld, die Beschreibung endet mit „Stil: …“ ohne Namen; Text ändern, dann „Lied machen“. iPhone: Musik → Mit Gesang → Text schreiben.",
+"thread": "Musik bearbeiten und remixen"
 }
 ]
 }

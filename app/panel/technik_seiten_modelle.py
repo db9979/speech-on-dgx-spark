@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "asr": {
-        "stand": "6128d2f0b3",
+        "stand": "6e54b4ac8f",
         "bezug": {
             "parakeet.MAX_AUDIO_S": ["s9"], "common.NOTASR_PORT": ["s9"], "common.NOTASR_IDLE": ["s9"], "admin.test_asr": ["s1"], "admin._test_asr": ["s2", "s4"],
             "common.BodyLimit": ["s5"], "common.PrioGate": ["s7"], "common.audio_rate_ok": ["s8"],
@@ -380,7 +380,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Bilder malen (and Musik machen in the same box)
     "bild": {
-        "stand": "111e4542f3",
+        "stand": "b139481dcb",
         "bezug": {
             "bilder.MAX_PICS": ["s4"], "schwer.WAITING": ["s4"], "bilder.JOB_SECONDS": ["s5"], "bilder.NSFW_MAX": ["s8"],
             "schwer.run": ["s5"], "schwer.pick": ["s5"], "schwer.hint": ["s5"], "schwer.BUNDLE": ["s5"],
@@ -389,7 +389,7 @@ SEITEN = {
             "bedarf.OnDemand": ["s6"], "musik_server.Engine.make": ["s7"], "musik_server.finish": ["s9"],
             "musik._measure": ["s5"], "musik.start": ["s4"], "musik.keep": ["s10"], "musik._work": ["s5"], "musik.refuse_text": ["s3"],
             "musik.plan_edit": ["s4"], "musik.start_edit": ["s1"], "musik.tone": ["s1"], "musik.upload": ["s1"],
-            "musik_server.edit_body": ["s7"], "musik.MAX_VERSIONS": ["s4"], "musik.UPLOADS_DAY": ["s4"],
+            "musik_server.edit_body": ["s7"], "musik.write_lyrics": ["s3"], "musik.MAX_VERSIONS": ["s4"], "musik.UPLOADS_DAY": ["s4"],
         },
         "kurz": ("Bilder malen macht aus einem Wunsch ein Bild, auf dem Spark selbst. Das Panel prüft den Wunsch mit "
                  "festen Regeln und gibt ihn an den Bild-Dienst, der nur auf dieser Maschine lauscht. Der lädt FLUX.2 "
@@ -455,10 +455,14 @@ SEITEN = {
               ("Wortliste und bekannte Personen", "word list and known people"),
               ("bilder.refuse_text prüft Wunsch und Prompt gegen eine feste Wortliste (nichts Sexuelles, keine Gewalt, "
                "keine Hasssymbole) und gegen die Namen der Profile und Kontakte. Für Lieder prüft musik.refuse_text Wunsch, Beschreibung und "
-               "Liedtext gegen die Wortliste, dazu „im Stil von“ einem Künstler und Geheimnisse; Namen gehen. Das Modell kann das nicht umgehen.",
+               "Liedtext gegen die Wortliste und Geheimnisse, Wunsch und Beschreibung auf „im Stil von“ einem Künstler (im Gespräch mit festem Hinweis, die Beschreibung ohne Namen neu zu schicken); Namen gehen. „Text schreiben“ "
+               "(musik.write_lyrics) lässt das Sprachmodell den Liedtext aus der Beschreibung schreiben und Künstlernamen in "
+               "Stilwörter setzen; das Panel schneidet „im Stil von …“ heraus und lehnt ab, wenn ein Name bleibt. Das Modell kann das nicht umgehen.",
                "bilder.refuse_text checks wish and prompt against a fixed word list (nothing sexual, no violence, no "
                "hate symbols) and against the names of profiles and contacts. For songs musik.refuse_text checks wish, description and "
-               "lyrics against the word list, plus \"in the style of\" an artist and secrets; names are fine. The model cannot get around it."),
+               "lyrics against the word list and secrets, wish and description for \"in the style of\" an artist (in the conversation with a fixed hint to send the description again without names); names are fine. \"Write lyrics\" "
+               "(musik.write_lyrics) has the language model write the lyrics from the description and turn artist names "
+               "into style words; the panel cuts \"in the style of …\" out and refuses if a name stays. The model cannot get around it."),
               ("stop", "nein", ("Feste Absage, nichts gemalt", "Fixed refusal, nothing painted"))),
             S("s4", "frage", ("Innerhalb der Grenzen?", "Within the limits?"),
               ("pro Tag, Platz, Warteschlange", "per day, space, queue"),
@@ -600,6 +604,7 @@ SEITEN = {
             ("musik_server.finish", ("MP3 prüfen und als KI-erzeugt kennzeichnen", "check the MP3 and mark it AI-made")),
             ("musik.start", ("Liedwunsch annehmen", "accept a song wish")),
             ("musik.refuse_text", ("Wortliste, Künstler, Geheimnisse", "word list, artists, secrets")),
+            ("musik.write_lyrics", ("Liedtext aus der Beschreibung, Namen zu Stilwörtern", "lyrics from the description, names to style words")),
             ("musik._work", ("Lied im Hintergrund", "song in the background")),
             ("musik.keep", ("Lied ablegen", "store the song")),
             ("musik._measure", ("Musik testen je Modell", "test music per model")),
@@ -609,7 +614,7 @@ SEITEN = {
             ("musik.upload", ("Eigene Datei mit Rechte-Haken", "own file with the rights tick")),
             ("musik_server.edit_body", ("Feste Felder für repaint und cover", "fixed fields for repaint and cover")),
         ],
-        "tests": ["test_bilder", "test_musik", "test_schwer"],
+        "tests": ["test_bilder", "test_musik", "test_musik_liedtext", "test_schwer"],
         "heute": [],
     },
 

@@ -154,9 +154,11 @@ THINGS = {
     # Offen (vorgaenge.py, plan assistent-zentrale): the cards, one button, „gesehen“; the app asks again when it
     # comes to the front (the event stream stays with the browser)
     "vorgaenge": ((("GET", "DELETE"), r"/api/profile/vorgaenge"), (("POST",), r"/api/profile/vorgaenge/(?:act|seen)")),
-    # Musik (musik.py): listen, make from a wish, delete one or all; change an own song, upload an own file and make
+    # Musik (musik.py): listen, make from a wish (Text schreiben writes its lyrics first), delete one or all; change
+    # an own song, upload an own file and make
     # a version a song of its own only with Musik bearbeiten (musik.EDIT_KEY, checked there)
-    "musik": ((("GET", "POST", "DELETE"), r"/api/musik"), (("GET",), rf"/api/musik/job/{_DOC}"),
+    "musik": ((("GET", "POST", "DELETE"), r"/api/musik"), (("POST",), r"/api/musik/liedtext"),
+              (("GET",), rf"/api/musik/job/{_DOC}"),
               (("GET",), rf"/api/musik/{_DOC}/datei"), (("DELETE",), rf"/api/musik/{_DOC}"),
               (("POST",), rf"/api/musik/{_DOC}/(?:bearbeiten|erkennen|eigenes)"), (("POST",), r"/api/musik/hochladen")),
 }

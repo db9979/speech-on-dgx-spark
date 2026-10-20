@@ -10491,16 +10491,6 @@
         }
       }
     },
-    "Ohne Gesang. Gesang und eigener Text gehen im Panel unter Ich → Musik.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Without singing. Singing and your own lyrics work in the panel under Me → Music."
-          }
-        }
-      }
-    },
     "Vorschlag zum Aufräumen": {
       "localizations": {
         "en": {
@@ -14567,6 +14557,66 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nothing needs you"
+          }
+        }
+      }
+    },
+    "Mit Gesang": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "With singing"
+          }
+        }
+      }
+    },
+    "Text schreiben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write lyrics"
+          }
+        }
+      }
+    },
+    "Ohne Gesang wird es instrumental. Mit Gesang und leerem Liedtext schreibt der Spark den Text zuerst ins Feld; Künstlernamen werden dabei zu Stilwörtern.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Without singing it is instrumental. With singing and empty lyrics the Spark first writes the lyrics into the field; artist names become style words."
+          }
+        }
+      }
+    },
+    "Künstlernamen sind jetzt Stilwörter in der Beschreibung.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Artist names are style words in the description now."
+          }
+        }
+      }
+    },
+    "Der Text steht im Feld: prüfen, ändern, dann „Machen“.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The lyrics are in the field: check, change, then \"Make\"."
+          }
+        }
+      }
+    },
+    "[verse] … [chorus] …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[verse] … [chorus] …"
           }
         }
       }

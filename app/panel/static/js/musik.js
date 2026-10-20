@@ -85,14 +85,25 @@ async function showMusik(){const box=$('musikbox');if(!box)return;if(!PROFILE||!
   for(const k of d.langs){const o=document.createElement('option');o.value=k;o.textContent=k;o.selected=k===(L==='en'?'en':'de');lang.appendChild(o)}
   const lyL=icEl('label','',t('Liedtext','Lyrics'));lyL.htmlFor='mulyrics';const ly=document.createElement('textarea');ly.id='mulyrics';ly.rows=5;ly.maxLength=lim.lyrics;
   ly.placeholder=t('[verse]\nErste Strophe …\n[chorus]\nRefrain …','[verse]\nFirst verse …\n[chorus]\nChorus …');
-  const lyBox=icEl('div','mu-lyr');lyBox.append(lyL,ly);const showSung=()=>{lyBox.hidden=!sung.checked;lang.hidden=!sung.checked};sung.onchange=showSung;
+  // Text schreiben: the language model writes the lyrics from the description (artist names become style words in
+  // the description); both stand in their fields to change, the song comes only from the next „Lied machen“
+  const wr=icEl('button','b',t('Text schreiben','Write lyrics'));wr.type='button';wr.id='mutext';
+  const lyH=icEl('div','mu-lyh');lyH.append(lyL,wr);const lyBox=icEl('div','mu-lyr');lyBox.append(lyH,ly);const showSung=()=>{lyBox.hidden=!sung.checked;lang.hidden=!sung.checked};sung.onchange=showSung;
   const go=icEl('button','b p',t('Lied machen','Make the song'));go.type='button';go.id='mugo';ta.dataset.senden='mugo';
   const msg=icEl('div','fh');msg.id='mumsg';msg.setAttribute('role','status');
   const opts=icEl('div','mu-opts');opts.append(lens,sungL,lang,icEl('span','mu-sp'),go);
-  f.append(ta,opts,lyBox,msg,icEl('div','fh',t('Ohne Gesang wird es instrumental. Jedes Lied ist als KI-erzeugt gekennzeichnet; Sexuelles, Gewalt, Hass und „im Stil von“ macht der Spark nicht.',
-    'Without singing it is instrumental. Every song is marked as made by an AI; the Spark makes nothing sexual, violent, hateful or "in the style of".')));
+  f.append(ta,opts,lyBox,msg,icEl('div','fh',t('Ohne Gesang wird es instrumental. Mit Gesang und leerem Liedtext schreibt der Spark den Text zuerst ins Feld. Jedes Lied ist als KI-erzeugt gekennzeichnet; Sexuelles, Gewalt, Hass und Künstlernamen macht der Spark nicht, „im Stil von“ wird beim Textschreiben zu Stilwörtern.',
+    'Without singing it is instrumental. With singing and empty lyrics the Spark first writes the lyrics into the field. Every song is marked as made by an AI; the Spark makes nothing sexual, violent or hateful and uses no artist names; when writing lyrics, "in the style of" becomes style words.')));
   wrap.append(f,up);pickLen(lim.default_s);showSung();
-  go.onclick=async()=>{const w=ta.value.trim();if(!w){ta.focus();return}if(sung.checked&&!ly.value.trim()){ly.focus();return}
+  const write=async()=>{const w=ta.value.trim();if(!w){ta.focus();return false}
+    wr.disabled=go.disabled=true;msg.textContent=t('Das Sprachmodell schreibt den Liedtext …','The language model writes the lyrics …');
+    const r=await apiTry('/api/musik/liedtext',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wunsch:w,sekunden:secs,sprache:lang.value})});
+    wr.disabled=go.disabled=false;if(!r.r.ok){msg.textContent=String(r.d.detail||t('Ging nicht.','Did not work.'));return false}
+    ly.value=r.d.liedtext||'';if(r.d.wunsch){ta.value=r.d.wunsch;ta.dispatchEvent(new Event('input'))}
+    msg.textContent=(r.d.namen?t('Künstlernamen sind jetzt Stilwörter in der Beschreibung. ','Artist names are style words in the description now. '):'')
+      +t('Der Text steht im Feld: prüfen, ändern, dann „Lied machen“.','The lyrics are in the field: check, change, then "Make the song".');ly.focus();return true};
+  wr.onclick=write;
+  go.onclick=async()=>{const w=ta.value.trim();if(!w){ta.focus();return}if(sung.checked&&!ly.value.trim()){await write();return}
     go.disabled=true;msg.textContent=t('wird angenommen …','being accepted …');
     const r2=await apiTry('/api/musik',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({wunsch:w,sekunden:secs,gesang:sung.checked,sprache:lang.value,liedtext:sung.checked?ly.value:''})});

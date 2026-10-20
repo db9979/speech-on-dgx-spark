@@ -2841,7 +2841,7 @@ flowchart TD
 
 1. <a id="kn-bild-s1"></a>**A picture wish**: A profile writes a wish under Me → Pictures, or the router group "bild" offers the tool bild_malen in the conversation; the model writes an English prompt for it. Changing pictures starts without a tool: bilder.from_turn takes by a fixed rule the photo of this message or the result of the last change, under Me → Pictures an own picture. Everything ends in bilder.start. Quick buttons (rotate, brighter, black and white …) need no model: bilder.quick_png does them at once on the panel. A song wish comes the same way through Me → Music or the group "musik" with musik_machen into musik.start; a change of an own song through Me → Music or musik_bearbeiten into musik.start_edit (the panel picks the song, never the model), cutting and tempo without a model into musik.tone, an own file with the rights tick into musik.upload.
 2. <a id="kn-bild-s2"></a>**Feature released?**: features.allowed asks the release: the admin switched painting pictures on and did not block this profile. Guests never get the tool; after outside text and at kill switch stage 2 it is locked.
-3. <a id="kn-bild-s3"></a>**Wish allowed?**: bilder.refuse_text checks wish and prompt against a fixed word list (nothing sexual, no violence, no hate symbols) and against the names of profiles and contacts. For songs musik.refuse_text checks wish, description and lyrics against the word list, plus "in the style of" an artist and secrets; names are fine. The model cannot get around it.
+3. <a id="kn-bild-s3"></a>**Wish allowed?**: bilder.refuse_text checks wish and prompt against a fixed word list (nothing sexual, no violence, no hate symbols) and against the names of profiles and contacts. For songs musik.refuse_text checks wish, description and lyrics against the word list and secrets, wish and description for "in the style of" an artist (in the conversation with a fixed hint to send the description again without names); names are fine. "Write lyrics" (musik.write_lyrics) has the language model write the lyrics from the description and turn artist names into style words; the panel cuts "in the style of …" out and refuses if a name stays. The model cannot get around it.
 4. <a id="kn-bild-s4"></a>**Within the limits?**: Per profile there are pictures per day (rolling 24 hours), space and at most 300 pictures; songs: songs per day, space and the longest song (musik.start), at most 10 versions per song, 10 own files a day; musik.plan_edit checks every number of a change. On the whole Spark at most 10 heavy jobs wait, pictures and songs together.
 5. <a id="kn-bild-s5"></a>**Wait for a pause and the place**: The job runs in the background (bilder._work, musik._work): it waits until nobody speaks (vorrang) and joins the one queue for pictures and songs (schwer.run). The fixed rule schwer.pick takes the oldest; while the loaded kind still waits it goes first, but at most 3 times in a row while the other kind waits. When another kind is next, the panel first ends the loaded model. Who stands behind others gets a fixed sentence with the place and about how long (schwer.hint), the card shows "Waiting · place 2 of 3". A picture may take at most 720 seconds.
 6. <a id="kn-bild-s6"></a>**Model loaded?**: bild_server.Engine.start first takes the one place (bedarf.OnDemand.claim, lock bedarf.lock: when the music service holds it, it answers "belegt") and starts sd-server as its own process on 127.0.0.1, but only when enough shared memory is free; otherwise everything else stays undisturbed. Too little memory does not end the job: it keeps its place and tries again every 30 seconds, for at most 600 seconds.
@@ -2897,6 +2897,7 @@ flowchart TD
 - `app/musik_server.py` `finish`: check the MP3 and mark it AI-made ([step 9](#kn-bild-s9))
 - `app/panel/musik.py` `start`: accept a song wish ([step 1](#kn-bild-s1), [step 4](#kn-bild-s4))
 - `app/panel/musik.py` `refuse_text`: word list, artists, secrets ([step 3](#kn-bild-s3))
+- `app/panel/musik.py` `write_lyrics`: lyrics from the description, names to style words ([step 3](#kn-bild-s3))
 - `app/panel/musik.py` `_work`: song in the background ([step 5](#kn-bild-s5))
 - `app/panel/musik.py` `keep`: store the song ([step 10](#kn-bild-s10))
 - `app/panel/musik.py` `_measure`: test music per model ([step 5](#kn-bild-s5))
@@ -2906,7 +2907,7 @@ flowchart TD
 - `app/panel/musik.py` `upload`: own file with the rights tick ([step 1](#kn-bild-s1))
 - `app/musik_server.py` `edit_body`: fixed fields for repaint and cover ([step 7](#kn-bild-s7))
 
-Self-tests: `test_bilder`, `test_musik`, `test_schwer`
+Self-tests: `test_bilder`, `test_musik`, `test_musik_liedtext`, `test_schwer`
 
 ### Services at home
 

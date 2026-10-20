@@ -404,10 +404,23 @@ extension SparkAPI {
         try Self.check(body, response)
     }
 
-    /// Make one from the person's own description and length (instrumental; singing and lyrics stay in the panel).
-    func makeSong(_ wish: String, seconds: Int) async throws {
-        _ = try await call("POST", "api/musik", body: ["wunsch": String(wish.prefix(500)), "sekunden": seconds])
+    /// Make one from the person's own description and length; with singing the lyrics in the language of the phone.
+    func makeSong(_ wish: String, seconds: Int, lyrics: String? = nil) async throws {
+        var body: [String: Any] = ["wunsch": String(wish.prefix(500)), "sekunden": seconds]
+        if let lyrics { body.merge(["gesang": true, "sprache": Self.songLanguage, "liedtext": String(lyrics.prefix(3000))]) { $1 } }
+        _ = try await call("POST", "api/musik", body: body)
     }
+
+    /// Text schreiben: the language model writes the lyrics from the description; artist names become style words in
+    /// the description. Nothing is made yet, the person reads both first.
+    func writeLyrics(_ wish: String, seconds: Int) async throws -> (lyrics: String, wish: String, names: Bool) {
+        let d = try await object("POST", "api/musik/liedtext", body: ["wunsch": String(wish.prefix(500)), "sekunden": seconds,
+                                                                    "sprache": Self.songLanguage], timeout: 120)
+        return (String((d["liedtext"] as? String ?? "").prefix(3000)), String((d["wunsch"] as? String ?? wish).prefix(300)),
+                d["namen"] as? Bool ?? false)
+    }
+
+    static var songLanguage: String { Locale.current.language.languageCode?.identifier == "en" ? "en" : "de" }
 
     func deleteSong(_ id: String) async throws {
         guard Self.isJob(id) else { return }
@@ -640,6 +653,10 @@ struct SongsView: View {
     @State private var changing: Song?
     @State private var picking = false
     @State private var upload: URL?
+    @State private var sung = false
+    @State private var lyrics = ""
+    @State private var writing = false
+    @State private var note: String?
 
     var body: some View {
         List {
@@ -648,15 +665,28 @@ struct SongsView: View {
                     TextField("Was für Musik?", text: $wish, axis: .vertical).lineLimit(1...3)
                     Button("Machen") { Task { await make() } }
                         .buttonStyle(.borderedProminent)
-                        .disabled(wish.trimmingCharacters(in: .whitespaces).count < 3)
+                        .disabled(wish.trimmingCharacters(in: .whitespaces).count < 3 || writing)
                 }
                 if !m.lengths.isEmpty {
                     Picker("Länge", selection: $m.length) {
                         ForEach(m.lengths, id: \.self) { s in Text(verbatim: Self.clock(s)) }
                     }
                 }
+                Toggle("Mit Gesang", isOn: $sung)
+                if sung {
+                    // Text schreiben: the Spark writes the lyrics into the field, the song comes only from "Machen"
+                    HStack {
+                        Text("Liedtext").font(.subheadline.weight(.semibold))
+                        Spacer()
+                        if writing { ProgressView() }
+                        Button("Text schreiben") { Task { await write() } }
+                            .disabled(wish.trimmingCharacters(in: .whitespaces).count < 3 || writing)
+                    }
+                    TextField("[verse] … [chorus] …", text: $lyrics, axis: .vertical).lineLimit(3...12).font(.callout)
+                    if let note { Text(note).font(.footnote).foregroundStyle(.secondary) }
+                }
                 if m.making > 0 { Label("Wird gemacht …", systemImage: "music.note") .foregroundStyle(.secondary) }
-            } footer: { Text(SparkAPI.way(String(localized: "Ohne Gesang. Gesang und eigener Text gehen im Panel unter Ich → Musik."))) }
+            } footer: { Text("Ohne Gesang wird es instrumental. Mit Gesang und leerem Liedtext schreibt der Spark den Text zuerst ins Feld; Künstlernamen werden dabei zu Stilwörtern.") }
             if !m.loading && m.songs.isEmpty { Text("Noch keine Musik.").foregroundStyle(.secondary) }
             // grouped by day like the list under Ich → Musik in the panel
             ForEach(Self.days(m.songs), id: \.0) { day, songs in
@@ -770,10 +800,26 @@ struct SongsView: View {
         } catch { m.error = error.localizedDescription }
     }
 
-    private func make() async {
+    private func write() async {
+        writing = true
+        defer { writing = false }
         do {
-            try await SparkAPI.current?.makeSong(wish, seconds: m.length)
-            wish = ""
+            guard let r = try await SparkAPI.current?.writeLyrics(wish, seconds: m.length) else { return }
+            (lyrics, wish) = (r.lyrics, r.wish)
+            note = (r.names ? String(localized: "Künstlernamen sind jetzt Stilwörter in der Beschreibung.") + " " : "")
+                + String(localized: "Der Text steht im Feld: prüfen, ändern, dann „Machen“.")
+            m.error = nil
+        } catch { m.error = error.localizedDescription }
+    }
+
+    private func make() async {
+        if sung && lyrics.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            await write()
+            return
+        }
+        do {
+            try await SparkAPI.current?.makeSong(wish, seconds: m.length, lyrics: sung ? lyrics : nil)
+            (wish, lyrics, note) = ("", "", nil)
             await m.load()
             await m.follow()
         } catch { m.error = error.localizedDescription }

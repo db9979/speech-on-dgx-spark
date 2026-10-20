@@ -1640,6 +1640,7 @@ body.inchats:not(.appview):not(.kbd) .cx-comp{padding-right:96px}
 .mu-new textarea{width:100%;box-sizing:border-box}.mu-new .fh:empty{display:none}
 .mu-opts{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin-top:8px}.mu-opts .ld-chips{margin:0;min-width:0}.mu-opts select{width:auto}
 .mu-opts .mu-sp{flex:1}.mu-opts select[hidden]{display:none}.mu-lyr{margin-top:8px}.mu-lyr[hidden]{display:none}.mu-lyr textarea{width:100%;box-sizing:border-box}
+.mu-lyh{display:flex;align-items:center;gap:8px;margin-bottom:4px}.mu-lyh label{flex:1}
 .ld-ico.mu{border:0;padding:0;cursor:pointer;color:#fff;background:linear-gradient(135deg,#e0457b,#b4308f)}.ld-ico.mu.play{background:var(--acc)}
 .ld-ico.mu:focus-visible,.mu-pb:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 .mu-ic{display:block;width:11px;height:12px;background:currentColor;clip-path:polygon(10% 0,100% 50%,10% 100%);margin-left:2px}

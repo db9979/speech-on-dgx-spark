@@ -1641,6 +1641,7 @@ def snapshot(view="admin", now=None):
                         + (f" · {mus['edited']} bearbeitet" if mus.get("edited") else "")
                         + (f" · {mus['uploaded']} hochgeladen" if mus.get("uploaded") else "")
                         + (f" · {mus['heard']} erkannt" if mus.get("heard") else "")
+                        + (f" · {mus['texts']} Liedtexte geschrieben" if mus.get("texts") else "")
                         + (f" · {mus['refused']} abgelehnt" if mus.get("refused") else "")
                         + (f" · {mus['failed']} Fehler" if mus.get("failed") else "")
                         + (" · misst gerade" if mus.get("test_run") else
@@ -1668,7 +1669,7 @@ def snapshot(view="admin", now=None):
             "meld": {k: meld.get(k) for k in ("on", "drafts", "sent_today", "last", "token")},
             "make": {k: make.get(k) for k in ("on", "run", "wait", "done", "failed", "sent", "planned")},
             "bild": {k: bild.get(k) for k in ("on", "run", "wait", "done", "edited", "quick", "failed", "refused")},
-            "musik": {k: mus.get(k) for k in ("on", "installed", "run", "wait", "done", "failed", "refused", "edited", "uploaded", "heard", "test_run",
+            "musik": {k: mus.get(k) for k in ("on", "installed", "run", "wait", "done", "failed", "refused", "edited", "uploaded", "heard", "texts", "test_run",
                                               "test_ok", "test_total")},
             "schwer": heavy, "stats": node_stats(now), "aktiv": _aktiv(now)}
 
