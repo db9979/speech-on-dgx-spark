@@ -10,6 +10,9 @@ struct ListEntry: Identifiable {
     let id: String
     let text: String
     let qty: String
+    /// „bis“ (from a meeting in the Begleiter): "bis Fr 24.10." / "due Fri 24 Oct", "" without; late: the day has passed
+    let due: String
+    let late: Bool
     let at: Date?
     let by: String
     let src: String
@@ -21,6 +24,21 @@ struct ListEntry: Identifiable {
         id = d["id"] as? String ?? ""
         text = d["text"] as? String ?? ""
         qty = d["qty"] as? String ?? ""
+        let raw = d["due"] as? String ?? ""
+        let f0 = DateFormatter()
+        f0.calendar = Calendar(identifier: .gregorian)
+        f0.locale = Locale(identifier: "en_US_POSIX")
+        f0.dateFormat = "yyyy-MM-dd"
+        if raw.count == 10, let day = f0.date(from: raw) {
+            let f1 = DateFormatter()
+            f1.locale = Locale(identifier: en ? "en_GB" : "de_DE")
+            f1.dateFormat = en ? "EEE d MMM" : "EEE dd.MM."
+            due = (en ? "due " : "bis ") + f1.string(from: day)
+            late = raw < f0.string(from: Date())
+        } else {
+            due = ""
+            late = false
+        }
         let t = (d["t"] as? NSNumber)?.doubleValue ?? 0
         at = t > 0 ? Date(timeIntervalSince1970: t) : nil
         by = d["by_name"] as? String ?? ""
@@ -307,6 +325,10 @@ struct ListeView: View {
                 Image(systemName: "circle").foregroundStyle(l.write ? AnyShapeStyle(.tint) : AnyShapeStyle(.secondary))
                 VStack(alignment: .leading, spacing: 2) {
                     Text(verbatim: line(x)).foregroundStyle(.primary)
+                    if !x.due.isEmpty {
+                        Text(verbatim: x.due).font(.caption.weight(.semibold))
+                            .foregroundStyle(x.late ? AnyShapeStyle(.red) : AnyShapeStyle(.tint))
+                    }
                     let w = who(x.by, x.at, x.src)
                     if !w.isEmpty { Text(verbatim: w).font(.caption).foregroundStyle(.secondary) }
                 }

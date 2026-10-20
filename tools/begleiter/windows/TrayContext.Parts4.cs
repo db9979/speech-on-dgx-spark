@@ -1139,13 +1139,20 @@ internal sealed partial class TrayContext
             MeetingResult result = await SparkClient.MeetingEndAsync(creds.Base, creds.Key, session.Id, CancellationToken.None);
             CloseMeeting(session);
             bool remarkable = _desk?.MeetingRemarkable == true;
-            var form = new MeetingEndForm(result, duration, remarkable, async (tasks, toRemarkable) =>
+            var form = new MeetingEndForm(result, duration, remarkable, async (tasks, listId, toRemarkable) =>
             {
                 (string Base, string Key) c = Credentials() ?? throw new SparkException(null, "Der Begleiter ist nicht gekoppelt.");
-                (int reminders, bool ok) = await SparkClient.MeetingKeepAsync(c.Base, c.Key, session.Id, tasks, toRemarkable, CancellationToken.None);
+                (int reminders, int listed, bool ok) = await SparkClient.MeetingKeepAsync(c.Base, c.Key, session.Id, tasks, listId, toRemarkable, CancellationToken.None);
                 if (toRemarkable)
                 {
                     return ok ? "Aufs reMarkable geschickt." : "Das reMarkable hat es nicht angenommen.";
+                }
+
+                if (listId is not null)
+                {
+                    string name = result.Lists.FirstOrDefault(l => l.Id == listId)?.Name ?? "die Liste";
+                    return listed == 0 ? "Schon auf „" + name + "“."
+                        : (listed == 1 ? "1 Aufgabe" : string.Create(German, $"{listed} Aufgaben")) + " auf „" + name + "“.";
                 }
 
                 return reminders == 1 ? "1 Erinnerung angelegt." : string.Create(German, $"{reminders} Erinnerungen angelegt.");

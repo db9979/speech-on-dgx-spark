@@ -2364,6 +2364,13 @@
 "titel": "Musik: Liedtext schreiben lassen",
 "text": "Unter Ich → Musik „Mit Gesang“ an, Liedtext leer, Beschreibung „Big Band Song über einen Systemadministrator im stiel fran sinatra, micael bubele“, 2 min: „Lied machen“ (oder „Text schreiben“) schreibt Strophen und Refrain ins Feld, die Beschreibung endet mit „Stil: …“ ohne Namen; Text ändern, dann „Lied machen“. iPhone: Musik → Mit Gesang → Text schreiben.",
 "thread": "Musik bearbeiten und remixen"
+},
+{
+"id": "P362",
+"v": 869,
+"titel": "Besprechungs-Aufgaben auf die Liste",
+"text": "A: Update von Spark und Spark-Begleiter (neueste Fassung). Admin: Listen und „Besprechungen mitschreiben“ an. B: Im Begleiter eine kurze Besprechung mitschreiben, in der eine Aufgabe mit Termin vereinbart wird („Anna schickt das Angebot bis Freitag“), dann Beenden. C: Im Fenster Aufgaben ankreuzen, neben „Ausgewählte auf die Liste“ steht „Aufgaben“; klicken: „2 Aufgaben auf „Aufgaben““. D: Seite Listen → Aufgaben: die Einträge mit Chip „bis Fr …“ und „aus Besprechung“; dasselbe in der iPhone-App unter Listen. E: Nochmal klicken: „Schon auf „Aufgaben““, nichts doppelt. F: „Als Erinnerung“ legt weiter Erinnerungen an; unter dem Gesicht im Assistenten sind lange Erinnerungen ganz sichtbar und enden mit „…“. G: „Aufs reMarkable“: die Zusammenfassung liegt im Ordner „Besprechungen“, nicht „Antworten“.",
+"thread": "Besprechungs-Aufgaben in Listen"
 }
 ]
 }

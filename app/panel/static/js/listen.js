@@ -15,6 +15,10 @@ const lstWhen=s=>{if(!s)return '';const d=new Date(s*1000),n=new Date(),y=new Da
   return d.toDateString()===n.toDateString()?t('heute ','today ')+tm:d.toDateString()===y.toDateString()?t('gestern ','yesterday ')+tm
     :n-d<6*864e5?d.toLocaleDateString(kalLoc(),{weekday:'short'})+' '+tm:d.toLocaleDateString(kalLoc(),{day:'numeric',month:'short'})};
 // „Dominik · heute 08:15 · per Stimme“: who, when, from where (the source is a fixed word, tasks.SOURCES)
+// „bis“ of an entry (a date JJJJ-MM-TT, from a meeting in the Begleiter): „bis Fr 24.10.“, red once it has passed
+function lstDue(x){if(!x.due)return '';const d=new Date(x.due+'T12:00'),n=new Date();if(isNaN(d))return '';
+  const late=x.due<`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`;
+  return ` <span class="lstdue${late?' late':''}">${esc(t('bis ','due ')+d.toLocaleDateString(L==='en'?'en-GB':'de-DE',{weekday:'short',day:'2-digit',month:'2-digit'}))}</span>`}
 function lstWho(x){const d=LST.data,src=d&&d.sources&&d.sources[x.src];
   return [x.by_name&&PROFILE&&x.by_name===PROFILE.name?t('ich','me'):x.by_name,lstWhen(x.t),src?t(src[0],src[1]):''].filter(Boolean).join(' · ')}
 const lstName=l=>L==='en'?l.name_en:l.name;
@@ -74,7 +78,7 @@ function lstDetail(w){const box=w.querySelector('.lstdet'),l=lstList();box.hidde
   const write=!l.shared||l.shared.level==='add',mine=!l.shared;   // Mitschreiben: put on and tick off; deleting: the owner
   const who=x=>`<small>${esc(lstWho(x))}</small>`;
   const item=x=>`<div class="lstitem">${write?`<button type="button" class="lstck" data-tick="${esc(x.id)}" aria-label="${esc(t('Abhaken: ','Tick off: ')+x.text)}"></button>`:'<span class="lstck" aria-hidden="true"></span>'}`+
-    `<span class="lstit"><b>${esc(x.text)}</b>${x.qty?` <span class="lstqty">${esc(x.qty)}</span>`:''}${who(x)}</span>`+
+    `<span class="lstit"><b>${esc(x.text)}</b>${x.qty?` <span class="lstqty">${esc(x.qty)}</span>`:''}${lstDue(x)}${who(x)}</span>`+
     (mine?`<button type="button" class="ic-ib lstdel" data-del="${esc(x.id)}" title="${esc(t('Löschen','Delete'))}" aria-label="${esc(t('Löschen: ','Delete: ')+x.text)}">✕</button>`:'')+`</div>`;
   let body='';
   if(l.shop){const groups=new Map();for(const x of l.items){const k=L==='en'?x.dept_en:x.dept;if(!groups.has(k))groups.set(k,[]);groups.get(k).push(x)}

@@ -314,10 +314,19 @@ struct MeetingTask: Equatable, Identifiable {
     var id: Int { index }
 }
 
+/// a list the meeting's tasks may go onto (id, name, symbol); "Aufgaben" comes first from the Spark
+struct MeetingList: Equatable, Identifiable, Hashable {
+    let id: String
+    let name: String
+    let icon: String
+}
+
 struct MeetingResult: Equatable {
     let summary: String
     let tasks: [MeetingTask]
     let chars: Int
+    /// empty: the lists are not allowed for the profile, only reminders
+    let lists: [MeetingList]
 
     /// POST /api/desk/meeting/end, checked; the index is the position in the Spark's list (what "keep" sends back)
     init(_ d: [String: Any]) {
@@ -331,6 +340,11 @@ struct MeetingResult: Equatable {
         }
         tasks = list
         chars = (d["chars"] as? NSNumber)?.intValue ?? 0
+        lists = (d["lists"] as? [Any] ?? []).prefix(30).compactMap { x -> MeetingList? in
+            guard let l = x as? [String: Any], let id = l["id"] as? String, !id.isEmpty, id.count <= 20,
+                  id.allSatisfy({ $0.isASCII && ($0.isLetter || $0.isNumber || $0 == "-" || $0 == "_") }) else { return nil }
+            return MeetingList(id: id, name: PlainText.line(l["name"], max: 40), icon: PlainText.line(l["icon"], max: 4))
+        }
     }
 }
 

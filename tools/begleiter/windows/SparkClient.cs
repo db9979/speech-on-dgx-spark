@@ -87,7 +87,8 @@ internal sealed record PostResult(int? Unread, bool More, int? Fuerdich, IReadOn
 /// <summary>Teil "meeting": eine Aufgabe aus der Besprechung.</summary>
 internal sealed record MeetingTask(string Text, DateTimeOffset? Due);
 
-internal sealed record MeetingResult(string Summary, IReadOnlyList<MeetingTask> Tasks, int Chars);
+/// <summary>Teil "meeting": Zusammenfassung, Aufgaben und die Listen, auf die sie dürfen (leer: nur als Erinnerung).</summary>
+internal sealed record MeetingResult(string Summary, IReadOnlyList<MeetingTask> Tasks, int Chars, IReadOnlyList<ListRow> Lists);
 
 /// <summary>Teil "home": ein Knopf mit Zustand ("on"/"off" oder unbekannt).</summary>
 internal sealed record HomeState(string Id, string Name, string Kind, bool? On);
@@ -441,12 +442,22 @@ internal static partial class SparkClient
             }
         }
 
-        return new MeetingResult(Json.Str(json["summary"]) ?? "", tasks, Json.Int(json["chars"]) ?? 0);
+        var lists = new List<ListRow>();
+        foreach (JsonNode? item in (json["lists"] as JsonArray ?? new JsonArray()).Take(30))
+        {
+            if (item is JsonObject o && Json.Str(o["id"]) is { Length: > 0 and <= 20 } lid && IsSafeId(lid))
+            {
+                lists.Add(new ListRow(lid, Clean(Json.Str(o["name"]), 40), Clean(Json.Str(o["icon"]), 4), null, ""));
+            }
+        }
+
+        return new MeetingResult(Json.Str(json["summary"]) ?? "", tasks, Json.Int(json["chars"]) ?? 0, lists);
     }
 
-    /// <summary>POST /api/desk/meeting/keep – gewählte Aufgaben als Erinnerung und/oder aufs reMarkable.</summary>
-    public static async Task<(int Reminders, bool Remarkable)> MeetingKeepAsync(
-        string baseUrl, string key, string id, IEnumerable<int> tasks, bool remarkable, CancellationToken ct)
+    /// <summary>POST /api/desk/meeting/keep – gewählte Aufgaben auf eine Liste (<paramref name="listId"/>), sonst als
+    /// Erinnerung, und/oder aufs reMarkable.</summary>
+    public static async Task<(int Reminders, int Listed, bool Remarkable)> MeetingKeepAsync(
+        string baseUrl, string key, string id, IEnumerable<int> tasks, string? listId, bool remarkable, CancellationToken ct)
     {
         var list = new JsonArray();
         foreach (int i in tasks)
@@ -455,9 +466,14 @@ internal static partial class SparkClient
         }
 
         var body = new JsonObject { ["id"] = id, ["tasks"] = list, ["remarkable"] = remarkable };
+        if (listId is not null)
+        {
+            body["list"] = listId;
+        }
+
         using var request = new HttpRequestMessage(HttpMethod.Post, baseUrl + "/api/desk/meeting/keep") { Content = JsonContent(body) };
         JsonNode json = await SendAsync(request, key, pairing: false, MediumTimeout, ct).ConfigureAwait(true);
-        return (Json.Int(json["reminders"]) ?? 0, Json.Bool(json["remarkable"]) ?? false);
+        return (Json.Int(json["reminders"]) ?? 0, Json.Int(json["listed"]) ?? 0, Json.Bool(json["remarkable"]) ?? false);
     }
 
     /// <summary>GET /api/desk/home – die Knöpfe mit Zustand.</summary>

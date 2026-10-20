@@ -41,6 +41,29 @@ class Listen(unittest.TestCase):
         for k in [k for k in guard._rate if k[0] == "listen"]:
             guard._rate.pop(k, None)
 
+    def test_due_and_meeting_source(self):
+        """„bis“ of an entry (a meeting's task from the Begleiter, Dominik 2026-10-20): only a real date, kept and shown,
+        set on an entry that had none; qty=False reads no amount; the source „aus Besprechung“."""
+        import asyncio
+        a = profile("Listen Bea")
+        uid = uid_of("Listen Bea")
+        self.assertTrue(tasks.due_ok("2026-10-24"))
+        for bad in ("2026-02-30", "24.10.2026", "2026-10-24T10:00", "", None, 5):
+            self.assertFalse(tasks.due_ok(bad), bad)
+        asyncio.run(tasks.add(uid, "aufgaben", ["3 Angebote einholen"], src="besprechung", due="2026-10-24", qty=False))
+        asyncio.run(tasks.add(uid, "aufgaben", ["Raum buchen"], src="besprechung", due="morgen", qty=False))
+        asyncio.run(tasks.add(uid, "aufgaben", ["Raum buchen"], src="besprechung", due="2026-10-25", qty=False))
+        rows = {x["text"]: x for x in a.get("/api/profile/tasks").json()["lists"]["aufgaben"]["items"]}
+        self.assertEqual((rows["3 Angebote einholen"]["qty"], rows["3 Angebote einholen"]["due"]), ("", "2026-10-24"))
+        self.assertEqual(rows["Raum buchen"]["due"], "2026-10-25")     # the second time it brought a date
+        self.assertEqual(rows["Raum buchen"]["src"], "besprechung")
+        self.assertEqual(a.get("/api/profile/tasks").json()["sources"]["besprechung"], ["aus Besprechung", "from a meeting"])
+        d = tasks._load(uid)                                             # a broken date in the file is dropped
+        d["items"][0]["due"] = "bald"
+        tasks._save(uid, d)
+        self.assertNotIn("due", tasks._load(uid)["items"][0])
+        self.assertIn("DUE;VALUE=DATE:20261024", tasks._ical("x", "2026-10-24")[1].decode())
+
     def test_own_lists_who_when_done_and_back(self):
         a = profile("Listen Lea")
         r = a.post("/api/profile/listen", json={"name": "  Baumarkt  ", "icon": "🔧"})

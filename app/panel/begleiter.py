@@ -2535,7 +2535,8 @@ MEET_SYSTEM = ("Du fasst eine Besprechung zusammen. Das Gespräch zwischen <<<GE
                "Zusammenfassung auf Deutsch: worum es ging, was beschlossen wurde\", \"tasks\": [{\"text\": \"wer was "
                "tun soll\", \"due\": \"YYYY-MM-DDTHH:MM oder leer\"}]}. Höchstens 20 Aufgaben, nur solche, die im "
                "Gespräch wirklich vereinbart wurden. Heute ist {today}.")
-_meetings = {}                    # id -> {"uid", "did", "t0", "parts": [text], "chars", "ended", "summary", "tasks", "kept"}
+_meetings = {}                    # id -> {"uid", "did", "t0", "parts": [text], "chars", "ended", "summary", "tasks",
+#                                          "kept" (as reminder), "listed" (onto a list)}
 
 
 def _meet_sweep(now):
@@ -2565,7 +2566,7 @@ def meet_start(uid, did, now=None):
             raise HTTPException(429, "Der Spark schreibt gerade schon bei zu vielen Besprechungen mit.")
         mid = secrets.token_hex(12)
         _meetings[mid] = {"uid": uid, "did": did, "t0": now, "parts": [], "chars": 0, "ended": None, "summary": "",
-                          "tasks": [], "kept": set()}
+                          "tasks": [], "kept": set(), "listed": set()}
     return mid
 
 
@@ -2669,7 +2670,7 @@ async def program_meet_end(request: Request):
     body = await json_body(request, MAX_BODY)
     m = _meeting(uid, dev["id"], body.get("id"))
     if m["ended"]:
-        return {"summary": m["summary"], "tasks": m["tasks"], "chars": m["chars"]}
+        return {"summary": m["summary"], "tasks": m["tasks"], "chars": m["chars"], "lists": meet_lists(uid)}
     notaus.stop("gespraech")
     m["ended"] = time.time()
     t0 = time.time()
@@ -2694,7 +2695,52 @@ async def program_meet_end(request: Request):
     except Exception as e:
         print("begleiter: meeting convo", type(e).__name__, flush=True)
     _live(f"Besprechung zusammengefasst ({m['chars']} Zeichen, {len(res['tasks'])} Aufgaben, {time.time() - t0:.1f} s)")
-    return {"summary": res["summary"], "tasks": res["tasks"], "chars": m["chars"]}
+    return {"summary": res["summary"], "tasks": res["tasks"], "chars": m["chars"], "lists": meet_lists(uid)}
+
+
+def meet_lists(uid):
+    """The lists a meeting's tasks may go onto (Dominik 2026-10-20 „ok“, plan besprechung-aufgaben): „Aufgaben“ first,
+    then the others; empty when the lists are not allowed for the profile (the program then offers only reminders)."""
+    if not features.allowed("tasks", uid):
+        return []
+    import tasks
+    out = [{"id": x["id"], "name": x["name"], "icon": x["icon"]} for x in tasks.lists_of(uid)]
+    return sorted(out, key=lambda x: x["id"] != "aufgaben")
+
+
+def _meet_entry(text):
+    """A meeting's task as a list entry: at most tasks.TEXT_MAX characters, cut at a word with „…“."""
+    import tasks
+    if len(text) <= tasks.TEXT_MAX:
+        return text
+    cut = text[:tasks.TEXT_MAX - 1]
+    return (cut.rsplit(" ", 1)[0] if " " in cut[40:] else cut).rstrip(" ,;:-–") + "…"
+
+
+async def _meet_to_list(uid, m, picks, lst):
+    """The picked tasks onto the list lst (tasks.add, source „besprechung“, with the date of „bis“); each task once."""
+    import tasks
+    if not features.allowed("tasks", uid):
+        raise HTTPException(403, "Listen sind aus (Funktionen → Listen für Einkauf und Aufgaben).")
+    if not isinstance(lst, str) or not tasks.known(uid, lst):
+        raise HTTPException(404, "Diese Liste gibt es nicht (mehr).")
+    by_due = {}
+    for i in dict.fromkeys(picks):
+        if i not in m["listed"]:
+            t = m["tasks"][i]
+            by_due.setdefault((t.get("due") or "")[:10], []).append(i)
+    n = 0
+    for due, idx in by_due.items():
+        try:
+            added = await tasks.add(uid, lst, [_meet_entry(m["tasks"][i]["text"]) for i in idx], by=uid,
+                                    src="besprechung", due=due or None, qty=False)
+        except notaus.NotausAktiv:
+            raise HTTPException(423, "Notaus: gerade wird nichts geändert")
+        except ValueError:
+            raise HTTPException(502, "Die Liste hat die Aufgaben nicht angenommen.")
+        m["listed"].update(idx)
+        n += len(added)
+    return n
 
 
 def _rm_ok(uid):
@@ -2722,6 +2768,11 @@ async def program_meet_keep(request: Request):
     picks = body.get("tasks") if isinstance(body.get("tasks"), list) else []
     picks = [i for i in picks if isinstance(i, int) and not isinstance(i, bool) and 0 <= i < len(m["tasks"])]
     zone, now, n = _zone(uid), time.time(), 0
+    if "list" in body:   # onto a list (Begleiter from V01.0.866); without "list" as reminders, like older programs ask
+        import tasks
+        listed = await _meet_to_list(uid, m, picks, body["list"]) if picks else 0
+        _live(f"Besprechung: {listed} Aufgabe(n) auf eine Liste")
+        return {"reminders": 0, "listed": listed, "list": tasks.name_of(uid, body["list"]), "remarkable": False}
     if picks and not features.allowed("reminders", uid):
         raise HTTPException(403, "Erinnerungen sind aus (Funktionen → Timer und Erinnerungen).")
     for i in dict.fromkeys(picks):
@@ -2740,7 +2791,7 @@ async def program_meet_keep(request: Request):
         local = datetime.datetime.fromtimestamp(m["t0"], zone)
         text = m["summary"] + ("\n\nAufgaben:\n" + "\n".join("☐ " + t["text"] for t in m["tasks"]) if m["tasks"] else "")
         try:
-            await remarkable.send(uid, "Besprechung " + local.strftime("%d.%m. %H:%M"), text)
+            await remarkable.send(uid, "Besprechung " + local.strftime("%d.%m. %H:%M"), text, art="besprechung")
             rm = True
         except Exception as e:
             print("begleiter: meeting to reMarkable", type(e).__name__, flush=True)

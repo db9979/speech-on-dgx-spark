@@ -135,6 +135,32 @@ class Erinnerungen(unittest.TestCase):
         self.assertEqual(self.dav.delete(path + "ABC-1.ics").status_code, 404)
         self.assertNotIn("Butter", str(a.get("/api/profile/tasks").json()["lists"]["einkauf"]))
 
+    def test_due_goes_both_ways(self):
+        """„bis“ of an entry (a meeting's task, Dominik 2026-10-20) reaches Reminders as DUE (a date) and comes back:
+        set, moved or taken away there, the Spark follows; ticking it off there keeps it."""
+        import asyncio
+        path = self.base + "liste-aufgaben/"
+        asyncio.run(tasks.add(self.uid, "aufgaben", ["Angebot schicken"], src="besprechung", due="2026-10-24", qty=False))
+        eid = tasks._load(self.uid)["items"][0]["id"]
+        ctag = self.find(path, "0")
+        r = self.dav.get(path + f"{eid}.ics")
+        self.assertIn("DUE;VALUE=DATE:20261024", r.text)
+        moved = TODO.format(uid=f"{eid}@speech-spark", text="Angebot schicken", extra="DUE;VALUE=DATE:20261027\r\n")
+        self.assertEqual(self.dav.put(path + f"{eid}.ics", content=moved).status_code, 204)
+        self.assertEqual(tasks._load(self.uid)["items"][0]["due"], "2026-10-27")
+        self.assertNotEqual(self.find(path, "0"), ctag)
+        timed = TODO.format(uid=f"{eid}@speech-spark", text="Angebot schicken",
+                            extra="DUE:20261028T090000Z\r\nSTATUS:COMPLETED\r\n")
+        self.assertEqual(self.dav.put(path + f"{eid}.ics", content=timed).status_code, 204)
+        x = tasks._load(self.uid)["items"][0]
+        self.assertEqual((x["due"], bool(x.get("done"))), ("2026-10-28", True))       # only the date
+        gone = TODO.format(uid=f"{eid}@speech-spark", text="Angebot schicken", extra="")
+        self.assertEqual(self.dav.put(path + f"{eid}.ics", content=gone).status_code, 204)
+        self.assertNotIn("due", tasks._load(self.uid)["items"][0])
+        new = TODO.format(uid="D-1", text="Raum buchen", extra="DUE;VALUE=DATE:20261030\r\n")
+        self.assertEqual(self.dav.put(path + "D-1.ics", content=new, headers={"If-None-Match": "*"}).status_code, 201)
+        self.assertEqual(next(y for y in tasks._load(self.uid)["items"] if y["text"] == "Raum buchen")["due"], "2026-10-30")
+
     def test_only_one_task_with_a_summary(self):
         path = self.base + "liste-aufgaben/"
         event = TODO.replace("VTODO", "VEVENT").format(uid="E1", text="Termin", extra="")

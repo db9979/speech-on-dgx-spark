@@ -289,7 +289,10 @@ Systemton (was die Lautsprecher/das Headset abspielen, also auch die anderen in 
 nicht, sagt der Begleiter Bescheid und schreibt nur das Mikrofon mit. Alle 30 Sekunden geht ein Stück an den
 eigenen Spark, auf dem PC bleibt nichts. Höchstens 3 Stunden. Nach **Beenden** (oder Strg+Alt+R) erscheint ein
 Fenster mit der Zusammenfassung (**Kopieren**) und den erkannten Aufgaben zum Ankreuzen (keine vorausgewählt):
-**Ausgewählte als Erinnerung**, **Aufs reMarkable** (wenn im Panel eingerichtet) und **Schließen**. Während der
+**Ausgewählte auf die Liste** mit **Liste: … ▾** zum Wählen (Standard „Aufgaben“; „bis“ wird zum Datum des
+Eintrags, die Quelle heißt „aus Besprechung“), **Als Erinnerung**, **Aufs reMarkable** (wenn im Panel eingerichtet,
+Ordner „Besprechungen“) und **Schließen**. Sind die Listen für das Profil nicht freigegeben, bleibt nur
+**Ausgewählte als Erinnerung**. Während der
 Besprechung hört das Weckwort nicht mit und Diktieren geht nicht.
 
 **Smart-Home-Knöpfe:** Im Begleiter-Fenster unter **Zuhause** stehen die Knöpfe, die im Panel für dieses Gerät

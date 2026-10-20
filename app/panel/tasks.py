@@ -25,7 +25,10 @@ sharing stay with the owner. The other profile reaches it as "<owner id>.<list i
 and level at every call, taking it back holds at once. New entries of others reach the other people of the list as
 one note per NOTE_EVERY (preference list_note, function listnote). Entries of others are outside text for the model.
 
-    USERS_DIR/<uid>/tasks.json   {"items": [{id, list, text, qty?, t, by, src, done?, done_by?, sent?}],
+An entry may have „bis“ (due, a date „JJJJ-MM-TT“ as the person means it, no time zone; from a meeting in the Begleiter,
+Dominik 2026-10-20): the page and the apps show it as a chip, the voice and the lists elsewhere keep it as it is.
+
+    USERS_DIR/<uid>/tasks.json   {"items": [{id, list, text, qty?, due?, t, by, src, done?, done_by?, sent?}],
                                   "lists": [{id, name, icon}],
                                   "targets": {"einkauf": {"acc", "url", "name"} | absent},
                                   "shares": {list id: {profile id: "see" | "add"}}}
@@ -63,6 +66,8 @@ LEVELS = ("see", "add")     # Sehen, Mitschreiben
 SHARED = re.compile(r"(u_[0-9a-f]{12})\.(einkauf|aufgaben|l[0-9a-f]{8})")
 NOTE_EVERY = 600            # one note per list and person at most this often (new entries of others)
 NAME_MAX = 40
+TEXT_MAX = 120              # characters of one entry
+DUE_RE = re.compile(r"20\d\d-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])")   # „bis“ of an entry: a date, nothing else
 MAX_ITEMS = 400
 KEEP_SENT = 14 * 86400      # entries the iPhone took stay hidden this long (so a second fetch sends nothing twice)
 KEEP_DONE = 14 * 86400      # ticked off entries stay under „Erledigt“ this long
@@ -72,7 +77,8 @@ SOURCES = {"panel": ("Panel", "panel"), "app": ("App", "app"), "stimme": ("per S
            "assistent": ("Assistent", "assistant"), "telegram": ("Telegram", "Telegram"), "telefon": ("Telefon", "phone"),
            "uhr": ("Uhr", "watch"), "terminal": ("Terminal", "terminal"), "begleiter": ("Begleiter", "companion"),
            "siri": ("Siri", "Siri"), "remarkable": ("reMarkable", "reMarkable"), "auftrag": ("Auftrag", "job"),
-           "mcp": ("MCP", "MCP"), "erinnerungen": ("iPhone Erinnerungen", "iPhone Reminders")}
+           "mcp": ("MCP", "MCP"), "erinnerungen": ("iPhone Erinnerungen", "iPhone Reminders"),
+           "besprechung": ("aus Besprechung", "from a meeting")}
 # the chat's client (chat_turn body „client“) -> source
 CLIENT_SRC = {"speaker": "stimme", "telefon": "telefon", "telegram": "telegram", "watch": "uhr", "mcp": "mcp",
               "tui": "terminal", "android": "app", "iphone": "app", "desk": "begleiter", "siri": "siri"}
@@ -137,6 +143,8 @@ def _load(uid):
     for x in items:   # entries from before who and when were kept: put on by the owner
         x.setdefault("by", uid)
         x.setdefault("src", "panel")
+        if "due" in x and not due_ok(x["due"]):
+            x.pop("due")
     targets = {k: v for k, v in (d.get("targets") or {}).items()
                if k in LISTS and isinstance(v, dict) and v.get("url") and v.get("acc")}
     shares = {}
@@ -160,7 +168,18 @@ def _save(uid, d):
 
 def clean(text):
     text = re.sub(r"\s+", " ", str(text or "")).strip(" .,;:-–")
-    return text[:120]
+    return text[:TEXT_MAX]
+
+
+def due_ok(due):
+    """A „bis“ as kept: a real date „JJJJ-MM-TT“."""
+    if not isinstance(due, str) or not DUE_RE.fullmatch(due):
+        return False
+    try:
+        datetime.date.fromisoformat(due)
+        return True
+    except ValueError:
+        return False
 
 
 def clean_name(text):
@@ -381,7 +400,7 @@ async def _todos(c, url):
     return out
 
 
-def _ical(text):
+def _ical(text, due=None):
     cal = icalendar.Calendar()
     cal.add("prodid", "-//speech-on-dgx-spark//DE")
     cal.add("version", "2.0")
@@ -390,6 +409,8 @@ def _ical(text):
     todo.add("uid", uid_text)
     todo.add("dtstamp", datetime.datetime.now(datetime.timezone.utc))
     todo.add("summary", text)
+    if due:
+        todo.add("due", datetime.date.fromisoformat(due))
     todo.add("status", "NEEDS-ACTION")
     cal.add_component(todo)
     return uid_text, cal.to_ical()
@@ -407,19 +428,29 @@ async def items(uid, lst):
     d = _load(uid)
     tgt = d["targets"].get(lst)
     if not tgt:
-        return [{k: x.get(k, "") for k in ("id", "text", "qty", "t", "by", "src")}
+        return [{k: x.get(k, "") for k in ("id", "text", "qty", "due", "t", "by", "src")}
                 for x in d["items"] if x["list"] == lst and not x.get("sent") and not x.get("done")]
     acc = _account(uid, tgt["acc"])
     if not acc:
         raise ValueError("the calendar account of this list was removed")
     async with _client(acc) as c:
-        return [{"id": href, "etag": etag, "text": str(todo.get("SUMMARY", "")).strip(), "qty": "", "t": 0, "by": "", "src": ""}
+        return [{"id": href, "etag": etag, "text": str(todo.get("SUMMARY", "")).strip(), "qty": "", "due": _todo_due(todo),
+                 "t": 0, "by": "", "src": ""}
                 for href, etag, _, todo in await _todos(c, tgt["url"]) if str(todo.get("SUMMARY", "")).strip()]
+
+
+def _todo_due(todo):
+    """The date of a VTODO's DUE (only the date), "" when it has none."""
+    try:
+        d = todo.decoded("DUE")
+    except (KeyError, ValueError):
+        return ""
+    return d.date().isoformat() if isinstance(d, datetime.datetime) else d.isoformat() if isinstance(d, datetime.date) else ""
 
 
 def done_items(uid, lst):
     """The entries ticked off in the last KEEP_DONE, newest first (only lists on the Spark keep them)."""
-    return sorted(({k: x.get(k, "") for k in ("id", "text", "qty", "t", "by", "src", "done", "done_by")}
+    return sorted(({k: x.get(k, "") for k in ("id", "text", "qty", "due", "t", "by", "src", "done", "done_by")}
                    for x in _load(uid)["items"] if x["list"] == lst and x.get("done")), key=lambda x: -x["done"])
 
 
@@ -427,11 +458,14 @@ def sent_count(uid, lst):
     return sum(1 for x in _load(uid)["items"] if x["list"] == lst and x.get("sent"))
 
 
-async def _add(uid, lst, texts, by, src):
-    """Adds the entries; returns the ones added as shown (the same entry again adds its amount up)."""
+async def _add(uid, lst, texts, by, src, due=None, qty=True):
+    """Adds the entries; returns the ones added as shown (the same entry again adds its amount up). due: „bis“ of every
+    one (due_ok), qty False: no amount is read from the text („3 Angebote einholen“ from a meeting stays as it is)."""
     notaus.stop("aktion", uid)   # the Notaus (or the profile's own) holds every action off (notaus.py)
+    due = due if due_ok(due) else None
     seen, new = set(), []
-    for text, qty in (split_qty(x) for x in texts):
+    amounts = qty
+    for text, qty in (split_qty(x) if amounts else (clean(x), "") for x in texts):
         if text and text.lower() not in seen:
             seen.add(text.lower())
             new.append({"text": text, "qty": qty})
@@ -448,7 +482,7 @@ async def _add(uid, lst, texts, by, src):
             raise ValueError("the calendar account of this list was removed")
         async with _client(acc) as c:
             for x in new:
-                uid_text, body = _ical(show(x))
+                uid_text, body = _ical(show(x), due)
                 r = await c.put(tgt["url"].rstrip("/") + f"/{uid_text.split('@')[0]}.ics", content=body,
                                 headers={"Content-Type": "text/calendar; charset=utf-8", "If-None-Match": "*"})
                 if r.status_code not in (200, 201, 204):
@@ -463,9 +497,12 @@ async def _add(uid, lst, texts, by, src):
             old = have.get(x["text"].lower())
             if old:
                 old["qty"] = _sum_qty(old.get("qty", ""), x["qty"])
+                if due and not old.get("due"):
+                    old["due"] = due
             else:
                 d["items"].append(dict({"id": os.urandom(5).hex(), "list": lst, "text": x["text"], "t": now,
-                                        "by": by or uid, "src": src}, **({"qty": x["qty"]} if x["qty"] else {})))
+                                        "by": by or uid, "src": src}, **({"qty": x["qty"]} if x["qty"] else {}),
+                                       **({"due": due} if due else {})))
         _save(uid, d)
     return [show(x) for x in new]
 
@@ -555,10 +592,10 @@ async def _logged(what, lst, uid, run, by=None):
     return out
 
 
-async def add(uid, lst, texts, by=None, src="panel"):
+async def add(uid, lst, texts, by=None, src="panel", due=None, qty=True):
     """Adds the entries (_add) with a journal line for every outcome. by: the profile that puts them on (the owner
-    when left out), src: where they came from (SOURCES)."""
-    out = await _logged("add", lst, uid, _add(uid, lst, texts, by, src), by)
+    when left out), src: where they came from (SOURCES), due: „bis“ („JJJJ-MM-TT“) of every one, qty: read amounts."""
+    out = await _logged("add", lst, uid, _add(uid, lst, texts, by, src, due, qty), by)
     if out:
         _tell(uid, lst, by or uid, len(out))
     return out
@@ -928,8 +965,8 @@ def _entry(x, names):
     if by and by not in names:
         p = profiles.by_id(by)
         names[by] = p["name"] if p else ""
-    out = {"id": x["id"], "text": x["text"], "qty": x.get("qty", ""), "t": x.get("t", 0), "src": x.get("src", ""),
-           "by_name": names.get(by, "")}
+    out = {"id": x["id"], "text": x["text"], "qty": x.get("qty", ""), "due": x.get("due", ""), "t": x.get("t", 0),
+           "src": x.get("src", ""), "by_name": names.get(by, "")}
     if x.get("done"):
         db = x.get("done_by") or ""
         if db and db not in names:

@@ -439,11 +439,14 @@ extension SparkClient {
         MeetingResult(try await postJSON("api/desk/meeting/end", ["id": id], timeout: 300))
     }
 
-    /// POST /api/desk/meeting/keep -> (reminders, remarkable)
-    func meetingKeep(id: String, tasks: [Int], remarkable: Bool) async throws -> (reminders: Int, remarkable: Bool) {
-        let d = try await postJSON("api/desk/meeting/keep", ["id": id, "tasks": tasks, "remarkable": remarkable],
-                                   timeout: 120)
-        return ((d["reminders"] as? NSNumber)?.intValue ?? 0, (d["remarkable"] as? Bool) ?? false)
+    /// POST /api/desk/meeting/keep -> (reminders, listed, remarkable); with a list the tasks go onto it, else reminders
+    func meetingKeep(id: String, tasks: [Int], list: String? = nil, remarkable: Bool) async throws
+        -> (reminders: Int, listed: Int, remarkable: Bool) {
+        var body: [String: Any] = ["id": id, "tasks": tasks, "remarkable": remarkable]
+        if let list { body["list"] = list }
+        let d = try await postJSON("api/desk/meeting/keep", body, timeout: 120)
+        return ((d["reminders"] as? NSNumber)?.intValue ?? 0, (d["listed"] as? NSNumber)?.intValue ?? 0,
+                (d["remarkable"] as? Bool) ?? false)
     }
 
     /// GET /api/desk/home

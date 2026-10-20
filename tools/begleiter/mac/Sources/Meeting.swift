@@ -521,6 +521,7 @@ final class MeetingResultBox: ObservableObject {
     let result: MeetingResult
     let remarkable: Bool
     @Published var picked: Set<Int> = []
+    @Published var list: String
     @Published private(set) var busy = false
     @Published private(set) var status = ""
     @Published private(set) var failed = false
@@ -529,6 +530,7 @@ final class MeetingResultBox: ObservableObject {
         self.id = id
         self.result = result
         self.remarkable = remarkable
+        self.list = result.lists.first?.id ?? ""
     }
 
     static func show(_ box: MeetingResultBox) {
@@ -538,8 +540,9 @@ final class MeetingResultBox: ObservableObject {
         }
     }
 
-    func keep(remarkable toRemarkable: Bool) {
+    func keep(remarkable toRemarkable: Bool, toList: Bool = false) {
         guard !busy, let client = AppModel.shared.client else { return }
+        let listId: String? = toList && !list.isEmpty ? list : nil
         let tasks = toRemarkable ? [] : picked.sorted()
         if !toRemarkable && tasks.isEmpty {
             status = "Erst Aufgaben ankreuzen."
@@ -550,8 +553,14 @@ final class MeetingResultBox: ObservableObject {
         status = ""
         Task { @MainActor in
             do {
-                let r = try await client.meetingKeep(id: id, tasks: tasks, remarkable: toRemarkable)
-                if toRemarkable {
+                let r = try await client.meetingKeep(id: id, tasks: tasks, list: listId, remarkable: toRemarkable)
+                if let listId {
+                    let name = result.lists.first(where: { $0.id == listId })?.name ?? "die Liste"
+                    status = r.listed == 0 ? "Schon auf „\(name)“."
+                        : (r.listed == 1 ? "1 Aufgabe" : "\(r.listed) Aufgaben") + " auf „\(name)“."
+                    failed = false
+                    picked = []
+                } else if toRemarkable {
                     status = r.remarkable ? "Liegt auf dem reMarkable." : "Das reMarkable hat es nicht angenommen."
                     failed = !r.remarkable
                 } else {
@@ -621,6 +630,23 @@ struct MeetingResultView: View {
                         .font(.system(size: 12))
                         .foregroundColor(box.failed ? Theme.bad : Theme.ok)
                 }
+                if !box.result.tasks.isEmpty && !box.result.lists.isEmpty {
+                    // the tasks onto a list ("Aufgaben" first), Dominik 2026-10-20
+                    HStack(spacing: 8) {
+                        Button("Ausgewählte auf die Liste") { box.keep(remarkable: false, toList: true) }
+                            .buttonStyle(PrimaryButtonStyle())
+                            .disabled(box.busy || box.picked.isEmpty)
+                        Picker("Liste", selection: $box.list) {
+                            ForEach(box.result.lists) { l in
+                                Text(verbatim: l.icon + " " + l.name).tag(l.id)
+                            }
+                        }
+                        .labelsHidden()
+                        .frame(maxWidth: 200)
+                        .disabled(box.busy)
+                        Spacer()
+                    }
+                }
                 HStack(spacing: 8) {
                     Button("Kopieren") { Clip.put(box.result.summary) }
                         .buttonStyle(SoftButtonStyle())
@@ -631,7 +657,11 @@ struct MeetingResultView: View {
                             .buttonStyle(SoftButtonStyle())
                             .disabled(box.busy)
                     }
-                    if !box.result.tasks.isEmpty {
+                    if !box.result.tasks.isEmpty && !box.result.lists.isEmpty {
+                        Button("Als Erinnerung") { box.keep(remarkable: false) }
+                            .buttonStyle(SoftButtonStyle())
+                            .disabled(box.busy || box.picked.isEmpty)
+                    } else if !box.result.tasks.isEmpty {
                         Button("Ausgewählte als Erinnerung") { box.keep(remarkable: false) }
                             .buttonStyle(PrimaryButtonStyle())
                             .disabled(box.busy || box.picked.isEmpty)

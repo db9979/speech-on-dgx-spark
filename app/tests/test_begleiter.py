@@ -1399,7 +1399,7 @@ class Seven(unittest.TestCase):
         self.assertTrue(d["summary"].startswith("Besprochen: Wir schicken das Angebot."))
         self.assertEqual(len(d["tasks"]), begleiter.MEET_TASKS)
         self.assertEqual([t["text"] for t in d["tasks"][:4]], ["Angebot schicken", "Protokoll lesen", "Raum buchen", "Aufgabe 0"])
-        self.assertTrue(d["tasks"][0]["due"].startswith("2026-10-20T10:00"))
+        self.assertTrue(d["tasks"][0]["due"].startswith(helpers.MEET_DUE()))
         self.assertNotIn("due", d["tasks"][1])
         self.assertEqual(begleiter._meetings[mid]["parts"], [])                 # the transcript is gone
         conv = next(x for x in profiles.convos(uid) if x["id"] == "meet-" + mid[:20])
@@ -1413,6 +1413,38 @@ class Seven(unittest.TestCase):
         self.assertEqual(prog.post("/api/desk/meeting/keep", json={"id": mid, "tasks": [0]}).json()["reminders"], 0)
         self.assertEqual(len(profiles.reminders(uid)), before + 2)
         self.assertEqual(prog.post("/api/desk/meeting/keep", json={"id": mid, "remarkable": True}).status_code, 403)
+        # the summary goes into the reMarkable's folder „Besprechungen“, not „Antworten“ (Dominik 2026-10-20)
+        import remarkable
+        got = []
+
+        async def fake_send(uid_, title, text, art="antwort"):
+            got.append((uid_, title.split(" ")[0], art))
+            return {"title": title, "where": "Spark", "lost": False}
+        with unittest.mock.patch.object(begleiter, "_rm_ok", return_value=True), \
+                unittest.mock.patch.object(remarkable, "send", fake_send):
+            r = prog.post("/api/desk/meeting/keep", json={"id": mid, "remarkable": True})
+        self.assertEqual((r.status_code, got), (200, [(uid, "Besprechung", "besprechung")]), r.text)
+        # onto a list (Dominik 2026-10-20 „ok“): „Aufgaben“ first, the date of „bis“, source „besprechung“, each task once
+        import tasks
+        helpers.keep_chat(self, "tasks")
+        helpers.set_config(tasks=False)
+        self.assertEqual(prog.post("/api/desk/meeting/end", json={"id": mid}).json()["lists"], [])
+        self.assertEqual(prog.post("/api/desk/meeting/keep", json={"id": mid, "tasks": [0], "list": "aufgaben"}).status_code, 403)
+        helpers.set_config(tasks=True)
+        lists = prog.post("/api/desk/meeting/end", json={"id": mid}).json()["lists"]
+        self.assertEqual([x["id"] for x in lists[:2]], ["aufgaben", "einkauf"])
+        self.assertEqual(prog.post("/api/desk/meeting/keep", json={"id": mid, "tasks": [0], "list": "nope"}).status_code, 404)
+        r = prog.post("/api/desk/meeting/keep", json={"id": mid, "tasks": [0, 1, 1, 99], "list": "aufgaben"})
+        self.assertEqual(r.json(), {"reminders": 0, "listed": 2, "list": "Aufgaben", "remarkable": False})
+        self.assertEqual(prog.post("/api/desk/meeting/keep", json={"id": mid, "tasks": [0, 1], "list": "aufgaben"}).json()["listed"], 0)
+        rows = {x["text"]: x for x in asyncio.run(tasks.items(uid, "aufgaben"))}
+        self.assertEqual((rows["Angebot schicken"]["src"], rows["Angebot schicken"]["due"]),
+                         ("besprechung", helpers.MEET_DUE()[:10]))
+        self.assertEqual(rows["Protokoll lesen"]["due"], "")
+        self.assertIn("besprechung", tasks.SOURCES)
+        long = begleiter._meet_entry("Rundschreiben " * 20)
+        self.assertTrue(long.endswith("…") and len(long) <= tasks.TEXT_MAX and "Rundschrei…" not in long)
+        self.assertEqual(begleiter._meet_entry("3 Angebote einholen"), "3 Angebote einholen")
         # an hour after: gone; and never more than four at once on the Spark
         begleiter._meetings[mid]["ended"] = time.time() - begleiter.MEET_KEEP - 1
         self.assertEqual(prog.post("/api/desk/meeting/end", json={"id": mid}).status_code, 404)

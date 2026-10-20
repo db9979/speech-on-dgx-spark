@@ -137,7 +137,7 @@ def fake_llm():
                 said = last.get("content") or ""
                 heard = said.split("<<<GESPRAECH\n", 1)[1].rsplit("\nGESPRAECH>>>", 1)[0] if "<<<GESPRAECH\n" in said else ""
                 return {"choices": [{"message": {"content": "<think>\n</think>\nHier das JSON:\n" + json.dumps(
-                    {"summary": "Besprochen: " + heard[:60], "tasks": [{"text": "Angebot schicken", "due": "2026-10-20T10:00"},
+                    {"summary": "Besprochen: " + heard[:60], "tasks": [{"text": "Angebot schicken", "due": MEET_DUE()},
                                                                      {"text": "Protokoll lesen", "due": "kein Datum"},
                                                                      {"text": "  "}, "Raum buchen\x07"] +
                      [{"text": f"Aufgabe {i}"} for i in range(30)]})}}]}
@@ -956,6 +956,12 @@ def write_config(c):
     if os.path.exists(os.environ["SPEECH_SPARK_CONFIG"]):
         shutil.copymode(os.environ["SPEECH_SPARK_CONFIG"], os.environ["SPEECH_SPARK_CONFIG"] + ".part")
     os.replace(os.environ["SPEECH_SPARK_CONFIG"] + ".part", os.environ["SPEECH_SPARK_CONFIG"])
+
+
+def MEET_DUE():
+    """The due time of the fake meeting's first task: tomorrow 10:00 (a fixed date was dropped as past one day later)."""
+    import datetime
+    return (datetime.date.today() + datetime.timedelta(days=1)).isoformat() + "T10:00"
 
 
 def keep_chat(test, *keys):

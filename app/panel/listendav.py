@@ -68,6 +68,8 @@ def _ics(x):
     todo.add("dtstamp", _stamp(x.get("done") or x.get("t")))
     todo.add("created", _stamp(x.get("t")))
     todo.add("summary", tasks.show(x))
+    if x.get("due"):   # „bis“ (a meeting's task): a date, so Reminders shows it on that day
+        todo.add("due", datetime.date.fromisoformat(x["due"]))
     if x.get("done"):
         todo.add("status", "COMPLETED")
         todo.add("completed", _stamp(x["done"]))
@@ -79,7 +81,7 @@ def _ics(x):
 
 
 def _ctag(items):
-    raw = "|".join(f"{n}:{tasks.show(x)}:{x.get('done', 0)}" for n, x in sorted(items.items()))
+    raw = "|".join(f"{n}:{tasks.show(x)}:{x.get('done', 0)}:{x.get('due', '')}" for n, x in sorted(items.items()))
     return hashlib.sha1(raw.encode("utf-8", "replace")).hexdigest()[:16]
 
 
@@ -94,7 +96,7 @@ def collection(uid, part, li, base):
 
 
 def _read(body):
-    """(summary, done, uid) of the one VTODO in a calendar object, or None."""
+    """(summary, done, uid, due) of the one VTODO in a calendar object, or None (due: only the date, "" without)."""
     text = (body or b"").decode("utf-8", "replace")
     if len(text) > MAX_TEXT:
         return None
@@ -109,14 +111,15 @@ def _read(body):
     if not summary:
         return None
     done = str(t.get("STATUS", "")).upper() == "COMPLETED" or bool(t.get("COMPLETED"))
-    return summary, done, re.sub(r"[^A-Za-z0-9._@-]", "", str(t.get("UID", "")))[:200]
+    due = tasks._todo_due(t)
+    return summary, done, re.sub(r"[^A-Za-z0-9._@-]", "", str(t.get("UID", "")))[:200], due if tasks.due_ok(due) else ""
 
 
 def _put(uid, lid, name, body, headers):
     got = _read(body)
     if not got:
         return 415, "failed (not a task)"
-    summary, done, ref = got
+    summary, done, ref, due = got
     with tasks._lock:
         d = tasks._load(uid)
         have = _entries(uid, lid, d).get(name)
@@ -129,7 +132,8 @@ def _put(uid, lid, name, body, headers):
                 return 507, "refused (full)"
             text, qty = tasks.split_qty(summary)
             x = dict({"id": os.urandom(5).hex(), "list": lid, "text": text or summary, "t": now, "by": uid,
-                      "src": "erinnerungen", "dav": name}, **({"qty": qty} if qty else {}), **({"dav_uid": ref} if ref else {}))
+                      "src": "erinnerungen", "dav": name}, **({"qty": qty} if qty else {}), **({"dav_uid": ref} if ref else {}),
+                     **({"due": due} if due else {}))
             if done:
                 x["done"], x["done_by"] = now, uid
             d["items"].append(x)
@@ -141,6 +145,10 @@ def _put(uid, lid, name, body, headers):
                 have.pop("qty", None)
                 if qty:
                     have["qty"] = qty
+            if due:                 # the date set or moved in Reminders; taken away there: gone here too
+                have["due"] = due
+            else:
+                have.pop("due", None)
             what = "edit"
             if done and not have.get("done"):
                 have["done"], have["done_by"], what = now, uid, "done"

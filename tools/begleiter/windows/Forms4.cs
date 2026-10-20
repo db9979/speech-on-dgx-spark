@@ -282,7 +282,8 @@ internal sealed class TaskCheck : CheckBox, IThemed
 
 /// <summary>
 /// Teil "meeting", nach dem Beenden: Zusammenfassung (markier- und kopierbar), Aufgaben als Häkchen (keins
-/// vorausgewählt), „Ausgewählte als Erinnerung“, „Aufs reMarkable“ (nur wenn das Panel es anbietet), „Schließen“.
+/// vorausgewählt), „Ausgewählte auf die Liste“ mit Listenwahl (Standard „Aufgaben“, nur wenn der Spark Listen schickt),
+/// „Als Erinnerung“, „Aufs reMarkable“ (nur wenn das Panel es anbietet), „Schließen“.
 /// </summary>
 internal sealed class MeetingEndForm : ThemedForm
 {
@@ -301,10 +302,15 @@ internal sealed class MeetingEndForm : ThemedForm
     private readonly Panel _tasksPanel = new() { AutoScroll = true };
     private readonly List<TaskCheck> _checks = new();
     private readonly TLabel _status = new(TextRole.SmallMuted);
-    private readonly SparkButton _remind = new(ButtonKind.Primary, "Ausgewählte als Erinnerung");
+    private readonly SparkButton _toList = new(ButtonKind.Primary, "Ausgewählte auf die Liste");
+    private readonly SparkButton _listPick = new(ButtonKind.Secondary);
+    private readonly ContextMenuStrip _listMenu = new();
+    private readonly SparkButton _remind;
+    private readonly IReadOnlyList<ListRow> _lists;
+    private ListRow? _list;
     private readonly SparkButton _remarkable = new(ButtonKind.Secondary, "Aufs reMarkable");
     private readonly SparkButton _close = new(ButtonKind.Secondary, "Schließen");
-    private readonly Func<int[], bool, Task<string>> _keep;
+    private readonly Func<int[], string?, bool, Task<string>> _keep;
     private readonly bool _offerRemarkable;
     private readonly string _subtitle;
     private Rectangle _face;
@@ -312,10 +318,15 @@ internal sealed class MeetingEndForm : ThemedForm
     private Rectangle _sub;
     private bool _busy;
 
-    /// <param name="keep">Gewählte Aufgaben (Indizes) und ob aufs reMarkable; gibt den Hinweis für die Statuszeile zurück.</param>
-    public MeetingEndForm(MeetingResult result, TimeSpan duration, bool offerRemarkable, Func<int[], bool, Task<string>> keep)
+    /// <param name="keep">Gewählte Aufgaben (Indizes), die Liste (null: als Erinnerung) und ob aufs reMarkable; gibt den
+    /// Hinweis für die Statuszeile zurück.</param>
+    public MeetingEndForm(MeetingResult result, TimeSpan duration, bool offerRemarkable, Func<int[], string?, bool, Task<string>> keep)
     {
         _keep = keep;
+        _lists = result.Lists;
+        _list = _lists.Count > 0 ? _lists[0] : null;
+        _remind = new SparkButton(_list is null ? ButtonKind.Primary : ButtonKind.Secondary,
+                                  _list is null ? "Ausgewählte als Erinnerung" : "Als Erinnerung");
         _offerRemarkable = offerRemarkable;
         _subtitle = string.Create(CultureInfo.InvariantCulture, $"Dauer {(int)duration.TotalMinutes} min")
                     + (result.Chars > 0 ? string.Create(CultureInfo.GetCultureInfo("de-DE"), $" · {result.Chars:N0} Zeichen mitgeschrieben") : "");
@@ -330,7 +341,7 @@ internal sealed class MeetingEndForm : ThemedForm
         string summary = result.Summary.Trim().Length > 0 ? result.Summary.Trim() : "(Der Spark hat keine Zusammenfassung geschickt.)";
         _summary.Text = summary.Replace("\r\n", "\n", StringComparison.Ordinal).Replace("\n", Environment.NewLine, StringComparison.Ordinal);
 
-        Controls.AddRange(new Control[] { _summaryHost, _copy, _tasksHeading, _tasksPanel, _status, _remind, _remarkable, _close });
+        Controls.AddRange(new Control[] { _summaryHost, _copy, _tasksHeading, _tasksPanel, _status, _toList, _listPick, _remind, _remarkable, _close });
         int tab = 0;
         _summaryHost.TabIndex = tab++;
         _copy.TabIndex = tab++;
@@ -349,8 +360,24 @@ internal sealed class MeetingEndForm : ThemedForm
             _tasksHeading.Text = "Aufgaben: keine erkannt";
         }
 
+        _toList.TabIndex = tab++;
+        _listPick.TabIndex = tab++;
         _remind.TabIndex = tab++;
         _remarkable.TabIndex = tab++;
+        _toList.Visible = _listPick.Visible = _list is not null;
+        foreach (ListRow l in _lists)
+        {
+            ListRow row = l;
+            _listMenu.Items.Add(row.Icon + " " + row.Name, null, (_, _) =>
+            {
+                _list = row;
+                ShowList();
+            });
+        }
+
+        ShowList();
+        _listPick.Click += (_, _) => _listMenu.Show(_listPick, new Point(0, _listPick.Height));
+        Disposed += (_, _) => _listMenu.Dispose();
         _close.TabIndex = tab;
         _remarkable.Visible = offerRemarkable;
         _copy.Click += (_, _) =>
@@ -362,8 +389,9 @@ internal sealed class MeetingEndForm : ThemedForm
             _status.ApplyTheme(DeviceDpi);
             LayoutContent();
         };
-        _remind.Click += async (_, _) => await KeepAsync(remarkable: false);
-        _remarkable.Click += async (_, _) => await KeepAsync(remarkable: true);
+        _toList.Click += async (_, _) => await KeepAsync(remarkable: false, toList: true);
+        _remind.Click += async (_, _) => await KeepAsync(remarkable: false, toList: false);
+        _remarkable.Click += async (_, _) => await KeepAsync(remarkable: true, toList: false);
         _close.Click += (_, _) => Close();
         CancelButton = _close;
         UpdateButtons();
@@ -382,15 +410,27 @@ internal sealed class MeetingEndForm : ThemedForm
         ActiveControl = _close;
     }
 
+    private void ShowList()
+    {
+        _listPick.Text = _list is null ? "" : "Liste: " + _list.Name + " ▾";
+        _listPick.AccessibleName = _listPick.Text;
+        if (IsHandleCreated)
+        {
+            LayoutContent();
+        }
+    }
+
     private void UpdateButtons()
     {
         bool any = _checks.Any(c => c.Checked);
+        _toList.Enabled = !_busy && any;
+        _listPick.Enabled = !_busy;
         _remind.Enabled = !_busy && any;
         _remarkable.Enabled = !_busy && _offerRemarkable;
         _close.Enabled = !_busy;
     }
 
-    private async Task KeepAsync(bool remarkable)
+    private async Task KeepAsync(bool remarkable, bool toList)
     {
         if (_busy)
         {
@@ -400,10 +440,11 @@ internal sealed class MeetingEndForm : ThemedForm
         int[] selected = remarkable ? Array.Empty<int>() : _checks.Select((c, i) => (c.Checked, i)).Where(t => t.Checked).Select(t => t.i).ToArray();
         _busy = true;
         UpdateButtons();
-        SetStatus(remarkable ? "Wird aufs reMarkable geschickt …" : "Erinnerungen werden angelegt …", error: false);
+        string? listId = toList ? _list?.Id : null;
+        SetStatus(remarkable ? "Wird aufs reMarkable geschickt …" : listId is not null ? "Kommt auf die Liste …" : "Erinnerungen werden angelegt …", error: false);
         try
         {
-            string text = await _keep(selected, remarkable);
+            string text = await _keep(selected, listId, remarkable);
             if (!IsDisposed)
             {
                 SetStatus(text, error: false);
@@ -411,8 +452,7 @@ internal sealed class MeetingEndForm : ThemedForm
                 {
                     foreach (TaskCheck c in _checks.Where(c => c.Checked))
                     {
-                        c.Checked = false;
-                        c.Enabled = false; // schon als Erinnerung angelegt
+                        c.Checked = false; // schon auf der Liste bzw. als Erinnerung angelegt (der Spark legt keine doppelt an)
                     }
                 }
             }
@@ -475,6 +515,16 @@ internal sealed class MeetingEndForm : ThemedForm
         {
             Size rm = _remarkable.Preferred();
             _remarkable.Bounds = new Rectangle(x, footY, rm.Width, rm.Height);
+        }
+
+        if (_list is not null)
+        {
+            // eine Zeile darüber: „Ausgewählte auf die Liste“ und die Listenwahl
+            Size toList = _toList.Preferred();
+            footY -= toList.Height + S(8);
+            _toList.Bounds = new Rectangle(pad, footY, toList.Width, toList.Height);
+            Size pick = _listPick.Preferred();
+            _listPick.Bounds = new Rectangle(_toList.Right + S(8), footY, Math.Min(pick.Width, Math.Max(S(60), w - pad - _toList.Right - S(8))), pick.Height);
         }
 
         int statusH = _status.Text.Length > 0 ? Draw.TextHeight(_status.Text, _status.Font, inner) : 0;

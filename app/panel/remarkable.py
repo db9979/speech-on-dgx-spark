@@ -909,19 +909,22 @@ def where(uid, items=None):
     return (t, p) if p else ("", "Spark")
 
 
-async def send(uid, title, text):
+async def send(uid, title, text, art="antwort"):
     """A new EPUB with this text in the chosen folder (default "Spark", created when missing). Only adds a new
-    document; nothing existing is changed. Returns {"title", "where", "lost"} (lost: the chosen folder is gone)."""
+    document; nothing existing is changed. art: its kind (rmpapier.ARTEN, "antwort" or "besprechung" for a meeting
+    from the Begleiter), the folder below the base folder. Returns {"title", "where", "lost"} (lost: the chosen
+    folder is gone)."""
+    art = art if art in ("antwort", "besprechung") else "antwort"
     text = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", "", str(text or ""))[:MAX_SEND].strip()
     text = plain_markdown(text)   # an answer's Markdown signs stay off the paper
     if not text:
         raise ValueError("nothing to send")
     title = _clean(title, 80) or "Vom Spark"
     import rmpapier
-    if features.allowed("rmpapier", uid):      # a designed sheet in the device's format, in "Antworten" (rmpapier.py)
-        return await rmpapier.place(uid, "antwort", title, rmpapier.built_text(uid, "Antwort", title, text), "text",
-                                    auto=False)
-    return await place(uid, title, epub(title, text), art="antwort")
+    label = {"antwort": "Antwort", "besprechung": "Besprechung"}[art]
+    if features.allowed("rmpapier", uid):      # a designed sheet in the device's format, in "Antworten"/"Besprechungen"
+        return await rmpapier.place(uid, art, title, rmpapier.built_text(uid, label, title, text), "text", auto=False)
+    return await place(uid, title, epub(title, text), art=art)
 
 
 def _count(d, key, most):

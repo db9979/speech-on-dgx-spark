@@ -136,10 +136,10 @@ body.inchat #fab{display:none}
 .hint{font-size:12px;margin-top:8px;position:relative}
 .chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:14px;min-height:24px;position:relative}
 .chip{font-size:11.5px;padding:3px 9px;border-radius:99px;background:color-mix(in srgb,var(--line) 60%,transparent);color:var(--mut);font-variant-numeric:tabular-nums}
-.rems{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:10px}
+.rems{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:10px;width:100%;min-width:0;box-sizing:border-box}   /* never wider than the face card: long texts end in „…“ */
 .guestnote{margin:8px 0 4px;text-align:center}
 .rem{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;padding:3px 4px 3px 10px;border-radius:99px;background:color-mix(in srgb,var(--acc) 14%,transparent);color:var(--fg);font-variant-numeric:tabular-nums;max-width:100%}
-.rem b{color:var(--acc);font-weight:600}.rem span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rem b{color:var(--acc);font-weight:600;white-space:nowrap;flex:none}.rem span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .rem button{border:0;background:none;color:var(--mut);cursor:pointer;font-size:14px;line-height:1;padding:2px 6px;border-radius:99px}.rem button:hover{color:var(--fg);background:color-mix(in srgb,var(--line) 70%,transparent)}
 .blocks{flex-basis:100%;font:11px/1.4 ui-monospace,monospace;color:var(--mut);text-align:center;user-select:all;word-break:break-word}
 .msg .who{font-size:11px;color:var(--mut);margin:2px 6px 0;text-align:right}
@@ -1920,6 +1920,7 @@ textarea{resize:none}textarea[data-fest]{resize:vertical}textarea.feldplatz{padd
 .lstitem{display:flex;align-items:center;gap:10px;padding:8px 2px;border-bottom:1px solid var(--line);min-width:0}
 .lstit{flex:1;min-width:0;overflow-wrap:anywhere}.lstit b{font-weight:550}.lstit small{display:block;color:var(--mut);font-size:12px}
 .lstqty{color:var(--mut);font-size:12.5px}
+.lstdue{font-size:11.5px;padding:1px 7px;border-radius:99px;background:color-mix(in srgb,var(--acc) 14%,transparent);color:var(--acc);white-space:nowrap}.lstdue.late{background:color-mix(in srgb,#ef4444 14%,transparent);color:#dc2626}
 .lstck{flex:none;width:24px;height:24px;border-radius:99px;border:2px solid var(--line);background:none;padding:0;cursor:pointer;display:grid;place-items:center;font-size:13px;color:#fff}
 .lstck:hover{border-color:var(--ok)}.lstck.on{background:var(--ok);border-color:var(--ok)}
 .lstitem.done .lstit b{text-decoration:line-through;color:var(--mut)}

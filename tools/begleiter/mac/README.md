@@ -376,8 +376,10 @@ Leiste sagt das. Alle 30 Sekunden geht ein Stück an den Spark; auf dem Mac wird
 3 Stunden.
 
 Nach **Beenden** öffnet sich ein Fenster mit der Zusammenfassung (markierbar, **Kopieren**) und den Aufgaben zum
-Ankreuzen (keine ist vorab angekreuzt): **Ausgewählte als Erinnerung**, **Aufs reMarkable** (nur wenn im Panel
-eingerichtet) und **Schließen**. Diesen Teil muss zusätzlich der Admin freigeben.
+Ankreuzen (keine ist vorab angekreuzt): **Ausgewählte auf die Liste** mit der Listenwahl daneben (Standard
+„Aufgaben“; „bis“ wird zum Datum des Eintrags, die Quelle heißt „aus Besprechung“), **Als Erinnerung**, **Aufs
+reMarkable** (nur wenn im Panel eingerichtet, Ordner „Besprechungen“) und **Schließen**. Sind die Listen für das
+Profil nicht freigegeben, bleibt nur **Ausgewählte als Erinnerung**. Diesen Teil muss zusätzlich der Admin freigeben.
 
 ### Smart-Home-Knöpfe
 

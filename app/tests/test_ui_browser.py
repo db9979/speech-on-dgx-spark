@@ -177,6 +177,16 @@ class Browser(unittest.TestCase):
                         self.assertLessEqual(box["page"], h + 1, f"{w}: Seite rollt")
                         self.assertTrue(box["logs"], f"{w}: Verlauf rollt nicht in sich")
                         self.assertEqual(box["wide"], [], f"{w}: waagrechter Rollbalken")   # V01.0.331: the face card's glow
+                        # reminders under the face (a meeting's long tasks, 2026-10-20): never wider than the card,
+                        # cut off on both sides; the text ends in „…“ instead
+                        side = await pg.evaluate("""(()=>{REM_ON=true;const d=Date.now()+864e5,x='Rundschreiben an die Entwickler mit den Vorgaben für den Agenten-Entwicklertag und der Bitte, sich vorab Gedanken zu machen';
+                            rem.list=[{id:'u1',due:d,text:x},{id:'u2',due:d+60e3,text:x+' (zweite)'}];rem.show();
+                            const s=document.querySelector('#chat .stage').getBoundingClientRect(),l=$('remlist').getBoundingClientRect();
+                            const out=[...document.querySelectorAll('#remlist .rem')].some(e=>{const r=e.getBoundingClientRect();return r.left<s.left-1||r.right>s.right+1});
+                            rem.list=[];rem.show();return {l:l.left-s.left,r:s.right-l.right,out}})()""")
+                        self.assertGreaterEqual(side["l"], -1, f"{w}: Erinnerungen links abgeschnitten")
+                        self.assertGreaterEqual(side["r"], -1, f"{w}: Erinnerungen rechts abgeschnitten")
+                        self.assertFalse(side["out"], f"{w}: eine Erinnerung ragt aus der Karte")
                         if w > 1100:
                             self.assertAlmostEqual(box["sb"], box["cb"], delta=1)   # both cards equally tall
                         else:
