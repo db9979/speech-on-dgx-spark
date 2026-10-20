@@ -257,6 +257,21 @@ def _client(item):
                            seen=hintergrund.tracker("ha", item["_uid"]) if item.get("_uid") else None)
 
 
+async def _all(c, item, strict=False):
+    """Every state the token's user may read: from the live connection's copy (halive.py, Vorrat je Profil) while it is
+    connected, else GET /api/states. None when Home Assistant rejected the token (strict: raises then, like any other
+    failure)."""
+    import halive
+    got = halive.states(item)
+    if got is not None:
+        return got
+    r = await c.get(item["url"] + "/api/states")
+    if r.status_code == 401 and not strict:
+        return None
+    r.raise_for_status()
+    return [s for s in r.json() or [] if isinstance(s, dict) and s.get("entity_id")]
+
+
 async def check(item):
     """Raises ValueError with a readable reason when Home Assistant cannot be used."""
     try:
@@ -606,11 +621,9 @@ async def states(item, text="", domain="", area="", limit=60):
     """Searches every state the token's user may read; returns (count, text for the model).
     Without words, domain or area it gives an overview: areas, zones, people, counts per kind."""
     async with _client(item) as c:
-        r = await c.get(item["url"] + "/api/states")
-        if r.status_code == 401:
+        all_states = await _all(c, item)
+        if all_states is None:
             return 0, "Home Assistant rejected the token."
-        r.raise_for_status()
-        all_states = [s for s in r.json() or [] if isinstance(s, dict) and s.get("entity_id")]
         areas = await _areas(c, item)
     exact = next((s for s in all_states if s["entity_id"] == str(text).strip().lower()), None)
     if exact:  # one entity by its id: every attribute
@@ -671,10 +684,7 @@ _PRIMARY = {"media_player": 0, "light": 0, "climate": 0, "cover": 0, "fan": 0, "
 
 async def _switchable(item):
     async with _client(item) as c:
-        r = await c.get(item["url"] + "/api/states")
-        r.raise_for_status()
-        all_states = [s for s in r.json() or [] if isinstance(s, dict) and s.get("entity_id")
-                      and s["entity_id"].split(".")[0] in _SWITCHABLE]
+        all_states = [s for s in await _all(c, item, strict=True) if s["entity_id"].split(".")[0] in _SWITCHABLE]
         areas = await _areas(c, item)
     names = {s["entity_id"]: (s.get("attributes") or {}).get("friendly_name") or s["entity_id"] for s in all_states}
     return all_states, areas, names
@@ -940,11 +950,9 @@ async def history(item, text, hours=24, zone=None):
     import datetime
     hours = min(24 * 30, max(1, int(hours or 24)))
     async with _client(item) as c:
-        r = await c.get(item["url"] + "/api/states")
-        if r.status_code == 401:
+        all_states = await _all(c, item)
+        if all_states is None:
             return 0, "Home Assistant rejected the token."
-        r.raise_for_status()
-        all_states = [x for x in r.json() or [] if isinstance(x, dict) and x.get("entity_id")]
         areas = await _areas(c, item)
         names = {x["entity_id"]: _name(x) for x in all_states}
         eid = str(text).strip().lower()
@@ -1087,9 +1095,7 @@ async def lookup(item, text, limit=12):
     if not words:
         return None
     async with _client(item) as c:
-        r = await c.get(item["url"] + "/api/states")
-        r.raise_for_status()
-        all_states = [x for x in r.json() or [] if isinstance(x, dict) and x.get("entity_id")]
+        all_states = await _all(c, item, strict=True)
         areas = await _areas(c, item)
     names = {x["entity_id"]: _name(x) for x in all_states}
     labels = [_norm(names[x["entity_id"]] + " " + x["entity_id"].split(".", 1)[1] + " "

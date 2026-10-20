@@ -963,13 +963,17 @@ function latRender(l){const f=s=>s?`<b>${s.median} s</b> <span class="mut">(${s.
     (l.ack_today&&(l.ack_today.with||l.ack_today.without)?`<div class="mut">${t(`Heute ${l.ack_today.with} Antworten mit sofortigem Satz, ${l.ack_today.without} ohne`,`Today ${l.ack_today.with} answers with an instant sentence, ${l.ack_today.without} without`)}${l.ack_today.top.length?t(', am häufigsten ohne: ',', most often without: ')+l.ack_today.top.map(x=>`${esc(x.group)} (${x.n})`).join(', '):''}</div>`:'')}
 // per kind of question (Weiche group) and per version: where answers are slow, and whether a version made it better
 function latTables(l){const s=v=>v==null?'–':v+' s',p=v=>v==null?'–':v+' %';
-  const H=[t('Weiche','Switch'),t('Antworten','Answers'),t('Erster Ton (9 von 10)','First sound (9 of 10)'),t('Erstes Zeichen','First character'),t('Ende','End'),t('Aus dem Speicher','From the cache'),t('Werkzeuge','Tools')];
+  const H=[t('Weiche','Switch'),t('Antworten','Answers'),t('Erster Ton (9 von 10)','First sound (9 of 10)'),t('Erstes Zeichen','First character'),t('Ende','End'),t('Aus dem Speicher','From the cache'),t('Werkzeuge','Tools'),t('Werkzeuge warten','Tools wait')];
   const V=[t('Version','Version'),H[1],H[2],H[5]];
+  const D=[t('Dienst','Service'),t('Antworten','Answers'),t('Aus dem Vorrat','From the store'),t('Älterer Stand','Older reading'),t('Gewartet','Waited'),t('Werkzeuge warten','Tools wait')];
+  const DN={mail:t('E-Mail','E-mail'),calendar:t('Kalender','Calendar'),weather:t('Wetter','Weather'),parcels:t('Pakete','Parcels'),fuerdich:t('Für dich','For you')};
+  const d=(l.services||[]).map(r=>[esc(DN[r.service]||r.service),r.n,`<b>${p(r.share)}</b> <span class="mut">(${r.warm})</span>`,r.alt,r.kalt,s(r.wait)]);
   const tb=(hd,rows)=>`<table class="stack"><thead><tr>${hd.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map((c,i)=>`<td data-label="${hd[i]}">${c}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
-  const g=(l.groups||[]).map(r=>[esc(r.group),r.n,`<b>${s(r.median)}</b> <span class="mut">(${s(r.p90)})</span>`,s(r.first),s(r.end),p(r.cache),r.tools??'–']);
+  const g=(l.groups||[]).map(r=>[esc(r.group),r.n,`<b>${s(r.median)}</b> <span class="mut">(${s(r.p90)})</span>`,s(r.first),s(r.end),p(r.cache),r.tools??'–',s(r.wait)]);
   const v=(l.versions||[]).map(r=>[esc(r.version),r.n,`<b>${s(r.median)}</b> <span class="mut">(${s(r.p90)})</span>`,p(r.cache)]);
   return (g.length?`<details class="adv"><summary>${t('Je Fragenart, letzte 7 Tage','Per kind of question, last 7 days')}</summary>${tb(H,g)}</details>`:'')+
-    (v.length?`<details class="adv"><summary>${t('Je Version','Per version')}</summary>${tb(V,v)}</details>`:'')}
+    (v.length?`<details class="adv"><summary>${t('Je Version','Per version')}</summary>${tb(V,v)}</details>`:'')+
+    (d.length?`<details class="adv"><summary>${t('Je Dienst: Vorrat, letzte 7 Tage','Per service: store, last 7 days')}</summary>${tb(D,d)}</details>`:'')}
 async function loadLive(){try{const r=await (await api('/api/livecheck')).json();liveRender(r);latRender(r.latency)}catch{}loadQuality()}
 // quality test of the language model (sandbox questions, see quality.py)
 let qTimer=null;

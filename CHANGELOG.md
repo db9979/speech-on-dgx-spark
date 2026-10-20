@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.879** · 2026-10-20 · Vorrat je Profil: der Assistent nimmt Kalender, Mail, Wetter und Pakete aus dem Speicher, solange frisch genug, bei langsamem Dienst nach höchstens 2 s den älteren Stand mit Uhrzeit, „schau nochmal nach“ fragt neu; eine Runde je Minute hält aktive Profile frisch, Tagesbriefing 10 min vorher geschrieben, Wetter und Pakete versiegelt auf der Platte, Home Assistant live über WebSocket; Zustand → Prüfen je Dienst; ohne Schalter
 - **V01.0.878** · 2026-10-20 · Update sperrt sofort beim Klick: Sicherung, Laden, Prüfen, Modell-Rechner und Neustart als Schritte im selben Fenster auf allen Geräten; jedes frühe Ende löst die Sperre und nennt den Grund
 - **V01.0.877** · 2026-10-21 · Für dich aus dem Vorrat: die letzte Lesung je Postfach bleibt versiegelt im Profil, nach einem Neustart sofort da; antwortet ein Postfach nicht, kommen seine Einträge mit „Stand hh:mm“ im Tab, beim Vorlesen und unter Heute
 - **V01.0.876** · 2026-10-21 · Alles Offene im Assistenten (Stufe 2): Vorschläge des Assistenten (neuer Termin, verschieben, löschen, Mail per Sprache, Aufräumen, Entwurf) als Karte „Wartet auf dein Ja“ unter der Antwort und unter Offen, mit „Eintragen“/„Senden“ (dasselbe wie ein getipptes Ja), „Ändern …“ (Formular oder Schreibfenster, ausgefüllt) und „Abbrechen“; auch vom Lautsprecher am Handy bestätigen; iPhone

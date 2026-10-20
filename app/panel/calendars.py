@@ -43,6 +43,7 @@ import notaus
 import profiles
 import sparkkalender
 import vault
+import vorrat
 
 MAX_TOPICS = 3
 MAX_CALENDARS = 8
@@ -687,19 +688,37 @@ async def _one(uid, cal, start, end, zone, stale=False):
         want = [(whole, blocks[0], (blocks[-1] + datetime.timedelta(days=32)).replace(day=1))]
     else:
         want = [((uid, cal["id"], m.date().isoformat()), m, (m + datetime.timedelta(days=32)).replace(day=1)) for m in blocks]
-    wait = {}
+    wait, soon, kinds = {}, {}, []
+    # the assistant (vorrat.py): a block up to vorrat's fresh age as it is; an older one when the server does not
+    # answer within vorrat.WAIT, saying „Stand hh:mm“; „schau nochmal nach“ always asks the server
+    assist = vorrat.in_turn() and not stale
     for key, a, b in want:
         hit = _cache.get(key)
-        if hit and now - hit[0] < CACHE_SECONDS:
+        kind = vorrat.state("calendar", hit[0] if hit else None, now) if assist else None
+        if kind == "warm" or (kind is None and hit and now - hit[0] < CACHE_SECONDS):
+            kinds.append(("warm", None))
             continue
-        task = _block(uid, cal, key, a, b, behind=bool(hit and stale))
-        if not (hit and stale):
+        task = _block(uid, cal, key, a, b, behind=bool(hit and (stale or kind == "alt")))
+        if kind == "alt":
+            soon[key] = (task, hit[0])
+        elif not (hit and stale):
             wait[key] = task
     got = {}
+    if soon:
+        await asyncio.wait([t for t, _ in soon.values()], timeout=vorrat.WAIT)
+        for key, (task, when) in soon.items():
+            if task.done() and not task.cancelled() and task.exception() is None:
+                got[key] = task.result()
+                kinds.append(("kalt", None))
+            else:
+                kinds.append(("alt", when))   # the older block stays in the cache and is read below
     for key, r in zip(wait, await asyncio.gather(*(asyncio.shield(t) for t in wait.values()), return_exceptions=True)):
         if isinstance(r, BaseException):
             raise r
         got[key] = r   # also when a change meanwhile kept it out of the cache (_epoch)
+        kinds.append(("kalt", None))
+    for kind, when in kinds if assist else ():
+        vorrat.note("calendar", kind, when)
     keys = [whole] if whole in _cache else [k for k, _, _ in want]
     texts = list(dict.fromkeys(x for k in keys for x in (_cache.get(k) or (0, got.get(k, [])))[1]))
     # expanding runs outside the event loop, one at a time, so a heavy calendar never stalls the panel
@@ -746,8 +765,8 @@ async def events(uid, start, end, zone, shared=False, stale=False):
     """(events of all the profile's calendars from start to end, sorted; [(name, error)] of the
     calendars that could not be read). None when no calendar is connected. shared: also the calendars other
     profiles share with it (the page and the assistant's calendar_events; never the briefing or Von selbst). stale: an
-    older block (up to STALE_SECONDS) at once while it is fetched anew behind (the card under Heute; the assistant
-    always waits for a fresh one)."""
+    older block (up to STALE_SECONDS) at once while it is fetched anew behind (the card under Heute). The assistant
+    follows vorrat.DIENSTE "calendar" (_one): fresh enough as it is, older after vorrat.WAIT with „Stand hh:mm“."""
     if not (reading(uid) if shared else get(uid))["calendars"]:
         return None
     evs, errors, _ = await _collect(uid, start, end, zone, shared, stale)
@@ -782,18 +801,6 @@ async def warm(uid, now=None):
     res = await asyncio.gather(*(_one(c.get("owner") or uid, c, t0, t0 + datetime.timedelta(days=35),
                                       datetime.timezone.utc) for c in reading(uid)["calendars"]), return_exceptions=True)
     return sum(1 for r in res if not isinstance(r, BaseException))
-
-
-async def keep_fresh_loop():
-    """Started with the panel; every CACHE_SECONDS one keep_fresh, one line when it fetched something."""
-    while True:
-        await asyncio.sleep(CACHE_SECONDS)
-        try:
-            people, n = await keep_fresh()
-            if people:
-                print(f"calendar: kept fresh | {n} calendars of {people} profiles", flush=True)
-        except Exception as e:
-            print(f"calendar: keep fresh failed ({type(e).__name__})", flush=True)
 
 
 # ---------------------------------------------------------------- the page Kalender (kalender.js)

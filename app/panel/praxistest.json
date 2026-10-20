@@ -2427,6 +2427,27 @@
 "titel": "Für dich: Stand bei Ausfall",
 "text": "Öffne E-Mail → Für dich, starte danach das Panel neu: der Tab zeigt sofort dieselben Einträge. Trenne den Pi kurz vom Internet und frag „Was muss ich diese Woche erledigen?“: die Einträge kommen mit „Einträge von Stand hh:mm“, nie nur „nicht erreichbar“.",
 "thread": "Persönlicher Assistent aus dem Postfach"
+},
+{
+"id": "P371",
+"v": 879,
+"titel": "Vorrat je Profil",
+"text": "Seite Kalender öffnen, 5 Minuten warten, dann den Assistenten „Was steht morgen an?“ fragen: Antwort ohne Warten. Zustand → Prüfen → Je Dienst: Vorrat zeigt Kalender mit „Aus dem Vorrat“. „Schau nochmal in meinen Kalender“: holt neu (Gewartet +1). Wetter zweimal fragen: das zweite Mal aus dem Vorrat. Zustand → Live bei Kalender und Wetter: „heute n Fragen, x % aus dem Vorrat“.",
+"thread": "Vorrat je Profil"
+},
+{
+"id": "P372",
+"v": 879,
+"titel": "Vorrat je Profil: Runde, Briefing, Neustart",
+"text": "Panel öffnen, 40 Minuten nichts tun, dann „Wie wird das Wetter?“ und „Kommen heute Pakete?“: beide ohne Warten (Zustand → Prüfen → Je Dienst: Vorrat, „Aus dem Vorrat“). Zustand → Live bei Kalender: „Vorrat: heute n Runden“. Briefing-Zeit auf in 12 Minuten stellen: die Mitteilung kommt auf die Minute, im Log vorher „briefing: written ahead“. Panel neu starten, sofort „Wie wird das Wetter?“: Antwort ohne Warten aus dem versiegelten Vorrat; Live bei Wetter „versiegelt bei 1 Profilen“.",
+"thread": "Vorrat je Profil"
+},
+{
+"id": "P373",
+"v": 879,
+"titel": "Home Assistant live",
+"text": "Mit verbundenem Home Assistant das Panel öffnen, 2 Minuten warten: Zustand → Live bei Home Assistant „live: 1 Verbindungen“. Ein Fenster öffnen, dann „Ist das Fenster im Bad offen?“: richtige Antwort sofort. Home Assistant neu starten: die Verbindung kommt nach etwa 1 Minute wieder (Log „homeassistant: live connected“).",
+"thread": "Vorrat je Profil"
 }
 ]
 }

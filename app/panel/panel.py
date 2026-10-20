@@ -28,6 +28,8 @@ import account  # noqa: E402
 import calendars  # noqa: E402
 import mail  # noqa: E402
 import vorwaermen  # noqa: E402
+import vorrat  # noqa: E402
+import halive  # noqa: E402
 import coadmin  # noqa: E402
 import guard  # noqa: E402
 import homeassistant  # noqa: E402
@@ -554,8 +556,10 @@ async def mail_fresh():
 
 @app.on_event("startup")
 async def calendar_fresh():
-    """Kalender (calendars.keep_fresh): the appointments of whoever read them lately are fetched anew in the background."""
-    spawn(calendars.keep_fresh_loop())
+    """Vorrat je Profil (vorrat.loop): calendars, weather, parcels and „Für dich“ of whoever used them lately are read
+    anew in the background, so the assistant answers from memory."""
+    spawn(vorrat.loop())
+    spawn(halive.loop())   # Home Assistant live: a copy of the states for active profiles (halive.py)
     main_loop[0] = asyncio.get_running_loop()   # core.later: page changes behind the page
 
 

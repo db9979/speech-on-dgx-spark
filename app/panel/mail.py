@@ -33,6 +33,7 @@ import mailvorrat
 import netguard
 import profiles
 import vault
+import vorrat
 
 MAX_ACCOUNTS = 4
 DAYS = 30
@@ -510,8 +511,8 @@ def find(uid, query="", days=7, unread=False, limit=8, stale=False, budget=None)
     return lookup(uid, query, days, unread, limit, stale, budget)[0]
 
 
-ASK_FRESH = 600     # the assistant (listing, briefing) takes a listing up to this old as it is
-ASK_WAIT = 2.0      # an older one: it waits this long for the fetch, then answers with the older one and its time
+ASK_FRESH = vorrat.DIENSTE["mail"][0]   # the assistant (listing, briefing) takes a listing up to this old as it is
+ASK_WAIT = vorrat.WAIT                 # an older one: waits this long, then answers with the older one and its time
 
 
 def lookup(uid, query="", days=7, unread=False, limit=8, stale=False, budget=None, fresh=CACHE_SECONDS, wait=None):

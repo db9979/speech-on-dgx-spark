@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "aussen": {
-        "stand": "d8f6b76bdf",
+        "stand": "54f45464b3",
         "bezug": {
             "dienstwacht.TIMEOUT": ["s5"], "notaus.locked_tools": ["s3"], "dienstwacht.tool_down": ["s5"],
             "netguard.client": ["s8", "s9", "s10"], "netguard.IMAP4_SSL": ["s9"],
@@ -77,10 +77,12 @@ SEITEN = {
               ("Heimnetz · Nutzer · nur Internet", "home · user · internet only"),
               ("Jedes Modul ruft den Wächter mit seiner festen Stufe: Home Assistant und Kiwix mit Heimnetz; Kalender, "
                "Kontakte, Aufgaben, Mail und MCP mit Nutzer; reMarkable und Seiten aus der Suche mit nur Internet. "
+               "Die Live-Verbindung zu Home Assistant (halive) prüft ihre Adresse ebenso mit Heimnetz. "
                "Die Stufe steht im Code, nicht in den Einstellungen.",
                "Each module calls the guard with its fixed level: Home Assistant and Kiwix with home; calendars, "
                "contacts, tasks, mail and MCP with user; reMarkable and pages from search with internet only. The "
-               "level is in the code, not in the settings.")),
+               "live connection to Home Assistant (halive) checks its address with home as well. The level is in the code, "
+               "not in the settings.")),
             S("s8", "frage", ("Wächter erlaubt die Adresse?", "Guard allows the address?"),
               ("Kasten Wächter", "box Guard"),
               ("Der Wächter löst den Namen einmal auf und prüft jede Adresse: keine eigenen Dienste, kein 169.254, "
@@ -182,7 +184,7 @@ SEITEN = {
         "heute": [("guard_ok", ("verbunden", "connected")), ("guard_bad", ("gesperrt", "blocked"))],
     },
     "internet": {
-        "stand": "a27262a07b",
+        "stand": "08dc558739",
         "bezug": {
             "regeln": ["s3", "s4"], "regel:Seiten aus der Suche": ["s4", "s5"], "regel:Mail, Kalender, Kontakte": ["s4", "s5"],
             "regel:reMarkable": ["s4", "s5"], "regel:Wetter, Fahrplan, Wikipedia": ["s3"], "regel:Telegram": ["s7"],

@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.879** Per-profile store: the assistant takes calendar, mail, weather and parcels from memory while fresh enough, with a slow service after at most 2 s the older reading with its time, "look again" asks anew; one round a minute keeps active profiles fresh, daily briefing written 10 min ahead, weather and parcels sealed on disk, Home Assistant live over WebSocket; Status → Check per service; no switch
 - **V01.0.878** The update locks right at the click: backup, fetch, check, model computer and restart as steps in the same window on every device; every early end releases the lock and names the reason
 - **V01.0.877** For you from the supply: the last reading per mailbox stays sealed in the profile, there at once after a restart; when a mailbox does not answer its entries come with "Stand hh:mm" in the tab, when read aloud and under Today
 - **V01.0.876** Everything open in the assistant (stage 2): the assistant's proposals (new appointment, move, delete, mail by voice, tidy-up, draft) as a card "Waiting for your yes" under the answer and under Open, with "Add"/"Send" (the same as a typed yes), "Change …" (form or writing window, filled in) and "Cancel"; also confirm a speaker's proposal on the phone; iPhone
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.872** Mail: mail supply, the Spark keeps the newest headers and mail texts sealed in the profile; after a restart the listing is there at once, and when a mailbox does not answer the assistant answers with the kept state and its time instead of "not reachable"; a listing up to 10 minutes old is taken as it is, otherwise it waits at most 2 seconds
 - **V01.0.871** CarPlay stable: the voice window opens and closes one step at a time, every row does something or says „Spark not reachable“, after a conversation radio and music are back at normal volume, „Danke“ ends it, „repeat the last answer“, no wake word in the car, CarPlay steps in the app's sound log
 - **V01.0.870** Fix For you read aloud: "reply open" says clearly who waits for whom, every entry names its mail (sender, day, subject), while the first reading runs you hear "still reading" or the last reading instead of "mailbox unreachable"
-- **V01.0.869** Meeting from the Spark companion: chosen tasks go onto a list with "Ausgewählte auf die Liste" ("Tasks" by default, selectable) with the date from "due" and the source "from a meeting", also on the iPhone and in Reminders; "Als Erinnerung" stays. Reminders under the face are no longer cut off on both sides, the summary lands on the reMarkable under "Meetings" instead of "Answers"
 
 
 All versions: [CHANGELOG.md](CHANGELOG.md)

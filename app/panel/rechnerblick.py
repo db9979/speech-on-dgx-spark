@@ -73,6 +73,7 @@ DIENST_NAMEN = {"asr": ("Spracherkennung", "Speech recognition"), "asr-engine": 
 TEIL_NAMEN = {"anfragen": ("Anfragen und Seiten", "Requests and pages"), "bedeutungssuche": ("Bedeutungssuche", "Meaning search"),
               "nachsortieren": ("Nachsortieren", "Re-ranking"), "auslassen": ("Ordner auslassen", "Leaving out folders"),
               "loopwacht": ("Hänge-Wächter", "Stall watch"), "aufraeumen": ("Chat löschen", "Deleting a chat"),
+              "halive": ("Home Assistant live", "Home Assistant live"),
               "weitere": ("Weitere Threads", "Other threads"), "uebrig": ("Kurze Programme und Rest", "Short programs and rest")}
 # the warnings: kind -> (computer, level)
 ARTEN = {"heiss": ("panel", "warn"), "drossel": ("panel", "warn"), "strom": ("panel", "bad"), "ram": ("panel", "bad"),

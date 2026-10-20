@@ -23,6 +23,7 @@ import recall  # noqa: E402
 import senden  # noqa: E402
 import tidy  # noqa: E402
 import wiki  # noqa: E402
+import vorrat  # noqa: E402
 import chat  # noqa: E402  (constants and helpers; imported fully before any call)
 import dienstwacht  # noqa: E402
 
@@ -317,7 +318,7 @@ async def run(t, name, args, st):
         now = datetime.datetime.now(zone)
         await t.out.put({"type": "goto", "to": "cal", "day": day.isoformat()})   # Karte „Im Kalender ansehen“ (chat.js)
         return ("\n".join(calendars.line(x, now) for x in evs) or "No appointments in this period. Say so; do not guess any.") \
-            + "".join(f"\nCalendar '{n}' could not be read: {e}" for n, e in errors)
+            + "".join(f"\nCalendar '{n}' could not be read: {e}" for n, e in errors) + vorrat.stand("calendar")
     if name == "calendar_add" and t.cal_write:
         try:
             item = chat.appointment(args, t.body.get("tz"))

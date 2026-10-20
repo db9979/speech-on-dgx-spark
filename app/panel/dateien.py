@@ -87,6 +87,10 @@ DATEIEN = [
     profil("mail-vorrat.bin", "Mail-Vorrat: die neuesten Kopfzeilen (300 je Postfach, 30 Tage) und bis zu 40 Mailtexte ohne Anhänge",
            "Mail supply: the newest headers (300 per mailbox, 30 days) and up to 40 mail texts without attachments", art="Mails",
            schutz=("versiegelt", "sealed")),  # mailvorrat.py
+    profil("wetter-vorrat.bin", "Wetter-Vorrat: die letzte Vorhersage für den eigenen Ort", "Weather supply: the last forecast for the own place",
+           art="Zustand", schutz=("versiegelt", "sealed")),  # weather.SUPPLY
+    profil("pakete-vorrat.bin", "Paket-Vorrat: die zuletzt aus den Mails gelesenen Sendungen", "Parcel supply: the parcels last read from the mails",
+           art="Mails", schutz=("versiegelt", "sealed")),  # parcels.SUPPLY
     profil("mail-tidy.json", "Posteingang aufräumen", "Inbox tidy", art="Einstellungen"),
     profil("fuerdich-vorrat.bin", "Für dich: die letzte Lesung je Postfach (gefundene Einträge mit Absender, Betreff und Zeit, kein Mailtext)",
            "For you: the last reading per mailbox (found entries with sender, subject and time, no mail text)", art="Mails",

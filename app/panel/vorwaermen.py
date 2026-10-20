@@ -1,8 +1,9 @@
 """Vorwärmen (Dominik 2026-10-19 „1a 2b 3a 4a 5a 6a 7a 9“, stage A): when a profile signs in, or the panel or its app
-opens (GET /api/whoami with a profile), its calendars (this and the next month), its mail listing with the newest
-messages, „Für dich“ and its address book are read into the caches of their own modules in the background, so the
-pages, Heute and the assistant answer at once. From then on calendars.keep_fresh and mail.keep_fresh keep them fresh
-(every 5 minutes, for profiles active in the last day).
+opens (GET /api/whoami with a profile), or one of its devices says it is in use (zustellung.seen), its calendars (this
+and the next month), its mail listing with the newest messages, „Für dich“, its address book, the weather at home and
+its parcels are read into the caches of their own modules in the background, so the pages, Heute and the assistant
+answer at once. From then on vorrat.loop (calendars, weather, parcels, Für dich) and mail.keep_fresh keep them fresh
+for profiles active in the last day.
 
 - Only what the profile may use now (features.allowed), never for guests; only reading, nothing is changed.
 - A profile at most every WARM_AGAIN seconds; at most AT_ONCE profiles at the same time; each step waits while
@@ -89,6 +90,13 @@ def _steps(uid):
     import contacts
     if contacts.usable(uid):
         out.append(("contacts", lambda: asyncio.to_thread(contacts.cards, uid)))
+    import weather   # Vorrat je Profil (vorrat.py): weather at home and parcels too, so the first question finds them
+    if weather.usable(uid):
+        w = weather.get(uid)
+        out.append(("weather", lambda: weather.forecast(w["lat"], w["lon"], 7, uid)))
+    import parcels
+    if parcels.usable(uid):
+        out.append(("parcels", lambda: asyncio.to_thread(parcels.scan, uid)))
     return out
 
 

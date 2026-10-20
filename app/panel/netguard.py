@@ -157,6 +157,7 @@ DIRECT_OK = {
     "wyoming": ("lokal", "eigene Sprachdienste auf localhost"),
     "telefon": ("geprueft", "SIP und Ton (UDP) nur mit der Telefonanlage nach resolve() im Heimnetz und der Ton-Adresse aus ihrem SDP"),
     "zertpin": ("geprueft", "Zertifikat lesen nach resolve()"),
+    "halive": ("geprueft", "WebSocket zum eigenen Home Assistant nach resolve() mit Heimnetz-Regeln (HOME), nur lesen"),
     "asr_proxy": ("lokal", "Spracherkennung: Proxy zur Engine auf localhost"),
     "tts_proxy": ("lokal", "Sprachausgabe: Proxy zur Engine auf localhost"),
     "bench": ("lokal", "Messung der eigenen Dienste auf localhost (Kommandozeile)"),

@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.879** Vorrat je Profil: der Assistent nimmt Kalender, Mail, Wetter und Pakete aus dem Speicher, solange frisch genug, bei langsamem Dienst nach höchstens 2 s den älteren Stand mit Uhrzeit, „schau nochmal nach“ fragt neu; eine Runde je Minute hält aktive Profile frisch, Tagesbriefing 10 min vorher geschrieben, Wetter und Pakete versiegelt auf der Platte, Home Assistant live über WebSocket; Zustand → Prüfen je Dienst; ohne Schalter
 - **V01.0.878** Update sperrt sofort beim Klick: Sicherung, Laden, Prüfen, Modell-Rechner und Neustart als Schritte im selben Fenster auf allen Geräten; jedes frühe Ende löst die Sperre und nennt den Grund
 - **V01.0.877** Für dich aus dem Vorrat: die letzte Lesung je Postfach bleibt versiegelt im Profil, nach einem Neustart sofort da; antwortet ein Postfach nicht, kommen seine Einträge mit „Stand hh:mm“ im Tab, beim Vorlesen und unter Heute
 - **V01.0.876** Alles Offene im Assistenten (Stufe 2): Vorschläge des Assistenten (neuer Termin, verschieben, löschen, Mail per Sprache, Aufräumen, Entwurf) als Karte „Wartet auf dein Ja“ unter der Antwort und unter Offen, mit „Eintragen“/„Senden“ (dasselbe wie ein getipptes Ja), „Ändern …“ (Formular oder Schreibfenster, ausgefüllt) und „Abbrechen“; auch vom Lautsprecher am Handy bestätigen; iPhone
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.872** E-Mail: Mail-Vorrat, der Spark hält die neuesten Kopfzeilen und Mailtexte versiegelt im Profil; nach einem Neustart steht die Liste sofort da, und antwortet ein Postfach nicht, antwortet der Assistent mit dem gehaltenen Stand und der Uhrzeit statt „nicht erreichbar“; eine Liste bis 10 Minuten nimmt er so, sonst wartet er höchstens 2 Sekunden
 - **V01.0.871** CarPlay stabil: das Sprechfenster geht der Reihe nach auf und zu, jede Zeile tut etwas oder sagt „Spark nicht erreichbar“, nach einem Gespräch sind Radio und Musik wieder normal laut, „Danke“ beendet, „Letzte Antwort wiederholen“, kein Weckwort im Auto, CarPlay-Schritte im Ton-Protokoll
 - **V01.0.870** Fix Für dich vorlesen: „Antwort offen“ sagt klar, wer auf wen wartet, jeder Eintrag nennt seine Mail (Absender, Tag, Betreff), beim ersten Lesen kommt „lese noch“ oder die letzte Lesung statt „Postfach nicht erreichbar“
-- **V01.0.869** Besprechung aus dem Spark-Begleiter: ausgewählte Aufgaben kommen mit „Ausgewählte auf die Liste“ auf eine Liste (Standard „Aufgaben“, wählbar) mit dem Datum aus „bis“ und der Quelle „aus Besprechung“, auch im iPhone und in Erinnerungen; „Als Erinnerung“ bleibt. Erinnerungen unter dem Gesicht sind nicht mehr links und rechts abgeschnitten, die Zusammenfassung landet auf dem reMarkable unter „Besprechungen“ statt „Antworten“
 
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)

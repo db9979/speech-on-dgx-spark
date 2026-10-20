@@ -20,6 +20,7 @@ unused ones expire after 90 days, deleting one cuts it off at once. At most logs
 """
 import contextlib
 import contextvars
+import functools
 import hashlib
 import hmac
 import ipaddress
@@ -1357,6 +1358,16 @@ def snapshot(view="admin", now=None):
     except Exception:
         warm = {"profiles": 0}
     try:
+        import vorrat
+        vsub = functools.partial(vorrat.live_sub, live=vorrat.for_live())
+        vround = vorrat.rounds_live()
+        vkept = vorrat.supply_live()
+        import halive
+        halv = halive.for_live()
+    except Exception:
+        vsub = lambda d: ""   # noqa: E731
+        vround, halv, vkept = {}, {}, {}
+    try:
         import antwortvorschlag
         avs = antwortvorschlag.for_live()
     except Exception:
@@ -1538,6 +1549,14 @@ def snapshot(view="admin", now=None):
                          f" {offen['warten']} Vorschläge warten auf ein Ja, heute {offen['ja']} per Knopf bestätigt")
         if x["id"] in ("cal", "mail") and warm.get("profiles"):   # Vorwärmen: how many profiles, how long ago (no name)
             x["sub"] += f" · {warm['profiles']} Profile vorgewärmt, zuletzt vor {warm['ago']} min"
+        if x["id"] in ("cal", "mail", "weather", "parcels"):   # Vorrat je Profil: today's share from the store (numbers)
+            x["sub"] += vsub({"cal": "calendar"}.get(x["id"], x["id"]))
+        if vkept.get(x["id"]):   # Vorrat je Profil 3b: profiles whose last weather/parcels reading is kept sealed
+            x["sub"] += f" · versiegelt bei {vkept[x['id']]} Profilen"
+        if x["id"] == "cal" and vround.get("rounds"):   # Vorrat je Profil: one round for all services (numbers)
+            x["sub"] += f" · Vorrat: heute {vround['rounds']} Runden, {vround['refreshed']} Dienste aufgefrischt"
+        if x["id"] == "ha" and halv.get("open"):   # Home Assistant live: connections and state changes today (numbers)
+            x["sub"] += f" · live: {halv['open']} Verbindungen, heute {halv['changes']} Änderungen"
         if x["id"] == "nasquelle" and nql.get("on"):   # Wissensordner: folders, documents, failing (no path, no name)
             x["sub"] = (f"{nql.get('folders', 0)} Ordner · {nql.get('profiles', 0)} Profile · {nql.get('docs', 0)} Dokumente"
                         + (f" · {nql['bad']} mit Fehler" if nql.get("bad") else "")

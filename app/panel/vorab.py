@@ -87,7 +87,7 @@ async def _job(group, turn):
         import weather
         w = weather.get(uid)
         if w:
-            await weather.forecast(w["lat"], w["lon"], 7)
+            await weather.forecast(w["lat"], w["lon"], 7, uid)
     elif group == "paket":
         import parcels
         await asyncio.to_thread(parcels.scan, uid)

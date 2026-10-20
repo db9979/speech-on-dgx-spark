@@ -65,7 +65,7 @@ class Fake:
             self.got.append(("kalender", uid, (end - start).days))
             return [], []
 
-        async def forecast(lat, lon, days=7):
+        async def forecast(lat, lon, days=7, uid=None):
             self.got.append(("wetter", lat))
             return {}
         calendars.events = events

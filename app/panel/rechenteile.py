@@ -16,7 +16,7 @@ import time
 
 ANFRAGEN = "anfragen"
 # fixed thread names of the panel -> part
-THREADS = {"auslassen": "auslassen", "loopwacht": "loopwacht", "chats-drop": "aufraeumen"}
+THREADS = {"auslassen": "auslassen", "loopwacht": "loopwacht", "chats-drop": "aufraeumen", "ha-live": "halive"}
 # thread names of asyncio.to_thread, ThreadPoolExecutor and AnyIO: work for a request or a page
 HELFER = ("asyncio_", "ThreadPoolExecutor", "AnyIO worker")
 # the panel's own worker processes: module -> part

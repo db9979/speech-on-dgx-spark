@@ -58,7 +58,7 @@ Vor jedem Commit durchgehen. In der Antwort an Dominik kurz nennen, welche Punkt
 
 ## Geheimnisse und Logs
 - [ ] Geheimnisse liegen nur im vault und werden nach dem Speichern nie zurückgegeben.
-- [ ] Was ein Dienst für ein Profil vorhält (Mail-Vorrat), liegt nur über `vorrat.Vorrat` im Profilordner: versiegelt mit AES-GCM, an Profil und Namen gebunden, ohne Schlüssel gar nicht auf der Platte, begrenzt (Mail: 300 Kopfzeilen je Postfach, 40 Texte ohne Anhänge und HTML) und mit Löschfrist (14 Tage ungenutzt, mit Postfach und Profil).
+- [ ] Was ein Dienst für ein Profil vorhält (Mail-Vorrat, Wetter am eigenen Ort, Pakete), liegt nur über `vorrat.Vorrat` im Profilordner: versiegelt mit AES-GCM, an Profil und Namen gebunden, ohne Schlüssel gar nicht auf der Platte, begrenzt (Mail: 300 Kopfzeilen je Postfach, 40 Texte ohne Anhänge und HTML) und mit Löschfrist (14 Tage ungenutzt, mit Postfach und Profil).
 - [ ] Logs und Fehlertexte enthalten keine Tokens. Bot-Tokens und Schlüssel werden geschwärzt, also nicht `str(e)` von httpx mit Token in der URL ausgeben.
 - [ ] `/health` und ähnliche offene Seiten zeigen nur einen Status, keine Fehlertexte und keine Namen.
 - [ ] Das Änderungsprotokoll schreibt nur `guard.log` (Prüfkette); nichts schreibt, kürzt oder löscht `audit.log` anders.

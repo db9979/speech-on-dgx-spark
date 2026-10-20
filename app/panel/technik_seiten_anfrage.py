@@ -509,12 +509,12 @@ SEITEN = {
         "heute": [],
     },
     "antwort": {
-        "stand": "a6eb059dcb",
+        "stand": "25182bf158",
         "bezug": {
             "chat.MAX_SAVES": ["s11"], "chat.LOOP_SAME": ["s11"], "chat._answer": ["s4", "s5", "s11"], "chat_modell.model_turn": ["s4", "s11"], "chat_ton.speech_out": ["s8"],
             "chat.split_sentences": ["s5"], "chat.said_key": ["s8"], "chat.no_code": ["s8"],
             "chat.loop_count": ["s11"], "answercheck.known": ["s6"], "answercheck.unsupported": ["s6"],
-            "answercheck.fresh": ["s6"], "taten.announces": ["s7", "s12"],
+            "answercheck.fresh": ["s6"], "taten.announces": ["s7", "s12"], "vorrat.WAIT": ["s11"],
         },
         "kurz": ("Hier entsteht die Antwort: Das Panel fragt das Sprachmodell in Runden, lässt angebotene Werkzeuge "
                  "laufen, prüft jeden fertigen Satz mit festen Regeln und schickt Text und Ton als einen Strom ans Gerät. "
@@ -637,11 +637,19 @@ SEITEN = {
               ("Halbe Worte vor dem Aufruf werden zurückgenommen, ein fertiger Satz bleibt. Jeder Aufruf geht über "
                "chat_tools.run; das Ergebnis kommt als Werkzeug-Nachricht zurück. Scheitert ein Werkzeug zweimal "
                "gleich, wird es für diese Antwort gestoppt. Hatte keine Regel die Frage erkannt, zählt die Weiche "
-               "die Gruppe des ersten Werkzeugs und das feste Hinweiswort (weiche.learn), nie ein Wort der Frage.",
+               "die Gruppe des ersten Werkzeugs und das feste Hinweiswort (weiche.learn), nie ein Wort der Frage. "
+               "Lesende Werkzeuge (Kalender, Wetter, Pakete) nehmen ihre Daten aus dem Speicher ihres Dienstes, solange "
+               "sie frisch genug sind (Vorrat je Profil, vorrat.take); ein älterer Stand wartet höchstens {vorrat.WAIT} s "
+               "auf den Server und kommt sonst mit „Stand hh:mm“, „schau nochmal nach“ fragt immer den Server. Jede "
+               "Antwort hält fest, wie lange die Werkzeuge warteten und woher jeder Dienst kam (latency, Zustand → Prüfen).",
                "Half words before the call are taken back, a finished sentence stays. Every call goes through "
                "chat_tools.run; the result comes back as a tool message. A tool that fails twice the same way is "
                "stopped for this answer. When no rule recognized the question, the switch counts the group of the "
-               "first tool and the fixed hint word (weiche.learn), never a word of the question."),
+               "first tool and the fixed hint word (weiche.learn), never a word of the question. Reading tools (calendar, "
+               "weather, parcels) take their data from their service's memory while it is fresh enough (Vorrat je "
+               "Profil, vorrat.take); an older reading waits at most {vorrat.WAIT} s for the server and otherwise comes "
+               "with „as of hh:mm“, „look again“ always asks the server. Every answer keeps how long the tools waited "
+               "and where each service came from (latency, Status → Checks)."),
               ("zurueck", ("nächste Runde", "next round"), "s4")),
             S("s12", "schritt", ("Ehrliche Schlusssätze", "Honest closing sentences"),
               ("feste Sätze statt der weggelassenen", "fixed sentences instead of the dropped ones"),
@@ -696,6 +704,8 @@ SEITEN = {
         "zahlen": [
             ("{chat.MAX_CALLS}", ("Werkzeugaufrufe pro Runde, mehr laufen nicht", "tool calls per round, more do not run"), "chat.MAX_CALLS"),
             ("{chat.MAX_SAVES}", ("Gedächtnis-Notizen pro Antwort", "memory notes per answer"), "chat.MAX_SAVES"),
+            ("{vorrat.WAIT} s", ("wartet ein Werkzeug höchstens auf den Server, wenn ein älterer Stand da ist",
+                                 "a tool waits at most for the server when an older reading is at hand"), "vorrat.WAIT"),
             ("{chat.LOOP_SAME}", ("gleiche Fehler, bis ein Werkzeug stoppt (oder {chat.LOOP_ANY} beliebige)",
                                   "same failures until a tool stops (or {chat.LOOP_ANY} of any kind)"), "chat.LOOP_SAME"),
             ("{chat.FIRST_CUT}", ("Zeichen, ab denen der erste Satz am Komma losgeht", "characters after which the first sentence goes at a comma"), "chat.FIRST_CUT"),
@@ -747,7 +757,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Werkzeuge (chat_tools.run)
     "werkzeuge": {
-        "stand": "5f427fcfdd",
+        "stand": "02aae99b69",
         "bezug": {
             "chat.LOCKED_OUTSIDE": ["s4"], "notaus.INTERNET_TOOLS": ["s3"], "werkzeuge.NAMES": ["s11"],
             "chat_tools.run": ["s2", "s7"], "chat.wrap_outside": ["s9"], "chat.LOCKED_MAIL": ["s4"],
@@ -822,10 +832,12 @@ SEITEN = {
               ("Erweiterung oder eingebautes Werkzeug", "extension or built-in tool"),
               ("Erweiterungen bekommen Profil, Gerät und Herkunft vom Panel, nie vom Modell. Smart-Home-Änderungen "
                "brauchen das Codewort in der letzten Nachricht, wenn eines eingestellt ist. Verbindungen zu Diensten "
-               "draußen gehen über den Wächter.",
+               "draußen gehen über den Wächter. Home Assistant liest Zustände aus der Kopie der Live-Verbindung "
+               "(halive.states), solange sie für genau diese Adresse und diesen Schlüssel steht, sonst über HTTP.",
                "Extensions get profile, device and origin from the panel, never from the model. Smart home changes need "
                "the code word in the latest message when one is set. Connections to outside services go through the "
-               "guard.")),
+               "guard. Home Assistant reads states from the live connection's copy (halive.states) while it stands for "
+               "exactly this address and key, else over HTTP.")),
             S("s8", "schritt", ("Fehler als Satz", "Errors as a sentence"),
               ("„nicht erreichbar“, nie raten", "„not reachable“, never guess"),
               ("Ist ein Dienst nicht erreichbar, wird daraus ein kurzer Ergebnis-Text („nicht erreichbar“, „Suche "

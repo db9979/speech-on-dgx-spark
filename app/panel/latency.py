@@ -9,6 +9,10 @@ Since plan genauer-und-schneller (1) each answer also keeps, as fixed words and 
 the number of tools offered, the model rounds, the share the model read from its cache, the seconds to its first
 character and to the end, and the version. Zustand → Prüfen then shows the last 7 days per group and the last versions
 side by side, so every change can be judged by its numbers.
+
+Since plan vorrat-je-profil (1) also the seconds the tools took ("w") and, per service, whether its data came from the
+memory of the service, as an older reading, or after waiting for the server ("s", vorrat.seen); Zustand → Prüfen
+shows that per service (by_service).
 """
 import json
 import os
@@ -66,7 +70,8 @@ MEASURE = {"g": lambda v: isinstance(v, str) and re.fullmatch(r"[a-z_@]{1,24}(?:
            "n": lambda v: isinstance(v, int) and not isinstance(v, bool) and 0 <= v <= 500,
            "r": lambda v: isinstance(v, int) and not isinstance(v, bool) and 0 <= v <= 20,
            "h": lambda v: isinstance(v, int) and not isinstance(v, bool) and 0 <= v <= 100,
-           "f": _SECS, "e": _SECS,
+           "f": _SECS, "e": _SECS, "w": _SECS,
+           "s": lambda v: isinstance(v, str) and re.fullmatch(r"[a-z]{3,12}:(?:warm|alt|kalt)(?:\+[a-z]{3,12}:(?:warm|alt|kalt)){0,7}", v),
            "v": lambda v: isinstance(v, str) and re.fullmatch(r"V\d{2}\.\d\.\d{3,4}", v)}
 
 
@@ -102,8 +107,28 @@ def by_group(items, now, days=7):
         s = _stats([x["a"] for x in xs])
         out.append(dict(s, group=g, first=_med([x["f"] for x in xs if "f" in x]), end=_med([x["e"] for x in xs if "e" in x]),
                         cache=_med([x["h"] for x in xs if "h" in x]), tools=_med([x["n"] for x in xs if "n" in x]),
-                        rounds=_med([x["r"] for x in xs if "r" in x])))
+                        rounds=_med([x["r"] for x in xs if "r" in x]), wait=_med([x["w"] for x in xs if "w" in x])))
     return sorted(out, key=lambda r: -r["median"])[:20]
+
+
+def by_service(items, now, days=7):
+    """Per service of the last days (vorrat.py): answers that used it, how many took it from the store, an older
+    reading or waited, the share from the store, and the median seconds the tools took in those answers."""
+    rows = {}
+    for x in items:
+        if x["t"] > now - days * DAY and x.get("s"):
+            for part in x["s"].split("+"):
+                d, _, kind = part.partition(":")
+                r = rows.setdefault(d, {"warm": 0, "alt": 0, "kalt": 0, "w": []})
+                r[kind] = r.get(kind, 0) + 1
+                if "w" in x:
+                    r["w"].append(x["w"])
+    out = []
+    for d, r in rows.items():
+        n = r["warm"] + r["alt"] + r["kalt"]
+        out.append({"service": d, "n": n, "warm": r["warm"], "alt": r["alt"], "kalt": r["kalt"],
+                    "share": round(100 * (r["warm"] + r["alt"]) / n) if n else 0, "wait": _med(r["w"])})
+    return sorted(out, key=lambda r: -r["n"])
 
 
 def by_version(items, last=4):
@@ -161,7 +186,7 @@ def _summary(now):
         if now - DAY < x["t"] <= now:
             hours[23 - min(23, int((now - x["t"]) // 3600))] += 1
     res = {"day": _stats(day), "week": _stats(week), "ack": _stats(acks), "warn": None, "hours": hours,
-           "groups": by_group(items, now), "versions": by_version(items)}
+           "groups": by_group(items, now), "versions": by_version(items), "services": by_service(items, now)}
     d, w = res["day"], res["week"]
     # clearly slower: at least 10 answers today, median more than 1.5 times and 1.5 s above the week's
     if d and w and d["n"] >= 10 and w["n"] >= 10 and d["median"] > 1.5 * w["median"] and d["median"] > w["median"] + 1.5:

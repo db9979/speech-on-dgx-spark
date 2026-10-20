@@ -1957,7 +1957,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ell wird einmal neu gefragt, mit dem Hinweis, zuerst das Werkzeug zu nutzen. 10. Werkzeug gewünscht?: Hat das Modell keinen Werkzeugaufruf geschrieben oder ist die Länge erreicht, ist die Antwort fertig. Bei erreichter Länge wird bis zum letzten Satzende gesprochen, der Rest fällt weg. 11. Werkzeuge ausführen: Halbe Worte vor dem Aufruf werden zurückgenommen, ein fertiger Satz bleibt. Jeder Aufruf geht über chat_tools.run; das Ergebnis kommt als Werkzeug-Nachricht zurück. Scheitert ein Werkzeug zweimal gleich, wird es für diese Antwort gestoppt. Hatte keine Regel die Frage erkannt, zählt die Weiche die Gruppe des ersten Werkzeugs und das feste Hinweiswort (weiche.learn), nie ein Wort der Frage. 12. Ehrliche Schlusssätze: Fiel ein Satz wegen einer Zahl weg, sagt das Panel „Genauere Angaben dazu habe ich nicht.“; fiel eine Tat weg, einen festen Satz aus taten.sentence. Beide Sätze kommen vom Panel, nie vom Modell. Antwortet das Sprachmodell nicht, weil es gerade wechselt, neu startet oder gemessen wird, sagt das Panel das mit der erwarteten Zeit (llmstart.satz, auch in der Wartungspause eines Wechsels). 13. Nachfragen des Panels: Nur wenn nichts Fremdes gelesen wurde: eine gelernte K"
+"text": "ell wird einmal neu gefragt, mit dem Hinweis, zuerst das Werkzeug zu nutzen. 10. Werkzeug gewünscht?: Hat das Modell keinen Werkzeugaufruf geschrieben oder ist die Länge erreicht, ist die Antwort fertig. Bei erreichter Länge wird bis zum letzten Satzende gesprochen, der Rest fällt weg. 11. Werkzeuge ausführen: Halbe Worte vor dem Aufruf werden zurückgenommen, ein fertiger Satz bleibt. Jeder Aufruf geht über chat_tools.run; das Ergebnis kommt als Werkzeug-Nachricht zurück. Scheitert ein Werkzeug zweimal gleich, wird es für diese Antwort gestoppt. Hatte keine Regel die Frage erkannt, zählt die Weiche die Gruppe des ersten Werkzeugs und das feste Hinweiswort (weiche.learn), nie ein Wort der Frage. Lesende Werkzeuge (Kalender, Wetter, Pakete) nehmen ihre Daten aus dem Speicher ihres Dienstes, solange sie frisch genug sind (Vorrat je Profil, vorrat.take); ein älterer Stand wartet höchstens 2.0 s auf den Server und kommt sonst mit „Stand hh:mm“, „schau nochmal nach“ fragt immer den Server. Jede Antwort hält fest, wie lange die Werkzeuge warteten und woher jeder Dienst kam (latency, Zustand → Prüfen). 12. Ehrliche Schlusssätze: Fiel ein Satz wegen einer Zahl weg, sagt das Panel „Genauere "
 },
 {
 "lang": "de",
@@ -1965,7 +1965,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "orrektur zum Merken anbieten oder ein Fakt aus dem Gedächtnis nachfragen (nach festen Regeln). Danach legt das Panel die Antwort aufs reMarkable, wenn gewünscht; bietet die Antwort selbst an, sich dort hinzulegen, wartet sie auf ein „Ja“ (remarkable.propose). Es holt bei einer Rückfrage schon vorab. Ist „Das kannst du auch sagen“ an, hängt das Panel feste Beispielsätze an (saetze.row, am Bildschirm als Zeile vor dem Ende; saetze.spoken, beim Sprechen höchstens ein Satz am Tag). Das Werkzeug-Log des Profils wird geschrieben. 14. Strom endet: Der Anfrage-Verlauf wird abgeschlossen, Fälle und die Prüfung im Hintergrund laufen erst nach dem Sprechen. Bricht das Gerät ab (Unterbrechen), stoppen Modell und Sprachausgabe sofort. Stützt sich die Antwort auf mindestens zwei eigene Dokumente oder Kiwix-Artikel, merkt wissensbuch.keep_offer sie und das Gerät zeigt „Ins Wissensbuch“; nur der Klick des Besitzers legt sie ab."
+"text": "Angaben dazu habe ich nicht.“; fiel eine Tat weg, einen festen Satz aus taten.sentence. Beide Sätze kommen vom Panel, nie vom Modell. Antwortet das Sprachmodell nicht, weil es gerade wechselt, neu startet oder gemessen wird, sagt das Panel das mit der erwarteten Zeit (llmstart.satz, auch in der Wartungspause eines Wechsels). 13. Nachfragen des Panels: Nur wenn nichts Fremdes gelesen wurde: eine gelernte Korrektur zum Merken anbieten oder ein Fakt aus dem Gedächtnis nachfragen (nach festen Regeln). Danach legt das Panel die Antwort aufs reMarkable, wenn gewünscht; bietet die Antwort selbst an, sich dort hinzulegen, wartet sie auf ein „Ja“ (remarkable.propose). Es holt bei einer Rückfrage schon vorab. Ist „Das kannst du auch sagen“ an, hängt das Panel feste Beispielsätze an (saetze.row, am Bildschirm als Zeile vor dem Ende; saetze.spoken, beim Sprechen höchstens ein Satz am Tag). Das Werkzeug-Log des Profils wird geschrieben. 14. Strom endet: Der Anfrage-Verlauf wird abgeschlossen, Fälle und die Prüfung im Hintergrund laufen erst nach dem Sprechen. Bricht das Gerät ab (Unterbrechen), stoppen Modell und Sprachausgabe sofort. Stützt sich die Antwort auf mindestens zwei eigene Dokumente"
 },
 {
 "lang": "de",
@@ -1981,7 +1981,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 4 Werkzeugaufrufe pro Runde, mehr laufen nicht (Schritt 11) - 3 Gedächtnis-Notizen pro Antwort (Schritt 11) - 2 gleiche Fehler, bis ein Werkzeug stoppt (oder 3 beliebige) (Schritt 11) - 50 Zeichen, ab denen der erste Satz am Komma losgeht (Schritt 5)"
+"text": "- 4 Werkzeugaufrufe pro Runde, mehr laufen nicht (Schritt 11) - 3 Gedächtnis-Notizen pro Antwort (Schritt 11) - 2.0 s wartet ein Werkzeug höchstens auf den Server, wenn ein älterer Stand da ist (Schritt 11) - 2 gleiche Fehler, bis ein Werkzeug stoppt (oder 3 beliebige) (Schritt 11) - 50 Zeichen, ab denen der erste Satz am Komma losgeht (Schritt 5)"
 },
 {
 "lang": "de",
@@ -2053,7 +2053,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": " dafür ist an), kommt sofort ein fester Satz mit der Uhrzeit des Ausfalls statt eines Versuchs. Die Websuche fragt erst unten und kann dann aufs eigene Archiv ausweichen. 6. Lesen markieren: Werkzeuge, die fremden Text bringen (Websuche, Dokumente, Kalender, frühere Gespräche, Kamera), setzen die Marke schon vor dem Lauf. Ab dann sind die Sperren aus Schritt 4 für den Rest der Antwort aktiv. document_search bringt mit dem Wissensbuch zuerst die passende Seite, dann die Stellen; beides ist fremder Text. 7. Werkzeug ausführen: Erweiterungen bekommen Profil, Gerät und Herkunft vom Panel, nie vom Modell. Smart-Home-Änderungen brauchen das Codewort in der letzten Nachricht, wenn eines eingestellt ist. Verbindungen zu Diensten draußen gehen über den Wächter. 8. Fehler als Satz: Ist ein Dienst nicht erreichbar, wird daraus ein kurzer Ergebnis-Text („nicht erreichbar“, „Suche fehlgeschlagen, nicht raten“). Ein angebotenes Werkzeug ohne passende Einrichtung meldet „unbekannt“. 9. Ergebnis als Daten einpacken: Fremder Text bekommt einen festen Hinweis davor und steht zwischen Markierungen, die er selbst nicht schließen kann. Zustände aus Home Assistant mit freiem Text (Titel, Listen) zählen "
+"text": " dafür ist an), kommt sofort ein fester Satz mit der Uhrzeit des Ausfalls statt eines Versuchs. Die Websuche fragt erst unten und kann dann aufs eigene Archiv ausweichen. 6. Lesen markieren: Werkzeuge, die fremden Text bringen (Websuche, Dokumente, Kalender, frühere Gespräche, Kamera), setzen die Marke schon vor dem Lauf. Ab dann sind die Sperren aus Schritt 4 für den Rest der Antwort aktiv. document_search bringt mit dem Wissensbuch zuerst die passende Seite, dann die Stellen; beides ist fremder Text. 7. Werkzeug ausführen: Erweiterungen bekommen Profil, Gerät und Herkunft vom Panel, nie vom Modell. Smart-Home-Änderungen brauchen das Codewort in der letzten Nachricht, wenn eines eingestellt ist. Verbindungen zu Diensten draußen gehen über den Wächter. Home Assistant liest Zustände aus der Kopie der Live-Verbindung (halive.states), solange sie für genau diese Adresse und diesen Schlüssel steht, sonst über HTTP. 8. Fehler als Satz: Ist ein Dienst nicht erreichbar, wird daraus ein kurzer Ergebnis-Text („nicht erreichbar“, „Suche fehlgeschlagen, nicht raten“). Ein angebotenes Werkzeug ohne passende Einrichtung meldet „unbekannt“. 9. Ergebnis als Daten einpacken: Fremder Text bekommt e"
 },
 {
 "lang": "de",
@@ -2061,7 +2061,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "auch als fremd. Mit „Schnellere Websuche“ steht der lange Hinweis einmal je Antwort, vor jedem weiteren Block ein kurzer mit derselben Regel (chat.OUTSIDE_AGAIN); die Markierungen bleiben immer. 10. Gerät markiert die Antwort: Das Gerät erfährt, dass die Antwort auf fremdem Text beruht. Solche Antworten gehen später nicht noch einmal ans Modell. 11. Festhalten: Die Log-Zeile nennt den Namen nur, wenn er angeboten war, sonst „unbekannt“. Was eine Tat war, merkt sich taten für die Handlungs-Prüfung. Menschen sehen die verständlichen Namen aus werkzeuge.py. 12. Zweimal gescheitert?: Scheitert ein Werkzeug 2 Mal mit denselben Angaben oder 3 Mal überhaupt, wird es für diese Antwort gestoppt und das Modell hört, dass es ehrlich sagen soll, was nicht ging. 13. Ergebnis zurück ans Modell: Das Modell bekommt das Ergebnis in der nächsten Runde als Daten. Was es daraus sagt, prüft wieder die Antwort (Antwort-Prüfung, Taten prüfen)."
+"text": "inen festen Hinweis davor und steht zwischen Markierungen, die er selbst nicht schließen kann. Zustände aus Home Assistant mit freiem Text (Titel, Listen) zählen auch als fremd. Mit „Schnellere Websuche“ steht der lange Hinweis einmal je Antwort, vor jedem weiteren Block ein kurzer mit derselben Regel (chat.OUTSIDE_AGAIN); die Markierungen bleiben immer. 10. Gerät markiert die Antwort: Das Gerät erfährt, dass die Antwort auf fremdem Text beruht. Solche Antworten gehen später nicht noch einmal ans Modell. 11. Festhalten: Die Log-Zeile nennt den Namen nur, wenn er angeboten war, sonst „unbekannt“. Was eine Tat war, merkt sich taten für die Handlungs-Prüfung. Menschen sehen die verständlichen Namen aus werkzeuge.py. 12. Zweimal gescheitert?: Scheitert ein Werkzeug 2 Mal mit denselben Angaben oder 3 Mal überhaupt, wird es für diese Antwort gestoppt und das Modell hört, dass es ehrlich sagen soll, was nicht ging. 13. Ergebnis zurück ans Modell: Das Modell bekommt das Ergebnis in der nächsten Runde als Daten. Was es daraus sagt, prüft wieder die Antwort (Antwort-Prüfung, Taten prüfen)."
 },
 {
 "lang": "de",
@@ -2261,7 +2261,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "1. Werkzeug will nach außen: Alles, was eine Adresse aus Einstellungen oder aus fremdem Text ansteuert, holt sich seinen Zugang über netguard.client mit einer Stufe (heute 31 Module). Feste eigene Dienste wie das Sprachmodell laufen direkt; welche das sind und warum, steht in netguard.DIRECT_OK, ein Selbsttest hält die Liste vollständig. 2. Name einmal auflösen: resolve() fragt den Namen genau einmal ab. Hat er mehrere Adressen, muss jede erlaubt sein, sonst ist Schluss. 3. Eigener Dienst?: Die Ports der eigenen Dienste sind auf dieser Maschine gesperrt: auf Loopback und auf jeder eigenen Adresse im LAN oder VPN (own_addresses liest sie jede Minute neu). Laufen die Modelle auf einem anderen Rechner (models.host), gelten seine Adressen genauso (model_addresses). 4. Internet und Notaus an?: Ist die Adresse öffentlich und der Notaus mindestens auf Stufe 1, geht nichts ins Internet, egal welche Stufe das Werkzeug hat. Das Heimnetz bleibt erreichbar, wie die Stufe es erlaubt. 5. Öffentliche Adresse?: Eine öffentliche Adresse ist auf jeder Stufe erlaubt. 6. Stufe „nur Internet“?: Was aus Suchergebnissen oder Antworten kommt, darf nie ins Heimnetz (chat, feeds, geraeteupdate, ghtoken, mai"
+"text": "1. Werkzeug will nach außen: Alles, was eine Adresse aus Einstellungen oder aus fremdem Text ansteuert, holt sich seinen Zugang über netguard.client mit einer Stufe (heute 32 Module). Feste eigene Dienste wie das Sprachmodell laufen direkt; welche das sind und warum, steht in netguard.DIRECT_OK, ein Selbsttest hält die Liste vollständig. 2. Name einmal auflösen: resolve() fragt den Namen genau einmal ab. Hat er mehrere Adressen, muss jede erlaubt sein, sonst ist Schluss. 3. Eigener Dienst?: Die Ports der eigenen Dienste sind auf dieser Maschine gesperrt: auf Loopback und auf jeder eigenen Adresse im LAN oder VPN (own_addresses liest sie jede Minute neu). Laufen die Modelle auf einem anderen Rechner (models.host), gelten seine Adressen genauso (model_addresses). 4. Internet und Notaus an?: Ist die Adresse öffentlich und der Notaus mindestens auf Stufe 1, geht nichts ins Internet, egal welche Stufe das Werkzeug hat. Das Heimnetz bleibt erreichbar, wie die Stufe es erlaubt. 5. Öffentliche Adresse?: Eine öffentliche Adresse ist auf jeder Stufe erlaubt. 6. Stufe „nur Internet“?: Was aus Suchergebnissen oder Antworten kommt, darf nie ins Heimnetz (chat, feeds, geraeteupdate, ghtoken, mai"
 },
 {
 "lang": "de",
@@ -2869,7 +2869,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ush laufen direkt, ohne Wächter. Welche Module das dürfen und warum, steht in netguard.DIRECT_OK; ein Selbsttest meldet jedes Modul, das direkt verbindet und dort fehlt. 7. Stufe des Dienstes: Jedes Modul ruft den Wächter mit seiner festen Stufe: Home Assistant und Kiwix mit Heimnetz; Kalender, Kontakte, Aufgaben, Mail und MCP mit Nutzer; reMarkable und Seiten aus der Suche mit nur Internet. Die Stufe steht im Code, nicht in den Einstellungen. 8. Wächter erlaubt die Adresse?: Der Wächter löst den Namen einmal auf und prüft jede Adresse: keine eigenen Dienste, kein 169.254, Heimnetz nur auf Stufe Heimnetz oder mit Schalter, im Notaus kein Internet. Danach verbindet er genau mit der geprüften Adresse. 9. Anfrage an den Dienst: Das Panel öffnet den Zugang des Profils (Token, Passwort) erst jetzt und schickt ihn nur an die eingetragene Seite. Mail geht über IMAP mit TLS an die geprüfte Adresse. Mit „Schnellere Websuche“ hat jede Trefferseite höchstens 3 s, bringt die zur Frage passenden Stellen, und dieselbe Suche kommt 10 Minuten lang aus dem Arbeitsspeicher. 10. Antwort zu groß?: Über den Wächter wird jede Antwort an der Grenze des Moduls abgeschnitten, auch nach dem Entpacken. 11. E"
+"text": "ush laufen direkt, ohne Wächter. Welche Module das dürfen und warum, steht in netguard.DIRECT_OK; ein Selbsttest meldet jedes Modul, das direkt verbindet und dort fehlt. 7. Stufe des Dienstes: Jedes Modul ruft den Wächter mit seiner festen Stufe: Home Assistant und Kiwix mit Heimnetz; Kalender, Kontakte, Aufgaben, Mail und MCP mit Nutzer; reMarkable und Seiten aus der Suche mit nur Internet. Die Live-Verbindung zu Home Assistant (halive) prüft ihre Adresse ebenso mit Heimnetz. Die Stufe steht im Code, nicht in den Einstellungen. 8. Wächter erlaubt die Adresse?: Der Wächter löst den Namen einmal auf und prüft jede Adresse: keine eigenen Dienste, kein 169.254, Heimnetz nur auf Stufe Heimnetz oder mit Schalter, im Notaus kein Internet. Danach verbindet er genau mit der geprüften Adresse. 9. Anfrage an den Dienst: Das Panel öffnet den Zugang des Profils (Token, Passwort) erst jetzt und schickt ihn nur an die eingetragene Seite. Mail geht über IMAP mit TLS an die geprüfte Adresse. Mit „Schnellere Websuche“ hat jede Trefferseite höchstens 3 s, bringt die zur Frage passenden Stellen, und dieselbe Suche kommt 10 Minuten lang aus dem Arbeitsspeicher. 10. Antwort zu groß?: Über den Wächter w"
 },
 {
 "lang": "de",
@@ -2877,7 +2877,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "rgebnis für Mein Zustand und Live: Ob der Dienst geantwortet oder die Anmeldung abgelehnt hat, sieht das Profil unter Ich → Mein Zustand; die Live-Seite zählt, was der Wächter erlaubt oder gesperrt hat. Inhalte gehen nirgends hin. 12. Antwort als Daten ans Modell: Das Werkzeug gibt die Antwort als Daten zurück. Liest es fremden Text (Mail, Kalender, Archiv, Webseite, MCP im Lesemodus), gilt die Antwort ab jetzt als eine mit Text von außen; siehe Schritt 4."
+"text": "ird jede Antwort an der Grenze des Moduls abgeschnitten, auch nach dem Entpacken. 11. Ergebnis für Mein Zustand und Live: Ob der Dienst geantwortet oder die Anmeldung abgelehnt hat, sieht das Profil unter Ich → Mein Zustand; die Live-Seite zählt, was der Wächter erlaubt oder gesperrt hat. Inhalte gehen nirgends hin. 12. Antwort als Daten ans Modell: Das Werkzeug gibt die Antwort als Daten zurück. Liest es fremden Text (Mail, Kalender, Archiv, Webseite, MCP im Lesemodus), gilt die Antwort ab jetzt als eine mit Text von außen; siehe Schritt 4."
 },
 {
 "lang": "de",
@@ -5078,6 +5078,46 @@
 "head": "Sprach-Chat",
 "title": "Vorwärmen (V01.0.830, Dominik 2026-10-19 „1a 3a 4a 5a 7a 9“)",
 "text": "Vorwärmen (V01.0.830, Dominik 2026-10-19 „1a 3a 4a 5a 7a 9“): Meldet sich ein Profil an oder öffnet es das Panel oder die App, liest der Spark im Hintergrund vorab, was seine Seiten gleich brauchen: die Termine dieses und des nächsten Monats aus allen Kalendern (auch geteilten), die Liste der E-Mail mit den neuesten Mails, „Für dich“ und das Adressbuch. Die Seiten Kalender, E-Mail und Heute zeigen dann sofort, was da ist; Heute nimmt den Kalender aus demselben Speicher wie die Seite Kalender. Danach halten die bekannten Auffrischungen alle 5 Minuten alles frisch. Regeln: nur Funktionen, die das Profil gerade nutzen darf, nie für Gäste; ein Profil höchstens alle 10 Minuten; höchstens zwei Profile gleichzeitig; jeder Schritt wartet, solange jemand spricht (Stimme zuerst). Alles bleibt im Arbeitsspeicher, nichts Neues auf der Platte. Zustand → Live zeigt bei Kalender und Mail nur, wie viele Profile vorgewärmt sind und wie lange das her ist; das Log (Bereich Vorrang) schreibt eine Zeile „vorwaermen: done“ mit Zahlen."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Vorrat je Profil, Stufe A (V01.0.879, Dominik 2026-10-20 „alle Punkte umsetzen“, Plan vorrat-je-profil/plan.md; vorrat.py, kein Schalter): Fragt die Person den Assistenten nach Terminen, Wetter oder Paketen, nimmt das Werkzeug die Daten aus dem Speicher seines Dienstes, solange sie frisch genug sind (Kalender 10 Minuten, Wetter 30, Pakete 15; vorrat.DIENSTE). Ist der Stand älter (bis 24 Stunden, bei Wetter und Paketen bis 6), fragt der Dienst den Server neu und die Antwort wartet höchstens 2 Sekunden darauf; kommt bis dahin nichts oder antwortet der Server nicht, nennt der Assistent den alten Stand mit Uhrzeit („Stand 14:05 Uhr“), der neue landet für die nächste Frage im Speicher. „Schau nochmal nach“, „aktualisiere“ oder „neu laden“ fragt immer den Server. Früher nahm der Assistent beim Kalender nur, was jünger als 2 Minuten war, obwohl die Auffrischung alle 2 bis 5 Minuten läuft, und wartete bei Wetter und Paketen bei jeder ersten Frage. Die Mail folgt derselben Regel mit dem verschlüsselten Mail-Vorrat. Seiten und Hintergrund behalten ihre Regeln. Es gilt nur für Funktionen, die das Profil ohnehin nutzen darf, nie für Gäste, und ändert nur, wann gelesen wird, nicht was. Messen: "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Jede gesprochene Antwort hält fest, wie lange die Werkzeuge warteten und je Dienst, ob die Daten aus dem Vorrat, als älterer Stand oder nach Warten kamen (nur feste Wörter). Zustand → Prüfen zeigt das unter „Je Dienst: Vorrat, letzte 7 Tage“ und in der Tabelle je Fragenart die Spalte „Werkzeuge warten“; Zustand → Live zeigt bei Kalender, E-Mail, Wetter und Pakete „heute n Fragen, x % aus dem Vorrat“. Das Log (Bereich Vorrang) schreibt „vorrat: older reading“ mit Dienst und Alter in Minuten, nie ein Profil oder einen Inhalt."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Vorrat je Profil, Stufe B und C (V01.0.879; vorrat.py, halive.py, kein Schalter): Eine Runde jede Minute (vorrat.loop) ersetzt die eigene Schleife des Kalenders: Sie gleicht die Kalender wie bisher alle 2 Minuten ab und frischt für jedes Profil, das in den letzten 24 Stunden aktiv war, auf, was älter als seine Frische-Zeit ist: Wetter am Heimatort, Pakete und „Für dich“, Letzteres sobald eine Mail neuer ist als seine letzte Lesung. Höchstens zwei Profile gleichzeitig, jeder Schritt wartet, solange jemand spricht, nur freigegebene Funktionen, nie Gäste; die Mail behält ihre eigene Runde mit dem Mail-Vorrat; ihre Zeiten für den Assistenten (10 Minuten frisch, 2 Sekunden warten) kommen aus vorrat.DIENSTE. Wetter (nur am eigenen Ort) und Pakete legen ihre letzte Lesung zusätzlich versiegelt im Profilordner ab (wetter-vorrat.bin, pakete-vorrat.bin, über vorrat.Vorrat wie der Mail-Vorrat, höchstens alle 30 bzw. 5 Minuten geschrieben): Nach einem Neustart beantwortet der Assistent die erste Frage sofort daraus, mit Stand, wenn sie älter ist. Pakete nur aus vollständig gelesenen Postfächern; gelöscht wird mit dem letzten Postfach, beim Wetter mit dem Ort, bei beiden nach 14 Tagen ohne Lesu"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "ng und mit dem Profil. Ein einmal gefragter anderer Ort bleibt nur im Speicher. Vorwärmen liest beim Anmelden jetzt auch Wetter und Pakete, und ein Gerät, das gerade benutzt wird (Signal von „Mitteilung ans genutzte Gerät“), wärmt das Profil ebenfalls vor (höchstens alle 10 Minuten). Das Tagesbriefing wird 10 Minuten vor seiner Uhrzeit geschrieben und auf die Minute geschickt; dabei liegen Kalender, Mail, Wetter und Pakete für die Fragen am Morgen schon im Speicher (ein vorab geschriebener Text gilt 20 Minuten). Home Assistant live: Für aktive Profile mit freigegebenem Home Assistant hält der Spark eine WebSocket-Verbindung zum eigenen Home Assistant (höchstens 4 auf dem ganzen Spark). Sie fragt einmal alle Zustände ab und hört dann nur auf Änderungen (state_changed); „Ist das Fenster offen?“, Zustände, Verlauf und das Suchen beim Schalten nehmen diese Kopie statt jedes Mal alle Zustände über HTTP zu laden. Die Verbindung liest nur, geht über den Wächter (Heimnetz-Regeln, geprüfte Adresse), nimmt TLS wie eingestellt, endet bei Mein Notaus und bei Sperre; eine verlorene Verbindung wird nach 1 Minute wieder versucht (bis 15 Minuten). Höchstens 5000 Geräte und 8 MB je Nachricht, nicht"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "s auf der Platte. Zustand → Live: beim Kalender „Vorrat: heute n Runden, m Dienste aufgefrischt“, bei Home Assistant „live: n Verbindungen, heute m Änderungen“, bei Wetter und Pakete „versiegelt bei n Profilen“; das Log schreibt „vorrat: kept fresh“ und „homeassistant: live connected | n entities“ nur mit Zahlen und dem Profil als Kürzel."
 },
 {
 "lang": "de",
@@ -11061,7 +11101,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "o the last sentence end, the rest is dropped. 11. Run the tools: Half words before the call are taken back, a finished sentence stays. Every call goes through chat_tools.run; the result comes back as a tool message. A tool that fails twice the same way is stopped for this answer. When no rule recognized the question, the switch counts the group of the first tool and the fixed hint word (weiche.learn), never a word of the question. 12. Honest closing sentences: When a sentence fell out because of a figure, the panel says „I have no more precise details on that.“; when a deed fell out, a fixed sentence from taten.sentence. Both come from the panel, never from the model. When the language model does not answer because it is switching, restarting or being measured, the panel says so with the expected time (llmstart.satz, also during a switch's maintenance pause). 13. The panel's own questions: Only when nothing from outside was read: offer to remember a learned correction or ask about a fact in memory (by fixed rules). Then the panel puts the answer on the reMarkable when asked; when the answer itself offers to go there, it waits for a „yes“ (remarkable.propose). It fetches ahead for a"
+"text": "o the last sentence end, the rest is dropped. 11. Run the tools: Half words before the call are taken back, a finished sentence stays. Every call goes through chat_tools.run; the result comes back as a tool message. A tool that fails twice the same way is stopped for this answer. When no rule recognized the question, the switch counts the group of the first tool and the fixed hint word (weiche.learn), never a word of the question. Reading tools (calendar, weather, parcels) take their data from their service's memory while it is fresh enough (Vorrat je Profil, vorrat.take); an older reading waits at most 2.0 s for the server and otherwise comes with „as of hh:mm“, „look again“ always asks the server. Every answer keeps how long the tools waited and where each service came from (latency, Status → Checks). 12. Honest closing sentences: When a sentence fell out because of a figure, the panel says „I have no more precise details on that.“; when a deed fell out, a fixed sentence from taten.sentence. Both come from the panel, never from the model. When the language model does not answer because it is switching, restarting or being measured, the panel says so with the expected time (llmsta"
 },
 {
 "lang": "en",
@@ -11069,7 +11109,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": " question back. When „You can also say“ is on, the panel adds fixed example sentences (saetze.row, on a screen as a row before the end; saetze.spoken, while talking at most one sentence a day). The profile's tool log is written. 14. Stream ends: The request trace is closed; cases and the background check run only after speaking. When the device aborts (barge-in), model and speech output stop at once. When the answer rests on at least two own documents or Kiwix articles, wissensbuch.keep_offer keeps it and the device shows „To the knowledge book“; only the owner's click files it."
+"text": "rt.satz, also during a switch's maintenance pause). 13. The panel's own questions: Only when nothing from outside was read: offer to remember a learned correction or ask about a fact in memory (by fixed rules). Then the panel puts the answer on the reMarkable when asked; when the answer itself offers to go there, it waits for a „yes“ (remarkable.propose). It fetches ahead for a question back. When „You can also say“ is on, the panel adds fixed example sentences (saetze.row, on a screen as a row before the end; saetze.spoken, while talking at most one sentence a day). The profile's tool log is written. 14. Stream ends: The request trace is closed; cases and the background check run only after speaking. When the device aborts (barge-in), model and speech output stop at once. When the answer rests on at least two own documents or Kiwix articles, wissensbuch.keep_offer keeps it and the device shows „To the knowledge book“; only the owner's click files it."
 },
 {
 "lang": "en",
@@ -11085,7 +11125,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 4 tool calls per round, more do not run (step 11) - 3 memory notes per answer (step 11) - 2 same failures until a tool stops (or 3 of any kind) (step 11) - 50 characters after which the first sentence goes at a comma (step 5)"
+"text": "- 4 tool calls per round, more do not run (step 11) - 3 memory notes per answer (step 11) - 2.0 s a tool waits at most for the server when an older reading is at hand (step 11) - 2 same failures until a tool stops (or 3 of any kind) (step 11) - 50 characters after which the first sentence goes at a comma (step 5)"
 },
 {
 "lang": "en",
@@ -11149,7 +11189,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "s further down and then can fall back to the own archive. 6. Mark reading: Tools that bring outside text (web search, documents, calendar, earlier conversations, camera) set the mark before they run. From then on the locks of step 4 hold for the rest of the answer. With the knowledge book document_search brings the fitting page first, then the passages; both are outside text. 7. Run the tool: Extensions get profile, device and origin from the panel, never from the model. Smart home changes need the code word in the latest message when one is set. Connections to outside services go through the guard. 8. Errors as a sentence: When a service cannot be reached, it becomes a short result text („not reachable“, „search failed, do not guess“). An offered tool without a matching setup answers „unknown“. 9. Wrap the result as data: Outside text gets a fixed note in front and stands between markers it cannot close itself. Home Assistant states with free text (titles, lists) count as outside too. With „Faster web search“ the long note stands once per answer, before every further block a short one with the same rule (chat.OUTSIDE_AGAIN); the markers always stay. 10. Device marks the answer: Th"
+"text": "s further down and then can fall back to the own archive. 6. Mark reading: Tools that bring outside text (web search, documents, calendar, earlier conversations, camera) set the mark before they run. From then on the locks of step 4 hold for the rest of the answer. With the knowledge book document_search brings the fitting page first, then the passages; both are outside text. 7. Run the tool: Extensions get profile, device and origin from the panel, never from the model. Smart home changes need the code word in the latest message when one is set. Connections to outside services go through the guard. Home Assistant reads states from the live connection's copy (halive.states) while it stands for exactly this address and key, else over HTTP. 8. Errors as a sentence: When a service cannot be reached, it becomes a short result text („not reachable“, „search failed, do not guess“). An offered tool without a matching setup answers „unknown“. 9. Wrap the result as data: Outside text gets a fixed note in front and stands between markers it cannot close itself. Home Assistant states with free text (titles, lists) count as outside too. With „Faster web search“ the long note stands once per an"
 },
 {
 "lang": "en",
@@ -11157,7 +11197,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "e device learns that the answer rests on outside text. Such answers do not go to the model again later. 11. Record: The log line names the tool only when it was offered, else „unbekannt“. What was a deed is noted by taten for the action check. People see the readable names from werkzeuge.py. 12. Failed twice?: When a tool fails 2 times with the same details or 3 times at all, it is stopped for this answer and the model is told to say honestly what did not work. 13. Result back to the model: The model gets the result as data in the next round. What it says from it is checked again by the answer (answer check, check deeds)."
+"text": "swer, before every further block a short one with the same rule (chat.OUTSIDE_AGAIN); the markers always stay. 10. Device marks the answer: The device learns that the answer rests on outside text. Such answers do not go to the model again later. 11. Record: The log line names the tool only when it was offered, else „unbekannt“. What was a deed is noted by taten for the action check. People see the readable names from werkzeuge.py. 12. Failed twice?: When a tool fails 2 times with the same details or 3 times at all, it is stopped for this answer and the model is told to say honestly what did not work. 13. Result back to the model: The model gets the result as data in the next round. What it says from it is checked again by the answer (answer check, check deeds)."
 },
 {
 "lang": "en",
@@ -11349,7 +11389,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "1. A tool wants out: Everything that goes to an address from settings or from outside text gets its access through netguard.client with a level (today 31 modules). Fixed own services like the language model go directly; which ones and why is listed in netguard.DIRECT_OK, a self-test keeps that list complete. 2. Resolve the name once: resolve() looks the name up exactly once. If it has several addresses, each one must be allowed, else it stops. 3. Own service?: The ports of the own services are closed on this machine: on loopback and on every own address in the LAN or VPN (own_addresses reads them again every minute). When the models run on another computer (models.host), its addresses count the same (model_addresses). 4. Internet and kill switch on?: If the address is public and the kill switch is at stage 1 or higher, nothing goes to the internet, whatever level the tool has. The home network stays reachable as the level allows. 5. Public address?: A public address is allowed at every level. 6. Level „internet only“?: What comes from search results or answers may never go to the home network (chat, feeds, geraeteupdate, ghtoken, mailansicht, meldung, modellseite, remarkable, verbu"
+"text": "1. A tool wants out: Everything that goes to an address from settings or from outside text gets its access through netguard.client with a level (today 32 modules). Fixed own services like the language model go directly; which ones and why is listed in netguard.DIRECT_OK, a self-test keeps that list complete. 2. Resolve the name once: resolve() looks the name up exactly once. If it has several addresses, each one must be allowed, else it stops. 3. Own service?: The ports of the own services are closed on this machine: on loopback and on every own address in the LAN or VPN (own_addresses reads them again every minute). When the models run on another computer (models.host), its addresses count the same (model_addresses). 4. Internet and kill switch on?: If the address is public and the kill switch is at stage 1 or higher, nothing goes to the internet, whatever level the tool has. The home network stays reachable as the level allows. 5. Public address?: A public address is allowed at every level. 6. Level „internet only“?: What comes from search results or answers may never go to the home network (chat, feeds, geraeteupdate, ghtoken, mailansicht, meldung, modellseite, remarkable, verbu"
 },
 {
 "lang": "en",
@@ -11949,7 +11989,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": " self-test reports every module that connects directly and is missing there. 7. Level of the service: Each module calls the guard with its fixed level: Home Assistant and Kiwix with home; calendars, contacts, tasks, mail and MCP with user; reMarkable and pages from search with internet only. The level is in the code, not in the settings. 8. Guard allows the address?: The guard resolves the name once and checks every address: no own services, no 169.254, home network only at level home or with the switch, no internet during the kill switch. Then it connects to exactly the checked address. 9. Request to the service: The panel unseals the profile's login (token, password) only now and sends it only to the entered site. Mail goes over IMAP with TLS to the checked address. With „Faster web search“ each result page gets at most 3 s, brings the parts that fit the question, and the same search comes from memory for 10 minutes. 10. Answer too large?: Through the guard each answer is cut at the module's limit, also after unpacking. 11. Result for My status and Live: Whether the service answered or refused the login, the profile sees under Me → My status; the live page counts what the guard a"
+"text": " self-test reports every module that connects directly and is missing there. 7. Level of the service: Each module calls the guard with its fixed level: Home Assistant and Kiwix with home; calendars, contacts, tasks, mail and MCP with user; reMarkable and pages from search with internet only. The live connection to Home Assistant (halive) checks its address with home as well. The level is in the code, not in the settings. 8. Guard allows the address?: The guard resolves the name once and checks every address: no own services, no 169.254, home network only at level home or with the switch, no internet during the kill switch. Then it connects to exactly the checked address. 9. Request to the service: The panel unseals the profile's login (token, password) only now and sends it only to the entered site. Mail goes over IMAP with TLS to the checked address. With „Faster web search“ each result page gets at most 3 s, brings the parts that fit the question, and the same search comes from memory for 10 minutes. 10. Answer too large?: Through the guard each answer is cut at the module's limit, also after unpacking. 11. Result for My status and Live: Whether the service answered or refused th"
 },
 {
 "lang": "en",
@@ -11957,7 +11997,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "llowed or blocked. Contents go nowhere. 12. Answer as data to the model: The tool returns the answer as data. If it reads someone else's text (mail, calendar, archive, web page, MCP in read mode), the answer counts from now on as one with outside text; see step 4."
+"text": "e login, the profile sees under Me → My status; the live page counts what the guard allowed or blocked. Contents go nowhere. 12. Answer as data to the model: The tool returns the answer as data. If it reads someone else's text (mail, calendar, archive, web page, MCP in read mode), the answer counts from now on as one with outside text; see step 4."
 },
 {
 "lang": "en",
@@ -14077,6 +14117,46 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
+"text": "Per-profile store, stage A (V01.0.879, Dominik 2026-10-20 \"build all points\", plan vorrat-je-profil/plan.md; vorrat.py, no switch): When the person asks the assistant about appointments, weather or parcels, the tool takes the data from its service's memory while it is fresh enough (calendar 10 minutes, weather 30, parcels 15; vorrat.DIENSTE). When the reading is older (up to 24 hours, weather and parcels up to 6), the service asks the server anew and the answer waits at most 2 seconds for it; when nothing comes by then or the server does not answer, the assistant names the older reading with its time (\"as of 14:05\"), and the new one lands in memory for the next question. \"Look again\", \"refresh\" or \"reload\" always ask the server. Before, the assistant only took calendar blocks younger than 2 minutes although the refresh runs every 2 to 5 minutes, and waited for weather and parcels on every first question. Mail follows the same rule with the encrypted mail store. Pages and background work keep their rules. It applies only to functions the profile may use anyway, never to guests, and only changes when data is read, not what. Measuring: every spoken answer keeps how long the tools wait"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "ed and, per service, whether the data came from the store, as an older reading or after waiting (fixed words only). Status → Checks shows it under \"Per service: store, last 7 days\" and adds the column \"Tools wait\" per kind of question; Status → Live shows for Calendar, E-mail, Weather and Parcels \"today n questions, x % from the store\". The log (area Priority) writes \"vorrat: older reading\" with the service and the age in minutes, never a profile or content."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "Per-profile store, stages B and C (V01.0.879; vorrat.py, halive.py, no switch): One round every minute (vorrat.loop) replaces the calendar's own loop: it compares the calendars every 2 minutes as before and, for every profile active in the last 24 hours, refreshes what is older than its fresh age: the weather at home, parcels and \"For you\", the latter as soon as a mail is newer than its last reading. At most two profiles at the same time, each step waits while somebody speaks, only released functions, never guests; mail keeps its own round with the mail store; its times for the assistant (10 minutes fresh, 2 seconds wait) come from vorrat.DIENSTE. Weather (only at the own place) and parcels also keep their last reading sealed in the profile folder (wetter-vorrat.bin, pakete-vorrat.bin, through vorrat.Vorrat like the mail store, written at most every 30 or 5 minutes): after a restart the assistant answers the first question from it at once, with the time it was read when older. Parcels only from mailboxes read completely; deleted with the last mailbox, for the weather with the place, for both after 14 days without a reading and with the profile. Another place asked for once stays in"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": " memory only. Warming up now also reads weather and parcels at sign-in, and a device in use right now (signal of \"Note to the device in use\") warms the profile too (at most every 10 minutes). The daily briefing is written 10 minutes before its time and sent on the minute; calendar, mail, weather and parcels are then already in memory for the morning's questions (a text written ahead counts for 20 minutes). Home Assistant live: for active profiles with Home Assistant released the Spark keeps one WebSocket connection to their own Home Assistant (at most 4 on the whole Spark). It asks for all states once and then only listens for changes (state_changed); \"Is the window open?\", states, history and finding a device to switch use this copy instead of loading all states over HTTP every time. The connection only reads, goes through the guard (home network rules, checked address), uses TLS as set, ends with My kill switch and a block; a lost connection is tried again after 1 minute (up to 15 minutes). At most 5000 devices and 8 MB per message, nothing on disk. Status → Live: at Calendar \"Vorrat: today n rounds, m services refreshed\", at Home Assistant \"live: n connections, today m changes\","
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": " at Weather and Parcels \"versiegelt bei n Profilen\" (sealed for n profiles); the log writes \"vorrat: kept fresh\" and \"homeassistant: live connected | n entities\" with numbers and the profile as a short name only."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
 "text": "New mail at once (V01.0.852, warming up stage C, Dominik 2026-10-19 \"6a\"; mailidle.py, admin switch Features → Reading e-mail → \"Neue Mails sofort\", chat.mail_idle, off): for profiles that read their mail in the last two hours the Spark keeps a connection to the inbox open (IMAP IDLE). When the server reports a new mail (EXISTS) or one another program moved (EXPUNGE), the profile's mail rules run at once (with \"Mails ordnen\"), the E-mail page's list is fetched anew with the newest mails ahead, and \"Für dich\" hears of it (mailidle.on_new); at most every 20 seconds per profile, a change in between comes right after, and never while someone speaks. At most 4 connections on the whole Spark, the newest readers first; a server without IDLE stays with the fetch every five minutes (mail.keep_fresh, asked again after a day). The connection only reads (EXAMINE), each waiting one sits in select() on its socket and holds neither the panel's loop nor a lock; IDLE is renewed every 24 minutes, a lost connection is tried again after 1 minute (up to 15 minutes). From the server only the words EXISTS, EXPUNGE, BYE and the answer to DONE count; over-long lines end the connection. My emergency stop, t"
 },
 {
@@ -15821,7 +15901,7 @@
 "file": "Assistant and panel",
 "head": "More precise and faster (since V01.0.755)",
 "title": "More precise and faster (since V01.0.755)",
-"text": "once per answer, before every further block a short one with the same rule (chat.OUTSIDE_AGAIN), the markers <<< >>> always stay. Log: \"chat: web search, n of m pages in time\" and \"chat: web search from memory\". - Extended answer check (*Settings → Language model → Extended answer check*, chat.answer_check_more, off): for data questions, temperatures (\"14 Grad\", \"-3 °C\"), distances in km and percentages must also be in what the model was given; rounded counts as right (answercheck.MORE_SLACK: one degree, one percentage point, for km one km or a tenth). A name in quotation marks must be in what was read in every data answer, not only after a calendar read. Counts (\"3 new mails\") are deliberately not checked: tool results often do not state them as a number, honest sentences would drop out. The quality test checks with the same rules. - Measuring the word choice: Status → Check → Quality test has the button \"Test with Qwen's recommendation\": the same test once with top_p 0.8, top_k 20 and presence_penalty 1 (quality.QWEN_SAMPLING), only for this run. Below, the newest run with the own word choice and the one with the recommendation stand side by side; if the recommendation was better"
+"text": "once per answer, before every further block a short one with the same rule (chat.OUTSIDE_AGAIN), the markers <<< >>> always stay. Log: \"chat: web search, n of m pages in time\" and \"chat: web search from memory\". - Extended answer check (*Settings → Language model → Extended answer check*, chat.answer_check_more, off): for data questions, temperatures (\"14 Grad\", \"-3 °C\"), distances in km and percentages must also be in what the model was given; rounded counts as right (answercheck.MORE_SLACK: one degree, one percentage point, for km one km or a tenth). A name in quotation marks must be in what was read in every data answer, not only after a calendar read. Counts (\"3 new mails\") are deliberately not checked: tool results often do not state them as a number, honest sentences would drop out. The quality test checks with the same rules. - Measuring the word choice: Status → Checks → Quality test has the button \"Test with Qwen's recommendation\": the same test once with top_p 0.8, top_k 20 and presence_penalty 1 (quality.QWEN_SAMPLING), only for this run. Below, the newest run with the own word choice and the one with the recommendation stand side by side; if the recommendation was bette"
 },
 {
 "lang": "en",
@@ -15829,7 +15909,7 @@
 "file": "Assistant and panel",
 "head": "More precise and faster (since V01.0.755)",
 "title": "More precise and faster (since V01.0.755)",
-"text": ", the admin sets the values under Settings → Language model (new: *Limit the choice (top_k)*, chat.top_k, 0 = the server's default)."
+"text": "r, the admin sets the values under Settings → Language model (new: *Limit the choice (top_k)*, chat.top_k, 0 = the server's default)."
 },
 {
 "lang": "en",

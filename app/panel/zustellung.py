@@ -70,6 +70,9 @@ def seen(uid, way, idle=0, gone=False, key="", now=None):
         if uid not in _sig and len(_sig) >= MAX:
             _sig.pop(min(_sig, key=lambda u: max((v[0] for v in _sig[u].values()), default=0)), None)
         _sig.setdefault(uid, {})[way] = (now, now - idle, bool(gone), key if re.fullmatch(r"[0-9a-f]{16}", key or "") else "")
+    if not gone and idle < ACTIVE:   # in use: read its services ahead (vorwaermen.ask, at most every WARM_AGAIN)
+        import vorwaermen
+        vorwaermen.ask(uid, now)
 
 
 def in_use(uid, now=None):

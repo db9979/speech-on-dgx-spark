@@ -13,11 +13,15 @@ import time
 
 import mail
 import features
+import vorrat
+from vorrat import Vorrat
 
 DAYS = 14
-CACHE_SECONDS = 600
 SCAN = 300
 _cache = {}
+# Vorrat je Profil (3b): the last reading sealed in the profile's folder, so the first question after a restart is
+# answered at once (with „Stand“ when older); deleted with the last mailbox and after IDLE_DAYS without a reading
+SUPPLY = Vorrat("pakete-vorrat.bin", idle_days=14, write_every=300)
 CARRIERS = [("DHL", ("dhl.de", "dhl.com", "deutschepost.de", "dhl-news.de")),
             ("Hermes", ("hermesworld.com", "myhermes.de", "hermes-europe.de")),
             ("DPD", ("dpd.de", "dpd.com")), ("GLS", ("gls-group.eu", "gls-pakete.de", "gls-group.com")),
@@ -156,10 +160,24 @@ def _scan_account(acct, days):
 
 
 def scan(uid, days=DAYS):
-    """The profile's parcels, newest mail per parcel; [(mailbox, error)]."""
-    hit = _cache.get(uid)
-    if hit and time.time() - hit[0] < CACHE_SECONDS:
-        return hit[1]
+    """The profile's parcels, newest mail per parcel; [(mailbox, error)]. Kept in memory; taken from there while fresh
+    enough (vorrat.DIENSTE "parcels"), an older reading when the mailbox is slow, saying so (vorrat.stand)."""
+    if not mail.get(uid)["accounts"]:
+        drop(uid)
+        return [], []
+    return vorrat.take_sync("parcels", _cache.get(uid) or _kept(uid), ("parcels", uid), lambda: _read(uid, days))
+
+
+def _kept(uid):
+    """The sealed reading of the profile ((time, (parcels, errors)) or None); it goes back into memory."""
+    d = SUPPLY.load(uid)
+    if not isinstance(d.get("t"), (int, float)) or not isinstance(d.get("v"), list):
+        return None
+    hit = _cache[uid] = (d["t"], (d["v"], []))
+    return hit
+
+
+def _read(uid, days):
     found, errors = [], []
     for a in mail.get(uid)["accounts"]:
         try:
@@ -175,11 +193,15 @@ def scan(uid, days=DAYS):
             out.append(x)
     res = (out, errors)
     _cache[uid] = (time.time(), res)
+    if not errors:   # only a complete reading is kept on the disk
+        SUPPLY.load(uid).update(t=_cache[uid][0], v=out)
+        SUPPLY.changed(uid)
     return res
 
 
 def drop(uid):
     _cache.pop(uid, None)
+    SUPPLY.forget(uid)
 
 
 def _day_word(d, today):
@@ -254,7 +276,7 @@ def offer(ctx):
 async def tool(name, args, ctx):
     import asyncio
     try:
-        return await asyncio.to_thread(report, ctx["who"]["id"])
+        return await asyncio.to_thread(report, ctx["who"]["id"]) + vorrat.stand("parcels")
     except Exception as e:
         return f"Postfach nicht lesbar: {type(e).__name__}"
 

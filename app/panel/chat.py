@@ -49,6 +49,7 @@ import tracelog  # noqa: E402  (Logs → Anfragen: the way of each request)
 import features  # noqa: E402
 import gedaechtnis  # noqa: E402  (Gedächtnis prüfen: evidence and fixed rules for facts)
 import vorab  # noqa: E402  (fetching ahead when the answer asks back)
+import vorrat  # noqa: E402  (Vorrat je Profil: answers from what the services keep in memory)
 import ack  # noqa: E402  (the instant ready-made sentence)
 import sofort  # noqa: E402  (Einfaches sofort beantworten: fixed sentences, no model)
 import verbrauch  # noqa: E402  (Verbrauchszähler: tokens per task and profile)
@@ -228,6 +229,10 @@ def wait_measure(turn, tm, t0, end):
          "e": end - t0, "v": app_version()}
     if firsts:
         m["f"] = firsts[0] - t0
+    if getattr(turn, "tool_wait", 0):   # seconds the tools took (Vorrat je Profil: does the store help?)
+        m["w"] = turn.tool_wait
+    if vorrat.seen(getattr(turn, "vorrat", None)):
+        m["s"] = vorrat.seen(turn.vorrat)
     if read:
         m["h"] = round(100 * cached / read)
     return m
@@ -1520,6 +1525,11 @@ async def morning_briefing(uid, tz="", markdown=False):
                                   thinking=None if ccfg.get("thinking") else False)
 
 
+BRIEF_AHEAD = 10 * 60   # s before a profile's briefing time its text is written ahead (Vorrat je Profil)
+BRIEF_KEEP = 20 * 60    # s a text written ahead is sent as it is; older, it is written anew
+_brief_ready = {}       # uid -> (time, day, text written ahead or None); memory only
+
+
 async def due_briefings(now=None):
     """Sends the daily briefing to profiles that set a time and have push on, once a day, within
     two hours after that time (the panel may have been off). Also kept as a conversation."""
@@ -1538,12 +1548,29 @@ async def due_briefings(now=None):
             last = open(mark).read().strip()
         except OSError:
             last = ""
-        if last == local.strftime("%Y-%m-%d") or not start <= local < start + datetime.timedelta(hours=2):
+        day = local.strftime("%Y-%m-%d")
+        if last != day and start - datetime.timedelta(seconds=BRIEF_AHEAD) <= local < start \
+                and _brief_ready.get(uid, (0, ""))[1] != day:
+            # Vorrat je Profil: the parts are read and the text written ahead, so it goes out on the minute and the
+            # morning questions find calendar, mail, weather and parcels warm
+            _brief_ready[uid] = (time.time(), day, None)
+            try:
+                await vorrang.quiet("Briefing")
+                _brief_ready[uid] = (time.time(), day, await morning_briefing(uid, s.get("tz", ""), markdown=True))
+                print("briefing: written ahead", flush=True)
+            except Exception as e:
+                print("briefing: ahead failed", type(e).__name__, flush=True)
+            continue
+        if last == day or not start <= local < start + datetime.timedelta(hours=2):
             continue
         with open(os.open(mark, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600), "w") as f:
-            f.write(local.strftime("%Y-%m-%d"))  # first, so a failing LLM does not retry every minute
+            f.write(day)  # first, so a failing LLM does not retry every minute
+        ready = _brief_ready.pop(uid, None)
         try:
-            text = await morning_briefing(uid, s.get("tz", ""), markdown=True)
+            if ready and ready[1] == day and ready[2] and time.time() - ready[0] < BRIEF_KEEP:
+                text = ready[2]
+            else:
+                text = await morning_briefing(uid, s.get("tz", ""), markdown=True)
         except Exception as e:
             print("briefing:", type(e).__name__, e, flush=True)
             continue
@@ -1861,6 +1888,8 @@ async def _chat(request: Request):
     t_req = _last_chat[0] = time.time()
     turn = await chat_turn.prepare(request)
     turn.t_req = t_req   # for the timing lines (logfilter detail "chat") and Logs → Anfragen
+    # Vorrat je Profil (vorrat.py): what this answer's tools take from the services' memory, and "nochmal nachsehen"
+    turn.vorrat = vorrat.begin(getattr(turn, "ask_text", "") or "", (turn.body or {}).get("tz") if isinstance(turn.body, dict) else None)
     return await _answer(request, turn)
 
 
@@ -1950,7 +1979,9 @@ async def _answer(request, turn):
             if st["saves"] > MAX_SAVES:
                 return "Not saved: at most a few notes per answer."
         t_run = time.monotonic()
+        vorrat.use(getattr(turn, "vorrat", None))
         result = await chat_tools.run(turn, name, args, st)
+        turn.tool_wait = getattr(turn, "tool_wait", 0.0) + (time.monotonic() - t_run)
         # every tool call, done or not, in Zustand → Logs → Diagnose (filter Chat): the name only when it was offered,
         # ok or not ok by taten's fixed words and the time; never its arguments or its result
         print(f"chat: tool {name if name in st['offered'] else 'unbekannt'} "

@@ -17,12 +17,17 @@ import httpx
 
 import profiles
 import features
+import vorrat
 from common import load_config
+from vorrat import Vorrat
 
 FORECAST = "https://api.open-meteo.com/v1/forecast"
 GEOCODE = "https://geocoding-api.open-meteo.com/v1/search"
-CACHE_SECONDS = 900
 _cache = {}
+MAX_PLACES = 64        # forecasts kept in memory at most
+# Vorrat je Profil (3b): the forecast of the profile's own place sealed in its folder, so the first question after a
+# restart is answered at once (with „Stand“ when older); only that one place, never a place asked for once
+SUPPLY = Vorrat("wetter-vorrat.bin", idle_days=14, write_every=1800)
 
 # WMO weather codes as words
 CODES = {0: "klar", 1: "meist sonnig", 2: "teils bewölkt", 3: "bedeckt", 45: "Nebel", 48: "Nebel mit Reif",
@@ -138,6 +143,7 @@ def _store(uid, d):
 async def set_place(uid, place, pick=None):
     """Sets the profile's place; pick ({"lat", "lon", "name"}) is one of the choices the page showed.
     Returns (place, other choices)."""
+    SUPPLY.forget(uid)   # the kept forecast was of the old place
     if not str(place or "").strip() and not pick:
         try:
             os.remove(_file(uid))
@@ -159,23 +165,35 @@ async def set_place(uid, place, pick=None):
     return d, found if len(found) > 1 else []
 
 
-async def forecast(lat, lon, days=7):
+async def forecast(lat, lon, days=7, uid=None):
+    """The forecast of a place (7 days or more), kept in memory; the assistant takes it from there while it is fresh
+    enough (vorrat.DIENSTE "weather"), an older one when the service is slow, saying so (vorrat.stand). With uid the
+    place is that profile's own (get(uid)): its forecast is also kept sealed on the disk (SUPPLY)."""
     key = (round(lat, 3), round(lon, 3))
-    hit = _cache.get(key)
-    if hit and time.time() - hit[0] < CACHE_SECONDS:
-        return hit[1]
-    url, _ = urls()
-    params = {"latitude": lat, "longitude": lon, "timezone": "auto", "forecast_days": max(2, min(14, days)),
-              "current": "temperature_2m,weather_code",
-              "daily": "weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,"
-                       "precipitation_sum,wind_gusts_10m_max",
-              "hourly": "precipitation_probability,temperature_2m"}
-    async with httpx.AsyncClient(timeout=httpx.Timeout(15, connect=5)) as c:
-        r = await c.get(url, params=params)
-    r.raise_for_status()
-    d = r.json()
-    _cache[key] = (time.time(), d)
-    return d
+    if uid and key not in _cache:
+        d = SUPPLY.load(uid)
+        if d.get("k") == list(key) and isinstance(d.get("t"), (int, float)) and isinstance(d.get("v"), dict):
+            _cache[key] = (d["t"], d["v"])
+
+    async def fetch():
+        url, _ = urls()
+        params = {"latitude": lat, "longitude": lon, "timezone": "auto", "forecast_days": max(7, min(14, days)),
+                  "current": "temperature_2m,weather_code",
+                  "daily": "weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,"
+                           "precipitation_sum,wind_gusts_10m_max",
+                  "hourly": "precipitation_probability,temperature_2m"}
+        async with httpx.AsyncClient(timeout=httpx.Timeout(15, connect=5)) as c:
+            r = await c.get(url, params=params)
+        r.raise_for_status()
+        d = r.json()
+        _cache[key] = (time.time(), d)
+        for k in sorted(_cache, key=lambda k: _cache[k][0])[:max(0, len(_cache) - MAX_PLACES)]:
+            _cache.pop(k, None)   # a fixed cap: the oldest places go first (the Pi has no memory limit that works)
+        if uid:
+            SUPPLY.load(uid).update(k=list(key), t=time.time(), v=d)
+            SUPPLY.changed(uid)
+        return d
+    return await vorrat.take("weather", _cache.get(key), ("weather",) + key, fetch)
 
 
 def passing(e):
@@ -237,9 +255,10 @@ def _label(day, today):
         f"{WEEKDAYS[day.weekday()]}, {day.day}.{day.month}."
 
 
-async def report(lat, lon, name, first=None, days=1):
-    """Fixed sentences for days from `first` (a date in the place's time zone; default today)."""
-    d = await forecast(lat, lon, 7)
+async def report(lat, lon, name, first=None, days=1, uid=None):
+    """Fixed sentences for days from `first` (a date in the place's time zone; default today); uid: the profile's own
+    place (forecast)."""
+    d = await forecast(lat, lon, 7, uid)
     dates = [datetime.date.fromisoformat(x) for x in (d.get("daily") or {}).get("time") or []]
     if not dates:
         return f"Für {name} gibt es gerade keine Vorhersage."
@@ -265,7 +284,7 @@ async def notable_tomorrow(uid):
     w = get(uid)
     if not w:
         return "", []
-    d = await forecast(w["lat"], w["lon"], 3)
+    d = await forecast(w["lat"], w["lon"], 3, uid)
     dy = d.get("daily") or {}
     if len(dy.get("time") or []) < 2:
         return "", []
@@ -310,9 +329,11 @@ def offer(ctx):
 
 async def tool(name, args, ctx):
     w = get(ctx["who"]["id"])
+    own = ctx["who"]["id"]
     try:
         place = _clean(args.get("place"))
         if place and place.lower() not in (w.get("place", "").lower(), w.get("name", "").lower().split(",")[0]):
+            own = None   # another place: memory only, never on the disk
             w = await _place(ctx, place, args)
             if isinstance(w, str):
                 return w
@@ -326,7 +347,7 @@ async def tool(name, args, ctx):
             days = max(1, min(7, int(args.get("days") or 1)))
         except (TypeError, ValueError):
             days = 1
-        return await report(w["lat"], w["lon"], w["name"], first, days)
+        return await report(w["lat"], w["lon"], w["name"], first, days, own) + vorrat.stand("weather")
     except ValueError as e:
         return f"Keine Vorhersage: {e}."
     except (httpx.HTTPError, KeyError) as e:
@@ -414,6 +435,7 @@ def api_delete(request: Request, prof=Depends(browser_profile)):
 
 
 def forget(uid):
+    SUPPLY.forget(uid)
     try:
         os.remove(_file(uid))
     except OSError:
