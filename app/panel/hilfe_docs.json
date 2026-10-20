@@ -5108,6 +5108,30 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Was ich über dich weiß, Stufe 3 und 4 (Dominik 2026-10-18 „3a 4a 6a 7a“, 2026-10-20 „alle weiteren stufen umsetzten“): Eine eigene Seite *Ich → Was ich über dich weiß* (ichweiss.py, gehört zu „Für dich aus Mails“, chat.mail_insight, kein eigener Schalter; Gäste nie). Interessen (3a): Vorschläge mit Beleg, nie aus einem Mailtext: ein Shop mit mindestens zwei Bestellungen, Angeboten oder Newslettern in 30 Tagen (nur aus den Kopfzeilen der letzten Lesung von Für dich, fuerdich.shops) und die Stichwörter aus Reddit und Feeds. Ein Interesse zählt erst nach „Stimmt“; „Nicht so“ bleibt gemerkt und kommt nicht wieder; eigene Interessen lassen sich eintragen. An einer Bestellung oder einem Angebot unter *E-Mail → Für dich* macht „Mehr davon“ den Shop zum Interesse; ein Angebot, das zu einem Interesse passt, steht oben und zeigt „passt zu …“. Gespeichert wird nur Name, Zustand und Zeit in users/<p>/interessen.json (höchstens 60). Aus dem Netz (4a): Bei einem Interesse mit „Tipps aus dem Netz“ sucht ein eigener Lauf höchstens einmal am Tag zwischen 10 und 19 Uhr in der eigenen Websuche (SearXNG) nach genau dem Wort des Interesses, nie mit Mailtext oder Absender; der erste Treffer mit https-Ad"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "resse wird der Tipp (Titel als Text, Link nur in neuem Tab ohne Referrer), drei Tage sichtbar. Braucht die Freigabe der Websuche. Wiederkehrendes (6a): Rechnungen desselben Absenders in drei oder mehr Monaten um denselben Tag (Abstand höchstens 6 Tage), aus den Kopfzeilen der letzten 200 Tage (nur lesen, einmal am Tag); „Monatlich erinnern“ setzt eine monatliche Erinnerung „Rechnung … kommt um den 15.“ um 9 Uhr. Diese Woche und Diesen Monat (Stufe 4, 7a): „Deine Woche: 3 erledigt, 2 offen. Nächste Woche: …“ aus den Markierungen der letzten 7 Tage und den Fristen der nächsten 7 Tage; die Summe der Rechnungen und Bestellungen dieses Monats nur aus geprüften Beträgen (auch unter E-Mail → Für dich). Sonntags ab 18 Uhr kommt der Wochenrückblick von selbst (Von selbst: „Wochenrückblick“, pro_rueckblick, einmal pro Woche, unter E-Mail → Einstellungen). Gemerkt: die neuesten Fakten des Gedächtnisses und der Mailstil mit dem Weg zu ihren Seiten. „⋯ → Alle Interessen vergessen“ und „Daten löschen“ entfernen die Datei. iPhone: *Für dich → Was ich über dich weiß* mit denselben Abschnitten und Knöpfen, „Mehr davon“ an der Karte, CarPlay-Zeile „Fristen vorlesen“. Zustand → Live: Ereignis „Was ic"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "h über dich weiß“ (nur „Netz-Tipp gefunden“). Logs (Bereich „mail“): ichweiss: angesehen vorschlaege=2 interessen=1 wiederkehrend=1 …, ichweiss: interesse als=yes …, ichweiss: erinnerung monatlich gesetzt …, ichweiss: netztipp gefunden|ohne treffer|fehler=…, ichweiss: kopfzeilen gelesen ordner=2 absender=5, fuerdich: mehr davon …. API (Profil): GET /api/profile/ichweiss, POST /api/profile/ichweiss/interest {\"name\", \"state\": \"yes\"|\"no\"|\"forget\", \"src\", \"web\"}, POST /api/profile/ichweiss/recurring {\"id\"}, DELETE /api/profile/ichweiss; dazu POST /api/profile/fuerdich/act {\"id\", \"do\": \"more\"}."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Schreibhilfe (V01.0.332, `schreib.py`)",
 "text": "Schreibhilfe (V01.0.332, schreib.py): Mails und andere Texte (auch aus Word, Excel, Pages) verbessern. Schalter: Funktionen → Post und Kontakte → „Schreibhilfe“ (Admin, aus); freigegeben gilt sie für jedes Profil, unter Ich → Schreibhilfe steht, was sie kann; Gäste nie. Auf der Seite Ich → Schreibhilfe: Text hineinkopieren, Art wählen (Korrigieren: nur Rechtschreibung, Grammatik, Zeichensetzung; Glätten; Kürzer; Freundlicher; Förmlicher; Übersetzen in Deutsch, Englisch, Französisch, Spanisch, Italienisch oder Niederländisch; Antwort entwerfen aus der erhaltenen Mail und eigenen Stichpunkten, fehlende Angaben kommen als [eckige Klammern]), optional ein freier Wunsch zur Form („mit Du“, Gruß). Beim Korrigieren, Glätten, Kürzen und Umformulieren zeigt das Panel jede Änderung farbig; die Änderungen rechnet das Panel selbst aus (Wortvergleich), nicht das Modell. „Kopieren“, „Als meinen Text übernehmen“ (für eine zweite Runde). Mit „Bilder erkennen“ liest „Aus Bild lesen“ oder ein mit Strg+V eingefügtes Bildschirmfoto den Text aus einem Bild (das Bild wird danach sofort verworfen). Mit „E-Mail lesen“, „Postfach aufräumen“ und dem Postfach-Schalter „Entwürfe“ legt „Als Entwurf ins Postfac"
 },
@@ -13654,6 +13678,30 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "again and Forget the marks). Next stages: interests and \"What I know about you\", web tip, weekly review, spending."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "What I know about you, stages 3 and 4 (Dominik 2026-10-18 \"3a 4a 6a 7a\", 2026-10-20 \"build all further stages\"): a page of its own *Me → What I know about you* (ichweiss.py, part of \"For you from mail\", chat.mail_insight, no switch of its own; never guests). Interests (3a): proposals with evidence, never from a mail text: a shop with at least two orders, offers or newsletters in 30 days (only from the headers of the last reading of For you, fuerdich.shops) and the keywords of Reddit and feeds. An interest counts only after \"Right\"; \"Not really\" is remembered and does not come back; own interests can be added. On an order or offer under *E-mail → For you*, \"More of this\" makes the shop an interest; an offer that fits an interest comes first and shows \"fits …\". Only name, state and time are kept, in users/<p>/interessen.json (at most 60). From the web (4a): for an interest with \"Tips from the web\" a separate run searches at most once a day between 10 am and 7 pm in the own web search (SearXNG) for exactly the word of the interest, never with mail text or sender; the first hit with an https address becomes the tip (title as text, link only in a new tab without referrer), visible for t"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "hree days. Needs the web search released. Recurring (6a): bills of the same sender in three or more months around the same day (at most 6 days apart), from the headers of the last 200 days (read-only, once a day); \"Remind me monthly\" sets a monthly reminder \"Rechnung … kommt um den 15.\" at 9 am. This week and this month (stage 4, 7a): \"Deine Woche: 3 erledigt, 2 offen. Nächste Woche: …\" from the marks of the last 7 days and the deadlines of the next 7 days; the sum of this month's bills and orders only from checked amounts (also under E-mail → For you). On Sundays from 6 pm the weekly review comes by itself (By itself: \"Weekly review\", pro_rueckblick, once a week, under E-mail → Settings). Kept: the newest facts of the memory and the mail style with the ways to their pages. \"⋯ → Forget every interest\" and \"Delete data\" remove the file. iPhone: *For you → What I know about you* with the same sections and buttons, \"More of this\" on the card, CarPlay row \"Read deadlines aloud\". State → Live: event \"Was ich über dich weiß\" (only \"Netz-Tipp gefunden\"). Logs (area \"mail\"): ichweiss: angesehen vorschlaege=2 interessen=1 wiederkehrend=1 …, ichweiss: interesse als=yes …, ichweiss: erinnerun"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "g monatlich gesetzt …, ichweiss: netztipp gefunden|ohne treffer|fehler=…, ichweiss: kopfzeilen gelesen ordner=2 absender=5, fuerdich: mehr davon …. API (profile): GET /api/profile/ichweiss, POST /api/profile/ichweiss/interest {\"name\", \"state\": \"yes\"|\"no\"|\"forget\", \"src\", \"web\"}, POST /api/profile/ichweiss/recurring {\"id\"}, DELETE /api/profile/ichweiss; plus POST /api/profile/fuerdich/act {\"id\", \"do\": \"more\"}."
 },
 {
 "lang": "en",

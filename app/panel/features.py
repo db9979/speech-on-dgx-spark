@@ -48,7 +48,7 @@ ME_PAGES = (("overbox", "Überblick", "Overview"), ("bgbox", "Mein Zustand", "My
             ("logbox", "Werkzeug-Verlauf", "Tool history"), ("taskbox", "Aufgaben", "Tasks"),
             ("agentbox", "Aufträge", "Jobs"), ("mymcpbox", "Meine MCP-Dienste", "My MCP services"), ("wxbox", "Wetter", "Weather"), ("feedbox", "Reddit und Feeds", "Reddit and feeds"),
             ("probox", "Von selbst", "By itself"), ("notebox", "Mitteilungen", "Notifications"),
-            ("writebox", "Schreibhilfe", "Writing help"), ("conbox", "Kontakte", "Contacts"),
+            ("wissbox", "Was ich über dich weiß", "What I know about you"), ("writebox", "Schreibhilfe", "Writing help"), ("conbox", "Kontakte", "Contacts"),
             ("habox", "Smart Home", "Smart home"), ("roombox", "Raum-Modus", "Room mode"), ("espbox", "Lautsprecher", "Speakers"), ("telbox", "Telefon", "Phone"),
             ("trbox", "Bus und Bahn", "Bus and train"), ("tgbox", "Telegram", "Telegram"), ("appbox", "iPhone-App", "iPhone app"),
             ("andbox", "Android-App", "Android app"), ("deskbox", "Begleiter", "Companion"), ("pebbox", "Pebble-Uhr", "Pebble watch"),
@@ -323,6 +323,10 @@ FEATURES = (
     # phishing found in the own mails by fixed rules; tab „Für dich“ on the mail page
     F("fuerdich", "Für dich aus Mails", "For you from mail", "post", ("mail_insight",), parent="mail", me="mailbox",
       guide="fuerdich"),
+    # ichweiss.py (stages 3 and 4, „3a 4a 6a 7a“): interests with their evidence (count after „Stimmt“), Wiederkehrendes,
+    # the week and the month, one web tip a day; part of the same switch, its own page under Ich
+    F("ichweiss", "Was ich über dich weiß", "What I know about you", "post", ("mail_insight",), parent="fuerdich",
+      me="wissbox", guide="ichweiss"),
     F("schreib", "Schreibhilfe", "Writing help", "post", ("write_help",), me="writebox", guide="schreib"),
     F("schreibapps", "Schreibhilfe in anderen Programmen", "Writing help in other programs", "post", ("write_apps",), parent="schreib", me="writebox", guide="schreibapps"),
     F("contacts", "Kontakte", "Contacts", "post", ("contacts",), me="conbox", guide="contacts"),

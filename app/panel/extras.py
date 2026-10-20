@@ -37,6 +37,7 @@ import telefon_anruf
 import rufen
 import senden
 import fuerdich
+import ichweiss
 
 SERVICES = [roomfar, weather, contacts, parcels, fuerdich, tasks, transit, feeds, wiki, agent, senden, messages, remarkable, hamelden, hilfe, begleiter, meinmcp, docmake, bilder, musik, tagebuch, zustand_wz, rmliste, aendern, nasablage, naszustand, telefon_anruf, rufen]
 
@@ -102,3 +103,4 @@ async def briefing(uid, zone=None, private=True):
 async def due_once():
     await contacts.due_once()
     await feeds.due_once()
+    await ichweiss.due_once()

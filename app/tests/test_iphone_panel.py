@@ -242,7 +242,8 @@ class Things(unittest.TestCase):
              "wissensbuch": ("GET", "/api/profile/wissensbuch", 200),
              "calendar": ("GET", "/api/profile/calendar/view", 200), "mail": ("GET", "/api/profile/mail/inbox", 200),
              "mailmanage": ("GET", "/api/profile/mail/folders", 400), "mailsend": ("POST", "/api/profile/mail/send/preview", 400),
-             "calserver": ("GET", "/api/profile/calserver", 200), "fuerdich": ("GET", "/api/profile/fuerdich", 200)}
+             "calserver": ("GET", "/api/profile/calserver", 200), "fuerdich": ("GET", "/api/profile/fuerdich", 200),
+             "ichweiss": ("GET", "/api/profile/ichweiss", 200)}
 
     app, uid = Areas.app, Areas.uid
 
@@ -277,6 +278,14 @@ class Things(unittest.TestCase):
             self.assertNotIn(k, profiles.SETTINGS, k)       # never a profile switch
         self.assertEqual(set(iphone.THINGS) & set(iphone.AREAS), set())
 
+    @staticmethod
+    def ancestors(features, key):
+        out, k = [], features.BY_KEY[key].parent
+        while k:
+            out.append(k)
+            k = features.BY_KEY[k].parent if k in features.BY_KEY else ""
+        return out
+
     def test_each_part_opens_with_its_own_release_only(self):
         import features
         c, a = self.app("Thea")
@@ -289,8 +298,8 @@ class Things(unittest.TestCase):
             try:
                 self.assertFalse(a.get("/api/iphone/hello").json()["areas"][k], k)
                 self.assertEqual(a.request(method, path, **self.body(method)).status_code, 401, k)
-                for other, (m2, p2, ok2) in self.PROBE.items():   # the others stay open (the Wissensbuch hangs on Dokumente)
-                    if other != k and features.BY_KEY[other].parent != k:
+                for other, (m2, p2, ok2) in self.PROBE.items():   # the others stay open (the Wissensbuch hangs on Dokumente,
+                    if other != k and k not in self.ancestors(features, other):   # Was ich über dich weiß on Für dich on Mail)
                         self.assertEqual(a.request(m2, p2, **self.body(m2)).status_code, ok2, (k, other))
             finally:
                 helpers.set_config(deny={})

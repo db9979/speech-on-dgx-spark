@@ -2245,6 +2245,13 @@
 "titel": "Technik-Seite Sicherheit",
 "text": "A: Zustand → Technik, auf den Kasten „Sicherheit“ tippen: die Seite zeigt den Weg einer Frage in 10 Schritten mit Ausgängen (Notaus, Abgewiesen, Gastrechte, Vorschlag mit Ja), die Rollen-Tabelle, die Grenzen A bis E und die Code-Liste. B: Ein Beispiel wie „Mail verlangt eine Handlung“ antippen: die Schritte leuchten der Reihe nach. C: Auf Englisch umschalten: alles auf Englisch.",
 "thread": "Sicherheitsmodell beschreiben"
+},
+{
+"id": "P345",
+"v": 851,
+"titel": "Was ich über dich weiß",
+"text": "Ich → Was ich über dich weiß öffnen: Vorschlag mit Beleg mit „Stimmt“ bestätigen, eigenes Interesse eintragen, „Tipps aus dem Netz“ einschalten (am nächsten Tag ein Tipp, Link öffnet in neuem Tab). Unter E-Mail → Für dich an einer Bestellung „Mehr davon“ drücken. Wiederkehrende Rechnung: „Monatlich erinnern“, dann unter Erinnerungen prüfen. Sonntag ab 18 Uhr kommt der Wochenrückblick. Auf dem iPhone: Heute → Für dich → Was ich über dich weiß; CarPlay „Fristen vorlesen“.",
+"thread": "Persönlicher Assistent aus dem Postfach"
 }
 ]
 }

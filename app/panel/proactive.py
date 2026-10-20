@@ -43,7 +43,7 @@ KINDS = {"events": ("Termin-Vorlauf", 10, "pro_events"), "ha": ("Smart Home", 10
          "greet": ("Begrüßung", 3, "pro_greet"), "follow": ("Nachfrage", 1, "pro_follow"),
          "mail": ("Wichtige Mail", 10, "pro_mail"), "weather": ("Wetter", 1, "pro_weather"),
          "tidy": ("Postfach aufräumen", 2, "pro_tidy"), "bday": ("Geburtstag", 1, "pro_bday"),
-         "parcel": ("Paket kommt heute", 3, "pro_parcel"), "fuerdich": ("Fristen und Verdacht", 3, "pro_fuerdich"), "transit": ("Bus und Bahn", 1, "pro_transit"),
+         "parcel": ("Paket kommt heute", 3, "pro_parcel"), "fuerdich": ("Fristen und Verdacht", 3, "pro_fuerdich"), "rueckblick": ("Wochenrückblick", 1, "pro_rueckblick"), "transit": ("Bus und Bahn", 1, "pro_transit"),
          "tipp": ("Funktion vorschlagen", 1, "pro_tips"),
          "feeds": ("Neues aus Feeds", 10, "pro_feeds"),   # feeds.py: replies at once, keyword hits at most feeds.WORD_DAY
          "meldung": ("Neue Problem-Meldung", 10, "pro_meldung"),
@@ -1039,6 +1039,29 @@ async def check_fuerdich(uid, p, now):
         await deliver(uid, "fuerdich", text, why=f"Für dich: {why}", data=why, mail=True)
 
 
+RUECK_DAY, RUECK_HOURS = 6, (18, 21)    # Sundays from 18 o'clock (6a), once per calendar week
+
+
+async def check_rueckblick(uid, p, now):
+    """Wochenrückblick (ichweiss.week_sentence): Sundays from 18 o'clock, once per ISO week; fixed sentence with numbers
+    and the titles of the coming deadlines only."""
+    import fuerdich
+    import ichweiss
+    st = state(uid)
+    wk = "%d-%02d" % now.isocalendar()[:2]
+    if now.weekday() != RUECK_DAY or not RUECK_HOURS[0] <= now.hour < RUECK_HOURS[1] or st.get("rueck_week") == wk or \
+            not ichweiss.usable(uid) or blocked(uid, "rueckblick", p, now):
+        return
+    try:
+        items, _ = await asyncio.wait_for(asyncio.shield(fuerdich._reading(uid)), FUER_WAIT)
+    except Exception:
+        return
+    _mut(uid, lambda s: s.update(rueck_week=wk))
+    w = ichweiss.week(uid, items, now.date())
+    await deliver(uid, "rueckblick", ichweiss.week_sentence(w, now.date()), why="Wochenrückblick am Sonntag",
+                  data="rueckblick", mail=True)
+
+
 async def check_tips(uid, p, now):
     """One hint on a function that would help, at most once a week (tipps.py decides which), in the day only."""
     import tipps
@@ -1094,6 +1117,7 @@ async def due_once(now=None):
                          ("bday", lambda: check_bday(uid, p, local) if p.get("pro_bday") else None),
                          ("parcel", lambda: check_parcel(uid, p, local) if p.get("pro_parcel") else None),
                          ("fuerdich", lambda: check_fuerdich(uid, p, local) if p.get("pro_fuerdich", True) else None),
+                         ("rueckblick", lambda: check_rueckblick(uid, p, local) if p.get("pro_rueckblick", True) else None),
                          ("transit", lambda: check_transit(uid, p, local) if p.get("pro_transit") else None),
                          ("tipp", lambda: check_tips(uid, p, local) if p.get("pro_tips") else None)):
             try:
@@ -1121,6 +1145,7 @@ def status(uid):
     import weather
     import feeds
     import fuerdich
+    import ichweiss
     import homeassistant
     import hamelden
     import mail
@@ -1141,7 +1166,7 @@ def status(uid):
                     "search": bool(cc.get("search_url") and features.allowed("search", uid, cc)),
                     "history": features.allowed("history", uid, cc), "reminders": features.allowed("reminders", uid, cc),
                     "weather": weather.usable(uid), "contacts": contacts.usable(uid), "parcels": parcels.usable(uid),
-                    "fuerdich": fuerdich.usable(uid),
+                    "fuerdich": fuerdich.usable(uid), "ichweiss": ichweiss.usable(uid),
                     "transit": bool(transit.usable(uid) and transit.get(uid).get("commute")),
                     "feeds": feeds.usable(uid)}}
 

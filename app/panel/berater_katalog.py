@@ -215,7 +215,7 @@ OHNE_PROFIL = (
         "chat_push_text", "chat_receipts", "con_bday", "daily", "devup_night", "doc_deliver", "doc_docling", "doc_due", "doc_sender",
         "echo", "face", "follow", "hands", "learn", "live", "msg_all", "msg_from", "msg_speaker", "pro_bday", "pro_events", "pro_feeds",
         "pro_follow", "pro_greet", "pro_ha", "pro_ha_cam", "pro_ha_events", "pro_ha_live", "pro_ha_loud", "pro_ha_me",
-        "pro_lead", "pro_learn", "pro_mail", "pro_mail_from", "pro_mail_smart", "pro_max", "pro_on", "pro_parcel", "pro_fuerdich",
+        "pro_lead", "pro_learn", "pro_mail", "pro_mail_from", "pro_mail_smart", "pro_max", "pro_on", "pro_parcel", "pro_fuerdich", "pro_rueckblick",
         "peb_cmds", "peb_fern", "pro_place", "pro_quiet", "pro_tidy", "pro_tips", "voice_tips", "pro_transit", "pro_weather", "pro_weather_at", "rate_back",
         "report_notify", "rm_inbox", "rm_morning", "rm_morning_at", "rm_week", "rm_tidy", "rm_model", "rm_tasks_cal", "rm_tasks_lists", "rm_tasks_mail",
         "rm_tasks_new", "rm_tasks_note", "role", "roles",

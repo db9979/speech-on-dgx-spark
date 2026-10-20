@@ -149,6 +149,7 @@ MODULE = {
     "antwortvorschlag": ("dienste", "Antwortvorschläge beim Antworten auf eine Mail: drei Richtungen, umformen, nur im Speicher"),
     "postfach": ("dienste", "Mails ordnen auf der Seite E-Mail: gelesen, markieren, Archiv, Ordner, Mehrfachauswahl, nie löschen"),
     "mailregeln": ("dienste", "Mail-Regeln der Seite E-Mail: wenn Absender/Betreff, dann Ordner, gelesen, markieren; nie löschen"),
+    "ichweiss": ("dienste", "Was ich über dich weiß: Interessen mit Beleg, Wiederkehrendes, Woche, Monat und ein Netz-Tipp am Tag"),
     "fuerdich": ("dienste", "Für dich: findet Rechnungen, Verträge, Bestellungen, Angebote, offene Antworten und Phishing in den eigenen Mails"),
     "mailstil": ("dienste", "Mailstil: lernt aus gesendeten Mails, wie das Profil schreibt, für Mail-Entwürfe"),
     "parcels": ("dienste", "Pakete aus Versand-Mails"),

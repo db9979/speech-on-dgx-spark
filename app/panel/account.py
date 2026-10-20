@@ -89,7 +89,7 @@ router = APIRouter()
 
 # whoami flag -> function in features.py
 WHO = {"documents": "documents", "reminders": "reminders", "speaker_id": "speaker", "calendar": "calendar",
-       "homeassistant": "ha", "mail": "mail", "mail_tidy": "tidy", "mail_style": "mailstil", "mail_insight": "fuerdich", "mail_manage": "mailmanage", "mail_send": "mailsend", "proactive": "proactive", "room": "room",
+       "homeassistant": "ha", "mail": "mail", "mail_tidy": "tidy", "mail_style": "mailstil", "mail_insight": "fuerdich", "ichweiss": "ichweiss", "mail_manage": "mailmanage", "mail_send": "mailsend", "proactive": "proactive", "room": "room",
        "room_voices": "roomtv", "room_ha": "roomha", "room_remote": "roomfar", "weather": "weather", "contacts": "contacts",
        "parcels": "parcels", "telegram": "telegram", "tasks": "tasks", "transit": "transit", "feeds": "feeds",
        "esp32": "esp32", "iphone": "iphone", "iphone_panel": "iphonepanel", "pebble": "pebble", "pebble_chat": "pebblechat", "pebble_reply": "pebbleantwort", "pebble_remote": "pebblefern", "pebble_health": "pebblegesund", "pebble_face": "pebblezifferblatt", "pebble_day": "pebbletag", "pebble_alerts": "pebblemeldung", "pebble_note": "pebblemerken", "pebble_place": "pebbleort", "pebble_follow": "pebblefolge", "pebble_quick": "pebbleschnell", "pebble_remind": "pebbleerinnern", "terminal": "terminal",

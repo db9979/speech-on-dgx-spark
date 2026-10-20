@@ -102,7 +102,7 @@ AUFGABEN = {
     "Lernen aus Gesprächen": "hintergrund", "Lernen": "hintergrund", "Korrekturen lernen": "hintergrund",
     "Proaktiver Hinweis": "hintergrund", "Gedächtnis-Themen": "hintergrund", "Gedächtnis aufräumen": "hintergrund",
     "Kamerabild": "hintergrund", "Steckbrief": "hintergrund", "Dokument lesen": "hintergrund",
-    "Tagesüberblick": "hintergrund", "Postfach aufräumen": "hintergrund", "Mail sortieren": "hintergrund", "Für dich": "hintergrund", "Wichtige Mail": "hintergrund",
+    "Tagesüberblick": "hintergrund", "Postfach aufräumen": "hintergrund", "Mail sortieren": "hintergrund", "Für dich": "hintergrund", "Netz-Tipp": "hintergrund", "Wichtige Mail": "hintergrund",
     "reMarkable": "hintergrund", "reMarkable: Sprachmodell": "hintergrund", "Suchindex": "hintergrund",
     "Treffer nachsortieren": "hintergrund", "Dokumente suchen": "hintergrund",
     # the settings assistant and Verbessern

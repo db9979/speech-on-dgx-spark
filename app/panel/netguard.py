@@ -137,6 +137,7 @@ DIRECT_OK = {
     "loopwacht": ("lokal", "nur die Meldung an systemd über den Unix-Socket aus $NOTIFY_SOCKET (Watchdog), kein Netz"),
     "mcpserver": ("lokal", "eigene Sprachdienste auf localhost"),
     "monitor": ("lokal", "Gesundheitsabfrage der eigenen Dienste auf localhost"),
+    "ichweiss": ("suche", "SearXNG für den Netz-Tipp, nur mit dem Wort eines bestätigten Interesses"),
     "proactive": ("sprachmodell", "Sprachmodell und SearXNG"),
     "push": ("fest", "Browser-Push nur an bekannte Push-Dienste (PUSH_HOSTS)"),
     "quality": ("sprachmodell", "Sprachmodell"),

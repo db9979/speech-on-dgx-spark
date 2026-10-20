@@ -28,14 +28,21 @@ async function fuerAct(x,b){b.disabled=true;
 async function fuerCancel(x,b){b.disabled=true;
   try{const d=await (await api('/api/profile/fuerdich/act',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:x.id,do:'cancel'})})).json();
     await postFromFuer('',d)}catch(e){fuerMsg(e.message,true)}b.disabled=false}
+// stage 3 („3a“): „Mehr davon“ makes the shop of an order or offer a confirmed interest (Ich → Was ich über dich weiß)
+async function fuerMore(x,b){b.disabled=true;
+  try{const d=await (await api('/api/profile/fuerdich/act',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:x.id,do:'more'})})).json();
+    for(const y of FUER.items)if(y.who===x.who){y.fits=d.name;y.acts=(y.acts||[]).filter(a=>a!=='more')}fuerRender();
+    fuerMsg(t('Gemerkt: „','Noted: "')+d.name+t('“ interessiert dich. Ändern unter Ich → Was ich über dich weiß.','" interests you. Change it under Me → What I know about you.'))}
+  catch(e){b.disabled=false;fuerMsg(e.message,true)}}
 function fuerEvent(x){KAL.q=x.event;KAL.qi=null;KAL.qfocus=true;icTabSet('cal','show');goSec('cal')}
 function fuerButtons(x){const a=x.acts||[],out=[];
   if(a.includes('remind')){const b=icBtn('bell',t('Erinnern','Remind me'),b=>fuerAct(x,b));b.dataset.fuerRemind=x.id;out.push(b)}
   if(a.includes('event')&&x.event&&typeof KAL!=='undefined'){const b=icBtn('cal',t('Eintragen','Add to calendar'),()=>fuerEvent(x));b.dataset.fuerEvent=x.id;out.push(b)}
   if(a.includes('reply')&&window.postFromFuer){const b=icBtn('reply',t('Antwort entwerfen','Draft a reply'),()=>postFromFuer(x.ref));b.dataset.fuerReply=x.id;out.push(b)}
   if(a.includes('cancel')&&window.postFromFuer){const b=icBtn('pen',t('Kündigung entwerfen','Draft a cancellation'),b=>fuerCancel(x,b));b.dataset.fuerCancel=x.id;out.push(b)}
+  if(a.includes('more')){const b=icBtn('spark',t('Mehr davon','More of this'),b=>fuerMore(x,b));b.dataset.fuerMore=x.id;out.push(b)}
   return out}
-function fuerItem(x){const E=icEl,meta=[FUER_KIND[x.kind]||x.kind,x.line,t('aus ','from ')+x.who+(x.subject?' · „'+x.subject+'“':'')].filter(Boolean).join(' · ');
+function fuerItem(x){const E=icEl,meta=[FUER_KIND[x.kind]||x.kind,x.fits?t('passt zu „','fits "')+x.fits+t('“','"'):'',x.line,t('aus ','from ')+x.who+(x.subject?' · „'+x.subject+'“':'')].filter(Boolean).join(' · ');
   const ok=icBtn('check',t('Erledigt','Done'),()=>fuerMark(x.id,'done'));ok.dataset.fuerDone=x.id;
   const no=icBtn('x',x.kind==='verdacht'?t('Ist echt','Is genuine'):t('Nicht interessant','Not interesting'),()=>fuerMark(x.id,'no'));no.dataset.fuerNo=x.id;
   const lead=E('span','fd-ico'+(x.urgent?' hot':''));lead.appendChild(icSvg(FUER_ICON[x.kind]||'mail',16));
@@ -53,6 +60,11 @@ function fuerRender(){const d=FUER,box=$('fuerbox'),E=icEl;if(!box||!d)return;bo
   box.appendChild(icCard('mail',t('Für dich','For you'),t(`${urgent.length} brauchen dich · ${rest.length} gut zu wissen`,`${urgent.length} need you · ${rest.length} good to know`),[again],menu));
   const m=E('div','fh');m.id='fuermsg';box.appendChild(m);
   for(const e of d.errors||[])box.appendChild(E('div','fh err','⚠ '+t('Postfach nicht lesbar: ','Mailbox not readable: ')+e));
+  // stage 4 („7a“, „4a“): this month's sum from checked amounts and the tip of the day; the tip's address only as an
+  // https link in a new tab without the Spark's address (noreferrer), its title as text
+  if(d.month)box.appendChild(E('div','fh',d.month.line));
+  if(d.tip&&d.tip.url){const a=E('a','b',t('Öffnen','Open'));a.href=d.tip.url;a.target='_blank';a.rel='noopener noreferrer';
+    box.appendChild(icList([icRow(d.tip.title,t('Tipp aus dem Netz zu „','Tip from the web for "')+d.tip.name+t('“ · ','" · ')+d.tip.domain,[a])]))}
   if(!d.items.length){box.appendChild(icEmpty(t('Gerade nichts, was dich braucht.','Nothing that needs you right now.')));return}
   if(urgent.length){box.appendChild(icGroup(t('Braucht dich','Needs you'),urgent.length));box.appendChild(icList(urgent.map(fuerItem)))}
   if(rest.length){box.appendChild(icGroup(t('Gut zu wissen','Good to know'),rest.length));box.appendChild(icList(rest.map(fuerItem)))}}

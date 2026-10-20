@@ -113,6 +113,15 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
             }
             out.append(post)
         }
+        if areas.contains("fuerdich") {   // Für dich (fuerdich.py): deadlines and open bills, read aloud like any answer
+            let due = CPListItem(text: String(localized: "Fristen vorlesen"), detailText: String(localized: "Was du diese Woche erledigen musst"),
+                                 image: UIImage(systemName: "tray.full"))
+            due.handler = { _, done in
+                Conversation.shared.write(String(localized: "Was muss ich diese Woche erledigen?"))
+                done()
+            }
+            out.append(due)
+        }
         return out
     }
 

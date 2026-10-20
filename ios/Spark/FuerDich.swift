@@ -17,6 +17,7 @@ struct FuerItem: Identifiable, Hashable {
     let addr: String
     let event: String
     let acts: [String]
+    let fits: String
 
     init(_ d: [String: Any]) {
         id = d["id"] as? String ?? ""
@@ -30,6 +31,7 @@ struct FuerItem: Identifiable, Hashable {
         addr = String((d["addr"] as? String ?? "").prefix(200))
         event = String((d["event"] as? String ?? "").prefix(200))
         acts = d["acts"] as? [String] ?? []
+        fits = String((d["fits"] as? String ?? "").prefix(40))
     }
 
     var icon: String {
@@ -47,6 +49,8 @@ final class FuerModel: ObservableObject {
     @Published var errors: [String] = []
     @Published var error: String?
     @Published var note: String?
+    @Published var month = ""
+    @Published var tip: WissTip?
 
     func load(_ fresh: Bool = false) async {
         guard let api = SparkAPI.current else { error = String(localized: "Nicht gekoppelt."); return }
@@ -58,6 +62,8 @@ final class FuerModel: ObservableObject {
             waiting = d["loading"] as? Bool ?? false
             if !waiting { items = (d["items"] as? [[String: Any]] ?? []).prefix(60).map(FuerItem.init) }
             errors = (d["errors"] as? [String] ?? []).prefix(5).map { String($0.prefix(120)) }
+            month = String(((d["month"] as? [String: Any])?["line"] as? String ?? "").prefix(200))
+            tip = WissTip(d["tip"] as? [String: Any])
             error = nil
         } catch {
             self.error = error.localizedDescription
@@ -81,6 +87,18 @@ final class FuerModel: ObservableObject {
             let d = try await api.object("POST", "api/profile/fuerdich/act", body: ["id": x.id, "do": "remind"])
             let due = Date(timeIntervalSince1970: ((d["due"] as? NSNumber)?.doubleValue ?? 0) / 1000)
             note = String(localized: "Erinnerung gesetzt: \(d["text"] as? String ?? "") · \(due.formatted(date: .abbreviated, time: .shortened))")
+        } catch {
+            note = error.localizedDescription
+        }
+    }
+
+    /// „Mehr davon“ (stage 3): the shop of an order or offer becomes a confirmed interest (Was ich über dich weiß).
+    func more(_ x: FuerItem) async {
+        guard let api = SparkAPI.current else { return }
+        do {
+            let d = try await api.object("POST", "api/profile/fuerdich/act", body: ["id": x.id, "do": "more"])
+            note = String(localized: "Gemerkt: „\(d["name"] as? String ?? x.who)“ interessiert dich.")
+            await load()
         } catch {
             note = error.localizedDescription
         }
@@ -125,6 +143,7 @@ struct FuerDichView: View {
                 Text("Was der Spark in deinen Mails gefunden hat, nach festen Regeln. Die Mails bleiben ungelesen und unverändert; Links aus Mails öffnet der Spark nie.")
                     .font(.footnote).foregroundStyle(.secondary)
                 if let n = m.note { Text(verbatim: n).font(.footnote) }
+                NavigationLink { IchWeissView() } label: { Label("Was ich über dich weiß", systemImage: "person.text.rectangle") }
             }
             if m.nomail {
                 Text(SparkAPI.way(String(localized: "Erst im Panel unter E-Mail → Einstellungen ein Postfach verbinden."))).foregroundStyle(.secondary)
@@ -136,6 +155,18 @@ struct FuerDichView: View {
             let urgent = m.items.filter(\.urgent), rest = m.items.filter { !$0.urgent }
             if !urgent.isEmpty { Section("Braucht dich") { ForEach(urgent) { row($0) } } }
             if !rest.isEmpty { Section("Gut zu wissen") { ForEach(rest) { row($0) } } }
+            if !m.month.isEmpty || m.tip != nil {
+                Section("Diesen Monat") {
+                    if !m.month.isEmpty { Text(verbatim: m.month).font(.subheadline) }
+                    if let tip = m.tip {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(verbatim: tip.title)
+                            Text("Tipp aus dem Netz zu „\(tip.name)“ · \(tip.domain)").font(.caption).foregroundStyle(.secondary)
+                            if let u = tip.url { Link("Öffnen", destination: u).font(.callout) }
+                        }
+                    }
+                }
+            }
             if !m.errors.isEmpty { Text("Postfach nicht lesbar: \(m.errors.joined(separator: ", "))").foregroundStyle(.red) }
             if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
         }
@@ -182,6 +213,7 @@ struct FuerDichView: View {
                 Text(verbatim: x.title).font(.headline)
                 if !x.line.isEmpty { Text(verbatim: x.line).font(.subheadline).foregroundStyle(.secondary) }
                 Text(verbatim: x.who + (x.subject.isEmpty ? "" : " · „" + x.subject + "“")).font(.caption).foregroundStyle(.secondary)
+                if !x.fits.isEmpty { Text("passt zu „\(x.fits)“").font(.caption).foregroundStyle(.tint) }
                 if !x.acts.isEmpty {
                     HStack(spacing: 14) {
                         if x.acts.contains("remind") { Button("Erinnern") { Task { await m.remind(x) } } }
@@ -194,6 +226,7 @@ struct FuerDichView: View {
                         if x.acts.contains("cancel") {
                             Button("Kündigung entwerfen") { Task { writing = await m.cancelDraft(x) } }
                         }
+                        if x.acts.contains("more") { Button("Mehr davon") { Task { await m.more(x) } } }
                     }
                     .font(.callout)
                     .buttonStyle(.borderless)

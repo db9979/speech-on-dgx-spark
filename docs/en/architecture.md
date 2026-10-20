@@ -267,6 +267,7 @@ Home Assistant, mail, calendar, tasks, weather, reMarkable, MCP and what the Spa
 | `app/panel/fuerdich.py` | Für dich: the Spark looks through the profile's own mailboxes and finds what needs the person or is good to know: rechnung a bill with an amount, with the da … |
 | `app/panel/hamelden.py` | Home Assistant tells the Spark. |
 | `app/panel/homeassistant.py` | Home Assistant per profile: each profile connects its own Home Assistant (address and long-lived access token); only that profile's requests can use it, gues … |
+| `app/panel/ichweiss.py` | Was ich über dich weiß: one page under Ich that shows what the Spark knows about the person and lets it be corrected: Interessen proposed with their evidence … |
 | `app/panel/kalenderserver.py` | Spark-Kalender, Stufe 4: the Spark as a CalDAV server, so the iPhone's own calendar app (or Thunderbird, DAVx5 on Android) shows and changes the profile's Sp … |
 | `app/panel/kalenderspiegel.py` | Spark-Kalender, Stufe 1: a copy of every CalDAV calendar on the Spark itself. |
 | `app/panel/mail.py` | Reading e-mail per profile over IMAP (read only; guests have none). |
@@ -512,6 +513,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `users/ID/speicher.vor-nas.json` | Copy of my data before the move to storage places | Login | – | yes | – |
 | `users/ID/mail-tidy.json` | Inbox tidy | Settings | – | yes | – |
 | `users/ID/fuerdich.json` | For you: what you marked as done or not interesting (only checksums) | Settings | – | yes | – |
+| `users/ID/interessen.json` | What I know about you: confirmed and refused interests and the last web tip (never a mail) | Settings | – | yes | – |
 | `users/ID/mailstil.json` | Mail style (only the summary, never a mail) | Settings | – | yes | – |
 | `users/ID/mail-regeln.json` | Mail rules of the E-mail page (senders, words, folders; never a mail) | Settings | – | yes | – |
 | `users/ID/spark-kalender.json` | Spark calendar: appointments of the calendars without an account (only here) | Appointments | sealed | yes | – |

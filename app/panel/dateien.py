@@ -85,6 +85,8 @@ DATEIEN = [
     profil("mail-tidy.json", "Posteingang aufräumen", "Inbox tidy", art="Einstellungen"),
     profil("fuerdich.json", "Für dich: was du als erledigt oder uninteressant markiert hast (nur Prüfsummen)",
            "For you: what you marked as done or not interesting (only checksums)", art="Einstellungen"),
+    profil("interessen.json", "Was ich über dich weiß: bestätigte und abgelehnte Interessen und der letzte Netz-Tipp (keine Mail)",
+           "What I know about you: confirmed and refused interests and the last web tip (never a mail)", art="Einstellungen"),
     profil("mailstil.json", "Mailstil (nur die Zusammenfassung, keine Mail)", "Mail style (only the summary, never a mail)", art="Einstellungen"),
     profil("mail-regeln.json", "Mail-Regeln der Seite E-Mail (Absender, Wörter, Ordner; keine Mail)", "Mail rules of the E-mail page (senders, words, folders; never a mail)",
            art="Einstellungen"),  # mailregeln.py

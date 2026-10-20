@@ -256,13 +256,13 @@ class Page(Fake):
                     await pg.evaluate("openMe('mailbox')")
                     await b.until(pg, "!!document.querySelector('#promail input[data-k=pro_parcel]')")
                     mail_rows = await pg.evaluate("[...document.querySelectorAll('#promail input[data-k]')].map(e=>e.dataset.k)")
-                    self.assertEqual(sorted(mail_rows), ["pro_fuerdich", "pro_mail", "pro_parcel", "pro_tidy"])
+                    self.assertEqual(sorted(mail_rows), ["pro_fuerdich", "pro_mail", "pro_parcel", "pro_rueckblick", "pro_tidy"])
                     await pg.evaluate("proIn('procal')")
                     await b.until(pg, "!!document.querySelector('#procal input[data-k=pro_events]')")
                     await pg.evaluate("openMe('probox')")
                     await b.until(pg, "!!document.querySelector('#probox input[data-k=pro_on]')")
                     here = await pg.evaluate("[...document.querySelectorAll('#probox input[data-k]')].map(e=>e.dataset.k)")
-                    for k in ("pro_events", "pro_mail", "pro_tidy", "pro_parcel", "pro_fuerdich"):
+                    for k in ("pro_events", "pro_mail", "pro_tidy", "pro_parcel", "pro_fuerdich", "pro_rueckblick"):
                         self.assertNotIn(k, here)
                     self.assertIn("E-Mail → Einstellungen", await pg.evaluate("$('probox').textContent"))
                     self.assertEqual(errors, [])

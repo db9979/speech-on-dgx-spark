@@ -345,7 +345,17 @@ def _raw_text(msg):
     return "\n".join(out)[:2 * RAW]
 
 
-def _account(acct, uid, today, now):
+def _shop(shops, h):
+    """Counts a shop's orders, offers and newsletters from the header alone (Was ich über dich weiß, ichweiss.py)."""
+    subj, name = h["subject"], who(h["from"])
+    what = "orders" if ORDER.search(subj) else "offers" if (h["bulk"] or h["cat"]) and OFFER.search(subj) else \
+        "news" if h["bulk"] or h["cat"] in ("werbung", "newsletter") else ""
+    if what and name and len(shops) < 300:
+        c = shops.setdefault(name, {})
+        c[what] = c.get(what, 0) + 1
+
+
+def _account(acct, uid, today, now, shops=None):
     import mailregeln
     import parcels
     import tidy
@@ -378,6 +388,8 @@ def _account(acct, uid, today, now):
                 subj = h["subject"]
                 if mailregeln.quiet(uid, h["from"], subj):   # a mail rule says „nicht in Für dich“ (mailregeln.py)
                     continue
+                if shops is not None:
+                    _shop(shops, h)
                 person = asks(h, sent_dt, now, answered, wrote)
                 if not (person or BILL.search(subj) or ORDER.search(subj) or CONTRACT.search(subj) or
                         any(re.search(r"\b" + br + r"\b", f"{h['from']} {subj}".lower()) for br in BRANDS) or
@@ -403,6 +415,14 @@ def _account(acct, uid, today, now):
     return out
 
 
+_shops = {}                     # uid -> {shop name: {"orders", "offers", "news"}} of the last reading (memory only)
+
+
+def shops(uid):
+    """Per shop how many orders, offers and newsletters the last reading saw (ichweiss.proposals); names only."""
+    return _shops.get(uid, {})
+
+
 def scan(uid, today=None, now=None, force=False):
     """(items newest first without pressed ones, [(mailbox name, error)]). force: read anew whatever the cache holds
     (the cache stays until the new reading replaces it, so the tab keeps showing the last one meanwhile)."""
@@ -411,11 +431,11 @@ def scan(uid, today=None, now=None, force=False):
         return hit[1]
     today = today or datetime.date.today()
     now = now or datetime.datetime.now(datetime.timezone.utc)
-    found, errors = [], []
+    found, errors, shop = [], [], {}
 
     def one(a):
         try:
-            return _account(a, uid, today, now), None
+            return _account(a, uid, today, now, shop), None
         except (ValueError, OSError, imaplib.IMAP4.error) as e:
             return [], (a.get("name", ""), "nicht_lesbar" if isinstance(e, ValueError) else type(e).__name__)
     accts = mail.get(uid)["accounts"]
@@ -437,7 +457,9 @@ def scan(uid, today=None, now=None, force=False):
     res = (items, errors)
     if len(_cache) > 200:
         _cache.clear()
+        _shops.clear()
     _cache[uid] = (time.time(), res)
+    _shops[uid] = shop
     return res
 
 
@@ -480,17 +502,25 @@ def sentence(x, today):
 
 
 def public(uid, items, errors, today=None):
+    import ichweiss
     today = today or datetime.date.today()
+    wiss = features.allowed("ichweiss", uid)
     out = []
     for x in items:
         title, line = sentence(x, today)
         out.append({"id": x["id"], "kind": x["kind"], "urgent": x["kind"] in URGENT, "title": title, "line": line,
                     "who": x.get("who", ""), "subject": x.get("subject", ""), "sent": x["sent"], "day": x.get("day", ""),
                     "amount": x.get("amount", ""), "ref": x.get("ref", ""), "folder": x.get("box", "INBOX"), "addr": x.get("addr", ""),
-                    "acts": acts(uid, x), "event": event_line(x, today)})
-    out.sort(key=lambda y: (not y["urgent"], y["day"] or "9999", y["sent"]))
+                    "acts": acts(uid, x), "event": event_line(x, today),
+                    "fits": ichweiss.fits(uid, x.get("who", "")) if wiss and x["kind"] in SHOP_KINDS else ""})
+    # an offer that fits a confirmed interest comes first among the offers (stage 3, „3a 4a“)
+    out.sort(key=lambda y: (not y["urgent"], not y["fits"], y["day"] or "9999", y["sent"]))
     counts = {k: sum(1 for y in out if y["kind"] == k) for k in KINDS}
-    return {"items": out, "counts": counts, "errors": [f"{n}: {e}" for n, e in errors]}
+    res = {"items": out, "counts": counts, "errors": [f"{n}: {e}" for n, e in errors]}
+    if wiss:                    # Diesen Monat (7a) and the tip from the web (4a) at the end of the tab
+        m = ichweiss.month_sum(items, today)
+        res.update(month=dict(m, line=ichweiss.month_line(m)), tip=ichweiss.tip_of(uid))
+    return res
 
 
 # ---------------------------------------------------------------- stage 2: the buttons (Dominik 2026-10-18 „5a“)
@@ -500,6 +530,7 @@ def public(uid, items, errors, today=None):
 REMIND_KINDS = ("rechnung", "vertrag", "angebot", "antwort")
 REMIND_HOUR = 9                 # a reminder rings at 9 o'clock on the day before the deadline
 REMIND_SOON = 3600              # never sooner than this from now
+SHOP_KINDS = ("bestellung", "angebot")   # „Mehr davon“ makes the shop a confirmed interest (ichweiss.py)
 NOSEND = re.compile(r"(?i)^(no-?reply|do-?not-?reply|mailer-daemon|postmaster|bounce\w*)[@.+-]")   # no cancelling mail goes there
 
 
@@ -527,6 +558,10 @@ def acts(uid, x):
         out.append("reply")
     if k == "vertrag" and features.allowed("mailsend", uid):
         out.append("cancel")
+    if k in SHOP_KINDS and x.get("who") and features.allowed("ichweiss", uid):
+        import ichweiss
+        if not ichweiss.known(uid, x["who"]):
+            out.append("more")
     return out
 
 
@@ -748,17 +783,17 @@ def api_forget(request: Request, prof=Depends(browser_profile)):
 
 @router.post("/api/profile/fuerdich/act", dependencies=[Depends(assistant)])
 async def api_act(request: Request, prof=Depends(own_profile)):
-    """A button of a card: {"id", "do": "remind"} sets its reminder, {"id", "do": "cancel"} returns the draft of a
+    """A button of a card: {"id", "do": "remind"} sets its reminder, {"id", "do": "more"} (Mehr davon) makes the shop a
+    confirmed interest (ichweiss.py), {"id", "do": "cancel"} returns the draft of a
     cancelling mail ({"to", "subject", "text"}, nothing is sent; the preview sheet of the mail page sends)."""
     _mine(request, prof)
     b = await json_body(request, 2 * 1024)
     k, do, uid = b.get("id"), b.get("do"), prof["id"]
-    if not isinstance(k, str) or not re.fullmatch(r"[0-9a-f]{20}", k) or do not in ("remind", "cancel"):
+    if not isinstance(k, str) or not re.fullmatch(r"[0-9a-f]{20}", k) or do not in ("remind", "cancel", "more"):
         print("fuerdich: knopf abgelehnt grund=eingabe", flush=True)
-        raise HTTPException(400, "id and do (remind, cancel)")
+        raise HTTPException(400, "id and do (remind, cancel, more)")
     x = find(uid, k)
-    want = {"remind": "remind", "cancel": "cancel"}[do]
-    if x is None or want not in acts(uid, x):
+    if x is None or do not in acts(uid, x):
         print(f"fuerdich: knopf abgelehnt grund={'fehlt' if x is None else 'nicht_erlaubt'} {profiles.log_name(prof)}", flush=True)
         raise HTTPException(404 if x is None else 403, "Diese Karte gibt es nicht mehr. Bitte neu laden."
                             if x is None else "Für diese Karte gibt es diesen Knopf nicht.")
@@ -767,6 +802,11 @@ async def api_act(request: Request, prof=Depends(own_profile)):
         item = remind(uid, x)
         print(f"fuerdich: erinnerung gesetzt {profiles.log_name(prof)}", flush=True)
         return {"ok": True, "text": item["text"], "due": item["due"]}
+    if do == "more":
+        import ichweiss
+        item = ichweiss.set_state(uid, x["who"], "yes", "karte")
+        print(f"fuerdich: mehr davon {profiles.log_name(prof)}", flush=True)
+        return {"ok": True, "name": item["name"]}
     print(f"fuerdich: kuendigung entworfen {profiles.log_name(prof)}", flush=True)
     return dict(cancel_draft(uid, x, datetime.date.today()), ok=True)
 

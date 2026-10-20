@@ -220,6 +220,7 @@ WITHOUT = {
     "schreib": "das Modell formuliert selbst",
     "mailsend": "kein Werkzeug fürs Modell: Vorschau-Blatt auf der Seite, per Sprache feste Sätze des Panels (senden.answer) mit Ja",
     "mailmanage": "nur Knöpfe auf der Seite E-Mail (gelesen, Archiv, Verschieben); per Stimme ordnet Postfach aufräumen",
+    "ichweiss": "eine Seite unter Ich → Was ich über dich weiß; Fristen und Rückblick per Sprache über fuer_dich",
     "mailstil": "wirkt in jedem Mail-Entwurf (mail_draft, Begleiter); gelernt wird nur auf Knopfdruck unter E-Mail → Einstellungen",
     "schreibapps": "Kanal in anderen Programmen",
     "begleitermeeting": "startet am Begleiter",

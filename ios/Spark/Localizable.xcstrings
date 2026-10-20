@@ -12980,6 +12980,366 @@
           }
         }
       }
+    },
+    "Gemerkt: „%@“ interessiert dich.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noted: \"%@\" interests you."
+          }
+        }
+      }
+    },
+    "Kommt nicht wieder als Vorschlag.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Will not be proposed again."
+          }
+        }
+      }
+    },
+    "Vergessen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forgotten."
+          }
+        }
+      }
+    },
+    "Diese Erinnerung gibt es schon.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This reminder exists already."
+          }
+        }
+      }
+    },
+    "Monatliche Erinnerung gesetzt: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Monthly reminder set: %@"
+          }
+        }
+      }
+    },
+    "Was der Spark über dich weiß und woher: Interessen zählen erst, wenn du „Stimmt“ sagst. Feste Regeln, kein Modell, alles bleibt auf dem Spark.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What the Spark knows about you and where from: interests count only once you say \"Right\". Fixed rules, no model, everything stays on the Spark."
+          }
+        }
+      }
+    },
+    "Vorschläge": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proposals"
+          }
+        }
+      }
+    },
+    "Beleg: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evidence: %@"
+          }
+        }
+      }
+    },
+    "Nicht so": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not really"
+          }
+        }
+      }
+    },
+    "Interessen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Interests"
+          }
+        }
+      }
+    },
+    "Tipps aus dem Netz": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tips from the web"
+          }
+        }
+      }
+    },
+    "Vergessen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forget"
+          }
+        }
+      }
+    },
+    "z. B. Rennrad": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "e.g. road bike"
+          }
+        }
+      }
+    },
+    "Wieder vorschlagen dürfen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "May be proposed again"
+          }
+        }
+      }
+    },
+    "Aus dem Netz": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From the web"
+          }
+        }
+      }
+    },
+    "Tipp zu „%@“ · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tip for \"%@\" · %@"
+          }
+        }
+      }
+    },
+    "Wiederkehrendes": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recurring"
+          }
+        }
+      }
+    },
+    "Lese die Kopfzeilen deiner Mails …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading your mail headers …"
+          }
+        }
+      }
+    },
+    "Nichts gefunden, was jeden Monat kommt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing found that comes every month."
+          }
+        }
+      }
+    },
+    "Rechnung %@ kommt um den %lld.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bill %@ comes around day %lld."
+          }
+        }
+      }
+    },
+    "in %lld Monaten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "in %lld months"
+          }
+        }
+      }
+    },
+    "Erinnerung ist da": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reminder is set"
+          }
+        }
+      }
+    },
+    "Monatlich erinnern": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remind me monthly"
+          }
+        }
+      }
+    },
+    "Gemerkt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kept"
+          }
+        }
+      }
+    },
+    "%lld gemerkte Fakten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld facts kept"
+          }
+        }
+      }
+    },
+    "Ändern und vergessen unter Ich → Gedächtnis": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change and forget under Me → Memory"
+          }
+        }
+      }
+    },
+    "Mailstil aus %lld eigenen Mails gelernt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mail style learned from %lld own mails"
+          }
+        }
+      }
+    },
+    "Was ich über dich weiß": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What I know about you"
+          }
+        }
+      }
+    },
+    "Alle Interessen vergessen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forget every interest"
+          }
+        }
+      }
+    },
+    "Alle Interessen und den Tipp aus dem Netz vergessen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forget every interest and the web tip?"
+          }
+        }
+      }
+    },
+    "Tipp aus dem Netz zu „%@“ · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tip from the web for \"%@\" · %@"
+          }
+        }
+      }
+    },
+    "passt zu „%@“": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "fits \"%@\""
+          }
+        }
+      }
+    },
+    "Mehr davon": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "More of this"
+          }
+        }
+      }
+    },
+    "Fristen vorlesen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read deadlines aloud"
+          }
+        }
+      }
+    },
+    "Was du diese Woche erledigen musst": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What you have to do this week"
+          }
+        }
+      }
+    },
+    "Was muss ich diese Woche erledigen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What do I have to do this week?"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
