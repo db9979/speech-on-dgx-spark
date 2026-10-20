@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "geraet": {
-        "stand": "d0f12b874e",
+        "stand": "3f808d8945",
         "bezug": {
             "account.CONVO_BODY": ["s10"], "admin.test_asr": ["s4"], "admin._test_asr": ["s4", "s5"],
             "admin.read_audio": ["s4"], "chat.chat": ["s6", "s7"], "account.profile_save_convo": ["s10"],
@@ -201,7 +201,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Apps
     "apps": {
-        "stand": "d6952549f2",
+        "stand": "0aadaa68fe",
         "bezug": {
             "android.TOKEN_SECONDS": ["s3"], "android.TOKEN_USES": ["s3"], "iphone.profile_pair": ["s1", "s2"],
             "kopplung.Codes.new": ["s3"], "kopplung.Codes.take": ["s4"], "iphone.app_pair": ["s4", "s5"],
@@ -210,6 +210,7 @@ SEITEN = {
             "terminal.profile_pair": ["s1", "s2"], "terminal.setup_base": ["s3"], "terminal.program_pair": ["s4", "s5"],
             "terminal.reaches": ["s7"], "terminal.CODE_SECONDS": ["s3"], "terminal.MAX_DEVICES": ["s2"],
             "regel:tui": ["s7"], "android.assist_gate": ["s9"], "android.flags": ["s9"],
+            "zustellung.api_da": ["s9"],
         },
         "kurz": ("Die iPhone-App bekommt beim Koppeln einen eigenen Geräteschlüssel des Profils und spricht damit "
                  "dieselben Endpunkte an wie der Browser. Der Schlüssel öffnet nur eine feste Liste von Pfaden. Die "
@@ -304,14 +305,20 @@ SEITEN = {
                "Chats macht die App ihren eigenen Schlüssel im Secure Enclave; der Spark bekommt nur die öffentliche Hälfte. "
                "Das Blatt der Android-App über anderen Apps fragt als Gerät „android“, nur solange „Android: Spark als "
                "Assistent“ freigegeben ist (android.assist_gate). Ob die App den letzten Stand der Seiten behalten darf, sagt "
-               "hello mit „keep“ (appmerken.keep); bei Nein löscht sie ihn.",
+               "hello mit „keep“ (appmerken.keep); bei Nein löscht sie ihn. Mit „Mitteilung ans genutzte Gerät“ "
+               "sagen App und Seiten jede Minute nur, ob sie gerade benutzt werden (POST /api/zustellung/da, der Begleiter "
+               "mit seiner Leerlaufzeit); zustellung.pick schickt eine Mitteilung dann an das Gerät mit der letzten Eingabe "
+               "der letzten {zustellung.ACTIVE} Sekunden, sonst gleich an die Handy-App.",
                "The app asks through the same endpoints as the page, with the same limits. What it may do on top "
                "(smart home, CarPlay, listening, documents, pictures) the Spark tells it in /api/iphone/hello; the app "
                "only shows it and follows it. Calls between profiles ring through a VoIP push from Apple that carries "
                "only the call's random number; the app asks the Spark who calls. For private chats the app makes its own "
                "key in the Secure Enclave; the Spark only gets the public half. The Android app's sheet over other apps asks as "
                "device „android“ only while „Android: Spark as assistant“ is released (android.assist_gate). Whether the app may keep the pages' last state, hello says with "
-               "„keep“ (appmerken.keep); on no it deletes it."),
+               "„keep“ (appmerken.keep); on no it deletes it. With „Notes to the device in use“ the app and the pages only say "
+               "every minute whether they are in use right now (POST /api/zustellung/da, the companion with its idle time); "
+               "zustellung.pick then sends a note to the device with the last input within the last {zustellung.ACTIVE} "
+               "seconds, else to the phone app at once."),
               ("info", ("Terminal", "Terminal"),
                ("Terminal-Client: Schlüssel-Bereich „tui“, nur {terminal.TUI_RULES|anzahl} Regeln (Chat, Gespräche, Heute, Kalender mit Schnell eintragen, Mails lesen, Aufträge)",
                 "terminal client: key scope „tui“, only {terminal.TUI_RULES|anzahl} rules (chat, conversations, Today, calendar with quick add, reading mail, jobs)"))),
@@ -363,6 +370,8 @@ SEITEN = {
             ("{terminal.CODE_SECONDS|min}", ("Minuten gilt eine Kopplungszeile fürs Terminal", "minutes a terminal pairing line is valid"),
              "terminal.CODE_SECONDS"),
             ("{terminal.MAX_DEVICES}", ("Terminals pro Profil", "terminals per profile"), "terminal.MAX_DEVICES"),
+            ("{zustellung.ACTIVE}", ("Sekunden nach der letzten Eingabe gilt ein Gerät als benutzt",
+                                     "seconds after the last input a device counts as in use"), "zustellung.ACTIVE"),
         ],
         "einstellen": [
             ("Funktionen → iPhone-App und Funktionen → Android-App: die Apps für alle Profile (Standard aus).",
@@ -399,12 +408,15 @@ SEITEN = {
             ("android.apk_response", ("App-Datei nur mit gültigem Link", "app file only with a valid link")),
             ("android.flags", ("was die Android-App selbst einschaltet: Assistent, Fingerabdruck", "what the Android app switches on itself: assistant, fingerprint")),
             ("android.assist_gate", ("Fragen des Android-Blatts nur mit Freigabe, nie Gäste", "questions of the Android sheet only when released, never guests")),
+            ("zustellung.pick", ("Mitteilung ans benutzte Gerät, sonst an die Handy-App", "note to the device in use, else to the phone app")),
+            ("zustellung.api_da", ("nur „gerade benutzt“ oder „weg“, nur Seiten und Apps", "only „in use“ or „away“, only pages and the apps")),
             ("terminal.profile_pair", ("Kopplungszeile fürs Terminal nur aus dem eigenen Browser", "terminal pairing line only from the own browser")),
             ("terminal.setup_base", ("zu Hause gepinnt, extern nur https", "pinned at home, outside https only")),
             ("terminal.program_pair", ("der erste Kontakt des Terminals", "the terminal's first contact")),
             ("terminal.reaches", ("die feste Regelliste des Terminals", "the terminal's fixed rule list")),
         ],
-        "tests": ["test_iphone", "test_iphone_panel", "test_android", "test_app_notaus", "test_kopplung", "test_terminal"],
+        "tests": ["test_iphone", "test_iphone_panel", "test_android", "test_app_notaus", "test_kopplung", "test_terminal",
+                  "test_zustellung"],
         "heute": [],
     },
 
@@ -969,7 +981,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ MCP-Programme
     "mcpc": {
-        "stand": "31eb878c06",
+        "stand": "8edae7c0fd",
         "bezug": {
             "mcpserver.MAX_CONNS": ["s3"], "mcpserver.mcp_post": ["s1"], "mcpserver.origin_ok": ["s2"],
             "mcpserver.check_conn": ["s3"], "mcpserver.is_local": ["s4"], "mcpserver.find": ["s3"],

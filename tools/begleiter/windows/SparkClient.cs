@@ -168,7 +168,8 @@ internal static partial class SparkClient
     public static async Task<PollResult> PollAsync(string baseUrl, string key, int after, bool micClosed, CancellationToken ct)
     {
         string url = baseUrl + "/api/desk/poll?after=" + Math.Max(0, after).ToString(System.Globalization.CultureInfo.InvariantCulture)
-                     + "&mic=" + (micClosed ? "closed" : "open") + "&" + VersionQuery;
+                     + "&mic=" + (micClosed ? "closed" : "open") + "&" + VersionQuery
+                     + "&idle=" + NativeMethods.IdleSeconds().ToString(System.Globalization.CultureInfo.InvariantCulture);
         using var request = new HttpRequestMessage(HttpMethod.Get, url);
         JsonNode json = await SendAsync(request, key, pairing: false, ShortTimeout, ct).ConfigureAwait(true);
 

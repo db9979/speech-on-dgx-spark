@@ -190,14 +190,19 @@ WAYS = ("app", "and", "desk", "tg", "web")
 
 
 def pick(uid, private=True, to=""):
-    """One target for a note (V01.0.181: everything once): the device the profile used last, else the
+    """One target for a note (V01.0.181: everything once): with Meldung ans genutzte Gerät (zustellung.pick) the device in
+    use right now, else the phone app; otherwise the device the profile used last, else the
     iPhone app, else the Android app (android.py, it asks for notes itself), else the Spark-Begleiter on PC or
     Mac (begleiter.py, same), else Telegram, else the newest browser. Returns ("app"|"and"|"desk"|"tg"|"web", [subscriptions]).
     to: the way the profile chose for this kind of note (e.g. svc_device of the Dienst-Wächter), when it is set up."""
+    import zustellung
     have = _have(uid, private)
     kind, key, t = profiles.LAST_USED.get(uid, ("", "", 0))
+    routed = None if to in have and have[to] else zustellung.pick(uid, have)
     if to in have and have[to]:
         kind, key = to, (key if kind == to else "")
+    elif routed:   # Meldung ans genutzte Gerät (zustellung.py): the device in use now, else the phone app
+        kind, key = routed[0], routed[1]
     elif not (have.get(kind) and time.time() - t < LAST_KEEP):
         kind = next((k for k in WAYS if have[k]), "")
     if kind != "web":

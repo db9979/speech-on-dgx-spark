@@ -319,6 +319,7 @@ final class Conversation: ObservableObject {
 
     func scene(_ p: ScenePhase) {
         foreground = p == .active
+        if p != .inactive, let api = SparkAPI.current { Task { await api.inUse(foreground) } }   // Meldung ans genutzte Gerät
         if foreground {
             CallCenter.shared.foreground()
             Task { await callWaiting() }
@@ -382,6 +383,7 @@ final class Conversation: ObservableObject {
     private func tick() {
         ticks += 1
         if foreground && !unreachable && ticks % 3 == 0 { Task { await rightsCheck() } }
+        if foreground && !unreachable && ticks % 3 == 0, let api = SparkAPI.current { Task { await api.inUse(true) } }
         if phase == .waiting && !canWake {
             base()
             notice = String(localized: "Weckwort pausiert, um Akku zu sparen. Tippen startet es wieder.")

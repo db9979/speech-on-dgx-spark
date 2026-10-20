@@ -253,7 +253,10 @@ final class AppModel: ObservableObject {
                 try await loadConfig(client)
             }
             let mic = MicSwitch.shared.closed ? "closed" : "open"   // only this state, never sound
-            let d = try await client.get("api/desk/poll?after=\(lastNote ?? 0)&mic=\(mic)&\(versionQuery)")
+            // Meldung ans genutzte Gerät: seconds since the last input at this Mac (only the number, never what)
+            let idle = Int(min(CGEventSource.secondsSinceLastEventType(.combinedSessionState,
+                                                                          eventType: CGEventType(rawValue: ~0)!), 7 * 86400))
+            let d = try await client.get("api/desk/poll?after=\(lastNote ?? 0)&mic=\(mic)&idle=\(idle)&\(versionQuery)")
             guard client === self.client else { return 1 }
             let pollUpdate = d["update"] as? String          // null or "1.0.350"
             if let rev = (d["rev"] as? NSNumber)?.intValue, rev != config?.rev {

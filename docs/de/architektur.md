@@ -339,6 +339,7 @@ Apps, Telegram, Uhr, Lautsprecher, Raummodus, Chats und der Verlauf auf allen Ge
 | `app/panel/verlauf.py` | Verlauf auf allen Geräten gleich |
 | `app/panel/watch.py` | Antworten für die Uhr |
 | `app/panel/wyoming.py` | Home Assistant Assist über Wyoming |
+| `app/panel/zustellung.py` | Mitteilung ans genutzte Gerät: Geräte sagen „gerade benutzt“, sonst die Handy-App |
 
 ### Betrieb
 
@@ -858,9 +859,9 @@ flowchart TD
 4. <a id="kn-apps-s4"></a>**Code gültig?**: Die App schickt den Code. Der Spark prüft das Rate-Limit (10 pro Minute und Adresse), vergleicht den Hash zeitkonstant und löscht den Code beim ersten Treffer. Ein abgelaufener oder schon benutzter Code passt nie. Ist es kein Link-Code, prüft pruefzugang.py einen getippten Prüf-Code für Apples Prüfung (12 Zeichen, 14 Tage, höchstens 5 iPhones, nur bei eingeschaltetem Prüfzugang); falsche Prüf-Codes sperren die Adresse wie falsche PINs.
 5. <a id="kn-apps-s5"></a>**Eigener Geräteschlüssel**: profiles.add_device erzeugt den Schlüssel und speichert nur seinen SHA-256-Hash in profiles.json. Die App bekommt ihn genau einmal und legt ihn im Schlüsselbund ab.
 6. <a id="kn-apps-s6"></a>**Jede Anfrage mit Schlüssel**: profiles.current sucht den Hash des Schlüssels in der Geräteliste. Ein Geräteschlüssel geht vor dem Cookie; das Profil kommt so immer aus dem Schlüssel, nie aus dem, was die App schreibt.
-7. <a id="kn-apps-s7"></a>**Pfad für die App erlaubt?**: Ein App-Schlüssel gilt nur für die 69 Pfade in profiles.APP_PATHS (Chat, Spracherkennung, Gespräche, Erinnerungen, Chats, Anrufe …), ein paar Lese-Muster, die Panel-Bereiche (Admin-Schalter iPhone-App mit Panel) und „Meine Sachen“ (iphone.THINGS, je Teil nur mit der Freigabe seiner eigenen Funktion). Alles andere sieht er ohne Profil.
+7. <a id="kn-apps-s7"></a>**Pfad für die App erlaubt?**: Ein App-Schlüssel gilt nur für die 70 Pfade in profiles.APP_PATHS (Chat, Spracherkennung, Gespräche, Erinnerungen, Chats, Anrufe …), ein paar Lese-Muster, die Panel-Bereiche (Admin-Schalter iPhone-App mit Panel) und „Meine Sachen“ (iphone.THINGS, je Teil nur mit der Freigabe seiner eigenen Funktion). Alles andere sieht er ohne Profil.
 8. <a id="kn-apps-s8"></a>**App gerade aus oder Mein Notaus?**: Ist die App vom Admin aus- oder für das Profil gesperrt, oder hat das Profil Mein Notaus an, gibt es für diese Anfrage kein Profil. Die App bekommt „gerade nicht“ (503), behält ihre Kopplung und geht wieder, sobald der Schalter zurück ist.
-9. <a id="kn-apps-s9"></a>**Wie ein Browser des Profils**: Die App fragt über dieselben Endpunkte wie die Seite, mit denselben Grenzen. Was sie zusätzlich darf (Smart Home, CarPlay, Zuhören, Dokumente, Bilder), sagt ihr der Spark in /api/iphone/hello; die App zeigt es nur an und hält sich daran. Anrufe zwischen Profilen klingeln über einen VoIP-Push von Apple, der nur die zufällige Nummer des Anrufs trägt; wer anruft, fragt die App beim Spark nach. Für private Chats macht die App ihren eigenen Schlüssel im Secure Enclave; der Spark bekommt nur die öffentliche Hälfte. Das Blatt der Android-App über anderen Apps fragt als Gerät „android“, nur solange „Android: Spark als Assistent“ freigegeben ist (android.assist_gate). Ob die App den letzten Stand der Seiten behalten darf, sagt hello mit „keep“ (appmerken.keep); bei Nein löscht sie ihn.
+9. <a id="kn-apps-s9"></a>**Wie ein Browser des Profils**: Die App fragt über dieselben Endpunkte wie die Seite, mit denselben Grenzen. Was sie zusätzlich darf (Smart Home, CarPlay, Zuhören, Dokumente, Bilder), sagt ihr der Spark in /api/iphone/hello; die App zeigt es nur an und hält sich daran. Anrufe zwischen Profilen klingeln über einen VoIP-Push von Apple, der nur die zufällige Nummer des Anrufs trägt; wer anruft, fragt die App beim Spark nach. Für private Chats macht die App ihren eigenen Schlüssel im Secure Enclave; der Spark bekommt nur die öffentliche Hälfte. Das Blatt der Android-App über anderen Apps fragt als Gerät „android“, nur solange „Android: Spark als Assistent“ freigegeben ist (android.assist_gate). Ob die App den letzten Stand der Seiten behalten darf, sagt hello mit „keep“ (appmerken.keep); bei Nein löscht sie ihn. Mit „Mitteilung ans genutzte Gerät“ sagen App und Seiten jede Minute nur, ob sie gerade benutzt werden (POST /api/zustellung/da, der Begleiter mit seiner Leerlaufzeit); zustellung.pick schickt eine Mitteilung dann an das Gerät mit der letzten Eingabe der letzten 120 Sekunden, sonst gleich an die Handy-App.
 10. <a id="kn-apps-s10"></a>**Konto, Geräte oder Sicherheit?**: Endpunkte, die Verbindungen, Geräte oder Sicherheit des Profils ändern, nehmen nur die eigene Browser-Anmeldung (core.browser_profile). Einen Geräteschlüssel lehnen sie ab, außer in einem Bereich, den das Profil der App freigegeben hat; Geheimnisse brauchen dort zusätzlich einen frischen Code.
 11. <a id="kn-apps-s11"></a>**Entfernen wirkt sofort**: Wird das iPhone im Panel entfernt, verschwindet der Hash aus der Geräteliste. Die nächste Anfrage der App findet kein Profil mehr.
 
@@ -883,11 +884,12 @@ Gilt bei: [Schritt 6](#kn-apps-s6), [Schritt 7](#kn-apps-s7)
 
 - **10** Minuten gilt ein Kopplungs-Code ([Schritt 3](#kn-apps-s3))
 - **5** iPhones pro Profil ([Schritt 2](#kn-apps-s2))
-- **69** feste Pfade für den App-Schlüssel ([Schritt 7](#kn-apps-s7))
+- **70** feste Pfade für den App-Schlüssel ([Schritt 7](#kn-apps-s7))
 - **30** Minuten gilt ein Android-Download-Link ([Schritt 3](#kn-apps-s3))
 - **5** Downloads pro Android-Link ([Schritt 3](#kn-apps-s3))
 - **10** Minuten gilt eine Kopplungszeile fürs Terminal ([Schritt 3](#kn-apps-s3))
 - **5** Terminals pro Profil ([Schritt 2](#kn-apps-s2))
+- **120** Sekunden nach der letzten Eingabe gilt ein Gerät als benutzt ([Schritt 9](#kn-apps-s9))
 
 #### Einstellen
 
@@ -917,12 +919,14 @@ Gilt bei: [Schritt 6](#kn-apps-s6), [Schritt 7](#kn-apps-s7)
 - `app/panel/android.py` `apk_response`: App-Datei nur mit gültigem Link ([Schritt 3](#kn-apps-s3))
 - `app/panel/android.py` `flags`: was die Android-App selbst einschaltet: Assistent, Fingerabdruck ([Schritt 9](#kn-apps-s9))
 - `app/panel/android.py` `assist_gate`: Fragen des Android-Blatts nur mit Freigabe, nie Gäste ([Schritt 9](#kn-apps-s9))
+- `app/panel/zustellung.py` `pick`: Mitteilung ans benutzte Gerät, sonst an die Handy-App ([Schritt 9](#kn-apps-s9))
+- `app/panel/zustellung.py` `api_da`: nur „gerade benutzt“ oder „weg“, nur Seiten und Apps ([Schritt 9](#kn-apps-s9))
 - `app/panel/terminal.py` `profile_pair`: Kopplungszeile fürs Terminal nur aus dem eigenen Browser ([Schritt 1](#kn-apps-s1), [Schritt 2](#kn-apps-s2))
 - `app/panel/terminal.py` `setup_base`: zu Hause gepinnt, extern nur https ([Schritt 3](#kn-apps-s3))
 - `app/panel/terminal.py` `program_pair`: der erste Kontakt des Terminals ([Schritt 4](#kn-apps-s4), [Schritt 5](#kn-apps-s5))
 - `app/panel/terminal.py` `reaches`: die feste Regelliste des Terminals ([Schritt 7](#kn-apps-s7))
 
-Selbsttests: `test_iphone`, `test_iphone_panel`, `test_android`, `test_app_notaus`, `test_kopplung`, `test_terminal`
+Selbsttests: `test_iphone`, `test_iphone_panel`, `test_android`, `test_app_notaus`, `test_kopplung`, `test_terminal`, `test_zustellung`
 
 ### Telegram, Siri, Uhr
 

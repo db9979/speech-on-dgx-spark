@@ -2322,6 +2322,13 @@
 "titel": "Musik bearbeiten: Text und Hochladen",
 "text": "An einem Lied mit Gesang „Text ändern“: eine Strophe ändern, einen Refrain hinzufügen und am Griff ⠿ nach oben ziehen (Maus und Finger), dann Vorschläge machen; einmal mit „Ganz neu machen“ und 3 Minuten. Im Menü „⋯“ eine eigene MP3 nur mit Rechte-Haken hochladen. iPhone: Lied nach rechts wischen → Bearbeiten, Teile durch Halten verschieben.",
 "thread": "Musik bearbeiten und remixen"
+},
+{
+"id": "P356",
+"v": 864,
+"titel": "Mitteilung ans genutzte Gerät",
+"text": "A: Update, Admin: Funktionen → Timer und Erinnerungen → „Mitteilung ans genutzte Gerät“ an. B: Am PC im Panel tippen, dann „Erinnere mich in 2 Minuten an Tee“ sagen und weiter am PC arbeiten: die Erinnerung kommt am PC, nicht am iPhone. C: Noch eine Erinnerung stellen, dann den PC 3 Minuten nicht anfassen (Seite offen lassen): sie kommt gleich aufs iPhone. D: Die iPhone-App offen haben und benutzen, am PC nichts tun: die Mitteilung kommt in der App. E: Mit dem Spark-Begleiter (neueste Fassung) am PC arbeiten, Panel zu: sie kommt als Begleiter-Meldung. F: Zustand → Live: Verbindung „Gerade benutzte Geräte“ mit Anzahl und „heute n ans benutzte Gerät, m ans Handy“. G: Schalter aus: wieder das zuletzt benutzte Gerät.",
+"thread": "Benachrichtigung aufs genutzte Gerät"
 }
 ]
 }

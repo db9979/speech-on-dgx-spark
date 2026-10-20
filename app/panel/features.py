@@ -254,6 +254,10 @@ FEATURES = (
     F("hacam", "Kamerabild beschreiben", "Describe a camera picture", "day", ("ha_camera", "homeassistant"),
       pref="pro_ha_cam", parent="proactive", me="probox", guide="hacam"),
     F("reminders", "Timer und Erinnerungen", "Timers and reminders", "day", ("reminders",), guide="reminders"),
+    # zustellung.py (plan benachrichtigung-geraet, Dominik 2026-10-20 "ok"): a note goes to the device in use right now,
+    # else to the phone app
+    F("notedevice", "Mitteilung ans genutzte Gerät", "Notes to the device in use", "day", ("note_device", "reminders"),
+      parent="reminders", guide="notedevice"),
     F("tasks", "Listen für Einkauf und Aufgaben", "Lists for shopping and tasks", "day", ("tasks",), me="taskbox", guide="tasks"),
     F("mystatus", "Mein Zustand", "My status", "day", ("my_status",), me="bgbox", guide="mystatus"),
     F("agent", "Aufträge", "Jobs", "day", ("agent",), me="agentbox", guide="agent"),

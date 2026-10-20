@@ -393,6 +393,12 @@ struct SparkAPI {
         return d["play"] as? Bool ?? true
     }
 
+    /// Meldung ans genutzte Gerät: the app is in front right now, or in the background ("weg"); only this state, never
+    /// what happens in the app. The Spark then sends notes here while the app is used, and to the phone when nothing is.
+    func inUse(_ front: Bool) async {
+        _ = try? await post("api/zustellung/da", ["idle": 0, "weg": !front])
+    }
+
     /// Notes the Spark wants to say by itself ("Von selbst") since a time (ms).
     func notes(since: Int) async throws -> [Note] {
         var c = URLComponents(url: base.appendingPathComponent("api/proactive"), resolvingAgainstBaseURL: false)!

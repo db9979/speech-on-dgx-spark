@@ -1005,7 +1005,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": " und speichert nur seinen SHA-256-Hash in profiles.json. Die App bekommt ihn genau einmal und legt ihn im Schlüsselbund ab. 6. Jede Anfrage mit Schlüssel: profiles.current sucht den Hash des Schlüssels in der Geräteliste. Ein Geräteschlüssel geht vor dem Cookie; das Profil kommt so immer aus dem Schlüssel, nie aus dem, was die App schreibt. 7. Pfad für die App erlaubt?: Ein App-Schlüssel gilt nur für die 69 Pfade in profiles.APP_PATHS (Chat, Spracherkennung, Gespräche, Erinnerungen, Chats, Anrufe …), ein paar Lese-Muster, die Panel-Bereiche (Admin-Schalter iPhone-App mit Panel) und „Meine Sachen“ (iphone.THINGS, je Teil nur mit der Freigabe seiner eigenen Funktion). Alles andere sieht er ohne Profil. 8. App gerade aus oder Mein Notaus?: Ist die App vom Admin aus- oder für das Profil gesperrt, oder hat das Profil Mein Notaus an, gibt es für diese Anfrage kein Profil. Die App bekommt „gerade nicht“ (503), behält ihre Kopplung und geht wieder, sobald der Schalter zurück ist. 9. Wie ein Browser des Profils: Die App fragt über dieselben Endpunkte wie die Seite, mit denselben Grenzen. Was sie zusätzlich darf (Smart Home, CarPlay, Zuhören, Dokumente, Bilder), sagt ihr der Spark in /api/ip"
+"text": " und speichert nur seinen SHA-256-Hash in profiles.json. Die App bekommt ihn genau einmal und legt ihn im Schlüsselbund ab. 6. Jede Anfrage mit Schlüssel: profiles.current sucht den Hash des Schlüssels in der Geräteliste. Ein Geräteschlüssel geht vor dem Cookie; das Profil kommt so immer aus dem Schlüssel, nie aus dem, was die App schreibt. 7. Pfad für die App erlaubt?: Ein App-Schlüssel gilt nur für die 70 Pfade in profiles.APP_PATHS (Chat, Spracherkennung, Gespräche, Erinnerungen, Chats, Anrufe …), ein paar Lese-Muster, die Panel-Bereiche (Admin-Schalter iPhone-App mit Panel) und „Meine Sachen“ (iphone.THINGS, je Teil nur mit der Freigabe seiner eigenen Funktion). Alles andere sieht er ohne Profil. 8. App gerade aus oder Mein Notaus?: Ist die App vom Admin aus- oder für das Profil gesperrt, oder hat das Profil Mein Notaus an, gibt es für diese Anfrage kein Profil. Die App bekommt „gerade nicht“ (503), behält ihre Kopplung und geht wieder, sobald der Schalter zurück ist. 9. Wie ein Browser des Profils: Die App fragt über dieselben Endpunkte wie die Seite, mit denselben Grenzen. Was sie zusätzlich darf (Smart Home, CarPlay, Zuhören, Dokumente, Bilder), sagt ihr der Spark in /api/ip"
 },
 {
 "lang": "de",
@@ -1013,7 +1013,15 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "hone/hello; die App zeigt es nur an und hält sich daran. Anrufe zwischen Profilen klingeln über einen VoIP-Push von Apple, der nur die zufällige Nummer des Anrufs trägt; wer anruft, fragt die App beim Spark nach. Für private Chats macht die App ihren eigenen Schlüssel im Secure Enclave; der Spark bekommt nur die öffentliche Hälfte. Das Blatt der Android-App über anderen Apps fragt als Gerät „android“, nur solange „Android: Spark als Assistent“ freigegeben ist (android.assist_gate). Ob die App den letzten Stand der Seiten behalten darf, sagt hello mit „keep“ (appmerken.keep); bei Nein löscht sie ihn. 10. Konto, Geräte oder Sicherheit?: Endpunkte, die Verbindungen, Geräte oder Sicherheit des Profils ändern, nehmen nur die eigene Browser-Anmeldung (core.browser_profile). Einen Geräteschlüssel lehnen sie ab, außer in einem Bereich, den das Profil der App freigegeben hat; Geheimnisse brauchen dort zusätzlich einen frischen Code. 11. Entfernen wirkt sofort: Wird das iPhone im Panel entfernt, verschwindet der Hash aus der Geräteliste. Die nächste Anfrage der App findet kein Profil mehr."
+"text": "hone/hello; die App zeigt es nur an und hält sich daran. Anrufe zwischen Profilen klingeln über einen VoIP-Push von Apple, der nur die zufällige Nummer des Anrufs trägt; wer anruft, fragt die App beim Spark nach. Für private Chats macht die App ihren eigenen Schlüssel im Secure Enclave; der Spark bekommt nur die öffentliche Hälfte. Das Blatt der Android-App über anderen Apps fragt als Gerät „android“, nur solange „Android: Spark als Assistent“ freigegeben ist (android.assist_gate). Ob die App den letzten Stand der Seiten behalten darf, sagt hello mit „keep“ (appmerken.keep); bei Nein löscht sie ihn. Mit „Mitteilung ans genutzte Gerät“ sagen App und Seiten jede Minute nur, ob sie gerade benutzt werden (POST /api/zustellung/da, der Begleiter mit seiner Leerlaufzeit); zustellung.pick schickt eine Mitteilung dann an das Gerät mit der letzten Eingabe der letzten 120 Sekunden, sonst gleich an die Handy-App. 10. Konto, Geräte oder Sicherheit?: Endpunkte, die Verbindungen, Geräte oder Sicherheit des Profils ändern, nehmen nur die eigene Browser-Anmeldung (core.browser_profile). Einen Geräteschlüssel lehnen sie ab, außer in einem Bereich, den das Profil der App freigegeben hat; Geheimnisse "
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Ablauf",
+"title": "Ablauf",
+"text": "brauchen dort zusätzlich einen frischen Code. 11. Entfernen wirkt sofort: Wird das iPhone im Panel entfernt, verschwindet der Hash aus der Geräteliste. Die nächste Anfrage der App findet kein Profil mehr."
 },
 {
 "lang": "de",
@@ -1029,7 +1037,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 10 Minuten gilt ein Kopplungs-Code (Schritt 3) - 5 iPhones pro Profil (Schritt 2) - 69 feste Pfade für den App-Schlüssel (Schritt 7) - 30 Minuten gilt ein Android-Download-Link (Schritt 3) - 5 Downloads pro Android-Link (Schritt 3) - 10 Minuten gilt eine Kopplungszeile fürs Terminal (Schritt 3) - 5 Terminals pro Profil (Schritt 2)"
+"text": "- 10 Minuten gilt ein Kopplungs-Code (Schritt 3) - 5 iPhones pro Profil (Schritt 2) - 70 feste Pfade für den App-Schlüssel (Schritt 7) - 30 Minuten gilt ein Android-Download-Link (Schritt 3) - 5 Downloads pro Android-Link (Schritt 3) - 10 Minuten gilt eine Kopplungszeile fürs Terminal (Schritt 3) - 5 Terminals pro Profil (Schritt 2) - 120 Sekunden nach der letzten Eingabe gilt ein Gerät als benutzt (Schritt 9)"
 },
 {
 "lang": "de",
@@ -1061,7 +1069,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "p/panel/terminal.py profile_pair: Kopplungszeile fürs Terminal nur aus dem eigenen Browser (Schritt 1, Schritt 2) - app/panel/terminal.py setup_base: zu Hause gepinnt, extern nur https (Schritt 3) - app/panel/terminal.py program_pair: der erste Kontakt des Terminals (Schritt 4, Schritt 5) - app/panel/terminal.py reaches: die feste Regelliste des Terminals (Schritt 7)"
+"text": "p/panel/zustellung.py pick: Mitteilung ans benutzte Gerät, sonst an die Handy-App (Schritt 9) - app/panel/zustellung.py api_da: nur „gerade benutzt“ oder „weg“, nur Seiten und Apps (Schritt 9) - app/panel/terminal.py profile_pair: Kopplungszeile fürs Terminal nur aus dem eigenen Browser (Schritt 1, Schritt 2) - app/panel/terminal.py setup_base: zu Hause gepinnt, extern nur https (Schritt 3) - app/panel/terminal.py program_pair: der erste Kontakt des Terminals (Schritt 4, Schritt 5) - app/panel/terminal.py reaches: die feste Regelliste des Terminals (Schritt 7)"
 },
 {
 "lang": "de",
@@ -1069,7 +1077,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "Selbsttests: test_iphone, test_iphone_panel, test_android, test_app_notaus, test_kopplung, test_terminal"
+"text": "Selbsttests: test_iphone, test_iphone_panel, test_android, test_app_notaus, test_kopplung, test_terminal, test_zustellung"
 },
 {
 "lang": "de",
@@ -4750,6 +4758,22 @@
 "head": "Sprach-Chat",
 "title": "Erinnerungen als Mitteilung",
 "text": "Erinnerungen als Mitteilung (nur Profile): Im Fenster „Ich“ unter „Gespräch“ schaltet „Erinnerungen auf diesem Gerät → Einschalten“ Push-Mitteilungen ein. Dann kommt eine Erinnerung auch, wenn die Seite zu ist, und nur auf die Geräte dieses Profils. Das braucht https mit gültigem Zertifikat (z. B. hinter einem Reverse-Proxy); auf dem iPhone die Seite zuerst über „Teilen → Zum Home-Bildschirm“ als App anlegen. Der Spark schickt dabei nur an die Push-Dienste der Browser (Apple, Google, Mozilla, Microsoft), verschlüsselt. Seit V01.0.181 kommt jede Mitteilung (Erinnerung, „Von selbst“-Meldung, Morgenrunde, Agent-Bericht) nur einmal: an das Gerät, das das Profil zuletzt benutzt hat (eine offene Seite, die iPhone-App oder Telegram, höchstens 12 Stunden zurück), sonst an die iPhone-App, sonst Telegram, sonst den zuletzt eingerichteten Browser. Private Meldungen gehen nur über Telegram, wenn das Profil persönliche Daten dort erlaubt hat."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Mitteilung ans genutzte Gerät (V01.0.864, Plan benachrichtigung-geraet, Dominik 2026-10-20 „ok“, Stufe 1; zustellung.py, Admin-Schalter Funktionen → Timer und Erinnerungen → „Mitteilung ans genutzte Gerät“, chat.note_device, aus): „Zuletzt benutzt“ hieß bisher: irgendwann in den letzten 12 Stunden, auch eine im Hintergrund offene Seite, nie die iPhone-App. Mit dem Schalter sagt jedes Gerät dem Spark nur, wie lange die letzte Eingabe her ist: eine offene Seite und die Android-App jede Minute, solange sie vorn sind, sofort bei der ersten Eingabe nach einer Pause und „weg“, wenn sie in den Hintergrund gehen (POST /api/zustellung/da, nur Zahl und Zustand); die iPhone-App beim Öffnen, jede Minute im Vordergrund und „weg“ im Hintergrund; der Spark-Begleiter mit seiner Abfrage alle 30 Sekunden die Leerlaufzeit des Rechners (Windows GetLastInputInfo, Mac CGEventSource). Eine Mitteilung geht dann an das Gerät mit der letzten Eingabe der letzten 2 Minuten (die Meldung des Geräts nicht älter als 90 Sekunden), sonst sofort an die Handy-App (iPhone, sonst Android), ohne Handy-App wie bisher. Ein Weg, den das Profil für eine Art Mitteilung gewählt hat (Dienst-Wächter), gilt weiter. Nur im Arbeit"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "sspeicher, nichts wird gespeichert. Logs: push: route aktiv|handy <weg>; Live: Verbindung „Gerade benutzte Geräte“ mit der Anzahl und den heute so verteilten Mitteilungen. Selbsttest test_zustellung. Nachfassen, „gelesen überall“, Dringendes und eine Ruhezeit für alles folgen in den Stufen 2 bis 4."
 },
 {
 "lang": "de",
@@ -9853,7 +9877,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": " the keychain. 6. Every request with the key: profiles.current looks up the key's hash in the device list. A device key comes before the cookie; the profile always comes from the key, never from what the app writes. 7. Path allowed for the app?: An app key only works for the 69 paths in profiles.APP_PATHS (chat, speech recognition, conversations, reminders, chats, calls …), a few read patterns, the panel areas (admin switch iPhone app with panel) and \"My things\" (iphone.THINGS, each part only with the release of its own function). Everything else it sees without a profile. 8. App off right now or My kill switch?: If the app is switched off by the admin or blocked for the profile, or the profile has My kill switch on, this request has no profile. The app gets „not now“ (503), keeps its pairing and works again as soon as the switch is back. 9. Like a browser of the profile: The app asks through the same endpoints as the page, with the same limits. What it may do on top (smart home, CarPlay, listening, documents, pictures) the Spark tells it in /api/iphone/hello; the app only shows it and follows it. Calls between profiles ring through a VoIP push from Apple that carries only the call"
+"text": " the keychain. 6. Every request with the key: profiles.current looks up the key's hash in the device list. A device key comes before the cookie; the profile always comes from the key, never from what the app writes. 7. Path allowed for the app?: An app key only works for the 70 paths in profiles.APP_PATHS (chat, speech recognition, conversations, reminders, chats, calls …), a few read patterns, the panel areas (admin switch iPhone app with panel) and \"My things\" (iphone.THINGS, each part only with the release of its own function). Everything else it sees without a profile. 8. App off right now or My kill switch?: If the app is switched off by the admin or blocked for the profile, or the profile has My kill switch on, this request has no profile. The app gets „not now“ (503), keeps its pairing and works again as soon as the switch is back. 9. Like a browser of the profile: The app asks through the same endpoints as the page, with the same limits. What it may do on top (smart home, CarPlay, listening, documents, pictures) the Spark tells it in /api/iphone/hello; the app only shows it and follows it. Calls between profiles ring through a VoIP push from Apple that carries only the call"
 },
 {
 "lang": "en",
@@ -9861,7 +9885,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "'s random number; the app asks the Spark who calls. For private chats the app makes its own key in the Secure Enclave; the Spark only gets the public half. The Android app's sheet over other apps asks as device „android“ only while „Android: Spark as assistant“ is released (android.assist_gate). Whether the app may keep the pages' last state, hello says with „keep“ (appmerken.keep); on no it deletes it. 10. Account, devices or security?: Endpoints that change the profile's connections, devices or security only take the own browser login (core.browser_profile). They refuse a device key, except in an area the profile opened for the app; secrets need a fresh code there as well. 11. Removing works at once: When the iPhone is removed in the panel, its hash leaves the device list. The app's next request finds no profile any more."
+"text": "'s random number; the app asks the Spark who calls. For private chats the app makes its own key in the Secure Enclave; the Spark only gets the public half. The Android app's sheet over other apps asks as device „android“ only while „Android: Spark as assistant“ is released (android.assist_gate). Whether the app may keep the pages' last state, hello says with „keep“ (appmerken.keep); on no it deletes it. With „Notes to the device in use“ the app and the pages only say every minute whether they are in use right now (POST /api/zustellung/da, the companion with its idle time); zustellung.pick then sends a note to the device with the last input within the last 120 seconds, else to the phone app at once. 10. Account, devices or security?: Endpoints that change the profile's connections, devices or security only take the own browser login (core.browser_profile). They refuse a device key, except in an area the profile opened for the app; secrets need a fresh code there as well. 11. Removing works at once: When the iPhone is removed in the panel, its hash leaves the device list. The app's next request finds no profile any more."
 },
 {
 "lang": "en",
@@ -9877,7 +9901,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 10 minutes a pairing code is valid (step 3) - 5 iPhones per profile (step 2) - 69 fixed paths for the app key (step 7) - 30 minutes an Android download link is valid (step 3) - 5 downloads per Android link (step 3) - 10 minutes a terminal pairing line is valid (step 3) - 5 terminals per profile (step 2)"
+"text": "- 10 minutes a pairing code is valid (step 3) - 5 iPhones per profile (step 2) - 70 fixed paths for the app key (step 7) - 30 minutes an Android download link is valid (step 3) - 5 downloads per Android link (step 3) - 10 minutes a terminal pairing line is valid (step 3) - 5 terminals per profile (step 2) - 120 seconds after the last input a device counts as in use (step 9)"
 },
 {
 "lang": "en",
@@ -9901,7 +9925,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/iphone.py profile_pair: pairing link only from the own browser (step 1, step 2) - app/panel/kopplung.py Codes.new: random one-time code, only the hash (also Pebble, writing help, companion) (step 3) - app/panel/kopplung.py Codes.take: redeem a code once, compared in constant time (step 4) - app/panel/iphone.py app_pair: the app's first contact (step 4, step 5) - app/panel/iphone.py app_hello: what the app may, the Spark decides (step 9) - app/panel/profiles.py add_device: make a key, store its hash (step 5) - app/panel/profiles.py current: profile from key or cookie, scopes, switches, kill switch (step 6) - app/panel/profiles.py _app_path: the app's fixed path list (step 7) - app/panel/core.py browser_profile: only the own browser login (step 10) - app/panel/account.py profile_remove_device: remove a device (step 11) - app/panel/android.py apk_response: app file only with a valid link (step 3) - app/panel/android.py flags: what the Android app switches on itself: assistant, fingerprint (step 9) - app/panel/android.py assist_gate: questions of the Android sheet only when released, never guests (step 9) - app/panel/terminal.py profile_pair: terminal pairing line only from"
+"text": "- app/panel/iphone.py profile_pair: pairing link only from the own browser (step 1, step 2) - app/panel/kopplung.py Codes.new: random one-time code, only the hash (also Pebble, writing help, companion) (step 3) - app/panel/kopplung.py Codes.take: redeem a code once, compared in constant time (step 4) - app/panel/iphone.py app_pair: the app's first contact (step 4, step 5) - app/panel/iphone.py app_hello: what the app may, the Spark decides (step 9) - app/panel/profiles.py add_device: make a key, store its hash (step 5) - app/panel/profiles.py current: profile from key or cookie, scopes, switches, kill switch (step 6) - app/panel/profiles.py _app_path: the app's fixed path list (step 7) - app/panel/core.py browser_profile: only the own browser login (step 10) - app/panel/account.py profile_remove_device: remove a device (step 11) - app/panel/android.py apk_response: app file only with a valid link (step 3) - app/panel/android.py flags: what the Android app switches on itself: assistant, fingerprint (step 9) - app/panel/android.py assist_gate: questions of the Android sheet only when released, never guests (step 9) - app/panel/zustellung.py pick: note to the device in use, else to th"
 },
 {
 "lang": "en",
@@ -9909,7 +9933,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": " the own browser (step 1, step 2) - app/panel/terminal.py setup_base: pinned at home, outside https only (step 3) - app/panel/terminal.py program_pair: the terminal's first contact (step 4, step 5) - app/panel/terminal.py reaches: the terminal's fixed rule list (step 7)"
+"text": "e phone app (step 9) - app/panel/zustellung.py api_da: only „in use“ or „away“, only pages and the apps (step 9) - app/panel/terminal.py profile_pair: terminal pairing line only from the own browser (step 1, step 2) - app/panel/terminal.py setup_base: pinned at home, outside https only (step 3) - app/panel/terminal.py program_pair: the terminal's first contact (step 4, step 5) - app/panel/terminal.py reaches: the terminal's fixed rule list (step 7)"
 },
 {
 "lang": "en",
@@ -9917,7 +9941,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "Self-tests: test_iphone, test_iphone_panel, test_android, test_app_notaus, test_kopplung, test_terminal"
+"text": "Self-tests: test_iphone, test_iphone_panel, test_android, test_app_notaus, test_kopplung, test_terminal, test_zustellung"
 },
 {
 "lang": "en",
@@ -13486,6 +13510,22 @@
 "head": "Voice chat",
 "title": "Reminders as notifications",
 "text": "Reminders as notifications (profiles only): in the \"Me\" window under \"Conversation\", \"Reminders on this device → Switch on\" turns on push notifications. A reminder then arrives also when the page is closed, and only on the devices of that profile. This needs https with a valid certificate (e.g. behind a reverse proxy); on an iPhone first add the page to the home screen (\"Share → Add to Home Screen\"). The Spark only sends to the browsers' push services (Apple, Google, Mozilla, Microsoft), encrypted. Since V01.0.181 every notification (reminder, \"speaking up\" note, morning briefing, agent report) arrives once: on the device the profile used last (an open page, the iPhone app or Telegram, at most 12 hours back), else the iPhone app, else Telegram, else the browser set up last. Private notes go over Telegram only when the profile allowed personal data there."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "Notes to the device in use (V01.0.864, plan benachrichtigung-geraet, Dominik 2026-10-20 \"ok\", stage 1; zustellung.py, admin switch Features → Timers and reminders → \"Notes to the device in use\", chat.note_device, off): \"Used last\" meant until now: some time in the last 12 hours, also a page left open in the background, never the iPhone app. With the switch every device only tells the Spark how long ago its last input was: an open page and the Android app every minute while in front, at once on the first input after a pause, and \"away\" when they go to the background (POST /api/zustellung/da, only a number and a state); the iPhone app when opened, every minute in front and \"away\" in the background; the Spark companion with its poll every 30 seconds the computer's idle time (Windows GetLastInputInfo, Mac CGEventSource). A note then goes to the device with the last input within the last 2 minutes (the device's word no older than 90 seconds), else at once to the phone app (iPhone, else Android), without a phone app as before. A way the profile chose for a kind of note (service watch) still holds. Kept in memory only, nothing is stored. Logs: push: route aktiv|handy <way>; Live: the conn"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "ection \"Gerade benutzte Geräte\" with the count and the notes routed so today. Self-test test_zustellung. Following up, \"read everywhere\", urgent notes and one quiet time for everything follow in stages 2 to 4."
 },
 {
 "lang": "en",

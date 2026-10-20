@@ -52,3 +52,16 @@ const rem={list:[],rung:new Set(),
     if(PROFILE&&!document.hidden&&now-(this.synced||0)>60e3){this.synced=now;    // pick up reminders set on other devices
       this.fetchList().then(l=>{if(PROFILE){this.list=[...l,...this.list.filter(x=>x.local)].filter(x=>!this.rung.has(x.id)).sort((a,b)=>a.due-b.due);this.show()}}).catch(()=>{})}}};
 setInterval(()=>rem.tick(),2000);
+// Meldung ans genutzte Gerät (zustellung.py): this page says how long ago it was last touched (only that, never what):
+// every 60 s while in front, at once on the first touch after a pause, "weg" when it goes to the background. With the
+// switch off the Spark says so, and the page asks again only every 5 minutes.
+const nahe={input:Date.now(),said:0,on:true,
+  async say(weg){if(!PROFILE)return;this.said=Date.now();
+    try{const r=await api('/api/zustellung/da',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({idle:Math.round((Date.now()-this.input)/1000),weg:!!weg,id:await rem.pushId()})});
+      if(r.ok)this.on=!!(await r.json()).on}catch{}},
+  touch(){const n=Date.now(),pause=n-this.input;this.input=n;if(this.on&&pause>30e3&&n-this.said>5e3&&!document.hidden)this.say()},
+  tick(){if(!document.hidden&&Date.now()-this.said>(this.on?60e3:300e3))this.say()}};
+['pointerdown','keydown','wheel','touchstart'].forEach(e=>addEventListener(e,()=>nahe.touch(),{passive:true,capture:true}));
+document.addEventListener('visibilitychange',()=>{if(document.hidden){if(nahe.on&&PROFILE)nahe.say(true)}else nahe.touch()});
+setInterval(()=>nahe.tick(),5000);

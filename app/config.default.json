@@ -222,6 +222,7 @@
     "homeassistant": false,
     "documents": true,
     "reminders": true,
+    "note_device": false,
     "calendar": true,
     "calendar_share": false,
     "calendar_server": false,

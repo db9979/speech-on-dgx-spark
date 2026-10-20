@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.864** Mitteilung ans genutzte Gerät (Admin-Schalter unter Funktionen → Timer und Erinnerungen, aus): eine Mitteilung geht an das Gerät, das du gerade benutzt (Panel-Seite, Android-App, iPhone-App, Spark-Begleiter am PC oder Mac), sonst sofort an die Handy-App; die Geräte melden nur „benutzt vor n Sekunden“ oder „weg“, nie Inhalte; Live zeigt die Anzahl
 - **V01.0.863** Musik bearbeiten (Admin-Schalter, aus): unter Ich → Musik ein Lied als neue Fassung ändern (Abschnitt neu, verlängern, Musikrichtung, Remix, Liedtext mit Strophen per Ziehen verschieben, schneiden, Tempo und Tonart), eigene Dateien mit Rechte-Haken hochladen, Werkzeug musik_bearbeiten; auch in der iPhone-App
 - **V01.0.862** Wackelnde Tests robust gemacht; dabei behoben: ein Kalender-Abgleich während einer Änderung schreibt nicht mehr den alten Termin zurück, das Formular „Kalender hinzufügen“ bleibt beim Ausfüllen offen
 - **V01.0.861** E-Mail: Liste, Mail und Ordner als drei gleiche Kästen, die Ordner rechts ein- und ausblendbar (Knopf „Ordner“, Taste O), Mails per Ziehen in einen Ordner, aufs Archiv oder in den Papierkorb; Löschen mit eigenem Schalter (aus) nur durch dich, in den Papierkorb mit „Rückgängig“, endgültig nur dort nach Rückfrage; nach dem dritten Verschieben vom selben Absender in denselben Ordner fragt der Spark, ob eine Regel das übernehmen soll; alles auch im iPhone
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.857** Für dich: liest bei einer neuen Mail sofort neu (mit „Neue Mails sofort“), und eine Marke nur im Betreff einer echten, bestätigten Mail (etwa o2 mit Netflix) ist kein Phishing-Verdacht mehr
 - **V01.0.856** Rechner-Karten springen nicht mehr: beide Rechner mit denselben Zeilen auf gleicher Höhe nebeneinander (auch am Handy), „Wer rechnet gerade“ mit festen Zeilen; Steuerzentrale und iPhone gleich
 - **V01.0.855** Fix: iPhone-App baut wieder (GitHub-Lauf „iPhone app“); die neue Listen-Ansicht hatte einen Typnamen, den die App schon hatte
-- **V01.0.854** Listen bekommen eine eigene Seite im Menü (und in der iPhone-App unter Meine Sachen): eigene Listen wie Baumarkt anlegen, bei jedem Eintrag wer ihn wann und woher draufgesetzt hat, Abgehaktes 14 Tage unter „Zuletzt erledigt“ mit „Zurückholen“, Einkauf nach Abteilungen und mit Mengen, Einkauf auf Heute
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

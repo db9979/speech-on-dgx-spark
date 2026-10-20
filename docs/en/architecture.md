@@ -339,6 +339,7 @@ Apps, Telegram, watch, speakers, room mode, chats and the history on all devices
 | `app/panel/verlauf.py` | Verlauf auf allen Geräten: what keeps a profile's conversations alike everywhere. |
 | `app/panel/watch.py` | Answers for the Pebble watch app: the chat runs here, the phone polls for text and audio. |
 | `app/panel/wyoming.py` | Wyoming for Home Assistant Assist: HA (Voice PE, the HA app, ESPHome speakers) uses the Spark's speech recognition and voice. |
+| `app/panel/zustellung.py` | Meldung ans gerade genutzte Gerät. |
 
 ### Operation
 
@@ -858,9 +859,9 @@ flowchart TD
 4. <a id="kn-apps-s4"></a>**Code valid?**: The app sends the code. The Spark checks the rate limit (10 per minute and address), compares the hash in constant time and deletes the code at the first hit. An expired or used code never fits. If it is no link code, pruefzugang.py checks a typed review code for Apple's review (12 signs, 14 days, at most 5 iPhones, only with the review access on); wrong review codes lock the address like wrong PINs.
 5. <a id="kn-apps-s5"></a>**Own device key**: profiles.add_device makes the key and stores only its SHA-256 hash in profiles.json. The app gets it exactly once and keeps it in the keychain.
 6. <a id="kn-apps-s6"></a>**Every request with the key**: profiles.current looks up the key's hash in the device list. A device key comes before the cookie; the profile always comes from the key, never from what the app writes.
-7. <a id="kn-apps-s7"></a>**Path allowed for the app?**: An app key only works for the 69 paths in profiles.APP_PATHS (chat, speech recognition, conversations, reminders, chats, calls …), a few read patterns, the panel areas (admin switch iPhone app with panel) and "My things" (iphone.THINGS, each part only with the release of its own function). Everything else it sees without a profile.
+7. <a id="kn-apps-s7"></a>**Path allowed for the app?**: An app key only works for the 70 paths in profiles.APP_PATHS (chat, speech recognition, conversations, reminders, chats, calls …), a few read patterns, the panel areas (admin switch iPhone app with panel) and "My things" (iphone.THINGS, each part only with the release of its own function). Everything else it sees without a profile.
 8. <a id="kn-apps-s8"></a>**App off right now or My kill switch?**: If the app is switched off by the admin or blocked for the profile, or the profile has My kill switch on, this request has no profile. The app gets „not now“ (503), keeps its pairing and works again as soon as the switch is back.
-9. <a id="kn-apps-s9"></a>**Like a browser of the profile**: The app asks through the same endpoints as the page, with the same limits. What it may do on top (smart home, CarPlay, listening, documents, pictures) the Spark tells it in /api/iphone/hello; the app only shows it and follows it. Calls between profiles ring through a VoIP push from Apple that carries only the call's random number; the app asks the Spark who calls. For private chats the app makes its own key in the Secure Enclave; the Spark only gets the public half. The Android app's sheet over other apps asks as device „android“ only while „Android: Spark as assistant“ is released (android.assist_gate). Whether the app may keep the pages' last state, hello says with „keep“ (appmerken.keep); on no it deletes it.
+9. <a id="kn-apps-s9"></a>**Like a browser of the profile**: The app asks through the same endpoints as the page, with the same limits. What it may do on top (smart home, CarPlay, listening, documents, pictures) the Spark tells it in /api/iphone/hello; the app only shows it and follows it. Calls between profiles ring through a VoIP push from Apple that carries only the call's random number; the app asks the Spark who calls. For private chats the app makes its own key in the Secure Enclave; the Spark only gets the public half. The Android app's sheet over other apps asks as device „android“ only while „Android: Spark as assistant“ is released (android.assist_gate). Whether the app may keep the pages' last state, hello says with „keep“ (appmerken.keep); on no it deletes it. With „Notes to the device in use“ the app and the pages only say every minute whether they are in use right now (POST /api/zustellung/da, the companion with its idle time); zustellung.pick then sends a note to the device with the last input within the last 120 seconds, else to the phone app at once.
 10. <a id="kn-apps-s10"></a>**Account, devices or security?**: Endpoints that change the profile's connections, devices or security only take the own browser login (core.browser_profile). They refuse a device key, except in an area the profile opened for the app; secrets need a fresh code there as well.
 11. <a id="kn-apps-s11"></a>**Removing works at once**: When the iPhone is removed in the panel, its hash leaves the device list. The app's next request finds no profile any more.
 
@@ -883,11 +884,12 @@ Applies at: [step 6](#kn-apps-s6), [step 7](#kn-apps-s7)
 
 - **10** minutes a pairing code is valid ([step 3](#kn-apps-s3))
 - **5** iPhones per profile ([step 2](#kn-apps-s2))
-- **69** fixed paths for the app key ([step 7](#kn-apps-s7))
+- **70** fixed paths for the app key ([step 7](#kn-apps-s7))
 - **30** minutes an Android download link is valid ([step 3](#kn-apps-s3))
 - **5** downloads per Android link ([step 3](#kn-apps-s3))
 - **10** minutes a terminal pairing line is valid ([step 3](#kn-apps-s3))
 - **5** terminals per profile ([step 2](#kn-apps-s2))
+- **120** seconds after the last input a device counts as in use ([step 9](#kn-apps-s9))
 
 #### Settings
 
@@ -917,12 +919,14 @@ Applies at: [step 6](#kn-apps-s6), [step 7](#kn-apps-s7)
 - `app/panel/android.py` `apk_response`: app file only with a valid link ([step 3](#kn-apps-s3))
 - `app/panel/android.py` `flags`: what the Android app switches on itself: assistant, fingerprint ([step 9](#kn-apps-s9))
 - `app/panel/android.py` `assist_gate`: questions of the Android sheet only when released, never guests ([step 9](#kn-apps-s9))
+- `app/panel/zustellung.py` `pick`: note to the device in use, else to the phone app ([step 9](#kn-apps-s9))
+- `app/panel/zustellung.py` `api_da`: only „in use“ or „away“, only pages and the apps ([step 9](#kn-apps-s9))
 - `app/panel/terminal.py` `profile_pair`: terminal pairing line only from the own browser ([step 1](#kn-apps-s1), [step 2](#kn-apps-s2))
 - `app/panel/terminal.py` `setup_base`: pinned at home, outside https only ([step 3](#kn-apps-s3))
 - `app/panel/terminal.py` `program_pair`: the terminal's first contact ([step 4](#kn-apps-s4), [step 5](#kn-apps-s5))
 - `app/panel/terminal.py` `reaches`: the terminal's fixed rule list ([step 7](#kn-apps-s7))
 
-Self-tests: `test_iphone`, `test_iphone_panel`, `test_android`, `test_app_notaus`, `test_kopplung`, `test_terminal`
+Self-tests: `test_iphone`, `test_iphone_panel`, `test_android`, `test_app_notaus`, `test_kopplung`, `test_terminal`, `test_zustellung`
 
 ### Telegram, Siri, watch
 

@@ -751,6 +751,15 @@ def _conns(now):
     except Exception:
         pass
     try:
+        # Mitteilung ans genutzte Gerät (zustellung.py): devices in use right now and notes routed today, only the counts
+        import zustellung
+        z = zustellung.for_live(now)
+        if z["on"] and (z["devices"] or z["aktiv"] or z["handy"]):
+            out.append({"name": "Gerade benutzte Geräte", "proto": f"Mitteilungen heute: {z['aktiv']} ans benutzte Gerät, "
+                        f"{z['handy']} ans Handy", "dir": "ein", "n": z["devices"]})
+    except Exception:
+        pass
+    try:
         # Bildschirm zeigen und bedienen (fernsicht.py): running sessions by kind, only the counts
         import fernsicht
         c = fernsicht.counts()

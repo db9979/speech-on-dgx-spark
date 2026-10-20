@@ -707,10 +707,13 @@ def program_office(app: str, request: Request):
 
 
 @router.get("/api/desk/poll", dependencies=[Depends(assistant)])
-async def program_poll(request: Request, after: int = 0, version: str = "", arch: str = "", mic: str = ""):
+async def program_poll(request: Request, after: int = 0, version: str = "", arch: str = "", mic: str = "", idle: int = -1):
     prof, dev = _program(request)
     guard.limit(request, "desk", prof["id"])
     _mic_said(dev["id"], mic)
+    if idle >= 0:   # seconds since the last input at this computer (Meldung ans genutzte Gerät, zustellung.py)
+        import zustellung
+        zustellung.seen(prof["id"], "desk", idle)
     held = lapsed(prof["id"])        # "Nicht stören" ran out without a word from the program: the summary now
     if held:
         await release(prof["id"], held)
