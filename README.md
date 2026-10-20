@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.858** Fix: GitHub run "Tests" green again; the new test of the computer cards allows 1 px rounding (GitHub's fonts) and measures both states in one go, without a race with the page's own poll; the test "a security point does not turn Zustand red" checks on a status of its own
 - **V01.0.857** For you: reads anew at once when a new mail comes (with "New mail at once"), and a brand only in the subject of a genuine, verified mail (say o2 with Netflix) is no longer a phishing suspicion
 - **V01.0.856** Computer cards no longer jump: both computers with the same rows at the same height side by side (also on the phone), „Wer rechnet gerade“ with fixed lines; control centre and iPhone alike
 - **V01.0.855** Fix: the iPhone app builds again (GitHub run "iPhone app"); the new Lists view used a type name the app already had
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.851** What I know about you (stages 3 and 4): interests with evidence only after "Right", "More of this" on the card, recurring bills with a monthly reminder, week and month sum from checked amounts, weekly review on Sundays, at most one web tip a day with only the word; iPhone and CarPlay
 - **V01.0.850** Status → Architecture has a new page "Security": how all layers of protection work together (the model proposes, the panel decides), with one question's way through every check, roles, borders and code; new rule: it is updated with every change of a protection rule
 - **V01.0.849** Cheat sheet to print: Me → What I can do opens two A4 sheets in German or English with everything you can say (only what is released, the key word marked), always built fresh from the routing rules
-- **V01.0.848** For you stage 2: buttons Remind me, Add to calendar, Draft a reply and Draft a cancellation (sending only through the preview), by voice "What do I have to do this week?" and "number two is done", a part in the daily briefing, by itself on deadlines and suspicion; on the iPhone under Today → For you
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

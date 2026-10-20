@@ -3729,8 +3729,10 @@ class Browser(unittest.TestCase):
                                        ("NotReadableError", "andere App"), ("TypeError", "nicht öffnen")):
                         self.assertIn(word, await pg.evaluate(f"micError({{name:'{name}',message:'Requested device not found'}})"))
                     self.assertNotIn("Requested", await pg.evaluate("micError({name:'NotFoundError',message:'Requested device not found'})"))
-                    await pg.evaluate("SECNEED=[{lvl:'bad',text:'Zweiter Anmeldeschritt aus.',btn:'Öffnen',go:'sec:sec'}];zustand()")
-                    self.assertNotEqual(await pg.evaluate("$('zhead').dataset.lvl"), "bad")
+                    # a red security point alone never makes Zustand say "Etwas läuft nicht": on a status of its own
+                    # in one go, so the test panel's own state (a service or note that is red right then) does not count
+                    self.assertNotEqual(await pg.evaluate("(()=>{SECNEED=[{lvl:'bad',text:'Zweiter Anmeldeschritt aus.',btn:'Öffnen',go:'sec:sec'}];"
+                                                          "zustand({glance:{},services:{},system:{},alerts:[]});return $('zhead').dataset.lvl})()"), "bad")
                     await pg.evaluate("markDirty($('pane-feat'),true)")
                     self.assertTrue(await pg.evaluate("!$('featdirty').hidden&&$('dirtycnt').hidden"))
                     await pg.evaluate("markDirty($('pane-feat'),false)")

@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.858** Fix: GitHub-Lauf „Tests“ wieder grün; der neue Test der Rechner-Karten erlaubt 1 px Rundung (Schrift auf GitHub) und misst beide Stände in einem Zug, ohne Wettlauf mit der eigenen Abfrage der Seite; der Test „Sicherheitspunkt macht Zustand nicht rot“ prüft auf eigenem Stand
 - **V01.0.857** Für dich: liest bei einer neuen Mail sofort neu (mit „Neue Mails sofort“), und eine Marke nur im Betreff einer echten, bestätigten Mail (etwa o2 mit Netflix) ist kein Phishing-Verdacht mehr
 - **V01.0.856** Rechner-Karten springen nicht mehr: beide Rechner mit denselben Zeilen auf gleicher Höhe nebeneinander (auch am Handy), „Wer rechnet gerade“ mit festen Zeilen; Steuerzentrale und iPhone gleich
 - **V01.0.855** Fix: iPhone-App baut wieder (GitHub-Lauf „iPhone app“); die neue Listen-Ansicht hatte einen Typnamen, den die App schon hatte
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.851** Was ich über dich weiß (Stufe 3 und 4): Interessen mit Beleg erst nach „Stimmt“, „Mehr davon“ an der Karte, Wiederkehrendes mit monatlicher Erinnerung, Woche und Monatssumme aus geprüften Beträgen, Wochenrückblick sonntags, höchstens ein Netz-Tipp am Tag nur mit dem Wort; iPhone und CarPlay
 - **V01.0.850** Zustand → Technik hat eine neue Seite „Sicherheit“: wie alle Schutzschichten zusammenspielen (das Modell schlägt vor, das Panel entscheidet), mit dem Weg einer Frage durch alle Prüfungen, Rollen, Grenzen und Code; neue Regel: bei jeder Änderung einer Schutzregel wird sie mitgezogen
 - **V01.0.849** Spickzettel zum Ausdrucken: Ich → Was ich kann öffnet auf Deutsch oder Englisch zwei A4-Blätter mit allem, was du sagen kannst (nur Freigegebenes, das Stichwort markiert), immer neu aus den Regeln der Weiche erzeugt
-- **V01.0.848** Für dich Stufe 2: Knöpfe Erinnern, Eintragen, Antwort entwerfen und Kündigung entwerfen (Senden nur über die Vorschau), per Stimme „Was muss ich diese Woche erledigen?“ und „Nummer zwei ist erledigt“, Teil im Tagesbriefing, von selbst bei Fristen und Verdacht; im iPhone unter Heute → Für dich
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

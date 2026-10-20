@@ -325,6 +325,8 @@ class Browser(unittest.TestCase):
         a = status(ruhig, "", "null,null", "{spannung:'ok',drossel:'nein'}")
         b = status(voll, ",".join(line % ("t" + str(i), "Teil mit sehr langem Namen", 2) for i in range(3)),
                    ",".join("'p%s'" % i for i in range(30)), "{spannung:'zu niedrig',drossel:'jetzt'}")
+        def nah(a, b):
+            return len(a) == len(b) and all(abs(x - y) <= 1 for x, y in zip(a, b))
         maß = ("[...$('zrechner').children].map(c=>[c.children.length,Math.round(c.getBoundingClientRect().height),"
                "[...c.children].map(r=>Math.round(r.getBoundingClientRect().top-c.getBoundingClientRect().top))])")
         async def go():
@@ -332,18 +334,30 @@ class Browser(unittest.TestCase):
                 for w, h in ((1280, 900), (390, 800), (320, 760)):
                     br, pg, errors = await self.page(p, w, h)
                     try:
-                        await pg.route("**/api/status", lambda r: r.abort())
+                        # no answer of the panel itself may land after the test's status (it would draw one Spark):
+                        # block new asks, then wait until every ask already on its way has come back
+                        offen = set()
+                        pg.on("request", lambda r: offen.add(r) if "/api/status" in r.url else None)
+                        pg.on("requestfinished", lambda r: offen.discard(r))
+                        pg.on("requestfailed", lambda r: offen.discard(r))
+                        await pg.route("**/api/status*", lambda r: r.abort())
                         await pg.evaluate("goSec('mon')")
-                        await pg.wait_for_function("typeof zustand==='function'&&!!$('zrechner')", timeout=20000)
-                        await pg.evaluate(a)
-                        vorher = await pg.evaluate(maß)
+                        for _ in range(100):
+                            if not offen:
+                                break
+                            await pg.wait_for_timeout(100)
+                        self.assertFalse(offen, w)
+                        await self.idle(pg)
+                        # both states and both measures in one go: nothing of the page can come in between
+                        vorher, nachher, gleich = await pg.evaluate(
+                            "(()=>{%s;const v=%s,p=$('zrechner').children[1].children[6];%s;"
+                            "return [v,%s,$('zrechner').children[1].children[6]===p]})()" % (a, maß, b, maß))
                         self.assertEqual([x[0] for x in vorher], [11, 11], w)         # admin.js ZR_ZEILEN
-                        self.assertEqual(vorher[0][2], vorher[1][2], w)               # every row beside its neighbour
-                        await pg.evaluate("window.__platte=$('zrechner').children[1].children[6]")
-                        await pg.evaluate(b)
-                        nachher = await pg.evaluate(maß)
-                        self.assertEqual(nachher, vorher, str((w, vorher, nachher)))  # nothing jumps
-                        self.assertTrue(await pg.evaluate("$('zrechner').children[1].children[6]===window.__platte"), w)
+                        self.assertTrue(nah(vorher[0][2], vorher[1][2]), (w, vorher))  # every row beside its neighbour
+                        self.assertTrue(gleich, w)                                     # the disk row stays the same element
+                        # nothing jumps: same rows, same heights (1 px for rounding: GitHub's fonts sit half a pixel apart)
+                        self.assertEqual([x[0] for x in nachher], [11, 11], w)
+                        self.assertTrue(all(nah([x[1]] + x[2], [y[1]] + y[2]) for x, y in zip(vorher, nachher)), (w, vorher, nachher))
                         self.assertFalse(await pg.evaluate("document.documentElement.scrollWidth>innerWidth"), w)
                         self.assertFalse(await pg.evaluate("[...document.querySelectorAll('#zrechner .zrcard')].some(e=>e.getBoundingClientRect().right>innerWidth+1)"), w)
                         self.assertEqual(errors, [])
