@@ -99,6 +99,7 @@ RULES = {
     "beraterwarum": "berater.py: „Warum?“ für alle Profile",
     "bewerten": "faelle.py: „Das war falsch“, „Gut so“",
     "calshare": "calendars.py: calendar_events liest geteilte Kalender mit („Was hat Sabine morgen?“), calendar_add trägt in einen genannten ein, erst nach Ja",
+    "listlink": "mitschreiblink.py: kein Werkzeug, eine Seite für Leute ohne Profil (nur eintragen, nie das Modell)",
     "listdav": "listendav.py: kein Werkzeug, die Listen als Aufgabenlisten des Kalender-Servers (die Kalender-App ändert sie, nicht das Modell)",
     "listshare": "tasks.py: tasks_show, tasks_add und tasks_change erreichen geteilte Listen („Setz Butter auf Sabines Einkaufsliste“), Löschen nur der Besitzer",
     "listnote": "tasks.py: ein Hinweis von selbst, wenn andere etwas auf eine geteilte Liste setzen; nichts zu fragen",

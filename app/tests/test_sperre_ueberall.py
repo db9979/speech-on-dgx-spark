@@ -297,6 +297,8 @@ class OwnData(Base):
 ADMIN_ON_OK = {
     "zustellung.py:for_live": "Spark-wide numbers for Zustand → Live; each note asks features.allowed notedevice (zustellung.pick)",
     "listendav.py:for_live": "Zustand → Live: Spark-wide flag beside a number; each profile's lists ask features.allowed listdav",
+    "mitschreiblink.py:for_live": "Zustand → Live: Spark-wide flag beside a number; each link asks features.allowed listlink for its owner",
+    "mitschreiblink.py:_door": "the visitor has no profile: Spark-wide door before the code is known; find() then asks features.allowed listlink for the owner",
     "vorgaenge.py:due": "Spark-wide early out of the minute loop; each profile then features.allowed vorgaenge",
     "vorgaenge.py:for_live": "admin-only numbers for Zustand → Live (no profile acts)",
     "saetze.py:admin_view": "admin-only numbers for Funktionen → Weiche (Spark-wide switch, no profile acts)",

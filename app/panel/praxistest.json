@@ -2406,6 +2406,13 @@
 "titel": "E-Mail wie Apple Mail",
 "text": "A: Update auf V01.0.874. Seite E-Mail am Rechner: links „Postfächer“ mit Ungelesen, Markiert, Mit Anhang und den Ordnern, Taste O blendet sie aus und ein. B: Eine Newsletter- oder Rechnungs-Mail öffnen: sie ist formatiert (fett, Tabellen), oben „Bilder von außen sind aus“; „Bilder laden“ zeigt die Bilder. C: Einen Link in der Mail antippen: erst die Frage mit der echten Adresse, „Öffnen“ öffnet einen neuen Tab. D: „Neue Mail“ (Taste N) an dich selbst, „Senden“: 10 s lang „Rückgängig“; einmal Rückgängig (das Fenster ist wieder da, nichts kam an), dann senden lassen (kommt an). E: Antworten mit einem ✨-Vorschlag: „Senden“ zeigt erst die Vorschau. F: Handy-Seite: Mail öffnen, die Leiste Antworten/Weiter/… steht unten, der Betreff ist frei. G: iPhone-App: dieselbe Mail formatiert, Link fragt vor Safari, Senden mit Rückgängig.",
 "thread": "Mail, Kalender, Kontakte wie bei Apple"
+},
+{
+"id": "P368",
+"v": 875,
+"titel": "Mitschreib-Link",
+"text": "A: Update auf V01.0.875, Funktionen → Listen für Einkauf und Aufgaben → „Mitschreib-Link“ an. B: Profil db: Seite Listen → Einkauf → ⋯ → „Teilen …“ → „Link für Leute ohne Profil“, 7 Tage, „Link erstellen“: Link und QR-Code erscheinen; Fenster schließen und neu öffnen: nur noch „Link bis …“ mit „Widerrufen“. C: Den QR-Code mit einem Handy ohne Spark-Anmeldung scannen: kleine Seite „🛒 Einkauf“; „2 Milch, Brot“ mit Name „Oma“ eintragen: „Danke, steht drauf.“ D: Bei db stehen Milch 2× und Brot mit „Mitschreib-Link“ und „Oma“. E: Am iPhone (db) unter Listen → Einkauf → „Teilen …“ einen Link mit „darf die Liste sehen“ erstellen und per „Link weitergeben“ schicken: der Empfänger sieht die offenen Einträge. F: „Widerrufen“: der Link meldet „Der Link passt nicht oder ist abgelaufen.“",
+"thread": "Einkaufsliste und Aufgaben teilen"
 }
 ]
 }

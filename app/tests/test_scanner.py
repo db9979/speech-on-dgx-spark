@@ -90,6 +90,8 @@ OPEN = {
     "/api/notaus/mine/off": "Mein Notaus off: the profile's browser login only, PIN with lockout and its fresh code, rate limit",
     "/api/notaus/ha": "Home Assistant raises the Notaus with its own key (notaus.key_find, hash, compare_digest), home network only, lockout, rate limit",
     "/api/admin/notaus/mine/off": "an admin lifts a profile's own Notaus: notaus._lift_how (browser at home), fresh code or password",
+    "/api/liste/check": "Mitschreib-Link: a visitor without a profile; 404 unless the admin allows it, random code (only its hash kept), expiry, revoke, Origin check, rate limit, lockout like a PIN (mitschreiblink._door)",
+    "/api/liste/add": "Mitschreib-Link: only puts entries on the one list of the link; 404 unless allowed, same door as /api/liste/check, Mein Notaus of the owner holds it",
     "/api/make/dl": "a made document for whoever holds its download link (random token, only its hash kept, 10 minutes, 5 uses, one file of one profile); 404 once off, rate limit",
     "/api/changelog": "Was ist neu: is_admin, else browser_profile (no guests, no device keys), rate limit; read only",
 }

@@ -149,6 +149,8 @@ THINGS = {
     "tasks": ((("GET",), r"/api/profile/tasks"), (("POST",), r"/api/profile/listen"),
               (("PUT", "DELETE"), r"/api/profile/listen/l[0-9a-f]{8}"),
               (("PUT",), r"/api/profile/listen/(?:einkauf|aufgaben|l[0-9a-f]{8})/share"),
+              (("GET", "POST"), r"/api/profile/listen/(?:einkauf|aufgaben|l[0-9a-f]{8})/links"),
+              (("DELETE",), r"/api/profile/listen/(?:einkauf|aufgaben|l[0-9a-f]{8})/links/k[0-9a-f]{8}"),
               (("POST",), r"/api/profile/tasks/(?:u_[0-9a-f]{12}\.)?(?:einkauf|aufgaben|l[0-9a-f]{8})/(?:add|done|undo)"),
               (("DELETE",), r"/api/profile/tasks/(?:einkauf|aufgaben|l[0-9a-f]{8})/[0-9a-f]{10}")),
     # Offen (vorgaenge.py, plan assistent-zentrale): the cards, one button, „gesehen“; the app asks again when it

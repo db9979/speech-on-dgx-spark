@@ -281,6 +281,7 @@ Home Assistant, mail, calendar, tasks, weather, reMarkable, MCP and what the Spa
 | `app/panel/mcp.py` | Outside tools over MCP (Model Context Protocol): the admin adds a tool server (Paperless, Nextcloud, GitHub ...) by its address, and the panel offers single … |
 | `app/panel/mcpserver.py` | The Spark as an MCP server: other programs (Open WebUI, n8n, Home Assistant, Claude, ...) use the Spark's abilities over the Model Context Protocol at /mcp. |
 | `app/panel/meinmcp.py` | Eigene MCP-Dienste pro Profil. |
+| `app/panel/mitschreiblink.py` | Mitschreib-Link: a link for people without a profile, so a visitor, the cleaner or the grandparents can put something on one list („Bring bitte Milch mit“). |
 | `app/panel/parcels.py` | Parcels from the profile's own e-mail: shipping mails of DHL, Hermes, DPD, GLS, UPS and Amazon are recognised by their sender, the status is taken from the m … |
 | `app/panel/postfach.py` | Mails ordnen auf der Seite E-Mail: the profile marks a message of its inbox as read or unread, archives it or moves it into one of its own folders, and takes … |
 | `app/panel/proactive.py` | The assistant speaks up by itself: a short note or question when something real happens. |
@@ -620,6 +621,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `state/meldungen` | Report drafts | – | no |
 | `state/mfa-admin.json` | Admin's second step | sealed | yes |
 | `state/migrated-chunk10` | One-time migration done | – | no |
+| `state/mitschreib-links.json` | Write links for lists (hashes) | hashes only | yes |
 | `state/modelle-eigene.json` | The admin's own models (Hugging Face name, pinned commit, memory need) | – | no |
 | `state/modelle-messen-wunsch.json` | The panel's wish for the next measurement (Status → Models "Measure"), seconds | – | no |
 | `state/modelle-messung.json` | Model measurement (numbers only) | – | no |
@@ -1490,6 +1492,7 @@ Applies at: [step 4](#kn-sicherheit-s4), [step 5](#kn-sicherheit-s5)
 | Stranger's voice | like a guest, earlier history stays behind | voice check in the same recording |
 | Profile | released functions on own data | sign-in; secrets with a fresh code |
 | Other profile | only what the owner shares with it one by one (see), while shared; for the assistant only text | geteilt.put with a fresh code, release „Sharing with profiles“ |
+| Someone with a write link | without a profile only entries on exactly one list, optionally see the open texts; no ticking off, no deleting, no tool, no model | mitschreiblink.find: only the hash, expiry, revoke, release „Write link“; wrong tries lock like a PIN |
 | Manager | look after people, switch no functions, no logs | role, checked on the server |
 | Admin | releases, blocks, kill switch, logs, live | sign-in with the second step; „Change protection“ asks every time |
 
@@ -1521,6 +1524,7 @@ Applies at: [step 4](#kn-sicherheit-s4), [step 5](#kn-sicherheit-s5)
 - `app/tarswart.py` `check`: checks every command to the Wärter ([step 3](#kn-sicherheit-s3))
 - `app/panel/chat_turn.py` `shared_stranger`: stranger's voice at a shared speaker ([step 4](#kn-sicherheit-s4))
 - `app/panel/features.py` `allowed`: the admin's release, for every profile ([step 5](#kn-sicherheit-s5))
+- `app/panel/mitschreiblink.py` `find`: checks a write link: hash, expiry, release, list ([step 3](#kn-sicherheit-s3), [step 5](#kn-sicherheit-s5))
 - `app/panel/features.py` `blocked`: block of single profiles ([step 5](#kn-sicherheit-s5))
 - `app/panel/geteilt.py` `put`: share with another profile, taking back works at once ([step 5](#kn-sicherheit-s5))
 - `app/panel/chat.py` `wrap_outside`: outside text as a block of data ([step 6](#kn-sicherheit-s6))
@@ -3249,7 +3253,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Seal**: vault.seal turns the value into „enc1:“ and a Fernet token (encrypted and protected against change). A value already sealed stays as it is.
 5. <a id="kn-state-s5"></a>**Write atomically**: common.write_json writes into a fresh temporary file next to it, never through a link, gives it the rights of the old file (a new one is readable for the service only) and then swaps it in one step. A crash in the middle leaves the old file whole.
 6. <a id="kn-state-s6"></a>**Read**: A sealed value is opened with the key. If the key does not fit (backup from another Spark), an empty value comes back and the account has to be entered again. Older unsealed values are read and sealed the next time they are saved.
-7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 34), otherwise the line gives its reason (dateien.STATE_LOCAL, 82). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
+7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 35), otherwise the line gives its reason (dateien.STATE_LOCAL, 82). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
 8. <a id="kn-state-s8"></a>**Move backup?**: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup.
 9. <a id="kn-state-s9"></a>**Fine when restoring?**: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays.
 10. <a id="kn-state-s10"></a>**Put in place with a way back**: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back.
@@ -3259,7 +3263,7 @@ flowchart TD
 
 #### Numbers (from the code)
 
-- **34** files in every backup ([step 7](#kn-state-s7))
+- **35** files in every backup ([step 7](#kn-state-s7))
 - **82** files and folders that stay out with a reason ([step 7](#kn-state-s7))
 - **8 MB** largest file when restoring ([step 9](#kn-state-s9))
 - **12** characters the move password has at least ([step 8](#kn-state-s8))

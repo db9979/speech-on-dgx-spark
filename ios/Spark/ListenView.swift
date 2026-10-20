@@ -1,5 +1,6 @@
 import SwiftUI
 import WidgetKit
+import CoreImage.CIFilterBuiltins
 
 /// Listen (plan listen-teilen.md, Dominik 2026-10-20 „1a 2a“): the same lists as the panel's page Listen (tasks.py):
 /// Einkauf, Aufgaben and own lists, who put an entry on and from where, „Erledigt“ with „Zurückholen“, the shopping
@@ -86,6 +87,8 @@ final class ListenModel: ObservableObject {
     @Published var sharing = false
     @Published var people: [ListPerson] = []
     @Published var note = true
+    /// Mitschreib-Link is released by the admin (mitschreiblink.py)
+    @Published var linking = false
     private var sources: [String: [String]] = [:]
     static let en = Locale.current.language.languageCode?.identifier != "de"
 
@@ -109,6 +112,7 @@ final class ListenModel: ObservableObject {
                              shares: l["shares"] as? [String: String] ?? [:])
         }
         sharing = d["sharing"] as? Bool ?? false
+        linking = d["linking"] as? Bool ?? false
         people = (d["people"] as? [[String: Any]] ?? []).map { ListPerson(id: $0["id"] as? String ?? "", name: $0["name"] as? String ?? "") }
         note = d["note"] as? Bool ?? note
         icons = d["icons"] as? [String] ?? icons
@@ -213,7 +217,7 @@ struct ListeView: View {
 
     var body: some View {
         let l = m.list(id)
-        let teilen = m.sharing && l?.mine == true && l?.onCalendar == false
+        let teilen = (m.sharing || m.linking) && l?.mine == true && l?.onCalendar == false
         List {
             if let l, !l.mine {
                 (l.write ? Text("Von \(l.owner) geteilt: du kannst eintragen und abhaken.") : Text("Von \(l.owner) geteilt: nur zum Ansehen."))
@@ -352,29 +356,112 @@ struct ListeTeilenView: View {
     var body: some View {
         let l = m.list(id)
         Form {
-            Section {
-                if m.people.isEmpty { Text("Es gibt keine anderen Profile.").foregroundStyle(.secondary) }
-                ForEach(m.people) { p in
-                    Picker(selection: Binding(get: { l?.shares[p.id] ?? "" }, set: { v in
-                        Task { await m.send("PUT", "/api/profile/listen/" + id + "/share", ["to": p.id, "level": v]) }
-                    })) {
-                        Text("Aus").tag("")
-                        Text("Sehen").tag("see")
-                        Text("Mitschreiben").tag("add")
-                    } label: { Text(verbatim: p.name) }
-                }
-            } footer: {
-                Text("Mitschreiben heißt eintragen und abhaken. Löschen und Teilen bleiben bei dir.")
-            }
-            Section {
-                Toggle("Hinweis bei neuen Einträgen", isOn: Binding(get: { m.note }, set: { v in Task { await m.setNote(v) } }))
-            } footer: {
-                Text("Höchstens alle 10 Minuten ein Hinweis, wenn andere etwas auf eine geteilte Liste setzen.")
-            }
+            if m.sharing { people(l) }
+            if m.linking { ListeLinkSection(id: id) }
             if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
         }
         .navigationTitle(Text(verbatim: l.map { $0.icon + " " + $0.name } ?? ""))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Fertig") { dismiss() } } }
+    }
+
+    @ViewBuilder private func people(_ l: SparkListe?) -> some View {
+        Section {
+            if m.people.isEmpty { Text("Es gibt keine anderen Profile.").foregroundStyle(.secondary) }
+            ForEach(m.people) { p in
+                Picker(selection: Binding(get: { l?.shares[p.id] ?? "" }, set: { v in
+                    Task { await m.send("PUT", "/api/profile/listen/" + id + "/share", ["to": p.id, "level": v]) }
+                })) {
+                    Text("Aus").tag("")
+                    Text("Sehen").tag("see")
+                    Text("Mitschreiben").tag("add")
+                } label: { Text(verbatim: p.name) }
+            }
+        } footer: {
+            Text("Mitschreiben heißt eintragen und abhaken. Löschen und Teilen bleiben bei dir.")
+        }
+        Section {
+            Toggle("Hinweis bei neuen Einträgen", isOn: Binding(get: { m.note }, set: { v in Task { await m.setNote(v) } }))
+        } footer: {
+            Text("Höchstens alle 10 Minuten ein Hinweis, wenn andere etwas auf eine geteilte Liste setzen.")
+        }
+    }
+}
+
+/// Mitschreib-Link (mitschreiblink.py): a link for people without a profile, put on only (optionally see).
+/// The Spark never shows a link again; the app shows the new one once, with its QR code, to pass on.
+struct ListeLinkSection: View {
+    let id: String
+    @State private var links: [[String: Any]] = []
+    @State private var days = 30
+    @State private var see = false
+    @State private var made: String?
+    @State private var error: String?
+
+    private var path: String { "/api/profile/listen/" + id + "/links" }
+
+    var body: some View {
+        Section {
+            ForEach(links.indices, id: \.self) { i in
+                let x = links[i]
+                HStack {
+                    VStack(alignment: .leading) {
+                        Text("Link bis \(Date(timeIntervalSince1970: x["until"] as? Double ?? 0).formatted(date: .abbreviated, time: .omitted))")
+                        Text((x["see"] as? Bool ?? false) ? "eintragen und ansehen" : "nur eintragen").font(.caption).foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Button("Widerrufen", role: .destructive) { Task { await call("DELETE", path + "/" + (x["id"] as? String ?? "")) } }
+                        .buttonStyle(.borderless)
+                }
+            }
+            if let made, let url = URL(string: made) {
+                if let qr = Self.qr(made) {
+                    Image(uiImage: qr).interpolation(.none).resizable().scaledToFit().frame(maxWidth: 200).frame(maxWidth: .infinity)
+                }
+                ShareLink(item: url) { Label("Link weitergeben", systemImage: "square.and.arrow.up") }
+                Text("Nur jetzt sichtbar: weitergeben oder den QR-Code zeigen.").font(.caption).foregroundStyle(.secondary)
+            }
+            Picker("Gültig für", selection: $days) {
+                Text("7 Tage").tag(7)
+                Text("30 Tage").tag(30)
+                Text("1 Jahr").tag(365)
+            }
+            Toggle("darf die Liste sehen", isOn: $see)
+            Button("Link erstellen") { Task { await call("POST", path, ["days": days, "see": see, "base": Self.base()]) } }
+            if let error { Text(SparkAPI.way(error)).foregroundStyle(.red) }
+        } header: {
+            Text("Link für Leute ohne Profil")
+        } footer: {
+            Text("Wer den Link hat, setzt nur etwas auf diese Liste: kein Abhaken, kein Löschen, kein Assistent.")
+        }
+        .task { await call("GET", path) }
+    }
+
+    /// the panel's address without a path: the link is <base>/#liste=<code>
+    static func base() -> String {
+        guard let b = SparkAPI.current?.base, let c = URLComponents(url: b, resolvingAgainstBaseURL: false),
+              let scheme = c.scheme, let host = c.host else { return "" }
+        return scheme + "://" + host + (c.port.map { ":\($0)" } ?? "")
+    }
+
+    static func qr(_ text: String) -> UIImage? {
+        let f = CIFilter.qrCodeGenerator()
+        f.message = Data(text.utf8)
+        guard let out = f.outputImage?.transformed(by: CGAffineTransform(scaleX: 8, y: 8)),
+              let cg = CIContext().createCGImage(out, from: out.extent) else { return nil }
+        return UIImage(cgImage: cg)
+    }
+
+    private func call(_ method: String, _ p: String, _ body: [String: Any]? = nil) async {
+        guard let api = SparkAPI.current else { error = String(localized: "Nicht gekoppelt."); return }
+        do {
+            let d = try await api.object(method, p, body: body)
+            links = d["links"] as? [[String: Any]] ?? []
+            if method == "POST" { made = d["link"] as? String }
+            if method == "DELETE" { made = nil }
+            error = nil
+        } catch {
+            self.error = error.localizedDescription
+        }
     }
 }

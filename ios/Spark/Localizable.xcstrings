@@ -14750,6 +14750,136 @@
           }
         }
       }
+    },
+    "Link bis %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Link until %@"
+          }
+        }
+      }
+    },
+    "eintragen und ansehen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "put on and look"
+          }
+        }
+      }
+    },
+    "nur eintragen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "put on only"
+          }
+        }
+      }
+    },
+    "Widerrufen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revoke"
+          }
+        }
+      }
+    },
+    "Link weitergeben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pass on the link"
+          }
+        }
+      }
+    },
+    "Nur jetzt sichtbar: weitergeben oder den QR-Code zeigen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Visible only now: pass it on or show the QR code."
+          }
+        }
+      }
+    },
+    "Gültig für": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Valid for"
+          }
+        }
+      }
+    },
+    "7 Tage": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "7 days"
+          }
+        }
+      }
+    },
+    "1 Jahr": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 year"
+          }
+        }
+      }
+    },
+    "darf die Liste sehen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "may see the list"
+          }
+        }
+      }
+    },
+    "Link erstellen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make link"
+          }
+        }
+      }
+    },
+    "Link für Leute ohne Profil": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Link for people without a profile"
+          }
+        }
+      }
+    },
+    "Wer den Link hat, setzt nur etwas auf diese Liste: kein Abhaken, kein Löschen, kein Assistent.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Whoever has the link only puts things on this list: no ticking off, no deleting, no assistant."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

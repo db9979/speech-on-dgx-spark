@@ -182,6 +182,7 @@ DATEIEN = [
     state("features-seen.json", "Wann Funktionen frei wurden", "When functions were released", sicherung="json"),  # when each function was first on („neu freigegeben“ in tipps.py, features.py)
     state("verbrauch-kontingent.json", "eigene Kontingente und Nachschlag", "Own quotas and extras", sicherung="json"),  # Kontingent: the admin's own limits per profile (verbrauch.py)
     state("iphone-pruef.json", "Prüfzugänge für die iPhone-App (Hashes)", "Review accesses for the iPhone app (hashes)", sicherung="json", schutz=("nur Hashes", "hashes only")),  # Apple's app review (pruefzugang.py)
+    state("mitschreib-links.json", "Mitschreib-Links für Listen (Hashes)", "Write links for lists (hashes)", sicherung="json", schutz=("nur Hashes", "hashes only")),  # links for people without a profile to put entries on one list (mitschreiblink.py)
     state("join.json", "Einladungen (Hashes)", "Invitations (hashes)", sicherung="json", schutz=("nur Hashes", "hashes only")),  # new people by invitation: the switch, invitations (code hashes) (join.py)
     # state/: every other file or folder, with the reason it stays out of a backup
     state("secret.key", "Schlüssel für alles Versiegelte", "Key for everything sealed", lokal="Schlüssel: nur verschlüsselt in der Umzugs-Sicherung (move-keys.json)", schutz=("ist der Schlüssel", "is the key")),

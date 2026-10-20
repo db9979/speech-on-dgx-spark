@@ -276,6 +276,8 @@ FEATURES = (
       parent="listshare", me="taskbox", guide="listshare"),
     F("listdav", "Listen in Erinnerungen", "Lists in Reminders", "day", ("tasks_dav", "tasks", "calendar_server", "calendar"),
       parent="tasks", me="taskbox", guide="listdav"),
+    F("listlink", "Mitschreib-Link", "Write link", "day", ("tasks_link", "tasks"), parent="tasks", me="taskbox",
+      guide="listlink"),
     F("mystatus", "Mein Zustand", "My status", "day", ("my_status",), me="bgbox", guide="mystatus"),
     F("agent", "Aufträge", "Jobs", "day", ("agent",), me="agentbox", guide="agent"),
     # watches (beobachten.py): admin release only, every profile with agent functions, never guests

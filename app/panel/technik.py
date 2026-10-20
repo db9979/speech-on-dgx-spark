@@ -159,6 +159,7 @@ MODULE = {
     "parcels": ("dienste", "Pakete aus Versand-Mails"),
     "geteilt": ("dienste", "Teilen mit Profilen: Dokumente an einzelne Profile, Ich → Geteilt, zurückziehen sofort"),
     "calendars": ("dienste", "Kalender und Tagesbriefing, einzelne Kalender mit anderen Profilen geteilt"),
+    "mitschreiblink": ("dienste", "Mitschreib-Link: Leute ohne Profil setzen etwas auf eine Liste (Code nach dem #, nur Hash, mit Ablauf)"),
     "listendav": ("dienste", "Listen in Erinnerungen: die Spark-Listen eines Profils als Aufgabenlisten (VTODO) des Kalender-Servers"),
     "kalenderserver": ("dienste", "Kalender-Server: die Spark-Kalender eines Profils für Kalender-Apps (CalDAV unter /caldav/, App-Passwort)"),
     "sparkkalender": ("dienste", "Spark-Kalender ohne Konto: Termine nur auf dem Spark, verschlüsselt im Profil, beantwortet CalDAV im Panel selbst"),

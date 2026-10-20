@@ -396,7 +396,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ zugang (guard, core, profiles, features)
     "zugang": {
-        "stand": "00c2b17903",
+        "stand": "3a633a6218",
         "bezug": {
             "guard.MAX_FAILS": ["s2", "s3"], "guard.MAX_NAME_FAILS": ["s2", "s3"], "guard.LOCK_FIRST": ["s2"],
             "guard.DAY_FAILS": ["s2", "s3"], "guard.failed": ["s3"], "guard.succeeded": ["s5"],
@@ -621,9 +621,9 @@ SEITEN = {
 
     # ------------------------------------------------------------------ sicherheit (the model as a whole)
     "sicherheit": {
-        "stand": "9dee89b8d4",
+        "stand": "2c00e0816c",
         "bezug": {
-            "features.blocked": ["s5"], "geteilt.put": ["s5"], "core.confirm_code": ["s3", "s8"], "core.CONFIRM_WINDOW": ["s3"], "guard.Slot": ["s3"],
+            "features.blocked": ["s5"], "geteilt.put": ["s5"], "mitschreiblink.find": ["s3", "s5"], "core.confirm_code": ["s3", "s8"], "core.CONFIRM_WINDOW": ["s3"], "guard.Slot": ["s3"],
             "notaus.STAGE": ["s2"], "vault.seal": ["s10"], "tarswart.check": ["s3"], "tarswart.COMMANDS": ["s3"],
             "netguard.allowed": ["s6"], "chat.LOCKED_OUTSIDE": ["s6"], "mailansicht.clean": ["s6"], "regeln": ["s4", "s5"],
         },
@@ -759,6 +759,11 @@ SEITEN = {
             [("Anderes Profil", "Other profile"), ("nur, was der Besitzer einzeln mit ihm teilt (Sehen), solange er teilt; für den Assistenten nur Text",
                                          "only what the owner shares with it one by one (see), while shared; for the assistant only text"),
              ("geteilt.put mit frischem Code, Freigabe „Teilen mit Profilen“", "geteilt.put with a fresh code, release „Sharing with profiles“")],
+            [("Jemand mit Mitschreib-Link", "Someone with a write link"),
+             ("ohne Profil nur Einträge auf genau eine Liste, auf Wunsch die offenen Texte sehen; kein Abhaken, kein Löschen, kein Werkzeug, kein Modell",
+              "without a profile only entries on exactly one list, optionally see the open texts; no ticking off, no deleting, no tool, no model"),
+             ("mitschreiblink.find: nur der Hash, Ablauf, Widerruf, Freigabe „Mitschreib-Link“; Fehlversuche sperren wie eine PIN",
+              "mitschreiblink.find: only the hash, expiry, revoke, release „Write link“; wrong tries lock like a PIN")],
             [("Verwalter", "Manager"), ("Personen betreuen, keine Funktionen schalten, keine Logs", "look after people, switch no functions, no logs"),
              ("Rolle, auf dem Server geprüft", "role, checked on the server")],
             [("Admin", "Admin"), ("Freigaben, Sperren, Notaus, Logs, Live", "releases, blocks, kill switch, logs, live"),
@@ -804,6 +809,7 @@ SEITEN = {
             ("tarswart.check", ("prüft jeden Befehl an den Wärter", "checks every command to the Wärter")),
             ("chat_turn.shared_stranger", ("fremde Stimme am geteilten Lautsprecher", "stranger's voice at a shared speaker")),
             ("features.allowed", ("Freigabe des Admins, gilt für jedes Profil", "the admin's release, for every profile")),
+            ("mitschreiblink.find", ("prüft einen Mitschreib-Link: Hash, Ablauf, Freigabe, Liste", "checks a write link: hash, expiry, release, list")),
             ("features.blocked", ("Sperre einzelner Profile", "block of single profiles")),
             ("geteilt.put", ("Teilen mit einem anderen Profil, zurückziehen wirkt sofort", "share with another profile, taking back works at once")),
             ("chat.wrap_outside", ("Text von außen als Datenblock", "outside text as a block of data")),

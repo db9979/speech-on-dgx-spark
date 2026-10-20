@@ -78,7 +78,8 @@ SOURCES = {"panel": ("Panel", "panel"), "app": ("App", "app"), "stimme": ("per S
            "uhr": ("Uhr", "watch"), "terminal": ("Terminal", "terminal"), "begleiter": ("Begleiter", "companion"),
            "siri": ("Siri", "Siri"), "remarkable": ("reMarkable", "reMarkable"), "auftrag": ("Auftrag", "job"),
            "mcp": ("MCP", "MCP"), "erinnerungen": ("iPhone Erinnerungen", "iPhone Reminders"),
-           "besprechung": ("aus Besprechung", "from a meeting")}
+           "besprechung": ("aus Besprechung", "from a meeting"),
+           "link": ("Mitschreib-Link", "write link")}
 # the chat's client (chat_turn body „client“) -> source
 CLIENT_SRC = {"speaker": "stimme", "telefon": "telefon", "telegram": "telegram", "watch": "uhr", "mcp": "mcp",
               "tui": "terminal", "android": "app", "iphone": "app", "desk": "begleiter", "siri": "siri"}
@@ -423,12 +424,12 @@ def show(x):
 
 
 async def items(uid, lst):
-    """[{"id", "text", "qty", "t", "by", "src"}] of the list's open entries ("id" is the CalDAV address on way B, where
+    """[{"id", "text", "qty", "t", "by", "src", "by_link"}] of the list's open entries ("id" is the CalDAV address on way B, where
     the Spark keeps no amount, who or when)."""
     d = _load(uid)
     tgt = d["targets"].get(lst)
     if not tgt:
-        return [{k: x.get(k, "") for k in ("id", "text", "qty", "due", "t", "by", "src")}
+        return [{k: x.get(k, "") for k in ("id", "text", "qty", "due", "t", "by", "src", "by_link")}
                 for x in d["items"] if x["list"] == lst and not x.get("sent") and not x.get("done")]
     acc = _account(uid, tgt["acc"])
     if not acc:
@@ -450,7 +451,7 @@ def _todo_due(todo):
 
 def done_items(uid, lst):
     """The entries ticked off in the last KEEP_DONE, newest first (only lists on the Spark keep them)."""
-    return sorted(({k: x.get(k, "") for k in ("id", "text", "qty", "due", "t", "by", "src", "done", "done_by")}
+    return sorted(({k: x.get(k, "") for k in ("id", "text", "qty", "due", "t", "by", "src", "done", "done_by", "by_link")}
                    for x in _load(uid)["items"] if x["list"] == lst and x.get("done")), key=lambda x: -x["done"])
 
 
@@ -458,9 +459,11 @@ def sent_count(uid, lst):
     return sum(1 for x in _load(uid)["items"] if x["list"] == lst and x.get("sent"))
 
 
-async def _add(uid, lst, texts, by, src, due=None, qty=True):
+async def _add(uid, lst, texts, by, src, due=None, qty=True, guest=None):
     """Adds the entries; returns the ones added as shown (the same entry again adds its amount up). due: „bis“ of every
-    one (due_ok), qty False: no amount is read from the text („3 Angebote einholen“ from a meeting stays as it is)."""
+    one (due_ok), qty False: no amount is read from the text („3 Angebote einholen“ from a meeting stays as it is),
+    guest: the name a person without a profile typed on a Mitschreib-Link (mitschreiblink.py), kept as "by_link"
+    instead of "by"."""
     notaus.stop("aktion", uid)   # the Notaus (or the profile's own) holds every action off (notaus.py)
     due = due if due_ok(due) else None
     seen, new = set(), []
@@ -501,8 +504,10 @@ async def _add(uid, lst, texts, by, src, due=None, qty=True):
                     old["due"] = due
             else:
                 d["items"].append(dict({"id": os.urandom(5).hex(), "list": lst, "text": x["text"], "t": now,
-                                        "by": by or uid, "src": src}, **({"qty": x["qty"]} if x["qty"] else {}),
-                                       **({"due": due} if due else {})))
+                                        "by": "" if guest is not None else by or uid, "src": src},
+                                       **({"qty": x["qty"]} if x["qty"] else {}),
+                                       **({"due": due} if due else {}),
+                                       **({"by_link": guest} if guest is not None else {})))
         _save(uid, d)
     return [show(x) for x in new]
 
@@ -592,12 +597,13 @@ async def _logged(what, lst, uid, run, by=None):
     return out
 
 
-async def add(uid, lst, texts, by=None, src="panel", due=None, qty=True):
+async def add(uid, lst, texts, by=None, src="panel", due=None, qty=True, guest=None):
     """Adds the entries (_add) with a journal line for every outcome. by: the profile that puts them on (the owner
-    when left out), src: where they came from (SOURCES), due: „bis“ („JJJJ-MM-TT“) of every one, qty: read amounts."""
-    out = await _logged("add", lst, uid, _add(uid, lst, texts, by, src, due, qty), by)
+    when left out), src: where they came from (SOURCES), due: „bis“ („JJJJ-MM-TT“) of every one, qty: read amounts,
+    guest: the typed name of a Mitschreib-Link visitor."""
+    out = await _logged("add", lst, uid, _add(uid, lst, texts, by, src, due, qty, guest), by)
     if out:
-        _tell(uid, lst, by or uid, len(out))
+        _tell(uid, lst, "" if guest is not None else by or uid, len(out), name=guest)
     return out
 
 
@@ -611,15 +617,16 @@ async def change(uid, lst, picked, action, by=None):
 _notes = {}   # (to, owner, list) -> {"last": time sent, "n": entries waiting, "by": [names], "wait": a send is due}
 
 
-def _tell(owner, lst, by, n, now=None):
+def _tell(owner, lst, by, n, now=None, name=None):
     """New entries on a shared list: one note to every other person of the list who wants it (preference list_note),
-    at most one per NOTE_EVERY; what comes in between waits and goes as one („Sabine hat 3 Einträge …“)."""
+    at most one per NOTE_EVERY; what comes in between waits and goes as one („Sabine hat 3 Einträge …“). by "" with
+    name: a person without a profile on a Mitschreib-Link, then the owner hears of it too."""
     people = people_of(owner, lst)
-    if len(people) < 2:
+    if by in people and len(people) < 2:
         return
     import asyncio
     now = time.time() if now is None else now
-    name = (profiles.by_id(by) or {}).get("name", "")
+    name = (name or "Gast") + " (Link)" if not by else (profiles.by_id(by) or {}).get("name", "")
     for to in people:
         if to == by or not features.allowed("listnote", to):
             continue
@@ -724,6 +731,8 @@ def drop_list(uid, lid):
         d["items"] = [x for x in d["items"] if x["list"] != lid]
         _save(uid, d)
     _list_log("delete", uid, f"{n} entries")
+    import mitschreiblink
+    mitschreiblink.drop_list(uid, lid)   # its Mitschreib-Links end with it
     return n
 
 
@@ -869,8 +878,10 @@ def offer(ctx):
     if not who or not ctx.get("own") or not features.allowed("tasks", who["id"]):
         return None  # a voice recognized at someone else's device reads no lists either
     tools = TOOLS
-    # CalDAV lists and lists other profiles share hold others' words
-    outside = {"tasks_show"} if _load(who["id"])["targets"] or shared_to(who["id"]) else set()
+    # CalDAV lists, lists other profiles share and entries from a Mitschreib-Link hold others' words
+    d = _load(who["id"])
+    outside = {"tasks_show"} if d["targets"] or shared_to(who["id"]) or any(x.get("src") == "link" for x in d["items"]) \
+        else set()
     return {"tools": tools, "hint": HINT, "outside": outside, "changes": {"tasks_add", "tasks_change"},
             "filler": {"tasks_show": ("Ich schaue auf die Liste.", "Let me check the list.")}}
 
@@ -966,7 +977,7 @@ def _entry(x, names):
         p = profiles.by_id(by)
         names[by] = p["name"] if p else ""
     out = {"id": x["id"], "text": x["text"], "qty": x.get("qty", ""), "due": x.get("due", ""), "t": x.get("t", 0),
-           "src": x.get("src", ""), "by_name": names.get(by, "")}
+           "src": x.get("src", ""), "by_name": names.get(by, "") if by else x.get("by_link", "")}
     if x.get("done"):
         db = x.get("done_by") or ""
         if db and db not in names:
@@ -1021,6 +1032,7 @@ async def get_lists(prof=Depends(_on)):
     if share:
         res["people"] = [{"id": p["id"], "name": p["name"]} for p in profiles.names() if p["id"] != uid]
         res["note"] = features.pref_on("listnote", uid)
+    res["linking"] = features.allowed("listlink", uid)   # Mitschreib-Link (mitschreiblink.py)
     return res
 
 

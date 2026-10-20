@@ -115,7 +115,7 @@ function lstDetail(w){const box=w.querySelector('.lstdet'),l=lstList();box.hidde
   // „⋯“: sharing a list of the profile's own (on the Spark), a new name or symbol and deleting an own one (asked in
   // the page, never with confirm())
   const acts=[];
-  if(mine&&LST.data.sharing&&!l.target)acts.push({label:t('Teilen …','Share …'),act:()=>{LST.ask=false;LST.form=null;LST.share=!LST.share;lstDraw()}});
+  if(mine&&(LST.data.sharing||LST.data.linking)&&!l.target)acts.push({label:t('Teilen …','Share …'),act:()=>{LST.ask=false;LST.form=null;LST.share=!LST.share;lstDraw()}});
   if(l.own)acts.push({label:t('Umbenennen','Rename'),act:()=>{LST.ask=false;LST.share=false;LST.form={make:false,name:l.name,icon:l.icon};lstDraw()}},
     {label:t('Liste löschen','Delete list'),danger:true,act:()=>{LST.form=null;LST.share=false;LST.ask=true;lstDraw()}});
   if(acts.length)box.querySelector('.lsthead').appendChild(icMenu(acts));
@@ -131,15 +131,17 @@ function lstSub(l){const n=l.items.length,last=[...l.items].sort((a,b)=>(b.t||0)
 // „Teilen“: each other profile Aus, Sehen or Mitschreiben (tasks.set_share); the own wish for a note when others put
 // something on (preference list_note, features „listnote“)
 function lstShareHtml(l){const d=LST.data,sh=l.shares||{},opt=(v,lbl,cur)=>`<option value="${v}"${v===cur?' selected':''}>${esc(lbl)}</option>`;
-  return `<div class="lstform lstshare"><b>${esc(t('Teilen mit','Share with'))}</b>`+
+  return `<div class="lstform lstshare">`+(d.sharing?`<b>${esc(t('Teilen mit','Share with'))}</b>`+
     ((d.people||[]).map(p=>`<div class="setrow"><div class="lbl"><b>${esc(p.name)}</b></div><select data-share="${esc(p.id)}" aria-label="${esc(t('Freigabe für ','Sharing with ')+p.name)}">`+
       opt('',t('Aus','Off'),sh[p.id]||'')+opt('see',t('Sehen','See'),sh[p.id]||'')+opt('add',t('Mitschreiben','Write along'),sh[p.id]||'')+`</select></div>`).join('')
       ||`<div class="fh">${esc(t('Es gibt noch kein anderes Profil.','There is no other profile yet.'))}</div>`)+
     `<div class="fh">${esc(t('Mitschreiben heißt eintragen und abhaken; löschen und teilen kannst nur du.','Writing along means putting on and ticking off; only you delete and share.'))}</div>`+
-    `<label class="lstnote"><input type="checkbox" data-k="note"${d.note?' checked':''}> ${esc(t('Hinweis, wenn andere etwas eintragen','A note when others put something on'))}</label>`+
+    `<label class="lstnote"><input type="checkbox" data-k="note"${d.note?' checked':''}> ${esc(t('Hinweis, wenn andere etwas eintragen','A note when others put something on'))}</label>`:'')+
+    (d.linking&&window.mitLinkHtml?mitLinkHtml(l):'')+   // Mitschreib-Link (mitschreib.js)
     `<div class="row"><button class="b" type="button" data-k="shareclose">${esc(t('Fertig','Done'))}</button></div></div>`}
 function lstShareBind(box,l){
   box.querySelectorAll('[data-share]').forEach(s=>s.onchange=()=>lstSend('/api/profile/listen/'+encodeURIComponent(LST.sel)+'/share','PUT',{to:s.dataset.share,level:s.value}));
   const n=box.querySelector('[data-k=note]');if(n)n.onchange=async()=>{const {r}=await apiTry('/api/profile/settings',xjson('PUT',{'list_note':n.checked}));
     if(r.ok)LST.data.note=n.checked;else{n.checked=!n.checked;LST.msg=t('Nicht gespeichert.','Not saved.');lstDraw()}};
-  const c=box.querySelector('[data-k=shareclose]');if(c)c.onclick=()=>{LST.share=false;lstDraw()}}
+  const c=box.querySelector('[data-k=shareclose]');if(c)c.onclick=()=>{LST.share=false;lstDraw()};
+  if(LST.data.linking&&window.mitLinkBind)mitLinkBind(box,l)}

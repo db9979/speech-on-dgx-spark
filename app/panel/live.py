@@ -1375,8 +1375,9 @@ def snapshot(view="admin", now=None):
         ksrv = {"on": False}
     try:
         import listendav
+        import mitschreiblink
         import tasks
-        lst = dict(tasks.for_live(), dav=listendav.for_live())
+        lst = dict(tasks.for_live(), dav=listendav.for_live(), link=mitschreiblink.for_live())
     except Exception:
         lst = {"on": False}
     try:
@@ -1523,7 +1524,9 @@ def snapshot(view="admin", now=None):
         if x["id"] == "cal" and lst.get("on") and (lst["lists"] or lst["added"] or lst["done"] or lst.get("shares")):   # Listen: numbers only
             x["sub"] += (f" · Listen: {lst['lists']} eigene bei {lst['profiles']} Profilen, heute {lst['added']} eingetragen,"
                          f" {lst['done']} abgehakt" + (f", {lst['shares']}× geteilt" if lst.get("shares") else "")
-                         + (f", {lst['dav']['saved']} aus Erinnerungen" if lst["dav"].get("on") else ""))
+                         + (f", {lst['dav']['saved']} aus Erinnerungen" if lst["dav"].get("on") else "")
+                         + (f", {lst['link']['links']} Mitschreib-Links, {lst['link']['added']} darüber eingetragen,"
+                            f" {lst['link']['refused']} abgelehnt" if lst["link"].get("on") else ""))
         if x["id"] == "cal" and offen.get("on"):   # Offen (vorgaenge.py): numbers only, never a title
             x["sub"] += (f" · Offen: {offen['braucht']} brauchen jemanden bei {offen['profiles']} Profilen, {offen['spaeter']} später,"
                          f" heute {offen['erledigt']} erledigt, {offen['wieder']} wieder da, {offen['streams']} Seiten verbunden")

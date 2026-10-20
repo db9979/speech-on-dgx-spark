@@ -228,6 +228,7 @@
     "calendar_share": false,
     "tasks_share": false,
     "tasks_dav": false,
+    "tasks_link": false,
     "calendar_server": false,
     "mail": false,
     "mail_tidy": false,
