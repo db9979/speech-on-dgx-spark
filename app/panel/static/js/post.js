@@ -3,7 +3,7 @@
 // text (GET /api/profile/mail/message, it stays unread); „Einstellungen“ holds everything set up for mail (#mailbox
 // with Aufräumen, Mailstil and Pakete in #parbox; pages of Ich until V01.0.807). Sender, subject and text come from
 // other people: only through esc(), no HTML, no pictures, no links that open.
-const POST={data:null,sel:null,msg:null,q:'',chips:{},unread:false,seq:0,mseq:0,busy:false,err:'',done:null,folders:{},write:null,prev:null,sent:'',accts:null,sug:{},
+const POST={menu:'',menuAt:null,data:null,sel:null,msg:null,q:'',chips:{},unread:false,seq:0,mseq:0,busy:false,err:'',done:null,folders:{},write:null,prev:null,sent:'',accts:null,sug:{},
   box:null,tree:null,treeOpen:false,pick:[]};
 // Ordner (Mailclient Stufe A, Dominik 2026-10-19 „1a 4a“, postfach.py, with Mails ordnen): box null = the inbox of every
 // mailbox, else {account, folder, name} of one folder; tree = GET /api/profile/mail/tree; pick = ids of the Mehrfachauswahl
@@ -80,7 +80,7 @@ function postPaint(w){const d=POST.data;w.classList.toggle('ld-sel',!!POST.sel||
   if(d&&d.connected===false){w.innerHTML=`<div class="empty">${esc(t('Noch kein Postfach verbunden. Unter Einstellungen verbindest du iCloud, Gmail, GMX, web.de oder ein anderes IMAP-Postfach.','No mailbox connected yet. Under Settings you connect iCloud, Gmail, GMX, web.de or another IMAP mailbox.'))}<div><button class="b p" type="button" data-k="set">${esc(t('Postfach verbinden','Connect a mailbox'))}</button></div></div>`;
     w.querySelector('[data-k=set]').onclick=()=>{icTabSet('post','set');postOpen()};return}
   if(!w.querySelector('.ld-tools')){
-    w.innerHTML=`<div class="ld-tools"><input type="search" data-k="q" placeholder="${esc(t('Suchen, auch von: betreff: hat:anhang','Search, also from: subject: has:attachment'))}" aria-label="${esc(t('Suchen','Search'))}">${POST_CHIPS.map(c=>`<button type="button" class="ld-chip" data-chip="${c[0]}" aria-pressed="false">${esc(t(c[2],c[3]))}</button>`).join('')}${ORD_ON?`<button type="button" class="ld-chip" data-k="tree" aria-expanded="false"></button>`:''}<button type="button" class="ld-chip" data-k="unread" aria-pressed="false">${esc(t('Nur ungelesen','Unread only'))}</button>${SEND_ON?`<button type="button" class="b p" data-k="new">${esc(t('Neue Mail','New mail'))}</button>`:''}<button type="button" class="b" data-k="again">${esc(t('Neu laden','Reload'))}</button></div>`+
+    w.innerHTML=`<div class="ld-tools"><input type="search" data-k="q" placeholder="${esc(t('Suchen, auch von: betreff: hat:anhang','Search, also from: subject: has:attachment'))}" aria-label="${esc(t('Suchen','Search'))}">${POST_CHIPS.map(c=>`<button type="button" class="ld-chip" data-chip="${c[0]}" aria-pressed="false">${esc(t(c[2],c[3]))}</button>`).join('')}${ORD_ON?`<button type="button" class="ld-chip" data-k="tree" aria-expanded="false"></button>`:''}<button type="button" class="ld-chip" data-k="unread" aria-pressed="false">${esc(t('Nur ungelesen','Unread only'))}</button>${SEND_ON?`<button type="button" class="b p" data-k="new">✎ ${esc(t('Neue Mail','New mail'))}</button>`:''}<button type="button" class="b" data-k="again">${esc(t('Neu laden','Reload'))}</button></div>`+
       `<div class="postwarn"></div><div class="postundo"></div><div class="ld-split"><div class="ld-list"></div><div class="ld-detail postdet" hidden></div></div>`;
     const q=w.querySelector('[data-k=q]');q.value=POST.q;let tm=0;
     q.oninput=()=>{clearTimeout(tm);tm=setTimeout(()=>{POST.q=q.value.trim();POST.sel=null;postLoad()},400)};
@@ -112,42 +112,73 @@ function postPaint(w){const d=POST.data;w.classList.toggle('ld-sel',!!POST.sel||
   list.querySelectorAll('[data-id]').forEach(r=>{r.onclick=()=>{if(POST.swiped){POST.swiped=false;return}postRead(r.dataset.id)};r.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();postRead(r.dataset.id)}};postSwipe(r);if(r.draggable)postDrag(r,w)});
   postUndo(w);if(POST.sent)w.querySelector('.postundo').insertAdjacentHTML('beforeend',`<div class="note">${esc(POST.sent)}</div>`);
   if(POST.write)postWriteBox(w);else postDetail(w)}
-// one message: plain text, attachments only named (to Dokumente on request through the assistant)
-// the way out is always shown (Dominik 2026-10-19): on the phone „‹ Zurück“, beside the list „✕ Schließen“
+// the buttons of a message (Dominik 2026-10-20 „1 und 3“): one bar that stays on top while the mail scrolls, symbols in
+// three groups (write · order · rule), each with its name and key on hover; on a phone the five most used sit at the
+// thumb below, ★ and ⋯ on top. Nothing is ever deleted; every move can go back right after.
+const POST_IC={reply:'M9 14L4 9l5-5M4 9h10a6 6 0 0 1 6 6v4',fwd:'M15 14l5-5-5-5M20 9H10a6 6 0 0 0-6 6v4',
+  cal:'M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM3 10h18M8 3v4M16 3v4M12 13v5M9.5 15.5h5',
+  read:'M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM3 7l9 6 9-6',
+  star:'M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z',
+  arch:'M3 4h18v5H3zM5 9v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9M10 13h4',
+  move:'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM12 11v5M9.5 13.5L12 16l2.5-2.5',
+  rule:'M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zM12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1',
+  more:'M5 12h.01M12 12h.01M19 12h.01',back:'M15 18l-6-6 6-6',close:'M6 6l12 12M18 6L6 18',
+  pen:'M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4'};
+const postIc=k=>`<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${POST_IC[k]}"/></svg>`;
+// one symbol button: its name for screen readers and the hover note (with the key when there is one)
+const postIb=(k,data,de,en,key,on)=>{const n=t(de,en);return `<button type="button" class="pib${on?' on':''}" ${data} aria-label="${esc(n)}" data-tip="${esc(n+(key&&!NARROW()?' · '+key:''))}">${postIc(k)}</button>`};
+// the way out of a form being written is always shown (Dominik 2026-10-19): on the phone „‹“, beside the list „✕“
 const postOut=(de,en)=>`<button type="button" class="b ld-back postclose" data-close="1">${NARROW()?'‹':'✕'} ${esc(t(de,en))}</button>`;
-function postDetail(w){const box=w.querySelector('.postdet'),m=POST.msg;if(!box)return;box.hidden=!POST.sel;if(!POST.sel)return;
-  const back=NARROW()?postOut('Zurück','Back'):postOut('Schließen','Close');
-  if(!m)box.innerHTML=back+`<div class="mut">${esc(t('Lade die Mail …','Loading the mail …'))}</div>`;
-  else if(m.err)box.innerHTML=back+`<div class="note warn">${esc(m.err)}</div>`;
-  else box.innerHTML=back+`<h3>${esc(m.subject||t('(ohne Betreff)','(no subject)'))}</h3>`+
-    `<dl class="ld-facts"><dt>${esc(t('Von','From'))}</dt><dd>${esc(m.from)}</dd>${m.to?`<dt>${esc(t('An','To'))}</dt><dd>${esc(m.to)}</dd>`:''}<dt>${esc(t('Wann','When'))}</dt><dd>${esc(new Date(m.date*1000).toLocaleString(kalLoc(),{weekday:'short',day:'numeric',month:'long',hour:'2-digit',minute:'2-digit'}))}</dd>`+
-    (m.files&&m.files.length?`<dt>${esc(t('Anhänge','Attachments'))}</dt><dd>${ORD_ON&&m.parts&&m.parts.length?m.parts.map(f=>`<a class="ld-chip" download href="/api/profile/mail/file?${esc(new URLSearchParams({id:POST.sel,folder:postSrc(),n:f.n}).toString())}">⬇ ${esc(f.name)} (${f.kb} KB)</a>`).join(' '):esc(m.files.join(', '))}</dd>`:'')+`</dl>`+
-    `<div class="posttext">${esc(m.text||t('(kein Text)','(no text)'))}</div>`+
-    `<div class="fh">${esc(t('Nur als Text, Bilder und Links von außen sind aus.','Text only, pictures and links from outside stay off.')+' '+(SEND_ON?'':t('Antworten geht mit dem Assistenten: „Antworte Anna …“.','Reply with the assistant: "Reply to Anna …".'))+(NARROW()?'':' '+t('Tasten: J und K blättern','Keys: J and K browse')+(SEND_ON?t(', R antwortet',', R replies'):'')+(ORD_ON?t(', E archiviert, U gelesen oder ungelesen',', E archives, U read or unread'):'')+'.'))}</div>`+
-    (!m.err&&(SEND_ON||(typeof CAL_ON!=='undefined'&&CAL_ON))?`<div class="row postwr">${SEND_ON?`<button class="b p" type="button" data-w="reply">${esc(t('Antworten','Reply'))}</button><button class="b" type="button" data-w="fwd">${esc(t('Weiterleiten','Forward'))}</button>`:''}${typeof CAL_ON!=='undefined'&&CAL_ON?`<button class="b" type="button" data-w="cal">${esc(t('Als Termin','As appointment'))}</button>`:''}</div>`:'')+
-    (ORD_ON&&!m.err?postOrder()+`<div class="row postord"><button class="b" type="button" data-w="rule">${esc(t('⚙ Regel daraus …','⚙ Rule from this …'))}</button></div>`:'');
-  box.querySelector('[data-close]').onclick=()=>{POST.sel=null;POST.msg=null;postDraw()};
-  const rp=box.querySelector('[data-w=reply]');if(rp)rp.onclick=()=>postWrite(m);
-  const fw=box.querySelector('[data-w=fwd]');if(fw)fw.onclick=()=>postWrite(m,true);
-  const ac=box.querySelector('[data-w=cal]');if(ac)ac.onclick=()=>postAsEvent(m);
-  const ru=box.querySelector('[data-w=rule]');if(ru)ru.onclick=()=>postRuleFrom(m);
-  if(ORD_ON&&m&&!m.err)postOrderBind(box)}
-// the buttons below a message: never delete, every move can go back right after
 const postSrc=()=>POST.box?POST.box.folder:'INBOX';
 // what the folder's role allows: moved out only of the inbox, an own folder or the archive (postfach._source)
 const postMovable=()=>!POST.box||['folder','archive'].includes(POST.box.role);
-function postOrder(){const x=postItems().find(i=>i.id===POST.sel),f=POST.folders[POST.sel.split(':')[0]],src=postSrc();
-  const into=(f&&f.folders||[]).filter(n=>n!==src);if(POST.box)into.unshift('INBOX');
-  return `<div class="row postord"><button class="b" type="button" data-o="${x&&x.unread?'read':'unread'}">${esc(x&&x.unread?t('Als gelesen markieren','Mark as read'):t('Als ungelesen markieren','Mark as unread'))}</button>`+
-    `<button class="b" type="button" data-o="${x&&x.flagged?'unflag':'flag'}">${esc(x&&x.flagged?t('Markierung weg','Unflag'):t('★ Markieren','★ Flag'))}</button>`+
-    (postMovable()&&!(f&&f.archive===src)?`<button class="b" type="button" data-o="archive">${esc(t('Archivieren','Archive'))}</button>`:'')+
-    (postMovable()?`<select data-o="folder" aria-label="${esc(t('Verschieben nach','Move to'))}"><option value="">${esc(t('Verschieben nach …','Move to …'))}</option>${into.map(n=>`<option value="${esc(n)}">${esc(n==='INBOX'?t('Posteingang','Inbox'):n)}</option>`).join('')}</select>`:'')+
-    `</div><div class="postordmsg fh"></div>`}
+function postBar(m){const menu=POST.menuAt===POST.sel?POST.menu:'',x=postItems().find(i=>i.id===POST.sel),f=POST.folders[POST.sel.split(':')[0]],src=postSrc(),ok=m&&!m.err;
+  const cal=ok&&typeof CAL_ON!=='undefined'&&CAL_ON,send=ok&&SEND_ON,ord=ok&&ORD_ON,arch=ord&&postMovable()&&!(f&&f.archive===src),mv=ord&&postMovable();
+  const close=NARROW()?`<button type="button" class="pib postclose ld-back" data-close="1" aria-label="${esc(t('Zurück','Back'))}">${postIc('back')}</button>`
+    :`<button type="button" class="pib postclose" data-close="1" aria-label="${esc(t('Schließen','Close'))}" data-tip="${esc(t('Schließen · Esc','Close · Esc'))}">${postIc('close')}</button>`;
+  const read=ord?postIb('read',`data-o="${x&&x.unread?'read':'unread'}"`,...(x&&x.unread?['Als gelesen markieren','Mark as read']:['Als ungelesen markieren','Mark as unread']),'U'):'';
+  const star=ord?postIb('star',`data-o="${x&&x.flagged?'unflag':'flag'}"`,...(x&&x.flagged?['Markierung weg','Unflag']:['Markieren','Flag']),'S',x&&x.flagged):'';
+  const rule=ord?postIb('rule','data-w="rule"','Regel daraus …','Rule from this …','G'):'';
+  if(NARROW()){   // a phone: back, ★ and ⋯ on top, the five most used at the thumb below
+    const more=ord?`<button type="button" class="pib" data-o="more" aria-label="${esc(t('Mehr','More'))}" aria-expanded="${menu==='more'}">${postIc('more')}</button>`:'';
+    const foot=[send?['reply','data-w="reply"','Antworten','Reply']:null,send?['fwd','data-w="fwd"','Weiter','Forward']:null,
+      arch?['arch','data-o="archive"','Archiv','Archive']:null,mv?['move','data-o="pick"','Ordner','Folder']:null,cal?['cal','data-w="cal"','Termin','Event']:null].filter(Boolean);
+    return `<div class="postbar" role="toolbar" aria-label="${esc(t('Mail','Mail'))}">${close}<span class="pgap"></span>`+
+      (SEND_ON?`<button type="button" class="pib" data-w="new" aria-label="${esc(t('Neue Mail','New mail'))}">${postIc('pen')}</button>`:'')+star+more+`</div>`+
+      (menu==='more'?`<div class="postmenu">${ord?`<button type="button" ${read.match(/data-o="\w+"/)[0]}>${postIc('read')}${esc(x&&x.unread?t('Als gelesen markieren','Mark as read'):t('Als ungelesen markieren','Mark as unread'))}</button><button type="button" data-w="rule">${postIc('rule')}${esc(t('Regel daraus …','Rule from this …'))}</button>`:''}</div>`:'')+
+      (menu==='pick'?postMoveMenu(f,src):'')+
+      (foot.length?`<div class="postfoot" role="toolbar">${foot.map(b=>`<button type="button" ${b[1]}>${postIc(b[0])}<span>${esc(t(b[2],b[3]))}</span></button>`).join('')}</div>`:'')}
+  const g1=(send?`<button type="button" class="b p postpri" data-w="reply" data-tip="${esc(t('Antworten · R','Reply · R'))}">${postIc('reply')}${esc(t('Antworten','Reply'))}</button>`+postIb('fwd','data-w="fwd"','Weiterleiten','Forward','F'):'')+
+    (cal?postIb('cal','data-w="cal"','Als Termin','As appointment','T'):'');
+  const g2=read+star+(arch?postIb('arch','data-o="archive"','Archivieren','Archive','E'):'')+
+    (mv?postIb('move','data-o="pick" aria-expanded="'+(menu==='pick')+'"','Verschieben nach …','Move to …','V'):'');
+  return `<div class="postbar" role="toolbar" aria-label="${esc(t('Mail','Mail'))}">${close}<span class="psep"></span>${[g1,g2,rule].filter(Boolean).join('<span class="psep"></span>')}</div>`+
+    (menu==='pick'?postMoveMenu(f,src):'')}
+// „Verschieben nach …“: the folders of the message's mailbox as a short menu (the inbox first when in a folder)
+function postMoveMenu(f,src){const into=(f&&f.folders||[]).filter(n=>n!==src);if(POST.box)into.unshift('INBOX');
+  return `<div class="postmenu postmv">${into.length?into.map(n=>`<button type="button" data-mv="${esc(n)}">${postIc('move')}${esc(n==='INBOX'?t('Posteingang','Inbox'):n)}</button>`).join('')
+    :`<span class="mut">${esc(t('Ordner werden geladen …','Loading folders …'))}</span>`}</div>`}
+function postDetail(w){const box=w.querySelector('.postdet'),m=POST.msg;if(!box)return;box.hidden=!POST.sel;if(!POST.sel)return;
+  const bar=postBar(m);
+  if(!m)box.innerHTML=bar+`<div class="mut">${esc(t('Lade die Mail …','Loading the mail …'))}</div>`;
+  else if(m.err)box.innerHTML=bar+`<div class="note warn">${esc(m.err)}</div>`;
+  else box.innerHTML=bar+`<h3>${esc(m.subject||t('(ohne Betreff)','(no subject)'))}</h3>`+
+    `<dl class="ld-facts"><dt>${esc(t('Von','From'))}</dt><dd>${esc(m.from)}</dd>${m.to?`<dt>${esc(t('An','To'))}</dt><dd>${esc(m.to)}</dd>`:''}<dt>${esc(t('Wann','When'))}</dt><dd>${esc(new Date(m.date*1000).toLocaleString(kalLoc(),{weekday:'short',day:'numeric',month:'long',hour:'2-digit',minute:'2-digit'}))}</dd>`+
+    (m.files&&m.files.length?`<dt>${esc(t('Anhänge','Attachments'))}</dt><dd>${ORD_ON&&m.parts&&m.parts.length?m.parts.map(f=>`<a class="ld-chip" download href="/api/profile/mail/file?${esc(new URLSearchParams({id:POST.sel,folder:postSrc(),n:f.n}).toString())}">⬇ ${esc(f.name)} (${f.kb} KB)</a>`).join(' '):esc(m.files.join(', '))}</dd>`:'')+`</dl>`+
+    `<div class="posttext">${esc(m.text||t('(kein Text)','(no text)'))}</div>`+
+    `<div class="fh">${esc(t('Nur als Text, Bilder und Links von außen sind aus.','Text only, pictures and links from outside stay off.')+' '+(SEND_ON?'':t('Antworten geht mit dem Assistenten: „Antworte Anna …“.','Reply with the assistant: "Reply to Anna …".'))+(NARROW()?'':' '+t('Tasten: J und K blättern','Keys: J and K browse')+'.'))}</div><div class="postordmsg fh"></div>`;
+  const msg=box.querySelector('.postordmsg')||document.createElement('div');
+  box.querySelector('[data-close]').onclick=()=>{POST.sel=null;POST.msg=null;postDraw()};
+  const on=(q,f)=>box.querySelectorAll(q).forEach(b=>b.onclick=f);
+  on('[data-w=reply]',()=>postWrite(m));on('[data-w=fwd]',()=>postWrite(m,true));on('[data-w=new]',()=>postWrite(null));
+  on('[data-w=cal]',()=>postAsEvent(m));on('[data-w=rule]',()=>{postRuleFrom(m)});
+  on('[data-o=pick]',()=>postMenu('pick'));on('[data-o=more]',()=>postMenu('more'));
+  box.querySelectorAll('[data-o]:not([data-o=pick]):not([data-o=more])').forEach(b=>b.onclick=()=>{postAct(b.dataset.o,'',msg)});
+  on('[data-mv]',e=>{postAct('move',e.currentTarget.dataset.mv,msg)});
+  const sel=POST.sel;if(ORD_ON&&m&&!m.err)postFoldersFor(sel.split(':')[0]).then(n=>{if(n&&$('postview')&&POST.sel===sel&&!POST.write)postDetail($('postview'))})}
+// the move menu (or ⋯ on a phone) opens and closes in place
+function postMenu(k){if(POST.write)return;POST.menu=POST.menuAt===POST.sel&&POST.menu===k?'':k;POST.menuAt=POST.sel;if($('postview'))postDetail($('postview'))}
 async function postFoldersFor(acct){if(!POST.folders[acct]){const {r,d}=await apiTry('/api/profile/mail/folders?'+new URLSearchParams({account:acct}));if(r.ok)POST.folders[acct]=d;return r.ok}return false}
-async function postOrderBind(box){const acct=POST.sel.split(':')[0],sel=box.querySelector('select[data-o=folder]'),msg=box.querySelector('.postordmsg');
-  if(await postFoldersFor(acct)&&$('postview'))postDetail($('postview'));
-  box.querySelectorAll('button[data-o]').forEach(b=>b.onclick=()=>postAct(b.dataset.o,'',msg));
-  if(sel)sel.onchange=()=>{if(sel.value)postAct('move',sel.value,msg)}}
 async function postAct(action,folder,msg,mid,which){const id=which||POST.sel,src=postSrc();if(msg){msg.className='postordmsg fh';msg.textContent=t('Einen Moment …','One moment …')}
   const {r,d}=await apiTry('/api/profile/mail/act',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,action,folder,mid:mid||'',src})});
   if(!r.ok){if(msg){msg.className='postordmsg err';msg.textContent=errSay(r.status,d.detail,'')}else{POST.err=errSay(r.status,d.detail,'');postDraw()}return}
@@ -254,7 +285,7 @@ function postDrag(r,w){r.ondragstart=async e=>{const id=r.dataset.id,ids=POST.pi
 function postWriteBox(w){let box=w.querySelector('.postdet');const f=POST.write,p=POST.prev;if(!box)return;box.hidden=false;
   const inline=!!(f.reply&&POST.sel===f.reply&&POST.msg&&!POST.msg.err);
   if(inline){postDetail(w);const rp=box.querySelector('[data-w=reply]');if(rp)rp.remove();
-    box.querySelector('.ld-back').onclick=()=>postDrop(true);
+    box.querySelector('.postbar .postclose').onclick=()=>postDrop(true);
     const h=document.createElement('div');h.className='postreply';box.appendChild(h);box=h}
   const back=inline?`<button type="button" class="b postdrop" data-close="1">✕ ${esc(t('Verwerfen','Discard'))}</button>`
     :postOut('Verwerfen','Discard');
@@ -302,19 +333,28 @@ async function postSend(b,msg){b.disabled=true;msg.className='postordmsg fh';msg
 // rules, nothing is saved before „Eintragen“
 function postAsEvent(m){KAL.q=postTopic(m.subject,200);KAL.qi=null;KAL.qfocus=true;
   icTabSet('cal','show');goSec('cal')}
-// keys on the page (Dominik 2026-10-19 „5a“): J/K next and previous, R reply, E archive, U read or unread, Esc closes
+// keys on the page (Dominik 2026-10-19 „5a“, 2026-10-20): J/K next and previous, R reply, F forward, T as appointment,
+// E archive, U read or unread, S flag, V move, G rule from this; Esc closes
 // (the mail, or the form being written)
 document.addEventListener('keydown',e=>{if(!$('post')||!$('post').classList.contains('on')||!$('postview'))return;
   if(e.key==='Escape'&&POST.write){e.preventDefault();postDrop();return}   // also from inside the form
   if(/^(INPUT|TEXTAREA|SELECT)$/.test((e.target&&e.target.tagName)||'')||e.metaKey||e.ctrlKey||e.altKey)return;
   const items=postItems(),i=items.findIndex(x=>x.id===POST.sel),k=e.key.toLowerCase();
   if(k==='j'||k==='k'){const n=items[k==='j'?Math.min(i+1,items.length-1):Math.max(i-1,0)];if(n){e.preventDefault();postRead(n.id)}return}
+  if(k==='escape'&&POST.menu&&POST.menuAt===POST.sel){POST.menu='';postDetail($('postview'));return}
   if(k==='escape'&&POST.sel&&!POST.write){POST.sel=null;POST.msg=null;postDraw();return}
   if(!POST.sel||POST.write)return;
-  if(k==='r'&&SEND_ON&&POST.msg&&!POST.msg.err){e.preventDefault();postWrite(POST.msg);return}
-  if(!ORD_ON)return;
+  const m=POST.msg&&!POST.msg.err?POST.msg:null;
+  if(k==='r'&&SEND_ON&&m){e.preventDefault();postWrite(m);return}
+  if(k==='f'&&SEND_ON&&m){e.preventDefault();postWrite(m,true);return}
+  if(k==='t'&&m&&typeof CAL_ON!=='undefined'&&CAL_ON){e.preventDefault();postAsEvent(m);return}
+  if(!ORD_ON||!m)return;
+  const x=items[i];
   if(k==='e'){e.preventDefault();postAct('archive','',null)}
-  else if(k==='u'){const x=items[i];if(x){e.preventDefault();postAct(x.unread?'read':'unread','',null)}}});
+  else if(k==='u'){if(x){e.preventDefault();postAct(x.unread?'read':'unread','',null)}}
+  else if(k==='s'){if(x){e.preventDefault();postAct(x.flagged?'unflag':'flag','',null)}}
+  else if(k==='v'&&postMovable()){e.preventDefault();postMenu('pick')}
+  else if(k==='g'){e.preventDefault();postRuleFrom(m)}});
 // a phone: swipe a row left to archive, right for read or unread (only with Mails ordnen)
 function postSwipe(r){if(!ORD_ON)return;let x0=0,y0=0,dx=0,on=false;
   r.addEventListener('touchstart',e=>{const p=e.touches[0];x0=p.clientX;y0=p.clientY;dx=0;on=true},{passive:true});

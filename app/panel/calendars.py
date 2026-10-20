@@ -582,9 +582,26 @@ def _month_events(text, a, b, zone):
         out.append({"start": s, "end": e, "allday": allday,
                     "title": str(ev.get("SUMMARY", "") or "(ohne Titel)").strip()[:200],
                     "location": str(ev.get("LOCATION", "") or "").strip()[:200],
+                    "note": _note(ev.get("DESCRIPTION")), "link": _link(ev.get("URL")),
                     "private": str(ev.get("CLASS", "") or "").upper() in ("PRIVATE", "CONFIDENTIAL"),
                     "repeat": str(ev.get("UID", "")) in rep})
     return out
+
+
+NOTE_MAX = 2000      # characters of an appointment's own text (DESCRIPTION) the page shows
+
+
+def _note(v):
+    """An appointment's own text as plain text: control characters out, at most two empty lines, NOTE_MAX long.
+    Written by whoever made the appointment: shown as text, never as a page or an order."""
+    s = re.sub(r"[\x00-\x08\x0b-\x1f\x7f]", "", str(v or "")).replace("\r", "").strip()
+    return re.sub(r"\n{3,}", "\n\n", s)[:NOTE_MAX]
+
+
+def _link(v):
+    """The appointment's web address (URL) as text when it is http(s), else empty."""
+    s = str(v or "").strip()
+    return s[:300] if re.fullmatch(r"https?://[^\s<>\"]{1,300}", s) else ""
 
 
 def _expand(texts, start, end, zone, name=""):
@@ -688,7 +705,7 @@ async def _one(uid, cal, start, end, zone, stale=False):
     # expanding runs outside the event loop, one at a time, so a heavy calendar never stalls the panel
     evs = await expand(texts, start, end, zone, cal.get("name", ""))
     if cal.get("owner"):   # shared by another profile (2a): a private appointment is only „belegt“ with its time
-        evs = [dict(x, title=BUSY, location="") if x["private"] else x for x in evs]
+        evs = [dict(x, title=BUSY, location="", note="", link="") if x["private"] else x for x in evs]
     return evs
 
 
@@ -809,11 +826,21 @@ async def view(uid, day, days, zone):
     for x in evs[:VIEW_MAX]:
         first = (x.get("calendar") or "").split(", ")[0]
         i = names.index(first) if first in names else 0
+        ok = i in edit and not x.get("repeat")
         out.append({"start": int(x["start"].timestamp()), "end": int(x["end"].timestamp()), "allday": bool(x["allday"]),
-                    "title": x["title"], "location": x["location"], "cal": i,
-                    "edit": i in edit and not x.get("repeat")})
+                    "title": x["title"], "location": x["location"], "cal": i, "edit": ok,
+                    "note": x.get("note", ""), "link": x.get("link", ""), "why": "" if ok else _why(cals[i], x)})
     return {"connected": True, "calendars": names, "shared": shared, "edit": edit, "add": add, "events": out,
             "errors": [n for n, _ in errors], "loading": loading, "notes": notes(uid)}
+
+
+def _why(cal, x):
+    """Why the page may not change an appointment, as a fixed word (READONLY): abo, geteilt, serie, lesen."""
+    if cal.get("owner"):
+        return "geteilt"
+    if re.match(r"webcals?://", cal.get("url", ""), re.I) or re.search(r"\.ics(\?|$)", cal.get("url", ""), re.I):
+        return "abo"
+    return "serie" if x.get("repeat") else "lesen"
 
 
 # ---------------------------------------------------------------- the page Kalender changes (stage 2)

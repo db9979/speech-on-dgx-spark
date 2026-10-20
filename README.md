@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.853** E-mail: the buttons of a mail in a fixed bar on top, symbols with name and key on hover, on the phone and iPhone the five most used at the thumb below; calendar: appointments that cannot be changed carry a 🔒 with the reason, the card shows the appointment's note and link
 - **V01.0.852** New mail at once: the Spark keeps the inbox of profiles reading their mail open with IMAP IDLE; new mail is on the E-mail page within seconds and the rules act at once; at most 4 connections, admin switch, off
 - **V01.0.851** What I know about you (stages 3 and 4): interests with evidence only after "Right", "More of this" on the card, recurring bills with a monthly reminder, week and month sum from checked amounts, weekly review on Sundays, at most one web tip a day with only the word; iPhone and CarPlay
 - **V01.0.850** Status → Architecture has a new page "Security": how all layers of protection work together (the model proposes, the panel decides), with one question's way through every check, roles, borders and code; new rule: it is updated with every change of a protection rule
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.846** "Rule from this …" also takes the mail's subject (without Re:/AW:/Fwd:, free to change), in the panel and on the iPhone
 - **V01.0.845** Fix: the iPhone app builds again (GitHub run "iPhone app" green, TestFlight possible again); two places in E-mail (saving a rule, reply suggestions) did not suit the Swift compiler
 - **V01.0.844** Code check: an own mailbox sends only through the outgoing server you type in when connecting it, never a guessed one; Me → Conversation folds its groups; one name per thing (Status → Summary, Features → Jobs, Features → Phone, Me → Spark as MCP server, on the phone "Assistant")
-- **V01.0.843** E-mail as a full mail client: read every folder of every mailbox, make, rename, remove empty ones; ★ flag, multiple selection and dragging into folders with undo; rules straight from a mail ("Rule from this …", dry run, sort existing mail), all under E-mail → Rules; search with von:, betreff:, hat:anhang; fetch attachments; forward via the preview; on the iPhone too; part of "Mails ordnen" and "Mails senden", off, a mail is never deleted
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

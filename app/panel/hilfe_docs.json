@@ -4853,7 +4853,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "Neue Mails sofort (V01.0.848, Vorwärmen Stufe C, Dominik 2026-10-19 „6a“; mailidle.py, Admin-Schalter Funktionen → E-Mail lesen → „Neue Mails sofort“, chat.mail_idle, aus): Für Profile, die ihre Mails in den letzten zwei Stunden gelesen haben, hält der Spark eine Verbindung zum Posteingang offen (IMAP IDLE). Meldet der Server eine neue Mail (EXISTS) oder eine, die ein anderes Programm verschoben hat (EXPUNGE), laufen gleich die Mail-Regeln des Profils (mit „Mails ordnen“), die Liste der Seite E-Mail wird neu geholt samt der neuesten Mails vorab, und „Für dich“ hört davon (mailidle.on_new); höchstens alle 20 Sekunden je Profil, eine Änderung dazwischen kommt danach, und nie, während jemand spricht. Höchstens 4 Verbindungen auf dem ganzen Spark, die neuesten Leser zuerst; ein Server ohne IDLE bleibt beim Abruf alle fünf Minuten (mail.keep_fresh, nach einem Tag wieder gefragt). Die Verbindung liest nur (EXAMINE), jeder Wartende hängt in select() an seinem Socket und hält weder die Schleife des Panels noch eine Sperre auf; IDLE wird alle 24 Minuten erneuert, eine verlorene Verbindung nach 1 Minute wieder versucht (bis 15 Minuten). Vom Server zählen nur die Wörter EXISTS, EXPUNGE, BYE u"
+"text": "Neue Mails sofort (V01.0.852, Vorwärmen Stufe C, Dominik 2026-10-19 „6a“; mailidle.py, Admin-Schalter Funktionen → E-Mail lesen → „Neue Mails sofort“, chat.mail_idle, aus): Für Profile, die ihre Mails in den letzten zwei Stunden gelesen haben, hält der Spark eine Verbindung zum Posteingang offen (IMAP IDLE). Meldet der Server eine neue Mail (EXISTS) oder eine, die ein anderes Programm verschoben hat (EXPUNGE), laufen gleich die Mail-Regeln des Profils (mit „Mails ordnen“), die Liste der Seite E-Mail wird neu geholt samt der neuesten Mails vorab, und „Für dich“ hört davon (mailidle.on_new); höchstens alle 20 Sekunden je Profil, eine Änderung dazwischen kommt danach, und nie, während jemand spricht. Höchstens 4 Verbindungen auf dem ganzen Spark, die neuesten Leser zuerst; ein Server ohne IDLE bleibt beim Abruf alle fünf Minuten (mail.keep_fresh, nach einem Tag wieder gefragt). Die Verbindung liest nur (EXAMINE), jeder Wartende hängt in select() an seinem Socket und hält weder die Schleife des Panels noch eine Sperre auf; IDLE wird alle 24 Minuten erneuert, eine verlorene Verbindung nach 1 Minute wieder versucht (bis 15 Minuten). Vom Server zählen nur die Wörter EXISTS, EXPUNGE, BYE u"
 },
 {
 "lang": "de",
@@ -4924,6 +4924,14 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Termine: änderbar oder nur lesen, mit ihrem Text (V01.0.853, Dominik 2026-10-20)",
+"text": "Termine: änderbar oder nur lesen, mit ihrem Text (V01.0.853, Dominik 2026-10-20): Auf der Seite Kalender trägt ein Termin, den die Seite nicht ändern kann, ein 🔒 in der Woche, im Tag und in der Liste; seine Karte sagt warum, mit festen Worten aus dem Panel (calendars._why): ein Abo-Link (iCal), ein Kalender, den dir jemand geteilt hat, ein wiederholter Termin (die Serie im Kalender-Programm ändern) oder ein Kalender, der sich hier nicht ändern lässt. Die Karte zeigt jetzt auch den Text im Termin (DESCRIPTION, „Notiz“) und seinen Link (URL), beides nur als Text: höchstens 2000 Zeichen, ohne Steuerzeichen, ein Link nur, wenn er mit http oder https beginnt, und er öffnet sich nicht von selbst; lange Notizen zeigen 8 Zeilen und „Weiter lesen“. Ein privater Termin aus einem geteilten Kalender bleibt „belegt“, ohne Text und Link. Dasselbe in der iPhone-App (Schloss in der Liste, Abschnitt „Notiz“, der Grund in der Karte)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Sprach-Chat",
 "text": "Mails ordnen (V01.0.816, Plan kalender-mail/plan.md Stufe 2; Funktionen → E-Mail lesen → „Mails ordnen“, chat.mail_manage, aus): In einer geöffneten Mail stehen „Gelesen“/„Ungelesen“, „Archivieren“ und eine Ordnerwahl; nach Archivieren oder Verschieben holt „Rückgängig“ die Mail sofort in den Posteingang zurück (gefunden über ihre Message-ID). Der Knopf ist das eigene Ja. postfach.py kennt nur diese vier Dinge: das Flag \\Seen einer Mail im Posteingang, eine Mail ins Archiv (der Ordner mit \\Archive, sonst „Archive“/„Archiv“) oder in einen gewöhnlichen eigenen Ordner, und zurück. Nie in Papierkorb, Spam, Gesendet oder Entwürfe, nie gelöscht, nie ein Ordner angelegt oder umbenannt; ohne IMAP MOVE nur COPY und danach UID EXPUNGE genau des bestätigten Originals (wie beim Aufräumen). Notaus hält jede Aktion an. Endpunkte GET /api/profile/mail/folders und POST /api/profile/mail/act (nur die eigene Anmeldung im Browser, nur eigene Postfächer, Rate-Limit postordnen); Live zeigt bei der Post nur, wie viele Mails heute auf der Seite geordnet wurden; Log mail: page <Aktion> done|refused, not found|refused, notaus|failed, nie Absender, Betreff oder Ordner."
 },
@@ -4974,6 +4982,14 @@
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
 "text": "st aus der Vorschau raus. Aus einem Ordner nur mit „Mails ordnen“. Ziehen in einen Ordner (am Rechner, mit „Mails ordnen“): Eine Zeile, oder alle angehakten, in die Leiste „Hierher ziehen“ über der Liste ziehen; das ist dasselbe Verschieben wie mit dem Knopf, mit „Rückgängig“. Live zählt geladene Anhänge (eine Zahl). Log mail: file shown | <KB>, mail: file refused|failed, nie ein Dateiname. Im iPhone: Suchfeld über der Liste mit denselben Wörtern als Vorschlägen, Anhänge in der Mail öffnen sich per Tipp in der Vorschau (Quick Look), „Weiterleiten“ in jeder Mail; Ziehen gibt es im iPhone nicht, dort „Verschieben nach …“."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Knopfleiste einer Mail (V01.0.853, Dominik 2026-10-20 „1 und 3“)",
+"text": "Knopfleiste einer Mail (V01.0.853, Dominik 2026-10-20 „1 und 3“): Die Knöpfe einer geöffneten Mail stehen in einer Leiste, die beim Rollen oben stehen bleibt: „Antworten“ groß mit Wort, daneben Symbole in drei Gruppen, Schreiben (Weiterleiten, Als Termin), Ordnen (gelesen oder ungelesen, ★ Markieren, Archivieren, Verschieben nach … als kurzes Menü der Ordner) und Regel daraus. Fährt die Maus über ein Symbol, steht sein Name mit der Taste da: R antworten, F weiterleiten, T als Termin, U gelesen, S markieren, E archivieren, V verschieben, G Regel, J und K blättern, Esc schließt (erst das Menü, dann die Mail). Auf dem Handy stehen die fünf häufigsten unten am Daumen (Antworten, Weiter, Archiv, Ordner, Termin), oben Zurück, ✎ Neue Mail, ★ und ⋯ (gelesen, Regel daraus); in der iPhone-App genauso in der unteren Leiste und oben rechts. „✎ Neue Mail“ steht weiter immer über der Liste. Eine Funktion, die aus ist, zeigt keinen Knopf."
 },
 {
 "lang": "de",
@@ -13469,7 +13485,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "New mail at once (V01.0.848, warming up stage C, Dominik 2026-10-19 \"6a\"; mailidle.py, admin switch Features → Reading e-mail → \"Neue Mails sofort\", chat.mail_idle, off): for profiles that read their mail in the last two hours the Spark keeps a connection to the inbox open (IMAP IDLE). When the server reports a new mail (EXISTS) or one another program moved (EXPUNGE), the profile's mail rules run at once (with \"Mails ordnen\"), the E-mail page's list is fetched anew with the newest mails ahead, and \"Für dich\" hears of it (mailidle.on_new); at most every 20 seconds per profile, a change in between comes right after, and never while someone speaks. At most 4 connections on the whole Spark, the newest readers first; a server without IDLE stays with the fetch every five minutes (mail.keep_fresh, asked again after a day). The connection only reads (EXAMINE), each waiting one sits in select() on its socket and holds neither the panel's loop nor a lock; IDLE is renewed every 24 minutes, a lost connection is tried again after 1 minute (up to 15 minutes). From the server only the words EXISTS, EXPUNGE, BYE and the answer to DONE count; over-long lines end the connection. My emergency stop, t"
+"text": "New mail at once (V01.0.852, warming up stage C, Dominik 2026-10-19 \"6a\"; mailidle.py, admin switch Features → Reading e-mail → \"Neue Mails sofort\", chat.mail_idle, off): for profiles that read their mail in the last two hours the Spark keeps a connection to the inbox open (IMAP IDLE). When the server reports a new mail (EXISTS) or one another program moved (EXPUNGE), the profile's mail rules run at once (with \"Mails ordnen\"), the E-mail page's list is fetched anew with the newest mails ahead, and \"Für dich\" hears of it (mailidle.on_new); at most every 20 seconds per profile, a change in between comes right after, and never while someone speaks. At most 4 connections on the whole Spark, the newest readers first; a server without IDLE stays with the fetch every five minutes (mail.keep_fresh, asked again after a day). The connection only reads (EXAMINE), each waiting one sits in select() on its socket and holds neither the panel's loop nor a lock; IDLE is renewed every 24 minutes, a lost connection is tried again after 1 minute (up to 15 minutes). From the server only the words EXISTS, EXPUNGE, BYE and the answer to DONE count; over-long lines end the connection. My emergency stop, t"
 },
 {
 "lang": "en",
@@ -13533,6 +13549,14 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
+"text": "Appointments: changeable or read only, with their text (V01.0.853, Dominik 2026-10-20): on the Calendar page an appointment the page cannot change carries a 🔒 in the week, the day and the list; its card says why, in fixed words from the panel (calendars._why): a subscription link (iCal), a calendar someone shared with you, a repeating appointment (change the series in the calendar app) or a calendar that cannot be changed here. The card now also shows the appointment's text (DESCRIPTION, \"Note\") and its link (URL), both as text only: at most 2000 characters, no control characters, a link only when it starts with http or https, and it never opens by itself; long notes show 8 lines and \"Read on\". A private appointment from a shared calendar stays \"belegt\" (busy), without text or link. The same in the iPhone app (lock in the list, section \"Note\", the reason in the card)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
 "text": "Order mail (V01.0.816, plan kalender-mail/plan.md stage 2; Features → Reading e-mail → \"Mails ordnen\", chat.mail_manage, off): an opened mail shows \"Read\"/\"Unread\", \"Archive\" and a folder choice; after archiving or moving, \"Undo\" brings the mail straight back into the inbox (found by its Message-ID). The button is the person's own yes. postfach.py knows only these four things: the \\Seen flag of one inbox mail, one mail into the archive (the folder flagged \\Archive, else \"Archive\"/\"Archiv\") or into an ordinary own folder, and back. Never into trash, junk, sent or drafts, never deleted, never a folder created or renamed; without IMAP MOVE only COPY and then UID EXPUNGE of exactly the confirmed original (as with tidying). Notaus holds every action off. Endpoints GET /api/profile/mail/folders and POST /api/profile/mail/act (own browser login only, own mailboxes only, rate limit postordnen); Live shows at mail only how many mails were ordered on the page today; log mail: page <action> done|refused, not found|refused, notaus|failed, never sender, subject or folder."
 },
 {
@@ -13582,6 +13606,14 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ly with \"Mails ordnen\". Drag into a folder (on a computer, with \"Mails ordnen\"): drag a row, or all ticked ones, onto the \"Drop here\" bar above the list; the same move as with the button, with \"Undo\". Live counts fetched attachments (a number). Log mail: file shown | <KB>, mail: file refused|failed, never a file name. On the iPhone: a search field above the list with the same words as suggestions, attachments in the mail open by a tap in the preview (Quick Look), \"Forward\" in every mail; there is no dragging on the iPhone, there \"Move to …\"."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "The bar of a mail (V01.0.853, Dominik 2026-10-20 \"1 und 3\")",
+"text": "The bar of a mail (V01.0.853, Dominik 2026-10-20 \"1 und 3\"): the buttons of an open mail sit in one bar that stays on top while the mail scrolls: \"Reply\" large with its word, beside it symbols in three groups, writing (forward, as appointment), ordering (read or unread, ★ flag, archive, move to … as a short menu of the folders) and rule from this. Hovering a symbol shows its name with its key: R reply, F forward, T as appointment, U read, S flag, E archive, V move, G rule, J and K browse, Esc closes (the menu first, then the mail). On a phone the five most used sit at the thumb below (reply, forward, archive, folder, appointment), on top back, ✎ new mail, ★ and ⋯ (read, rule from this); the iPhone app does the same in its bottom bar and top right. \"✎ New mail\" stays above the list as always. A function that is off shows no button."
 },
 {
 "lang": "en",

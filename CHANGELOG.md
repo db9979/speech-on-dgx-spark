@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.853** · 2026-10-20 · E-Mail: die Knöpfe einer Mail in einer festen Leiste oben, Symbole mit Namen und Taste beim Drüberfahren, auf dem Handy und im iPhone die fünf häufigsten unten am Daumen; Kalender: Termine, die sich nicht ändern lassen, tragen ein 🔒 mit dem Grund, die Karte zeigt Notiz und Link des Termins
 - **V01.0.852** · 2026-10-20 · Neue Mails sofort: der Spark hält den Posteingang von Profilen, die gerade ihre Mails lesen, per IMAP IDLE offen; neue Mails stehen nach Sekunden auf der Seite E-Mail und die Regeln greifen gleich; höchstens 4 Verbindungen, Admin-Schalter, aus
 - **V01.0.851** · 2026-10-20 · Was ich über dich weiß (Stufe 3 und 4): Interessen mit Beleg erst nach „Stimmt“, „Mehr davon“ an der Karte, Wiederkehrendes mit monatlicher Erinnerung, Woche und Monatssumme aus geprüften Beträgen, Wochenrückblick sonntags, höchstens ein Netz-Tipp am Tag nur mit dem Wort; iPhone und CarPlay
 - **V01.0.850** · 2026-10-20 · Zustand → Technik hat eine neue Seite „Sicherheit“: wie alle Schutzschichten zusammenspielen (das Modell schlägt vor, das Panel entscheidet), mit dem Weg einer Frage durch alle Prüfungen, Rollen, Grenzen und Code; neue Regel: bei jeder Änderung einer Schutzregel wird sie mitgezogen

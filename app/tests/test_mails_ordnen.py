@@ -298,11 +298,14 @@ class Page(unittest.TestCase):
                     await pg.evaluate("MAIL_ON=true;ORD_ON=true;postStart({profile:PROFILE,mail:true});icTabSet('post','show');goSec('post')")
                     await b.until(pg, "!POST.busy&&!!POST.data&&POST.data.items.length===2")
                     await pg.evaluate("[...document.querySelectorAll('#postview .ld-row')].find(e=>e.textContent.includes('Werkstatt')).click()")
-                    await b.until(pg, "!!document.querySelector('#postview .postord [data-o=archive]')")
-                    await b.until(pg, "document.querySelectorAll('#postview .postord select option').length>1")
+                    await b.until(pg, "!!document.querySelector('#postview .postfoot [data-o=archive]')")   # phone: at the thumb
+                    await pg.click("#postview .postfoot [data-o=pick]")
+                    await b.until(pg, "document.querySelectorAll('#postview .postmv [data-mv]').length>0")
+                    await pg.click("#postview .postfoot [data-o=pick]")                                     # closes again
+                    await b.until(pg, "!document.querySelector('#postview .postmv')")
                     over = await pg.evaluate("document.documentElement.scrollWidth-document.documentElement.clientWidth")
                     self.assertLessEqual(over, 1)
-                    await pg.click("#postview .postord [data-o=archive]")
+                    await pg.click("#postview .postfoot [data-o=archive]")
                     await b.until(pg, "POST.data.items.length===1&&!!document.querySelector('#postview .postundo [data-u]')")
                     self.assertEqual(len(FMB.boxes["Archive"]), 1)
                     await pg.click("#postview .postundo [data-u]")
@@ -311,7 +314,7 @@ class Page(unittest.TestCase):
                     # without the function no buttons
                     await pg.evaluate("ORD_ON=false;[...document.querySelectorAll('#postview .ld-row')][0].click()")
                     await b.until(pg, "!!POST.msg&&!!document.querySelector('#postview .posttext')")
-                    self.assertEqual(await pg.evaluate("document.querySelectorAll('#postview .postord').length"), 0)
+                    self.assertEqual(await pg.evaluate("document.querySelectorAll('#postview [data-o]').length"), 0)
                     self.assertEqual(errors, [])
                 finally:
                     await br.close()
@@ -338,6 +341,10 @@ class Page(unittest.TestCase):
                     await b.until(pg, "!POST.busy&&!!POST.data&&POST.data.items.length===2")
                     await pg.evaluate("[...document.querySelectorAll('#postview .ld-row')].find(e=>e.textContent.includes('Werkstatt')).click()")
                     await b.until(pg, "!!document.querySelector('#postview [data-w=rule]')")
+                    # Dominik 2026-10-20 „1 und 3“: one bar on top that stays, symbols with name and key on hover
+                    self.assertEqual(await pg.evaluate("getComputedStyle(document.querySelector('#postview .postbar')).position"), "sticky")
+                    self.assertEqual(await pg.evaluate("document.querySelector('#postview .postbar [data-o=archive]').dataset.tip"), "Archivieren · E")
+                    self.assertEqual(await pg.evaluate("document.querySelectorAll('#postview .postfoot').length"), 0)   # thumb bar only on a phone
                     await pg.click("#postview [data-w=rule]")
                     await b.until(pg, "!!RULES.form")
                     self.assertEqual(await pg.evaluate("RULES.form.when"),

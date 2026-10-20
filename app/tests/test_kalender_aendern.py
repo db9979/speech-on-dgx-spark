@@ -109,6 +109,26 @@ class Api(unittest.TestCase):
         self.assertTrue(x["allday"])
         self.assertEqual(x["end"] - x["start"], 2 * 86400)
 
+    def test_read_only_says_why_and_the_own_text_shows(self):
+        """Dominik 2026-10-20: whether an appointment can be changed is visible, with the reason, and its own text
+        (DESCRIPTION) shows as plain text; a link only when it is http(s); control characters never pass."""
+        helpers.CAL_EVENTS[REPEAT[0]] = REPEAT[1].replace("SUMMARY:", "DESCRIPTION:Treffpunkt\\nam Tor\r\n"
+                                                          "URL:javascript:alert(1)\r\nSUMMARY:")
+        helpers.CAL_EVENTS["/dav/privat/aendern-note.ics"] = (
+            "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//t//t//EN\r\nBEGIN:VEVENT\r\nUID:aendern-note\r\n"
+            "DTSTART;TZID=Europe/Berlin:20260311T090000\r\nDTEND;TZID=Europe/Berlin:20260311T100000\r\n"
+            "DESCRIPTION:Unterlagen mitbringen\r\nURL:https://example.org/termin\r\nSUMMARY:Notiz Aendern\r\n"
+            "END:VEVENT\r\nEND:VCALENDAR\r\n")
+        helpers.cal_changed_behind()
+        got = {x["title"]: x for x in self.mine(self.view())}
+        one, rep = got["Notiz Aendern"], got["Joggen Aendern"]
+        self.assertEqual((one["edit"], one["why"], one["note"], one["link"]), (True, "", "Unterlagen mitbringen", "https://example.org/termin"))
+        self.assertEqual((rep["edit"], rep["why"], rep["note"], rep["link"]), (False, "serie", "Treffpunkt\nam Tor", ""))
+        self.assertEqual(calendars._why({"url": "https://x.de/feed.ics"}, {}), "abo")
+        self.assertEqual(calendars._why({"url": "https://x.de/dav/", "owner": "u_1"}, {}), "geteilt")
+        self.assertEqual(len(calendars._note("x" * 5000)), calendars.NOTE_MAX)
+        self.assertEqual(calendars._note("a\x07b\r\n\n\n\nc"), "ab\n\nc")          # no control characters, two empty lines at most
+
     def test_refused(self):
         self.assertEqual(self.add(title=" ").status_code, 400)
         self.assertEqual(self.add(end="2026-03-12T09:00").status_code, 400)

@@ -2259,6 +2259,20 @@
 "titel": "Neue Mails sofort",
 "text": "A: Update auf V01.0.852, Admin: Funktionen → E-Mail lesen → „Neue Mails sofort“ an. B: Die Seite E-Mail öffnen und offen lassen; von einem anderen Gerät eine Mail an dich schicken: sie steht nach wenigen Sekunden in der Liste (ohne Neu laden), nicht erst nach 5 Minuten. C: Eine Regel für diesen Absender anlegen, noch eine Mail schicken: sie liegt nach Sekunden im Ordner. D: Überblick → Live, Knoten E-Mail: „sofort: 1 Verbindungen, heute N neue Mails“. E: Schalter aus: nach spätestens einer Minute 0 Verbindungen, Abruf wieder alle 5 Minuten.",
 "thread": "Kalender und E-Mail in Panel und Apps"
+},
+{
+"id": "P347",
+"v": 853,
+"titel": "Knopfleiste einer Mail",
+"text": "A: Update auf V01.0.853. Am Rechner eine Mail öffnen und nach unten rollen: die Leiste mit Antworten und den Symbolen bleibt oben. B: Mit der Maus über jedes Symbol: Name und Taste erscheinen; S markiert, V öffnet die Ordner, Esc schließt erst das Menü, dann die Mail. C: Am Handy eine Mail öffnen: unten Antworten, Weiter, Archiv, Ordner, Termin; oben ✎ öffnet eine neue Mail, ⋯ hat gelesen und Regel daraus. D: Im iPhone dieselben Knöpfe in der unteren Leiste, ★ und ⋯ oben rechts.",
+"thread": "Kalender und E-Mail in Panel und Apps"
+},
+{
+"id": "P348",
+"v": 853,
+"titel": "Termine: nur lesen, Notiz und Link",
+"text": "A: Seite Kalender: Termine aus einem Abo (iCal), einem geteilten Kalender oder einer Serie tragen ein 🔒. B: Einen davon öffnen: die Karte sagt, warum er sich nicht ändern lässt. C: Einen Termin mit Notiz (im iPhone-Kalender „Notizen“) und Link öffnen: beides steht in der Karte, der Link nur als Text; eine lange Notiz zeigt „Weiter lesen“. D: Dasselbe im iPhone (Schloss in der Liste, Abschnitt Notiz).",
+"thread": "Kalender und E-Mail in Panel und Apps"
 }
 ]
 }

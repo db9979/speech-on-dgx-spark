@@ -11291,16 +11291,6 @@
         }
       }
     },
-    "Diesen Termin änderst du im Kalender, aus dem er kommt (wiederholt oder geteilt).": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Change this appointment in the calendar it comes from (repeating or shared)."
-          }
-        }
-      }
-    },
     "Termin": {
       "localizations": {
         "en": {
@@ -13337,6 +13327,76 @@
           "stringUnit": {
             "state": "translated",
             "value": "What do I have to do this week?"
+          }
+        }
+      }
+    },
+    "Notiz": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Note"
+          }
+        }
+      }
+    },
+    "Link": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Link"
+          }
+        }
+      }
+    },
+    "nur lesen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "read only"
+          }
+        }
+      }
+    },
+    "Nur lesen: der Kalender ist ein Abo-Link (iCal), Änderungen gehen nur beim Anbieter.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read only: the calendar is a subscription link (iCal), changes only at its provider."
+          }
+        }
+      }
+    },
+    "Nur lesen: ein Kalender, den dir jemand geteilt hat; ändern kann ihn nur, wem er gehört.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read only: a calendar someone shared with you; only its owner can change it."
+          }
+        }
+      }
+    },
+    "Nur lesen: ein wiederholter Termin; die Serie änderst du im Kalender-Programm.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read only: a repeating appointment; change the series in your calendar app."
+          }
+        }
+      }
+    },
+    "Nur lesen: dieser Kalender lässt sich hier nicht ändern.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read only: this calendar cannot be changed here."
           }
         }
       }

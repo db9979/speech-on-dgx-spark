@@ -18,6 +18,9 @@ struct CalEvent: Identifiable, Hashable {
     let location: String
     let cal: Int
     let edit: Bool
+    var note = ""      // the appointment's own text, plain (calendars._note)
+    var link = ""      // its web address, shown as text only
+    var why = ""       // why it is read-only, a fixed word (calendars._why): abo, geteilt, serie, lesen
     var id: String { "\(cal)|\(Int(start.timeIntervalSince1970))|\(title)" }
 }
 
@@ -84,7 +87,8 @@ extension SparkAPI {
             return CalEvent(start: Date(timeIntervalSince1970: s), end: Date(timeIntervalSince1970: en),
                             allday: e["allday"] as? Bool ?? false, title: String((e["title"] as? String ?? "").prefix(200)),
                             location: String((e["location"] as? String ?? "").prefix(200)), cal: e["cal"] as? Int ?? 0,
-                            edit: e["edit"] as? Bool ?? false)
+                            edit: e["edit"] as? Bool ?? false, note: String((e["note"] as? String ?? "").prefix(2000)),
+                            link: String((e["link"] as? String ?? "").prefix(300)), why: String((e["why"] as? String ?? "").prefix(20)))
         }
         return v
     }
@@ -282,7 +286,12 @@ struct KalenderView: View {
         HStack(alignment: .top, spacing: 10) {
             RoundedRectangle(cornerRadius: 2).fill(Self.tint(e.cal)).frame(width: 4)
             VStack(alignment: .leading, spacing: 2) {
-                Text(verbatim: e.title.isEmpty ? String(localized: "(ohne Titel)") : e.title).lineLimit(2)
+                HStack(spacing: 4) {
+                    if !e.edit {
+                        Image(systemName: "lock.fill").font(.caption2).foregroundStyle(.secondary).accessibilityLabel(Text("nur lesen"))
+                    }
+                    Text(verbatim: e.title.isEmpty ? String(localized: "(ohne Titel)") : e.title).lineLimit(2)
+                }
                 HStack(spacing: 4) {
                     if e.allday { Text("ganztägig") } else {
                         Text(e.start, format: .dateTime.hour().minute())
@@ -392,6 +401,16 @@ struct KalenderDetail: View {
         self.done = done
     }
 
+    /// Why an appointment is read-only, from the panel's fixed word (calendars._why); the words are the app's own.
+    static func readOnly(_ why: String) -> String {
+        switch why {
+        case "abo": return String(localized: "Nur lesen: der Kalender ist ein Abo-Link (iCal), Änderungen gehen nur beim Anbieter.")
+        case "geteilt": return String(localized: "Nur lesen: ein Kalender, den dir jemand geteilt hat; ändern kann ihn nur, wem er gehört.")
+        case "serie": return String(localized: "Nur lesen: ein wiederholter Termin; die Serie änderst du im Kalender-Programm.")
+        default: return String(localized: "Nur lesen: dieser Kalender lässt sich hier nicht ändern.")
+        }
+    }
+
     var body: some View {
         NavigationStack {
             List {
@@ -404,7 +423,11 @@ struct KalenderDetail: View {
                         Text(e.end, format: .dateTime.hour().minute())
                     }
                     if !e.location.isEmpty { LabeledContent("Ort") { Text(verbatim: e.location) } }
+                    if !e.link.isEmpty { LabeledContent("Link") { Text(verbatim: e.link).textSelection(.enabled) } }
                     if !calendar.isEmpty { LabeledContent("Kalender") { Text(verbatim: calendar) } }
+                }
+                if !e.note.isEmpty {
+                    Section("Notiz") { Text(verbatim: e.note).textSelection(.enabled) }   // plain text, no link opens
                 }
                 if e.edit {
                     Section {
@@ -420,7 +443,7 @@ struct KalenderDetail: View {
                         Button("Löschen", role: .destructive) { asking = true }.disabled(busy)
                     }
                 } else {
-                    Section { Text("Diesen Termin änderst du im Kalender, aus dem er kommt (wiederholt oder geteilt).").foregroundStyle(.secondary) }
+                    Section { Label { Text(Self.readOnly(e.why)) } icon: { Image(systemName: "lock") }.foregroundStyle(.secondary) }
                 }
                 if let error { Text(error).foregroundStyle(.red) }
             }
@@ -444,7 +467,7 @@ struct KalenderDetail: View {
             before = e
             e = CalEvent(start: c.date(byAdding: .day, value: days, to: e.start) ?? e.start,
                          end: c.date(byAdding: .day, value: days, to: e.end) ?? e.end, allday: e.allday, title: e.title,
-                         location: e.location, cal: e.cal, edit: e.edit)
+                         location: e.location, cal: e.cal, edit: e.edit, note: e.note, link: e.link, why: e.why)
             error = nil
             done()
         } catch {
@@ -1349,6 +1372,7 @@ struct MailView: View {
         }
         .navigationTitle("Mail")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar { bars }
         .task { await load() }
         .sheet(item: $writing) { d in MailWrite(draft: d) }
         .sheet(item: $ruleFrom) { r in MailRules(start: r) }
@@ -1370,52 +1394,87 @@ struct MailView: View {
         String(s.replacingOccurrences(of: #"^((re|aw|antw|fwd?|wg)\s*:\s*)+"#, with: "", options: [.regularExpression, .caseInsensitive]).prefix(200))
     }
 
+    // the buttons of a mail (Dominik 2026-10-20 „1 und 3“): the five most used at the thumb below, ★ and ⋯ on top
+    private var into: [String] { (folder == nil ? [] : ["INBOX"]) + folders.filter { $0 != folder?.name } }
+    private var canMove: Bool { folder?.movable ?? true }
+
     @ViewBuilder private var actions: some View {
-        let a = talk.allowed.areas
-        if a.contains("calendar") {
-            Section { Button("Als Termin") { asEvent = true } }
+        if talk.allowed.areas.contains("mailmanage") {
+            Section {} footer: { Text("Gelöscht wird nie. Im Panel holt „Rückgängig“ eine verschobene Mail sofort zurück.") }
         }
-        if a.contains("mailsend") || a.contains("mailmanage") {
-            Section {
-                if a.contains("mailsend"), let m {
-                    Button("Antworten") {
-                        writing = MailDraft(reply: m.id, to: PostView.address(m.from),
-                                            subject: m.subject.lowercased().hasPrefix("re:") || m.subject.lowercased().hasPrefix("aw:") ? m.subject : "Re: " + m.subject)
-                    }
-                    Button("Weiterleiten") {
-                        let low = m.subject.lowercased()
-                        writing = MailDraft(subject: low.hasPrefix("fwd:") || low.hasPrefix("wg:") ? m.subject : "Fwd: " + m.subject,
-                                            forward: m.id, folder: folder?.name ?? "INBOX", files: m.files)
-                    }
+    }
+
+    @ToolbarContentBuilder private var bars: some ToolbarContent {
+        let a = talk.allowed.areas
+        ToolbarItemGroup(placement: .topBarTrailing) {
+            if a.contains("mailmanage") && m != nil {
+                Button { Task { await act(flagged ? "unflag" : "flag", "") } } label: {
+                    Image(systemName: flagged ? "star.fill" : "star")
                 }
-                if a.contains("mailmanage") {
-                    Button(item.unread ? LocalizedStringKey("Als gelesen markieren") : LocalizedStringKey("Als ungelesen markieren")) { Task { await act(item.unread ? "read" : "unread", "") } }
-                        .disabled(busy)
-                    Button(flagged ? LocalizedStringKey("Markierung weg") : LocalizedStringKey("Markieren")) { Task { await act(flagged ? "unflag" : "flag", "") } }
-                        .disabled(busy)
-                    if let m {
-                        Button("Regel daraus …") {
-                            ruleFrom = MailRule(account: String(item.id.prefix(9)), from: PostView.address(m.from).lowercased(),
-                                            subject: String(Self.topic(m.subject).prefix(80)))
+                .accessibilityLabel(flagged ? Text("Markierung weg") : Text("Markieren"))
+                .disabled(busy)
+            }
+            if m != nil && (a.contains("mailmanage") || a.contains("mailsend")) {
+                Menu {
+                    if a.contains("mailsend") { Button { writing = MailDraft() } label: { Label("Neue Mail", systemImage: "square.and.pencil") } }
+                    if a.contains("mailmanage") {
+                        Button { Task { await act(item.unread ? "read" : "unread", "") } } label: {
+                            Label(item.unread ? LocalizedStringKey("Als gelesen markieren") : LocalizedStringKey("Als ungelesen markieren"), systemImage: "envelope")
                         }
+                        Button { rule() } label: { Label("Regel daraus …", systemImage: "gearshape") }
                     }
-                    if folder?.movable ?? true {
-                        if archive != nil && archive != folder?.name { Button("Archivieren") { Task { await act("archive", "") } }.disabled(busy) }
-                        let into = (folder == nil ? [] : ["INBOX"]) + folders.filter { $0 != folder?.name }
-                        if !into.isEmpty {
-                            Menu("Verschieben nach …") {
-                                ForEach(into, id: \.self) { f in
-                                    Button { Task { await act("move", f) } } label: { Text(verbatim: f == "INBOX" ? String(localized: "Posteingang") : f) }
-                                }
-                            }
-                            .disabled(busy)
-                        }
-                    }
-                }
-            } footer: {
-                if a.contains("mailmanage") { Text("Gelöscht wird nie. Im Panel holt „Rückgängig“ eine verschobene Mail sofort zurück.") }
+                } label: { Image(systemName: "ellipsis.circle") }
+                .accessibilityLabel(Text("Mehr"))
             }
         }
+        ToolbarItemGroup(placement: .bottomBar) {
+            if m != nil {
+                if a.contains("mailsend") {
+                    Button { reply() } label: { Label("Antworten", systemImage: "arrowshape.turn.up.left") }
+                    Spacer()
+                    Button { forward() } label: { Label("Weiterleiten", systemImage: "arrowshape.turn.up.right") }
+                    Spacer()
+                }
+                if a.contains("mailmanage") && canMove {
+                    if archive != nil && archive != folder?.name {
+                        Button { Task { await act("archive", "") } } label: { Label("Archivieren", systemImage: "archivebox") }.disabled(busy)
+                        Spacer()
+                    }
+                    if !into.isEmpty {
+                        Menu {
+                            ForEach(into, id: \.self) { f in
+                                Button { Task { await act("move", f) } } label: { Text(verbatim: f == "INBOX" ? String(localized: "Posteingang") : f) }
+                            }
+                        } label: { Label("Verschieben nach …", systemImage: "folder") }
+                        .disabled(busy)
+                        Spacer()
+                    }
+                }
+                if a.contains("calendar") {
+                    Button { asEvent = true } label: { Label("Als Termin", systemImage: "calendar.badge.plus") }
+                }
+            }
+        }
+    }
+
+    private func reply() {
+        guard let m else { return }
+        let low = m.subject.lowercased()
+        writing = MailDraft(reply: m.id, to: PostView.address(m.from),
+                            subject: low.hasPrefix("re:") || low.hasPrefix("aw:") ? m.subject : "Re: " + m.subject)
+    }
+
+    private func forward() {
+        guard let m else { return }
+        let low = m.subject.lowercased()
+        writing = MailDraft(subject: low.hasPrefix("fwd:") || low.hasPrefix("wg:") ? m.subject : "Fwd: " + m.subject,
+                            forward: m.id, folder: folder?.name ?? "INBOX", files: m.files)
+    }
+
+    private func rule() {
+        guard let m else { return }
+        ruleFrom = MailRule(account: String(item.id.prefix(9)), from: PostView.address(m.from).lowercased(),
+                            subject: String(Self.topic(m.subject).prefix(80)))
     }
 
     private func fetch(_ n: Int, _ name: String) async {

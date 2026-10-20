@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.853** E-Mail: die Knöpfe einer Mail in einer festen Leiste oben, Symbole mit Namen und Taste beim Drüberfahren, auf dem Handy und im iPhone die fünf häufigsten unten am Daumen; Kalender: Termine, die sich nicht ändern lassen, tragen ein 🔒 mit dem Grund, die Karte zeigt Notiz und Link des Termins
 - **V01.0.852** Neue Mails sofort: der Spark hält den Posteingang von Profilen, die gerade ihre Mails lesen, per IMAP IDLE offen; neue Mails stehen nach Sekunden auf der Seite E-Mail und die Regeln greifen gleich; höchstens 4 Verbindungen, Admin-Schalter, aus
 - **V01.0.851** Was ich über dich weiß (Stufe 3 und 4): Interessen mit Beleg erst nach „Stimmt“, „Mehr davon“ an der Karte, Wiederkehrendes mit monatlicher Erinnerung, Woche und Monatssumme aus geprüften Beträgen, Wochenrückblick sonntags, höchstens ein Netz-Tipp am Tag nur mit dem Wort; iPhone und CarPlay
 - **V01.0.850** Zustand → Technik hat eine neue Seite „Sicherheit“: wie alle Schutzschichten zusammenspielen (das Modell schlägt vor, das Panel entscheidet), mit dem Weg einer Frage durch alle Prüfungen, Rollen, Grenzen und Code; neue Regel: bei jeder Änderung einer Schutzregel wird sie mitgezogen
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.846** „Regel daraus …“ übernimmt auch den Betreff der Mail (ohne Re:/AW:/Fwd:, frei änderbar), im Panel und im iPhone
 - **V01.0.845** Fix: iPhone-App baut wieder (GitHub-Lauf „iPhone app“ grün, TestFlight wieder möglich); zwei Stellen in E-Mail (Regel sichern, Antwortvorschläge) passten nicht zum Swift-Compiler
 - **V01.0.844** Code-Prüfung: ein eigenes Postfach sendet nur über den Postausgang, den du beim Verbinden einträgst, nie über einen geratenen; Ich → Gespräch klappt seine Gruppen ein; ein Name je Sache (Zustand → Überblick, Funktionen → Aufträge, Funktionen → Telefon, Ich → Spark als MCP-Server, am Handy „Assistent“)
-- **V01.0.843** E-Mail wie ein volles Mailprogramm: alle Ordner aller Postfächer lesen, anlegen, umbenennen, leere entfernen; ★ markieren, Mehrfachauswahl und Ziehen in Ordner mit Rückgängig; Regeln direkt aus einer Mail („Regel daraus …“, Probelauf, vorhandene einsortieren), alle unter E-Mail → Regeln; Suche mit von:, betreff:, hat:anhang; Anhänge laden; Weiterleiten über die Vorschau; auch im iPhone; Teil von „Mails ordnen“ und „Mails senden“, aus, nie wird eine Mail gelöscht
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
