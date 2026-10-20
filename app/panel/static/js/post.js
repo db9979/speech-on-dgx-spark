@@ -300,7 +300,7 @@ async function postSend(b,msg){b.disabled=true;msg.className='postordmsg fh';msg
   POST.write=null;POST.prev=null;postDraw()}
 // „Als Termin“: the page Kalender with the subject in „Schnell eintragen“; the panel reads it there by its fixed
 // rules, nothing is saved before „Eintragen“
-function postAsEvent(m){KAL.q=(m.subject||'').replace(/^(re|aw|antw|fwd?|wg)\s*:\s*/i,'').slice(0,200);KAL.qi=null;KAL.qfocus=true;
+function postAsEvent(m){KAL.q=postTopic(m.subject,200);KAL.qi=null;KAL.qfocus=true;
   icTabSet('cal','show');goSec('cal')}
 // keys on the page (Dominik 2026-10-19 „5a“): J/K next and previous, R reply, E archive, U read or unread, Esc closes
 // (the mail, or the form being written)
@@ -396,5 +396,7 @@ function postRuleForm(b){const f=RULES.form,d=RULES.data||{accounts:[]},fo=f.acc
     else RULES.msg=t('Gesichert. Die Regel nimmt ab jetzt neue Mails.','Saved. The rule takes new mail from now on.');
     await postRulesLoad()}}
 // „⚙ Regel daraus …“ at a mail: the form with this mail's mailbox and sender, on the tab Regeln
-function postRuleFrom(m){const acct=(POST.sel||'').split(':')[0];RULES.form={account:acct,when:{from:postAddr(m.from).toLowerCase(),subject:'',to:'',attach:false},then:{folder:'',read:false,flag:false,quiet:false}};
+// the subject without Re:, AW:, Fwd: … (Dominik 2026-10-20: the rule takes the mail's subject too, free to change)
+const postTopic=(x,n=80)=>(x||'').replace(/^((re|aw|antw|fwd?|wg)\s*:\s*)+/i,'').trim().slice(0,n);
+function postRuleFrom(m){const acct=(POST.sel||'').split(':')[0];RULES.form={account:acct,when:{from:postAddr(m.from).toLowerCase(),subject:postTopic(m.subject),to:'',attach:false},then:{folder:'',read:false,flag:false,quiet:false}};
   RULES.test=null;icTabSet('post','regeln');postOpen()}

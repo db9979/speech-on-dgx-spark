@@ -1013,7 +1013,7 @@ struct MailRule: Identifiable {
     var box = ""
     var key = UUID()
 
-    init(account: String = "", from: String = "") { self.account = account; self.from = from }
+    init(account: String = "", from: String = "", subject: String = "") { self.account = account; self.from = from; self.subject = subject }
 
     init(_ d: [String: Any]) {
         let w = d["when"] as? [String: Any] ?? [:], t = d["then"] as? [String: Any] ?? [:]
@@ -1395,7 +1395,8 @@ struct MailView: View {
                         .disabled(busy)
                     if let m {
                         Button("Regel daraus …") {
-                            ruleFrom = MailRule(account: String(item.id.prefix(9)), from: PostView.address(m.from).lowercased())
+                            ruleFrom = MailRule(account: String(item.id.prefix(9)), from: PostView.address(m.from).lowercased(),
+                                            subject: String(Self.topic(m.subject).prefix(80)))
                         }
                     }
                     if folder?.movable ?? true {

@@ -317,6 +317,37 @@ class Page(unittest.TestCase):
                     await br.close()
         asyncio.run(go())
 
+    def test_a_rule_from_a_mail_takes_sender_and_subject(self):
+        """Dominik 2026-10-20: „Regel daraus …“ fills in the sender and the mail's subject (without Re:/AW:/Fwd:)."""
+        from tests.test_ui_browser import Browser, async_playwright
+        b = Browser("run")
+        b.port = self.port
+        fill()
+
+        async def go():
+            async with async_playwright() as p:
+                br, pg, errors = await b.page(p, 1200, 900)
+                try:
+                    uid = await pg.evaluate("PROFILE.id")
+                    if not mail.get(uid)["accounts"]:
+                        r = await pg.request.post(f"http://127.0.0.1:{self.port}/api/profile/mail",
+                                                  data={"kind": "icloud", "user": helpers.MAIL_USER, "password": helpers.MAIL_PW})
+                        self.assertEqual(r.status, 200, await r.text())
+                    mail._cache.clear()
+                    await pg.evaluate("MAIL_ON=true;ORD_ON=true;postStart({profile:PROFILE,mail:true});icTabSet('post','show');goSec('post')")
+                    await b.until(pg, "!POST.busy&&!!POST.data&&POST.data.items.length===2")
+                    await pg.evaluate("[...document.querySelectorAll('#postview .ld-row')].find(e=>e.textContent.includes('Werkstatt')).click()")
+                    await b.until(pg, "!!document.querySelector('#postview [data-w=rule]')")
+                    await pg.click("#postview [data-w=rule]")
+                    await b.until(pg, "!!RULES.form")
+                    self.assertEqual(await pg.evaluate("RULES.form.when"),
+                                     {"from": "anna@example.de", "subject": "Werkstatt fertig", "to": "", "attach": False})
+                    self.assertEqual(await pg.evaluate("postTopic('AW: Re: Fwd:  Angebot 4711 ')"), "Angebot 4711")
+                    self.assertEqual(errors, [])
+                finally:
+                    await br.close()
+        asyncio.run(go())
+
     def test_folders_and_many_from_the_page(self):
         """Mailclient Stufe A: the folder tree in the list's place, a folder opened, two mails ticked and marked read."""
         from tests.test_ui_browser import Browser, async_playwright

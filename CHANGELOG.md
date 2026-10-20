@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.846** · 2026-10-20 · „Regel daraus …“ übernimmt auch den Betreff der Mail (ohne Re:/AW:/Fwd:, frei änderbar), im Panel und im iPhone
 - **V01.0.845** · 2026-10-19 · Fix: iPhone-App baut wieder (GitHub-Lauf „iPhone app“ grün, TestFlight wieder möglich); zwei Stellen in E-Mail (Regel sichern, Antwortvorschläge) passten nicht zum Swift-Compiler
 - **V01.0.844** · 2026-10-19 · Code-Prüfung: ein eigenes Postfach sendet nur über den Postausgang, den du beim Verbinden einträgst, nie über einen geratenen; Ich → Gespräch klappt seine Gruppen ein; ein Name je Sache (Zustand → Überblick, Funktionen → Aufträge, Funktionen → Telefon, Ich → Spark als MCP-Server, am Handy „Assistent“)
 - **V01.0.843** · 2026-10-19 · E-Mail wie ein volles Mailprogramm: alle Ordner aller Postfächer lesen, anlegen, umbenennen, leere entfernen; ★ markieren, Mehrfachauswahl und Ziehen in Ordner mit Rückgängig; Regeln direkt aus einer Mail („Regel daraus …“, Probelauf, vorhandene einsortieren), alle unter E-Mail → Regeln; Suche mit von:, betreff:, hat:anhang; Anhänge laden; Weiterleiten über die Vorschau; auch im iPhone; Teil von „Mails ordnen“ und „Mails senden“, aus, nie wird eine Mail gelöscht

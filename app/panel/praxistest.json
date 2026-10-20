@@ -2210,6 +2210,13 @@
 "titel": "Gespräch eingeklappt, ein Name je Sache",
 "text": "P: Ich → Gespräch am Handy: nur „Zuhören“ ist offen, die anderen Gruppen sind eingeklappt und nennen in grauer Schrift, was drin ist; ein Sprung-Link wie „Ich → Gespräch → Antwortlänge“ klappt die Gruppe auf. A: Zustand → Überblick heißt nicht mehr Monitoring, am Handy unten „Assistent“ statt „Spark“, Seite „Spark verwalten“. Funktionen → Aufträge (vorher Agent-Funktionen), Funktionen → Telefon (vorher Den Spark anrufen), Ich → Spark als MCP-Server (vorher Dienste per MCP). Englisch: Features → Routing statt Switch, Me → By itself.",
 "thread": "Code-Prüfung: Tempo, Sicherheit, Bedienung"
+},
+{
+"id": "P340",
+"v": 846,
+"titel": "Regel mit Betreff",
+"text": "A: Update auf V01.0.846. Eine Mail mit „AW: …“ im Betreff öffnen, „⚙ Regel daraus …“: Absender und Betreff stehen schon da, der Betreff ohne „AW:“. B: Betreff kürzen, „Probelauf“, „Sichern“. C: Dasselbe im iPhone (Mail → „Regel daraus …“).",
+"thread": "Kalender und E-Mail in Panel und Apps"
 }
 ]
 }

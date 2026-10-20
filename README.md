@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.846** "Rule from this …" also takes the mail's subject (without Re:/AW:/Fwd:, free to change), in the panel and on the iPhone
 - **V01.0.845** Fix: the iPhone app builds again (GitHub run "iPhone app" green, TestFlight possible again); two places in E-mail (saving a rule, reply suggestions) did not suit the Swift compiler
 - **V01.0.844** Code check: an own mailbox sends only through the outgoing server you type in when connecting it, never a guessed one; Me → Conversation folds its groups; one name per thing (Status → Summary, Features → Jobs, Features → Phone, Me → Spark as MCP server, on the phone "Assistant")
 - **V01.0.843** E-mail as a full mail client: read every folder of every mailbox, make, rename, remove empty ones; ★ flag, multiple selection and dragging into folders with undo; rules straight from a mail ("Rule from this …", dry run, sort existing mail), all under E-mail → Rules; search with von:, betreff:, hat:anhang; fetch attachments; forward via the preview; on the iPhone too; part of "Mails ordnen" and "Mails senden", off, a mail is never deleted
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.839** Spark calendar stage 3: a calendar without any account that lives only on the Spark (encrypted in the profile); create it under Me → Calendar or on the iPhone, appointments via page, app or voice, shared like any calendar
 - **V01.0.838** Calendar: no more panel stalls while working out appointments (6-8 s standstill); each appointment is worked out once per month and kept, all in one background thread at low priority, never two at once
 - **V01.0.837** E-mail: reply suggestions when answering (part of Send mails): three short answers in different directions are ready, prepared while the mail is open, in the mail's tone and signed with the profile name; the picked one stays freely editable, plus shorter, friendlier, more formal and in English; panel and iPhone
-- **V01.0.836** The panel gets its turn sooner while much is computed in the background
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
