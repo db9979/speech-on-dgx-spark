@@ -2280,6 +2280,13 @@
 "titel": "Seite Listen",
 "text": "A: Update auf V01.0.854, Funktionen → Listen für Einkauf und Aufgaben an. Im Menü steht „Listen“ nach E-Mail. B: „+ Neue Liste“ → Baumarkt mit Symbol anlegen, „Schrauben 2x, Dübel“ eintragen: bei jedem Eintrag steht dein Name, „gerade eben“ und „Seite“. C: Im Chat „Setz Nägel auf die Baumarkt-Liste“: Nägel steht dort mit „Assistent“. D: Schrauben abhaken: unter „Zuletzt erledigt“, „Zurückholen“ holt sie zurück. E: Einkauf: „Milch, Äpfel, Spülmittel“ steht nach Abteilungen, „3 Milch“ dazu macht „Milch 4×“. F: iPhone-App → Meine Sachen → Listen: dieselben Listen, Abhaken mit Tipp, Wischen löscht; Heute zeigt den Einkauf.",
 "thread": "Listen für Einkauf und Aufgaben"
+},
+{
+"id": "P350",
+"v": 856,
+"titel": "Rechner-Karten ruhig und nebeneinander",
+"text": "A: Zustand → Überblick → Rechner am Rechner: CPU, Speicher, GPU, Temperatur, Platte, Netz, Wer rechnet gerade und Dienste stehen bei tars und speech auf gleicher Höhe nebeneinander; beim Pi steht bei GPU „–“. B: Ein paar Minuten zusehen (oder ein Bild malen lassen): die Karten werden nicht höher oder niedriger, Zeilen tauschen nicht den Platz, ein ruhender Dienst steht mit „–“ grau da. C: Dasselbe am Handy: zwei schmale Spalten nebeneinander, nichts ragt über den Rand. D: Steuerzentrale am Bildschirm: „Platte“ steht in beiden Rahmen an derselben Stelle, am Pi „GPU – keine“. E: iPhone-App → Überblick: Abschnitt „Rechner“ als Tabelle mit beiden Rechnern nebeneinander.",
+"thread": "Rechner-Karten nebeneinander"
 }
 ]
 }

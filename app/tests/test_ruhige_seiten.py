@@ -1,7 +1,8 @@
 """Ruhigere Seiten ohne Springen (plaene/ruhige-seiten.md, Dominik 2026-10-14): what the person has open stays open
 and in its place. Saving never reloads the page, a reload the page must do comes back to the same place (base.js
 placeNow, start.js placeBack), the update shows one calm window (no band, the bar never goes back), open parts stay
-open when their box is drawn anew, and Zustand polls only while it is seen. Static checks everywhere, browser checks
+open when their box is drawn anew, Zustand polls only while it is seen, and the computer cards keep their rows in
+place and side by side (Spiegel-Karten, 2026-10-20). Static checks everywhere, browser checks
 where Playwright and Chromium exist; no test reads the clock."""
 import asyncio
 import os
@@ -296,6 +297,58 @@ class Browser(unittest.TestCase):
                     self.assertEqual(errors, [])
                 finally:
                     await br.close()
+        asyncio.run(go())
+
+    def test_computer_cards_stand_still_side_by_side(self):
+        """Spiegel-Karten (Dominik 2026-10-20, plan rechner-karten/plan.md): Zustand → Überblick → Rechner shows both
+        computers with the same rows, each row on the height of its neighbour, on the computer and on the phone; new
+        services, more parts or a longer legend change neither the card's height nor a row's place, and a poll
+        swaps only the rows that changed (the disk row stays the same element)."""
+        def wer(z, rest, darin):
+            return "{gemessen:true,zeilen:[%s],rest:{id:'rest',name:'System und Rest',en:'',pct:%s},darin:[%s]}" % (z, rest, darin)
+        def card(k, name, z, rest, darin, top, dienste, strom):
+            return ("{id:'%s',name:'%s',stufe:'ok',ok:true,cpu:6,kerne:4,last:0.5,ram_total:7.9,ram_frei:7.1,ram_cache:2,platte_total:504,"
+                    "platte_frei:473,platte_pct:2,netz_rx_mbs:0.1,netz_tx_mbs:0,netz_mbit:1000,laeuft_s:300000,temp:48,luefter:false,temp_warn:80,"
+                    "strom:%s,version:'V01.0.1',geraet:'Raspberry Pi 5',system:'Debian',gpu:{util:3,temp:37,power:10},llm:'qwen36',hinweise:[],"
+                    "haenger:{n:0},dienste:[%s],wer:%s,namen:{},kurven:{cpu:[1,5,3],frei:[7,7.1,7.2],temp:[50,52,51],netz:[0.5,1,1.6],gpu:[1,2,3],top:[%s]}}"
+                    % (k, name, strom, dienste, wer(z, rest, darin), top))
+        line = "{id:'%s',name:'%s',en:'',pct:%s}"
+        ruhig = [line % ("asr", "Spracherkennung", 0), line % ("tts", "Sprachausgabe", 0.4), "null", "null", "null", "null"]
+        voll = [line % (i, "Dienst mit einem langen Namen " + i, 3) for i in "abcdef"]
+        chip = "{id:'%s',state:'%s',name:'%s'}"
+        d2 = ",".join(chip % (i, "active", "Panel") for i in "ab")
+        d9 = ",".join(chip % (i, "failed" if i in "cd" else "active", "Dienst " + i) for i in "abcdefghi")
+        def status(z, darin, top, strom):
+            return ("zustand({glance:{},services:{},system:{},alerts:[],rechner:{an:true,liste:[%s,%s]}})"
+                    % (card("modell", "tars", ",".join(z), 0.3, "", top, d9, "null"),
+                       card("panel", "speech", ",".join(z), 0.6, darin, top, d2, strom)))
+        a = status(ruhig, "", "null,null", "{spannung:'ok',drossel:'nein'}")
+        b = status(voll, ",".join(line % ("t" + str(i), "Teil mit sehr langem Namen", 2) for i in range(3)),
+                   ",".join("'p%s'" % i for i in range(30)), "{spannung:'zu niedrig',drossel:'jetzt'}")
+        maß = ("[...$('zrechner').children].map(c=>[c.children.length,Math.round(c.getBoundingClientRect().height),"
+               "[...c.children].map(r=>Math.round(r.getBoundingClientRect().top-c.getBoundingClientRect().top))])")
+        async def go():
+            async with async_playwright() as p:
+                for w, h in ((1280, 900), (390, 800), (320, 760)):
+                    br, pg, errors = await self.page(p, w, h)
+                    try:
+                        await pg.route("**/api/status", lambda r: r.abort())
+                        await pg.evaluate("goSec('mon')")
+                        await pg.wait_for_function("typeof zustand==='function'&&!!$('zrechner')", timeout=20000)
+                        await pg.evaluate(a)
+                        vorher = await pg.evaluate(maß)
+                        self.assertEqual([x[0] for x in vorher], [11, 11], w)         # admin.js ZR_ZEILEN
+                        self.assertEqual(vorher[0][2], vorher[1][2], w)               # every row beside its neighbour
+                        await pg.evaluate("window.__platte=$('zrechner').children[1].children[6]")
+                        await pg.evaluate(b)
+                        nachher = await pg.evaluate(maß)
+                        self.assertEqual(nachher, vorher, str((w, vorher, nachher)))  # nothing jumps
+                        self.assertTrue(await pg.evaluate("$('zrechner').children[1].children[6]===window.__platte"), w)
+                        self.assertFalse(await pg.evaluate("document.documentElement.scrollWidth>innerWidth"), w)
+                        self.assertFalse(await pg.evaluate("[...document.querySelectorAll('#zrechner .zrcard')].some(e=>e.getBoundingClientRect().right>innerWidth+1)"), w)
+                        self.assertEqual(errors, [])
+                    finally:
+                        await br.close()
         asyncio.run(go())
 
 

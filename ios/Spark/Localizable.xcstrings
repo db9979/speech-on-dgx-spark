@@ -13500,6 +13500,56 @@
           }
         }
       }
+    },
+    "Netz": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Network"
+          }
+        }
+      }
+    },
+    "Wer rechnet gerade": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Who is computing now"
+          }
+        }
+      }
+    },
+    "darin": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "inside"
+          }
+        }
+      }
+    },
+    "wird gemessen …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "being measured …"
+          }
+        }
+      }
+    },
+    "Rechner": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Computers"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -693,7 +693,7 @@ class Browser(unittest.TestCase):
                     got = await pg.evaluate("[...$('zrechner').children].map(c=>[c.dataset.lvl,c.querySelectorAll('svg.zrspark').length,"
                                             "c.querySelectorAll('.zrchips span').length,c.querySelector('h2').textContent])")
                     self.assertEqual([g[0] for g in got], ["ok", "warn"])
-                    self.assertEqual([g[1] for g in got], [4, 4])          # GPU, memory, CPU, network / CPU, memory, temperature, network
+                    self.assertEqual([g[1] for g in got], [5, 4])          # CPU, memory, GPU, temperature, network / the panel computer has no GPU
                     self.assertEqual([g[2] for g in got], [2, 2])
                     self.assertIn("tars", got[0][3])
                     await pg.evaluate(gone)

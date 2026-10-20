@@ -178,33 +178,36 @@ struct StatusView: View {
                 LabeledContent("CPU") { Text(verbatim: Self.num(sys["cpu"]) + " %") }
                 LabeledContent("GPU") { Text(verbatim: Self.num(gpu["util"]) + " % · " + Self.num(gpu["temp"]) + " °C · " + Self.num(gpu["power"]) + " W") }
             }
-            // Zustand → Überblick → Rechner (rechnerblick.py): with the models on another computer both computers,
-            // numbers and fixed words only; the colour follows the panel's fixed rules ("stufe")
+            // Zustand → Überblick → Rechner (rechnerblick.py): with the models on another computer both computers side by
+            // side like the panel's Spiegel-Karten (Dominik 2026-10-20): one row per value, the model computer left and
+            // the panel computer right, the same rows in the same order, „–“ where a computer lacks a value, „Wer rechnet
+            // gerade“ with always the same lines; numbers and fixed words only, the colour follows the panel's "stufe"
             let rech = d["rechner"] as? [String: Any] ?? [:]
             if rech["an"] as? Bool == true {
-                ForEach(stableRows(rech["liste"] as? [[String: Any]] ?? []) { ($0["id"] as? String ?? "") }, id: \.id) { item in
-                    let c = item.row
-                    Section {
-                        LabeledContent("Zustand") { Text(Self.stufe(c)).foregroundStyle(Self.stufeFarbe(c)) }
-                        if c["id"] as? String == "modell" {
-                            let cg = c["gpu"] as? [String: Any] ?? [:]
-                            LabeledContent("GPU") { Text(verbatim: Self.num(cg["util"]) + " % · " + Self.num(cg["temp"]) + " °C") }
+                let liste = rech["liste"] as? [[String: Any]] ?? []
+                let m = liste.first { $0["id"] as? String == "modell" } ?? [:]
+                let p = liste.first { $0["id"] as? String == "panel" } ?? [:]
+                Section("Rechner") {
+                    HStack(alignment: .top, spacing: 12) {
+                        ForEach(0..<2, id: \.self) { i in
+                            let c = i == 0 ? m : p
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(verbatim: Self.rechnerName(c)).font(.subheadline.weight(.semibold))
+                                Text(Self.stufe(c)).font(.caption).foregroundStyle(Self.stufeFarbe(c))
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
                         }
-                        LabeledContent("CPU") { Text(verbatim: Self.num(c["cpu"]) + " %") }
-                        // „Wer rechnet gerade“ (rechnerblick.rechnen): services by their share of the CPU, the panel's
-                        // parts indented; names (de/en) only from the panel
-                        ForEach(Self.wer(c), id: \.0) { key, name, pct in
-                            LabeledContent { Text(verbatim: Self.num(pct) + " %") } label: { Text(verbatim: name).font(key.contains("/") ? .caption : .body) }
+                    }
+                    ForEach(Self.vergleich(m, p), id: \.0) { _, name, a, b in
+                        VStack(alignment: .leading, spacing: 2) {
+                            if !name.isEmpty { Text(verbatim: name).font(.caption).foregroundStyle(.secondary) }
+                            HStack(alignment: .top, spacing: 12) {
+                                Text(verbatim: a).frame(maxWidth: .infinity, alignment: .leading)
+                                Text(verbatim: b).frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                            .font(.callout.monospacedDigit())
                         }
-                        LabeledContent("Speicher frei") { Text(verbatim: Self.num(c["ram_frei"]) + " / " + Self.num(c["ram_total"]) + " GiB") }
-                        if c["temp"] is NSNumber { LabeledContent("Temperatur") { Text(verbatim: Self.num(c["temp"]) + " °C") } }
-                        LabeledContent("Platte frei") { Text(verbatim: Self.num(c["platte_frei"]) + " GB · " + Self.num(c["platte_pct"]) + " %") }
-                        LabeledContent("Dienste") { Text(verbatim: Self.dienste(c)) }
-                        // the Hänge-Wächter (loopwacht.py): how often the panel stood still in the last 24 hours
-                        if let hg = c["haenger"] as? [String: Any], (hg["n"] as? Int ?? 0) > 0 {
-                            LabeledContent("Panel hing") { Text("\(hg["n"] as? Int ?? 0)-mal · längstens \(hg["max_s"] as? Int ?? 0) s").foregroundStyle(.orange) }
-                        }
-                    } header: { Text(verbatim: Self.rechnerName(c)) }
+                    }
                 }
             }
             // Zustand → Überblick → Rundlauf (rundlauf.py): the last real round trip, each step in ms, the step that
@@ -298,20 +301,60 @@ struct StatusView: View {
         return n == n.rounded() ? String(Int(n)) : String(format: "%.1f", n)
     }
 
-    /// „Wer rechnet gerade“ of a computer: (key, name, %) of each service, a part of the panel as "panel/<id>" with
-    /// "   " before its name; the panel sends the names in German and English
-    static func wer(_ c: [String: Any]) -> [(String, String, Any?)] {
+    /// the rows of Zustand → Überblick → Rechner for both computers side by side, in the order of the panel's cards
+    /// (admin.js zRCard): (key, name, model computer, panel computer); „–“ where a computer lacks the value
+    static func vergleich(_ m: [String: Any], _ p: [String: Any]) -> [(String, String, String, String)] {
+        var out: [(String, String, String, String)] = []
+        func add(_ key: String, _ name: String, _ f: ([String: Any]) -> String) { out.append((key, name, f(m), f(p))) }
+        add("cpu", "CPU") { num($0["cpu"]) + " %" }
+        add("ram", String(localized: "Speicher frei")) { num($0["ram_frei"]) + " / " + num($0["ram_total"]) + " GiB" }
+        add("gpu", "GPU") { c in
+            guard c["id"] as? String == "modell" else { return "–" }
+            let g = c["gpu"] as? [String: Any] ?? [:]
+            return num(g["util"]) + " % · " + num(g["power"]) + " W"
+        }
+        add("temp", String(localized: "Temperatur")) { c in
+            let g = c["gpu"] as? [String: Any] ?? [:]
+            return num(c["temp"] is NSNumber ? c["temp"] : g["temp"]) + " °C"
+        }
+        add("platte", String(localized: "Platte frei")) { num($0["platte_frei"]) + " GB · " + num($0["platte_pct"]) + " %" }
+        add("netz", String(localized: "Netz")) { "↓ " + num($0["netz_rx_mbs"]) + " ↑ " + num($0["netz_tx_mbs"]) + " MB/s" }
+        add("eigen", "") { c in
+            if c["id"] as? String == "modell" { return String(localized: "Sprachmodell") + ": " + (c["llm"] as? String ?? "–") }
+            let hg = c["haenger"] as? [String: Any] ?? [:]
+            return String(localized: "Panel hing") + ": \((hg["n"] as? NSNumber)?.intValue ?? 0)×"
+        }
+        let wm = wer(m), wp = wer(p)
+        for i in 0..<max(wm.count, wp.count) {
+            out.append(("wer\(i)", i == 0 ? String(localized: "Wer rechnet gerade") : "", i < wm.count ? wm[i] : "", i < wp.count ? wp[i] : ""))
+        }
+        add("dienste", String(localized: "Dienste")) { dienste($0) }
+        return out
+    }
+
+    /// „Wer rechnet gerade“ of a computer (rechnerblick.wer): always the same lines, a resting service at 0 %, the
+    /// panel's parts in the line under it, the rest, then the empty places; the panel sends the names in German and English
+    static func wer(_ c: [String: Any]) -> [String] {
         let de = Locale.current.language.languageCode?.identifier == "de"
         let nm = { (x: [String: Any]) in (de ? x["name"] : x["en"]) as? String ?? x["name"] as? String ?? "" }
-        var out: [(String, String, Any?)] = []
-        for x in c["rechnen"] as? [[String: Any]] ?? [] {
-            let id = x["id"] as? String ?? ""
-            out.append((id, nm(x), x["pct"]))
-            for y in x["teile"] as? [[String: Any]] ?? [] {
-                out.append(("panel/" + (y["id"] as? String ?? ""), "   " + nm(y), y["pct"]))
-            }
+        let zeile = { (x: [String: Any]) in nm(x) + " " + num(x["pct"]) + " %" }
+        let w = c["wer"] as? [String: Any] ?? [:]
+        let z = w["zeilen"] as? [Any] ?? []
+        guard w["gemessen"] as? Bool == true else {
+            return [String(localized: "wird gemessen …")] + Array(repeating: "", count: z.count)
         }
-        return out
+        let da = z.compactMap { $0 as? [String: Any] }
+        let panel = c["id"] as? String == "panel"
+        let teile = (w["darin"] as? [[String: Any]] ?? []).map(zeile)
+        let darin = "   " + String(localized: "darin") + ": " + (teile.isEmpty ? "–" : teile.joined(separator: " · "))
+        var out: [String] = []
+        for x in da {
+            out.append(zeile(x))
+            if panel && x["id"] as? String == "panel" { out.append(darin) }
+        }
+        if panel && !da.contains(where: { $0["id"] as? String == "panel" }) { out.append(darin) }
+        out.append((w["rest"] as? [String: Any]).map(zeile) ?? "")
+        return out + Array(repeating: "", count: max(0, z.count - da.count))
     }
 
     /// a computer of Zustand → Überblick → Rechner: its host name and its role

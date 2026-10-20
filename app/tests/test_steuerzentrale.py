@@ -366,7 +366,7 @@ class Bild(unittest.TestCase):
 
     def test_the_biggest_service_in_each_frame(self):
         """„Wer rechnet gerade“ (rechnerblick.spitze, Dominik 2026-10-18): the service that takes the most CPU leads the
-        frame's last line, the panel with its part; idle shows the line as before."""
+        frame's last line, the panel with its part; idle says „▶ Leerlauf“ in the same field (Spiegel-Karten 2026-10-20)."""
         d = beispiel()
         d["rechner"]["liste"][0]["spitze"] = {"id": "llm", "name": "Sprachmodell", "en": "Language model", "pct": 29.0}
         d["rechner"]["liste"][1]["spitze"] = {"id": "panel/bedeutungssuche", "name": "Panel · Bedeutungssuche", "en": "", "pct": 31.4}
@@ -374,6 +374,24 @@ class Bild(unittest.TestCase):
         self.assertIn("▶ Sprachmodell 29 %", t)
         self.assertIn("▶ Panel · Bedeutungssuche 31 %", t)
         self.assertNotIn("▶ Sprachmodell", sz.bild(beispiel(), 240, 67).text())
+        self.assertIn("▶ Leerlauf", sz.bild(beispiel(), 240, 67).text())
+
+    def test_both_frames_have_their_values_in_the_same_places(self):
+        """Spiegel-Karten (Dominik 2026-10-20): in both frames GPU, RAM, the biggest service and „Platte“ start at the
+        same column of their frame, whatever the biggest service is called; the Pi's GPU is „–“."""
+        d = beispiel()
+        d["rechner"]["liste"][0]["spitze"] = {"id": "llm", "name": "Sprachmodell", "en": "", "pct": 29.0}
+        zeilen = sz.bild(d, 240, 67).text().splitlines()
+        # the frames start where their CPU lines start: the same distance to GPU, and „Platte“ after the same field
+        z1 = next(z for z in zeilen if z.count("CPU ") == 2)
+        c = [m for m in range(len(z1)) if z1.startswith("CPU ", m)]
+        g = [m for m in range(len(z1)) if z1.startswith("GPU ", m)]
+        self.assertEqual(g[0] - c[0], g[1] - c[1])
+        self.assertIn("GPU – keine", z1)
+        z3 = next(z for z in zeilen if "▶ Sprachmodell" in z and "▶ Leerlauf" in z)
+        p = [m for m in range(len(z3)) if z3.startswith("Platte ", m)]
+        s0 = [z3.index("▶ Sprachmodell"), z3.index("▶ Leerlauf")]
+        self.assertEqual(p[0] - s0[0], p[1] - s0[1])
 
     def test_curve_and_numbers(self):
         self.assertEqual(sz.linie([0, 100], 4, 0, 100), "▁▁██")

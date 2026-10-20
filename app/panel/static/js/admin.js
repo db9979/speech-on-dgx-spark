@@ -165,28 +165,37 @@ function zCards(s){const box=$('zcards');if(!box)return;const g=s.glance||{},sv=
 // red and with its last values greyed out. Numbers and fixed words only (no address, no process).
 // „Wer rechnet gerade“ (Dominik 2026-10-18 „1a 2a 3a 4b“): services by their share of the CPU (the panel with its parts),
 // the biggest in the tile, the strip of who worked most in the last 20 minutes; names (de/en) only from rechnerblick.py.
+// Since 2026-10-20 (Spiegel-Karten) the list stands still: rechnerblick.wer gives always the same lines in a fixed order
+// (a resting service at 0 % in grey, an empty place kept), the rest, the panel's line „darin“, the strip and its legend
+// always, the legend on one line.
 const zNm=x=>x?(L==='en'?x.en:x.name)||x.name||'':'';
 const ZR_FARBE=['#3b6fd8','#0d9488','#7c3aed','#d97706','#db2777','#65a30d','#0891b2','#9333ea'];
-function zRFarben(c){const f={};let i=0;const add=id=>{if(id&&!(id in f))f[id]=ZR_FARBE[i++%ZR_FARBE.length]};
-  for(const x of c.rechnen||[]){if(x.id==='rest')continue;add(x.id);for(const y of x.teile||[])add('panel/'+y.id)}
+function zRFarben(c){const f={},W=c.wer||{};let i=0;const add=id=>{if(id&&!(id in f))f[id]=ZR_FARBE[i++%ZR_FARBE.length]};
+  for(const x of W.zeilen||[])if(x)add(x.id);for(const y of W.darin||[])add('panel/'+y.id);
   for(const id of (c.kurven||{}).top||[])add(id);return f}
-function zRWer(c){const R=c.rechnen||[],T=((c.kurven||{}).top||[]),f=zRFarben(c);if(!R.length&&!T.some(Boolean))return null;
+function zRWer(c){const W=c.wer||{},T=((c.kurven||{}).top||[]),f=zRFarben(c);
   const r=document.createElement('div');r.className='zrrow zrwer';const w=document.createElement('div'),k=document.createElement('small');
   k.textContent=t('Wer rechnet gerade','Who is computing now');w.appendChild(k);
-  const line=(x,sub,col)=>{const l=document.createElement('div');l.className='zrl'+(sub?' zrsub':'');const n=document.createElement('span');n.textContent=zNm(x);
-    const b=document.createElement('span');b.className='zrb';const i=document.createElement('i');i.style.width=Math.max(1,Math.min(100,Math.round(100*x.pct/Math.max(1,c.cpu||0))))+'%';
-    i.style.background=col||'var(--mut)';b.appendChild(i);const p=document.createElement('span');p.className='p';p.textContent=fmt(x.pct,' %',x.pct<1?1:0);l.append(n,b,p);w.appendChild(l)};
-  if(!R.length){const m=document.createElement('small');m.textContent=t('wird gemessen …','being measured …');w.appendChild(m)}
-  for(const x of R){line(x,false,f[x.id]);for(const y of x.teile||[])line(y,true,f['panel/'+y.id])}
-  if(T.some(Boolean)){const h=document.createElement('small');h.textContent=t('Wer am meisten rechnete (20 min)','Who computed most (20 min)');
-    const st=document.createElement('div');st.className='zrstrip';st.setAttribute('aria-hidden','true');
-    for(const id of T){const i=document.createElement('i');if(id)i.style.background=f[id];st.appendChild(i)}
-    const lg=document.createElement('div');lg.className='zrleg';const N=c.namen||{};
-    const g=document.createElement('span');g.textContent=t('grau = Leerlauf (unter 5 %)','grey = idle (below 5 %)');lg.appendChild(g);
-    for(const id of [...new Set(T.filter(Boolean))]){const s2=document.createElement('span'),q=document.createElement('i');q.style.background=f[id];
-      s2.append(q,zNm({name:(N[id]||[id])[0],en:(N[id]||[id,id])[1]}));lg.appendChild(s2)}
-    w.append(h,st,lg)}
-  r.appendChild(w);return r}
+  const line=(x,col,wort)=>{const l=document.createElement('div');l.className='zrl'+(x&&x.pct?'':wort?' zr0':x?' zr0':' zrleer');
+    const n=document.createElement('span');n.textContent=x?zNm(x):wort||'·';
+    const b=document.createElement('span');b.className='zrb';const i=document.createElement('i');
+    if(x&&x.pct){i.style.width=Math.max(1,Math.min(100,Math.round(100*x.pct/Math.max(1,c.cpu||0))))+'%';i.style.background=col||'var(--mut)'}
+    b.appendChild(i);const p=document.createElement('span');p.className='p';p.textContent=x&&x.pct?fmt(x.pct,' %',x.pct<1?1:0):'–';l.append(n,b,p);w.appendChild(l)};
+  const Z=W.zeilen||[null],da=Z.filter(Boolean);   // the services, the rest, then the empty places (the card keeps its height)
+  const darin=()=>{const d=document.createElement('small');d.className='zrdarin';const D=W.darin||[];   // the panel's parts, one line under it
+    d.textContent=t('darin: ','inside: ')+(D.length?D.map(y=>zNm(y)+' '+fmt(y.pct,' %',y.pct<1?1:0)).join(' · '):'–');d.title=d.textContent;w.appendChild(d)};
+  for(const x of da){line(x,f[x.id]);if(c.id==='panel'&&x.id==='panel')darin()}
+  if(c.id==='panel'&&!da.some(x=>x.id==='panel'))darin();
+  line(W.rest||{id:'rest',name:'System und Rest',en:'System and rest',pct:0},'#94a3b8');
+  Z.slice(da.length).forEach((x,j)=>line(null,'',!j&&!W.gemessen?t('wird gemessen …','being measured …'):''));
+  const h=document.createElement('small');h.textContent=t('Wer am meisten rechnete (20 min)','Who computed most (20 min)');
+  const st=document.createElement('div');st.className='zrstrip';st.setAttribute('aria-hidden','true');
+  for(const id of T){const i=document.createElement('i');if(id)i.style.background=f[id];st.appendChild(i)}
+  const lg=document.createElement('div');lg.className='zrleg zr1';const N=c.namen||{};
+  const g=document.createElement('span');g.textContent=t('grau = Leerlauf (unter 5 %)','grey = idle (below 5 %)');lg.appendChild(g);
+  for(const id of [...new Set(T.filter(Boolean))]){const s2=document.createElement('span'),q=document.createElement('i');q.style.background=f[id];
+    s2.append(q,zNm({name:(N[id]||[id])[0],en:(N[id]||[id,id])[1]}));lg.appendChild(s2)}
+  w.append(h,st,lg);r.appendChild(w);return r}
 const ZR_STROM={ok:'ok','zu niedrig':t('Spannung zu niedrig','voltage too low'),'war niedrig':t('Spannung war niedrig','voltage was low'),
   nein:t('nie gedrosselt','never throttled'),jetzt:t('drosselt gerade','throttling now'),'war an':t('war gedrosselt','was throttled')};
 const zRRole=c=>c.id==='modell'?t('Modell-Rechner','Model computer'):t('Panel-Rechner','Panel computer');
@@ -198,52 +207,65 @@ const zUsed=c=>c.ram_total!=null&&c.ram_frei!=null?c.ram_total-c.ram_frei:null;
 function zRTile(c){const bel=zUsed(c);
   const b=zCard(c.stufe,'mem',zRName(c),bel==null?'–':fmt(bel,'',1),bel==null?'':t(' GiB belegt',' GiB used'),
     ['CPU '+fmt(c.cpu,' %'),c.temp!=null?fmt(c.temp,' °C'):'',c.platte_pct!=null?t('Platte ','Disk ')+fmt(c.platte_pct,' %'):'',
-     c.spitze?t('am meisten: ','most: ')+zNm(c.spitze)+' '+fmt(c.spitze.pct,' %'):c.rechnen&&c.rechnen.length?t('Leerlauf','idle'):''].filter(Boolean).join(' · '),zRGo);
+     c.spitze?t('am meisten: ','most: ')+zNm(c.spitze)+' '+fmt(c.spitze.pct,' %'):(c.wer||{}).gemessen?t('Leerlauf','idle'):''].filter(Boolean).join(' · '),zRGo);
   if(bel!=null&&c.ram_total){const bar=document.createElement('span');bar.className='zbar';const f=document.createElement('i');
     f.style.width=Math.max(2,Math.min(100,Math.round(100*bel/c.ram_total)))+'%';bar.appendChild(f);b.appendChild(bar)}
   return b}
-function zRCard(c){const card=document.createElement('div');card.className='card zrcard';card.dataset.lvl=c.stufe;
+// Spiegel-Karten (Dominik 2026-10-20 „so umsetzen“, plan rechner-karten/plan.md): both cards have the same rows in the
+// same order, each on the height of its neighbour (CSS subgrid in #zrechner, also two columns on the phone): CPU,
+// Speicher (always free), GPU, Temperatur, Platte, Netz, the computer's own row (Sprachmodell / Panel hing with Strom),
+// Wer rechnet gerade, Dienste. What a computer lacks shows „–“; a curve row keeps its curve even before two values.
+const ZR_ZEILEN=11;   // h2, the line below it and the nine rows: #zrechner's subgrid spans them (--zrz in app.css)
+function zRCard(c){const card=document.createElement('div');card.className='card zrcard';card.dataset.lvl=c.stufe;card.dataset.id=c.id;
   const stale=c.id==='modell'&&!c.ok;card.classList.toggle('zrstale',stale);
   const h=document.createElement('h2'),nm=document.createElement('span'),pl=document.createElement('span');nm.textContent=zRName(c);
   pl.className='pill '+(c.stufe||'');pl.textContent=stale?t('antwortet nicht','not answering')+(c.stumm_s!=null?t(' seit ',' for ')+zDur(c.stumm_s):''):c.stufe==='ok'?t('alles gut','all good'):c.stufe==='bad'?t('Fehler','Error'):t('Hinweis','Note');
   h.append(nm,pl);const meta=document.createElement('div');meta.className='mut zrmeta';
   meta.textContent=[c.geraet,c.system,c.laeuft_s!=null?t('läuft seit ','up ')+zDur(c.laeuft_s):'',c.version].filter(Boolean).join(' · ');card.append(h,meta);
-  const K=c.kurven||{},hw=c.hinweise||[];
-  const row=(k,big,small,curve,max,lvl)=>{const r=document.createElement('div');r.className='zrrow';const tx=document.createElement('div');
+  const K=c.kurven||{},hw=c.hinweise||[],g=c.gpu||{},modell=c.id==='modell';
+  const row=(k,big,small,curve,max,lvl,cls)=>{const r=document.createElement('div');r.className='zrrow'+(cls?' '+cls:'');const tx=document.createElement('div');
     const kk=document.createElement('small');kk.textContent=k;const b=document.createElement('b');b.textContent=big;tx.append(kk,b);
-    if(small){const sm=document.createElement('small');sm.textContent=small;tx.appendChild(sm)}r.appendChild(tx);
-    if(curve&&curve.filter(x=>x!=null).length>1){const v=document.createElementNS('http://www.w3.org/2000/svg','svg');v.setAttribute('class','zrspark');v.setAttribute('aria-hidden','true');spark(v,curve,max);r.appendChild(v)}
-    else if(lvl){const d=document.createElement('span');d.className='zrdot';d.dataset.lvl=lvl;r.appendChild(d)}
+    b.title=big;const sm=document.createElement('small');sm.textContent=small||'\u00a0';sm.title=small||'';tx.appendChild(sm);r.appendChild(tx);
+    if(curve){const v=document.createElementNS('http://www.w3.org/2000/svg','svg');v.setAttribute('class','zrspark');v.setAttribute('aria-hidden','true');spark(v,curve,max);r.appendChild(v)}
+    else{const d=document.createElement('span');d.className='zrdot';d.dataset.lvl=lvl||'';r.appendChild(d)}
     card.appendChild(r)};
-  if(c.id==='modell'){const g=c.gpu||{};
-    row('GPU',fmt(g.util,' %'),[fmt(g.temp,' °C'),fmt(g.power,' W')].join(' · '),K.gpu,100);
-    row('Unified Memory',c.ram_frei==null?'–':fmt(c.ram_frei,t(' GiB frei',' GiB free'),1),c.ram_total!=null?t('von ','of ')+fmt(c.ram_total,' GiB',1)+t(' · Grenze 8 GiB',' · limit 8 GiB'):'',K.frei,c.ram_total)}
-  row('CPU',fmt(c.cpu,' %'),[c.kerne?c.kerne+t(' Kerne',' cores'):'',c.last!=null?t('Last ','load ')+fmt(c.last,'',2):''].filter(Boolean).join(' · '),K.cpu,100);
-  const wer=zRWer(c);if(wer)card.appendChild(wer);
-  if(c.id==='panel'){const bel=zUsed(c);
-    row(t('Arbeitsspeicher','Memory'),bel==null?'–':fmt(bel,t(' GiB belegt',' GiB used'),1),[c.ram_frei!=null?fmt(c.ram_frei,t(' GiB verfügbar',' GiB available'),1):'',
-      c.ram_cache!=null?t('Cache ','cache ')+fmt(c.ram_cache,' GiB',1):'',c.swap?t('Swap ','swap ')+fmt(c.swap,' GiB',1):''].filter(Boolean).join(' · '),
-      (K.frei||[]).map(x=>x==null||c.ram_total==null?null:c.ram_total-x),c.ram_total);
-    row(t('Temperatur','Temperature'),fmt(c.temp,' °C'),[c.luefter==null?'':c.luefter?t('Lüfter an','fan on'):t('Lüfter aus','fan off'),
-      c.temp_warn?t('Hinweis ab ','note from ')+c.temp_warn+' °C':''].filter(Boolean).join(' · '),K.temp,100);
-    const hg=c.haenger||{};   // the Hänge-Wächter (loopwacht.py): stalls of the panel in the last 24 hours
-    row(t('Panel hing','Panel stalled'),hg.jetzt_s?t('gerade ','now ')+hg.jetzt_s+' s':(hg.n||0)+t('-mal','×'),
-      hg.n?t('in 24 Std., längstens ','in 24 h, longest ')+hg.max_s+' s':t('in 24 Std. nie','never in 24 h'),null,null,hg.jetzt_s?'bad':hg.n?'warn':'ok')}
+  row('CPU',fmt(c.cpu,' %'),[c.kerne?c.kerne+t(' Kerne',' cores'):'',c.last!=null?t('Last ','load ')+fmt(c.last,'',2):''].filter(Boolean).join(' · '),K.cpu||[],100);
+  const bel=zUsed(c);
+  row(t('Speicher','Memory')+(modell?' · Unified Memory':''),c.ram_frei==null?'–':fmt(c.ram_frei,t(' GiB frei',' GiB free'),1),
+    [c.ram_total!=null?t('von ','of ')+fmt(c.ram_total,' GiB',1):'',bel!=null?fmt(bel,t(' belegt',' used'),1):'',c.ram_cache!=null?t('Cache ','cache ')+fmt(c.ram_cache,'',1):'',
+     c.swap?t('Swap ','swap ')+fmt(c.swap,'',1):'',modell?t('Grenze 8 GiB','limit 8 GiB'):''].filter(Boolean).join(' · '),K.frei||[],c.ram_total);
+  if(modell)row('GPU',fmt(g.util,' %'),g.power!=null?fmt(g.power,' W'):'',K.gpu||[],100);
+  else row('GPU','–',t('keine GPU','no GPU'),null,null,'','zrna');
+  const tp=c.temp??g.temp;
+  row(t('Temperatur','Temperature'),fmt(tp,' °C'),(modell?[c.temp!=null&&g.temp!=null?'GPU '+fmt(g.temp,' °C'):'']
+    :[c.luefter==null?'':c.luefter?t('Lüfter an','fan on'):t('Lüfter aus','fan off'),c.temp_warn?t('Hinweis ab ','note from ')+c.temp_warn+' °C':'']).filter(Boolean).join(' · '),K.temp||[],100);
   row(t('Platte','Disk'),fmt(c.platte_frei,t(' GB frei',' GB free')),c.platte_total!=null?t('von ','of ')+fmt(c.platte_total,' GB')+' · '+fmt(c.platte_pct,t(' % belegt',' % used')):'',
     null,null,c.platte_pct==null?'':hw.includes('platte_'+c.id)?'warn':'ok');
   row(t('Netz','Network'),!c.netz_mbit?'–':c.netz_mbit>=1000?fmt(c.netz_mbit/1000,' Gbit/s',c.netz_mbit%1000?1:0):fmt(c.netz_mbit,' Mbit/s'),
-    `↓ ${fmt(c.netz_rx_mbs,' MB/s',1)} ↑ ${fmt(c.netz_tx_mbs,' MB/s',1)}`,K.netz,null);
-  if(c.id==='modell')row(t('Sprachmodell','Language model'),c.llm||t('aus','off'),'',null,null,c.llm?'ok':'');
-  if(c.id==='panel'&&c.strom){const bad=c.strom.spannung==='zu niedrig'||c.strom.drossel==='jetzt';
-    row(t('Strom','Power'),bad?t('Problem','Problem'):'ok',[ZR_STROM[c.strom.spannung],ZR_STROM[c.strom.drossel]].filter(Boolean).join(' · '),null,null,bad?'bad':'ok')}
-  if((c.dienste||[]).length){const r=document.createElement('div');r.className='zrrow zrsvc';const k=document.createElement('small');k.textContent=t('Dienste','Services');
-    const w=document.createElement('div');w.className='zrchips';
-    for(const x of c.dienste){const sp=document.createElement('span');sp.dataset.lvl=x.state==='active'?'ok':x.state==='failed'?'bad':x.state==='activating'?'warn':'';
-      sp.textContent=zNm(x)||x.id;w.appendChild(sp)}
-    r.append(k,w);card.appendChild(r)}
+    `↓ ${fmt(c.netz_rx_mbs,' MB/s',1)} ↑ ${fmt(c.netz_tx_mbs,' MB/s',1)}`,K.netz||[],null);
+  if(modell)row(t('Sprachmodell','Language model'),c.llm||t('aus','off'),'',null,null,c.llm?'ok':'');
+  else{const hg=c.haenger||{},st=c.strom,bad=!!st&&(st.spannung==='zu niedrig'||st.drossel==='jetzt');   // the Hänge-Wächter (loopwacht.py) and the power
+    row(t('Panel hing','Panel stalled'),hg.jetzt_s?t('gerade ','now ')+hg.jetzt_s+' s':(hg.n||0)+t('-mal','×'),
+      [hg.n?t('in 24 Std., längstens ','in 24 h, longest ')+hg.max_s+' s':t('in 24 Std. nie','never in 24 h'),
+       st?t('Strom ','power ')+(bad?[ZR_STROM[st.spannung],ZR_STROM[st.drossel]].filter(x=>x&&x!=='ok').join(' · '):'ok'):''].filter(Boolean).join(' · '),
+      null,null,hg.jetzt_s||bad?'bad':hg.n?'warn':'ok')}
+  card.appendChild(zRWer(c));
+  const D=c.dienste||[],r=document.createElement('div');r.className='zrrow zrsvc';const k=document.createElement('small');
+  k.textContent=t('Dienste','Services')+' · '+D.filter(x=>x.state==='active').length+t(' von ',' of ')+D.length+t(' laufen',' running');
+  const w=document.createElement('div');w.className='zrchips';
+  for(const x of D){const sp=document.createElement('span');sp.dataset.lvl=x.state==='active'?'ok':x.state==='failed'?'bad':x.state==='activating'?'warn':'';
+    sp.textContent=zNm(x)||x.id;sp.title=sp.textContent;w.appendChild(sp)}
+  r.append(k,w);card.appendChild(r);
   return card}
-function zRechner(R){const box=$('zrechner'),h=$('zrechnerh');if(!box)return;box.hidden=h.hidden=!R.length;box.textContent='';
-  for(const c of R)box.appendChild(zRCard(c))}
+// a poll only puts in what changed (Richtlinie 6 „Ruhig, nichts springt“): same cards, same rows, each row that differs
+// is swapped in its place; new cards only when the computers change
+function zRechner(R){const box=$('zrechner'),h=$('zrechnerh');if(!box)return;box.hidden=h.hidden=!R.length;box.style.setProperty('--zrz',ZR_ZEILEN);
+  const neu=R.map(zRCard),alt=[...box.children];
+  if(alt.length!==neu.length||alt.some((c,i)=>c.dataset.id!==neu[i].dataset.id)){box.replaceChildren(...neu);return}
+  neu.forEach((n,i)=>zRSetzen(alt[i],n))}
+function zRSetzen(alt,neu){alt.className=neu.className;alt.dataset.lvl=neu.dataset.lvl;const N=[...neu.children];
+  N.forEach((x,i)=>{const a=alt.children[i];if(!a)alt.appendChild(x);else if(!a.isEqualNode(x))a.replaceWith(x)});
+  while(alt.children.length>N.length)alt.lastElementChild.remove()}
 // Zustand → Überblick → Rundlauf (rundlauf.py, plan verbesserungen 3a): the last real round trip through Sprechen,
 // Hören and the language model, each step in ms, the whole way with the curve of the last runs; a step that hakt is
 // red with a fixed word. Shown while Funktionen → Dienst-Wächter → Rundlauf prüfen is on. Numbers and fixed words only.

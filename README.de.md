@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.856** Rechner-Karten springen nicht mehr: beide Rechner mit denselben Zeilen auf gleicher Höhe nebeneinander (auch am Handy), „Wer rechnet gerade“ mit festen Zeilen; Steuerzentrale und iPhone gleich
 - **V01.0.855** Fix: iPhone-App baut wieder (GitHub-Lauf „iPhone app“); die neue Listen-Ansicht hatte einen Typnamen, den die App schon hatte
 - **V01.0.854** Listen bekommen eine eigene Seite im Menü (und in der iPhone-App unter Meine Sachen): eigene Listen wie Baumarkt anlegen, bei jedem Eintrag wer ihn wann und woher draufgesetzt hat, Abgehaktes 14 Tage unter „Zuletzt erledigt“ mit „Zurückholen“, Einkauf nach Abteilungen und mit Mengen, Einkauf auf Heute
 - **V01.0.853** E-Mail: die Knöpfe einer Mail in einer festen Leiste oben, Symbole mit Namen und Taste beim Drüberfahren, auf dem Handy und im iPhone die fünf häufigsten unten am Daumen; Kalender: Termine, die sich nicht ändern lassen, tragen ein 🔒 mit dem Grund, die Karte zeigt Notiz und Link des Termins
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.849** Spickzettel zum Ausdrucken: Ich → Was ich kann öffnet auf Deutsch oder Englisch zwei A4-Blätter mit allem, was du sagen kannst (nur Freigegebenes, das Stichwort markiert), immer neu aus den Regeln der Weiche erzeugt
 - **V01.0.848** Für dich Stufe 2: Knöpfe Erinnern, Eintragen, Antwort entwerfen und Kündigung entwerfen (Senden nur über die Vorschau), per Stimme „Was muss ich diese Woche erledigen?“ und „Nummer zwei ist erledigt“, Teil im Tagesbriefing, von selbst bei Fristen und Verdacht; im iPhone unter Heute → Für dich
 - **V01.0.847** Fix: „Morgenbriefing“ als ein Wort holt das echte Briefing, auch am Telefon
-- **V01.0.846** „Regel daraus …“ übernimmt auch den Betreff der Mail (ohne Re:/AW:/Fwd:, frei änderbar), im Panel und im iPhone
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

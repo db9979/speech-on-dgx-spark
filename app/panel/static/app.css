@@ -878,11 +878,25 @@ a.zcard,button.zcard{cursor:pointer}a.zcard:hover,button.zcard:hover{border-colo
 .zrchips span[data-lvl=ok]::before{background:var(--ok)}.zrchips span[data-lvl=warn]::before{background:var(--warn)}.zrchips span[data-lvl=bad]::before{background:var(--bad)}
 .zrstale .zrrow{opacity:.5}
 .zrwer{grid-template-columns:1fr}.zrl{display:grid;grid-template-columns:minmax(0,10em) minmax(0,1fr) 3.4em;gap:8px;align-items:center;font-size:13.5px;margin:2px 0}
-.zrl>span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.zrl.zrsub{padding-left:14px;font-size:12.5px;color:var(--mut)}
-.zrb{height:9px;background:var(--line);border-radius:5px;overflow:hidden}.zrb>i{display:block;height:100%;border-radius:5px}.zrl.zrsub .zrb{height:6px}
+.zrl>span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.zrb{height:9px;background:var(--line);border-radius:5px;overflow:hidden}.zrb>i{display:block;height:100%;border-radius:5px}
 .zrl>.p{text-align:right;font-variant-numeric:tabular-nums}.zrwer>div>small+small{margin-top:8px}
 .zrstrip{display:flex;height:14px;border-radius:4px;overflow:hidden;background:var(--line);margin-top:4px}.zrstrip>i{flex:1 1 0;min-width:0}
 .zrleg{display:flex;flex-wrap:wrap;gap:2px 12px;font-size:11.5px;color:var(--mut);margin-top:4px}.zrleg i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+/* Spiegel-Karten (Rechner-Karten, 2026-10-20): both cards with the same rows on the same height (subgrid, --zrz rows
+   from admin.js ZR_ZEILEN), two columns on the phone too; fixed lines in „Wer rechnet gerade“, legend, „darin“ and each value on one line (two
+   on the phone, the whole text in its title) */
+#zrechner{grid-template-rows:repeat(var(--zrz,11),auto);row-gap:0}
+#zrechner>.zrcard{display:grid;grid-template-rows:subgrid;grid-row:span var(--zrz,11);align-content:start;overflow:visible}
+#zrechner>.zrcard>h2{margin:0 0 4px}#zrechner .zrrow{align-items:start;align-content:start}#zrechner .zrrow>div>b,#zrechner .zrrow>div>small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.zrrow.zrna b{color:var(--mut);font-weight:600}
+.zrl.zr0{color:var(--mut)}.zrl.zrleer{visibility:hidden}.zrdarin{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:14px}
+.zrleg.zr1{flex-wrap:nowrap;overflow:hidden;white-space:nowrap}.zrleg.zr1>span{flex:none}
+#zrechner .zrchips{display:grid;grid-template-columns:repeat(auto-fill,minmax(9.5em,1fr))}#zrechner .zrchips span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:760px){#zrechner{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:8px}#zrechner>.zrcard{padding:12px 9px 10px 11px}
+  #zrechner>.zrcard>h2{flex-direction:column;align-items:flex-start;gap:3px;font-size:14px}#zrechner .zrmeta{font-size:11px}
+  #zrechner .zrrow{grid-template-columns:minmax(0,1fr);gap:2px;padding:7px 0}#zrechner .zrrow b{font-size:15px}#zrechner .zrrow>div>b+small{white-space:normal;overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;height:2.9em}#zrechner .zrspark{height:26px}#zrechner .zrdot{justify-self:start}
+  #zrechner .zrl{grid-template-columns:minmax(0,1fr) 3em;row-gap:2px;font-size:12px}#zrechner .zrl>.zrb{grid-column:1/-1;order:3;height:6px}
+  #zrechner .zrchips{grid-template-columns:minmax(0,1fr)}#zrechner .zrdarin{padding-left:0}}
 .zareas{columns:2 380px;column-gap:12px}.zareas>.card{break-inside:avoid;margin:0 0 12px}
 #zneed>h2,.zareas>.card>h2{display:flex;align-items:center;gap:10px}
 details.ztech{margin-top:4px}details.ztech>summary{cursor:pointer;font-weight:650;font-size:15px;padding:8px 2px;color:var(--mut)}details.ztech[open]>summary{margin-bottom:10px;color:var(--fg)}

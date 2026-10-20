@@ -15,6 +15,8 @@ computer's CPU (rechner.dienste_cpu, systemd's counters), the panel with its par
 the system; „spitze“ names the biggest for the tile, Live and the Steuerzentrale, the curve „top“ keeps it every 3 s
 for the strip of the last 20 minutes (below LEERLAUF_PCT nobody: idle). Names come only from DIENST_NAMEN and
 TEIL_NAMEN (de/en, also for the chips „Dienste“), the model computer's ids are data like its other values.
+Since 2026-10-20 (Spiegel-Karten) the card's list „wer“ stands still: always ZEILEN lines in a fixed order, chosen over
+the last 20 minutes, 0 % instead of gone, the rest always; both cards show the same rows on the same height.
 
 The warnings follow fixed rules (never a model): the panel computer TEMP_WARN °C or warmer (back below TEMP_OK),
 throttled or under-voltage now (the Raspberry Pi's firmware flags), less than RAM_MIN_GIB available memory; on either
@@ -51,6 +53,7 @@ ZAHLEN = {"cpu": (0, 100), "kerne": (0, 4096), "last": (0, 10000), "ram_total": 
 WORTE = ("name", "geraet", "system")
 LEERLAUF_PCT = 5       # % of the whole CPU: below it the biggest service does not count as working (grey in the strip)
 ZEILEN = 6             # services listed per card, the others count for the rest
+DARIN = 3              # the panel's biggest parts in its line „darin“
 REST_MIN = 0.5         # % below which no rest line is shown
 DIENST_ID = re.compile(r"[a-z][a-z0-9-]{0,23}")
 # the services' names (de, en): the ids rechner.dienste_cpu gives (speech-spark-<id>.service, qwen38, docker) and the
@@ -135,6 +138,36 @@ def rechnen(k, m):
     return liste
 
 
+def _reihe(i):
+    """The fixed place of a service in „Wer rechnet gerade“: the order of DIENST_NAMEN, an unknown id after them."""
+    keys = list(DIENST_NAMEN)
+    return (keys.index(i), "") if i in keys else (len(keys), i)
+
+
+def wer(k, m):
+    """„Wer rechnet gerade“ that stands still (Dominik 2026-10-20 „so umsetzen“, plan rechner-karten/plan.md): always
+    ZEILEN lines (None where nobody is), chosen by the share over the last 20 minutes and shown in the fixed order of
+    DIENST_NAMEN, each with its share now (0 while it rests), then the rest of the system, always; on the panel
+    computer its biggest DARIN parts for the line „darin“. A service that comes or goes only changes a line's name."""
+    d = (m or {}).get("dienste_cpu")
+    if not isinstance(d, dict):
+        return {"gemessen": False, "zeilen": [None] * ZEILEN, "rest": None, "darin": []}
+    with _lock:
+        v = list(_verlauf[k])
+    summe = dict(d)
+    for x in v:
+        for i, p in (x.get("d") or {}).items():
+            summe[i] = summe.get(i, 0) + p
+    wahl = sorted(sorted(summe, key=lambda i: (-summe[i], i))[:ZEILEN], key=_reihe)
+    zeilen = [{"id": i, **_name(DIENST_NAMEN, i), "pct": d.get(i, 0.0)} for i in wahl]
+    cpu = m.get("cpu")
+    rest = max(0.0, round(cpu - sum(x["pct"] for x in zeilen), 1)) if isinstance(cpu, (int, float)) else None
+    teile = m.get("teile") if k == "panel" and isinstance(m.get("teile"), dict) else {}
+    darin = [{"id": i, **_name(TEIL_NAMEN, i), "pct": p} for i, p in sorted(teile.items(), key=lambda x: (-x[1], x[0]))[:DARIN]]
+    return {"gemessen": True, "zeilen": zeilen + [None] * (ZEILEN - len(zeilen)),
+            "rest": None if rest is None else {"id": "rest", **_name(DIENST_NAMEN, "rest"), "pct": rest}, "darin": darin}
+
+
 def spitze(k, m):
     """The biggest service (the panel: its biggest part) when it takes at least LEERLAUF_PCT % of the CPU, else None."""
     liste = [x for x in rechnen(k, m) if x["id"] != "rest"]
@@ -171,7 +204,8 @@ def _nehmen(k, m, now, gpu=None):
         _verlauf[k].append({"t": now, "cpu": m.get("cpu"), "frei": m.get("ram_frei"), "temp": m.get("temp"),
                             "netz": round(rx + tx, 2) if rx is not None else None,
                             "gpu": (gpu or {}).get("util") if k == "modell" else None,
-                            "top": sp and sp["id"], "top_name": sp and (sp["name"], sp["en"])})
+                            "top": sp and sp["id"], "top_name": sp and (sp["name"], sp["en"]),
+                            "d": dict(m["dienste_cpu"]) if isinstance(m.get("dienste_cpu"), dict) else None})
     return True
 
 
@@ -312,7 +346,7 @@ def karte(k, now=None, mono=None):
         gpu = dict(_gpu)
     out = {"id": k, **{x: m.get(x) for x in (*ZAHLEN, *WORTE, "luefter") if x not in ("t", "netz_rx", "netz_tx", "strom")},
            "netz_rx_mbs": rx, "netz_tx_mbs": tx, "hinweise": sorted(w), "kurven": kurven(k),
-           "rechnen": rechnen(k, m), "spitze": spitze(k, m), "namen": namen(k)}
+           "wer": wer(k, m), "spitze": spitze(k, m), "namen": namen(k)}
     flags = m.get("strom")
     out["strom"] = None if flags is None else dict(zip(("spannung", "drossel"), rechner.strom_worte(flags)))
     if k == "modell":

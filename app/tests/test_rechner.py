@@ -322,6 +322,34 @@ class WerRechnet(unittest.TestCase):
         self.assertEqual(len(r), rechnerblick.ZEILEN + 1)                               # the others count for the rest
         self.assertEqual(r[-1], {"id": "rest", "name": "System und Rest", "en": "System and rest", "pct": 15.0})
 
+    def test_the_list_stands_still(self):
+        """Spiegel-Karten (Dominik 2026-10-20): „wer“ has always ZEILEN lines in the fixed order of DIENST_NAMEN, chosen
+        over the last 20 minutes; a service that rests stays at 0 %, a short peak of another does not push it out,
+        the rest is always there, the panel's biggest parts go to „darin“. Not measured: empty places, no guess."""
+        self.assertEqual(rechnerblick.wer("modell", messung()), {"gemessen": False, "zeilen": [None] * rechnerblick.ZEILEN,
+                                                                  "rest": None, "darin": []})
+        with mock.patch.object(steuer, "remote", return_value=True), mock.patch.object(steuer, "cached", return_value=None), \
+                mock.patch.object(steuer, "weg", return_value=False), mock.patch.object(steuer, "stumm_s", return_value=None):
+            runden = [{"panel": 20.0, "notasr": 3.0, "schirm": 1.0}] * 5 + [{"panel": 9.0, "turn": 30.0}]
+            for i, d in enumerate(runden):
+                pi = messung(t=50.0 + i, cpu=sum(d.values()) + 2, dienste_cpu=d)
+                with mock.patch.object(rechner, "messen", return_value=pi), \
+                        mock.patch.object(rechenteile, "messen", return_value={"anfragen": 5.0, "loopwacht": 0.1, "weitere": 2.0, "bg:Suchindex": 1.0}):
+                    rechnerblick.probe(now=1000.0 + 3 * i, mono=1000.0 + 3 * i)
+            w = rechnerblick.karte("panel", now=1018.0, mono=1018.0)["wer"]
+        self.assertTrue(w["gemessen"])
+        self.assertEqual(len(w["zeilen"]), rechnerblick.ZEILEN)
+        ids = [x and x["id"] for x in w["zeilen"]]
+        self.assertEqual(ids, ["panel", "turn", "notasr", "schirm", None, None])           # DIENST_NAMEN order, places kept
+        self.assertEqual([x["pct"] for x in w["zeilen"][:4]], [9.0, 30.0, 0.0, 0.0])       # resting: 0, not gone
+        self.assertEqual(w["rest"], {"id": "rest", "name": "System und Rest", "en": "System and rest", "pct": 2.0})
+        self.assertEqual([x["id"] for x in w["darin"]], ["anfragen", "weitere", "bg:Suchindex"])   # the DARIN biggest
+        many = {f"d{i}": 10.0 - i for i in range(9)}
+        w = rechnerblick.wer("modell", messung(cpu=60.0, dienste_cpu=many))
+        self.assertEqual([x["id"] for x in w["zeilen"]], [f"d{i}" for i in range(rechnerblick.ZEILEN)])
+        self.assertEqual(w["rest"]["pct"], 15.0)
+        self.assertEqual(w["darin"], [])                                                # parts only on the panel computer
+
     def test_the_strip_keeps_who_worked_most(self):
         with mock.patch.object(steuer, "remote", return_value=True), mock.patch.object(steuer, "cached", return_value=None), \
                 mock.patch.object(steuer, "weg", return_value=False), mock.patch.object(steuer, "stumm_s", return_value=None):

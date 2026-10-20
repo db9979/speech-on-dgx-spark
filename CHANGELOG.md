@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.856** · 2026-10-20 · Rechner-Karten springen nicht mehr: beide Rechner mit denselben Zeilen auf gleicher Höhe nebeneinander (auch am Handy), „Wer rechnet gerade“ mit festen Zeilen; Steuerzentrale und iPhone gleich
 - **V01.0.855** · 2026-10-20 · Fix: iPhone-App baut wieder (GitHub-Lauf „iPhone app“); die neue Listen-Ansicht hatte einen Typnamen, den die App schon hatte
 - **V01.0.854** · 2026-10-20 · Listen bekommen eine eigene Seite im Menü (und in der iPhone-App unter Meine Sachen): eigene Listen wie Baumarkt anlegen, bei jedem Eintrag wer ihn wann und woher draufgesetzt hat, Abgehaktes 14 Tage unter „Zuletzt erledigt“ mit „Zurückholen“, Einkauf nach Abteilungen und mit Mengen, Einkauf auf Heute
 - **V01.0.853** · 2026-10-20 · E-Mail: die Knöpfe einer Mail in einer festen Leiste oben, Symbole mit Namen und Taste beim Drüberfahren, auf dem Handy und im iPhone die fünf häufigsten unten am Daumen; Kalender: Termine, die sich nicht ändern lassen, tragen ein 🔒 mit dem Grund, die Karte zeigt Notiz und Link des Termins

@@ -212,8 +212,15 @@ def kopf(R, d, jetzt):
     R.hl(0, R.w - 1, 2, "d", "━")
 
 
-def bahn(R, x, w, top, bot, k, karte, live):
-    """One computer's frame with its numbers; returns the rows where the stages may go."""
+def spitze_text(karte):
+    """„▶ <the biggest service> N %“ or „▶ Leerlauf“ (rechnerblick.spitze)."""
+    sp = (karte or {}).get("spitze") or {}
+    return f"▶ {sp['name']} {zahl(sp.get('pct'))} %" if sp.get("name") else "▶ Leerlauf"
+
+
+def bahn(R, x, w, top, bot, k, karte, live, feld=0):
+    """One computer's frame with its numbers; returns the rows where the stages may go. „feld“: the width of the
+    biggest service, the same in both frames, so „Platte“ starts at the same place (Spiegel-Karten 2026-10-20)."""
     name = (karte or {}).get("name") or ("dieser Rechner" if k == "spark" else RECHNER.get(k, ""))
     titel = f"{name} · {RECHNER[k]}" if k in RECHNER else f"{name} · Panel und Modelle"
     weg_ = k == "modell" and karte and not karte.get("ok")
@@ -230,7 +237,8 @@ def bahn(R, x, w, top, bot, k, karte, live):
         c = karte or {}
         gpu = (c.get("gpu") or {}).get("util") if k == "modell" else None
         teile = [("CPU ", "m")] + balken(c.get("cpu"), n) + [(f" {zahl(c.get('cpu'))} %  ", "w")]
-        teile += ([("GPU ", "m")] + balken(gpu, n) + [(f" {zahl(gpu)} %", "w")]) if k == "modell" else [(f"{zahl(c.get('kerne'))} Kerne", "m")]
+        # Spiegel-Karten (Dominik 2026-10-20): both frames have the same lines and places, a GPU the Pi lacks is „–“
+        teile += ([("GPU ", "m")] + balken(gpu, n) + [(f" {zahl(gpu)} %", "w")]) if k == "modell" else [("GPU ", "m"), ("– keine", "m")]
         R.segs(i, top + 1, teile, x + w - 1)
         tot, frei = c.get("ram_total"), c.get("ram_frei")
         pct = 100 * (tot - frei) / tot if isinstance(tot, (int, float)) and isinstance(frei, (int, float)) and tot else None
@@ -240,14 +248,15 @@ def bahn(R, x, w, top, bot, k, karte, live):
         strom = c.get("strom") or {}
         lu = {True: "Lüfter an", False: "Lüfter aus"}.get(c.get("luefter"), "")
         hg = c.get("haenger") or {}   # the Hänge-Wächter (loopwacht.py): stalls of the panel in the last 24 hours
-        rest = " · ".join(p for p in (lu, f"Platte {zahl(c.get('platte_pct'))} %",
+        rest = " · ".join(p for p in (f"Platte {zahl(c.get('platte_pct'))} %", lu,
                                       f"Strom {strom.get('spannung')}" if strom else "",
                                       f"hing {hg['n']}-mal" if hg.get("n") else "") if p)
-        sp = c.get("spitze") or {}   # „Wer rechnet gerade“ (rechnerblick.spitze): the biggest service first
-        if weg_ or not sp.get("name"):
-            R.put(i, top + 3, kurz("nicht erreichbar" if weg_ else rest, w - 4), "r" if weg_ else "m")
+        # „Wer rechnet gerade“ (rechnerblick.spitze): the biggest service first, in a field as wide in both frames
+        feld = min(max(feld, len(spitze_text(c))) + 2, w - 4)
+        if weg_:
+            R.put(i, top + 3, kurz("nicht erreichbar", w - 4), "r")
         else:
-            R.segs(i, top + 3, [(f"▶ {sp['name']} {zahl(sp.get('pct'))} %", "y"), ("  " + rest, "m")], x + w - 1)
+            R.segs(i, top + 3, [(kurz(spitze_text(c), feld - 2).ljust(feld), "y" if (c.get("spitze") or {}).get("name") else "m"), (rest, "m")], x + w - 1)
         hist = (c.get("kurven") or {}).get("gpu" if k == "modell" else "cpu")
     R.put(i, top + 4, "20 min ", "m")
     R.put(i + 7, top + 4, linie(hist, w - 11, 0, 100), "g")
@@ -591,8 +600,9 @@ def bild(d, w, h, jetzt=None):
     else:
         lanes = [("spark", mx, M)]
     ln = []
+    feld = max([len(spitze_text(c)) for c in karten.values()] or [0])
     for k, x, lw in lanes:
-        a, b = bahn(R, x, lw, main_top, main_bot, k, karten.get(k), live)
+        a, b = bahn(R, x, lw, main_top, main_bot, k, karten.get(k), live, feld)
         ln.append((k, x, lw, a, b))
     stufen = [(k, n, s, wo if karten else "spark") for k, n, s, wo in STUFEN]
     lauf = gezeigt(d)
