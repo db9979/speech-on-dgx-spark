@@ -949,6 +949,48 @@ class Browser(unittest.TestCase):
         finally:
             helpers.set_config(write_help=False)
 
+    def test_listen_page(self):
+        """Listen (listen.js): the head of a list is one line beside its symbol (the title never breaks letter by
+        letter), the count is a number (never „NaN“), and the quick field, the items and the 14-day note stand below
+        the head, not in its row; on a computer and a phone, with the strict CSP, without sideways scrolling."""
+        import asyncio
+        import profiles
+        import tasks
+        me = next(u for u in profiles._load()["users"] if u["name"] == "Uitest")["id"]
+        asyncio.run(tasks.add(me, "einkauf", ["2 Milch", "Brot"]))
+
+        async def go():
+            async with async_playwright() as p:
+                for name, w, h in VIEWS:
+                    br, pg, errors = await self.page(p, w, h, csp=True)
+                    try:
+                        await pg.evaluate("showSec('listen')")
+                        await pg.wait_for_selector("#lstroot .ld-row", state="visible", timeout=20000)
+                        await pg.click("#lstroot .ld-row[data-l=einkauf]")
+                        await pg.wait_for_selector("#lstroot .lsthead h3", state="visible", timeout=20000)
+                        title = await pg.evaluate("(()=>{const r=document.querySelector('#lstroot .lsthead h3')"
+                                                  ".getBoundingClientRect();return [r.width,r.height]})()")
+                        self.assertGreater(title[0], 40, f"{name}: Titel zu schmal {title}")
+                        self.assertLess(title[1], 40, f"{name}: Titel bricht um {title}")
+                        self.assertNotIn("NaN", await pg.inner_text("#lstroot"), name)
+                        inside = await pg.evaluate("!!document.querySelector('#lstroot .lsthead .lstquick,"
+                                                   "#lstroot .lsthead .lstitem,#lstroot .lsthead .ld-empty')")
+                        self.assertFalse(inside, f"{name}: Eingabe und Einträge stehen im Kopf")
+                        below = await pg.evaluate("document.querySelector('#lstroot .lstquick').getBoundingClientRect().top"
+                                                  ">=document.querySelector('#lstroot .lsthead').getBoundingClientRect().bottom-1")
+                        self.assertTrue(below, f"{name}: das Eingabefeld steht nicht unter dem Kopf")
+                        over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                        self.assertLessEqual(over, 1, f"{name}: {over}px zu breit")
+                        self.assertEqual(errors, [], name)
+                    finally:
+                        await br.close()
+        try:
+            self.run_async(go())
+        finally:
+            d = tasks._load(me)
+            d["items"] = []
+            tasks._save(me, d)
+
     def test_praxistest_page(self):
         """Zustand → Praxistest (praxistest.js, V01.0.697): the newest points open on top, „Klappt“ puts a chip on
         the point, „Problem“ shows the way to the logs as a jump link, the old points go with one button; at 320, 390

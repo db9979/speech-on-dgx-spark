@@ -76,8 +76,7 @@ function lstDetail(w){const box=w.querySelector('.lstdet'),l=lstList();box.hidde
   else body=l.items.map(item).join('');
   const done=l.done||[],more=LST.allDone?done:done.slice(0,10);
   box.innerHTML=(shown?`<button type="button" class="b ld-back" data-k="back">‹ ${esc(t('Listen','Lists'))}</button>`:'')+
-    `<div class="lsthead"><span class="ld-ico lstico" aria-hidden="true">${esc(l.icon)}</span><div class="ld-mid"><h3>${esc(lstName(l))}</h3><small class="mut">${esc(lstSub(l))}</small></div>`+
-+`</div>`+
+    `<div class="lsthead"><span class="ld-ico lstico" aria-hidden="true">${esc(l.icon)}</span><div class="ld-mid"><h3>${esc(lstName(l))}</h3><small class="mut">${esc(lstSub(l))}</small></div></div>`+
     (LST.form&&!LST.form.make?lstFormHtml():'')+
     (LST.ask?`<div class="ic-danger"><div class="ic-mid"><b>${esc(t('Liste löschen?','Delete the list?'))}</b><span>${esc(t('„','"')+l.name+t('“ und ihre ','" and its ')+(l.items.length+(l.done||[]).length)+t(' Einträge sind dann weg.',' entries are gone then.'))}</span></div><button class="b ic-red" type="button" data-k="dropyes">${esc(t('Löschen','Delete'))}</button><button class="b" type="button" data-k="dropno">${esc(t('Abbrechen','Cancel'))}</button></div>`:'')+
     (l.error?`<div class="note warn">${esc(t('Nicht erreicht: ','Not reached: ')+l.error)}</div>`:'')+

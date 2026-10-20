@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.859** Lists page: the head of a list is one line again (the title broke letter by letter, "NaN" stood instead of the count), the input and entries stand below it; browser test for it
 - **V01.0.858** Fix: GitHub run "Tests" green again; the new test of the computer cards allows 1 px rounding (GitHub's fonts) and measures both states in one go, without a race with the page's own poll; the test "a security point does not turn Zustand red" checks on a status of its own
 - **V01.0.857** For you: reads anew at once when a new mail comes (with "New mail at once"), and a brand only in the subject of a genuine, verified mail (say o2 with Netflix) is no longer a phishing suspicion
 - **V01.0.856** Computer cards no longer jump: both computers with the same rows at the same height side by side (also on the phone), „Wer rechnet gerade“ with fixed lines; control centre and iPhone alike
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.852** New mail at once: the Spark keeps the inbox of profiles reading their mail open with IMAP IDLE; new mail is on the E-mail page within seconds and the rules act at once; at most 4 connections, admin switch, off
 - **V01.0.851** What I know about you (stages 3 and 4): interests with evidence only after "Right", "More of this" on the card, recurring bills with a monthly reminder, week and month sum from checked amounts, weekly review on Sundays, at most one web tip a day with only the word; iPhone and CarPlay
 - **V01.0.850** Status → Architecture has a new page "Security": how all layers of protection work together (the model proposes, the panel decides), with one question's way through every check, roles, borders and code; new rule: it is updated with every change of a protection rule
-- **V01.0.849** Cheat sheet to print: Me → What I can do opens two A4 sheets in German or English with everything you can say (only what is released, the key word marked), always built fresh from the routing rules
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.859** · 2026-10-20 · Seite Listen: der Kopf einer Liste ist wieder eine Zeile (der Titel brach Buchstabe für Buchstabe um, statt der Zahl stand „NaN“), Eingabe und Einträge stehen darunter; Browser-Test dafür
 - **V01.0.858** · 2026-10-20 · Fix: GitHub-Lauf „Tests“ wieder grün; der neue Test der Rechner-Karten erlaubt 1 px Rundung (Schrift auf GitHub) und misst beide Stände in einem Zug, ohne Wettlauf mit der eigenen Abfrage der Seite; der Test „Sicherheitspunkt macht Zustand nicht rot“ prüft auf eigenem Stand statt auf dem zufälligen Zustand des Test-Panels
 - **V01.0.857** · 2026-10-20 · Für dich: liest bei einer neuen Mail sofort neu (mit „Neue Mails sofort“), und eine Marke nur im Betreff einer echten, bestätigten Mail (etwa o2 mit Netflix) ist kein Phishing-Verdacht mehr
 - **V01.0.856** · 2026-10-20 · Rechner-Karten springen nicht mehr: beide Rechner mit denselben Zeilen auf gleicher Höhe nebeneinander (auch am Handy), „Wer rechnet gerade“ mit festen Zeilen; Steuerzentrale und iPhone gleich
