@@ -356,12 +356,14 @@ class Page(unittest.TestCase):
         asyncio.run(go())
 
     def test_folders_and_many_from_the_page(self):
-        """Mailclient Stufe A: the folder tree in the list's place, a folder opened, two mails ticked and marked read."""
+        """Mailclient Stufe A: the folder tree left of the list, a smart mailbox, a folder opened, two mails ticked after
+        „Auswählen“ and marked read."""
         from tests.test_ui_browser import Browser, async_playwright
         b = Browser("run")
         b.port = self.port
         fill()
         FMB.put("Projekte", helpers.box_mail("Bob <bob@example.de>", "Plan", "Hier der Plan.", mid="<ord-3@x>"))
+        FMB.boxes["INBOX"][1]["seen"] = True   # one read, one unread (the smart mailbox „Ungelesen“)
         postfach._trees.clear()
 
         async def go():
@@ -377,17 +379,29 @@ class Page(unittest.TestCase):
                     await pg.evaluate("MAIL_ON=true;ORD_ON=true;POST.box=null;POST.tree=null;POST.pick=[];const v=$('postview');if(v)v.remove();"
                                       "postStart({profile:PROFILE,mail:true});icTabSet('post','show');goSec('post');postOpen()")
                     await b.until(pg, "!POST.busy&&!!POST.data&&POST.data.items.length===2")
-                    # the folders stand right of the list in a box of their own (Dominik 2026-10-20), the list stays
+                    # the mailboxes and folders stand left of the list like Apple Mail (Apple-Stil „1a“), the list stays
                     await pg.evaluate("POST.fopen=false;postDraw()")
                     await pg.click("#postview [data-k=tree]")
                     await b.until(pg, "!!document.querySelector('#postview .postfold [data-f=Projekte]')")
                     self.assertEqual(await pg.evaluate("document.querySelectorAll('#postview .ld-list [data-id]').length"), 2)
+                    self.assertLess(await pg.evaluate("document.querySelector('#postview .postfold').getBoundingClientRect().right"),
+                                    await pg.evaluate("document.querySelector('#postview .ld-list').getBoundingClientRect().left"))
+                    # a smart mailbox: „Ungelesen“ lists only the unread one, a second tap shows all again
+                    await pg.click("#postview .postfold [data-smart=unread]")
+                    await b.until(pg, "!POST.busy&&POST.unread&&!!POST.data&&POST.data.items.length===1")
+                    self.assertIn("Ungelesen", await pg.inner_text("#postview .ld-list .posthead"))
+                    await pg.click("#postview .postfold [data-smart=unread]")
+                    await b.until(pg, "!POST.busy&&!POST.unread&&!!POST.data&&POST.data.items.length===2")
                     self.assertEqual(await pg.evaluate("document.querySelectorAll('#postview .postfold [data-fa]').length"), 1)
                     await pg.click("#postview .postfold [data-f=Projekte]")
                     await b.until(pg, "!POST.busy&&!!POST.data&&POST.data.folder==='Projekte'&&POST.data.items.length===1")
                     self.assertIn("Projekte", await pg.inner_text("#postview .ld-list .posthead"))
                     await pg.click("#postview .postfold [data-all]")
                     await b.until(pg, "!POST.busy&&!!POST.data&&!POST.data.folder&&POST.data.items.length===2")
+                    # ticks only after „Auswählen“ (Apple-Stil „1a“), the rows stay calm otherwise
+                    self.assertEqual(await pg.evaluate("document.querySelectorAll('#postview .ld-list [data-pick]').length"), 0)
+                    await pg.click("#postview [data-k=pickmode]")
+                    await b.until(pg, "document.querySelectorAll('#postview .ld-list [data-pick]').length===2")
                     for i in range(2):
                         await pg.locator("#postview .ld-list [data-pick]").nth(i).check()
                         await b.until(pg, f"POST.pick.length==={i + 1}")

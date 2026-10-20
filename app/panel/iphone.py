@@ -133,7 +133,7 @@ THINGS = {
     # Kalender-Server (kalenderserver.py): see, make (with a fresh code) and delete the app password for calendar apps
     "calserver": ((("GET", "POST", "DELETE"), r"/api/profile/calserver"),),
     # E-Mail: the inbox and one mail as plain text (stays unread); ordering and sending each with their own function
-    "mail": ((("GET",), r"/api/profile/mail/(?:inbox|message)"),),
+    "mail": ((("GET",), r"/api/profile/mail/(?:inbox|message|view|bild)"),),
     "mailmanage": ((("GET",), r"/api/profile/mail/(?:folders|tree|folder|file)"),
                    (("POST",), r"/api/profile/mail/(?:acts?|acts/back|folder/(?:new|rename|remove))"),
                    (("GET", "POST"), r"/api/profile/mail/rules(?:/test|/order)?"), (("POST",), r"/api/profile/mail/rules/never"),

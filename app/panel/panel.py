@@ -148,10 +148,11 @@ import praxistest  # noqa: E402
 import kalenderserver  # noqa: E402
 import zustellung  # noqa: E402
 import geteilt  # noqa: E402
+import mailansicht  # noqa: E402
 
 # no /docs, /redoc or /openapi.json: a map of every path for guests, and Swagger from a CDN
 app = FastAPI(title="Speech on DGX Spark", docs_url=None, redoc_url=None, openapi_url=None)
-for _module in (account, admin, chat, chats, chatsec, verbund, anrufe, update, system, proactive, room, roomlive, tidy, mailstil, fuerdich, ichweiss, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, terminal, android, appupdate, appmerken, pruefzugang, apns, transit, feeds, logfilter, agent, auftragsplan, images, messages, intent, wissen, tracelog, lokal, features, remarkable, rmplus, rmpapier, join, onboard, hintergrund, stufe, today, offsite, doclingdienst, suchpruefung, wissensbuch, mcpserver, meinmcp, live, hamelden, notaus, hilfe, tipps, saetze, spickzettel, schreib, begleiter, fernsicht, systemone, geraeteupdate, meldung, ghtoken, docmake, weiche, weiche_abstimmen, dienstwacht, wartung, faelle, berater, speicher, nashilfe, nas, nasquelle, auslassen, nasablage, naszustand, gehaeuse, schirm, verlauf, klaeren, technik, bilder, musik, verbrauch, modellseite, werkstattseite, praxistest, telefon, telefon_ich, kalenderserver, zustellung, geteilt, vorgaenge):
+for _module in (account, admin, chat, chats, chatsec, verbund, anrufe, update, system, proactive, room, roomlive, tidy, mailstil, fuerdich, ichweiss, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, terminal, android, appupdate, appmerken, pruefzugang, apns, transit, feeds, logfilter, agent, auftragsplan, images, messages, intent, wissen, tracelog, lokal, features, remarkable, rmplus, rmpapier, join, onboard, hintergrund, stufe, today, offsite, doclingdienst, suchpruefung, wissensbuch, mcpserver, meinmcp, live, hamelden, notaus, hilfe, tipps, saetze, spickzettel, schreib, begleiter, fernsicht, systemone, geraeteupdate, meldung, ghtoken, docmake, weiche, weiche_abstimmen, dienstwacht, wartung, faelle, berater, speicher, nashilfe, nas, nasquelle, auslassen, nasablage, naszustand, gehaeuse, schirm, verlauf, klaeren, technik, bilder, musik, verbrauch, modellseite, werkstattseite, praxistest, telefon, telefon_ich, kalenderserver, zustellung, geteilt, vorgaenge, mailansicht):
     app.include_router(_module.router)
 app.middleware("http")(update_lock)
 
@@ -191,7 +192,7 @@ SECURITY_HEADERS = {
     # iPhone app needs them). Pictures and sound also from data:/blob: (recordings, QR codes, the face).
     "Content-Security-Policy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
                                "img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; font-src 'self'; "
-                               "worker-src 'self'; frame-src 'none'; frame-ancestors 'self'; base-uri 'self'; "
+                               "worker-src 'self'; frame-src 'self'; frame-ancestors 'self'; base-uri 'self'; "
                                "object-src 'none'; form-action 'self'",
 }
 

@@ -53,6 +53,7 @@ Go through before every commit. In the answer to Dominik briefly name which poin
 - [ ] `subprocess` only with list arguments, never `shell=True`, `eval` or `exec`. No `pickle` and no `allow_pickle` on outside data.
 - [ ] IMAP values only from printable ASCII without CR/LF, quoted. (A Message-ID with `=0D=0A`)
 - [ ] HTML is built via `textContent` or `esc()` plus `data-` attributes, never via inline `onclick` with values.
+- [ ] HTML from outside (a mail) only as cleaned on the Spark (`mailansicht.clean`, a fixed list of allowed tags), in a `sandbox` frame without script with its own CSP; nothing loads from outside without the own click, links only after the question with the real address.
 - [ ] Configuration values are checked the same way when saving, when restoring and in `install.sh`. In Bash only take over digits or fixed values.
 
 ## Secrets and logs
@@ -106,6 +107,7 @@ Every change is checked not only against the traps above, but also against wheth
 **Browser**
 - [ ] Strict CSP (`script-src 'self'`, no `unsafe-eval`, no inline scripts), `frame-ancestors`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`, `Cross-Origin-Opener-Policy`.
 - [ ] Model output and outside texts are never executed as HTML in the interface.
+- [ ] Outside HTML (mail) only cleaned, in a `sandbox` frame without `allow-scripts` with its own CSP (`default-src 'none'`), outside pictures only through the Spark after the own click, the picture type by its first bytes, never SVG.
 
 **Supply chain and operation**
 - [ ] New packages with version and hash in the lock; new actions pinned by SHA; adopt Dependabot alerts promptly.

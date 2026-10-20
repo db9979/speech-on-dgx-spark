@@ -1341,9 +1341,11 @@ def snapshot(view="admin", now=None):
         post_idle = mailidle.for_live()
         import mailvorrat
         post_supply = mailvorrat.for_live()
+        import mailansicht
+        post_view = mailansicht.counts()
     except Exception:
         kal, kal_page, post_page, post_sent, post_files, post_del = {"on": False}, 0, 0, 0, 0, 0
-        post_idle = {}
+        post_idle, post_view = {}, {}
         post_rules = {}
         post_supply = {}
     try:
@@ -1496,6 +1498,8 @@ def snapshot(view="admin", now=None):
                          + (f", heute {post_rules['taken']} Mails einsortiert" if post_rules.get("taken") else ""))
         if x["id"] == "mail" and post_rules.get("hints"):   # Regel-Vorschlag: hints shown today (a number)
             x["sub"] += f" · heute {post_rules['hints']} Regel-Vorschläge"
+        if x["id"] == "mail" and post_view.get("html"):   # Apple-Stil „2a“: mails shown formatted, pictures from outside loaded (numbers)
+            x["sub"] += f" · heute {post_view['html']} formatiert gezeigt" + (f", {post_view['bilder']} Bilder von außen geladen" if post_view.get("bilder") else "")
         if x["id"] == "mail" and post_files:     # Anhang laden: attachments fetched today (a number, never which)
             x["sub"] += f" · heute {post_files} Anhänge geladen"
         if x["id"] == "mail" and post_idle.get("on"):   # Neue Mails sofort: IDLE connections, new mails today (numbers)

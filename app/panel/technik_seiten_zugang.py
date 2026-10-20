@@ -396,7 +396,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ zugang (guard, core, profiles, features)
     "zugang": {
-        "stand": "223be6c005",
+        "stand": "00c2b17903",
         "bezug": {
             "guard.MAX_FAILS": ["s2", "s3"], "guard.MAX_NAME_FAILS": ["s2", "s3"], "guard.LOCK_FIRST": ["s2"],
             "guard.DAY_FAILS": ["s2", "s3"], "guard.failed": ["s3"], "guard.succeeded": ["s5"],
@@ -621,11 +621,11 @@ SEITEN = {
 
     # ------------------------------------------------------------------ sicherheit (the model as a whole)
     "sicherheit": {
-        "stand": "485b97a0df",
+        "stand": "9dee89b8d4",
         "bezug": {
             "features.blocked": ["s5"], "geteilt.put": ["s5"], "core.confirm_code": ["s3", "s8"], "core.CONFIRM_WINDOW": ["s3"], "guard.Slot": ["s3"],
             "notaus.STAGE": ["s2"], "vault.seal": ["s10"], "tarswart.check": ["s3"], "tarswart.COMMANDS": ["s3"],
-            "netguard.allowed": ["s6"], "chat.LOCKED_OUTSIDE": ["s6"], "regeln": ["s4", "s5"],
+            "netguard.allowed": ["s6"], "chat.LOCKED_OUTSIDE": ["s6"], "mailansicht.clean": ["s6"], "regeln": ["s4", "s5"],
         },
         "kurz": ("Wie die Schutzschichten des Spark zusammenspielen. Der Grundsatz: das Sprachmodell schlägt vor, das Panel "
                  "entscheidet. Rechte, Sperren, Handlungen und Grenzen regelt das Panel mit festen Regeln im Code; was von "
@@ -690,10 +690,16 @@ SEITEN = {
               ("chat.wrap_outside", "chat.wrap_outside"),
               ("Was ein Werkzeug von außen liest, kommt als markierter Datenblock zum Modell. Ab da sind "
                "{chat.LOCKED_OUTSIDE|anzahl} handelnde Werkzeuge gesperrt, auch im nächsten Zug, und nichts davon wird ins "
-               "Gedächtnis gelernt. Verbindungen nach außen laufen nur über den Wächter (netguard.allowed).",
+               "Gedächtnis gelernt. Verbindungen nach außen laufen nur über den Wächter (netguard.allowed). Eine Mail mit "
+               "HTML zeigt die Seite nur so, wie der Spark sie bereinigt hat (mailansicht.clean: feste Liste erlaubter "
+               "Tags, kein Skript), in einem Rahmen ohne Skript mit eigener CSP; Bilder von außen erst nach eigenem Klick "
+               "über den Wächter, ein Link erst nach der Frage mit seiner echten Adresse.",
                "What a tool reads from outside reaches the model as a marked block of data. From then on "
                "{chat.LOCKED_OUTSIDE|anzahl} acting tools are locked, in the next turn too, and nothing of it is learned into "
-               "memory. Connections to the outside go only through the guard (netguard.allowed).")),
+               "memory. Connections to the outside go only through the guard (netguard.allowed). A mail with HTML is shown "
+               "only as the Spark cleaned it (mailansicht.clean: a fixed list of allowed tags, no script), in a frame "
+               "without script with its own CSP; pictures from outside only after the own click and through the guard, a "
+               "link only after the question with its real address.")),
             S("s7", "schritt", ("Sprachmodell schlägt vor", "The language model proposes"),
               ("nur angebotene Werkzeuge", "only offered tools"),
               ("Das Modell formuliert und wählt aus dem, was nach den Schritten davor übrig ist. Ruft es ein Werkzeug, das "
@@ -801,6 +807,7 @@ SEITEN = {
             ("features.blocked", ("Sperre einzelner Profile", "block of single profiles")),
             ("geteilt.put", ("Teilen mit einem anderen Profil, zurückziehen wirkt sofort", "share with another profile, taking back works at once")),
             ("chat.wrap_outside", ("Text von außen als Datenblock", "outside text as a block of data")),
+            ("mailansicht.clean", ("HTML einer Mail nur bereinigt, ohne Skript und ohne Laden von außen", "a mail's HTML only cleaned, without script and without loads from outside")),
             ("netguard.allowed", ("ob eine Verbindung nach außen sein darf", "whether a connection out may happen")),
             ("answercheck.unsupported", ("Zahl ohne Quelle fällt heraus", "a figure without a source is dropped")),
             ("textnorm.hide_secrets", ("Geheimnisse werden nie gesprochen", "secrets are never spoken")),

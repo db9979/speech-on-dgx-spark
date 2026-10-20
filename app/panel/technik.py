@@ -151,6 +151,7 @@ MODULE = {
     "mailregeln": ("dienste", "Mail-Regeln der Seite E-Mail: wenn Absender/Betreff, dann Ordner, gelesen, markieren; nie löschen; Regel-Vorschlag"),
     "ichweiss": ("dienste", "Was ich über dich weiß: Interessen mit Beleg, Wiederkehrendes, Woche, Monat und ein Netz-Tipp am Tag"),
     "fuerdich": ("dienste", "Für dich: findet Rechnungen, Verträge, Bestellungen, Angebote, offene Antworten und Phishing in den eigenen Mails"),
+    "mailansicht": ("dienste", "Mail formatiert (Seite E-Mail, iPhone): HTML bereinigt, Rahmen ohne Skript, Bilder von außen nur per Klick"),
     "mailvorrat": ("dienste", "Mail-Vorrat: neueste Kopfzeilen und Texte versiegelt im Profil, Antwort mit Stand bei Ausfall"),
     "vorrat": ("dienste", "Vorrat: versiegelter Vorrat eines Profils auf der Platte, die eine Bauweise für alle Dienste"),
     "mailidle": ("dienste", "Neue Mails sofort: IMAP IDLE für Profile, die ihre Mails gerade lesen, höchstens 4 Verbindungen"),

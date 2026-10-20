@@ -1517,7 +1517,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": ": Jede Funktion ist aus, bis der Admin sie freigibt; dann gilt sie für jedes Profil, außer der Admin sperrt einzelne (features.blocked). Was nicht erlaubt ist, wird gar nicht erst als Werkzeug angeboten. 6. Fremdes bleibt Daten: Was ein Werkzeug von außen liest, kommt als markierter Datenblock zum Modell. Ab da sind 13 handelnde Werkzeuge gesperrt, auch im nächsten Zug, und nichts davon wird ins Gedächtnis gelernt. Verbindungen nach außen laufen nur über den Wächter (netguard.allowed). 7. Sprachmodell schlägt vor: Das Modell formuliert und wählt aus dem, was nach den Schritten davor übrig ist. Ruft es ein Werkzeug, das nicht angeboten war, läuft es nicht. 8. Ändert es etwas?: Lesen geht sofort. Wer etwas ändert (Licht, Mail senden, Termin, Anruf), legt einen Vorschlag ab; er läuft erst nach einem schlichten „Ja“ auf genau diesen Vorschlag, vom selben Gerät. Home Assistant nur aus einer Allowlist. Mail löscht nur die Person selbst (in den Papierkorb, endgültig nur nach Rückfrage), nie das Modell. Knöpfe auf Karten im Gespräch und auf der Seite Offen sind feste Namen (vorgaenge.AKTIONEN); jeden Druck prüft das Panel (Besitzer, Art, Stand, Notaus), und was senden oder eintragen würde,"
+"text": ": Jede Funktion ist aus, bis der Admin sie freigibt; dann gilt sie für jedes Profil, außer der Admin sperrt einzelne (features.blocked). Was nicht erlaubt ist, wird gar nicht erst als Werkzeug angeboten. 6. Fremdes bleibt Daten: Was ein Werkzeug von außen liest, kommt als markierter Datenblock zum Modell. Ab da sind 13 handelnde Werkzeuge gesperrt, auch im nächsten Zug, und nichts davon wird ins Gedächtnis gelernt. Verbindungen nach außen laufen nur über den Wächter (netguard.allowed). Eine Mail mit HTML zeigt die Seite nur so, wie der Spark sie bereinigt hat (mailansicht.clean: feste Liste erlaubter Tags, kein Skript), in einem Rahmen ohne Skript mit eigener CSP; Bilder von außen erst nach eigenem Klick über den Wächter, ein Link erst nach der Frage mit seiner echten Adresse. 7. Sprachmodell schlägt vor: Das Modell formuliert und wählt aus dem, was nach den Schritten davor übrig ist. Ruft es ein Werkzeug, das nicht angeboten war, läuft es nicht. 8. Ändert es etwas?: Lesen geht sofort. Wer etwas ändert (Licht, Mail senden, Termin, Anruf), legt einen Vorschlag ab; er läuft erst nach einem schlichten „Ja“ auf genau diesen Vorschlag, vom selben Gerät. Home Assistant nur aus einer Allo"
 },
 {
 "lang": "de",
@@ -1525,7 +1525,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": " öffnet nur die Seite, auf der die Person es selbst tut. 9. Antwort prüfen: Zeiten, Daten und Beträge, die nirgends in den Quellen stehen, fallen heraus (answercheck.unsupported). Passwörter, Codes und Schlüssel werden nie gesprochen (textnorm.hide_secrets). Die Oberfläche zeigt Modelltext nie als HTML. 10. Spuren: Logs nur mit festen Wörtern und Zahlen. Änderungen an Zugängen und Schutz schreibt guard.log mit einer SHA-256-Kette; der Wachposten meldet Auffälliges an die Admins. Geheimnisse liegen versiegelt im vault (vault.seal)."
+"text": "wlist. Mail löscht nur die Person selbst (in den Papierkorb, endgültig nur nach Rückfrage), nie das Modell. Knöpfe auf Karten im Gespräch und auf der Seite Offen sind feste Namen (vorgaenge.AKTIONEN); jeden Druck prüft das Panel (Besitzer, Art, Stand, Notaus), und was senden oder eintragen würde, öffnet nur die Seite, auf der die Person es selbst tut. 9. Antwort prüfen: Zeiten, Daten und Beträge, die nirgends in den Quellen stehen, fallen heraus (answercheck.unsupported). Passwörter, Codes und Schlüssel werden nie gesprochen (textnorm.hide_secrets). Die Oberfläche zeigt Modelltext nie als HTML. 10. Spuren: Logs nur mit festen Wörtern und Zahlen. Änderungen an Zugängen und Schutz schreibt guard.log mit einer SHA-256-Kette; der Wachposten meldet Auffälliges an die Admins. Geheimnisse liegen versiegelt im vault (vault.seal)."
 },
 {
 "lang": "de",
@@ -1565,7 +1565,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/notaus.py blocks: ob eine Notaus-Stufe diese Art Arbeit anhält (Schritt 2) - app/panel/guard.py limit: Rate-Limit pro Adresse und Profil (Schritt 3) - app/panel/guard.py Slot: Höchstzahl gleichzeitiger Anfragen (Schritt 3) - app/panel/core.py confirm_code: frischer Code oder Passkey für heikle Wege (Schritt 3, Schritt 8) - app/tarswart.py check: prüft jeden Befehl an den Wärter (Schritt 3) - app/panel/chat_turn.py shared_stranger: fremde Stimme am geteilten Lautsprecher (Schritt 4) - app/panel/features.py allowed: Freigabe des Admins, gilt für jedes Profil (Schritt 5) - app/panel/features.py blocked: Sperre einzelner Profile (Schritt 5) - app/panel/geteilt.py put: Teilen mit einem anderen Profil, zurückziehen wirkt sofort (Schritt 5) - app/panel/chat.py wrap_outside: Text von außen als Datenblock (Schritt 6) - app/panel/netguard.py allowed: ob eine Verbindung nach außen sein darf (Schritt 6) - app/panel/answercheck.py unsupported: Zahl ohne Quelle fällt heraus (Schritt 9) - app/textnorm.py hide_secrets: Geheimnisse werden nie gesprochen (Schritt 9) - app/panel/guard.py log: Änderungsprotokoll mit Prüfkette (Schritt 10) - app/panel/vault.py seal: Geheimnisse versiegelt a"
+"text": "- app/panel/notaus.py blocks: ob eine Notaus-Stufe diese Art Arbeit anhält (Schritt 2) - app/panel/guard.py limit: Rate-Limit pro Adresse und Profil (Schritt 3) - app/panel/guard.py Slot: Höchstzahl gleichzeitiger Anfragen (Schritt 3) - app/panel/core.py confirm_code: frischer Code oder Passkey für heikle Wege (Schritt 3, Schritt 8) - app/tarswart.py check: prüft jeden Befehl an den Wärter (Schritt 3) - app/panel/chat_turn.py shared_stranger: fremde Stimme am geteilten Lautsprecher (Schritt 4) - app/panel/features.py allowed: Freigabe des Admins, gilt für jedes Profil (Schritt 5) - app/panel/features.py blocked: Sperre einzelner Profile (Schritt 5) - app/panel/geteilt.py put: Teilen mit einem anderen Profil, zurückziehen wirkt sofort (Schritt 5) - app/panel/chat.py wrap_outside: Text von außen als Datenblock (Schritt 6) - app/panel/mailansicht.py clean: HTML einer Mail nur bereinigt, ohne Skript und ohne Laden von außen (Schritt 6) - app/panel/netguard.py allowed: ob eine Verbindung nach außen sein darf (Schritt 6) - app/panel/answercheck.py unsupported: Zahl ohne Quelle fällt heraus (Schritt 9) - app/textnorm.py hide_secrets: Geheimnisse werden nie gesprochen (Schritt 9) - app/pan"
 },
 {
 "lang": "de",
@@ -1573,7 +1573,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "blegen (Schritt 10)"
+"text": "el/guard.py log: Änderungsprotokoll mit Prüfkette (Schritt 10) - app/panel/vault.py seal: Geheimnisse versiegelt ablegen (Schritt 10)"
 },
 {
 "lang": "de",
@@ -2261,7 +2261,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "1. Werkzeug will nach außen: Alles, was eine Adresse aus Einstellungen oder aus fremdem Text ansteuert, holt sich seinen Zugang über netguard.client mit einer Stufe (heute 30 Module). Feste eigene Dienste wie das Sprachmodell laufen direkt; welche das sind und warum, steht in netguard.DIRECT_OK, ein Selbsttest hält die Liste vollständig. 2. Name einmal auflösen: resolve() fragt den Namen genau einmal ab. Hat er mehrere Adressen, muss jede erlaubt sein, sonst ist Schluss. 3. Eigener Dienst?: Die Ports der eigenen Dienste sind auf dieser Maschine gesperrt: auf Loopback und auf jeder eigenen Adresse im LAN oder VPN (own_addresses liest sie jede Minute neu). Laufen die Modelle auf einem anderen Rechner (models.host), gelten seine Adressen genauso (model_addresses). 4. Internet und Notaus an?: Ist die Adresse öffentlich und der Notaus mindestens auf Stufe 1, geht nichts ins Internet, egal welche Stufe das Werkzeug hat. Das Heimnetz bleibt erreichbar, wie die Stufe es erlaubt. 5. Öffentliche Adresse?: Eine öffentliche Adresse ist auf jeder Stufe erlaubt. 6. Stufe „nur Internet“?: Was aus Suchergebnissen oder Antworten kommt, darf nie ins Heimnetz (chat, feeds, geraeteupdate, ghtoken, mel"
+"text": "1. Werkzeug will nach außen: Alles, was eine Adresse aus Einstellungen oder aus fremdem Text ansteuert, holt sich seinen Zugang über netguard.client mit einer Stufe (heute 31 Module). Feste eigene Dienste wie das Sprachmodell laufen direkt; welche das sind und warum, steht in netguard.DIRECT_OK, ein Selbsttest hält die Liste vollständig. 2. Name einmal auflösen: resolve() fragt den Namen genau einmal ab. Hat er mehrere Adressen, muss jede erlaubt sein, sonst ist Schluss. 3. Eigener Dienst?: Die Ports der eigenen Dienste sind auf dieser Maschine gesperrt: auf Loopback und auf jeder eigenen Adresse im LAN oder VPN (own_addresses liest sie jede Minute neu). Laufen die Modelle auf einem anderen Rechner (models.host), gelten seine Adressen genauso (model_addresses). 4. Internet und Notaus an?: Ist die Adresse öffentlich und der Notaus mindestens auf Stufe 1, geht nichts ins Internet, egal welche Stufe das Werkzeug hat. Das Heimnetz bleibt erreichbar, wie die Stufe es erlaubt. 5. Öffentliche Adresse?: Eine öffentliche Adresse ist auf jeder Stufe erlaubt. 6. Stufe „nur Internet“?: Was aus Suchergebnissen oder Antworten kommt, darf nie ins Heimnetz (chat, feeds, geraeteupdate, ghtoken, mai"
 },
 {
 "lang": "de",
@@ -2269,7 +2269,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "dung, modellseite, remarkable, verbund). 7. Nie erlaubt?: Link-lokale Adressen (169.254.x, dort antworten Cloud-Metadaten), Multicast, unbestimmte und reservierte Adressen sind auf keiner Stufe erlaubt. 8. Heimnetz erlaubt?: Home Assistant und andere Dienste im Heimnetz (doclingdienst, esp32, hamelden, homeassistant, kiwix, offsite) dürfen immer. Kalender, Kontakte, Mail und MCP (calendars, contacts, mail, mcp, meinmcp, tasks) nur, wenn unter Einstellungen → Sicherheit → Heimnetz-Adressen erlauben eingeschaltet ist. 9. Verbinden mit genau dieser Adresse: Die Verbindung geht an die geprüfte Adresse, nicht noch einmal an den Namen. Ein zweites Nachschlagen könnte anders antworten (DNS-Rebinding). Das Zertifikat wird trotzdem für den Namen geprüft. 10. Passwort nur zur eigenen Seite: Anmeldedaten gehen nur an die Seite, für die sie eingetragen wurden (gleicher Host oder gleiche Hauptdomain, etwa die CalDAV-Server von icloud.com), nie über http, wenn die Adresse https war. 11. Antwort höchstens 20 MB: Antworten werden bei 20 MB abgeschnitten, auch nach dem Entpacken von gzip, damit eine riesige oder gepackte Antwort den Speicher nicht füllt. 12. Antwort ans Werkzeug: Das Werkzeug bekom"
+"text": "lansicht, meldung, modellseite, remarkable, verbund). 7. Nie erlaubt?: Link-lokale Adressen (169.254.x, dort antworten Cloud-Metadaten), Multicast, unbestimmte und reservierte Adressen sind auf keiner Stufe erlaubt. 8. Heimnetz erlaubt?: Home Assistant und andere Dienste im Heimnetz (doclingdienst, esp32, hamelden, homeassistant, kiwix, offsite) dürfen immer. Kalender, Kontakte, Mail und MCP (calendars, contacts, mail, mcp, meinmcp, tasks) nur, wenn unter Einstellungen → Sicherheit → Heimnetz-Adressen erlauben eingeschaltet ist. 9. Verbinden mit genau dieser Adresse: Die Verbindung geht an die geprüfte Adresse, nicht noch einmal an den Namen. Ein zweites Nachschlagen könnte anders antworten (DNS-Rebinding). Das Zertifikat wird trotzdem für den Namen geprüft. 10. Passwort nur zur eigenen Seite: Anmeldedaten gehen nur an die Seite, für die sie eingetragen wurden (gleicher Host oder gleiche Hauptdomain, etwa die CalDAV-Server von icloud.com), nie über http, wenn die Adresse https war. 11. Antwort höchstens 20 MB: Antworten werden bei 20 MB abgeschnitten, auch nach dem Entpacken von gzip, damit eine riesige oder gepackte Antwort den Speicher nicht füllt. 12. Antwort ans Werkzeug: Das W"
 },
 {
 "lang": "de",
@@ -2277,7 +2277,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "mt die Antwort als Daten. Eine Weiterleitung ist eine neue Verbindung und wird genauso geprüft, ab Schritt 2."
+"text": "erkzeug bekommt die Antwort als Daten. Eine Weiterleitung ist eine neue Verbindung und wird genauso geprüft, ab Schritt 2."
 },
 {
 "lang": "de",
@@ -5213,7 +5213,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "Ordner rechts, Ziehen, Löschen und Regel-Vorschlag (V01.0.861, Dominik 2026-10-20 „ja so umsetzen“): Die Seite E-Mail zeigt Liste, Mail und Ordner als drei gleiche Kästen mit Kopfzeile (die Liste mit Name, Anzahl und neuen Mails). Die Ordner stehen rechts; der Knopf „Ordner“ oder die Taste O blendet sie ein und aus, der Browser merkt es sich. Die Ordner des Mailprogramms tragen deutsche Namen und eigene Symbole (Posteingang, Gesendet, Entwürfe, Archiv, Papierkorb, Spam). Eine Mail (oder mehrere ausgewählte) lässt sich auf einen Ordner ziehen; beim Ziehen gehen die Ordner von selbst auf, auch das Archiv- und das Papierkorb-Symbol der offenen Mail nehmen sie an; danach steht „Rückgängig“ da. Auf dem Handy kommen die Ordner von rechts als Blatt, verschoben wird über das Menü."
+"text": "Ordner rechts, Ziehen, Löschen und Regel-Vorschlag (V01.0.861, Dominik 2026-10-20 „ja so umsetzen“): Die Seite E-Mail zeigt Liste, Mail und Ordner als drei gleiche Kästen mit Kopfzeile (die Liste mit Name, Anzahl und neuen Mails). Die Ordner stehen rechts (seit Apple-Stil Stufe 1 links, siehe unten); der Knopf „Ordner“ oder die Taste O blendet sie ein und aus, der Browser merkt es sich. Die Ordner des Mailprogramms tragen deutsche Namen und eigene Symbole (Posteingang, Gesendet, Entwürfe, Archiv, Papierkorb, Spam). Eine Mail (oder mehrere ausgewählte) lässt sich auf einen Ordner ziehen; beim Ziehen gehen die Ordner von selbst auf, auch das Archiv- und das Papierkorb-Symbol der offenen Mail nehmen sie an; danach steht „Rückgängig“ da. Auf dem Handy kommen die Ordner von rechts als Blatt, verschoben wird über das Menü."
 },
 {
 "lang": "de",
@@ -5230,6 +5230,38 @@
 "head": "Sprach-Chat",
 "title": "Regel-Vorschlag",
 "text": "Regel-Vorschlag: Der Spark zählt je Profil, wie oft Mails desselben Absenders in denselben Ordner verschoben werden (mailregeln.learn, nur Adresse, Ordner, Anzahl, 30 Tage). Beim dritten Mal steht unter dem „Rückgängig“ ein Hinweis mit drei Knöpfen: „Regel anlegen und gleich anwenden“ (die Regel und die passenden Mails im Posteingang, mit „Rückgängig“), „Nur Regel“ und „Nicht mehr fragen“ (für dieses Paar gemerkt). Gibt es für den Absender schon eine Regel, fragt er nicht. Live: „heute N Regel-Vorschläge“. In der iPhone-App: Löschen beim Wischen, in der Mail und bei mehreren ausgewählten, „Rückgängig“ und der Regel-Vorschlag über der Liste, im Papierkorb „Endgültig löschen“ mit Rückfrage, die Ordner des Mailprogramms mit deutschem Namen."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "E-Mail wie Apple Mail, Stufe 1 (V01.0.874, Plan apple-stil/plan.md 1a 2a 3a, Dominik 2026-10-20 „ok“): Die Seite E-Mail folgt dem Aufbau von Apple Mail, ohne neuen Schalter (Teil von „E-Mail lesen“). - Postfächer links: Mit „Mails ordnen“ steht links eine Spalte „Postfächer“: Alle Posteingänge, die intelligenten Postfächer Ungelesen, Markiert und Mit Anhang, darunter die Ordner je Konto. Sie ist offen, bis du sie ausblendest (Seitenleisten-Knopf oder Taste O, der Browser merkt es sich); beim Ziehen einer Mail geht sie von selbst auf. Oben steht nur eine ruhige Leiste: Suche, „Auswählen“, Neu laden, „Neue Mail“ (Taste N). Häkchen gibt es erst nach „Auswählen“ oder mit ⌘/Strg-Klick. - Liste: Absender mit der Uhrzeit rechts (heute die Uhrzeit, gestern „Gestern“, diese Woche der Wochentag, sonst das Datum), darunter der Betreff, 📎 und ★ als kleine Zeichen. - Lesen: Kopf wie Apple Mail (Kreis mit den Initialen, Name, Adresse, An, Uhrzeit rechts, Betreff groß), Anhänge als Kacheln. Eine Mail mit HTML erscheint formatiert, wie sie gesendet wurde (Absätze, fett, Listen, Tabellen, Zitate): mailansicht.py bereinigt sie auf dem Spark mit einer festen Liste erlaubter Tags und Attribute (kein S"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "kript, kein Stil von außen, kein position, keine on…-Attribute, kein SVG, keine Formulare, keine Rahmen), die Seite zeigt sie in einem Rahmen mit sandbox ohne Skript und eigener CSP (default-src 'none'; img-src 'self' data:). Bilder von außen bleiben aus, damit der Absender nicht sieht, dass du die Mail liest; „Bilder laden“ holt sie für diese eine Mail über den Spark (netguard, nur öffentliche Adressen, nur Adressen, die in genau dieser Mail stehen, nur PNG, JPEG, GIF und WebP nach den ersten Bytes, nie SVG). Eingebettete Bilder (cid:) kommen aus dem Anhang. Ein Link öffnet sich erst nach der Frage „Link öffnen? Er führt zu …“ mit der echten Adresse; nennt der Linktext eine andere Adresse als das Ziel, steht eine Warnung dabei (eine übliche Masche von Phishing-Mails). mailto: öffnet eine neue Mail. Mails ohne HTML bleiben Text. - Handy: Die Leiste mit Antworten, Weiter, Archiv, Ordner und Löschen steht fest unten über der Tab-Leiste (vorher lag sie über dem Betreff). - Schreiben: Antworten, Weiterleiten und „Neue Mail“ öffnen ein eigenes Fenster über der Seite (am Rechner unten rechts, am Kopf verschiebbar und verkleinerbar, die Mail bleibt daneben lesbar; am Handy ein Blatt über "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "allem) mit kompakten Zeilen An, Kopie, Betreff, dem Text und den Spark-Vorschlägen als ✨-Chips. „Senden“ (oder ⌘/Strg+Enter) lässt den Spark die Mail prüfen (dieselbe Prüfung wie das Vorschau-Blatt, send/preview), dann wartet sie 10 Sekunden mit „Rückgängig“ und „Jetzt senden“; „Rückgängig“ bringt das Fenster mit allem Getippten zurück, nichts ist rausgegangen. Steht Text vom Spark in der Mail (ein ✨-Vorschlag, ✨ kürzer/freundlicher/förmlicher/auf Englisch, ein Entwurf aus „Für dich“), kommt vor dem Senden weiter das Vorschau-Blatt, gesendet wird nur dort. Mails per Stimme behalten ihre Freigabe-Karte mit „Ja“. - iPhone-App: dieselbe Mail formatiert in einer Web-Ansicht ohne Skript, die nichts aus dem Netz lädt (Inhaltsregel sperrt jedes Laden über http/https, die Seite trägt ihre eigene CSP, eingebettete Bilder kommen als data: mit), Kopf wie Apple Mail, Links nur nach der Frage mit der Adresse (dann Safari), Bilder von außen bleiben in der App aus. „Senden“ mit 10 Sekunden „Rückgängig“, Text vom Spark mit Vorschau. - Live (Knoten E-Mail): „heute N formatiert gezeigt, M Bilder von außen geladen“, nur Zahlen. Logs: mail: view html|text | N pictures outside, mail: picture loaded|sho"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "wn|refused …, nie Adresse, Betreff oder Text. - Noch nicht in Stufe 1: Vorschauzeilen in der Liste, Entwürfe im Ordner „Entwürfe“ und Adress-Vorschläge aus Kontakte (kommen nach dem Mail-Vorrat)."
 },
 {
 "lang": "de",
@@ -7494,6 +7526,14 @@
 "head": "Meine Sachen",
 "title": "Suchen, Anhänge und Weiterleiten in der E-Mail",
 "text": "Suchen, Anhänge und Weiterleiten in der E-Mail (Mailclient Stufe C): Das Suchfeld über der Liste kennt auch von:, betreff:, hat:anhang, ist:markiert (als Vorschläge zum Antippen). Anhänge einer Mail öffnen sich per Tipp in der Vorschau, von dort teilen oder sichern (mit „Mails ordnen“). „Weiterleiten“ setzt die Mail unter deine Zeilen, die Anhänge auf Wunsch; gesendet wird nur aus der Vorschau."
+},
+{
+"lang": "de",
+"src": "iphone-app",
+"file": "iPhone-App „Spark“",
+"head": "Meine Sachen",
+"title": "E-Mail wie Apple Mail",
+"text": "E-Mail wie Apple Mail (V01.0.874, Plan apple-stil/plan.md Stufe 1): Eine Mail hat oben den Kopf wie Apple Mail (Kreis mit den Initialen, Name, Uhrzeit, Adresse, An, Betreff groß). Mails mit HTML erscheinen formatiert, wie sie gesendet wurden; der Spark bereinigt sie vorher, die App zeigt sie in einer Web-Ansicht ohne Skript, die nichts aus dem Netz lädt (eingebettete Bilder kommen mit, Bilder von außen bleiben aus). Ein Link öffnet sich erst nach der Frage mit seiner Adresse in Safari, mailto: öffnet eine neue Mail. „Senden“ lässt den Spark die Mail prüfen und wartet dann 10 Sekunden mit „Rückgängig“ und „Jetzt senden“; mit Text vom Spark (Vorschlag, umformuliert, Entwurf aus „Für dich“) kommt vorher die Vorschau."
 },
 {
 "lang": "de",
@@ -10549,7 +10589,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "ts for every profile, unless the admin blocks single ones (features.blocked). What is not allowed is not even offered as a tool. 6. Outside stays data: What a tool reads from outside reaches the model as a marked block of data. From then on 13 acting tools are locked, in the next turn too, and nothing of it is learned into memory. Connections to the outside go only through the guard (netguard.allowed). 7. The language model proposes: The model words the answer and picks from what is left after the steps before. If it calls a tool that was not offered, it does not run. 8. Does it change something?: Reading happens at once. Whatever changes something (light, sending mail, appointment, call) leaves a proposal; it runs only after a plain „yes“ to exactly that proposal, from the same device. Home Assistant only from an allowlist. Only the person deletes mail (into the trash, for good only after a question), never the model. Buttons on cards in the conversation and on the page Open are fixed names (vorgaenge.AKTIONEN); the panel checks every press (owner, kind, state, kill switch), and what would send or enter something only opens the page where the person does it. 9. Check the answer: T"
+"text": "ts for every profile, unless the admin blocks single ones (features.blocked). What is not allowed is not even offered as a tool. 6. Outside stays data: What a tool reads from outside reaches the model as a marked block of data. From then on 13 acting tools are locked, in the next turn too, and nothing of it is learned into memory. Connections to the outside go only through the guard (netguard.allowed). A mail with HTML is shown only as the Spark cleaned it (mailansicht.clean: a fixed list of allowed tags, no script), in a frame without script with its own CSP; pictures from outside only after the own click and through the guard, a link only after the question with its real address. 7. The language model proposes: The model words the answer and picks from what is left after the steps before. If it calls a tool that was not offered, it does not run. 8. Does it change something?: Reading happens at once. Whatever changes something (light, sending mail, appointment, call) leaves a proposal; it runs only after a plain „yes“ to exactly that proposal, from the same device. Home Assistant only from an allowlist. Only the person deletes mail (into the trash, for good only after a question),"
 },
 {
 "lang": "en",
@@ -10557,7 +10597,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "imes, dates and amounts that are nowhere in the sources are dropped (answercheck.unsupported). Passwords, codes and keys are never spoken (textnorm.hide_secrets). The pages never show model text as HTML. 10. Traces: Logs carry only fixed words and numbers. Changes to access and protection are written by guard.log with a SHA-256 chain; the Wachposten tells the admins about anything unusual. Secrets lie sealed in the vault (vault.seal)."
+"text": " never the model. Buttons on cards in the conversation and on the page Open are fixed names (vorgaenge.AKTIONEN); the panel checks every press (owner, kind, state, kill switch), and what would send or enter something only opens the page where the person does it. 9. Check the answer: Times, dates and amounts that are nowhere in the sources are dropped (answercheck.unsupported). Passwords, codes and keys are never spoken (textnorm.hide_secrets). The pages never show model text as HTML. 10. Traces: Logs carry only fixed words and numbers. Changes to access and protection are written by guard.log with a SHA-256 chain; the Wachposten tells the admins about anything unusual. Secrets lie sealed in the vault (vault.seal)."
 },
 {
 "lang": "en",
@@ -10597,7 +10637,15 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/notaus.py blocks: whether a kill switch stage stops this kind of work (step 2) - app/panel/guard.py limit: rate limit per address and profile (step 3) - app/panel/guard.py Slot: cap on parallel requests (step 3) - app/panel/core.py confirm_code: fresh code or passkey for sensitive ways (step 3, step 8) - app/tarswart.py check: checks every command to the Wärter (step 3) - app/panel/chat_turn.py shared_stranger: stranger's voice at a shared speaker (step 4) - app/panel/features.py allowed: the admin's release, for every profile (step 5) - app/panel/features.py blocked: block of single profiles (step 5) - app/panel/geteilt.py put: share with another profile, taking back works at once (step 5) - app/panel/chat.py wrap_outside: outside text as a block of data (step 6) - app/panel/netguard.py allowed: whether a connection out may happen (step 6) - app/panel/answercheck.py unsupported: a figure without a source is dropped (step 9) - app/textnorm.py hide_secrets: secrets are never spoken (step 9) - app/panel/guard.py log: change log with its chain (step 10) - app/panel/vault.py seal: store secrets sealed (step 10)"
+"text": "- app/panel/notaus.py blocks: whether a kill switch stage stops this kind of work (step 2) - app/panel/guard.py limit: rate limit per address and profile (step 3) - app/panel/guard.py Slot: cap on parallel requests (step 3) - app/panel/core.py confirm_code: fresh code or passkey for sensitive ways (step 3, step 8) - app/tarswart.py check: checks every command to the Wärter (step 3) - app/panel/chat_turn.py shared_stranger: stranger's voice at a shared speaker (step 4) - app/panel/features.py allowed: the admin's release, for every profile (step 5) - app/panel/features.py blocked: block of single profiles (step 5) - app/panel/geteilt.py put: share with another profile, taking back works at once (step 5) - app/panel/chat.py wrap_outside: outside text as a block of data (step 6) - app/panel/mailansicht.py clean: a mail's HTML only cleaned, without script and without loads from outside (step 6) - app/panel/netguard.py allowed: whether a connection out may happen (step 6) - app/panel/answercheck.py unsupported: a figure without a source is dropped (step 9) - app/textnorm.py hide_secrets: secrets are never spoken (step 9) - app/panel/guard.py log: change log with its chain (step 10) - ap"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "In the code",
+"title": "In the code",
+"text": "p/panel/vault.py seal: store secrets sealed (step 10)"
 },
 {
 "lang": "en",
@@ -11261,7 +11309,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "1. A tool wants out: Everything that goes to an address from settings or from outside text gets its access through netguard.client with a level (today 30 modules). Fixed own services like the language model go directly; which ones and why is listed in netguard.DIRECT_OK, a self-test keeps that list complete. 2. Resolve the name once: resolve() looks the name up exactly once. If it has several addresses, each one must be allowed, else it stops. 3. Own service?: The ports of the own services are closed on this machine: on loopback and on every own address in the LAN or VPN (own_addresses reads them again every minute). When the models run on another computer (models.host), its addresses count the same (model_addresses). 4. Internet and kill switch on?: If the address is public and the kill switch is at stage 1 or higher, nothing goes to the internet, whatever level the tool has. The home network stays reachable as the level allows. 5. Public address?: A public address is allowed at every level. 6. Level „internet only“?: What comes from search results or answers may never go to the home network (chat, feeds, geraeteupdate, ghtoken, meldung, modellseite, remarkable, verbund). 7. Never"
+"text": "1. A tool wants out: Everything that goes to an address from settings or from outside text gets its access through netguard.client with a level (today 31 modules). Fixed own services like the language model go directly; which ones and why is listed in netguard.DIRECT_OK, a self-test keeps that list complete. 2. Resolve the name once: resolve() looks the name up exactly once. If it has several addresses, each one must be allowed, else it stops. 3. Own service?: The ports of the own services are closed on this machine: on loopback and on every own address in the LAN or VPN (own_addresses reads them again every minute). When the models run on another computer (models.host), its addresses count the same (model_addresses). 4. Internet and kill switch on?: If the address is public and the kill switch is at stage 1 or higher, nothing goes to the internet, whatever level the tool has. The home network stays reachable as the level allows. 5. Public address?: A public address is allowed at every level. 6. Level „internet only“?: What comes from search results or answers may never go to the home network (chat, feeds, geraeteupdate, ghtoken, mailansicht, meldung, modellseite, remarkable, verbu"
 },
 {
 "lang": "en",
@@ -11269,7 +11317,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": " allowed?: Link-local addresses (169.254.x, where cloud metadata answers), multicast, unspecified and reserved addresses are allowed at no level. 8. Home network allowed?: Home Assistant and other services in the home network (doclingdienst, esp32, hamelden, homeassistant, kiwix, offsite) always may. Calendars, contacts, mail and MCP (calendars, contacts, mail, mcp, meinmcp, tasks) only when Settings → Security → Allow home network addresses is on. 9. Connect to exactly this address: The connection goes to the checked address, not to the name again. A second look-up could answer differently (DNS rebinding). The certificate is still checked for the name. 10. Password only to its own site: Login data only goes to the site it was entered for (same host or same parent domain, like the CalDAV servers of icloud.com), never over http when the address was https. 11. Answer at most 20 MB: Answers are cut at 20 MB, also after unpacking gzip, so a huge or packed answer cannot fill the memory. 12. Answer to the tool: The tool gets the answer as data. A redirect is a new connection and is checked the same way, from step 2."
+"text": "nd). 7. Never allowed?: Link-local addresses (169.254.x, where cloud metadata answers), multicast, unspecified and reserved addresses are allowed at no level. 8. Home network allowed?: Home Assistant and other services in the home network (doclingdienst, esp32, hamelden, homeassistant, kiwix, offsite) always may. Calendars, contacts, mail and MCP (calendars, contacts, mail, mcp, meinmcp, tasks) only when Settings → Security → Allow home network addresses is on. 9. Connect to exactly this address: The connection goes to the checked address, not to the name again. A second look-up could answer differently (DNS rebinding). The certificate is still checked for the name. 10. Password only to its own site: Login data only goes to the site it was entered for (same host or same parent domain, like the CalDAV servers of icloud.com), never over http when the address was https. 11. Answer at most 20 MB: Answers are cut at 20 MB, also after unpacking gzip, so a huge or packed answer cannot fill the memory. 12. Answer to the tool: The tool gets the answer as data. A redirect is a new connection and is checked the same way, from step 2."
 },
 {
 "lang": "en",
@@ -14109,7 +14157,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "Folders on the right, dragging, deleting and the rule hint (V01.0.861, Dominik 2026-10-20 \"ja so umsetzen\"): the Mail page shows the list, the mail and the folders as three equal boxes with a head line (the list with its name, count and new mails). The folders sit on the right; the \"Folders\" button or the key O shows and hides them, the browser remembers it. The folders of the mail program carry their own names and symbols (Inbox, Sent, Drafts, Archive, Trash, Junk). A mail (or several picked ones) can be dragged onto a folder; while dragging the folders open by themselves, and the archive and trash symbols of the open mail take it too; afterwards \"Undo\" is there. On a phone the folders come in from the right as a sheet, moving goes through the menu."
+"text": "Folders on the right, dragging, deleting and the rule hint (V01.0.861, Dominik 2026-10-20 \"ja so umsetzen\"): the Mail page shows the list, the mail and the folders as three equal boxes with a head line (the list with its name, count and new mails). The folders sit on the right (since Apple style stage 1 on the left, see below); the \"Folders\" button or the key O shows and hides them, the browser remembers it. The folders of the mail program carry their own names and symbols (Inbox, Sent, Drafts, Archive, Trash, Junk). A mail (or several picked ones) can be dragged onto a folder; while dragging the folders open by themselves, and the archive and trash symbols of the open mail take it too; afterwards \"Undo\" is there. On a phone the folders come in from the right as a sheet, moving goes through the menu."
 },
 {
 "lang": "en",
@@ -14126,6 +14174,38 @@
 "head": "Voice chat",
 "title": "Rule hint",
 "text": "Rule hint: per profile the Spark counts how often mails of the same sender are moved into the same folder (mailregeln.learn, only address, folder, count, 30 days). The third time a hint stands below \"Undo\" with three buttons: \"Make the rule and apply it now\" (the rule and the fitting mails in the inbox, with \"Undo\"), \"Only the rule\" and \"Don't ask again\" (remembered for that pair). If the sender already has a rule, it does not ask. Live: \"today N rule hints\". In the iPhone app: delete on swipe, in the mail and for several picked ones, \"Undo\" and the rule hint above the list, in the trash \"Delete for good\" with a question, the mail program's folders with their own names."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "Mail like Apple Mail, stage 1 (V01.0.874, plan apple-stil/plan.md 1a 2a 3a, Dominik 2026-10-20 \"ok\"): the Mail page follows the layout of Apple Mail, without a new switch (part of \"Read mail\"). - Mailboxes on the left: with \"Order mail\" a column \"Mailboxes\" stands on the left: all inboxes, the smart mailboxes Unread, Flagged and With attachment, below them the folders per account. It is open until you hide it (sidebar button or key O, the browser remembers it); dragging a mail opens it by itself. On top there is only one quiet bar: search, \"Select\", reload, \"New mail\" (key N). Ticks only after \"Select\" or with ⌘/Ctrl-click. - List: the sender with the time on the right (today the time, yesterday \"Yesterday\", this week the weekday, else the date), the subject below, 📎 and ★ as small marks. - Reading: a head like Apple Mail (circle with the initials, name, address, to, time on the right, the subject big), attachments as tiles. A mail with HTML is shown formatted as it was sent (paragraphs, bold, lists, tables, quotes): mailansicht.py cleans it on the Spark with a fixed list of allowed tags and attributes (no script, no style from outside, no position, no on… attributes, no SVG, no fo"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "rms, no frames); the page shows it in a sandbox frame without script with its own CSP (default-src 'none'; img-src 'self' data:). Pictures from outside stay off so the sender does not learn that you read the mail; \"Load pictures\" fetches them for this one mail through the Spark (netguard, public addresses only, only addresses named in exactly this mail, only PNG, JPEG, GIF and WebP by their first bytes, never SVG). Embedded pictures (cid:) come from the attachment. A link opens only after the question \"Open the link? It leads to …\" with its real address; when the link text names another address than the target, a warning stands with it (a common trick of phishing mails). mailto: opens a new mail. Mails without HTML stay text. - Phone: the bar with reply, forward, archive, folder and delete stands fixed at the bottom above the tab bar (before, it lay over the subject). - Writing: reply, forward and \"New mail\" open a window of their own over the page (at the computer bottom right, movable by its head and to be made small, the mail stays readable beside it; on a phone a sheet over everything) with compact lines To, Copy, Subject, the text and the Spark's suggestions as ✨ chips. \"Send\""
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": " (or ⌘/Ctrl+Enter) has the Spark check the mail (the same check as the preview sheet, send/preview), then it waits 10 seconds with \"Undo\" and \"Send now\"; \"Undo\" brings the window back with everything typed, nothing went out. When the mail holds text of the Spark (a ✨ suggestion, ✨ shorter/friendlier/more formal/in English, a draft from \"For you\"), the preview sheet still comes before sending and only it sends. Mails by voice keep their approval card with \"yes\". - iPhone app: the same mail formatted in a web view without script that loads nothing from the network (a content rule blocks every http/https load, the page carries its own CSP, embedded pictures come along as data:), a head like Apple Mail, links only after the question with the address (then Safari), pictures from outside stay off in the app. \"Send\" with 10 seconds \"Undo\", text of the Spark with the preview. - Live (node Mail): \"today N shown formatted, M pictures from outside loaded\", numbers only. Logs: mail: view html|text | N pictures outside, mail: picture loaded|shown|refused …, never an address, subject or text. - Not yet in stage 1: preview lines in the list, drafts in the folder \"Drafts\" and address suggestions f"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "rom contacts (they come after the mail cache)."
 },
 {
 "lang": "en",
@@ -16254,6 +16334,14 @@
 "head": "My things",
 "title": "Search, attachments and forwarding in e-mail",
 "text": "Search, attachments and forwarding in e-mail (mail client stage C): the search field above the list also knows von:, betreff:, hat:anhang, ist:markiert (as suggestions to tap). A mail's attachments open by a tap in the preview, from there share or save them (with \"Mails ordnen\"). \"Forward\" puts the mail below your lines, the attachments if wanted; it is sent only from the preview."
+},
+{
+"lang": "en",
+"src": "iphone-app",
+"file": "iPhone app \"Spark\"",
+"head": "My things",
+"title": "E-mail like Apple Mail",
+"text": "E-mail like Apple Mail (V01.0.874, plan apple-stil/plan.md stage 1): a mail has the head like Apple Mail on top (circle with the initials, name, time, address, to, the subject big). Mails with HTML are shown formatted as they were sent; the Spark cleans them first, the app shows them in a web view without script that loads nothing from the network (embedded pictures come along, pictures from outside stay off). A link opens in Safari only after the question with its address, mailto: opens a new mail. \"Send\" has the Spark check the mail and then waits 10 seconds with \"Undo\" and \"Send now\"; with text of the Spark (a suggestion, a rewrite, a draft from \"For you\") the preview comes first."
 },
 {
 "lang": "en",

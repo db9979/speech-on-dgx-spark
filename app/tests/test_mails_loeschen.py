@@ -308,6 +308,8 @@ class Page(unittest.TestCase):
                     await self.open_page(b, pg, 5)
                     await b.until(pg, "!POST.busy&&!!POST.data&&POST.data.items.length===5")
                     await pg.evaluate("postFoldersFor(POST.data.items[0].id.split(':')[0])")
+                    # the mailboxes are open by default (Apple-Stil „1a“); hidden by the person they come back while dragging
+                    await pg.evaluate("postFolds(false)")
                     self.assertTrue(await pg.evaluate("$('postview').querySelector('.postfold').hidden"))
                     for n in range(3):
                         row = pg.locator("#postview .ld-list [data-id]", has_text="Bob").first

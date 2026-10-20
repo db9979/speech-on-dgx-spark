@@ -6,7 +6,7 @@ pages of Ich.
   mail.INBOX_MAX; GET /api/profile/mail/message gives one as plain text and only of an own mailbox; guests and a
   profile without the function get nothing.
 - The page lists, opens and reads at 320, 390 and 1280 px without sideways scrolling; text from a mail is text, never
-  markup; „Einstellungen“ holds #mailbox and #parbox; Ich lists neither; #me=mailbox (the apps) opens the page.
+  markup, an HTML mail only as the Spark cleaned it in a frame where nothing runs (mailansicht.py, test_mailansicht); „Einstellungen“ holds #mailbox and #parbox; Ich lists neither; #me=mailbox (the apps) opens the page.
 - The Von-selbst rows for mail sit under E-Mail → Einstellungen, Termin-Vorlauf under Kalender → Einstellungen, not
   under Ich → Von selbst.
 
@@ -30,7 +30,8 @@ ADMIN.post("/api/login", json={"password": "secret-admin"})
 ACCT = {"id": "m0a1b2c3d", "name": "Privat", "host": "imap.example.de", "port": 993, "user": "ich", "password": "pw"}
 RAW = {7: ("From: Anna Alt <anna@example.de>\r\nTo: ich@example.de\r\nSubject: Werkstatt <b>Auto</b>\r\n"
            "Date: Tue, 10 Mar 2026 09:30:00 +0100\r\nContent-Type: text/html; charset=utf-8\r\n\r\n"
-           "<p>Hallo, der Wagen ist <b>fertig</b>.</p><img src=\"https://tracker.example/x.gif\">\r\n"),
+           "<p>Hallo, der Wagen ist <b>fertig</b>.</p><img src=\"https://tracker.example/x.gif\">"
+           "<a href=\"https://werkstatt.example/r\">www.bank.example</a>\r\n"),
        8: ("From: shop@example.de\r\nTo: ich@example.de\r\nSubject: Rechnung\r\n"
            "Date: Mon, 09 Mar 2026 18:00:00 +0100\r\nContent-Type: text/plain; charset=utf-8\r\n\r\nDanke\r\n")}
 OWNERS = {}   # uid -> [account]: the fake profiles' mailboxes
@@ -190,8 +191,28 @@ class Page(Fake):
                         self.assertEqual(await pg.evaluate("document.querySelectorAll('#postview .ld-row b b').length"), 0)
                         self.assertIn("Werkstatt <b>Auto</b>", await pg.evaluate("$('postview').textContent"))
                         await pg.evaluate("document.querySelector('#postview .ld-row').click()")
-                        await b.until(pg, "!!POST.msg&&document.querySelector('#postview .posttext')&&document.querySelector('#postview .posttext').textContent.includes('fertig')")
+                        # Apple-Stil „2a“: an HTML mail shows formatted in its frame, as the Spark cleaned it: the bold
+                        # stays, the tracking picture from outside has no address, nothing runs, the page has no link
+                        frame = "document.querySelector('#postview .postframe')"
+                        await b.until(pg, f"!!POST.msg&&!!{frame}&&!!{frame}.contentDocument&&{frame}.contentDocument.body.textContent.includes('fertig')")
+                        self.assertEqual(await pg.evaluate(f"{frame}.contentDocument.querySelector('b').textContent"), "fertig")
+                        self.assertEqual(await pg.evaluate(f"[...{frame}.contentDocument.images].map(i=>i.getAttribute('src'))"), [None])
+                        self.assertEqual(await pg.evaluate(f"{frame}.contentDocument.querySelectorAll('script,a[href]').length"), 0)
+                        self.assertEqual(await pg.evaluate(f"{frame}.getAttribute('sandbox')"), "allow-same-origin")
+                        self.assertTrue(await pg.evaluate("!!document.querySelector('#postview .postpics [data-k=pics]')"))
                         self.assertEqual(await pg.evaluate("document.querySelectorAll('#postview .postdet img,#postview .postdet a').length"), 0)
+                        await b.until(pg, f"{frame}.getBoundingClientRect().height>=48")   # sized to its content
+                        # a link opens only after its real address was shown; a text naming another address is said
+                        await pg.evaluate("window.opened=[];window.open=(...a)=>{window.opened.push(a)};0")
+                        await pg.evaluate(f"{frame}.contentDocument.querySelector('[data-href]').click()")
+                        await b.until(pg, "!document.querySelector('#postview .postlink').hidden")
+                        say = await pg.inner_text("#postview .postlink")
+                        self.assertIn("werkstatt.example", say)
+                        self.assertIn("bank.example", say)
+                        self.assertTrue(await pg.evaluate("!!document.querySelector('#postview .postlink .note.warn')"))
+                        self.assertEqual(await pg.evaluate("window.opened"), [])
+                        await pg.click("#postview .postlink [data-l=go]")
+                        self.assertEqual(await pg.evaluate("window.opened"), [["https://werkstatt.example/r", "_blank", "noopener,noreferrer"]])
                         over = await pg.evaluate("document.documentElement.scrollWidth-document.documentElement.clientWidth")
                         self.assertLessEqual(over, 1, f"{width} px scrolls sideways")
                         if width < 660:   # phones: the message instead of the list, back to the list

@@ -11331,16 +11331,6 @@
         }
       }
     },
-    "Erst die Vorschau zeigt, was rausgeht. Gesendet wird nur dort.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Only the preview shows what goes out. It is sent only there."
-          }
-        }
-      }
-    },
     "Vorschau": {
       "localizations": {
         "en": {
@@ -12607,16 +12597,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Send the attachments along"
-          }
-        }
-      }
-    },
-    "Deine Zeilen stehen über der weitergeleiteten Mail und dürfen leer bleiben. Gesendet wird nur aus der Vorschau.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your lines stand above the forwarded mail and may stay empty. It is sent only from the preview."
           }
         }
       }
@@ -14667,6 +14647,106 @@
           "stringUnit": {
             "state": "translated",
             "value": "No answer yet"
+          }
+        }
+      }
+    },
+    "Die Mail ist zu groß für die App.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The mail is too big for the app."
+          }
+        }
+      }
+    },
+    "An: ": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To: "
+          }
+        }
+      }
+    },
+    "Bilder von außen bleiben in der App aus, damit der Absender nicht sieht, dass du die Mail liest.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pictures from outside stay off in the app, so the sender does not learn that you read the mail."
+          }
+        }
+      }
+    },
+    "Link öffnen? Er führt zu ": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open the link? It leads to "
+          }
+        }
+      }
+    },
+    "Wird gesendet an ": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sending to "
+          }
+        }
+      }
+    },
+    "in %lld s": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "in %lld s"
+          }
+        }
+      }
+    },
+    "Jetzt senden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send now"
+          }
+        }
+      }
+    },
+    "Mit Text vom Spark: vor dem Senden kommt die Vorschau.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "With text from the Spark: the preview comes before sending."
+          }
+        }
+      }
+    },
+    "Nach „Senden“ hast du 10 s für „Rückgängig“.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "After \"Send\" you have 10 s for \"Undo\"."
+          }
+        }
+      }
+    },
+    "Deine Zeilen stehen über der weitergeleiteten Mail und dürfen leer bleiben. Nach „Senden“ hast du 10 s für „Rückgängig“.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your lines stand above the forwarded mail and may stay empty. After \"Send\" you have 10 s for \"Undo\"."
           }
         }
       }

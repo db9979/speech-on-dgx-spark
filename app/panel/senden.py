@@ -1,6 +1,8 @@
 """Mails senden auf der Seite E-Mail (plan kalender-mail Stufe 3, function "Mails senden", chat.mail_send, off):
 a profile writes a new mail or answers one of its inbox, sees the finished mail on a preview sheet and only its
-„Senden“ there sends it. Two steps, both from the own browser login:
+„Senden“ there sends it. Two steps, both from the own browser login (Apple-Stil „3a“, Dominik 2026-10-20: for the
+profile's own words the page itself calls both after one „Senden“, with 10 s „Rückgängig“ in between; text of the
+Spark keeps the sheet):
 
   - preview(): checks every field with fixed rules and keeps the finished mail for PREVIEW_SECONDS under a random
     token, bound to the profile; the sheet shows exactly what will go out (from, to, copy, subject, text)

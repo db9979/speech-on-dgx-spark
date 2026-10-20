@@ -2399,6 +2399,13 @@
 "titel": "Mitteilung: einmal aufs Handy nachfassen, gelesen überall",
 "text": "A: Update; Admin: „Mitteilung ans genutzte Gerät“ und „Alles Offene im Assistenten“ an. B: Am PC im Panel „Erinnere mich in 3 Minuten an Tee“, dann den PC nicht mehr anfassen: die Erinnerung erscheint am PC und 2 Minuten später noch einmal auf dem iPhone, danach kein drittes Mal. C: Dasselbe, aber am PC nach der Mitteilung weiter tippen: aufs iPhone kommt nichts. D: Eine Mitteilung auf dem iPhone antippen: die Karte unter Offen zeigt „gesehen“, die Browser-Mitteilung am PC verschwindet beim nächsten Signal (spätestens 1 Minute). E: Zustand → Live zeigt bei „Gerade benutzte Geräte“ „nachgefasst“ und „warten“ als Zahlen, Zustand → Logs „push: nachgefasst“.",
 "thread": "Benachrichtigung aufs genutzte Gerät"
+},
+{
+"id": "P367",
+"v": 874,
+"titel": "E-Mail wie Apple Mail",
+"text": "A: Update auf V01.0.874. Seite E-Mail am Rechner: links „Postfächer“ mit Ungelesen, Markiert, Mit Anhang und den Ordnern, Taste O blendet sie aus und ein. B: Eine Newsletter- oder Rechnungs-Mail öffnen: sie ist formatiert (fett, Tabellen), oben „Bilder von außen sind aus“; „Bilder laden“ zeigt die Bilder. C: Einen Link in der Mail antippen: erst die Frage mit der echten Adresse, „Öffnen“ öffnet einen neuen Tab. D: „Neue Mail“ (Taste N) an dich selbst, „Senden“: 10 s lang „Rückgängig“; einmal Rückgängig (das Fenster ist wieder da, nichts kam an), dann senden lassen (kommt an). E: Antworten mit einem ✨-Vorschlag: „Senden“ zeigt erst die Vorschau. F: Handy-Seite: Mail öffnen, die Leiste Antworten/Weiter/… steht unten, der Betreff ist frei. G: iPhone-App: dieselbe Mail formatiert, Link fragt vor Safari, Senden mit Rückgängig.",
+"thread": "Mail, Kalender, Kontakte wie bei Apple"
 }
 ]
 }

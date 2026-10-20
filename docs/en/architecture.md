@@ -273,6 +273,7 @@ Home Assistant, mail, calendar, tasks, weather, reMarkable, MCP and what the Spa
 | `app/panel/kalenderspiegel.py` | Spark-Kalender, Stufe 1: a copy of every CalDAV calendar on the Spark itself. |
 | `app/panel/listendav.py` | Listen in Erinnerungen: the profile's Spark lists (Einkauf, Aufgaben, own lists) as task lists (VTODO) of the Spark's CalDAV server (kalenderserver.py), so t … |
 | `app/panel/mail.py` | Reading e-mail per profile over IMAP (read only; guests have none). |
+| `app/panel/mailansicht.py` | Mail formatted like it was sent: the HTML part of a mail as the page E-Mail shows it, made safe here on the Spark before any browser sees it. |
 | `app/panel/mailidle.py` | Neue Mails sofort: IMAP IDLE for the inboxes of profiles that read their mail lately, so new mail is on the page E-Mail within seconds and the profile's Mail … |
 | `app/panel/mailregeln.py` | Mail-Regeln: rules the profile makes on the page E-Mail, like in a mail program. |
 | `app/panel/mailstil.py` | Mailstil: the Spark learns from the profile's own sent mails how it writes (greeting, sign-off, du or Sie, length, tone, typical phrases) and writes mail dra … |
@@ -1471,7 +1472,7 @@ flowchart TD
 3. <a id="kn-sicherheit-s3"></a>**Signed in and within limits?**: Size limit and origin check (CSRF) before reading, then a rate limit per address and a cap on parallel requests for the model, recognition and output (guard.Slot). Secrets, roles and backups also need a fresh code or passkey (core.confirm_code, 10 minutes). The models on tars are reached only through the TLS-Tor; commands there are checked by the Wärter (tarswart.check: signature, time, one-time number, one of 16 fixed commands).
 4. <a id="kn-sicherheit-s4"></a>**Who asks, surely known?**: The profile comes from the cookie, the app key or a linked account. At a shared speaker the device key is not enough: chat_turn.shared_stranger allows personal things only when the owner's voice is surely recognised in the same recording.
 5. <a id="kn-sicherheit-s5"></a>**Release and block**: Every function is off until the admin releases it; then it counts for every profile, unless the admin blocks single ones (features.blocked). What is not allowed is not even offered as a tool.
-6. <a id="kn-sicherheit-s6"></a>**Outside stays data**: What a tool reads from outside reaches the model as a marked block of data. From then on 13 acting tools are locked, in the next turn too, and nothing of it is learned into memory. Connections to the outside go only through the guard (netguard.allowed).
+6. <a id="kn-sicherheit-s6"></a>**Outside stays data**: What a tool reads from outside reaches the model as a marked block of data. From then on 13 acting tools are locked, in the next turn too, and nothing of it is learned into memory. Connections to the outside go only through the guard (netguard.allowed). A mail with HTML is shown only as the Spark cleaned it (mailansicht.clean: a fixed list of allowed tags, no script), in a frame without script with its own CSP; pictures from outside only after the own click and through the guard, a link only after the question with its real address.
 7. <a id="kn-sicherheit-s7"></a>**The language model proposes**: The model words the answer and picks from what is left after the steps before. If it calls a tool that was not offered, it does not run.
 8. <a id="kn-sicherheit-s8"></a>**Does it change something?**: Reading happens at once. Whatever changes something (light, sending mail, appointment, call) leaves a proposal; it runs only after a plain „yes“ to exactly that proposal, from the same device. Home Assistant only from an allowlist. Only the person deletes mail (into the trash, for good only after a question), never the model. Buttons on cards in the conversation and on the page Open are fixed names (vorgaenge.AKTIONEN); the panel checks every press (owner, kind, state, kill switch), and what would send or enter something only opens the page where the person does it.
 9. <a id="kn-sicherheit-s9"></a>**Check the answer**: Times, dates and amounts that are nowhere in the sources are dropped (answercheck.unsupported). Passwords, codes and keys are never spoken (textnorm.hide_secrets). The pages never show model text as HTML.
@@ -1523,6 +1524,7 @@ Applies at: [step 4](#kn-sicherheit-s4), [step 5](#kn-sicherheit-s5)
 - `app/panel/features.py` `blocked`: block of single profiles ([step 5](#kn-sicherheit-s5))
 - `app/panel/geteilt.py` `put`: share with another profile, taking back works at once ([step 5](#kn-sicherheit-s5))
 - `app/panel/chat.py` `wrap_outside`: outside text as a block of data ([step 6](#kn-sicherheit-s6))
+- `app/panel/mailansicht.py` `clean`: a mail's HTML only cleaned, without script and without loads from outside ([step 6](#kn-sicherheit-s6))
 - `app/panel/netguard.py` `allowed`: whether a connection out may happen ([step 6](#kn-sicherheit-s6))
 - `app/panel/answercheck.py` `unsupported`: a figure without a source is dropped ([step 9](#kn-sicherheit-s9))
 - `app/textnorm.py` `hide_secrets`: secrets are never spoken ([step 9](#kn-sicherheit-s9))
@@ -2296,12 +2298,12 @@ flowchart TD
   s12 -.->|redirect| s2
 ```
 
-1. <a id="kn-waechter-s1"></a>**A tool wants out**: Everything that goes to an address from settings or from outside text gets its access through netguard.client with a level (today 30 modules). Fixed own services like the language model go directly; which ones and why is listed in netguard.DIRECT_OK, a self-test keeps that list complete.
+1. <a id="kn-waechter-s1"></a>**A tool wants out**: Everything that goes to an address from settings or from outside text gets its access through netguard.client with a level (today 31 modules). Fixed own services like the language model go directly; which ones and why is listed in netguard.DIRECT_OK, a self-test keeps that list complete.
 2. <a id="kn-waechter-s2"></a>**Resolve the name once**: resolve() looks the name up exactly once. If it has several addresses, each one must be allowed, else it stops.
 3. <a id="kn-waechter-s3"></a>**Own service?**: The ports of the own services are closed on this machine: on loopback and on every own address in the LAN or VPN (own_addresses reads them again every minute). When the models run on another computer (models.host), its addresses count the same (model_addresses).
 4. <a id="kn-waechter-s4"></a>**Internet and kill switch on?**: If the address is public and the kill switch is at stage 1 or higher, nothing goes to the internet, whatever level the tool has. The home network stays reachable as the level allows.
 5. <a id="kn-waechter-s5"></a>**Public address?**: A public address is allowed at every level.
-6. <a id="kn-waechter-s6"></a>**Level „internet only“?**: What comes from search results or answers may never go to the home network (chat, feeds, geraeteupdate, ghtoken, meldung, modellseite, remarkable, verbund).
+6. <a id="kn-waechter-s6"></a>**Level „internet only“?**: What comes from search results or answers may never go to the home network (chat, feeds, geraeteupdate, ghtoken, mailansicht, meldung, modellseite, remarkable, verbund).
 7. <a id="kn-waechter-s7"></a>**Never allowed?**: Link-local addresses (169.254.x, where cloud metadata answers), multicast, unspecified and reserved addresses are allowed at no level.
 8. <a id="kn-waechter-s8"></a>**Home network allowed?**: Home Assistant and other services in the home network (doclingdienst, esp32, hamelden, homeassistant, kiwix, offsite) always may. Calendars, contacts, mail and MCP (calendars, contacts, mail, mcp, meinmcp, tasks) only when Settings → Security → Allow home network addresses is on.
 9. <a id="kn-waechter-s9"></a>**Connect to exactly this address**: The connection goes to the checked address, not to the name again. A second look-up could answer differently (DNS rebinding). The certificate is still checked for the name.
@@ -2317,7 +2319,7 @@ Applies at: [step 6](#kn-waechter-s6), [step 8](#kn-waechter-s8)
 
 | Level | Who uses it (from the code) | Internet | Home network |
 |---|---|---|---|
-| internet only | chat, feeds, geraeteupdate, ghtoken, meldung, modellseite, remarkable, verbund | ✓ | ✕ |
+| internet only | chat, feeds, geraeteupdate, ghtoken, mailansicht, meldung, modellseite, remarkable, verbund | ✓ | ✕ |
 | user | calendars, contacts, mail, mcp, meinmcp, tasks | ✓ | only with switch |
 | home | doclingdienst, esp32, hamelden, homeassistant, kiwix, offsite | ✓ | ✓ |
 | by target | anrufe, dienstwacht, nas, nasquelle, speicher, telefon, zertpin | as the target is set | – |

@@ -1865,10 +1865,11 @@ body.adm .post .postfoot{bottom:calc(59px + env(safe-area-inset-bottom))}
 .post .postfoot button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;border:0;background:none;color:var(--fg);font:inherit;font-size:11px;font-weight:600;padding:4px 0;min-height:46px;cursor:pointer}
 .post .postfoot button span{color:var(--mut)}
 .post .postsugs{display:grid;gap:6px}.post .postsug{display:block;width:100%;text-align:left;border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--card);color:inherit;font:inherit;cursor:pointer;white-space:pre-wrap}.post .postsug i{display:block;font-style:normal;font-size:12px;font-weight:600;color:var(--acc)}.post .postsug.on{border-color:var(--acc);box-shadow:0 0 0 2px color-mix(in srgb,var(--acc) 25%,transparent)}.post .posttone{flex-wrap:wrap;gap:6px;margin-top:6px}
-.post .postreply{margin-top:14px;padding-top:10px;border-top:1px solid var(--line)}.post .postreply .postdrop{float:right}.post .postform{display:grid;gap:4px;margin-top:8px}.post .postform input,.post .postform select,.post .postform textarea{width:100%;max-width:100%;box-sizing:border-box}.post .postform label{margin-top:6px}
+.post .postform{display:grid;gap:4px;margin-top:8px}.post .postform input,.post .postform select,.post .postform textarea{width:100%;max-width:100%;box-sizing:border-box}.post .postform label{margin-top:6px}
 #parwrap[hidden]{display:none}
 /* three boxes alike (Dominik 2026-10-20 „gleiche Boxen“): list, mail and folders are cards with the same edge, corners and
-   a head line; the folders stand right of the mail („Ordner“, key O), on narrow screens they come in from the right */
+   a head line; the mailboxes and folders stand left of the list like Apple Mail (Apple-Stil „1a“, key O), on narrow
+   screens they come in from the right */
 .post .posthead{position:sticky;top:0;z-index:3;display:flex;align-items:center;gap:8px;min-height:44px;padding:0 10px;margin:0 0 4px;
   background:var(--card);border-bottom:1px solid var(--line)}
 .post .posthead b{font-size:14.5px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -1886,12 +1887,74 @@ body.adm .post .postfoot{bottom:calc(59px + env(safe-area-inset-bottom))}
 @container (min-width:900px){
   .post .ld-list{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:0 6px 8px}
   .post .ld-list>.posthead{margin:0 -6px 4px;border-radius:14px 14px 0 0}
-  .post.postfolds .ld-split{display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:16px;align-items:start}
-  .post.postfolds .ld-split:has(>.ld-detail:not([hidden])){grid-template-columns:minmax(260px,340px) minmax(0,1fr) 220px}
+  .post.postfolds .ld-split{display:grid;grid-template-columns:220px minmax(0,1fr);gap:16px;align-items:start}
+  .post.postfolds .ld-split:has(>.ld-detail:not([hidden])){grid-template-columns:210px minmax(260px,340px) minmax(0,1fr)}
 }
 @container (max-width:899.98px){
   .post .ld-list>.posthead{position:static;background:none;padding:0 8px}
   .post .postfold{position:fixed;top:0;right:0;bottom:0;width:min(300px,86vw);z-index:70;border-radius:16px 0 0 16px;box-shadow:-12px 0 40px rgba(20,24,36,.2);overflow-y:auto;overscroll-behavior:contain}
+}
+/* Apple-Stil Stufe 1 (Dominik 2026-10-20 „1a 2a 3a“): one quiet bar, rows like Apple Mail (sender and time, subject, two
+   lines of text), the head of a mail with the sender's circle, the mail formatted in its frame, the compose window */
+.post .posttools{gap:6px}.post .posttools input[type=search]{flex:1 1 160px}
+@container (min-width:660px){.post .posttools{flex-wrap:nowrap}}
+@container (max-width:659.98px){.post .posttools input[type=search]{order:5;flex:1 1 100%}.post .posttools [data-k=again]{margin-left:auto}}
+.post .posttools .postnew{display:inline-flex;align-items:center;gap:6px;flex:none}.post .posttools .postnew svg{width:17px;height:17px}
+.post .posttools .postpickbtn{flex:none}.post .posttools .postpickbtn.on{color:var(--acc)}
+.post .posttools .pib.on{color:var(--acc);background:color-mix(in srgb,var(--acc) 12%,var(--card))}.post .posttools .pib.on svg{fill:none}
+.post .ld-list .ld-row{align-items:flex-start;padding:9px 8px}.post .ld-list .ld-row .postav{margin-top:2px}
+.post .ld-list .ld-row .postdot{margin-top:14px}
+.post .ld-row.picked{background:color-mix(in srgb,var(--acc) 16%,transparent)}
+.post .postl1{display:flex;align-items:baseline;gap:8px;min-width:0}.post .postl1 b{flex:1;min-width:0}
+.post .postl1 .ld-right{flex:none;max-width:none;flex-wrap:nowrap}.post .ld-row .ld-when{display:inline}
+.post .postmk{font-size:12px}.post .postmk.star{color:#e0a100}
+.post .ld-mid .postsubj{color:var(--fg);font-size:13px}
+.post .ld-mid .postprv{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.35}
+.post .postchips{display:flex;flex-wrap:wrap;gap:4px;margin-top:3px}.post .postchips .ld-badge{font-size:11px}
+.post .posthdr{display:flex;gap:12px;align-items:flex-start;margin:4px 0 6px}
+.post .postav.big{width:44px;height:44px;font-size:15px}
+.post .posthdr .postl1 b{font-size:15.5px;white-space:normal}.post .posthdr .ld-when{color:var(--mut);font-size:12.5px}
+.post .posthdr .ld-mid small{white-space:normal;overflow-wrap:anywhere}
+.post .ld-detail h3.postsubjbig{font-size:21px;line-height:1.3;margin:10px 0 12px;overflow-wrap:anywhere}
+.post .postfiles{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}
+.post .postfile{display:inline-flex;align-items:center;gap:8px;max-width:260px;padding:8px 12px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--fg);text-decoration:none;min-width:0}
+.post .postfile span{display:grid;min-width:0}.post .postfile b{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.post .postfile small{color:var(--mut);font-size:11.5px}
+.post .postfile svg{flex:none;width:17px;height:17px;color:var(--mut)}.post a.postfile:hover{border-color:var(--acc)}
+.post .postpics{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:0 0 10px;padding:8px 12px;border-radius:12px;font-size:13px;color:var(--mut);
+  background:color-mix(in srgb,var(--line) 35%,transparent)}.post .postpics svg{flex:none;width:16px;height:16px}.post .postpics span{flex:1 1 200px}
+.post .postframe{display:block;width:100%;height:120px;border:0;border-radius:10px;background:#fff;color-scheme:light}
+.post .postlink[hidden]{display:none}.post .postlink .note{margin-top:10px}
+.post .postlinkurl{display:block;margin-top:4px;color:var(--mut);overflow-wrap:anywhere;font-size:12px}
+.post .postpend{display:flex;flex-wrap:wrap;align-items:center;gap:8px}.post .postpend span{flex:1 1 220px}
+.post .postsugs{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px}.post .postsugl{font-size:12px;font-weight:600;color:var(--acc)}
+.post .postsugs .postsug{width:auto;max-width:100%;border-radius:12px;padding:6px 10px;font-size:13px;white-space:normal}
+.post .postsugs .postsug i{display:inline;margin-right:6px}
+.post .postcmp[hidden]{display:none}
+.post .postcmp{position:fixed;right:24px;bottom:24px;z-index:80;width:min(640px,calc(100vw - 48px));height:min(620px,calc(100vh - 72px));display:flex;flex-direction:column;
+  background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:0 24px 70px rgba(20,24,36,.28);overflow:hidden}
+.post .postcmp.small{height:auto}.post .postcmp.small .postcmpb{display:none}
+.post .postcmph{display:flex;align-items:center;gap:4px;min-height:44px;padding:0 6px 0 14px;border-bottom:1px solid var(--line);cursor:move;user-select:none;
+  background:color-mix(in srgb,var(--line) 30%,var(--card))}
+.post .postcmph b{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14px}
+.post .postcmpb{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:4px 14px 12px;display:flex;flex-direction:column;gap:0}
+.post .postcmpb.postform{margin:0}
+.post .postcl{display:flex;align-items:center;gap:8px;margin:0;border-bottom:1px solid var(--line);padding:2px 0}
+.post .postcl span{flex:none;width:62px;color:var(--mut);font-size:13px}
+.post .postform .postcl input,.post .postform .postcl select{border:0;background:none;box-shadow:none;padding:8px 0;flex:1;min-width:0}
+.post .postcmpb textarea{flex:1;min-height:180px;border:0;background:none;box-shadow:none;padding:10px 0;resize:none;font:inherit;font-size:14.5px;line-height:1.5}
+.post .postcmpb .postsendrow{display:flex;align-items:center;margin-top:8px}.post .postsendrow .b.p{display:inline-flex;align-items:center;gap:6px}
+.post .postsendrow .b.p svg{width:16px;height:16px}.post .postsendrow .postordmsg{flex:1 1 200px}
+.post.ld-box.ld-sel>.postcmp:not([hidden]){display:flex}
+.post.ld-box.ld-sel>.postundo:has(>.postpend){display:block}
+@media (max-width:760px){
+  /* the thumb bar of an open mail stands still above the tab bar like Apple Mail, the mail scrolls under it */
+  .post .postfoot{position:fixed;left:0;right:0;bottom:0;margin:0;border-radius:0;z-index:45}
+  body.adm .post .postfoot,body.appview.aptabs .post .postfoot{bottom:calc(59px + env(safe-area-inset-bottom));padding-bottom:6px}
+  .post .postdet:has(>.postfoot){padding-bottom:84px}
+  .post .posthdr .ld-when{display:inline}
+  .post .postcmp{inset:0;width:auto;height:auto;border-radius:0;border:0;z-index:90;padding-bottom:env(safe-area-inset-bottom)}
+  .post .postcmph{cursor:default;padding-top:env(safe-area-inset-top)}
+  .post .posttools .postnew span{display:none}
 }
 /* touch screens: small marks keep their look, but a finger hits at least 44 px (code check 19.10. D11) */
 @media (pointer:coarse){.hqbtn,.fjump button,.ffilt button,.wayl{position:relative}

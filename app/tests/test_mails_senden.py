@@ -9,7 +9,9 @@ a new mail or an answer, the preview sheet, and only „Senden“ there sends it
   text, a token of another profile, a token used twice, no TLS on 587, more than MAX_DAY mails a day; a wrong
   password leaves the sheet for another try. Off (admin switch) and guests: nothing.
 - Every outcome has a log line with fixed words and numbers, never an address, a subject or the text.
-- The page at 390 px: „Neue Mail“, fill, „Vorschau“ shows the mail, „Senden“ sends it; „Antworten“ under a mail.
+- The page at 390 px (Apple-Stil „3a“): „Neue Mail“ opens the window, own words go with „Senden“ after the Spark checked
+  them and the „Rückgängig“ time (nothing goes out when it is used); an answer with a ✨ suggestion keeps the preview
+  sheet, only its „Senden“ sends.
 
 The fake mailbox (helpers.FakeMailbox) and a fake outgoing server; no wall clock, no network.
 """
@@ -382,7 +384,7 @@ class Page(unittest.TestCase):
                         self.assertEqual(r.status, 200, await r.text())
                     fresh_day()
                     mail._cache.clear()
-                    await pg.evaluate("MAIL_ON=true;SEND_ON=true;POST.accts=null;postStart({profile:PROFILE,mail:true});icTabSet('post','show');goSec('post')")
+                    await pg.evaluate("MAIL_ON=true;SEND_ON=true;POST.accts=null;POST_UNDO_MS=1500;postStart({profile:PROFILE,mail:true});icTabSet('post','show');goSec('post')")
                     await b.until(pg, "!POST.busy&&!!POST.data&&POST.data.items.length===1")
                     await pg.click("#postview [data-k=new]")
                     await b.until(pg, "!!document.querySelector('#postview [data-f=to]')")
@@ -391,12 +393,18 @@ class Page(unittest.TestCase):
                     await pg.fill("#postview [data-f=text]", "Kommst du?")
                     over = await pg.evaluate("document.documentElement.scrollWidth-document.documentElement.clientWidth")
                     self.assertLessEqual(over, 1, "the form scrolls sideways")
-                    await pg.click("#postview [data-s=prev]")
-                    await b.until(pg, "!!document.querySelector('#postview [data-s=send]')")
-                    self.assertEqual(FakeSMTP.sent, [])
-                    self.assertIn("carla@example.org", await pg.evaluate("document.querySelector('#postview .postprev').textContent"))
-                    await pg.click("#postview [data-s=send]")
-                    await b.until(pg, "!POST.write&&POST.sent.length>0")
+                    # Apple-Stil „3a“: own words go with „Senden“ after the Spark checked them, with „Rückgängig“ first
+                    await pg.click("#postview [data-s=go]")
+                    await b.until(pg, "!POST.write&&!!POST.pending&&!!document.querySelector('#postview .postpend [data-s=undo]')")
+                    self.assertIn("carla@example.org", await pg.evaluate("document.querySelector('#postview .postpend').textContent"))
+                    await pg.click("#postview .postpend [data-s=undo]")
+                    await b.until(pg, "!POST.pending&&!!POST.write&&document.querySelector('#postview [data-f=text]').value==='Kommst du?'")
+                    await asyncio.sleep(2)
+                    self.assertEqual(FakeSMTP.sent, [])                  # „Rückgängig“: nothing went out
+                    await pg.click("#postview [data-s=go]")
+                    await b.until(pg, "!!POST.pending")
+                    self.assertEqual(FakeSMTP.sent, [])                  # still waiting
+                    await b.until(pg, "!POST.pending&&POST.sent.length>0")
                     self.assertEqual(len(FakeSMTP.sent), 1)
                     # an answer from the mail shown
                     await pg.evaluate("[...document.querySelectorAll('#postview .ld-row')][0].click()")
@@ -413,8 +421,11 @@ class Page(unittest.TestCase):
                     self.assertEqual(await pg.evaluate("document.querySelector('#postview [data-f=text]').value"), "Hallo Anna, leider nicht.")
                     self.assertEqual(len(FakeSMTP.sent), 1)
                     await pg.fill("#postview [data-f=text]", "Danke!")
-                    await pg.click("#postview [data-s=prev]")
+                    # a ✨ suggestion was used: text of the Spark keeps the preview sheet, only its „Senden“ sends
+                    await pg.click("#postview [data-s=go]")
                     await b.until(pg, "!!document.querySelector('#postview [data-s=send]')")
+                    self.assertEqual(len(FakeSMTP.sent), 1)
+                    self.assertIn("bernd@example.de", await pg.evaluate("document.querySelector('#postview .postprev').textContent"))
                     await pg.click("#postview [data-s=send]")
                     await b.until(pg, "!POST.write&&POST.sent.length>0")
                     self.assertEqual(len(FakeSMTP.sent), 2)

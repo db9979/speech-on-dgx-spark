@@ -33,6 +33,7 @@ import gedaechtnis  # noqa: E402
 import mfa  # noqa: E402
 import postfach  # noqa: E402
 import mailregeln  # noqa: E402
+import mailansicht  # noqa: E402
 import senden  # noqa: E402
 import antwortvorschlag  # noqa: E402
 import verbrauch  # noqa: E402
@@ -1231,6 +1232,11 @@ async def profile_mail_message(request: Request, id: str = "", folder: str = "",
         raise HTTPException(502, "Das Postfach war nicht erreichbar.")
     if r is None:
         raise HTTPException(404, "Diese Mail gibt es nicht mehr.")
+    # Apple-Stil „2a“: with an HTML part the page shows the mail formatted in its frame (mailansicht.py)
+    try:
+        r.update(await asyncio.to_thread(mailansicht.facts, prof["id"], id[:40], folder[:200] or "INBOX"))
+    except (OSError, ValueError, imaplib.IMAP4.error):
+        r.update(html=False, remote=0)   # the text from mail.show is there, the frame waits for the next try
     return r
 
 

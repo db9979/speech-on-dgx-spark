@@ -53,6 +53,7 @@ Vor jedem Commit durchgehen. In der Antwort an Dominik kurz nennen, welche Punkt
 - [ ] `subprocess` nur mit Listen-Argumenten, nie `shell=True`, `eval` oder `exec`. Kein `pickle` und kein `allow_pickle` auf Fremddaten.
 - [ ] IMAP-Werte nur aus druckbarem ASCII ohne CR/LF, gequotet. (Eine Message-ID mit `=0D=0A`)
 - [ ] HTML wird über `textContent` oder `esc()` plus `data-`-Attribute gebaut, nie über inline `onclick` mit Werten.
+- [ ] HTML von außen (eine Mail) nur bereinigt auf dem Spark (`mailansicht.clean`, feste Liste erlaubter Tags), in einem `sandbox`-Rahmen ohne Skript mit eigener CSP; nichts lädt von außen ohne eigenen Klick, Links erst nach der Frage mit der echten Adresse.
 - [ ] Konfigurationswerte werden beim Speichern, beim Wiederherstellen und in `install.sh` gleich geprüft. In Bash nur Ziffern oder feste Werte übernehmen.
 
 ## Geheimnisse und Logs
@@ -106,6 +107,7 @@ Jede Änderung wird nicht nur gegen die Fallen oben geprüft, sondern auch dageg
 **Browser**
 - [ ] Strenge CSP (`script-src 'self'`, kein `unsafe-eval`, keine Inline-Skripte), `frame-ancestors`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`, `Cross-Origin-Opener-Policy`.
 - [ ] Modellausgaben und fremde Texte werden in der Oberfläche nie als HTML ausgeführt.
+- [ ] Fremdes HTML (Mail) nur bereinigt, im `sandbox`-Rahmen ohne `allow-scripts` mit eigener CSP (`default-src 'none'`), externe Bilder nur über den Spark nach eigenem Klick, Bildtyp nach den ersten Bytes, nie SVG.
 
 **Lieferkette und Betrieb**
 - [ ] Neue Pakete mit Version und Hash im Lock; neue Actions per SHA gepinnt; Dependabot-Hinweise zeitnah übernehmen.

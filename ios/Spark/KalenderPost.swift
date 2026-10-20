@@ -1,4 +1,5 @@
 import SwiftUI
+import WebKit
 
 /// Kalender und E-Mail in der App (plan kalender-mail Stufe 4, Dominik 2026-10-19 „baue alle Stufen“): the same
 /// pages as in the panel, with this iPhone's key (iphone.THINGS "calendar", "mail", "mailmanage", "mailsend" on the
@@ -7,7 +8,9 @@ import SwiftUI
 ///
 /// Kept on the iPhone (Merken.swift, 1b): the appointments of four weeks, the newest 50 mails of the inbox and up to
 /// 20 opened mails with their text; deleted when the function goes off, on unpairing and for another profile.
-/// Texts from mail are other people's words: shown as plain text only, never a link or a picture that opens.
+/// Texts from mail are other people's words: shown as plain text, or (Apple-Stil „2a“) as the HTML the Spark cleaned
+/// (mailansicht.py) in a web view without script that loads nothing from outside; a link opens only after the
+/// question with its address.
 
 // ---------------------------------------------------------------- the data
 struct CalEvent: Identifiable, Hashable {
@@ -96,6 +99,9 @@ struct MailText {
     var parts: [(n: Int, name: String, kb: Int)] = []
     /// its Message-ID: „Endgültig löschen“ removes only the mail that still carries it
     var mid = ""
+    /// Apple-Stil „2a“: the mail has an HTML part (shown formatted, mailansicht.py) and names pictures from outside
+    var html = false
+    var remote = 0
 }
 
 extension SparkAPI {
@@ -200,7 +206,22 @@ extension SparkAPI {
                         parts: (m["parts"] as? [[String: Any]] ?? []).prefix(20).compactMap { p in
                             guard let n = p["n"] as? Int, (0..<20).contains(n) else { return nil }
                             return (n, String((p["name"] as? String ?? "").prefix(120)), p["kb"] as? Int ?? 0)
-                        }, mid: String((m["mid"] as? String ?? "").prefix(300)))
+                        }, mid: String((m["mid"] as? String ?? "").prefix(300)),
+                        html: m["html"] as? Bool ?? false, remote: min(60, max(0, m["remote"] as? Int ?? 0)))
+    }
+
+    /// One own mail formatted (mailansicht.py, app=true): the Spark's cleaned HTML with its attached pictures inside
+    /// and its policy in the page; never more than 8 MB.
+    func mailPage(_ id: String, folder: String) async throws -> String {
+        var r = request("api/profile/mail/view")
+        var c = URLComponents(url: base.appendingPathComponent("api/profile/mail/view"), resolvingAgainstBaseURL: false)!
+        c.queryItems = [URLQueryItem(name: "app", value: "true"), URLQueryItem(name: "folder", value: folder), URLQueryItem(name: "id", value: id)]
+        r.url = c.url
+        r.timeoutInterval = 60
+        let (data, response) = try await Self.confirmed(r, code: nil)
+        try Self.check(data, response)
+        guard data.count <= 8 * 1024 * 1024 else { throw SparkError(message: String(localized: "Die Mail ist zu groß für die App.")) }
+        return String(decoding: data, as: UTF8.self)
     }
 
     /// the name of an opened mail's kept page ("mail-" and its id with the colon as a dash)
@@ -1467,6 +1488,9 @@ struct MailView: View {
     @State private var file: URL?
     @State private var fetching: Int?
     @State private var erasing = false
+    @State private var page: String?
+    @State private var pageHeight: CGFloat = 120
+    @State private var linkAsk: URL?
     private var flagged: Bool { flaggedNow ?? item.flagged }
 
     var body: some View {
@@ -1474,10 +1498,22 @@ struct MailView: View {
             if let at = keptAt { StandNote(at: at, loading: true).listRowBackground(Color.clear) }
             if let m {
                 Section {
-                    Text(verbatim: m.subject.isEmpty ? String(localized: "(ohne Betreff)") : m.subject).font(.headline)
-                    LabeledContent("Von") { Text(verbatim: m.from) }
-                    if !m.to.isEmpty { LabeledContent("An") { Text(verbatim: m.to) } }
-                    LabeledContent("Wann") { Text(m.date, format: .dateTime.weekday().day().month().hour().minute()) }
+                    // the head like Apple Mail: the sender's circle, name and time, address and to whom, the subject big
+                    HStack(alignment: .top, spacing: 12) {
+                        Text(verbatim: PostView.initials(m.from)).font(.headline).foregroundStyle(.white)
+                            .frame(width: 44, height: 44).background(Circle().fill(KalenderView.tint(m.from.unicodeScalars.reduce(0) { $0 &+ Int($1.value) })))
+                            .accessibilityHidden(true)
+                        VStack(alignment: .leading, spacing: 2) {
+                            HStack(alignment: .firstTextBaseline) {
+                                Text(verbatim: PostView.name(m.from)).font(.headline).lineLimit(2)
+                                Spacer(minLength: 8)
+                                Text(m.date, format: .dateTime.day().month().hour().minute()).font(.caption).foregroundStyle(.secondary)
+                            }
+                            Text(verbatim: PostView.address(m.from)).font(.caption).foregroundStyle(.secondary).textSelection(.enabled)
+                            if !m.to.isEmpty { Text(verbatim: String(localized: "An: ") + m.to).font(.caption).foregroundStyle(.secondary).lineLimit(2) }
+                        }
+                    }
+                    Text(verbatim: m.subject.isEmpty ? String(localized: "(ohne Betreff)") : m.subject).font(.title3.weight(.bold))
                     if !box.isEmpty { LabeledContent("Postfach") { Text(verbatim: box) } }
                     if !m.files.isEmpty && (m.parts.isEmpty || !talk.allowed.areas.contains("mailmanage")) {
                         LabeledContent("Anhänge") { Text(verbatim: m.files.joined(separator: ", ")) }
@@ -1498,8 +1534,26 @@ struct MailView: View {
                         }
                     }
                 }
-                // other people's words: plain text, no link and no picture opens
-                Section { Text(verbatim: m.text.isEmpty ? String(localized: "(kein Text)") : m.text).textSelection(.enabled) }
+                // other people's words: formatted as the Spark cleaned them (nothing runs, nothing loads from outside,
+                // a link asks first), else plain text
+                if m.html, let page {
+                    if m.remote > 0 {
+                        Label("Bilder von außen bleiben in der App aus, damit der Absender nicht sieht, dass du die Mail liest.", systemImage: "lock")
+                            .font(.footnote).foregroundStyle(.secondary)
+                    }
+                    Section {
+                        MailPageView(html: page, height: $pageHeight) { url in
+                            if url.scheme?.lowercased() == "mailto" {
+                                let to = String(url.absoluteString.dropFirst(7).prefix { $0 != "?" }).removingPercentEncoding ?? ""
+                                if talk.allowed.areas.contains("mailsend") { writing = MailDraft(to: String(to.prefix(2000))) }
+                            } else { linkAsk = url }
+                        }
+                            .frame(height: pageHeight)
+                            .listRowInsets(EdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8))
+                    }
+                } else {
+                    Section { Text(verbatim: m.text.isEmpty ? String(localized: "(kein Text)") : m.text).textSelection(.enabled) }
+                }
                 actions
             } else if error == nil {
                 LadeZeilen(rows: 4)
@@ -1523,6 +1577,13 @@ struct MailView: View {
                     .navigationBarTitleDisplayMode(.inline)
                     .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Fertig") { asEvent = false } } }
             }
+        }
+        // a link of the mail: its real address first, Safari only after „Öffnen“; mailto: opens a new mail
+        .confirmationDialog(Text(verbatim: String(localized: "Link öffnen? Er führt zu ") + (linkAsk?.host ?? "")),
+                            isPresented: Binding(get: { linkAsk != nil }, set: { if !$0 { linkAsk = nil } }), titleVisibility: .visible) {
+            Button("Öffnen") { if let u = linkAsk { UIApplication.shared.open(u) }; linkAsk = nil }
+        } message: {
+            Text(verbatim: String((linkAsk?.absoluteString ?? "").prefix(300)))
         }
         .confirmationDialog("Diese Mail endgültig löschen?", isPresented: $erasing, titleVisibility: .visible) {
             Button("Endgültig löschen", role: .destructive) { Task { await act("erase", "") } }
@@ -1661,6 +1722,9 @@ struct MailView: View {
         } catch {
             if m == nil { self.error = error.localizedDescription }
         }
+        if m?.html == true, page == nil {   // the formatted copy; without it the plain text stays
+            page = try? await api.mailPage(item.id, folder: folder?.name ?? "INBOX")
+        }
         if talk.allowed.areas.contains("mailsend"), m != nil {
             // Antwortvorschläge „1a“: prepared while the mail is open, „Antworten“ finds them ready on the Spark
             let id = item.id
@@ -1699,7 +1763,79 @@ struct MailView: View {
     }
 }
 
-/// A new mail or an answer: the form, then the Spark's preview sheet; only „Senden“ there sends (senden.py).
+/// A mail formatted (Apple-Stil „2a“): the page the Spark cleaned, in a web view that runs no script of the page, loads
+/// nothing from the network (a content rule blocks every http, https and ftp load, the page carries its own policy) and
+/// keeps no data; every tap on a link is stopped and handed to `link` (the question with its address), never followed.
+struct MailPageView: UIViewRepresentable {
+    let html: String
+    @Binding var height: CGFloat
+    let link: (URL) -> Void
+    private static var rules: WKContentRuleList?
+    private static let block = #"[{"trigger":{"url-filter":"^(https?|ftp|wss?):"},"action":{"type":"block"}}]"#
+
+    func makeCoordinator() -> Coordinator { Coordinator(self) }
+
+    func makeUIView(context: Context) -> WKWebView {
+        let c = WKWebViewConfiguration()
+        c.websiteDataStore = .nonPersistent()
+        c.defaultWebpagePreferences.allowsContentJavaScript = false
+        c.dataDetectorTypes = []
+        let v = WKWebView(frame: .zero, configuration: c)
+        v.navigationDelegate = context.coordinator
+        v.scrollView.isScrollEnabled = false
+        v.isOpaque = false
+        v.backgroundColor = .white
+        context.coordinator.show(v, html)
+        return v
+    }
+
+    func updateUIView(_ v: WKWebView, context: Context) {
+        context.coordinator.parent = self
+        if context.coordinator.shown != html { context.coordinator.show(v, html) }
+    }
+
+    @MainActor final class Coordinator: NSObject, WKNavigationDelegate {
+        var parent: MailPageView
+        var shown = ""
+        init(_ parent: MailPageView) { self.parent = parent }
+
+        /// the page only once the blocking rule is in place; without it nothing is shown (never loads from outside)
+        func show(_ v: WKWebView, _ html: String) {
+            shown = html
+            Task { @MainActor in
+                if MailPageView.rules == nil {
+                    MailPageView.rules = try? await WKContentRuleListStore.default()
+                        .compileContentRuleList(forIdentifier: "spark-mail-block", encodedContentRuleList: MailPageView.block)
+                }
+                guard let r = MailPageView.rules else { return }
+                v.configuration.userContentController.removeAllContentRuleLists()
+                v.configuration.userContentController.add(r)
+                v.loadHTMLString(html, baseURL: nil)
+            }
+        }
+
+        func webView(_ v: WKWebView, decidePolicyFor a: WKNavigationAction) async -> WKNavigationActionPolicy {
+            if a.navigationType == .other, a.request.url?.absoluteString == "about:blank" {
+                return .allow   // the page itself, from the string
+            }
+            if a.navigationType == .linkActivated, let u = a.request.url, ["http", "https", "mailto"].contains(u.scheme?.lowercased() ?? "") {
+                parent.link(u)
+            }
+            return .cancel
+        }
+
+        func webView(_ v: WKWebView, didFinish navigation: WKNavigation!) {
+            v.evaluateJavaScript("document.documentElement.scrollHeight") { h, _ in
+                if let h = h as? CGFloat { self.parent.height = min(30000, max(48, h)) }
+                else if let h = h as? Double { self.parent.height = min(30000, max(48, CGFloat(h))) }
+            }
+        }
+    }
+}
+
+/// A new mail or an answer (Apple-Stil „3a“): own words go with „Senden“ after the Spark checked them and 10 s for
+/// „Rückgängig“; text of the Spark (a suggestion, a rewrite, a draft of Für dich) keeps the preview sheet, only its
+/// „Senden“ sends (senden.py).
 struct MailDraft: Identifiable {
     var reply = ""
     var to = ""
@@ -1727,13 +1863,26 @@ struct MailWrite: View {
     @State private var ideasNote: String?
     @State private var picked: Int?
     @State private var withFiles = true
+    /// the text came from the Spark (a suggestion, a rewrite, a draft of Für dich): the preview sheet stays
+    @State private var spark = false
+    /// the checked mail waiting its 10 s for „Rückgängig“, and the seconds left
+    @State private var pending: [String: Any]?
+    @State private var left = 10
+    @State private var waiter: Task<Void, Never>?
     private static let tones: [(String, LocalizedStringKey)] = [("kuerzer", "kürzer"), ("freundlicher", "freundlicher"),
                                                                 ("foermlicher", "förmlicher"), ("uebersetzen", "auf Englisch")]
 
     var body: some View {
         NavigationStack {
             Form {
-                if let p = preview {
+                if let p = pending {
+                    Section {
+                        Text(verbatim: String(localized: "Wird gesendet an ") + (p["to"] as? [String] ?? []).joined(separator: ", "))
+                        Text(verbatim: String(localized: "in \(left) s")).font(.title2.weight(.semibold)).monospacedDigit()
+                        Button("Rückgängig") { undo() }.font(.headline)
+                        Button("Jetzt senden") { waiter?.cancel(); Task { await sendNow() } }.disabled(busy)
+                    }
+                } else if let p = preview {
                     Section {
                         LabeledContent("Von") { Text(verbatim: p["from"] as? String ?? "") }
                         if let v = p["server"] as? String, !v.isEmpty { LabeledContent("Über") { Text(verbatim: v) } }
@@ -1762,6 +1911,7 @@ struct MailWrite: View {
                                 Button {
                                     text = x.1
                                     picked = i
+                                    spark = true
                                 } label: {
                                     VStack(alignment: .leading, spacing: 2) {
                                         Text(verbatim: x.0).font(.caption.weight(.semibold)).foregroundStyle(.tint)
@@ -1789,19 +1939,23 @@ struct MailWrite: View {
                             }
                         }
                     } footer: {
-                        Text(draft.forward.isEmpty ? LocalizedStringKey("Erst die Vorschau zeigt, was rausgeht. Gesendet wird nur dort.")
-                             : LocalizedStringKey("Deine Zeilen stehen über der weitergeleiteten Mail und dürfen leer bleiben. Gesendet wird nur aus der Vorschau."))
+                        Text(spark ? LocalizedStringKey("Mit Text vom Spark: vor dem Senden kommt die Vorschau.")
+                             : draft.forward.isEmpty ? LocalizedStringKey("Nach „Senden“ hast du 10 s für „Rückgängig“.")
+                             : LocalizedStringKey("Deine Zeilen stehen über der weitergeleiteten Mail und dürfen leer bleiben. Nach „Senden“ hast du 10 s für „Rückgängig“."))
                     }
-                    Section { Button("Vorschau") { Task { await look() } }.disabled(busy || (draft.forward.isEmpty && text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)) }
+                    Section {
+                        Button { Task { await go() } } label: { Label("Senden", systemImage: "paperplane.fill") }
+                            .disabled(busy || (draft.forward.isEmpty && text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty))
+                    }
                 }
                 if let error { Text(SparkAPI.way(error)).foregroundStyle(.red) }
             }
             .navigationTitle(!draft.reply.isEmpty ? Text("Antworten") : !draft.forward.isEmpty ? Text("Weiterleiten") : Text("Neue Mail"))
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Verwerfen") { dismiss() } } }
-            .onAppear { if to.isEmpty && subject.isEmpty { to = draft.to; subject = draft.subject; text = draft.text } }
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Verwerfen") { dismiss() }.disabled(pending != nil) } }
+            .onAppear { if to.isEmpty && subject.isEmpty { to = draft.to; subject = draft.subject; text = draft.text; spark = !draft.text.isEmpty } }
             .task { if !draft.reply.isEmpty && ideas.isEmpty { await suggest() } }
-            .interactiveDismissDisabled(busy)
+            .interactiveDismissDisabled(busy || pending != nil)
         }
     }
 
@@ -1845,10 +1999,47 @@ struct MailWrite: View {
         defer { busy = false }
         do {
             let d = try await api.object("POST", "api/profile/mail/rewrite", body: ["text": String(text.prefix(20000)), "art": art], timeout: 120)
-            if let t = d["text"] as? String, !t.isEmpty { text = String(t.prefix(20000)) }
+            if let t = d["text"] as? String, !t.isEmpty { text = String(t.prefix(20000)); spark = true }
             error = nil
         } catch {
             self.error = error.localizedDescription
+        }
+    }
+
+    /// „Senden“: the Spark checks the mail (the same check as the preview); own words then wait 10 s for „Rückgängig“
+    private func go() async {
+        await look()
+        guard let p = preview, !spark else { return }   // text of the Spark: the preview sheet, only its „Senden“ sends
+        preview = nil
+        pending = p
+        left = 10
+        waiter = Task {
+            for i in stride(from: 10, to: 0, by: -1) {
+                left = i
+                try? await Task.sleep(for: .seconds(1))
+                if Task.isCancelled { return }
+            }
+            await sendNow()
+        }
+    }
+
+    private func undo() {
+        waiter?.cancel()
+        waiter = nil
+        pending = nil   // nothing went out; the form keeps everything typed
+    }
+
+    private func sendNow() async {
+        guard let api = SparkAPI.current, let token = pending?["token"] as? String else { return }
+        busy = true
+        defer { busy = false }
+        do {
+            _ = try await api.call("POST", "api/profile/mail/send", body: ["token": token], timeout: 120)
+            pending = nil
+            dismiss()
+        } catch {
+            self.error = error.localizedDescription
+            pending = nil
         }
     }
 
