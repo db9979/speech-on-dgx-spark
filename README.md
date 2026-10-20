@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.857** For you: reads anew at once when a new mail comes (with "New mail at once"), and a brand only in the subject of a genuine, verified mail (say o2 with Netflix) is no longer a phishing suspicion
 - **V01.0.856** Computer cards no longer jump: both computers with the same rows at the same height side by side (also on the phone), „Wer rechnet gerade“ with fixed lines; control centre and iPhone alike
 - **V01.0.855** Fix: the iPhone app builds again (GitHub run "iPhone app"); the new Lists view used a type name the app already had
 - **V01.0.854** Lists get a page of their own in the menu (and in the iPhone app under My things): make own lists like DIY store, every entry shows who put it on, when and from where, ticked off entries stay 14 days under "Recently done" with "Bring back", shopping by departments and with amounts, shopping on Today
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.850** Status → Architecture has a new page "Security": how all layers of protection work together (the model proposes, the panel decides), with one question's way through every check, roles, borders and code; new rule: it is updated with every change of a protection rule
 - **V01.0.849** Cheat sheet to print: Me → What I can do opens two A4 sheets in German or English with everything you can say (only what is released, the key word marked), always built fresh from the routing rules
 - **V01.0.848** For you stage 2: buttons Remind me, Add to calendar, Draft a reply and Draft a cancellation (sending only through the preview), by voice "What do I have to do this week?" and "number two is done", a part in the daily briefing, by itself on deadlines and suspicion; on the iPhone under Today → For you
-- **V01.0.847** Fix: „Morgenbriefing“ as one word gets the real briefing, also at the phone
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

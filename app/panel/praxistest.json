@@ -2287,6 +2287,13 @@
 "titel": "Rechner-Karten ruhig und nebeneinander",
 "text": "A: Zustand → Überblick → Rechner am Rechner: CPU, Speicher, GPU, Temperatur, Platte, Netz, Wer rechnet gerade und Dienste stehen bei tars und speech auf gleicher Höhe nebeneinander; beim Pi steht bei GPU „–“. B: Ein paar Minuten zusehen (oder ein Bild malen lassen): die Karten werden nicht höher oder niedriger, Zeilen tauschen nicht den Platz, ein ruhender Dienst steht mit „–“ grau da. C: Dasselbe am Handy: zwei schmale Spalten nebeneinander, nichts ragt über den Rand. D: Steuerzentrale am Bildschirm: „Platte“ steht in beiden Rahmen an derselben Stelle, am Pi „GPU – keine“. E: iPhone-App → Überblick: Abschnitt „Rechner“ als Tabelle mit beiden Rechnern nebeneinander.",
 "thread": "Rechner-Karten nebeneinander"
+},
+{
+"id": "P351",
+"v": 857,
+"titel": "Für dich: neue Mail und Phishing-Regel",
+"text": "„Neue Mails sofort“ an: eine Mail mit Rechnung und Frist morgen schicken, Für dich meldet sich ohne 30 Minuten Warten. Ein o2- oder Telekom-Angebot, das Netflix oder Amazon im Betreff nennt, steht nicht unter Verdacht; eine Mail „Netflix <…@fremd>“ mit „Zahlungsdaten aktualisieren“ schon.",
+"thread": "Persönlicher Assistent aus dem Postfach"
 }
 ]
 }

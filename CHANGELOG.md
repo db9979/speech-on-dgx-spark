@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.857** · 2026-10-20 · Für dich: liest bei einer neuen Mail sofort neu (mit „Neue Mails sofort“), und eine Marke nur im Betreff einer echten, bestätigten Mail (etwa o2 mit Netflix) ist kein Phishing-Verdacht mehr
 - **V01.0.856** · 2026-10-20 · Rechner-Karten springen nicht mehr: beide Rechner mit denselben Zeilen auf gleicher Höhe nebeneinander (auch am Handy), „Wer rechnet gerade“ mit festen Zeilen; Steuerzentrale und iPhone gleich
 - **V01.0.855** · 2026-10-20 · Fix: iPhone-App baut wieder (GitHub-Lauf „iPhone app“); die neue Listen-Ansicht hatte einen Typnamen, den die App schon hatte
 - **V01.0.854** · 2026-10-20 · Listen bekommen eine eigene Seite im Menü (und in der iPhone-App unter Meine Sachen): eigene Listen wie Baumarkt anlegen, bei jedem Eintrag wer ihn wann und woher draufgesetzt hat, Abgehaktes 14 Tage unter „Zuletzt erledigt“ mit „Zurückholen“, Einkauf nach Abteilungen und mit Mengen, Einkauf auf Heute

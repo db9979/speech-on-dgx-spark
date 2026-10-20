@@ -44,6 +44,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 import features
 import guard
 import mail
+import mailidle
 import notaus
 import profiles
 import vorrang
@@ -230,16 +231,42 @@ def links(raw, text):
         {m.group(1).lower().strip(".") for m in URL.finditer(f"{raw or ''}\n{text or ''}")}
 
 
-def suspicious(sender, subject, text, link_domains, forged=False):
-    """The brand a mail pretends to come from, when it does not; '' when it looks fine."""
+def signed(msg, sender):
+    """True when the own mail server says the sender's own domain sent this mail: DMARC pass, or DKIM pass signed by
+    that domain, or SPF pass for it (the top Authentication-Results header). Without one nothing can be told."""
+    dom = domain(sender)
+    try:
+        ar = str((msg.get_all("Authentication-Results") or [""])[0]).lower()
+    except Exception:
+        return False
+    if not dom or not ar:
+        return False
+    if re.search(r"\bdmarc=pass\b", ar):
+        return True
+    for kind, key in (("dkim", "header.d"), ("spf", "smtp.mailfrom")):
+        for m in re.finditer(kind + r"=pass\b[^;]*?" + re.escape(key) + r"=(?:[^@\s;]*@)?([a-z0-9.\-]+)", ar):
+            d = m.group(1).strip(".")
+            if d and (_of(dom, (d,)) or _of(d, (dom,))):
+                return True
+    return False
+
+
+def suspicious(sender, subject, text, link_domains, forged=False, signed_by_sender=False):
+    """The brand a mail pretends to come from, when it does not; '' when it looks fine. Pretending is the brand in
+    the sender's name (or a forged header); a brand only in the subject is a mail about it (an o2 offer with Netflix,
+    Dominik 2026-10-20) and counts only when the sender's own domain did not verifiably send the mail or the subject
+    itself asks to confirm, log in or says the account is blocked."""
     dom = domain(sender)
     name = email.utils.parseaddr(sender or "")[0].lower()
-    head = f"{name} {subject}".lower()
     for brand, domains in BRANDS.items():
-        if not re.search(r"\b" + re.escape(brand) + r"\b", head):
+        word = r"\b" + re.escape(brand) + r"\b"
+        in_name = bool(re.search(word, name)) or (bool(re.search(word, dom)) and not _of(dom, domains))   # name or lookalike domain
+        if not in_name and not re.search(word, (subject or "").lower()):
             continue
         if forged:
             return brand
+        if not in_name and not _of(dom, domains) and signed_by_sender and not ACTION.search(subject or ""):
+            continue                # its own domain sent it and only names the brand: an offer, a partner, news
         if _of(dom, domains):
             foreign = [d for d in link_domains if not _of(d, domains) and not _of(d, (dom,))]
             if foreign and ACTION.search(f"{subject}\n{text}") and len(foreign) == len(link_domains):
@@ -250,11 +277,11 @@ def suspicious(sender, subject, text, link_domains, forged=False):
     return ""
 
 
-def classify(h, text, sent, today, raw="", forged=False):
+def classify(h, text, sent, today, raw="", forged=False, signed_by_sender=False):
     """One item {kind, ...} of a mail or None. h: {"from", "subject", "bulk", "cat"} (cat: the tidy folder)."""
     frm, subj = h.get("from", ""), h.get("subject", "")
     s = f"{subj}\n{text[:6000]}"
-    brand = suspicious(frm, subj, text, links(raw, text), forged)
+    brand = suspicious(frm, subj, text, links(raw, text), forged, signed_by_sender)
     if brand:
         return {"kind": "verdacht", "brand": brand.capitalize() if len(brand) > 3 else brand.upper(),
                 "domain": domain(frm)[:60]}
@@ -405,7 +432,7 @@ def _account(acct, uid, today, now, shops=None):
                 if person and waiting(h, text, sent_dt, now, answered, wrote):
                     x = {"kind": "antwort", "days": int((now - sent_dt).total_seconds() // 86400)}
                 if x is None:
-                    x = classify(h, text, sent, today, _raw_text(msg), parcels.forged(msg))
+                    x = classify(h, text, sent, today, _raw_text(msg), parcels.forged(msg), signed(msg, h["from"]))
                 if x:
                     x.update(id=key(h["mid"], acct["id"], n), who=who(h["from"]), subject=subj[:90],
                              sent=sent.isoformat(), at=int(sent_dt.timestamp()), ref=f"{acct['id']}:{n}", box=box,
@@ -821,6 +848,11 @@ _new = set()
 def new_mail(uid):
     """Called when a new mail came in: the next check of Von selbst reads the mailboxes anew."""
     _new.add(uid)
+
+
+# IMAP IDLE of the mail page (mailidle.py, chat.mail_idle): a new mail in a profile's inbox makes the next check read
+# anew at once; with IDLE off the check still reads every FUER_EVERY seconds (proactive.check_fuerdich)
+mailidle.on_new(new_mail)
 
 
 def wants_fresh(uid):

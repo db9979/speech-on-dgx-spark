@@ -5125,7 +5125,15 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Für dich aus Mails",
-"text": "der die Kopfzeile sagt DMARC-Fehler). Beträge und Tage gelten nur, wenn sie sich lesen lassen; jeder Satz auf einer Karte ist ein fester Satz mit den geprüften Werten. Absendername und Betreff sind Text von außen und erscheinen nur als Text; Links aus Mails werden nie geöffnet oder verlinkt. Je Lauf höchstens 60 Mail-Texte je Postfach, im Hintergrund mit Vorrang für Sprache (vorrang.in_thread(\"Für dich\")), Ergebnis 10 Minuten im Speicher. ✓ (erledigt) und ✕ (nicht interessant / ist echt) merken sich nur eine Prüfsumme der Message-ID in users/<p>/fuerdich.json (bleibt auf dem Spark); „⋯ → Markierungen vergessen“ und „Daten löschen“ entfernen sie. Unter *Ich → Heute* zählt die Karte „Für dich“ nur, wie viele Karten dich brauchen (höchstens 3 Sekunden Warten, sonst „wird gelesen“). Logs nur mit festen Wörtern: fuerdich: gelesen funde=3 fehler=0 sekunden=1.2, fuerdich: markiert als=done Profil …. API (Profil): GET /api/profile/fuerdich (?fresh=1 liest neu), POST /api/profile/fuerdich/mark {\"id\", \"as\": \"done\"|\"no\"|\"open\"}, DELETE /api/profile/fuerdich."
+"text": "der die Kopfzeile sagt DMARC-Fehler; seit V01.0.857 zählt eine Marke nur im Betreff nicht, wenn der Mailserver bestätigt, dass die eigene Domain des Absenders die Mail geschickt hat (DMARC, DKIM oder SPF bestanden) und der Betreff nicht selbst zum Bestätigen oder Anmelden drängt: so ist ein o2-Angebot mit Netflix kein Verdacht mehr; Marke im Absendernamen oder in einer Nachahmer-Domain bleibt Verdacht). Beträge und Tage gelten nur, wenn sie sich lesen lassen; jeder Satz auf einer Karte ist ein fester Satz mit den geprüften Werten. Absendername und Betreff sind Text von außen und erscheinen nur als Text; Links aus Mails werden nie geöffnet oder verlinkt. Je Lauf höchstens 60 Mail-Texte je Postfach, im Hintergrund mit Vorrang für Sprache (vorrang.in_thread(\"Für dich\")), Ergebnis 10 Minuten im Speicher. ✓ (erledigt) und ✕ (nicht interessant / ist echt) merken sich nur eine Prüfsumme der Message-ID in users/<p>/fuerdich.json (bleibt auf dem Spark); „⋯ → Markierungen vergessen“ und „Daten löschen“ entfernen sie. Unter *Ich → Heute* zählt die Karte „Für dich“ nur, wie viele Karten dich brauchen (höchstens 3 Sekunden Warten, sonst „wird gelesen“). Logs nur mit festen Wörtern: fuerdich: ge"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Für dich aus Mails",
+"text": "lesen funde=3 fehler=0 sekunden=1.2, fuerdich: markiert als=done Profil …. API (Profil): GET /api/profile/fuerdich (?fresh=1 liest neu), POST /api/profile/fuerdich/mark {\"id\", \"as\": \"done\"|\"no\"|\"open\"}, DELETE /api/profile/fuerdich."
 },
 {
 "lang": "de",
@@ -5149,7 +5157,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": " werkzeug liste funde=N, fuerdich: briefing teile=N. Im iPhone: Heute → Für dich mit denselben Karten und Knöpfen (Wischen für Erledigt und Nicht interessant, ⋯ für Neu lesen und Markierungen vergessen). Nächste Stufen: Interessen und „Was ich über dich weiß“, Netz-Tipp, Wochenrückblick, Ausgaben."
+"text": " werkzeug liste funde=N, fuerdich: briefing teile=N. Im iPhone: Heute → Für dich mit denselben Karten und Knöpfen (Wischen für Erledigt und Nicht interessant, ⋯ für Neu lesen und Markierungen vergessen). Nächste Stufen: Interessen und „Was ich über dich weiß“, Netz-Tipp, Wochenrückblick, Ausgaben. Seit V01.0.857 liest Für dich bei einer neuen Mail sofort neu, wenn „Neue Mails sofort“ (IMAP IDLE, mailidle.py, chat.mail_idle) an ist (mailidle.on_new(fuerdich.new_mail)); sonst bleibt es beim Abruf alle 30 Minuten."
 },
 {
 "lang": "de",
@@ -13741,7 +13749,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "For you from mail",
-"text": "For you from mail (fuerdich.py, plan persoenlicher-assistent/plan.md, stage 1; Features → Mail and contacts → \"Für dich aus Mails\", chat.mail_insight, off by default; needs reading e-mail; once released for every profile, never guests): under *E-mail → For you* (a tab of its own on the mail page since V01.0.809) the Spark shows what it found in the mails of the last 30 days. Everything is read read-only (EXAMINE and BODY.PEEK): the inbox, the tidying folders Werbung, Newsletter and Rechnungen when they exist, and the headers of the \"Sent\" folder. Fixed rules, no language model: bill (amount, deadline from \"fällig am\", \"zahlbar bis\" …, or \"wird abgebucht\"), contract (renews on …, cancel by …), order (order confirmation with amount), offer (advertising or newsletter with coupon/discount ending within 14 days, at most 5), reply missing (someone you wrote to before asks something and has had no answer for 2 to 14 days; told by In-Reply-To and later mails to the address), suspicious (sender or subject names a known brand like Sparkasse, PayPal, DHL but does not come from its domain and wants something confirmed, or the header says DMARC failed). Amounts and days count only when they par"
+"text": "For you from mail (fuerdich.py, plan persoenlicher-assistent/plan.md, stage 1; Features → Mail and contacts → \"Für dich aus Mails\", chat.mail_insight, off by default; needs reading e-mail; once released for every profile, never guests): under *E-mail → For you* (a tab of its own on the mail page since V01.0.809) the Spark shows what it found in the mails of the last 30 days. Everything is read read-only (EXAMINE and BODY.PEEK): the inbox, the tidying folders Werbung, Newsletter and Rechnungen when they exist, and the headers of the \"Sent\" folder. Fixed rules, no language model: bill (amount, deadline from \"fällig am\", \"zahlbar bis\" …, or \"wird abgebucht\"), contract (renews on …, cancel by …), order (order confirmation with amount), offer (advertising or newsletter with coupon/discount ending within 14 days, at most 5), reply missing (someone you wrote to before asks something and has had no answer for 2 to 14 days; told by In-Reply-To and later mails to the address), suspicious (sender or subject names a known brand like Sparkasse, PayPal, DHL but does not come from its domain and wants something confirmed, or the header says DMARC failed; since V01.0.857 a brand only in the subjec"
 },
 {
 "lang": "en",
@@ -13749,7 +13757,15 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "For you from mail",
-"text": "se; every sentence on a card is a fixed sentence with the checked values. Sender name and subject are outside text and appear only as text; links from mails are never opened or linked. Per run at most 60 mail texts per mailbox, in the background with speech first (vorrang.in_thread(\"Für dich\")), the result kept 10 minutes in memory. ✓ (done) and ✕ (not interesting / is genuine) keep only a checksum of the Message-ID in users/<p>/fuerdich.json (stays on the Spark); \"⋯ → Forget the marks\" and \"Delete data\" remove them. Under *Me → Today* the card \"For you\" only counts how many cards need you (waits at most 3 seconds, else \"being read\"). Logs only with fixed words: fuerdich: gelesen funde=3 fehler=0 sekunden=1.2, fuerdich: markiert als=done Profil …. API (profile): GET /api/profile/fuerdich (?fresh=1 reads again), POST /api/profile/fuerdich/mark {\"id\", \"as\": \"done\"|\"no\"|\"open\"}, DELETE /api/profile/fuerdich."
+"text": "t does not count when the mail server confirms that the sender's own domain sent the mail (DMARC, DKIM or SPF passed) and the subject itself does not urge to confirm or log in: so an o2 offer with Netflix is no longer suspicious; a brand in the sender's name or in a lookalike domain stays suspicious). Amounts and days count only when they parse; every sentence on a card is a fixed sentence with the checked values. Sender name and subject are outside text and appear only as text; links from mails are never opened or linked. Per run at most 60 mail texts per mailbox, in the background with speech first (vorrang.in_thread(\"Für dich\")), the result kept 10 minutes in memory. ✓ (done) and ✕ (not interesting / is genuine) keep only a checksum of the Message-ID in users/<p>/fuerdich.json (stays on the Spark); \"⋯ → Forget the marks\" and \"Delete data\" remove them. Under *Me → Today* the card \"For you\" only counts how many cards need you (waits at most 3 seconds, else \"being read\"). Logs only with fixed words: fuerdich: gelesen funde=3 fehler=0 sekunden=1.2, fuerdich: markiert als=done Profil …. API (profile): GET /api/profile/fuerdich (?fresh=1 reads again), POST /api/profile/fuerdich/mark {"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "For you from mail",
+"text": "\"id\", \"as\": \"done\"|\"no\"|\"open\"}, DELETE /api/profile/fuerdich."
 },
 {
 "lang": "en",
@@ -13773,7 +13789,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "again and Forget the marks). Next stages: interests and \"What I know about you\", web tip, weekly review, spending."
+"text": "again and Forget the marks). Next stages: interests and \"What I know about you\", web tip, weekly review, spending. Since V01.0.857 For you reads anew at once when a new mail comes, if \"New mail at once\" (IMAP IDLE, mailidle.py, chat.mail_idle) is on (mailidle.on_new(fuerdich.new_mail)); otherwise it stays with the check every 30 minutes."
 },
 {
 "lang": "en",
