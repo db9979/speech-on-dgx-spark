@@ -160,7 +160,7 @@ MODULE = {
     "kalenderspiegel": ("dienste", "Spark-Kalender: verschlüsselte Kopie jedes CalDAV-Kalenders, holt nur Änderungen, Änderungen der Seite sofort"),
     "vorwaermen": ("dienste", "Vorwärmen: liest beim Anmelden Kalender, Mails, Für dich und Kontakte vorab in den Speicher"),
     "contacts": ("dienste", "Kontakte per CardDAV, nur lesen"),
-    "tasks": ("dienste", "Aufgaben und Einkaufsliste"),
+    "tasks": ("dienste", "Listen für Einkauf und Aufgaben"),
     "weather": ("dienste", "Wetter von Open-Meteo als feste Sätze"),
     "transit": ("dienste", "Bus und Bahn"),
     "feeds": ("dienste", "Reddit und Feeds: eigener Reddit-Posteingang, Subreddits und RSS, nur lesen"),

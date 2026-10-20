@@ -286,7 +286,7 @@ async def carry_out(uid, p):
         elif p["kind"] == "appointment":
             await calendars.add_event(uid, dict(p["item"], location="", alarm=0, calendar=""))
         else:
-            await tasks.add(uid, p["list"], [p["text"]])
+            await tasks.add(uid, p["list"], [p["text"]], src="auftrag")
     except Exception as e:
         print(f"agent: job proposal failed | {p['kind']} | {type(e).__name__}", flush=True)
         raise

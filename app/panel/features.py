@@ -45,7 +45,7 @@ ME_PAGES = (("overbox", "Überblick", "Overview"), ("bgbox", "Mein Zustand", "My
             ("kannbox", "Was ich kann", "What I can do"),
             ("setbox", "Gespräch", "Conversation"), ("loginbox", "Anmelden", "Sign in"), ("factbox", "Gedächtnis", "Memory"),
             ("docbox", "Dokumente", "Documents"), ("bildbox", "Bilder", "Pictures"), ("musikbox", "Musik", "Music"), ("rmbox", "reMarkable", "reMarkable"), ("storebox", "Speicher", "Storage"),
-            ("logbox", "Werkzeug-Verlauf", "Tool history"), ("taskbox", "Aufgaben", "Tasks"),
+            ("logbox", "Werkzeug-Verlauf", "Tool history"),
             ("agentbox", "Aufträge", "Jobs"), ("mymcpbox", "Meine MCP-Dienste", "My MCP services"), ("wxbox", "Wetter", "Weather"), ("feedbox", "Reddit und Feeds", "Reddit and feeds"),
             ("probox", "Von selbst", "By itself"), ("notebox", "Mitteilungen", "Notifications"),
             ("wissbox", "Was ich über dich weiß", "What I know about you"), ("writebox", "Schreibhilfe", "Writing help"), ("conbox", "Kontakte", "Contacts"),
@@ -60,7 +60,8 @@ ME_PAGES = (("overbox", "Überblick", "Overview"), ("bgbox", "Mein Zustand", "My
 # each holds everything of its kind, what is set up sits in its tab „Einstellungen“. The id of the box stays the place
 # (me=<id>) of every way, card and app; kalender.js OWN_PAGES carries the same (test_app_gleichstand).
 # (id, section, name de, name en)
-OWN_PAGES = (("calbox", "cal", "Kalender", "Calendar"), ("mailbox", "post", "E-Mail", "E-mail"))
+OWN_PAGES = (("calbox", "cal", "Kalender", "Calendar"), ("mailbox", "post", "E-Mail", "E-mail"),
+             ("taskbox", "listen", "Listen", "Lists"))
 # Ich pages every profile has, whatever is switched on (me.js meAll shows them for every profile too)
 ME_ALWAYS = frozenset(("setbox", "factbox", "logbox", "secbox"))
 # Ich pages the iPhone app leaves out, each with its reason; every other page can be opened in the app
@@ -249,7 +250,7 @@ FEATURES = (
     F("hacam", "Kamerabild beschreiben", "Describe a camera picture", "day", ("ha_camera", "homeassistant"),
       pref="pro_ha_cam", parent="proactive", me="probox", guide="hacam"),
     F("reminders", "Timer und Erinnerungen", "Timers and reminders", "day", ("reminders",), guide="reminders"),
-    F("tasks", "Aufgaben und Einkaufsliste", "Tasks and shopping list", "day", ("tasks",), me="taskbox", guide="tasks"),
+    F("tasks", "Listen für Einkauf und Aufgaben", "Lists for shopping and tasks", "day", ("tasks",), me="taskbox", guide="tasks"),
     F("mystatus", "Mein Zustand", "My status", "day", ("my_status",), me="bgbox", guide="mystatus"),
     F("agent", "Aufträge", "Jobs", "day", ("agent",), me="agentbox", guide="agent"),
     # watches (beobachten.py): admin release only, every profile with agent functions, never guests

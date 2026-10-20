@@ -2273,6 +2273,13 @@
 "titel": "Termine: nur lesen, Notiz und Link",
 "text": "A: Seite Kalender: Termine aus einem Abo (iCal), einem geteilten Kalender oder einer Serie tragen ein 🔒. B: Einen davon öffnen: die Karte sagt, warum er sich nicht ändern lässt. C: Einen Termin mit Notiz (im iPhone-Kalender „Notizen“) und Link öffnen: beides steht in der Karte, der Link nur als Text; eine lange Notiz zeigt „Weiter lesen“. D: Dasselbe im iPhone (Schloss in der Liste, Abschnitt Notiz).",
 "thread": "Kalender und E-Mail in Panel und Apps"
+},
+{
+"id": "P349",
+"v": 854,
+"titel": "Seite Listen",
+"text": "A: Update auf V01.0.854, Funktionen → Listen für Einkauf und Aufgaben an. Im Menü steht „Listen“ nach E-Mail. B: „+ Neue Liste“ → Baumarkt mit Symbol anlegen, „Schrauben 2x, Dübel“ eintragen: bei jedem Eintrag steht dein Name, „gerade eben“ und „Seite“. C: Im Chat „Setz Nägel auf die Baumarkt-Liste“: Nägel steht dort mit „Assistent“. D: Schrauben abhaken: unter „Zuletzt erledigt“, „Zurückholen“ holt sie zurück. E: Einkauf: „Milch, Äpfel, Spülmittel“ steht nach Abteilungen, „3 Milch“ dazu macht „Milch 4×“. F: iPhone-App → Meine Sachen → Listen: dieselben Listen, Abhaken mit Tipp, Wischen löscht; Heute zeigt den Einkauf.",
+"thread": "Listen für Einkauf und Aufgaben"
 }
 ]
 }

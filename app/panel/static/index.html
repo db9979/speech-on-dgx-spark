@@ -59,7 +59,7 @@
 <button class="b" id="logoutbtn" type="button" style="order:4;display:none">Abmelden</button>
 </div>
 <button class="ib" id="mmenu" type="button" title="Menü" aria-label="Menü"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
-<nav><button type="button" class="navfind" id="findbtn" aria-label="Suchen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><span>Suchen …</span><kbd>Strg K</kbd></button><button data-s="chat"><i class="ni" data-ni="chat"></i>Assistent</button><button data-s="chats" hidden><i class="ni" data-ni="chats"></i>Chats <span class="ncnt" id="cxcnt" hidden></span></button><button data-s="cal" hidden><i class="ni" data-ni="cal"></i>Kalender</button><button data-s="post" hidden><i class="ni" data-ni="post"></i>E-Mail</button><button type="button" class="navme" id="navme"><i class="ni" data-ni="me"></i>Ich <span class="medot" hidden></span></button><span class="navgrp">Spark verwalten</span><button data-s="mon" class="on"><i class="ni" data-ni="mon"></i>Zustand <span class="hdot" id="hdot"></span></button><button data-s="feat"><i class="ni" data-ni="feat"></i>Funktionen <span class="ncnt" id="featdirty" hidden>1</span></button><button data-s="prof"><i class="ni" data-ni="prof"></i>Personen und Geräte</button><button data-s="cfg"><i class="ni" data-ni="cfg"></i>Einstellungen <span class="ncnt" id="dirtycnt" hidden></span><span id="updbadge" class="pill warn" style="display:none">Update</span></button></nav></header>
+<nav><button type="button" class="navfind" id="findbtn" aria-label="Suchen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><span>Suchen …</span><kbd>Strg K</kbd></button><button data-s="chat"><i class="ni" data-ni="chat"></i>Assistent</button><button data-s="chats" hidden><i class="ni" data-ni="chats"></i>Chats <span class="ncnt" id="cxcnt" hidden></span></button><button data-s="cal" hidden><i class="ni" data-ni="cal"></i>Kalender</button><button data-s="post" hidden><i class="ni" data-ni="post"></i>E-Mail</button><button data-s="listen" hidden><i class="ni" data-ni="listen"></i>Listen</button><button type="button" class="navme" id="navme"><i class="ni" data-ni="me"></i>Ich <span class="medot" hidden></span></button><span class="navgrp">Spark verwalten</span><button data-s="mon" class="on"><i class="ni" data-ni="mon"></i>Zustand <span class="hdot" id="hdot"></span></button><button data-s="feat"><i class="ni" data-ni="feat"></i>Funktionen <span class="ncnt" id="featdirty" hidden>1</span></button><button data-s="prof"><i class="ni" data-ni="prof"></i>Personen und Geräte</button><button data-s="cfg"><i class="ni" data-ni="cfg"></i>Einstellungen <span class="ncnt" id="dirtycnt" hidden></span><span id="updbadge" class="pill warn" style="display:none">Update</span></button></nav></header>
 <main>
 <div class="ptabs subnav" id="subnav" hidden></div>
 <button class="b cfgback" id="subback" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg><span>Zustand</span></button>
@@ -281,7 +281,7 @@
       <div class="setrow"><div class="lbl"><b>Kalender und Tagesbriefing</b><span>Termine vorlesen, nach „Ja“ eintragen, und auf „Guten Morgen“ das Tagesbriefing.</span></div><label class="tgl"><input type="checkbox" id="chat.calendar"><i></i></label></div>
       <div class="setrow" data-show="chat.calendar" style="margin-left:18px"><div class="lbl"><b>Kalender teilen</b><span>Ein Profil teilt einen Kalender mit einem anderen, nur sehen oder sehen und eintragen. Private Termine nur als „belegt“.</span></div><label class="tgl"><input type="checkbox" id="chat.calendar_share"><i></i></label></div>
       <div class="setrow" data-show="chat.calendar" style="margin-left:18px"><div class="lbl"><b>Kalender-Server für Kalender-Apps</b><span>Die Spark-Kalender eines Profils im Kalender des iPhone (CalDAV), mit einem App-Passwort je Profil, im Heimnetz und über den Proxy.</span></div><label class="tgl"><input type="checkbox" id="chat.calendar_server"><i></i></label></div>
-      <div class="setrow"><div class="lbl"><b>Aufgaben und Einkaufsliste</b><span>„Setz Milch auf die Einkaufsliste“: Liste auf dem Spark oder in einer CalDAV-Aufgabenliste.</span></div><label class="tgl"><input type="checkbox" id="chat.tasks"><i></i></label></div>
+      <div class="setrow"><div class="lbl"><b>Listen für Einkauf und Aufgaben</b><span>„Setz Milch auf die Einkaufsliste“: Einkauf, Aufgaben und eigene Listen auf der Seite Listen, mit wer und wann.</span></div><label class="tgl"><input type="checkbox" id="chat.tasks"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Aufträge</b><span>„Recherchiere …, sag mir Bescheid“: Aufträge im Hintergrund, geplante Aufträge und eigene Abläufe, nur für freigeschaltete Profile.</span></div><label class="tgl"><input type="checkbox" id="chat.agent"><i></i></label></div>
       <div data-show="chat.agent" style="margin-left:18px" id="agentadmin"></div>
       <div class="setrow" data-show="chat.agent" style="margin-left:18px"><div class="lbl"><b>Beobachten</b><span>Webseiten regelmäßig prüfen lassen, Meldung nur bei Neuem (Firmware, Folge, Preis). Das Panel prüft jeden Fund selbst.</span></div><label class="tgl"><input type="checkbox" id="chat.agent_watch"><i></i></label></div>
@@ -828,6 +828,9 @@
       <div id="promail"></div>
       <div id="parwrap"><div class="mgrp">Pakete</div><div id="parbox"></div></div></div>
 </section>
+<section id="listen"><div class="card" id="lstroot"></div>
+    <div id="taskbox" class="lstset" hidden></div>
+</section>
 <section id="chats"><div class="card cx" id="cxbox">
   <div class="cx-off mut" id="cxoff" hidden></div>
   <div class="cx-split" id="cxsplit">
@@ -1207,7 +1210,6 @@
       <ul class="facts small" id="loglist"></ul>
       <div class="row" style="margin-top:8px"><button class="b" id="logreload" type="button">Neu laden</button><button class="b" id="logclear" type="button">Protokoll leeren</button></div></div>
     <div id="probox" class="ptab"></div>
-    <div id="taskbox" class="ptab"></div>
     <div id="agentbox" class="ptab"></div>
     <div id="tgbox" class="ptab"></div>
     <div id="espbox" class="ptab"></div>
@@ -1322,6 +1324,7 @@
 <script src="/static/js/today.js"></script>
 <script src="/static/js/kalender.js"></script>
 <script src="/static/js/post.js"></script>
+<script src="/static/js/listen.js"></script>
 <script src="/static/js/android.js"></script>
 <script src="/static/js/appview.js"></script>
 <script src="/static/js/notaus.js"></script>

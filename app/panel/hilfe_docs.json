@@ -1845,7 +1845,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Alltagsquote",
 "title": "Alltagsquote",
-"text": "- Die Testsätze (162) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (211) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt."
+"text": "- Die Testsätze (164) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (211) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt."
 },
 {
 "lang": "de",
@@ -1861,7 +1861,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 23 Gruppen der Weiche (Schritt 4, Schritt 6) - 2 Gruppen höchstens, die noch eingrenzen (Schritt 6) - 80 Zeichen höchstens für eine Folgefrage (Schritt 8) - 4 Sekunden höchstens für die Wahl des Modells (Schritt 10) - 300 ms Wartezeit mit „Schneller Antwortbeginn“ (Schritt 10) - 80 % Standard-Schwelle der Einordnung (Schritt 10) - 162 eingebaute Testsätze (Schritt 4, Schritt 5) - 211 Alltagssätze zum Messen (Schritt 14) - 20 Versionen für Rückgängig (Schritt 4)"
+"text": "- 23 Gruppen der Weiche (Schritt 4, Schritt 6) - 2 Gruppen höchstens, die noch eingrenzen (Schritt 6) - 80 Zeichen höchstens für eine Folgefrage (Schritt 8) - 4 Sekunden höchstens für die Wahl des Modells (Schritt 10) - 300 ms Wartezeit mit „Schneller Antwortbeginn“ (Schritt 10) - 80 % Standard-Schwelle der Einordnung (Schritt 10) - 164 eingebaute Testsätze (Schritt 4, Schritt 5) - 211 Alltagssätze zum Messen (Schritt 14) - 20 Versionen für Rückgängig (Schritt 4)"
 },
 {
 "lang": "de",
@@ -3772,8 +3772,24 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
-"title": "Aufgaben und Einkaufsliste (V01.0.96)",
-"text": "Aufgaben und Einkaufsliste (V01.0.96): „Setz Milch auf die Einkaufsliste“, „Was steht auf meiner Aufgabenliste?“. Admin-Schalter, zuerst aus, dann für jedes Profil. Jede der zwei Listen liegt entweder auf dem Spark, dann holt ein iPhone-Kurzbefehl mit dem Geräteschlüssel neue Einträge (POST /api/tasks/inbox?list=einkauf, Header X-Speech-Device; ein GET liest nur und ändert nichts) und trägt sie in die Erinnerungen-App ein, oder in einer CalDAV-Aufgabenliste eines Kalender-Kontos (Nextcloud, mailbox.org, Radicale). Hinzufügen geht sofort, Abhaken und Löschen per Sprache erst nach „Ja“. Nach Text von draußen fügt der Assistent in derselben Antwort nichts hinzu."
+"title": "Listen für Einkauf und Aufgaben (V01.0.96)",
+"text": "Listen für Einkauf und Aufgaben (V01.0.96): „Setz Milch auf die Einkaufsliste“, „Was steht auf meiner Aufgabenliste?“. Admin-Schalter, zuerst aus, dann für jedes Profil. Jede der zwei Listen liegt entweder auf dem Spark, dann holt ein iPhone-Kurzbefehl mit dem Geräteschlüssel neue Einträge (POST /api/tasks/inbox?list=einkauf, Header X-Speech-Device; ein GET liest nur und ändert nichts) und trägt sie in die Erinnerungen-App ein, oder in einer CalDAV-Aufgabenliste eines Kalender-Kontos (Nextcloud, mailbox.org, Radicale). Hinzufügen geht sofort, Abhaken und Löschen per Sprache erst nach „Ja“. Nach Text von draußen fügt der Assistent in derselben Antwort nichts hinzu."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Seite Listen (V01.0.854, Plan listen-teilen/plan.md, Dominik 2026-10-20 „1a 2a“): Die Listen haben eine eigene Seite im Menü (nach E-Mail, nur mit der Funktion) und in der iPhone-App unter Meine Sachen → Listen; Ich → Heute und Heute in der App zeigen den Einkauf mit Zahl und den ersten Einträgen. Neben Einkauf und Aufgaben legst du bis zu 20 eigene Listen an (Name, Symbol), benennst sie um und löschst sie samt Einträgen; „Setz Schrauben auf die Baumarkt-Liste“ trifft eine eigene Liste, eine unbekannte Liste legt der Assistent nie selbst an. Jeder Eintrag zeigt, wer ihn wann und woher draufgesetzt hat (Seite, App, Stimme, Telegram, Telefon, Uhr, reMarkable, Auftrag, …). Abhaken auf der Seite geht mit einem Tipp ohne Rückfrage; Abgehaktes bleibt 14 Tage unter „Zuletzt erledigt“ mit „Zurückholen“. Die Einkaufsliste ordnet nach Abteilungen (feste Wortliste im Panel, nie das Modell) und zählt Mengen zusammen („Milch 2x“ und „3 Milch“ werden „Milch 5×“). Schnittstellen: GET /api/profile/tasks, POST /api/profile/listen, PUT/DELETE /api/profile/listen/{id}, POST /api/profile/tasks/{liste} (/done, /undo), DELETE /api/profile/tasks/{liste}/{eintrag}; jede mit Anmeldung, Profilbindung, CSRF,"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": " 8 KB und Anfragegrenze listen; Sehen und Löschen gehen auch, wenn der Admin das Profil gesperrt hat. Protokoll: Zeilen tasks: nur mit festen Wörtern und Zahlen (eine eigene Liste heißt dort „own“, nie beim Namen); Zustand → Live zeigt beim Kalender nur, wie viele eigene Listen und wie viele Einträge heute eingetragen und abgehakt wurden. Tests: app/tests/test_listen.py."
 },
 {
 "lang": "de",
@@ -6389,7 +6405,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Grundausstattung für Neulinge (V01.0.721, Dominik 2026-10-17)",
-"text": "Grundausstattung für Neulinge (V01.0.721, Dominik 2026-10-17): Damit ein neues Profil von der ersten Frage an gut chattet, ist bei einer neuen Installation eine feste Liste an (features.GRUNDAUSSTATTUNG, jeder Eintrag mit Grund): Gezielte Werkzeugwahl, Eindeutiges direkt abrufen, Sofortige Rückmeldung, Vorab holen bei Rückfrage, Rückfrage statt Raten mit Auswahl merken, Rückfrage ohne Weckwort, Rückgängig per Sprache, Aus Korrekturen lernen, Gesicht zeigt, was es tut, Hilfe zum Spark mit „Frag Spark auf jeder Seite“, Funktionen vorschlagen, Das kannst du auch sagen, Aufgaben und Einkaufsliste und Verlauf sofort abgleichen. Hinein darf nur, was keine eigene Einrichtung braucht, nichts Neues aus dem Haus schickt, kein Zusatzmodell lädt und keinen Code des Admins verlangt; Gäste bekommen weiter nur Frage und Antwort. Eine bestehende Installation ändert sich nicht von selbst: oben auf Funktionen steht die Karte „Grundausstattung für ein gutes Gespräch“ als eine Zeile mit „x von n an“ und „Alle übernehmen“; „Was fehlt?“ klappt darunter auf, was noch aus ist, mit „Einzeln ansehen“ (seit V01.0.788, damit Funktionen kurz bleibt) (Filter „Empfohlen“; jede Zeile der Liste trägt „Empfohlen“)."
+"text": "Grundausstattung für Neulinge (V01.0.721, Dominik 2026-10-17): Damit ein neues Profil von der ersten Frage an gut chattet, ist bei einer neuen Installation eine feste Liste an (features.GRUNDAUSSTATTUNG, jeder Eintrag mit Grund): Gezielte Werkzeugwahl, Eindeutiges direkt abrufen, Sofortige Rückmeldung, Vorab holen bei Rückfrage, Rückfrage statt Raten mit Auswahl merken, Rückfrage ohne Weckwort, Rückgängig per Sprache, Aus Korrekturen lernen, Gesicht zeigt, was es tut, Hilfe zum Spark mit „Frag Spark auf jeder Seite“, Funktionen vorschlagen, Das kannst du auch sagen, Listen für Einkauf und Aufgaben und Verlauf sofort abgleichen. Hinein darf nur, was keine eigene Einrichtung braucht, nichts Neues aus dem Haus schickt, kein Zusatzmodell lädt und keinen Code des Admins verlangt; Gäste bekommen weiter nur Frage und Antwort. Eine bestehende Installation ändert sich nicht von selbst: oben auf Funktionen steht die Karte „Grundausstattung für ein gutes Gespräch“ als eine Zeile mit „x von n an“ und „Alle übernehmen“; „Was fehlt?“ klappt darunter auf, was noch aus ist, mit „Einzeln ansehen“ (seit V01.0.788, damit Funktionen kurz bleibt) (Filter „Empfohlen“; jede Zeile der Liste trägt „Empfohl"
 },
 {
 "lang": "de",
@@ -6397,7 +6413,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Grundausstattung für Neulinge (V01.0.721, Dominik 2026-10-17)",
-"text": " Zurücknehmen geht unter Zustand → Logs → Admin-Protokoll mit „Rückgängig“. Darunter fragt die Karte einmal „Darf der Spark ins Internet?“: Ja schaltet Wetter, Wikipedia direkt, den Dienst-Wächter (prüft zwei feste öffentliche Adressen) und die Websuche ein, die Websuche nur, wenn eine SearXNG-Adresse eingetragen ist; Nein merkt sich die Antwort (chat.grund_internet), nichts wird eingeschaltet. Ist alles an und die Frage beantwortet, verschwindet die Karte. Dasselbe steht in der iPhone-App unter Spark verwalten → Funktionen. Im leeren Chat ist der erste „Probier mal“-Satz „Wo stelle ich die Stimme ein?“, bis das Profil den Spark einmal nach sich selbst gefragt hat. Schnittstelle GET/POST /api/admin/grundausstattung (nur der Admin, nie der Verwalter, Anfragegrenze, 256 Byte); jede Übernahme steht im Admin-Protokoll („Schalter geändert“, auch unter Zustand → Live bei den Ereignissen). Plan: grundeinstellungen/plan.md; Tests: app/tests/test_grundausstattung.py."
+"text": "en“). Zurücknehmen geht unter Zustand → Logs → Admin-Protokoll mit „Rückgängig“. Darunter fragt die Karte einmal „Darf der Spark ins Internet?“: Ja schaltet Wetter, Wikipedia direkt, den Dienst-Wächter (prüft zwei feste öffentliche Adressen) und die Websuche ein, die Websuche nur, wenn eine SearXNG-Adresse eingetragen ist; Nein merkt sich die Antwort (chat.grund_internet), nichts wird eingeschaltet. Ist alles an und die Frage beantwortet, verschwindet die Karte. Dasselbe steht in der iPhone-App unter Spark verwalten → Funktionen. Im leeren Chat ist der erste „Probier mal“-Satz „Wo stelle ich die Stimme ein?“, bis das Profil den Spark einmal nach sich selbst gefragt hat. Schnittstelle GET/POST /api/admin/grundausstattung (nur der Admin, nie der Verwalter, Anfragegrenze, 256 Byte); jede Übernahme steht im Admin-Protokoll („Schalter geändert“, auch unter Zustand → Live bei den Ereignissen). Plan: grundeinstellungen/plan.md; Tests: app/tests/test_grundausstattung.py."
 },
 {
 "lang": "de",
@@ -10573,7 +10589,7 @@
 "file": "Architecture and data flow",
 "head": "Everyday score",
 "title": "Everyday score",
-"text": "- The test sentences (162) hold every reported wrong turn and must all pass. The everyday sentences (211) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up."
+"text": "- The test sentences (164) hold every reported wrong turn and must all pass. The everyday sentences (211) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up."
 },
 {
 "lang": "en",
@@ -10589,7 +10605,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 23 groups of the switch (step 4, step 6) - 2 groups at most that still narrow (step 6) - 80 characters at most for a follow-up (step 8) - 4 seconds at most for the model's pick (step 10) - 300 ms waiting with „Fast answer start“ (step 10) - 80 % default threshold of the classification (step 10) - 162 built-in test sentences (step 4, step 5) - 211 everyday sentences for measuring (step 14) - 20 versions for undo (step 4)"
+"text": "- 23 groups of the switch (step 4, step 6) - 2 groups at most that still narrow (step 6) - 80 characters at most for a follow-up (step 8) - 4 seconds at most for the model's pick (step 10) - 300 ms waiting with „Fast answer start“ (step 10) - 80 % default threshold of the classification (step 10) - 164 built-in test sentences (step 4, step 5) - 211 everyday sentences for measuring (step 14) - 20 versions for undo (step 4)"
 },
 {
 "lang": "en",
@@ -12436,8 +12452,24 @@
 "src": "assistant",
 "file": "Assistant and panel",
 "head": "Voice chat",
-"title": "Tasks and shopping list (V01.0.96)",
-"text": "Tasks and shopping list (V01.0.96): \"Put milk on the shopping list\", \"What is on my to-do list?\". Admin switch, off at first, then for every profile. Each of the two lists lives either on the Spark, where an iPhone shortcut with the device key fetches new entries (POST /api/tasks/inbox?list=einkauf, header X-Speech-Device; a GET only reads and changes nothing) into the Reminders app, or in a CalDAV task list of a calendar account (Nextcloud, mailbox.org, Radicale). Adding happens at once, ticking off and deleting by voice only after \"Yes\". After outside text the assistant adds nothing in the same answer."
+"title": "Lists for shopping and tasks (V01.0.96)",
+"text": "Lists for shopping and tasks (V01.0.96): \"Put milk on the shopping list\", \"What is on my to-do list?\". Admin switch, off at first, then for every profile. Each of the two lists lives either on the Spark, where an iPhone shortcut with the device key fetches new entries (POST /api/tasks/inbox?list=einkauf, header X-Speech-Device; a GET only reads and changes nothing) into the Reminders app, or in a CalDAV task list of a calendar account (Nextcloud, mailbox.org, Radicale). Adding happens at once, ticking off and deleting by voice only after \"Yes\". After outside text the assistant adds nothing in the same answer."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Page Lists (V01.0.854, plan `listen-teilen/plan.md`, Dominik 2026-10-20 \"1a 2a\")",
+"text": "Page Lists (V01.0.854, plan listen-teilen/plan.md, Dominik 2026-10-20 \"1a 2a\"): the lists have a page of their own in the menu (after E-mail, only with the function) and in the iPhone app under My things → Lists; Me → Today and Today in the app show the shopping with its number and the first entries. Besides shopping and tasks you make up to 20 own lists (name, symbol), rename them and delete them with their entries; \"Put screws on the DIY store list\" reaches an own list, and the assistant never makes an unknown list itself. Every entry shows who put it on, when and from where (page, app, voice, Telegram, phone, watch, reMarkable, job, …). Ticking off on the page is one tap without a question; ticked off entries stay 14 days under \"Recently done\" with \"Bring back\". The shopping list sorts by departments (a fixed word list in the panel, never the model) and adds up amounts (\"milk 2x\" and \"3 milk\" become \"milk 5×\"). Endpoints: GET /api/profile/tasks, POST /api/profile/listen, PUT/DELETE /api/profile/listen/{id}, POST /api/profile/tasks/{list} (/done, /undo), DELETE /api/profile/tasks/{list}/{entry}; each with login, profile binding, CSRF, 8 KB and rate limit listen; looking and delet"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Page Lists (V01.0.854, plan `listen-teilen/plan.md`, Dominik 2026-10-20 \"1a 2a\")",
+"text": "ing also work while the admin blocked the profile. Log: lines tasks: with fixed words and numbers only (an own list is \"own\" there, never its name); Status → Live shows with the calendar only how many own lists and how many entries were added and ticked off today. Tests: app/tests/test_listen.py."
 },
 {
 "lang": "en",
@@ -14925,7 +14957,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Basic set for newcomers (V01.0.721, Dominik 2026-10-17)",
-"text": "Basic set for newcomers (V01.0.721, Dominik 2026-10-17): so a new profile chats well from the first question, a new installation has a fixed list on (features.GRUNDAUSSTATTUNG, each entry with its reason): targeted tool choice, fetch clear questions directly, instant acknowledgement, fetch ahead on a question back, ask instead of guessing with remember the choice, follow-up without wake word, undo by voice, learning from corrections, face shows what it does, help with the Spark with \"Ask Spark on every page\", suggesting functions, you can also say, tasks and shopping list and instant history sync. Only what needs no setup of its own, sends nothing new out of the house, loads no extra model and wants no admin code may go in; guests still only ask and get answers. An existing installation never changes by itself: at the top of Features the card \"Basic set for a good conversation\" is one line with \"x of n on\" and \"Take them all\"; \"What is off?\" opens what is still off below it, with \"Look at each\" (since V01.0.788, so Features stays short) (filter \"Recommended\"; every row of the list carries \"Recommended\"). Taking it back works under Status → Logs → Admin-Protokoll with \"Undo\". Below,"
+"text": "Basic set for newcomers (V01.0.721, Dominik 2026-10-17): so a new profile chats well from the first question, a new installation has a fixed list on (features.GRUNDAUSSTATTUNG, each entry with its reason): targeted tool choice, fetch clear questions directly, instant acknowledgement, fetch ahead on a question back, ask instead of guessing with remember the choice, follow-up without wake word, undo by voice, learning from corrections, face shows what it does, help with the Spark with \"Ask Spark on every page\", suggesting functions, you can also say, lists for shopping and tasks and instant history sync. Only what needs no setup of its own, sends nothing new out of the house, loads no extra model and wants no admin code may go in; guests still only ask and get answers. An existing installation never changes by itself: at the top of Features the card \"Basic set for a good conversation\" is one line with \"x of n on\" and \"Take them all\"; \"What is off?\" opens what is still off below it, with \"Look at each\" (since V01.0.788, so Features stays short) (filter \"Recommended\"; every row of the list carries \"Recommended\"). Taking it back works under Status → Logs → Admin-Protokoll with \"Undo\". B"
 },
 {
 "lang": "en",
@@ -14933,7 +14965,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Basic set for newcomers (V01.0.721, Dominik 2026-10-17)",
-"text": " the card asks once \"May the Spark use the internet?\": yes switches on the weather, Wikipedia straight away, the service watch (checks two fixed public addresses) and the web search, the web search only when a SearXNG address is stored; no keeps the answer (chat.grund_internet) and switches nothing on. Once everything is on and the question answered, the card goes away. The same is in the iPhone app under Manage Spark → Funktionen. In an empty chat the first \"Try this\" sentence is \"Where do I set the voice?\" until the profile has asked the Spark about itself once. Endpoint GET/POST /api/admin/grundausstattung (admin only, never the Verwalter, rate limited, 256 bytes); every take-over is in the admin log (\"Schalter geändert\", also under Status → Live with the events). Plan: grundeinstellungen/plan.md; tests: app/tests/test_grundausstattung.py."
+"text": "elow, the card asks once \"May the Spark use the internet?\": yes switches on the weather, Wikipedia straight away, the service watch (checks two fixed public addresses) and the web search, the web search only when a SearXNG address is stored; no keeps the answer (chat.grund_internet) and switches nothing on. Once everything is on and the question answered, the card goes away. The same is in the iPhone app under Manage Spark → Funktionen. In an empty chat the first \"Try this\" sentence is \"Where do I set the voice?\" until the profile has asked the Spark about itself once. Endpoint GET/POST /api/admin/grundausstattung (admin only, never the Verwalter, rate limited, 256 bytes); every take-over is in the admin log (\"Schalter geändert\", also under Status → Live with the events). Plan: grundeinstellungen/plan.md; tests: app/tests/test_grundausstattung.py."
 },
 {
 "lang": "en",

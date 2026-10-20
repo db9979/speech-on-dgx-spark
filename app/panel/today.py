@@ -2,7 +2,7 @@
 
 GET /api/profile/today gives the signed-in profile (browser or its own app) what is due today, only from
 functions it may use (features.allowed): the next appointments (titles and times, at most 3, read with a
-time budget), open reminders, unread messages, own documents and remembered facts. Only numbers and short
+time budget), open reminders, unread messages, own documents, the open list entries and remembered facts. Only numbers and short
 titles, never mail or message text. What is still to set up comes from onboard.py ("Los geht's",
 /api/profile/setup), not from here.
 """
@@ -68,6 +68,9 @@ async def today(request: Request, tz: str = "", prof=Depends(own_profile)):
     if may("fuerdich"):   # numbers only; reads the mails with a time budget, the page never waits longer
         import fuerdich
         out["cards"]["fuerdich"] = await fuerdich.card(uid)
+    if may("tasks"):   # the lists on the Spark (tasks.card): numbers and the newest entries of Einkauf
+        import tasks
+        out["cards"]["tasks"] = tasks.card(uid)
     if may("memory"):
         out["cards"]["memory"] = {"facts": len(profiles.memory(uid))}
     return out

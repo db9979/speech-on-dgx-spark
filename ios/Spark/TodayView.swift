@@ -32,6 +32,11 @@ struct TodayView: View {
                             : s > 0 ? String(localized: "brauchen dich, davon \(s) verdächtig") : String(localized: "brauchen dich"))
                     }
                 }
+                if let l = cards["tasks"] as? [String: Any] {
+                    let first = l["first"] as? [String] ?? []
+                    row("checklist", String(localized: "Einkauf"), "\(l["shopping"] as? Int ?? 0)",
+                        first.isEmpty ? String(localized: "Nichts zu kaufen") : first.joined(separator: ", "))
+                }
                 if let m = cards["messages"] as? [String: Any] {
                     let n = m["unread"] as? Int ?? 0
                     row("bubble.left.and.bubble.right", String(localized: "Chats"), "\(n)", n > 0 ? String(localized: "ungelesen") : String(localized: "Alles gelesen"))

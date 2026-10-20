@@ -1,0 +1,250 @@
+import SwiftUI
+
+/// Listen (plan listen-teilen.md, Dominik 2026-10-20 „1a 2a“): the same lists as the panel's page Listen (tasks.py):
+/// Einkauf, Aufgaben and own lists, who put an entry on and from where, „Erledigt“ with „Zurückholen“, the shopping
+/// list by departments. Opens with the admin's release of Listen (iphone.THINGS "tasks"); every rule stays on the Spark.
+struct ListEntry: Identifiable {
+    let id: String
+    let text: String
+    let qty: String
+    let at: Date?
+    let by: String
+    let src: String
+    let dept: String
+    let done: Date?
+    let doneBy: String
+
+    init(_ d: [String: Any], en: Bool) {
+        id = d["id"] as? String ?? ""
+        text = d["text"] as? String ?? ""
+        qty = d["qty"] as? String ?? ""
+        let t = (d["t"] as? NSNumber)?.doubleValue ?? 0
+        at = t > 0 ? Date(timeIntervalSince1970: t) : nil
+        by = d["by_name"] as? String ?? ""
+        src = d["src"] as? String ?? ""
+        dept = (en ? d["dept_en"] : d["dept"]) as? String ?? ""
+        let f = (d["done"] as? NSNumber)?.doubleValue ?? 0
+        done = f > 0 ? Date(timeIntervalSince1970: f) : nil
+        doneBy = d["done_name"] as? String ?? ""
+    }
+}
+
+struct SparkList: Identifiable {
+    let id: String
+    let name: String
+    let icon: String
+    let own: Bool
+    let shop: Bool
+    let onCalendar: Bool
+    let error: String
+    let items: [ListEntry]
+    let done: [ListEntry]
+}
+
+@MainActor
+final class ListenModel: ObservableObject {
+    @Published var lists: [SparkList] = []
+    @Published var icons: [String] = []
+    @Published var loading = true
+    @Published var error: String?
+    private var sources: [String: [String]] = [:]
+    static let en = Locale.current.language.languageCode?.identifier != "de"
+
+    func list(_ id: String) -> SparkList? { lists.first { $0.id == id } }
+
+    /// where an entry came from, in the app's language („Stimme“, „Telegram“, …)
+    func source(_ k: String) -> String { (sources[k] ?? []).dropFirst(Self.en ? 1 : 0).first ?? "" }
+
+    private func take(_ d: [String: Any]) {
+        let all = d["lists"] as? [String: [String: Any]] ?? [:]
+        lists = (d["order"] as? [String] ?? []).compactMap { (k: String) -> SparkList? in
+            guard let l = all[k] else { return nil }
+            let en = Self.en && !(l["own"] as? Bool ?? false)
+            return SparkList(id: k, name: (en ? l["name_en"] : l["name"]) as? String ?? k, icon: l["icon"] as? String ?? "",
+                             own: l["own"] as? Bool ?? false, shop: l["shop"] as? Bool ?? false, onCalendar: l["target"] is [String: Any],
+                             error: l["error"] as? String ?? "",
+                             items: (l["items"] as? [[String: Any]] ?? []).map { ListEntry($0, en: Self.en) },
+                             done: (l["done"] as? [[String: Any]] ?? []).map { ListEntry($0, en: Self.en) })
+        }
+        icons = d["icons"] as? [String] ?? icons
+        sources = d["sources"] as? [String: [String]] ?? sources
+    }
+
+    func load() async { await send("GET", "/api/profile/tasks") }
+
+    /// one change; the Spark answers with all lists as they are now. true when it went through.
+    @discardableResult
+    func send(_ method: String, _ path: String, _ body: [String: Any]? = nil) async -> Bool {
+        guard let api = SparkAPI.current else { error = String(localized: "Nicht gekoppelt."); loading = false; return false }
+        do {
+            take(try await api.object(method, path, body: body))
+            error = nil
+            loading = false
+            return true
+        } catch {
+            self.error = error.localizedDescription
+            loading = false
+            return false
+        }
+    }
+}
+
+struct ListenView: View {
+    @StateObject private var m = ListenModel()
+    @State private var making = false
+    @State private var name = ""
+
+    var body: some View {
+        List {
+            ForEach(m.lists) { l in
+                NavigationLink { ListeView(m: m, id: l.id) } label: {
+                    HStack {
+                        Text(verbatim: l.icon).frame(width: 28)
+                        Text(verbatim: l.name)
+                        Spacer()
+                        Text(verbatim: "\(l.items.count)").foregroundStyle(.secondary)
+                    }
+                }
+            }
+            if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+        }
+        .navigationTitle("Listen")
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button { name = ""; making = true } label: { Image(systemName: "plus") }.accessibilityLabel("Neue Liste")
+            }
+        }
+        .alert("Neue Liste", isPresented: $making) {
+            TextField("Name", text: $name)
+            Button("Anlegen") { Task { await m.send("POST", "/api/profile/listen", ["name": name, "icon": m.icons.first ?? ""]) } }
+            Button("Abbrechen", role: .cancel) {}
+        }
+        .refreshable { await m.load() }
+        .task { await m.load() }
+        .overlay { if m.loading && m.lists.isEmpty { LadeZeilen(rows: 4).padding() } }
+    }
+}
+
+/// One list: add, tick off with a tap, delete with a swipe, „Zuletzt erledigt“ with „Zurückholen“; an own list can be
+/// renamed or deleted.
+struct ListeView: View {
+    @ObservedObject var m: ListenModel
+    let id: String
+    @Environment(\.dismiss) private var dismiss
+    @State private var text = ""
+    @State private var renaming = false
+    @State private var newName = ""
+    @State private var dropping = false
+    @FocusState private var typing: Bool
+
+    private var path: String { "/api/profile/tasks/" + id }
+
+    var body: some View {
+        let l = m.list(id)
+        List {
+            Section {
+                HStack {
+                    TextField("Eintragen, z. B. Milch 2x", text: $text).focused($typing).submitLabel(.done).onSubmit(add)
+                    Button(action: add) { Image(systemName: "plus.circle.fill") }.disabled(text.isEmpty).accessibilityLabel("Eintragen")
+                }
+            }
+            if let l {
+                if l.items.isEmpty { Text("Die Liste ist leer.").foregroundStyle(.secondary) }
+                ForEach(groups(l), id: \.0) { dept, rows in
+                    Section {
+                        ForEach(rows) { x in entry(x, l) }
+                    } header: { if !dept.isEmpty { Text(verbatim: dept) } }
+                }
+                if !l.done.isEmpty {
+                    Section("Zuletzt erledigt") {
+                        ForEach(l.done) { x in
+                            HStack {
+                                Image(systemName: "checkmark.circle.fill").foregroundStyle(.secondary)
+                                VStack(alignment: .leading) {
+                                    Text(verbatim: line(x)).strikethrough().foregroundStyle(.secondary)
+                                    Text(verbatim: who(x.doneBy, x.done, "")).font(.caption).foregroundStyle(.secondary)
+                                }
+                                Spacer()
+                                Button("Zurückholen") { Task { await m.send("POST", path + "/undo", ["ids": [x.id]]) } }
+                                    .buttonStyle(.borderless)
+                            }
+                            .swipeActions { Button("Löschen", role: .destructive) { Task { await m.send("DELETE", path + "/" + x.id) } } }
+                        }
+                    }
+                }
+                if !l.error.isEmpty { Text(verbatim: l.error).foregroundStyle(.red) }
+            }
+            if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+        }
+        .navigationTitle(Text(verbatim: l.map { $0.icon + " " + $0.name } ?? ""))
+        .toolbar {
+            if l?.own == true {
+                ToolbarItem(placement: .primaryAction) {
+                    Menu {
+                        Button("Umbenennen") { newName = l?.name ?? ""; renaming = true }
+                        Button("Liste löschen", role: .destructive) { dropping = true }
+                    } label: { Image(systemName: "ellipsis.circle") }
+                }
+            }
+        }
+        .alert("Umbenennen", isPresented: $renaming) {
+            TextField("Name", text: $newName)
+            Button("Sichern") { Task { await m.send("PUT", "/api/profile/listen/" + id, ["name": newName]) } }
+            Button("Abbrechen", role: .cancel) {}
+        }
+        .confirmationDialog("Die Liste mit allen Einträgen löschen?", isPresented: $dropping, titleVisibility: .visible) {
+            Button("Liste löschen", role: .destructive) {
+                Task { if await m.send("DELETE", "/api/profile/listen/" + id) { dismiss() } }
+            }
+        }
+        .refreshable { await m.load() }
+    }
+
+    private func add() {
+        let t = text.trimmingCharacters(in: .whitespaces)
+        guard !t.isEmpty else { return }
+        text = ""
+        Task { await m.send("POST", path + "/add", ["text": t]) }
+        typing = true
+    }
+
+    /// a shopping list by departments in the Spark's order, any other list as it is
+    private func groups(_ l: SparkList) -> [(String, [ListEntry])] {
+        guard l.shop else { return l.items.isEmpty ? [] : [("", l.items)] }
+        var order: [String] = []
+        var by: [String: [ListEntry]] = [:]
+        for x in l.items {
+            if by[x.dept] == nil { order.append(x.dept) }
+            by[x.dept, default: []].append(x)
+        }
+        return order.map { ($0, by[$0] ?? []) }
+    }
+
+    private func line(_ x: ListEntry) -> String { x.qty.isEmpty ? x.text : x.text + " · " + x.qty }
+
+    private func who(_ name: String, _ at: Date?, _ src: String) -> String {
+        [name, at.map { $0.formatted(.relative(presentation: .named)) } ?? "", m.source(src)]
+            .filter { !$0.isEmpty }.joined(separator: " · ")
+    }
+
+    private func entry(_ x: ListEntry, _ l: SparkList) -> some View {
+        Button {
+            Task { await m.send("POST", path + "/done", ["ids": [x.id]]) }
+        } label: {
+            HStack(alignment: .top, spacing: 10) {
+                Image(systemName: "circle").foregroundStyle(.tint)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(verbatim: line(x)).foregroundStyle(.primary)
+                    let w = who(x.by, x.at, x.src)
+                    if !w.isEmpty { Text(verbatim: w).font(.caption).foregroundStyle(.secondary) }
+                }
+            }
+        }
+        .accessibilityHint(Text("Abhaken"))
+        .swipeActions {
+            if !l.onCalendar {
+                Button("Löschen", role: .destructive) { Task { await m.send("DELETE", path + "/" + x.id) } }
+            }
+        }
+    }
+}

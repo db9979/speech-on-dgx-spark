@@ -92,7 +92,7 @@ def note_tool(uid, name, args, result):
             note(uid, "memory", {"id": hit["id"]}, f"die Notiz „{hit['text'][:60]}“ vergessen")
     elif name == "tasks_add" and isinstance(result, str) and result.startswith("Auf die Liste"):
         import tasks
-        lst = args.get("list") if args.get("list") in tasks.LISTS else tasks.which(args.get("list"))
+        lst = tasks.resolve(uid, args.get("list")) or "einkauf"
         items = args.get("items")
         items = [items] if isinstance(items, str) else [str(x) for x in items or []][:20]
         if items:

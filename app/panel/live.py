@@ -1348,6 +1348,11 @@ def snapshot(view="admin", now=None):
     except Exception:
         ksrv = {"on": False}
     try:
+        import tasks
+        lst = tasks.for_live()
+    except Exception:
+        lst = {"on": False}
+    try:
         import nasquelle
         nql = nasquelle.for_live()
     except Exception:
@@ -1477,6 +1482,9 @@ def snapshot(view="admin", now=None):
         if x["id"] == "cal" and ksrv.get("on"):   # Kalender-Server (Stufe 4): app passwords, requests today (numbers)
             x["sub"] += (f" · Kalender-Apps: {ksrv['profiles']} Profile, heute {ksrv['requests']} Anfragen,"
                          f" {ksrv['saved']} Änderungen, {ksrv['refused']} abgelehnt")
+        if x["id"] == "cal" and lst.get("on") and (lst["lists"] or lst["added"] or lst["done"]):   # Listen: numbers only
+            x["sub"] += (f" · Listen: {lst['lists']} eigene bei {lst['profiles']} Profilen, heute {lst['added']} eingetragen,"
+                         f" {lst['done']} abgehakt")
         if x["id"] in ("cal", "mail") and warm.get("profiles"):   # Vorwärmen: how many profiles, how long ago (no name)
             x["sub"] += f" · {warm['profiles']} Profile vorgewärmt, zuletzt vor {warm['ago']} min"
         if x["id"] == "nasquelle" and nql.get("on"):   # Wissensordner: folders, documents, failing (no path, no name)

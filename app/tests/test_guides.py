@@ -158,8 +158,8 @@ class DesignKlar(unittest.TestCase):
         # Funktionen, apps under Personen und Geräte), the search comes first
         # Chats (plan messenger.md) right below the assistant, shown only to profiles that may use them;
         # Kalender and E-Mail (plan kalender-mail.md 1a 2a, V01.0.805, V01.0.809) after Chats, shown only with
-        # the calendar or mail function
-        self.assertEqual(re.findall(r'data-s="(\w+)"', nav), ["chat", "chats", "cal", "post", "mon", "feat", "prof", "cfg"])
+        # the calendar or mail function; Listen (plan listen-teilen.md 1a) after E-Mail, shown only with the lists
+        self.assertEqual(re.findall(r'data-s="(\w+)"', nav), ["chat", "chats", "cal", "post", "listen", "mon", "feat", "prof", "cfg"])
         self.assertLess(nav.index('id="findbtn"'), nav.index('data-s="chat"'))
         self.assertLess(nav.index('id="navme"'), nav.index("Spark verwalten"))
         self.assertLess(nav.index("Spark verwalten"), nav.index('data-s="mon"'))

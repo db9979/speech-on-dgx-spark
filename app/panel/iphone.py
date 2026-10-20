@@ -144,6 +144,12 @@ THINGS = {
     "fuerdich": ((("GET", "DELETE"), r"/api/profile/fuerdich"), (("POST",), r"/api/profile/fuerdich/(?:mark|act)")),
     # Was ich über dich weiß (ichweiss.py): the page, an interest yes/no/forget, a monthly reminder, forget all
     "ichweiss": ((("GET", "DELETE"), r"/api/profile/ichweiss"), (("POST",), r"/api/profile/ichweiss/(?:interest|recurring)")),
+    # Listen (tasks.py, plan listen-teilen.md): the lists, add, tick off, take back, delete an entry; own lists made,
+    # renamed and deleted (the CalDAV target and the shortcut's inbox stay in the browser and with app_ios)
+    "tasks": ((("GET",), r"/api/profile/tasks"), (("POST",), r"/api/profile/listen"),
+              (("PUT", "DELETE"), r"/api/profile/listen/l[0-9a-f]{8}"),
+              (("POST",), r"/api/profile/tasks/(?:einkauf|aufgaben|l[0-9a-f]{8})/(?:add|done|undo)"),
+              (("DELETE",), r"/api/profile/tasks/(?:einkauf|aufgaben|l[0-9a-f]{8})/[0-9a-f]{10}")),
     # Musik (musik.py): listen, make from a wish, delete one or all
     "musik": ((("GET", "POST", "DELETE"), r"/api/musik"), (("GET",), rf"/api/musik/job/{_DOC}"),
               (("GET",), rf"/api/musik/{_DOC}/datei"), (("DELETE",), rf"/api/musik/{_DOC}")),

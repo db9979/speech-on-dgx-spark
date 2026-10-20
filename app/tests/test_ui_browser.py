@@ -357,7 +357,7 @@ class Browser(unittest.TestCase):
                         await pg.click(".whynote .tipnote .tiprow .b.p")
                         await pg.wait_for_selector("#tipsetup .row .b.p", timeout=20000)
                         await self.until(pg, "$('fab').classList.contains('open')", 20)
-                        self.assertIn("Funktionen → Aufgaben und Einkaufsliste", await pg.text_content("#tipsetup"))
+                        self.assertIn("Funktionen → Listen für Einkauf und Aufgaben", await pg.text_content("#tipsetup"))
                         with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
                             self.assertFalse(json.load(f)["chat"]["tasks"])   # nothing switches by itself
                         over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")

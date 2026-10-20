@@ -1211,16 +1211,6 @@
         }
       }
     },
-    "Aufgaben und Einkaufsliste": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tasks and shopping list"
-          }
-        }
-      }
-    },
     "Aufnahme ging nicht.": {
       "localizations": {
         "en": {
@@ -13397,6 +13387,116 @@
           "stringUnit": {
             "state": "translated",
             "value": "Read only: this calendar cannot be changed here."
+          }
+        }
+      }
+    },
+    "Listen für Einkauf und Aufgaben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lists for shopping and tasks"
+          }
+        }
+      }
+    },
+    "Listen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lists"
+          }
+        }
+      }
+    },
+    "Neue Liste": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New list"
+          }
+        }
+      }
+    },
+    "Eintragen, z. B. Milch 2x": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add, e.g. milk 2x"
+          }
+        }
+      }
+    },
+    "Die Liste ist leer.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The list is empty."
+          }
+        }
+      }
+    },
+    "Zuletzt erledigt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recently done"
+          }
+        }
+      }
+    },
+    "Zurückholen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bring back"
+          }
+        }
+      }
+    },
+    "Liste löschen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete list"
+          }
+        }
+      }
+    },
+    "Die Liste mit allen Einträgen löschen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete the list with all its entries?"
+          }
+        }
+      }
+    },
+    "Abhaken": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tick off"
+          }
+        }
+      }
+    },
+    "Nichts zu kaufen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing to buy"
           }
         }
       }

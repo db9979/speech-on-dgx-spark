@@ -287,7 +287,7 @@ Home Assistant, Mail, Kalender, Aufgaben, Wetter, reMarkable, MCP und was der Sp
 | `app/panel/rmplus.py` | Mehr mit dem reMarkable: Senden, Ordner, Abgleich |
 | `app/panel/senden.py` | Mails senden auf der Seite E-Mail: Vorschau-Blatt, SMTP über TLS, Kopie in Gesendet |
 | `app/panel/sparkkalender.py` | Spark-Kalender ohne Konto: Termine nur auf dem Spark, verschlüsselt im Profil, beantwortet CalDAV im Panel selbst |
-| `app/panel/tasks.py` | Aufgaben und Einkaufsliste |
+| `app/panel/tasks.py` | Listen für Einkauf und Aufgaben |
 | `app/panel/tidy.py` | Posteingang aufräumen |
 | `app/panel/transit.py` | Bus und Bahn |
 | `app/panel/vorwaermen.py` | Vorwärmen: liest beim Anmelden Kalender, Mails, Für dich und Kontakte vorab in den Speicher |
@@ -1830,7 +1830,7 @@ Gilt bei: [Schritt 9](#kn-weiche-s9)
 
 #### Alltagsquote
 
-- Die Testsätze (162) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (211) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt.
+- Die Testsätze (164) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (211) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt.
 
 #### Werkzeugnamen
 
@@ -1844,7 +1844,7 @@ Gilt bei: [Schritt 9](#kn-weiche-s9)
 - **4** Sekunden höchstens für die Wahl des Modells ([Schritt 10](#kn-weiche-s10))
 - **300 ms** Wartezeit mit „Schneller Antwortbeginn“ ([Schritt 10](#kn-weiche-s10))
 - **80 %** Standard-Schwelle der Einordnung ([Schritt 10](#kn-weiche-s10))
-- **162** eingebaute Testsätze ([Schritt 4](#kn-weiche-s4), [Schritt 5](#kn-weiche-s5))
+- **164** eingebaute Testsätze ([Schritt 4](#kn-weiche-s4), [Schritt 5](#kn-weiche-s5))
 - **211** Alltagssätze zum Messen ([Schritt 14](#kn-weiche-s14))
 - **20** Versionen für Rückgängig ([Schritt 4](#kn-weiche-s4))
 
@@ -3324,7 +3324,7 @@ Gilt bei: [Schritt 5](#kn-users-s5), [Schritt 7](#kn-users-s7)
 |---|---|---|
 | Gespräche | convos.json, toollog.json, room-history.json | ✓ |
 | Gedächtnis | memory.json, learned.json, zuordnungen.json | ✓ |
-| Aufgaben und Erinnerungen | tasks.json, reminders.json | ✓ |
+| Listen und Erinnerungen | tasks.json, reminders.json | ✓ |
 | Dokumente | wissen.db, docs/files/, suchpruefung.json | ✓ |
 | Erstellte Dokumente | erstellt/ | ✓ |
 | Gemalte Bilder | bilder/ | ✓ |

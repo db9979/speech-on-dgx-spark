@@ -620,7 +620,7 @@ async def _do_new(uid, kind, lines, now):
         return "aus", None
     import tasks
     lst = "aufgaben" if kind == "aufgabe" else "einkauf"
-    added = await tasks.add(uid, lst, lines)
+    added = await tasks.add(uid, lst, lines, src="remarkable")
     return "neu", {"list": lst, "texts": added}
 
 
@@ -819,9 +819,9 @@ async def undo(uid, i):
             return False
         if x["src"] == "neu":          # taken off the list again
             have = await tasks.items(uid, u["list"])
-            await tasks.change(uid, u["list"], [e for e in have if e["text"] in u["texts"]], "delete")
+            await tasks.change(uid, u["list"], tasks.match(have, u["texts"]), "delete")
         else:                          # ticked off: back on the list
-            await tasks.add(uid, u["list"], u["texts"])
+            await tasks.add(uid, u["list"], u["texts"], src="remarkable")
     if "plan" in u:
         import agent
         agent.mutate(uid, lambda d: d.update(plans=[p for p in d["plans"] if p.get("id") != u["plan"]]))

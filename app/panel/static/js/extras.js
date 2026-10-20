@@ -66,37 +66,34 @@ async function showPar(fresh){const box=$('parbox');if(!PROFILE||!PAR_ON){box.in
     <div class="row" style="margin-top:8px"><button class="b" type="button" id="parrun">${t('Jetzt prüfen','Check now')}</button></div>`:''}`;
   xbind(box,()=>showPar(true));
   if($('parrun'))$('parrun').onclick=()=>showPar(true)}
-// ---------------------------------------------------------------- tasks and shopping list (tasks.py)
+// ---------------------------------------------------------------- Listen → Einstellungen (tasks.py, listen.js)
+// where the two fixed lists live (on the Spark or in a CalDAV task list) and the iPhone shortcut; the lists themselves
+// are the page Listen
 let TASK_ON=false,TG_ON=false,APP_ON=false,APP_PANEL=false,PEB_ON=false,AND_ON=false,TERM_ON=false;
 async function showTasks(){const box=$('taskbox');if(!PROFILE||!TASK_ON){box.innerHTML='';return}
-  let d={lists:{}};try{d=await (await api('/api/profile/tasks')).json()}catch{}
-  const base=location.origin;
-  const list=(k,l)=>{const tg=l.target;return `<h3 style="margin:14px 0 4px">${esc(L==='en'?l.name_en:l.name)}</h3>
+  let d={lists:{},order:[]};try{d=await (await api('/api/profile/tasks')).json()}catch{}
+  const base=location.origin,fixed=(d.order||[]).filter(k=>d.lists[k]&&!d.lists[k].own);
+  const place=k=>{const l=d.lists[k],tg=l.target;return `<h3 style="margin:14px 0 4px">${esc(l.icon+' '+(L==='en'?l.name_en:l.name))}</h3>
     <div class="fh" style="margin-top:0">${tg?t('Liegt in der CalDAV-Liste ','Lives in the CalDAV list ')+'<b>'+esc(tg.name)+'</b>':t('Liegt auf dem Spark.','Lives on the Spark.')}${l.sent?' · '+l.sent+t(' ans iPhone übergeben',' handed to the iPhone'):''}</div>
     ${l.error?`<div class="fh err">${esc(l.error)}</div>`:''}
-    <ul class="facts">${l.items.map(x=>`<li><span>${esc(x.text)}</span><button class="b" type="button" data-tdone="${k}" data-id="${esc(x.id)}">${t('Erledigt','Done')}</button></li>`).join('')||`<li class="mut">${t('Leer.','Empty.')}</li>`}</ul>
-    <div class="rowin"><input data-tnew="${k}" placeholder="${t('Neuer Eintrag (mehrere mit Komma)','New entry (several with commas)')}" autocomplete="off"><button class="b" type="button" data-tadd="${k}">${t('Hinzufügen','Add')}</button></div>
-    <div class="row" style="margin-top:6px"><select data-ttgt="${k}"><option value="">${t('Auf dem Spark (Kurzbefehl fürs iPhone)','On the Spark (shortcut for the iPhone)')}</option>${tg?`<option value="${esc(tg.acc+'|'+tg.url)}" selected>${esc(tg.name)}</option>`:''}</select>
-      <button class="b" type="button" data-tfind="${k}">${t('CalDAV-Listen suchen','Find CalDAV lists')}</button></div>`};
-  box.innerHTML=`<div class="intro">${t('Sag „Setz Milch auf die Einkaufsliste“ oder „Was steht auf meiner Aufgabenliste?“. Hinzufügen geht sofort; Abhaken und Löschen per Sprache erst nach deinem „Ja“.','Say "Put milk on the shopping list" or "What is on my to-do list?". Adding happens at once; ticking off and deleting by voice only after your "Yes".')}</div>
-    ${Object.entries(d.lists).map(([k,l])=>list(k,l)).join('')}
+    <div class="row" style="margin-top:6px"><select data-ttgt="${esc(k)}" aria-label="${esc(t('Speicherort','Where it lives'))}"><option value="">${t('Auf dem Spark (Kurzbefehl fürs iPhone)','On the Spark (shortcut for the iPhone)')}</option>${tg?`<option value="${esc(tg.acc+'|'+tg.url)}" selected>${esc(tg.name)}</option>`:''}</select>
+      <button class="b" type="button" data-tfind="${esc(k)}">${t('CalDAV-Listen suchen','Find CalDAV lists')}</button></div>`};
+  box.innerHTML=`<div class="intro">${t('Einkauf und Aufgaben liegen auf dem Spark oder in einer CalDAV-Aufgabenliste (Nextcloud, mailbox.org …). Eigene Listen liegen immer auf dem Spark, mit wer und wann.','Shopping and tasks live on the Spark or in a CalDAV task list (Nextcloud, mailbox.org …). Own lists always live on the Spark, with who and when.')}</div>
+    ${fixed.map(place).join('')}
     <details style="margin-top:12px"><summary>${t('iPhone-Kurzbefehl für die Erinnerungen-App','iPhone shortcut for the Reminders app')}</summary><ol class="fh">
       <li>${t('Unter Personen und Geräte bei deinem Profil ein Gerät „iPhone Listen“ anlegen und den Schlüssel kopieren (der Siri-Schlüssel geht auch).','Under People and devices add a device "iPhone lists" to your profile and copy the key (the Siri key works too).')}</li>
       <li>${t('Kurzbefehle-App → neuer Kurzbefehl → „Inhalte von URL abrufen“: ','Shortcuts app → new shortcut → "Get contents of URL": ')}<code>${esc(base)}/api/tasks/inbox?list=einkauf</code>${t(', Methode POST, Header ',', method POST, header ')}<code>X-Speech-Device</code>${t(' = dein Schlüssel.',' = your key.')}</li>
       <li>${t('„Text teilen“ nach „Neue Zeilen“, dann „Wiederholen mit jedem“ → „Erinnerung hinzufügen“ (Liste „Einkauf“ wählen).','"Split text" by "New lines", then "Repeat with each" → "Add new reminder" (pick your shopping list).')}</li>
       <li>${t('Automation: z. B. „Wenn ich die Erinnerungen-App öffne“ oder stündlich, ohne Nachfrage ausführen. Für Aufgaben dasselbe mit list=aufgaben.','Automation: e.g. "When I open Reminders" or hourly, run without asking. For tasks the same with list=aufgaben.')}</li>
-      <li>${t('Übergebene Einträge verschwinden hier aus der Liste; ab dann ist die Erinnerungen-App zuständig.','Handed-over entries leave this list; from then on the Reminders app is in charge.')}</li></ol></details>
+      <li>${t('Übergebene Einträge verschwinden aus der Liste; ab dann ist die Erinnerungen-App zuständig.','Handed-over entries leave the list; from then on the Reminders app is in charge.')}</li></ol></details>
     <div class="fh" id="taskmsg"></div>`;
   xbind(box,showTasks);
-  box.querySelectorAll('[data-tadd]').forEach(b=>b.onclick=async()=>{const k=b.dataset.tadd,inp=box.querySelector(`[data-tnew="${k}"]`);if(!inp.value.trim())return;
-    try{await api('/api/profile/tasks/'+k,xjson('POST',{text:inp.value}));await showTasks()}catch(e){xmsg('taskmsg',e.message,true)}});
-  box.querySelectorAll('[data-tdone]').forEach(b=>b.onclick=async()=>{try{await api('/api/profile/tasks/'+b.dataset.tdone+'/done',xjson('POST',{ids:[b.dataset.id]}));await showTasks()}catch(e){xmsg('taskmsg',e.message,true)}});
   box.querySelectorAll('[data-tfind]').forEach(b=>b.onclick=async()=>{const k=b.dataset.tfind,sel=box.querySelector(`[data-ttgt="${k}"]`);xmsg('taskmsg',t('Suche Aufgabenlisten in deinen Kalender-Konten …','Looking for task lists in your calendar accounts …'));
     try{const r=await (await api('/api/profile/tasks/collections')).json();const cur=sel.value;
       sel.innerHTML=`<option value="">${t('Auf dem Spark (Kurzbefehl fürs iPhone)','On the Spark (shortcut for the iPhone)')}</option>`+r.collections.map(c=>`<option value="${esc(c.acc+'|'+c.url)}">${esc(c.name+' ('+c.acc_name+')')}</option>`).join('');sel.value=cur;
-      xmsg('taskmsg',(r.collections.length?r.collections.length+t(' Aufgabenlisten gefunden. Jetzt oben auswählen.',' task lists found. Pick one above.'):t('Keine Aufgabenliste gefunden. Erst unter Kalender ein CalDAV-Konto (z. B. Nextcloud) verbinden.','No task list found. First connect a CalDAV account (e.g. Nextcloud) under Calendar.'))+(r.errors.length?' ⚠ '+r.errors.join('; '):''))}catch(e){xmsg('taskmsg',e.message,true)}});
+      xmsg('taskmsg',(r.collections.length?r.collections.length+t(' Aufgabenlisten gefunden. Jetzt oben auswählen.',' task lists found. Pick one above.'):t('Keine Aufgabenliste gefunden. Erst unter Kalender → Einstellungen ein CalDAV-Konto (z. B. Nextcloud) verbinden.','No task list found. First connect a CalDAV account (e.g. Nextcloud) under Calendar → Settings.'))+(r.errors.length?' ⚠ '+r.errors.join('; '):''))}catch(e){xmsg('taskmsg',e.message,true)}});
   box.querySelectorAll('[data-ttgt]').forEach(sel=>sel.onchange=async()=>{const [acc,...u]=sel.value.split('|');
-    try{await api('/api/profile/tasks/target',xjson('PUT',{list:sel.dataset.ttgt,acc,url:u.join('|')}));await showTasks();xmsg('taskmsg',t('Gespeichert.','Saved.'))}catch(e){xmsg('taskmsg',e.message,true)}})}
+    try{await api('/api/profile/tasks/target',xjson('PUT',{list:sel.dataset.ttgt,acc,url:u.join('|')}));await showTasks();LST.data=null;xmsg('taskmsg',t('Gespeichert.','Saved.'))}catch(e){xmsg('taskmsg',e.message,true)}})}
 // ---------------------------------------------------------------- Telegram (telegram.py)
 async function showTg(){const box=$('tgbox');if(!PROFILE||!TG_ON){box.innerHTML='';return}
   let d={enabled:false,bot:'',linked:null};try{d=await (await api('/api/profile/telegram')).json()}catch{}
@@ -168,7 +165,7 @@ async function showFeeds(){const box=$('feedbox');if(!box)return;if(!PROFILE||!F
   if($('fdnow'))$('fdnow').onclick=()=>go(()=>api('/api/profile/feeds/now',xjson('POST')),t('Geholt.','Fetched.'));
   if($('fddel'))$('fddel').onclick=()=>go(()=>api('/api/profile/feeds',{method:'DELETE'}),t('Gelöscht.','Deleted.'))}
 // the extra boxes of Ich with the place each one draws into; Ich loads them side by side (me.js meLoad, laden.js)
-function extrasJobs(){return [['wxbox',typeof showWx==='function'&&showWx],['feedbox',typeof showFeeds==='function'&&showFeeds],['wissbox',typeof showWiss==='function'&&showWiss],['conbox',typeof showCon==='function'&&showCon],['taskbox',typeof showTasks==='function'&&showTasks],['tgbox',typeof showTg==='function'&&showTg],['appbox',typeof showApp==='function'&&showApp],['pebbox',typeof showPeb==='function'&&showPeb],['termbox',typeof showTerm==='function'&&showTerm],['andbox',typeof showAnd==='function'&&showAnd],['deskbox',typeof showDesk==='function'&&showDesk],['agentbox',typeof showAgent==='function'&&showAgent],['espbox',typeof showEsp==='function'&&showEsp],['rmbox',typeof showRm==='function'&&showRm],['bgbox',typeof showBg==='function'&&showBg],['usebox',typeof showUse==='function'&&showUse],['telbox',typeof showTel==='function'&&showTel],['mcpbox',typeof showMcp==='function'&&showMcp],['mymcpbox',typeof showMyMcp==='function'&&showMyMcp],['storebox',typeof showStore==='function'&&showStore],['rpbox',typeof showReport==='function'&&showReport],['writebox',typeof showWrite==='function'&&showWrite],['bildbox',typeof showBilder==='function'&&showBilder],['musikbox',typeof showMusik==='function'&&showMusik],['kannbox',typeof showKann==='function'&&showKann]].filter(x=>x[1]).map(([id,f])=>[id,f,1])}
+function extrasJobs(){return [['wxbox',typeof showWx==='function'&&showWx],['feedbox',typeof showFeeds==='function'&&showFeeds],['wissbox',typeof showWiss==='function'&&showWiss],['conbox',typeof showCon==='function'&&showCon],['tgbox',typeof showTg==='function'&&showTg],['appbox',typeof showApp==='function'&&showApp],['pebbox',typeof showPeb==='function'&&showPeb],['termbox',typeof showTerm==='function'&&showTerm],['andbox',typeof showAnd==='function'&&showAnd],['deskbox',typeof showDesk==='function'&&showDesk],['agentbox',typeof showAgent==='function'&&showAgent],['espbox',typeof showEsp==='function'&&showEsp],['rmbox',typeof showRm==='function'&&showRm],['bgbox',typeof showBg==='function'&&showBg],['usebox',typeof showUse==='function'&&showUse],['telbox',typeof showTel==='function'&&showTel],['mcpbox',typeof showMcp==='function'&&showMcp],['mymcpbox',typeof showMyMcp==='function'&&showMyMcp],['storebox',typeof showStore==='function'&&showStore],['rpbox',typeof showReport==='function'&&showReport],['writebox',typeof showWrite==='function'&&showWrite],['bildbox',typeof showBilder==='function'&&showBilder],['musikbox',typeof showMusik==='function'&&showMusik],['kannbox',typeof showKann==='function'&&showKann]].filter(x=>x[1]).map(([id,f])=>[id,f,1])}
 async function showExtras(){for(const [,f] of extrasJobs())await f().catch(()=>{})}
 // ---------------------------------------------------------------- iPhone app (iphone.py)
 // the iPhone app takes only https with a real certificate: the panel's own port 31443 or an IP address is self-signed

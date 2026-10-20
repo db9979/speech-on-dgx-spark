@@ -287,7 +287,7 @@ Home Assistant, mail, calendar, tasks, weather, reMarkable, MCP and what the Spa
 | `app/panel/rmplus.py` | More with the reMarkable. |
 | `app/panel/senden.py` | Mails senden auf der Seite E-Mail: a profile writes a new mail or answers one of its inbox, sees the finished mail on a preview sheet and only its „Senden“ t … |
 | `app/panel/sparkkalender.py` | Spark-Kalender, Stufe 3: a calendar that lives only on the Spark, without iCloud, Google or Nextcloud. |
-| `app/panel/tasks.py` | Tasks and the shopping list per profile: "Setz Milch auf die Einkaufsliste", "Was steht auf meiner Liste?". |
+| `app/panel/tasks.py` | Lists per profile: the shopping list, the to-do list and own lists („Setz Milch auf die Einkaufsliste“, „Was steht auf der Baumarkt-Liste?“). |
 | `app/panel/tidy.py` | Tidying the inbox per profile: obvious advertising, newsletters and the like are moved into folders under a main folder ("Spark/" unless the profile names an … |
 | `app/panel/transit.py` | Bus und Bahn: departures from the profile's home stop and connections, from a transport.rest service (https://v6.db.transport.rest by default, the admin can … |
 | `app/panel/vorwaermen.py` | Vorwärmen: when a profile signs in, or the panel or its app opens (GET /api/whoami with a profile), its calendars (this and the next month), its mail listing … |
@@ -1830,7 +1830,7 @@ Applies at: [step 9](#kn-weiche-s9)
 
 #### Everyday score
 
-- The test sentences (162) hold every reported wrong turn and must all pass. The everyday sentences (211) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up.
+- The test sentences (164) hold every reported wrong turn and must all pass. The everyday sentences (211) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up.
 
 #### Tool names
 
@@ -1844,7 +1844,7 @@ Applies at: [step 9](#kn-weiche-s9)
 - **4** seconds at most for the model's pick ([step 10](#kn-weiche-s10))
 - **300 ms** waiting with „Fast answer start“ ([step 10](#kn-weiche-s10))
 - **80 %** default threshold of the classification ([step 10](#kn-weiche-s10))
-- **162** built-in test sentences ([step 4](#kn-weiche-s4), [step 5](#kn-weiche-s5))
+- **164** built-in test sentences ([step 4](#kn-weiche-s4), [step 5](#kn-weiche-s5))
 - **211** everyday sentences for measuring ([step 14](#kn-weiche-s14))
 - **20** versions for undo ([step 4](#kn-weiche-s4))
 
@@ -3324,7 +3324,7 @@ Applies at: [step 5](#kn-users-s5), [step 7](#kn-users-s7)
 |---|---|---|
 | Conversations | convos.json, toollog.json, room-history.json | ✓ |
 | Memory | memory.json, learned.json, zuordnungen.json | ✓ |
-| Tasks and reminders | tasks.json, reminders.json | ✓ |
+| Lists and reminders | tasks.json, reminders.json | ✓ |
 | Documents | wissen.db, docs/files/, suchpruefung.json | ✓ |
 | Created documents | erstellt/ | ✓ |
 | Painted pictures | bilder/ | ✓ |

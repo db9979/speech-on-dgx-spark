@@ -1855,3 +1855,21 @@ textarea{resize:none}textarea[data-fest]{resize:vertical}textarea.feldplatz{padd
 .feldkopf{display:flex;align-items:center;gap:8px}.feldkopf b{flex:1;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.feldkopf .b[hidden]{display:none}
 #feldtext{flex:1;min-height:0;font-size:15px;line-height:1.55;padding:12px 14px}.feldfuss{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--mut)}
 @media (max-width:760px){#feldmodal{padding:0;place-items:stretch}#feldmodal .feldcard{width:100%;height:100dvh;border:0;border-radius:0;box-shadow:none;padding:calc(10px + env(safe-area-inset-top)) 12px calc(10px + env(safe-area-inset-bottom))}#feldtext{font-size:16px}}
+/* Listen (listen.js, plan listen-teilen Stufe 1): the lists on the left, the one tapped on the right; each entry with
+   a round box to tick it off, who put it on, when and from where in a grey line, the shop's departments as headings */
+.lst .ld-split:has(>.ld-detail:not([hidden])){grid-template-columns:minmax(240px,320px) minmax(0,1fr);gap:16px}
+.lst .ld-detail{padding:16px 20px}
+.lstico{background:color-mix(in srgb,var(--acc) 10%,transparent);font-size:17px;color:inherit}
+.lstcnt{font-variant-numeric:tabular-nums;color:var(--fg)}
+.lsthead{display:flex;align-items:center;gap:10px;margin-bottom:10px}.lsthead h3{margin:0}
+.lstquick{display:flex;gap:8px;margin:6px 0 8px}.lstquick input{flex:1;min-width:0;width:auto}
+.lstitem{display:flex;align-items:center;gap:10px;padding:8px 2px;border-bottom:1px solid var(--line);min-width:0}
+.lstit{flex:1;min-width:0;overflow-wrap:anywhere}.lstit b{font-weight:550}.lstit small{display:block;color:var(--mut);font-size:12px}
+.lstqty{color:var(--mut);font-size:12.5px}
+.lstck{flex:none;width:24px;height:24px;border-radius:99px;border:2px solid var(--line);background:none;padding:0;cursor:pointer;display:grid;place-items:center;font-size:13px;color:#fff}
+.lstck:hover{border-color:var(--ok)}.lstck.on{background:var(--ok);border-color:var(--ok)}
+.lstitem.done .lstit b{text-decoration:line-through;color:var(--mut)}
+.lstdel{opacity:.55}.lstitem:hover .lstdel,.lstdel:focus-visible{opacity:1}
+.lstform{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:8px 0}.lstform input{width:100%}
+.lsticons{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.lsticons .ld-chip{font-size:16px;padding:2px 8px}
+@media (max-width:760px){.lstck{width:28px;height:28px}.lstitem{padding:10px 2px}.lstdel{opacity:1}}

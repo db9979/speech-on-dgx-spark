@@ -152,7 +152,7 @@ const RMTPART={termine:['Heutige Termine, die noch kommen: Passt, 30 min vorher 
   neu:['Linien zum Schreiben und ein Kreuz, was es ist: Erinnerung heute, Morgen, Aufgabe oder Einkauf. Braucht „Bilder und Scans lesen“.','Lines to write on and one tick for what it is: reminder today, tomorrow, task or shopping. Needs "Read pictures and scans".'],
   anmerkung:['Freie Notiz; der Spark legt sie dir auf der nächsten Version zum Ankreuzen vor.','A free note; the Spark offers it to tick on the next version.']};
 const RMTOFF={termine:['Kommt erst, wenn der Kalender für dich freigegeben ist.','Comes once the calendar is released for you.'],
-  listen:['Kommt erst, wenn Aufgaben und Einkaufsliste für dich freigegeben sind.','Comes once tasks and shopping list are released for you.'],
+  listen:['Kommt erst, wenn Listen für Einkauf und Aufgaben für dich freigegeben sind.','Comes once lists for shopping and tasks are released for you.'],
   mails:['Kommt erst, wenn E-Mail lesen für dich freigegeben ist.','Comes once reading e-mail is released for you.'],neu:['',''],anmerkung:['','']};
 function rmPaper(p){const E=icEl,w=E('div');
   const sw=[['rmpapier','rm_paper',['Gestaltete Blätter','Designed sheets'],['Morgenblatt, Rückblick, Zusammenfassungen, Antworten, Eingang und Anleitung als Blatt im Format deines Geräts, mit „Kann weg“ oben rechts; auf dem Morgenblatt Erinnerungen zum Abhaken.','Morning sheet, review, summaries, answers, inbox and guide as a sheet in your device’s format, with "Kann weg" at the top right; reminders to tick off on the morning sheet.']],

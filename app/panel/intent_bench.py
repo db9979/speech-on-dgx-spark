@@ -103,6 +103,8 @@ BENCH = [
     ("Schreib Brot auf die Liste", "liste"),
     ("Nimm Butter von der Einkaufsliste", "liste"),
     ("Was ist auf meiner To-do-Liste?", "liste"),
+    ("Setz Schrauben auf die Baumarkt-Liste", "liste"),
+    ("Was steht auf der Liste Baumarkt?", "liste"),
     ("Wie wird das Wetter morgen?", "wetter"),
     ("Regnet es heute noch?", "wetter"),
     ("Brauche ich morgen einen Schirm wegen Regen?", "wetter"),

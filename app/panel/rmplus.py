@@ -765,7 +765,7 @@ async def todo_route(request: Request, prof=Depends(browser_profile)):
     """{"id", "do": "remind" | "drop", "due": ms}: a found task becomes a reminder (only by this click) or goes away."""
     uid = prof["id"]
     if not features.allowed("rmtodo", uid):
-        raise HTTPException(403, "Aufgaben vom reMarkable sind aus (Funktionen → Aufgaben vom reMarkable)")
+        raise HTTPException(403, "Aufgaben vom reMarkable sind aus (Funktionen → Aufs reMarkable schicken → Aufgaben vom reMarkable)")
     guard.limit(request, "rm", uid)
     body = await core.json_body(request, 1024, lenient=True)
     tid, do = body.get("id"), body.get("do")

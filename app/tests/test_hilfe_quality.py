@@ -53,7 +53,7 @@ CASES = (
     ("Wie stelle ich die Antwortlänge ein?", None, "Antwortlänge", "spark"),
     ("Wie aktiviere ich das Tagesbriefing?", None, "Tagesbriefing", "spark"),
     ("Wo sehe ich die Live-Übersicht?", None, "Live", "spark"),
-    ("Wie richte ich die Einkaufsliste ein?", None, "Einkaufsliste", "spark"),
+    ("Wie richte ich die Einkaufsliste ein?", None, "Listen für Einkauf und Aufgaben", "spark"),
     ("Wie ändere ich meine PIN?", None, "PIN ändern", "spark"),
     ("Wie ändere ich mein Passwort?", None, "PIN ändern", "spark"),
     ("Wie spiele ich ein Update ein?", None, "Update", "spark"),

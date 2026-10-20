@@ -274,7 +274,7 @@ SEITEN = {
             [("Bereich", "Area"), ("Dateien", "Files"), ("Eigener Speicher", "Own storage")],
             [("Gespräche", "Conversations"), "convos.json, toollog.json, room-history.json", "✓"],
             [("Gedächtnis", "Memory"), "memory.json, learned.json, zuordnungen.json", "✓"],
-            [("Aufgaben und Erinnerungen", "Tasks and reminders"), "tasks.json, reminders.json", "✓"],
+            [("Listen und Erinnerungen", "Lists and reminders"), "tasks.json, reminders.json", "✓"],
             [("Dokumente", "Documents"), "wissen.db, docs/files/, suchpruefung.json", "✓"],
             [("Erstellte Dokumente", "Created documents"), "erstellt/", "✓"],
             [("Gemalte Bilder", "Painted pictures"), "bilder/", "✓"],
