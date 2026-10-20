@@ -1354,7 +1354,7 @@ flowchart TD
 5. <a id="kn-middleware-s5"></a>**From outside?**: In the home network is only who has a private address and does not come through a proxy, or comes through a listed proxy that reports a private address. From kill switch stage 1 everything from outside only gets the page and the kill switch state.
 6. <a id="kn-middleware-s6"></a>**All quiet?**: In stage 3 only logins, lifting the kill switch and reading status, logs and live pass, also at home. In the stages below everything at home goes on; the panel then holds actions off further down.
 7. <a id="kn-middleware-s7"></a>**Foreign page?**: A changing request (POST, PUT, PATCH, DELETE) that carries a login cookie must come from the panel's own page: the browser says so with Sec-Fetch-Site, else Origin is compared with the host. Another port on the same machine counts as foreign. With neither header it is not a browser (scripts) and passes.
-8. <a id="kn-middleware-s8"></a>**Big upload without login?**: The paths for big uploads (backups, voices, sound, documents, pictures, MCP) only accept someone who could be logged in at all: admin cookie, profile or an Authorization line. Another Spark's file (/api/verbund/blob) only when Verbund and files are on and the sender is an allowed Spark with a known key. The real check comes later in the endpoint; here no byte of a stranger's upload is read.
+8. <a id="kn-middleware-s8"></a>**Big upload without login?**: The paths for big uploads (backups, voices, sound, documents, pictures, music, MCP) only accept someone who could be logged in at all: admin cookie, profile or an Authorization line. Another Spark's file (/api/verbund/blob) only when Verbund and files are on and the sender is an allowed Spark with a known key. The real check comes later in the endpoint; here no byte of a stranger's upload is read.
 9. <a id="kn-middleware-s9"></a>**Too large?**: Every path has its limit, else a small default of two MB holds. A Content-Length that is too large is refused at once; while reading, BodyLimit also counts and stops as soon as more arrives than allowed.
 10. <a id="kn-middleware-s10"></a>**Update running?**: While an update runs, changes under /api/ are held. The assistant, the devices and logging in stay open (update.UNLOCKED).
 11. <a id="kn-middleware-s11"></a>**Endpoint**: Only now the endpoint reads the request and checks login, profile and rate limit itself (the next box, „Login, profile“). With the usage counter on, the request first notes which profile it runs for: what it asks the models counts for that profile.
@@ -1830,11 +1830,11 @@ Applies at: [step 9](#kn-weiche-s9)
 
 #### Everyday score
 
-- The test sentences (164) hold every reported wrong turn and must all pass. The everyday sentences (211) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up.
+- The test sentences (168) hold every reported wrong turn and must all pass. The everyday sentences (211) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up.
 
 #### Tool names
 
-- Wherever a tool shows, a readable name comes from one table (89 tools), for example „Mailbox overview“ instead of mail_tidy_overview.
+- Wherever a tool shows, a readable name comes from one table (90 tools), for example „Mailbox overview“ instead of mail_tidy_overview.
 
 #### Numbers (from the code)
 
@@ -1844,7 +1844,7 @@ Applies at: [step 9](#kn-weiche-s9)
 - **4** seconds at most for the model's pick ([step 10](#kn-weiche-s10))
 - **300 ms** waiting with „Fast answer start“ ([step 10](#kn-weiche-s10))
 - **80 %** default threshold of the classification ([step 10](#kn-weiche-s10))
-- **164** built-in test sentences ([step 4](#kn-weiche-s4), [step 5](#kn-weiche-s5))
+- **168** built-in test sentences ([step 4](#kn-weiche-s4), [step 5](#kn-weiche-s5))
 - **211** everyday sentences for measuring ([step 14](#kn-weiche-s14))
 - **20** versions for undo ([step 4](#kn-weiche-s4))
 
@@ -2060,7 +2060,7 @@ Applies at: [step 4](#kn-werkzeuge-s4)
 - **3** memory notes per answer ([step 1](#kn-werkzeuge-s1))
 - **13** tools locked after outside text ([step 4](#kn-werkzeuge-s4))
 - **7** tools without internet with the kill switch ([step 3](#kn-werkzeuge-s3))
-- **89** tools with a readable name ([step 11](#kn-werkzeuge-s11))
+- **90** tools with a readable name ([step 11](#kn-werkzeuge-s11))
 
 #### Settings
 
@@ -2787,7 +2787,7 @@ Self-tests: `test_units`, `test_markdown`, `test_hardening`, `test_stufe`, `test
 
 Painting pictures turns a wish into a picture, on the Spark itself. The panel checks the wish with fixed rules and hands it to the picture service, which listens on this machine only. It loads FLUX.2 klein only at the first picture, checks the finished picture and frees the memory after a quiet time.
 
-Making music works the same way next to it: a wish under Me → Music or musik_machen in the conversation becomes a song (instrumental and 2 minutes unless asked). The music service on :31004 loads ACE-Step 1.5 only for a song, in the model the admin picked, and frees the memory after a quiet time; "Test music" measures every installed model. Both services share the on-demand engine of bedarf.py.
+Making music works the same way next to it: a wish under Me → Music or musik_machen in the conversation becomes a song (instrumental and 2 minutes unless asked). The music service on :31004 loads ACE-Step 1.5 only for a song, in the model the admin picked, and frees the memory after a quiet time; "Test music" measures every installed model. Both services share the on-demand engine of bedarf.py. Editing music turns an own song into a new version (part anew, extend, genre, remix, new lyrics) with the same model; cutting, tempo and key the music service does at once with ffmpeg, without a model. Own files only with the rights tick.
 
 Only one of the two models is loaded at a time (Dominik 2026-10-18): pictures and songs stand in one queue in the panel (schwer.py); who waits behind others hears the place and about how long it takes.
 
@@ -2828,10 +2828,10 @@ flowchart TD
   s8 -->|no| s8x
 ```
 
-1. <a id="kn-bild-s1"></a>**A picture wish**: A profile writes a wish under Me → Pictures, or the router group "bild" offers the tool bild_malen in the conversation; the model writes an English prompt for it. Changing pictures starts without a tool: bilder.from_turn takes by a fixed rule the photo of this message or the result of the last change, under Me → Pictures an own picture. Everything ends in bilder.start. Quick buttons (rotate, brighter, black and white …) need no model: bilder.quick_png does them at once on the panel. A song wish comes the same way through Me → Music or the group "musik" with musik_machen into musik.start.
+1. <a id="kn-bild-s1"></a>**A picture wish**: A profile writes a wish under Me → Pictures, or the router group "bild" offers the tool bild_malen in the conversation; the model writes an English prompt for it. Changing pictures starts without a tool: bilder.from_turn takes by a fixed rule the photo of this message or the result of the last change, under Me → Pictures an own picture. Everything ends in bilder.start. Quick buttons (rotate, brighter, black and white …) need no model: bilder.quick_png does them at once on the panel. A song wish comes the same way through Me → Music or the group "musik" with musik_machen into musik.start; a change of an own song through Me → Music or musik_bearbeiten into musik.start_edit (the panel picks the song, never the model), cutting and tempo without a model into musik.tone, an own file with the rights tick into musik.upload.
 2. <a id="kn-bild-s2"></a>**Feature released?**: features.allowed asks the release: the admin switched painting pictures on and did not block this profile. Guests never get the tool; after outside text and at kill switch stage 2 it is locked.
 3. <a id="kn-bild-s3"></a>**Wish allowed?**: bilder.refuse_text checks wish and prompt against a fixed word list (nothing sexual, no violence, no hate symbols) and against the names of profiles and contacts. For songs musik.refuse_text checks wish, description and lyrics against the word list, plus "in the style of" an artist and secrets; names are fine. The model cannot get around it.
-4. <a id="kn-bild-s4"></a>**Within the limits?**: Per profile there are pictures per day (rolling 24 hours), space and at most 300 pictures; songs: songs per day, space and the longest song (musik.start). On the whole Spark at most 10 heavy jobs wait, pictures and songs together.
+4. <a id="kn-bild-s4"></a>**Within the limits?**: Per profile there are pictures per day (rolling 24 hours), space and at most 300 pictures; songs: songs per day, space and the longest song (musik.start), at most 10 versions per song, 10 own files a day; musik.plan_edit checks every number of a change. On the whole Spark at most 10 heavy jobs wait, pictures and songs together.
 5. <a id="kn-bild-s5"></a>**Wait for a pause and the place**: The job runs in the background (bilder._work, musik._work): it waits until nobody speaks (vorrang) and joins the one queue for pictures and songs (schwer.run). The fixed rule schwer.pick takes the oldest; while the loaded kind still waits it goes first, but at most 3 times in a row while the other kind waits. When another kind is next, the panel first ends the loaded model. Who stands behind others gets a fixed sentence with the place and about how long (schwer.hint), the card shows "Waiting · place 2 of 3". A picture may take at most 720 seconds.
 6. <a id="kn-bild-s6"></a>**Model loaded?**: bild_server.Engine.start first takes the one place (bedarf.OnDemand.claim, lock bedarf.lock: when the music service holds it, it answers "belegt") and starts sd-server as its own process on 127.0.0.1, but only when enough shared memory is free; otherwise everything else stays undisturbed. Too little memory does not end the job: it keeps its place and tries again every 30 seconds, for at most 600 seconds.
 7. <a id="kn-bild-s7"></a>**Paint**: The engine paints the picture in 4 steps at the chosen size; its own output never reaches the journal, because it would name the prompt.
@@ -2849,6 +2849,8 @@ flowchart TD
 - **600** seconds of waiting for memory at most ([step 6](#kn-bild-s6))
 - **0.5** image check share above which it is discarded ([step 8](#kn-bild-s8))
 - **4** steps per picture ([step 7](#kn-bild-s7))
+- **10** versions per song at most ([step 4](#kn-bild-s4))
+- **10** own music files a day at most ([step 4](#kn-bild-s4))
 - **720** seconds per job at most ([step 5](#kn-bild-s5))
 
 #### Settings
@@ -2856,6 +2858,7 @@ flowchart TD
 - Installation: sudo ./install.sh --bild 4b-q8 (or 4b-q4, 9b-q8, 9b-q4, none).
 - Features → Painting pictures: switch, pictures per day, space, longest side, unload after minutes, "Bild testen".
 - Music: sudo ./install.sh --musik 2b (or 2b-klein, xl, none; several in a row all stay); Features → Making music: switch, model, songs per day, space, longest song; State → Checks → "Test music" measures every installed model.
+- Features → Making music → Editing music: switch (off); then under Me → Music "Edit" on a song and "Upload an own file" in the "⋯" menu.
 
 #### What you see
 
@@ -2886,6 +2889,11 @@ flowchart TD
 - `app/panel/musik.py` `_work`: song in the background ([step 5](#kn-bild-s5))
 - `app/panel/musik.py` `keep`: store the song ([step 10](#kn-bild-s10))
 - `app/panel/musik.py` `_measure`: test music per model ([step 5](#kn-bild-s5))
+- `app/panel/musik.py` `start_edit`: accept a change of a song ([step 1](#kn-bild-s1))
+- `app/panel/musik.py` `plan_edit`: check every number of the change ([step 4](#kn-bild-s4))
+- `app/panel/musik.py` `tone`: cut, tempo, key without a model ([step 1](#kn-bild-s1))
+- `app/panel/musik.py` `upload`: own file with the rights tick ([step 1](#kn-bild-s1))
+- `app/musik_server.py` `edit_body`: fixed fields for repaint and cover ([step 7](#kn-bild-s7))
 
 Self-tests: `test_bilder`, `test_musik`, `test_schwer`
 

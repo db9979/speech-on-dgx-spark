@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "asr": {
-        "stand": "12623519d7",
+        "stand": "d7455c8a1b",
         "bezug": {
             "parakeet.MAX_AUDIO_S": ["s9"], "common.NOTASR_PORT": ["s9"], "common.NOTASR_IDLE": ["s9"], "admin.test_asr": ["s1"], "admin._test_asr": ["s2", "s4"],
             "common.BodyLimit": ["s5"], "common.PrioGate": ["s7"], "common.audio_rate_ok": ["s8"],
@@ -380,7 +380,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Bilder malen (and Musik machen in the same box)
     "bild": {
-        "stand": "ef280a002f",
+        "stand": "111e4542f3",
         "bezug": {
             "bilder.MAX_PICS": ["s4"], "schwer.WAITING": ["s4"], "bilder.JOB_SECONDS": ["s5"], "bilder.NSFW_MAX": ["s8"],
             "schwer.run": ["s5"], "schwer.pick": ["s5"], "schwer.hint": ["s5"], "schwer.BUNDLE": ["s5"],
@@ -388,6 +388,8 @@ SEITEN = {
             "bildmodell.STEPS": ["s7"], "bilder.keep": ["s10"], "bild_server.Engine.paint": ["s7"],
             "bedarf.OnDemand": ["s6"], "musik_server.Engine.make": ["s7"], "musik_server.finish": ["s9"],
             "musik._measure": ["s5"], "musik.start": ["s4"], "musik.keep": ["s10"], "musik._work": ["s5"], "musik.refuse_text": ["s3"],
+            "musik.plan_edit": ["s4"], "musik.start_edit": ["s1"], "musik.tone": ["s1"], "musik.upload": ["s1"],
+            "musik_server.edit_body": ["s7"], "musik.MAX_VERSIONS": ["s4"], "musik.UPLOADS_DAY": ["s4"],
         },
         "kurz": ("Bilder malen macht aus einem Wunsch ein Bild, auf dem Spark selbst. Das Panel prüft den Wunsch mit "
                  "festen Regeln und gibt ihn an den Bild-Dienst, der nur auf dieser Maschine lauscht. Der lädt FLUX.2 "
@@ -396,7 +398,10 @@ SEITEN = {
                  "wird ein Lied (ohne Angabe instrumental, 2 Minuten). Der Musik-Dienst auf :31004 lädt ACE-Step 1.5 "
                  "nur für ein Lied, im Modell, das der Admin gewählt hat, und gibt den Speicher nach einer Ruhezeit "
                  "frei; „Musik testen“ misst jedes installierte Modell. Beide Dienste teilen die Engine bei Bedarf aus "
-                 "bedarf.py.\n\nImmer nur eins der beiden Modelle ist geladen (Dominik 2026-10-18): Bilder und Lieder "
+                 "bedarf.py. Musik bearbeiten macht aus einem eigenen Lied eine neue Fassung (Abschnitt neu, "
+                 "verlängern, Musikrichtung, Remix, neuer Text) mit demselben Modell; Schneiden, Tempo und Tonart "
+                 "macht der Musik-Dienst sofort mit ffmpeg, ohne Modell. Eigene Dateien nur mit dem Rechte-Haken."
+                 "\n\nImmer nur eins der beiden Modelle ist geladen (Dominik 2026-10-18): Bilder und Lieder "
                  "stehen in einer Warteschlange im Panel (schwer.py); wer hinter anderen wartet, hört Platz und "
                  "ungefähre Dauer.",
                  "Painting pictures turns a wish into a picture, on the Spark itself. The panel checks the wish with "
@@ -406,7 +411,10 @@ SEITEN = {
                  "conversation becomes a song (instrumental and 2 minutes unless asked). The music service on :31004 "
                  "loads ACE-Step 1.5 only for a song, in the model the admin picked, and frees the memory after a quiet "
                  "time; \"Test music\" measures every installed model. Both services share the on-demand engine of "
-                 "bedarf.py.\n\nOnly one of the two models is loaded at a time (Dominik 2026-10-18): pictures and songs "
+                 "bedarf.py. Editing music turns an own song into a new version (part anew, extend, genre, remix, "
+                 "new lyrics) with the same model; cutting, tempo and key the music service does at once with ffmpeg, "
+                 "without a model. Own files only with the rights tick."
+                 "\n\nOnly one of the two models is loaded at a time (Dominik 2026-10-18): pictures and songs "
                  "stand in one queue in the panel (schwer.py); who waits behind others hears the place and about how "
                  "long it takes."),
         "warum": ("Ein Bildmodell kann alles malen, auch Nacktes, Gewalt oder echte Menschen. Darüber entscheidet nie das "
@@ -423,13 +431,19 @@ SEITEN = {
                "ohne Werkzeug: bilder.from_turn nimmt nach fester Regel das Foto dieser Nachricht oder das Ergebnis "
                "der letzten Änderung, unter Ich → Bilder ein eigenes Bild. Alles landet in bilder.start. Schnellknöpfe "
                "(drehen, heller, schwarzweiß …) brauchen kein Modell: bilder.quick_png macht sie sofort im Panel. "
-               "Ein Liedwunsch kommt genauso über Ich → Musik oder die Gruppe „musik“ mit musik_machen in musik.start.",
+               "Ein Liedwunsch kommt genauso über Ich → Musik oder die Gruppe „musik“ mit musik_machen in musik.start; "
+               "eine Änderung eines eigenen Liedes über Ich → Musik oder musik_bearbeiten in musik.start_edit (das Panel "
+               "nimmt das Lied, nie das Modell), Schneiden und Tempo ohne Modell in musik.tone, eine eigene Datei mit "
+               "dem Rechte-Haken in musik.upload.",
                "A profile writes a wish under Me → Pictures, or the router group \"bild\" offers the tool bild_malen in "
                "the conversation; the model writes an English prompt for it. Changing pictures starts without a "
                "tool: bilder.from_turn takes by a fixed rule the photo of this message or the result of the last "
                "change, under Me → Pictures an own picture. Everything ends in bilder.start. Quick buttons (rotate, brighter, "
                "black and white …) need no model: bilder.quick_png does them at once on the panel. "
-               "A song wish comes the same way through Me → Music or the group \"musik\" with musik_machen into musik.start.")),
+               "A song wish comes the same way through Me → Music or the group \"musik\" with musik_machen into musik.start; "
+               "a change of an own song through Me → Music or musik_bearbeiten into musik.start_edit (the panel picks "
+               "the song, never the model), cutting and tempo without a model into musik.tone, an own file with the "
+               "rights tick into musik.upload.")),
             S("s2", "frage", ("Funktion frei?", "Feature released?"),
               ("Admin-Schalter, keine Sperre, kein Gast", "admin switch, no block, no guest"),
               ("features.allowed fragt die Freigabe: der Admin hat Bilder malen eingeschaltet und dieses Profil nicht "
@@ -449,10 +463,12 @@ SEITEN = {
             S("s4", "frage", ("Innerhalb der Grenzen?", "Within the limits?"),
               ("pro Tag, Platz, Warteschlange", "per day, space, queue"),
               ("Pro Profil gelten Bilder pro Tag (gleitend 24 Stunden), Platz und höchstens {bilder.MAX_PICS} Bilder; "
-               "Lieder: Lieder pro Tag, Platz und längstes Lied (musik.start). Auf dem ganzen Spark warten höchstens "
+               "Lieder: Lieder pro Tag, Platz und längstes Lied (musik.start), je Lied höchstens {musik.MAX_VERSIONS} "
+               "Fassungen, {musik.UPLOADS_DAY} eigene Dateien am Tag; jede Zahl einer Änderung prüft musik.plan_edit. Auf dem ganzen Spark warten höchstens "
                "{schwer.WAITING} schwere Aufträge, Bilder und Lieder zusammen.",
                "Per profile there are pictures per day (rolling 24 hours), space and at most {bilder.MAX_PICS} "
-               "pictures; songs: songs per day, space and the longest song (musik.start). On the whole Spark at most "
+               "pictures; songs: songs per day, space and the longest song (musik.start), at most {musik.MAX_VERSIONS} "
+               "versions per song, {musik.UPLOADS_DAY} own files a day; musik.plan_edit checks every number of a change. On the whole Spark at most "
                "{schwer.WAITING} heavy jobs wait, pictures and songs together."),
               ("stop", "nein", ("Abgelehnt mit Grund", "Refused with the reason"))),
             S("s5", "schritt", ("Warten auf Pause und Platz", "Wait for a pause and the place"),
@@ -531,6 +547,8 @@ SEITEN = {
             ("{bilder.NSFW_MAX}", ("Anteil der Bildprüfung, ab dem verworfen wird", "image check share above which it is discarded"),
              "bilder.NSFW_MAX"),
             ("{bildmodell.STEPS}", ("Schritte pro Bild", "steps per picture"), "bildmodell.STEPS"),
+            ("{musik.MAX_VERSIONS}", ("Fassungen je Lied höchstens", "versions per song at most"), "musik.MAX_VERSIONS"),
+            ("{musik.UPLOADS_DAY}", ("eigene Musikdateien am Tag höchstens", "own music files a day at most"), "musik.UPLOADS_DAY"),
             ("{bilder.JOB_SECONDS}", ("Sekunden pro Auftrag höchstens", "seconds per job at most"), "bilder.JOB_SECONDS"),
         ],
         "einstellen": [
@@ -546,6 +564,10 @@ SEITEN = {
              "Music: sudo ./install.sh --musik 2b (or 2b-klein, xl, none; several in a row all stay); Features → Making "
              "music: switch, model, songs per day, space, longest song; State → Checks → \"Test music\" measures every "
              "installed model."),
+            ("Funktionen → Musik machen → Musik bearbeiten: Schalter (aus); dann unter Ich → Musik am Lied „Bearbeiten“ "
+             "und im Menü „⋯“ „Eigene Datei hochladen“.",
+             "Features → Making music → Editing music: switch (off); then under Me → Music \"Edit\" on a song and "
+             "\"Upload an own file\" in the \"⋯\" menu."),
         ],
         "sehen": [
             ("Zustand → Live: Ziel „Bilder malen“ nur mit Zahlen; Logs → Diagnose, Bereich „Bild“.",
@@ -581,6 +603,11 @@ SEITEN = {
             ("musik._work", ("Lied im Hintergrund", "song in the background")),
             ("musik.keep", ("Lied ablegen", "store the song")),
             ("musik._measure", ("Musik testen je Modell", "test music per model")),
+            ("musik.start_edit", ("Änderung eines Liedes annehmen", "accept a change of a song")),
+            ("musik.plan_edit", ("Jede Zahl der Änderung prüfen", "check every number of the change")),
+            ("musik.tone", ("Schneiden, Tempo, Tonart ohne Modell", "cut, tempo, key without a model")),
+            ("musik.upload", ("Eigene Datei mit Rechte-Haken", "own file with the rights tick")),
+            ("musik_server.edit_body", ("Feste Felder für repaint und cover", "fixed fields for repaint and cover")),
         ],
         "tests": ["test_bilder", "test_musik", "test_schwer"],
         "heute": [],

@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.863** Musik bearbeiten (Admin-Schalter, aus): unter Ich → Musik ein Lied als neue Fassung ändern (Abschnitt neu, verlängern, Musikrichtung, Remix, Liedtext mit Strophen per Ziehen verschieben, schneiden, Tempo und Tonart), eigene Dateien mit Rechte-Haken hochladen, Werkzeug musik_bearbeiten; auch in der iPhone-App
 - **V01.0.862** Wackelnde Tests robust gemacht; dabei behoben: ein Kalender-Abgleich während einer Änderung schreibt nicht mehr den alten Termin zurück, das Formular „Kalender hinzufügen“ bleibt beim Ausfüllen offen
 - **V01.0.861** E-Mail: Liste, Mail und Ordner als drei gleiche Kästen, die Ordner rechts ein- und ausblendbar (Knopf „Ordner“, Taste O), Mails per Ziehen in einen Ordner, aufs Archiv oder in den Papierkorb; Löschen mit eigenem Schalter (aus) nur durch dich, in den Papierkorb mit „Rückgängig“, endgültig nur dort nach Rückfrage; nach dem dritten Verschieben vom selben Absender in denselben Ordner fragt der Spark, ob eine Regel das übernehmen soll; alles auch im iPhone
 - **V01.0.860** Spark-Begleiter (Windows und Mac) zieht Kalender und E-Mail nach: Post im Fenster (ungelesen, Für dich, dringende Karten), wichtige neue Mail als Hinweis mit „Antwort entwerfen“, Knöpfe je Meldung, Karten in Frag Spark, Schnell erfassen mit Strg+Alt+N (Termin, Erinnerung oder Liste), 3 Antwortvorschläge auch im Outlook-Add-in, geteilte Kalender in „Als Nächstes“, Listen im Fenster; alles je Gerät aus
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.856** Rechner-Karten springen nicht mehr: beide Rechner mit denselben Zeilen auf gleicher Höhe nebeneinander (auch am Handy), „Wer rechnet gerade“ mit festen Zeilen; Steuerzentrale und iPhone gleich
 - **V01.0.855** Fix: iPhone-App baut wieder (GitHub-Lauf „iPhone app“); die neue Listen-Ansicht hatte einen Typnamen, den die App schon hatte
 - **V01.0.854** Listen bekommen eine eigene Seite im Menü (und in der iPhone-App unter Meine Sachen): eigene Listen wie Baumarkt anlegen, bei jedem Eintrag wer ihn wann und woher draufgesetzt hat, Abgehaktes 14 Tage unter „Zuletzt erledigt“ mit „Zurückholen“, Einkauf nach Abteilungen und mit Mengen, Einkauf auf Heute
-- **V01.0.853** E-Mail: die Knöpfe einer Mail in einer festen Leiste oben, Symbole mit Namen und Taste beim Drüberfahren, auf dem Handy und im iPhone die fünf häufigsten unten am Daumen; Kalender: Termine, die sich nicht ändern lassen, tragen ein 🔒 mit dem Grund, die Karte zeigt Notiz und Link des Termins
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

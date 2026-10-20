@@ -88,7 +88,7 @@ TOOLS = {
     # Bilder malen (bilder.py): the picture is painted on the Spark (bild_server.py, 127.0.0.1)
     "bild_malen": "bild", "Bild malen": "bild", "Bild ändern (Panel)": "bild",
     # Musik machen (musik.py): the song is made on the model computer (musik_server.py)
-    "musik_machen": "musik", "Musik machen": "musik",
+    "musik_machen": "musik", "Musik machen": "musik", "musik_bearbeiten": "musik", "Musik bearbeiten": "musik",
     # Der Spark ruft an (telefon_anruf.py): planned on the Spark, the call goes through the PBX
     "anruf_planen": "telefon", "Anrufen lassen": "telefon",
     # the job itself (docmake._work): every part written by the language model, then the file built
@@ -1607,6 +1607,9 @@ def snapshot(view="admin", now=None):
                         + (f" · {bild['failed']} Fehler" if bild.get("failed") else "") + _platz(heavy, "bild"))
         if x["id"] == "musik":   # Musik machen: songs and the measurement in numbers (no wish, no lyrics)
             x["sub"] = (f"{mus.get('run', 0)} macht · {mus.get('wait', 0)} wartet · {mus.get('done', 0)} heute gemacht"
+                        + (f" · {mus['edited']} bearbeitet" if mus.get("edited") else "")
+                        + (f" · {mus['uploaded']} hochgeladen" if mus.get("uploaded") else "")
+                        + (f" · {mus['heard']} erkannt" if mus.get("heard") else "")
                         + (f" · {mus['refused']} abgelehnt" if mus.get("refused") else "")
                         + (f" · {mus['failed']} Fehler" if mus.get("failed") else "")
                         + (" · misst gerade" if mus.get("test_run") else
@@ -1634,7 +1637,7 @@ def snapshot(view="admin", now=None):
             "meld": {k: meld.get(k) for k in ("on", "drafts", "sent_today", "last", "token")},
             "make": {k: make.get(k) for k in ("on", "run", "wait", "done", "failed", "sent", "planned")},
             "bild": {k: bild.get(k) for k in ("on", "run", "wait", "done", "edited", "quick", "failed", "refused")},
-            "musik": {k: mus.get(k) for k in ("on", "installed", "run", "wait", "done", "failed", "refused", "test_run",
+            "musik": {k: mus.get(k) for k in ("on", "installed", "run", "wait", "done", "failed", "refused", "edited", "uploaded", "heard", "test_run",
                                               "test_ok", "test_total")},
             "schwer": heavy, "stats": node_stats(now), "aktiv": _aktiv(now)}
 

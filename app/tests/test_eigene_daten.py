@@ -36,6 +36,7 @@ OHNE = {
     "maildelete": "legt nur Mails im eigenen Postfach in dessen Papierkorb (endgültig nur dort), speichert nichts im Spark",
     "mailsend": "gesendete Mails liegen im Postfach unter Gesendet; im Spark bleibt nur die Vorschau höchstens 10 Minuten, ein Vorschlag per Sprache 5 Minuten",
     "bildaendern": "geänderte und hochgeladene Bilder liegen bei den Bildern (features.OWN bilder, Ich → Bilder)",
+    "musikbearbeiten": "Fassungen und hochgeladene Dateien liegen bei den Liedern (features.OWN musik, Ich → Musik)",
     "documents": "alle Dokumente auf einmal wären zu einschneidend; jedes Dokument hat sein eigenes Löschen unter Ich → Dokumente",
     "erstellen": "erstellte Dokumente gehören zu den Dokumenten (dasselbe einschneidende Löschen)",
     "parcels": "keine eigenen Daten: liest nur das Postfach (E-Mail)",

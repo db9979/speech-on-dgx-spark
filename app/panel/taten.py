@@ -25,6 +25,7 @@ KIND = {
     "nas_ablegen": "ablegen",
     "bild_malen": "bild",
     "musik_machen": "musik",
+    "musik_bearbeiten": "musik",
     "anruf_planen": "erinnerung",
     "fuer_dich_tun": "erinnerung",   # Für dich: erledigt, nicht interessant or a reminder (fuerdich.tool)
 }

@@ -187,6 +187,7 @@ ACTION_OK = {
     ("postfach.py", "_back_many"): "back_many schreibt über _outcome „mail: page many back done|refused|failed“ für jedes Ergebnis",
     ("postfach.py", "_folder_op"): "folder_op schreibt „mail: folder <aktion> done|refused|failed“ für jedes Ergebnis",
     ("mailidle.py", "wanted"): "liest nur, wer eine IDLE-Verbindung bekommt; look schreibt „mail: idle looked …“, der Thread jede Öffnung und jedes Ende",
+    ("musik.py", "_guard"): "prüft nur vor start_edit und tone; jede Absage schreibt _say „musik: nicht gestartet <grund> fuer …“, die Änderung selbst schreiben start_edit und tone",
     ("saetze.py", "start"): "liest nur und gibt drei feste Sätze zurück, nichts geschieht; die Notaus-Frage hält nur Vorschläge zurück",
     ("aendern.py", "set_volume"): "volume schreibt „aendern: lautstaerke …“, das Rückgängig answer seine Zeile",
     ("aendern.py", "undo"): "answer schreibt „aendern: rueckgaengig … ok|fehler“",

@@ -13750,6 +13750,506 @@
           }
         }
       }
+    },
+    "hochgeladen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "uploaded"
+          }
+        }
+      }
+    },
+    "Bearbeiten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit"
+          }
+        }
+      }
+    },
+    "Als eigenes Lied": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "As a song of its own"
+          }
+        }
+      }
+    },
+    "Eigene Datei hochladen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Upload an own file"
+          }
+        }
+      }
+    },
+    "Rechte an diesem Lied?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rights to this song?"
+          }
+        }
+      }
+    },
+    "Das ist meine Aufnahme oder ich habe die Rechte": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This is my recording or I own the rights"
+          }
+        }
+      }
+    },
+    "Hochladen geht nur mit eigenen Aufnahmen oder Liedern, an denen du die Rechte hast.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uploading works only with own recordings or songs you own the rights to."
+          }
+        }
+      }
+    },
+    "Abschnitt neu": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Part anew"
+          }
+        }
+      }
+    },
+    "Verlängern": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extend"
+          }
+        }
+      }
+    },
+    "Musikrichtung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Genre"
+          }
+        }
+      }
+    },
+    "Remix": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remix"
+          }
+        }
+      }
+    },
+    "Schneiden & Blenden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cut & fade"
+          }
+        }
+      }
+    },
+    "Tempo & Tonart": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tempo & key"
+          }
+        }
+      }
+    },
+    "Was ändern": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What to change"
+          }
+        }
+      }
+    },
+    "Bereich (Sekunden)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Part (seconds)"
+          }
+        }
+      }
+    },
+    "Von %lld s": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From %lld s"
+          }
+        }
+      }
+    },
+    "Bis %lld s": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To %lld s"
+          }
+        }
+      }
+    },
+    "Was soll in dem Teil anders sein?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What should be different in that part?"
+          }
+        }
+      }
+    },
+    "Wo": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Where"
+          }
+        }
+      }
+    },
+    "Hinten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At the end"
+          }
+        }
+      }
+    },
+    "Vorne": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At the front"
+          }
+        }
+      }
+    },
+    "%lld Sekunden länger": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld seconds longer"
+          }
+        }
+      }
+    },
+    "Wie soll es weitergehen? (frei lassen: wie bisher)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How should it go on? (leave empty: as before)"
+          }
+        }
+      }
+    },
+    "Eigene Worte": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Own words"
+          }
+        }
+      }
+    },
+    "z. B. Bossa Nova mit Flöte": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "e.g. bossa nova with flute"
+          }
+        }
+      }
+    },
+    "Nähe zum Original: %lld von 5": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Closeness to the original: %lld of 5"
+          }
+        }
+      }
+    },
+    "Wie soll der Remix klingen? (frei lassen: überraschen)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How should the remix sound? (leave empty: surprise me)"
+          }
+        }
+      }
+    },
+    "Einblenden %lld s": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fade in %lld s"
+          }
+        }
+      }
+    },
+    "Ausblenden %lld s": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fade out %lld s"
+          }
+        }
+      }
+    },
+    "Tonart %lld Halbtöne": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Key %lld half tones"
+          }
+        }
+      }
+    },
+    "%lld Vorschläge": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld suggestions"
+          }
+        }
+      }
+    },
+    "Teile außerhalb des Bereichs bleiben im Originalklang. Jede Änderung ist eine neue Fassung, das Original bleibt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parts outside the range keep the original sound. Every change is a new version, the original stays."
+          }
+        }
+      }
+    },
+    "Vorschläge machen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make suggestions"
+          }
+        }
+      }
+    },
+    "Neue Fassung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New version"
+          }
+        }
+      }
+    },
+    "Tempo %lld Prozent": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tempo %lld percent"
+          }
+        }
+      }
+    },
+    "Text ändern": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change lyrics"
+          }
+        }
+      }
+    },
+    "Teil": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Part"
+          }
+        }
+      }
+    },
+    "Strophe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verse"
+          }
+        }
+      }
+    },
+    "Refrain": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chorus"
+          }
+        }
+      }
+    },
+    "Vor-Refrain": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pre-chorus"
+          }
+        }
+      }
+    },
+    "Bridge": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bridge"
+          }
+        }
+      }
+    },
+    "Intro": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Intro"
+          }
+        }
+      }
+    },
+    "Outro": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Outro"
+          }
+        }
+      }
+    },
+    "Instrumental": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instrumental"
+          }
+        }
+      }
+    },
+    "Strophe hinzufügen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a verse"
+          }
+        }
+      }
+    },
+    "Refrain hinzufügen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a chorus"
+          }
+        }
+      }
+    },
+    "Liedtext": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lyrics"
+          }
+        }
+      }
+    },
+    "Zum Verschieben halten und ziehen, zum Entfernen nach links wischen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hold and drag to move, swipe left to remove."
+          }
+        }
+      }
+    },
+    "Ganz neu machen, mit eigener Länge": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make it completely anew, with its own length"
+          }
+        }
+      }
+    },
+    "Länge %lld s": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Length %lld s"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -201,9 +201,9 @@ GROUPS = {
     # Bilder malen (bilder.py): a picture, drawing, logo or colouring page painted on the Spark; „Was ist auf dem
     # Bild?“ has no painting word and stays with Bilder erkennen (images.py)
     "bild": ({"bild_malen"}, bilder.WORDS),
-    # Musik machen (musik.py): a song or a piece of music made on the Spark; „Spiel Musik“ has no making word and
-    # stays with Smart Home (the speakers)
-    "musik": ({"musik_machen"}, musik.WORDS),
+    # Musik machen (musik.py): a song or a piece of music made on the Spark, or one of the own songs changed (Musik
+    # bearbeiten); „Spiel Musik“ has no making word and stays with Smart Home (the speakers)
+    "musik": ({"musik_machen", "musik_bearbeiten"}, musik.GROUP_WORDS),
     # the Spark's own state (zustand_wz.py): services, backup, version, Notaus, Mein Zustand
     "zustand": ({"spark_zustand"}, zustand_wz.WORDS),
     # the own offline archive (Kiwix, V01.0.258): only when the person names it

@@ -1413,7 +1413,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": ", oder über einen eingetragenen Proxy, der eine private Adresse meldet. Ab Notaus-Stufe 1 bekommt alles von außen nur noch die Seite und den Notaus-Stand. 6. Alles still?: In Stufe 3 gehen auch im Heimnetz nur noch Anmelden, das Aufheben des Notaus und das Lesen von Zustand, Logs und Live durch. In den Stufen darunter läuft im Heimnetz alles weiter; Aktionen hält das Panel dann tiefer unten an. 7. Fremde Seite?: Eine ändernde Anfrage (POST, PUT, PATCH, DELETE), die ein Anmelde-Cookie mitbringt, muss von der eigenen Seite kommen: der Browser sagt es mit Sec-Fetch-Site, sonst wird Origin mit dem Host verglichen. Ein anderer Port auf demselben Rechner gilt als fremd. Ohne beide Kopfzeilen ist es kein Browser (Skripte) und geht durch. 8. Großer Upload ohne Anmeldung?: Die Pfade für große Uploads (Sicherungen, Stimmen, Ton, Dokumente, Bilder, MCP) nehmen nur an, wer überhaupt angemeldet sein könnte: Admin-Cookie, Profil oder eine Authorization-Zeile. Die Datei eines anderen Sparks (/api/verbund/blob) nur, wenn Verbund und Dateien an sind und der Absender ein erlaubter Spark mit bekanntem Schlüssel ist. Die echte Prüfung kommt danach im Endpunkt; hier geht es nur darum, dass kein Byte ei"
+"text": ", oder über einen eingetragenen Proxy, der eine private Adresse meldet. Ab Notaus-Stufe 1 bekommt alles von außen nur noch die Seite und den Notaus-Stand. 6. Alles still?: In Stufe 3 gehen auch im Heimnetz nur noch Anmelden, das Aufheben des Notaus und das Lesen von Zustand, Logs und Live durch. In den Stufen darunter läuft im Heimnetz alles weiter; Aktionen hält das Panel dann tiefer unten an. 7. Fremde Seite?: Eine ändernde Anfrage (POST, PUT, PATCH, DELETE), die ein Anmelde-Cookie mitbringt, muss von der eigenen Seite kommen: der Browser sagt es mit Sec-Fetch-Site, sonst wird Origin mit dem Host verglichen. Ein anderer Port auf demselben Rechner gilt als fremd. Ohne beide Kopfzeilen ist es kein Browser (Skripte) und geht durch. 8. Großer Upload ohne Anmeldung?: Die Pfade für große Uploads (Sicherungen, Stimmen, Ton, Dokumente, Bilder, Musik, MCP) nehmen nur an, wer überhaupt angemeldet sein könnte: Admin-Cookie, Profil oder eine Authorization-Zeile. Die Datei eines anderen Sparks (/api/verbund/blob) nur, wenn Verbund und Dateien an sind und der Absender ein erlaubter Spark mit bekanntem Schlüssel ist. Die echte Prüfung kommt danach im Endpunkt; hier geht es nur darum, dass kein "
 },
 {
 "lang": "de",
@@ -1421,7 +1421,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "nes fremden Uploads gelesen wird. 9. Zu groß?: Jeder Pfad hat seine Grenze, sonst gilt eine kleine Standardgrenze von zwei MB. Eine zu große Content-Length wird sofort abgelehnt; beim Lesen zählt BodyLimit zusätzlich mit und bricht ab, sobald mehr kommt als erlaubt. 10. Update läuft?: Während ein Update läuft, werden Änderungen unter /api/ angehalten. Der Assistent, die Geräte und das Anmelden bleiben offen (update.UNLOCKED). 11. Endpunkt: Erst jetzt liest der Endpunkt die Anfrage und prüft selbst Anmeldung, Profil und Rate-Limit (die nächste Station, „Anmeldung, Profil“). Ist der Verbrauchszähler an, merkt sich die Anfrage vorher, für welches Profil sie läuft: was sie die Modelle fragt, zählt für dieses Profil. 12. Antwort mit Schutz: Jede Antwort bekommt die Schutz-Kopfzeilen (keine fremden Rahmen, strenge Content-Security-Policy, auf https auch HSTS), unter /api/ „no-store“. Eine Änderung landet mit wer, Pfad und Status im Admin-Protokoll, außer gewöhnlicher Nutzung aus guard.QUIET_WHY. Benutzte Anmeldungen werden erneuert, auf https immer mit Secure."
+"text": "Byte eines fremden Uploads gelesen wird. 9. Zu groß?: Jeder Pfad hat seine Grenze, sonst gilt eine kleine Standardgrenze von zwei MB. Eine zu große Content-Length wird sofort abgelehnt; beim Lesen zählt BodyLimit zusätzlich mit und bricht ab, sobald mehr kommt als erlaubt. 10. Update läuft?: Während ein Update läuft, werden Änderungen unter /api/ angehalten. Der Assistent, die Geräte und das Anmelden bleiben offen (update.UNLOCKED). 11. Endpunkt: Erst jetzt liest der Endpunkt die Anfrage und prüft selbst Anmeldung, Profil und Rate-Limit (die nächste Station, „Anmeldung, Profil“). Ist der Verbrauchszähler an, merkt sich die Anfrage vorher, für welches Profil sie läuft: was sie die Modelle fragt, zählt für dieses Profil. 12. Antwort mit Schutz: Jede Antwort bekommt die Schutz-Kopfzeilen (keine fremden Rahmen, strenge Content-Security-Policy, auf https auch HSTS), unter /api/ „no-store“. Eine Änderung landet mit wer, Pfad und Status im Admin-Protokoll, außer gewöhnlicher Nutzung aus guard.QUIET_WHY. Benutzte Anmeldungen werden erneuert, auf https immer mit Secure."
 },
 {
 "lang": "de",
@@ -1845,7 +1845,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Alltagsquote",
 "title": "Alltagsquote",
-"text": "- Die Testsätze (164) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (211) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt."
+"text": "- Die Testsätze (168) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (211) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt."
 },
 {
 "lang": "de",
@@ -1853,7 +1853,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Werkzeugnamen",
 "title": "Werkzeugnamen",
-"text": "- Überall, wo ein Werkzeug sichtbar wird, steht ein lesbarer Name aus einer Tabelle (89 Werkzeuge), zum Beispiel „Postfach-Überblick“ statt mail_tidy_overview."
+"text": "- Überall, wo ein Werkzeug sichtbar wird, steht ein lesbarer Name aus einer Tabelle (90 Werkzeuge), zum Beispiel „Postfach-Überblick“ statt mail_tidy_overview."
 },
 {
 "lang": "de",
@@ -1861,7 +1861,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 23 Gruppen der Weiche (Schritt 4, Schritt 6) - 2 Gruppen höchstens, die noch eingrenzen (Schritt 6) - 80 Zeichen höchstens für eine Folgefrage (Schritt 8) - 4 Sekunden höchstens für die Wahl des Modells (Schritt 10) - 300 ms Wartezeit mit „Schneller Antwortbeginn“ (Schritt 10) - 80 % Standard-Schwelle der Einordnung (Schritt 10) - 164 eingebaute Testsätze (Schritt 4, Schritt 5) - 211 Alltagssätze zum Messen (Schritt 14) - 20 Versionen für Rückgängig (Schritt 4)"
+"text": "- 23 Gruppen der Weiche (Schritt 4, Schritt 6) - 2 Gruppen höchstens, die noch eingrenzen (Schritt 6) - 80 Zeichen höchstens für eine Folgefrage (Schritt 8) - 4 Sekunden höchstens für die Wahl des Modells (Schritt 10) - 300 ms Wartezeit mit „Schneller Antwortbeginn“ (Schritt 10) - 80 % Standard-Schwelle der Einordnung (Schritt 10) - 168 eingebaute Testsätze (Schritt 4, Schritt 5) - 211 Alltagssätze zum Messen (Schritt 14) - 20 Versionen für Rückgängig (Schritt 4)"
 },
 {
 "lang": "de",
@@ -2061,7 +2061,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 4 Aufrufe pro Runde (Schritt 1) - 3 Gedächtnis-Notizen pro Antwort (Schritt 1) - 13 Werkzeuge gesperrt nach fremdem Text (Schritt 4) - 7 Werkzeuge ohne Internet bei Notaus (Schritt 3) - 89 Werkzeuge mit verständlichem Namen (Schritt 11)"
+"text": "- 4 Aufrufe pro Runde (Schritt 1) - 3 Gedächtnis-Notizen pro Antwort (Schritt 1) - 13 Werkzeuge gesperrt nach fremdem Text (Schritt 4) - 7 Werkzeuge ohne Internet bei Notaus (Schritt 3) - 90 Werkzeuge mit verständlichem Namen (Schritt 11)"
 },
 {
 "lang": "de",
@@ -2709,7 +2709,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Bilder und Musik",
 "title": "Bilder und Musik",
-"text": "Musik machen läuft daneben genauso: aus einem Wunsch unter Ich → Musik oder musik_machen im Gespräch wird ein Lied (ohne Angabe instrumental, 2 Minuten). Der Musik-Dienst auf :31004 lädt ACE-Step 1.5 nur für ein Lied, im Modell, das der Admin gewählt hat, und gibt den Speicher nach einer Ruhezeit frei; „Musik testen“ misst jedes installierte Modell. Beide Dienste teilen die Engine bei Bedarf aus bedarf.py."
+"text": "Musik machen läuft daneben genauso: aus einem Wunsch unter Ich → Musik oder musik_machen im Gespräch wird ein Lied (ohne Angabe instrumental, 2 Minuten). Der Musik-Dienst auf :31004 lädt ACE-Step 1.5 nur für ein Lied, im Modell, das der Admin gewählt hat, und gibt den Speicher nach einer Ruhezeit frei; „Musik testen“ misst jedes installierte Modell. Beide Dienste teilen die Engine bei Bedarf aus bedarf.py. Musik bearbeiten macht aus einem eigenen Lied eine neue Fassung (Abschnitt neu, verlängern, Musikrichtung, Remix, neuer Text) mit demselben Modell; Schneiden, Tempo und Tonart macht der Musik-Dienst sofort mit ffmpeg, ohne Modell. Eigene Dateien nur mit dem Rechte-Haken."
 },
 {
 "lang": "de",
@@ -2733,7 +2733,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "1. Ein Bildwunsch: Ein Profil schreibt einen Wunsch unter Ich → Bilder, oder die Weiche-Gruppe „bild“ bietet im Gespräch das Werkzeug bild_malen an; das Modell schreibt dazu einen englischen Prompt. Bilder ändern startet ohne Werkzeug: bilder.from_turn nimmt nach fester Regel das Foto dieser Nachricht oder das Ergebnis der letzten Änderung, unter Ich → Bilder ein eigenes Bild. Alles landet in bilder.start. Schnellknöpfe (drehen, heller, schwarzweiß …) brauchen kein Modell: bilder.quick_png macht sie sofort im Panel. Ein Liedwunsch kommt genauso über Ich → Musik oder die Gruppe „musik“ mit musik_machen in musik.start. 2. Funktion frei?: features.allowed fragt die Freigabe: der Admin hat Bilder malen eingeschaltet und dieses Profil nicht gesperrt. Gäste bekommen das Werkzeug nie; nach fremdem Text und bei Notaus Stufe 2 ist es gesperrt. 3. Wunsch erlaubt?: bilder.refuse_text prüft Wunsch und Prompt gegen eine feste Wortliste (nichts Sexuelles, keine Gewalt, keine Hasssymbole) und gegen die Namen der Profile und Kontakte. Für Lieder prüft musik.refuse_text Wunsch, Beschreibung und Liedtext gegen die Wortliste, dazu „im Stil von“ einem Künstler und Geheimnisse; Namen gehen. Das Modell "
+"text": "1. Ein Bildwunsch: Ein Profil schreibt einen Wunsch unter Ich → Bilder, oder die Weiche-Gruppe „bild“ bietet im Gespräch das Werkzeug bild_malen an; das Modell schreibt dazu einen englischen Prompt. Bilder ändern startet ohne Werkzeug: bilder.from_turn nimmt nach fester Regel das Foto dieser Nachricht oder das Ergebnis der letzten Änderung, unter Ich → Bilder ein eigenes Bild. Alles landet in bilder.start. Schnellknöpfe (drehen, heller, schwarzweiß …) brauchen kein Modell: bilder.quick_png macht sie sofort im Panel. Ein Liedwunsch kommt genauso über Ich → Musik oder die Gruppe „musik“ mit musik_machen in musik.start; eine Änderung eines eigenen Liedes über Ich → Musik oder musik_bearbeiten in musik.start_edit (das Panel nimmt das Lied, nie das Modell), Schneiden und Tempo ohne Modell in musik.tone, eine eigene Datei mit dem Rechte-Haken in musik.upload. 2. Funktion frei?: features.allowed fragt die Freigabe: der Admin hat Bilder malen eingeschaltet und dieses Profil nicht gesperrt. Gäste bekommen das Werkzeug nie; nach fremdem Text und bei Notaus Stufe 2 ist es gesperrt. 3. Wunsch erlaubt?: bilder.refuse_text prüft Wunsch und Prompt gegen eine feste Wortliste (nichts Sexuelles, kei"
 },
 {
 "lang": "de",
@@ -2741,7 +2741,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "kann das nicht umgehen. 4. Innerhalb der Grenzen?: Pro Profil gelten Bilder pro Tag (gleitend 24 Stunden), Platz und höchstens 300 Bilder; Lieder: Lieder pro Tag, Platz und längstes Lied (musik.start). Auf dem ganzen Spark warten höchstens 10 schwere Aufträge, Bilder und Lieder zusammen. 5. Warten auf Pause und Platz: Der Auftrag läuft im Hintergrund (bilder._work, musik._work): er wartet, bis niemand spricht (vorrang), und stellt sich in die eine Warteschlange für Bilder und Lieder (schwer.run). Die feste Regel schwer.pick nimmt den ältesten; solange die geladene Art noch wartet, kommt sie zuerst, aber höchstens 3-mal hintereinander, während die andere Art wartet. Ist eine andere Art dran, beendet das Panel zuerst das geladene Modell. Wer hinter anderen steht, bekommt einen festen Satz mit Platz und ungefährer Dauer (schwer.hint), die Karte zeigt „Wartet · Platz 2 von 3“. Ein Bild darf höchstens 720 Sekunden brauchen. 6. Modell geladen?: bild_server.Engine.start nimmt zuerst den einen Platz (bedarf.OnDemand.claim, Sperre bedarf.lock: hält ihn der Musik-Dienst, antwortet er „belegt“) und startet sd-server als eigenen Prozess auf 127.0.0.1, aber nur, wenn genug gemeinsamer Speicher "
+"text": "ne Gewalt, keine Hasssymbole) und gegen die Namen der Profile und Kontakte. Für Lieder prüft musik.refuse_text Wunsch, Beschreibung und Liedtext gegen die Wortliste, dazu „im Stil von“ einem Künstler und Geheimnisse; Namen gehen. Das Modell kann das nicht umgehen. 4. Innerhalb der Grenzen?: Pro Profil gelten Bilder pro Tag (gleitend 24 Stunden), Platz und höchstens 300 Bilder; Lieder: Lieder pro Tag, Platz und längstes Lied (musik.start), je Lied höchstens 10 Fassungen, 10 eigene Dateien am Tag; jede Zahl einer Änderung prüft musik.plan_edit. Auf dem ganzen Spark warten höchstens 10 schwere Aufträge, Bilder und Lieder zusammen. 5. Warten auf Pause und Platz: Der Auftrag läuft im Hintergrund (bilder._work, musik._work): er wartet, bis niemand spricht (vorrang), und stellt sich in die eine Warteschlange für Bilder und Lieder (schwer.run). Die feste Regel schwer.pick nimmt den ältesten; solange die geladene Art noch wartet, kommt sie zuerst, aber höchstens 3-mal hintereinander, während die andere Art wartet. Ist eine andere Art dran, beendet das Panel zuerst das geladene Modell. Wer hinter anderen steht, bekommt einen festen Satz mit Platz und ungefährer Dauer (schwer.hint), die Karte"
 },
 {
 "lang": "de",
@@ -2749,7 +2749,15 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "frei ist; sonst bleibt alles andere ungestört. Zu wenig Speicher beendet den Auftrag nicht: er behält seinen Platz und versucht es alle 30 Sekunden neu, höchstens 600 Sekunden lang. 7. Malen: Die Engine malt das Bild in 4 Schritten in der gewählten Größe; ihre eigene Ausgabe kommt nie ins Journal, weil sie den Prompt nennen würde. 8. Bild unbedenklich?: bild_server.nsfw_share lässt einen Klassifikator auf der CPU das Bild prüfen. Über 0.5 wird es verworfen; fehlt die Prüfung, zeigt das Panel nichts. 9. Als KI-Bild kennzeichnen: bild_server.finish kodiert das Bild neu als PNG und schreibt hinein, dass es KI-erzeugt ist, ein geändertes Bild KI-bearbeitet (auch als IPTC-Angabe). 10. Bild abgelegt: Das Bild kommt mit seinem Auftrag in den Ordner des Profils (bilder.keep), die Karte im Chat und in der iPhone-App zeigt es, auch in einem wieder geöffneten Gespräch; über App oder Telegram kommt ein Push. Nach einer Ruhezeit beendet der Bild-Dienst die Engine und gibt den Speicher frei. Ein Lied liegt als MP3 unter users/ID/musik/ (musik.keep), mit Abspieler im Chat und unter Ich → Musik."
+"text": " zeigt „Wartet · Platz 2 von 3“. Ein Bild darf höchstens 720 Sekunden brauchen. 6. Modell geladen?: bild_server.Engine.start nimmt zuerst den einen Platz (bedarf.OnDemand.claim, Sperre bedarf.lock: hält ihn der Musik-Dienst, antwortet er „belegt“) und startet sd-server als eigenen Prozess auf 127.0.0.1, aber nur, wenn genug gemeinsamer Speicher frei ist; sonst bleibt alles andere ungestört. Zu wenig Speicher beendet den Auftrag nicht: er behält seinen Platz und versucht es alle 30 Sekunden neu, höchstens 600 Sekunden lang. 7. Malen: Die Engine malt das Bild in 4 Schritten in der gewählten Größe; ihre eigene Ausgabe kommt nie ins Journal, weil sie den Prompt nennen würde. 8. Bild unbedenklich?: bild_server.nsfw_share lässt einen Klassifikator auf der CPU das Bild prüfen. Über 0.5 wird es verworfen; fehlt die Prüfung, zeigt das Panel nichts. 9. Als KI-Bild kennzeichnen: bild_server.finish kodiert das Bild neu als PNG und schreibt hinein, dass es KI-erzeugt ist, ein geändertes Bild KI-bearbeitet (auch als IPTC-Angabe). 10. Bild abgelegt: Das Bild kommt mit seinem Auftrag in den Ordner des Profils (bilder.keep), die Karte im Chat und in der iPhone-App zeigt es, auch in einem wieder geö"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Ablauf",
+"title": "Ablauf",
+"text": "ffneten Gespräch; über App oder Telegram kommt ein Push. Nach einer Ruhezeit beendet der Bild-Dienst die Engine und gibt den Speicher frei. Ein Lied liegt als MP3 unter users/ID/musik/ (musik.keep), mit Abspieler im Chat und unter Ich → Musik."
 },
 {
 "lang": "de",
@@ -2765,7 +2773,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 300 Bilder pro Profil höchstens (Schritt 4) - 10 Bilder und Lieder warten höchstens (Schritt 4) - 3 dieselbe Art höchstens hintereinander (Schritt 5) - 600 Sekunden Warten auf Speicher höchstens (Schritt 6) - 0.5 Anteil der Bildprüfung, ab dem verworfen wird (Schritt 8) - 4 Schritte pro Bild (Schritt 7) - 720 Sekunden pro Auftrag höchstens (Schritt 5)"
+"text": "- 300 Bilder pro Profil höchstens (Schritt 4) - 10 Bilder und Lieder warten höchstens (Schritt 4) - 3 dieselbe Art höchstens hintereinander (Schritt 5) - 600 Sekunden Warten auf Speicher höchstens (Schritt 6) - 0.5 Anteil der Bildprüfung, ab dem verworfen wird (Schritt 8) - 4 Schritte pro Bild (Schritt 7) - 10 Fassungen je Lied höchstens (Schritt 4) - 10 eigene Musikdateien am Tag höchstens (Schritt 4) - 720 Sekunden pro Auftrag höchstens (Schritt 5)"
 },
 {
 "lang": "de",
@@ -2773,7 +2781,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Einstellen",
 "title": "Einstellen",
-"text": "- Installation: sudo ./install.sh --bild 4b-q8 (oder 4b-q4, 9b-q8, 9b-q4, none). - Funktionen → Bilder malen: Schalter, Bilder pro Tag, Platz, längste Seite, Entladen nach Minuten, „Bild testen“. - Musik: sudo ./install.sh --musik 2b (oder 2b-klein, xl, none; mehrere nacheinander bleiben alle); Funktionen → Musik machen: Schalter, Modell, Lieder pro Tag, Platz, längstes Lied; Zustand → Prüfen → „Musik testen“ misst jedes installierte Modell."
+"text": "- Installation: sudo ./install.sh --bild 4b-q8 (oder 4b-q4, 9b-q8, 9b-q4, none). - Funktionen → Bilder malen: Schalter, Bilder pro Tag, Platz, längste Seite, Entladen nach Minuten, „Bild testen“. - Musik: sudo ./install.sh --musik 2b (oder 2b-klein, xl, none; mehrere nacheinander bleiben alle); Funktionen → Musik machen: Schalter, Modell, Lieder pro Tag, Platz, längstes Lied; Zustand → Prüfen → „Musik testen“ misst jedes installierte Modell. - Funktionen → Musik machen → Musik bearbeiten: Schalter (aus); dann unter Ich → Musik am Lied „Bearbeiten“ und im Menü „⋯“ „Eigene Datei hochladen“."
 },
 {
 "lang": "de",
@@ -2797,7 +2805,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "tler, Geheimnisse (Schritt 3) - app/panel/musik.py _work: Lied im Hintergrund (Schritt 5) - app/panel/musik.py keep: Lied ablegen (Schritt 10) - app/panel/musik.py _measure: Musik testen je Modell (Schritt 5)"
+"text": "tler, Geheimnisse (Schritt 3) - app/panel/musik.py _work: Lied im Hintergrund (Schritt 5) - app/panel/musik.py keep: Lied ablegen (Schritt 10) - app/panel/musik.py _measure: Musik testen je Modell (Schritt 5) - app/panel/musik.py start_edit: Änderung eines Liedes annehmen (Schritt 1) - app/panel/musik.py plan_edit: Jede Zahl der Änderung prüfen (Schritt 4) - app/panel/musik.py tone: Schneiden, Tempo, Tonart ohne Modell (Schritt 1) - app/panel/musik.py upload: Eigene Datei mit Rechte-Haken (Schritt 1) - app/musik_server.py edit_body: Feste Felder für repaint und cover (Schritt 7)"
 },
 {
 "lang": "de",
@@ -4638,6 +4646,38 @@
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
 "text": "k/ (MP3 mit KI-Kennzeichen und index.json), Daten löschen der Freigabe zählt mit. Im Chat des Panels erscheint eine Liedkarte mit Abspieler, die Apps finden das Lied unter Ich → Musik und bekommen einen Hinweis, wenn es fertig ist. Ein Lied, das wartet oder entsteht, steht in Zustand → Live unter „Im Hintergrund“ und am Ziel „Musik machen“ (nur Zahlen); der Musik-Dienst steht auf der Karte des Modell-Rechners (Zustand → Überblick und Steuerzentrale), seit V01.0.700. Logs nur mit Zahlen und festen Wörtern: musik: auftrag 120 s instrumental chat fuer …, musik: gemacht 120 s gesang 9.5 s fuer …, musik: nicht gestartet kuenstler fuer …, nie Wunsch oder Liedtext. API: GET|POST|DELETE /api/musik, GET /api/musik/job/{id}, GET /api/musik/{id}/datei, DELETE /api/musik/{id}."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Musik bearbeiten (V01.0.863, standardmäßig aus, Plan musik-experte/plan.md, Dominik 2026-10-20 „alles nach Empfehlung umsetzten“, Stufe E1 mit dem heutigen Modell): Der Spark bearbeitet ein Lied unter *Ich → Musik*, ohne Internet, mit demselben ACE-Step (acestep.cpp: Aufgaben repaint, cover, cover-nofsq; Spuren trennen braucht das Basismodell und kommt erst nach dem Messen, Stufe E2). Eigener Admin-Schalter Funktionen → Musik bearbeiten (chat.musik_bearbeiten, unter Musik machen); freigegeben gilt er für jedes Profil, Gäste nie, nie über MCP. Arten (musik.ARTS, jede Zahl prüft musik.plan_edit mit festen Grenzen): Abschnitt neu (Bereich auf der Welle, Satz was anders sein soll), Verlängern (vorne oder hinten, 5 bis 120 s), Musikrichtung (zehn Knöpfe Pop, Rock, Reggae, Jazz, Klassik, Elektro, Hip-Hop, Schlager, Big Band, Akustisch oder eigene Worte, Schieber „frei ↔ nah am Original“ in fünf Stufen, BPM), Remix, Text ändern (der Liedtext als Teile Strophe, Refrain, Vor-Refrain, Bridge, Intro, Outro, Instrumental: Text ändern, Teile hinzufügen, entfernen und verschieben, im Panel per Ziehen am Griff ⠿ mit Maus oder Finger oder mit ↑/↓, in der iPhone-App durch Halten und Ziehen; daraus "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "wird das Lied nah am alten Klang neu gemacht oder mit „Ganz neu machen“ in eigener Länge für zusätzliche Strophen; Dominik 2026-10-20 „texte anpassen strophen hinzufügen und verschieben … immer auch mit drag and drop“), dazu ohne Modell sofort Schneiden & Blenden und Tempo & Tonart (75 bis 125 %, ±4 Halbtöne; ffmpeg auf dem Modell-Rechner, nur feste Filter, ein Lauf zur Zeit, 120 s Grenze, braucht nicht den Platz der schweren Aufträge) und Tempo und Tonart erkennen (/understand). Mit Modell bis zu drei Vorschläge in einem Lauf; alles außerhalb des gewählten Bereichs bleibt Abtastwert für Abtastwert im Originalklang (das macht die Engine selbst). Jede Änderung ist eine neue Fassung am Original (root, von, label), höchstens 10 je Lied; in der Liste steht jedes Lied einmal mit „· N Fassungen“, die Fassungen in den Einzelheiten mit ▶ zum Vergleichen, „Als eigenes Lied“, Herunterladen und Löschen; Schnellfilter Hochgeladen und Bearbeitet. KI-Fassungen tragen das Kennzeichen „KI-bearbeitet“. Eigene Datei hochladen (Menü „⋯“): MP3, WAV, FLAC, M4A, OGG bis 30 MB und 10 Minuten, 10 am Tag, nur mit dem Haken „Das ist meine eigene Aufnahme oder ich habe die Rechte daran“ (rechte=1); das Panel"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": " prüft die ersten Bytes, der Modell-Rechner liest die Datei mit ffmpeg aus einer Pipe (nur file,pipe) und gibt eine eigene MP3 ohne fremde Tags zurück, ohne KI-Kennzeichen, bis sie bearbeitet wird. Im Gespräch das Werkzeug musik_bearbeiten (Weiche-Gruppe musik, z. B. „Mach mein letztes Lied 30 Sekunden länger“, „Mach aus meinem Lied eine Reggae-Version“): welches Lied, entscheidet das Panel (immer das neueste eigene), nie das Modell; neuer Text nur auf der Seite. Es gelten Lieder pro Tag, Platz, Warteschlange und Notaus von Musik machen. Zustand → Live: Ziel „Musik machen“ zusätzlich bearbeitet, hochgeladen und erkannt (Anzahl). Logs (Bereich „Musik“): musik: bearbeitung richtung 2 vorschlaege seite fuer …, musik: bearbeitet richtung 2 fassungen 31.0 s fuer …, musik: bearbeitet tempo ohne modell fuer …, musik: hochgeladen mp3 182 s fuer …, musik: hochladen nicht gemacht rechte|gross|format|dienst fuer …, musik: erkannt 3 felder fuer …, musik: fassung eigenes lied fuer …; nie Wunsch, Text oder Dateiname. API (Profil, auch die App): POST /api/musik/hochladen?name=&rechte=1 (die Datei als Körper), POST /api/musik/{id}/bearbeiten ({art, …}), POST /api/musik/{id}/erkennen, POST /api/mus"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "ik/{id}/eigenes; auf dem Modell-Rechner POST /v1/musik/quelle|bearbeiten|ton|erkennen."
 },
 {
 "lang": "de",
@@ -10221,7 +10261,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "ress. From kill switch stage 1 everything from outside only gets the page and the kill switch state. 6. All quiet?: In stage 3 only logins, lifting the kill switch and reading status, logs and live pass, also at home. In the stages below everything at home goes on; the panel then holds actions off further down. 7. Foreign page?: A changing request (POST, PUT, PATCH, DELETE) that carries a login cookie must come from the panel's own page: the browser says so with Sec-Fetch-Site, else Origin is compared with the host. Another port on the same machine counts as foreign. With neither header it is not a browser (scripts) and passes. 8. Big upload without login?: The paths for big uploads (backups, voices, sound, documents, pictures, MCP) only accept someone who could be logged in at all: admin cookie, profile or an Authorization line. Another Spark's file (/api/verbund/blob) only when Verbund and files are on and the sender is an allowed Spark with a known key. The real check comes later in the endpoint; here no byte of a stranger's upload is read. 9. Too large?: Every path has its limit, else a small default of two MB holds. A Content-Length that is too large is refused at once; while "
+"text": "ress. From kill switch stage 1 everything from outside only gets the page and the kill switch state. 6. All quiet?: In stage 3 only logins, lifting the kill switch and reading status, logs and live pass, also at home. In the stages below everything at home goes on; the panel then holds actions off further down. 7. Foreign page?: A changing request (POST, PUT, PATCH, DELETE) that carries a login cookie must come from the panel's own page: the browser says so with Sec-Fetch-Site, else Origin is compared with the host. Another port on the same machine counts as foreign. With neither header it is not a browser (scripts) and passes. 8. Big upload without login?: The paths for big uploads (backups, voices, sound, documents, pictures, music, MCP) only accept someone who could be logged in at all: admin cookie, profile or an Authorization line. Another Spark's file (/api/verbund/blob) only when Verbund and files are on and the sender is an allowed Spark with a known key. The real check comes later in the endpoint; here no byte of a stranger's upload is read. 9. Too large?: Every path has its limit, else a small default of two MB holds. A Content-Length that is too large is refused at once;"
 },
 {
 "lang": "en",
@@ -10229,7 +10269,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "reading, BodyLimit also counts and stops as soon as more arrives than allowed. 10. Update running?: While an update runs, changes under /api/ are held. The assistant, the devices and logging in stay open (update.UNLOCKED). 11. Endpoint: Only now the endpoint reads the request and checks login, profile and rate limit itself (the next box, „Login, profile“). With the usage counter on, the request first notes which profile it runs for: what it asks the models counts for that profile. 12. Answer with protection: Every answer gets the protective headers (no foreign frames, a strict Content-Security-Policy, on https also HSTS), under /api/ „no-store“. A change goes into the admin log with who, path and status, except normal use from guard.QUIET_WHY. Logins in use are renewed, on https always with Secure."
+"text": " while reading, BodyLimit also counts and stops as soon as more arrives than allowed. 10. Update running?: While an update runs, changes under /api/ are held. The assistant, the devices and logging in stay open (update.UNLOCKED). 11. Endpoint: Only now the endpoint reads the request and checks login, profile and rate limit itself (the next box, „Login, profile“). With the usage counter on, the request first notes which profile it runs for: what it asks the models counts for that profile. 12. Answer with protection: Every answer gets the protective headers (no foreign frames, a strict Content-Security-Policy, on https also HSTS), under /api/ „no-store“. A change goes into the admin log with who, path and status, except normal use from guard.QUIET_WHY. Logins in use are renewed, on https always with Secure."
 },
 {
 "lang": "en",
@@ -10645,7 +10685,7 @@
 "file": "Architecture and data flow",
 "head": "Everyday score",
 "title": "Everyday score",
-"text": "- The test sentences (164) hold every reported wrong turn and must all pass. The everyday sentences (211) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up."
+"text": "- The test sentences (168) hold every reported wrong turn and must all pass. The everyday sentences (211) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up."
 },
 {
 "lang": "en",
@@ -10653,7 +10693,7 @@
 "file": "Architecture and data flow",
 "head": "Tool names",
 "title": "Tool names",
-"text": "- Wherever a tool shows, a readable name comes from one table (89 tools), for example „Mailbox overview“ instead of mail_tidy_overview."
+"text": "- Wherever a tool shows, a readable name comes from one table (90 tools), for example „Mailbox overview“ instead of mail_tidy_overview."
 },
 {
 "lang": "en",
@@ -10661,7 +10701,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 23 groups of the switch (step 4, step 6) - 2 groups at most that still narrow (step 6) - 80 characters at most for a follow-up (step 8) - 4 seconds at most for the model's pick (step 10) - 300 ms waiting with „Fast answer start“ (step 10) - 80 % default threshold of the classification (step 10) - 164 built-in test sentences (step 4, step 5) - 211 everyday sentences for measuring (step 14) - 20 versions for undo (step 4)"
+"text": "- 23 groups of the switch (step 4, step 6) - 2 groups at most that still narrow (step 6) - 80 characters at most for a follow-up (step 8) - 4 seconds at most for the model's pick (step 10) - 300 ms waiting with „Fast answer start“ (step 10) - 80 % default threshold of the classification (step 10) - 168 built-in test sentences (step 4, step 5) - 211 everyday sentences for measuring (step 14) - 20 versions for undo (step 4)"
 },
 {
 "lang": "en",
@@ -10853,7 +10893,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 4 calls per round (step 1) - 3 memory notes per answer (step 1) - 13 tools locked after outside text (step 4) - 7 tools without internet with the kill switch (step 3) - 89 tools with a readable name (step 11)"
+"text": "- 4 calls per round (step 1) - 3 memory notes per answer (step 1) - 13 tools locked after outside text (step 4) - 7 tools without internet with the kill switch (step 3) - 90 tools with a readable name (step 11)"
 },
 {
 "lang": "en",
@@ -11493,7 +11533,7 @@
 "file": "Architecture and data flow",
 "head": "Pictures and music",
 "title": "Pictures and music",
-"text": "Making music works the same way next to it: a wish under Me → Music or musik_machen in the conversation becomes a song (instrumental and 2 minutes unless asked). The music service on :31004 loads ACE-Step 1.5 only for a song, in the model the admin picked, and frees the memory after a quiet time; \"Test music\" measures every installed model. Both services share the on-demand engine of bedarf.py."
+"text": "Making music works the same way next to it: a wish under Me → Music or musik_machen in the conversation becomes a song (instrumental and 2 minutes unless asked). The music service on :31004 loads ACE-Step 1.5 only for a song, in the model the admin picked, and frees the memory after a quiet time; \"Test music\" measures every installed model. Both services share the on-demand engine of bedarf.py. Editing music turns an own song into a new version (part anew, extend, genre, remix, new lyrics) with the same model; cutting, tempo and key the music service does at once with ffmpeg, without a model. Own files only with the rights tick."
 },
 {
 "lang": "en",
@@ -11517,7 +11557,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "1. A picture wish: A profile writes a wish under Me → Pictures, or the router group \"bild\" offers the tool bild_malen in the conversation; the model writes an English prompt for it. Changing pictures starts without a tool: bilder.from_turn takes by a fixed rule the photo of this message or the result of the last change, under Me → Pictures an own picture. Everything ends in bilder.start. Quick buttons (rotate, brighter, black and white …) need no model: bilder.quick_png does them at once on the panel. A song wish comes the same way through Me → Music or the group \"musik\" with musik_machen into musik.start. 2. Feature released?: features.allowed asks the release: the admin switched painting pictures on and did not block this profile. Guests never get the tool; after outside text and at kill switch stage 2 it is locked. 3. Wish allowed?: bilder.refuse_text checks wish and prompt against a fixed word list (nothing sexual, no violence, no hate symbols) and against the names of profiles and contacts. For songs musik.refuse_text checks wish, description and lyrics against the word list, plus \"in the style of\" an artist and secrets; names are fine. The model cannot get around it. 4. Withi"
+"text": "1. A picture wish: A profile writes a wish under Me → Pictures, or the router group \"bild\" offers the tool bild_malen in the conversation; the model writes an English prompt for it. Changing pictures starts without a tool: bilder.from_turn takes by a fixed rule the photo of this message or the result of the last change, under Me → Pictures an own picture. Everything ends in bilder.start. Quick buttons (rotate, brighter, black and white …) need no model: bilder.quick_png does them at once on the panel. A song wish comes the same way through Me → Music or the group \"musik\" with musik_machen into musik.start; a change of an own song through Me → Music or musik_bearbeiten into musik.start_edit (the panel picks the song, never the model), cutting and tempo without a model into musik.tone, an own file with the rights tick into musik.upload. 2. Feature released?: features.allowed asks the release: the admin switched painting pictures on and did not block this profile. Guests never get the tool; after outside text and at kill switch stage 2 it is locked. 3. Wish allowed?: bilder.refuse_text checks wish and prompt against a fixed word list (nothing sexual, no violence, no hate symbols) and "
 },
 {
 "lang": "en",
@@ -11525,7 +11565,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "n the limits?: Per profile there are pictures per day (rolling 24 hours), space and at most 300 pictures; songs: songs per day, space and the longest song (musik.start). On the whole Spark at most 10 heavy jobs wait, pictures and songs together. 5. Wait for a pause and the place: The job runs in the background (bilder._work, musik._work): it waits until nobody speaks (vorrang) and joins the one queue for pictures and songs (schwer.run). The fixed rule schwer.pick takes the oldest; while the loaded kind still waits it goes first, but at most 3 times in a row while the other kind waits. When another kind is next, the panel first ends the loaded model. Who stands behind others gets a fixed sentence with the place and about how long (schwer.hint), the card shows \"Waiting · place 2 of 3\". A picture may take at most 720 seconds. 6. Model loaded?: bild_server.Engine.start first takes the one place (bedarf.OnDemand.claim, lock bedarf.lock: when the music service holds it, it answers \"belegt\") and starts sd-server as its own process on 127.0.0.1, but only when enough shared memory is free; otherwise everything else stays undisturbed. Too little memory does not end the job: it keeps its plac"
+"text": "against the names of profiles and contacts. For songs musik.refuse_text checks wish, description and lyrics against the word list, plus \"in the style of\" an artist and secrets; names are fine. The model cannot get around it. 4. Within the limits?: Per profile there are pictures per day (rolling 24 hours), space and at most 300 pictures; songs: songs per day, space and the longest song (musik.start), at most 10 versions per song, 10 own files a day; musik.plan_edit checks every number of a change. On the whole Spark at most 10 heavy jobs wait, pictures and songs together. 5. Wait for a pause and the place: The job runs in the background (bilder._work, musik._work): it waits until nobody speaks (vorrang) and joins the one queue for pictures and songs (schwer.run). The fixed rule schwer.pick takes the oldest; while the loaded kind still waits it goes first, but at most 3 times in a row while the other kind waits. When another kind is next, the panel first ends the loaded model. Who stands behind others gets a fixed sentence with the place and about how long (schwer.hint), the card shows \"Waiting · place 2 of 3\". A picture may take at most 720 seconds. 6. Model loaded?: bild_server.Eng"
 },
 {
 "lang": "en",
@@ -11533,7 +11573,15 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "e and tries again every 30 seconds, for at most 600 seconds. 7. Paint: The engine paints the picture in 4 steps at the chosen size; its own output never reaches the journal, because it would name the prompt. 8. Picture harmless?: bild_server.nsfw_share lets a classifier on the CPU check the picture. Above 0.5 it is discarded; without the check the panel shows nothing. 9. Mark as AI picture: bild_server.finish re-encodes the picture as PNG and writes into it that it is AI-made, a changed picture AI-edited (also as an IPTC entry). 10. Picture stored: The picture goes into the profile's folder with its job (bilder.keep), the card in the chat and in the iPhone app shows it, also in a conversation opened again; a push goes out through the app or Telegram. After a quiet time the picture service stops the engine and frees the memory. A song is kept as MP3 under users/ID/musik/ (musik.keep), with a player in the chat and under Me → Music."
+"text": "ine.start first takes the one place (bedarf.OnDemand.claim, lock bedarf.lock: when the music service holds it, it answers \"belegt\") and starts sd-server as its own process on 127.0.0.1, but only when enough shared memory is free; otherwise everything else stays undisturbed. Too little memory does not end the job: it keeps its place and tries again every 30 seconds, for at most 600 seconds. 7. Paint: The engine paints the picture in 4 steps at the chosen size; its own output never reaches the journal, because it would name the prompt. 8. Picture harmless?: bild_server.nsfw_share lets a classifier on the CPU check the picture. Above 0.5 it is discarded; without the check the panel shows nothing. 9. Mark as AI picture: bild_server.finish re-encodes the picture as PNG and writes into it that it is AI-made, a changed picture AI-edited (also as an IPTC entry). 10. Picture stored: The picture goes into the profile's folder with its job (bilder.keep), the card in the chat and in the iPhone app shows it, also in a conversation opened again; a push goes out through the app or Telegram. After a quiet time the picture service stops the engine and frees the memory. A song is kept as MP3 under u"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Way",
+"title": "Way",
+"text": "sers/ID/musik/ (musik.keep), with a player in the chat and under Me → Music."
 },
 {
 "lang": "en",
@@ -11549,7 +11597,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 300 pictures per profile at most (step 4) - 10 pictures and songs wait at most (step 4) - 3 the same kind at most in a row (step 5) - 600 seconds of waiting for memory at most (step 6) - 0.5 image check share above which it is discarded (step 8) - 4 steps per picture (step 7) - 720 seconds per job at most (step 5)"
+"text": "- 300 pictures per profile at most (step 4) - 10 pictures and songs wait at most (step 4) - 3 the same kind at most in a row (step 5) - 600 seconds of waiting for memory at most (step 6) - 0.5 image check share above which it is discarded (step 8) - 4 steps per picture (step 7) - 10 versions per song at most (step 4) - 10 own music files a day at most (step 4) - 720 seconds per job at most (step 5)"
 },
 {
 "lang": "en",
@@ -11557,7 +11605,7 @@
 "file": "Architecture and data flow",
 "head": "Settings",
 "title": "Settings",
-"text": "- Installation: sudo ./install.sh --bild 4b-q8 (or 4b-q4, 9b-q8, 9b-q4, none). - Features → Painting pictures: switch, pictures per day, space, longest side, unload after minutes, \"Bild testen\". - Music: sudo ./install.sh --musik 2b (or 2b-klein, xl, none; several in a row all stay); Features → Making music: switch, model, songs per day, space, longest song; State → Checks → \"Test music\" measures every installed model."
+"text": "- Installation: sudo ./install.sh --bild 4b-q8 (or 4b-q4, 9b-q8, 9b-q4, none). - Features → Painting pictures: switch, pictures per day, space, longest side, unload after minutes, \"Bild testen\". - Music: sudo ./install.sh --musik 2b (or 2b-klein, xl, none; several in a row all stay); Features → Making music: switch, model, songs per day, space, longest song; State → Checks → \"Test music\" measures every installed model. - Features → Making music → Editing music: switch (off); then under Me → Music \"Edit\" on a song and \"Upload an own file\" in the \"⋯\" menu."
 },
 {
 "lang": "en",
@@ -11581,7 +11629,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "k.py keep: store the song (step 10) - app/panel/musik.py _measure: test music per model (step 5)"
+"text": "k.py keep: store the song (step 10) - app/panel/musik.py _measure: test music per model (step 5) - app/panel/musik.py start_edit: accept a change of a song (step 1) - app/panel/musik.py plan_edit: check every number of the change (step 4) - app/panel/musik.py tone: cut, tempo, key without a model (step 1) - app/panel/musik.py upload: own file with the rights tick (step 1) - app/musik_server.py edit_body: fixed fields for repaint and cover (step 7)"
 },
 {
 "lang": "en",
@@ -13358,6 +13406,30 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": " find the song under Me → Music and get a notice when it is done. A song waiting or being made shows in State → Live under \"In the background\" and on the target \"Making music\" (numbers only); the music service shows on the model computer's card (State → Monitoring and the control centre), since V01.0.700. Logs with numbers and fixed words only: musik: auftrag 120 s instrumental chat fuer …, musik: gemacht 120 s gesang 9.5 s fuer …, musik: nicht gestartet kuenstler fuer …, never the wish or the lyrics. API: GET|POST|DELETE /api/musik, GET /api/musik/job/{id}, GET /api/musik/{id}/datei, DELETE /api/musik/{id}."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "Editing music (V01.0.863, off by default, plan musik-experte/plan.md, Dominik 2026-10-20 \"alles nach Empfehlung umsetzten\", stage E1 with today's model): The Spark edits a song under *Me → Music*, without the internet, with the same ACE-Step (acestep.cpp: tasks repaint, cover, cover-nofsq; splitting into stems needs the base model and comes only after measuring, stage E2). Own admin switch Features → Editing music (chat.musik_bearbeiten, below Making music); once released it holds for every profile, never for guests, never over MCP. Kinds (musik.ARTS, musik.plan_edit checks every number with fixed limits): Part anew (a range on the wave, a sentence what should be different), Extend (at the front or the end, 5 to 120 s), Genre (ten buttons Pop, Rock, Reggae, Jazz, Classical, Electronic, Hip-hop, Schlager, Big band, Acoustic or own words, slider \"free ↔ close to the original\" in five steps, BPM), Remix, Change lyrics (the lyrics as parts verse, chorus, pre-chorus, bridge, intro, outro, instrumental: change the text, add, remove and move parts, in the panel by dragging the handle ⠿ with mouse or finger or with ↑/↓, in the iPhone app by holding and dragging; the song is then made anew "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "close to its old sound or with \"Make it completely anew\" in its own length for added verses; Dominik 2026-10-20 \"texte anpassen strophen hinzufügen und verschieben … immer auch mit drag and drop\"), and without a model at once Cut & fade and Tempo & key (75 to 125 %, ±4 half tones; ffmpeg on the model computer, fixed filters only, one run at a time, 120 s limit, does not need the place of the heavy jobs) and Detect tempo and key (/understand). With the model up to three suggestions in one run; everything outside the chosen range keeps the original sound sample for sample (the engine does that itself). Every change is a new version at the original (root, von, label), at most 10 per song; the list shows each song once with \"· N versions\", the versions in the details with ▶ to compare, \"As a song of its own\", Download and Delete; quick filters Uploaded and Edited. AI versions carry the mark \"AI-edited\". Upload an own file (\"⋯\" menu): MP3, WAV, FLAC, M4A, OGG up to 30 MB and 10 minutes, 10 a day, only with the tick \"This is my own recording or I own the rights to it\" (rechte=1); the panel checks the first bytes, the model computer reads the file with ffmpeg from a pipe (only file,pipe) "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "and returns its own MP3 without foreign tags, without the AI mark until it is edited. In the conversation the tool musik_bearbeiten (Weiche group musik, e.g. \"Make my last song 30 seconds longer\", \"Turn my song into a reggae version\"): the panel decides which song (always the newest own one), never the model; new lyrics only on the page. Songs per day, space, queue and Notaus of Making music apply. State → Live: target \"Making music\" also edited, uploaded and detected (counts). Logs (area \"Musik\"): musik: bearbeitung richtung 2 vorschlaege seite fuer …, musik: bearbeitet richtung 2 fassungen 31.0 s fuer …, musik: bearbeitet tempo ohne modell fuer …, musik: hochgeladen mp3 182 s fuer …, musik: hochladen nicht gemacht rechte|gross|format|dienst fuer …, musik: erkannt 3 felder fuer …, musik: fassung eigenes lied fuer …; never the wish, the text or the file name. API (profile, also the app): POST /api/musik/hochladen?name=&rechte=1 (the file as the body), POST /api/musik/{id}/bearbeiten ({art, …}), POST /api/musik/{id}/erkennen, POST /api/musik/{id}/eigenes; on the model computer POST /v1/musik/quelle|bearbeiten|ton|erkennen."
 },
 {
 "lang": "en",

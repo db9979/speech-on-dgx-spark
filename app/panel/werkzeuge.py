@@ -49,6 +49,7 @@ NAMES = {
     "document_status": ("Dokument-Stand", "Document status"), "document_send": ("Dokument senden", "Send document"),
     "bild_malen": ("Bild malen", "Paint picture"),
     "musik_machen": ("Musik machen", "Make music"),
+    "musik_bearbeiten": ("Musik bearbeiten", "Edit music"),
     "anruf_planen": ("Anrufen lassen", "Have the Spark call"),
     "remarkable_sent": ("Aufs reMarkable Gelegtes", "Put on the reMarkable"),
     "remarkable_library": ("reMarkable-Ablage", "reMarkable library"),

@@ -271,12 +271,12 @@ SEITEN = {
               ("stop", "ja", ("Abgewiesen (403), Eintrag im Admin-Protokoll", "Refused (403), entry in the admin log"))),
             S("s8", "frage", ("Großer Upload ohne Anmeldung?", "Big upload without login?"),
               ("_may_upload", "_may_upload"),
-              ("Die Pfade für große Uploads (Sicherungen, Stimmen, Ton, Dokumente, Bilder, MCP) nehmen nur an, wer "
+              ("Die Pfade für große Uploads (Sicherungen, Stimmen, Ton, Dokumente, Bilder, Musik, MCP) nehmen nur an, wer "
                "überhaupt angemeldet sein könnte: Admin-Cookie, Profil oder eine Authorization-Zeile. Die Datei "
                "eines anderen Sparks (/api/verbund/blob) nur, wenn Verbund und Dateien an sind und der Absender ein "
                "erlaubter Spark mit bekanntem Schlüssel ist. Die echte Prüfung kommt danach im Endpunkt; hier geht "
                "es nur darum, dass kein Byte eines fremden Uploads gelesen wird.",
-               "The paths for big uploads (backups, voices, sound, documents, pictures, MCP) only accept someone who "
+               "The paths for big uploads (backups, voices, sound, documents, pictures, music, MCP) only accept someone who "
                "could be logged in at all: admin cookie, profile or an Authorization line. Another Spark's file "
                "(/api/verbund/blob) only when Verbund and files are on and the sender is an allowed Spark with a "
                "known key. The real check comes later in the endpoint; here no byte of a stranger's upload is read."),
@@ -396,7 +396,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ zugang (guard, core, profiles, features)
     "zugang": {
-        "stand": "ac0d3ca326",
+        "stand": "ee825e1a4e",
         "bezug": {
             "guard.MAX_FAILS": ["s2", "s3"], "guard.MAX_NAME_FAILS": ["s2", "s3"], "guard.LOCK_FIRST": ["s2"],
             "guard.DAY_FAILS": ["s2", "s3"], "guard.failed": ["s3"], "guard.succeeded": ["s5"],

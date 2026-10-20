@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "geraet": {
-        "stand": "b083770073",
+        "stand": "d0f12b874e",
         "bezug": {
             "account.CONVO_BODY": ["s10"], "admin.test_asr": ["s4"], "admin._test_asr": ["s4", "s5"],
             "admin.read_audio": ["s4"], "chat.chat": ["s6", "s7"], "account.profile_save_convo": ["s10"],
@@ -969,7 +969,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ MCP-Programme
     "mcpc": {
-        "stand": "a2d201d89c",
+        "stand": "31eb878c06",
         "bezug": {
             "mcpserver.MAX_CONNS": ["s3"], "mcpserver.mcp_post": ["s1"], "mcpserver.origin_ok": ["s2"],
             "mcpserver.check_conn": ["s3"], "mcpserver.is_local": ["s4"], "mcpserver.find": ["s3"],

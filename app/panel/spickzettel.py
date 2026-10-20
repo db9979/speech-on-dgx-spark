@@ -125,6 +125,10 @@ KARTEN = {
         (("musik",), ("musik_machen",), ("Musik machen", "Make music"),
          ("komponiere, Lied, Song, Melodie, Schlaflied", "compose, song"),
          (("musik_machen", "Komponier eine ruhige Melodie", "Compose a calm melody"),)),
+        (("musik",), ("musik_bearbeiten",), ("Musik bearbeiten", "Edit music"),
+         ("verlängere das Lied, kürze das Lied, Lied als Reggae, Remix vom Lied, Tonart vom Lied",
+          "extend the song, shorten the song, remix the song"),
+         (("musik_bearbeiten", "Mach aus meinem Lied eine Reggae-Version", "Turn my last song into reggae"),)),
     ),
     "gedaechtnis": (
         (("gedaechtnis",), ("memory_save", "memory_forget"), ("Gedächtnis", "Memory"),

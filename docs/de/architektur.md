@@ -1354,7 +1354,7 @@ flowchart TD
 5. <a id="kn-middleware-s5"></a>**Von außen?**: Im Heimnetz ist nur, wer eine private Adresse hat und nicht über einen Proxy kommt, oder über einen eingetragenen Proxy, der eine private Adresse meldet. Ab Notaus-Stufe 1 bekommt alles von außen nur noch die Seite und den Notaus-Stand.
 6. <a id="kn-middleware-s6"></a>**Alles still?**: In Stufe 3 gehen auch im Heimnetz nur noch Anmelden, das Aufheben des Notaus und das Lesen von Zustand, Logs und Live durch. In den Stufen darunter läuft im Heimnetz alles weiter; Aktionen hält das Panel dann tiefer unten an.
 7. <a id="kn-middleware-s7"></a>**Fremde Seite?**: Eine ändernde Anfrage (POST, PUT, PATCH, DELETE), die ein Anmelde-Cookie mitbringt, muss von der eigenen Seite kommen: der Browser sagt es mit Sec-Fetch-Site, sonst wird Origin mit dem Host verglichen. Ein anderer Port auf demselben Rechner gilt als fremd. Ohne beide Kopfzeilen ist es kein Browser (Skripte) und geht durch.
-8. <a id="kn-middleware-s8"></a>**Großer Upload ohne Anmeldung?**: Die Pfade für große Uploads (Sicherungen, Stimmen, Ton, Dokumente, Bilder, MCP) nehmen nur an, wer überhaupt angemeldet sein könnte: Admin-Cookie, Profil oder eine Authorization-Zeile. Die Datei eines anderen Sparks (/api/verbund/blob) nur, wenn Verbund und Dateien an sind und der Absender ein erlaubter Spark mit bekanntem Schlüssel ist. Die echte Prüfung kommt danach im Endpunkt; hier geht es nur darum, dass kein Byte eines fremden Uploads gelesen wird.
+8. <a id="kn-middleware-s8"></a>**Großer Upload ohne Anmeldung?**: Die Pfade für große Uploads (Sicherungen, Stimmen, Ton, Dokumente, Bilder, Musik, MCP) nehmen nur an, wer überhaupt angemeldet sein könnte: Admin-Cookie, Profil oder eine Authorization-Zeile. Die Datei eines anderen Sparks (/api/verbund/blob) nur, wenn Verbund und Dateien an sind und der Absender ein erlaubter Spark mit bekanntem Schlüssel ist. Die echte Prüfung kommt danach im Endpunkt; hier geht es nur darum, dass kein Byte eines fremden Uploads gelesen wird.
 9. <a id="kn-middleware-s9"></a>**Zu groß?**: Jeder Pfad hat seine Grenze, sonst gilt eine kleine Standardgrenze von zwei MB. Eine zu große Content-Length wird sofort abgelehnt; beim Lesen zählt BodyLimit zusätzlich mit und bricht ab, sobald mehr kommt als erlaubt.
 10. <a id="kn-middleware-s10"></a>**Update läuft?**: Während ein Update läuft, werden Änderungen unter /api/ angehalten. Der Assistent, die Geräte und das Anmelden bleiben offen (update.UNLOCKED).
 11. <a id="kn-middleware-s11"></a>**Endpunkt**: Erst jetzt liest der Endpunkt die Anfrage und prüft selbst Anmeldung, Profil und Rate-Limit (die nächste Station, „Anmeldung, Profil“). Ist der Verbrauchszähler an, merkt sich die Anfrage vorher, für welches Profil sie läuft: was sie die Modelle fragt, zählt für dieses Profil.
@@ -1830,11 +1830,11 @@ Gilt bei: [Schritt 9](#kn-weiche-s9)
 
 #### Alltagsquote
 
-- Die Testsätze (164) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (211) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt.
+- Die Testsätze (168) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (211) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt.
 
 #### Werkzeugnamen
 
-- Überall, wo ein Werkzeug sichtbar wird, steht ein lesbarer Name aus einer Tabelle (89 Werkzeuge), zum Beispiel „Postfach-Überblick“ statt mail_tidy_overview.
+- Überall, wo ein Werkzeug sichtbar wird, steht ein lesbarer Name aus einer Tabelle (90 Werkzeuge), zum Beispiel „Postfach-Überblick“ statt mail_tidy_overview.
 
 #### Zahlen (aus dem Code)
 
@@ -1844,7 +1844,7 @@ Gilt bei: [Schritt 9](#kn-weiche-s9)
 - **4** Sekunden höchstens für die Wahl des Modells ([Schritt 10](#kn-weiche-s10))
 - **300 ms** Wartezeit mit „Schneller Antwortbeginn“ ([Schritt 10](#kn-weiche-s10))
 - **80 %** Standard-Schwelle der Einordnung ([Schritt 10](#kn-weiche-s10))
-- **164** eingebaute Testsätze ([Schritt 4](#kn-weiche-s4), [Schritt 5](#kn-weiche-s5))
+- **168** eingebaute Testsätze ([Schritt 4](#kn-weiche-s4), [Schritt 5](#kn-weiche-s5))
 - **211** Alltagssätze zum Messen ([Schritt 14](#kn-weiche-s14))
 - **20** Versionen für Rückgängig ([Schritt 4](#kn-weiche-s4))
 
@@ -2060,7 +2060,7 @@ Gilt bei: [Schritt 4](#kn-werkzeuge-s4)
 - **3** Gedächtnis-Notizen pro Antwort ([Schritt 1](#kn-werkzeuge-s1))
 - **13** Werkzeuge gesperrt nach fremdem Text ([Schritt 4](#kn-werkzeuge-s4))
 - **7** Werkzeuge ohne Internet bei Notaus ([Schritt 3](#kn-werkzeuge-s3))
-- **89** Werkzeuge mit verständlichem Namen ([Schritt 11](#kn-werkzeuge-s11))
+- **90** Werkzeuge mit verständlichem Namen ([Schritt 11](#kn-werkzeuge-s11))
 
 #### Einstellen
 
@@ -2787,7 +2787,7 @@ Selbsttests: `test_units`, `test_markdown`, `test_hardening`, `test_stufe`, `tes
 
 Bilder malen macht aus einem Wunsch ein Bild, auf dem Spark selbst. Das Panel prüft den Wunsch mit festen Regeln und gibt ihn an den Bild-Dienst, der nur auf dieser Maschine lauscht. Der lädt FLUX.2 klein erst beim ersten Bild, prüft das fertige Bild und gibt den Speicher nach einer Ruhezeit frei.
 
-Musik machen läuft daneben genauso: aus einem Wunsch unter Ich → Musik oder musik_machen im Gespräch wird ein Lied (ohne Angabe instrumental, 2 Minuten). Der Musik-Dienst auf :31004 lädt ACE-Step 1.5 nur für ein Lied, im Modell, das der Admin gewählt hat, und gibt den Speicher nach einer Ruhezeit frei; „Musik testen“ misst jedes installierte Modell. Beide Dienste teilen die Engine bei Bedarf aus bedarf.py.
+Musik machen läuft daneben genauso: aus einem Wunsch unter Ich → Musik oder musik_machen im Gespräch wird ein Lied (ohne Angabe instrumental, 2 Minuten). Der Musik-Dienst auf :31004 lädt ACE-Step 1.5 nur für ein Lied, im Modell, das der Admin gewählt hat, und gibt den Speicher nach einer Ruhezeit frei; „Musik testen“ misst jedes installierte Modell. Beide Dienste teilen die Engine bei Bedarf aus bedarf.py. Musik bearbeiten macht aus einem eigenen Lied eine neue Fassung (Abschnitt neu, verlängern, Musikrichtung, Remix, neuer Text) mit demselben Modell; Schneiden, Tempo und Tonart macht der Musik-Dienst sofort mit ffmpeg, ohne Modell. Eigene Dateien nur mit dem Rechte-Haken.
 
 Immer nur eins der beiden Modelle ist geladen (Dominik 2026-10-18): Bilder und Lieder stehen in einer Warteschlange im Panel (schwer.py); wer hinter anderen wartet, hört Platz und ungefähre Dauer.
 
@@ -2828,10 +2828,10 @@ flowchart TD
   s8 -->|nein| s8x
 ```
 
-1. <a id="kn-bild-s1"></a>**Ein Bildwunsch**: Ein Profil schreibt einen Wunsch unter Ich → Bilder, oder die Weiche-Gruppe „bild“ bietet im Gespräch das Werkzeug bild_malen an; das Modell schreibt dazu einen englischen Prompt. Bilder ändern startet ohne Werkzeug: bilder.from_turn nimmt nach fester Regel das Foto dieser Nachricht oder das Ergebnis der letzten Änderung, unter Ich → Bilder ein eigenes Bild. Alles landet in bilder.start. Schnellknöpfe (drehen, heller, schwarzweiß …) brauchen kein Modell: bilder.quick_png macht sie sofort im Panel. Ein Liedwunsch kommt genauso über Ich → Musik oder die Gruppe „musik“ mit musik_machen in musik.start.
+1. <a id="kn-bild-s1"></a>**Ein Bildwunsch**: Ein Profil schreibt einen Wunsch unter Ich → Bilder, oder die Weiche-Gruppe „bild“ bietet im Gespräch das Werkzeug bild_malen an; das Modell schreibt dazu einen englischen Prompt. Bilder ändern startet ohne Werkzeug: bilder.from_turn nimmt nach fester Regel das Foto dieser Nachricht oder das Ergebnis der letzten Änderung, unter Ich → Bilder ein eigenes Bild. Alles landet in bilder.start. Schnellknöpfe (drehen, heller, schwarzweiß …) brauchen kein Modell: bilder.quick_png macht sie sofort im Panel. Ein Liedwunsch kommt genauso über Ich → Musik oder die Gruppe „musik“ mit musik_machen in musik.start; eine Änderung eines eigenen Liedes über Ich → Musik oder musik_bearbeiten in musik.start_edit (das Panel nimmt das Lied, nie das Modell), Schneiden und Tempo ohne Modell in musik.tone, eine eigene Datei mit dem Rechte-Haken in musik.upload.
 2. <a id="kn-bild-s2"></a>**Funktion frei?**: features.allowed fragt die Freigabe: der Admin hat Bilder malen eingeschaltet und dieses Profil nicht gesperrt. Gäste bekommen das Werkzeug nie; nach fremdem Text und bei Notaus Stufe 2 ist es gesperrt.
 3. <a id="kn-bild-s3"></a>**Wunsch erlaubt?**: bilder.refuse_text prüft Wunsch und Prompt gegen eine feste Wortliste (nichts Sexuelles, keine Gewalt, keine Hasssymbole) und gegen die Namen der Profile und Kontakte. Für Lieder prüft musik.refuse_text Wunsch, Beschreibung und Liedtext gegen die Wortliste, dazu „im Stil von“ einem Künstler und Geheimnisse; Namen gehen. Das Modell kann das nicht umgehen.
-4. <a id="kn-bild-s4"></a>**Innerhalb der Grenzen?**: Pro Profil gelten Bilder pro Tag (gleitend 24 Stunden), Platz und höchstens 300 Bilder; Lieder: Lieder pro Tag, Platz und längstes Lied (musik.start). Auf dem ganzen Spark warten höchstens 10 schwere Aufträge, Bilder und Lieder zusammen.
+4. <a id="kn-bild-s4"></a>**Innerhalb der Grenzen?**: Pro Profil gelten Bilder pro Tag (gleitend 24 Stunden), Platz und höchstens 300 Bilder; Lieder: Lieder pro Tag, Platz und längstes Lied (musik.start), je Lied höchstens 10 Fassungen, 10 eigene Dateien am Tag; jede Zahl einer Änderung prüft musik.plan_edit. Auf dem ganzen Spark warten höchstens 10 schwere Aufträge, Bilder und Lieder zusammen.
 5. <a id="kn-bild-s5"></a>**Warten auf Pause und Platz**: Der Auftrag läuft im Hintergrund (bilder._work, musik._work): er wartet, bis niemand spricht (vorrang), und stellt sich in die eine Warteschlange für Bilder und Lieder (schwer.run). Die feste Regel schwer.pick nimmt den ältesten; solange die geladene Art noch wartet, kommt sie zuerst, aber höchstens 3-mal hintereinander, während die andere Art wartet. Ist eine andere Art dran, beendet das Panel zuerst das geladene Modell. Wer hinter anderen steht, bekommt einen festen Satz mit Platz und ungefährer Dauer (schwer.hint), die Karte zeigt „Wartet · Platz 2 von 3“. Ein Bild darf höchstens 720 Sekunden brauchen.
 6. <a id="kn-bild-s6"></a>**Modell geladen?**: bild_server.Engine.start nimmt zuerst den einen Platz (bedarf.OnDemand.claim, Sperre bedarf.lock: hält ihn der Musik-Dienst, antwortet er „belegt“) und startet sd-server als eigenen Prozess auf 127.0.0.1, aber nur, wenn genug gemeinsamer Speicher frei ist; sonst bleibt alles andere ungestört. Zu wenig Speicher beendet den Auftrag nicht: er behält seinen Platz und versucht es alle 30 Sekunden neu, höchstens 600 Sekunden lang.
 7. <a id="kn-bild-s7"></a>**Malen**: Die Engine malt das Bild in 4 Schritten in der gewählten Größe; ihre eigene Ausgabe kommt nie ins Journal, weil sie den Prompt nennen würde.
@@ -2849,6 +2849,8 @@ flowchart TD
 - **600** Sekunden Warten auf Speicher höchstens ([Schritt 6](#kn-bild-s6))
 - **0.5** Anteil der Bildprüfung, ab dem verworfen wird ([Schritt 8](#kn-bild-s8))
 - **4** Schritte pro Bild ([Schritt 7](#kn-bild-s7))
+- **10** Fassungen je Lied höchstens ([Schritt 4](#kn-bild-s4))
+- **10** eigene Musikdateien am Tag höchstens ([Schritt 4](#kn-bild-s4))
 - **720** Sekunden pro Auftrag höchstens ([Schritt 5](#kn-bild-s5))
 
 #### Einstellen
@@ -2856,6 +2858,7 @@ flowchart TD
 - Installation: sudo ./install.sh --bild 4b-q8 (oder 4b-q4, 9b-q8, 9b-q4, none).
 - Funktionen → Bilder malen: Schalter, Bilder pro Tag, Platz, längste Seite, Entladen nach Minuten, „Bild testen“.
 - Musik: sudo ./install.sh --musik 2b (oder 2b-klein, xl, none; mehrere nacheinander bleiben alle); Funktionen → Musik machen: Schalter, Modell, Lieder pro Tag, Platz, längstes Lied; Zustand → Prüfen → „Musik testen“ misst jedes installierte Modell.
+- Funktionen → Musik machen → Musik bearbeiten: Schalter (aus); dann unter Ich → Musik am Lied „Bearbeiten“ und im Menü „⋯“ „Eigene Datei hochladen“.
 
 #### Was du siehst
 
@@ -2886,6 +2889,11 @@ flowchart TD
 - `app/panel/musik.py` `_work`: Lied im Hintergrund ([Schritt 5](#kn-bild-s5))
 - `app/panel/musik.py` `keep`: Lied ablegen ([Schritt 10](#kn-bild-s10))
 - `app/panel/musik.py` `_measure`: Musik testen je Modell ([Schritt 5](#kn-bild-s5))
+- `app/panel/musik.py` `start_edit`: Änderung eines Liedes annehmen ([Schritt 1](#kn-bild-s1))
+- `app/panel/musik.py` `plan_edit`: Jede Zahl der Änderung prüfen ([Schritt 4](#kn-bild-s4))
+- `app/panel/musik.py` `tone`: Schneiden, Tempo, Tonart ohne Modell ([Schritt 1](#kn-bild-s1))
+- `app/panel/musik.py` `upload`: Eigene Datei mit Rechte-Haken ([Schritt 1](#kn-bild-s1))
+- `app/musik_server.py` `edit_body`: Feste Felder für repaint und cover ([Schritt 7](#kn-bild-s7))
 
 Selbsttests: `test_bilder`, `test_musik`, `test_schwer`
 

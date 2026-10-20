@@ -41,6 +41,11 @@ BENCH = [
     ("Kannst du ein Geburtstagslied für mich machen?", "musik"),
     ("Erzeuge eine fröhliche Melodie mit Gitarre", "musik"),
     ("Schreib mir einen Song mit Gesang über den Sommer", "musik"),
+    # Musik bearbeiten (musik.py): a change of an own song, never a reminder or a document
+    ("Mach mein letztes Lied 30 Sekunden länger", "musik"),
+    ("Mach aus meinem Lied eine Reggae-Version", "musik"),
+    ("Verlängere das Lied hinten um eine halbe Minute", "musik"),
+    ("Kannst du den Song etwas schneller machen?", "musik"),
     # the own Kiwix archive (V01.0.264): mein, dein, im Archiv, never the uploaded documents
     ("Schaue in deinem Archiv nach, was du über Albert Einstein", "archiv"),
     ("Schau in meinem Archiv nach Sauerteig", "archiv"),

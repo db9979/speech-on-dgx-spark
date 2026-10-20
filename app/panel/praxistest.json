@@ -2305,10 +2305,23 @@
 {
 "id": "P353",
 "v": 861,
-"v": 861,
 "titel": "E-Mail: Ordner rechts, Ziehen, Löschen",
 "text": "A: Update auf V01.0.861, Funktionen → E-Mail lesen → Mails ordnen → „Mails löschen“ an. B: Seite E-Mail: rechts die Ordner mit deutschen Namen; „Ordner“ oder Taste O blendet sie aus, nach Neuladen bleibt es so. C: Eine Mail auf einen eigenen Ordner ziehen: sie ist weg, „Rückgängig“ holt sie zurück. D: Eine Mail mit Entf löschen: sie liegt im Papierkorb (auch im Mailprogramm), „Rückgängig“ holt sie zurück. E: Im Papierkorb „Endgültig löschen“: erst nach der Rückfrage ist sie weg, andere Mails dort bleiben. F: Dreimal Mails desselben Absenders in denselben Ordner verschieben: der Hinweis fragt nach einer Regel; „Regel anlegen und gleich anwenden“ legt sie an und räumt den Posteingang. G: Handy: „Ordner“ öffnet das Blatt von rechts. H: iPhone-App: Wischen → Löschen, „Rückgängig“ oben in der Liste, im Papierkorb „Endgültig löschen“ mit Rückfrage.",
 "thread": "Kalender und E-Mail in den Apps"
+},
+{
+"id": "P354",
+"v": 863,
+"titel": "Musik bearbeiten: Fassungen",
+"text": "Funktionen → Musik machen → Musik bearbeiten an. Unter Ich → Musik an einem Lied „Bearbeiten“: Musikrichtung Reggae mit 2 Vorschlägen, dann hinten 30 s verlängern, dann Tempo 90 %. Es entstehen Fassungen am Original („· N Fassungen“), ▶ spielt sie im Wechsel, das Original bleibt. Im Gespräch: „Mach mein letztes Lied 30 Sekunden länger“.",
+"thread": "Musik bearbeiten und remixen"
+},
+{
+"id": "P355",
+"v": 863,
+"titel": "Musik bearbeiten: Text und Hochladen",
+"text": "An einem Lied mit Gesang „Text ändern“: eine Strophe ändern, einen Refrain hinzufügen und am Griff ⠿ nach oben ziehen (Maus und Finger), dann Vorschläge machen; einmal mit „Ganz neu machen“ und 3 Minuten. Im Menü „⋯“ eine eigene MP3 nur mit Rechte-Haken hochladen. iPhone: Lied nach rechts wischen → Bearbeiten, Teile durch Halten verschieben.",
+"thread": "Musik bearbeiten und remixen"
 }
 ]
 }

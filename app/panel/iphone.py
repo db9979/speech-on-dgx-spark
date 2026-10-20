@@ -150,9 +150,11 @@ THINGS = {
               (("PUT", "DELETE"), r"/api/profile/listen/l[0-9a-f]{8}"),
               (("POST",), r"/api/profile/tasks/(?:einkauf|aufgaben|l[0-9a-f]{8})/(?:add|done|undo)"),
               (("DELETE",), r"/api/profile/tasks/(?:einkauf|aufgaben|l[0-9a-f]{8})/[0-9a-f]{10}")),
-    # Musik (musik.py): listen, make from a wish, delete one or all
+    # Musik (musik.py): listen, make from a wish, delete one or all; change an own song, upload an own file and make
+    # a version a song of its own only with Musik bearbeiten (musik.EDIT_KEY, checked there)
     "musik": ((("GET", "POST", "DELETE"), r"/api/musik"), (("GET",), rf"/api/musik/job/{_DOC}"),
-              (("GET",), rf"/api/musik/{_DOC}/datei"), (("DELETE",), rf"/api/musik/{_DOC}")),
+              (("GET",), rf"/api/musik/{_DOC}/datei"), (("DELETE",), rf"/api/musik/{_DOC}"),
+              (("POST",), rf"/api/musik/{_DOC}/(?:bearbeiten|erkennen|eigenes)"), (("POST",), r"/api/musik/hochladen")),
 }
 # what hello tells the app (the app shows an area where it is true)
 RIGHTS_PANEL = ("app_mine", "app_voice", "app_auto", "app_security", "app_accounts")

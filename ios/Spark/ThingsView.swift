@@ -1,4 +1,5 @@
 import AVFoundation
+import UniformTypeIdentifiers
 import SwiftUI
 
 /// "Meine Sachen" (Dominik 2026-10-17, plan app-meine-sachen/plan.md): one page for everything the Spark keeps for
@@ -294,7 +295,7 @@ struct Picture: Identifiable, Equatable {
     let size: Int
 }
 
-/// A song the Spark made (musik.py).
+/// A song the Spark made, an own file or a version of one (musik.py; kind "", "upload" or "edit").
 struct Song: Identifiable, Equatable {
     let id: String
     let title: String
@@ -303,6 +304,17 @@ struct Song: Identifiable, Equatable {
     let seconds: Int
     let sung: Bool
     let size: Int
+    var kind = ""
+    var root = ""
+    /// what was changed, in the app's language (Musik bearbeiten)
+    var label = ""
+}
+
+/// What Musik bearbeiten offers this profile (musik.py musik_list "edit"); nil when the admin switch is off.
+struct SongEditing {
+    let genres: [(key: String, de: String, en: String)]
+    let maxAdd: Int
+    let uploadMB: Int
 }
 
 extension SparkAPI {
@@ -331,23 +343,61 @@ extension SparkAPI {
     }
 
     /// The profile's songs, newest first, how many are still being made and the lengths the admin allows (seconds).
-    func songs() async throws -> (songs: [Song], making: Int, lengths: [Int], length: Int) {
+    func songs() async throws -> (songs: [Song], making: Int, lengths: [Int], length: Int, editing: SongEditing?) {
         let d = try await object("GET", "api/musik")
+        let en = Locale.current.language.languageCode?.identifier == "en"
         let songs = (d["songs"] as? [[String: Any]] ?? []).compactMap { s -> Song? in
             guard let id = s["id"] as? String, Self.isJob(id) else { return nil }
             let wish = s["wish"] as? String ?? "", caption = s["caption"] as? String ?? ""
+            let label = s["label"] as? [String] ?? []
+            let root = s["root"] as? String ?? ""
             return Song(id: id, title: String((wish.isEmpty ? caption : wish).prefix(200)),
-                        lyrics: String((s["lyrics"] as? String ?? "").prefix(2000)),
+                        lyrics: String((s["lyrics"] as? String ?? "").prefix(3000)),
                         created: Date(timeIntervalSince1970: (s["t"] as? NSNumber)?.doubleValue ?? 0),
                         seconds: (s["length_s"] as? NSNumber)?.intValue ?? 0, sung: s["sung"] as? Bool ?? false,
-                        size: (s["bytes"] as? NSNumber)?.intValue ?? 0)
+                        size: (s["bytes"] as? NSNumber)?.intValue ?? 0, kind: s["kind"] as? String ?? "",
+                        root: Self.isJob(root) ? root : id,
+                        label: String((label.count == 2 ? (en ? label[1] : label[0]) : "").prefix(120)))
+        }
+        var editing: SongEditing?
+        if let e = d["edit"] as? [String: Any], e["on"] as? Bool == true {
+            let genres = (e["genres"] as? [[String]] ?? []).compactMap { g -> (key: String, de: String, en: String)? in
+                g.count == 3 ? (key: g[0], de: g[1], en: g[2]) : nil
+            }
+            editing = SongEditing(genres: genres, maxAdd: (e["max_add"] as? NSNumber)?.intValue ?? 120,
+                                  uploadMB: (e["upload_mb"] as? NSNumber)?.intValue ?? 30)
         }
         let jobs = (d["jobs"] as? [[String: Any]] ?? []).filter { ["wait", "run"].contains($0["state"] as? String ?? "") }
         let lim = d["limits"] as? [String: Any] ?? [:]
         let most = (lim["max_s"] as? NSNumber)?.intValue ?? 120
         // the same choice as the length chips under Ich → Musik in the panel (musik.js MULENS)
         let lengths = [30, 60, 120, 180, 240, 300, 420, 600].filter { $0 <= most }
-        return (songs.sorted { $0.created > $1.created }, jobs.count, lengths, (lim["default_s"] as? NSNumber)?.intValue ?? 120)
+        return (songs.sorted { $0.created > $1.created }, jobs.count, lengths, (lim["default_s"] as? NSNumber)?.intValue ?? 120, editing)
+    }
+
+    /// Musik bearbeiten: one change of an own song ({art, …} as under Ich → Musik); the Spark checks every number.
+    func editSong(_ id: String, _ body: [String: Any]) async throws {
+        guard Self.isJob(id) else { return }
+        _ = try await call("POST", "api/musik/\(id)/bearbeiten", body: body)
+    }
+
+    /// A version becomes a song of its own.
+    func ownSong(_ id: String) async throws {
+        guard Self.isJob(id) else { return }
+        _ = try await call("POST", "api/musik/\(id)/eigenes")
+    }
+
+    /// An own music file, only after the tick for the rights; the raw file as the body.
+    func uploadSong(_ data: Data, name: String) async throws {
+        var c = URLComponents(url: base.appendingPathComponent("api/musik/hochladen"), resolvingAgainstBaseURL: false)!
+        c.queryItems = [URLQueryItem(name: "rechte", value: "1"), URLQueryItem(name: "name", value: String(name.prefix(120)))]
+        var r = request("api/musik/hochladen", method: "POST")
+        r.url = c.url
+        r.timeoutInterval = 200
+        r.setValue("application/octet-stream", forHTTPHeaderField: "Content-Type")
+        r.httpBody = data
+        let (body, response) = try await URLSession.shared.data(for: r)
+        try Self.check(body, response)
     }
 
     /// Make one from the person's own description and length (instrumental; singing and lyrics stay in the panel).
@@ -529,13 +579,14 @@ final class SongsModel: NSObject, ObservableObject, AVAudioPlayerDelegate {
     @Published var error: String?
     @Published var playing: String?
     @Published var fetching: String?
+    @Published var editing: SongEditing?
     private var player: AVAudioPlayer?
 
     func load() async {
         guard let api = SparkAPI.current else { return }
         do {
             let d = try await api.songs()
-            (songs, making, lengths) = (d.songs, d.making, d.lengths)
+            (songs, making, lengths, editing) = (d.songs, d.making, d.lengths, d.editing)
             if !lengths.contains(length) { length = lengths.contains(d.length) ? d.length : (lengths.last ?? d.length) }
             error = nil
         } catch { self.error = error.localizedDescription }
@@ -582,6 +633,9 @@ struct SongsView: View {
     @StateObject private var m = SongsModel()
     @State private var wish = ""
     @State private var removing: Song?
+    @State private var changing: Song?
+    @State private var picking = false
+    @State private var upload: URL?
 
     var body: some View {
         List {
@@ -614,6 +668,8 @@ struct SongsView: View {
                             VStack(alignment: .leading, spacing: 2) {
                                 // the person's own wish: plain text, nothing in it is a link or a command
                                 Text(verbatim: s.title).lineLimit(2)
+                                if !s.label.isEmpty { Text(verbatim: "↳ " + s.label).font(.caption).foregroundStyle(.tint) }
+                                else if s.kind == "upload" { Text("hochgeladen").font(.caption).foregroundStyle(.secondary) }
                                 HStack(spacing: 4) {
                                     if s.seconds > 0 { Text(verbatim: Self.clock(s.seconds)); Text(verbatim: "·") }
                                     Text(s.sung ? LocalizedStringKey("mit Gesang") : LocalizedStringKey("ohne Gesang"))
@@ -626,12 +682,40 @@ struct SongsView: View {
                         }
                         .listRowBackground(s.id == start ? Color.accentColor.opacity(0.08) : nil)
                         .swipeActions { Button(role: .destructive) { removing = s } label: { Label("Löschen", systemImage: "trash") } }
+                        .swipeActions(edge: .leading) {
+                            if m.editing != nil { Button { changing = s } label: { Label("Bearbeiten", systemImage: "slider.horizontal.3") }.tint(.pink) }
+                        }
+                        .contextMenu {
+                            if m.editing != nil {
+                                Button { changing = s } label: { Label("Bearbeiten", systemImage: "slider.horizontal.3") }
+                                if s.kind == "edit" && s.root != s.id {
+                                    Button { Task { await own(s) } } label: { Label("Als eigenes Lied", systemImage: "music.note") }
+                                }
+                            }
+                        }
                     }
                 }
             }
             if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
         }
         .navigationTitle("Musik")
+        .toolbar {
+            if m.editing != nil {
+                Button { picking = true } label: { Label("Eigene Datei hochladen", systemImage: "square.and.arrow.up") }
+            }
+        }
+        .fileImporter(isPresented: $picking, allowedContentTypes: [.audio, .mp3, .wav]) { result in
+            if case .success(let url) = result { upload = url }
+        }
+        .confirmationDialog("Rechte an diesem Lied?", isPresented: Binding(get: { upload != nil }, set: { if !$0 { upload = nil } }),
+                            titleVisibility: .visible, presenting: upload) { url in
+            Button("Das ist meine Aufnahme oder ich habe die Rechte") { Task { await send(url) } }
+        } message: { _ in Text("Hochladen geht nur mit eigenen Aufnahmen oder Liedern, an denen du die Rechte hast.") }
+        .sheet(item: $changing) { s in
+            if let e = m.editing {
+                NavigationStack { SongEditView(song: s, editing: e) { await m.load(); await m.follow() } }
+            }
+        }
         .refreshable { await m.load() }
         .task { await m.load(); await m.follow() }
         .onDisappear { m.stop() }
@@ -662,6 +746,26 @@ struct SongsView: View {
         return groups.indices.filter { !groups[$0].isEmpty }.map { ($0, groups[$0]) }
     }
 
+    private func own(_ s: Song) async {
+        do { try await SparkAPI.current?.ownSong(s.id); await m.load() } catch { m.error = error.localizedDescription }
+    }
+
+    /// The picked file as it is (the Spark checks format, size and the day's count).
+    private func send(_ url: URL) async {
+        let open = url.startAccessingSecurityScopedResource()
+        defer { if open { url.stopAccessingSecurityScopedResource() } }
+        do {
+            let size = (try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
+            if size > (m.editing?.uploadMB ?? 30) * 1_048_576 {
+                m.error = String(localized: "Die Datei ist zu groß.")
+                return
+            }
+            let data = try Data(contentsOf: url)
+            try await SparkAPI.current?.uploadSong(data, name: url.deletingPathExtension().lastPathComponent)
+            await m.load()
+        } catch { m.error = error.localizedDescription }
+    }
+
     private func make() async {
         do {
             try await SparkAPI.current?.makeSong(wish, seconds: m.length)
@@ -669,6 +773,171 @@ struct SongsView: View {
             await m.load()
             await m.follow()
         } catch { m.error = error.localizedDescription }
+    }
+}
+
+/// Musik bearbeiten in the app: the same kinds as under Ich → Musik in the panel, with fixed fields; the part of the
+/// song as from/to seconds (the wave stays in the panel). Each change is a new version, the original stays.
+struct SongEditView: View {
+    let song: Song
+    let editing: SongEditing
+    var done: () async -> Void
+    @Environment(\.dismiss) private var dismiss
+    @State private var art = "verlaengern"
+    @State private var wish = ""
+    @State private var from = 0.0
+    @State private var to = 0.0
+    @State private var front = false
+    @State private var add = 30
+    @State private var genre = ""
+    @State private var near = 2
+    @State private var tempo = 100
+    @State private var halftones = 0
+    @State private var fadeIn = 0
+    @State private var fadeOut = 0
+    @State private var many = 1
+    @State private var sending = false
+    @State private var error: String?
+    @State private var parts: [LyricPart] = []
+    @State private var fresh = false
+    @State private var length = 120
+
+    /// One part of the lyrics ([verse], [chorus], …) for Text ändern.
+    struct LyricPart: Identifiable {
+        let id = UUID()
+        var tag: String
+        var text = ""
+    }
+    static let partKinds: [(String, LocalizedStringKey)] = [("verse", "Strophe"), ("chorus", "Refrain"), ("pre-chorus", "Vor-Refrain"),
+        ("bridge", "Bridge"), ("intro", "Intro"), ("outro", "Outro"), ("instrumental", "Instrumental")]
+
+    /// The lyrics as parts: a line "[tag]" starts one, lines before the first tag are a verse (musik.js muParts).
+    static func parse(_ text: String) -> [LyricPart] {
+        var out: [LyricPart] = []
+        for line in text.components(separatedBy: "\n") {
+            let l = line.trimmingCharacters(in: .whitespaces)
+            if l.hasPrefix("["), l.hasSuffix("]"), (4...22).contains(l.count) {
+                out.append(LyricPart(tag: String(l.dropFirst().dropLast()).lowercased()))
+                continue
+            }
+            if out.isEmpty { if l.isEmpty { continue }; out.append(LyricPart(tag: "verse")) }
+            out[out.count - 1].text += (out[out.count - 1].text.isEmpty ? "" : "\n") + line
+        }
+        return out.map { LyricPart(tag: $0.tag, text: $0.text.trimmingCharacters(in: .whitespacesAndNewlines)) }
+    }
+
+    static let arts: [(String, LocalizedStringKey)] = [("abschnitt", "Abschnitt neu"), ("verlaengern", "Verlängern"),
+        ("richtung", "Musikrichtung"), ("remix", "Remix"), ("text", "Text ändern"), ("schneiden", "Schneiden & Blenden"),
+        ("tempo", "Tempo & Tonart")]
+    private var model: Bool { ["abschnitt", "verlaengern", "richtung", "remix", "text"].contains(art) }
+    private var en: Bool { Locale.current.language.languageCode?.identifier == "en" }
+
+    var body: some View {
+        Form {
+            Section {
+                Text(verbatim: song.label.isEmpty ? song.title : song.label).lineLimit(2)
+                Picker("Was ändern", selection: $art) { ForEach(Self.arts, id: \.0) { Text($0.1).tag($0.0) } }
+            }
+            if art == "abschnitt" || art == "schneiden" {
+                Section("Bereich (Sekunden)") {
+                    Stepper(value: $from, in: 0...Double(max(1, song.seconds)), step: 1) { Text("Von \(Int(from)) s") }
+                    Stepper(value: $to, in: 0...Double(max(1, song.seconds)), step: 1) { Text("Bis \(Int(to)) s") }
+                }
+            }
+            if art == "text" {
+                // drag a part by holding it, swipe to remove it (the panel: the handle ⠿ or ↑/↓)
+                Section {
+                    ForEach($parts) { $p in
+                        VStack(alignment: .leading) {
+                            Picker("Teil", selection: $p.tag) {
+                                ForEach(Self.partKinds, id: \.0) { Text($0.1).tag($0.0) }
+                                if !Self.partKinds.contains(where: { $0.0 == p.tag }) { Text(verbatim: p.tag).tag(p.tag) }
+                            }
+                            TextField("Text", text: $p.text, axis: .vertical).lineLimit(2...8)
+                        }
+                    }
+                    .onMove { parts.move(fromOffsets: $0, toOffset: $1) }
+                    .onDelete { parts.remove(atOffsets: $0) }
+                    Button("Strophe hinzufügen") { parts.append(LyricPart(tag: "verse")) }
+                    Button("Refrain hinzufügen") { parts.append(LyricPart(tag: "chorus")) }
+                } header: { Text("Liedtext") } footer: { Text("Zum Verschieben halten und ziehen, zum Entfernen nach links wischen.") }
+                Section {
+                    Toggle("Ganz neu machen, mit eigener Länge", isOn: $fresh)
+                    if fresh { Stepper(value: $length, in: 30...600, step: 10) { Text("Länge \(length) s") } }
+                    else { Stepper(value: $near, in: 0...4) { Text("Nähe zum Original: \(near + 1) von 5") } }
+                }
+            }
+            Section {
+                switch art {
+                case "text":
+                    EmptyView()
+                case "abschnitt":
+                    TextField("Was soll in dem Teil anders sein?", text: $wish, axis: .vertical).lineLimit(1...3)
+                case "verlaengern":
+                    Picker("Wo", selection: $front) { Text("Hinten").tag(false); Text("Vorne").tag(true) }.pickerStyle(.segmented)
+                    Stepper(value: $add, in: 5...editing.maxAdd, step: 5) { Text("\(add) Sekunden länger") }
+                    TextField("Wie soll es weitergehen? (frei lassen: wie bisher)", text: $wish, axis: .vertical).lineLimit(1...3)
+                case "richtung":
+                    Picker("Musikrichtung", selection: $genre) {
+                        Text("Eigene Worte").tag("")
+                        ForEach(editing.genres, id: \.key) { g in Text(verbatim: en ? g.en : g.de).tag(g.key) }
+                    }
+                    if genre.isEmpty { TextField("z. B. Bossa Nova mit Flöte", text: $wish) }
+                    Stepper(value: $near, in: 0...4) { Text("Nähe zum Original: \(near + 1) von 5") }
+                case "remix":
+                    TextField("Wie soll der Remix klingen? (frei lassen: überraschen)", text: $wish, axis: .vertical).lineLimit(1...3)
+                    Stepper(value: $near, in: 0...4) { Text("Nähe zum Original: \(near + 1) von 5") }
+                case "schneiden":
+                    Stepper(value: $fadeIn, in: 0...30) { Text("Einblenden \(fadeIn) s") }
+                    Stepper(value: $fadeOut, in: 0...30) { Text("Ausblenden \(fadeOut) s") }
+                default:
+                    Stepper(value: $tempo, in: 75...125, step: 5) { Text("Tempo \(tempo) Prozent") }
+                    Stepper(value: $halftones, in: -4...4) { Text("Tonart \(halftones) Halbtöne") }
+                }
+                if model { Stepper(value: $many, in: 1...3) { Text("\(many) Vorschläge") } }
+            } footer: { Text("Teile außerhalb des Bereichs bleiben im Originalklang. Jede Änderung ist eine neue Fassung, das Original bleibt.") }
+            if let error { Text(SparkAPI.way(error)).foregroundStyle(.red) }
+        }
+        .navigationTitle("Bearbeiten")
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) { Button("Abbrechen") { dismiss() } }
+            ToolbarItem(placement: .confirmationAction) {
+                Button(model ? "Vorschläge machen" : "Neue Fassung") { Task { await send() } }.disabled(sending)
+            }
+        }
+        .onAppear {
+            to = Double(song.seconds)
+            length = max(30, min(600, song.seconds))
+            parts = Self.parse(song.lyrics)
+            if parts.isEmpty { parts = [LyricPart(tag: "verse"), LyricPart(tag: "chorus")] }
+        }
+    }
+
+    private func send() async {
+        var b: [String: Any] = ["art": art]
+        switch art {
+        case "abschnitt": b.merge(["von": from, "bis": to, "wunsch": wish, "vorschlaege": many]) { $1 }
+        case "verlaengern": b.merge(["wo": front ? "vorne" : "hinten", "sekunden": add, "wunsch": wish, "vorschlaege": many]) { $1 }
+        case "richtung": b.merge(["richtung": genre, "worte": genre.isEmpty ? wish : "", "nah": near, "vorschlaege": many]) { $1 }
+        case "remix": b.merge(["wunsch": wish, "nah": near, "vorschlaege": many]) { $1 }
+        case "text":
+            let text = parts.filter { !$0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || $0.tag == "instrumental" }
+                .map { "[\($0.tag)]\n" + $0.text.trimmingCharacters(in: .whitespacesAndNewlines) }.joined(separator: "\n\n")
+            b.merge(["liedtext": text, "nah": near, "vorschlaege": fresh ? 1 : many]) { $1 }
+            if fresh { b.merge(["neu": true, "sekunden": length]) { $1 } }
+        case "schneiden":
+            // the whole song: only the fades; else the part to keep (the Spark checks it against the length)
+            if from > 0 || to < Double(song.seconds) { b.merge(["von": from, "bis": min(to, Double(song.seconds))]) { $1 } }
+            b.merge(["einblenden": fadeIn, "ausblenden": fadeOut]) { $1 }
+        default: b.merge(["tempo": tempo, "halbtoene": halftones]) { $1 }
+        }
+        sending = true
+        defer { sending = false }
+        do {
+            try await SparkAPI.current?.editSong(song.id, b)
+            await done()
+            dismiss()
+        } catch { self.error = error.localizedDescription }
     }
 }
 

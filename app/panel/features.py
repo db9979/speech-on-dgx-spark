@@ -221,6 +221,10 @@ FEATURES = (
       guide="bildaendern"),
     # Musik machen (musik.py, musik_server.py, plan musik M1): ACE-Step 1.5 on the model computer, install.sh --musik
     F("musik", "Musik machen", "Making music", "data", ("musik",), me="musikbox", guide="musik"),
+    # Musik bearbeiten (musik.py, plan musik-experte, Stufe E1): an own song or an own file changed into a new version
+    # (Abschnitt neu, Verlängern, Musikrichtung, Remix, Schneiden, Tempo und Tonart); the panel picks the song
+    F("musikbearbeiten", "Musik bearbeiten", "Editing music", "data", ("musik_bearbeiten",), parent="musik",
+      me="musikbox", guide="musikbearbeiten"),
     F("docbrief", "Steckbrief und Tags", "Document card and tags", "data", ("doc_brief",),
       parent="documents", me="docbox", guide="docbrief"),
     # Suchprüfung (suchpruefung.py, plan suche-schaerfen, Stufe 1): test questions measure how often the search

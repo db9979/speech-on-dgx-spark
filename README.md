@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.863** Editing music (admin switch, off): under Me → Music change a song as a new version (part anew, extend, genre, remix, lyrics with verses moved by dragging, cut, tempo and key), upload own files with the rights tick, tool musik_bearbeiten; also in the iPhone app
 - **V01.0.862** Flaky tests made robust; fixed along the way: a calendar comparison during a change no longer writes the old appointment back, the form "Add calendar" stays open while you fill it in
 - **V01.0.861** Mail: list, mail and folders as three equal boxes, the folders on the right shown or hidden (button "Folders", key O), drag mails into a folder, onto the archive or the trash; deleting with its own switch (off) only by you, into the trash with "Undo", for good only there after a question; after the third move from the same sender into the same folder the Spark asks whether a rule should do it; all of it in the iPhone app too
 - **V01.0.860** Spark companion (Windows and Mac) catches up with calendar and e-mail: mail in the window (unread, For you, urgent cards), an important new mail as a note with "Draft a reply", buttons per note, cards in Ask Spark, quick capture with Ctrl+Alt+N (appointment, reminder or list), 3 reply suggestions also in the Outlook add-in, shared calendars in "Als Nächstes", lists in the window; all off per device
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.856** Computer cards no longer jump: both computers with the same rows at the same height side by side (also on the phone), „Wer rechnet gerade“ with fixed lines; control centre and iPhone alike
 - **V01.0.855** Fix: the iPhone app builds again (GitHub run "iPhone app"); the new Lists view used a type name the app already had
 - **V01.0.854** Lists get a page of their own in the menu (and in the iPhone app under My things): make own lists like DIY store, every entry shows who put it on, when and from where, ticked off entries stay 14 days under "Recently done" with "Bring back", shopping by departments and with amounts, shopping on Today
-- **V01.0.853** E-mail: the buttons of a mail in a fixed bar on top, symbols with name and key on hover, on the phone and iPhone the five most used at the thumb below; calendar: appointments that cannot be changed carry a 🔒 with the reason, the card shows the appointment's note and link
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

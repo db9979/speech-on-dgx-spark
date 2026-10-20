@@ -15,9 +15,21 @@ AI (musik_server: its own ID3 tag). Text from outside (mail, web, documents) nev
 song: musik_machen is a changing tool, locked after outside text (chat.LOCKED_OUTSIDE via the extras' "changes"),
 and from Notaus stage 2 on. Guests never get the tool or the page; a blocked profile only sees „Daten löschen“.
 
+Musik bearbeiten (plan plaene/musik-experte.md, Dominik 2026-10-20 „alles nach Empfehlung“ = 1a-6a, own admin switch
+chat.musik_bearbeiten, built on Musik machen): one of the person's own songs (made by the Spark, a version of one, or
+an own file uploaded with the tick „eigene Aufnahme oder ich habe die Rechte“) is changed into a new version
+(„Fassung“); the original always stays. With the music model on the one place of the heavy jobs: Abschnitt neu and
+Verlängern (repaint), Musikrichtung ändern (cover, the genre from fixed buttons GENRES plus own words), Remix
+(cover-nofsq), Erkennen (tempo, key, description). Without a model, at once: Schneiden & Blenden, Tempo & Tonart
+(ffmpeg on the model computer). The panel decides which song, never the model: on the page the one the person opened,
+in the conversation (musik_bearbeiten) always the newest song of the profile. An uploaded file is data: its first
+bytes must fit one of FORMATS, the model computer reads it with ffmpeg from a pipe only, and only our own MP3 without
+its tags is kept. Changed versions are marked „KI-bearbeitet“; an own file stays without the AI mark until a model
+changes it.
+
 Speech first (vorrang): a job waits until the spoken answer is over, the song itself runs while nobody speaks.
 Storage users/<id>/musik/<song>.mp3 and index.json (speicher.AREAS "musik"). Journal lines start with "musik:",
-fixed words and numbers only: never a wish, a description, lyrics or a name (profiles.log_name)."""
+fixed words and numbers only: never a wish, a description, lyrics, a file name or a name (profiles.log_name)."""
 import asyncio
 import base64
 import json
@@ -41,6 +53,7 @@ from core import api_headers, assistant, auth, browser_profile, json_body, own_p
 
 router = APIRouter()
 KEY = "musik"
+EDIT_KEY = "musikbearbeiten"   # Musik bearbeiten (features.py, chat.musik_bearbeiten; builds on Musik machen)
 VARIANTS = {"2b": ("2B turbo + 1,7B", "2B turbo + 1.7B"), "2b-klein": ("2B turbo + 0,6B", "2B turbo + 0.6B"),
             "xl": ("XL turbo + 1,7B", "XL turbo + 1.7B")}   # musikmodell.VARIANTS (the panel has no model files)
 MAX_WISH = 300
@@ -56,6 +69,31 @@ DAY_S = 24 * 3600
 ID = re.compile(r"[0-9a-f]{12}")
 CTRL = re.compile(r"[\x00-\x09\x0b-\x1f\x7f<>\ud800-\udfff]")
 LANGS = ("de", "en", "fr", "es", "it", "nl", "pt", "pl", "sv", "da", "no", "fi", "tr", "ru", "uk", "ja", "zh", "ko")
+# Musik bearbeiten
+MAX_UPLOAD = 30 * 1024**2   # an own file (musik_server.MAX_UPLOAD)
+UPLOADS_DAY = 10            # own files per profile in 24 hours
+MAX_VERSIONS = 10           # versions of one song (Fassungen), the original counted
+MAX_ADD_S = 120             # longer by at most this much at once (musik_server.MAX_ADD_S)
+MAX_NAME = 120
+# the own file's first bytes -> its format (musik_server.DEMUX); nothing else is sent on
+FORMATS = (("mp3", re.compile(rb"\AID3|\A\xff[\xe0-\xff]", re.S)), ("wav", re.compile(rb"\ARIFF....WAVE", re.S)),
+           ("flac", re.compile(rb"\AfLaC")), ("m4a", re.compile(rb"\A....ftyp", re.S)), ("ogg", re.compile(rb"\AOggS")))
+# what can be changed: the kind -> (needs the music model, label de, label en)
+ARTS = {"abschnitt": (True, "Abschnitt neu", "Part made anew"), "verlaengern": (True, "Verlängert", "Extended"),
+        "richtung": (True, "Musikrichtung", "Genre"), "remix": (True, "Remix", "Remix"),
+        "text": (True, "Neuer Text", "New lyrics"),
+        "schneiden": (False, "Geschnitten", "Cut"), "tempo": (False, "Tempo und Tonart", "Tempo and key")}
+# Musikrichtung ändern (Dominik 2026-10-20 „sollte auch die musik richtung geändert werden können“): the buttons, the
+# words that go to the model (English, as its captions)
+GENRES = {"pop": ("Pop", "Pop", "pop"), "rock": ("Rock", "Rock", "rock, electric guitars, drums"),
+          "reggae": ("Reggae", "Reggae", "reggae, offbeat guitar, relaxed groove"),
+          "jazz": ("Jazz", "Jazz", "jazz, swing, upright bass, piano"),
+          "klassik": ("Klassik", "Classical", "classical, orchestral, strings"),
+          "elektro": ("Elektro", "Electronic", "electronic, synthesizer, dance beat"),
+          "hiphop": ("Hip-Hop", "Hip-hop", "hip hop, boom bap beat"), "schlager": ("Schlager", "Schlager", "german schlager, upbeat"),
+          "bigband": ("Big Band", "Big band", "big band, brass section, swing"),
+          "akustisch": ("Akustisch", "Acoustic", "acoustic, unplugged, acoustic guitar")}
+NEAR = (0.3, 0.45, 0.6, 0.75, 0.9)   # the slider „frei ↔ nah am Original“ (audio_cover_strength)
 
 # a wish for a song in the person's own words (the Weiche's group "musik" and offer below): a verb of making and a
 # song, or composing; „Spiel Musik“, „Mach Musik an“ (Home Assistant, the speakers) has no making word and stays there
@@ -79,6 +117,21 @@ AGAIN = re.compile(r"(?i)\b(nochmal|noch einmal|noch ein|nochmals|anders|andere[
                    r"kürzer|schneller|langsamer|ruhiger|fröhlicher|mit gesang|ohne gesang|again|another|instead|longer|shorter|"
                    r"geht das|kannst du das|stil\w*|style|version|variante|fassung|remix|genre|reggae|rock|jazz|pop|techno|"
                    r"klassik\w*|classical|schlager|hip.?hop|metal|blues|country|funk|disco|soul|punk|folk|akustisch\w*|acoustic)\b")
+# changing a song that is there (Musik bearbeiten): a changing word and a song, in either order, or „mach aus meinem
+# Lied …“; „Spiel das Lied schneller“ is playing (PLAY) and stays with the speakers
+_GENRE = (r"reggae|rock\w*|jazz\w*|pop|techno|klassik\w*|classical|schlager|hip.?hop|metal|blues|country|funk|disco|"
+          r"soul|punk|folk|akustisch\w*|acoustic|big.?band|elektro\w*|electronic")
+_CHANGE = (r"verlänger\w*|verkürz\w*|kürz\w*|schneid\w*|remix\w*|bearbeit\w*|tonart|halbt[oö]n\w*|musikrichtung|"
+           r"genre|extend\w*|lengthen|shorten|trim\w*|länger|kürzer|schneller|langsamer|höher|tiefer|longer|shorter|"
+           r"faster|slower|ausblend\w*|einblend\w*|fade\w*")
+EDIT = re.compile(
+    r"(?i)\b(" + _CHANGE + r")\b.{0,60}\b(lied\w*|song\w*|stück\w*|track\w*)\b"
+    r"|\b(lied\w*|song\w*|stück\w*|track\w*)\b.{0,60}\b(" + _CHANGE + r"|als\s+(?:" + _GENRE + r")|im\s+(?:"
+    + _GENRE + r")[\s-]*stil|in\s+(?:a\s+)?(?:" + _GENRE + r")\s+style|(?:" + _GENRE + r")[\s-]*(?:version|fassung|stil))\b"
+    r"|\bmach\w*\s+aus\s+(?:meinem|dem|unserem|diesem)\s+(?:letzten\s+)?(lied|song|stück|track)\b"
+    r"|\bturn\s+(?:my|the|this)\s+(?:last\s+)?(song|track)\s+into\b")
+# the Weiche's group "musik": making or changing (intent.GROUPS)
+GROUP_WORDS = re.compile(WORDS.pattern + "|" + EDIT.pattern.removeprefix("(?i)"), re.I)
 # a song named in the last answer or the person's words (also „Musik“): in the follow window the model gets NO_PROMISE
 SONG = re.compile(r"(?i)\b" + _SONG + r"\b")
 ABOUT = re.compile(r"(?i)\b(" + _SONG[1:-1] + r"|musik|music)\b")
@@ -116,11 +169,33 @@ HINT = ("musik_machen macht ein Lied oder Musikstück auf dem Spark. Rufe es nur
         "Wunsch nach Gesang ist es instrumental. Danach ein kurzer Satz, dass das Lied entsteht und gleich erscheint "
         "(im Chat und unter Ich → Musik). „Spiel Musik“ heißt abspielen, nicht machen.")
 
+TOOL_EDIT = {"type": "function", "function": {
+    "name": "musik_bearbeiten",
+    "description": "Changes the user's newest song on the Spark into a new version (the original stays; the Spark "
+                   "picks the song). art: richtung = another genre or style (richtung_en: English style words, no "
+                   "artist names), verlaengern = longer (sekunden to add, wo vorne or hinten), abschnitt = a part made "
+                   "anew (von_s and bis_s, beschreibung_en what should be there), remix = closer variation "
+                   "(beschreibung_en), schneiden = keep only von_s to bis_s, tempo = faster or slower (tempo_prozent "
+                   "75-125) or another key (halbtoene -4 to 4). Only what the user asked for.",
+    "parameters": {"type": "object", "required": ["art"], "properties": {
+        "art": {"type": "string", "enum": [a for a in ARTS if a != "text"]},   # new lyrics only on the page
+        "richtung_en": {"type": "string", "description": "the new genre or style in English, for richtung"},
+        "beschreibung_en": {"type": "string", "description": "what the changed music should be like, English"},
+        "sekunden": {"type": "integer", "description": "seconds to add, for verlaengern"},
+        "wo": {"type": "string", "enum": ["vorne", "hinten"], "description": "where to add, for verlaengern"},
+        "von_s": {"type": "number", "description": "start of the part in seconds"},
+        "bis_s": {"type": "number", "description": "end of the part in seconds"},
+        "tempo_prozent": {"type": "integer", "description": "new tempo in percent of the song, 75-125"},
+        "halbtoene": {"type": "integer", "description": "key change in half tones, -4 to 4"}}}}}
+HINT_EDIT = ("musik_bearbeiten ändert das neueste Lied der Person (eine neue Fassung, das Original bleibt): andere "
+             "Musikrichtung, länger, ein Teil neu, Remix, kürzen, Tempo oder Tonart. Ein ganz neues Lied macht "
+             "musik_machen. Danach ein kurzer Satz, dass die Fassung entsteht und unter Ich → Musik erscheint.")
+
 _lock = threading.Lock()
 _jobs = {}                  # jid -> job
 _tasks = set()
 _recent = {}                # uid -> time of the last wish (also a refused one), song start and end (FOLLOW_SECONDS)
-_count = DayCounter(done=0, failed=0, refused=0)
+_count = DayCounter(done=0, failed=0, refused=0, edited=0, uploaded=0, heard=0)
 BACKGROUND = True           # tests run _work themselves
 
 
@@ -192,7 +267,8 @@ REFUSED = {"wortliste": ("Das mache ich nicht: der Wunsch fällt unter die feste
            "zeit": ("Das Lied dauerte zu lange.", "The song took too long."),
            "notaus": ("Der Notaus hält das gerade an.", "The Notaus holds this off right now."),
            "pause": ("Musik machen wird gerade gewartet; bitte etwas später noch einmal.",
-                     "Making music is being maintained right now; please try again a little later.")}
+                     "Making music is being maintained right now; please try again a little later."),
+           "quelle": ("Das Lied gibt es nicht mehr.", "That song is not there any more.")}
 
 
 # ---------------------------------------------------------------- storage (users/<id>/musik/)
@@ -236,8 +312,41 @@ def used_bytes(uid):
 
 
 def today_count(uid, now=None):
+    """Songs and versions the music made for the profile in the last 24 hours (music.day_limit); own files count
+    apart (uploads_today)."""
     now = time.time() if now is None else now
-    return sum(1 for x in all_songs(uid) if now - float(x.get("t") or 0) < DAY_S)
+    return sum(1 for x in all_songs(uid) if now - float(x.get("t") or 0) < DAY_S and x.get("kind") != "upload")
+
+
+def uploads_today(uid, now=None):
+    now = time.time() if now is None else now
+    return sum(1 for x in all_songs(uid) if now - float(x.get("t") or 0) < DAY_S and x.get("kind") == "upload")
+
+
+def root_of(x):
+    """The song a version belongs to (its first song); a song is its own root."""
+    r = str(x.get("root") or "")
+    return r if ID.fullmatch(r) else x["id"]
+
+
+def versions(uid, root):
+    return [x for x in all_songs(uid) if root_of(x) == root]
+
+
+def song_row(uid, sid):
+    return next((x for x in all_songs(uid) if x["id"] == sid), None) if ID.fullmatch(str(sid or "")) else None
+
+
+def set_fields(uid, sid, **kw):
+    """Changes fields of one song's line (Erkennen, „Als eigenes Lied“); False when there is no such song."""
+    with _lock:
+        items = all_songs(uid)
+        for x in items:
+            if x["id"] == sid:
+                x.update(kw)
+                _save_index(uid, items)
+                return True
+    return False
 
 
 def keep(uid, mp3, meta):
@@ -284,10 +393,16 @@ features.OWN[KEY] = (lambda uid: len(all_songs(uid)), clear)
 
 
 def public(x):
+    """One song for the page and the apps; kind "" (made), "upload" (an own file) or "edit" (a version), root the
+    song its versions belong to, label (de, en) what was changed."""
+    lab = x.get("label")
     return {"id": x["id"], "t": x.get("t"), "wish": x.get("wish", ""), "caption": x.get("caption", ""),
             "lyrics": x.get("lyrics", ""), "sung": bool(x.get("sung")), "language": x.get("language", ""),
             "length_s": x.get("length_s"), "seconds": x.get("seconds"), "model": x.get("model", ""),
-            "bytes": x.get("bytes", 0), "src": x.get("src", ""), "job": x.get("job", "")}
+            "bytes": x.get("bytes", 0), "src": x.get("src", ""), "job": x.get("job", ""),
+            "kind": x.get("kind", ""), "root": root_of(x), "von": x.get("von", ""), "art": x.get("art", ""),
+            "label": lab if isinstance(lab, list) and len(lab) == 2 else ["", ""], "bpm": x.get("bpm"),
+            "key": x.get("key", ""), "heard": bool(x.get("heard"))}
 
 
 # ---------------------------------------------------------------- jobs
@@ -296,7 +411,8 @@ def stats():
     with _lock:
         run = sum(1 for j in _jobs.values() if j["state"] == "run")
         wait = sum(1 for j in _jobs.values() if j["state"] == "wait")
-    return {"run": run, "wait": wait, "done": _count["done"], "failed": _count["failed"], "refused": _count["refused"]}
+    return {"run": run, "wait": wait, "done": _count["done"], "failed": _count["failed"], "refused": _count["refused"],
+            "edited": _count["edited"], "uploaded": _count["uploaded"], "heard": _count["heard"]}
 
 
 def _live(text_):
@@ -311,7 +427,9 @@ def job_public(j):
     """The job for its page and card; q: its place among the heavy jobs while it is open (schwer.where)."""
     return {"id": j["id"], "state": j["state"], "error": j.get("error", ""), "error_en": j.get("error_en", ""),
             "song": public(j["song"]) if j.get("song") else None, "caption": j["caption"], "t0": int(j["t0"]),
-            "length_s": j["seconds"], "sung": j["sung"], "q": schwer.where(j["id"]) if j["state"] in ("wait", "run") else None}
+            "length_s": j["seconds"], "sung": j["sung"], "q": schwer.where(j["id"]) if j["state"] in ("wait", "run") else None,
+            "kind": j.get("kind", ""), "von": j.get("von", ""), "label": j.get("label") or ["", ""],
+            "songs": [public(x) for x in j.get("songs") or []]}
 
 
 def jobs_of(uid):
@@ -411,13 +529,7 @@ def start(prof, caption, wish, seconds=None, sung=False, language="", lyrics="",
     kind = "gesang" if sung else "instrumental"
     _live(f"Lied {secs} s {kind} angenommen")
     print(f"musik: auftrag {secs} s {kind} {src} fuer {j['log']}", flush=True)
-    if BACKGROUND:
-        try:
-            t = asyncio.get_running_loop().create_task(_go(j))
-            _tasks.add(t)
-            t.add_done_callback(_tasks.discard)
-        except RuntimeError:
-            _fail(j, "dienst")
+    _spawn(j)
     return job_public(j)
 
 
@@ -484,6 +596,8 @@ def _body(j):
 
 
 async def _work(j):
+    if j.get("kind") in ("edit", "hear"):
+        return await _work_edit(j)
     import vorrang
     await vorrang.quiet("Musik machen")
 
@@ -523,6 +637,456 @@ async def _work(j):
             print("musik: hinweis nicht gesendet", type(e).__name__, flush=True)
 
 
+# ---------------------------------------------------------------- Musik bearbeiten
+def _clock(x):
+    x = int(round(x or 0))
+    return f"{x // 60}:{x % 60:02d}"
+
+
+def _num(v, lo, hi):
+    """A number within lo..hi, or None."""
+    if isinstance(v, bool) or not isinstance(v, (int, float)) or not lo <= float(v) <= hi:
+        return None
+    return round(float(v), 2)
+
+
+def plan_edit(row, art, p, lim):
+    """The checked change of one song: (fields for musik_server, label (de, en), length afterwards, needs the model).
+    p is what the page or the tool asked; every number is checked here with fixed rules. ValueError((de, en)) with
+    the reason."""
+    if art not in ARTS:
+        raise ValueError(("Diese Änderung gibt es nicht.", "There is no such change."))
+    model_, de, en = ARTS[art]
+    dur = float(row.get("length_s") or 0)
+    if dur < 1:
+        raise ValueError(("Die Länge des Liedes ist unbekannt.", "The song's length is unknown."))
+    wish = clean(p.get("wunsch"), MAX_WISH)
+    base = row.get("caption") or row.get("wish") or ""
+    out = {"art": art, "length_s": round(dur, 2)}
+    after = dur
+    if art == "abschnitt":
+        a, b = _num(p.get("von"), 0, dur), _num(p.get("bis"), 0, dur)
+        if a is None or b is None or b - a < 1:
+            raise ValueError(("Bitte einen Bereich im Lied wählen (mindestens 1 Sekunde).",
+                              "Please pick a part of the song (at least 1 second)."))
+        if not wish:
+            raise ValueError(("Was soll in dem Teil anders sein?", "What should be different in that part?"))
+        out.update(start=a, end=b, caption=clean(f"{wish}. {base}", MAX_CAPTION),
+                   lyrics=clean(p.get("liedtext"), MAX_LYRICS, lines=True))
+        de, en = f"{de} {_clock(a)}–{_clock(b)}", f"{en} {_clock(a)}–{_clock(b)}"
+    elif art == "verlaengern":
+        add = _num(p.get("sekunden"), 5, MAX_ADD_S)
+        where = p.get("wo") if p.get("wo") in ("vorne", "hinten") else None
+        if add is None or where is None:
+            raise ValueError(("Bitte vorne oder hinten und 5 bis 120 Sekunden wählen.",
+                              "Please pick front or end and 5 to 120 seconds."))
+        after = dur + add
+        if after > lim["max_s"]:
+            raise ValueError((f"Länger als {_clock(lim['max_s'])} min geht nicht.",
+                              f"Longer than {_clock(lim['max_s'])} min is not possible."))
+        out.update(add_s=add, where=where, caption=clean(wish or base, MAX_CAPTION) or "music",
+                   lyrics=clean(p.get("liedtext"), MAX_LYRICS, lines=True))
+        de, en = f"{de} {'vorne' if where == 'vorne' else 'hinten'} +{int(add)} s", f"{en} {'at the front' if where == 'vorne' else 'at the end'} +{int(add)} s"
+    elif art == "richtung":
+        g = p.get("richtung")
+        words = clean(p.get("worte"), MAX_WISH)
+        if g not in GENRES and not words:
+            raise ValueError(("Welche Musikrichtung soll es werden?", "Which genre should it become?"))
+        near = p.get("nah")
+        out.update(caption=clean(", ".join(x for x in (GENRES[g][2] if g in GENRES else "", words) if x), MAX_CAPTION),
+                   near=NEAR[near] if isinstance(near, int) and not isinstance(near, bool) and 0 <= near < len(NEAR) else NEAR[2],
+                   lyrics=row.get("lyrics", "") if row.get("sung") else "")
+        bpm = p.get("bpm")
+        if isinstance(bpm, int) and not isinstance(bpm, bool) and 40 <= bpm <= 220:
+            out["bpm"] = bpm
+        name = GENRES[g][0] if g in GENRES else words[:40]
+        name_en = GENRES[g][1] if g in GENRES else words[:40]
+        de, en = f"{de}: {name}", f"{en}: {name_en}"
+    elif art == "remix":
+        near = p.get("nah")
+        out.update(caption=clean(wish or base, MAX_CAPTION) or "music",
+                   near=NEAR[near] if isinstance(near, int) and not isinstance(near, bool) and 0 <= near < len(NEAR) else NEAR[3],
+                   lyrics=row.get("lyrics", "") if row.get("sung") else "")
+    elif art == "text":
+        # Text ändern (Dominik 2026-10-20 „texte anpassen strophen hinzufügen und verschieben … daraus wieder das
+        # lied neu generiert“): the whole lyrics as the page put them together, the song made anew close to its sound
+        lyrics = clean(p.get("liedtext"), MAX_LYRICS, lines=True)
+        if not lyrics:
+            raise ValueError(("Bitte den Liedtext schreiben.", "Please write the lyrics."))
+        lang = p.get("sprache") if p.get("sprache") in LANGS else (row.get("language") if row.get("language") in LANGS else "de")
+        near = p.get("nah")
+        out.update(caption=clean(wish or base, MAX_CAPTION) or "music", lyrics=lyrics, language=lang,
+                   near=NEAR[near] if isinstance(near, int) and not isinstance(near, bool) and 0 <= near < len(NEAR) else NEAR[1])
+        if p.get("neu") is True:   # made anew from the description and the text, with its own length (more verses)
+            after = length(p.get("sekunden"), lim)
+            out.update(neu=True, seconds=after)
+            de, en = "Neu mit neuem Text", "Made anew with new lyrics"
+    elif art == "schneiden":
+        a, b = _num(p.get("von"), 0, dur), _num(p.get("bis"), 0, dur)
+        fin, fout = _num(p.get("einblenden"), 0, 30), _num(p.get("ausblenden"), 0, 30)
+        cut = a is not None and b is not None and (a > 0 or b < dur)
+        if a is not None and b is not None and b - a < 1:
+            raise ValueError(("Bitte mindestens 1 Sekunde behalten.", "Please keep at least 1 second."))
+        if not cut and not fin and not fout:
+            raise ValueError(("Bitte einen Bereich oder ein Ein- oder Ausblenden wählen.",
+                              "Please pick a part or a fade in or out."))
+        if cut:
+            out.update(start=a, end=b)
+            after = b - a
+            de, en = f"{de} {_clock(a)}–{_clock(b)}", f"{en} {_clock(a)}–{_clock(b)}"
+        if fin:
+            out["fade_in"] = min(fin, after / 2)
+        if fout:
+            out["fade_out"] = min(fout, after / 2)
+        if not cut:
+            de, en = "Ein- und ausgeblendet", "Faded in and out"
+    else:   # tempo
+        pct = p.get("tempo")
+        half = p.get("halbtoene")
+        pct = pct if isinstance(pct, int) and not isinstance(pct, bool) and 75 <= pct <= 125 else 100
+        half = half if isinstance(half, int) and not isinstance(half, bool) and -4 <= half <= 4 else 0
+        if pct == 100 and half == 0:
+            raise ValueError(("Bitte Tempo oder Tonart ändern.", "Please change the tempo or the key."))
+        if pct != 100:
+            out["tempo"] = round(pct / 100, 2)
+            after = dur * 100 / pct
+        if half:
+            out["halftones"] = half
+        parts = ([f"Tempo {pct} %"] if pct != 100 else []) + ([f"Tonart {half:+d}"] if half else [])
+        parts_en = ([f"tempo {pct} %"] if pct != 100 else []) + ([f"key {half:+d}"] if half else [])
+        de, en = ", ".join(parts), ", ".join(parts_en).capitalize()
+    return out, [de, en], round(after, 1), model_
+
+
+def _guard(prof, row, texts):
+    """The fixed rules before any change; raises ValueError((de, en))."""
+    uid = prof["id"]
+    if not features.allowed(KEY, uid) or not features.allowed(EDIT_KEY, uid):
+        _say("aus", prof)
+        raise ValueError(("Musik bearbeiten ist für dich nicht freigegeben.", "Editing music is not released for you."))
+    try:
+        notaus.stop("auftrag", uid)
+    except notaus.NotausAktiv:
+        _say("notaus", prof)
+        raise ValueError(REFUSED["notaus"])
+    if row is None:
+        _say("quelle", prof)
+        raise ValueError(("Das Lied gibt es nicht (mehr).", "That song is not there (any more)."))
+    why = refuse_text(uid, *texts)
+    if why:
+        _count.bump("refused")
+        _say(why, prof)
+        raise ValueError(REFUSED[why])
+    lim = limits()
+    if used_bytes(uid) >= lim["store_mb"] * 1024 * 1024 or len(all_songs(uid)) >= MAX_SONGS:
+        _say("voll", prof)
+        raise ValueError(("Deine Lieder brauchen schon den ganzen Platz; bitte erst alte löschen (Ich → Musik).",
+                          "Your songs use all their space; please delete old ones first (Me → Music)."))
+    if len(versions(uid, root_of(row))) >= MAX_VERSIONS:
+        _say("fassungen", prof)
+        raise ValueError((f"Ein Lied hat höchstens {MAX_VERSIONS} Fassungen; bitte erst eine löschen.",
+                          f"A song has at most {MAX_VERSIONS} versions; please delete one first."))
+    return lim
+
+
+def _mark(row):
+    """The AI mark a change of row keeps: "made" for a song the Spark made, "edited" for a version, "" for an own
+    file no model has touched yet."""
+    return row.get("ai") if row.get("ai") in ("made", "edited", "") else ("" if row.get("kind") == "upload" else "made")
+
+
+def _new_row(row, label, art, length, extra=None):
+    return dict({"wish": row.get("wish", ""), "caption": row.get("caption", ""), "lyrics": row.get("lyrics", ""),
+                 "sung": bool(row.get("sung")), "language": row.get("language", ""), "length_s": length,
+                 "model": row.get("model", ""), "src": "bearbeiten", "kind": "edit", "root": root_of(row),
+                 "von": row["id"], "art": art, "label": label, "bpm": row.get("bpm"), "key": row.get("key", ""),
+                 "ai": _mark(row)}, **(extra or {}))
+
+
+def start_edit(prof, sid, art, p, src="seite", client="web"):
+    """A change with the music model (ARTS with True) as a job on the one place, or a change without a model done at
+    once (await finish_tone). Returns the job; raises ValueError((de, en))."""
+    uid = prof["id"]
+    row = song_row(uid, sid)
+    lim = _guard(prof, row, (p.get("wunsch"), p.get("worte"), p.get("liedtext")))
+    fields, label, after, model_ = plan_edit(row, art, p, lim)
+    if not model_:
+        raise ValueError(("Das geht ohne Musikmodell sofort.", "That works at once without the music model."))
+    if wartung.paused("musik"):
+        _say("wartung", prof)
+        raise ValueError(REFUSED["pause"])
+    _sweep(time.time())
+    with _lock:
+        if any(j["uid"] == uid and j["state"] in ("wait", "run") for j in _jobs.values()):
+            _say("laeuft", prof)
+            raise ValueError(("Ich arbeite schon an einem Lied für dich; erst wenn es fertig ist.",
+                              "I am already working on a song for you; once it is done."))
+        if schwer.full():
+            _say("warteschlange", prof)
+            raise ValueError(("Gerade warten schon viele Lieder; bitte etwas später noch einmal.",
+                              "Many songs are waiting already; please try again a little later."))
+    if today_count(uid) >= lim["day"]:
+        _say("tageslimit", prof)
+        raise ValueError((f"Heute sind schon {lim['day']} Lieder entstanden; morgen wieder.",
+                          f"{lim['day']} songs were made today already; tomorrow again."))
+    n = p.get("vorschlaege")
+    n = n if isinstance(n, int) and not isinstance(n, bool) and 1 <= n <= 3 else 1
+    n = min(n, lim["day"] - today_count(uid))
+    jid = secrets.token_hex(6)
+    j = {"id": jid, "uid": uid, "state": "wait", "kind": "edit", "caption": label[0], "wish": row.get("wish", ""),
+         "seconds": int(round(after)), "sung": bool(row.get("sung")), "language": row.get("language", ""), "lyrics": "",
+         "t0": time.time(), "src": src, "client": client, "log": profiles.log_name(prof), "model": model(),
+         "von": sid, "art": art, "label": label, "fields": dict(fields, suggestions=n), "after": after}
+    with _lock:
+        _jobs[jid] = j
+    _recent[uid] = time.time()
+    _live(f"Bearbeitung {art} angenommen")
+    print(f"musik: bearbeitung {art} {n} vorschlaege {src} fuer {j['log']}", flush=True)
+    _spawn(j)
+    return job_public(j)
+
+
+def start_hear(prof, sid):
+    """Erkennen as a job on the one place (the language model listens)."""
+    uid = prof["id"]
+    row = song_row(uid, sid)
+    if not features.allowed(KEY, uid) or not features.allowed(EDIT_KEY, uid) or row is None:
+        _say("aus" if row else "quelle", prof)
+        raise ValueError(("Das geht gerade nicht.", "That does not work right now."))
+    try:
+        notaus.stop("auftrag", uid)
+    except notaus.NotausAktiv:
+        _say("notaus", prof)
+        raise ValueError(REFUSED["notaus"])
+    if wartung.paused("musik"):
+        _say("wartung", prof)
+        raise ValueError(REFUSED["pause"])
+    with _lock:
+        if any(j["uid"] == uid and j["state"] in ("wait", "run") for j in _jobs.values()) or schwer.full():
+            _say("laeuft", prof)
+            raise ValueError(("Ich arbeite schon an einem Lied für dich; erst wenn es fertig ist.",
+                              "I am already working on a song for you; once it is done."))
+    jid = secrets.token_hex(6)
+    j = {"id": jid, "uid": uid, "state": "wait", "kind": "hear", "caption": "Erkennen", "wish": "", "seconds": 0,
+         "sung": False, "language": "", "lyrics": "", "t0": time.time(), "src": "seite", "client": "web",
+         "log": profiles.log_name(prof), "model": model(), "von": sid, "label": ["Erkennen", "Listening"]}
+    with _lock:
+        _jobs[jid] = j
+    print(f"musik: erkennen angenommen fuer {j['log']}", flush=True)
+    _spawn(j)
+    return job_public(j)
+
+
+def _spawn(j):
+    if BACKGROUND:
+        try:
+            t = asyncio.get_running_loop().create_task(_go(j))
+            _tasks.add(t)
+            t.add_done_callback(_tasks.discard)
+        except RuntimeError:
+            _fail(j, "dienst")
+
+
+def _source_b64(uid, sid):
+    p = song_path(uid, sid)
+    if not p:
+        raise ValueError("quelle")
+    with open(p, "rb") as f:
+        data = f.read(MAX_MP3 + 1)
+    if len(data) > MAX_MP3:
+        raise ValueError("quelle")
+    return base64.b64encode(data).decode()
+
+
+def _mp3(b64):
+    try:
+        mp3 = base64.b64decode(b64, validate=True)
+    except (ValueError, TypeError):
+        raise ValueError("dienst")
+    if not mp3.startswith(b"ID3") or len(mp3) > MAX_MP3:
+        raise ValueError("dienst")
+    return mp3
+
+
+async def _post(path, body):
+    try:
+        code, d = await call(path, body)
+    except httpx.HTTPError:
+        raise ValueError("dienst")
+    if code in (502, 503) and d.get("detail") in ("memory", "missing", "engine", "belegt"):
+        raise ValueError(d["detail"])
+    if code == 504:
+        raise ValueError("zeit")
+    if code != 200:
+        raise ValueError("dienst")
+    return d
+
+
+async def _work_edit(j):
+    import vorrang
+    await vorrang.quiet("Musik bearbeiten")
+    row = song_row(j["uid"], j["von"])
+    if row is None:
+        _fail(j, "quelle")
+        return
+    try:
+        src = await asyncio.to_thread(_source_b64, j["uid"], j["von"])
+    except ValueError:
+        _fail(j, "quelle")
+        return
+    body = dict(j.get("fields") or {}, mp3=src, title=(row.get("wish") or row.get("caption") or "")[:120])
+    if "language" not in body and row.get("sung") and row.get("language") in LANGS:
+        body["language"] = row["language"]
+    if j.get("model"):
+        body["variant"] = j["model"]
+
+    async def once():
+        await vorrang.quiet("Musik bearbeiten")
+        if wartung.paused("musik"):
+            raise ValueError("pause")
+        j["state"] = "run"
+        if body.get("neu"):
+            _mp3_, made = await make({"caption": body["caption"], "seconds": body["seconds"], "lyrics": body["lyrics"],
+                                      "language": body["language"], "title": body["title"], "seed": -1,
+                                      **({"variant": body["variant"]} if body.get("variant") else {})})
+            return dict(made, mp3s=[made["mp3"]])
+        return await _post("/v1/musik/erkennen" if j["kind"] == "hear" else "/v1/musik/bearbeiten", body)
+    try:
+        d = await schwer.run("musik", j.get("id"), j.get("t0"), once)
+    except ValueError as e:
+        _fail(j, str(e) if str(e) in REFUSED else "dienst")
+        return
+    if j["kind"] == "hear":
+        got = {k: d[k] for k in ("bpm", "key") if d.get(k)}
+        if not row.get("caption") and d.get("caption"):
+            got["caption"] = clean(d["caption"], MAX_CAPTION)
+        if not row.get("lyrics") and d.get("lyrics"):
+            got.update(lyrics=clean(d["lyrics"], MAX_LYRICS, lines=True), sung=True,
+                       language=d.get("language") if d.get("language") in LANGS else "")
+        set_fields(j["uid"], j["von"], heard=True, **got)
+        _count.bump("heard")
+        j.update(state="done", song=song_row(j["uid"], j["von"]), end=time.time())
+        print(f"musik: erkannt {len(got)} felder fuer {j['log']}", flush=True)
+        return
+    try:
+        mp3s = [_mp3(x) for x in (d.get("mp3s") or [])[:3]]
+    except ValueError:
+        _fail(j, "dienst")
+        return
+    if not mp3s:
+        _fail(j, "dienst")
+        return
+    rows = []
+    for i, mp3 in enumerate(mp3s):
+        label = j["label"] if len(mp3s) == 1 else [f"{j['label'][0]} ({i + 1})", f"{j['label'][1]} ({i + 1})"]
+        extra = {"seconds": d.get("seconds"), "model": str(d.get("variant") or j.get("model") or "")[:10],
+                 "job": j["id"], "ai": "edited"}
+        if j["art"] in ("richtung", "remix", "abschnitt", "verlaengern"):
+            extra["caption"] = j["fields"].get("caption", row.get("caption", ""))[:MAX_CAPTION] if j["art"] == "richtung" else row.get("caption", "")
+        if j["art"] == "text":
+            extra.update(lyrics=j["fields"]["lyrics"], sung=True, language=j["fields"]["language"])
+        rows.append(keep(j["uid"], mp3, _new_row(row, label, j["art"], j["after"], extra)))
+    j.update(state="done", song=rows[0], songs=rows, end=time.time())
+    _recent[j["uid"]] = time.time()
+    _count.bump("edited")
+    import verbrauch
+    verbrauch.add("musik", "Musik machen", who=j["uid"], amount=len(rows), ms=int((d.get("seconds") or 0) * 1000))
+    _live(f"Bearbeitung {j['art']} fertig")
+    print(f"musik: bearbeitet {j['art']} {len(rows)} fassungen {d.get('seconds')} s fuer {j['log']}", flush=True)
+    try:
+        import tagebuch
+        tagebuch.note(j["uid"], "musik", "Lied bearbeitet: " + j["label"][0][:60], ref=rows[0]["id"])
+    except Exception:
+        pass
+    if j["client"] != "web":
+        try:
+            import push
+            await push.send(j["uid"], "Fassung fertig", "Die neue Fassung liegt unter Ich → Musik.", tag="musik", why="Musik")
+        except Exception as e:   # noqa: BLE001 - the version is there anyway
+            print("musik: hinweis nicht gesendet", type(e).__name__, flush=True)
+
+
+async def tone(prof, sid, art, p, src="seite"):
+    """Schneiden & Blenden, Tempo & Tonart: at once on the model computer with ffmpeg, no model and no place in the
+    queue. Returns the new version's line; raises ValueError((de, en))."""
+    uid = prof["id"]
+    row = song_row(uid, sid)
+    lim = _guard(prof, row, ())
+    fields, label, after, model_ = plan_edit(row, art, p, lim)
+    if model_:
+        raise ValueError(("Das braucht das Musikmodell.", "That needs the music model."))
+    if after > lim["max_s"] + MAX_ADD_S:
+        raise ValueError(("Das Lied würde zu lang.", "The song would get too long."))
+    try:
+        body = dict(fields, mp3=await asyncio.to_thread(_source_b64, uid, sid), mark=_mark(row),
+                    title=(row.get("wish") or row.get("caption") or "")[:120])
+        d = await _post("/v1/musik/ton", body)
+        mp3 = _mp3(d.get("mp3"))
+    except ValueError as e:
+        why = str(e) if str(e) in REFUSED else "dienst"
+        print(f"musik: ton nicht gemacht {why} fuer {profiles.log_name(prof)}", flush=True)
+        raise ValueError(REFUSED[why])
+    new = keep(uid, mp3, _new_row(row, label, art, after))
+    _count.bump("edited")
+    _live(f"Bearbeitung {art} fertig")
+    print(f"musik: bearbeitet {art} ohne modell fuer {profiles.log_name(prof)}", flush=True)
+    return new
+
+
+def file_format(data):
+    """The own file's format from its first bytes (FORMATS), or ""."""
+    head = bytes(data[:16])
+    return next((name for name, sig in FORMATS if sig.match(head)), "")
+
+
+async def upload(prof, data, name):
+    """An own file with the rights tick: checked, read in on the model computer (ffmpeg from a pipe), kept as our MP3
+    without its tags and without the AI mark. Returns its line; raises ValueError((de, en))."""
+    uid = prof["id"]
+    if not features.allowed(KEY, uid) or not features.allowed(EDIT_KEY, uid):
+        _say("aus", prof)
+        raise ValueError(("Musik bearbeiten ist für dich nicht freigegeben.", "Editing music is not released for you."))
+    try:
+        notaus.stop("auftrag", uid)
+    except notaus.NotausAktiv:
+        _say("notaus", prof)
+        raise ValueError(REFUSED["notaus"])
+    lim = limits()
+    if uploads_today(uid) >= UPLOADS_DAY:
+        _say("tageslimit", prof)
+        raise ValueError((f"Heute sind schon {UPLOADS_DAY} eigene Dateien hochgeladen; morgen wieder.",
+                          f"{UPLOADS_DAY} own files were uploaded today already; tomorrow again."))
+    if used_bytes(uid) + len(data) >= lim["store_mb"] * 1024 * 1024 or len(all_songs(uid)) >= MAX_SONGS:
+        _say("voll", prof)
+        raise ValueError(("Deine Lieder brauchen schon den ganzen Platz; bitte erst alte löschen (Ich → Musik).",
+                          "Your songs use all their space; please delete old ones first (Me → Music)."))
+    fmt = file_format(data)
+    if not fmt:
+        _say("format", prof)
+        raise ValueError(("Das ist keine Musikdatei, die ich lesen kann (MP3, WAV, FLAC, M4A, OGG).",
+                          "That is no music file I can read (MP3, WAV, FLAC, M4A, OGG)."))
+    title = clean(re.sub(r"\.(mp3|wav|flac|m4a|ogg|aac|mp4)$", "", str(name or ""), flags=re.I), MAX_NAME) or "Eigene Datei"
+    code = 0
+    try:
+        async with httpx.AsyncClient(timeout=180, trust_env=False) as c:
+            r = await c.post(model_url("musik", "/v1/musik/quelle"), params={"art": fmt}, content=data,
+                             headers=dict(api_headers(), **{"Content-Type": "application/octet-stream"}))
+        code = r.status_code
+        d = r.json() if code == 200 else {}
+        mp3 = _mp3(d.get("mp3"))
+        secs = float(d.get("length_s") or 0)
+    except (httpx.HTTPError, ValueError):
+        print(f"musik: hochladen nicht gemacht {'format' if code == 415 else 'dienst'} fuer {profiles.log_name(prof)}",
+              flush=True)
+        raise ValueError(("Die Datei ließ sich nicht lesen.", "The file could not be read."))
+    row = keep(uid, mp3, {"wish": title, "caption": "", "lyrics": "", "sung": False, "language": "",
+                          "length_s": round(secs, 1), "model": "", "src": "upload", "kind": "upload", "ai": ""})
+    print(f"musik: hochgeladen {fmt} {int(secs)} s fuer {profiles.log_name(prof)}", flush=True)
+    _count.bump("uploaded")
+    _live("Eigene Datei hochgeladen")
+    return row
+
+
 # ---------------------------------------------------------------- the assistant
 def wants(text):
     """The person's own message asks to make music (the wish words, never „spiel …“): chat_turn keeps the last
@@ -531,12 +1095,29 @@ def wants(text):
     return bool(WORDS.search(words)) and not (PLAY.search(words) and not re.search(r"(?i)komponier|compose", words))
 
 
+def wants_edit(text):
+    """The person's own message asks to change a song that is there (EDIT, never „spiel …“)."""
+    words = str(text or "")[:2000]
+    return bool(EDIT.search(words)) and not PLAY.search(words)
+
+
 def offer(ctx):
     who = ctx.get("who")
     if not who or not ctx.get("own") or ctx.get("private") is False or ctx.get("client") == "mcp":
         return None
     uid = who["id"]
     words = str(ctx.get("text") or "")
+    # Musik bearbeiten: the own words name a change of a song, or a change follows a song (the follow window); only
+    # with a song to change and only on the own word (own), Mail and the Notaus lock it like musik_machen
+    edit = (features.allowed(EDIT_KEY, uid) and features.allowed(KEY, uid) and bool(all_songs(uid))
+            and (wants_edit(words) or (time.time() - _recent.get(uid, 0) < FOLLOW_SECONDS and not PLAY.search(words)
+                                       and bool(AGAIN.search(words)))))
+    if edit:
+        _recent[uid] = time.time()
+        return {"tools": [TOOL_EDIT, TOOL], "hint": HINT_EDIT + " " + HINT, "changes": {"musik_bearbeiten", "musik_machen"},
+                "keep": {"musik_bearbeiten", "musik_machen"}, "own": {"musik_bearbeiten", "musik_machen"},
+                "filler": {"musik_bearbeiten": ("Ich mache die neue Fassung.", "Making the new version."),
+                           "musik_machen": ("Ich mache das Lied.", "Making the song.")}}
     asked = wants(words)
     before = str(ctx.get("before") or "")
     # the window counts from the last wish, the start and the end of a song; the last answer about a song counts too
@@ -557,8 +1138,46 @@ def offer(ctx):
             "filler": {"musik_machen": ("Ich mache das Lied.", "Making the song.")}}
 
 
+async def tool_edit(args, ctx):
+    """musik_bearbeiten: the newest song of the profile (the panel picks it, never the model), the change from the
+    tool's fields with the same checks as the page."""
+    who = ctx.get("who") or {}
+    args = args if isinstance(args, dict) else {}
+    songs = all_songs(who["id"])
+    if not songs:
+        return "Not done: Es gibt noch kein Lied zum Bearbeiten. Sag das so in einem Satz."
+    row, art = songs[0], str(args.get("art") or "")
+    g = str(args.get("richtung_en") or "").strip().lower()
+    p = {"wunsch": args.get("beschreibung_en"), "sekunden": args.get("sekunden"), "wo": args.get("wo") or "hinten",
+         "von": args.get("von_s"), "bis": args.get("bis_s"), "tempo": args.get("tempo_prozent"),
+         "halbtoene": args.get("halbtoene"), "richtung": next((k for k, v in GENRES.items() if g in (k, v[1].lower())), ""),
+         "worte": args.get("richtung_en")}
+    if art == "schneiden":
+        p.setdefault("von", 0)
+        if p["bis"] is None:
+            p["bis"] = row.get("length_s")
+    try:
+        if art in ARTS and not ARTS[art][0]:
+            new = await tone(who, row["id"], art, p, src="chat")
+            return (f"Done: the new version „{new['label'][1]}“ of the newest song is ready under Ich → Musik. Say "
+                    "that in one short sentence; do not describe how it sounds.")
+        j = start_edit(who, row["id"], art, p, src="chat", client=ctx.get("client") or "web")
+    except ValueError as e:
+        de = e.args[0][0] if e.args and isinstance(e.args[0], tuple) else "Das ging nicht."
+        return f"Not done: {de} Sag das so in einem Satz."
+    wait = schwer.hint(j["id"])
+    if wait:
+        return (f"Started, but waiting in the queue: a new version ({j['label'][1]}) of the newest song. Say this to "
+                f"the user, in their language and without changing the numbers: „{wait}“ It appears under Ich → Musik. "
+                "Do not describe how it sounds.")
+    return (f"Started: a new version ({j['label'][1]}) of the newest song is being made; the original stays. Tell the "
+            "user in one short sentence; it appears under Ich → Musik. Do not describe how it sounds.")
+
+
 async def tool(name, args, ctx):
     who = ctx.get("who") or {}
+    if name == "musik_bearbeiten" and who.get("id"):
+        return await tool_edit(args, ctx)
     if name != "musik_machen" or not who.get("id"):
         return "Not done: unknown tool."
     args = args if isinstance(args, dict) else {}
@@ -596,8 +1215,13 @@ def _prof(request, prof):
 def musik_list(request: Request, prof=Depends(own_profile)):
     uid = _prof(request, prof)["id"]
     guard.limit(request, "musik", uid)
+    edit = features.allowed(EDIT_KEY, uid)
     return {"songs": [public(x) for x in all_songs(uid)], "jobs": jobs_of(uid), "limits": limits(),
-            "used": used_bytes(uid), "today": today_count(uid), "langs": list(LANGS)}
+            "used": used_bytes(uid), "today": today_count(uid), "langs": list(LANGS),
+            "edit": {"on": edit, "genres": [[k, de, en] for k, (de, en, _w) in GENRES.items()], "near": len(NEAR),
+                     "max_add": MAX_ADD_S, "versions": MAX_VERSIONS, "upload_mb": MAX_UPLOAD // 1024**2,
+                     "uploads": uploads_today(uid), "uploads_day": UPLOADS_DAY,
+                     "formats": [k for k, _ in FORMATS]} if edit else {"on": False}}
 
 
 @router.post("/api/musik", dependencies=[Depends(assistant)])
@@ -666,6 +1290,79 @@ def musik_clear(request: Request, prof=Depends(browser_profile)):
     n = clear(prof["id"])
     print(f"musik: geloescht {n} fuer {profiles.log_name(prof)}", flush=True)
     return {"ok": True, "deleted": n}
+
+
+def _edit_prof(request, prof):
+    _prof(request, prof)
+    if not features.allowed(EDIT_KEY, prof["id"]):
+        raise HTTPException(403, "Musik bearbeiten ist aus (Funktionen → Musik bearbeiten)")
+    return prof
+
+
+def _no(e):
+    return HTTPException(409, e.args[0][0] if e.args and isinstance(e.args[0], tuple) else "geht nicht")
+
+
+@router.post("/api/musik/hochladen", dependencies=[Depends(assistant)])
+async def musik_upload(request: Request, name: str = "", rechte: int = 0, prof=Depends(browser_profile)):
+    """Ich → Musik „Eigene Datei hochladen“: the raw file as the body, only with the tick for the rights (rechte=1)."""
+    uid = _edit_prof(request, prof)["id"]
+    guard.limit(request, "musikhochladen", uid)
+    if rechte != 1:
+        print(f"musik: hochladen nicht gemacht rechte fuer {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(400, "Bitte bestätigen, dass es deine Aufnahme ist oder du die Rechte hast.")
+    import images
+    try:
+        data = await images._read(request, MAX_UPLOAD)
+    except HTTPException:
+        print(f"musik: hochladen nicht gemacht gross fuer {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(413, f"Die Datei ist zu groß (höchstens {MAX_UPLOAD // 1024**2} MB).")
+    try:
+        return public(await upload(prof, data, name))
+    except ValueError as e:
+        raise _no(e)
+
+
+@router.post("/api/musik/{sid}/bearbeiten", dependencies=[Depends(assistant)])
+async def musik_edit(sid: str, request: Request, prof=Depends(browser_profile)):
+    """Ich → Musik „Bearbeiten“: {art, …} on one of the profile's own songs; with the music model a job, without it
+    the new version at once."""
+    uid = _edit_prof(request, prof)["id"]
+    guard.limit(request, "musikmachen", uid)
+    body = await json_body(request, 16 * 1024, lenient=True)
+    art = str(body.get("art") or "")
+    if not ID.fullmatch(sid) or art not in ARTS:
+        raise HTTPException(400, "unbekannte Änderung")
+    try:
+        if not ARTS[art][0]:
+            return {"song": public(await tone(prof, sid, art, body))}
+        return {"job": start_edit(prof, sid, art, body)}
+    except ValueError as e:
+        raise _no(e)
+
+
+@router.post("/api/musik/{sid}/erkennen", dependencies=[Depends(assistant)])
+async def musik_hear(sid: str, request: Request, prof=Depends(browser_profile)):
+    """Erkennen: tempo, key and description of one own song, as a job."""
+    uid = _edit_prof(request, prof)["id"]
+    guard.limit(request, "musikmachen", uid)
+    if not ID.fullmatch(sid):
+        raise HTTPException(404, "kein solches Lied")
+    try:
+        return {"job": start_hear(prof, sid)}
+    except ValueError as e:
+        raise _no(e)
+
+
+@router.post("/api/musik/{sid}/eigenes", dependencies=[Depends(assistant)])
+def musik_own(sid: str, request: Request, prof=Depends(browser_profile)):
+    """„Als eigenes Lied“: a version becomes a song of its own (its own versions start from it)."""
+    uid = _edit_prof(request, prof)["id"]
+    guard.limit(request, "musik", uid)
+    if not ID.fullmatch(sid) or not set_fields(uid, sid, root=sid):
+        raise HTTPException(404, "kein solches Lied")
+    print(f"musik: fassung eigenes lied fuer {profiles.log_name(prof)}", flush=True)
+    return public(song_row(uid, sid))
 
 
 # ---------------------------------------------------------------- admin: Musik testen (stage M0, measuring)

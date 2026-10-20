@@ -179,6 +179,7 @@
     "bilder": false,
     "bilder_aendern": false,
     "musik": false,
+    "musik_bearbeiten": false,
     "remarkable": false,
     "remarkable_send": false,
     "remarkable_fresh": false,
