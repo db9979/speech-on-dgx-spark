@@ -148,7 +148,8 @@ THINGS = {
     # renamed and deleted (the CalDAV target and the shortcut's inbox stay in the browser and with app_ios)
     "tasks": ((("GET",), r"/api/profile/tasks"), (("POST",), r"/api/profile/listen"),
               (("PUT", "DELETE"), r"/api/profile/listen/l[0-9a-f]{8}"),
-              (("POST",), r"/api/profile/tasks/(?:einkauf|aufgaben|l[0-9a-f]{8})/(?:add|done|undo)"),
+              (("PUT",), r"/api/profile/listen/(?:einkauf|aufgaben|l[0-9a-f]{8})/share"),
+              (("POST",), r"/api/profile/tasks/(?:u_[0-9a-f]{12}\.)?(?:einkauf|aufgaben|l[0-9a-f]{8})/(?:add|done|undo)"),
               (("DELETE",), r"/api/profile/tasks/(?:einkauf|aufgaben|l[0-9a-f]{8})/[0-9a-f]{10}")),
     # Musik (musik.py): listen, make from a wish, delete one or all; change an own song, upload an own file and make
     # a version a song of its own only with Musik bearbeiten (musik.EDIT_KEY, checked there)
@@ -162,6 +163,9 @@ RIGHTS_PANEL = ("app_mine", "app_voice", "app_auto", "app_security", "app_accoun
 MINE_FIELDS = ("daily", "learn")
 # document settings (Ich -> Dokumente) with Meine Sachen → Dokumente; the functions themselves follow the admin release
 DOC_FIELDS = ("doc_due",)
+# Listen (tasks.py): the note when others put something on a shared list, with Meine Sachen → Listen while the admin
+# has released „Listen teilen“
+LIST_FIELDS = ("list_note",)
 AUTO_FIELDS = ()
 # switches older apps still send although the admin release alone decides now: ignored. Only the keys the old
 # apps sent, all out of profiles.GONE (the one list); app_on and the other rights stay refused (400).
@@ -473,8 +477,9 @@ async def app_settings_save(request: Request, prof=Depends(own_profile)):
 
 
 def _fields(uid):
-    return APP_FIELDS + sum((f for right, f in (("app_mine", MINE_FIELDS), ("documents", DOC_FIELDS),
-                                                ("app_auto", AUTO_FIELDS)) if area_on(uid, right)), ())
+    return APP_FIELDS + sum((f for right, f in (("app_mine", MINE_FIELDS), ("documents", DOC_FIELDS), ("tasks", LIST_FIELDS),
+                                                ("app_auto", AUTO_FIELDS))
+                             if area_on(uid, right) and (f is not LIST_FIELDS or features.allowed("listshare", uid))), ())
 
 
 def _live_mark(area, text):

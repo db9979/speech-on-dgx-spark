@@ -2329,6 +2329,20 @@
 "titel": "Mitteilung ans genutzte Gerät",
 "text": "A: Update, Admin: Funktionen → Timer und Erinnerungen → „Mitteilung ans genutzte Gerät“ an. B: Am PC im Panel tippen, dann „Erinnere mich in 2 Minuten an Tee“ sagen und weiter am PC arbeiten: die Erinnerung kommt am PC, nicht am iPhone. C: Noch eine Erinnerung stellen, dann den PC 3 Minuten nicht anfassen (Seite offen lassen): sie kommt gleich aufs iPhone. D: Die iPhone-App offen haben und benutzen, am PC nichts tun: die Mitteilung kommt in der App. E: Mit dem Spark-Begleiter (neueste Fassung) am PC arbeiten, Panel zu: sie kommt als Begleiter-Meldung. F: Zustand → Live: Verbindung „Gerade benutzte Geräte“ mit Anzahl und „heute n ans benutzte Gerät, m ans Handy“. G: Schalter aus: wieder das zuletzt benutzte Gerät.",
 "thread": "Benachrichtigung aufs genutzte Gerät"
+},
+{
+"id": "P357",
+"v": 865,
+"titel": "Listen teilen",
+"text": "A: Update auf V01.0.865, Funktionen → Listen für Einkauf und Aufgaben → „Listen teilen“ an. B: Profil db: Seite Listen → Einkauf → ⋯ → „Teilen …“, sb auf „Mitschreiben“. C: Profil sb (iPhone): Meine Sachen → Listen zeigt „Mit mir geteilt“ → Einkauf von db; „Butter“ eintragen, eins abhaken; Löschen gibt es dort nicht. D: Nach höchstens 10 Minuten bekommt db einen Hinweis „… hat 1 Eintrag auf „Einkauf“ gesetzt.“; bei db steht an Butter der Name von sb. E: sb sagt „Setz Käse auf Dominiks Einkaufsliste“: Käse steht bei db. F: db stellt sb auf „Sehen“: sb sieht die Liste, kann aber nichts mehr eintragen; „Aus“: die Liste ist bei sb weg.",
+"thread": "Einkaufsliste und Aufgaben teilen"
+},
+{
+"id": "P358",
+"v": 865,
+"titel": "Listen in Erinnerungen",
+"text": "A: Update auf V01.0.865, Funktionen → Listen für Einkauf und Aufgaben → „Listen in Erinnerungen“ an, dazu Funktionen → Kalender und Tagesbriefing → „Kalender-Server für Kalender-Apps“; App-Passwort unter Kalender → Einstellungen. B: iPhone: Einstellungen → Apps → Erinnerungen → Accounts: beim Spark-CalDAV-Account „Erinnerungen“ an. In Erinnerungen stehen 🛒 Einkauf, ✓ Aufgaben und deine eigenen Listen. C: In Erinnerungen „Butter“ auf Einkauf setzen: auf der Seite Listen steht Butter mit „iPhone Erinnerungen“. D: Auf der Seite Milch abhaken: in Erinnerungen ist Milch nach dem Aktualisieren erledigt. E: In Erinnerungen Butter abhaken, dann löschen: auf der Seite erst unter „Zuletzt erledigt“, dann weg. F: Widget „Einkauf“ auf den Homescreen: zeigt die offenen Einträge, nach einer Änderung in der App gleich neu.",
+"thread": "Einkaufsliste und Aufgaben teilen"
 }
 ]
 }

@@ -215,7 +215,7 @@ def pick(uid, private=True, to=""):
 WHY = {"agent": "Auftrag", "briefing": "Tagesüberblick", "notaus": "Notaus", "setup": "Einrichtung",
        "pro-": "Von selbst", "mcp": "MCP-Bestätigung", "admin": "Hinweis", "hello": "Test", "devup": "Geräte-Update", "doc": "Dokument", "bild": "Bild",
        "svc": "Dienst-Wächter", "wartung": "Wartungspause", "chat-": "Chat", "wache": "Wachposten",
-       "modell": "Modellwechsel", "ruf": "Anruf starten"}
+       "modell": "Modellwechsel", "ruf": "Anruf starten", "listen": "Listen"}
 
 
 def _why(tag):

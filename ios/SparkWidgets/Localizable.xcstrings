@@ -130,6 +130,76 @@
           }
         }
       }
+    },
+    "🛒 %lld auf der Einkaufsliste": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "🛒 %lld on the shopping list"
+          }
+        }
+      }
+    },
+    "🛒 Einkauf · %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "🛒 Shopping · %lld"
+          }
+        }
+      }
+    },
+    "🛒 Einkauf": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "🛒 Shopping"
+          }
+        }
+      }
+    },
+    "Nichts auf der Liste.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing on the list."
+          }
+        }
+      }
+    },
+    "und %lld weitere": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "and %lld more"
+          }
+        }
+      }
+    },
+    "Einkauf": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shopping"
+          }
+        }
+      }
+    },
+    "Was auf der Einkaufsliste steht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What is on the shopping list."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

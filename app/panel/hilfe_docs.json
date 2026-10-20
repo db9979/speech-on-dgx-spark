@@ -3812,6 +3812,38 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Listen teilen (V01.0.865, Stufe 2 des Plans, Dominik 2026-10-20 „3a“)",
+"text": "Listen teilen (V01.0.865, Stufe 2 des Plans, Dominik 2026-10-20 „3a“): Eigener Admin-Schalter unter Funktionen → Listen für Einkauf und Aufgaben, zuerst aus; frei gilt er für jedes Profil, Gäste bekommen nichts. Wem eine Liste gehört, teilt sie auf der Seite Listen mit „Teilen …“ (oder in der iPhone-App) je Profil: Aus, Sehen oder Mitschreiben. Mitschreiben heißt eintragen und abhaken; Löschen, Umbenennen und Teilen bleiben bei der Besitzerin oder dem Besitzer. Listen aus einem Kalenderkonto (CalDAV) lassen sich nicht teilen. Geteilte Listen stehen unter „Mit mir geteilt“ mit „von …“, auch in der App; per Stimme geht „Setz Butter auf Sabines Einkaufsliste“. Wer eine Liste nicht geteilt bekommen hat, erfährt nicht einmal, dass es sie gibt (dieselbe Antwort wie für keine Liste); wer nur sehen darf, bekommt beim Eintragen ein klares Nein. Was andere eintragen, kommt höchstens alle 10 Minuten gebündelt als Hinweis („Anton hat 3 Einträge auf „Einkauf“ gesetzt.“), abschaltbar mit „Hinweis bei neuen Einträgen“ (eigene Einstellung jedes Profils). Geteilte Einträge stammen von anderen Menschen: der Assistent liest sie als Daten von außen (tasks_show außen), nie als Befehl. Schnittstelle: PU"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Listen teilen (V01.0.865, Stufe 2 des Plans, Dominik 2026-10-20 „3a“)",
+"text": "T /api/profile/listen/{id}/share mit {to, level}, Anmeldung, Profilbindung, CSRF, 8 KB, Anfragegrenze listen; eine geteilte Liste heißt dort u_….{liste}. Protokoll: tasks: list share | ok see|add|off und bei fremden Einträgen tasks: add einkauf shared | … mit profiles.log_name, nie mit Namen oder Inhalten; Zustand → Live zählt nur, wie viele Listen geteilt sind. Tests: Teilen in app/tests/test_listen.py."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Listen in Erinnerungen (V01.0.865, Stufe 3 des Plans, Dominik 2026-10-20 „5a“)",
+"text": "Listen in Erinnerungen (V01.0.865, Stufe 3 des Plans, Dominik 2026-10-20 „5a“): Eigener Admin-Schalter unter Funktionen → Listen für Einkauf und Aufgaben, zuerst aus; er wirkt mit dem Kalender-Server für Kalender-Apps (Funktionen → Kalender und Tagesbriefing). Die eigenen Listen eines Profils, die auf dem Spark liegen (Einkauf, Aufgaben, eigene Listen; nicht eine Liste in einem Kalenderkonto, nie die Liste eines anderen Profils, auch keine geteilte), erscheinen als Aufgabenlisten (VTODO) unter /caldav/<profil>/liste-<liste>/ und damit in der Erinnerungen-App des iPhone (oder Thunderbird, DAVx5 mit tasks.org), über denselben CalDAV-Account und dasselbe App-Passwort wie die Spark-Kalender. Beide Richtungen: Eintragen, Abhaken, Zurückholen und Löschen in Erinnerungen ändern die Liste auf dem Spark, die Seite und die Stimme ändern, was Erinnerungen sieht (ctag und etags). Was hereinkommt, ist Daten: genau eine VTODO mit Titel, davon nur Titel (gekürzt) und ob erledigt; sonst 415; ein falsches If-Match 412; höchstens so viele Einträge wie eine Liste fasst. Ein Eintrag aus Erinnerungen trägt die Herkunft „iPhone Erinnerungen“ und behält Objektname und UID der App. Die Tür ist die des Kal"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Listen in Erinnerungen (V01.0.865, Stufe 3 des Plans, Dominik 2026-10-20 „5a“)",
+"text": "ender-Servers: Anmeldung mit App-Passwort, nur der eigene Pfad, Mein Notaus, Anfragegrenze caldav. Protokoll: die Zeilen von tasks: mit „from calendar app“, nie der Eintrag; Zustand → Live zählt beim Kalender die Änderungen aus Erinnerungen. Dazu kommt ein Widget „Einkauf“ für Home- und Sperrbildschirm der iPhone-App: die offenen Einträge der Einkaufsliste, neu geladen, sobald sich in der App eine Liste ändert, sonst etwa alle 30 Minuten (mit dem Schlüssel des iPhone, nur mit freigegebenen Listen). Code: app/panel/listendav.py, ios/SparkWidgets/SparkWidgets.swift; Tests: app/tests/test_listendav.py."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Bus und Bahn (V01.0.102)",
 "text": "Bus und Bahn (V01.0.102): „Wann fährt der nächste Bus?“, „Wie komme ich um 8 nach Karlsruhe?“. Admin-Schalter, zuerst aus, dann für jedes Profil. Fahrplan von transport.rest (Standard https://v6.db.transport.rest, eigene Adresse einstellbar); feste Sätze mit Verspätung, Gleis und Ausfällen. Mit einer Pendelstrecke (Ziel, Uhrzeit, Tage) meldet „Von selbst“ 45 bis 5 Minuten vorher, wenn die Verbindung 5 Minuten oder mehr später fährt oder ausfällt. Fahrplantext zählt als Text von draußen."
 },
@@ -12598,6 +12630,38 @@
 "head": "Voice chat",
 "title": "Page Lists (V01.0.854, plan `listen-teilen/plan.md`, Dominik 2026-10-20 \"1a 2a\")",
 "text": "ing also work while the admin blocked the profile. Log: lines tasks: with fixed words and numbers only (an own list is \"own\" there, never its name); Status → Live shows with the calendar only how many own lists and how many entries were added and ticked off today. Tests: app/tests/test_listen.py."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Share lists (V01.0.865, stage 2 of the plan, Dominik 2026-10-20 \"3a\")",
+"text": "Share lists (V01.0.865, stage 2 of the plan, Dominik 2026-10-20 \"3a\"): its own admin switch under Functions → Lists for shopping and tasks, off at first; released, it holds for every profile, guests get nothing. Whoever owns a list shares it on the page Lists with \"Share …\" (or in the iPhone app) per profile: off, see or add to it. Add to it means adding and ticking off; deleting, renaming and sharing stay with the owner. Lists from a calendar account (CalDAV) cannot be shared. Shared lists stand under \"Shared with me\" with \"from …\", also in the app; by voice \"Put butter on Sabine's shopping list\" works. Whoever a list is not shared with does not even learn it exists (the same answer as for no list); whoever may only see gets a clear no when adding. What others add arrives at most every 10 minutes bundled as a note (\"Anton put 3 entries on \"Shopping\".\"), switched off with \"Note on new entries\" (each profile's own setting). Shared entries come from other people: the assistant reads them as outside data (tasks_show outside), never as a command. Endpoint: PUT /api/profile/listen/{id}/share with {to, level}, login, profile binding, CSRF, 8 KB, rate limit listen; a shared list is u_….{l"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Share lists (V01.0.865, stage 2 of the plan, Dominik 2026-10-20 \"3a\")",
+"text": "ist} there. Log: tasks: list share | ok see|add|off and for others' entries tasks: add einkauf shared | … with profiles.log_name, never names or contents; Status → Live only counts how many lists are shared. Tests: Teilen in app/tests/test_listen.py."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Lists in Reminders (V01.0.865, stage 3 of the plan, Dominik 2026-10-20 \"5a\")",
+"text": "Lists in Reminders (V01.0.865, stage 3 of the plan, Dominik 2026-10-20 \"5a\"): its own admin switch under Functions → Lists for shopping and tasks, off at first; it works with the calendar server for calendar apps (Functions → Calendar and daily briefing). A profile's own lists that live on the Spark (shopping, tasks, own lists; not a list in a calendar account, never another profile's list, also not a shared one) show as task lists (VTODO) under /caldav/<profile>/liste-<list>/ and so in the iPhone's Reminders app (or Thunderbird, DAVx5 with tasks.org), through the same CalDAV account and app password as the Spark calendars. Both ways: putting on, ticking off, bringing back and deleting in Reminders change the list on the Spark, the page and the voice change what Reminders sees (ctag and etags). What comes in is data: exactly one VTODO with a title, of it only the title (cut) and whether it is done; else 415; a wrong If-Match 412; at most as many entries as a list holds. An entry from Reminders shows the source \"iPhone Reminders\" and keeps the app's object name and UID. The door is the calendar server's: login with the app password, only the own path, My emergency stop, rate limit c"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Lists in Reminders (V01.0.865, stage 3 of the plan, Dominik 2026-10-20 \"5a\")",
+"text": "aldav. Log: the tasks: lines with \"from calendar app\", never the entry; Status → Live counts the changes from Reminders with the calendar. On top there is a widget \"Shopping\" for the home and lock screen of the iPhone app: the open entries of the shopping list, reloaded as soon as a list changes in the app, else about every 30 minutes (with the iPhone's key, only with the lists released). Code: app/panel/listendav.py, ios/SparkWidgets/SparkWidgets.swift; tests: app/tests/test_listendav.py."
 },
 {
 "lang": "en",

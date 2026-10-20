@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.865** Share lists (stage 2): share a list per profile to see or add to it (adding and ticking off, deleting stays with the owner), "Shared with me" on the page and on the iPhone, "Put butter on Sabine's shopping list", news from others as one bundled note; lists in the iPhone's Reminders app both ways (stage 3, through the calendar server) and a Shopping widget; one admin switch each, off at first
 - **V01.0.864** Notes to the device in use (admin switch under Functions → Timers and reminders, off): a note goes to the device you are using right now (panel page, Android app, iPhone app, Spark companion on PC or Mac), else at once to the phone app; devices only say "used n seconds ago" or "away", never content; Live shows the count
 - **V01.0.863** Editing music (admin switch, off): under Me → Music change a song as a new version (part anew, extend, genre, remix, lyrics with verses moved by dragging, cut, tempo and key), upload own files with the rights tick, tool musik_bearbeiten; also in the iPhone app
 - **V01.0.862** Flaky tests made robust; fixed along the way: a calendar comparison during a change no longer writes the old appointment back, the form "Add calendar" stays open while you fill it in
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.858** Fix: GitHub run "Tests" green again; the new test of the computer cards allows 1 px rounding (GitHub's fonts) and measures both states in one go, without a race with the page's own poll; the test "a security point does not turn Zustand red" checks on a status of its own
 - **V01.0.857** For you: reads anew at once when a new mail comes (with "New mail at once"), and a brand only in the subject of a genuine, verified mail (say o2 with Netflix) is no longer a phishing suspicion
 - **V01.0.856** Computer cards no longer jump: both computers with the same rows at the same height side by side (also on the phone), „Wer rechnet gerade“ with fixed lines; control centre and iPhone alike
-- **V01.0.855** Fix: the iPhone app builds again (GitHub run "iPhone app"); the new Lists view used a type name the app already had
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

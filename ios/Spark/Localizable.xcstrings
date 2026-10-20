@@ -14250,6 +14250,146 @@
           }
         }
       }
+    },
+    "Meine Listen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "My lists"
+          }
+        }
+      }
+    },
+    "Mit mir geteilt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared with me"
+          }
+        }
+      }
+    },
+    "von %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "from %@"
+          }
+        }
+      }
+    },
+    "Geteilt mit %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared with %lld"
+          }
+        }
+      }
+    },
+    "Von %@ geteilt: du kannst eintragen und abhaken.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared by %@: you can add and tick off."
+          }
+        }
+      }
+    },
+    "Von %@ geteilt: nur zum Ansehen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared by %@: to look at only."
+          }
+        }
+      }
+    },
+    "Teilen …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share …"
+          }
+        }
+      }
+    },
+    "Es gibt keine anderen Profile.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There are no other profiles."
+          }
+        }
+      }
+    },
+    "Aus": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Off"
+          }
+        }
+      }
+    },
+    "Sehen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "See"
+          }
+        }
+      }
+    },
+    "Mitschreiben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to it"
+          }
+        }
+      }
+    },
+    "Mitschreiben heißt eintragen und abhaken. Löschen und Teilen bleiben bei dir.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to it means adding and ticking off. Deleting and sharing stay with you."
+          }
+        }
+      }
+    },
+    "Hinweis bei neuen Einträgen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Note on new entries"
+          }
+        }
+      }
+    },
+    "Höchstens alle 10 Minuten ein Hinweis, wenn andere etwas auf eine geteilte Liste setzen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At most one note every 10 minutes when others put something on a shared list."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

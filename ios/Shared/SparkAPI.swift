@@ -366,6 +366,21 @@ struct SparkAPI {
         return list.prefix(50).compactMap { ListeningRoom($0) }
     }
 
+    /// The open entries of the shopping list for the Einkauf widget (texts with amounts, at most 20; Listen Stufe 3).
+    func shopping() async throws -> [String] {
+        var r = request("api/profile/tasks")
+        r.timeoutInterval = 15
+        let (data, response) = try await URLSession.shared.data(for: r)
+        try Self.check(data, response)
+        let lists = Self.object(data)["lists"] as? [String: Any] ?? [:]
+        let items = (lists["einkauf"] as? [String: Any])?["items"] as? [[String: Any]] ?? []
+        return items.prefix(20).map { d in
+            let text = String((d["text"] as? String ?? "").prefix(60))
+            let qty = d["qty"] as? String ?? ""
+            return qty.isEmpty ? text : text + " " + qty
+        }
+    }
+
     /// Ends one room (its key) or, without a key, all rooms of the profile. Starting is not possible from the app.
     func endRoom(_ key: String? = nil) async throws {
         var body: [String: Any] = ["all": true]

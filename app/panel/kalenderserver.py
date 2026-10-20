@@ -32,6 +32,7 @@ from fastapi.responses import Response
 import calendars
 import features
 import guard
+import listendav
 import notaus
 import profiles
 import sparkkalender
@@ -173,6 +174,7 @@ def _principal(uid, depth):
             cal = sparkkalender.calendar(uid, cid)
             if cal is not None:
                 out.append(sparkkalender.collection(cal, f"{home}{cid}/", title))
+        out += [listendav.collection(uid, part, li, f"{home}{part}/") for part, li in listendav.collections(uid)]
     return out
 
 
@@ -216,8 +218,9 @@ async def caldav(request: Request, rest: str = ""):
             return Response(status_code=403)   # new calendars are made on the Spark (Ich → Kalender)
         return Response(status_code=405)
     cid = parts[1]
-    title = dict(_own(uid)).get(cid)
-    if title is None:
+    lists = cid.startswith(listendav.PART)   # a Spark list as a task list (listendav.py, Listen Stufe 3)
+    title = None if lists else dict(_own(uid)).get(cid)
+    if title is None and not lists:
         return Response(status_code=404)   # not an own Spark calendar of this profile
     if method in ("PROPPATCH", "MKCALENDAR"):
         return Response(status_code=403)   # name and colour are kept on the Spark
@@ -229,6 +232,9 @@ async def caldav(request: Request, rest: str = ""):
         except notaus.NotausAktiv:
             print(f"calendar: caldav not saved, notaus | {_who(uid)}", flush=True)
             return Response(status_code=423)
+    if lists:
+        status, head, out = listendav.serve(uid, cid, method, name, request.headers, body, f"{PREFIX}{uid}/{cid}/")
+        return Response(content=out, status_code=status, headers=head)
     status, head, out = sparkkalender.serve(uid, cid, method, name, request.headers, body, f"{PREFIX}{uid}/{cid}/", title)
     if writes:
         if status < 300:

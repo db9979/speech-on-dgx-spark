@@ -225,6 +225,8 @@
     "note_device": false,
     "calendar": true,
     "calendar_share": false,
+    "tasks_share": false,
+    "tasks_dav": false,
     "calendar_server": false,
     "mail": false,
     "mail_tidy": false,

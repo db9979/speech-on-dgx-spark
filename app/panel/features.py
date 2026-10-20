@@ -259,6 +259,14 @@ FEATURES = (
     F("notedevice", "Mitteilung ans genutzte Gerät", "Notes to the device in use", "day", ("note_device", "reminders"),
       parent="reminders", guide="notedevice"),
     F("tasks", "Listen für Einkauf und Aufgaben", "Lists for shopping and tasks", "day", ("tasks",), me="taskbox", guide="tasks"),
+    # tasks.py (plan listen-teilen Stufe 2, Dominik 2026-10-20 „3a“): share an own list with another profile, see or
+    # put on and tick off; a note when others put something on (preference list_note)
+    F("listshare", "Listen teilen", "Share lists", "day", ("tasks_share", "tasks"), parent="tasks", me="taskbox",
+      guide="listshare"),
+    F("listnote", "Hinweis bei neuen Einträgen", "Note on new entries", "day", ("tasks_share", "tasks"), pref="list_note",
+      parent="listshare", me="taskbox", guide="listshare"),
+    F("listdav", "Listen in Erinnerungen", "Lists in Reminders", "day", ("tasks_dav", "tasks", "calendar_server", "calendar"),
+      parent="tasks", me="taskbox", guide="listdav"),
     F("mystatus", "Mein Zustand", "My status", "day", ("my_status",), me="bgbox", guide="mystatus"),
     F("agent", "Aufträge", "Jobs", "day", ("agent",), me="agentbox", guide="agent"),
     # watches (beobachten.py): admin release only, every profile with agent functions, never guests

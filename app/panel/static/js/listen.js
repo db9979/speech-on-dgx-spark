@@ -4,7 +4,10 @@
 // when and from where, the shop's departments, „Zuletzt erledigt“ with „Zurückholen“. „Einstellungen“ holds where the
 // two fixed lists live and the iPhone shortcut (the box #taskbox, a page of Ich until Listen came). Entries and
 // names are the person's words: only through esc().
-const LST={data:null,sel:'',seq:0,busy:false,err:'',msg:'',form:null,ask:false,allDone:false};
+// Stufe 2 (Listen teilen, plan „3a“): „Teilen“ on an own list gives each other profile Aus, Sehen or Mitschreiben;
+// lists others share come under „Mit mir geteilt“ ("<owner>.<list>"), see-only ones without field and ticks, and
+// deleting stays with the owner. The panel checks every call (tasks.where); the page only leaves out what it may not.
+const LST={data:null,sel:'',seq:0,busy:false,err:'',msg:'',form:null,ask:false,allDone:false,share:false};
 // the menu entry only for a signed-in profile that may use lists (start.js, like Kalender)
 window.lstStart=who=>{const on=!!(who&&who.profile&&who.tasks);document.querySelectorAll('nav button[data-s=listen]').forEach(b=>b.hidden=!on)};
 const lstWhen=s=>{if(!s)return '';const d=new Date(s*1000),n=new Date(),y=new Date(n.getFullYear(),n.getMonth(),n.getDate()-1),
@@ -36,17 +39,20 @@ function lstPaint(w){const d=LST.data;w.classList.toggle('ld-sel',!!LST.sel);
   w.querySelector('.lstwarn').innerHTML=LST.err?`<div class="note warn">${esc(t('Die Listen kamen nicht an: ','The lists did not arrive: ')+LST.err)}</div>`:'';
   const list=w.querySelector('.ld-list');list.classList.toggle('busy',LST.busy&&!d);
   if(!d){list.innerHTML=LST.busy?`<div class="ld-empty mut">${esc(t('Lade die Listen …','Loading the lists …'))}</div>`:'';return}
-  const row=k=>{const l=d.lists[k],n=l.items.length,sub=l.target?t('in ','in ')+l.target.name:l.error?t('nicht erreichbar','not reachable')
-      :n?l.items.slice(0,3).map(x=>x.text).join(', ')+(n>3?' …':''):t('leer','empty');
+  const row=k=>{const l=d.lists[k],n=l.items.length,ppl=Object.keys(l.shares||{}).length,
+      sub=(l.shared?t('von ','from ')+l.shared.owner+' · ':ppl?'👥 '+ppl+' · ':'')+(l.target?t('in ','in ')+l.target.name:l.error?t('nicht erreichbar','not reachable')
+      :n?l.items.slice(0,3).map(x=>x.text).join(', ')+(n>3?' …':''):t('leer','empty'));
     return `<div class="ld-row${k===LST.sel?' on':''}" role="button" tabindex="0" data-l="${esc(k)}"><span class="ld-ico lstico" aria-hidden="true">${esc(l.icon)}</span>`+
       `<span class="ld-mid"><b>${esc(lstName(l))}</b><small>${esc(sub)}</small></span><span class="ld-right"><b class="lstcnt">${n}</b></span></div>`};
-  const own=d.order.filter(k=>d.lists[k].own);
-  list.innerHTML=`<div class="ld-grp"><span>${esc(t('Meine Listen','My lists'))}</span><span>${d.order.length}</span></div>`+
-    d.order.filter(k=>!d.lists[k].own).map(row).join('')+own.map(row).join('')+
+  const own=d.order.filter(k=>d.lists[k].own),fixed=d.order.filter(k=>!d.lists[k].own&&!d.lists[k].shared),
+    theirs=d.order.filter(k=>d.lists[k].shared);
+  list.innerHTML=`<div class="ld-grp"><span>${esc(t('Meine Listen','My lists'))}</span><span>${fixed.length+own.length}</span></div>`+
+    fixed.map(row).join('')+own.map(row).join('')+
     (own.length<d.max_lists?`<div class="ld-more"><button class="b" type="button" data-k="new">${esc(t('+ Neue Liste','+ New list'))}</button></div>`:'')+
-    (LST.form&&LST.form.make?lstFormHtml():'');
+    (LST.form&&LST.form.make?lstFormHtml():'')+
+    (theirs.length?`<div class="ld-grp"><span>${esc(t('Mit mir geteilt','Shared with me'))}</span><span>${theirs.length}</span></div>`+theirs.map(row).join(''):'');
   list.querySelectorAll('[data-l]').forEach(r=>{const go=()=>{LST.sel=r.dataset.l;LST.ask=false;LST.form=null;LST.msg='';LST.allDone=false;lstDraw()};
-    r.onclick=go;r.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}}});
+    r.onclick=()=>{go();LST.share=false};r.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();LST.share=false}}});
   const nb=list.querySelector('[data-k=new]');if(nb)nb.onclick=()=>{LST.form={make:true,name:'',icon:d.icons[0]};lstDraw();const i=list.querySelector('[data-f=name]');if(i)i.focus()};
   if(LST.form&&LST.form.make)lstFormBind(list);
   lstDetail(w)}
@@ -65,10 +71,11 @@ function lstFormBind(box){const f=LST.form,i=box.querySelector('[data-f=name]');
 // the list tapped: add at once, the entries (by department on a shopping list), the ones ticked off lately
 function lstDetail(w){const box=w.querySelector('.lstdet'),l=lstList();box.hidden=!l;if(!l)return;
   const shown=NARROW(),q=box.querySelector('[data-k=q]'),keep=q?q.value:'',focus=q&&document.activeElement===q;
+  const write=!l.shared||l.shared.level==='add',mine=!l.shared;   // Mitschreiben: put on and tick off; deleting: the owner
   const who=x=>`<small>${esc(lstWho(x))}</small>`;
-  const item=x=>`<div class="lstitem"><button type="button" class="lstck" data-tick="${esc(x.id)}" aria-label="${esc(t('Abhaken: ','Tick off: ')+x.text)}"></button>`+
+  const item=x=>`<div class="lstitem">${write?`<button type="button" class="lstck" data-tick="${esc(x.id)}" aria-label="${esc(t('Abhaken: ','Tick off: ')+x.text)}"></button>`:'<span class="lstck" aria-hidden="true"></span>'}`+
     `<span class="lstit"><b>${esc(x.text)}</b>${x.qty?` <span class="lstqty">${esc(x.qty)}</span>`:''}${who(x)}</span>`+
-    `<button type="button" class="ic-ib lstdel" data-del="${esc(x.id)}" title="${esc(t('Löschen','Delete'))}" aria-label="${esc(t('Löschen: ','Delete: ')+x.text)}">✕</button></div>`;
+    (mine?`<button type="button" class="ic-ib lstdel" data-del="${esc(x.id)}" title="${esc(t('Löschen','Delete'))}" aria-label="${esc(t('Löschen: ','Delete: ')+x.text)}">✕</button>`:'')+`</div>`;
   let body='';
   if(l.shop){const groups=new Map();for(const x of l.items){const k=L==='en'?x.dept_en:x.dept;if(!groups.has(k))groups.set(k,[]);groups.get(k).push(x)}
     const order=(LST.data.depts||[]).map(g=>L==='en'?g[1]:g[0]);
@@ -76,35 +83,59 @@ function lstDetail(w){const box=w.querySelector('.lstdet'),l=lstList();box.hidde
   else body=l.items.map(item).join('');
   const done=l.done||[],more=LST.allDone?done:done.slice(0,10);
   box.innerHTML=(shown?`<button type="button" class="b ld-back" data-k="back">‹ ${esc(t('Listen','Lists'))}</button>`:'')+
-    `<div class="lsthead"><span class="ld-ico lstico" aria-hidden="true">${esc(l.icon)}</span><div class="ld-mid"><h3>${esc(lstName(l))}</h3><small class="mut">${esc(lstSub(l))}</small></div></div>`+
+    `<div class="lsthead"><span class="ld-ico lstico" aria-hidden="true">${esc(l.icon)}</span><div class="ld-mid"><h3>${esc(lstName(l))}</h3><small class="mut">${esc(lstSub(l))}</small></div>`+
+    `</div>`+
+    (LST.share&&mine?lstShareHtml(l):'')+
     (LST.form&&!LST.form.make?lstFormHtml():'')+
     (LST.ask?`<div class="ic-danger"><div class="ic-mid"><b>${esc(t('Liste löschen?','Delete the list?'))}</b><span>${esc(t('„','"')+l.name+t('“ und ihre ','" and its ')+(l.items.length+(l.done||[]).length)+t(' Einträge sind dann weg.',' entries are gone then.'))}</span></div><button class="b ic-red" type="button" data-k="dropyes">${esc(t('Löschen','Delete'))}</button><button class="b" type="button" data-k="dropno">${esc(t('Abbrechen','Cancel'))}</button></div>`:'')+
     (l.error?`<div class="note warn">${esc(t('Nicht erreicht: ','Not reached: ')+l.error)}</div>`:'')+
-    `<div class="lstquick"><input data-k="q" maxlength="400" autocomplete="off" enterkeyhint="done" aria-label="${esc(t('Eintrag hinzufügen','Add an entry'))}" placeholder="${esc(t('Eintrag hinzufügen … (mehrere mit Komma, z. B. „2 Milch, Brot“)','Add an entry … (several with commas, e.g. "2 milk, bread")'))}"><button class="b p" type="button" data-k="add">${esc(t('Hinzufügen','Add'))}</button></div>`+
+    (write?`<div class="lstquick"><input data-k="q" maxlength="400" autocomplete="off" enterkeyhint="done" aria-label="${esc(t('Eintrag hinzufügen','Add an entry'))}" placeholder="${esc(t('Eintrag hinzufügen … (mehrere mit Komma, z. B. „2 Milch, Brot“)','Add an entry … (several with commas, e.g. "2 milk, bread")'))}"><button class="b p" type="button" data-k="add">${esc(t('Hinzufügen','Add'))}</button></div>`
+      :`<div class="fh">${esc(t('Diese Liste ist mit dir nur zum Ansehen geteilt.','This list is shared with you to look at only.'))}</div>`)+
     (LST.msg?`<div class="fh err">${esc(LST.msg)}</div>`:'')+
     (body||`<div class="ld-empty mut">${esc(t('Noch nichts auf der Liste. Sag auch „Setz Milch auf die Einkaufsliste“.','Nothing on the list yet. You can also say "Put milk on the shopping list".'))}</div>`)+
     (done.length?`<div class="ld-grp"><span>${esc(t('Zuletzt erledigt','Done lately'))}</span><span>${done.length}</span></div>`+more.map(x=>
       `<div class="lstitem done"><span class="lstck on" aria-hidden="true">✓</span><span class="lstit"><b>${esc(x.text)}</b>${x.qty?` <span class="lstqty">${esc(x.qty)}</span>`:''}<small>${esc([x.by_name?t('eingetragen von ','put on by ')+x.by_name:'',t('abgehakt','ticked off')+(x.done_name?t(' von ',' by ')+x.done_name:'')+', '+lstWhen(x.done)].filter(Boolean).join(' · '))}</small></span>`+
-      `<button type="button" class="b" data-undo="${esc(x.id)}">${esc(t('Zurückholen','Bring back'))}</button></div>`).join('')+
+      (write?`<button type="button" class="b" data-undo="${esc(x.id)}">${esc(t('Zurückholen','Bring back'))}</button>`:'')+`</div>`).join('')+
       (done.length>more.length?`<div class="ld-more"><button class="lnk" type="button" data-k="alldone">${esc(t('Weitere ','Show ')+(done.length-more.length)+t(' zeigen',' more'))}</button></div>`:''):'')+
     `<div class="fh">${esc(l.target?t('Diese Liste liegt in deiner CalDAV-Aufgabenliste; dort steht nicht, wer etwas eingetragen hat.','This list lives in your CalDAV task list; it does not keep who put something on.')
       :t('Erledigte Einträge bleiben 14 Tage hier, dann sind sie weg.','Ticked off entries stay here for 14 days, then they are gone.'))}</div>`;
-  const qi=box.querySelector('[data-k=q]');qi.value=keep;if(focus)qi.focus();
+  const qi=box.querySelector('[data-k=q]');if(qi){qi.value=keep;if(focus)qi.focus()}
   const add=async()=>{const v=qi.value.trim();if(!v)return;qi.value='';const d=await lstSend('/api/profile/tasks/'+encodeURIComponent(LST.sel),'POST',{text:v});
     const again=$('lstview')&&$('lstview').querySelector('[data-k=q]');if(!d&&again)again.value=v;if(again)again.focus()};
-  box.querySelector('[data-k=add]').onclick=add;qi.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();add()}};
+  if(qi){box.querySelector('[data-k=add]').onclick=add;qi.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();add()}}}
   box.querySelectorAll('[data-tick]').forEach(b=>b.onclick=()=>{b.classList.add('on');lstSend('/api/profile/tasks/'+encodeURIComponent(LST.sel)+'/done','POST',{ids:[b.dataset.tick]})});
   box.querySelectorAll('[data-undo]').forEach(b=>b.onclick=()=>lstSend('/api/profile/tasks/'+encodeURIComponent(LST.sel)+'/undo','POST',{ids:[b.dataset.undo]}));
   box.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>lstSend('/api/profile/tasks/'+encodeURIComponent(LST.sel)+'/'+encodeURIComponent(b.dataset.del),'DELETE'));
   const ad=box.querySelector('[data-k=alldone]');if(ad)ad.onclick=()=>{LST.allDone=true;lstDraw()};
   const bk=box.querySelector('[data-k=back]');if(bk)bk.onclick=()=>{LST.sel='';LST.form=null;LST.ask=false;lstDraw()};
-  // an own list: „⋯“ with a new name or symbol and deleting it (asked in the page, never with confirm())
-  if(l.own)box.querySelector('.lsthead').appendChild(icMenu([{label:t('Umbenennen','Rename'),act:()=>{LST.ask=false;LST.form={make:false,name:l.name,icon:l.icon};lstDraw()}},
-    {label:t('Liste löschen','Delete list'),danger:true,act:()=>{LST.form=null;LST.ask=true;lstDraw()}}]));
+  // „⋯“: sharing a list of the profile's own (on the Spark), a new name or symbol and deleting an own one (asked in
+  // the page, never with confirm())
+  const acts=[];
+  if(mine&&LST.data.sharing&&!l.target)acts.push({label:t('Teilen …','Share …'),act:()=>{LST.ask=false;LST.form=null;LST.share=!LST.share;lstDraw()}});
+  if(l.own)acts.push({label:t('Umbenennen','Rename'),act:()=>{LST.ask=false;LST.share=false;LST.form={make:false,name:l.name,icon:l.icon};lstDraw()}},
+    {label:t('Liste löschen','Delete list'),danger:true,act:()=>{LST.form=null;LST.share=false;LST.ask=true;lstDraw()}});
+  if(acts.length)box.querySelector('.lsthead').appendChild(icMenu(acts));
+  if(LST.share&&mine)lstShareBind(box,l);
   const dy=box.querySelector('[data-k=dropyes]');if(dy)dy.onclick=()=>{LST.ask=false;lstSend('/api/profile/listen/'+encodeURIComponent(LST.sel),'DELETE')};
   const dn=box.querySelector('[data-k=dropno]');if(dn)dn.onclick=()=>{LST.ask=false;lstDraw()};
   if(LST.form&&!LST.form.make)lstFormBind(box)}
 // the line under the name: how many are open, the newest entry and who put it on
 function lstSub(l){const n=l.items.length,last=[...l.items].sort((a,b)=>(b.t||0)-(a.t||0))[0];
-  return [n===1?t('1 offen','1 open'):n+t(' offen',' open'),last&&last.by_name?last.by_name+t(' hat „',' put "')+last.text+t('“ eingetragen, ','" on, ')+lstWhen(last.t):'',
+  return [l.shared?t('von ','from ')+l.shared.owner+', '+(l.shared.level==='add'?t('Mitschreiben','writing along'):t('nur sehen','see only')):'',
+    n===1?t('1 offen','1 open'):n+t(' offen',' open'),last&&last.by_name?last.by_name+t(' hat „',' put "')+last.text+t('“ eingetragen, ','" on, ')+lstWhen(last.t):'',
     l.sent?l.sent+t(' ans iPhone übergeben',' handed to the iPhone'):''].filter(Boolean).join(' · ')}
+// „Teilen“: each other profile Aus, Sehen or Mitschreiben (tasks.set_share); the own wish for a note when others put
+// something on (preference list_note, features „listnote“)
+function lstShareHtml(l){const d=LST.data,sh=l.shares||{},opt=(v,lbl,cur)=>`<option value="${v}"${v===cur?' selected':''}>${esc(lbl)}</option>`;
+  return `<div class="lstform lstshare"><b>${esc(t('Teilen mit','Share with'))}</b>`+
+    ((d.people||[]).map(p=>`<div class="setrow"><div class="lbl"><b>${esc(p.name)}</b></div><select data-share="${esc(p.id)}" aria-label="${esc(t('Freigabe für ','Sharing with ')+p.name)}">`+
+      opt('',t('Aus','Off'),sh[p.id]||'')+opt('see',t('Sehen','See'),sh[p.id]||'')+opt('add',t('Mitschreiben','Write along'),sh[p.id]||'')+`</select></div>`).join('')
+      ||`<div class="fh">${esc(t('Es gibt noch kein anderes Profil.','There is no other profile yet.'))}</div>`)+
+    `<div class="fh">${esc(t('Mitschreiben heißt eintragen und abhaken; löschen und teilen kannst nur du.','Writing along means putting on and ticking off; only you delete and share.'))}</div>`+
+    `<label class="lstnote"><input type="checkbox" data-k="note"${d.note?' checked':''}> ${esc(t('Hinweis, wenn andere etwas eintragen','A note when others put something on'))}</label>`+
+    `<div class="row"><button class="b" type="button" data-k="shareclose">${esc(t('Fertig','Done'))}</button></div></div>`}
+function lstShareBind(box,l){
+  box.querySelectorAll('[data-share]').forEach(s=>s.onchange=()=>lstSend('/api/profile/listen/'+encodeURIComponent(LST.sel)+'/share','PUT',{to:s.dataset.share,level:s.value}));
+  const n=box.querySelector('[data-k=note]');if(n)n.onchange=async()=>{const {r}=await apiTry('/api/profile/settings',xjson('PUT',{'list_note':n.checked}));
+    if(r.ok)LST.data.note=n.checked;else{n.checked=!n.checked;LST.msg=t('Nicht gespeichert.','Not saved.');lstDraw()}};
+  const c=box.querySelector('[data-k=shareclose]');if(c)c.onclick=()=>{LST.share=false;lstDraw()}}

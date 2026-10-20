@@ -19,9 +19,16 @@ Each of the two fixed lists can also live elsewhere:
 Adding happens at once; by voice ticking off and deleting only after the person's "Ja" in the next message (the
 panel does it, not the model); with the own finger on the page at once. After outside text nothing is added.
 
+Sharing (Dominik 2026-10-20 „3a“, plan Stufe 2, function Listen teilen, off): the owner shares a list on the Spark
+with another profile, „Sehen“ (see) or „Mitschreiben“ (add: put on, tick off, take back); deleting, renaming and
+sharing stay with the owner. The other profile reaches it as "<owner id>.<list id>" (SHARED), the panel checks owner
+and level at every call, taking it back holds at once. New entries of others reach the other people of the list as
+one note per NOTE_EVERY (preference list_note, function listnote). Entries of others are outside text for the model.
+
     USERS_DIR/<uid>/tasks.json   {"items": [{id, list, text, qty?, t, by, src, done?, done_by?, sent?}],
                                   "lists": [{id, name, icon}],
-                                  "targets": {"einkauf": {"acc", "url", "name"} | absent}}
+                                  "targets": {"einkauf": {"acc", "url", "name"} | absent},
+                                  "shares": {list id: {profile id: "see" | "add"}}}
 """
 import datetime
 import difflib
@@ -52,6 +59,9 @@ ICONS = ("📝", "🛒", "🔨", "🧳", "🎁", "🏠", "🌱", "🍳", "💊",
 # lists that are sorted by departments: the shopping list and own lists with the cart
 SHOP_ICON = "🛒"
 MAX_LISTS = 20
+LEVELS = ("see", "add")     # Sehen, Mitschreiben
+SHARED = re.compile(r"(u_[0-9a-f]{12})\.(einkauf|aufgaben|l[0-9a-f]{8})")
+NOTE_EVERY = 600            # one note per list and person at most this often (new entries of others)
 NAME_MAX = 40
 MAX_ITEMS = 400
 KEEP_SENT = 14 * 86400      # entries the iPhone took stay hidden this long (so a second fetch sends nothing twice)
@@ -129,7 +139,13 @@ def _load(uid):
         x.setdefault("src", "panel")
     targets = {k: v for k, v in (d.get("targets") or {}).items()
                if k in LISTS and isinstance(v, dict) and v.get("url") and v.get("acc")}
-    return {"items": items, "lists": lists, "targets": targets}
+    shares = {}
+    for k, v in (d.get("shares") or {}).items():
+        if k in ids and k not in targets and isinstance(v, dict):
+            v = {u: lv for u, lv in v.items() if lv in LEVELS and isinstance(u, str) and u != uid}
+            if v:
+                shares[k] = v
+    return {"items": items, "lists": lists, "targets": targets, "shares": shares}
 
 
 def _save(uid, d):
@@ -138,7 +154,8 @@ def _save(uid, d):
         done = sorted((x for x in items if x.get("done")), key=lambda x: x["done"])
         drop = {id(x) for x in done[:len(items) - MAX_ITEMS]}
         items = [x for x in items if id(x) not in drop][-MAX_ITEMS:]
-    profiles._write(_file(uid), {"items": items, "lists": d["lists"], "targets": d["targets"]})
+    profiles._write(_file(uid), {"items": items, "lists": d["lists"], "targets": d["targets"],
+                                 "shares": d.get("shares") or {}})
 
 
 def clean(text):
@@ -155,6 +172,92 @@ def lists_of(uid, d=None):
     d = d or _load(uid)
     return [{"id": k, "name": de, "name_en": en, "icon": ic, "own": False} for k, (de, en, ic) in LISTS.items()] + \
            [{"id": x["id"], "name": x["name"], "name_en": x["name"], "icon": x["icon"], "own": True} for x in d["lists"]]
+
+
+# ---------------------------------------------------------------- sharing with other profiles (Stufe 2)
+def shared_to(uid):
+    """[(owner id, owner name, list {"id", "name", "name_en", "icon"}, level)] of the lists others share with uid; only
+    while the function is allowed for both."""
+    if not features.allowed("listshare", uid):
+        return []
+    out = []
+    for p in profiles.names():
+        if p["id"] == uid or not os.path.exists(_file(p["id"])):
+            continue
+        d = _load(p["id"])
+        for li in lists_of(p["id"], d):
+            lvl = d["shares"].get(li["id"], {}).get(uid)
+            if lvl in LEVELS and features.allowed("listshare", p["id"]):
+                out.append((p["id"], p["name"], li, lvl))
+    return out
+
+
+def shared_by(owner, d=None):
+    """[(list id, list {"id", "name", "name_en", "icon", "own"}, {profile id: level})] of the owner's lists it shares
+    with profiles that still exist."""
+    d = d or _load(owner)
+    have = set(profiles.user_ids())
+    out = []
+    for li in lists_of(owner, d):
+        to = {u: v for u, v in d["shares"].get(li["id"], {}).items() if u in have}
+        if to:
+            out.append((li["id"], li, to))
+    return out
+
+
+def where(uid, lst, need="see"):
+    """(owner, list id) a list address of uid means: an own list, or "<owner>.<list>" another profile shares with uid
+    at a level that allows need ("see", "add"; "own" only the owner's lists). ValueError when it is none of those."""
+    m = SHARED.fullmatch(str(lst or ""))
+    if not m:
+        if known(uid, lst):
+            return uid, lst
+        raise ValueError("this list does not exist (any more)")
+    owner, lid = m.groups()
+    if need == "own" or owner == uid \
+            or not (features.allowed("listshare", uid) and features.allowed("listshare", owner)) or not known(owner, lid):
+        raise ValueError("this list does not exist (any more)")
+    d = _load(owner)
+    lvl = d["shares"].get(lid, {}).get(uid)
+    if lvl not in LEVELS:   # not shared with uid: the same answer as for no list at all
+        raise ValueError("this list does not exist (any more)")
+    if need == "add" and lvl != "add":
+        raise PermissionError("this list is shared with you to look only")
+    return owner, lid
+
+
+def people_of(owner, lid, d=None):
+    """The profiles a list belongs to: the owner and everyone it is shared with (and who may still see it)."""
+    d = d or _load(owner)
+    have = set(profiles.user_ids())
+    if not features.allowed("listshare", owner):
+        return [owner]
+    return [owner] + [u for u in d["shares"].get(lid, {}) if u in have and features.allowed("listshare", u)]
+
+
+def set_share(uid, lid, to, level):
+    """Shares the own list lid with the profile to ("see", "add") or takes it back (""). ValueError for a list that
+    is not the owner's own on the Spark or a profile that is no other one."""
+    try:
+        if level not in LEVELS + ("",):
+            raise ValueError("level must be see, add or empty")
+        if to == uid or to not in profiles.user_ids():
+            raise ValueError("no such other profile")
+        with _lock:
+            d = _load(uid)
+            if not known(uid, lid):
+                raise ValueError("this list does not exist (any more)")
+            if lid in d["targets"]:
+                raise ValueError("a list in a CalDAV task list cannot be shared")
+            sh = {k: v for k, v in d["shares"].get(lid, {}).items() if k != to}
+            if level:
+                sh[to] = level
+            d["shares"] = {k: v for k, v in dict(d["shares"], **{lid: sh}).items() if v}
+            _save(uid, d)
+    except ValueError:
+        _list_log("share", uid, "refused")
+        raise
+    _list_log("share", uid, "ok " + (level or "off"))
 
 
 def _norm(s):
@@ -425,25 +528,28 @@ def _kind(lst):
     return lst if lst in LISTS else "own"
 
 
-def _log(what, lst, uid, result):
-    """One journal line per change of a list, said or not: fixed words and numbers, never the entries."""
-    print(f"tasks: {what} {_kind(lst)} | {result} | {profiles.log_name(profiles.by_id(uid))}", flush=True)
+def _log(what, lst, uid, result, by=None):
+    """One journal line per change of a list, said or not: fixed words and numbers, never the entries. by: the
+    profile that changed a list another one shares with it (the line says „shared“ and names it, not the owner)."""
+    other = by and by != uid
+    print(f"tasks: {what} {_kind(lst)}{' shared' if other else ''} | {result} | "
+          f"{profiles.log_name(profiles.by_id(by if other else uid))}", flush=True)
 
 
 _count = DayCounter()   # per day: "add", "done", "undo", "delete" (entries, never which)
 
 
-async def _logged(what, lst, uid, run):
+async def _logged(what, lst, uid, run, by=None):
     try:
         out = await run
     except notaus.NotausAktiv:
-        _log(what, lst, uid, "refused notaus")
+        _log(what, lst, uid, "refused notaus", by)
         raise
     except Exception as e:
-        _log(what, lst, uid, f"failed ({type(e).__name__})")
+        _log(what, lst, uid, f"failed ({type(e).__name__})", by)
         raise
     n = len(out) if isinstance(out, list) else out
-    _log(what, lst, uid, f"{n} entries")
+    _log(what, lst, uid, f"{n} entries", by)
     if n:
         _count.bump(what, n)
     return out
@@ -452,13 +558,75 @@ async def _logged(what, lst, uid, run):
 async def add(uid, lst, texts, by=None, src="panel"):
     """Adds the entries (_add) with a journal line for every outcome. by: the profile that puts them on (the owner
     when left out), src: where they came from (SOURCES)."""
-    return await _logged("add", lst, uid, _add(uid, lst, texts, by, src))
+    out = await _logged("add", lst, uid, _add(uid, lst, texts, by, src), by)
+    if out:
+        _tell(uid, lst, by or uid, len(out))
+    return out
 
 
 async def change(uid, lst, picked, action, by=None):
     """Ticks off, takes back or deletes (_change) with a journal line for every outcome."""
     what = {"delete": "delete", "undo": "undo"}.get(action, "done")
-    return await _logged(what, lst, uid, _change(uid, lst, picked, action, by))
+    return await _logged(what, lst, uid, _change(uid, lst, picked, action, by), by)
+
+
+# ---------------------------------------------------------------- a note when others put something on (Stufe 2)
+_notes = {}   # (to, owner, list) -> {"last": time sent, "n": entries waiting, "by": [names], "wait": a send is due}
+
+
+def _tell(owner, lst, by, n, now=None):
+    """New entries on a shared list: one note to every other person of the list who wants it (preference list_note),
+    at most one per NOTE_EVERY; what comes in between waits and goes as one („Sabine hat 3 Einträge …“)."""
+    people = people_of(owner, lst)
+    if len(people) < 2:
+        return
+    import asyncio
+    now = time.time() if now is None else now
+    name = (profiles.by_id(by) or {}).get("name", "")
+    for to in people:
+        if to == by or not features.allowed("listnote", to):
+            continue
+        x = _notes.setdefault((to, owner, lst), {"last": 0, "n": 0, "by": [], "wait": False})
+        x["n"] += n
+        if name and name not in x["by"]:
+            x["by"].append(name)
+        if x["wait"]:
+            continue
+        x["wait"] = True
+        later = max(0.0, x["last"] + NOTE_EVERY - now)
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            continue
+        loop.call_later(later, lambda k=(to, owner, lst): loop.create_task(_flush(k)))
+
+
+def note_text(to, owner, lst, x):
+    """(title, body) of a note: who, how many and which list, never the entries themselves."""
+    lname = name_of(owner, lst)
+    whose = "" if to == owner else f" von {(profiles.by_id(owner) or {}).get('name', '')}"
+    who = " und ".join(x["by"][:3]) or "Jemand"
+    n = x["n"]
+    return "📝 Listen", f"{who} {'hat' if len(x['by']) < 2 else 'haben'} {n} Eintr{'ag' if n == 1 else 'äge'} auf „{lname}“{whose} gesetzt."
+
+
+async def _flush(k, now=None):
+    x = _notes.get(k)
+    if not x or not x["n"]:
+        if x:
+            x["wait"] = False
+        return 0
+    to, owner, lst = k
+    title, body = note_text(to, owner, lst, x)
+    x.update(last=time.time() if now is None else now, n=0, by=[], wait=False)
+    if not features.allowed("listnote", to):
+        return 0
+    import push
+    try:
+        return await push.send(to, title, body, tag="listen", why="Listen")
+    except Exception as e:
+        print(f"tasks: note failed ({type(e).__name__}) | {profiles.log_name(profiles.by_id(to))}", flush=True)
+        return 0
 
 
 def _list_log(what, uid, result):
@@ -557,9 +725,10 @@ def inbox(uid, lst, take):
 def for_live():
     """Live (Kalender): profiles with own lists, how many own lists, entries added and ticked off today; numbers only."""
     c = _count.counts()
-    own = [len(_load(uid)["lists"]) for uid in profiles.user_ids() if os.path.exists(_file(uid))]
+    ds = [_load(uid) for uid in profiles.user_ids() if os.path.exists(_file(uid))]
+    own = [len(d["lists"]) for d in ds]
     return {"on": admin_on(), "profiles": sum(1 for n in own if n), "lists": sum(own), "added": c.get("add", 0),
-            "done": c.get("done", 0)}
+            "done": c.get("done", 0), "shares": sum(len(v) for d in ds for v in d["shares"].values())}
 
 
 def card(uid):
@@ -575,6 +744,17 @@ def resolve(uid, name):
     """The list a name from the model or a request means, or None for a name that fits no list of the profile
     (then the answer names the lists there are, instead of putting it on the shopping list)."""
     n = str(name or "").strip().lower()
+    if SHARED.fullmatch(n):
+        return n
+    for owner, oname, li, lvl in shared_to(uid) if n else ():   # „Sabines Einkaufsliste“, „Einkauf von Sabine“
+        o = oname.lower()
+        if not re.search(r"(?<!\w)" + re.escape(o) + r"(s|')?(?!\w)", n):
+            continue
+        rest = re.sub(r"(?<!\w)(von |of )?" + re.escape(o) + r"(s|')?(?!\w)", " ", n)
+        fits = _norm(rest) == _norm(li["name"]) or (li["id"] == "einkauf" and re.search(r"einkauf|shop|kauf", rest)) \
+            or (li["id"] == "aufgaben" and re.search(r"aufgab|todo|to-do|erledig|task", rest))
+        if fits:
+            return f"{owner}.{li['id']}"
     if not n or n in LISTS:
         return n or "einkauf"
     hit = which(n, uid)
@@ -612,7 +792,8 @@ async def answer(ctx, latest):
     drop_pending(who["id"])
     if calendars.confirms(latest):
         try:
-            n = await change(who["id"], p["list"], p["items"], p["action"])
+            owner, lid = where(who["id"], p["list"], "own" if p["action"] == "delete" else "add")
+            n = await change(owner, lid, p["items"], p["action"], by=who["id"])
             note = (f"Erledigt: {describe(p)} ({n} Eintrag{'' if n == 1 else 'e'}, vom Speicherort bestätigt)." if n
                     else "Nichts geändert: die Einträge stehen nicht mehr auf der Liste.")
         except Exception as e:
@@ -651,13 +832,14 @@ def offer(ctx):
     if not who or not ctx.get("own") or not features.allowed("tasks", who["id"]):
         return None  # a voice recognized at someone else's device reads no lists either
     tools = TOOLS
-    outside = {"tasks_show"} if _load(who["id"])["targets"] else set()   # shared CalDAV lists hold others' words
+    # CalDAV lists and lists other profiles share hold others' words
+    outside = {"tasks_show"} if _load(who["id"])["targets"] or shared_to(who["id"]) else set()
     return {"tools": tools, "hint": HINT, "outside": outside, "changes": {"tasks_add", "tasks_change"},
             "filler": {"tasks_show": ("Ich schaue auf die Liste.", "Let me check the list.")}}
 
 
 def _names(uid):
-    return ", ".join(x["name"] for x in lists_of(uid))
+    return ", ".join([x["name"] for x in lists_of(uid)] + [f"{li['name']} von {o}" for _, o, li, _ in shared_to(uid)])
 
 
 async def tool(name, args, ctx):
@@ -666,22 +848,33 @@ async def tool(name, args, ctx):
     if lst is None:
         return (f"Nicht geändert: eine Liste „{clean_name(args.get('list'))}“ gibt es nicht. Die Listen des Nutzers: "
                 f"{_names(uid)}. Neue Listen legt er auf der Seite Listen an.")
-    label = SAID.get(lst) or name_of(uid, lst)
+    need = {"tasks_show": "see", "tasks_add": "add"}.get(name, "own" if args.get("action") == "delete" else "add")
+    try:
+        owner, lid = where(uid, lst, need)
+    except PermissionError:
+        return "Nicht geändert: diese Liste ist mit dem Nutzer nur zum Ansehen geteilt."
+    except ValueError:
+        if need == "own" and SHARED.fullmatch(str(lst)):
+            return "Nicht geändert: Löschen darf auf einer geteilten Liste nur, wem sie gehört. Abhaken geht."
+        return f"Nicht geändert: die Liste gibt es nicht (mehr). Die Listen des Nutzers: {_names(uid)}."
+    label = SAID.get(lid) or name_of(owner, lid)
+    if owner != uid:
+        label += f" von {(profiles.by_id(owner) or {}).get('name', '')}"
     wanted = args.get("items")
     wanted = [wanted] if isinstance(wanted, str) else wanted if isinstance(wanted, list) else []
     try:
         if name == "tasks_show":
-            have = await items(uid, lst)
-            more = sent_count(uid, lst)
+            have = await items(owner, lid)
+            more = sent_count(owner, lid)
             text = (f"Auf der Liste {label} steht: " + ", ".join(show(x) for x in have) + "." if have
                     else f"Die Liste {label} ist leer.")
             return text + (f" {more} weitere Einträge hat das iPhone schon in die Erinnerungen übernommen." if more else "")
         if name == "tasks_add":
-            done = await add(uid, lst, [str(x) for x in wanted], src=CLIENT_SRC.get(ctx.get("client"), "assistent"))
+            done = await add(owner, lid, [str(x) for x in wanted], by=uid, src=CLIENT_SRC.get(ctx.get("client"), "assistent"))
             return f"Auf die Liste {label} gesetzt: {', '.join(done)}." if done else "Nichts hinzugefügt: kein Eintrag genannt."
         if name == "tasks_change":
             action = "delete" if args.get("action") == "delete" else "done"
-            picked = match(await items(uid, lst), [str(x) for x in wanted])
+            picked = match(await items(owner, lid), [str(x) for x in wanted])
             if not picked:
                 return f"Nicht gefunden auf der Liste {label}: {', '.join(clean(x) for x in wanted) or 'nichts genannt'}."
             p = {"list": lst, "name": label, "action": action, "items": [{k: x[k] for k in ("id", "text") if k in x}
@@ -746,32 +939,52 @@ def _entry(x, names):
     return out
 
 
+async def _rows(owner, k, d, names, may):
+    """The entries of one list for the page: open ones (with the department on a shopping list) and ticked off ones."""
+    tgt = d["targets"].get(k)
+    try:
+        have, err = (await items(owner, k)) if may else [], ""
+    except (httpx.HTTPError, ValueError) as e:
+        have, err = [], str(e)[:200]
+    sorted_ = shop(owner, k, d)
+    rows = []
+    for x in have:
+        e = _entry(x, names)
+        if sorted_:
+            e["dept"], e["dept_en"] = department(x["text"])
+        rows.append(e)
+    return dict(items=rows, done=[_entry(x, names) for x in done_items(owner, k)] if not tgt else [],
+                sent=sent_count(owner, k), error=err, shop=sorted_,
+                target={"acc": tgt["acc"], "url": tgt["url"], "name": tgt.get("name", "")} if tgt else None)
+
+
 @router.get("/api/profile/tasks")
 async def get_lists(prof=Depends(_on)):
+    """The profile's lists and, with Listen teilen, the lists others share with it ("<owner>.<list>", "shared":
+    whose and the level) and with whom its own are shared (names only)."""
     uid = prof["id"]
     d = _load(uid)
     may = features.allowed("tasks", uid)
-    out, names = {}, {}
+    share = features.allowed("listshare", uid)
+    out, names, order = {}, {}, [x["id"] for x in lists_of(uid, d)]
+    shares = {k: to for k, _, to in shared_by(uid, d)} if share else {}
     for li in lists_of(uid, d):
         k = li["id"]
-        tgt = d["targets"].get(k)
-        try:
-            have, err = (await items(uid, k)) if may else [], ""
-        except (httpx.HTTPError, ValueError) as e:
-            have, err = [], str(e)[:200]
-        sorted_ = shop(uid, k, d)
-        rows = []
-        for x in have:
-            e = _entry(x, names)
-            if sorted_:
-                e["dept"], e["dept_en"] = department(x["text"])
-            rows.append(e)
-        out[k] = dict(li, items=rows, done=[_entry(x, names) for x in done_items(uid, k)] if not tgt else [],
-                      sent=sent_count(uid, k), error=err, shop=sorted_,
-                      target={"acc": tgt["acc"], "url": tgt["url"], "name": tgt.get("name", "")} if tgt else None)
-    return {"lists": out, "order": [x["id"] for x in lists_of(uid, d)], "icons": list(ICONS),
-            "depts": [[de, en] for de, en, _ in DEPARTMENTS] + [list(OTHER_DEPT)],
-            "sources": {k: list(v) for k, v in SOURCES.items()}, "max_lists": MAX_LISTS}
+        out[k] = dict(li, **await _rows(uid, k, d, names, may))
+        if share:
+            out[k]["shares"] = shares.get(k, {})
+    for owner, oname, li, lvl in (shared_to(uid) if may else []):
+        k = f"{owner}.{li['id']}"
+        od = _load(owner)
+        out[k] = dict(li, own=False, shared={"owner": oname, "level": lvl}, **await _rows(owner, li["id"], od, names, may))
+        order.append(k)
+    res = {"lists": out, "order": order, "icons": list(ICONS),
+           "depts": [[de, en] for de, en, _ in DEPARTMENTS] + [list(OTHER_DEPT)],
+           "sources": {k: list(v) for k, v in SOURCES.items()}, "max_lists": MAX_LISTS, "sharing": share}
+    if share:
+        res["people"] = [{"id": p["id"], "name": p["name"]} for p in profiles.names() if p["id"] != uid]
+        res["note"] = features.pref_on("listnote", uid)
+    return res
 
 
 @router.get("/api/profile/tasks/collections")
@@ -809,9 +1022,14 @@ def _app_ios(request, uid):
         raise HTTPException(403, "Apple Reminders from the app are off (Ich -> iPhone-App)")
 
 
-def _known(uid, lst):
-    if not known(uid, lst):
-        raise HTTPException(404, "this list does not exist (any more)")
+def _where(uid, lst, need="see"):
+    """(owner, list id) of an address the profile may use as need asks (where); 404 for none, 403 for see only."""
+    try:
+        return where(uid, lst, need)
+    except PermissionError as e:
+        raise HTTPException(403, str(e))
+    except ValueError as e:
+        raise HTTPException(404, str(e))
 
 
 @router.post("/api/profile/listen")
@@ -844,10 +1062,23 @@ async def delete_list(lid: str, prof=Depends(_on)):
     return await get_lists(prof)
 
 
+@router.put("/api/profile/listen/{lid}/share")
+async def share_list(lid: str, request: Request, prof=Depends(_on)):
+    """Listen teilen: {"to": profile id, "level": "see" | "add" | ""} for one of the profile's own lists."""
+    if not features.allowed("listshare", prof["id"]):
+        raise HTTPException(403, "sharing lists is turned off (Funktionen → Listen für Einkauf und Aufgaben)")
+    body = await core.json_body(request, BODY)
+    try:
+        set_share(prof["id"], lid, str(body.get("to", ""))[:40], str(body.get("level", ""))[:8])
+    except ValueError as e:
+        raise HTTPException(404 if "exist" in str(e) else 400, str(e))
+    return await get_lists(prof)
+
+
 @router.post("/api/profile/tasks/{lst}")
 async def add_items(lst: str, request: Request, prof=Depends(_on)):
     """The page and the iPhone shortcut (APP_PATHS: the app's key only with the profile's app_ios switch)."""
-    _known(prof["id"], lst)
+    _where(prof["id"], lst, "add")
     _app_ios(request, prof["id"])
     return await _add_text(lst, request, prof)
 
@@ -855,14 +1086,15 @@ async def add_items(lst: str, request: Request, prof=Depends(_on)):
 @router.post("/api/profile/tasks/{lst}/add")
 async def add_items_app(lst: str, request: Request, prof=Depends(_on)):
     """The iPhone app's Meine Sachen → Listen (iphone.THINGS "tasks"): opens with the admin's release of the lists."""
-    _known(prof["id"], lst)
+    _where(prof["id"], lst, "add")
     return await _add_text(lst, request, prof)
 
 
 async def _add_text(lst, request, prof):
+    owner, lid = _where(prof["id"], lst, "add")
     text = str((await core.json_body(request, BODY, lenient=True)).get("text", ""))
     try:
-        await add(prof["id"], lst, [x for x in re.split(r"[,\n]", text)], src=_src(request))
+        await add(owner, lid, [x for x in re.split(r"[,\n]", text)], by=prof["id"], src=_src(request))
     except (httpx.HTTPError, ValueError) as e:
         raise HTTPException(502, str(e)[:200])
     return await get_lists(prof)
@@ -876,11 +1108,11 @@ async def _ids(request):
 @router.post("/api/profile/tasks/{lst}/done")
 async def done_items_route(lst: str, request: Request, prof=Depends(_on)):
     """From the page: the person ticks off with their own finger, no extra question."""
-    _known(prof["id"], lst)
+    owner, lid = _where(prof["id"], lst, "add")
     ids = await _ids(request)
     try:
-        have = await items(prof["id"], lst)
-        await change(prof["id"], lst, [x for x in have if x["id"] in ids], "done")
+        have = await items(owner, lid)
+        await change(owner, lid, [x for x in have if x["id"] in ids], "done", by=prof["id"])
     except (httpx.HTTPError, ValueError) as e:
         raise HTTPException(502, str(e)[:200])
     return await get_lists(prof)
@@ -889,16 +1121,16 @@ async def done_items_route(lst: str, request: Request, prof=Depends(_on)):
 @router.post("/api/profile/tasks/{lst}/undo")
 async def undo_items(lst: str, request: Request, prof=Depends(_on)):
     """„Zurückholen“: a ticked off entry back on the list (only lists on the Spark keep them)."""
-    _known(prof["id"], lst)
+    owner, lid = _where(prof["id"], lst, "add")
     ids = await _ids(request)
-    await change(prof["id"], lst, [{"id": x} for x in ids], "undo")
+    await change(owner, lid, [{"id": x} for x in ids], "undo", by=prof["id"])
     return await get_lists(prof)
 
 
 @router.delete("/api/profile/tasks/{lst}/{item}")
 async def delete_item(lst: str, item: str, prof=Depends(_on)):
-    """Deletes one entry, open or ticked off (own data: also while the admin blocked the profile)."""
-    _known(prof["id"], lst)
+    """Deletes one entry, open or ticked off (own data: also while the admin blocked the profile); only the owner."""
+    _where(prof["id"], lst, "own")
     try:
         have = await items(prof["id"], lst) + done_items(prof["id"], lst)
         await change(prof["id"], lst, [x for x in have if x["id"] == item], "delete")

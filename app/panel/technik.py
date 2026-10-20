@@ -155,6 +155,7 @@ MODULE = {
     "mailstil": ("dienste", "Mailstil: lernt aus gesendeten Mails, wie das Profil schreibt, für Mail-Entwürfe"),
     "parcels": ("dienste", "Pakete aus Versand-Mails"),
     "calendars": ("dienste", "Kalender und Tagesbriefing, einzelne Kalender mit anderen Profilen geteilt"),
+    "listendav": ("dienste", "Listen in Erinnerungen: die Spark-Listen eines Profils als Aufgabenlisten (VTODO) des Kalender-Servers"),
     "kalenderserver": ("dienste", "Kalender-Server: die Spark-Kalender eines Profils für Kalender-Apps (CalDAV unter /caldav/, App-Passwort)"),
     "sparkkalender": ("dienste", "Spark-Kalender ohne Konto: Termine nur auf dem Spark, verschlüsselt im Profil, beantwortet CalDAV im Panel selbst"),
     "kalenderspiegel": ("dienste", "Spark-Kalender: verschlüsselte Kopie jedes CalDAV-Kalenders, holt nur Änderungen, Änderungen der Seite sofort"),

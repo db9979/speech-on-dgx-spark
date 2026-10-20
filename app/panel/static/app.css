@@ -1924,5 +1924,8 @@ textarea{resize:none}textarea[data-fest]{resize:vertical}textarea.feldplatz{padd
 .lstitem.done .lstit b{text-decoration:line-through;color:var(--mut)}
 .lstdel{opacity:.55}.lstitem:hover .lstdel,.lstdel:focus-visible{opacity:1}
 .lstform{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:8px 0}.lstform input{width:100%}
+.lstshare .setrow{padding:6px 0}
+.lstshare select{min-width:9em}
+.lstnote{display:flex;gap:8px;align-items:center;margin:8px 0}.lstform .lstnote input{width:auto}
 .lsticons{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.lsticons .ld-chip{font-size:16px;padding:2px 8px}
 @media (max-width:760px){.lstck{width:28px;height:28px}.lstitem{padding:10px 2px}.lstdel{opacity:1}}

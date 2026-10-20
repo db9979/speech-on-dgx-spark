@@ -270,6 +270,7 @@ Home Assistant, mail, calendar, tasks, weather, reMarkable, MCP and what the Spa
 | `app/panel/ichweiss.py` | Was ich über dich weiß: one page under Ich that shows what the Spark knows about the person and lets it be corrected: Interessen proposed with their evidence … |
 | `app/panel/kalenderserver.py` | Spark-Kalender, Stufe 4: the Spark as a CalDAV server, so the iPhone's own calendar app (or Thunderbird, DAVx5 on Android) shows and changes the profile's Sp … |
 | `app/panel/kalenderspiegel.py` | Spark-Kalender, Stufe 1: a copy of every CalDAV calendar on the Spark itself. |
+| `app/panel/listendav.py` | Listen in Erinnerungen: the profile's Spark lists (Einkauf, Aufgaben, own lists) as task lists (VTODO) of the Spark's CalDAV server (kalenderserver.py), so t … |
 | `app/panel/mail.py` | Reading e-mail per profile over IMAP (read only; guests have none). |
 | `app/panel/mailidle.py` | Neue Mails sofort: IMAP IDLE for the inboxes of profiles that read their mail lately, so new mail is on the page E-Mail within seconds and the profile's Mail … |
 | `app/panel/mailregeln.py` | Mail-Regeln: rules the profile makes on the page E-Mail, like in a mail program. |

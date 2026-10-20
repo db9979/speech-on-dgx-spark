@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.865** Listen teilen (Stufe 2): eine Liste je Profil zum Sehen oder Mitschreiben teilen (eintragen und abhaken, Löschen bleibt beim Besitzer), „Mit mir geteilt“ auf der Seite und im iPhone, „Setz Butter auf Sabines Einkaufsliste“, Neues von anderen als gebündelter Hinweis; Listen in der Erinnerungen-App des iPhone in beide Richtungen (Stufe 3, über den Kalender-Server) und ein Widget Einkauf; je ein Admin-Schalter, zuerst aus
 - **V01.0.864** Mitteilung ans genutzte Gerät (Admin-Schalter unter Funktionen → Timer und Erinnerungen, aus): eine Mitteilung geht an das Gerät, das du gerade benutzt (Panel-Seite, Android-App, iPhone-App, Spark-Begleiter am PC oder Mac), sonst sofort an die Handy-App; die Geräte melden nur „benutzt vor n Sekunden“ oder „weg“, nie Inhalte; Live zeigt die Anzahl
 - **V01.0.863** Musik bearbeiten (Admin-Schalter, aus): unter Ich → Musik ein Lied als neue Fassung ändern (Abschnitt neu, verlängern, Musikrichtung, Remix, Liedtext mit Strophen per Ziehen verschieben, schneiden, Tempo und Tonart), eigene Dateien mit Rechte-Haken hochladen, Werkzeug musik_bearbeiten; auch in der iPhone-App
 - **V01.0.862** Wackelnde Tests robust gemacht; dabei behoben: ein Kalender-Abgleich während einer Änderung schreibt nicht mehr den alten Termin zurück, das Formular „Kalender hinzufügen“ bleibt beim Ausfüllen offen
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.858** Fix: GitHub-Lauf „Tests“ wieder grün; der neue Test der Rechner-Karten erlaubt 1 px Rundung (Schrift auf GitHub) und misst beide Stände in einem Zug, ohne Wettlauf mit der eigenen Abfrage der Seite; der Test „Sicherheitspunkt macht Zustand nicht rot“ prüft auf eigenem Stand
 - **V01.0.857** Für dich: liest bei einer neuen Mail sofort neu (mit „Neue Mails sofort“), und eine Marke nur im Betreff einer echten, bestätigten Mail (etwa o2 mit Netflix) ist kein Phishing-Verdacht mehr
 - **V01.0.856** Rechner-Karten springen nicht mehr: beide Rechner mit denselben Zeilen auf gleicher Höhe nebeneinander (auch am Handy), „Wer rechnet gerade“ mit festen Zeilen; Steuerzentrale und iPhone gleich
-- **V01.0.855** Fix: iPhone-App baut wieder (GitHub-Lauf „iPhone app“); die neue Listen-Ansicht hatte einen Typnamen, den die App schon hatte
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

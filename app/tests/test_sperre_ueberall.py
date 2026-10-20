@@ -296,6 +296,7 @@ class OwnData(Base):
 # (no profile), a module's own Spark switch next to its per-profile check, or a display flag combined with the block.
 ADMIN_ON_OK = {
     "zustellung.py:for_live": "Spark-wide numbers for Zustand → Live; each note asks features.allowed notedevice (zustellung.pick)",
+    "listendav.py:for_live": "Zustand → Live: Spark-wide flag beside a number; each profile's lists ask features.allowed listdav",
     "saetze.py:admin_view": "admin-only numbers for Funktionen → Weiche (Spark-wide switch, no profile acts)",
     "verbrauch.py:on": "Spark-wide counter (admin switch); each profile's own view asks features.allowed verbrauch",
     "telefon.py:settings": "Spark-wide SIP part (admin switches); each call asks features.allowed telefon for its profile",

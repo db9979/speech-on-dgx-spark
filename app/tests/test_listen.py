@@ -181,5 +181,117 @@ class Listen(unittest.TestCase):
             self.assertNotIn(word, log)
 
 
+class Teilen(unittest.TestCase):
+    """Stufe 2 (Dominik 2026-10-20 „3a“): an own list shared with another profile, see or put on and tick off; deleting
+    and sharing stay with the owner; taking it back holds at once; a note when others put something on."""
+
+    def setUp(self):
+        helpers.keep_chat(self, "tasks", "tasks_share", "deny")
+        helpers.set_config(tasks=True, tasks_share=True, deny={})
+        for k in [k for k in guard._rate if k[0] == "listen"]:
+            guard._rate.pop(k, None)
+
+    def test_see_add_and_back(self):
+        owner, other, third = profile("Mitlist Sabine"), profile("Mitlist Tom"), profile("Mitlist Uli")
+        so, to = uid_of("Mitlist Sabine"), uid_of("Mitlist Tom")
+        owner.post("/api/profile/tasks/einkauf", json={"text": "Milch"})
+        key = f"{so}.einkauf"
+        self.assertNotIn(key, other.get("/api/profile/tasks").json()["lists"])          # nothing before sharing
+        self.assertEqual(other.post(f"/api/profile/tasks/{key}", json={"text": "Kekse"}).status_code, 404)
+        r = owner.put("/api/profile/listen/einkauf/share", json={"to": to, "level": "see"})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(r.json()["lists"]["einkauf"]["shares"], {to: "see"})
+        self.assertIn({"id": to, "name": "Mitlist Tom"}, r.json()["people"])
+        seen = other.get("/api/profile/tasks").json()
+        self.assertEqual(seen["lists"][key]["shared"], {"owner": "Mitlist Sabine", "level": "see"})
+        self.assertEqual([x["text"] for x in seen["lists"][key]["items"]], ["Milch"])
+        self.assertEqual(other.post(f"/api/profile/tasks/{key}", json={"text": "Kekse"}).status_code, 403)   # see only
+        self.assertNotIn(key, third.get("/api/profile/tasks").json()["lists"])          # never someone else
+        # Mitschreiben: put on and tick off, with who; deleting and sharing stay with the owner
+        owner.put("/api/profile/listen/einkauf/share", json={"to": to, "level": "add"})
+        r = other.post(f"/api/profile/tasks/{key}", json={"text": "Kekse"})
+        self.assertEqual(r.status_code, 200, r.text)
+        mine = owner.get("/api/profile/tasks").json()["lists"]["einkauf"]["items"]
+        kekse = next(x for x in mine if x["text"] == "Kekse")
+        self.assertEqual(kekse["by_name"], "Mitlist Tom")
+        self.assertEqual(other.delete(f"/api/profile/tasks/{key}/{kekse['id']}").status_code, 404)
+        self.assertEqual(other.put(f"/api/profile/listen/{key}/share", json={"to": so, "level": "add"}).status_code, 404)
+        r = other.post(f"/api/profile/tasks/{key}/done", json={"ids": [kekse["id"]]})
+        self.assertEqual(r.json()["lists"][key]["done"][0]["done_name"], "Mitlist Tom")
+        # taken back: at once
+        owner.put("/api/profile/listen/einkauf/share", json={"to": to, "level": ""})
+        self.assertNotIn(key, other.get("/api/profile/tasks").json()["lists"])
+        self.assertEqual(other.post(f"/api/profile/tasks/{key}/add", json={"text": "Wein"}).status_code, 404)
+        self.assertEqual(owner.put("/api/profile/listen/einkauf/share", json={"to": so, "level": "see"}).status_code, 400)
+        self.assertEqual(owner.put("/api/profile/listen/einkauf/share", json={"to": to, "level": "all"}).status_code, 400)
+
+    def test_switch_off_and_blocked_close_it(self):
+        owner, other = profile("Mitlist Vera"), profile("Mitlist Willi")
+        so, to = uid_of("Mitlist Vera"), uid_of("Mitlist Willi")
+        owner.put("/api/profile/listen/einkauf/share", json={"to": to, "level": "add"})
+        key = f"{so}.einkauf"
+        self.assertIn(key, other.get("/api/profile/tasks").json()["lists"])
+        helpers.set_config(deny={"listshare": [so]})          # the owner blocked: nobody reaches it
+        self.assertNotIn(key, other.get("/api/profile/tasks").json()["lists"])
+        helpers.set_config(deny={})
+        helpers.set_config(tasks_share=False)                 # off for everyone
+        self.assertNotIn(key, other.get("/api/profile/tasks").json()["lists"])
+        self.assertEqual(owner.put("/api/profile/listen/einkauf/share", json={"to": to, "level": "see"}).status_code, 403)
+
+    def test_by_voice_and_outside(self):
+        owner, other = profile("Mitlist Xenia"), profile("Mitlist Yann")
+        so, to = uid_of("Mitlist Xenia"), uid_of("Mitlist Yann")
+        owner.put("/api/profile/listen/einkauf/share", json={"to": to, "level": "add"})
+        self.assertIn("gesetzt: Butter", ask(other, 'TOOL tasks_add {"list": "Mitlist Xenias Einkaufsliste", "items": ["Butter"]}'))
+        row = next(x for x in owner.get("/api/profile/tasks").json()["lists"]["einkauf"]["items"] if x["text"] == "Butter")
+        self.assertEqual((row["by_name"], row["src"]), ("Mitlist Yann", "assistent"))
+        self.assertIn("Löschen darf", ask(other, 'TOOL tasks_change {"list": "Mitlist Xenias Einkaufsliste", "items": ["Butter"], "action": "delete"}'))
+        # what others wrote is outside text: after reading it nothing is added in the same answer
+        helpers.LLM_CALLS.clear()
+        out = ask(other, 'TOOL tasks_show {"list": "Einkauf von Mitlist Xenia"}')
+        self.assertIn("Butter", out)
+        self.assertNotIn("tasks_add", [t["function"]["name"] for t in helpers.LLM_CALLS[-1].get("tools", [])])
+
+    def test_a_note_for_the_others(self):
+        import asyncio
+        import push
+        owner, other = profile("Mitlist Zora"), profile("Mitlist Anton")
+        so, to = uid_of("Mitlist Zora"), uid_of("Mitlist Anton")
+        owner.put("/api/profile/listen/einkauf/share", json={"to": to, "level": "add"})
+        sent = []
+
+        async def fake(uid, title, body, tag="", **kw):
+            sent.append((uid, body, tag))
+            return 1
+        real = push.send
+        push.send = fake
+        self.addCleanup(setattr, push, "send", real)
+        tasks._notes.clear()
+        tasks._tell(so, "einkauf", to, 2)                    # Anton put two on Zora's list
+        tasks._tell(so, "einkauf", to, 1)
+        self.assertEqual(asyncio.run(tasks._flush((so, so, "einkauf"))), 1)
+        self.assertEqual(sent, [(so, "Mitlist Anton hat 3 Einträge auf „Einkauf“ gesetzt.", "listen")])
+        self.assertNotIn((to, so, "einkauf"), tasks._notes)   # never to the one who wrote
+        # the profile's own preference off: no note
+        owner.put("/api/profile/settings", json={"list_note": False})
+        tasks._tell(so, "einkauf", to, 1)
+        self.assertEqual(asyncio.run(tasks._flush((so, so, "einkauf"))), 0)
+        owner.put("/api/profile/settings", json={"list_note": True})
+
+    def test_journal_says_shared_never_names(self):
+        owner, other = profile("Mitlist Berta"), profile("Mitlist Carl")
+        so, to = uid_of("Mitlist Berta"), uid_of("Mitlist Carl")
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            owner.put("/api/profile/listen/einkauf/share", json={"to": to, "level": "add"})
+            other.post(f"/api/profile/tasks/{so}.einkauf", json={"text": "Geheimkäse"})
+        log = out.getvalue()
+        self.assertIn("tasks: list share | ok add", log)
+        self.assertIn("tasks: add einkauf shared | 1 entries", log)
+        for word in ("Geheimkäse", "Mitlist Berta", "Mitlist Carl"):
+            self.assertNotIn(word, log)
+        self.assertGreaterEqual(tasks.for_live()["shares"], 1)
+
+
 if __name__ == "__main__":
     unittest.main()

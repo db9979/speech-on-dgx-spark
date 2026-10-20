@@ -1358,8 +1358,9 @@ def snapshot(view="admin", now=None):
     except Exception:
         ksrv = {"on": False}
     try:
+        import listendav
         import tasks
-        lst = tasks.for_live()
+        lst = dict(tasks.for_live(), dav=listendav.for_live())
     except Exception:
         lst = {"on": False}
     try:
@@ -1494,9 +1495,10 @@ def snapshot(view="admin", now=None):
         if x["id"] == "cal" and ksrv.get("on"):   # Kalender-Server (Stufe 4): app passwords, requests today (numbers)
             x["sub"] += (f" · Kalender-Apps: {ksrv['profiles']} Profile, heute {ksrv['requests']} Anfragen,"
                          f" {ksrv['saved']} Änderungen, {ksrv['refused']} abgelehnt")
-        if x["id"] == "cal" and lst.get("on") and (lst["lists"] or lst["added"] or lst["done"]):   # Listen: numbers only
+        if x["id"] == "cal" and lst.get("on") and (lst["lists"] or lst["added"] or lst["done"] or lst.get("shares")):   # Listen: numbers only
             x["sub"] += (f" · Listen: {lst['lists']} eigene bei {lst['profiles']} Profilen, heute {lst['added']} eingetragen,"
-                         f" {lst['done']} abgehakt")
+                         f" {lst['done']} abgehakt" + (f", {lst['shares']}× geteilt" if lst.get("shares") else "")
+                         + (f", {lst['dav']['saved']} aus Erinnerungen" if lst["dav"].get("on") else ""))
         if x["id"] in ("cal", "mail") and warm.get("profiles"):   # Vorwärmen: how many profiles, how long ago (no name)
             x["sub"] += f" · {warm['profiles']} Profile vorgewärmt, zuletzt vor {warm['ago']} min"
         if x["id"] == "nasquelle" and nql.get("on"):   # Wissensordner: folders, documents, failing (no path, no name)
