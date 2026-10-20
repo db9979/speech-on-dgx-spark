@@ -78,6 +78,7 @@ CASES = (
     ("Wo ist mein Paket?", None, None, "paket"),
     ("Was steht heute im Kalender?", None, None, "kalender"),
     ("Wo finde ich meinen Termin morgen?", None, None, "kalender"),
+    ("Was ist mein Morgenbriefing?", None, None, "kalender"),
     ("Was habe ich morgen vor?", None, None, "kalender"),
     ("Wie spät ist es?", None, None, "-spark"),
     ("Warum ist die Banane krumm?", None, None, "-spark"),

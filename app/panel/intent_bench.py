@@ -66,6 +66,10 @@ BENCH = [
     ("Was habe ich morgen für Termine?", "kalender"),
     ("Trag Zahnarzt am Dienstag um 10 ein", "kalender"),
     ("Was steht heute an?", "kalender"),
+    # the briefing as one word (Dominik 20.10. at the phone: no group, the model made up the day)
+    ("Gib mir mein Morgenbriefing", "kalender"),
+    ("Was ist mein Morgenbriefing?", "kalender"),
+    ("Tagesbriefing bitte", "kalender"),
     ("Habe ich heute Abend einen Termin?", "kalender"),
     ("Was steht morgen in meinem Kalender?", "kalender"),
     ("Verschieb den Termin beim Friseur", "kalender"),

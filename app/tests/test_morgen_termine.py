@@ -65,6 +65,32 @@ class MorningGreeting(unittest.TestCase):
         self.assertIn("veraltet", first["messages"][0]["content"] + first["messages"][-1]["content"])
 
 
+class BriefingByName(unittest.TestCase):
+    """Dominik 2026-10-20 at the phone: „Morgenbriefing“ as one word went to no group (and „Was ist mein
+    Morgenbriefing?“ to the Spark-Hilfe), so no tool ran and the model made up the day."""
+
+    def test_the_word_alone_needs_the_briefing(self):
+        for text in ("Morgenbriefing", "Gib mir mein Morgenbriefing", "Was ist mein Morgenbriefing?", "Tagesbriefing bitte",
+                     "Mach mir das Morgen-Briefing", "Lies mir mein Briefing vor", "Was steht heute an?"):
+            self.assertIn("daily_briefing", chat.needed(text, OFFERED), text)
+            self.assertEqual(intent.classify(text).names, ["kalender"], text)
+        # about the function itself it stays the Spark-Hilfe
+        for text in ("Was ist das Morgenbriefing?", "Wie stelle ich das Morgenbriefing ein?"):
+            self.assertEqual(intent.classify(text).names, ["spark"], text)
+
+    def test_first_round_reads_the_day(self):
+        a = profile("Briefingmensch")
+        uid = a.get("/api/whoami").json()["profile"]["id"]
+        calendars.add(uid, calendars.entry({"name": "Privat", "url": f"http://127.0.0.1:{helpers.CAL_PORT}/dav/",
+                                            "user": "m", "password": "pw"}))
+        helpers.LLM_CALLS.clear()
+        r = a.post("/api/chat", json={"messages": [{"role": "user", "content": "Gib mir mein Morgenbriefing"}],
+                                      "tz": "Europe/Berlin"})
+        self.assertEqual(r.status_code, 200, r.text)
+        first = next(c for c in helpers.LLM_CALLS if c.get("stream"))
+        self.assertEqual(first.get("tool_choice"), {"type": "function", "function": {"name": "daily_briefing"}})
+
+
 class EndedAppointments(unittest.TestCase):
     def test_marked_over(self):
         day = datetime.datetime(2026, 10, 11, tzinfo=ZONE)

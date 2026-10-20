@@ -147,7 +147,9 @@ PANEL_WORDS = re.compile(r"(?i)\b(spark|panel|assistent\w*|schalter|einstellung\
                          r"passkeys?)\b")
 # own data asked for, not how something works ("Wo finde ich meinen Termin morgen?")
 DATA_ASK = re.compile(r"(?i)\b(heute|morgen|gestern|übermorgen|nächste[nrs]? woche|diese woche|am (montag|dienstag|mittwoch|"
-                      r"donnerstag|freitag|samstag|sonntag)|um \d|letzte[nrs]? (mail|nachricht|termin)|today|tomorrow|yesterday)\b")
+                      r"donnerstag|freitag|samstag|sonntag)|um \d|letzte[nrs]? (mail|nachricht|termin)|today|tomorrow|yesterday|"
+                      # „Was ist mein Morgenbriefing?“ asks for the own day, not what the function is (Dominik 2026-10-20)
+                      r"mein(e|en|em)? \w*-?briefing\w*|my (daily |morning )?briefing)\b")
 STRONG = re.compile(r"(?i)\b(was kannst du|was empfiehlst du|welche einstellung|was sollte ich|best practice|hilfe zum spark|"
                     r"what can you do|what do you recommend)")
 # on a page: "hier", "diese Seite", "dieser Schalter" points at the page (plan 2)

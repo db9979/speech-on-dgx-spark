@@ -1757,7 +1757,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Alltagsquote",
 "title": "Alltagsquote",
-"text": "- Die Testsätze (158) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (211) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt."
+"text": "- Die Testsätze (161) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (211) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt."
 },
 {
 "lang": "de",
@@ -1773,7 +1773,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 23 Gruppen der Weiche (Schritt 4, Schritt 6) - 2 Gruppen höchstens, die noch eingrenzen (Schritt 6) - 80 Zeichen höchstens für eine Folgefrage (Schritt 8) - 4 Sekunden höchstens für die Wahl des Modells (Schritt 10) - 300 ms Wartezeit mit „Schneller Antwortbeginn“ (Schritt 10) - 80 % Standard-Schwelle der Einordnung (Schritt 10) - 158 eingebaute Testsätze (Schritt 4, Schritt 5) - 211 Alltagssätze zum Messen (Schritt 14) - 20 Versionen für Rückgängig (Schritt 4)"
+"text": "- 23 Gruppen der Weiche (Schritt 4, Schritt 6) - 2 Gruppen höchstens, die noch eingrenzen (Schritt 6) - 80 Zeichen höchstens für eine Folgefrage (Schritt 8) - 4 Sekunden höchstens für die Wahl des Modells (Schritt 10) - 300 ms Wartezeit mit „Schneller Antwortbeginn“ (Schritt 10) - 80 % Standard-Schwelle der Einordnung (Schritt 10) - 161 eingebaute Testsätze (Schritt 4, Schritt 5) - 211 Alltagssätze zum Messen (Schritt 14) - 20 Versionen für Rückgängig (Schritt 4)"
 },
 {
 "lang": "de",
@@ -5589,7 +5589,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Termine nur frisch aus dem Kalender (V01.0.348)",
-"text": "Termine nur frisch aus dem Kalender (V01.0.348): „Guten Morgen“ allein (auch mit „Spark“, „wie geht’s“) zählt als Bitte um den Tag: Die Weiche ordnet es dem Kalender zu, und die erste Runde muss daily_briefing aufrufen (ohne Briefing: calendar_events). Vor einer anderen Bitte („Guten Morgen, mach das Licht an“) gilt das nicht. Jedes Kalender-Ergebnis markiert Termine, die schon zu Ende sind, mit „(already over)“; Briefing und Tagesüberblick nennen sie nicht als anstehend. Hat eine Antwort den Kalender gelesen, nimmt die Antwort-Prüfung Uhrzeiten, Daten und in Anführungszeichen genannte Termintitel nur noch aus der Frage, den Anweisungen und den Ergebnissen dieser Antwort, nicht mehr aus früheren Antworten im Gespräch; so kommen gestrige Termine nie als heutige zurück (im Protokoll „Termin aus früherer Antwort“)."
+"text": "Termine nur frisch aus dem Kalender (V01.0.348): „Guten Morgen“ allein (auch mit „Spark“, „wie geht’s“) zählt als Bitte um den Tag: Die Weiche ordnet es dem Kalender zu, und die erste Runde muss daily_briefing aufrufen (ohne Briefing: calendar_events). Vor einer anderen Bitte („Guten Morgen, mach das Licht an“) gilt das nicht. Ebenso das Briefing beim Namen, auch als ein Wort (V01.0.847): „Morgenbriefing“, „Gib mir mein Tagesbriefing“, „Was ist mein Morgenbriefing?“ gehen zum Kalender und rufen daily_briefing auf; nur „Was ist das Morgenbriefing?“ oder „Wie stelle ich es ein?“ fragt nach der Funktion (Spark-Hilfe). Jedes Kalender-Ergebnis markiert Termine, die schon zu Ende sind, mit „(already over)“; Briefing und Tagesüberblick nennen sie nicht als anstehend. Hat eine Antwort den Kalender gelesen, nimmt die Antwort-Prüfung Uhrzeiten, Daten und in Anführungszeichen genannte Termintitel nur noch aus der Frage, den Anweisungen und den Ergebnissen dieser Antwort, nicht mehr aus früheren Antworten im Gespräch; so kommen gestrige Termine nie als heutige zurück (im Protokoll „Termin aus früherer Antwort“)."
 },
 {
 "lang": "de",
@@ -10301,7 +10301,7 @@
 "file": "Architecture and data flow",
 "head": "Everyday score",
 "title": "Everyday score",
-"text": "- The test sentences (158) hold every reported wrong turn and must all pass. The everyday sentences (211) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up."
+"text": "- The test sentences (161) hold every reported wrong turn and must all pass. The everyday sentences (211) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up."
 },
 {
 "lang": "en",
@@ -10317,7 +10317,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 23 groups of the switch (step 4, step 6) - 2 groups at most that still narrow (step 6) - 80 characters at most for a follow-up (step 8) - 4 seconds at most for the model's pick (step 10) - 300 ms waiting with „Fast answer start“ (step 10) - 80 % default threshold of the classification (step 10) - 158 built-in test sentences (step 4, step 5) - 211 everyday sentences for measuring (step 14) - 20 versions for undo (step 4)"
+"text": "- 23 groups of the switch (step 4, step 6) - 2 groups at most that still narrow (step 6) - 80 characters at most for a follow-up (step 8) - 4 seconds at most for the model's pick (step 10) - 300 ms waiting with „Fast answer start“ (step 10) - 80 % default threshold of the classification (step 10) - 161 built-in test sentences (step 4, step 5) - 211 everyday sentences for measuring (step 14) - 20 versions for undo (step 4)"
 },
 {
 "lang": "en",
@@ -13965,7 +13965,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Appointments only fresh from the calendar (V01.0.348)",
-"text": "Appointments only fresh from the calendar (V01.0.348): \"Guten Morgen\" on its own (also with \"Spark\", \"wie geht's\") counts as asking for the day: the switch files it under the calendar and the first round has to call daily_briefing (without the briefing: calendar_events). Before another request (\"Guten Morgen, turn on the light\") it does not. Every calendar result marks appointments that have already ended with \"(already over)\"; briefing and daily overview do not name them as coming up. Once an answer has read the calendar, the answer check takes times, dates and quoted appointment titles only from the question, the instructions and this answer's results, no longer from earlier answers in the conversation, so yesterday's appointments never come back as today's (tool log: \"Termin aus früherer Antwort\")."
+"text": "Appointments only fresh from the calendar (V01.0.348): \"Guten Morgen\" on its own (also with \"Spark\", \"wie geht's\") counts as asking for the day: the switch files it under the calendar and the first round has to call daily_briefing (without the briefing: calendar_events). Before another request (\"Guten Morgen, turn on the light\") it does not. The same for the briefing by name, also as one word (V01.0.847): \"Morgenbriefing\", \"Gib mir mein Tagesbriefing\", \"Was ist mein Morgenbriefing?\" go to the calendar and call daily_briefing; only \"Was ist das Morgenbriefing?\" or \"Wie stelle ich es ein?\" asks about the function (Spark help). Every calendar result marks appointments that have already ended with \"(already over)\"; briefing and daily overview do not name them as coming up. Once an answer has read the calendar, the answer check takes times, dates and quoted appointment titles only from the question, the instructions and this answer's results, no longer from earlier answers in the conversation, so yesterday's appointments never come back as today's (tool log: \"Termin aus früherer Antwort\")."
 },
 {
 "lang": "en",

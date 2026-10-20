@@ -2217,6 +2217,13 @@
 "titel": "Regel mit Betreff",
 "text": "A: Update auf V01.0.846. Eine Mail mit „AW: …“ im Betreff öffnen, „⚙ Regel daraus …“: Absender und Betreff stehen schon da, der Betreff ohne „AW:“. B: Betreff kürzen, „Probelauf“, „Sichern“. C: Dasselbe im iPhone (Mail → „Regel daraus …“).",
 "thread": "Kalender und E-Mail in Panel und Apps"
+},
+{
+"id": "P341",
+"v": 847,
+"titel": "Morgenbriefing am Telefon",
+"text": "A: Vom Mobilteil den Spark anrufen, mit Stimme oder Telefon-PIN anmelden, dann „Gib mir mein Morgenbriefing“: er liest echte Termine, Erinnerungen und Mails von heute vor (wie im Kalender). B: Im Chat „Was ist mein Morgenbriefing?“: dieselben echten Daten, keine Erklärung der Funktion. C: Zustand → Logs → Anfragen: die Frage steht unter Kalender und Briefing, Werkzeug Tagesüberblick.",
+"thread": "Auflegen nach Gesprächsende"
 }
 ]
 }

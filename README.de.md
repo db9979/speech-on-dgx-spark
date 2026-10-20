@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.847** Fix: „Morgenbriefing“ als ein Wort holt das echte Briefing, auch am Telefon
 - **V01.0.846** „Regel daraus …“ übernimmt auch den Betreff der Mail (ohne Re:/AW:/Fwd:, frei änderbar), im Panel und im iPhone
 - **V01.0.845** Fix: iPhone-App baut wieder (GitHub-Lauf „iPhone app“ grün, TestFlight wieder möglich); zwei Stellen in E-Mail (Regel sichern, Antwortvorschläge) passten nicht zum Swift-Compiler
 - **V01.0.844** Code-Prüfung: ein eigenes Postfach sendet nur über den Postausgang, den du beim Verbinden einträgst, nie über einen geratenen; Ich → Gespräch klappt seine Gruppen ein; ein Name je Sache (Zustand → Überblick, Funktionen → Aufträge, Funktionen → Telefon, Ich → Spark als MCP-Server, am Handy „Assistent“)
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.840** Spark-Kalender Stufe 4: der Spark als Kalender-Server (CalDAV) für den Kalender des iPhone, Thunderbird oder DAVx5; App-Passwort je Profil unter Kalender → Einstellungen oder im iPhone, im Heimnetz und über den Proxy; Admin-Schalter, aus
 - **V01.0.839** Spark-Kalender Stufe 3: ein Kalender ganz ohne Konto, der nur auf dem Spark liegt (verschlüsselt im Profil); anlegen unter Ich → Kalender oder im iPhone, Termine per Seite, App oder Sprache, teilen wie jeder Kalender
 - **V01.0.838** Kalender: kein Panel-Hänger mehr beim Ausrechnen der Termine (6-8 s Stillstand); jeder Termin wird nur einmal je Monat ausgerechnet und gemerkt, alles in einem Hintergrund-Faden mit niedriger Priorität, nie zwei gleichzeitig
-- **V01.0.837** E-Mail: Antwortvorschläge beim Antworten (Teil von Mails senden): drei kurze Antworten in verschiedene Richtungen liegen bereit, schon vorbereitet, solange die Mail offen ist, im Ton der Mail und mit dem Namen des Profils; die gewählte bleibt frei änderbar, dazu kürzer, freundlicher, förmlicher und auf Englisch; Panel und iPhone
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

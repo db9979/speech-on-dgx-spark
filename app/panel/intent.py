@@ -49,7 +49,7 @@ HOME_WORDS = re.compile(r"(?i)\b(licht\w*|lampe\w*|leuchte\w*|heizung\w*|thermos
                         # and „Wann ist die Waschmaschine fertig?“ were „unklar“, with route_model lean without HA tools)
                         r"\w*tür(en)?|\w*fenster|garagentor\w*|türschloss|waschmaschine\w*|trockner\w*|"
                         r"spülmaschine\w*|geschirrspüler\w*|strom(verbrauch|zähler)?|akku\w*|kamera\w*|doors?|windows?)\b")
-CALENDAR_WORDS = re.compile(chat.NEED_CALENDAR.pattern + "|" + chat.MORNING.pattern + r"|(?i:\b(briefing|was steht (heute|morgen) an|"
+CALENDAR_WORDS = re.compile(chat.NEED_CALENDAR.pattern + "|" + chat.MORNING.pattern + r"|(?i:\b(\w*-?briefing\w*|tagesüberblick|was steht (heute|morgen) an|"
                             r"mein(en)? tag|was hab(e)? ich (heute|morgen)( noch)?( vor)?|\w+termin(?!al)\w*|"
                             # „Terminal“ is the terminal client (terminal.py), never an appointment
                             r"elterngespräch\w*|sprechstunde\w*|vorstellungsgespräch\w*|"

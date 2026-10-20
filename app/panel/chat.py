@@ -616,10 +616,15 @@ DONE_WORDS = re.compile(r"(?i)(?:^|[.!?]\s+)\s*(?:und |and |sag mal,? |weißt du
 DIARY_WORDS = re.compile(r"(?i)\b(was|welche\w*)\b.{0,40}\b(hast du|hat (der )?spark)\b.{0,40}\b(gemacht|erledigt|getan|"
                          r"geschaltet|eingeschaltet|ausgeschaltet|geschickt|gestellt|erstellt|angelegt)\b|"
                          r"\bspark-?tagebuch\b|\bwhat (did|have) you (done|do|made|sent|switched)\b")
+# the briefing asked for by name, also as one word („Morgenbriefing“, „Tagesbriefing“; Dominik 2026-10-20 at the phone:
+# without a tool the model made up the day)
+NEED_BRIEFING = re.compile(r"(?i)\b(\w*-?briefing\w*|tagesüberblick\w*|was steht (heute|morgen) an)\b")
 NEED_TOOLS = [  # tool that has to be offered, words in the question: one place for chat and quality test
     ("calendar_events", NEED_CALENDAR),
     ("daily_briefing", MORNING),
     ("calendar_events", MORNING),   # no briefing offered: the calendar of today at least
+    ("daily_briefing", NEED_BRIEFING),
+    ("calendar_events", NEED_BRIEFING),
     ("mail_list", NEED_MAIL),
     ("reminder_list", NEED_REMINDER),
     ("web_search", NEED_SEARCH),
