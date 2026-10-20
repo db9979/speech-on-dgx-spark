@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.878** Update sperrt sofort beim Klick: Sicherung, Laden, Prüfen, Modell-Rechner und Neustart als Schritte im selben Fenster auf allen Geräten; jedes frühe Ende löst die Sperre und nennt den Grund
 - **V01.0.877** Für dich aus dem Vorrat: die letzte Lesung je Postfach bleibt versiegelt im Profil, nach einem Neustart sofort da; antwortet ein Postfach nicht, kommen seine Einträge mit „Stand hh:mm“ im Tab, beim Vorlesen und unter Heute
 - **V01.0.876** Alles Offene im Assistenten (Stufe 2): Vorschläge des Assistenten (neuer Termin, verschieben, löschen, Mail per Sprache, Aufräumen, Entwurf) als Karte „Wartet auf dein Ja“ unter der Antwort und unter Offen, mit „Eintragen“/„Senden“ (dasselbe wie ein getipptes Ja), „Ändern …“ (Formular oder Schreibfenster, ausgefüllt) und „Abbrechen“; auch vom Lautsprecher am Handy bestätigen; iPhone
 - **V01.0.875** Mitschreib-Link (Listen Stufe 4): ein Link mit QR-Code für Leute ohne Profil, die nur etwas auf eine Liste setzen (auf Wunsch die offenen Einträge sehen), mit Ablauf 7 Tage bis 1 Jahr, jederzeit widerrufbar, nur der Hash gespeichert, falsche Codes sperren wie eine PIN; im Panel und im iPhone, eigener Admin-Schalter, zuerst aus
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.871** CarPlay stabil: das Sprechfenster geht der Reihe nach auf und zu, jede Zeile tut etwas oder sagt „Spark nicht erreichbar“, nach einem Gespräch sind Radio und Musik wieder normal laut, „Danke“ beendet, „Letzte Antwort wiederholen“, kein Weckwort im Auto, CarPlay-Schritte im Ton-Protokoll
 - **V01.0.870** Fix Für dich vorlesen: „Antwort offen“ sagt klar, wer auf wen wartet, jeder Eintrag nennt seine Mail (Absender, Tag, Betreff), beim ersten Lesen kommt „lese noch“ oder die letzte Lesung statt „Postfach nicht erreichbar“
 - **V01.0.869** Besprechung aus dem Spark-Begleiter: ausgewählte Aufgaben kommen mit „Ausgewählte auf die Liste“ auf eine Liste (Standard „Aufgaben“, wählbar) mit dem Datum aus „bis“ und der Quelle „aus Besprechung“, auch im iPhone und in Erinnerungen; „Als Erinnerung“ bleibt. Erinnerungen unter dem Gesicht sind nicht mehr links und rechts abgeschnitten, die Zusammenfassung landet auf dem reMarkable unter „Besprechungen“ statt „Antworten“
-- **V01.0.868** Musik: „Text schreiben“ unter Ich → Musik und in der iPhone-App – das Sprachmodell schreibt den Liedtext aus der Beschreibung (Strophen und Refrain passend zur Länge) ins Feld, erst der nächste Klick macht das Lied; Künstlernamen werden zu Stilwörtern, feste Prüfung, auch „im stiel“; Fix: im Gespräch kam bei Künstlernamen kein Lied (Beschreibung wird ohne Namen neu geschrieben, „so wie“ im Text gilt nicht mehr als Künstler)
 
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)

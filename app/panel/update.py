@@ -261,12 +261,50 @@ UPDATE_TIMEOUT = 45 * 60  # then the page offers to wait or cancel (the unit its
 _upd_cache = {"t": 0.0, "running": False}
 
 
+# From the click on (Dominik 2026-10-20 "sollte direkt nach installieren gesperrt sein"): the backup before the update
+# and the unit's start take a while, so the lock begins with begin(), not with the unit. While the backup runs the
+# panel holds it itself; once the unit was started it holds it for a few seconds until systemd shows it running.
+PENDING_MAX = 30 * 60   # a backup that never ends does not keep the panel locked
+UNIT_GRACE = 15         # seconds for systemd to show the started unit as running
+_pending = {"since": 0.0, "unit": 0.0}
+
+
+def _pending_holds(unit_running, now=None):
+    """Whether begin() still holds the lock: the backup runs, or the unit was just started and systemd does not show
+    it yet. Forgets itself when the unit runs (the unit's own state holds the lock then) or the time is over."""
+    now = time.time() if now is None else now
+    since, unit = _pending["since"], _pending["unit"]
+    if not since:
+        return False
+    if unit_running or not 0 <= now - since < PENDING_MAX or (unit and not 0 <= now - unit < UNIT_GRACE):
+        _pending.update(since=0.0, unit=0.0)
+        return False
+    return True
+
+
 def update_running():
-    """True while the update unit runs (asked at most every 3 s)."""
+    """True while the update unit runs (asked at most every 3 s) or begin() prepares it."""
     if time.time() - _upd_cache["t"] > 3:
         code, out = run(["systemctl", "show", "speech-spark-update", "-p", "ActiveState"])
         _upd_cache.update(t=time.time(), running=bool(re.search(r"^ActiveState=(activating|active)$", out, re.M)))
-    return _upd_cache["running"]
+    return _upd_cache["running"] or _pending_holds(_upd_cache["running"])
+
+
+def _say(text, version="", done=False, ok=None):
+    """One step of this update in the progress file, before update.sh takes it over (it keeps "started")."""
+    now = int(time.time())
+    started = int(_pending["since"]) or now
+    if done:
+        try:
+            with open(UPDATE_PROGRESS) as f:
+                started = int(json.load(f).get("started") or now)
+        except (OSError, ValueError, TypeError, AttributeError):
+            pass
+    try:
+        write_json(UPDATE_PROGRESS, {"step": 0, "text": str(text)[:120], "started": started, "updated": now,
+                                     "done": done, "ok": ok, "version": str(version or "")[:20]})
+    except OSError as e:
+        print("update: progress not written", type(e).__name__, flush=True)
 
 
 def update_progress():
@@ -312,7 +350,9 @@ def gesamt(now=None):
         out["pct"] = TARS_ANTEIL + round(pct * (100 - TARS_ANTEIL) / 100) if pct > 5 or p.get("done") else TARS_ANTEIL
         if p.get("done") and p.get("ok"):
             out["pct"] = 100
-        if out["run"] and pct <= 5:      # update.sh waits for the model computer (its first step)
+        if out["run"] and pct < 5:       # backup and fetch on this computer, before the model computer's share
+            out.update(teil="", pct=0)
+        elif out["run"] and pct <= 5:    # update.sh waits for the model computer (its first step)
             lauf = p.get("started")
             if d.get("update") is True:
                 _tars_lauf["seen"] = lauf
@@ -379,14 +419,38 @@ def _backup_first(why):
         backup.create(why)
     except Exception as e:  # a failed backup does not block the update, but it is noted
         guard.log("backup_failed", detail=f"{type(e).__name__}: {e}"[:200])
+        print("update: backup failed", type(e).__name__, flush=True)
+
+
+def begin(why="before-update", version=""):
+    """The one way to start the update unit (button, rollback, iPhone app, overnight): locks at once and says so in
+    the progress file every page, the app and the case's display read, then the backup, then the unit. When the
+    unit does not start, the lock goes again and the progress file names why."""
+    if update_running():
+        raise HTTPException(409, "Ein Update läuft schon.")
+    _pending.update(since=time.time(), unit=0.0)
+    _upd_cache["t"] = 0.0
+    _say("Sicherung vor dem Update", version)
+    print("update: begin", "rollback" if why == "before-rollback" else "update", flush=True)
+    _backup_first(why)
+    _say("Update startet", version)
+    try:
+        out = _start()
+    except HTTPException:
+        _pending.update(since=0.0, unit=0.0)
+        _say("Update konnte nicht starten; die bisherige Version läuft weiter", version, done=True, ok=False)
+        print("update: start failed", flush=True)
+        raise
+    _pending["unit"] = time.time()
+    print("update: unit started", flush=True)
+    return out
 
 
 @router.post("/api/update", dependencies=[Depends(auth)])
 def start_update():
     import live
     live.mark("Update", "Update gestartet")
-    _backup_first("before-update")
-    return _start()
+    return begin("before-update", (_remote_cache.get("data") or {}).get("version") or "")
 
 
 @router.post("/api/update/rollback", dependencies=[Depends(auth), Depends(admin_code)])
@@ -395,12 +459,13 @@ def rollback():
     prev = previous_version()
     if not prev:
         raise HTTPException(404, "no previous version known (it is kept from the next update on)")
-    _backup_first("before-rollback")
+    if update_running():
+        raise HTTPException(409, "Ein Update läuft schon.")
     with open(os.path.join(os.path.dirname(UPDATE_PROGRESS), "update-target"), "w") as f:
         f.write(prev["commit"])
     guard.log("rollback", detail=f"back to {prev.get('version') or prev.get('short')}")
     try:
-        return _start()
+        return begin("before-rollback", prev.get("version") or "")
     except HTTPException:
         os.remove(os.path.join(os.path.dirname(UPDATE_PROGRESS), "update-target"))
         raise
@@ -493,8 +558,7 @@ async def night_once(now=None):
     version = remote.get("version") or str(remote["latest"])[:7]
     import live
     live.mark("Update", f"Update in der Nacht gestartet: {version}")
-    await asyncio.to_thread(_backup_first, "before-update")
-    _start()
+    await asyncio.to_thread(begin, "before-update", version)
     guard.log("update_night", detail=str(version)[:40])
     print("update: started overnight,", version, flush=True)
     return "started"

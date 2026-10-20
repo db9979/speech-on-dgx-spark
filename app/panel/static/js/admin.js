@@ -943,8 +943,10 @@ $('updgo').onclick=async()=>{let tk={};try{tk=(await (await api('/api/update')).
   const ask=tk.now?t(`Gerade läuft ein Gespräch mit dem Spark (zuletzt vor ${tk.ago} s gesprochen). Das Update startet die Dienste kurz neu und unterbricht es. Trotzdem jetzt installieren?`,`Somebody is talking with the Spark right now (last speech ${tk.ago} s ago). The update restarts the services briefly and cuts that off. Install anyway?`)
     :t('Update jetzt installieren? Die Dienste starten dabei kurz neu.','Install the update now? The services restart briefly.');
   if(!await ulAsk(t('Update installieren?','Install the update?'),ask,t('Installieren','Install')))return;
+  // the lock shows at once and the server holds it from the click (update.begin): backup, then the unit
   try{ul.clicked=Date.now();ulShow();await api('/api/update',{method:'POST'})}
-  catch(e){ulStop();$('updlock').style.display='none';$('updmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
+  catch(e){if(e.status===409)return;   // one runs already (another tab or device): this window follows it
+    ulFail(t('Update konnte nicht starten','Update could not start'),e.message,t('Die bisherige Version läuft weiter.','The previous version keeps running.'),null,false)}};
 setInterval(()=>{if(ADMIN)api('/api/update').then(r=>r.json()).then(u=>updBadge(u.remote)).catch(()=>{})},600000);
 // ---------------------------------------------------------------- previous version, live check, backups
 $('updprev').onclick=async()=>{if(!await ulAsk(t('Vorige Version einspielen?','Install the previous version?'),t('Die vorige Version wieder installieren? Vorher wird automatisch gesichert. Gilt die vorige Version vor V01.0.37, müssen Kalender-Passwörter und Home-Assistant-Tokens danach neu eingegeben werden.','Install the previous version again? A backup is made first. If the previous version is older than V01.0.37, calendar passwords and Home Assistant tokens have to be entered again afterwards.'),t('Einspielen','Install')))return;

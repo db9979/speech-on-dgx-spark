@@ -171,8 +171,7 @@ async def app_start(request: Request, prof=Depends(own_profile)):
             d["last"] = time.time()
             _write(d)
     version = remote.get("version") or remote["latest"][:7]
-    await asyncio.to_thread(update._backup_first, "before-update")
-    update._start()
+    await asyncio.to_thread(update.begin, "before-update", version)
     guard.log("update_from_app", ip=guard.client_ip(request), uid=uid,
               detail=f"{dev.get('name', '')[:40]} -> {version}")
     print("update: started from the iPhone app by", profiles.log_name(prof), flush=True)

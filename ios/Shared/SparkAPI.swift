@@ -801,7 +801,8 @@ struct SparkAPI {
     /// Starts the update: only with a fresh 6-digit code from the profile's authenticator app.
     func startUpdate(code: String) async throws -> String {
         var r = request("api/iphone/update", method: "POST")
-        r.timeoutInterval = 60
+        // the Spark answers after its backup (it locks and shows "Sicherung vor dem Update" at once)
+        r.timeoutInterval = 300
         let (data, response) = try await Self.confirmed(r, code: code)
         try Self.check(data, response)
         return Self.object(data)["version"] as? String ?? ""

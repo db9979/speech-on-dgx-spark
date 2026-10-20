@@ -1043,7 +1043,10 @@ _pin_models()
 # reports its own share (tarswart.status "update_pct") so the case's display can show one bar for both.
 UPDATE_PROGRESS = os.path.join(STATE, "update-progress.json")
 # install.sh sections -> (share of the bar, German label)
-UPDATE_STEPS = [("Neue Version", 5, "Neue Version geladen"), ("System packages", 10, "Systempakete"),
+# the first steps come before install.sh: the panel at the click (update.begin), then update.sh
+UPDATE_STEPS = [("Sicherung vor dem Update", 1, "Sicherung vor dem Update"), ("Update startet", 2, "Update startet"),
+                ("Lädt und prüft", 3, "Lädt und prüft die neue Version"), ("Neue Version", 5, "Neue Version geladen"),
+                ("Modell-Rechner", 5, "Modell-Rechner wird zuerst aktualisiert"), ("System packages", 10, "Systempakete"),
                 ("Service user", 14, "Dienstkonto und Ordner"), ("Git clone", 16, "Git-Kopie"),
                 ("config.json", 20, "Einstellungen übernehmen"), ("qwen38 API key", 22, "Schlüssel für das Sprachmodell"),
                 ("certificate", 24, "Zertifikat"), ("Checking ports", 26, "Ports prüfen"),

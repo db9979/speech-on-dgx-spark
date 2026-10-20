@@ -35,6 +35,46 @@ STATE=${SPEECH_SPARK_STATE:-/var/lib/speech-spark/state}
 # the state folder belongs to the service user: root reads and writes there only as that user, so a link
 # planted there never makes root read (or write) a file of its own
 as_svc() { runuser -u speech -- "$@"; }
+# Progress for the panel (step, text, done + ok at the end). The panel writes the first step at the click
+# (update.begin: "Sicherung vor dem Update") and holds the lock from then on; every step here keeps its start time,
+# and every way this script ends, early ones included, writes done + ok with the reason, which releases the lock.
+# install.sh adds one step per section it starts.
+export SPEECH_SPARK_PROGRESS=${SPEECH_SPARK_PROGRESS:-$STATE/update-progress.json}
+newver=""
+step() {  # text: one step of this update; the start time stays the one the panel wrote (numbers only, under 30 min)
+  [ "$CHECK" = 1 ] && return 0
+  local now s
+  now=$(date +%s)
+  s=$(as_svc cat -- "$SPEECH_SPARK_PROGRESS" 2>/dev/null | jq -r 'if .done == false then .started else empty end' 2>/dev/null \
+    | tr -dc '0-9' | head -c 12 || true)
+  { [ -n "$s" ] && [ "$s" -le "$now" ] && [ $((now - s)) -lt 1800 ]; } || s=$now
+  rm -rf -- "$SPEECH_SPARK_PROGRESS" "$SPEECH_SPARK_PROGRESS.tmp"
+  jq -nc --argjson now "$now" --argjson s "$s" --arg t "$1" --arg v "$newver" \
+    '{step: 1, text: $t, started: $s, updated: $now, done: false, ok: null, version: $v}' \
+    | as_svc tee -- "$SPEECH_SPARK_PROGRESS" >/dev/null || true
+}
+finish() {  # ok message
+  [ "$CHECK" = 1 ] && return 0
+  local j
+  j=$(as_svc cat -- "$SPEECH_SPARK_PROGRESS" | jq -c --argjson ok "$1" --arg t "$2" --argjson now "$(date +%s)" \
+    '.done=true | .ok=$ok | .text=$t | .updated=$now') \
+    && printf '%s\n' "$j" | as_svc tee -- "$SPEECH_SPARK_PROGRESS" >/dev/null
+}
+# an end without its own message (a failed command under set -e): still done, with the exit code, never a lock left
+on_exit() {
+  local rc=$?
+  [ "$CHECK" = 1 ] && return 0
+  if as_svc cat -- "$SPEECH_SPARK_PROGRESS" 2>/dev/null | jq -e '.done == false' >/dev/null 2>&1; then
+    finish false "Update abgebrochen (Fehler $rc); die bisherige Version läuft weiter" || true
+  fi
+}
+trap on_exit EXIT
+trap 'finish false "Update abgebrochen"; exit 143' TERM INT
+stop_early() {  # message for the panel: nothing changed
+  finish false "$1" || true
+  exit 1
+}
+step "Lädt und prüft die neue Version"
 FROM_PANEL=0
 if [ -z "$TARGET" ] && [ -s "$STATE/update-target" ] && [ ! -L "$STATE/update-target" ]; then
   TARGET=$(as_svc head -c 64 -- "$STATE/update-target" 2>/dev/null | tr -dc '0-9a-f' || true)
@@ -50,7 +90,8 @@ old=$(jq -r '.commit // empty' "$(dirname "$SRC")/VERSION.json" 2>/dev/null || t
 git cat-file -e "${old:-x}^{commit}" 2>/dev/null || old=$(git rev-parse HEAD)
 echo "Installed: $(git log -1 --format='%h %cs %s' "$old")"
 echo "Fetching $(git remote get-url origin) ($BRANCH) ..."
-git fetch --quiet origin "$BRANCH"
+git fetch --quiet origin "$BRANCH" || { echo "GitHub not reachable: the new version could not be fetched; nothing changed." >&2
+  stop_early "Neue Version konnte nicht geladen werden (GitHub nicht erreichbar); die bisherige Version läuft weiter"; }
 new=$(git rev-parse "origin/$BRANCH")
 
 # newest commit of $BRANCH whose "Tests" run passed (JSON of the Actions API on stdin)
@@ -72,7 +113,7 @@ if [ -z "$TARGET" ] && [ "$NEWEST" = 0 ]; then
         || ! git merge-base --is-ancestor "$green" "$new"; then
       echo "No version with passed GitHub tests found (GitHub not reachable?); nothing changed." >&2
       echo "To take the newest version anyway: sudo $0 --newest" >&2
-      exit 1
+      stop_early "Keine Version mit bestandenen GitHub-Tests gefunden; die bisherige Version läuft weiter"
     fi
     if [ "$green" != "$new" ]; then
       echo "The newest version $(git rev-parse --short "$new") has not passed GitHub's tests (yet); taking the newest one that did."
@@ -85,7 +126,7 @@ if [ -n "$TARGET" ]; then
   # only versions that are part of the official branch
   if ! git cat-file -e "$TARGET^{commit}" 2>/dev/null || ! git merge-base --is-ancestor "$TARGET" "origin/$BRANCH"; then
     echo "Version $TARGET is not part of $BRANCH; nothing changed." >&2
-    exit 1
+    stop_early "Diese Version gehört nicht zum offiziellen Stand; nichts geändert"
   fi
   new=$(git rev-parse "$TARGET")
   if [ "$FROM_PANEL" = 1 ]; then
@@ -95,19 +136,20 @@ if [ -n "$TARGET" ]; then
     prev=$(jq -r '.commit // empty' "$(dirname "$SRC")/VERSION.prev.json" 2>/dev/null || true)
     if [ "$new" != "$prev" ] || ! git merge-base --is-ancestor "$SECURITY_FLOOR" "$new"; then
       echo "Version $TARGET is not the previous version this Spark ran; nothing changed." >&2
-      exit 1
+      stop_early "Das ist nicht die vorige Version dieses Sparks; nichts geändert"
     fi
   fi
   echo "Going to the chosen version instead of the newest."
 elif [ "$old" != "$new" ] && git merge-base --is-ancestor "$new" "$old"; then
   # installed is newer than the newest tested version (e.g. installed with --newest): nothing to do
   echo "Already up to date (no newer version has passed GitHub's tests)."
+  finish true "Schon aktuell"
   exit 0
 elif ! git merge-base --is-ancestor "$old" "$new"; then
   # the branch never loses commits; a rewritten history is not taken without being asked for
   echo "The history of $BRANCH was rewritten on GitHub (the installed version is no longer part of it); nothing changed." >&2
   echo "If that is intended: sudo $0 --to $(git rev-parse --short "$new")" >&2
-  exit 1
+  stop_early "Der Verlauf auf GitHub wurde umgeschrieben; nichts geändert"
 fi
 
 # Optional: only signed versions. With $SIGNERS (root's own file in the format of ssh-keygen's
@@ -119,11 +161,11 @@ if [ -e "$SIGNERS" ] || [ -L "$SIGNERS" ]; then
   if [ -L "$SIGNERS" ] || [ ! -f "$SIGNERS" ] || [ "$(stat -c %u "$SIGNERS")" != 0 ] \
       || [ -n "$(find "$SIGNERS" -maxdepth 0 -perm /022 2>/dev/null)" ]; then
     echo "$SIGNERS is not a plain file of root (writable only by root); nothing changed." >&2
-    exit 1
+    finish false "Signaturliste ungültig; nichts geändert" || true; exit 1   # (the block also runs alone: test_hardening)
   fi
   if ! git -c gpg.format=ssh -c gpg.ssh.allowedSignersFile="$SIGNERS" verify-commit "$new" >/dev/null 2>&1; then
     echo "Version $(git rev-parse --short "$new") is not signed with a key from $SIGNERS; nothing changed." >&2
-    exit 1
+    finish false "Neue Version ist nicht richtig signiert; nichts geändert" || true; exit 1
   fi
   echo "Signature checked ($SIGNERS)."
 else
@@ -132,6 +174,7 @@ fi
 
 if [ "$old" = "$new" ]; then
   echo "Already up to date."
+  finish true "Schon aktuell"
   exit 0
 fi
 echo "Available: $(git log -1 --format='%h %cs %s' "$new")"
@@ -144,23 +187,8 @@ else
 fi
 [ "$CHECK" = 1 ] && exit 0
 
-# Progress for the panel (step, text, done + ok at the end); the panel locks itself
-# while this runs. install.sh adds one step per section it starts.
-export SPEECH_SPARK_PROGRESS=${SPEECH_SPARK_PROGRESS:-/var/lib/speech-spark/state/update-progress.json}
-mkdir -p "$(dirname "$SPEECH_SPARK_PROGRESS")"
-newver=$(git show "$new:app/VERSION" 2>/dev/null | head -1 || true)
-# the state folder belongs to the service user: the file is written and read as that user (as_svc above)
-rm -rf -- "$SPEECH_SPARK_PROGRESS" "$SPEECH_SPARK_PROGRESS.tmp"
-jq -nc --argjson now "$(date +%s)" --arg v "$newver" \
-  '{step: 1, text: "Neue Version geladen", started: $now, updated: $now, done: false, ok: null, version: $v}' \
-  | as_svc tee -- "$SPEECH_SPARK_PROGRESS" >/dev/null
-finish() {  # ok message
-  local j
-  j=$(as_svc cat -- "$SPEECH_SPARK_PROGRESS" | jq -c --argjson ok "$1" --arg t "$2" --argjson now "$(date +%s)" \
-    '.done=true | .ok=$ok | .text=$t | .updated=$now') \
-    && printf '%s\n' "$j" | as_svc tee -- "$SPEECH_SPARK_PROGRESS" >/dev/null
-}
-trap 'finish false "Update abgebrochen"' TERM INT
+newver=$(git show "$new:app/VERSION" 2>/dev/null | head -1 | tr -dc 'V0-9.' | head -c 20 || true)
+step "Neue Version geladen"
 
 echo
 # Spark teilen (plan raspberry-split B5): with the models on another computer that one updates first, by its own
@@ -168,6 +196,7 @@ echo
 mhost=$(jq -r '.models.host // "127.0.0.1"' /etc/speech-spark/config.json 2>/dev/null || echo 127.0.0.1)
 if [ "$CHECK" = 0 ] && [ -n "$mhost" ] && [ "$mhost" != 127.0.0.1 ] && [ "$mhost" != localhost ] && [ "$mhost" != ::1 ]; then
   echo "Updating the model computer first ..."
+  step "Modell-Rechner wird zuerst aktualisiert"
   /usr/local/bin/speech-spark teilen modelle-update || echo "The model computer did not update; going on (two versions only give a hint)."
 fi
 echo "Updating ..."
