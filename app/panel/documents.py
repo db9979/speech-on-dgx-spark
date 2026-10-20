@@ -31,6 +31,7 @@ import sqlite3
 import threading
 import time
 import zipfile
+from typing import NamedTuple
 
 import profiles
 
@@ -723,7 +724,8 @@ def related(uid, doc_id, most=8):
 
 
 def match_docs(uid, tags=None, art=None, used_only=True, shared_only=False):
-    """Ids of the documents with all these tags (any spelling of case) and this art."""
+    """Ids of the documents with all these tags (any spelling of case) and this art. shared_only: True or an Offer,
+    only what this profile offers (Für alle, single documents)."""
     want = {t.lower() for t in clean_tags(tags or [])}
     art = _short(art, 30).lower()
     if not os.path.exists(db_path(uid)):
@@ -732,7 +734,7 @@ def match_docs(uid, tags=None, art=None, used_only=True, shared_only=False):
         rows = con.execute("SELECT * FROM docs" + (" WHERE use=1" if used_only else "")).fetchall()
     out = set()
     for r in rows:
-        if shared_only and not (r["shared"] and r["state"] == "ready"):
+        if shared_only and not _offered(r, shared_only):
             continue
         c = card(r)
         if want - {t.lower() for t in c["tags"]}:
@@ -1014,23 +1016,52 @@ def reread(uid, doc_id, pictures=False, docling=False):
             "todo": len(todo), "kind": kind, "file": True, "docling": bool(docling)}
 
 
-def list_shared(uid):
-    """[{"id", "name", "file", "kind", "pages"}] this profile offers to everyone (ready and in use)."""
+class Offer(NamedTuple):
+    """What one owner offers one other profile: everything „Für alle“ (all) and these single documents (ids,
+    geteilt.py). True in place of an Offer means „Für alle“ only."""
+    all: bool
+    ids: frozenset = frozenset()
+
+
+def _offer_sql(offer, a="d."):
+    """The SQL condition of an Offer on the table docs (alias a): only documents read and in use."""
+    o = Offer(True) if offer is True else offer
+    ids = sorted(i for i in o.ids if re.fullmatch(r"[0-9a-f]{12}", i))
+    parts = ([f"{a}shared=1"] if o.all else []) + ([f"{a}id IN (%s)" % ",".join("'%s'" % i for i in ids)] if ids else [])
+    return "(" + (" OR ".join(parts) or "0") + f") AND {a}state='ready'"
+
+
+def _offered(r, offer):
+    o = Offer(True) if offer is True else offer
+    return r["state"] == "ready" and bool(o.all and r["shared"] or r["id"] in o.ids)
+
+
+def list_shared(uid, offer=True):
+    """[{"id", "name", "file", "kind", "pages"}] this profile offers to everyone (ready and in use), or what it
+    offers one other profile (an Offer)."""
     if not os.path.exists(db_path(uid)):
         return []
     with _Db(uid) as con:
-        rows = con.execute("SELECT * FROM docs WHERE shared=1 AND use=1 AND state='ready' "
-                           "ORDER BY created DESC, id").fetchall()
+        rows = con.execute("SELECT * FROM docs WHERE use=1 AND " + _offer_sql(offer, "") +
+                           " ORDER BY created DESC, id").fetchall()
     return [{"id": r["id"], "name": r["name"], "file": bool(r["file"]), "kind": r["kind"], "pages": r["pages"], **card(r)}
             for r in rows]
 
 
-def is_shared(uid, doc_id):
+def is_shared(uid, doc_id, offer=True):
     if not re.fullmatch(r"[0-9a-f]{12}", doc_id) or not os.path.exists(db_path(uid)):
         return False
     with _Db(uid) as con:
-        return bool(con.execute("SELECT 1 FROM docs WHERE id=? AND shared=1 AND use=1 AND state='ready'",
+        return bool(con.execute("SELECT 1 FROM docs WHERE id=? AND use=1 AND " + _offer_sql(offer, ""),
                                 (doc_id,)).fetchone())
+
+
+def doc_ready(uid, doc_id):
+    """The document is there, read and in use: only such a one can be shared (geteilt.py)."""
+    if not re.fullmatch(r"[0-9a-f]{12}", doc_id or "") or not os.path.exists(db_path(uid)):
+        return False
+    with _Db(uid) as con:
+        return bool(con.execute("SELECT 1 FROM docs WHERE id=? AND use=1 AND state='ready'", (doc_id,)).fetchone())
 
 
 def _from_storage(uid, file, path):
@@ -1533,7 +1564,7 @@ def _terms(text):
 def search(uid, query, k=5, qvec=None, shared_only=False, only_docs=None, fresh=False, now=None):
     """Best-matching pieces of this profile's documents in use: [{"id", "name", "page", "text", "file", "score"}].
     qvec: the query's meaning vector (docembed), merged with the full-text ranking. shared_only: only the
-    documents this profile offers to everyone ("Für alle"), for another profile's search. only_docs: a set
+    documents this profile offers to everyone ("Für alle", True) or to one other profile (an Offer), for its search. only_docs: a set
     of document ids (tags, art) the search keeps to. fresh ("Neueste zuerst"): a piece changed lately gains up
     to FRESH (about two places), halved every FRESH_HALF; fit stays first. Each hit then carries "changed"."""
     if not os.path.exists(db_path(uid)) and not os.path.isdir(_dir(uid)):
@@ -1543,7 +1574,7 @@ def search(uid, query, k=5, qvec=None, shared_only=False, only_docs=None, fresh=
     keep = None if only_docs is None else [d for d in only_docs if re.fullmatch(r"[0-9a-f]{12}", d)]
     if keep is not None and not keep:
         return []
-    cond = "d.use=1" + (" AND d.shared=1 AND d.state='ready'" if shared_only else "") + \
+    cond = "d.use=1" + (" AND " + _offer_sql(shared_only) if shared_only else "") + \
         (" AND d.id IN (%s)" % ",".join("'%s'" % d for d in keep) if keep is not None else "")
     with _Db(uid) as con:
         if shared_only or only_docs is not None:
@@ -1613,7 +1644,7 @@ def recent(uid, since=0, until=None, k=8, shared_only=False):
     if not os.path.exists(db_path(uid)):
         return []
     until = until or 2 ** 62
-    cond = "d.use=1" + (" AND d.shared=1 AND d.state='ready'" if shared_only else "")
+    cond = "d.use=1" + (" AND " + _offer_sql(shared_only) if shared_only else "")
     t = "COALESCE(NULLIF(c.changed, 0), NULLIF(d.changed, 0), d.created, 0)"
     with _Db(uid) as con:
         rows = con.execute(f"SELECT c.doc, c.page, d.name, d.file, d.source, MAX({t}) AS w, "

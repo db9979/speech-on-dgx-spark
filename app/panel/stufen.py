@@ -55,6 +55,7 @@ LIST = {
     ("POST", "/api/profile/calendar"): (CONFIRM, "Konten", "Kalender verbinden", "Connect a calendar"),
     ("POST", "/api/profile/calserver"): (CONFIRM, "Konten", "App-Passwort für Kalender-Apps erzeugen", "Make an app password for calendar apps"),
     ("PUT", "/api/profile/calendar/{cid}/share"): (CONFIRM, "Konten", "Kalender mit einem anderen Profil teilen", "Share a calendar with another profile"),
+    ("PUT", "/api/profile/teilen/{kind}/{item}"): (CONFIRM, "Konten", "Etwas mit einem anderen Profil teilen (Ich → Geteilt)", "Share something with another profile (Me → Shared)"),
     ("POST", "/api/profile/mail"): (CONFIRM, "Konten", "Mail-Konto verbinden", "Connect a mail account"),
     ("POST", "/api/profile/mail/folder/rename"): (CONFIRM, "Konten", "Mail-Ordner umbenennen", "Rename a mail folder"),
     ("POST", "/api/profile/mail/folder/remove"): (CONFIRM, "Konten", "Leeren Mail-Ordner entfernen", "Remove an empty mail folder"),

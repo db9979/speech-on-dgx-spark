@@ -44,7 +44,7 @@ GROUPS = (("talk", "Gespräch", "Conversation"), ("speed", "Tempo und Genauigkei
 ME_PAGES = (("overbox", "Überblick", "Overview"), ("bgbox", "Mein Zustand", "My status"), ("gobox", "Los geht's", "Let's go"),
             ("kannbox", "Was ich kann", "What I can do"),
             ("setbox", "Gespräch", "Conversation"), ("loginbox", "Anmelden", "Sign in"), ("factbox", "Gedächtnis", "Memory"),
-            ("docbox", "Dokumente", "Documents"), ("bildbox", "Bilder", "Pictures"), ("musikbox", "Musik", "Music"), ("rmbox", "reMarkable", "reMarkable"), ("storebox", "Speicher", "Storage"),
+            ("docbox", "Dokumente", "Documents"), ("teilbox", "Geteilt", "Shared"), ("bildbox", "Bilder", "Pictures"), ("musikbox", "Musik", "Music"), ("rmbox", "reMarkable", "reMarkable"), ("storebox", "Speicher", "Storage"),
             ("logbox", "Werkzeug-Verlauf", "Tool history"),
             ("agentbox", "Aufträge", "Jobs"), ("mymcpbox", "Meine MCP-Dienste", "My MCP services"), ("wxbox", "Wetter", "Weather"), ("feedbox", "Reddit und Feeds", "Reddit and feeds"),
             ("probox", "Von selbst", "By itself"), ("notebox", "Mitteilungen", "Notifications"),
@@ -178,6 +178,11 @@ FEATURES = (
       parent="documents", me="docbox", guide="docnight"),
     F("docshared", "Gemeinsame Dokumente", "Shared documents", "data", ("doc_shared",),
       parent="documents", me="docbox", guide="docshared"),
+    # geteilt.py (plan teilen-profile, Dominik 2026-10-20 „ok“): one way to share for every kind, Ich → Geteilt; a
+    # document to single profiles, calendars and lists listed and taken back there. The note is a preference.
+    F("teilen", "Teilen mit Profilen", "Sharing with profiles", "data", ("share",), me="teilbox", guide="teilen"),
+    F("teilenhinweis", "Hinweis auf Geteiltes", "Note on shared things", "data", ("share",), pref="share_note",
+      parent="teilen", me="teilbox", guide="teilenhinweis"),
     # Docling-Server (doclingdienst.py): for all profiles once the admin sets it up; each may say "not my files"
     # (preference doc_docling, on by default) because the files leave the Spark for the server in the home network
     F("docling", "Docling-Server", "Docling server", "data", ("docling",), pref="doc_docling", parent="documents",

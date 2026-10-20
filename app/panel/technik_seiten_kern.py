@@ -241,7 +241,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Wissen: how a question finds passages
     "wissen": {
-        "stand": "1dc7a1f1e5",
+        "stand": "79ad084d24",
         "bezug": {
             "lokal.MAX_HITS": ["s5"], "wissen.search": ["s1", "s8", "s9"], "documents.search": ["s5", "s6"],
             "documents._terms": ["s5"], "documents.match_docs": ["s4"], "docembed.query": ["s3"],
@@ -331,13 +331,13 @@ SEITEN = {
                "with age. Fit stays more important; each hit then carries its date."),
               ("info", "ja", ("kleiner Vorsprung für Neues", "small lead for new pages"))),
             S("s8", "schritt", ("Geteilte Dokumente der anderen", "Shared documents of the others"),
-              ("„Für alle“ markiert, nur fertig gelesene", "marked „for everyone“, only fully read ones"),
+              ("„Für alle“ oder einzeln geteilt, nur fertig gelesene", "„for everyone“ or shared singly, only fully read ones"),
               ("Mit „Gemeinsame Dokumente“ läuft dieselbe Suche in den Dateien der anderen Profile, aber nur über "
-               "Dokumente, die dort „Für alle“ sind. Ist der Haushaltsordner für das Profil frei, läuft sie auch im "
+               "Dokumente, die dort „Für alle“ sind oder mit „Teilen mit Profilen“ einzeln mit diesem Profil geteilt (documents.Offer). Ist der Haushaltsordner für das Profil frei, läuft sie auch im "
                "Bestand des Haushalts (users/haushalt/). Die Treffer tragen den Namen des Besitzers oder „Haushalt“; "
                "alles wird nach Rang sortiert.",
                "With „Shared documents“ the same search runs in the other profiles' files, but only over documents "
-               "marked „for everyone“ there. With the household folder released for the profile it also runs in the "
+               "marked „for everyone“ there or shared singly with this profile through „Sharing with profiles“ (documents.Offer). With the household folder released for the profile it also runs in the "
                "household's store (users/haushalt/). The hits carry the owner's name or „Haushalt“; everything is "
                "sorted by rank.")),
             S("s9", "frage", ("Treffer nachsortieren an?", "Re-rank hits on?"),
@@ -398,7 +398,7 @@ SEITEN = {
         "regeln": [
             [("Quelle", "Source"), ("Wie sie gefunden wird", "How it is found"), ("Wer", "Who")],
             [("Eigene Dokumente", "Own documents"), ("document_search: Volltext, Bedeutung, Nachsortieren", "document_search: full text, meaning, re-ranking"), ("eigenes Profil", "own profile")],
-            [("Geteilte Dokumente", "Shared documents"), ("dieselbe Suche, nur „Für alle“", "the same search, only „for everyone“"), ("andere Profile, nie Gäste", "other profiles, never guests")],
+            [("Geteilte Dokumente", "Shared documents"), ("dieselbe Suche, nur „Für alle“ oder einzeln geteilt", "the same search, only „for everyone“ or shared singly"), ("andere Profile, nie Gäste", "other profiles, never guests")],
             [("Gedächtnis", "Memory"), ("wird nicht gesucht: steht in drei Blöcken im Systemprompt", "not searched: stands in three blocks in the system prompt"), ("eigenes Profil", "own profile")],
             [("Frühere Gespräche", "Earlier conversations"), ("history_search über Wörter", "history_search by words"), ("eigenes Profil", "own profile")],
             [("Kiwix", "Kiwix"), ("archive_search und wikipedia über das eigene Kiwix im Heimnetz", "archive_search and wikipedia via the own Kiwix in the home network"), ("alle Profile, nie Gäste", "all profiles, never guests")],

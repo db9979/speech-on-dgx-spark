@@ -190,11 +190,28 @@ def add(uid, name, data, text=None, source="upload"):
 
 
 def _sharers(uid):
-    """The other profiles that offer documents to everyone ("Für alle"), when this profile may see them, and the
-    Haushaltsordner (nasquelle.HAUS, S5) when the admin released it for this profile."""
+    """The other profiles that offer documents to this one: to everyone ("Für alle", when this profile may see them),
+    single documents to this profile (Teilen, geteilt.py) and the Haushaltsordner (nasquelle.HAUS, S5) when the
+    admin released it for this profile."""
     import nasquelle
+    import geteilt
     out = [o for o in profiles.user_ids() if o != uid and on(o, "shared")] if on(uid, "shared") else []
+    out += [o for o in geteilt.doc_owners(uid) if o not in out]
     return out + ([nasquelle.HAUS] if nasquelle.haus_find(uid) else [])
+
+
+def _offer(uid, o):
+    """What o offers uid (documents.Offer): „Für alle“ while both may, and the single documents o shares with uid."""
+    import nasquelle
+    import geteilt
+    if o == nasquelle.HAUS:
+        return documents.Offer(True)
+    return documents.Offer(on(uid, "shared") and on(o, "shared"), geteilt.doc_offer(uid, o))
+
+
+def geteilt_ids(uid):
+    import geteilt
+    return sorted(geteilt.doc_ids(uid)) if geteilt.may_kind("doc", uid) else []
 
 
 def shared_list(uid):
@@ -202,14 +219,14 @@ def shared_list(uid):
     out = []
     for o in _sharers(uid):
         owner = _owner_name(o)
-        out += [dict(d, owner=owner) for d in documents.list_shared(o)]
+        out += [dict(d, owner=owner) for d in documents.list_shared(o, _offer(uid, o))]
     return out
 
 
 def find_shared(uid, doc_id):
     """The owner's id of a document another profile offers to this one, else None."""
     for o in _sharers(uid):
-        if documents.is_shared(o, doc_id):
+        if documents.is_shared(o, doc_id, _offer(uid, o)):
             return o
     return None
 
@@ -230,9 +247,9 @@ async def search(uid, query, k=5, tags=None, art=None, semantic=True, keep=True,
     own = documents.match_docs(uid, tags, art) if narrow else None
     hits = await asyncio.to_thread(documents.search, uid, query, k, qvec, False, own, fresh)
     for o in _sharers(uid):
-        owner = _owner_name(o)
-        keep = documents.match_docs(o, tags, art, shared_only=True) if narrow else None
-        theirs = await asyncio.to_thread(documents.search, o, query, k, qvec, True, keep, fresh)
+        owner, offer = _owner_name(o), _offer(uid, o)
+        keep = documents.match_docs(o, tags, art, shared_only=offer) if narrow else None
+        theirs = await asyncio.to_thread(documents.search, o, query, k, qvec, offer, keep, fresh)
         hits += [dict(h, owner=owner, shared=True) for h in theirs]
     hits = sorted(hits, key=lambda h: -h.get("score", 0))[:k]
     if rerank:
@@ -245,9 +262,10 @@ def cards(uid, tags=None, art=None):
     own = documents.match_docs(uid, tags, art)
     out = [d for d in documents.list_docs(uid, used_only=True) if d["id"] in own]
     for o in _sharers(uid):
-        keep = documents.match_docs(o, tags, art, shared_only=True)
+        offer = _offer(uid, o)
+        keep = documents.match_docs(o, tags, art, shared_only=offer)
         owner = _owner_name(o)
-        out += [dict(d, owner=owner) for d in documents.list_shared(o) if d["id"] in keep]
+        out += [dict(d, owner=owner) for d in documents.list_shared(o, offer) if d["id"] in keep]
     return out
 
 
@@ -318,7 +336,7 @@ async def recent(uid, since=0, until=None, k=8):
     hits = await asyncio.to_thread(documents.recent, uid, since, until, k)
     for o in _sharers(uid):
         owner = _owner_name(o)
-        hits += [dict(h, owner=owner, shared=True) for h in await asyncio.to_thread(documents.recent, o, since, until, k, True)]
+        hits += [dict(h, owner=owner, shared=True) for h in await asyncio.to_thread(documents.recent, o, since, until, k, _offer(uid, o))]
     return sorted(hits, key=lambda h: -h.get("changed", 0))[:k]
 
 
@@ -599,6 +617,7 @@ def info(prof=Depends(own_profile)):
             # "Mit Docling lesen" is a preference: on unless the profile turned it off (doclingdienst.PREF)
             "on": dict({k: on(uid, k) for k in kinds}, due=s.get("doc_due") is True, docling=s.get("doc_docling", True) is not False),
             "others": shared_list(uid),
+            "teil": geteilt_ids(uid),     # own documents shared with single profiles (Teilen, geteilt.py)
             "usage": documents.usage(uid), "quota": keep_bytes(uid) or None,
             "used": documents.usage_total(uid), "space": quota_bytes(uid),
             "today": documents.count_today(uid, today(time.time())) if admin_on("pictures") else 0,

@@ -1565,7 +1565,15 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/notaus.py blocks: ob eine Notaus-Stufe diese Art Arbeit anhält (Schritt 2) - app/panel/guard.py limit: Rate-Limit pro Adresse und Profil (Schritt 3) - app/panel/guard.py Slot: Höchstzahl gleichzeitiger Anfragen (Schritt 3) - app/panel/core.py confirm_code: frischer Code oder Passkey für heikle Wege (Schritt 3, Schritt 8) - app/tarswart.py check: prüft jeden Befehl an den Wärter (Schritt 3) - app/panel/chat_turn.py shared_stranger: fremde Stimme am geteilten Lautsprecher (Schritt 4) - app/panel/features.py allowed: Freigabe des Admins, gilt für jedes Profil (Schritt 5) - app/panel/features.py blocked: Sperre einzelner Profile (Schritt 5) - app/panel/chat.py wrap_outside: Text von außen als Datenblock (Schritt 6) - app/panel/netguard.py allowed: ob eine Verbindung nach außen sein darf (Schritt 6) - app/panel/answercheck.py unsupported: Zahl ohne Quelle fällt heraus (Schritt 9) - app/textnorm.py hide_secrets: Geheimnisse werden nie gesprochen (Schritt 9) - app/panel/guard.py log: Änderungsprotokoll mit Prüfkette (Schritt 10) - app/panel/vault.py seal: Geheimnisse versiegelt ablegen (Schritt 10)"
+"text": "- app/panel/notaus.py blocks: ob eine Notaus-Stufe diese Art Arbeit anhält (Schritt 2) - app/panel/guard.py limit: Rate-Limit pro Adresse und Profil (Schritt 3) - app/panel/guard.py Slot: Höchstzahl gleichzeitiger Anfragen (Schritt 3) - app/panel/core.py confirm_code: frischer Code oder Passkey für heikle Wege (Schritt 3, Schritt 8) - app/tarswart.py check: prüft jeden Befehl an den Wärter (Schritt 3) - app/panel/chat_turn.py shared_stranger: fremde Stimme am geteilten Lautsprecher (Schritt 4) - app/panel/features.py allowed: Freigabe des Admins, gilt für jedes Profil (Schritt 5) - app/panel/features.py blocked: Sperre einzelner Profile (Schritt 5) - app/panel/geteilt.py put: Teilen mit einem anderen Profil, zurückziehen wirkt sofort (Schritt 5) - app/panel/chat.py wrap_outside: Text von außen als Datenblock (Schritt 6) - app/panel/netguard.py allowed: ob eine Verbindung nach außen sein darf (Schritt 6) - app/panel/answercheck.py unsupported: Zahl ohne Quelle fällt heraus (Schritt 9) - app/textnorm.py hide_secrets: Geheimnisse werden nie gesprochen (Schritt 9) - app/panel/guard.py log: Änderungsprotokoll mit Prüfkette (Schritt 10) - app/panel/vault.py seal: Geheimnisse versiegelt a"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Im Code",
+"title": "Im Code",
+"text": "blegen (Schritt 10)"
 },
 {
 "lang": "de",
@@ -2133,7 +2141,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "le und in ihrer Kontextzeile (Titel, Art, Überschriften), die nur mit 0.4 zählt. Die besten 30 bekommen einen Rang. 6. Bedeutung dazumischen: Hat die Frage einen Vektor, werden die Vektoren aller Stellen verglichen. Unter 0,75 Ähnlichkeit gilt nichts als verwandt; die besten 30 darüber bekommen ebenfalls einen Rang. Beide Ränge werden addiert, so steigt eine Stelle, die in beiden Listen weit oben steht. Die Vektoren liegen als float32 im Speicher und werden nur neu gelesen, wenn sich Stellen oder genutzte Dokumente ändern; solange noch Vektoren fehlen, höchstens alle 30 Sekunden. 7. Neueste zuerst?: Mit „Neueste zuerst“ bekommt eine kürzlich geänderte Stelle einen kleinen Vorsprung, etwa zwei Plätze, der mit dem Alter kleiner wird. Die Passung bleibt wichtiger; jeder Treffer trägt dann sein Datum. 8. Geteilte Dokumente der anderen: Mit „Gemeinsame Dokumente“ läuft dieselbe Suche in den Dateien der anderen Profile, aber nur über Dokumente, die dort „Für alle“ sind. Ist der Haushaltsordner für das Profil frei, läuft sie auch im Bestand des Haushalts (users/haushalt/). Die Treffer tragen den Namen des Besitzers oder „Haushalt“; alles wird nach Rang sortiert. 9. Treffer nachsortieren a"
+"text": "le und in ihrer Kontextzeile (Titel, Art, Überschriften), die nur mit 0.4 zählt. Die besten 30 bekommen einen Rang. 6. Bedeutung dazumischen: Hat die Frage einen Vektor, werden die Vektoren aller Stellen verglichen. Unter 0,75 Ähnlichkeit gilt nichts als verwandt; die besten 30 darüber bekommen ebenfalls einen Rang. Beide Ränge werden addiert, so steigt eine Stelle, die in beiden Listen weit oben steht. Die Vektoren liegen als float32 im Speicher und werden nur neu gelesen, wenn sich Stellen oder genutzte Dokumente ändern; solange noch Vektoren fehlen, höchstens alle 30 Sekunden. 7. Neueste zuerst?: Mit „Neueste zuerst“ bekommt eine kürzlich geänderte Stelle einen kleinen Vorsprung, etwa zwei Plätze, der mit dem Alter kleiner wird. Die Passung bleibt wichtiger; jeder Treffer trägt dann sein Datum. 8. Geteilte Dokumente der anderen: Mit „Gemeinsame Dokumente“ läuft dieselbe Suche in den Dateien der anderen Profile, aber nur über Dokumente, die dort „Für alle“ sind oder mit „Teilen mit Profilen“ einzeln mit diesem Profil geteilt (documents.Offer). Ist der Haushaltsordner für das Profil frei, läuft sie auch im Bestand des Haushalts (users/haushalt/). Die Treffer tragen den Namen des B"
 },
 {
 "lang": "de",
@@ -2141,7 +2149,15 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "n?: Ohne Nachsortieren gehen die ersten fünf der Mischung weiter. Mit Nachsortieren reicht die Mischung ihre besten 30 weiter. 10. Cross-Encoder ordnet: Ein kleines Modell auf dem Prozessor liest Frage und Stelle zusammen und gibt jeder eine Zahl. Stellen unter -4.0 beantworten die Frage nicht und fallen weg, die besten fünf bleiben. Schläft das Modell, ist es belegt, zu langsam oder kaputt, bleibt die Reihenfolge der Mischung; die Antwort wartet nie länger als eingestellt. 11. „Was habe ich zuletzt notiert?“: Fragt die Person mit eigenen Worten nach dem, was sie zuletzt, heute oder diese Woche notiert hat, kommen die zuletzt geänderten Seiten zuerst. Ist in der Zeit nichts geändert, sagt das Werkzeug das, statt zu raten. 12. Keine Stelle gefunden?: Findet die Suche nichts, waren aber Tags oder Art genannt, bekommt das Modell die Steckbrief-Zeilen der passenden Dokumente. Sonst heißt es: nichts gefunden, sag das, rate nicht. 13. Stellen mit Herkunft ans Modell: Jede Stelle geht mit Dokument, Seite und Abschnitt ans Modell. Ab jetzt gilt die Antwort als eine, die Text von außen gelesen hat: Schalten, Merken und Erinnerungen sind in ihr gesperrt. Das Gerät zeigt die Quellen."
+"text": "esitzers oder „Haushalt“; alles wird nach Rang sortiert. 9. Treffer nachsortieren an?: Ohne Nachsortieren gehen die ersten fünf der Mischung weiter. Mit Nachsortieren reicht die Mischung ihre besten 30 weiter. 10. Cross-Encoder ordnet: Ein kleines Modell auf dem Prozessor liest Frage und Stelle zusammen und gibt jeder eine Zahl. Stellen unter -4.0 beantworten die Frage nicht und fallen weg, die besten fünf bleiben. Schläft das Modell, ist es belegt, zu langsam oder kaputt, bleibt die Reihenfolge der Mischung; die Antwort wartet nie länger als eingestellt. 11. „Was habe ich zuletzt notiert?“: Fragt die Person mit eigenen Worten nach dem, was sie zuletzt, heute oder diese Woche notiert hat, kommen die zuletzt geänderten Seiten zuerst. Ist in der Zeit nichts geändert, sagt das Werkzeug das, statt zu raten. 12. Keine Stelle gefunden?: Findet die Suche nichts, waren aber Tags oder Art genannt, bekommt das Modell die Steckbrief-Zeilen der passenden Dokumente. Sonst heißt es: nichts gefunden, sag das, rate nicht. 13. Stellen mit Herkunft ans Modell: Jede Stelle geht mit Dokument, Seite und Abschnitt ans Modell. Ab jetzt gilt die Antwort als eine, die Text von außen gelesen hat: Schalten, "
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Ablauf",
+"title": "Ablauf",
+"text": "Merken und Erinnerungen sind in ihr gesperrt. Das Gerät zeigt die Quellen."
 },
 {
 "lang": "de",
@@ -4310,6 +4326,22 @@
 "head": "Sprach-Chat",
 "title": "Gemeinsame Dokumente (V01.0.236)",
 "text": "Gemeinsame Dokumente (V01.0.236): Mit dem Admin-Schalter *Funktionen → Eigene Dokumente → Gemeinsame Dokumente* (ab Werk aus, freigegeben für jedes Profil) erscheint an jedem fertigen Dokument „Für alle“. Ein angehaktes Dokument bleibt in der Datenbank des Besitzers und wird nicht neu eingelesen; jedes andere Profil, das die Funktion nutzen darf, findet es in seiner Suche (Quelle „…, geteilt von Name“) und sieht es unter „Von anderen für alle freigegeben“ mit „Ansehen“. Nur der Besitzer nimmt die Freigabe zurück, ändert oder löscht das Dokument; der Admin sieht unter Zustand → Überblick, was freigegeben ist, und kann es zurücknehmen. Gäste, Telegram ohne „Persönliches“ und Stimmen, die ein geteilter Lautsprecher nicht als Inhaber erkennt, bekommen keine gemeinsamen Dokumente. Ihr Text bleibt Text von außen wie jedes Dokument. Agenten suchen weiterhin nur in den eigenen Dokumenten."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Teilen mit Profilen (V01.0.866, Plan `teilen-profile/plan.md`, Stufe 1)",
+"text": "Teilen mit Profilen (V01.0.866, Plan teilen-profile/plan.md, Stufe 1): Admin-Schalter *Funktionen → Teilen mit Profilen* (chat.share, ab Werk aus; freigegeben für jedes Profil, Gäste nie). An jedem fertigen eigenen Dokument steht dann „Teilen“: ein Dialog mit Personensuche, je Profil *Aus* oder *Sehen*, dazu „Alle Profile“ (das bisherige „Für alle“, mit *Gemeinsame Dokumente*). Speichern braucht einen frischen Code. Das andere Profil findet das Dokument unter Ich → Dokumente (Quelle „Von anderen“), in seiner Suche und unter der neuen Seite Ich → Geteilt; für seinen Assistenten ist es Text von außen wie jedes Dokument. Ich → Geteilt zeigt in zwei Reitern alles an einem Ort: *Mit mir geteilt* (Dokumente, Kalender und Listen anderer, „neu“ seit dem letzten Besuch, Öffnen) und *Von mir geteilt* (je Person „Zurückziehen“, bei Dokumenten „Ändern“; zurückziehen wirkt sofort). Die Daten bleiben immer beim Besitzer, es gibt keine Kopie; Kalender und Listen teilt man weiter an ihrer Seite, sie hängen als Adapter an geteilt.py. *Hinweis auf Geteiltes* (Ich → Geteilt, ab Werk an): eine Mitteilung „Name hat etwas mit dir geteilt“ an die Geräte des Empfängers, höchstens eine alle 10 Minuten, meh"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Teilen mit Profilen (V01.0.866, Plan `teilen-profile/plan.md`, Stufe 1)",
+"text": "r werden gesammelt. Grenzen: 50 Personen pro Dokument, 500 einzeln geteilte Dokumente pro Profil. Gespeichert in users/<profil>/geteilt.json. Live (Kachel „Geteilt“) und Logs (Bereich Nachrichten, geteilt: …) zeigen nur Zahlen. Als Nächstes: Notizen, Wissensbuch-Seiten, Bilder und Musik (Stufe 2), Ablauf und Nachricht (Stufe 3), Teilen per Sprache und aus dem iPhone (Stufe 4)."
 },
 {
 "lang": "de",
@@ -10461,7 +10493,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/notaus.py blocks: whether a kill switch stage stops this kind of work (step 2) - app/panel/guard.py limit: rate limit per address and profile (step 3) - app/panel/guard.py Slot: cap on parallel requests (step 3) - app/panel/core.py confirm_code: fresh code or passkey for sensitive ways (step 3, step 8) - app/tarswart.py check: checks every command to the Wärter (step 3) - app/panel/chat_turn.py shared_stranger: stranger's voice at a shared speaker (step 4) - app/panel/features.py allowed: the admin's release, for every profile (step 5) - app/panel/features.py blocked: block of single profiles (step 5) - app/panel/chat.py wrap_outside: outside text as a block of data (step 6) - app/panel/netguard.py allowed: whether a connection out may happen (step 6) - app/panel/answercheck.py unsupported: a figure without a source is dropped (step 9) - app/textnorm.py hide_secrets: secrets are never spoken (step 9) - app/panel/guard.py log: change log with its chain (step 10) - app/panel/vault.py seal: store secrets sealed (step 10)"
+"text": "- app/panel/notaus.py blocks: whether a kill switch stage stops this kind of work (step 2) - app/panel/guard.py limit: rate limit per address and profile (step 3) - app/panel/guard.py Slot: cap on parallel requests (step 3) - app/panel/core.py confirm_code: fresh code or passkey for sensitive ways (step 3, step 8) - app/tarswart.py check: checks every command to the Wärter (step 3) - app/panel/chat_turn.py shared_stranger: stranger's voice at a shared speaker (step 4) - app/panel/features.py allowed: the admin's release, for every profile (step 5) - app/panel/features.py blocked: block of single profiles (step 5) - app/panel/geteilt.py put: share with another profile, taking back works at once (step 5) - app/panel/chat.py wrap_outside: outside text as a block of data (step 6) - app/panel/netguard.py allowed: whether a connection out may happen (step 6) - app/panel/answercheck.py unsupported: a figure without a source is dropped (step 9) - app/textnorm.py hide_secrets: secrets are never spoken (step 9) - app/panel/guard.py log: change log with its chain (step 10) - app/panel/vault.py seal: store secrets sealed (step 10)"
 },
 {
 "lang": "en",
@@ -11013,7 +11045,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": ", headings), which counts only 0.4. The best 30 get a rank. 6. Mix in meaning: If the question has a vector, it is compared with every passage's vector. Below 0.75 similarity nothing counts as related; the best 30 above get a rank too. Both ranks are added, so a passage high in both lists rises. The vectors are kept in memory as float32 and read again only when passages or used documents change; while vectors are still missing, at most every 30 seconds. 7. Newest first?: With „Newest first“ a passage changed lately gets a small lead, about two places, which shrinks with age. Fit stays more important; each hit then carries its date. 8. Shared documents of the others: With „Shared documents“ the same search runs in the other profiles' files, but only over documents marked „for everyone“ there. With the household folder released for the profile it also runs in the household's store (users/haushalt/). The hits carry the owner's name or „Haushalt“; everything is sorted by rank. 9. Re-rank hits on?: Without re-ranking the first five of the mix go on. With re-ranking the mix hands over its best 30. 10. Cross-encoder orders: A small model on the processor reads question and passage togethe"
+"text": ", headings), which counts only 0.4. The best 30 get a rank. 6. Mix in meaning: If the question has a vector, it is compared with every passage's vector. Below 0.75 similarity nothing counts as related; the best 30 above get a rank too. Both ranks are added, so a passage high in both lists rises. The vectors are kept in memory as float32 and read again only when passages or used documents change; while vectors are still missing, at most every 30 seconds. 7. Newest first?: With „Newest first“ a passage changed lately gets a small lead, about two places, which shrinks with age. Fit stays more important; each hit then carries its date. 8. Shared documents of the others: With „Shared documents“ the same search runs in the other profiles' files, but only over documents marked „for everyone“ there or shared singly with this profile through „Sharing with profiles“ (documents.Offer). With the household folder released for the profile it also runs in the household's store (users/haushalt/). The hits carry the owner's name or „Haushalt“; everything is sorted by rank. 9. Re-rank hits on?: Without re-ranking the first five of the mix go on. With re-ranking the mix hands over its best 30. 10. Cr"
 },
 {
 "lang": "en",
@@ -11021,7 +11053,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "r and gives each a number. Passages below -4.0 do not answer the question and drop out, the best five stay. If the model sleeps, is busy, too slow or broken, the mix's order stays; the answer never waits longer than set. 11. „What did I note lately?“: If the person asks in their own words what they noted lately, today or this week, the pages changed last come first. If nothing changed in that time, the tool says so instead of guessing. 12. No passage found?: If the search finds nothing but tags or a kind were given, the model gets the card lines of the fitting documents. Otherwise: nothing found, say so, do not guess. 13. Passages with source to the model: Each passage goes to the model with document, page and section. From now on the answer counts as one that read outside text: switching, saving to memory and reminders are locked in it. The device shows the sources."
+"text": "oss-encoder orders: A small model on the processor reads question and passage together and gives each a number. Passages below -4.0 do not answer the question and drop out, the best five stay. If the model sleeps, is busy, too slow or broken, the mix's order stays; the answer never waits longer than set. 11. „What did I note lately?“: If the person asks in their own words what they noted lately, today or this week, the pages changed last come first. If nothing changed in that time, the tool says so instead of guessing. 12. No passage found?: If the search finds nothing but tags or a kind were given, the model gets the card lines of the fitting documents. Otherwise: nothing found, say so, do not guess. 13. Passages with source to the model: Each passage goes to the model with document, page and section. From now on the answer counts as one that read outside text: switching, saving to memory and reminders are locked in it. The device shows the sources."
 },
 {
 "lang": "en",
@@ -13126,6 +13158,22 @@
 "head": "Voice chat",
 "title": "Shared documents (V01.0.236)",
 "text": "Shared documents (V01.0.236): with the admin switch *Features → Own documents → Shared documents* (off by default, released for every profile) every finished document gets \"For everyone\". A ticked document stays in its owner's database and is not read again; every other profile that may use the function finds it in its search (source \"…, geteilt von name\") and sees it under \"Shared for everyone by others\" with \"View\". Only the owner takes the sharing back, changes or deletes the document; the admin sees under Status → Summary what is shared and can take it back. Guests, Telegram without \"personal\" and voices a shared speaker does not recognize as its owner get no shared documents. Their text stays outside text like any document. Agents still search only their own documents."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Sharing with profiles (V01.0.866, plan `teilen-profile/plan.md`, stage 1)",
+"text": "Sharing with profiles (V01.0.866, plan teilen-profile/plan.md, stage 1): admin switch *Features → Sharing with profiles* (chat.share, off by default; once released for every profile, guests never). Every finished own document then has „Share“: a dialog with a person search, *Off* or *See* per profile, plus „All profiles“ (the former „For everyone“, with *Shared documents*). Saving needs a fresh code. The other profile finds the document under Me → Documents (source „From others“), in its search and on the new page Me → Shared; for its assistant it is outside text like any document. Me → Shared shows everything in one place in two tabs: *Shared with me* (documents, calendars and lists of others, „new“ since the last visit, Open) and *Shared by me* (per person „Take back“, for documents „Change“; taking back works at once). The data always stays with the owner, there is no copy; calendars and lists are still shared on their own page, they hang on geteilt.py as adapters. *Note on shared things* (Me → Shared, on by default): a note „Name shared something with you“ to the recipient's devices, at most one every 10 minutes, more are collected. Limits: 50 people per document, 500 singly sh"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Sharing with profiles (V01.0.866, plan `teilen-profile/plan.md`, stage 1)",
+"text": "ared documents per profile. Stored in users/<profile>/geteilt.json. Live (tile „Shared“) and logs (area messages, geteilt: …) show numbers only. Next: notes, Wissensbuch pages, pictures and music (stage 2), expiry and message (stage 3), sharing by voice and from the iPhone (stage 4)."
 },
 {
 "lang": "en",

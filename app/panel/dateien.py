@@ -56,6 +56,8 @@ DATEIEN = [
     profil("learned.json", "Lesemarken des Lernens aus Gesprächen", "Read marks of learning from conversations", bereich="gedaechtnis"),
     profil("zuordnungen.json", "Gemerkte Zuordnungen", "Remembered matches", bereich="gedaechtnis"),
     profil("tasks.json", "Aufgaben", "Tasks", bereich="alltag"),
+    profil("geteilt.json", "Geteilt: welche Dokumente mit welchen Profilen, seit wann; wann Ich → Geteilt zuletzt offen war",
+           "Shared: which documents with which profiles, since when; when Me → Shared was last open", art="Einstellungen"),
     profil("reminders.json", "Erinnerungen", "Reminders", bereich="alltag"),
     profil("wissen.db", "Dokumente: Text, Abschnitte mit Kontextzeile, Suche, Vektoren (SQLite)", "Documents: text, sections with context line, search, vectors (SQLite)", bereich="dokumente"),
     profil("docs/files/", "Originale der Uploads", "Originals of uploads", bereich="dokumente"),

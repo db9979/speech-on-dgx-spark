@@ -265,6 +265,7 @@ Home Assistant, Mail, Kalender, Aufgaben, Wetter, reMarkable, MCP und was der Sp
 | `app/panel/extras.py` | Kleine Zusatzdienste mit ihren Werkzeugen |
 | `app/panel/feeds.py` | Reddit und Feeds: eigener Reddit-Posteingang, Subreddits und RSS, nur lesen |
 | `app/panel/fuerdich.py` | Für dich: findet Rechnungen, Verträge, Bestellungen, Angebote, offene Antworten und Phishing in den eigenen Mails |
+| `app/panel/geteilt.py` | Teilen mit Profilen: Dokumente an einzelne Profile, Ich → Geteilt, zurückziehen sofort |
 | `app/panel/hamelden.py` | Home Assistant meldet Ereignisse an den Spark |
 | `app/panel/homeassistant.py` | Home Assistant pro Profil |
 | `app/panel/ichweiss.py` | Was ich über dich weiß: Interessen mit Beleg, Wiederkehrendes, Woche, Monat und ein Netz-Tipp am Tag |
@@ -497,6 +498,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `users/ID/erstellt/` | Erstellte Dokumente |  | – | ja | Erstellte Dokumente |
 | `users/ID/bilder/` | Gemalte Bilder und ihr Verzeichnis (Prompt, Wunsch, Größe) |  | – | ja | Gemalte Bilder |
 | `users/ID/musik/` | Eigene Lieder und ihr Verzeichnis (Wunsch, Beschreibung, Liedtext, Länge) |  | – | ja | Eigene Lieder |
+| `users/ID/geteilt.json` | Geteilt: welche Dokumente mit welchen Profilen, seit wann; wann Ich → Geteilt zuletzt offen war | Einstellungen | – | ja | – |
 | `users/ID/settings.json` | Einstellungen | Einstellungen | – | ja | – |
 | `users/ID/setup.json` | Einrichtung | Einstellungen | – | ja | – |
 | `users/ID/speicher.json` | Ziele des eigenen Speichers | Einstellungen | Schlüssel versiegelt | ja | – |
@@ -1478,6 +1480,7 @@ Gilt bei: [Schritt 4](#kn-sicherheit-s4), [Schritt 5](#kn-sicherheit-s5)
 | Gast | Frage und Antwort, keine Werkzeuge, keine persönlichen Daten, nur Fehlercodes | Rate-Limit, Höchstzahl gleichzeitig |
 | Fremde Stimme | wie ein Gast, früherer Verlauf geht nicht mit | Stimmprüfung in derselben Aufnahme |
 | Profil | freigegebene Funktionen auf eigene Daten | Anmeldung; Geheimnisse mit frischem Code |
+| Anderes Profil | nur, was der Besitzer einzeln mit ihm teilt (Sehen), solange er teilt; für den Assistenten nur Text | geteilt.put mit frischem Code, Freigabe „Teilen mit Profilen“ |
 | Verwalter | Personen betreuen, keine Funktionen schalten, keine Logs | Rolle, auf dem Server geprüft |
 | Admin | Freigaben, Sperren, Notaus, Logs, Live | Anmeldung mit zweitem Schritt; „Schutz ändern“ fragt jedes Mal |
 
@@ -1510,6 +1513,7 @@ Gilt bei: [Schritt 4](#kn-sicherheit-s4), [Schritt 5](#kn-sicherheit-s5)
 - `app/panel/chat_turn.py` `shared_stranger`: fremde Stimme am geteilten Lautsprecher ([Schritt 4](#kn-sicherheit-s4))
 - `app/panel/features.py` `allowed`: Freigabe des Admins, gilt für jedes Profil ([Schritt 5](#kn-sicherheit-s5))
 - `app/panel/features.py` `blocked`: Sperre einzelner Profile ([Schritt 5](#kn-sicherheit-s5))
+- `app/panel/geteilt.py` `put`: Teilen mit einem anderen Profil, zurückziehen wirkt sofort ([Schritt 5](#kn-sicherheit-s5))
 - `app/panel/chat.py` `wrap_outside`: Text von außen als Datenblock ([Schritt 6](#kn-sicherheit-s6))
 - `app/panel/netguard.py` `allowed`: ob eine Verbindung nach außen sein darf ([Schritt 6](#kn-sicherheit-s6))
 - `app/panel/answercheck.py` `unsupported`: Zahl ohne Quelle fällt heraus ([Schritt 9](#kn-sicherheit-s9))
@@ -2152,7 +2156,7 @@ flowchart TD
 5. <a id="kn-wissen-s5"></a>**Volltext: Wörter und Kontextzeile**: Die Frage wird in Suchwörter zerlegt (Füllwörter weg, Endungen grob gekürzt). Gesucht wird in den Wörtern jeder Stelle und in ihrer Kontextzeile (Titel, Art, Überschriften), die nur mit 0.4 zählt. Die besten 30 bekommen einen Rang.
 6. <a id="kn-wissen-s6"></a>**Bedeutung dazumischen**: Hat die Frage einen Vektor, werden die Vektoren aller Stellen verglichen. Unter 0,75 Ähnlichkeit gilt nichts als verwandt; die besten 30 darüber bekommen ebenfalls einen Rang. Beide Ränge werden addiert, so steigt eine Stelle, die in beiden Listen weit oben steht. Die Vektoren liegen als float32 im Speicher und werden nur neu gelesen, wenn sich Stellen oder genutzte Dokumente ändern; solange noch Vektoren fehlen, höchstens alle 30 Sekunden.
 7. <a id="kn-wissen-s7"></a>**Neueste zuerst?**: Mit „Neueste zuerst“ bekommt eine kürzlich geänderte Stelle einen kleinen Vorsprung, etwa zwei Plätze, der mit dem Alter kleiner wird. Die Passung bleibt wichtiger; jeder Treffer trägt dann sein Datum.
-8. <a id="kn-wissen-s8"></a>**Geteilte Dokumente der anderen**: Mit „Gemeinsame Dokumente“ läuft dieselbe Suche in den Dateien der anderen Profile, aber nur über Dokumente, die dort „Für alle“ sind. Ist der Haushaltsordner für das Profil frei, läuft sie auch im Bestand des Haushalts (users/haushalt/). Die Treffer tragen den Namen des Besitzers oder „Haushalt“; alles wird nach Rang sortiert.
+8. <a id="kn-wissen-s8"></a>**Geteilte Dokumente der anderen**: Mit „Gemeinsame Dokumente“ läuft dieselbe Suche in den Dateien der anderen Profile, aber nur über Dokumente, die dort „Für alle“ sind oder mit „Teilen mit Profilen“ einzeln mit diesem Profil geteilt (documents.Offer). Ist der Haushaltsordner für das Profil frei, läuft sie auch im Bestand des Haushalts (users/haushalt/). Die Treffer tragen den Namen des Besitzers oder „Haushalt“; alles wird nach Rang sortiert.
 9. <a id="kn-wissen-s9"></a>**Treffer nachsortieren an?**: Ohne Nachsortieren gehen die ersten fünf der Mischung weiter. Mit Nachsortieren reicht die Mischung ihre besten 30 weiter.
 10. <a id="kn-wissen-s10"></a>**Cross-Encoder ordnet**: Ein kleines Modell auf dem Prozessor liest Frage und Stelle zusammen und gibt jeder eine Zahl. Stellen unter -4.0 beantworten die Frage nicht und fallen weg, die besten fünf bleiben. Schläft das Modell, ist es belegt, zu langsam oder kaputt, bleibt die Reihenfolge der Mischung; die Antwort wartet nie länger als eingestellt.
 11. <a id="kn-wissen-s11"></a>**„Was habe ich zuletzt notiert?“**: Fragt die Person mit eigenen Worten nach dem, was sie zuletzt, heute oder diese Woche notiert hat, kommen die zuletzt geänderten Seiten zuerst. Ist in der Zeit nichts geändert, sagt das Werkzeug das, statt zu raten.
@@ -2168,7 +2172,7 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 | Quelle | Wie sie gefunden wird | Wer |
 |---|---|---|
 | Eigene Dokumente | document_search: Volltext, Bedeutung, Nachsortieren | eigenes Profil |
-| Geteilte Dokumente | dieselbe Suche, nur „Für alle“ | andere Profile, nie Gäste |
+| Geteilte Dokumente | dieselbe Suche, nur „Für alle“ oder einzeln geteilt | andere Profile, nie Gäste |
 | Gedächtnis | wird nicht gesucht: steht in drei Blöcken im Systemprompt | eigenes Profil |
 | Frühere Gespräche | history_search über Wörter | eigenes Profil |
 | Kiwix | archive_search und wikipedia über das eigene Kiwix im Heimnetz | alle Profile, nie Gäste |

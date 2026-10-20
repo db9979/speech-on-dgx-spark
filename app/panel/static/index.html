@@ -175,6 +175,7 @@
       <div class="setrow" data-show="chat.documents" style="margin-left:18px"><div class="lbl"><b>Dokumente erstellen</b><span>Der Spark schreibt auf Bitte Briefe, Präsentationen und Tabellen als Word, PDF, PowerPoint oder Excel; erst die Gliederung, nach deinem Ja.</span></div><label class="tgl"><input type="checkbox" id="chat.doc_make"><i></i></label></div>
       <div class="setrow" data-show="chat.doc_make" style="margin-left:36px"><div class="lbl"><b>Eigene Vorlagen</b><span>Profile laden eigene Word- oder PowerPoint-Vorlagen hoch (ohne Makros, höchstens 10 MB); der Spark füllt sie.</span></div><label class="tgl"><input type="checkbox" id="chat.doc_make_templates"><i></i></label></div>
       <div class="setrow" data-show="chat.doc_make" style="margin-left:36px"><div class="lbl"><b>Bilder aus dem Kiwix</b><span>Titelfolie und „Bild und Text“-Folien bekommen ein Bild aus der Wikipedia im eigenen Kiwix, mit Quelle. Braucht das Kiwix-Archiv.</span></div><label class="tgl"><input type="checkbox" id="chat.doc_make_wikipics"><i></i></label></div>
+      <div class="setrow"><div class="lbl"><b>Teilen mit Profilen</b><span>Profile teilen Dokumente einzeln mit anderen Profilen; Ich → Geteilt zeigt alles Geteilte (auch Listen und Kalender). Gäste nie.</span></div><label class="tgl"><input type="checkbox" id="chat.share"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Speicher und NAS</b><span>Profile verbinden ihre NAS oder Cloud einmal als Ort und wählen dort, wofür; die Sicherung nutzt dieselbe Anmeldung.</span></div><label class="tgl"><input type="checkbox" id="chat.nas_on"><i></i></label></div>
       <div class="setrow" data-show="chat.nas_on" style="margin-left:18px"><div class="lbl"><b>Kopie meiner Daten</b><span>Profile legen eine verschlüsselte Kopie ihrer Daten an einem ihrer Orte ab; der Spark arbeitet immer lokal weiter.</span></div><label class="tgl"><input type="checkbox" id="chat.storage_own"><i></i></label></div>
       <div class="setrow" data-show="chat.storage_own" style="margin-left:36px"><div class="lbl"><b>Speicher im Heimnetz erlauben</b><span>Ziele mit Adressen im Heimnetz (NAS, Fritzbox, Nextcloud zu Hause). Aus: nur Adressen im Internet.</span></div><label class="tgl"><input type="checkbox" id="chat.storage_lan"><i></i></label></div>
@@ -1195,6 +1196,7 @@
       <details class="docopts" id="sprbox" hidden><summary>Suchprüfung</summary><div id="sprin"></div></details>
       <details class="docopts" id="auslbox" hidden><summary>Ausgelassene Ordner</summary><div id="auslin"></div></details>
       <details class="docopts" id="docopts"><summary>Einstellungen für Dokumente</summary><div class="intro">PDF bis 100 MB (der Admin kann mehr erlauben); Word, Excel, PowerPoint, OpenDocument, Text, Markdown, HTML, CSV oder E-Mail (.eml) je bis 20 MB. Der Assistent sucht darin, wenn eine Frage dazu passt. Nur du kannst sie nutzen, außer du gibst ein Dokument „Für alle“ frei.</div><div id="docsw"></div><div class="mut" id="docuse"></div></details></div>
+    <div id="teilbox" class="ptab"></div>
     <div id="voicebox" class="ptab"><div class="intro">Lies drei kurze Sätze vor. Danach erkennt der Assistent dich an der Stimme, auch an anderen Geräten, und antwortet mit deinem Gedächtnis, deinen Dokumenten und Einstellungen.</div>
       <div id="voicestate" class="mut" style="margin-top:8px"></div><div id="voicesay" class="voicesay" style="display:none"></div>
       <div class="row" style="margin-top:8px"><button class="b p" id="voicego" type="button">Stimme einlernen</button><button class="b" id="voicedel" type="button">Stimme löschen</button><span id="voicemsg"></span></div></div>
@@ -1286,6 +1288,7 @@
 <script src="/static/js/mailstil.js"></script>
 <script src="/static/js/fuerdich.js"></script>
 <script src="/static/js/ichweiss.js"></script>
+<script src="/static/js/geteilt.js"></script>
 <script src="/static/js/proactive.js"></script>
 <script src="/static/js/room.js"></script>
 <script src="/static/js/extras.js"></script>

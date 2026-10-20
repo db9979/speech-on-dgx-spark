@@ -2343,6 +2343,13 @@
 "titel": "Listen in Erinnerungen",
 "text": "A: Update auf V01.0.865, Funktionen → Listen für Einkauf und Aufgaben → „Listen in Erinnerungen“ an, dazu Funktionen → Kalender und Tagesbriefing → „Kalender-Server für Kalender-Apps“; App-Passwort unter Kalender → Einstellungen. B: iPhone: Einstellungen → Apps → Erinnerungen → Accounts: beim Spark-CalDAV-Account „Erinnerungen“ an. In Erinnerungen stehen 🛒 Einkauf, ✓ Aufgaben und deine eigenen Listen. C: In Erinnerungen „Butter“ auf Einkauf setzen: auf der Seite Listen steht Butter mit „iPhone Erinnerungen“. D: Auf der Seite Milch abhaken: in Erinnerungen ist Milch nach dem Aktualisieren erledigt. E: In Erinnerungen Butter abhaken, dann löschen: auf der Seite erst unter „Zuletzt erledigt“, dann weg. F: Widget „Einkauf“ auf den Homescreen: zeigt die offenen Einträge, nach einer Änderung in der App gleich neu.",
 "thread": "Einkaufsliste und Aufgaben teilen"
+},
+{
+"id": "P359",
+"v": 866,
+"titel": "Teilen mit Profilen",
+"text": "Funktionen → Teilen mit Profilen an. Ich → Dokumente → ein Dokument → Teilen: ein zweites Profil suchen, „Sehen“, Speichern (Code). Am anderen Profil: Mitteilung, das Dokument unter Ich → Geteilt und in der Suche. Ich → Geteilt → Von mir geteilt → Zurückziehen: beim anderen sofort weg. Ein Gast sieht nichts.",
+"thread": "Teilen zwischen Profilen"
 }
 ]
 }

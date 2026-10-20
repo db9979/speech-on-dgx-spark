@@ -396,7 +396,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ zugang (guard, core, profiles, features)
     "zugang": {
-        "stand": "d7c5bd0a9d",
+        "stand": "ccdb760d4c",
         "bezug": {
             "guard.MAX_FAILS": ["s2", "s3"], "guard.MAX_NAME_FAILS": ["s2", "s3"], "guard.LOCK_FIRST": ["s2"],
             "guard.DAY_FAILS": ["s2", "s3"], "guard.failed": ["s3"], "guard.succeeded": ["s5"],
@@ -621,9 +621,9 @@ SEITEN = {
 
     # ------------------------------------------------------------------ sicherheit (the model as a whole)
     "sicherheit": {
-        "stand": "f1ac51aac9",
+        "stand": "485b97a0df",
         "bezug": {
-            "features.blocked": ["s5"], "core.confirm_code": ["s3", "s8"], "core.CONFIRM_WINDOW": ["s3"], "guard.Slot": ["s3"],
+            "features.blocked": ["s5"], "geteilt.put": ["s5"], "core.confirm_code": ["s3", "s8"], "core.CONFIRM_WINDOW": ["s3"], "guard.Slot": ["s3"],
             "notaus.STAGE": ["s2"], "vault.seal": ["s10"], "tarswart.check": ["s3"], "tarswart.COMMANDS": ["s3"],
             "netguard.allowed": ["s6"], "chat.LOCKED_OUTSIDE": ["s6"], "regeln": ["s4", "s5"],
         },
@@ -744,6 +744,9 @@ SEITEN = {
              ("Stimmprüfung in derselben Aufnahme", "voice check in the same recording")],
             [("Profil", "Profile"), ("freigegebene Funktionen auf eigene Daten", "released functions on own data"),
              ("Anmeldung; Geheimnisse mit frischem Code", "sign-in; secrets with a fresh code")],
+            [("Anderes Profil", "Other profile"), ("nur, was der Besitzer einzeln mit ihm teilt (Sehen), solange er teilt; für den Assistenten nur Text",
+                                         "only what the owner shares with it one by one (see), while shared; for the assistant only text"),
+             ("geteilt.put mit frischem Code, Freigabe „Teilen mit Profilen“", "geteilt.put with a fresh code, release „Sharing with profiles“")],
             [("Verwalter", "Manager"), ("Personen betreuen, keine Funktionen schalten, keine Logs", "look after people, switch no functions, no logs"),
              ("Rolle, auf dem Server geprüft", "role, checked on the server")],
             [("Admin", "Admin"), ("Freigaben, Sperren, Notaus, Logs, Live", "releases, blocks, kill switch, logs, live"),
@@ -790,6 +793,7 @@ SEITEN = {
             ("chat_turn.shared_stranger", ("fremde Stimme am geteilten Lautsprecher", "stranger's voice at a shared speaker")),
             ("features.allowed", ("Freigabe des Admins, gilt für jedes Profil", "the admin's release, for every profile")),
             ("features.blocked", ("Sperre einzelner Profile", "block of single profiles")),
+            ("geteilt.put", ("Teilen mit einem anderen Profil, zurückziehen wirkt sofort", "share with another profile, taking back works at once")),
             ("chat.wrap_outside", ("Text von außen als Datenblock", "outside text as a block of data")),
             ("netguard.allowed", ("ob eine Verbindung nach außen sein darf", "whether a connection out may happen")),
             ("answercheck.unsupported", ("Zahl ohne Quelle fällt heraus", "a figure without a source is dropped")),

@@ -127,6 +127,8 @@ const docAll=()=>DOCL.concat(DOCO);
 const docFind=id=>docAll().find(d=>d.id===id);
 const docBrief=()=>!!(DOCINFO&&DOCINFO.allow.brief);
 const docShareOn=()=>!!(DOCINFO&&DOCINFO.allow.shared);
+// Teilen mit Profilen (geteilt.js): the one dialog, „Für alle“ is one row of it then
+const docTeil=()=>typeof TEIL_ON!=='undefined'&&TEIL_ON&&typeof shareOpen==='function';
 const docSrc=d=>d.owner?'other':DOCSRC[d.source]?d.source:'upload';
 const docTitle=d=>docBrief()&&d.title||d.name;
 const docHas=(d,tag)=>!tag||(d.tags||[]).some(x=>x.toLowerCase()===tag.toLowerCase());
@@ -265,9 +267,10 @@ function docDetail(){const box=$('docdetail'),d=DOCV.pick?null:docFind(DOCV.sel)
     ((d.tags||[]).length?`<div class="dtags">${d.tags.map(x=>`<button type="button" class="dtag${x.toLowerCase()===DOCV.tag.toLowerCase()?' on':''}" data-doctag="${esc(x)}" title="${esc(t('Liste nach diesem Tag filtern','Filter the list by this tag'))}">${esc(x)}</button>`).join('')}</div>`:'')+
     (own&&brief&&d.state==='ready'?`<div class="dtagedit"><input id="doctagin" maxlength="250" value="${esc((d.tags||[]).join(', '))}" placeholder="${esc(t('Tags mit Komma; leer = die automatischen','Tags with commas; empty = the automatic ones'))}" aria-label="${esc(t('Eigene Tags','Own tags'))}"><button class="b" type="button" data-dact="tags">${esc(t('Speichern','Save'))}</button></div>`:'')+
     (own?`<div class="ld-sw"><span>${esc(t('Der Assistent sucht darin','The assistant searches it'))}</span><label class="tgl"><input type="checkbox" data-docuse="${esc(d.id)}"${d.use?' checked':''}><i></i></label></div>`:'')+
-    (own&&docShareOn()&&d.state==='ready'?`<div class="ld-sw"><span>${esc(t('Für alle','For everyone'))}<small class="mut"> · ${esc(t('alle Profile mit „Gemeinsame Dokumente“ finden und öffnen es','every profile with "Shared documents" finds and opens it'))}</small></span><label class="tgl"><input type="checkbox" data-docshare="${esc(d.id)}"${d.shared?' checked':''}><i></i></label></div>`:'')+
+    (own&&docShareOn()&&!docTeil()&&d.state==='ready'?`<div class="ld-sw"><span>${esc(t('Für alle','For everyone'))}<small class="mut"> · ${esc(t('alle Profile mit „Gemeinsame Dokumente“ finden und öffnen es','every profile with "Shared documents" finds and opens it'))}</small></span><label class="tgl"><input type="checkbox" data-docshare="${esc(d.id)}"${d.shared?' checked':''}><i></i></label></div>`:'')+
     `<div class="ld-acts">`+(d.file?`<a class="b p" href="${esc(href)}"${pdf?' target="_blank"':''} rel="noopener">${esc(pdf?t('PDF öffnen','Open PDF'):pic?t('Bild öffnen','Open picture'):t('Original herunterladen','Download original'))}</a>`:'')+
     `<button class="b" type="button" data-dact="view">${esc(t('Text lesen','Read text'))}</button>`+
+    (own&&docTeil()&&d.state==='ready'&&d.use?`<button class="b" type="button" data-dact="teilen" title="${esc(t('Mit anderen Profilen teilen','Share with other profiles'))}">${esc(t('Teilen','Share'))}${d.shared||(DOCINFO&&DOCINFO.teil||[]).includes(d.id)?' · '+esc(t('geteilt','shared')):''}</button>`:'')+
     (own&&brief&&DOCINFO.on.due&&docDue(d,today)?`<button class="b" type="button" data-docremind="${esc(d.id)}" title="${esc(t('Erinnerung sechs Wochen vor der Frist (oder am Tag davor)','Reminder six weeks before the deadline (or the day before)'))}">${esc(t('Erinnern','Remind'))}</button>`:'')+
     (own&&d.file&&d.state!=='reading'?`<button class="b" type="button" data-docreread="${esc(d.id)}" title="${esc(t('Aus dem aufbewahrten Original neu einlesen','Read again from the kept original'))}">${esc(t('Neu einlesen','Read again'))}</button>`:'')+
     (own?`<button class="b danger" type="button" data-docdel="${esc(d.id)}" data-name="${esc(d.name)}"${d.source==='nas'?' data-nas="1"':''}>${esc(d.source==='nas'?t('Nicht mehr finden','Stop finding'):t('Löschen','Delete'))}</button>`:'')+`</div>`+
@@ -332,7 +335,7 @@ async function docTagsSave(){const id=DOCV.sel,list=$('doctagin').value.split(',
   catch(x){docErr(x)}$('doctagin').blur();showDocs()}
 $('docdetail').onkeydown=e=>{if(e.target.id==='doctagin'&&e.key==='Enter'){e.preventDefault();docTagsSave()}};
 $('docdetail').onclick=async e=>{const a=e.target.closest('[data-dact]');
-  if(a){const k=a.dataset.dact;if(k==='back'){DOCV.sel='';docRender();$('doclist').scrollIntoView({block:'nearest'})}else if(k==='view')docView(DOCV.sel);else if(k==='tags')docTagsSave();return}
+  if(a){const k=a.dataset.dact;if(k==='back'){DOCV.sel='';docRender();$('doclist').scrollIntoView({block:'nearest'})}else if(k==='view')docView(DOCV.sel);else if(k==='teilen')shareOpen('doc',DOCV.sel);else if(k==='tags')docTagsSave();return}
   const c=e.target.closest('[data-doctag]');if(c){DOCV.tag=DOCV.tag.toLowerCase()===c.dataset.doctag.toLowerCase()?'':c.dataset.doctag;DOCV.max=DOCPAGE;docRender();return}
   const rm=e.target.closest('[data-docremind]');
   if(rm){rm.disabled=true;try{const r=await (await api('/api/profile/wissen/'+encodeURIComponent(rm.dataset.docremind)+'/remind',{method:'POST'})).json();
@@ -371,7 +374,7 @@ function ptab(id,page=true){if(PROFILE&&!GATE&&$('setscope'))$('setscope').textC
 $('meback').onclick=()=>ptab(meLast,false);
 // every page of Ich with whether it shows now (the Sprung-Links in way.js know the names of the hidden ones too)
 function meAll(){return [['overbox',t('Überblick','Overview'),!!PROFILE&&!PHONE.matches],['bgbox',t('Mein Zustand','My status'),PROFILE&&MYST_ON],['gobox',t('Los geht\'s','Let\'s go'),!!PROFILE&&typeof SETUP!=='undefined'&&!!SETUP&&SETUP.open>0],['kannbox',t('Was ich kann','What I can do'),PROFILE&&typeof SATZ_ON!=='undefined'&&SATZ_ON],['setbox',t('Gespräch','Conversation'),!GATE&&!isGuest()],['loginbox',t('Anmelden','Sign in'),!PROFILE],
-    ['factbox',t('Gedächtnis','Memory'),!!PROFILE],['docbox',t('Dokumente','Documents'),PROFILE&&DOCS_ON],['bildbox',t('Bilder','Pictures'),PROFILE&&typeof BILD_ON!=='undefined'&&BILD_ON],['musikbox',t('Musik','Music'),PROFILE&&typeof MUSIK_ON!=='undefined'&&MUSIK_ON],['rmbox','reMarkable',PROFILE&&RM_ON],['storebox',t('Speicher','Storage'),PROFILE&&(typeof STORE_ON!=='undefined'&&STORE_ON||typeof NAS_ON!=='undefined'&&NAS_ON)],['logbox',t('Werkzeug-Verlauf','Tool history'),!!PROFILE],
+    ['factbox',t('Gedächtnis','Memory'),!!PROFILE],['docbox',t('Dokumente','Documents'),PROFILE&&DOCS_ON],['teilbox',t('Geteilt','Shared'),PROFILE&&typeof TEIL_ON!=='undefined'&&TEIL_ON],['bildbox',t('Bilder','Pictures'),PROFILE&&typeof BILD_ON!=='undefined'&&BILD_ON],['musikbox',t('Musik','Music'),PROFILE&&typeof MUSIK_ON!=='undefined'&&MUSIK_ON],['rmbox','reMarkable',PROFILE&&RM_ON],['storebox',t('Speicher','Storage'),PROFILE&&(typeof STORE_ON!=='undefined'&&STORE_ON||typeof NAS_ON!=='undefined'&&NAS_ON)],['logbox',t('Werkzeug-Verlauf','Tool history'),!!PROFILE],
     ['agentbox',t('Aufträge','Jobs'),PROFILE&&AGENT_ON],['mymcpbox',t('Meine MCP-Dienste','My MCP services'),PROFILE&&typeof MYMCP_ON!=='undefined'&&MYMCP_ON],['wxbox',t('Wetter','Weather'),PROFILE&&WX_ON],['feedbox',t('Reddit und Feeds','Reddit and feeds'),PROFILE&&typeof FD_ON!=='undefined'&&FD_ON],['probox',t('Von selbst','By itself'),PROFILE&&PRO_ON],['notebox',t('Mitteilungen','Notifications'),PROFILE&&REM_ON],
     ['wissbox',t('Was ich über dich weiß','What I know about you'),PROFILE&&typeof WISS_ON!=='undefined'&&WISS_ON],['writebox',t('Schreibhilfe','Writing help'),PROFILE&&typeof WRITE_ON!=='undefined'&&WRITE_ON],['conbox',t('Kontakte','Contacts'),PROFILE&&CON_ON],
     ['habox',t('Smart Home','Smart home'),PROFILE&&HA_ON],['roombox',t('Raum-Modus','Room mode'),PROFILE&&ROOM_ON],['espbox',t('Lautsprecher','Speakers'),PROFILE&&ESP_ON],['telbox',t('Telefon','Phone'),PROFILE&&typeof TEL_ON!=='undefined'&&TEL_ON],

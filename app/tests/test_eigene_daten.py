@@ -37,6 +37,7 @@ OHNE = {
     "mailsend": "gesendete Mails liegen im Postfach unter Gesendet; im Spark bleibt nur die Vorschau höchstens 10 Minuten, ein Vorschlag per Sprache 5 Minuten",
     "bildaendern": "geänderte und hochgeladene Bilder liegen bei den Bildern (features.OWN bilder, Ich → Bilder)",
     "musikbearbeiten": "Fassungen und hochgeladene Dateien liegen bei den Liedern (features.OWN musik, Ich → Musik)",
+    "teilen": "teilt nur eigene Dokumente, Kalender und Listen, keine Kopie; jede Freigabe zieht Ich → Geteilt einzeln zurück, und ein gelöschtes Dokument ist nicht mehr geteilt",
     "documents": "alle Dokumente auf einmal wären zu einschneidend; jedes Dokument hat sein eigenes Löschen unter Ich → Dokumente",
     "erstellen": "erstellte Dokumente gehören zu den Dokumenten (dasselbe einschneidende Löschen)",
     "parcels": "keine eigenen Daten: liest nur das Postfach (E-Mail)",

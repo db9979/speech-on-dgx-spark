@@ -265,6 +265,7 @@ Home Assistant, mail, calendar, tasks, weather, reMarkable, MCP and what the Spa
 | `app/panel/extras.py` | Small services the assistant can use besides the big ones in chat.py (weather, contacts, parcels ...). |
 | `app/panel/feeds.py` | Reddit und Feeds: each profile connects its own Reddit inbox (the private RSS link from reddit.com → Settings → RSS-Feeds), subreddits and any other RSS or A … |
 | `app/panel/fuerdich.py` | Für dich: the Spark looks through the profile's own mailboxes and finds what needs the person or is good to know: rechnung a bill with an amount, with the da … |
+| `app/panel/geteilt.py` | Teilen zwischen Profilen: one way to share for every kind. |
 | `app/panel/hamelden.py` | Home Assistant tells the Spark. |
 | `app/panel/homeassistant.py` | Home Assistant per profile: each profile connects its own Home Assistant (address and long-lived access token); only that profile's requests can use it, gues … |
 | `app/panel/ichweiss.py` | Was ich über dich weiß: one page under Ich that shows what the Spark knows about the person and lets it be corrected: Interessen proposed with their evidence … |
@@ -497,6 +498,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `users/ID/erstellt/` | Created documents |  | – | yes | Created documents |
 | `users/ID/bilder/` | Painted pictures and their index (prompt, wish, size) |  | – | yes | Painted pictures |
 | `users/ID/musik/` | Own songs and their index (wish, description, lyrics, length) |  | – | yes | Own songs |
+| `users/ID/geteilt.json` | Shared: which documents with which profiles, since when; when Me → Shared was last open | Settings | – | yes | – |
 | `users/ID/settings.json` | Settings | Settings | – | yes | – |
 | `users/ID/setup.json` | Setup | Settings | – | yes | – |
 | `users/ID/speicher.json` | Own storage targets | Settings | key sealed | yes | – |
@@ -1478,6 +1480,7 @@ Applies at: [step 4](#kn-sicherheit-s4), [step 5](#kn-sicherheit-s5)
 | Guest | question and answer, no tools, no personal data, error codes only | rate limit, parallel cap |
 | Stranger's voice | like a guest, earlier history stays behind | voice check in the same recording |
 | Profile | released functions on own data | sign-in; secrets with a fresh code |
+| Other profile | only what the owner shares with it one by one (see), while shared; for the assistant only text | geteilt.put with a fresh code, release „Sharing with profiles“ |
 | Manager | look after people, switch no functions, no logs | role, checked on the server |
 | Admin | releases, blocks, kill switch, logs, live | sign-in with the second step; „Change protection“ asks every time |
 
@@ -1510,6 +1513,7 @@ Applies at: [step 4](#kn-sicherheit-s4), [step 5](#kn-sicherheit-s5)
 - `app/panel/chat_turn.py` `shared_stranger`: stranger's voice at a shared speaker ([step 4](#kn-sicherheit-s4))
 - `app/panel/features.py` `allowed`: the admin's release, for every profile ([step 5](#kn-sicherheit-s5))
 - `app/panel/features.py` `blocked`: block of single profiles ([step 5](#kn-sicherheit-s5))
+- `app/panel/geteilt.py` `put`: share with another profile, taking back works at once ([step 5](#kn-sicherheit-s5))
 - `app/panel/chat.py` `wrap_outside`: outside text as a block of data ([step 6](#kn-sicherheit-s6))
 - `app/panel/netguard.py` `allowed`: whether a connection out may happen ([step 6](#kn-sicherheit-s6))
 - `app/panel/answercheck.py` `unsupported`: a figure without a source is dropped ([step 9](#kn-sicherheit-s9))
@@ -2152,7 +2156,7 @@ flowchart TD
 5. <a id="kn-wissen-s5"></a>**Full text: words and context line**: The question is split into search words (filler words dropped, endings roughly cut). The search looks in each passage's words and in its context line (title, kind, headings), which counts only 0.4. The best 30 get a rank.
 6. <a id="kn-wissen-s6"></a>**Mix in meaning**: If the question has a vector, it is compared with every passage's vector. Below 0.75 similarity nothing counts as related; the best 30 above get a rank too. Both ranks are added, so a passage high in both lists rises. The vectors are kept in memory as float32 and read again only when passages or used documents change; while vectors are still missing, at most every 30 seconds.
 7. <a id="kn-wissen-s7"></a>**Newest first?**: With „Newest first“ a passage changed lately gets a small lead, about two places, which shrinks with age. Fit stays more important; each hit then carries its date.
-8. <a id="kn-wissen-s8"></a>**Shared documents of the others**: With „Shared documents“ the same search runs in the other profiles' files, but only over documents marked „for everyone“ there. With the household folder released for the profile it also runs in the household's store (users/haushalt/). The hits carry the owner's name or „Haushalt“; everything is sorted by rank.
+8. <a id="kn-wissen-s8"></a>**Shared documents of the others**: With „Shared documents“ the same search runs in the other profiles' files, but only over documents marked „for everyone“ there or shared singly with this profile through „Sharing with profiles“ (documents.Offer). With the household folder released for the profile it also runs in the household's store (users/haushalt/). The hits carry the owner's name or „Haushalt“; everything is sorted by rank.
 9. <a id="kn-wissen-s9"></a>**Re-rank hits on?**: Without re-ranking the first five of the mix go on. With re-ranking the mix hands over its best 30.
 10. <a id="kn-wissen-s10"></a>**Cross-encoder orders**: A small model on the processor reads question and passage together and gives each a number. Passages below -4.0 do not answer the question and drop out, the best five stay. If the model sleeps, is busy, too slow or broken, the mix's order stays; the answer never waits longer than set.
 11. <a id="kn-wissen-s11"></a>**„What did I note lately?“**: If the person asks in their own words what they noted lately, today or this week, the pages changed last come first. If nothing changed in that time, the tool says so instead of guessing.
@@ -2168,7 +2172,7 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 | Source | How it is found | Who |
 |---|---|---|
 | Own documents | document_search: full text, meaning, re-ranking | own profile |
-| Shared documents | the same search, only „for everyone“ | other profiles, never guests |
+| Shared documents | the same search, only „for everyone“ or shared singly | other profiles, never guests |
 | Memory | not searched: stands in three blocks in the system prompt | own profile |
 | Earlier conversations | history_search by words | own profile |
 | Kiwix | archive_search and wikipedia via the own Kiwix in the home network | all profiles, never guests |

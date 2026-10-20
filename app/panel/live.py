@@ -173,6 +173,8 @@ TARGETS = {
     "pruef": ("Suchprüfung", "Prüffragen und Trefferquote · auf dem Spark", "spark", False),
     # Wissensbuch (wissensbuch.py): shown while it is on, pages, sentences and documents waiting (numbers only)
     "wbuch": ("Wissensbuch", "Seiten aus den eigenen Dokumenten · auf dem Spark", "spark", False),
+    # Teilen mit Profilen (geteilt.py): shown while it is on, single shares and today's changes (numbers only)
+    "geteilt": ("Geteilt", "Teilen mit Profilen · auf dem Spark", "spark", False),
     # Den Spark anrufen (telefon.py): the PBX in the home network; signed in, calls now and today in numbers, never a number
     "telefon": ("Telefonanlage", "SIP · Heimnetz", "lan", False),
     # Spark teilen (steuer.py): the DGX with the models while the panel runs on another computer; reachable, counts
@@ -1293,6 +1295,13 @@ def snapshot(view="admin", now=None):
     if wbk.get("on"):
         used.add("wbuch")
     try:
+        import geteilt
+        tei = geteilt.for_live()
+    except Exception:
+        tei = {"on": False}
+    if tei.get("on"):
+        used.add("geteilt")
+    try:
         import telefon
         tel = telefon.for_live()
     except Exception:
@@ -1571,6 +1580,9 @@ def snapshot(view="admin", now=None):
                         + (f" · {spr['top5']} % unter den ersten 5" if spr.get("top5") is not None else " · noch kein Lauf")
                         + (f" · Sammelfragen {spr['sammel']} % ganz gefunden" if spr.get("sammel") is not None else "")
                         + (" · prüft gerade" if spr.get("running") else ""))
+        if x["id"] == "geteilt":   # Teilen mit Profilen: how many single shares, by how many, today (never a title or name)
+            x["sub"] = (f"{tei.get('docs', 0)} Dokumente einzeln geteilt von {tei.get('owners', 0)} Profilen"
+                        + f" · heute {tei.get('set', 0)} geteilt, {tei.get('back', 0)} zurückgezogen")
         if x["id"] == "wbuch":     # Wissensbuch: pages, sentences, documents waiting, numbers only (never a title)
             x["sub"] = (f"{wbk.get('seiten', 0)} Seiten · {wbk.get('saetze', 0)} Sätze · {wbk.get('warten', 0)} Dokumente warten"
                         + (f" · {wbk['widerspruch']} Widersprüche" if wbk.get("widerspruch") else "")

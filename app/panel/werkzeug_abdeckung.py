@@ -227,6 +227,8 @@ WITHOUT = {
     "ichweiss": "eine Seite unter Ich → Was ich über dich weiß; Fristen und Rückblick per Sprache über fuer_dich",
     "maildelete": "kein Werkzeug: nur Knopf, Taste oder Ziehen auf der Seite E-Mail; Modell, Regeln, Für dich und Stimme löschen nie",
     "notedevice": "kein Werkzeug: wählt nur, auf welches Gerät eine Mitteilung geht (zustellung.py), feste Regeln des Panels",
+    "teilen": "kein Werkzeug in Stufe 1: geteilt wird nur im Dialog am Dokument (Ich → Dokumente → Teilen), die Suche des anderen findet es über document_search",
+    "teilenhinweis": "kein Werkzeug: eine Mitteilung, wenn jemand etwas teilt (push.send)",
     "mailidle": "kein Werkzeug: hält die Posteingänge per IMAP IDLE offen, die Seite E-Mail und die Mail-Regeln bekommen neue Mails in Sekunden",
     "mailstil": "wirkt in jedem Mail-Entwurf (mail_draft, Begleiter); gelernt wird nur auf Knopfdruck unter E-Mail → Einstellungen",
     "schreibapps": "Kanal in anderen Programmen",

@@ -302,6 +302,7 @@ ADMIN_ON_OK = {
     "telefon.py:settings": "Spark-wide SIP part (admin switches); each call asks features.allowed telefon for its profile",
     "telefon_anruf.py:alarm_tick": "Spark-wide early out; the admin who gets the call is picked with features.allowed telefonalarm (_admin)",
     "verbrauch.py:quota_on": "Spark-wide early out; each profile then features.allowed kontingent (verbrauch.limit)",
+    "geteilt.py:for_live": "admin-only numbers for Live (Spark-wide switch, no profile acts)",
     "account.py:whoami": "page flags: admin switch and not features.blocked for the profile",
     "feeds.py:admin_on": "Spark-wide early out (due_once, routes); each profile then features.allowed feeds (due, usable, block check in _on)",
     "account.py:profile_voice": "display flag: admin switch and not features.blocked",
