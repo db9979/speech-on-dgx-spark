@@ -5357,7 +5357,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": " werkzeug liste funde=N, fuerdich: briefing teile=N. Im iPhone: Heute → Für dich mit denselben Karten und Knöpfen (Wischen für Erledigt und Nicht interessant, ⋯ für Neu lesen und Markierungen vergessen). Nächste Stufen: Interessen und „Was ich über dich weiß“, Netz-Tipp, Wochenrückblick, Ausgaben. Seit V01.0.857 liest Für dich bei einer neuen Mail sofort neu, wenn „Neue Mails sofort“ (IMAP IDLE, mailidle.py, chat.mail_idle) an ist (mailidle.on_new(fuerdich.new_mail)); sonst bleibt es beim Abruf alle 30 Minuten."
+"text": " werkzeug liste funde=N, fuerdich: briefing teile=N. Im iPhone: Heute → Für dich mit denselben Karten und Knöpfen (Wischen für Erledigt und Nicht interessant, ⋯ für Neu lesen und Markierungen vergessen). Nächste Stufen: Interessen und „Was ich über dich weiß“, Netz-Tipp, Wochenrückblick, Ausgaben. Seit V01.0.857 liest Für dich bei einer neuen Mail sofort neu, wenn „Neue Mails sofort“ (IMAP IDLE, mailidle.py, chat.mail_idle) an ist (mailidle.on_new(fuerdich.new_mail)); sonst bleibt es beim Abruf alle 30 Minuten. Seit V01.0.870 nennt die vorgelesene Liste zu jedem Eintrag die Mail (Absender, Tag, Betreff, Ordner außerhalb des Posteingangs), „Antwort offen“ heißt „… hat dir vor 4 Tagen eine Frage geschickt und wartet auf deine Antwort“, und braucht das Lesen länger als 20 Sekunden, nimmt das Werkzeug die letzte Lesung oder sagt „liest noch“ statt „nicht lesbar“ (Log fuerdich: werkzeug laedt noch bzw. … liste aus letzter lesung)."
 },
 {
 "lang": "de",
@@ -14181,7 +14181,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "again and Forget the marks). Next stages: interests and \"What I know about you\", web tip, weekly review, spending. Since V01.0.857 For you reads anew at once when a new mail comes, if \"New mail at once\" (IMAP IDLE, mailidle.py, chat.mail_idle) is on (mailidle.on_new(fuerdich.new_mail)); otherwise it stays with the check every 30 minutes."
+"text": "again and Forget the marks). Next stages: interests and \"What I know about you\", web tip, weekly review, spending. Since V01.0.857 For you reads anew at once when a new mail comes, if \"New mail at once\" (IMAP IDLE, mailidle.py, chat.mail_idle) is on (mailidle.on_new(fuerdich.new_mail)); otherwise it stays with the check every 30 minutes. Since V01.0.870 the spoken list names the mail of every entry (sender, day, subject, folder outside the inbox), \"reply missing\" reads \"… sent you a question 4 days ago and waits for your answer\", and when reading takes longer than 20 seconds the tool uses the last reading or says \"still reading\" instead of \"not readable\" (log fuerdich: werkzeug laedt noch or … liste aus letzter lesung)."
 },
 {
 "lang": "en",

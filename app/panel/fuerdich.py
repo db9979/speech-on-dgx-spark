@@ -524,7 +524,9 @@ def sentence(x, today):
     if k == "angebot":
         return f"Angebot von {w}, gültig bis {day_word(x['day'], today)}", "Steht in der Mail."
     if k == "antwort":
-        return f"{w} wartet seit {x['days']} Tagen auf deine Antwort", "In der Mail steht eine Frage an dich."
+        # who waits for whom stays unmistakable when read aloud (Dominik 2026-10-20: „ich soll auf Anna warten“)
+        return (f"{w} hat dir vor {x['days']} Tagen eine Frage geschickt und wartet auf deine Antwort",
+                "Du hast darauf noch nicht geantwortet.")
     return w, ""
 
 
@@ -902,6 +904,7 @@ HINT = ("Fragen wie „Was muss ich erledigen?“ oder „Was steht in Für dich
         "die Sätze aus dem Ergebnis vor, ohne etwas dazuzuerfinden. fuer_dich_tun nur, wenn die Person für eine "
         "Nummer ausdrücklich erledigt, nicht interessant oder erinnern sagt.")
 LIST_MAX = 8
+TOOL_WAIT = 20                  # seconds the voice tool waits for a reading before it uses the last one
 LIST_KEEP = 1800                # seconds a numbered list stays valid for fuer_dich_tun
 _listed = {}                    # uid -> (time, [ids in the order said])
 
@@ -925,16 +928,30 @@ def say_list(uid, items, errors, today):
     _listed[uid] = (time.time(), [x["id"] for x in pub])
     if not pub:
         return "Für dich: nichts, was dich gerade braucht."
-    lines = [f"{i}. {x['title']}. {x['line']}" for i, x in enumerate(pub, 1)]
+    lines = [f"{i}. {x['title']}. {x['line']} (Mail von {x['who']} vom {day_word(x['sent'], today)}"
+             + (f", Betreff „{x['subject']}“" if x["subject"] else "") + (f", Ordner {x['folder']}" if x["folder"] != "INBOX" else "")
+             + ")" for i, x in enumerate(pub, 1)]
     more = len(items) - len(pub)
-    return "Für dich:\n" + "\n".join(lines) + (f"\nUnd {more} weitere unter E-Mail → Für dich." if more > 0 else "")
+    return ("Für dich (feste Sätze aus den Mails; lies sie so vor, wie sie stehen, und ändere nicht, wer auf wen wartet; "
+            "nenne zu einem Eintrag die Mail, aus der er kommt):\n" + "\n".join(lines)
+            + (f"\nUnd {more} weitere unter E-Mail → Für dich." if more > 0 else ""))
 
 
 async def tool(name, args, ctx):
     uid = ctx["who"]["id"]
     if name == "fuer_dich":
         try:
-            items, errors = await asyncio.wait_for(asyncio.shield(_reading(uid)), 25)
+            items, errors = await asyncio.wait_for(asyncio.shield(_reading(uid)), TOOL_WAIT)
+        except asyncio.TimeoutError:
+            # still reading (the first reading of a big mailbox on the Pi takes longer): the last reading if there is
+            # one, else „liest noch“, never „nicht erreichbar“ (Dominik 2026-10-20); the reading goes on behind it
+            hit = _cache.get(uid)
+            if hit and time.time() - hit[0] < STALE_SECONDS:
+                items, errors = hit[1]
+                print("fuerdich: werkzeug liste aus letzter lesung", flush=True)
+            else:
+                print("fuerdich: werkzeug laedt noch", flush=True)
+                return "Für dich: ich lese dein Postfach gerade noch, das dauert beim ersten Mal etwas. Sag, dass du gleich noch einmal fragen sollst."
         except Exception as e:
             if getattr(e, "status_code", 0) == 503:
                 print("fuerdich: werkzeug gestoppt grund=notaus", flush=True)

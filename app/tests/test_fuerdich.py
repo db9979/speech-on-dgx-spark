@@ -207,7 +207,7 @@ class FuerDich(unittest.TestCase):
         kinds = {x["kind"]: x for x in d["items"]}
         self.assertEqual(set(kinds), {"antwort", "rechnung", "verdacht"}, d)    # Ben asks nobody he wrote to
         self.assertTrue(kinds["rechnung"]["title"].startswith("Rechnung Stadtwerke: 84,20 € bis "))
-        self.assertEqual(kinds["antwort"]["title"], "Anna wartet seit 4 Tagen auf deine Antwort")
+        self.assertEqual(kinds["antwort"]["title"], "Anna hat dir vor 4 Tagen eine Frage geschickt und wartet auf deine Antwort")
         self.assertEqual(kinds["verdacht"]["title"], "Vorsicht: Mail gibt sich als Sparkasse aus")
         self.assertEqual([x["urgent"] for x in d["items"]], [True, True, True])
         for x in d["items"]:
@@ -425,6 +425,10 @@ class Stage2(FuerDich):
         self.assertTrue(said.startswith(mail.UNTRUSTED), said)                    # the sentences stay mail data
         self.assertIn("1. ", said)
         self.assertNotIn("bezahlt", said)
+        # every line names the mail it comes from, so a spoken deadline can be found again (Dominik 2026-10-20)
+        self.assertIn("Anna hat dir vor 4 Tagen eine Frage geschickt und wartet auf deine Antwort", said)
+        self.assertIn("(Mail von Anna vom ", said)
+        self.assertIn("Betreff „Grillabend“", said)
         order = fuerdich._listed[uid][1]
         for bad in ({"number": 0, "do": "done"}, {"number": 9, "do": "done"}, {"number": 1, "do": "delete"}, {"number": "1", "do": "no"}):
             self.assertTrue(asyncio.run(fuerdich.tool("fuer_dich_tun", bad, ctx)).startswith("Not done"), bad)
@@ -438,6 +442,27 @@ class Stage2(FuerDich):
         self.assertTrue(brief.startswith(mail.UNTRUSTED))
         self.assertIn("Für dich (aus deinem Postfach):", brief)
         self.assertNotIn(order[0], brief)
+
+    def test_voice_list_while_still_reading_is_no_outage(self):
+        """A reading that takes longer than the voice tool waits is „liest noch“ or the last reading, never „Postfach
+        nicht lesbar“ (Dominik 2026-10-20: „mein Posteingang ist gerade nicht erreichbar“ while the Pi was reading)."""
+        p, uid = self.setup_profile("Fuelangsam")
+        ctx = {"who": {"id": uid, "name": "Fuelangsam"}, "own": True, "private": True}
+        saved_read, saved_wait = fuerdich._reading, fuerdich.TOOL_WAIT
+
+        def slow(uid, fresh=False):
+            return asyncio.ensure_future(asyncio.sleep(5))
+        fuerdich._reading, fuerdich.TOOL_WAIT = slow, 0.05
+        try:
+            fuerdich._cache.pop(uid, None)
+            said = asyncio.run(fuerdich.tool("fuer_dich", {}, ctx))
+            self.assertIn("gerade noch", said)
+            self.assertNotIn("nicht lesbar", said)
+            fuerdich._cache[uid] = (time.time() - 3600, ([], []))           # an older reading is used instead
+            self.assertIn("nichts, was dich gerade braucht", asyncio.run(fuerdich.tool("fuer_dich", {}, ctx)))
+        finally:
+            fuerdich._reading, fuerdich.TOOL_WAIT = saved_read, saved_wait
+            fuerdich._cache.pop(uid, None)
 
     def test_von_selbst_says_suspicion_once(self):
         import proactive

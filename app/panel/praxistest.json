@@ -2371,6 +2371,13 @@
 "titel": "Besprechungs-Aufgaben auf die Liste",
 "text": "A: Update von Spark und Spark-Begleiter (neueste Fassung). Admin: Listen und „Besprechungen mitschreiben“ an. B: Im Begleiter eine kurze Besprechung mitschreiben, in der eine Aufgabe mit Termin vereinbart wird („Anna schickt das Angebot bis Freitag“), dann Beenden. C: Im Fenster Aufgaben ankreuzen, neben „Ausgewählte auf die Liste“ steht „Aufgaben“; klicken: „2 Aufgaben auf „Aufgaben““. D: Seite Listen → Aufgaben: die Einträge mit Chip „bis Fr …“ und „aus Besprechung“; dasselbe in der iPhone-App unter Listen. E: Nochmal klicken: „Schon auf „Aufgaben““, nichts doppelt. F: „Als Erinnerung“ legt weiter Erinnerungen an; unter dem Gesicht im Assistenten sind lange Erinnerungen ganz sichtbar und enden mit „…“. G: „Aufs reMarkable“: die Zusammenfassung liegt im Ordner „Besprechungen“, nicht „Antworten“.",
 "thread": "Besprechungs-Aufgaben in Listen"
+},
+{
+"id": "P363",
+"v": 870,
+"titel": "Für dich: Fristen vorlesen",
+"text": "Frag „Was muss ich diese Woche erledigen?“ (oder CarPlay „Fristen vorlesen“): jeder Eintrag nennt die Mail, aus der er kommt; eine offene Antwort klingt wie „Anna hat dir eine Frage geschickt und wartet auf deine Antwort“; direkt nach dem Panel-Neustart kommt „lese noch“, nie „nicht lesbar“.",
+"thread": "Persönlicher Assistent aus dem Postfach"
 }
 ]
 }
