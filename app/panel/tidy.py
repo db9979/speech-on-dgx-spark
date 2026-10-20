@@ -1535,6 +1535,15 @@ def describe(plan, d=None):
     return ""
 
 
+def card(uid, plan):
+    """The card „Wartet auf dein Ja“ (vorgaenge.from_pending): the proposal in the same words the assistant read."""
+    if plan.get("kind") == "draft":
+        return {"titel": "Entwurf ablegen", "felder": [["An", plan.get("to_show", "")], ["Betreff", plan.get("subject", "")],
+                                                        ["Text", plan.get("text", "")]], "knopf": "ablegen"}
+    return {"titel": "Postfach aufräumen", "felder": [["Was", describe(plan, state(uid)).removesuffix(" Soll ich das tun?")]],
+            "knopf": "ausfuehren"}
+
+
 def carry_out(uid, plan):
     """Does a confirmed proposal; returns a sentence saying what happened (checked). One journal line for every
     outcome: the kind and done, refused or failed, never senders, subjects or texts."""

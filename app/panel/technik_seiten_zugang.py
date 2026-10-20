@@ -709,17 +709,19 @@ SEITEN = {
             S("s8", "frage", ("Ändert es etwas?", "Does it change something?"),
               ("schalten, senden, eintragen", "switch, send, enter"),
               ("Lesen geht sofort. Wer etwas ändert (Licht, Mail senden, Termin, Anruf), legt einen Vorschlag ab; er läuft "
-               "erst nach einem schlichten „Ja“ auf genau diesen Vorschlag, vom selben Gerät. Home Assistant nur aus einer "
+               "erst nach einem schlichten „Ja“ auf genau diesen Vorschlag, vom selben Gerät, oder dem Ja-Knopf seiner Karte "
+               "„Wartet auf dein Ja“ (eigenes Profil, dieselbe Funktion wie das getippte Ja). Home Assistant nur aus einer "
                "Allowlist. Mail löscht nur die Person selbst (in den Papierkorb, endgültig nur nach Rückfrage), nie das Modell. "
                "Knöpfe auf Karten im Gespräch und auf der Seite Offen sind feste Namen (vorgaenge.AKTIONEN); jeden Druck prüft "
-               "das Panel (Besitzer, Art, Stand, Notaus), und was senden oder eintragen würde, öffnet nur die Seite, auf der "
-               "die Person es selbst tut.",
+               "das Panel (Besitzer, Art, Stand, Notaus, Schalter des Moduls), und was ohne Vorschlag senden oder eintragen "
+               "würde, öffnet nur die Seite, auf der die Person es selbst tut.",
                "Reading happens at once. Whatever changes something (light, sending mail, appointment, call) leaves a "
-               "proposal; it runs only after a plain „yes“ to exactly that proposal, from the same device. Home Assistant only "
+               "proposal; it runs only after a plain „yes“ to exactly that proposal, from the same device, or the yes button of "
+               "its card „Waiting for your yes“ (own profile, the same function as the typed yes). Home Assistant only "
                "from an allowlist. Only the person deletes mail (into the trash, for good only after a question), never the model. "
                "Buttons on cards in the conversation and on the page Open are fixed names (vorgaenge.AKTIONEN); the panel checks "
-               "every press (owner, kind, state, kill switch), and what would send or enter something only opens the page where "
-               "the person does it."),
+               "every press (owner, kind, state, kill switch, the module's switches), and what would send or enter something "
+               "without a proposal only opens the page where the person does it."),
               ("info", "ja", ("Erst ein Vorschlag, dann „Ja“", "First a proposal, then „yes“"))),
             S("s9", "schritt", ("Antwort prüfen", "Check the answer"),
               ("answercheck.unsupported, textnorm.hide_secrets", "answercheck.unsupported, textnorm.hide_secrets"),

@@ -1078,6 +1078,43 @@ def drop_pending(uid):
     profiles.pending_drop(uid, "calendar")
 
 
+async def carry(uid, prop):
+    """A yes to the waiting proposal, typed („Ja“, chat_turn) or the card's button (vorgaenge.py): saves the new
+    appointment, or moves or deletes the one found, and keeps what it was for „Mach das rückgängig“ (aendern.py).
+    Returns (True, the calendar's name or the change's sentence) or (False, why the calendar refused, short)."""
+    import aendern
+    kept = {}
+    try:
+        if prop.get("change"):
+            res = await change_event(uid, prop, kept)
+            aendern.note(uid, "calendar_ics", kept, "den Termin „" + prop["title"][:60] + "“ wie vorher stellen")
+        else:
+            res = await add_event(uid, prop, kept)
+            if kept.get("href"):
+                aendern.note(uid, "calendar", kept, "den Termin „" + prop["title"][:60] + "“ wieder löschen")
+    except Exception as e:
+        return False, str(e)[:160]
+    return True, res
+
+
+def card(uid, p):
+    """The card „Wartet auf dein Ja“ of a waiting proposal (vorgaenge.from_pending), in the panel's words: title,
+    lines, the yes button's word and for a new appointment the line the Kalender's form takes („Ändern …“)."""
+    if p.get("change"):
+        rows = [["Was", p.get("title", "")], ["Wann", _old(p).split("“ am ", 1)[-1]]]
+        if p["change"] != "delete":
+            rows.append(["Neu", _new(p)])
+        return {"titel": "Termin löschen" if p["change"] == "delete" else "Termin verschieben", "felder": rows,
+                "knopf": "loeschen" if p["change"] == "delete" else "verschieben"}
+    s, e = datetime.datetime.fromisoformat(p["start"]), datetime.datetime.fromisoformat(p["end"])
+    when = f"{WEEKDAYS[s.weekday()]} {s:%d.%m.}" + (" ganztägig" if p.get("allday") else f", {s:%H:%M}–{e:%H:%M}")
+    rows = [["Was", p.get("title", "")], ["Wann", when]] + ([["Wo", p["location"]]] if p.get("location") else []) \
+        + ([["Kalender", p["calendar"]]] if p.get("calendar") else [])
+    line = f"{s.day}.{s.month}.{s.year} " + ("" if p.get("allday") else f"{s:%H:%M}-{e:%H:%M} ") + p.get("title", "") \
+        + (" in " + p["location"] if p.get("location") else "")
+    return {"titel": "Neuer Termin", "felder": rows, "knopf": "eintragen", "aendern": {"event": line}}
+
+
 def describe(item):
     s = datetime.datetime.fromisoformat(item["start"])
     e = datetime.datetime.fromisoformat(item["end"])

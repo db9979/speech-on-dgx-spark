@@ -27,6 +27,8 @@ final class Conversation: ObservableObject {
         /// Ablauf und Freigabe zeigen (ablauf.py): the tools of this answer, and the kind of a proposal waiting for "Ja"
         var steps: [StepItem]?
         var confirm: String?
+        /// Alles Offene im Assistenten (Stufe 2): the card „Wartet auf dein Ja“ of that proposal (vorgaenge.py)
+        var confirmVg: String?
         /// Rückfrage-Karte (ablauf.asks): the answers to the question this answer ends with
         var answers: [String]?
         /// Ins Wissensbuch (wissensbuch.py): the id the Spark kept this answer by, and whether it was filed
@@ -806,7 +808,7 @@ final class Conversation: ObservableObject {
                 case .picture(let job, let prompt): edit { $0.picJob = job; $0.picPrompt = prompt }
                 case .more(let kind, let items): edit { $0.more = items; $0.moreKind = kind }
                 case .step(let x): edit { $0.steps = ($0.steps ?? []) + [x] }
-                case .confirm(let kind): edit { $0.confirm = kind }
+                case .confirm(let kind, let vg): edit { $0.confirm = kind; $0.confirmVg = vg }
                 case .answers(let x): edit { $0.answers = x }
                 case .wbuch(let id): edit { $0.wbId = id }
                 }

@@ -308,7 +308,7 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
   if(typeof mkCard==='function')for(const c of mkcards)el.appendChild(mkCard(c));
   for(const c of blcards){if(c.type==='musik'){if(typeof musikCard==='function')el.appendChild(musikCard(c))}else if(typeof bildCard==='function')el.appendChild(bildCard(c))}
   if(!err)for(const c of chcards)el.appendChild(choiceCard(c));
-  if(!err&&!foreign)for(const c of confirms)el.appendChild(confirmCard(c));
+  if(!err&&!foreign)for(const c of confirms)el.appendChild(c.vg&&window.vgAttach?vgAttach(c.vg,confirmCard(c)):confirmCard(c));   // Alles Offene: the proposal's card
   if(!err&&!foreign&&full.trim()){const g=gotoCard(gotos);if(g)el.appendChild(g)}
   if(rateId&&full.trim()&&!err&&typeof rateBar==='function')el.appendChild(rateBar(rateId));
   if(more&&full.trim()&&!err&&!foreign&&typeof moreRow==='function')el.appendChild(moreRow(more));

@@ -12,10 +12,14 @@ from tests import helpers
 
 helpers.start()
 import panel  # noqa: E402
+import ablauf  # noqa: E402
+import calendars  # noqa: E402
 import chat  # noqa: E402
 import fuerdich  # noqa: E402
 import guard  # noqa: E402
 import profiles  # noqa: E402
+import senden  # noqa: E402
+import tidy  # noqa: E402
 import vorgaenge  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
@@ -175,8 +179,111 @@ class Vorgaenge(unittest.TestCase):
         self.assertNotEqual(y["rev"], vorgaenge.view(uid)["rev"])
         # Live: numbers only
         live = vorgaenge.for_live()
-        self.assertEqual(set(live), {"on", "profiles", "braucht", "spaeter", "erledigt", "wieder", "streams"})
+        self.assertEqual(set(live), {"on", "profiles", "braucht", "spaeter", "erledigt", "wieder", "streams", "warten", "ja"})
         self.assertTrue(all(isinstance(v, (int, bool)) for v in live.values()))
+
+
+
+TERMIN = {"title": "Steuerberater", "start": "2026-10-23T14:00:00+02:00", "end": "2026-10-23T15:00:00+02:00",
+          "location": "Lahr"}
+
+
+class Vorschlaege(unittest.TestCase):
+    """Stufe 2: a proposal waiting for a yes is the card „Wartet auf dein Ja“; its button runs the module's own carry
+    (the same as a typed „Ja“), the module's switches are checked again at the press, and the card closes when the
+    proposal is answered in the conversation, replaced or over."""
+    def setUp(self):
+        helpers.keep_chat(self, "reminders", "vorgaenge")
+        helpers.set_config(reminders=True, vorgaenge=True)
+        for k in [k for k in guard._rate if str(k[0]).startswith("vorgaenge")]:
+            guard._rate.pop(k, None)
+
+    def card(self, uid):
+        return [x for x in vorgaenge.view(uid)["items"] if x["art"] == "vorschlag"]
+
+    def test_a_new_appointment_waits_as_a_card_and_its_button_saves_it(self):
+        a = profile("Vorschlag Vera")
+        uid = uid_of("Vorschlag Vera")
+        calendars.propose(uid, dict(TERMIN), "web:c1")
+        [x] = self.card(uid)
+        self.assertEqual((x["titel"], x["zustand"], x["gruppe"]), ("Neuer Termin", "offen", "braucht"))
+        self.assertEqual(x["felder"], [["Was", "Steuerberater"], ["Wann", "Fr 23.10., 14:00–15:00"], ["Wo", "Lahr"]])
+        self.assertEqual([(k["k"], k["de"], k["stufe"]) for k in x["acts"]],
+                         [("vs_ja", "Eintragen", "ja"), ("vs_aendern", "Ändern …", "seite"), ("vs_nein", "Abbrechen", "direkt")])
+        # under the answer that made it: the Freigabe-Karte carries the card's number
+        [ev] = ablauf.waiting(uid, [calendars], 0, "web:c1")
+        self.assertEqual(ev["vg"], x["id"])
+        act = lambda **b: a.post("/api/profile/vorgaenge/act", json=dict({"id": x["id"]}, **b))  # noqa: E731
+        with mock.patch.object(vorgaenge.notaus, "refuse", return_value=True):     # Notaus: nothing is carried out
+            self.assertEqual(act(act="vs_ja", rev=x["rev"]).status_code, 503)
+        with mock.patch.object(calendars, "carry", new=mock.AsyncMock(return_value=(True, "Privat"))) as carry:
+            r = act(act="vs_ja", rev=x["rev"])
+            self.assertEqual(r.status_code, 200, r.text)
+            self.assertEqual(act(act="vs_ja", rev=r.json()["item"]["rev"]).status_code, 403)   # once
+        self.assertEqual(carry.await_count, 1)
+        self.assertEqual(carry.await_args.args[1]["title"], "Steuerberater")
+        d = r.json()
+        self.assertEqual((d["text"], d["gelungen"]), ("Eingetragen in „Privat“.", True))
+        self.assertEqual((d["item"]["zustand"], d["item"]["wie"], d["item"]["fertig"], d["item"]["acts"]),
+                         ("erledigt", "vs_ja", ["Eingetragen", "Added"], []))
+        self.assertIsNone(calendars.pending(uid))                                  # a later „Ja“ finds nothing
+        self.assertEqual(vorgaenge.for_live()["ja"] >= 1, True)
+
+    def test_change_goes_to_the_form_and_cancel_drops_it(self):
+        a = profile("Vorschlag Viktor")
+        uid = uid_of("Vorschlag Viktor")
+        calendars.propose(uid, dict(TERMIN), "web:c2")
+        [x] = self.card(uid)
+        r = a.post("/api/profile/vorgaenge/act", json={"id": x["id"], "act": "vs_aendern", "rev": x["rev"]})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual((r.json()["item"]["zustand"], r.json()["item"]["wie"]), ("weg", "vs_aendern"))
+        self.assertIsNone(calendars.pending(uid))
+        q = calendars.quick(r.json()["event"], datetime.datetime(2026, 10, 20, 9, 0, tzinfo=BERLIN))   # the form reads it
+        self.assertEqual((q["title"], q["location"], q["start"][:16]), ("Steuerberater", "Lahr", "2026-10-23T14:00"))
+        calendars.propose(uid, dict(TERMIN, title="Zahnarzt"), "web:c2")
+        y = next(c for c in self.card(uid) if c["zustand"] == "offen")
+        r = a.post("/api/profile/vorgaenge/act", json={"id": y["id"], "act": "vs_nein", "rev": y["rev"]})
+        self.assertEqual((r.json()["item"]["zustand"], r.json()["item"]["wie"]), ("weg", "vs_nein"))
+        self.assertIsNone(calendars.pending(uid))
+
+    def test_the_card_closes_when_answered_replaced_or_over(self):
+        profile("Vorschlag Wanda")
+        uid = uid_of("Vorschlag Wanda")
+        vorgaenge.from_pending(uid, "calendar", dict(TERMIN, t=100))
+        old = self.card(uid)[0]["id"]
+        calendars.propose(uid, dict(TERMIN, title="Friseur"), "web:c3")            # a newer one replaces it
+        by = {x["id"]: x for x in self.card(uid)}
+        self.assertEqual((by[old]["zustand"], by[old]["wie"]), ("weg", "ersetzt"))
+        new = next(i for i in by if i != old)
+        p = calendars.pending(uid)
+        calendars.drop_pending(uid)                                                # „Ja“ or „Nein“ typed in the conversation
+        self.assertEqual(vorgaenge.sweep(uid, now=p["t"] + 30), 1)
+        x = next(c for c in self.card(uid) if c["id"] == new)
+        self.assertEqual((x["zustand"], x["wie"]), ("weg", "beantwortet"))
+        vorgaenge.from_pending(uid, "calendar", dict(TERMIN, t=200))               # long over: nothing waits
+        self.assertEqual(vorgaenge.sweep(uid, now=200 + 16 * 60), 1)
+        self.assertEqual(sorted(c["wie"] for c in self.card(uid)), ["abgelaufen", "beantwortet", "ersetzt"])
+
+    def test_the_modules_switches_count_at_the_press_and_the_text_goes_with_the_answer(self):
+        a = profile("Vorschlag Willi")
+        uid = uid_of("Vorschlag Willi")
+        p = {"kind": "new", "account": "x", "to": "anna@example.org", "label": "Anna", "text": "Samstag passt.", "subject": "Samstag"}
+        profiles.pending_set(uid, senden.NAME, p, "web:c4")
+        [x] = self.card(uid)
+        self.assertEqual((x["titel"], x["felder"][-1], [k["de"] for k in x["acts"]]),
+                         ("Neue Mail", ["Text", "Samstag passt."], ["Senden", "Ändern …", "Abbrechen"]))
+        with mock.patch.object(senden, "level", return_value="off"):               # „Mails senden“ switched off since
+            r = a.post("/api/profile/vorgaenge/act", json={"id": x["id"], "act": "vs_ja", "rev": x["rev"]})
+        self.assertEqual(r.status_code, 403)
+        self.assertIsNotNone(senden.pending(uid))
+        other = profile("Vorschlag Wilma")                                         # never another profile's
+        self.assertEqual(other.post("/api/profile/vorgaenge/act", json={"id": x["id"], "act": "vs_ja"}).status_code, 404)
+        with mock.patch.object(vorgaenge, "_may", return_value=True):            # „Mails senden“ on
+            r = a.post("/api/profile/vorgaenge/act", json={"id": x["id"], "act": "vs_aendern", "rev": x["rev"]})
+        self.assertEqual(r.json()["draft"], {"to": "anna@example.org", "subject": "Samstag", "text": "Samstag passt."})
+        self.assertNotIn("Text", [f[0] for f in r.json()["item"]["felder"]])       # the mail's text only while it waits
+        self.assertEqual(senden.card(uid, dict(p, kind="reply")).get("aendern"), None)   # an answer stays one
+        self.assertEqual(tidy.card(uid, {"kind": "draft", "to_show": "Anna", "subject": "Re: x", "text": "Hallo"})["knopf"], "ablegen")
 
 
 if __name__ == "__main__":

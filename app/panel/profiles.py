@@ -47,12 +47,22 @@ def _write(path, data):
 
 # One proposal per profile and module waiting for a yes: USERS_DIR/<uid>/<name>-pending.json with "t" (when) and
 # "src" (where it was proposed; only a yes from there confirms it). calendars, tidy, tasks, agent, meinmcp, fixes, messages.
+# PENDING_HOOKS get (uid, name, proposal) after it is written (vorgaenge.from_pending: the card „Wartet auf dein Ja“).
+PENDING_HOOKS = []
+
+
 def pending_file(uid, name):
     return _path(uid, f"{name}-pending.json")
 
 
 def pending_set(uid, name, data, src=""):
-    _write(pending_file(uid, name), dict(data, t=int(time.time()), src=str(src or "")[:120]))
+    item = dict(data, t=int(time.time()), src=str(src or "")[:120])
+    _write(pending_file(uid, name), item)
+    for f in PENDING_HOOKS:
+        try:
+            f(uid, name, item)
+        except Exception as e:
+            print("profiles: pending hook", type(e).__name__, flush=True)
 
 
 def pending_get(uid, name, seconds):

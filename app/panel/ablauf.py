@@ -19,6 +19,7 @@ import re
 
 import profiles
 import taten
+import vorgaenge
 import werkzeuge
 
 # module of a waiting proposal (chat_turn.waiting_mods) -> what it is about, in fixed words
@@ -48,7 +49,7 @@ def step(name, result, seconds):
 
 def waiting(uid, mods, since, src):
     """The kinds of the proposals this answer left for a "Ja": made since the start of the turn, from this device
-    and conversation (the yes only counts there). Returns [{"type": "confirm", "kind", "de", "en"}]."""
+    and conversation (the yes only counts there). Returns [{"type": "confirm", "kind", "de", "en", "vg"?}]."""
     out = []
     for mod in mods:
         try:
@@ -59,7 +60,11 @@ def waiting(uid, mods, since, src):
             continue
         kind = mod.__name__.rsplit(".", 1)[-1]
         de, en = KINDS.get(kind, ("Vorschlag", "Proposal"))
-        out.append({"type": "confirm", "kind": kind, "de": de, "en": en})
+        ev = {"type": "confirm", "kind": kind, "de": de, "en": en}
+        # Alles Offene im Assistenten (Stufe 2): its card „Wartet auf dein Ja“ with what it is and the yes button
+        name = next((k for k, v in vorgaenge.VORSCHLAEGE.items() if v == kind), "")
+        vg = vorgaenge.id_of(uid, f"vorschlag:{name}:{int(p.get('t') or 0)}") if name else None
+        out.append(dict(ev, vg=vg) if vg else ev)
     if out:
         print(f"chat: freigabe-karte gezeigt | {len(out)}", flush=True)
     return out[:1]   # one yes confirms one thing (chat_turn): one card

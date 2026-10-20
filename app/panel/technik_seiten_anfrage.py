@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "vorbereiten": {
-        "stand": "92c535d7d5",
+        "stand": "90fd8d2b27",
         "bezug": {
             "klaeren.MAX_BUTTONS": ["s7"], "chat_turn.prepare": ["s1", "s13"], "chat_turn.shared_stranger": ["s3"],
             "chat.left_out": ["s2", "s4"], "notaus.locked_tools": ["s11"], "chat_turn.notaus_note": ["s8", "s11"],
@@ -509,7 +509,7 @@ SEITEN = {
         "heute": [],
     },
     "antwort": {
-        "stand": "62d7652946",
+        "stand": "a6eb059dcb",
         "bezug": {
             "chat.MAX_SAVES": ["s11"], "chat.LOOP_SAME": ["s11"], "chat._answer": ["s4", "s5", "s11"], "chat_modell.model_turn": ["s4", "s11"], "chat_ton.speech_out": ["s8"],
             "chat.split_sentences": ["s5"], "chat.said_key": ["s8"], "chat.no_code": ["s8"],

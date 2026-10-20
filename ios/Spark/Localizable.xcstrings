@@ -14880,6 +14880,56 @@
           }
         }
       }
+    },
+    "Abgebrochen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelled"
+          }
+        }
+      }
+    },
+    "Weiter auf der Seite": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continued on the page"
+          }
+        }
+      }
+    },
+    "Im Gespräch beantwortet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Answered in the conversation"
+          }
+        }
+      }
+    },
+    "Neuer Vorschlag": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New proposal"
+          }
+        }
+      }
+    },
+    "Nicht ausgeführt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not done"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

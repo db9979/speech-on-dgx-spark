@@ -388,7 +388,6 @@ def offer(ctx):
 
 async def answer(ctx, latest):
     """The person's yes or no to a waiting mail, or a new one in their own words: {"call", "system", …} or None."""
-    import asyncio
     who = ctx.get("who")
     if not who or not ctx.get("own") or not ctx.get("private", True) or level() == "off":
         return None
@@ -405,25 +404,50 @@ async def answer(ctx, latest):
             print(f"mail: voice declined | {log_who}", flush=True)
             return _note(("(abgelehnt)", describe(p), "nicht gesendet"),
                          f"{describe(p)} wurde NICHT gesendet, weil der Nutzer nicht zugestimmt hat. Sag das kurz.", False)
-        body = {"to": p["to"], "text": p["text"], "subject": p.get("subject", "")}
-        body.update({"reply": p["reply"]} if p.get("reply") else {"account": p["account"]})
-        try:
-            prev = await asyncio.to_thread(preview, uid, body)
-            done = await asyncio.to_thread(send, uid, prev["token"])
-        except notaus.NotausAktiv:
+        how, why = await carry(uid, p)
+        if how == "notaus":
             return _note(("(Notaus)", describe(p), "nicht gesendet"), "Notaus: gerade wird nichts gesendet. Sag dem Nutzer genau das.", False)
-        except (ValueError, LookupError) as e:
-            return _note(("(nicht möglich)", describe(p), str(e)[:120]),
-                         f"Die Mail wurde NICHT gesendet ({str(e)[:120]}). Sag dem Nutzer das in einem Satz.", False)
-        except Exception as e:
-            return _note(("(Fehler)", describe(p), type(e).__name__),
+        if how == "refused":
+            return _note(("(nicht möglich)", describe(p), why),
+                         f"Die Mail wurde NICHT gesendet ({why}). Sag dem Nutzer das in einem Satz.", False)
+        if how == "failed":
+            return _note(("(Fehler)", describe(p), why),
                          "Der Postausgang brach ab; ob die Mail raus ist, steht im Ordner Gesendet. Sag dem Nutzer genau das.", False)
-        print(f"mail: voice sent | {log_who}", flush=True)
         return _note(("(bestätigt)", describe(p), "gesendet"),
                      f"Die Mail an {p['label']} ist gesendet. Sag dem Nutzer genau das in einem Satz.", False)
     if not got:
         return None
     return _direct(uid, got, src, log_who)
+
+
+async def carry(uid, p):
+    """Sends the waiting mail after a yes, typed (answer) or the card's button (vorgaenge.py), through the same
+    preview and send as the page's sheet. Returns ("sent", "") or ("notaus" | "refused" | "failed", why, short)."""
+    import asyncio
+    body = {"to": p["to"], "text": p["text"], "subject": p.get("subject", "")}
+    body.update({"reply": p["reply"]} if p.get("reply") else {"account": p["account"]})
+    try:
+        prev = await asyncio.to_thread(preview, uid, body)
+        await asyncio.to_thread(send, uid, prev["token"])
+    except notaus.NotausAktiv:
+        return "notaus", ""
+    except (ValueError, LookupError) as e:
+        return "refused", str(e)[:120]
+    except Exception as e:
+        return "failed", type(e).__name__
+    print(f"mail: voice sent | {profiles.log_name(profiles.by_id(uid))}", flush=True)
+    return "sent", ""
+
+
+def card(uid, p):
+    """The card „Wartet auf dein Ja“ (vorgaenge.from_pending): to whom and the text; a new mail also opens in the
+    page's writing window („Ändern …“), an answer stays one to its mail."""
+    rows = [["An", p.get("label", "")]] + ([["Betreff", p["subject"]]] if p.get("subject") else []) \
+        + [["Text", p.get("text", "")]]
+    out = {"titel": "Antwort per Mail" if p.get("kind") == "reply" else "Neue Mail", "felder": rows, "knopf": "senden"}
+    if p.get("kind") == "new":
+        out["aendern"] = {"addr": p.get("to", ""), "subject": p.get("subject", ""), "text": p.get("text", "")}
+    return out
 
 
 def _refuse(why, note, log_who):

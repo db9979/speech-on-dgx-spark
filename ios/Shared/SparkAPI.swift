@@ -23,7 +23,8 @@ enum ChatEvent {
     case picture(job: String, prompt: String)   // a picture is painted for this answer (bilder.py): its job
     case more(kind: String, items: [MoreItem])  // the Spark's fixed sentences under the answer (saetze.py)
     case step(StepItem)     // Ablauf zeigen (ablauf.py): one tool of this answer, its readable name, ok and time
-    case confirm(String)    // Freigabe-Karte (ablauf.py): the kind of a proposal waiting for "Ja", in fixed words
+    case confirm(String, vg: String?)   // Freigabe-Karte (ablauf.py): the kind of a proposal waiting for "Ja", in fixed
+                                        // words, and its card „Wartet auf dein Ja“ (vorgaenge.py, Stufe 2) when there is one
     case answers([String])  // Rückfrage-Karte (ablauf.asks, klaeren.py): the answers to the question this answer asks
     case wbuch(String)      // "Ins Wissensbuch" may go under this answer (wissensbuch.keep_offer): the id the Spark kept it by
 }
@@ -944,7 +945,8 @@ struct SparkAPI {
                             // only the kind in fixed words; a tap sends "Ja" or "Nein" like a typed answer
                             let de = Locale.preferredLanguages.first?.hasPrefix("de") ?? true
                             let kind = String(((de ? ev["de"] : ev["en"]) as? String ?? "").prefix(40))
-                            if !kind.isEmpty { cont.yield(.confirm(kind)) }
+                            let vg = (ev["vg"] as? String).flatMap { $0.range(of: #"^v[0-9a-f]{10}$"#, options: .regularExpression) != nil ? $0 : nil }
+                            if !kind.isEmpty { cont.yield(.confirm(kind, vg: vg)) }
                         case "choice":
                             // short plain answers (Ja/Nein, „A oder B“, a device name); a tap sends one like a typed answer.
                             // The long list with a search field stays in the panel

@@ -16,6 +16,7 @@ struct Vorgang: Identifiable {
     let art: String
     let artName: String
     let bell: Bool
+    let check: Bool
     let urgent: Bool
     let title: String
     let line: String
@@ -31,6 +32,8 @@ struct Vorgang: Identifiable {
     let rev: Int
     let knoepfe: [Knopf]
     let data: [String: String]
+    /// a proposal's card (Stufe 2): what it says after its yes („Eingetragen“, „Gesendet“)
+    let fertig: String
 
     init(_ d: [String: Any], en: Bool) {
         let date = { (k: String) -> Date? in
@@ -41,6 +44,7 @@ struct Vorgang: Identifiable {
         art = d["art"] as? String ?? ""
         artName = (en ? d["art_en"] : d["art_de"]) as? String ?? ""
         bell = d["sym"] as? String == "bell"
+        check = d["sym"] as? String == "check"
         urgent = d["dringend"] as? Bool ?? false
         title = String((d["titel"] as? String ?? "").prefix(200))
         line = String((d["zeile"] as? String ?? "").prefix(200))
@@ -58,6 +62,8 @@ struct Vorgang: Identifiable {
             Knopf(k: $0["k"] as? String ?? "", name: (en ? $0["en"] : $0["de"]) as? String ?? "", page: $0["stufe"] as? String == "seite")
         }
         data = d["daten"] as? [String: String] ?? [:]
+        let f = d["fertig"] as? [String] ?? []
+        fertig = f.count == 2 ? (en ? f[1] : f[0]) : ""
     }
 
     var done: Bool { group == "erledigt" }
@@ -141,8 +147,12 @@ func vorgangState(_ x: Vorgang) -> String {
         return x.laterUntil.map { String(localized: "Später: wieder da \($0.formatted(f))") } ?? String(localized: "Später, ohne Zeit")
     }
     guard x.done else { return "" }
-    let how = x.how == "abgelaufen" ? String(localized: "Abgelaufen") : x.state == "weg" ? String(localized: "Nicht wichtig")
-        : x.how == "fd_remind" ? String(localized: "Erinnerung gesetzt") : String(localized: "Erledigt")
+    let ended: [String: String] = ["vs_nein": String(localized: "Abgebrochen"), "vs_aendern": String(localized: "Weiter auf der Seite"),
+                                   "beantwortet": String(localized: "Im Gespräch beantwortet"), "ersetzt": String(localized: "Neuer Vorschlag"),
+                                   "fehler": String(localized: "Nicht ausgeführt")]
+    let how = x.how == "abgelaufen" ? String(localized: "Abgelaufen") : x.how == "vs_ja" && !x.fertig.isEmpty ? x.fertig
+        : ended[x.how] ?? (x.state == "weg" ? String(localized: "Nicht wichtig")
+        : x.how == "fd_remind" ? String(localized: "Erinnerung gesetzt") : String(localized: "Erledigt"))
     return [how, x.place, x.changed?.formatted(f) ?? ""].filter { !$0.isEmpty }.joined(separator: " · ")
 }
 
@@ -152,6 +162,7 @@ struct VorgangKarte: View {
     @State private var busy = false
     @State private var writing: MailDraft?
     @State private var adding: FuerEvent?
+    @State private var note: (String, Bool)?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -163,9 +174,10 @@ struct VorgangKarte: View {
                     if x.has("zurueck") { Button("Zurückholen") { run("zurueck") }.font(.footnote) }
                 }
                 Text(verbatim: vorgangState(x)).font(.caption).foregroundStyle(.secondary)
+                if let n = note { Text(verbatim: n.0).font(.caption).foregroundStyle(n.1 ? Color.secondary : Color.red) }
             } else {
                 HStack(spacing: 6) {
-                    Image(systemName: x.bell ? "bell" : "envelope").foregroundStyle(.tint)
+                    Image(systemName: x.bell ? "bell" : x.check ? "checkmark.seal" : "envelope").foregroundStyle(.tint)
                     Text(verbatim: x.artName.uppercased()).font(.caption).foregroundStyle(.secondary)
                     Spacer()
                     if !x.due.isEmpty { Text(verbatim: x.due).font(.caption).foregroundStyle(.orange) }
@@ -214,6 +226,7 @@ struct VorgangKarte: View {
         Task {
             let d = await store.act(x, k, when: when)
             busy = false
+            if let t = d?["text"] as? String, !t.isEmpty { note = (t, d?["gelungen"] as? Bool ?? false) }   // a proposal's yes
             guard page, let d else { return }
             let z = x.data
             switch k {
@@ -226,8 +239,28 @@ struct VorgangKarte: View {
                 if let m = d["draft"] as? [String: Any] {
                     writing = MailDraft(to: m["to"] as? String ?? "", subject: m["subject"] as? String ?? "", text: m["text"] as? String ?? "")
                 }
+            case "vs_aendern":   // the proposal goes to the form or the writing window, filled; only there it is saved or sent
+                if let e = d["event"] as? String, !e.isEmpty { adding = FuerEvent(line: e) }
+                if let m = d["draft"] as? [String: Any] {
+                    writing = MailDraft(to: m["to"] as? String ?? "", subject: m["subject"] as? String ?? "", text: m["text"] as? String ?? "")
+                }
             default: break
             }
+        }
+    }
+}
+
+/// the card „Wartet auf dein Ja“ under the answer that made the proposal (Stufe 2), the Ja/Nein card until it is known
+struct VorschlagKarte: View {
+    let id: String
+    let kind: String
+    @ObservedObject private var store = VorgangStore.shared
+
+    var body: some View {
+        if let x = store.items[id] {
+            VorgangKarte(x: x).frame(maxWidth: 420, alignment: .leading)
+        } else {
+            ConfirmCard(kind: kind).onAppear { store.want(id) }
         }
     }
 }

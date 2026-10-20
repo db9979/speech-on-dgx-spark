@@ -609,6 +609,8 @@ async def prepare(request):
         for mod in waiting_mods():
             if mod.pending(who["id"]):
                 mod.drop_pending(who["id"])
+        import vorgaenge
+        vorgaenge.sweep(who["id"])
         print(f"notaus: {'Stufe ' + str(held) if held >= 2 else 'Mein Notaus'} - keine Aktion, kein Ja, nur lesen", flush=True)
     cal_write = bool((cal["calendars"] or "add" in cal["shared"]) and own_browser and not mcp and not act_held)
     prop = None
@@ -624,27 +626,19 @@ async def prepare(request):
             latest = messages[-1]["content"] if messages[-1]["role"] == "user" else ""
             calendars.drop_pending(who["id"])
             if prop.get("change") and calendars.confirms(latest):
-                # calendar_change: move or delete one appointment (calendars.change_event), then keep the old one for undo
-                kept = {}
-                try:
-                    note = await calendars.change_event(who["id"], prop, kept) + " (vom Kalender-Server bestätigt)"
-                    aendern.note(who["id"], "calendar_ics", kept, "den Termin „" + prop["title"][:60] + "“ wie vorher stellen")
-                except Exception as e:
-                    note = f"NICHT geändert, der Kalender lehnte ab: {str(e)[:160]}. Vorschlag war {calendars.describe_change(prop)}"
+                # calendar_change: move or delete one appointment, the old one kept for undo (calendars.carry)
+                ok, res = await calendars.carry(who["id"], prop)
+                note = res + " (vom Kalender-Server bestätigt)" if ok else \
+                    f"NICHT geändert, der Kalender lehnte ab: {res}. Vorschlag war {calendars.describe_change(prop)}"
                 cal_note[:] = [{"name": "calendar_change (bestätigt)", "args": calendars.describe_change(prop), "result": note}]
                 system = per_turn(system, "Kalender: " + note + " Sag dem Nutzer genau das in einem Satz.")
             elif prop.get("change"):
                 system = per_turn(system, "Kalender: Der Vorschlag, " + calendars.describe_change(prop)
                                   + ", wurde NICHT ausgeführt, weil der Nutzer nicht zugestimmt hat.")
             elif calendars.confirms(latest):
-                try:
-                    put = {}
-                    where = await calendars.add_event(who["id"], prop, put)
-                    note = f"Saved in calendar '{where}' (confirmed by the calendar server): {calendars.describe(prop)}"
-                    if put.get("href"):
-                        aendern.note(who["id"], "calendar", put, "den Termin „" + prop["title"][:60] + "“ wieder löschen")
-                except Exception as e:
-                    note = f"NOT saved, the calendar refused it: {e}. Proposal was {calendars.describe(prop)}"
+                ok, res = await calendars.carry(who["id"], prop)
+                note = f"Saved in calendar '{res}' (confirmed by the calendar server): {calendars.describe(prop)}" if ok else \
+                    f"NOT saved, the calendar refused it: {res}. Proposal was {calendars.describe(prop)}"
                 cal_note[:] = [{"name": "calendar_add (bestätigt)", "args": calendars.describe(prop), "result": note}]
                 system = per_turn(system, "Kalender: " + note + " Sag dem Nutzer genau das in einem Satz.")
             else:
@@ -789,6 +783,8 @@ async def prepare(request):
             p = mod.pending(who["id"])
             if p and p.get("src", src) == src:
                 mod.drop_pending(who["id"])
+        import vorgaenge   # the cards „Wartet auf dein Ja“ of the proposals answered now (Alles Offene, Stufe 2)
+        vorgaenge.sweep(who["id"])
     if briefing:
         system = per_turn(system, chat.BRIEFING_HINT + (" " + chat.CALENDAR_HINT if cal["calendars"] else "")
                           + (" Nenne im Briefing nach den Erinnerungen kurz die ungelesenen Mails (Absender und Thema)."

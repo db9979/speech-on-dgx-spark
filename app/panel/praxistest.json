@@ -2413,6 +2413,13 @@
 "titel": "Mitschreib-Link",
 "text": "A: Update auf V01.0.875, Funktionen → Listen für Einkauf und Aufgaben → „Mitschreib-Link“ an. B: Profil db: Seite Listen → Einkauf → ⋯ → „Teilen …“ → „Link für Leute ohne Profil“, 7 Tage, „Link erstellen“: Link und QR-Code erscheinen; Fenster schließen und neu öffnen: nur noch „Link bis …“ mit „Widerrufen“. C: Den QR-Code mit einem Handy ohne Spark-Anmeldung scannen: kleine Seite „🛒 Einkauf“; „2 Milch, Brot“ mit Name „Oma“ eintragen: „Danke, steht drauf.“ D: Bei db stehen Milch 2× und Brot mit „Mitschreib-Link“ und „Oma“. E: Am iPhone (db) unter Listen → Einkauf → „Teilen …“ einen Link mit „darf die Liste sehen“ erstellen und per „Link weitergeben“ schicken: der Empfänger sieht die offenen Einträge. F: „Widerrufen“: der Link meldet „Der Link passt nicht oder ist abgelaufen.“",
 "thread": "Einkaufsliste und Aufgaben teilen"
+},
+{
+"id": "P369",
+"v": 876,
+"titel": "Alles Offene: Vorschläge mit Ja-Knopf",
+"text": "Mit „Alles Offene im Assistenten“ an: „Trag Donnerstag 14 Uhr Steuerberater in Lahr ein“ sagen. Unter der Antwort steht die Karte „Wartet auf dein Ja“ mit Was, Wann, Wo und „Eintragen“, „Ändern …“, „Abbrechen“. „Eintragen“ drücken: die Karte sagt „Eingetragen in …“ und der Termin steht im Kalender. Noch einen vorschlagen lassen und am iPhone unter Meine Sachen → Offen bestätigen. Einen dritten mit „Ändern …“ öffnen: das Formular der Seite Kalender ist ausgefüllt. Einen vierten mit „Nein“ im Gespräch beantworten: die Karte zeigt „Im Gespräch beantwortet“.",
+"thread": "Zentraler Assistenten-Chat mit Karten"
 }
 ]
 }

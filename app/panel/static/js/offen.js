@@ -1,4 +1,4 @@
-// Alles Offene im Assistenten (vorgaenge.py, plan assistent-zentrale/plan.md Stufe 1, Dominik 2026-10-20 „ok“): one
+// Alles Offene im Assistenten (vorgaenge.py, plan assistent-zentrale/plan.md Stufe 1+2, Dominik 2026-10-20 „ok“): one
 // store of this profile's Vorgänge for the card in the conversation, the line „Noch offen“ above it and the page Offen
 // (Braucht dich · Später · Erledigt, list left, card right). A message of the conversation carries only the number
 // ("vg"); the card is drawn from the store, so a button pressed on one device changes the card on every one (stream
@@ -28,17 +28,23 @@ const vgWhen=s=>{if(!s)return '';const d=new Date(s*1000),n=new Date(),tm=new Da
 const vgFrist=f=>{if(!f)return null;const d=new Date(f+'T12:00'),n=new Date(),days=Math.round((d-new Date(n.getFullYear(),n.getMonth(),n.getDate(),12))/864e5);
   return [days<=0?t('heute fällig','due today'):days===1?t('morgen fällig','due tomorrow'):t('fällig ','due ')+d.toLocaleDateString(kalLoc(),{day:'numeric',month:'numeric'}),days<=1]};
 const WO_EN={Rechner:'computer',Handy:'phone',iPhone:'iPhone',Begleiter:'companion',Telegram:'Telegram'};
+// how a proposal's card („Wartet auf dein Ja“, Stufe 2) ended when not by its yes
+const VG_WIE={vs_nein:['Abgebrochen','Cancelled'],vs_aendern:['Weiter auf der Seite','Continued on the page'],beantwortet:['Im Gespräch beantwortet','Answered in the conversation'],
+  ersetzt:['Neuer Vorschlag','New proposal'],fehler:['Nicht ausgeführt','Not done']};
+const vgSym=x=>x.sym==='bell'?'bell':x.sym==='check'?'check':'mail';
 // the line under a card: what happened, where and when
 function vgState(x){if(x.zustand==='spaeter')return x.spaeter_bis?t('Später: wieder da ','Later: back ')+vgWhen(x.spaeter_bis):t('Später, ohne Zeit','Later, no time');
-  if(x.zustand==='erledigt'||x.zustand==='weg'){const how=x.wie==='abgelaufen'?t('Abgelaufen','Expired'):x.zustand==='weg'?t('Nicht wichtig','Not important')
+  if(x.zustand==='erledigt'||x.zustand==='weg'){const how=x.wie==='abgelaufen'?t('Abgelaufen','Expired'):x.wie==='vs_ja'&&x.fertig?(L==='en'?x.fertig[1]:x.fertig[0])
+      :VG_WIE[x.wie]?t(...VG_WIE[x.wie]):x.zustand==='weg'?t('Nicht wichtig','Not important')
       :x.wie==='fd_remind'?t('Erinnerung gesetzt','Reminder set'):x.wie==='fd_more'?t('Mehr davon gemerkt','More of this noted'):t('Erledigt','Done');
     return how+(x.wo?' · '+t('am ','on the ')+(L==='en'?WO_EN[x.wo]||x.wo:x.wo):'')+' · '+vgWhen(x.ge)}
   return ''}
 // ---------------------------------------------------------------- the card
 function vgCard(x,where){const el=icEl,c=el('div','vk'+(x.dringend?' hot':''));c.dataset.vg=x.id;
   if(x.gruppe==='erledigt'){c.className='vk-zu';c.append(el('span','vk-sym','✓'),el('span','',x.titel),el('small','mut',vgState(x)));
+    if(VG.msg&&VG.msgId===x.id&&where!=='list')c.appendChild(el('div','fh'+(VG.msgOk?'':' err'),VG.msg));
     const b=el('button','b',t('Zurückholen','Bring back'));b.type='button';b.onclick=()=>vgAct(x,'zurueck','',b);if(x.acts.some(a=>a.k==='zurueck'))c.appendChild(b);return c}
-  const k=el('div','vk-k'),sym=el('span','vk-sym');sym.appendChild(icSvg(x.sym==='bell'?'bell':'mail',14));k.append(sym,el('b','',vgName(x)));
+  const k=el('div','vk-k'),sym=el('span','vk-sym');sym.appendChild(icSvg(vgSym(x),14));k.append(sym,el('b','',vgName(x)));
   const f=vgFrist(x.frist);if(f)k.appendChild(el('span','frist'+(f[1]?' warn':''),f[0]));
   c.append(k,el('b','vk-t',x.titel));if(x.zeile)c.appendChild(el('div','vk-z',x.zeile));
   if(x.felder&&x.felder.length){const dl=el('dl','vk-f');for(const [a,b] of x.felder){dl.append(el('dt','',t(a,{Von:'From',Betrag:'Amount'}[a]||a)),el('dd','',b))}c.appendChild(dl)}
@@ -48,7 +54,7 @@ function vgCard(x,where){const el=icEl,c=el('div','vk'+(x.dringend?' hot':''));c
   if(x.zustand==='spaeter'&&x.acts.some(a=>a.k==='zurueck')){const b=el('button','b',t('Jetzt zeigen','Show now'));b.type='button';b.onclick=()=>vgAct(x,'zurueck','',b);bar.appendChild(b)}
   if(x.acts.some(a=>a.k==='spaeter'))bar.appendChild(vgLater(x));
   c.appendChild(bar);const st=vgState(x);if(st)c.appendChild(el('div','vk-fuss',st));
-  if(VG.msg&&VG.msgId===x.id&&where!=='list')c.appendChild(el('div','fh err',VG.msg));
+  if(VG.msg&&VG.msgId===x.id&&where!=='list')c.appendChild(el('div','fh'+(VG.msgOk?'':' err'),VG.msg));
   return c}
 // „Später ▾“: the four choices of vorgaenge.SPAETER, the time it comes back beside each
 function vgLater(x){const el=icEl,w=el('span','vk-sp'),b=el('button','b',t('Später ▾','Later ▾'));b.type='button';b.setAttribute('aria-haspopup','true');
@@ -57,23 +63,29 @@ function vgLater(x){const el=icEl,w=el('span','vk-sp'),b=el('button','b',t('Spä
   b.onclick=e=>{e.stopPropagation();const open=!pop.hidden;document.querySelectorAll('.ic-pop').forEach(p=>p.hidden=true);pop.hidden=open};
   w.classList.add('ic-menu');w.append(b,pop);return w}
 // one button: the Spark checks and answers with the card as it is now; "seite" opens the place where it goes on
-async function vgAct(x,k,wann,btn){if(btn)btn.disabled=true;VG.msg='';
+async function vgAct(x,k,wann,btn){if(btn)btn.disabled=true;VG.msg='';VG.msgOk=false;
   const {r,d}=await apiTry('/api/profile/vorgaenge/act',xjson('POST',{id:x.id,act:k,rev:x.rev,wann,view:document.body.classList.contains('appview')?'app':undefined}));
   if(btn)btn.disabled=false;
   const det=d&&d.detail;
   if(r.status===409&&det&&det.item){VG.items.set(x.id,det.item);VG.msg=det.text;VG.msgId=x.id;vgPaint();return}
   if(!r.ok){VG.msg=errSay(r.status,det,"");VG.msgId=x.id;vgPaint();return}
   VG.items.set(x.id,d.item);VG.rev=Math.max(VG.rev,d.rev||0);
+  if(d.text){VG.msg=d.text;VG.msgOk=!!d.gelungen;VG.msgId=x.id}   // the yes of a proposal: the checked result in the panel's words
   const a=x.acts.find(a=>a.k===k);if(a&&a.stufe==='seite')vgGo(x,k,d);
   vgLoad(false)}
 function vgGo(x,k,d){const z=x.daten||{};
   if(k==='fd_event'&&typeof fuerEvent==='function'&&typeof KAL!=='undefined')fuerEvent({event:z.event});
   else if(k==='fd_reply'&&window.postFromFuer)postFromFuer(z.ref);
-  else if(k==='fd_cancel'&&window.postFromFuer&&d.draft)postFromFuer('',d.draft)}
+  else if(k==='fd_cancel'&&window.postFromFuer&&d.draft)postFromFuer('',d.draft)
+  else if(k==='vs_aendern'&&d.event&&typeof fuerEvent==='function'&&typeof KAL!=='undefined')fuerEvent({event:d.event})   // the Kalender's form, filled
+  else if(k==='vs_aendern'&&d.draft&&window.postFromFuer)postFromFuer('',d.draft)}   // the writing window, filled; only its sheet sends
 // ---------------------------------------------------------------- in the conversation (chat.js openConvo)
 window.vgMount=(b,m)=>{const d=b.parentNode;d.classList.add('vgmsg');d.dataset.vg=m.vg;vgFill(d)};
 function vgFill(d){const x=VG.items.get(d.dataset.vg),b=d.querySelector('.bubble');if(!x||!b)return;   // unknown: the sentence stays
   b.textContent='';b.classList.remove('typing');b.classList.add('vgb');b.appendChild(vgCard(x,'chat'))}
+// a proposal of this answer (chat.js, Stufe 2): its card under the answer, the Ja/Nein card until the store knows it
+window.vgAttach=(id,fallback)=>{const d=icEl('div','vgatt');d.dataset.vg=id;d.appendChild(fallback);vgLoad(false).then(()=>vgFillAtt(d));return d};
+function vgFillAtt(d){const x=VG.items.get(d.dataset.vg);if(!x)return;d.textContent='';d.appendChild(vgCard(x,'chat'))}
 // a note of Von selbst or a reminder that rang with a card: the card here at once, the saved one comes with convoLook
 window.vgLive=(id,text)=>{if(!document.querySelector('#chatlog .vgmsg[data-vg="'+id+'"]')){const b=chatLog('assistant',text);b.classList.add('pro');vgMount(b,{vg:id})}
   vgLoad(false).then(()=>{if(typeof convoLook==='function')convoLook(true)})};
@@ -107,7 +119,7 @@ function vgPage(w){w.classList.toggle('ld-sel',!!VG.sel);
   if(!rows.length)list.appendChild(icEl('div','ld-empty mut',VG.grp==='braucht'?t('Nichts offen. Was dich braucht, kommt als Karte ins Gespräch und steht dann hier.','Nothing open. What needs you comes as a card into the conversation and then stands here.')
     :VG.grp==='spaeter'?t('Nichts für später.','Nothing for later.'):t('In den letzten 7 Tagen nichts erledigt.','Nothing done in the last 7 days.')));
   for(const x of rows){const r=icEl('div','ld-row'+(x.id===VG.sel?' on':''));r.setAttribute('role','button');r.tabIndex=0;
-    const ic=icEl('span','ld-ico vk-sym');ic.appendChild(icSvg(x.sym==='bell'?'bell':'mail',15));const mid=icEl('span','ld-mid');
+    const ic=icEl('span','ld-ico vk-sym');ic.appendChild(icSvg(vgSym(x),15));const mid=icEl('span','ld-mid');
     mid.append(icEl('b','',x.titel),icEl('small','',[vgName(x),vgState(x)||x.zeile].filter(Boolean).join(' · ')));
     const right=icEl('span','ld-right');const f=vgFrist(x.frist);if(f)right.appendChild(icEl('span','frist'+(f[1]?' warn':''),f[0]));
     r.append(ic,mid,right);const go=()=>{VG.sel=x.id;VG.msg='';vgPaint()};r.onclick=go;r.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}};list.appendChild(r)}
@@ -121,8 +133,8 @@ function vgPage(w){w.classList.toggle('ld-sel',!!VG.sel);
   det.appendChild(ch)}
 // „Einstellungen“: what lands here and taking the done ones (or all) away; the switch itself is the admin's
 async function vgSettings(b){b.textContent='';const c=VG.counts;
-  b.appendChild(icEl('div','intro',t('Was dich braucht, kommt als Karte ins Gespräch des Tages: dringende Funde aus „Für dich“ (Rechnung, Vertrag, Antwort, Verdacht) und Erinnerungen, die geklingelt haben. Jede Karte hat feste Knöpfe; „Später“ legt sie hierher, sie kommt zur gewählten Zeit wieder. Erledigt ist auf jedem Gerät erledigt.',
-    'What needs you comes as a card into the day\'s conversation: urgent finds from "For you" (bill, contract, reply, suspicion) and reminders that rang. Every card has fixed buttons; "Later" puts it here and it comes back at the chosen time. Done is done on every device.')));
+  b.appendChild(icEl('div','intro',t('Was dich braucht, kommt als Karte ins Gespräch des Tages: dringende Funde aus „Für dich“ (Rechnung, Vertrag, Antwort, Verdacht) und Erinnerungen, die geklingelt haben, dazu Vorschläge des Assistenten, die auf dein Ja warten (Termin, Mail, Aufräumen). Jede Karte hat feste Knöpfe; „Später“ legt sie hierher, sie kommt zur gewählten Zeit wieder. Erledigt ist auf jedem Gerät erledigt.',
+    'What needs you comes as a card into the day\'s conversation: urgent finds from "For you" (bill, contract, reply, suspicion) and reminders that rang, and the assistant\'s proposals waiting for your yes (appointment, mail, tidy-up). Every card has fixed buttons; "Later" puts it here and it comes back at the chosen time. Done is done on every device.')));
   b.appendChild(icStats([[c.braucht||0,t('brauchen dich','need you'),!!c.braucht],[c.spaeter||0,t('später','later')],[c.erledigt||0,t('erledigt (7 Tage)','done (7 days)')]]));
   b.appendChild(icEl('div','fh',t('Ob eine Karte auch als Mitteilung kommt, stellst du unter Ich → Von selbst ein.','Whether a card also comes as a notification is set under Me → By itself.')));
   const msg=icEl('div','fh');
@@ -133,7 +145,7 @@ async function vgSettings(b){b.textContent='';const c=VG.counts;
   b.appendChild(icDanger(t('Alles Offene löschen','Delete everything open'),t('Die Karten und die Später-Liste sind dann weg. Mails und Erinnerungen bleiben, wo sie sind.','The cards and the later list are gone then. Mails and reminders stay where they are.'),
     t('Alles löschen','Delete all'),e=>{const btn=e.currentTarget;if(btn.dataset.sure){drop(false,btn);delete btn.dataset.sure;btn.textContent=t('Alles löschen','Delete all')}else{btn.dataset.sure='1';btn.textContent=t('Wirklich löschen?','Really delete?')}}))}
 // ---------------------------------------------------------------- every place at once
-function vgPaint(){document.querySelectorAll('#chatlog .vgmsg').forEach(vgFill);vgStrip();
+function vgPaint(){document.querySelectorAll('#chatlog .vgmsg').forEach(vgFill);document.querySelectorAll('#chatlog .vgatt').forEach(vgFillAtt);vgStrip();
   const n=VG_ON?VG.counts.braucht||0:0;
   document.querySelectorAll('nav button[data-s=offen]').forEach(b=>{let s=b.querySelector('.ncnt');if(!s){s=icEl('span','ncnt');b.append(' ',s)}s.hidden=!n;s.textContent=n>99?'99+':String(n)});
   const w=$('vgview');if(w)vgPage(w)}

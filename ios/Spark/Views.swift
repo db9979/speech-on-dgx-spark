@@ -338,7 +338,9 @@ struct ChatView: View {
                             if m.role != "user", let v = m.vg { VorgangImGespraech(id: v, message: m).id(m.id) } else { Bubble(message: m).id(m.id) }
                             if m.role != "user", let j = m.picJob { PictureCard(job: j) }
                             if m.role != "user", let steps = m.steps, !steps.isEmpty { StepsFold(steps: steps) }
-                            if m.role != "user", m.id == talk.messages.last?.id, let kind = m.confirm { ConfirmCard(kind: kind) }
+                            if m.role != "user", m.id == talk.messages.last?.id, let kind = m.confirm {
+                                if let v = m.confirmVg { VorschlagKarte(id: v, kind: kind) } else { ConfirmCard(kind: kind) }
+                            }
                             if m.role != "user", m.id == talk.messages.last?.id, m.confirm == nil, let a = m.answers, !a.isEmpty {
                                 AnswersCard(answers: a)
                             }

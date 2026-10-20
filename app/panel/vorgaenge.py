@@ -14,11 +14,14 @@ runs. Titles and lines are the panel's words; a sender or subject from a mail is
     seen()      a device showed it (stops a follow-up push, thread „Benachrichtigung nur aufs aktive Gerät“)
     done()      the source says it is done elsewhere (Für dich marked on the mail page …)
     due()       every minute: Später is over → open again, once more into the conversation and onto a device
+    from_pending()  stage 2: a proposal waiting for a yes (calendars, senden, tidy: profiles.pending_set) becomes the
+                card „Wartet auf dein Ja“ with what it is and its yes button; ja() runs the module's own carry (the same
+                as a typed „Ja“), sweep() closes the card when the proposal is answered, replaced or over
 
     GET  /api/profile/vorgaenge?seit=<rev>   the changed ones (all without seit), with "rev" and the counts
     DELETE /api/profile/vorgaenge?nur=erledigt  the done ones (or all) of this profile away
     GET  /api/profile/vorgaenge/stream       {"type": "vorgang", "rev": n, "neu": bool, "weg": bool}: never text
-    POST /api/profile/vorgaenge/act          {"id", "act", "rev", "wann"?}: one button
+    POST /api/profile/vorgaenge/act          {"id", "act", "rev", "wann"?}: one button (vs_ja: {"text", "gelungen"})
 
 Kept in users/<id>/vorgaenge.json: the open ones, the ones for later and the done ones of the last ERLEDIGT_TAGE days.
 Off until the admin switches chat.vorgaenge on (needs chat.reminders); then for every profile the admin did not
@@ -44,12 +47,16 @@ from core import assistant, json_body, own_profile
 
 router = APIRouter()
 
-# the kinds (stage 1: Für dich and reminders; plan stages 2-4 add Kalender, Mail, Nachrichten, Geteilt, Dienste)
+# the kinds (stage 1: Für dich and reminders; stage 2 proposals of Kalender and E-Mail; stages 3-4 Nachrichten, Geteilt,
+# Dienste)
 ARTEN = {
     "fuerdich": {"de": "Für dich", "en": "For you", "sym": "mail", "mail": True, "dringend": False,
                  "acts": ("fd_remind", "fd_event", "fd_reply", "fd_cancel", "fd_more", "erledigt", "ausblenden")},
     "erinnerung": {"de": "Erinnerung", "en": "Reminder", "sym": "bell", "mail": False, "dringend": True,
                    "acts": ("erledigt",)},
+    # stage 2: a proposal waiting for a yes (calendars, senden, tidy); it lives as long as the proposal does
+    "vorschlag": {"de": "Wartet auf dein Ja", "en": "Waiting for your yes", "sym": "check", "mail": False, "dringend": False,
+                  "acts": ("vs_ja", "vs_aendern", "vs_nein")},
 }
 # every button there is; "direkt" runs here at once (Rückgängig with "zurueck"), "seite" only opens the place where
 # the person goes on (the mail page's preview sheet sends, the Kalender's „Eintragen“ saves), nothing runs here
@@ -63,7 +70,21 @@ AKTIONEN = {
     "fd_event": {"de": "Eintragen …", "en": "Add to calendar …", "stufe": "seite"},
     "fd_reply": {"de": "Antwort entwerfen …", "en": "Draft a reply …", "stufe": "seite"},
     "fd_cancel": {"de": "Kündigung entwerfen …", "en": "Draft a cancellation …", "stufe": "seite"},
+    # "ja": the card itself is the preview, the button is the yes (the same carry as a typed „Ja“)
+    "vs_ja": {"de": "Ja", "en": "Yes", "stufe": "ja"},
+    "vs_aendern": {"de": "Ändern …", "en": "Change …", "stufe": "seite"},
+    "vs_nein": {"de": "Abbrechen", "en": "Cancel", "stufe": "direkt"},
 }
+# Stufe 2 (plan Kalender und E-Mail): the proposals that become a card „Wartet auf dein Ja“: the name of the waiting
+# file (profiles.pending_set) → the module with card(uid, p) and its yes (calendars.carry, senden.carry, tidy.carry_out)
+VORSCHLAEGE = {"calendar": "calendars", "senden": "senden", "mail": "tidy"}
+# the yes button's word and what the card says after it, by the module's card()["knopf"]
+KNOPF = {"eintragen": (("Eintragen", "Add"), ("Eingetragen", "Added")),
+         "verschieben": (("Verschieben", "Move"), ("Verschoben", "Moved")),
+         "loeschen": (("Löschen", "Delete"), ("Gelöscht", "Deleted")),
+         "senden": (("Senden", "Send"), ("Gesendet", "Sent")),
+         "ablegen": (("Als Entwurf ablegen", "Save as draft"), ("Als Entwurf abgelegt", "Saved as draft")),
+         "ausfuehren": (("Ausführen", "Do it"), ("Ausgeführt", "Done"))}
 # „Später“: the four choices of the card (plan 4a), local time of the profile; "ohne" stays in Offen only
 SPAETER = {"abend": ("Heute Abend", "This evening"), "morgen": ("Morgen früh", "Tomorrow morning"),
            "woche": ("Nächste Woche", "Next week"), "ohne": ("Ohne Zeit", "No time")}
@@ -77,6 +98,7 @@ MAX_ITEMS = 300
 # a sender and a subject are outside text, shown and handed on as text only
 DATEN = ("event", "ref", "folder", "fd", "addr", "subject")
 MAX_TEXT = 160
+FELD_MAX = 600                  # a line of a card: the text of a mail to send is read before „Senden“
 ID = re.compile(r"v[0-9a-f]{10}")
 KEY = re.compile(r"[a-z]{2,12}:[\w.:@-]{1,120}")
 
@@ -142,6 +164,7 @@ def forget(uid):
 
 features.OWN["vorgaenge"] = (count, forget)
 profiles.REMINDER_HOOKS.append(lambda uid, item: from_reminder(uid, item))
+profiles.PENDING_HOOKS.append(lambda uid, name, item: from_pending(uid, name, item))
 
 
 def _clean(v, n=MAX_TEXT):
@@ -149,15 +172,17 @@ def _clean(v, n=MAX_TEXT):
 
 
 # ---------------------------------------------------------------- making and closing
-def put(uid, art, key, titel, zeile="", felder=(), frist="", daten=None, say=False, now=None):
+def put(uid, art, key, titel, zeile="", felder=(), frist="", daten=None, say=False, now=None, knopf=""):
     """Makes the Vorgang of key (or updates the words of the one there is). Returns (item, new) or (None, False) when
-    the function is off for this profile. say: a new one also goes as a card into today's main conversation."""
+    the function is off for this profile. say: a new one also goes as a card into today's main conversation.
+    knopf: the yes button's word of a proposal (KNOPF)."""
     if not features.allowed("vorgaenge", uid) or art not in ARTEN or not KEY.fullmatch(str(key)):
         return None, False
     now = now or time.time()
     words = {"titel": _clean(titel), "zeile": _clean(zeile),
-             "felder": [[_clean(a, 30), _clean(b)] for a, b in list(felder)[:6]], "frist": _clean(frist, 10),
-             "daten": {k: _clean(v, 300) for k, v in (daten or {}).items() if k in DATEN}}
+             "felder": [[_clean(a, 30), _clean(b, FELD_MAX)] for a, b in list(felder)[:6]], "frist": _clean(frist, 10),
+             "daten": {k: _clean(v, 300) for k, v in (daten or {}).items() if k in DATEN},
+             **({"knopf": knopf} if knopf in KNOPF else {})}
 
     def fn(d):
         x = next((y for y in d["items"] if y["key"] == key), None)
@@ -207,6 +232,8 @@ def _set(x, zustand, wie="", wo="", now=None):
         x["wo"] = wo
     if zustand != "spaeter":
         x.pop("spaeter_bis", None)
+    if x.get("art") == "vorschlag" and zustand in ("erledigt", "weg"):   # a mail's text is kept only while it waits
+        x["felder"] = [f for f in x.get("felder", []) if f[0] != "Text"]
 
 
 def done(uid, key, wie="erledigt", wo=""):
@@ -275,13 +302,17 @@ def public(uid, x):
     a = ARTEN[x["art"]]
     ok = _allowed_acts(uid, x)
     acts = [k for k in a["acts"] + ("spaeter", "zurueck") if k in ok]
+    names = {k: AKTIONEN[k] for k in acts}
+    if x.get("knopf") in KNOPF:      # a proposal's yes says what it does („Eintragen“, „Senden“)
+        names["vs_ja"] = dict(AKTIONEN["vs_ja"], de=KNOPF[x["knopf"]][0][0], en=KNOPF[x["knopf"]][0][1])
     return {"id": x["id"], "art": x["art"], "art_de": a["de"], "art_en": a["en"], "sym": a["sym"],
             "dringend": a["dringend"], "mail": a["mail"], "titel": x["titel"], "zeile": x.get("zeile", ""),
             "felder": x.get("felder", []), "frist": x.get("frist", ""), "zustand": x["zustand"], "gruppe": group_of(x),
             "spaeter_bis": x.get("spaeter_bis", 0), "t": x["t"], "ge": x["ge"], "wie": x.get("wie", ""),
             "wo": x.get("wo", ""), "rev": x.get("rev", 0), "daten": x.get("daten", {}),
-            "acts": [{"k": k, "de": AKTIONEN[k]["de"], "en": AKTIONEN[k]["en"], "stufe": AKTIONEN[k]["stufe"]} for k in acts],
-            "zugestellt": x.get("zugestellt", [])}
+            "acts": [{"k": k, "de": names[k]["de"], "en": names[k]["en"], "stufe": names[k]["stufe"]} for k in acts],
+            "zugestellt": x.get("zugestellt", []),
+            **({"fertig": list(KNOPF[x["knopf"]][1])} if x.get("knopf") in KNOPF else {})}
 
 
 def counts(items):
@@ -299,6 +330,8 @@ def view(uid, seit=0):
 
 def _allowed_acts(uid, x):
     """The buttons of this Vorgang by fixed rules: the kind's list, the source's own rules, the state."""
+    if x["art"] == "vorschlag":      # no „Später“ and no way back: the proposal itself is gone after 15 minutes
+        return set() if x["zustand"] in ("erledigt", "weg") else {"vs_ja", "vs_nein"} | ({"vs_aendern"} if x.get("aendern") else set())
     if x["zustand"] in ("erledigt", "weg"):
         return {"zurueck"}
     out = {"erledigt", "spaeter"} | ({"zurueck"} if x["zustand"] == "spaeter" else set())
@@ -315,8 +348,8 @@ def _allowed_acts(uid, x):
 WO = {"web": "Rechner", "phone": "Handy", "app": "iPhone", "desk": "Begleiter", "tg": "Telegram"}
 
 
-def act(uid, vid, name, rev=None, wann="", wo="web", now=None):
-    """Runs one button. Returns {"item", "rev", ...}; raises HTTPException with a fixed sentence when it may not."""
+def _check(uid, vid, name, rev, wann=""):
+    """Every button's checks (name, Notaus, owner, rev, kind, state); returns (the file, the Vorgang)."""
     if name not in AKTIONEN:
         raise _refuse("aktion", 400, "Diesen Knopf gibt es nicht.")
     if notaus.refuse("aktion", uid):
@@ -334,8 +367,17 @@ def act(uid, vid, name, rev=None, wann="", wo="web", now=None):
         raise _refuse("nicht_erlaubt", 403, "Für diesen Vorgang gibt es diesen Knopf nicht.")
     if name == "spaeter" and wann not in SPAETER:
         raise _refuse("wann", 400, "Wann soll er wiederkommen?")
+    return d, x
+
+
+def act(uid, vid, name, rev=None, wann="", wo="web", now=None):
+    """Runs one button. Returns {"item", "rev", ...}; raises HTTPException with a fixed sentence when it may not.
+    The yes of a proposal (vs_ja) runs in ja(), it waits for the calendar or the outgoing server."""
+    d, x = _check(uid, vid, name, rev, wann)
     now = now or time.time()
     where = WO.get(wo, "Rechner")
+    if x["art"] == "vorschlag":
+        return _vorschlag_act(uid, x, name, where, now)
     extra = (_source_act(uid, x, name) or {}) if x["art"] == "fuerdich" and name != "spaeter" else {}
     if AKTIONEN[name]["stufe"] == "seite":
         print(f"vorgang: knopf {name} seite {x['art']} | {profiles.log_name(profiles.by_id(uid))}", flush=True)
@@ -390,6 +432,154 @@ def _source_act(uid, x, name):
     return None
 
 
+# ---------------------------------------------------------------- Stufe 2: a proposal waiting for a yes
+def _mod(name):
+    import importlib
+    return importlib.import_module(VORSCHLAEGE[name])
+
+
+def _who(uid):
+    return profiles.log_name(profiles.by_id(uid))
+
+
+def _may(uid, name):
+    """The module's own switches, checked again at the press (the admin may have switched it off since)."""
+    if name == "calendar":
+        return features.allowed("calendar", uid)
+    if name == "senden":
+        import senden
+        return senden.level() != "off" and features.allowed("mailsend", uid) and features.allowed("mail", uid)
+    return features.allowed("tidy", uid) and features.allowed("mail", uid)
+
+
+def from_pending(uid, name, item):
+    """profiles.pending_set: a proposal of calendars, senden or tidy waits for a yes → the card „Wartet auf dein Ja“
+    (in Offen and under the answer that made it, chat.py). A newer one of the same module replaces it."""
+    if name not in VORSCHLAEGE or not features.allowed("vorgaenge", uid):
+        return None
+    c = _mod(name).card(uid, item)
+    key = f"vorschlag:{name}:{int(item.get('t') or 0)}"
+
+    def fn(d):
+        for y in d["items"]:
+            if y["art"] == "vorschlag" and y["key"].startswith(f"vorschlag:{name}:") and y["key"] != key \
+                    and y["zustand"] in ("offen", "gesehen"):
+                _set(y, "weg", "ersetzt")
+    _mut(uid, fn)
+    x, _ = put(uid, "vorschlag", key, c["titel"], felder=c["felder"], knopf=c["knopf"])
+    if x:   # the file was just written: its card waits (also one of the same second that closed before)
+        def mark(d):
+            y = next((z for z in d["items"] if z["id"] == x["id"]), None)
+            if y and y["zustand"] in ("erledigt", "weg"):
+                _set(y, "offen")
+            if y:
+                y["aendern"] = bool(c.get("aendern"))
+        _mut(uid, mark)
+    return x["id"] if x else None
+
+
+def _proposal(uid, x):
+    """(name, the waiting proposal, its module) of a card; the card goes when the proposal is gone (410)."""
+    _, name, t = x["key"].split(":", 2)
+    if name not in VORSCHLAEGE:
+        raise _refuse("art", 403, "Für diesen Vorgang gibt es diesen Knopf nicht.")
+    mod = _mod(name)
+    p = mod.pending(uid)
+    if not p or str(int(p.get("t") or 0)) != t:
+        sweep(uid)
+        raise _refuse("vorbei", 410, "Der Vorschlag gilt nicht mehr. Sag es dem Assistenten bitte noch einmal.")
+    if not _may(uid, name):
+        raise _refuse("aus", 403, "Diese Funktion ist gerade aus.")
+    return name, p, mod
+
+
+def _close(uid, vid, zustand, wie, where, now=None):
+    def fn(d):
+        y = next((z for z in d["items"] if z["id"] == vid), None)
+        if y:
+            _set(y, zustand, wie, where, now)
+        return y
+    return _mut(uid, fn)
+
+
+def _vorschlag_act(uid, x, name, where, now):
+    """„Abbrechen“ (the proposal goes, nothing is done) and „Ändern …“ (it goes to the page's form or writing
+    window, already filled; only the page saves or sends). The yes runs in ja()."""
+    if name == "vs_ja":
+        raise _refuse("weg", 400, "Diesen Knopf gibt es so nicht.")
+    pname, p, mod = _proposal(uid, x)
+    profiles.pending_drop(uid, pname)
+    extra = {}
+    if name == "vs_aendern":
+        extra = mod.card(uid, p).get("aendern") or {}
+        extra = {"event": extra["event"]} if "event" in extra else {"draft": {"to": extra.get("addr", ""),
+                                                                               "subject": extra.get("subject", ""),
+                                                                               "text": extra.get("text", "")}}
+    y = _close(uid, x["id"], "weg", name, where, now)
+    _day.bump("erledigt")
+    _live(f"{name} vorschlag")
+    print(f"vorgang: knopf {name} vorschlag ok | {_who(uid)}", flush=True)
+    return dict(extra, item=public(uid, y), rev=_load(uid)["rev"])
+
+
+async def ja(uid, vid, rev=None, wo="web"):
+    """The yes button of a proposal: the same carry as a typed „Ja“ (calendars.carry, senden.carry, tidy.carry_out),
+    from any own device, also when the proposal was made at a speaker or in Telegram (plan 7a „Am Handy freigeben“).
+    Returns {"item", "rev", "text", "gelungen"}: the module's checked result in the panel's words."""
+    import asyncio
+    _, x = _check(uid, vid, "vs_ja", rev)
+    name, p, mod = _proposal(uid, x)
+    profiles.pending_drop(uid, name)      # one yes carries it out once, whichever device was quicker
+    if name == "calendar":
+        ok, res = await mod.carry(uid, p)
+        text = (res if p.get("change") else f"Eingetragen in „{res}“.") if ok else f"Nicht ausgeführt: {res}"
+    elif name == "senden":
+        how, why = await mod.carry(uid, p)
+        ok = how == "sent"
+        text = {"sent": f"Die Mail an {p.get('label', '')} ist gesendet.", "notaus": "Notaus: gerade wird nichts gesendet.",
+                "refused": f"Nicht gesendet: {why}", "failed": "Der Postausgang brach ab; ob die Mail raus ist, steht im "
+                "Ordner Gesendet."}[how]
+    else:
+        try:
+            ok, text = True, await asyncio.to_thread(mod.carry_out, uid, p)
+        except Exception as e:
+            ok, text = False, f"Nicht ausgeführt: {str(e)[:120] if isinstance(e, ValueError) else type(e).__name__}"
+    y = _close(uid, x["id"], "erledigt" if ok else "weg", "vs_ja" if ok else "fehler", WO.get(wo, "Rechner"))
+    _day.bump("erledigt" if ok else "abgelehnt")
+    if ok:
+        _day.bump("ja")
+    _live(f"vs_ja vorschlag {'ok' if ok else 'fehler'}")
+    print(f"vorgang: knopf vs_ja vorschlag {'ok' if ok else 'fehler'} | {_who(uid)}", flush=True)
+    return {"item": public(uid, y), "rev": _load(uid)["rev"], "text": _clean(text, 300), "gelungen": ok}
+
+
+def sweep(uid, now=None):
+    """The cards of proposals that are gone (answered in the conversation, replaced, older than their minutes) are
+    closed: „Im Gespräch beantwortet“ or „Abgelaufen“. chat_turn after every answer, due() every minute."""
+    if not os.path.exists(_file(uid)):
+        return 0
+    now = now or time.time()
+    gone = {}
+    for x in _load(uid)["items"]:
+        if x["art"] != "vorschlag" or x["zustand"] not in ("offen", "gesehen"):
+            continue
+        _, name, t = x["key"].split(":", 2)
+        mod = _mod(name) if name in VORSCHLAEGE else None
+        p = mod.pending(uid) if mod else None
+        if not p or str(int(p.get("t") or 0)) != t:
+            gone[x["id"]] = "abgelaufen" if not mod or now - int(t) >= getattr(mod, "PENDING_SECONDS", 900) else "beantwortet"
+    if not gone:
+        return 0
+
+    def fn(d):
+        for y in d["items"]:
+            if y["id"] in gone and y["zustand"] in ("offen", "gesehen"):
+                _set(y, "weg", gone[y["id"]], "", now)
+    _mut(uid, fn)
+    print(f"vorgang: vorschlag vorbei {len(gone)} | {_who(uid)}", flush=True)
+    return len(gone)
+
+
 def _refuse(why, status, text):
     _bump_refused()
     print(f"vorgang: knopf abgelehnt grund={why}", flush=True)
@@ -412,6 +602,7 @@ async def due(now=None):
     for uid in profiles.user_ids():
         if not os.path.exists(_file(uid)) or not features.allowed("vorgaenge", uid, c):
             continue
+        sweep(uid, now)
         woke = []
 
         def fn(d):
@@ -523,17 +714,19 @@ def for_live():
     """Live (Kalender node): profiles with something open, open, for later, done today; numbers only."""
     if not features.admin_on("vorgaenge"):
         return {"on": False}
-    braucht = spaeter = profs = 0
+    braucht = spaeter = profs = warten = 0
     for uid in profiles.user_ids():
         if not os.path.exists(_file(uid)):
             continue
-        c = counts(_load(uid)["items"])
+        items = _load(uid)["items"]
+        c = counts(items)
+        warten += sum(1 for x in items if x["art"] == "vorschlag" and group_of(x) == "braucht")
         braucht += c["braucht"]
         spaeter += c["spaeter"]
         profs += 1 if c["braucht"] or c["spaeter"] else 0
     t = today_counts()
     return {"on": True, "profiles": profs, "braucht": braucht, "spaeter": spaeter, "erledigt": t.get("erledigt", 0),
-            "wieder": t.get("wieder", 0), "streams": streams()}
+            "wieder": t.get("wieder", 0), "streams": streams(), "warten": warten, "ja": t.get("ja", 0)}
 
 
 def card(uid):
@@ -572,6 +765,8 @@ async def api_act(request: Request, prof=Depends(own_profile)):
             (rev is not None and not isinstance(rev, int)) or not isinstance(wann, str):
         print("vorgang: knopf abgelehnt grund=eingabe", flush=True)
         raise HTTPException(400, "id, act, rev")
+    if name == "vs_ja":
+        return dict(await ja(prof["id"], vid, rev, _where(request, b)), ok=True)
     return dict(act(prof["id"], vid, name, rev, wann, _where(request, b)), ok=True)
 
 

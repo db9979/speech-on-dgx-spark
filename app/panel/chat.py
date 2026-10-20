@@ -2323,11 +2323,16 @@ async def _answer(request, turn):
                 more = None
             if more:
                 yield f"data: {json.dumps(more)}\n\n"
-            if getattr(turn, "steps_on", False):   # Freigabe-Karte (ablauf.py): a proposal of this answer waits for "Ja"
+            # Freigabe-Karte (ablauf.py): a proposal of this answer waits for "Ja"; with Alles Offene im Assistenten
+            # (vorgaenge.py, Stufe 2) its card „Wartet auf dein Ja“ ("vg"), also without „Ablauf und Freigabe zeigen“
+            vg_on = bool(who and getattr(turn, "own_browser", False) and features.allowed("vorgaenge", who["id"]))
+            if getattr(turn, "steps_on", False) or vg_on:
                 import ablauf
                 cards = ablauf.waiting(who["id"], chat_turn.waiting_mods(), t0, src)
+                cards = cards if getattr(turn, "steps_on", False) else [c for c in cards if c.get("vg")]
                 for ev in cards:
                     yield f"data: {json.dumps(ev)}\n\n"
+            if getattr(turn, "steps_on", False):
                 # Rückfrage-Karte: the answer ends with a question to the person; its answers as buttons (fixed rules)
                 ask_ev = None if cards or screen or asked else ablauf.asks(trace["said"], outside)
                 if ask_ev:
