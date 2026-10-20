@@ -84,6 +84,9 @@ DATEIEN = [
     profil("auslassen.json", "Ausgelassene Ordner und Namensregeln des Profils", "Left-out folders and name rules of the profile", art="Einstellungen"),
     profil("nasablage.json", "Ablage-Ordner des Profils", "Filing folder of the profile", art="Einstellungen"),
     profil("speicher.vor-nas.json", "Kopie meiner Daten vor dem Umzug auf Speicherorte", "Copy of my data before the move to storage places", art="Login"),
+    profil("mail-vorrat.bin", "Mail-Vorrat: die neuesten Kopfzeilen (300 je Postfach, 30 Tage) und bis zu 40 Mailtexte ohne Anhänge",
+           "Mail supply: the newest headers (300 per mailbox, 30 days) and up to 40 mail texts without attachments", art="Mails",
+           schutz=("versiegelt", "sealed")),  # mailvorrat.py
     profil("mail-tidy.json", "Posteingang aufräumen", "Inbox tidy", art="Einstellungen"),
     profil("fuerdich.json", "Für dich: was du als erledigt oder uninteressant markiert hast (nur Prüfsummen)",
            "For you: what you marked as done or not interesting (only checksums)", art="Einstellungen"),

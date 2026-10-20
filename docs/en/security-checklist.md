@@ -57,6 +57,7 @@ Go through before every commit. In the answer to Dominik briefly name which poin
 
 ## Secrets and logs
 - [ ] Secrets live only in the vault and are never returned after saving.
+- [ ] What a service keeps for a profile (mail supply) lies only through `vorrat.Vorrat` in the profile folder: sealed with AES-GCM, bound to profile and name, not on the disk at all without a key, bounded (mail: 300 headers per mailbox, 40 texts without attachments and HTML) and with a deletion period (14 days unused, with the mailbox and the profile).
 - [ ] Logs and error texts contain no tokens. Bot tokens and keys are redacted, so do not output `str(e)` from httpx with a token in the URL.
 - [ ] `/health` and similar open pages show only a status, no error texts and no names.
 - [ ] The change log is written only by `guard.log` (hash chain); nothing writes, shortens or deletes `audit.log` another way.

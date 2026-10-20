@@ -25,6 +25,7 @@ from tests import helpers
 helpers.start()
 import panel  # noqa: E402,F401
 import mail  # noqa: E402
+import mailvorrat  # noqa: E402
 
 A1 = {"id": "m00000001", "name": "Privat", "host": "x", "user": "a"}
 A2 = {"id": "m00000002", "name": "Arbeit", "host": "y", "user": "b"}
@@ -57,6 +58,9 @@ class Base(unittest.TestCase):
         mail._bodies.clear()
         mail._inflight.clear()
         mail._used.clear()
+        mail._supplied.clear()
+        mail._live.clear()
+        mailvorrat._v.clear()   # the Mail-Vorrat of earlier tests (memory)
 
     def tearDown(self):
         for ev in list(mail._inflight.values()):
@@ -177,7 +181,8 @@ class Fresh(Base):
         try:
             people, _ = mail.keep_fresh(now)
             self.assertEqual(people, 1)
-            self.assertEqual(sorted(self.calls), [A1["id"], A2["id"]])
+            # the page's listing and the Mail-Vorrat's longer one (mailvorrat.HEADS a mailbox, every SUPPLY_EVERY)
+            self.assertEqual(sorted(self.calls), [A1["id"], A1["id"], A2["id"], A2["id"]])
             self.assertEqual(ahead, ["u1"])
             self.assertNotIn("u2", mail._used)
             self.calls.clear()

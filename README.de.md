@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.872** E-Mail: Mail-Vorrat, der Spark hält die neuesten Kopfzeilen und Mailtexte versiegelt im Profil; nach einem Neustart steht die Liste sofort da, und antwortet ein Postfach nicht, antwortet der Assistent mit dem gehaltenen Stand und der Uhrzeit statt „nicht erreichbar“; eine Liste bis 10 Minuten nimmt er so, sonst wartet er höchstens 2 Sekunden
 - **V01.0.871** CarPlay stabil: das Sprechfenster geht der Reihe nach auf und zu, jede Zeile tut etwas oder sagt „Spark nicht erreichbar“, nach einem Gespräch sind Radio und Musik wieder normal laut, „Danke“ beendet, „Letzte Antwort wiederholen“, kein Weckwort im Auto, CarPlay-Schritte im Ton-Protokoll
 - **V01.0.870** Fix Für dich vorlesen: „Antwort offen“ sagt klar, wer auf wen wartet, jeder Eintrag nennt seine Mail (Absender, Tag, Betreff), beim ersten Lesen kommt „lese noch“ oder die letzte Lesung statt „Postfach nicht erreichbar“
 - **V01.0.869** Besprechung aus dem Spark-Begleiter: ausgewählte Aufgaben kommen mit „Ausgewählte auf die Liste“ auf eine Liste (Standard „Aufgaben“, wählbar) mit dem Datum aus „bis“ und der Quelle „aus Besprechung“, auch im iPhone und in Erinnerungen; „Als Erinnerung“ bleibt. Erinnerungen unter dem Gesicht sind nicht mehr links und rechts abgeschnitten, die Zusammenfassung landet auf dem reMarkable unter „Besprechungen“ statt „Antworten“
@@ -50,7 +51,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.865** Listen teilen (Stufe 2): eine Liste je Profil zum Sehen oder Mitschreiben teilen (eintragen und abhaken, Löschen bleibt beim Besitzer), „Mit mir geteilt“ auf der Seite und im iPhone, „Setz Butter auf Sabines Einkaufsliste“, Neues von anderen als gebündelter Hinweis; Listen in der Erinnerungen-App des iPhone in beide Richtungen (Stufe 3, über den Kalender-Server) und ein Widget Einkauf; je ein Admin-Schalter, zuerst aus
 - **V01.0.864** Mitteilung ans genutzte Gerät (Admin-Schalter unter Funktionen → Timer und Erinnerungen, aus): eine Mitteilung geht an das Gerät, das du gerade benutzt (Panel-Seite, Android-App, iPhone-App, Spark-Begleiter am PC oder Mac), sonst sofort an die Handy-App; die Geräte melden nur „benutzt vor n Sekunden“ oder „weg“, nie Inhalte; Live zeigt die Anzahl
 - **V01.0.863** Musik bearbeiten (Admin-Schalter, aus): unter Ich → Musik ein Lied als neue Fassung ändern (Abschnitt neu, verlängern, Musikrichtung, Remix, Liedtext mit Strophen per Ziehen verschieben, schneiden, Tempo und Tonart), eigene Dateien mit Rechte-Haken hochladen, Werkzeug musik_bearbeiten; auch in der iPhone-App
-- **V01.0.862** Wackelnde Tests robust gemacht; dabei behoben: ein Kalender-Abgleich während einer Änderung schreibt nicht mehr den alten Termin zurück, das Formular „Kalender hinzufügen“ bleibt beim Ausfüllen offen
+
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

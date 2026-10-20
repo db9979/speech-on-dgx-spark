@@ -3133,7 +3133,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "erbund, anrufe), ihn neu lesen."
+"text": "erbund, anrufe, vorrat), ihn neu lesen."
 },
 {
 "lang": "de",
@@ -5054,6 +5054,22 @@
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
 "text": "nd die Antwort auf DONE; überlange Zeilen beenden die Verbindung. Mein Notaus, die Sperre des Admins und der Schalter schließen sie. Live (Knoten E-Mail): offene Verbindungen und neue Mails heute, nur Zahlen; das Log nennt nur feste Wörter und das Profil als Kürzel."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Mail-Vorrat (V01.0.872, Dominik 2026-10-20 „ja, so umsetzen“; mailvorrat.py auf vorrat.py, Teil von „E-Mail lesen“, kein eigener Schalter): Der Spark hält von jedem Postfach die neuesten Kopfzeilen (Absender, Betreff, Zeit, gelesen und markiert; höchstens 300 je Postfach aus den letzten 30 Tagen) und bis zu 40 Mailtexte je Profil (die vorab geholten und die geöffneten, je höchstens 4000 Zeichen reiner Text, nie Anhänge, HTML oder Bilder) im Profilordner vor (mail-vorrat.bin). Die Datei ist mit AES-GCM versiegelt, an Profil und Namen gebunden und wird höchstens alle 5 Minuten geschrieben; ohne Schlüssel bleibt alles nur im Speicher. Gefüllt wird nur aus dem, was der Spark ohnehin liest (Liste der Seite, alle 30 Minuten eine längere Liste, Vorab-Texte), nie mit einer eigenen Verbindung. Antwortet ein Postfach nicht, antworten Assistent, Briefing und die Seite aus dem Vorrat (für „Für dich“ und die Fristen gilt seine letzte Lesung) mit seinem Stand („wie am 20.10. um 14:05 gelesen“) statt „nicht erreichbar“, und eine Mail öffnet aus dem gehaltenen Text. Nach einem Neustart zeigt die Seite E-Mail die Liste sofort aus dem Vorrat und holt sie dahinter neu. Für den Assistenten gilt: eine "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Liste bis 10 Minuten nimmt er so, eine ältere holt er neu und wartet darauf höchstens 2 Sekunden, sonst antwortet er mit dem älteren Stand und sagt die Uhrzeit dazu. Ordnen auf der Seite zieht im Vorrat mit (gelesen, markiert, archiviert, gelöscht). Gelöscht wird der Vorrat mit dem Postfach, mit allen Postfächern, mit dem Profil und nach 14 Tagen, in denen niemand die Mails gelesen hat. vorrat.py ist die eine Bauweise für solche Vorräte anderer Dienste. Live (Knoten E-Mail): Profile mit Vorrat und wie oft heute daraus geantwortet wurde, nur Zahlen."
 },
 {
 "lang": "de",
@@ -12069,7 +12085,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 34), otherwise the line gives its reason (dateien.STATE_LOCAL, 82). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe) read it again."
+"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 34), otherwise the line gives its reason (dateien.STATE_LOCAL, 82). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe, vorrat) read it again."
 },
 {
 "lang": "en",
@@ -13926,6 +13942,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "he admin's block and the switch close it. Live (node E-mail): open connections and new mails today, numbers only; the log names only fixed words and the profile as a short name."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "Mail supply (V01.0.872, Dominik 2026-10-20 \"ja, so umsetzen\"; mailvorrat.py on vorrat.py, part of \"Read mail\", no switch of its own): the Spark keeps the newest headers of each mailbox (sender, subject, time, read and flag marks; at most 300 per mailbox from the last 30 days) and up to 40 mail texts per profile (the ones fetched ahead and the opened ones, each at most 4000 characters of plain text, never attachments, HTML or pictures) in the profile folder (mail-vorrat.bin). The file is sealed with AES-GCM, bound to profile and name, and written at most every 5 minutes; without a key everything stays in memory only. It is filled only from what the Spark reads anyway (the page's listing, a longer listing every 30 minutes, the texts fetched ahead), never with a connection of its own. When a mailbox does not answer, the assistant, the briefing and the page answer from the supply (\"For you\" and the deadlines use their last reading) with its time (\"as read on 20.10. at 14:05\") instead of \"not reachable\", and a mail opens from the kept text. After a restart the Mail page shows the listing at once from the supply and fetches it anew behind. For the assistant: a listing up to 10 minutes ol"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "d is taken as it is, an older one is fetched anew with at most 2 seconds of waiting, otherwise it answers with the older state and says the time. Ordering on the page follows in the supply (read, flagged, archived, deleted). The supply goes with the mailbox, with all mailboxes, with the profile and after 14 days in which nobody read the mail. vorrat.py is the one way to build such supplies for other services. Live (node Mail): profiles with a supply and how often it answered today, numbers only."
 },
 {
 "lang": "en",

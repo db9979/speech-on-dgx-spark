@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "state": {
-        "stand": "db4351c236",
+        "stand": "cac8125adc",
         "bezug": {
             "backup.MOVE_MIN": ["s8"], "backup._seal_keys": ["s8"], "backup._check_state": ["s9"],
             "backup._swap": ["s10"], "backup._forget_cached": ["s11"],
@@ -102,9 +102,9 @@ SEITEN = {
             S("s11", "ende", ("Schlüssel neu lesen", "Read the keys again"),
               ("kein alter Schlüssel im Speicher", "no old key in memory"),
               ("_forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, "
-               "verbund, anrufe), ihn neu lesen.",
+               "verbund, anrufe, vorrat), ihn neu lesen.",
                "_forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, "
-               "anrufe) read it again.")),
+               "anrufe, vorrat) read it again.")),
         ],
         "beispiele": [
             (("Telegram-Bot-Token eintragen", "Enter the Telegram bot token"),

@@ -1337,10 +1337,13 @@ def snapshot(view="admin", now=None):
         post_files = mail.files_today()
         import mailidle
         post_idle = mailidle.for_live()
+        import mailvorrat
+        post_supply = mailvorrat.for_live()
     except Exception:
         kal, kal_page, post_page, post_sent, post_files, post_del = {"on": False}, 0, 0, 0, 0, 0
         post_idle = {}
         post_rules = {}
+        post_supply = {}
     try:
         import vorwaermen
         warm = vorwaermen.for_live()
@@ -1495,6 +1498,8 @@ def snapshot(view="admin", now=None):
             x["sub"] += f" · heute {post_files} Anhänge geladen"
         if x["id"] == "mail" and post_idle.get("on"):   # Neue Mails sofort: IDLE connections, new mails today (numbers)
             x["sub"] += f" · sofort: {post_idle['open']} Verbindungen, heute {post_idle['new']} neue Mails"
+        if x["id"] == "mail" and post_supply.get("profiles"):   # Mail-Vorrat: profiles with a supply, answers from it (numbers)
+            x["sub"] += f" · Vorrat bei {post_supply['profiles']} Profilen" + (f", heute {post_supply['answers']}× daraus geantwortet" if post_supply.get("answers") else "")
         if x["id"] == "mail" and post_sent:      # Mails senden: mails sent from the page today (a number, never to whom)
             x["sub"] += f" · heute {post_sent} gesendet"
         if x["id"] == "mail" and (avs.get("suggested") or avs.get("rewritten")):   # Antwortvorschläge: numbers only

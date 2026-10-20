@@ -355,7 +355,7 @@ def _check_state(work, key):
 def _forget_cached():
     """Modules that keep a key in memory read it again."""
     import sys
-    for mod, attr, empty in (("vault", "_fernet", None), ("push", "_key", None), ("apns", "_jwt", (0.0, "", "")), ("chats", "_ckey", None), ("verbund", "_pkey", None), ("anrufe", "_tkey", None)):
+    for mod, attr, empty in (("vault", "_fernet", None), ("push", "_key", None), ("apns", "_jwt", (0.0, "", "")), ("chats", "_ckey", None), ("verbund", "_pkey", None), ("anrufe", "_tkey", None), ("vorrat", "_vkey", None)):
         m = sys.modules.get(mod)
         if m is not None and hasattr(m, attr):
             setattr(m, attr, empty)

@@ -151,6 +151,8 @@ MODULE = {
     "mailregeln": ("dienste", "Mail-Regeln der Seite E-Mail: wenn Absender/Betreff, dann Ordner, gelesen, markieren; nie löschen; Regel-Vorschlag"),
     "ichweiss": ("dienste", "Was ich über dich weiß: Interessen mit Beleg, Wiederkehrendes, Woche, Monat und ein Netz-Tipp am Tag"),
     "fuerdich": ("dienste", "Für dich: findet Rechnungen, Verträge, Bestellungen, Angebote, offene Antworten und Phishing in den eigenen Mails"),
+    "mailvorrat": ("dienste", "Mail-Vorrat: neueste Kopfzeilen und Texte versiegelt im Profil, Antwort mit Stand bei Ausfall"),
+    "vorrat": ("dienste", "Vorrat: versiegelter Vorrat eines Profils auf der Platte, die eine Bauweise für alle Dienste"),
     "mailidle": ("dienste", "Neue Mails sofort: IMAP IDLE für Profile, die ihre Mails gerade lesen, höchstens 4 Verbindungen"),
     "mailstil": ("dienste", "Mailstil: lernt aus gesendeten Mails, wie das Profil schreibt, für Mail-Entwürfe"),
     "parcels": ("dienste", "Pakete aus Versand-Mails"),
@@ -506,7 +508,7 @@ INHALT, VERSCHLUESSELT, USERS_SONST = dateien.INHALT, dateien.VERSCHLUESSELT, da
 USERS_GLOBAL, STATE_SONST = dateien.USERS_GLOBAL, dateien.STATE_SONST
 # the kinds of dateien.LOCAL and USERS_SONST in English
 KAT_EN = {"Einstellungen": "Settings", "Gesundheit": "Health", "Zustand": "State", "Login": "Login", "Gerät": "Device", "Stimmabdruck": "Voiceprint",
-          "Schlüssel": "Key", "noch nicht angeboten": "not offered yet", "Warteschlange": "Queue", "Termine": "Appointments",
+          "Schlüssel": "Key", "noch nicht angeboten": "not offered yet", "Warteschlange": "Queue", "Termine": "Appointments", "Mails": "Mails",
           "alte Sprachnachrichten (bis zur Übernahme in die Chats)": "old voice messages (until moved into the chats)"}
 # the Spark's own places outside state/ and users/
 SYSTEM = [
