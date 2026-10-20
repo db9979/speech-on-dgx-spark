@@ -72,6 +72,7 @@ Vor jedem Commit durchgehen. In der Antwort an Dominik kurz nennen, welche Punkt
 - [ ] Ein Kopplungs- oder Umzugsschritt ändert die Rolle eines Rechners erst nach einem unterschriebenen Ergebnis der Gegenseite und löscht nichts.
 
 ## Vor dem Commit
+- [ ] Ändert oder ergänzt die Änderung eine Schutzregel, ist die Knoten-Seite „Sicherheit“ (Zustand → Technik) im selben Commit angepasst.
 - [ ] Neue Schalter stehen standardmäßig auf aus: ein Admin-Schalter, kein neuer Profilschalter; eine Sperre für einzelne Profile setzt nur der Admin.
 - [ ] Jede neue Schutzregel hat einen Selbsttest.
 - [ ] Alle Selbsttests sind grün.

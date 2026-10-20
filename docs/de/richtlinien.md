@@ -92,6 +92,8 @@ Diese Liste gehört zu jedem Commit, der eine Funktion, ein Werkzeug, einen Dien
 
 Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checkliste.md)** (etwa 45 Punkte plus „Stand der Technik“). Sie wird vor jedem Commit durchgegangen, und die Antwort nennt die berührten Punkte (PA, C, M [[secure-coding-rules]]). Jede Änderung wird zusätzlich gegen den aktuellen Stand der Technik geprüft (Dominik 2026-10-12); was dort als „noch nicht erfüllt“ steht, wird beim nächsten Berühren der Stelle nachgezogen.
 
+**Sicherheitsmodell immer aktuell** (Dominik 2026-10-20): Wie alle Schutzschichten zusammenspielen, zeigt die Knoten-Seite „Sicherheit“ (Zustand → Technik, `technik_seiten_zugang.py`, erzeugt in `docs/de/architektur.md`). Wer eine Schutzregel ändert oder eine neue dazubaut (Rechte, Sperren, Fremdtext, Bestätigen, Grenzen zwischen den Rechnern, Protokoll), passt diese Seite im selben Commit an: Ablauf, Regeln, Zahlen und Code-Liste. Ihr Fingerabdruck `stand` deckt die zentralen Schutzstellen ab; ändert sich eine davon, ist `test_technik` rot, bis die Seite geprüft ist. Eine neue Schutzstelle kommt in ihre Code-Liste. (🧪 test_technik)
+
 ### 2.1 Zugang
 - Für jeden Endpunkt ist festgelegt, wer darf: Gast, Profil im Browser, Geräteschlüssel oder Admin. (C; 🧪 test_scanner)
 - Für folgende Dinge braucht es eine Browser-Anmeldung und einen frischen Code (`browser_profile` + `confirm_code`), nie den Geräteschlüssel: Geheimnisse, Adressen, die ein Token bekommen, Codewort, Push-Ziele und Mail-Konten. (C)

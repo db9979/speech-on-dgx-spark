@@ -2238,6 +2238,13 @@
 "titel": "Spickzettel zum Ausdrucken",
 "text": "A: Update auf V01.0.849. Ich → Was ich kann → „Deutsch“: eine Seite mit Karten nach Bereichen öffnet sich, nur Funktionen, die bei dir freigegeben sind, in jedem Satz ein Wort gelb markiert. B: Drucken (Strg P) → Als PDF sichern: zwei bis drei A4-Seiten, gut lesbar. C: „Englisch“ zeigt dieselben Karten auf Englisch. D: In der iPhone-App „Im Panel öffnen“ → Was ich kann: dasselbe, dort Teilen → Drucken.",
 "thread": "Spickzettel Sprachbefehle"
+},
+{
+"id": "P344",
+"v": 850,
+"titel": "Technik-Seite Sicherheit",
+"text": "A: Zustand → Technik, auf den Kasten „Sicherheit“ tippen: die Seite zeigt den Weg einer Frage in 10 Schritten mit Ausgängen (Notaus, Abgewiesen, Gastrechte, Vorschlag mit Ja), die Rollen-Tabelle, die Grenzen A bis E und die Code-Liste. B: Ein Beispiel wie „Mail verlangt eine Handlung“ antippen: die Schritte leuchten der Reihe nach. C: Auf Englisch umschalten: alles auf Englisch.",
+"thread": "Sicherheitsmodell beschreiben"
 }
 ]
 }

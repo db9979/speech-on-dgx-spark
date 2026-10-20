@@ -25,6 +25,7 @@ flowchart TB
   subgraph z_spark["DGX Spark · intern"]
     subgraph z_panel["Panel :31080 / :31443 · bei Spark teilen auf eigenem Rechner"]
       middleware["Middleware<br/>panel.py"]
+      sicherheit["Sicherheit<br/>Schichten · Grenzen"]
       zugang["Anmeldung, Profil<br/>guard · profiles"]
       vorbereiten["Anfrage vorbereiten<br/>chat_turn.prepare"]
       weiche["Weiche<br/>intent.py"]
@@ -1407,6 +1408,108 @@ Gilt bei: [Schritt 4](#kn-middleware-s4), [Schritt 5](#kn-middleware-s5), [Schri
 - `app/panel/panel.py` `protect`: Schutz-Kopfzeilen ([Schritt 12](#kn-middleware-s12))
 
 Selbsttests: `test_hardening`, `test_panel`, `test_notaus`, `test_seiten_laden`
+
+### Sicherheit
+
+Wie die Schutzschichten des Spark zusammenspielen. Der Grundsatz: das Sprachmodell schlägt vor, das Panel entscheidet. Rechte, Sperren, Handlungen und Grenzen regelt das Panel mit festen Regeln im Code; was von außen kommt (Web, Mail, Kalender, Dokumente, Telegram, Home Assistant, Modellausgaben), ist Daten und nie ein Befehl. Diese Seite zeigt den Weg einer Frage durch alle Schichten; die einzelnen Kästen haben ihre eigenen Seiten.
+
+**Warum:** Ein Sprachmodell lässt sich von Text überreden, den es liest. Darum darf es nichts entscheiden, was Rechte, Geld, Geräte oder Daten anderer betrifft. Jede Schicht kann nur einschränken, keine kann freigeben, was eine frühere verboten hat (Reihenfolge Rechte, Sperren, Absicht).
+
+#### Ablauf
+
+```mermaid
+flowchart TD
+  s1(["1. Frage oder Auftrag kommt herein"])
+  s2{{"2. Lässt der Notaus es zu?"}}
+  s3{{"3. Angemeldet und im Rahmen?"}}
+  s4{{"4. Wer fragt, sicher erkannt?"}}
+  s5["5. Freigabe und Sperre"]
+  s6["6. Fremdes bleibt Daten"]
+  s7["7. Sprachmodell schlägt vor"]
+  s8{{"8. Ändert es etwas?"}}
+  s9["9. Antwort prüfen"]
+  s10(["10. Spuren"])
+  s1 --> s2
+  s2 -->|ja| s3
+  s3 -->|ja| s4
+  s4 -->|ja| s5
+  s5 --> s6
+  s6 --> s7
+  s7 --> s8
+  s8 -->|nein| s9
+  s9 --> s10
+  s2x(["Gestoppt"])
+  s2 -->|nein| s2x
+  s3x(["Abgewiesen"])
+  s3 -->|nein| s3x
+  s4x(["Gastrechte: nur Frage und Antwort, kein Werkzeug"])
+  s4 -->|nein| s4x
+  s8x(["Erst ein Vorschlag, dann „Ja“"])
+  s8 -->|ja| s8x
+```
+
+1. <a id="kn-sicherheit-s1"></a>**Frage oder Auftrag kommt herein**: Im Heimnetz direkt, von unterwegs nur über den Reverse-Proxy mit TLS. Jedes Gerät hat seinen eigenen Schlüssel oder meldet sich wie im Browser an.
+2. <a id="kn-sicherheit-s2"></a>**Lässt der Notaus es zu?**: Der Notaus hat drei Stufen von außen nach innen: Stufe 1 sperrt das Internet, Stufe 2 jede Handlung, Stufe 3 jedes Gespräch. Kein Modell, keine Mail und kein Dokument kann ihn auslösen oder aufheben.
+3. <a id="kn-sicherheit-s3"></a>**Angemeldet und im Rahmen?**: Größenlimit und Herkunftsprüfung (CSRF) vor dem Lesen, dann Rate-Limit pro Adresse und eine Höchstzahl gleichzeitiger Anfragen für Modell, Erkennung und Ausgabe (guard.Slot). Geheimnisse, Rollen und Sicherungen brauchen dazu einen frischen Code oder Passkey (core.confirm_code, 10 Minuten). Zu den Modellen auf tars geht es nur durch das TLS-Tor; Befehle dort prüft der Wärter (tarswart.check: Unterschrift, Zeit, Einmal-Nummer, einer von 16 festen Befehlen).
+4. <a id="kn-sicherheit-s4"></a>**Wer fragt, sicher erkannt?**: Das Profil kommt aus Cookie, App-Schlüssel oder verknüpftem Konto. Am geteilten Lautsprecher reicht der Geräteschlüssel nicht: chat_turn.shared_stranger gibt Persönliches nur frei, wenn die Inhaberstimme in derselben Aufnahme sicher erkannt ist.
+5. <a id="kn-sicherheit-s5"></a>**Freigabe und Sperre**: Jede Funktion ist aus, bis der Admin sie freigibt; dann gilt sie für jedes Profil, außer der Admin sperrt einzelne (features.blocked). Was nicht erlaubt ist, wird gar nicht erst als Werkzeug angeboten.
+6. <a id="kn-sicherheit-s6"></a>**Fremdes bleibt Daten**: Was ein Werkzeug von außen liest, kommt als markierter Datenblock zum Modell. Ab da sind 13 handelnde Werkzeuge gesperrt, auch im nächsten Zug, und nichts davon wird ins Gedächtnis gelernt. Verbindungen nach außen laufen nur über den Wächter (netguard.allowed).
+7. <a id="kn-sicherheit-s7"></a>**Sprachmodell schlägt vor**: Das Modell formuliert und wählt aus dem, was nach den Schritten davor übrig ist. Ruft es ein Werkzeug, das nicht angeboten war, läuft es nicht.
+8. <a id="kn-sicherheit-s8"></a>**Ändert es etwas?**: Lesen geht sofort. Wer etwas ändert (Licht, Mail senden, Termin, Anruf), legt einen Vorschlag ab; er läuft erst nach einem schlichten „Ja“ auf genau diesen Vorschlag, vom selben Gerät. Home Assistant nur aus einer Allowlist, Mail wird nie gelöscht.
+9. <a id="kn-sicherheit-s9"></a>**Antwort prüfen**: Zeiten, Daten und Beträge, die nirgends in den Quellen stehen, fallen heraus (answercheck.unsupported). Passwörter, Codes und Schlüssel werden nie gesprochen (textnorm.hide_secrets). Die Oberfläche zeigt Modelltext nie als HTML.
+10. <a id="kn-sicherheit-s10"></a>**Spuren**: Logs nur mit festen Wörtern und Zahlen. Änderungen an Zugängen und Schutz schreibt guard.log mit einer SHA-256-Kette; der Wachposten meldet Auffälliges an die Admins. Geheimnisse liegen versiegelt im vault (vault.seal).
+
+**Beispiele:** Mail verlangt eine Handlung: Die Mail wird gelesen, aber nichts geschaltet: die Werkzeuge dafür sind gesperrt. · Fremde Stimme am Lautsprecher: Antwort wie für einen Gast, ohne Mails oder Termine. · Licht ausschalten: Erst nach „Ja“ wird geschaltet. · Notaus Stufe 3: Kein Gespräch, nur die Notaus-Seite.
+
+#### Regeln
+
+Gilt bei: [Schritt 4](#kn-sicherheit-s4), [Schritt 5](#kn-sicherheit-s5)
+
+| Wer | bekommt | geprüft durch |
+|---|---|---|
+| Gast | Frage und Antwort, keine Werkzeuge, keine persönlichen Daten, nur Fehlercodes | Rate-Limit, Höchstzahl gleichzeitig |
+| Fremde Stimme | wie ein Gast, früherer Verlauf geht nicht mit | Stimmprüfung in derselben Aufnahme |
+| Profil | freigegebene Funktionen auf eigene Daten | Anmeldung; Geheimnisse mit frischem Code |
+| Verwalter | Personen betreuen, keine Funktionen schalten, keine Logs | Rolle, auf dem Server geprüft |
+| Admin | Freigaben, Sperren, Notaus, Logs, Live | Anmeldung mit zweitem Schritt; „Schutz ändern“ fragt jedes Mal |
+
+#### Die Grenzen
+
+- A, von draußen herein: nur über den Reverse-Proxy mit TLS; jeder Endpunkt prüft Anmeldung, Profil, CSRF, Größe und Rate-Limit.
+- B, Geräte im Heimnetz: ein Schlüssel pro Gerät; am geteilten Lautsprecher zählt zusätzlich die Stimme.
+- C, der Spark liest Fremdes: nur über den Wächter, kein Heimnetz ohne Erlaubnis, geprüfte Adresse festgehalten; was zurückkommt, ist Daten.
+- D, Panel zu den Modellen: TLS 1.3 mit beim Koppeln angeheftetem Zertifikat; die Modelle hören nur auf 127.0.0.1.
+- E, Handgriffe auf tars: nur feste Befehle des Wärters, unterschrieben, mit Zeit und Einmal-Nummer.
+
+#### Maßstäbe
+
+- OWASP ASVS 5.0 Stufe 2 (Anmeldung und Admin Stufe 3), OWASP Top 10 für LLM-Anwendungen 2025, BSI TR-02102; die Sicherheits-Checkliste mit ihrem Teil „Stand der Technik“ nennt, was noch fehlt.
+
+#### Zahlen (aus dem Code)
+
+- **13** Werkzeuge nach Text von außen gesperrt ([Schritt 6](#kn-sicherheit-s6))
+- **10 min** zählt ein richtiger Code für „Bestätigen“ ([Schritt 3](#kn-sicherheit-s3))
+- **16** feste Befehle des Wärters auf tars ([Schritt 3](#kn-sicherheit-s3))
+- **3** Notaus-Stufen, die letzte hält jedes Gespräch an ([Schritt 2](#kn-sicherheit-s2))
+
+#### Im Code
+
+- `app/panel/notaus.py` `blocks`: ob eine Notaus-Stufe diese Art Arbeit anhält ([Schritt 2](#kn-sicherheit-s2))
+- `app/panel/guard.py` `limit`: Rate-Limit pro Adresse und Profil ([Schritt 3](#kn-sicherheit-s3))
+- `app/panel/guard.py` `Slot`: Höchstzahl gleichzeitiger Anfragen ([Schritt 3](#kn-sicherheit-s3))
+- `app/panel/core.py` `confirm_code`: frischer Code oder Passkey für heikle Wege ([Schritt 3](#kn-sicherheit-s3), [Schritt 8](#kn-sicherheit-s8))
+- `app/tarswart.py` `check`: prüft jeden Befehl an den Wärter ([Schritt 3](#kn-sicherheit-s3))
+- `app/panel/chat_turn.py` `shared_stranger`: fremde Stimme am geteilten Lautsprecher ([Schritt 4](#kn-sicherheit-s4))
+- `app/panel/features.py` `allowed`: Freigabe des Admins, gilt für jedes Profil ([Schritt 5](#kn-sicherheit-s5))
+- `app/panel/features.py` `blocked`: Sperre einzelner Profile ([Schritt 5](#kn-sicherheit-s5))
+- `app/panel/chat.py` `wrap_outside`: Text von außen als Datenblock ([Schritt 6](#kn-sicherheit-s6))
+- `app/panel/netguard.py` `allowed`: ob eine Verbindung nach außen sein darf ([Schritt 6](#kn-sicherheit-s6))
+- `app/panel/answercheck.py` `unsupported`: Zahl ohne Quelle fällt heraus ([Schritt 9](#kn-sicherheit-s9))
+- `app/textnorm.py` `hide_secrets`: Geheimnisse werden nie gesprochen ([Schritt 9](#kn-sicherheit-s9))
+- `app/panel/guard.py` `log`: Änderungsprotokoll mit Prüfkette ([Schritt 10](#kn-sicherheit-s10))
+- `app/panel/vault.py` `seal`: Geheimnisse versiegelt ablegen ([Schritt 10](#kn-sicherheit-s10))
+
+Selbsttests: `test_hardening`, `test_gaeste`, `test_kontext_trennung`, `test_scanner`, `test_stufen`, `test_notaus`, `test_waerter`, `test_protokoll`, `test_wachposten`, `test_markdown`
 
 ### Anmeldung, Profil
 

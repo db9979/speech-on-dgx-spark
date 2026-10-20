@@ -72,6 +72,7 @@ Go through before every commit. In the answer to Dominik briefly name which poin
 - [ ] A pairing or moving step changes a computer's role only after a signed result from the other side and deletes nothing.
 
 ## Before the commit
+- [ ] If the change alters or adds a protection rule, the node page "Security" (Status → Architecture) is updated in the same commit.
 - [ ] New switches are off by default: one admin switch, no new profile switch; only the admin blocks single profiles.
 - [ ] Every new protection rule has a self-test.
 - [ ] All self-tests are green.

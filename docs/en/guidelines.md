@@ -92,6 +92,8 @@ This list belongs to every commit that adds or changes a feature, a tool, a serv
 
 The complete list is the **[Security checklist](security-checklist.md)** (about 45 points plus "State of the art"). It is gone through before every commit, and the answer names the points touched (PA, C, M [[secure-coding-rules]]). Every change is additionally checked against the current state of the art (Dominik 2026-10-12); whatever is listed there as "not yet met" is brought up to date the next time the place is touched.
 
+**Security model always current** (Dominik 2026-10-20): how all layers of protection work together is shown by the node page "Security" (Status → Architecture, `technik_seiten_zugang.py`, generated into `docs/en/architecture.md`). Whoever changes a protection rule or builds a new one (rights, locks, outside text, confirming, borders between the computers, change log) updates this page in the same commit: way, rules, numbers and code list. Its fingerprint `stand` covers the central protection points; when one of them changes, `test_technik` is red until the page was checked. A new protection point goes into its code list. (🧪 test_technik)
+
 ### 2.1 Access
 - For every endpoint it is defined who may: guest, profile in the browser, device key or admin. (C; 🧪 test_scanner)
 - The following things need a browser login and a fresh code (`browser_profile` + `confirm_code`), never the device key: secrets, addresses that receive a token, code word, push targets and mail accounts. (C)

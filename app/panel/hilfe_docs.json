@@ -1483,6 +1483,94 @@
 "lang": "de",
 "src": "architektur",
 "file": "Architektur und Datenfluss",
+"head": "Sicherheit",
+"title": "Sicherheit",
+"text": "Wie die Schutzschichten des Spark zusammenspielen. Der Grundsatz: das Sprachmodell schlägt vor, das Panel entscheidet. Rechte, Sperren, Handlungen und Grenzen regelt das Panel mit festen Regeln im Code; was von außen kommt (Web, Mail, Kalender, Dokumente, Telegram, Home Assistant, Modellausgaben), ist Daten und nie ein Befehl. Diese Seite zeigt den Weg einer Frage durch alle Schichten; die einzelnen Kästen haben ihre eigenen Seiten."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Sicherheit",
+"title": "Warum",
+"text": "Warum: Ein Sprachmodell lässt sich von Text überreden, den es liest. Darum darf es nichts entscheiden, was Rechte, Geld, Geräte oder Daten anderer betrifft. Jede Schicht kann nur einschränken, keine kann freigeben, was eine frühere verboten hat (Reihenfolge Rechte, Sperren, Absicht)."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Ablauf",
+"title": "Ablauf",
+"text": "1. Frage oder Auftrag kommt herein: Im Heimnetz direkt, von unterwegs nur über den Reverse-Proxy mit TLS. Jedes Gerät hat seinen eigenen Schlüssel oder meldet sich wie im Browser an. 2. Lässt der Notaus es zu?: Der Notaus hat drei Stufen von außen nach innen: Stufe 1 sperrt das Internet, Stufe 2 jede Handlung, Stufe 3 jedes Gespräch. Kein Modell, keine Mail und kein Dokument kann ihn auslösen oder aufheben. 3. Angemeldet und im Rahmen?: Größenlimit und Herkunftsprüfung (CSRF) vor dem Lesen, dann Rate-Limit pro Adresse und eine Höchstzahl gleichzeitiger Anfragen für Modell, Erkennung und Ausgabe (guard.Slot). Geheimnisse, Rollen und Sicherungen brauchen dazu einen frischen Code oder Passkey (core.confirm_code, 10 Minuten). Zu den Modellen auf tars geht es nur durch das TLS-Tor; Befehle dort prüft der Wärter (tarswart.check: Unterschrift, Zeit, Einmal-Nummer, einer von 16 festen Befehlen). 4. Wer fragt, sicher erkannt?: Das Profil kommt aus Cookie, App-Schlüssel oder verknüpftem Konto. Am geteilten Lautsprecher reicht der Geräteschlüssel nicht: chat_turn.shared_stranger gibt Persönliches nur frei, wenn die Inhaberstimme in derselben Aufnahme sicher erkannt ist. 5. Freigabe und Sperre"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Ablauf",
+"title": "Ablauf",
+"text": ": Jede Funktion ist aus, bis der Admin sie freigibt; dann gilt sie für jedes Profil, außer der Admin sperrt einzelne (features.blocked). Was nicht erlaubt ist, wird gar nicht erst als Werkzeug angeboten. 6. Fremdes bleibt Daten: Was ein Werkzeug von außen liest, kommt als markierter Datenblock zum Modell. Ab da sind 13 handelnde Werkzeuge gesperrt, auch im nächsten Zug, und nichts davon wird ins Gedächtnis gelernt. Verbindungen nach außen laufen nur über den Wächter (netguard.allowed). 7. Sprachmodell schlägt vor: Das Modell formuliert und wählt aus dem, was nach den Schritten davor übrig ist. Ruft es ein Werkzeug, das nicht angeboten war, läuft es nicht. 8. Ändert es etwas?: Lesen geht sofort. Wer etwas ändert (Licht, Mail senden, Termin, Anruf), legt einen Vorschlag ab; er läuft erst nach einem schlichten „Ja“ auf genau diesen Vorschlag, vom selben Gerät. Home Assistant nur aus einer Allowlist, Mail wird nie gelöscht. 9. Antwort prüfen: Zeiten, Daten und Beträge, die nirgends in den Quellen stehen, fallen heraus (answercheck.unsupported). Passwörter, Codes und Schlüssel werden nie gesprochen (textnorm.hide_secrets). Die Oberfläche zeigt Modelltext nie als HTML. 10. Spuren: Logs n"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Ablauf",
+"title": "Ablauf",
+"text": "ur mit festen Wörtern und Zahlen. Änderungen an Zugängen und Schutz schreibt guard.log mit einer SHA-256-Kette; der Wachposten meldet Auffälliges an die Admins. Geheimnisse liegen versiegelt im vault (vault.seal)."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Ablauf",
+"title": "Beispiele",
+"text": "Beispiele: Mail verlangt eine Handlung: Die Mail wird gelesen, aber nichts geschaltet: die Werkzeuge dafür sind gesperrt. · Fremde Stimme am Lautsprecher: Antwort wie für einen Gast, ohne Mails oder Termine. · Licht ausschalten: Erst nach „Ja“ wird geschaltet. · Notaus Stufe 3: Kein Gespräch, nur die Notaus-Seite."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Die Grenzen",
+"title": "Die Grenzen",
+"text": "- A, von draußen herein: nur über den Reverse-Proxy mit TLS; jeder Endpunkt prüft Anmeldung, Profil, CSRF, Größe und Rate-Limit. - B, Geräte im Heimnetz: ein Schlüssel pro Gerät; am geteilten Lautsprecher zählt zusätzlich die Stimme. - C, der Spark liest Fremdes: nur über den Wächter, kein Heimnetz ohne Erlaubnis, geprüfte Adresse festgehalten; was zurückkommt, ist Daten. - D, Panel zu den Modellen: TLS 1.3 mit beim Koppeln angeheftetem Zertifikat; die Modelle hören nur auf 127.0.0.1. - E, Handgriffe auf tars: nur feste Befehle des Wärters, unterschrieben, mit Zeit und Einmal-Nummer."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Maßstäbe",
+"title": "Maßstäbe",
+"text": "- OWASP ASVS 5.0 Stufe 2 (Anmeldung und Admin Stufe 3), OWASP Top 10 für LLM-Anwendungen 2025, BSI TR-02102; die Sicherheits-Checkliste mit ihrem Teil „Stand der Technik“ nennt, was noch fehlt."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Zahlen (aus dem Code)",
+"title": "Zahlen (aus dem Code)",
+"text": "- 13 Werkzeuge nach Text von außen gesperrt (Schritt 6) - 10 min zählt ein richtiger Code für „Bestätigen“ (Schritt 3) - 16 feste Befehle des Wärters auf tars (Schritt 3) - 3 Notaus-Stufen, die letzte hält jedes Gespräch an (Schritt 2)"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Im Code",
+"title": "Im Code",
+"text": "- app/panel/notaus.py blocks: ob eine Notaus-Stufe diese Art Arbeit anhält (Schritt 2) - app/panel/guard.py limit: Rate-Limit pro Adresse und Profil (Schritt 3) - app/panel/guard.py Slot: Höchstzahl gleichzeitiger Anfragen (Schritt 3) - app/panel/core.py confirm_code: frischer Code oder Passkey für heikle Wege (Schritt 3, Schritt 8) - app/tarswart.py check: prüft jeden Befehl an den Wärter (Schritt 3) - app/panel/chat_turn.py shared_stranger: fremde Stimme am geteilten Lautsprecher (Schritt 4) - app/panel/features.py allowed: Freigabe des Admins, gilt für jedes Profil (Schritt 5) - app/panel/features.py blocked: Sperre einzelner Profile (Schritt 5) - app/panel/chat.py wrap_outside: Text von außen als Datenblock (Schritt 6) - app/panel/netguard.py allowed: ob eine Verbindung nach außen sein darf (Schritt 6) - app/panel/answercheck.py unsupported: Zahl ohne Quelle fällt heraus (Schritt 9) - app/textnorm.py hide_secrets: Geheimnisse werden nie gesprochen (Schritt 9) - app/panel/guard.py log: Änderungsprotokoll mit Prüfkette (Schritt 10) - app/panel/vault.py seal: Geheimnisse versiegelt ablegen (Schritt 10)"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Im Code",
+"title": "Im Code",
+"text": "Selbsttests: test_hardening, test_gaeste, test_kontext_trennung, test_scanner, test_stufen, test_notaus, test_waerter, test_protokoll, test_wachposten, test_markdown"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
 "head": "Anmeldung, Profil",
 "title": "Anmeldung, Profil",
 "text": "Hier entscheidet das Panel, wer eine Anfrage stellt und was diese Person darf: Anmeldung mit Passwort oder PIN (mit Sperre nach Fehlversuchen), Cookie oder Geräteschlüssel, Rate-Limit und die Freigaben je Funktion. Das Profil kommt nur aus Cookie, Schlüssel oder dem Panel selbst, nie aus dem Text einer Anfrage oder vom Modell."
@@ -10070,6 +10158,94 @@
 "head": "In the code",
 "title": "In the code",
 "text": "Self-tests: test_hardening, test_panel, test_notaus, test_seiten_laden"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Security",
+"title": "Security",
+"text": "How the Spark's layers of protection work together. The principle: the language model proposes, the panel decides. Rights, locks, actions and borders are settled by the panel with fixed rules in the code; what comes from outside (web, mail, calendar, documents, Telegram, Home Assistant, model output) is data and never a command. This page shows one question's way through every layer; the single boxes have their own pages."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Security",
+"title": "Why",
+"text": "Why: A language model can be talked into things by text it reads. So it may decide nothing that touches rights, money, devices or other people's data. Every layer can only narrow, none can allow what an earlier one forbade (order: rights, locks, intent)."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Way",
+"title": "Way",
+"text": "1. A question or order comes in: At home directly, on the way only through the reverse proxy with TLS. Every device has its own key or signs in like the browser. 2. Does the kill switch allow it?: The kill switch has three stages from the outside in: stage 1 closes the internet, stage 2 every action, stage 3 every conversation. No model, mail or document can trigger or lift it. 3. Signed in and within limits?: Size limit and origin check (CSRF) before reading, then a rate limit per address and a cap on parallel requests for the model, recognition and output (guard.Slot). Secrets, roles and backups also need a fresh code or passkey (core.confirm_code, 10 minutes). The models on tars are reached only through the TLS-Tor; commands there are checked by the Wärter (tarswart.check: signature, time, one-time number, one of 16 fixed commands). 4. Who asks, surely known?: The profile comes from the cookie, the app key or a linked account. At a shared speaker the device key is not enough: chat_turn.shared_stranger allows personal things only when the owner's voice is surely recognised in the same recording. 5. Release and block: Every function is off until the admin releases it; then it coun"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Way",
+"title": "Way",
+"text": "ts for every profile, unless the admin blocks single ones (features.blocked). What is not allowed is not even offered as a tool. 6. Outside stays data: What a tool reads from outside reaches the model as a marked block of data. From then on 13 acting tools are locked, in the next turn too, and nothing of it is learned into memory. Connections to the outside go only through the guard (netguard.allowed). 7. The language model proposes: The model words the answer and picks from what is left after the steps before. If it calls a tool that was not offered, it does not run. 8. Does it change something?: Reading happens at once. Whatever changes something (light, sending mail, appointment, call) leaves a proposal; it runs only after a plain „yes“ to exactly that proposal, from the same device. Home Assistant only from an allowlist, mail is never deleted. 9. Check the answer: Times, dates and amounts that are nowhere in the sources are dropped (answercheck.unsupported). Passwords, codes and keys are never spoken (textnorm.hide_secrets). The pages never show model text as HTML. 10. Traces: Logs carry only fixed words and numbers. Changes to access and protection are written by guard.log wit"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Way",
+"title": "Way",
+"text": "h a SHA-256 chain; the Wachposten tells the admins about anything unusual. Secrets lie sealed in the vault (vault.seal)."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Way",
+"title": "Examples",
+"text": "Examples: A mail demands an action: The mail is read, but nothing is switched: the tools for it are locked. · A stranger's voice at the speaker: An answer as for a guest, without mails or appointments. · Switch off the light: Switched only after „yes“. · Kill switch stage 3: No conversation, only the kill switch page."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "The borders",
+"title": "The borders",
+"text": "- A, in from outside: only through the reverse proxy with TLS; every endpoint checks sign-in, profile, CSRF, size and rate limit. - B, devices at home: one key per device; at a shared speaker the voice counts as well. - C, the Spark reads outside things: only through the guard, no home network without permission, the checked address pinned; what comes back is data. - D, panel to the models: TLS 1.3 with the certificate pinned at the pairing; the models listen on 127.0.0.1 only. - E, handles on tars: only fixed commands of the Wärter, signed, with time and one-time number."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Standards",
+"title": "Standards",
+"text": "- OWASP ASVS 5.0 level 2 (sign-in and admin level 3), OWASP Top 10 for LLM applications 2025, BSI TR-02102; the security checklist with its part „State of the art“ names what is still missing."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Numbers (from the code)",
+"title": "Numbers (from the code)",
+"text": "- 13 tools locked after outside text (step 6) - 10 min a right code counts for „Confirm“ (step 3) - 16 fixed commands of the Wärter on tars (step 3) - 3 kill switch stages, the last stops every conversation (step 2)"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "In the code",
+"title": "In the code",
+"text": "- app/panel/notaus.py blocks: whether a kill switch stage stops this kind of work (step 2) - app/panel/guard.py limit: rate limit per address and profile (step 3) - app/panel/guard.py Slot: cap on parallel requests (step 3) - app/panel/core.py confirm_code: fresh code or passkey for sensitive ways (step 3, step 8) - app/tarswart.py check: checks every command to the Wärter (step 3) - app/panel/chat_turn.py shared_stranger: stranger's voice at a shared speaker (step 4) - app/panel/features.py allowed: the admin's release, for every profile (step 5) - app/panel/features.py blocked: block of single profiles (step 5) - app/panel/chat.py wrap_outside: outside text as a block of data (step 6) - app/panel/netguard.py allowed: whether a connection out may happen (step 6) - app/panel/answercheck.py unsupported: a figure without a source is dropped (step 9) - app/textnorm.py hide_secrets: secrets are never spoken (step 9) - app/panel/guard.py log: change log with its chain (step 10) - app/panel/vault.py seal: store secrets sealed (step 10)"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "In the code",
+"title": "In the code",
+"text": "Self-tests: test_hardening, test_gaeste, test_kontext_trennung, test_scanner, test_stufen, test_notaus, test_waerter, test_protokoll, test_wachposten, test_markdown"
 },
 {
 "lang": "en",

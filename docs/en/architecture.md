@@ -25,6 +25,7 @@ flowchart TB
   subgraph z_spark["DGX Spark · inside"]
     subgraph z_panel["Panel :31080 / :31443 · with the Spark split on its own computer"]
       middleware["Middleware<br/>panel.py"]
+      sicherheit["Security<br/>Schichten · Grenzen"]
       zugang["Login, profile<br/>guard · profiles"]
       vorbereiten["Prepare request<br/>chat_turn.prepare"]
       weiche["Switch<br/>intent.py"]
@@ -384,7 +385,7 @@ Live overview, logs, watchers, backup, update, help and the admin pages.
 | `app/panel/technik_seiten_kern.py` | Status → Architecture, Knoten-Seiten: the pages of language model, own knowledge and operation (llm, wissen, betrieb). |
 | `app/panel/technik_seiten_modelle.py` | Status → Architecture, Knoten-Seiten: the pages of speech recognition, speech output and pictures (asr, tts, bild). |
 | `app/panel/technik_seiten_netz.py` | Status → Architecture, Knoten-Seiten: the pages of outside services, internet and Spark split (aussen, internet, teilen, werkstatt). |
-| `app/panel/technik_seiten_zugang.py` | Status → Architecture, Knoten-Seiten: the pages of the guard, middleware and access (waechter, middleware, zugang). |
+| `app/panel/technik_seiten_zugang.py` | Status → Architecture, Knoten-Seiten: the pages of the guard, middleware and access (waechter, middleware, zugang, sicherheit). |
 | `app/panel/tracelog.py` | Status → Logs → Requests: the way of each request through the panel, step by step, for the admin: arrival, preparation, the switch (intent.py), every round o … |
 | `app/panel/undo.py` | Rückgängig im Admin-Protokoll. |
 | `app/panel/update.py` | Updates from GitHub: version check, start/stop, progress and the lock while an update runs. |
@@ -1407,6 +1408,108 @@ Applies at: [step 4](#kn-middleware-s4), [step 5](#kn-middleware-s5), [step 6](#
 - `app/panel/panel.py` `protect`: protective headers ([step 12](#kn-middleware-s12))
 
 Self-tests: `test_hardening`, `test_panel`, `test_notaus`, `test_seiten_laden`
+
+### Security
+
+How the Spark's layers of protection work together. The principle: the language model proposes, the panel decides. Rights, locks, actions and borders are settled by the panel with fixed rules in the code; what comes from outside (web, mail, calendar, documents, Telegram, Home Assistant, model output) is data and never a command. This page shows one question's way through every layer; the single boxes have their own pages.
+
+**Why:** A language model can be talked into things by text it reads. So it may decide nothing that touches rights, money, devices or other people's data. Every layer can only narrow, none can allow what an earlier one forbade (order: rights, locks, intent).
+
+#### Way
+
+```mermaid
+flowchart TD
+  s1(["1. A question or order comes in"])
+  s2{{"2. Does the kill switch allow it?"}}
+  s3{{"3. Signed in and within limits?"}}
+  s4{{"4. Who asks, surely known?"}}
+  s5["5. Release and block"]
+  s6["6. Outside stays data"]
+  s7["7. The language model proposes"]
+  s8{{"8. Does it change something?"}}
+  s9["9. Check the answer"]
+  s10(["10. Traces"])
+  s1 --> s2
+  s2 -->|yes| s3
+  s3 -->|yes| s4
+  s4 -->|yes| s5
+  s5 --> s6
+  s6 --> s7
+  s7 --> s8
+  s8 -->|no| s9
+  s9 --> s10
+  s2x(["Stopped"])
+  s2 -->|no| s2x
+  s3x(["Refused"])
+  s3 -->|no| s3x
+  s4x(["Guest rights: question and answer only, no tool"])
+  s4 -->|no| s4x
+  s8x(["First a proposal, then „yes“"])
+  s8 -->|yes| s8x
+```
+
+1. <a id="kn-sicherheit-s1"></a>**A question or order comes in**: At home directly, on the way only through the reverse proxy with TLS. Every device has its own key or signs in like the browser.
+2. <a id="kn-sicherheit-s2"></a>**Does the kill switch allow it?**: The kill switch has three stages from the outside in: stage 1 closes the internet, stage 2 every action, stage 3 every conversation. No model, mail or document can trigger or lift it.
+3. <a id="kn-sicherheit-s3"></a>**Signed in and within limits?**: Size limit and origin check (CSRF) before reading, then a rate limit per address and a cap on parallel requests for the model, recognition and output (guard.Slot). Secrets, roles and backups also need a fresh code or passkey (core.confirm_code, 10 minutes). The models on tars are reached only through the TLS-Tor; commands there are checked by the Wärter (tarswart.check: signature, time, one-time number, one of 16 fixed commands).
+4. <a id="kn-sicherheit-s4"></a>**Who asks, surely known?**: The profile comes from the cookie, the app key or a linked account. At a shared speaker the device key is not enough: chat_turn.shared_stranger allows personal things only when the owner's voice is surely recognised in the same recording.
+5. <a id="kn-sicherheit-s5"></a>**Release and block**: Every function is off until the admin releases it; then it counts for every profile, unless the admin blocks single ones (features.blocked). What is not allowed is not even offered as a tool.
+6. <a id="kn-sicherheit-s6"></a>**Outside stays data**: What a tool reads from outside reaches the model as a marked block of data. From then on 13 acting tools are locked, in the next turn too, and nothing of it is learned into memory. Connections to the outside go only through the guard (netguard.allowed).
+7. <a id="kn-sicherheit-s7"></a>**The language model proposes**: The model words the answer and picks from what is left after the steps before. If it calls a tool that was not offered, it does not run.
+8. <a id="kn-sicherheit-s8"></a>**Does it change something?**: Reading happens at once. Whatever changes something (light, sending mail, appointment, call) leaves a proposal; it runs only after a plain „yes“ to exactly that proposal, from the same device. Home Assistant only from an allowlist, mail is never deleted.
+9. <a id="kn-sicherheit-s9"></a>**Check the answer**: Times, dates and amounts that are nowhere in the sources are dropped (answercheck.unsupported). Passwords, codes and keys are never spoken (textnorm.hide_secrets). The pages never show model text as HTML.
+10. <a id="kn-sicherheit-s10"></a>**Traces**: Logs carry only fixed words and numbers. Changes to access and protection are written by guard.log with a SHA-256 chain; the Wachposten tells the admins about anything unusual. Secrets lie sealed in the vault (vault.seal).
+
+**Examples:** A mail demands an action: The mail is read, but nothing is switched: the tools for it are locked. · A stranger's voice at the speaker: An answer as for a guest, without mails or appointments. · Switch off the light: Switched only after „yes“. · Kill switch stage 3: No conversation, only the kill switch page.
+
+#### Rules
+
+Applies at: [step 4](#kn-sicherheit-s4), [step 5](#kn-sicherheit-s5)
+
+| Who | gets | checked by |
+|---|---|---|
+| Guest | question and answer, no tools, no personal data, error codes only | rate limit, parallel cap |
+| Stranger's voice | like a guest, earlier history stays behind | voice check in the same recording |
+| Profile | released functions on own data | sign-in; secrets with a fresh code |
+| Manager | look after people, switch no functions, no logs | role, checked on the server |
+| Admin | releases, blocks, kill switch, logs, live | sign-in with the second step; „Change protection“ asks every time |
+
+#### The borders
+
+- A, in from outside: only through the reverse proxy with TLS; every endpoint checks sign-in, profile, CSRF, size and rate limit.
+- B, devices at home: one key per device; at a shared speaker the voice counts as well.
+- C, the Spark reads outside things: only through the guard, no home network without permission, the checked address pinned; what comes back is data.
+- D, panel to the models: TLS 1.3 with the certificate pinned at the pairing; the models listen on 127.0.0.1 only.
+- E, handles on tars: only fixed commands of the Wärter, signed, with time and one-time number.
+
+#### Standards
+
+- OWASP ASVS 5.0 level 2 (sign-in and admin level 3), OWASP Top 10 for LLM applications 2025, BSI TR-02102; the security checklist with its part „State of the art“ names what is still missing.
+
+#### Numbers (from the code)
+
+- **13** tools locked after outside text ([step 6](#kn-sicherheit-s6))
+- **10 min** a right code counts for „Confirm“ ([step 3](#kn-sicherheit-s3))
+- **16** fixed commands of the Wärter on tars ([step 3](#kn-sicherheit-s3))
+- **3** kill switch stages, the last stops every conversation ([step 2](#kn-sicherheit-s2))
+
+#### In the code
+
+- `app/panel/notaus.py` `blocks`: whether a kill switch stage stops this kind of work ([step 2](#kn-sicherheit-s2))
+- `app/panel/guard.py` `limit`: rate limit per address and profile ([step 3](#kn-sicherheit-s3))
+- `app/panel/guard.py` `Slot`: cap on parallel requests ([step 3](#kn-sicherheit-s3))
+- `app/panel/core.py` `confirm_code`: fresh code or passkey for sensitive ways ([step 3](#kn-sicherheit-s3), [step 8](#kn-sicherheit-s8))
+- `app/tarswart.py` `check`: checks every command to the Wärter ([step 3](#kn-sicherheit-s3))
+- `app/panel/chat_turn.py` `shared_stranger`: stranger's voice at a shared speaker ([step 4](#kn-sicherheit-s4))
+- `app/panel/features.py` `allowed`: the admin's release, for every profile ([step 5](#kn-sicherheit-s5))
+- `app/panel/features.py` `blocked`: block of single profiles ([step 5](#kn-sicherheit-s5))
+- `app/panel/chat.py` `wrap_outside`: outside text as a block of data ([step 6](#kn-sicherheit-s6))
+- `app/panel/netguard.py` `allowed`: whether a connection out may happen ([step 6](#kn-sicherheit-s6))
+- `app/panel/answercheck.py` `unsupported`: a figure without a source is dropped ([step 9](#kn-sicherheit-s9))
+- `app/textnorm.py` `hide_secrets`: secrets are never spoken ([step 9](#kn-sicherheit-s9))
+- `app/panel/guard.py` `log`: change log with its chain ([step 10](#kn-sicherheit-s10))
+- `app/panel/vault.py` `seal`: store secrets sealed ([step 10](#kn-sicherheit-s10))
+
+Self-tests: `test_hardening`, `test_gaeste`, `test_kontext_trennung`, `test_scanner`, `test_stufen`, `test_notaus`, `test_waerter`, `test_protokoll`, `test_wachposten`, `test_markdown`
 
 ### Login, profile
 

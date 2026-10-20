@@ -1,5 +1,5 @@
 """Zustand → Technik, Knoten-Seiten: the pages of the guard, middleware and access
-(waechter, middleware, zugang). Rules and placeholders as in technik_seiten.py; the engine and the order are in technik_knoten.py."""
+(waechter, middleware, zugang, sicherheit). Rules and placeholders as in technik_seiten.py; the engine and the order are in technik_knoten.py."""
 from technik_seiten import S
 
 SEITEN = {
@@ -617,6 +617,189 @@ SEITEN = {
         ],
         "tests": ["test_panel", "test_features", "test_rechte_sofort", "test_passkey", "test_coadmin"],
         "heute": [("door_in", ("von außen angenommen", "accepted from outside")), ("door_out", ("abgewiesen", "refused"))],
+    },
+
+    # ------------------------------------------------------------------ sicherheit (the model as a whole)
+    "sicherheit": {
+        "stand": "f1ac51aac9",
+        "bezug": {
+            "features.blocked": ["s5"], "core.confirm_code": ["s3", "s8"], "core.CONFIRM_WINDOW": ["s3"], "guard.Slot": ["s3"],
+            "notaus.STAGE": ["s2"], "vault.seal": ["s10"], "tarswart.check": ["s3"], "tarswart.COMMANDS": ["s3"],
+            "netguard.allowed": ["s6"], "chat.LOCKED_OUTSIDE": ["s6"], "regeln": ["s4", "s5"],
+        },
+        "kurz": ("Wie die Schutzschichten des Spark zusammenspielen. Der Grundsatz: das Sprachmodell schlägt vor, das Panel "
+                 "entscheidet. Rechte, Sperren, Handlungen und Grenzen regelt das Panel mit festen Regeln im Code; was von "
+                 "außen kommt (Web, Mail, Kalender, Dokumente, Telegram, Home Assistant, Modellausgaben), ist Daten und nie "
+                 "ein Befehl. Diese Seite zeigt den Weg einer Frage durch alle Schichten; die einzelnen Kästen haben ihre "
+                 "eigenen Seiten.",
+                 "How the Spark's layers of protection work together. The principle: the language model proposes, the panel "
+                 "decides. Rights, locks, actions and borders are settled by the panel with fixed rules in the code; what comes "
+                 "from outside (web, mail, calendar, documents, Telegram, Home Assistant, model output) is data and never a "
+                 "command. This page shows one question's way through every layer; the single boxes have their own pages."),
+        "warum": ("Ein Sprachmodell lässt sich von Text überreden, den es liest. Darum darf es nichts entscheiden, was Rechte, "
+                  "Geld, Geräte oder Daten anderer betrifft. Jede Schicht kann nur einschränken, keine kann freigeben, was "
+                  "eine frühere verboten hat (Reihenfolge Rechte, Sperren, Absicht).",
+                  "A language model can be talked into things by text it reads. So it may decide nothing that touches rights, "
+                  "money, devices or other people's data. Every layer can only narrow, none can allow what an earlier one "
+                  "forbade (order: rights, locks, intent)."),
+        "ablauf": [
+            S("s1", "start", ("Frage oder Auftrag kommt herein", "A question or order comes in"),
+              ("Browser, App, Lautsprecher, Telegram, MCP", "browser, app, speaker, Telegram, MCP"),
+              ("Im Heimnetz direkt, von unterwegs nur über den Reverse-Proxy mit TLS. Jedes Gerät hat seinen eigenen "
+               "Schlüssel oder meldet sich wie im Browser an.",
+               "At home directly, on the way only through the reverse proxy with TLS. Every device has its own key or "
+               "signs in like the browser.")),
+            S("s2", "frage", ("Lässt der Notaus es zu?", "Does the kill switch allow it?"),
+              ("notaus.blocks", "notaus.blocks"),
+              ("Der Notaus hat drei Stufen von außen nach innen: Stufe {notaus.STAGE.internet} sperrt das Internet, Stufe "
+               "{notaus.STAGE.aktion} jede Handlung, Stufe {notaus.STAGE.gespraech} jedes Gespräch. Kein Modell, keine Mail und "
+               "kein Dokument kann ihn auslösen oder aufheben.",
+               "The kill switch has three stages from the outside in: stage {notaus.STAGE.internet} closes the internet, stage "
+               "{notaus.STAGE.aktion} every action, stage {notaus.STAGE.gespraech} every conversation. No model, mail or "
+               "document can trigger or lift it."),
+              ("stop", "nein", ("Gestoppt", "Stopped"))),
+            S("s3", "frage", ("Angemeldet und im Rahmen?", "Signed in and within limits?"),
+              ("guard.limit, Größe, Herkunft", "guard.limit, size, origin"),
+              ("Größenlimit und Herkunftsprüfung (CSRF) vor dem Lesen, dann Rate-Limit pro Adresse und eine Höchstzahl "
+               "gleichzeitiger Anfragen für Modell, Erkennung und Ausgabe (guard.Slot). Geheimnisse, Rollen und Sicherungen "
+               "brauchen dazu einen frischen Code oder Passkey (core.confirm_code, {core.CONFIRM_WINDOW|min} Minuten). Zu "
+               "den Modellen auf tars geht es nur durch das TLS-Tor; Befehle dort prüft der Wärter (tarswart.check: "
+               "Unterschrift, Zeit, Einmal-Nummer, einer von {tarswart.COMMANDS|anzahl} festen Befehlen).",
+               "Size limit and origin check (CSRF) before reading, then a rate limit per address and a cap on parallel "
+               "requests for the model, recognition and output (guard.Slot). Secrets, roles and backups also need a fresh "
+               "code or passkey (core.confirm_code, {core.CONFIRM_WINDOW|min} minutes). The models on tars are reached only "
+               "through the TLS-Tor; commands there are checked by the Wärter (tarswart.check: signature, time, one-time "
+               "number, one of {tarswart.COMMANDS|anzahl} fixed commands)."),
+              ("stop", "nein", ("Abgewiesen", "Refused"))),
+            S("s4", "frage", ("Wer fragt, sicher erkannt?", "Who asks, surely known?"),
+              ("aus der Anmeldung, nie aus dem Text", "from the sign-in, never from the text"),
+              ("Das Profil kommt aus Cookie, App-Schlüssel oder verknüpftem Konto. Am geteilten Lautsprecher reicht der "
+               "Geräteschlüssel nicht: chat_turn.shared_stranger gibt Persönliches nur frei, wenn die Inhaberstimme in "
+               "derselben Aufnahme sicher erkannt ist.",
+               "The profile comes from the cookie, the app key or a linked account. At a shared speaker the device key is "
+               "not enough: chat_turn.shared_stranger allows personal things only when the owner's voice is surely "
+               "recognised in the same recording."),
+              ("info", "nein", ("Gastrechte: nur Frage und Antwort, kein Werkzeug", "Guest rights: question and answer only, no tool"))),
+            S("s5", "schritt", ("Freigabe und Sperre", "Release and block"),
+              ("features.allowed", "features.allowed"),
+              ("Jede Funktion ist aus, bis der Admin sie freigibt; dann gilt sie für jedes Profil, außer der Admin sperrt "
+               "einzelne (features.blocked). Was nicht erlaubt ist, wird gar nicht erst als Werkzeug angeboten.",
+               "Every function is off until the admin releases it; then it counts for every profile, unless the admin "
+               "blocks single ones (features.blocked). What is not allowed is not even offered as a tool.")),
+            S("s6", "schritt", ("Fremdes bleibt Daten", "Outside stays data"),
+              ("chat.wrap_outside", "chat.wrap_outside"),
+              ("Was ein Werkzeug von außen liest, kommt als markierter Datenblock zum Modell. Ab da sind "
+               "{chat.LOCKED_OUTSIDE|anzahl} handelnde Werkzeuge gesperrt, auch im nächsten Zug, und nichts davon wird ins "
+               "Gedächtnis gelernt. Verbindungen nach außen laufen nur über den Wächter (netguard.allowed).",
+               "What a tool reads from outside reaches the model as a marked block of data. From then on "
+               "{chat.LOCKED_OUTSIDE|anzahl} acting tools are locked, in the next turn too, and nothing of it is learned into "
+               "memory. Connections to the outside go only through the guard (netguard.allowed).")),
+            S("s7", "schritt", ("Sprachmodell schlägt vor", "The language model proposes"),
+              ("nur angebotene Werkzeuge", "only offered tools"),
+              ("Das Modell formuliert und wählt aus dem, was nach den Schritten davor übrig ist. Ruft es ein Werkzeug, das "
+               "nicht angeboten war, läuft es nicht.",
+               "The model words the answer and picks from what is left after the steps before. If it calls a tool that was "
+               "not offered, it does not run.")),
+            S("s8", "frage", ("Ändert es etwas?", "Does it change something?"),
+              ("schalten, senden, eintragen", "switch, send, enter"),
+              ("Lesen geht sofort. Wer etwas ändert (Licht, Mail senden, Termin, Anruf), legt einen Vorschlag ab; er läuft "
+               "erst nach einem schlichten „Ja“ auf genau diesen Vorschlag, vom selben Gerät. Home Assistant nur aus einer "
+               "Allowlist, Mail wird nie gelöscht.",
+               "Reading happens at once. Whatever changes something (light, sending mail, appointment, call) leaves a "
+               "proposal; it runs only after a plain „yes“ to exactly that proposal, from the same device. Home Assistant only "
+               "from an allowlist, mail is never deleted."),
+              ("info", "ja", ("Erst ein Vorschlag, dann „Ja“", "First a proposal, then „yes“"))),
+            S("s9", "schritt", ("Antwort prüfen", "Check the answer"),
+              ("answercheck.unsupported, textnorm.hide_secrets", "answercheck.unsupported, textnorm.hide_secrets"),
+              ("Zeiten, Daten und Beträge, die nirgends in den Quellen stehen, fallen heraus (answercheck.unsupported). "
+               "Passwörter, Codes und Schlüssel werden nie gesprochen (textnorm.hide_secrets). Die Oberfläche zeigt "
+               "Modelltext nie als HTML.",
+               "Times, dates and amounts that are nowhere in the sources are dropped (answercheck.unsupported). Passwords, "
+               "codes and keys are never spoken (textnorm.hide_secrets). The pages never show model text as HTML.")),
+            S("s10", "ende", ("Spuren", "Traces"),
+              ("guard.log, Wachposten", "guard.log, Wachposten"),
+              ("Logs nur mit festen Wörtern und Zahlen. Änderungen an Zugängen und Schutz schreibt guard.log mit einer "
+               "SHA-256-Kette; der Wachposten meldet Auffälliges an die Admins. Geheimnisse liegen versiegelt im vault "
+               "(vault.seal).",
+               "Logs carry only fixed words and numbers. Changes to access and protection are written by guard.log with a "
+               "SHA-256 chain; the Wachposten tells the admins about anything unusual. Secrets lie sealed in the vault "
+               "(vault.seal).")),
+        ],
+        "beispiele": [
+            (("Mail verlangt eine Handlung", "A mail demands an action"), ["s1", "s2", "s3", "s4", "s5", "s6", "s7", "s9", "s10"],
+             ("Die Mail wird gelesen, aber nichts geschaltet: die Werkzeuge dafür sind gesperrt.",
+              "The mail is read, but nothing is switched: the tools for it are locked.")),
+            (("Fremde Stimme am Lautsprecher", "A stranger's voice at the speaker"), ["s1", "s2", "s3", "s4", "s4!", "s7", "s9"],
+             ("Antwort wie für einen Gast, ohne Mails oder Termine.", "An answer as for a guest, without mails or appointments.")),
+            (("Licht ausschalten", "Switch off the light"), ["s1", "s2", "s3", "s4", "s5", "s7", "s8", "s8!", "s10"],
+             ("Erst nach „Ja“ wird geschaltet.", "Switched only after „yes“.")),
+            (("Notaus Stufe 3", "Kill switch stage 3"), ["s1", "s2", "s2!"],
+             ("Kein Gespräch, nur die Notaus-Seite.", "No conversation, only the kill switch page.")),
+        ],
+        "regeln": [
+            [("Wer", "Who"), ("bekommt", "gets"), ("geprüft durch", "checked by")],
+            [("Gast", "Guest"), ("Frage und Antwort, keine Werkzeuge, keine persönlichen Daten, nur Fehlercodes",
+                                 "question and answer, no tools, no personal data, error codes only"), ("Rate-Limit, Höchstzahl gleichzeitig", "rate limit, parallel cap")],
+            [("Fremde Stimme", "Stranger's voice"), ("wie ein Gast, früherer Verlauf geht nicht mit", "like a guest, earlier history stays behind"),
+             ("Stimmprüfung in derselben Aufnahme", "voice check in the same recording")],
+            [("Profil", "Profile"), ("freigegebene Funktionen auf eigene Daten", "released functions on own data"),
+             ("Anmeldung; Geheimnisse mit frischem Code", "sign-in; secrets with a fresh code")],
+            [("Verwalter", "Manager"), ("Personen betreuen, keine Funktionen schalten, keine Logs", "look after people, switch no functions, no logs"),
+             ("Rolle, auf dem Server geprüft", "role, checked on the server")],
+            [("Admin", "Admin"), ("Freigaben, Sperren, Notaus, Logs, Live", "releases, blocks, kill switch, logs, live"),
+             ("Anmeldung mit zweitem Schritt; „Schutz ändern“ fragt jedes Mal", "sign-in with the second step; „Change protection“ asks every time")],
+        ],
+        "zahlen": [
+            ("{chat.LOCKED_OUTSIDE|anzahl}", ("Werkzeuge nach Text von außen gesperrt", "tools locked after outside text"), "chat.LOCKED_OUTSIDE"),
+            ("{core.CONFIRM_WINDOW|min} min", ("zählt ein richtiger Code für „Bestätigen“", "a right code counts for „Confirm“"), "core.CONFIRM_WINDOW"),
+            ("{tarswart.COMMANDS|anzahl}", ("feste Befehle des Wärters auf tars", "fixed commands of the Wärter on tars"), "tarswart.COMMANDS"),
+            ("{notaus.STAGE.gespraech}", ("Notaus-Stufen, die letzte hält jedes Gespräch an", "kill switch stages, the last stops every conversation"), "notaus.STAGE"),
+        ],
+        "mehr": [
+            (("Die Grenzen", "The borders"), [
+                ("A, von draußen herein: nur über den Reverse-Proxy mit TLS; jeder Endpunkt prüft Anmeldung, Profil, CSRF, "
+                 "Größe und Rate-Limit.",
+                 "A, in from outside: only through the reverse proxy with TLS; every endpoint checks sign-in, profile, CSRF, "
+                 "size and rate limit."),
+                ("B, Geräte im Heimnetz: ein Schlüssel pro Gerät; am geteilten Lautsprecher zählt zusätzlich die Stimme.",
+                 "B, devices at home: one key per device; at a shared speaker the voice counts as well."),
+                ("C, der Spark liest Fremdes: nur über den Wächter, kein Heimnetz ohne Erlaubnis, geprüfte Adresse "
+                 "festgehalten; was zurückkommt, ist Daten.",
+                 "C, the Spark reads outside things: only through the guard, no home network without permission, the checked "
+                 "address pinned; what comes back is data."),
+                ("D, Panel zu den Modellen: TLS 1.3 mit beim Koppeln angeheftetem Zertifikat; die Modelle hören nur auf "
+                 "127.0.0.1.",
+                 "D, panel to the models: TLS 1.3 with the certificate pinned at the pairing; the models listen on 127.0.0.1 "
+                 "only."),
+                ("E, Handgriffe auf tars: nur feste Befehle des Wärters, unterschrieben, mit Zeit und Einmal-Nummer.",
+                 "E, handles on tars: only fixed commands of the Wärter, signed, with time and one-time number."),
+            ]),
+            (("Maßstäbe", "Standards"), [
+                ("OWASP ASVS 5.0 Stufe 2 (Anmeldung und Admin Stufe 3), OWASP Top 10 für LLM-Anwendungen 2025, BSI TR-02102; "
+                 "die Sicherheits-Checkliste mit ihrem Teil „Stand der Technik“ nennt, was noch fehlt.",
+                 "OWASP ASVS 5.0 level 2 (sign-in and admin level 3), OWASP Top 10 for LLM applications 2025, BSI TR-02102; "
+                 "the security checklist with its part „State of the art“ names what is still missing."),
+            ]),
+        ],
+        "code": [
+            ("notaus.blocks", ("ob eine Notaus-Stufe diese Art Arbeit anhält", "whether a kill switch stage stops this kind of work")),
+            ("guard.limit", ("Rate-Limit pro Adresse und Profil", "rate limit per address and profile")),
+            ("guard.Slot", ("Höchstzahl gleichzeitiger Anfragen", "cap on parallel requests")),
+            ("core.confirm_code", ("frischer Code oder Passkey für heikle Wege", "fresh code or passkey for sensitive ways")),
+            ("tarswart.check", ("prüft jeden Befehl an den Wärter", "checks every command to the Wärter")),
+            ("chat_turn.shared_stranger", ("fremde Stimme am geteilten Lautsprecher", "stranger's voice at a shared speaker")),
+            ("features.allowed", ("Freigabe des Admins, gilt für jedes Profil", "the admin's release, for every profile")),
+            ("features.blocked", ("Sperre einzelner Profile", "block of single profiles")),
+            ("chat.wrap_outside", ("Text von außen als Datenblock", "outside text as a block of data")),
+            ("netguard.allowed", ("ob eine Verbindung nach außen sein darf", "whether a connection out may happen")),
+            ("answercheck.unsupported", ("Zahl ohne Quelle fällt heraus", "a figure without a source is dropped")),
+            ("textnorm.hide_secrets", ("Geheimnisse werden nie gesprochen", "secrets are never spoken")),
+            ("guard.log", ("Änderungsprotokoll mit Prüfkette", "change log with its chain")),
+            ("vault.seal", ("Geheimnisse versiegelt ablegen", "store secrets sealed")),
+        ],
+        "tests": ["test_hardening", "test_gaeste", "test_kontext_trennung", "test_scanner", "test_stufen", "test_notaus",
+                  "test_waerter", "test_protokoll", "test_wachposten", "test_markdown"],
+        "heute": [],
     },
 
     # ------------------------------------------------------------------ vorbereiten (chat_turn.prepare, klaeren.py)

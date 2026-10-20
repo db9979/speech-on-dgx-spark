@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.850** Status → Architecture has a new page "Security": how all layers of protection work together (the model proposes, the panel decides), with one question's way through every check, roles, borders and code; new rule: it is updated with every change of a protection rule
 - **V01.0.849** Cheat sheet to print: Me → What I can do opens two A4 sheets in German or English with everything you can say (only what is released, the key word marked), always built fresh from the routing rules
 - **V01.0.848** For you stage 2: buttons Remind me, Add to calendar, Draft a reply and Draft a cancellation (sending only through the preview), by voice "What do I have to do this week?" and "number two is done", a part in the daily briefing, by itself on deadlines and suspicion; on the iPhone under Today → For you
 - **V01.0.847** Fix: „Morgenbriefing“ as one word gets the real briefing, also at the phone
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.843** E-mail as a full mail client: read every folder of every mailbox, make, rename, remove empty ones; ★ flag, multiple selection and dragging into folders with undo; rules straight from a mail ("Rule from this …", dry run, sort existing mail), all under E-mail → Rules; search with von:, betreff:, hat:anhang; fetch attachments; forward via the preview; on the iPhone too; part of "Mails ordnen" and "Mails senden", off, a mail is never deleted
 - **V01.0.842** Fix: GitHub run "Tests" green again; the test for the way of a note on top sometimes clicked the note about open hands-on tests, drawn again every 3 s, instead of its own
 - **V01.0.841** Fewer scroll bars: Me scrolls as a whole with one bar (before three, one of them only scrolled the hidden page underneath), E-mail on a computer like a mail program (the page stands, list and reading pane scroll side by side, the mail text never on its own), lists without a bar of their own inside the page; a guard test checks every page with real bars
-- **V01.0.840** Spark calendar stage 4: the Spark as a calendar server (CalDAV) for the iPhone calendar, Thunderbird or DAVx5; an app password per profile under Calendar → Settings or on the iPhone, at home and through the proxy; admin switch, off
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
