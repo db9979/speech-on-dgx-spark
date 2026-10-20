@@ -2420,6 +2420,13 @@
 "titel": "Alles Offene: Vorschläge mit Ja-Knopf",
 "text": "Mit „Alles Offene im Assistenten“ an: „Trag Donnerstag 14 Uhr Steuerberater in Lahr ein“ sagen. Unter der Antwort steht die Karte „Wartet auf dein Ja“ mit Was, Wann, Wo und „Eintragen“, „Ändern …“, „Abbrechen“. „Eintragen“ drücken: die Karte sagt „Eingetragen in …“ und der Termin steht im Kalender. Noch einen vorschlagen lassen und am iPhone unter Meine Sachen → Offen bestätigen. Einen dritten mit „Ändern …“ öffnen: das Formular der Seite Kalender ist ausgefüllt. Einen vierten mit „Nein“ im Gespräch beantworten: die Karte zeigt „Im Gespräch beantwortet“.",
 "thread": "Zentraler Assistenten-Chat mit Karten"
+},
+{
+"id": "P370",
+"v": 877,
+"titel": "Für dich: Stand bei Ausfall",
+"text": "Öffne E-Mail → Für dich, starte danach das Panel neu: der Tab zeigt sofort dieselben Einträge. Trenne den Pi kurz vom Internet und frag „Was muss ich diese Woche erledigen?“: die Einträge kommen mit „Einträge von Stand hh:mm“, nie nur „nicht erreichbar“.",
+"thread": "Persönlicher Assistent aus dem Postfach"
 }
 ]
 }

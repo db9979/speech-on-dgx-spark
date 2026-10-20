@@ -88,6 +88,9 @@ DATEIEN = [
            "Mail supply: the newest headers (300 per mailbox, 30 days) and up to 40 mail texts without attachments", art="Mails",
            schutz=("versiegelt", "sealed")),  # mailvorrat.py
     profil("mail-tidy.json", "Posteingang aufräumen", "Inbox tidy", art="Einstellungen"),
+    profil("fuerdich-vorrat.bin", "Für dich: die letzte Lesung je Postfach (gefundene Einträge mit Absender, Betreff und Zeit, kein Mailtext)",
+           "For you: the last reading per mailbox (found entries with sender, subject and time, no mail text)", art="Mails",
+           schutz=("versiegelt", "sealed")),  # fuerdich.py
     profil("fuerdich.json", "Für dich: was du als erledigt oder uninteressant markiert hast (nur Prüfsummen)",
            "For you: what you marked as done or not interesting (only checksums)", art="Einstellungen"),
     profil("vorgaenge.json", "Offen: was dich braucht, was du auf später gelegt hast und was erledigt ist (Titel und Zustand der Karten); ein Vorschlag, der auf dein Ja wartet, mit dem Text der Mail nur bis zur Antwort",

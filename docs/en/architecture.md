@@ -523,6 +523,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `users/ID/speicher.vor-nas.json` | Copy of my data before the move to storage places | Login | – | yes | – |
 | `users/ID/mail-vorrat.bin` | Mail supply: the newest headers (300 per mailbox, 30 days) and up to 40 mail texts without attachments | Mails | sealed | yes | – |
 | `users/ID/mail-tidy.json` | Inbox tidy | Settings | – | yes | – |
+| `users/ID/fuerdich-vorrat.bin` | For you: the last reading per mailbox (found entries with sender, subject and time, no mail text) | Mails | sealed | yes | – |
 | `users/ID/fuerdich.json` | For you: what you marked as done or not interesting (only checksums) | Settings | – | yes | – |
 | `users/ID/vorgaenge.json` | Open: what needs you, what you put off for later and what is done (titles and state of the cards); a proposal waiting for your yes, with the mail's text only until it is answered | Queue | – | yes | – |
 | `users/ID/interessen.json` | What I know about you: confirmed and refused interests and the last web tip (never a mail) | Settings | – | yes | – |

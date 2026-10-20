@@ -694,7 +694,7 @@ class Deeper(unittest.TestCase):
         done = []
 
         async def read(u):
-            fuerdich._cache[u] = (time.time(), ([card], []))
+            fuerdich._keep(u, {"a1": {"at": time.time(), "items": [card]}}, [], time.time())
         with unittest.mock.patch.object(begleiter.features, "allowed", return_value=True), \
                 unittest.mock.patch.object(mail, "get", return_value={"accounts": [{"id": "a1"}]}), \
                 unittest.mock.patch.object(mail, "find", return_value=(heads, [], False)), \

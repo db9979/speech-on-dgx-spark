@@ -121,7 +121,7 @@ class IchWeiss(unittest.TestCase):
         order = next(x for x in items if x["kind"] == "bestellung")
         self.assertIn("more", order["acts"])
         ichweiss.set_state(uid, order["who"], "yes", "karte")
-        fuerdich._cache.pop(uid, None)
+        fuerdich._v.forget(uid)
         order = next(x for x in p.get("/api/profile/fuerdich").json()["items"] if x["kind"] == "bestellung")
         self.assertNotIn("more", order["acts"])
         self.assertEqual(order["fits"], order["who"])

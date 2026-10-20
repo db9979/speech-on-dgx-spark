@@ -160,7 +160,7 @@ class FuerDich(unittest.TestCase):
     def setUp(self):
         mail.IMAP = FMB
         mail._cache.clear()
-        fuerdich._cache.clear()
+        fuerdich._v.clear()
         today = datetime.date.today()
         due = (today + datetime.timedelta(days=6)).strftime("%d.%m.%Y")
         FMB.reset(
@@ -239,18 +239,18 @@ class FuerDich(unittest.TestCase):
         def slow(u, today=None, now=None, force=False):
             calls.append(force)
             time.sleep(0.3)
-            fuerdich._cache[u] = (time.time(), ([], []))   # as scan keeps its reading
+            fuerdich._keep(u, {}, [], time.time())   # as scan keeps its reading
             return [], []
         fuerdich.scan = slow
         fuerdich.VIEW_BUDGET = 0.05
-        fuerdich._cache.pop(uid, None)
+        fuerdich._v.forget(uid)
         try:
             async def go():
                 first = await fuerdich.view(prof)
                 await asyncio.sleep(0.6)
                 second = await fuerdich.view(prof)
                 old = time.time() - fuerdich.CACHE_SECONDS - 5
-                fuerdich._cache[uid] = (old, ([], []))
+                fuerdich._keep(uid, {}, [], old)
                 t0 = time.time()
                 third = await fuerdich.view(prof)
                 quick = time.time() - t0
@@ -263,10 +263,10 @@ class FuerDich(unittest.TestCase):
             self.assertLess(quick, 0.2)
             self.assertEqual(len(calls), 2)                     # and read anew behind it, the cache kept meanwhile
             self.assertTrue(calls[1])
-            self.assertGreater(fuerdich._cache[uid][0], old)
+            self.assertGreater(fuerdich._last(uid)[0], old)
         finally:
             fuerdich.scan, fuerdich.VIEW_BUDGET = saved
-            fuerdich._cache.pop(uid, None)
+            fuerdich._v.forget(uid)
 
     def test_marks_are_kept_as_hashes_and_can_be_forgotten(self):
         p, uid = self.setup_profile("Fuedo")
@@ -454,15 +454,66 @@ class Stage2(FuerDich):
             return asyncio.ensure_future(asyncio.sleep(5))
         fuerdich._reading, fuerdich.TOOL_WAIT = slow, 0.05
         try:
-            fuerdich._cache.pop(uid, None)
+            fuerdich._v.forget(uid)
             said = asyncio.run(fuerdich.tool("fuer_dich", {}, ctx))
             self.assertIn("gerade noch", said)
             self.assertNotIn("nicht lesbar", said)
-            fuerdich._cache[uid] = (time.time() - 3600, ([], []))           # an older reading is used instead
+            fuerdich._keep(uid, {}, [], time.time() - 3600)           # an older reading is used instead
             self.assertIn("nichts, was dich gerade braucht", asyncio.run(fuerdich.tool("fuer_dich", {}, ctx)))
         finally:
             fuerdich._reading, fuerdich.TOOL_WAIT = saved_read, saved_wait
-            fuerdich._cache.pop(uid, None)
+            fuerdich._v.forget(uid)
+
+    def test_outage_and_restart_answer_from_the_kept_reading(self):
+        """The last reading per mailbox is kept sealed in the profile (vorrat.Vorrat, fuerdich-vorrat.bin): after a
+        restart the tab shows it at once, a mailbox that does not answer gives its items with „Stand hh:mm“ (Dominik
+        2026-10-20, Mail-Vorrat), never a mail text in the file, never plain text."""
+        p, uid = self.setup_profile("Fuevorrat")
+        first = p.get("/api/profile/fuerdich").json()
+        self.assertEqual({x["kind"] for x in first["items"]}, {"antwort", "rechnung", "verdacht"})
+        path = fuerdich._v.file(uid)
+        self.assertTrue(path.endswith("fuerdich-vorrat.bin"))
+        with open(path, "rb") as f:
+            raw = f.read()
+        for word in (b"Stadtwerke", b"Grillabend", b"Anna", b"84,20", b"Ignoriere"):
+            self.assertNotIn(word, raw)                                   # sealed, never plain text
+        self.assertEqual(oct(os.stat(path).st_mode & 0o777), "0o600")
+        # a restart: memory empty, the tab answers at once from the file without opening the mailbox
+        fuerdich._v.clear()
+        FMB.calls.clear()
+        again = p.get("/api/profile/fuerdich").json()
+        self.assertNotIn("loading", again)
+        self.assertEqual([x["id"] for x in again["items"]], [x["id"] for x in first["items"]])
+        self.assertEqual(FMB.calls, [])
+        # the mailbox does not answer: its items stay, with the time of the reading
+        before = fuerdich.for_live()["answers"]
+
+        def down(*a, **k):
+            raise OSError("down")
+        saved = fuerdich._account
+        fuerdich._account = down
+        try:
+            items, errors = fuerdich.scan(uid, force=True)
+            self.assertEqual({x["kind"] for x in items}, {"antwort", "rechnung", "verdacht"})
+            self.assertEqual(len(errors), 1)
+            self.assertIn("antwortet gerade nicht, Einträge von Stand ", errors[0][1])
+            self.assertEqual(fuerdich.for_live()["answers"], before + 1)
+            said = fuerdich.say_list(uid, items, errors, datetime.date.today())
+            self.assertIn("Einträge von Stand ", said)
+            self.assertIn("Rechnung Stadtwerke", said)
+            # nothing kept: the mailbox is named as not readable, never a made-up list
+            fuerdich._v.forget(uid)
+            self.assertFalse(os.path.exists(path))
+            items, errors = fuerdich.scan(uid, force=True)
+            self.assertEqual(items, [])
+            self.assertIn("gerade nicht lesbar", fuerdich.say_list(uid, items, errors, datetime.date.today()))
+        finally:
+            fuerdich._account = saved
+        # Markierungen vergessen (features.OWN) deletes the kept reading too
+        p.get("/api/profile/fuerdich?fresh=1")
+        self.assertTrue(os.path.exists(path))
+        self.assertEqual(p.delete("/api/profile/fuerdich").status_code, 200)
+        self.assertFalse(os.path.exists(path))
 
     def test_von_selbst_says_suspicion_once(self):
         import proactive

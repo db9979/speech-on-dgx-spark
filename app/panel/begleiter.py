@@ -2035,7 +2035,7 @@ async def post(uid):
         out["loading"] = True
     if features.allowed("fuerdich", uid):
         await fuerdich.card(uid)       # reads for at most fuerdich.CARD_BUDGET, then the cache
-        hit = fuerdich._cache.get(uid)
+        hit = fuerdich._last(uid)
         if hit:
             items = fuerdich.public(uid, hit[1][0], [])["items"]
             out["fuerdich"] = len(items)

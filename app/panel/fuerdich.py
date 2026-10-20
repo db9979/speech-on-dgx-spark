@@ -18,8 +18,13 @@ and Rechnungen when tidying made them, and the headers of the Sent folder (to kn
 answered). Nothing is marked, moved or written. Off until the admin switches chat.mail_insight on (needs chat.mail);
 then for every profile with a mailbox the admin did not block; guests never.
 
-Kept: the found items only in memory (CACHE_SECONDS); in users/<id>/fuerdich.json only what the person pressed
-(erledigt / nicht interessant) as hashes of the Message-ID with the time, so a pressed card does not come back.
+Kept: the last reading of each mailbox (the found items with their time, never a mail text) sealed in
+users/<id>/fuerdich-vorrat.bin (vorrat.Vorrat, the one way for such a supply), so the tab shows it at once after a
+restart and a mailbox that does not answer gives its items with „Stand hh:mm“ instead of „nicht erreichbar“ (Dominik
+2026-10-20, part of the Mail-Vorrat); a mailbox's items go with the mailbox on the next reading, the file with
+„Markierungen vergessen“, the profile, and after VORRAT_IDLE_DAYS without a reading. In users/<id>/fuerdich.json only
+what the person pressed (erledigt / nicht interessant) as hashes of the Message-ID with the time, so a pressed card
+does not come back.
 
     GET  /api/profile/fuerdich           {"items": [...], "counts": {...}, "errors": [...]} (?fresh=1 reads again)
     POST /api/profile/fuerdich/mark      {"id": ..., "as": "done" | "no" | "open"}
@@ -49,6 +54,7 @@ import notaus
 import profiles
 import vorrang
 from common import DayCounter
+from vorrat import Vorrat
 from core import assistant, browser_profile, json_body, own_profile
 
 router = APIRouter()
@@ -60,7 +66,11 @@ SCAN = 300                      # newest messages per folder whose headers are r
 BODIES = 60                     # at most this many mail texts are read per mailbox and run
 RAW = 60000                     # bytes of one mail
 CACHE_SECONDS = 600
-STALE_SECONDS = 24 * 3600       # the tab shows an older reading at once and reads anew in the background
+STALE_SECONDS = 24 * 3600       # the tab shows an older reading at once and reads anew in the background; a mailbox
+                                # that does not answer gives its kept items up to this old (with „Stand hh:mm“)
+VORRAT = "fuerdich-vorrat.bin"  # the last reading per mailbox, sealed in the profile's folder (dateien.py)
+VORRAT_IDLE_DAYS = 14           # deleted when nobody read „Für dich“ for this long (mailvorrat.IDLE_DAYS)
+SWEEP_EVERY = 24 * 3600
 VIEW_BUDGET = 8.0               # seconds the tab waits for a first reading, then „lädt noch“ (fuerdich.js asks again)
 ANSWER_DAYS = 2                 # a question waits this long before it is a card
 ANSWER_MAX = 14                 # and is not one any more after this
@@ -114,8 +124,11 @@ BRANDS = {"sparkasse": ("sparkasse.de", "s-payment.de", "sparkassen-finanzportal
 SALT = "fuerdich-v1"
 
 _lock = threading.Lock()
-_cache = {}                     # uid -> (time, result)
-_day = DayCounter()             # per day: runs, found, failed, marked (Zustand → Live)
+# uid -> {"at": time of the last reading, "boxes": {mailbox id: {"at", "items"}}, "errors": [[name, why]]}; written on
+# every reading (at most every CACHE_SECONDS, unless the person asks for a fresh one)
+_v = Vorrat(VORRAT, VORRAT_IDLE_DAYS, write_every=0, empty=lambda: {"at": 0, "boxes": {}, "errors": []})
+_swept = [0.0]
+_day = DayCounter()             # per day: runs, found, failed, marked, vorrat (Zustand → Live)
 
 
 # ---------------------------------------------------------------- the pressed marks
@@ -151,7 +164,7 @@ def forget(uid):
         os.remove(_file(uid))
     except OSError:
         pass
-    _cache.pop(uid, None)
+    _v.forget(uid)          # the kept reading goes with the marks („Markierungen vergessen“)
 
 
 features.OWN["fuerdich"] = (count, forget)
@@ -450,15 +463,62 @@ def shops(uid):
     return _shops.get(uid, {})
 
 
+def _order(found, pressed):
+    """Newest first, each once, without pressed ones, at most MAX_OFFERS offers and MAX_ITEMS items."""
+    seen, items = set(), []
+    for x in sorted(found, key=lambda x: x["at"], reverse=True):
+        if x["id"] in seen or x["id"] in pressed:
+            continue
+        seen.add(x["id"])
+        items.append(x)
+    offers = [x for x in items if x["kind"] == "angebot"][MAX_OFFERS:]
+    return [x for x in items if x not in offers][:MAX_ITEMS]
+
+
+def _last(uid):
+    """(time, (items, errors)) of the last reading (memory, else the sealed file after a restart), or None."""
+    d = _v.load(uid)
+    if not d.get("at"):
+        return None
+    found = [x for b in d["boxes"].values() for x in b["items"]]
+    return d["at"], (_order(found, marks(uid)), [tuple(e) for e in d["errors"]])
+
+
+def _keep(uid, boxes, errors, at):
+    """Keeps a reading (the only way, scan and tests); the file is written at once, sealed."""
+    with _v.lock:
+        d = _v.load(uid)
+        d.update(at=at, boxes=boxes, errors=[list(e) for e in errors])
+        try:
+            _v.changed(uid, force=True)
+        except OSError:
+            print("fuerdich: vorrat nicht geschrieben", flush=True)
+    if at - _swept[0] > SWEEP_EVERY:
+        _swept[0] = at
+        try:
+            n = _v.sweep()
+            print(f"fuerdich: vorrat aufgeraeumt dateien={n}", flush=True)
+        except OSError:
+            print("fuerdich: vorrat aufraeumen fehler", flush=True)
+
+
+def stand_word(at, today=None):
+    """„14:20“ for a time of today, „19.10. 14:20“ for an older one (local time)."""
+    t = mail.local(datetime.datetime.fromtimestamp(at, datetime.timezone.utc))
+    return f"{t:%H:%M}" if t.date() == (today or datetime.date.today()) else f"{t:%d.%m. %H:%M}"
+
+
 def scan(uid, today=None, now=None, force=False):
-    """(items newest first without pressed ones, [(mailbox name, error)]). force: read anew whatever the cache holds
-    (the cache stays until the new reading replaces it, so the tab keeps showing the last one meanwhile)."""
-    hit = _cache.get(uid)
+    """(items newest first without pressed ones, [(mailbox name, error)]). force: read anew whatever was read last
+    (the last reading stays until the new one replaces it, so the tab keeps showing it meanwhile). A mailbox that
+    does not answer keeps its last items (up to STALE_SECONDS old) and says „Stand hh:mm“ in its error."""
+    hit = _last(uid)
     if hit and time.time() - hit[0] < CACHE_SECONDS and today is None and not force:
         return hit[1]
     today = today or datetime.date.today()
     now = now or datetime.datetime.now(datetime.timezone.utc)
-    found, errors, shop = [], [], {}
+    errors, shop, boxes, t = [], {}, {}, time.time()
+    kept = _v.load(uid)["boxes"]
 
     def one(a):
         try:
@@ -468,26 +528,22 @@ def scan(uid, today=None, now=None, force=False):
     accts = mail.get(uid)["accounts"]
     # all mailboxes at the same time (Dominik 2026-10-19 „dauert länger als sonst“), each its own IMAP session
     with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, len(accts))) as ex:
-        for got, err in ex.map(one, accts):
-            found += got
-            if err:
+        for a, (got, err) in zip(accts, ex.map(one, accts)):
+            old = kept.get(a.get("id"))
+            if not err:
+                boxes[a["id"]] = {"at": t, "items": got}
+            elif old and t - old["at"] < STALE_SECONDS and old["items"]:
+                boxes[a["id"]] = old       # its last items, said with their time (never „nicht erreichbar“ alone)
+                errors.append((err[0], f"antwortet gerade nicht, Einträge von Stand {stand_word(old['at'], today)}"))
+                _bump("vorrat")
+                print(f"fuerdich: postfach aus vorrat {profiles.log_name(profiles.by_id(uid))}", flush=True)
+            else:
                 errors.append(err)
-    pressed = marks(uid)
-    seen, items = set(), []
-    for x in sorted(found, key=lambda x: x["at"], reverse=True):
-        if x["id"] in seen or x["id"] in pressed:
-            continue
-        seen.add(x["id"])
-        items.append(x)
-    offers = [x for x in items if x["kind"] == "angebot"][MAX_OFFERS:]
-    items = [x for x in items if x not in offers][:MAX_ITEMS]
-    res = (items, errors)
-    if len(_cache) > 200:
-        _cache.clear()
+    _keep(uid, boxes, errors, t)          # a removed mailbox's items are gone with this reading
+    if len(_shops) > 200:
         _shops.clear()
-    _cache[uid] = (time.time(), res)
     _shops[uid] = shop
-    return res
+    return _last(uid)[1]
 
 
 # ---------------------------------------------------------------- fixed sentences
@@ -647,7 +703,7 @@ def cancel_draft(uid, x, today):
 
 def find(uid, k):
     """The item with this id from the last reading, or None (the page shows only what is in it)."""
-    hit = _cache.get(uid)
+    hit = _last(uid)
     return next((x for x in (hit[1][0] if hit else []) if x["id"] == k), None)
 
 
@@ -675,12 +731,7 @@ def mark(uid, k, how, tell=True):
         m.pop(k, None)
     else:
         m[k] = [how, int(time.time())]
-    _save(uid, m)
-    hit = _cache.get(uid)
-    if hit and how != "open":
-        _cache[uid] = (hit[0], ([x for x in hit[1][0] if x["id"] != k], hit[1][1]))
-    elif how == "open":
-        _cache.pop(uid, None)
+    _save(uid, m)                       # the last reading leaves it out from now on (_last), „open“ brings it back
     _bump("markiert")
     if tell:
         import vorgaenge
@@ -716,8 +767,8 @@ async def card(uid):
 
 
 def heute(uid):
-    """Numbers for the card under Ich → Heute: only from the cache (never reads mail by itself)."""
-    hit = _cache.get(uid)
+    """Numbers for the card under Ich → Heute: only from the last reading (never reads mail by itself)."""
+    hit = _last(uid)
     if not hit:
         return {"ready": False}
     items = hit[1][0]
@@ -727,7 +778,7 @@ def heute(uid):
 
 async def run(uid, fresh=False):
     """Reads the mailboxes off the event loop; one line in the journal for every outcome."""
-    hit = _cache.get(uid)
+    hit = _last(uid)
     cached = bool(hit and time.time() - hit[0] < CACHE_SECONDS and not fresh)
     t0 = time.time()
     try:
@@ -754,6 +805,11 @@ def today_counts():
     return _day.counts()
 
 
+def for_live():
+    """Live (node E-Mail): profiles with a kept reading in memory and mailboxes answered from it today; numbers only."""
+    return {"profiles": sum(1 for d in _v.mem.values() if d.get("at")), "answers": _day.counts().get("vorrat", 0)}
+
+
 def _live(n):
     try:
         import live
@@ -766,7 +822,7 @@ async def view(prof, fresh=False):
     """The tab „Für dich“: the last reading at once (up to STALE_SECONDS old; an older one than CACHE_SECONDS is read
     anew behind it), the first one waited for at most VIEW_BUDGET, then {"loading": True} while it goes on."""
     uid, now = prof["id"], time.time()
-    hit = _cache.get(uid)
+    hit = _last(uid)                    # after a restart from the sealed file: the last reading at once
     if hit and not fresh and now - hit[0] < STALE_SECONDS:
         # at once with the last reading (Dominik 2026-10-19 „die fenster sollten direkt reagieren“); an older one is
         # read anew behind it and shows on the next look
@@ -926,15 +982,18 @@ def say_list(uid, items, errors, today):
     """The fixed sentences of the list for the assistant, numbered; keeps the order for fuer_dich_tun."""
     pub = public(uid, items, errors, today)["items"][:LIST_MAX]
     _listed[uid] = (time.time(), [x["id"] for x in pub])
+    # a mailbox that did not answer, in fixed words: with its kept items „Stand hh:mm“, else „gerade nicht lesbar“
+    note = "".join(f"\nPostfach {n}: " + (f"{e}." if "Stand" in e else "gerade nicht lesbar, seine Einträge fehlen.")
+                   for n, e in errors)
     if not pub:
-        return "Für dich: nichts, was dich gerade braucht."
+        return "Für dich: nichts, was dich gerade braucht." + note
     lines = [f"{i}. {x['title']}. {x['line']} (Mail von {x['who']} vom {day_word(x['sent'], today)}"
              + (f", Betreff „{x['subject']}“" if x["subject"] else "") + (f", Ordner {x['folder']}" if x["folder"] != "INBOX" else "")
              + ")" for i, x in enumerate(pub, 1)]
     more = len(items) - len(pub)
     return ("Für dich (feste Sätze aus den Mails; lies sie so vor, wie sie stehen, und ändere nicht, wer auf wen wartet; "
             "nenne zu einem Eintrag die Mail, aus der er kommt):\n" + "\n".join(lines)
-            + (f"\nUnd {more} weitere unter E-Mail → Für dich." if more > 0 else ""))
+            + (f"\nUnd {more} weitere unter E-Mail → Für dich." if more > 0 else "") + note)
 
 
 async def tool(name, args, ctx):
@@ -945,7 +1004,7 @@ async def tool(name, args, ctx):
         except asyncio.TimeoutError:
             # still reading (the first reading of a big mailbox on the Pi takes longer): the last reading if there is
             # one, else „liest noch“, never „nicht erreichbar“ (Dominik 2026-10-20); the reading goes on behind it
-            hit = _cache.get(uid)
+            hit = _last(uid)
             if hit and time.time() - hit[0] < STALE_SECONDS:
                 items, errors = hit[1]
                 print("fuerdich: werkzeug liste aus letzter lesung", flush=True)

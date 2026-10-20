@@ -264,7 +264,7 @@ Home Assistant, Mail, Kalender, Aufgaben, Wetter, reMarkable, MCP und was der Sp
 | `app/panel/contacts.py` | Kontakte per CardDAV, nur lesen |
 | `app/panel/extras.py` | Kleine Zusatzdienste mit ihren Werkzeugen |
 | `app/panel/feeds.py` | Reddit und Feeds: eigener Reddit-Posteingang, Subreddits und RSS, nur lesen |
-| `app/panel/fuerdich.py` | Für dich: findet Rechnungen, Verträge, Bestellungen, Angebote, offene Antworten und Phishing in den eigenen Mails |
+| `app/panel/fuerdich.py` | Für dich: findet Rechnungen, Verträge, Bestellungen, Angebote, offene Antworten, Phishing; letzte Lesung versiegelt |
 | `app/panel/geteilt.py` | Teilen mit Profilen: Dokumente an einzelne Profile, Ich → Geteilt, zurückziehen sofort |
 | `app/panel/hamelden.py` | Home Assistant meldet Ereignisse an den Spark |
 | `app/panel/homeassistant.py` | Home Assistant pro Profil |
@@ -523,6 +523,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `users/ID/speicher.vor-nas.json` | Kopie meiner Daten vor dem Umzug auf Speicherorte | Login | – | ja | – |
 | `users/ID/mail-vorrat.bin` | Mail-Vorrat: die neuesten Kopfzeilen (300 je Postfach, 30 Tage) und bis zu 40 Mailtexte ohne Anhänge | Mails | versiegelt | ja | – |
 | `users/ID/mail-tidy.json` | Posteingang aufräumen | Einstellungen | – | ja | – |
+| `users/ID/fuerdich-vorrat.bin` | Für dich: die letzte Lesung je Postfach (gefundene Einträge mit Absender, Betreff und Zeit, kein Mailtext) | Mails | versiegelt | ja | – |
 | `users/ID/fuerdich.json` | Für dich: was du als erledigt oder uninteressant markiert hast (nur Prüfsummen) | Einstellungen | – | ja | – |
 | `users/ID/vorgaenge.json` | Offen: was dich braucht, was du auf später gelegt hast und was erledigt ist (Titel und Zustand der Karten); ein Vorschlag, der auf dein Ja wartet, mit dem Text der Mail nur bis zur Antwort | Warteschlange | – | ja | – |
 | `users/ID/interessen.json` | Was ich über dich weiß: bestätigte und abgelehnte Interessen und der letzte Netz-Tipp (keine Mail) | Einstellungen | – | ja | – |

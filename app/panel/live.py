@@ -1343,11 +1343,14 @@ def snapshot(view="admin", now=None):
         post_supply = mailvorrat.for_live()
         import mailansicht
         post_view = mailansicht.counts()
+        import fuerdich
+        post_fd = fuerdich.for_live()
     except Exception:
         kal, kal_page, post_page, post_sent, post_files, post_del = {"on": False}, 0, 0, 0, 0, 0
         post_idle, post_view = {}, {}
         post_rules = {}
         post_supply = {}
+        post_fd = {}
     try:
         import vorwaermen
         warm = vorwaermen.for_live()
@@ -1507,6 +1510,8 @@ def snapshot(view="admin", now=None):
             x["sub"] += f" · sofort: {post_idle['open']} Verbindungen, heute {post_idle['new']} neue Mails"
         if x["id"] == "mail" and post_supply.get("profiles"):   # Mail-Vorrat: profiles with a supply, answers from it (numbers)
             x["sub"] += f" · Vorrat bei {post_supply['profiles']} Profilen" + (f", heute {post_supply['answers']}× daraus geantwortet" if post_supply.get("answers") else "")
+        if x["id"] == "mail" and post_fd.get("answers"):   # Für dich: mailboxes answered from its kept reading today (a number)
+            x["sub"] += f" · Für dich heute {post_fd['answers']}× aus der letzten Lesung"
         if x["id"] == "mail" and post_sent:      # Mails senden: mails sent from the page today (a number, never to whom)
             x["sub"] += f" · heute {post_sent} gesendet"
         if x["id"] == "mail" and (avs.get("suggested") or avs.get("rewritten")):   # Antwortvorschläge: numbers only
