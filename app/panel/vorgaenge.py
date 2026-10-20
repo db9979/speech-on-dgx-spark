@@ -483,6 +483,24 @@ def from_fuerdich(uid, items, today):
     return n
 
 
+def find(uid, vid):
+    """One Vorgang by its number, or None (zustellung.py: is it still open?)."""
+    if not (isinstance(vid, str) and ID.fullmatch(vid)) or not os.path.exists(_file(uid)):
+        return None
+    return next((y for y in _load(uid)["items"] if y["id"] == vid), None)
+
+
+def delivered(uid, vid, weg, stufe):
+    """zustellung.py: a note about this Vorgang went out (stufe "sofort" or "nachgefasst"); the last few are kept."""
+    def fn(d):
+        x = next((y for y in d["items"] if y["id"] == vid), None)
+        if x is not None:
+            x["zugestellt"] = (x.get("zugestellt") or [])[-4:] + [{"weg": _clean(weg, 10), "t": int(time.time()),
+                                                                   "stufe": _clean(stufe, 12)}]
+        return x is not None
+    return _mut(uid, fn) if find(uid, vid) else False
+
+
 def id_of(uid, key):
     x = next((y for y in _load(uid)["items"] if y["key"] == key), None) if os.path.exists(_file(uid)) else None
     return x["id"] if x else None

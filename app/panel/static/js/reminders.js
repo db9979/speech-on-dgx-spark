@@ -56,13 +56,20 @@ setInterval(()=>rem.tick(),2000);
 // Meldung ans genutzte Gerät (zustellung.py): this page says how long ago it was last touched (only that, never what):
 // every 60 s while in front, at once on the first touch after a pause, "weg" when it goes to the background. With the
 // switch off the Spark says so, and the page asks again only every 5 minutes.
-const nahe={input:Date.now(),said:0,on:true,
-  async say(weg){if(!PROFILE)return;this.said=Date.now();
+// stage 2: a tapped note about a Vorgang says "gesehen"; "zu" are the Vorgänge done elsewhere, their notifications go
+const nahe={input:Date.now(),said:0,on:true,seen:[],
+  async say(weg){if(!PROFILE)return;this.said=Date.now();const seen=this.seen.splice(0,5);
     try{const r=await api('/api/zustellung/da',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({idle:Math.round((Date.now()-this.input)/1000),weg:!!weg,id:await rem.pushId()})});
-      if(r.ok)this.on=!!(await r.json()).on}catch{}},
+      body:JSON.stringify({idle:Math.round((Date.now()-this.input)/1000),weg:!!weg,id:await rem.pushId(),...(seen.length?{gesehen:seen}:{})})});
+      if(r.ok){const d=await r.json();this.on=!!d.on;if(d.zu&&d.zu.length)this.close(d.zu)}}catch{}},
+  async close(zu){try{const reg=await navigator.serviceWorker.getRegistration();if(!reg)return;
+    for(const n of await reg.getNotifications())if(n.data&&zu.includes(n.data.vg))n.close()}catch{}},
+  opened(vg){if(/^v[0-9a-f]{10}$/.test(vg||'')&&!this.seen.includes(vg)){this.seen.push(vg);this.say()}},
   touch(){const n=Date.now(),pause=n-this.input;this.input=n;if(this.on&&pause>30e3&&n-this.said>5e3&&!document.hidden)this.say()},
   tick(){if(!document.hidden&&Date.now()-this.said>(this.on?60e3:300e3))this.say()}};
 ['pointerdown','keydown','wheel','touchstart'].forEach(e=>addEventListener(e,()=>nahe.touch(),{passive:true,capture:true}));
 document.addEventListener('visibilitychange',()=>{if(document.hidden){if(nahe.on&&PROFILE)nahe.say(true)}else nahe.touch()});
 setInterval(()=>nahe.tick(),5000);
+if(navigator.serviceWorker)navigator.serviceWorker.addEventListener('message',e=>nahe.opened(e.data&&e.data.vg));
+{const q=new URLSearchParams(location.search),vg=q.get('vg');if(vg){q.delete('vg');
+  history.replaceState(null,'',location.pathname+(q.toString()?'?'+q:'')+location.hash);setTimeout(()=>nahe.opened(vg),1500)}}

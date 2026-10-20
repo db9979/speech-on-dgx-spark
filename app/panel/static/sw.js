@@ -21,16 +21,20 @@ self.addEventListener('push', e => {
   e.waitUntil(self.clients.matchAll({type: 'window', includeUncontrolled: true}).then(list => {
     if (d.tag !== 'hello' && list.some(c => c.visibilityState === 'visible')) return;
     return self.registration.showNotification(d.title || 'Spark', {body: d.body || '', tag: d.tag || undefined,
-      icon: '/static/icon-192.png', badge: '/static/icon-192.png', data: {weg: typeof d.weg === 'string' ? d.weg.slice(0, 200) : ''}});
+      icon: '/static/icon-192.png', badge: '/static/icon-192.png', data: {weg: typeof d.weg === 'string' ? d.weg.slice(0, 200) : '',
+        vg: /^v[0-9a-f]{10}$/.test(d.vg || '') ? d.vg : ''}});
   }));
 });
-// a note naming a place in the panel ("Ich → Gedächtnis", push.py) opens it there (way.js); only navigation
+// a note naming a place in the panel ("Ich → Gedächtnis", push.py) opens it there (way.js); only navigation.
+// A note about a Vorgang (vg) tells the page it was opened, the page says "gesehen" (reminders.js, zustellung.py)
 self.addEventListener('notificationclick', e => {
   e.notification.close();
-  const weg = (e.notification.data && e.notification.data.weg) || '';
+  const weg = (e.notification.data && e.notification.data.weg) || '', vg = (e.notification.data && e.notification.data.vg) || '';
   e.waitUntil(self.clients.matchAll({type: 'window', includeUncontrolled: true}).then(list => {
-    if (!list.length) return self.clients.openWindow(weg ? '/#weg=' + encodeURIComponent(weg) : '/');
+    const to = weg ? '/#weg=' + encodeURIComponent(weg) : '/';
+    if (!list.length) return self.clients.openWindow(vg ? '/?vg=' + vg + to.slice(1) : to);
     if (weg) list[0].postMessage({weg});
+    if (vg) list[0].postMessage({vg});
     return list[0].focus();
   }));
 });

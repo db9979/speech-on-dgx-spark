@@ -1013,7 +1013,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "hone/hello; die App zeigt es nur an und hält sich daran. Anrufe zwischen Profilen klingeln über einen VoIP-Push von Apple, der nur die zufällige Nummer des Anrufs trägt; wer anruft, fragt die App beim Spark nach. Für private Chats macht die App ihren eigenen Schlüssel im Secure Enclave; der Spark bekommt nur die öffentliche Hälfte. Das Blatt der Android-App über anderen Apps fragt als Gerät „android“, nur solange „Android: Spark als Assistent“ freigegeben ist (android.assist_gate). Ob die App den letzten Stand der Seiten behalten darf, sagt hello mit „keep“ (appmerken.keep); bei Nein löscht sie ihn. Mit „Mitteilung ans genutzte Gerät“ sagen App und Seiten jede Minute nur, ob sie gerade benutzt werden (POST /api/zustellung/da, der Begleiter mit seiner Leerlaufzeit); zustellung.pick schickt eine Mitteilung dann an das Gerät mit der letzten Eingabe der letzten 120 Sekunden, sonst gleich an die Handy-App. 10. Konto, Geräte oder Sicherheit?: Endpunkte, die Verbindungen, Geräte oder Sicherheit des Profils ändern, nehmen nur die eigene Browser-Anmeldung (core.browser_profile). Einen Geräteschlüssel lehnen sie ab, außer in einem Bereich, den das Profil der App freigegeben hat; Geheimnisse "
+"text": "hone/hello; die App zeigt es nur an und hält sich daran. Anrufe zwischen Profilen klingeln über einen VoIP-Push von Apple, der nur die zufällige Nummer des Anrufs trägt; wer anruft, fragt die App beim Spark nach. Für private Chats macht die App ihren eigenen Schlüssel im Secure Enclave; der Spark bekommt nur die öffentliche Hälfte. Das Blatt der Android-App über anderen Apps fragt als Gerät „android“, nur solange „Android: Spark als Assistent“ freigegeben ist (android.assist_gate). Ob die App den letzten Stand der Seiten behalten darf, sagt hello mit „keep“ (appmerken.keep); bei Nein löscht sie ihn. Mit „Mitteilung ans genutzte Gerät“ sagen App und Seiten jede Minute nur, ob sie gerade benutzt werden (POST /api/zustellung/da, der Begleiter mit seiner Leerlaufzeit); zustellung.pick schickt eine Mitteilung dann an das Gerät mit der letzten Eingabe der letzten 120 Sekunden, sonst gleich an die Handy-App. Hat niemand sie gesehen, schickt zustellung.follow sie nach 5 Minuten einmal aufs Handy; ein angetippter Hinweis meldet „gesehen“, und mit der Antwort „zu“ räumen Seiten und iPhone Erledigtes weg. 10. Konto, Geräte oder Sicherheit?: Endpunkte, die Verbindungen, Geräte oder Sicherheit "
 },
 {
 "lang": "de",
@@ -1021,7 +1021,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "brauchen dort zusätzlich einen frischen Code. 11. Entfernen wirkt sofort: Wird das iPhone im Panel entfernt, verschwindet der Hash aus der Geräteliste. Die nächste Anfrage der App findet kein Profil mehr."
+"text": "des Profils ändern, nehmen nur die eigene Browser-Anmeldung (core.browser_profile). Einen Geräteschlüssel lehnen sie ab, außer in einem Bereich, den das Profil der App freigegeben hat; Geheimnisse brauchen dort zusätzlich einen frischen Code. 11. Entfernen wirkt sofort: Wird das iPhone im Panel entfernt, verschwindet der Hash aus der Geräteliste. Die nächste Anfrage der App findet kein Profil mehr."
 },
 {
 "lang": "de",
@@ -1037,7 +1037,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 10 Minuten gilt ein Kopplungs-Code (Schritt 3) - 5 iPhones pro Profil (Schritt 2) - 70 feste Pfade für den App-Schlüssel (Schritt 7) - 30 Minuten gilt ein Android-Download-Link (Schritt 3) - 5 Downloads pro Android-Link (Schritt 3) - 10 Minuten gilt eine Kopplungszeile fürs Terminal (Schritt 3) - 5 Terminals pro Profil (Schritt 2) - 120 Sekunden nach der letzten Eingabe gilt ein Gerät als benutzt (Schritt 9)"
+"text": "- 10 Minuten gilt ein Kopplungs-Code (Schritt 3) - 5 iPhones pro Profil (Schritt 2) - 70 feste Pfade für den App-Schlüssel (Schritt 7) - 30 Minuten gilt ein Android-Download-Link (Schritt 3) - 5 Downloads pro Android-Link (Schritt 3) - 10 Minuten gilt eine Kopplungszeile fürs Terminal (Schritt 3) - 5 Terminals pro Profil (Schritt 2) - 120 Sekunden nach der letzten Eingabe gilt ein Gerät als benutzt (Schritt 9) - 5 Minuten bis eine ungesehene Mitteilung aufs Handy nachkommt (Schritt 9)"
 },
 {
 "lang": "de",
@@ -1069,7 +1069,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "p/panel/zustellung.py pick: Mitteilung ans benutzte Gerät, sonst an die Handy-App (Schritt 9) - app/panel/zustellung.py api_da: nur „gerade benutzt“ oder „weg“, nur Seiten und Apps (Schritt 9) - app/panel/terminal.py profile_pair: Kopplungszeile fürs Terminal nur aus dem eigenen Browser (Schritt 1, Schritt 2) - app/panel/terminal.py setup_base: zu Hause gepinnt, extern nur https (Schritt 3) - app/panel/terminal.py program_pair: der erste Kontakt des Terminals (Schritt 4, Schritt 5) - app/panel/terminal.py reaches: die feste Regelliste des Terminals (Schritt 7)"
+"text": "p/panel/zustellung.py pick: Mitteilung ans benutzte Gerät, sonst an die Handy-App (Schritt 9) - app/panel/zustellung.py api_da: nur „gerade benutzt“ oder „weg“, nur Seiten und Apps (Schritt 9) - app/panel/zustellung.py follow: einmal aufs Handy nachfassen, nie ein drittes Mal (Schritt 9) - app/panel/terminal.py profile_pair: Kopplungszeile fürs Terminal nur aus dem eigenen Browser (Schritt 1, Schritt 2) - app/panel/terminal.py setup_base: zu Hause gepinnt, extern nur https (Schritt 3) - app/panel/terminal.py program_pair: der erste Kontakt des Terminals (Schritt 4, Schritt 5) - app/panel/terminal.py reaches: die feste Regelliste des Terminals (Schritt 7)"
 },
 {
 "lang": "de",
@@ -4885,7 +4885,15 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "sspeicher, nichts wird gespeichert. Logs: push: route aktiv|handy <weg>; Live: Verbindung „Gerade benutzte Geräte“ mit der Anzahl und den heute so verteilten Mitteilungen. Selbsttest test_zustellung. Nachfassen, „gelesen überall“, Dringendes und eine Ruhezeit für alles folgen in den Stufen 2 bis 4."
+"text": "sspeicher, nichts wird gespeichert. Logs: push: route aktiv|handy <weg>; Live: Verbindung „Gerade benutzte Geräte“ mit der Anzahl und den heute so verteilten Mitteilungen. Selbsttest test_zustellung. Dringendes, eine Ruhezeit für alles und Ich → Mitteilungen folgen in den Stufen 3 und 4."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Nachfassen und „gelesen überall“ (V01.0.873, Stufe 2, gleicher Schalter)",
+"text": "Nachfassen und „gelesen überall“ (V01.0.873, Stufe 2, gleicher Schalter): push.send merkt sich jede Mitteilung (Titel und Text nur im Arbeitsspeicher, höchstens 6 Stunden). Ging sie an ein anderes Gerät als die Handy-App und hat der Spark den Weg selbst gewählt, kommt sie nach 5 Minuten einmal aufs Handy (zustellung.follow, jede Minute), eine dringende Art (vorgaenge.ARTEN „dringend“, die eine Liste; ohne Vorgang zählt eine Erinnerung als Art „erinnerung“) nach 2 Minuten; nie ein drittes Mal. Nicht, wenn das Gerät danach berührt wurde (sein Signal aus Stufe 1) oder ihr Vorgang nicht mehr offen ist. Mitteilungen zu einem Vorgang tragen dessen Nummer (vg, an Apple nur die Nummer): ein angetippter Hinweis meldet mit dem Signal gesehen (höchstens 5 Nummern, vorgaenge.seen), die Antwort zu nennt die Vorgänge, die nicht mehr offen sind; die Seiten schließen deren Browser-Mitteilungen, die iPhone-App nimmt sie aus der Mitteilungszentrale, Begleiter und Android-App holen sie nicht mehr ab. Logs: push: nachgefasst <weg> → <handy>, push: nachfassen nicht noetig, gesehen, push: nachfassen ohne handy, push: gesehen <n>; Live: nachgefasst und wartend als Zahlen."
 },
 {
 "lang": "de",
@@ -10037,7 +10045,15 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "'s random number; the app asks the Spark who calls. For private chats the app makes its own key in the Secure Enclave; the Spark only gets the public half. The Android app's sheet over other apps asks as device „android“ only while „Android: Spark as assistant“ is released (android.assist_gate). Whether the app may keep the pages' last state, hello says with „keep“ (appmerken.keep); on no it deletes it. With „Notes to the device in use“ the app and the pages only say every minute whether they are in use right now (POST /api/zustellung/da, the companion with its idle time); zustellung.pick then sends a note to the device with the last input within the last 120 seconds, else to the phone app at once. 10. Account, devices or security?: Endpoints that change the profile's connections, devices or security only take the own browser login (core.browser_profile). They refuse a device key, except in an area the profile opened for the app; secrets need a fresh code there as well. 11. Removing works at once: When the iPhone is removed in the panel, its hash leaves the device list. The app's next request finds no profile any more."
+"text": "'s random number; the app asks the Spark who calls. For private chats the app makes its own key in the Secure Enclave; the Spark only gets the public half. The Android app's sheet over other apps asks as device „android“ only while „Android: Spark as assistant“ is released (android.assist_gate). Whether the app may keep the pages' last state, hello says with „keep“ (appmerken.keep); on no it deletes it. With „Notes to the device in use“ the app and the pages only say every minute whether they are in use right now (POST /api/zustellung/da, the companion with its idle time); zustellung.pick then sends a note to the device with the last input within the last 120 seconds, else to the phone app at once. If nobody saw it, zustellung.follow sends it once to the phone after 5 minutes; a tapped note says „seen“, and with the answer „zu“ pages and the iPhone take done ones away. 10. Account, devices or security?: Endpoints that change the profile's connections, devices or security only take the own browser login (core.browser_profile). They refuse a device key, except in an area the profile opened for the app; secrets need a fresh code there as well. 11. Removing works at once: When the iPho"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Way",
+"title": "Way",
+"text": "ne is removed in the panel, its hash leaves the device list. The app's next request finds no profile any more."
 },
 {
 "lang": "en",
@@ -10053,7 +10069,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 10 minutes a pairing code is valid (step 3) - 5 iPhones per profile (step 2) - 70 fixed paths for the app key (step 7) - 30 minutes an Android download link is valid (step 3) - 5 downloads per Android link (step 3) - 10 minutes a terminal pairing line is valid (step 3) - 5 terminals per profile (step 2) - 120 seconds after the last input a device counts as in use (step 9)"
+"text": "- 10 minutes a pairing code is valid (step 3) - 5 iPhones per profile (step 2) - 70 fixed paths for the app key (step 7) - 30 minutes an Android download link is valid (step 3) - 5 downloads per Android link (step 3) - 10 minutes a terminal pairing line is valid (step 3) - 5 terminals per profile (step 2) - 120 seconds after the last input a device counts as in use (step 9) - 5 minutes until an unseen note follows to the phone (step 9)"
 },
 {
 "lang": "en",
@@ -10085,7 +10101,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "e phone app (step 9) - app/panel/zustellung.py api_da: only „in use“ or „away“, only pages and the apps (step 9) - app/panel/terminal.py profile_pair: terminal pairing line only from the own browser (step 1, step 2) - app/panel/terminal.py setup_base: pinned at home, outside https only (step 3) - app/panel/terminal.py program_pair: the terminal's first contact (step 4, step 5) - app/panel/terminal.py reaches: the terminal's fixed rule list (step 7)"
+"text": "e phone app (step 9) - app/panel/zustellung.py api_da: only „in use“ or „away“, only pages and the apps (step 9) - app/panel/zustellung.py follow: follow up once to the phone, never a third time (step 9) - app/panel/terminal.py profile_pair: terminal pairing line only from the own browser (step 1, step 2) - app/panel/terminal.py setup_base: pinned at home, outside https only (step 3) - app/panel/terminal.py program_pair: the terminal's first contact (step 4, step 5) - app/panel/terminal.py reaches: the terminal's fixed rule list (step 7)"
 },
 {
 "lang": "en",
@@ -13773,7 +13789,15 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "ection \"Gerade benutzte Geräte\" with the count and the notes routed so today. Self-test test_zustellung. Following up, \"read everywhere\", urgent notes and one quiet time for everything follow in stages 2 to 4."
+"text": "ection \"Gerade benutzte Geräte\" with the count and the notes routed so today. Self-test test_zustellung. Urgent notes, one quiet time for everything and Me → Notes follow in stages 3 and 4."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Following up and \"read everywhere\" (V01.0.873, stage 2, same switch)",
+"text": "Following up and \"read everywhere\" (V01.0.873, stage 2, same switch): push.send remembers every note (title and text in memory only, 6 hours at most). If it went to a device other than the phone app and the Spark chose the way itself, it comes once to the phone after 5 minutes (zustellung.follow, every minute), an urgent kind (vorgaenge.ARTEN \"dringend\", the one list; without a Vorgang a reminder counts as kind \"erinnerung\") after 2 minutes; never a third time. Not when the device was touched afterwards (its signal from stage 1) or its Vorgang is no longer open. Notes about a Vorgang carry its number (vg, to Apple only the number): a tapped note says gesehen with the signal (5 numbers at most, vorgaenge.seen), the answer zu names the Vorgänge no longer open; pages close their browser notifications, the iPhone app takes them out of the notification centre, the companion and the Android app no longer fetch them. Logs: push: nachgefasst <way> → <phone>, push: nachfassen nicht noetig, gesehen, push: nachfassen ohne handy, push: gesehen <n>; Live: followed up and waiting as numbers."
 },
 {
 "lang": "en",

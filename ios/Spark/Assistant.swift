@@ -1057,4 +1057,16 @@ final class Relay: NSObject, UNUserNotificationCenterDelegate {
             done(play ? [.banner, .sound] : [])
         }
     }
+
+    /// A tapped note about a Vorgang counts as seen on every device (Meldung ans genutzte Gerät, zustellung.py).
+    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse,
+                                withCompletionHandler done: @escaping () -> Void) {
+        guard let vg = response.notification.request.content.userInfo["v"] as? String, let api = SparkAPI.current else {
+            return done()
+        }
+        Task {
+            await api.inUse(true, seen: [vg])
+            done()
+        }
+    }
 }

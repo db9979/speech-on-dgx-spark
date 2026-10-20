@@ -203,12 +203,13 @@ def _bearer(s, now):
     return tok
 
 
-def payload(nid, tag):
-    """What goes through Apple: nothing but a fixed sentence, the inbox id and the kind."""
+def payload(nid, tag, vg=""):
+    """What goes through Apple: nothing but a fixed sentence, the inbox id, the kind and a Vorgang's number."""
     # the kind may carry a random message id ("msg-<12 hex>") so the app can answer it; never text
     kind = re.sub(r"[^a-z0-9\-]", "", str(tag).lower())[:24]
     return {"aps": {"alert": {"title": "Spark", "body": GENERIC}, "sound": "default", "mutable-content": 1,
-                    "thread-id": "spark"}, "n": nid, "k": kind}
+                    "thread-id": "spark"}, "n": nid, "k": kind,
+            **({"v": vg} if re.fullmatch(r"v[0-9a-f]{10}", str(vg or "")) else {})}
 
 
 def _client():
@@ -234,8 +235,9 @@ def _reason(r):
         return ""
 
 
-async def send(uid, title, body, tag="", now=None):
-    """To every iPhone of the profile; returns how many Apple accepted."""
+async def send(uid, title, body, tag="", now=None, vg=""):
+    """To every iPhone of the profile; returns how many Apple accepted. vg: the Vorgang the note is about (its number
+    only, so the app takes the notification away when it is done elsewhere, zustellung.py)."""
     now = time.time() if now is None else now
     if not reachable(uid):
         return 0
@@ -251,7 +253,7 @@ async def send(uid, title, body, tag="", now=None):
         async with _client() as c:
             for did, token in [x for x in profile_tokens(uid) if x[0] not in rung]:
                 try:
-                    r = await _post(c, s, token, payload(nid, tag), now)
+                    r = await _post(c, s, token, payload(nid, tag, vg), now)
                 except httpx.HTTPError as e:
                     print("apns:", type(e).__name__, flush=True)
                     continue

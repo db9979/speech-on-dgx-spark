@@ -201,7 +201,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Apps
     "apps": {
-        "stand": "0aadaa68fe",
+        "stand": "62ff4d7c38",
         "bezug": {
             "android.TOKEN_SECONDS": ["s3"], "android.TOKEN_USES": ["s3"], "iphone.profile_pair": ["s1", "s2"],
             "kopplung.Codes.new": ["s3"], "kopplung.Codes.take": ["s4"], "iphone.app_pair": ["s4", "s5"],
@@ -210,7 +210,7 @@ SEITEN = {
             "terminal.profile_pair": ["s1", "s2"], "terminal.setup_base": ["s3"], "terminal.program_pair": ["s4", "s5"],
             "terminal.reaches": ["s7"], "terminal.CODE_SECONDS": ["s3"], "terminal.MAX_DEVICES": ["s2"],
             "regel:tui": ["s7"], "android.assist_gate": ["s9"], "android.flags": ["s9"],
-            "zustellung.api_da": ["s9"],
+            "zustellung.api_da": ["s9"], "zustellung.follow": ["s9"],
         },
         "kurz": ("Die iPhone-App bekommt beim Koppeln einen eigenen Geräteschlüssel des Profils und spricht damit "
                  "dieselben Endpunkte an wie der Browser. Der Schlüssel öffnet nur eine feste Liste von Pfaden. Die "
@@ -308,7 +308,9 @@ SEITEN = {
                "hello mit „keep“ (appmerken.keep); bei Nein löscht sie ihn. Mit „Mitteilung ans genutzte Gerät“ "
                "sagen App und Seiten jede Minute nur, ob sie gerade benutzt werden (POST /api/zustellung/da, der Begleiter "
                "mit seiner Leerlaufzeit); zustellung.pick schickt eine Mitteilung dann an das Gerät mit der letzten Eingabe "
-               "der letzten {zustellung.ACTIVE} Sekunden, sonst gleich an die Handy-App.",
+               "der letzten {zustellung.ACTIVE} Sekunden, sonst gleich an die Handy-App. Hat niemand sie gesehen, schickt "
+               "zustellung.follow sie nach {zustellung.FOLLOW|min} Minuten einmal aufs Handy; ein angetippter Hinweis meldet "
+               "„gesehen“, und mit der Antwort „zu“ räumen Seiten und iPhone Erledigtes weg.",
                "The app asks through the same endpoints as the page, with the same limits. What it may do on top "
                "(smart home, CarPlay, listening, documents, pictures) the Spark tells it in /api/iphone/hello; the app "
                "only shows it and follows it. Calls between profiles ring through a VoIP push from Apple that carries "
@@ -318,7 +320,9 @@ SEITEN = {
                "„keep“ (appmerken.keep); on no it deletes it. With „Notes to the device in use“ the app and the pages only say "
                "every minute whether they are in use right now (POST /api/zustellung/da, the companion with its idle time); "
                "zustellung.pick then sends a note to the device with the last input within the last {zustellung.ACTIVE} "
-               "seconds, else to the phone app at once."),
+               "seconds, else to the phone app at once. If nobody saw it, zustellung.follow sends it once to the phone after "
+               "{zustellung.FOLLOW|min} minutes; a tapped note says „seen“, and with the answer „zu“ pages and the iPhone "
+               "take done ones away."),
               ("info", ("Terminal", "Terminal"),
                ("Terminal-Client: Schlüssel-Bereich „tui“, nur {terminal.TUI_RULES|anzahl} Regeln (Chat, Gespräche, Heute, Kalender mit Schnell eintragen, Mails lesen, Aufträge)",
                 "terminal client: key scope „tui“, only {terminal.TUI_RULES|anzahl} rules (chat, conversations, Today, calendar with quick add, reading mail, jobs)"))),
@@ -372,6 +376,8 @@ SEITEN = {
             ("{terminal.MAX_DEVICES}", ("Terminals pro Profil", "terminals per profile"), "terminal.MAX_DEVICES"),
             ("{zustellung.ACTIVE}", ("Sekunden nach der letzten Eingabe gilt ein Gerät als benutzt",
                                      "seconds after the last input a device counts as in use"), "zustellung.ACTIVE"),
+            ("{zustellung.FOLLOW|min}", ("Minuten bis eine ungesehene Mitteilung aufs Handy nachkommt",
+                                         "minutes until an unseen note follows to the phone"), "zustellung.FOLLOW"),
         ],
         "einstellen": [
             ("Funktionen → iPhone-App und Funktionen → Android-App: die Apps für alle Profile (Standard aus).",
@@ -414,6 +420,7 @@ SEITEN = {
             ("android.assist_gate", ("Fragen des Android-Blatts nur mit Freigabe, nie Gäste", "questions of the Android sheet only when released, never guests")),
             ("zustellung.pick", ("Mitteilung ans benutzte Gerät, sonst an die Handy-App", "note to the device in use, else to the phone app")),
             ("zustellung.api_da", ("nur „gerade benutzt“ oder „weg“, nur Seiten und Apps", "only „in use“ or „away“, only pages and the apps")),
+            ("zustellung.follow", ("einmal aufs Handy nachfassen, nie ein drittes Mal", "follow up once to the phone, never a third time")),
             ("terminal.profile_pair", ("Kopplungszeile fürs Terminal nur aus dem eigenen Browser", "terminal pairing line only from the own browser")),
             ("terminal.setup_base", ("zu Hause gepinnt, extern nur https", "pinned at home, outside https only")),
             ("terminal.program_pair", ("der erste Kontakt des Terminals", "the terminal's first contact")),

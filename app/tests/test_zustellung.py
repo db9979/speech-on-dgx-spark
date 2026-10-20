@@ -6,6 +6,9 @@
   whose signal is older than FRESH is not in use; a blocked profile goes on as before.
 - The signal carries only a number and a state; only pages and the apps may send it, the profile comes from the login.
 - Logs: one fixed line per routed note; Live: devices in use and notes routed as numbers.
+- Stage 2: a note to a device other than the phone app comes once more to the phone after FOLLOW (urgent: FOLLOW_URGENT)
+  unless that device was touched after it or its Vorgang is no longer open; never a third time. Opening a note says
+  "gesehen" for its Vorgang; done elsewhere, the devices take it away ("zu", Begleiter and Android no longer fetch it).
 
 No wall clock beyond the signals' own times (all passed as now=), no network.
 """
@@ -18,8 +21,11 @@ from tests import helpers
 
 helpers.start()
 import panel  # noqa: E402
+import asyncio  # noqa: E402
 import apns  # noqa: E402
 import android  # noqa: E402
+import begleiter  # noqa: E402
+import vorgaenge  # noqa: E402
 import features  # noqa: E402
 import guard  # noqa: E402
 import live  # noqa: E402
@@ -104,7 +110,7 @@ class Route(Base):
     def test_the_device_in_use_wins_over_the_one_used_last(self):
         profiles.used(self.uid, "app")                        # used last, but now the page is touched
         r = self.c.post("/api/zustellung/da", json={"idle": 3, "id": self.web})
-        self.assertEqual(r.json(), {"on": True})
+        self.assertEqual(r.json(), {"on": True, "zu": []})
         kind, subs, log = self.pick()
         self.assertEqual((kind, subs), ("web", [self.web]))   # this browser only
         self.assertIn("push: route aktiv web |", log)
@@ -150,7 +156,7 @@ class Signal(Base):
         key = profiles.add_device("iPhone Zora", self.uid, scope="app")
         app = TestClient(panel.app)
         app.headers[profiles.DEVICE_HEADER] = key
-        self.assertEqual(app.post("/api/zustellung/da", json={"idle": 0, "weg": False}).json(), {"on": True})
+        self.assertTrue(app.post("/api/zustellung/da", json={"idle": 0, "weg": False}).json()["on"])
         self.assertEqual([w for w, _, _ in zustellung.in_use(self.uid)], ["app"])
         app.post("/api/zustellung/da", json={"idle": 0, "weg": True})
         self.assertEqual(zustellung.in_use(self.uid), [])
@@ -194,6 +200,110 @@ class Shown(Base):
         log = self.pick()[2]
         self.assertNotIn(self.uid, log)
         self.assertRegex(log.strip(), r"^push: route aktiv web \| ")
+
+
+class Follow(Base):
+    NAME = "Zustell Fiete"
+
+    def setUp(self):
+        super().setUp()
+        helpers.set_config(vorgaenge=True)
+        zustellung._out.pop(self.uid, None)
+        self.went = []
+        self.real_one = push._send_one
+
+        async def one(uid, kind, targets, title, body, tag, private, why, ref="", vg=""):
+            self.went.append((kind, tag, vg))
+            return 1
+        push._send_one = one
+
+    def tearDown(self):
+        push._send_one = self.real_one
+        zustellung._out.pop(self.uid, None)
+        vorgaenge.forget(self.uid)
+        helpers.set_config(vorgaenge=False)
+        super().tearDown()
+
+    def send(self, **kw):
+        with contextlib.redirect_stdout(io.StringIO()):
+            asyncio.run(push.send(self.uid, "T", "B", **kw))
+        return zustellung._out[self.uid][-1]
+
+    def follow(self, now):
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            n = asyncio.run(zustellung.follow(now))
+        return n, out.getvalue()
+
+    def test_a_note_nobody_saw_comes_once_to_the_phone(self):
+        zustellung.seen(self.uid, "web", 0, key=self.web)          # the page is in use: the note goes there
+        x = self.send(tag="pro-x")
+        self.assertEqual((self.went[-1][0], x["due"]), ("web", x["t"] + zustellung.FOLLOW))
+        self.assertEqual(self.follow(x["t"] + zustellung.FOLLOW - 10)[0], 0)   # not yet
+        n, log = self.follow(x["t"] + zustellung.FOLLOW + 1)
+        self.assertEqual((n, self.went[-1][0]), (1, "app"))
+        self.assertIn("push: nachgefasst web → app |", log)
+        self.assertEqual(self.follow(x["t"] + 3 * zustellung.FOLLOW)[0], 0)    # never a third time
+        self.assertEqual(zustellung.for_live()["nachgefasst"] >= 1, True)
+
+    def test_touched_after_the_note_no_follow_up(self):
+        zustellung.seen(self.uid, "web", 0, key=self.web)
+        x = self.send(tag="pro-x")
+        zustellung.seen(self.uid, "web", 0, key=self.web, now=x["t"] + 30)    # the person went on at the computer
+        n, log = self.follow(x["t"] + zustellung.FOLLOW + 1)
+        self.assertEqual((n, self.went[-1][0]), (0, "web"))
+        self.assertIn("push: nachfassen nicht noetig, gesehen web |", log)
+
+    def test_urgent_waits_shorter_phone_and_chosen_way_never(self):
+        self.assertTrue(vorgaenge.ARTEN["erinnerung"]["dringend"])
+        zustellung.seen(self.uid, "web", 0, key=self.web)
+        x = self.send(tag="r1", why="Erinnerung")
+        self.assertEqual(x["due"], x["t"] + zustellung.FOLLOW_URGENT)
+        self.assertEqual(self.send(tag="pro-x", to="web")["due"], 0)        # a way the profile chose
+        zustellung._sig.pop(self.uid, None)
+        self.assertEqual(self.send(tag="pro-x")["way"], "app")             # nothing in use: the phone at once
+        self.assertEqual(zustellung._out[self.uid][-1]["due"], 0)
+
+    def test_no_phone_app_no_follow_up(self):
+        zustellung.seen(self.uid, "web", 0, key=self.web)
+        x = self.send(tag="pro-x")
+        self.phone = False
+        n, log = self.follow(x["t"] + zustellung.FOLLOW + 1)
+        self.assertEqual(n, 0)
+        self.assertIn("push: nachfassen ohne handy web |", log)
+
+    def test_off_nothing_kept(self):
+        helpers.set_config(note_device=False)
+        with contextlib.redirect_stdout(io.StringIO()):
+            asyncio.run(push.send(self.uid, "T", "B", tag="pro-x"))
+        self.assertNotIn(self.uid, zustellung._out)
+
+    def test_opened_on_one_device_seen_and_gone_everywhere(self):
+        with contextlib.redirect_stdout(io.StringIO()):
+            v, _ = vorgaenge.put(self.uid, "erinnerung", "erinnerung:zf1", "Erinnerung: Tee")
+        zustellung.seen(self.uid, "web", 0, key=self.web)
+        x = self.send(tag="r2", why="Erinnerung", vg=v["id"])
+        self.assertEqual(self.went[-1], ("web", "r2", v["id"]))
+        android.keep(self.uid, "T", "B", "r2", vg=v["id"])
+        begleiter.keep(self.uid, "T", "B", "r2", vg=v["id"])
+        self.assertTrue(any(n["title"] == "T" for n in android.notes(self.uid, 0)[0]))
+        ua = {"User-Agent": "Mozilla/5.0 SparkAndroid/1.4.3"}
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            r = self.c.post("/api/zustellung/da", json={"idle": 0, "gesehen": [v["id"]]}, headers=ua).json()
+        self.assertIn("push: gesehen 1 and |", out.getvalue())
+        self.assertEqual(vorgaenge.find(self.uid, v["id"])["zustand"], "gesehen")
+        self.assertEqual(r["zu"], [v["id"]])                                # every device takes it away
+        self.assertEqual([n for n in android.notes(self.uid, 0)[0] if n.get("tag") == "r2"], [])
+        self.assertEqual([n for n in begleiter.notes(self.uid, 0)[0] if n.get("tag") == "r2"], [])
+        self.assertEqual(self.follow(x["t"] + zustellung.FOLLOW + 1)[0], 0)  # seen: no follow-up
+
+    def test_bad_seen_values_refused(self):
+        for bad in (["x"], ["v0123456789"] * 6, "v0123456789", [1]):
+            self.assertEqual(self.c.post("/api/zustellung/da", json={"idle": 0, "gesehen": bad}).status_code, 400)
+
+    def test_apple_carries_only_the_number(self):
+        p = apns.payload("a" * 16, "pro-x", "v0123456789")
+        self.assertEqual((p["v"], p["aps"]["alert"]["body"]), ("v0123456789", apns.GENERIC))
+        self.assertNotIn("v", apns.payload("a" * 16, "pro-x", "../x"))
 
 
 class Wiring(unittest.TestCase):

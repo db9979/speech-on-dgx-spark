@@ -401,6 +401,10 @@ async def stability():
                     await proactive.due_once()
                 except Exception as e:
                     print("proactive:", type(e).__name__, e, flush=True)
+                try:   # Meldung ans genutzte Gerät: a note nobody saw comes once to the phone app (zustellung.py)
+                    await zustellung.follow()
+                except Exception as e:
+                    print("push: nachfassen", type(e).__name__, flush=True)
                 try:   # Offen: „Später“ is over → the card comes back (vorgaenge.py)
                     await vorgaenge.due()
                 except Exception as e:

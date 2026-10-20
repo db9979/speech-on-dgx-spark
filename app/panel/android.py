@@ -298,14 +298,16 @@ def reachable(uid, now=None):
     return features.allowed("android", uid) and now - _polled.get(uid, -1e12) < POLLED_KEEP
 
 
-def keep(uid, title, body, tag="", now=None):
-    """A note for the profile's Android app; it fetches it with its next question."""
+def keep(uid, title, body, tag="", now=None, vg=""):
+    """A note for the profile's Android app; it fetches it with its next question. vg: the Vorgang it is about; once
+    that is no longer open the app no longer fetches it (zustellung.closed)."""
     now = time.time() if now is None else now
     with _lock:
         n = _seq.get(uid, 0) + 1
         _seq[uid] = n
         box = [x for x in _notes.get(uid, []) if now - x["t"] < NOTE_SECONDS]
-        box.append({"n": n, "t": now, "title": str(title)[:200], "body": str(body)[:1500], "tag": str(tag)[:20]})
+        box.append({"n": n, "t": now, "title": str(title)[:200], "body": str(body)[:1500], "tag": str(tag)[:20],
+                    "vg": str(vg or "")[:12]})
         _notes[uid] = box[-NOTE_MAX:]
         waits = list(_waiters.get(uid, []))
     for loop, ev in waits:   # a waiting app hears it at once (keep may run in any thread)
@@ -317,12 +319,14 @@ def keep(uid, title, body, tag="", now=None):
 
 
 def notes(uid, after, now=None):
+    import zustellung
     now = time.time() if now is None else now
+    zu = set(zustellung.closed(uid, now))   # Meldung ans genutzte Gerät: done elsewhere, not fetched any more
     with _lock:
         _polled[uid] = now
-        box = [x for x in _notes.get(uid, []) if now - x["t"] < NOTE_SECONDS]
+        box = [x for x in _notes.get(uid, []) if now - x["t"] < NOTE_SECONDS and x.get("vg", "") not in zu]
         _notes[uid] = box
-        return [dict(x) for x in box if x["n"] > after], _seq.get(uid, 0)
+        return [{k: v for k, v in x.items() if k != "vg"} for x in box if x["n"] > after], _seq.get(uid, 0)
 
 
 # ---------------------------------------------------------------- endpoints

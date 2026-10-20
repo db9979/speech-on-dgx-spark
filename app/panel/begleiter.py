@@ -458,23 +458,26 @@ def reachable(uid, now=None):
     return any(now - _seen.get(x["id"], -1e12) < ONLINE and part_on(uid, x["id"], "notes") for x in devices(uid))
 
 
-def keep(uid, title, body, tag="", now=None, ref=""):
-    """A note for the programs of the profile; ref: what it is about (a Für-dich card), kept here, never sent out."""
+def keep(uid, title, body, tag="", now=None, ref="", vg=""):
+    """A note for the programs of the profile; ref: what it is about (a Für-dich card), kept here, never sent out.
+    vg: the Vorgang it is about; once that is no longer open the programs no longer fetch it (zustellung.closed)."""
     now = time.time() if now is None else now
     with _lock:
         n = _seq.get(uid, 0) + 1
         _seq[uid] = n
         box = [x for x in _notes.get(uid, []) if now - x["t"] < NOTE_SECONDS]
         box.append({"n": n, "t": now, "title": str(title)[:200], "body": str(body)[:1500], "tag": str(tag)[:20],
-                    "ref": str(ref or "")[:40]})
+                    "ref": str(ref or "")[:40], "vg": str(vg or "")[:12]})
         _notes[uid] = box[-NOTE_MAX:]
     return n
 
 
 def notes(uid, after, now=None):
+    import zustellung
     now = time.time() if now is None else now
+    zu = set(zustellung.closed(uid, now))   # Meldung ans genutzte Gerät: done elsewhere, not fetched any more
     with _lock:
-        box = [x for x in _notes.get(uid, []) if now - x["t"] < NOTE_SECONDS]
+        box = [x for x in _notes.get(uid, []) if now - x["t"] < NOTE_SECONDS and x.get("vg", "") not in zu]
         _notes[uid] = box
         return [dict({k: x[k] for k in ("n", "title", "body", "tag")}, weg=note_weg(x)) for x in box if x["n"] > after], \
             _seq.get(uid, 0)

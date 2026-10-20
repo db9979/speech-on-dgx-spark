@@ -2392,6 +2392,13 @@
 "titel": "Mail-Vorrat: schnell und bei Ausfall",
 "text": "A: Update auf V01.0.872. B: Seite E-Mail öffnen, dann den Pi neu starten: gleich nach dem Neustart steht die Liste der Mails sofort da, ohne „lädt“. C: Den Assistenten fragen „Was ist neu im Postfach?“: die Antwort kommt schnell; ist die Liste älter als 10 Minuten und das Postfach langsam, nennt er „Stand hh:mm“. D: Ein Postfach kurz unerreichbar machen (z. B. WLAN am Pi kurz trennen): der Assistent nennt die gehaltenen Mails mit „wie um hh:mm gelesen“ statt „nicht erreichbar“, eine kürzlich geöffnete Mail lässt sich weiter lesen. E: Zustand → Überblick, Knoten E-Mail: „Vorrat bei N Profilen“, nach D „heute N× daraus geantwortet“. F: Postfach unter E-Mail entfernen: der Vorrat ist mit weg.",
 "thread": "Kalender und E-Mail in den Apps"
+},
+{
+"id": "P366",
+"v": 873,
+"titel": "Mitteilung: einmal aufs Handy nachfassen, gelesen überall",
+"text": "A: Update; Admin: „Mitteilung ans genutzte Gerät“ und „Alles Offene im Assistenten“ an. B: Am PC im Panel „Erinnere mich in 3 Minuten an Tee“, dann den PC nicht mehr anfassen: die Erinnerung erscheint am PC und 2 Minuten später noch einmal auf dem iPhone, danach kein drittes Mal. C: Dasselbe, aber am PC nach der Mitteilung weiter tippen: aufs iPhone kommt nichts. D: Eine Mitteilung auf dem iPhone antippen: die Karte unter Offen zeigt „gesehen“, die Browser-Mitteilung am PC verschwindet beim nächsten Signal (spätestens 1 Minute). E: Zustand → Live zeigt bei „Gerade benutzte Geräte“ „nachgefasst“ und „warten“ als Zahlen, Zustand → Logs „push: nachgefasst“.",
+"thread": "Benachrichtigung aufs genutzte Gerät"
 }
 ]
 }

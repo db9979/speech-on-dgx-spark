@@ -192,7 +192,7 @@ async def deliver(uid, kind, text, why="", data="", offer=None, until=None, forc
     with live.within(rec):
         if item.get("pushed"):
             try:
-                await push.send(uid, "💬 Spark", text, tag="pro-" + kind, private=private, ref=ref)
+                await push.send(uid, "💬 Spark", text, tag="pro-" + kind, private=private, ref=ref, **({"vg": vg} if vg else {}))
             except Exception as e:
                 print("proactive: push:", type(e).__name__, e, flush=True)
         else:

@@ -1,5 +1,6 @@
 import Foundation
 import UIKit
+import UserNotifications
 
 struct SparkError: LocalizedError {
     let message: String
@@ -410,8 +411,17 @@ struct SparkAPI {
 
     /// Meldung ans genutzte Gerät: the app is in front right now, or in the background ("weg"); only this state, never
     /// what happens in the app. The Spark then sends notes here while the app is used, and to the phone when nothing is.
-    func inUse(_ front: Bool) async {
-        _ = try? await post("api/zustellung/da", ["idle": 0, "weg": !front])
+    /// seen: Vorgang numbers of notes opened here (they count as seen everywhere); the answer's "zu" are the Vorgänge
+    /// done elsewhere, their notifications leave the notification centre.
+    func inUse(_ front: Bool, seen: [String] = []) async {
+        var body: [String: Any] = ["idle": 0, "weg": !front]
+        if !seen.isEmpty { body["gesehen"] = Array(seen.prefix(5)) }
+        guard let d = try? await post("api/zustellung/da", body), let zu = d["zu"] as? [String], !zu.isEmpty else { return }
+        let center = UNUserNotificationCenter.current()
+        let gone = await center.deliveredNotifications()
+            .filter { zu.contains($0.request.content.userInfo["v"] as? String ?? "") }
+            .map { $0.request.identifier }
+        if !gone.isEmpty { center.removeDeliveredNotifications(withIdentifiers: gone) }
     }
 
     /// Notes the Spark wants to say by itself ("Von selbst") since a time (ms).

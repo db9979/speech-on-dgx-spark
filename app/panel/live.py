@@ -753,12 +753,14 @@ def _conns(now):
     except Exception:
         pass
     try:
-        # Mitteilung ans genutzte Gerät (zustellung.py): devices in use right now and notes routed today, only the counts
+        # Mitteilung ans genutzte Gerät (zustellung.py): devices in use right now, notes routed and followed up today and
+        # notes waiting for their follow-up, only the counts
         import zustellung
         z = zustellung.for_live(now)
-        if z["on"] and (z["devices"] or z["aktiv"] or z["handy"]):
+        if z["on"] and (z["devices"] or z["aktiv"] or z["handy"] or z["nachgefasst"] or z["warten"]):
             out.append({"name": "Gerade benutzte Geräte", "proto": f"Mitteilungen heute: {z['aktiv']} ans benutzte Gerät, "
-                        f"{z['handy']} ans Handy", "dir": "ein", "n": z["devices"]})
+                        f"{z['handy']} ans Handy, {z['nachgefasst']} nachgefasst, {z['warten']} warten", "dir": "ein",
+                        "n": z["devices"]})
     except Exception:
         pass
     try:

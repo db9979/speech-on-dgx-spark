@@ -223,13 +223,17 @@ def _why(tag):
     return next((v for k, v in WHY.items() if tag == k or (k.endswith("-") and tag.startswith(k))), "")
 
 
-async def send(uid, title, body, tag="", private=True, why="", to="", ref=""):
+async def send(uid, title, body, tag="", private=True, why="", to="", ref="", vg=""):
     """Sends a note once: to one device of the profile (pick), the iPhone app, Telegram (private notes,
     i.e. appointments, mails, the briefing, only when it allowed personal data there) or a browser.
     "hello" goes to the browsers only. to: the way the profile chose for this kind of note ("all": every way it
     has set up, "every": every device and browser of the profile but Telegram, for chats). ref: what the note is about
-    (a Für-dich card), only for the Begleiter's buttons (begleiter.NOTE_ACTS), never sent anywhere. Drops subscriptions
-    the push service no longer knows. Returns the number of devices reached."""
+    (a Für-dich card), only for the Begleiter's buttons (begleiter.NOTE_ACTS), never sent anywhere. vg: the Vorgang
+    of Offen the note is about (vorgaenge.py; a tag "vg-<id>" says it too): with Meldung ans genutzte Gerät a note
+    nobody saw comes once more to the phone app, and leaves every device when the Vorgang is done (zustellung.py).
+    Drops subscriptions the push service no longer knows. Returns the number of devices reached."""
+    import zustellung
+    vg = vg or (tag[3:] if tag.startswith("vg-") else "")
     import begleiter
     # "Nicht stören" (Spark-Begleiter part quiet): while the profile is in a call or presenting, notes wait and one
     # summary follows; alarms, reminders and safety notes always go (begleiter.urgent)
@@ -252,7 +256,10 @@ async def send(uid, title, body, tag="", private=True, why="", to="", ref=""):
         ways = [pick(uid, private, to)]
     n = 0
     for kind, targets in ways:
-        n += await _send_one(uid, kind, targets, title, body, tag, private, why, ref)
+        n += await _send_one(uid, kind, targets, title, body, tag, private, why, ref, **({"vg": vg} if vg else {}))
+    if tag != "hello" and n:   # Meldung ans genutzte Gerät, stage 2: follow-up and „gelesen überall“
+        zustellung.sent(uid, [k for k, _ in ways if k], {"title": title, "body": body, "tag": tag, "private": private,
+                                                          "why": why, "ref": ref}, vg, follow=not to)
     # one line per note, sent or not: the kind of note, the ways and how many devices it reached, never its text
     print(f"push: {_word(tag, why)} {'sent' if n else 'reached no device'} | {n} device(s) | "
           f"{','.join(k for k, _ in ways if k) or 'no way'} | {profiles.log_name(profiles.by_id(uid))}", flush=True)
@@ -264,23 +271,23 @@ def _word(tag, why):
     return why if why in set(WHY.values()) | {"Erinnerung"} else _why(tag) or "Hinweis"
 
 
-async def _send_one(uid, kind, targets, title, body, tag, private, why, ref=""):
+async def _send_one(uid, kind, targets, title, body, tag, private, why, ref="", vg=""):
     import apns
     import telegram
     t0 = time.time()
     # the iPhone app: Apple only carries "new message", the text waits on the Spark (apns.py)
-    n = await apns.send(uid, title, body, tag=tag) if kind == "app" else 0
+    n = await apns.send(uid, title, body, tag=tag, **({"vg": vg} if vg else {})) if kind == "app" else 0
     if kind == "and":   # the Android app fetches it with its next question (android.py)
         import android
-        android.keep(uid, title, body, tag)
+        android.keep(uid, title, body, tag, **({"vg": vg} if vg else {}))
         n += 1
     if kind == "desk":  # the Spark-Begleiter on PC or Mac fetches it with its next poll (begleiter.py)
         import begleiter
-        begleiter.keep(uid, title, body, tag, ref=ref)
+        begleiter.keep(uid, title, body, tag, ref=ref, **({"vg": vg} if vg else {}))
         n += 1
     # a note naming a place in the panel opens it there when tapped (sw.js, way.js)
     import wege
-    payload = json.dumps({"title": title, "body": body, "tag": tag, "weg": wege.find(body)}).encode()[:3000]
+    payload = json.dumps({"title": title, "body": body, "tag": tag, "weg": wege.find(body), "vg": vg}).encode()[:3000]
     n += await telegram.notify(uid, f"{title}\n{body}", private) if kind == "tg" else 0
     async with httpx.AsyncClient(timeout=15) as c:
         for sub in targets:
@@ -335,10 +342,12 @@ async def due_reminders():
         on_watch = pebblewatch.held(uid)
         for x in [x for x in profiles.reminders(uid)
                   if x.get("due", 0) <= (by - pebblewatch.WATCH_GRACE if x.get("id") in on_watch else by)]:
-            if not profiles.take_reminder(uid, x["id"], by):
+            took = profiles.take_reminder(uid, x["id"], by)
+            if not took:
                 continue   # a device played it in the meantime
             if now - x["due"] < 6 * 3600 * 1000:  # older ones (panel was off) are dropped, with a line
-                sent += await send(uid, "⏰ " + x["text"], "Erinnerung", tag=x["id"], private=False, why="Erinnerung")
+                vg = {"vg": took["vg"]} if took.get("vg") else {}   # the Vorgang of the reminder (zustellung.py)
+                sent += await send(uid, "⏰ " + x["text"], "Erinnerung", tag=x["id"], private=False, why="Erinnerung", **vg)
             else:
                 print(f"reminders: one dropped, more than 6 h overdue | {profiles.log_name(profiles.by_id(uid))}", flush=True)
     return sent

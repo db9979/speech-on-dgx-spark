@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.873** Notes to the device in use stage 2 (same switch): a note nobody saw at the computer or on a page comes once to the phone after 5 minutes (reminders after 2 minutes), never a third time; open a note about something open and it leaves the other devices; Live shows followed-up and waiting as numbers
 - **V01.0.872** Mail: mail supply, the Spark keeps the newest headers and mail texts sealed in the profile; after a restart the listing is there at once, and when a mailbox does not answer the assistant answers with the kept state and its time instead of "not reachable"; a listing up to 10 minutes old is taken as it is, otherwise it waits at most 2 seconds
 - **V01.0.871** CarPlay stable: the voice window opens and closes one step at a time, every row does something or says „Spark not reachable“, after a conversation radio and music are back at normal volume, „Danke“ ends it, „repeat the last answer“, no wake word in the car, CarPlay steps in the app's sound log
 - **V01.0.870** Fix For you read aloud: "reply open" says clearly who waits for whom, every entry names its mail (sender, day, subject), while the first reading runs you hear "still reading" or the last reading instead of "mailbox unreachable"
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.866** Sharing with profiles (stage 1): share a document with single other profiles (button „Share“, find a person, See or Off), Ich → Shared shows everything others share with you and you share with others (lists and calendars too), taking back works at once, notes bundled; admin switch, off
 - **V01.0.865** Share lists (stage 2): share a list per profile to see or add to it (adding and ticking off, deleting stays with the owner), "Shared with me" on the page and on the iPhone, "Put butter on Sabine's shopping list", news from others as one bundled note; lists in the iPhone's Reminders app both ways (stage 3, through the calendar server) and a Shopping widget; one admin switch each, off at first
 - **V01.0.864** Notes to the device in use (admin switch under Functions → Timers and reminders, off): a note goes to the device you are using right now (panel page, Android app, iPhone app, Spark companion on PC or Mac), else at once to the phone app; devices only say "used n seconds ago" or "away", never content; Live shows the count
-- **V01.0.863** Editing music (admin switch, off): under Me → Music change a song as a new version (part anew, extend, genre, remix, lyrics with verses moved by dragging, cut, tempo and key), upload own files with the rights tick, tool musik_bearbeiten; also in the iPhone app
 
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
