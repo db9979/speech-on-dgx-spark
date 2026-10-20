@@ -2231,6 +2231,13 @@
 "titel": "Für dich: Knöpfe, Stimme, von selbst",
 "text": "A: Admin: Funktionen → Für dich aus Mails, Timer und Erinnerungen, Kalender und Mails senden an. E-Mail → Für dich: an einer Rechnung mit Frist „Erinnern“ drücken: unten steht „Erinnerung gesetzt: Rechnung … bezahlen“ mit dem Tag vor der Frist um 9 Uhr. B: „Eintragen“ öffnet den Kalender mit Datum und „Rechnung …“ in Schnell eintragen; erst „Eintragen“ dort speichert. C: An „… wartet seit N Tagen auf deine Antwort“ „Antwort entwerfen“: die Mail öffnet sich mit Antwortfeld und Vorschlägen; nur „Vorschau“ und „Senden“ schicken. An einem Vertrag „Kündigung entwerfen“: neue Mail mit festem Kündigungstext. D: Im Chat oder per Stimme „Was muss ich diese Woche erledigen?“: nummerierte Liste derselben Karten; „Nummer eins ist erledigt“ nimmt die Karte weg. E: Ich → Von selbst an, E-Mail → Einstellungen → Fristen und Verdacht an: eine Mail, die sich als Bank ausgibt, meldet sich einmal von selbst. F: iPhone: Heute → Für dich zeigt dieselben Karten mit Erinnern, Eintragen, Antwort und Kündigung; Wischen markiert.",
 "thread": "Persönlicher Assistent aus dem Postfach"
+},
+{
+"id": "P343",
+"v": 849,
+"titel": "Spickzettel zum Ausdrucken",
+"text": "A: Update auf V01.0.849. Ich → Was ich kann → „Deutsch“: eine Seite mit Karten nach Bereichen öffnet sich, nur Funktionen, die bei dir freigegeben sind, in jedem Satz ein Wort gelb markiert. B: Drucken (Strg P) → Als PDF sichern: zwei bis drei A4-Seiten, gut lesbar. C: „Englisch“ zeigt dieselben Karten auf Englisch. D: In der iPhone-App „Im Panel öffnen“ → Was ich kann: dasselbe, dort Teilen → Drucken.",
+"thread": "Spickzettel Sprachbefehle"
 }
 ]
 }

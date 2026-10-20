@@ -475,7 +475,8 @@ def _event(what):
         import live
         live.event("Funktionen vorschlagen", {"follow": "Beispielsätze unter der Antwort", "near": "Meintest du",
                                               "new": "Neu bei dir", "kann": "Was ich kann", "voice": "Beispielsatz gesprochen",
-                                              "tap": "Beispielsatz getippt", "start": "Probier mal"}.get(what, what))
+                                              "tap": "Beispielsatz getippt", "start": "Probier mal",
+                                              "spick": "Spickzettel"}.get(what, what))
     except Exception:
         pass
 

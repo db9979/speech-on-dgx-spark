@@ -6228,6 +6228,22 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Spickzettel zum Ausdrucken (V01.0.849)",
+"text": "Spickzettel zum Ausdrucken (V01.0.849): Unter Ich → Was ich kann öffnet „Deutsch“ oder „English“ eine Seite mit zwei A4-Blättern: je Bereich die Karten der Weiche mit Sätzen zum Sagen, in jedem Satz markiert das Wort, auf das die Weiche wirklich anspringt (aus intent.classify, mit den eigenen Wörtern des Admins unter Funktionen → Weiche), dazu Stichwörter, der Name der Funktion, Kurzbefehle, „Leicht verwechselt“ und was hilft, wenn eine Antwort danebengeht. Es steht nur darauf, was für dein Profil freigegeben und eingerichtet ist. Drucken oder im Druckfenster „Als PDF sichern“ (am iPhone Teilen → Drucken); „Als Datei laden“ speichert die Seite. Der Spickzettel wird bei jedem Öffnen aus dem Code erzeugt (spickzettel.py: Sätze aus werkzeug_abdeckung.SENTENCES, Bereiche aus saetze.AREAS, Namen aus features.py, Version aus app/VERSION) und veraltet so nie; test_spickzettel wird rot, wenn ein Werkzeug keine Karte hat oder ein Satz, ein Stichwort oder eine Verwechslung nicht dort landet, wo das Blatt sagt. Teil von „Das kannst du auch sagen“, kein eigener Schalter; nie für Gäste; die Seite hat keine Skripte und eine strenge Seiten-Richtlinie (CSP). Protokoll: tipps: Spickzettel de|en <Za"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Spickzettel zum Ausdrucken (V01.0.849)",
+"text": "hl> Werkzeuge; Live: Ereignis „Spickzettel“. Plan: plaene/spickzettel.md."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Grundausstattung für Neulinge (V01.0.721, Dominik 2026-10-17)",
 "text": "Grundausstattung für Neulinge (V01.0.721, Dominik 2026-10-17): Damit ein neues Profil von der ersten Frage an gut chattet, ist bei einer neuen Installation eine feste Liste an (features.GRUNDAUSSTATTUNG, jeder Eintrag mit Grund): Gezielte Werkzeugwahl, Eindeutiges direkt abrufen, Sofortige Rückmeldung, Vorab holen bei Rückfrage, Rückfrage statt Raten mit Auswahl merken, Rückfrage ohne Weckwort, Rückgängig per Sprache, Aus Korrekturen lernen, Gesicht zeigt, was es tut, Hilfe zum Spark mit „Frag Spark auf jeder Seite“, Funktionen vorschlagen, Das kannst du auch sagen, Aufgaben und Einkaufsliste und Verlauf sofort abgleichen. Hinein darf nur, was keine eigene Einrichtung braucht, nichts Neues aus dem Haus schickt, kein Zusatzmodell lädt und keinen Code des Admins verlangt; Gäste bekommen weiter nur Frage und Antwort. Eine bestehende Installation ändert sich nicht von selbst: oben auf Funktionen steht die Karte „Grundausstattung für ein gutes Gespräch“ als eine Zeile mit „x von n an“ und „Alle übernehmen“; „Was fehlt?“ klappt darunter auf, was noch aus ist, mit „Einzeln ansehen“ (seit V01.0.788, damit Funktionen kurz bleibt) (Filter „Empfohlen“; jede Zeile der Liste trägt „Empfohlen“)."
 },
@@ -14606,6 +14622,14 @@
 "head": "Voice chat",
 "title": "You can also say (V01.0.684, basic set)",
 "text": "at I can do → \"Delete my count\" deletes it. Switches: Features → below \"Suggesting functions\" \"You can also say\" and below it \"Tips while talking\". Log: lines tipps:; Status → Live events \"Funktionen vorschlagen\" (shown, tapped), never contents. Plan: plaene/funktionen-zeigen.md; tests: app/tests/test_saetze.py."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Cheat sheet to print (V01.0.849)",
+"text": "Cheat sheet to print (V01.0.849): under Me → What I can do, \"Deutsch\" or \"English\" opens a page of two A4 sheets: per area the routing's cards with sentences to say, in each sentence the word the routing really reacts to marked (from intent.classify, with the admin's own words under Features → Routing), plus key words, the name of the function, short commands, \"Easily mixed up\" and what helps when an answer goes wrong. Only what is released and set up for your profile is on it. Print it or pick \"Save as PDF\" in the print window (on the iPhone Share → Print); \"Download as file\" keeps the page. The sheet is built from the code each time it opens (spickzettel.py: sentences from werkzeug_abdeckung.SENTENCES, areas from saetze.AREAS, names from features.py, version from app/VERSION), so it never goes out of date; test_spickzettel turns red when a tool has no card or a sentence, key word or mix-up does not land where the sheet says. Part of \"You can also say\", no switch of its own; never for guests; the page has no scripts and a strict content security policy. Log: tipps: Spickzettel de|en <n> Werkzeuge; Live: event \"Spickzettel\". Plan: plaene/spickzettel.md."
 },
 {
 "lang": "en",

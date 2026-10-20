@@ -197,6 +197,7 @@ Bereitet eine Anfrage vor, fragt das Sprachmodell in Runden und prüft, was gesa
 | `app/panel/saetze.py` | Zeigt Sätze für Funktionen, die an sind und noch nie benutzt wurden |
 | `app/panel/schreib.py` | Schreibhilfe: korrigieren, kürzen, übersetzen, entwerfen |
 | `app/panel/sofort.py` | Einfaches sofort beantworten: Uhrzeit, Datum, Rechnen und Einheiten als fester Satz ohne Modell |
+| `app/panel/spickzettel.py` | Spickzettel zum Ausdrucken: was das Profil sagen kann, aus den Regeln der Weiche erzeugt |
 | `app/panel/stille.py` | Aus Stille werden nie Wörter |
 | `app/panel/stufe.py` | Vorrang für Personen in der Warteschlange der Sprachausgabe |
 | `app/panel/systemone.py` | Einordnung mit Wahrscheinlichkeit über das Sprachmodell (LLM-Tor oder qwen38) |

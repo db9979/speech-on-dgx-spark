@@ -108,6 +108,7 @@ MODULE = {
     "tipps": ("gespraech", "Schlägt passende Funktionen vor, die noch aus sind"),
     "ablauf": ("gespraech", "Zeigt unter der Antwort die benutzten Werkzeuge und einen wartenden Vorschlag als Karte mit Ja und Nein"),
     "saetze": ("gespraech", "Zeigt Sätze für Funktionen, die an sind und noch nie benutzt wurden"),
+    "spickzettel": ("gespraech", "Spickzettel zum Ausdrucken: was das Profil sagen kann, aus den Regeln der Weiche erzeugt"),
     "stufe": ("gespraech", "Vorrang für Personen in der Warteschlange der Sprachausgabe"),
     # Weiche
     "intent": ("weiche", "Die Weiche: feste Regeln für die eigene letzte Nachricht"),

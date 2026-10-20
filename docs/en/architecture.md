@@ -197,6 +197,7 @@ Prepares a request, asks the language model in rounds and checks what is said.
 | `app/panel/saetze.py` | Das kannst du auch sagen. |
 | `app/panel/schreib.py` | Schreibhilfe: the Spark corrects, smooths, shortens, translates or drafts a text, for mails and anything else the person writes (Word, Excel, Pages ...). |
 | `app/panel/sofort.py` | Einfaches sofort beantworten: a few plain questions get a fixed sentence from the panel, without the language model, so the first sound comes at once. |
+| `app/panel/spickzettel.py` | Spickzettel zum Ausdrucken. |
 | `app/panel/stille.py` | Silence never becomes words (fixed rule, no switch). |
 | `app/panel/stufe.py` | Priority for people: a profile the admin gives "Vorrang" gets its answer first when several people talk to the Spark at once. |
 | `app/panel/systemone.py` | Einordnung mit Wahrscheinlichkeit: qwen38's POST /v1/systemone for a few fixed questions. |
