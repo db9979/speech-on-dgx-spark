@@ -223,6 +223,7 @@
     "documents": true,
     "reminders": true,
     "note_device": false,
+    "vorgaenge": false,
     "calendar": true,
     "calendar_share": false,
     "tasks_share": false,

@@ -32,6 +32,8 @@ final class Conversation: ObservableObject {
         /// Ins Wissensbuch (wissensbuch.py): the id the Spark kept this answer by, and whether it was filed
         var wbId: String?
         var filed: Bool?
+        /// Alles Offene im Assistenten (vorgaenge.py): the number of the card this message is (VorgangImGespraech)
+        var vg: String?
     }
 
     /// The painted picture kept with an answer ("att" "bild" on the Spark, profiles._att): its job and prompt.
@@ -47,6 +49,7 @@ final class Conversation: ObservableObject {
         let mark = d["mail"] as? Bool == true ? "mail" : d["outside"] as? Bool == true ? "outside" : nil
         var m = Message(role: role, text: text, mark: mark)
         if role == "assistant", let p = picture(d) { m.picJob = p.job; m.picPrompt = p.prompt }
+        if role == "assistant", let v = d["vg"] as? String, v.range(of: #"^v[0-9a-f]{10}$"#, options: .regularExpression) != nil { m.vg = v }
         return m
     }
 

@@ -666,7 +666,8 @@ def _zone(uid):
     return chat.user_zone(profiles.effective(uid).get("tz", ""))
 
 
-def mark(uid, k, how):
+def mark(uid, k, how, tell=True):
+    """tell: the card of Offen (vorgaenge.py) follows; False when Offen itself pressed the button."""
     m = marks(uid)
     if how == "open":
         m.pop(k, None)
@@ -679,6 +680,12 @@ def mark(uid, k, how):
     elif how == "open":
         _cache.pop(uid, None)
     _bump("markiert")
+    if tell:
+        import vorgaenge
+        if how == "open":
+            vorgaenge.reopen(uid, "fuerdich:" + k)
+        else:
+            vorgaenge.done(uid, "fuerdich:" + k, "erledigt" if how == "done" else "ausblenden")
 
 
 CARD_BUDGET = 3.0              # seconds the card under Heute waits for a first reading
@@ -729,6 +736,8 @@ async def run(uid, fresh=False):
     if not cached:
         _bump("gelesen")
         _live(len(items))
+        import vorgaenge   # what needs the person goes to Offen (in the list; Von selbst puts the card into the chat)
+        vorgaenge.from_fuerdich(uid, items, datetime.datetime.now(_zone(uid)).date())
         print(f"fuerdich: gelesen funde={len(items)} fehler={len(errors)} sekunden={time.time() - t0:.1f}", flush=True)
     return items, errors
 

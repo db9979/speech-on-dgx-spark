@@ -8,7 +8,7 @@ const KAL_H=44;   // pixels per hour in the day and week view
 // pages of their own outside Ich: the id of the old Ich page (still the place in every way, card and app) → section
 // (features.OWN_PAGES, test_app_gleichstand keeps both equal)
 const OWN_PAGES={calbox:['cal',t('Kalender','Calendar'),t('Termine','Appointments')],mailbox:['post',t('E-Mail','E-mail'),t('Posteingang','Inbox'),[['fuer',t('Für dich','For you'),()=>typeof FUER_ON!=='undefined'&&FUER_ON],['regeln',t('Regeln','Rules'),()=>typeof ORD_ON!=='undefined'&&ORD_ON]]],
-  taskbox:['listen',t('Listen','Lists'),t('Listen','Lists')]};
+  taskbox:['listen',t('Listen','Lists'),t('Listen','Lists')],vgbox:['offen',t('Offen','Open'),t('Offen','Open')]};
 // [section, name, first tab, [more tabs: key, name, shown?]]; every page ends with the tab „Einstellungen“
 function ownPage(id){const p=OWN_PAGES[id];if(!p)return false;
   if($('profmodal').style.display==='grid'&&window.closeProf)closeProf();

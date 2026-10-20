@@ -147,14 +147,14 @@ struct ThingsView: View {
 
     /// whether the profile has any part of Meine Sachen (the button beside the conversation and the row in Einstellungen)
     static func any(_ a: Allowed) -> Bool {
-        a.make || !a.areas.isDisjoint(with: ["documents", "bilder", "musik", "memory", "calendar", "mail", "tasks"])
+        a.make || !a.areas.isDisjoint(with: ["documents", "bilder", "musik", "memory", "calendar", "mail", "tasks", "vorgaenge"])
     }
 
     private var a: Allowed { talk.allowed }
     private var none: Bool {
         !a.areas.contains("documents") && !a.make && !a.areas.contains("bilder") && !a.areas.contains("musik")
             && !a.areas.contains("memory") && !a.areas.contains("calendar") && !a.areas.contains("mail")
-            && !a.areas.contains("tasks")
+            && !a.areas.contains("tasks") && !a.areas.contains("vorgaenge")
     }
 
     var body: some View {
@@ -165,8 +165,9 @@ struct ThingsView: View {
                 ForEach(hits) { h in NavigationLink { h.page } label: { row(h) } }
             } else {
                 if let at = m.keptAt { StandNote(at: at, loading: m.loading).listRowBackground(Color.clear) }
-                // Kalender, E-Mail (KalenderPost.swift) and Listen (ListenView.swift): pages of their own, like in the panel's menu
-                if a.areas.contains("calendar") || a.areas.contains("mail") || a.areas.contains("tasks") {
+                // Kalender, E-Mail (KalenderPost.swift), Listen (ListenView.swift) and Offen (Vorgaenge.swift): pages of their
+                // own, like in the panel's menu
+                if a.areas.contains("calendar") || a.areas.contains("mail") || a.areas.contains("tasks") || a.areas.contains("vorgaenge") {
                     Section {
                         if a.areas.contains("calendar") {
                             NavigationLink { KalenderView() } label: { Label("Kalender", systemImage: "calendar") }
@@ -176,6 +177,9 @@ struct ThingsView: View {
                         }
                         if a.areas.contains("tasks") {
                             NavigationLink { ListenView() } label: { Label("Listen", systemImage: "checklist") }
+                        }
+                        if a.areas.contains("vorgaenge") {
+                            NavigationLink { OffenView() } label: { Label("Offen", systemImage: "tray") }
                         }
                     }
                 }

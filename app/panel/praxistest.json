@@ -2350,6 +2350,13 @@
 "titel": "Teilen mit Profilen",
 "text": "Funktionen → Teilen mit Profilen an. Ich → Dokumente → ein Dokument → Teilen: ein zweites Profil suchen, „Sehen“, Speichern (Code). Am anderen Profil: Mitteilung, das Dokument unter Ich → Geteilt und in der Suche. Ich → Geteilt → Von mir geteilt → Zurückziehen: beim anderen sofort weg. Ein Gast sieht nichts.",
 "thread": "Teilen zwischen Profilen"
+},
+{
+"id": "P360",
+"v": 867,
+"titel": "Alles Offene: Karten im Gespräch und Seite Offen",
+"text": "Admin: Funktionen → Mein Tag → Timer und Erinnerungen → „Alles Offene im Assistenten“ an. Eine Erinnerung in 1 Minute stellen: sie klingelt und steht als Karte mit „Erledigt“ und „Später“ im Gespräch. „Später → Heute Abend“: die Karte steht unter Offen → Später mit der Zeit. Am iPhone unter Meine Sachen → Offen „Erledigt“ drücken: im Browser zeigt die Karte gleich „Erledigt am iPhone“. Eine Rechnung mit Frist morgen aus Für dich steht unter Offen → Braucht dich mit „Erinnern“ und „Eintragen …“.",
+"thread": "Zentraler Assistenten-Chat mit Karten"
 }
 ]
 }

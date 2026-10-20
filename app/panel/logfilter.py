@@ -33,7 +33,7 @@ AREAS = (("search", r"^chat: web search"), ("werkzeug", r"^chat: tool "),
          ("nachrichten", r"^(chats|messages|verbund|geteilt):"), ("seite", r"^seite:"), ("klaeren", r"^klaeren:"),
          ("listen", r"^(tasks|reminders|calendar|contacts):"), ("mitteilung", r"^(push|apns):"),
          ("pc", r"^(begleiter|meinmcp|docmake|mcp-server):"), ("bild", r"^(bilder|bild):"), ("musik", r"^musik:"), ("schwer", r"^schwer:"), ("remarkable", r"^remarkable:"),
-         ("apps", r"^(iphone|android|app|join|onboard|terminal):"), ("vonselbst", r"^(proactive|agent|tipps|feeds):"),
+         ("apps", r"^(iphone|android|app|join|onboard|terminal):"), ("vonselbst", r"^(proactive|agent|tipps|feeds|vorgang):"),
          ("verbessern", r"^(berater|faelle|tagebuch|meldung):"),
          ("system", r"^(notaus|notzugang|wartung|guard|audit|coadmin|dienstwacht|watchdog|livecheck|update|geraeteupdate|logs|vault|zustand|"
                     r"ghtoken|netguard|verbrauch|modelle|llmtor|tlstor|dockertor|teilen|waerter|steuer|notbetrieb|gehaeuse|rechner|schirm|praxistest|rundlauf|werkstatt|wachposten|loopwacht)\b"),

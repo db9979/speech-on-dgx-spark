@@ -151,6 +151,9 @@ THINGS = {
               (("PUT",), r"/api/profile/listen/(?:einkauf|aufgaben|l[0-9a-f]{8})/share"),
               (("POST",), r"/api/profile/tasks/(?:u_[0-9a-f]{12}\.)?(?:einkauf|aufgaben|l[0-9a-f]{8})/(?:add|done|undo)"),
               (("DELETE",), r"/api/profile/tasks/(?:einkauf|aufgaben|l[0-9a-f]{8})/[0-9a-f]{10}")),
+    # Offen (vorgaenge.py, plan assistent-zentrale): the cards, one button, „gesehen“; the app asks again when it
+    # comes to the front (the event stream stays with the browser)
+    "vorgaenge": ((("GET", "DELETE"), r"/api/profile/vorgaenge"), (("POST",), r"/api/profile/vorgaenge/(?:act|seen)")),
     # Musik (musik.py): listen, make from a wish, delete one or all; change an own song, upload an own file and make
     # a version a song of its own only with Musik bearbeiten (musik.EDIT_KEY, checked there)
     "musik": ((("GET", "POST", "DELETE"), r"/api/musik"), (("GET",), rf"/api/musik/job/{_DOC}"),

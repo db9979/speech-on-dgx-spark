@@ -163,6 +163,7 @@ MODULE = {
     "vorwaermen": ("dienste", "Vorwärmen: liest beim Anmelden Kalender, Mails, Für dich und Kontakte vorab in den Speicher"),
     "contacts": ("dienste", "Kontakte per CardDAV, nur lesen"),
     "tasks": ("dienste", "Listen für Einkauf und Aufgaben"),
+    "vorgaenge": ("dienste", "Alles Offene im Assistenten: Karten mit Knöpfen im Gespräch, Später, Seite Offen (eine Ablage je Profil)"),
     "weather": ("dienste", "Wetter von Open-Meteo als feste Sätze"),
     "transit": ("dienste", "Bus und Bahn"),
     "feeds": ("dienste", "Reddit und Feeds: eigener Reddit-Posteingang, Subreddits und RSS, nur lesen"),

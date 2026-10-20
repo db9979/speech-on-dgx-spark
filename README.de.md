@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.867** Alles Offene im Assistenten (Stufe 1): was dich braucht, kommt als Karte mit Knöpfen ins Gespräch des Tages (dringende Für-dich-Funde, Erinnerungen, die geklingelt haben), direkt erledigen oder „Später“ (heute Abend, morgen früh, nächste Woche, ohne Zeit); neue Seite Offen (Braucht dich, Später, Erledigt) mit Zahl am Menüpunkt, „Noch offen“ über dem Gespräch, Heute-Karte; iPhone: Karten im Gespräch, Meine Sachen → Offen; Admin-Schalter, aus
 - **V01.0.866** Teilen mit Profilen (Stufe 1): ein Dokument einzeln mit anderen Profilen teilen (Knopf „Teilen“, Person suchen, Sehen oder Aus), Ich → Geteilt zeigt alles, was andere mit dir und du mit anderen teilst (auch Listen und Kalender), zurückziehen wirkt sofort, Mitteilung gebündelt; Admin-Schalter, aus
 - **V01.0.865** Listen teilen (Stufe 2): eine Liste je Profil zum Sehen oder Mitschreiben teilen (eintragen und abhaken, Löschen bleibt beim Besitzer), „Mit mir geteilt“ auf der Seite und im iPhone, „Setz Butter auf Sabines Einkaufsliste“, Neues von anderen als gebündelter Hinweis; Listen in der Erinnerungen-App des iPhone in beide Richtungen (Stufe 3, über den Kalender-Server) und ein Widget Einkauf; je ein Admin-Schalter, zuerst aus
 - **V01.0.864** Mitteilung ans genutzte Gerät (Admin-Schalter unter Funktionen → Timer und Erinnerungen, aus): eine Mitteilung geht an das Gerät, das du gerade benutzt (Panel-Seite, Android-App, iPhone-App, Spark-Begleiter am PC oder Mac), sonst sofort an die Handy-App; die Geräte melden nur „benutzt vor n Sekunden“ oder „weg“, nie Inhalte; Live zeigt die Anzahl
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.860** Spark-Begleiter (Windows und Mac) zieht Kalender und E-Mail nach: Post im Fenster (ungelesen, Für dich, dringende Karten), wichtige neue Mail als Hinweis mit „Antwort entwerfen“, Knöpfe je Meldung, Karten in Frag Spark, Schnell erfassen mit Strg+Alt+N (Termin, Erinnerung oder Liste), 3 Antwortvorschläge auch im Outlook-Add-in, geteilte Kalender in „Als Nächstes“, Listen im Fenster; alles je Gerät aus
 - **V01.0.859** Seite Listen: der Kopf einer Liste ist wieder eine Zeile (der Titel brach Buchstabe für Buchstabe um, statt der Zahl stand „NaN“), Eingabe und Einträge stehen darunter; Browser-Test dafür
 - **V01.0.858** Fix: GitHub-Lauf „Tests“ wieder grün; der neue Test der Rechner-Karten erlaubt 1 px Rundung (Schrift auf GitHub) und misst beide Stände in einem Zug, ohne Wettlauf mit der eigenen Abfrage der Seite; der Test „Sicherheitspunkt macht Zustand nicht rot“ prüft auf eigenem Stand
-- **V01.0.857** Für dich: liest bei einer neuen Mail sofort neu (mit „Neue Mails sofort“), und eine Marke nur im Betreff einer echten, bestätigten Mail (etwa o2 mit Netflix) ist kein Phishing-Verdacht mehr
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

@@ -292,6 +292,7 @@ Home Assistant, mail, calendar, tasks, weather, reMarkable, MCP and what the Spa
 | `app/panel/tasks.py` | Lists per profile: the shopping list, the to-do list and own lists („Setz Milch auf die Einkaufsliste“, „Was steht auf der Baumarkt-Liste?“). |
 | `app/panel/tidy.py` | Tidying the inbox per profile: obvious advertising, newsletters and the like are moved into folders under a main folder ("Spark/" unless the profile names an … |
 | `app/panel/transit.py` | Bus und Bahn: departures from the profile's home stop and connections, from a transport.rest service (https://v6.db.transport.rest by default, the admin can … |
+| `app/panel/vorgaenge.py` | Alles Offene im Assistenten: what needs the person becomes one Vorgang in one place per profile. |
 | `app/panel/vorwaermen.py` | Vorwärmen: when a profile signs in, or the panel or its app opens (GET /api/whoami with a profile), its calendars (this and the next month), its mail listing … |
 | `app/panel/weather.py` | Weather straight from Open-Meteo (no key): the panel turns the numbers into fixed German sentences, the language model only reads them out. |
 | `app/panel/zustand_wz.py` | Zustand per Sprache: the tool spark_zustand. |
@@ -518,6 +519,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `users/ID/speicher.vor-nas.json` | Copy of my data before the move to storage places | Login | – | yes | – |
 | `users/ID/mail-tidy.json` | Inbox tidy | Settings | – | yes | – |
 | `users/ID/fuerdich.json` | For you: what you marked as done or not interesting (only checksums) | Settings | – | yes | – |
+| `users/ID/vorgaenge.json` | Open: what needs you, what you put off for later and what is done (titles and state of the cards) | Queue | – | yes | – |
 | `users/ID/interessen.json` | What I know about you: confirmed and refused interests and the last web tip (never a mail) | Settings | – | yes | – |
 | `users/ID/mailstil.json` | Mail style (only the summary, never a mail) | Settings | – | yes | – |
 | `users/ID/mail-regeln.json` | Mail rules of the E-mail page (senders, words, folders; never a mail) | Settings | – | yes | – |
@@ -1465,7 +1467,7 @@ flowchart TD
 5. <a id="kn-sicherheit-s5"></a>**Release and block**: Every function is off until the admin releases it; then it counts for every profile, unless the admin blocks single ones (features.blocked). What is not allowed is not even offered as a tool.
 6. <a id="kn-sicherheit-s6"></a>**Outside stays data**: What a tool reads from outside reaches the model as a marked block of data. From then on 13 acting tools are locked, in the next turn too, and nothing of it is learned into memory. Connections to the outside go only through the guard (netguard.allowed).
 7. <a id="kn-sicherheit-s7"></a>**The language model proposes**: The model words the answer and picks from what is left after the steps before. If it calls a tool that was not offered, it does not run.
-8. <a id="kn-sicherheit-s8"></a>**Does it change something?**: Reading happens at once. Whatever changes something (light, sending mail, appointment, call) leaves a proposal; it runs only after a plain „yes“ to exactly that proposal, from the same device. Home Assistant only from an allowlist. Only the person deletes mail (into the trash, for good only after a question), never the model.
+8. <a id="kn-sicherheit-s8"></a>**Does it change something?**: Reading happens at once. Whatever changes something (light, sending mail, appointment, call) leaves a proposal; it runs only after a plain „yes“ to exactly that proposal, from the same device. Home Assistant only from an allowlist. Only the person deletes mail (into the trash, for good only after a question), never the model. Buttons on cards in the conversation and on the page Open are fixed names (vorgaenge.AKTIONEN); the panel checks every press (owner, kind, state, kill switch), and what would send or enter something only opens the page where the person does it.
 9. <a id="kn-sicherheit-s9"></a>**Check the answer**: Times, dates and amounts that are nowhere in the sources are dropped (answercheck.unsupported). Passwords, codes and keys are never spoken (textnorm.hide_secrets). The pages never show model text as HTML.
 10. <a id="kn-sicherheit-s10"></a>**Traces**: Logs carry only fixed words and numbers. Changes to access and protection are written by guard.log with a SHA-256 chain; the Wachposten tells the admins about anything unusual. Secrets lie sealed in the vault (vault.seal).
 
@@ -3342,6 +3344,7 @@ Applies at: [step 5](#kn-users-s5), [step 7](#kn-users-s7)
 | Conversations | convos.json, toollog.json, room-history.json | ✓ |
 | Memory | memory.json, learned.json, zuordnungen.json | ✓ |
 | Lists and reminders | tasks.json, reminders.json | ✓ |
+| Open (cards, later) | vorgaenge.json | ✓ |
 | Documents | wissen.db, docs/files/, suchpruefung.json | ✓ |
 | Created documents | erstellt/ | ✓ |
 | Painted pictures | bilder/ | ✓ |

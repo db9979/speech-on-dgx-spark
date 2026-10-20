@@ -122,12 +122,18 @@ def target(uid, own_cid, own_title, local, via, owner=True):
     channel's own as before. A voice that was not clearly the owner's never goes into the main conversation."""
     if not owner or via not in VIA or not features.allowed("eingespraech", uid):
         return own_cid, own_title, {}
+    return main_today(uid, local) + ({"via": via},)
+
+
+def main_today(uid, local):
+    """(id, title) of today's main conversation: the newest of today that is no channel's own, else a new one of
+    the day. The one place for it: channels (target) and the cards of Offen (vorgaenge.card_message) use it."""
     midnight = local.replace(hour=0, minute=0, second=0, microsecond=0).timestamp() * 1000
     main = next((c for c in profiles.convos(uid) if c.get("updated", 0) >= midnight
                  and not str(c.get("id", "")).startswith(OWN_PREFIXES)), None)
     if main:
-        return main["id"], main.get("title") or "Heute", {"via": via}
-    return "tag-" + local.strftime("%Y%m%d"), "Heute " + local.strftime("%d.%m."), {"via": via}
+        return main["id"], main.get("title") or "Heute"
+    return "tag-" + local.strftime("%Y%m%d"), "Heute " + local.strftime("%d.%m.")
 
 
 def keep(uid, own_cid, own_title, local, via, msgs, owner=True):

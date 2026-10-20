@@ -1373,6 +1373,11 @@ def snapshot(view="admin", now=None):
     except Exception:
         lst = {"on": False}
     try:
+        import vorgaenge
+        offen = vorgaenge.for_live()
+    except Exception:
+        offen = {"on": False}
+    try:
         import nasquelle
         nql = nasquelle.for_live()
     except Exception:
@@ -1508,6 +1513,9 @@ def snapshot(view="admin", now=None):
             x["sub"] += (f" · Listen: {lst['lists']} eigene bei {lst['profiles']} Profilen, heute {lst['added']} eingetragen,"
                          f" {lst['done']} abgehakt" + (f", {lst['shares']}× geteilt" if lst.get("shares") else "")
                          + (f", {lst['dav']['saved']} aus Erinnerungen" if lst["dav"].get("on") else ""))
+        if x["id"] == "cal" and offen.get("on"):   # Offen (vorgaenge.py): numbers only, never a title
+            x["sub"] += (f" · Offen: {offen['braucht']} brauchen jemanden bei {offen['profiles']} Profilen, {offen['spaeter']} später,"
+                         f" heute {offen['erledigt']} erledigt, {offen['wieder']} wieder da, {offen['streams']} Seiten verbunden")
         if x["id"] in ("cal", "mail") and warm.get("profiles"):   # Vorwärmen: how many profiles, how long ago (no name)
             x["sub"] += f" · {warm['profiles']} Profile vorgewärmt, zuletzt vor {warm['ago']} min"
         if x["id"] == "nasquelle" and nql.get("on"):   # Wissensordner: folders, documents, failing (no path, no name)

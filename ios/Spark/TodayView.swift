@@ -37,6 +37,13 @@ struct TodayView: View {
                     row("checklist", String(localized: "Einkauf"), "\(l["shopping"] as? Int ?? 0)",
                         first.isEmpty ? String(localized: "Nichts zu kaufen") : first.joined(separator: ", "))
                 }
+                if let o = cards["vorgaenge"] as? [String: Any] {
+                    // Offen (vorgaenge.py): how many need you, the first titles; the cards themselves on Meine Sachen → Offen
+                    let n = o["braucht"] as? Int ?? 0, first = o["first"] as? [String] ?? []
+                    NavigationLink { OffenView() } label: {
+                        row("tray", String(localized: "Offen"), "\(n)", first.isEmpty ? String(localized: "Nichts braucht dich") : first.joined(separator: " · "))
+                    }
+                }
                 if let m = cards["messages"] as? [String: Any] {
                     let n = m["unread"] as? Int ?? 0
                     row("bubble.left.and.bubble.right", String(localized: "Chats"), "\(n)", n > 0 ? String(localized: "ungelesen") : String(localized: "Alles gelesen"))

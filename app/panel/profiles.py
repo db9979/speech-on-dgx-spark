@@ -1164,6 +1164,9 @@ def _clean_msg(m, uid=None):
              **({"screen": True} if screen else {"outside": True} if m.get("outside") and not m.get("mail") else {}))
     if m.get("via") in VIA:
         d["via"] = m["via"]
+    # a card of Offen (vorgaenge.py): only its number; every device draws the card with today's state
+    if m["role"] == "assistant" and isinstance(m.get("vg"), str) and re.fullmatch(r"v[0-9a-f]{10}", m["vg"]):
+        d["vg"] = m["vg"]
     att = _att(m.get("att")) if m["role"] == "assistant" and not screen else []
     if att:
         d["att"] = att
@@ -1240,6 +1243,10 @@ def add_reminder(uid, text, due, every="", made=None):
     return item
 
 
+# called once when a reminder rang (take_reminder): vorgaenge.from_reminder makes its card of Offen and returns its number
+REMINDER_HOOKS = []
+
+
 def take_reminder(uid, rid, due_by):
     """The one device that plays a due reminder takes it off the list; every later one gets None
     (one ring for the whole profile, not one per device). Only when it is due by due_by (ms)."""
@@ -1252,6 +1259,12 @@ def take_reminder(uid, rid, due_by):
             if nxt:   # a repeating reminder comes back at its next time (a new id: each ring is taken once)
                 keep = sorted(keep + [dict(item, id=secrets.token_hex(4), due=nxt)], key=lambda x: x["due"])[-MAX_REMINDERS:]
             _write(_path(uid, "reminders.json"), keep)
+    if item is not None:
+        for f in REMINDER_HOOKS:   # outside the lock: a hook may write the conversation (vorgaenge.from_reminder)
+            try:
+                item = dict(item, vg=f(uid, item) or "")
+            except Exception as e:
+                print("profiles: reminder hook", type(e).__name__, flush=True)
     return item
 
 

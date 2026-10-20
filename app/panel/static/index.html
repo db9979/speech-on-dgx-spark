@@ -59,7 +59,7 @@
 <button class="b" id="logoutbtn" type="button" style="order:4;display:none">Abmelden</button>
 </div>
 <button class="ib" id="mmenu" type="button" title="Menü" aria-label="Menü"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
-<nav><button type="button" class="navfind" id="findbtn" aria-label="Suchen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><span>Suchen …</span><kbd>Strg K</kbd></button><button data-s="chat"><i class="ni" data-ni="chat"></i>Assistent</button><button data-s="chats" hidden><i class="ni" data-ni="chats"></i>Chats <span class="ncnt" id="cxcnt" hidden></span></button><button data-s="cal" hidden><i class="ni" data-ni="cal"></i>Kalender</button><button data-s="post" hidden><i class="ni" data-ni="post"></i>E-Mail</button><button data-s="listen" hidden><i class="ni" data-ni="listen"></i>Listen</button><button type="button" class="navme" id="navme"><i class="ni" data-ni="me"></i>Ich <span class="medot" hidden></span></button><span class="navgrp">Spark verwalten</span><button data-s="mon" class="on"><i class="ni" data-ni="mon"></i>Zustand <span class="hdot" id="hdot"></span></button><button data-s="feat"><i class="ni" data-ni="feat"></i>Funktionen <span class="ncnt" id="featdirty" hidden>1</span></button><button data-s="prof"><i class="ni" data-ni="prof"></i>Personen und Geräte</button><button data-s="cfg"><i class="ni" data-ni="cfg"></i>Einstellungen <span class="ncnt" id="dirtycnt" hidden></span><span id="updbadge" class="pill warn" style="display:none">Update</span></button></nav></header>
+<nav><button type="button" class="navfind" id="findbtn" aria-label="Suchen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><span>Suchen …</span><kbd>Strg K</kbd></button><button data-s="chat"><i class="ni" data-ni="chat"></i>Assistent</button><button data-s="chats" hidden><i class="ni" data-ni="chats"></i>Chats <span class="ncnt" id="cxcnt" hidden></span></button><button data-s="cal" hidden><i class="ni" data-ni="cal"></i>Kalender</button><button data-s="post" hidden><i class="ni" data-ni="post"></i>E-Mail</button><button data-s="listen" hidden><i class="ni" data-ni="listen"></i>Listen</button><button data-s="offen" hidden><i class="ni" data-ni="offen"></i>Offen</button><button type="button" class="navme" id="navme"><i class="ni" data-ni="me"></i>Ich <span class="medot" hidden></span></button><span class="navgrp">Spark verwalten</span><button data-s="mon" class="on"><i class="ni" data-ni="mon"></i>Zustand <span class="hdot" id="hdot"></span></button><button data-s="feat"><i class="ni" data-ni="feat"></i>Funktionen <span class="ncnt" id="featdirty" hidden>1</span></button><button data-s="prof"><i class="ni" data-ni="prof"></i>Personen und Geräte</button><button data-s="cfg"><i class="ni" data-ni="cfg"></i>Einstellungen <span class="ncnt" id="dirtycnt" hidden></span><span id="updbadge" class="pill warn" style="display:none">Update</span></button></nav></header>
 <main>
 <div class="ptabs subnav" id="subnav" hidden></div>
 <button class="b cfgback" id="subback" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg><span>Zustand</span></button>
@@ -207,6 +207,7 @@
       <div class="row" style="margin-top:8px"><button class="b" id="searchtest" type="button">Verbindung testen</button><span id="searchmsg" class="mut"></span></div><div class="fh">Über deine eigene SearXNG-Instanz. Am besten erlaubt sie das JSON-Format (settings.yml: search.formats: [html, json]); sonst liest das Panel die normale Ergebnisseite.</div></div>
       <div class="setrow"><div class="lbl"><b>Timer und Erinnerungen</b><span>„Erinnere mich in 10 Minuten an den Ofen“: Das Gerät klingelt und sagt es an.</span></div><label class="tgl"><input type="checkbox" id="chat.reminders"><i></i></label></div>
       <div class="setrow" data-show="chat.reminders" style="margin-left:18px"><div class="lbl"><b>Mitteilung ans genutzte Gerät</b><span>Eine Mitteilung geht an das Gerät, das gerade benutzt wird, sonst an die Handy-App.</span></div><label class="tgl"><input type="checkbox" id="chat.note_device"><i></i></label></div>
+      <div class="setrow" data-show="chat.reminders" style="margin-left:18px"><div class="lbl"><b>Alles Offene im Assistenten</b><span>Was dich braucht, kommt als Karte mit Knöpfen ins Gespräch; „Später“ legt es auf die Seite Offen.</span></div><label class="tgl"><input type="checkbox" id="chat.vorgaenge"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Mein Zustand</b><span>Jedes Profil sieht unter Ich, was der Spark im Hintergrund für es erledigt und ob seine verbundenen Dienste antworten.</span></div><label class="tgl"><input type="checkbox" id="chat.my_status"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Verbrauchszähler</b><span>Zählt Tokens, Sekunden und Bilder je Modell, Aufgabe und Profil, nur Zahlen. Zu sehen unter Zustand → Verbrauch und Ich → Verbrauch.</span></div><label class="tgl"><input type="checkbox" id="chat.usage_count"><i></i></label></div>
       <div class="setrow" data-show="chat.usage_count" style="margin-left:18px"><div class="lbl"><b>Kontingent</b><span>Grenzen beim Sprachmodell je Profil für Tag, Woche und Monat, danach ein fester Satz. Admin-Profile ohne Grenze.</span></div><label class="tgl"><input type="checkbox" id="chat.usage_quota"><i></i></label></div>
@@ -837,6 +838,9 @@
 <section id="listen"><div class="card" id="lstroot"></div>
     <div id="taskbox" class="lstset" hidden></div>
 </section>
+<section id="offen"><div class="card" id="vgroot"></div>
+    <div id="vgbox" class="vgset" hidden></div>
+</section>
 <section id="chats"><div class="card cx" id="cxbox">
   <div class="cx-off mut" id="cxoff" hidden></div>
   <div class="cx-split" id="cxsplit">
@@ -1333,6 +1337,7 @@
 <script src="/static/js/kalender.js"></script>
 <script src="/static/js/post.js"></script>
 <script src="/static/js/listen.js"></script>
+<script src="/static/js/offen.js"></script>
 <script src="/static/js/android.js"></script>
 <script src="/static/js/appview.js"></script>
 <script src="/static/js/notaus.js"></script>

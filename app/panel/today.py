@@ -68,6 +68,9 @@ async def today(request: Request, tz: str = "", prof=Depends(own_profile)):
     if may("fuerdich"):   # numbers only; reads the mails with a time budget, the page never waits longer
         import fuerdich
         out["cards"]["fuerdich"] = await fuerdich.card(uid)
+    if may("vorgaenge"):   # Offen (vorgaenge.card): how many need the person, how many later, the first titles
+        import vorgaenge
+        out["cards"]["vorgaenge"] = vorgaenge.card(uid)
     if may("tasks"):   # the lists on the Spark (tasks.card): numbers and the newest entries of Einkauf
         import tasks
         out["cards"]["tasks"] = tasks.card(uid)

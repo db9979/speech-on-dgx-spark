@@ -1929,3 +1929,24 @@ textarea{resize:none}textarea[data-fest]{resize:vertical}textarea.feldplatz{padd
 .lstnote{display:flex;gap:8px;align-items:center;margin:8px 0}.lstform .lstnote input{width:auto}
 .lsticons{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.lsticons .ld-chip{font-size:16px;padding:2px 8px}
 @media (max-width:760px){.lstck{width:28px;height:28px}.lstitem{padding:10px 2px}.lstdel{opacity:1}}
+/* Offen (offen.js, plan assistent-zentrale Stufe 1): one card for the conversation and the page; kind and deadline on
+   top, the panel's sentence, facts, fixed buttons with „Später ▾“, a grey line with what happened; done ones shrink */
+.msg .bubble.vgb{background:none;padding:0;width:min(600px,100%);white-space:normal}
+.vk{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:11px 14px 12px;display:flex;flex-direction:column;gap:4px}
+.vk.hot{border-left:3px solid var(--warn)}
+.vk-k{display:flex;align-items:center;gap:6px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--mut)}
+.vk-sym{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:7px;background:color-mix(in srgb,var(--acc) 14%,var(--card));color:var(--acc);flex:none}
+.vk .frist,.ld-right .frist{margin-left:auto;font-size:11.5px;padding:1px 8px;border-radius:99px;background:color-mix(in srgb,var(--line) 70%,transparent);text-transform:none;letter-spacing:0;white-space:nowrap}
+.frist.warn{background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--warn);font-weight:700}
+.vk-t{font-size:14.5px}.vk-z{font-size:13.5px;color:color-mix(in srgb,var(--fg) 85%,var(--mut))}
+.vk-f{display:grid;grid-template-columns:70px 1fr;gap:2px 10px;margin:2px 0;font-size:13.5px}.vk-f dt{color:var(--mut)}.vk-f dd{margin:0;overflow-wrap:anywhere}
+.vk-b{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:4px}.vk-b .b{padding:6px 11px;font-size:13px}
+.vk-sp{margin-left:auto}.vk-pop{top:auto;bottom:38px}
+.vk-fuss{font-size:12px;color:var(--mut)}
+.vk-zu{display:inline-flex;flex-wrap:wrap;gap:8px;align-items:center;border:1px dashed var(--line);border-radius:12px;padding:6px 12px;font-size:13px}
+.vk-zu .vk-sym{background:color-mix(in srgb,var(--ok) 16%,var(--card));color:var(--ok)}.vk-zu .b{padding:3px 9px;font-size:12.5px}
+.vgstrip{border:1px solid var(--line);background:var(--card);border-radius:12px;margin:0 0 8px;padding:2px 4px}
+.vgs-h,.vgs-r{display:flex;gap:8px;align-items:center;width:100%;border:0;background:none;color:var(--fg);font:inherit;font-size:13.5px;padding:6px 8px;cursor:pointer;text-align:left;border-radius:8px}
+.vgs-h:hover,.vgs-r:hover{background:color-mix(in srgb,var(--line) 50%,transparent)}.vgs-c{margin-left:auto;color:var(--mut)}
+.vgs-r span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.vgstrip .ic-lnk{margin:2px 8px 6px}
+.vgdet .vk{box-shadow:none;border:0;padding:0 0 10px;border-bottom:1px solid var(--line);border-radius:0}.vgdet .vg-facts{margin:10px 0}

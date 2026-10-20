@@ -34,6 +34,7 @@ async function meToday(){if(!PROFILE)return;const ph=PHONE.matches,host=ph?$('pt
   if(c.fuerdich&&!c.fuerdich.nomail)cards.appendChild(tdCard(t('Für dich','For you'),c.fuerdich.ready?(c.fuerdich.urgent?t(`${c.fuerdich.urgent} brauchen dich`,`${c.fuerdich.urgent} need you`):t('Nichts dringend','Nothing urgent')):t('wird gelesen','being read'),
     c.fuerdich.suspicious?t(`${c.fuerdich.suspicious} verdächtige Mail`,`${c.fuerdich.suspicious} suspicious mail`):c.fuerdich.ready?t(`${c.fuerdich.total} Funde in deinen Mails`,`${c.fuerdich.total} finds in your mails`):'','post:fuer'));
   if(c.tasks)cards.appendChild(tdCard(t('Listen','Lists'),String(c.tasks.shopping),c.tasks.first&&c.tasks.first.length?t('Einkauf: ','Shopping: ')+c.tasks.first.join(' · '):t('Einkauf ist leer','Shopping is empty'),'listen:show'));
+  if(c.vorgaenge)cards.appendChild(tdCard(t('Offen','Open'),String(c.vorgaenge.braucht),c.vorgaenge.first&&c.vorgaenge.first.length?c.vorgaenge.first.join(' · '):c.vorgaenge.spaeter?c.vorgaenge.spaeter+t(' für später',' for later'):t('Nichts braucht dich','Nothing needs you'),'offen:show'));
   if(c.memory)cards.appendChild(tdCard(t('Gedächtnis','Memory'),String(c.memory.facts),t('gemerkte Fakten','remembered facts'),'factbox'));
   // Mein Zustand (hintergrund.js): the short line here, the whole card under Ich → Mein Zustand
   if(typeof MYST_ON!=='undefined'&&MYST_ON){try{const r=await api('/api/profile/hintergrund?brief=1',{cache:'no-store'});

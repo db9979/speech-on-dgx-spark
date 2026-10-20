@@ -29,13 +29,14 @@ const rem={list:[],rung:new Set(),
   async take(x){if(!PROFILE||x.local){this.drop(x.id);return true}
     let play=true;
     try{const r=await api('/api/profile/reminders/played',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:x.id})});
-      if(r.ok)play=!!(await r.json()).play}catch{}    // the Spark unreachable: rather ring once too often than never
+      if(r.ok){const d=await r.json();play=!!d.play;x.vg=d.vg||''}}catch{}   // vg: its card of Offen is in today's conversation    // the Spark unreachable: rather ring once too often than never
     this.list=this.list.filter(y=>y.id!==x.id);this.keep();return play},
   async ring(x){this.rung.add(x.id);if(!await this.take(x))return;
+    const card=x.vg&&window.vgLive;
     if(Date.now()-x.due>10*60e3){   // long missed (page was closed): shown quietly, not chimed or said
-      chatLog('assistant','⏰ '+t('Verpasst ','Missed ')+'('+this.when(x.due)+'): '+x.text);return}
+      if(card)vgLive(x.vg,x.text);else chatLog('assistant','⏰ '+t('Verpasst ','Missed ')+'('+this.when(x.due)+'): '+x.text);return}
     const line=t('Erinnerung: ','Reminder: ')+x.text;
-    chime();setTimeout(chime,350);const b=chatLog('assistant','⏰ '+line);b.classList.add('alarm');
+    chime();setTimeout(chime,350);if(card)vgLive(x.vg,line);else chatLog('assistant','⏰ '+line).classList.add('alarm');
     if(document.hidden)try{if(window.Notification&&Notification.permission==='granted')new Notification('⏰ '+x.text,{body:t('Erinnerung','Reminder'),tag:x.id})}catch{}
     if(chat.rec||chat.ctrl||playing())return;   // a conversation is running: the bubble and the chime suffice
     if(typeof voiceOn==='function'&&!voiceOn())return;   // Vorlesen off: the bubble and the chime suffice

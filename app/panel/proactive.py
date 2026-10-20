@@ -145,9 +145,11 @@ def blocked(uid, kind, p=None, local=None, st=None):
     return ""
 
 
-async def deliver(uid, kind, text, why="", data="", offer=None, until=None, force=False, mail=False, ref=""):
+async def deliver(uid, kind, text, why="", data="", offer=None, until=None, force=False, mail=False, ref="", vg=None):
     """Says text to the profile (open page, else push) unless something blocks it; logs it in the
-    profile's tool log. ref: what it is about (a Für-dich card), for the Begleiter's buttons. Returns the item, or None."""
+    profile's tool log. ref: what it is about (a Für-dich card), for the Begleiter's buttons. Returns the item, or None.
+    vg: a Vorgang of Offen (vorgaenge.py) the note is about: its card goes into today's main conversation, the page
+    only rings and speaks."""
     p = prefs(uid)
     local = datetime.datetime.now(_zone(p))
     text = re.sub(r"\s+", " ", str(text)).strip()[:400]
@@ -162,6 +164,8 @@ async def deliver(uid, kind, text, why="", data="", offer=None, until=None, forc
             "until": int(until or now + QUEUE_KEEP)}
     if mail:
         item["mail"] = True    # kept out of what the learner reads, like answers made from mail
+    if vg:
+        item["vg"] = vg
     private = kind not in PUBLIC_KINDS
     if not page and push.reachable(uid, private):
         item["pushed"] = True
@@ -195,6 +199,12 @@ async def deliver(uid, kind, text, why="", data="", offer=None, until=None, forc
             live.note(uid, "page", now, 1)
     if own is not None:
         live.end(own)
+    if vg:
+        try:
+            import vorgaenge
+            vorgaenge.say(uid, vg)
+        except Exception as e:
+            print("proactive: card", type(e).__name__, flush=True)
     profiles.tool_log_add(uid, f"(von selbst: {KINDS[kind][0]})",
                           [{"name": "von selbst: " + kind, "args": why, "result": data or text}], text)
     print(f"proactive: {kind} said ({'push' if item.get('pushed') else 'page'})", flush=True)
@@ -247,7 +257,7 @@ def poll(uid, since=0):
     already played is left out (V01.0.179: said once, not on every device of the profile)."""
     _polled[uid] = time.time()
     now = time.time()
-    return [{k: x[k] for k in ("id", "t", "kind", "text", "mail") if k in x}
+    return [{k: x[k] for k in ("id", "t", "kind", "text", "mail", "vg") if k in x}
             for x in state(uid).get("queue", []) if x["t"] > since and x.get("until", 0) > now
             and not x.get("pushed") and not x.get("played")]
 
@@ -1036,7 +1046,9 @@ async def check_fuerdich(uid, p, now):
         if k in said or blocked(uid, "fuerdich", p, now):
             continue
         _mut(uid, lambda s, k=k: s.update(fuer_said=(s.get("fuer_said", []) + [k])[-100:]))
-        await deliver(uid, "fuerdich", text, why=f"Für dich: {why}", data=why, mail=True, ref=k)
+        import vorgaenge   # with Offen on, the note is its card in today's conversation
+        await deliver(uid, "fuerdich", text, why=f"Für dich: {why}", data=why, mail=True, ref=k,
+                      vg=vorgaenge.id_of(uid, "fuerdich:" + k) if features.allowed("vorgaenge", uid) else None)
 
 
 RUECK_DAY, RUECK_HOURS = 6, (18, 21)    # Sundays from 18 o'clock (6a), once per calendar week

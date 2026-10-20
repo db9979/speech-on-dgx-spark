@@ -106,6 +106,7 @@ RULES = {
 }
 
 WITHOUT = {
+    "vorgaenge": "Stufe 1 ohne Werkzeug: Karten und Knöpfe im Gespräch und auf der Seite Offen (vorgaenge.AKTIONEN); „Was ist offen?“ per Stimme kommt in Stufe 4",
     "calserver": "kein Werkzeug: Kalender-Apps erreichen den Spark über CalDAV (kalenderserver.py), Termine per Sprache über calendar_add",
     "ablauf": "Einstellung, wie Antworten gezeigt werden (ablauf.py)",
     "auftragsplan": "Werkzeuge nur innerhalb eines Auftrags (auftragsplan.py), Antworten und Ja unter Ich → Aufträge",

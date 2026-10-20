@@ -61,7 +61,7 @@ ME_PAGES = (("overbox", "Überblick", "Overview"), ("bgbox", "Mein Zustand", "My
 # (me=<id>) of every way, card and app; kalender.js OWN_PAGES carries the same (test_app_gleichstand).
 # (id, section, name de, name en)
 OWN_PAGES = (("calbox", "cal", "Kalender", "Calendar"), ("mailbox", "post", "E-Mail", "E-mail"),
-             ("taskbox", "listen", "Listen", "Lists"))
+             ("taskbox", "listen", "Listen", "Lists"), ("vgbox", "offen", "Offen", "Open"))
 # Ich pages every profile has, whatever is switched on (me.js meAll shows them for every profile too)
 ME_ALWAYS = frozenset(("setbox", "factbox", "logbox", "secbox"))
 # Ich pages the iPhone app leaves out, each with its reason; every other page can be opened in the app
@@ -263,6 +263,10 @@ FEATURES = (
     # else to the phone app
     F("notedevice", "Mitteilung ans genutzte Gerät", "Notes to the device in use", "day", ("note_device", "reminders"),
       parent="reminders", guide="notedevice"),
+    # Alles Offene im Assistenten (vorgaenge.py, plan assistent-zentrale): cards with buttons in the conversation, Später,
+    # the page Offen; a child row under Timer und Erinnerungen (the Funktionen page is near its height limit)
+    F("vorgaenge", "Alles Offene im Assistenten", "Everything open in the assistant", "day", ("vorgaenge",),
+      parent="reminders", me="vgbox", guide="vorgaenge"),
     F("tasks", "Listen für Einkauf und Aufgaben", "Lists for shopping and tasks", "day", ("tasks",), me="taskbox", guide="tasks"),
     # tasks.py (plan listen-teilen Stufe 2, Dominik 2026-10-20 „3a“): share an own list with another profile, see or
     # put on and tick off; a note when others put something on (preference list_note)

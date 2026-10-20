@@ -1,0 +1,288 @@
+import SwiftUI
+
+/// Alles Offene im Assistenten (vorgaenge.py, plan assistent-zentrale Stufe 1): the same Vorgänge as the panel's page
+/// Offen. A message of the conversation carries only the number ("vg"); the card is drawn from this store, so a button
+/// pressed in the browser changes the card here at the next look. The buttons are names the Spark sent and the Spark
+/// checks each again (rev: another device was quicker → the card shows the new state). Titles are the panel's words,
+/// a sender from a mail is outside text: shown with Text(verbatim:) only. Opens with the admin's release
+/// (iphone.THINGS "vorgaenge").
+struct Vorgang: Identifiable {
+    struct Knopf: Hashable {
+        let k: String
+        let name: String
+        let page: Bool
+    }
+    let id: String
+    let art: String
+    let artName: String
+    let bell: Bool
+    let urgent: Bool
+    let title: String
+    let line: String
+    let facts: [(String, String)]
+    let due: String
+    let state: String
+    let group: String
+    let laterUntil: Date?
+    let how: String
+    let place: String
+    let changed: Date?
+    let made: Date?
+    let rev: Int
+    let knoepfe: [Knopf]
+    let data: [String: String]
+
+    init(_ d: [String: Any], en: Bool) {
+        let date = { (k: String) -> Date? in
+            let t = (d[k] as? NSNumber)?.doubleValue ?? 0
+            return t > 0 ? Date(timeIntervalSince1970: t) : nil
+        }
+        id = d["id"] as? String ?? ""
+        art = d["art"] as? String ?? ""
+        artName = (en ? d["art_en"] : d["art_de"]) as? String ?? ""
+        bell = d["sym"] as? String == "bell"
+        urgent = d["dringend"] as? Bool ?? false
+        title = String((d["titel"] as? String ?? "").prefix(200))
+        line = String((d["zeile"] as? String ?? "").prefix(200))
+        facts = (d["felder"] as? [[String]] ?? []).compactMap { $0.count == 2 ? ($0[0], $0[1]) : nil }
+        due = d["frist"] as? String ?? ""
+        state = d["zustand"] as? String ?? ""
+        group = d["gruppe"] as? String ?? ""
+        laterUntil = date("spaeter_bis")
+        how = d["wie"] as? String ?? ""
+        place = d["wo"] as? String ?? ""
+        changed = date("ge")
+        made = date("t")
+        rev = d["rev"] as? Int ?? 0
+        knoepfe = (d["acts"] as? [[String: Any]] ?? []).map {
+            Knopf(k: $0["k"] as? String ?? "", name: (en ? $0["en"] : $0["de"]) as? String ?? "", page: $0["stufe"] as? String == "seite")
+        }
+        data = d["daten"] as? [String: String] ?? [:]
+    }
+
+    var done: Bool { group == "erledigt" }
+    func has(_ k: String) -> Bool { knoepfe.contains { $0.k == k } }
+}
+
+@MainActor
+final class VorgangStore: ObservableObject {
+    static let shared = VorgangStore()
+    static let en = Locale.current.language.languageCode?.identifier != "de"
+    @Published var items: [String: Vorgang] = [:]
+    @Published var counts: [String: Int] = [:]
+    @Published var later: [(String, String)] = []
+    @Published var error: String?
+    @Published var loading = false
+    private var rev = 0
+    private var asked = Date.distantPast
+
+    func load(all: Bool = false) async {
+        guard Conversation.shared.allowed.areas.contains("vorgaenge"), let api = SparkAPI.current else { return }
+        loading = true
+        defer { loading = false }
+        do {
+            let d = try await api.object("GET", "/api/profile/vorgaenge", query: ["seit": all ? "0" : String(rev)])
+            if all { items = [:] }
+            for x in (d["items"] as? [[String: Any]] ?? []).map({ Vorgang($0, en: Self.en) }) { items[x.id] = x }
+            rev = d["rev"] as? Int ?? rev
+            counts = d["counts"] as? [String: Int] ?? counts
+            let order = ["abend", "morgen", "woche", "ohne"], sp = d["spaeter"] as? [String: [String]] ?? [:]
+            later = order.compactMap { k in sp[k].map { (k, Self.en ? $0.last ?? k : $0.first ?? k) } }
+            error = nil
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
+
+    /// a card of the conversation shows: one look for what changed, at most every 10 seconds for an unknown number and
+    /// every 30 seconds otherwise (a button pressed in the browser shows here then)
+    func want(_ id: String) {
+        guard Date().timeIntervalSince(asked) > (items[id] == nil ? 10 : 30) else { return }
+        asked = Date()
+        Task { await load() }
+    }
+
+    func list(_ group: String) -> [Vorgang] {
+        let xs = items.values.filter { $0.group == group }
+        switch group {
+        case "spaeter": return xs.sorted { ($0.laterUntil ?? .distantFuture) < ($1.laterUntil ?? .distantFuture) }
+        case "erledigt": return xs.sorted { ($0.changed ?? .distantPast) > ($1.changed ?? .distantPast) }
+        default: return xs.sorted { $0.urgent != $1.urgent ? $0.urgent : ($0.made ?? .distantPast) > ($1.made ?? .distantPast) }
+        }
+    }
+
+    /// one button; the Spark answers with the card as it is now (and a draft for „Kündigung entwerfen …“)
+    func act(_ x: Vorgang, _ k: String, when: String = "") async -> [String: Any]? {
+        guard let api = SparkAPI.current else { return nil }
+        do {
+            let d = try await api.object("POST", "/api/profile/vorgaenge/act", body: ["id": x.id, "act": k, "rev": x.rev, "wann": when])
+            if let i = d["item"] as? [String: Any] { let y = Vorgang(i, en: Self.en); items[y.id] = y }
+            error = nil
+            await load()
+            return d
+        } catch {
+            self.error = error.localizedDescription
+            await load(all: true)        // another device was quicker: show the state it left
+            return nil
+        }
+    }
+
+    func drop(onlyDone: Bool) async {
+        guard let api = SparkAPI.current else { return }
+        _ = try? await api.object("DELETE", "/api/profile/vorgaenge", query: onlyDone ? ["nur": "erledigt"] : [:])
+        await load(all: true)
+    }
+}
+
+/// the line under a card: what happened, where and when
+func vorgangState(_ x: Vorgang) -> String {
+    let f = Date.FormatStyle(date: .abbreviated, time: .shortened)
+    if x.state == "spaeter" {
+        return x.laterUntil.map { String(localized: "Später: wieder da \($0.formatted(f))") } ?? String(localized: "Später, ohne Zeit")
+    }
+    guard x.done else { return "" }
+    let how = x.how == "abgelaufen" ? String(localized: "Abgelaufen") : x.state == "weg" ? String(localized: "Nicht wichtig")
+        : x.how == "fd_remind" ? String(localized: "Erinnerung gesetzt") : String(localized: "Erledigt")
+    return [how, x.place, x.changed?.formatted(f) ?? ""].filter { !$0.isEmpty }.joined(separator: " · ")
+}
+
+struct VorgangKarte: View {
+    let x: Vorgang
+    @ObservedObject var store = VorgangStore.shared
+    @State private var busy = false
+    @State private var writing: MailDraft?
+    @State private var adding: FuerEvent?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            if x.done {
+                HStack {
+                    Image(systemName: "checkmark.circle").foregroundStyle(.green)
+                    Text(verbatim: x.title).lineLimit(1)
+                    Spacer()
+                    if x.has("zurueck") { Button("Zurückholen") { run("zurueck") }.font(.footnote) }
+                }
+                Text(verbatim: vorgangState(x)).font(.caption).foregroundStyle(.secondary)
+            } else {
+                HStack(spacing: 6) {
+                    Image(systemName: x.bell ? "bell" : "envelope").foregroundStyle(.tint)
+                    Text(verbatim: x.artName.uppercased()).font(.caption).foregroundStyle(.secondary)
+                    Spacer()
+                    if !x.due.isEmpty { Text(verbatim: x.due).font(.caption).foregroundStyle(.orange) }
+                }
+                Text(verbatim: x.title).font(.headline)
+                if !x.line.isEmpty { Text(verbatim: x.line).font(.subheadline).foregroundStyle(.secondary) }
+                ForEach(x.facts.indices, id: \.self) { i in
+                    LabeledContent(x.facts[i].0 == "Von" ? String(localized: "Von") : x.facts[i].0) { Text(verbatim: x.facts[i].1) }.font(.subheadline)
+                }
+                HStack {
+                    ForEach(x.knoepfe.filter { $0.k != "spaeter" && $0.k != "zurueck" }.prefix(3), id: \.self) { b in
+                        Button { run(b.k, page: b.page) } label: { Text(verbatim: b.name).lineLimit(1) }
+                            .buttonStyle(.bordered)
+                    }
+                    if x.state == "spaeter" && x.has("zurueck") { Button("Jetzt zeigen") { run("zurueck") }.buttonStyle(.bordered) }
+                    if x.has("spaeter") {
+                        Menu {
+                            ForEach(store.later, id: \.0) { w in Button { run("spaeter", when: w.0) } label: { Text(verbatim: w.1) } }
+                        } label: { Text("Später") }
+                        .buttonStyle(.bordered)
+                    }
+                }
+                .disabled(busy)
+                .font(.footnote)
+                let st = vorgangState(x)
+                if !st.isEmpty { Text(verbatim: st).font(.caption).foregroundStyle(.secondary) }
+            }
+        }
+        .padding(12)
+        .background(RoundedRectangle(cornerRadius: 14).fill(Color(.secondarySystemBackground)))
+        .overlay(alignment: .leading) { if x.urgent && !x.done { Rectangle().fill(.orange).frame(width: 3).clipShape(Capsule()) } }
+        .sheet(item: $writing) { d in MailWrite(draft: d) }
+        .sheet(item: $adding) { e in
+            NavigationStack {
+                List { Section("Eintragen") { QuickAdd(text: e.line) { adding = nil } } }
+                    .navigationTitle("Eintragen")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Fertig") { adding = nil } } }
+            }
+        }
+    }
+
+    /// "seite": the place where the person goes on opens here (nothing is sent or saved by the button itself)
+    private func run(_ k: String, page: Bool = false, when: String = "") {
+        busy = true
+        Task {
+            let d = await store.act(x, k, when: when)
+            busy = false
+            guard page, let d else { return }
+            let z = x.data
+            switch k {
+            case "fd_event": if let e = z["event"], !e.isEmpty { adding = FuerEvent(line: e) }
+            case "fd_reply":
+                let s = z["subject"] ?? ""
+                writing = MailDraft(reply: z["ref"] ?? "", to: z["addr"] ?? "", subject: s.lowercased().hasPrefix("re:") ? s : "Re: " + s,
+                                    folder: z["folder"] ?? "INBOX")
+            case "fd_cancel":
+                if let m = d["draft"] as? [String: Any] {
+                    writing = MailDraft(to: m["to"] as? String ?? "", subject: m["subject"] as? String ?? "", text: m["text"] as? String ?? "")
+                }
+            default: break
+            }
+        }
+    }
+}
+
+/// a message of the conversation with "vg": its card, or the sentence while the store does not know it (switched off,
+/// or older than the Erledigt days)
+struct VorgangImGespraech: View {
+    let id: String
+    let message: Conversation.Message
+    @ObservedObject private var store = VorgangStore.shared
+
+    var body: some View {
+        if let x = store.items[id] {
+            VorgangKarte(x: x).frame(maxWidth: 420, alignment: .leading).onAppear { store.want(id) }
+        } else {
+            Bubble(message: message).onAppear { store.want(id) }
+        }
+    }
+}
+
+/// Meine Sachen → Offen: Braucht dich, Später, Erledigt (7 Tage), like the panel's page Offen
+struct OffenView: View {
+    @ObservedObject private var store = VorgangStore.shared
+    @State private var group = "braucht"
+    @State private var asking = false
+
+    var body: some View {
+        List {
+            Picker("Gruppe", selection: $group) {
+                Text("Braucht dich \(store.counts["braucht"] ?? 0)").tag("braucht")
+                Text("Später \(store.counts["spaeter"] ?? 0)").tag("spaeter")
+                Text("Erledigt \(store.counts["erledigt"] ?? 0)").tag("erledigt")
+            }
+            .pickerStyle(.segmented)
+            .listRowBackground(Color.clear)
+            let xs = store.list(group)
+            if xs.isEmpty && !store.loading {
+                Text(group == "braucht" ? "Nichts offen. Was dich braucht, kommt als Karte ins Gespräch und steht dann hier."
+                     : group == "spaeter" ? "Nichts für später." : "In den letzten 7 Tagen nichts erledigt.")
+                    .foregroundStyle(.secondary)
+            }
+            ForEach(xs) { x in VorgangKarte(x: x).listRowInsets(EdgeInsets(top: 6, leading: 12, bottom: 6, trailing: 12)) }
+            if let e = store.error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            Section {
+                Button("Erledigte entfernen") { Task { await store.drop(onlyDone: true) } }
+                Button("Alles löschen", role: .destructive) { asking = true }
+            } footer: {
+                Text(SparkAPI.way(String(localized: "Mails und Erinnerungen bleiben, wo sie sind. Ob eine Karte auch als Mitteilung kommt, stellst du unter Ich → Von selbst ein.")))
+            }
+        }
+        .navigationTitle("Offen")
+        .confirmationDialog("Alles Offene löschen?", isPresented: $asking, titleVisibility: .visible) {
+            Button("Alles löschen", role: .destructive) { Task { await store.drop(onlyDone: false) } }
+        }
+        .refreshable { await store.load(all: true) }
+        .task { await store.load(all: true) }
+    }
+}

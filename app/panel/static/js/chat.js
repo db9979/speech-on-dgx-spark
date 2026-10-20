@@ -549,7 +549,7 @@ function fillConvos(){const l=convos.load(),d=x=>new Date(x).toLocaleString(L===
     l.map(c=>`<option value="${c.id}"${c.id===chat.cid?' selected':''}>${d(c.updated)} · ${esc(c.title||'…')}</option>`).join('');
   $('convodel').disabled=!chat.cid;if(typeof offlineKeep==='function')offlineKeep()}   // verlauf.js loads after this file
 function openConvo(id,picked){const c=id&&convos.load().find(x=>x.id===id);chat.cid=c?c.id:null;chat.picked=!!(c&&picked);chat.msgs=c?c.msgs.slice():[];chat.saved=chat.msgs.length;chat.known=PROFILE&&c?c.id:null;chat.fresh=false;
-  $('chatlog').innerHTML='';$('chattiming').textContent='';chat.msgs.forEach(m=>{const b=chatLog(m.role,m.content);deletable(b,m);if(m.att||m.via)attRender(b,m.att,false,m.via)});fillConvos();if(!chat.msgs.length&&typeof moreStart==='function')moreStart()}
+  $('chatlog').innerHTML='';$('chattiming').textContent='';chat.msgs.forEach(m=>{const b=chatLog(m.role,m.content);deletable(b,m);if(m.att||m.via)attRender(b,m.att,false,m.via);if(m.vg&&window.vgMount)vgMount(b,m)});fillConvos();if(!chat.msgs.length&&typeof moreStart==='function')moreStart()}
 // What stood under an answer (sources, own documents, a document made), kept with the message so every device and a
 // reload show it again (profiles._att checks it on the Spark). live: right after the answer, where the card itself shows.
 function attOf(searches,sources,docs,drefs,mkcards,blcards){const a=[];

@@ -14390,6 +14390,186 @@
           }
         }
       }
+    },
+    "Abgelaufen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expired"
+          }
+        }
+      }
+    },
+    "Alles Offene löschen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete everything open?"
+          }
+        }
+      }
+    },
+    "Alles löschen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete all"
+          }
+        }
+      }
+    },
+    "Braucht dich %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Needs you %lld"
+          }
+        }
+      }
+    },
+    "Erinnerung gesetzt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reminder set"
+          }
+        }
+      }
+    },
+    "Erledigt %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done %lld"
+          }
+        }
+      }
+    },
+    "Erledigte entfernen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove the done ones"
+          }
+        }
+      }
+    },
+    "Gruppe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Group"
+          }
+        }
+      }
+    },
+    "In den letzten 7 Tagen nichts erledigt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing done in the last 7 days."
+          }
+        }
+      }
+    },
+    "Jetzt zeigen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show now"
+          }
+        }
+      }
+    },
+    "Mails und Erinnerungen bleiben, wo sie sind. Ob eine Karte auch als Mitteilung kommt, stellst du unter Ich → Von selbst ein.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mails and reminders stay where they are. Whether a card also comes as a notification is set under Me → By itself."
+          }
+        }
+      }
+    },
+    "Nicht wichtig": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not important"
+          }
+        }
+      }
+    },
+    "Nichts für später.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing for later."
+          }
+        }
+      }
+    },
+    "Nichts offen. Was dich braucht, kommt als Karte ins Gespräch und steht dann hier.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing open. What needs you comes as a card into the conversation and then stands here."
+          }
+        }
+      }
+    },
+    "Später %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Later %lld"
+          }
+        }
+      }
+    },
+    "Später, ohne Zeit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Later, no time"
+          }
+        }
+      }
+    },
+    "Später: wieder da %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Later: back %@"
+          }
+        }
+      }
+    },
+    "Nichts braucht dich": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing needs you"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -87,6 +87,8 @@ DATEIEN = [
     profil("mail-tidy.json", "Posteingang aufräumen", "Inbox tidy", art="Einstellungen"),
     profil("fuerdich.json", "Für dich: was du als erledigt oder uninteressant markiert hast (nur Prüfsummen)",
            "For you: what you marked as done or not interesting (only checksums)", art="Einstellungen"),
+    profil("vorgaenge.json", "Offen: was dich braucht, was du auf später gelegt hast und was erledigt ist (Titel und Zustand der Karten)",
+           "Open: what needs you, what you put off for later and what is done (titles and state of the cards)", art="Warteschlange"),
     profil("interessen.json", "Was ich über dich weiß: bestätigte und abgelehnte Interessen und der letzte Netz-Tipp (keine Mail)",
            "What I know about you: confirmed and refused interests and the last web tip (never a mail)", art="Einstellungen"),
     profil("mailstil.json", "Mailstil (nur die Zusammenfassung, keine Mail)", "Mail style (only the summary, never a mail)", art="Einstellungen"),

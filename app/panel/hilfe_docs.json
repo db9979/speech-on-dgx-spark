@@ -1517,7 +1517,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": ": Jede Funktion ist aus, bis der Admin sie freigibt; dann gilt sie für jedes Profil, außer der Admin sperrt einzelne (features.blocked). Was nicht erlaubt ist, wird gar nicht erst als Werkzeug angeboten. 6. Fremdes bleibt Daten: Was ein Werkzeug von außen liest, kommt als markierter Datenblock zum Modell. Ab da sind 13 handelnde Werkzeuge gesperrt, auch im nächsten Zug, und nichts davon wird ins Gedächtnis gelernt. Verbindungen nach außen laufen nur über den Wächter (netguard.allowed). 7. Sprachmodell schlägt vor: Das Modell formuliert und wählt aus dem, was nach den Schritten davor übrig ist. Ruft es ein Werkzeug, das nicht angeboten war, läuft es nicht. 8. Ändert es etwas?: Lesen geht sofort. Wer etwas ändert (Licht, Mail senden, Termin, Anruf), legt einen Vorschlag ab; er läuft erst nach einem schlichten „Ja“ auf genau diesen Vorschlag, vom selben Gerät. Home Assistant nur aus einer Allowlist. Mail löscht nur die Person selbst (in den Papierkorb, endgültig nur nach Rückfrage), nie das Modell. 9. Antwort prüfen: Zeiten, Daten und Beträge, die nirgends in den Quellen stehen, fallen heraus (answercheck.unsupported). Passwörter, Codes und Schlüssel werden nie gesprochen (textnorm.hi"
+"text": ": Jede Funktion ist aus, bis der Admin sie freigibt; dann gilt sie für jedes Profil, außer der Admin sperrt einzelne (features.blocked). Was nicht erlaubt ist, wird gar nicht erst als Werkzeug angeboten. 6. Fremdes bleibt Daten: Was ein Werkzeug von außen liest, kommt als markierter Datenblock zum Modell. Ab da sind 13 handelnde Werkzeuge gesperrt, auch im nächsten Zug, und nichts davon wird ins Gedächtnis gelernt. Verbindungen nach außen laufen nur über den Wächter (netguard.allowed). 7. Sprachmodell schlägt vor: Das Modell formuliert und wählt aus dem, was nach den Schritten davor übrig ist. Ruft es ein Werkzeug, das nicht angeboten war, läuft es nicht. 8. Ändert es etwas?: Lesen geht sofort. Wer etwas ändert (Licht, Mail senden, Termin, Anruf), legt einen Vorschlag ab; er läuft erst nach einem schlichten „Ja“ auf genau diesen Vorschlag, vom selben Gerät. Home Assistant nur aus einer Allowlist. Mail löscht nur die Person selbst (in den Papierkorb, endgültig nur nach Rückfrage), nie das Modell. Knöpfe auf Karten im Gespräch und auf der Seite Offen sind feste Namen (vorgaenge.AKTIONEN); jeden Druck prüft das Panel (Besitzer, Art, Stand, Notaus), und was senden oder eintragen würde,"
 },
 {
 "lang": "de",
@@ -1525,7 +1525,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "de_secrets). Die Oberfläche zeigt Modelltext nie als HTML. 10. Spuren: Logs nur mit festen Wörtern und Zahlen. Änderungen an Zugängen und Schutz schreibt guard.log mit einer SHA-256-Kette; der Wachposten meldet Auffälliges an die Admins. Geheimnisse liegen versiegelt im vault (vault.seal)."
+"text": " öffnet nur die Seite, auf der die Person es selbst tut. 9. Antwort prüfen: Zeiten, Daten und Beträge, die nirgends in den Quellen stehen, fallen heraus (answercheck.unsupported). Passwörter, Codes und Schlüssel werden nie gesprochen (textnorm.hide_secrets). Die Oberfläche zeigt Modelltext nie als HTML. 10. Spuren: Logs nur mit festen Wörtern und Zahlen. Änderungen an Zugängen und Schutz schreibt guard.log mit einer SHA-256-Kette; der Wachposten meldet Auffälliges an die Admins. Geheimnisse liegen versiegelt im vault (vault.seal)."
 },
 {
 "lang": "de",
@@ -3853,7 +3853,23 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Listen in Erinnerungen (V01.0.865, Stufe 3 des Plans, Dominik 2026-10-20 „5a“)",
-"text": "ender-Servers: Anmeldung mit App-Passwort, nur der eigene Pfad, Mein Notaus, Anfragegrenze caldav. Protokoll: die Zeilen von tasks: mit „from calendar app“, nie der Eintrag; Zustand → Live zählt beim Kalender die Änderungen aus Erinnerungen. Dazu kommt ein Widget „Einkauf“ für Home- und Sperrbildschirm der iPhone-App: die offenen Einträge der Einkaufsliste, neu geladen, sobald sich in der App eine Liste ändert, sonst etwa alle 30 Minuten (mit dem Schlüssel des iPhone, nur mit freigegebenen Listen). Code: app/panel/listendav.py, ios/SparkWidgets/SparkWidgets.swift; Tests: app/tests/test_listendav.py."
+"text": "ender-Servers: Anmeldung mit App-Passwort, nur der eigene Pfad, Mein Notaus, Anfragegrenze caldav. Protokoll: die Zeilen von tasks: mit „from calendar app“, nie der Eintrag; Zustand → Live zählt beim Kalender die Änderungen aus Erinnerungen. Dazu kommt ein Widget „Einkauf“ für Home- und Sperrbildschirm der iPhone-App: die offenen Einträge der Einkaufsliste, neu geladen, sobald sich in der App eine Liste ändert, sonst etwa alle 30 Minuten (mit dem Schlüssel des iPhone, nur mit freigegebenen Listen). Code: app/panel/listendav.py, ios/SparkWidgets/SparkWidgets.swift; Tests: app/tests/test_listendav.py. Alles Offene im Assistenten (V01.0.867, Plan assistent-zentrale/plan.md, Dominik 2026-10-20 „ok“, Stufe 1): Was dich braucht, kommt als Karte mit Knöpfen ins Gespräch des Tages (dasselbe Hauptgespräch wie bei „Ein Gespräch für alle Kanäle“): dringende Funde aus „Für dich“ (Rechnung, Vertrag, Antwort, Verdacht) und Erinnerungen, die geklingelt haben. Auf der Karte erledigst du es direkt („Erledigt“, „Erinnern“, „Nicht wichtig“, „Mehr davon“) oder öffnest die Stelle, an der du weitermachst („Eintragen …“, „Antwort entwerfen …“, „Kündigung entwerfen …“: gesendet oder gespeichert wird erst "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Listen in Erinnerungen (V01.0.865, Stufe 3 des Plans, Dominik 2026-10-20 „5a“)",
+"text": "dort). „Später“ legt die Karte weg: heute Abend (18 Uhr, abends in drei Stunden), morgen früh (8 Uhr), nächste Woche (Montag 8 Uhr) oder ohne Zeit; zur Zeit kommt sie einmal als „Wieder da: …“ ins Gespräch und als Mitteilung auf ein Gerät. Die Seite Offen im Menü (nach Listen, nur mit der Funktion; Android über die Panel-Ansicht) zeigt alles geordnet: *Braucht dich*, *Später* (nach Zeit), *Erledigt* (7 Tage, mit „Zurückholen“), links die Liste, rechts die Karte; über dem Gespräch steht „Noch offen: N“, der Menüpunkt trägt die Zahl, Ich → Heute eine Karte. In der iPhone-App: Karten im Gespräch, Meine Sachen → Offen, Heute-Karte. Erledigt auf einem Gerät ist auf jedem erledigt. Technik: vorgaenge.py hält je Profil vorgaenge.json (ein Vorgang je Sachschlüssel fuerdich:<id> oder erinnerung:<id>, Zustand offen · gesehen · später · erledigt · weg, Zähler rev). Das Gespräch speichert nur die Nummer (vg) an einer Assistenten-Nachricht, die Karte zeichnet jede Seite aus der Ablage (GET /api/profile/vorgaenge?seit=<rev>; der Strom /api/profile/vorgaenge/stream sendet nur Zahlen). Die Knöpfe sind feste Namen (vorgaenge.AKTIONEN); POST /api/profile/vorgaenge/act prüft Besitzer, Art, die Regeln"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Listen in Erinnerungen (V01.0.865, Stufe 3 des Plans, Dominik 2026-10-20 „5a“)",
+"text": " der Quelle (fuerdich.acts), den Stand (rev, sonst 409 mit dem neuen Stand) und den Notaus, dann läuft die Funktion der Quelle. Für dich und der Vorgang werden zusammen markiert. Nur das Panel macht einen Vorgang, nie das Modell; ein Absender aus einer Mail bleibt Text. Admin-Schalter „Alles Offene im Assistenten“ unter Timer und Erinnerungen, zuerst aus, dann für jedes Profil (sperrbar), Gäste nie. Offen → Einstellungen nimmt die erledigten oder alle Vorgänge weg; Mails und Erinnerungen bleiben. Bestätigungs-Karten („Ja“-Vorschläge), Kalender, Mail, Nachrichten, Geteiltes und „Was ist offen?“ per Stimme folgen in den Stufen 2 bis 4."
 },
 {
 "lang": "de",
@@ -10445,7 +10461,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "ts for every profile, unless the admin blocks single ones (features.blocked). What is not allowed is not even offered as a tool. 6. Outside stays data: What a tool reads from outside reaches the model as a marked block of data. From then on 13 acting tools are locked, in the next turn too, and nothing of it is learned into memory. Connections to the outside go only through the guard (netguard.allowed). 7. The language model proposes: The model words the answer and picks from what is left after the steps before. If it calls a tool that was not offered, it does not run. 8. Does it change something?: Reading happens at once. Whatever changes something (light, sending mail, appointment, call) leaves a proposal; it runs only after a plain „yes“ to exactly that proposal, from the same device. Home Assistant only from an allowlist. Only the person deletes mail (into the trash, for good only after a question), never the model. 9. Check the answer: Times, dates and amounts that are nowhere in the sources are dropped (answercheck.unsupported). Passwords, codes and keys are never spoken (textnorm.hide_secrets). The pages never show model text as HTML. 10. Traces: Logs carry only fixed words a"
+"text": "ts for every profile, unless the admin blocks single ones (features.blocked). What is not allowed is not even offered as a tool. 6. Outside stays data: What a tool reads from outside reaches the model as a marked block of data. From then on 13 acting tools are locked, in the next turn too, and nothing of it is learned into memory. Connections to the outside go only through the guard (netguard.allowed). 7. The language model proposes: The model words the answer and picks from what is left after the steps before. If it calls a tool that was not offered, it does not run. 8. Does it change something?: Reading happens at once. Whatever changes something (light, sending mail, appointment, call) leaves a proposal; it runs only after a plain „yes“ to exactly that proposal, from the same device. Home Assistant only from an allowlist. Only the person deletes mail (into the trash, for good only after a question), never the model. Buttons on cards in the conversation and on the page Open are fixed names (vorgaenge.AKTIONEN); the panel checks every press (owner, kind, state, kill switch), and what would send or enter something only opens the page where the person does it. 9. Check the answer: T"
 },
 {
 "lang": "en",
@@ -10453,7 +10469,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "nd numbers. Changes to access and protection are written by guard.log with a SHA-256 chain; the Wachposten tells the admins about anything unusual. Secrets lie sealed in the vault (vault.seal)."
+"text": "imes, dates and amounts that are nowhere in the sources are dropped (answercheck.unsupported). Passwords, codes and keys are never spoken (textnorm.hide_secrets). The pages never show model text as HTML. 10. Traces: Logs carry only fixed words and numbers. Changes to access and protection are written by guard.log with a SHA-256 chain; the Wachposten tells the admins about anything unusual. Secrets lie sealed in the vault (vault.seal)."
 },
 {
 "lang": "en",
@@ -12693,7 +12709,23 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Lists in Reminders (V01.0.865, stage 3 of the plan, Dominik 2026-10-20 \"5a\")",
-"text": "aldav. Log: the tasks: lines with \"from calendar app\", never the entry; Status → Live counts the changes from Reminders with the calendar. On top there is a widget \"Shopping\" for the home and lock screen of the iPhone app: the open entries of the shopping list, reloaded as soon as a list changes in the app, else about every 30 minutes (with the iPhone's key, only with the lists released). Code: app/panel/listendav.py, ios/SparkWidgets/SparkWidgets.swift; tests: app/tests/test_listendav.py."
+"text": "aldav. Log: the tasks: lines with \"from calendar app\", never the entry; Status → Live counts the changes from Reminders with the calendar. On top there is a widget \"Shopping\" for the home and lock screen of the iPhone app: the open entries of the shopping list, reloaded as soon as a list changes in the app, else about every 30 minutes (with the iPhone's key, only with the lists released). Code: app/panel/listendav.py, ios/SparkWidgets/SparkWidgets.swift; tests: app/tests/test_listendav.py. Everything open in the assistant (V01.0.867, plan assistent-zentrale/plan.md, Dominik 2026-10-20 \"ok\", stage 1): What needs you comes as a card with buttons into the day's conversation (the same main conversation as \"One conversation for all channels\"): urgent finds from \"For you\" (bill, contract, reply, suspicion) and reminders that rang. On the card you deal with it at once (\"Done\", \"Remind me\", \"Not important\", \"More of this\") or open the place where you go on (\"Add to calendar …\", \"Draft a reply …\", \"Draft a cancellation …\": nothing is sent or saved before that place). \"Later\" puts the card away: this evening (6 pm, in the evening in three hours), tomorrow morning (8 am), next week (Monday 8 "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Lists in Reminders (V01.0.865, stage 3 of the plan, Dominik 2026-10-20 \"5a\")",
+"text": "am) or no time; at that time it comes back once as \"Wieder da: …\" into the conversation and as a notification on one device. The page Open in the menu (after Lists, only with the function; Android through the panel view) shows everything in order: *Needs you*, *Later* (by time), *Done* (7 days, with \"Bring back\"), the list on the left, the card on the right; above the conversation stands \"Still open: N\", the menu entry carries the number, Me → Today a card. In the iPhone app: cards in the conversation, My things → Open, a Today card. Done on one device is done on every one. Technology: vorgaenge.py keeps vorgaenge.json per profile (one Vorgang per key fuerdich:<id> or erinnerung:<id>, state offen · gesehen · spaeter · erledigt · weg, counter rev). The conversation keeps only the number (vg) on an assistant message; every page draws the card from the store (GET /api/profile/vorgaenge?seit=<rev>; the stream /api/profile/vorgaenge/stream sends numbers only). The buttons are fixed names (vorgaenge.AKTIONEN); POST /api/profile/vorgaenge/act checks owner, kind, the source's rules (fuerdich.acts), the state (rev, else 409 with the new state) and the emergency stop, then the source's funct"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Lists in Reminders (V01.0.865, stage 3 of the plan, Dominik 2026-10-20 \"5a\")",
+"text": "ion runs. For you and the Vorgang are marked together. Only the panel makes a Vorgang, never the model; a sender from a mail stays text. Admin switch \"Everything open in the assistant\" under Timers and reminders, off at first, then for every profile (can be blocked), guests never. Open → Settings removes the done ones or all; mails and reminders stay. Confirmation cards (\"yes\" proposals), calendar, mail, messages, shared things and \"what is open?\" by voice follow in stages 2 to 4."
 },
 {
 "lang": "en",

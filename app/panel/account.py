@@ -91,7 +91,7 @@ router = APIRouter()
 WHO = {"documents": "documents", "reminders": "reminders", "speaker_id": "speaker", "calendar": "calendar",
        "homeassistant": "ha", "mail": "mail", "mail_tidy": "tidy", "mail_style": "mailstil", "mail_insight": "fuerdich", "ichweiss": "ichweiss", "share": "teilen", "mail_manage": "mailmanage", "mail_delete": "maildelete", "mail_send": "mailsend", "proactive": "proactive", "room": "room",
        "room_voices": "roomtv", "room_ha": "roomha", "room_remote": "roomfar", "weather": "weather", "contacts": "contacts",
-       "parcels": "parcels", "telegram": "telegram", "tasks": "tasks", "transit": "transit", "feeds": "feeds",
+       "parcels": "parcels", "telegram": "telegram", "tasks": "tasks", "vorgaenge": "vorgaenge", "transit": "transit", "feeds": "feeds",
        "esp32": "esp32", "iphone": "iphone", "iphone_panel": "iphonepanel", "pebble": "pebble", "pebble_chat": "pebblechat", "pebble_reply": "pebbleantwort", "pebble_remote": "pebblefern", "pebble_health": "pebblegesund", "pebble_face": "pebblezifferblatt", "pebble_day": "pebbletag", "pebble_alerts": "pebblemeldung", "pebble_note": "pebblemerken", "pebble_place": "pebbleort", "pebble_follow": "pebblefolge", "pebble_quick": "pebbleschnell", "pebble_remind": "pebbleerinnern", "terminal": "terminal",
        "android": "android", "android_live": "androidlive", "android_update": "androidupdate", "android_assist": "androidassist", "android_lock": "androidlock", "mcp_server": "mcpserver", "my_mcp": "mymcp", "write_help": "schreib", "write_apps": "schreibapps", "desk": "begleiter", "desk_act": "begleitertun", "desk_meeting": "begleitermeeting", "desk_view": "begleiterschirm", "desk_operate": "begleiterbedienen",
        "remarkable": "remarkable", "remarkable_send": "rmsend", "remarkable_fresh": "rmfresh", "remarkable_plus": "rmguide", "remarkable_paper": "rmpapier", "remarkable_tasks": "rmaufgaben", "my_status": "mystatus", "usage_count": "verbrauch", "person_priority": "vorrang",
@@ -974,10 +974,11 @@ async def profile_reminder_played(request: Request, prof=Depends(own_profile)):
     if not re.fullmatch(r"[0-9a-f]{1,16}", rid):
         raise HTTPException(400, "id is required")
     # only a due one (a device whose clock runs ahead does not take it early)
-    play = profiles.take_reminder(prof["id"], rid, time.time() * 1000 + 60_000) is not None
-    if play:   # only the device that plays it writes the line (the others get "play": false)
+    taken = profiles.take_reminder(prof["id"], rid, time.time() * 1000 + 60_000)
+    if taken is not None:   # only the device that plays it writes the line (the others get "play": false)
         print(f"reminders: one played on a device | {profiles.log_name(prof)}", flush=True)
-    return {"play": play}
+    # "vg": its card of Offen (vorgaenge.py) is in today's conversation; the page shows that card instead of a bubble
+    return {"play": taken is not None, **({"vg": taken["vg"]} if taken and taken.get("vg") else {})}
 
 
 @router.delete("/api/profile/reminders/{rid}", dependencies=[Depends(assistant)])
