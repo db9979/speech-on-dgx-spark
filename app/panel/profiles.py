@@ -932,6 +932,7 @@ SETTINGS = {
     "con_bday": (True, lambda v: isinstance(v, bool)),
     "pro_bday": (True, lambda v: isinstance(v, bool)),
     "pro_parcel": (True, lambda v: isinstance(v, bool)),
+    "pro_fuerdich": (True, lambda v: isinstance(v, bool)),   # Für dich: deadlines today or tomorrow and phishing (fuerdich.due_notes)
     "pro_transit": (True, lambda v: isinstance(v, bool)),
     "pro_feeds": (True, lambda v: isinstance(v, bool)),     # replies and keyword hits from Reddit und Feeds (feeds.py)
     "pro_tips": (True, lambda v: isinstance(v, bool)),     # one hint on a function a week (tipps.py, chat.feature_tips_push)

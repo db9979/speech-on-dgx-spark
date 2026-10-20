@@ -400,3 +400,9 @@ function postRuleForm(b){const f=RULES.form,d=RULES.data||{accounts:[]},fo=f.acc
 const postTopic=(x,n=80)=>(x||'').replace(/^((re|aw|antw|fwd?|wg)\s*:\s*)+/i,'').trim().slice(0,n);
 function postRuleFrom(m){const acct=(POST.sel||'').split(':')[0];RULES.form={account:acct,when:{from:postAddr(m.from).toLowerCase(),subject:postTopic(m.subject),to:'',attach:false},then:{folder:'',read:false,flag:false,quiet:false}};
   RULES.test=null;icTabSet('post','regeln');postOpen()}
+// Für dich (fuerdich.js, Stufe 2, Dominik 2026-10-18 „5a“): „Antwort entwerfen“ opens the mail in Posteingang and its
+// answer with the Antwortvorschläge, „Kündigung entwerfen“ a new mail with the fixed draft of the Spark; both send only
+// from the preview sheet here
+window.postFromFuer=async(id,draft)=>{icTabSet('post','show');POST.box=null;POST.write=null;POST.prev=null;goSec('post');
+  if(draft){await postWrite(null);Object.assign(POST.write,{to:draft.to||'',subject:draft.subject||'',text:draft.text||''});postDraw();return}
+  await postRead(id);if(POST.sel===id&&POST.msg&&!POST.msg.err)await postWrite(POST.msg)};

@@ -396,7 +396,8 @@ def _account(acct, uid, today, now):
                     x = classify(h, text, sent, today, _raw_text(msg), parcels.forged(msg))
                 if x:
                     x.update(id=key(h["mid"], acct["id"], n), who=who(h["from"]), subject=subj[:90],
-                             sent=sent.isoformat(), at=int(sent_dt.timestamp()), ref=f"{acct['id']}:{n}")
+                             sent=sent.isoformat(), at=int(sent_dt.timestamp()), ref=f"{acct['id']}:{n}", box=box,
+                             addr=email.utils.parseaddr(h["from"])[1].lower()[:200])
                     out.append(x)
     print(f"fuerdich: postfach gelesen ordner={len(boxes)} mails={read} funde={len(out)}", flush=True)
     return out
@@ -485,10 +486,137 @@ def public(uid, items, errors, today=None):
         title, line = sentence(x, today)
         out.append({"id": x["id"], "kind": x["kind"], "urgent": x["kind"] in URGENT, "title": title, "line": line,
                     "who": x.get("who", ""), "subject": x.get("subject", ""), "sent": x["sent"], "day": x.get("day", ""),
-                    "amount": x.get("amount", "")})
+                    "amount": x.get("amount", ""), "ref": x.get("ref", ""), "folder": x.get("box", "INBOX"), "addr": x.get("addr", ""),
+                    "acts": acts(uid, x), "event": event_line(x, today)})
     out.sort(key=lambda y: (not y["urgent"], y["day"] or "9999", y["sent"]))
     counts = {k: sum(1 for y in out if y["kind"] == k) for k in KINDS}
     return {"items": out, "counts": counts, "errors": [f"{n}: {e}" for n, e in errors]}
+
+
+# ---------------------------------------------------------------- stage 2: the buttons (Dominik 2026-10-18 „5a“)
+# Erinnern sets a reminder with a fixed text, Eintragen hands a fixed line to „Schnell eintragen“ of the page Kalender
+# (only its „Eintragen“ saves), Antwort entwerfen opens the answer with the Antwortvorschläge of the mail page,
+# Kündigung entwerfen a new mail with a fixed text; both send only from the preview sheet of the mail page (senden.py).
+REMIND_KINDS = ("rechnung", "vertrag", "angebot", "antwort")
+REMIND_HOUR = 9                 # a reminder rings at 9 o'clock on the day before the deadline
+REMIND_SOON = 3600              # never sooner than this from now
+NOSEND = re.compile(r"(?i)^(no-?reply|do-?not-?reply|mailer-daemon|postmaster|bounce\w*)[@.+-]")   # no cancelling mail goes there
+
+
+def deadline(x):
+    """The day that matters on a card (iso or ""): the last day to cancel, else the day it is due or ends."""
+    if x.get("kind") == "rechnung" and x.get("debit"):
+        return ""
+    if x.get("kind") not in ("rechnung", "vertrag", "angebot"):
+        return ""
+    return x.get("cancel") or x.get("day") or ""
+
+
+def _one(v, n=60):
+    return re.sub(r"[\x00-\x1f]+", " ", str(v or "")).strip()[:n]
+
+
+def acts(uid, x):
+    """The buttons a card has, by fixed rules: what the kind allows and the switches this profile may use."""
+    k, out = x["kind"], []
+    if k in REMIND_KINDS and not (k == "rechnung" and x.get("debit")) and features.allowed("reminders", uid):
+        out.append("remind")
+    if deadline(x) and features.allowed("calendar", uid):
+        out.append("event")
+    if k == "antwort" and x.get("box", "INBOX") == "INBOX" and x.get("ref") and features.allowed("mailsend", uid):
+        out.append("reply")
+    if k == "vertrag" and features.allowed("mailsend", uid):
+        out.append("cancel")
+    return out
+
+
+def remind_text(x):
+    k, w = x["kind"], _one(x.get("who"), 40)
+    if k == "rechnung":
+        return f"Rechnung {w} bezahlen" + (f" ({x['amount']})" if x.get("amount") else "")
+    if k == "vertrag":
+        return f"Vertrag {w}: kündigen oder behalten?"
+    if k == "angebot":
+        return f"Angebot von {w} läuft ab"
+    return f"{w} antworten"
+
+
+def remind_at(x, now):
+    """When the reminder rings (epoch seconds): 9 o'clock the day before the deadline, else tomorrow at 9; never
+    sooner than REMIND_SOON from now. now: aware datetime in the person's zone."""
+    d = deadline(x)
+    day = datetime.date.fromisoformat(d) - datetime.timedelta(days=1) if d else now.date() + datetime.timedelta(days=1)
+    at = datetime.datetime.combine(day, datetime.time(REMIND_HOUR), now.tzinfo)
+    if at.timestamp() < now.timestamp() + REMIND_SOON:
+        at = now + datetime.timedelta(seconds=REMIND_SOON) if d and d >= now.date().isoformat() else \
+            datetime.datetime.combine(now.date() + datetime.timedelta(days=1), datetime.time(REMIND_HOUR), now.tzinfo)
+    return int(at.timestamp())
+
+
+def event_line(x, today):
+    """The line for „Schnell eintragen“ (calendars.quick reads it): the day and fixed words, or ""."""
+    d = deadline(x)
+    if not d:
+        return ""
+    day = datetime.date.fromisoformat(d)
+    what = {"rechnung": "Rechnung", "vertrag": "Kündigungsfrist" if x.get("cancel") else "Vertrag verlängert sich",
+            "angebot": "Angebot endet"}[x["kind"]]
+    # only letters and spaces of the name: a digit, a time or „in …“ would be read as a day, an hour or a place
+    w = " ".join(re.sub(r"[^\w\s&-]|\d|_", " ", _one(x.get("who"), 40)).split())
+    w = re.sub(r"(?i)\b(in|im|bei|beim|at|am|um|on)\b", " ", w)
+    return f"{day.day}.{day.month}.{day.year} {what} {' '.join(w.split())}".strip()
+
+
+def cancel_draft(uid, x, today):
+    """A new mail that cancels the contract: fixed sentences with the checked values, to the sender unless it is a
+    no-reply address. The person reads and changes it; only the preview sheet sends."""
+    prof = profiles.by_id(uid) or {}
+    w = _one(x.get("who"), 40)
+    end = f"zum {datetime.date.fromisoformat(x['day']):%d.%m.%Y}" if x.get("day") else "zum nächstmöglichen Zeitpunkt"
+    addr = x.get("addr", "")
+    return {"to": "" if NOSEND.match(addr) else addr, "subject": f"Kündigung meines Vertrags bei {w}"[:120],
+            "text": "Sehr geehrte Damen und Herren,\n\n"
+                    f"hiermit kündige ich meinen Vertrag bei {w} fristgerecht {end}.\n"
+                    "Bitte bestätigen Sie mir die Kündigung und das Vertragsende schriftlich.\n\n"
+                    "Mit freundlichen Grüßen\n" + _one(prof.get("name"), 80)}
+
+
+def find(uid, k):
+    """The item with this id from the last reading, or None (the page shows only what is in it)."""
+    hit = _cache.get(uid)
+    return next((x for x in (hit[1][0] if hit else []) if x["id"] == k), None)
+
+
+def remind(uid, x, zone=None):
+    """Sets the reminder of a card; returns the reminder."""
+    now = datetime.datetime.now(zone or _zone(uid))
+    item = profiles.add_reminder(uid, remind_text(x), remind_at(x, now) * 1000)
+    try:
+        import tagebuch
+        tagebuch.note(uid, "erinnerung", item["text"], ref=item["id"])
+    except Exception:
+        pass
+    return item
+
+
+def _zone(uid):
+    import chat
+    return chat.user_zone(profiles.effective(uid).get("tz", ""))
+
+
+def mark(uid, k, how):
+    m = marks(uid)
+    if how == "open":
+        m.pop(k, None)
+    else:
+        m[k] = [how, int(time.time())]
+    _save(uid, m)
+    hit = _cache.get(uid)
+    if hit and how != "open":
+        _cache[uid] = (hit[0], ([x for x in hit[1][0] if x["id"] != k], hit[1][1]))
+    elif how == "open":
+        _cache.pop(uid, None)
+    _bump("markiert")
 
 
 CARD_BUDGET = 3.0              # seconds the card under Heute waits for a first reading
@@ -605,18 +733,7 @@ async def api_mark(request: Request, prof=Depends(own_profile)):
     if not isinstance(k, str) or not re.fullmatch(r"[0-9a-f]{20}", k) or how not in ("done", "no", "open"):
         print("fuerdich: markieren abgelehnt grund=eingabe", flush=True)
         raise HTTPException(400, "id and as (done, no, open)")
-    m = marks(prof["id"])
-    if how == "open":
-        m.pop(k, None)
-    else:
-        m[k] = [how, int(time.time())]
-    _save(prof["id"], m)
-    hit = _cache.get(prof["id"])
-    if hit and how != "open":
-        _cache[prof["id"]] = (hit[0], ([x for x in hit[1][0] if x["id"] != k], hit[1][1]))
-    elif how == "open":
-        _cache.pop(prof["id"], None)
-    _bump("markiert")
+    mark(prof["id"], k, how)
     print(f"fuerdich: markiert als={how} {profiles.log_name(prof)}", flush=True)
     return {"ok": True}
 
@@ -627,3 +744,164 @@ def api_forget(request: Request, prof=Depends(browser_profile)):
     forget(prof["id"])
     print(f"fuerdich: geloescht {profiles.log_name(prof)}", flush=True)
     return {"ok": True}
+
+
+@router.post("/api/profile/fuerdich/act", dependencies=[Depends(assistant)])
+async def api_act(request: Request, prof=Depends(own_profile)):
+    """A button of a card: {"id", "do": "remind"} sets its reminder, {"id", "do": "cancel"} returns the draft of a
+    cancelling mail ({"to", "subject", "text"}, nothing is sent; the preview sheet of the mail page sends)."""
+    _mine(request, prof)
+    b = await json_body(request, 2 * 1024)
+    k, do, uid = b.get("id"), b.get("do"), prof["id"]
+    if not isinstance(k, str) or not re.fullmatch(r"[0-9a-f]{20}", k) or do not in ("remind", "cancel"):
+        print("fuerdich: knopf abgelehnt grund=eingabe", flush=True)
+        raise HTTPException(400, "id and do (remind, cancel)")
+    x = find(uid, k)
+    want = {"remind": "remind", "cancel": "cancel"}[do]
+    if x is None or want not in acts(uid, x):
+        print(f"fuerdich: knopf abgelehnt grund={'fehlt' if x is None else 'nicht_erlaubt'} {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(404 if x is None else 403, "Diese Karte gibt es nicht mehr. Bitte neu laden."
+                            if x is None else "Für diese Karte gibt es diesen Knopf nicht.")
+    _bump("knopf")
+    if do == "remind":
+        item = remind(uid, x)
+        print(f"fuerdich: erinnerung gesetzt {profiles.log_name(prof)}", flush=True)
+        return {"ok": True, "text": item["text"], "due": item["due"]}
+    print(f"fuerdich: kuendigung entworfen {profiles.log_name(prof)}", flush=True)
+    return dict(cancel_draft(uid, x, datetime.date.today()), ok=True)
+
+
+# ---------------------------------------------------------------- Von selbst melden (proactive.py, kind "fuerdich")
+# „von selbst nur bei Fristen und Verdacht“ (2a): a bill or a cancelling deadline today or tomorrow, a suspected
+# phishing mail; once per card (proactive keeps the said ids). A new mail (IMAP IDLE of the mail page) only makes the
+# next check read anew: new_mail(uid).
+_new = set()
+
+
+def new_mail(uid):
+    """Called when a new mail came in: the next check of Von selbst reads the mailboxes anew."""
+    _new.add(uid)
+
+
+def wants_fresh(uid):
+    if uid in _new:
+        _new.discard(uid)
+        return True
+    return False
+
+
+def due_notes(uid, items, today):
+    """[(id, why, sentence)] of the cards that may speak by themselves today, by fixed rules."""
+    out = []
+    soon = {today.isoformat(), (today + datetime.timedelta(days=1)).isoformat()}
+    for x in items:
+        title, line = sentence(x, today)
+        if x["kind"] == "verdacht":
+            out.append((x["id"], "Verdacht", f"{title}. {line}"))
+        elif x["kind"] in ("rechnung", "vertrag") and deadline(x) in soon:
+            out.append((x["id"], "Frist", f"{title}. {line}"))
+    return out
+
+
+# ---------------------------------------------------------------- the assistant's tools and the briefing (extras.py)
+TOOL = {"type": "function", "function": {
+    "name": "fuer_dich",
+    "description": "What the user's own mailbox says needs them (Für dich): bills with the day they are due, contracts "
+                   "that renew with the last day to cancel, offers that end, people waiting for an answer, suspected "
+                   "phishing mails. Returns a numbered list of fixed sentences.",
+    "parameters": {"type": "object", "properties": {}}}}
+TOOL_DO = {"type": "function", "function": {
+    "name": "fuer_dich_tun",
+    "description": "Acts on one entry of the last fuer_dich list, only when the user says so for that entry: "
+                   "done (erledigt), no (nicht interessant) or remind (eine Erinnerung am Tag vor der Frist).",
+    "parameters": {"type": "object", "properties": {
+        "number": {"type": "integer", "description": "the number of the entry in the last fuer_dich list"},
+        "do": {"type": "string", "enum": ["done", "no", "remind"]}}, "required": ["number", "do"]}}}
+HINT = ("Fragen wie „Was muss ich erledigen?“ oder „Was steht in Für dich?“ beantwortest du mit fuer_dich und liest "
+        "die Sätze aus dem Ergebnis vor, ohne etwas dazuzuerfinden. fuer_dich_tun nur, wenn die Person für eine "
+        "Nummer ausdrücklich erledigt, nicht interessant oder erinnern sagt.")
+LIST_MAX = 8
+LIST_KEEP = 1800                # seconds a numbered list stays valid for fuer_dich_tun
+_listed = {}                    # uid -> (time, [ids in the order said])
+
+
+def usable(uid):
+    return bool(features.allowed("fuerdich", uid) and mail.get(uid)["accounts"])
+
+
+def offer(ctx):
+    who = ctx.get("who")
+    if not who or not ctx.get("own") or not ctx.get("private", True) or not usable(who["id"]):
+        return None
+    return {"tools": [TOOL, TOOL_DO], "hint": HINT, "mail": {"fuer_dich"}, "changes": {"fuer_dich_tun"},
+            "filler": {"fuer_dich": ("Ich schaue, was in deinem Postfach auf dich wartet.",
+                                     "Let me see what your mailbox has for you.")}}
+
+
+def say_list(uid, items, errors, today):
+    """The fixed sentences of the list for the assistant, numbered; keeps the order for fuer_dich_tun."""
+    pub = public(uid, items, errors, today)["items"][:LIST_MAX]
+    _listed[uid] = (time.time(), [x["id"] for x in pub])
+    if not pub:
+        return "Für dich: nichts, was dich gerade braucht."
+    lines = [f"{i}. {x['title']}. {x['line']}" for i, x in enumerate(pub, 1)]
+    more = len(items) - len(pub)
+    return "Für dich:\n" + "\n".join(lines) + (f"\nUnd {more} weitere unter E-Mail → Für dich." if more > 0 else "")
+
+
+async def tool(name, args, ctx):
+    uid = ctx["who"]["id"]
+    if name == "fuer_dich":
+        try:
+            items, errors = await asyncio.wait_for(asyncio.shield(_reading(uid)), 25)
+        except Exception as e:
+            if getattr(e, "status_code", 0) == 503:
+                print("fuerdich: werkzeug gestoppt grund=notaus", flush=True)
+                return "Notaus: Postfach lesen ist gerade gestoppt. Sag das so."
+            print(f"fuerdich: werkzeug fehler={type(e).__name__}", flush=True)
+            return "Postfach gerade nicht lesbar. Sag das so."
+        print(f"fuerdich: werkzeug liste funde={len(items)}", flush=True)
+        return mail._wrap(say_list(uid, items, errors, datetime.datetime.now(_zone(uid)).date()))
+    n, do = args.get("number"), args.get("do")
+    t, ids = _listed.get(uid, (0, []))
+    if do not in ("done", "no", "remind") or not isinstance(n, int) or not 1 <= n <= len(ids) or time.time() - t > LIST_KEEP:
+        print("fuerdich: werkzeug tun abgelehnt grund=eingabe", flush=True)
+        return "Not done: first read the list with fuer_dich, then name one of its numbers."
+    x = find(uid, ids[n - 1])
+    if x is None:
+        print("fuerdich: werkzeug tun abgelehnt grund=fehlt", flush=True)
+        return "Not done: this entry is gone. Read the list again with fuer_dich."
+    if do == "remind":
+        if "remind" not in acts(uid, x):
+            print("fuerdich: werkzeug tun abgelehnt grund=nicht_erlaubt", flush=True)
+            return "Not done: this entry has no reminder."
+        item = remind(uid, x)
+        print("fuerdich: werkzeug erinnerung gesetzt", flush=True)
+        when = datetime.datetime.fromtimestamp(item["due"] / 1000, _zone(uid)).strftime("%d.%m. %H:%M")
+        return f"Reminder set: '{item['text']}' at {when}."
+    mark(uid, x["id"], do)
+    print(f"fuerdich: werkzeug markiert als={do}", flush=True)
+    return f"Marked entry {n} as {'done' if do == 'done' else 'not interesting'}; it no longer shows in Für dich."
+
+
+BRIEF_MAX = 3
+
+
+async def briefing(uid, zone=None):
+    """The part of the daily briefing: what needs the person, from the last reading (read if there is none yet)."""
+    if not usable(uid):
+        return ""
+    try:
+        items, errors = await asyncio.wait_for(asyncio.shield(_reading(uid)), 10)
+    except Exception:
+        print("fuerdich: briefing ohne lesung", flush=True)
+        return ""
+    today = datetime.datetime.now(zone).date() if zone else datetime.date.today()
+    pub = [x for x in public(uid, items, errors, today)["items"] if x["urgent"]]
+    print(f"fuerdich: briefing teile={min(len(pub), BRIEF_MAX)}", flush=True)
+    if not pub:
+        return ""
+    lines = [f"{x['title']}. {x['line']}" for x in pub[:BRIEF_MAX]]
+    if len(pub) > BRIEF_MAX:
+        lines.append(f"Und {len(pub) - BRIEF_MAX} weitere unter E-Mail → Für dich.")
+    return mail._wrap("Für dich (aus deinem Postfach):\n" + "\n".join(lines))

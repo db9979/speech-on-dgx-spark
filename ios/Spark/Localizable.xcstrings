@@ -12760,6 +12760,226 @@
           }
         }
       }
+    },
+    "Alle als erledigt oder uninteressant markierten Karten wieder zeigen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show every card marked as done or not interesting again?"
+          }
+        }
+      }
+    },
+    "Als erledigt markiert.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marked as done."
+          }
+        }
+      }
+    },
+    "Antwort entwerfen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Draft a reply"
+          }
+        }
+      }
+    },
+    "Erinnern": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remind me"
+          }
+        }
+      }
+    },
+    "Erinnerung gesetzt: %@ · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reminder set: %@ · %@"
+          }
+        }
+      }
+    },
+    "Erledigt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done"
+          }
+        }
+      }
+    },
+    "Erst im Panel unter E-Mail → Einstellungen ein Postfach verbinden.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect a mailbox in the panel under E-mail → Settings first."
+          }
+        }
+      }
+    },
+    "Für dich": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For you"
+          }
+        }
+      }
+    },
+    "Gerade nichts, was dich braucht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing that needs you right now."
+          }
+        }
+      }
+    },
+    "Gut zu wissen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Good to know"
+          }
+        }
+      }
+    },
+    "Ist echt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Is genuine"
+          }
+        }
+      }
+    },
+    "Kommt nicht wieder.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Will not come back."
+          }
+        }
+      }
+    },
+    "Kündigung entwerfen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Draft a cancellation"
+          }
+        }
+      }
+    },
+    "Lese deine Mails …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading your mails …"
+          }
+        }
+      }
+    },
+    "Lese deine Mails … das dauert beim ersten Mal etwas.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading your mails … the first time takes a moment."
+          }
+        }
+      }
+    },
+    "Markierungen vergessen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forget the marks"
+          }
+        }
+      }
+    },
+    "Neu lesen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read again"
+          }
+        }
+      }
+    },
+    "Nicht interessant": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not interesting"
+          }
+        }
+      }
+    },
+    "Postfach nicht lesbar: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mailbox not readable: %@"
+          }
+        }
+      }
+    },
+    "Was der Spark in deinen Mails gefunden hat, nach festen Regeln. Die Mails bleiben ungelesen und unverändert; Links aus Mails öffnet der Spark nie.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What the Spark found in your mails, by fixed rules. The mails stay unread and unchanged; the Spark never opens links from mails."
+          }
+        }
+      }
+    },
+    "brauchen dich": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "need you"
+          }
+        }
+      }
+    },
+    "brauchen dich, davon %lld verdächtig": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "need you, %lld of them suspicious"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

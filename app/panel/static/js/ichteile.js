@@ -8,7 +8,8 @@ const SVG={check:'M5 12l5 5 9-10',x:'M6 6l12 12M18 6L6 18',trash:'M4 7h16M10 11v
   pen:'M4 20l4-1 11-11-3-3L5 16z',more:'M5 12h.01M12 12h.01M19 12h.01',sync:'M20 11a8 8 0 00-14-5L4 8M4 13a8 8 0 0014 5l2-2M4 4v4h4M20 20v-4h-4',
   folder:'M3 6h6l2 2h10v11H3z',nb:'M5 4h11a3 3 0 013 3v13H8a3 3 0 01-3-3zM5 17a3 3 0 013-3h11',pdf:'M6 3h8l4 4v14H6zM14 3v4h4M9 14h6M9 17h4',
   chev:'M9 6l6 6-6 6',down:'M6 9l6 6 6-6',back:'M15 6l-6 6 6 6',spark:'M12 3l2 6 6 2-6 2-2 6-2-6-6-2 6-2z',mail:'M3 5h18v14H3zM3 7l9 6 9-6',
-  search:'M11 4a7 7 0 100 14 7 7 0 000-14zM20 20l-3.5-3.5'};
+  search:'M11 4a7 7 0 100 14 7 7 0 000-14zM20 20l-3.5-3.5',bell:'M6 16v-5a6 6 0 0112 0v5l2 2H4zM10 20a2 2 0 004 0',
+  cal:'M4 6h16v14H4zM4 10h16M8 3v4M16 3v4',reply:'M10 7l-6 5 6 5M4 12h10a6 6 0 016 6'};
 const NS='http://www.w3.org/2000/svg';
 window.icSvg=(n,s=16)=>{const v=document.createElementNS(NS,'svg');v.setAttribute('viewBox','0 0 24 24');v.setAttribute('width',s);v.setAttribute('height',s);
   v.setAttribute('fill','none');v.setAttribute('stroke','currentColor');v.setAttribute('stroke-width',n==='more'?'3':'1.9');v.setAttribute('stroke-linecap','round');

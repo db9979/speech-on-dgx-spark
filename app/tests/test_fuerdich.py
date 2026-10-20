@@ -268,3 +268,149 @@ class FuerDich(unittest.TestCase):
         import panel
         self.assertIn(TestClient(panel.app).get("/api/profile/fuerdich").status_code, (401, 403))
         self.assertEqual(p.get("/api/profile/fuerdich").status_code, 200)
+
+
+class Stage2Rules(unittest.TestCase):
+    """Stage 2 (Dominik 2026-10-18 „5a“): the buttons, the reminder, the calendar line and the cancelling draft come
+    from fixed rules and fixed sentences; a mail cannot add a button or put words into them."""
+    NOW = datetime.datetime(2026, 10, 18, 12, tzinfo=datetime.timezone.utc)
+
+    def setUp(self):
+        self.allowed = features.allowed
+        self.on = {"reminders", "calendar", "mailsend"}
+        features.allowed = lambda k, uid=None, *a, **kw: k in self.on
+
+    def tearDown(self):
+        features.allowed = self.allowed
+
+    def test_buttons_follow_the_kind_and_the_switches(self):
+        bill = {"kind": "rechnung", "amount": "84,20 €", "day": "2026-10-24", "debit": False}
+        self.assertEqual(fuerdich.acts("u", bill), ["remind", "event"])
+        self.assertEqual(fuerdich.acts("u", dict(bill, debit=True, day="")), [])    # abgebucht: nothing to do
+        deal = {"kind": "vertrag", "day": "2026-11-30", "cancel": "2026-10-31"}
+        self.assertEqual(fuerdich.acts("u", deal), ["remind", "event", "cancel"])
+        ask = {"kind": "antwort", "days": 4, "ref": "a1:7", "box": "INBOX"}
+        self.assertEqual(fuerdich.acts("u", ask), ["remind", "reply"])
+        self.assertEqual(fuerdich.acts("u", dict(ask, box="Werbung")), ["remind"])   # an answer only from the inbox
+        self.assertEqual(fuerdich.acts("u", {"kind": "verdacht", "brand": "Sparkasse", "domain": "x.example"}), [])
+        self.on = set()
+        self.assertEqual(fuerdich.acts("u", deal), [])
+
+    def test_reminder_rings_the_day_before_at_nine(self):
+        bill = {"kind": "rechnung", "amount": "84,20 €", "day": "2026-10-24", "who": "Stadtwerke"}
+        at = datetime.datetime.fromtimestamp(fuerdich.remind_at(bill, self.NOW), datetime.timezone.utc)
+        self.assertEqual((at.date().isoformat(), at.hour), ("2026-10-23", 9))
+        self.assertEqual(fuerdich.remind_text(bill), "Rechnung Stadtwerke bezahlen (84,20 €)")
+        soon = fuerdich.remind_at(dict(bill, day="2026-10-18"), self.NOW)         # due today: within the hour
+        self.assertEqual(soon, int(self.NOW.timestamp()) + fuerdich.REMIND_SOON)
+        ask = {"kind": "antwort", "who": "Anna"}
+        at = datetime.datetime.fromtimestamp(fuerdich.remind_at(ask, self.NOW), datetime.timezone.utc)
+        self.assertEqual((at.date().isoformat(), at.hour), ("2026-10-19", 9))
+        self.assertEqual(fuerdich.remind_text(ask), "Anna antworten")
+
+    def test_the_calendar_line_reads_as_one_day(self):
+        import calendars
+        deal = {"kind": "vertrag", "day": "2026-11-30", "cancel": "2026-10-31", "who": "congstar in Köln 12 Uhr"}
+        line = fuerdich.event_line(deal, DAY)
+        f = calendars.quick(line, self.NOW)
+        self.assertEqual((f["start"], f["allday"], f["location"]), ("2026-10-31", True, ""))
+        self.assertEqual(f["title"], "Kündigungsfrist congstar Köln Uhr")
+        self.assertEqual(fuerdich.event_line({"kind": "antwort", "who": "Anna"}, DAY), "")
+
+    def test_cancelling_draft_is_fixed_text(self):
+        deal = {"kind": "vertrag", "day": "2026-11-30", "who": "congstar", "addr": "info@congstar.de"}
+        d = fuerdich.cancel_draft("nobody", deal, DAY)
+        self.assertEqual(d["to"], "info@congstar.de")
+        self.assertIn("fristgerecht zum 30.11.2026", d["text"])
+        self.assertEqual(fuerdich.cancel_draft("nobody", dict(deal, addr="noreply@congstar.de"), DAY)["to"], "")
+        self.assertIn("zum nächstmöglichen Zeitpunkt", fuerdich.cancel_draft("nobody", dict(deal, day=""), DAY)["text"])
+
+    def test_only_deadlines_and_suspicion_speak_by_themselves(self):
+        items = [{"id": "a" * 20, "kind": "rechnung", "amount": "5,00 €", "day": "2026-10-19", "who": "A", "sent": "2026-10-10"},
+                 {"id": "b" * 20, "kind": "rechnung", "amount": "5,00 €", "day": "2026-10-25", "who": "B", "sent": "2026-10-10"},
+                 {"id": "c" * 20, "kind": "verdacht", "brand": "PayPal", "domain": "pp.example", "who": "C"},
+                 {"id": "d" * 20, "kind": "angebot", "day": "2026-10-18", "who": "D", "sent": "2026-10-10"},
+                 {"id": "e" * 20, "kind": "rechnung", "amount": "5,00 €", "day": "2026-10-18", "debit": True, "who": "E",
+                  "sent": "2026-10-10"}]
+        said = fuerdich.due_notes("u", items, DAY)
+        self.assertEqual([(k[0], why) for k, why, _ in said], [("a", "Frist"), ("c", "Verdacht")])
+        self.assertTrue(said[0][2].startswith("Rechnung A: 5,00 € bis morgen"))
+
+
+class Stage2(FuerDich):
+    """The buttons, the voice tools, the briefing and Von selbst against the fake mailbox."""
+
+    def test_buttons(self):
+        helpers.set_config(mail_send=True)
+        p, uid = self.setup_profile("Fueknopf")
+        items = p.get("/api/profile/fuerdich").json()["items"]
+        kinds = {x["kind"]: x for x in items}
+        self.assertEqual(kinds["rechnung"]["acts"], ["remind", "event"])
+        self.assertEqual(kinds["antwort"]["acts"], ["remind", "reply"])
+        self.assertEqual(kinds["verdacht"]["acts"], [])
+        self.assertRegex(kinds["rechnung"]["event"], r"^\d{1,2}\.\d{1,2}\.\d{4} Rechnung Stadtwerke$")
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            r = p.post("/api/profile/fuerdich/act", json={"id": kinds["rechnung"]["id"], "do": "remind"})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(r.json()["text"], "Rechnung Stadtwerke bezahlen (84,20 €)")
+        self.assertIn("Rechnung Stadtwerke bezahlen (84,20 €)", [x["text"] for x in profiles.reminders(uid)])
+        self.assertIn("fuerdich: erinnerung gesetzt", out.getvalue())
+        self.assertNotIn("Stadtwerke", out.getvalue())
+        # a button the card does not have, a card that is gone, and wrong input
+        self.assertEqual(p.post("/api/profile/fuerdich/act", json={"id": kinds["rechnung"]["id"], "do": "cancel"}).status_code, 403)
+        self.assertEqual(p.post("/api/profile/fuerdich/act", json={"id": "0" * 20, "do": "remind"}).status_code, 404)
+        for bad in ({"id": "x", "do": "remind"}, {"id": kinds["rechnung"]["id"], "do": "send"}):
+            self.assertEqual(p.post("/api/profile/fuerdich/act", json=bad).status_code, 400, bad)
+        helpers.set_config(mail_send=False)
+        self.assertEqual([x for x in p.get("/api/profile/fuerdich?fresh=1").json()["items"] if x["kind"] == "antwort"][0]["acts"],
+                         ["remind"])
+
+    def test_voice_tools_and_briefing(self):
+        p, uid = self.setup_profile("Fuestimme")
+        ctx = {"who": {"id": uid, "name": "Fuestimme"}, "own": True, "private": True}
+        o = fuerdich.offer(ctx)
+        self.assertEqual([t["function"]["name"] for t in o["tools"]], ["fuer_dich", "fuer_dich_tun"])
+        self.assertEqual((o["mail"], o["changes"]), ({"fuer_dich"}, {"fuer_dich_tun"}))
+        self.assertIsNone(fuerdich.offer(dict(ctx, who=None)))                     # guests: no tool
+        self.assertIsNone(fuerdich.offer(dict(ctx, private=False)))
+        # before any list a number means nothing
+        fuerdich._listed.pop(uid, None)
+        self.assertTrue(asyncio.run(fuerdich.tool("fuer_dich_tun", {"number": 1, "do": "done"}, ctx)).startswith("Not done"))
+        said = asyncio.run(fuerdich.tool("fuer_dich", {}, ctx))
+        self.assertTrue(said.startswith(mail.UNTRUSTED), said)                    # the sentences stay mail data
+        self.assertIn("1. ", said)
+        self.assertNotIn("bezahlt", said)
+        order = fuerdich._listed[uid][1]
+        for bad in ({"number": 0, "do": "done"}, {"number": 9, "do": "done"}, {"number": 1, "do": "delete"}, {"number": "1", "do": "no"}):
+            self.assertTrue(asyncio.run(fuerdich.tool("fuer_dich_tun", bad, ctx)).startswith("Not done"), bad)
+        res = asyncio.run(fuerdich.tool("fuer_dich_tun", {"number": 1, "do": "done"}, ctx))
+        self.assertTrue(res.startswith("Marked entry 1"), res)
+        self.assertIn(order[0], fuerdich.marks(uid))
+        import taten
+        self.assertTrue(taten.act("fuer_dich_tun", {}, res)["ok"])
+        self.assertFalse(taten.act("fuer_dich_tun", {}, "Not done: first read the list")["ok"])
+        brief = asyncio.run(fuerdich.briefing(uid))
+        self.assertTrue(brief.startswith(mail.UNTRUSTED))
+        self.assertIn("Für dich (aus deinem Postfach):", brief)
+        self.assertNotIn(order[0], brief)
+
+    def test_von_selbst_says_suspicion_once(self):
+        import proactive
+        p, uid = self.setup_profile("Fuevonselbst")
+        p.get("/api/profile/fuerdich")                  # the first reading
+        said, saved = [], (proactive.deliver, proactive.blocked)
+        async def deliver(u, kind, text, **kw):
+            said.append((kind, text, kw.get("mail")))
+        proactive.deliver, proactive.blocked = deliver, lambda *a, **kw: ""
+        try:
+            now = datetime.datetime.now(datetime.timezone.utc).replace(hour=12)
+            p_ = profiles.effective(uid)
+            asyncio.run(proactive.check_fuerdich(uid, p_, now))
+            fuerdich.new_mail(uid)                       # a new mail: read anew, but said already
+            asyncio.run(proactive.check_fuerdich(uid, p_, now))
+        finally:
+            proactive.deliver, proactive.blocked = saved
+        self.assertEqual([(k, m) for k, _, m in said], [("fuerdich", True)])
+        self.assertTrue(said[0][1].startswith("Vorsicht: Mail gibt sich als Sparkasse aus."))
+        self.assertNotIn("https", said[0][1])

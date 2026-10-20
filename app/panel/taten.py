@@ -26,6 +26,7 @@ KIND = {
     "bild_malen": "bild",
     "musik_machen": "musik",
     "anruf_planen": "erinnerung",
+    "fuer_dich_tun": "erinnerung",   # Für dich: erledigt, nicht interessant or a reminder (fuerdich.tool)
 }
 # kind -> the tool that knows what was done earlier (R4 "Nein zu eigenem Tun", thread "Einstellungen optimieren")
 STATUS = {"dokument": "document_status", "remarkable": "remarkable_sent", "erinnerung": "reminder_list",

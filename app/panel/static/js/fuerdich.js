@@ -1,4 +1,4 @@
-// „Für dich“ (fuerdich.py, plan persoenlicher-assistent, stage 1): what the Spark found in the own mails by fixed
+// „Für dich“ (fuerdich.py, plan persoenlicher-assistent, stages 1 and 2): what the Spark found in the own mails by fixed
 // rules (bill, contract, order, offer, open reply, phishing). Every card names the mail it comes from; nothing happens
 // until the person presses. Sender names and subjects are outside text: shown with textContent only, never as a link.
 let FUER_ON=false,FUER=null,FUER_TRIES=0;
@@ -18,11 +18,28 @@ async function showFuerDich(fresh,again){const box=$('fuerbox');if(!box)return;i
 async function fuerMark(id,as){try{await api('/api/profile/fuerdich/mark',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,as})})}
   catch(e){fuerMsg(e.message,true);return}
   FUER.items=FUER.items.filter(x=>x.id!==id);fuerRender();fuerMsg(as==='done'?t('Als erledigt markiert.','Marked as done.'):t('Kommt nicht wieder.','Will not come back.'))}
+// stage 2 (Dominik 2026-10-18 „5a“): the buttons the panel allows for a card (fuerdich.acts, fixed rules). Erinnern sets
+// a reminder with a fixed text, Eintragen hands a fixed line to „Schnell eintragen“ of the page Kalender (only its
+// „Eintragen“ saves), Antwort and Kündigung open the mail page; there only the preview sheet sends
+async function fuerAct(x,b){b.disabled=true;
+  try{const r=await api('/api/profile/fuerdich/act',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:x.id,do:'remind'})});const d=await r.json();
+    fuerMsg(t('Erinnerung gesetzt: ','Reminder set: ')+d.text+' · '+new Date(d.due).toLocaleString(kalLoc(),{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}))}
+  catch(e){b.disabled=false;fuerMsg(e.message,true)}}
+async function fuerCancel(x,b){b.disabled=true;
+  try{const d=await (await api('/api/profile/fuerdich/act',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:x.id,do:'cancel'})})).json();
+    await postFromFuer('',d)}catch(e){fuerMsg(e.message,true)}b.disabled=false}
+function fuerEvent(x){KAL.q=x.event;KAL.qi=null;KAL.qfocus=true;icTabSet('cal','show');goSec('cal')}
+function fuerButtons(x){const a=x.acts||[],out=[];
+  if(a.includes('remind')){const b=icBtn('bell',t('Erinnern','Remind me'),b=>fuerAct(x,b));b.dataset.fuerRemind=x.id;out.push(b)}
+  if(a.includes('event')&&x.event&&typeof KAL!=='undefined'){const b=icBtn('cal',t('Eintragen','Add to calendar'),()=>fuerEvent(x));b.dataset.fuerEvent=x.id;out.push(b)}
+  if(a.includes('reply')&&window.postFromFuer){const b=icBtn('reply',t('Antwort entwerfen','Draft a reply'),()=>postFromFuer(x.ref));b.dataset.fuerReply=x.id;out.push(b)}
+  if(a.includes('cancel')&&window.postFromFuer){const b=icBtn('pen',t('Kündigung entwerfen','Draft a cancellation'),b=>fuerCancel(x,b));b.dataset.fuerCancel=x.id;out.push(b)}
+  return out}
 function fuerItem(x){const E=icEl,meta=[FUER_KIND[x.kind]||x.kind,x.line,t('aus ','from ')+x.who+(x.subject?' · „'+x.subject+'“':'')].filter(Boolean).join(' · ');
   const ok=icBtn('check',t('Erledigt','Done'),()=>fuerMark(x.id,'done'));ok.dataset.fuerDone=x.id;
   const no=icBtn('x',x.kind==='verdacht'?t('Ist echt','Is genuine'):t('Nicht interessant','Not interesting'),()=>fuerMark(x.id,'no'));no.dataset.fuerNo=x.id;
   const lead=E('span','fd-ico'+(x.urgent?' hot':''));lead.appendChild(icSvg(FUER_ICON[x.kind]||'mail',16));
-  const r=icRow(x.title,meta,[ok,no],lead);r.dataset.fuerKind=x.kind;return r}
+  const r=icRow(x.title,meta,[...fuerButtons(x),ok,no],lead);r.dataset.fuerKind=x.kind;return r}
 function fuerRender(){const d=FUER,box=$('fuerbox'),E=icEl;if(!box||!d)return;box.textContent='';
   box.appendChild(E('h3','sec',t('Für dich','For you')));
   box.appendChild(E('div','intro',t('Was der Spark in deinen Mails gefunden hat: Rechnungen mit Frist, Verträge, die sich verlängern, Bestellungen, Angebote, Fragen ohne Antwort und Mails, die sich als Bank oder Shop ausgeben. Feste Regeln, kein Modell; die Mails bleiben ungelesen und unverändert. Links aus Mails öffnet der Spark nie.',

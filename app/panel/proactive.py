@@ -43,7 +43,7 @@ KINDS = {"events": ("Termin-Vorlauf", 10, "pro_events"), "ha": ("Smart Home", 10
          "greet": ("Begrüßung", 3, "pro_greet"), "follow": ("Nachfrage", 1, "pro_follow"),
          "mail": ("Wichtige Mail", 10, "pro_mail"), "weather": ("Wetter", 1, "pro_weather"),
          "tidy": ("Postfach aufräumen", 2, "pro_tidy"), "bday": ("Geburtstag", 1, "pro_bday"),
-         "parcel": ("Paket kommt heute", 3, "pro_parcel"), "transit": ("Bus und Bahn", 1, "pro_transit"),
+         "parcel": ("Paket kommt heute", 3, "pro_parcel"), "fuerdich": ("Fristen und Verdacht", 3, "pro_fuerdich"), "transit": ("Bus und Bahn", 1, "pro_transit"),
          "tipp": ("Funktion vorschlagen", 1, "pro_tips"),
          "feeds": ("Neues aus Feeds", 10, "pro_feeds"),   # feeds.py: replies at once, keyword hits at most feeds.WORD_DAY
          "meldung": ("Neue Problem-Meldung", 10, "pro_meldung"),
@@ -1013,6 +1013,32 @@ async def check_parcel(uid, p, now):
         await deliver(uid, "parcel", line, why="Versandmail in deinem Postfach", data=line[:300], mail=True)
 
 
+FUER_EVERY = 1800
+FUER_WAIT = 5
+
+
+async def check_fuerdich(uid, p, now):
+    """Für dich (fuerdich.due_notes): a bill or a cancelling deadline today or tomorrow and a suspected phishing mail,
+    once per card, 8 am to 8 pm; from the last reading, read anew every FUER_EVERY or right after a new mail."""
+    import fuerdich
+    st = state(uid)
+    fresh = fuerdich.wants_fresh(uid)
+    if not fuerdich.usable(uid) or not 8 <= now.hour < 20 or blocked(uid, "fuerdich", p, now) or \
+            (not fresh and time.time() - st.get("fuer_checked", 0) < FUER_EVERY):
+        return
+    try:    # the reading goes on behind a short wait; its result is in the cache at the next minute
+        items, _ = await asyncio.wait_for(asyncio.shield(fuerdich._reading(uid, fresh)), FUER_WAIT)
+    except Exception:
+        return
+    _mut(uid, lambda s: s.update(fuer_checked=time.time()))
+    said = set(st.get("fuer_said", []))
+    for k, why, text in fuerdich.due_notes(uid, items, now.date()):
+        if k in said or blocked(uid, "fuerdich", p, now):
+            continue
+        _mut(uid, lambda s, k=k: s.update(fuer_said=(s.get("fuer_said", []) + [k])[-100:]))
+        await deliver(uid, "fuerdich", text, why=f"Für dich: {why}", data=why, mail=True)
+
+
 async def check_tips(uid, p, now):
     """One hint on a function that would help, at most once a week (tipps.py decides which), in the day only."""
     import tipps
@@ -1067,6 +1093,7 @@ async def due_once(now=None):
                          ("weather", lambda: check_weather(uid, p, local) if p.get("pro_weather") else None),
                          ("bday", lambda: check_bday(uid, p, local) if p.get("pro_bday") else None),
                          ("parcel", lambda: check_parcel(uid, p, local) if p.get("pro_parcel") else None),
+                         ("fuerdich", lambda: check_fuerdich(uid, p, local) if p.get("pro_fuerdich", True) else None),
                          ("transit", lambda: check_transit(uid, p, local) if p.get("pro_transit") else None),
                          ("tipp", lambda: check_tips(uid, p, local) if p.get("pro_tips") else None)):
             try:
@@ -1093,6 +1120,7 @@ def status(uid):
     import transit
     import weather
     import feeds
+    import fuerdich
     import homeassistant
     import hamelden
     import mail
@@ -1113,6 +1141,7 @@ def status(uid):
                     "search": bool(cc.get("search_url") and features.allowed("search", uid, cc)),
                     "history": features.allowed("history", uid, cc), "reminders": features.allowed("reminders", uid, cc),
                     "weather": weather.usable(uid), "contacts": contacts.usable(uid), "parcels": parcels.usable(uid),
+                    "fuerdich": fuerdich.usable(uid),
                     "transit": bool(transit.usable(uid) and transit.get(uid).get("commute")),
                     "feeds": feeds.usable(uid)}}
 

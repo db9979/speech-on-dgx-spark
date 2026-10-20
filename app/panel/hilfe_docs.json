@@ -1757,7 +1757,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Alltagsquote",
 "title": "Alltagsquote",
-"text": "- Die Testsätze (161) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (211) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt."
+"text": "- Die Testsätze (162) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (211) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt."
 },
 {
 "lang": "de",
@@ -1765,7 +1765,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Werkzeugnamen",
 "title": "Werkzeugnamen",
-"text": "- Überall, wo ein Werkzeug sichtbar wird, steht ein lesbarer Name aus einer Tabelle (87 Werkzeuge), zum Beispiel „Postfach-Überblick“ statt mail_tidy_overview."
+"text": "- Überall, wo ein Werkzeug sichtbar wird, steht ein lesbarer Name aus einer Tabelle (89 Werkzeuge), zum Beispiel „Postfach-Überblick“ statt mail_tidy_overview."
 },
 {
 "lang": "de",
@@ -1773,7 +1773,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 23 Gruppen der Weiche (Schritt 4, Schritt 6) - 2 Gruppen höchstens, die noch eingrenzen (Schritt 6) - 80 Zeichen höchstens für eine Folgefrage (Schritt 8) - 4 Sekunden höchstens für die Wahl des Modells (Schritt 10) - 300 ms Wartezeit mit „Schneller Antwortbeginn“ (Schritt 10) - 80 % Standard-Schwelle der Einordnung (Schritt 10) - 161 eingebaute Testsätze (Schritt 4, Schritt 5) - 211 Alltagssätze zum Messen (Schritt 14) - 20 Versionen für Rückgängig (Schritt 4)"
+"text": "- 23 Gruppen der Weiche (Schritt 4, Schritt 6) - 2 Gruppen höchstens, die noch eingrenzen (Schritt 6) - 80 Zeichen höchstens für eine Folgefrage (Schritt 8) - 4 Sekunden höchstens für die Wahl des Modells (Schritt 10) - 300 ms Wartezeit mit „Schneller Antwortbeginn“ (Schritt 10) - 80 % Standard-Schwelle der Einordnung (Schritt 10) - 162 eingebaute Testsätze (Schritt 4, Schritt 5) - 211 Alltagssätze zum Messen (Schritt 14) - 20 Versionen für Rückgängig (Schritt 4)"
 },
 {
 "lang": "de",
@@ -1973,7 +1973,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 4 Aufrufe pro Runde (Schritt 1) - 3 Gedächtnis-Notizen pro Antwort (Schritt 1) - 13 Werkzeuge gesperrt nach fremdem Text (Schritt 4) - 7 Werkzeuge ohne Internet bei Notaus (Schritt 3) - 87 Werkzeuge mit verständlichem Namen (Schritt 11)"
+"text": "- 4 Aufrufe pro Runde (Schritt 1) - 3 Gedächtnis-Notizen pro Antwort (Schritt 1) - 13 Werkzeuge gesperrt nach fremdem Text (Schritt 4) - 7 Werkzeuge ohne Internet bei Notaus (Schritt 3) - 89 Werkzeuge mit verständlichem Namen (Schritt 11)"
 },
 {
 "lang": "de",
@@ -4989,7 +4989,31 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Für dich aus Mails",
-"text": "der die Kopfzeile sagt DMARC-Fehler). Beträge und Tage gelten nur, wenn sie sich lesen lassen; jeder Satz auf einer Karte ist ein fester Satz mit den geprüften Werten. Absendername und Betreff sind Text von außen und erscheinen nur als Text; Links aus Mails werden nie geöffnet oder verlinkt. Je Lauf höchstens 60 Mail-Texte je Postfach, im Hintergrund mit Vorrang für Sprache (vorrang.in_thread(\"Für dich\")), Ergebnis 10 Minuten im Speicher. ✓ (erledigt) und ✕ (nicht interessant / ist echt) merken sich nur eine Prüfsumme der Message-ID in users/<p>/fuerdich.json (bleibt auf dem Spark); „⋯ → Markierungen vergessen“ und „Daten löschen“ entfernen sie. Unter *Ich → Heute* zählt die Karte „Für dich“ nur, wie viele Karten dich brauchen (höchstens 3 Sekunden Warten, sonst „wird gelesen“). Logs nur mit festen Wörtern: fuerdich: gelesen funde=3 fehler=0 sekunden=1.2, fuerdich: markiert als=done Profil …. API (Profil): GET /api/profile/fuerdich (?fresh=1 liest neu), POST /api/profile/fuerdich/mark {\"id\", \"as\": \"done\"|\"no\"|\"open\"}, DELETE /api/profile/fuerdich. Nächste Stufen: Knöpfe (Erinnern, Antwort entwerfen) und Fragen per Stimme, Hinweise von selbst, Interessen, „Was ich über dich weiß“."
+"text": "der die Kopfzeile sagt DMARC-Fehler). Beträge und Tage gelten nur, wenn sie sich lesen lassen; jeder Satz auf einer Karte ist ein fester Satz mit den geprüften Werten. Absendername und Betreff sind Text von außen und erscheinen nur als Text; Links aus Mails werden nie geöffnet oder verlinkt. Je Lauf höchstens 60 Mail-Texte je Postfach, im Hintergrund mit Vorrang für Sprache (vorrang.in_thread(\"Für dich\")), Ergebnis 10 Minuten im Speicher. ✓ (erledigt) und ✕ (nicht interessant / ist echt) merken sich nur eine Prüfsumme der Message-ID in users/<p>/fuerdich.json (bleibt auf dem Spark); „⋯ → Markierungen vergessen“ und „Daten löschen“ entfernen sie. Unter *Ich → Heute* zählt die Karte „Für dich“ nur, wie viele Karten dich brauchen (höchstens 3 Sekunden Warten, sonst „wird gelesen“). Logs nur mit festen Wörtern: fuerdich: gelesen funde=3 fehler=0 sekunden=1.2, fuerdich: markiert als=done Profil …. API (Profil): GET /api/profile/fuerdich (?fresh=1 liest neu), POST /api/profile/fuerdich/mark {\"id\", \"as\": \"done\"|\"no\"|\"open\"}, DELETE /api/profile/fuerdich."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Für dich, Stufe 2: Knöpfe, Stimme, von selbst (Dominik 2026-10-18 „5a“, 2026-10-20 „alle weiteren stufen umsetzten“): Jede Karte bekommt die Knöpfe, die das Panel nach festen Regeln für ihre Art und die freigegebenen Funktionen erlaubt (fuerdich.acts): Erinnern (Rechnung, Vertrag, Angebot, Antwort offen; mit „Timer und Erinnerungen“) setzt eine Erinnerung mit festem Text, z. B. „Rechnung Stadtwerke bezahlen (84,20 €)“, um 9 Uhr am Tag vor der Frist, ohne Frist morgen um 9 Uhr, nie früher als in einer Stunde. Eintragen (Karten mit Frist; mit „Kalender“) öffnet den Kalender mit einer festen Zeile wie „31.10.2026 Kündigungsfrist congstar“ in „Schnell eintragen“; gespeichert wird erst mit dessen „Eintragen“. Antwort entwerfen (Antwort offen aus dem Posteingang; mit „Mails senden“) öffnet die Mail auf der Seite E-Mail mit dem Antwortfeld und den Antwortvorschlägen im eigenen Mailstil. Kündigung entwerfen (Vertrag; mit „Mails senden“) öffnet eine neue Mail mit festem Text („hiermit kündige ich meinen Vertrag bei … fristgerecht zum …“), an den Absender, außer es ist eine No-Reply-Adresse. Gesendet wird in beiden Fällen nur über das Vorschau-Blatt der Seite E-Mail. Per Stimme: „Was muss ic"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "h diese Woche erledigen?“ liest die Karten als nummerierte feste Sätze vor (Werkzeug fuer_dich, höchstens 8, Mail-Daten wie jedes Lesen aus Mails); „Nummer zwei ist erledigt“, „… nicht interessant“ oder „Erinner mich an Nummer eins“ handelt über fuer_dich_tun, nur mit einer Nummer der zuletzt vorgelesenen Liste (30 Minuten gültig) und nie in derselben Antwort, in der Mail-Text gelesen wurde (Werkzeug ändert etwas). Das Tagesbriefing nennt höchstens drei Karten, die dich brauchen. Von selbst melden → Fristen und Verdacht (pro_fuerdich, unter E-Mail → Einstellungen, an, sobald „Von selbst melden“ an ist): eine Rechnung oder Kündigungsfrist, die heute oder morgen fällig ist, und eine Mail unter Verdacht, je Karte einmal, 8 bis 20 Uhr, höchstens 3 am Tag, nur feste Sätze. Geprüft wird alle 30 Minuten aus der letzten Lesung, nach einer neuen Mail sofort (fuerdich.new_mail, IMAP IDLE der Seite E-Mail). Endpunkt POST /api/profile/fuerdich/act {\"id\", \"do\": \"remind\"|\"cancel\"} (eigenes Profil, nur Karten der letzten Lesung, nur erlaubte Knöpfe, Größenlimit, Rate-Limit „fuerdich“). Logs: fuerdich: erinnerung gesetzt, fuerdich: kuendigung entworfen, fuerdich: knopf abgelehnt grund=…, fuerdich:"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": " werkzeug liste funde=N, fuerdich: briefing teile=N. Im iPhone: Heute → Für dich mit denselben Karten und Knöpfen (Wischen für Erledigt und Nicht interessant, ⋯ für Neu lesen und Markierungen vergessen). Nächste Stufen: Interessen und „Was ich über dich weiß“, Netz-Tipp, Wochenrückblick, Ausgaben."
 },
 {
 "lang": "de",
@@ -10301,7 +10325,7 @@
 "file": "Architecture and data flow",
 "head": "Everyday score",
 "title": "Everyday score",
-"text": "- The test sentences (161) hold every reported wrong turn and must all pass. The everyday sentences (211) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up."
+"text": "- The test sentences (162) hold every reported wrong turn and must all pass. The everyday sentences (211) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up."
 },
 {
 "lang": "en",
@@ -10309,7 +10333,7 @@
 "file": "Architecture and data flow",
 "head": "Tool names",
 "title": "Tool names",
-"text": "- Wherever a tool shows, a readable name comes from one table (87 tools), for example „Mailbox overview“ instead of mail_tidy_overview."
+"text": "- Wherever a tool shows, a readable name comes from one table (89 tools), for example „Mailbox overview“ instead of mail_tidy_overview."
 },
 {
 "lang": "en",
@@ -10317,7 +10341,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 23 groups of the switch (step 4, step 6) - 2 groups at most that still narrow (step 6) - 80 characters at most for a follow-up (step 8) - 4 seconds at most for the model's pick (step 10) - 300 ms waiting with „Fast answer start“ (step 10) - 80 % default threshold of the classification (step 10) - 161 built-in test sentences (step 4, step 5) - 211 everyday sentences for measuring (step 14) - 20 versions for undo (step 4)"
+"text": "- 23 groups of the switch (step 4, step 6) - 2 groups at most that still narrow (step 6) - 80 characters at most for a follow-up (step 8) - 4 seconds at most for the model's pick (step 10) - 300 ms waiting with „Fast answer start“ (step 10) - 80 % default threshold of the classification (step 10) - 162 built-in test sentences (step 4, step 5) - 211 everyday sentences for measuring (step 14) - 20 versions for undo (step 4)"
 },
 {
 "lang": "en",
@@ -10509,7 +10533,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 4 calls per round (step 1) - 3 memory notes per answer (step 1) - 13 tools locked after outside text (step 4) - 7 tools without internet with the kill switch (step 3) - 87 tools with a readable name (step 11)"
+"text": "- 4 calls per round (step 1) - 3 memory notes per answer (step 1) - 13 tools locked after outside text (step 4) - 7 tools without internet with the kill switch (step 3) - 89 tools with a readable name (step 11)"
 },
 {
 "lang": "en",
@@ -13413,7 +13437,31 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "For you from mail",
-"text": "se; every sentence on a card is a fixed sentence with the checked values. Sender name and subject are outside text and appear only as text; links from mails are never opened or linked. Per run at most 60 mail texts per mailbox, in the background with speech first (vorrang.in_thread(\"Für dich\")), the result kept 10 minutes in memory. ✓ (done) and ✕ (not interesting / is genuine) keep only a checksum of the Message-ID in users/<p>/fuerdich.json (stays on the Spark); \"⋯ → Forget the marks\" and \"Delete data\" remove them. Under *Me → Today* the card \"For you\" only counts how many cards need you (waits at most 3 seconds, else \"being read\"). Logs only with fixed words: fuerdich: gelesen funde=3 fehler=0 sekunden=1.2, fuerdich: markiert als=done Profil …. API (profile): GET /api/profile/fuerdich (?fresh=1 reads again), POST /api/profile/fuerdich/mark {\"id\", \"as\": \"done\"|\"no\"|\"open\"}, DELETE /api/profile/fuerdich. Next stages: buttons (remind, draft a reply) and questions by voice, notes on its own, interests, \"What I know about you\"."
+"text": "se; every sentence on a card is a fixed sentence with the checked values. Sender name and subject are outside text and appear only as text; links from mails are never opened or linked. Per run at most 60 mail texts per mailbox, in the background with speech first (vorrang.in_thread(\"Für dich\")), the result kept 10 minutes in memory. ✓ (done) and ✕ (not interesting / is genuine) keep only a checksum of the Message-ID in users/<p>/fuerdich.json (stays on the Spark); \"⋯ → Forget the marks\" and \"Delete data\" remove them. Under *Me → Today* the card \"For you\" only counts how many cards need you (waits at most 3 seconds, else \"being read\"). Logs only with fixed words: fuerdich: gelesen funde=3 fehler=0 sekunden=1.2, fuerdich: markiert als=done Profil …. API (profile): GET /api/profile/fuerdich (?fresh=1 reads again), POST /api/profile/fuerdich/mark {\"id\", \"as\": \"done\"|\"no\"|\"open\"}, DELETE /api/profile/fuerdich."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "For you, stage 2: buttons, voice, by itself (Dominik 2026-10-18 \"5a\", 2026-10-20 \"build all further stages\"): every card gets the buttons the panel allows by fixed rules for its kind and the released functions (fuerdich.acts): Remind me (bill, contract, offer, reply missing; with \"Timers and reminders\") sets a reminder with a fixed text, e.g. \"Rechnung Stadtwerke bezahlen (84,20 €)\", at 9 am the day before the deadline, without a deadline tomorrow at 9 am, never sooner than in an hour. Add to calendar (cards with a deadline; with \"Calendar\") opens the calendar with a fixed line such as \"31.10.2026 Kündigungsfrist congstar\" in \"Quick add\"; it is saved only with its \"Add\". Draft a reply (reply missing from the inbox; with \"Send mail\") opens the mail on the E-mail page with the reply form and the reply suggestions in the own mail style. Draft a cancellation (contract; with \"Send mail\") opens a new mail with a fixed text (\"hiermit kündige ich meinen Vertrag bei … fristgerecht zum …\"), to the sender unless it is a no-reply address. Both send only through the preview sheet of the E-mail page. By voice: \"What do I have to do this week?\" reads the cards as numbered fixed sentences (tool fu"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "er_dich, at most 8, mail data like any reading from mail); \"number two is done\", \"… not interesting\" or \"remind me of number one\" acts through fuer_dich_tun, only with a number of the list read last (valid 30 minutes) and never in the same answer that read mail text (the tool changes something). The daily briefing names at most three cards that need you. Speak up by itself → Deadlines and suspicion (pro_fuerdich, under E-mail → Settings, on once \"Speak up by itself\" is on): a bill or a cancelling deadline due today or tomorrow and a suspicious mail, once per card, 8 am to 8 pm, at most 3 a day, fixed sentences only. It checks every 30 minutes from the last reading, right after a new mail (fuerdich.new_mail, IMAP IDLE of the E-mail page). Endpoint POST /api/profile/fuerdich/act {\"id\", \"do\": \"remind\"|\"cancel\"} (own profile, only cards of the last reading, only allowed buttons, size limit, rate limit \"fuerdich\"). Logs: fuerdich: erinnerung gesetzt, fuerdich: kuendigung entworfen, fuerdich: knopf abgelehnt grund=…, fuerdich: werkzeug liste funde=N, fuerdich: briefing teile=N. On the iPhone: Today → For you with the same cards and buttons (swipe for Done and Not interesting, ⋯ for Read "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "again and Forget the marks). Next stages: interests and \"What I know about you\", web tip, weekly review, spending."
 },
 {
 "lang": "en",

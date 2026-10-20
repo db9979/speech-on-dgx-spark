@@ -105,7 +105,11 @@ PHONE_WORDS = re.compile(r"(?i)\b(iphone|auf meinem handy|am handy|shortcut|kurz
 MAIL_WORDS = re.compile(chat.NEED_MAIL.pattern + r"|(?i:\b(postfach\w*|postfächer|post (vo[mn]|von der)|antwort (vo[mn]|von der)|"
                         r"(e-?mail-?|mail)?entwurf\w* .{0,30}antwort\w*|antwort an (frau|herrn?)|"
                         # „Lösch die Werbemails“, „Wie viele Newsletter kamen?“
-                        r"\w+mails?|spam\w*|newsletter\w*)\b)")
+                        r"\w+mails?|spam\w*|newsletter\w*|"
+                        # Für dich (fuerdich.py): „Was muss ich diese Woche erledigen?“, „Nummer zwei ist erledigt“
+                        r"in „?für dich|was (muss|soll) ich .{0,30}\berledigen|(offene|unbezahlte) rechnung\w*|"
+                        r"wer wartet .{0,20}\bantwort\w*|(nummer|punkt) (eins|zwei|drei|vier|fünf|sechs|sieben|acht|[1-8])\b.{0,30}"
+                        r"\b(erledigt|nicht interessant))\b)")
 PARCEL_WORDS = re.compile(dict(chat.NEED_TOOLS)["parcels"].pattern + r"|(?i:\b(\w*bestellung\w*|dhl|hermes|dpd|gls|"
                           r"zustell\w*)\b)")
 # plan weiche-intelligenter 2: current things the rules missed („Wie steht der DAX?“, „Hat der Baumarkt heute offen?“)
@@ -166,7 +170,8 @@ GROUPS = {
     "smarthome": ({"home_assistant", "home_assistant_action", "home_assistant_states", "home_assistant_history",
                    "home_assistant_todo", "camera_describe"}, None),   # words: homeassistant's own verbs + HOME_WORDS
     "kalender": ({"calendar_events", "calendar_add", "calendar_change", "daily_briefing"}, CALENDAR_WORDS),
-    "mail": ({"mail_list", "mail_search", "mail_read", "mail_tidy_overview", "mail_tidy_propose", "mail_draft"},
+    "mail": ({"mail_list", "mail_search", "mail_read", "mail_tidy_overview", "mail_tidy_propose", "mail_draft",
+              "fuer_dich", "fuer_dich_tun"},
              MAIL_WORDS),
     "websuche": ({"web_search"}, SEARCH_WORDS),
     "erinnerung": ({"reminder_set", "reminder_list", "reminder_cancel", "anruf_planen"}, REMINDER_WORDS),

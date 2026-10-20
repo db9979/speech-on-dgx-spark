@@ -32,6 +32,7 @@ NAMES = {
     "home_rule_delete": ("Regel löschen", "Delete rule"), "proactive_pause": ("Meldungen pausieren", "Pause notes"),
     "speaker_volume": ("Lautstärke", "Volume"), "undo_last": ("Rückgängig", "Undo"),
     "weather": ("Wetter", "Weather"), "transit": ("Bus und Bahn", "Transit"), "parcels": ("Pakete", "Parcels"),
+    "fuer_dich": ("Für dich", "For you"), "fuer_dich_tun": ("Für dich: erledigen", "For you: act"),
     "feeds_news": ("Reddit und Feeds", "Reddit and feeds"),
     "contacts_search": ("Kontakte", "Contacts"), "memory_save": ("Merken", "Remember"),
     "memory_forget": ("Vergessen", "Forget"), "history_search": ("Frühere Gespräche", "Earlier conversations"),

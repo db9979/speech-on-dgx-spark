@@ -139,6 +139,9 @@ THINGS = {
                    (("GET", "POST"), r"/api/profile/mail/rules(?:/test|/order)?"),
                    (("POST",), r"/api/profile/mail/rules/[0-9a-f]{8}/apply"), (("DELETE",), r"/api/profile/mail/rules/[0-9a-f]{8}")),
     "mailsend": ((("POST",), r"/api/profile/mail/(?:send(?:/preview)?|suggest|rewrite)"),),
+    # Für dich (fuerdich.py): the cards, a mark, a button (reminder, the draft of a cancelling mail), forget the marks;
+    # sending stays with "mailsend"
+    "fuerdich": ((("GET", "DELETE"), r"/api/profile/fuerdich"), (("POST",), r"/api/profile/fuerdich/(?:mark|act)")),
     # Musik (musik.py): listen, make from a wish, delete one or all
     "musik": ((("GET", "POST", "DELETE"), r"/api/musik"), (("GET",), rf"/api/musik/job/{_DOC}"),
               (("GET",), rf"/api/musik/{_DOC}/datei"), (("DELETE",), rf"/api/musik/{_DOC}")),
@@ -397,7 +400,7 @@ async def app_doc(request: Request, prof=Depends(own_profile)):
 # The app's "Mein Profil": only these fields, each checked by the same rule as in the panel. What the app
 # may do (app_*), Telegram, the smart home and the tone ("style", told to the model) stay in the panel.
 APP_FIELDS = ("voice", "speed", "length", "pro_on", "pro_quiet", "pro_max", "pro_events", "pro_lead",
-              "pro_weather", "pro_place", "pro_weather_at", "pro_parcel", "pro_bday", "pro_transit", "pro_feeds",
+              "pro_weather", "pro_place", "pro_weather_at", "pro_parcel", "pro_fuerdich", "pro_bday", "pro_transit", "pro_feeds",
               "pro_greet", "pro_mail", "briefing_at",
               "hands", "barge",   # Freihändig and Ins Wort fallen: the same values as in the browser (Vereinheitlichen Phase 6)
               "face",             # Einstellungen → Gesicht: the profile's own face, the same as Ich → Gespräch → Anzeige
@@ -434,7 +437,7 @@ def app_settings(request: Request, prof=Depends(own_profile)):
                       "documents": features.allowed("documents", prof["id"], chat)},
             # services the admin released for this profile ("Von selbst" can only use those)
             "services": {k: features.allowed(f, prof["id"], chat)
-                         for k, f in (("wx_on", "weather"), ("par_on", "parcels"), ("con_on", "contacts"),
+                         for k, f in (("wx_on", "weather"), ("par_on", "parcels"), ("fd_on", "fuerdich"), ("con_on", "contacts"),
                                       ("transit_on", "transit"))}}
 
 

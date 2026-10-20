@@ -23,6 +23,15 @@ struct TodayView: View {
                     row("bell", String(localized: "Erinnerungen"), "\(r["count"] as? Int ?? 0)",
                         next.map { when($0["due"]) + " · " + ($0["text"] as? String ?? "") } ?? String(localized: "Keine offen"))
                 }
+                if let f = cards["fuerdich"] as? [String: Any], f["nomail"] as? Bool != true {
+                    // Für dich (fuerdich.py): numbers only here, the cards on their own page (FuerDich.swift)
+                    NavigationLink { FuerDichView() } label: {
+                        let n = f["urgent"] as? Int ?? 0, s = f["suspicious"] as? Int ?? 0
+                        row("tray.full", String(localized: "Für dich"), f["ready"] as? Bool == true ? "\(n)" : "…",
+                            f["ready"] as? Bool != true ? String(localized: "Lese deine Mails …")
+                            : s > 0 ? String(localized: "brauchen dich, davon \(s) verdächtig") : String(localized: "brauchen dich"))
+                    }
+                }
                 if let m = cards["messages"] as? [String: Any] {
                     let n = m["unread"] as? Int ?? 0
                     row("bubble.left.and.bubble.right", String(localized: "Chats"), "\(n)", n > 0 ? String(localized: "ungelesen") : String(localized: "Alles gelesen"))

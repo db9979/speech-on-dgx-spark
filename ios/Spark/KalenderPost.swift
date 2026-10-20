@@ -1491,6 +1491,8 @@ struct MailDraft: Identifiable {
     var forward = ""
     var folder = "INBOX"
     var files: [String] = []
+    /// a text the form starts with (Für dich: the fixed draft of a cancelling mail, FuerDich.swift)
+    var text = ""
     let id = UUID()
 }
 
@@ -1580,7 +1582,7 @@ struct MailWrite: View {
             .navigationTitle(!draft.reply.isEmpty ? Text("Antworten") : !draft.forward.isEmpty ? Text("Weiterleiten") : Text("Neue Mail"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Verwerfen") { dismiss() } } }
-            .onAppear { if to.isEmpty && subject.isEmpty { to = draft.to; subject = draft.subject } }
+            .onAppear { if to.isEmpty && subject.isEmpty { to = draft.to; subject = draft.subject; text = draft.text } }
             .task { if !draft.reply.isEmpty && ideas.isEmpty { await suggest() } }
             .interactiveDismissDisabled(busy)
         }

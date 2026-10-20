@@ -81,6 +81,7 @@ BENCH = [
     ("Lies mir die letzte Mail vor", "mail"),
     ("Hat mir Tom eine E-Mail geschrieben?", "mail"),
     ("Do I have new e-mails?", "mail"),
+    ("Was muss ich diese Woche erledigen?", "mail"),
     ("Wie hat Bayern gespielt?", "websuche"),
     ("Such mal im Internet nach dem Baumarkt in Ettlingen", "websuche"),
     ("Was ist heute politisch los?", "websuche"),

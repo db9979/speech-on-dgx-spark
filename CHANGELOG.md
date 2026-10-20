@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.848** · 2026-10-20 · Für dich Stufe 2: Knöpfe Erinnern, Eintragen, Antwort entwerfen und Kündigung entwerfen (Senden nur über die Vorschau), per Stimme „Was muss ich diese Woche erledigen?“ und „Nummer zwei ist erledigt“, Teil im Tagesbriefing, von selbst bei Fristen und Verdacht; im iPhone unter Heute → Für dich
 - **V01.0.847** · 2026-10-20 · Fix: „Morgenbriefing“, „Tagesbriefing“ und „Was ist mein Morgenbriefing?“ holen das Briefing über das Werkzeug (auch am Telefon), statt dass das Modell den Tag erfindet
 - **V01.0.846** · 2026-10-20 · „Regel daraus …“ übernimmt auch den Betreff der Mail (ohne Re:/AW:/Fwd:, frei änderbar), im Panel und im iPhone
 - **V01.0.845** · 2026-10-19 · Fix: iPhone-App baut wieder (GitHub-Lauf „iPhone app“ grün, TestFlight wieder möglich); zwei Stellen in E-Mail (Regel sichern, Antwortvorschläge) passten nicht zum Swift-Compiler
