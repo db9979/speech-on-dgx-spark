@@ -583,6 +583,9 @@ struct SettingsView: View {
         case "meeting": return "Besprechung mitschreiben"
         case "home": return "Smart-Home-Knöpfe"
         case "daily": return "Tagesstart und Feierabend"
+        case "post": return "Post im Begleiter"
+        case "lists": return "Listen im Begleiter"
+        case "capture": return "Schnell erfassen"
         default: return p
         }
     }

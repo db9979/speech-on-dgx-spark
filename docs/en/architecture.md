@@ -1019,7 +1019,7 @@ Applies at: [step 1](#kn-kanaele-s1), [step 9](#kn-kanaele-s9), [step 11](#kn-ka
 - `app/panel/telegram.py` `ask`: question to the chat, collect the answer, store ([step 7](#kn-kanaele-s7), [step 8](#kn-kanaele-s8), [step 11](#kn-kanaele-s11))
 - `app/panel/telegram.py` `transcribe`: voice message through ffmpeg to recognition ([step 5](#kn-kanaele-s5))
 - `app/panel/chat.py` `siri_ask`: Siri: profile from the key ([step 1](#kn-kanaele-s1), [step 3](#kn-kanaele-s3))
-- `app/panel/chat.py` `text_ask`: Siri and companion: question, answer, history ([step 6](#kn-kanaele-s6), [step 7](#kn-kanaele-s7), [step 11](#kn-kanaele-s11))
+- `app/panel/chat.py` `text_ask`: Siri and companion: question, answer, history, for the companion also the cards (desk_cards) ([step 6](#kn-kanaele-s6), [step 7](#kn-kanaele-s7), [step 11](#kn-kanaele-s11))
 - `app/panel/chat.py` `watch_ask`: watch: start the answer as a job ([step 1](#kn-kanaele-s1), [step 7](#kn-kanaele-s7))
 - `app/panel/chat.py` `_watch_run`: watch: the answer into the history ([step 11](#kn-kanaele-s11))
 - `app/panel/watch.py` `run`: reads the stream into the watch job ([step 8](#kn-kanaele-s8))

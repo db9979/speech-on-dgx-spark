@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "geraet": {
-        "stand": "ca45207cbf",
+        "stand": "b083770073",
         "bezug": {
             "account.CONVO_BODY": ["s10"], "admin.test_asr": ["s4"], "admin._test_asr": ["s4", "s5"],
             "admin.read_audio": ["s4"], "chat.chat": ["s6", "s7"], "account.profile_save_convo": ["s10"],
@@ -410,7 +410,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Telegram, Siri, Uhr
     "kanaele": {
-        "stand": "e7ef39e57b",
+        "stand": "4ad8e8b956",
         "bezug": {
             "watch.JOB_TTL": ["s9"], "telegram.loop": ["s1"], "telegram.handle": ["s2", "s3", "s4"],
             "telegram.ask": ["s7", "s8", "s11"], "telegram.transcribe": ["s5"], "chat.siri_ask": ["s1", "s3"],
@@ -618,7 +618,7 @@ SEITEN = {
             ("telegram.ask", ("Frage an den Chat, Antwort einsammeln, speichern", "question to the chat, collect the answer, store")),
             ("telegram.transcribe", ("Sprachnachricht über ffmpeg zur Spracherkennung", "voice message through ffmpeg to recognition")),
             ("chat.siri_ask", ("Siri: Profil aus dem Schlüssel", "Siri: profile from the key")),
-            ("chat.text_ask", ("Siri und Begleiter: Frage, Antwort, Verlauf", "Siri and companion: question, answer, history")),
+            ("chat.text_ask", ("Siri und Begleiter: Frage, Antwort, Verlauf, beim Begleiter dazu die Karten (desk_cards)", "Siri and companion: question, answer, history, for the companion also the cards (desk_cards)")),
             ("chat.watch_ask", ("Uhr: Antwort als Auftrag starten", "watch: start the answer as a job")),
             ("chat._watch_run", ("Uhr: Antwort in den Verlauf", "watch: the answer into the history")),
             ("watch.run", ("liest den Strom in den Uhr-Auftrag", "reads the stream into the watch job")),
@@ -969,7 +969,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ MCP-Programme
     "mcpc": {
-        "stand": "488edb1e74",
+        "stand": "a2d201d89c",
         "bezug": {
             "mcpserver.MAX_CONNS": ["s3"], "mcpserver.mcp_post": ["s1"], "mcpserver.origin_ok": ["s2"],
             "mcpserver.check_conn": ["s3"], "mcpserver.is_local": ["s4"], "mcpserver.find": ["s3"],

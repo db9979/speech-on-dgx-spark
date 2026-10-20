@@ -15,12 +15,15 @@ Ein kleines Programm in der Menüleiste (kein Symbol im Dock) für den eigenen S
 | **App erkennen** | die Schreibhilfe erfährt die *Art* des Programms (Mail, Browser, Word …), nie Namen oder Fenstertitel | – |
 | **Antwort entwerfen** | zur ausgewählten Mail in Mail einen Antwortentwurf öffnen – gesendet wird nie | ⌥⌘M |
 | **Ordner „Spark-Wissen“** | neue oder geänderte Dateien in `~/Spark-Wissen` kommen ins Wissen des Spark | – |
-| **Knöpfe in Meldungen** | Meldungen mit „Antworten“, „Später“, „Panel öffnen“ | – |
+| **Knöpfe in Meldungen** | Meldungen mit „Antworten“, „Später“, „Panel öffnen“; zu „Für dich“ „Erledigt“, „Erinnern“ | – |
 | **Spark darf am Mac handeln** | der Spark darf um wenige, fest umrissene Dinge bitten – jedes einzeln mit Rückfrage | – |
 | **Weckwort** | „Hey Spark, …“ sagen statt ein Kürzel zu drücken | – |
 | **Vorlesen** | markierten Text liest der Spark mit der Stimme des Profils vor | ⌥⌘L |
 | **Vom Handy auf den Mac** | Text, Links und Dateien, die du im Panel an diesen Mac schickst, kommen hier an | – |
 | **Termine im Begleiter** | „Als Nächstes“ im Begleiter-Fenster, Mitteilung 10 Minuten vor jedem Termin | – |
+| **Post im Begleiter** | „Post“ im Begleiter-Fenster: ungelesen und Für dich, dringende Karten mit „Erledigt“/„Erinnern“; wichtige neue Mail als Mitteilung mit „Antwort entwerfen“, „Gelesen“, „Ansehen“ | – |
+| **Schnell erfassen** | eine Zeile wie „Zahnarzt Fr 10 Uhr bei Dr. Weber“ als Termin oder Erinnerung; gespeichert erst mit „Eintragen“, danach „Rückgängig“ | ⌃⌥N |
+| **Listen im Begleiter** | „Listen“ im Begleiter-Fenster: Listen mit offenen Einträgen, Zahl und neuester Eintrag, „Öffnen“ führt zur Seite Listen | – |
 | **Nicht stören erkennen** | bei Anruf, Kamera oder Präsentation hält der Spark seine Meldungen zurück | – |
 | **Besprechung mitschreiben** | Mikrofon und Ton des Macs mitschreiben, danach Zusammenfassung und Aufgaben | ⌥⌘R |
 | **Smart-Home-Knöpfe** | Abschnitt „Zuhause“ mit den im Panel gewählten Knöpfen | – |
@@ -119,6 +122,13 @@ daneben, als einfacher Text, der sich markieren und mit **Kopieren** übernehmen
 Zusammenhang, **Neu** fängt von vorn an. Ist Diktieren an, gibt es einen runden **Mikrofon-Knopf**, um die Frage zu
 sprechen.
 
+**Karten unter der Antwort** (wie im Panel und im iPhone): fragt der Spark zurück („Soll ich … eintragen?“), stehen
+**Ja** und **Nein** darunter, bei „A oder B?“ die beiden Teile und „Anders …“; wartet ein Vorschlag auf dein Ja
+(„Termin wartet auf dein Ja“), ebenso. Ein Klick schickt nur dieses Wort, als hättest du es getippt; entscheiden tut
+der Spark mit seinen festen Regeln. Hat die Antwort Termine oder eine Mail gelesen, öffnet **Im Kalender ansehen ↗**
+bzw. **Mail öffnen ↗** die Seite im Panel. Ist im Panel „Ablauf und Freigabe zeigen“ an, steht unter der Antwort
+klein, welche Werkzeuge der Spark benutzt hat und wie lange es dauerte.
+
 ### Diktieren
 
 ⌥⌘D startet die Aufnahme. Oben auf dem Bildschirm erscheint dann immer eine **dunkle Leiste mit rotem Punkt
@@ -181,6 +191,9 @@ macOS, ob der Begleiter Mail steuern darf (siehe „Freigaben“).
 der Mail (mit Bedienungshilfen) oder man fügt ihn im Fenster ein; der Entwurf kommt in die Zwischenablage – im
 Antwortfenster von Outlook mit **⌘V** einfügen.
 
+Im Fenster holt **„3 Vorschläge“** drei kurze Antworten zur Mail; ein Klick übernimmt einen, danach formen „Kürzer“,
+„Freundlicher“, „Förmlicher“ und „Englisch“ ihn um. Gesendet wird auch hier nie.
+
 ### Ordner „Spark-Wissen“
 
 Ist der Teil an, legt der Begleiter den Ordner **`~/Spark-Wissen`** an (Einstellungen → Allgemein → „Anderen Ordner
@@ -209,7 +222,10 @@ bzw. den Pfeil klicken:
   Antwort kommt als Mitteilung und steht auch im Fenster von „Frag Spark“. Ohne Text öffnet sich „Frag Spark“ mit der
   Meldung als Bezug.
 - **Später**: die Meldung kommt in einer Stunde noch einmal (merkt sich macOS).
-- **Panel öffnen**: öffnet das Panel im Browser.
+- **Panel öffnen**: öffnet das Panel im Browser, und zwar an der Stelle, die die Meldung nennt („E-Mail → Für dich“,
+  „Ich → Gedächtnis“).
+- Zu einer Frist oder einem Verdacht aus **Für dich**: **Erledigt** (die Karte gilt als erledigt) und **Erinnern**
+  (Erinnerung am Tag vor der Frist). Welche Knöpfe eine Meldung hat, legt das Panel nach ihrer Art fest, nie ihr Text.
 
 ### Spark darf am Mac handeln
 
@@ -316,7 +332,29 @@ Jedes Stück kommt genau einmal an; danach meldet der Begleiter dem Spark „erl
 
 Alle 5 Minuten holt der Begleiter die Termine und Erinnerungen der nächsten 24 Stunden. Im Begleiter-Fenster steht
 der Abschnitt **„Als Nächstes“**; 10 Minuten vor jedem Termin kommt eine Mitteilung mit Titel und Uhrzeit (einmal je
-Termin). Meldungen des Spark bekommen zusätzlich den Knopf **„In 20 Min erinnern“**.
+Termin). Meldungen des Spark bekommen zusätzlich den Knopf **„In 20 Min erinnern“**. Termine aus Kalendern, die andere
+Profile mit dir teilen, tragen den Namen des Profils; ein Klick auf einen Termin öffnet den Tag im Kalender des Panels.
+
+### Post im Begleiter
+
+Im Begleiter-Fenster steht der Abschnitt **„Post“**: wie viele Mails ungelesen sind und wie viele Karten in „Für dich“
+warten, darunter die bis zu 3 dringenden Karten mit **„Erledigt“**, **„Erinnern“** und **„Ansehen“**; „E-Mail öffnen“
+springt ins Panel. Alle 5 Minuten, beim Öffnen des Fensters und bei einer neuen Mail aufgefrischt. Eine wichtige neue
+Mail (welche, entscheidet der Spark) kommt als Mitteilung mit **„Antwort entwerfen“** (Frag Spark mit der Bitte im
+Feld, gesendet wird nichts), **„Gelesen“** (nur mit „Mails ordnen“) und **„Ansehen“**. Bei verborgenen Vorschauen
+zeigt der Sperrbildschirm nur „Neue Mail“.
+
+### Schnell erfassen
+
+⌃⌥N (oder die Kachel „Erfassen“) öffnet ein kleines Fenster für eine Zeile wie „Zahnarzt Fr 10 Uhr bei Dr. Weber“;
+markierter Text kommt mit. Der Spark zeigt, was er erkannt hat (Termin oder Erinnerung, Tag und Uhrzeit, Ort).
+Gespeichert wird erst mit **„Eintragen“**, danach 10 Minuten lang **„Rückgängig“**.
+„Milch, Eier auf Einkauf“ legt die Einträge auf diese Liste (Art „Liste“).
+
+### Listen im Begleiter
+
+Im Begleiter-Fenster stehen unter **„Listen“** die Listen mit offenen Einträgen, je mit Zahl und dem neuesten Eintrag
+(auch wer ihn ergänzt hat); „Öffnen“ führt zur Seite Listen.
 
 ### Nicht stören erkennen
 
@@ -411,7 +449,7 @@ das dort in Rot. Ein Teil, der im Panel aus ist, hat kein Kürzel. Die Kürzel s
 - **Automation für Mail** (für „Antwort entwerfen“): macOS fragt beim ersten ⌥⌘M „Spark-Begleiter möchte Mail
   steuern“ → „OK“. Später unter Systemeinstellungen → Datenschutz & Sicherheit → Automation → Spark-Begleiter → Mail.
 - **Mitteilungen**: fragt macOS, sobald „Meldungen“, „Knöpfe in Meldungen“, der Ordner „Spark-Wissen“, „Vom Handy
-  auf den Mac“, „Termine im Begleiter“ oder „Tagesstart und Feierabend“ an ist.
+  auf den Mac“, „Termine im Begleiter“, „Post im Begleiter“ oder „Tagesstart und Feierabend“ an ist.
 - **Downloads-Ordner** (für „Vom Handy auf den Mac“): macOS fragt bei der ersten Datei.
 - **Kamera**: „Nicht stören erkennen“ schaut nur nach, ob ein anderes Programm die Kamera benutzt; der Begleiter
   schaltet sie nie selbst ein.

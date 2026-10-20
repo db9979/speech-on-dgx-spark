@@ -37,15 +37,24 @@ internal static class Parts
     // Rechner fernsteuern, Stufe 2: Bildschirm zeigen und bedienen – aus, bis das Panel ihn einschaltet.
     public const string View = "view";
 
+    // Begleiter nachziehen 1a/2a: Post im Fenster und wichtige neue Mails als Meldung – aus, bis das Panel ihn einschaltet.
+    public const string Post = "post";
+
+    // Begleiter nachziehen 4a: Schnell erfassen (Strg+Alt+N) – aus, bis das Panel ihn einschaltet.
+    public const string Capture = "capture";
+
+    // Begleiter nachziehen 8a: die Listen (Seite Listen) im Fenster – aus, bis das Panel ihn einschaltet.
+    public const string Lists = "lists";
+
     /// <summary>Alle Teile in der Reihenfolge, in der sie angezeigt werden.</summary>
     public static readonly string[] All =
     {
         Write, Ask, Dictate, Notes, Status, Notaus, Files, Screen, Context, Mail, Folder, Actions, Act, Wake,
-        Speak, Inbox, Agenda, Quiet, Meeting, Home, Daily, Office, View,
+        Speak, Inbox, Agenda, Quiet, Meeting, Home, Daily, Office, View, Post, Capture, Lists,
     };
 
     /// <summary>Teile mit eigenem Tastenkürzel.</summary>
-    public static readonly string[] WithHotkey = { Write, Ask, Dictate, Screen, Mail, Speak, Meeting };
+    public static readonly string[] WithHotkey = { Write, Ask, Dictate, Screen, Mail, Speak, Meeting, Capture };
 
     public static string Label(string part) => part switch
     {
@@ -72,6 +81,9 @@ internal static class Parts
         Daily => "Tagesstart und Feierabend",
         Office => "Office-Add-ins",
         View => "Bildschirm zeigen und bedienen",
+        Post => "Post im Begleiter",
+        Capture => "Schnell erfassen",
+        Lists => "Listen im Begleiter",
         _ => part,
     };
 }
@@ -109,6 +121,7 @@ internal readonly record struct Hotkey(Keys Modifiers, Keys Key)
         Parts.Mail => new Hotkey(Keys.Control | Keys.Alt, Keys.M),
         Parts.Speak => new Hotkey(Keys.Control | Keys.Alt, Keys.L),
         Parts.Meeting => new Hotkey(Keys.Control | Keys.Alt, Keys.R),
+        Parts.Capture => new Hotkey(Keys.Control | Keys.Alt, Keys.N),
         _ => new Hotkey(Keys.Control | Keys.Alt, Keys.S),
     };
 

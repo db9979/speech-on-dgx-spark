@@ -310,6 +310,11 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
             return;
         }
 
+        if (fresh.Any(n => n.Tag == "mail-new"))
+        {
+            _ = RefreshPostAsync();   // eine neue Mail: die Zahlen unter „Post“ gleich neu
+        }
+
         if (IsOn(Parts.Actions) || IsOn(Parts.Agenda))
         {
             // Mit Knöpfen (actions) bzw. „In 20 Min erinnern“ (agenda) auch im Tray-Fenster.
@@ -697,6 +702,8 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
             AskHotkey = ask ? _config.GetHotkey(Parts.Ask).ToString() : null,
             AskVoice = ask && IsOn(Parts.Dictate) && !MicSwitch.Closed ? AskByVoice : null,
             Notes = BuildPanelNotes(),
+            Post = BuildPostCards(),
+            Lists = BuildListCards(),
             Agenda = BuildAgendaLines(),
             AgendaEmpty = AgendaEmptyText(),
             Home = BuildHomeButtons(),
@@ -970,6 +977,9 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
                     break;
                 case Parts.Meeting:
                     await ToggleMeetingAsync();
+                    break;
+                case Parts.Capture:
+                    await OpenCaptureAsync(fromHotkey: true);
                     break;
             }
         }
@@ -1534,6 +1544,8 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
             _pollTimer.Dispose();
             _updater.Dispose();
             DisposeParts4();
+            _postTimer.Dispose();
+            _listsTimer.Dispose();
             Theme.Changed -= OnThemeChanged;
             Theme.Unwatch();
             _hotkeys.Dispose();

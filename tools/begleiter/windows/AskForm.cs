@@ -56,6 +56,9 @@ internal sealed class AskForm : ThemedForm
     /// <summary>Teil "actions": die nächste Frage antwortet auf diese Meldung (Nummer).</summary>
     private int? _note;
 
+    /// <summary>Karten unter der letzten Antwort (Rückfrage, Freigabe, Sprung): eine Reihe Knöpfe über der Statuszeile.</summary>
+    private readonly List<SparkButton> _cardButtons = new();
+
     /// <param name="speakAnswer">Antwort vorlesen (Teil "speak", gleiche Wiedergabe und Pille wie Strg+Alt+L).</param>
     /// <param name="stopSpeaking">Laufendes Vorlesen beenden.</param>
     /// <param name="setSpeakMode">Einstellung „Antworten vorlesen“ speichern.</param>
@@ -226,6 +229,39 @@ internal sealed class AskForm : ThemedForm
         _status.Fit(pad, statusY, w - (2 * pad));
 
         int chatBottom = (statusH > 0 ? statusY : inputY) - S(8);
+        if (_cardButtons.Count > 0)
+        {
+            // die Knöpfe der Karten in einer Reihe (bei Bedarf umbrochen) direkt über der Statuszeile
+            var rows = new List<List<(SparkButton B, Size Z)>> { new() };
+            int x = 0;
+            foreach (SparkButton b in _cardButtons)
+            {
+                Size z = b.Preferred();
+                if (x > 0 && x + z.Width > w - (2 * pad))
+                {
+                    rows.Add(new());
+                    x = 0;
+                }
+
+                rows[^1].Add((b, z));
+                x += z.Width + S(6);
+            }
+
+            int rowH = rows.SelectMany(r => r).Max(t => t.Z.Height);
+            int top = chatBottom - (rows.Count * (rowH + S(6))) + S(6);
+            for (int r = 0; r < rows.Count; r++)
+            {
+                int cx = pad;
+                foreach (var (b, z) in rows[r])
+                {
+                    b.Bounds = new Rectangle(cx, top + (r * (rowH + S(6))), z.Width, z.Height);
+                    cx += z.Width + S(6);
+                }
+            }
+
+            chatBottom = top - S(8);
+        }
+
         _chat.Bounds = new Rectangle(pad - S(4), y, w - (2 * pad) + S(8), Math.Max(S(40), chatBottom - y));
     }
 
@@ -367,7 +403,8 @@ internal sealed class AskForm : ThemedForm
     }
 
     /// <summary>Teil "actions" → Antworten: die Meldung als Zitat zeigen; die nächste Frage geht mit "note" an den Spark.</summary>
-    public void QuoteNote(Note note)
+    /// <param name="ask">Steht danach schon im Fragefeld (z. B. „Antwort entwerfen“ zu einer neuen Mail), nichts wird gesendet.</param>
+    public void QuoteNote(Note note, string? ask = null)
     {
         string title = note.Title.Trim();
         string quote = "Meldung" + (title.Length > 0 ? ": " + title : "") + (note.Body.Trim().Length > 0 ? Environment.NewLine + note.Body.Trim() : "");
@@ -375,6 +412,12 @@ internal sealed class AskForm : ThemedForm
         _note = note.N;
         RefreshParts();
         _question.PlaceholderText = "Antwort auf die Meldung …";
+        if (ask is not null)
+        {
+            _question.Text = ask;
+            _question.SelectionStart = _question.TextLength;
+        }
+
         SetStatus("Deine Antwort bezieht sich auf diese Meldung.", error: false);
         Bring();
     }
@@ -399,12 +442,14 @@ internal sealed class AskForm : ThemedForm
 
         _chat.Add(mine: true, question);
         _question.Clear();
+        ShowCards(Array.Empty<AskCard>());
         _chat.Pending = true;
         SetBusy(true, "");
         _cts = new CancellationTokenSource();
         try
         {
-            (string answer, string? md) = await SparkClient.AskAsync(_config.Base, key, question, _cts.Token, _note);
+            AskReply reply = await SparkClient.AskAsync(_config.Base, key, question, _cts.Token, _note);
+            (string answer, string? md) = (reply.Answer, reply.Md);
             if (IsDisposed)
             {
                 return;
@@ -432,7 +477,9 @@ internal sealed class AskForm : ThemedForm
                 _question.PlaceholderText = "Frag weiter …";
             }
 
-            SetStatus("", error: false);
+            string title = string.Join(" · ", reply.Cards.Select(c => c.Title).Where(t => t.Length > 0));
+            SetStatus(string.Join(" · ", new[] { reply.Steps ?? "", title }.Where(t => t.Length > 0)), error: false);
+            ShowCards(reply.Cards);
         }
         catch (OperationCanceledException)
         {
@@ -597,6 +644,66 @@ internal sealed class AskForm : ThemedForm
         {
             TimeSpan t = r.Elapsed;
             SetStatus(string.Create(CultureInfo.InvariantCulture, $"Ich höre zu {(int)t.TotalMinutes}:{t.Seconds:00} … (höchstens {Recorder.MaxSeconds} s; ■ zum Beenden)"), error: false);
+        }
+    }
+
+    /// <summary>
+    /// Die Karten der letzten Antwort als Knöpfe: „send“ schickt das feste Wort wie getippt (das Panel entscheidet mit
+    /// seinen Regeln), „open“ öffnet eine Seite im Panel (nur <see cref="AskCards.Pages"/>), „focus“ setzt den Cursor ins Feld.
+    /// </summary>
+    private void ShowCards(IReadOnlyList<AskCard> cards)
+    {
+        foreach (SparkButton old in _cardButtons)
+        {
+            Controls.Remove(old);
+            old.Dispose();
+        }
+
+        _cardButtons.Clear();
+        int tab = 10;
+        foreach (AskCard card in cards)
+        {
+            foreach (AskButton b in card.Buttons)
+            {
+                var button = new SparkButton(b.Main ? ButtonKind.Primary : ButtonKind.Secondary, b.Open is null ? b.Label : b.Label + " ↗")
+                {
+                    FontSize = 9f,
+                    TabIndex = tab++,
+                    AccessibleDescription = card.Title.Length > 0 ? card.Title : "Antwort auf die Frage des Spark",
+                    Surface = P.Card,
+                };
+                AskButton pick = b;
+                button.Click += async (_, _) => await PickCardAsync(pick);
+                _cardButtons.Add(button);
+                Controls.Add(button);
+            }
+        }
+
+        if (IsHandleCreated)
+        {
+            LayoutContent();
+            Invalidate();
+        }
+    }
+
+    private async Task PickCardAsync(AskButton b)
+    {
+        if (b.Send is { } word)
+        {
+            if (_busy || !_canAsk)
+            {
+                return;
+            }
+
+            await SendTextAsync(word, spoken: false);
+        }
+        else if (b.Open is { } page)
+        {
+            Wege.Open?.Invoke(page);
+        }
+        else
+        {
+            _question.Focus();
         }
     }
 

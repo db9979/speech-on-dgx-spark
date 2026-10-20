@@ -228,7 +228,21 @@ final class MailBox: ObservableObject {
     @Published private(set) var busy = false
     @Published private(set) var status = ""
     @Published private(set) var isError = false
+    /// Antwortvorschläge (Begleiter nachziehen 6a): three answers to pick, then change freely or by the tweak buttons
+    @Published private(set) var ideas: [Idea] = []
+    @Published private(set) var ideasAsked = false
+    @Published var draft = ""
+    @Published private(set) var picked = false
     private var task: Task<Void, Never>?
+
+    struct Idea: Identifiable {
+        let id = UUID()
+        let label: String
+        let text: String
+    }
+
+    static let tweaks = [("Kürzer", "kuerzer"), ("Freundlicher", "freundlicher"), ("Förmlicher", "foermlicher"),
+                         ("Englisch", "uebersetzen")]
 
     init(kind: Kind, from: String, subject: String, mail: String) {
         self.kind = kind
@@ -244,11 +258,71 @@ final class MailBox: ObservableObject {
 
     static func show(_ box: MailBox) {
         Windows.shared.close(MailDraft.windowID)
-        Windows.shared.show(MailDraft.windowID, title: "Antwort entwerfen", size: NSSize(width: 520, height: 470),
+        Windows.shared.show(MailDraft.windowID, title: "Antwort entwerfen", size: NSSize(width: 520, height: 520),
                             floating: true) {
             MailBoxView(box: box)
         }
         Windows.shared.whenClosed(MailDraft.windowID) { [weak box] in box?.task?.cancel() }
+        if !box.mail.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { box.loadIdeas() }
+    }
+
+    /// POST /api/write/suggest: three answers to this mail; nothing is sent.
+    func loadIdeas() {
+        guard !busy, !picked, let client = AppModel.shared.client,
+              !mail.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        let body = mailText
+        ideasAsked = true
+        busy = true
+        setStatus("Der Spark sucht drei Antworten …", error: false)
+        task = Task { @MainActor [weak self] in
+            do {
+                let d = try await client.postJSON("api/write/suggest", ["mail": body], timeout: 120)
+                let list = (d["items"] as? [Any] ?? []).prefix(3).compactMap { x -> Idea? in
+                    guard let o = x as? [String: Any], let t = o["text"] as? String,
+                          !t.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
+                    let l = PlainText.line(o["label"], max: 24)
+                    return Idea(label: l.isEmpty ? "Vorschlag" : l, text: String(t.prefix(2000)))
+                }
+                self?.busy = false
+                guard let self, !self.picked else { return }
+                self.ideas = list
+                self.setStatus(list.isEmpty ? "Keine Vorschläge – Stichpunkte schreiben." : "Einen Vorschlag wählen oder Stichpunkte schreiben.",
+                               error: false)
+            } catch is CancellationError {
+                self?.busy = false
+            } catch {
+                self?.busy = false
+                self?.ideasAsked = false
+                self?.setStatus(AppModel.shared.absorb(error), error: true)
+            }
+        }
+    }
+
+    func pick(_ i: Idea) {
+        draft = i.text
+        picked = true
+        setStatus("Ändern, kürzen oder übersetzen – gesendet wird nichts.", error: false)
+    }
+
+    /// kürzer, freundlicher, förmlicher, Englisch: through /api/write/assist like the writing help
+    func tweak(_ art: String) {
+        guard !busy, picked, !draft.isEmpty, let client = AppModel.shared.client else { return }
+        let text = draft
+        busy = true
+        setStatus("Der Spark formt die Antwort um …", error: false)
+        task = Task { @MainActor [weak self] in
+            do {
+                let r = try await client.improve(text: text, art: art, sprache: art == "uebersetzen" ? "en" : nil, wunsch: "")
+                self?.busy = false
+                self?.draft = r.text
+                self?.setStatus("Ändern, kürzen oder übersetzen – gesendet wird nichts.", error: false)
+            } catch is CancellationError {
+                self?.busy = false
+            } catch {
+                self?.busy = false
+                self?.setStatus(AppModel.shared.absorb(error), error: true)
+            }
+        }
     }
 
     /// what the Spark gets as "mail": sender and subject (when known) and the text, at most 20000 characters
@@ -262,6 +336,13 @@ final class MailBox: ObservableObject {
 
     func write() {
         guard !busy else { return }
+        if picked {
+            // a picked suggestion: as it stands in the field now
+            let answer = draft.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !answer.isEmpty else { return setStatus("Die Antwort ist leer.", error: true) }
+            deliver(answer)
+            return
+        }
         guard !mail.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             setStatus(isOutlook ? "Bitte den Text der Mail einfügen." : "Die Mail ist leer.", error: true)
             return
@@ -286,34 +367,39 @@ final class MailBox: ObservableObject {
                     self?.setStatus("Der Spark hat keine Antwort geschrieben.", error: true)
                     return
                 }
-                switch kind {
-                case .outlook:
-                    Clip.put(answer)
-                    Windows.shared.close(MailDraft.windowID)
-                    HUD.show("Antwortentwurf in der Zwischenablage. In die Antwort einfügen (⌘V).",
-                             symbol: "doc.on.clipboard", seconds: 8)
-                case .mail(let id):
-                    if let f = MailScript.makeReply(answer: answer, id: id) {
-                        Clip.put(answer)
-                        self?.busy = false
-                        switch f {
-                        case .notAllowed:
-                            self?.setStatus("Keine Freigabe für Mail. Der Entwurf liegt in der Zwischenablage.", error: true)
-                            MailDraft.show(f)
-                        case .other(let m):
-                            self?.setStatus(m + " Der Entwurf liegt in der Zwischenablage.", error: true)
-                        }
-                        return
-                    }
-                    Windows.shared.close(MailDraft.windowID)
-                    HUD.show("Antwortentwurf in Mail geöffnet – nichts gesendet.", symbol: "envelope", seconds: 5)
-                }
+                self?.busy = false
+                self?.deliver(answer, kind: kind)
             } catch is CancellationError {
                 self?.busy = false
             } catch {
                 self?.busy = false
                 self?.setStatus(AppModel.shared.absorb(error), error: true)
             }
+        }
+    }
+
+    /// The answer as a reply window in Mail (nothing sent), for Outlook into the clipboard.
+    private func deliver(_ answer: String, kind given: Kind? = nil) {
+        switch given ?? kind {
+        case .outlook:
+            Clip.put(answer)
+            Windows.shared.close(MailDraft.windowID)
+            HUD.show("Antwortentwurf in der Zwischenablage. In die Antwort einfügen (⌘V).",
+                     symbol: "doc.on.clipboard", seconds: 8)
+        case .mail(let id):
+            if let f = MailScript.makeReply(answer: answer, id: id) {
+                Clip.put(answer)
+                switch f {
+                case .notAllowed:
+                    setStatus("Keine Freigabe für Mail. Der Entwurf liegt in der Zwischenablage.", error: true)
+                    MailDraft.show(f)
+                case .other(let m):
+                    setStatus(m + " Der Entwurf liegt in der Zwischenablage.", error: true)
+                }
+                return
+            }
+            Windows.shared.close(MailDraft.windowID)
+            HUD.show("Antwortentwurf in Mail geöffnet – nichts gesendet.", symbol: "envelope", seconds: 5)
         }
     }
 
@@ -374,6 +460,58 @@ struct MailBoxView: View {
                     .background(RoundedRectangle(cornerRadius: 10).fill(Theme.soft))
                     .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.line, lineWidth: 1))
                 }
+                ideasRow
+                if box.picked {
+                    caption("Antwort (frei änderbar, gesendet wird nichts)")
+                    TextEditor(text: $box.draft)
+                        .font(.system(size: 12))
+                        .frame(minHeight: 120)
+                        .padding(6)
+                        .background(RoundedRectangle(cornerRadius: 10).fill(Theme.card))
+                        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.line, lineWidth: 1))
+                        .disabled(box.busy)
+                    HStack(spacing: 6) {
+                        ForEach(0..<MailBox.tweaks.count, id: \.self) { n in
+                            Button(MailBox.tweaks[n].0) { box.tweak(MailBox.tweaks[n].1) }
+                                .buttonStyle(SoftButtonStyle())
+                                .disabled(box.busy)
+                        }
+                    }
+                } else {
+                    notesField
+                }
+                statusRow
+            }
+            .padding(14)
+        }
+        .background(Theme.card)
+        .foregroundColor(Theme.fg)
+        .frame(minWidth: 440, minHeight: 380)
+    }
+
+    /// the three suggestions as buttons (or "3 Vorschläge" before they were asked for)
+    @ViewBuilder
+    private var ideasRow: some View {
+        if !box.picked {
+            if !box.ideas.isEmpty {
+                caption("Vorschläge")
+                HStack(spacing: 6) {
+                    ForEach(box.ideas) { i in
+                        Button(i.label) { box.pick(i) }
+                            .buttonStyle(SoftButtonStyle())
+                            .help(DeskConfig.plain(i.text, max: 300))
+                    }
+                }
+            } else if !box.ideasAsked {
+                Button("3 Vorschläge") { box.loadIdeas() }
+                    .buttonStyle(SoftButtonStyle())
+                    .disabled(box.busy)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var notesField: some View {
                 caption("Was soll drinstehen? (freiwillig, z. B. „zusagen, Termin Dienstag 10 Uhr“)")
                 HStack(alignment: .bottom, spacing: 6) {
                     TextField("Stichpunkte für die Antwort …", text: $box.notes, axis: .vertical)
@@ -388,6 +526,9 @@ struct MailBoxView: View {
                 .padding(8)
                 .background(RoundedRectangle(cornerRadius: 10).fill(Theme.card))
                 .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.line, lineWidth: 1))
+    }
+
+    private var statusRow: some View {
                 HStack(spacing: 8) {
                     if box.busy { ProgressView().controlSize(.small) }
                     Text(Wege.text(box.status))
@@ -399,17 +540,11 @@ struct MailBoxView: View {
                     Button("Abbrechen") { Windows.shared.close(MailDraft.windowID) }
                         .buttonStyle(SoftButtonStyle())
                         .keyboardShortcut(.cancelAction)
-                    Button("Entwurf schreiben") { box.write() }
+                    Button(box.picked ? (box.isOutlook ? "Kopieren" : "Entwurf öffnen") : "Entwurf schreiben") { box.write() }
                         .buttonStyle(PrimaryButtonStyle())
                         .keyboardShortcut(.return, modifiers: .command)
                         .disabled(box.busy)
                 }
-            }
-            .padding(14)
-        }
-        .background(Theme.card)
-        .foregroundColor(Theme.fg)
-        .frame(minWidth: 440, minHeight: 380)
     }
 
     private func caption(_ s: String) -> some View {

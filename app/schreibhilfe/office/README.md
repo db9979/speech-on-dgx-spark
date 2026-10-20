@@ -29,6 +29,8 @@ Für **Outlook classic** bringt er einen eigenen Knopf mit, der auch mit iCloud-
 - **Outlook verfassen:** Text markieren (ohne Markierung: ganzer Text) → *Markierten Text verbessern* →
   Änderungen prüfen → *Übernehmen*. Bei Antworten zusätzlich *Antwort entwerfen* (fügt am Cursor ein).
 - **Outlook lesen:** *Antwort entwerfen* (optional Stichpunkte) → *Als Antwort öffnen*; oder *Mail übersetzen*.
+  Bei *Antwort entwerfen* holt *3 Vorschläge* drei kurze Antworten; danach formen *Kürzer*, *Freundlicher*,
+  *Förmlicher* und *Englisch* die Antwort um.
 - **Word:** Text markieren → verbessern → *Übernehmen* ersetzt die Markierung.
 - **Excel:** genau eine Zelle mit Text markieren → verbessern → *In Zelle schreiben*.
 

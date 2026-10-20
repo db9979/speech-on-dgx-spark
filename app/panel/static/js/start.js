@@ -70,6 +70,9 @@ async function startPage(){let who=null;try{who=await (await /*raw: the first wh
     else if(h[1]==='cfg'&&ADMIN&&$('pane-'+h[2]))goCfg(h[2]);
     else if(h[1]==='me'&&PROFILE&&typeof OWN_PAGES!=='undefined'&&OWN_PAGES[h[2]]){icTabSet(OWN_PAGES[h[2]][0],'show');goSec(OWN_PAGES[h[2]][0])}   // a page of its own (Kalender): its first tab
     else if(h[1]==='me'&&PROFILE&&/box$/.test(h[2])&&$(h[2]))openMe(h[2])}}catch{}
+  // #kal=YYYY-MM-DD from the Begleiter („Als Nächstes“, Begleiter nachziehen 7a): the page Kalender on that day
+  try{const k=/^#kal=(\d{4})-(\d{2})-(\d{2})$/.exec(location.hash);if(k){history.replaceState(null,'',location.pathname+location.search);
+    if(PROFILE&&typeof KAL!=='undefined'&&$('cal')){KAL.day=new Date(+k[1],k[2]-1,+k[3]);icTabSet('cal','show');goSec('cal')}}}catch{}
   // #weg=<a way like „Ich → Sicherheit“> from the apps, mails and messages: opens it like a Sprung-Link (way.js)
   try{if(typeof wayHash==='function')wayHash()}catch{}
   try{const fr=sessionStorage.getItem('flagsreload');if(fr){sessionStorage.removeItem('flagsreload');if(fr==='away')sayToast(t('Deine Funktionen wurden geändert, Seite neu geladen.','Your functions were changed, page reloaded.'),5000)}}catch{}   // back where the new version was loaded

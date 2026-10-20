@@ -2294,6 +2294,13 @@
 "titel": "Für dich: neue Mail und Phishing-Regel",
 "text": "„Neue Mails sofort“ an: eine Mail mit Rechnung und Frist morgen schicken, Für dich meldet sich ohne 30 Minuten Warten. Ein o2- oder Telekom-Angebot, das Netflix oder Amazon im Betreff nennt, steht nicht unter Verdacht; eine Mail „Netflix <…@fremd>“ mit „Zahlungsdaten aktualisieren“ schon.",
 "thread": "Persönlicher Assistent aus dem Postfach"
+},
+{
+"id": "P352",
+"v": 860,
+"titel": "Begleiter: Post, Schnell erfassen, Listen",
+"text": "Unter Ich → Begleiter beim Gerät „Post im Begleiter“, „Schnell erfassen“, „Listen im Begleiter“ und „Termine im Begleiter“ einschalten. 1) Im Begleiter-Fenster stehen Post (ungelesen, Für dich, dringende Karten mit Erledigt/Erinnern), Als Nächstes (auch Termine geteilter Kalender mit Namen; Klick öffnet den Tag im Kalender) und Listen (Zahl, neuester Eintrag, Öffnen). 2) Eine Mail von einem Kontakt schicken lassen: kommt als Meldung mit Antwort entwerfen, Gelesen, Ansehen. 3) Strg+Alt+N (Mac ⌃⌥N): „Zahnarzt Fr 10 Uhr bei Dr. Weber“ zeigt Chips, erst Eintragen speichert, Rückgängig nimmt es zurück; „Milch, Eier auf Einkauf“ landet auf der Liste. 4) Antwort entwerfen (Strg+Alt+M) und im Outlook-Add-in: „3 Vorschläge“, einen wählen, dann Kürzer/Freundlicher/Englisch. 5) In Frag Spark nach einem Termin fragen: Karte „Im Kalender ansehen“.",
+"thread": "Begleiter nachziehen"
 }
 ]
 }

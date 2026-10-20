@@ -281,7 +281,18 @@ struct SeenIDs {
 // ------------------------------------------------------------------ actions on notes
 
 enum NoteActions {
-    static let known = ["reply", "later", "open"]
+    /// "done" and "fdremind" belong to a note about a Für-dich card (begleiter.NOTE_ACTS) and act through the panel
+    static let known = ["reply", "later", "open", "done", "fdremind"]
+
+    /// the title of a button that acts through the panel (POST /api/desk/note/act), nil for the others
+    static func panelLabel(_ action: String) -> String? {
+        switch action {
+        case "done": return "Erledigt"
+        case "fdremind": return "Erinnern"
+        case "read": return "Gelesen"
+        default: return nil
+        }
+    }
 
     /// the note's "actions", in a fixed order, unknown ones dropped
     static func parse(_ raw: Any?) -> [String] {

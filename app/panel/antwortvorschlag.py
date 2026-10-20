@@ -82,14 +82,23 @@ def _who(uid):
 
 
 async def _make(uid, ref):
-    t0 = time.time()
     try:
         m = await asyncio.to_thread(mail.show, uid, ref)
         if m is None:
             raise LookupError("the mail is gone")
+    except Exception as e:
+        _count.bump("fehler")
+        print(f"mail: suggestions failed ({type(e).__name__}) | {_who(uid)}", flush=True)
+        raise
+    return await _three(uid, f"Von: {m.get('from', '')}\nBetreff: {m.get('subject', '')}\n\n" + (m.get("text") or ""))
+
+
+async def _three(uid, text):
+    """The model's three answers to a mail text (sender and subject in front); one journal line for every outcome."""
+    t0 = time.time()
+    try:
         name = (profiles.by_id(uid) or {}).get("name") or ""
-        head = f"Von: {m.get('from', '')}\nBetreff: {m.get('subject', '')}\n\n"
-        user = "<<<MAIL\n" + schreib.unmark(head + (m.get("text") or "")[:MAX_MAIL]) + "\nMAIL>>>"
+        user = "<<<MAIL\n" + schreib.unmark(text[:MAX_MAIL]) + "\nMAIL>>>"
         raw = await asyncio.wait_for(llm.complete(SYSTEM.format(name=_clean(name, 40) or "[Name]"), user, JOB, 900,
                                                  temperature=0.6, timeout=SECONDS, who=uid), SECONDS)
         items = parse(raw)
@@ -135,6 +144,25 @@ async def suggest(uid, ref, now=None):
         _kept.pop(min(_kept, key=lambda k: _kept[k][0]))
     _kept[key] = (now, items)
     return items, False
+
+
+async def for_text(uid, text):
+    """Begleiter „Antwort entwerfen“ and the Outlook add-in (Begleiter nachziehen 6a): three answers to a mail the
+    program read itself (Outlook, Apple Mail); only drafts, nothing is sent from here. Not kept: the text is the key."""
+    try:
+        notaus.stop("gespraech")
+    except notaus.NotausAktiv:
+        print(f"mail: suggestions refused (Notaus) | {_who(uid)}", flush=True)
+        raise
+    text = _clean(text, MAX_MAIL)
+    if not text:
+        raise ValueError("mail fehlt")
+    try:
+        _quota(uid)
+    except verbrauch.Quota:
+        print(f"mail: suggestions refused (Quota) | {_who(uid)}", flush=True)
+        raise
+    return await _three(uid, text)
 
 
 async def rewrite(uid, text, art):

@@ -20,6 +20,7 @@ enum HotAction: UInt32, CaseIterable, Identifiable {
     case mail = 5
     case speak = 6
     case meeting = 7
+    case capture = 8
 
     var id: UInt32 { rawValue }
 
@@ -33,6 +34,7 @@ enum HotAction: UInt32, CaseIterable, Identifiable {
         case .mail: return "mail"
         case .speak: return "speak"
         case .meeting: return "meeting"
+        case .capture: return "capture"
         }
     }
 
@@ -45,10 +47,11 @@ enum HotAction: UInt32, CaseIterable, Identifiable {
         case .mail: return "Antwort entwerfen"
         case .speak: return "Vorlesen"
         case .meeting: return "Besprechung"
+        case .capture: return "Schnell erfassen"
         }
     }
 
-    /// ⌥⌘S, ⌥⌘A, ⌥⌘D, ⌥⌘B, ⌥⌘M, ⌥⌘L, ⌥⌘R
+    /// ⌥⌘S, ⌥⌘A, ⌥⌘D, ⌥⌘B, ⌥⌘M, ⌥⌘L, ⌥⌘R; Schnell erfassen ⌃⌥N
     var standard: Hotkey {
         let mods = UInt32(cmdKey | optionKey)
         switch self {
@@ -59,6 +62,7 @@ enum HotAction: UInt32, CaseIterable, Identifiable {
         case .mail: return Hotkey(keyCode: UInt32(kVK_ANSI_M), mods: mods, label: "⌥⌘M")
         case .speak: return Hotkey(keyCode: UInt32(kVK_ANSI_L), mods: mods, label: "⌥⌘L")
         case .meeting: return Hotkey(keyCode: UInt32(kVK_ANSI_R), mods: mods, label: "⌥⌘R")
+        case .capture: return Hotkey(keyCode: UInt32(kVK_ANSI_N), mods: UInt32(controlKey | optionKey), label: "⌃⌥N")
         }
     }
 }

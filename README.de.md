@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.860** Spark-Begleiter (Windows und Mac) zieht Kalender und E-Mail nach: Post im Fenster (ungelesen, Für dich, dringende Karten), wichtige neue Mail als Hinweis mit „Antwort entwerfen“, Knöpfe je Meldung, Karten in Frag Spark, Schnell erfassen mit Strg+Alt+N (Termin, Erinnerung oder Liste), 3 Antwortvorschläge auch im Outlook-Add-in, geteilte Kalender in „Als Nächstes“, Listen im Fenster; alles je Gerät aus
 - **V01.0.859** Seite Listen: der Kopf einer Liste ist wieder eine Zeile (der Titel brach Buchstabe für Buchstabe um, statt der Zahl stand „NaN“), Eingabe und Einträge stehen darunter; Browser-Test dafür
 - **V01.0.858** Fix: GitHub-Lauf „Tests“ wieder grün; der neue Test der Rechner-Karten erlaubt 1 px Rundung (Schrift auf GitHub) und misst beide Stände in einem Zug, ohne Wettlauf mit der eigenen Abfrage der Seite; der Test „Sicherheitspunkt macht Zustand nicht rot“ prüft auf eigenem Stand
 - **V01.0.857** Für dich: liest bei einer neuen Mail sofort neu (mit „Neue Mails sofort“), und eine Marke nur im Betreff einer echten, bestätigten Mail (etwa o2 mit Netflix) ist kein Phishing-Verdacht mehr
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.853** E-Mail: die Knöpfe einer Mail in einer festen Leiste oben, Symbole mit Namen und Taste beim Drüberfahren, auf dem Handy und im iPhone die fünf häufigsten unten am Daumen; Kalender: Termine, die sich nicht ändern lassen, tragen ein 🔒 mit dem Grund, die Karte zeigt Notiz und Link des Termins
 - **V01.0.852** Neue Mails sofort: der Spark hält den Posteingang von Profilen, die gerade ihre Mails lesen, per IMAP IDLE offen; neue Mails stehen nach Sekunden auf der Seite E-Mail und die Regeln greifen gleich; höchstens 4 Verbindungen, Admin-Schalter, aus
 - **V01.0.851** Was ich über dich weiß (Stufe 3 und 4): Interessen mit Beleg erst nach „Stimmt“, „Mehr davon“ an der Karte, Wiederkehrendes mit monatlicher Erinnerung, Woche und Monatssumme aus geprüften Beträgen, Wochenrückblick sonntags, höchstens ein Netz-Tipp am Tag nur mit dem Wort; iPhone und CarPlay
-- **V01.0.850** Zustand → Technik hat eine neue Seite „Sicherheit“: wie alle Schutzschichten zusammenspielen (das Modell schlägt vor, das Panel entscheidet), mit dem Weg einer Frage durch alle Prüfungen, Rollen, Grenzen und Code; neue Regel: bei jeder Änderung einer Schutzregel wird sie mitgezogen
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

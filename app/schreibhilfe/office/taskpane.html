@@ -41,6 +41,13 @@
       <select id="sprache"></select>
     </div>
 
+    <div id="vorschlaegeZeile" hidden>
+      <label>Vorschläge</label>
+      <div id="vorschlaege" class="knoepfe">
+        <button id="vorschlaegeBtn" type="button">3 Vorschläge</button>
+      </div>
+    </div>
+
     <div id="notizenZeile" hidden>
       <label for="notizen">Stichpunkte für die Antwort (optional)</label>
       <textarea id="notizen" rows="3" maxlength="20000" placeholder="z. B. Termin passt, Unterlagen folgen Freitag"></textarea>
@@ -60,6 +67,12 @@
       </div>
       <label for="text">Ergebnis (bearbeitbar)</label>
       <textarea id="text" rows="8" spellcheck="true"></textarea>
+      <div id="umformen" class="knoepfe" hidden>
+        <button type="button" data-art="kuerzer">Kürzer</button>
+        <button type="button" data-art="freundlicher">Freundlicher</button>
+        <button type="button" data-art="foermlicher">Förmlicher</button>
+        <button type="button" data-art="uebersetzen">Englisch</button>
+      </div>
       <div class="knoepfe">
         <button id="uebernehmen" type="button" class="primaer">Übernehmen</button>
         <button id="kopieren" type="button">Kopieren</button>

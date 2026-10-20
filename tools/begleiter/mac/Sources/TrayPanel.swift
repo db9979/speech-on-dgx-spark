@@ -41,6 +41,8 @@ struct TrayPanel: View {
     @ObservedObject var quiet = Quiet.shared
     @ObservedObject var mic = MicSwitch.shared
     @ObservedObject var agenda = AgendaCenter.shared
+    @ObservedObject var lists = ListsCenter.shared
+    @ObservedObject var post = PostCenter.shared
     @ObservedObject var home = HomeCenter.shared
     @State private var holder = PanelWindow()
 
@@ -70,7 +72,9 @@ struct TrayPanel: View {
                                       speak: { go { model.askByVoice() } })
                     }
                     tiles
+                    if model.part("post") { postSection }
                     if model.part("agenda") { agendaSection }
+                    if model.part("lists") { listsSection }
                     if model.part("home") { homeSection }
                     thisMac
                     if !moreHint.isEmpty {
@@ -96,6 +100,8 @@ struct TrayPanel: View {
         .onExitCommand { holder.close() }
         .onAppear {
             agenda.refreshSoon()
+            post.refreshSoon()
+            lists.refreshSoon()
             home.refreshSoon()
         }
     }
@@ -197,6 +203,11 @@ struct TrayPanel: View {
                     go { if speaker.active { speaker.stop() } else { speaker.readClipboard() } }
                 }
             }
+            if model.part("capture") {
+                PanelTile(title: "Erfassen", symbol: "plus.circle", color: Theme.accent2, key: model.hotkeyLabel(.capture)) {
+                    go { CaptureController.open(fromHotkey: false) }
+                }
+            }
             if model.part("meeting") {
                 PanelTile(title: meeting.running ? "Mitschreiben beenden" : "Mitschreiben",
                           symbol: meeting.running ? "stop.circle" : "record.circle", color: Theme.bad,
@@ -272,6 +283,66 @@ struct TrayPanel: View {
         SectionLabel(text: t)
     }
 
+    /// "Post": unread mail and Für dich as numbers, the urgent cards with their buttons (part post)
+    private var postSection: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            sectionTitle("Post")
+            PanelBox {
+                PanelRow(title: post.loaded ? post.post.summary : "Lädt …",
+                         detail: !post.problem.isEmpty ? post.problem : post.post.loading ? "Wird noch gelesen …" : "",
+                         symbol: "envelope", verb: post.post.noMail ? "" : "E-Mail öffnen") {
+                    go { model.openPanel("#me=mailbox") }
+                }
+                ForEach(post.post.cards) { c in
+                    RowLine()
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(verbatim: c.title)
+                            .font(.system(size: 13, weight: .semibold))
+                            .lineLimit(2)
+                        if !c.line.isEmpty {
+                            Text(verbatim: c.line)
+                                .font(.system(size: 11))
+                                .foregroundColor(Theme.muted)
+                                .lineLimit(2)
+                        }
+                        HStack(spacing: 6) {
+                            ForEach(c.acts, id: \.self) { a in
+                                Button(NoteActions.panelLabel(a) ?? a) { post.act(c, a) }
+                                    .buttonStyle(SoftButtonStyle())
+                            }
+                            Button("Ansehen") {
+                                go {
+                                    if let url = Wege.link("E-Mail → Für dich", base: model.base) { NSWorkspace.shared.open(url) }
+                                }
+                            }
+                            .buttonStyle(SoftButtonStyle())
+                        }
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 7)
+                }
+            }
+        }
+    }
+
+    /// "Listen": the lists with open entries (part lists); a row opens the page Listen
+    private var listsSection: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            sectionTitle("Listen")
+            PanelBox {
+                if lists.rows.isEmpty {
+                    PanelRow(title: !lists.problem.isEmpty ? lists.problem : lists.loaded ? "Keine Listen." : "Lädt …",
+                             detail: "", symbol: "list.bullet", verb: "Öffnen") { go { model.openPanel("#me=taskbox") } }
+                }
+                ForEach(Array(lists.rows.enumerated()), id: \.element.id) { i, l in
+                    if i > 0 { RowLine() }
+                    PanelRow(title: (l.icon.isEmpty ? "" : l.icon + " ") + l.name, detail: l.detail,
+                             symbol: "list.bullet", verb: "Öffnen") { go { model.openPanel("#me=taskbox") } }
+                }
+            }
+        }
+    }
+
     /// "Als Nächstes": the next events and reminders (part agenda), in a box like in the panel
     private var agendaSection: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -302,15 +373,30 @@ struct TrayPanel: View {
                                 Text(verbatim: l.title)
                                     .font(.system(size: 13))
                                     .lineLimit(2)
-                                Text(verbatim: IsoDate.short(l.when, now: now) + (l.detail.isEmpty ? "" : " · " + l.detail))
-                                    .font(.system(size: 11))
-                                    .foregroundColor(Theme.muted)
-                                    .lineLimit(1)
+                                HStack(spacing: 5) {
+                                    if !l.who.isEmpty {
+                                        // whose shared calendar (Begleiter nachziehen 7a)
+                                        Text(verbatim: l.who)
+                                            .font(.system(size: 10, weight: .semibold))
+                                            .foregroundColor(Theme.accent)
+                                            .padding(.horizontal, 6)
+                                            .padding(.vertical, 1)
+                                            .background(Capsule().fill(Theme.accent.opacity(0.12)))
+                                            .lineLimit(1)
+                                    }
+                                    Text(verbatim: IsoDate.short(l.when, now: now) + (l.detail.isEmpty ? "" : " · " + l.detail))
+                                        .font(.system(size: 11))
+                                        .foregroundColor(Theme.muted)
+                                        .lineLimit(1)
+                                }
                             }
                             Spacer(minLength: 0)
                         }
                         .padding(.horizontal, 10)
                         .padding(.vertical, 7)
+                        .contentShape(Rectangle())
+                        .onTapGesture { if !l.day.isEmpty { model.openPanel("#kal=" + l.day) } }
+                        .help(Text(verbatim: l.day.isEmpty ? "" : "Im Kalender öffnen"))
                     }
                 }
             }

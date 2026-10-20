@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.860** Spark companion (Windows and Mac) catches up with calendar and e-mail: mail in the window (unread, For you, urgent cards), an important new mail as a note with "Draft a reply", buttons per note, cards in Ask Spark, quick capture with Ctrl+Alt+N (appointment, reminder or list), 3 reply suggestions also in the Outlook add-in, shared calendars in "Als Nächstes", lists in the window; all off per device
 - **V01.0.859** Lists page: the head of a list is one line again (the title broke letter by letter, "NaN" stood instead of the count), the input and entries stand below it; browser test for it
 - **V01.0.858** Fix: GitHub run "Tests" green again; the new test of the computer cards allows 1 px rounding (GitHub's fonts) and measures both states in one go, without a race with the page's own poll; the test "a security point does not turn Zustand red" checks on a status of its own
 - **V01.0.857** For you: reads anew at once when a new mail comes (with "New mail at once"), and a brand only in the subject of a genuine, verified mail (say o2 with Netflix) is no longer a phishing suspicion
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.853** E-mail: the buttons of a mail in a fixed bar on top, symbols with name and key on hover, on the phone and iPhone the five most used at the thumb below; calendar: appointments that cannot be changed carry a 🔒 with the reason, the card shows the appointment's note and link
 - **V01.0.852** New mail at once: the Spark keeps the inbox of profiles reading their mail open with IMAP IDLE; new mail is on the E-mail page within seconds and the rules act at once; at most 4 connections, admin switch, off
 - **V01.0.851** What I know about you (stages 3 and 4): interests with evidence only after "Right", "More of this" on the card, recurring bills with a monthly reminder, week and month sum from checked amounts, weekly review on Sundays, at most one web tip a day with only the word; iPhone and CarPlay
-- **V01.0.850** Status → Architecture has a new page "Security": how all layers of protection work together (the model proposes, the panel decides), with one question's way through every check, roles, borders and code; new rule: it is updated with every change of a protection rule
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

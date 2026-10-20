@@ -5,6 +5,7 @@ import io
 import json
 import os
 import unittest
+import unittest.mock
 
 from tests import helpers
 
@@ -46,6 +47,7 @@ def notaus_off():
     except FileNotFoundError:
         pass
     notaus._cache.update(key=None, state=None)
+
 
 
 class Schreib(unittest.TestCase):
@@ -241,6 +243,11 @@ class Schreib(unittest.TestCase):
         self.assertEqual((r.status_code, r.json()["text"]), (200, "Ein Fehler."), r.text)
         r = prog.post("/api/write/plain?art=korrigieren", content="Noch ein Feler.".encode(), headers=dict(k, **{"Content-Type": "text/plain"}))
         self.assertEqual((r.status_code, r.text), (200, "Noch ein Fehler."))
+        # Antwortvorschläge for the Outlook add-in (Begleiter nachziehen 6a): the same key, three drafts, nothing sent
+        import antwortvorschlag
+        with unittest.mock.patch.object(antwortvorschlag, "_three", return_value=[{"label": "Danke", "text": "Danke!"}]):
+            r = prog.post("/api/write/suggest", json={"mail": "Hallo, passt Freitag?"}, headers=k)
+        self.assertEqual((r.status_code, r.json()["items"][0]["label"]), (200, "Danke"), r.text)
         # nothing else with this key
         for path in ("/api/profile/settings", "/api/profile/memory", "/api/write/devices"):
             self.assertIn(prog.get(path, headers=k).status_code, (401, 404), path)

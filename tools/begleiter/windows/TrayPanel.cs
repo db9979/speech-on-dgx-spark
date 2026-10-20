@@ -32,10 +32,16 @@ internal sealed record PanelItem(string Text, Glyph Glyph, string? Hotkey, Actio
 
 /// <summary>Teil "actions": eine Meldung im Tray-Fenster mit ihren Knöpfen (nur die angebotenen sind gesetzt).</summary>
 /// <param name="Done">„OK“: die Meldung ist gesehen und verschwindet; das Fenster bleibt offen (Dominik 2026-10-16).</param>
-internal sealed record PanelNote(int N, string Title, string Body, Action? Reply, Action? Later, Action? Open, Action? Remind = null, Action? Done = null);
+/// <summary>
+/// Eine Meldung im Tray-Fenster; <see cref="Extra"/> = Knöpfe ihrer Art vom Panel (Für dich: Erledigt, Erinnern),
+/// <see cref="OpenLabel"/> = „Ansehen“, wenn die Meldung einen Weg ins Panel hat.
+/// </summary>
+internal sealed record PanelNote(int N, string Title, string Body, Action? Reply, Action? Later, Action? Open, Action? Remind = null, Action? Done = null,
+    IReadOnlyList<(string Label, Action Action)>? Extra = null, string OpenLabel = "Panel öffnen");
 
 /// <summary>Teil "agenda": eine Zeile unter „Als Nächstes“ (Zeit, Text, Ort/Hinweis).</summary>
-internal sealed record PanelLine(string When, string Text, string Detail);
+/// <summary>Eine Zeile unter „Als Nächstes“; Who als Namen-Chip (geteilter Kalender), Open beim Klick (Termin im Panel).</summary>
+internal sealed record PanelLine(string When, string Text, string Detail, string Who = "", Action? Open = null);
 
 /// <summary>Teil "home": ein Knopf unter „Zuhause“ (Schalter mit Zustand, Szene oder Skript).</summary>
 internal sealed record PanelHomeButton(string Name, bool Toggle, bool? On, bool Enabled, Action Action);
@@ -71,6 +77,12 @@ internal sealed class PanelModel
 
     /// <summary>Mikrofon im Fragefeld (nur mit Teil "dictate"): „Frag Spark“ öffnen und gleich zuhören.</summary>
     public Action? AskVoice { get; init; }
+
+    /// <summary>Teil "post": Karten unter „Post“ (zuerst die Zahlen, dann dringende Für-dich-Karten); <c>null</c> = Abschnitt fehlt.</summary>
+    public IReadOnlyList<PanelNote>? Post { get; init; }
+
+    /// <summary>Teil "lists": eine Karte je Liste unter „Listen“; <c>null</c> = Abschnitt fehlt.</summary>
+    public IReadOnlyList<PanelNote>? Lists { get; init; }
 
     /// <summary>Meldungen mit Knöpfen (Teil "actions").</summary>
     public IReadOnlyList<PanelNote> Notes { get; init; } = Array.Empty<PanelNote>();
@@ -119,14 +131,15 @@ internal sealed class TrayPanel : ThemedForm
     private readonly Action<Action> _post;
     private readonly List<SparkButton> _items = new();
     private readonly List<Action> _actions = new();
-    private readonly List<(PanelNote Note, List<SparkButton> Buttons)> _notes = new();
-    private readonly List<(Rectangle Card, Rectangle Title, Rectangle Body)> _noteRects = new();
-    private Rectangle _notesHeading;
+    private readonly CardGroup _notes = new();
+    private readonly CardGroup _postCards = new();
+    private readonly CardGroup _listCards = new();
     private readonly List<SparkButton> _home = new();
     private readonly List<Action> _homeActions = new();
     private Rectangle _agendaHeading;
     private Rectangle _agendaBox;
     private readonly List<(Rectangle When, Rectangle Text, Rectangle Detail)> _agendaRects = new();
+    private readonly List<Rectangle> _agendaRows = new();
     private readonly List<int> _agendaLines = new();
     private Rectangle _agendaEmpty;
     private Rectangle _homeHeading;
@@ -373,7 +386,15 @@ internal sealed class TrayPanel : ThemedForm
 
     private void BuildNotes()
     {
-        foreach (var (_, buttons) in _notes)
+        BuildCards(_postCards, _model.Post ?? Array.Empty<PanelNote>(), 40);
+        BuildCards(_listCards, _model.Lists ?? Array.Empty<PanelNote>(), 45);
+        BuildCards(_notes, _model.Notes, 50);
+    }
+
+    /// <summary>Karten mit Knöpfen (Meldungen, Post): alte Knöpfe weg, neue nach der Reihe.</summary>
+    private void BuildCards(CardGroup group, IReadOnlyList<PanelNote> list, int tab)
+    {
+        foreach (var (_, buttons) in group.Cards)
         {
             foreach (SparkButton b in buttons)
             {
@@ -382,12 +403,14 @@ internal sealed class TrayPanel : ThemedForm
             }
         }
 
-        _notes.Clear();
-        int tab = 50;
-        foreach (PanelNote note in _model.Notes)
+        group.Cards.Clear();
+        foreach (PanelNote note in list)
         {
             var buttons = new List<SparkButton>();
-            foreach (var (label, action) in new (string, Action?)[] { ("OK", note.Done), ("Antworten", note.Reply), ("Später", note.Later), ("In 20 Min erinnern", note.Remind), ("Panel öffnen", note.Open) })
+            var row = new List<(string, Action?)> { ("OK", note.Done) };
+            row.AddRange((note.Extra ?? Array.Empty<(string, Action)>()).Select(e => (e.Label, (Action?)e.Action)));
+            row.AddRange(new (string, Action?)[] { ("Antworten", note.Reply), ("Später", note.Later), ("In 20 Min erinnern", note.Remind), (note.OpenLabel, note.Open) });
+            foreach (var (label, action) in row)
             {
                 if (action is null)
                 {
@@ -413,7 +436,7 @@ internal sealed class TrayPanel : ThemedForm
                 Controls.Add(button);
             }
 
-            _notes.Add((note, buttons));
+            group.Cards.Add((note, buttons));
         }
     }
 
@@ -585,6 +608,7 @@ internal sealed class TrayPanel : ThemedForm
 
         // Als Nächstes (Teil "agenda")
         _agendaRects.Clear();
+        _agendaRows.Clear();
         _agendaLines.Clear();
         _agendaEmpty = Rectangle.Empty;
         _agendaBox = Rectangle.Empty;
@@ -607,9 +631,10 @@ internal sealed class TrayPanel : ThemedForm
                     y += S(8);
                 }
 
-                int dh = line.Detail.Length > 0 ? smallH : 0;
+                int dh = line.Detail.Length > 0 || line.Who.Length > 0 ? smallH + S(2) : 0;
                 _agendaRects.Add((new Rectangle(pad + cell, y, whenW, lineH), new Rectangle(pad + cell + whenW, y, lineW, lineH),
                     new Rectangle(pad + cell + whenW, y + lineH, lineW, dh)));
+                _agendaRows.Add(new Rectangle(pad, y - S(4), inner, lineH + dh + S(8)));
                 y += lineH + dh + S(8);
             }
 
@@ -628,50 +653,10 @@ internal sealed class TrayPanel : ThemedForm
             _agendaHeading = Rectangle.Empty;
         }
 
-        // Meldungen mit Knöpfen
-        _noteRects.Clear();
-        if (_notes.Count > 0)
-        {
-            Section(ref y, pad, inner, out _notesHeading);
-            foreach (var (note, buttons) in _notes)
-            {
-                int cardPad = S(12);
-                int tw = inner - (2 * cardPad);
-                int th = Draw.Measure("Ag", F(9f, FontStyle.Bold)).Height;
-                int lineH = Draw.Measure("Ag", F(8.5f)).Height;
-                int bh = note.Body.Length > 0 ? Math.Min(Draw.TextHeight(note.Body, F(8.5f), tw), lineH * 2) : 0;
-                int by = y + cardPad + th + (bh > 0 ? S(2) + bh : 0) + S(8);
-                int bx = pad + cardPad;
-                int rowH = 0;
-                foreach (SparkButton b in buttons)
-                {
-                    Size size = b.Preferred();
-                    size.Height = Math.Min(size.Height, S(28));
-                    if (bx > pad + cardPad && bx + size.Width > pad + cardPad + tw)
-                    {
-                        bx = pad + cardPad;
-                        by += rowH + S(6);
-                        rowH = 0;
-                    }
-
-                    b.Bounds = new Rectangle(bx, by, size.Width, size.Height);
-                    b.Surface = P.Card;
-                    bx += size.Width + S(6);
-                    rowH = Math.Max(rowH, size.Height);
-                }
-
-                int cardH = (by - y) + rowH + cardPad;
-                _noteRects.Add((new Rectangle(pad, y, inner, cardH), new Rectangle(pad + cardPad, y + cardPad, tw, th),
-                    new Rectangle(pad + cardPad, y + cardPad + th + S(2), tw, bh)));
-                y += cardH + S(8);
-            }
-
-            y += S(2);
-        }
-        else
-        {
-            _notesHeading = Rectangle.Empty;
-        }
+        // Post (Teil "post") und Meldungen mit Knöpfen
+        LayoutCards(_postCards, ref y, pad, inner);
+        LayoutCards(_listCards, ref y, pad, inner);
+        LayoutCards(_notes, ref y, pad, inner);
 
         // Zuhause (Teil "home")
         if (m.Home is not null)
@@ -869,7 +854,19 @@ internal sealed class TrayPanel : ThemedForm
                 Draw.Text(g, agenda[i].Text, F(9f), text, p.Fg);
                 if (detail.Height > 0)
                 {
-                    Draw.Text(g, agenda[i].Detail, F(8f), detail, p.Muted);
+                    Rectangle rest = detail;
+                    if (agenda[i].Who.Length > 0)
+                    {
+                        // Namen-Chip: wessen geteilter Kalender (Begleiter nachziehen 7a)
+                        Font chip = F(7.5f, FontStyle.Bold);
+                        int cw = Math.Min(detail.Width / 2, Draw.Measure(agenda[i].Who, chip).Width + S(10));
+                        var box = new Rectangle(detail.X, detail.Y + S(1), cw, detail.Height - S(2));
+                        Draw.FillRound(g, p.BannerBack, box, S(6));
+                        Draw.Text(g, agenda[i].Who, chip, Rectangle.Inflate(box, -S(5), 0), p.Accent);
+                        rest = new Rectangle(box.Right + S(6), detail.Y, Math.Max(0, detail.Right - box.Right - S(6)), detail.Height);
+                    }
+
+                    Draw.Text(g, agenda[i].Detail, F(8f), rest, p.Muted);
                 }
             }
 
@@ -879,22 +876,9 @@ internal sealed class TrayPanel : ThemedForm
             }
         }
 
-        if (!_notesHeading.IsEmpty)
-        {
-            PaintHeading(g, "Meldungen", _notesHeading, _notes.Count);
-            for (int i = 0; i < _noteRects.Count && i < _notes.Count; i++)
-            {
-                var (card, title, body) = _noteRects[i];
-                PanelNote note = _notes[i].Note;
-                Draw.FillRound(g, p.Card, card, S(12));
-                Draw.StrokeRound(g, p.Line, card, S(12));
-                Draw.Text(g, note.Title, F(9f, FontStyle.Bold), title, p.Fg);
-                if (body.Height > 0)
-                {
-                    Draw.Text(g, note.Body, F(8.5f), body, p.Muted, Draw.Wrap | TextFormatFlags.EndEllipsis);
-                }
-            }
-        }
+        PaintCards(g, _postCards, "Post", 0);
+        PaintCards(g, _listCards, "Listen", 0);
+        PaintCards(g, _notes, "Meldungen", _notes.Cards.Count);
 
         if (!_homeHeading.IsEmpty)
         {
@@ -915,6 +899,85 @@ internal sealed class TrayPanel : ThemedForm
         {
             Draw.Text(g, hint, F(8.5f), _hint, p.Muted, Draw.Wrap);
         }
+    }
+
+    /// <summary>Überschrift und Karten einer Gruppe; leer = kein Abschnitt.</summary>
+    private void LayoutCards(CardGroup group, ref int y, int pad, int inner)
+    {
+        group.Rects.Clear();
+        if (group.Cards.Count == 0)
+        {
+            group.Heading = Rectangle.Empty;
+            return;
+        }
+
+        Section(ref y, pad, inner, out group.Heading);
+        foreach (var (note, buttons) in group.Cards)
+        {
+            int cardPad = S(12);
+            int tw = inner - (2 * cardPad);
+            int th = Draw.Measure("Ag", F(9f, FontStyle.Bold)).Height;
+            int lineH = Draw.Measure("Ag", F(8.5f)).Height;
+            int bh = note.Body.Length > 0 ? Math.Min(Draw.TextHeight(note.Body, F(8.5f), tw), lineH * 2) : 0;
+            int by = y + cardPad + th + (bh > 0 ? S(2) + bh : 0) + S(8);
+            int bx = pad + cardPad;
+            int rowH = 0;
+            foreach (SparkButton b in buttons)
+            {
+                Size size = b.Preferred();
+                size.Height = Math.Min(size.Height, S(28));
+                if (bx > pad + cardPad && bx + size.Width > pad + cardPad + tw)
+                {
+                    bx = pad + cardPad;
+                    by += rowH + S(6);
+                    rowH = 0;
+                }
+
+                b.Bounds = new Rectangle(bx, by, size.Width, size.Height);
+                b.Surface = P.Card;
+                bx += size.Width + S(6);
+                rowH = Math.Max(rowH, size.Height);
+            }
+
+            int cardH = (by - y) + rowH + cardPad;
+            group.Rects.Add((new Rectangle(pad, y, inner, cardH), new Rectangle(pad + cardPad, y + cardPad, tw, th),
+                new Rectangle(pad + cardPad, y + cardPad + th + S(2), tw, bh)));
+            y += cardH + S(8);
+        }
+
+        y += S(2);
+    }
+
+    /// <summary>Karten einer Gruppe zeichnen (Hintergrund, Titel, Text; die Knöpfe sind eigene Steuerelemente).</summary>
+    private void PaintCards(Graphics g, CardGroup group, string heading, int count)
+    {
+        if (group.Heading.IsEmpty)
+        {
+            return;
+        }
+
+        Palette p = P;
+        PaintHeading(g, heading, group.Heading, count);
+        for (int i = 0; i < group.Rects.Count && i < group.Cards.Count; i++)
+        {
+            var (card, title, body) = group.Rects[i];
+            PanelNote note = group.Cards[i].Note;
+            Draw.FillRound(g, p.Card, card, S(12));
+            Draw.StrokeRound(g, p.Line, card, S(12));
+            Draw.Text(g, note.Title, F(9f, FontStyle.Bold), title, p.Fg);
+            if (body.Height > 0)
+            {
+                Draw.Text(g, note.Body, F(8.5f), body, p.Muted, Draw.Wrap | TextFormatFlags.EndEllipsis);
+            }
+        }
+    }
+
+    /// <summary>Karten mit Knöpfen unter einer Überschrift (Meldungen, Post).</summary>
+    private sealed class CardGroup
+    {
+        public readonly List<(PanelNote Note, List<SparkButton> Buttons)> Cards = new();
+        public readonly List<(Rectangle Card, Rectangle Title, Rectangle Body)> Rects = new();
+        public Rectangle Heading;
     }
 
     /// <summary>Abschnittsüberschrift in kleinen Großbuchstaben, dahinter optional die Anzahl als Abzeichen.</summary>
@@ -1048,18 +1111,46 @@ internal sealed class TrayPanel : ThemedForm
     // der Hinweis unten mit einem Weg („im Panel unter Ich → Begleiter“) ist ein Sprung-Link (Wege.cs)
     private bool OverWayHint(Point at) => !_hint.IsEmpty && _hint.Contains(at) && Wege.Find(_model.Hint) is not null;
 
+    // ein Termin unter „Als Nächstes“ öffnet seinen Tag im Kalender des Panels (Begleiter nachziehen 7a)
+    private Action? AgendaOpenAt(Point at)
+    {
+        if (_model.Agenda is not { } agenda)
+        {
+            return null;
+        }
+
+        for (int i = 0; i < _agendaRows.Count && i < agenda.Count; i++)
+        {
+            if (_agendaRows[i].Contains(at))
+            {
+                return agenda[i].Open;
+            }
+        }
+
+        return null;
+    }
+
     protected override void OnMouseMove(MouseEventArgs e)
     {
         base.OnMouseMove(e);
-        Cursor = OverWayHint(e.Location) ? Cursors.Hand : Cursors.Default;
+        Cursor = OverWayHint(e.Location) || AgendaOpenAt(e.Location) is not null ? Cursors.Hand : Cursors.Default;
     }
 
     protected override void OnMouseUp(MouseEventArgs e)
     {
         base.OnMouseUp(e);
-        if (e.Button == MouseButtons.Left && OverWayHint(e.Location))
+        if (e.Button != MouseButtons.Left)
+        {
+            return;
+        }
+
+        if (OverWayHint(e.Location))
         {
             Wege.OpenFrom(_model.Hint);
+        }
+        else if (AgendaOpenAt(e.Location) is { } open)
+        {
+            open();
         }
     }
 

@@ -2472,6 +2472,7 @@ async def text_ask(request, prof, body, who="siri"):
         return {"type": "http.request", "body": data, "more_body": False}
     response = await chat(Request(request.scope, receive))
     answer, error, from_mail, from_outside = "", "", False, False
+    steps, cards = [], []   # the Begleiter's Frag Spark: tools used and the cards under the answer (desk_cards)
     async for chunk in response.body_iterator:
         for line in (chunk.decode() if isinstance(chunk, bytes) else chunk).split("\n"):
             if not line.startswith("data:"):
@@ -2490,6 +2491,10 @@ async def text_ask(request, prof, body, who="siri"):
                 from_outside = True
             elif ev.get("type") == "error" and not error and ev.get("code", "").startswith("llm"):
                 error = "Der Spark konnte gerade nicht antworten."
+            elif ev.get("type") == "step" and len(steps) < 40:
+                steps.append(ev)
+            elif ev.get("type") in ("confirm", "choice", "goto") and len(cards) < 6:
+                cards.append(ev)
     answer = answer.strip() or error or "Dazu habe ich keine Antwort."
     # kept like the browser keeps it: the code word blacked out, an answer from mail marked (so the
     # background learner never reads it)
@@ -2517,7 +2522,51 @@ async def text_ask(request, prof, body, who="siri"):
     plain, md = hide_secrets(plain_markdown(answer)), hide_secrets(answer)
     def hidden(x):
         return sum(x.count(h) for h in SECRET_HINT.values())
-    return dict({"answer": plain}, **({"md": md[:MD_ANSWER_MAX]} if hidden(md) >= hidden(plain) else {}))
+    return dict({"answer": plain}, **({"md": md[:MD_ANSWER_MAX]} if hidden(md) >= hidden(plain) else {}),
+                **desk_cards(steps, cards))
+
+
+# the pages a card under an answer opens in the panel (#me=, start.js): the Begleiter only opens these
+DESK_GOTO = {"cal": ("Im Kalender ansehen", "#me=calbox"), "post": ("Mail öffnen", "#me=mailbox")}
+
+
+def desk_cards(steps, cards):
+    """Frag Spark im Begleiter (Begleiter nachziehen 5a, Dominik 2026-10-20): the same events the page shows under an
+    answer, in fixed words for a program without a page: "steps" one line (the readable tool names, ok or not, the
+    time), "cards" [{"title", "buttons": [{"label", "send" | "open" | "focus", "main"?}]}]. A "send" button sends its
+    word like a typed answer, so the module that asked decides with its own rules; "open" is only a page of DESK_GOTO;
+    "focus" puts the cursor in the field. Nothing on a card comes from the model but the parts of „A oder B?“
+    (ablauf.asks: the answer's own words, never after mail or outside text)."""
+    out = {}
+    if steps:
+        names = []
+        for ev in steps:
+            name = str(ev.get("de") or "")[:40] + ("" if ev.get("ok", True) else " ✗")
+            if name and name not in names:
+                names.append(name)
+        sec = sum(int(ev.get("ms") or 0) for ev in steps) / 1000
+        out["steps"] = (f"{len(steps)} Werkzeug{'' if len(steps) == 1 else 'e'} benutzt · " + f"{sec:.1f}".replace(".", ",")
+                        + " s" + (": " + ", ".join(names[:4]) if names else ""))
+    shown, goto = [], []
+    for ev in cards:
+        if ev.get("type") == "confirm":
+            shown.append({"title": str(ev.get("de") or "Vorschlag")[:30] + " wartet auf dein Ja",
+                          "buttons": [{"label": "Ja", "send": "Ja", "main": True}, {"label": "Nein", "send": "Nein"}]})
+        elif ev.get("type") == "choice":
+            buttons = [{"label": str(o.get("label") or "")[:30], "send": str(o.get("send") or "")[:30]}
+                       for o in (ev.get("options") or [])[:4] if o.get("label") and o.get("send")]
+            if buttons:
+                buttons[0]["main"] = True
+                if ev.get("free"):
+                    buttons.append({"label": str(ev["free"])[:30], "focus": True})
+                shown.append({"title": "", "buttons": buttons})
+        elif ev.get("type") == "goto" and ev.get("to") in DESK_GOTO and ev["to"] not in goto:
+            goto.append(ev["to"])
+    if goto:
+        shown.append({"title": "", "buttons": [{"label": DESK_GOTO[k][0], "open": DESK_GOTO[k][1]} for k in goto]})
+    if shown:
+        out["cards"] = shown[:3]
+    return out
 
 
 def _watch_job(job_id, request):

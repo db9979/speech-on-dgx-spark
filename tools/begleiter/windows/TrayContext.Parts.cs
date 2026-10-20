@@ -126,6 +126,8 @@ internal sealed partial class TrayContext
         }
 
         SyncParts4();
+        SyncPost();
+        SyncLists();
         SyncOffice();
         SyncFern();
         UpdateIcon();
@@ -149,6 +151,9 @@ internal sealed partial class TrayContext
         StopFern();
         _mailForm?.Close();
         StopParts4();
+        StopPost();
+        StopLists();
+        StopCapture();
         if (removeFileMenu)
         {
             FileMenu.Unregister();
@@ -578,7 +583,18 @@ internal sealed partial class TrayContext
                 (string Base, string Key) creds = Credentials() ?? throw new SparkException(null, "Der Begleiter ist nicht gekoppelt.");
                 AssistResult result = await SparkClient.AssistAsync(creds.Base, creds.Key, notes, "antwort", null, null, ct, app, mail);
                 return result.Text;
-            }, ReportFromWindow, NewDictation());
+            }, ReportFromWindow, NewDictation(), new MailHelp(
+                async (mail, ct) =>
+                {
+                    (string Base, string Key) creds = Credentials() ?? throw new SparkException(null, "Der Begleiter ist nicht gekoppelt.");
+                    return await SparkClient.SuggestAsync(creds.Base, creds.Key, mail, ct);
+                },
+                async (art, text, ct) =>
+                {
+                    (string Base, string Key) creds = Credentials() ?? throw new SparkException(null, "Der Begleiter ist nicht gekoppelt.");
+                    AssistResult result = await SparkClient.AssistAsync(creds.Base, creds.Key, text, art, art == "uebersetzen" ? "en" : null, null, ct, app);
+                    return result.Text;
+                }));
             form.FormClosed += (_, _) =>
             {
                 if (ReferenceEquals(_mailForm, form))
@@ -637,10 +653,60 @@ internal sealed partial class TrayContext
             actions && n.Actions.Contains("open") && !string.IsNullOrEmpty(_config.Base) ? () =>
             {
                 DismissNote(n);
-                OpenPanel();
+                OpenNoteWay(n);
             } : null,
-            agenda ? () => _ = RemindNoteAsync(n) : null,
-            () => DismissNote(n))).ToList();
+            agenda && !n.Actions.Contains("fdremind") ? () => _ = RemindNoteAsync(n) : null,
+            () => DismissNote(n),
+            actions ? NoteExtras(n) : null,
+            n.Weg is null ? "Panel öffnen" : "Ansehen")).ToList();
+    }
+
+    /// <summary>Die Knöpfe ihrer Art: „Antwort entwerfen“ (neue Mail, mit Frag Spark) und die, die über das Panel wirken.</summary>
+    private List<(string, Action)> NoteExtras(Note n)
+    {
+        var extra = new List<(string, Action)>();
+        if (n.Actions.Contains("draft") && IsOn(Parts.Ask))
+        {
+            extra.Add(("Antwort entwerfen", () =>
+            {
+                DismissNote(n);
+                EnsureAsk().QuoteNote(n, NoteActs.DraftQuestion);
+            }));
+        }
+
+        extra.AddRange(n.Actions.Where(a => NoteActs.Label(a) is not null)
+            .Select(a => (NoteActs.Label(a)!, (Action)(() => _ = NoteActAsync(n, a)))));
+        return extra;
+    }
+
+    /// <summary>„Ansehen“: der Weg der Meldung im Panel (z. B. E-Mail → Für dich), sonst die Startseite.</summary>
+    private void OpenNoteWay(Note note)
+    {
+        if (note.Weg is null || !Wege.OpenFrom(note.Weg))
+        {
+            OpenPanel();
+        }
+    }
+
+    /// <summary>Ein Knopf ihrer Art (Für dich: Erledigt, Erinnern): das Panel prüft Meldung und Karte und tut es.</summary>
+    private async Task NoteActAsync(Note note, string act)
+    {
+        DismissNote(note);
+        if (Credentials() is not { } creds)
+        {
+            return;
+        }
+
+        try
+        {
+            string text = await SparkClient.NoteActAsync(creds.Base, creds.Key, note.N, act, CancellationToken.None);
+            Notify(text, ToolTipIcon.Info);
+        }
+        catch (SparkException ex)
+        {
+            Notify(ex.Message, ToolTipIcon.Warning);
+            Report(ex, fromPoll: false);
+        }
     }
 
     private void ReplyToNote(Note note)

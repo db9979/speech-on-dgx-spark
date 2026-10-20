@@ -309,7 +309,7 @@ class Delivery(Base):
     def test_push_every_reaches_each_browser_but_not_telegram(self):
         ways = {}
 
-        async def one(uid, kind, targets, title, body, tag, private, why):
+        async def one(uid, kind, targets, title, body, tag, private, why, ref=""):
             ways[kind] = len(targets)
             return 1
         with mock.patch.object(push, "_have", lambda u, p: {"app": True, "and": False, "desk": False, "tg": True, "web": True}), \

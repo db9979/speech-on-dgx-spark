@@ -479,6 +479,30 @@ async def _run(prof, body, client, where, request=None):
         raise HTTPException(502, str(e)[:120] if isinstance(e, RuntimeError) else "Das Sprachmodell ist nicht erreichbar.")
 
 
+@router.post("/api/write/suggest", dependencies=[Depends(assistant)])
+async def write_suggest(request: Request):
+    """Antwortvorschläge to a mail a program read itself (Begleiter „Antwort entwerfen“, the Outlook add-in;
+    Begleiter nachziehen 6a, Dominik 2026-10-20): {"mail"} → three answers to pick and change (kürzer and the others
+    through /api/write/assist). Only drafts: nothing is sent from here; the mail is data (antwortvorschlag.SYSTEM)."""
+    import antwortvorschlag
+    prof, client, where = writer(request)
+    _mine(request, prof)
+    body = await core.json_body(request, MAX_BODY)
+    try:
+        text = clean(body.get("mail"), MAX_MAIL, "mail", need=True)
+        items = await antwortvorschlag.for_text(prof["id"], text)
+    except verbrauch.Quota as e:
+        raise HTTPException(429, str(e))
+    except notaus.NotausAktiv:
+        raise HTTPException(423, "Notaus: gerade antwortet der Spark nicht")
+    except ValueError as e:
+        raise HTTPException(400, str(e)[:200])
+    except (asyncio.TimeoutError, httpx.HTTPError, KeyError, RuntimeError):
+        raise HTTPException(502, "Das Sprachmodell hat gerade keine Vorschläge geliefert.")
+    _live(f"Antwortvorschläge ({where})")
+    return {"items": items}
+
+
 @router.post("/api/write/picture", dependencies=[Depends(assistant)])
 async def write_picture(request: Request, prof=Depends(browser_profile)):
     _mine(request, prof)

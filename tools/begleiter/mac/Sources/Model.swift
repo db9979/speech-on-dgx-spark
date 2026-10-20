@@ -18,7 +18,7 @@ struct LangInfo: Identifiable, Equatable {
 struct DeskConfig: Equatable {
     static let partNames = ["write", "ask", "dictate", "notes", "status", "notaus",
                             "files", "screen", "context", "mail", "folder", "actions", "act", "wake",
-                            "speak", "inbox", "agenda", "quiet", "meeting", "home", "daily", "office", "view"]
+                            "speak", "inbox", "agenda", "quiet", "meeting", "home", "daily", "office", "view", "post", "capture", "lists"]
     static let fallbackArts = [
         ArtInfo(id: "korrigieren", de: "Korrigieren", changes: true),
         ArtInfo(id: "glaetten", de: "Glätten", changes: true),
@@ -282,7 +282,7 @@ final class AppModel: ObservableObject {
         applyHotkeys()
         applyParts()
         if let want = c.autostart { applyAutostart(want) }
-        if ["notes", "actions", "folder", "inbox", "agenda", "daily"].contains(where: { c.parts[$0] == true }) {
+        if ["notes", "actions", "folder", "inbox", "agenda", "daily", "post"].contains(where: { c.parts[$0] == true }) {
             Notifier.ask()
         }
         if reach == .unknown || reach == .offline {
@@ -326,16 +326,23 @@ final class AppModel: ObservableObject {
         }
         if part("notes") {
             let notes = (d["notes"] as? [[String: Any]] ?? []).compactMap {
-                x -> (n: Int, title: String, body: String, tag: String, actions: [String])? in
+                x -> (n: Int, title: String, body: String, tag: String, actions: [String], weg: String?)? in
                 guard let n = (x["n"] as? NSNumber)?.intValue, n > prev else { return nil }
-                return (n, x["title"] as? String ?? "", x["body"] as? String ?? "", x["tag"] as? String ?? "",
-                        NoteActions.parse(x["actions"]))
+                // the way "Panel öffnen" goes (E-Mail → Für dich): only a way as Wege finds one in a text
+                let weg = Wege.find(x["weg"] as? String ?? "")?.way
+                let tag = x["tag"] as? String ?? ""
+                // an important new mail (part post) has its own buttons: Antwort entwerfen, Gelesen, Ansehen
+                let acts = tag == NoteActions.mailTag ? NoteActions.parseMail(x["actions"]) : NoteActions.parse(x["actions"])
+                return (n, x["title"] as? String ?? "", x["body"] as? String ?? "", tag, acts, weg)
+            }
+            if notes.contains(where: { $0.tag == NoteActions.mailTag }) {
+                Task { await PostCenter.shared.refresh() }   // the numbers under "Post" at once
             }
             for note in notes.sorted(by: { $0.n < $1.n }).suffix(5) {
-                var buttons = part("actions") ? note.actions : []
-                if part("agenda") { buttons.append("remind") }
+                var buttons = part("actions") ? note.actions.filter { $0 != "draft" || part("ask") } : []
+                if part("agenda") && !buttons.contains("fdremind") && note.tag != NoteActions.mailTag { buttons.append("remind") }
                 Notifier.show(title: note.title, body: note.body, tag: note.tag, id: "note-\(note.n)",
-                              note: note.n, actions: buttons)
+                              note: note.n, actions: buttons, weg: note.weg)
             }
         }
         // last smaller than before: the Spark started anew
@@ -429,6 +436,8 @@ final class AppModel: ObservableObject {
             Speaker.shared.toggle()
         case .meeting:
             Meeting.shared.toggle()
+        case .capture:
+            CaptureController.open(fromHotkey: true)
         case .dictate:
             if NSApp.isActive, let key = NSApp.keyWindow, key === Windows.shared.window("ask") {
                 Dictation.shared.toggle(.ask)
@@ -522,6 +531,8 @@ final class AppModel: ObservableObject {
         if !(on && part("inbox")) { InboxCenter.shared.clear() }
         Speaker.shared.apply(on: on && part("speak"))
         AgendaCenter.shared.apply(on: on && part("agenda"))
+        PostCenter.shared.apply(on: on && part("post"))
+        ListsCenter.shared.apply(on: on && part("lists"))
         Quiet.shared.apply(on: on && part("quiet"))
         Meeting.shared.apply(on: on && part("meeting"))
         HomeCenter.shared.apply(on: on && part("home"), configured: config?.v4.homeButtons ?? [])
@@ -658,13 +669,14 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
         let typed = (response as? UNTextInputNotificationResponse)?.userText ?? ""
         let req = response.notification.request
         let note = (req.content.userInfo["note"] as? NSNumber)?.intValue
+        let weg = req.content.userInfo["weg"] as? String
         let title = req.content.title
         let body = req.content.body
         let thread = req.content.threadIdentifier
         let category = req.content.categoryIdentifier
         Task { @MainActor in
             Notifier.handle(action: action, typed: typed, note: note, title: title, body: body, thread: thread,
-                            category: category)
+                            category: category, weg: weg)
         }
         completionHandler()
     }
@@ -702,11 +714,26 @@ enum Notifier {
                     return UNNotificationAction(identifier: "later", title: "Später", options: [])
                 case "remind":
                     return UNNotificationAction(identifier: "remind", title: "In 20 Min erinnern", options: [])
+                case "done", "fdremind":
+                    return UNNotificationAction(identifier: a, title: NoteActions.panelLabel(a) ?? a, options: [])
                 default:
                     return UNNotificationAction(identifier: "open", title: "Panel öffnen", options: [.foreground])
                 }
             }
             set.insert(UNNotificationCategory(identifier: id, actions: actions, intentIdentifiers: [], options: []))
+        }
+        // a new mail: sender and subject only after unlocking when previews are hidden (hiddenPreviewsBodyPlaceholder)
+        for combo in NoteActions.mailCombinations {
+            guard let id = NoteActions.mailCategory(combo) else { continue }
+            let actions: [UNNotificationAction] = combo.map { a in
+                switch a {
+                case "draft": return UNNotificationAction(identifier: "draft", title: "Antwort entwerfen", options: [.foreground])
+                case "read": return UNNotificationAction(identifier: "read", title: NoteActions.panelLabel(a) ?? a, options: [])
+                default: return UNNotificationAction(identifier: "open", title: "Ansehen", options: [.foreground])
+                }
+            }
+            set.insert(UNNotificationCategory(identifier: id, actions: actions, intentIdentifiers: [],
+                                              hiddenPreviewsBodyPlaceholder: "Neue Mail", options: []))
         }
         set.insert(UNNotificationCategory(identifier: inboxFileCategory,
                                           actions: [UNNotificationAction(identifier: "openFolder", title: "Ordner öffnen",
@@ -716,20 +743,26 @@ enum Notifier {
     }
 
     /// The Spark's note as plain text; with buttons when the part "actions" is on and the note has some.
-    static func show(title: String, body: String, tag: String, id: String, note: Int? = nil, actions: [String] = []) {
+    static func show(title: String, body: String, tag: String, id: String, note: Int? = nil, actions: [String] = [],
+                     weg: String? = nil) {
         let c = UNMutableNotificationContent()
         c.title = DeskConfig.plain(title, max: 200).isEmpty ? "Spark" : DeskConfig.plain(title, max: 200)
         c.body = String(body.prefix(1500))
         c.sound = .default
         if !tag.isEmpty { c.threadIdentifier = String(tag.prefix(20)) }
-        if let note { c.userInfo = ["note": note] }
-        if let cat = NoteActions.category4(actions) { c.categoryIdentifier = cat }
+        var info: [String: Any] = [:]
+        if let note { info["note"] = note }
+        if let weg { info["weg"] = weg }
+        if !info.isEmpty { c.userInfo = info }
+        if let cat = tag == NoteActions.mailTag ? NoteActions.mailCategory(actions) : NoteActions.category4(actions) {
+            c.categoryIdentifier = cat
+        }
         let r = UNNotificationRequest(identifier: id, content: c, trigger: nil)
         UNUserNotificationCenter.current().add(r) { _ in }
     }
 
     static func handle(action: String, typed: String, note: Int?, title: String, body: String, thread: String,
-                       category: String) {
+                       category: String, weg: String? = nil) {
         let model = AppModel.shared
         switch action {
         case "reply":
@@ -749,13 +782,38 @@ enum Notifier {
             c.body = body
             c.sound = .default
             if !thread.isEmpty { c.threadIdentifier = thread }
-            if let note { c.userInfo = ["note": note] }
+            var info: [String: Any] = [:]
+            if let note { info["note"] = note }
+            if let weg { info["weg"] = weg }
+            if !info.isEmpty { c.userInfo = info }
             if !category.isEmpty { c.categoryIdentifier = category }
             let trigger = UNTimeIntervalNotificationTrigger(timeInterval: laterSeconds, repeats: false)
             let r = UNNotificationRequest(identifier: "later-\(note ?? 0)-\(UUID().uuidString)", content: c, trigger: trigger)
             UNUserNotificationCenter.current().add(r) { _ in }
         case "open":
-            model.openPanel()
+            // the note's way (E-Mail → Für dich), else the start page
+            if let weg, let url = Wege.link(weg, base: model.base) {
+                NSWorkspace.shared.open(url)
+            } else {
+                model.openPanel()
+            }
+        case "draft":
+            // Antwort entwerfen to a new mail: Frag Spark with the note in front and the request in the field, not sent
+            guard model.part("actions"), model.part("ask") else { return HUD.show(AppModel.offHint("Frag Spark")) }
+            AskController.openForNote(note, title: title, body: body)
+            AskController.shared.input = NoteActions.draftQuestion
+        case "done", "fdremind", "read":
+            // a button of a note about a Für-dich card or a new mail: the Spark checks the note and what is behind it
+            guard model.part("actions") else { return HUD.show(AppModel.offHint("Knöpfe in Meldungen")) }
+            guard let note, let client = model.client else { return }
+            Task { @MainActor in
+                do {
+                    let text = try await client.noteAct(note: note, act: action)
+                    Notifier.plain(title: "Spark", body: text)
+                } catch {
+                    Notifier.plain(title: "Spark", body: model.absorb(error))
+                }
+            }
         case "remind":
             AgendaCenter.shared.remind(note: note, text: note == nil ? DeskConfig.plain(title, max: 300) : nil)
         case "openFolder":

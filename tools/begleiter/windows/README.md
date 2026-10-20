@@ -16,12 +16,15 @@ eigenen Spark. Es kann:
 | **App erkennen** | die Schreibhilfe erfährt, aus welcher *Art* Programm der Text kommt (z. B. Outlook, Browser) | – |
 | **Antwort entwerfen** | Antwort auf die offene/markierte Mail in Outlook als Entwurf – wird nie gesendet | **Strg+Alt+M** |
 | **Ordner Spark-Wissen** | neue und geänderte Dateien in einem Ordner gehen automatisch ins Wissen | – |
-| **Knöpfe in Meldungen** | Meldungen mit **Antworten**, **Später**, **Panel öffnen** | – |
+| **Knöpfe in Meldungen** | Meldungen mit **Antworten**, **Später**, **Panel öffnen**; zu „Für dich“ **Erledigt**, **Erinnern**, **Ansehen** | – |
 | **Spark darf am PC handeln** | der Spark darf um wenige, fest umrissene Handlungen bitten – jede einzeln mit Rückfrage | – |
 | **Weckwort** | auf „Hey Spark“ (Wort aus dem Panel) hören und die Frage beantworten | – |
 | **Vorlesen** | markierten Text in der eigenen Stimme des Profils vorlesen | **Strg+Alt+L** |
 | **Vom Handy auf den PC** | Text, Links und Dateien, die man am Handy „an den PC“ schickt | – |
 | **Termine im Begleiter** | „Als Nächstes“ im Begleiter-Fenster, Hinweis 10 Minuten vor jedem Termin | – |
+| **Post im Begleiter** | „Post“ im Begleiter-Fenster: ungelesen und Für dich, dringende Karten mit **Erledigt**/**Erinnern**; wichtige neue Mail als Meldung mit **Antwort entwerfen**, **Gelesen**, **Ansehen** | – |
+| **Schnell erfassen** | eine Zeile wie „Zahnarzt Fr 10 Uhr bei Dr. Weber“ als Termin oder Erinnerung; gespeichert erst mit **Eintragen**, danach **Rückgängig** | **Strg+Alt+N** |
+| **Listen im Begleiter** | „Listen“ im Begleiter-Fenster: Listen mit offenen Einträgen, Zahl und neuester Eintrag, **Öffnen** führt zur Seite Listen | – |
 | **Nicht stören erkennen** | bei Telefonat/Videokonferenz oder Präsentation hält der Spark Meldungen zurück | – |
 | **Besprechung mitschreiben** | Mikrofon und Systemton mitschreiben, danach Zusammenfassung und Aufgaben | **Strg+Alt+R** |
 | **Smart-Home-Knöpfe** | Knöpfe „Zuhause“ im Begleiter-Fenster (Licht, Szenen, Skripte) | – |
@@ -108,6 +111,12 @@ darunter die eingeschalteten Teile, ggf. „Aktualisieren auf …“, **Einstell
 erscheint als Sprechblase mit reinem Text; Folgefragen behalten den Zusammenhang. **Kopieren** unter
 einer Antwort (oder Rechtsklick auf die Blase, oder Strg+C) kopiert sie. Ist Diktieren an, nimmt der
 **Mikrofon-Knopf** die Frage auf (noch einmal klicken = Stopp).
+Fragt der Spark zurück („Soll ich … eintragen?“) oder wartet ein Vorschlag auf dein Ja, stehen unter der Antwort
+Knöpfe: **Ja** und **Nein**, bei „A oder B?“ die beiden Teile und „Anders …“ (setzt nur den Cursor ins Feld). Ein Klick
+schickt nur dieses Wort, als hättest du es getippt; entscheiden tut der Spark mit seinen festen Regeln. Hat die Antwort
+Termine oder eine Mail gelesen, öffnet **Im Kalender ansehen ↗** bzw. **Mail öffnen ↗** die Seite im Panel. Ist im
+Panel „Ablauf und Freigabe zeigen“ an, steht in der Zeile darüber, welche Werkzeuge benutzt wurden und wie lange es
+dauerte.
 
 **Diktieren:** **Strg+Alt+D** startet die Aufnahme (unten rechts erscheint eine dunkle Pille „Ich
 höre zu“ mit rotem Punkt, Zeit, Pegel und dem Tastenkürzel), **Strg+Alt+D** noch einmal beendet sie
@@ -152,6 +161,8 @@ Antwort, Outlook öffnet ein Antwortfenster mit dem Text über der Originalmail.
 macht man selbst. Das **neue Outlook** (und andere Mailprogramme) lässt sich nicht steuern: dann vorher den
 Text der Mail markieren und Strg+Alt+M drücken (oder ihn im Fenster einfügen); die fertige Antwort liegt
 danach in der Zwischenablage – **in die Antwort einfügen (Strg+V)**.
+Im Fenster holt **3 Vorschläge** drei kurze Antworten zur Mail; ein Klick übernimmt einen, danach formen
+**Kürzer**, **Freundlicher**, **Förmlicher** und **Englisch** ihn um. Gesendet wird auch hier nie.
 
 **Ordner Spark-Wissen:** Beim Einschalten legt der Begleiter `%USERPROFILE%\Spark-Wissen` an (anderer Ordner:
 Einstellungen → **Kopplung** → **Ordner wählen …**). Neue oder geänderte Dateien darin (auch in Unterordnern)
@@ -167,7 +178,11 @@ der Unterordner (nur Namen) gehen alle 10 Minuten ans Panel für den Ordnerbaum.
 **Knöpfe in Meldungen:** Meldungen mit Knöpfen erscheinen zusätzlich im Begleiter-Fenster (Klick aufs Symbol
 oder auf den Hinweis) unter „Meldungen“: **Antworten** öffnet „Frag Spark“ mit der Meldung als Zitat – die
 Antwort bezieht sich dann auf diese Meldung; **Später** zeigt sie in einer Stunde noch einmal (solange der
-Begleiter läuft); **Panel öffnen** öffnet das Panel im Browser.
+Begleiter läuft); **Panel öffnen** öffnet das Panel im Browser. Die Knöpfe richten sich nach der Art der Meldung,
+das Panel legt sie fest (nie der Text der Meldung): eine Frist oder ein Verdacht aus **Für dich** hat **Erledigt**
+(markiert die Karte als erledigt), **Erinnern** (Erinnerung am Tag vor der Frist) und **Ansehen** (öffnet E-Mail →
+Für dich im Panel). Nennt eine Meldung einen Weg („… unter Ich → Gedächtnis“, „E-Mail → Für dich“), führt „Ansehen“
+genau dorthin.
 
 **Spark darf am PC handeln:** Der Spark kann um eine Handlung bitten; der Begleiter fragt **jedes Mal** in
 einem Fenster im Vordergrund: „Spark möchte: … Erlauben?“ mit der genauen Beschreibung darunter.
@@ -240,7 +255,24 @@ gleiche Namen bekommen „(2)“, „(3)“ … Ein Klick auf den Hinweis öffne
 
 **Termine im Begleiter:** Im Begleiter-Fenster steht unter **Als Nächstes**, was in den nächsten 24 Stunden
 ansteht (Termine mit Ort, Erinnerungen), alle 5 Minuten aufgefrischt. 10 Minuten vor jedem Termin kommt ein
-Hinweis mit Titel und Uhrzeit. Meldungen im Begleiter-Fenster bekommen den Knopf **In 20 Min erinnern**.
+Hinweis mit Titel und Uhrzeit. Meldungen im Begleiter-Fenster bekommen den Knopf **In 20 Min erinnern**. Termine aus
+Kalendern, die andere Profile mit dir teilen, tragen den Namen des Profils; ein Klick auf einen Termin öffnet den Tag im
+Kalender des Panels.
+
+**Post im Begleiter:** Im Begleiter-Fenster steht unter **Post**, wie viele Mails ungelesen sind und wie viele Karten
+in „Für dich“ warten, darunter die bis zu 3 dringenden Karten mit **Erledigt**, **Erinnern** und **Ansehen**; **E-Mail
+öffnen** springt ins Panel. Alle 5 Minuten und bei einer neuen Mail aufgefrischt. Eine wichtige neue Mail (von
+Kontakten oder Menschen, denen du geschrieben hast; welche, entscheidet der Spark) kommt als Meldung mit **Antwort
+entwerfen** (Frag Spark mit der Bitte im Feld, gesendet wird nichts), **Gelesen** (nur mit „Mails ordnen“) und
+**Ansehen**. Absender und Betreff sind nur Text.
+
+**Schnell erfassen:** **Strg+Alt+N** (oder Kachel **Erfassen**) öffnet ein kleines Fenster für eine Zeile wie
+„Zahnarzt Fr 10 Uhr bei Dr. Weber“; markierter Text kommt mit. Der Spark zeigt, was er erkannt hat (Termin oder
+Erinnerung, Tag und Uhrzeit, Ort). Gespeichert wird erst mit **Eintragen**, danach 10 Minuten lang **Rückgängig**.
+„Milch, Eier auf Einkauf“ legt die Einträge auf diese Liste (Art **Liste**).
+
+**Listen im Begleiter:** Im Begleiter-Fenster stehen unter **Listen** die Listen mit offenen Einträgen, je mit Zahl und dem
+neuesten Eintrag (auch wer ihn ergänzt hat); **Öffnen** führt zur Seite Listen.
 
 **Nicht stören erkennen:** Benutzt ein anderes Programm Mikrofon oder Kamera (Teams, Zoom, Telefon …) oder läuft
 eine PowerPoint-Bildschirmpräsentation bzw. ein Vollbildprogramm/der Präsentationsmodus, sagt der Begleiter dem

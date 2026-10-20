@@ -39,8 +39,20 @@ internal sealed record AssistResult(string Text, IReadOnlyList<DiffPart>? Diff, 
 
 internal sealed record PairResult(string Key, string? Profile);
 
-/// <summary>Eine Meldung; <see cref="Actions"/> = angebotene Knöpfe ("reply", "later", "open").</summary>
-internal sealed record Note(int N, string Title, string Body, string? Tag, IReadOnlyList<string> Actions);
+/// <summary>
+/// Eine Meldung; <see cref="Actions"/> = angebotene Knöpfe ("reply", "later", "open"; zu einer Für-dich-Karte
+/// "done", "fdremind"), <see cref="Weg"/> = wohin „Ansehen“ im Panel führt (leer: Startseite).
+/// </summary>
+internal sealed record Note(int N, string Title, string Body, string? Tag, IReadOnlyList<string> Actions, string? Weg = null);
+
+/// <summary>Ein Knopf unter einer Antwort in Frag Spark: schickt sein Wort, öffnet eine Panel-Seite oder setzt den Cursor ins Feld.</summary>
+internal sealed record AskButton(string Label, string? Send, string? Open, bool Focus, bool Main);
+
+/// <summary>Eine Karte unter einer Antwort (Rückfrage, Freigabe, Sprung): Überschrift und Knöpfe, alles feste Wörter des Panels.</summary>
+internal sealed record AskCard(string Title, IReadOnlyList<AskButton> Buttons);
+
+/// <summary>Antwort von /api/desk/ask: schlichter Text, Markdown, die Zeile „Werkzeuge benutzt“ und die Karten.</summary>
+internal sealed record AskReply(string Answer, string? Md, string? Steps, IReadOnlyList<AskCard> Cards);
 
 /// <summary>Eine Bitte des Spark, am PC etwas zu tun (Teil "act").</summary>
 internal sealed record ActAsk(string Id, string Action, string Arg, string Text);
@@ -51,13 +63,26 @@ internal sealed record PollResult(int Rev, IReadOnlyList<Note> Notes, int Last, 
 /// <summary>Teil "inbox": etwas vom Handy für diesen PC (Text, Link oder Datei).</summary>
 internal sealed record InboxItem(string Id, string Kind, string? Text, string? Name, long? Size);
 
-/// <summary>Teil "agenda": ein Termin der nächsten 24 Stunden.</summary>
-internal sealed record AgendaEvent(DateTimeOffset Start, DateTimeOffset? End, string Title, string Where);
+/// <summary>Teil "agenda": ein Termin der nächsten 24 Stunden. Who: Profil, das den Kalender teilt (leer bei eigenen);
+/// Day: der Tag (JJJJ-MM-TT), den ein Klick im Panel öffnet (#kal=…), oder leer.</summary>
+internal sealed record AgendaEvent(DateTimeOffset Start, DateTimeOffset? End, string Title, string Where, string Who = "", string Day = "");
 
 /// <summary>Teil "agenda": eine fällige Erinnerung der nächsten 24 Stunden.</summary>
 internal sealed record AgendaReminder(DateTimeOffset Due, string Text);
 
 internal sealed record AgendaResult(IReadOnlyList<AgendaEvent> Events, IReadOnlyList<AgendaReminder> Reminders);
+
+/// <summary>Teil "post": eine dringende Für-dich-Karte unter „Post“ mit ihren Knöpfen (done, fdremind).</summary>
+internal sealed record PostCard(string Id, string Title, string Line, IReadOnlyList<string> Acts);
+
+/// <summary>Teil "post": ungelesene Mails, Für-dich-Karten (null = noch nicht gelesen oder aus), dringende Karten.</summary>
+/// <summary>Teil "capture": was das Panel aus der Zeile liest (Art, erlaubte Arten, Titel, Chips) – noch nichts gespeichert.</summary>
+internal sealed record CapturePreview(string Kind, IReadOnlyList<string> Kinds, string Title, IReadOnlyList<string> Chips);
+
+/// <summary>Teil "lists": eine Liste unter „Listen“ (Symbol, Name, offene Einträge, der neueste als fester Satz).</summary>
+internal sealed record ListRow(string Id, string Name, string Icon, int? Open, string Last);
+
+internal sealed record PostResult(int? Unread, bool More, int? Fuerdich, IReadOnlyList<PostCard> Cards, bool Loading, bool NoMail);
 
 /// <summary>Teil "meeting": eine Aufgabe aus der Besprechung.</summary>
 internal sealed record MeetingTask(string Text, DateTimeOffset? Due);
@@ -157,10 +182,11 @@ internal static partial class SparkClient
                     var actions = new List<string>();
                     if (o["actions"] is JsonArray acts)
                     {
-                        actions.AddRange(acts.Select(Json.Str).OfType<string>().Where(a => a is "reply" or "later" or "open").Distinct());
+                        actions.AddRange(acts.Select(Json.Str).OfType<string>().Where(a => NoteActs.Known.Contains(a)).Distinct());
                     }
 
-                    notes.Add(new Note(n, Json.Str(o["title"]) ?? "", Json.Str(o["body"]) ?? "", Json.Str(o["tag"]), actions));
+                    notes.Add(new Note(n, Json.Str(o["title"]) ?? "", Json.Str(o["body"]) ?? "", Json.Str(o["tag"]), actions,
+                        NoteActs.CleanWeg(Json.Str(o["weg"]))));
                 }
             }
         }
@@ -237,7 +263,9 @@ internal static partial class SparkClient
             {
                 if (item is JsonObject o && ParseTime(Json.Str(o["start"])) is { } start)
                 {
-                    events.Add(new AgendaEvent(start, ParseTime(Json.Str(o["end"])), Clean(Json.Str(o["title"]), 120), Clean(Json.Str(o["where"]), 120)));
+                    string day = Json.Str(o["day"]) ?? "";
+                    events.Add(new AgendaEvent(start, ParseTime(Json.Str(o["end"])), Clean(Json.Str(o["title"]), 120), Clean(Json.Str(o["where"]), 120),
+                        Clean(Json.Str(o["who"]), 40), System.Text.RegularExpressions.Regex.IsMatch(day, @"^\d{4}-\d{2}-\d{2}$") ? day : ""));
                 }
             }
         }
@@ -255,6 +283,91 @@ internal static partial class SparkClient
         }
 
         return new AgendaResult(events, reminders);
+    }
+
+    /// <summary>GET /api/desk/post – Post im Begleiter: Zahlen und bis zu 3 dringende Für-dich-Karten.</summary>
+    public static async Task<PostResult> PostAsync(string baseUrl, string key, CancellationToken ct)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, baseUrl + "/api/desk/post");
+        JsonNode json = await SendAsync(request, key, pairing: false, ShortTimeout, ct).ConfigureAwait(true);
+        var cards = new List<PostCard>();
+        if (json["cards"] is JsonArray list)
+        {
+            foreach (JsonNode? item in list.Take(3))
+            {
+                if (item is JsonObject o && Json.Str(o["id"]) is { Length: > 0 and <= 40 } id)
+                {
+                    var acts = (o["acts"] as JsonArray ?? new JsonArray()).Select(a => Json.Str(a))
+                        .Where(a => a is "done" or "fdremind").Select(a => a!).Distinct().ToList();
+                    cards.Add(new PostCard(id, Clean(Json.Str(o["title"]), 120), Clean(Json.Str(o["line"]), 200), acts));
+                }
+            }
+        }
+
+        static int? Count(JsonNode? n) => n is JsonValue v && v.TryGetValue(out int i) && i >= 0 ? i : null;
+        static bool Yes(JsonNode? n) => n is JsonValue v && v.TryGetValue(out bool b) && b;
+        return new PostResult(Count(json["unread"]), Yes(json["more"]), Count(json["fuerdich"]), cards, Yes(json["loading"]), Yes(json["nomail"]));
+    }
+
+    /// <summary>GET /api/desk/lists – die Listen mit offenen Einträgen (höchstens 6).</summary>
+    public static async Task<IReadOnlyList<ListRow>> ListsAsync(string baseUrl, string key, CancellationToken ct)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, baseUrl + "/api/desk/lists");
+        JsonNode json = await SendAsync(request, key, pairing: false, ShortTimeout, ct).ConfigureAwait(true);
+        var rows = new List<ListRow>();
+        foreach (JsonNode? item in (json["lists"] as JsonArray ?? new JsonArray()).Take(6))
+        {
+            if (item is JsonObject o && Json.Str(o["id"]) is { Length: > 0 and <= 20 } id)
+            {
+                int? open = o["open"] is JsonValue v && v.TryGetValue(out int n) && n >= 0 ? n : null;
+                rows.Add(new ListRow(id, Clean(Json.Str(o["name"]), 40), Clean(Json.Str(o["icon"]), 4), open, Clean(Json.Str(o["last"]), 120)));
+            }
+        }
+
+        return rows;
+    }
+
+    /// <summary>POST /api/desk/post/act – Erledigt oder Erinnern an einer Karte unter „Post“; der Satz für den Hinweis.</summary>
+    public static async Task<string> PostActAsync(string baseUrl, string key, string card, string act, CancellationToken ct)
+    {
+        var body = new JsonObject { ["card"] = card, ["act"] = act };
+        using var request = new HttpRequestMessage(HttpMethod.Post, baseUrl + "/api/desk/post/act") { Content = JsonContent(body) };
+        JsonNode json = await SendAsync(request, key, pairing: false, ShortTimeout, ct).ConfigureAwait(true);
+        return Clean(Json.Str(json["text"]) ?? "Erledigt.", 240);
+    }
+
+    /// <summary>POST /api/desk/capture ohne save – die Chips zu einer Zeile (Schnell erfassen).</summary>
+    public static async Task<CapturePreview> CapturePreviewAsync(string baseUrl, string key, string text, string kind, CancellationToken ct)
+    {
+        JsonNode json = await CaptureAsync(baseUrl, key, text, kind, save: false, ct).ConfigureAwait(true);
+        var kinds = (json["kinds"] as JsonArray ?? new JsonArray()).Select(k => Json.Str(k))
+            .Where(k => k is "termin" or "erinnerung" or "liste").Select(k => k!).Distinct().ToList();
+        var chips = (json["chips"] as JsonArray ?? new JsonArray()).Take(4).Select(c => Clean(Json.Str(c), 80)).Where(c => c.Length > 0).ToList();
+        string got = Json.Str(json["kind"]) is { } k && kinds.Contains(k) ? k : kinds.FirstOrDefault() ?? "";
+        return new CapturePreview(got, kinds, Clean(Json.Str(json["title"]), 200), chips);
+    }
+
+    /// <summary>POST /api/desk/capture mit save – „Eintragen“: (Satz für den Hinweis, Schlüssel für Rückgängig).</summary>
+    public static async Task<(string Text, string? Undo)> CaptureSaveAsync(string baseUrl, string key, string text, string kind, CancellationToken ct)
+    {
+        JsonNode json = await CaptureAsync(baseUrl, key, text, kind, save: true, ct).ConfigureAwait(true);
+        string? undo = Json.Str(json["undo"]) is { Length: > 0 and <= 40 } u ? u : null;
+        return (Clean(Json.Str(json["text"]) ?? "Eingetragen.", 240), undo);
+    }
+
+    private static async Task<JsonNode> CaptureAsync(string baseUrl, string key, string text, string kind, bool save, CancellationToken ct)
+    {
+        var body = new JsonObject { ["text"] = text.Length > 200 ? text[..200] : text, ["kind"] = kind, ["tz"] = LocalIanaTimeZone() ?? "", ["save"] = save };
+        using var request = new HttpRequestMessage(HttpMethod.Post, baseUrl + "/api/desk/capture") { Content = JsonContent(body) };
+        return await SendAsync(request, key, pairing: false, ShortTimeout, ct).ConfigureAwait(true);
+    }
+
+    /// <summary>POST /api/desk/capture/undo – den letzten Eintrag zurücknehmen (10 Minuten lang).</summary>
+    public static async Task<string> CaptureUndoAsync(string baseUrl, string key, string undo, CancellationToken ct)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, baseUrl + "/api/desk/capture/undo") { Content = JsonContent(new JsonObject { ["undo"] = undo }) };
+        JsonNode json = await SendAsync(request, key, pairing: false, ShortTimeout, ct).ConfigureAwait(true);
+        return Clean(Json.Str(json["text"]) ?? "Zurückgenommen.", 240);
     }
 
     /// <summary>POST /api/desk/remind – Text oder Meldung in <paramref name="minutes"/> Minuten erinnern. Gibt die Fälligkeit zurück.</summary>
@@ -517,7 +630,7 @@ internal static partial class SparkClient
     /// POST /api/desk/ask – Frage an den Spark (bis zu 3 Minuten). Answer ist schlichter Text (Vorlesen), Md die
     /// Antwort mit Markdown zum gegliederten Anzeigen (fehlt bei älteren Sparks).
     /// </summary>
-    public static async Task<(string Answer, string? Md)> AskAsync(string baseUrl, string key, string text, CancellationToken ct, int? note = null)
+    public static async Task<AskReply> AskAsync(string baseUrl, string key, string text, CancellationToken ct, int? note = null)
     {
         var body = new JsonObject { ["text"] = text };
         if (note is { } n)
@@ -533,7 +646,17 @@ internal static partial class SparkClient
         using var request = new HttpRequestMessage(HttpMethod.Post, baseUrl + "/api/desk/ask") { Content = JsonContent(body) };
         JsonNode json = await SendAsync(request, key, pairing: false, LongTimeout, ct).ConfigureAwait(true);
         string answer = Json.Str(json["answer"]) ?? throw new SparkException(null, "Der Spark hat keine Antwort geschickt.");
-        return (answer, Json.Str(json["md"]));
+        string? steps = Json.Str(json["steps"]);
+        return new AskReply(answer, Json.Str(json["md"]), steps is null ? null : Clean(steps, 200), AskCards.Parse(json["cards"]));
+    }
+
+    /// <summary>POST /api/desk/note/act – ein Knopf einer Meldung zu einer Für-dich-Karte ("done", "fdremind"). Gibt den Satz für den Hinweis zurück.</summary>
+    public static async Task<string> NoteActAsync(string baseUrl, string key, int note, string act, CancellationToken ct)
+    {
+        var body = new JsonObject { ["note"] = note, ["act"] = act };
+        using var request = new HttpRequestMessage(HttpMethod.Post, baseUrl + "/api/desk/note/act") { Content = JsonContent(body) };
+        JsonNode json = await SendAsync(request, key, pairing: false, ShortTimeout, ct).ConfigureAwait(true);
+        return Clean(Json.Str(json["text"]) ?? "Erledigt.", 240);
     }
 
     /// <summary>POST /api/desk/dictate – WAV (16 kHz, mono, 16 bit) in Text umwandeln.</summary>
@@ -593,6 +716,24 @@ internal static partial class SparkClient
         }
 
         return new AssistResult(result, ParseDiff(json["diff"]), Json.Int(json["changes"]), Json.Int(json["ms"]));
+    }
+
+    /// <summary>POST /api/write/suggest – drei Antworten (Richtung, Text) zu einer Mail, die das Programm selbst gelesen hat.</summary>
+    public static async Task<IReadOnlyList<(string Label, string Text)>> SuggestAsync(string baseUrl, string key, string mail, CancellationToken ct)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, baseUrl + "/api/write/suggest") { Content = JsonContent(new JsonObject { ["mail"] = mail }) };
+        JsonNode json = await SendAsync(request, key, pairing: false, LongTimeout, ct).ConfigureAwait(true);
+        var items = new List<(string, string)>();
+        foreach (JsonNode? item in (json["items"] as JsonArray ?? new JsonArray()).Take(3))
+        {
+            string text = Json.Str(item?["text"]) ?? "";
+            if (text.Trim().Length > 0)
+            {
+                items.Add((Clean(Json.Str(item?["label"]), 24), text.Length > 2000 ? text[..2000] : text));
+            }
+        }
+
+        return items;
     }
 
     /// <summary>POST /api/desk/file – Datei zusammenfassen/übersetzen/erklären lassen oder ins Wissen übernehmen.</summary>

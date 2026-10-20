@@ -145,9 +145,9 @@ def blocked(uid, kind, p=None, local=None, st=None):
     return ""
 
 
-async def deliver(uid, kind, text, why="", data="", offer=None, until=None, force=False, mail=False):
+async def deliver(uid, kind, text, why="", data="", offer=None, until=None, force=False, mail=False, ref=""):
     """Says text to the profile (open page, else push) unless something blocks it; logs it in the
-    profile's tool log. Returns the item, or None."""
+    profile's tool log. ref: what it is about (a Für-dich card), for the Begleiter's buttons. Returns the item, or None."""
     p = prefs(uid)
     local = datetime.datetime.now(_zone(p))
     text = re.sub(r"\s+", " ", str(text)).strip()[:400]
@@ -188,7 +188,7 @@ async def deliver(uid, kind, text, why="", data="", offer=None, until=None, forc
     with live.within(rec):
         if item.get("pushed"):
             try:
-                await push.send(uid, "💬 Spark", text, tag="pro-" + kind, private=private)
+                await push.send(uid, "💬 Spark", text, tag="pro-" + kind, private=private, ref=ref)
             except Exception as e:
                 print("proactive: push:", type(e).__name__, e, flush=True)
         else:
@@ -1036,7 +1036,7 @@ async def check_fuerdich(uid, p, now):
         if k in said or blocked(uid, "fuerdich", p, now):
             continue
         _mut(uid, lambda s, k=k: s.update(fuer_said=(s.get("fuer_said", []) + [k])[-100:]))
-        await deliver(uid, "fuerdich", text, why=f"Für dich: {why}", data=why, mail=True)
+        await deliver(uid, "fuerdich", text, why=f"Für dich: {why}", data=why, mail=True, ref=k)
 
 
 RUECK_DAY, RUECK_HOURS = 6, (18, 21)    # Sundays from 18 o'clock (6a), once per calendar week

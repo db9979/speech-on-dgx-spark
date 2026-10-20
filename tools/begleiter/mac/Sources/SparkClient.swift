@@ -283,11 +283,34 @@ extension SparkClient {
     /// The same with "md", the answer with Markdown for showing it formatted (missing from older Sparks);
     /// "answer" stays the plain text for reading aloud and copying.
     func askRich(_ text: String, note: Int? = nil) async throws -> (answer: String, md: String?) {
+        let r = try await askFull(text, note: note)
+        return (r.answer, r.md)
+    }
+
+    /// The answer with what goes under it in Frag Spark: the line of tools used ("steps") and the cards
+    /// (Rückfrage, Freigabe, ways), both fixed words of the Spark (AskCards).
+    struct AskReply {
+        let answer: String
+        let md: String?
+        let steps: String?
+        let cards: [AskCards.Card]
+    }
+
+    func askFull(_ text: String, note: Int? = nil) async throws -> AskReply {
         var body: [String: Any] = ["text": String(text.prefix(SparkClient.askMax)), "tz": TimeZone.current.identifier]
         if let note { body["note"] = note }
         let d = try await postJSON("api/desk/ask", body, timeout: 190)
         guard let a = d["answer"] as? String else { throw SparkProblem.failed("Keine Antwort vom Spark.") }
-        return (a, d["md"] as? String)
+        let steps = (d["steps"] as? String).map { DeskConfig.plain($0, max: 200) }
+        return AskReply(answer: a, md: d["md"] as? String, steps: steps?.isEmpty == false ? steps : nil,
+                        cards: AskCards.parse(d["cards"]))
+    }
+
+    /// POST /api/desk/note/act: a button of a note about a Für-dich card ("done", "fdremind"); the sentence to show.
+    func noteAct(note: Int, act: String) async throws -> String {
+        let d = try await postJSON("api/desk/note/act", ["note": note, "act": act], timeout: 30)
+        let t = DeskConfig.plain(d["text"] as? String ?? "", max: 240)
+        return t.isEmpty ? "Erledigt." : t
     }
 
     /// POST /api/desk/dictate with the recording as WAV.

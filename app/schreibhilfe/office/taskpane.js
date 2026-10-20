@@ -387,6 +387,7 @@
     $("spracheZeile").hidden = !mitSprache;
     if (mitSprache) fuelleSprachen(art);
     $("notizenZeile").hidden = art !== "antwort";
+    $("vorschlaegeZeile").hidden = art !== "antwort";
     $("los").textContent = losText(art);
   }
 
@@ -417,6 +418,7 @@
 
   function setzeErgebnisZurueck() {
     quelle = null;
+    $("umformen").hidden = true;
     $("ergebnis").hidden = true;
     $("text").value = "";
     meldung($("ergebnisMeldung"), "");
@@ -567,6 +569,69 @@
     });
   }
 
+  // Antwortvorschläge (Begleiter nachziehen 6a): drei Antworten zur gelesenen Mail (/api/write/suggest), eine wählen,
+  // dann frei ändern oder umformen (kürzer, freundlicher, förmlicher, Englisch über /api/write/assist). Nie gesendet:
+  // „Als Antwort öffnen“ öffnet nur das Antwortfenster.
+  function vorschlaege() {
+    if (busy) return;
+    var status = $("status");
+    busy = true;
+    $("vorschlaegeBtn").disabled = true;
+    meldung(status, "Der Spark sucht drei Antworten …", "laeuft");
+    holeQuelle("antwort").then(function (q) {
+      quelle = q;
+      return api("POST", "/api/write/suggest", { mail: String(q.mail || "").slice(0, maxLen) }, true);
+    }).then(function (r) {
+      var box = $("vorschlaege");
+      while (box.firstChild) box.removeChild(box.firstChild);
+      var items = (r && Array.isArray(r.items)) ? r.items.slice(0, 3) : [];
+      items.forEach(function (x) {
+        if (!x || typeof x.text !== "string" || !x.text.trim()) return;
+        var b = document.createElement("button");
+        b.type = "button";
+        b.textContent = String(x.label || "Vorschlag").slice(0, 24);   // nur Text, nie Markup
+        b.title = x.text.slice(0, 300);
+        b.addEventListener("click", function () {
+          zeigeErgebnis(x.text.slice(0, 2000), null, null);
+          $("umformen").hidden = false;
+          meldung(status, "Ändern, kürzen oder übersetzen – gesendet wird nichts.", "ok");
+        });
+        box.appendChild(b);
+      });
+      meldung(status, box.firstChild ? "Einen Vorschlag wählen oder Stichpunkte schreiben und „Los“." : "Keine Vorschläge – Stichpunkte schreiben.", "ok");
+    }).catch(function (err) {
+      quelle = null;
+      $("vorschlaegeBtn").disabled = false;
+      fehler(err, status);
+    }).finally(function () { busy = false; });
+  }
+
+  // eine andere Mail: wieder nur der Knopf „3 Vorschläge“
+  function vorschlaegeZurueck() {
+    var box = $("vorschlaege");
+    while (box.firstChild) box.removeChild(box.firstChild);
+    var b = document.createElement("button");
+    b.type = "button";
+    b.id = "vorschlaegeBtn";
+    b.textContent = "3 Vorschläge";
+    b.addEventListener("click", vorschlaege);
+    box.appendChild(b);
+  }
+
+  function umformen(art) {
+    var text = $("text").value;
+    if (busy || !text.trim()) return;
+    var el = $("ergebnisMeldung");
+    busy = true;
+    meldung(el, "Der Spark formt die Antwort um …", "laeuft");
+    var body = { art: art, text: text.slice(0, maxLen) };
+    if (art === "uebersetzen") body.sprache = "en";
+    api("POST", "/api/write/assist", body, true).then(function (r) {
+      if (r && typeof r.text === "string") $("text").value = r.text;
+      meldung(el, "Ändern, kürzen oder übersetzen – gesendet wird nichts.", "ok");
+    }).catch(function (err) { fehler(err, el); }).finally(function () { busy = false; });
+  }
+
   function zeigeErgebnis(text, diff, changes) {
     $("text").value = text;
     zeigeDiff(diff, changes);
@@ -625,6 +690,7 @@
   function itemGewechselt() {
     mode = erkenneModus(null);
     setzeErgebnisZurueck();
+    vorschlaegeZurueck();
     if (!$("haupt").hidden) zeigeHaupt();
   }
 
@@ -639,6 +705,10 @@
     $("los").addEventListener("click", los);
     $("uebernehmen").addEventListener("click", uebernehmen);
     $("kopieren").addEventListener("click", kopieren);
+    vorschlaegeZurueck();
+    Array.prototype.forEach.call($("umformen").querySelectorAll("button"), function (b) {
+      b.addEventListener("click", function () { umformen(b.getAttribute("data-art")); });
+    });
     $("neuKoppeln").addEventListener("click", neuKoppeln);
     $("koppelnBtn").addEventListener("click", koppeln);
     $("code").addEventListener("keydown", function (e) { if (e.key === "Enter") koppeln(); });

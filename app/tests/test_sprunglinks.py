@@ -168,6 +168,10 @@ class Outside(unittest.TestCase):
         for none in ("Mein Notaus ist an.", "In Open WebUI → Einstellungen → Verbindungen", "", None, "Ich bin da → gleich"):
             self.assertEqual(wege.find(none), "", none)
         self.assertLessEqual(len(wege.find("Ich → " + "x" * 500)), wege.MAX)
+        # the pages of their own (way.js WAY_ROOTS): E-Mail and Kalender are roots outside the panel too
+        self.assertEqual(wege.find("Ansehen unter E-Mail → Für dich."), "E-Mail → Für dich")
+        self.assertEqual(wege.find("Settings under Calendar → Settings."), "Calendar → Settings")
+        self.assertEqual(wege.find("Unter Ich → E-Mail."), "Ich → E-Mail")
 
     def test_link_only_with_a_plain_address(self):
         import wege

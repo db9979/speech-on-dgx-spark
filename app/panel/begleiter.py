@@ -26,7 +26,8 @@ data: nothing here acts on them; the answers come from the normal assistant with
     GET    /api/desk/config                     -> parts, write defaults, rev
     GET    /api/desk/poll?after=n&mic=open|closed -> rev, notes, Notaus stage (also the "online" mark; mic: the
                                                    program's switch "Mikrofon offen/zu", shown under Ich → Begleiter)
-    POST   /api/desk/ask {text, tz?}            -> {"answer"}
+    POST   /api/desk/ask {text, tz?}            -> {"answer", "md"?, "steps"?, "cards"?} (cards: Rückfrage, Freigabe, goto)
+    POST   /api/desk/note/act {note, act}       -> a button of a note of its own kind (part actions, NOTE_ACTS)
     POST   /api/desk/dictate (multipart file)   -> {"text"}
     POST   /api/desk/notaus {}                  -> {"on": true}
     GET    /api/desk/update?arch=x64|arm64|mac  -> the newer program file the Spark keeps (see below)
@@ -34,7 +35,12 @@ data: nothing here acts on them; the answers come from the normal assistant with
     POST   /api/desk/speak {text}               -> audio/wav in the profile's voice (part speak)
     GET    /api/desk/inbox/file?id=…            -> a file sent from the phone (part inbox; poll lists them)
     POST   /api/desk/inbox/done {id}            -> {} (taken or refused at the computer: gone here)
-    GET    /api/desk/agenda                     -> next 24 h: events and reminders (part agenda)
+    GET    /api/desk/agenda                     -> next 24 h: events (own and shared, who + day) and reminders (part agenda)
+    GET    /api/desk/lists                      -> the lists with open entries, count and newest (part lists)
+    GET    /api/desk/post                       -> unread, Für dich, up to 3 urgent cards (part post)
+    POST   /api/desk/capture {text, kind, tz, save} -> the chips, saved only with save (part capture)
+    POST   /api/desk/capture/undo {undo}        -> takes the last one back (10 minutes)
+    POST   /api/desk/post/act {card, act}       -> Erledigt / Erinnern on such a card
     POST   /api/desk/remind {text|note, minutes} -> {"due"}
     POST   /api/desk/busy {busy, why}           -> notes are held while busy, one summary afterwards (part quiet)
     POST   /api/desk/meeting/start|chunk|end|keep   write along in a meeting (part meeting, admin chat.desk_meeting)
@@ -88,7 +94,13 @@ PARTS = ("write", "ask", "dictate", "notes", "status", "notaus",
          # Dominik 2026-10-12: buttons in Outlook classic, Word, Excel and the new Outlook set up by the program
          "office",
          # Rechner fernsteuern, Stufe 2 (fernsicht.py, admin chat.desk_view): show the screen, operate when allowed there
-         "view")
+         "view",
+         # Begleiter nachziehen 1a/2a (Dominik 2026-10-20): Post in the window and a note for an important new mail
+         "post",
+         # Begleiter nachziehen 4a: Schnell erfassen (Strg+Alt+N / ⌃⌥N), an appointment or a reminder from one line
+         "capture",
+         # Begleiter nachziehen 8a: the lists (tasks.py, page Listen) in the window; Schnell erfassen also onto a list
+         "lists")
 PART_NAMES = {"write": "Schreibhilfe", "ask": "Frag Spark", "dictate": "Diktieren", "notes": "Meldungen",
               "status": "Zustandspunkt", "notaus": "Mein Notaus", "files": "Rechtsklick auf Dateien",
               "screen": "Bildschirm fragen", "context": "App erkennen", "mail": "Antwort entwerfen",
@@ -96,7 +108,8 @@ PART_NAMES = {"write": "Schreibhilfe", "ask": "Frag Spark", "dictate": "Diktiere
               "wake": "Weckwort am PC", "speak": "Vorlesen", "inbox": "Vom Handy auf den PC",
               "agenda": "Termine im Begleiter", "quiet": "Nicht stören erkennen", "meeting": "Besprechung mitschreiben",
               "home": "Smart-Home-Knöpfe", "daily": "Tagesstart und Feierabend", "office": "Office-Add-ins",
-              "view": "Bildschirm zeigen und bedienen"}
+              "view": "Bildschirm zeigen und bedienen", "post": "Post im Begleiter",
+              "capture": "Schnell erfassen", "lists": "Listen im Begleiter"}
 KINDS = {"windows": "Windows", "mac": "Mac"}
 MAX_DEVICES = 10
 MAX_BODY = 8 * 1024
@@ -106,6 +119,16 @@ POLL_ACT = 10           # with "Am PC handeln": a request reaches the computer s
 ONLINE = 120               # seconds after the last poll a device counts as online
 NOTE_SECONDS = 6 * 3600    # notes wait this long for the program
 NOTE_MAX = 30
+# Knöpfe in Meldungen (part actions, Begleiter nachziehen 3a, Dominik 2026-10-20): the buttons of a note by its kind,
+# fixed here, never from the note's text; "done" and "fdremind" act on the Für-dich card the note is about (its ref;
+# "remind" stays the program's own "In 20 Min erinnern").
+# Every other note keeps reply, later, open. "open" goes to the note's way (NOTE_WEG, else the first way in its text).
+# A note about an important new mail (part post, 2a): "draft" opens Frag Spark with the note in front (the program),
+# "read" marks the mail read (only with „Mails ordnen“), "open" goes to E-Mail → Posteingang.
+NOTE_ACTS = {"pro-fuerdich": ("done", "fdremind", "open"), "mail-new": ("draft", "read", "open")}
+NOTE_ACTS_PLAIN = ("reply", "later", "open")
+NOTE_WEG = {"pro-fuerdich": "E-Mail → Für dich", "mail-new": "E-Mail → Posteingang"}
+NOTE_PANEL_ACTS = ("done", "fdremind", "read")   # the buttons that act here (POST /api/desk/note/act)
 DICT_LANGS = ("auto", "de", "en", "fr", "es", "it", "nl")
 RELEASES = {"windows": "https://github.com/db9979/speech-on-dgx-spark/releases/tag/begleiter-windows",
             "mac": "https://github.com/db9979/speech-on-dgx-spark/releases/tag/begleiter-mac"}
@@ -114,7 +137,7 @@ DEFAULT = {"parts": {"write": True, "ask": True, "dictate": False, "notes": True
                      "files": False, "screen": False, "context": False, "mail": False, "folder": False,
                      "actions": False, "act": False, "wake": False, "speak": False, "inbox": False, "agenda": False,
                      "quiet": False, "meeting": False, "home": False, "daily": False, "office": False,
-                     "view": False},
+                     "view": False, "post": False, "capture": False, "lists": False},
            "act": {"apps": []}, "home": {"buttons": []}, "office": {"base": ""},
            "write": {"art": "korrigieren", "sprache": "en", "wunsch": "", "arts": list(schreib.ARTS), "preview": True},
            "dictate": {"sprache": "auto"}, "autostart": True}
@@ -180,7 +203,14 @@ def may(uid):
             # the buttons in Office use the writing help (and its reply draft) of this program
             "office": w,
             # looking at the screen and operating it: its own admin switch (Funktionen → Bildschirm zeigen und bedienen)
-            "view": features.allowed("begleiterschirm", uid)}
+            "view": features.allowed("begleiterschirm", uid),
+            # Post im Begleiter: what the profile may read on the page E-Mail (Funktionen → E-Mail lesen)
+            "post": features.allowed("mail", uid),
+            # Schnell erfassen: an appointment (Kalender) or a reminder (Timer und Erinnerungen)
+            "capture": features.allowed("calendar", uid) or features.allowed("reminders", uid)
+            or features.allowed("tasks", uid),
+            # Listen im Begleiter: the lists of the page Listen (Funktionen → Listen)
+            "lists": features.allowed("tasks", uid)}
     return {p: bool(need.get(p, True)) for p in PARTS}
 
 
@@ -428,13 +458,15 @@ def reachable(uid, now=None):
     return any(now - _seen.get(x["id"], -1e12) < ONLINE and part_on(uid, x["id"], "notes") for x in devices(uid))
 
 
-def keep(uid, title, body, tag="", now=None):
+def keep(uid, title, body, tag="", now=None, ref=""):
+    """A note for the programs of the profile; ref: what it is about (a Für-dich card), kept here, never sent out."""
     now = time.time() if now is None else now
     with _lock:
         n = _seq.get(uid, 0) + 1
         _seq[uid] = n
         box = [x for x in _notes.get(uid, []) if now - x["t"] < NOTE_SECONDS]
-        box.append({"n": n, "t": now, "title": str(title)[:200], "body": str(body)[:1500], "tag": str(tag)[:20]})
+        box.append({"n": n, "t": now, "title": str(title)[:200], "body": str(body)[:1500], "tag": str(tag)[:20],
+                    "ref": str(ref or "")[:40]})
         _notes[uid] = box[-NOTE_MAX:]
     return n
 
@@ -444,7 +476,27 @@ def notes(uid, after, now=None):
     with _lock:
         box = [x for x in _notes.get(uid, []) if now - x["t"] < NOTE_SECONDS]
         _notes[uid] = box
-        return [{k: x[k] for k in ("n", "title", "body", "tag")} for x in box if x["n"] > after], _seq.get(uid, 0)
+        return [dict({k: x[k] for k in ("n", "title", "body", "tag")}, weg=note_weg(x)) for x in box if x["n"] > after], \
+            _seq.get(uid, 0)
+
+
+def note_weg(x):
+    """The way "Ansehen" opens: fixed by the note's kind, else the first way in its text (wege.py), else ""."""
+    import wege
+    return NOTE_WEG.get(x.get("tag", "")) or wege.find(x.get("title", "") + ". " + x.get("body", ""))
+
+
+def note_acts(uid, x):
+    """The buttons of one note (part actions on): by its kind; the Für-dich ones only with a card behind it."""
+    acts = NOTE_ACTS.get(x.get("tag", ""), NOTE_ACTS_PLAIN)
+    if "done" in acts and not (x.get("ref") and features.allowed("fuerdich", uid)):
+        return ["open"]
+    if "read" in acts:
+        if not (x.get("ref") and features.allowed("mail", uid)):
+            return ["open"]
+        if not features.allowed("mailmanage", uid):
+            return [a for a in acts if a != "read"]
+    return list(acts)
 
 
 # ---------------------------------------------------------------- the panel (own browser login)
@@ -668,10 +720,14 @@ async def program_poll(request: Request, after: int = 0, version: str = "", arch
     cfg, rev = program_rev(dev["id"], prof["id"])
     items, last = notes(prof["id"], max(0, min(after, 10 ** 9))) if part_on(prof["id"], dev["id"], "notes") \
         else ([], _seq.get(prof["id"], 0))
+    if items and not part_on(prof["id"], dev["id"], "post"):
+        items = [x for x in items if x["tag"] != "mail-new"]   # a new mail only where Post im Begleiter is on
     _tell(dev["id"], version, arch)
     up = newer(arch, version)
     if items and part_on(prof["id"], dev["id"], "actions"):
-        items = [dict(x, actions=["reply", "later", "open"]) for x in items]
+        with _lock:
+            refs = {x["n"]: x for x in _notes.get(prof["id"], [])}
+        items = [dict(x, actions=note_acts(prof["id"], refs.get(x["n"], x))) for x in items]
     return {"rev": rev, "notes": items, "last": last, "notaus": {"level": notaus.level()},
             "update": up["version"] if up else None,
             "asks": open_asks(prof["id"], dev["id"]) if part_on(prof["id"], dev["id"], "act") else [],
@@ -694,7 +750,84 @@ async def program_ask(request: Request):
         note = x and (x["title"] + ": " + x["body"])
     out = await chat.text_ask(request, prof, {"text": body.get("text"), "tz": body.get("tz"), "note": note or ""}, "desk")
     md = out.get("md")   # the Markdown for builds that draw it; "answer" stays plain for older ones
-    return dict({"answer": str(out.get("answer") or "")}, **({"md": md} if isinstance(md, str) and md else {}))
+    # Frag Spark mit Karten (5a): the steps line and the cards under the answer, built by chat.text_ask from fixed words
+    more = {k: out[k] for k in ("steps", "cards") if out.get(k)}
+    return dict({"answer": str(out.get("answer") or "")}, **({"md": md} if isinstance(md, str) and md else {}), **more)
+
+
+@router.post("/api/desk/note/act", dependencies=[Depends(assistant)])
+@shown("Knopf in einer Meldung")
+async def program_note_act(request: Request):
+    """{"note": n, "act": "done" | "fdremind" | "read"}: a button of a note of its own kind (NOTE_ACTS) that acts here.
+    The note is looked up here, the card or mail behind it too; the program only names the note and the button."""
+    prof, dev = _program(request)
+    uid = prof["id"]
+    _part(prof, dev, "actions")
+    guard.limit(request, "desknote", uid)
+    body = await json_body(request, MAX_BODY)
+    n, act = body.get("note"), body.get("act")
+    if not isinstance(n, int) or isinstance(n, bool) or act not in NOTE_PANEL_ACTS:
+        print("begleiter: meldung knopf abgelehnt grund=eingabe", flush=True)
+        raise HTTPException(400, "note und act (done, fdremind, read)")
+    with _lock:
+        x = next((dict(y) for y in _notes.get(uid, []) if y["n"] == n), None)
+    if x is None or act not in note_acts(uid, x):
+        print(f"begleiter: meldung knopf abgelehnt grund={'fehlt' if x is None else 'nicht_erlaubt'} "
+              f"{profiles.log_name(prof)}", flush=True)
+        raise HTTPException(404 if x is None else 403, "Diese Meldung gibt es nicht mehr." if x is None
+                            else "Für diese Meldung gibt es diesen Knopf nicht.")
+    if act == "read":
+        if x["tag"] == "mail-new" and not part_on(uid, dev["id"], "post"):
+            print(f"begleiter: meldung knopf abgelehnt grund=post_aus {profiles.log_name(prof)}", flush=True)
+            raise HTTPException(403, f"{PART_NAMES['post']} ist für dieses Gerät aus (Ich → Begleiter).")
+        return await _mail_read(prof, x["ref"], "meldung")
+    return _fd_act(prof, x["ref"], act, "meldung")
+
+
+def _fd_act(prof, ref, act, where):
+    """Erledigt / Erinnern on a Für-dich card (a note about it, or a card under Post); one log line per outcome."""
+    import fuerdich
+    uid = prof["id"]
+    card = fuerdich.find(uid, ref)
+    if card is None:
+        print(f"begleiter: {where} knopf abgelehnt grund=karte_fehlt {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(404, "Diese Karte gibt es nicht mehr. Unter E-Mail → Für dich ansehen.")
+    if act == "fdremind":
+        if "remind" not in fuerdich.acts(uid, card):
+            print(f"begleiter: {where} knopf abgelehnt grund=keine_erinnerung {profiles.log_name(prof)}", flush=True)
+            raise HTTPException(403, "Für diese Karte gibt es keine Erinnerung.")
+        item = fuerdich.remind(uid, card)
+        print(f"begleiter: {where} knopf=erinnern ok {profiles.log_name(prof)}", flush=True)
+        _live("Für dich: Erinnerung")
+        return {"ok": True, "text": "Erinnerung gesetzt: " + str(item.get("text") or "")[:200]}
+    fuerdich.mark(uid, ref, "done")
+    print(f"begleiter: {where} knopf=erledigt ok {profiles.log_name(prof)}", flush=True)
+    _live("Für dich: erledigt")
+    return {"ok": True, "text": "Als erledigt markiert."}
+
+
+async def _mail_read(prof, ref, where):
+    """„Gelesen“ on a new mail: Mails ordnen marks it read (postfach.act logs it too); never more than that."""
+    import imaplib
+    import postfach
+    uid = prof["id"]
+    if not features.allowed("mailmanage", uid):
+        print(f"begleiter: {where} knopf abgelehnt grund=ordnen_aus {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(403, "Erst muss der Admin „Mails ordnen“ freigeben (Funktionen → Mails ordnen).")
+    try:
+        await asyncio.wait_for(asyncio.to_thread(postfach.act, uid, ref, "read", "", "", "INBOX"), 45)
+    except LookupError:
+        print(f"begleiter: {where} knopf=gelesen fehlt {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(404, "Diese Mail ist nicht mehr im Posteingang.")
+    except notaus.NotausAktiv:
+        print(f"begleiter: {where} knopf=gelesen notaus {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(423, "Notaus: gerade wird nichts geändert")
+    except (ValueError, OSError, imaplib.IMAP4.error, asyncio.TimeoutError) as e:
+        print(f"begleiter: {where} knopf=gelesen fehler ({type(e).__name__}) {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(502, "Das Postfach war nicht erreichbar.")
+    print(f"begleiter: {where} knopf=gelesen ok {profiles.log_name(prof)}", flush=True)
+    _live("Mail gelesen")
+    return {"ok": True, "text": "Als gelesen markiert."}
 
 
 @router.post("/api/desk/dictate", dependencies=[Depends(assistant)])
@@ -1820,25 +1953,32 @@ AGENDA_MAX = 10
 
 
 async def agenda(uid, now=None):
-    """The next 24 hours: events of the profile's calendars and its reminders, at most 10 each."""
+    """The next 24 hours: events of the profile's calendars (and those shared with it) and its reminders, at most 10
+    each. "day" (YYYY-MM-DD) is what a click opens: the page Kalender on that day (#kal=…)."""
     import calendars
     zone = _zone(uid)
     now = time.time() if now is None else now
     start = datetime.datetime.fromtimestamp(now, zone)
     end = start + datetime.timedelta(hours=24)
     events = []
-    if features.allowed("calendar", uid) and calendars.get(uid)["calendars"]:
+    if features.allowed("calendar", uid) and calendars.reading(uid)["calendars"]:
+        # Begleiter nachziehen 7a: also the calendars other profiles share with this one ("Kalender teilen"); such an
+        # appointment says whose it is ("who", the owner's profile name; a private one is only „belegt“)
+        whose = {calendars.shared_name(n, c): n for _o, n, c, _l in calendars.shared_to(uid)}
         try:
-            r = await asyncio.wait_for(calendars.events(uid, start, end, zone), 30)
+            r = await asyncio.wait_for(calendars.events(uid, start, end, zone, shared=True), 30)
         except Exception as e:
             print("begleiter: agenda calendar", type(e).__name__, flush=True)
             r = None
         for x in (r or ([], []))[0]:
             if not x["allday"] and x["end"] <= start:
                 continue
+            names = [n for n in str(x.get("calendar") or "").split(", ") if n]
+            who = whose[names[0]] if names and all(n in whose for n in names) else ""
             events.append({"start": x["start"].isoformat(timespec="seconds"),
                            "end": None if x["allday"] else x["end"].isoformat(timespec="seconds"),
-                           "title": str(x.get("title") or "")[:200], "where": str(x.get("location") or "")[:200]})
+                           "title": str(x.get("title") or "")[:200], "where": str(x.get("location") or "")[:200],
+                           "who": str(who)[:60], "day": x["start"].astimezone(zone).date().isoformat()})
             if len(events) >= AGENDA_MAX:
                 break
     rems = []
@@ -1855,6 +1995,397 @@ async def program_agenda(request: Request):
     _part(prof, dev, "agenda")
     guard.limit(request, "deskagenda", prof["id"])
     return await agenda(prof["id"])
+
+
+# ---- post: Post im Begleiter (Begleiter nachziehen 1a, 2a; Dominik 2026-10-20)
+# The window shows how many mails are unread and how many Für-dich cards wait, the up to POST_CARDS urgent cards with
+# Erledigt / Erinnern, and "E-Mail öffnen". A new mail (mailidle.on_new, IMAP IDLE of the page E-Mail) becomes a note
+# only when it is important by fixed rules: unread, at most NEW_SECONDS old, from a contact or from someone the profile
+# wrote to in the last year (Sent folder, cached WROTE_SECONDS), never a list or no-reply sender. Sender and subject are
+# data: text in the note, never a button or a link. The buttons are NOTE_ACTS["mail-new"].
+POST_CARDS = 3
+POST_UNREAD = 50             # "50+" in the window
+POST_BUDGET = 3.0            # seconds the window waits for a first reading
+NEW_SECONDS = 15 * 60
+NEW_MAX = 3                  # notes for one arrival at most
+WROTE_SECONDS = 6 * 3600
+_post_said = {}              # uid -> {mail ids a note was made for} (memory only)
+_wrote = {}                  # uid -> (time, {addresses the profile wrote to})
+
+
+async def post(uid):
+    """The section Post of the window: numbers and the urgent cards, from the caches first (never longer than
+    POST_BUDGET); "loading" while the first reading goes on."""
+    import fuerdich
+    import mail
+    out = {"unread": None, "more": False, "fuerdich": None, "cards": [], "loading": False}
+    if not mail.get(uid)["accounts"]:
+        return dict(out, nomail=True)
+    mail._used[uid] = time.time()      # the person looks at the own post: kept fresh, new mail at once (mailidle)
+    try:
+        found, _, _ = await asyncio.to_thread(mail.find, uid, "", 14, True, POST_UNREAD, True, POST_BUDGET)
+        out.update(unread=len(found), more=len(found) >= POST_UNREAD)
+    except TimeoutError:
+        out["loading"] = True
+    if features.allowed("fuerdich", uid):
+        await fuerdich.card(uid)       # reads for at most fuerdich.CARD_BUDGET, then the cache
+        hit = fuerdich._cache.get(uid)
+        if hit:
+            items = fuerdich.public(uid, hit[1][0], [])["items"]
+            out["fuerdich"] = len(items)
+            out["cards"] = [{"id": x["id"], "title": x["title"], "line": x["line"],
+                             "acts": ["done"] + (["fdremind"] if "remind" in x["acts"] else [])}
+                            for x in items if x["urgent"]][:POST_CARDS]
+        else:
+            out["loading"] = True
+    return out
+
+
+@router.get("/api/desk/post", dependencies=[Depends(assistant)])
+async def program_post(request: Request):
+    prof, dev = _program(request)
+    _part(prof, dev, "post")
+    guard.limit(request, "deskpost", prof["id"])
+    out = await post(prof["id"])
+    print(f"begleiter: post angesehen karten={len(out['cards'])} {profiles.log_name(prof)}", flush=True)
+    return out
+
+
+@router.post("/api/desk/post/act", dependencies=[Depends(assistant)])
+@shown("Knopf unter Post")
+async def program_post_act(request: Request):
+    """{"card": id, "act": "done" | "fdremind"}: a button of a Für-dich card under Post (the card is looked up here)."""
+    prof, dev = _program(request)
+    _part(prof, dev, "post")
+    guard.limit(request, "desknote", prof["id"])
+    body = await json_body(request, MAX_BODY)
+    card, act = body.get("card"), body.get("act")
+    if not isinstance(card, str) or not 0 < len(card) <= 40 or act not in ("done", "fdremind") \
+            or not features.allowed("fuerdich", prof["id"]):
+        print(f"begleiter: post knopf abgelehnt grund=eingabe {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(400, "card und act (done, fdremind)")
+    return _fd_act(prof, card, act, "post")
+
+
+def wrote_to(uid, now=None):
+    """{address: time} of the people the profile wrote to (Sent folders of its mailboxes, read only), cached."""
+    import fuerdich
+    import tidy
+    now = time.time() if now is None else now
+    hit = _wrote.get(uid)
+    if hit and now - hit[0] < WROTE_SECONDS:
+        return hit[1]
+    import mail
+    out = {}
+    for a in mail.get(uid)["accounts"]:
+        try:
+            with tidy.Box(a) as b:
+                out.update(fuerdich._sent(b)[1])
+        except Exception as e:
+            print(f"begleiter: post gesendet nicht lesbar ({type(e).__name__})", flush=True)
+    if len(_wrote) > 200:
+        _wrote.clear()
+    _wrote[uid] = (now, out)
+    return out
+
+
+def important(uid, h, wrote, now):
+    """Fixed rules for a note about a new mail (2a); h: header fields of mail.find."""
+    import email.utils
+    import fuerdich
+    addr = email.utils.parseaddr(h.get("from", ""))[1].lower()
+    if not h.get("unread") or not addr or fuerdich.NOREPLY.search(addr) or now - h["date"].timestamp() > NEW_SECONDS:
+        return False
+    import contacts
+    return addr in wrote or bool(contacts.name_for(uid, addr))
+
+
+def _post_on(uid):
+    return any(part_on(uid, d["id"], "post") and part_on(uid, d["id"], "notes") for d in devices(uid))
+
+
+def mail_arrived(uid, now=None):
+    """mailidle.on_new: a new mail came into one of the profile's inboxes (runs in the IDLE thread)."""
+    import mail
+    import push
+    if not _post_on(uid) or notaus.blocks("auto", uid):
+        return 0
+    name = profiles.log_name(profiles.by_id(uid))
+    now = time.time() if now is None else now
+    try:
+        found, _, _ = mail.find(uid, "", 1, True, 20, budget=60)
+    except TimeoutError:
+        print(f"begleiter: post neue mail zu langsam {name}", flush=True)
+        return 0
+    said = _post_said.setdefault(uid, set())
+    fresh = [(f"{aid}:{u}", h) for aid, u, h in found if f"{aid}:{u}" not in said]
+    picked = []
+    if fresh:
+        wrote = wrote_to(uid, now)
+        picked = [(ref, h) for ref, h in fresh if important(uid, h, wrote, now)][:NEW_MAX]
+    for ref, h in picked:
+        said.add(ref)
+        who = mail.known(uid, h["from"])
+        who = who.split(" <")[0] if " <" in who else who
+        # over the one way every note takes (push.send: Nicht stören, the journal, later the choice of the device in
+        # use); to the Begleiter, the device this part is on
+        asyncio.run(push.send(uid, f"Neue Mail von {who}", h.get("subject") or "(ohne Betreff)", tag="mail-new",
+                              to="desk", ref=ref))
+    if len(said) > 500:
+        said.clear()
+    print(f"begleiter: post neue mails={len(fresh)} hinweise={len(picked)} {name}", flush=True)
+    if picked:
+        _live("Neue Mail als Hinweis")
+    return len(picked)
+
+
+def _hook_post():
+    import mailidle
+    mailidle.on_new(mail_arrived)
+
+
+_hook_post()
+
+
+# ---- capture: Schnell erfassen (Begleiter nachziehen 4a; Dominik 2026-10-20)
+# One line from anywhere (Strg+Alt+N / ⌃⌥N, the marked text comes along) becomes an appointment or a reminder by fixed
+# rules (calendars.quick, the page Kalender's „Schnell eintragen“; no model). The program sends only the text and the
+# kind; the panel reads the line again for „Eintragen“, so what is saved is what the chips showed. Undo for
+# UNDO_SECONDS, memory only. „Milch, 2 Eier auf Einkauf“ goes onto a list (8a, tasks.py; the list must exist).
+CAPTURE_KINDS = ("termin", "erinnerung", "liste")
+UNDO_SECONDS = 600
+REMIND_HOUR = 9               # a reminder with a day but no time rings at 9
+_REMIND_WORDS = re.compile(r"(?i)^\s*(?:erinnere?\s+mich\s+(?:daran\s+)?(?:an\s+|dass\s+|zu\s+)?|erinnerung:?\s*|"
+                           r"remind\s+me\s+(?:to\s+|about\s+|of\s+)?)")
+_undo = {}                    # token -> (uid, time, kind, what)
+
+
+def capture_kinds(uid):
+    """What this profile may capture: an appointment needs Kalender and an own calendar, a reminder Erinnerungen."""
+    import calendars
+    out = ["termin"] if features.allowed("calendar", uid) and calendars.get(uid)["calendars"] else []
+    out += ["erinnerung"] if features.allowed("reminders", uid) else []
+    return out + (["liste"] if features.allowed("tasks", uid) else [])
+
+
+# „Milch, 2 Eier und Butter auf (die) Einkaufsliste“ / „… on the shopping list“: the entries and the list's word
+_ON_LIST = re.compile(r"(?i)^(.+?)\s+(?:auf|zu|in|on|to)\s+(?:die\s+|der\s+|den\s+|meine\s+|my\s+|the\s+)?(.{2,40}?)\s*$")
+
+
+def capture_list(uid, text):
+    """(list id, [entries]) of a line for a list, or (None, entries) when it names no list of the profile."""
+    import tasks
+    m = _ON_LIST.match(text)
+    lst = tasks.resolve(uid, m.group(2)) if m else None
+    rest = m.group(1) if m and lst else text
+    parts = [tasks.clean(x) for x in re.split(r"\s*(?:,|;|\bund\b|\band\b|\+)\s*", rest)]
+    return lst, [x for x in parts if x][:20]
+
+
+def capture_read(uid, text, kind, zone, now=None):
+    """The line as {kind, kinds, title, start, end, allday, location, chips}; ValueError without a title or kind."""
+    import calendars
+    kinds = capture_kinds(uid)
+    if not kinds:
+        raise ValueError("Erst Kalender oder Erinnerungen freigeben (Funktionen → Kalender).")
+    text = " ".join(schreib.CTRL.sub(" ", str(text or "")).split())[:calendars.QUICK_MAX]
+    said = bool(_REMIND_WORDS.match(text))
+    lst, entries = capture_list(uid, text) if "liste" in kinds else (None, [])
+    if kind not in kinds:
+        dated = [k for k in kinds if k != "liste"]
+        kind = "liste" if lst and not said or not dated else \
+            "erinnerung" if (said or "termin" not in kinds) and "erinnerung" in kinds else dated[0]
+    if kind == "liste":
+        return _capture_read_list(uid, kinds, lst or "einkauf", entries)
+    now = now or datetime.datetime.now(zone)
+    q = calendars.quick(_REMIND_WORDS.sub("", text, 1) if said else text, now)
+    out = dict(q, kind=kind, kinds=kinds)
+    if kind == "erinnerung":
+        if q["allday"]:
+            at = datetime.datetime.combine(datetime.date.fromisoformat(q["start"]), datetime.time(REMIND_HOUR), zone)
+            if at <= now:
+                at = now + datetime.timedelta(hours=1)
+        else:
+            at = datetime.datetime.fromisoformat(q["start"]).replace(tzinfo=zone)
+        out.update(start=at.isoformat(timespec="minutes"), allday=False, location="")
+    out["chips"] = _chips(out, zone, now)
+    return out
+
+
+def _capture_read_list(uid, kinds, lst, entries):
+    import tasks
+    if not entries:
+        raise ValueError("no entry")
+    if not tasks.known(uid, lst):
+        lst = "einkauf"
+    icon = next((x["icon"] for x in tasks.lists_of(uid) if x["id"] == lst), "📝")
+    n = len(entries)
+    return {"kind": "liste", "kinds": kinds, "list": lst, "entries": entries, "title": ", ".join(entries)[:200],
+            "chips": [f"{icon} {tasks.name_of(uid, lst)}", "1 Eintrag" if n == 1 else f"{n} Einträge"]}
+
+
+def _chips(x, zone, now):
+    """The recognised parts as short fixed texts: the day and time (or „ganztägig“), the place."""
+    s = datetime.datetime.fromisoformat(x["start"])
+    s = s if s.tzinfo else s.replace(tzinfo=zone)
+    day = s.date()
+    word = "heute" if day == now.date() else "morgen" if day == now.date() + datetime.timedelta(days=1) else \
+        ("Mo", "Di", "Mi", "Do", "Fr", "Sa", "So")[day.weekday()] + f" {day.day}.{day.month}."
+    out = [word + (" ganztägig" if x["allday"] else f" {s:%H:%M}")]
+    if x.get("location"):
+        out.append("📍 " + x["location"][:60])
+    return out
+
+
+@router.post("/api/desk/capture", dependencies=[Depends(assistant)])
+async def program_capture(request: Request):
+    """{"text", "kind": "termin" | "erinnerung" | "", "tz", "save": bool}: the chips, and with save the entry itself
+    (the button „Eintragen“ is the yes). Returns {"chips", ...} or {"text", "undo"}."""
+    prof, dev = _program(request)
+    uid = prof["id"]
+    _part(prof, dev, "capture")
+    guard.limit(request, "deskcapture", uid)
+    body = await json_body(request, MAX_BODY)
+    zone = _zone_of(uid, body.get("tz"))
+    try:
+        x = capture_read(uid, body.get("text"), body.get("kind"), zone)
+    except ValueError as e:
+        print(f"begleiter: erfassen abgelehnt grund=eingabe {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(400, str(e)[:200] if "Funktionen" in str(e) else "Was soll ich eintragen?")
+    if body.get("save") is not True:
+        return {k: x[k] for k in ("kind", "kinds", "title", "chips")}
+    return await _capture_save(prof, x, zone)
+
+
+async def _capture_save(prof, x, zone):
+    import calendars
+    uid = prof["id"]
+    token = secrets.token_hex(8)
+    try:
+        if x["kind"] == "liste":
+            import tasks
+            before = {e["id"] for e in await tasks.items(uid, x["list"])}
+            with _step("tool", "tasks_add"):
+                added = await tasks.add(uid, x["list"], x["entries"], by=uid, src="begleiter")
+            new = [e["id"] for e in await tasks.items(uid, x["list"]) if e["id"] not in before]
+            what = (x["list"], new)
+            text = f"Auf {tasks.name_of(uid, x['list'])}: {', '.join(added)}"
+        elif x["kind"] == "erinnerung":
+            due = datetime.datetime.fromisoformat(x["start"]).timestamp() * 1000
+            with _step("tool", "reminder_set"):
+                item = profiles.add_reminder(uid, x["title"], due)
+            what = item["id"]
+            text = f"Erinnerung {x['chips'][0]}: {x['title']}"
+        else:
+            start, end = x["start"], x["end"]
+            item = calendars.page_item({"title": x["title"], "start": start, "end": end, "allday": x["allday"],
+                                        "location": x["location"]}, zone)
+            with _step("tool", "calendar_add"):
+                where = await calendars.add_event(uid, item)
+            what = (where, x["title"], item["start"])
+            text = f"Eingetragen {' · '.join(x['chips'])}: {x['title']}"
+    except notaus.NotausAktiv:
+        print(f"begleiter: erfassen abgelehnt grund=notaus {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(423, "Notaus: gerade wird nichts geändert")
+    except ValueError as e:
+        print(f"begleiter: erfassen abgelehnt grund=eingabe {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(400, str(e)[:200])
+    except httpx.HTTPError:
+        print(f"begleiter: erfassen fehler grund=kalender {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(502, "Der Kalender ist nicht erreichbar.")
+    now = time.time()
+    for k in [k for k, v in _undo.items() if now - v[1] >= UNDO_SECONDS]:
+        _undo.pop(k, None)
+    undo = x["kind"] != "liste" or bool(what[1])   # a list on CalDAV keeps no ids here: nothing to take back
+    if undo:
+        _undo[token] = (uid, now, x["kind"], what)
+    print(f"begleiter: erfassen {x['kind']} ok {profiles.log_name(prof)}", flush=True)
+    _live("Schnell erfasst: " + {"erinnerung": "Erinnerung", "liste": "Liste"}.get(x["kind"], "Termin"))
+    return {"ok": True, "text": text[:240], "undo": token if undo else None}
+
+
+@router.post("/api/desk/capture/undo", dependencies=[Depends(assistant)])
+async def program_capture_undo(request: Request):
+    """{"undo": token}: the last entry of Schnell erfassen back, within UNDO_SECONDS and only for its own profile."""
+    import calendars
+    prof, dev = _program(request)
+    uid = prof["id"]
+    _part(prof, dev, "capture")
+    guard.limit(request, "deskcapture", uid)
+    body = await json_body(request, MAX_BODY)
+    hit = _undo.get(str(body.get("undo") or "")[:40])
+    if not hit or hit[0] != uid or time.time() - hit[1] >= UNDO_SECONDS:
+        print(f"begleiter: erfassen rueckgaengig abgelehnt grund=fehlt {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(404, "Das lässt sich nicht mehr rückgängig machen.")
+    _undo.pop(str(body["undo"])[:40], None)
+    _, _, kind, what = hit
+    if kind == "liste":
+        import tasks
+        try:
+            await tasks.change(uid, what[0], [{"id": i} for i in what[1]], "delete", by=uid)
+        except (ValueError, httpx.HTTPError, notaus.NotausAktiv) as e:
+            print(f"begleiter: erfassen rueckgaengig fehler ({type(e).__name__}) {profiles.log_name(prof)}", flush=True)
+            raise HTTPException(409, "Das ließ sich nicht zurücknehmen. Auf der Seite Listen löschen.")
+    elif kind == "erinnerung":
+        profiles.remove_reminders(uid, [what])
+    else:
+        where, title, start = what
+        zone = _zone(uid)
+        cals = calendars.reading(uid)["calendars"]
+        cal = next((i for i, c in enumerate(cals) if not c.get("owner") and c.get("name") == where), -1)
+        try:
+            p = await calendars.page_find(uid, cal, title, int(datetime.datetime.fromisoformat(start).timestamp()), zone)
+            p["change"] = "delete"
+            await calendars.change_event(uid, p)
+        except (LookupError, ValueError, httpx.HTTPError, notaus.NotausAktiv) as e:
+            print(f"begleiter: erfassen rueckgaengig fehler ({type(e).__name__}) {profiles.log_name(prof)}", flush=True)
+            raise HTTPException(409, "Der Termin ließ sich nicht zurücknehmen. Im Kalender löschen (Kalender → Termine).")
+    print(f"begleiter: erfassen rueckgaengig {kind} ok {profiles.log_name(prof)}", flush=True)
+    _live("Schnell erfasst: zurückgenommen")
+    return {"ok": True, "text": "Zurückgenommen."}
+
+
+# ---- lists: Listen im Begleiter (Begleiter nachziehen 8a; after „Listen teilen“ stage 1)
+# The window shows the lists with open entries: symbol, name, how many are open and the newest entry as a fixed
+# sentence („Sabine hat „Milch“ ergänzt“ when another profile put it on, else „zuletzt „Milch““); „Öffnen“ goes to
+# the page Listen. Entries are the person's text: shown as text only, never as a command.
+DESK_LISTS = 6
+
+
+async def desk_lists(uid):
+    import tasks
+    out = []
+    for li in tasks.lists_of(uid):
+        try:
+            have = await asyncio.wait_for(tasks.items(uid, li["id"]), 10)
+        except (asyncio.TimeoutError, ValueError, httpx.HTTPError):
+            have = None
+        if have is not None and not have and li["own"]:
+            continue   # an own list with nothing open stays on the page
+        last = ""
+        if have:
+            x = max(enumerate(have), key=lambda p: (p[1].get("t") or 0, p[0]))[1]   # the same second: the later one
+            by = profiles.by_id(x["by"]) if x.get("by") and x["by"] != uid else None
+            what = tasks.show(x)[:60]
+            last = f"{by['name']} hat „{what}“ ergänzt" if by else f"zuletzt „{what}“"
+        out.append({"id": li["id"], "name": li["name"][:40], "icon": li["icon"],
+                    "open": None if have is None else len(have), "last": last[:120]})
+        if len(out) >= DESK_LISTS:
+            break
+    return {"lists": out}
+
+
+@router.get("/api/desk/lists", dependencies=[Depends(assistant)])
+async def program_lists(request: Request):
+    prof, dev = _program(request)
+    _part(prof, dev, "lists")
+    guard.limit(request, "deskpost", prof["id"])
+    return await desk_lists(prof["id"])
+
+
+def _zone_of(uid, tz):
+    import chat
+    return chat.user_zone(tz[:64]) if isinstance(tz, str) and tz else _zone(uid)
 
 
 @router.post("/api/desk/remind", dependencies=[Depends(assistant)])

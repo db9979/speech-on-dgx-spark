@@ -202,6 +202,15 @@ internal sealed partial class TrayContext
     private bool AddPartMenuItems4()
     {
         bool any = false;
+        if (IsOn(Parts.Capture))
+        {
+            _menu.Items.Add(new ToolStripMenuItem("Schnell erfassen …", null, async (_, _) => await OpenCaptureAsync(fromHotkey: false))
+            {
+                ShortcutKeyDisplayString = _config.GetHotkey(Parts.Capture).ToString(),
+            });
+            any = true;
+        }
+
         if (IsOn(Parts.Speak))
         {
             bool active = _speaker is not null || _speakCts is not null;
@@ -227,6 +236,11 @@ internal sealed partial class TrayContext
 
     private void AddPanelItems4(List<PanelItem> items)
     {
+        if (IsOn(Parts.Capture))
+        {
+            items.Add(new PanelItem("Erfassen", Glyph.Plus, _config.GetHotkey(Parts.Capture).ToString(), () => _ = OpenCaptureAsync(fromHotkey: false)));
+        }
+
         if (IsOn(Parts.Speak))
         {
             bool active = _speaker is not null || _speakCts is not null;
@@ -266,7 +280,9 @@ internal sealed partial class TrayContext
             }
 
             string when = e.Start <= now ? "jetzt" : WhenText(e.Start, now);
-            rows.Add((e.Start, new PanelLine(when, e.Title.Length > 0 ? e.Title : "Termin", e.Where)));
+            string day = e.Day;
+            rows.Add((e.Start, new PanelLine(when, e.Title.Length > 0 ? e.Title : "Termin", e.Where, e.Who,
+                day.Length > 0 && !string.IsNullOrEmpty(_config.Base) ? () => OpenPanelPage("#kal=" + day) : null)));
         }
 
         foreach (AgendaReminder r in agenda.Reminders)

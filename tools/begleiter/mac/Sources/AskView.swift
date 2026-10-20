@@ -15,6 +15,9 @@ final class AskController: ObservableObject {
         let failed: Bool
         /// the answer with Markdown, shown formatted; copied and read aloud is `answer`
         var md: String? = nil
+        /// the line of tools used ("2 Werkzeuge benutzt · 1,4 s: …") and the cards under the answer (AskCards)
+        var steps: String? = nil
+        var cards: [AskCards.Card] = []
     }
 
     @Published var input = ""
@@ -26,6 +29,8 @@ final class AskController: ObservableObject {
 
     /// the note the next question answers (button "Antworten" without text): sent as "note"
     @Published private(set) var noteContext: (n: Int, title: String)?
+    /// counts up when a card's "Anders …" wants the cursor in the field
+    @Published private(set) var focusTick = 0
 
     private var task: Task<Void, Never>?
     private var generation = 0
@@ -69,12 +74,13 @@ final class AskController: ObservableObject {
         status = ""
         task = Task { @MainActor [weak self] in
             do {
-                let (a, md) = try await client.askRich(q, note: note)
+                let r = try await client.askFull(q, note: note)
                 guard let self else { return }
                 self.noteContext = nil
-                let clean = a.trimmingCharacters(in: .whitespacesAndNewlines)
-                let shown = md?.trimmingCharacters(in: .whitespacesAndNewlines)
-                self.entries.append(Entry(question: q, answer: clean, failed: false, md: shown?.isEmpty == false ? shown : nil))
+                let clean = r.answer.trimmingCharacters(in: .whitespacesAndNewlines)
+                let shown = r.md?.trimmingCharacters(in: .whitespacesAndNewlines)
+                self.entries.append(Entry(question: q, answer: clean, failed: false, md: shown?.isEmpty == false ? shown : nil,
+                                          steps: r.steps, cards: r.cards))
                 Self.speakIfWanted(clean, spoken: spoken)
                 if self.generation == mine {
                     self.input = ""
@@ -159,6 +165,21 @@ final class AskController: ObservableObject {
         }
     }
 
+    /// A button of a card under the last answer: its word goes like a typed answer (the Spark decides with its own
+    /// rules), a way opens that page in the panel, "Anders …" puts the cursor in the field.
+    func pick(_ b: AskCards.Button) {
+        if let word = b.send {
+            guard !busy else { return }
+            input = word
+            inputSpoken = false
+            send()
+        } else if let page = b.open {
+            AppModel.shared.openPanel(page)
+        } else {
+            focusTick += 1
+        }
+    }
+
     func copyLast() {
         guard let a = entries.last(where: { !$0.failed })?.answer, !a.isEmpty else { return }
         Clip.put(a)
@@ -184,6 +205,7 @@ struct AskView: View {
     @AppStorage(AskSpeak.key) private var speakMode = "voice"
 
     private static let bottomID = "unten"
+    @FocusState private var fieldFocused: Bool
 
     var body: some View {
         VStack(spacing: 0) {
@@ -203,6 +225,15 @@ struct AskView: View {
                             ForEach(c.entries) { e in
                                 own(e.question)
                                 answer(e.answer, md: e.md)
+                                if let steps = e.steps {
+                                    Text(verbatim: "▸ " + steps)
+                                        .font(.system(size: 11))
+                                        .foregroundColor(Theme.muted)
+                                        .padding(.leading, 38)
+                                }
+                                if e.id == c.entries.last?.id && c.pending == nil {
+                                    ForEach(e.cards) { card in cardView(card) }
+                                }
                             }
                             if let q = c.pending {
                                 own(q)
@@ -239,6 +270,7 @@ struct AskView: View {
                         .textFieldStyle(.plain)
                         .font(.system(size: 13))
                         .lineLimit(1...5)
+                        .focused($fieldFocused)
                         .onSubmit { c.send() }
                         .disabled(c.busy)
                         .padding(.vertical, 8)
@@ -313,6 +345,35 @@ struct AskView: View {
         }
         .background(Theme.card)
         .frame(minWidth: 420, minHeight: 380)
+        .onChange(of: c.focusTick) { _ in fieldFocused = true }
+    }
+
+    /// a card under the last answer: its title (fixed words) and its buttons in one row
+    private func cardView(_ card: AskCards.Card) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            if !card.title.isEmpty {
+                Text(verbatim: card.title)
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundColor(Theme.muted)
+            }
+            HStack(spacing: 6) {
+                ForEach(card.buttons) { b in
+                    if b.main {
+                        Button(b.label) { c.pick(b) }
+                            .buttonStyle(PrimaryButtonStyle())
+                            .disabled(c.busy)
+                    } else {
+                        Button(b.open == nil ? b.label : b.label + " ↗") { c.pick(b) }
+                            .buttonStyle(SoftButtonStyle())
+                            .disabled(c.busy && b.send != nil)
+                    }
+                }
+            }
+        }
+        .padding(10)
+        .background(RoundedRectangle(cornerRadius: 12).fill(Theme.card))
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.line, lineWidth: 1))
+        .padding(.leading, 38)
     }
 
     private var micActive: Bool {

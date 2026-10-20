@@ -278,8 +278,24 @@ internal sealed class OutlookMail : IDisposable
 /// Spark die Antwort schreiben. Mit klassischem Outlook öffnet sich danach ein Antwort-Entwurf (nie gesendet); ohne
 /// (neues Outlook) liegt die Antwort in der Zwischenablage – „In die Antwort einfügen (Strg+V)“.
 /// </summary>
+/// <summary>
+/// Antwortvorschläge (Begleiter nachziehen 6a): drei Antworten zur Mail (/api/write/suggest) und Umformen
+/// (kürzer, freundlicher, förmlicher, Englisch über /api/write/assist). Immer nur ein Entwurf, nie gesendet.
+/// </summary>
+internal sealed record MailHelp(
+    Func<string, CancellationToken, Task<IReadOnlyList<(string Label, string Text)>>> Suggest,
+    Func<string, string, CancellationToken, Task<string>> Rewrite);
+
 internal sealed class MailForm : ThemedForm
 {
+    private static readonly (string Label, string Art)[] Tweaks =
+        { ("Kürzer", "kuerzer"), ("Freundlicher", "freundlicher"), ("Förmlicher", "foermlicher"), ("Englisch", "uebersetzen") };
+
+    private readonly MailHelp? _help;
+    private readonly List<SparkButton> _ideas = new();
+    private readonly List<SparkButton> _tweaks = new();
+    private readonly SparkButton _askIdeas = new(ButtonKind.Chip, "3 Vorschläge");
+    private bool _draft;
     private readonly OutlookMail? _outlook;
     private readonly Func<string, string, CancellationToken, Task<string>> _write;
     private readonly Action<SparkException> _report;
@@ -310,9 +326,12 @@ internal sealed class MailForm : ThemedForm
     /// <param name="selection">Ausweichweg: markierter Text aus dem Programm im Vordergrund.</param>
     /// <param name="write">Ruft /api/write/assist {"art":"antwort","mail","text"} auf.</param>
     /// <param name="dictation">Einsprechen in die Felder (Teil „Diktieren“), oder <c>null</c>.</param>
-    public MailForm(OutlookMail? outlook, string? selection, Func<string, string, CancellationToken, Task<string>> write, Action<SparkException> report, Dictation? dictation = null)
+    /// <param name="help">Antwortvorschläge und Umformen, oder <c>null</c>.</param>
+    public MailForm(OutlookMail? outlook, string? selection, Func<string, string, CancellationToken, Task<string>> write, Action<SparkException> report, Dictation? dictation = null,
+        MailHelp? help = null)
     {
         _outlook = outlook;
+        _help = help;
         _write = write;
         _report = report;
         _mailHost = new RoundedHost(_mail);
@@ -351,6 +370,17 @@ internal sealed class MailForm : ThemedForm
         }
 
         Controls.AddRange(new Control[] { _from, _mailLabel, _mailHost, _notesLabel, _notesHost, _answerHost, _status, _cancel, _copy, _go });
+        _askIdeas.Visible = help is not null;
+        Controls.Add(_askIdeas);
+        _askIdeas.Click += async (_, _) => await LoadIdeasAsync();
+        foreach (var (label, art) in Tweaks)
+        {
+            var b = new SparkButton(ButtonKind.Chip, label) { Visible = false, FontSize = 8.5f };
+            b.Click += async (_, _) => await TweakAsync(art);
+            _tweaks.Add(b);
+            Controls.Add(b);
+        }
+
         _mailHost.TabIndex = 0;
         _notesHost.TabIndex = 1;
         _go.TabIndex = 2;
@@ -388,6 +418,145 @@ internal sealed class MailForm : ThemedForm
     {
         base.OnLoad(e);
         ActiveControl = _outlook is null && _mail.TextLength == 0 ? _mail : _notes;
+        if (_help is not null && (_outlook is not null || _mail.TextLength > 0))
+        {
+            _ = LoadIdeasAsync();   // die Mail ist schon da: die Vorschläge gleich holen
+        }
+    }
+
+    /// <summary>Drei Vorschläge zur Mail als Chips; ein Klick legt den Text ins Antwortfeld (dort frei änderbar).</summary>
+    private async Task LoadIdeasAsync()
+    {
+        string mail = _outlook?.ForSpark ?? _mail.Text.Trim();
+        if (_help is null || _draft || _done)
+        {
+            return;
+        }
+
+        if (mail.Length == 0)
+        {
+            SetStatus("Bitte zuerst den Text der Mail einfügen.", error: true);
+            return;
+        }
+
+        _askIdeas.Enabled = false;
+        SetStatus("Der Spark sucht drei Antworten …", error: false);
+        _cts ??= new CancellationTokenSource();
+        try
+        {
+            var items = await _help.Suggest(mail.Length > OutlookMail.MaxBody ? mail[..OutlookMail.MaxBody] : mail, _cts.Token);
+            if (IsDisposed || _draft || _done)
+            {
+                return;
+            }
+
+            foreach (SparkButton old in _ideas)
+            {
+                Controls.Remove(old);
+                old.Dispose();
+            }
+
+            _ideas.Clear();
+            foreach (var (label, text) in items.Take(3))
+            {
+                var b = new SparkButton(ButtonKind.Chip, label.Length > 0 ? label : "Vorschlag") { FontSize = 8.5f };
+                string answer = text;
+                b.Click += (_, _) => PickIdea(answer);
+                _ideas.Add(b);
+                Controls.Add(b);
+            }
+
+            _askIdeas.Visible = false;
+            SetStatus(_ideas.Count > 0 ? "Einen Vorschlag wählen oder unten Stichpunkte schreiben." : "Keine Vorschläge – Stichpunkte schreiben.", error: false);
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (SparkException ex)
+        {
+            if (!IsDisposed)
+            {
+                _askIdeas.Enabled = true;
+                SetStatus(ex.Message, error: true);
+            }
+        }
+    }
+
+    private void PickIdea(string text)
+    {
+        _draft = true;
+        _answer.Text = text.Replace("\r\n", "\n", StringComparison.Ordinal).Replace("\n", Environment.NewLine, StringComparison.Ordinal);
+        _answer.ReadOnly = false;
+        _answerHost.Visible = true;
+        _tweaks.ForEach(b => b.Visible = true);
+        _ideas.ForEach(b => b.Visible = false);
+        _go.Text = _outlook is not null ? "Entwurf öffnen" : "Kopieren";
+        SetStatus("Ändern, kürzen oder übersetzen – gesendet wird nichts.", error: false);
+        _answer.Focus();
+    }
+
+    private async Task TweakAsync(string art)
+    {
+        if (_help is null || _answer.TextLength == 0)
+        {
+            return;
+        }
+
+        _tweaks.ForEach(b => b.Enabled = false);
+        _answer.ReadOnly = true;
+        SetStatus("Der Spark formt die Antwort um …", error: false);
+        _cts ??= new CancellationTokenSource();
+        try
+        {
+            string text = await _help.Rewrite(art, _answer.Text, _cts.Token);
+            if (!IsDisposed)
+            {
+                _answer.Text = text.Replace("\r\n", "\n", StringComparison.Ordinal).Replace("\n", Environment.NewLine, StringComparison.Ordinal);
+                SetStatus("Ändern, kürzen oder übersetzen – gesendet wird nichts.", error: false);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (SparkException ex)
+        {
+            if (!IsDisposed)
+            {
+                SetStatus(ex.Message, error: true);
+            }
+        }
+        finally
+        {
+            if (!IsDisposed)
+            {
+                _tweaks.ForEach(b => b.Enabled = true);
+                _answer.ReadOnly = _done;
+            }
+        }
+    }
+
+    /// <summary>Chips nebeneinander, mit Umbruch; gibt die Höhe zurück.</summary>
+    private int FlowChips(IEnumerable<SparkButton> chips, int x0, int y, int width)
+    {
+        int x = x0;
+        int rowH = 0;
+        int top = y;
+        foreach (SparkButton b in chips.Where(b => b.Visible))
+        {
+            Size size = b.Preferred();
+            if (x > x0 && x + size.Width > x0 + width)
+            {
+                x = x0;
+                y += rowH + S(6);
+                rowH = 0;
+            }
+
+            b.Bounds = new Rectangle(x, y, size.Width, size.Height);
+            x += size.Width + S(6);
+            rowH = Math.Max(rowH, size.Height);
+        }
+
+        return rowH == 0 ? 0 : y + rowH - top;
     }
 
     protected override void LayoutContent()
@@ -402,6 +571,8 @@ internal sealed class MailForm : ThemedForm
         _title = new Rectangle(pad + face + S(8), y, inner - face - S(8), face);
         y += face + S(8);
         y += _from.Fit(pad, y, inner) + S(10);
+        int chipsH = FlowChips(_ideas.Append(_askIdeas).Concat(_tweaks), pad, y, inner);
+        y += chipsH > 0 ? chipsH + S(10) : 0;
 
         Size go = _go.Preferred();
         int buttonsY = h - pad - go.Height;
@@ -465,6 +636,13 @@ internal sealed class MailForm : ThemedForm
             return;
         }
 
+        if (_draft)
+        {
+            // ein gewählter Vorschlag: so, wie er jetzt im Feld steht
+            Deliver(_answer.Text.Trim());
+            return;
+        }
+
         string mail = _outlook?.ForSpark ?? _mail.Text.Trim();
         if (mail.Length == 0)
         {
@@ -492,31 +670,8 @@ internal sealed class MailForm : ThemedForm
                 return;
             }
 
-            if (_outlook is not null)
-            {
-                // Reply() wartet, falls Outlook erst fragt (z. B. „Externe Inhalte herunterladen?“): dann darf
-                // der Begleiter nicht davorliegen, und der Hinweis steht schon da, bevor Outlook antwortet.
-                StopClock();
-                TopMost = false;
-                SetStatus("Outlook öffnet den Entwurf … Fragt Outlook etwas (z. B. „Externe Inhalte herunterladen?“), bitte dort antworten.", error: false);
-                Update();
-                OutlookMail.BringOutlookForward();
-                try
-                {
-                    _outlook.OpenReply(answer);
-                    Close();
-                    return;
-                }
-                catch (InvalidOperationException ex)
-                {
-                    // Outlook wollte nicht: dann wie beim neuen Outlook über die Zwischenablage.
-                    TopMost = true;
-                    ShowAnswer(answer, ex.Message + " ");
-                    return;
-                }
-            }
-
-            ShowAnswer(answer, "");
+            StopClock();
+            Deliver(answer);
         }
         catch (OperationCanceledException)
         {
@@ -544,6 +699,35 @@ internal sealed class MailForm : ThemedForm
         }
     }
 
+    /// <summary>Die fertige Antwort: als Entwurf in Outlook (klassisch), sonst in die Zwischenablage.</summary>
+    private void Deliver(string answer)
+    {
+        if (_outlook is not null)
+        {
+            // Reply() wartet, falls Outlook erst fragt (z. B. „Externe Inhalte herunterladen?“): dann darf
+            // der Begleiter nicht davorliegen, und der Hinweis steht schon da, bevor Outlook antwortet.
+            TopMost = false;
+            SetStatus("Outlook öffnet den Entwurf … Fragt Outlook etwas (z. B. „Externe Inhalte herunterladen?“), bitte dort antworten.", error: false);
+            Update();
+            OutlookMail.BringOutlookForward();
+            try
+            {
+                _outlook.OpenReply(answer);
+                Close();
+                return;
+            }
+            catch (InvalidOperationException ex)
+            {
+                // Outlook wollte nicht: dann wie beim neuen Outlook über die Zwischenablage.
+                TopMost = true;
+                ShowAnswer(answer, ex.Message + " ");
+                return;
+            }
+        }
+
+        ShowAnswer(answer, "");
+    }
+
     /// <summary>Sekunden mitzählen, solange der Spark schreibt – das Fenster zeigt, dass es arbeitet.</summary>
     private void StartClock()
     {
@@ -563,6 +747,10 @@ internal sealed class MailForm : ThemedForm
     private void ShowAnswer(string answer, string prefix)
     {
         _done = true;
+        _tweaks.ForEach(b => b.Visible = false);
+        _ideas.ForEach(b => b.Visible = false);
+        _askIdeas.Visible = false;
+        _answer.ReadOnly = true;
         _answer.Text = answer.Replace("\r\n", "\n", StringComparison.Ordinal).Replace("\n", Environment.NewLine, StringComparison.Ordinal);
         _answerHost.Visible = true;
         _copy.Visible = true;

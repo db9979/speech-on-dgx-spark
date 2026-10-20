@@ -172,6 +172,10 @@ struct AgendaEvent: Equatable, Identifiable {
     let end: Date?
     let title: String
     let place: String
+    /// the profile that shares this calendar ("" for an own one, Begleiter nachziehen 7a)
+    var who = ""
+    /// YYYY-MM-DD: a click opens the page Kalender on that day (#kal=…), "" = nothing to open
+    var day = ""
 
     /// stable per event (start + title), for "once per event"
     var id: String {
@@ -201,8 +205,10 @@ struct Agenda: Equatable {
         events = (d["events"] as? [Any] ?? []).prefix(10).compactMap { x -> AgendaEvent? in
             guard let e = x as? [String: Any], let start = IsoDate.parse(e["start"]) else { return nil }
             let title = PlainText.line(e["title"], max: 200)
+            let day = e["day"] as? String ?? ""
             return AgendaEvent(start: start, end: IsoDate.parse(e["end"]),
-                               title: title.isEmpty ? "Termin" : title, place: PlainText.line(e["where"], max: 120))
+                               title: title.isEmpty ? "Termin" : title, place: PlainText.line(e["where"], max: 120),
+                               who: PlainText.line(e["who"], max: 40), day: Agenda.isDay(day) ? day : "")
         }.sorted { $0.start < $1.start }
         reminders = (d["reminders"] as? [Any] ?? []).prefix(10).compactMap { x -> AgendaReminder? in
             guard let r = x as? [String: Any], let due = IsoDate.parse(r["due"]) else { return nil }
@@ -213,6 +219,11 @@ struct Agenda: Equatable {
 
     init() {}
 
+    /// "2026-10-21" and nothing else: the only thing a click puts into the panel's address (#kal=…)
+    static func isDay(_ s: String) -> Bool {
+        s.range(of: #"^\d{4}-\d{2}-\d{2}$"#, options: .regularExpression) != nil
+    }
+
     /// one line per thing, the next ones first (events still running count too)
     struct Line: Equatable, Identifiable {
         let id: String
@@ -220,12 +231,14 @@ struct Agenda: Equatable {
         let isReminder: Bool
         let title: String
         let detail: String
+        var who = ""
+        var day = ""
     }
 
     func upcoming(now: Date, limit: Int = 5) -> [Line] {
         var out: [Line] = []
         for e in events where (e.end ?? e.start.addingTimeInterval(3600)) > now {
-            out.append(Line(id: "e" + e.id, when: e.start, isReminder: false, title: e.title, detail: e.place))
+            out.append(Line(id: "e" + e.id, when: e.start, isReminder: false, title: e.title, detail: e.place, who: e.who, day: e.day))
         }
         for (i, r) in reminders.enumerated() where r.due > now.addingTimeInterval(-300) {
             out.append(Line(id: "r\(i)-\(Int(r.due.timeIntervalSince1970))", when: r.due, isReminder: true,
@@ -443,6 +456,26 @@ extension NoteActions {
     static func category4(_ actions: [String]) -> String? {
         let a = withRemind.filter { actions.contains($0) }
         return a.isEmpty ? nil : "note." + a.joined(separator: ".")
+    }
+
+    /// a note about an important new mail (tag "mail-new", part post): Antwort entwerfen, Gelesen (Mails ordnen), Ansehen
+    static let mailTag = "mail-new"
+    static let mail = ["draft", "read", "open"]
+    /// what "Antwort entwerfen" puts into the field of Frag Spark (sent only when the person presses Enter)
+    static let draftQuestion = "Entwirf eine kurze Antwort auf diese Mail. Nicht senden."
+
+    static func parseMail(_ raw: Any?) -> [String] {
+        let given = (raw as? [Any] ?? []).compactMap { $0 as? String }
+        return mail.filter { given.contains($0) }
+    }
+
+    static func mailCategory(_ actions: [String]) -> String? {
+        let a = mail.filter { actions.contains($0) }
+        return a.isEmpty ? nil : "mail." + a.joined(separator: ".")
+    }
+
+    static var mailCombinations: [[String]] {
+        (1..<(1 << mail.count)).map { mask in mail.enumerated().filter { mask & (1 << $0.offset) != 0 }.map { $0.element } }
     }
 
     static var allCombinations4: [[String]] {

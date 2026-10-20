@@ -642,7 +642,7 @@ def _app_area(request, uid):
 # A Spark-Begleiter key (scope "desk", begleiter.py, the program in the Windows notification area or the Mac menu
 # bar) only reaches its own paths, only while the admin and the profile allow it (DESK_GATE, set by begleiter.py);
 # each part (writing help, questions, dictation, notes, Notaus button) is checked again per device there.
-DESK_PATHS = ("/api/write", "/api/write/assist", "/api/desk/config", "/api/desk/poll", "/api/desk/ask",
+DESK_PATHS = ("/api/write", "/api/write/assist", "/api/write/suggest", "/api/desk/config", "/api/desk/poll", "/api/desk/ask",
               "/api/desk/dictate", "/api/desk/notaus", "/api/desk/update", "/api/desk/file", "/api/desk/screen", "/api/desk/hear", "/api/desk/act",
               # Version 4 (exact paths; the ids go in the query or the body)
               "/api/desk/speak", "/api/desk/inbox/file", "/api/desk/inbox/done", "/api/desk/agenda", "/api/desk/remind",
@@ -650,6 +650,12 @@ DESK_PATHS = ("/api/write", "/api/write/assist", "/api/desk/config", "/api/desk/
               "/api/desk/meeting/keep", "/api/desk/home", "/api/desk/daily", "/api/desk/apps",
               # Rechner fernsteuern, Stufe 1: what the person chose at the computer, the held wait for orders
               "/api/desk/local", "/api/desk/wait",
+              # Begleiter nachziehen (2026-10-20): a button of a note of its own kind (Für dich: erledigt, erinnern)
+              "/api/desk/note/act",
+              # Post im Begleiter (part post): unread, Für dich, the buttons of its cards
+              "/api/desk/post", "/api/desk/post/act",
+              # Schnell erfassen (part capture): the chips of one line, „Eintragen“, Rückgängig
+              "/api/desk/capture", "/api/desk/capture/undo", "/api/desk/lists",
               # Ordner auslassen (auslassen.py): the sub folders of "Spark-Wissen", for the tree
               "/api/desk/ordner",
               # Stufe 2 (fernsicht.py): answer at the computer, pictures out, inputs in, end
@@ -672,7 +678,7 @@ HAEV_GATE = [lambda uid: False]
 # A writing help key (scope "write", Mac quick action, Windows program, Office add-in, browser extension, paired
 # by code in schreib.py) only gets texts improved, on these paths, and only while the admin and the profile have
 # the writing help and "In anderen Programmen" on (WRITE_GATE, set by schreib.py).
-WRITE_PATHS = ("/api/write", "/api/write/assist", "/api/write/plain")
+WRITE_PATHS = ("/api/write", "/api/write/assist", "/api/write/plain", "/api/write/suggest")
 WRITE_GATE = [lambda uid: False]
 # A terminal key (scope "tui", spark-tui paired by code, terminal.py) only reaches terminal.TUI_RULES (TUI_REACH says
 # "panel" or "agent", None for anything else), and only while the admin has the terminal client on (TUI_GATE).

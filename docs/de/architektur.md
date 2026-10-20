@@ -1019,7 +1019,7 @@ Gilt bei: [Schritt 1](#kn-kanaele-s1), [Schritt 9](#kn-kanaele-s9), [Schritt 11]
 - `app/panel/telegram.py` `ask`: Frage an den Chat, Antwort einsammeln, speichern ([Schritt 7](#kn-kanaele-s7), [Schritt 8](#kn-kanaele-s8), [Schritt 11](#kn-kanaele-s11))
 - `app/panel/telegram.py` `transcribe`: Sprachnachricht über ffmpeg zur Spracherkennung ([Schritt 5](#kn-kanaele-s5))
 - `app/panel/chat.py` `siri_ask`: Siri: Profil aus dem Schlüssel ([Schritt 1](#kn-kanaele-s1), [Schritt 3](#kn-kanaele-s3))
-- `app/panel/chat.py` `text_ask`: Siri und Begleiter: Frage, Antwort, Verlauf ([Schritt 6](#kn-kanaele-s6), [Schritt 7](#kn-kanaele-s7), [Schritt 11](#kn-kanaele-s11))
+- `app/panel/chat.py` `text_ask`: Siri und Begleiter: Frage, Antwort, Verlauf, beim Begleiter dazu die Karten (desk_cards) ([Schritt 6](#kn-kanaele-s6), [Schritt 7](#kn-kanaele-s7), [Schritt 11](#kn-kanaele-s11))
 - `app/panel/chat.py` `watch_ask`: Uhr: Antwort als Auftrag starten ([Schritt 1](#kn-kanaele-s1), [Schritt 7](#kn-kanaele-s7))
 - `app/panel/chat.py` `_watch_run`: Uhr: Antwort in den Verlauf ([Schritt 11](#kn-kanaele-s11))
 - `app/panel/watch.py` `run`: liest den Strom in den Uhr-Auftrag ([Schritt 8](#kn-kanaele-s8))

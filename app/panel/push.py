@@ -217,11 +217,13 @@ def _why(tag):
     return next((v for k, v in WHY.items() if tag == k or (k.endswith("-") and tag.startswith(k))), "")
 
 
-async def send(uid, title, body, tag="", private=True, why="", to=""):
+async def send(uid, title, body, tag="", private=True, why="", to="", ref=""):
     """Sends a note once: to one device of the profile (pick), the iPhone app, Telegram (private notes,
     i.e. appointments, mails, the briefing, only when it allowed personal data there) or a browser.
     "hello" goes to the browsers only. to: the way the profile chose for this kind of note ("all": every way it
-    has set up, "every": every device and browser of the profile but Telegram, for chats). Drops subscriptions the push service no longer knows. Returns the number of devices reached."""
+    has set up, "every": every device and browser of the profile but Telegram, for chats). ref: what the note is about
+    (a Für-dich card), only for the Begleiter's buttons (begleiter.NOTE_ACTS), never sent anywhere. Drops subscriptions
+    the push service no longer knows. Returns the number of devices reached."""
     import begleiter
     # "Nicht stören" (Spark-Begleiter part quiet): while the profile is in a call or presenting, notes wait and one
     # summary follows; alarms, reminders and safety notes always go (begleiter.urgent)
@@ -244,7 +246,7 @@ async def send(uid, title, body, tag="", private=True, why="", to=""):
         ways = [pick(uid, private, to)]
     n = 0
     for kind, targets in ways:
-        n += await _send_one(uid, kind, targets, title, body, tag, private, why)
+        n += await _send_one(uid, kind, targets, title, body, tag, private, why, ref)
     # one line per note, sent or not: the kind of note, the ways and how many devices it reached, never its text
     print(f"push: {_word(tag, why)} {'sent' if n else 'reached no device'} | {n} device(s) | "
           f"{','.join(k for k, _ in ways if k) or 'no way'} | {profiles.log_name(profiles.by_id(uid))}", flush=True)
@@ -256,7 +258,7 @@ def _word(tag, why):
     return why if why in set(WHY.values()) | {"Erinnerung"} else _why(tag) or "Hinweis"
 
 
-async def _send_one(uid, kind, targets, title, body, tag, private, why):
+async def _send_one(uid, kind, targets, title, body, tag, private, why, ref=""):
     import apns
     import telegram
     t0 = time.time()
@@ -268,7 +270,7 @@ async def _send_one(uid, kind, targets, title, body, tag, private, why):
         n += 1
     if kind == "desk":  # the Spark-Begleiter on PC or Mac fetches it with its next poll (begleiter.py)
         import begleiter
-        begleiter.keep(uid, title, body, tag)
+        begleiter.keep(uid, title, body, tag, ref=ref)
         n += 1
     # a note naming a place in the panel opens it there when tapped (sw.js, way.js)
     import wege
