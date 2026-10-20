@@ -29,7 +29,7 @@ struct ListEntry: Identifiable {
     }
 }
 
-struct SparkList: Identifiable {
+struct SparkListe: Identifiable {
     let id: String
     let name: String
     let icon: String
@@ -43,24 +43,24 @@ struct SparkList: Identifiable {
 
 @MainActor
 final class ListenModel: ObservableObject {
-    @Published var lists: [SparkList] = []
+    @Published var lists: [SparkListe] = []
     @Published var icons: [String] = []
     @Published var loading = true
     @Published var error: String?
     private var sources: [String: [String]] = [:]
     static let en = Locale.current.language.languageCode?.identifier != "de"
 
-    func list(_ id: String) -> SparkList? { lists.first { $0.id == id } }
+    func list(_ id: String) -> SparkListe? { lists.first { $0.id == id } }
 
     /// where an entry came from, in the app's language („Stimme“, „Telegram“, …)
     func source(_ k: String) -> String { (sources[k] ?? []).dropFirst(Self.en ? 1 : 0).first ?? "" }
 
     private func take(_ d: [String: Any]) {
         let all = d["lists"] as? [String: [String: Any]] ?? [:]
-        lists = (d["order"] as? [String] ?? []).compactMap { (k: String) -> SparkList? in
+        lists = (d["order"] as? [String] ?? []).compactMap { (k: String) -> SparkListe? in
             guard let l = all[k] else { return nil }
             let en = Self.en && !(l["own"] as? Bool ?? false)
-            return SparkList(id: k, name: (en ? l["name_en"] : l["name"]) as? String ?? k, icon: l["icon"] as? String ?? "",
+            return SparkListe(id: k, name: (en ? l["name_en"] : l["name"]) as? String ?? k, icon: l["icon"] as? String ?? "",
                              own: l["own"] as? Bool ?? false, shop: l["shop"] as? Bool ?? false, onCalendar: l["target"] is [String: Any],
                              error: l["error"] as? String ?? "",
                              items: (l["items"] as? [[String: Any]] ?? []).map { ListEntry($0, en: Self.en) },
@@ -209,7 +209,7 @@ struct ListeView: View {
     }
 
     /// a shopping list by departments in the Spark's order, any other list as it is
-    private func groups(_ l: SparkList) -> [(String, [ListEntry])] {
+    private func groups(_ l: SparkListe) -> [(String, [ListEntry])] {
         guard l.shop else { return l.items.isEmpty ? [] : [("", l.items)] }
         var order: [String] = []
         var by: [String: [ListEntry]] = [:]
@@ -227,7 +227,7 @@ struct ListeView: View {
             .filter { !$0.isEmpty }.joined(separator: " · ")
     }
 
-    private func entry(_ x: ListEntry, _ l: SparkList) -> some View {
+    private func entry(_ x: ListEntry, _ l: SparkListe) -> some View {
         Button {
             Task { await m.send("POST", path + "/done", ["ids": [x.id]]) }
         } label: {

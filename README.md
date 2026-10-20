@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.855** Fix: the iPhone app builds again (GitHub run "iPhone app"); the new Lists view used a type name the app already had
 - **V01.0.854** Lists get a page of their own in the menu (and in the iPhone app under My things): make own lists like DIY store, every entry shows who put it on, when and from where, ticked off entries stay 14 days under "Recently done" with "Bring back", shopping by departments and with amounts, shopping on Today
 - **V01.0.853** E-mail: the buttons of a mail in a fixed bar on top, symbols with name and key on hover, on the phone and iPhone the five most used at the thumb below; calendar: appointments that cannot be changed carry a 🔒 with the reason, the card shows the appointment's note and link
 - **V01.0.852** New mail at once: the Spark keeps the inbox of profiles reading their mail open with IMAP IDLE; new mail is on the E-mail page within seconds and the rules act at once; at most 4 connections, admin switch, off
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.848** For you stage 2: buttons Remind me, Add to calendar, Draft a reply and Draft a cancellation (sending only through the preview), by voice "What do I have to do this week?" and "number two is done", a part in the daily briefing, by itself on deadlines and suspicion; on the iPhone under Today → For you
 - **V01.0.847** Fix: „Morgenbriefing“ as one word gets the real briefing, also at the phone
 - **V01.0.846** "Rule from this …" also takes the mail's subject (without Re:/AW:/Fwd:, free to change), in the panel and on the iPhone
-- **V01.0.845** Fix: the iPhone app builds again (GitHub run "iPhone app" green, TestFlight possible again); two places in E-mail (saving a rule, reply suggestions) did not suit the Swift compiler
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
