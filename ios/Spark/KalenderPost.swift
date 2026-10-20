@@ -57,6 +57,31 @@ struct MailFolder: Identifiable, Hashable {
     var id: String { account + "|" + name }
     /// messages are moved only out of the inbox, an own folder or the archive (postfach._source)
     var movable: Bool { role == "inbox" || role == "folder" || role == "archive" }
+    /// Mails löschen: out of anything but the trash itself (postfach._source_del); in the trash only „Endgültig löschen“
+    var deletable: Bool { !["trash", "all", "group"].contains(role) }
+    var trash: Bool { role == "trash" }
+}
+
+/// Regel-Vorschlag (mailregeln.learn): the third move of one sender into one folder asks whether a rule should do it.
+struct MailHint: Identifiable {
+    let account: String
+    let from: String
+    let folder: String
+    var id: String { account + "|" + from + "|" + folder }
+    init?(_ d: Any?) {
+        guard let d = d as? [String: Any], let a = d["account"] as? String, let f = d["from"] as? String,
+              let o = d["folder"] as? String, !a.isEmpty, !f.isEmpty, !o.isEmpty else { return nil }
+        account = String(a.prefix(20)); from = String(f.prefix(200)); folder = String(o.prefix(200))
+    }
+}
+
+/// „Rückgängig“ right after a delete (or a move): the same mails by their Message-ID back where they were.
+struct MailUndo {
+    let account: String
+    let folder: String
+    let mids: [String]
+    let src: String
+    let text: String
 }
 
 struct MailText {
@@ -69,6 +94,8 @@ struct MailText {
     let files: [String]
     /// the attachments to fetch (Anhang laden, with Mails ordnen): number, name, size in KB
     var parts: [(n: Int, name: String, kb: Int)] = []
+    /// its Message-ID: „Endgültig löschen“ removes only the mail that still carries it
+    var mid = ""
 }
 
 extension SparkAPI {
@@ -173,7 +200,7 @@ extension SparkAPI {
                         parts: (m["parts"] as? [[String: Any]] ?? []).prefix(20).compactMap { p in
                             guard let n = p["n"] as? Int, (0..<20).contains(n) else { return nil }
                             return (n, String((p["name"] as? String ?? "").prefix(120)), p["kb"] as? Int ?? 0)
-                        })
+                        }, mid: String((m["mid"] as? String ?? "").prefix(300)))
     }
 
     /// the name of an opened mail's kept page ("mail-" and its id with the colon as a dash)
@@ -590,6 +617,10 @@ final class PostModel: ObservableObject {
     @Published var picked = Set<String>()
     /// Suche (Mailclient Stufe C): words, von:, betreff:, hat:anhang, ist:markiert; the Spark compares, never runs
     @Published var query = ""
+    /// after a delete or a move: one line, „Rückgängig“ and maybe the Regel-Vorschlag
+    @Published var note: String?
+    @Published var undo: MailUndo?
+    @Published var hint: MailHint?
 
     func load(_ on: Bool) async {
         guard on else { Merken.drop("post"); Merken.dropAll("mail-"); items = []; loading = false; return }
@@ -642,15 +673,67 @@ final class PostModel: ObservableObject {
             .map { ($0.key, $0.value.sorted { $0.date > $1.date }) }
     }
 
-    /// swipe (Dominik 2026-10-19 „5a“): archive, read or unread; the Spark decides what may happen (postfach.py)
+    /// swipe (Dominik 2026-10-19 „5a“): archive, delete, read or unread; the Spark decides what may happen (postfach.py)
     func act(_ x: MailItem, _ action: String) async {
         guard let api = SparkAPI.current else { return }
         do {
-            _ = try await api.call("POST", "api/profile/mail/act",
-                                   body: ["id": x.id, "action": action, "folder": "", "mid": "", "src": folder?.name ?? "INBOX"])
+            let d = try await api.object("POST", "api/profile/mail/act",
+                                         body: ["id": x.id, "action": action, "folder": "", "mid": "", "src": folder?.name ?? "INBOX"])
             if let kept = SparkAPI.keptMail(x.id) { Merken.drop(kept) }
+            done(action, String(x.id.prefix(9)), d)
             error = nil
             await load(true)
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
+
+    /// what the Spark answered to a delete, archive or move: the line with „Rückgängig“, the Regel-Vorschlag
+    func done(_ action: String, _ account: String, _ d: [String: Any]) {
+        hint = MailHint(d["hint"])
+        let into = String((d["folder"] as? String ?? "").prefix(200))
+        var mids = (d["mids"] as? [String] ?? []).prefix(50).map { String($0.prefix(300)) }
+        if let m = d["mid"] as? String, !m.isEmpty { mids = [String(m.prefix(300))] }
+        guard ["delete", "archive", "move"].contains(action), !into.isEmpty, !mids.isEmpty, !account.isEmpty else { undo = nil; return }
+        let text = action == "delete" ? String(localized: "In den Papierkorb gelegt.") : String(localized: "Verschoben nach „\(into)“.")
+        undo = MailUndo(account: account, folder: into, mids: mids, src: folder?.name ?? "INBOX", text: text)
+        note = nil
+    }
+
+    /// „Rückgängig“: back by Message-ID (acts/back), from the folder or the trash they went into
+    func back() async {
+        guard let api = SparkAPI.current, let u = undo else { return }
+        undo = nil
+        hint = nil
+        do {
+            _ = try await api.object("POST", "api/profile/mail/acts/back", body: ["account": u.account, "folder": u.folder, "mids": u.mids, "src": u.src])
+            note = String(localized: "Zurückgeholt.")
+            error = nil
+            await load(true)
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
+
+    /// the Regel-Vorschlag answered: "apply" (rule and the inbox now), "rule" (only the rule), "never" (not asked again)
+    func answer(_ h: MailHint, _ how: String) async {
+        hint = nil
+        guard let api = SparkAPI.current else { return }
+        do {
+            if how == "never" {
+                _ = try await api.object("POST", "api/profile/mail/rules/never", body: ["account": h.account, "from": h.from, "folder": h.folder])
+                note = String(localized: "Gut, dafür frage ich nicht mehr.")
+                return
+            }
+            let d = try await api.object("POST", "api/profile/mail/rules",
+                                         body: ["account": h.account, "when": ["from": h.from], "then": ["folder": h.folder]])
+            note = String(localized: "Regel angelegt: neue Mails von \(h.from) kommen nach „\(h.folder)“.")
+            if how == "apply", let id = d["saved"] as? String, !id.isEmpty {
+                let y = try await api.object("POST", "api/profile/mail/rules/\(id)/apply", body: [:], timeout: 120)
+                note = (note ?? "") + " " + String(localized: "\(y["n"] as? Int ?? 0) Mails aus dem Posteingang dazu.")
+                await load(true)
+            }
+            error = nil
         } catch {
             self.error = error.localizedDescription
         }
@@ -660,9 +743,17 @@ final class PostModel: ObservableObject {
     func actMany(_ action: String, _ into: String = "") async {
         guard let api = SparkAPI.current, !picked.isEmpty else { return }
         do {
-            _ = try await api.object("POST", "api/profile/mail/acts",
-                                     body: ["ids": Array(picked.prefix(50)), "action": action, "folder": into, "src": folder?.name ?? "INBOX"])
+            let d = try await api.object("POST", "api/profile/mail/acts",
+                                         body: ["ids": Array(picked.prefix(50)), "action": action, "folder": into, "src": folder?.name ?? "INBOX"])
             for id in picked { if let kept = SparkAPI.keptMail(id) { Merken.drop(kept) } }
+            // one mailbox moved: „Rückgängig“ as on the page; several mailboxes only the line
+            let moved = (d["moved"] as? [[String: Any]] ?? [])
+            if moved.count == 1, let m = moved.first {
+                done(action, String((m["acct"] as? String ?? "").prefix(20)), ["folder": d["folder"] ?? "", "mids": m["mids"] ?? [String](), "hint": d["hint"] ?? NSNull()])
+            } else {
+                hint = MailHint(d["hint"])
+                undo = nil
+            }
             picked = []
             error = nil
             await load(true)
@@ -687,6 +778,8 @@ struct PostView: View {
     @State private var rules = false
 
     private var manage: Bool { talk.allowed.areas.contains("mailmanage") }
+    /// Mails löschen (own switch, off): only the person, into the mailbox's trash with „Rückgängig“
+    private var del: Bool { manage && talk.allowed.areas.contains("maildelete") && (m.folder?.deletable ?? true) }
     /// the search words the Spark knows besides plain words (mail._words)
     private static let chips: [(String, LocalizedStringKey)] = [("ist:markiert", "★ Markiert"), ("hat:anhang", "📎 Mit Anhang"),
                                                                 ("ist:ungelesen", "Ungelesen"), ("von:", "von: Absender"), ("betreff:", "betreff: Wort")]
@@ -694,6 +787,7 @@ struct PostView: View {
     var body: some View {
         List(selection: $m.picked) {
             if let at = m.keptAt { StandNote(at: at, loading: m.loading).listRowBackground(Color.clear) }
+            if m.undo != nil || m.note != nil || m.hint != nil { done }
             if !m.connected {
                 Text(SparkAPI.way(String(localized: "Noch kein Postfach verbunden. Im Panel unter E-Mail → Einstellungen verbindest du iCloud, Gmail, GMX, web.de oder IMAP.")))
                     .foregroundStyle(.secondary)
@@ -706,11 +800,12 @@ struct PostView: View {
                 Section {
                     ForEach(xs) { x in
                         NavigationLink {
-                            MailView(item: x, box: m.boxes.count > 1 && m.boxes.indices.contains(x.box) ? m.boxes[x.box] : "", folder: m.folder) {
-                                Task { await m.load(true) }
-                            }
+                            MailView(item: x, box: m.boxes.count > 1 && m.boxes.indices.contains(x.box) ? m.boxes[x.box] : "", folder: m.folder, post: m)
                         } label: { row(x) }
                         .swipeActions(edge: .trailing) {
+                            if del {
+                                Button(role: .destructive) { Task { await m.act(x, "delete") } } label: { Label("Löschen", systemImage: "trash") }
+                            }
                             if manage && m.folder?.movable ?? true {
                                 Button { Task { await m.act(x, "archive") } } label: { Label("Archivieren", systemImage: "archivebox") }.tint(.blue)
                             }
@@ -763,6 +858,7 @@ struct PostView: View {
                     Button("Gelesen") { Task { await m.actMany("read") } }
                     Button("Markieren") { Task { await m.actMany("flag") } }
                     if m.folder?.movable ?? true { Button("Archivieren") { Task { await m.actMany("archive") } } }
+                    if del { Button("Löschen", role: .destructive) { Task { await m.actMany("delete") } } }
                     if (m.folder?.movable ?? true) && !moveTo.isEmpty {
                         Menu("Verschieben nach …") {
                             ForEach(moveTo, id: \.self) { f in
@@ -826,6 +922,31 @@ struct PostView: View {
         let words = n.split(whereSeparator: { " .-_\"".contains($0) }).filter { $0.first?.isLetter == true }
         let s = words.count > 1 ? String(words[0].prefix(1)) + String(words[1].prefix(1)) : String((words.first ?? "?").prefix(2))
         return s.uppercased()
+    }
+
+    /// after a delete or move: the line, „Rückgängig“ and the Regel-Vorschlag with its three answers
+    @ViewBuilder private var done: some View {
+        Section {
+            if let u = m.undo {
+                HStack {
+                    Text(verbatim: u.text)
+                    Spacer()
+                    Button("Rückgängig") { Task { await m.back() } }.buttonStyle(.borderless)
+                }
+            }
+            if let n = m.note { Text(verbatim: n).foregroundStyle(.secondary) }
+            if let h = m.hint {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Mails von \(h.from) legst du oft nach „\(h.folder)“. Soll eine Regel das übernehmen?")
+                    Button("Regel anlegen und gleich anwenden") { Task { await m.answer(h, "apply") } }.buttonStyle(.borderedProminent)
+                    HStack {
+                        Button("Nur Regel") { Task { await m.answer(h, "rule") } }.buttonStyle(.bordered)
+                        Button("Nicht mehr fragen") { Task { await m.answer(h, "never") } }.buttonStyle(.bordered)
+                    }
+                }
+                .padding(.vertical, 4)
+            }
+        }
     }
 
     private func row(_ x: MailItem) -> some View {
@@ -916,7 +1037,7 @@ struct MailFolders: View {
                     } header: {
                         Text(verbatim: a.name)
                     } footer: {
-                        Text("Eigene Ordner: wischen oder lange drücken zum Umbenennen oder Entfernen (nur leere). Gelöscht wird nie eine Mail.")
+                        Text("Eigene Ordner: wischen oder lange drücken zum Umbenennen oder Entfernen (nur leere). Ein Ordner mit Mails bleibt stehen.")
                     }
                 }
                 if let error { Text(SparkAPI.way(error)).foregroundStyle(.red) }
@@ -953,6 +1074,18 @@ struct MailFolders: View {
         .padding(.leading, CGFloat(min(f.depth, 4)) * 14)
     }
 
+    /// the folders of the mail program by their German (or English) name, as on the page (post.js POST_ROLE)
+    static func roleName(_ role: String) -> String? {
+        switch role {
+        case "sent": return String(localized: "Gesendet")
+        case "drafts": return String(localized: "Entwürfe")
+        case "archive": return String(localized: "Archiv")
+        case "trash": return String(localized: "Papierkorb")
+        case "junk": return String(localized: "Spam")
+        default: return nil
+        }
+    }
+
     static func icon(_ role: String) -> String {
         switch role {
         case "inbox": return "tray"
@@ -974,8 +1107,10 @@ struct MailFolders: View {
                 let fs = (a["folders"] as? [[String: Any]] ?? []).prefix(80).compactMap { f -> MailFolder? in
                     guard let n = f["name"] as? String, !n.isEmpty else { return nil }
                     let last = delim.isEmpty ? n : String(n.components(separatedBy: delim).last ?? n)
-                    return MailFolder(account: id, name: n, title: n == "INBOX" ? String(localized: "Posteingang") : String(last.prefix(80)),
-                                      role: f["role"] as? String ?? "folder", depth: f["depth"] as? Int ?? 0,
+                    let role = f["role"] as? String ?? "folder", depth = f["depth"] as? Int ?? 0
+                    return MailFolder(account: id, name: n, title: n == "INBOX" ? String(localized: "Posteingang")
+                                      : depth == 0 ? (Self.roleName(role) ?? String(last.prefix(80))) : String(last.prefix(80)),
+                                      role: role, depth: depth,
                                       unseen: f["unseen"] as? Int ?? 0, own: f["own"] as? Bool ?? false)
                 }
                 return Box(id: id, name: String((a["name"] as? String ?? "").prefix(60)), folders: Array(fs), error: a["error"] as? Bool ?? false)
@@ -1316,7 +1451,8 @@ struct MailView: View {
     let box: String
     /// nil: the inbox; else the folder the mail is in (Ordner)
     let folder: MailFolder?
-    let changed: () -> Void
+    /// the list: it reloads and shows „Rückgängig“ and the Regel-Vorschlag after a delete or move
+    let post: PostModel
     @State private var m: MailText?
     @State private var keptAt: Date?
     @State private var error: String?
@@ -1330,6 +1466,7 @@ struct MailView: View {
     @State private var ruleFrom: MailRule?
     @State private var file: URL?
     @State private var fetching: Int?
+    @State private var erasing = false
     private var flagged: Bool { flaggedNow ?? item.flagged }
 
     var body: some View {
@@ -1387,6 +1524,11 @@ struct MailView: View {
                     .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Fertig") { asEvent = false } } }
             }
         }
+        .confirmationDialog("Diese Mail endgültig löschen?", isPresented: $erasing, titleVisibility: .visible) {
+            Button("Endgültig löschen", role: .destructive) { Task { await act("erase", "") } }
+        } message: {
+            Text("Sie ist danach auch im Postfach weg. Das lässt sich nicht rückgängig machen.")
+        }
     }
 
     /// the subject without Re:, AW:, Fwd: … as the line for Schnell eintragen
@@ -1400,7 +1542,11 @@ struct MailView: View {
 
     @ViewBuilder private var actions: some View {
         if talk.allowed.areas.contains("mailmanage") {
-            Section {} footer: { Text("Gelöscht wird nie. Im Panel holt „Rückgängig“ eine verschobene Mail sofort zurück.") }
+            Section {} footer: {
+                talk.allowed.areas.contains("maildelete")
+                    ? Text("Löschen legt die Mail in den Papierkorb, „Rückgängig“ holt sie zurück. Endgültig nur im Papierkorb nach Rückfrage.")
+                    : Text("Gelöscht wird nie. „Rückgängig“ holt eine verschobene Mail sofort zurück.")
+            }
         }
     }
 
@@ -1452,6 +1598,15 @@ struct MailView: View {
                 }
                 if a.contains("calendar") {
                     Button { asEvent = true } label: { Label("Als Termin", systemImage: "calendar.badge.plus") }
+                }
+                if a.contains("mailmanage") && a.contains("maildelete") {
+                    if folder?.trash == true {
+                        Spacer()
+                        Button(role: .destructive) { erasing = true } label: { Label("Endgültig löschen", systemImage: "trash.slash") }.disabled(busy || m?.mid.isEmpty != false)
+                    } else if folder?.deletable ?? true {
+                        Spacer()
+                        Button(role: .destructive) { Task { await act("delete", "") } } label: { Label("Löschen", systemImage: "trash") }.disabled(busy)
+                    }
                 }
             }
         }
@@ -1523,10 +1678,13 @@ struct MailView: View {
         busy = true
         defer { busy = false }
         do {
-            _ = try await api.call("POST", "api/profile/mail/act",
-                                   body: ["id": item.id, "action": action, "folder": into, "mid": "", "src": folder?.name ?? "INBOX"])
+            var b: [String: Any] = ["id": item.id, "action": action, "folder": into, "mid": "", "src": folder?.name ?? "INBOX"]
+            if action == "erase" { b["mid"] = m?.mid ?? ""; b["sure"] = true }   // only after the question below
+            let d = try await api.object("POST", "api/profile/mail/act", body: b)
             if let kept = SparkAPI.keptMail(item.id) { Merken.drop(kept) }
-            changed()
+            post.done(action, String(item.id.prefix(9)), d)
+            if action == "erase" { post.note = String(localized: "Endgültig gelöscht.") }
+            Task { await post.load(true) }
             if action == "read" || action == "unread" {
                 note = action == "read" ? String(localized: "Als gelesen markiert.") : String(localized: "Als ungelesen markiert.")
             } else if action == "flag" || action == "unflag" {

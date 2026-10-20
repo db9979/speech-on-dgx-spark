@@ -320,6 +320,10 @@ FEATURES = (
       guide="mailsend"),
     # mailidle.py (Vorwärmen Stufe C, Dominik 2026-10-19 „6a“): IMAP IDLE for profiles that read mail lately, new mail
     # and its rules within seconds, at most mailidle.MAX_OPEN connections
+    # postfach.py „Löschen“ (Dominik 2026-10-20): the person moves a message into the trash and back, or removes one
+    # there for good after the page's own question; rules, the model, „Für dich“ and the voice never delete
+    F("maildelete", "Mails löschen", "Delete mail", "post", ("mail_delete", "mail_manage", "mail"), parent="mailmanage",
+      me="mailbox", guide="maildelete"),
     F("mailidle", "Neue Mails sofort", "New mail at once", "post", ("mail_idle", "mail"), parent="mail", me="mailbox",
       guide="mailidle"),
     F("mailstil", "Mailstil lernen", "Learn mail style", "post", ("mail_style",), parent="mail", me="mailbox", guide="mailstil"),

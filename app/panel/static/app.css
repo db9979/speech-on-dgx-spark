@@ -1101,7 +1101,7 @@ select.ld-chip{width:auto;max-width:180px;padding:3px 8px}
   main>section.on:has(.ld-frame)>.card :is(.ic-tabwrap,.ic-tabbody):has(.ld-frame){display:flex;flex-direction:column;flex:1;min-height:0}
   .ld-frame{display:flex;flex-direction:column;flex:1;min-height:0}
   .ld-frame>.ld-split{display:grid;flex:1;min-height:0;grid-template-rows:minmax(0,1fr);align-items:stretch}
-  .ld-frame>.ld-split>.ld-list,.ld-frame>.ld-split>.ld-detail{position:static;align-self:stretch;min-height:0;max-height:none;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
+  .ld-frame>.ld-split>.ld-list,.ld-frame>.ld-split>.ld-detail,.ld-frame>.ld-split>.postfold{position:static;align-self:stretch;min-height:0;max-height:none;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
   .ld-frame>.ld-split>.ld-detail{padding-bottom:84px}   /* its end scrolls out from under the floating face */
 }
 @container (max-width:659.98px){
@@ -1853,6 +1853,32 @@ body.adm .post .postfoot{bottom:calc(59px + env(safe-area-inset-bottom))}
 .post .postsugs{display:grid;gap:6px}.post .postsug{display:block;width:100%;text-align:left;border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--card);color:inherit;font:inherit;cursor:pointer;white-space:pre-wrap}.post .postsug i{display:block;font-style:normal;font-size:12px;font-weight:600;color:var(--acc)}.post .postsug.on{border-color:var(--acc);box-shadow:0 0 0 2px color-mix(in srgb,var(--acc) 25%,transparent)}.post .posttone{flex-wrap:wrap;gap:6px;margin-top:6px}
 .post .postreply{margin-top:14px;padding-top:10px;border-top:1px solid var(--line)}.post .postreply .postdrop{float:right}.post .postform{display:grid;gap:4px;margin-top:8px}.post .postform input,.post .postform select,.post .postform textarea{width:100%;max-width:100%;box-sizing:border-box}.post .postform label{margin-top:6px}
 #parwrap[hidden]{display:none}
+/* three boxes alike (Dominik 2026-10-20 „gleiche Boxen“): list, mail and folders are cards with the same edge, corners and
+   a head line; the folders stand right of the mail („Ordner“, key O), on narrow screens they come in from the right */
+.post .posthead{position:sticky;top:0;z-index:3;display:flex;align-items:center;gap:8px;min-height:44px;padding:0 10px;margin:0 0 4px;
+  background:var(--card);border-bottom:1px solid var(--line)}
+.post .posthead b{font-size:14.5px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.post .posthead small{color:var(--mut);font-size:12.5px;white-space:nowrap}.post .posthead .pib{margin-left:auto;width:32px;height:32px}
+.post .postfbtn{display:inline-flex;align-items:center;gap:6px;position:relative}.post .postfbtn svg{width:17px;height:17px}
+.post .postfbtn.on{color:var(--acc);border-color:color-mix(in srgb,var(--acc) 40%,var(--line));background:color-mix(in srgb,var(--acc) 12%,var(--card))}
+.post .postfold[hidden]{display:none}
+.post .postfold{background:var(--card);border:1px solid var(--line);border-radius:14px;min-width:0}
+.post .postfold .posthead{border-radius:14px 14px 0 0}
+.post .postfl{padding:0 6px 8px}.post .postfl .ld-row{border-bottom:0;padding:7px 8px}.post .postfl .ld-grp{padding:12px 8px 4px}
+.post .postfi{flex:none;width:22px;display:grid;place-items:center;color:var(--mut)}.post .postfi svg{width:18px;height:18px}
+.post .postfl .ld-row.on .postfi,.post .postfl .ld-row.on b{color:var(--acc)}
+.post .postfl .ld-row.drop,.post .pib.drop{outline:2px dashed var(--acc);outline-offset:-2px;background:color-mix(in srgb,var(--acc) 16%,var(--card));color:var(--acc)}
+.post .posthint{display:flex;flex-wrap:wrap;align-items:center;gap:8px}.post .posthint .row{display:flex;flex-wrap:wrap;gap:6px}
+@container (min-width:900px){
+  .post .ld-list{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:0 6px 8px}
+  .post .ld-list>.posthead{margin:0 -6px 4px;border-radius:14px 14px 0 0}
+  .post.postfolds .ld-split{display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:16px;align-items:start}
+  .post.postfolds .ld-split:has(>.ld-detail:not([hidden])){grid-template-columns:minmax(260px,340px) minmax(0,1fr) 220px}
+}
+@container (max-width:899.98px){
+  .post .ld-list>.posthead{position:static;background:none;padding:0 8px}
+  .post .postfold{position:fixed;top:0;right:0;bottom:0;width:min(300px,86vw);z-index:70;border-radius:16px 0 0 16px;box-shadow:-12px 0 40px rgba(20,24,36,.2);overflow-y:auto;overscroll-behavior:contain}
+}
 /* touch screens: small marks keep their look, but a finger hits at least 44 px (code check 19.10. D11) */
 @media (pointer:coarse){.hqbtn,.fjump button,.ffilt button,.wayl{position:relative}
   .hqbtn::after{content:'';position:absolute;inset:-12px}

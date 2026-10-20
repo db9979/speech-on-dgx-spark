@@ -308,6 +308,22 @@ class Things(unittest.TestCase):
         self.assertEqual(a.get("/api/bilder").status_code, 401)
         self.assertFalse(a.get("/api/iphone/hello").json()["areas"]["bilder"])
 
+    def test_delete_mail_shows_only_with_its_own_switch(self):
+        """Mails löschen in the app (iphone.FLAGS): hello names it only with its own admin switch (off); the
+        paths stay those of Mails ordnen, where the Spark checks the switch again (postfach._may_delete)."""
+        helpers.keep_chat(self, "mail_delete")
+        c, a = self.app("Delia")
+        self.assertFalse(a.get("/api/iphone/hello").json()["areas"]["maildelete"])
+        helpers.set_config(mail_delete=True)
+        self.assertTrue(a.get("/api/iphone/hello").json()["areas"]["maildelete"])
+        r = a.post("/api/profile/mail/act", json={"id": "x", "action": "delete"})
+        self.assertNotEqual(r.status_code, 401)   # reaches the mail checks (no such mail), not refused by the key
+        helpers.set_config(deny={"maildelete": [self.uid("Delia")]})
+        try:
+            self.assertFalse(a.get("/api/iphone/hello").json()["areas"]["maildelete"])
+        finally:
+            helpers.set_config(deny={})
+
     def test_quick_add_from_the_app(self):
         """Schnell eintragen and „Als Termin“ in the app (V01.0.82x catch-up, Dominik 2026-10-19 „a“): the Spark reads
         the line with its fixed rules for the app's key too, only with the calendar's release; nothing is saved."""

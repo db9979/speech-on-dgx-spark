@@ -33,6 +33,7 @@ _N = itertools.count(1)
 # functions with a page under Ich (account.WHO) that keep no „Daten löschen“ card, each with its reason
 OHNE = {
     "mailmanage": "ordnet nur Mails im eigenen Postfach, speichert nichts im Spark; die Mails löscht das Postfach selbst",
+    "maildelete": "legt nur Mails im eigenen Postfach in dessen Papierkorb (endgültig nur dort), speichert nichts im Spark",
     "mailsend": "gesendete Mails liegen im Postfach unter Gesendet; im Spark bleibt nur die Vorschau höchstens 10 Minuten, ein Vorschlag per Sprache 5 Minuten",
     "bildaendern": "geänderte und hochgeladene Bilder liegen bei den Bildern (features.OWN bilder, Ich → Bilder)",
     "documents": "alle Dokumente auf einmal wären zu einschneidend; jedes Dokument hat sein eigenes Löschen unter Ich → Dokumente",

@@ -11341,16 +11341,6 @@
         }
       }
     },
-    "Gelöscht wird nie. Im Panel holt „Rückgängig“ eine verschobene Mail sofort zurück.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nothing is ever deleted. In the panel, \"Undo\" brings a moved mail straight back."
-          }
-        }
-      }
-    },
     "So geht die Mail raus": {
       "localizations": {
         "en": {
@@ -12087,16 +12077,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "This mailbox was not reachable."
-          }
-        }
-      }
-    },
-    "Eigene Ordner: wischen oder lange drücken zum Umbenennen oder Entfernen (nur leere). Gelöscht wird nie eine Mail.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Own folders: swipe or long-press to rename or remove (empty ones only). A mail is never deleted."
           }
         }
       }
@@ -13547,6 +13527,226 @@
           "stringUnit": {
             "state": "translated",
             "value": "Computers"
+          }
+        }
+      }
+    },
+    "In den Papierkorb gelegt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moved to the trash."
+          }
+        }
+      }
+    },
+    "Verschoben nach „%@“.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moved to \"%@\"."
+          }
+        }
+      }
+    },
+    "Zurückgeholt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brought back."
+          }
+        }
+      }
+    },
+    "Gut, dafür frage ich nicht mehr.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fine, I will not ask about this again."
+          }
+        }
+      }
+    },
+    "Regel angelegt: neue Mails von %@ kommen nach „%@“.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rule made: new mails from %@ go into \"%@\"."
+          }
+        }
+      }
+    },
+    "%lld Mails aus dem Posteingang dazu.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld mails from the inbox with it."
+          }
+        }
+      }
+    },
+    "Mails von %@ legst du oft nach „%@“. Soll eine Regel das übernehmen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You often put mails from %@ into \"%@\". Should a rule do that?"
+          }
+        }
+      }
+    },
+    "Regel anlegen und gleich anwenden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make the rule and apply it now"
+          }
+        }
+      }
+    },
+    "Nur Regel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only the rule"
+          }
+        }
+      }
+    },
+    "Nicht mehr fragen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Don't ask again"
+          }
+        }
+      }
+    },
+    "Endgültig löschen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete for good"
+          }
+        }
+      }
+    },
+    "Endgültig gelöscht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deleted for good."
+          }
+        }
+      }
+    },
+    "Diese Mail endgültig löschen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete this mail for good?"
+          }
+        }
+      }
+    },
+    "Sie ist danach auch im Postfach weg. Das lässt sich nicht rückgängig machen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It is then gone from the mailbox too. This cannot be undone."
+          }
+        }
+      }
+    },
+    "Löschen legt die Mail in den Papierkorb, „Rückgängig“ holt sie zurück. Endgültig nur im Papierkorb nach Rückfrage.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete puts the mail into the trash, \"Undo\" brings it back. For good only in the trash, after a question."
+          }
+        }
+      }
+    },
+    "Gelöscht wird nie. „Rückgängig“ holt eine verschobene Mail sofort zurück.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing is ever deleted. \"Undo\" brings a moved mail back at once."
+          }
+        }
+      }
+    },
+    "Eigene Ordner: wischen oder lange drücken zum Umbenennen oder Entfernen (nur leere). Ein Ordner mit Mails bleibt stehen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Own folders: swipe or long-press to rename or remove (empty ones only). A folder holding mails stays."
+          }
+        }
+      }
+    },
+    "Gesendet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sent"
+          }
+        }
+      }
+    },
+    "Entwürfe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drafts"
+          }
+        }
+      }
+    },
+    "Archiv": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archive"
+          }
+        }
+      }
+    },
+    "Papierkorb": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trash"
+          }
+        }
+      }
+    },
+    "Spam": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Junk"
           }
         }
       }

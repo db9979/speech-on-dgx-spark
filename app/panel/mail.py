@@ -747,7 +747,7 @@ def show(uid, ref, folder="INBOX"):
     text, names = plain(msg)
     return {"id": str(ref), "from": known(uid, _addr(msg.get("From", ""))), "to": _hdr(msg.get("To", ""))[:200],
             "date": int(_date(msg.get("Date")).timestamp()), "subject": _hdr(msg.get("Subject", "")),
-            "text": text, "files": names[:20],
+            "text": text, "files": names[:20], "mid": re.sub(r"[\s\x00-\x1f]", "", str(msg.get("Message-ID", "")))[:300],
             "parts": [{"n": i, "name": name, "kb": max(1, size // 1024)} for i, (_, name, size) in enumerate(files(msg)[:20])]}
 
 

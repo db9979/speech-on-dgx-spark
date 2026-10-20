@@ -272,13 +272,13 @@ Home Assistant, Mail, Kalender, Aufgaben, Wetter, reMarkable, MCP und was der Sp
 | `app/panel/kalenderspiegel.py` | Spark-Kalender: verschlüsselte Kopie jedes CalDAV-Kalenders, holt nur Änderungen, Änderungen der Seite sofort |
 | `app/panel/mail.py` | Mail lesen per IMAP |
 | `app/panel/mailidle.py` | Neue Mails sofort: IMAP IDLE für Profile, die ihre Mails gerade lesen, höchstens 4 Verbindungen |
-| `app/panel/mailregeln.py` | Mail-Regeln der Seite E-Mail: wenn Absender/Betreff, dann Ordner, gelesen, markieren; nie löschen |
+| `app/panel/mailregeln.py` | Mail-Regeln der Seite E-Mail: wenn Absender/Betreff, dann Ordner, gelesen, markieren; nie löschen; Regel-Vorschlag |
 | `app/panel/mailstil.py` | Mailstil: lernt aus gesendeten Mails, wie das Profil schreibt, für Mail-Entwürfe |
 | `app/panel/mcp.py` | Werkzeuge von MCP-Servern, die der Admin einträgt |
 | `app/panel/mcpserver.py` | Der Spark als MCP-Server für andere Programme |
 | `app/panel/meinmcp.py` | Eigene MCP-Dienste pro Profil |
 | `app/panel/parcels.py` | Pakete aus Versand-Mails |
-| `app/panel/postfach.py` | Mails ordnen auf der Seite E-Mail: gelesen, markieren, Archiv, Ordner, Mehrfachauswahl, nie löschen |
+| `app/panel/postfach.py` | Mails ordnen auf der Seite E-Mail: gelesen, markieren, Archiv, Ordner, Mehrfachauswahl, Löschen in den Papierkorb |
 | `app/panel/proactive.py` | Meldet sich von selbst, wenn etwas Echtes passiert |
 | `app/panel/remarkable.py` | reMarkable-Notizbücher als Wissen |
 | `app/panel/rmaufgaben.py` | Aufgabenblatt zum Ankreuzen aufs reMarkable |
@@ -1458,7 +1458,7 @@ flowchart TD
 5. <a id="kn-sicherheit-s5"></a>**Freigabe und Sperre**: Jede Funktion ist aus, bis der Admin sie freigibt; dann gilt sie für jedes Profil, außer der Admin sperrt einzelne (features.blocked). Was nicht erlaubt ist, wird gar nicht erst als Werkzeug angeboten.
 6. <a id="kn-sicherheit-s6"></a>**Fremdes bleibt Daten**: Was ein Werkzeug von außen liest, kommt als markierter Datenblock zum Modell. Ab da sind 13 handelnde Werkzeuge gesperrt, auch im nächsten Zug, und nichts davon wird ins Gedächtnis gelernt. Verbindungen nach außen laufen nur über den Wächter (netguard.allowed).
 7. <a id="kn-sicherheit-s7"></a>**Sprachmodell schlägt vor**: Das Modell formuliert und wählt aus dem, was nach den Schritten davor übrig ist. Ruft es ein Werkzeug, das nicht angeboten war, läuft es nicht.
-8. <a id="kn-sicherheit-s8"></a>**Ändert es etwas?**: Lesen geht sofort. Wer etwas ändert (Licht, Mail senden, Termin, Anruf), legt einen Vorschlag ab; er läuft erst nach einem schlichten „Ja“ auf genau diesen Vorschlag, vom selben Gerät. Home Assistant nur aus einer Allowlist, Mail wird nie gelöscht.
+8. <a id="kn-sicherheit-s8"></a>**Ändert es etwas?**: Lesen geht sofort. Wer etwas ändert (Licht, Mail senden, Termin, Anruf), legt einen Vorschlag ab; er läuft erst nach einem schlichten „Ja“ auf genau diesen Vorschlag, vom selben Gerät. Home Assistant nur aus einer Allowlist. Mail löscht nur die Person selbst (in den Papierkorb, endgültig nur nach Rückfrage), nie das Modell.
 9. <a id="kn-sicherheit-s9"></a>**Antwort prüfen**: Zeiten, Daten und Beträge, die nirgends in den Quellen stehen, fallen heraus (answercheck.unsupported). Passwörter, Codes und Schlüssel werden nie gesprochen (textnorm.hide_secrets). Die Oberfläche zeigt Modelltext nie als HTML.
 10. <a id="kn-sicherheit-s10"></a>**Spuren**: Logs nur mit festen Wörtern und Zahlen. Änderungen an Zugängen und Schutz schreibt guard.log mit einer SHA-256-Kette; der Wachposten meldet Auffälliges an die Admins. Geheimnisse liegen versiegelt im vault (vault.seal).
 

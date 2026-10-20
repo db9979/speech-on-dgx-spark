@@ -41,7 +41,7 @@ Vor jedem Commit durchgehen. In der Antwort an Dominik kurz nennen, welche Punkt
 - [ ] Es gibt pro Profil genau einen offenen Vorschlag. Er gilt nur für dasselbe Gerät, ein schlichtes „Ja“ und 15 Minuten. Jede neue Antwort verwirft ihn.
 - [ ] Die Stimmprüfung für „Ja“ gehört zur selben Aufnahme wie der Text.
 - [ ] Home Assistant läuft mit einer Allowlist von Domains, nicht mit einer Sperrliste (`script`, `automation`, `button` usw. bleiben draußen).
-- [ ] Mail wird nie gelöscht. Verschieben nur mit geprüfter UIDVALIDITY und exaktem Abgleich von Absender und Message-ID nach SEARCH.
+- [ ] Mail löscht nur die Person selbst auf der Seite E-Mail (Schalter „Mails löschen“, aus): in den Papierkorb mit „Rückgängig“, endgültig nur im Papierkorb nach eigener Rückfrage und nur genau diese Mail (gleiche Message-ID, UID EXPUNGE, nie ein blankes EXPUNGE); Modell, Regeln, „Für dich“ und Stimme nie. Verschieben nur mit geprüfter UIDVALIDITY und exaktem Abgleich von Absender und Message-ID nach SEARCH.
 
 ## Anfragen nach außen (SSRF)
 - [ ] Nur http(s). Loopback, private und link-local Adressen sind gesperrt, außer der Admin erlaubt das Heimnetz ausdrücklich.

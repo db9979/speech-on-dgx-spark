@@ -221,6 +221,7 @@ WITHOUT = {
     "mailsend": "kein Werkzeug fürs Modell: Vorschau-Blatt auf der Seite, per Sprache feste Sätze des Panels (senden.answer) mit Ja",
     "mailmanage": "nur Knöpfe auf der Seite E-Mail (gelesen, Archiv, Verschieben); per Stimme ordnet Postfach aufräumen",
     "ichweiss": "eine Seite unter Ich → Was ich über dich weiß; Fristen und Rückblick per Sprache über fuer_dich",
+    "maildelete": "kein Werkzeug: nur Knopf, Taste oder Ziehen auf der Seite E-Mail; Modell, Regeln, Für dich und Stimme löschen nie",
     "mailidle": "kein Werkzeug: hält die Posteingänge per IMAP IDLE offen, die Seite E-Mail und die Mail-Regeln bekommen neue Mails in Sekunden",
     "mailstil": "wirkt in jedem Mail-Entwurf (mail_draft, Begleiter); gelernt wird nur auf Knopfdruck unter E-Mail → Einstellungen",
     "schreibapps": "Kanal in anderen Programmen",

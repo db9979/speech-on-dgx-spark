@@ -11,23 +11,30 @@ and takes that back right after. Writing to the mailbox knows exactly these four
     inbox (EXAMINE, PEEK); an own folder created, renamed or, when it is empty and has no folders inside, removed.
     Folders of the mail program (inbox, sent, drafts, trash, junk, archive) and the folders of „Mails aufräumen“
     (tidy.py, renamed there) are never renamed or removed.
-  - nothing else: never into the trash, the junk, the sent or the drafts folder, never a message deleted
+  - Löschen (Dominik 2026-10-20, own switch „Mails löschen“, chat.mail_delete, off): only the person on the page
+    (button, key, drag) moves a message into the mailbox's trash, and takes it back from there; „Endgültig löschen“
+    removes one message of the trash, after its own question on the page, matched by its Message-ID (UID EXPUNGE of
+    exactly that message, never a plain EXPUNGE). Rules, the model, „Für dich“ and the voice never delete.
+  - nothing else: an ordinary move never goes into the trash, the junk, the sent or the drafts folder
 
 A button on the page is the person's own yes. The connection is tidy.Box (netguard.USER, TLS only); MOVE, or COPY
 and then UID EXPUNGE of exactly the confirmed original where MOVE is missing (iCloud). Logs carry fixed words and
 the profile's log name only, never a sender, a subject or a folder.
 """
+import email.utils
 import imaplib
 import re
 import threading
 import time
 
+import features
 import mail
 import notaus
 import profiles
 import tidy
 
-ACTIONS = ("read", "unread", "flag", "unflag", "archive", "move", "back")
+ACTIONS = ("read", "unread", "flag", "unflag", "archive", "move", "back", "delete", "erase")
+DELETE = ("delete", "erase")   # only with „Mails löschen“ (features maildelete)
 MANY = 50          # messages one request of the page changes at most (Mehrfachauswahl)
 TREE_MAX = 80      # folders per mailbox the page lists
 LIST_MAX = 50      # messages of a folder the page lists (newest first)
@@ -38,7 +45,18 @@ NEVER = re.compile(r"(?i)^(trash|papierkorb|gelöscht\w*|deleted( items| message
                    r"sent( items| messages)?|gesendet\w*|drafts?|entwürfe)$")
 _lock = threading.Lock()
 _trees = {}   # uid -> (time, tree): the folder tree of the page, memory only
-_today = {"day": "", "n": 0}   # Live: how many messages were ordered on the page today (a number, never which)
+_today = {"day": "", "n": 0, "del": 0}   # Live: messages ordered / deleted on the page today (numbers, never which)
+
+
+def _trash(box):
+    """The mailbox's trash folder (the server's \\Trash flag first, else its usual name), or None."""
+    return next((n for n, x in box.boxes.items() if "\\trash" in x["flags"]), None) \
+        or next((n for n in box.boxes if role(box, n) == "trash"), None)
+
+
+def _may_delete(uid, action):
+    if action in DELETE and not features.allowed("maildelete", uid):
+        raise ValueError("Löschen ist aus (Funktionen → E-Mail lesen → Mails löschen).")
 
 
 def _account(uid, ref):
@@ -114,17 +132,33 @@ def _outcome(uid, action, fn, ref, n=1, inbox=True):
     with _lock:
         day = time.strftime("%Y-%m-%d")
         if _today["day"] != day:
-            _today.update(day=day, n=0)
+            _today.update(day=day, n=0, **{"del": 0})
         _today["n"] += n
+        if action in DELETE:
+            _today["del"] += n
     if n == 1:
         mail.changed(uid, ref if inbox else "", action)   # the cached listing follows at once, no new fetch
-    if n > 1 or action in ("archive", "move", "back"):
+    if n > 1 or action in ("archive", "move", "back", "delete", "erase"):
         _trees.pop(uid, None)
     return out
 
 
+def _hint(uid, account_id, senders, folder):
+    """Regel-Vorschlag: the moves of one sender into one folder are counted (mailregeln.learn); the third asks."""
+    import mailregeln
+    try:
+        return mailregeln.learn(uid, account_id, senders, folder)
+    except Exception as e:   # a hint never stops the move that already happened
+        print(f"mail: rule hint failed ({type(e).__name__}) | {profiles.log_name(profiles.by_id(uid))}", flush=True)
+        return None
+
+
 def today():
     return _today["n"] if _today["day"] == time.strftime("%Y-%m-%d") else 0
+
+
+def deleted_today():
+    return _today["del"] if _today["day"] == time.strftime("%Y-%m-%d") else 0
 
 
 def role(box, name):
@@ -252,6 +286,41 @@ def _source(box, src, moving):
     return src
 
 
+def _source_del(box, src):
+    """The folder a message is deleted out of: anything but the trash itself, a group or Gmail's views."""
+    if src.upper() == "INBOX":
+        return "INBOX"
+    if src not in box.boxes or role(box, src) in ("group", "all", "trash"):
+        raise LookupError("no such folder")
+    return src
+
+
+def _erase(box, u, mid):
+    """One message of the selected trash removed for good: exactly this UID, only when its Message-ID is the one the
+    page showed, with UID EXPUNGE (UIDPLUS) so no other message marked deleted goes with it."""
+    if "UIDPLUS" not in box.caps:
+        raise ValueError("the mail server cannot remove one message alone (no UIDPLUS)")
+    if not mid or tidy.clean_mid(_mid(box, u)) != tidy.clean_mid(mid):
+        raise LookupError("the message is not there")
+    typ, _ = box.c.uid("STORE", str(u), "+FLAGS.SILENT", "(\\Deleted)")
+    if typ != "OK":
+        raise ValueError(f"the mail server refused ({typ})")
+    typ, _ = box.c.uid("EXPUNGE", str(u))
+    if typ != "OK":
+        box.c.uid("STORE", str(u), "-FLAGS.SILENT", "(\\Deleted)")
+        raise ValueError(f"the mail server refused ({typ})")
+
+
+def _senders(box, uids):
+    """The sender addresses of messages about to move (for the rule hint), lower case."""
+    out = []
+    for h in box.headers(uids, "FROM").values():
+        a = email.utils.parseaddr(str(h.get("From") or ""))[1].strip().lower()
+        if re.fullmatch(r"[^@\s<>\"]{1,64}@[\w.\-]+\.\w{2,}", a):
+            out.append(a)
+    return out
+
+
 def _store(box, uids, action):
     flag = "(\\Seen)" if action in ("read", "unread") else "(\\Flagged)"
     sign = "+" if action in ("read", "flag") else "-"
@@ -275,13 +344,15 @@ def _act(uid, ref, action, folder, mid, src="INBOX"):
     if action not in ACTIONS:
         raise ValueError("unknown action")
     notaus.stop("aktion", uid)   # the Notaus (or the profile's own) holds every action off (notaus.py)
+    _may_delete(uid, action)
     acct, u = _account(uid, ref)
     with tidy.Box(acct) as box:
         targets, arch = _targets(box)
+        trash = _trash(box)
         if action == "back":
-            # right after archive or move: the same message (its Message-ID) from that folder back where it was
-            home = _source(box, src or "INBOX", True)
-            if folder not in targets or not mid:
+            # right after archive, move or delete: the same message (its Message-ID) from that folder back where it was
+            home = _source(box, src or "INBOX", True) if folder != trash else _source_del(box, src or "INBOX")
+            if (folder not in targets and not (trash and folder == trash)) or not mid:
                 raise ValueError("only back from an own folder, with the message's id")
             box.select(folder, write=True)
             hits = box.find_mid(mid)
@@ -289,6 +360,22 @@ def _act(uid, ref, action, folder, mid, src="INBOX"):
                 raise LookupError("the message is not there")
             _move(box, hits, home)
             return {"done": action, "mid": mid, "folder": home}
+        if action in DELETE:
+            if not trash:
+                raise ValueError("this mailbox has no trash folder")
+            if action == "erase":
+                if (src or "") != trash:
+                    raise ValueError("only out of the trash")
+                box.select(trash, write=True)
+                _erase(box, u, mid)
+                return {"done": action, "mid": "", "folder": ""}
+            here = _source_del(box, src or "INBOX")
+            box.select(here, write=True)
+            if not box.headers([u], "MESSAGE-ID"):
+                raise LookupError("the message is not there")
+            m = _mid(box, u)
+            _move(box, [u], trash)
+            return {"done": action, "mid": m, "folder": trash}
         moving = action in ("archive", "move")
         here = _source(box, src or "INBOX", moving)
         box.select(here, write=True)
@@ -299,29 +386,37 @@ def _act(uid, ref, action, folder, mid, src="INBOX"):
             return {"done": action, "mid": "", "folder": ""}
         dst = _dest(box, targets, arch, action, folder, here)
         m = _mid(box, u)
+        who = _senders(box, [u])
         _move(box, [u], dst)
-        return {"done": action, "mid": m, "folder": dst}
+        return {"done": action, "mid": m, "folder": dst, "hint": _hint(uid, acct["id"], who, dst)}
 
 
 def _act_many(uid, refs, action, folder, src="INBOX"):
-    if action not in ACTIONS or action == "back":
+    if action not in ACTIONS or action in ("back", "erase"):
         raise ValueError("unknown action")
     refs = list(dict.fromkeys(str(r) for r in refs))
     if not refs or len(refs) > MANY:
         raise ValueError(f"one to {MANY} messages at a time")
     notaus.stop("aktion", uid)
+    _may_delete(uid, action)
     groups = {}
     for r in refs:
         acct, u = _account(uid, r)
         groups.setdefault(acct["id"], (acct, []))[1].append(u)
-    moving = action in ("archive", "move")
-    if action == "move" and len(groups) > 1:
+    moving = action in ("archive", "move", "delete")
+    if action in ("move", "delete") and len(groups) > 1:
         raise ValueError("a move goes into the folder of one mailbox: pick messages of one mailbox")
-    n, moved, where = 0, [], ""
+    n, moved, where, hint = 0, [], "", None
     for acct, uids in groups.values():
         with tidy.Box(acct) as box:
             targets, arch = _targets(box)
-            here = _source(box, src or "INBOX", moving)
+            if action == "delete":
+                dst = _trash(box)
+                if not dst:
+                    raise ValueError("this mailbox has no trash folder")
+                here = _source_del(box, src or "INBOX")
+            else:
+                here = _source(box, src or "INBOX", moving)
             box.select(here, write=True)
             there = [u for u in uids if u in box.headers(uids, "MESSAGE-ID")]
             if not there:
@@ -329,17 +424,20 @@ def _act_many(uid, refs, action, folder, src="INBOX"):
             if not moving:
                 _store(box, there, action)
             else:
-                dst = _dest(box, targets, arch, action, folder, here)
+                if action != "delete":
+                    dst = _dest(box, targets, arch, action, folder, here)
                 mids = [str(h.get("Message-ID") or "").strip()[:300] for h in box.headers(there, "MESSAGE-ID").values()]
+                who = _senders(box, there) if action != "delete" else []
                 _move(box, there, dst)
                 moved.append({"acct": acct["id"], "mids": [m for m in mids if m][:MANY]})
                 where = dst
+                hint = hint or _hint(uid, acct["id"], who, dst)
             n += len(there)
     if not n:
         raise LookupError("the messages are not there")
     for r in refs:
         mail.changed(uid, r if (src or "INBOX").upper() == "INBOX" else "", action)
-    return {"done": action, "n": n, "moved": moved, "folder": where}
+    return {"done": action, "n": n, "moved": moved, "folder": where, "hint": hint}
 
 
 def back_many(uid, account_id, folder, mids, src="INBOX"):
@@ -355,8 +453,9 @@ def _back_many(uid, account_id, folder, mids, src):
         raise ValueError("only with the messages' ids")
     with tidy.Box(acct) as box:
         targets, _ = _targets(box)
-        home = _source(box, src or "INBOX", True)
-        if folder not in targets:
+        trash = _trash(box)
+        home = _source(box, src or "INBOX", True) if folder != trash else _source_del(box, src or "INBOX")
+        if folder not in targets and not (trash and folder == trash):
             raise ValueError("only back from an own folder")
         box.select(folder, write=True)
         hits = [h for m in ids if m for h in box.find_mid(m)[:1]]

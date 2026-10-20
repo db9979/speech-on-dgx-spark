@@ -41,7 +41,7 @@ Go through before every commit. In the answer to Dominik briefly name which poin
 - [ ] There is exactly one open suggestion per profile. It is valid only for the same device, a plain "Yes" and 15 minutes. Every new answer discards it.
 - [ ] The voice check for "Yes" belongs to the same recording as the text.
 - [ ] Home Assistant runs with an allowlist of domains, not with a block list (`script`, `automation`, `button` etc. stay out).
-- [ ] Mail is never deleted. Moving only with a verified UIDVALIDITY and an exact match of sender and Message-ID after SEARCH.
+- [ ] Only the person deletes mail on the E-Mail page (switch "Delete mail", off): into the trash with "Undo", for good only inside the trash after its own question and only exactly that mail (same Message-ID, UID EXPUNGE, never a bare EXPUNGE); the model, rules, "For you" and the voice never. Moving only with a verified UIDVALIDITY and an exact match of sender and Message-ID after SEARCH.
 
 ## Outgoing requests (SSRF)
 - [ ] Only http(s). Loopback, private and link-local addresses are blocked, unless the admin explicitly allows the home network.

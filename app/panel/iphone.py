@@ -136,7 +136,7 @@ THINGS = {
     "mail": ((("GET",), r"/api/profile/mail/(?:inbox|message)"),),
     "mailmanage": ((("GET",), r"/api/profile/mail/(?:folders|tree|folder|file)"),
                    (("POST",), r"/api/profile/mail/(?:acts?|acts/back|folder/(?:new|rename|remove))"),
-                   (("GET", "POST"), r"/api/profile/mail/rules(?:/test|/order)?"),
+                   (("GET", "POST"), r"/api/profile/mail/rules(?:/test|/order)?"), (("POST",), r"/api/profile/mail/rules/never"),
                    (("POST",), r"/api/profile/mail/rules/[0-9a-f]{8}/apply"), (("DELETE",), r"/api/profile/mail/rules/[0-9a-f]{8}")),
     "mailsend": ((("POST",), r"/api/profile/mail/(?:send(?:/preview)?|suggest|rewrite)"),),
     # Für dich (fuerdich.py): the cards, a mark, a button (reminder, the draft of a cancelling mail), forget the marks;
@@ -179,9 +179,14 @@ profiles.APP_AREAS.update({right: tuple((frozenset(m), re.compile(p)) for m, p i
 profiles.APP_AREA_GATE[0] = area_on
 
 
+# parts with their own function but no own paths: the app shows their buttons, the Spark checks the function again on
+# the part's paths (Mails löschen goes through Mails ordnen's act and acts, postfach._may_delete)
+FLAGS = ("maildelete",)
+
+
 def panel_rights(uid):
     """What hello tells the app: which panel areas and which parts of Meine Sachen it shows."""
-    return {r: area_on(uid, r) for r in RIGHTS_PANEL + tuple(THINGS)}
+    return {r: area_on(uid, r) for r in RIGHTS_PANEL + tuple(THINGS)} | {f: features.allowed(f, uid) for f in FLAGS}
 
 
 def phones(uid):

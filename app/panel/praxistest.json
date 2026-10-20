@@ -2301,6 +2301,14 @@
 "titel": "Begleiter: Post, Schnell erfassen, Listen",
 "text": "Unter Ich → Begleiter beim Gerät „Post im Begleiter“, „Schnell erfassen“, „Listen im Begleiter“ und „Termine im Begleiter“ einschalten. 1) Im Begleiter-Fenster stehen Post (ungelesen, Für dich, dringende Karten mit Erledigt/Erinnern), Als Nächstes (auch Termine geteilter Kalender mit Namen; Klick öffnet den Tag im Kalender) und Listen (Zahl, neuester Eintrag, Öffnen). 2) Eine Mail von einem Kontakt schicken lassen: kommt als Meldung mit Antwort entwerfen, Gelesen, Ansehen. 3) Strg+Alt+N (Mac ⌃⌥N): „Zahnarzt Fr 10 Uhr bei Dr. Weber“ zeigt Chips, erst Eintragen speichert, Rückgängig nimmt es zurück; „Milch, Eier auf Einkauf“ landet auf der Liste. 4) Antwort entwerfen (Strg+Alt+M) und im Outlook-Add-in: „3 Vorschläge“, einen wählen, dann Kürzer/Freundlicher/Englisch. 5) In Frag Spark nach einem Termin fragen: Karte „Im Kalender ansehen“.",
 "thread": "Begleiter nachziehen"
+},
+{
+"id": "P353",
+"v": 861,
+"v": 861,
+"titel": "E-Mail: Ordner rechts, Ziehen, Löschen",
+"text": "A: Update auf V01.0.861, Funktionen → E-Mail lesen → Mails ordnen → „Mails löschen“ an. B: Seite E-Mail: rechts die Ordner mit deutschen Namen; „Ordner“ oder Taste O blendet sie aus, nach Neuladen bleibt es so. C: Eine Mail auf einen eigenen Ordner ziehen: sie ist weg, „Rückgängig“ holt sie zurück. D: Eine Mail mit Entf löschen: sie liegt im Papierkorb (auch im Mailprogramm), „Rückgängig“ holt sie zurück. E: Im Papierkorb „Endgültig löschen“: erst nach der Rückfrage ist sie weg, andere Mails dort bleiben. F: Dreimal Mails desselben Absenders in denselben Ordner verschieben: der Hinweis fragt nach einer Regel; „Regel anlegen und gleich anwenden“ legt sie an und räumt den Posteingang. G: Handy: „Ordner“ öffnet das Blatt von rechts. H: iPhone-App: Wischen → Löschen, „Rückgängig“ oben in der Liste, im Papierkorb „Endgültig löschen“ mit Rückfrage.",
+"thread": "Kalender und E-Mail in den Apps"
 }
 ]
 }

@@ -377,15 +377,16 @@ class Page(unittest.TestCase):
                     await pg.evaluate("MAIL_ON=true;ORD_ON=true;POST.box=null;POST.tree=null;POST.pick=[];const v=$('postview');if(v)v.remove();"
                                       "postStart({profile:PROFILE,mail:true});icTabSet('post','show');goSec('post');postOpen()")
                     await b.until(pg, "!POST.busy&&!!POST.data&&POST.data.items.length===2")
+                    # the folders stand right of the list in a box of their own (Dominik 2026-10-20), the list stays
+                    await pg.evaluate("POST.fopen=false;postDraw()")
                     await pg.click("#postview [data-k=tree]")
-                    await b.until(pg, "!!document.querySelector('#postview .ld-list [data-f=Projekte]')")
-                    self.assertEqual(await pg.evaluate("document.querySelectorAll('#postview .ld-list [data-fa]').length"), 1)
-                    await pg.click("#postview .ld-list [data-f=Projekte]")
+                    await b.until(pg, "!!document.querySelector('#postview .postfold [data-f=Projekte]')")
+                    self.assertEqual(await pg.evaluate("document.querySelectorAll('#postview .ld-list [data-id]').length"), 2)
+                    self.assertEqual(await pg.evaluate("document.querySelectorAll('#postview .postfold [data-fa]').length"), 1)
+                    await pg.click("#postview .postfold [data-f=Projekte]")
                     await b.until(pg, "!POST.busy&&!!POST.data&&POST.data.folder==='Projekte'&&POST.data.items.length===1")
-                    self.assertIn("Projekte", await pg.inner_text("#postview [data-k=tree]"))
-                    await pg.click("#postview [data-k=tree]")
-                    await b.until(pg, "!!document.querySelector('#postview .ld-list [data-all]')")
-                    await pg.click("#postview .ld-list [data-all]")
+                    self.assertIn("Projekte", await pg.inner_text("#postview .ld-list .posthead"))
+                    await pg.click("#postview .postfold [data-all]")
                     await b.until(pg, "!POST.busy&&!!POST.data&&!POST.data.folder&&POST.data.items.length===2")
                     for i in range(2):
                         await pg.locator("#postview .ld-list [data-pick]").nth(i).check()
@@ -395,6 +396,11 @@ class Page(unittest.TestCase):
                     await b.until(pg, "POST.pick.length===0&&POST.data.items.every(x=>!x.unread)")
                     self.assertEqual([m["seen"] for m in FMB.boxes["INBOX"]], [True, True])
                     self.assertLessEqual(await pg.evaluate("document.documentElement.scrollWidth-document.documentElement.clientWidth"), 1)
+                    # O hides the folders again and the choice is kept for the next visit
+                    await pg.evaluate("document.activeElement&&document.activeElement.blur()")
+                    await pg.keyboard.press("o")
+                    await b.until(pg, "!POST.fopen&&document.querySelector('#postview .postfold').hidden")
+                    self.assertEqual(await pg.evaluate("localStorage.getItem('spark.postFolds')"), "0")
                     self.assertEqual(errors, [])
                 finally:
                     await br.close()

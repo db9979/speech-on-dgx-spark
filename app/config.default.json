@@ -228,6 +228,7 @@
     "mail_tidy": false,
     "mail_manage": false,
     "mail_idle": false,
+    "mail_delete": false,
     "mail_send": false,
     "mail_send_voice": "off",
     "mail_style": false,

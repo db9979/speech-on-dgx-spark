@@ -1509,7 +1509,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": ": Jede Funktion ist aus, bis der Admin sie freigibt; dann gilt sie für jedes Profil, außer der Admin sperrt einzelne (features.blocked). Was nicht erlaubt ist, wird gar nicht erst als Werkzeug angeboten. 6. Fremdes bleibt Daten: Was ein Werkzeug von außen liest, kommt als markierter Datenblock zum Modell. Ab da sind 13 handelnde Werkzeuge gesperrt, auch im nächsten Zug, und nichts davon wird ins Gedächtnis gelernt. Verbindungen nach außen laufen nur über den Wächter (netguard.allowed). 7. Sprachmodell schlägt vor: Das Modell formuliert und wählt aus dem, was nach den Schritten davor übrig ist. Ruft es ein Werkzeug, das nicht angeboten war, läuft es nicht. 8. Ändert es etwas?: Lesen geht sofort. Wer etwas ändert (Licht, Mail senden, Termin, Anruf), legt einen Vorschlag ab; er läuft erst nach einem schlichten „Ja“ auf genau diesen Vorschlag, vom selben Gerät. Home Assistant nur aus einer Allowlist, Mail wird nie gelöscht. 9. Antwort prüfen: Zeiten, Daten und Beträge, die nirgends in den Quellen stehen, fallen heraus (answercheck.unsupported). Passwörter, Codes und Schlüssel werden nie gesprochen (textnorm.hide_secrets). Die Oberfläche zeigt Modelltext nie als HTML. 10. Spuren: Logs n"
+"text": ": Jede Funktion ist aus, bis der Admin sie freigibt; dann gilt sie für jedes Profil, außer der Admin sperrt einzelne (features.blocked). Was nicht erlaubt ist, wird gar nicht erst als Werkzeug angeboten. 6. Fremdes bleibt Daten: Was ein Werkzeug von außen liest, kommt als markierter Datenblock zum Modell. Ab da sind 13 handelnde Werkzeuge gesperrt, auch im nächsten Zug, und nichts davon wird ins Gedächtnis gelernt. Verbindungen nach außen laufen nur über den Wächter (netguard.allowed). 7. Sprachmodell schlägt vor: Das Modell formuliert und wählt aus dem, was nach den Schritten davor übrig ist. Ruft es ein Werkzeug, das nicht angeboten war, läuft es nicht. 8. Ändert es etwas?: Lesen geht sofort. Wer etwas ändert (Licht, Mail senden, Termin, Anruf), legt einen Vorschlag ab; er läuft erst nach einem schlichten „Ja“ auf genau diesen Vorschlag, vom selben Gerät. Home Assistant nur aus einer Allowlist. Mail löscht nur die Person selbst (in den Papierkorb, endgültig nur nach Rückfrage), nie das Modell. 9. Antwort prüfen: Zeiten, Daten und Beträge, die nirgends in den Quellen stehen, fallen heraus (answercheck.unsupported). Passwörter, Codes und Schlüssel werden nie gesprochen (textnorm.hi"
 },
 {
 "lang": "de",
@@ -1517,7 +1517,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ur mit festen Wörtern und Zahlen. Änderungen an Zugängen und Schutz schreibt guard.log mit einer SHA-256-Kette; der Wachposten meldet Auffälliges an die Admins. Geheimnisse liegen versiegelt im vault (vault.seal)."
+"text": "de_secrets). Die Oberfläche zeigt Modelltext nie als HTML. 10. Spuren: Logs nur mit festen Wörtern und Zahlen. Änderungen an Zugängen und Schutz schreibt guard.log mit einer SHA-256-Kette; der Wachposten meldet Auffälliges an die Admins. Geheimnisse liegen versiegelt im vault (vault.seal)."
 },
 {
 "lang": "de",
@@ -5006,6 +5006,30 @@
 "head": "Sprach-Chat",
 "title": "Knopfleiste einer Mail (V01.0.853, Dominik 2026-10-20 „1 und 3“)",
 "text": "Knopfleiste einer Mail (V01.0.853, Dominik 2026-10-20 „1 und 3“): Die Knöpfe einer geöffneten Mail stehen in einer Leiste, die beim Rollen oben stehen bleibt: „Antworten“ groß mit Wort, daneben Symbole in drei Gruppen, Schreiben (Weiterleiten, Als Termin), Ordnen (gelesen oder ungelesen, ★ Markieren, Archivieren, Verschieben nach … als kurzes Menü der Ordner) und Regel daraus. Fährt die Maus über ein Symbol, steht sein Name mit der Taste da: R antworten, F weiterleiten, T als Termin, U gelesen, S markieren, E archivieren, V verschieben, G Regel, J und K blättern, Esc schließt (erst das Menü, dann die Mail). Auf dem Handy stehen die fünf häufigsten unten am Daumen (Antworten, Weiter, Archiv, Ordner, Termin), oben Zurück, ✎ Neue Mail, ★ und ⋯ (gelesen, Regel daraus); in der iPhone-App genauso in der unteren Leiste und oben rechts. „✎ Neue Mail“ steht weiter immer über der Liste. Eine Funktion, die aus ist, zeigt keinen Knopf."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Ordner rechts, Ziehen, Löschen und Regel-Vorschlag (V01.0.861, Dominik 2026-10-20 „ja so umsetzen“): Die Seite E-Mail zeigt Liste, Mail und Ordner als drei gleiche Kästen mit Kopfzeile (die Liste mit Name, Anzahl und neuen Mails). Die Ordner stehen rechts; der Knopf „Ordner“ oder die Taste O blendet sie ein und aus, der Browser merkt es sich. Die Ordner des Mailprogramms tragen deutsche Namen und eigene Symbole (Posteingang, Gesendet, Entwürfe, Archiv, Papierkorb, Spam). Eine Mail (oder mehrere ausgewählte) lässt sich auf einen Ordner ziehen; beim Ziehen gehen die Ordner von selbst auf, auch das Archiv- und das Papierkorb-Symbol der offenen Mail nehmen sie an; danach steht „Rückgängig“ da. Auf dem Handy kommen die Ordner von rechts als Blatt, verschoben wird über das Menü."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Löschen",
+"text": "Löschen hat einen eigenen Admin-Schalter unter Funktionen → E-Mail lesen → Mails ordnen → „Mails löschen“ (chat.mail_delete, aus). Löschen kann nur die Person selbst auf der Seite (Papierkorb-Symbol, Taste Entf, Ziehen auf den Papierkorb, „Löschen“ bei mehreren): die Mail geht in den Papierkorb des Postfachs (der Ordner mit \\Trash), „Rückgängig“ holt sie zurück. „Endgültig löschen“ gibt es nur im Papierkorb, nach einer eigenen Rückfrage, und es trifft nur genau diese Mail: das Postfach muss UIDPLUS können, die Message-ID muss noch stimmen, dann UID STORE \\Deleted und UID EXPUNGE nur dieser UID, nie ein blankes EXPUNGE. Modell, Regeln, „Für dich“ und die Stimme löschen nie; ein normales Verschieben geht weiter nie in den Papierkorb. Live (Knoten E-Mail): „davon N gelöscht“, nur Zahlen."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Regel-Vorschlag",
+"text": "Regel-Vorschlag: Der Spark zählt je Profil, wie oft Mails desselben Absenders in denselben Ordner verschoben werden (mailregeln.learn, nur Adresse, Ordner, Anzahl, 30 Tage). Beim dritten Mal steht unter dem „Rückgängig“ ein Hinweis mit drei Knöpfen: „Regel anlegen und gleich anwenden“ (die Regel und die passenden Mails im Posteingang, mit „Rückgängig“), „Nur Regel“ und „Nicht mehr fragen“ (für dieses Paar gemerkt). Gibt es für den Absender schon eine Regel, fragt er nicht. Live: „heute N Regel-Vorschläge“. In der iPhone-App: Löschen beim Wischen, in der Mail und bei mehreren ausgewählten, „Rückgängig“ und der Regel-Vorschlag über der Liste, im Papierkorb „Endgültig löschen“ mit Rückfrage, die Ordner des Mailprogramms mit deutschem Namen."
 },
 {
 "lang": "de",
@@ -10293,7 +10317,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "ts for every profile, unless the admin blocks single ones (features.blocked). What is not allowed is not even offered as a tool. 6. Outside stays data: What a tool reads from outside reaches the model as a marked block of data. From then on 13 acting tools are locked, in the next turn too, and nothing of it is learned into memory. Connections to the outside go only through the guard (netguard.allowed). 7. The language model proposes: The model words the answer and picks from what is left after the steps before. If it calls a tool that was not offered, it does not run. 8. Does it change something?: Reading happens at once. Whatever changes something (light, sending mail, appointment, call) leaves a proposal; it runs only after a plain „yes“ to exactly that proposal, from the same device. Home Assistant only from an allowlist, mail is never deleted. 9. Check the answer: Times, dates and amounts that are nowhere in the sources are dropped (answercheck.unsupported). Passwords, codes and keys are never spoken (textnorm.hide_secrets). The pages never show model text as HTML. 10. Traces: Logs carry only fixed words and numbers. Changes to access and protection are written by guard.log wit"
+"text": "ts for every profile, unless the admin blocks single ones (features.blocked). What is not allowed is not even offered as a tool. 6. Outside stays data: What a tool reads from outside reaches the model as a marked block of data. From then on 13 acting tools are locked, in the next turn too, and nothing of it is learned into memory. Connections to the outside go only through the guard (netguard.allowed). 7. The language model proposes: The model words the answer and picks from what is left after the steps before. If it calls a tool that was not offered, it does not run. 8. Does it change something?: Reading happens at once. Whatever changes something (light, sending mail, appointment, call) leaves a proposal; it runs only after a plain „yes“ to exactly that proposal, from the same device. Home Assistant only from an allowlist. Only the person deletes mail (into the trash, for good only after a question), never the model. 9. Check the answer: Times, dates and amounts that are nowhere in the sources are dropped (answercheck.unsupported). Passwords, codes and keys are never spoken (textnorm.hide_secrets). The pages never show model text as HTML. 10. Traces: Logs carry only fixed words a"
 },
 {
 "lang": "en",
@@ -10301,7 +10325,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "h a SHA-256 chain; the Wachposten tells the admins about anything unusual. Secrets lie sealed in the vault (vault.seal)."
+"text": "nd numbers. Changes to access and protection are written by guard.log with a SHA-256 chain; the Wachposten tells the admins about anything unusual. Secrets lie sealed in the vault (vault.seal)."
 },
 {
 "lang": "en",
@@ -13678,6 +13702,30 @@
 "head": "Voice chat",
 "title": "The bar of a mail (V01.0.853, Dominik 2026-10-20 \"1 und 3\")",
 "text": "The bar of a mail (V01.0.853, Dominik 2026-10-20 \"1 und 3\"): the buttons of an open mail sit in one bar that stays on top while the mail scrolls: \"Reply\" large with its word, beside it symbols in three groups, writing (forward, as appointment), ordering (read or unread, ★ flag, archive, move to … as a short menu of the folders) and rule from this. Hovering a symbol shows its name with its key: R reply, F forward, T as appointment, U read, S flag, E archive, V move, G rule, J and K browse, Esc closes (the menu first, then the mail). On a phone the five most used sit at the thumb below (reply, forward, archive, folder, appointment), on top back, ✎ new mail, ★ and ⋯ (read, rule from this); the iPhone app does the same in its bottom bar and top right. \"✎ New mail\" stays above the list as always. A function that is off shows no button."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "Folders on the right, dragging, deleting and the rule hint (V01.0.861, Dominik 2026-10-20 \"ja so umsetzen\"): the Mail page shows the list, the mail and the folders as three equal boxes with a head line (the list with its name, count and new mails). The folders sit on the right; the \"Folders\" button or the key O shows and hides them, the browser remembers it. The folders of the mail program carry their own names and symbols (Inbox, Sent, Drafts, Archive, Trash, Junk). A mail (or several picked ones) can be dragged onto a folder; while dragging the folders open by themselves, and the archive and trash symbols of the open mail take it too; afterwards \"Undo\" is there. On a phone the folders come in from the right as a sheet, moving goes through the menu."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Deleting",
+"text": "Deleting has its own admin switch under Functions → Read mail → Order mail → \"Delete mail\" (chat.mail_delete, off). Only the person deletes, on the page (trash symbol, the Delete key, dragging onto the trash, \"Delete\" for several): the mail goes into the mailbox's trash (the folder with \\Trash), \"Undo\" brings it back. \"Delete for good\" exists only inside the trash, after its own question, and hits exactly that mail: the mailbox must know UIDPLUS, the Message-ID must still match, then UID STORE \\Deleted and UID EXPUNGE of that UID only, never a bare EXPUNGE. The model, rules, \"For you\" and the voice never delete; an ordinary move still never goes into the trash. Live (node Mail): \"of them N deleted\", numbers only."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Rule hint",
+"text": "Rule hint: per profile the Spark counts how often mails of the same sender are moved into the same folder (mailregeln.learn, only address, folder, count, 30 days). The third time a hint stands below \"Undo\" with three buttons: \"Make the rule and apply it now\" (the rule and the fitting mails in the inbox, with \"Undo\"), \"Only the rule\" and \"Don't ask again\" (remembered for that pair). If the sender already has a rule, it does not ask. Live: \"today N rule hints\". In the iPhone app: delete on swipe, in the mail and for several picked ones, \"Undo\" and the rule hint above the list, in the trash \"Delete for good\" with a question, the mail program's folders with their own names."
 },
 {
 "lang": "en",

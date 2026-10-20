@@ -1310,6 +1310,7 @@ def snapshot(view="admin", now=None):
         kal_page = calendars.page_today()
         import postfach
         post_page = postfach.today()
+        post_del = postfach.deleted_today()
         import senden
         post_sent = senden.today()
         import mailregeln
@@ -1319,7 +1320,7 @@ def snapshot(view="admin", now=None):
         import mailidle
         post_idle = mailidle.for_live()
     except Exception:
-        kal, kal_page, post_page, post_sent, post_files = {"on": False}, 0, 0, 0, 0
+        kal, kal_page, post_page, post_sent, post_files, post_del = {"on": False}, 0, 0, 0, 0, 0
         post_idle = {}
         post_rules = {}
     try:
@@ -1460,10 +1461,12 @@ def snapshot(view="admin", now=None):
         if x["id"] == "cal" and kal.get("on"):   # Kalender teilen: shares in numbers (never a name or an appointment)
             x["sub"] += f" · {kal.get('shares', 0)} geteilt von {kal.get('owners', 0)} Profilen"
         if x["id"] == "mail" and post_page:      # Mails ordnen: messages ordered on the page today (a number)
-            x["sub"] += f" · heute {post_page} auf der Seite geordnet"
+            x["sub"] += f" · heute {post_page} auf der Seite geordnet" + (f", davon {post_del} gelöscht" if post_del else "")
         if x["id"] == "mail" and post_rules.get("rules"):   # Mail-Regeln: rules and what they took today (numbers only)
             x["sub"] += (f" · {post_rules['rules']} Regeln bei {post_rules['profiles']} Profilen"
                          + (f", heute {post_rules['taken']} Mails einsortiert" if post_rules.get("taken") else ""))
+        if x["id"] == "mail" and post_rules.get("hints"):   # Regel-Vorschlag: hints shown today (a number)
+            x["sub"] += f" · heute {post_rules['hints']} Regel-Vorschläge"
         if x["id"] == "mail" and post_files:     # Anhang laden: attachments fetched today (a number, never which)
             x["sub"] += f" · heute {post_files} Anhänge geladen"
         if x["id"] == "mail" and post_idle.get("on"):   # Neue Mails sofort: IDLE connections, new mails today (numbers)

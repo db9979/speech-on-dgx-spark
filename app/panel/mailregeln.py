@@ -9,7 +9,12 @@ A rule is fixed data, never a model's guess:
 
 The first rule that fits decides (the profile orders them). Rules run each RUN_EVERY on mail that came into the
 inbox since the last look (by UID, nothing older); a rule made from a mail can, with the code, also take the
-mails already there (at most APPLY_MAX, „Rückgängig“ brings them back). Nothing is ever deleted.
+mails already there (at most APPLY_MAX, „Rückgängig“ brings them back). A rule never deletes.
+
+Regel-Vorschlag (Dominik 2026-10-20): every move on the page (postfach) counts per mailbox, sender address and
+folder (learn); the LEARN_AFTER-th move within LEARN_DAYS asks once on the page whether a rule should do it, unless a
+rule for that sender and folder is there or the profile said „Nicht mehr fragen“ (never). The counts sit in the same
+file as the rules; only the page's own moves count, never a rule's or the tidying's.
 
 What comes in is data: sender, subject and addresses are only compared with the rule's words (casefold, no regular
 expressions from the profile). The rules live in users/<id>/mail-regeln.json (600); the journal carries fixed words
@@ -39,10 +44,13 @@ PREVIEW_DAYS = 90
 PREVIEW_MAX = 1000       # newest inbox mails a dry run looks at
 APPLY_MAX = 50           # mails „auch die vorhandenen“ takes at most (as many as „Rückgängig“ brings back)
 WORD_MAX = 80
+LEARN_AFTER = 3          # the third move of one sender into one folder brings the hint
+LEARN_DAYS = 30          # moves older than this do not count
+LEARN_MAX = 300          # counted sender/folder pairs per profile (the oldest go)
 HEAD = "FROM TO CC SUBJECT CONTENT-TYPE MESSAGE-ID"
 _lock = threading.Lock()
 _last = {}               # uid -> when its rules last ran
-_count = DayCounter(genommen=0, laeufe=0)   # per day: mails the rules took, looks
+_count = DayCounter(genommen=0, laeufe=0, vorschlaege=0)   # per day: mails the rules took, looks, rule hints
 
 
 def _file(uid):
@@ -59,6 +67,8 @@ def load(uid):
     rules = d.get("rules") if isinstance(d.get("rules"), list) else []
     d["rules"] = [r for r in rules if isinstance(r, dict) and isinstance(r.get("id"), str)][:MAX_RULES]
     d["seen"] = d.get("seen") if isinstance(d.get("seen"), dict) else {}
+    d["learn"] = d.get("learn") if isinstance(d.get("learn"), dict) else {}
+    d["never"] = [k for k in (d.get("never") if isinstance(d.get("never"), list) else []) if isinstance(k, str)][-LEARN_MAX:]
     return d
 
 
@@ -131,6 +141,53 @@ def _check_folder(uid, account, folder):
         targets, _ = postfach._targets(box)
     if folder not in targets:
         raise ValueError("not a folder a message may go to")
+
+
+def _key(account_id, sender, folder):
+    return f"{account_id}|{sender}|{folder}"
+
+
+def learn(uid, account_id, senders, folder, now=None):
+    """Counts the page's moves of these senders into `folder`; {"account", "from", "folder", "n"} for the hint when
+    one sender reached LEARN_AFTER moves within LEARN_DAYS (and is then counted from zero again), else None."""
+    now = int(now or time.time())
+    if not senders or not folder:
+        return None
+    hint = None
+    with _lock:
+        d = load(uid)
+        learnt = {k: v for k, v in d["learn"].items()
+                  if isinstance(v, list) and len(v) == 2 and now - int(v[1]) < LEARN_DAYS * 86400}
+        ruled = {(r.get("account", ""), r["when"].get("from", ""), r["then"].get("folder", "")) for r in d["rules"]}
+        for a in dict.fromkeys(senders):
+            k = _key(account_id, a, folder)
+            n = (learnt.get(k) or [0, now])[0] + 1
+            learnt[k] = [n, now]
+            if n >= LEARN_AFTER and not hint and k not in d["never"] and (account_id, a, folder) not in ruled:
+                hint = {"account": account_id, "from": a, "folder": folder, "n": n}
+                learnt[k] = [0, now]
+        d["learn"] = dict(sorted(learnt.items(), key=lambda kv: kv[1][1])[-LEARN_MAX:])
+        _save(uid, d)
+    if hint:
+        _count.bump("vorschlaege")
+        print(f"mail: rule hint | {hint['n']} | {profiles.log_name(profiles.by_id(uid))}", flush=True)
+    return hint
+
+
+def never(uid, body):
+    """„Nicht mehr fragen“ on a hint: this sender into this folder never asks again."""
+    accts = {a["id"] for a in mail.get(uid)["accounts"]}
+    account, sender, folder = str(body.get("account") or ""), _word(body.get("from")).lower(), _word(body.get("folder"), 200)
+    if account not in accts or not sender or not folder:
+        raise ValueError("mailbox, sender and folder")
+    with _lock:
+        d = load(uid)
+        k = _key(account, sender, folder)
+        d["never"] = [x for x in d["never"] if x != k][-(LEARN_MAX - 1):] + [k]
+        d["learn"].pop(k, None)
+        _save(uid, d)
+    print(f"mail: rule hint never | {profiles.log_name(profiles.by_id(uid))}", flush=True)
+    return {"ok": True}
 
 
 def remove(uid, rid):
@@ -400,4 +457,4 @@ def for_live():
             n = len(load(uid)["rules"])
             profs += 1 if n else 0
             rules += n
-    return {"profiles": profs, "rules": rules, "taken": c.get("genommen", 0)}
+    return {"profiles": profs, "rules": rules, "taken": c.get("genommen", 0), "hints": c.get("vorschlaege", 0)}

@@ -89,7 +89,7 @@ router = APIRouter()
 
 # whoami flag -> function in features.py
 WHO = {"documents": "documents", "reminders": "reminders", "speaker_id": "speaker", "calendar": "calendar",
-       "homeassistant": "ha", "mail": "mail", "mail_tidy": "tidy", "mail_style": "mailstil", "mail_insight": "fuerdich", "ichweiss": "ichweiss", "mail_manage": "mailmanage", "mail_send": "mailsend", "proactive": "proactive", "room": "room",
+       "homeassistant": "ha", "mail": "mail", "mail_tidy": "tidy", "mail_style": "mailstil", "mail_insight": "fuerdich", "ichweiss": "ichweiss", "mail_manage": "mailmanage", "mail_delete": "maildelete", "mail_send": "mailsend", "proactive": "proactive", "room": "room",
        "room_voices": "roomtv", "room_ha": "roomha", "room_remote": "roomfar", "weather": "weather", "contacts": "contacts",
        "parcels": "parcels", "telegram": "telegram", "tasks": "tasks", "transit": "transit", "feeds": "feeds",
        "esp32": "esp32", "iphone": "iphone", "iphone_panel": "iphonepanel", "pebble": "pebble", "pebble_chat": "pebblechat", "pebble_reply": "pebbleantwort", "pebble_remote": "pebblefern", "pebble_health": "pebblegesund", "pebble_face": "pebblezifferblatt", "pebble_day": "pebbletag", "pebble_alerts": "pebblemeldung", "pebble_note": "pebblemerken", "pebble_place": "pebbleort", "pebble_follow": "pebblefolge", "pebble_quick": "pebbleschnell", "pebble_remind": "pebbleerinnern", "terminal": "terminal",
@@ -1274,11 +1274,15 @@ async def profile_mail_folders(request: Request, account: str = "", prof=Depends
 
 @router.post("/api/profile/mail/act", dependencies=[Depends(assistant), Depends(mail_on), Depends(mailmanage_on)])
 async def profile_mail_act(request: Request, prof=Depends(browser_profile)):
-    """Mails ordnen (postfach.act): {id, action read|unread|archive|move|back, folder, mid}; the button is the yes,
-    only the own browser login, never deleted (postfach.py logs every outcome)."""
+    """Mails ordnen (postfach.act): {id, action read|unread|archive|move|back|delete|erase, folder, mid, src}; the button
+    is the yes, only the own browser login; delete and erase only with „Mails löschen“, erase only with "sure" after
+    the page's own question (postfach.py logs every outcome)."""
     guard.limit(request, "postordnen", prof["id"])
     body = await request.json()
     body = body if isinstance(body, dict) else {}
+    if body.get("action") == "erase" and body.get("sure") is not True:
+        print(f"mail: page erase refused, not sure | {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(400, "Endgültig löschen nur nach der Rückfrage.")
     try:
         return await asyncio.wait_for(asyncio.to_thread(
             postfach.act, prof["id"], str(body.get("id") or "")[:40], str(body.get("action") or "")[:10],
@@ -1432,6 +1436,13 @@ async def profile_mail_rule_order(request: Request, prof=Depends(browser_profile
     mailregeln.order(prof["id"], ids)
     print(f"mail: rules ordered | {profiles.log_name(prof)}", flush=True)
     return mailregeln.public(prof["id"])
+
+
+@router.post("/api/profile/mail/rules/never", dependencies=[Depends(assistant), Depends(mail_on), Depends(mailmanage_on)])
+async def profile_mail_rule_never(request: Request, prof=Depends(browser_profile)):
+    """Regel-Vorschlag „Nicht mehr fragen“: {account, from, folder}."""
+    guard.limit(request, "postordnen", prof["id"])
+    return await _rule(prof, "never", mailregeln.never, await json_body(request, 4096))
 
 
 @router.post("/api/profile/mail/rules/{rid}/apply", dependencies=[Depends(assistant), Depends(mail_on), Depends(mailmanage_on)])

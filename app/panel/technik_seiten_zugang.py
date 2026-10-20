@@ -704,10 +704,10 @@ SEITEN = {
               ("schalten, senden, eintragen", "switch, send, enter"),
               ("Lesen geht sofort. Wer etwas ändert (Licht, Mail senden, Termin, Anruf), legt einen Vorschlag ab; er läuft "
                "erst nach einem schlichten „Ja“ auf genau diesen Vorschlag, vom selben Gerät. Home Assistant nur aus einer "
-               "Allowlist, Mail wird nie gelöscht.",
+               "Allowlist. Mail löscht nur die Person selbst (in den Papierkorb, endgültig nur nach Rückfrage), nie das Modell.",
                "Reading happens at once. Whatever changes something (light, sending mail, appointment, call) leaves a "
                "proposal; it runs only after a plain „yes“ to exactly that proposal, from the same device. Home Assistant only "
-               "from an allowlist, mail is never deleted."),
+               "from an allowlist. Only the person deletes mail (into the trash, for good only after a question), never the model."),
               ("info", "ja", ("Erst ein Vorschlag, dann „Ja“", "First a proposal, then „yes“"))),
             S("s9", "schritt", ("Antwort prüfen", "Check the answer"),
               ("answercheck.unsupported, textnorm.hide_secrets", "answercheck.unsupported, textnorm.hide_secrets"),
