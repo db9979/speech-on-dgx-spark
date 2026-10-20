@@ -262,8 +262,8 @@ class Behind(Base):
         p = asyncio.run(calendars.page_find("u-behind", 0, "Zahnarzt",
                                             int(datetime.datetime(2026, 3, 10, 9, tzinfo=UTC).timestamp()), zone))
         self.seen()
-        p.update(change="edit", new_title="Zahnarzt neu", new_start="2026-03-11T09:00+00:00",
-                 new_end="2026-03-11T10:00+00:00", new_allday=False, new_location="")
+        p.update(change="edit", item={"title": "Zahnarzt neu", "start": "2026-03-11T09:00+00:00",
+                                      "end": "2026-03-11T10:00+00:00", "allday": False, "location": ""})
         now, _ = self.run_page(lambda: calendars.change_event("u-behind", p, wait=False))
         self.assertEqual(now, ["Zahnarzt neu"])
         self.assertEqual([m for m, k in helpers.CAL_SEEN if k == "object"], ["PUT"])   # no GET first

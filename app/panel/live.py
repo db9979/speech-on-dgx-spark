@@ -1329,6 +1329,7 @@ def snapshot(view="admin", now=None):
         import calendars
         kal = calendars.for_live()
         kal_page = calendars.page_today()
+        kal_serie, kal_undo = calendars.page_today("serie"), calendars.page_today("undo")
         import postfach
         post_page = postfach.today()
         post_del = postfach.deleted_today()
@@ -1348,6 +1349,7 @@ def snapshot(view="admin", now=None):
         post_fd = fuerdich.for_live()
     except Exception:
         kal, kal_page, post_page, post_sent, post_files, post_del = {"on": False}, 0, 0, 0, 0, 0
+        kal_serie = kal_undo = 0
         post_idle, post_view = {}, {}
         post_rules = {}
         post_supply = {}
@@ -1529,6 +1531,8 @@ def snapshot(view="admin", now=None):
             x["sub"] += f" · heute {avs['suggested']}× Antwortvorschläge, {avs['rewritten']}× umformuliert"
         if x["id"] == "cal" and kal_page:        # the page Kalender: appointments added, changed, deleted today (a number)
             x["sub"] += f" · heute {kal_page} auf der Seite geändert"
+            # Apple-Stil „5a“: of them repeating appointments, and taken back with „Rückgängig“ (numbers only)
+            x["sub"] += (f", {kal_serie} davon Serien" if kal_serie else "") + (f", {kal_undo} zurückgenommen" if kal_undo else "")
         if x["id"] == "cal" and kcopy.get("calendars"):   # Spark-Kalender: copies, appointments, last comparison (numbers)
             x["sub"] += (f" · {kcopy['calendars']} Kalender als Kopie, {kcopy['items']} Termine"
                          + (f", abgeglichen vor {kcopy['ago']} min" if kcopy.get("ago") is not None else ""))

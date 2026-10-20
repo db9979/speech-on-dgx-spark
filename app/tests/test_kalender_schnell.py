@@ -123,8 +123,9 @@ class Page(unittest.TestCase):
                         connect(uid)
                     await pg.evaluate("CAL_ON=true;icTabSet('cal','show');KAL.day=new Date(2026,2,10);KAL.view='week';goSec('cal')")
                     await b.until(pg, "!KAL.busy&&!!KAL.data&&KAL.data.add&&KAL.data.add.length>0")
-                    # the view has the whole width: no side column beside it
-                    wide = await pg.evaluate("document.querySelector('#kalview .kalmain').getBoundingClientRect().width/"
+                    # the view has the whole width beside the column of calendars (Apple-Stil „4a“): the card never takes a column
+                    wide = await pg.evaluate("(document.querySelector('#kalview .kalmain').getBoundingClientRect().width+"
+                                             "document.querySelector('#kalview .kalside').getBoundingClientRect().width)/"
                                              "document.querySelector('#kalroot').getBoundingClientRect().width")
                     self.assertGreater(wide, 0.9)
                     await pg.fill("#kalview [data-q]", "Schnell Sitzung 11.03.2026 9 Uhr im Saal")

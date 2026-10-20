@@ -13311,16 +13311,6 @@
         }
       }
     },
-    "Nur lesen: ein wiederholter Termin; die Serie änderst du im Kalender-Programm.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Read only: a repeating appointment; change the series in your calendar app."
-          }
-        }
-      }
-    },
     "Nur lesen: dieser Kalender lässt sich hier nicht ändern.": {
       "localizations": {
         "en": {
@@ -14927,6 +14917,356 @@
           "stringUnit": {
             "state": "translated",
             "value": "Not done"
+          }
+        }
+      }
+    },
+    "Alle künftigen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All Future Events"
+          }
+        }
+      }
+    },
+    "Endet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ends"
+          }
+        }
+      }
+    },
+    "Endet am": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "End Date"
+          }
+        }
+      }
+    },
+    "Erinnerung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alert"
+          }
+        }
+      }
+    },
+    "Keine Termine": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Events"
+          }
+        }
+      }
+    },
+    "Liste zeigen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show List"
+          }
+        }
+      }
+    },
+    "Tag zeigen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show Day"
+          }
+        }
+      }
+    },
+    "Name <mail@beispiel.de>": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name <mail@example.com>"
+          }
+        }
+      }
+    },
+    "Nur dieser Termin": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This Event Only"
+          }
+        }
+      }
+    },
+    "Nur eine Liste im Termin: es geht keine Einladung raus.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only a list in the event: no invitation is sent."
+          }
+        }
+      }
+    },
+    "Person hinzufügen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add Person"
+          }
+        }
+      }
+    },
+    "Termin bearbeiten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit Event"
+          }
+        }
+      }
+    },
+    "Termin löschen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete Event"
+          }
+        }
+      }
+    },
+    "Termin verschieben?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move Event?"
+          }
+        }
+      }
+    },
+    "Verschieben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move"
+          }
+        }
+      }
+    },
+    "Wiederholen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repeat"
+          }
+        }
+      }
+    },
+    "Wiederholten Termin ändern?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change Repeating Event?"
+          }
+        }
+      }
+    },
+    "wiederholt sich": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "repeats"
+          }
+        }
+      }
+    },
+    "Gelöscht: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deleted: %@"
+          }
+        }
+      }
+    },
+    "Verschoben: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moved: %@"
+          }
+        }
+      }
+    },
+    "Geändert: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Changed: %@"
+          }
+        }
+      }
+    },
+    "Eingetragen: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Added: %@"
+          }
+        }
+      }
+    },
+    "%lld Tage vorher": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld days before"
+          }
+        }
+      }
+    },
+    "%lld Std. vorher": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld hours before"
+          }
+        }
+      }
+    },
+    "%lld Min. vorher": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld minutes before"
+          }
+        }
+      }
+    },
+    "Täglich": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every Day"
+          }
+        }
+      }
+    },
+    "Wöchentlich": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every Week"
+          }
+        }
+      }
+    },
+    "Alle 2 Wochen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every 2 Weeks"
+          }
+        }
+      }
+    },
+    "Monatlich": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every Month"
+          }
+        }
+      }
+    },
+    "Jährlich": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every Year"
+          }
+        }
+      }
+    },
+    "Eigene Regel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Custom"
+          }
+        }
+      }
+    },
+    "Nie": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Never"
+          }
+        }
+      }
+    },
+    "Keine": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "None"
+          }
+        }
+      }
+    },
+    "1 Tag vorher": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 day before"
+          }
+        }
+      }
+    },
+    "1 Std. vorher": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 hour before"
           }
         }
       }

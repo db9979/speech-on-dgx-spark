@@ -198,7 +198,7 @@ struct FuerDichView: View {
         .sheet(item: $writing) { d in MailWrite(draft: d) }
         .sheet(item: $adding) { e in
             NavigationStack {
-                List { Section("Eintragen") { QuickAdd(text: e.line) { adding = nil } } }
+                List { Section("Eintragen") { QuickAdd(text: e.line) { _, _ in adding = nil } } }
                     .navigationTitle("Eintragen")
                     .navigationBarTitleDisplayMode(.inline)
                     .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Fertig") { adding = nil } } }

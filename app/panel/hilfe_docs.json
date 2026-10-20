@@ -5309,7 +5309,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "E-Mail wie Apple Mail, Stufe 1 (V01.0.874, Plan apple-stil/plan.md 1a 2a 3a, Dominik 2026-10-20 „ok“): Die Seite E-Mail folgt dem Aufbau von Apple Mail, ohne neuen Schalter (Teil von „E-Mail lesen“). - Postfächer links: Mit „Mails ordnen“ steht links eine Spalte „Postfächer“: Alle Posteingänge, die intelligenten Postfächer Ungelesen, Markiert und Mit Anhang, darunter die Ordner je Konto. Sie ist offen, bis du sie ausblendest (Seitenleisten-Knopf oder Taste O, der Browser merkt es sich); beim Ziehen einer Mail geht sie von selbst auf. Oben steht nur eine ruhige Leiste: Suche, „Auswählen“, Neu laden, „Neue Mail“ (Taste N). Häkchen gibt es erst nach „Auswählen“ oder mit ⌘/Strg-Klick. - Liste: Absender mit der Uhrzeit rechts (heute die Uhrzeit, gestern „Gestern“, diese Woche der Wochentag, sonst das Datum), darunter der Betreff, 📎 und ★ als kleine Zeichen. - Lesen: Kopf wie Apple Mail (Kreis mit den Initialen, Name, Adresse, An, Uhrzeit rechts, Betreff groß), Anhänge als Kacheln. Eine Mail mit HTML erscheint formatiert, wie sie gesendet wurde (Absätze, fett, Listen, Tabellen, Zitate): mailansicht.py bereinigt sie auf dem Spark mit einer festen Liste erlaubter Tags und Attribute (kein S"
+"text": "E-Mail wie Apple Mail, Stufe 1 (V01.0.874, Plan apple-stil/plan.md 1a 2a 3a, Dominik 2026-10-20 „ok“): Die Seite E-Mail folgt dem Aufbau von Apple Mail, ohne neuen Schalter (Teil von „E-Mail lesen“)."
 },
 {
 "lang": "de",
@@ -5317,7 +5317,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "kript, kein Stil von außen, kein position, keine on…-Attribute, kein SVG, keine Formulare, keine Rahmen), die Seite zeigt sie in einem Rahmen mit sandbox ohne Skript und eigener CSP (default-src 'none'; img-src 'self' data:). Bilder von außen bleiben aus, damit der Absender nicht sieht, dass du die Mail liest; „Bilder laden“ holt sie für diese eine Mail über den Spark (netguard, nur öffentliche Adressen, nur Adressen, die in genau dieser Mail stehen, nur PNG, JPEG, GIF und WebP nach den ersten Bytes, nie SVG). Eingebettete Bilder (cid:) kommen aus dem Anhang. Ein Link öffnet sich erst nach der Frage „Link öffnen? Er führt zu …“ mit der echten Adresse; nennt der Linktext eine andere Adresse als das Ziel, steht eine Warnung dabei (eine übliche Masche von Phishing-Mails). mailto: öffnet eine neue Mail. Mails ohne HTML bleiben Text. - Handy: Die Leiste mit Antworten, Weiter, Archiv, Ordner und Löschen steht fest unten über der Tab-Leiste (vorher lag sie über dem Betreff). - Schreiben: Antworten, Weiterleiten und „Neue Mail“ öffnen ein eigenes Fenster über der Seite (am Rechner unten rechts, am Kopf verschiebbar und verkleinerbar, die Mail bleibt daneben lesbar; am Handy ein Blatt über "
+"text": "Kalender wie Apple Kalender, Stufe 2 (V01.0.880, Plan apple-stil/plan.md 4a 5a, Dominik 2026-10-20 „ok“): Kein neuer Schalter (Teil von „Kalender“). Links eine Seitenleiste wie in Apple Kalender: Monat im Kleinen (Tipp springt zum Tag), alle Kalender mit Farbe zum Ein- und Ausblenden (merkt sich der Browser), geteilte und Abos mit Zeichen; auf dem Handy öffnet ☰ sie als Blatt. Neue Ansicht Jahr (zwölf Monate, Tipp öffnet den Tag). Anlegen wie bei Apple: in Woche und Tag in freie Zeit ziehen (Viertelstunden) oder doppelklicken, in der Ganztags-Zeile doppelklicken für einen ganztägigen Termin, auf dem Handy lange drücken; der Termin steht sofort als Entwurf da und der Inspektor öffnet sich daneben mit dem Titel zum Tippen. Ein Tipp auf einen eigenen Termin öffnet denselben Inspektor: Titel, Ort, ganztägig, Beginn und Ende, Wiederholen (Nie, Täglich, Wöchentlich, Alle 2 Wochen, Monatlich, Jährlich, mit „Endet am“), Kalender (nur beim Anlegen), Erinnerung (5 Min. bis 2 Tage vorher), Personen, Notiz und Link. Schließen (Esc, Klick daneben, „Fertig“) speichert; danach steht zwei Minuten „Rückgängig“ unten. Die untere Kante eines Termins zieht man für eine andere Dauer. Auf dem Handy zeig"
 },
 {
 "lang": "de",
@@ -5325,7 +5325,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "allem) mit kompakten Zeilen An, Kopie, Betreff, dem Text und den Spark-Vorschlägen als ✨-Chips. „Senden“ (oder ⌘/Strg+Enter) lässt den Spark die Mail prüfen (dieselbe Prüfung wie das Vorschau-Blatt, send/preview), dann wartet sie 10 Sekunden mit „Rückgängig“ und „Jetzt senden“; „Rückgängig“ bringt das Fenster mit allem Getippten zurück, nichts ist rausgegangen. Steht Text vom Spark in der Mail (ein ✨-Vorschlag, ✨ kürzer/freundlicher/förmlicher/auf Englisch, ein Entwurf aus „Für dich“), kommt vor dem Senden weiter das Vorschau-Blatt, gesendet wird nur dort. Mails per Stimme behalten ihre Freigabe-Karte mit „Ja“. - iPhone-App: dieselbe Mail formatiert in einer Web-Ansicht ohne Skript, die nichts aus dem Netz lädt (Inhaltsregel sperrt jedes Laden über http/https, die Seite trägt ihre eigene CSP, eingebettete Bilder kommen als data: mit), Kopf wie Apple Mail, Links nur nach der Frage mit der Adresse (dann Safari), Bilder von außen bleiben in der App aus. „Senden“ mit 10 Sekunden „Rückgängig“, Text vom Spark mit Vorschau. - Live (Knoten E-Mail): „heute N formatiert gezeigt, M Bilder von außen geladen“, nur Zahlen. Logs: mail: view html|text | N pictures outside, mail: picture loaded|sho"
+"text": "t der Tag oben einen Wochenstreifen; Wischen wechselt den Tag. Wiederholte Termine (5a) lassen sich jetzt ändern, verschieben und löschen: das Panel fragt „Nur dieser Termin“ oder „Alle künftigen“ (bei geänderter Regel nur „Alle künftigen“). „Nur dieser“ schreibt eine Ausnahme (RECURRENCE-ID) oder streicht den einen Tag (EXDATE); „Alle künftigen“ ändert ab dem ersten Termin die Serie selbst, ab einem späteren endet die alte Serie davor (UNTIL, ein COUNT wird umgerechnet) und eine neue beginnt. Personen sind nur eine Liste im Termin (ATTENDEE mit SCHEDULE-AGENT=CLIENT): weder der Kalender-Server noch der Spark schickt eine Einladung; Einladungen kommen später mit eigenem Admin-Schalter. Technik: kalserie.py (reine iCal-Funktionen: Felder lesen und prüfen, Serie ändern), calendars.page_series, change_series, keep_undo, page_undo. Jede Änderung geht wie bisher erst in die Kopie des Spark und dahinter zum Server, je Profil der Reihe nach, damit „Rückgängig“ nie vor dem Speichern ankommt. Endpunkte: PUT /api/profile/calendar/event nimmt für einen Termin einer Serie uid, rid (sein ursprünglicher Beginn) und scope one|future; Wiederholen, Erinnerung, Personen, Notiz und Link nur, wenn sie"
 },
 {
 "lang": "de",
@@ -5333,7 +5333,23 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "wn|refused …, nie Adresse, Betreff oder Text. - Noch nicht in Stufe 1: Vorschauzeilen in der Liste, Entwürfe im Ordner „Entwürfe“ und Adress-Vorschläge aus Kontakte (kommen nach dem Mail-Vorrat)."
+"text": " im Formular stehen (eine Verschiebung oder eine ältere App lässt sie, wie sie sind). Neu POST /api/profile/calendar/undo {\"undo\"}: das Token aus der Antwort jedes Speicherns, an das Profil gebunden, 120 Sekunden gültig, höchstens fünf, einmal nutzbar (danach 410); Anmeldung, CSRF, Größenlimit, Rate-Limit „kalenderaendern“. Logs: calendar: series changed|deleted, this one|from this on, calendar: series not changed (…), calendar: page undo done|gone|failed, jeweils mit … refused, notaus. Live: „heute N auf der Seite geändert, N davon Serien, N zurückgenommen“. Offen für später: Einladungen, einen Termin in einen anderen Kalender verschieben, Punkte in der Jahresansicht. - Postfächer links: Mit „Mails ordnen“ steht links eine Spalte „Postfächer“: Alle Posteingänge, die intelligenten Postfächer Ungelesen, Markiert und Mit Anhang, darunter die Ordner je Konto. Sie ist offen, bis du sie ausblendest (Seitenleisten-Knopf oder Taste O, der Browser merkt es sich); beim Ziehen einer Mail geht sie von selbst auf. Oben steht nur eine ruhige Leiste: Suche, „Auswählen“, Neu laden, „Neue Mail“ (Taste N). Häkchen gibt es erst nach „Auswählen“ oder mit ⌘/Strg-Klick. - Liste: Absender mit der Uhrzei"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "t rechts (heute die Uhrzeit, gestern „Gestern“, diese Woche der Wochentag, sonst das Datum), darunter der Betreff, 📎 und ★ als kleine Zeichen. - Lesen: Kopf wie Apple Mail (Kreis mit den Initialen, Name, Adresse, An, Uhrzeit rechts, Betreff groß), Anhänge als Kacheln. Eine Mail mit HTML erscheint formatiert, wie sie gesendet wurde (Absätze, fett, Listen, Tabellen, Zitate): mailansicht.py bereinigt sie auf dem Spark mit einer festen Liste erlaubter Tags und Attribute (kein Skript, kein Stil von außen, kein position, keine on…-Attribute, kein SVG, keine Formulare, keine Rahmen), die Seite zeigt sie in einem Rahmen mit sandbox ohne Skript und eigener CSP (default-src 'none'; img-src 'self' data:). Bilder von außen bleiben aus, damit der Absender nicht sieht, dass du die Mail liest; „Bilder laden“ holt sie für diese eine Mail über den Spark (netguard, nur öffentliche Adressen, nur Adressen, die in genau dieser Mail stehen, nur PNG, JPEG, GIF und WebP nach den ersten Bytes, nie SVG). Eingebettete Bilder (cid:) kommen aus dem Anhang. Ein Link öffnet sich erst nach der Frage „Link öffnen? Er führt zu …“ mit der echten Adresse; nennt der Linktext eine andere Adresse als das Ziel, steht ein"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "e Warnung dabei (eine übliche Masche von Phishing-Mails). mailto: öffnet eine neue Mail. Mails ohne HTML bleiben Text. - Handy: Die Leiste mit Antworten, Weiter, Archiv, Ordner und Löschen steht fest unten über der Tab-Leiste (vorher lag sie über dem Betreff). - Schreiben: Antworten, Weiterleiten und „Neue Mail“ öffnen ein eigenes Fenster über der Seite (am Rechner unten rechts, am Kopf verschiebbar und verkleinerbar, die Mail bleibt daneben lesbar; am Handy ein Blatt über allem) mit kompakten Zeilen An, Kopie, Betreff, dem Text und den Spark-Vorschlägen als ✨-Chips. „Senden“ (oder ⌘/Strg+Enter) lässt den Spark die Mail prüfen (dieselbe Prüfung wie das Vorschau-Blatt, send/preview), dann wartet sie 10 Sekunden mit „Rückgängig“ und „Jetzt senden“; „Rückgängig“ bringt das Fenster mit allem Getippten zurück, nichts ist rausgegangen. Steht Text vom Spark in der Mail (ein ✨-Vorschlag, ✨ kürzer/freundlicher/förmlicher/auf Englisch, ein Entwurf aus „Für dich“), kommt vor dem Senden weiter das Vorschau-Blatt, gesendet wird nur dort. Mails per Stimme behalten ihre Freigabe-Karte mit „Ja“. - iPhone-App: dieselbe Mail formatiert in einer Web-Ansicht ohne Skript, die nichts aus dem Netz lädt ("
 },
 {
 "lang": "de",
@@ -7614,6 +7630,14 @@
 "head": "Meine Sachen",
 "title": "E-Mail wie Apple Mail",
 "text": "E-Mail wie Apple Mail (V01.0.874, Plan apple-stil/plan.md Stufe 1): Eine Mail hat oben den Kopf wie Apple Mail (Kreis mit den Initialen, Name, Uhrzeit, Adresse, An, Betreff groß). Mails mit HTML erscheinen formatiert, wie sie gesendet wurden; der Spark bereinigt sie vorher, die App zeigt sie in einer Web-Ansicht ohne Skript, die nichts aus dem Netz lädt (eingebettete Bilder kommen mit, Bilder von außen bleiben aus). Ein Link öffnet sich erst nach der Frage mit seiner Adresse in Safari, mailto: öffnet eine neue Mail. „Senden“ lässt den Spark die Mail prüfen und wartet dann 10 Sekunden mit „Rückgängig“ und „Jetzt senden“; mit Text vom Spark (Vorschlag, umformuliert, Entwurf aus „Für dich“) kommt vorher die Vorschau."
+},
+{
+"lang": "de",
+"src": "iphone-app",
+"file": "iPhone-App „Spark“",
+"head": "Meine Sachen",
+"title": "Kalender wie Apple Kalender",
+"text": "Kalender wie Apple Kalender (V01.0.880, Plan apple-stil/plan.md Stufe 2): Oben ein Wochenstreifen mit Punkten an Tagen mit Terminen, darunter der gewählte Tag; Wischen zur Seite wechselt den Tag, auf dem Streifen die Woche, „Heute“ springt zurück, oben rechts geht es zur Liste. „Neuer Termin“ (+) ist ein Formular in Gruppen wie bei Apple: Titel und Ort, Ganztägig, Beginn, Ende, Wiederholen mit „Endet“, Kalender, Erinnerung, Personen (nur eine Liste, es geht keine Einladung raus), Notiz und Link. Ein Termin zeigt Wiederholen, Erinnerung und Personen; „Bearbeiten“ öffnet dasselbe Formular. Bei einem wiederholten Termin fragt die App „Nur dieser Termin“ oder „Alle künftigen“, auch bei „+1 Tag“, „+1 Woche“ und „Termin löschen“. Nach jedem Speichern steht „Rückgängig“ in der Ansicht (zwei Minuten, der Spark setzt den alten Stand zurück)."
 },
 {
 "lang": "de",
@@ -14333,7 +14357,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "Mail like Apple Mail, stage 1 (V01.0.874, plan apple-stil/plan.md 1a 2a 3a, Dominik 2026-10-20 \"ok\"): the Mail page follows the layout of Apple Mail, without a new switch (part of \"Read mail\"). - Mailboxes on the left: with \"Order mail\" a column \"Mailboxes\" stands on the left: all inboxes, the smart mailboxes Unread, Flagged and With attachment, below them the folders per account. It is open until you hide it (sidebar button or key O, the browser remembers it); dragging a mail opens it by itself. On top there is only one quiet bar: search, \"Select\", reload, \"New mail\" (key N). Ticks only after \"Select\" or with ⌘/Ctrl-click. - List: the sender with the time on the right (today the time, yesterday \"Yesterday\", this week the weekday, else the date), the subject below, 📎 and ★ as small marks. - Reading: a head like Apple Mail (circle with the initials, name, address, to, time on the right, the subject big), attachments as tiles. A mail with HTML is shown formatted as it was sent (paragraphs, bold, lists, tables, quotes): mailansicht.py cleans it on the Spark with a fixed list of allowed tags and attributes (no script, no style from outside, no position, no on… attributes, no SVG, no fo"
+"text": "Mail like Apple Mail, stage 1 (V01.0.874, plan apple-stil/plan.md 1a 2a 3a, Dominik 2026-10-20 \"ok\"): the Mail page follows the layout of Apple Mail, without a new switch (part of \"Read mail\")."
 },
 {
 "lang": "en",
@@ -14341,7 +14365,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "rms, no frames); the page shows it in a sandbox frame without script with its own CSP (default-src 'none'; img-src 'self' data:). Pictures from outside stay off so the sender does not learn that you read the mail; \"Load pictures\" fetches them for this one mail through the Spark (netguard, public addresses only, only addresses named in exactly this mail, only PNG, JPEG, GIF and WebP by their first bytes, never SVG). Embedded pictures (cid:) come from the attachment. A link opens only after the question \"Open the link? It leads to …\" with its real address; when the link text names another address than the target, a warning stands with it (a common trick of phishing mails). mailto: opens a new mail. Mails without HTML stay text. - Phone: the bar with reply, forward, archive, folder and delete stands fixed at the bottom above the tab bar (before, it lay over the subject). - Writing: reply, forward and \"New mail\" open a window of their own over the page (at the computer bottom right, movable by its head and to be made small, the mail stays readable beside it; on a phone a sheet over everything) with compact lines To, Copy, Subject, the text and the Spark's suggestions as ✨ chips. \"Send\""
+"text": "Calendar like Apple Calendar, stage 2 (V01.0.880, plan apple-stil/plan.md 4a 5a, Dominik 2026-10-20 \"ok\"): no new switch (part of \"Calendar\"). A sidebar on the left like in Apple Calendar: a small month (a tap jumps to the day), every calendar with its colour to show and hide (the browser remembers), shared ones and subscriptions marked; on a phone ☰ opens it as a sheet. New view Year (twelve months, a tap opens the day). Creating like Apple: in week and day drag in free time (quarter hours) or double-click, double-click the all-day row for an all-day appointment, long-press on a phone; the appointment shows at once as a draft and the inspector opens beside it with the title to type. A tap on an own appointment opens the same inspector: title, place, all day, start and end, repeat (Never, Daily, Weekly, Every 2 weeks, Monthly, Yearly, with \"Ends on\"), calendar (only when creating), alert (5 min to 2 days before), people, note and link. Closing (Esc, a click beside it, \"Done\") saves; then \"Undo\" stays at the bottom for two minutes. The lower edge of an appointment is dragged for another length. On a phone the day shows a week strip on top; a swipe changes the day. Repeating appointm"
 },
 {
 "lang": "en",
@@ -14349,7 +14373,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": " (or ⌘/Ctrl+Enter) has the Spark check the mail (the same check as the preview sheet, send/preview), then it waits 10 seconds with \"Undo\" and \"Send now\"; \"Undo\" brings the window back with everything typed, nothing went out. When the mail holds text of the Spark (a ✨ suggestion, ✨ shorter/friendlier/more formal/in English, a draft from \"For you\"), the preview sheet still comes before sending and only it sends. Mails by voice keep their approval card with \"yes\". - iPhone app: the same mail formatted in a web view without script that loads nothing from the network (a content rule blocks every http/https load, the page carries its own CSP, embedded pictures come along as data:), a head like Apple Mail, links only after the question with the address (then Safari), pictures from outside stay off in the app. \"Send\" with 10 seconds \"Undo\", text of the Spark with the preview. - Live (node Mail): \"today N shown formatted, M pictures from outside loaded\", numbers only. Logs: mail: view html|text | N pictures outside, mail: picture loaded|shown|refused …, never an address, subject or text. - Not yet in stage 1: preview lines in the list, drafts in the folder \"Drafts\" and address suggestions f"
+"text": "ents (5a) can now be changed, moved and deleted: the panel asks \"Only this appointment\" or \"All future ones\" (with a changed rule only \"All future ones\"). \"Only this\" writes an exception (RECURRENCE-ID) or removes the one day (EXDATE); \"All future ones\" changes the series itself from the first appointment, from a later one the old series ends before it (UNTIL, a COUNT is converted) and a new one begins. People are only a list in the appointment (ATTENDEE with SCHEDULE-AGENT=CLIENT): neither the calendar server nor the Spark sends an invitation; invitations come later with an admin switch of their own. Technology: kalserie.py (pure iCal functions: reading and checking fields, changing a series), calendars.page_series, change_series, keep_undo, page_undo. Every change goes into the Spark's copy first and to the server behind as before, in order per profile, so \"Undo\" never arrives before the save. Endpoints: PUT /api/profile/calendar/event takes uid, rid (its original start) and scope one|future for an appointment of a series; repeat, alert, people, note and link only when the form names them (a move or an older app leaves them as they are). New POST /api/profile/calendar/undo {\"undo"
 },
 {
 "lang": "en",
@@ -14357,7 +14381,23 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "rom contacts (they come after the mail cache)."
+"text": "\"}: the token from the answer of every save, bound to the profile, valid 120 seconds, at most five, usable once (then 410); login, CSRF, size limit, rate limit \"kalenderaendern\". Logs: calendar: series changed|deleted, this one|from this on, calendar: series not changed (…), calendar: page undo done|gone|failed, each with … refused, notaus. Live: \"heute N auf der Seite geändert, N davon Serien, N zurückgenommen\". Left for later: invitations, moving an appointment to another calendar, dots in the year view. - Mailboxes on the left: with \"Order mail\" a column \"Mailboxes\" stands on the left: all inboxes, the smart mailboxes Unread, Flagged and With attachment, below them the folders per account. It is open until you hide it (sidebar button or key O, the browser remembers it); dragging a mail opens it by itself. On top there is only one quiet bar: search, \"Select\", reload, \"New mail\" (key N). Ticks only after \"Select\" or with ⌘/Ctrl-click. - List: the sender with the time on the right (today the time, yesterday \"Yesterday\", this week the weekday, else the date), the subject below, 📎 and ★ as small marks. - Reading: a head like Apple Mail (circle with the initials, name, address, to, ti"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "me on the right, the subject big), attachments as tiles. A mail with HTML is shown formatted as it was sent (paragraphs, bold, lists, tables, quotes): mailansicht.py cleans it on the Spark with a fixed list of allowed tags and attributes (no script, no style from outside, no position, no on… attributes, no SVG, no forms, no frames); the page shows it in a sandbox frame without script with its own CSP (default-src 'none'; img-src 'self' data:). Pictures from outside stay off so the sender does not learn that you read the mail; \"Load pictures\" fetches them for this one mail through the Spark (netguard, public addresses only, only addresses named in exactly this mail, only PNG, JPEG, GIF and WebP by their first bytes, never SVG). Embedded pictures (cid:) come from the attachment. A link opens only after the question \"Open the link? It leads to …\" with its real address; when the link text names another address than the target, a warning stands with it (a common trick of phishing mails). mailto: opens a new mail. Mails without HTML stay text. - Phone: the bar with reply, forward, archive, folder and delete stands fixed at the bottom above the tab bar (before, it lay over the subject). -"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": " Writing: reply, forward and \"New mail\" open a window of their own over the page (at the computer bottom right, movable by its head and to be made small, the mail stays readable beside it; on a phone a sheet over everything) with compact lines To, Copy, Subject, the text and the Spark's suggestions as ✨ chips. \"Send\" (or ⌘/Ctrl+Enter) has the Spark check the mail (the same check as the preview sheet, send/preview), then it waits 10 seconds with \"Undo\" and \"Send now\"; \"Undo\" brings the window back with everything typed, nothing went out. When the mail holds text of the Spark (a ✨ suggestion, ✨ shorter/friendlier/more formal/in English, a draft from \"For you\"), the preview sheet still comes before sending and only it sends. Mails by voice keep their approval card with \"yes\". - iPhone app: the same mail formatted in a web view without script that loads nothing from the network (a content rule blocks every http/https load, the page carries its own CSP, embedded pictures come along as data:), a head like Apple Mail, links only after the question with the address (then Safari), pictures from outside stay off in the app. \"Send\" with 10 seconds \"Undo\", text of the Spark with the preview. -"
 },
 {
 "lang": "en",
@@ -16502,6 +16542,14 @@
 "head": "My things",
 "title": "E-mail like Apple Mail",
 "text": "E-mail like Apple Mail (V01.0.874, plan apple-stil/plan.md stage 1): a mail has the head like Apple Mail on top (circle with the initials, name, time, address, to, the subject big). Mails with HTML are shown formatted as they were sent; the Spark cleans them first, the app shows them in a web view without script that loads nothing from the network (embedded pictures come along, pictures from outside stay off). A link opens in Safari only after the question with its address, mailto: opens a new mail. \"Send\" has the Spark check the mail and then waits 10 seconds with \"Undo\" and \"Send now\"; with text of the Spark (a suggestion, a rewrite, a draft from \"For you\") the preview comes first."
+},
+{
+"lang": "en",
+"src": "iphone-app",
+"file": "iPhone app \"Spark\"",
+"head": "My things",
+"title": "Calendar like Apple Calendar",
+"text": "Calendar like Apple Calendar (V01.0.880, plan apple-stil/plan.md stage 2): on top a week strip with dots on days with appointments, below it the chosen day; a swipe sideways changes the day, on the strip the week, \"Today\" jumps back, top right switches to the list. \"New Event\" (+) is a form in groups like Apple's: title and place, all day, start, end, repeat with \"Ends\", calendar, alert, people (only a list, no invitation is sent), note and link. An appointment shows repeat, alert and people; \"Edit\" opens the same form. For a repeating appointment the app asks \"This Event Only\" or \"All Future Events\", also for \"+1 day\", \"+1 week\" and \"Delete Event\". After every save \"Undo\" stays in the view (two minutes, the Spark puts back the old state)."
 },
 {
 "lang": "en",

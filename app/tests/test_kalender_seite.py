@@ -154,7 +154,9 @@ class Page(unittest.TestCase):
                             self.assertLessEqual(over, 1, f"{view} at {width} px scrolls sideways")
                         # a tap shows the details
                         await pg.evaluate("document.querySelector('#kalview [data-i]').click()")
-                        await b.until(pg, "!document.querySelector('#kalview .kaldet').hidden&&document.querySelector('#kalview .kaldet').textContent.includes('Offenburg')")
+                        # (an own one in the inspector: the place is in its field)
+                        await b.until(pg, "!document.querySelector('#kalview .kaldet').hidden&&(document.querySelector('#kalview .kaldet').textContent+"
+                                          "[...document.querySelectorAll('#kalview .kaldet input')].map(i=>i.value).join(' ')).includes('Offenburg')")
                         self.assertEqual(errors, [])
                     finally:
                         await br.close()

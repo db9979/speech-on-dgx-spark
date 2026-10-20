@@ -164,6 +164,7 @@ MODULE = {
     "kalenderserver": ("dienste", "Kalender-Server: die Spark-Kalender eines Profils für Kalender-Apps (CalDAV unter /caldav/, App-Passwort)"),
     "sparkkalender": ("dienste", "Spark-Kalender ohne Konto: Termine nur auf dem Spark, verschlüsselt im Profil, beantwortet CalDAV im Panel selbst"),
     "kalenderspiegel": ("dienste", "Spark-Kalender: verschlüsselte Kopie jedes CalDAV-Kalenders, holt nur Änderungen, Änderungen der Seite sofort"),
+    "kalserie": ("dienste", "Kalender wie Apple: Wiederholen, Erinnerung, Personen ohne Einladung, Serie nur dieser oder alle künftigen"),
     "vorwaermen": ("dienste", "Vorwärmen: liest beim Anmelden Kalender, Mails, Für dich und Kontakte vorab in den Speicher"),
     "halive": ("dienste", "Home Assistant live: hält für aktive Profile eine Kopie aller Zustände über eine WebSocket-Verbindung"),
     "contacts": ("dienste", "Kontakte per CardDAV, nur lesen"),

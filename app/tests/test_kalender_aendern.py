@@ -4,11 +4,12 @@ Stufen“): the page's form is the person's own yes; the server checks like the 
 - POST /api/profile/calendar/event adds to the first own CalDAV calendar, or to the one named (also one shared with
   "add"); never to an iCal link; a form without title, or an end before the start, is refused.
 - PUT /api/profile/calendar/event changes (title, place, start, end) or deletes exactly the one appointment the page
-  shows, only in an own CalDAV calendar, never a repeating one, with the server's etag (If-Match); an appointment
-  that is no longer there as shown gives 409; a shared calendar is never changed by the other profile.
+  shows, only in an own CalDAV calendar, with the server's etag (If-Match); an appointment that is no longer there
+  as shown gives 409; a shared calendar is never changed by the other profile. A repeating one goes only with its
+  series' uid and scope (test_kalender_serie.py), never by title and start.
 - The view marks which appointments the page may change ("edit") and where it may add ("add").
-- The form at 390 px: „+ Termin“, fill, „Speichern“, the appointment is on the page; „Ändern“ and „Löschen“ in its
-  details.
+- The inspector at 390 px: „+ Termin“, fill, „Hinzufügen“, the appointment is on the page; a tap on it opens the
+  inspector again (change, „Fertig“), „Löschen“ there.
 
 Fixed dates (2026-03), the fake CalDAV server; no wall clock.
 """
@@ -123,7 +124,9 @@ class Api(unittest.TestCase):
         got = {x["title"]: x for x in self.mine(self.view())}
         one, rep = got["Notiz Aendern"], got["Joggen Aendern"]
         self.assertEqual((one["edit"], one["why"], one["note"], one["link"]), (True, "", "Unterlagen mitbringen", "https://example.org/termin"))
-        self.assertEqual((rep["edit"], rep["why"], rep["note"], rep["link"]), (False, "serie", "Treffpunkt\nam Tor", ""))
+        # a repeating one of an own calendar is changed too since Apple-Stil „5a“ (with its uid and the series' rule)
+        self.assertEqual((rep["edit"], rep["why"], rep["note"], rep["link"], rep["rule"]), (True, "", "Treffpunkt\nam Tor", "", "weekly"))
+        self.assertEqual(rep["uid"], "aendern-rr")
         self.assertEqual(calendars._why({"url": "https://x.de/feed.ics"}, {}), "abo")
         self.assertEqual(calendars._why({"url": "https://x.de/dav/", "owner": "u_1"}, {}), "geteilt")
         self.assertEqual(len(calendars._note("x" * 5000)), calendars.NOTE_MAX)
@@ -138,9 +141,12 @@ class Api(unittest.TestCase):
         helpers.CAL_EVENTS[REPEAT[0]] = REPEAT[1]
         helpers.cal_changed_behind()
         x = self.mine(self.view())[0]
-        self.assertFalse(x["edit"])           # a repeating one is never changed on the page
+        # a repeating one never goes by title and start alone (that would hit the whole series): 409
         r = self.c.put("/api/profile/calendar/event", json={"change": "delete", "cal": x["cal"], "title": x["title"], "start": x["start"], "tz": TZ})
         self.assertEqual(r.status_code, 409)
+        # … and with its rid only with a scope
+        r = self.c.put("/api/profile/calendar/event", json={"change": "delete", "cal": x["cal"], "uid": x["uid"], "rid": x["rid"], "start": x["start"], "tz": TZ})
+        self.assertEqual(r.status_code, 400)
         self.assertIn(REPEAT[0], helpers.CAL_EVENTS)
         guest = TestClient(panel.app)
         self.assertIn(guest.post("/api/profile/calendar/event", json={"title": "x"}).status_code, (401, 403))
@@ -205,9 +211,9 @@ class Page(unittest.TestCase):
                     self.assertLessEqual(over, 1, "the form scrolls sideways")
                     await pg.click("#kalview [data-act=save]")
                     await b.until(pg, "!KAL.busy&&KAL.data.events.some(x=>x.title==='Elternabend Aendern'&&x.edit)")
-                    await pg.evaluate("document.querySelector('#kalview .kli[data-i]') && [...document.querySelectorAll('#kalview .kli[data-i]')].find(e=>e.textContent.includes('Elternabend')).click()")
-                    await b.until(pg, "!!document.querySelector('#kalview .kaldet [data-act=edit]')")
-                    await pg.click("#kalview .kaldet [data-act=edit]")
+                    # an own appointment opens the inspector at once (Apple-Stil „4a“)
+                    await pg.evaluate("document.querySelector('#kalview .kli[data-i]') && [...document.querySelectorAll('#kalview .kli[data-i]')].find(e=>e.textContent.includes('Elterna')).click()")
+                    await b.until(pg, "document.querySelector('#kalview .kaldet [data-f=title]')?.value==='Elternabend Aendern'")
                     await pg.fill("#kalview [data-f=title]", "Elternabend Aendern neu")
                     await pg.click("#kalview [data-act=save]")
                     await b.until(pg, "!KAL.busy&&KAL.data.events.some(x=>x.title==='Elternabend Aendern neu')")

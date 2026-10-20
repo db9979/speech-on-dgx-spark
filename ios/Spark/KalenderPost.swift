@@ -23,8 +23,21 @@ struct CalEvent: Identifiable, Hashable {
     let edit: Bool
     var note = ""      // the appointment's own text, plain (calendars._note)
     var link = ""      // its web address, shown as text only
-    var why = ""       // why it is read-only, a fixed word (calendars._why): abo, geteilt, serie, lesen
+    var why = ""       // why it is read-only, a fixed word (calendars._why): abo, geteilt, lesen
+    var alarm = 0      // minutes before the start of its alert, 0: none (kalserie.alarm_of)
+    var people: [CalPerson] = []   // a list in the appointment, never an invitation (kalserie.people_of)
+    var uid = ""       // a repeating one (Apple-Stil „5a“): its series, the original start and the rule
+    var rid = 0
+    var rule = ""      // daily, weekly, biweekly, monthly, yearly, custom
+    var until = ""     // YYYY-MM-DD or empty
     var id: String { "\(cal)|\(Int(start.timeIntervalSince1970))|\(title)" }
+    var series: Bool { rid != 0 && !uid.isEmpty }
+}
+
+struct CalPerson: Hashable {
+    var name: String
+    var mail: String
+    var shown: String { name.isEmpty ? mail : "\(name) <\(mail)>" }
 }
 
 struct CalView {
@@ -121,7 +134,14 @@ extension SparkAPI {
                             allday: e["allday"] as? Bool ?? false, title: String((e["title"] as? String ?? "").prefix(200)),
                             location: String((e["location"] as? String ?? "").prefix(200)), cal: e["cal"] as? Int ?? 0,
                             edit: e["edit"] as? Bool ?? false, note: String((e["note"] as? String ?? "").prefix(2000)),
-                            link: String((e["link"] as? String ?? "").prefix(300)), why: String((e["why"] as? String ?? "").prefix(20)))
+                            link: String((e["link"] as? String ?? "").prefix(300)), why: String((e["why"] as? String ?? "").prefix(20)),
+                            alarm: min(40320, max(0, e["alarm"] as? Int ?? 0)),
+                            people: (e["people"] as? [[String: Any]] ?? []).prefix(20).compactMap { p in
+                                guard let m = p["mail"] as? String, m.contains("@") else { return nil }
+                                return CalPerson(name: String((p["name"] as? String ?? "").prefix(80)), mail: String(m.prefix(254)))
+                            },
+                            uid: String((e["uid"] as? String ?? "").prefix(255)), rid: e["rid"] as? Int ?? 0,
+                            rule: String((e["rule"] as? String ?? "").prefix(12)), until: String((e["until"] as? String ?? "").prefix(10)))
         }
         return v
     }
@@ -149,11 +169,19 @@ extension SparkAPI {
         return f.string(from: d)
     }
 
-    /// the form's fields as the Spark's page form takes them (calendars.page_item)
+    /// the form's fields as the Spark's page form takes them (calendars.page_item); a move sends only these, the
+    /// Spark keeps every other field as the calendar has it
     static func calFields(title: String, allday: Bool, start: Date, end: Date, location: String) -> [String: Any] {
         let endDay = Calendar.current.date(byAdding: .day, value: 1, to: end) ?? end   // all day: the end is the next day
         return ["title": String(title.prefix(200)), "allday": allday, "location": String(location.prefix(200)),
                 "start": allday ? isoDay(start) : isoMinute(start), "end": allday ? isoDay(endDay) : isoMinute(end)]
+    }
+
+    /// Apple-Stil „4a“: repeat (kalserie.RULES), its end, alert, people, note and link next to the times
+    static func calMore(rule: String, until: Date?, alarm: Int, people: [CalPerson], note: String, link: String) -> [String: Any] {
+        ["rule": rule, "until": rule.isEmpty || rule == "custom" ? "" : until.map { isoDay($0) } ?? "", "alarm": alarm,
+         "people": people.prefix(20).map { ["name": String($0.name.prefix(80)), "mail": String($0.mail.prefix(254))] },
+         "note": String(note.prefix(2000)), "link": String(link.prefix(300))]
     }
 
     /// Schnell eintragen: one line as the form's fields (calendars.quick on the Spark, fixed rules, nothing saved)
@@ -161,7 +189,7 @@ extension SparkAPI {
         try await object("GET", "api/profile/calendar/quick", query: ["text": String(text.prefix(200)), "tz": Self.zone])
     }
 
-    /// the fields of an appointment as shown, moved by `days` (+1 Tag, +1 Woche; 0 = as it is, for „Rückgängig“)
+    /// the fields of an appointment as shown, moved by `days` (+1 Tag, +1 Woche)
     static func moved(_ e: CalEvent, days: Int) -> [String: Any] {
         let c = Calendar.current
         let s = c.date(byAdding: .day, value: days, to: e.start) ?? e.start
@@ -170,19 +198,27 @@ extension SparkAPI {
                          end: e.allday ? (c.date(byAdding: .day, value: -1, to: en) ?? s) : en, location: e.location)
     }
 
-    func addEvent(_ fields: [String: Any], calendar: String) async throws {
+    /// a new appointment; the answer's token takes it back („Rückgängig“, calendars.keep_undo)
+    func addEvent(_ fields: [String: Any], calendar: String) async throws -> String {
         var b = fields
         b["calendar"] = calendar
         b["tz"] = Self.zone
-        _ = try await call("POST", "api/profile/calendar/event", body: b)
+        return try await object("POST", "api/profile/calendar/event", body: b)["undo"] as? String ?? ""
     }
 
-    /// change (new fields) or delete (nil) exactly the appointment shown; 409 when it is no longer there like this
-    func changeEvent(_ e: CalEvent, _ new: [String: Any]?) async throws {
+    /// change (new fields) or delete (nil) exactly the appointment shown; one of a series with its scope "one"
+    /// („Nur dieser Termin“) or "future" („Alle künftigen“); 409 when it is no longer there like this
+    func changeEvent(_ e: CalEvent, _ new: [String: Any]?, scope: String = "") async throws -> String {
         var b: [String: Any] = ["change": new == nil ? "delete" : "edit", "cal": e.cal, "title": e.title,
                                 "start": Int(e.start.timeIntervalSince1970), "tz": Self.zone]
         if let new { b["new"] = new }
-        _ = try await call("PUT", "api/profile/calendar/event", body: b)
+        if e.series { b["uid"] = e.uid; b["rid"] = e.rid; b["scope"] = scope }
+        return try await object("PUT", "api/profile/calendar/event", body: b)["undo"] as? String ?? ""
+    }
+
+    /// „Rückgängig“: the Spark puts the appointment back as it was (for two minutes after the change)
+    func undoEvent(_ token: String) async throws {
+        _ = try await call("POST", "api/profile/calendar/undo", body: ["undo": String(token.prefix(40))])
     }
 
     static func inbox(_ d: [String: Any]) -> (items: [MailItem], boxes: [String], connected: Bool, errors: [String]) {
@@ -229,31 +265,45 @@ extension SparkAPI {
 }
 
 // ---------------------------------------------------------------- Kalender
+/// Wie Apple Kalender (Apple-Stil „4a“ „5a“, Dominik 2026-10-20): the week strip with its day under it (swipe to the
+/// next day, the strip to the next week) or the list; a tap shows the appointment, „Bearbeiten“ the form in groups;
+/// a repeating one asks „Nur dieser Termin“ or „Alle künftigen“; „Rückgängig“ asks the Spark to put it back.
 @MainActor
 final class KalenderModel: ObservableObject {
     @Published var v = CalView()
     @Published var loading = true
     @Published var error: String?
     @Published var keptAt: Date?
+    @Published var day = Calendar.current.startOfDay(for: Date())
+    @Published var undo: CalUndo?
+    private var from: Date?
     static let span = 28
 
-    /// four weeks from the Monday of this week
-    static var first: Date {
+    static func monday(_ d: Date) -> Date {
         let c = Calendar(identifier: .iso8601)
-        return c.date(from: c.dateComponents([.yearForWeekOfYear, .weekOfYear], from: Date())) ?? Calendar.current.startOfDay(for: Date())
+        return c.date(from: c.dateComponents([.yearForWeekOfYear, .weekOfYear], from: d)) ?? Calendar.current.startOfDay(for: d)
     }
 
+    /// four weeks from the Monday of the day shown; only the four weeks from this week are kept on the iPhone
     func load(_ on: Bool) async {
         guard on else { Merken.drop("kalender"); v = CalView(); loading = false; return }
-        if loading, keptAt == nil, let k = Merken.object("kalender") {
+        let first = Self.monday(day)
+        let here = first == Self.monday(Date())
+        if here, loading, keptAt == nil, let k = Merken.object("kalender") {
             v = SparkAPI.calView(k.d)
             keptAt = k.at
         }
         guard let api = SparkAPI.current else { loading = false; return }
         do {
-            let d = try await Merken.timed("kalender") { try await api.calendarView(from: Self.first, days: Self.span) }
+            let d: [String: Any]
+            if here {
+                d = try await Merken.timed("kalender") { try await api.calendarView(from: first, days: Self.span) }
+                Merken.keepObject("kalender", d)
+            } else {
+                d = try await api.calendarView(from: first, days: Self.span)
+            }
             v = SparkAPI.calView(d)
-            Merken.keepObject("kalender", d)
+            from = first
             keptAt = nil
             error = nil
         } catch {
@@ -262,13 +312,100 @@ final class KalenderModel: ObservableObject {
         loading = false
     }
 
-    /// the days with appointments, from today on
+    /// another day: within the loaded weeks at once, else its four weeks are asked for
+    func show(_ d: Date) async {
+        day = Calendar.current.startOfDay(for: d)
+        if let f = from, day >= f, let e = Calendar.current.date(byAdding: .day, value: Self.span, to: f), day < e { return }
+        await load(true)
+    }
+
+    func move(days n: Int) async {
+        await show(Calendar.current.date(byAdding: .day, value: n, to: day) ?? day)
+    }
+
+    /// the appointments of one day (an all-day one on every day it covers), all-day ones first
+    func events(on d: Date) -> [CalEvent] {
+        let a = Calendar.current.startOfDay(for: d)
+        let b = Calendar.current.date(byAdding: .day, value: 1, to: a) ?? a
+        return v.events.filter { $0.start < b && max($0.end, $0.start.addingTimeInterval(60)) > a }
+            .sorted { ($0.allday ? 0 : 1, $0.start) < ($1.allday ? 0 : 1, $1.start) }
+    }
+
+    /// the list: the days with appointments of the loaded weeks, from the day shown on
     var days: [(Date, [CalEvent])] {
-        let today = Calendar.current.startOfDay(for: Date())
         let groups = Dictionary(grouping: v.events) { Calendar.current.startOfDay(for: $0.start) }
-        return groups.filter { $0.key >= today || $0.value.contains { $0.end > Date() } }
+        return groups.filter { $0.key >= day || $0.value.contains { $0.end > day } }
             .sorted { $0.key < $1.key }
             .map { ($0.key, $0.value.sorted { ($0.allday ? 0 : 1, $0.start) < ($1.allday ? 0 : 1, $1.start) }) }
+    }
+
+    func saved(_ token: String, _ text: String) {
+        undo = token.isEmpty ? nil : CalUndo(token: token, text: text)
+        Task { await load(true) }
+    }
+
+    func takeBack() async {
+        guard let u = undo, let api = SparkAPI.current else { return }
+        undo = nil
+        do {
+            try await api.undoEvent(u.token)
+            error = nil
+        } catch {
+            self.error = error.localizedDescription
+        }
+        await load(true)
+    }
+}
+
+struct CalUndo {
+    let token: String
+    let text: String
+}
+
+/// repeat and alert as the app names them (kalserie.RULES, kalserie.ALARMS on the Spark)
+enum CalNames {
+    static let rules = ["", "daily", "weekly", "biweekly", "monthly", "yearly"]
+    static let alarms = [0, 5, 10, 15, 30, 60, 120, 1440, 2880]
+
+    static func rule(_ r: String) -> String {
+        switch r {
+        case "daily": return String(localized: "Täglich")
+        case "weekly": return String(localized: "Wöchentlich")
+        case "biweekly": return String(localized: "Alle 2 Wochen")
+        case "monthly": return String(localized: "Monatlich")
+        case "yearly": return String(localized: "Jährlich")
+        case "custom": return String(localized: "Eigene Regel")
+        default: return String(localized: "Nie")
+        }
+    }
+
+    static func alarm(_ n: Int) -> String {
+        if n <= 0 { return String(localized: "Keine") }
+        if n % 1440 == 0 { return n == 1440 ? String(localized: "1 Tag vorher") : String(localized: "\(n / 1440) Tage vorher") }
+        if n % 60 == 0 { return n == 60 ? String(localized: "1 Std. vorher") : String(localized: "\(n / 60) Std. vorher") }
+        return String(localized: "\(n) Min. vorher")
+    }
+
+    /// "YYYY-MM-DD" (the end of a series as the Spark gives it) as a day here; nil when empty
+    static func day(_ s: String) -> Date? {
+        let f = DateFormatter()
+        f.calendar = Calendar(identifier: .gregorian)
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.dateFormat = "yyyy-MM-dd"
+        return s.isEmpty ? nil : f.date(from: s)
+    }
+
+    /// "Anna <anna@example.org>" or "anna@example.org"; nil for anything else (the Spark checks again)
+    static func person(_ s: String) -> CalPerson? {
+        let t = s.trimmingCharacters(in: .whitespacesAndNewlines).trimmingCharacters(in: CharacterSet(charactersIn: ",;"))
+        let mail = #"[^@\s<>",;]{1,64}@[A-Za-z0-9.-]{1,190}\.[A-Za-z]{2,24}"#
+        if let r = t.range(of: "^(.*?)\\s*<\\s*(" + mail + ")\\s*>$", options: .regularExpression) {
+            let inner = String(t[r])
+            guard let lt = inner.lastIndex(of: "<"), let gt = inner.lastIndex(of: ">") else { return nil }
+            let name = inner[..<lt].trimmingCharacters(in: CharacterSet(charactersIn: " \""))
+            return CalPerson(name: String(name.prefix(80)), mail: String(inner[inner.index(after: lt)..<gt]).trimmingCharacters(in: .whitespaces))
+        }
+        return t.range(of: "^" + mail + "$", options: .regularExpression) != nil ? CalPerson(name: "", mail: t) : nil
     }
 }
 
@@ -277,27 +414,46 @@ struct KalenderView: View {
     @StateObject private var m = KalenderModel()
     @State private var open: CalEvent?
     @State private var form: CalForm?
+    @AppStorage("kalender.liste") private var asList = false
 
     var body: some View {
         List {
             if let at = m.keptAt { StandNote(at: at, loading: m.loading).listRowBackground(Color.clear) }
-            if !m.v.add.isEmpty {
-                Section("Schnell eintragen") { QuickAdd(text: "") { Task { await m.load(true) } } }
-            }
             if !m.v.connected {
                 Text(SparkAPI.way(String(localized: "Noch kein Kalender verbunden. Im Panel unter Kalender → Einstellungen verbindest du iCloud, Nextcloud oder einen Abo-Link.")))
                     .foregroundStyle(.secondary)
-            } else if !m.loading && m.days.isEmpty {
-                Text("In den nächsten vier Wochen steht nichts an.").foregroundStyle(.secondary)
-            }
-            ForEach(m.days, id: \.0) { day, evs in
-                Section {
-                    ForEach(evs) { e in
-                        Button { open = e } label: { row(e) }.foregroundStyle(.primary)
-                    }
-                } header: {
-                    Text(day, format: .dateTime.weekday(.wide).day().month(.wide))
+            } else if asList {
+                if !m.loading && m.days.isEmpty {
+                    Text("In den nächsten vier Wochen steht nichts an.").foregroundStyle(.secondary)
                 }
+                ForEach(m.days, id: \.0) { day, evs in
+                    Section {
+                        ForEach(evs) { e in Button { open = e } label: { row(e) }.foregroundStyle(.primary) }
+                    } header: {
+                        Text(day, format: .dateTime.weekday(.wide).day().month(.wide))
+                    }
+                }
+            } else {
+                Section { WeekStrip(m: m) }
+                Section {
+                    let evs = m.events(on: m.day)
+                    if evs.isEmpty && !m.loading { Text("Keine Termine").foregroundStyle(.secondary) }
+                    ForEach(evs) { e in Button { open = e } label: { row(e) }.foregroundStyle(.primary) }
+                } header: {
+                    Text(m.day, format: .dateTime.weekday(.wide).day().month(.wide))
+                }
+            }
+            if let u = m.undo {
+                Section {
+                    HStack {
+                        Text(verbatim: u.text).lineLimit(2)
+                        Spacer()
+                        Button("Rückgängig") { Task { await m.takeBack() } }
+                    }
+                }
+            }
+            if !m.v.add.isEmpty {
+                Section("Schnell eintragen") { QuickAdd(text: "") { token, title in m.saved(token, String(localized: "Eingetragen: \(title)")) } }
             }
             if !m.v.errors.isEmpty {
                 Text("Nicht erreicht: \(m.v.errors.joined(separator: ", "))").foregroundStyle(.red)
@@ -307,11 +463,23 @@ struct KalenderView: View {
             }
             if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
         }
+        // a swipe sideways turns the day (Apple Kalender); up and down still scrolls
+        .simultaneousGesture(DragGesture(minimumDistance: 40).onEnded { g in
+            guard !asList, abs(g.translation.width) > 90, abs(g.translation.height) < 50 else { return }
+            Task { await m.move(days: g.translation.width < 0 ? 1 : -1) }
+        })
         .navigationTitle("Kalender")
         .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button("Heute") { Task { await m.show(Date()) } }
+            }
+            ToolbarItem(placement: .primaryAction) {
+                Button { asList.toggle() } label: { Image(systemName: asList ? "calendar" : "list.bullet") }
+                    .accessibilityLabel(asList ? Text("Tag zeigen") : Text("Liste zeigen"))
+            }
             if !m.v.add.isEmpty {
                 ToolbarItem(placement: .primaryAction) {
-                    Button { form = CalForm(event: nil) } label: { Image(systemName: "plus") }
+                    Button { form = CalForm(event: nil, day: m.day) } label: { Image(systemName: "plus") }
                         .accessibilityLabel("Neuer Termin")
                 }
             }
@@ -321,11 +489,13 @@ struct KalenderView: View {
         .overlay { if m.loading && m.keptAt == nil { LadeZeilen(rows: 5).padding() } }
         .sheet(item: $open) { e in
             KalenderDetail(e: e, calendar: m.v.calendars.indices.contains(e.cal) ? m.v.calendars[e.cal] : "",
-                           change: { DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { form = CalForm(event: e) } }, done: { Task { await m.load(true) } })
+                           change: { DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { form = CalForm(event: e, day: m.day) } },
+                           saved: { token, text in m.saved(token, text) })
         }
         .sheet(item: $form) { f in
-            KalenderForm(event: f.event, calendars: m.v.add.compactMap { m.v.calendars.indices.contains($0) ? m.v.calendars[$0] : nil }) {
-                Task { await m.load(true) }
+            KalenderForm(event: f.event, day: f.day, calendars: m.v.add.compactMap { m.v.calendars.indices.contains($0) ? m.v.calendars[$0] : nil },
+                         calendar: f.event.map { m.v.calendars.indices.contains($0.cal) ? m.v.calendars[$0.cal] : "" } ?? "") { token, text in
+                m.saved(token, text)
             }
         }
     }
@@ -337,6 +507,9 @@ struct KalenderView: View {
                 HStack(spacing: 4) {
                     if !e.edit {
                         Image(systemName: "lock.fill").font(.caption2).foregroundStyle(.secondary).accessibilityLabel(Text("nur lesen"))
+                    }
+                    if !e.rule.isEmpty {
+                        Image(systemName: "repeat").font(.caption2).foregroundStyle(.secondary).accessibilityLabel(Text("wiederholt sich"))
                     }
                     Text(verbatim: e.title.isEmpty ? String(localized: "(ohne Titel)") : e.title).lineLimit(2)
                 }
@@ -357,16 +530,56 @@ struct KalenderView: View {
     static func tint(_ i: Int) -> Color { [Color.blue, .orange, .green, .purple, .pink, .teal][abs(i) % 6] }
 }
 
+/// The week of the day shown (Apple Kalender on the iPhone): a dot for a day with appointments; a tap shows that
+/// day, a swipe on the strip the week before or after.
+struct WeekStrip: View {
+    @ObservedObject var m: KalenderModel
+
+    var body: some View {
+        let first = KalenderModel.monday(m.day)
+        HStack(spacing: 2) {
+            ForEach(0..<7, id: \.self) { i in
+                let d = Calendar.current.date(byAdding: .day, value: i, to: first) ?? first
+                let on = Calendar.current.isDate(d, inSameDayAs: m.day)
+                let today = Calendar.current.isDateInToday(d)
+                Button { Task { await m.show(d) } } label: {
+                    VStack(spacing: 3) {
+                        Text(d, format: .dateTime.weekday(.narrow)).font(.caption2).foregroundStyle(.secondary)
+                        Text(d, format: .dateTime.day())
+                            .font(.body.weight(on ? .semibold : .regular))
+                            .frame(width: 34, height: 34)
+                            .background(Circle().fill(on ? (today ? Color.red : Color.primary) : Color.clear))
+                            .foregroundStyle(on ? Color(.systemBackground) : (today ? Color.red : Color.primary))
+                        Circle().fill(m.events(on: d).isEmpty ? Color.clear : Color.secondary).frame(width: 5, height: 5)
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(Text(d, format: .dateTime.weekday(.wide).day().month(.wide)))
+                .accessibilityAddTraits(on ? .isSelected : [])
+            }
+        }
+        .padding(.vertical, 4)
+        .contentShape(Rectangle())
+        .gesture(DragGesture(minimumDistance: 30).onEnded { g in
+            guard abs(g.translation.width) > 60 else { return }
+            Task { await m.move(days: g.translation.width < 0 ? 7 : -7) }
+        })
+    }
+}
+
 struct CalForm: Identifiable {
     let event: CalEvent?
+    var day = Date()
     var id: String { event?.id ?? "neu" }
 }
 
 /// Schnell eintragen (Dominik 2026-10-19 „2a“, as on the page Kalender): one line; the Spark reads it with fixed
 /// rules and shows what it understood, only „Eintragen“ saves (into the first own calendar, like the page).
+/// `saved` gets the Spark's token for „Rückgängig“ and the title.
 struct QuickAdd: View {
     @State var text: String
-    let saved: () -> Void
+    let saved: (String, String) -> Void
     @State private var fields: [String: Any]?
     @State private var busy = false
     @State private var done = false
@@ -420,41 +633,34 @@ struct QuickAdd: View {
         var b = f
         b.removeValue(forKey: "found")
         do {
-            try await api.addEvent(b, calendar: "")
+            let token = try await api.addEvent(b, calendar: "")
             fields = nil
             text = ""
             done = true
-            saved()
+            saved(token, f["title"] as? String ?? "")
         } catch {
             self.error = error.localizedDescription
         }
     }
 }
 
+/// One appointment as Apple Kalender shows it; „Bearbeiten“ opens the form. +1 Tag, +1 Woche and „Löschen“ of a
+/// repeating one ask „Nur dieser Termin“ or „Alle künftigen“ (Apple-Stil „5a“); „Rückgängig“ is on the calendar.
 struct KalenderDetail: View {
     @Environment(\.dismiss) private var dismiss
+    let e: CalEvent
     let calendar: String
     let change: () -> Void
-    let done: () -> Void
-    @State private var e: CalEvent
-    @State private var before: CalEvent?      // after +1 Tag/+1 Woche: the appointment as it was, for „Rückgängig“
-    @State private var asking = false
+    let saved: (String, String) -> Void
+    @State private var asking: Int?          // 0: delete, 1 or 7: move by that many days
     @State private var busy = false
     @State private var error: String?
-
-    init(e: CalEvent, calendar: String, change: @escaping () -> Void, done: @escaping () -> Void) {
-        _e = State(initialValue: e)
-        self.calendar = calendar
-        self.change = change
-        self.done = done
-    }
 
     /// Why an appointment is read-only, from the panel's fixed word (calendars._why); the words are the app's own.
     static func readOnly(_ why: String) -> String {
         switch why {
         case "abo": return String(localized: "Nur lesen: der Kalender ist ein Abo-Link (iCal), Änderungen gehen nur beim Anbieter.")
         case "geteilt": return String(localized: "Nur lesen: ein Kalender, den dir jemand geteilt hat; ändern kann ihn nur, wem er gehört.")
-        case "serie": return String(localized: "Nur lesen: ein wiederholter Termin; die Serie änderst du im Kalender-Programm.")
         default: return String(localized: "Nur lesen: dieser Kalender lässt sich hier nicht ändern.")
         }
     }
@@ -471,80 +677,67 @@ struct KalenderDetail: View {
                         Text(e.end, format: .dateTime.hour().minute())
                     }
                     if !e.location.isEmpty { LabeledContent("Ort") { Text(verbatim: e.location) } }
-                    if !e.link.isEmpty { LabeledContent("Link") { Text(verbatim: e.link).textSelection(.enabled) } }
+                }
+                Section {
+                    if !e.rule.isEmpty { LabeledContent("Wiederholen") { Text(CalNames.rule(e.rule)) } }
+                    if e.alarm > 0 { LabeledContent("Erinnerung") { Text(CalNames.alarm(e.alarm)) } }
                     if !calendar.isEmpty { LabeledContent("Kalender") { Text(verbatim: calendar) } }
+                    if !e.link.isEmpty { LabeledContent("Link") { Text(verbatim: e.link).textSelection(.enabled) } }
+                }
+                if !e.people.isEmpty {
+                    Section("Personen") { ForEach(e.people, id: \.self) { Text(verbatim: $0.shown) } }
                 }
                 if !e.note.isEmpty {
                     Section("Notiz") { Text(verbatim: e.note).textSelection(.enabled) }   // plain text, no link opens
                 }
                 if e.edit {
                     Section {
-                        Button("Ändern") { dismiss(); change() }
+                        Button("Bearbeiten") { dismiss(); change() }
                         HStack {
-                            Button("+1 Tag") { Task { await move(1) } }.buttonStyle(.bordered)
-                            Button("+1 Woche") { Task { await move(7) } }.buttonStyle(.bordered)
+                            Button("+1 Tag") { ask(1) }.buttonStyle(.bordered)
+                            Button("+1 Woche") { ask(7) }.buttonStyle(.bordered)
                         }
                         .disabled(busy)
-                        if before != nil {
-                            Button("Rückgängig") { Task { await undo() } }.disabled(busy)
-                        }
-                        Button("Löschen", role: .destructive) { asking = true }.disabled(busy)
+                        Button("Termin löschen", role: .destructive) { asking = 0 }.disabled(busy)
                     }
                 } else {
                     Section { Label { Text(Self.readOnly(e.why)) } icon: { Image(systemName: "lock") }.foregroundStyle(.secondary) }
                 }
-                if let error { Text(error).foregroundStyle(.red) }
+                if let error { Text(SparkAPI.way(error)).foregroundStyle(.red) }
             }
             .navigationTitle("Termin")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Fertig") { dismiss() } } }
-            .confirmationDialog("Termin löschen?", isPresented: $asking, titleVisibility: .visible) {
-                Button("Löschen", role: .destructive) { Task { await delete() } }
+            .confirmationDialog(asking == 0 ? Text("Termin löschen?") : Text("Termin verschieben?"),
+                                isPresented: Binding(get: { asking != nil }, set: { if !$0 { asking = nil } }),
+                                titleVisibility: .visible, presenting: asking) { n in
+                if e.series {
+                    Button("Nur dieser Termin", role: n == 0 ? .destructive : nil) { Task { await run(n, "one") } }
+                    Button("Alle künftigen", role: n == 0 ? .destructive : nil) { Task { await run(n, "future") } }
+                } else {
+                    if n == 0 {
+                        Button("Löschen", role: .destructive) { Task { await run(0, "") } }
+                    } else {
+                        Button("Verschieben") { Task { await run(n, "") } }
+                    }
+                }
             }
         }
     }
 
-    /// +1 Tag, +1 Woche (Dominik 2026-10-19 „1a“): the Spark changes exactly this appointment; „Rückgängig“ moves it back
-    private func move(_ days: Int) async {
-        guard let api = SparkAPI.current else { return }
-        busy = true
-        defer { busy = false }
-        let c = Calendar.current
-        do {
-            try await api.changeEvent(e, SparkAPI.moved(e, days: days))
-            before = e
-            e = CalEvent(start: c.date(byAdding: .day, value: days, to: e.start) ?? e.start,
-                         end: c.date(byAdding: .day, value: days, to: e.end) ?? e.end, allday: e.allday, title: e.title,
-                         location: e.location, cal: e.cal, edit: e.edit, note: e.note, link: e.link, why: e.why)
-            error = nil
-            done()
-        } catch {
-            self.error = error.localizedDescription
-        }
+    /// a move of a single appointment goes at once (Dominik 2026-10-19 „1a“); a series and every delete ask first
+    private func ask(_ days: Int) {
+        if e.series { asking = days } else { Task { await run(days, "") } }
     }
 
-    private func undo() async {
-        guard let api = SparkAPI.current, let b = before else { return }
-        busy = true
-        defer { busy = false }
-        do {
-            try await api.changeEvent(e, SparkAPI.moved(b, days: 0))
-            e = b
-            before = nil
-            error = nil
-            done()
-        } catch {
-            self.error = error.localizedDescription
-        }
-    }
-
-    private func delete() async {
+    private func run(_ days: Int, _ scope: String) async {
         guard let api = SparkAPI.current else { return }
         busy = true
         defer { busy = false }
         do {
-            try await api.changeEvent(e, nil)
-            done()
+            let token = try await api.changeEvent(e, days == 0 ? nil : SparkAPI.moved(e, days: days), scope: scope)
+            error = nil
+            saved(token, days == 0 ? String(localized: "Gelöscht: \(e.title)") : String(localized: "Verschoben: \(e.title)"))
             dismiss()
         } catch {
             self.error = error.localizedDescription
@@ -552,69 +745,168 @@ struct KalenderDetail: View {
     }
 }
 
+/// Neuer Termin / Termin bearbeiten in groups like Apple Kalender (Apple-Stil „4a“): title and place, the times,
+/// repeat with its end, calendar, alert, people (a list in the appointment only: no invitation goes out), note and
+/// link. A repeating one asks „Nur dieser Termin“ or „Alle künftigen“; a changed rule only „Alle künftigen“.
 struct KalenderForm: View {
     @Environment(\.dismiss) private var dismiss
     let event: CalEvent?
+    let day: Date
     let calendars: [String]
-    let saved: () -> Void
+    let saved: (String, String) -> Void
     @State private var title = ""
+    @State private var location = ""
     @State private var allday = false
     @State private var start = Date()
     @State private var end = Date().addingTimeInterval(3600)
-    @State private var location = ""
+    @State private var rule = ""
+    @State private var ends = false
+    @State private var until = Date()
     @State private var calendar = ""
+    @State private var alarm = 0
+    @State private var people: [CalPerson] = []
+    @State private var person = ""
+    @State private var note = ""
+    @State private var link = ""
+    @State private var asking = false
     @State private var busy = false
     @State private var error: String?
+
+    /// the fields start as the appointment has them (or the day shown with the next full hour), set here and not
+    /// on appear: the end follows a changed start, and that must not count the first filling
+    init(event: CalEvent?, day: Date, calendars: [String], calendar: String, saved: @escaping (String, String) -> Void) {
+        self.event = event
+        self.day = day
+        self.calendars = calendars
+        self.saved = saved
+        let c = Calendar.current
+        if let e = event {
+            _title = State(initialValue: e.title); _location = State(initialValue: e.location)
+            _allday = State(initialValue: e.allday); _start = State(initialValue: e.start)
+            _end = State(initialValue: e.allday ? (c.date(byAdding: .day, value: -1, to: e.end) ?? e.start) : e.end)
+            _rule = State(initialValue: e.rule); _alarm = State(initialValue: e.alarm); _people = State(initialValue: e.people)
+            _note = State(initialValue: e.note); _link = State(initialValue: e.link)
+            let u = CalNames.day(e.until)
+            _ends = State(initialValue: u != nil)
+            _until = State(initialValue: u ?? e.start)
+            _calendar = State(initialValue: calendar)
+        } else {
+            let now = Date()
+            let hour = c.component(.hour, from: now.addingTimeInterval(3600))
+            let s = c.date(bySettingHour: hour, minute: 0, second: 0, of: day) ?? now
+            _start = State(initialValue: s)
+            _end = State(initialValue: s.addingTimeInterval(3600))
+            _until = State(initialValue: c.date(byAdding: .month, value: 3, to: s) ?? s)
+            _calendar = State(initialValue: calendar.isEmpty ? calendars.first ?? "" : calendar)
+        }
+    }
+
+    /// the rule or its end changed: only „Alle künftigen“ makes sense then
+    private var ruleChanged: Bool {
+        guard let e = event else { return false }
+        return rule != e.rule || (ends ? SparkAPI.isoDay(until) : "") != e.until
+    }
 
     var body: some View {
         NavigationStack {
             Form {
                 Section {
                     TextField("Titel", text: $title)
+                    TextField("Ort", text: $location)
+                }
+                Section {
                     Toggle("Ganztägig", isOn: $allday)
                     DatePicker("Beginn", selection: $start, displayedComponents: allday ? [.date] : [.date, .hourAndMinute])
                     DatePicker("Ende", selection: $end, in: start..., displayedComponents: allday ? [.date] : [.date, .hourAndMinute])
-                    TextField("Ort", text: $location)
                 }
-                if event == nil && calendars.count > 1 {
-                    Picker("Kalender", selection: $calendar) {
-                        ForEach(calendars, id: \.self) { Text(verbatim: $0).tag($0) }
+                Section {
+                    Picker("Wiederholen", selection: $rule) {
+                        ForEach(CalNames.rules + (rule == "custom" ? ["custom"] : []), id: \.self) { Text(CalNames.rule($0)).tag($0) }
+                    }
+                    if !rule.isEmpty && rule != "custom" {
+                        Toggle("Endet", isOn: $ends)
+                        if ends { DatePicker("Endet am", selection: $until, in: start..., displayedComponents: [.date]) }
                     }
                 }
-                if let error { Text(error).foregroundStyle(.red) }
+                if event == nil && calendars.count > 1 {
+                    Section {
+                        Picker("Kalender", selection: $calendar) {
+                            ForEach(calendars, id: \.self) { Text(verbatim: $0).tag($0) }
+                        }
+                    }
+                }
+                Section {
+                    Picker("Erinnerung", selection: $alarm) {
+                        ForEach(CalNames.alarms + (CalNames.alarms.contains(alarm) ? [] : [alarm]), id: \.self) { Text(CalNames.alarm($0)).tag($0) }
+                    }
+                }
+                Section {
+                    ForEach(people, id: \.self) { Text(verbatim: $0.shown) }
+                        .onDelete { people.remove(atOffsets: $0) }
+                    if people.count < 20 {
+                        HStack {
+                            TextField("Name <mail@beispiel.de>", text: $person)
+                                .textInputAutocapitalization(.never)
+                                .keyboardType(.emailAddress)
+                                .onSubmit { addPerson() }
+                            Button { addPerson() } label: { Image(systemName: "plus.circle.fill") }
+                                .accessibilityLabel("Person hinzufügen")
+                                .disabled(CalNames.person(person) == nil)
+                        }
+                    }
+                } header: {
+                    Text("Personen")
+                } footer: {
+                    Text("Nur eine Liste im Termin: es geht keine Einladung raus.")
+                }
+                Section {
+                    TextField("Notiz", text: $note, axis: .vertical).lineLimit(3...10)
+                    TextField("Link", text: $link).textInputAutocapitalization(.never).keyboardType(.URL)
+                }
+                if let error { Text(SparkAPI.way(error)).foregroundStyle(.red) }
             }
-            .navigationTitle(event == nil ? Text("Neuer Termin") : Text("Termin ändern"))
+            .navigationTitle(event == nil ? Text("Neuer Termin") : Text("Termin bearbeiten"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Abbrechen") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Speichern") { Task { await save() } }
-                        .disabled(busy || title.trimmingCharacters(in: .whitespaces).isEmpty)
+                    Button {
+                        if event?.series == true { asking = true } else { Task { await save("") } }
+                    } label: {
+                        event == nil ? Text("Hinzufügen") : Text("Fertig")
+                    }
+                    .disabled(busy || title.trimmingCharacters(in: .whitespaces).isEmpty)
                 }
             }
-            .onAppear {
-                if let e = event {
-                    title = e.title; allday = e.allday; start = e.start; location = e.location
-                    end = e.allday ? (Calendar.current.date(byAdding: .day, value: -1, to: e.end) ?? e.start) : e.end
-                } else {
-                    calendar = calendars.first ?? ""
-                    let c = Calendar.current
-                    start = c.date(bySetting: .minute, value: 0, of: Date().addingTimeInterval(3600)) ?? Date()
-                    end = start.addingTimeInterval(3600)
-                }
+            .confirmationDialog("Wiederholten Termin ändern?", isPresented: $asking, titleVisibility: .visible) {
+                if !ruleChanged { Button("Nur dieser Termin") { Task { await save("one") } } }
+                Button("Alle künftigen") { Task { await save("future") } }
             }
-            .onChange(of: start) { _, s in if end < s { end = s.addingTimeInterval(allday ? 0 : 3600) } }
+            .onChange(of: start) { old, s in
+                // the end moves with the start, the length stays (Apple Kalender)
+                end = max(s, end.addingTimeInterval(s.timeIntervalSince(old)))
+            }
         }
     }
 
-    private func save() async {
+    private func addPerson() {
+        guard let p = CalNames.person(person), !people.contains(where: { $0.mail.lowercased() == p.mail.lowercased() }) else { return }
+        people.append(p)
+        person = ""
+    }
+
+    private func save(_ scope: String) async {
         guard let api = SparkAPI.current else { return }
         busy = true
         defer { busy = false }
-        let fields = SparkAPI.calFields(title: title, allday: allday, start: start, end: end, location: location)
+        if let p = CalNames.person(person) { people.append(p); person = "" }
+        var fields = SparkAPI.calFields(title: title, allday: allday, start: start, end: end, location: location)
+        fields.merge(SparkAPI.calMore(rule: rule, until: ends ? until : nil, alarm: alarm, people: people, note: note, link: link)) { a, _ in a }
+        if event != nil && !ruleChanged { fields.removeValue(forKey: "rule"); fields.removeValue(forKey: "until") }
         do {
-            if let e = event { try await api.changeEvent(e, fields) } else { try await api.addEvent(fields, calendar: calendar) }
-            saved()
+            let token: String
+            if let e = event { token = try await api.changeEvent(e, fields, scope: scope) } else { token = try await api.addEvent(fields, calendar: calendar) }
+            saved(token, event == nil ? String(localized: "Eingetragen: \(title)") : String(localized: "Geändert: \(title)"))
             dismiss()
         } catch {
             self.error = error.localizedDescription
@@ -1572,7 +1864,7 @@ struct MailView: View {
         }
         .sheet(isPresented: $asEvent) {
             NavigationStack {
-                List { Section("Als Termin") { QuickAdd(text: Self.topic(m?.subject ?? "")) {} } }
+                List { Section("Als Termin") { QuickAdd(text: Self.topic(m?.subject ?? "")) { _, _ in } } }
                     .navigationTitle("Termin aus der Mail")
                     .navigationBarTitleDisplayMode(.inline)
                     .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Fertig") { asEvent = false } } }

@@ -1115,23 +1115,27 @@ async def profile_calendar_event_add(request: Request, prof=Depends(browser_prof
     except ValueError as e:
         print(f"calendar: page form refused | {profiles.log_name(prof)}", flush=True)
         raise HTTPException(400, str(e)[:200])
+    out = {}
     try:
-        where = await calendars.add_event(prof["id"], item, wait=False)   # Stufe 2: the copy first, the server behind
+        where = await calendars.add_event(prof["id"], item, out, wait=False)   # Stufe 2: the copy first, the server behind
     except notaus.NotausAktiv:
         raise HTTPException(423, "Notaus: gerade wird nichts geändert")
     except ValueError as e:
         raise HTTPException(400, str(e)[:200])
     except httpx.HTTPError:
         raise HTTPException(502, "Der Kalender ist nicht erreichbar.")
-    calendars.page_done()
-    return {"ok": True, "calendar": where}
+    calendars.page_done("serie" if item.get("rule") else "")
+    # „Rückgängig“ (Apple-Stil „4a“): only in an own calendar (another profile's stays with its owner)
+    undo = calendars.keep_undo(prof["id"], out["account"], out["cal"], [(out["href"], None)]) if out.get("href") else ""
+    return {"ok": True, "calendar": where, "undo": undo}
 
 
 @router.put("/api/profile/calendar/event", dependencies=[Depends(assistant), Depends(calendar_on)])
 async def profile_calendar_event_change(request: Request, prof=Depends(browser_profile)):
     """The page Kalender: change or delete one appointment it shows ({cal, title, start (epoch), change "edit" |
-    "delete", for edit the form's fields}). Only an own CalDAV calendar, never a repeating appointment; the
-    server's etag guards against a change meanwhile (calendars.change_event logs every outcome)."""
+    "delete", for edit the form's fields}). Only an own CalDAV calendar; the server's etag guards against a change
+    meanwhile (calendars.change_event logs every outcome). One occurrence of a series (Apple-Stil „5a“) comes with
+    its uid, rid (its original start) and scope "one" („Nur dieser Termin“) or "future" („Alle künftigen“)."""
     guard.limit(request, "kalenderaendern", prof["id"])
     body = await request.json()
     body = body if isinstance(body, dict) else {}
@@ -1142,16 +1146,23 @@ async def profile_calendar_event_change(request: Request, prof=Depends(browser_p
             raise ValueError("change must be edit or delete")
         item = calendars.page_item(body.get("new") if isinstance(body.get("new"), dict) else {}, zone) if change == "edit" else None
         cal, start = int(body.get("cal", -1)), int(body.get("start") or 0)
+        rid, scope = int(body.get("rid") or 0), body.get("scope")
+        if rid and scope not in calendars.kalserie.SCOPES:
+            raise ValueError("scope must be one or future")
     except (ValueError, TypeError, OverflowError) as e:
         print(f"calendar: page form refused | {profiles.log_name(prof)}", flush=True)
         raise HTTPException(400, str(e)[:200])
     try:
+        if rid:
+            f = await calendars.page_series(prof["id"], cal, str(body.get("uid") or "")[:255], start, zone)
+            undo = await calendars.change_series(prof["id"], f, scope, item, rid, zone)
+            calendars.page_done("serie")
+            return {"ok": True, "undo": undo}
         p = await calendars.page_find(prof["id"], cal, str(body.get("title") or "")[:200], start, zone)
         p["change"] = change
-        if item:
-            p.update(new_title=item["title"], new_start=item["start"], new_end=item["end"],
-                     new_allday=item["allday"], new_location=item["location"])
-        note = await calendars.change_event(prof["id"], p, wait=False)   # Stufe 2: the copy first, the server behind
+        p["item"] = item
+        out = {}
+        note = await calendars.change_event(prof["id"], p, out, wait=False)   # Stufe 2: the copy first, the server behind
     except LookupError as e:
         print(f"calendar: page change refused, not found | {profiles.log_name(prof)}", flush=True)
         raise HTTPException(409, str(e))
@@ -1161,8 +1172,29 @@ async def profile_calendar_event_change(request: Request, prof=Depends(browser_p
         raise HTTPException(400, str(e)[:200])
     except httpx.HTTPError:
         raise HTTPException(502, "Der Kalender ist nicht erreichbar.")
-    calendars.page_done()
-    return {"ok": True, "note": note}
+    calendars.page_done("serie" if item and item.get("rule") else "")
+    return {"ok": True, "note": note, "undo": calendars.keep_undo(prof["id"], out["account"], out["cal"], [(out["href"], out["ics"])])}
+
+
+@router.post("/api/profile/calendar/undo", dependencies=[Depends(assistant), Depends(calendar_on)])
+async def profile_calendar_undo(request: Request, prof=Depends(browser_profile)):
+    """„Rückgängig“ after a save on the page or in the app (Apple-Stil „4a“): {undo: the token the save gave}; the
+    objects go back as they were, for calendars.UNDO_SECONDS (calendars.page_undo logs every outcome)."""
+    guard.limit(request, "kalenderaendern", prof["id"])
+    body = await request.json()
+    body = body if isinstance(body, dict) else {}
+    try:
+        await calendars.page_undo(prof["id"], str(body.get("undo") or "")[:40])
+    except LookupError as e:
+        raise HTTPException(410, str(e))
+    except notaus.NotausAktiv:
+        raise HTTPException(423, "Notaus: gerade wird nichts geändert")
+    except ValueError as e:
+        raise HTTPException(409, str(e)[:200])
+    except httpx.HTTPError:
+        raise HTTPException(502, "Der Kalender ist nicht erreichbar.")
+    calendars.page_done("undo")
+    return {"ok": True}
 
 
 @router.get("/api/profile/mail", dependencies=[Depends(assistant)])

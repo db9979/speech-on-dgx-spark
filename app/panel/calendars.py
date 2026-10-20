@@ -38,6 +38,7 @@ import recurring_ical_events
 
 import hintergrund
 import kalenderspiegel
+import kalserie
 import netguard
 import notaus
 import profiles
@@ -184,18 +185,21 @@ def shared_to(uid):
 
 
 _live = [0.0, {}]
-_page = {"day": "", "n": 0}   # changes made on the page Kalender today (Live: a number, never which)
+_page = {"day": "", "n": 0, "serie": 0, "undo": 0}   # changes on the page Kalender today (Live: numbers, never which)
 
 
-def page_done():
+def page_done(kind=""):
+    """One change on the page (or in the app); kind "serie" (a repeating appointment) or "undo" (taken back)."""
     day = time.strftime("%Y-%m-%d")
     if _page["day"] != day:
-        _page.update(day=day, n=0)
+        _page.update(day=day, n=0, serie=0, undo=0)
     _page["n"] += 1
+    if kind in ("serie", "undo"):
+        _page[kind] += 1
 
 
-def page_today():
-    return _page["n"] if _page["day"] == time.strftime("%Y-%m-%d") else 0
+def page_today(kind="n"):
+    return _page[kind] if _page["day"] == time.strftime("%Y-%m-%d") else 0
 
 
 def for_live(now=None):
@@ -561,6 +565,8 @@ def _month_events(text, a, b, zone):
         # every occurrence carries a RECURRENCE-ID after expanding: a repeating one is known by its master
         rep = {str(v.get("UID", "")) for v in cal.walk("VEVENT")
                if v.get("RRULE") is not None or v.get("RDATE") is not None or v.get("RECURRENCE-ID") is not None}
+        rules = {str(v.get("UID", "")): kalserie.rule_of(v) for v in cal.walk("VEVENT")
+                 if v.get("RRULE") is not None and v.get("RECURRENCE-ID") is None}
         items = recurring_ical_events.of(cal).between(a - datetime.timedelta(days=1), b + datetime.timedelta(days=1))
     except Exception:
         return out
@@ -585,8 +591,22 @@ def _month_events(text, a, b, zone):
                     "location": str(ev.get("LOCATION", "") or "").strip()[:200],
                     "note": _note(ev.get("DESCRIPTION")), "link": _link(ev.get("URL")),
                     "private": str(ev.get("CLASS", "") or "").upper() in ("PRIVATE", "CONFIDENTIAL"),
-                    "repeat": str(ev.get("UID", "")) in rep})
+                    "repeat": str(ev.get("UID", "")) in rep, "uid": str(ev.get("UID", ""))[:255],
+                    "rid": _rid_epoch(ev.get("RECURRENCE-ID"), zone) if str(ev.get("UID", "")) in rep else 0,
+                    "rule": rules.get(str(ev.get("UID", "")), ("", ""))[0] if str(ev.get("UID", "")) in rep else "",
+                    "until": rules.get(str(ev.get("UID", "")), ("", ""))[1],
+                    "alarm": kalserie.alarm_of(ev), "people": kalserie.people_of(ev)})
     return out
+
+
+def _rid_epoch(v, zone):
+    """The original start of one occurrence of a series (its RECURRENCE-ID) as epoch seconds: how the page names it."""
+    v = getattr(v, "dt", None)
+    if v is None:
+        return 0
+    if not isinstance(v, datetime.datetime):
+        v = datetime.datetime.combine(v, datetime.time(), zone)
+    return int((v if v.tzinfo else v.replace(tzinfo=zone)).timestamp())
 
 
 NOTE_MAX = 2000      # characters of an appointment's own text (DESCRIPTION) the page shows
@@ -833,21 +853,25 @@ async def view(uid, day, days, zone):
     for x in evs[:VIEW_MAX]:
         first = (x.get("calendar") or "").split(", ")[0]
         i = names.index(first) if first in names else 0
-        ok = i in edit and not x.get("repeat")
+        ok = i in edit
         out.append({"start": int(x["start"].timestamp()), "end": int(x["end"].timestamp()), "allday": bool(x["allday"]),
                     "title": x["title"], "location": x["location"], "cal": i, "edit": ok,
-                    "note": x.get("note", ""), "link": x.get("link", ""), "why": "" if ok else _why(cals[i], x)})
+                    "note": x.get("note", ""), "link": x.get("link", ""), "why": "" if ok else _why(cals[i], x),
+                    "alarm": x.get("alarm", 0), "people": x.get("people", []) if ok else [],
+                    **({"uid": x.get("uid", ""), "rid": x.get("rid", 0), "rule": x.get("rule", ""), "until": x.get("until", "")}
+                       if x.get("repeat") else {})})
     return {"connected": True, "calendars": names, "shared": shared, "edit": edit, "add": add, "events": out,
             "errors": [n for n, _ in errors], "loading": loading, "notes": notes(uid)}
 
 
 def _why(cal, x):
-    """Why the page may not change an appointment, as a fixed word (READONLY): abo, geteilt, serie, lesen."""
+    """Why the page may not change an appointment, as a fixed word: abo, geteilt, lesen (a repeating one of an own
+    calendar is changed like any other since Apple-Stil „5a“)."""
     if cal.get("owner"):
         return "geteilt"
     if re.match(r"webcals?://", cal.get("url", ""), re.I) or re.search(r"\.ics(\?|$)", cal.get("url", ""), re.I):
         return "abo"
-    return "serie" if x.get("repeat") else "lesen"
+    return "lesen"
 
 
 # ---------------------------------------------------------------- the page Kalender changes (stage 2)
@@ -873,9 +897,10 @@ def page_item(body, zone):
         raise ValueError("start and end must be dates like 2026-10-19 or 2026-10-19T10:00")
     if e <= s or e - s > datetime.timedelta(days=31):
         raise ValueError("the end must lie after the start, at most 31 days")
-    return {"title": title, "start": s.isoformat(), "end": e.isoformat(), "allday": allday,
-            "location": str(body.get("location") or "").strip()[:200], "alarm": 0,
-            "calendar": str(body.get("calendar") or "").strip()[:120]}
+    # Apple-Stil „4a“: repeat, alert, people, note and link (kalserie.fields checks them)
+    return dict(kalserie.fields(body, s), title=title, start=s.isoformat(), end=e.isoformat(), allday=allday,
+                location=str(body.get("location") or "").strip()[:200], zone=getattr(zone, "key", None) or str(zone),
+                calendar=str(body.get("calendar") or "").strip()[:120])
 
 
 # Schnell eintragen (Dominik 2026-10-19 „2a“): one line on the page Kalender, e.g. „Zahnarzt morgen 10 Uhr bei
@@ -1135,30 +1160,7 @@ def describe(item):
 
 
 def ical(item, uid_text):
-    cal = icalendar.Calendar()
-    cal.add("prodid", "-//speech-on-dgx-spark//DE")
-    cal.add("version", "2.0")
-    ev = icalendar.Event()
-    ev.add("uid", uid_text)
-    ev.add("dtstamp", datetime.datetime.now(datetime.timezone.utc))
-    ev.add("summary", item["title"])
-    s, e = datetime.datetime.fromisoformat(item["start"]), datetime.datetime.fromisoformat(item["end"])
-    if item.get("allday"):
-        ev.add("dtstart", s.date())
-        ev.add("dtend", e.date())
-    else:
-        ev.add("dtstart", s.astimezone(datetime.timezone.utc))
-        ev.add("dtend", e.astimezone(datetime.timezone.utc))
-    if item.get("location"):
-        ev.add("location", item["location"])
-    if item.get("alarm"):
-        al = icalendar.Alarm()
-        al.add("action", "DISPLAY")
-        al.add("description", item["title"])
-        al.add("trigger", datetime.timedelta(minutes=-int(item["alarm"])))
-        ev.add_component(al)
-    cal.add_component(ev)
-    return cal.to_ical()
+    return kalserie.new_calendar(item, uid_text)
 
 
 async def add_event(uid, item, out=None, wait=True):
@@ -1225,7 +1227,7 @@ async def _add_event(uid, item, out=None, wait=True):
         if d.get("owner"):
             return d.get("name") or "Kalender"
         if out is not None:
-            out.update(account=d.get("id"), href=url)
+            out.update(account=d.get("id"), href=url, cal=pick[0])
         return pick[1] or d.get("name", "Kalender")
     async with _cal_client(d) as c:
         r = await c.put(url, content=ical(item, uid_text),
@@ -1234,8 +1236,8 @@ async def _add_event(uid, item, out=None, wait=True):
             _drop(d.get("owner") or uid)
             if d.get("owner"):   # in another profile's calendar: undo and changes stay with its owner
                 return d.get("name") or "Kalender"
-            if out is not None:   # where it went, for „Mach das rückgängig“ (aendern.py)
-                out.update(account=d.get("id"), href=url)
+            if out is not None:   # where it went, for „Mach das rückgängig“ (aendern.py) and the page's undo
+                out.update(account=d.get("id"), href=url, cal=pick[0])
             return pick[1] or d.get("name", "Kalender")
     raise ValueError(f"the calendar server answered {r.status_code}")
 
@@ -1389,22 +1391,16 @@ async def _change_event(uid, p, out=None, wait=True):
         raise ValueError("a repeating appointment is not changed by voice")
     if p["change"] == "delete":
         text = None
+    elif p["change"] == "edit":   # the page's form: every field at once (kalserie.fill), a repeat rule makes a series
+        text = kalserie.change_single(old, p["item"])
     else:
-        for k in ("DTSTART", "DTEND", "DURATION", "DTSTAMP") + (("SUMMARY", "LOCATION") if p["change"] == "edit" else ()):
+        for k in ("DTSTART", "DTEND", "DURATION", "DTSTAMP"):
             ev.pop(k, None)
-        if p["change"] == "edit":   # the page's form: title, place, start and end at once
-            s1, e1 = datetime.datetime.fromisoformat(p["new_start"]), datetime.datetime.fromisoformat(p["new_end"])
-            ev.add("summary", p["new_title"])
-            if p.get("new_location"):
-                ev.add("location", p["new_location"])
-            allday = p.get("new_allday")
-        else:
-            s0 = datetime.datetime.fromisoformat(p["start"])
-            e0 = datetime.datetime.fromisoformat(p["end"])
-            s1 = datetime.datetime.fromisoformat(p["new_start"])
-            e1 = s1 + (e0 - s0)
-            allday = p.get("allday")
-        if allday:
+        s0 = datetime.datetime.fromisoformat(p["start"])
+        e0 = datetime.datetime.fromisoformat(p["end"])
+        s1 = datetime.datetime.fromisoformat(p["new_start"])
+        e1 = s1 + (e0 - s0)
+        if p.get("allday"):
             ev.add("dtstart", s1.date())
             ev.add("dtend", e1.date())
         else:
@@ -1415,24 +1411,11 @@ async def _change_event(uid, p, out=None, wait=True):
         ev.pop("SEQUENCE", None)
         ev.add("sequence", seq + 1)
         text = cal.to_ical().decode()
-    if not wait and local:
-        import core
-        core.later(_behind(uid, d, p["cal"], p["href"], text, _local(uid, d, p["cal"], p["href"], text), etag))
-    else:
-        head = {"If-Match": etag} if etag else {}
-        async with _cal_client(d) as c:
-            if text is None:
-                r = await c.delete(p["href"], headers=head)
-            else:
-                r = await c.put(p["href"], content=text.encode(),
-                                headers=dict(head, **{"Content-Type": "text/calendar; charset=utf-8"}))
-        if r.status_code not in (200, 201, 204):
-            raise ValueError(f"the calendar server answered {r.status_code}")
-        _drop(uid)
+    await _writes(uid, d, p.get("cal") or "", [(p["href"], text, etag, False)], copy=not wait and bool(local))
     if out is not None:
-        out.update(account=p["account"], href=p["href"], ics=old, deleted=p["change"] == "delete")
+        out.update(account=p["account"], href=p["href"], ics=old, deleted=p["change"] == "delete", cal=p.get("cal") or "")
     if p["change"] == "edit":
-        return f"Termin „{p['new_title']}“ geändert."
+        return f"Termin „{p['item']['title']}“ geändert."
     return f"Termin {_old(p)} gelöscht." if p["change"] == "delete" else f"Termin „{p['title']}“ auf {_new(p)} verschoben."
 
 
@@ -1478,7 +1461,7 @@ async def _behind(uid, d, cal_url, href, text, before, etag=""):
     who = profiles.log_name(profiles.by_id(uid))
     tag, status = "", 0
     try:
-        async with _cal_client(d) as c:
+        async with _order(uid), _cal_client(d) as c:
             if text is None:
                 r = await c.delete(href, headers={"If-Match": etag} if etag else {})
                 ok = r.status_code in (200, 204, 404)
@@ -1504,6 +1487,140 @@ async def _behind(uid, d, cal_url, href, text, before, etag=""):
         _notes.setdefault(uid, []).append((time.time(), (title.group(1).strip() if title else "")[:80]))
         print(f"calendar: not saved behind ({status}) | {who}", flush=True)
     _blocks(uid, d.get("owner"))
+
+
+_orders = {}   # (uid, event loop) -> asyncio.Lock: a profile's changes behind the page reach the server in order
+
+
+def _order(uid):
+    key = (uid, id(asyncio.get_running_loop()))
+    if key not in _orders:
+        if len(_orders) > 500:
+            _orders.clear()
+        _orders[key] = asyncio.Lock()
+    return _orders[key]
+
+
+async def _writes(uid, d, cal_url, writes, copy):
+    """The page's writes [(href, text or None to delete, etag, new)] of entry d: copy True puts each into the Spark's
+    copy at once and sends it to the server behind (_behind, in order); else straight to the server, with If-Match
+    (the etag) or If-None-Match for a new object."""
+    if copy:
+        import core
+        for href, text, etag, _new in writes:
+            core.later(_behind(uid, d, cal_url, href, text, _local(uid, d, cal_url, href, text), etag))
+        return
+    async with _cal_client(d) as c:
+        for href, text, etag, new in writes:
+            head = {"If-None-Match": "*"} if new else {"If-Match": etag} if etag else {}
+            if text is None:
+                r = await c.delete(href, headers=head)
+            else:
+                r = await c.put(href, content=text.encode(),
+                                headers=dict(head, **{"Content-Type": "text/calendar; charset=utf-8"}))
+            if r.status_code not in (200, 201, 204):
+                _drop(uid)
+                raise ValueError(f"the calendar server answered {r.status_code}")
+    _drop(uid)
+
+
+# ---------------------------------------------------------------- Apple-Stil „5a“: a repeating appointment on the page
+# „Nur dieser Termin“ or „Alle künftigen“ (kalserie.py on the iCal text): the page names the occurrence by the series'
+# UID and its original start; only an own CalDAV calendar, the etag guards against a change meanwhile.
+async def page_series(uid, cal, ev_uid, start, zone):
+    """The object holding the series ev_uid with an occurrence near start (epoch) in the own calendar at place cal:
+    {"account", "cal", "href", "etag", "text", "entry"}; LookupError when it is not there like this."""
+    cals = reading(uid)["calendars"]
+    if not 0 <= cal < len(cals) or cals[cal].get("owner") or not ev_uid:
+        raise LookupError("not an own calendar")
+    d = next((x for x in _writable(uid) if x.get("id") == cals[cal]["id"]), None)
+    if d is None:
+        raise LookupError("not an own calendar")
+    s = datetime.datetime.fromtimestamp(int(start), zone)
+    async with _cal_client(d) as c:
+        for href, _ in (await _parts(c, d))[:20]:
+            for ohref, etag, text in await _objects(c, href, (s - datetime.timedelta(days=1)).astimezone(datetime.timezone.utc),
+                                                    (s + datetime.timedelta(days=1)).astimezone(datetime.timezone.utc), d):
+                flat = text.replace("\r\n ", "").replace("\n ", "")
+                if re.search(r"(?m)^UID[^:\r\n]*:" + re.escape(ev_uid) + r"\r?$", flat):
+                    return {"account": d.get("id"), "cal": href, "href": ohref, "etag": etag, "text": text, "entry": d}
+    raise LookupError("the series is not there as shown (changed meanwhile)")
+
+
+async def change_series(uid, f, scope, item, rid, zone, wait=False):
+    """One change of a series found by page_series: scope "one" (this occurrence) or "future" (from it on), item
+    None deletes. One journal line for every outcome. Returns the undo token."""
+    who = profiles.log_name(profiles.by_id(uid))
+    what = "deleted" if item is None else "changed"
+    try:
+        notaus.stop("aktion", uid)
+        if scope == "one":
+            writes = [(f["href"], kalserie.change_one(f["text"], _uid_of(f["text"]), rid, item, zone), f["etag"], False)]
+        else:
+            rest, new = kalserie.change_future(f["text"], _uid_of(f["text"]), rid, item, zone,
+                                               f"{os.urandom(8).hex()}@speech-spark")
+            writes = [(f["href"], rest, f["etag"], False)]
+            if new:
+                writes.append((f["cal"].rstrip("/") + f"/{os.urandom(8).hex()}.ics", new, "", True))
+        d = f["entry"]
+        await _writes(uid, d, f["cal"], writes, copy=not wait and kalenderspiegel.ready(d.get("id"), f["cal"]))
+    except notaus.NotausAktiv:
+        print(f"calendar: series change refused, notaus | {who}", flush=True)
+        raise
+    except Exception as e:
+        print(f"calendar: series not {what} ({type(e).__name__}) | {who}", flush=True)
+        raise
+    print(f"calendar: series {what}, {'this one' if scope == 'one' else 'from this on'} | {who}", flush=True)
+    return keep_undo(uid, d.get("id"), f["cal"], [(h, f["text"] if h == f["href"] else None) for h, _t, _e, _n in writes])
+
+
+def _uid_of(text):
+    m = re.search(r"(?m)^UID[^:\r\n]*:(.*?)\r?$", text.replace("\r\n ", "").replace("\n ", ""))
+    return m.group(1).strip() if m else ""
+
+
+# ---------------------------------------------------------------- „Rückgängig“ on the page (Apple-Stil „4a“)
+# Every save of the page keeps how the objects were before, for UNDO_SECONDS, in memory, bound to the profile:
+# „Rückgängig“ puts them back (a new one goes again), through the same way as the save.
+UNDO_SECONDS = 120
+UNDO_MAX = 5
+_undos = {}   # uid -> {token: (when, account, calendar address, [(href, text before or None)])}
+
+
+def keep_undo(uid, account, cal_url, before):
+    now = time.time()
+    mine = {k: v for k, v in _undos.get(uid, {}).items() if now - v[0] < UNDO_SECONDS}
+    while len(mine) >= UNDO_MAX:
+        mine.pop(next(iter(mine)))
+    token = os.urandom(12).hex()
+    mine[token] = (now, account, cal_url, before)
+    _undos[uid] = mine
+    return token
+
+
+async def page_undo(uid, token, wait=False):
+    """„Rückgängig“: the objects of one save as they were (LookupError: unknown or older than UNDO_SECONDS)."""
+    who = profiles.log_name(profiles.by_id(uid))
+    x = _undos.get(uid, {}).pop(str(token or "")[:40], None)
+    if x is None or time.time() - x[0] >= UNDO_SECONDS:
+        print(f"calendar: page undo gone | {who}", flush=True)
+        raise LookupError("too late to take it back")
+    try:
+        notaus.stop("aktion", uid)
+        d = _account(uid, x[1])
+        copy = not wait and kalenderspiegel.ready(d.get("id"), x[2])
+        writes = []
+        for href, before in x[3]:
+            now = kalenderspiegel.item(d.get("id"), x[2], href) if copy else None
+            writes.append((href, before, (now or ("", ""))[0], before is not None and copy and now is None))
+        await _writes(uid, d, x[2], writes, copy)
+    except notaus.NotausAktiv:
+        print(f"calendar: page undo refused, notaus | {who}", flush=True)
+        raise
+    except Exception as e:
+        print(f"calendar: page undo failed ({type(e).__name__}) | {who}", flush=True)
+        raise
+    print(f"calendar: page undo done | {who}", flush=True)
 
 
 async def delete_href(uid, acc, href):

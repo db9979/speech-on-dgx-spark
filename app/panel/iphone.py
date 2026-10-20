@@ -127,9 +127,10 @@ THINGS = {
                     (("DELETE",), r"/api/profile/wissensbuch/satz/[0-9]{1,12}"),
                     (("POST",), r"/api/profile/wissensbuch/satz/[0-9]{1,12}/(?:stimmt|noch)"),
                     (("POST",), r"/api/profile/wissensbuch/ablegen")),
-    # Kalender (plan kalender-mail Stufe 4): the page's view (own and shared calendars), add, change, delete; the
-    # tap is the yes, calendars.py checks like on the page (own CalDAV, never repeating, with the etag)
-    "calendar": ((("GET",), r"/api/profile/calendar/(?:view|quick)"), (("POST", "PUT"), r"/api/profile/calendar/event")),
+    # Kalender (plan kalender-mail Stufe 4, Apple-Stil „4a“ „5a“): the page's view (own and shared calendars), add,
+    # change, delete, a series' one or future occurrences, „Rückgängig“; the tap is the yes, calendars.py checks like
+    # on the page (own CalDAV, with the etag)
+    "calendar": ((("GET",), r"/api/profile/calendar/(?:view|quick)"), (("POST", "PUT"), r"/api/profile/calendar/event"), (("POST",), r"/api/profile/calendar/undo")),
     # Kalender-Server (kalenderserver.py): see, make (with a fresh code) and delete the app password for calendar apps
     "calserver": ((("GET", "POST", "DELETE"), r"/api/profile/calserver"),),
     # E-Mail: the inbox and one mail as plain text (stays unread); ordering and sending each with their own function

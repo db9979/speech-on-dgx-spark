@@ -581,6 +581,12 @@ class SetUp(unittest.TestCase):
         ids = self.ids()
         self.assertIn("cal", ids)
         self.assertNotIn("web", ids)          # switched on, but no SearXNG address
+        # the page Kalender (Apple-Stil „5a“): changes, of them series, taken back; numbers only
+        import calendars
+        self.addCleanup(calendars._page.update, dict(calendars._page))
+        calendars._page.update(day=time.strftime("%Y-%m-%d"), n=3, serie=2, undo=1)
+        cal = next(x for x in live.snapshot("admin", now=1000.0)["targets"] if x["id"] == "cal")
+        self.assertIn("heute 3 auf der Seite geändert, 2 davon Serien, 1 zurückgenommen", cal["sub"])
         self.chat(search=True, search_url="http://127.0.0.1:9/", calendar=True)
         self.assertIn("web", self.ids())
 
