@@ -4853,6 +4853,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "Neue Mails sofort (V01.0.848, Vorwärmen Stufe C, Dominik 2026-10-19 „6a“; mailidle.py, Admin-Schalter Funktionen → E-Mail lesen → „Neue Mails sofort“, chat.mail_idle, aus): Für Profile, die ihre Mails in den letzten zwei Stunden gelesen haben, hält der Spark eine Verbindung zum Posteingang offen (IMAP IDLE). Meldet der Server eine neue Mail (EXISTS) oder eine, die ein anderes Programm verschoben hat (EXPUNGE), laufen gleich die Mail-Regeln des Profils (mit „Mails ordnen“), die Liste der Seite E-Mail wird neu geholt samt der neuesten Mails vorab, und „Für dich“ hört davon (mailidle.on_new); höchstens alle 20 Sekunden je Profil, eine Änderung dazwischen kommt danach, und nie, während jemand spricht. Höchstens 4 Verbindungen auf dem ganzen Spark, die neuesten Leser zuerst; ein Server ohne IDLE bleibt beim Abruf alle fünf Minuten (mail.keep_fresh, nach einem Tag wieder gefragt). Die Verbindung liest nur (EXAMINE), jeder Wartende hängt in select() an seinem Socket und hält weder die Schleife des Panels noch eine Sperre auf; IDLE wird alle 24 Minuten erneuert, eine verlorene Verbindung nach 1 Minute wieder versucht (bis 15 Minuten). Vom Server zählen nur die Wörter EXISTS, EXPUNGE, BYE u"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "nd die Antwort auf DONE; überlange Zeilen beenden die Verbindung. Mein Notaus, die Sperre des Admins und der Schalter schließen sie. Live (Knoten E-Mail): offene Verbindungen und neue Mails heute, nur Zahlen; das Log nennt nur feste Wörter und das Profil als Kürzel."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "Spark-Kalender, Stufe 1: eine Kopie auf dem Spark (V01.0.830, Dominik 2026-10-19 „1a 2a“): Jeder CalDAV-Kalender (iCloud, Nextcloud, …) hat jetzt eine Kopie auf dem Spark. Beim ersten Mal holt der Spark ihn ganz, danach fragt er den Server nur noch, was sich geändert hat (WebDAV-Abgleich mit Sync-Token; ein Server ohne diesen Abgleich wird über die Kennzeichen seiner Termine verglichen, einer, der beides nicht kann, wie bisher monatsweise gelesen) und holt nur diese Termine. Die Seite Kalender, Heute, der Assistent und das Briefing lesen aus der Kopie in Millisekunden statt 1 bis 8 Sekunden. Für Profile, die in den letzten 24 Stunden aktiv waren, gleicht der Spark alle 2 Minuten im Hintergrund ab; nach einer eigenen Änderung (Eintragen, Verschieben, Löschen) beim nächsten Blick sofort. Die Kopie liegt nur verschlüsselt auf der Platte (kalender-spiegel/, Schlüssel wie bei den Passwörtern), höchstens 5000 Termine je Kalender, und wird mit dem Kalender oder dem Profil gelöscht. Abo-Links (.ics, webcal://) bleiben wie bisher. Zustand → Live zeigt beim Kalender, wie viele Kalender als Kopie da sind, wie viele Termine und wann zuletzt abgeglichen wurde; das Log schreibt „calendar: mirror"
 },
 {
@@ -13446,6 +13462,22 @@
 "head": "Voice chat",
 "title": "Warming up (V01.0.830, Dominik 2026-10-19 \"1a 3a 4a 5a 7a 9\")",
 "text": "Warming up (V01.0.830, Dominik 2026-10-19 \"1a 3a 4a 5a 7a 9\"): when a profile signs in or opens the panel or the app, the Spark reads ahead in the background what its pages will need: this and the next month from all its calendars (shared ones too), the e-mail listing with the newest messages, \"For you\" and the address book. The pages Calendar, E-mail and Today then show at once what is there; Today takes the calendar from the same memory as the page Calendar. From then on the known refreshes every 5 minutes keep it fresh. Rules: only functions the profile may use now, never for guests; a profile at most every 10 minutes; at most two profiles at the same time; every step waits while somebody speaks (voice first). Everything stays in memory, nothing new on the disk. Status → Live shows for Calendar and Mail only how many profiles are warm and how long ago; the log (area Priority) writes one line \"vorwaermen: done\" with numbers."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "New mail at once (V01.0.848, warming up stage C, Dominik 2026-10-19 \"6a\"; mailidle.py, admin switch Features → Reading e-mail → \"Neue Mails sofort\", chat.mail_idle, off): for profiles that read their mail in the last two hours the Spark keeps a connection to the inbox open (IMAP IDLE). When the server reports a new mail (EXISTS) or one another program moved (EXPUNGE), the profile's mail rules run at once (with \"Mails ordnen\"), the E-mail page's list is fetched anew with the newest mails ahead, and \"Für dich\" hears of it (mailidle.on_new); at most every 20 seconds per profile, a change in between comes right after, and never while someone speaks. At most 4 connections on the whole Spark, the newest readers first; a server without IDLE stays with the fetch every five minutes (mail.keep_fresh, asked again after a day). The connection only reads (EXAMINE), each waiting one sits in select() on its socket and holds neither the panel's loop nor a lock; IDLE is renewed every 24 minutes, a lost connection is tried again after 1 minute (up to 15 minutes). From the server only the words EXISTS, EXPUNGE, BYE and the answer to DONE count; over-long lines end the connection. My emergency stop, t"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "he admin's block and the switch close it. Live (node E-mail): open connections and new mails today, numbers only; the log names only fixed words and the profile as a short name."
 },
 {
 "lang": "en",

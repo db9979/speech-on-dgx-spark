@@ -47,6 +47,7 @@ import rechnerblick  # noqa: E402
 import room  # noqa: E402
 import roomlive  # noqa: E402
 import tidy  # noqa: E402
+import mailidle  # noqa: E402
 import mailregeln  # noqa: E402
 import mailstil  # noqa: E402
 import weather  # noqa: E402
@@ -535,6 +536,7 @@ async def anrufe_loop():
 async def mail_fresh():
     """E-Mail (mail.keep_fresh): the inbox of whoever read it lately is fetched anew in the background."""
     spawn(mail.keep_fresh_loop())
+    spawn(mailidle.loop())
 
 
 @app.on_event("startup")

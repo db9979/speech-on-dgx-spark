@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.852** Neue Mails sofort: der Spark hält den Posteingang von Profilen, die gerade ihre Mails lesen, per IMAP IDLE offen; neue Mails stehen nach Sekunden auf der Seite E-Mail und die Regeln greifen gleich; höchstens 4 Verbindungen, Admin-Schalter, aus
 - **V01.0.851** Was ich über dich weiß (Stufe 3 und 4): Interessen mit Beleg erst nach „Stimmt“, „Mehr davon“ an der Karte, Wiederkehrendes mit monatlicher Erinnerung, Woche und Monatssumme aus geprüften Beträgen, Wochenrückblick sonntags, höchstens ein Netz-Tipp am Tag nur mit dem Wort; iPhone und CarPlay
 - **V01.0.850** Zustand → Technik hat eine neue Seite „Sicherheit“: wie alle Schutzschichten zusammenspielen (das Modell schlägt vor, das Panel entscheidet), mit dem Weg einer Frage durch alle Prüfungen, Rollen, Grenzen und Code; neue Regel: bei jeder Änderung einer Schutzregel wird sie mitgezogen
 - **V01.0.849** Spickzettel zum Ausdrucken: Ich → Was ich kann öffnet auf Deutsch oder Englisch zwei A4-Blätter mit allem, was du sagen kannst (nur Freigegebenes, das Stichwort markiert), immer neu aus den Regeln der Weiche erzeugt
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.845** Fix: iPhone-App baut wieder (GitHub-Lauf „iPhone app“ grün, TestFlight wieder möglich); zwei Stellen in E-Mail (Regel sichern, Antwortvorschläge) passten nicht zum Swift-Compiler
 - **V01.0.844** Code-Prüfung: ein eigenes Postfach sendet nur über den Postausgang, den du beim Verbinden einträgst, nie über einen geratenen; Ich → Gespräch klappt seine Gruppen ein; ein Name je Sache (Zustand → Überblick, Funktionen → Aufträge, Funktionen → Telefon, Ich → Spark als MCP-Server, am Handy „Assistent“)
 - **V01.0.843** E-Mail wie ein volles Mailprogramm: alle Ordner aller Postfächer lesen, anlegen, umbenennen, leere entfernen; ★ markieren, Mehrfachauswahl und Ziehen in Ordner mit Rückgängig; Regeln direkt aus einer Mail („Regel daraus …“, Probelauf, vorhandene einsortieren), alle unter E-Mail → Regeln; Suche mit von:, betreff:, hat:anhang; Anhänge laden; Weiterleiten über die Vorschau; auch im iPhone; Teil von „Mails ordnen“ und „Mails senden“, aus, nie wird eine Mail gelöscht
-- **V01.0.842** Fix: GitHub-Lauf „Tests“ wieder grün; der Test für den Weg eines Hinweises oben klickte manchmal den Hinweis zu offenen Praxistests, der alle 3 s neu gezeichnet wird, statt des eigenen
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

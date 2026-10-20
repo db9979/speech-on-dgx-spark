@@ -1316,8 +1316,11 @@ def snapshot(view="admin", now=None):
         post_rules = mailregeln.for_live()
         import mail
         post_files = mail.files_today()
+        import mailidle
+        post_idle = mailidle.for_live()
     except Exception:
         kal, kal_page, post_page, post_sent, post_files = {"on": False}, 0, 0, 0, 0
+        post_idle = {}
         post_rules = {}
     try:
         import vorwaermen
@@ -1458,6 +1461,8 @@ def snapshot(view="admin", now=None):
                          + (f", heute {post_rules['taken']} Mails einsortiert" if post_rules.get("taken") else ""))
         if x["id"] == "mail" and post_files:     # Anhang laden: attachments fetched today (a number, never which)
             x["sub"] += f" · heute {post_files} Anhänge geladen"
+        if x["id"] == "mail" and post_idle.get("on"):   # Neue Mails sofort: IDLE connections, new mails today (numbers)
+            x["sub"] += f" · sofort: {post_idle['open']} Verbindungen, heute {post_idle['new']} neue Mails"
         if x["id"] == "mail" and post_sent:      # Mails senden: mails sent from the page today (a number, never to whom)
             x["sub"] += f" · heute {post_sent} gesendet"
         if x["id"] == "mail" and (avs.get("suggested") or avs.get("rewritten")):   # Antwortvorschläge: numbers only

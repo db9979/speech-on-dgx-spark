@@ -2252,6 +2252,13 @@
 "titel": "Was ich über dich weiß",
 "text": "Ich → Was ich über dich weiß öffnen: Vorschlag mit Beleg mit „Stimmt“ bestätigen, eigenes Interesse eintragen, „Tipps aus dem Netz“ einschalten (am nächsten Tag ein Tipp, Link öffnet in neuem Tab). Unter E-Mail → Für dich an einer Bestellung „Mehr davon“ drücken. Wiederkehrende Rechnung: „Monatlich erinnern“, dann unter Erinnerungen prüfen. Sonntag ab 18 Uhr kommt der Wochenrückblick. Auf dem iPhone: Heute → Für dich → Was ich über dich weiß; CarPlay „Fristen vorlesen“.",
 "thread": "Persönlicher Assistent aus dem Postfach"
+},
+{
+"id": "P346",
+"v": 852,
+"titel": "Neue Mails sofort",
+"text": "A: Update auf V01.0.852, Admin: Funktionen → E-Mail lesen → „Neue Mails sofort“ an. B: Die Seite E-Mail öffnen und offen lassen; von einem anderen Gerät eine Mail an dich schicken: sie steht nach wenigen Sekunden in der Liste (ohne Neu laden), nicht erst nach 5 Minuten. C: Eine Regel für diesen Absender anlegen, noch eine Mail schicken: sie liegt nach Sekunden im Ordner. D: Überblick → Live, Knoten E-Mail: „sofort: 1 Verbindungen, heute N neue Mails“. E: Schalter aus: nach spätestens einer Minute 0 Verbindungen, Abruf wieder alle 5 Minuten.",
+"thread": "Kalender und E-Mail in Panel und Apps"
 }
 ]
 }
