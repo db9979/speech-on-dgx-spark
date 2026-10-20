@@ -186,6 +186,13 @@ final class Conversation: ObservableObject {
     private var floor: Float = 0.02
     /// last time something like a voice came in while listening (the car keeps the microphone open for it)
     private var lastVoice = Date()
+    /// last time the microphone delivered anything at all (watchInput)
+    private var lastInput = Date()
+    /// Siri, a call or the car's voice took the sound while listening: the car listens again once it is back
+    private var listenAfter = false
+    /// the sound playing is a note said by itself (or a repeated answer), not the answer to a question: in the car the
+    /// microphone then stays closed afterwards (Dominik 2026-10-20 „1a“)
+    private var unasked = false
     private var streamDone = true
     private var last = Date.distantPast
     private var lastActivity = Date()
@@ -216,6 +223,7 @@ final class Conversation: ObservableObject {
         audio.onRaw = { w.feed($0) }
         audio.onInput = { [weak self] s, l in MainActor.assumeIsolated { self?.input(s, l) } }
         audio.onIdle = { [weak self] in MainActor.assumeIsolated { self?.played() } }
+        audio.onInterrupt = { [weak self] began in MainActor.assumeIsolated { self?.interrupted(began) } }
         wake.onWake = { [weak self] in MainActor.assumeIsolated { self?.woke() } }
         UIDevice.current.isBatteryMonitoringEnabled = true
         charging = Self.onPower()
@@ -271,7 +279,8 @@ final class Conversation: ObservableObject {
     /// The wake word may listen: the app's switch, the profile allows it, recognition on the iPhone,
     /// and on battery only for a while after the last use.
     var canWake: Bool {
-        guard Prefs.wake, allowed.listen, speechAllowed, wake.onDevice, !CallCenter.shared.active else { return false }
+        // never in the car (Dominik 2026-10-20 „2a“): the radio set it off and the microphone stayed open all drive
+        guard Prefs.wake, allowed.listen, speechAllowed, wake.onDevice, !CallCenter.shared.active, !inCar else { return false }
         if charging { return true }
         return Prefs.batteryMinutes > 0 && Date().timeIntervalSince(lastActivity) < Double(Prefs.batteryMinutes) * 60
     }
@@ -342,9 +351,11 @@ final class Conversation: ObservableObject {
 
     /// Akku: in the background with nothing to hear or say the audio engine stops, so iOS can put the app to sleep
     /// (an answer still playing finishes first: it ends in base(), which comes back here). Never during a call (CallKit owns the
-    /// sound then) and never while the wake word or CarPlay listens.
+    /// sound then) and never while the wake word listens. In the car also in front (CarPlay stabil, V01.0.871): a resting
+    /// engine kept the sound for itself the whole drive (voice processing ducks the radio and the music, the car took the
+    /// sound away from them), so it lets go as soon as a conversation ends; the next tap starts it again.
     private func sleepAudio() {
-        guard !foreground, !canWake, !inCar, phase == .idle, !CallCenter.shared.active else { return }
+        guard !foreground || inCar, !canWake, phase == .idle, !CallCenter.shared.active else { return }
         audio.sleep()
     }
 
@@ -564,10 +575,53 @@ final class Conversation: ObservableObject {
         lastLoud = Date()
         lastVoice = Date()
         phase = .listening
+        watchInput(startedAt)
+    }
+
+    /// The checks of a question run only when the microphone delivers something. After a route switch in the car or
+    /// an interruption the engine may deliver nothing, and the assistant stayed "listening" forever. Every 2 s: nothing
+    /// came for 2 s → start the microphone once again, still nothing → stop and say so (CarPlay stabil, V01.0.871).
+    private func watchInput(_ at: Date, retried: Bool = false) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [weak self] in
+            MainActor.assumeIsolated {
+                guard let self, self.phase == .listening, self.startedAt == at else { return }
+                guard Date().timeIntervalSince(self.lastInput) > 2 else { self.watchInput(at, retried: retried); return }
+                if !retried {
+                    AudioEngine.note("Mikrofon stumm, starte neu")
+                    self.audio.stopInput()
+                    try? self.audio.startInput()
+                    self.watchInput(at, retried: true)
+                } else {
+                    AudioEngine.note("Mikrofon stumm, aufgegeben")
+                    self.pcm = []
+                    self.carEnd(sad: true)
+                    self.error = String(localized: "Das Mikrofon liefert keinen Ton. Bitte noch einmal tippen.")
+                    self.base()
+                }
+            }
+        }
+    }
+
+    /// Siri, a call or the car's own voice took the sound: the question being listened to is dropped (the microphone
+    /// hears nothing meanwhile); in the car the conversation listens again once the sound is back.
+    private func interrupted(_ began: Bool) {
+        if began {
+            guard phase == .listening else { return }
+            pcm = []
+            listenAfter = inCar
+            base()
+        } else if listenAfter && inCar && (phase == .idle || phase == .waiting) {
+            listenAfter = false
+            listen(preroll: 0, fromWake: false, opened: "hands")
+        } else {
+            listenAfter = false
+            if phase == .idle { sleepAudio() }
+        }
     }
 
     private func input(_ samples: [Int16], _ lvl: Float) {
         level = lvl
+        lastInput = Date()
         ring.append(contentsOf: samples)
         if ring.count > Int(AudioEngine.rate * 2) { ring.removeFirst(ring.count - Int(AudioEngine.rate * 2)) }
         // the car: a quieter voice over the road noise still counts (see carEndSilence)
@@ -589,6 +643,7 @@ final class Conversation: ObservableObject {
             else if !heard && (inCar ? now.timeIntervalSince(lastVoice) > Self.carGiveUp
                                      : now.timeIntervalSince(startedAt) > Self.giveUp) {
                 pcm = []
+                carEnd(sad: false)
                 notice = Prefs.handsFree ? String(localized: "Nichts gehört, Mikrofon aus. Tippen zum Sprechen.") : nil
                 base()
             } else if now.timeIntervalSince(startedAt) > Self.maxQuestion { finish() }
@@ -626,7 +681,7 @@ final class Conversation: ObservableObject {
                     // the Spark heard only silence or a click (it says so instead of "Ja"/"Okay"): hands-free
                     // ends quietly as when nothing was said
                     if woke { listen(preroll: 0, fromWake: false) }
-                    else if Prefs.handsFree || inCar { notice = String(localized: "Nichts gehört, Mikrofon aus. Tippen zum Sprechen."); base() }
+                    else if Prefs.handsFree || inCar { notice = String(localized: "Nichts gehört, Mikrofon aus. Tippen zum Sprechen."); carEnd(sad: false); base() }
                     else { error = String(localized: "Nichts verstanden."); base() }
                     return
                 }
@@ -634,6 +689,13 @@ final class Conversation: ObservableObject {
                 if let o = offer {
                     if Self.yes(text) { offer = nil; PhoneAction.run(o); base(); return }
                     if Self.no(text) { PhoneAction.decline(o); offer = nil; base(); return }
+                }
+                // „Danke“, „Ende“ in the car: the conversation closes at once instead of after 15 s of quiet (Dominik 2026-10-20 „3a“)
+                if inCar && Self.bye(text) {
+                    AudioEngine.note("CarPlay: Ende gesagt")
+                    carEnd(sad: false)
+                    base()
+                    return
                 }
                 await send(text, api)
             } catch {
@@ -644,6 +706,18 @@ final class Conversation: ObservableObject {
 
     static func yes(_ t: String) -> Bool {
         t.lowercased().range(of: #"^\W*(ja|jawohl|ja bitte|ja,? mach( das)?|okay|ok|yes|yes please|yeah|sure)\W*$"#, options: .regularExpression) != nil
+    }
+
+    static func bye(_ t: String) -> Bool {
+        t.lowercased().range(of: #"^\W*(danke( ?schön| sehr)?|vielen dank|ende|tschüss|tschüs|stopp?|das wars?|das war'?s|fertig|thanks|thank you|bye|that'?s all|done)\W*$"#,
+                             options: .regularExpression) != nil
+    }
+
+    /// The end of a conversation in the car is heard, not only seen: a short falling tone, lower when it did not work.
+    /// Played before base(), so the engine lets go of the sound only after the tone (played → sleepAudio).
+    private func carEnd(sad: Bool) {
+        guard inCar else { return }
+        audio.endTone(sad: sad)
     }
 
     static func no(_ t: String) -> Bool {
@@ -679,6 +753,7 @@ final class Conversation: ObservableObject {
 
     /// typed: a typed question that waits in the outbox when the Spark cannot be reached.
     private func send(_ text: String, _ api: SparkAPI, typed: Bool = false) async {
+        unasked = false
         if Date().timeIntervalSince(last) > Self.newAfter { fresh() }
         var question = Message(role: "user", text: text)
         if let a = attachment, !labelShown {
@@ -856,7 +931,7 @@ final class Conversation: ObservableObject {
     }
 
     private func played() {
-        if phase == .speaking && streamDone { answered() }
+        if phase == .speaking && streamDone { answered() } else if phase == .idle { sleepAudio() }   // after the end tone
     }
 
     /// After an answer: hands-free listens again (also for "Ja"), else back to rest.
@@ -865,6 +940,12 @@ final class Conversation: ObservableObject {
         if !outbox.isEmpty && !unreachable {
             phase = .idle
             if flushNext() { return }
+        }
+        if unasked && inCar {   // a note said by itself or a repeated answer: nothing to answer, the microphone stays closed
+            unasked = false
+            carEnd(sad: false)
+            base()
+            return
         }
         if Prefs.handsFree || inCar || offer != nil && canWake {
             listen(preroll: 0, fromWake: false, opened: "hands")
@@ -883,6 +964,7 @@ final class Conversation: ObservableObject {
             error = e.localizedDescription
         }
         streamDone = true
+        carEnd(sad: true)
         base()
     }
 
@@ -919,6 +1001,7 @@ final class Conversation: ObservableObject {
         wake.stop()
         phase = .speaking
         streamDone = false
+        unasked = true
         task = Task {
             do {
                 for try await pcm in api.say(n.text) { audio.play(pcm) }
@@ -926,6 +1009,31 @@ final class Conversation: ObservableObject {
             streamDone = true
             if !audio.busy { answered() }
         }
+    }
+
+    /// „Letzte Antwort wiederholen“ (CarPlay, Dominik 2026-10-20 „4a“): the newest answer once more in the Spark's voice.
+    /// False when there is none yet.
+    func repeatLast() -> Bool {
+        guard let text = messages.last(where: { $0.role == "assistant" && !$0.text.isEmpty })?.text,
+              let api = SparkAPI.current else { return false }
+        task?.cancel()
+        audio.stopPlaying()
+        wake.stop()
+        audio.stopInput()
+        audio.warmUp()
+        lastActivity = Date()
+        phase = .speaking
+        streamDone = false
+        unasked = true
+        task = Task {
+            do {
+                for try await pcm in api.say(text) { audio.play(pcm) }
+            } catch {}
+            guard !Task.isCancelled else { return }
+            streamDone = true
+            if !audio.busy { answered() }
+        }
+        return true
     }
 }
 

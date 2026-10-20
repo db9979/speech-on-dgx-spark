@@ -1154,7 +1154,7 @@ struct SettingsView: View {
                         UIPasteboard.general.string = "Spark-App \(v) (\(b)) · Ton\n```\n" + AudioEngine.diary.joined(separator: "\n") + "\n```"
                     }
                 } footer: {
-                    Text("Bleibt eine Antwort stumm: hier tippen und in den Thread einfügen. Es steht nur drin, wann der Ton startet und wohin er geht.")
+                    Text("Bleibt eine Antwort stumm oder hakt CarPlay: hier tippen und in den Thread einfügen. Es steht nur drin, wann der Ton startet, wohin er geht und was CarPlay tut, nie was gesagt wurde.")
                 }
                 Section {
                     Toggle("Freihändig", isOn: $handsFree)

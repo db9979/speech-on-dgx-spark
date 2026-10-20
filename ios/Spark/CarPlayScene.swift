@@ -8,15 +8,25 @@ import UIKit
 /// (listening, thinking, speaking) with the profile's face (robot or comic, from hello and redrawn when it arrives later, as a still picture:
 /// CarPlay allows no own drawing or animation), never text. Needs the CarPlay entitlement for voice-based
 /// conversational apps (Spark.entitlements; granted by Apple since V01.0.676, docs/de/iphone-app.md).
+/// CarPlay stabil (V01.0.871): the voice template is shown and hidden one step at a time (CarPlay refuses a second
+/// present or dismiss while one runs, the template then stayed away while Spark spoke, and a tapped row seemed to do
+/// nothing), a row always starts something or shows why not, and every step goes into the Ton-Protokoll.
 @MainActor
 final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
     private var interface: CPInterfaceController?
     private var voice: CPVoiceControlTemplate?
-    private var shown = false
+    /// the state the voice template should show, nil for the list
+    private var want: String?
+    /// a present or dismiss is under way: the next one waits for its completion (sync)
+    private var moving = false
+    private var refused = 0
+    /// back to the list only after a short moment: the step between two answers does not flicker
+    private var hide: Task<Void, Never>?
     private var watch: AnyCancellable?
     private var watchFace: AnyCancellable?
     private var start: CPListItem?
     private var fresh: CPListItem?
+    private var repeatRow: CPListItem?
     private var list: CPListTemplate?
     private var watchAreas: AnyCancellable?
     /// the face the pictures show; the profile's choice arrives with hello, often only after CarPlay connected
@@ -26,22 +36,31 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
     func templateApplicationScene(_ templateApplicationScene: CPTemplateApplicationScene,
                                   didConnect interfaceController: CPInterfaceController) {
         interface = interfaceController
+        AudioEngine.note("CarPlay: verbunden")
         let talk = Conversation.shared
         talk.inCar = true
+        if talk.phase == .waiting { talk.stop() }   // no wake word in the car („2a“): base() closes the microphone
         let start = CPListItem(text: String(localized: "Mit Spark sprechen"), detailText: String(localized: "Antippen und losreden"),
                                image: nil)
         start.handler = { [weak self] _, done in
-            self?.begin(fresh: false)
             done()
+            self?.begin(fresh: false)
         }
         self.start = start
         let fresh = CPListItem(text: String(localized: "Neues Gespräch"), detailText: String(localized: "Das bisherige Gespräch vergessen"),
                                image: UIImage(systemName: "square.and.pencil"))
         fresh.handler = { [weak self] _, done in
-            self?.begin(fresh: true)
             done()
+            self?.begin(fresh: true)
         }
         self.fresh = fresh
+        let again = CPListItem(text: String(localized: "Letzte Antwort wiederholen"), detailText: String(localized: "Spark sagt sie noch einmal"),
+                               image: UIImage(systemName: "arrow.counterclockwise"))
+        again.handler = { [weak self] _, done in
+            done()
+            self?.again()
+        }
+        self.repeatRow = again
         let list = CPListTemplate(title: "Spark", sections: [CPListSection(items: items(talk.allowed.areas))])
         self.list = list
         interfaceController.setRootTemplate(list, animated: false, completion: nil)
@@ -62,7 +81,7 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
     private func use(face kind: String) {
         guard kind != face else { return }
         start?.setImage(FaceStill.image(kind, .idle) ?? UIImage(systemName: "waveform"))
-        if shown { faceLater = true; return }
+        if moving || (voice != nil && interface?.presentedTemplate === voice) { faceLater = true; return }
         face = kind
         faceLater = false
         voice = CPVoiceControlTemplate(voiceControlStates: [
@@ -71,21 +90,33 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
             CPVoiceControlState(identifier: "think", titleVariants: [String(localized: "Denke nach …")],
                                 image: FaceStill.image(kind, .think) ?? UIImage(systemName: "ellipsis"), repeats: true),
             CPVoiceControlState(identifier: "speak", titleVariants: [String(localized: "Spark spricht …")],
-                                image: FaceStill.image(kind, .speak) ?? UIImage(systemName: "speaker.wave.2.fill"), repeats: true)])
+                                image: FaceStill.image(kind, .speak) ?? UIImage(systemName: "speaker.wave.2.fill"), repeats: true),
+            // a short moment before the list comes back, so the car says why nothing happens instead of just closing
+            CPVoiceControlState(identifier: "offline", titleVariants: [String(localized: "Spark nicht erreichbar")],
+                                image: FaceStill.image(kind, .sad) ?? UIImage(systemName: "wifi.slash"), repeats: false),
+            CPVoiceControlState(identifier: "fail", titleVariants: [String(localized: "Hat nicht geklappt")],
+                                image: FaceStill.image(kind, .sad) ?? UIImage(systemName: "exclamationmark.triangle"), repeats: false),
+            CPVoiceControlState(identifier: "none", titleVariants: [String(localized: "Noch keine Antwort")],
+                                image: FaceStill.image(kind, .idle) ?? UIImage(systemName: "text.bubble"), repeats: false)])
     }
 
     func templateApplicationScene(_ templateApplicationScene: CPTemplateApplicationScene,
                                   didDisconnectInterfaceController interfaceController: CPInterfaceController) {
+        AudioEngine.note("CarPlay: getrennt")
+        hide?.cancel()
+        hide = nil
+        want = nil
+        moving = false
         watch = nil
         watchFace = nil
         watchAreas = nil
         list = nil
         fresh = nil
+        repeatRow = nil
         interface = nil
         start = nil
         voice = nil
         face = ""
-        shown = false
         let talk = Conversation.shared
         talk.inCar = false
         talk.stop()
@@ -94,45 +125,97 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
     /// The rows: talking, a new conversation, and with Kalender and E-Mail released the assistant reads them aloud
     /// (plan kalender-mail Stufe 4: the car shows no text, the answer is spoken like any other).
     private func items(_ areas: Set<String>) -> [CPListItem] {
-        var out = [start, fresh].compactMap { $0 }
+        var out = [start, repeatRow, fresh].compactMap { $0 }
         if areas.contains("calendar") {
             let cal = CPListItem(text: String(localized: "Termine vorlesen"), detailText: String(localized: "Was heute und morgen ansteht"),
                                  image: UIImage(systemName: "calendar"))
-            cal.handler = { _, done in
-                Conversation.shared.write(String(localized: "Was steht heute und morgen an?"))
+            cal.handler = { [weak self] _, done in
                 done()
+                self?.ask(String(localized: "Was steht heute und morgen an?"), "Termine")
             }
             out.append(cal)
         }
         if areas.contains("mail") {
             let post = CPListItem(text: String(localized: "Neue Mails vorlesen"), detailText: String(localized: "Wer geschrieben hat und worum es geht"),
                                   image: UIImage(systemName: "envelope"))
-            post.handler = { _, done in
-                Conversation.shared.write(String(localized: "Habe ich neue Mails?"))
+            post.handler = { [weak self] _, done in
                 done()
+                self?.ask(String(localized: "Habe ich neue Mails?"), "Mails")
             }
             out.append(post)
         }
         if areas.contains("fuerdich") {   // Für dich (fuerdich.py): deadlines and open bills, read aloud like any answer
             let due = CPListItem(text: String(localized: "Fristen vorlesen"), detailText: String(localized: "Was du diese Woche erledigen musst"),
                                  image: UIImage(systemName: "tray.full"))
-            due.handler = { _, done in
-                Conversation.shared.write(String(localized: "Was muss ich diese Woche erledigen?"))
+            due.handler = { [weak self] _, done in
                 done()
+                self?.ask(String(localized: "Was muss ich diese Woche erledigen?"), "Fristen")
             }
             out.append(due)
         }
         return out
     }
 
+    /// "Mit Spark sprechen", "Neues Gespräch": always listens, also while Spark still speaks or thinks (before: a tap
+    /// then did nothing and the row seemed stuck). Without the Spark the car says so instead of staying silent.
     private func begin(fresh: Bool) {
         let talk = Conversation.shared
+        AudioEngine.note(fresh ? "CarPlay: Knopf Neues Gespräch" : "CarPlay: Knopf Sprechen")
         if fresh { talk.restart() }
-        if talk.phase == .idle || talk.phase == .waiting { talk.tap() }
+        reachable { [weak self] in
+            switch talk.phase {
+            case .listening: self?.show(talk.phase)
+            case .idle, .waiting: talk.tap()
+            default:
+                talk.stop()
+                talk.tap()
+            }
+        }
+    }
+
+    /// „Letzte Antwort wiederholen“: the newest answer once more; with none yet the car says so for a moment.
+    private func again() {
+        AudioEngine.note("CarPlay: Knopf Wiederholen")
+        reachable { [weak self] in
+            if !Conversation.shared.repeatLast() { self?.flash("none") }
+        }
+    }
+
+    /// A row that asks a fixed question (Termine, Mails, Fristen); `kind` is a fixed word for the Ton-Protokoll.
+    private func ask(_ question: String, _ kind: String) {
+        AudioEngine.note("CarPlay: Knopf \(kind)")
+        reachable { Conversation.shared.write(question) }
+    }
+
+    /// Runs `go` when the Spark answers. A question in the car never waits in the outbox (its answer would start
+    /// speaking by itself much later): without the Spark the car shows „Spark nicht erreichbar“ for a moment.
+    private func reachable(_ go: @escaping @MainActor () -> Void) {
+        let talk = Conversation.shared
+        guard talk.unreachable else { go(); return }
+        Task { [weak self] in
+            if await talk.check() { go() } else { self?.flash("offline") }
+        }
+    }
+
+    /// A state of trouble on the voice template for 3 s, then the list.
+    private func flash(_ state: String) {
+        AudioEngine.note("CarPlay: zeigt \(state)")
+        want = state
+        sync()
+        later(3)
+    }
+
+    private func later(_ seconds: Double) {
+        hide?.cancel()
+        hide = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(seconds))
+            guard let self, !Task.isCancelled else { return }
+            self.want = nil
+            self.sync()
+        }
     }
 
     private func show(_ phase: Conversation.Phase) {
-        guard let interface, let voice else { return }
         let state: String?
         switch phase {
         case .listening: state = "listen"
@@ -141,17 +224,56 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
         case .idle, .waiting: state = nil
         }
         if let state {
-            if !shown {
-                shown = true
-                interface.presentTemplate(voice, animated: true, completion: nil)
+            hide?.cancel()
+            hide = nil
+            want = state
+            sync()
+            return
+        }
+        guard want != nil, hide == nil else { return }
+        // the conversation ended with an error: the car says why for a moment instead of just closing
+        let talk = Conversation.shared
+        if talk.unreachable { flash("offline") } else if talk.error != nil { flash("fail") } else { later(0.8) }
+    }
+
+    /// Brings the car to the wanted state, one present or dismiss at a time (CarPlay refuses a second one while one runs).
+    /// Whether the template is up is asked from CarPlay itself (presentedTemplate), never kept in an own flag that could
+    /// go wrong when the car closed it.
+    private func sync() {
+        guard let interface, let voice, !moving else { return }
+        let up = interface.presentedTemplate === voice
+        if let want {
+            voice.activateVoiceControlState(withIdentifier: want)
+            guard !up else { return }
+            moving = true
+            interface.presentTemplate(voice, animated: true) { [weak self] ok, _ in
+                Task { @MainActor in self?.moved(ok, "auf") }
             }
-            voice.activateVoiceControlState(withIdentifier: state)
-        } else if shown {
-            shown = false
-            interface.dismissTemplate(animated: true, completion: nil)
-            if faceLater { use(face: Conversation.shared.allowed.face) }
+        } else if up {
+            moving = true
+            interface.dismissTemplate(animated: true) { [weak self] ok, _ in
+                Task { @MainActor in self?.moved(ok, "zu") }
+            }
+        } else if faceLater {
+            use(face: Conversation.shared.allowed.face)
         }
     }
+
+    private func moved(_ ok: Bool, _ how: String) {
+        moving = false
+        AudioEngine.note(ok ? "CarPlay: Sprachfenster \(how)" : "CarPlay: Sprachfenster \(how) abgelehnt")
+        if ok {
+            refused = 0
+            sync()
+        } else if refused < 3 {
+            refused += 1
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in MainActor.assumeIsolated { self?.sync() } }
+        }
+    }
+
+    // ---------------------------------------------------------------- the car screen in front or not (Ton-Protokoll)
+    func sceneWillEnterForeground(_ scene: UIScene) { AudioEngine.note("CarPlay: vorn") }
+    func sceneDidEnterBackground(_ scene: UIScene) { AudioEngine.note("CarPlay: Hintergrund") }
 }
 
 /// The picked face (FaceView's looks) as one still picture per state for CarPlay. The comic faces keep

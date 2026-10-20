@@ -907,6 +907,7 @@ Gilt bei: [Schritt 6](#kn-apps-s6), [Schritt 7](#kn-apps-s7)
 
 - Zustand → Live: eine Zeile unter Ereignisse, wenn ein iPhone gekoppelt oder entfernt wird.
 - Logs → Anfragen: Fragen der App mit Eingang „iPhone-App“ oder „CarPlay“, vom Android-Blatt „Android-App“.
+- iPhone → Einstellungen → Ton-Protokoll kopieren: die letzten 150 Schritte von Ton und CarPlay (Sprechfenster, Knöpfe, Tonweg, Unterbrechungen, App-Start), nur feste Wörter, bleibt auf dem iPhone.
 - Zustand → Live: offene Terminals als Anzahl unter Verbindungen. Zustand → Logs: im Bereich „Apps“ die „terminal:“-Zeilen.
 
 #### Im Code

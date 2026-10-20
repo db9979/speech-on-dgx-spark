@@ -1053,7 +1053,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Was du siehst",
 "title": "Was du siehst",
-"text": "- Zustand → Live: eine Zeile unter Ereignisse, wenn ein iPhone gekoppelt oder entfernt wird. - Logs → Anfragen: Fragen der App mit Eingang „iPhone-App“ oder „CarPlay“, vom Android-Blatt „Android-App“. - Zustand → Live: offene Terminals als Anzahl unter Verbindungen. Zustand → Logs: im Bereich „Apps“ die „terminal:“-Zeilen."
+"text": "- Zustand → Live: eine Zeile unter Ereignisse, wenn ein iPhone gekoppelt oder entfernt wird. - Logs → Anfragen: Fragen der App mit Eingang „iPhone-App“ oder „CarPlay“, vom Android-Blatt „Android-App“. - iPhone → Einstellungen → Ton-Protokoll kopieren: die letzten 150 Schritte von Ton und CarPlay (Sprechfenster, Knöpfe, Tonweg, Unterbrechungen, App-Start), nur feste Wörter, bleibt auf dem iPhone. - Zustand → Live: offene Terminals als Anzahl unter Verbindungen. Zustand → Logs: im Bereich „Apps“ die „terminal:“-Zeilen."
 },
 {
 "lang": "de",
@@ -7325,7 +7325,7 @@
 "file": "iPhone-App „Spark“",
 "head": "Schnellstart, Verlauf, Fotos, ohne Netz",
 "title": "Schnellstart, Verlauf, Fotos, ohne Netz",
-"text": "l im Hintergrund (höchstens alle 5 Minuten). Braucht eine Seite länger als 2 Sekunden, steht unter Zustand → Logs (Bereich Apps) eine Zeile app: langsam <Seite> <ms> ms iphone. - Akku schonen (seit V01.0.668): Im Hintergrund stoppt die App ihre Audio-Engine, sobald nichts mehr zuhört, spricht oder telefoniert; eine laufende Antwort spricht sie noch zu Ende. So kann iOS die App schlafen legen. Ausnahmen: das Weckwort hört zu (am Ladekabel oder die Zeit unter „Am Akku“) oder CarPlay läuft. - Englisch: Steht das iPhone auf Englisch, ist die App englisch, auch das Weckwort und Siri („Ask Spark“, „Start Spark“). - Lange Fragen (seit V01.0.829): Das Eingabefeld wächst bis fünf Zeilen mit, darüber scrollt es. Die Zeilentaste macht eine neue Zeile, der Pfeil schickt ab. Ab vier Zeilen öffnet ⤢ oben rechts im Feld die Großansicht über den ganzen Bildschirm: *Fertig* übernimmt den Text ins Feld, *Senden* schickt ab."
+"text": "l im Hintergrund (höchstens alle 5 Minuten). Braucht eine Seite länger als 2 Sekunden, steht unter Zustand → Logs (Bereich Apps) eine Zeile app: langsam <Seite> <ms> ms iphone. - Akku schonen (seit V01.0.668): Im Hintergrund stoppt die App ihre Audio-Engine, sobald nichts mehr zuhört, spricht oder telefoniert; eine laufende Antwort spricht sie noch zu Ende. So kann iOS die App schlafen legen. Ausnahme: das Weckwort hört zu (am Ladekabel oder die Zeit unter „Am Akku“). Im Auto lässt die App den Ton seit V01.0.871 nach jedem Gespräch auch im Vordergrund los, damit Radio und Musik nicht leiser bleiben. - Englisch: Steht das iPhone auf Englisch, ist die App englisch, auch das Weckwort und Siri („Ask Spark“, „Start Spark“). - Lange Fragen (seit V01.0.829): Das Eingabefeld wächst bis fünf Zeilen mit, darüber scrollt es. Die Zeilentaste macht eine neue Zeile, der Pfeil schickt ab. Ab vier Zeilen öffnet ⤢ oben rechts im Feld die Großansicht über den ganzen Bildschirm: *Fertig* übernimmt den Text ins Feld, *Senden* schickt ab."
 },
 {
 "lang": "de",
@@ -7614,6 +7614,30 @@
 "head": "CarPlay",
 "title": "Termine und Mails vorlesen",
 "text": "Termine und Mails vorlesen (seit V01.0.815): Mit Kalender oder E-Mail lesen freigegeben stehen im Auto zusätzlich „Termine vorlesen“ und „Neue Mails vorlesen“. Ein Tippen stellt dem Assistenten die Frage („Was steht heute und morgen an?“, „Habe ich neue Mails?“), die Antwort kommt gesprochen; das Auto zeigt dabei wie immer keinen Text."
+},
+{
+"lang": "de",
+"src": "iphone-app",
+"file": "iPhone-App „Spark“",
+"head": "CarPlay",
+"title": "Stabil im Auto",
+"text": "Stabil im Auto (seit V01.0.871): - Das Sprechfenster („Ich höre zu“, „Denke nach“, „Spark spricht“) geht Schritt für Schritt auf und zu. Vorher konnte CarPlay ein zweites Öffnen während des Schließens ablehnen: Spark sprach, das Auto zeigte die Liste, oder das Fenster blieb stehen. Ob es offen ist, fragt die App CarPlay selbst. Zwischen zwei Antworten bleibt es kurz stehen, statt zu flackern. - Jede Zeile tut etwas: „Mit Spark sprechen“ hört auch zu, während Spark noch spricht oder nachdenkt (vorher passierte dann nichts und die Zeile blieb markiert). Ist der Spark nicht erreichbar, zeigt das Auto 3 Sekunden „Spark nicht erreichbar“; eine Frage aus dem Auto wartet nicht in der Warteschlange, damit die Antwort nicht viel später von selbst losspricht. Endet ein Gespräch mit einem Fehler, steht 3 Sekunden „Hat nicht geklappt“ da, statt dass das Fenster einfach verschwindet. - Nimmt Siri, ein Anruf oder die Ansage des Autos den Ton, während Spark zuhört, hört Spark danach im Auto von selbst wieder zu. - Liefert das Mikrofon nach einem Wechsel des Tonwegs nichts mehr, startet die App es nach 2 Sekunden neu; kommt dann immer noch nichts, hört sie auf und sagt es, statt endlos „Ich höre z"
+},
+{
+"lang": "de",
+"src": "iphone-app",
+"file": "iPhone-App „Spark“",
+"head": "CarPlay",
+"title": "Stabil im Auto",
+"text": "u“ zu zeigen. - Nach einem Gespräch lässt die App den Ton los: Radio, Musik und Navigation sind wieder normal laut, bis du wieder tippst. - Bedienung im Auto (Dominik 2026-10-20 „1a 2a 3a 4a 5a“): Nach einem Hinweis von selbst oder einer wiederholten Antwort bleibt das Mikrofon zu; es öffnet sich nur nach einer echten Frage. Das Weckwort ist im Auto immer aus (das Radio konnte es auslösen). „Danke“, „Ende“, „Tschüss“, „Stopp“ oder „Das war's“ beendet das Gespräch sofort, statt 15 Sekunden zu warten. Neue Zeile „Letzte Antwort wiederholen“: Spark sagt die letzte Antwort noch einmal (gibt es noch keine, steht kurz „Noch keine Antwort“ da). Endet ein Gespräch, hörst du einen kurzen fallenden Ton, bei einem Fehler einen tieferen; du musst nicht aufs Display schauen. - Ton-Protokoll: Einstellungen → „Ton-Protokoll kopieren“ zeigt jetzt auch, was CarPlay tut (verbunden, getrennt, vorn, Hintergrund, Sprechfenster auf/zu oder abgelehnt, welcher Knopf, Tonweg geändert und warum, Unterbrechungen, App gestartet oder beendet). Nur feste Wörter und Uhrzeiten, nie was gesagt wurde. Die letzten 150 Zeilen bleiben auf dem iPhone, auch wenn iOS die App beendet; beim Melden eines Fehlers geht es mit"
+},
+{
+"lang": "de",
+"src": "iphone-app",
+"file": "iPhone-App „Spark“",
+"head": "CarPlay",
+"title": "Stabil im Auto",
+"text": " dem Schalter „Ton-Protokoll der App anhängen“ mit."
 },
 {
 "lang": "de",
@@ -10029,7 +10053,7 @@
 "file": "Architecture and data flow",
 "head": "What you see",
 "title": "What you see",
-"text": "- Status → Live: a line under events when an iPhone is paired or removed. - Logs → Requests: the app's questions with the input „iPhone-App“ or „CarPlay“, from the Android sheet „Android-App“. - Status → Live: open terminals as a number under connections. Status → Logs: the „terminal:“ lines in the area „Apps“."
+"text": "- Status → Live: a line under events when an iPhone is paired or removed. - Logs → Requests: the app's questions with the input „iPhone-App“ or „CarPlay“, from the Android sheet „Android-App“. - iPhone → Settings → Ton-Protokoll kopieren: the last 150 steps of sound and CarPlay (voice window, buttons, sound route, interruptions, app start), only fixed words, stays on the iPhone. - Status → Live: open terminals as a number under connections. Status → Logs: the „terminal:“ lines in the area „Apps“."
 },
 {
 "lang": "en",
@@ -16037,7 +16061,7 @@
 "file": "iPhone app \"Spark\"",
 "head": "Quick start, history, photos, offline",
 "title": "Quick start, history, photos, offline",
-"text": "ine as soon as nothing listens, speaks or calls any more; an answer still playing is finished first. iOS can then put the app to sleep. Exceptions: the wake word listens (on the charger, or for the time under \"On battery\") or CarPlay runs. - English: On an iPhone set to English the app is in English, including the wake word and Siri (\"Ask Spark\", \"Start Spark\"). - Long questions (since V01.0.829): the input field grows up to five lines, beyond that it scrolls. The return key makes a new line, the arrow sends. From four lines ⤢ at the top right of the field opens the large view over the whole screen: *Done* puts the text back into the field, *Send* sends it."
+"text": "ine as soon as nothing listens, speaks or calls any more; an answer still playing is finished first. iOS can then put the app to sleep. Exception: the wake word listens (on the charger, or for the time under \"On battery\"). In the car the app lets go of the sound after every conversation since V01.0.871, also in front, so radio and music do not stay quieter. - English: On an iPhone set to English the app is in English, including the wake word and Siri (\"Ask Spark\", \"Start Spark\"). - Long questions (since V01.0.829): the input field grows up to five lines, beyond that it scrolls. The return key makes a new line, the arrow sends. From four lines ⤢ at the top right of the field opens the large view over the whole screen: *Done* puts the text back into the field, *Send* sends it."
 },
 {
 "lang": "en",
@@ -16294,6 +16318,22 @@
 "head": "CarPlay",
 "title": "Reading appointments and mail aloud",
 "text": "Reading appointments and mail aloud (since V01.0.815): with Calendar or Reading e-mail released, the car also shows \"Termine vorlesen\" and \"Neue Mails vorlesen\". A tap asks the assistant (\"What is on today and tomorrow?\", \"Do I have new mail?\"), the answer is spoken; as always the car shows no text."
+},
+{
+"lang": "en",
+"src": "iphone-app",
+"file": "iPhone app \"Spark\"",
+"head": "CarPlay",
+"title": "Stable in the car",
+"text": "Stable in the car (since V01.0.871): - The voice window (\"Listening\", \"Thinking\", \"Spark speaks\") opens and closes one step at a time. Before, CarPlay could refuse a second opening while one was closing: Spark spoke while the car showed the list, or the window stayed up. Whether it is open the app asks CarPlay itself. Between two answers it stays a moment instead of flickering. - Every row does something: \"Mit Spark sprechen\" also listens while Spark still speaks or thinks (before, nothing happened and the row stayed highlighted). When the Spark cannot be reached the car shows \"Spark not reachable\" for 3 seconds; a question from the car does not wait in the outbox, so its answer does not start speaking by itself much later. When a conversation ends with an error, \"That didn't work\" stays for 3 seconds instead of the window just vanishing. - When Siri, a call or the car's announcement takes the sound while Spark listens, Spark listens again by itself in the car afterwards. - When the microphone delivers nothing after the sound route changed, the app restarts it after 2 seconds; if still nothing comes, it stops and says so instead of showing \"Listening\" forever. - After a conversatio"
+},
+{
+"lang": "en",
+"src": "iphone-app",
+"file": "iPhone app \"Spark\"",
+"head": "CarPlay",
+"title": "Stable in the car",
+"text": "n the app lets go of the sound: radio, music and navigation are back at normal volume until you tap again. - Use in the car (Dominik 2026-10-20 \"1a 2a 3a 4a 5a\"): after a note said by itself or a repeated answer the microphone stays closed; it only opens after a real question. The wake word is always off in the car (the radio could set it off). \"Danke\", \"Ende\", \"Tschüss\", \"Stopp\" or \"Das war's\" (also \"thanks\", \"bye\", \"that's all\") ends the conversation at once instead of waiting 15 seconds. New row \"Letzte Antwort wiederholen\": Spark says the last answer once more (with none yet, \"No answer yet\" shows for a moment). When a conversation ends you hear a short falling tone, a lower one on an error; no need to look at the screen. - Sound log: Settings → \"Ton-Protokoll kopieren\" now also shows what CarPlay does (connected, disconnected, in front, background, voice window open/closed or refused, which button, sound route changed and why, interruptions, app started or ended). Only fixed words and times, never what was said. The last 150 lines stay on the iPhone even when iOS ends the app; when reporting a problem it goes along with the switch \"Ton-Protokoll der App anhängen\"."
 },
 {
 "lang": "en",

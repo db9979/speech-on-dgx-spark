@@ -390,6 +390,10 @@ SEITEN = {
              "Status → Live: a line under events when an iPhone is paired or removed."),
             ("Logs → Anfragen: Fragen der App mit Eingang „iPhone-App“ oder „CarPlay“, vom Android-Blatt „Android-App“.",
              "Logs → Requests: the app's questions with the input „iPhone-App“ or „CarPlay“, from the Android sheet „Android-App“."),
+            ("iPhone → Einstellungen → Ton-Protokoll kopieren: die letzten 150 Schritte von Ton und CarPlay (Sprechfenster, Knöpfe, "
+             "Tonweg, Unterbrechungen, App-Start), nur feste Wörter, bleibt auf dem iPhone.",
+             "iPhone → Settings → Ton-Protokoll kopieren: the last 150 steps of sound and CarPlay (voice window, buttons, sound "
+             "route, interruptions, app start), only fixed words, stays on the iPhone."),
             ("Zustand → Live: offene Terminals als Anzahl unter Verbindungen. Zustand → Logs: im Bereich „Apps“ die „terminal:“-Zeilen.",
              "Status → Live: open terminals as a number under connections. Status → Logs: the „terminal:“ lines in the area „Apps“."),
         ],

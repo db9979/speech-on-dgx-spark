@@ -6661,16 +6661,6 @@
         }
       }
     },
-    "Bleibt eine Antwort stumm: hier tippen und in den Thread einfügen. Es steht nur drin, wann der Ton startet und wohin er geht.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "If an answer stays silent: tap here and paste it into the thread. It only says when the sound starts and where it goes."
-          }
-        }
-      }
-    },
     "%@ braucht dich": {
       "localizations": {
         "en": {
@@ -14617,6 +14607,66 @@
           "stringUnit": {
             "state": "translated",
             "value": "[verse] … [chorus] …"
+          }
+        }
+      }
+    },
+    "Bleibt eine Antwort stumm oder hakt CarPlay: hier tippen und in den Thread einfügen. Es steht nur drin, wann der Ton startet, wohin er geht und was CarPlay tut, nie was gesagt wurde.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If an answer stays silent or CarPlay stumbles: tap here and paste it into the thread. It only says when the sound starts, where it goes and what CarPlay does, never what was said."
+          }
+        }
+      }
+    },
+    "Hat nicht geklappt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That didn't work"
+          }
+        }
+      }
+    },
+    "Das Mikrofon liefert keinen Ton. Bitte noch einmal tippen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The microphone delivers no sound. Please tap again."
+          }
+        }
+      }
+    },
+    "Letzte Antwort wiederholen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repeat the last answer"
+          }
+        }
+      }
+    },
+    "Spark sagt sie noch einmal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spark says it once more"
+          }
+        }
+      }
+    },
+    "Noch keine Antwort": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No answer yet"
           }
         }
       }

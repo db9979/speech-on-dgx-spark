@@ -35,13 +35,17 @@ final class AudioEngine {
     /// After silence a piece starts with a 5 ms fade-in (24 kHz) instead of a step, which clicks.
     private static let fadeIn = 120
 
-    /// "Ton-Protokoll" (Einstellungen): the last steps of the audio engine, to copy into the thread.
-    private(set) static var diary: [String] = []
+    /// "Ton-Protokoll" (Einstellungen): the last steps of the audio engine and of CarPlay, to copy into the thread or
+    /// attach to a report. Only fixed words and numbers, never what was said. Kept on the iPhone across a restart of
+    /// the app, so a drive whose app iOS ended still shows what happened (CarPlay stabil, V01.0.871).
+    private(set) static var diary: [String] = UserDefaults.standard.stringArray(forKey: diaryKey) ?? []
+    private static let diaryKey = "audioDiary"
     static func note(_ s: String) {
         let t = Date().formatted(.dateTime.hour(.twoDigits(amPM: .omitted)).minute(.twoDigits).second(.twoDigits))
         let route = AVAudioSession.sharedInstance().currentRoute.outputs.map { $0.portType.rawValue }.joined(separator: "+")
         diary.append("\(t) \(s) [\(route)]")
-        if diary.count > 80 { diary.removeFirst(diary.count - 80) }
+        if diary.count > 150 { diary.removeFirst(diary.count - 150) }
+        UserDefaults.standard.set(diary, forKey: diaryKey)
     }
 
     /// Main thread: 16 kHz samples and their loudness (0...1).
@@ -50,6 +54,10 @@ final class AudioEngine {
     var onRaw: ((AVAudioPCMBuffer) -> Void)?
     /// Main thread: everything queued has been played.
     var onIdle: (() -> Void)?
+    /// Main thread: Siri, a call or another app took the sound (true) or gave it back (false).
+    var onInterrupt: ((Bool) -> Void)?
+    /// Taken by another app: pieces not yet heard wait for the sound to come back instead of being given up.
+    private var interrupted = false
     /// Loudness of what is playing right now (0...1), for the face's mouth.
     private(set) var outLevel: Float = 0
 
@@ -60,10 +68,28 @@ final class AudioEngine {
         engine.attach(node)
         NotificationCenter.default.addObserver(forName: AVAudioSession.interruptionNotification, object: nil, queue: .main) { [weak self] n in
             guard let self, let raw = n.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt else { return }
-            Self.note(raw == AVAudioSession.InterruptionType.ended.rawValue ? "Unterbrechung vorbei" : "Unterbrechung")
-            guard AVAudioSession.InterruptionType(rawValue: raw) == .ended, !self.sleeping else { return }
-            try? self.ensureRunning()
-            self.resume()
+            let ended = raw == AVAudioSession.InterruptionType.ended.rawValue
+            Self.note(ended ? "Unterbrechung vorbei" : "Unterbrechung")
+            self.interrupted = !ended
+            if ended && !self.sleeping {
+                try? self.ensureRunning()
+                self.resume()
+            }
+            self.onInterrupt?(!ended)
+        }
+        // where the sound goes (car, speaker, headset) and why it changed: the evidence after a drive
+        NotificationCenter.default.addObserver(forName: AVAudioSession.routeChangeNotification, object: nil, queue: .main) { n in
+            let why = (n.userInfo?[AVAudioSessionRouteChangeReasonKey] as? UInt).flatMap { AVAudioSession.RouteChangeReason(rawValue: $0) }
+            let word: String
+            switch why ?? .unknown {
+            case .newDeviceAvailable: word = "neues Gerät"
+            case .oldDeviceUnavailable: word = "Gerät weg"
+            case .categoryChange: word = "Kategorie"
+            case .override: word = "umgelenkt"
+            case .routeConfigurationChange: word = "Konfiguration"
+            default: word = "anderes"
+            }
+            Self.note("Weg geändert: \(word)")
         }
         NotificationCenter.default.addObserver(forName: .AVAudioEngineConfigurationChange, object: engine, queue: .main) { [weak self] _ in
             guard let self, !self.sleeping else { return }
@@ -277,7 +303,8 @@ final class AudioEngine {
     /// conversation does not wait for sound that never comes.
     private func watchStopped() {
         DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
-            guard let self, !self.engine.isRunning, !self.pending.isEmpty else { return }
+            // taken by Siri, a call or the car's own voice: the pieces wait for the sound to come back (resume)
+            guard let self, !self.engine.isRunning, !self.pending.isEmpty, !self.interrupted else { return }
             do { try self.ensureRunning(); self.resume() } catch {
                 Self.note("aufgegeben")
                 self.stopPlaying()
@@ -309,12 +336,18 @@ final class AudioEngine {
     }
 
     /// A short rising tone: "I am listening".
-    func chime() {
+    func chime() { tone(from: 660, to: 1100) }
+
+    /// A short falling tone: the conversation in the car ended, lower when it did not work (Dominik 2026-10-20 „5a“),
+    /// so nobody has to look at the car screen.
+    func endTone(sad: Bool) { tone(from: sad ? 440 : 880, to: sad ? 260 : 600) }
+
+    private func tone(from: Double, to: Double) {
         let sr = 24000.0, n = Int(sr * 0.18)
         var d = Data(capacity: n * 2)
         for i in 0..<n {
             let t = Double(i) / sr
-            let f = 660 + 440 * t / 0.18
+            let f = from + (to - from) * t / 0.18
             let env = min(1, Double(i) / 300) * min(1, Double(n - i) / 900)
             let v = Int16(sin(2 * .pi * f * t) * env * 9000)
             withUnsafeBytes(of: v.littleEndian) { d.append(contentsOf: $0) }

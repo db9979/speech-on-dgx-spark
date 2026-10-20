@@ -2378,6 +2378,13 @@
 "titel": "Für dich: Fristen vorlesen",
 "text": "Frag „Was muss ich diese Woche erledigen?“ (oder CarPlay „Fristen vorlesen“): jeder Eintrag nennt die Mail, aus der er kommt; eine offene Antwort klingt wie „Anna hat dir eine Frage geschickt und wartet auf deine Antwort“; direkt nach dem Panel-Neustart kommt „lese noch“, nie „nicht lesbar“.",
 "thread": "Persönlicher Assistent aus dem Postfach"
+},
+{
+"id": "P364",
+"v": 871,
+"titel": "CarPlay stabil",
+"text": "A: iPhone-App aus TestFlight mit V01.0.871 oder neuer, Pi auf V01.0.871. B: Im Auto Spark öffnen, „Mit Spark sprechen“, eine Frage: das Sprechfenster zeigt Ich höre zu → Denke nach → Spark spricht, danach hört Spark weiter zu; 15 s nichts sagen: die Liste kommt zurück. C: Während Spark spricht „Mit Spark sprechen“ antippen: die Antwort hört auf, Spark hört zu (die Zeile bleibt nicht hängen). D: „Termine vorlesen“ und „Fristen vorlesen“: jedes Mal kommt das Sprechfenster. E: Musik oder Radio laufen lassen, eine Frage stellen: nach dem Gespräch ist die Musik wieder normal laut. F: Während Spark zuhört Siri oder eine Navigationsansage auslösen: danach hört Spark von selbst wieder zu. G: „Danke“ sagen: das Gespräch endet sofort mit einem kurzen fallenden Ton. H: „Letzte Antwort wiederholen“: Spark sagt sie noch einmal, danach bleibt das Mikrofon zu. I: Kommt ein Hinweis von selbst, öffnet sich danach kein Mikrofon; ein Weckwort reagiert im Auto nicht. J: Nach der Fahrt in der App Einstellungen → „Ton-Protokoll kopieren“ und in den Thread einfügen (auch wenn alles lief).",
+"thread": "CarPlay stabil und bedienbar"
 }
 ]
 }

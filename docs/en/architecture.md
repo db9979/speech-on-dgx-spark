@@ -907,6 +907,7 @@ Applies at: [step 6](#kn-apps-s6), [step 7](#kn-apps-s7)
 
 - Status → Live: a line under events when an iPhone is paired or removed.
 - Logs → Requests: the app's questions with the input „iPhone-App“ or „CarPlay“, from the Android sheet „Android-App“.
+- iPhone → Settings → Ton-Protokoll kopieren: the last 150 steps of sound and CarPlay (voice window, buttons, sound route, interruptions, app start), only fixed words, stays on the iPhone.
 - Status → Live: open terminals as a number under connections. Status → Logs: the „terminal:“ lines in the area „Apps“.
 
 #### In the code

@@ -72,7 +72,8 @@ class IPhone(unittest.TestCase):
         a = read(need(os.path.join(IOS, "Assistant.swift")))
         guard = a[a.index("private func sleepAudio()"):]
         guard = guard[:guard.index("\n    }\n")]
-        for x in ("!foreground", "!canWake", "!inCar", "phase == .idle", "!CallCenter.shared.active"):
+        # in the car it sleeps in front too once a conversation ended (CarPlay stabil: a resting engine kept the car's sound)
+        for x in ("!foreground || inCar", "!canWake", "phase == .idle", "!CallCenter.shared.active"):
             self.assertIn(x, guard)
         self.assertGreaterEqual(a.count("sleepAudio()"), 3)   # the definition, going to the background, base() after an answer
 

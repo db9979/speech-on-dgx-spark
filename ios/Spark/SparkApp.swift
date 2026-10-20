@@ -21,6 +21,8 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
         // notifications that arrive while the app is open: banner, sound and said aloud
         UNUserNotificationCenter.current().delegate = Relay.shared
+        // Ton-Protokoll: a start in the middle of a drive shows that iOS had ended the app (CarPlay stabil)
+        AudioEngine.note("App gestartet " + Date().formatted(.dateTime.day().month(.twoDigits)))
         Store.share()
         Passkey.install()
         Task { @MainActor in CodePrompt.install() }
@@ -28,6 +30,9 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         MainActor.assumeIsolated { CallCenter.shared.wake() }
         return true
     }
+
+    func applicationDidReceiveMemoryWarning(_ application: UIApplication) { AudioEngine.note("Speicher knapp") }
+    func applicationWillTerminate(_ application: UIApplication) { AudioEngine.note("App wird beendet") }
 
     func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
         let hex = deviceToken.map { String(format: "%02x", $0) }.joined()
