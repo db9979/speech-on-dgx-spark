@@ -422,10 +422,11 @@ main_loop = [None]   # the panel's own event loop (set at its start), which outl
 
 def later(coro, name=None):
     """Work that must finish after the answer went out (a page's change on its way to the calendar server): on the
-    panel's own loop when it runs (it outlives the request), else like spawn."""
+    panel's own loop when it runs (it outlives the request), else like spawn. A loop that stopped without being
+    closed (a panel started and stopped again, as in the tests) would keep the work forever: only a running one."""
     loop = main_loop[0]
     try:
-        if loop is not None and not loop.is_closed() and loop is not asyncio.get_running_loop():
+        if loop is not None and loop.is_running() and loop is not asyncio.get_running_loop():
             return asyncio.run_coroutine_threadsafe(coro, loop)
     except RuntimeError:
         pass

@@ -64,19 +64,21 @@ class Base(unittest.TestCase):
 
 
 class AdminList(Base):
+    # a name no other test uses: the run shares one profile list, and "viel" also found "AuViele" (test_auslassen)
     @classmethod
     def setUpClass(cls):
         for i in range(30):
-            ADMIN.post("/api/admin/profiles", json={"name": f"Viel{i:02d}", "pin": "1234"})
+            r = ADMIN.post("/api/admin/profiles", json={"name": f"Listenprobe{i:02d}", "pin": "1234"})
+            assert r.status_code in (200, 409), r.text
 
     def test_pages_search_and_cap(self):
-        d = ADMIN.get("/api/admin/profiles", params={"q": "viel", "per": 25}).json()
+        d = ADMIN.get("/api/admin/profiles", params={"q": "listenprobe", "per": 25}).json()
         self.assertEqual((d["total"], len(d["users"]), d["page"]), (30, 25, 0))
-        self.assertEqual([u["name"] for u in d["users"]][:2], ["Viel00", "Viel01"])
-        d = ADMIN.get("/api/admin/profiles", params={"q": "viel", "per": 25, "page": 1}).json()
-        self.assertEqual([u["name"] for u in d["users"]], [f"Viel{i}" for i in range(25, 30)])
+        self.assertEqual([u["name"] for u in d["users"]][:2], ["Listenprobe00", "Listenprobe01"])
+        d = ADMIN.get("/api/admin/profiles", params={"q": "listenprobe", "per": 25, "page": 1}).json()
+        self.assertEqual([u["name"] for u in d["users"]], [f"Listenprobe{i}" for i in range(25, 30)])
         # a page past the end shows the last one; at most ADMIN_PER per page whatever is asked
-        self.assertEqual(ADMIN.get("/api/admin/profiles", params={"q": "viel", "per": 25, "page": 99}).json()["page"], 1)
+        self.assertEqual(ADMIN.get("/api/admin/profiles", params={"q": "listenprobe", "per": 25, "page": 99}).json()["page"], 1)
         self.assertEqual(ADMIN.get("/api/admin/profiles", params={"per": 5000}).json()["per"], profiles.ADMIN_PER)
         # every name for the device field, whatever the page shows
         self.assertGreaterEqual(len(d["names"]), 30)
@@ -84,31 +86,31 @@ class AdminList(Base):
         self.assertEqual(len(ADMIN.get("/api/admin/profiles").json()["users"]), d["all"])
 
     def test_filter_and_sort(self):
-        _, uid = profile("Viel07")
-        d = ADMIN.get("/api/admin/profiles", params={"q": "viel", "show": "nodev", "per": 100}).json()
+        _, uid = profile("Listenprobe07")
+        d = ADMIN.get("/api/admin/profiles", params={"q": "listenprobe", "show": "nodev", "per": 100}).json()
         self.assertEqual(d["total"], 30)
-        # Viel07 signed in: the newest use first, and no longer idle
+        # Listenprobe07 signed in: the newest use first, and no longer idle
         profiles._seen[uid] = {"t": int(NOW)}
-        d = ADMIN.get("/api/admin/profiles", params={"q": "viel", "sort": "recent", "per": 3}).json()
-        self.assertEqual(d["users"][0]["name"], "Viel07")
-        d = profiles.admin_list("viel", "idle", per=100, now=NOW + 10)
-        self.assertNotIn("Viel07", [u["name"] for u in d["users"]])
-        d = profiles.admin_list("viel", "idle", per=100, now=NOW + 91 * 86400)
-        self.assertIn("Viel07", [u["name"] for u in d["users"]])
+        d = ADMIN.get("/api/admin/profiles", params={"q": "listenprobe", "sort": "recent", "per": 3}).json()
+        self.assertEqual(d["users"][0]["name"], "Listenprobe07")
+        d = profiles.admin_list("listenprobe", "idle", per=100, now=NOW + 10)
+        self.assertNotIn("Listenprobe07", [u["name"] for u in d["users"]])
+        d = profiles.admin_list("listenprobe", "idle", per=100, now=NOW + 91 * 86400)
+        self.assertIn("Listenprobe07", [u["name"] for u in d["users"]])
         # unknown filter and sort fall back to the plain list
-        d = ADMIN.get("/api/admin/profiles", params={"q": "viel", "show": "x';", "sort": "evil", "per": 100}).json()
+        d = ADMIN.get("/api/admin/profiles", params={"q": "listenprobe", "show": "x';", "sort": "evil", "per": 100}).json()
         self.assertEqual(d["total"], 30)
 
     def test_details_and_admin_only(self):
-        _, uid = profile("Viel11")
+        _, uid = profile("Listenprobe11")
         d = ADMIN.get(f"/api/admin/profiles/{uid}").json()
-        self.assertEqual((d["name"], d["devices"], d["mfa"]), ("Viel11", [], False))
+        self.assertEqual((d["name"], d["devices"], d["mfa"]), ("Listenprobe11", [], False))
         self.assertEqual(ADMIN.get("/api/admin/profiles/u_000000000000").status_code, 404)
         guest = TestClient(panel.app)
         for r in (guest.get("/api/admin/profiles"), guest.get(f"/api/admin/profiles/{uid}"),
                   guest.put(f"/api/admin/profiles/{uid}/call", json={"call": "X"})):
             self.assertEqual(r.status_code, 401)
-        c, _ = profile("Viel12")
+        c, _ = profile("Listenprobe12")
         self.assertEqual(c.get("/api/admin/profiles").status_code, 401)
 
     def test_delete_needs_a_fresh_code(self):

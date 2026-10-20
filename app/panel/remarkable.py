@@ -258,13 +258,19 @@ def why_count(errors):
     return ", ".join(f"{k} ×{n}" for k, n in sorted(seen.items(), key=lambda x: (-x[1], x[0])))
 
 
+async def _busy_wait(seconds):
+    """The pause before asking a busy cloud again; its own name, so a test replaces only this wait, never the
+    asyncio.sleep of every other task in the panel"""
+    await asyncio.sleep(seconds)
+
+
 async def _authed(uid, method, url, most=MAX_INDEX, headers=None, **kw):
     r = await _request(method, url, await user_token(uid), most, headers, **kw)
     if r.status_code == 401:
         r = await _request(method, url, await user_token(uid, fresh=True), most, headers, **kw)
     if r.status_code in BUSY:
         print(f"remarkable: cloud answered HTTP {r.status_code}, trying once more", flush=True)
-        await asyncio.sleep(_pause(r))
+        await _busy_wait(_pause(r))
         r = await _request(method, url, await user_token(uid), most, headers, **kw)
     return r
 

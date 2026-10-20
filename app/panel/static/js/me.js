@@ -427,13 +427,15 @@ $('calkind').onchange=calKind;
 // released (d.people comes then); every change is one PUT with the code like before.
 const CALLEVEL=[['',t('Nicht','Not')],['see',t('Sehen','See')],['add',t('Sehen + eintragen','See + add')]];
 const calKindOf=c=>c.spark?t('Auf dem Spark','On the Spark'):/^webcals?:|\.ics(\?|$)/i.test(c.url)?t('Abo-Link','Subscription'):/icloud\.com/i.test(c.url)?'iCloud':'CalDAV';
-function calRender(d){const people=d.people||[],name=id=>(people.find(p=>p.id===id)||{}).name||'';CAL_PEOPLE=people;
+// added: right after adding one the form folds; a refresh (opening the page again, sharing, topics) leaves it as the
+// person left it, so it never closes under someone filling it in (V01.0.862)
+function calRender(d,added){const people=d.people||[],name=id=>(people.find(p=>p.id===id)||{}).name||'';CAL_PEOPLE=people;
   $('callist').innerHTML=d.calendars.map(c=>{const sh=Object.entries(c.shares||{});
     return `<li class="calc"><span><b>${esc(c.name)}</b><span class="calchips"><span class="chip">${esc(calKindOf(c))}</span>${sh.length?`<span class="chip hi">${esc(t('Geteilt mit ','Shared with ')+sh.map(([id])=>name(id)).filter(Boolean).join(', '))}</span>`:''}</span></span>`+
       `<span class="calbtns">${people.length?`<button class="b" type="button" data-share="${esc(c.id)}">${esc(t('Teilen','Share'))}</button>`:''}<details class="calmore"><summary class="b" aria-label="${esc(t('Mehr','More'))}">⋯</summary><div class="calmenu"><small class="mut">${esc(c.url.replace(/^\w+:\/\//,'').slice(0,60))}</small><button class="b" type="button" ${onAttr('calRemove',c.id,c.name,c.spark?1:0)}>${t('Entfernen','Remove')}</button></div></details></span></li>`}).join('')||`<li class="mut">${t('Noch kein Kalender verbunden.','No calendar connected yet.')}</li>`;
   $('callist').querySelectorAll('[data-share]').forEach(b=>b.onclick=()=>calShareOpen(d.calendars.find(c=>c.id===b.dataset.share)));
   $('calshared').innerHTML=(d.shared||[]).length?`<div class="mgrp">${esc(t('Mit dir geteilt','Shared with you'))}</div><ul class="facts">`+d.shared.map(x=>`<li class="calc"><span><b>${esc(x.owner)} · ${esc(x.name)}</b><span class="calchips"><span class="chip">${esc(x.level==='add'?t('Sehen und eintragen','See and add'):t('Nur sehen','See only'))}</span></span></span></li>`).join('')+'</ul>':'';
-  CAL_TOPICS=(d.topics||[]).slice();calTopics();calKind();$('caltest').style.display=d.calendars.length?'':'none';$('caladd').open=!d.calendars.length}
+  CAL_TOPICS=(d.topics||[]).slice();calTopics();calKind();$('caltest').style.display=d.calendars.length?'':'none';if(!d.calendars.length)$('caladd').open=true;else if(added)$('caladd').open=false}
 let CAL_PEOPLE=[];
 // an address with several calendars (an iCloud account): the window asks which one is shared, never the whole
 // account (C2); each person keeps the one shared with them, the choice applies to the rows changed now
@@ -499,8 +501,8 @@ const calMsg=(x,err,list)=>{const m=$('calmsg');m.className=err?'err':'';m.inner
 $('calsave').onclick=async()=>{const spark=!!CALKIND[$('calkind').value].spark;calMsg(spark?t('Lege an …','Creating …'):t('Prüfe den Kalender …','Checking the calendar …'));
   const {r,d}=await apiTry('/api/profile/calendar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(spark?{spark:true,name:$('calname').value}:{name:$('calname').value,url:$('calurl').value.trim(),user:$('caluser').value.trim(),password:$('calpw').value,tz:TZ()})});
   if(!r.ok){calMsg(t('Nicht hinzugefügt: ','Not added: ')+errSay(r.status,d.detail,""),true);return}
-  if(spark){$('calname').value='';calRender(d);calMsg(t('Angelegt. Termine trägst du auf der Seite Kalender oder per Sprache ein.','Created. Add appointments on the Calendar page or by voice.'));return}
-  ['calname','calurl','caluser','calpw'].forEach(i=>$(i).value='');calRender(d);
+  if(spark){$('calname').value='';calRender(d,1);calMsg(t('Angelegt. Termine trägst du auf der Seite Kalender oder per Sprache ein.','Created. Add appointments on the Calendar page or by voice.'));return}
+  ['calname','calurl','caluser','calpw'].forEach(i=>$(i).value='');calRender(d,1);
   calMsg(t('Hinzugefügt. ','Added. ')+(d.check.events.length?t('Die nächsten Termine:','Next appointments:'):t('Keine Termine in den nächsten 14 Tagen.','No appointments in the next 14 days.')),false,d.check.events)};
 $('caltest').onclick=async()=>{calMsg(t('Lese die Kalender …','Reading the calendars …'));
   let d;try{d=await (await api('/api/profile/calendar/test',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tz:TZ()})})).json()}catch(e){calMsg(e.message,true);return}

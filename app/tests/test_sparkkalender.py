@@ -192,9 +192,13 @@ class Page(unittest.TestCase):
                 br, pg, errors = await b.page(p, 390, 900)
                 try:
                     uid = await pg.evaluate("PROFILE.id")
-                    await pg.evaluate("CAL_ON=true;showCal();goSec('cal');document.getElementById('calbox').hidden=false;"
-                                      "document.getElementById('caladd').open=true")
-                    await b.until(pg, "!!document.querySelector('#calkind option[value=spark]')")
+                    # the way a person goes (Kalender → Einstellungen → Kalender hinzufügen), again until it shows: on a
+                    # busy runner the page's own start drew the calendar page anew after the test opened it, and the
+                    # form stayed hidden for 30 s (V01.0.862)
+                    await pg.evaluate("CAL_ON=true;showCal()")
+                    await b.until(pg, "(()=>{if(!$('calkind')||!$('calkind').offsetParent){ownPage('calbox');"
+                                      "$('calbox').hidden=false;$('caladd').open=true}"
+                                      "return !!document.querySelector('#calkind option[value=spark]')&&!!$('calkind').offsetParent})()")
                     await pg.select_option("#calkind", "spark")
                     self.assertFalse(await pg.is_visible("#calurl"))
                     self.assertFalse(await pg.is_visible("#caluser"))
@@ -203,6 +207,10 @@ class Page(unittest.TestCase):
                     await b.until(pg, "[...document.querySelectorAll('#callist .calc')].some(e=>e.textContent.includes('Garten'))")
                     cal = next(x for x in calendars.get(uid)["calendars"] if x["name"] == "Garten")
                     self.assertTrue(cal["spark"])
+                    # right after adding, the form folds; opened again, a refresh of the page leaves it open (it
+                    # closed under the person filling it in, and this test after another one left a calendar)
+                    self.assertFalse(await pg.evaluate("$('caladd').open"))
+                    self.assertTrue(await pg.evaluate("(async()=>{$('caladd').open=true;await showCal();return $('caladd').open})()"))
                     asked = []
 
                     def answer(dlg):

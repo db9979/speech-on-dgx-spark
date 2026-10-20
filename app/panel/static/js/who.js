@@ -38,13 +38,15 @@ async function whoOpen(f){const me=whoOpen.n=(whoOpen.n||0)+1;goSec('feat');if(t
   for(let d=row.parentElement;d&&d!==document.body;d=d.parentElement)if(d.tagName==='DETAILS'&&!d.open)d.open=true;
   requestAnimationFrame(()=>{if(typeof sFlash==='function')sFlash(row);else row.scrollIntoView({block:'center'})})}
 // boxes that fill in later (the profile chips of a function, slow with many profiles) push the row away: they scroll
-// back to it until the user scrolls, taps or types himself, at most 15 s
-function whoJumped(){WHO_JUMP=Date.now();clearInterval(whoJumped.t);
+// back to it until the user scrolls, taps or types himself, for 15 s after it last had to (at most a minute)
+function whoJumped(){WHO_JUMP=whoJumped.t0=Date.now();clearInterval(whoJumped.t);
   const stop=()=>{WHO_JUMP=0;clearInterval(whoJumped.t);for(const e of WHO_STOP)removeEventListener(e,stop,true)};
   for(const e of WHO_STOP)addEventListener(e,stop,{capture:true,passive:true});
   // anything drawn later above the row (not only the chips) moves it: bring it back while it is out of view
   whoJumped.t=setInterval(()=>{if(!whoKeepJump()){clearInterval(whoJumped.t);return}
-    const r=WHO_LAST.getBoundingClientRect();if(r.height&&(r.top<0||r.bottom>innerHeight))WHO_LAST.scrollIntoView({block:'center'})},400)}
+    // each time it had to bring the row back, 15 s more (a busy phone draws for longer), at most one minute in all
+    const r=WHO_LAST.getBoundingClientRect();if(r.height&&(r.top<0||r.bottom>innerHeight)){WHO_LAST.scrollIntoView({block:'center'});
+      WHO_JUMP=Math.min(Date.now(),whoJumped.t0+45000)}},400)}
 const WHO_STOP=['wheel','touchstart','keydown','pointerdown'];
 function whoKeepJump(){return !!(WHO_JUMP&&Date.now()-WHO_JUMP<15000&&WHO_LAST&&WHO_LAST.isConnected)}
 // a blocked profile's chip: tap allows the function for it again

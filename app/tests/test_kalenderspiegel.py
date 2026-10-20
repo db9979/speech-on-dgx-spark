@@ -269,6 +269,32 @@ class Behind(Base):
         self.assertEqual([m for m, k in helpers.CAL_SEEN if k == "object"], ["PUT"])   # no GET first
         self.assertIn("Zahnarzt neu", helpers.CAL_EVENTS["/dav/privat/a.ics"])
 
+    def test_a_comparison_running_during_a_change_never_puts_the_old_state_back(self):
+        """V01.0.862 (busy GitHub runner): a comparison already asking the server when the page changed an object,
+        and the server took the change before the comparison ended, held the old state; it put it back and marked
+        the copy fresh, so the changed appointment showed its old time until the next look."""
+        url = self.cal()
+        cal = ks._mem[CID][url]
+        h = next(iter(cal["items"]))
+        old, new = cal["items"][h][1], ev("a", "20260311", "Zahnarzt neu")
+        real = (ks._changes, ks._multiget)
+
+        async def changes(c, u, token):   # while the server answers, the page changes the object and it is taken
+            ks.put_local(CID, url, h, new)
+            ks.taken(CID, url, h, "neu")
+            return {h: "alt"}, [h + "x"], "token-alt"
+
+        async def multiget(c, u, hrefs):
+            return {x: ("alt", old) for x in hrefs}
+        ks._changes, ks._multiget = changes, multiget
+        try:
+            with contextlib.redirect_stdout(io.StringIO()):
+                asyncio.run(ks._sync(None, CID, url, cal))
+        finally:
+            ks._changes, ks._multiget = real
+        self.assertIn("Zahnarzt neu", cal["items"][h][1])
+        self.assertEqual((cal["token"], cal["at"]), ("", 0.0))      # the next look compares everything again
+
     def test_a_refusal_puts_the_copy_back_and_leaves_a_note(self):
         helpers.CAL_REFUSE[0] = 503
         item = calendars.page_item(self.item(), UTC)

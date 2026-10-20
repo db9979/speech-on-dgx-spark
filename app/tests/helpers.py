@@ -782,10 +782,12 @@ def cal_changed_behind():
     fake server arrive first, then every Spark copy asks the server again at the next look (as after SYNC_SECONDS)."""
     import calendars
     import kalenderspiegel
-    for _ in range(200):
-        if not kalenderspiegel._pending:
-            break
+    # until the server took them, not a fixed 4 s: on a busy GitHub runner a write took longer, arrived after the
+    # test's clean-up and brought "Probe Aendern" back into the next test (V01.0.862)
+    end = time.monotonic() + 60
+    while kalenderspiegel._pending and time.monotonic() < end:
         time.sleep(0.02)
+    assert not kalenderspiegel._pending, "calendar writes still on their way after 60 s"
     kalenderspiegel.stale(list(kalenderspiegel._mem))
     calendars._cache.clear()
 
@@ -909,7 +911,14 @@ _panels = set()   # stop() of every panel served right now (serve_panel)
 def serve_panel(cls, port):
     """The panel for a browser test class on port, stopped again when the class is done (one at a time)."""
     import panel
-    stop = _serve(panel.app, port)
+    before, serve = core.main_loop[0], _serve(panel.app, port)
+
+    def stop():
+        # its start made its loop the panel's own (core.later); stopped, the loop of start() takes over again, or
+        # a calendar change of a later test waited forever on the stopped one (V01.0.862)
+        serve()
+        core.main_loop[0] = before
+        _panels.discard(stop)
     _panels.add(stop)
     cls.addClassCleanup(stop)
     return stop

@@ -184,6 +184,19 @@ def item(cid, url, href):
 # overwrites it. If the server refuses, the copy goes back and the next comparison starts from scratch (the
 # server's version wins).
 _pending = set()       # (cid, href) written here, not yet taken by the server
+# A comparison that was already asking the server while the page changed an object (and the server took it before
+# the comparison ended) holds that object's old state: it must not put it back, nor mark the copy as up to date
+# (seen on a busy GitHub runner, V01.0.862: a changed appointment showed its old time again until the next look).
+_seq = [0]             # counts the page's changes
+_touch = {}            # (cid, href) -> the count at its last change here
+
+
+def _touched(cid, h):
+    _seq[0] += 1
+    _touch[(cid, h)] = _seq[0]
+    if len(_touch) > 2000:   # only recent changes matter: a comparison lasts seconds, not thousands of changes
+        for k in [k for k, v in _touch.items() if v < _seq[0] - 1000]:
+            del _touch[k]
 
 
 def put_local(cid, url, href, text):
@@ -196,6 +209,7 @@ def put_local(cid, url, href, text):
     else:
         cal["items"][h] = ["", text, *_span(text)]
     _pending.add((cid, h))
+    _touched(cid, h)
     return before
 
 
@@ -205,6 +219,7 @@ def taken(cid, url, href, tag=""):
     after the token the copy holds (RFC 6578 3.5), and this one was made here."""
     h = _path(href)
     _pending.discard((cid, h))
+    _touched(cid, h)
     cal = _load(cid).get(url)
     if cal and h in cal["items"]:
         cal["items"][h][0] = tag or ""
@@ -217,6 +232,7 @@ def undo(cid, url, href, before):
     """The server refused: the copy goes back, and the next look compares everything anew (the server wins)."""
     h = _path(href)
     _pending.discard((cid, h))
+    _touched(cid, h)
     cal = _load(cid).get(url)
     if not cal:
         return
@@ -236,7 +252,7 @@ def _status(resp):
 async def _sync(c, cid, url, cal):
     """Asks the server what changed since the copy's token and fetches only that. One line when something changed
     or it failed; a quiet one when all stayed as it was."""
-    t0 = time.time()
+    t0, start = time.time(), _seq[0]
     try:
         tags, gone, token = await _changes(c, url, cal["token"])
         if tags is None:   # no sync-collection (or the token is no longer valid there): compare all etags
@@ -256,16 +272,18 @@ async def _sync(c, cid, url, cal):
     except Exception as e:
         print(f"calendar: mirror failed ({type(e).__name__})", flush=True)
         raise
-    gone = [h for h in gone if (cid, h) not in _pending]
-    got = {h: v for h, v in got.items() if (cid, h) not in _pending}
+    late = {h for (c2, h), n in list(_touch.items()) if c2 == cid and n > start}
+    gone = [h for h in gone if (cid, h) not in _pending and h not in late]
+    got = {h: v for h, v in got.items() if (cid, h) not in _pending and h not in late}
     for h in gone:
         cal["items"].pop(h, None)
     for h, (tag, text) in got.items():
         if h in cal["items"] or len(cal["items"]) < MAX_ITEMS:
             cal["items"][h] = [tag, text, *spans[h]]
     full = not cal["token"] and not cal.get("done")
-    cal.update(token=token or "", at=time.time(), done=True)
-    _last[0] = cal["at"]
+    # changed here meanwhile: the next look compares everything again instead of trusting this answer's token
+    cal.update(token="" if late else token or "", at=0.0 if late else time.time(), done=True)
+    _last[0] = time.time()
     if got or gone:
         _save(cid)
         what = "full" if full else "changed"

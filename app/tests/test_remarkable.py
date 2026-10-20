@@ -821,12 +821,12 @@ class Fresh(Base):
 
         async def sleep(t):
             waits.append(t)
-        remarkable._request, old = slow_down, remarkable.asyncio.sleep
-        remarkable.asyncio.sleep = sleep
+        remarkable._request, old = slow_down, remarkable._busy_wait
+        remarkable._busy_wait = sleep   # only this wait: asyncio.sleep is every task's (other threads too)
         try:
             self.assertEqual(run(remarkable.root(uid))[0], CLOUD[0].root)
         finally:
-            remarkable.asyncio.sleep = old
+            remarkable._busy_wait = old
         self.assertEqual(waits, [remarkable.BUSY_WAIT_MAX])          # Retry-After honoured, but capped
 
     def test_entries_not_read_name_their_reasons_in_fixed_words(self):
