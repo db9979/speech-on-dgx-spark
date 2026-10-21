@@ -28,7 +28,7 @@ At the end it prints the address, password and API key, then TTS speaks a senten
 
 | Task | Command |
 |---|---|
-| Update | button in the panel under *Settings → Update and backup*, or `sudo speech-spark update` |
+| Update | button in the panel under *Settings → Update*, or `sudo speech-spark update` |
 | Show addresses and keys | `sudo speech-spark info` |
 | Own language model | `sudo ./install.sh --llm`, then `sudo speech-spark modelle llm uebernehmen` (back: `… zurueck`) |
 | Workshop (test run, code measurement, diagnosis, repair) | on the model computer `sudo ./install.sh --werkstatt`, then *Features → Workshop* |
@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.901** Docs current, part 1: every way in docs/ and the READMEs leads to today's place (Me → Overview instead of "Today", Settings → Update, own pages Calendar, E-mail, Contacts, Features → My day and Access, no more „Monitoring“); test_sprunglinks now checks the docs the help answers from; rule „All docs always current“ in the guideline
 - **V01.0.900** Everything open in the assistant (stages 3 and 4): chat messages, shared things, important mails, questions of running jobs, MCP approvals and, for admins, services that are down as cards under Open (never with text); "Done"/"Later" under Telegram notes and "Done" in the companion with the same checks; "What is open?" by voice (read only); Live per kind; iPhone
 - **V01.0.899** Fix self-tests: the invitation test left a Spark calendar and switches turned off behind, later calendar page tests went red; every test class now puts everything back
 - **V01.0.898** Kiwix as knowledge: own time limit in the quick look of “Look locally first” (default 900 ms), per question the fitting books (German Wikipedia plus the specialist books whose title fits the question), archive article as a dated source under the answer, order books by dragging, “Check Kiwix” names books the Kiwix no longer knows; a book older than a year gets its date said in the answer
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.894** Knowledge map (stage 1): the knowledge book gets its own menu entry with Pages and Map; connections between pages, each with its source and checked by fixed rules, "Wrong", export as Mermaid, Graphviz, SVG, PNG and Obsidian links, native map on the iPhone (off by default)
 - **V01.0.893** Folders at once and folder menu: the Mail page's folder list is kept sealed in the mail supply and is there at once after a restart; the "⋯" at a folder is a small menu beside it like Apple Mail (right click, a sheet on a phone), renaming and new folders right in the row; iPhone with symbols
 - **V01.0.892** reMarkable documents well formatted: lists, numbers, tables, smaller head, device format
-- **V01.0.891** Up to date: a stand always names its day („as of yesterday 18:00“), the weather takes „today“ from the clock instead of a forecast of yesterday, the morning briefing names mails with their day and only unread ones, the web search looks within a period with a date per hit for questions about today, and a fixed sentence of the panel says what is not current; an opened mail counts as read
 
 
 

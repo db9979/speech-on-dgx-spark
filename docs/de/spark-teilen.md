@@ -35,7 +35,7 @@ Das Panel mit allen Profilen, Gedächtnis, Chats, Stimmen und Einstellungen zieh
 2. **Auf dem DGX:** `sudo speech-spark umziehen --code`. Er macht eine Umzugs-Sicherung mit dem Tresor-Schlüssel (versiegelt mit einem Zufallspasswort) und dem https-Zertifikat des Panels und zeigt den Code.
 3. Der neue Rechner holt beim Koppeln den Umzug, spielt ihn ein, zählt die Profile und meldet „fertig“. Bei einem schon installierten Panel-Rechner geht das auch mit `sudo speech-spark umziehen --von <IP-des-DGX>`.
 4. Erst nach diesem „fertig“ schaltet der DGX sein Panel ab und läuft als Modell-Rechner weiter. Bricht etwas ab, bleibt der DGX unverändert. Keiner der Schritte löscht etwas.
-5. **Von Hand danach** (steht auch unter Zustand → Update, 14 Tage lang):
+5. **Von Hand danach** (steht auch unter Einstellungen → Update, 14 Tage lang):
    - im Router die Weiterleitung 31443 und die Ports für Anrufe (Funktionen → Chats → „Anrufe von unterwegs“) auf den neuen Rechner,
    - in Home Assistant Wyoming auf `<neuer-Rechner>:31003`,
    - bei jedem ESP32-Lautsprecher die neue Server-Adresse (http://<Pi-IP>:31080, per USB unter Lautsprecher einrichten; steht im Board noch die Adresse des DGX, sagen die Diagnose und „Netz prüfen“ das und nennen die richtige),
@@ -65,14 +65,14 @@ Steckt der Raspberry Pi im Pironman-5-Gehäuse, zeigt das kleine Display den Zus
 
 Das Panel schreibt nie selbst in Systemdateien: es legt einen Wunsch ab und startet die feste Einheit `speech-spark-gehaeuse`, die den Wunsch noch einmal prüft und den Block aus zwei Zahlen selbst schreibt. Prüfen mit `sudo speech-spark gehaeuse status`; der Live-Kasten „Gehäuse“ zeigt Display, LEDs und Seite, die Logs stehen im Bereich „gehaeuse“.
 
-## Beide Rechner im Monitoring
+## Beide Rechner im Überblick
 
 Laufen Panel und Modelle getrennt, zeigt Zustand → Überblick beide Rechner gleichwertig: oben je eine Kachel (Modell-Rechner mit freiem Speicher, GPU und CPU; Panel-Rechner mit belegtem Arbeitsspeicher, CPU, Temperatur und Platte) und darunter unter „Rechner“ zwei Karten nebeneinander mit Kurven der letzten 20 Minuten:
 
 - **Modell-Rechner**: GPU mit Temperatur und Leistung, Unified Memory mit der 8-GiB-Grenze, CPU, Platte, Netz, das laufende Sprachmodell und seine Dienste. Die Werte schickt der Wärter mit seinem Zustand.
 - **Panel-Rechner**: CPU, Arbeitsspeicher (belegt, verfügbar, Cache), Temperatur und Lüfter, Speicherkarte oder SSD, Netz, Strom (Unterspannung und Drosselung des Raspberry Pi) und seine Dienste, dazu „Panel hing“: wie oft der Hänge-Wächter das Panel in den letzten 24 Stunden stillstehen sah, und wie lange längstens ([Sicherheit und Betrieb](sicherheit-und-betrieb.md)).
 
-Antwortet der Modell-Rechner nicht, bleibt seine Karte stehen, rot mit „antwortet nicht seit …“ und den letzten Werten grau. Unter „Braucht dich“ meldet sich das Panel mit festen Regeln: Panel-Rechner ab 80 °C, gedrosselt oder mit zu wenig Strom, weniger als 0,5 GiB Arbeitsspeicher frei; auf jedem Rechner weniger als 10 % Platte frei; der Modell-Rechner antwortet nicht. Jeder Hinweis führt zu den Karten. Dasselbe zeigen Zustand → Live (Kasten „Panel-Rechner“, CPU des Panel-Rechners neben der des Modell-Rechners), die iPhone-App unter Monitoring und die Android-App über die Panel-Ansicht. Gezeigt werden nur Zahlen und feste Wörter, nie Adressen oder Prozesse; auf einem einzelnen Spark bleibt die Seite wie bisher. Logs im Bereich „system“ (`rechner: hinweis …`).
+Antwortet der Modell-Rechner nicht, bleibt seine Karte stehen, rot mit „antwortet nicht seit …“ und den letzten Werten grau. Unter „Braucht dich“ meldet sich das Panel mit festen Regeln: Panel-Rechner ab 80 °C, gedrosselt oder mit zu wenig Strom, weniger als 0,5 GiB Arbeitsspeicher frei; auf jedem Rechner weniger als 10 % Platte frei; der Modell-Rechner antwortet nicht. Jeder Hinweis führt zu den Karten. Dasselbe zeigen Zustand → Live (Kasten „Panel-Rechner“, CPU des Panel-Rechners neben der des Modell-Rechners), die iPhone-App unter Überblick und die Android-App über die Panel-Ansicht. Gezeigt werden nur Zahlen und feste Wörter, nie Adressen oder Prozesse; auf einem einzelnen Spark bleibt die Seite wie bisher. Logs im Bereich „system“ (`rechner: hinweis …`).
 
 ## Steuerzentrale am Bildschirm
 

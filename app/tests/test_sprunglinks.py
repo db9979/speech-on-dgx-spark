@@ -99,6 +99,34 @@ def hints():
     return found
 
 
+# the docs (docs/de, docs/en and both READMEs): „Hilfe zum Spark“ answers from them (hilfe_docs.json), so a way
+# there leads somewhere too (Dominik 2026-10-21: „aktuell halten bei jeder Änderung“); not in a copy with only app/.
+# In the app guides „Einstellungen → …“ is the device's own settings, like in the apps' code (DEVICE).
+DOC_APPS = ("iphone-app.md", "android-app.md", "iphone-veroeffentlichen.md", "iphone-publishing.md")
+
+
+def doc_files():
+    files = sorted(glob.glob(os.path.join(ROOT, "docs", "*", "*.md")))
+    return files + [p for p in (os.path.join(ROOT, "README.md"), os.path.join(ROOT, "README.de.md")) if os.path.exists(p)]
+
+
+def doc_hints():
+    """{way text: [where]} for every way in the docs, cut at the end of its line, emphasis or code."""
+    found = {}
+    for path in doc_files():
+        text = open(path, encoding="utf-8").read()
+        for m in HINT.finditer(text):
+            if OTHER.search(text[max(0, m.start() - 60):m.start()]):
+                continue
+            if os.path.basename(path) in DOC_APPS and DEVICE.match(text, m.start()):
+                continue
+            if text[max(0, m.start() - 9):m.start()] == "Post und ":   # Funktionen → Post und Kontakte → …
+                continue
+            s = re.split(r"\n|\*|`|<", text[m.start():m.start() + 220])[0]
+            found.setdefault(s, []).append(f"{os.path.relpath(path, ROOT)}:{text.count(chr(10), 0, m.start()) + 1}")
+    return found
+
+
 def alert_ways():
     """{go: [file]} of every note for the top of the admin pages (dicts with kind, level and text, health.alerts):
     each must say with "go" where to look or act; [file] of those without."""
@@ -376,6 +404,34 @@ class Browser(unittest.TestCase):
 
         bad = asyncio.run(go())
         self.assertEqual(bad, [], "Wege ohne Ziel:\n" + "\n".join(bad))
+
+    def test_every_way_in_the_docs_is_found(self):
+        """The same for the ways in docs/de, docs/en and the READMEs: a renamed or moved place turns this red until
+        the docs say today's name (the help answers from them)."""
+        found = doc_hints()
+        if not found:
+            self.skipTest("only app/ here")
+
+        async def go():
+            bad = []
+            async with async_playwright() as p:
+                for locale, roots in (("de-DE", DE_ROOTS), ("en-US", EN_ROOTS)):
+                    br, pg, errors = await self.page(p, locale)
+                    for s in ("mon", "logs", "test", "prof", "apps", "int", "cfg"):
+                        await pg.evaluate(f"goSec('{s}')")
+                        await pg.wait_for_timeout(400)
+                    ways = [s for s in found if s.startswith(roots) and not (locale == "de-DE" and s.startswith(EN_ROOTS))]
+                    res = await pg.evaluate("ws=>ws.map(w=>!!wayParse(w,0,true))", ways)
+                    for w, ok in zip(ways, res):
+                        first = HINT.sub("", w, count=1).lstrip().lstrip('„“"')
+                        if not ok and re.match(r"[A-ZÄÖÜ0-9]", first):
+                            bad.append(f"{w!r} ({', '.join(found[w][:3])})")
+                    self.assertEqual(errors, [])
+                    await br.close()
+            return bad
+
+        bad = asyncio.run(go())
+        self.assertEqual(bad, [], "Wege in der Doku ohne Ziel:\n" + "\n".join(bad))
 
     def test_alert_ways_lead_somewhere(self):
         """Every way of a note on top finds each of its steps, and the note's button opens it (slow answers:

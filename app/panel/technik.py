@@ -538,11 +538,12 @@ def _en_names():
     """The page's own English names (static/js/i18n.js EN, the menu in base.js), for the menu ways in a docstring."""
     out = {}
     try:
-        with open(os.path.join(HERE, "static", "js", "base.js"), encoding="utf-8") as f:
-            out.update(re.findall(r"\['[a-z]+',t\('([^']+)','([^']+)'\)\]", f.read()))
         with open(os.path.join(HERE, "static", "js", "i18n.js"), encoding="utf-8") as f:
             m = re.search(r"const EN=(\{.*?\});?\n", f.read(), re.S)
         out.update(json.loads(m.group(1)) if m else {})
+        # the menu wins: „Überblick“ is „Summary“ in Zustand, though a tab elsewhere calls it „Overview“
+        with open(os.path.join(HERE, "static", "js", "base.js"), encoding="utf-8") as f:
+            out.update(re.findall(r"\['[a-z]+',t\('([^']+)','([^']+)'\)\]", f.read()))
     except (OSError, ValueError):
         pass
     return out

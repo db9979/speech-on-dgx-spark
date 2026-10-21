@@ -449,9 +449,9 @@ Panel on its own computer, models on the DGX: pairing, TLS-Tor, Wärter and the 
 |---|---|
 | `app/panel/gehaeuse.py` | Gehäuse. |
 | `app/panel/notbetrieb.py` | Notbetrieb mit Parakeet. |
-| `app/panel/rechenteile.py` | Status → Overview → Computers, „Wer rechnet gerade“: which part inside the panel takes the CPU, next to the services of both computers (rechner.dienste_cpu). |
-| `app/rechner.py` | The values of one computer for Status → Overview → Computers: CPU, memory, disk, network, temperature, fan, power flags, running time, device and system name … |
-| `app/panel/rechnerblick.py` | Status → Overview → Computers: when the panel and the models run on two computers (Spark teilen), both side by side: a tile each on top and a card each under … |
+| `app/panel/rechenteile.py` | Status → Summary → Computers, „Wer rechnet gerade“: which part inside the panel takes the CPU, next to the services of both computers (rechner.dienste_cpu). |
+| `app/rechner.py` | The values of one computer for Status → Summary → Computers: CPU, memory, disk, network, temperature, fan, power flags, running time, device and system name, … |
+| `app/panel/rechnerblick.py` | Status → Summary → Computers: when the panel and the models run on two computers (Spark teilen), both side by side: a tile each on top and a card each under … |
 | `app/panel/schirm.py` | Steuerzentrale am Bildschirm. |
 | `app/panel/steuer.py` | Steuer: the model units and the GPU, here or on the model computer. |
 | `app/steuerzentrale.py` | Steuerzentrale am Bildschirm, the screen half. |
@@ -463,7 +463,7 @@ Panel on its own computer, models on the DGX: pairing, TLS-Tor, Wärter and the 
 
 ## Data storage
 
-All files belong to the user `speech` (folders 0700, files 0600) and are written atomically (`.tmp`, then renamed). "Backup" means the file is in the backup under Status → System → Backup. "Own storage" means a profile can copy the file encrypted to its own storage.
+All files belong to the user `speech` (folders 0700, files 0600) and are written atomically (`.tmp`, then renamed). "Backup" means the file is in the backup under Settings → Backup. "Own storage" means a profile can copy the file encrypted to its own storage.
 
 <!-- technik:speicher -->
 ### System

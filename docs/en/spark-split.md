@@ -35,7 +35,7 @@ The panel with all profiles, memory, chats, voices and settings moves in one go.
 2. **On the DGX:** `sudo speech-spark umziehen --code`. It makes a move backup with the vault key (sealed with a random password) and the panel's https certificate and shows the code.
 3. While pairing, the new computer fetches the move, restores it, counts the profiles and reports "fertig". On a panel computer that is already installed this also works with `sudo speech-spark umziehen --von <IP-of-the-DGX>`.
 4. Only after this "fertig" does the DGX switch its panel off and run on as the model computer. If something breaks off, the DGX stays as it was. No step deletes anything.
-5. **By hand afterwards** (also listed under Status → Update for 14 days):
+5. **By hand afterwards** (also listed under Settings → Update for 14 days):
    - in the router the forward of 31443 and the ports for calls (Features → Chats → "Calls when away") to the new computer,
    - in Home Assistant Wyoming to `<new-computer>:31003`,
    - on every ESP32 speaker the new server address (http://<Pi IP>:31080, over USB under speaker setup; if the board still has the DGX address, the diagnosis and "Check network" say so and name the right one),
@@ -65,14 +65,14 @@ When the Raspberry Pi sits in the Pironman 5 case, the small display shows the s
 
 The panel never writes system files itself: it leaves a wish and starts the fixed unit `speech-spark-gehaeuse`, which checks the wish again and writes the block itself from two numbers. Check with `sudo speech-spark gehaeuse status`; the Live box "Gehäuse" shows display, LEDs and page, the logs are in the area "gehaeuse".
 
-## Both computers in Monitoring
+## Both computers in the summary
 
 When the panel and the models run apart, Status → Summary shows both computers as equals: a tile each on top (the model computer with free memory, GPU and CPU; the panel computer with used memory, CPU, temperature and disk) and below, under "Computers", two cards side by side with curves of the last 20 minutes:
 
 - **Model computer**: GPU with temperature and power, unified memory with the 8 GiB limit, CPU, disk, network, the running language model and its services. The Wärter sends the values with its status.
 - **Panel computer**: CPU, memory (used, available, cache), temperature and fan, SD card or SSD, network, power (the Raspberry Pi's under-voltage and throttling) and its services, plus "Panel stalled": how often the hang guard saw the panel stand still in the last 24 hours, and the longest ([Security and operation](security-and-operation.md)).
 
-When the model computer does not answer, its card stays, red with "not answering for …" and its last values grey. Under "Braucht dich" the panel speaks up by fixed rules: the panel computer from 80 °C, throttled or short of power, less than 0.5 GiB memory free; on either computer less than 10 % disk free; the model computer not answering. Each note leads to the cards. The same shows in Status → Live (box "Panel computer", the panel computer's CPU next to the model computer's), in the iPhone app under Monitoring and in the Android app through the panel view. Only numbers and fixed words, never addresses or processes; on a single Spark the page stays as before. Logs in the area "system" (`rechner: hinweis …`).
+When the model computer does not answer, its card stays, red with "not answering for …" and its last values grey. Under "Braucht dich" the panel speaks up by fixed rules: the panel computer from 80 °C, throttled or short of power, less than 0.5 GiB memory free; on either computer less than 10 % disk free; the model computer not answering. Each note leads to the cards. The same shows in Status → Live (box "Panel computer", the panel computer's CPU next to the model computer's), in the iPhone app under Überblick (Summary) and in the Android app through the panel view. Only numbers and fixed words, never addresses or processes; on a single Spark the page stays as before. Logs in the area "system" (`rechner: hinweis …`).
 
 ## Control centre on the screen
 

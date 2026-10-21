@@ -28,7 +28,7 @@ Am Ende stehen Adresse, Passwort und API-Schlüssel auf dem Bildschirm, danach s
 
 | Aufgabe | Befehl |
 |---|---|
-| Aktualisieren | Knopf im Portal unter *Einstellungen → Update und Sicherung* oder `sudo speech-spark update` |
+| Aktualisieren | Knopf im Portal unter *Einstellungen → Update* oder `sudo speech-spark update` |
 | Adressen und Schlüssel anzeigen | `sudo speech-spark info` |
 | Eigenes Sprachmodell | `sudo ./install.sh --llm`, danach `sudo speech-spark modelle llm uebernehmen` (zurück: `… zurueck`) |
 | Werkstatt (Testlauf, Code-Messung, Diagnose, Reparatur) | auf dem Modell-Rechner `sudo ./install.sh --werkstatt`, dann *Funktionen → Werkstatt* |
@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.901** Doku aktuell, Teil 1: jeder Weg in docs/ und den READMEs führt zur heutigen Stelle (Ich → Überblick statt „Heute“, Einstellungen → Update, eigene Seiten Kalender, E-Mail, Kontakte, Funktionen → Mein Tag und Zugang, kein „Monitoring“ mehr); test_sprunglinks prüft jetzt auch die Doku, aus der die Hilfe antwortet; Regel „Ganze Doku immer aktuell“ in der Richtlinie
 - **V01.0.900** Alles Offene im Assistenten (Stufen 3 und 4): Chat-Nachrichten, Geteiltes, wichtige Mails, Fragen laufender Aufträge, MCP-Freigaben und für Admins ausgefallene Dienste als Karten unter Offen (nie mit Text); Knöpfe „Erledigt“/„Später“ unter Telegram-Meldungen und „Erledigt“ im Begleiter mit denselben Prüfungen; „Was ist offen?“ per Stimme (nur lesen); Live je Art; iPhone
 - **V01.0.899** Fix Selbsttests: der Einladungs-Test ließ einen Spark-Kalender und ausgeschaltete Schalter zurück, spätere Kalender-Seitentests wurden rot; jede Testklasse stellt jetzt alles zurück
 - **V01.0.898** Kiwix als Wissen: eigene Zeitgrenze im Vorlauf von „Erst lokal suchen“ (Standard 900 ms), je Frage die passenden Bücher (deutsche Wikipedia plus die Fachbücher, deren Titel zur Frage passt), Archiv-Artikel als Quelle mit Stand unter der Antwort, Bücher per Ziehen ordnen, „Kiwix prüfen“ meldet Bücher, die das Kiwix nicht mehr kennt; ist ein Buch älter als ein Jahr, nennt die Antwort seinen Stand
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.894** Wissenskarte (Stufe 1): das Wissensbuch bekommt einen eigenen Menüpunkt mit Seiten und Karte; Verbindungen zwischen den Seiten, jede mit Quelle und nach festen Regeln geprüft, „Stimmt nicht“, Export als Mermaid, Graphviz, SVG, PNG und Obsidian-Links, Karte nativ auf dem iPhone (ab Werk aus)
 - **V01.0.893** Ordner sofort und Ordner-Menü: die Ordnerliste der Seite E-Mail liegt versiegelt im Mail-Vorrat und steht nach einem Neustart sofort da; das „⋯“ am Ordner ist ein kleines Menü daneben wie bei Apple Mail (Rechtsklick, Blatt auf dem Handy), Umbenennen und neue Ordner direkt in der Zeile; iPhone mit Symbolen
 - **V01.0.892** reMarkable-Dokumente sauber formatiert: Listen, Nummern, Tabellen, kleinerer Kopf, Gerätformat
-- **V01.0.891** Tagesaktuell: der Stand nennt immer seinen Tag („Stand gestern 18:00“), das Wetter nimmt „heute“ von der Uhr statt aus einer Vorhersage von gestern, der Morgenbericht nennt Mails mit Tag und nur noch ungelesene, die Websuche sucht bei Fragen nach Heutigem im Zeitraum mit Datum je Treffer, und was nicht aktuell ist, sagt ein fester Satz des Panels; eine geöffnete Mail gilt als gelesen
 
 
 
