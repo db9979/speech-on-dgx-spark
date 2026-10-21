@@ -2608,6 +2608,13 @@
 "titel": "Flash Next neu messen",
 "text": "A: Update (tars zuerst). B: Auf tars `sudo speech-spark modelle messen flash`. C: Ergebnis auf der Karte „Qwen3.8 Flash Next“: „Modelle auf interner NVMe“, „frei nach Laden“ deutlich über 0,1 GiB (qwen38: 17 bis 19 GiB), tok/s näher an 47.",
 "thread": "Eigene Modell-Installation statt qwen38"
+},
+{
+"id": "P397",
+"v": 911,
+"titel": "CarPlay Folgefragen",
+"text": "A: iPhone-App aus TestFlight mit V01.0.911 oder neuer. B: Im Auto „Mit Spark sprechen“, eine Frage, die Antwort anhören, nach dem Zuhör-Ton eine Folgefrage stellen: Spark beantwortet sie, kein „Nicht erkannt“. C: Noch zwei Folgefragen hintereinander. D: Nach der Fahrt „Ton-Protokoll kopieren“: keine Zeile „Ende: fremde Stimme“.",
+"thread": "CarPlay stabil und bedienbar"
 }
 ]
 }

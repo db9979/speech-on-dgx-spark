@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.911** · 2026-10-21 · CarPlay Folgefragen: im Auto wird eine Folgefrage nicht mehr mit der Stimmprobe verglichen; über das Automikrofon galt die eigene Stimme als fremd, und jedes Gespräch endete nach der Folgefrage mit „Nicht erkannt“ (Ton-Protokoll der Fahrt vom 21.10.)
 - **V01.0.910** · 2026-10-21 · Flash Next: Speicher-Einstellung von qwen38 v1.37.0 (bleibt mehr frei), Messung zeigt, ob die Modelle auf der internen NVMe liegen
 - **V01.0.909** · 2026-10-21 · Dienste auf Abruf: Bildverständnis, Werkstatt und Gehäuse stehen in Ruhe als „bereit“ statt grau, nicht installierte Teile fehlen in den Dienste-Chips
 - **V01.0.908** · 2026-10-21 · Zustand der NAS: der Speicherpool heißt „an Volumes vergeben“ statt „belegt“ und löst nie mehr „zu 100 % belegt“ aus (freier Platz steht beim Volume), Hinweise nennen Volume-Namen, USB- und eSATA-Platten an der NAS mit Belegung und freiem Platz (hrStorageTable)

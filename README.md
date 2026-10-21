@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.911** CarPlay follow-ups: in the car a follow-up counts again instead of being dropped as a foreign voice
 - **V01.0.910** Flash Next leaves more memory free, measurement shows NVMe or USB
 - **V01.0.909** Services on demand: image understanding, Werkstatt and case rest as "ready" instead of grey, parts not installed are left out of the service chips
 - **V01.0.908** NAS status reads right: the storage pool shows "given to volumes" instead of "100 % used", no false warning; USB disks on the NAS with use and free space
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.904** Docs current, part 4 (security): „Ways in“ in the security docs, every way into the panel with who, default and protection (panel, device keys, calendar and contacts apps through /caldav and /carddav, MCP and OAuth, other Sparks, downloads, Live, Wyoming, phone, Telegram); sealed supplies, editing contacts with ETag and the search at the mail server described; calendar apps (CalDAV) under APIs and integration; guard test_doku_stand.WegeHinein and a point in the security checklist
 - **V01.0.903** Docs current, part 3: „All functions“ in the docs (de and en): each of the 234 functions with its switch way, what it builds on, its Me page and the first sentence of its guide, written by hilfe.py --docs, so the help finds them too; guard test_doku_stand.Funktionen
 - **V01.0.902** Docs current, part 2: English caught up (iPhone app: Hey Siri, CarPlay icon and simulator, push errors; two wrong version numbers), Workshop in the iPhone docs, Summary instead of Monitoring in the app; new guard test_doku_stand.Gleichstand: German and English hold the same parts with the same versions per section
-- **V01.0.901** Docs current, part 1: every way in docs/ and the READMEs leads to today's place (Me → Overview instead of "Today", Settings → Update, own pages Calendar, E-mail, Contacts, Features → My day and Access, no more „Monitoring“); test_sprunglinks now checks the docs the help answers from; rule „All docs always current“ in the guideline
 
 
 

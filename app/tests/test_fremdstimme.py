@@ -81,8 +81,9 @@ class Rule(unittest.TestCase):
     def test_only_known_ways_of_opening(self):
         for v in ("barge", "follow", "hands", " Barge "):
             self.assertEqual(fremdstimme.opened(v), v.strip().lower())
-        for v in ("", "tap", "wake", "barge; rm", None, 3, "x" * 50):
+        for v in ("", "tap", "wake", "barge; rm", None, 3, "x" * 50, "car"):
             self.assertEqual(fremdstimme.opened(v), "", v)
+        self.assertNotIn("car", fremdstimme.OPEN)   # the car's microphone is never compared (CarPlay follow-ups)
 
     def test_checked_only_with_a_voiceprint_and_speaker_recognition(self):
         speakers.has_voice = lambda uid: True
@@ -217,6 +218,7 @@ class App(unittest.TestCase):
         self.assertIn('listen(preroll: 0.6, fromWake: false, opened: "barge")', a)
         self.assertIn('listen(preroll: 0, fromWake: false, opened: "hands")', a)
         self.assertIn("api.transcribe(wav: wav, language: Store.language, opened: how)", a)
+        self.assertIn('let woke = fromWake, how = inCar ? "car" : opened', a)   # never a voiceprint in the car
         self.assertIn('name=\\"opened\\"', api)
 
 
