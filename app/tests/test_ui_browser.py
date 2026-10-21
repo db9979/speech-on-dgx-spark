@@ -820,6 +820,33 @@ class Browser(unittest.TestCase):
                 await br.close()
         self.run_async(go())
 
+    def test_settings_menu_rows_start_at_one_left_edge_on_the_phone(self):
+        """Dominik 21.10.2026 (V01.0.911, screenshot): on the phone the rows of Spark verwalten → Einstellungen sat at
+        different indents, each title with its line centred in the row. Every row's title and its state line start at
+        the same left edge, right of the symbol."""
+        async def go():
+            async with async_playwright() as p:
+                br, pg, errors = await self.page(p, 390, 844)
+                await pg.evaluate("goSec('cfg')")
+                await pg.wait_for_function("[...document.querySelectorAll('#cfgnav small.gls')].some(x=>x.textContent.trim())", timeout=20000)
+                rows = await pg.evaluate("""[...document.querySelectorAll('#cfgnav button.hasic')].filter(b=>b.offsetParent!==null).map(b=>{
+                    const tx=[...b.childNodes].find(n=>n.nodeType===3&&n.nodeValue.trim()),r=document.createRange();r.selectNodeContents(tx);
+                    const sm=b.querySelector('small.gls'),ic=b.querySelector('.cic').getBoundingClientRect();
+                    return {p:b.dataset.p,title:Math.round(r.getBoundingClientRect().left),line:sm&&sm.textContent.trim()?Math.round(sm.getBoundingClientRect().left):null,
+                            icon:Math.round(ic.right)}})""")
+                self.assertGreaterEqual(len(rows), 8, rows)
+                lefts = {r["title"] for r in rows} | {r["line"] for r in rows if r["line"] is not None}
+                self.assertEqual(len(lefts), 1, rows)
+                self.assertTrue(all(r["title"] > r["icon"] for r in rows), rows)
+                # Chromium lays a block button out from the left, Safari centres its content: the rows must be a column
+                # that starts left, so the edge is the same in every browser
+                lay = await pg.evaluate("""[...new Set([...document.querySelectorAll('#cfgnav button.hasic')].filter(b=>b.offsetParent!==null)
+                    .map(b=>{const c=getComputedStyle(b);return [c.display,c.flexDirection,c.alignItems].join(' ')}))]""")
+                self.assertEqual(lay, ["flex column flex-start"])
+                self.assertEqual(errors, [])
+                await br.close()
+        self.run_async(go())
+
     def test_github_token_row_folds_when_it_works(self):
         """Dominik 14.10.2026: a saved token that works shows only a status line with "Ändern" and "Entfernen";
         "Ändern" opens the field again, a token GitHub refused keeps the field open."""

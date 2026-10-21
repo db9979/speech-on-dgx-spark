@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.919** Settings on the phone line up: in the iPhone browser each setting's title and line sat centred instead of left next to its symbol
 - **V01.0.918** RED FIX: two test leftovers fixed that disturbed other tests after the test parts were cut anew (test_tagesaktuell left a fake mail lookup behind, test_panel an open question)
 - **V01.0.917** Flash Next variant 0.65 removed (never started)
 - **V01.0.916** Attack self-test (idea from NeMo Guardrails): every way in for outside text attacked with 12 disguises against a model that obeys every order; four gaps closed: the model's markers (<|im_start|>, <tool_call>) are defused, after a mail Wikipedia, weather and transit are locked too, short text states in the smart home count as outside, the briefing stands wholly in its data block
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.912** Look locally first also finds with a typo: a long word may be mistyped by one or two letters (“Dresdner Fraunkirche” finds the Kiwix article), without a title the Spark asks shortened words, and the title naming most words of the question wins; archive links optionally with an own name (address for links)
 - **V01.0.911** CarPlay follow-ups: in the car a follow-up counts again instead of being dropped as a foreign voice
 - **V01.0.910** Flash Next leaves more memory free, measurement shows NVMe or USB
-- **V01.0.909** Services on demand: image understanding, Werkstatt and case rest as "ready" instead of grey, parts not installed are left out of the service chips
 
 
 

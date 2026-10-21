@@ -1195,7 +1195,8 @@ select.segsel{display:none!important}
 .cic.c-blue{background:#3b82f6}.cic.c-violet{background:#7c5cf0}.cic.c-teal{background:#0ea5a5}.cic.c-red{background:#e5484d}.cic.c-gray{background:#7b8499}.cic.c-green{background:#22a35a}.cic.c-amber{background:#e09a14}
 #cfgnav button.hasic{display:flex;align-items:center;gap:10px;padding:6px 10px}
 @media (max-width:760px){
-  #cfgnav button.hasic{display:block;position:relative;padding:12px 40px 12px 54px;min-height:56px}
+  /* a column, never display:block: Safari centres the content of a block button (V01.0.919, the titles sat at different indents) */
+  #cfgnav button.hasic{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;position:relative;padding:12px 40px 12px 54px;min-height:56px}
   #cfgnav button.hasic .cic{position:absolute;left:14px;top:50%;margin-top:-15px;width:30px;height:30px;border-radius:8px}
   #cfgnav button.hasic .cic svg{width:17px;height:17px}
 }

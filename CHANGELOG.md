@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.919** · 2026-10-21 · Einstellungen am Handy bündig: Safari zentrierte den Inhalt der Einstellungszeilen (Block-Knopf), jetzt eine linksbündige Spalte; Browser-Test prüft dieselbe linke Kante bei 390 px, Regel „Mehrzeilige Knöpfe als Spalte“ in der Richtlinie
 - **V01.0.918** · 2026-10-21 · ROT-FIX: zwei Testreste behoben, die nach der neuen Aufteilung der Testläufe andere Tests störten (test_tagesaktuell ließ einen falschen Mail-Abruf stehen, test_panel eine offene Rückfrage)
 - **V01.0.917** · 2026-10-21 · Flash Next nur noch mit Anteil 0,70: die Variante 0,65 startete auf tars nie und ist aus dem Katalog
 - **V01.0.916** · 2026-10-21 · Angriffs-Selbsttest (Idee aus NeMo Guardrails): jeder Weg für fremden Text mit 12 Tarnungen gegen ein Modell angegriffen, das jedem Befehl gehorcht; vier Lücken geschlossen: Marken des Modells (<|im_start|>, <tool_call>) werden entschärft, nach einer Mail auch Wikipedia, Wetter und Fahrplan gesperrt, kurze Text-Zustände im Smart Home zählen als fremd, das Briefing steht ganz im Datenblock

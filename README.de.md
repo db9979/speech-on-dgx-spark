@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.919** Einstellungen am Handy bündig: im iPhone-Browser standen Titel und Zeile jeder Einstellung mittig statt links neben dem Symbol
 - **V01.0.918** ROT-FIX: zwei Testreste behoben, die nach der neuen Aufteilung der Testläufe andere Tests störten (test_tagesaktuell ließ einen falschen Mail-Abruf stehen, test_panel eine offene Rückfrage)
 - **V01.0.917** Flash-Next-Variante 0,65 entfernt (startete nie)
 - **V01.0.916** Angriffs-Selbsttest (Idee aus NeMo Guardrails): jeder Weg für fremden Text mit 12 Tarnungen gegen ein Modell angegriffen, das jedem Befehl gehorcht; vier Lücken geschlossen: Marken des Modells (<|im_start|>, <tool_call>) werden entschärft, nach einer Mail auch Wikipedia, Wetter und Fahrplan gesperrt, kurze Text-Zustände im Smart Home zählen als fremd, das Briefing steht ganz im Datenblock
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.912** Erst lokal suchen findet auch mit Tippfehler: ein langes Wort darf um ein bis zwei Buchstaben vertippt sein („Dresdner Fraunkirche“ findet den Kiwix-Artikel), ohne Titel fragt der Spark gekürzte Wörter nach, und der Titel mit den meisten Wörtern der Frage gewinnt; Archiv-Links auf Wunsch mit eigenem Namen (Adresse für Links)
 - **V01.0.911** CarPlay Folgefragen: im Auto zählt die Folgefrage wieder, statt als fremde Stimme abgewiesen zu werden
 - **V01.0.910** Flash Next lässt mehr Speicher frei, Messung zeigt NVMe oder USB
-- **V01.0.909** Dienste auf Abruf: Bildverständnis, Werkstatt und Gehäuse stehen in Ruhe als „bereit“ statt grau, nicht installierte Teile fehlen in den Dienste-Chips
 
 
 
