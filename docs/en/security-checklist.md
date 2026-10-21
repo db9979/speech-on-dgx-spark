@@ -75,6 +75,7 @@ Go through before every commit. In the answer to Dominik briefly name which poin
 
 ## Before the commit
 - [ ] If the change alters or adds a protection rule, the node page "Security" (Status → Architecture) is updated in the same commit.
+- [ ] A new way in (a path outside `/api/`, a port, a device with its own key) stands with who, default and protection in "Ways in" (`security-and-operation.md`, German `sicherheit-und-betrieb.md`); new data on the disk and new ways to write outward stand below it.
 - [ ] New switches are off by default: one admin switch, no new profile switch; only the admin blocks single profiles.
 - [ ] Every new protection rule has a self-test.
 - [ ] All self-tests are green.

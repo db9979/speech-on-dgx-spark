@@ -9,7 +9,8 @@ every feature is switched per profile; nothing turned red. These tests do:
 - the Technik boxes of the models show the ports from config.default.json,
 - every local link and picture in the READMEs exists,
 - docs/de and docs/en (and both READMEs) hold the same parts with the same versions (Gleichstand),
-- every function of features.py is in the docs, the list „Alle Funktionen“ is current (Funktionen).
+- every function of features.py is in the docs, the list „Alle Funktionen“ is current (Funktionen),
+- every way into the panel (routes outside /api/, ports) is described in „Wege hinein“ (WegeHinein).
 
 The README and docs parts skip in a copy with only app/; the help and Technik parts always run. No clock.
 """
@@ -221,3 +222,38 @@ class Funktionen(unittest.TestCase):
         for f in features.FEATURES:
             self.assertIn(f"**{f.de}**", de, f.key)
             self.assertIn(f"**{f.en}**", en, f.key)
+
+
+# the files every browser fetches before a sign-in: the page, its scripts and icons; nothing of a profile
+PUBLIC_FILES = {"/", "/favicon.ico", "/apple-touch-icon.png", "/manifest.webmanifest", "/sw.js"}
+
+
+def ways_in(text):
+    """The paths and ports the table „Wege hinein“/„Ways in“ names (`/caldav/`, `/pebble/…`, `:31003`)."""
+    part = text[text.index("### Wege hinein" if "### Wege hinein" in text else "### Ways in"):]
+    part = part[:part.index("\n### ", 5)]
+    paths = [p.split("…")[0] for p in re.findall(r"`(/[^`\s]*)`", part)]
+    ports = {int(p) for p in re.findall(r":(\d{4,5})\b", part)}
+    return paths, ports
+
+
+@unittest.skipUnless(docs_here(), "README and docs/ not here (app/ alone)")
+class WegeHinein(unittest.TestCase):
+    """Every way into the panel is in „Wege hinein“ of sicherheit-und-betrieb.md and security-and-operation.md with
+    who may use it and its protection (Dominik 2026-10-21): every route outside /api/ and /static/, and the ports
+    panel, Wyoming and the phone listen on. A new door turns this red until it is described in both languages."""
+
+    def test_every_route_and_port_is_described(self):
+        import panel
+        from tests.test_pruefung import all_routes
+        routes = {r.path for r in all_routes(panel.app.routes)}
+        doors = sorted(p for p in routes if not p.startswith(("/api/", "/static/")) and p not in PUBLIC_FILES)
+        self.assertIn("/caldav/{rest:path}", doors)
+        self.assertIn("/mcp", doors)
+        c = config()
+        ports = {c["panel"]["port"], c["panel"]["https_port"], c["chat"]["wyoming_port"], telefon.SIP_PORT, min(telefon.RTP_PORTS)}
+        for name in ("de/sicherheit-und-betrieb.md", "en/security-and-operation.md"):
+            paths, named = ways_in(read(os.path.join(ROOT, "docs", name)))
+            missing = [d for d in doors if not any(d == p.rstrip("/") or d.startswith(p) and len(p) > 1 for p in paths)]
+            self.assertEqual(missing, [], f"{name}: ways in without a row")
+            self.assertEqual(sorted(ports - named), [], f"{name}: ports without a row")

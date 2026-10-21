@@ -443,6 +443,22 @@
 "lang": "de",
 "src": "apis-und-einbinden",
 "file": "APIs und Einbinden",
+"head": "Kalender-Apps (CalDAV, seit V01.0.840)",
+"title": "Kalender-Apps (CalDAV, seit V01.0.840)",
+"text": "Der Spark ist selbst ein CalDAV-Server für die Spark-Kalender eines Profils, damit die Kalender-App des iPhones, Thunderbird oder DAVx5 sie direkt zeigen und ändern. Admin: Funktionen → Mein Tag → „Kalender-Server für Kalender-Apps“ (aus). Das Profil legt unter Kalender → Einstellungen → „Für Kalender-Apps“ ein App-Passwort an (im eigenen Browser-Login oder in der iPhone-App, mit Code); es erscheint einmal, gespeichert wird nur seine Prüfsumme, „Zugang löschen“ beendet es sofort. In der App: Server https://<Adresse>/caldav/ (oder nur die Adresse, /.well-known/caldav leitet weiter), Benutzer ist die Profil-ID, Passwort das App-Passwort. Erreichbar sind nur die eigenen Spark-Kalender, nie iCloud oder andere Konten und nie ein anderes Profil. Falsche Passwörter sperren wie eine PIN. Sicherheit: Wege hinein."
+},
+{
+"lang": "de",
+"src": "apis-und-einbinden",
+"file": "APIs und Einbinden",
+"head": "Kontakte-Apps (CardDAV, seit V01.0.897)",
+"title": "Kontakte-Apps (CardDAV, seit V01.0.897)",
+"text": "Der Spark ist auch ein CardDAV-Server für das Adressbuch „Auf dem Spark“ eines Profils, damit die Kontakte-App des iPhones, Thunderbird oder DAVx5 es direkt zeigen und ändern. Admin: Funktionen → Post und Kontakte → „Kontakte für Kontakte-Apps“ (aus; braucht „Kontakte“ und „Kalender-Server für Kalender-Apps“). Einrichtung auf dem iPhone: Einstellungen → Apps → Kontakte → Accounts → Andere → CardDAV-Account, Server = Adresse des Spark mit /carddav/, Benutzer = Profil-Kennung, Passwort = das App-Passwort des Kalender-Servers. Die Tür ist dieselbe wie bei /caldav/ (falsche Versuche sperren wie eine PIN, Lastgrenze „caldav“, fremde Webseiten abgewiesen, Mein Notaus). Nur das eigene Adressbuch, nie iCloud-Adressbücher und nie ein anderes Profil; je Karte eine vCard mit Name oder Firma, höchstens 256 KB und 2000 Karten; Schreiben nur mit „Kontakte ändern“, sonst nur Lesen."
+},
+{
+"lang": "de",
+"src": "apis-und-einbinden",
+"file": "APIs und Einbinden",
 "head": "Pebble-Uhr",
 "title": "Pebble-Uhr",
 "text": "Die Watch-App „Spark“ (app/pebble/speech-spark.pbw, Quellcode in pebble/) bringt den Sprach-Chat auf Pebble Time 2 und Core 2 Duo, mit Antwort als Text und über den Lautsprecher der Uhr. Auf Pebble Round 2 kommt die Antwort nur als Text. Sie braucht eine Uhr-Firmware mit Lautsprecher-API (ab etwa v4.9.170)."
@@ -1509,7 +1525,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "1. Frage oder Auftrag kommt herein: Im Heimnetz direkt, von unterwegs nur über den Reverse-Proxy mit TLS. Jedes Gerät hat seinen eigenen Schlüssel oder meldet sich wie im Browser an. 2. Lässt der Notaus es zu?: Der Notaus hat drei Stufen von außen nach innen: Stufe 1 sperrt das Internet, Stufe 2 jede Handlung, Stufe 3 jedes Gespräch. Kein Modell, keine Mail und kein Dokument kann ihn auslösen oder aufheben. 3. Angemeldet und im Rahmen?: Größenlimit und Herkunftsprüfung (CSRF) vor dem Lesen, dann Rate-Limit pro Adresse und eine Höchstzahl gleichzeitiger Anfragen für Modell, Erkennung und Ausgabe (guard.Slot). Geheimnisse, Rollen und Sicherungen brauchen dazu einen frischen Code oder Passkey (core.confirm_code, 10 Minuten). Zu den Modellen auf tars geht es nur durch das TLS-Tor; Befehle dort prüft der Wärter (tarswart.check: Unterschrift, Zeit, Einmal-Nummer, einer von 16 festen Befehlen). 4. Wer fragt, sicher erkannt?: Das Profil kommt aus Cookie, App-Schlüssel oder verknüpftem Konto. Am geteilten Lautsprecher reicht der Geräteschlüssel nicht: chat_turn.shared_stranger gibt Persönliches nur frei, wenn die Inhaberstimme in derselben Aufnahme sicher erkannt ist. 5. Freigabe und Sperre"
+"text": "1. Frage oder Auftrag kommt herein: Im Heimnetz direkt, von unterwegs nur über den Reverse-Proxy mit TLS. Jedes Gerät hat seinen eigenen Schlüssel oder meldet sich wie im Browser an. Jeder Weg hinein (Panel, Geräteschlüssel, Kalender- und Kontakte-Apps, MCP, andere Sparks, Wyoming, Telefon, Telegram) steht mit seinem Schutz in der Sicherheits-Doku unter „Wege hinein“. 2. Lässt der Notaus es zu?: Der Notaus hat drei Stufen von außen nach innen: Stufe 1 sperrt das Internet, Stufe 2 jede Handlung, Stufe 3 jedes Gespräch. Kein Modell, keine Mail und kein Dokument kann ihn auslösen oder aufheben. 3. Angemeldet und im Rahmen?: Größenlimit und Herkunftsprüfung (CSRF) vor dem Lesen, dann Rate-Limit pro Adresse und eine Höchstzahl gleichzeitiger Anfragen für Modell, Erkennung und Ausgabe (guard.Slot). Geheimnisse, Rollen und Sicherungen brauchen dazu einen frischen Code oder Passkey (core.confirm_code, 10 Minuten). Zu den Modellen auf tars geht es nur durch das TLS-Tor; Befehle dort prüft der Wärter (tarswart.check: Unterschrift, Zeit, Einmal-Nummer, einer von 16 festen Befehlen). 4. Wer fragt, sicher erkannt?: Das Profil kommt aus Cookie, App-Schlüssel oder verknüpftem Konto. Am geteilten "
 },
 {
 "lang": "de",
@@ -1517,7 +1533,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": ": Jede Funktion ist aus, bis der Admin sie freigibt; dann gilt sie für jedes Profil, außer der Admin sperrt einzelne (features.blocked). Was nicht erlaubt ist, wird gar nicht erst als Werkzeug angeboten. 6. Fremdes bleibt Daten: Was ein Werkzeug von außen liest, kommt als markierter Datenblock zum Modell. Ab da sind 13 handelnde Werkzeuge gesperrt, auch im nächsten Zug, und nichts davon wird ins Gedächtnis gelernt. Verbindungen nach außen laufen nur über den Wächter (netguard.allowed). Eine Mail mit HTML zeigt die Seite nur so, wie der Spark sie bereinigt hat (mailansicht.clean: feste Liste erlaubter Tags, kein Skript), in einem Rahmen ohne Skript mit eigener CSP; Bilder von außen erst nach eigenem Klick über den Wächter, ein Link erst nach der Frage mit seiner echten Adresse. 7. Sprachmodell schlägt vor: Das Modell formuliert und wählt aus dem, was nach den Schritten davor übrig ist. Ruft es ein Werkzeug, das nicht angeboten war, läuft es nicht. 8. Ändert es etwas?: Lesen geht sofort. Wer etwas ändert (Licht, Mail senden, Termin, Anruf), legt einen Vorschlag ab; er läuft erst nach einem schlichten „Ja“ auf genau diesen Vorschlag, vom selben Gerät, oder dem Ja-Knopf seiner Karte „W"
+"text": "Lautsprecher reicht der Geräteschlüssel nicht: chat_turn.shared_stranger gibt Persönliches nur frei, wenn die Inhaberstimme in derselben Aufnahme sicher erkannt ist. 5. Freigabe und Sperre: Jede Funktion ist aus, bis der Admin sie freigibt; dann gilt sie für jedes Profil, außer der Admin sperrt einzelne (features.blocked). Was nicht erlaubt ist, wird gar nicht erst als Werkzeug angeboten. 6. Fremdes bleibt Daten: Was ein Werkzeug von außen liest, kommt als markierter Datenblock zum Modell. Ab da sind 13 handelnde Werkzeuge gesperrt, auch im nächsten Zug, und nichts davon wird ins Gedächtnis gelernt. Verbindungen nach außen laufen nur über den Wächter (netguard.allowed). Eine Mail mit HTML zeigt die Seite nur so, wie der Spark sie bereinigt hat (mailansicht.clean: feste Liste erlaubter Tags, kein Skript), in einem Rahmen ohne Skript mit eigener CSP; Bilder von außen erst nach eigenem Klick über den Wächter, ein Link erst nach der Frage mit seiner echten Adresse. 7. Sprachmodell schlägt vor: Das Modell formuliert und wählt aus dem, was nach den Schritten davor übrig ist. Ruft es ein Werkzeug, das nicht angeboten war, läuft es nicht. 8. Ändert es etwas?: Lesen geht sofort. Wer etwas ä"
 },
 {
 "lang": "de",
@@ -1525,7 +1541,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "artet auf dein Ja“ (eigenes Profil, dieselbe Funktion wie das getippte Ja). Home Assistant nur aus einer Allowlist. Mail löscht nur die Person selbst (in den Papierkorb, endgültig nur nach Rückfrage), nie das Modell. Knöpfe auf Karten im Gespräch und auf der Seite Offen sind feste Namen (vorgaenge.AKTIONEN); jeden Druck prüft das Panel (Besitzer, Art, Stand, Notaus, Schalter des Moduls), und was ohne Vorschlag senden oder eintragen würde, öffnet nur die Seite, auf der die Person es selbst tut. 9. Antwort prüfen: Zeiten, Daten und Beträge, die nirgends in den Quellen stehen, fallen heraus (answercheck.unsupported). Passwörter, Codes und Schlüssel werden nie gesprochen (textnorm.hide_secrets). Die Oberfläche zeigt Modelltext nie als HTML. 10. Spuren: Logs nur mit festen Wörtern und Zahlen. Änderungen an Zugängen und Schutz schreibt guard.log mit einer SHA-256-Kette; der Wachposten meldet Auffälliges an die Admins. Geheimnisse liegen versiegelt im vault (vault.seal)."
+"text": "ndert (Licht, Mail senden, Termin, Anruf), legt einen Vorschlag ab; er läuft erst nach einem schlichten „Ja“ auf genau diesen Vorschlag, vom selben Gerät, oder dem Ja-Knopf seiner Karte „Wartet auf dein Ja“ (eigenes Profil, dieselbe Funktion wie das getippte Ja). Home Assistant nur aus einer Allowlist. Mail löscht nur die Person selbst (in den Papierkorb, endgültig nur nach Rückfrage), nie das Modell. Knöpfe auf Karten im Gespräch und auf der Seite Offen sind feste Namen (vorgaenge.AKTIONEN); jeden Druck prüft das Panel (Besitzer, Art, Stand, Notaus, Schalter des Moduls), und was ohne Vorschlag senden oder eintragen würde, öffnet nur die Seite, auf der die Person es selbst tut. 9. Antwort prüfen: Zeiten, Daten und Beträge, die nirgends in den Quellen stehen, fallen heraus (answercheck.unsupported). Passwörter, Codes und Schlüssel werden nie gesprochen (textnorm.hide_secrets). Die Oberfläche zeigt Modelltext nie als HTML. 10. Spuren: Logs nur mit festen Wörtern und Zahlen. Änderungen an Zugängen und Schutz schreibt guard.log mit einer SHA-256-Kette; der Wachposten meldet Auffälliges an die Admins. Geheimnisse liegen versiegelt im vault (vault.seal)."
 },
 {
 "lang": "de",
@@ -10243,6 +10259,22 @@
 "lang": "de",
 "src": "sicherheit-und-betrieb",
 "file": "Sicherheit und Betrieb",
+"head": "Wege hinein",
+"title": "Wege hinein",
+"text": "Alles, was von außen ans Panel kommt, und wer dort was darf. Jeder Weg ist ab Werk zu oder braucht eine Anmeldung, jeder zählt gegen eine Lastgrenze und schreibt feste Wörter ins Log. Ein neuer Weg hinein kommt im selben Commit in diese Liste und auf die Knoten-Seite „Sicherheit“ (Zustand → Technik)."
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Daten auf der Platte und neue Schreibwege",
+"title": "Daten auf der Platte und neue Schreibwege",
+"text": "- Vorräte versiegelt (seit V01.0.872/879): Was ein Dienst für ein Profil gelesen hat, liegt als Vorrat versiegelt (vault) im Profil, damit Antworten bei einem Ausfall mit „Stand …“ kommen: Mail-Vorrat (mail-vorrat.bin, Kopfzeilen und bis zu 40 Mailtexte ohne Anhänge), Wetter-, Paket- und Für-dich-Vorrat. Nicht in der Sicherung, „Daten löschen“ entfernt sie. Liste aller Dateien: Architektur → Datenablage. - Kontakte ändern (seit V01.0.888, Schalter „Kontakte ändern“, aus): Geändert wird nur im eigenen Adressbuch des Profils und nur mit If-Match (ETag); hat sich die Karte inzwischen geändert, überschreibt der Spark nichts. Neue Karten gehen in das gewählte Buch oder „Auf dem Spark“. - Suche beim Mailserver (seit V01.0.887): Was man ins Suchfeld tippt, wird zu IMAP-SEARCH-Wörtern; nur Buchstaben, Ziffern, @, . und - kommen hinein, nie ein Anführungszeichen, ein Wort außerhalb von ASCII als UTF-8-Literal. Gesucht wird nur in den eigenen Postfächern."
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
 "head": "Repo und Releases absichern",
 "title": "Repo und Releases absichern",
 "text": "Seit V01.0.390. Die GitHub-Workflows hängen alle Actions an einen festen Commit (Dependabot schlägt monatlich neue vor), Schreibrecht hat nur der Job, der ein Release oder einen Build-Branch schreibt, und actions/checkout behält keinen Token. Die Signierschlüssel (Android-Keystore, App-Store-Connect-Schlüssel, Developer-ID) liegen in der Umgebung release, die nur Workflows auf main nutzen dürfen; Workflows auf anderen Branches sehen sie nicht. Der Selbsttest test_workflows hält das fest."
@@ -11795,6 +11827,22 @@
 "lang": "en",
 "src": "apis-and-integration",
 "file": "APIs and integration",
+"head": "Calendar apps (CalDAV, since V01.0.840)",
+"title": "Calendar apps (CalDAV, since V01.0.840)",
+"text": "The Spark is itself a CalDAV server for a profile's Spark calendars, so the iPhone's calendar app, Thunderbird or DAVx5 show and change them directly. Admin: Features → My day → \"Calendar server for calendar apps\" (off). The profile makes an app password under Calendar → Settings → \"For calendar apps\" (in its own browser login or in the iPhone app, with its code); it is shown once, only its hash is kept, \"Delete access\" ends it at once. In the app: server https://<address>/caldav/ (or just the address, /.well-known/caldav redirects), the user is the profile ID, the password the app password. Only the own Spark calendars are reachable, never iCloud or other accounts and never another profile. Wrong passwords lock like a PIN. Security: Ways in."
+},
+{
+"lang": "en",
+"src": "apis-and-integration",
+"file": "APIs and integration",
+"head": "Contacts apps (CardDAV, since V01.0.897)",
+"title": "Contacts apps (CardDAV, since V01.0.897)",
+"text": "The Spark is also a CardDAV server for a profile's address book \"On the Spark\", so the iPhone's Contacts app, Thunderbird or DAVx5 show and change it directly. Admin: Features → Mail and contacts → \"Contacts for contacts apps\" (off; needs \"Contacts\" and \"Calendar server for calendar apps\"). Setup on the iPhone: Settings → Apps → Contacts → Accounts → Other → CardDAV account, server = the Spark's address with /carddav/, user = profile id, password = the calendar server's app password. The door is the same as for /caldav/ (wrong guesses lock like a PIN, rate limit \"caldav\", other sites' web pages refused, My emergency stop). Only the own address book, never iCloud address books and never another profile; one vCard per card with a name or company, at most 256 KB and 2000 cards; writing only with \"Edit contacts\", otherwise read-only."
+},
+{
+"lang": "en",
+"src": "apis-and-integration",
+"file": "APIs and integration",
 "head": "Pebble watch",
 "title": "Pebble watch",
 "text": "The watch app \"Spark\" (app/pebble/speech-spark.pbw, source in pebble/) brings the voice chat to Pebble Time 2 and Core 2 Duo, with the answer as text and through the watch speaker. On Pebble Round 2 the answer is text only. It needs a watch firmware with the speaker API (from about v4.9.170)."
@@ -12853,7 +12901,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "1. A question or order comes in: At home directly, on the way only through the reverse proxy with TLS. Every device has its own key or signs in like the browser. 2. Does the kill switch allow it?: The kill switch has three stages from the outside in: stage 1 closes the internet, stage 2 every action, stage 3 every conversation. No model, mail or document can trigger or lift it. 3. Signed in and within limits?: Size limit and origin check (CSRF) before reading, then a rate limit per address and a cap on parallel requests for the model, recognition and output (guard.Slot). Secrets, roles and backups also need a fresh code or passkey (core.confirm_code, 10 minutes). The models on tars are reached only through the TLS-Tor; commands there are checked by the Wärter (tarswart.check: signature, time, one-time number, one of 16 fixed commands). 4. Who asks, surely known?: The profile comes from the cookie, the app key or a linked account. At a shared speaker the device key is not enough: chat_turn.shared_stranger allows personal things only when the owner's voice is surely recognised in the same recording. 5. Release and block: Every function is off until the admin releases it; then it coun"
+"text": "1. A question or order comes in: At home directly, on the way only through the reverse proxy with TLS. Every device has its own key or signs in like the browser. Every way in (panel, device keys, calendar and contacts apps, MCP, other Sparks, Wyoming, phone, Telegram) stands with its protection in the security docs under \"Ways in\". 2. Does the kill switch allow it?: The kill switch has three stages from the outside in: stage 1 closes the internet, stage 2 every action, stage 3 every conversation. No model, mail or document can trigger or lift it. 3. Signed in and within limits?: Size limit and origin check (CSRF) before reading, then a rate limit per address and a cap on parallel requests for the model, recognition and output (guard.Slot). Secrets, roles and backups also need a fresh code or passkey (core.confirm_code, 10 minutes). The models on tars are reached only through the TLS-Tor; commands there are checked by the Wärter (tarswart.check: signature, time, one-time number, one of 16 fixed commands). 4. Who asks, surely known?: The profile comes from the cookie, the app key or a linked account. At a shared speaker the device key is not enough: chat_turn.shared_stranger allows p"
 },
 {
 "lang": "en",
@@ -12861,7 +12909,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "ts for every profile, unless the admin blocks single ones (features.blocked). What is not allowed is not even offered as a tool. 6. Outside stays data: What a tool reads from outside reaches the model as a marked block of data. From then on 13 acting tools are locked, in the next turn too, and nothing of it is learned into memory. Connections to the outside go only through the guard (netguard.allowed). A mail with HTML is shown only as the Spark cleaned it (mailansicht.clean: a fixed list of allowed tags, no script), in a frame without script with its own CSP; pictures from outside only after the own click and through the guard, a link only after the question with its real address. 7. The language model proposes: The model words the answer and picks from what is left after the steps before. If it calls a tool that was not offered, it does not run. 8. Does it change something?: Reading happens at once. Whatever changes something (light, sending mail, appointment, call) leaves a proposal; it runs only after a plain „yes“ to exactly that proposal, from the same device, or the yes button of its card „Waiting for your yes“ (own profile, the same function as the typed yes). Home Assistan"
+"text": "ersonal things only when the owner's voice is surely recognised in the same recording. 5. Release and block: Every function is off until the admin releases it; then it counts for every profile, unless the admin blocks single ones (features.blocked). What is not allowed is not even offered as a tool. 6. Outside stays data: What a tool reads from outside reaches the model as a marked block of data. From then on 13 acting tools are locked, in the next turn too, and nothing of it is learned into memory. Connections to the outside go only through the guard (netguard.allowed). A mail with HTML is shown only as the Spark cleaned it (mailansicht.clean: a fixed list of allowed tags, no script), in a frame without script with its own CSP; pictures from outside only after the own click and through the guard, a link only after the question with its real address. 7. The language model proposes: The model words the answer and picks from what is left after the steps before. If it calls a tool that was not offered, it does not run. 8. Does it change something?: Reading happens at once. Whatever changes something (light, sending mail, appointment, call) leaves a proposal; it runs only after a plain"
 },
 {
 "lang": "en",
@@ -12869,7 +12917,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "t only from an allowlist. Only the person deletes mail (into the trash, for good only after a question), never the model. Buttons on cards in the conversation and on the page Open are fixed names (vorgaenge.AKTIONEN); the panel checks every press (owner, kind, state, kill switch, the module's switches), and what would send or enter something without a proposal only opens the page where the person does it. 9. Check the answer: Times, dates and amounts that are nowhere in the sources are dropped (answercheck.unsupported). Passwords, codes and keys are never spoken (textnorm.hide_secrets). The pages never show model text as HTML. 10. Traces: Logs carry only fixed words and numbers. Changes to access and protection are written by guard.log with a SHA-256 chain; the Wachposten tells the admins about anything unusual. Secrets lie sealed in the vault (vault.seal)."
+"text": " „yes“ to exactly that proposal, from the same device, or the yes button of its card „Waiting for your yes“ (own profile, the same function as the typed yes). Home Assistant only from an allowlist. Only the person deletes mail (into the trash, for good only after a question), never the model. Buttons on cards in the conversation and on the page Open are fixed names (vorgaenge.AKTIONEN); the panel checks every press (owner, kind, state, kill switch, the module's switches), and what would send or enter something without a proposal only opens the page where the person does it. 9. Check the answer: Times, dates and amounts that are nowhere in the sources are dropped (answercheck.unsupported). Passwords, codes and keys are never spoken (textnorm.hide_secrets). The pages never show model text as HTML. 10. Traces: Logs carry only fixed words and numbers. Changes to access and protection are written by guard.log with a SHA-256 chain; the Wachposten tells the admins about anything unusual. Secrets lie sealed in the vault (vault.seal)."
 },
 {
 "lang": "en",
@@ -16701,7 +16749,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "Contacts like Apple Contacts, stage 3b: the Spark as a CardDAV server (V01.0.897, kontaktserver.py): admin switch Features → Contacts → \"Contacts for contacts apps\" (chat.contacts_server, off; needs \"Contacts\" and \"Calendar server for calendar apps\"). Then the address book \"On the Spark\" shows in the iPhone's Contacts app (Settings → Apps → Contacts → Accounts → Other → CardDAV account: server = the Spark's address with /carddav/, user = profile id, password = the app password from Calendar → Settings → \"For calendar apps\"). The door is the calendar server's (Basic login, wrong guesses lock like a PIN, rate limit caldav, other sites' web pages refused, Mein Notaus). Only the own address book \"On the Spark\", never iCloud address books (the iPhone has those itself) and never another profile. PROPFIND, REPORT (addressbook-query, addressbook-multiget), GET, PUT, DELETE with etags; per card exactly one vCard with a name or company, at most 256 KB, at most 2000 cards. Writing only with \"Edit contacts\", otherwise read only (403). A change on the page keeps the app's object name. Live: requests, changes, refusals today."
+"text": "Contacts like Apple Contacts, stage 3b: the Spark as a CardDAV server (V01.0.897, kontaktserver.py): admin switch Features → Contacts → \"Contacts for contacts apps\" (chat.contacts_server, off; needs \"Contacts\" and \"Calendar server for calendar apps\"). Then the address book \"On the Spark\" shows in the iPhone's Contacts app (on the iPhone: Settings → Apps → Contacts → Accounts → Other → CardDAV account: server = the Spark's address with /carddav/, user = profile id, password = the app password from Calendar → Settings → \"For calendar apps\"). The door is the calendar server's (Basic login, wrong guesses lock like a PIN, rate limit caldav, other sites' web pages refused, Mein Notaus). Only the own address book \"On the Spark\", never iCloud address books (the iPhone has those itself) and never another profile. PROPFIND, REPORT (addressbook-query, addressbook-multiget), GET, PUT, DELETE with etags; per card exactly one vCard with a name or company, at most 256 KB, at most 2000 cards. Writing only with \"Edit contacts\", otherwise read only (403). A change on the page keeps the app's object name. Live: requests, changes, refusals today."
 },
 {
 "lang": "en",
@@ -21302,6 +21350,22 @@
 "head": "Security",
 "title": "Security",
 "text": "ds (OWASP); older hashes keep working and are computed anew at the next sign-in, a profile's other browsers stay signed in (signed with the old hash until the PIN changes), with the admin password the other admin browsers sign in once more. Whoever then goes back to a version before V01.0.825 no longer gets in with password or PIN and uses sudo speech-spark notzugang. The own https server speaks only TLS 1.2 or newer (panel.tls_context). The sentry always reports a new way in, changed protection and a changed log at once; the daily cap holds only for lockouts. Watch answers (/api/watch/poll, report, cancel) only for the profile that asked. The day's count of sent mails survives a restart (state/mail-gesendet.json). \"Undo\" when ordering mail takes only a real Message-ID (tidy.clean_mid in find_mid). The Werkstatt sandbox on tars reaches only the LLM-Tor (see Werkstatt). The scanner test no longer counts assistant and an _on without a profile as a login."
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Ways in",
+"title": "Ways in",
+"text": "Everything that reaches the panel from outside, and who may do what there. Every way is closed by default or needs a sign-in, each counts against a rate limit and writes fixed words to the log. A new way in goes into this list and onto the node page \"Security\" (Status → Architecture) in the same commit."
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Data on the disk and new ways to write",
+"title": "Data on the disk and new ways to write",
+"text": "- Supplies sealed (since V01.0.872/879): what a service read for a profile lies sealed (vault) in the profile as a supply, so answers come with \"as of …\" during an outage: mail supply (mail-vorrat.bin, headers and up to 40 mail texts without attachments), weather, parcel and for-you supply. Not in the backup, \"Delete data\" removes them. All files: Architecture → data storage. - Edit contacts (since V01.0.888, switch \"Edit contacts\", off): changes go only into the profile's own address book and only with If-Match (ETag); when the card changed meanwhile, the Spark overwrites nothing. New cards go into the chosen book or \"On the Spark\". - Search at the mail server (since V01.0.887): what you type into the search field becomes IMAP SEARCH words; only letters, digits, @, . and - get in, never a quote, a word beyond ASCII as a UTF-8 literal. Only the own mailboxes are searched."
 },
 {
 "lang": "en",

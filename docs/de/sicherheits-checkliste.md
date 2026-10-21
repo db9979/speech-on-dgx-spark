@@ -75,6 +75,7 @@ Vor jedem Commit durchgehen. In der Antwort an Dominik kurz nennen, welche Punkt
 
 ## Vor dem Commit
 - [ ] Ändert oder ergänzt die Änderung eine Schutzregel, ist die Knoten-Seite „Sicherheit“ (Zustand → Technik) im selben Commit angepasst.
+- [ ] Ein neuer Weg hinein (Pfad außerhalb von `/api/`, Port, Gerät mit eigenem Schlüssel) steht mit Wer, Ab Werk und Schutz in „Wege hinein“ (`sicherheit-und-betrieb.md`, englisch `security-and-operation.md`); neue Daten auf der Platte und neue Schreibwege nach außen stehen darunter.
 - [ ] Neue Schalter stehen standardmäßig auf aus: ein Admin-Schalter, kein neuer Profilschalter; eine Sperre für einzelne Profile setzt nur der Admin.
 - [ ] Jede neue Schutzregel hat einen Selbsttest.
 - [ ] Alle Selbsttests sind grün.

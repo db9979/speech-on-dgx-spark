@@ -646,9 +646,12 @@ SEITEN = {
             S("s1", "start", ("Frage oder Auftrag kommt herein", "A question or order comes in"),
               ("Browser, App, Lautsprecher, Telegram, MCP", "browser, app, speaker, Telegram, MCP"),
               ("Im Heimnetz direkt, von unterwegs nur über den Reverse-Proxy mit TLS. Jedes Gerät hat seinen eigenen "
-               "Schlüssel oder meldet sich wie im Browser an.",
+               "Schlüssel oder meldet sich wie im Browser an. Jeder Weg hinein (Panel, Geräteschlüssel, Kalender- und Kontakte-Apps, "
+               "MCP, andere Sparks, Wyoming, Telefon, Telegram) steht mit seinem Schutz in der Sicherheits-Doku unter "
+               "„Wege hinein“.",
                "At home directly, on the way only through the reverse proxy with TLS. Every device has its own key or "
-               "signs in like the browser.")),
+               "signs in like the browser. Every way in (panel, device keys, calendar and contacts apps, MCP, other Sparks, Wyoming, "
+               "phone, Telegram) stands with its protection in the security docs under \"Ways in\".")),
             S("s2", "frage", ("Lässt der Notaus es zu?", "Does the kill switch allow it?"),
               ("notaus.blocks", "notaus.blocks"),
               ("Der Notaus hat drei Stufen von außen nach innen: Stufe {notaus.STAGE.internet} sperrt das Internet, Stufe "

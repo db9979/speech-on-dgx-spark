@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.904** Docs current, part 4 (security): „Ways in“ in the security docs, every way into the panel with who, default and protection (panel, device keys, calendar and contacts apps through /caldav and /carddav, MCP and OAuth, other Sparks, downloads, Live, Wyoming, phone, Telegram); sealed supplies, editing contacts with ETag and the search at the mail server described; calendar apps (CalDAV) under APIs and integration; guard test_doku_stand.WegeHinein and a point in the security checklist
 - **V01.0.903** Docs current, part 3: „All functions“ in the docs (de and en): each of the 234 functions with its switch way, what it builds on, its Me page and the first sentence of its guide, written by hilfe.py --docs, so the help finds them too; guard test_doku_stand.Funktionen
 - **V01.0.902** Docs current, part 2: English caught up (iPhone app: Hey Siri, CarPlay icon and simulator, push errors; two wrong version numbers), Workshop in the iPhone docs, Summary instead of Monitoring in the app; new guard test_doku_stand.Gleichstand: German and English hold the same parts with the same versions per section
 - **V01.0.901** Docs current, part 1: every way in docs/ and the READMEs leads to today's place (Me → Overview instead of "Today", Settings → Update, own pages Calendar, E-mail, Contacts, Features → My day and Access, no more „Monitoring“); test_sprunglinks now checks the docs the help answers from; rule „All docs always current“ in the guideline
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.897** Contacts like Apple Contacts (stage 3b): the Spark as a CardDAV server, the address book "On the Spark" shows in the iPhone's Contacts app (switch "Contacts for contacts apps", off); invitations from mail: an .ics invitation into the calendar with one tap, Accept, Maybe, Decline to the organiser (switch "Invitations from mail", off), panel and iPhone; the contact card with line symbols, "Message" on a PC copies the number
 - **V01.0.896** Workshop counts honestly: page tests without a browser show as "did not run" instead of red or green; fix `speech-spark info` without an IP
 - **V01.0.895** Fix iPhone app: the knowledge map computes the points' places in Double (cos and sin were ambiguous, the app did not build since V01.0.894)
-- **V01.0.894** Knowledge map (stage 1): the knowledge book gets its own menu entry with Pages and Map; connections between pages, each with its source and checked by fixed rules, "Wrong", export as Mermaid, Graphviz, SVG, PNG and Obsidian links, native map on the iPhone (off by default)
 
 
 
