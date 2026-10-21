@@ -58,7 +58,7 @@ internal sealed record AskReply(string Answer, string? Md, string? Steps, IReadO
 internal sealed record ActAsk(string Id, string Action, string Arg, string Text);
 
 internal sealed record PollResult(int Rev, IReadOnlyList<Note> Notes, int Last, int NotausLevel, string? Update, IReadOnlyList<ActAsk> Asks,
-    IReadOnlyList<InboxItem> Inbox);
+    IReadOnlyList<InboxItem> Inbox, string? SparkUpdate);
 
 /// <summary>Teil "inbox": etwas vom Handy für diesen PC (Text, Link oder Datei).</summary>
 internal sealed record InboxItem(string Id, string Kind, string? Text, string? Name, long? Size);
@@ -209,7 +209,16 @@ internal static partial class SparkClient
         }
 
         int level = json["notaus"] is JsonObject notaus ? Json.Int(notaus["level"]) ?? 0 : 0;
-        return new PollResult(Json.Int(json["rev"]) ?? 0, notes, Json.Int(json["last"]) ?? after, level, Json.Str(json["update"]), asks, inbox);
+        // das Update des Sparks selbst (wie Panel und iPhone): "Spark-Update läuft: 40 % · Schritt"
+        string? spark = null;
+        if (json["spark_update"] is JsonObject su)
+        {
+            int pct = Math.Clamp(Json.Int(su["pct"]) ?? 0, 0, 100);
+            string step = new string((Json.Str(su["step"]) ?? "").Where(c => !char.IsControl(c)).Take(40).ToArray());
+            spark = $"Spark-Update läuft: {pct} %" + (step.Length > 0 ? " · " + step : "");
+        }
+
+        return new PollResult(Json.Int(json["rev"]) ?? 0, notes, Json.Int(json["last"]) ?? after, level, Json.Str(json["update"]), asks, inbox, spark);
     }
 
     /// <summary>Kennungen, die in eine Adresse oder JSON zurückgehen: nur Buchstaben, Ziffern, '-' und '_'.</summary>

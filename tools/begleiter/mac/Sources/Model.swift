@@ -317,6 +317,12 @@ final class AppModel: ObservableObject {
         if level > 0 {
             reach = .notaus
             reachText = "Notaus Stufe \(level) ist an."
+        } else if let su = d["spark_update"] as? [String: Any] {
+            // the Spark's own update (like the panel and the iPhone): "Spark-Update läuft: 40 % · step"
+            let pct = min(max((su["pct"] as? NSNumber)?.intValue ?? 0, 0), 100)
+            let step = String(String((su["step"] as? String ?? "").unicodeScalars.filter { !CharacterSet.controlCharacters.contains($0) }).prefix(40))
+            reach = .ok
+            reachText = "Spark-Update läuft: \(pct) %" + (step.isEmpty ? "" : " · \(step)")
         } else {
             reach = .ok
             reachText = ""
@@ -370,8 +376,10 @@ final class AppModel: ObservableObject {
             reachText = m
         case .offline(let m):
             if reach != .notaus || config == nil {
+                // while the Spark's update ran, this is the restart that belongs to it
+                let restart = reach == .ok && reachText.hasPrefix("Spark-Update läuft")
                 reach = .offline
-                reachText = m
+                reachText = restart ? "Spark startet für das Update neu …" : m
             }
         }
         return p.message
@@ -614,6 +622,7 @@ final class AppModel: ObservableObject {
         switch reach {
         case .unknown: return "Verbinde mit dem Spark …"
         case .ok:
+            if !reachText.isEmpty { return reachText }
             let p = config?.profile ?? ""
             return p.isEmpty ? "Spark erreichbar" : "Spark erreichbar · \(p)"
         case .offline: return reachText.isEmpty ? "Spark nicht erreichbar" : reachText

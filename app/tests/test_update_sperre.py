@@ -17,7 +17,6 @@ import steuer  # noqa: E402
 import update  # noqa: E402
 
 PANEL = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "panel")
-ROOT = os.path.dirname(os.path.dirname(PANEL))
 T0 = 2_000_000_000.0
 
 
@@ -122,8 +121,7 @@ class Bar(unittest.TestCase):
 
 class Script(unittest.TestCase):
     def setUp(self):
-        with open(os.path.join(ROOT, "update.sh"), encoding="utf-8") as f:
-            self.sh = f.read()
+        self.sh = helpers.repo_file("update.sh")   # skipped in a copy with only app/ (the Spark's own self-test)
 
     def test_every_end_says_done_with_a_reason(self):
         sh = self.sh
@@ -141,6 +139,24 @@ class Script(unittest.TestCase):
         self.assertIn("if .done == false then .started else empty end", self.sh)
         self.assertLess(self.sh.index('step "Modell-Rechner wird zuerst aktualisiert"'), self.sh.index("teilen modelle-update"))
         self.assertNotIn("started: $now", self.sh, "never a new start time in the middle of an update")
+
+
+class Begleiter(unittest.TestCase):
+    def test_the_desk_program_shows_the_same_update(self):
+        import begleiter
+        g = {"run": True, "teil": "", "pct": 140, "step": "Sicherung vor dem Update" + "x" * 50, "done": False, "ok": None}
+        with mock.patch.object(update, "gesamt", return_value=g):
+            self.assertEqual(begleiter.spark_update(), {"pct": 100, "step": ("Sicherung vor dem Update" + "x" * 50)[:40]})
+        for idle in (None, dict(g, run=False, done=True, ok=True)):
+            with mock.patch.object(update, "gesamt", return_value=idle):
+                self.assertIsNone(begleiter.spark_update())
+        self.assertIn('"spark_update": spark_update()', _src("begleiter.py"))
+
+    def test_both_programs_read_it(self):
+        for client in (("windows", "SparkClient.cs"), ("mac", "Sources", "Model.swift")):
+            code = helpers.repo_file("tools", "begleiter", *client)   # skipped in a copy with only app/
+            self.assertIn('"spark_update"', code, client)
+            self.assertIn("Spark-Update läuft", code, client)
 
 
 if __name__ == "__main__":

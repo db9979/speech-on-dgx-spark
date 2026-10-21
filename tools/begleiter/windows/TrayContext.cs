@@ -163,6 +163,7 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
     public IReadOnlyCollection<string> HotkeyConflicts => _conflicts;
 
     public Connection Connection => _connection;
+    public string ConnectionText => _connectionText;
 
     public Updater Updates => _updater;
 
@@ -222,7 +223,7 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
             }
             else
             {
-                SetConnection(Connection.Online, "");
+                SetConnection(Connection.Online, poll.SparkUpdate ?? "");
             }
 
             OnPolledOk();
@@ -434,7 +435,9 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
         }
         else if (ex.Status is null || (fromPoll && ex.Status >= 500))
         {
-            SetConnection(Connection.Offline, ex.Message);
+            // lief gerade das Update des Sparks, ist das der Neustart, der dazugehört
+            bool restart = _connection == Connection.Online && _connectionText.StartsWith("Spark-Update läuft", StringComparison.Ordinal);
+            SetConnection(Connection.Offline, restart ? "Spark startet für das Update neu …" : ex.Message);
         }
     }
 
@@ -457,8 +460,8 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
     {
         Connection.Unpaired => "Nicht gekoppelt",
         Connection.Unknown => "Verbinde mit dem Spark …",
-        Connection.Online => "Verbunden mit " + (_desk?.Profile ?? _config.Profile ?? "dem Spark"),
-        Connection.Offline => "Spark nicht erreichbar",
+        Connection.Online => _connectionText.Length > 0 ? _connectionText : "Verbunden mit " + (_desk?.Profile ?? _config.Profile ?? "dem Spark"),
+        Connection.Offline => _connectionText.StartsWith("Spark startet", StringComparison.Ordinal) ? _connectionText : "Spark nicht erreichbar",
         Connection.Notaus => _connectionText.Length > 0 ? _connectionText : "Notaus",
         _ => "",
     };

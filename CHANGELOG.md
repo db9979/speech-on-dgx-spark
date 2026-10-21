@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.883** · 2026-10-21 · Begleiter zeigt das Spark-Update: „Spark-Update läuft: 40 % · Schritt“ im Zustand am PC und Mac, beim Neustart „Spark startet für das Update neu …“; Update-Tests laufen auch in einer Kopie nur mit app/
 - **V01.0.882** · 2026-10-21 · Besprechungs-Aufgaben unter Offen: jede Aufgabe, die der Spark-Begleiter aus einer Besprechung auf eine Liste legt, wird auch eine Karte „Aus Besprechung“ unter Offen (nicht im Gespräch); „Erledigt“ hakt den Eintrag ab, abgehakt, zurückgeholt oder gelöscht auf der Liste folgt die Karte, überfällig bleibt sie offen
 - **V01.0.881** · 2026-10-21 · Fix: die Tests des Update-Fensters (test_ruhige_seiten) schalten ihre Schritte selbst und warten auf das Neuladen, statt Antworten mitzuzählen; unter Last nicht mehr ab und zu rot
 - **V01.0.880** · 2026-10-21 · Kalender wie Apple Kalender (Stufe 2): Seitenleiste mit Monat und Kalendern zum Ein- und Ausblenden, Jahresansicht; in freie Zeit ziehen oder doppelklicken legt an, Inspektor mit Ort, Wiederholen, Erinnerung, Personen, Notiz und Link, Schließen speichert, untere Kante ändert die Dauer, zwei Minuten „Rückgängig“; wiederholte Termine ändern, verschieben und löschen mit „Nur dieser Termin“ oder „Alle künftigen“; Personen nur als Liste ohne Einladung; Handy mit Wochenstreifen; iPhone-App mit Formular in Gruppen und Rückgängig

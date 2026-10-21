@@ -7261,7 +7261,15 @@
 "file": "Installation im Detail",
 "head": "Aktualisieren",
 "title": "Aktualisieren",
-"text": "gen → Update). Jeder Zustand zeigt nur seine Knöpfe: die Frage „Installieren“ und „Abbrechen“, ein laufendes Update keine; ist es nach 45 Minuten nicht fertig, gibt es „Neu laden“ und „Update abbrechen“, schlägt es fehl, „Schließen“ und „Protokoll kopieren“. Das Protokoll steht eingeklappt darunter. Die Sperre beginnt mit dem Klick auf „Installieren“ (seit V01.0.878, update.begin): Der Server hält sie selbst, während er vorher sichert, und alle Seiten, die iPhone-App, Live und das Gehäuse-Display zeigen dieselben Schritte: „Sicherung vor dem Update“, „Update startet“, „Lädt und prüft die neue Version“, „Neue Version geladen“, bei geteiltem Spark „Modell-Rechner wird zuerst aktualisiert“, dann die Schritte der Installation bis „Dienste neu starten“ und „Fertig“. Jedes Ende, auch ein frühes (GitHub nicht erreichbar, keine geprüfte Version, falsche Signatur, Dienst startet nicht), schreibt „fertig“ mit dem Grund; damit endet die Sperre, und das Fenster nennt den Grund. Ein zweiter Start während der Sperre wird abgelehnt."
+"text": "gen → Update). Jeder Zustand zeigt nur seine Knöpfe: die Frage „Installieren“ und „Abbrechen“, ein laufendes Update keine; ist es nach 45 Minuten nicht fertig, gibt es „Neu laden“ und „Update abbrechen“, schlägt es fehl, „Schließen“ und „Protokoll kopieren“. Das Protokoll steht eingeklappt darunter. Die Sperre beginnt mit dem Klick auf „Installieren“ (seit V01.0.878, update.begin): Der Server hält sie selbst, während er vorher sichert, und alle Seiten, die iPhone-App, Live und das Gehäuse-Display zeigen dieselben Schritte: „Sicherung vor dem Update“, „Update startet“, „Lädt und prüft die neue Version“, „Neue Version geladen“, bei geteiltem Spark „Modell-Rechner wird zuerst aktualisiert“, dann die Schritte der Installation bis „Dienste neu starten“ und „Fertig“. Jedes Ende, auch ein frühes (GitHub nicht erreichbar, keine geprüfte Version, falsche Signatur, Dienst startet nicht), schreibt „fertig“ mit dem Grund; damit endet die Sperre, und das Fenster nennt den Grund. Ein zweiter Start während der Sperre wird abgelehnt. Der Spark-Begleiter am PC und Mac zeigt im Zustand dieselbe Zeile „Spark-Update läuft: 40 % · Schritt“ und während des Neustarts „Spark startet für das Update neu …“ "
+},
+{
+"lang": "de",
+"src": "installation",
+"file": "Installation im Detail",
+"head": "Aktualisieren",
+"title": "Aktualisieren",
+"text": "statt „nicht erreichbar“ (seit V01.0.883, begleiter.spark_update in /api/desk/poll, braucht den neuen Begleiter-Build)."
 },
 {
 "lang": "de",
@@ -16213,7 +16221,7 @@
 "file": "Installation in detail",
 "head": "Updating",
 "title": "Updating",
-"text": " update none; after 45 minutes without finishing it offers Reload and Cancel update, a failed one Close and Copy log. The log stays folded below. The lock begins with the click on Install (since V01.0.878, update.begin): the server holds it itself while it backs up first, and every page, the iPhone app, Live and the case's display show the same steps: \"Sicherung vor dem Update\" (backup), \"Update startet\", \"Lädt und prüft die neue Version\" (fetch and check), \"Neue Version geladen\", on a shared Spark \"Modell-Rechner wird zuerst aktualisiert\" (model computer first), then the install steps up to restarting the services and \"Fertig\". Every end, early ones included (GitHub not reachable, no tested version, wrong signature, the unit does not start), writes done with its reason; that ends the lock and the window names the reason. A second start during the lock is refused."
+"text": " update none; after 45 minutes without finishing it offers Reload and Cancel update, a failed one Close and Copy log. The log stays folded below. The lock begins with the click on Install (since V01.0.878, update.begin): the server holds it itself while it backs up first, and every page, the iPhone app, Live and the case's display show the same steps: \"Sicherung vor dem Update\" (backup), \"Update startet\", \"Lädt und prüft die neue Version\" (fetch and check), \"Neue Version geladen\", on a shared Spark \"Modell-Rechner wird zuerst aktualisiert\" (model computer first), then the install steps up to restarting the services and \"Fertig\". Every end, early ones included (GitHub not reachable, no tested version, wrong signature, the unit does not start), writes done with its reason; that ends the lock and the window names the reason. A second start during the lock is refused. The Spark companion on PC and Mac shows the same line \"Spark-Update läuft: 40 % · step\" in its state and during the restart \"Spark startet für das Update neu …\" instead of \"not reachable\" (since V01.0.883, begleiter.spark_update in /api/desk/poll, needs the new companion build)."
 },
 {
 "lang": "en",

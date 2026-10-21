@@ -131,7 +131,7 @@ struct TrayPanel: View {
 
     private var stateLine: String {
         let pill = model.reachPill
-        let text = model.reach == .ok && model.paired ? "alles läuft" : pill.text
+        let text = model.reach == .ok && model.paired ? (model.reachText.isEmpty ? "alles läuft" : model.reachText) : pill.text
         return model.paired ? model.deviceName + " · " + text : text
     }
 

@@ -709,6 +709,19 @@ def program_office(app: str, request: Request):
     return Response(xml, media_type="application/xml")
 
 
+def spark_update():
+    """The Spark's own update for the status line (update.gesamt, the same steps as the panel, the iPhone and the
+    case's display): {"pct", "step"} while it runs, else None. Numbers and fixed words only."""
+    import update
+    try:
+        g = update.gesamt()
+    except Exception:
+        return None
+    if not g or not g.get("run"):
+        return None
+    return {"pct": max(0, min(100, int(g.get("pct") or 0))), "step": str(g.get("step") or "")[:40]}
+
+
 @router.get("/api/desk/poll", dependencies=[Depends(assistant)])
 async def program_poll(request: Request, after: int = 0, version: str = "", arch: str = "", mic: str = "", idle: int = -1):
     prof, dev = _program(request)
@@ -735,7 +748,7 @@ async def program_poll(request: Request, after: int = 0, version: str = "", arch
             refs = {x["n"]: x for x in _notes.get(prof["id"], [])}
         items = [dict(x, actions=note_acts(prof["id"], refs.get(x["n"], x))) for x in items]
     return {"rev": rev, "notes": items, "last": last, "notaus": {"level": notaus.level()},
-            "update": up["version"] if up else None,
+            "update": up["version"] if up else None, "spark_update": spark_update(),
             "asks": open_asks(prof["id"], dev["id"]) if part_on(prof["id"], dev["id"], "act") else [],
             "inbox": inbox_items(prof["id"], dev["id"]) if part_on(prof["id"], dev["id"], "inbox") else []}
 

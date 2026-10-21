@@ -8,6 +8,8 @@ internal interface IBegleiterHost
     DeskConfig? Desk { get; }
 
     Connection Connection { get; }
+    /// <summary>Der Satz zum Zustand, z. B. „Spark-Update läuft: 40 % · …“ (leer, wenn nichts Besonderes).</summary>
+    string ConnectionText { get; }
 
     Updater Updates { get; }
 
@@ -636,6 +638,7 @@ internal sealed class SettingsForm : ThemedForm
         {
             (false, _) => ("Nicht gekoppelt", "Unter Kopplung mit dem Spark verbinden.", StatusKind.Off),
             (_, Connection.Notaus) => ("Notaus ist an", "Aufheben nur im Panel im Browser mit der PIN.", StatusKind.Bad),
+            (_, Connection.Online) when _host.ConnectionText.Length > 0 => (_host.ConnectionText, AboutLine(config, desk), StatusKind.Busy),
             (_, Connection.Online) => ("Alles läuft", AboutLine(config, desk), StatusKind.Ok),
             (_, Connection.Unknown) => ("Verbinde …", AboutLine(config, desk), StatusKind.Off),
             _ => ("Spark nicht erreichbar", AboutLine(config, desk), StatusKind.Off),
