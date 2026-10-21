@@ -139,33 +139,36 @@ class Browser(unittest.TestCase):
                 try:
                     await pg.evaluate("goCfg('upd')")
                     await self.idle(pg)
-                    steps = {"n": 0}
+                    # the test moves the update from step to step itself (before: the n-th answer decided, so on a busy
+                    # machine the short no-answer stretch or the reload could pass before the test looked, V01.0.881)
+                    state = {"p": "run"}
 
                     async def progress(route):
-                        steps["n"] += 1
-                        n = steps["n"]
-                        if n in (3, 4, 5):   # the panel restarts: no answer
+                        if state["p"] == "down":   # the panel restarts: no answer
                             await route.abort()
-                            return
-                        if n >= 7:
+                        elif state["p"] == "done":
                             await route.fulfill(json={"done": True, "ok": True, "started": 1e10, "version": "V9", "running": False})
-                            return
-                        await route.fulfill(json={"running": True, "started": 1e10, "now": 1e10 + 30, "timeout": 900,
-                                                  "percent": 60 if n < 3 else 20, "text": "Schritt"})
+                        else:
+                            await route.fulfill(json={"running": True, "started": 1e10, "now": 1e10 + 30, "timeout": 900,
+                                                      "percent": 60 if state["p"] == "run" else 20, "text": "Schritt"})
                     await pg.route("**/api/update/progress*", progress)
                     # every other request fails meanwhile, as during a restart
                     await pg.route("**/api/status", lambda r: r.abort())
                     await pg.evaluate("ul.clicked=Date.now();ulShow();window.__w=[];window.__iv=setInterval(()=>__w.push(parseFloat(document.getElementById('ulfill').style.width)||0),100)")
+                    await pg.wait_for_function("parseFloat(document.getElementById('ulfill').style.width)>=60", timeout=20000)
+                    state["p"] = "down"
                     await pg.wait_for_function("ul.miss>=2", timeout=20000)
                     await pg.evaluate("for(let i=0;i<3;i++)lzNet(0)")
                     self.assertFalse(await pg.evaluate("!!document.getElementById('lzband')&&!document.getElementById('lzband').hidden"))
                     self.assertFalse(await pg.evaluate("!!document.getElementById('verbanner')"))
+                    state["p"] = "back"
                     await pg.wait_for_function("ul.miss===0&&parseFloat(document.getElementById('ulfill').style.width)>0", timeout=20000)
+                    await pg.wait_for_timeout(300)   # a few more samples of the bar after the restart
                     seen = await pg.evaluate("__w")
                     self.assertTrue(all(b >= a for a, b in zip(seen, seen[1:])), seen)   # never back
                     self.assertGreaterEqual(max(seen), 60)
                     async with pg.expect_navigation(timeout=30000):
-                        pass
+                        state["p"] = "done"
                     await pg.wait_for_function("document.getElementById('pane-upd').classList.contains('on')", timeout=20000)
                     self.assertEqual(errors, [])
                 finally:
@@ -182,15 +185,17 @@ class Browser(unittest.TestCase):
                 try:
                     await pg.evaluate("goCfg('upd')")
                     await self.idle(pg)
-                    steps = {"n": 0}
+                    # the test moves from the last update's file to this one's and to the end itself (before: the n-th
+                    # answer decided, and the reload could come before the test waited for it, V01.0.881)
+                    state = {"p": "old", "old": 0}
 
                     async def progress(route):
-                        steps["n"] += 1
-                        n, now = steps["n"], time.time()
-                        if n <= 3:      # the last update's file, the new unit already active
+                        now = time.time()
+                        if state["p"] == "old":     # the last update's file, the new unit already active
+                            state["old"] += 1
                             await route.fulfill(json={"running": True, "started": now - 6120, "now": now, "timeout": 2700,
                                                       "done": True, "ok": True, "text": "Fertig", "percent": 100})
-                        elif n <= 5:
+                        elif state["p"] == "new":
                             await route.fulfill(json={"running": True, "started": now - 5, "now": now, "timeout": 2700,
                                                       "percent": 40, "text": "Schritt"})
                         else:
@@ -200,11 +205,18 @@ class Browser(unittest.TestCase):
                     await pg.evaluate("ulWatch()")
                     self.assertGreater(await pg.evaluate("ul.clicked"), (time.time() - 60) * 1000)
                     await pg.evaluate("ulStop();ul.clicked=Date.now();ulShow()")
+                    seen_old, end = state["old"], time.monotonic() + 20
+                    while state["old"] < seen_old + 2 and time.monotonic() < end:   # asked twice with the old file there
+                        await asyncio.sleep(0.1)
+                    self.assertGreaterEqual(state["old"], seen_old + 2)
+                    self.assertNotIn("zu lange", await pg.evaluate("document.getElementById('updlock').innerText"))
+                    self.assertEqual(await pg.evaluate("document.getElementById('ultime').textContent"), "")
+                    state["p"] = "new"
                     await pg.wait_for_function("document.getElementById('ultime').textContent!==''", timeout=20000)
                     self.assertNotIn("zu lange", await pg.evaluate("document.getElementById('updlock').innerText"))
                     self.assertLess(await pg.evaluate("parseInt(document.getElementById('ultime').textContent)"), 5)
                     async with pg.expect_navigation(timeout=30000):
-                        pass
+                        state["p"] = "done"
                     self.assertEqual(errors, [])
                 finally:
                     await br.close()
@@ -239,8 +251,10 @@ class Browser(unittest.TestCase):
                     self.assertEqual(await pg.evaluate(seen), ["ulreload", "ulcancel"])
                     self.assertTrue(await pg.evaluate("!document.getElementById('ulpbox').hidden&&!document.getElementById('ulpbox').open"))
                     self.assertIn("Schritt", await pg.evaluate("document.getElementById('ultext').textContent"))
-                    await pg.evaluate("ul.clicked=Date.now();ulShow()")
+                    # the failed state first, then the window: its first question must already get it (before, on a busy
+                    # machine it still got the slow state, stopped again and never asked anew, V01.0.881)
                     state["p"] = {"done": True, "ok": False, "started": 1e10, "running": False, "text": "Selbsttests rot", "log": ["eins"]}
+                    await pg.evaluate("ul.clicked=Date.now();ulShow()")
                     await pg.wait_for_function("document.getElementById('ultext').textContent==='Selbsttests rot'", timeout=20000)
                     self.assertEqual(await pg.evaluate(seen), ["ulclose", "ulcopy"])
                     self.assertEqual(await pg.evaluate("document.getElementById('ullog').textContent"), "eins")
