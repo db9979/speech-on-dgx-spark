@@ -21,6 +21,9 @@ enum Prefs {
     /// Antworten vorlesen: off for the profile (speakAnswers, the Spark checks it too) or only on this iPhone (speakHere)
     static var speakAnswers: Bool { (d.object(forKey: "speakAnswers") as? Bool ?? true) && (d.object(forKey: "speakHere") as? Bool ?? true) }
     static var speakNotes: Bool { get { d.object(forKey: "speakNotes") as? Bool ?? true } set { d.set(newValue, forKey: "speakNotes") } }
+    /// CarPlay: „Briefing beim Einsteigen“, once a day when the car connects (Dominik 2026-10-21 „6b“, off)
+    static var carBriefing: Bool { get { d.bool(forKey: "carBriefing") } set { d.set(newValue, forKey: "carBriefing") } }
+    static var carBriefingDay: String { get { d.string(forKey: "carBriefingDay") ?? "" } set { d.set(newValue, forKey: "carBriefingDay") } }
 }
 
 /// Timers and reminders the Spark set for this profile ring on the iPhone as notifications.

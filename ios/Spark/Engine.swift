@@ -229,11 +229,16 @@ final class AudioEngine {
     }
 
     // ---------------------------------------------------------------- output
-    func play(_ pcm: Data) {
+    /// tone: a short sound of its own (the chime, the end tone) with its fixed name for the Ton-Protokoll. It never waits
+    /// the rebuffer time meant for a gap inside an answer (CarPlay Runde 2: the chime came 400 ms late, after the
+    /// microphone's deaf time, and the car microphone took it for the start of a question). Returns the seconds until
+    /// the piece starts playing.
+    @discardableResult
+    func play(_ pcm: Data, tone: String? = nil) -> Double {
         let data = rest + pcm
         let frames = data.count / 2
         rest = data.count % 2 == 1 ? Data(data.suffix(1)) : Data()
-        guard frames > 0, let buffer = AVAudioPCMBuffer(pcmFormat: playFormat, frameCapacity: AVAudioFrameCount(frames)) else { return }
+        guard frames > 0, let buffer = AVAudioPCMBuffer(pcmFormat: playFormat, frameCapacity: AVAudioFrameCount(frames)) else { return 0 }
         buffer.frameLength = AVAudioFrameCount(frames)
         let out = buffer.floatChannelData![0]
         data.withUnsafeBytes { raw in
@@ -244,12 +249,13 @@ final class AudioEngine {
         if queued == 0 {   // the player is silent: begin softly
             for i in 0..<min(frames, Self.fadeIn) { out[i] *= Float(i) / Float(Self.fadeIn) }
         }
-        do { try ensureRunning() } catch { return }
-        let dry = queued == 0 && heard && !holding
+        do { try ensureRunning() } catch { return 0 }
+        let dry = queued == 0 && heard && !holding && tone == nil
+        let ahead = Double(pending.reduce(0) { $0 + Int($1.1.frameLength) }) / 24000
         queued += 1
         nextId += 1
         pending.append((nextId, buffer))
-        if pending.count == 1 && !dry { Self.note("Antwort: erstes Stück") }
+        if let tone { Self.note("Ton: \(tone)") } else if pending.count == 1 && !dry { Self.note("Antwort: erstes Stück") }
         let wait = dry ? Self.rebuffer : Self.settle - Date().timeIntervalSince(startedAt)
         if wait > 0 || holding {
             // just started: hold the pieces until a route switch would have happened, then play all of them;
@@ -264,10 +270,11 @@ final class AudioEngine {
                     self.resume()
                 }
             }
-            return
+            return max(wait, Self.settle) + ahead
         }
         schedule(nextId, buffer)
         node.play()
+        return ahead
     }
 
     /// Before an answer arrives: set the engine up now, so the configuration change that
@@ -335,14 +342,16 @@ final class AudioEngine {
         node.stop()
     }
 
-    /// A short rising tone: "I am listening".
-    func chime() { tone(from: 660, to: 1100) }
+    /// A short rising tone: "I am listening". Returns the seconds until it has ended.
+    @discardableResult
+    func chime() -> Double { tone(from: 660, to: 1100, "Zuhören") }
 
     /// A short falling tone: the conversation in the car ended, lower when it did not work (Dominik 2026-10-20 „5a“),
     /// so nobody has to look at the car screen.
-    func endTone(sad: Bool) { tone(from: sad ? 440 : 880, to: sad ? 260 : 600) }
+    func endTone(sad: Bool) { _ = tone(from: sad ? 440 : 880, to: sad ? 260 : 600, sad ? "Ende Fehler" : "Ende") }
 
-    private func tone(from: Double, to: Double) {
+    @discardableResult
+    private func tone(from: Double, to: Double, _ name: String) -> Double {
         let sr = 24000.0, n = Int(sr * 0.18)
         var d = Data(capacity: n * 2)
         for i in 0..<n {
@@ -352,7 +361,7 @@ final class AudioEngine {
             let v = Int16(sin(2 * .pi * f * t) * env * 9000)
             withUnsafeBytes(of: v.littleEndian) { d.append(contentsOf: $0) }
         }
-        play(d)
+        return play(d, tone: name) + 0.18
     }
 
     /// 16 kHz mono 16-bit samples as a WAV file for the Spark's speech recognition.

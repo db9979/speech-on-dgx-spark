@@ -32,11 +32,22 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
     /// the face the pictures show; the profile's choice arrives with hello, often only after CarPlay connected
     private var face = ""
     private var faceLater = false
+    private var day: CPListItem?
+    private var remind: CPListItem?
+    /// Wireless CarPlay drops out for a moment now and then: the conversation goes on and ends only when the car stays
+    /// away this long (Dominik 2026-10-21 „3“; before, every drop-out stopped the answer at once).
+    static let dropOut: TimeInterval = 5
+    private static var away: Task<Void, Never>?
+    /// „Mein Tag“ and the briefing when the car connects (Dominik 2026-10-21 „6a“, „6b“)
+    static let dayQuestion = String(localized: "Gib mir mein Briefing für heute: Termine, Fristen und Wetter.")
 
     func templateApplicationScene(_ templateApplicationScene: CPTemplateApplicationScene,
                                   didConnect interfaceController: CPInterfaceController) {
         interface = interfaceController
-        AudioEngine.note("CarPlay: verbunden")
+        let back = Self.away != nil
+        Self.away?.cancel()
+        Self.away = nil
+        AudioEngine.note(back ? "CarPlay: wieder da" : "CarPlay: verbunden")
         let talk = Conversation.shared
         talk.inCar = true
         if talk.phase == .waiting { talk.stop() }   // no wake word in the car („2a“): base() closes the microphone
@@ -61,6 +72,20 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
             self?.again()
         }
         self.repeatRow = again
+        let day = CPListItem(text: String(localized: "Mein Tag"), detailText: String(localized: "Termine, Fristen und Wetter"),
+                             image: UIImage(systemName: "sun.max"))
+        day.handler = { [weak self] _, done in
+            done()
+            self?.ask(Self.dayQuestion, "MeinTag", hint: String(localized: "Ich schaue, was heute ansteht …"))
+        }
+        self.day = day
+        let remind = CPListItem(text: String(localized: "Erinnerung sprechen"), detailText: String(localized: "Sag, woran und wann"),
+                                image: UIImage(systemName: "bell"))
+        remind.handler = { [weak self] _, done in
+            done()
+            self?.remindMe()
+        }
+        self.remind = remind
         let list = CPListTemplate(title: "Spark", sections: [CPListSection(items: items(talk.allowed.areas))])
         self.list = list
         interfaceController.setRootTemplate(list, animated: false, completion: nil)
@@ -74,6 +99,7 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
         // started by the car alone, the phone screen never appeared and nothing asked the Spark yet (hello):
         // without it the car would keep the defaults (robot face, no profile switches)
         Task { await talk.check() }
+        if !back { briefingOnConnect() }
     }
 
     /// Draws the pictures for the profile's face. A voice template on screen keeps its pictures (CarPlay
@@ -97,7 +123,13 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
             CPVoiceControlState(identifier: "fail", titleVariants: [String(localized: "Hat nicht geklappt")],
                                 image: FaceStill.image(kind, .sad) ?? UIImage(systemName: "exclamationmark.triangle"), repeats: false),
             CPVoiceControlState(identifier: "none", titleVariants: [String(localized: "Noch keine Antwort")],
-                                image: FaceStill.image(kind, .idle) ?? UIImage(systemName: "text.bubble"), repeats: false)])
+                                image: FaceStill.image(kind, .idle) ?? UIImage(systemName: "text.bubble"), repeats: false),
+            CPVoiceControlState(identifier: "unknown", titleVariants: [String(localized: "Nicht erkannt, tipp zum Sprechen")],
+                                image: FaceStill.image(kind, .sad) ?? UIImage(systemName: "person.crop.circle.badge.questionmark"), repeats: false),
+            CPVoiceControlState(identifier: "slow", titleVariants: [String(localized: "Dauert zu lange")],
+                                image: FaceStill.image(kind, .sad) ?? UIImage(systemName: "hourglass"), repeats: false),
+            CPVoiceControlState(identifier: "remind", titleVariants: [String(localized: "Woran soll ich dich erinnern?")],
+                                image: FaceStill.image(kind, .listen) ?? UIImage(systemName: "bell"), repeats: true)])
     }
 
     func templateApplicationScene(_ templateApplicationScene: CPTemplateApplicationScene,
@@ -113,25 +145,35 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
         list = nil
         fresh = nil
         repeatRow = nil
+        day = nil
+        remind = nil
         interface = nil
         start = nil
         voice = nil
         face = ""
-        let talk = Conversation.shared
-        talk.inCar = false
-        talk.stop()
+        // a short drop-out of wireless CarPlay does not end the conversation; only a car that stays away does
+        Self.away?.cancel()
+        Self.away = Task {
+            try? await Task.sleep(for: .seconds(Self.dropOut))
+            guard !Task.isCancelled else { return }
+            Self.away = nil
+            let talk = Conversation.shared
+            talk.stop("Auto getrennt")
+            talk.inCar = false
+        }
     }
 
     /// The rows: talking, a new conversation, and with Kalender and E-Mail released the assistant reads them aloud
     /// (plan kalender-mail Stufe 4: the car shows no text, the answer is spoken like any other).
     private func items(_ areas: Set<String>) -> [CPListItem] {
-        var out = [start, repeatRow, fresh].compactMap { $0 }
+        var out = [start, day, repeatRow].compactMap { $0 }
+        if Conversation.shared.allowed.reminders, let remind { out.append(remind) }
         if areas.contains("calendar") {
             let cal = CPListItem(text: String(localized: "Termine vorlesen"), detailText: String(localized: "Was heute und morgen ansteht"),
                                  image: UIImage(systemName: "calendar"))
             cal.handler = { [weak self] _, done in
                 done()
-                self?.ask(String(localized: "Was steht heute und morgen an?"), "Termine")
+                self?.ask(String(localized: "Was steht heute und morgen an?"), "Termine", hint: String(localized: "Ich schaue in deinen Kalender …"))
             }
             out.append(cal)
         }
@@ -140,7 +182,7 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
                                   image: UIImage(systemName: "envelope"))
             post.handler = { [weak self] _, done in
                 done()
-                self?.ask(String(localized: "Habe ich neue Mails?"), "Mails")
+                self?.ask(String(localized: "Habe ich neue Mails?"), "Mails", hint: String(localized: "Ich schaue in deine Mails …"))
             }
             out.append(post)
         }
@@ -149,10 +191,11 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
                                  image: UIImage(systemName: "tray.full"))
             due.handler = { [weak self] _, done in
                 done()
-                self?.ask(String(localized: "Was muss ich diese Woche erledigen?"), "Fristen")
+                self?.ask(String(localized: "Was muss ich diese Woche erledigen?"), "Fristen", hint: String(localized: "Ich schaue nach deinen Fristen …"))
             }
             out.append(due)
         }
+        if let fresh { out.append(fresh) }
         return out
     }
 
@@ -182,9 +225,30 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
     }
 
     /// A row that asks a fixed question (Termine, Mails, Fristen); `kind` is a fixed word for the Ton-Protokoll.
-    private func ask(_ question: String, _ kind: String) {
+    private func ask(_ question: String, _ kind: String, hint: String? = nil) {
         AudioEngine.note("CarPlay: Knopf \(kind)")
-        reachable { Conversation.shared.write(question) }
+        reachable { Conversation.shared.write(question, hint: hint) }
+    }
+
+    /// „Erinnerung sprechen“: listens at once, the voice window asks „Woran soll ich dich erinnern?“.
+    private func remindMe() {
+        AudioEngine.note("CarPlay: Knopf Erinnerung")
+        reachable { Conversation.shared.listenForReminder() }
+    }
+
+    /// „Briefing beim Einsteigen“ (switch in the app, off; Dominik 2026-10-21 „6b“): once a day, a few seconds after the
+    /// car connected and only while nothing else runs.
+    private func briefingOnConnect() {
+        let today = Date().formatted(.iso8601.year().month().day())
+        guard Prefs.carBriefing, Prefs.carBriefingDay != today else { return }
+        Task { [weak self] in
+            try? await Task.sleep(for: .seconds(4))
+            let talk = Conversation.shared
+            guard let self, self.interface != nil, talk.phase == .idle || talk.phase == .waiting,
+                  Prefs.carBriefingDay != today else { return }
+            Prefs.carBriefingDay = today
+            self.ask(Self.dayQuestion, "Briefing beim Verbinden", hint: String(localized: "Guten Tag. Ich schaue, was heute ansteht …"))
+        }
     }
 
     /// Runs `go` when the Spark answers. A question in the car never waits in the outbox (its answer would start
@@ -218,7 +282,7 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
     private func show(_ phase: Conversation.Phase) {
         let state: String?
         switch phase {
-        case .listening: state = "listen"
+        case .listening: state = Conversation.shared.remindNext ? "remind" : "listen"
         case .transcribing, .thinking: state = "think"
         case .speaking: state = "speak"
         case .idle, .waiting: state = nil
@@ -233,7 +297,11 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
         guard want != nil, hide == nil else { return }
         // the conversation ended with an error: the car says why for a moment instead of just closing
         let talk = Conversation.shared
-        if talk.unreachable { flash("offline") } else if talk.error != nil { flash("fail") } else { later(0.8) }
+        if talk.unreachable { flash("offline") }
+        else if talk.lastEnd == "unknown" { flash("unknown") }
+        else if talk.lastEnd == "slow" { flash("slow") }
+        else if talk.error != nil { flash("fail") }
+        else { later(0.8) }
     }
 
     /// Brings the car to the wanted state, one present or dismiss at a time (CarPlay refuses a second one while one runs).

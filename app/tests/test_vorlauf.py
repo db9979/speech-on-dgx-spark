@@ -53,7 +53,7 @@ class IPhone(unittest.TestCase):
             self.src = f.read()
 
     def test_ran_dry_collects_audio_first(self):
-        play = self.src[self.src.index("func play(_ pcm: Data)"):self.src.index("func warmUp()")]
+        play = self.src[self.src.index("func play(_ pcm: Data"):self.src.index("func warmUp()")]
         self.assertIn("let dry = queued == 0 && heard && !holding", play)
         self.assertIn("dry ? Self.rebuffer :", play)
         self.assertTrue(re.search(r"static let rebuffer: TimeInterval = 0\.[2-6]\b", self.src))
@@ -64,7 +64,7 @@ class IPhone(unittest.TestCase):
             self.assertIn("heard = false", body[:body.index("}")])
 
     def test_soft_start_after_silence(self):
-        play = self.src[self.src.index("func play(_ pcm: Data)"):self.src.index("func warmUp()")]
+        play = self.src[self.src.index("func play(_ pcm: Data"):self.src.index("func warmUp()")]
         self.assertIn("if queued == 0 {", play)
         self.assertIn("Float(i) / Float(Self.fadeIn)", play)
 

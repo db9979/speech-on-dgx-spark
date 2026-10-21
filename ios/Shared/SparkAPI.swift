@@ -483,7 +483,8 @@ struct SparkAPI {
 
     /// The recorded question (WAV) as text.
     /// opened: how the microphone opened by itself ("barge", "hands"); the Spark then takes only a known voice.
-    func transcribe(wav: Data, language: String, opened: String = "") async throws -> String {
+    /// ignored: the Spark's reason when it did not take the recording ("foreign voice", fremdstimme.py), else "".
+    func transcribe(wav: Data, language: String, opened: String = "") async throws -> (text: String, ignored: String) {
         let boundary = "spark-" + UUID().uuidString
         var r = request("api/test/asr", method: "POST")
         r.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
@@ -498,7 +499,8 @@ struct SparkAPI {
         r.httpBody = body
         let (data, response) = try await URLSession.shared.data(for: r)
         try Self.check(data, response)
-        return (Self.object(data)["text"] as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        let d = Self.object(data)
+        return ((d["text"] as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines), d["ignored"] as? String ?? "")
     }
 
     /// A question for Siri: the answer as text (the Spark keeps follow-ups for ten minutes).

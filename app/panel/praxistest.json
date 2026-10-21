@@ -2497,6 +2497,13 @@
 "titel": "Kontakte wie Apple Kontakte",
 "text": "A: Update auf V01.0.888. Funktionen → Kontakte an, ein Adressbuch unter Kontakte → Einstellungen. Menü Kontakte: links Suche, Adressbücher als Chips, A bis Z mit Buchstabenleiste; ein Buchstabe springt dorthin. B: Einen Kontakt antippen: Karte mit Initialen, Nachricht, Anruf, Mail, Termin, Teilen; „Mit …“ zeigt den nächsten Termin und die letzte Mail (wenn vorhanden). Teilen lädt eine .vcf. C: Seite E-Mail, eine Mail öffnen, auf den Absender tippen: seine Karte öffnet sich. D: Funktionen → Kontakte → „Kontakte ändern“ an. Karte → Bearbeiten: Telefon mit + hinzufügen, eins mit − entfernen, Fertig: das iPhone (iCloud-Kontakte) zeigt dieselbe Änderung, Foto bleibt. E: „+ Neuer Kontakt“ ins iCloud-Adressbuch und einer „Auf dem Spark“; einen davon löschen (Rückfrage). F: Dieselbe Karte am iPhone ändern, dann im Panel ohne Neuladen speichern: Hinweis „inzwischen geändert“, nichts überschrieben. G: iPhone-App: Meine Sachen → Kontakte, A–Z, Karte, Bearbeiten, Wischen entfernt ein Feld. Schalter aus: Bearbeiten verschwindet überall.",
 "thread": "Mail, Kalender, Kontakte wie bei Apple"
+},
+{
+"id": "P381",
+"v": 889,
+"titel": "CarPlay Runde 2",
+"text": "A: iPhone-App aus TestFlight mit V01.0.889 oder neuer. B: Im Auto „Mit Spark sprechen“, eine Frage, die Antwort ganz anhören: danach kommt der Zuhör-Ton und Spark hört weiter zu; eine Folgefrage stellen. C: Während Spark spricht laut reden: die Antwort läuft weiter; „Mit Spark sprechen“ antippen unterbricht. D: „Neue Mails vorlesen“: sofort „Ich schaue in deine Mails …“, dann die Antwort; die Zeile hängt nie. E: „Mein Tag“ und „Erinnerung sprechen“ („morgen um 8 an Brot“) ausprobieren. F: App: Einstellungen → CarPlay → „Briefing beim Einsteigen“ an, beim nächsten Einsteigen kommt es einmal von selbst. G: Nach der Fahrt „Ton-Protokoll kopieren“ in den Thread: jede Zeile „Ende: …“ nennt den Grund.",
+"thread": "CarPlay stabil und bedienbar"
 }
 ]
 }

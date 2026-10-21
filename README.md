@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.889** CarPlay round 2: no barge-in in the car, „not recognised“ instead of a silent end, drop-outs end nothing, mail and deadlines never hang, „My day“, „Speak a reminder“, briefing when getting in
 - **V01.0.888** Contacts like Apple Contacts (stage 3a): a page of its own in the menu with address books as groups, search, A–Z with a letter bar, the card with Message, Call, Mail, Event, Share and "With Anna" (next appointment, latest mail); tapping a mail's sender opens the card; with the admin switch "Edit contacts" (off) editing with − and + per field, back into the own address book with its ETag, new cards also "On the Spark"; iPhone under My things
 - **V01.0.887** Load older mail: at the end of the list the next 50 older mails come by themselves, in the inbox and in every folder, down to the first mail; a search goes over the whole mailbox on the mail server; panel, iPhone and spark-tui (up to 200)
 - **V01.0.886** Workshop made clear: own page Status → Workshop with four tiles, history and a result that explains what red means and what comes next (find the cause, test only the red ones again, copy for Claude)
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.882** Meeting tasks under Open: every task the Spark companion puts onto a list from a meeting also becomes a card "From a meeting" under Open (not in the conversation); "Done" ticks the entry off, ticked off, brought back or deleted on the list the card follows, overdue it stays open
 - **V01.0.881** Update window tests no longer flaky: they move their steps on themselves
 - **V01.0.880** Calendar like Apple Calendar (stage 2): a sidebar with the month and calendars to show and hide, a year view; drag in free time or double-click to create, an inspector with place, repeat, alert, people, note and link, closing saves, the lower edge changes the length, two minutes "Undo"; repeating appointments changed, moved and deleted with "Only this appointment" or "All future ones"; people only as a list without invitation; phone with a week strip; iPhone app with a grouped form and undo
-- **V01.0.879** Per-profile store: the assistant takes calendar, mail, weather and parcels from memory while fresh enough, with a slow service after at most 2 s the older reading with its time, "look again" asks anew; one round a minute keeps active profiles fresh, daily briefing written 10 min ahead, weather and parcels sealed on disk, Home Assistant live over WebSocket; Status → Check per service; no switch
 
 
 

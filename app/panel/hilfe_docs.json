@@ -7813,7 +7813,7 @@
 "file": "iPhone-App „Spark“",
 "head": "CarPlay",
 "title": "CarPlay",
-"text": "Ein eigenes Symbol „Spark“ im Auto. Antippen → „Mit Spark sprechen“ → losreden. Das Gespräch geht freihändig weiter, bis 15 Sekunden lang keine Stimme mehr kommt; Ins-Wort-Fallen geht wie in der App. Im Auto zählt auch eine leisere Stimme über dem Fahrgeräusch, und erst 1,6 Sekunden Pause beenden eine Frage, damit Spark nicht mitten im Satz abbricht (seit V01.0.734). Das Auto zeigt nur „Ich höre zu“, „Denke nach“, „Spark spricht“, nie Text, dazu das Gesicht deines Profils (Roboter oder Comic, wie in der App), passend zum Zustand als Standbild; startet nur das Auto die App, fragt sie den Spark gleich selbst nach dem Gesicht (seit V01.0.676; bewegte Bilder erlaubt Apple in CarPlay nicht). Antworten sind im Auto kurz. Smart Home im Auto nur mit dem eigenen Schalter „Smart Home auch im Auto“ (zusätzlich zu „Smart Home aus der App“) und Codewort. Route und Anruf nur nach „Ja“. Hinweise von selbst sagt die App im Auto laut. Ein eigenes Weckwort im Auto erlaubt Apple nicht; „Hey Siri, Frag Spark“ geht weiter."
+"text": "Ein eigenes Symbol „Spark“ im Auto. Antippen → „Mit Spark sprechen“ → losreden. Das Gespräch geht freihändig weiter, bis 15 Sekunden lang keine Stimme mehr kommt; Ins-Wort-Fallen geht wie in der App. Im Auto zählt auch eine leisere Stimme über dem Fahrgeräusch, und erst 1,6 Sekunden Pause beenden eine Frage, damit Spark nicht mitten im Satz abbricht (seit V01.0.734). Das Auto zeigt nur „Ich höre zu“, „Denke nach“, „Spark spricht“, nie Text, dazu das Gesicht deines Profils (Roboter oder Comic, wie in der App), passend zum Zustand als Standbild; startet nur das Auto die App, fragt sie den Spark gleich selbst nach dem Gesicht (seit V01.0.676; bewegte Bilder erlaubt Apple in CarPlay nicht). Antworten sind im Auto kurz. Smart Home im Auto nur mit dem eigenen Schalter „Smart Home auch im Auto“ (zusätzlich zu „Smart Home aus der App“) und Codewort. Route und Anruf nur nach „Ja“. Hinweise von selbst sagt die App im Auto laut. Ein eigenes Weckwort im Auto erlaubt Apple nicht; „Hey Siri, Frag Spark“ geht weiter. Ins-Wort-Fallen gibt es im Auto nicht (seit V01.0.889); zum Unterbrechen „Mit Spark sprechen“ antippen."
 },
 {
 "lang": "de",
@@ -7861,7 +7861,7 @@
 "file": "iPhone-App „Spark“",
 "head": "CarPlay",
 "title": "Stabil im Auto",
-"text": "u“ zu zeigen. - Nach einem Gespräch lässt die App den Ton los: Radio, Musik und Navigation sind wieder normal laut, bis du wieder tippst. - Bedienung im Auto (Dominik 2026-10-20 „1a 2a 3a 4a 5a“): Nach einem Hinweis von selbst oder einer wiederholten Antwort bleibt das Mikrofon zu; es öffnet sich nur nach einer echten Frage. Das Weckwort ist im Auto immer aus (das Radio konnte es auslösen). „Danke“, „Ende“, „Tschüss“, „Stopp“ oder „Das war's“ beendet das Gespräch sofort, statt 15 Sekunden zu warten. Neue Zeile „Letzte Antwort wiederholen“: Spark sagt die letzte Antwort noch einmal (gibt es noch keine, steht kurz „Noch keine Antwort“ da). Endet ein Gespräch, hörst du einen kurzen fallenden Ton, bei einem Fehler einen tieferen; du musst nicht aufs Display schauen. - Ton-Protokoll: Einstellungen → „Ton-Protokoll kopieren“ zeigt jetzt auch, was CarPlay tut (verbunden, getrennt, vorn, Hintergrund, Sprechfenster auf/zu oder abgelehnt, welcher Knopf, Tonweg geändert und warum, Unterbrechungen, App gestartet oder beendet). Nur feste Wörter und Uhrzeiten, nie was gesagt wurde. Die letzten 150 Zeilen bleiben auf dem iPhone, auch wenn iOS die App beendet; beim Melden eines Fehlers geht es mit"
+"text": "u“ zu zeigen. - Nach einem Gespräch lässt die App den Ton los: Radio, Musik und Navigation sind wieder normal laut, bis du wieder tippst. - Bedienung im Auto (Dominik 2026-10-20 „1a 2a 3a 4a 5a“): Nach einem Hinweis von selbst oder einer wiederholten Antwort bleibt das Mikrofon zu; es öffnet sich nur nach einer echten Frage. Das Weckwort ist im Auto immer aus (das Radio konnte es auslösen). „Danke“, „Ende“, „Tschüss“, „Stopp“ oder „Das war's“ beendet das Gespräch sofort, statt 15 Sekunden zu warten. Neue Zeile „Letzte Antwort wiederholen“: Spark sagt die letzte Antwort noch einmal (gibt es noch keine, steht kurz „Noch keine Antwort“ da). Endet ein Gespräch, hörst du einen kurzen fallenden Ton, bei einem Fehler einen tieferen; du musst nicht aufs Display schauen. - Runde 2 (seit V01.0.889, Dominik 2026-10-21 „Alles umsetzen, auch 6b“, nach dem Ton-Protokoll einer Fahrt, in der jedes Gespräch direkt nach der Antwort endete): - Im Auto fällt Spark nie ins Wort: Der Autolautsprecher kam laut ins Mikrofon zurück, und die Antwort brach ab. Unterbrechen: „Mit Spark sprechen“ antippen. - Der Zuhör-Ton kam nach einem Neustart des Tons bis zu 0,6 Sekunden später als gedacht und landete im Mi"
 },
 {
 "lang": "de",
@@ -7869,7 +7869,15 @@
 "file": "iPhone-App „Spark“",
 "head": "CarPlay",
 "title": "Stabil im Auto",
-"text": " dem Schalter „Ton-Protokoll der App anhängen“ mit."
+"text": "krofon. Jetzt hört das Mikrofon erst nach dem Ton zu, und ein Ton wartet nie auf die Pufferzeit einer Antwort. - Kennt der Spark die Stimme einer Folgefrage nicht (die Stimmprobe, über das Automikrofon klingt man anders), zeigt das Auto 3 Sekunden „Nicht erkannt, tipp zum Sprechen“ mit tiefem Ton, statt still zu enden. - Ein Funkaussetzer bei kabellosem CarPlay beendet das Gespräch nicht mehr; erst wenn das Auto 5 Sekunden weg bleibt. - „Termine vorlesen“, „Neue Mails vorlesen“, „Fristen vorlesen“ und „Mein Tag“ sagen sofort einen kurzen Satz („Ich schaue in deine Mails …“). Kommt nach 30 Sekunden noch keine Antwort, steht „Dauert zu lange“ da, und die Liste ist wieder frei. - Neue Zeilen „Mein Tag“ (Termine, Fristen und Wetter) und „Erinnerung sprechen“ (das Auto fragt „Woran soll ich dich erinnern?“, deine Worte werden zu „Erinnere mich …“; nur mit Erinnerungen). - Briefing beim Einsteigen (App: Einstellungen → CarPlay, aus, nur dieses iPhone): einmal am Tag, ein paar Sekunden nach dem Verbinden, „Mein Tag“ von selbst. - Das Ton-Protokoll nennt jetzt jedes Gesprächsende mit Grund („Ende: Stille“, „fremde Stimme“, „Danke gesagt“, „Hinweis gesagt“, „zu langsam“, „Unterbrechung“, „M"
+},
+{
+"lang": "de",
+"src": "iphone-app",
+"file": "iPhone-App „Spark“",
+"head": "CarPlay",
+"title": "Stabil im Auto",
+"text": "ikrofon stumm“, „Auto getrennt“ …), ein Ende ohne Grund mit der Zeile im Code, dazu „Zuhören“ und die Töne. - Ton-Protokoll: Einstellungen → „Ton-Protokoll kopieren“ zeigt jetzt auch, was CarPlay tut (verbunden, getrennt, vorn, Hintergrund, Sprechfenster auf/zu oder abgelehnt, welcher Knopf, Tonweg geändert und warum, Unterbrechungen, App gestartet oder beendet). Nur feste Wörter und Uhrzeiten, nie was gesagt wurde. Die letzten 150 Zeilen bleiben auf dem iPhone, auch wenn iOS die App beendet; beim Melden eines Fehlers geht es mit dem Schalter „Ton-Protokoll der App anhängen“ mit."
 },
 {
 "lang": "de",
@@ -16829,7 +16837,23 @@
 "file": "iPhone app \"Spark\"",
 "head": "CarPlay",
 "title": "Stable in the car",
-"text": "n the app lets go of the sound: radio, music and navigation are back at normal volume until you tap again. - Use in the car (Dominik 2026-10-20 \"1a 2a 3a 4a 5a\"): after a note said by itself or a repeated answer the microphone stays closed; it only opens after a real question. The wake word is always off in the car (the radio could set it off). \"Danke\", \"Ende\", \"Tschüss\", \"Stopp\" or \"Das war's\" (also \"thanks\", \"bye\", \"that's all\") ends the conversation at once instead of waiting 15 seconds. New row \"Letzte Antwort wiederholen\": Spark says the last answer once more (with none yet, \"No answer yet\" shows for a moment). When a conversation ends you hear a short falling tone, a lower one on an error; no need to look at the screen. - Sound log: Settings → \"Ton-Protokoll kopieren\" now also shows what CarPlay does (connected, disconnected, in front, background, voice window open/closed or refused, which button, sound route changed and why, interruptions, app started or ended). Only fixed words and times, never what was said. The last 150 lines stay on the iPhone even when iOS ends the app; when reporting a problem it goes along with the switch \"Ton-Protokoll der App anhängen\"."
+"text": "n the app lets go of the sound: radio, music and navigation are back at normal volume until you tap again. - Use in the car (Dominik 2026-10-20 \"1a 2a 3a 4a 5a\"): after a note said by itself or a repeated answer the microphone stays closed; it only opens after a real question. The wake word is always off in the car (the radio could set it off). \"Danke\", \"Ende\", \"Tschüss\", \"Stopp\" or \"Das war's\" (also \"thanks\", \"bye\", \"that's all\") ends the conversation at once instead of waiting 15 seconds. New row \"Letzte Antwort wiederholen\": Spark says the last answer once more (with none yet, \"No answer yet\" shows for a moment). When a conversation ends you hear a short falling tone, a lower one on an error; no need to look at the screen. - Round 2 (since V01.0.889, Dominik 2026-10-21 \"implement everything, 6b too\", after the sound log of a drive in which every conversation ended right after the answer): - In the car Spark is never interrupted by sound: the car's loudspeakers came back loud into its microphone and the answer broke off. To interrupt, tap \"Mit Spark sprechen\". - After a restart of the sound the listening chime came up to 0.6 seconds later than expected and ended up in the microph"
+},
+{
+"lang": "en",
+"src": "iphone-app",
+"file": "iPhone app \"Spark\"",
+"head": "CarPlay",
+"title": "Stable in the car",
+"text": "one. Now the microphone listens only after the chime, and a tone never waits the buffer time of an answer. - When the Spark does not know the voice of a follow-up (the voiceprint; through the car microphone you sound different), the car shows \"Not recognised, tap to speak\" for 3 seconds with a low tone instead of ending silently. - A drop-out of wireless CarPlay no longer ends the conversation; only a car that stays away for 5 seconds does. - \"Termine vorlesen\", \"Neue Mails vorlesen\", \"Fristen vorlesen\" and \"My day\" say a short sentence at once (\"Let me look at your mail …\"). When no answer has begun after 30 seconds, \"Taking too long\" shows and the list is free again. - New rows \"My day\" (appointments, deadlines and weather) and \"Speak a reminder\" (the car asks \"What should I remind you of?\", your words become \"Remind me …\"; only with reminders). - Briefing when getting in (app: Settings → CarPlay, off, only this iPhone): once a day, a few seconds after connecting, \"My day\" by itself. - The sound log now names every end of a conversation with its reason (\"Ende: Stille\", \"fremde Stimme\", \"Danke gesagt\", \"Hinweis gesagt\", \"zu langsam\", \"Unterbrechung\", \"Mikrofon stumm\", \"Auto getren"
+},
+{
+"lang": "en",
+"src": "iphone-app",
+"file": "iPhone app \"Spark\"",
+"head": "CarPlay",
+"title": "Stable in the car",
+"text": "nt\" …), an end without a reason with its line in the code, plus \"Zuhören\" and the tones. - Sound log: Settings → \"Ton-Protokoll kopieren\" now also shows what CarPlay does (connected, disconnected, in front, background, voice window open/closed or refused, which button, sound route changed and why, interruptions, app started or ended). Only fixed words and times, never what was said. The last 150 lines stay on the iPhone even when iOS ends the app; when reporting a problem it goes along with the switch \"Ton-Protokoll der App anhängen\"."
 },
 {
 "lang": "en",

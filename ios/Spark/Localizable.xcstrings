@@ -15800,6 +15800,206 @@
           }
         }
       }
+    },
+    "Was ändern": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What to change"
+          }
+        }
+      }
+    },
+    "Vorschläge machen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make suggestions"
+          }
+        }
+      }
+    },
+    "Mein Tag": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "My day"
+          }
+        }
+      }
+    },
+    "Termine, Fristen und Wetter": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Appointments, deadlines and weather"
+          }
+        }
+      }
+    },
+    "Erinnerung sprechen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speak a reminder"
+          }
+        }
+      }
+    },
+    "Sag, woran und wann": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Say what and when"
+          }
+        }
+      }
+    },
+    "Gib mir mein Briefing für heute: Termine, Fristen und Wetter.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Give me my briefing for today: appointments, deadlines and weather."
+          }
+        }
+      }
+    },
+    "Ich schaue, was heute ansteht …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Let me look at what's on today …"
+          }
+        }
+      }
+    },
+    "Guten Tag. Ich schaue, was heute ansteht …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hello. Let me look at what's on today …"
+          }
+        }
+      }
+    },
+    "Ich schaue in deine Mails …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Let me look at your mail …"
+          }
+        }
+      }
+    },
+    "Ich schaue nach deinen Fristen …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Let me look at your deadlines …"
+          }
+        }
+      }
+    },
+    "Ich schaue in deinen Kalender …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Let me look at your calendar …"
+          }
+        }
+      }
+    },
+    "Nicht erkannt, tipp zum Sprechen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not recognised, tap to speak"
+          }
+        }
+      }
+    },
+    "Dauert zu lange": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Taking too long"
+          }
+        }
+      }
+    },
+    "Woran soll ich dich erinnern?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What should I remind you of?"
+          }
+        }
+      }
+    },
+    "Erinnere mich": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remind me"
+          }
+        }
+      }
+    },
+    "Das dauert gerade zu lange. Bitte gleich noch einmal fragen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This is taking too long right now. Please ask again in a moment."
+          }
+        }
+      }
+    },
+    "Briefing beim Einsteigen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Briefing when getting in"
+          }
+        }
+      }
+    },
+    "CarPlay": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CarPlay"
+          }
+        }
+      }
+    },
+    "Einmal am Tag, wenn sich das iPhone mit dem Auto verbindet: Termine, Fristen und Wetter, gesprochen. Gilt nur für dieses iPhone. Im Auto fällt Spark dir nicht ins Wort; zum Unterbrechen „Mit Spark sprechen“ antippen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Once a day when the iPhone connects to the car: appointments, deadlines and weather, spoken. Only on this iPhone. In the car Spark is not interrupted by talking; to interrupt, tap „Mit Spark sprechen“."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -1073,6 +1073,8 @@ struct SettingsView: View {
     @EnvironmentObject var app: AppState
     @EnvironmentObject var talk: Conversation
     @AppStorage("handsFree") private var handsFree = false
+    /// CarPlay: „Briefing beim Einsteigen“ (Prefs.carBriefing), only on this iPhone
+    @AppStorage("carBriefing") private var carBriefing = false
     @AppStorage("bargeIn") private var bargeIn = true
     /// Antworten vorlesen: the profile's switch (speak), like Freihändig; "Auf diesem iPhone" only here (Prefs.speakHere)
     @AppStorage("speakAnswers") private var speakAnswers = true
@@ -1166,6 +1168,11 @@ struct SettingsView: View {
                 }
                 .onChange(of: handsFree) { _, v in if synced { Task { await saveTalk("hands", v) } } }
                 .onChange(of: bargeIn) { _, v in if synced { Task { await saveTalk("barge", v) } } }
+                Section {
+                    Toggle("Briefing beim Einsteigen", isOn: $carBriefing)
+                } header: { Text("CarPlay") } footer: {
+                    Text("Einmal am Tag, wenn sich das iPhone mit dem Auto verbindet: Termine, Fristen und Wetter, gesprochen. Gilt nur für dieses iPhone. Im Auto fällt Spark dir nicht ins Wort; zum Unterbrechen „Mit Spark sprechen“ antippen.")
+                }
                 Section {
                     Toggle("Antworten vorlesen", isOn: $speakAnswers)
                     Toggle("Auf diesem iPhone vorlesen", isOn: $speakHere).disabled(!speakAnswers)
