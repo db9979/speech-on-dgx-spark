@@ -1976,3 +1976,61 @@ class Labels(unittest.TestCase):
         tray = self.src("windows", "TrayPanel.cs")
         self.assertIn("width = Math.Max(width, foot + (2 * pad));", tray)
         self.assertIn("_panel.Preferred().Width", tray)
+
+
+class PanelTabs(unittest.TestCase):
+    """Dominik 2026-10-21 ("begleiter app wird zu lang und zeigt dadurch nicht alles an"): the tray window has three
+    tabs below the tiles (Heute, Meldungen, Rechner), only the tab scrolls and the window is at most as high as the
+    free screen, so head, Frag Spark, tiles and the foot with Notaus always stay visible. Small tiles, four in a row;
+    each section shows its first three with "Alle n zeigen"; a new note opens on "Meldungen"; the last tab is kept
+    per device. Windows and Mac alike."""
+    ROOT = Office.ROOT
+
+    def src(self, *path):
+        return Office.src(self, *path)
+
+    def test_windows_tab_scrolls_inside_the_screen(self):
+        tray = self.src("windows", "TrayPanel.cs")
+        for tab in ("Heute,", "Meldungen,", "Rechner,"):
+            self.assertIn("    " + tab, tray[tray.index("internal enum PanelTab"):])
+        self.assertIn("private sealed class ScrollHost : Panel", tray)
+        layout = tray[tray.index("protected override void LayoutContent()"):tray.index("private PanelTab TabOf(")]
+        self.assertIn("Screen.FromPoint(Cursor.Position).WorkingArea", layout)
+        self.assertIn("int viewH = Math.Min(most, Math.Max(S(160), room));", layout)   # never higher than the screen
+        self.assertIn("_scroll = Math.Clamp(", layout)
+        # tiles, the tab bar, the hint and the foot are on the window itself, never on the scrolling host
+        build = tray[tray.index("private void BuildItems()"):tray.index("private static Color? TintFor")]
+        self.assertIn("if (kind is ButtonKind.Toggle or ButtonKind.Row)\n            {\n                InHost(button);", build)
+        self.assertIn("Controls.Add(_tabs[i]);", tray)
+        self.assertIn("private const int Columns = 4;", tray)
+        self.assertIn("Compact = kind == ButtonKind.Tile,", build)
+        self.assertIn("_tips.SetToolTip(button, $\"{item.Text} ({hotkey})\");", build)
+        self.assertIn("private const int FirstShown = 3;", tray)
+        self.assertIn('$"Alle {count} zeigen"', tray)
+        # the mouse wheel of the buttons on the host reaches the host and is used up there
+        host = tray[tray.index("private sealed class ScrollHost"):]
+        self.assertIn("handled.Handled = true;", host)
+        ctx = self.src("windows", "TrayContext.cs")
+        start = ctx[ctx.index("private PanelTab PanelStartTab("):ctx.index("/// <summary>Gruß im Kopf")]
+        self.assertIn("notes.Any(n => n.N > _panelNotesShown) ? PanelTab.Meldungen", start)
+        self.assertIn("_config.PanelTab = tab.ToString();", start)
+        self.assertIn("public string? PanelTab { get; set; }", self.src("windows", "AppConfig.cs"))
+
+    def test_mac_tab_scrolls_inside_the_screen(self):
+        tray = self.src("mac", "Sources", "TrayPanel.swift")
+        self.assertIn(".pickerStyle(.segmented)", tray)
+        self.assertIn("ScrollView(.vertical)", tray)
+        self.assertIn(".frame(height: min(max(tabHeight, 40), maxTabHeight))", tray)
+        self.assertIn("visibleFrame.height", tray[tray.index("private var maxTabHeight"):])
+        self.assertIn('@AppStorage("panelTab")', tray)
+        self.assertIn("tab = notes.unseen ? .meldungen : (PanelTab(rawValue: savedTab) ?? .heute)", tray)
+        self.assertIn("count: 4)", tray[tray.index("private static let tileColumns"):])
+        tiles = tray[tray.index("private var tiles: some View"):tray.index('/// "Dieser Mac"')]
+        self.assertEqual(tiles.count("PanelTile("), tiles.count("compact: true"))
+        self.assertGreaterEqual(tray.count("moreButton(count:"), 2)               # Als Nächstes and Post
+        model = self.src("mac", "Sources", "Model.swift")
+        poll = model[model.index("Notifier.show(title: note.title"):]
+        self.assertIn("NotesCenter.shared.add(", poll[:400])
+        center = model[model.index("final class NotesCenter"):model.index("final class NotificationDelegate")]
+        self.assertIn("static let keep = 10", center)
+        self.assertIn("removeDeliveredNotifications", center)                   # "OK" also clears the notification

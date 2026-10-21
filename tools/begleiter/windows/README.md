@@ -52,11 +52,16 @@ Der Begleiter trägt die Farben und das Gesicht des Panels („Spark-Gesicht“)
   mit Gruß („Guten Morgen, Dominik“), Gerät und Zustand als Punkt („alles läuft“), rechts das Zahnrad
   für die **Einstellungen** und ✕. Darunter (falls vorhanden) der Update-Hinweis, dann das Feld
   **„Frag Spark …“** (Enter schickt die Frage ab, der Mikrofon-Knopf fragt per Sprache), die Befehle
-  als **Kacheln** mit ihrem Tastenkürzel (Text verbessern, Diktieren, Bildschirm fragen, Vorlesen …)
-  und Abschnitte wie im Panel: **Als Nächstes** (Termine), **Meldungen** (mit Anzahl), **Zuhause**
-  und **Dieser Rechner** mit Schaltern für Mikrofon und Weckwort und Zeilen für Wissen-Ordner und
-  Office-Add-ins. Unten **Panel öffnen** und rechts „Notaus …“ in Rot. Es schließt sich, sobald man
-  woanders hinklickt, oder mit **Esc**; mit Tab bzw. ↑/↓ und Enter geht alles auch per Tastatur.
+  als kleine **Kacheln**, vier nebeneinander (Text verbessern, Diktieren, Bildschirm fragen, Vorlesen …;
+  das Tastenkürzel steht im Tooltip). Darunter drei **Reiter**: **Heute** (Als Nächstes, Post, Listen
+  je in einer Zeile), **Meldungen** (mit Anzahl, die neueste oben, „OK“ nimmt eine weg) und **Rechner**
+  (Zuhause und Dieser Rechner mit Schaltern für Mikrofon und Weckwort und Zeilen für Wissen-Ordner
+  und Office-Add-ins). Das Fenster ist höchstens so hoch wie der freie Bildschirm, nur der Reiter rollt
+  (Mausrad oder Leiste rechts); Als Nächstes und Post zeigen die ersten drei, „Alle n zeigen“ klappt den
+  Rest auf. Kommt eine neue Meldung, öffnet es auf „Meldungen“, sonst auf dem zuletzt gewählten Reiter
+  (nur auf diesem Rechner gemerkt). Unten **Panel öffnen** und rechts „Notaus …“ in Rot, beides immer
+  sichtbar. Es schließt sich, sobald man woanders hinklickt, oder mit **Esc**; mit Tab bzw. ↑/↓ und
+  Enter geht alles auch per Tastatur.
 - **Rechtsklick aufs Symbol** zeigt weiter das schlichte Menü (Zustand, Teile, Einstellungen, Beenden).
 - Die Fenster für **Text verbessern**, **Frag Spark** und die **Einstellungen** haben oben den
   Farbverlauf des Panels; Frag Spark zeigt Fragen und Antworten als Sprechblasen.

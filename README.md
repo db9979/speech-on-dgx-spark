@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.913** Companion window in order: three tabs Heute, Meldungen and Rechner below the tiles, only the tab scrolls and the window stays on the screen, small tiles four in a row, the first three per section with „Alle n zeigen“, a new note opens „Meldungen“, on the Mac notes in the window too (Windows and Mac)
 - **V01.0.912** Look locally first also finds with a typo: a long word may be mistyped by one or two letters (“Dresdner Fraunkirche” finds the Kiwix article), without a title the Spark asks shortened words, and the title naming most words of the question wins; archive links optionally with an own name (address for links)
 - **V01.0.911** CarPlay follow-ups: in the car a follow-up counts again instead of being dropped as a foreign voice
 - **V01.0.910** Flash Next leaves more memory free, measurement shows NVMe or USB
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.906** Mail like a full mail program: moving without reloading the folder list, rule suggestions at night from your KI folder, also as a card in the assistant, the conversation under a mail, only the own text without quotes and signature, send later, confirmation codes as a note (own switch, never via Telegram) and mail statistics; panel, iPhone and Begleiter
 - **V01.0.905** Docs current, part 5 (architecture): a box of its own „Mail, calendar, contacts“ in the picture under Status → Architecture with its node page (page, question or app; fetch through the guard; sealed supply; answer with its time; changes only with a preview or If-Match; door for calendar and contacts apps), the mail, calendar and contacts modules form a group of their own there; the README diagram shows the own pages and calendar and contacts apps as a way in
 - **V01.0.904** Docs current, part 4 (security): „Ways in“ in the security docs, every way into the panel with who, default and protection (panel, device keys, calendar and contacts apps through /caldav and /carddav, MCP and OAuth, other Sparks, downloads, Live, Wyoming, phone, Telegram); sealed supplies, editing contacts with ETag and the search at the mail server described; calendar apps (CalDAV) under APIs and integration; guard test_doku_stand.WegeHinein and a point in the security checklist
-- **V01.0.903** Docs current, part 3: „All functions“ in the docs (de and en): each of the 234 functions with its switch way, what it builds on, its Me page and the first sentence of its guide, written by hilfe.py --docs, so the help finds them too; guard test_doku_stand.Funktionen
 
 
 

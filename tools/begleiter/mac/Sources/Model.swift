@@ -355,6 +355,8 @@ final class AppModel: ObservableObject {
                     && note.tag != NoteActions.codeTag { buttons.append("remind") }
                 Notifier.show(title: note.title, body: note.body, tag: note.tag, id: "note-\(note.n)",
                               note: note.n, actions: buttons, weg: note.weg)
+                NotesCenter.shared.add(.init(n: note.n, title: note.title, body: note.body, tag: note.tag,
+                                             buttons: buttons, weg: note.weg))
             }
         }
         // last smaller than before: the Spark started anew
@@ -670,6 +672,79 @@ final class AppModel: ObservableObject {
 }
 
 // ------------------------------------------------------------------ notifications ("Meldungen")
+
+/// The Spark's notes of this run for the tab "Meldungen" in the menu-bar panel ("Begleiter-Fenster ordnen" 5a): newest
+/// first, at most ten, only in memory and only text. "OK" takes one away (also from the Notification Center); its other
+/// buttons do what the same button in the notification does.
+@MainActor
+final class NotesCenter: ObservableObject {
+    static let shared = NotesCenter()
+    static let keep = 10
+
+    struct Item: Identifiable, Equatable {
+        let n: Int
+        let title: String
+        let body: String
+        let tag: String
+        let buttons: [String]
+        let weg: String?
+
+        var id: Int { n }
+
+        init(n: Int, title: String, body: String, tag: String, buttons: [String], weg: String?) {
+            self.n = n
+            let t = DeskConfig.plain(title, max: 120)
+            self.title = t.isEmpty ? "Meldung vom Spark" : t
+            self.body = DeskConfig.plain(body, max: 300)
+            self.tag = tag
+            self.buttons = buttons
+            self.weg = weg
+        }
+    }
+
+    @Published private(set) var items: [Item] = []
+    private var shownUpTo = 0
+
+    /// a note the panel has not shown yet: the panel opens on "Meldungen"
+    var unseen: Bool { items.contains { $0.n > shownUpTo } }
+
+    func markSeen() {
+        shownUpTo = max(shownUpTo, items.map(\.n).max() ?? 0)
+    }
+
+    func add(_ item: Item) {
+        items.removeAll { $0.n == item.n }
+        items.append(item)
+        items.sort { $0.n > $1.n }
+        if items.count > Self.keep { items.removeLast(items.count - Self.keep) }
+    }
+
+    func dismiss(_ item: Item) {
+        items.removeAll { $0.n == item.n }
+        UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: ["note-\(item.n)"])
+    }
+
+    static func label(_ action: String, _ item: Item) -> String {
+        switch action {
+        case "reply": return "Antworten"
+        case "later": return "Später"
+        case "remind": return "In 20 Min erinnern"
+        case "draft": return "Antwort entwerfen"
+        case "copy": return "Code kopieren"
+        case "open": return item.tag == NoteActions.mailTag || item.weg != nil ? "Ansehen" : "Panel öffnen"
+        default: return NoteActions.panelLabel(action) ?? action
+        }
+    }
+
+    /// a button of the note: taken away from the list, then the same as in the notification
+    func run(_ action: String, _ item: Item) {
+        dismiss(item)
+        let category = item.tag == NoteActions.codeTag ? NoteActions.codeCategory
+            : (item.tag == NoteActions.mailTag ? NoteActions.mailCategory(item.buttons) : NoteActions.category4(item.buttons)) ?? ""
+        Notifier.handle(action: action, typed: "", note: item.n, title: item.title, body: item.body, thread: item.tag,
+                        category: category, weg: item.weg)
+    }
+}
 
 final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
     func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification,

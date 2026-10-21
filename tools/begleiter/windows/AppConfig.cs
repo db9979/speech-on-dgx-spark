@@ -61,6 +61,9 @@ internal sealed class AppConfig
     /// <summary>„Mikrofon zu“: kein Teil öffnet das Mikrofon (siehe <see cref="MicSwitch"/>). Lokal, bleibt nach Neustart.</summary>
     public bool MicClosed { get; set; }
 
+    /// <summary>Zuletzt offener Reiter im Begleiter-Fenster („Heute“, „Meldungen“, „Rechner“; nur lokal, 6a).</summary>
+    public string? PanelTab { get; set; }
+
     /// <summary>Teil "daily": Tagesstart an (lokal).</summary>
     public bool DailyMorningOn { get; set; } = true;
 

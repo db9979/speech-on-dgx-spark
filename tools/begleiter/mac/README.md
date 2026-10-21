@@ -47,10 +47,15 @@ graue Schrift kräftiger.
 - **Klick aufs Gesicht** öffnet ein kleines Fenster: oben ein Farbverlauf, das Gesicht mit Gruß („Guten Morgen,
   Dominik“), Gerätename und Zustand als Punkt, rechts das Zahnrad für die **Einstellungen** und das
   Ein/Aus-Zeichen (beendet den Begleiter). Darunter gegebenenfalls der Hinweis auf eine neue Version, dann das Feld
-  **„Frag Spark …“** (Enter fragt, das Mikrofon fragt per Sprache), die Befehle als **Kacheln** mit Tastenkürzel
-  und Abschnitte wie im Panel: **Als Nächstes**, **Zuhause** und **Dieser Mac** mit Schaltern für Mikrofon und
-  Weckwort und Zeilen für Wissen-Ordner, Vom Spark, Nicht stören und Office-Add-ins. Unten **Panel öffnen** und
-  „Notaus …“ in Rot. Esc oder ein Klick daneben schließt das Fenster.
+  **„Frag Spark …“** (Enter fragt, das Mikrofon fragt per Sprache), die Befehle als kleine **Kacheln**, vier
+  nebeneinander (Tastenkürzel in der Hilfe). Darunter drei **Reiter** als Segment-Schalter: **Heute** (Als Nächstes,
+  Post, Listen je in einer Zeile), **Meldungen** (die Meldungen vom Spark seit dem Start, die neueste oben, mit ihren
+  Knöpfen; „OK“ nimmt eine weg, auch aus der Mitteilungszentrale) und **Rechner** (Zuhause und Dieser Mac mit
+  Schaltern für Mikrofon und Weckwort und Zeilen für Wissen-Ordner, Vom Spark, Nicht stören und Office-Add-ins).
+  Das Fenster ist höchstens so hoch wie der freie Bildschirm, nur der Reiter rollt; Als Nächstes und Post zeigen die
+  ersten drei, „Alle n zeigen“ klappt den Rest auf. Mit einer neuen Meldung öffnet es auf „Meldungen“, sonst auf
+  dem zuletzt gewählten Reiter (nur auf diesem Mac gemerkt). Unten **Panel öffnen** und „Notaus …“ in Rot, beides
+  immer sichtbar. Esc oder ein Klick daneben schließt das Fenster.
 - **Einstellungen** haben links ein Seitenmenü wie das Panel: Übersicht (Zustand und was im Panel an ist),
   Frag Spark, Tastenkürzel, Tagesstart, Wissen-Ordner und unter „Gerät“ Berechtigungen, Kopplung, Über und Update.
   Seiten von Teilen, die aus sind, fehlen.

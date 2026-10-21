@@ -214,6 +214,9 @@ internal sealed class SparkButton : Button, IThemed
     /// <summary>Farbe des Symbols einer Kachel (sonst der Akzent).</summary>
     public Color? Tint { get; set; }
 
+    /// <summary>Kleine Kachel (vier nebeneinander, Begleiter-Fenster ordnen 3a): Symbol oben mittig, Name darunter, kein Kürzel.</summary>
+    public bool Compact { get; set; }
+
     /// <summary>Gewählt (Chip) bzw. aktiv (Mikrofon nimmt auf).</summary>
     public bool Checked
     {
@@ -507,11 +510,17 @@ internal sealed class SparkButton : Button, IThemed
         Draw.FillRound(g, back, r, S(12));
         Draw.StrokeRound(g, Danger ? Palette.Mix(p.Line, p.Bad, 0.45f) : p.Line, r, S(12));
 
-        int box = S(28);
-        var boxRect = new RectangleF(S(10), S(10), box, box);
+        int box = Compact ? S(26) : S(28);
+        var boxRect = Compact ? new RectangleF((Width - box) / 2f, S(7), box, box) : new RectangleF(S(10), S(10), box, box);
         Draw.FillRound(g, p.HighContrast ? p.Card : Palette.Mix(p.Card, tint, 0.14f), boxRect, S(8));
         float gs = S(16);
         Glyphs.Draw(g, Glyph, new RectangleF(boxRect.X + ((box - gs) / 2f), boxRect.Y + ((box - gs) / 2f), gs, gs), Enabled ? tint : p.Muted);
+        if (Compact)
+        {
+            var label = new Rectangle(S(3), S(37), Math.Max(1, Width - S(6)), Math.Max(1, Height - S(40)));
+            Draw.Text(g, Text, Font, label, Enabled ? p.Fg : p.Muted, Draw.Wrap | TextFormatFlags.HorizontalCenter | TextFormatFlags.EndEllipsis);
+            return;
+        }
 
         int x = S(10);
         int w = Math.Max(1, Width - S(20));

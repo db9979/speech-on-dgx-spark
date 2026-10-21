@@ -6124,6 +6124,22 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Begleiter-Fenster geordnet (V01.0.913)",
+"text": "Begleiter-Fenster geordnet (V01.0.913): Das Fenster beim Klick aufs Symbol (Windows) bzw. aufs Gesicht in der Menüleiste (Mac) wurde mit allen Teilen höher als der Bildschirm, unten fehlten Teile und der Notaus. Jetzt bleiben Kopf, „Frag Spark …“, die Kacheln und der Fuß mit „Panel öffnen“ und Notaus immer sichtbar; darunter stehen drei Reiter: Heute (Als Nächstes, Post, Listen), Meldungen (mit Zahl) und Rechner (Zuhause, Dieser Rechner bzw. Dieser Mac). Reiter ohne Inhalt fehlen, bei nur einem gibt es keine Leiste. Das Fenster ist höchstens so hoch wie der freie Bildschirm, nur der Reiter rollt (eine Leiste); alle Reiter sind gleich hoch, damit beim Wechsel nichts springt. Die Kacheln sind klein, vier nebeneinander, das Tastenkürzel steht im Tooltip. Als Nächstes und Post zeigen die ersten drei, „Alle n zeigen“ klappt den Rest auf; Listen stehen je in einer Zeile mit Zahl und neuestem Eintrag, ein Klick öffnet die Seite Listen. Kommt eine neue Meldung, öffnet das Fenster auf „Meldungen“ (die neueste oben, „OK“ und „Erledigt“ nehmen sie weg), sonst auf dem zuletzt gewählten Reiter; gemerkt wird er nur auf dem Gerät. Am Mac zeigt „Meldungen“ jetzt auch die Meldungen vom Spark seit d"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Begleiter-Fenster geordnet (V01.0.913)",
+"text": "em Start (höchstens 10, nur im Speicher) mit denselben Knöpfen wie die Mitteilung; „OK“ nimmt sie auch aus der Mitteilungszentrale. Kein neuer Schalter, keine Änderung am Panel. Braucht den neuen Begleiter-Build."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Meldungen mit „OK“ (V01.0.663)",
 "text": "Meldungen mit „OK“ (V01.0.663): Im Tray-Fenster des Windows-Begleiters hat jede Meldung zuerst den Knopf „OK“. Er nimmt die Meldung weg, ohne etwas zu öffnen, und das Fenster bleibt offen, damit weitere gleich mit bestätigt werden können. Auf dem Mac sind Meldungen Mitteilungen von macOS und verschwinden wie gewohnt mit „Schließen“. Braucht den neuen Begleiter-Build."
 },
@@ -17534,6 +17550,22 @@
 "head": "Voice chat",
 "title": "Blocked Spark add-in (V01.0.545)",
 "text": "Blocked Spark add-in (V01.0.545): after a hang Outlook moves an add-in to \"Disabled items\", and its tick under COM add-ins stays empty. \"Office-Add-ins einrichten …\" now lifts that block, for Spark only (Resiliency\\DisabledItems and CrashingAddinList); other add-ins stay as Outlook set them."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Companion window in order (V01.0.913)",
+"text": "Companion window in order (V01.0.913): the window on a click on the icon (Windows) or on the face in the menu bar (Mac) grew higher than the screen with all parts on, so parts and the Notaus were cut off at the bottom. Now the head, \"Frag Spark …\", the tiles and the foot with \"Panel öffnen\" and Notaus always stay visible; below are three tabs: Heute (Als Nächstes, Post, Listen), Meldungen (with a count) and Rechner (Zuhause, Dieser Rechner or Dieser Mac). Tabs without content are left out, with only one there is no bar. The window is at most as high as the free screen and only the tab scrolls (one bar); all tabs have the same height so nothing jumps when switching. The tiles are small, four in a row, the hotkey is in the tooltip. Als Nächstes and Post show the first three, \"Alle n zeigen\" opens the rest; lists are one line each with count and newest entry, a click opens the page Lists. When a new note comes, the window opens on \"Meldungen\" (newest on top, \"OK\" and \"Erledigt\" take it away), else on the tab chosen last; it is kept only on the device. On the Mac \"Meldungen\" now also shows the Spark's notes since the start (at most 10, only in memory) with the same buttons as the notif"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Companion window in order (V01.0.913)",
+"text": "ication; \"OK\" also removes it from the Notification Center. No new switch, no change in the panel. Needs the new companion build."
 },
 {
 "lang": "en",

@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.913** · 2026-10-21 · Begleiter-Fenster geordnet: drei Reiter Heute, Meldungen und Rechner unter den Kacheln, nur der Reiter rollt und das Fenster bleibt im Bildschirm, kleine Kacheln zu viert, je Abschnitt die ersten drei mit „Alle n zeigen“, neue Meldung öffnet „Meldungen“, am Mac jetzt auch Meldungen im Fenster (Windows und Mac)
 - **V01.0.912** · 2026-10-21 · Erst lokal suchen findet auch mit Tippfehler: ein langes Wort darf um ein bis zwei Buchstaben vertippt sein („Dresdner Fraunkirche“ findet den Kiwix-Artikel), ohne Titel fragt der Spark gekürzte Wörter nach, und der Titel mit den meisten Wörtern der Frage gewinnt; Archiv-Links auf Wunsch mit eigenem Namen (Adresse für Links)
 - **V01.0.911** · 2026-10-21 · CarPlay Folgefragen: im Auto wird eine Folgefrage nicht mehr mit der Stimmprobe verglichen; über das Automikrofon galt die eigene Stimme als fremd, und jedes Gespräch endete nach der Folgefrage mit „Nicht erkannt“ (Ton-Protokoll der Fahrt vom 21.10.)
 - **V01.0.910** · 2026-10-21 · Flash Next: Speicher-Einstellung von qwen38 v1.37.0 (bleibt mehr frei), Messung zeigt, ob die Modelle auf der internen NVMe liegen

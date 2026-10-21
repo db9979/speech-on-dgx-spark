@@ -26,10 +26,29 @@ final class PanelWindow {
     }
 }
 
+/// The tabs below the tiles ("Begleiter-Fenster ordnen" 1a, Dominik 2026-10-21); only the tab scrolls.
+enum PanelTab: String, CaseIterable {
+    case heute = "Heute"
+    case meldungen = "Meldungen"
+    case rechner = "Rechner"
+}
+
+/// The height of a part of the panel, measured, so the tab gets exactly the room it needs (up to the screen).
+private struct PanelHeightKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = max(value, nextValue()) }
+}
+
+private struct FixedHeightKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = max(value, nextValue()) }
+}
+
 /// Click on the face in the menu bar ("Begleiter aufpolieren" 1a, Dominik 2026-10-17): gradient bar, face with greeting
-/// and state, settings and quit; the update banner; the field "Frag Spark …"; the commands as tiles; then sections
-/// like in the panel (Als Nächstes, Zuhause, Dieser Mac with switches); at the bottom "Panel öffnen" and Notaus.
-/// The coffee is only in Einstellungen → Über und Update. Closes on focus loss and Esc.
+/// and state, settings and quit; the update banner; the field "Frag Spark …"; the commands as small tiles. Below three
+/// tabs ("Begleiter-Fenster ordnen", Dominik 2026-10-21): "Heute" (Als Nächstes, Post, Listen), "Meldungen" and
+/// "Rechner" (Zuhause, Dieser Mac); only the tab scrolls and the panel is at most as high as the free screen. At the
+/// bottom "Panel öffnen" and Notaus. The coffee is only in Einstellungen → Über und Update. Closes on focus loss and Esc.
 struct TrayPanel: View {
     @ObservedObject var model: AppModel
     @ObservedObject var dictation: Dictation
@@ -44,10 +63,21 @@ struct TrayPanel: View {
     @ObservedObject var lists = ListsCenter.shared
     @ObservedObject var post = PostCenter.shared
     @ObservedObject var home = HomeCenter.shared
+    @ObservedObject var notes = NotesCenter.shared
     @State private var holder = PanelWindow()
+    /// the tab open last, on this Mac only (6a)
+    @AppStorage("panelTab") private var savedTab = PanelTab.heute.rawValue
+    @State private var tab: PanelTab?
+    @State private var agendaAll = false
+    @State private var postAll = false
+    @State private var tabHeight: CGFloat = 0
+    @State private var measured: CGFloat = 0
+    @State private var fixedHeight: CGFloat = 0
 
-    private static let tileColumns = [GridItem(.flexible(), spacing: 7), GridItem(.flexible(), spacing: 7),
-                                      GridItem(.flexible(), spacing: 7)]
+    /// four small tiles in a row (3a)
+    private static let tileColumns = Array(repeating: GridItem(.flexible(), spacing: 6), count: 4)
+    /// the first three of a section, below "Alle n zeigen" (4a)
+    private static let firstShown = 3
 
     var body: some View {
         VStack(spacing: 0) {
@@ -72,17 +102,7 @@ struct TrayPanel: View {
                                       speak: { go { model.askByVoice() } })
                     }
                     tiles
-                    if model.part("post") { postSection }
-                    if model.part("agenda") { agendaSection }
-                    if model.part("lists") { listsSection }
-                    if model.part("home") { homeSection }
-                    thisMac
-                    if !moreHint.isEmpty {
-                        Text(Wege.text(moreHint))
-                            .font(.system(size: 11))
-                            .foregroundColor(Theme.muted)
-                            .padding(.horizontal, 2)
-                    }
+                    if openTabs.count > 1 { tabPicker }
                 } else {
                     PanelBox {
                         PanelRow(title: "Mit dem Spark koppeln", detail: "Einmal verbinden, dann geht alles hier.",
@@ -90,7 +110,31 @@ struct TrayPanel: View {
                     }
                 }
             }
-            .padding(14)
+            .padding(.horizontal, 14)
+            .padding(.top, 14)
+            .padding(.bottom, showsTab ? 4 : 14)
+            .background(GeometryReader { g in Color.clear.preference(key: FixedHeightKey.self, value: g.size.height) })
+            if showsTab {
+                // only the tab scrolls, with one bar; at most as high as the free screen (2a)
+                ScrollView(.vertical) {
+                    VStack(alignment: .leading, spacing: 10) {
+                        tabContent
+                    }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 6)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(GeometryReader { g in Color.clear.preference(key: PanelHeightKey.self, value: g.size.height) })
+                }
+                .frame(height: min(max(tabHeight, 40), maxTabHeight))
+            }
+            if model.paired && !moreHint.isEmpty {
+                Text(Wege.text(moreHint))
+                    .font(.system(size: 11))
+                    .foregroundColor(Theme.muted)
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 10)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
             footer
         }
         .frame(width: 360)
@@ -98,11 +142,140 @@ struct TrayPanel: View {
         .foregroundColor(Theme.fg)
         .background(WindowGrabber { w in holder.window = w })
         .onExitCommand { holder.close() }
+        .onPreferenceChange(PanelHeightKey.self) { h in
+            // grows with the tab, never shrinks while open: switching tabs does not make the panel jump
+            measured = h
+            if h > tabHeight { tabHeight = h }
+        }
+        .onPreferenceChange(FixedHeightKey.self) { h in fixedHeight = h }
         .onAppear {
+            // a note not shown yet: open on "Meldungen" (5a), else the tab open last (6a)
+            tab = notes.unseen ? .meldungen : (PanelTab(rawValue: savedTab) ?? .heute)
+            notes.markSeen()
+            tabHeight = measured
+            agendaAll = false
+            postAll = false
             agenda.refreshSoon()
             post.refreshSoon()
             lists.refreshSoon()
             home.refreshSoon()
+        }
+        .onChange(of: notes.items.first?.n) { _ in
+            // a new note while the panel is open: show it at once
+            if notes.unseen {
+                tab = .meldungen
+                notes.markSeen()
+            }
+        }
+    }
+
+    // ------------------------------------------------------------------ tabs
+
+    private var showsTab: Bool { model.paired && !openTabs.isEmpty }
+
+    /// the room for the tab: the free screen (menu bar and Dock left out) minus the fixed parts, at least 160
+    private var maxTabHeight: CGFloat {
+        let screen = holder.window?.screen?.visibleFrame.height ?? NSScreen.main?.visibleFrame.height ?? 800
+        return max(160, screen - fixedHeight - 70 - (moreHint.isEmpty ? 0 : 30))
+    }
+
+    /// only tabs with something to show; no bar when only one is left
+    private var openTabs: [PanelTab] {
+        PanelTab.allCases.filter { t in
+            switch t {
+            case .heute: return model.part("agenda") || model.part("post") || model.part("lists")
+            case .meldungen: return model.part("notes")
+            case .rechner: return model.part("home") || !macRows.isEmpty
+            }
+        }
+    }
+
+    private var current: PanelTab {
+        let t = tab ?? .heute
+        return openTabs.contains(t) ? t : (openTabs.first ?? .heute)
+    }
+
+    private func tabLabel(_ t: PanelTab) -> String {
+        t == .meldungen && !notes.items.isEmpty ? "Meldungen \(notes.items.count)" : t.rawValue
+    }
+
+    private var tabPicker: some View {
+        Picker(selection: Binding(get: { current }, set: { t in
+            tab = t
+            savedTab = t.rawValue
+        })) {
+            ForEach(openTabs, id: \.self) { t in
+                Text(verbatim: tabLabel(t)).tag(t)
+            }
+        } label: {
+            Text(verbatim: "Reiter")
+        }
+        .pickerStyle(.segmented)
+        .labelsHidden()
+    }
+
+    @ViewBuilder
+    private var tabContent: some View {
+        switch current {
+        case .heute:
+            if model.part("agenda") { agendaSection }
+            if model.part("post") { postSection }
+            if model.part("lists") { listsSection }
+        case .meldungen:
+            notesSection
+        case .rechner:
+            if model.part("home") { homeSection }
+            thisMac
+        }
+    }
+
+    /// "Alle n zeigen" / "Weniger zeigen" below a shortened section (4a); the panel stays open
+    private func moreButton(count: Int, all: Bool, toggle: @escaping () -> Void) -> some View {
+        Button(action: toggle) {
+            Text(verbatim: all ? "Weniger zeigen" : "Alle \(count) zeigen")
+                .font(.system(size: 11.5, weight: .semibold))
+                .foregroundColor(Theme.accent)
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal, 2)
+    }
+
+    /// "Meldungen": the Spark's notes of this run, newest first, with their buttons; "OK" only takes one away (5a)
+    private var notesSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if openTabs.count < 2 { SectionLabel(text: "Meldungen", count: notes.items.count) }
+            if notes.items.isEmpty {
+                Text(verbatim: "Keine Meldungen.")
+                    .font(.system(size: 12))
+                    .foregroundColor(Theme.muted)
+                    .padding(.horizontal, 2)
+            }
+            ForEach(notes.items) { n in
+                PanelBox {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(verbatim: n.title)
+                            .font(.system(size: 13, weight: .semibold))
+                            .lineLimit(2)
+                        if !n.body.isEmpty {
+                            Text(verbatim: n.body)
+                                .font(.system(size: 11))
+                                .foregroundColor(Theme.muted)
+                                .lineLimit(2)
+                        }
+                        FlowLayout(spacing: 6) {
+                            Button("OK") { notes.dismiss(n) }
+                                .buttonStyle(SoftButtonStyle())
+                            ForEach(n.buttons, id: \.self) { a in
+                                Button(NotesCenter.label(a, n)) { go { notes.run(a, n) } }
+                                    .buttonStyle(SoftButtonStyle())
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 7)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
         }
     }
 
@@ -171,47 +344,47 @@ struct TrayPanel: View {
         .accessibilityLabel(Text(verbatim: label))
     }
 
-    /// the commands as tiles, three in a row (only the parts that are on)
+    /// the commands as small tiles, four in a row (only the parts that are on; the hotkey is in the help)
     private var tiles: some View {
-        LazyVGrid(columns: Self.tileColumns, alignment: .leading, spacing: 7) {
+        LazyVGrid(columns: Self.tileColumns, alignment: .leading, spacing: 6) {
             if model.part("write") {
-                PanelTile(title: "Text verbessern", symbol: "pencil", color: Theme.accent, key: model.hotkeyLabel(.write)) {
+                PanelTile(title: "Text verbessern", symbol: "pencil", color: Theme.accent, key: model.hotkeyLabel(.write), compact: true) {
                     go { Task { await model.startWrite(fromMenu: true) } }
                 }
             }
             if model.part("dictate") {
                 PanelTile(title: dictation.recording ? "Diktat beenden" : "Diktieren",
                           symbol: dictation.recording ? "stop.circle" : "mic", color: Theme.accent2,
-                          key: model.hotkeyLabel(.dictate), danger: dictation.recording) {
+                          key: model.hotkeyLabel(.dictate), danger: dictation.recording, compact: true) {
                     go { dictation.toggle(.cursor(nil)) }
                 }
             }
             if model.part("screen") {
-                PanelTile(title: "Bildschirm fragen", symbol: "viewfinder", color: Theme.accent, key: model.hotkeyLabel(.screen)) {
+                PanelTile(title: "Bildschirm fragen", symbol: "viewfinder", color: Theme.accent, key: model.hotkeyLabel(.screen), compact: true) {
                     go { ScreenAsk.start() }
                 }
             }
             if model.part("mail") {
-                PanelTile(title: "Antwort entwerfen", symbol: "envelope", color: Theme.accent2, key: model.hotkeyLabel(.mail)) {
+                PanelTile(title: "Antwort entwerfen", symbol: "envelope", color: Theme.accent2, key: model.hotkeyLabel(.mail), compact: true) {
                     go { MailDraft.start(front: nil) }
                 }
             }
             if model.part("speak") {
                 PanelTile(title: speaker.active ? "Vorlesen stoppen" : "Vorlesen",
                           symbol: speaker.active ? "stop.circle" : "speaker.wave.2", color: Theme.ok,
-                          key: model.hotkeyLabel(.speak)) {
+                          key: model.hotkeyLabel(.speak), compact: true) {
                     go { if speaker.active { speaker.stop() } else { speaker.readClipboard() } }
                 }
             }
             if model.part("capture") {
-                PanelTile(title: "Erfassen", symbol: "plus.circle", color: Theme.accent2, key: model.hotkeyLabel(.capture)) {
+                PanelTile(title: "Erfassen", symbol: "plus.circle", color: Theme.accent2, key: model.hotkeyLabel(.capture), compact: true) {
                     go { CaptureController.open(fromHotkey: false) }
                 }
             }
             if model.part("meeting") {
                 PanelTile(title: meeting.running ? "Mitschreiben beenden" : "Mitschreiben",
                           symbol: meeting.running ? "stop.circle" : "record.circle", color: Theme.bad,
-                          key: model.hotkeyLabel(.meeting), danger: meeting.running) {
+                          key: model.hotkeyLabel(.meeting), danger: meeting.running, compact: true) {
                     go { meeting.toggle() }
                 }
             }
@@ -293,7 +466,7 @@ struct TrayPanel: View {
                          symbol: "envelope", verb: post.post.noMail ? "" : "E-Mail öffnen") {
                     go { model.openPanel("#me=mailbox") }
                 }
-                ForEach(post.post.cards) { c in
+                ForEach(postAll ? post.post.cards : Array(post.post.cards.prefix(Self.firstShown - 1))) { c in
                     RowLine()
                     VStack(alignment: .leading, spacing: 6) {
                         Text(verbatim: c.title)
@@ -322,10 +495,13 @@ struct TrayPanel: View {
                     .padding(.vertical, 7)
                 }
             }
+            if post.post.cards.count + 1 > Self.firstShown {
+                moreButton(count: post.post.cards.count + 1, all: postAll) { postAll.toggle() }
+            }
         }
     }
 
-    /// "Listen": the lists with open entries (part lists); a row opens the page Listen
+    /// "Listen": one line per list (name, open entries, the last one; part lists); a row opens the page Listen
     private var listsSection: some View {
         VStack(alignment: .leading, spacing: 6) {
             sectionTitle("Listen")
@@ -336,8 +512,9 @@ struct TrayPanel: View {
                 }
                 ForEach(Array(lists.rows.enumerated()), id: \.element.id) { i, l in
                     if i > 0 { RowLine() }
-                    PanelRow(title: (l.icon.isEmpty ? "" : l.icon + " ") + l.name, detail: l.detail,
+                    PanelRow(title: (l.icon.isEmpty ? "" : l.icon + " ") + l.name + " · " + l.detail,
                              symbol: "list.bullet", verb: "Öffnen") { go { model.openPanel("#me=taskbox") } }
+                        .help(Text(verbatim: l.name + " · " + l.detail))
                 }
             }
         }
@@ -349,6 +526,7 @@ struct TrayPanel: View {
             sectionTitle("Als Nächstes")
             let now = Date()
             let lines = agenda.agenda.upcoming(now: now)
+            let shown = agendaAll ? lines : Array(lines.prefix(Self.firstShown))
             if !agenda.problem.isEmpty && lines.isEmpty {
                 Text(verbatim: agenda.problem)
                     .font(.system(size: 12))
@@ -362,7 +540,7 @@ struct TrayPanel: View {
                     .padding(.horizontal, 2)
             } else {
                 PanelBox {
-                    ForEach(Array(lines.enumerated()), id: \.element.id) { i, l in
+                    ForEach(Array(shown.enumerated()), id: \.element.id) { i, l in
                         if i > 0 { RowLine() }
                         HStack(alignment: .top, spacing: 10) {
                             Image(systemName: l.isReminder ? "bell" : "calendar")
@@ -398,6 +576,9 @@ struct TrayPanel: View {
                         .onTapGesture { if !l.day.isEmpty { model.openPanel("#kal=" + l.day) } }
                         .help(Text(verbatim: l.day.isEmpty ? "" : "Im Kalender öffnen"))
                     }
+                }
+                if lines.count > Self.firstShown {
+                    moreButton(count: lines.count, all: agendaAll) { agendaAll.toggle() }
                 }
             }
         }

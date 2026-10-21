@@ -24,6 +24,22 @@ internal enum PanelItemKind
     Footer,
 }
 
+/// <summary>
+/// Reiter unter den Kacheln (Dominik 2026-10-21 „Begleiter-Fenster ordnen“ 1a): nur der Reiter rollt, Kopf, Fragefeld,
+/// Kacheln und Fuß mit Notaus bleiben immer sichtbar.
+/// </summary>
+internal enum PanelTab
+{
+    /// <summary>Als Nächstes, Post, Listen.</summary>
+    Heute,
+
+    /// <summary>Meldungen mit ihren Knöpfen, die neueste oben.</summary>
+    Meldungen,
+
+    /// <summary>Zuhause und Dieser Rechner.</summary>
+    Rechner,
+}
+
 /// <summary>Ein eingeschalteter Teil im Tray-Fenster: Kachel, Schalter, Zeile oder Link im Fuß.</summary>
 /// <param name="On">Nur <see cref="PanelItemKind.Toggle"/>: der Schalter steht auf an.</param>
 /// <param name="Verb">Nur <see cref="PanelItemKind.Row"/>: die Tätigkeit rechts, z. B. „Öffnen“.</param>
@@ -87,6 +103,15 @@ internal sealed class PanelModel
     /// <summary>Meldungen mit Knöpfen (Teil "actions").</summary>
     public IReadOnlyList<PanelNote> Notes { get; init; } = Array.Empty<PanelNote>();
 
+    /// <summary>Teil "actions" ist an: der Reiter „Meldungen“ steht auch ohne Meldung da („Keine Meldungen.“).</summary>
+    public bool NotesOn { get; init; }
+
+    /// <summary>Reiter beim Öffnen: „Meldungen“ bei einer neuen Meldung, sonst der zuletzt gewählte (5a, 6a).</summary>
+    public PanelTab StartTab { get; init; }
+
+    /// <summary>Ein Reiter wurde gewählt (wird je Gerät gemerkt, 6a).</summary>
+    public Action<PanelTab>? TabChosen { get; init; }
+
     /// <summary>Teil "agenda": Zeilen unter „Als Nächstes“; <c>null</c> = Abschnitt fehlt.</summary>
     public IReadOnlyList<PanelLine>? Agenda { get; init; }
 
@@ -118,14 +143,16 @@ internal sealed class PanelModel
 /// <summary>
 /// Begleiter-Fenster beim Linksklick aufs Symbol, an der Taskleiste verankert (Entwurf „Begleiter aufpolieren“ 1a,
 /// Dominik 2026-10-17): oben Farbverlauf und Kopf mit Gesicht, Gruß, Gerät und Zustandspunkt, rechts Einstellungen
-/// und Schließen; darunter der Update-Hinweis, das Fragefeld „Frag Spark …“, die Befehle als Kacheln, dann Abschnitte
-/// wie im Panel (Als Nächstes, Meldungen, Zuhause, Dieser Rechner mit Schaltern); unten „Panel öffnen“ und Notaus.
-/// Der Kaffee steht nur noch unter Einstellungen → Über und Update. Schließt bei Fokusverlust und mit Esc.
+/// und Schließen; darunter der Update-Hinweis, das Fragefeld „Frag Spark …“ und die Befehle als kleine Kacheln.
+/// Darunter drei Reiter (Dominik 2026-10-21 „Begleiter-Fenster ordnen“): „Heute“ (Als Nächstes, Post, Listen),
+/// „Meldungen“ und „Rechner“ (Zuhause, Dieser Rechner); nur der Reiter rollt, das Fenster ist höchstens so hoch
+/// wie der freie Bildschirm. Unten „Panel öffnen“ und Notaus. Schließt bei Fokusverlust und mit Esc.
 /// </summary>
 internal sealed class TrayPanel : ThemedForm
 {
     private const float Width96 = 360;
-    private const int Columns = 3;
+    private const int Columns = 4; // kleine Kacheln, vier nebeneinander (3a)
+    private const int FirstShown = 3; // je Abschnitt die ersten drei, darunter „Alle n zeigen“ (4a)
     private const int MaxQuestion = 2000;
 
     private readonly Action<Action> _post;
@@ -133,7 +160,7 @@ internal sealed class TrayPanel : ThemedForm
     private readonly List<Action> _actions = new();
     private readonly CardGroup _notes = new();
     private readonly CardGroup _postCards = new();
-    private readonly CardGroup _listCards = new();
+    private readonly List<SparkButton> _lists = new();
     private readonly List<SparkButton> _home = new();
     private readonly List<Action> _homeActions = new();
     private Rectangle _agendaHeading;
@@ -142,6 +169,10 @@ internal sealed class TrayPanel : ThemedForm
     private readonly List<Rectangle> _agendaRows = new();
     private readonly List<int> _agendaLines = new();
     private Rectangle _agendaEmpty;
+    private Rectangle _listHeading;
+    private Rectangle _listBox;
+    private readonly List<int> _listLines = new();
+    private Rectangle _notesEmpty;
     private Rectangle _homeHeading;
     private Rectangle _homeNote;
     private Rectangle _rowsHeading;
@@ -155,6 +186,22 @@ internal sealed class TrayPanel : ThemedForm
     private readonly RoundedHost _askHost;
     private readonly SparkButton _askMic = new(ButtonKind.Primary) { Glyph = Glyph.Mic, AccessibleName = "Frag Spark: sprechen" };
     private readonly ToolTip _tips = new();
+
+    // Reiter und Rollfläche (1a, 2a): die Teile des Reiters liegen auf _host und werden an seinem Rand abgeschnitten
+    private readonly ScrollHost _host = new();
+    private readonly SparkButton[] _tabs = { new(ButtonKind.Chip, "Heute"), new(ButtonKind.Chip, "Meldungen"), new(ButtonKind.Chip, "Rechner") };
+    private readonly SparkButton _agendaMore = new(ButtonKind.Link) { FontSize = 8.5f };
+    private readonly SparkButton _postMore = new(ButtonKind.Link) { FontSize = 8.5f };
+    private readonly HashSet<Control> _cut = new();
+    private Rectangle _tabBar;
+    private PanelTab _tab;
+    private int _scroll;
+    private int _contentH;
+    private bool _agendaAll;
+    private bool _postAll;
+    private int _newestNote;
+    private int? _dragY;
+    private int _dragScroll;
 
     private PanelModel _model;
     private bool _closing;
@@ -175,6 +222,8 @@ internal sealed class TrayPanel : ThemedForm
     {
         _model = model;
         _post = post;
+        _tab = model.StartTab;
+        _newestNote = Newest(model);
         _askHost = new RoundedHost(_ask) { Accessory = _askMic };
 
         FormBorderStyle = FormBorderStyle.None;
@@ -201,11 +250,34 @@ internal sealed class TrayPanel : ThemedForm
         _tips.SetToolTip(_settings, "Einstellungen");
         _tips.SetToolTip(_close, "Schließen (Esc)");
         _ask.TabIndex = 0;
+        for (int i = 0; i < _tabs.Length; i++)
+        {
+            var tab = (PanelTab)i;
+            _tabs[i].FontSize = 9f;
+            _tabs[i].TabIndex = 30 + i;
+            _tabs[i].Click += (_, _) => ChooseTab(tab);
+            Controls.Add(_tabs[i]);
+        }
+
+        // „Alle n zeigen“ klappt auf und zu; das Fenster bleibt offen
+        _agendaMore.Click += (_, _) => ShowAll(ref _agendaAll);
+        _postMore.Click += (_, _) => ShowAll(ref _postAll);
+        _agendaMore.TabIndex = 39;
+        _postMore.TabIndex = 44;
+        _host.TabIndex = 35;
+        _host.Wheel = delta => ScrollTo(_scroll - (delta * S(48) / 120));
+        _host.PaintTab = PaintTab;
+        _host.MouseMove += OnHostMouseMove;
+        _host.MouseDown += OnHostMouseDown;
+        _host.MouseUp += OnHostMouseUp;
         Controls.Add(_update);
         Controls.Add(_settings);
         Controls.Add(_close);
         Controls.Add(_panel);
         Controls.Add(_askHost);
+        Controls.Add(_host);
+        InHost(_agendaMore);
+        InHost(_postMore);
         BuildItems();
         BuildNotes();
         BuildHome();
@@ -226,6 +298,8 @@ internal sealed class TrayPanel : ThemedForm
         }
     }
 
+    private static int Newest(PanelModel model) => model.Notes.Count > 0 ? model.Notes.Max(n => n.N) : 0;
+
     /// <summary>Neuer Inhalt, während das Fenster offen ist (z. B. Fortschritt beim Laden).</summary>
     public void SetModel(PanelModel model)
     {
@@ -233,6 +307,15 @@ internal sealed class TrayPanel : ThemedForm
         bool sameRows = model.Items.Count == _model.Items.Count &&
             model.Items.Zip(_model.Items).All(pair => pair.First with { Action = pair.Second.Action } == pair.Second);
         _model = model;
+        int newest = Newest(model);
+        if (newest > _newestNote && _tab != PanelTab.Meldungen)
+        {
+            // eine neue Meldung kommt, während das Fenster offen ist: gleich auf „Meldungen“ (5a)
+            _tab = PanelTab.Meldungen;
+            _scroll = 0;
+        }
+
+        _newestNote = Math.Max(_newestNote, newest);
         if (sameRows)
         {
             // Nur die Aktionen tauschen – die Zeilen bleiben (kein Flackern, Klick geht nicht verloren).
@@ -302,12 +385,24 @@ internal sealed class TrayPanel : ThemedForm
         _post(() => ask(question));
     }
 
+    /// <summary>Ein Teil des Reiters: liegt auf der Rollfläche, das Mausrad rollt, der Fokus holt ihn ins Bild.</summary>
+    private void InHost(Control c)
+    {
+        _host.Controls.Add(c);
+        c.Enter += (_, _) => ShowInView(c);
+    }
+
+    private static void Drop(Control c)
+    {
+        c.Parent?.Controls.Remove(c);
+        c.Dispose();
+    }
+
     private void BuildItems()
     {
         foreach (SparkButton old in _items)
         {
-            Controls.Remove(old);
-            old.Dispose();
+            Drop(old);
         }
 
         _items.Clear();
@@ -331,6 +426,8 @@ internal sealed class TrayPanel : ThemedForm
                 Detail = item.Detail,
                 Verb = item.Verb,
                 Tint = TintFor(item.Glyph),
+                Compact = kind == ButtonKind.Tile,
+                FontSize = kind == ButtonKind.Tile ? 8f : 9.5f,
                 TabIndex = item.Kind == PanelItemKind.Footer ? 104 : item.Kind == PanelItemKind.Tile ? index++ : 90 + index++,
             };
             button.Checked = item.Kind == PanelItemKind.Toggle && item.On;
@@ -342,6 +439,10 @@ internal sealed class TrayPanel : ThemedForm
             if (item.Hotkey is { Length: > 0 } hotkey)
             {
                 button.AccessibleDescription = "Tastenkürzel " + hotkey;
+                if (kind == ButtonKind.Tile)
+                {
+                    _tips.SetToolTip(button, $"{item.Text} ({hotkey})"); // kleine Kachel: das Kürzel als Tooltip (3a)
+                }
             }
 
             int slot = _actions.Count;
@@ -360,7 +461,14 @@ internal sealed class TrayPanel : ThemedForm
                 }
             };
             _items.Add(button);
-            Controls.Add(button);
+            if (kind is ButtonKind.Toggle or ButtonKind.Row)
+            {
+                InHost(button); // Reiter „Rechner“
+            }
+            else
+            {
+                Controls.Add(button);
+            }
         }
 
         _update.TabIndex = 100;
@@ -387,7 +495,7 @@ internal sealed class TrayPanel : ThemedForm
     private void BuildNotes()
     {
         BuildCards(_postCards, _model.Post ?? Array.Empty<PanelNote>(), 40);
-        BuildCards(_listCards, _model.Lists ?? Array.Empty<PanelNote>(), 45);
+        BuildLists();
         BuildCards(_notes, _model.Notes, 50);
     }
 
@@ -398,8 +506,7 @@ internal sealed class TrayPanel : ThemedForm
         {
             foreach (SparkButton b in buttons)
             {
-                Controls.Remove(b);
-                b.Dispose();
+                Drop(b);
             }
         }
 
@@ -433,10 +540,39 @@ internal sealed class TrayPanel : ThemedForm
                     }
                 };
                 buttons.Add(button);
-                Controls.Add(button);
+                InHost(button);
             }
 
             group.Cards.Add((note, buttons));
+        }
+    }
+
+    /// <summary>Listen: je Liste eine Zeile (Name, Zahl, letzter Eintrag), ein Klick öffnet die Seite Listen (4a).</summary>
+    private void BuildLists()
+    {
+        foreach (SparkButton b in _lists)
+        {
+            Drop(b);
+        }
+
+        _lists.Clear();
+        int tab = 45;
+        foreach (PanelNote note in _model.Lists ?? Array.Empty<PanelNote>())
+        {
+            string text = note.Body.Length > 0 ? note.Title + " · " + note.Body : note.Title;
+            var button = new SparkButton(ButtonKind.Row, text)
+            {
+                FontSize = 9f,
+                Verb = note.Open is not null ? note.OpenLabel : null,
+                Enabled = note.Open is not null,
+                TabIndex = tab++,
+            };
+            button.AccessibleName = text + (note.Open is not null ? ", " + note.OpenLabel : "");
+            _tips.SetToolTip(button, text);
+            Action? open = note.Open;
+            button.Click += (_, _) => Run(open);
+            _lists.Add(button);
+            InHost(button);
         }
     }
 
@@ -445,8 +581,7 @@ internal sealed class TrayPanel : ThemedForm
     {
         foreach (SparkButton b in _home)
         {
-            Controls.Remove(b);
-            b.Dispose();
+            Drop(b);
         }
 
         _home.Clear();
@@ -475,7 +610,7 @@ internal sealed class TrayPanel : ThemedForm
                 }
             };
             _home.Add(button);
-            Controls.Add(button);
+            InHost(button);
         }
     }
 
@@ -488,6 +623,68 @@ internal sealed class TrayPanel : ThemedForm
 
         Close();
         _post(action);
+    }
+
+    /// <summary>Hat der Reiter etwas zu zeigen? Reiter ohne Inhalt fehlen in der Leiste.</summary>
+    private bool Has(PanelTab tab) => tab switch
+    {
+        PanelTab.Heute => _model.Agenda is not null || _postCards.Cards.Count > 0 || _model.Lists is not null,
+        PanelTab.Meldungen => _model.NotesOn || _notes.Cards.Count > 0,
+        _ => _model.Home is not null || _items.Any(b => b.Kind is ButtonKind.Toggle or ButtonKind.Row),
+    };
+
+    private void ChooseTab(PanelTab tab)
+    {
+        if (tab == _tab)
+        {
+            return;
+        }
+
+        _tab = tab;
+        _scroll = 0;
+        if (_model.TabChosen is { } chosen)
+        {
+            _post(() => chosen(tab)); // je Gerät gemerkt (6a)
+        }
+
+        LayoutContent();
+        Invalidate(true);
+    }
+
+    private void ShowAll(ref bool all)
+    {
+        all = !all;
+        LayoutContent();
+        PlaceAtTray();
+        Invalidate(true);
+    }
+
+    /// <summary>Den Reiter rollen (begrenzt auf seinen Inhalt).</summary>
+    private void ScrollTo(int value)
+    {
+        int most = Math.Max(0, _contentH - _host.Height);
+        value = Math.Clamp(value, 0, most);
+        if (value == _scroll)
+        {
+            return;
+        }
+
+        _scroll = value;
+        LayoutContent();
+        _host.Invalidate();
+    }
+
+    /// <summary>Mit der Tastatur erreicht: ins Bild rollen.</summary>
+    private void ShowInView(Control c)
+    {
+        if (c.Top < 0)
+        {
+            ScrollTo(_scroll + c.Top - S(8));
+        }
+        else if (c.Bottom > _host.Height)
+        {
+            ScrollTo(_scroll + c.Bottom - _host.Height + S(8));
+        }
     }
 
     /// <summary>Kleine Großbuchstaben-Überschrift eines Abschnitts (wie im Panel).</summary>
@@ -588,13 +785,13 @@ internal sealed class TrayPanel : ThemedForm
             y += h + S(10);
         }
 
-        // Befehle als Kacheln, drei nebeneinander
+        // Befehle als kleine Kacheln, vier nebeneinander (3a)
         var tiles = _items.Where(b => b.Kind == ButtonKind.Tile).ToList();
         if (tiles.Count > 0)
         {
-            int gap = S(7);
+            int gap = S(6);
             int tw = (inner - ((Columns - 1) * gap)) / Columns;
-            int th = tiles.Any(t => !string.IsNullOrEmpty(t.Hotkey)) ? S(86) : S(70);
+            int th = S(66);
             for (int i = 0; i < tiles.Count; i++)
             {
                 int col = i % Columns;
@@ -603,139 +800,86 @@ internal sealed class TrayPanel : ThemedForm
             }
 
             int rows = (tiles.Count + Columns - 1) / Columns;
-            y += (rows * th) + ((rows - 1) * gap) + S(6);
+            y += (rows * th) + ((rows - 1) * gap) + S(8);
         }
 
-        // Als Nächstes (Teil "agenda")
-        _agendaRects.Clear();
-        _agendaRows.Clear();
-        _agendaLines.Clear();
-        _agendaEmpty = Rectangle.Empty;
-        _agendaBox = Rectangle.Empty;
-        if (m.Agenda is { } agenda)
+        // Reiterleiste: nur Reiter mit Inhalt, keine Leiste bei nur einem
+        var open = Enum.GetValues<PanelTab>().Where(Has).ToList();
+        if (open.Count > 0 && !open.Contains(_tab))
         {
-            Section(ref y, pad, inner, out _agendaHeading);
-            int boxTop = y;
-            int cell = S(12);
-            int lineH = Draw.Measure("Ag", F(9f)).Height;
-            int smallH = Draw.Measure("Ag", F(8f)).Height;
-            int whenW = S(52);
-            int lineW = inner - (2 * cell) - whenW;
-            y += S(8);
-            for (int i = 0; i < agenda.Count; i++)
+            _tab = open[0];
+            _scroll = 0;
+        }
+
+        _tabBar = Rectangle.Empty;
+        int chipH = S(28);
+        int barPad = S(3);
+        int cw = open.Count > 1 ? (inner - (2 * barPad)) / open.Count : 0;
+        int cx = pad + barPad;
+        for (int i = 0; i < _tabs.Length; i++)
+        {
+            var tab = (PanelTab)i;
+            bool shown = open.Count > 1 && open.Contains(tab);
+            _tabs[i].Visible = shown;
+            if (!shown)
             {
-                PanelLine line = agenda[i];
-                if (i > 0)
+                continue;
+            }
+
+            int count = tab == PanelTab.Meldungen ? _notes.Cards.Count : 0;
+            _tabs[i].Text = count > 0 ? $"{tab} {count}" : tab.ToString();
+            _tabs[i].Checked = tab == _tab;
+            _tabs[i].Surface = P.Soft;
+            _tabs[i].Bounds = new Rectangle(cx, y + barPad, cw, chipH);
+            cx += cw;
+        }
+
+        if (open.Count > 1)
+        {
+            _tabBar = new Rectangle(pad, y, inner, chipH + (2 * barPad));
+            y += _tabBar.Height + S(4);
+        }
+
+        // unten fest: Hinweis und Fuß
+        int hintH = string.IsNullOrEmpty(m.Hint) ? 0 : Draw.TextHeight(m.Hint, F(8.5f), inner);
+        Size panel = _panel.Preferred();
+        int below = (hintH > 0 ? hintH + S(10) : 0) + S(8) + panel.Height + S(8);
+
+        // der Reiter: höchstens so hoch wie der freie Bildschirm, nur er rollt (2a); alle Reiter gleich hoch, nichts springt
+        _cut.Clear();
+        _host.Visible = open.Count > 0;
+        if (open.Count > 0)
+        {
+            int most = 0;
+            foreach (PanelTab tab in open)
+            {
+                int h = LayoutTab(tab, 0, pad, inner);
+                most = Math.Max(most, h);
+                if (tab == _tab)
                 {
-                    _agendaLines.Add(y);
-                    y += S(8);
+                    _contentH = h;
                 }
-
-                int dh = line.Detail.Length > 0 || line.Who.Length > 0 ? smallH + S(2) : 0;
-                _agendaRects.Add((new Rectangle(pad + cell, y, whenW, lineH), new Rectangle(pad + cell + whenW, y, lineW, lineH),
-                    new Rectangle(pad + cell + whenW, y + lineH, lineW, dh)));
-                _agendaRows.Add(new Rectangle(pad, y - S(4), inner, lineH + dh + S(8)));
-                y += lineH + dh + S(8);
             }
 
-            if (agenda.Count == 0 && !string.IsNullOrEmpty(m.AgendaEmpty))
-            {
-                int h = Draw.TextHeight(m.AgendaEmpty, F(8.5f), inner - (2 * cell));
-                _agendaEmpty = new Rectangle(pad + cell, y, inner - (2 * cell), h);
-                y += h + S(8);
-            }
-
-            _agendaBox = new Rectangle(pad, boxTop, inner, y - boxTop);
-            y += S(6);
-        }
-        else
-        {
-            _agendaHeading = Rectangle.Empty;
+            Rectangle work = Screen.FromPoint(Cursor.Position).WorkingArea;
+            int room = work.Height - (2 * S(10)) - y - S(6) - below;
+            int viewH = Math.Min(most, Math.Max(S(160), room));
+            _scroll = Math.Clamp(_scroll, 0, Math.Max(0, _contentH - viewH));
+            LayoutTab(_tab, -_scroll, pad, inner);
+            _host.Bounds = new Rectangle(0, y, width, viewH);
+            _host.Thumb = ThumbFor(width, viewH);
+            y += viewH + S(6);
         }
 
-        // Post (Teil "post") und Meldungen mit Knöpfen
-        LayoutCards(_postCards, ref y, pad, inner);
-        LayoutCards(_listCards, ref y, pad, inner);
-        LayoutCards(_notes, ref y, pad, inner);
-
-        // Zuhause (Teil "home")
-        if (m.Home is not null)
+        foreach (Control c in _host.Controls)
         {
-            Section(ref y, pad, inner, out _homeHeading);
-            int hx = pad;
-            int rowH = 0;
-            foreach (SparkButton b in _home)
-            {
-                Size size = b.Preferred();
-                size.Width = Math.Min(size.Width, inner);
-                if (hx > pad && hx + size.Width > pad + inner)
-                {
-                    hx = pad;
-                    y += rowH + S(6);
-                    rowH = 0;
-                }
-
-                b.Bounds = new Rectangle(hx, y, size.Width, size.Height);
-                hx += size.Width + S(6);
-                rowH = Math.Max(rowH, size.Height);
-            }
-
-            y += rowH + (rowH > 0 ? S(6) : 0);
-            if (!string.IsNullOrEmpty(m.HomeNote))
-            {
-                int h = Draw.TextHeight(m.HomeNote, F(8.5f), inner);
-                _homeNote = new Rectangle(pad, y, inner, h);
-                y += h + S(6);
-            }
-            else
-            {
-                _homeNote = Rectangle.Empty;
-            }
-
-            y += S(4);
-        }
-        else
-        {
-            _homeHeading = Rectangle.Empty;
-            _homeNote = Rectangle.Empty;
+            c.Visible = TabOf(c) == _tab && !_cut.Contains(c);
         }
 
-        // Dieser Rechner: Schalter und Zeilen in einem Kasten
-        _rowLines.Clear();
-        var rows2 = _items.Where(b => b.Kind is ButtonKind.Toggle or ButtonKind.Row).ToList();
-        if (rows2.Count > 0)
+        if (hintH > 0)
         {
-            Section(ref y, pad, inner, out _rowsHeading);
-            int boxTop = y;
-            y += S(3);
-            for (int i = 0; i < rows2.Count; i++)
-            {
-                if (i > 0)
-                {
-                    _rowLines.Add(y);
-                    y += S(2);
-                }
-
-                int h = rows2[i].Preferred().Height;
-                rows2[i].Bounds = new Rectangle(pad + S(3), y, inner - S(6), h);
-                y += h + S(1);
-            }
-
-            y += S(2);
-            _rowsBox = new Rectangle(pad, boxTop, inner, y - boxTop);
-            y += S(8);
-        }
-        else
-        {
-            _rowsHeading = Rectangle.Empty;
-            _rowsBox = Rectangle.Empty;
-        }
-
-        if (!string.IsNullOrEmpty(m.Hint))
-        {
-            int h = Draw.TextHeight(m.Hint, F(8.5f), inner);
-            _hint = new Rectangle(pad, y, inner, h);
-            y += h + S(10);
+            _hint = new Rectangle(pad, y, inner, hintH);
+            y += hintH + S(10);
         }
         else
         {
@@ -746,7 +890,6 @@ internal sealed class TrayPanel : ThemedForm
         _footLine = y;
         y += S(8);
         _panel.Visible = m.OpenPanel is not null;
-        Size panel = _panel.Preferred();
         if (m.OpenPanel is not null)
         {
             _panel.Bounds = new Rectangle(pad - S(6), y, panel.Width, panel.Height);
@@ -765,6 +908,238 @@ internal sealed class TrayPanel : ThemedForm
 
         y += panel.Height + S(8);
         ClientSize = new Size(width, y);
+    }
+
+    /// <summary>Zu welchem Reiter ein Teil auf der Rollfläche gehört.</summary>
+    private PanelTab TabOf(Control c)
+    {
+        if (c == _agendaMore || c == _postMore || (c is SparkButton b && (_lists.Contains(b) || _postCards.Cards.Any(card => card.Buttons.Contains(b)))))
+        {
+            return PanelTab.Heute;
+        }
+
+        return c is SparkButton n && _notes.Cards.Any(card => card.Buttons.Contains(n)) ? PanelTab.Meldungen : PanelTab.Rechner;
+    }
+
+    /// <summary>Schmaler Daumen rechts, wenn der Reiter mehr hat als Platz (eine Leiste zum Rollen).</summary>
+    private Rectangle ThumbFor(int width, int viewH)
+    {
+        if (_contentH <= viewH || viewH <= 0)
+        {
+            return Rectangle.Empty;
+        }
+
+        int track = viewH - S(8);
+        int h = Math.Max(S(28), track * viewH / _contentH);
+        int y = S(4) + ((track - h) * _scroll / Math.Max(1, _contentH - viewH));
+        return new Rectangle(width - S(9), y, S(5), h);
+    }
+
+    /// <summary>Inhalt eines Reiters ab <paramref name="y0"/> (Koordinaten der Rollfläche); gibt seine Höhe zurück.</summary>
+    private int LayoutTab(PanelTab tab, int y0, int pad, int inner)
+    {
+        int y = y0 + S(2);
+        switch (tab)
+        {
+            case PanelTab.Heute:
+                LayoutAgenda(ref y, pad, inner);
+                LayoutCards(_postCards, ref y, pad, inner, _postAll ? int.MaxValue : FirstShown);
+                More(_postMore, _postCards.Cards.Count, _postAll, ref y, pad);
+                LayoutLists(ref y, pad, inner);
+                break;
+            case PanelTab.Meldungen:
+                // die Leiste nennt den Reiter schon; ohne Leiste steht die Überschrift da
+                LayoutCards(_notes, ref y, pad, inner, int.MaxValue, heading: _tabBar.IsEmpty);
+                _notesEmpty = Rectangle.Empty;
+                if (_notes.Cards.Count == 0)
+                {
+                    int h = Draw.TextHeight("Keine Meldungen.", F(8.5f), inner);
+                    _notesEmpty = new Rectangle(pad + S(2), y + S(8), inner - S(2), h);
+                    y += h + S(16);
+                }
+
+                break;
+            default:
+                LayoutHome(ref y, pad, inner);
+                LayoutRows(ref y, pad, inner);
+                break;
+        }
+
+        return y - y0 + S(2);
+    }
+
+    /// <summary>„Alle n zeigen“ unter einem gekürzten Abschnitt (4a); bei höchstens drei fehlt der Link.</summary>
+    private void More(SparkButton more, int count, bool all, ref int y, int pad)
+    {
+        if (count <= FirstShown)
+        {
+            _cut.Add(more);
+            return;
+        }
+
+        more.Text = all ? "Weniger zeigen" : $"Alle {count} zeigen";
+        Size size = more.Preferred();
+        more.Bounds = new Rectangle(pad - S(6), y - S(6), size.Width, size.Height);
+        y += size.Height - S(2);
+    }
+
+    // Als Nächstes (Teil "agenda"): die ersten drei, „Alle n zeigen“ klappt den Rest auf
+    private void LayoutAgenda(ref int y, int pad, int inner)
+    {
+        PanelModel m = _model;
+        _agendaRects.Clear();
+        _agendaRows.Clear();
+        _agendaLines.Clear();
+        _agendaEmpty = Rectangle.Empty;
+        _agendaBox = Rectangle.Empty;
+        _agendaHeading = Rectangle.Empty;
+        if (m.Agenda is not { } agenda)
+        {
+            _cut.Add(_agendaMore);
+            return;
+        }
+
+        Section(ref y, pad, inner, out _agendaHeading);
+        int boxTop = y;
+        int cell = S(12);
+        int lineH = Draw.Measure("Ag", F(9f)).Height;
+        int smallH = Draw.Measure("Ag", F(8f)).Height;
+        int whenW = S(52);
+        int lineW = inner - (2 * cell) - whenW;
+        int count = _agendaAll ? agenda.Count : Math.Min(agenda.Count, FirstShown);
+        y += S(8);
+        for (int i = 0; i < count; i++)
+        {
+            PanelLine line = agenda[i];
+            if (i > 0)
+            {
+                _agendaLines.Add(y);
+                y += S(8);
+            }
+
+            int dh = line.Detail.Length > 0 || line.Who.Length > 0 ? smallH + S(2) : 0;
+            _agendaRects.Add((new Rectangle(pad + cell, y, whenW, lineH), new Rectangle(pad + cell + whenW, y, lineW, lineH),
+                new Rectangle(pad + cell + whenW, y + lineH, lineW, dh)));
+            _agendaRows.Add(new Rectangle(pad, y - S(4), inner, lineH + dh + S(8)));
+            y += lineH + dh + S(8);
+        }
+
+        if (agenda.Count == 0 && !string.IsNullOrEmpty(m.AgendaEmpty))
+        {
+            int h = Draw.TextHeight(m.AgendaEmpty, F(8.5f), inner - (2 * cell));
+            _agendaEmpty = new Rectangle(pad + cell, y, inner - (2 * cell), h);
+            y += h + S(8);
+        }
+
+        _agendaBox = new Rectangle(pad, boxTop, inner, y - boxTop);
+        y += S(6);
+        More(_agendaMore, agenda.Count, _agendaAll, ref y, pad);
+    }
+
+    // Listen (Teil "lists"): eine Zeile je Liste in einem Kasten
+    private void LayoutLists(ref int y, int pad, int inner)
+    {
+        _listLines.Clear();
+        _listHeading = Rectangle.Empty;
+        _listBox = Rectangle.Empty;
+        if (_model.Lists is null)
+        {
+            return;
+        }
+
+        Section(ref y, pad, inner, out _listHeading);
+        int boxTop = y;
+        y += S(3);
+        for (int i = 0; i < _lists.Count; i++)
+        {
+            if (i > 0)
+            {
+                _listLines.Add(y);
+                y += S(2);
+            }
+
+            int h = S(36);
+            _lists[i].Bounds = new Rectangle(pad + S(3), y, inner - S(6), h);
+            y += h + S(1);
+        }
+
+        y += S(2);
+        _listBox = new Rectangle(pad, boxTop, inner, y - boxTop);
+        y += S(8);
+    }
+
+    // Zuhause (Teil "home")
+    private void LayoutHome(ref int y, int pad, int inner)
+    {
+        PanelModel m = _model;
+        _homeHeading = Rectangle.Empty;
+        _homeNote = Rectangle.Empty;
+        if (m.Home is null)
+        {
+            return;
+        }
+
+        Section(ref y, pad, inner, out _homeHeading);
+        int hx = pad;
+        int rowH = 0;
+        foreach (SparkButton b in _home)
+        {
+            Size size = b.Preferred();
+            size.Width = Math.Min(size.Width, inner);
+            if (hx > pad && hx + size.Width > pad + inner)
+            {
+                hx = pad;
+                y += rowH + S(6);
+                rowH = 0;
+            }
+
+            b.Bounds = new Rectangle(hx, y, size.Width, size.Height);
+            hx += size.Width + S(6);
+            rowH = Math.Max(rowH, size.Height);
+        }
+
+        y += rowH + (rowH > 0 ? S(6) : 0);
+        if (!string.IsNullOrEmpty(m.HomeNote))
+        {
+            int h = Draw.TextHeight(m.HomeNote, F(8.5f), inner);
+            _homeNote = new Rectangle(pad, y, inner, h);
+            y += h + S(6);
+        }
+
+        y += S(4);
+    }
+
+    // Dieser Rechner: Schalter und Zeilen in einem Kasten
+    private void LayoutRows(ref int y, int pad, int inner)
+    {
+        _rowLines.Clear();
+        _rowsHeading = Rectangle.Empty;
+        _rowsBox = Rectangle.Empty;
+        var rows = _items.Where(b => b.Kind is ButtonKind.Toggle or ButtonKind.Row).ToList();
+        if (rows.Count == 0)
+        {
+            return;
+        }
+
+        Section(ref y, pad, inner, out _rowsHeading);
+        int boxTop = y;
+        y += S(3);
+        for (int i = 0; i < rows.Count; i++)
+        {
+            if (i > 0)
+            {
+                _rowLines.Add(y);
+                y += S(2);
+            }
+
+            int h = rows[i].Preferred().Height;
+            rows[i].Bounds = new Rectangle(pad + S(3), y, inner - S(6), h);
+            y += h + S(1);
+        }
+
+        y += S(2);
+        _rowsBox = new Rectangle(pad, boxTop, inner, y - boxTop);
+        y += S(8);
     }
 
     protected override void PaintContent(Graphics g)
@@ -842,57 +1217,9 @@ internal sealed class TrayPanel : ThemedForm
             }
         }
 
-        if (!_agendaHeading.IsEmpty && m.Agenda is { } agenda)
+        if (!_tabBar.IsEmpty)
         {
-            PaintHeading(g, "Als Nächstes", _agendaHeading, 0);
-            PaintBox(g, _agendaBox, _agendaLines);
-            Font when = F(9f, FontStyle.Bold);
-            for (int i = 0; i < _agendaRects.Count && i < agenda.Count; i++)
-            {
-                var (whenRect, text, detail) = _agendaRects[i];
-                Draw.Text(g, agenda[i].When, when, whenRect, p.Accent);
-                Draw.Text(g, agenda[i].Text, F(9f), text, p.Fg);
-                if (detail.Height > 0)
-                {
-                    Rectangle rest = detail;
-                    if (agenda[i].Who.Length > 0)
-                    {
-                        // Namen-Chip: wessen geteilter Kalender (Begleiter nachziehen 7a)
-                        Font chip = F(7.5f, FontStyle.Bold);
-                        int cw = Math.Min(detail.Width / 2, Draw.Measure(agenda[i].Who, chip).Width + S(10));
-                        var box = new Rectangle(detail.X, detail.Y + S(1), cw, detail.Height - S(2));
-                        Draw.FillRound(g, p.BannerBack, box, S(6));
-                        Draw.Text(g, agenda[i].Who, chip, Rectangle.Inflate(box, -S(5), 0), p.Accent);
-                        rest = new Rectangle(box.Right + S(6), detail.Y, Math.Max(0, detail.Right - box.Right - S(6)), detail.Height);
-                    }
-
-                    Draw.Text(g, agenda[i].Detail, F(8f), rest, p.Muted);
-                }
-            }
-
-            if (!_agendaEmpty.IsEmpty && m.AgendaEmpty is { } empty)
-            {
-                Draw.Text(g, empty, F(8.5f), _agendaEmpty, p.Muted, Draw.Wrap);
-            }
-        }
-
-        PaintCards(g, _postCards, "Post", 0);
-        PaintCards(g, _listCards, "Listen", 0);
-        PaintCards(g, _notes, "Meldungen", _notes.Cards.Count);
-
-        if (!_homeHeading.IsEmpty)
-        {
-            PaintHeading(g, "Zuhause", _homeHeading, 0);
-            if (!_homeNote.IsEmpty && m.HomeNote is { } homeNote)
-            {
-                Draw.Text(g, homeNote, F(8.5f), _homeNote, p.Muted, Draw.Wrap);
-            }
-        }
-
-        if (!_rowsHeading.IsEmpty)
-        {
-            PaintHeading(g, "Dieser Rechner", _rowsHeading, 0);
-            PaintBox(g, _rowsBox, _rowLines);
+            Draw.FillRound(g, p.Soft, _tabBar, S(10));
         }
 
         if (!_hint.IsEmpty && m.Hint is { } hint)
@@ -901,19 +1228,128 @@ internal sealed class TrayPanel : ThemedForm
         }
     }
 
-    /// <summary>Überschrift und Karten einer Gruppe; leer = kein Abschnitt.</summary>
-    private void LayoutCards(CardGroup group, ref int y, int pad, int inner)
+    /// <summary>Der offene Reiter auf der Rollfläche (Koordinaten der Rollfläche, schon um das Rollen verschoben).</summary>
+    private void PaintTab(Graphics g)
     {
-        group.Rects.Clear();
-        if (group.Cards.Count == 0)
+        Draw.HighQuality(g);
+        Palette p = P;
+        PanelModel m = _model;
+        switch (_tab)
         {
-            group.Heading = Rectangle.Empty;
+            case PanelTab.Heute:
+                PaintAgenda(g);
+                PaintCards(g, _postCards, "Post", 0);
+                if (!_listHeading.IsEmpty)
+                {
+                    PaintHeading(g, "Listen", _listHeading, 0);
+                    PaintBox(g, _listBox, _listLines);
+                }
+
+                break;
+            case PanelTab.Meldungen:
+                PaintCards(g, _notes, "Meldungen", _notes.Cards.Count);
+                if (!_notesEmpty.IsEmpty)
+                {
+                    Draw.Text(g, "Keine Meldungen.", F(8.5f), _notesEmpty, p.Muted, Draw.Wrap);
+                }
+
+                break;
+            default:
+                if (!_homeHeading.IsEmpty)
+                {
+                    PaintHeading(g, "Zuhause", _homeHeading, 0);
+                    if (!_homeNote.IsEmpty && m.HomeNote is { } homeNote)
+                    {
+                        Draw.Text(g, homeNote, F(8.5f), _homeNote, p.Muted, Draw.Wrap);
+                    }
+                }
+
+                if (!_rowsHeading.IsEmpty)
+                {
+                    PaintHeading(g, "Dieser Rechner", _rowsHeading, 0);
+                    PaintBox(g, _rowsBox, _rowLines);
+                }
+
+                break;
+        }
+
+        if (!_host.Thumb.IsEmpty)
+        {
+            using var thumb = new SolidBrush(_dragY is null ? p.Line : p.Muted);
+            using System.Drawing.Drawing2D.GraphicsPath path = Draw.Round(_host.Thumb, _host.Thumb.Width / 2f);
+            g.FillPath(thumb, path);
+        }
+    }
+
+    private void PaintAgenda(Graphics g)
+    {
+        Palette p = P;
+        PanelModel m = _model;
+        if (_agendaHeading.IsEmpty || m.Agenda is not { } agenda)
+        {
             return;
         }
 
-        Section(ref y, pad, inner, out group.Heading);
+        PaintHeading(g, "Als Nächstes", _agendaHeading, 0);
+        PaintBox(g, _agendaBox, _agendaLines);
+        Font when = F(9f, FontStyle.Bold);
+        for (int i = 0; i < _agendaRects.Count && i < agenda.Count; i++)
+        {
+            var (whenRect, text, detail) = _agendaRects[i];
+            Draw.Text(g, agenda[i].When, when, whenRect, p.Accent);
+            Draw.Text(g, agenda[i].Text, F(9f), text, p.Fg);
+            if (detail.Height > 0)
+            {
+                Rectangle rest = detail;
+                if (agenda[i].Who.Length > 0)
+                {
+                    // Namen-Chip: wessen geteilter Kalender (Begleiter nachziehen 7a)
+                    Font chip = F(7.5f, FontStyle.Bold);
+                    int cw = Math.Min(detail.Width / 2, Draw.Measure(agenda[i].Who, chip).Width + S(10));
+                    var box = new Rectangle(detail.X, detail.Y + S(1), cw, detail.Height - S(2));
+                    Draw.FillRound(g, p.BannerBack, box, S(6));
+                    Draw.Text(g, agenda[i].Who, chip, Rectangle.Inflate(box, -S(5), 0), p.Accent);
+                    rest = new Rectangle(box.Right + S(6), detail.Y, Math.Max(0, detail.Right - box.Right - S(6)), detail.Height);
+                }
+
+                Draw.Text(g, agenda[i].Detail, F(8f), rest, p.Muted);
+            }
+        }
+
+        if (!_agendaEmpty.IsEmpty && m.AgendaEmpty is { } empty)
+        {
+            Draw.Text(g, empty, F(8.5f), _agendaEmpty, p.Muted, Draw.Wrap);
+        }
+    }
+
+    /// <summary>Überschrift und Karten einer Gruppe; leer = kein Abschnitt. Mehr als <paramref name="limit"/> Karten bleiben zu.</summary>
+    private void LayoutCards(CardGroup group, ref int y, int pad, int inner, int limit, bool heading = true)
+    {
+        group.Rects.Clear();
+        group.Heading = Rectangle.Empty;
+        if (group.Cards.Count == 0)
+        {
+            return;
+        }
+
+        if (heading)
+        {
+            Section(ref y, pad, inner, out group.Heading);
+        }
+        else
+        {
+            y += S(6);
+        }
+
+        int index = 0;
         foreach (var (note, buttons) in group.Cards)
         {
+            if (index++ >= limit)
+            {
+                _cut.UnionWith(buttons);
+                continue;
+            }
+
             int cardPad = S(12);
             int tw = inner - (2 * cardPad);
             int th = Draw.Measure("Ag", F(9f, FontStyle.Bold)).Height;
@@ -951,13 +1387,12 @@ internal sealed class TrayPanel : ThemedForm
     /// <summary>Karten einer Gruppe zeichnen (Hintergrund, Titel, Text; die Knöpfe sind eigene Steuerelemente).</summary>
     private void PaintCards(Graphics g, CardGroup group, string heading, int count)
     {
-        if (group.Heading.IsEmpty)
+        Palette p = P;
+        if (!group.Heading.IsEmpty)
         {
-            return;
+            PaintHeading(g, heading, group.Heading, count);
         }
 
-        Palette p = P;
-        PaintHeading(g, heading, group.Heading, count);
         for (int i = 0; i < group.Rects.Count && i < group.Cards.Count; i++)
         {
             var (card, title, body) = group.Rects[i];
@@ -978,6 +1413,40 @@ internal sealed class TrayPanel : ThemedForm
         public readonly List<(PanelNote Note, List<SparkButton> Buttons)> Cards = new();
         public readonly List<(Rectangle Card, Rectangle Title, Rectangle Body)> Rects = new();
         public Rectangle Heading;
+    }
+
+    /// <summary>
+    /// Rollfläche des Reiters: schneidet ihre Teile am Rand ab, zeichnet über <see cref="PaintTab"/> und gibt das
+    /// Mausrad (auch das ihrer Knöpfe, Windows reicht es nach oben weiter) an <see cref="Wheel"/>.
+    /// </summary>
+    private sealed class ScrollHost : Panel
+    {
+        public ScrollHost()
+        {
+            SetStyle(ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint | ControlStyles.ResizeRedraw | ControlStyles.UserPaint, true);
+            TabStop = false;
+        }
+
+        public Action<int>? Wheel { get; set; }
+
+        public Action<Graphics>? PaintTab { get; set; }
+
+        public Rectangle Thumb { get; set; }
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            e.Graphics.Clear(Theme.Current.Card);
+            PaintTab?.Invoke(e.Graphics);
+        }
+
+        protected override void OnMouseWheel(MouseEventArgs e)
+        {
+            Wheel?.Invoke(e.Delta);
+            if (e is HandledMouseEventArgs handled)
+            {
+                handled.Handled = true;
+            }
+        }
     }
 
     /// <summary>Abschnittsüberschrift in kleinen Großbuchstaben, dahinter optional die Anzahl als Abzeichen.</summary>
@@ -1114,7 +1583,7 @@ internal sealed class TrayPanel : ThemedForm
     // ein Termin unter „Als Nächstes“ öffnet seinen Tag im Kalender des Panels (Begleiter nachziehen 7a)
     private Action? AgendaOpenAt(Point at)
     {
-        if (_model.Agenda is not { } agenda)
+        if (_tab != PanelTab.Heute || _model.Agenda is not { } agenda)
         {
             return null;
         }
@@ -1130,25 +1599,68 @@ internal sealed class TrayPanel : ThemedForm
         return null;
     }
 
+    // Daumen breiter fassen als gezeichnet, damit er sich gut greifen lässt
+    private bool OverThumb(Point at) => !_host.Thumb.IsEmpty && Rectangle.Inflate(_host.Thumb, S(5), 0).Contains(at);
+
     protected override void OnMouseMove(MouseEventArgs e)
     {
         base.OnMouseMove(e);
-        Cursor = OverWayHint(e.Location) || AgendaOpenAt(e.Location) is not null ? Cursors.Hand : Cursors.Default;
+        Cursor = OverWayHint(e.Location) ? Cursors.Hand : Cursors.Default;
     }
 
     protected override void OnMouseUp(MouseEventArgs e)
     {
         base.OnMouseUp(e);
-        if (e.Button != MouseButtons.Left)
-        {
-            return;
-        }
-
-        if (OverWayHint(e.Location))
+        if (e.Button == MouseButtons.Left && OverWayHint(e.Location))
         {
             Wege.OpenFrom(_model.Hint);
         }
-        else if (AgendaOpenAt(e.Location) is { } open)
+    }
+
+    protected override void OnMouseWheel(MouseEventArgs e)
+    {
+        base.OnMouseWheel(e);
+        // das Mausrad über dem Fragefeld oder den Kacheln rollt den Reiter, wenn der Zeiger über ihm steht
+        if (_host.Visible && _host.RectangleToScreen(_host.ClientRectangle).Contains(Cursor.Position))
+        {
+            ScrollTo(_scroll - (e.Delta * S(48) / 120));
+        }
+    }
+
+    private void OnHostMouseMove(object? sender, MouseEventArgs e)
+    {
+        if (_dragY is int from && _host.Thumb.Height > 0)
+        {
+            int track = Math.Max(1, _host.Height - S(8) - _host.Thumb.Height);
+            ScrollTo(_dragScroll + ((e.Y - from) * Math.Max(0, _contentH - _host.Height) / track));
+            return;
+        }
+
+        _host.Cursor = AgendaOpenAt(e.Location) is not null ? Cursors.Hand : Cursors.Default;
+    }
+
+    private void OnHostMouseDown(object? sender, MouseEventArgs e)
+    {
+        if (e.Button == MouseButtons.Left && OverThumb(e.Location))
+        {
+            _dragY = e.Y;
+            _dragScroll = _scroll;
+            _host.Capture = true;
+            _host.Invalidate();
+        }
+    }
+
+    private void OnHostMouseUp(object? sender, MouseEventArgs e)
+    {
+        if (_dragY is not null)
+        {
+            _dragY = null;
+            _host.Capture = false;
+            _host.Invalidate();
+            return;
+        }
+
+        if (e.Button == MouseButtons.Left && AgendaOpenAt(e.Location) is { } open)
         {
             open();
         }

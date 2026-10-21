@@ -49,6 +49,7 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
     private SettingsForm? _settings;
     private TrayPanel? _panel;
     private long _panelClosedAt;
+    private int _panelNotesShown; // höchste Meldungsnummer, die das Fenster schon gezeigt hat (5a)
     private bool _writing;
     private bool _pairOpen;
     private bool _checking;
@@ -608,7 +609,9 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
             return;
         }
 
-        var panel = new TrayPanel(BuildPanelModel(), action => _invoker.BeginInvoke(action));
+        PanelModel model = BuildPanelModel();
+        var panel = new TrayPanel(model, action => _invoker.BeginInvoke(action));
+        _panelNotesShown = Math.Max(_panelNotesShown, model.Notes.Count > 0 ? model.Notes.Max(n => n.N) : 0);
         OnPanelOpened();
         panel.FormClosed += (_, _) =>
         {
@@ -628,7 +631,9 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
     {
         if (_panel is { IsDisposed: false, Visible: true } panel)
         {
-            panel.SetModel(BuildPanelModel());
+            PanelModel model = BuildPanelModel();
+            panel.SetModel(model);
+            _panelNotesShown = Math.Max(_panelNotesShown, model.Notes.Count > 0 ? model.Notes.Max(n => n.N) : 0);
         }
     }
 
@@ -690,6 +695,7 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
         }
 
         bool ask = paired && IsOn(Parts.Ask);
+        IReadOnlyList<PanelNote> notes = BuildPanelNotes();
         return new PanelModel
         {
             Title = paired && profile.Length > 0 ? Greeting(DateTime.Now.Hour) + ", " + profile : Title,
@@ -704,7 +710,10 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
             Ask = ask ? AskFromPanel : null,
             AskHotkey = ask ? _config.GetHotkey(Parts.Ask).ToString() : null,
             AskVoice = ask && IsOn(Parts.Dictate) && !MicSwitch.Closed ? AskByVoice : null,
-            Notes = BuildPanelNotes(),
+            Notes = notes,
+            NotesOn = paired && IsOn(Parts.Notes) && (IsOn(Parts.Actions) || IsOn(Parts.Agenda)),
+            StartTab = PanelStartTab(notes),
+            TabChosen = ChoosePanelTab,
             Post = BuildPostCards(),
             Lists = BuildListCards(),
             Agenda = BuildAgendaLines(),
@@ -715,6 +724,17 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
             Settings = () => OpenSettings(),
             OpenPanel = string.IsNullOrEmpty(_config.Base) ? null : OpenPanel,
         };
+    }
+
+    /// <summary>Reiter beim Öffnen: „Meldungen“, wenn eine noch nicht gezeigte da ist (5a), sonst der zuletzt gewählte (6a).</summary>
+    private PanelTab PanelStartTab(IReadOnlyList<PanelNote> notes) =>
+        notes.Any(n => n.N > _panelNotesShown) ? PanelTab.Meldungen
+        : Enum.TryParse(_config.PanelTab, out PanelTab saved) && Enum.IsDefined(saved) ? saved : PanelTab.Heute;
+
+    private void ChoosePanelTab(PanelTab tab)
+    {
+        _config.PanelTab = tab.ToString();
+        TrySave();
     }
 
     /// <summary>Gruß im Kopf des Begleiter-Fensters nach der Tageszeit.</summary>

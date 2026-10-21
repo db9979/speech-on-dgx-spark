@@ -591,42 +591,72 @@ struct PanelTile: View {
     var color: Color = Theme.accent
     var key = ""
     var danger = false
+    /// small tile, four in a row ("Begleiter-Fenster ordnen" 3a): symbol on top in the middle, name below, the key only as help
+    var compact = false
     let run: () -> Void
     @State private var hover = false
     @Environment(\.isEnabled) private var enabled
 
     var body: some View {
         Button(action: run) {
-            VStack(alignment: .leading, spacing: 6) {
-                Image(systemName: symbol)
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundColor(danger ? Theme.bad : color)
-                    .frame(width: 28, height: 28)
-                    .background(RoundedRectangle(cornerRadius: 8).fill((danger ? Theme.bad : color).opacity(0.14)))
-                Text(verbatim: title)
-                    .font(.system(size: 12, weight: .semibold))
-                    .lineLimit(2)
-                    .multilineTextAlignment(.leading)
-                    .fixedSize(horizontal: false, vertical: true)
-                Spacer(minLength: 0)
-                if !key.isEmpty {
-                    Text(verbatim: key)
-                        .font(.system(size: 10.5))
-                        .foregroundColor(Theme.muted)
-                }
-            }
-            .padding(9)
-            .frame(maxWidth: .infinity, minHeight: 82, alignment: .topLeading)
-            .background(RoundedRectangle(cornerRadius: 10)
-                .fill(danger ? Theme.bad.opacity(0.06) : (hover && enabled ? Theme.soft : Theme.card)))
-            .overlay(RoundedRectangle(cornerRadius: 10).stroke(danger ? Theme.bad.opacity(0.4) : Theme.line, lineWidth: 1))
-            .opacity(enabled ? 1 : 0.5)
-            .contentShape(RoundedRectangle(cornerRadius: 10))
+            if compact { small } else { large }
         }
         .buttonStyle(.plain)
         .onHover { hover = $0 }
         .help(Text(verbatim: key.isEmpty ? title : title + " (" + key + ")"))
         .accessibilityLabel(Text(verbatim: title))
+    }
+
+    private var small: some View {
+        VStack(spacing: 4) {
+            Image(systemName: symbol)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(danger ? Theme.bad : color)
+                .frame(width: 26, height: 26)
+                .background(RoundedRectangle(cornerRadius: 8).fill((danger ? Theme.bad : color).opacity(0.14)))
+            Text(verbatim: title)
+                .font(.system(size: 10.5, weight: .semibold))
+                .lineLimit(2)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 3)
+        .padding(.vertical, 6)
+        .frame(maxWidth: .infinity, minHeight: 62, alignment: .top)
+        .background(RoundedRectangle(cornerRadius: 10)
+            .fill(danger ? Theme.bad.opacity(0.06) : (hover && enabled ? Theme.soft : Theme.card)))
+        .overlay(RoundedRectangle(cornerRadius: 10).stroke(danger ? Theme.bad.opacity(0.4) : Theme.line, lineWidth: 1))
+        .opacity(enabled ? 1 : 0.5)
+        .contentShape(RoundedRectangle(cornerRadius: 10))
+    }
+
+    private var large: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Image(systemName: symbol)
+                .font(.system(size: 13, weight: .medium))
+                .foregroundColor(danger ? Theme.bad : color)
+                .frame(width: 28, height: 28)
+                .background(RoundedRectangle(cornerRadius: 8).fill((danger ? Theme.bad : color).opacity(0.14)))
+            Text(verbatim: title)
+                .font(.system(size: 12, weight: .semibold))
+                .lineLimit(2)
+                .multilineTextAlignment(.leading)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
+            if !key.isEmpty {
+                Text(verbatim: key)
+                    .font(.system(size: 10.5))
+                    .foregroundColor(Theme.muted)
+            }
+        }
+        .padding(9)
+        .frame(maxWidth: .infinity, minHeight: 82, alignment: .topLeading)
+        .background(RoundedRectangle(cornerRadius: 10)
+            .fill(danger ? Theme.bad.opacity(0.06) : (hover && enabled ? Theme.soft : Theme.card)))
+        .overlay(RoundedRectangle(cornerRadius: 10).stroke(danger ? Theme.bad.opacity(0.4) : Theme.line, lineWidth: 1))
+        .opacity(enabled ? 1 : 0.5)
+        .contentShape(RoundedRectangle(cornerRadius: 10))
     }
 }
 

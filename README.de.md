@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.913** Begleiter-Fenster geordnet: drei Reiter Heute, Meldungen und Rechner unter den Kacheln, nur der Reiter rollt und das Fenster bleibt im Bildschirm, kleine Kacheln zu viert, je Abschnitt die ersten drei mit „Alle n zeigen“, neue Meldung öffnet „Meldungen“, am Mac jetzt auch Meldungen im Fenster (Windows und Mac)
 - **V01.0.912** Erst lokal suchen findet auch mit Tippfehler: ein langes Wort darf um ein bis zwei Buchstaben vertippt sein („Dresdner Fraunkirche“ findet den Kiwix-Artikel), ohne Titel fragt der Spark gekürzte Wörter nach, und der Titel mit den meisten Wörtern der Frage gewinnt; Archiv-Links auf Wunsch mit eigenem Namen (Adresse für Links)
 - **V01.0.911** CarPlay Folgefragen: im Auto zählt die Folgefrage wieder, statt als fremde Stimme abgewiesen zu werden
 - **V01.0.910** Flash Next lässt mehr Speicher frei, Messung zeigt NVMe oder USB
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.906** Mail wie ein großes Mailprogramm: Verschieben ohne Neuladen der Ordnerliste, Regel-Vorschläge nachts aus deinem KI-Ordner, auch als Karte im Assistenten, Unterhaltung unter einer Mail, nur der eigene Text ohne Zitate und Signatur, Später senden, Bestätigungscodes als Mitteilung (eigener Schalter, nie über Telegram) und Mail-Statistik; Panel, iPhone und Begleiter
 - **V01.0.905** Doku aktuell, Teil 5 (Technik): eigener Kasten „Post, Kalender, Kontakte“ im Bild unter Zustand → Technik mit Knoten-Seite (Seite, Frage oder App; Abruf über den Wächter; Vorrat versiegelt; Antwort mit Stand; Ändern nur mit Vorschau oder If-Match; Tür für Kalender- und Kontakte-Apps), die Mail-, Kalender- und Kontakte-Module bilden dort eine eigene Gruppe; das README-Schaubild zeigt die eigenen Seiten und Kalender- und Kontakte-Apps als Weg hinein
 - **V01.0.904** Doku aktuell, Teil 4 (Sicherheit): „Wege hinein“ in der Sicherheits-Doku, jeder Weg ins Panel mit Wer, Ab Werk und Schutz (Panel, Geräteschlüssel, Kalender- und Kontakte-Apps über /caldav und /carddav, MCP und OAuth, andere Sparks, Downloads, Live, Wyoming, Telefon, Telegram); versiegelte Vorräte, Kontakte ändern mit ETag und die Suche beim Mailserver beschrieben; Kalender-Apps (CalDAV) unter APIs und Einbinden; Wächter test_doku_stand.WegeHinein und Punkt in der Sicherheits-Checkliste
-- **V01.0.903** Doku aktuell, Teil 3: „Alle Funktionen“ in der Doku (de und en): jede der 234 Funktionen mit Schalter-Weg, worauf sie aufbaut, Ich-Seite und erstem Satz ihrer Anleitung, geschrieben von hilfe.py --docs, damit auch die Hilfe sie findet; Wächter test_doku_stand.Funktionen
 
 
 
