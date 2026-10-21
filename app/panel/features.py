@@ -356,6 +356,10 @@ FEATURES = (
     # there for good after the page's own question; rules, the model, „Für dich“ and the voice never delete
     F("maildelete", "Mails löschen", "Delete mail", "post", ("mail_delete", "mail_manage", "mail"), parent="mailmanage",
       me="mailbox", guide="maildelete"),
+    # einladung.py (Dominik 2026-10-21 „ja alles umsetzen 1-6“, Punkt 3): an invitation (.ics) in a mail into a calendar
+    # with one tap, Zusagen/Vielleicht/Absagen to the organiser (with „Mails senden“)
+    F("einladungen", "Einladungen aus Mails", "Invitations from mail", "post", ("mail_invites", "mail", "calendar"),
+      parent="mail", me="mailbox", guide="einladungen"),
     F("mailidle", "Neue Mails sofort", "New mail at once", "post", ("mail_idle", "mail"), parent="mail", me="mailbox",
       guide="mailidle"),
     F("mailstil", "Mailstil lernen", "Learn mail style", "post", ("mail_style",), parent="mail", me="mailbox", guide="mailstil"),
@@ -374,6 +378,10 @@ FEATURES = (
     # contacts.py page Kontakte (Apple-Stil „6a“): a card changed in its own address book (ETag), new ones there or on the Spark
     F("kontakteaendern", "Kontakte ändern", "Edit contacts", "post", ("contacts_edit", "contacts"), parent="contacts",
       me="conbox", guide="kontakteaendern"),
+    # kontaktserver.py (Apple-Stil „6a“ Stufe 3b): the address book „Auf dem Spark“ for the iPhone's Kontakte app (CardDAV,
+    # the Kalender-Server's app password)
+    F("kontaktserver", "Kontakte für Kontakte-Apps", "Contacts for contacts apps", "post",
+      ("contacts_server", "contacts", "calendar_server"), parent="contacts", me="conbox", guide="kontaktserver"),
     # home
     F("ha", "Home Assistant", "Home Assistant", "home", ("homeassistant",), me="habox", guide="ha"),
     F("room", "Raum-Modus", "Room mode", "home", ("room",), me="roombox", guide="room"),

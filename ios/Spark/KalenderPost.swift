@@ -115,6 +115,8 @@ struct MailText {
     /// Apple-Stil „2a“: the mail has an HTML part (shown formatted, mailansicht.py) and names pictures from outside
     var html = false
     var remote = 0
+    /// Einladungen aus Mails: the mail carries an invitation (.ics) this profile may take (EinladungSection)
+    var invite = false
 }
 
 extension SparkAPI {
@@ -243,7 +245,7 @@ extension SparkAPI {
                             guard let n = p["n"] as? Int, (0..<20).contains(n) else { return nil }
                             return (n, String((p["name"] as? String ?? "").prefix(120)), p["kb"] as? Int ?? 0)
                         }, mid: String((m["mid"] as? String ?? "").prefix(300)),
-                        html: m["html"] as? Bool ?? false, remote: min(60, max(0, m["remote"] as? Int ?? 0)))
+                        html: m["html"] as? Bool ?? false, remote: min(60, max(0, m["remote"] as? Int ?? 0)), invite: m["invite"] as? Bool ?? false)
     }
 
     /// One own mail formatted (mailansicht.py, app=true): the Spark's cleaned HTML with its attached pictures inside
@@ -1872,6 +1874,7 @@ struct MailView: View {
                         LabeledContent("Anhänge") { Text(verbatim: m.files.joined(separator: ", ")) }
                     }
                 }
+                if m.invite && talk.allowed.areas.contains("einladungen") { EinladungSection(id: m.id, folder: folder?.name ?? "") }   // Einladung.swift
                 // Anhang laden (Mailclient Stufe C, with Mails ordnen): fetched only on a tap, shown by Quick Look
                 if !m.parts.isEmpty && talk.allowed.areas.contains("mailmanage") {
                     Section("Anhänge") {

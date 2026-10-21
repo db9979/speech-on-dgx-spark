@@ -396,7 +396,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ zugang (guard, core, profiles, features)
     "zugang": {
-        "stand": "6577ceb4a6",
+        "stand": "7abae0fb4b",
         "bezug": {
             "guard.MAX_FAILS": ["s2", "s3"], "guard.MAX_NAME_FAILS": ["s2", "s3"], "guard.LOCK_FIRST": ["s2"],
             "guard.DAY_FAILS": ["s2", "s3"], "guard.failed": ["s3"], "guard.succeeded": ["s5"],
@@ -423,10 +423,10 @@ SEITEN = {
             S("s1", "start", ("Anmelden oder fragen", "Log in or ask"),
               ("/api/login · /api/profile/login · jede Anfrage", "/api/login · /api/profile/login · every request"),
               ("Beim Anmelden bekommt der Browser ein Cookie; Apps, Uhr und Lautsprecher haben stattdessen einen "
-               "Geräteschlüssel, Kalender-Apps (Kalender-Server, kalenderserver.py) ein App-Passwort, das wie eine PIN sperrt. "
+               "Geräteschlüssel, Kalender- und Kontakte-Apps (kalenderserver.py, kontaktserver.py) ein App-Passwort, das wie eine PIN sperrt. "
                "Die Schritte 2 bis 5 laufen einmal beim Anmelden, die Schritte ab 6 bei jeder Anfrage.",
-               "Logging in gives the browser a cookie; apps, watch and speakers have a device key instead, calendar apps "
-               "(calendar server, kalenderserver.py) an app password that locks like a PIN. Steps 2 to "
+               "Logging in gives the browser a cookie; apps, watch and speakers have a device key instead, calendar and "
+               "contacts apps (kalenderserver.py, kontaktserver.py) an app password that locks like a PIN. Steps 2 to "
                "5 run once when logging in, the steps from 6 on with every request.")),
             S("s2", "frage", ("Gesperrt?", "Locked?"),
               ("guard.check", "guard.check"),

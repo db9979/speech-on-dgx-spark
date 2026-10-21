@@ -409,6 +409,8 @@ ADMIN_ON_OK = {
     "logfilter.py:logfilter": "admin's log page",
     "lokal.py:admin_on": "Spark switch; per profile lokal.on (features.allowed)",
     "kalenderserver.py:admin_on": "Spark switch: without it /caldav does not exist; every login then features.allowed calserver",
+    "einladung.py:admin_on": "Spark switch for the endpoints; every request then features.allowed einladungen (_on)",
+    "kontaktserver.py:admin_on": "Spark switch: without it /carddav does not exist; every login then features.allowed kontaktserver",
     "mcpserver.py:admin_on": "Spark switch; per profile and connection features.allowed mcpserver",
     "mcpserver.py:extern_on": "Spark-wide: the server reachable from outside",
     "mcpserver.py:act_on": "Spark switch; each call checks features.allowed for the profile",

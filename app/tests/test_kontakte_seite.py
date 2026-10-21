@@ -7,7 +7,8 @@
 - „Kontakte ändern“ (chat.contacts_edit) off: nothing changes (403). On: a change goes back into its own address book
   with If-Match, a card changed there meanwhile gives 409 and stays as it is; a new card into the book chosen or the
   Spark's own one; delete with If-Match. Another profile never reaches a card; guests never.
-- The page at 1280 and 390 px: A–Z, the card, „Bearbeiten“ with + fields, „Fertig“ saves.
+- The page at 1280 and 390 px: A–Z, the card with line symbols, „Nachricht“ without a messages app says what to do,
+  „Bearbeiten“ with + fields, „Fertig“ saves.
 
 Fake CardDAV server with ETags; no wall clock.
 """
@@ -273,6 +274,15 @@ class Page(unittest.TestCase):
                         await pg.evaluate("[...document.querySelectorAll('#konview [data-c]')].find(e=>e.textContent.includes('Anna')).click()")
                         await b.until(pg, "!!document.querySelector('#konview .koncard [data-k=edit]')")
                         self.assertIn("+49 170 1234567", await pg.text_content("#konview .koncard"))
+                        # line symbols, no emoji (Dominik 2026-10-21); „Nachricht“ in a browser without a messages
+                        # app copies the number and says so instead of doing nothing
+                        acts = await pg.evaluate("[...document.querySelectorAll('#konview .konact')].map(a=>[!!a.querySelector('svg'),a.textContent])")
+                        self.assertEqual(len(acts), 5)
+                        for has_svg, text in acts:
+                            self.assertTrue(has_svg, text)
+                            self.assertIsNone(re.search(r"[\U0001F300-\U0001FAFF\u2600-\u27BF\u2934\uFE0E\uFE0F]", text), text)
+                        await pg.click("#konview .koncard [data-k=sms]")
+                        await b.until(pg, "document.querySelector('#konview .konhint').textContent.includes('Handy')")
                         await pg.click("#konview .koncard [data-k=edit]")
                         await pg.click("#konview .konform [data-add=phones]")
                         await pg.fill("#konview .konform [data-f=phones] .konrow:last-child input", "0731 42")

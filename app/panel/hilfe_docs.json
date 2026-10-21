@@ -1605,7 +1605,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "1. Anmelden oder fragen: Beim Anmelden bekommt der Browser ein Cookie; Apps, Uhr und Lautsprecher haben stattdessen einen Geräteschlüssel, Kalender-Apps (Kalender-Server, kalenderserver.py) ein App-Passwort, das wie eine PIN sperrt. Die Schritte 2 bis 5 laufen einmal beim Anmelden, die Schritte ab 6 bei jeder Anfrage. 2. Gesperrt?: Gesperrt wird je Adresse und je Name (oder Admin-Passwort). Die Sperre eines Namens gilt nicht für einen Browser, der sich mit diesem Namen schon angemeldet hat (Cookie speech_known, gespeichert wird nur sein Hash). So kann ein Fremder durch Raten den Besitzer nicht aussperren. 3. Passwort oder PIN richtig?: Geprüft wird in einem eigenen Thread. Ein unbekannter Name kostet dieselbe Arbeit wie eine falsche PIN, die Antwort ist dieselbe. Ein Fehlversuch wartet eine Sekunde, zählt für die Sperre und, wenn er von außen kommt, für „Notaus von selbst“. 4. Zweiter Schritt?: Hat das Profil (oder der Admin) den zweiten Schritt an und ist der Browser nicht als vertraut eingetragen, kommt als Nächstes der Code aus der App oder ein Passkey. Ein falscher Code zählt wie eine falsche PIN. 5. Cookie setzen: Der Zähler der Adresse wird gelöscht; Fehlversuche Fremder für "
+"text": "1. Anmelden oder fragen: Beim Anmelden bekommt der Browser ein Cookie; Apps, Uhr und Lautsprecher haben stattdessen einen Geräteschlüssel, Kalender- und Kontakte-Apps (kalenderserver.py, kontaktserver.py) ein App-Passwort, das wie eine PIN sperrt. Die Schritte 2 bis 5 laufen einmal beim Anmelden, die Schritte ab 6 bei jeder Anfrage. 2. Gesperrt?: Gesperrt wird je Adresse und je Name (oder Admin-Passwort). Die Sperre eines Namens gilt nicht für einen Browser, der sich mit diesem Namen schon angemeldet hat (Cookie speech_known, gespeichert wird nur sein Hash). So kann ein Fremder durch Raten den Besitzer nicht aussperren. 3. Passwort oder PIN richtig?: Geprüft wird in einem eigenen Thread. Ein unbekannter Name kostet dieselbe Arbeit wie eine falsche PIN, die Antwort ist dieselbe. Ein Fehlversuch wartet eine Sekunde, zählt für die Sperre und, wenn er von außen kommt, für „Notaus von selbst“. 4. Zweiter Schritt?: Hat das Profil (oder der Admin) den zweiten Schritt an und ist der Browser nicht als vertraut eingetragen, kommt als Nächstes der Code aus der App oder ein Passkey. Ein falscher Code zählt wie eine falsche PIN. 5. Cookie setzen: Der Zähler der Adresse wird gelöscht; Fehlversuc"
 },
 {
 "lang": "de",
@@ -1613,7 +1613,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "den Namen zählen weiter. Das Profil-Cookie ist signiert und steht in der Liste der angemeldeten Browser; es gilt höchstens 90 Tage ohne Nutzung und wird erneuert, solange es benutzt wird. Das Admin-Cookie ist mit Passwort, einem eigenen Schlüssel dieses Spark und dem zweiten Schritt signiert. War der zweite Schritt dabei (Code, Passkey oder vertrauter Browser), trägt die Sitzung sein Zeichen: nur dann zählt eine Admin-Rolle des Profils, ohne eigene Admin-Anmeldung. Danach liest das Panel Kalender und Mails des Profils im Hintergrund vorab (vorwaermen.py, höchstens alle 600 Sekunden), damit seine Seiten sofort aufgehen. 6. Profil bestimmen: Zuerst, was nur das Panel selbst setzt (Telegram, „Spark fragen“ über MCP), dann der Geräteschlüssel (nur sein Hash ist gespeichert), dann das Cookie: Signatur, Alter, Sitzung noch in der Liste und nicht abgemeldet. 7. Schlüssel für diesen Weg frei?: Ein Schlüssel mit Bereich (App, Uhr, Raum, Home Assistant, Schreibhilfe, Begleiter, Terminal) reicht nur für seine eigenen Pfade und nur, solange Admin und Profil die Funktion anhaben. Ist sie gerade aus oder hat das Profil seinen eigenen Notaus an, antwortet das Panel mit 503 statt 401, damit die Ap"
+"text": "he Fremder für den Namen zählen weiter. Das Profil-Cookie ist signiert und steht in der Liste der angemeldeten Browser; es gilt höchstens 90 Tage ohne Nutzung und wird erneuert, solange es benutzt wird. Das Admin-Cookie ist mit Passwort, einem eigenen Schlüssel dieses Spark und dem zweiten Schritt signiert. War der zweite Schritt dabei (Code, Passkey oder vertrauter Browser), trägt die Sitzung sein Zeichen: nur dann zählt eine Admin-Rolle des Profils, ohne eigene Admin-Anmeldung. Danach liest das Panel Kalender und Mails des Profils im Hintergrund vorab (vorwaermen.py, höchstens alle 600 Sekunden), damit seine Seiten sofort aufgehen. 6. Profil bestimmen: Zuerst, was nur das Panel selbst setzt (Telegram, „Spark fragen“ über MCP), dann der Geräteschlüssel (nur sein Hash ist gespeichert), dann das Cookie: Signatur, Alter, Sitzung noch in der Liste und nicht abgemeldet. 7. Schlüssel für diesen Weg frei?: Ein Schlüssel mit Bereich (App, Uhr, Raum, Home Assistant, Schreibhilfe, Begleiter, Terminal) reicht nur für seine eigenen Pfade und nur, solange Admin und Profil die Funktion anhaben. Ist sie gerade aus oder hat das Profil seinen eigenen Notaus an, antwortet das Panel mit 503 statt 40"
 },
 {
 "lang": "de",
@@ -1621,7 +1621,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "p ihre Kopplung behält. 8. Ohne Profil und Gastzugang aus?: Ohne Profil kommt nur durch, wer der Admin ist (Cookie oder HTTP Basic, dessen Fehlversuche wie auf der Anmeldeseite zählen), oder wenn der Admin den Assistenten ohne Passwort freigegeben hat. Gäste bekommen dann nur Frage und Antwort. 9. Zu viele Anfragen?: Je Profil, sonst je Adresse, zählt das Panel die Anfragen der letzten Minute: im Chat 120 für ein Profil oder den Admin, 30 für einen Gast. 10. Gast, alle Plätze belegt?: Gäste teilen sich 4 gleichzeitige Plätze im Chat. Ein Platz, den niemand freigibt, gilt nach 10 Minuten wieder als frei. 11. Freigabe je Funktion: Für jede Funktion fragt das Panel in fester Reihenfolge: Schalter des Admins (und der Funktion, auf der sie aufbaut), Gast (bekommt nie eine), vom Admin für das Profil gesperrt, eigener Wunsch des Profils, zweiter Schritt nötig. Gelesen wird bei jeder Anfrage neu, eine Änderung gilt also sofort. 12. Weiter zur Vorbereitung: Die Anfrage geht mit ihrem Profil (oder als Gast) an chat_turn.prepare. Die Sprache bekommt Vorrang vor Hintergrundarbeit, und die anderen offenen Seiten des Profils sehen „antwortet gerade“."
+"text": "1, damit die App ihre Kopplung behält. 8. Ohne Profil und Gastzugang aus?: Ohne Profil kommt nur durch, wer der Admin ist (Cookie oder HTTP Basic, dessen Fehlversuche wie auf der Anmeldeseite zählen), oder wenn der Admin den Assistenten ohne Passwort freigegeben hat. Gäste bekommen dann nur Frage und Antwort. 9. Zu viele Anfragen?: Je Profil, sonst je Adresse, zählt das Panel die Anfragen der letzten Minute: im Chat 120 für ein Profil oder den Admin, 30 für einen Gast. 10. Gast, alle Plätze belegt?: Gäste teilen sich 4 gleichzeitige Plätze im Chat. Ein Platz, den niemand freigibt, gilt nach 10 Minuten wieder als frei. 11. Freigabe je Funktion: Für jede Funktion fragt das Panel in fester Reihenfolge: Schalter des Admins (und der Funktion, auf der sie aufbaut), Gast (bekommt nie eine), vom Admin für das Profil gesperrt, eigener Wunsch des Profils, zweiter Schritt nötig. Gelesen wird bei jeder Anfrage neu, eine Änderung gilt also sofort. 12. Weiter zur Vorbereitung: Die Anfrage geht mit ihrem Profil (oder als Gast) an chat_turn.prepare. Die Sprache bekommt Vorrang vor Hintergrundarbeit, und die anderen offenen Seiten des Profils sehen „antwortet gerade“."
 },
 {
 "lang": "de",
@@ -5461,7 +5461,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "Kontakte wie Apple Kontakte, Stufe 3a (V01.0.888, Plan apple-stil/plan.md 6a, Dominik 2026-10-21 „Weiter“): Kontakte ist eine eigene Seite im Menü (kontakte.js), sichtbar mit „Kontakte“. Links Suche, die Adressbücher als Gruppen (Chips mit Anzahl), A bis Z mit Buchstabenleiste am Rand; rechts die Karte mit Initialen, Nachricht (sms:), Anruf (tel:), Mail (öffnet „Neue Mail“ auf der Seite E-Mail, ohne „Mails senden“ das Mailprogramm), Termin (Schnell eintragen auf der Seite Kalender) und Teilen (die Karte als .vcf), darunter Telefon, E-Mail, Adresse, Webseite, Geburtstag, Notiz und „Mit Anna“: der nächste Termin in 60 Tagen (per Mail-Adresse oder Name) und die letzte Mail aus dem Mail-Vorrat, ohne dafür ein Postfach abzufragen. Ein Tipp auf den Absender einer Mail öffnet seine Karte. Die Adressbücher selbst stehen unter Kontakte → Einstellungen (vorher Ich → Kontakte). Ändern: Admin-Schalter Funktionen → Kontakte → „Kontakte ändern“ (chat.contacts_edit, aus). Dann „Bearbeiten“ wie bei Apple (je Feld ein Minus, je Art „+ hinzufügen“, „Fertig“), „Neuer Kontakt“ (ins gewählte Adressbuch oder „Auf dem Spark“) und „Kontakt löschen“ nach Rückfrage. kontaktkarte.py prüft jedes Feld (Nummern"
+"text": "Kontakte wie Apple Kontakte, Stufe 3a (V01.0.888, Plan apple-stil/plan.md 6a, Dominik 2026-10-21 „Weiter“): Kontakte ist eine eigene Seite im Menü (kontakte.js), sichtbar mit „Kontakte“. Links Suche, die Adressbücher als Gruppen (Chips mit Anzahl), A bis Z mit Buchstabenleiste am Rand; rechts die Karte mit Initialen, fünf Knöpfe mit Linien-Symbolen in der Akzentfarbe: Nachricht (sms: auf Handy, Tablet und Mac; ein Windows- oder Linux-Browser hat keine Nachrichten-App, dort kopiert der Knopf die Nummer und sagt, dass die Nachricht vom Handy ausgeht), Anruf (tel:), Mail (öffnet „Neue Mail“ auf der Seite E-Mail, ohne „Mails senden“ das Mailprogramm), Termin (Schnell eintragen auf der Seite Kalender) und Teilen (die Karte als .vcf), darunter Telefon, E-Mail, Adresse, Webseite, Geburtstag, Notiz und „Mit Anna“: der nächste Termin in 60 Tagen (per Mail-Adresse oder Name) und die letzte Mail aus dem Mail-Vorrat, ohne dafür ein Postfach abzufragen. Ein Tipp auf den Absender einer Mail öffnet seine Karte. Die Adressbücher selbst stehen unter Kontakte → Einstellungen (vorher Ich → Kontakte). Ändern: Admin-Schalter Funktionen → Kontakte → „Kontakte ändern“ (chat.contacts_edit, aus). Dann „Bea"
 },
 {
 "lang": "de",
@@ -5469,7 +5469,31 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": " nur Ziffern und Zeichen, Mail-Form, Webseiten nur http/https, Geburtstag als Datum, Höchstzahlen) und ersetzt in der vCard nur die Zeilen der Seite; Foto, UID und alles andere bleiben. contacts.save holt die Karte frisch, vergleicht das ETag, schreibt mit If-Match (neu mit If-None-Match: *); wurde sie inzwischen geändert, antwortet der Spark 409 und überschreibt nichts. Karten „Auf dem Spark“ liegen versiegelt im Profil. Endpunkte /api/profile/contacts/page|with|vcf|card mit Anmeldung, Profil, CSRF, 64 KB, Rate-Limit kontakte; Notaus sperrt das Ändern (423). Der Assistent und die Stimme ändern nie Kontakte. Live: Adressbücher, Karten auf dem Spark, heute auf der Seite geändert (nur Zahlen). Kommt in Stufe 3b: der Spark als CardDAV-Server fürs iPhone."
+"text": "rbeiten“ wie bei Apple (je Feld ein Minus, je Art „+ hinzufügen“, „Fertig“), „Neuer Kontakt“ (ins gewählte Adressbuch oder „Auf dem Spark“) und „Kontakt löschen“ nach Rückfrage. kontaktkarte.py prüft jedes Feld (Nummern nur Ziffern und Zeichen, Mail-Form, Webseiten nur http/https, Geburtstag als Datum, Höchstzahlen) und ersetzt in der vCard nur die Zeilen der Seite; Foto, UID und alles andere bleiben. contacts.save holt die Karte frisch, vergleicht das ETag, schreibt mit If-Match (neu mit If-None-Match: *); wurde sie inzwischen geändert, antwortet der Spark 409 und überschreibt nichts. Karten „Auf dem Spark“ liegen versiegelt im Profil. Endpunkte /api/profile/contacts/page|with|vcf|card mit Anmeldung, Profil, CSRF, 64 KB, Rate-Limit kontakte; Notaus sperrt das Ändern (423). Der Assistent und die Stimme ändern nie Kontakte. Live: Adressbücher, Karten auf dem Spark, heute auf der Seite geändert (nur Zahlen). Stufe 3b (der Spark als CardDAV-Server) steht im nächsten Absatz."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Kontakte wie Apple Kontakte, Stufe 3b: der Spark als CardDAV-Server (V01.0.897, kontaktserver.py): Admin-Schalter Funktionen → Kontakte → „Kontakte für Kontakte-Apps“ (chat.contacts_server, aus; braucht „Kontakte“ und „Kalender-Server für Kalender-Apps“). Dann erscheint das Adressbuch „Auf dem Spark“ in der Kontakte-App des iPhone (Einstellungen → Apps → Kontakte → Accounts → Andere → CardDAV-Account: Server = Adresse des Spark mit /carddav/, Benutzer = Profil-Kennung, Passwort = App-Passwort aus Kalender → Einstellungen → „Für Kalender-Apps“). Die Tür ist die des Kalender-Servers (Basic-Anmeldung, falsche Versuche sperren wie eine PIN, Rate-Limit caldav, fremde Webseiten abgewiesen, Mein Notaus). Nur das eigene Adressbuch „Auf dem Spark“, nie iCloud-Adressbücher (die hat das iPhone selbst) und nie ein anderes Profil. PROPFIND, REPORT (addressbook-query, addressbook-multiget), GET, PUT, DELETE mit ETags; je Karte genau eine vCard mit Name oder Firma, höchstens 256 KB, höchstens 2000 Karten. Schreiben nur mit „Kontakte ändern“, sonst nur Lesen (403). Eine Änderung auf der Seite behält den Objektnamen der App. Live: Anfragen, Änderungen, Ablehnungen heute."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Einladungen aus Mails (V01.0.897, einladung.py, Dominik 2026-10-21 „ja alles umsetzen 1-6“, Punkt 3): Admin-Schalter Funktionen → E-Mail lesen → „Einladungen aus Mails“ (chat.mail_invites, aus; braucht E-Mail lesen und Kalender). Hat eine Mail eine Einladung dabei (ein Teil text/calendar oder eine .ics-Datei; mail.show meldet nur invite), zeigt die Seite E-Mail unter dem Betreff eine Leiste (einladung.js): Titel, Zeit, Ort, wer einlädt, wie viele Personen, die eigene Antwort bisher und ob der Termin schon in einem Kalender steht. „Zusagen“ und „Vielleicht“ tragen ihn ein (in den gewählten Kalender, sonst den ersten, in den der Spark schreiben darf, CalDAV oder Spark-Kalender), „Absagen“ nimmt ihn heraus; eine Einladung mit METHOD:PUBLISH hat nur „In den Kalender“, eine Absage des Einladenden (CANCEL) nur „Aus dem Kalender entfernen“ nach Rückfrage. Die Einladung ist fremder Text: höchstens 256 KB, ein Termin (VEVENTs einer UID, höchstens 50), nur REQUEST, PUBLISH und CANCEL. In den Kalender geht ein neuer Kalender des Spark mit nur den nötigen Feldern (Zeit, Wiederholung, Titel, Ort, Beschreibung bis 4000 Zeichen, Einladender, höchstens 100 Personen, Zeitzonen); Erinnerungen, Anhän"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "ge und Links des Absenders bleiben draußen. Der Platz im Kalender folgt aus der UID: dieselbe Einladung noch einmal oder ihre Änderung ersetzt den Termin, statt ihn doppelt einzutragen. Mit „Mails senden“ geht die Antwort (iMIP METHOD:REPLY mit der eigenen PARTSTAT) vom Postfach, an das die Einladung kam, an den Einladenden (senden.send_now: Tageslimit, Notaus, Journal); abschaltbar mit dem Häkchen „Antwort an … senden“. Endpunkte GET|POST /api/profile/mail/invite mit Anmeldung, Profil, CSRF, 4 KB, Rate-Limit einladung; Notaus 423. Der Assistent beantwortet keine Einladungen. Live (Kalender): heute gezeigt, eingetragen, beantwortet (nur Zahlen). iPhone: derselbe Abschnitt über der Mail (Einladung.swift)."
 },
 {
 "lang": "de",
@@ -7798,6 +7822,22 @@
 "head": "Meine Sachen",
 "title": "Kontakte wie Apple Kontakte",
 "text": "Kontakte wie Apple Kontakte (V01.0.888, Plan apple-stil/plan.md Stufe 3a): Meine Sachen → Kontakte (mit „Kontakte“): A bis Z mit Suche und Buchstabenleiste, die Karte mit Nachricht, Anruf, Mail, Termin und Teilen (.vcf über das Teilen-Menü), Telefon, E-Mail, Adresse, Webseite, Geburtstag, Notiz und „Mit Anna“. Mit „Kontakte ändern“: „Bearbeiten“, „+“ für einen neuen Kontakt, Felder per Wischen entfernen, „hinzufügen“ je Art, „Kontakt löschen“ nach Rückfrage; der Spark prüft alles und schreibt die Karte mit ETag in ihr Adressbuch zurück. Die Adressbücher richtet man im Browser unter Kontakte → Einstellungen ein."
+},
+{
+"lang": "de",
+"src": "iphone-app",
+"file": "iPhone-App „Spark“",
+"head": "Meine Sachen",
+"title": "Kontakte-App des iPhone",
+"text": "Kontakte-App des iPhone (V01.0.897, Stufe 3b): Mit „Kontakte für Kontakte-Apps“ zeigt die eigene Kontakte-App des iPhone das Adressbuch „Auf dem Spark“ als CardDAV-Account (Einrichtung siehe Hilfe „Kontakte für Kontakte-Apps“); mit „Kontakte ändern“ auch zum Ändern."
+},
+{
+"lang": "de",
+"src": "iphone-app",
+"file": "iPhone-App „Spark“",
+"head": "Meine Sachen",
+"title": "Einladungen aus Mails",
+"text": "Einladungen aus Mails (V01.0.897): Mit „Einladungen aus Mails“ zeigt eine Mail mit Einladung über dem Text einen Abschnitt „Einladung“ mit Titel, Zeit, Ort und wer einlädt; „Zusagen“, „Vielleicht“, „Absagen“ (bei einer Absage des Einladenden „Aus dem Kalender entfernen“), bei mehreren Kalendern eine Auswahl, mit „Mails senden“ der Schalter „Antwort senden an …“. Der Spark prüft und schreibt alles."
 },
 {
 "lang": "de",
@@ -10981,7 +11021,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "1. Log in or ask: Logging in gives the browser a cookie; apps, watch and speakers have a device key instead, calendar apps (calendar server, kalenderserver.py) an app password that locks like a PIN. Steps 2 to 5 run once when logging in, the steps from 6 on with every request. 2. Locked?: Locks are kept per address and per name (or the admin password). A name's lock does not hold for a browser that logged in to that name before (cookie speech_known, only its hash is kept). So a stranger guessing cannot lock the owner out. 3. Password or PIN right?: The check runs in its own thread. An unknown name costs the same work as a wrong PIN, the answer is the same. A wrong attempt waits a second, counts for the lock and, when it comes from outside, for „Emergency stop by itself“. 4. Second step?: If the profile (or the admin) has the second step on and the browser is not trusted, the code from the app or a passkey comes next. A wrong code counts like a wrong PIN. 5. Set the cookie: The address's counter is cleared; strangers' wrong attempts for the name keep counting. The profile cookie is signed and stands in the list of signed-in browsers; it holds at most 90 days without use and is renew"
+"text": "1. Log in or ask: Logging in gives the browser a cookie; apps, watch and speakers have a device key instead, calendar and contacts apps (kalenderserver.py, kontaktserver.py) an app password that locks like a PIN. Steps 2 to 5 run once when logging in, the steps from 6 on with every request. 2. Locked?: Locks are kept per address and per name (or the admin password). A name's lock does not hold for a browser that logged in to that name before (cookie speech_known, only its hash is kept). So a stranger guessing cannot lock the owner out. 3. Password or PIN right?: The check runs in its own thread. An unknown name costs the same work as a wrong PIN, the answer is the same. A wrong attempt waits a second, counts for the lock and, when it comes from outside, for „Emergency stop by itself“. 4. Second step?: If the profile (or the admin) has the second step on and the browser is not trusted, the code from the app or a passkey comes next. A wrong code counts like a wrong PIN. 5. Set the cookie: The address's counter is cleared; strangers' wrong attempts for the name keep counting. The profile cookie is signed and stands in the list of signed-in browsers; it holds at most 90 days without us"
 },
 {
 "lang": "en",
@@ -10989,7 +11029,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "ed while used. The admin cookie is signed with the password, a key of this Spark only and the second step. When the second step was part of it (code, passkey or a trusted browser) the session carries its mark: only then does a profile's admin role count, without an admin sign-in of its own. Then the panel reads the profile's calendars and mail ahead in the background (vorwaermen.py, at most every 600 seconds), so its pages open at once. 6. Find the profile: First what only the panel itself sets (Telegram, „Ask Spark“ over MCP), then the device key (only its hash is stored), then the cookie: signature, age, session still in the list and not logged out. 7. Key free for this path?: A key with a scope (app, watch, room, Home Assistant, writing help, companion, terminal) only reaches its own paths and only while the admin and the profile have the function on. If it is off right now or the profile has its own kill switch on, the panel answers 503 instead of 401, so the app keeps its pairing. 8. No profile and guest access off?: Without a profile only the admin passes (cookie or HTTP Basic, whose wrong attempts count like on the login page), or anybody when the admin opened the assistant "
+"text": "e and is renewed while used. The admin cookie is signed with the password, a key of this Spark only and the second step. When the second step was part of it (code, passkey or a trusted browser) the session carries its mark: only then does a profile's admin role count, without an admin sign-in of its own. Then the panel reads the profile's calendars and mail ahead in the background (vorwaermen.py, at most every 600 seconds), so its pages open at once. 6. Find the profile: First what only the panel itself sets (Telegram, „Ask Spark“ over MCP), then the device key (only its hash is stored), then the cookie: signature, age, session still in the list and not logged out. 7. Key free for this path?: A key with a scope (app, watch, room, Home Assistant, writing help, companion, terminal) only reaches its own paths and only while the admin and the profile have the function on. If it is off right now or the profile has its own kill switch on, the panel answers 503 instead of 401, so the app keeps its pairing. 8. No profile and guest access off?: Without a profile only the admin passes (cookie or HTTP Basic, whose wrong attempts count like on the login page), or anybody when the admin opened "
 },
 {
 "lang": "en",
@@ -10997,7 +11037,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "without password. Guests then only get question and answer. 9. Too many requests?: Per profile, else per address, the panel counts the requests of the last minute: in the chat 120 for a profile or the admin, 30 for a guest. 10. Guest, all places taken?: Guests share 4 places at once in the chat. A place nobody frees counts as free again after 10 minutes. 11. Release per function: For every function the panel asks in a fixed order: the admin's switch (and the one of the function it builds on), guest (never gets one), blocked by the admin for the profile, the profile's own wish, second step needed. It is read anew with every request, so a change holds at once. 12. On to preparing: The request goes on with its profile (or as a guest) to chat_turn.prepare. Speech gets priority over background work, and the profile's other open pages see „answering“."
+"text": "the assistant without password. Guests then only get question and answer. 9. Too many requests?: Per profile, else per address, the panel counts the requests of the last minute: in the chat 120 for a profile or the admin, 30 for a guest. 10. Guest, all places taken?: Guests share 4 places at once in the chat. A place nobody frees counts as free again after 10 minutes. 11. Release per function: For every function the panel asks in a fixed order: the admin's switch (and the one of the function it builds on), guest (never gets one), blocked by the admin for the profile, the profile's own wish, second step needed. It is read anew with every request, so a change holds at once. 12. On to preparing: The request goes on with its profile (or as a guest) to chat_turn.prepare. Speech gets priority over background work, and the profile's other open pages see „answering“."
 },
 {
 "lang": "en",
@@ -14717,7 +14757,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "Contacts like Apple Contacts, stage 3a (V01.0.888, plan apple-stil/plan.md 6a, Dominik 2026-10-21 \"Weiter\"): Contacts is a page of its own in the menu (kontakte.js), shown with \"Contacts\". On the left a search, the address books as groups (chips with counts), A to Z with a letter bar at the edge; on the right the card with initials, Message (sms:), Call (tel:), Mail (opens \"New mail\" on the page E-mail, without \"Send mail\" the mail program), Event (Quick add on the page Calendar) and Share (the card as .vcf), below phone, e-mail, address, website, birthday, note and \"With Anna\": the next appointment within 60 days (by mail address or name) and the latest mail from the mail supply, without asking a mailbox for it. Tapping the sender of a mail opens their card. The address books themselves are under Contacts → Settings (before: Me → Contacts). Changing: admin switch Features → Contacts → \"Edit contacts\" (chat.contacts_edit, off). Then \"Edit\" like Apple (a minus per field, \"+ add\" per kind, \"Done\"), \"New contact\" (into the chosen address book or \"On the Spark\") and \"Delete contact\" after asking. kontaktkarte.py checks every field (numbers only digits and signs, mail form, websites onl"
+"text": "Contacts like Apple Contacts, stage 3a (V01.0.888, plan apple-stil/plan.md 6a, Dominik 2026-10-21 \"Weiter\"): Contacts is a page of its own in the menu (kontakte.js), shown with \"Contacts\". On the left a search, the address books as groups (chips with counts), A to Z with a letter bar at the edge; on the right the card with initials, five buttons with line symbols in the accent colour: Message (sms: on phone, tablet and Mac; a Windows or Linux browser has no messages app, there the button copies the number and says the message goes from the phone), Call (tel:), Mail (opens \"New mail\" on the page E-mail, without \"Send mail\" the mail program), Event (Quick add on the page Calendar) and Share (the card as .vcf), below phone, e-mail, address, website, birthday, note and \"With Anna\": the next appointment within 60 days (by mail address or name) and the latest mail from the mail supply, without asking a mailbox for it. Tapping the sender of a mail opens their card. The address books themselves are under Contacts → Settings (before: Me → Contacts). Changing: admin switch Features → Contacts → \"Edit contacts\" (chat.contacts_edit, off). Then \"Edit\" like Apple (a minus per field, \"+ add\" per "
 },
 {
 "lang": "en",
@@ -14725,7 +14765,31 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "y http/https, birthday as a date, maximum counts) and replaces only the page's lines in the vCard; photo, UID and everything else stay. contacts.save fetches the card fresh, compares the ETag, writes with If-Match (new ones with If-None-Match: *); if it was changed meanwhile, the Spark answers 409 and overwrites nothing. Cards \"On the Spark\" are kept sealed in the profile. Endpoints /api/profile/contacts/page|with|vcf|card with login, profile, CSRF, 64 KB, rate limit kontakte; Notaus blocks changing (423). The assistant and the voice never change contacts. Live: address books, cards on the Spark, changed on the page today (numbers only). Coming in stage 3b: the Spark as a CardDAV server for the iPhone."
+"text": "kind, \"Done\"), \"New contact\" (into the chosen address book or \"On the Spark\") and \"Delete contact\" after asking. kontaktkarte.py checks every field (numbers only digits and signs, mail form, websites only http/https, birthday as a date, maximum counts) and replaces only the page's lines in the vCard; photo, UID and everything else stay. contacts.save fetches the card fresh, compares the ETag, writes with If-Match (new ones with If-None-Match: *); if it was changed meanwhile, the Spark answers 409 and overwrites nothing. Cards \"On the Spark\" are kept sealed in the profile. Endpoints /api/profile/contacts/page|with|vcf|card with login, profile, CSRF, 64 KB, rate limit kontakte; Notaus blocks changing (423). The assistant and the voice never change contacts. Live: address books, cards on the Spark, changed on the page today (numbers only). Stage 3b (the Spark as a CardDAV server) is in the next paragraph."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "Contacts like Apple Contacts, stage 3b: the Spark as a CardDAV server (V01.0.897, kontaktserver.py): admin switch Features → Contacts → \"Contacts for contacts apps\" (chat.contacts_server, off; needs \"Contacts\" and \"Calendar server for calendar apps\"). Then the address book \"On the Spark\" shows in the iPhone's Contacts app (Settings → Apps → Contacts → Accounts → Other → CardDAV account: server = the Spark's address with /carddav/, user = profile id, password = the app password from Calendar → Settings → \"For calendar apps\"). The door is the calendar server's (Basic login, wrong guesses lock like a PIN, rate limit caldav, other sites' web pages refused, Mein Notaus). Only the own address book \"On the Spark\", never iCloud address books (the iPhone has those itself) and never another profile. PROPFIND, REPORT (addressbook-query, addressbook-multiget), GET, PUT, DELETE with etags; per card exactly one vCard with a name or company, at most 256 KB, at most 2000 cards. Writing only with \"Edit contacts\", otherwise read only (403). A change on the page keeps the app's object name. Live: requests, changes, refusals today."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "Invitations from mail (V01.0.897, einladung.py, Dominik 2026-10-21 \"ja alles umsetzen 1-6\", point 3): admin switch Features → Reading e-mail → \"Invitations from mail\" (chat.mail_invites, off; needs Reading e-mail and Calendar). If a mail carries an invitation (a text/calendar part or an .ics file; mail.show only reports invite), the E-mail page shows a bar under the subject (einladung.js): title, time, place, who invites, how many people, the own answer so far and whether the appointment is in a calendar already. \"Accept\" and \"Maybe\" put it in (into the chosen calendar, else the first one the Spark may write into, CalDAV or Spark calendar), \"Decline\" takes it out; an invitation with METHOD:PUBLISH only has \"Add to calendar\", a cancellation by the organiser (CANCEL) only \"Remove from calendar\" after asking. The invitation is someone else's text: at most 256 KB, one appointment (VEVENTs of one UID, at most 50), only REQUEST, PUBLISH and CANCEL. Into the calendar goes a new calendar of the Spark's own making with only the fields needed (time, repetition, title, place, description up to 4000 characters, organiser, at most 100 people, time zones); the sender's alerts, attachments and li"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "nks stay out. The place in the calendar follows from the UID: the same invitation again or its update replaces the appointment instead of adding it twice. With \"Send mail\" the answer (iMIP METHOD:REPLY with the own PARTSTAT) goes from the mailbox the invitation came to, to the organiser (senden.send_now: day limit, Notaus, journal); it can be left out with the tick \"Answer to … send\". Endpoints GET|POST /api/profile/mail/invite with login, profile, CSRF, 4 KB, rate limit einladung; Notaus 423. The assistant does not answer invitations. Live (Calendar): shown, entered, answered today (numbers only). iPhone: the same section above the mail (Einladung.swift)."
 },
 {
 "lang": "en",
@@ -16910,6 +16974,22 @@
 "head": "My things",
 "title": "Contacts like Apple Contacts",
 "text": "Contacts like Apple Contacts (V01.0.888, plan apple-stil/plan.md stage 3a): My things → Contacts (with \"Contacts\"): A to Z with search and a letter bar, the card with Message, Call, Mail, Event and Share (.vcf through the share menu), phone, e-mail, address, website, birthday, note and \"With Anna\". With \"Edit contacts\": \"Edit\", \"+\" for a new contact, remove fields by swiping, \"add\" per kind, \"Delete contact\" after asking; the Spark checks everything and writes the card back into its address book with its ETag. The address books are set up in the browser under Contacts → Settings."
+},
+{
+"lang": "en",
+"src": "iphone-app",
+"file": "iPhone app \"Spark\"",
+"head": "My things",
+"title": "The iPhone's Contacts app",
+"text": "The iPhone's Contacts app (V01.0.897, stage 3b): with \"Contacts for contacts apps\" the iPhone's own Contacts app shows the address book \"On the Spark\" as a CardDAV account (setup in the help \"Contacts for contacts apps\"); with \"Edit contacts\" also for changing."
+},
+{
+"lang": "en",
+"src": "iphone-app",
+"file": "iPhone app \"Spark\"",
+"head": "My things",
+"title": "Invitations from mail",
+"text": "Invitations from mail (V01.0.897): with \"Invitations from mail\" a mail with an invitation shows a section \"Invitation\" above the text with title, time, place and who invites; \"Accept\", \"Maybe\", \"Decline\" (for a cancellation by the organiser \"Remove from calendar\"), with several calendars a choice, with \"Send mail\" the switch \"Send answer to …\". The Spark checks and writes everything."
 },
 {
 "lang": "en",

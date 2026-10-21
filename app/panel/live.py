@@ -1419,9 +1419,15 @@ def snapshot(view="admin", now=None):
         offen = {"on": False}
     try:
         import contacts
-        kon = contacts.for_live()
+        import kontaktserver
+        kon = dict(contacts.for_live(), srv=kontaktserver.for_live())
     except Exception:
         kon = {}
+    try:
+        import einladung
+        ein = einladung.for_live()
+    except Exception:
+        ein = {"on": False}
     try:
         import nasquelle
         nql = nasquelle.for_live()
@@ -1561,6 +1567,8 @@ def snapshot(view="admin", now=None):
                          + (f", abgeglichen vor {kcopy['ago']} min" if kcopy.get("ago") is not None else ""))
         if x["id"] == "cal" and kspark.get("calendars"):   # Spark-Kalender ohne Konto (Stufe 3): numbers only
             x["sub"] += f" · {kspark['calendars']} Spark-Kalender ohne Konto, {kspark['items']} Termine"
+        if x["id"] == "cal" and ein.get("on"):   # Einladungen aus Mails: shown, taken, answered today (numbers)
+            x["sub"] += f" · Einladungen heute: {ein['shown']} gezeigt, {ein['saved']} eingetragen, {ein['answered']} beantwortet"
         if x["id"] == "cal" and ksrv.get("on"):   # Kalender-Server (Stufe 4): app passwords, requests today (numbers)
             x["sub"] += (f" · Kalender-Apps: {ksrv['profiles']} Profile, heute {ksrv['requests']} Anfragen,"
                          f" {ksrv['saved']} Änderungen, {ksrv['refused']} abgelehnt")
@@ -1572,6 +1580,9 @@ def snapshot(view="admin", now=None):
                             f" {lst['link']['refused']} abgelehnt" if lst["link"].get("on") else ""))
         if x["id"] == "contacts" and (kon.get("books") or kon.get("spark") or kon.get("today")):   # Seite Kontakte: numbers only, never a name
             x["sub"] += f" · {kon['books']} Adressbücher, {kon['spark']} Karten auf dem Spark, heute {kon['today']} auf der Seite geändert"
+        if x["id"] == "contacts" and kon.get("srv", {}).get("on"):   # Kontakte-Server: requests and changes today (numbers)
+            x["sub"] += (f" · Kontakte-Apps: heute {kon['srv']['requests']} Anfragen, {kon['srv']['saved']} Änderungen,"
+                         f" {kon['srv']['refused']} abgelehnt")
         if x["id"] == "cal" and offen.get("on"):   # Offen (vorgaenge.py): numbers only, never a title
             x["sub"] += (f" · Offen: {offen['braucht']} brauchen jemanden bei {offen['profiles']} Profilen, {offen['spaeter']} später,"
                          f" heute {offen['erledigt']} erledigt, {offen['wieder']} wieder da, {offen['streams']} Seiten verbunden,"

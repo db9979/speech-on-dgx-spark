@@ -130,6 +130,10 @@ Each tile follows only the admin's release of its function (Own documents, Creat
 
 **Contacts like Apple Contacts** (V01.0.888, plan `apple-stil/plan.md` stage 3a): My things → Contacts (with "Contacts"): A to Z with search and a letter bar, the card with Message, Call, Mail, Event and Share (`.vcf` through the share menu), phone, e-mail, address, website, birthday, note and "With Anna". With "Edit contacts": "Edit", "+" for a new contact, remove fields by swiping, "add" per kind, "Delete contact" after asking; the Spark checks everything and writes the card back into its address book with its ETag. The address books are set up in the browser under Contacts → Settings.
 
+**The iPhone's Contacts app** (V01.0.897, stage 3b): with "Contacts for contacts apps" the iPhone's own Contacts app shows the address book "On the Spark" as a CardDAV account (setup in the help "Contacts for contacts apps"); with "Edit contacts" also for changing.
+
+**Invitations from mail** (V01.0.897): with "Invitations from mail" a mail with an invitation shows a section "Invitation" above the text with title, time, place and who invites; "Accept", "Maybe", "Decline" (for a cancellation by the organiser "Remove from calendar"), with several calendars a choice, with "Send mail" the switch "Send answer to …". The Spark checks and writes everything.
+
 ## Messages to other profiles
 
 You write in Chats (button at the top right when chats are on). Since V01.0.488 the app has no messages window of its own and no notification with a reply field any more; new chat messages arrive as "💬 name" and open the app. With Siri: "Message with Spark" asks for recipient and text and confirms before sending; the message lands in the chat with that person, "everybody" in the group "Alle". The name must match a profile that takes your messages (name or call name). When several fit, Siri asks "Whom do you mean?" with at most 4 names; for an unknown name it says at most 3 similar ones. The Today card "Chats" counts unread chat messages. Who may write to you is set in the browser (Me → Conversation → Chats). Needs the next TestFlight build.

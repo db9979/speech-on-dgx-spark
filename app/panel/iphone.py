@@ -160,6 +160,9 @@ THINGS = {
     # Kontakte (contacts.py, Apple-Stil „6a“): the page's cards, „Mit Anna“, a card as .vcf; changing, adding and
     # deleting only with Kontakte ändern (its own function, checked there again; the address books stay in the browser)
     "contacts": ((("GET",), r"/api/profile/contacts/page"), (("GET",), r"/api/profile/contacts/(?:with|vcf)/[csv][0-9a-f]{12}")),
+    # Einladungen aus Mails (einladung.py): the invitation in a mail and the tap (the answer mail is checked there
+    # against „Mails senden“ again)
+    "einladungen": ((("GET", "POST"), r"/api/profile/mail/invite"),),
     "kontakteaendern": ((("POST",), r"/api/profile/contacts/card"), (("PUT", "DELETE"), r"/api/profile/contacts/card/[cs][0-9a-f]{12}")),
     # Offen (vorgaenge.py, plan assistent-zentrale): the cards, one button, „gesehen“; the app asks again when it
     # comes to the front (the event stream stays with the browser)

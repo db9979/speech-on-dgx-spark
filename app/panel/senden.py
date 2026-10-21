@@ -275,6 +275,32 @@ def send(uid, token):
     return {"sent": p["n"] - refused, "refused": refused, "copy": copy}
 
 
+def send_now(uid, acct, msg):
+    """A mail the Spark itself composed after a tap (einladung.py: the answer to an invitation), without a preview
+    sheet: counted like every sent mail, held by the Notaus, one journal line for each outcome."""
+    who = profiles.log_name(profiles.by_id(uid))
+    try:
+        notaus.stop("aktion", uid)
+        with _lock:
+            if _count(uid) >= MAX_DAY:
+                raise ValueError(f"at most {MAX_DAY} mails a day")
+        refused = _smtp(acct, msg)
+    except notaus.NotausAktiv:
+        print(f"mail: send refused, notaus | {who}", flush=True)
+        raise
+    except ValueError:
+        print(f"mail: send refused | {who}", flush=True)
+        raise
+    except Exception as e:
+        print(f"mail: send failed ({type(e).__name__}) | {who}", flush=True)
+        raise
+    with _lock:
+        _today["n"][uid] = _today["n"].get(uid, 0) + 1
+        write_json(SENT_FILE, {"day": _today["day"], "n": dict(_today["n"])}, mode=0o600)
+    print(f"mail: sent by a tap | {refused} refused | {who}", flush=True)
+    return refused
+
+
 def _smtp(acct, msg):
     host, port = outgoing(acct)
     ctx = ssl.create_default_context()

@@ -170,6 +170,8 @@ MODULE = {
     "vorwaermen": ("dienste", "Vorwärmen: liest beim Anmelden Kalender, Mails, Für dich und Kontakte vorab in den Speicher"),
     "halive": ("dienste", "Home Assistant live: hält für aktive Profile eine Kopie aller Zustände über eine WebSocket-Verbindung"),
     "contacts": ("dienste", "Kontakte per CardDAV: Seite Kontakte wie Apple, ändern nur mit Schalter, zurück mit ETag"),
+    "einladung": ("dienste", "Einladungen aus Mails: eine .ics-Einladung mit einem Tipp in den Kalender, Antwort an den Einladenden"),
+    "kontaktserver": ("dienste", "Kontakte-Server: das Adressbuch „Auf dem Spark“ für Kontakte-Apps (CardDAV unter /carddav/)"),
     "kontaktkarte": ("dienste", "Kontakte ändern: Felder prüfen, nur die Zeilen der Seite in der vCard ersetzen, Rest bleibt"),
     "tasks": ("dienste", "Listen für Einkauf und Aufgaben"),
     "vorgaenge": ("dienste", "Alles Offene im Assistenten: Karten mit Knöpfen im Gespräch, Später, Seite Offen, Vorschläge mit Ja-Knopf"),

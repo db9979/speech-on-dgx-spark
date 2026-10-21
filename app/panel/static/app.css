@@ -2165,7 +2165,8 @@ textarea{resize:none}textarea[data-fest]{resize:vertical}textarea.feldplatz{padd
 .konacts{display:flex;justify-content:center;gap:6px;margin-top:12px}
 .konact{display:flex;flex-direction:column;align-items:center;gap:2px;flex:1 1 0;min-width:0;max-width:72px;padding:7px 2px;border-radius:12px;border:0;font:inherit;font-size:11.5px;
   background:color-mix(in srgb,var(--acc) 10%,transparent);color:var(--acc);cursor:pointer;text-decoration:none}
-.konact i{font-style:normal;font-size:18px;line-height:1}.konact:disabled{opacity:.4;cursor:default}
+.konact svg{display:block;margin-bottom:1px}.konact:hover:not(:disabled){background:color-mix(in srgb,var(--acc) 16%,transparent)}.konact:disabled{opacity:.4;cursor:default}
+.konhint{text-align:center;font-size:12.5px;margin-top:6px;min-height:0}.konhint:empty{display:none}
 .konf{padding:8px 2px;border-bottom:1px solid var(--line);overflow-wrap:anywhere}.konf small{display:block;color:var(--mut);font-size:12px}
 .konfoot{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:12px}
 .konform label{display:block;margin:8px 0 2px;font-size:12.5px;color:var(--mut)}.konform label :is(input,select,textarea){width:100%;margin-top:2px}
@@ -2207,3 +2208,8 @@ textarea{resize:none}textarea[data-fest]{resize:vertical}textarea.feldplatz{padd
 .wkempty{position:absolute;inset:0;display:grid;place-items:center;padding:20px;text-align:center;pointer-events:none}
 @media (max-width:1100px){.wkgrid{grid-template-columns:minmax(0,1fr) 280px}.wkside{grid-column:1/-1;order:3}}
 @media (max-width:760px){.wkgrid{grid-template-columns:minmax(0,1fr)}.wkmap{order:1;height:62vh;min-height:340px}.wkdet{order:2}.wkside{order:3}.wkzoom{margin-left:0}.wkzoom .b{min-width:44px;min-height:44px}}
+/* Einladungen aus Mails (einladung.js): the bar under the subject, like Apple Mail's invitation card */
+.einbar{margin:4px 0 12px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:color-mix(in srgb,var(--acc) 5%,transparent)}
+.einhead{display:flex;gap:10px;align-items:flex-start}.einhead>svg{color:var(--acc);flex:none;margin-top:2px}.einhead small{display:block;color:var(--mut)}
+.einstate{margin-top:8px;font-size:13px}.einpick{display:flex;gap:8px;align-items:center;margin-top:8px}.einpick select{flex:1;min-width:0}
+.einreply{margin-top:6px;font-size:13px}.einacts{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.einacts .b{flex:1 1 auto}

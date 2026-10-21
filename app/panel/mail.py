@@ -1023,6 +1023,7 @@ def older_today():
 def show(uid, ref, folder="INBOX"):
     """One message for the page E-Mail as plain text (no HTML, no pictures from outside, long links cut by plain()),
     fetched with PEEK so it stays unread; None when it is gone, ValueError for an id of no own mailbox."""
+    import einladung   # here: einladung.py imports mail
     msg = message(uid, ref, folder)
     if msg is None:
         return None
@@ -1030,7 +1031,8 @@ def show(uid, ref, folder="INBOX"):
     return {"id": str(ref), "from": known(uid, _addr(msg.get("From", ""))), "to": _hdr(msg.get("To", ""))[:200],
             "date": int(_date(msg.get("Date")).timestamp()), "subject": _hdr(msg.get("Subject", "")),
             "text": text, "files": names[:20], "mid": re.sub(r"[\s\x00-\x1f]", "", str(msg.get("Message-ID", "")))[:300],
-            "parts": [{"n": i, "name": name, "kb": max(1, size // 1024)} for i, (_, name, size) in enumerate(files(msg)[:20])]}
+            "parts": [{"n": i, "name": name, "kb": max(1, size // 1024)} for i, (_, name, size) in enumerate(files(msg)[:20])],
+            "invite": einladung.has(uid, msg)}   # Einladungen aus Mails (einladung.py, Apple-Stil thread)
 
 
 FILE_MAX = 25 * 1024 * 1024     # one attachment the page hands out (Mailclient Stufe C)

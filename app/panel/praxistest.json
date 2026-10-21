@@ -2538,6 +2538,20 @@
 "titel": "Werkstatt zählt ehrlich",
 "text": "A: Update. Zustand → Werkstatt → Alles testen (oder den Nachtlauf abwarten). B: Im Ergebnis stehen grün, rot, wackelig und „nicht gelaufen“ (die Seiten-Tests, die einen Browser brauchen) mit einem Satz, warum. C: Rot ist höchstens noch ein Rest; „Für Claude kopieren“ nennt auch „nicht gelaufen“. D: iPhone-App: Spark verwalten → Werkstatt → Ergebnis zeigt die Zeile „nicht gelaufen“. E: Auf tars: sudo speech-spark info zeigt die Adressen.",
 "thread": "Werkstatt übersichtlich bedienen"
+},
+{
+"id": "P387",
+"v": 897,
+"titel": "Kontakte-App des iPhone (CardDAV)",
+"text": "A: Update auf V01.0.897. Funktionen → Kontakte → „Kontakte für Kontakte-Apps“ an (Kalender-Server muss an sein). Kalender → Einstellungen → „Für Kalender-Apps“: App-Passwort, falls noch keins. B: iPhone: Einstellungen → Apps → Kontakte → Accounts → Account hinzufügen → Andere → CardDAV-Account: Server https://<Spark>/carddav/, Benutzer = Profil-Kennung, Passwort = App-Passwort. Die Gruppe „Auf dem Spark“ erscheint in Kontakte. C: Im Panel einen Kontakt „Auf dem Spark“ anlegen: kommt in der Kontakte-App an (nach dem Abgleich). D: In der Kontakte-App einen Kontakt in „Auf dem Spark“ anlegen und ändern: steht auf der Seite Kontakte. E: „Kontakte ändern“ aus: die Kontakte-App kann nicht mehr speichern, zeigt aber alles. F: Falsches Passwort fünfmal: gesperrt wie bei einer PIN.",
+"thread": "Mail, Kalender, Kontakte wie bei Apple"
+},
+{
+"id": "P388",
+"v": 897,
+"titel": "Einladung aus einer Mail in den Kalender",
+"text": "A: Update auf V01.0.897. Funktionen → E-Mail lesen → „Einladungen aus Mails“ an (für die Antwort auch „Mails senden“). B: Von einem anderen Konto (z. B. Outlook oder Google) eine Einladung an dein Postfach schicken. Auf der Seite E-Mail öffnen: unter dem Betreff stehen Titel, Zeit, Ort und wer einlädt. C: „Zusagen“: der Termin steht im Kalender, der Einladende bekommt die Zusage (Häkchen „Antwort an … senden“). D: Die Einladung ändern (andere Uhrzeit) und neu öffnen, „Zusagen“: der Termin ist verschoben, nicht doppelt. E: Die Einladung beim Einladenden absagen: die Absage-Mail zeigt „Aus dem Kalender entfernen“, nach dem Tipp ist er weg. F: Dasselbe in der iPhone-App unter E-Mail. G: Kontakte: die Karte zeigt Linien-Symbole; „Nachricht“ am Windows-PC kopiert die Nummer und sagt es.",
+"thread": "Mail, Kalender, Kontakte wie bei Apple"
 }
 ]
 }

@@ -264,6 +264,7 @@ Home Assistant, Mail, Kalender, Aufgaben, Wetter, reMarkable, MCP und was der Sp
 | `app/panel/beobachten.py` | Beobachten: Funde prüfen, nur Neues melden (Eigene Aufgaben) |
 | `app/panel/calendars.py` | Kalender und Tagesbriefing, einzelne Kalender mit anderen Profilen geteilt |
 | `app/panel/contacts.py` | Kontakte per CardDAV: Seite Kontakte wie Apple, ändern nur mit Schalter, zurück mit ETag |
+| `app/panel/einladung.py` | Einladungen aus Mails: eine .ics-Einladung mit einem Tipp in den Kalender, Antwort an den Einladenden |
 | `app/panel/extras.py` | Kleine Zusatzdienste mit ihren Werkzeugen |
 | `app/panel/feeds.py` | Reddit und Feeds: eigener Reddit-Posteingang, Subreddits und RSS, nur lesen |
 | `app/panel/fuerdich.py` | Für dich: findet Rechnungen, Verträge, Bestellungen, Angebote, offene Antworten, Phishing; letzte Lesung versiegelt |
@@ -276,6 +277,7 @@ Home Assistant, Mail, Kalender, Aufgaben, Wetter, reMarkable, MCP und was der Sp
 | `app/panel/kalenderspiegel.py` | Spark-Kalender: verschlüsselte Kopie jedes CalDAV-Kalenders, holt nur Änderungen, Änderungen der Seite sofort |
 | `app/panel/kalserie.py` | Kalender wie Apple: Wiederholen, Erinnerung, Personen ohne Einladung, Serie nur dieser oder alle künftigen |
 | `app/panel/kontaktkarte.py` | Kontakte ändern: Felder prüfen, nur die Zeilen der Seite in der vCard ersetzen, Rest bleibt |
+| `app/panel/kontaktserver.py` | Kontakte-Server: das Adressbuch „Auf dem Spark“ für Kontakte-Apps (CardDAV unter /carddav/) |
 | `app/panel/listendav.py` | Listen in Erinnerungen: die Spark-Listen eines Profils als Aufgabenlisten (VTODO) des Kalender-Servers |
 | `app/panel/mail.py` | Mail lesen per IMAP |
 | `app/panel/mailansicht.py` | Mail formatiert (Seite E-Mail, iPhone): HTML bereinigt, Rahmen ohne Skript, Bilder von außen nur per Klick |
@@ -1594,7 +1596,7 @@ flowchart TD
   s10 -->|ja| s10x
 ```
 
-1. <a id="kn-zugang-s1"></a>**Anmelden oder fragen**: Beim Anmelden bekommt der Browser ein Cookie; Apps, Uhr und Lautsprecher haben stattdessen einen Geräteschlüssel, Kalender-Apps (Kalender-Server, kalenderserver.py) ein App-Passwort, das wie eine PIN sperrt. Die Schritte 2 bis 5 laufen einmal beim Anmelden, die Schritte ab 6 bei jeder Anfrage.
+1. <a id="kn-zugang-s1"></a>**Anmelden oder fragen**: Beim Anmelden bekommt der Browser ein Cookie; Apps, Uhr und Lautsprecher haben stattdessen einen Geräteschlüssel, Kalender- und Kontakte-Apps (kalenderserver.py, kontaktserver.py) ein App-Passwort, das wie eine PIN sperrt. Die Schritte 2 bis 5 laufen einmal beim Anmelden, die Schritte ab 6 bei jeder Anfrage.
 2. <a id="kn-zugang-s2"></a>**Gesperrt?**: Gesperrt wird je Adresse und je Name (oder Admin-Passwort). Die Sperre eines Namens gilt nicht für einen Browser, der sich mit diesem Namen schon angemeldet hat (Cookie speech_known, gespeichert wird nur sein Hash). So kann ein Fremder durch Raten den Besitzer nicht aussperren.
 3. <a id="kn-zugang-s3"></a>**Passwort oder PIN richtig?**: Geprüft wird in einem eigenen Thread. Ein unbekannter Name kostet dieselbe Arbeit wie eine falsche PIN, die Antwort ist dieselbe. Ein Fehlversuch wartet eine Sekunde, zählt für die Sperre und, wenn er von außen kommt, für „Notaus von selbst“.
 4. <a id="kn-zugang-s4"></a>**Zweiter Schritt?**: Hat das Profil (oder der Admin) den zweiten Schritt an und ist der Browser nicht als vertraut eingetragen, kommt als Nächstes der Code aus der App oder ein Passkey. Ein falscher Code zählt wie eine falsche PIN.

@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.897** Contacts like Apple Contacts (stage 3b): the Spark as a CardDAV server, the address book "On the Spark" shows in the iPhone's Contacts app (switch "Contacts for contacts apps", off); invitations from mail: an .ics invitation into the calendar with one tap, Accept, Maybe, Decline to the organiser (switch "Invitations from mail", off), panel and iPhone; the contact card with line symbols, "Message" on a PC copies the number
 - **V01.0.896** Workshop counts honestly: page tests without a browser show as "did not run" instead of red or green; fix `speech-spark info` without an IP
 - **V01.0.895** Fix iPhone app: the knowledge map computes the points' places in Double (cos and sin were ambiguous, the app did not build since V01.0.894)
 - **V01.0.894** Knowledge map (stage 1): the knowledge book gets its own menu entry with Pages and Map; connections between pages, each with its source and checked by fixed rules, "Wrong", export as Mermaid, Graphviz, SVG, PNG and Obsidian links, native map on the iPhone (off by default)
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.890** Fix iPhone app: the contact card loads the .vcf file for Share as data (the app did not build since V01.0.888)
 - **V01.0.889** CarPlay round 2: no barge-in in the car, „not recognised“ instead of a silent end, drop-outs end nothing, mail and deadlines never hang, „My day“, „Speak a reminder“, briefing when getting in
 - **V01.0.888** Contacts like Apple Contacts (stage 3a): a page of its own in the menu with address books as groups, search, A–Z with a letter bar, the card with Message, Call, Mail, Event, Share and "With Anna" (next appointment, latest mail); tapping a mail's sender opens the card; with the admin switch "Edit contacts" (off) editing with − and + per field, back into the own address book with its ETag, new cards also "On the Spark"; iPhone under My things
-- **V01.0.887** Load older mail: at the end of the list the next 50 older mails come by themselves, in the inbox and in every folder, down to the first mail; a search goes over the whole mailbox on the mail server; panel, iPhone and spark-tui (up to 200)
 
 
 

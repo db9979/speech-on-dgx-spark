@@ -74,19 +74,30 @@ function konDetail(w){const box=w.querySelector('.kondet'),c=konCard(),f=KON.for
   box.innerHTML=back+(KON.msg?`<div class="note warn">${esc(KON.msg)}</div>`:'')+(f?konFormHtml(f):konCardHtml(c));
   box.querySelector('[data-k=back]').onclick=()=>{KON.sel='';KON.form=null;KON.msg='';konDraw()};
   if(f)konFormBind(box);else konCardBind(box,c)}
+// the five buttons as line symbols in the accent colour, like the mail buttons (Dominik 2026-10-21: no emoji)
+const KON_IC={sms:'M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z',
+  tel:'M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z',
+  mail:'M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM3 7l9 6 9-6',
+  event:'M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM3 10h18M8 3v4M16 3v4',
+  share:'M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7M16 6l-4-4-4 4M12 2v13'};
+const konIc=k=>`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${KON_IC[k]}"/></svg>`;
+// „Nachricht“ opens the messages app where there is one (phone, tablet, Mac); a Windows or Linux browser has none,
+// there the button copies the number and says so (before, nothing happened)
+const konSms=()=>/iPhone|iPad|Android|Macintosh/.test(navigator.userAgent)||matchMedia('(pointer:coarse)').matches;
 // the card: the person, the five buttons, the fields, „Mit Anna“
 function konCardHtml(c){const tel=(c.phones.find(p=>p[0]==='Handy')||c.phones[0]||[])[1]||'',mail=c.emails[0]||'',bk=konBook(c.book);
-  const act=(k,ic,lbl,on,href)=>href&&on?`<a class="konact" data-k="${k}" href="${esc(href)}"><i aria-hidden="true">${ic}</i>${esc(lbl)}</a>`
-    :`<button type="button" class="konact" data-k="${k}"${on?'':' disabled'}><i aria-hidden="true">${ic}</i>${esc(lbl)}</button>`;
+  const act=(k,lbl,on,href)=>{const ic=konIc(k);return href&&on?`<a class="konact" data-k="${k}" href="${esc(href)}">${ic}${esc(lbl)}</a>`
+    :`<button type="button" class="konact" data-k="${k}"${on?'':' disabled'}>${ic}${esc(lbl)}</button>`};
   const num=s=>s.replace(/[^\d+]/g,'');
   const row=(lbl,val)=>`<div class="konf"><small>${esc(lbl)}</small><div>${val}</div></div>`;
   const bd=c.bday?(()=>{const m=/^(\d{4}|-)-(\d\d)-(\d\d)$/.exec(c.bday);if(!m)return '';const dt=new Date(2000,+m[2]-1,+m[3]);
     return dt.toLocaleDateString(L==='en'?'en-GB':'de-DE',{day:'numeric',month:'long'})+(m[1]!=='-'?' '+m[1]:'')})():'';
   return `<div class="koncard"><div class="konhead"><span class="konav big" aria-hidden="true">${esc(konInit(c))}</span><h3>${esc(c.name)}</h3>`+
     (c.title||c.org&&c.org!==c.name?`<div class="mut">${esc([c.title,c.org!==c.name?c.org:''].filter(Boolean).join(' · '))}</div>`:'')+
-    `<div class="konacts">${act('sms','💬',t('Nachricht','Message'),!!tel,tel&&'sms:'+num(tel))}${act('tel','📞',t('Anruf','Call'),!!tel,tel&&'tel:'+num(tel))}`+
-    `${act('mail','✉️',t('Mail','Mail'),!!mail)}${act('event','📅',t('Termin','Event'),typeof CAL_ON==='undefined'||CAL_ON)}`+
-    `${act('share','⤴︎',t('Teilen','Share'),true,'/api/profile/contacts/vcf/'+encodeURIComponent(c.id))}</div></div>`+
+    `<div class="konacts">${act('sms',t('Nachricht','Message'),!!tel,konSms()&&tel&&'sms:'+num(tel))}${act('tel',t('Anruf','Call'),!!tel,tel&&'tel:'+num(tel))}`+
+    `${act('mail',t('Mail','Mail'),!!mail)}${act('event',t('Termin','Event'),typeof CAL_ON==='undefined'||CAL_ON)}`+
+    `${act('share',t('Teilen','Share'),true,'/api/profile/contacts/vcf/'+encodeURIComponent(c.id))}</div>`+
+    `<div class="konhint mut" aria-live="polite"></div></div>`+
     c.phones.map(p=>row(konKind(p[0]),`<a href="tel:${esc(num(p[1]))}">${esc(p[1])}</a>`)).join('')+
     c.emails.map(m=>row(t('E-Mail','E-mail'),`<a href="#" data-mail="${esc(m)}">${esc(m)}</a>`)).join('')+
     c.addrs.map(a=>row(konKind(a.kind),esc([a.street,[a.zip,a.city].filter(Boolean).join(' '),a.country].filter(Boolean).join('\n')).replace(/\n/g,'<br>'))).join('')+
@@ -102,6 +113,11 @@ function konCardBind(box,c){
   box.querySelectorAll('[data-mail]').forEach(a=>a.onclick=e=>{e.preventDefault();mail(a.dataset.mail)});
   const b=k=>box.querySelector(`.konacts [data-k=${k}]`);
   if(c.emails[0])b('mail').onclick=()=>mail(c.emails[0]);
+  const sms=b('sms'),hint=box.querySelector('.konhint');
+  if(sms.tagName==='BUTTON'&&!sms.disabled)sms.onclick=async()=>{const n=(c.phones.find(p=>p[0]==='Handy')||c.phones[0])[1];
+    let ok=false;try{await navigator.clipboard.writeText(n);ok=true}catch(e){}
+    hint.textContent=(ok?t('Nummer kopiert. ','Number copied. '):n+' · ')+t('Dieser Rechner hat keine Nachrichten-App; die Nachricht geht vom Handy aus, auch in der Spark-App unter Kontakte.',
+      'This computer has no messages app; send the message from the phone, also in the Spark app under Contacts.')};
   b('event').onclick=()=>{if(typeof KAL==='undefined')return;KAL.q=t('Termin mit ','Meeting with ')+c.name+' ';KAL.qi=null;KAL.qfocus=true;icTabSet('cal','show');goSec('cal')};
   b('share').setAttribute('download',(c.name||'kontakt').replace(/[^\p{L}\p{N} ._-]/gu,'')+'.vcf');
   const ed=box.querySelector('[data-k=edit]');

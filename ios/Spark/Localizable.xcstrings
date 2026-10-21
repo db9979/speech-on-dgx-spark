@@ -16120,6 +16120,196 @@
           }
         }
       }
+    },
+    "Abgesagt von ": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelled by "
+          }
+        }
+      }
+    },
+    "Einladung von ": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invitation from "
+          }
+        }
+      }
+    },
+    "Aus dem Kalender entfernen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove from calendar"
+          }
+        }
+      }
+    },
+    "Antwort senden an ": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send answer to "
+          }
+        }
+      }
+    },
+    "In den Kalender": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to calendar"
+          }
+        }
+      }
+    },
+    "Zusagen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accept"
+          }
+        }
+      }
+    },
+    "Vielleicht": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maybe"
+          }
+        }
+      }
+    },
+    "Absagen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Decline"
+          }
+        }
+      }
+    },
+    "Den abgesagten Termin aus dem Kalender entfernen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove the cancelled appointment from the calendar?"
+          }
+        }
+      }
+    },
+    "Zugesagt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accepted"
+          }
+        }
+      }
+    },
+    "Abgesagt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Declined"
+          }
+        }
+      }
+    },
+    "Abgesagt. Steht in keinem Kalender.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelled. In no calendar."
+          }
+        }
+      }
+    },
+    "Abgesagt. Steht noch im Kalender „%@“.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelled. Still in the calendar \"%@\"."
+          }
+        }
+      }
+    },
+    "Im Kalender „%@“": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In the calendar \"%@\""
+          }
+        }
+      }
+    },
+    "Noch nicht im Kalender": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not in the calendar yet"
+          }
+        }
+      }
+    },
+    "Aus dem Kalender entfernt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Removed from the calendar."
+          }
+        }
+      }
+    },
+    "Nicht im Kalender.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not in the calendar."
+          }
+        }
+      }
+    },
+    "Im Kalender „%@“.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In the calendar \"%@\"."
+          }
+        }
+      }
+    },
+    "Antwort gesendet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Answer sent."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

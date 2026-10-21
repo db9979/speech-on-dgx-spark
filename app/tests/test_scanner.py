@@ -59,6 +59,8 @@ OPEN = {
     "/api/esp32/ping": "\"Netz prüfen\": a random marker of this Spark, nothing else; only while the admin switched speakers on",
     "/": "the page itself",
     "/.well-known/caldav": "only a redirect to /caldav/ for calendar apps, 404 while the admin has the calendar server off (kalenderserver.py)",
+    "/.well-known/carddav": "only a redirect to /carddav/ for contacts apps, 404 while the admin has the contacts server off (kontaktserver.py)",
+    "/carddav": "contacts apps log in like calendar apps (kalenderserver.login: app password, lockout, rate limit, own path only), 404 while off",
     "/caldav": "calendar apps log in with HTTP Basic and the profile's app password (kalenderserver.login: lockout, rate limit, own path only), 404 while off",
     "/static/{name}": "page files",
     "/static/js/{name}": "page files",

@@ -687,7 +687,8 @@ async def save(uid, cid, bid, f, seen=""):
             x = _find(uid, cid)
             if x.get("book") == SPARK:
                 text = kontaktkarte.patch(x["vcf"], f)
-                card = dict(_card(text, cid, SPARK, "", ""), vcf=text)
+                # the object name a contacts app gave it (kontaktserver.py) stays, so the app sees a change
+                card = dict(_card(text, cid, SPARK, "", ""), vcf=text, **({"dav": x["dav"]} if x.get("dav") else {}))
             else:
                 a, _book = _place(uid, x.get("book"))
                 async with _client(a, seen=False) as c:

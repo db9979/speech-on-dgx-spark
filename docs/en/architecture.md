@@ -264,6 +264,7 @@ Home Assistant, mail, calendar, tasks, weather, reMarkable, MCP and what the Spa
 | `app/panel/beobachten.py` | Eigene Aufgaben, die beobachten: „Sag mir Bescheid, wenn es eine neue Firmware für meine FRITZ!Box gibt“, „Erinnere mich, wenn der Flug nach Rom unter 100 Eu … |
 | `app/panel/calendars.py` | Calendar and daily briefing per profile (guests have neither). |
 | `app/panel/contacts.py` | Contacts per profile, read only (CardDAV: iCloud, Nextcloud, others). |
+| `app/panel/einladung.py` | Einladungen aus Mails: a mail with an invitation (.ics, iMIP) shows above its text what, when, where and who invites, and with one tap it goes into a calenda … |
 | `app/panel/extras.py` | Small services the assistant can use besides the big ones in chat.py (weather, contacts, parcels ...). |
 | `app/panel/feeds.py` | Reddit und Feeds: each profile connects its own Reddit inbox (the private RSS link from reddit.com → Settings → RSS-Feeds), subreddits and any other RSS or A … |
 | `app/panel/fuerdich.py` | Für dich: the Spark looks through the profile's own mailboxes and finds what needs the person or is good to know: rechnung a bill with an amount, with the da … |
@@ -276,6 +277,7 @@ Home Assistant, mail, calendar, tasks, weather, reMarkable, MCP and what the Spa
 | `app/panel/kalenderspiegel.py` | Spark-Kalender, Stufe 1: a copy of every CalDAV calendar on the Spark itself. |
 | `app/panel/kalserie.py` | Kalender wie Apple Kalender: the fields of an appointment the page Kalender and the iPhone app set (place, all day, start and end, repeat, alert, people, not … |
 | `app/panel/kontaktkarte.py` | Kontakte wie Apple Kontakte: the fields of a contact the page Kontakte and the iPhone app edit, checked, and written into a vCard. |
+| `app/panel/kontaktserver.py` | Kontakte wie Apple Kontakte, Stufe 3b: the Spark as a CardDAV server, so the iPhone's own Kontakte app (or Thunderbird, DAVx5 on Android) shows and changes t … |
 | `app/panel/listendav.py` | Listen in Erinnerungen: the profile's Spark lists (Einkauf, Aufgaben, own lists) as task lists (VTODO) of the Spark's CalDAV server (kalenderserver.py), so t … |
 | `app/panel/mail.py` | Reading e-mail per profile over IMAP (read only; guests have none). |
 | `app/panel/mailansicht.py` | Mail formatted like it was sent: the HTML part of a mail as the page E-Mail shows it, made safe here on the Spark before any browser sees it. |
@@ -1594,7 +1596,7 @@ flowchart TD
   s10 -->|yes| s10x
 ```
 
-1. <a id="kn-zugang-s1"></a>**Log in or ask**: Logging in gives the browser a cookie; apps, watch and speakers have a device key instead, calendar apps (calendar server, kalenderserver.py) an app password that locks like a PIN. Steps 2 to 5 run once when logging in, the steps from 6 on with every request.
+1. <a id="kn-zugang-s1"></a>**Log in or ask**: Logging in gives the browser a cookie; apps, watch and speakers have a device key instead, calendar and contacts apps (kalenderserver.py, kontaktserver.py) an app password that locks like a PIN. Steps 2 to 5 run once when logging in, the steps from 6 on with every request.
 2. <a id="kn-zugang-s2"></a>**Locked?**: Locks are kept per address and per name (or the admin password). A name's lock does not hold for a browser that logged in to that name before (cookie speech_known, only its hash is kept). So a stranger guessing cannot lock the owner out.
 3. <a id="kn-zugang-s3"></a>**Password or PIN right?**: The check runs in its own thread. An unknown name costs the same work as a wrong PIN, the answer is the same. A wrong attempt waits a second, counts for the lock and, when it comes from outside, for „Emergency stop by itself“.
 4. <a id="kn-zugang-s4"></a>**Second step?**: If the profile (or the admin) has the second step on and the browser is not trusted, the code from the app or a passkey comes next. A wrong code counts like a wrong PIN.

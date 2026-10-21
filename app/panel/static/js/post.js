@@ -246,6 +246,7 @@ function postDetail(w){const box=w.querySelector('.postdet'),m=POST.msg;if(!box)
       (SEND_ON?'':`<div class="fh">${esc(t('Antworten geht mit dem Assistenten: „Antworte Anna …“.','Reply with the assistant: "Reply to Anna …".'))}</div>`)+`<div class="postordmsg fh"></div>`+foot;
     const fr=box.querySelector('.postframe');if(fr)postFrame(fr,box.querySelector('.postlink'));
     const who=box.querySelector('.posthdr .postl1 b');if(who&&window.konShow&&CON_ON){who.className='postwho';who.tabIndex=0;who.setAttribute('role','button');who.onkeydown=e=>{if(e.key==='Enter')who.click()};who.title=t('Kontaktkarte','Contact card');who.onclick=()=>konShow(postAddr(m.from),postName(m.from))}   // Kontakte: the sender's card
+    if(m.invite&&window.einShow)einShow(box.querySelector('.postsubjbig'),POST.sel,postSrc());   // Einladungen aus Mails (einladung.js)
     const pics=box.querySelector('[data-k=pics]');if(pics)pics.onclick=()=>{POST.pics=POST.sel;postDetail(w)}}
   const msg=box.querySelector('.postordmsg')||document.createElement('div');
   box.querySelector('[data-close]').onclick=()=>{POST.sel=null;POST.msg=null;postDraw()};
