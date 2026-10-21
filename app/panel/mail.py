@@ -166,6 +166,8 @@ def forget(uid):
     mailvorrat.forget(uid)
     import mailregeln   # mailregeln.py imports this module
     mailregeln.forget(uid)   # the mail rules go with the mailboxes
+    import senden   # senden.py imports this module
+    senden.later_forget(uid)   # and the planned mails (Später senden)
 
 
 def _drop(uid):
@@ -316,7 +318,11 @@ def html_text(s):
 
 
 QUOTE = re.compile(r"^\s*(>|-{2,}\s*(Original|Ursprüngliche)|Am .{5,120} schrieb .{1,120}:\s*$|On .{5,120} wrote:\s*$"
-                   r"|Von: .+|From: .+|-- ?$)", re.I)
+                   r"|Von: .+|From: .+|-- ?$|_{10,}\s*$"
+                   # the phone's or program's own line under a mail (Dominik 2026-10-21 „2“): no text of the person
+                   r"|(Von meinem|Gesendet von meinem|Sent from my|Gesendet mit|Get Outlook for|Gesendet von Mail für) .{1,60}$)", re.I)
+# „Am Mo., 20. Okt. 2026 um 10:00 Uhr schrieb Anna <“ broken over two lines by the mail program
+QUOTE2 = re.compile(r"^\s*(Am|On) .{5,160} (schrieb|wrote)\b.{0,160}:\s*$", re.I)
 
 
 def files(msg):
@@ -350,8 +356,8 @@ def plain(msg):
             htm = content
     s = text if text and text.strip() else html_text(htm or "")
     lines, every = [], str(s).replace("\r", "").split("\n")
-    for ln in every:
-        if QUOTE.match(ln):
+    for i, ln in enumerate(every):
+        if QUOTE.match(ln) or (re.match(r"\s*(Am|On) ", ln) and QUOTE2.match(ln + " " + (every[i + 1] if i + 1 < len(every) else ""))):
             break
         lines.append(ln.rstrip())
     files_ = [f"{name} ({max(1, size // 1024)} KB)" for _, name, size in attached]
@@ -1033,6 +1039,64 @@ def show(uid, ref, folder="INBOX"):
             "text": text, "files": names[:20], "mid": re.sub(r"[\s\x00-\x1f]", "", str(msg.get("Message-ID", "")))[:300],
             "parts": [{"n": i, "name": name, "kb": max(1, size // 1024)} for i, (_, name, size) in enumerate(files(msg)[:20])],
             "invite": einladung.has(uid, msg)}   # Einladungen aus Mails (einladung.py, Apple-Stil thread)
+
+
+THREAD_MAX = 10      # other mails of a conversation shown under a message
+THREAD_TEXT = 1500   # characters of each one's own text
+_threads = DayCounter(gezeigt=0)   # Live: conversations shown today, all profiles (a number)
+
+
+def threads_today():
+    return _threads.counts()["gezeigt"]
+
+
+def thread(uid, ref, folder="INBOX"):
+    """Unterhaltung (Dominik 2026-10-21 „1“): the other mails of the same conversation, found by their Message-ID (this
+    one's References and In-Reply-To, and the replies naming it) in the inbox, the sent folder and the message's own
+    folder; oldest first, at most THREAD_MAX, each with its own text (plain(): no quotes, no signature). Read only
+    (EXAMINE, PEEK); the headers are data, checked exactly before a mail counts. None when the message is gone."""
+    import tidy   # tidy.py imports this module
+    msg = message(uid, ref, folder)
+    if msg is None:
+        return None
+    aid = str(ref).split(":")[0].strip("[")
+    acct = next(a for a in get(uid)["accounts"] if a["id"] == aid)
+    me = tidy.clean_mid(msg.get("Message-ID", ""))
+    refs = [x for x in dict.fromkeys(tidy.clean_mid(x) for x in re.findall(r"<[^<>\s]{3,250}>",
+            f'{msg.get("References", "")} {msg.get("In-Reply-To", "")}')) if x and x != me][-THREAD_MAX:]
+    if not refs and not me:
+        return []
+    found = {}
+    with tidy.Box(acct) as box:
+        places = ["INBOX", box.special("\\sent", tidy.SENT_NAMES), folder if folder != "INBOX" else None]
+        for name in dict.fromkeys(n for n in places if n):
+            try:
+                box.select(name)
+            except ValueError:
+                continue
+            hits = set()
+            for r in refs:
+                hits |= set(box.search("HEADER", "Message-ID", tidy._q(r)))
+            if me:
+                hits |= set(box.search("HEADER", "In-Reply-To", tidy._q(me))) | set(box.search("HEADER", "References", tidy._q(me)))
+            heads = box.headers(sorted(hits)[-THREAD_MAX * 2:], "FROM DATE SUBJECT MESSAGE-ID IN-REPLY-TO REFERENCES")
+            for u, h in heads.items():
+                mid = tidy.clean_mid(h.get("Message-ID", ""))
+                said = set(re.findall(r"(?<!\S)<[^<>\s]{3,250}>(?!\S)", f'{h.get("References", "")} {h.get("In-Reply-To", "")}'))
+                if not mid or mid == me or mid in found or not (mid in refs or (me and me in said)):
+                    continue
+                found[mid] = {"id": f"{aid}:{u}", "folder": name, "from": known(uid, _addr(h.get("From", ""))),
+                              "date": int(_date(h.get("Date")).timestamp()), "subject": _hdr(h.get("Subject", ""))[:200],
+                              "own": (email.utils.parseaddr(_hdr(h.get("From", "")))[1].lower() == str(acct.get("user") or "").lower()),
+                              "uid": u}
+            for x in [x for x in found.values() if x["folder"] == name and "text" not in x]:
+                x["text"] = box.text(x.pop("uid"))[:THREAD_TEXT]
+    out = sorted(found.values(), key=lambda x: x["date"])[-THREAD_MAX:]
+    for x in out:
+        x.pop("uid", None)
+    if out:
+        _threads.bump("gezeigt")
+    return out
 
 
 FILE_MAX = 25 * 1024 * 1024     # one attachment the page hands out (Mailclient Stufe C)

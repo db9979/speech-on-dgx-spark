@@ -2573,6 +2573,20 @@
 "titel": "Alles Offene: Telegram-Knöpfe, Begleiter, „Was ist offen?“",
 "text": "Mit Telegram verbunden eine Erinnerung klingeln lassen: unter der Telegram-Meldung stehen „Erledigt“ und „Später“; „Erledigt“ drücken, die Knöpfe verschwinden und unter Offen steht „Erledigt · am Telegram“. Im Begleiter bei einer solchen Meldung „Erledigt“ drücken. Am Lautsprecher „Was ist noch offen?“ fragen: die Antwort nennt Zahl und Titel, nichts wird erledigt. Als Admin einen Dienst kurz stoppen: Karte „Dienst“, danach „Läuft wieder“.",
 "thread": "Zentraler Assistenten-Chat mit Karten"
+},
+{
+"id": "P392",
+"v": 901,
+"titel": "Mail: Verschieben, Vorschläge, Unterhaltung, Später, Codes, Statistik",
+"text": "A: Pi auf V01.0.906. E-Mail: eine Mail in einen Ordner ziehen: sie verschwindet sofort, die Ordnerliste bleibt stehen, nur die Zahlen ändern sich. B: Eine Mail mit Antworten öffnen: darunter „Unterhaltung“ mit den anderen Mails, älteste zuerst; zitierter Text und „Von meinem iPhone gesendet“ sind weg. C: Neue Mail, „Später …“, „Morgen 8:00“: über der Liste „1 Mail geplant“, „Zurücknehmen“ geht; eine Mail für in 2 Minuten planen: sie geht pünktlich raus und steht als „gesendet“ da. D: Mit „Mails ordnen“: Reiter Regeln, „Wer schreibt dir am meisten“ aufklappen: Wochen und Absender, „Regel …“ öffnet das Formular mit dem Absender. E: Nach einer Nacht mit eigenem Ablegen im KI-Ordner: unter Regeln „Vorschläge aus deinem Ablegen“. F: Admin: Funktionen → E-Mail lesen → Neue Mails sofort → Bestätigungscodes an; einen Code anfordern (z. B. GitHub-Anmeldung): Mitteilung „Bestätigungscode · 123456 · GitHub“ auf dem genutzten Gerät, „Code kopieren“ legt ihn in die Zwischenablage; nie in Telegram, nicht in Zustand → Logs. G: iPhone-App: dasselbe unter Meine Sachen → E-Mail.",
+"thread": "Kalender und E-Mail in den Apps"
+},
+{
+"id": "P393",
+"v": 906,
+"titel": "Mail: Verschieben, Vorschläge, Unterhaltung, Später, Codes, Statistik",
+"text": "A: Pi auf V01.0.906. E-Mail: eine Mail in einen Ordner ziehen: sie verschwindet sofort, die Ordnerliste bleibt stehen, nur die Zahlen ändern sich. B: Eine Mail mit Antworten öffnen: darunter „Unterhaltung“ mit den anderen Mails, älteste zuerst; zitierter Text und „Von meinem iPhone gesendet“ sind weg. C: Neue Mail, „Später …“, „Morgen 8:00“: über der Liste „1 Mail geplant“, „Zurücknehmen“ geht; eine Mail für in 2 Minuten planen: sie geht pünktlich raus und steht als „gesendet“ da. D: Mit „Mails ordnen“: Reiter Regeln, „Wer schreibt dir am meisten“ aufklappen: Wochen und Absender, „Regel …“ öffnet das Formular mit dem Absender. E: Nach einer Nacht mit eigenem Ablegen im KI-Ordner: unter Regeln „Vorschläge aus deinem Ablegen“. F: Admin: Funktionen → E-Mail lesen → Neue Mails sofort → Bestätigungscodes an; einen Code anfordern (z. B. GitHub-Anmeldung): Mitteilung „Bestätigungscode · 123456 · GitHub“ auf dem genutzten Gerät, „Code kopieren“ legt ihn in die Zwischenablage; nie in Telegram, nicht in Zustand → Logs. G: iPhone-App: dasselbe unter Meine Sachen → E-Mail.",
+"thread": "Kalender und E-Mail in den Apps"
 }
 ]
 }

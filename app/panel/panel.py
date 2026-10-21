@@ -50,7 +50,9 @@ import room  # noqa: E402
 import roomlive  # noqa: E402
 import tidy  # noqa: E402
 import mailidle  # noqa: E402
+import mailcode  # noqa: E402,F401  (hooks itself on mailidle.on_new)
 import mailregeln  # noqa: E402
+import senden  # noqa: E402
 import mailstil  # noqa: E402
 import weather  # noqa: E402
 import contacts  # noqa: E402
@@ -495,6 +497,10 @@ async def mail_rules():
                 await mailregeln.due_once()
             except Exception as e:
                 print("mail: rules loop failed |", type(e).__name__, flush=True)
+            try:
+                await senden.later_due_once()   # Später senden: what is due goes out (each mail once)
+            except Exception as e:
+                print("mail: send later loop failed |", type(e).__name__, flush=True)
     spawn(loop())
 
 

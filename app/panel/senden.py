@@ -24,10 +24,13 @@ original's sender, date, subject and text below a fixed line, with its attachmen
 FORWARD_FILES), subject "Fwd: …"; the recipients are typed like for a new mail. The Notaus holds sending off. Logs carry fixed words, numbers and the profile's log
 name only, never an address, a subject or the text.
 """
+import base64
+import email
 import email.message
 import email.policy
 import email.utils
 import imaplib
+import json
 import os
 import re
 import smtplib
@@ -232,32 +235,46 @@ def send(uid, token):
         print(f"mail: send refused, no preview | {who}", flush=True)
         raise LookupError("the preview is gone; look at the mail again")
     try:
-        notaus.stop("aktion", uid)
-        if _count(uid) >= MAX_DAY:
-            raise ValueError(f"at most {MAX_DAY} mails a day")
-        acct = next((a for a in mail.get(uid)["accounts"] if a["id"] == p["acct"]), None)
-        if not acct:
-            raise ValueError("unknown mailbox")
-        refused = _smtp(acct, p["msg"])
-    except notaus.NotausAktiv:
+        out = _deliver(uid, p["acct"], p["msg"], p["n"], "aktion")
+    except (notaus.NotausAktiv, ValueError):
         p["busy"] = False               # nothing went out: the sheet may try again
-        print(f"mail: send refused, notaus | {who}", flush=True)
         raise
-    except ValueError:
-        p["busy"] = False
-        print(f"mail: send refused | {who}", flush=True)
-        raise
-    except Exception as e:
+    except Exception:
         with _lock:                     # unclear whether it went out: never a second time from this sheet
             _pending.pop(token, None)
-        print(f"mail: send failed ({type(e).__name__}) | {who}", flush=True)
         raise
     with _lock:
         _pending.pop(token, None)
+    return out
+
+
+def _deliver(uid, acct_id, msg, n, stop):
+    """Sends one finished mail (the sheet's „Senden“ or a planned one, Später senden) and puts a copy into the sent
+    folder where the server keeps none: {"sent", "refused", "copy"}. NotausAktiv, ValueError (nothing went out) or
+    anything else (unclear whether it went out); every result has its log line."""
+    who = profiles.log_name(profiles.by_id(uid))
+    try:
+        notaus.stop(stop, uid)
+        if _count(uid) >= MAX_DAY:
+            raise ValueError(f"at most {MAX_DAY} mails a day")
+        acct = next((a for a in mail.get(uid)["accounts"] if a["id"] == acct_id), None)
+        if not acct:
+            raise ValueError("unknown mailbox")
+        refused = _smtp(acct, msg)
+    except notaus.NotausAktiv:
+        print(f"mail: send refused, notaus | {who}", flush=True)
+        raise
+    except ValueError:
+        print(f"mail: send refused | {who}", flush=True)
+        raise
+    except Exception as e:
+        print(f"mail: send failed ({type(e).__name__}) | {who}", flush=True)
+        raise
+    with _lock:
         _count(uid)
         _today["n"][uid] = _today["n"].get(uid, 0) + 1
         write_json(SENT_FILE, {"day": _today["day"], "n": dict(_today["n"])}, mode=0o600)
-    print(f"mail: sent | {p['n'] - refused} recipients, {refused} refused | {who}", flush=True)
+    print(f"mail: sent | {n - refused} recipients, {refused} refused | {who}", flush=True)
     copy = ""
     if outgoing(acct)[0] not in KEEPS_SENT:
         try:
@@ -265,14 +282,175 @@ def send(uid, token):
                 copy = box.special("\\sent", tidy.SENT_NAMES) or ""
                 if copy:
                     typ, _ = box.c.append(tidy._q(box.boxes[copy]["raw"]), "(\\Seen)",
-                                          imaplib.Time2Internaldate(time.time()), p["msg"].as_bytes())
+                                          imaplib.Time2Internaldate(time.time()), msg.as_bytes())
                     copy = copy if typ == "OK" else ""
         except Exception as e:
             print(f"mail: sent copy failed ({type(e).__name__}) | {who}", flush=True)
             copy = ""
         else:
             print(f"mail: sent copy {'done' if copy else 'refused, no folder'} | {who}", flush=True)
-    return {"sent": p["n"] - refused, "refused": refused, "copy": copy}
+    return {"sent": n - refused, "refused": refused, "copy": copy}
+
+
+# ---------------------------------------------------------------- Später senden (Dominik 2026-10-21 „4“)
+# The finished mail of a preview sheet goes out at a time the profile picks (LATER_MIN to LATER_DAYS ahead); until then
+# it lies sealed in the profile's folder (vorrat.seal, AES-GCM, bound to the profile and the file name), at most
+# LATER_MAX at once, and can be dropped any time. due_once() sends what is due, each mail once: a mail whose sending
+# broke off unclearly is never tried again (state „unklar“). The day's limit MAX_DAY counts when it goes out; the
+# Notaus holds it back (it waits); without Mails senden it is not sent and says so. A sent line stays a day, no text.
+LATER_FILE = "mail-spaeter.bin"
+LATER_MAX = 20
+LATER_MIN = 60
+LATER_DAYS = 30
+LATER_KEEP = 86400
+
+
+def _later_load(uid):
+    import vorrat
+    try:
+        with open(profiles._path(uid, LATER_FILE), encoding="utf-8") as f:
+            got = json.loads(vorrat.unseal(json.load(f).get("data", ""), f"{uid}/{LATER_FILE}") or b"[]")
+    except (OSError, ValueError, AttributeError):
+        got = []
+    return [x for x in got if isinstance(x, dict) and isinstance(x.get("id"), str)] if isinstance(got, list) else []
+
+
+def _later_save(uid, items):
+    import vorrat
+    path = profiles._path(uid, LATER_FILE)
+    if not items:
+        try:
+            os.remove(path)
+        except OSError:
+            pass
+        return
+    sealed = vorrat.seal(json.dumps(items).encode(), f"{uid}/{LATER_FILE}")
+    if sealed is None:
+        raise ValueError("the Spark cannot seal a planned mail here (no key), so it is not kept")
+    write_json(path, {"v": 1, "data": sealed}, mode=0o600)
+
+
+def later(uid, token, at, now=None):
+    """The preview sheet's mail planned for `at` (epoch seconds); {"id", "at"}. ValueError for a time out of range or
+    too many planned, LookupError when the sheet is gone."""
+    who = profiles.log_name(profiles.by_id(uid))
+    now = time.time() if now is None else now
+    try:
+        at = int(at)
+        if not now + LATER_MIN <= at <= now + LATER_DAYS * 86400:
+            raise ValueError(f"a time from {LATER_MIN // 60} minute to {LATER_DAYS} days ahead")
+        with _lock:
+            p = _pending.get(str(token or ""))
+            if not p or p["uid"] != uid or p.get("busy") or now - p["t"] > PREVIEW_SECONDS:
+                raise LookupError("the preview is gone; look at the mail again")
+            items = _later_load(uid)
+            if sum(1 for x in items if x.get("state") == "wartet") >= LATER_MAX:
+                raise ValueError(f"at most {LATER_MAX} planned mails")
+            msg = p["msg"]
+            x = {"id": os.urandom(6).hex(), "acct": p["acct"], "at": at, "n": p["n"], "state": "wartet",
+                 "to": str(msg["To"] or "")[:300], "subject": str(msg["Subject"] or "")[:200],
+                 "raw": base64.b64encode(msg.as_bytes()).decode()}
+            _later_save(uid, items + [x])
+            _pending.pop(token, None)
+    except LookupError:
+        print(f"mail: send later refused, no preview | {who}", flush=True)
+        raise
+    except ValueError:
+        print(f"mail: send later refused | {who}", flush=True)
+        raise
+    print(f"mail: send later planned | {who}", flush=True)
+    return {"id": x["id"], "at": at}
+
+
+def later_list(uid, now=None):
+    """The planned mails for the page: when, to whom, subject, state (wartet, gesendet, nicht gesendet, unklar)."""
+    now = time.time() if now is None else now
+    names = {a["id"]: a.get("name", "") for a in mail.get(uid)["accounts"]}
+    return [{"id": x["id"], "at": x["at"], "to": x.get("to", ""), "subject": x.get("subject", ""), "state": x["state"],
+             "box": names.get(x["acct"], "")} for x in sorted(_later_load(uid), key=lambda x: x["at"])
+            if x["state"] == "wartet" or now - x.get("done", 0) < LATER_KEEP]
+
+
+def later_drop(uid, lid):
+    """A planned mail taken back (or a done line cleared); False when there is none."""
+    who = profiles.log_name(profiles.by_id(uid))
+    with _lock:
+        items = _later_load(uid)
+        keep = [x for x in items if x["id"] != str(lid)]
+        if len(keep) == len(items):
+            print(f"mail: send later drop refused, not found | {who}", flush=True)
+            return False
+        _later_save(uid, keep)
+    print(f"mail: send later dropped | {who}", flush=True)
+    return True
+
+
+def later_count():
+    """Live: planned mails waiting, all profiles (a number)."""
+    n = 0
+    for uid in profiles.user_ids():
+        if os.path.exists(profiles._path(uid, LATER_FILE)):
+            n += sum(1 for x in _later_load(uid) if x["state"] == "wartet")
+    return n
+
+
+def _later_send(uid, now):
+    """Sends the profile's due mails, each once; returns how many went out."""
+    with _lock:
+        items = _later_load(uid)
+        for x in items:
+            if x["state"] == "sendet" and now - x["at"] > 600:   # the panel stopped while it was sending: unclear
+                x.update(state="unklar", done=int(now))
+                x.pop("raw", None)
+                print(f"mail: send later unclear, stopped while sending | {profiles.log_name(profiles.by_id(uid))}", flush=True)
+        due = [x for x in items if x["state"] == "wartet" and x["at"] <= now]
+        for x in due:
+            x["state"] = "sendet"           # taken: a second look never sends it again
+        _later_save(uid, items)
+    sent = 0
+    for x in due:
+        state = "gesendet"
+        if not features.allowed("mailsend", uid):
+            state = "nicht gesendet"
+            print(f"mail: send later refused, off | {profiles.log_name(profiles.by_id(uid))}", flush=True)
+        else:
+            try:
+                msg = email.message_from_bytes(base64.b64decode(x["raw"]), policy=email.policy.SMTP)
+                _deliver(uid, x["acct"], msg, x["n"], "auto")
+                sent += 1
+            except notaus.NotausAktiv:
+                state = "wartet"            # held back, goes when the Notaus is over
+            except ValueError:
+                state = "nicht gesendet"
+            except Exception:
+                state = "unklar"            # broke off: maybe out, never a second time
+        with _lock:
+            items = _later_load(uid)
+            for y in items:
+                if y["id"] == x["id"]:
+                    y["state"] = state
+                    if state != "wartet":
+                        y["done"] = int(now)
+                        y.pop("raw", None)  # the text goes with the sending, only the line stays a day
+            _later_save(uid, [y for y in items if y["state"] in ("wartet", "sendet") or now - y.get("done", 0) < LATER_KEEP])
+    return sent
+
+
+async def later_due_once(now=None):
+    """Called each minute (panel.py): every profile with planned mails sends what is due."""
+    import asyncio
+    now = time.time() if now is None else now
+    for uid in profiles.user_ids():
+        if os.path.exists(profiles._path(uid, LATER_FILE)):
+            await asyncio.to_thread(_later_send, uid, now)
+
+
+def later_forget(uid):
+    """Ich → Meine Daten / profile removed: the planned mails go."""
+    try:
+        os.remove(profiles._path(uid, LATER_FILE))
+    except OSError:
+        pass
 
 
 def send_now(uid, acct, msg):

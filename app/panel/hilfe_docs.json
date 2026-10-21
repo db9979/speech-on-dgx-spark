@@ -3501,7 +3501,15 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "sie mit dem Schlüssel des Spark im Ordner des Profils. 7. Antwort mit Stand: Kommt etwas nicht frisch vom Anbieter, sagt frisch.stand mit festem Satz, von wann es ist („Stand gestern 18:00“). Die Seiten zeigen sofort, was da ist, und laden im Hintergrund nach. 8. Etwas ändern?: Lesen ist alles, was ohne weitere Schalter geht. 9. Ändern mit Prüfung: Eine Mail geht erst nach dem Vorschau-Blatt und dem Tipp auf Senden raus (senden.preview, senden.send, höchstens 30 am Tag). contacts.save schreibt eine Karte mit If-Match zurück: hat sie sich inzwischen geändert, wird nichts überschrieben. 10. Tür für Apps: kalenderserver.login weist fremde Webseiten ab, sperrt falsche Passwörter wie eine PIN, hält Mein Notaus und den Schalter ein und zählt die Lastgrenze. Danach sieht die App nur die Spark-Kalender und das Adressbuch „Auf dem Spark“ des Profils; kontaktserver._write nimmt je Karte eine vCard, höchstens 2000, und schreibt nur mit „Kontakte ändern“. 11. Nur eigene Daten: Kein Profil sieht die Post, Termine oder Kontakte eines anderen, außer einem Kalender, den der Besitzer teilt."
+"text": "sie mit dem Schlüssel des Spark im Ordner des Profils. 7. Antwort mit Stand: Kommt etwas nicht frisch vom Anbieter, sagt frisch.stand mit festem Satz, von wann es ist („Stand gestern 18:00“). Die Seiten zeigen sofort, was da ist, und laden im Hintergrund nach. 8. Etwas ändern?: Lesen ist alles, was ohne weitere Schalter geht. Ein Bestätigungscode aus einer neuen Mail wird mit eigenem Schalter nur eine Mitteilung aufs genutzte Gerät (mailcode.arrived), nie über Telegram, nie im Log. 9. Ändern mit Prüfung: Eine Mail geht erst nach dem Vorschau-Blatt und dem Tipp auf Senden raus (senden.preview, senden.send, höchstens 30 am Tag). „Später senden“ legt sie bis zur Zeit versiegelt ab (senden.later); brach ein Senden ab, geht sie nie ein zweites Mal. contacts.save schreibt eine Karte mit If-Match zurück: hat sie sich inzwischen geändert, wird nichts überschrieben. 10. Tür für Apps: kalenderserver.login weist fremde Webseiten ab, sperrt falsche Passwörter wie eine PIN, hält Mein Notaus und den Schalter ein und zählt die Lastgrenze. Danach sieht die App nur die Spark-Kalender und das Adressbuch „Auf dem Spark“ des Profils; kontaktserver._write nimmt je Karte eine vCard, höchstens 2000, und "
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Ablauf",
+"title": "Ablauf",
+"text": "schreibt nur mit „Kontakte ändern“. 11. Nur eigene Daten: Kein Profil sieht die Post, Termine oder Kontakte eines anderen, außer einem Kalender, den der Besitzer teilt."
 },
 {
 "lang": "de",
@@ -3541,7 +3549,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/mail.py lookup: Mails mit Stand (Schritt 1, Schritt 5, Schritt 7) - app/panel/calendars.py view: Termine für die Seite (Schritt 1) - app/panel/netguard.py IMAP4_SSL: IMAP nur zu geprüften Adressen (Schritt 4) - app/panel/kalenderspiegel.py objects: Kalender-Kopie holt Änderungen (Schritt 4) - app/panel/mailvorrat.py keep_heads: Vorrat der Kopfzeilen (Schritt 6) - app/panel/vorrat.py seal: versiegelt auf der Platte (Schritt 6) - app/panel/frisch.py stand: Stand mit Tag (Schritt 7) - app/panel/senden.py preview: Vorschau-Blatt (Schritt 9) - app/panel/senden.py send: senden nach dem Tipp (Schritt 9) - app/panel/contacts.py save: Karte zurück mit If-Match (Schritt 9) - app/panel/kalenderserver.py login: Tür für Kalender- und Kontakte-Apps (Schritt 2, Schritt 10) - app/panel/kontaktserver.py _write: Karte einer Kontakte-App (Schritt 10)"
+"text": "- app/panel/mail.py lookup: Mails mit Stand (Schritt 1, Schritt 5, Schritt 7) - app/panel/calendars.py view: Termine für die Seite (Schritt 1) - app/panel/netguard.py IMAP4_SSL: IMAP nur zu geprüften Adressen (Schritt 4) - app/panel/kalenderspiegel.py objects: Kalender-Kopie holt Änderungen (Schritt 4) - app/panel/mailvorrat.py keep_heads: Vorrat der Kopfzeilen (Schritt 6) - app/panel/vorrat.py seal: versiegelt auf der Platte (Schritt 6) - app/panel/frisch.py stand: Stand mit Tag (Schritt 7) - app/panel/senden.py preview: Vorschau-Blatt (Schritt 9) - app/panel/senden.py send: senden nach dem Tipp (Schritt 9) - app/panel/senden.py later: später senden, versiegelt (Schritt 9) - app/panel/mailcode.py arrived: Bestätigungscode als Mitteilung (Schritt 8) - app/panel/contacts.py save: Karte zurück mit If-Match (Schritt 9) - app/panel/kalenderserver.py login: Tür für Kalender- und Kontakte-Apps (Schritt 2, Schritt 10) - app/panel/kontaktserver.py _write: Karte einer Kontakte-App (Schritt 10)"
 },
 {
 "lang": "de",
@@ -3549,7 +3557,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "Selbsttests: test_mailvorrat, test_vorrat, test_mails_senden, test_kalenderserver, test_kontaktserver, test_kontakte_seite, test_kalenderspiegel"
+"text": "Selbsttests: test_mailvorrat, test_vorrat, test_mails_senden, test_kalenderserver, test_kontaktserver, test_kontakte_seite, test_kalenderspiegel, test_mailcode"
 },
 {
 "lang": "de",
@@ -5341,7 +5349,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "ßt es, nichts darunter verschiebt sich. Umbenennen und neue Ordner tippt man direkt in der Zeile (Enter behält, Esc verwirft). Auf dem iPhone dasselbe mit langem Drücken oder Wischen, jeweils mit Symbol."
+"text": "ßt es, nichts darunter verschiebt sich. Umbenennen und neue Ordner tippt man direkt in der Zeile (Enter behält, Esc verwirft). Auf dem iPhone dasselbe mit langem Drücken oder Wischen, jeweils mit Symbol. Verschieben ohne Neuladen (V01.0.906, Dominik 2026-10-21 „reloaded immer die gesamte Ordnerliste“): eine verschobene, archivierte oder gelöschte Mail verschwindet sofort aus der Liste, die Ordnerliste bleibt stehen und zählt nur ihre ungelesenen Zahlen selbst um; der Spark liest die Ordner still dahinter neu (eine schon gezeigte Liste wird nie durch eine ältere ersetzt). Sagt der Spark nein, kommt die Mail mit dem Grund zurück. Auf dem iPhone bleibt die Liste ebenso stehen, auch nachgeladene ältere Seiten."
 },
 {
 "lang": "de",
@@ -5508,6 +5516,38 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Unterhaltung (V01.0.906, Dominik 2026-10-21 „1“)",
+"text": "Unterhaltung (V01.0.906, Dominik 2026-10-21 „1“): Unter einer geöffneten Mail stehen die anderen Mails derselben Unterhaltung, älteste zuerst, je eine Zeile (wer, wann, die ersten Worte; die eigenen als „Du“), aufgeklappt mit ihrem eigenen Text ohne Zitate. Der Spark findet sie über die Message-ID (References, In-Reply-To und die Antworten auf diese Mail) im Posteingang, im Ordner Gesendet und im Ordner der Mail, nur lesend (EXAMINE, PEEK), höchstens 10, und prüft jede Kennung genau, eine bloß ähnliche zählt nicht (mail.thread, GET /api/profile/mail/thread, nach der Mail geladen, damit das Öffnen nie wartet). Kein eigener Schalter, gehört zu „E-Mail lesen“. Live: „heute N Unterhaltungen gezeigt“. iPhone: derselbe Abschnitt „Unterhaltung“ unter der Mail."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Nur der eigene Text (V01.0.906, Dominik 2026-10-21 „2“)",
+"text": "Nur der eigene Text (V01.0.906, Dominik 2026-10-21 „2“): mail.plain schneidet auch Zitatköpfe ab, die das Mailprogramm auf zwei Zeilen umbricht („Am Mo., 20. Okt. 2026 um 10:00 Uhr schrieb Anna <“ / „anna@x.de>:“), die Outlook-Trennlinie und Zeilen wie „Von meinem iPhone gesendet“ oder „Get Outlook for iOS“; Zusammenfassungen, „Für dich“ und Antwortvorschläge bekommen so nur die Worte des Absenders (test_mail_text)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Regel-Vorschläge aus dem Ablegen (V01.0.906, Dominik 2026-10-21 „ok“ und „nur die Ordner unterhalb deines KI Ordners“, Plan plaene/mail-regeln-lernen.md): Nachts zwischen 2 und 5 Uhr schaut der Spark je Profil einmal in die Ordner unter dem Hauptordner von „Mails aufräumen“ (dem KI-Ordner, tidy root), und nur, wenn sich dort seit der letzten Nacht etwas geändert hat (STATUS MESSAGES und UIDNEXT; nur lesen, nur Kopfzeilen, je Ordner die neuesten 300 der letzten 30 Tage). Gezählt wird nur, was der Nutzer selbst dort abgelegt hat: Mails, die „Mails aufräumen“ verschoben hat (sein Protokoll mit Message-ID), zählen nicht, Absender mit einer Regel hier oder in „Mails aufräumen“ und Paare auf der Nie-Liste fallen weg. Feste Regeln, nie das Modell: mindestens 5 Mails eines Absenders in einem Ordner und mindestens 80 % seiner Mails dort (Posteingang mitgezählt); eine Domain (@firma.de) nur, wenn mehrere Adressen alle im selben Ordner liegen und keine im Posteingang, nie Freemail (gmail, gmx, web.de, iCloud …); höchstens 3 neue Vorschläge je Nacht, die stärksten zuerst, offen höchstens 7 Tage. Sie stehen unter E-Mail → Regeln oben als „Vorschläge aus deinem Ablegen“ mit „Regel anlegen und ab"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "legen“ (die Regel und die Mails des Absenders im Posteingang, mit „Rückgängig“), „Nur Regel“ und „Nicht mehr fragen“; eine Regel entsteht nur nach dem Klick. Kein eigener Schalter, gehört zu „Mails ordnen“. Live: „N Vorschläge aus dem Ablegen“; Log nur mit Zahlen. iPhone: dieselbe Liste oben in „Regeln“. Als Karte: jeder Vorschlag steht morgens auch als Karte „Regel-Vorschlag“ im Assistenten und unter Offen (vorgaenge.QUELLEN[\"regel\"]), mit denselben Knöpfen wie auf der Seite: „Regel anlegen und ablegen“ (nur solange Mails davon im Posteingang liegen), „Regel anlegen“, „Nicht mehr fragen“; der Knopf ruft dieselben Prüfungen wie die Seite (ohne „Mails ordnen“ keine Knöpfe), und wird der Vorschlag auf der Seite angenommen oder läuft nach 7 Tagen ab, schließt sich die Karte."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Regel-Vorschlag",
 "text": "Regel-Vorschlag: Der Spark zählt je Profil, wie oft Mails desselben Absenders in denselben Ordner verschoben werden (mailregeln.learn, nur Adresse, Ordner, Anzahl, 30 Tage). Beim dritten Mal steht unter dem „Rückgängig“ ein Hinweis mit drei Knöpfen: „Regel anlegen und gleich anwenden“ (die Regel und die passenden Mails im Posteingang, mit „Rückgängig“), „Nur Regel“ und „Nicht mehr fragen“ (für dieses Paar gemerkt). Gibt es für den Absender schon eine Regel, fragt er nicht. Live: „heute N Regel-Vorschläge“. In der iPhone-App: Löschen beim Wischen, in der Mail und bei mehreren ausgewählten, „Rückgängig“ und der Regel-Vorschlag über der Liste, im Papierkorb „Endgültig löschen“ mit Rückfrage, die Ordner des Mailprogramms mit deutschem Namen."
 },
@@ -5630,6 +5670,46 @@
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
 "text": "Gerät, durch dieselben Prüfungen wie das Blatt. Nie für Gäste, eine fremde Stimme oder Telegram ohne Freigabe fürs Private. Log mail: voice proposed|sent|declined|refused, <Grund>."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Später senden (V01.0.906, Dominik 2026-10-21 „4“; Teil von „Mails senden“, kein eigener Schalter): Im Vorschau-Blatt und im Fenster „Neue Mail“ steht „Später …“ (iPhone: „Später senden …“ mit Datum und Uhrzeit). POST /api/profile/mail/send mit Token und at plant genau die fertige Mail des Blatts, frühestens 1 Minute, spätestens 30 Tage voraus, höchstens 20 auf einmal; sie liegt bis dahin versiegelt im Profil (mail-spaeter.bin, vorrat.seal, an Profil und Dateiname gebunden). Über der Liste stehen die geplanten Mails (wann, an wen, Betreff, nie der Text) mit „Zurücknehmen“ (DELETE /api/profile/mail/later/{id}, auch wenn „Mails senden“ inzwischen aus ist). Jede Minute schickt senden.later_due_once was fällig ist, jede Mail genau einmal, durch dieselben Prüfungen wie „Senden“ (Tageslimit 30, TLS, Kopie in „Gesendet“): der Notaus hält sie zurück, bis er aus ist; ist „Mails senden“ aus, geht sie nicht raus und steht als „nicht gesendet“ da; bricht der Postausgang ab, steht sie als „unklar, schau in Gesendet“ da und wird nie ein zweites Mal versucht. Mit dem Senden verschwindet der Text, die Zeile bleibt einen Tag. Live zeigt bei Mail nur die Zahl der geplanten Mails; Log mail: send later"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": " planned|refused|dropped|unclear … ohne Adresse, Betreff oder Text."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Bestätigungscodes (V01.0.906, Dominik 2026-10-21 „5“, Idee aus email-mcp, eigener Code; Funktionen → E-Mail lesen → Neue Mails sofort → „Bestätigungscodes“, chat.mail_code, aus): Kommt eine Mail mit einem Code („482913 ist dein Bestätigungscode“), schickt mailcode.py eine Mitteilung „Bestätigungscode · 482913 · GitHub“ aufs gerade genutzte Gerät, mit „Code kopieren“ (iPhone: Knopf oder Tippen legt ihn für 3 Minuten nur lokal in die Zwischenablage; Begleiter Mac und Windows ebenso). Feste Regeln, nie das Modell: ungelesen, höchstens 10 Minuten alt, ein Wort wie Code, Bestätigungscode, TAN, verification code nahe (80 Zeichen) an genau einem Code aus 4 bis 8 Ziffern oder Großbuchstaben mit Ziffern; Gutschein-, Rabatt-, Bestell-, Sendungs- und Kundennummern zählen nicht, eine Jahreszahl nie. Höchstens 10 Mitteilungen je Stunde und Profil, eine je Mail. Braucht „Neue Mails sofort“; ein Profil mit dieser Funktion, das in den letzten zwei Stunden irgendein Gerät nutzte, bekommt dafür seine IDLE-Verbindung. Nie über Telegram: ist Telegram das genutzte Gerät, geht sie an den nächsten anderen Weg (iPhone-App, Android, Begleiter, Browser), ohne einen gibt es keine Mitteilung. Apple trägt nur "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "„Neue Nachricht vom Spark“, den Text holt die App vom Spark; der Code liegt nur im Speicher mit seiner Mitteilung, nie auf der Platte, nie im Log (mail: code looked|no device|limit|too slow … nur mit Zahlen), Live zeigt bei Mail nur die Zahl der Mitteilungen heute. Mein Notaus hält sie an."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Mail-Statistik (V01.0.906, Dominik 2026-10-21 „6“; Teil von „Mails ordnen“, kein eigener Schalter): Oben auf dem Reiter Regeln (Panel und iPhone) klappt „Wer schreibt dir am meisten“ auf: die Mails je Woche der letzten vier Wochen und die 15 häufigsten Absender der letzten 30 Tage mit Anzahl und ungelesenen, dazu „hat Regel“ oder „Regel …“ (das Formular mit diesem Absender). mailregeln.stats zählt fest im Panel aus der Liste, die der Mail-Vorrat ohnehin hält (300 Kopfzeilen je Postfach), und liest nichts neu, solange sie frisch ist; nichts geht an das Modell. GET /api/profile/mail/stats (Rate-Limit postordnen), Log mail: stats shown|too slow … nur mit Zahlen, Live bei Mail: wie oft heute angesehen."
 },
 {
 "lang": "de",
@@ -8734,6 +8814,14 @@
 "head": "Post und Kontakte",
 "title": "Post und Kontakte",
 "text": "- Neue Mails sofort (Funktionen → Post und Kontakte → „Neue Mails sofort“; baut auf „E-Mail lesen“; E-Mail → Einstellungen): Neue Mails stehen nach wenigen Sekunden auf der Seite E-Mail, nicht erst nach dem nächsten Abruf alle fünf Minuten, und deine Mail-Regeln sortieren sie gleich ein."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Post und Kontakte",
+"title": "Post und Kontakte",
+"text": "- Bestätigungscodes (Funktionen → Post und Kontakte → „Bestätigungscodes“; baut auf „Neue Mails sofort“; E-Mail → Einstellungen): Kommt eine Mail mit einem Bestätigungscode („482913 ist dein Code“), zeigt der Spark den Code sofort als Mitteilung auf dem Gerät, das du gerade nutzt, mit „Code kopieren“."
 },
 {
 "lang": "de",
@@ -14893,7 +14981,15 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "t fresh from the provider, frisch.stand says with a fixed sentence when it is from (\"as of yesterday 18:00\"). The pages show at once what is there and load the rest behind. 8. Change something?: Reading is all that works without further switches. 9. Change with a check: A mail goes out only after the preview sheet and the tap on Send (senden.preview, senden.send, at most 30 a day). contacts.save writes a card back with If-Match: if it changed meanwhile, nothing is overwritten. 10. Door for apps: kalenderserver.login refuses other sites' web pages, locks wrong passwords like a PIN, keeps My emergency stop and the switch and counts the rate limit. Then the app sees only the profile's Spark calendars and the address book \"On the Spark\"; kontaktserver._write takes one vCard per card, at most 2000, and writes only with \"Edit contacts\". 11. Own data only: No profile sees another one's mail, appointments or contacts, except a calendar its owner shares."
+"text": "t fresh from the provider, frisch.stand says with a fixed sentence when it is from (\"as of yesterday 18:00\"). The pages show at once what is there and load the rest behind. 8. Change something?: Reading is all that works without further switches. A confirmation code from a new mail becomes, with a switch of its own, only a note on the device in use (mailcode.arrived), never by Telegram, never in a log. 9. Change with a check: A mail goes out only after the preview sheet and the tap on Send (senden.preview, senden.send, at most 30 a day). \"Send later\" keeps it sealed until its time (senden.later); if a sending broke off, it never goes a second time. contacts.save writes a card back with If-Match: if it changed meanwhile, nothing is overwritten. 10. Door for apps: kalenderserver.login refuses other sites' web pages, locks wrong passwords like a PIN, keeps My emergency stop and the switch and counts the rate limit. Then the app sees only the profile's Spark calendars and the address book \"On the Spark\"; kontaktserver._write takes one vCard per card, at most 2000, and writes only with \"Edit contacts\". 11. Own data only: No profile sees another one's mail, appointments or contacts, exce"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Way",
+"title": "Way",
+"text": "pt a calendar its owner shares."
 },
 {
 "lang": "en",
@@ -14933,7 +15029,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/mail.py lookup: mail with its time (step 1, step 5, step 7) - app/panel/calendars.py view: appointments for the page (step 1) - app/panel/netguard.py IMAP4_SSL: IMAP only to checked addresses (step 4) - app/panel/kalenderspiegel.py objects: calendar copy fetches changes (step 4) - app/panel/mailvorrat.py keep_heads: supply of headers (step 6) - app/panel/vorrat.py seal: sealed on the disk (step 6) - app/panel/frisch.py stand: time with its day (step 7) - app/panel/senden.py preview: preview sheet (step 9) - app/panel/senden.py send: send after the tap (step 9) - app/panel/contacts.py save: card back with If-Match (step 9) - app/panel/kalenderserver.py login: door for calendar and contacts apps (step 2, step 10) - app/panel/kontaktserver.py _write: card from a contacts app (step 10)"
+"text": "- app/panel/mail.py lookup: mail with its time (step 1, step 5, step 7) - app/panel/calendars.py view: appointments for the page (step 1) - app/panel/netguard.py IMAP4_SSL: IMAP only to checked addresses (step 4) - app/panel/kalenderspiegel.py objects: calendar copy fetches changes (step 4) - app/panel/mailvorrat.py keep_heads: supply of headers (step 6) - app/panel/vorrat.py seal: sealed on the disk (step 6) - app/panel/frisch.py stand: time with its day (step 7) - app/panel/senden.py preview: preview sheet (step 9) - app/panel/senden.py send: send after the tap (step 9) - app/panel/senden.py later: send later, sealed (step 9) - app/panel/mailcode.py arrived: confirmation code as a note (step 8) - app/panel/contacts.py save: card back with If-Match (step 9) - app/panel/kalenderserver.py login: door for calendar and contacts apps (step 2, step 10) - app/panel/kontaktserver.py _write: card from a contacts app (step 10)"
 },
 {
 "lang": "en",
@@ -14941,7 +15037,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "Self-tests: test_mailvorrat, test_vorrat, test_mails_senden, test_kalenderserver, test_kontaktserver, test_kontakte_seite, test_kalenderspiegel"
+"text": "Self-tests: test_mailvorrat, test_vorrat, test_mails_senden, test_kalenderserver, test_kontaktserver, test_kontakte_seite, test_kalenderspiegel, test_mailcode"
 },
 {
 "lang": "en",
@@ -16693,7 +16789,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "ne the same with a long press or a swipe, each with its symbol."
+"text": "ne the same with a long press or a swipe, each with its symbol. Moving without reloading (V01.0.906, Dominik 2026-10-21 \"always reloads the whole folder list\"): a moved, archived or deleted mail leaves the list at once, the folder list stays and only counts its unread numbers itself; the Spark reads the folders anew quietly behind (a list already shown is never replaced by an older one). When the Spark says no, the mail comes back with the reason. On the iPhone the list stays the same way, older pages loaded too."
 },
 {
 "lang": "en",
@@ -16852,6 +16948,38 @@
 "src": "assistant",
 "file": "Assistant and panel",
 "head": "Voice chat",
+"title": "Conversation (V01.0.906, Dominik 2026-10-21 \"1\")",
+"text": "Conversation (V01.0.906, Dominik 2026-10-21 \"1\"): under an opened mail stand the other mails of the same conversation, oldest first, one line each (who, when, the first words; own ones as \"You\"), opened with their own text without quotes. The Spark finds them by Message-ID (References, In-Reply-To and the replies to this mail) in the inbox, the Sent folder and the mail's own folder, read only (EXAMINE, PEEK), at most 10, and checks every id exactly, one that only looks alike does not count (mail.thread, GET /api/profile/mail/thread, loaded after the mail so opening never waits). No switch of its own, part of \"Read e-mail\". Live: \"N conversations shown today\". iPhone: the same section \"Conversation\" under the mail."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Only the own text (V01.0.906, Dominik 2026-10-21 \"2\")",
+"text": "Only the own text (V01.0.906, Dominik 2026-10-21 \"2\"): mail.plain also cuts quote heads the mail program breaks over two lines (\"On Mon, Oct 20, 2026 at 10:00 AM Anna <\" / \"anna@x.de> wrote:\"), the Outlook divider and lines like \"Sent from my iPhone\" or \"Get Outlook for iOS\"; summaries, \"For you\" and reply suggestions so get only the sender's words (test_mail_text)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "Rule suggestions from your filing (V01.0.906, Dominik 2026-10-21 \"ok\" and \"only the folders below your KI folder\", plan plaene/mail-regeln-lernen.md): at night between 2 and 5 the Spark looks once per profile into the folders below the main folder of \"Tidy mails\" (the KI folder, tidy root), and only when something there changed since the last night (STATUS MESSAGES and UIDNEXT; read only, headers only, per folder the newest 300 of the last 30 days). Only what the person filed there counts: mails \"Tidy mails\" moved (its log by Message-ID) do not, senders with a rule here or in \"Tidy mails\" and pairs on the never list are left out. Fixed rules, never the model: at least 5 mails of a sender in one folder and at least 80 % of its mails there (the inbox counted too); a domain (@company.de) only when several addresses all lie in the same folder and none in the inbox, never freemail (gmail, gmx, web.de, iCloud …); at most 3 new suggestions a night, the strongest first, open for 7 days at most. They stand on top of E-mail → Rules as \"Suggestions from your filing\" with \"Make the rule and file\" (the rule and the sender's mails in the inbox, with \"Undo\"), \"Rule only\" and \"Do not ask again\"; a"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": " rule comes only after the click. No switch of its own, part of \"Order mails\". Live: \"N suggestions from filing\"; the log has numbers only. iPhone: the same list on top of \"Rules\". As a card: each suggestion also stands in the morning as a card \"Rule suggestion\" in the assistant and under Open (vorgaenge.QUELLEN[\"regel\"]), with the page's buttons: \"Make the rule and file them\" (only while some of its mails lie in the inbox), \"Make the rule\", \"Don't ask again\"; a button runs the same checks as the page (no buttons without \"Mails ordnen\"), and when the suggestion is taken on the page or expires after 7 days the card closes."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
 "title": "Rule hint",
 "text": "Rule hint: per profile the Spark counts how often mails of the same sender are moved into the same folder (mailregeln.learn, only address, folder, count, 30 days). The third time a hint stands below \"Undo\" with three buttons: \"Make the rule and apply it now\" (the rule and the fitting mails in the inbox, with \"Undo\"), \"Only the rule\" and \"Don't ask again\" (remembered for that pair). If the sender already has a rule, it does not ask. Live: \"today N rule hints\". In the iPhone app: delete on swipe, in the mail and for several picked ones, \"Undo\" and the rule hint above the list, in the trash \"Delete for good\" with a question, the mail program's folders with their own names."
 },
@@ -16974,6 +17102,38 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "l: voice proposed|sent|declined|refused, <reason>."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "Send later (V01.0.906, Dominik 2026-10-21 \"4\"; part of \"Mails senden\", no switch of its own): the preview sheet and the \"New mail\" window offer \"Later …\" (iPhone: \"Send later …\" with date and time). POST /api/profile/mail/send with the token and at plans exactly the sheet's finished mail, at least 1 minute and at most 30 days ahead, at most 20 at once; until then it lies sealed in the profile (mail-spaeter.bin, vorrat.seal, bound to profile and file name). Above the list stand the planned mails (when, to whom, subject, never the text) with \"Withdraw\" (DELETE /api/profile/mail/later/{id}, also when \"Mails senden\" was switched off meanwhile). Each minute senden.later_due_once sends what is due, each mail exactly once, through the same checks as \"Send\" (30 a day, TLS, copy in \"Sent\"): the Notaus holds it back until it is over; with \"Mails senden\" off it does not go out and shows \"not sent\"; if the outgoing server breaks off it shows \"unclear, check Sent\" and is never tried a second time. With the sending the text goes, the line stays a day. Live shows at mail only the number of planned mails; log mail: send later planned|refused|dropped|unclear … without address, subject or text."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "Confirmation codes (V01.0.906, Dominik 2026-10-21 \"5\", idea from email-mcp, own code; Features → Reading e-mail → New mail at once → \"Bestätigungscodes\", chat.mail_code, off): when a mail with a code arrives (\"482913 ist dein Bestätigungscode\"), mailcode.py sends a note \"Bestätigungscode · 482913 · GitHub\" to the device in use, with \"Copy code\" (iPhone: the button or a tap puts it on the clipboard for 3 minutes, local only; Begleiter on Mac and Windows likewise). Fixed rules, never the model: unread, at most 10 minutes old, a word like code, Bestätigungscode, TAN, verification code close (80 characters) to exactly one code of 4 to 8 digits or capitals with digits; voucher, discount, order, tracking and customer numbers do not count, a year never. At most 10 notes an hour per profile, one per mail. Needs \"New mail at once\"; a profile with this function that used any device in the last two hours gets its IDLE connection for it. Never through Telegram: if Telegram is the device in use, it goes to the next other way (iPhone app, Android, Begleiter, browser); with none there is no note. Apple carries only \"New message from the Spark\", the app fetches the text from the Spark; the code li"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "ves only in memory with its note, never on disk, never in the log (mail: code looked|no device|limit|too slow … with numbers only); Live shows at mail only the number of notes today. My emergency stop holds them."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "Mail statistics (V01.0.906, Dominik 2026-10-21 \"6\"; part of \"Mails ordnen\", no switch of its own): at the top of the tab Rules (panel and iPhone) \"Who writes most\" opens: the mails a week of the last four weeks and the 15 most frequent senders of the last 30 days with count and unread ones, and \"has rule\" or \"Rule …\" (the form with that sender). mailregeln.stats counts in the panel from the listing the Mail-Vorrat keeps anyway (300 headers a mailbox) and reads nothing again while it is fresh; nothing goes to the model. GET /api/profile/mail/stats (rate limit postordnen), log mail: stats shown|too slow … with numbers only, Live at mail: how often looked at today."
 },
 {
 "lang": "en",
@@ -19990,6 +20150,14 @@
 "head": "Mail and contacts",
 "title": "Mail and contacts",
 "text": "- New mail at once (Features → Mail and contacts → \"New mail at once\"; builds on \"Reading e-mail\"; E-mail → Settings): New mail is on the E-mail page within a few seconds, not only at the next fetch every five minutes, and your mail rules sort it at once."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Mail and contacts",
+"title": "Mail and contacts",
+"text": "- Confirmation codes (Features → Mail and contacts → \"Confirmation codes\"; builds on \"New mail at once\"; E-mail → Settings): When a mail with a confirmation code arrives (\"482913 is your code\"), the Spark shows the code at once as a note on the device you are using, with \"Copy code\"."
 },
 {
 "lang": "en",

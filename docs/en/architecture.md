@@ -310,6 +310,7 @@ The own pages E-mail, Calendar and Contacts, fetching from the provider, the sea
 | `app/panel/kontaktserver.py` | Kontakte wie Apple Kontakte, Stufe 3b: the Spark as a CardDAV server, so the iPhone's own Kontakte app (or Thunderbird, DAVx5 on Android) shows and changes t … |
 | `app/panel/mail.py` | Reading e-mail per profile over IMAP (read only; guests have none). |
 | `app/panel/mailansicht.py` | Mail formatted like it was sent: the HTML part of a mail as the page E-Mail shows it, made safe here on the Spark before any browser sees it. |
+| `app/panel/mailcode.py` | Bestätigungscodes: a new mail with a confirmation code („482913 ist dein Bestätigungscode“) becomes a note on the device in use, with „Code kopieren“. |
 | `app/panel/mailidle.py` | Neue Mails sofort: IMAP IDLE for the inboxes of profiles that read their mail lately, so new mail is on the page E-Mail within seconds and the profile's Mail … |
 | `app/panel/mailregeln.py` | Mail-Regeln: rules the profile makes on the page E-Mail, like in a mail program. |
 | `app/panel/mailstil.py` | Mailstil: the Spark learns from the profile's own sent mails how it writes (greeting, sign-off, du or Sie, length, tone, typical phrases) and writes mail dra … |
@@ -548,7 +549,8 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `users/ID/vorgaenge.json` | Open: what needs you, what you put off for later and what is done (titles and state of the cards); a proposal waiting for your yes, with the mail's text only until it is answered | Queue | – | yes | – |
 | `users/ID/interessen.json` | What I know about you: confirmed and refused interests and the last web tip (never a mail) | Settings | – | yes | – |
 | `users/ID/mailstil.json` | Mail style (only the summary, never a mail) | Settings | – | yes | – |
-| `users/ID/mail-regeln.json` | Mail rules of the E-mail page (senders, words, folders; never a mail) | Settings | – | yes | – |
+| `users/ID/mail-regeln.json` | Mail rules of the E-mail page and rule suggestions (senders, words, folders; never a mail) | Settings | – | yes | – |
+| `users/ID/mail-spaeter.bin` | Send later: planned mails until they go out, after that for a day the line without text | Queue | sealed | yes | – |
 | `users/ID/spark-kalender.json` | Spark calendar: appointments of the calendars without an account (only here) | Appointments | sealed | yes | – |
 | `users/ID/kalender-server.json` | Calendar server: check value of the app password for calendar apps | Login | hash only | yes | – |
 | `users/ID/calendar.json` | Calendar account and shares with other profiles | Login | password sealed | yes | – |
@@ -3668,8 +3670,8 @@ flowchart TD
 5. <a id="kn-post-s5"></a>**Back in time?**: The assistant waits only briefly (mail.lookup). If the provider is slow or away, it answers from the last listing or the supply, never with one from days ago.
 6. <a id="kn-post-s6"></a>**Supply sealed**: mailvorrat.keep_heads keeps the newest headers, plus the texts read last; vorrat.seal seals them with the Spark's key in the profile's folder.
 7. <a id="kn-post-s7"></a>**Answer with its time**: When something is not fresh from the provider, frisch.stand says with a fixed sentence when it is from ("as of yesterday 18:00"). The pages show at once what is there and load the rest behind.
-8. <a id="kn-post-s8"></a>**Change something?**: Reading is all that works without further switches.
-9. <a id="kn-post-s9"></a>**Change with a check**: A mail goes out only after the preview sheet and the tap on Send (senden.preview, senden.send, at most 30 a day). contacts.save writes a card back with If-Match: if it changed meanwhile, nothing is overwritten.
+8. <a id="kn-post-s8"></a>**Change something?**: Reading is all that works without further switches. A confirmation code from a new mail becomes, with a switch of its own, only a note on the device in use (mailcode.arrived), never by Telegram, never in a log.
+9. <a id="kn-post-s9"></a>**Change with a check**: A mail goes out only after the preview sheet and the tap on Send (senden.preview, senden.send, at most 30 a day). "Send later" keeps it sealed until its time (senden.later); if a sending broke off, it never goes a second time. contacts.save writes a card back with If-Match: if it changed meanwhile, nothing is overwritten.
 10. <a id="kn-post-s10"></a>**Door for apps**: kalenderserver.login refuses other sites' web pages, locks wrong passwords like a PIN, keeps My emergency stop and the switch and counts the rate limit. Then the app sees only the profile's Spark calendars and the address book "On the Spark"; kontaktserver._write takes one vCard per card, at most 2000, and writes only with "Edit contacts".
 11. <a id="kn-post-s11"></a>**Own data only**: No profile sees another one's mail, appointments or contacts, except a calendar its owner shares.
 
@@ -3705,11 +3707,13 @@ flowchart TD
 - `app/panel/frisch.py` `stand`: time with its day ([step 7](#kn-post-s7))
 - `app/panel/senden.py` `preview`: preview sheet ([step 9](#kn-post-s9))
 - `app/panel/senden.py` `send`: send after the tap ([step 9](#kn-post-s9))
+- `app/panel/senden.py` `later`: send later, sealed ([step 9](#kn-post-s9))
+- `app/panel/mailcode.py` `arrived`: confirmation code as a note ([step 8](#kn-post-s8))
 - `app/panel/contacts.py` `save`: card back with If-Match ([step 9](#kn-post-s9))
 - `app/panel/kalenderserver.py` `login`: door for calendar and contacts apps ([step 2](#kn-post-s2), [step 10](#kn-post-s10))
 - `app/panel/kontaktserver.py` `_write`: card from a contacts app ([step 10](#kn-post-s10))
 
-Self-tests: `test_mailvorrat`, `test_vorrat`, `test_mails_senden`, `test_kalenderserver`, `test_kontaktserver`, `test_kontakte_seite`, `test_kalenderspiegel`
+Self-tests: `test_mailvorrat`, `test_vorrat`, `test_mails_senden`, `test_kalenderserver`, `test_kontaktserver`, `test_kontakte_seite`, `test_kalenderspiegel`, `test_mailcode`
 
 ### journald
 

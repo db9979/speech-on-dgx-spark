@@ -21,6 +21,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
         // notifications that arrive while the app is open: banner, sound and said aloud
         UNUserNotificationCenter.current().delegate = Relay.shared
+        Relay.categories()
         // Ton-Protokoll: a start in the middle of a drive shows that iOS had ended the app (CarPlay stabil)
         AudioEngine.note("App gestartet " + Date().formatted(.dateTime.day().month(.twoDigits)))
         Store.share()

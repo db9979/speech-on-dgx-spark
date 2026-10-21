@@ -341,7 +341,9 @@ final class AppModel: ObservableObject {
                 let weg = Wege.find(x["weg"] as? String ?? "")?.way
                 let tag = x["tag"] as? String ?? ""
                 // an important new mail (part post) has its own buttons: Antwort entwerfen, Gelesen, Ansehen
-                let acts = tag == NoteActions.mailTag ? NoteActions.parseMail(x["actions"]) : NoteActions.parse(x["actions"])
+                let acts = tag == NoteActions.mailTag ? NoteActions.parseMail(x["actions"])
+                    : tag == NoteActions.codeTag ? NoteActions.parseCode(x["actions"])
+                    : NoteActions.parse(x["actions"])
                 return (n, x["title"] as? String ?? "", x["body"] as? String ?? "", tag, acts, weg)
             }
             if notes.contains(where: { $0.tag == NoteActions.mailTag }) {
@@ -349,7 +351,8 @@ final class AppModel: ObservableObject {
             }
             for note in notes.sorted(by: { $0.n < $1.n }).suffix(5) {
                 var buttons = part("actions") ? note.actions.filter { $0 != "draft" || part("ask") } : []
-                if part("agenda") && !buttons.contains("fdremind") && note.tag != NoteActions.mailTag { buttons.append("remind") }
+                if part("agenda") && !buttons.contains("fdremind") && note.tag != NoteActions.mailTag
+                    && note.tag != NoteActions.codeTag { buttons.append("remind") }
                 Notifier.show(title: note.title, body: note.body, tag: note.tag, id: "note-\(note.n)",
                               note: note.n, actions: buttons, weg: note.weg)
             }
@@ -747,6 +750,10 @@ enum Notifier {
             set.insert(UNNotificationCategory(identifier: id, actions: actions, intentIdentifiers: [],
                                               hiddenPreviewsBodyPlaceholder: "Neue Mail", options: []))
         }
+        // Bestätigungscodes: „Code kopieren“ puts the code on the clipboard, nothing goes to the Spark
+        set.insert(UNNotificationCategory(identifier: NoteActions.codeCategory,
+                                          actions: [UNNotificationAction(identifier: "copy", title: "Code kopieren", options: [])],
+                                          intentIdentifiers: [], options: []))
         set.insert(UNNotificationCategory(identifier: inboxFileCategory,
                                           actions: [UNNotificationAction(identifier: "openFolder", title: "Ordner öffnen",
                                                                          options: [.foreground])],
@@ -766,7 +773,9 @@ enum Notifier {
         if let note { info["note"] = note }
         if let weg { info["weg"] = weg }
         if !info.isEmpty { c.userInfo = info }
-        if let cat = tag == NoteActions.mailTag ? NoteActions.mailCategory(actions) : NoteActions.category4(actions) {
+        if tag == NoteActions.codeTag {
+            if actions.contains("copy") { c.categoryIdentifier = NoteActions.codeCategory }
+        } else if let cat = tag == NoteActions.mailTag ? NoteActions.mailCategory(actions) : NoteActions.category4(actions) {
             c.categoryIdentifier = cat
         }
         let r = UNNotificationRequest(identifier: id, content: c, trigger: nil)
@@ -814,6 +823,12 @@ enum Notifier {
             guard model.part("actions"), model.part("ask") else { return HUD.show(AppModel.offHint("Frag Spark")) }
             AskController.openForNote(note, title: title, body: body)
             AskController.shared.input = NoteActions.draftQuestion
+        case "copy":
+            // Bestätigungscodes: the code (the note's first word) on the clipboard, only here
+            guard let code = NoteActions.codeOf(body) else { return }
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setString(code, forType: .string)
+            HUD.show("Code kopiert")
         case "done", "fdremind", "read":
             // a button of a note about a Für-dich card or a new mail: the Spark checks the note and what is behind it
             guard model.part("actions") else { return HUD.show(AppModel.offHint("Knöpfe in Meldungen")) }

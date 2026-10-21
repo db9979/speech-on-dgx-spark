@@ -310,12 +310,13 @@ Die eigenen Seiten E-Mail, Kalender und Kontakte, der Abruf beim Anbieter, der v
 | `app/panel/kontaktserver.py` | Kontakte-Server: das Adressbuch „Auf dem Spark“ für Kontakte-Apps (CardDAV unter /carddav/) |
 | `app/panel/mail.py` | Mail lesen per IMAP |
 | `app/panel/mailansicht.py` | Mail formatiert (Seite E-Mail, iPhone): HTML bereinigt, Rahmen ohne Skript, Bilder von außen nur per Klick |
+| `app/panel/mailcode.py` | Bestätigungscodes: Code aus neuer Mail als Mitteilung aufs genutzte Gerät, nie Telegram, nie im Log |
 | `app/panel/mailidle.py` | Neue Mails sofort: IMAP IDLE für Profile, die ihre Mails gerade lesen, höchstens 4 Verbindungen |
-| `app/panel/mailregeln.py` | Mail-Regeln der Seite E-Mail: wenn Absender/Betreff, dann Ordner, gelesen, markieren; nie löschen; Regel-Vorschlag |
+| `app/panel/mailregeln.py` | Mail-Regeln: wenn Absender/Betreff, dann Ordner, gelesen, markieren; nie löschen; Vorschläge nachts, Statistik |
 | `app/panel/mailstil.py` | Mailstil: lernt aus gesendeten Mails, wie das Profil schreibt, für Mail-Entwürfe |
 | `app/panel/mailvorrat.py` | Mail-Vorrat: neueste Kopfzeilen und Texte versiegelt im Profil, Antwort mit Stand bei Ausfall |
 | `app/panel/postfach.py` | Mails ordnen auf der Seite E-Mail: gelesen, markieren, Archiv, Ordner, Mehrfachauswahl, Löschen in den Papierkorb |
-| `app/panel/senden.py` | Mails senden auf der Seite E-Mail: Vorschau-Blatt, SMTP über TLS, Kopie in Gesendet |
+| `app/panel/senden.py` | Mails senden auf der Seite E-Mail: Vorschau-Blatt, SMTP über TLS, Kopie in Gesendet, Später senden versiegelt |
 | `app/panel/sparkkalender.py` | Spark-Kalender ohne Konto: Termine nur auf dem Spark, verschlüsselt im Profil, beantwortet CalDAV im Panel selbst |
 | `app/panel/tidy.py` | Posteingang aufräumen |
 
@@ -548,7 +549,8 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `users/ID/vorgaenge.json` | Offen: was dich braucht, was du auf später gelegt hast und was erledigt ist (Titel und Zustand der Karten); ein Vorschlag, der auf dein Ja wartet, mit dem Text der Mail nur bis zur Antwort | Warteschlange | – | ja | – |
 | `users/ID/interessen.json` | Was ich über dich weiß: bestätigte und abgelehnte Interessen und der letzte Netz-Tipp (keine Mail) | Einstellungen | – | ja | – |
 | `users/ID/mailstil.json` | Mailstil (nur die Zusammenfassung, keine Mail) | Einstellungen | – | ja | – |
-| `users/ID/mail-regeln.json` | Mail-Regeln der Seite E-Mail (Absender, Wörter, Ordner; keine Mail) | Einstellungen | – | ja | – |
+| `users/ID/mail-regeln.json` | Mail-Regeln der Seite E-Mail und Regel-Vorschläge (Absender, Wörter, Ordner; keine Mail) | Einstellungen | – | ja | – |
+| `users/ID/mail-spaeter.bin` | Später senden: geplante Mails bis zum Senden, danach einen Tag die Zeile ohne Text | Warteschlange | versiegelt | ja | – |
 | `users/ID/spark-kalender.json` | Spark-Kalender: Termine der Kalender ohne Konto (nur hier) | Termine | versiegelt | ja | – |
 | `users/ID/kalender-server.json` | Kalender-Server: Prüfwert des App-Passworts für Kalender-Apps | Login | nur der Hash | ja | – |
 | `users/ID/calendar.json` | Kalender-Zugang und Freigaben an andere Profile | Login | Passwort versiegelt | ja | – |
@@ -3668,8 +3670,8 @@ flowchart TD
 5. <a id="kn-post-s5"></a>**Rechtzeitig zurück?**: Der Assistent wartet nur kurz (mail.lookup). Ist der Anbieter langsam oder weg, antwortet er aus der letzten Liste oder dem Vorrat, nie mit einer von vor Tagen.
 6. <a id="kn-post-s6"></a>**Vorrat versiegelt**: mailvorrat.keep_heads behält die neuesten Kopfzeilen, dazu die zuletzt gelesenen Texte; vorrat.seal versiegelt sie mit dem Schlüssel des Spark im Ordner des Profils.
 7. <a id="kn-post-s7"></a>**Antwort mit Stand**: Kommt etwas nicht frisch vom Anbieter, sagt frisch.stand mit festem Satz, von wann es ist („Stand gestern 18:00“). Die Seiten zeigen sofort, was da ist, und laden im Hintergrund nach.
-8. <a id="kn-post-s8"></a>**Etwas ändern?**: Lesen ist alles, was ohne weitere Schalter geht.
-9. <a id="kn-post-s9"></a>**Ändern mit Prüfung**: Eine Mail geht erst nach dem Vorschau-Blatt und dem Tipp auf Senden raus (senden.preview, senden.send, höchstens 30 am Tag). contacts.save schreibt eine Karte mit If-Match zurück: hat sie sich inzwischen geändert, wird nichts überschrieben.
+8. <a id="kn-post-s8"></a>**Etwas ändern?**: Lesen ist alles, was ohne weitere Schalter geht. Ein Bestätigungscode aus einer neuen Mail wird mit eigenem Schalter nur eine Mitteilung aufs genutzte Gerät (mailcode.arrived), nie über Telegram, nie im Log.
+9. <a id="kn-post-s9"></a>**Ändern mit Prüfung**: Eine Mail geht erst nach dem Vorschau-Blatt und dem Tipp auf Senden raus (senden.preview, senden.send, höchstens 30 am Tag). „Später senden“ legt sie bis zur Zeit versiegelt ab (senden.later); brach ein Senden ab, geht sie nie ein zweites Mal. contacts.save schreibt eine Karte mit If-Match zurück: hat sie sich inzwischen geändert, wird nichts überschrieben.
 10. <a id="kn-post-s10"></a>**Tür für Apps**: kalenderserver.login weist fremde Webseiten ab, sperrt falsche Passwörter wie eine PIN, hält Mein Notaus und den Schalter ein und zählt die Lastgrenze. Danach sieht die App nur die Spark-Kalender und das Adressbuch „Auf dem Spark“ des Profils; kontaktserver._write nimmt je Karte eine vCard, höchstens 2000, und schreibt nur mit „Kontakte ändern“.
 11. <a id="kn-post-s11"></a>**Nur eigene Daten**: Kein Profil sieht die Post, Termine oder Kontakte eines anderen, außer einem Kalender, den der Besitzer teilt.
 
@@ -3705,11 +3707,13 @@ flowchart TD
 - `app/panel/frisch.py` `stand`: Stand mit Tag ([Schritt 7](#kn-post-s7))
 - `app/panel/senden.py` `preview`: Vorschau-Blatt ([Schritt 9](#kn-post-s9))
 - `app/panel/senden.py` `send`: senden nach dem Tipp ([Schritt 9](#kn-post-s9))
+- `app/panel/senden.py` `later`: später senden, versiegelt ([Schritt 9](#kn-post-s9))
+- `app/panel/mailcode.py` `arrived`: Bestätigungscode als Mitteilung ([Schritt 8](#kn-post-s8))
 - `app/panel/contacts.py` `save`: Karte zurück mit If-Match ([Schritt 9](#kn-post-s9))
 - `app/panel/kalenderserver.py` `login`: Tür für Kalender- und Kontakte-Apps ([Schritt 2](#kn-post-s2), [Schritt 10](#kn-post-s10))
 - `app/panel/kontaktserver.py` `_write`: Karte einer Kontakte-App ([Schritt 10](#kn-post-s10))
 
-Selbsttests: `test_mailvorrat`, `test_vorrat`, `test_mails_senden`, `test_kalenderserver`, `test_kontaktserver`, `test_kontakte_seite`, `test_kalenderspiegel`
+Selbsttests: `test_mailvorrat`, `test_vorrat`, `test_mails_senden`, `test_kalenderserver`, `test_kontaktserver`, `test_kontakte_seite`, `test_kalenderspiegel`, `test_mailcode`
 
 ### journald
 

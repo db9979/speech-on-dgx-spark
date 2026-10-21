@@ -47,6 +47,15 @@ def fill():
     FMB.after_login = ("IMAP4REV1", "MOVE", "UIDPLUS")
 
 
+
+async def server(done, most=10.0):
+    """Verschieben ohne Neuladen (V01.0.894): the page takes a mail away at once; waits until the mailbox has it too."""
+    for _ in range(int(most / 0.1)):
+        if done():
+            return
+        await asyncio.sleep(0.1)
+
+
 class Base(unittest.TestCase):
     NAME = "Loesch Lotte"
 
@@ -285,6 +294,7 @@ class Page(unittest.TestCase):
                     pg.once("dialog", lambda d: asyncio.ensure_future(d.accept()))
                     await pg.click("#postview .postbar [data-o=erase]")
                     await b.until(pg, "POST.data.items.length===0")
+                    await server(lambda: FMB.boxes["Deleted Messages"] == [])   # the list goes at once, the mailbox follows
                     self.assertEqual(FMB.boxes["Deleted Messages"], [])
                     self.assertIn("Endgültig gelöscht", await pg.inner_text("#postview .postundo"))
                     self.assertEqual(errors, [])
@@ -322,6 +332,7 @@ class Page(unittest.TestCase):
                         await pg.mouse.move(box["x"] + 20, box["y"] + box["height"] / 2, steps=6)
                         await pg.mouse.up()
                         await b.until(pg, f"POST.data.items.length==={4 - n}")
+                    await server(lambda: len(FMB.boxes["Projekte"]) == 3)       # moved at once on the page, the mailbox follows
                     self.assertEqual(len(FMB.boxes["Projekte"]), 3)
                     await b.until(pg, "!!document.querySelector('#postview .posthint [data-h=save]')")
                     self.assertIn("bob@example.de", await pg.inner_text("#postview .posthint"))

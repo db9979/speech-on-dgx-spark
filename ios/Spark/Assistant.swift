@@ -1133,9 +1133,23 @@ final class Relay: NSObject, UNUserNotificationCenterDelegate {
         }
     }
 
+    /// Bestätigungscodes (mailcode.py): the button „Code kopieren“ under a note with a code.
+    static func categories() {
+        let copy = UNNotificationAction(identifier: "copy", title: String(localized: "Code kopieren"), options: [])
+        UNUserNotificationCenter.current().setNotificationCategories(
+            [UNNotificationCategory(identifier: "spark.code", actions: [copy], intentIdentifiers: [], options: [])])
+    }
+
     /// A tapped note about a Vorgang counts as seen on every device (Meldung ans genutzte Gerät, zustellung.py).
+    /// A note with a code (Bestätigungscodes): „Code kopieren“ or a tap puts it on the clipboard for 3 minutes.
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse,
                                 withCompletionHandler done: @escaping () -> Void) {
+        if let code = response.notification.request.content.userInfo["copy"] as? String,
+           code.range(of: "^[A-Z0-9]{4,8}$", options: .regularExpression) != nil,
+           [UNNotificationDefaultActionIdentifier, "copy"].contains(response.actionIdentifier) {
+            UIPasteboard.general.setItems([[UIPasteboard.typeAutomatic: code]],
+                                          options: [.expirationDate: Date().addingTimeInterval(180), .localOnly: true])
+        }
         guard let vg = response.notification.request.content.userInfo["v"] as? String, let api = SparkAPI.current else {
             return done()
         }

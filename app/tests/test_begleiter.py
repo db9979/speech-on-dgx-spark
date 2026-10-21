@@ -860,7 +860,8 @@ class Deeper(unittest.TestCase):
             return "".join(open(os.path.join(root, n), encoding="utf-8").read() for n in names)
         win = re.search(r"Known = \{([^}]*)\}", src("windows/Karten.cs")).group(1)
         mac = src("mac/Sources/DeepLogic.swift", "mac/Sources/V4Logic.swift")
-        mac_known = re.search(r"static let known = \[([^\]]*)\]", mac).group(1) + re.search(r"static let mail = \[([^\]]*)\]", mac).group(1)
+        mac_known = re.search(r"static let known = \[([^\]]*)\]", mac).group(1) + re.search(r"static let mail = \[([^\]]*)\]", mac).group(1) \
+            + re.search(r"static let code = \[([^\]]*)\]", mac).group(1)
         for a in acts:
             self.assertIn(f'"{a}"', win, a)
             self.assertIn(f'"{a}"', mac_known, a)

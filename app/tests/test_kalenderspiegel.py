@@ -232,8 +232,10 @@ class Behind(Base):
                 now = sorted(re.search(r"SUMMARY:([^\r\n]*)", x[1]).group(1)
                              for x in ks._mem[CID][self.cal()]["items"].values())
                 server_now = len(helpers.CAL_EVENTS)
-                for _ in range(200):          # the change behind the page
-                    if not ks._pending:
+                # the change behind the page: done when the copy has no change waiting and its journal line is
+                # written (the line comes right after the copy took it; under load that can be a moment later)
+                for _ in range(1000):
+                    if not ks._pending and "saved behind" in out.getvalue():
                         break
                     await asyncio.sleep(0.01)
             self.log = out.getvalue()

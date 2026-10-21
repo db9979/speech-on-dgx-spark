@@ -664,7 +664,8 @@ class FakeMailbox:
         if n not in self.boxes:
             return "NO", [b"no such folder"]
         box = self.boxes[n]
-        return "OK", [f'"{n}" (MESSAGES {len(box)} UNSEEN {sum(1 for m in box if not m["seen"])})'.encode()]
+        return "OK", [f'"{n}" (MESSAGES {len(box)} UNSEEN {sum(1 for m in box if not m["seen"])} '
+                      f'UIDNEXT {self.uidnext.get(n, 100)})'.encode()]
 
     def select(self, name, readonly=False):
         n = self._name(name)
@@ -727,10 +728,11 @@ class FakeMailbox:
                 elif k == "FROM":
                     w = a.pop(0).strip('"').lower()
                     hit = [m for m in hit if w in m["raw"].split(b"\r\n")[0].decode().lower()]
-                elif k == "HEADER":
-                    a.pop(0)
+                elif k == "HEADER":         # the named header holds the text (Message-ID, In-Reply-To, References)
+                    field = a.pop(0).lower() + ":"
                     w = a.pop(0).strip('"')
-                    hit = [m for m in hit if f"Message-ID: {w}".encode() in m["raw"]]
+                    hit = [m for m in hit if any(ln.lower().startswith(field) and w in ln
+                                                 for ln in m["raw"].decode(errors="replace").split("\r\n\r\n")[0].split("\r\n"))]
                 elif k == "TEXT":
                     w = a.pop(0).strip('"').lower()
                     hit = [m for m in hit if w in m["raw"].decode().lower()]

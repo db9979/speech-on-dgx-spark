@@ -1344,15 +1344,19 @@ def snapshot(view="admin", now=None):
         post_del = postfach.deleted_today()
         import senden
         post_sent = senden.today()
+        post_later = senden.later_count()
         import mailregeln
         post_rules = mailregeln.for_live()
         import mail
         post_files = mail.files_today()
         import mailidle
         post_idle = mailidle.for_live()
+        import mailcode
+        post_code = mailcode.for_live()
         import mailvorrat
         post_supply = mailvorrat.for_live()
         post_older = mail.older_today()
+        post_threads = mail.threads_today()
         import mailansicht
         post_view = mailansicht.counts()
         import fuerdich
@@ -1364,6 +1368,9 @@ def snapshot(view="admin", now=None):
         post_rules = {}
         post_supply = {}
         post_older = 0
+        post_threads = 0
+        post_later = 0
+        post_code = {}
         post_fd = {}
     try:
         import vorwaermen
@@ -1542,6 +1549,10 @@ def snapshot(view="admin", now=None):
                          + (f", heute {post_rules['taken']} Mails einsortiert" if post_rules.get("taken") else ""))
         if x["id"] == "mail" and post_rules.get("hints"):   # Regel-Vorschlag: hints shown today (a number)
             x["sub"] += f" · heute {post_rules['hints']} Regel-Vorschläge"
+        if x["id"] == "mail" and post_rules.get("stats"):   # Mail-Statistik: looked at today (a number, never who)
+            x["sub"] += f" · heute {post_rules['stats']}× Statistik angesehen"
+        if x["id"] == "mail" and post_rules.get("night"):   # Regel-Vorschläge aus dem Ablegen: made last night (a number)
+            x["sub"] += f" · {post_rules['night']} Vorschläge aus dem Ablegen"
         if x["id"] == "mail" and post_view.get("html"):   # Apple-Stil „2a“: mails shown formatted, pictures from outside loaded (numbers)
             x["sub"] += f" · heute {post_view['html']} formatiert gezeigt" + (f", {post_view['bilder']} Bilder von außen geladen" if post_view.get("bilder") else "")
         if x["id"] == "mail" and post_files:     # Anhang laden: attachments fetched today (a number, never which)
@@ -1552,10 +1563,16 @@ def snapshot(view="admin", now=None):
             x["sub"] += f" · Vorrat bei {post_supply['profiles']} Profilen" + (f", heute {post_supply['answers']}× daraus geantwortet" if post_supply.get("answers") else "")
         if x["id"] == "mail" and post_older:     # Ältere nachladen: older pages loaded today (a number, never what)
             x["sub"] += f" · heute {post_older} ältere Seiten geladen"
+        if x["id"] == "mail" and post_threads:   # Unterhaltung: conversations shown today (a number, never which)
+            x["sub"] += f" · heute {post_threads} Unterhaltungen gezeigt"
         if x["id"] == "mail" and post_fd.get("answers"):   # Für dich: mailboxes answered from its kept reading today (a number)
             x["sub"] += f" · Für dich heute {post_fd['answers']}× aus der letzten Lesung"
         if x["id"] == "mail" and post_sent:      # Mails senden: mails sent from the page today (a number, never to whom)
             x["sub"] += f" · heute {post_sent} gesendet"
+        if x["id"] == "mail" and post_code.get("on"):   # Bestätigungscodes: notes today (a number, never a code)
+            x["sub"] += f" · Codes: heute {post_code['today']} Mitteilungen"
+        if x["id"] == "mail" and post_later:     # Später senden: planned mails waiting (a number, never to whom)
+            x["sub"] += f" · {post_later} Mails geplant"
         if x["id"] == "mail" and (avs.get("suggested") or avs.get("rewritten")):   # Antwortvorschläge: numbers only
             x["sub"] += f" · heute {avs['suggested']}× Antwortvorschläge, {avs['rewritten']}× umformuliert"
         if x["id"] == "cal" and kal_page:        # the page Kalender: appointments added, changed, deleted today (a number)

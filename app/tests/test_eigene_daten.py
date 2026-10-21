@@ -34,7 +34,8 @@ _N = itertools.count(1)
 OHNE = {
     "mailmanage": "ordnet nur Mails im eigenen Postfach, speichert nichts im Spark; die Mails löscht das Postfach selbst",
     "maildelete": "legt nur Mails im eigenen Postfach in dessen Papierkorb (endgültig nur dort), speichert nichts im Spark",
-    "mailsend": "gesendete Mails liegen im Postfach unter Gesendet; im Spark bleibt nur die Vorschau höchstens 10 Minuten, ein Vorschlag per Sprache 5 Minuten",
+    "mailsend": "gesendete Mails liegen im Postfach unter Gesendet; im Spark bleibt nur die Vorschau höchstens 10 Minuten, ein Vorschlag per Sprache 5 Minuten; geplante Mails (Später senden) versiegelt bis zum Senden, sie gehen mit den Daten von E-Mail lesen",
+    "mailcode": "keine eigenen Daten: ein Code lebt nur mit seiner Mitteilung im Speicher, nie auf der Platte",
     "bildaendern": "geänderte und hochgeladene Bilder liegen bei den Bildern (features.OWN bilder, Ich → Bilder)",
     "musikbearbeiten": "Fassungen und hochgeladene Dateien liegen bei den Liedern (features.OWN musik, Ich → Musik)",
     "teilen": "teilt nur eigene Dokumente, Kalender und Listen, keine Kopie; jede Freigabe zieht Ich → Geteilt einzeln zurück, und ein gelöschtes Dokument ist nicht mehr geteilt",

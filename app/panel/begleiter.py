@@ -125,7 +125,7 @@ NOTE_MAX = 30
 # Every other note keeps reply, later, open. "open" goes to the note's way (NOTE_WEG, else the first way in its text).
 # A note about an important new mail (part post, 2a): "draft" opens Frag Spark with the note in front (the program),
 # "read" marks the mail read (only with „Mails ordnen“), "open" goes to E-Mail → Posteingang.
-NOTE_ACTS = {"pro-fuerdich": ("done", "fdremind", "open"), "mail-new": ("draft", "read", "open")}
+NOTE_ACTS = {"pro-fuerdich": ("done", "fdremind", "open"), "mail-new": ("draft", "read", "open"), "mailcode": ("copy",)}
 NOTE_ACTS_PLAIN = ("reply", "later", "open")
 NOTE_WEG = {"pro-fuerdich": "E-Mail → Für dich", "mail-new": "E-Mail → Posteingang"}
 NOTE_PANEL_ACTS = ("done", "fdremind", "read")   # the buttons that act here (POST /api/desk/note/act)
@@ -2468,7 +2468,7 @@ QUIET_HOLD = 30
 QUIET_TITLE = "Während du beschäftigt warst"
 QUIET_WHY = {"call": "Anruf", "present": "Präsentation"}
 # never held: Notaus, safety notes, confirmations that wait, room mode listening, tests, reminders (alarms)
-URGENT = {"notaus", "security", "spkcode", "mcp", "room", "admin", "hello", "quiet", "setup"}
+URGENT = {"notaus", "security", "spkcode", "mcp", "room", "admin", "hello", "quiet", "setup", "mailcode"}
 _quiet = {}                       # uid -> {"until", "why", "held": [titles], "more": n}
 
 

@@ -362,6 +362,10 @@ FEATURES = (
       parent="mail", me="mailbox", guide="einladungen"),
     F("mailidle", "Neue Mails sofort", "New mail at once", "post", ("mail_idle", "mail"), parent="mail", me="mailbox",
       guide="mailidle"),
+    # mailcode.py (Dominik 2026-10-21 „5“): a new mail with a confirmation code as a note on the device in use, never
+    # Telegram, the code never logged; needs Neue Mails sofort
+    F("mailcode", "Bestätigungscodes", "Confirmation codes", "post", ("mail_code", "mail_idle", "mail"), parent="mailidle",
+      me="mailbox", guide="mailcode"),
     F("mailstil", "Mailstil lernen", "Learn mail style", "post", ("mail_style",), parent="mail", me="mailbox", guide="mailstil"),
     F("parcels", "Pakete", "Parcels", "post", ("parcels",), parent="mail", me="mailbox", guide="parcels"),
     # fuerdich.py (plan persoenlicher-assistent, Dominik 2026-10-18): bills, contracts, orders, offers, open replies and

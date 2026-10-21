@@ -478,6 +478,23 @@ extension NoteActions {
     /// what "Antwort entwerfen" puts into the field of Frag Spark (sent only when the person presses Enter)
     static let draftQuestion = "Entwirf eine kurze Antwort auf diese Mail. Nicht senden."
 
+    /// a note with a confirmation code (tag "mailcode", mailcode.py): only „Code kopieren“, the code is the first word
+    static let codeTag = "mailcode"
+    static let code = ["copy"]
+    static let codeCategory = "code.copy"
+
+    /// the code of such a note: its first word when it looks like one (4 to 8 capitals or digits), else nil
+    static func codeOf(_ body: String) -> String? {
+        guard let first = body.split(separator: " ").first.map(String.init),
+              first.range(of: "^[A-Z0-9]{4,8}$", options: .regularExpression) != nil else { return nil }
+        return first
+    }
+
+    static func parseCode(_ raw: Any?) -> [String] {
+        let given = (raw as? [Any] ?? []).compactMap { $0 as? String }
+        return code.filter { given.contains($0) }
+    }
+
     static func parseMail(_ raw: Any?) -> [String] {
         let given = (raw as? [Any] ?? []).compactMap { $0 as? String }
         return mail.filter { given.contains($0) }

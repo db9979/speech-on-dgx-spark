@@ -90,7 +90,7 @@ router = APIRouter()
 
 # whoami flag -> function in features.py
 WHO = {"documents": "documents", "reminders": "reminders", "speaker_id": "speaker", "calendar": "calendar",
-       "homeassistant": "ha", "mail": "mail", "mail_tidy": "tidy", "mail_style": "mailstil", "mail_insight": "fuerdich", "ichweiss": "ichweiss", "share": "teilen", "mail_manage": "mailmanage", "mail_delete": "maildelete", "mail_send": "mailsend", "proactive": "proactive", "room": "room",
+       "homeassistant": "ha", "mail": "mail", "mail_tidy": "tidy", "mail_style": "mailstil", "mail_insight": "fuerdich", "ichweiss": "ichweiss", "share": "teilen", "mail_manage": "mailmanage", "mail_delete": "maildelete", "mail_code": "mailcode", "mail_send": "mailsend", "proactive": "proactive", "room": "room",
        "room_voices": "roomtv", "room_ha": "roomha", "room_remote": "roomfar", "weather": "weather", "contacts": "contacts",
        "parcels": "parcels", "telegram": "telegram", "tasks": "tasks", "vorgaenge": "vorgaenge", "knowledge_book": "wissensbuch", "knowledge_map": "wissenskarte", "transit": "transit", "feeds": "feeds",
        "esp32": "esp32", "iphone": "iphone", "iphone_panel": "iphonepanel", "pebble": "pebble", "pebble_chat": "pebblechat", "pebble_reply": "pebbleantwort", "pebble_remote": "pebblefern", "pebble_health": "pebblegesund", "pebble_face": "pebblezifferblatt", "pebble_day": "pebbletag", "pebble_alerts": "pebblemeldung", "pebble_note": "pebblemerken", "pebble_place": "pebbleort", "pebble_follow": "pebblefolge", "pebble_quick": "pebbleschnell", "pebble_remind": "pebbleerinnern", "terminal": "terminal",
@@ -1293,6 +1293,31 @@ async def profile_mail_message(request: Request, id: str = "", folder: str = "",
     return r
 
 
+@router.get("/api/profile/mail/thread", dependencies=[Depends(assistant), Depends(mail_on)])
+async def profile_mail_thread(request: Request, id: str = "", folder: str = "", prof=Depends(own_profile)):
+    """Unterhaltung (Dominik 2026-10-21 „1“): the other mails of a message's conversation (mail.thread), asked for after
+    the message is shown, so opening it never waits for this. Read only, own mailboxes only."""
+    guard.limit(request, "post", prof["id"])
+    if folder and folder.upper() != "INBOX" and not features.allowed("mailmanage", prof["id"]):
+        raise HTTPException(403, "Ordner gehören zu „Mails ordnen“.")
+    try:
+        r = await asyncio.wait_for(asyncio.to_thread(mail.thread, prof["id"], id[:40], folder[:200] or "INBOX"), 45)
+    except ValueError:
+        print(f"mail: thread refused | {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(400, "Unbekannte Mail.")
+    except asyncio.TimeoutError:
+        print(f"mail: thread too slow | {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(504, "Das Postfach hat zu lange gebraucht. Bitte gleich noch einmal.")
+    except (OSError, imaplib.IMAP4.error):
+        print(f"mail: thread not readable | {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(502, "Das Postfach war nicht erreichbar.")
+    if r is None:
+        print(f"mail: thread refused, gone | {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(404, "Diese Mail gibt es nicht mehr.")
+    print(f"mail: thread shown | {len(r)} | {profiles.log_name(prof)}", flush=True)
+    return {"items": r}
+
+
 @router.get("/api/profile/mail/file", dependencies=[Depends(assistant), Depends(mail_on), Depends(mailmanage_on)])
 async def profile_mail_file(request: Request, id: str = "", folder: str = "", n: int = 0, prof=Depends(own_profile)):
     """„Anhang laden“ (Mailclient Stufe C): attachment n of an own message as a download. Someone else's file: never
@@ -1457,6 +1482,16 @@ def profile_mail_rules(request: Request, prof=Depends(browser_profile)):
     return mailregeln.public(prof["id"])
 
 
+@router.get("/api/profile/mail/stats", dependencies=[Depends(assistant), Depends(mail_on), Depends(mailmanage_on)])
+async def profile_mail_stats(request: Request, prof=Depends(browser_profile)):
+    """Mail-Statistik on the tab Regeln: who writes most in 30 days, mails a week, unread, ruled already (numbers)."""
+    guard.limit(request, "postordnen", prof["id"])
+    try:
+        return await asyncio.to_thread(mailregeln.stats, prof["id"])
+    except TimeoutError:
+        return {"loading": True}
+
+
 async def _rule(prof, what, fn, *args):
     try:
         return await asyncio.wait_for(asyncio.to_thread(fn, prof["id"], *args), 60)
@@ -1596,10 +1631,18 @@ async def profile_mail_rewrite(request: Request, prof=Depends(browser_profile)):
 
 @router.post("/api/profile/mail/send", dependencies=[Depends(assistant), Depends(mail_on), Depends(mailsend_on)])
 async def profile_mail_send(request: Request, prof=Depends(browser_profile)):
-    """Mails senden: {token} of the preview sheet; „Senden“ there is the yes, the mail goes out once."""
+    """Mails senden: {token} of the preview sheet; „Senden“ there is the yes, the mail goes out once. With {at} (epoch
+    seconds, Später senden) it is planned instead and goes out then (senden.later)."""
     guard.limit(request, "mailsenden", prof["id"])
-    body = await request.json()
-    token = str((body if isinstance(body, dict) else {}).get("token") or "")[:64]
+    body = await json_body(request, 4096)
+    token = str(body.get("token") or "")[:64]
+    if body.get("at") is not None:
+        try:
+            return await asyncio.to_thread(senden.later, prof["id"], token, int(body["at"]))
+        except LookupError:
+            raise HTTPException(409, "Die Vorschau ist abgelaufen. Bitte die Mail noch einmal ansehen.")
+        except (TypeError, ValueError) as e:
+            raise HTTPException(400, str(e)[:200])
     try:
         return await asyncio.wait_for(asyncio.to_thread(senden.send, prof["id"], token), 90)
     except LookupError:
@@ -1613,6 +1656,22 @@ async def profile_mail_send(request: Request, prof=Depends(browser_profile)):
         raise HTTPException(504, "Der Postausgang hat zu lange gebraucht. Ob die Mail raus ist, steht im Ordner Gesendet.")
     except OSError:
         raise HTTPException(502, "Der Postausgang brach ab. Ob die Mail raus ist, steht im Ordner Gesendet.")
+
+
+@router.get("/api/profile/mail/later", dependencies=[Depends(assistant), Depends(mail_on), Depends(mailsend_on)])
+def profile_mail_later(request: Request, prof=Depends(own_profile)):
+    """Später senden: the planned mails (when, to whom, subject, state), never their text."""
+    guard.limit(request, "post", prof["id"])
+    return {"items": senden.later_list(prof["id"])}
+
+
+@router.delete("/api/profile/mail/later/{lid}", dependencies=[Depends(assistant)])
+def profile_mail_later_drop(request: Request, lid: str, prof=Depends(browser_profile)):
+    """A planned mail taken back before it goes out (always possible, also with Mails senden off)."""
+    guard.limit(request, "mailsenden", prof["id"])
+    if not senden.later_drop(prof["id"], lid[:20]):
+        raise HTTPException(404, "Diese geplante Mail gibt es nicht mehr.")
+    return {"items": senden.later_list(prof["id"])}
 
 
 @router.get("/api/profile/homeassistant", dependencies=[Depends(assistant)])

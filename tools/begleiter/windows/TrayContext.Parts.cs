@@ -674,6 +674,16 @@ internal sealed partial class TrayContext
             }));
         }
 
+        // Bestätigungscodes: „Code kopieren“ legt den Code nur hier in die Zwischenablage, nichts geht an den Spark
+        if (n.Actions.Contains("copy") && NoteActs.CodeOf(n.Body) is { } code)
+        {
+            extra.Add(("Code kopieren", () =>
+            {
+                DismissNote(n);
+                Clipboard.SetText(code);
+            }));
+        }
+
         extra.AddRange(n.Actions.Where(a => NoteActs.Label(a) is not null)
             .Select(a => (NoteActs.Label(a)!, (Action)(() => _ = NoteActAsync(n, a)))));
         return extra;

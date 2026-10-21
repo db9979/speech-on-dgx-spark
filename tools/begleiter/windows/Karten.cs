@@ -8,7 +8,14 @@ namespace SparkBegleiter;
 /// </summary>
 internal static class NoteActs
 {
-    public static readonly string[] Known = { "reply", "later", "open", "done", "fdremind", "draft", "read" };
+    public static readonly string[] Known = { "reply", "later", "open", "done", "fdremind", "draft", "read", "copy" };
+
+    /// <summary>Bestätigungscodes (mailcode.py): der Code einer Meldung ist ihr erstes Wort (4 bis 8 Großbuchstaben oder Ziffern), sonst null.</summary>
+    public static string? CodeOf(string body)
+    {
+        var first = body.Split(' ', 2)[0];
+        return System.Text.RegularExpressions.Regex.IsMatch(first, "^[A-Z0-9]{4,8}$") ? first : null;
+    }
 
     /// <summary>Beschriftung eines Knopfs, der nur über das Panel wirkt (POST /api/desk/note/act).</summary>
     public static string? Label(string act) => act switch

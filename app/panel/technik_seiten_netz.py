@@ -627,14 +627,14 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Post, Kalender, Kontakte
     "post": {
-        "stand": "69dfad70c1",
+        "stand": "bfd80f4015",
         "bezug": {
             "kalenderserver.login": ["s2", "s10"], "kontaktserver._write": ["s10"], "kontaktserver.MAX_CARDS": ["s10"],
             "mail.MAX_ACCOUNTS": ["s3"], "mail.lookup": ["s1", "s5", "s7"], "calendars.view": ["s1"],
             "netguard.IMAP4_SSL": ["s4"], "mail.TIMEOUT": ["s4"], "kalenderspiegel.objects": ["s4"],
             "mailvorrat.keep_heads": ["s6"], "mailvorrat.HEADS": ["s6"], "mailvorrat.TEXTS": ["s6"], "vorrat.seal": ["s6"],
             "frisch.stand": ["s7"], "senden.preview": ["s9"], "senden.send": ["s9"], "senden.MAX_DAY": ["s9"],
-            "contacts.save": ["s9"],
+            "contacts.save": ["s9"], "senden.later": ["s9"], "mailcode.arrived": ["s8"],
         },
         "kurz": ("Die Seiten E-Mail, Kalender und Kontakte und der Assistent lesen dieselben Daten: Postfächer per IMAP, "
                  "Kalender und Adressbücher per CalDAV und CardDAV beim Anbieter, dazu die Spark-Kalender und das Adressbuch "
@@ -700,15 +700,20 @@ SEITEN = {
                "(\"as of yesterday 18:00\"). The pages show at once what is there and load the rest behind.")),
             S("s8", "frage", ("Etwas ändern?", "Change something?"),
               ("senden, ordnen, Kontakt ändern", "send, order, change a contact"),
-              ("Lesen ist alles, was ohne weitere Schalter geht.", "Reading is all that works without further switches."),
+              ("Lesen ist alles, was ohne weitere Schalter geht. Ein Bestätigungscode aus einer neuen Mail wird mit eigenem "
+               "Schalter nur eine Mitteilung aufs genutzte Gerät (mailcode.arrived), nie über Telegram, nie im Log.",
+               "Reading is all that works without further switches. A confirmation code from a new mail becomes, with a "
+               "switch of its own, only a note on the device in use (mailcode.arrived), never by Telegram, never in a log."),
               ("ok", "nein", "s11")),
             S("s9", "schritt", ("Ändern mit Prüfung", "Change with a check"),
               ("eigener Schalter, Tipp des Menschen", "switch of its own, the person's tap"),
               ("Eine Mail geht erst nach dem Vorschau-Blatt und dem Tipp auf Senden raus (senden.preview, senden.send, "
-               "höchstens {senden.MAX_DAY} am Tag). contacts.save schreibt eine Karte mit If-Match zurück: hat sie sich "
+               "höchstens {senden.MAX_DAY} am Tag). „Später senden“ legt sie bis zur Zeit versiegelt ab (senden.later); "
+               "brach ein Senden ab, geht sie nie ein zweites Mal. contacts.save schreibt eine Karte mit If-Match zurück: hat sie sich "
                "inzwischen geändert, wird nichts überschrieben.",
                "A mail goes out only after the preview sheet and the tap on Send (senden.preview, senden.send, at most "
-               "{senden.MAX_DAY} a day). contacts.save writes a card back with If-Match: if it changed meanwhile, nothing is "
+               "{senden.MAX_DAY} a day). \"Send later\" keeps it sealed until its time (senden.later); if a sending broke "
+               "off, it never goes a second time. contacts.save writes a card back with If-Match: if it changed meanwhile, nothing is "
                "overwritten."),
               ("ok", ("fertig", "done"), "s11")),
             S("s10", "schritt", ("Tür für Apps", "Door for apps"),
@@ -770,12 +775,14 @@ SEITEN = {
             ("frisch.stand", ("Stand mit Tag", "time with its day")),
             ("senden.preview", ("Vorschau-Blatt", "preview sheet")),
             ("senden.send", ("senden nach dem Tipp", "send after the tap")),
+            ("senden.later", ("später senden, versiegelt", "send later, sealed")),
+            ("mailcode.arrived", ("Bestätigungscode als Mitteilung", "confirmation code as a note")),
             ("contacts.save", ("Karte zurück mit If-Match", "card back with If-Match")),
             ("kalenderserver.login", ("Tür für Kalender- und Kontakte-Apps", "door for calendar and contacts apps")),
             ("kontaktserver._write", ("Karte einer Kontakte-App", "card from a contacts app")),
         ],
         "tests": ["test_mailvorrat", "test_vorrat", "test_mails_senden", "test_kalenderserver", "test_kontaktserver",
-                  "test_kontakte_seite", "test_kalenderspiegel"],
+                  "test_kontakte_seite", "test_kalenderspiegel", "test_mailcode"],
         "heute": [],
     },
     # ------------------------------------------------------------------ Browser und Handy

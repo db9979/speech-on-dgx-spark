@@ -13,6 +13,7 @@ The fake mailbox (helpers.FakeMailbox); no wall clock, no network.
 import asyncio
 import contextlib
 import io
+import time
 import unittest
 
 from tests import helpers
@@ -192,6 +193,24 @@ class Folders(Base):
         r = self.c.post("/api/profile/mail/act", json={"id": f"{self.acct}:{u}", "action": "move", "folder": "INBOX", "src": "Deleted Messages"})
         self.assertEqual(r.status_code, 400)
         self.assertEqual(len(FMB.boxes["Deleted Messages"]), 1)
+
+    def test_a_move_keeps_the_tree_and_reads_it_behind(self):
+        """Dominik 2026-10-21 „reloaded immer die gesamte Ordnerliste“: after a move the tree is not thrown away (it comes
+        at once, never waiting for the mailbox) and is read anew behind, so the next ask has the new numbers."""
+        t = self.tree()
+        self.assertEqual((t["INBOX"]["unseen"], t["Projekte"]["unseen"]), (2, 1))
+        u = next(m["uid"] for m in FMB.boxes["INBOX"] if not m["seen"])
+        r = self.c.post("/api/profile/mail/act", json={"id": f"{self.acct}:{u}", "action": "move", "folder": "Projekte"})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertIn(self.uid, postfach._trees)                                   # kept, not dropped
+        for _ in range(50):
+            if self.uid not in postfach._tree_busy:
+                break
+            time.sleep(0.1)
+        got = self.c.get("/api/profile/mail/tree").json()
+        f = {x["name"]: x for x in got["accounts"][0]["folders"]}
+        self.assertEqual((f["INBOX"]["unseen"], f["Projekte"]["unseen"]), (1, 2))
+        self.assertNotIn("neu", got)
 
     def test_many_at_once_and_back(self):
         ids = [f"{self.acct}:{m['uid']}" for m in FMB.boxes["INBOX"]]
@@ -441,6 +460,33 @@ class Page(unittest.TestCase):
                     await pg.press("#postview .postfold [data-fin=new]", "Enter")
                     await b.until(pg, "!!document.querySelector('#postview .postfold [data-f=\"Projekte2/Unter\"]')")
                     self.assertIn("Projekte2/Unter", FMB.boxes)
+                    # Dominik 2026-10-21 „reloaded immer die gesamte Ordnerliste“: a move takes the mail off at once, the
+                    # folders stay (never „Lade die Ordner“), only their numbers change; when the Spark says no it comes back
+                    await pg.evaluate("postAct('unread','',null,'',POST.data.items[0].id)")
+                    await b.until(pg, "POST.data.items[0].unread")
+                    await pg.evaluate("postTreeLoad(true)")
+                    unseen = "(n=>(POST.tree.accounts[0].folders.find(f=>f.name===n)||{}).unseen||0)"
+                    await b.until(pg, f"!POST.treeBusy&&!!POST.tree.accounts&&{unseen}('INBOX')===1")
+                    await pg.evaluate("window._lade=0;new MutationObserver(()=>{if(document.querySelector('#postview .postfold').textContent.includes('Lade die Ordner'))window._lade++})"
+                                      ".observe(document.querySelector('#postview .postfold'),{childList:true,subtree:true,characterData:true});"
+                                      "window._td=0;const o=postTreeLoad;postTreeLoad=(...a)=>o(...a).then(()=>{window._td++})")
+                    before = await pg.evaluate(f"{unseen}('Projekte2')")
+                    mid = await pg.evaluate("POST.data.items[0].id")
+                    self.assertEqual(await pg.evaluate(f"window._p=postAct('move','Projekte2',null,'','{mid}');POST.data.items.length"), 1)   # at once
+                    await pg.evaluate("window._p")
+                    self.assertEqual((await pg.evaluate(f"{unseen}('INBOX')"), await pg.evaluate(f"{unseen}('Projekte2')")), (0, before + 1))
+                    self.assertEqual(len(FMB.boxes["Projekte2"]), 2)
+                    await b.until(pg, "window._td>=1&&!POST.treeBusy")                                # asked again quietly behind
+                    self.assertEqual((await pg.evaluate(f"{unseen}('INBOX')"), await pg.evaluate(f"{unseen}('Projekte2')")), (0, before + 1))
+                    self.assertEqual(await pg.evaluate("window._lade"), 0)
+                    await pg.route("**/api/profile/mail/act", lambda r: r.fulfill(status=409, content_type="application/json", body='{"detail":"nein"}'))
+                    left = await pg.evaluate("POST.data.items[0].id")
+                    self.assertEqual(await pg.evaluate(f"window._p=postAct('archive','',null,'','{left}');POST.data.items.length"), 0)
+                    await pg.evaluate("window._p")
+                    self.assertEqual(await pg.evaluate("POST.data.items.map(i=>i.id)"), [left])           # back again
+                    self.assertTrue(await pg.evaluate("!!POST.err"))
+                    await pg.unroute("**/api/profile/mail/act")
+                    await pg.evaluate("POST.err='';postDraw()")
                     # O hides the folders again and the choice is kept for the next visit
                     await pg.evaluate("document.activeElement&&document.activeElement.blur()")
                     await pg.keyboard.press("o")

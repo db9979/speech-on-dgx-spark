@@ -16350,6 +16350,276 @@
           }
         }
       }
+    },
+    "Unterhaltung · 1 weitere Mail": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conversation · 1 more mail"
+          }
+        }
+      }
+    },
+    "Unterhaltung · %lld weitere Mails": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conversation · %lld more mails"
+          }
+        }
+      }
+    },
+    "Vorschläge aus deinem Ablegen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggestions from your filing"
+          }
+        }
+      }
+    },
+    "Mails von %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mails from %@"
+          }
+        }
+      }
+    },
+    "legst du in „%@“ (%lld×) · %lld liegen gerade im Posteingang": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "you put into \"%@\" (%lld×) · %lld in the inbox now"
+          }
+        }
+      }
+    },
+    "legst du in „%@“ (%lld×)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "you put into \"%@\" (%lld×)"
+          }
+        }
+      }
+    },
+    "Regel anlegen und ablegen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make the rule and file"
+          }
+        }
+      }
+    },
+    "Regel anlegen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make the rule"
+          }
+        }
+      }
+    },
+    "Später senden …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send later …"
+          }
+        }
+      }
+    },
+    "Später senden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send later"
+          }
+        }
+      }
+    },
+    "Senden am": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send on"
+          }
+        }
+      }
+    },
+    "Planen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schedule"
+          }
+        }
+      }
+    },
+    "Geplante Mails": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scheduled mails"
+          }
+        }
+      }
+    },
+    "Zurücknehmen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Withdraw"
+          }
+        }
+      }
+    },
+    "nicht gesendet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "not sent"
+          }
+        }
+      }
+    },
+    "unklar, schau in Gesendet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "unclear, check Sent"
+          }
+        }
+      }
+    },
+    "wird gesendet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "sending"
+          }
+        }
+      }
+    },
+    "1 Mail geplant": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 mail scheduled"
+          }
+        }
+      }
+    },
+    "%lld Mails geplant": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld mails scheduled"
+          }
+        }
+      }
+    },
+    "Code kopieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy code"
+          }
+        }
+      }
+    },
+    "diese Woche": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "this week"
+          }
+        }
+      }
+    },
+    "vor %lld Wo.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld wk ago"
+          }
+        }
+      }
+    },
+    "%lld Mails, %lld ungelesen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld mails, %lld unread"
+          }
+        }
+      }
+    },
+    "%lld Mails": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld mails"
+          }
+        }
+      }
+    },
+    "hat Regel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "has rule"
+          }
+        }
+      }
+    },
+    "Regel …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rule …"
+          }
+        }
+      }
+    },
+    "Wer schreibt dir am meisten (30 Tage, %lld Mails, %lld ungelesen)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Who writes most (30 days, %lld mails, %lld unread)"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

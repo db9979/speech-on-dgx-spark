@@ -236,6 +236,7 @@ WITHOUT = {
     "notedevice": "kein Werkzeug: wählt nur, auf welches Gerät eine Mitteilung geht (zustellung.py), feste Regeln des Panels",
     "teilen": "kein Werkzeug in Stufe 1: geteilt wird nur im Dialog am Dokument (Ich → Dokumente → Teilen), die Suche des anderen findet es über document_search",
     "teilenhinweis": "kein Werkzeug: eine Mitteilung, wenn jemand etwas teilt (push.send)",
+    "mailcode": "kein Werkzeug: feste Regeln finden den Code in einer neuen Mail, eine Mitteilung aufs genutzte Gerät, nie Telegram",
     "mailidle": "kein Werkzeug: hält die Posteingänge per IMAP IDLE offen, die Seite E-Mail und die Mail-Regeln bekommen neue Mails in Sekunden",
     "mailstil": "wirkt in jedem Mail-Entwurf (mail_draft, Begleiter); gelernt wird nur auf Knopfdruck unter E-Mail → Einstellungen",
     "schreibapps": "Kanal in anderen Programmen",

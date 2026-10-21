@@ -186,5 +186,188 @@ class Rules(unittest.TestCase):
             helpers.set_config(mail_manage=True)
 
 
+
+class Suggest(unittest.TestCase):
+    """Regel-Vorschläge aus dem Ablegen (Dominik 2026-10-21 „ok“ and 09:55 „nur die Ordner unterhalb deines KI Ordners“):
+    the night looks only below the KI folder and only when one changed; what „Mails aufräumen“ moved never counts; a
+    sender needs SUGGEST_MIN mails and SUGGEST_SHARE of them in one folder; a domain only with a clear picture, never
+    freemail; at most SUGGEST_DAY a night; a rule only after a click, which (or „Nicht mehr fragen“) takes it off."""
+
+    @classmethod
+    def setUpClass(cls):
+        mail.IMAP = FMB
+        helpers.set_config(mail=True, mail_manage=True)
+        cls.c, cls.uid = profile("Ablage Alma")
+        fill()
+        r = cls.c.post("/api/profile/mail", json={"kind": "icloud", "user": helpers.MAIL_USER, "password": helpers.MAIL_PW})
+        assert r.status_code == 200, r.text
+        cls.acct = mail.get(cls.uid)["accounts"][0]["id"]
+
+    @classmethod
+    def tearDownClass(cls):
+        mail.IMAP = helpers.FakeIMAP
+        helpers.set_config(mail=False, mail_manage=False)
+        mailregeln.forget(cls.uid)
+        tidy.forget(cls.uid)
+
+    def setUp(self):
+        fill()
+        mail.IMAP = FMB
+        mailregeln.forget(self.uid)
+        tidy._mut(self.uid, lambda d: d.update(root="KI", rules=[], log=[]))
+
+    def put(self, folder, frm, n, tag):
+        for i in range(n):
+            FMB.put(folder, helpers.box_mail(frm, f"Post {i}", "…", mid=f"<{tag}-{i}@x>"))
+
+    def test_only_below_the_ki_folder_and_fixed_rules(self):
+        self.put("KI/Strom", "Stadtwerke <rechnung@stadtwerke.de>", 6, "sw")
+        FMB.put("INBOX", helpers.box_mail("Stadtwerke <rechnung@stadtwerke.de>", "Neu", "…"))
+        self.put("Auto", "Kehl <werkstatt@kehl.de>", 6, "auto")                    # not below the KI folder
+        self.put("KI/A", "Mix <mix@verein.de>", 3, "ma")                           # spread over two folders
+        self.put("KI/B", "Mix <mix@verein.de>", 3, "mb")
+        self.put("KI/Werbung", "Shop <promo@shop.de>", 6, "pr")                    # moved by „Mails aufräumen“
+        tidy._mut(self.uid, lambda d: d.update(log=[{"id": f"l{i}", "run": "r", "t": 10 ** 10, "aid": self.acct,
+                                                     "mid": f"<pr-{i}@x>", "folder": "KI/Werbung"} for i in range(6)]))
+        self.put("KI/Bestellungen", "A <a@amazon.de>", 3, "a1")                    # one domain, two addresses
+        self.put("KI/Bestellungen", "B <b@amazon.de>", 3, "a2")
+        self.put("KI/Freunde", "X <x@gmail.com>", 3, "g1")                          # freemail: never as a domain
+        self.put("KI/Freunde", "Y <y@gmail.com>", 3, "g2")
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            got = mailregeln.suggest(self.uid)
+        self.assertEqual(sorted((x["from"], x["folder"], x["n"], x["inbox"]) for x in got),
+                         [("@amazon.de", "KI/Bestellungen", 6, 0), ("rechnung@stadtwerke.de", "KI/Strom", 6, 1)])
+        self.assertIn("mail: rule suggestions | 2 |", out.getvalue())
+        self.assertNotIn("stadtwerke", out.getvalue())                               # never a sender in the log
+        # nothing changed below the KI folder: no folder is read again
+        FMB.calls.clear()
+        self.assertEqual(mailregeln.suggest(self.uid), [])
+        self.assertFalse([c for c in FMB.calls if c[0] == "select"])
+        # the page shows them; a rule (from the click) or „Nicht mehr fragen“ takes one off
+        d = self.c.get("/api/profile/mail/rules").json()
+        self.assertEqual(len(d["suggest"]), 2)
+        r = self.c.post("/api/profile/mail/rules", json={"account": self.acct, "when": {"from": "rechnung@stadtwerke.de"},
+                                                        "then": {"folder": "KI/Strom"}})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual([x["from"] for x in r.json()["suggest"]], ["@amazon.de"])
+        r = self.c.post("/api/profile/mail/rules/never", json={"account": self.acct, "from": "@amazon.de", "folder": "KI/Bestellungen"})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(self.c.get("/api/profile/mail/rules").json()["suggest"], [])
+        # a new mail there: looked at again, but never asked again and the rule's sender is left out
+        self.put("KI/Bestellungen", "A <a@amazon.de>", 1, "a3")
+        self.assertEqual(mailregeln.suggest(self.uid), [])
+
+    def test_cards_in_the_assistant_with_the_page_buttons(self):
+        """Each suggestion is a card „Regel-Vorschlag“ (vorgaenge.QUELLEN): „Regel anlegen und ablegen“ only while some
+        of its mails lie in the inbox; a button runs the page's own rule; taking one on the page closes its card."""
+        import vorgaenge
+        helpers.set_config(vorgaenge=True)
+        self.addCleanup(helpers.set_config, vorgaenge=False)
+        self.put("KI/Strom", "Stadtwerke <rechnung@stadtwerke.de>", 6, "sw")
+        FMB.put("INBOX", helpers.box_mail("Stadtwerke <rechnung@stadtwerke.de>", "Neu", "…"))
+        self.put("KI/Verein", "Verein <info@verein.de>", 5, "vn")
+        self.put("KI/Shop", "Shop <post@shop.de>", 5, "sh")
+        got = {x["from"]: x for x in mailregeln.suggest(self.uid)}
+        cards = {x["key"]: x for x in vorgaenge._load(self.uid)["items"] if x["art"] == "regel"}
+        self.assertEqual(set(cards), {f"regel:{x['id']}" for x in got.values()})
+        sw, vn, sh = (cards[f"regel:{got[a]['id']}"] for a in ("rechnung@stadtwerke.de", "info@verein.de", "post@shop.de"))
+        self.assertIn("rechnung@stadtwerke.de", sw["titel"])
+        self.assertEqual([k["k"] for k in vorgaenge.public(self.uid, sw)["acts"]], ["rg_ablegen", "rg_regel", "rg_nie", "spaeter"])
+        self.assertEqual([k["k"] for k in vorgaenge.public(self.uid, vn)["acts"]], ["rg_regel", "rg_nie", "spaeter"])
+        with self.assertRaises(vorgaenge.HTTPException):
+            vorgaenge.act(self.uid, vn["id"], "rg_ablegen")                         # none of its mails in the inbox
+        out = vorgaenge.act(self.uid, sw["id"], "rg_ablegen")
+        self.assertIn("1 Mails aus dem Posteingang", out["text"])
+        self.assertEqual([(r["when"]["from"], r["then"]["folder"]) for r in mailregeln.load(self.uid)["rules"]],
+                         [("rechnung@stadtwerke.de", "KI/Strom")])
+        self.assertEqual(len(FMB.boxes["KI/Strom"]), 7)
+        self.assertEqual(vorgaenge.act(self.uid, vn["id"], "rg_nie")["text"], "Gut, dazu frage ich nicht mehr.")
+        self.c.post("/api/profile/mail/rules", json={"account": self.acct, "when": {"from": "post@shop.de"}, "then": {"folder": "KI/Shop"}})
+        state = {x["key"]: x["zustand"] for x in vorgaenge._load(self.uid)["items"] if x["art"] == "regel"}
+        self.assertEqual(state, {sw["key"]: "erledigt", vn["key"]: "weg", sh["key"]: "erledigt"})
+        self.assertEqual(mailregeln.load(self.uid)["suggest"], [])
+        helpers.set_config(mail_manage=False)                                      # without Mails ordnen: no button
+        try:
+            self.assertEqual(mailregeln._card_acts(self.uid, sw), set())
+        finally:
+            helpers.set_config(mail_manage=True)
+
+    def test_at_most_three_a_night_and_only_at_night(self):
+        for i in range(5):
+            self.put(f"KI/F{i}", f"S <s{i}@firma{i}.de>", 5 + i, f"f{i}")
+        import datetime
+        day = datetime.datetime(2026, 10, 21, 14, 0).timestamp()
+        night = datetime.datetime(2026, 10, 22, 3, 0).timestamp()
+        others = {u: "2026-10-22" for u in mailregeln.profiles.user_ids() if u != self.uid}   # one profile a minute
+        mailregeln._sug_day.update(others)
+        mailregeln._sug_day.pop(self.uid, None)
+        asyncio.run(mailregeln.due_once(now=day))
+        self.assertEqual(mailregeln.load(self.uid)["suggest"], [])
+        asyncio.run(mailregeln.due_once(now=night))
+        got = mailregeln.load(self.uid)["suggest"]
+        self.assertEqual([x["n"] for x in got], [9, 8, 7])                          # the strongest first
+        helpers.set_config(mail_manage=False)                                         # off: no look
+        try:
+            mailregeln.forget(self.uid)
+            mailregeln._sug_day.pop(self.uid, None)
+            asyncio.run(mailregeln.due_once(now=night))
+            self.assertEqual(mailregeln.load(self.uid)["suggest"], [])
+        finally:
+            helpers.set_config(mail_manage=True)
+
+class Stats(unittest.TestCase):
+    """Mail-Statistik (Dominik 2026-10-21 „6“): who writes most in 30 days and the mails a week, counted by the panel
+    from the listing the Mail-Vorrat keeps; a sender with a rule says so; logs carry numbers only; with Mails ordnen."""
+
+    @classmethod
+    def setUpClass(cls):
+        mail.IMAP = FMB
+        helpers.set_config(mail=True, mail_manage=True)
+        cls.c, cls.uid = profile("Statistik Stella")
+        fill()
+        r = cls.c.post("/api/profile/mail", json={"kind": "icloud", "user": helpers.MAIL_USER, "password": helpers.MAIL_PW})
+        assert r.status_code == 200, r.text
+        cls.acct = mail.get(cls.uid)["accounts"][0]["id"]
+
+    @classmethod
+    def tearDownClass(cls):
+        mail.IMAP = helpers.FakeIMAP
+        helpers.set_config(mail=False, mail_manage=False)
+        mailregeln.forget(cls.uid)
+
+    def test_counts_weeks_rules_and_logs(self):
+        import datetime
+        from unittest import mock
+        now = 1_800_000_000.0
+        day = lambda d: datetime.datetime.fromtimestamp(now - d * 86400 - 60, datetime.timezone.utc)
+        found = [(self.acct, i, {"from": "Heise <news@heise.de>", "unread": i < 2, "date": day(i)}) for i in range(5)]
+        found += [(self.acct, 10 + i, {"from": "anna@autohaus-kehl.de", "unread": False, "date": day(8 + i)}) for i in range(2)]
+        found += [(self.acct, 20, {"from": "Shop <promo@shop.de>", "unread": True, "date": day(25)})]
+        mailregeln.forget(self.uid)
+        self.assertEqual(self.c.post("/api/profile/mail/rules", json={"account": self.acct, "when": {"from": "anna@autohaus-kehl.de"},
+                                                                     "then": {"folder": "Auto"}}).status_code, 200)
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out), mock.patch.object(mail, "lookup", return_value=((found, [], 0), None)):
+            s = mailregeln.stats(self.uid, now)
+            r = self.c.get("/api/profile/mail/stats")
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual((s["total"], s["unread"], s["weeks"]), (8, 3, [5, 2, 0, 1]))
+        self.assertEqual([(x["addr"], x["name"], x["n"], x["unread"], x["rule"]) for x in s["senders"]],
+                         [("news@heise.de", "Heise", 5, 2, False), ("anna@autohaus-kehl.de", "", 2, 0, True),
+                          ("promo@shop.de", "Shop", 1, 1, False)])
+        self.assertIn("mail: stats shown | 8 mails, 3 senders", out.getvalue())
+        for secret in ("heise", "anna", "shop"):
+            self.assertNotIn(secret, out.getvalue())
+        with mock.patch.object(mail, "lookup", side_effect=TimeoutError):
+            self.assertEqual(self.c.get("/api/profile/mail/stats").json(), {"loading": True})
+        self.assertIn(TestClient(panel.app).get("/api/profile/mail/stats").status_code, (401, 403))
+        helpers.set_config(mail_manage=False)
+        try:
+            self.assertEqual(self.c.get("/api/profile/mail/stats").status_code, 403)
+        finally:
+            helpers.set_config(mail_manage=True)
+
+
 if __name__ == "__main__":
     unittest.main()

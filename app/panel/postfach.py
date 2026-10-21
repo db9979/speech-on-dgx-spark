@@ -48,6 +48,7 @@ NEVER = re.compile(r"(?i)^(trash|papierkorb|gelöscht\w*|deleted( items| message
 _lock = threading.Lock()
 _trees = {}   # uid -> (time, tree): the folder tree of the page (kept on the disk in the Mail-Vorrat, mailvorrat.tree)
 _tree_busy = set()   # profiles whose folder tree is read in the background
+_tree_again = set()   # profiles whose tree changed while it was read: read once more
 _today = {"day": "", "n": 0, "del": 0}   # Live: messages ordered / deleted on the page today (numbers, never which)
 
 
@@ -142,7 +143,7 @@ def _outcome(uid, action, fn, ref, n=1, inbox=True):
     if n == 1:
         mail.changed(uid, ref if inbox else "", action)   # the cached listing follows at once, no new fetch
     if n > 1 or action in ("archive", "move", "back", "delete", "erase"):
-        _trees.pop(uid, None)
+        _tree_old(uid)
     return out
 
 
@@ -231,22 +232,36 @@ def tree(uid, fresh=False):
     return _read_tree(uid)
 
 
-def _tree_behind(uid):
-    """One reading of the folder lists in the background per profile."""
+def _tree_behind(uid, again=False):
+    """One reading of the folder lists in the background per profile; again: a change during a reading reads once more."""
     with _lock:
         if uid in _tree_busy:
+            if again:
+                _tree_again.add(uid)
             return
         _tree_busy.add(uid)
 
     def run():
-        try:
-            _read_tree(uid)
-        except Exception as e:
-            print(f"mail: tree refresh failed ({type(e).__name__})", flush=True)
-        finally:
+        while True:
+            try:
+                _read_tree(uid)
+            except Exception as e:
+                print(f"mail: tree refresh failed ({type(e).__name__})", flush=True)
             with _lock:
-                _tree_busy.discard(uid)
+                if uid not in _tree_again:
+                    _tree_busy.discard(uid)
+                    return
+                _tree_again.discard(uid)
     threading.Thread(target=run, name="mail-ordner", daemon=True).start()
+
+
+def _tree_old(uid):
+    """A mail moved, archived or deleted (Dominik 2026-10-21 „reloaded immer die gesamte Ordnerliste“): the tree stays,
+    the page counts the unread itself; it is read anew behind and the next ask gets the new one."""
+    hit = _trees.get(uid)
+    if hit:
+        _trees[uid] = (min(hit[0], time.time() - TREE_SECONDS), hit[1])
+    _tree_behind(uid, again=True)
 
 
 def _read_tree(uid):

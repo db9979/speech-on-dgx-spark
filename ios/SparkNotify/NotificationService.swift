@@ -33,6 +33,13 @@ final class NotificationService: UNNotificationServiceExtension {
                 if let body = d["body"] as? String, !body.isEmpty {
                     c.body = String(body.prefix(1500))
                     c.userInfo["spark"] = c.body   // the open app says it aloud (Relay)
+                    // Bestätigungscodes (mailcode.py): „Code kopieren“; the code is the note's first word, from the Spark
+                    if request.content.userInfo["k"] as? String == "mailcode",
+                       let code = c.body.split(separator: " ").first.map(String.init),
+                       code.range(of: "^[A-Z0-9]{4,8}$", options: .regularExpression) != nil {
+                        c.userInfo["copy"] = code
+                        c.categoryIdentifier = "spark.code"
+                    }
                 }
             }
             self?.finish()

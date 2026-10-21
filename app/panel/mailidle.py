@@ -56,8 +56,14 @@ def wanted(now=None):
     now = time.time() if now is None else now
     if not features.chat_cfg().get("mail_idle"):
         return []
+    import mailcode
+    seen_at = dict(mail._used)
+    for uid in profiles.user_ids():   # Bestätigungscodes: a profile with it that used any device lately
+        t = mailcode.wants_idle(uid, now)
+        if t > seen_at.get(uid, 0):
+            seen_at[uid] = t
     out = []
-    for uid, seen in sorted(mail._used.items(), key=lambda x: -x[1]):
+    for uid, seen in sorted(seen_at.items(), key=lambda x: -x[1]):
         if now - seen > ACTIVE_SECONDS or not features.allowed("mailidle", uid) or notaus.blocks("auto", uid):
             continue
         for a in mail.get(uid)["accounts"]:

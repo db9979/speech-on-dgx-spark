@@ -16,6 +16,9 @@ folder (learn); the LEARN_AFTER-th move within LEARN_DAYS asks once on the page 
 rule for that sender and folder is there or the profile said „Nicht mehr fragen“ (never). The counts sit in the same
 file as the rules; only the page's own moves count, never a rule's or the tidying's.
 
+Mail-Statistik (Dominik 2026-10-21 „6“): stats() counts who writes most in 30 days and the mails a week, from the
+listing the Mail-Vorrat keeps; the tab Regeln shows it with „Regel …“ per sender.
+
 What comes in is data: sender, subject and addresses are only compared with the rule's words (casefold, no regular
 expressions from the profile). The rules live in users/<id>/mail-regeln.json (600); the journal carries fixed words
 and numbers only (never a sender, subject, folder or word of a rule); Live shows rules and how many mails they took.
@@ -48,9 +51,21 @@ LEARN_AFTER = 3          # the third move of one sender into one folder brings t
 LEARN_DAYS = 30          # moves older than this do not count
 LEARN_MAX = 300          # counted sender/folder pairs per profile (the oldest go)
 HEAD = "FROM TO CC SUBJECT CONTENT-TYPE MESSAGE-ID"
+# Regel-Vorschläge aus dem Ablegen (Dominik 2026-10-21 „ok“, plan plaene/mail-regeln-lernen.md): fixed thresholds
+SUGGEST_NIGHT = (2, 5)   # local hours of the night look
+SUGGEST_MIN = 5          # mails of one sender in one folder at the least
+SUGGEST_SHARE = 0.8      # and this share of all its mails there (the folders under the KI folder and the inbox)
+SUGGEST_DAY = 3          # new suggestions per night at most
+SUGGEST_KEEP = 7         # days an unanswered suggestion stays
+SUGGEST_SCAN = 300       # newest mails per folder looked at
+SUGGEST_MAX = 20         # open suggestions per profile
+FREEMAIL = ("gmail.com", "googlemail.com", "gmx.de", "gmx.net", "gmx.at", "gmx.ch", "web.de", "t-online.de", "icloud.com",
+            "me.com", "mac.com", "outlook.com", "outlook.de", "hotmail.com", "hotmail.de", "live.com", "live.de", "yahoo.com",
+            "yahoo.de", "aol.com", "freenet.de", "posteo.de", "mailbox.org", "proton.me", "protonmail.com", "online.de")
 _lock = threading.Lock()
 _last = {}               # uid -> when its rules last ran
-_count = DayCounter(genommen=0, laeufe=0, vorschlaege=0)   # per day: mails the rules took, looks, rule hints
+_sug_day = {}            # uid -> the night its rule suggestions were looked for
+_count = DayCounter(genommen=0, laeufe=0, vorschlaege=0, nacht=0, statistik=0)   # per day: mails taken, looks, rule hints, night suggestions, statistics shown
 
 
 def _file(uid):
@@ -69,6 +84,9 @@ def load(uid):
     d["seen"] = d.get("seen") if isinstance(d.get("seen"), dict) else {}
     d["learn"] = d.get("learn") if isinstance(d.get("learn"), dict) else {}
     d["never"] = [k for k in (d.get("never") if isinstance(d.get("never"), list) else []) if isinstance(k, str)][-LEARN_MAX:]
+    d["suggest"] = [x for x in (d.get("suggest") if isinstance(d.get("suggest"), list) else [])
+                    if isinstance(x, dict) and isinstance(x.get("id"), str)][-SUGGEST_MAX:]
+    d["looked"] = d.get("looked") if isinstance(d.get("looked"), dict) else {}
     return d
 
 
@@ -128,7 +146,10 @@ def add(uid, body, rid=""):
                 raise ValueError(f"at most {MAX_RULES} rules")
             r.update(id=secrets.token_hex(4), made=int(time.time()), n={})
             d["rules"].append(r)
+        gone = [x["id"] for x in d["suggest"] if x["account"] == r["account"] and x["from"] == r["when"]["from"]]
+        d["suggest"] = [x for x in d["suggest"] if x["id"] not in gone]
         _save(uid, d)
+    _cards_done(uid, gone, "erledigt")
     return r
 
 
@@ -185,7 +206,10 @@ def never(uid, body):
         k = _key(account, sender, folder)
         d["never"] = [x for x in d["never"] if x != k][-(LEARN_MAX - 1):] + [k]
         d["learn"].pop(k, None)
+        gone = [x["id"] for x in d["suggest"] if _key(x["account"], x["from"], x["folder"]) == k]
+        d["suggest"] = [x for x in d["suggest"] if x["id"] not in gone]
         _save(uid, d)
+    _cards_done(uid, gone, "ausblenden")
     print(f"mail: rule hint never | {profiles.log_name(profiles.by_id(uid))}", flush=True)
     return {"ok": True}
 
@@ -236,7 +260,9 @@ def public(uid):
                 "keep": r["cat"] == "keep"} for r in st["rules"]]
     except Exception:
         old = []
-    return {"rules": rules, "tidy": old, "accounts": [{"id": k, "name": v} for k, v in names.items()]}
+    sug = [{k: x[k] for k in ("id", "account", "from", "folder", "n", "inbox")} | {"box": names.get(x["account"], "")}
+           for x in _fresh(d["suggest"]) if x["account"] in names]
+    return {"rules": rules, "tidy": old, "accounts": [{"id": k, "name": v} for k, v in names.items()], "suggest": sug}
 
 
 # ---------------------------------------------------------------- deciding
@@ -370,11 +396,217 @@ def run(uid, now=None):
     return {"taken": taken, "errors": errors}
 
 
+# ---------------------------------------------------------------- Regel-Vorschläge aus dem Ablegen
+def _fresh(sug, now=None):
+    now = time.time() if now is None else now
+    return [x for x in sug if now - int(x.get("t", 0)) < SUGGEST_KEEP * 86400]
+
+
+def _under(box, root):
+    """The folders below the profile's KI folder („Mails aufräumen“, tidy root) in the server's own names."""
+    if not root:
+        return []
+    top = box.name(root)
+    return sorted(n for n, x in box.boxes.items() if n.startswith(top + box.delim) and "\\noselect" not in x["flags"])
+
+
+def _status(box, name):
+    """MESSAGES and UIDNEXT of a folder: when both stay, nothing was put in or taken out since."""
+    raw = box.boxes.get(name, {}).get("raw") or tidy._utf7(name)
+    typ, data = box.c.status(tidy._q(raw), "(MESSAGES UIDNEXT)")
+    text = b" ".join(x for x in data if isinstance(x, bytes)).decode(errors="replace") if typ == "OK" else ""
+    return "/".join(re.findall(r"(?:MESSAGES|UIDNEXT) (\d+)", text))
+
+
+def _senders(box, name, days):
+    """{sender address: [Message-ID, …]} of the newest SUGGEST_SCAN mails of the last days in a folder (header only)."""
+    box.select(name)
+    uids = sorted(box.search("SINCE", tidy._since(days)))[-SUGGEST_SCAN:]
+    out = {}
+    for h in box.headers(uids, "FROM MESSAGE-ID").values():
+        a = (_addrs(h.get("From", "")) or [""])[0]
+        if a:
+            out.setdefault(a, []).append(tidy.clean_mid(h.get("Message-ID", "")))
+    return out
+
+
+def _weigh(count, inbox, own, skip):
+    """Fixed rules (never the model): [(sender or @domain, folder, n, in the inbox now)] strongest first.
+    count {folder: {sender: n}} of what the profile put there itself; inbox {sender: n}."""
+    total = {}
+    for f, by in count.items():
+        for a, n in by.items():
+            total[a] = total.get(a, 0) + n
+    out, done = [], set()
+    # a domain only with a clear picture: several addresses, all of it in one folder, nothing in the inbox, no freemail
+    doms = {}
+    for f, by in count.items():
+        for a, n in by.items():
+            doms.setdefault(a.split("@")[-1], {}).setdefault(f, {})[a] = n
+    for dom, fs in doms.items():
+        addrs = {a for by in fs.values() for a in by}
+        if dom in FREEMAIL or len(fs) != 1 or len(addrs) < 2 or any(a in own for a in addrs):
+            continue
+        f, by = next(iter(fs.items()))
+        n = sum(by.values())
+        if n >= SUGGEST_MIN and not any(a.split("@")[-1] == dom for a in inbox) and ("@" + dom, f) not in skip:
+            out.append(("@" + dom, f, n, 0))
+            done |= addrs
+    for f, by in count.items():
+        for a, n in by.items():
+            if a in done or a in own or (a, f) in skip:
+                continue
+            if n >= SUGGEST_MIN and n >= SUGGEST_SHARE * (total[a] + inbox.get(a, 0)):
+                out.append((a, f, n, inbox.get(a, 0)))
+    return sorted(out, key=lambda x: -x[2])
+
+
+def suggest(uid, now=None):
+    """The night look of one profile: only the folders below its KI folder (Dominik 2026-10-21 09:55), only when one of
+    them changed since the last look; what „Mails aufräumen“ moved itself (its log, by Message-ID) never counts.
+    Senders with a rule (here or in „Mails aufräumen“) or on the never list are left out. Returns new suggestions."""
+    now = time.time() if now is None else now
+    who = profiles.log_name(profiles.by_id(uid))
+    st = tidy.state(uid)
+    root, theirs = st["root"], {x["mid"] for x in st["log"] if x.get("mid")}
+    d = load(uid)
+    ruled = {(r.get("account", ""), r["when"].get("from", "")) for r in d["rules"]}
+    new, looked = [], dict(d["looked"])
+    for acct in mail.get(uid)["accounts"]:
+        aid = acct["id"]
+        try:
+            with tidy.Box(acct) as box:
+                under = _under(box, root)
+                mark = {n: _status(box, n) for n in under}
+                if not under or looked.get(aid) == mark:
+                    continue
+                looked[aid] = mark
+                count = {}
+                for n in under:
+                    by = {a: sum(1 for m in ms if not m or m not in theirs) for a, ms in _senders(box, n, tidy.LOG_DAYS).items()}
+                    count[n] = {a: k for a, k in by.items() if k}
+                inbox = {a: len(ms) for a, ms in _senders(box, "INBOX", tidy.LOG_DAYS).items()}
+        except (OSError, ValueError, imaplib.IMAP4.error) as e:
+            print(f"mail: rule suggestions not looked ({type(e).__name__}) | {who}", flush=True)
+            continue
+        own = {str(acct.get("user") or "").lower()}
+        skip = {(x["from"], x["folder"]) for x in d["suggest"] if x["account"] == aid}
+        skip |= {(k.split("|")[1], k.split("|", 2)[2]) for k in d["never"] if k.startswith(aid + "|")}
+        for a, f, n, inb in _weigh(count, inbox, own, skip):
+            if (aid, a) in ruled or (not a.startswith("@") and tidy.rule_for(st, a)) or (a.startswith("@") and any(r["match"] == a for r in st["rules"])):
+                continue
+            new.append({"id": secrets.token_hex(4), "account": aid, "from": a, "folder": f, "n": n, "inbox": inb, "t": int(now)})
+    new = new[:SUGGEST_DAY]
+    with _lock:
+        d = load(uid)
+        d["looked"] = looked
+        kept = (_fresh(d["suggest"], now) + new)[-SUGGEST_MAX:]
+        old = [x["id"] for x in d["suggest"] if x["id"] not in {y["id"] for y in kept}]
+        d["suggest"] = kept
+        _save(uid, d)
+    _cards_done(uid, old, "abgelaufen")
+    for x in new:   # a card „Regel-Vorschlag“ in the assistant and under Offen (vorgaenge.py), the same buttons as here
+        _card(uid, x)
+    if new:
+        _count.bump("nacht", len(new))
+    print(f"mail: rule suggestions | {len(new)} | {who}", flush=True)
+    return new
+
+
+# ---------------------------------------------------------------- Karten (vorgaenge.py, Dominik 2026-10-21 „ok“ 3a)
+# Each night's suggestion is also a card „Regel-Vorschlag“ in today's assistant chat and under Offen, with the buttons
+# of the page: „Regel anlegen und ablegen“ (only while some of its mails lie in the inbox), „Regel anlegen“, „Nicht
+# mehr fragen“. The card runs the same add/apply/never as the page (its checks, its journal lines); taking a
+# suggestion on the page (or its expiry after SUGGEST_KEEP days) closes the card. Sender and folder are text on the card.
+CARD = "regel"
+
+
+def _card(uid, x):
+    import vorgaenge
+    titel = f"Regel-Vorschlag: Mails von {x['from']}"
+    zeile = (f"legst du in „{x['folder']}“ ({x['n']}×)" + (f", {x['inbox']} liegen gerade im Posteingang" if x["inbox"] else "")
+             + ". Soll das künftig eine Regel machen?")
+    vorgaenge.put(uid, CARD, f"{CARD}:{x['id']}", titel, zeile, say=True)
+
+
+def _cards_done(uid, ids, wie):
+    if not ids:
+        return
+    import vorgaenge
+    for sid in ids:
+        vorgaenge.done(uid, f"{CARD}:{sid}", wie)
+
+
+def _card_sug(uid, x):
+    return next((y for y in load(uid)["suggest"] if f"{CARD}:{y['id']}" == x["key"]), None)
+
+
+def _card_acts(uid, x):
+    """The buttons the rules allow now: none without Mails ordnen or once the suggestion is gone."""
+    sug = _card_sug(uid, x)
+    if not sug or not features.allowed("mailmanage", uid):
+        return set()
+    return {"rg_regel", "rg_nie"} | ({"rg_ablegen"} if sug["inbox"] else set())
+
+
+def _card_run(uid, x, name):
+    """A button of the card: the page's own add/apply/never; the card closes through _cards_done."""
+    import vorgaenge
+    if name not in ("rg_regel", "rg_ablegen", "rg_nie"):
+        return None
+    sug = _card_sug(uid, x)
+    if not sug:
+        raise vorgaenge.HTTPException(404, "Diesen Vorschlag gibt es nicht mehr.")
+    body = {"account": sug["account"], "from": sug["from"], "folder": sug["folder"]}
+    try:
+        if name == "rg_nie":
+            never(uid, body)
+            return {"text": "Gut, dazu frage ich nicht mehr."}
+        r = add(uid, {"account": sug["account"], "when": {"from": sug["from"]}, "then": {"folder": sug["folder"]}})
+        print(f"mail: rule suggestion taken | card | {profiles.log_name(profiles.by_id(uid))}", flush=True)
+        if name == "rg_ablegen":
+            n = apply(uid, r["id"])["n"]
+            return {"text": f"Regel angelegt, {n} Mails aus dem Posteingang abgelegt."}
+        return {"text": "Regel angelegt: neue Mails kommen künftig gleich in den Ordner."}
+    except (ValueError, LookupError) as e:
+        raise vorgaenge.HTTPException(400, str(e)[:200])
+
+
+def _register():
+    import vorgaenge
+    vorgaenge.ARTEN[CARD] = {"de": "Regel-Vorschlag", "en": "Rule suggestion", "sym": "mail", "mail": True, "dringend": False,
+                             "acts": ("rg_ablegen", "rg_regel", "rg_nie")}
+    vorgaenge.AKTIONEN.update(rg_ablegen={"de": "Regel anlegen und ablegen", "en": "Make the rule and file them", "stufe": "direkt"},
+                              rg_regel={"de": "Regel anlegen", "en": "Make the rule", "stufe": "direkt"},
+                              rg_nie={"de": "Nicht mehr fragen", "en": "Don't ask again", "stufe": "direkt"})
+    vorgaenge.QUELLEN[CARD] = {"acts": _card_acts, "run": _card_run}
+    vorgaenge.OFFEN_STUNDEN[CARD] = SUGGEST_KEEP * 24
+
+
+def _night(now):
+    import datetime
+    return SUGGEST_NIGHT[0] <= datetime.datetime.fromtimestamp(now).hour < SUGGEST_NIGHT[1]
+
+
 async def due_once(now=None):
-    """Called each minute (panel.py): profiles with rules whose look is due; never during a Notaus."""
+    """Called each minute (panel.py): profiles with rules whose look is due; never during a Notaus. At night one
+    profile per minute gets its look for rule suggestions (once a night)."""
     import asyncio
     now = time.time() if now is None else now
     c = features.chat_cfg()
+    if _night(now):
+        day = time.strftime("%Y-%m-%d", time.localtime(now))
+        for uid in profiles.user_ids():
+            if _sug_day.get(uid) == day or not mail.get(uid)["accounts"]:
+                continue
+            if not features.allowed("mailmanage", uid, c) or notaus.blocks("auto", uid):
+                continue
+            _sug_day[uid] = day
+            try:
+                await asyncio.to_thread(suggest, uid, now)
+            except Exception as e:
+                print(f"mail: rule suggestions failed ({type(e).__name__}) | {profiles.log_name(profiles.by_id(uid))}", flush=True)
+            break
     for uid in profiles.user_ids():
         if now - _last.get(uid, 0) < RUN_EVERY - 5 or not os.path.exists(_file(uid)):
             continue
@@ -448,6 +680,53 @@ def apply(uid, rid):
     return {"n": n, "moved": moved, "folder": rule["then"].get("folder", "")}
 
 
+# ---------------------------------------------------------------- Mail-Statistik (Dominik 2026-10-21 „6“)
+# Who writes most in the last mail.DAYS days and how many mails came each week, to tidy up: from the listing the
+# Mail-Vorrat keeps anyway (mailvorrat.HEADS a mailbox), so nothing is read again while it is fresh. Per sender the
+# number, the unread ones and whether a rule (here or in Mails aufräumen) already takes it; the page offers
+# „Regel …“ from there. Counted by the panel, nothing goes to the model.
+STATS_TOP = 15
+STATS_WEEKS = 4
+STATS_BUDGET = 5
+
+
+def stats(uid, now=None):
+    """{"weeks": [n, …] newest first, "senders": [{addr, name, n, unread, rule}], "total", "unread", "as_of"};
+    TimeoutError while a first reading still goes on."""
+    import mailvorrat
+    now = time.time() if now is None else now
+    who = profiles.log_name(profiles.by_id(uid))
+    accts = mail.get(uid)["accounts"]
+    try:
+        (found, _, _), as_of = mail.lookup(uid, "", mail.DAYS, False, mailvorrat.HEADS * max(1, len(accts)),
+                                           stale=True, budget=STATS_BUDGET)
+    except TimeoutError:
+        print(f"mail: stats too slow | {who}", flush=True)
+        raise
+    d, st = load(uid), tidy.state(uid)
+    weeks, people, unread = [0] * STATS_WEEKS, {}, 0
+    for aid, _, h in found:
+        addr = (_addrs(h.get("from", "")) or [""])[0]
+        if not addr:
+            continue
+        age = int((now - h["date"].timestamp()) // (7 * 86400))
+        if 0 <= age < STATS_WEEKS:
+            weeks[age] += 1
+        x = people.setdefault(addr, {"addr": addr, "name": "", "n": 0, "unread": 0, "rule": False, "acct": aid})
+        x["n"] += 1
+        x["unread"] += 1 if h.get("unread") else 0
+        unread += 1 if h.get("unread") else 0
+        name = email.utils.parseaddr(h.get("from", ""))[0]
+        x["name"] = x["name"] or re.sub(r"[\x00-\x1f]", "", name)[:60]
+    top = sorted(people.values(), key=lambda x: (-x["n"], x["addr"]))[:STATS_TOP]
+    for x in top:
+        h = {"from": x["addr"], "to": [], "subject": "", "attach": False}
+        x["rule"] = bool(first(d["rules"], h, x["acct"]) or tidy.rule_for(st, x["addr"]))
+    _count.bump("statistik")
+    print(f"mail: stats shown | {len(found)} mails, {len(people)} senders | {who}", flush=True)
+    return {"weeks": weeks, "senders": top, "total": len(found), "unread": unread, "as_of": int(as_of or now)}
+
+
 def for_live():
     """Live (Post): profiles with rules, rules in all, mails the rules took today; numbers only."""
     c = _count.counts()
@@ -457,4 +736,8 @@ def for_live():
             n = len(load(uid)["rules"])
             profs += 1 if n else 0
             rules += n
-    return {"profiles": profs, "rules": rules, "taken": c.get("genommen", 0), "hints": c.get("vorschlaege", 0)}
+    return {"profiles": profs, "rules": rules, "taken": c.get("genommen", 0), "hints": c.get("vorschlaege", 0),
+            "night": c.get("nacht", 0), "stats": c.get("statistik", 0)}
+
+
+_register()

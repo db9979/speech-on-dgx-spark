@@ -235,6 +235,7 @@
     "mail_tidy": false,
     "mail_manage": false,
     "mail_idle": false,
+    "mail_code": false,
     "mail_delete": false,
     "share": false,
     "mail_send": false,

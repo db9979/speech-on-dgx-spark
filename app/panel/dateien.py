@@ -102,8 +102,11 @@ DATEIEN = [
     profil("interessen.json", "Was ich über dich weiß: bestätigte und abgelehnte Interessen und der letzte Netz-Tipp (keine Mail)",
            "What I know about you: confirmed and refused interests and the last web tip (never a mail)", art="Einstellungen"),
     profil("mailstil.json", "Mailstil (nur die Zusammenfassung, keine Mail)", "Mail style (only the summary, never a mail)", art="Einstellungen"),
-    profil("mail-regeln.json", "Mail-Regeln der Seite E-Mail (Absender, Wörter, Ordner; keine Mail)", "Mail rules of the E-mail page (senders, words, folders; never a mail)",
-           art="Einstellungen"),  # mailregeln.py
+    profil("mail-regeln.json", "Mail-Regeln der Seite E-Mail und Regel-Vorschläge (Absender, Wörter, Ordner; keine Mail)",
+           "Mail rules of the E-mail page and rule suggestions (senders, words, folders; never a mail)", art="Einstellungen"),  # mailregeln.py
+    profil("mail-spaeter.bin", "Später senden: geplante Mails bis zum Senden, danach einen Tag die Zeile ohne Text",
+           "Send later: planned mails until they go out, after that for a day the line without text", art="Warteschlange",
+           schutz=("versiegelt", "sealed")),  # senden.py
     profil("spark-kalender.json", "Spark-Kalender: Termine der Kalender ohne Konto (nur hier)", "Spark calendar: appointments of the calendars without an account (only here)",
            art="Termine", schutz=("versiegelt", "sealed")),  # sparkkalender.py
     profil("kalender-server.json", "Kalender-Server: Prüfwert des App-Passworts für Kalender-Apps", "Calendar server: check value of the app password for calendar apps",

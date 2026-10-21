@@ -21,7 +21,9 @@ import email
 import email.policy
 import io
 import os
+import time
 import unittest
+from unittest import mock
 
 from tests import helpers
 from tests.test_ui_browser import browser_ok
@@ -31,6 +33,7 @@ import panel  # noqa: E402
 import guard  # noqa: E402
 import mail  # noqa: E402
 import netguard  # noqa: E402
+import profiles  # noqa: E402
 import senden  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
@@ -242,6 +245,114 @@ class Send(unittest.TestCase):
         self.assertEqual(self.send(p["token"]).json(), {"sent": 1, "refused": 1, "copy": ""})
 
 
+class Later(unittest.TestCase):
+    """Später senden (Dominik 2026-10-21 „4“): the sheet's mail planned, sealed in the profile, sent once when due."""
+    preview, setUp_send, tearDownClass = Send.preview, Send.setUp, Send.tearDownClass
+
+    @classmethod
+    def setUpClass(cls):
+        use_fakes()
+        helpers.set_config(mail=True, mail_send=True)
+        cls.c, cls.uid = profile("Später Svea")
+        fill()
+        if not mail.get(cls.uid)["accounts"]:
+            r = cls.c.post("/api/profile/mail", json={"kind": "icloud", "user": helpers.MAIL_USER, "password": helpers.MAIL_PW})
+            assert r.status_code == 200, r.text
+        cls.icloud = mail.get(cls.uid)["accounts"][0]["id"]
+
+    def plan(self, at=None, c=None, **kw):
+        p = self.preview(c=c, **kw).json()
+        at = int(time.time()) + 3600 if at is None else at
+        return (c or self.c).post("/api/profile/mail/send", json={"token": p["token"], "at": at})
+
+    def setUp(self):
+        self.setUp_send()
+        senden.later_forget(self.uid)
+
+    def test_plan_list_drop_and_sealed(self):
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            r = self.plan()
+            self.assertEqual(r.status_code, 200, r.text)
+            items = self.c.get("/api/profile/mail/later").json()["items"]
+        self.assertEqual(FakeSMTP.sent, [])                                   # planned, nothing out
+        self.assertEqual([(x["subject"], x["state"]) for x in items], [("Grillen am Samstag", "wartet")])
+        self.assertNotIn("text", items[0])
+        self.assertNotIn("raw", items[0])
+        raw = open(profiles._path(self.uid, senden.LATER_FILE), "rb").read()
+        for secret in (b"carla", b"Grillen", b"kommst"):                      # sealed on disk
+            self.assertNotIn(secret, raw)
+        self.assertEqual(senden.later_count(), 1)                             # Live: a number
+        self.assertIn("mail: send later planned", out.getvalue())
+        for secret in ("carla", "Grillen"):
+            self.assertNotIn(secret, out.getvalue())
+        other, _ = profile("Senden Otto")
+        self.assertEqual(other.get("/api/profile/mail/later").json()["items"], [])
+        self.assertEqual(other.delete(f"/api/profile/mail/later/{items[0]['id']}").status_code, 404)   # not his
+        self.assertEqual(self.c.delete(f"/api/profile/mail/later/{items[0]['id']}").json()["items"], [])
+        self.assertFalse(os.path.exists(profiles._path(self.uid, senden.LATER_FILE)))
+        asyncio.run(senden.later_due_once(time.time() + 7200))
+        self.assertEqual(FakeSMTP.sent, [])                                   # taken back: never sent
+
+    def test_due_goes_out_once(self):
+        self.assertEqual(self.plan().status_code, 200)
+        now = time.time()
+        asyncio.run(senden.later_due_once(now + 60))
+        self.assertEqual(FakeSMTP.sent, [])                                   # not yet
+        asyncio.run(senden.later_due_once(now + 3700))
+        asyncio.run(senden.later_due_once(now + 3800))
+        self.assertEqual(len(FakeSMTP.sent), 1)                               # once
+        x = senden.later_list(self.uid, now + 3800)[0]
+        self.assertEqual(x["state"], "gesendet")
+        self.assertNotIn("raw", senden._later_load(self.uid)[0])              # the text goes with the sending
+        self.assertEqual(senden.later_list(self.uid, now + 3800 + senden.LATER_KEEP), [])
+        self.assertEqual(senden.today(), 1)                                   # counts for the day's limit
+
+    def test_refused(self):
+        now = int(time.time())
+        for at in (now + 10, now + senden.LATER_DAYS * 86400 + 100, "morgen"):
+            self.assertEqual(self.plan(at=at).status_code, 400, at)
+        self.assertEqual(self.c.post("/api/profile/mail/send", json={"token": "x", "at": now + 3600}).status_code, 409)
+        p = self.preview().json()
+        other, _ = profile("Senden Otto")
+        self.assertEqual(other.post("/api/profile/mail/send", json={"token": p["token"], "at": now + 3600}).status_code, 409)
+        guest = TestClient(panel.app)
+        self.assertIn(guest.get("/api/profile/mail/later").status_code, (401, 403))
+        self.assertIn(guest.delete("/api/profile/mail/later/abc").status_code, (401, 403))
+        self.assertIn(guest.post("/api/profile/mail/send", json={"token": "x", "at": now + 3600}).status_code, (401, 403))
+        self.assertEqual(senden._later_load(self.uid), [])
+        items = [{"id": f"{i:012x}", "state": "wartet", "at": now + 3600} for i in range(senden.LATER_MAX)]
+        senden._later_save(self.uid, items)
+        self.assertEqual(self.plan().status_code, 400)                        # at most LATER_MAX
+
+    def test_notaus_waits_off_says_so_unclear_never_again(self):
+        self.assertEqual(self.plan().status_code, 200)
+        now = time.time() + 3700
+        with mock.patch.object(senden.notaus, "stop", side_effect=senden.notaus.NotausAktiv("x")):
+            asyncio.run(senden.later_due_once(now))
+        self.assertEqual((FakeSMTP.sent, senden.later_list(self.uid, now)[0]["state"]), ([], "wartet"))
+        helpers.set_config(mail_send=False)
+        try:
+            asyncio.run(senden.later_due_once(now))
+        finally:
+            helpers.set_config(mail_send=True)
+        self.assertEqual((FakeSMTP.sent, senden.later_list(self.uid, now)[0]["state"]), ([], "nicht gesendet"))
+        senden.later_forget(self.uid)
+        self.assertEqual(self.plan().status_code, 200)
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out), mock.patch.object(senden, "_smtp", side_effect=OSError("cut")):
+            asyncio.run(senden.later_due_once(now))
+        self.assertEqual(senden.later_list(self.uid, now)[0]["state"], "unklar")
+        asyncio.run(senden.later_due_once(now + 60))
+        self.assertEqual(FakeSMTP.sent, [])                                   # never a second time
+        self.assertIn("mail: send failed (OSError)", out.getvalue())
+        items = senden._later_load(self.uid)                                  # the panel stopped mid-sending
+        items[0].update(state="sendet", at=int(now) - 700, raw="eA==")
+        senden._later_save(self.uid, items)
+        asyncio.run(senden.later_due_once(now))
+        self.assertEqual((FakeSMTP.sent, senden.later_list(self.uid, now)[0]["state"]), ([], "unklar"))
+
+
 def fresh_day():
     """A new day for the send limit: nothing counted in memory and none kept on disk."""
     senden._today.update(day="", n={})
@@ -435,6 +546,52 @@ class Page(unittest.TestCase):
                     await pg.evaluate("SEND_ON=false;[...document.querySelectorAll('#postview .ld-row')][0].click()")
                     await b.until(pg, "!!POST.msg&&!!document.querySelector('#postview .posttext')")
                     self.assertEqual(await pg.evaluate("document.querySelectorAll('#postview [data-w=reply]').length"), 0)
+                    self.assertEqual(errors, [])
+                finally:
+                    await br.close()
+        asyncio.run(go())
+
+    def test_send_later_plan_and_take_back(self):
+        """Später senden (Dominik 2026-10-21 „4“): „Später …“ in the new-mail window, a time chip plans it, the list
+        above the mails shows it with „Zurücknehmen“, nothing goes out."""
+        from tests.test_ui_browser import Browser, async_playwright
+        b = Browser("run")
+        b.port = self.port
+        fill()
+        use_fakes()
+
+        async def go():
+            async with async_playwright() as p:
+                br, pg, errors = await b.page(p, 390, 900)
+                try:
+                    pg.on("dialog", lambda d: asyncio.ensure_future(d.accept()))
+                    uid = await pg.evaluate("PROFILE.id")
+                    if not mail.get(uid)["accounts"]:
+                        r = await pg.request.post(f"http://127.0.0.1:{self.port}/api/profile/mail",
+                                                  data={"kind": "icloud", "user": helpers.MAIL_USER, "password": helpers.MAIL_PW})
+                        self.assertEqual(r.status, 200, await r.text())
+                    senden.later_forget(uid)
+                    fresh_day()
+                    mail._cache.clear()
+                    await pg.evaluate("MAIL_ON=true;SEND_ON=true;POST.accts=null;POST.later=[];postStart({profile:PROFILE,mail:true});icTabSet('post','show');goSec('post')")
+                    await b.until(pg, "!POST.busy&&!!POST.data&&POST.data.items.length===1")
+                    await pg.click("#postview [data-k=new]")
+                    await b.until(pg, "!!document.querySelector('#postview [data-f=to]')")
+                    await pg.fill("#postview [data-f=to]", "carla@example.org")
+                    await pg.fill("#postview [data-f=subject]", "Grillen")
+                    await pg.fill("#postview [data-f=text]", "Kommst du?")
+                    await pg.click("#postview [data-s=later]")
+                    await pg.evaluate("[...document.querySelectorAll('#postview .postlater [data-lt]')].pop().click()")
+                    await b.until(pg, "!POST.write&&(POST.later||[]).length===1&&!!document.querySelector('#postview .postlaterl')")
+                    self.assertIn("1 Mail geplant", await pg.evaluate("document.querySelector('#postview .postlaterl summary').textContent"))
+                    self.assertEqual(FakeSMTP.sent, [])
+                    over = await pg.evaluate("document.documentElement.scrollWidth-document.documentElement.clientWidth")
+                    self.assertLessEqual(over, 1, "the list scrolls sideways")
+                    await pg.evaluate("document.querySelector('#postview .postlaterl').open=true")
+                    await pg.click("#postview .postlaterl [data-ld]")
+                    await b.until(pg, "(POST.later||[]).length===0&&!document.querySelector('#postview .postlaterl')")
+                    self.assertEqual(senden._later_load(uid), [])
+                    self.assertEqual(FakeSMTP.sent, [])
                     self.assertEqual(errors, [])
                 finally:
                     await br.close()

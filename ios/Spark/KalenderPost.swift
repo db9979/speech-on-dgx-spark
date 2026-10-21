@@ -941,6 +941,8 @@ final class PostModel: ObservableObject {
     @Published var more = false
     @Published var moreFail: String?
     @Published var moreErr: [String] = []
+    /// Später senden (Dominik 2026-10-21 „4“): the planned mails, never their text
+    @Published var later: [MailLater] = []
 
     func load(_ on: Bool) async {
         guard on else { Merken.drop("post"); Merken.dropAll("mail-"); items = []; loading = false; return }
@@ -974,6 +976,7 @@ final class PostModel: ObservableObject {
         do {
             let d = try await Merken.timed("post") { try await api.object("GET", "api/profile/mail/inbox", timeout: 60) }
             show(d)
+            await laterLoad()
             // only the 50 newest: sender, subject and time (never a text here)
             var cut = d
             cut["items"] = (d["items"] as? [[String: Any]] ?? []).prefix(50).map { $0 }
@@ -993,19 +996,49 @@ final class PostModel: ObservableObject {
             .map { ($0.key, $0.value.sorted { $0.date > $1.date }) }
     }
 
+    func laterLoad() async {
+        guard let api = SparkAPI.current, Conversation.shared.allowed.areas.contains("mailsend") else { later = []; return }
+        if let d = try? await api.object("GET", "api/profile/mail/later") {
+            later = (d["items"] as? [[String: Any]] ?? []).prefix(40).compactMap(MailLater.init)
+        }
+    }
+
+    /// a planned mail taken back (or a done line removed)
+    func laterDrop(_ x: MailLater) async {
+        guard let api = SparkAPI.current else { return }
+        do {
+            let d = try await api.object("DELETE", "api/profile/mail/later/\(x.id)")
+            later = (d["items"] as? [[String: Any]] ?? []).prefix(40).compactMap(MailLater.init)
+            error = nil
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
+
     /// swipe (Dominik 2026-10-19 „5a“): archive, delete, read or unread; the Spark decides what may happen (postfach.py)
     func act(_ x: MailItem, _ action: String) async {
         guard let api = SparkAPI.current else { return }
+        let back = gone([x.id], action)
         do {
             let d = try await api.object("POST", "api/profile/mail/act",
                                          body: ["id": x.id, "action": action, "folder": "", "mid": "", "src": folder?.name ?? "INBOX"])
             if let kept = SparkAPI.keptMail(x.id) { Merken.drop(kept) }
             done(action, String(x.id.prefix(9)), d)
             error = nil
-            await load(true)
+            if back.isEmpty { await load(true) }
         } catch {
+            items += back.filter { b in !items.contains { $0.id == b.id } }
             self.error = error.localizedDescription
         }
+    }
+
+    /// Dominik 2026-10-21 „reloaded immer die gesamte Liste“: a mail moved, archived or deleted leaves the list at once
+    /// and nothing is loaded anew (the page stays where it is, older pages too); what left comes back when the Spark says no
+    func gone(_ ids: [String], _ action: String) -> [MailItem] {
+        guard ["archive", "move", "delete", "erase"].contains(action) else { return [] }
+        let out = items.filter { ids.contains($0.id) }
+        items.removeAll { ids.contains($0.id) }
+        return out
     }
 
     /// what the Spark answered to a delete, archive or move: the line with „Rückgängig“, the Regel-Vorschlag
@@ -1063,8 +1096,15 @@ final class PostModel: ObservableObject {
     func actMany(_ action: String, _ into: String = "") async {
         guard let api = SparkAPI.current, !picked.isEmpty else { return }
         do {
-            let d = try await api.object("POST", "api/profile/mail/acts",
-                                         body: ["ids": Array(picked.prefix(50)), "action": action, "folder": into, "src": folder?.name ?? "INBOX"])
+            let ids = Array(picked.prefix(50)), back = gone(ids, action)
+            let d: [String: Any]
+            do {
+                d = try await api.object("POST", "api/profile/mail/acts",
+                                         body: ["ids": ids, "action": action, "folder": into, "src": folder?.name ?? "INBOX"])
+            } catch {
+                items += back.filter { b in !items.contains { $0.id == b.id } }
+                throw error
+            }
             for id in picked { if let kept = SparkAPI.keptMail(id) { Merken.drop(kept) } }
             // one mailbox moved: „Rückgängig“ as on the page; several mailboxes only the line
             let moved = (d["moved"] as? [[String: Any]] ?? [])
@@ -1076,7 +1116,7 @@ final class PostModel: ObservableObject {
             }
             picked = []
             error = nil
-            await load(true)
+            if back.isEmpty { await load(true) }
         } catch {
             self.error = error.localizedDescription
         }
@@ -1131,6 +1171,28 @@ struct PostView: View {
         List(selection: $m.picked) {
             if let at = m.keptAt { StandNote(at: at, loading: m.loading).listRowBackground(Color.clear) }
             if m.undo != nil || m.note != nil || m.hint != nil { done }
+            if !m.later.isEmpty {
+                Section {
+                    DisclosureGroup {
+                        ForEach(m.later) { x in
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(verbatim: x.subject.isEmpty ? String(localized: "(ohne Betreff)") : x.subject)
+                                Text(verbatim: String(localized: "an ") + x.to + " · " + x.at.formatted(.dateTime.weekday().day().month().hour().minute())
+                                     + (x.state == "wartet" ? "" : " · " + x.stateText)).font(.caption).foregroundStyle(.secondary)
+                            }
+                            .swipeActions(edge: .trailing) {
+                                Button(x.state == "wartet" ? LocalizedStringKey("Zurücknehmen") : LocalizedStringKey("Entfernen"), role: .destructive) {
+                                    Task { await m.laterDrop(x) }
+                                }
+                            }
+                        }
+                    } label: {
+                        let n = m.later.filter { $0.state == "wartet" }.count
+                        Label(n == 1 ? LocalizedStringKey("1 Mail geplant") : n > 1 ? LocalizedStringKey("\(n) Mails geplant") : LocalizedStringKey("Geplante Mails"),
+                              systemImage: "clock")
+                    }
+                }
+            }
             if !m.connected {
                 Text(SparkAPI.way(String(localized: "Noch kein Postfach verbunden. Im Panel unter E-Mail → Einstellungen verbindest du iCloud, Gmail, GMX, web.de oder IMAP.")))
                     .foregroundStyle(.secondary)
@@ -1589,6 +1651,8 @@ struct MailRules: View {
     @Environment(\.dismiss) private var dismiss
     @State private var rules: [MailRule] = []
     @State private var tidy: [String] = []
+    @State private var suggest: [MailSuggestion] = []
+    @State private var stats: MailStats?
     @State private var accounts: [(String, String)] = []
     @State private var editing: MailRule?
     @State private var loading = true
@@ -1599,6 +1663,31 @@ struct MailRules: View {
         NavigationStack {
             List {
                 if let note { Text(note).foregroundStyle(.secondary) }
+                // Regel-Vorschläge aus dem Ablegen (Dominik 2026-10-21 „ok“): a rule only after a tap
+                if !suggest.isEmpty {
+                    Section("Vorschläge aus deinem Ablegen") {
+                        ForEach(suggest) { x in
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text("Mails von \(x.from)")
+                                Text(x.inbox > 0 ? LocalizedStringKey("legst du in „\(x.folder)“ (\(x.n)×) · \(x.inbox) liegen gerade im Posteingang")
+                                     : LocalizedStringKey("legst du in „\(x.folder)“ (\(x.n)×)")).font(.caption).foregroundStyle(.secondary)
+                                HStack {
+                                    Button(x.inbox > 0 ? LocalizedStringKey("Regel anlegen und ablegen") : LocalizedStringKey("Regel anlegen")) { Task { await take(x, x.inbox > 0) } }
+                                        .buttonStyle(.borderedProminent)
+                                    if x.inbox > 0 { Button("Nur Regel") { Task { await take(x, false) } }.buttonStyle(.bordered) }
+                                    Button("Nicht mehr fragen") {
+                                        Task {
+                                            await call("POST", "api/profile/mail/rules/never", ["account": x.account, "from": x.from, "folder": x.folder])
+                                            await load()
+                                        }
+                                    }
+                                    .buttonStyle(.bordered)
+                                }
+                                .font(.caption)
+                            }
+                        }
+                    }
+                }
                 Section {
                     ForEach(rules) { r in
                         Button { editing = r } label: {
@@ -1634,6 +1723,39 @@ struct MailRules: View {
                 if !tidy.isEmpty {
                     Section("Aus „Mails aufräumen“") { ForEach(tidy, id: \.self) { Text(verbatim: $0) } }
                 }
+                // Mail-Statistik (mailregeln.stats, Dominik 2026-10-21 „6“): who writes most, mails a week; „Regel …“
+                if let stats, stats.total > 0 {
+                    Section {
+                        DisclosureGroup {
+                            HStack(spacing: 16) {
+                                ForEach(Array(stats.weeks.enumerated()), id: \.offset) { i, n in
+                                    VStack(alignment: .leading) {
+                                        Text(verbatim: "\(n)").bold()
+                                        Text(i == 0 ? LocalizedStringKey("diese Woche") : LocalizedStringKey("vor \(i) Wo.")).font(.caption2).foregroundStyle(.secondary)
+                                    }
+                                }
+                            }
+                            ForEach(stats.senders) { x in
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(verbatim: x.name.isEmpty ? x.addr : x.name)
+                                        Text(x.unread > 0 ? LocalizedStringKey("\(x.n) Mails, \(x.unread) ungelesen") : LocalizedStringKey("\(x.n) Mails"))
+                                            .font(.caption).foregroundStyle(.secondary)
+                                    }
+                                    Spacer()
+                                    if x.rule {
+                                        Text("hat Regel").font(.caption).foregroundStyle(.secondary)
+                                    } else {
+                                        Button("Regel …") { editing = MailRule(account: x.account.isEmpty ? (accounts.first?.0 ?? "") : x.account, from: x.addr) }
+                                            .buttonStyle(.bordered).font(.caption)
+                                    }
+                                }
+                            }
+                        } label: {
+                            Text("Wer schreibt dir am meisten (30 Tage, \(stats.total) Mails, \(stats.unread) ungelesen)")
+                        }
+                    }
+                }
                 if let error { Text(SparkAPI.way(error)).foregroundStyle(.red) }
             }
             .overlay { if loading && rules.isEmpty { LadeZeilen(rows: 4).padding() } }
@@ -1663,6 +1785,7 @@ struct MailRules: View {
             self.error = error.localizedDescription
         }
         loading = false
+        if let d = try? await api.object("GET", "api/profile/mail/stats"), d["loading"] == nil { stats = MailStats(d) }
     }
 
     private func show(_ d: [String: Any]) {
@@ -1671,6 +1794,24 @@ struct MailRules: View {
             String((x["match"] as? String ?? "").prefix(80)) + " → " + ((x["keep"] as? Bool ?? false) ? String(localized: "Posteingang") : String((x["folder"] as? String ?? "").prefix(80)))
         }
         accounts = (d["accounts"] as? [[String: Any]] ?? []).prefix(4).map { (String(($0["id"] as? String ?? "").prefix(9)), String(($0["name"] as? String ?? "").prefix(60))) }
+        if let x = d["suggest"] as? [[String: Any]] { suggest = x.prefix(20).compactMap(MailSuggestion.init) }
+    }
+
+    /// a suggestion taken: the rule, and with file also the mails of that sender in the inbox now (as on the page)
+    private func take(_ x: MailSuggestion, _ file: Bool) async {
+        guard let api = SparkAPI.current else { return }
+        do {
+            let d = try await api.object("POST", "api/profile/mail/rules", body: ["account": x.account, "when": ["from": x.from], "then": ["folder": x.folder]])
+            show(d)
+            note = String(localized: "Regel angelegt: neue Mails von \(x.from) kommen nach „\(x.folder)“.")
+            if file, let id = d["saved"] as? String, !id.isEmpty {
+                let y = try await api.object("POST", "api/profile/mail/rules/\(id)/apply", body: [:], timeout: 120)
+                note = (note ?? "") + " " + String(localized: "\(y["n"] as? Int ?? 0) Mails aus dem Posteingang dazu.")
+            }
+            error = nil
+        } catch {
+            self.error = error.localizedDescription
+        }
     }
 
     private func call(_ method: String, _ path: String, _ body: [String: Any]?) async {
@@ -1681,6 +1822,99 @@ struct MailRules: View {
         } catch {
             self.error = error.localizedDescription
         }
+    }
+}
+
+/// Mail-Statistik (mailregeln.stats): mails a week, newest first, and who writes most; numbers and the own senders only
+struct MailStats {
+    struct Sender: Identifiable {
+        let addr: String
+        let name: String
+        let n: Int
+        let unread: Int
+        let rule: Bool
+        let account: String
+        var id: String { addr }
+    }
+    let weeks: [Int]
+    let senders: [Sender]
+    let total: Int
+    let unread: Int
+
+    init(_ d: [String: Any]) {
+        weeks = (d["weeks"] as? [Int] ?? []).prefix(8).map { $0 }
+        senders = (d["senders"] as? [[String: Any]] ?? []).prefix(30).compactMap { x in
+            guard let a = x["addr"] as? String, !a.isEmpty else { return nil }
+            return Sender(addr: String(a.prefix(200)), name: String((x["name"] as? String ?? "").prefix(60)), n: x["n"] as? Int ?? 0,
+                          unread: x["unread"] as? Int ?? 0, rule: x["rule"] as? Bool ?? false, account: String((x["acct"] as? String ?? "").prefix(9)))
+        }
+        total = d["total"] as? Int ?? 0
+        unread = d["unread"] as? Int ?? 0
+    }
+}
+
+/// A planned mail (Später senden, senden.later_list): when, to whom, subject, state; never its text
+struct MailLater: Identifiable {
+    let id: String
+    let at: Date
+    let to: String
+    let subject: String
+    let state: String
+
+    init?(_ d: [String: Any]) {
+        guard let id = d["id"] as? String, let at = d["at"] as? Int else { return nil }
+        self.id = String(id.prefix(20))
+        self.at = Date(timeIntervalSince1970: TimeInterval(at))
+        to = String((d["to"] as? String ?? "").prefix(300))
+        subject = String((d["subject"] as? String ?? "").prefix(200))
+        state = String((d["state"] as? String ?? "").prefix(20))
+    }
+
+    var stateText: String {
+        switch state {
+        case "gesendet": return String(localized: "gesendet")
+        case "nicht gesendet": return String(localized: "nicht gesendet")
+        case "unklar": return String(localized: "unklar, schau in Gesendet")
+        default: return String(localized: "wird gesendet")
+        }
+    }
+}
+
+/// One other mail of a conversation (mail.thread): who, when, its own text; own = sent from this mailbox
+struct MailThreadItem: Identifiable {
+    let id: String
+    let from: String
+    let date: Date
+    let text: String
+    let own: Bool
+
+    init?(_ d: [String: Any]) {
+        guard let id = d["id"] as? String else { return nil }
+        self.id = String(id.prefix(40)) + String((d["folder"] as? String ?? "").prefix(200))
+        from = String((d["from"] as? String ?? "").prefix(150))
+        date = Date(timeIntervalSince1970: TimeInterval(d["date"] as? Int ?? 0))
+        text = String((d["text"] as? String ?? "").prefix(1500))
+        own = d["own"] as? Bool ?? false
+    }
+}
+
+/// A rule the night found in the folders below the KI folder (mailregeln.suggest): sender (or @domain), folder, how often
+struct MailSuggestion: Identifiable {
+    let id: String
+    let account: String
+    let from: String
+    let folder: String
+    let n: Int
+    let inbox: Int
+
+    init?(_ d: [String: Any]) {
+        guard let id = d["id"] as? String, let from = d["from"] as? String, let folder = d["folder"] as? String else { return nil }
+        self.id = String(id.prefix(20))
+        account = String((d["account"] as? String ?? "").prefix(20))
+        self.from = String(from.prefix(120))
+        self.folder = String(folder.prefix(200))
+        n = d["n"] as? Int ?? 0
+        inbox = d["inbox"] as? Int ?? 0
     }
 }
 
@@ -1844,6 +2078,7 @@ struct MailView: View {
     @State private var erasing = false
     @State private var page: String?
     @State private var pageHeight: CGFloat = 120
+    @State private var thread: [MailThreadItem] = []
     @State private var linkAsk: URL?
     @Environment(\.colorScheme) private var scheme
     private var flagged: Bool { flaggedNow ?? item.flagged }
@@ -1909,6 +2144,25 @@ struct MailView: View {
                     }
                 } else {
                     Section { Text(verbatim: m.text.isEmpty ? String(localized: "(kein Text)") : m.text).textSelection(.enabled) }
+                }
+                // Unterhaltung (Dominik 2026-10-21 „1“): the other mails of the conversation, folded to one line each
+                if !thread.isEmpty {
+                    Section(thread.count == 1 ? LocalizedStringKey("Unterhaltung · 1 weitere Mail") : LocalizedStringKey("Unterhaltung · \(thread.count) weitere Mails")) {
+                        ForEach(thread) { x in
+                            DisclosureGroup {
+                                Text(verbatim: x.text.isEmpty ? String(localized: "(kein Text)") : x.text).textSelection(.enabled)
+                            } label: {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    HStack(alignment: .firstTextBaseline) {
+                                        Text(verbatim: x.own ? String(localized: "Du") : PostView.name(x.from)).font(.subheadline.weight(.semibold))
+                                        Spacer(minLength: 8)
+                                        Text(x.date, format: .dateTime.day().month().hour().minute()).font(.caption).foregroundStyle(.secondary)
+                                    }
+                                    Text(verbatim: x.text.replacingOccurrences(of: "\n", with: " ")).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                                }
+                            }
+                        }
+                    }
                 }
                 actions
             } else if error == nil {
@@ -2091,6 +2345,10 @@ struct MailView: View {
         if m?.html == true, page == nil {   // the formatted copy; without it the plain text stays
             page = try? await api.mailPage(item.id, folder: folder?.name ?? "INBOX")
         }
+        if m != nil, let t = try? await api.object("GET", "api/profile/mail/thread",
+                                                   query: folder.map { ["id": item.id, "folder": $0.name] } ?? ["id": item.id], timeout: 60) {
+            thread = (t["items"] as? [[String: Any]] ?? []).prefix(10).compactMap(MailThreadItem.init)
+        }
         if talk.allowed.areas.contains("mailsend"), m != nil {
             // Antwortvorschläge „1a“: prepared while the mail is open, „Antworten“ finds them ready on the Spark
             let id = item.id
@@ -2114,7 +2372,7 @@ struct MailView: View {
             if let kept = SparkAPI.keptMail(item.id) { Merken.drop(kept) }
             post.done(action, String(item.id.prefix(9)), d)
             if action == "erase" { post.note = String(localized: "Endgültig gelöscht.") }
-            Task { await post.load(true) }
+            if post.gone([item.id], action).isEmpty { Task { await post.load(true) } }
             if action == "read" || action == "unread" {
                 note = action == "read" ? String(localized: "Als gelesen markiert.") : String(localized: "Als ungelesen markiert.")
             } else if action == "flag" || action == "unflag" {
@@ -2257,6 +2515,9 @@ struct MailWrite: View {
     @State private var pending: [String: Any]?
     @State private var left = 10
     @State private var waiter: Task<Void, Never>?
+    /// Später senden (Dominik 2026-10-21 „4“): the time picked on its own sheet
+    @State private var laterOpen = false
+    @State private var laterAt = Date().addingTimeInterval(3600)
     private static let tones: [(String, LocalizedStringKey)] = [("kuerzer", "kürzer"), ("freundlicher", "freundlicher"),
                                                                 ("foermlicher", "förmlicher"), ("uebersetzen", "auf Englisch")]
 
@@ -2282,6 +2543,7 @@ struct MailWrite: View {
                     Section { Text(verbatim: p["text"] as? String ?? "") }
                     Section {
                         Button("Senden") { Task { await send() } }.disabled(busy)
+                        Button("Später senden …") { laterOpen = true }.disabled(busy)
                         Button("Ändern") { preview = nil }
                     }
                 } else {
@@ -2334,6 +2596,10 @@ struct MailWrite: View {
                     Section {
                         Button { Task { await go() } } label: { Label("Senden", systemImage: "paperplane.fill") }
                             .disabled(busy || (draft.forward.isEmpty && text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty))
+                        if !spark {
+                            Button { laterOpen = true } label: { Label("Später senden …", systemImage: "clock") }
+                                .disabled(busy || (draft.forward.isEmpty && text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty))
+                        }
                     }
                 }
                 if let error { Text(SparkAPI.way(error)).foregroundStyle(.red) }
@@ -2344,6 +2610,33 @@ struct MailWrite: View {
             .onAppear { if to.isEmpty && subject.isEmpty { to = draft.to; subject = draft.subject; text = draft.text; spark = !draft.text.isEmpty } }
             .task { if !draft.reply.isEmpty && ideas.isEmpty { await suggest() } }
             .interactiveDismissDisabled(busy || pending != nil)
+            .sheet(isPresented: $laterOpen) {
+                NavigationStack {
+                    Form {
+                        DatePicker("Senden am", selection: $laterAt, in: Date().addingTimeInterval(120)...Date().addingTimeInterval(30 * 86400))
+                        Button("Planen") { laterOpen = false; Task { await later() } }.disabled(busy)
+                    }
+                    .navigationTitle("Später senden")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Abbrechen") { laterOpen = false } } }
+                }
+                .presentationDetents([.medium])
+            }
+        }
+    }
+
+    /// Später senden: checked like „Senden“ (the preview), then planned on the Spark; it can be taken back until then
+    private func later() async {
+        if preview == nil { await look() }
+        guard let api = SparkAPI.current, let token = preview?["token"] as? String else { return }
+        busy = true
+        defer { busy = false }
+        do {
+            _ = try await api.call("POST", "api/profile/mail/send", body: ["token": token, "at": Int(laterAt.timeIntervalSince1970)], timeout: 60)
+            dismiss()
+        } catch {
+            self.error = error.localizedDescription
+            preview = nil
         }
     }
 
