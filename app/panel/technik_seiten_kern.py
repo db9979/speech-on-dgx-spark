@@ -241,7 +241,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Wissen: how a question finds passages
     "wissen": {
-        "stand": "e36260e3c2",
+        "stand": "d46320d4d2",
         "bezug": {
             "lokal.MAX_HITS": ["s5"], "wissen.search": ["s1", "s8", "s9"], "documents.search": ["s5", "s6"],
             "documents._terms": ["s5"], "documents.match_docs": ["s4"], "docembed.query": ["s3"],
@@ -251,7 +251,7 @@ SEITEN = {
             "regel:Erst lokal suchen": ["s5"], "regel:Wissensbuch": ["s13"], "wissensbuch.answer_block": ["s13"],
             "wissensbuch.PAGES_PER_DOC": ["s13"], "wissensbuch.MAX_PAGES": ["s13"],
             "wissensbuch.SAMPLE": ["s13"], "wissenskarte.view": ["s13"], "wissenskarte.check_edge": ["s13"],
-            "wissenskarte.EDGES_PER_DOC": ["s13"], "wissenskarte.VIEW_NODES": ["s13"], "wissenskarte.MAX_EDGES": ["s13"],
+            "wissenskarte.EDGES_PER_DOC": ["s13"], "wissenskarte.VIEW_NODES": ["s13"], "wissenskarte.MAX_EDGES": ["s13"], "wissenskarte.DAY": ["s13"],
         },
         "kurz": ("Wissen ist alles, was der Spark selbst weiß, ohne ins Internet zu gehen: die hochgeladenen Dokumente "
                  "jedes Profils (eine SQLite-Datei wissen.db pro Profil), das Gedächtnis, frühere Gespräche, das eigene "
@@ -420,6 +420,7 @@ SEITEN = {
             ("{wissenskarte.EDGES_PER_DOC}", ("Verbindungen, die ein Dokument in die Wissenskarte bringen darf", "connections one document may bring into the knowledge map"), "wissenskarte.EDGES_PER_DOC"),
             ("{wissenskarte.MAX_EDGES}", ("Verbindungen in der Wissenskarte pro Profil", "connections in the knowledge map per profile"), "wissenskarte.MAX_EDGES"),
             ("{wissenskarte.VIEW_NODES}", ("Punkte, die die Karte auf einmal zeigt", "points the map shows at once"), "wissenskarte.VIEW_NODES"),
+            ("{wissenskarte.DAY}", ("Dokumente am Tag für die Wissenskarte (Standard)", "documents a day for the knowledge map (default)"), "wissenskarte.DAY"),
         ],
         "einstellen": [
             ("Funktionen → Eigene Dokumente und darunter Bedeutungssuche an: Stellen bekommen einen Bedeutungsvektor "
@@ -437,9 +438,9 @@ SEITEN = {
              "Features → Own documents and below it Knowledge book on: pages from the own documents, with how many "
              "documents a day."),
             ("Funktionen → Eigene Dokumente → Wissensbuch und darunter Wissenskarte an: Verbindungen zwischen den "
-             "Seiten, zu sehen im Menü Wissensbuch auf der Seite Karte.",
+             "Seiten, zu sehen im Menü Wissensbuch auf der Seite Karte, dazu wie viele Dokumente am Tag (eigene Grenze).",
              "Features → Own documents → Knowledge book and below it Knowledge map on: connections between the "
-             "pages, shown in the menu Knowledge book on the page Map."),
+             "pages, shown in the menu Knowledge book on the page Map, with how many documents a day (own limit)."),
         ],
         "sehen": [
             ("Zustand → Logs → Anfragen: der Schritt „Nachsortieren“ mit Zahl der Kandidaten, behaltenen Stellen und "

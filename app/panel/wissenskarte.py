@@ -22,7 +22,8 @@ link or style lines; the panel never runs it.
 
 Off until the admin allows it (Funktionen → Eigene Dokumente → Wissensbuch → Wissenskarte, chat.knowledge_map); it
 builds on the Wissensbuch (parent) and then works for every profile the admin did not block; guests never. Works in
-quiet minutes after the Wissensbuch (wissen.due_once), at most chat.knowledge_book_day documents per profile and day,
+quiet minutes after the Wissensbuch (wissen.due_once), at most chat.knowledge_map_day documents per profile and day
+(own limit, Dominik 2026-10-21 „1“: a step only names connections, so the backlog of a full book goes in about a day),
 one model request at a time behind speech (vorrang). The journal gets fixed words and numbers only.
 
     GET    /api/profile/wissenskarte                 the visible part (?um=<page>&tiefe=1|2, ?doc=<document>)
@@ -66,6 +67,7 @@ EDGES_PER_DOC = 30       # connections one document may bring
 MAX_EDGES = 3000         # connections per profile
 VIEW_NODES = 150         # points in one answer of the map
 VIEW_EDGES = 400         # connections in one answer of the map
+DAY = 200                # documents per profile and day (chat.knowledge_map_day)
 DETAIL_LEN = 40          # characters of the detail on a connection
 READ_TIMEOUT = 180
 EXPORT_FMTS = ("mermaid", "dot")
@@ -119,6 +121,12 @@ class _Db(wissensbuch._Db):
 
 
 # ---------------------------------------------------------------- fixed rules
+def day_limit():
+    """Documents per profile and day (chat.knowledge_map_day, 5 to 500, default DAY)."""
+    v = _chat().get("knowledge_map_day", DAY)
+    return v if isinstance(v, int) and not isinstance(v, bool) and 5 <= v <= 500 else DAY
+
+
 def kind(word):
     """The key of a kind the model named (its German word, or the key itself), else ""."""
     w = re.sub(r"\s+", " ", str(word or "")).strip().lower()
@@ -332,7 +340,7 @@ async def due_once(now=None):
     for uid in profiles.user_ids():
         if not allowed(uid) or not os.path.exists(documents.db_path(uid)):
             continue
-        if documents.count_today(uid, day, key="wkarte") >= wissensbuch.day_limit():
+        if documents.count_today(uid, day, key="wkarte") >= day_limit():
             continue
         got = await work_in(uid, now)
         if got:

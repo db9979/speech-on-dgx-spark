@@ -2256,6 +2256,7 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - **30** Verbindungen, die ein Dokument in die Wissenskarte bringen darf ([Schritt 13](#kn-wissen-s13))
 - **3000** Verbindungen in der Wissenskarte pro Profil ([Schritt 13](#kn-wissen-s13))
 - **150** Punkte, die die Karte auf einmal zeigt ([Schritt 13](#kn-wissen-s13))
+- **200** Dokumente am Tag für die Wissenskarte (Standard) ([Schritt 13](#kn-wissen-s13))
 
 #### Einstellen
 
@@ -2264,7 +2265,7 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - Funktionen → Eigene Dokumente und darunter Steckbrief und Tags an: Suche nach Tags und Art.
 - Funktionen → Eigene Dokumente und darunter Gemeinsame Dokumente an: Dokumente „Für alle“.
 - Funktionen → Eigene Dokumente und darunter Wissensbuch an: Seiten aus den eigenen Dokumenten, dazu wie viele Dokumente am Tag.
-- Funktionen → Eigene Dokumente → Wissensbuch und darunter Wissenskarte an: Verbindungen zwischen den Seiten, zu sehen im Menü Wissensbuch auf der Seite Karte.
+- Funktionen → Eigene Dokumente → Wissensbuch und darunter Wissenskarte an: Verbindungen zwischen den Seiten, zu sehen im Menü Wissensbuch auf der Seite Karte, dazu wie viele Dokumente am Tag (eigene Grenze).
 
 #### Was du siehst
 

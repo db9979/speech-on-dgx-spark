@@ -2245,7 +2245,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 30 Kandidaten für das Nachsortieren (Schritt 9) - -4.0 Untergrenze des Cross-Encoders (Schritt 10) - 0.4 Gewicht der Kontextzeile (Schritt 5) - 8 s längstes Warten auf den Fragevektor (Schritt 3) - 8.5 GiB freier Speicher, damit das Vektormodell startet (Schritt 3) - 1.5 GiB dasselbe auf einem Panel-Rechner (Spark teilen) (Schritt 3) - 3 Treffer höchstens bei „Erst lokal suchen“ (Schritt 5) - 5 Seiten, die ein Dokument im Wissensbuch ändern darf (Schritt 13) - 300 Seiten im Wissensbuch pro Profil (Schritt 13) - 50 Sätze, die das Modell nachts gegen ihre Quelle prüft (Standard) (Schritt 13) - 30 Verbindungen, die ein Dokument in die Wissenskarte bringen darf (Schritt 13) - 3000 Verbindungen in der Wissenskarte pro Profil (Schritt 13) - 150 Punkte, die die Karte auf einmal zeigt (Schritt 13)"
+"text": "- 30 Kandidaten für das Nachsortieren (Schritt 9) - -4.0 Untergrenze des Cross-Encoders (Schritt 10) - 0.4 Gewicht der Kontextzeile (Schritt 5) - 8 s längstes Warten auf den Fragevektor (Schritt 3) - 8.5 GiB freier Speicher, damit das Vektormodell startet (Schritt 3) - 1.5 GiB dasselbe auf einem Panel-Rechner (Spark teilen) (Schritt 3) - 3 Treffer höchstens bei „Erst lokal suchen“ (Schritt 5) - 5 Seiten, die ein Dokument im Wissensbuch ändern darf (Schritt 13) - 300 Seiten im Wissensbuch pro Profil (Schritt 13) - 50 Sätze, die das Modell nachts gegen ihre Quelle prüft (Standard) (Schritt 13) - 30 Verbindungen, die ein Dokument in die Wissenskarte bringen darf (Schritt 13) - 3000 Verbindungen in der Wissenskarte pro Profil (Schritt 13) - 150 Punkte, die die Karte auf einmal zeigt (Schritt 13) - 200 Dokumente am Tag für die Wissenskarte (Standard) (Schritt 13)"
 },
 {
 "lang": "de",
@@ -2253,7 +2253,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Einstellen",
 "title": "Einstellen",
-"text": "- Funktionen → Eigene Dokumente und darunter Bedeutungssuche an: Stellen bekommen einen Bedeutungsvektor (Standard aus). - Funktionen → Eigene Dokumente und darunter Treffer nachsortieren an: dazu Modellgröße und wie lange höchstens gewartet wird. - Funktionen → Eigene Dokumente und darunter Steckbrief und Tags an: Suche nach Tags und Art. - Funktionen → Eigene Dokumente und darunter Gemeinsame Dokumente an: Dokumente „Für alle“. - Funktionen → Eigene Dokumente und darunter Wissensbuch an: Seiten aus den eigenen Dokumenten, dazu wie viele Dokumente am Tag. - Funktionen → Eigene Dokumente → Wissensbuch und darunter Wissenskarte an: Verbindungen zwischen den Seiten, zu sehen im Menü Wissensbuch auf der Seite Karte."
+"text": "- Funktionen → Eigene Dokumente und darunter Bedeutungssuche an: Stellen bekommen einen Bedeutungsvektor (Standard aus). - Funktionen → Eigene Dokumente und darunter Treffer nachsortieren an: dazu Modellgröße und wie lange höchstens gewartet wird. - Funktionen → Eigene Dokumente und darunter Steckbrief und Tags an: Suche nach Tags und Art. - Funktionen → Eigene Dokumente und darunter Gemeinsame Dokumente an: Dokumente „Für alle“. - Funktionen → Eigene Dokumente und darunter Wissensbuch an: Seiten aus den eigenen Dokumenten, dazu wie viele Dokumente am Tag. - Funktionen → Eigene Dokumente → Wissensbuch und darunter Wissenskarte an: Verbindungen zwischen den Seiten, zu sehen im Menü Wissensbuch auf der Seite Karte, dazu wie viele Dokumente am Tag (eigene Grenze)."
 },
 {
 "lang": "de",
@@ -4758,6 +4758,14 @@
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
 "text": ", nach einem Messtest mit 5000 Dokumenten), Stufe 3 (Werkzeuge wissen_weg und schaubild nach Messung), Stufe 4 (Code-Dateien mit festem Leser)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Wissenskarte schneller (V01.0.907, Dominik 2026-10-21 „1“)",
+"text": "Wissenskarte schneller (V01.0.907, Dominik 2026-10-21 „1“): Die Wissenskarte hat eine eigene Tagesgrenze *Funktionen → Eigene Dokumente → Wissensbuch → Wissenskarte → Karte: Dokumente pro Tag und Profil* (chat.knowledge_map_day, 5 bis 500, Standard 200; vorher galt chat.knowledge_book_day mit 40). Ein Kartenschritt nennt nur Verbindungen und ist kurz, so ist der Rückstand eines vollen Wissensbuchs (etwa 150 Dokumente) in rund einem Tag eingearbeitet. Weiterhin nur in ruhigen Minuten, erst wenn das Wissensbuch nichts zu tun hat, ein Dokument je Schritt hinter der Sprache."
 },
 {
 "lang": "de",
@@ -13773,7 +13781,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 30 candidates for re-ranking (step 9) - -4.0 cross-encoder's lower limit (step 10) - 0.4 weight of the context line (step 5) - 8 s longest wait for the question vector (step 3) - 8.5 GiB free memory for the vector model to start (step 3) - 1.5 GiB the same on a panel computer (Spark teilen) (step 3) - 3 hits at most with „Look locally first“ (step 5) - 5 pages one document may change in the knowledge book (step 13) - 300 pages in the knowledge book per profile (step 13) - 50 sentences the model checks against their source at night (default) (step 13) - 30 connections one document may bring into the knowledge map (step 13) - 3000 connections in the knowledge map per profile (step 13) - 150 points the map shows at once (step 13)"
+"text": "- 30 candidates for re-ranking (step 9) - -4.0 cross-encoder's lower limit (step 10) - 0.4 weight of the context line (step 5) - 8 s longest wait for the question vector (step 3) - 8.5 GiB free memory for the vector model to start (step 3) - 1.5 GiB the same on a panel computer (Spark teilen) (step 3) - 3 hits at most with „Look locally first“ (step 5) - 5 pages one document may change in the knowledge book (step 13) - 300 pages in the knowledge book per profile (step 13) - 50 sentences the model checks against their source at night (default) (step 13) - 30 connections one document may bring into the knowledge map (step 13) - 3000 connections in the knowledge map per profile (step 13) - 150 points the map shows at once (step 13) - 200 documents a day for the knowledge map (default) (step 13)"
 },
 {
 "lang": "en",
@@ -13781,7 +13789,7 @@
 "file": "Architecture and data flow",
 "head": "Settings",
 "title": "Settings",
-"text": "- Features → Own documents and below it Meaning search on: passages get a meaning vector (default off). - Features → Own documents and below it Re-rank hits on: with model size and the longest wait. - Features → Own documents and below it Document card and tags on: search by tags and kind. - Features → Own documents and below it Shared documents on: documents „for everyone“. - Features → Own documents and below it Knowledge book on: pages from the own documents, with how many documents a day. - Features → Own documents → Knowledge book and below it Knowledge map on: connections between the pages, shown in the menu Knowledge book on the page Map."
+"text": "- Features → Own documents and below it Meaning search on: passages get a meaning vector (default off). - Features → Own documents and below it Re-rank hits on: with model size and the longest wait. - Features → Own documents and below it Document card and tags on: search by tags and kind. - Features → Own documents and below it Shared documents on: documents „for everyone“. - Features → Own documents and below it Knowledge book on: pages from the own documents, with how many documents a day. - Features → Own documents → Knowledge book and below it Knowledge map on: connections between the pages, shown in the menu Knowledge book on the page Map, with how many documents a day (own limit)."
 },
 {
 "lang": "en",
@@ -16214,6 +16222,14 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "measuring), stage 4 (code files with a fixed reader)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Knowledge map faster (V01.0.907, Dominik 2026-10-21 \"1\")",
+"text": "Knowledge map faster (V01.0.907, Dominik 2026-10-21 \"1\"): the knowledge map has its own daily limit *Features → Own documents → Knowledge book → Knowledge map → Map: documents per day and profile* (chat.knowledge_map_day, 5 to 500, default 200; before, chat.knowledge_book_day with 40 applied). A map step only names connections and is short, so the backlog of a full knowledge book (about 150 documents) is worked in within about a day. Still only in quiet minutes, only when the knowledge book has nothing to do, one document per step behind speech."
 },
 {
 "lang": "en",

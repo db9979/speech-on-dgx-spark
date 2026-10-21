@@ -2256,6 +2256,7 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - **30** connections one document may bring into the knowledge map ([step 13](#kn-wissen-s13))
 - **3000** connections in the knowledge map per profile ([step 13](#kn-wissen-s13))
 - **150** points the map shows at once ([step 13](#kn-wissen-s13))
+- **200** documents a day for the knowledge map (default) ([step 13](#kn-wissen-s13))
 
 #### Settings
 
@@ -2264,7 +2265,7 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - Features → Own documents and below it Document card and tags on: search by tags and kind.
 - Features → Own documents and below it Shared documents on: documents „for everyone“.
 - Features → Own documents and below it Knowledge book on: pages from the own documents, with how many documents a day.
-- Features → Own documents → Knowledge book and below it Knowledge map on: connections between the pages, shown in the menu Knowledge book on the page Map.
+- Features → Own documents → Knowledge book and below it Knowledge map on: connections between the pages, shown in the menu Knowledge book on the page Map, with how many documents a day (own limit).
 
 #### What you see
 

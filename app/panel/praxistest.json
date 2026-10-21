@@ -2587,6 +2587,13 @@
 "titel": "Mail: Verschieben, Vorschläge, Unterhaltung, Später, Codes, Statistik",
 "text": "A: Pi auf V01.0.906. E-Mail: eine Mail in einen Ordner ziehen: sie verschwindet sofort, die Ordnerliste bleibt stehen, nur die Zahlen ändern sich. B: Eine Mail mit Antworten öffnen: darunter „Unterhaltung“ mit den anderen Mails, älteste zuerst; zitierter Text und „Von meinem iPhone gesendet“ sind weg. C: Neue Mail, „Später …“, „Morgen 8:00“: über der Liste „1 Mail geplant“, „Zurücknehmen“ geht; eine Mail für in 2 Minuten planen: sie geht pünktlich raus und steht als „gesendet“ da. D: Mit „Mails ordnen“: Reiter Regeln, „Wer schreibt dir am meisten“ aufklappen: Wochen und Absender, „Regel …“ öffnet das Formular mit dem Absender. E: Nach einer Nacht mit eigenem Ablegen im KI-Ordner: unter Regeln „Vorschläge aus deinem Ablegen“. F: Admin: Funktionen → E-Mail lesen → Neue Mails sofort → Bestätigungscodes an; einen Code anfordern (z. B. GitHub-Anmeldung): Mitteilung „Bestätigungscode · 123456 · GitHub“ auf dem genutzten Gerät, „Code kopieren“ legt ihn in die Zwischenablage; nie in Telegram, nicht in Zustand → Logs. G: iPhone-App: dasselbe unter Meine Sachen → E-Mail.",
 "thread": "Kalender und E-Mail in den Apps"
+},
+{
+"id": "P394",
+"v": 907,
+"titel": "Wissenskarte schneller",
+"text": "A: Update. B: Funktionen → Eigene Dokumente → Wissensbuch → Wissenskarte: darunter „Karte: Dokumente pro Tag und Profil“ steht auf 200. C: Am nächsten Tag zeigt Wissensbuch → Karte oben viel weniger wartende Dokumente und Punkte mit Verbindungen. D: Eine Zahl unter 5 oder über 500 wird beim Speichern abgelehnt.",
+"thread": "Wissensgraph aus Dokumenten"
 }
 ]
 }

@@ -55,9 +55,9 @@ def book(*pages):
 
 class Base(unittest.TestCase):
     def setUp(self):
-        helpers.keep_chat(self, "documents", "doc_semantic", "doc_brief", "knowledge_book", "knowledge_book_day", "knowledge_map")
+        helpers.keep_chat(self, "documents", "doc_semantic", "doc_brief", "knowledge_book", "knowledge_book_day", "knowledge_map", "knowledge_map_day")
         helpers.set_config(documents=True, doc_semantic=False, doc_brief=False, knowledge_book=True, knowledge_book_day=40,
-                           knowledge_map=True)
+                           knowledge_map=True, knowledge_map_day=200)
         wissenskarte._live.update(at=0.0, d=None)
 
     def fresh(self, name):
@@ -100,6 +100,12 @@ class Defaults(Base):
         with open(helpers.APP + "/config.default.json") as f:
             ch = json.load(f)["chat"]
         self.assertIs(ch["knowledge_map"], False)
+        self.assertEqual(ch["knowledge_map_day"], 200)
+        self.assertEqual(wissenskarte.day_limit(), 200)
+        for bad in (4, 501, "200", True):                   # the admin's number is checked like the book's
+            cfg = ADMIN.get("/api/config").json()
+            cfg["chat"]["knowledge_map_day"] = bad
+            self.assertEqual(ADMIN.put("/api/config", json=cfg).status_code, 400, bad)
         self.assertNotIn("wissenskarte", features.DEFAULT_ON)
         self.assertEqual(features.BY_KEY["wissenskarte"].parent, "wissensbuch")
         self.assertEqual(features.BY_KEY["wissenskarte"].me, "wbbox")
@@ -229,7 +235,7 @@ class Rules(Base):
             self.assertEqual(run(wissenskarte.work_in(uid, DAY)), "wissenskarte")
         self.assertIn("wissen: wissenskarte fehler | OSError", out.getvalue())
         self.assertIsNone(wissenskarte.next_doc(uid))
-        helpers.set_config(knowledge_book_day=5)
+        helpers.set_config(knowledge_book_day=200, knowledge_map_day=5)   # the map's own limit counts, not the book's
         day = datetime.datetime.fromtimestamp(DAY).strftime("%Y-%m-%d")
         while documents.count_today(uid, day, key="wkarte") < 5:
             documents.count_today(uid, day, add=1, key="wkarte")
