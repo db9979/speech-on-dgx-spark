@@ -162,7 +162,20 @@ class Parts(unittest.TestCase):
         for k, v in technik.KNOTEN.items():
             for name in (v[2], v[3]):
                 self.assertLessEqual(sum(wide(c) for c in name) * name_px, room, f"{k}: name „{name}“ too long for its box")
-            self.assertLessEqual(len(v[4]) * .6 * sub_px, room, f"{k}: line „{v[4]}“ too long for its box")
+            self.assertLessEqual(v[4].count("\n"), 1, f"{k}: at most two rows under the name")
+            for row in v[4].split("\n"):
+                self.assertLessEqual(len(row) * .6 * sub_px + 16, room, f"{k}: line „{row}“ too long for its box (the symbol takes 16)")
+
+    def test_every_box_has_colour_and_symbol(self):
+        """Every box has a kind for its colour bar (technik.FARBEN, a colour in technik.css) and a symbol; one only in
+        one setup says which (NUR_BEI)."""
+        css = open(os.path.join(PANEL, "static", "technik.css"), encoding="utf-8").read()
+        self.assertEqual(set(technik.FARBE), set(technik.KNOTEN))
+        self.assertEqual(set(technik.SYMBOL), set(technik.KNOTEN))
+        self.assertLessEqual(set(technik.FARBE.values()), set(technik.FARBEN))
+        for kind in technik.FARBEN:
+            self.assertIn(f".c-{kind}{{--tk-c:", css, kind)
+        self.assertLessEqual(set(technik.NUR_BEI), set(technik.KNOTEN))
 
     def test_edges_and_steps_name_real_nodes(self):
         for a, b in technik.KANTEN:

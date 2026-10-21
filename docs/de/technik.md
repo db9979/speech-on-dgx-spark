@@ -120,7 +120,7 @@ Reden mehrere Personen gleichzeitig, bekommen ausgewählte Profile ihre Antwort 
 
 ## Aufbau des Chats
 
-Wie die Teile zusammenspielen, der Weg einer Anfrage und alle Speicherorte stehen in [Architektur und Datenfluss](architektur.md) und im Panel unter **Zustand → Technik**.
+Wie die Teile zusammenspielen, der Weg einer Anfrage und alle Speicherorte stehen in [Architektur und Datenfluss](architektur.md) und im Panel unter **Zustand → Technik**. Im Bild hat jeder Kasten links einen Farbstreifen für seine Art (Legende rechts oben: Geräte, Zugang und Schutz, Gespräch, Wissen, Post und Kontakte, Betrieb, Modelle, Speicher, Draußen) und ein Symbol vor seiner Zeile; Pfeile zeigen die Richtung, ein Schild markiert, was es nur bei Spark teilen gibt (V01.0.915, `technik.FARBE`, `SYMBOL`, `NUR_BEI`). `test_technik` prüft, dass jeder Text in seinen Kasten passt und keine Linie quer durch einen Kasten läuft.
 
 Eine Antwort des Assistenten läuft in drei Dateien unter `app/panel/`:
 

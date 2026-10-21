@@ -350,7 +350,7 @@ KNOTEN = {
     "middleware": (24, 222, "Middleware", "Middleware", "panel.py", "",
                    "Notaus, Herkunft (CSRF) und Größenlimit, in dieser Reihenfolge, bevor ein Endpunkt die Anfrage liest.",
                    "Kill switch, origin (CSRF) and size limit, in this order, before an endpoint reads the request.", ["panel.py", "notaus.py"]),
-    "sicherheit": (24, 330, "Sicherheit", "Security", "Schichten · Grenzen", "",
+    "sicherheit": (24, 350, "Sicherheit", "Security", "alle Schichten", "",
                    "Wie alle Schutzschichten zusammenspielen: das Modell schlägt vor, das Panel entscheidet.",
                    "How all layers of protection work together: the model proposes, the panel decides.",
                    ["wachposten.py", "vault.py", "stufen.py"]),
@@ -366,18 +366,18 @@ KNOTEN = {
     "antwort": (704, 222, "Antwort bauen", "Build answer", "chat._answer", "gespraech",
                 "Runden mit dem Sprachmodell, Prüfungen, Text und Ton als ein Strom.",
                 "Rounds with the language model, checks, text and sound as one stream.", []),
-    "werkzeuge": (704, 330, "Werkzeuge", "Tools", "chat_tools.run", "dienste",
+    "werkzeuge": (704, 350, "Werkzeuge", "Tools", "chat_tools.run", "dienste",
                   "Nur angebotene Werkzeuge laufen; Ergebnisse sind Daten, nie Befehle.",
                   "Only offered tools run; results are data, never commands.", ["chat_tools.py"]),
-    "wissen": (534, 330, "Wissen", "Knowledge", "documents · wissen", "wissen",
+    "wissen": (534, 350, "Wissen", "Knowledge", "documents · wissen", "wissen",
                "Eigene Dokumente, Gedächtnis, Kiwix, erstellte Dokumente.", "Own documents, memory, Kiwix, created documents.", []),
-    "waechter": (704, 436, "Wächter", "Guard", "netguard.py", "",
+    "waechter": (704, 476, "Wächter", "Guard", "netguard.py", "",
                  "Öffentlich, Heimnetz nur mit Erlaubnis, nie Metadaten oder eigene Ports.",
                  "Public, home network only when allowed, never metadata or own ports.", ["netguard.py"]),
-    "betrieb": (364, 330, "Logs und Live", "Logs and live", "tracelog · live", "betrieb",
+    "betrieb": (364, 350, "Logs und Live", "Logs and live", "tracelog · live", "betrieb",
                 "Anfrage-Verlauf, Live-Übersicht, Wächter, Sicherung. Nur feste Wörter und Zahlen.",
                 "Request history, live overview, watchers, backup. Only fixed words and numbers.", []),
-    "llm": (896, 326, "Sprachmodell", "Language model", ":31006 → :31016", "",
+    "llm": (896, 344, "Sprachmodell", "Language model", ":31006 → :31016", "",
             "Das eigene Modell (vLLM) hinter dem LLM-Tor (:31006 → :31016, Bildverständnis :31017 bei Bedarf), eingeschaltet mit "
             "speech-spark modelle llm uebernehmen; bis dahin oder nach … zurueck Qwen3.8 aus dgx-spark-qwen38 (:30001). Ein Modell "
             "in Docker (Qwen3.8 Flash Next) läuft vorerst nur zum Messen: festes Image, ohne Netz, Socket über das Docker-Tor.",
@@ -387,9 +387,9 @@ KNOTEN = {
             ["llm_tor.py", "einordnung.py", "modelle.py", "dockertor.py"]),
     "asr": (896, 196, "Spracherkennung", "Speech recognition", ":31001 → :31011", "sprache",
             "Proxy nimmt an, die Engine läuft nur lokal.", "The proxy accepts, the engine runs locally only.", []),
-    "tts": (896, 388, "Sprachausgabe", "Speech output", ":31002 → :31012", "",
+    "tts": (896, 418, "Sprachausgabe", "Speech output", ":31002 → :31012", "",
             "Qwen3-TTS mit eigenen Stimmen.", "Qwen3-TTS with own voices.", ["tts_proxy.py", "tts_server.py", "tempo.py", "kurzref.py", "textnorm.py"]),
-    "bild": (896, 450, "Bilder und Musik", "Pictures and music", ":31005 · :31004", "",
+    "bild": (896, 490, "Bilder und Musik", "Pictures and music", ":31005 → :31015\n:31004 → :31014", "",
              "FLUX.2 klein (:31005 → :31015) und ACE-Step 1.5 (:31004 → :31014) auf dem Spark, nur lokal; jede Engine lädt "
              "beim ersten Auftrag und entlädt nach Ruhe. Immer nur eine zur Zeit: eine Warteschlange im Panel, die Sperre "
              "bedarf.lock auf dem Spark.",
@@ -398,43 +398,43 @@ KNOTEN = {
              "the Spark.",
              ["bilder.py", "bild_server.py", "bildmodell.py", "musik.py", "musik_server.py", "musikmodell.py", "bedarf.py",
               "schwer.py"]),
-    "aussen": (620, 646, "Dienste im Heimnetz", "Services at home", "HA, NAS, Kiwix …", "",
+    "aussen": (620, 706, "Dienste im Heimnetz", "Services at home", "HA, NAS, Kiwix …", "",
                "Home Assistant, NAS, Kiwix, SearXNG und MCP-Dienste im eigenen Netz. Über den Wächter mit Stufe Heimnetz; "
                "feste Dienste mit Grund in netguard.DIRECT_OK.",
                "Home Assistant, NAS, Kiwix, SearXNG and MCP services in the own network. Through the guard at level home; "
                "fixed services with a reason in netguard.DIRECT_OK.", []),
-    "internet": (780, 734, "Dienste im Internet", "Internet services", "IMAP, CalDAV, Web", "",
+    "internet": (780, 794, "Dienste im Internet", "Internet services", "IMAP, CalDAV, Web", "",
                  "Mail und Kalender beim Anbieter, Seiten aus der Suche, Wetter, Fahrplan, Wikipedia, reMarkable, Telegram, "
                  "Update-Prüfung. Über den Wächter oder feste Adressen; der Notaus schaltet sie ab.",
                  "Mail and calendars at the provider, pages from search, weather, transit, Wikipedia, reMarkable, Telegram, "
                  "update check. Through the guard or fixed addresses; the kill switch turns them off.", []),
-    "teilen": (896, 258, "Spark teilen", "Spark split", "TLS-Tor · :31007", "teilen",
+    "teilen": (896, 270, "Spark teilen", "Spark split", "TLS-Tor · :31007", "teilen",
                "Nur wenn das Panel auf einem eigenen Rechner läuft: jeder Weg zu den Modellen geht durch das TLS-Tor "
                "(TLS 1.3, beim Koppeln angeheftetes Zertifikat), Befehle an den Wärter sind unterschrieben. Zustand → Überblick "
                "zeigt dann beide Rechner nebeneinander.",
                "Only when the panel runs on its own computer: every way to the models goes through the TLS-Tor "
                "(TLS 1.3, certificate pinned at the pairing), commands to the Wärter are signed. Status → Summary "
                "then shows both computers side by side.", ["tlstor.py", "tarswart.py", "teilen.py", "rechner.py"]),
-    "state": (194, 550, "state/", "state/", "global", "", "Globaler Zustand: Schlüssel, Statistik, Wächter.",
+    "state": (194, 610, "state/", "state/", "global", "", "Globaler Zustand: Schlüssel, Statistik, Wächter.",
               "Global state: keys, statistics, watchers.", []),
-    "users": (534, 550, "users/ID/", "users/ID/", "pro Profil", "", "Alles eines Profils; kein Profil sieht den Ordner eines anderen.",
+    "users": (534, 610, "users/ID/", "users/ID/", "pro Profil", "", "Alles eines Profils; kein Profil sieht den Ordner eines anderen.",
               "Everything of one profile; no profile sees another one's folder.", []),
-    "ablage": (896, 550, "voices/, backups/", "voices/, backups/", "Stimmen, Sicherungen", "",
+    "ablage": (896, 610, "voices/, backups/", "voices/, backups/", "Stimmen, Backups", "",
                "Geklonte Stimmen und Sicherungen.", "Cloned voices and backups.", []),
-    "werkstatt": (24, 436, "Werkstatt", "Workshop", "werkstatt.py", "",
+    "werkstatt": (24, 476, "Werkstatt", "Workshop", "werkstatt.py", "",
                   "Nur für Admins: Testlauf, Code-Messung, Diagnose und Reparatur in einer Sandbox auf dem DGX, ohne Daten und "
                   "Internet; heraus kommen Zahlen und ein Patch zum Ansehen, eingespielt wird nichts.",
                   "Admins only: test run, code measurement, diagnosis and repair in a sandbox on the DGX, without data and "
                   "internet; numbers and a patch to look at come out, nothing is installed.",
                   ["werkstatt.py", "werkstattseite.py"]),
-    "post": (534, 436, "Post und Kontakte", "Mail and contacts", "/caldav · /carddav", "post",
+    "post": (534, 476, "Post und Kontakte", "Mail and contacts", "/caldav · /carddav", "post",
              "Eigene Seiten E-Mail, Kalender, Kontakte; Abruf beim Anbieter über den Wächter, Vorrat versiegelt, "
              "Antwort mit Stand, Kalender- und Kontakte-Apps durch eine eigene Tür.",
              "Own pages E-mail, Calendar, Contacts; fetched from the provider through the guard, supply sealed, answer "
              "with its time, calendar and contacts apps through a door of their own.",
              ["mail.py", "calendars.py", "contacts.py", "mailvorrat.py", "senden.py", "kalenderserver.py", "kontaktserver.py",
               "static/js/post.js", "static/js/kalender.js", "static/js/kontakte.js"]),
-    "journal": (364, 550, "journald", "journald", "speech-spark", "", "Alle Dienste; wie lange und wie viel, stellt der Admin ein (Standard 14 Tage, 500 MB).",
+    "journal": (364, 610, "journald", "journald", "speech-spark", "", "Alle Dienste; wie lange und wie viel, stellt der Admin ein (Standard 14 Tage, 500 MB).",
                 "All services; how long and how much is set by the admin (default 14 days, 500 MB).", []),
 }
 KANTEN = [("geraet", "middleware"), ("apps", "middleware"), ("kanaele", "middleware"), ("lautsprecher", "middleware"),
@@ -445,22 +445,41 @@ KANTEN = [("geraet", "middleware"), ("apps", "middleware"), ("kanaele", "middlew
           ("wissen", "users"), ("zugang", "users"), ("zugang", "state"), ("tts", "ablage"), ("zugang", "werkstatt"),
           ("werkzeuge", "post"), ("post", "waechter"), ("post", "users")]
 # the picture's size and one box (the browser draws from these, test_technik checks every box and line inside)
-BILD = (1084, 802)
+BILD = (1084, 862)
 KASTEN = (156, 52)
 # zones (Dominik 2026-10-14 „lan, internet, intern“, plan technische-doku/ueberblick 1+3): id -> kind (colour), German,
 # English, x, y, width, height, x of the label (left of it a line passes)
 ZONEN = {
     "geraete": ("geraet", "Geräte · im Heimnetz oder unterwegs", "Devices · at home or on the way", 8, 8, 864, 100, 20),
-    "spark": ("spark", "DGX Spark · intern", "DGX Spark · inside", 8, 154, 1068, 464, 560),
+    "spark": ("spark", "DGX Spark · intern", "DGX Spark · inside", 8, 154, 1068, 524, 560),
     "panel": ("panel", "Panel :31080 / :31443 · bei Spark teilen auf eigenem Rechner",
-              "Panel :31080 / :31443 · with the Spark split on its own computer", 16, 178, 860, 342, 200),
-    "modelle": ("modelle", "Modelle · auf dem DGX", "Models · on the DGX", 888, 178, 180, 342, 900),
-    "speicher": ("speicher", "Speicher", "Storage", 16, 528, 1052, 82, 28),
-    "heimnetz": ("lan", "Heimnetz · geht raus", "Home network · going out", 8, 626, 1068, 80, 20),
-    "internet": ("net", "Internet · geht raus", "Internet · going out", 8, 714, 1068, 80, 20),
+              "Panel :31080 / :31443 · with the Spark split on its own computer", 16, 178, 860, 382, 200),
+    "modelle": ("modelle", "Modelle · auf dem DGX", "Models · on the DGX", 888, 178, 180, 382, 900),
+    "speicher": ("speicher", "Speicher", "Storage", 16, 588, 1052, 82, 28),
+    "heimnetz": ("lan", "Heimnetz · geht raus", "Home network · going out", 8, 686, 1068, 80, 20),
+    "internet": ("net", "Internet · geht raus", "Internet · going out", 8, 774, 1068, 80, 20),
 }
 # how a device comes in: "lan" directly in the home network, "net" on the way through the reverse proxy or a bot
 REIN = {"geraet": ("lan", "net"), "apps": ("lan", "net"), "lautsprecher": ("lan",), "mcpc": ("lan", "net"), "kanaele": ("net",)}
+# the look of the boxes (Dominik 2026-10-21 „alles“ after „nicht schön“): a colour bar per kind with a legend right of
+# the devices, a symbol before the line of every box, and a tab on a box that only exists in one setup
+FARBEN = {"geraet": ("Geräte", "Devices"), "zugang": ("Zugang und Schutz", "Access and protection"),
+          "gespraech": ("Gespräch", "Conversation"), "wissen": ("Wissen", "Knowledge"),
+          "post": ("Post und Kontakte", "Mail and contacts"), "betrieb": ("Betrieb", "Operation"),
+          "modell": ("Modelle", "Models"), "speicher": ("Speicher", "Storage"), "aussen": ("Draußen", "Outside")}
+FARBE = {**dict.fromkeys(("geraet", "apps", "kanaele", "lautsprecher", "mcpc"), "geraet"),
+         **dict.fromkeys(("middleware", "zugang", "sicherheit", "waechter"), "zugang"),
+         **dict.fromkeys(("vorbereiten", "weiche", "antwort", "werkzeuge"), "gespraech"),
+         "wissen": "wissen", "post": "post", "betrieb": "betrieb", "werkstatt": "betrieb",
+         **dict.fromkeys(("llm", "asr", "tts", "bild", "teilen"), "modell"),
+         **dict.fromkeys(("state", "users", "ablage", "journal"), "speicher"), "aussen": "aussen", "internet": "aussen"}
+SYMBOL = {"geraet": "💻", "apps": "📱", "kanaele": "💬", "lautsprecher": "🔊", "mcpc": "🧩", "middleware": "🚦",
+          "zugang": "🔑", "sicherheit": "🛡️", "waechter": "🧱", "vorbereiten": "📝", "weiche": "🔀", "antwort": "💡",
+          "werkzeuge": "🛠️", "wissen": "📚", "post": "✉️", "betrieb": "📊", "werkstatt": "🧪", "llm": "🧠",
+          "asr": "🎙️", "tts": "🗣️", "bild": "🎨", "teilen": "🔗", "state": "🗄️", "users": "👤", "ablage": "💾",
+          "journal": "📜", "aussen": "🏠", "internet": "🌐"}
+LEGENDE = (892, 18)            # x, y of the legend's first row (14 apart)
+NUR_BEI = {"teilen": ("nur bei Spark teilen", "only with Spark split")}
 # the two doors where the devices' way enters the Spark: kind, German, English, x, y (on the edge of the zone spark)
 TUEREN = [("lan", "Heimnetz: direkt", "Home network: directly", 112, 154),
           ("net", "Unterwegs: über den Reverse-Proxy", "On the way: through the reverse proxy", 290, 154)]
@@ -473,21 +492,21 @@ LINIEN = {
     "vorbereiten>weiche": [(520, 248), (534, 248)], "weiche>antwort": [(690, 248), (704, 248)],
     "middleware>asr": [(154, 222), (154, 208), (896, 208)],
     "antwort>geraet": [(742, 222), (742, _BUS), (174, _BUS), (174, 86)],
-    "antwort>llm": [(860, 236), (884, 236), (884, 352), (896, 352)],
-    "antwort>tts": [(860, 262), (876, 262), (876, 414), (896, 414)],
-    "werkzeuge>bild": [(860, 356), (868, 356), (868, 476), (896, 476)],
-    "antwort>werkzeuge": [(782, 274), (782, 330)], "werkzeuge>wissen": [(704, 356), (690, 356)],
-    "werkzeuge>waechter": [(782, 382), (782, 436)],
-    "waechter>aussen": [(762, 488), (762, 646)], "waechter>internet": [(822, 488), (822, 734)],
-    "antwort>betrieb": [(730, 274), (730, 312), (480, 312), (480, 330)],
-    "betrieb>journal": [(442, 382), (442, 550)], "betrieb>state": [(380, 382), (380, 530), (300, 530), (300, 550)],
-    "zugang>state": [(240, 274), (240, 550)],
-    "zugang>users": [(330, 274), (330, 300), (527, 300), (527, 538), (560, 538), (560, 550)],
-    "wissen>users": [(534, 374), (527, 374), (527, 538), (560, 538), (560, 550)],
-    "werkzeuge>post": [(720, 382), (720, 420), (650, 420), (650, 436)], "post>waechter": [(690, 462), (704, 462)],
-    "post>users": [(612, 488), (612, 550)],
-    "tts>ablage": [(1052, 414), (1060, 414), (1060, 576), (1052, 576)],
-    "zugang>werkstatt": [(210, 274), (210, 462), (180, 462)],
+    "antwort>llm": [(860, 236), (884, 236), (884, 370), (896, 370)],
+    "antwort>tts": [(860, 262), (876, 262), (876, 444), (896, 444)],
+    "werkzeuge>bild": [(860, 376), (868, 376), (868, 516), (896, 516)],
+    "antwort>werkzeuge": [(782, 274), (782, 350)], "werkzeuge>wissen": [(704, 376), (690, 376)],
+    "werkzeuge>waechter": [(782, 402), (782, 476)],
+    "waechter>aussen": [(762, 528), (762, 706)], "waechter>internet": [(822, 528), (822, 794)],
+    "antwort>betrieb": [(730, 274), (730, 312), (480, 312), (480, 350)],
+    "betrieb>journal": [(442, 402), (442, 610)], "betrieb>state": [(380, 402), (380, 590), (300, 590), (300, 610)],
+    "zugang>state": [(240, 274), (240, 610)],
+    "zugang>users": [(330, 274), (330, 300), (527, 300), (527, 598), (560, 598), (560, 610)],
+    "wissen>users": [(534, 394), (527, 394), (527, 598), (560, 598), (560, 610)],
+    "werkzeuge>post": [(720, 402), (720, 440), (650, 440), (650, 476)], "post>waechter": [(690, 502), (704, 502)],
+    "post>users": [(612, 528), (612, 610)],
+    "tts>ablage": [(1052, 444), (1060, 444), (1060, 636), (1052, 636)],
+    "zugang>werkstatt": [(210, 274), (210, 502), (180, 502)],
 }
 
 # where a group lives in the picture (the node that lists it)
@@ -662,7 +681,7 @@ def data(lang="de"):
         mods = sorted(n for n, (grp, _de) in MODULE.items() if grp == gid and n in files)
         groups.append({"id": gid, "name": g[i], "text": g[2 + i], "node": ORT.get(gid, ""),
                        "modules": [{"name": n, "file": files[n], "text": _en_line(n) if en else MODULE[n][1]} for n in mods]})
-    nodes = [{"id": k, "x": v[0], "y": v[1], "name": v[2 + i], "sub": v[4], "group": v[5], "text": v[6 + i], "files": v[8],
+    nodes = [{"id": k, "x": v[0], "y": v[1], "name": v[2 + i], "sub": v[4], "group": v[5], "farbe": FARBE[k], "symbol": SYMBOL[k], "nur": NUR_BEI.get(k, ("", ""))[i], "text": v[6 + i], "files": v[8],
               "store": k in ("state", "users", "ablage", "journal"), "page": k in technik_knoten.SEITEN_DATEN} for k, v in KNOTEN.items()]
     steps = [{"name": s[i], "text": s[2 + i], "code": s[4], "nodes": s[5], "edges": s[6]} for s in SCHRITTE]
     rows = []
@@ -678,7 +697,8 @@ def data(lang="de"):
            "zones": [{"id": z, "kind": v[0], "name": v[1 + i], "x": v[3], "y": v[4], "w": v[5], "h": v[6], "lx": v[7]}
                      for z, v in ZONEN.items()],
            "doors": [{"kind": t[0], "name": t[1 + i], "x": t[3], "y": t[4]} for t in TUEREN],
-           "lines": {k: [list(p) for p in v] for k, v in LINIEN.items()}}
+           "lines": {k: [list(p) for p in v] for k, v in LINIEN.items()},
+           "legend": {"x": LEGENDE[0], "y": LEGENDE[1], "kinds": [{"kind": k, "name": v[i]} for k, v in FARBEN.items()]}}
     return {"version": version, "groups": groups, "nodes": nodes, "edges": [list(e) for e in KANTEN], "steps": steps, "pic": pic,
             "storage": rows, "areas": {k: v[1 if en else 0] for k, v in dateien.AREAS.items()}}
 
@@ -721,7 +741,7 @@ def mermaid(lang="de"):
     def node(k):
         v = KNOTEN[k]
         shape = ('[("', '")]') if k in ("state", "users", "ablage", "journal") else ('["', '"]')
-        return f'{k}{shape[0]}{v[2 + i]}<br/>{v[4]}{shape[1]}'
+        return f'{k}{shape[0]}{v[2 + i]}<br/>{v[4].replace(chr(10), "<br/>")}{shape[1]}'
 
     def parent(z):
         outer = [y for y in ZONEN if _inner(z, y)]

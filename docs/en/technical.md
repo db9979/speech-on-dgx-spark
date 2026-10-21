@@ -120,7 +120,7 @@ When several people talk at once, chosen profiles get their answer first (since 
 
 ## How the chat is built
 
-How the parts work together, the way of a request and every storage place are in [Architecture and data flow](architecture.md) and in the panel under **Status → Architecture**.
+How the parts work together, the way of a request and every storage place are in [Architecture and data flow](architecture.md) and in the panel under **Status → Architecture**. In the picture every box has a colour bar on the left for its kind (legend top right: devices, access and protection, conversation, knowledge, mail and contacts, operation, models, storage, outside) and a symbol before its line; arrows show the direction, a tab marks what exists only with the Spark split (V01.0.915, `technik.FARBE`, `SYMBOL`, `NUR_BEI`). `test_technik` checks that every text fits its box and no line runs across a box.
 
 One answer of the assistant runs through three files in `app/panel/`:
 

@@ -25,7 +25,7 @@ flowchart TB
   subgraph z_spark["DGX Spark · inside"]
     subgraph z_panel["Panel :31080 / :31443 · with the Spark split on its own computer"]
       middleware["Middleware<br/>panel.py"]
-      sicherheit["Security<br/>Schichten · Grenzen"]
+      sicherheit["Security<br/>alle Schichten"]
       zugang["Login, profile<br/>guard · profiles"]
       vorbereiten["Prepare request<br/>chat_turn.prepare"]
       weiche["Switch<br/>intent.py"]
@@ -41,13 +41,13 @@ flowchart TB
       llm["Language model<br/>:31006 → :31016"]
       asr["Speech recognition<br/>:31001 → :31011"]
       tts["Speech output<br/>:31002 → :31012"]
-      bild["Pictures and music<br/>:31005 · :31004"]
+      bild["Pictures and music<br/>:31005 → :31015<br/>:31004 → :31014"]
       teilen["Spark split<br/>TLS-Tor · :31007"]
     end
     subgraph z_speicher["Storage"]
       state[("state/<br/>global")]
       users[("users/ID/<br/>pro Profil")]
-      ablage[("voices/, backups/<br/>Stimmen, Sicherungen")]
+      ablage[("voices/, backups/<br/>Stimmen, Backups")]
       journal[("journald<br/>speech-spark")]
     end
   end

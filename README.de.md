@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.915** Technik-Schaubild schöner: Farbstreifen je Art mit Legende, Symbol vor jeder Zeile, Pfeile mit Richtung und hellere Linien, Schild „nur bei Spark teilen“, mehr Luft zwischen den Reihen; Wächter: jeder Kasten hat Farbe und Symbol
 - **V01.0.914** Technik-Schaubild ohne Überlauf: jeder Text passt in seinen Kasten (Post und Kontakte, Lautsprecher/Telefon, Bilder und Musik gekürzt, Schrift etwas kleiner); neue Wächter in test_technik: Text passt (de und en), keine Linie quer durch einen Kasten
 - **V01.0.913** Begleiter-Fenster geordnet: drei Reiter Heute, Meldungen und Rechner unter den Kacheln, nur der Reiter rollt und das Fenster bleibt im Bildschirm, kleine Kacheln zu viert, je Abschnitt die ersten drei mit „Alle n zeigen“, neue Meldung öffnet „Meldungen“, am Mac jetzt auch Meldungen im Fenster (Windows und Mac)
 - **V01.0.912** Erst lokal suchen findet auch mit Tippfehler: ein langes Wort darf um ein bis zwei Buchstaben vertippt sein („Dresdner Fraunkirche“ findet den Kiwix-Artikel), ohne Titel fragt der Spark gekürzte Wörter nach, und der Titel mit den meisten Wörtern der Frage gewinnt; Archiv-Links auf Wunsch mit eigenem Namen (Adresse für Links)
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.908** NAS-Anzeige richtig: der Speicherpool heißt „an Volumes vergeben“ statt „100 % belegt“, keine Fehlwarnung mehr; USB-Platten an der NAS mit Belegung und freiem Platz
 - **V01.0.907** Wissenskarte schneller: eigene Tagesgrenze „Karte: Dokumente pro Tag und Profil“ (5 bis 500, Standard 200 statt der 40 des Wissensbuchs), so ist der Rückstand eines vollen Wissensbuchs in rund einem Tag verbunden
 - **V01.0.906** Mail wie ein großes Mailprogramm: Verschieben ohne Neuladen der Ordnerliste, Regel-Vorschläge nachts aus deinem KI-Ordner, auch als Karte im Assistenten, Unterhaltung unter einer Mail, nur der eigene Text ohne Zitate und Signatur, Später senden, Bestätigungscodes als Mitteilung (eigener Schalter, nie über Telegram) und Mail-Statistik; Panel, iPhone und Begleiter
-- **V01.0.905** Doku aktuell, Teil 5 (Technik): eigener Kasten „Post, Kalender, Kontakte“ im Bild unter Zustand → Technik mit Knoten-Seite (Seite, Frage oder App; Abruf über den Wächter; Vorrat versiegelt; Antwort mit Stand; Ändern nur mit Vorschau oder If-Match; Tür für Kalender- und Kontakte-Apps), die Mail-, Kalender- und Kontakte-Module bilden dort eine eigene Gruppe; das README-Schaubild zeigt die eigenen Seiten und Kalender- und Kontakte-Apps als Weg hinein
 
 
 

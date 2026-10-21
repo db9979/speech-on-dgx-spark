@@ -11397,7 +11397,7 @@
 "file": "Technik und Fehlersuche",
 "head": "Aufbau des Chats",
 "title": "Aufbau des Chats",
-"text": "Wie die Teile zusammenspielen, der Weg einer Anfrage und alle Speicherorte stehen in Architektur und Datenfluss und im Panel unter Zustand → Technik."
+"text": "Wie die Teile zusammenspielen, der Weg einer Anfrage und alle Speicherorte stehen in Architektur und Datenfluss und im Panel unter Zustand → Technik. Im Bild hat jeder Kasten links einen Farbstreifen für seine Art (Legende rechts oben: Geräte, Zugang und Schutz, Gespräch, Wissen, Post und Kontakte, Betrieb, Modelle, Speicher, Draußen) und ein Symbol vor seiner Zeile; Pfeile zeigen die Richtung, ein Schild markiert, was es nur bei Spark teilen gibt (V01.0.915, technik.FARBE, SYMBOL, NUR_BEI). test_technik prüft, dass jeder Text in seinen Kasten passt und keine Linie quer durch einen Kasten läuft."
 },
 {
 "lang": "de",
@@ -22677,7 +22677,7 @@
 "file": "Technical details and troubleshooting",
 "head": "How the chat is built",
 "title": "How the chat is built",
-"text": "How the parts work together, the way of a request and every storage place are in Architecture and data flow and in the panel under Status → Architecture."
+"text": "How the parts work together, the way of a request and every storage place are in Architecture and data flow and in the panel under Status → Architecture. In the picture every box has a colour bar on the left for its kind (legend top right: devices, access and protection, conversation, knowledge, mail and contacts, operation, models, storage, outside) and a symbol before its line; arrows show the direction, a tab marks what exists only with the Spark split (V01.0.915, technik.FARBE, SYMBOL, NUR_BEI). test_technik checks that every text fits its box and no line runs across a box."
 },
 {
 "lang": "en",

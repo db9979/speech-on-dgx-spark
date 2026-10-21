@@ -18,12 +18,20 @@ function tkSvg(lit,litEdges,dim){const d=TK.d,P=d.pic,[W,H]=P.size,[BW,BH]=P.box
   const has=(a,b)=>litEdges.includes(a+'>'+b)||litEdges.includes(b+'>'+a);
   const way={lan:t('Heimnetz','home'),net:t('unterwegs','on the way')};
   const pills=n=>(P.rein[n.id]||[]).map((k,j)=>`<g class="tk-pill ${esc(k)}"><rect x="${n.x+j*74}" y="${n.y+BH+5}" width="70" height="14" rx="7"/><text x="${n.x+j*74+35}" y="${n.y+BH+15}">${esc(way[k]||k)}</text></g>`).join('');
+  const lg=P.legend,legend=`<g class="tk-legend">`+lg.kinds.map((k,j)=>`<g class="c-${esc(k.kind)}"><rect class="tk-bar" x="${lg.x}" y="${lg.y+j*14-8}" width="4" height="10" rx="2"/><text x="${lg.x+10}" y="${lg.y+j*14}">${esc(k.name)}</text></g>`).join('')+`</g>`;
+  const tab=n=>n.nur?`<g class="tk-tab"><rect x="${n.x+BW-112}" y="${n.y-7}" width="104" height="14" rx="7"/><text x="${n.x+BW-60}" y="${n.y+3}">${esc(n.nur)}</text></g>`:'';
   return`<svg class="tk-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(t('Teile des Spark, wo sie liegen, und ihre Verbindungen','Parts of the Spark, where they live, and their connections'))}">`+
+    `<defs><marker id="tkah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,1L9,5L0,9z"/></marker></defs>`+
     P.zones.map(z=>`<g class="tk-zone ${esc(z.kind)}"><rect x="${z.x}" y="${z.y}" width="${z.w}" height="${z.h}" rx="14"/><text x="${z.lx}" y="${z.y+16}">${esc(z.name)}</text></g>`).join('')+
     `<g class="tk-edges${litEdges.length?' pick':''}">`+d.edges.map(([a,b])=>`<path class="tk-edge${has(a,b)?' on':''}${b==='internet'?' net':b==='aussen'?' lan':''}" d="${tkLine(a,b)}"/>`).join('')+`</g>`+
     P.doors.map(r=>`<g class="tk-door ${esc(r.kind)}"><rect x="${r.x}" y="${r.y-9}" width="${Math.round(r.name.length*6.3+20)}" height="18" rx="9"/><text x="${r.x+10}" y="${r.y+4}">${esc(r.name)}</text></g>`).join('')+
-    d.nodes.map(n=>`<g class="tk-node${n.store?' store':''}${n.id==='teilen'?' opt':''}${n.id===TK.sel&&TK.view==='bild'?' sel':''}${lit.includes(n.id)?' lit':''}${dim&&!lit.includes(n.id)?' dim':''}" data-tkn="${esc(n.id)}" tabindex="0" role="button" aria-label="${esc(n.name)}">`+
-      `<rect x="${n.x}" y="${n.y}" width="${BW}" height="${BH}" rx="${n.store?6:12}"/><text x="${n.x+12}" y="${n.y+22}">${esc(n.name)}</text><text class="tk-sub" x="${n.x+12}" y="${n.y+39}">${esc(n.sub)}</text></g>`+pills(n)).join('')+'</svg>'}
+    legend+d.nodes.map(n=>`<g class="tk-node c-${esc(n.farbe)}${n.store?' store':''}${n.nur?' opt':''}${n.id===TK.sel&&TK.view==='bild'?' sel':''}${lit.includes(n.id)?' lit':''}${dim&&!lit.includes(n.id)?' dim':''}" data-tkn="${esc(n.id)}" tabindex="0" role="button" aria-label="${esc(n.name)}">`+
+      `<rect x="${n.x}" y="${n.y}" width="${BW}" height="${BH}" rx="${n.store?6:12}"/><rect class="tk-bar" x="${n.x+3}" y="${n.y+9}" width="4" height="${BH-18}" rx="2"/>`+
+      tkTexts(n)+tab(n)+`</g>`+pills(n)).join('')+'</svg>'}
+// name, symbol and line of a box; a line with "\n" (Bilder und Musik: four ports) takes two rows under a higher name
+function tkTexts(n){const sub=String(n.sub).split('\n'),two=sub.length>1,y0=two?17:22;
+  return`<text x="${n.x+12}" y="${n.y+y0}">${esc(n.name)}</text><text class="tk-sym" x="${n.x+12}" y="${n.y+y0+18}">${esc(n.symbol)}</text>`+
+    sub.map((l,k)=>`<text class="tk-sub" x="${n.x+28}" y="${n.y+y0+17+k*13}">${esc(l)}</text>`).join('')}
 function tkRows(n){return TK.d.storage.filter(r=>tkWriter(r)===n.id)}
 // which box of the picture writes a storage place (for the jump from the list and the count in the detail)
 function tkWriter(r){if(r.art==='state')return'state';if(r.art==='system')return/journald/.test(r.pfad)?'journal':/voices|backups/.test(r.pfad)?'ablage':'';return'users'}

@@ -40,8 +40,16 @@ html.tk-lock{overflow:hidden}
 .tk-door.lan rect{stroke:var(--tk-lan)}.tk-door.lan text{fill:var(--tk-lan)}.tk-door.net rect{stroke:var(--tk-net)}.tk-door.net text{fill:var(--tk-net)}
 .tk-pill rect{fill:none;stroke-width:1}.tk-pill text{font:600 9.5px var(--font,system-ui);text-anchor:middle}
 .tk-pill.lan rect{stroke:var(--tk-lan)}.tk-pill.lan text{fill:var(--tk-lan)}.tk-pill.net rect{stroke:var(--tk-net)}.tk-pill.net text{fill:var(--tk-net)}
-.tk-node.opt rect{stroke-dasharray:5 4}
-.tk-edge{stroke:var(--mut);stroke-opacity:.7;stroke-width:1.6;fill:none;stroke-linejoin:round}
+.tk-node.opt>rect:first-child{stroke-dasharray:5 4}
+.tk-svg .tk-node .tk-tab rect{fill:var(--card);stroke:var(--tk-c);stroke-width:1}.tk-svg .tk-node .tk-tab text{font:600 9px var(--font,system-ui);fill:var(--tk-c);text-anchor:middle}
+.tk-svg .tk-node .tk-bar,.tk-svg .tk-legend .tk-bar{fill:var(--tk-c);stroke:none}
+.tk-node .tk-sym{font:11px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif}
+.tk-legend text{fill:var(--mut);font:600 9.5px var(--font,system-ui)}
+/* one colour per kind (technik.FARBEN); mid tones that read on light and dark */
+.c-geraet{--tk-c:#64748b}.c-zugang{--tk-c:#6366f1}.c-gespraech{--tk-c:#a855f7}.c-wissen{--tk-c:#10b981}.c-post{--tk-c:#f43f5e}
+.c-betrieb{--tk-c:#0ea5e9}.c-modell{--tk-c:#06b6d4}.c-speicher{--tk-c:#d97706}.c-aussen{--tk-c:#94a3b8}
+.tk-edge{stroke:var(--mut);stroke-opacity:.5;stroke-width:1.5;fill:none;stroke-linejoin:round;marker-end:url(#tkah)}
+#tkah path{fill:context-stroke}
 .tk-edge.lan{stroke:var(--tk-lan)}.tk-edge.net{stroke:var(--tk-net)}
 .tk-edges.pick .tk-edge:not(.on){stroke-opacity:.16}
 .tk-edge.on{stroke:var(--acc2);stroke-width:2.6;stroke-dasharray:7 5;animation:tkflow 1s linear infinite}
