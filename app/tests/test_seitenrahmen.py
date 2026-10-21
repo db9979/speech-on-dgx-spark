@@ -15,7 +15,7 @@ from tests.test_ui_browser import async_playwright, browser_ok, chromium
 helpers.start()
 
 STATIC = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "panel", "static")
-ZUSTAND = ("mon", "live", "test", "logs", "verb", "usage", "models", "tech")
+ZUSTAND = ("mon", "live", "test", "werk", "logs", "verb", "usage", "models", "tech")
 OTHERS = ("feat", "route", "int", "prof", "apps", "cfg")
 
 

@@ -24,7 +24,7 @@ a time (at most WINDOW seconds off) and a one-time number (each is taken once).
     weiter                      ends this computer's Wartungspause ("Weiter" on the panel)
     update                      starts this computer's own update (speech-spark-update with its own rules: the newest
                                 version with passed GitHub tests, never a version the panel names)
-    werkstatt                   what Funktionen → Werkstatt needs from here (werkstatt.daten: results without patches)
+    werkstatt                   what Zustand → Werkstatt needs from here (werkstatt.daten: results without patches)
     werkstatt_auftrag {art, text}   an order with the fixed rules (werkstatt.anfragen), then speech-spark-werkstatt
     werkstatt_eins <id>         one order with its text and patch
     werkstatt_weg <id>          deletes one order

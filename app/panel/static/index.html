@@ -258,12 +258,7 @@
       <div class="setrow" data-show="chat.werkstatt" style="margin-left:18px"><div class="lbl"><b>Jede Nacht testen</b><span>Einmal pro Nacht alle Selbsttests wie auf GitHub; nach einem Modellwechsel danach die Code-Messung.</span></div><label class="tgl"><input type="checkbox" id="chat.werkstatt_nacht"><i></i></label></div>
       <div data-show="chat.werkstatt" style="margin-left:36px">
         <div data-show="chat.werkstatt_nacht"><label for="chat.werkstatt_stunde">Start ab (Uhr)</label><input class="num" id="chat.werkstatt_stunde" type="number" min="0" max="23"><div class="fh">0 bis 23, Standard 3. Die Messung startet bis 5 Stunden danach.</div></div>
-        <div id="wkbox" data-nodirty><div class="fh" id="wkstand" role="status"></div>
-          <div class="row"><button class="b" id="wktests" type="button">Testlauf</button><button class="b" id="wkmessen" type="button">Code-Messung</button></div>
-          <label for="wktext">Problem für Diagnose oder Reparatur</label><textarea id="wktext" rows="3" maxlength="2000" placeholder="Was passiert, was sollte passieren?"></textarea>
-          <div class="row"><button class="b" id="wkdiag" type="button">Diagnose</button><button class="b" id="wkrep" type="button">Reparatur</button></div>
-          <div class="fh">Diagnose liest nur. Reparatur ändert die Kopie und zeigt den Patch mit den Tests der geänderten Dateien; übernehmen tut ihn ein Mensch. Beides und die Code-Messung fragen nach dem Code.</div>
-          <div id="wkmess" class="fh"></div><div id="wklist"></div><pre id="wkpatch" class="wkpatch" hidden></pre></div>
+        <div class="fh">Testen, untersuchen und reparieren unter Zustand → Werkstatt.</div>
       </div>
       <div class="setrow"><div class="lbl"><b>Einstellungs-Assistent</b><span>Fehler, 👎 und unklare Fragen werden Fälle mit Vorschlägen aus einem festen Katalog. Übernehmen nur du, unter Zustand → Verbessern.</span></div><label class="tgl"><input type="checkbox" id="chat.berater"><i></i></label></div>
       <div class="setrow" data-show="chat.berater" style="margin-left:18px"><div class="lbl"><b>👍/👎 unter Antworten</b><span>Profile können eine Antwort bewerten (fünf Gründe, kurzer Text) oder „Das war falsch“ sagen.</span></div><label class="tgl"><input type="checkbox" id="chat.bewerten"><i></i></label></div>
@@ -1058,6 +1053,14 @@
 </section>
 
 <section id="live"><div class="lv" id="lvroot"></div></section>
+<section id="werk"><div class="card ld-box ld-frame" id="wkbox">
+  <div class="ld-head"><h2>Werkstatt</h2><span class="mut wknacht" id="wknacht"></span></div>
+  <div class="pintro">Prüft und repariert eine abgeschottete Kopie des Spark-Codes auf dem Modell-Rechner: ohne deine Daten, ohne Internet. Dein Spark selbst bleibt unberührt, eingespielt wird nie etwas.</div>
+  <div class="note" id="wkoff" hidden>Die Werkstatt ist aus. Einschalten unter Funktionen → Werkstatt.</div>
+  <div class="wkacts" id="wkacts"></div>
+  <div class="ld-split"><div class="ld-list" id="wklist"></div><div class="ld-detail" id="wkdetail" hidden></div></div>
+  <div class="mut" id="wkmsg" role="status"></div>
+</div></section>
 <section id="verb"><div class="card ld-box" id="vbbox">
   <div class="ld-head"><h2>Verbessern</h2><button class="b" type="button" id="vbrun">Jetzt nachsehen</button></div>
   <div class="pintro">Fehler, 👎 und unklare Fragen werden Fälle. Der Spark schlägt Änderungen aus einem festen Katalog vor, prüft sie auf dem Prüfstand und schaut nach 24 Stunden, ob sie geholfen haben. Nichts ändert sich, bevor du übernimmst.</div>

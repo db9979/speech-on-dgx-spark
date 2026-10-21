@@ -32,6 +32,7 @@
 #   speech-spark teilen modelle-update  on the panel computer: the model computer's own update (update.sh runs it first)
 #   speech-spark werkstatt [status]  the Werkstatt (install.sh --werkstatt): OpenCode, code measurement, last results
 #   speech-spark werkstatt tests|messen|diagnose "<text>"|reparatur "<text>"  start one order in the sandbox
+#   speech-spark werkstatt nachtest "<test> …"  only these tests again (the red ones of a test run)
 #   speech-spark werkstatt ergebnis <id>  text and change of one order
 set -euo pipefail
 # runuser, nft, systemctl live in /usr/sbin on Debian and Raspberry Pi OS; a caller with PATH=/usr/bin:/bin (teilen.py
@@ -1095,7 +1096,7 @@ WERK_UNIT=speech-spark-werkstatt
 WERK_LAUF=speech-spark-werkstatt-lauf
 werkstatt_lauf() {   # $1 = the order (JSON, checked by werkstatt.py), $2 = its kind
   local props=()
-  case "$2" in tests|messen|diagnose|reparatur) ;; *) echo "werkstatt: abgelehnt art"; return 1 ;; esac
+  case "$2" in tests|nachtest|messen|diagnose|reparatur) ;; *) echo "werkstatt: abgelehnt art"; return 1 ;; esac
   mapfile -t props < <(as_panel_user ../werkstatt.py sandbox "$2")
   [ "${#props[@]}" -gt 20 ] || { echo "werkstatt: abgelehnt sandbox"; return 1; }
   [ -x "$PREFIX/venv-panel/bin/python" ] || { echo "werkstatt: abgelehnt python"; return 1; }
@@ -1110,18 +1111,18 @@ cmd_werkstatt() {
   case "${1:-status}" in
     status) as_panel_user ../werkstatt.py status ;;
     ergebnis) [ $# -ge 2 ] || die "speech-spark werkstatt ergebnis <id>"; as_panel_user ../werkstatt.py ergebnis "$2" ;;
-    tests|messen|diagnose|reparatur)
+    tests|nachtest|messen|diagnose|reparatur)
       need_root werkstatt "$1"
       id "spark-werkstatt" >/dev/null 2>&1 || die "the Werkstatt is not installed: sudo ./install.sh --werkstatt"
       im_gang "$WERK_UNIT" "$WERK_LAUF" && die "an order is running already: sudo speech-spark logs werkstatt"
       as_panel_user ../werkstatt.py wunsch "$1" "${2:-}" || die "refused (see the line above)"
       systemctl start --no-block "$WERK_UNIT"
-      echo "Der Auftrag läuft (auch wenn du dieses Fenster schließt). Ergebnis: Funktionen → Werkstatt oder sudo speech-spark werkstatt" ;;
+      echo "Der Auftrag läuft (auch wenn du dieses Fenster schließt). Ergebnis: Zustand → Werkstatt oder sudo speech-spark werkstatt" ;;
     intern)   # inside $WERK_UNIT only
       [ "${INVOCATION_ID:-}" ] || die "only inside its own unit"
       a=$(as_panel_user ../werkstatt.py wunsch-nehmen) || { echo "werkstatt: abgelehnt wunsch"; return 1; }
       werkstatt_lauf "$a" "$(jq -r .art <<<"$a")" ;;
-    *) die "speech-spark werkstatt [status]|tests|messen|diagnose \"<text>\"|reparatur \"<text>\"|ergebnis <id>" ;;
+    *) die "speech-spark werkstatt [status]|tests|nachtest \"<test> …\"|messen|diagnose \"<text>\"|reparatur \"<text>\"|ergebnis <id>" ;;
   esac
 }
 
@@ -1143,6 +1144,6 @@ case "${1:-}" in
   zurueckholen) shift; cmd_zurueckholen "$@" ;;
   gehaeuse) shift; cmd_gehaeuse "$@" ;;
   werkstatt) shift; cmd_werkstatt "$@" ;;
-  ""|-h|--help|help) sed -n '2,35p' "$0" | sed 's/^# \{0,1\}//' ;;
+  ""|-h|--help|help) sed -n '2,36p' "$0" | sed 's/^# \{0,1\}//' ;;
   *) die "unknown command: $1 (see: speech-spark help)" ;;
 esac

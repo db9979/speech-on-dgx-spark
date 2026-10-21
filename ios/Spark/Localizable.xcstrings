@@ -15270,6 +15270,186 @@
           }
         }
       }
+    },
+    "Ein Auftrag läuft": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An order is running"
+          }
+        }
+      }
+    },
+    "Werkstatt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Workshop"
+          }
+        }
+      }
+    },
+    "Rote Tests": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Red tests"
+          }
+        }
+      }
+    },
+    "Nur die roten noch mal testen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Test only the red ones again"
+          }
+        }
+      }
+    },
+    "Alles testen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Test everything"
+          }
+        }
+      }
+    },
+    "Alle Selbsttests laufen in einer abgeschotteten Kopie auf dem Modell-Rechner, ohne Sprachmodell. Dein Spark bleibt unberührt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All self-tests run in a sealed-off copy on the model computer, without a language model. Your Spark stays untouched."
+          }
+        }
+      }
+    },
+    "Problem untersuchen oder reparieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Look into a problem or repair it"
+          }
+        }
+      }
+    },
+    "Rot heißt: der Test hat in der Kopie nicht bestanden. Ein Update gibt es nur für Versionen, die auf GitHub grün waren; meist fehlt der Kopie etwas (Internet, Daten, Browser). Dein Spark läuft davon unberührt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Red means: the test did not pass in the copy. An update only comes for versions that were green on GitHub; mostly the copy lacks something (internet, data, browser). Your Spark is not affected."
+          }
+        }
+      }
+    },
+    "Noch keine Ergebnisse.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No results yet."
+          }
+        }
+      }
+    },
+    "Ergebnis": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Result"
+          }
+        }
+      }
+    },
+    "grün": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "green"
+          }
+        }
+      }
+    },
+    "rot": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "red"
+          }
+        }
+      }
+    },
+    "wackelig": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "flaky"
+          }
+        }
+      }
+    },
+    "Version": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version"
+          }
+        }
+      }
+    },
+    "alle grün": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "all green"
+          }
+        }
+      }
+    },
+    "Vorschlag": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proposal"
+          }
+        }
+      }
+    },
+    "Dieses Ergebnis löschen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete this result?"
+          }
+        }
+      }
+    },
+    "Die Werkstatt ist aus. Einschalten unter Funktionen → Werkstatt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The workshop is off. Switch it on under Features → Workshop."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

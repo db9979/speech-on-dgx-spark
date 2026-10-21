@@ -3373,7 +3373,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "1. Auftrag oder Nachtregel: Ein Admin tippt Testlauf, Code-Messung, Diagnose oder Reparatur an (werkstattseite.auftrag_geben; die drei mit Sprachmodell brauchen den Code der zweiten Stufe). Ist „Jede Nacht testen“ an, startet werkstattseite.nacht_art in den ersten 5 Stunden nach der eingestellten Stunde einen Testlauf und nach einem Modellwechsel eine Code-Messung. 2. Feste Regeln erfüllt?: werkstatt.pruefen nimmt nur eine bekannte Art, nichts läuft schon, OpenCode und das eigene Sprachmodell sind da, wo die Art sie braucht. Der Text des Admins wird gesäubert und eingezäunt: er beschreibt nur das Problem. 3. Wunsch an root: Das Panel schreibt einen Wunsch und darf per sudo nur die feste Einheit speech-spark-werkstatt starten. werkstatt.wunsch_nehmen liest ihn als root genau einmal und prüft alles noch einmal. 4. Sandbox: werkstatt.sandbox startet den Auftrag mit systemd-run als Nutzer spark-werkstatt: nur sein eigener Ordner ist beschreibbar, Daten, Einstellungen und Schlüssel des Spark sind unsichtbar, Netz nur zu diesem Rechner und dort per nftables nur zum LLM-Tor (prüft den Schlüssel) und zu den freien Ports der eigenen Tests, nie zu einer Engine oder zum Panel; ohne diese Sper"
+"text": "1. Auftrag oder Nachtregel: Ein Admin tippt auf der Seite Zustand → Werkstatt „Alles testen“, „Problem untersuchen“, „Reparatur versuchen“ oder „Sprachmodell messen“ an (werkstattseite.auftrag_geben; die drei mit Sprachmodell brauchen den Code der zweiten Stufe). „Nur die roten noch mal testen“ nennt nur das Ergebnis; die Namen nimmt werkstattseite.nachtest_namen aus dem gespeicherten Ergebnis, nie von der Seite. Ist „Jede Nacht testen“ an, startet werkstattseite.nacht_art in den ersten 5 Stunden nach der eingestellten Stunde einen Testlauf und nach einem Modellwechsel eine Code-Messung. 2. Feste Regeln erfüllt?: werkstatt.pruefen nimmt nur eine bekannte Art, nichts läuft schon, OpenCode und das eigene Sprachmodell sind da, wo die Art sie braucht. Der Text des Admins wird gesäubert und eingezäunt: er beschreibt nur das Problem. „Rote Tests noch mal“ nimmt nur Testnamen, jeden einmal, höchstens 30. 3. Wunsch an root: Das Panel schreibt einen Wunsch und darf per sudo nur die feste Einheit speech-spark-werkstatt starten. werkstatt.wunsch_nehmen liest ihn als root genau einmal und prüft alles noch einmal. 4. Sandbox: werkstatt.sandbox startet den Auftrag mit systemd-run als Nutzer spar"
 },
 {
 "lang": "de",
@@ -3381,7 +3381,15 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "re startet kein Auftrag. Speicher- und Zeitgrenze je Art (werkstatt.GRENZE_S). 5. Kopie des Codes gemacht?: werkstatt.kopie klont den Klon des Installers, nie von GitHub. Weil er root gehört, nennt werkstatt.git_umgebung genau diesen Ordner in einer eigenen git-Datei der Sandbox als sicher. 6. Nur ein Testlauf?: Der Testlauf braucht weder OpenCode noch das Sprachmodell; er geht gleich zu den Tests. 7. OpenCode mit festen Rechten: werkstatt.rechte: Diagnose liest nur, Reparatur darf Dateien der Kopie ändern und die Selbsttests starten; kein Web, kein git push, jeder andere Befehl abgelehnt. Das Sprachmodell fragt OpenCode über das LLM-Tor ganz hinten in der Reihe, damit Gespräche vorgehen. 8. Selbsttests: werkstatt.testlauf lässt die Selbsttests der Kopie laufen wie GitHub; wer beim zweiten Versuch grün wird, zählt als wackelig. 9. Ergebnis als Daten: werkstatt.pruefe_ergebnis nimmt nur bekannte Felder, Zahlen im Rahmen und Wörter aus festen Listen; ein Patch über 200000 Zeichen wird gekürzt. Die Seite zeigt alles nur als Text. 10. Der Admin entscheidet: Den Patch gibt der Admin einem Claude-Thread oder einem Menschen; die Werkstatt spielt nie etwas ein und pusht nie."
+"text": "k-werkstatt: nur sein eigener Ordner ist beschreibbar, Daten, Einstellungen und Schlüssel des Spark sind unsichtbar, Netz nur zu diesem Rechner und dort per nftables nur zum LLM-Tor (prüft den Schlüssel) und zu den freien Ports der eigenen Tests, nie zu einer Engine oder zum Panel; ohne diese Sperre startet kein Auftrag. Speicher- und Zeitgrenze je Art (werkstatt.GRENZE_S). 5. Kopie des Codes gemacht?: werkstatt.kopie klont den Klon des Installers, nie von GitHub. Weil er root gehört, nennt werkstatt.git_umgebung genau diesen Ordner in einer eigenen git-Datei der Sandbox als sicher. 6. Nur Tests?: Alles testen und „Rote Tests noch mal“ brauchen weder OpenCode noch das Sprachmodell; sie gehen gleich zu den Tests. 7. OpenCode mit festen Rechten: werkstatt.rechte: Diagnose liest nur, Reparatur darf Dateien der Kopie ändern und die Selbsttests starten; kein Web, kein git push, jeder andere Befehl abgelehnt. Das Sprachmodell fragt OpenCode über das LLM-Tor ganz hinten in der Reihe, damit Gespräche vorgehen. 8. Selbsttests: werkstatt.testlauf lässt die Selbsttests der Kopie laufen wie GitHub; wer beim zweiten Versuch grün wird, zählt als wackelig. werkstatt.namen_testen lässt bei „Rote T"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Ablauf",
+"title": "Ablauf",
+"text": "ests noch mal“ jeden genannten Test einzeln in einem eigenen Prozess laufen: jetzt grün oder weiter rot. 9. Ergebnis als Daten: werkstatt.pruefe_ergebnis nimmt nur bekannte Felder, Zahlen im Rahmen und Wörter aus festen Listen; ein Patch über 200000 Zeichen wird gekürzt. Die Seite zeigt alles nur als Text, dazu mit festen Sätzen, was das Ergebnis heißt und was als Nächstes geht. 10. Der Admin entscheidet: Den Patch gibt der Admin einem Claude-Thread oder einem Menschen; die Werkstatt spielt nie etwas ein und pusht nie."
 },
 {
 "lang": "de",
@@ -3389,7 +3397,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Beispiele",
-"text": "Beispiele: Testlauf in der Nacht: Grün, rot und wackelig stehen unter Funktionen → Werkstatt. · Reparatur vorschlagen: Ein Patch mit Testergebnis zum Ansehen. · Kein eigenes Sprachmodell: Abgelehnt, bevor etwas startet."
+"text": "Beispiele: Testlauf in der Nacht: Grün, rot und wackelig stehen unter Zustand → Werkstatt. · Rote Tests noch mal: Jeder rote Test einzeln: jetzt grün oder weiter rot. · Reparatur vorschlagen: Ein Patch mit Testergebnis zum Ansehen. · Kein eigenes Sprachmodell: Abgelehnt, bevor etwas startet."
 },
 {
 "lang": "de",
@@ -3397,7 +3405,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 600 s darf ein Wunsch alt sein (Schritt 3) - 2000 Zeichen höchstens im Auftrag (Schritt 2) - 4 Teile des Testlaufs gleichzeitig (Schritt 8) - 20 Ergebnisse bleiben (Schritt 9) - 200000 Zeichen eines Patches, mehr wird gekürzt (Schritt 9) - 5 h nach der Stunde darf die Nacht starten (Schritt 1)"
+"text": "- 600 s darf ein Wunsch alt sein (Schritt 3) - 2000 Zeichen höchstens im Auftrag (Schritt 2) - 4 Teile des Testlaufs gleichzeitig (Schritt 8) - 30 Testnamen höchstens je Ergebnis und „noch mal“ (Schritt 2) - 20 Ergebnisse bleiben (Schritt 9) - 200000 Zeichen eines Patches, mehr wird gekürzt (Schritt 9) - 5 h nach der Stunde darf die Nacht starten (Schritt 1)"
 },
 {
 "lang": "de",
@@ -3405,7 +3413,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Einstellen",
 "title": "Einstellen",
-"text": "- Auf dem Modell-Rechner einmal sudo ./install.sh --werkstatt (OpenCode mit fester Version und Prüfsumme). - Funktionen → Werkstatt: an und aus, „Jede Nacht testen“ mit der Startstunde."
+"text": "- Auf dem Modell-Rechner einmal sudo ./install.sh --werkstatt (OpenCode mit fester Version und Prüfsumme). - Funktionen → Werkstatt: an und aus, „Jede Nacht testen“ mit der Startstunde. - Zustand → Werkstatt: die vier Aufträge starten, Ergebnisse ansehen, rote Tests noch mal, für Claude kopieren, löschen."
 },
 {
 "lang": "de",
@@ -3413,7 +3421,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Was du siehst",
 "title": "Was du siehst",
-"text": "- Funktionen → Werkstatt: Stand, letzter Testlauf, Code-Messung je Sprachmodell und die letzten Ergebnisse mit Patch. - Zustand → Live, Monitoring und die Steuerzentrale: Teil „Werkstatt“ mit Art und Status, nie Inhalte."
+"text": "- Zustand → Werkstatt: links der Verlauf, rechts ein Ergebnis mit großen Zahlen, was es heißt (etwa „Was heißt rot?“), den roten Tests nach Bereich, Antwort oder Patch und den nächsten Schritten. - Zustand → Live, Monitoring und die Steuerzentrale: Teil „Werkstatt“ mit Art und Status, nie Inhalte."
 },
 {
 "lang": "de",
@@ -3421,7 +3429,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/werkstattseite.py auftrag_geben: Auftrag vom Panel (Schritt 1) - app/panel/werkstattseite.py nacht_art: feste Nachtregel (Schritt 1) - app/werkstatt.py pruefen: feste Regeln eines Auftrags (Schritt 2) - app/werkstatt.py wunsch_nehmen: root nimmt den Wunsch einmal (Schritt 3) - app/werkstatt.py sandbox: Grenzen der Sandbox (Schritt 4) - app/werkstatt.py kopie: Kopie aus dem Klon des Installers (Schritt 5) - app/werkstatt.py git_umgebung: nur dieser Klon gilt als sicher (Schritt 5) - app/werkstatt.py rechte: Rechte von OpenCode (Schritt 7) - app/werkstatt.py testlauf: Selbsttests in Teilen (Schritt 8) - app/werkstatt.py pruefe_ergebnis: Ergebnis als Daten (Schritt 9)"
+"text": "- app/panel/werkstattseite.py auftrag_geben: Auftrag vom Panel (Schritt 1) - app/panel/werkstattseite.py nacht_art: feste Nachtregel (Schritt 1) - app/werkstatt.py pruefen: feste Regeln eines Auftrags (Schritt 2) - app/werkstatt.py wunsch_nehmen: root nimmt den Wunsch einmal (Schritt 3) - app/werkstatt.py sandbox: Grenzen der Sandbox (Schritt 4) - app/werkstatt.py kopie: Kopie aus dem Klon des Installers (Schritt 5) - app/werkstatt.py git_umgebung: nur dieser Klon gilt als sicher (Schritt 5) - app/werkstatt.py rechte: Rechte von OpenCode (Schritt 7) - app/werkstatt.py testlauf: Selbsttests in Teilen (Schritt 8) - app/werkstatt.py namen_testen: rote Tests einzeln noch mal (Schritt 8) - app/panel/werkstattseite.py nachtest_namen: Namen nur aus dem Ergebnis (Schritt 1) - app/werkstatt.py pruefe_ergebnis: Ergebnis als Daten (Schritt 9)"
 },
 {
 "lang": "de",
@@ -8405,7 +8413,7 @@
 "file": "Sicherheit und Betrieb",
 "head": "Werkstatt",
 "title": "Werkstatt",
-"text": "Nur für Admins, standardmäßig aus (*Funktionen → Werkstatt*). Den Weg eines Auftrags zeigt *Zustand → Technik*, Kasten „Werkstatt“."
+"text": "Nur für Admins, standardmäßig aus (Schalter *Funktionen → Werkstatt*), bedient unter *Zustand → Werkstatt*. Den Weg eines Auftrags zeigt *Zustand → Technik*, Kasten „Werkstatt“."
 },
 {
 "lang": "de",
@@ -8413,7 +8421,7 @@
 "file": "Sicherheit und Betrieb",
 "head": "Werkstatt",
 "title": "Werkstatt",
-"text": "- Werkstatt (seit V01.0.757, Plan plaene/opencode-werkstatt.md, Dominik 2026-10-17 „0-4“ und „3 und 1 ohne OpenCode bauen, OpenCode nur für Reparatur und Diagnose, und das erst messen“; Admin-Schalter chat.werkstatt, aus; nur Admin; app/werkstatt.py, panel/werkstattseite.py): Unter *Funktionen → Werkstatt* arbeitet der Modell-Rechner in einer abgeschotteten Kopie des Codes. Vier Arten (werkstatt.ARTEN): - *Testlauf*: alle Selbsttests in 4 Teilen wie GitHub „Tests“ (selftest.py --part, ein zweiter Versuch je rotem Test), ohne Sprachmodell; Ergebnis grün, rot, wackelig mit den Namen. - *Code-Messung*: das laufende Sprachmodell repariert mit OpenCode 10 bekannte Fehler aus der Geschichte des Repos (werkstatt.AUFGABEN: je Commit, Symptom und Testmodul; jede Aufgabe ist vor dem Fix rot und danach grün geprüft). Die Kopie steht auf dem Stand vor dem Fix, die Tests des Fixes sind schon da; gezählt wird, wie viele danach grün sind (je Sprachmodell gespeichert, „8 von 10“). - *Diagnose*: OpenCode liest den Code zum Problem des Admins und antwortet in Worten; ändern darf es nichts (werkstatt.rechte: kein edit, Shell nur git log/show/diff/grep/status, rg, grep, ls). - *Reparatur*: OpenCode än"
+"text": "- Eigene Seite Zustand → Werkstatt (V01.0.886, Dominik 2026-10-21 „1“; vorher ein Kasten rechts unter Funktionen, Bilder werkstatt/): oben vier Kacheln *Alles testen*, *Problem untersuchen*, *Reparatur versuchen*, *Sprachmodell messen*, jede mit einem Satz, was sie tut; ein Tipp öffnet rechts ein Formular mit „Was passiert:“ und *Starten*. Links der Verlauf (läuft gerade, dann die Ergebnisse mit Punkt und Kurzwort: „24 rot“, „alle grün“, „Antwort“, „Vorschlag“, „8 von 10“), rechts ein Ergebnis wie bei Mail (Liste und Detail, auf dem Handy als eigene Seite mit „‹ Werkstatt“): große Zahlen grün, rot, wackelig, ein fester Satz, was es heißt („Was heißt rot?“: ein Update über das Panel gibt es nur für Versionen, die auf GitHub grün waren, rot in der Kopie liegt meist an ihr; dein Spark ist unberührt), die roten Tests nach Bereich (Testmodul) aufklappbar, Antwort oder Patch, und die nächsten Schritte: *Ursache untersuchen* (Problem untersuchen mit den Namen der roten Tests vorbelegt), *Nur die roten noch mal testen*, *Reparatur versuchen* nach einer Antwort, *Für Claude kopieren* (Version, Zahlen, Namen, Antwort, Patch als Text), *Löschen*. Ein Fehlergrund kommt mit festem Satz und Weg "
 },
 {
 "lang": "de",
@@ -8421,7 +8429,7 @@
 "file": "Sicherheit und Betrieb",
 "head": "Werkstatt",
 "title": "Werkstatt",
-"text": "dert die Kopie und darf python selftest.py … laufen lassen; heraus kommen der Patch (höchstens 200 000 Zeichen), die geänderten Dateien mit Zeilen und die Tests der geänderten Dateien. Eingespielt, committet oder gepusht wird nichts: den Patch gibt der Admin einem Menschen oder einem Claude-Thread. - Feste Regeln (werkstatt.pruefen, im Panel, im Wärter und noch einmal von root): bekannte Art, kein anderer Auftrag läuft, für die drei mit Modell OpenCode da und das eigene Sprachmodell aktiv, Text 8 bis 2000 Zeichen nur bei Diagnose und Reparatur. Das Panel legt einen Wunsch ab (state/werkstatt-wunsch.json, höchstens 10 Minuten alt, einmal genommen) und startet speech-spark-werkstatt (sudoers: nur systemctl start --no-block genau dieser Einheit). Diagnose, Reparatur und Code-Messung fragen nach dem Code (stufen.LIST, Bestätigen), der Testlauf nicht (er lässt kein Modell Code schreiben). - Sandbox (werkstatt.sandbox, systemd-run als speech-spark-werkstatt-lauf): eigener Nutzer spark-werkstatt ohne Login, einzig beschreibbar /var/lib/spark-werkstatt/arbeit; ProtectSystem=strict, ProtectHome, PrivateTmp, PrivateDevices, NoNewPrivileges, keine Capabilities, InaccessiblePaths für /var/lib/"
+"text": "(„OpenCode fehlt: auf dem Modell-Rechner einmal …“). Ob „Jede Nacht testen“ an ist, steht oben mit Sprung-Link. Funktionen behält nur die Schalter und den Hinweis „Testen, untersuchen und reparieren unter Zustand → Werkstatt“. iPhone-App: *Spark verwalten → Werkstatt* (Verlauf, Ergebnis, Alles testen, rote noch mal, Löschen; Untersuchen und Reparieren öffnen die Seite des Panels in der App). - Rote Tests noch mal (Art nachtest, ohne Sprachmodell und ohne OpenCode): POST /api/admin/werkstatt/tests mit {\"von\": \"<id>\"} nennt nur das Ergebnis; die Namen nimmt das Panel aus dem gespeicherten, geprüften Ergebnis (werkstattseite.nachtest_namen: ganze Namen, ohne selftest, zusammen höchstens 2000 Zeichen), nie von der Seite. werkstatt.pruefen nimmt bei dieser Art nur Testnamen (TESTNAME), jeden einmal, höchstens NAMEN_MAX (30); in der Sandbox läuft jeder einzeln in einem eigenen Prozess (selftest.py --rerun, werkstatt.namen_testen): jetzt grün oder weiter rot. Jedes Ergebnis trägt die Version der Kopie (app/VERSION, Muster werkstatt.VERSION)."
 },
 {
 "lang": "de",
@@ -8429,7 +8437,7 @@
 "file": "Sicherheit und Betrieb",
 "head": "Werkstatt",
 "title": "Werkstatt",
-"text": "speech-spark, /etc/speech-spark, /root, /home; Netz nur 127.0.0.1 (IPAddressDeny=any) und dort nur zum LLM-Tor, das den Schlüssel prüft, zu DNS und zu den freien Ports ab 32768, die die eigenen Tests öffnen: nftables-Tabelle speech_spark_werkstatt (/etc/speech-spark-werkstatt.nft, Einheit speech-spark-werkstatt-fw, nur für den Nutzer spark-werkstatt); ohne sie startet kein Auftrag (V01.0.825, Code-Prüfung 19.10.: vorher erreichte vom Modell geschriebener Code jede Engine ohne Schlüssel und das Panel); Speicher 12 GiB beim Testlauf, sonst 8; Nice=19, Platte im Leerlauf, feste Höchstzeit je Art (GRENZE_S). Die Kopie ist ein git clone aus /opt/speech-spark/src, nie von GitHub; .git der Kopie gehört der Sandbox, das Original bleibt unberührt. Weil das Original root gehört, nennt eine eigene globale git-Datei der Sandbox (git-sicher.conf) genau diesen Klon als sicher; git 2.43 nimmt das nur von dort, nicht von -c (V01.0.765, vorher endete jeder Auftrag mit „Code-Kopie fehlt“). - OpenCode (MIT, /opt/speech-spark/werkstatt/bin/opencode): eine Datei aus der npm-Registry, Version und SHA-512 fest in werkstatt.py (OPENCODE_VERSION, OPENCODE_SHA512), von sudo ./install.sh --werkstatt geprüft "
+"text": "- Werkstatt (seit V01.0.757, Plan plaene/opencode-werkstatt.md, Dominik 2026-10-17 „0-4“ und „3 und 1 ohne OpenCode bauen, OpenCode nur für Reparatur und Diagnose, und das erst messen“; Admin-Schalter chat.werkstatt, aus; nur Admin; app/werkstatt.py, panel/werkstattseite.py): Unter *Zustand → Werkstatt* arbeitet der Modell-Rechner in einer abgeschotteten Kopie des Codes. Fünf Arten (werkstatt.ARTEN, mit *Rote Tests noch mal* oben): - *Testlauf*: alle Selbsttests in 4 Teilen wie GitHub „Tests“ (selftest.py --part, ein zweiter Versuch je rotem Test), ohne Sprachmodell; Ergebnis grün, rot, wackelig mit den Namen. - *Code-Messung*: das laufende Sprachmodell repariert mit OpenCode 10 bekannte Fehler aus der Geschichte des Repos (werkstatt.AUFGABEN: je Commit, Symptom und Testmodul; jede Aufgabe ist vor dem Fix rot und danach grün geprüft). Die Kopie steht auf dem Stand vor dem Fix, die Tests des Fixes sind schon da; gezählt wird, wie viele danach grün sind (je Sprachmodell gespeichert, „8 von 10“). - *Diagnose*: OpenCode liest den Code zum Problem des Admins und antwortet in Worten; ändern darf es nichts (werkstatt.rechte: kein edit, Shell nur git log/show/diff/grep/status, rg, grep, ls"
 },
 {
 "lang": "de",
@@ -8437,7 +8445,7 @@
 "file": "Sicherheit und Betrieb",
 "head": "Werkstatt",
 "title": "Werkstatt",
-"text": "vor dem Entpacken, aktualisiert sich nie selbst; Autoupdate, Teilen, Plugins, MCP, LSP, Modell-Liste aus dem Netz, fremde Skills und Projekt-Konfiguration sind aus. Es spricht nur das eigene LLM-Tor an (127.0.0.1:llm.port, API-Schlüssel des Hauses) mit x-spark-stufe: 0: jede Frage der Sandbox steht ganz hinten (common.stage_of: jeder Aufrufer dieses Rechners darf sich selbst nach hinten stellen, nie nach vorn). Der Text des Admins steht als Daten in <<< >>>, der Rest des Auftrags ist fester Text (werkstatt.PROMPT). - Ergebnisse (state/werkstatt.json auf dem Modell-Rechner, als Daten geprüft: bekannte Felder, Zahlen im Bereich, Pfade und Testnamen nach festen Mustern): die letzten 20 Aufträge, die Code-Messung je Sprachmodell, der letzte Testlauf. Die Seite zeigt sie (Wörter nur als Text, der Patch in einem <pre>), „Verwerfen“ löscht eines mit seinem Patch. - *Jede Nacht testen* (chat.werkstatt_nacht unter der Werkstatt, aus; Stunde chat.werkstatt_stunde, 0 bis 23, Standard 3): feste Regel im Panel (werkstattseite.nacht_art): in der Startstunde einmal der Testlauf; bis 5 Stunden danach die Code-Messung, wenn das laufende Sprachmodell noch keine hat (nach einem Modellwechsel). Nie wä"
+"text": "). - *Reparatur*: OpenCode ändert die Kopie und darf python selftest.py … laufen lassen; heraus kommen der Patch (höchstens 200 000 Zeichen), die geänderten Dateien mit Zeilen und die Tests der geänderten Dateien. Eingespielt, committet oder gepusht wird nichts: den Patch gibt der Admin einem Menschen oder einem Claude-Thread. - Feste Regeln (werkstatt.pruefen, im Panel, im Wärter und noch einmal von root): bekannte Art, kein anderer Auftrag läuft, für die drei mit Modell OpenCode da und das eigene Sprachmodell aktiv, Text 8 bis 2000 Zeichen nur bei Diagnose und Reparatur. Das Panel legt einen Wunsch ab (state/werkstatt-wunsch.json, höchstens 10 Minuten alt, einmal genommen) und startet speech-spark-werkstatt (sudoers: nur systemctl start --no-block genau dieser Einheit). Diagnose, Reparatur und Code-Messung fragen nach dem Code (stufen.LIST, Bestätigen), der Testlauf nicht (er lässt kein Modell Code schreiben). - Sandbox (werkstatt.sandbox, systemd-run als speech-spark-werkstatt-lauf): eigener Nutzer spark-werkstatt ohne Login, einzig beschreibbar /var/lib/spark-werkstatt/arbeit; ProtectSystem=strict, ProtectHome, PrivateTmp, PrivateDevices, NoNewPrivileges, keine Capabilities, In"
 },
 {
 "lang": "de",
@@ -8445,7 +8453,23 @@
 "file": "Sicherheit und Betrieb",
 "head": "Werkstatt",
 "title": "Werkstatt",
-"text": "hrend ein Auftrag läuft. - Überwachung: *Zustand → Live* Kasten „Werkstatt“ (was läuft, letzte Nacht grün und rot, Code-Messung „n/m“; nie Text oder Patch), *Zustand → Überblick* und die Steuerzentrale zeigen die Einheit speech-spark-werkstatt beim Modell-Rechner (common.ON_DEMAND_UNITS). Fortschritt nur als Zeilen werkstatt: tests start 4 teile … (werkstatt.STAND: feste Wörter und Zahlen), speech-spark logs werkstatt. - Kommandozeile auf dem Modell-Rechner: sudo speech-spark werkstatt status|tests|messen|diagnose \"Text\"|reparatur \"Text\"|ergebnis <id>. Mit geteiltem Spark geht alles über den Wärter (werkstatt, werkstatt_auftrag, werkstatt_eins, werkstatt_weg), der dieselben Regeln mit seinem Stand prüft. - Endpunkte (nur Admin, Rate-Limits werkstatt und werkstatt_auftrag): GET /api/admin/werkstatt, POST /api/admin/werkstatt/tests, POST /api/admin/werkstatt/auftrag (art, text; Code), GET|DELETE /api/admin/werkstatt/<id>. Selbsttest test_werkstatt. - Technik: *Zustand → Technik*, Kasten „Werkstatt“ mit eigener Knoten-Seite (Weg, Zahlen, Code)."
+"text": "accessiblePaths für /var/lib/speech-spark, /etc/speech-spark, /root, /home; Netz nur 127.0.0.1 (IPAddressDeny=any) und dort nur zum LLM-Tor, das den Schlüssel prüft, zu DNS und zu den freien Ports ab 32768, die die eigenen Tests öffnen: nftables-Tabelle speech_spark_werkstatt (/etc/speech-spark-werkstatt.nft, Einheit speech-spark-werkstatt-fw, nur für den Nutzer spark-werkstatt); ohne sie startet kein Auftrag (V01.0.825, Code-Prüfung 19.10.: vorher erreichte vom Modell geschriebener Code jede Engine ohne Schlüssel und das Panel); Speicher 12 GiB beim Testlauf, sonst 8; Nice=19, Platte im Leerlauf, feste Höchstzeit je Art (GRENZE_S). Die Kopie ist ein git clone aus /opt/speech-spark/src, nie von GitHub; .git der Kopie gehört der Sandbox, das Original bleibt unberührt. Weil das Original root gehört, nennt eine eigene globale git-Datei der Sandbox (git-sicher.conf) genau diesen Klon als sicher; git 2.43 nimmt das nur von dort, nicht von -c (V01.0.765, vorher endete jeder Auftrag mit „Code-Kopie fehlt“). - OpenCode (MIT, /opt/speech-spark/werkstatt/bin/opencode): eine Datei aus der npm-Registry, Version und SHA-512 fest in werkstatt.py (OPENCODE_VERSION, OPENCODE_SHA512), von sudo ./in"
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Werkstatt",
+"title": "Werkstatt",
+"text": "stall.sh --werkstatt geprüft vor dem Entpacken, aktualisiert sich nie selbst; Autoupdate, Teilen, Plugins, MCP, LSP, Modell-Liste aus dem Netz, fremde Skills und Projekt-Konfiguration sind aus. Es spricht nur das eigene LLM-Tor an (127.0.0.1:llm.port, API-Schlüssel des Hauses) mit x-spark-stufe: 0: jede Frage der Sandbox steht ganz hinten (common.stage_of: jeder Aufrufer dieses Rechners darf sich selbst nach hinten stellen, nie nach vorn). Der Text des Admins steht als Daten in <<< >>>, der Rest des Auftrags ist fester Text (werkstatt.PROMPT). - Ergebnisse (state/werkstatt.json auf dem Modell-Rechner, als Daten geprüft: bekannte Felder, Zahlen im Bereich, Pfade und Testnamen nach festen Mustern): die letzten 20 Aufträge, die Code-Messung je Sprachmodell, der letzte Testlauf. Die Seite zeigt sie (Wörter nur als Text, der Patch in einem <pre>), „Löschen“ löscht eines mit seinem Patch. - *Jede Nacht testen* (chat.werkstatt_nacht unter der Werkstatt, aus; Stunde chat.werkstatt_stunde, 0 bis 23, Standard 3): feste Regel im Panel (werkstattseite.nacht_art): in der Startstunde einmal der Testlauf; bis 5 Stunden danach die Code-Messung, wenn das laufende Sprachmodell noch keine hat (nach e"
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Werkstatt",
+"title": "Werkstatt",
+"text": "inem Modellwechsel). Nie während ein Auftrag läuft. - Überwachung: *Zustand → Live* Kasten „Werkstatt“ (was läuft, letzte Nacht grün und rot, Code-Messung „n/m“; nie Text oder Patch), *Zustand → Überblick* und die Steuerzentrale zeigen die Einheit speech-spark-werkstatt beim Modell-Rechner (common.ON_DEMAND_UNITS). Fortschritt nur als Zeilen werkstatt: tests start 4 teile … (werkstatt.STAND: feste Wörter und Zahlen), speech-spark logs werkstatt. - Kommandozeile auf dem Modell-Rechner: sudo speech-spark werkstatt status|tests|nachtest \"Testnamen\"|messen|diagnose \"Text\"|reparatur \"Text\"|ergebnis <id>. Mit geteiltem Spark geht alles über den Wärter (werkstatt, werkstatt_auftrag, werkstatt_eins, werkstatt_weg), der dieselben Regeln mit seinem Stand prüft. - Endpunkte (nur Admin, Rate-Limits werkstatt und werkstatt_auftrag): GET /api/admin/werkstatt, POST /api/admin/werkstatt/tests (leer: alles testen; von: rote Tests noch mal), POST /api/admin/werkstatt/auftrag (art, text; Code), GET|DELETE /api/admin/werkstatt/<id>. Selbsttest test_werkstatt. - Technik: *Zustand → Technik*, Kasten „Werkstatt“ mit eigener Knoten-Seite (Weg, Zahlen, Code)."
 },
 {
 "lang": "de",
@@ -12493,7 +12517,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "1. Order or night rule: An admin taps test run, code measurement, diagnosis or repair (werkstattseite.auftrag_geben; the three with the language model need the second-step code). With \"Test every night\" on, werkstattseite.nacht_art starts a test run in the first 5 hours after the set hour, and a code measurement after a model switch. 2. Fixed rules met?: werkstatt.pruefen takes only a known kind, nothing runs yet, OpenCode and the own language model are there where the kind needs them. The admin's text is cleaned and fenced: it only describes the problem. 3. Wish to root: The panel writes a wish and may start only the fixed unit speech-spark-werkstatt through sudo. werkstatt.wunsch_nehmen reads it as root exactly once and checks everything again. 4. Sandbox: werkstatt.sandbox starts the order with systemd-run as the user spark-werkstatt: only its own folder is writable, the Spark's data, settings and keys are invisible, network only to this computer and there, by nftables, only to the LLM-Tor (it checks the key) and the free ports of its own tests, never an engine or the panel; without this firewall no order starts. A memory and time limit per kind (werkstatt.GRENZE_S). 5. Copy of "
+"text": "1. Order or night rule: On the page Status → Workshop an admin taps \"Test everything\", \"Look into a problem\", \"Try a repair\" or \"Measure the language model\" (werkstattseite.auftrag_geben; the three with the language model need the second-step code). \"Test only the red ones again\" names only the result; werkstattseite.nachtest_namen takes the names from the kept result, never from the page. With \"Test every night\" on, werkstattseite.nacht_art starts a test run in the first 5 hours after the set hour, and a code measurement after a model switch. 2. Fixed rules met?: werkstatt.pruefen takes only a known kind, nothing runs yet, OpenCode and the own language model are there where the kind needs them. The admin's text is cleaned and fenced: it only describes the problem. \"Red tests again\" takes only test names, each once, at most 30. 3. Wish to root: The panel writes a wish and may start only the fixed unit speech-spark-werkstatt through sudo. werkstatt.wunsch_nehmen reads it as root exactly once and checks everything again. 4. Sandbox: werkstatt.sandbox starts the order with systemd-run as the user spark-werkstatt: only its own folder is writable, the Spark's data, settings and keys are"
 },
 {
 "lang": "en",
@@ -12501,7 +12525,15 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "the code made?: werkstatt.kopie clones the installer's clone, never from GitHub. Because root owns it, werkstatt.git_umgebung names exactly this folder as safe in the sandbox's own git file. 6. Only a test run?: The test run needs neither OpenCode nor the language model; it goes straight to the tests. 7. OpenCode with fixed rights: werkstatt.rechte: diagnosis only reads, repair may change files of the copy and start the self-tests; no web, no git push, every other command refused. OpenCode asks the language model through the LLM-Tor at the very back of the line, so conversations go first. 8. Self-tests: werkstatt.testlauf runs the copy's self-tests like GitHub; whatever turns green on the second try counts as wobbly. 9. Result as data: werkstatt.pruefe_ergebnis takes only known fields, numbers in range and words from fixed lists; a patch over 200000 characters is cut. The page shows everything as text only. 10. The admin decides: The admin hands the patch to a Claude thread or a person; the workshop never installs or pushes anything."
+"text": " invisible, network only to this computer and there, by nftables, only to the LLM-Tor (it checks the key) and the free ports of its own tests, never an engine or the panel; without this firewall no order starts. A memory and time limit per kind (werkstatt.GRENZE_S). 5. Copy of the code made?: werkstatt.kopie clones the installer's clone, never from GitHub. Because root owns it, werkstatt.git_umgebung names exactly this folder as safe in the sandbox's own git file. 6. Only tests?: Test everything and \"Red tests again\" need neither OpenCode nor the language model; they go straight to the tests. 7. OpenCode with fixed rights: werkstatt.rechte: diagnosis only reads, repair may change files of the copy and start the self-tests; no web, no git push, every other command refused. OpenCode asks the language model through the LLM-Tor at the very back of the line, so conversations go first. 8. Self-tests: werkstatt.testlauf runs the copy's self-tests like GitHub; whatever turns green on the second try counts as wobbly. For \"Red tests again\" werkstatt.namen_testen runs each named test alone in its own process: green now or still red. 9. Result as data: werkstatt.pruefe_ergebnis takes only know"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Way",
+"title": "Way",
+"text": "n fields, numbers in range and words from fixed lists; a patch over 200000 characters is cut. The page shows everything as text only, with fixed sentences on what the result means and what can come next. 10. The admin decides: The admin hands the patch to a Claude thread or a person; the workshop never installs or pushes anything."
 },
 {
 "lang": "en",
@@ -12509,7 +12541,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Examples",
-"text": "Examples: Test run at night: Green, red and wobbly show under Features → Workshop. · Propose a repair: A patch with its test result to look at. · No own language model: Refused before anything starts."
+"text": "Examples: Test run at night: Green, red and wobbly show under Status → Workshop. · Red tests again: Each red test alone: green now or still red. · Propose a repair: A patch with its test result to look at. · No own language model: Refused before anything starts."
 },
 {
 "lang": "en",
@@ -12517,7 +12549,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 600 s a wish may be old (step 3) - 2000 characters at most in an order (step 2) - 4 parts of the test run at once (step 8) - 20 results are kept (step 9) - 200000 characters of a patch, more is cut (step 9) - 5 h after the hour the night may start (step 1)"
+"text": "- 600 s a wish may be old (step 3) - 2000 characters at most in an order (step 2) - 4 parts of the test run at once (step 8) - 30 test names at most per result and \"again\" (step 2) - 20 results are kept (step 9) - 200000 characters of a patch, more is cut (step 9) - 5 h after the hour the night may start (step 1)"
 },
 {
 "lang": "en",
@@ -12525,7 +12557,7 @@
 "file": "Architecture and data flow",
 "head": "Settings",
 "title": "Settings",
-"text": "- On the model computer once sudo ./install.sh --werkstatt (OpenCode with a pinned version and checksum). - Features → Workshop: on and off, \"Test every night\" with the start hour."
+"text": "- On the model computer once sudo ./install.sh --werkstatt (OpenCode with a pinned version and checksum). - Features → Workshop: on and off, \"Test every night\" with the start hour. - Status → Workshop: start the four orders, look at results, red tests again, copy for Claude, delete."
 },
 {
 "lang": "en",
@@ -12533,7 +12565,7 @@
 "file": "Architecture and data flow",
 "head": "What you see",
 "title": "What you see",
-"text": "- Features → Workshop: status, last test run, code measurement per language model and the last results with patch. - Status → Live, Monitoring and the control centre: part \"Workshop\" with kind and status, never contents."
+"text": "- Status → Workshop: the history on the left, one result on the right with big numbers, what it means (such as \"What does red mean?\"), the red tests by area, the answer or patch and the next steps. - Status → Live, Monitoring and the control centre: part \"Workshop\" with kind and status, never contents."
 },
 {
 "lang": "en",
@@ -12541,7 +12573,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/werkstattseite.py auftrag_geben: order from the panel (step 1) - app/panel/werkstattseite.py nacht_art: fixed night rule (step 1) - app/werkstatt.py pruefen: fixed rules of an order (step 2) - app/werkstatt.py wunsch_nehmen: root takes the wish once (step 3) - app/werkstatt.py sandbox: limits of the sandbox (step 4) - app/werkstatt.py kopie: copy from the installer's clone (step 5) - app/werkstatt.py git_umgebung: only this clone counts as safe (step 5) - app/werkstatt.py rechte: OpenCode's rights (step 7) - app/werkstatt.py testlauf: self-tests in parts (step 8) - app/werkstatt.py pruefe_ergebnis: result as data (step 9)"
+"text": "- app/panel/werkstattseite.py auftrag_geben: order from the panel (step 1) - app/panel/werkstattseite.py nacht_art: fixed night rule (step 1) - app/werkstatt.py pruefen: fixed rules of an order (step 2) - app/werkstatt.py wunsch_nehmen: root takes the wish once (step 3) - app/werkstatt.py sandbox: limits of the sandbox (step 4) - app/werkstatt.py kopie: copy from the installer's clone (step 5) - app/werkstatt.py git_umgebung: only this clone counts as safe (step 5) - app/werkstatt.py rechte: OpenCode's rights (step 7) - app/werkstatt.py testlauf: self-tests in parts (step 8) - app/werkstatt.py namen_testen: red tests alone again (step 8) - app/panel/werkstattseite.py nachtest_namen: names only from the result (step 1) - app/werkstatt.py pruefe_ergebnis: result as data (step 9)"
 },
 {
 "lang": "en",
@@ -17261,7 +17293,7 @@
 "file": "Security and operation",
 "head": "Workshop",
 "title": "Workshop",
-"text": "Admins only, off by default (*Features → Workshop*). *Status → Architecture*, box \"Workshop\", shows the way of an order."
+"text": "Admins only, off by default (switch *Features → Workshop*), used under *Status → Workshop*. *Status → Architecture*, box \"Workshop\", shows the way of an order."
 },
 {
 "lang": "en",
@@ -17269,7 +17301,7 @@
 "file": "Security and operation",
 "head": "Workshop",
 "title": "Workshop",
-"text": "- Workshop (since V01.0.757, plan plaene/opencode-werkstatt.md, Dominik 2026-10-17 \"0-4\" and \"build 3 and 1 without OpenCode, OpenCode only for repair and diagnosis, and measure that first\"; admin switch chat.werkstatt, off; admin only; app/werkstatt.py, panel/werkstattseite.py): under *Features → Workshop* the model computer works in a sealed-off copy of the code. Four kinds (werkstatt.ARTEN): - *Test run*: all self-tests in 4 parts like GitHub \"Tests\" (selftest.py --part, a second try per red test), without a language model; result green, red, flaky with the names. - *Code measurement*: the running language model repairs 10 known bugs from the repo's history with OpenCode (werkstatt.AUFGABEN: commit, symptom and test module each; every task is checked red before the fix and green after it). The copy stands before the fix with the fix's tests already there; counted is how many are green afterwards (kept per language model, \"8 of 10\"). - *Diagnosis*: OpenCode reads the code for the admin's problem and answers in words; it may not change anything (werkstatt.rechte: no edit, shell only git log/show/diff/grep/status, rg, grep, ls). - *Repair*: OpenCode changes the copy and may run pyt"
+"text": "- Own page Status → Workshop (V01.0.886, Dominik 2026-10-21 \"1\"; before a box on the right under Features, pictures werkstatt/): four tiles on top, *Test everything*, *Look into a problem*, *Try a repair*, *Measure the language model*, each with a sentence on what it does; a tap opens a form on the right with \"What happens:\" and *Start*. On the left the history (running now, then the results with a dot and a short word: \"24 red\", \"all green\", \"Answer\", \"Proposal\", \"8 of 10\"), on the right one result like in mail (list and detail, on a phone its own page with \"‹ Workshop\"): big numbers green, red, flaky, a fixed sentence on what it means (\"What does red mean?\": an update through the panel only comes for versions that were green on GitHub, red in the copy mostly comes from the copy; your Spark is not affected), the red tests by area (test module) to unfold, answer or patch, and the next steps: *Find the cause* (look into a problem, prefilled with the names of the red tests), *Test only the red ones again*, *Try a repair* after an answer, *Copy for Claude* (version, numbers, names, answer, patch as text), *Delete*. A failure reason comes with a fixed sentence and way (\"OpenCode missin"
 },
 {
 "lang": "en",
@@ -17277,7 +17309,7 @@
 "file": "Security and operation",
 "head": "Workshop",
 "title": "Workshop",
-"text": "hon selftest.py …; the result is the patch (at most 200,000 characters), the changed files with lines and the tests of the changed files. Nothing is installed, committed or pushed: the admin hands the patch to a person or a Claude thread. - Fixed rules (werkstatt.pruefen, in the panel, in the Wärter and once more by root): a known kind, no other order running, for the three with a model OpenCode present and the own language model active, a text of 8 to 2000 characters only for diagnosis and repair. The panel leaves a wish (state/werkstatt-wunsch.json, at most 10 minutes old, taken once) and starts speech-spark-werkstatt (sudoers: only systemctl start --no-block of exactly this unit). Diagnosis, repair and code measurement ask for the code (stufen.LIST, confirm), the test run does not (no model writes code there). - Sandbox (werkstatt.sandbox, systemd-run as speech-spark-werkstatt-lauf): its own user spark-werkstatt without a login, the only writable folder /var/lib/spark-werkstatt/arbeit; ProtectSystem=strict, ProtectHome, PrivateTmp, PrivateDevices, NoNewPrivileges, no capabilities, InaccessiblePaths for /var/lib/speech-spark, /etc/speech-spark, /root, /home; network only 127.0.0."
+"text": "g: on the model computer once …\"). Whether \"Test every night\" is on shows on top with a jump link. Features keeps only the switches and the hint \"Test, look into and repair under Status → Workshop\". iPhone app: *Manage Spark → Workshop* (history, result, test everything, red ones again, delete; looking into problems and repairs open the panel's page in the app). - Red tests again (kind nachtest, without a language model and without OpenCode): POST /api/admin/werkstatt/tests with {\"von\": \"<id>\"} names only the result; the panel takes the names from the kept, checked result (werkstattseite.nachtest_namen: whole names, without selftest, together at most 2000 characters), never from the page. For this kind werkstatt.pruefen takes only test names (TESTNAME), each once, at most NAMEN_MAX (30); in the sandbox each runs alone in its own process (selftest.py --rerun, werkstatt.namen_testen): green now or still red. Every result carries the copy's version (app/VERSION, pattern werkstatt.VERSION)."
 },
 {
 "lang": "en",
@@ -17285,7 +17317,7 @@
 "file": "Security and operation",
 "head": "Workshop",
 "title": "Workshop",
-"text": "1 (IPAddressDeny=any) and there only the LLM-Tor, which checks the key, DNS and the free ports from 32768 that its own tests open: nftables table speech_spark_werkstatt (/etc/speech-spark-werkstatt.nft, unit speech-spark-werkstatt-fw, only for the user spark-werkstatt); without it no order starts (V01.0.825, code check 19.10.: before, model-written code reached every engine without a key and the panel); memory 12 GiB for the test run, else 8; Nice=19, disk idle, a fixed time limit per kind (GRENZE_S). The copy is a git clone of /opt/speech-spark/src, never from GitHub; the copy's .git belongs to the sandbox, the original stays untouched. Because root owns the original, a global git file of the sandbox's own (git-sicher.conf) names exactly this clone as safe; git 2.43 takes that only from there, not from -c (V01.0.765, before that every order ended in \"Code copy missing\"). - OpenCode (MIT, /opt/speech-spark/werkstatt/bin/opencode): one file from the npm registry, version and SHA-512 fixed in werkstatt.py (OPENCODE_VERSION, OPENCODE_SHA512), checked by sudo ./install.sh --werkstatt before unpacking, never updating itself; autoupdate, sharing, plugins, MCP, LSP, the model list from th"
+"text": "- Workshop (since V01.0.757, plan plaene/opencode-werkstatt.md, Dominik 2026-10-17 \"0-4\" and \"build 3 and 1 without OpenCode, OpenCode only for repair and diagnosis, and measure that first\"; admin switch chat.werkstatt, off; admin only; app/werkstatt.py, panel/werkstattseite.py): under *Status → Workshop* the model computer works in a sealed-off copy of the code. Five kinds (werkstatt.ARTEN, with *Red tests again* above): - *Test run*: all self-tests in 4 parts like GitHub \"Tests\" (selftest.py --part, a second try per red test), without a language model; result green, red, flaky with the names. - *Code measurement*: the running language model repairs 10 known bugs from the repo's history with OpenCode (werkstatt.AUFGABEN: commit, symptom and test module each; every task is checked red before the fix and green after it). The copy stands before the fix with the fix's tests already there; counted is how many are green afterwards (kept per language model, \"8 of 10\"). - *Diagnosis*: OpenCode reads the code for the admin's problem and answers in words; it may not change anything (werkstatt.rechte: no edit, shell only git log/show/diff/grep/status, rg, grep, ls). - *Repair*: OpenCode chan"
 },
 {
 "lang": "en",
@@ -17293,7 +17325,7 @@
 "file": "Security and operation",
 "head": "Workshop",
 "title": "Workshop",
-"text": "e net, outside skills and project configuration are off. It talks only to the own LLM-Tor (127.0.0.1:llm.port, the house API key) with x-spark-stufe: 0: every request of the sandbox stands last (common.stage_of: any caller of this computer may put itself last, never first). The admin's text stands as data in <<< >>>, the rest of the order is fixed text (werkstatt.PROMPT). - Results (state/werkstatt.json on the model computer, checked as data: known fields, numbers in range, paths and test names by fixed patterns): the last 20 orders, the code measurement per language model, the last test run. The page shows them (words only as text, the patch in a <pre>), \"Discard\" deletes one with its patch. - *Test every night* (chat.werkstatt_nacht below the workshop, off; hour chat.werkstatt_stunde, 0 to 23, default 3): a fixed rule in the panel (werkstattseite.nacht_art): in the start hour the test run once; up to 5 hours later the code measurement when the running language model has none yet (after a model switch). Never while an order runs. - Watching: *Status → Live* box \"Workshop\" (what runs, last night green and red, code measurement \"n/m\"; never a text or a patch), *Status → Summary* and"
+"text": "ges the copy and may run python selftest.py …; the result is the patch (at most 200,000 characters), the changed files with lines and the tests of the changed files. Nothing is installed, committed or pushed: the admin hands the patch to a person or a Claude thread. - Fixed rules (werkstatt.pruefen, in the panel, in the Wärter and once more by root): a known kind, no other order running, for the three with a model OpenCode present and the own language model active, a text of 8 to 2000 characters only for diagnosis and repair. The panel leaves a wish (state/werkstatt-wunsch.json, at most 10 minutes old, taken once) and starts speech-spark-werkstatt (sudoers: only systemctl start --no-block of exactly this unit). Diagnosis, repair and code measurement ask for the code (stufen.LIST, confirm), the test run does not (no model writes code there). - Sandbox (werkstatt.sandbox, systemd-run as speech-spark-werkstatt-lauf): its own user spark-werkstatt without a login, the only writable folder /var/lib/spark-werkstatt/arbeit; ProtectSystem=strict, ProtectHome, PrivateTmp, PrivateDevices, NoNewPrivileges, no capabilities, InaccessiblePaths for /var/lib/speech-spark, /etc/speech-spark, /root, "
 },
 {
 "lang": "en",
@@ -17301,7 +17333,23 @@
 "file": "Security and operation",
 "head": "Workshop",
 "title": "Workshop",
-"text": " the control centre show the unit speech-spark-werkstatt at the model computer (common.ON_DEMAND_UNITS). Progress only as lines werkstatt: tests start 4 teile … (werkstatt.STAND: fixed words and numbers), speech-spark logs werkstatt. - Command line on the model computer: sudo speech-spark werkstatt status|tests|messen|diagnose \"text\"|reparatur \"text\"|ergebnis <id>. With a split Spark everything goes through the Wärter (werkstatt, werkstatt_auftrag, werkstatt_eins, werkstatt_weg), which checks the same rules with its own state. - Endpoints (admin only, rate limits werkstatt and werkstatt_auftrag): GET /api/admin/werkstatt, POST /api/admin/werkstatt/tests, POST /api/admin/werkstatt/auftrag (art, text; code), GET|DELETE /api/admin/werkstatt/<id>. Self-test test_werkstatt. - Architecture: *Status → Architecture*, box \"Workshop\" with its own node page (way, numbers, code)."
+"text": "/home; network only 127.0.0.1 (IPAddressDeny=any) and there only the LLM-Tor, which checks the key, DNS and the free ports from 32768 that its own tests open: nftables table speech_spark_werkstatt (/etc/speech-spark-werkstatt.nft, unit speech-spark-werkstatt-fw, only for the user spark-werkstatt); without it no order starts (V01.0.825, code check 19.10.: before, model-written code reached every engine without a key and the panel); memory 12 GiB for the test run, else 8; Nice=19, disk idle, a fixed time limit per kind (GRENZE_S). The copy is a git clone of /opt/speech-spark/src, never from GitHub; the copy's .git belongs to the sandbox, the original stays untouched. Because root owns the original, a global git file of the sandbox's own (git-sicher.conf) names exactly this clone as safe; git 2.43 takes that only from there, not from -c (V01.0.765, before that every order ended in \"Code copy missing\"). - OpenCode (MIT, /opt/speech-spark/werkstatt/bin/opencode): one file from the npm registry, version and SHA-512 fixed in werkstatt.py (OPENCODE_VERSION, OPENCODE_SHA512), checked by sudo ./install.sh --werkstatt before unpacking, never updating itself; autoupdate, sharing, plugins, MCP,"
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Workshop",
+"title": "Workshop",
+"text": " LSP, the model list from the net, outside skills and project configuration are off. It talks only to the own LLM-Tor (127.0.0.1:llm.port, the house API key) with x-spark-stufe: 0: every request of the sandbox stands last (common.stage_of: any caller of this computer may put itself last, never first). The admin's text stands as data in <<< >>>, the rest of the order is fixed text (werkstatt.PROMPT). - Results (state/werkstatt.json on the model computer, checked as data: known fields, numbers in range, paths and test names by fixed patterns): the last 20 orders, the code measurement per language model, the last test run. The page shows them (words only as text, the patch in a <pre>), \"Delete\" deletes one with its patch. - *Test every night* (chat.werkstatt_nacht below the workshop, off; hour chat.werkstatt_stunde, 0 to 23, default 3): a fixed rule in the panel (werkstattseite.nacht_art): in the start hour the test run once; up to 5 hours later the code measurement when the running language model has none yet (after a model switch). Never while an order runs. - Watching: *Status → Live* box \"Workshop\" (what runs, last night green and red, code measurement \"n/m\"; never a text or a pat"
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Workshop",
+"title": "Workshop",
+"text": "ch), *Status → Summary* and the control centre show the unit speech-spark-werkstatt at the model computer (common.ON_DEMAND_UNITS). Progress only as lines werkstatt: tests start 4 teile … (werkstatt.STAND: fixed words and numbers), speech-spark logs werkstatt. - Command line on the model computer: sudo speech-spark werkstatt status|tests|nachtest \"test names\"|messen|diagnose \"text\"|reparatur \"text\"|ergebnis <id>. With a split Spark everything goes through the Wärter (werkstatt, werkstatt_auftrag, werkstatt_eins, werkstatt_weg), which checks the same rules with its own state. - Endpoints (admin only, rate limits werkstatt and werkstatt_auftrag): GET /api/admin/werkstatt, POST /api/admin/werkstatt/tests (empty: test everything; von: red tests again), POST /api/admin/werkstatt/auftrag (art, text; code), GET|DELETE /api/admin/werkstatt/<id>. Self-test test_werkstatt. - Architecture: *Status → Architecture*, box \"Workshop\" with its own node page (way, numbers, code)."
 },
 {
 "lang": "en",

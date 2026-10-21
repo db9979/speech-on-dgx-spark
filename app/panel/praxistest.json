@@ -2476,6 +2476,13 @@
 "titel": "Musik bearbeiten: eigene Seite",
 "text": "Unter Ich → Musik ein Lied öffnen → „Bearbeiten“: die Seite nimmt die ganze Breite, das Ich-Menü ist weg. Auf der großen Welle einen Bereich ziehen, links „Musikrichtung“ wählen, rechts die Fassungen mit ▶ vergleichen, unten „Vorschläge machen“; der Stand des Auftrags steht in der Leiste. „‹ Lieder“ führt zurück. Am Handy: Werkzeuge wischen, „Fassungen“ unten. iPhone-App: Lied nach rechts wischen → Bearbeiten, Werkzeug-Leiste, Knopf unten.",
 "thread": "Musik bearbeiten und remixen"
+},
+{
+"id": "P378",
+"v": 886,
+"titel": "Werkstatt auf eigener Seite",
+"text": "A: Update, Admin: Funktionen → Werkstatt an (der Kasten dort zeigt nur noch den Hinweis). B: Zustand → Werkstatt: oben vier Kacheln, links der Verlauf, rechts der letzte Testlauf mit grün, rot, wackelig und „Was heißt rot?“. C: Bei roten Tests „Rote Tests, nach Bereich“ aufklappen: die Namen stehen da. D: „Nur die roten noch mal testen“: links „läuft“, danach ein Ergebnis „Rote Tests noch mal“ mit jetzt grün oder weiter rot. E: „Ursache untersuchen“: das Formular ist mit den Namen vorbelegt, Starten fragt nach dem Code. F: „Für Claude kopieren“ und in einen Thread einfügen: Version, Zahlen und Namen stehen drin. G: Am Handy: Liste, Tipp öffnet das Ergebnis, „‹ Werkstatt“ zurück. H: iPhone-App: Spark verwalten → Werkstatt zeigt den Verlauf, ein Ergebnis öffnet sich, Löschen geht.",
+"thread": "Werkstatt übersichtlich bedienen"
 }
 ]
 }

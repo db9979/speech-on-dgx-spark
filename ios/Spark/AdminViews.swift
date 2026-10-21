@@ -92,6 +92,7 @@ struct AdminView: View {
                     NavigationLink("Überblick") { StatusView() }
                     NavigationLink("Logs") { LogsView() }
                     if s.role != "manager" { NavigationLink("Prüfen") { ChecksView() } }
+                    if s.role != "manager" { NavigationLink("Werkstatt") { WerkstattView() } }
                     if s.role != "manager" { NavigationLink("Verbrauch") { UsageView() } }
                     if s.role != "manager" { NavigationLink("Modelle") { ModelsView() } }
                     if s.role != "manager" { NavigationLink("Praxistest") { PraxisView() } }
@@ -860,6 +861,161 @@ struct PraxisView: View {
 
     private func mark(_ p: [String: Any], _ stand: String) async {
         do { _ = try await AdminSession.shared.call("POST", "api/admin/praxistest/" + (p["id"] as? String ?? ""), body: ["stand": stand]); await load() }
+        catch { self.error = error.localizedDescription }
+    }
+}
+
+/// Zustand → Werkstatt (panel/werkstattseite.py, Dominik 2026-10-21 „1“): the workshop's results on the model computer,
+/// the newest first, each with what it means and the next step. Looking into a problem and repairs need a description
+/// and the code: they open the panel's page here in the app.
+struct WerkstattView: View {
+    @State private var d: [String: Any] = [:]
+    @State private var error: String?
+    @State private var open: PanelPlace?
+
+    var body: some View {
+        List {
+            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if d["an"] as? Bool == false {
+                Text(SparkAPI.way(String(localized: "Die Werkstatt ist aus. Einschalten unter Funktionen → Werkstatt."))).foregroundStyle(.secondary)
+            } else {
+                Section {
+                    Button("Alles testen") { Task { await start() } }.disabled(d["laeuft"] as? Bool == true)
+                    if let url = SparkAPI.panelLink("go=werk") {
+                        Button("Problem untersuchen oder reparieren") { open = PanelPlace(url: url) }
+                    }
+                } footer: {
+                    Text("Alle Selbsttests laufen in einer abgeschotteten Kopie auf dem Modell-Rechner, ohne Sprachmodell. Dein Spark bleibt unberührt.")
+                }
+                if d["laeuft"] as? Bool == true {
+                    Section { Label("Ein Auftrag läuft", systemImage: "hourglass") }
+                }
+                Section("Verlauf") {
+                    let list = d["auftraege"] as? [[String: Any]] ?? []
+                    ForEach(Array(list.enumerated()), id: \.offset) { _, a in
+                        NavigationLink(destination: WerkstattEinsView(id: a["id"] as? String ?? "", arten: d["arten"] as? [String: Any] ?? [:], changed: { await load() })) {
+                            LabeledContent {
+                                Text(verbatim: Self.badge(a)).foregroundStyle(Self.color(a))
+                            } label: {
+                                VStack(alignment: .leading) {
+                                    Text(verbatim: Self.art(a["art"], d["arten"]))
+                                    Text(verbatim: Self.when(a["zeit"])).font(.caption).foregroundStyle(.secondary)
+                                }
+                            }
+                        }
+                    }
+                    if list.isEmpty { Text("Noch keine Ergebnisse.").foregroundStyle(.secondary) }
+                }
+            }
+        }
+        .navigationTitle("Werkstatt")
+        .refreshable { await load() }
+        .task { await load() }
+        .sheet(item: $open) { p in PanelPage(url: p.url).ignoresSafeArea() }
+    }
+
+    private func load() async {
+        do { d = try await AdminSession.shared.object("GET", "api/admin/werkstatt"); error = nil }
+        catch { self.error = error.localizedDescription }
+    }
+
+    private func start() async {
+        do { d = try await AdminSession.shared.object("POST", "api/admin/werkstatt/tests", body: [:]); error = nil }
+        catch { self.error = error.localizedDescription }
+    }
+
+    static func num(_ v: Any?) -> Int { (v as? NSNumber)?.intValue ?? 0 }
+    static func when(_ v: Any?) -> String {
+        let s = (v as? NSNumber)?.doubleValue ?? 0
+        return s > 0 ? Date(timeIntervalSince1970: s).formatted(date: .abbreviated, time: .shortened) : ""
+    }
+    static func art(_ a: Any?, _ arten: Any?) -> String {
+        let k = a as? String ?? ""
+        let x = (arten as? [String: Any])?[k] as? [String: Any] ?? [:]
+        return (UsageView.de ? x["de"] : x["en"]) as? String ?? k
+    }
+    static func failed(_ a: [String: Any]) -> Bool { a["grund"] as? String != "ok" && a["grund"] as? String != "leer" }
+    static func badge(_ a: [String: Any]) -> String {
+        let rot = num((a["tests"] as? [String: Any])?["rot"])
+        let art = a["art"] as? String ?? ""
+        if failed(a) { return String(localized: "Fehler") }
+        if art == "tests" || art == "nachtest" { return rot > 0 ? "\(rot) " + String(localized: "rot") : String(localized: "alle grün") }
+        if art == "messen" {
+            let l = a["aufgaben"] as? [[String: Any]] ?? []
+            return "\(l.filter { $0["ok"] as? Bool == true }.count) / \(l.count)"
+        }
+        return art == "reparatur" ? String(localized: "Vorschlag") : String(localized: "Antwort")
+    }
+    static func color(_ a: [String: Any]) -> Color {
+        failed(a) || num((a["tests"] as? [String: Any])?["rot"]) > 0 ? .red : .secondary
+    }
+}
+
+/// One result of the workshop: numbers, what red means, the red tests, the answer; „Nur die roten noch mal testen“
+/// names only the result (the Spark takes the names from it) and „Löschen“.
+struct WerkstattEinsView: View {
+    let id: String
+    let arten: [String: Any]
+    let changed: () async -> Void
+    @State private var a: [String: Any] = [:]
+    @State private var error: String?
+    @State private var asking = false
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        List {
+            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            let ts = a["tests"] as? [String: Any] ?? [:]
+            let rot = WerkstattView.num(ts["rot"])
+            let namen = ts["rot_namen"] as? [String] ?? []
+            let art = a["art"] as? String ?? ""
+            Section {
+                Text(verbatim: WerkstattView.art(a["art"], arten) + " · " + WerkstattView.when(a["zeit"])).font(.headline)
+                if let v = a["version"] as? String, !v.isEmpty { LabeledContent("Version") { Text(verbatim: v) } }
+                if art == "tests" || art == "nachtest" {
+                    LabeledContent("grün") { Text(verbatim: "\(WerkstattView.num(ts["gruen"]))").foregroundStyle(.green) }
+                    LabeledContent("rot") { Text(verbatim: "\(rot)").foregroundStyle(rot > 0 ? .red : .secondary) }
+                    LabeledContent("wackelig") { Text(verbatim: "\(WerkstattView.num(ts["wackelig"]))") }
+                }
+            } footer: {
+                if rot > 0 && art == "tests" {
+                    Text("Rot heißt: der Test hat in der Kopie nicht bestanden. Ein Update gibt es nur für Versionen, die auf GitHub grün waren; meist fehlt der Kopie etwas (Internet, Daten, Browser). Dein Spark läuft davon unberührt.")
+                }
+            }
+            if !namen.isEmpty {
+                Section("Rote Tests") {
+                    ForEach(namen, id: \.self) { Text(verbatim: $0).font(.caption.monospaced()) }
+                }
+            }
+            if let text = a["text"] as? String, !text.isEmpty {
+                Section("Antwort") { Text(verbatim: text).font(.callout) }
+            }
+            Section {
+                if rot > 0 && namen.contains(where: { $0 != "selftest" }) {
+                    Button("Nur die roten noch mal testen") { Task { await again() } }
+                }
+                Button("Löschen", role: .destructive) { asking = true }
+            }
+        }
+        .navigationTitle("Ergebnis")
+        .task { await load() }
+        .confirmationDialog("Dieses Ergebnis löschen?", isPresented: $asking) {
+            Button("Löschen", role: .destructive) { Task { await delete() } }
+        }
+    }
+
+    private func load() async {
+        do { a = try await AdminSession.shared.object("GET", "api/admin/werkstatt/" + id); error = nil }
+        catch { self.error = error.localizedDescription }
+    }
+
+    private func again() async {
+        do { _ = try await AdminSession.shared.call("POST", "api/admin/werkstatt/tests", body: ["von": id]); await changed(); dismiss() }
+        catch { self.error = error.localizedDescription }
+    }
+
+    private func delete() async {
+        do { _ = try await AdminSession.shared.call("DELETE", "api/admin/werkstatt/" + id); await changed(); dismiss() }
         catch { self.error = error.localizedDescription }
     }
 }

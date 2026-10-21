@@ -271,7 +271,7 @@ MODULE = {
     "wege": ("betrieb", "Sprung-Links in Texten außerhalb des Panels"),
     "praxistest": ("betrieb", "Zustand → Praxistest: die Prüfpunkte aus praxistest.json, je Punkt klappt, Problem oder später (nur Admins)"),
     "weiche_abstimmen": ("weiche", "Weiche abstimmen: Wortvorschläge des Sprachmodells, mit festen Regeln an den Alltagssätzen gemessen"),
-    "werkstattseite": ("betrieb", "Funktionen → Werkstatt: Testlauf, Code-Messung, Diagnose und Reparatur anfragen, Ergebnisse zeigen, feste Nachtregel"),
+    "werkstattseite": ("betrieb", "Zustand → Werkstatt: Aufträge anfragen, rote Tests noch mal, Ergebnisse mit nächsten Schritten, feste Nachtregel"),
     "modellseite": ("betrieb", "Zustand → Modelle: Katalog, Speicher-Budget, Messen, Wechseln und Zurückholen, eigene Modelle hinzufügen und löschen"),
     "technik": ("betrieb", "Diese Seite: Zustand → Technik und die Architektur-Doku"),
     "technik_knoten": ("betrieb", "Knoten-Seiten: jeder Kasten ganz genau, mit Ablauf, Regeln, Zahlen und Code"),

@@ -405,7 +405,7 @@ Live-Übersicht, Logs, Wächter, Sicherung, Update, Hilfe und die Admin-Seiten.
 | `app/panel/wartung.py` | Wartungspause: Spark hält an, während ein Modell neu eingespielt wird |
 | `app/panel/wege.py` | Sprung-Links in Texten außerhalb des Panels |
 | `app/werkstatt.py` | Werkstatt: feste Regeln für Aufträge, Sandbox ohne Netz und Daten, OpenCode, Code-Messung mit 10 Reparaturen |
-| `app/panel/werkstattseite.py` | Funktionen → Werkstatt: Testlauf, Code-Messung, Diagnose und Reparatur anfragen, Ergebnisse zeigen, feste Nachtregel |
+| `app/panel/werkstattseite.py` | Zustand → Werkstatt: Aufträge anfragen, rote Tests noch mal, Ergebnisse mit nächsten Schritten, feste Nachtregel |
 
 ### Sprachdienste
 
@@ -3521,7 +3521,7 @@ flowchart TD
   s3["3. Wunsch an root"]
   s4["4. Sandbox"]
   s5{{"5. Kopie des Codes gemacht?"}}
-  s6{{"6. Nur ein Testlauf?"}}
+  s6{{"6. Nur Tests?"}}
   s7["7. OpenCode mit festen Rechten"]
   s8["8. Selbsttests"]
   s9["9. Ergebnis als Daten"]
@@ -3542,24 +3542,25 @@ flowchart TD
   s6 -.->|ja| s8
 ```
 
-1. <a id="kn-werkstatt-s1"></a>**Auftrag oder Nachtregel**: Ein Admin tippt Testlauf, Code-Messung, Diagnose oder Reparatur an (werkstattseite.auftrag_geben; die drei mit Sprachmodell brauchen den Code der zweiten Stufe). Ist „Jede Nacht testen“ an, startet werkstattseite.nacht_art in den ersten 5 Stunden nach der eingestellten Stunde einen Testlauf und nach einem Modellwechsel eine Code-Messung.
-2. <a id="kn-werkstatt-s2"></a>**Feste Regeln erfüllt?**: werkstatt.pruefen nimmt nur eine bekannte Art, nichts läuft schon, OpenCode und das eigene Sprachmodell sind da, wo die Art sie braucht. Der Text des Admins wird gesäubert und eingezäunt: er beschreibt nur das Problem.
+1. <a id="kn-werkstatt-s1"></a>**Auftrag oder Nachtregel**: Ein Admin tippt auf der Seite Zustand → Werkstatt „Alles testen“, „Problem untersuchen“, „Reparatur versuchen“ oder „Sprachmodell messen“ an (werkstattseite.auftrag_geben; die drei mit Sprachmodell brauchen den Code der zweiten Stufe). „Nur die roten noch mal testen“ nennt nur das Ergebnis; die Namen nimmt werkstattseite.nachtest_namen aus dem gespeicherten Ergebnis, nie von der Seite. Ist „Jede Nacht testen“ an, startet werkstattseite.nacht_art in den ersten 5 Stunden nach der eingestellten Stunde einen Testlauf und nach einem Modellwechsel eine Code-Messung.
+2. <a id="kn-werkstatt-s2"></a>**Feste Regeln erfüllt?**: werkstatt.pruefen nimmt nur eine bekannte Art, nichts läuft schon, OpenCode und das eigene Sprachmodell sind da, wo die Art sie braucht. Der Text des Admins wird gesäubert und eingezäunt: er beschreibt nur das Problem. „Rote Tests noch mal“ nimmt nur Testnamen, jeden einmal, höchstens 30.
 3. <a id="kn-werkstatt-s3"></a>**Wunsch an root**: Das Panel schreibt einen Wunsch und darf per sudo nur die feste Einheit speech-spark-werkstatt starten. werkstatt.wunsch_nehmen liest ihn als root genau einmal und prüft alles noch einmal.
 4. <a id="kn-werkstatt-s4"></a>**Sandbox**: werkstatt.sandbox startet den Auftrag mit systemd-run als Nutzer spark-werkstatt: nur sein eigener Ordner ist beschreibbar, Daten, Einstellungen und Schlüssel des Spark sind unsichtbar, Netz nur zu diesem Rechner und dort per nftables nur zum LLM-Tor (prüft den Schlüssel) und zu den freien Ports der eigenen Tests, nie zu einer Engine oder zum Panel; ohne diese Sperre startet kein Auftrag. Speicher- und Zeitgrenze je Art (werkstatt.GRENZE_S).
 5. <a id="kn-werkstatt-s5"></a>**Kopie des Codes gemacht?**: werkstatt.kopie klont den Klon des Installers, nie von GitHub. Weil er root gehört, nennt werkstatt.git_umgebung genau diesen Ordner in einer eigenen git-Datei der Sandbox als sicher.
-6. <a id="kn-werkstatt-s6"></a>**Nur ein Testlauf?**: Der Testlauf braucht weder OpenCode noch das Sprachmodell; er geht gleich zu den Tests.
+6. <a id="kn-werkstatt-s6"></a>**Nur Tests?**: Alles testen und „Rote Tests noch mal“ brauchen weder OpenCode noch das Sprachmodell; sie gehen gleich zu den Tests.
 7. <a id="kn-werkstatt-s7"></a>**OpenCode mit festen Rechten**: werkstatt.rechte: Diagnose liest nur, Reparatur darf Dateien der Kopie ändern und die Selbsttests starten; kein Web, kein git push, jeder andere Befehl abgelehnt. Das Sprachmodell fragt OpenCode über das LLM-Tor ganz hinten in der Reihe, damit Gespräche vorgehen.
-8. <a id="kn-werkstatt-s8"></a>**Selbsttests**: werkstatt.testlauf lässt die Selbsttests der Kopie laufen wie GitHub; wer beim zweiten Versuch grün wird, zählt als wackelig.
-9. <a id="kn-werkstatt-s9"></a>**Ergebnis als Daten**: werkstatt.pruefe_ergebnis nimmt nur bekannte Felder, Zahlen im Rahmen und Wörter aus festen Listen; ein Patch über 200000 Zeichen wird gekürzt. Die Seite zeigt alles nur als Text.
+8. <a id="kn-werkstatt-s8"></a>**Selbsttests**: werkstatt.testlauf lässt die Selbsttests der Kopie laufen wie GitHub; wer beim zweiten Versuch grün wird, zählt als wackelig. werkstatt.namen_testen lässt bei „Rote Tests noch mal“ jeden genannten Test einzeln in einem eigenen Prozess laufen: jetzt grün oder weiter rot.
+9. <a id="kn-werkstatt-s9"></a>**Ergebnis als Daten**: werkstatt.pruefe_ergebnis nimmt nur bekannte Felder, Zahlen im Rahmen und Wörter aus festen Listen; ein Patch über 200000 Zeichen wird gekürzt. Die Seite zeigt alles nur als Text, dazu mit festen Sätzen, was das Ergebnis heißt und was als Nächstes geht.
 10. <a id="kn-werkstatt-s10"></a>**Der Admin entscheidet**: Den Patch gibt der Admin einem Claude-Thread oder einem Menschen; die Werkstatt spielt nie etwas ein und pusht nie.
 
-**Beispiele:** Testlauf in der Nacht: Grün, rot und wackelig stehen unter Funktionen → Werkstatt. · Reparatur vorschlagen: Ein Patch mit Testergebnis zum Ansehen. · Kein eigenes Sprachmodell: Abgelehnt, bevor etwas startet.
+**Beispiele:** Testlauf in der Nacht: Grün, rot und wackelig stehen unter Zustand → Werkstatt. · Rote Tests noch mal: Jeder rote Test einzeln: jetzt grün oder weiter rot. · Reparatur vorschlagen: Ein Patch mit Testergebnis zum Ansehen. · Kein eigenes Sprachmodell: Abgelehnt, bevor etwas startet.
 
 #### Zahlen (aus dem Code)
 
 - **600 s** darf ein Wunsch alt sein ([Schritt 3](#kn-werkstatt-s3))
 - **2000** Zeichen höchstens im Auftrag ([Schritt 2](#kn-werkstatt-s2))
 - **4** Teile des Testlaufs gleichzeitig ([Schritt 8](#kn-werkstatt-s8))
+- **30** Testnamen höchstens je Ergebnis und „noch mal“ ([Schritt 2](#kn-werkstatt-s2))
 - **20** Ergebnisse bleiben ([Schritt 9](#kn-werkstatt-s9))
 - **200000** Zeichen eines Patches, mehr wird gekürzt ([Schritt 9](#kn-werkstatt-s9))
 - **5 h** nach der Stunde darf die Nacht starten ([Schritt 1](#kn-werkstatt-s1))
@@ -3568,10 +3569,11 @@ flowchart TD
 
 - Auf dem Modell-Rechner einmal sudo ./install.sh --werkstatt (OpenCode mit fester Version und Prüfsumme).
 - Funktionen → Werkstatt: an und aus, „Jede Nacht testen“ mit der Startstunde.
+- Zustand → Werkstatt: die vier Aufträge starten, Ergebnisse ansehen, rote Tests noch mal, für Claude kopieren, löschen.
 
 #### Was du siehst
 
-- Funktionen → Werkstatt: Stand, letzter Testlauf, Code-Messung je Sprachmodell und die letzten Ergebnisse mit Patch.
+- Zustand → Werkstatt: links der Verlauf, rechts ein Ergebnis mit großen Zahlen, was es heißt (etwa „Was heißt rot?“), den roten Tests nach Bereich, Antwort oder Patch und den nächsten Schritten.
 - Zustand → Live, Monitoring und die Steuerzentrale: Teil „Werkstatt“ mit Art und Status, nie Inhalte.
 
 #### Im Code
@@ -3585,6 +3587,8 @@ flowchart TD
 - `app/werkstatt.py` `git_umgebung`: nur dieser Klon gilt als sicher ([Schritt 5](#kn-werkstatt-s5))
 - `app/werkstatt.py` `rechte`: Rechte von OpenCode ([Schritt 7](#kn-werkstatt-s7))
 - `app/werkstatt.py` `testlauf`: Selbsttests in Teilen ([Schritt 8](#kn-werkstatt-s8))
+- `app/werkstatt.py` `namen_testen`: rote Tests einzeln noch mal ([Schritt 8](#kn-werkstatt-s8))
+- `app/panel/werkstattseite.py` `nachtest_namen`: Namen nur aus dem Ergebnis ([Schritt 1](#kn-werkstatt-s1))
 - `app/werkstatt.py` `pruefe_ergebnis`: Ergebnis als Daten ([Schritt 9](#kn-werkstatt-s9))
 
 Selbsttests: `test_werkstatt`

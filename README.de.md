@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.886** Werkstatt übersichtlich: eigene Seite Zustand → Werkstatt mit vier Kacheln, Verlauf und Ergebnis, das erklärt, was rot heißt und was als Nächstes geht (Ursache untersuchen, nur die roten noch mal testen, für Claude kopieren)
 - **V01.0.885** Musik bearbeiten auf eigener Seite über die ganze Breite: große Welle, Werkzeuge links, Einstellungen in der Mitte, Fassungen rechts, Knopf in einer festen Leiste unten; auf dem Handy und in der iPhone-App dieselbe Ordnung
 - **V01.0.884** Fix iPhone-App: der Inhalt einer formatierten Mail blieb leer (die Sperrregel der Web-Ansicht wurde nicht übersetzt); im Dunkelmodus erscheint eine schlichte Mail hell auf dunklem Grund wie bei Apple Mail, eine Mail mit eigenen Farben bleibt auf Weiß
 - **V01.0.883** Der Begleiter am PC und Mac zeigt das Spark-Update: „Spark-Update läuft: 40 % · Schritt“ im Zustand, beim Neustart „Spark startet für das Update neu …“
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.879** Vorrat je Profil: der Assistent nimmt Kalender, Mail, Wetter und Pakete aus dem Speicher, solange frisch genug, bei langsamem Dienst nach höchstens 2 s den älteren Stand mit Uhrzeit, „schau nochmal nach“ fragt neu; eine Runde je Minute hält aktive Profile frisch, Tagesbriefing 10 min vorher geschrieben, Wetter und Pakete versiegelt auf der Platte, Home Assistant live über WebSocket; Zustand → Prüfen je Dienst; ohne Schalter
 - **V01.0.878** Update sperrt sofort beim Klick: Sicherung, Laden, Prüfen, Modell-Rechner und Neustart als Schritte im selben Fenster auf allen Geräten; jedes frühe Ende löst die Sperre und nennt den Grund
 - **V01.0.877** Für dich aus dem Vorrat: die letzte Lesung je Postfach bleibt versiegelt im Profil, nach einem Neustart sofort da; antwortet ein Postfach nicht, kommen seine Einträge mit „Stand hh:mm“ im Tab, beim Vorlesen und unter Heute
-- **V01.0.876** Alles Offene im Assistenten (Stufe 2): Vorschläge des Assistenten (neuer Termin, verschieben, löschen, Mail per Sprache, Aufräumen, Entwurf) als Karte „Wartet auf dein Ja“ unter der Antwort und unter Offen, mit „Eintragen“/„Senden“ (dasselbe wie ein getipptes Ja), „Ändern …“ (Formular oder Schreibfenster, ausgefüllt) und „Abbrechen“; auch vom Lautsprecher am Handy bestätigen; iPhone
 
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)

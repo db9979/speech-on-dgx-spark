@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.886** Workshop made clear: own page Status → Workshop with four tiles, history and a result that explains what red means and what comes next (find the cause, test only the red ones again, copy for Claude)
 - **V01.0.885** Editing music on a page of its own over the whole width: big wave, tools on the left, settings in the middle, versions on the right, the button in a fixed bar at the bottom; the same order on a phone and in the iPhone app
 - **V01.0.884** Fix iPhone app: the content of a formatted mail stayed empty (the web view's blocking rule did not compile); in dark mode a plain mail shows light on dark like Apple Mail, a mail with its own colours keeps its white page
 - **V01.0.883** The companion on PC and Mac shows the Spark's update: "Spark-Update läuft: 40 % · step" in its state, during the restart "Spark startet für das Update neu …"
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.879** Per-profile store: the assistant takes calendar, mail, weather and parcels from memory while fresh enough, with a slow service after at most 2 s the older reading with its time, "look again" asks anew; one round a minute keeps active profiles fresh, daily briefing written 10 min ahead, weather and parcels sealed on disk, Home Assistant live over WebSocket; Status → Check per service; no switch
 - **V01.0.878** The update locks right at the click: backup, fetch, check, model computer and restart as steps in the same window on every device; every early end releases the lock and names the reason
 - **V01.0.877** For you from the supply: the last reading per mailbox stays sealed in the profile, there at once after a restart; when a mailbox does not answer its entries come with "Stand hh:mm" in the tab, when read aloud and under Today
-- **V01.0.876** Everything open in the assistant (stage 2): the assistant's proposals (new appointment, move, delete, mail by voice, tidy-up, draft) as a card "Waiting for your yes" under the answer and under Open, with "Add"/"Send" (the same as a typed yes), "Change …" (form or writing window, filled in) and "Cancel"; also confirm a speaker's proposal on the phone; iPhone
 
 
 All versions: [CHANGELOG.md](CHANGELOG.md)

@@ -61,6 +61,20 @@ class Regeln(unittest.TestCase):
         self.assertTrue(text.startswith("Licht im Bad geht nicht\n"))
         self.assertEqual(len(text), werkstatt.TEXT_MAX)
 
+    def test_red_tests_again_only_by_name(self):
+        """„Nur die roten noch mal“ (Dominik 2026-10-21): only test names, each once, at most NAMEN_MAX; no OpenCode,
+        no language model, no free text."""
+        self.modell.return_value = ""
+        self.assertEqual(werkstatt.pruefen("nachtest", "test_a.X.y  test_b", {}, da=False), "test_a.X.y test_b")
+        for bad in ("", "   ", "test_a.X.y; rm -rf /", "test_a test_a", "$(reboot)", "Warum ist das rot?"):
+            with self.assertRaises(werkstatt.Fehler) as e:
+                werkstatt.pruefen("nachtest", bad, {}, da=False)
+            self.assertEqual(str(e.exception), "namen", bad)
+        viele = " ".join(f"test_{i}" for i in range(werkstatt.NAMEN_MAX + 1))
+        with self.assertRaises(werkstatt.Fehler):
+            werkstatt.pruefen("nachtest", viele, {}, da=False)
+        self.assertEqual(werkstatt.namen("a b a c;d"), ["a", "b"])
+
     def test_the_wish_is_taken_once_and_only_fresh(self):
         werkstatt.wunsch("diagnose", "Das Licht im Bad geht nicht an", path=self.wunsch, da=True)
         t = werkstatt.read_json(self.wunsch, {})["zeit"]
@@ -332,7 +346,12 @@ echo '{"type":"text","part":{"text":"Ursache gefunden"}}'
 FAKE_LESEN = """#!/bin/sh
 echo '{"type":"text","part":{"text":"Die Ursache steht in app/x.py"}}'
 """
-SELFTEST = "import sys, unittest\nr = unittest.main(module=None, argv=['x'] + sys.argv[1:], exit=False)\nsys.exit(0 if r.result.wasSuccessful() else 1)\n"
+SELFTEST = ("import sys, unittest\n"
+            "if sys.argv[1:2] == ['--rerun']:\n"
+            "    sys.path.insert(0, sys.argv[2])\n"
+            "    r = unittest.TextTestRunner().run(unittest.defaultTestLoader.loadTestsFromNames(sys.argv[3:]))\n"
+            "    sys.exit(0 if r.wasSuccessful() else 1)\n"
+            "r = unittest.main(module=None, argv=['x'] + sys.argv[1:], exit=False)\nsys.exit(0 if r.result.wasSuccessful() else 1)\n")
 
 
 class Lauf(unittest.TestCase):
@@ -343,7 +362,9 @@ class Lauf(unittest.TestCase):
         self.quelle = os.path.join(self.tmp, "src")
         os.makedirs(os.path.join(self.quelle, "app", "tests"))
         for name, text in (("app/x.py", "x = 1\n"), ("app/selftest.py", SELFTEST),
-                           ("app/tests/test_x.py", "import unittest\nclass T(unittest.TestCase):\n    def test_ok(self):\n        pass\n")):
+                           ("app/VERSION", "V01.0.900\n"),
+                           ("app/tests/test_x.py", "import unittest\nclass T(unittest.TestCase):\n    def test_ok(self):\n        pass\n"),
+                           ("app/tests/test_rot.py", "import unittest\nclass R(unittest.TestCase):\n    def test_rot(self):\n        self.fail()\n")):
             with open(os.path.join(self.quelle, name), "w") as f:
                 f.write(text)
         git = ["git", "-C", self.quelle, "-c", "user.name=t", "-c", "user.email=t@t"]
@@ -394,6 +415,22 @@ class Lauf(unittest.TestCase):
         for z in err.getvalue().splitlines():
             self.assertRegex(z, werkstatt.STAND.pattern, "progress lines: fixed words and numbers")
         werkstatt.pruefe_ergebnis(r)
+
+    def test_red_tests_again(self):
+        """nachtest: each named test in its own process (selftest.py --rerun), no model asked."""
+        self.bereit.return_value = False
+        err = io.StringIO()
+        with mock.patch.object(sys, "stderr", err):
+            r = werkstatt.lauf(self.order("nachtest", "/nichts", "test_x.T.test_ok test_rot.R.test_rot test_fehlt.A.b"))
+        self.assertEqual(r["grund"], "ok", err.getvalue())
+        self.assertEqual((r["tests"]["gruen"], r["tests"]["rot"]), (1, 2))
+        self.assertEqual(r["tests"]["rot_namen"], ["test_rot.R.test_rot", "test_fehlt.A.b"])
+        self.assertEqual(r["version"], "V01.0.900")
+        self.bereit.assert_not_called()
+        for z in err.getvalue().splitlines():
+            self.assertRegex(z, werkstatt.STAND.pattern)
+        self.assertEqual(werkstatt.pruefe_ergebnis(r)["version"], "V01.0.900")
+        self.assertEqual(werkstatt.pruefe_ergebnis(dict(r, version="1; rm"))["version"], "")
 
     def test_diagnose_answers_and_changes_nothing(self):
         with mock.patch.object(sys, "stderr", io.StringIO()):
@@ -550,7 +587,31 @@ class Seite(unittest.TestCase):
         werkstatt.uebernehmen(ergebnis(), werkstatt.DATEN)
         with redirect_stdout(io.StringIO()):
             self.assertEqual(self.admin.get("/api/admin/werkstatt/w1760000000").json()["text"], "Ursache gefunden")
+            self.assertEqual(self.admin.post("/api/admin/werkstatt/tests", json={"von": "w1760000000"}).status_code, 409,
+                             "a result without red tests has nothing to test again")
             self.assertEqual(self.admin.delete("/api/admin/werkstatt/w1760000000").json()["auftraege"], [])
+
+    def test_red_tests_again_from_the_page(self):
+        """„Nur die roten noch mal“: the page names only the result; the names come from the kept result."""
+        helpers.set_config(werkstatt=True)
+        rot = ["test_a.X.y", "selftest", "test_b.Y.z"]
+        werkstatt.uebernehmen(ergebnis(id="w1760000500", art="tests", patch="", text="",
+                                       tests={"gruen": 9, "rot": 3, "wackelig": 0, "rot_namen": rot}), werkstatt.DATEN)
+        out = io.StringIO()
+        with mock.patch.object(self.w, "_starten", return_value=True), redirect_stdout(out):
+            for bad in ({"von": "../x"}, {"von": "w1760000999"}):
+                self.assertEqual(self.admin.post("/api/admin/werkstatt/tests", json=bad).status_code, 404, bad)
+            self.assertFalse(os.path.exists(werkstatt.WUNSCH))
+            r = self.admin.post("/api/admin/werkstatt/tests", json={"von": "w1760000500", "text": "test_boese.A.b"})
+        self.assertEqual(r.status_code, 200, r.text)
+        w = werkstatt.read_json(werkstatt.WUNSCH, {})
+        self.assertEqual((w["art"], w["text"]), ("nachtest", "test_a.X.y test_b.Y.z"), "only the kept names, without selftest")
+        self.assertIn("werkstatt: auftrag nachtest gestartet", out.getvalue())
+        self.assertIn("werkstatt: auftrag nachtest abgelehnt keins", out.getvalue())
+        lang = [f"test_{i:03d}." + "x" * 150 for i in range(werkstatt.NAMEN_MAX)]
+        liste = self.w.nachtest_namen({"tests": {"rot_namen": lang}})
+        self.assertLessEqual(len(" ".join(liste)), werkstatt.TEXT_MAX, "the Wärter takes no more")
+        self.assertTrue(liste and all(n in lang for n in liste), "whole names only")
 
     def test_the_night_rule_switches_and_logs(self):
         helpers.set_config(werkstatt=True, werkstatt_nacht=False)

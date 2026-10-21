@@ -405,7 +405,7 @@ Live overview, logs, watchers, backup, update, help and the admin pages.
 | `app/panel/wartung.py` | Wartungspause: while the language model (own or qwen38), the speech recognition or the speech output is updated, the Spark pauses on purpose instead of failing. |
 | `app/panel/wege.py` | Ways into the panel in texts that leave it ("Einschalten unter Me → Telegram"): Telegram messages, push notes. |
 | `app/werkstatt.py` | Werkstatt: the model computer's workshop, a copy of the installed code in a sandbox. |
-| `app/panel/werkstattseite.py` | Features → Workshop: the panel's side of app/werkstatt.py, for admins only, default off (chat.werkstatt). |
+| `app/panel/werkstattseite.py` | Status → Workshop: the panel's side of app/werkstatt.py, for admins only, default off (switch Features → Workshop, chat.werkstatt). |
 
 ### Speech services
 
@@ -3521,7 +3521,7 @@ flowchart TD
   s3["3. Wish to root"]
   s4["4. Sandbox"]
   s5{{"5. Copy of the code made?"}}
-  s6{{"6. Only a test run?"}}
+  s6{{"6. Only tests?"}}
   s7["7. OpenCode with fixed rights"]
   s8["8. Self-tests"]
   s9["9. Result as data"]
@@ -3542,24 +3542,25 @@ flowchart TD
   s6 -.->|yes| s8
 ```
 
-1. <a id="kn-werkstatt-s1"></a>**Order or night rule**: An admin taps test run, code measurement, diagnosis or repair (werkstattseite.auftrag_geben; the three with the language model need the second-step code). With "Test every night" on, werkstattseite.nacht_art starts a test run in the first 5 hours after the set hour, and a code measurement after a model switch.
-2. <a id="kn-werkstatt-s2"></a>**Fixed rules met?**: werkstatt.pruefen takes only a known kind, nothing runs yet, OpenCode and the own language model are there where the kind needs them. The admin's text is cleaned and fenced: it only describes the problem.
+1. <a id="kn-werkstatt-s1"></a>**Order or night rule**: On the page Status → Workshop an admin taps "Test everything", "Look into a problem", "Try a repair" or "Measure the language model" (werkstattseite.auftrag_geben; the three with the language model need the second-step code). "Test only the red ones again" names only the result; werkstattseite.nachtest_namen takes the names from the kept result, never from the page. With "Test every night" on, werkstattseite.nacht_art starts a test run in the first 5 hours after the set hour, and a code measurement after a model switch.
+2. <a id="kn-werkstatt-s2"></a>**Fixed rules met?**: werkstatt.pruefen takes only a known kind, nothing runs yet, OpenCode and the own language model are there where the kind needs them. The admin's text is cleaned and fenced: it only describes the problem. "Red tests again" takes only test names, each once, at most 30.
 3. <a id="kn-werkstatt-s3"></a>**Wish to root**: The panel writes a wish and may start only the fixed unit speech-spark-werkstatt through sudo. werkstatt.wunsch_nehmen reads it as root exactly once and checks everything again.
 4. <a id="kn-werkstatt-s4"></a>**Sandbox**: werkstatt.sandbox starts the order with systemd-run as the user spark-werkstatt: only its own folder is writable, the Spark's data, settings and keys are invisible, network only to this computer and there, by nftables, only to the LLM-Tor (it checks the key) and the free ports of its own tests, never an engine or the panel; without this firewall no order starts. A memory and time limit per kind (werkstatt.GRENZE_S).
 5. <a id="kn-werkstatt-s5"></a>**Copy of the code made?**: werkstatt.kopie clones the installer's clone, never from GitHub. Because root owns it, werkstatt.git_umgebung names exactly this folder as safe in the sandbox's own git file.
-6. <a id="kn-werkstatt-s6"></a>**Only a test run?**: The test run needs neither OpenCode nor the language model; it goes straight to the tests.
+6. <a id="kn-werkstatt-s6"></a>**Only tests?**: Test everything and "Red tests again" need neither OpenCode nor the language model; they go straight to the tests.
 7. <a id="kn-werkstatt-s7"></a>**OpenCode with fixed rights**: werkstatt.rechte: diagnosis only reads, repair may change files of the copy and start the self-tests; no web, no git push, every other command refused. OpenCode asks the language model through the LLM-Tor at the very back of the line, so conversations go first.
-8. <a id="kn-werkstatt-s8"></a>**Self-tests**: werkstatt.testlauf runs the copy's self-tests like GitHub; whatever turns green on the second try counts as wobbly.
-9. <a id="kn-werkstatt-s9"></a>**Result as data**: werkstatt.pruefe_ergebnis takes only known fields, numbers in range and words from fixed lists; a patch over 200000 characters is cut. The page shows everything as text only.
+8. <a id="kn-werkstatt-s8"></a>**Self-tests**: werkstatt.testlauf runs the copy's self-tests like GitHub; whatever turns green on the second try counts as wobbly. For "Red tests again" werkstatt.namen_testen runs each named test alone in its own process: green now or still red.
+9. <a id="kn-werkstatt-s9"></a>**Result as data**: werkstatt.pruefe_ergebnis takes only known fields, numbers in range and words from fixed lists; a patch over 200000 characters is cut. The page shows everything as text only, with fixed sentences on what the result means and what can come next.
 10. <a id="kn-werkstatt-s10"></a>**The admin decides**: The admin hands the patch to a Claude thread or a person; the workshop never installs or pushes anything.
 
-**Examples:** Test run at night: Green, red and wobbly show under Features → Workshop. · Propose a repair: A patch with its test result to look at. · No own language model: Refused before anything starts.
+**Examples:** Test run at night: Green, red and wobbly show under Status → Workshop. · Red tests again: Each red test alone: green now or still red. · Propose a repair: A patch with its test result to look at. · No own language model: Refused before anything starts.
 
 #### Numbers (from the code)
 
 - **600 s** a wish may be old ([step 3](#kn-werkstatt-s3))
 - **2000** characters at most in an order ([step 2](#kn-werkstatt-s2))
 - **4** parts of the test run at once ([step 8](#kn-werkstatt-s8))
+- **30** test names at most per result and "again" ([step 2](#kn-werkstatt-s2))
 - **20** results are kept ([step 9](#kn-werkstatt-s9))
 - **200000** characters of a patch, more is cut ([step 9](#kn-werkstatt-s9))
 - **5 h** after the hour the night may start ([step 1](#kn-werkstatt-s1))
@@ -3568,10 +3569,11 @@ flowchart TD
 
 - On the model computer once sudo ./install.sh --werkstatt (OpenCode with a pinned version and checksum).
 - Features → Workshop: on and off, "Test every night" with the start hour.
+- Status → Workshop: start the four orders, look at results, red tests again, copy for Claude, delete.
 
 #### What you see
 
-- Features → Workshop: status, last test run, code measurement per language model and the last results with patch.
+- Status → Workshop: the history on the left, one result on the right with big numbers, what it means (such as "What does red mean?"), the red tests by area, the answer or patch and the next steps.
 - Status → Live, Monitoring and the control centre: part "Workshop" with kind and status, never contents.
 
 #### In the code
@@ -3585,6 +3587,8 @@ flowchart TD
 - `app/werkstatt.py` `git_umgebung`: only this clone counts as safe ([step 5](#kn-werkstatt-s5))
 - `app/werkstatt.py` `rechte`: OpenCode's rights ([step 7](#kn-werkstatt-s7))
 - `app/werkstatt.py` `testlauf`: self-tests in parts ([step 8](#kn-werkstatt-s8))
+- `app/werkstatt.py` `namen_testen`: red tests alone again ([step 8](#kn-werkstatt-s8))
+- `app/panel/werkstattseite.py` `nachtest_namen`: names only from the result ([step 1](#kn-werkstatt-s1))
 - `app/werkstatt.py` `pruefe_ergebnis`: result as data ([step 9](#kn-werkstatt-s9))
 
 Self-tests: `test_werkstatt`

@@ -201,7 +201,7 @@ class Browser(post.Fake):
                 for vname, w, h in (("pc", 1280, 900), ("handy", 390, 844)):
                     br, pg, errors = await self.page(p, w, h)
                     try:
-                        for s in ("chat", "mon", "live", "test", "logs", "verb", "usage", "models", "tech", "feat", "prof",
+                        for s in ("chat", "mon", "live", "test", "werk", "logs", "verb", "usage", "models", "tech", "feat", "prof",
                                   "route", "int", "apps", "cal"):
                             await pg.evaluate(f"goSec('{s}')")
                             await self.check(pg, f"{vname}/{s}")

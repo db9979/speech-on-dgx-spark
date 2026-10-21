@@ -5,6 +5,8 @@ sandbox. Optional part (`sudo ./install.sh --werkstatt`), admin switch Funktione
     tests      the whole self-test of the installed version in TEILE parts at once: green, wobbly (green only in the
                second try) or red, with the names of the tests; no model. On request, and every night by the panel's
                fixed rule (panel/werkstattseite.py, Funktionen → Werkstatt → Jede Nacht testen).
+    nachtest   only the named tests again (the red ones of a test run, Zustand → Werkstatt „Nur die roten noch mal“),
+               each in its own process: still red or green now; no model. The names come from the kept result.
     messen     the code measurement: AUFGABEN, real repairs from the history, each put back to the code before its
                fix with the fix's own tests, handed to OpenCode with the own language model; counts how many come out
                green. On request, and after the night's test run when the running language model has no measurement
@@ -44,6 +46,7 @@ from common import PREFIX, STATE, load_config, read_json, write_json  # noqa: E4
 
 ARTEN = {   # kind -> (German, English, needs OpenCode and the language model, needs the admin's text)
     "tests": ("Testlauf", "Test run", False, False),
+    "nachtest": ("Rote Tests noch mal", "Red tests again", False, True),
     "messen": ("Code-Messung", "Code measurement", True, False),
     "diagnose": ("Diagnose", "Diagnosis", True, True),
     "reparatur": ("Reparatur", "Repair", True, True),
@@ -74,13 +77,14 @@ AUFTRAEGE_MAX = 20                            # results kept (the oldest goes)
 TEILE = 4                                     # self-test parts at once (like GitHub "Tests")
 TEST_S = 900                                  # seconds per test module or part (install.sh's limit for a whole run)
 OPENCODE_S = {"diagnose": 1200, "reparatur": 2400, "messen": 1200}   # seconds OpenCode may work (per task)
-GRENZE_S = {"tests": 3 * 3600, "messen": 4 * 3600, "diagnose": 1800, "reparatur": 3600}   # the whole sandbox
+GRENZE_S = {"tests": 3 * 3600, "nachtest": 3600, "messen": 4 * 3600, "diagnose": 1800, "reparatur": 3600}   # the whole sandbox
 STAND = re.compile(r"^werkstatt: [A-Za-z0-9 .,:%/()_+-]{1,160}$")   # a progress line: fixed words and numbers only
 STAND_MAX = 6
 IM_GANG = ("active", "activating", "deactivating", "reloading")
 ID = re.compile(r"^w[0-9]{10}$")
 PFAD = re.compile(r"^[A-Za-z0-9_][A-Za-z0-9_./-]{0,199}$")
 TESTNAME = re.compile(r"^[A-Za-z0-9_.]{1,160}$")
+VERSION = re.compile(r"^V[0-9]{2}\.[0-9]\.[0-9]{3,4}$")     # app/VERSION of the copy
 MODELL = re.compile(r"^[a-z0-9][a-z0-9.-]{1,47}$")
 GRUENDE = ("ok", "llm", "opencode", "zeit", "quelle", "tests", "abbruch", "fehler", "leer")
 STUFE_HEADER = "x-spark-stufe"                # common.STAGE_HEADER: "0" puts every request of the sandbox last
@@ -196,7 +200,7 @@ def sandbox(art):
          "SystemCallArchitectures": "native", "RestrictAddressFamilies": "AF_UNIX AF_INET AF_INET6",
          "IPAddressDeny": "any", "IPAddressAllow": "localhost",
          "InaccessiblePaths": "-/var/lib/speech-spark -/etc/speech-spark -/root -/home",
-         "MemoryMax": "12G" if art == "tests" else "8G", "CPUQuota": "800%" if art == "tests" else "400%",
+         "MemoryMax": "12G" if art in ("tests", "nachtest") else "8G", "CPUQuota": "800%" if art in ("tests", "nachtest") else "400%",
          "Nice": "19", "IOSchedulingClass": "idle", "RuntimeMaxSec": str(GRENZE_S[art]),
          "LogNamespace": "speech-spark", "KillMode": "control-group"}
     out = []
@@ -232,12 +236,26 @@ def sauber_text(text, most=TEXT_MAX):
     return text[:most]
 
 
+def namen(text):
+    """The tests of a „nachtest“: names separated by blanks, each a test id, at most NAMEN_MAX, each once."""
+    out = []
+    for n in str(text).split():
+        if TESTNAME.match(n) and n not in out:
+            out.append(n)
+    return out[:NAMEN_MAX]
+
+
 def pruefen(art, text, cfg=None, laeuft=False, da=None):
     """The fixed rules of an order (the panel decides, never a model). Returns the clean text; raises Fehler."""
     if art not in ARTEN:
         raise Fehler("art")
     if laeuft:
         raise Fehler("laeuft")
+    if art == "nachtest":
+        liste = namen(text)
+        if not liste or len(liste) != len(str(text).split()):
+            raise Fehler("namen")
+        return " ".join(liste)
     braucht_llm, braucht_text = ARTEN[art][2], ARTEN[art][3]
     if braucht_llm and not (installiert() if da is None else da):
         raise Fehler("opencode")
@@ -258,7 +276,7 @@ def wunsch(art, text, laeuft=False, cfg=None, path=None, da=None):
 
 
 def anfragen(art, text, starten, laeuft=False, cfg=None, path=None, da=None):
-    """An order from Funktionen → Werkstatt (or the panel's night rule): the rules, the wish, then starten()."""
+    """An order from Zustand → Werkstatt (or the panel's night rule): the rules, the wish, then starten()."""
     wunsch(art, text, laeuft, cfg, path, da)
     if not starten():
         raise Fehler("start")
@@ -330,7 +348,8 @@ def pruefe_ergebnis(r):
     out = {"id": r["id"], "art": r["art"], "zeit": _zahl(r.get("zeit"), 10 ** 11), "dauer_s": _zahl(r.get("dauer_s"), 10 ** 6),
            "grund": r.get("grund") if r.get("grund") in GRUENDE else "fehler",
            "modell": r["modell"] if isinstance(r.get("modell"), str) and MODELL.match(r["modell"]) else "",
-           "aufgabe": sauber_text(r.get("aufgabe", "")), "text": sauber_text(r.get("text", ""), ANTWORT_MAX)}
+           "aufgabe": sauber_text(r.get("aufgabe", "")), "text": sauber_text(r.get("text", ""), ANTWORT_MAX),
+           "version": r["version"] if isinstance(r.get("version"), str) and VERSION.match(r["version"]) else ""}
     t = r.get("tests") if isinstance(r.get("tests"), dict) else {}
     out["tests"] = {"gruen": _zahl(t.get("gruen")), "rot": _zahl(t.get("rot")), "wackelig": _zahl(t.get("wackelig")),
                     "rot_namen": _namen(t.get("rot_namen")), "wackelig_namen": _namen(t.get("wackelig_namen"))}
@@ -376,7 +395,7 @@ def kurz(r):
 
 
 def daten(laeuft=False, stand=(), path=None, cfg=None, da=None):
-    """What Funktionen → Werkstatt, Live and the Wärter need: installed, running, progress, results (no patches)."""
+    """What Zustand → Werkstatt, Live and the Wärter need: installed, running, progress, results (no patches)."""
     path = DATEN if path is None else path
     d = read_json(path, {})
     return {"installiert": installiert() if da is None else da, "version": OPENCODE_VERSION, "laeuft": bool(laeuft),
@@ -517,6 +536,35 @@ def module_testen(app, python, module):
     return {"gruen": gruen, "rot": len(rot), "wackelig": 0, "rot_namen": rot, "wackelig_namen": []}
 
 
+def namen_testen(app, python, liste):
+    """The named tests again (nachtest), each in its own process like selftest.py's second try: green or red."""
+    gruen, rot = 0, []
+    env = {"PATH": os.path.dirname(python) + ":/usr/bin:/bin", "LANG": "C.UTF-8", "HOME": os.environ.get("HOME", ARBEIT),
+           "SPEECH_SPARK_NO_BROWSER": "1", "PYTHONDONTWRITEBYTECODE": "1"}
+    for n in namen(" ".join(liste)):
+        try:
+            p = subprocess.run([python, "-W", "ignore", "selftest.py", "--rerun", os.path.join(app, "tests"), n],
+                               cwd=app, env=env, capture_output=True, timeout=TEST_S)
+            ok = p.returncode == 0
+        except subprocess.TimeoutExpired:
+            ok = False
+        if ok:
+            gruen += 1
+        else:
+            rot.append(n)
+    return {"gruen": gruen, "rot": len(rot), "wackelig": 0, "rot_namen": rot, "wackelig_namen": []}
+
+
+def version(ordner):
+    """app/VERSION of the copy, "" when it has none."""
+    try:
+        with open(os.path.join(ordner, "app", "VERSION"), encoding="utf-8") as f:
+            v = f.read().strip()
+    except OSError:
+        return ""
+    return v if VERSION.match(v) else ""
+
+
 def module_zu(dateien, app):
     """The test modules of changed files: tests/test_<name>.py for app/…/<name>.py, and every changed test module."""
     out = []
@@ -607,8 +655,17 @@ def lauf(a, now=time.time):
             _log("tests kopie")
             kopie(a["quelle"], kopie_ordner)
             _log(f"tests start {TEILE} teile")
+            r["version"] = version(kopie_ordner)
             r["tests"] = testlauf(os.path.join(kopie_ordner, "app"), a["python"])
             _log(f"tests ende gruen {r['tests']['gruen']} rot {r['tests']['rot']} wackelig {r['tests']['wackelig']}")
+        elif art == "nachtest":
+            _log("nachtest kopie")
+            kopie(a["quelle"], kopie_ordner)
+            r["version"] = version(kopie_ordner)
+            liste = namen(a.get("text", ""))
+            _log(f"nachtest start {len(liste)} tests")
+            r["tests"] = namen_testen(os.path.join(kopie_ordner, "app"), a["python"], liste)
+            _log(f"nachtest ende gruen {r['tests']['gruen']} rot {r['tests']['rot']}")
         elif art == "messen":
             for i, auf in enumerate(AUFGABEN, 1):
                 t0 = now()
@@ -628,6 +685,7 @@ def lauf(a, now=time.time):
         else:
             _log(f"{art} kopie")
             kopie(a["quelle"], kopie_ordner)
+            r["version"] = version(kopie_ordner)
             _log(f"{art} opencode start")
             fertig, r["text"] = opencode(art, kopie_ordner, a, auftrag_text(art, a.get("text", "")), home)
             if not fertig:

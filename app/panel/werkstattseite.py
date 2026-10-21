@@ -1,10 +1,13 @@
-"""Funktionen → Werkstatt (plan plaene/opencode-werkstatt.md, Dominik 2026-10-17 „0-4“ and „3 und 1 ohne OpenCode“):
-the panel's side of app/werkstatt.py, for admins only, default off (chat.werkstatt).
+"""Zustand → Werkstatt (plan plaene/opencode-werkstatt.md, Dominik 2026-10-17 „0-4“ and „3 und 1 ohne OpenCode“; its
+own page since Dominik 2026-10-21 „1“, before a box under Funktionen): the panel's side of app/werkstatt.py, for admins
+only, default off (switch Funktionen → Werkstatt, chat.werkstatt).
 
-Four kinds of orders, all run on the model computer in the sandbox of werkstatt.py (user spark-werkstatt, own copy
+Five kinds of orders, all run on the model computer in the sandbox of werkstatt.py (user spark-werkstatt, own copy
 of the code, no data folder, no internet, no push):
 
     tests      the whole self-test like GitHub "Tests", without any model (also every night, see below)
+    nachtest   only the red tests of a kept test run again, without any model (the names come from that result here,
+               never from the page)
     messen     the code measurement: the running language model repairs 10 known bugs with OpenCode, counted green
     diagnose   OpenCode reads the code for the admin's problem and answers in words (it may not change anything)
     reparatur  OpenCode changes its copy; the result is a patch with the tests of the changed files
@@ -54,8 +57,9 @@ GRUND = {"art": "Diese Art von Auftrag gibt es nicht.", "laeuft": "Ein Auftrag l
          "text": f"Bitte das Problem in {werkstatt.TEXT_MIN} bis {werkstatt.TEXT_MAX} Zeichen beschreiben.",
          "start": "Der Auftrag ließ sich nicht starten. Auf dem Modell-Rechner: sudo ./install.sh --werkstatt",
          "wunsch": "ungültig", "rechner": "Der Modell-Rechner antwortet gerade nicht.",
-         "aus": "Die Werkstatt ist aus (Funktionen → Werkstatt)."}
-STATUS = {"laeuft": 409, "aus": 409, "start": 503, "rechner": 503, "opencode": 409, "llm": 409}
+         "aus": "Die Werkstatt ist aus (Funktionen → Werkstatt).",
+         "namen": "Dieses Ergebnis hat keine roten Tests zum Wiederholen.", "keins": "Kein solcher Auftrag."}
+STATUS = {"laeuft": 409, "aus": 409, "start": 503, "rechner": 503, "opencode": 409, "llm": 409, "namen": 409, "keins": 404}
 
 
 def _an(cfg=None):
@@ -129,6 +133,34 @@ def holen(cfg=None):
         return sauber(steuer.call("werkstatt", cfg=cfg, timeout=15))
     laeuft = werkstatt.im_gang(_im_gang())
     return sauber(werkstatt.daten(laeuft, werkstatt.stand(journal(werkstatt.UNIT, 60)) if laeuft else [], cfg=cfg))
+
+
+def _eins(aid, cfg=None):
+    """One kept order (checked), from here or the model computer; raises werkstatt.Fehler("keins"/"rechner")."""
+    cfg = load_config() if cfg is None else cfg
+    if not werkstatt.ID.match(str(aid)):
+        raise werkstatt.Fehler("keins")
+    if steuer.remote(cfg):
+        d = steuer.call("werkstatt_eins", (aid,), cfg=cfg, timeout=15)
+        if not isinstance(d, dict):
+            raise werkstatt.Fehler("rechner")
+        a = d.get("auftrag")
+    else:
+        a = werkstatt.eins(aid)
+    try:
+        return werkstatt.pruefe_ergebnis(a)
+    except werkstatt.Fehler:
+        raise werkstatt.Fehler("keins")
+
+
+def nachtest_namen(r):
+    """„Nur die roten noch mal“: the red tests of a kept result, whole names only, together at most werkstatt.TEXT_MAX
+    characters (the Wärter takes no more). "selftest" (the run broke before any test) cannot run alone."""
+    out = []
+    for n in werkstatt.namen(" ".join((r.get("tests") or {}).get("rot_namen") or [])):
+        if n != "selftest" and len(" ".join(out + [n])) <= werkstatt.TEXT_MAX:
+            out.append(n)
+    return out
 
 
 def _fehler(word):
@@ -255,17 +287,30 @@ def _seite(cfg=None):
 
 @router.get("/api/admin/werkstatt", dependencies=[Depends(auth)])
 async def admin_werkstatt(request: Request):
-    """Funktionen → Werkstatt: what runs, the results without patches, the measurements, last night."""
+    """Zustand → Werkstatt: what runs, the results without patches, the measurements, last night."""
     guard.limit(request, "werkstatt", None, True)
     return await asyncio.to_thread(_seite)
 
 
 @router.post("/api/admin/werkstatt/tests", dependencies=[Depends(auth)])
 async def admin_tests(request: Request):
-    """„Testlauf“: the self-test in the sandbox, without a model (no code from a model runs: no code asked)."""
+    """„Alles testen“: the self-test in the sandbox, without a model (no code from a model runs: no code asked).
+    With {"von": <id>} „Nur die roten noch mal“: the red tests of that kept result again; the names come from the
+    result, never from the page."""
     guard.limit(request, "werkstatt_auftrag", None, True)
-    await core.json_body(request, MAX_BODY, lenient=True)
-    return await _geben(request, "tests", "")
+    body = await core.json_body(request, MAX_BODY, lenient=True)
+    von = body.get("von") if isinstance(body, dict) else None
+    if von is None:
+        return await _geben(request, "tests", "")
+    try:
+        liste = nachtest_namen(await asyncio.to_thread(_eins, von))
+    except werkstatt.Fehler as e:
+        print(f"werkstatt: auftrag nachtest abgelehnt {e}", flush=True)
+        _fehler(str(e))
+    if not liste:
+        print("werkstatt: auftrag nachtest abgelehnt namen", flush=True)
+        _fehler("namen")
+    return await _geben(request, "nachtest", " ".join(liste))
 
 
 @router.post("/api/admin/werkstatt/auftrag", dependencies=[Depends(auth), Depends(admin_code)])
@@ -296,21 +341,11 @@ async def _geben(request, art, text):
 def admin_eins(request: Request, aid: str):
     """One result with its answer and patch (both only text for the page)."""
     guard.limit(request, "werkstatt", None, True)
-    if not werkstatt.ID.match(aid):
-        raise HTTPException(404, "Kein solcher Auftrag.")
-    cfg = load_config()
-    if steuer.remote(cfg):
-        d = steuer.call("werkstatt_eins", (aid,), cfg=cfg, timeout=15)
-        if not isinstance(d, dict):
-            _fehler("rechner")
-        a = d.get("auftrag")
-    else:
-        a = werkstatt.eins(aid)
     try:
-        r = werkstatt.pruefe_ergebnis(a)
-    except werkstatt.Fehler:
-        print("werkstatt: eins keins", flush=True)
-        raise HTTPException(404, "Kein solcher Auftrag.")
+        r = _eins(aid)
+    except werkstatt.Fehler as e:
+        print(f"werkstatt: eins {e}", flush=True)
+        _fehler(str(e))
     print("werkstatt: eins ok", flush=True)
     return r
 
