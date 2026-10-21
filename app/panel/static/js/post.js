@@ -344,9 +344,11 @@ const POST_ROLE={inbox:['inbox','Posteingang','Inbox'],sent:['sent','Gesendet','
 // on a phone the folders come in from the right only when asked and go when one is picked (POST.fsheet, not kept)
 const postFoldOn=()=>NARROW()?!!POST.fsheet:POST.fopen;
 function postFolds(on){if(NARROW())POST.fsheet=on;else{POST.fopen=on;try{localStorage.setItem('spark.postFolds',on?'1':'0')}catch(e){}}if(on)postTreeLoad();postDraw()}
-async function postTreeLoad(fresh){if(POST.tree&&!fresh)return;POST.treeBusy=true;
+// Dominik 2026-10-21 „1“: a kept list (Mail-Vorrat) comes at once with neu, read anew behind; asked again after 3 s
+async function postTreeLoad(fresh,again){if(POST.tree&&!fresh&&!again)return;POST.treeBusy=!again;POST.treeTries=again?(POST.treeTries||0)+1:0;
   const {r,d}=await apiTry('/api/profile/mail/tree'+(fresh?'?fresh=true':''));POST.treeBusy=false;
-  POST.tree=r.ok?d:{err:errSay(r.status,d.detail,'')};const w=$('postview');if(w)postFoldPaint(w)}
+  if(r.ok||!again)POST.tree=r.ok?d:{err:errSay(r.status,d.detail,'')};const w=$('postview');if(w)postFoldPaint(w);
+  if(r.ok&&d.neu&&POST.treeTries<5)setTimeout(()=>{if($('postview'))postTreeLoad(false,true)},3000)}
 function postTreeHtml(){const tr=POST.tree;
   if(!tr||POST.treeBusy)return `<div class="ld-empty mut">${esc(t('Lade die Ordner …','Loading the folders …'))}</div>`;
   if(tr.err)return `<div class="note warn">${esc(tr.err)}</div>`;
@@ -359,20 +361,52 @@ function postTreeHtml(){const tr=POST.tree;
     tr.accounts.map(a=>`<div class="ld-grp"><span>${esc(a.name)}</span><button type="button" class="ld-chip" data-new="${esc(a.id)}">${esc(t('+ Neuer Ordner','+ New folder'))}</button></div>`+
       (a.error?`<div class="note warn">${esc(t('Dieses Postfach war nicht erreichbar.','This mailbox was not reachable.'))}</div>`:'')+
       a.folders.map(f=>{const rl=POST_ROLE[f.role]||POST_ROLE.folder,name=rl[1]&&!f.depth?t(rl[1],rl[2]):f.name.split(a.delim).pop(),pad=f.depth?` style="padding-left:${8+f.depth*18}px"`:'';
-        const menu=POST.fmenu===a.id+'|'+f.name?`<div class="row postord"><button class="b" type="button" data-fo="rename" data-fa2="${esc(a.id)}" data-ff2="${esc(f.name)}">${esc(t('Umbenennen','Rename'))}</button><button class="b" type="button" data-fo="new" data-fa2="${esc(a.id)}" data-ff2="${esc(f.name)}">${esc(t('Ordner darin','Folder inside'))}</button><button class="b" type="button" data-fo="remove" data-fa2="${esc(a.id)}" data-ff2="${esc(f.name)}">${esc(t('Entfernen (nur leer)','Remove (empty only)'))}</button></div>`:'';
+        // Dominik 2026-10-21 „besser integriert“: a small menu at the folder like Apple Mail (⋯ or right click; a sheet from below on a phone)
+        const k=a.id+'|'+f.name,fa=`data-fa2="${esc(a.id)}" data-ff2="${esc(f.name)}"`;
+        const menu=POST.fmenu===k?`<div class="postmenu postfmenu" role="menu">`+
+          `<button type="button" role="menuitem" data-fo="rename" ${fa}>${postIc('pen')}${esc(t('Umbenennen','Rename'))}</button>`+
+          `<button type="button" role="menuitem" data-fo="new" ${fa}>${postIc('folder')}${esc(t('Neuer Ordner darin','New folder inside'))}</button>`+
+          `<button type="button" role="menuitem" class="bad" data-fo="remove" ${fa}>${postIc('trash')}<span>${esc(t('Ordner entfernen','Remove folder'))}<small>${esc(t('nur wenn er leer ist','only when it is empty'))}</small></span></button></div>`:'';
+        const fresh=POST.fnew&&POST.fnew.acct===a.id&&POST.fnew.inside===f.name?postFoldInput('new',a.id,f.name,'',(f.depth||0)+1):'';
+        if(POST.fren===k)return postFoldInput('rename',a.id,f.name,name,f.depth||0)+fresh;
         return row(POST.box&&POST.box.account===a.id&&POST.box.folder===f.name,(f.role==='group'?'':`data-acct="${esc(a.id)}" data-f="${esc(f.name)}" data-role="${esc(f.role)}"`)+pad,rl[0],name,
           f.unseen?`<span class="ld-badge read">${f.unseen}</span>`:'',
-          f.own?`<button type="button" class="ld-chip" data-fa="${esc(a.id)}" data-ff="${esc(f.name)}" aria-label="${esc(t('Ordner bearbeiten','Edit folder'))}" aria-expanded="${POST.fmenu===a.id+'|'+f.name}">⋯</button>`:'')+menu}).join('')).join('')+
-    `<div class="fh">${esc(t('Eigene Ordner: ⋯ zum Umbenennen, für einen Ordner darin oder zum Entfernen (nur leere). Ordner des Mail-Programms und von „Mails aufräumen“ bleiben, wie sie sind.','Own folders: ⋯ to rename, for a folder inside or to remove (empty ones only). Folders of the mail program and of "Tidy mails" stay as they are.')+(NARROW()?'':' '+t('Mails ziehst du einfach auf einen Ordner.','Drag mails straight onto a folder.')))}</div>`}
+          f.own?`<button type="button" class="postfmore" data-fa="${esc(a.id)}" data-ff="${esc(f.name)}" aria-label="${esc(t('Ordner bearbeiten','Edit folder'))}" aria-haspopup="menu" aria-expanded="${POST.fmenu===k}">${postIc('more')}</button>`+menu:'')+fresh}).join('')+
+      (POST.fnew&&POST.fnew.acct===a.id&&!POST.fnew.inside?postFoldInput('new',a.id,'','',0):'')).join('')+
+    `<div class="fh">${esc(t('Eigene Ordner: ⋯ oder Rechtsklick zum Umbenennen, für einen Ordner darin oder zum Entfernen (nur leere). Ordner des Mail-Programms und von „Mails aufräumen“ bleiben, wie sie sind.','Own folders: ⋯ or right click to rename, for a folder inside or to remove (empty ones only). Folders of the mail program and of "Tidy mails" stay as they are.')+(NARROW()?'':' '+t('Mails ziehst du einfach auf einen Ordner.','Drag mails straight onto a folder.')))}</div>`}
+// a folder named in its own row (Umbenennen, Neuer Ordner): Enter keeps it, Esc or leaving the field drops it
+function postFoldInput(op,acct,folder,value,depth){const pad=depth?` style="padding-left:${8+depth*18}px"`:'';
+  return `<div class="ld-row postfren"${pad}><span class="postfi" aria-hidden="true">${postIc('folder')}</span><input type="text" maxlength="100" data-fin="${op}" data-fa2="${esc(acct)}" data-ff2="${esc(folder)}" value="${esc(value)}" placeholder="${esc(t('Name des Ordners','Folder name'))}" aria-label="${esc(op==='new'?t('Name des neuen Ordners','Name of the new folder'):t('Neuer Name','New name'))}"></div>`}
 function postTreeBind(list){
   const open=x=>{POST.box=x;POST.chips={};POST.unread=false;POST.fsheet=false;POST.sel=null;POST.msg=null;POST.pick=[];POST.done=null;POST.data=null;postLoad()};
   list.querySelectorAll('[data-all]').forEach(r=>r.onclick=()=>open(null));
   list.querySelectorAll('[data-smart]').forEach(r=>{const go=()=>postSmart(r.dataset.smart,true);r.onclick=go;r.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}}});
   list.querySelectorAll('[data-f]').forEach(r=>{const go=()=>open({account:r.dataset.acct,folder:r.dataset.f,role:r.dataset.role,name:r.querySelector('b').textContent});
-    r.onclick=e=>{if(e.target.closest('[data-fa]'))return;go()};r.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}}});
+    r.onclick=e=>{if(e.target.closest('[data-fa],.postfmenu'))return;go()};r.onkeydown=e=>{if(e.target===r&&(e.key==='Enter'||e.key===' ')){e.preventDefault();go()}}});
   list.querySelectorAll('[data-new]').forEach(b=>b.onclick=()=>postFolderNew(b.dataset.new,''));
-  list.querySelectorAll('[data-fa]').forEach(b=>b.onclick=e=>{e.stopPropagation();const k=b.dataset.fa+'|'+b.dataset.ff;POST.fmenu=POST.fmenu===k?null:k;postDraw()});
-  list.querySelectorAll('[data-fo]').forEach(b=>b.onclick=()=>postFolderDo(b.dataset.fo,b.dataset.fa2,b.dataset.ff2));
+  const menuAt=k=>{POST.fmenu=POST.fmenu===k?null:k;POST.fren=null;postDraw();const m=document.querySelector('#postview .postfmenu button');if(m)m.focus()};
+  list.querySelectorAll('[data-fa]').forEach(b=>b.onclick=e=>{e.stopPropagation();menuAt(b.dataset.fa+'|'+b.dataset.ff)});
+  list.querySelectorAll('[data-f]').forEach(r=>{const own=r.querySelector('[data-fa]');if(own)r.oncontextmenu=e=>{e.preventDefault();menuAt(own.dataset.fa+'|'+own.dataset.ff)}});
+  list.querySelectorAll('[data-fo]').forEach(b=>b.onclick=e=>{e.stopPropagation();postFolderDo(b.dataset.fo,b.dataset.fa2,b.dataset.ff2)});
+  list.querySelectorAll('.postfmenu').forEach(m=>m.onkeydown=e=>{const bs=[...m.querySelectorAll('button')],i=bs.indexOf(document.activeElement);
+    if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();bs[(i+(e.key==='ArrowDown'?1:bs.length-1))%bs.length].focus()}});
+  list.querySelectorAll('[data-fin]').forEach(x=>{let done=false;const end=async keep=>{if(done)return;done=true;const n=x.value.trim(),op=x.dataset.fin,acct=x.dataset.fa2,f=x.dataset.ff2;
+      POST.fren=null;POST.fnew=null;if(!keep||!n||(op==='rename'&&n===f.split(/[/.]/).pop())){postDraw();return}
+      if(op==='new')await postFolderCall('/api/profile/mail/folder/new',{account:acct,folder:f,name:n});
+      else{const d=await postFolderCall('/api/profile/mail/folder/rename',{account:acct,folder:f,name:n});if(d&&POST.box&&POST.box.folder===f){POST.box.folder=d.folder;POST.box.name=n}}
+      postDraw()};
+    x.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();end(true)}else if(e.key==='Escape'){e.preventDefault();e.stopPropagation();end(false)}};
+    x.onblur=()=>end(true);x.onclick=e=>e.stopPropagation();setTimeout(()=>{x.focus();x.select()},0)});
+  // beside its ⋯ (above it when there is no room below); on a phone the sheet from below (app.css); scrolling closes it
+  const fm=list.querySelector('.postfmenu'),fb=fm&&list.querySelector('[data-fa][aria-expanded="true"]');
+  if(fm&&fb&&!NARROW()){const r=fb.getBoundingClientRect(),h=fm.offsetHeight;
+    fm.style.left=Math.max(8,Math.min(r.right-fm.offsetWidth,innerWidth-fm.offsetWidth-8))+'px';
+    fm.style.top=(r.bottom+4+h>innerHeight-8?Math.max(8,r.top-4-h):r.bottom+4)+'px'}
+  if(fm)(list.closest('.postfold')||list).addEventListener('scroll',()=>{if(POST.fmenu){POST.fmenu=null;postDraw()}},{once:true});
+  // a click anywhere else closes the folder menu
+  if(!POST.fmenuOff){POST.fmenuOff=true;
+    document.addEventListener('pointerdown',e=>{if(POST.fmenu&&!e.target.closest('.postfmenu,[data-fa]')){POST.fmenu=null;postDraw()}},true);
+    document.addEventListener('keydown',e=>{if(POST.fmenu&&e.key==='Escape'){e.stopPropagation();POST.fmenu=null;postDraw()}},true)}
   // drop: the dragged mails into this folder (one mailbox; into the trash only with Mails löschen)
   list.querySelectorAll('[data-f]').forEach(r=>postDropOn(r,()=>postCanDrop(r),()=>r.dataset.f))}
 // the mailboxes and folders as a box of their own left of the list (Apple-Stil „1a“): shown unless hidden (O) and while dragging
@@ -411,12 +445,11 @@ async function postHintDo(k){const h=POST.hint;if(!h)return;POST.hint=null;const
   postDraw()}
 async function postFolderCall(path,body){const {r,d}=await apiTry(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
   if(!r.ok){alert(errSay(r.status,d.detail,''));return null}delete POST.folders[body.account];await postTreeLoad(true);return d}
-async function postFolderNew(acct,inside){const n=(prompt(inside?t('Name des neuen Ordners in „'+inside+'“:','Name of the new folder inside "'+inside+'":'):t('Name des neuen Ordners:','Name of the new folder:'))||'').trim();
-  if(n)await postFolderCall('/api/profile/mail/folder/new',{account:acct,folder:inside,name:n})}
+// Neuer Ordner and Umbenennen happen in the row itself (postFoldInput), like Apple Mail
+function postFolderNew(acct,inside){POST.fmenu=null;POST.fren=null;POST.fnew={acct,inside};postDraw()}
 async function postFolderDo(op,acct,f){POST.fmenu=null;
   if(op==='new')return postFolderNew(acct,f);
-  if(op==='rename'){const n=(prompt(t('Neuer Name für „'+f+'“:','New name for "'+f+'":'),f.split(/[/.]/).pop())||'').trim();
-    if(n){const d=await postFolderCall('/api/profile/mail/folder/rename',{account:acct,folder:f,name:n});if(d&&POST.box&&POST.box.folder===f){POST.box.folder=d.folder;POST.box.name=n;postDraw()}}return}
+  if(op==='rename'){POST.fnew=null;POST.fren=acct+'|'+f;postDraw();return}
   if(op==='remove'&&confirm(t('Den leeren Ordner „'+f+'“ entfernen? Mails werden nie gelöscht: einen Ordner mit Mails lässt der Spark stehen.','Remove the empty folder "'+f+'"? Mails are never deleted: a folder holding mails stays.'))){
     const d=await postFolderCall('/api/profile/mail/folder/remove',{account:acct,folder:f});if(d&&POST.box&&POST.box.folder===f){POST.box=null;postLoad()}}
   else postDraw()}

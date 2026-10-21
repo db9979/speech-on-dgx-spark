@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.893** · 2026-10-21 · Ordner sofort und Ordner-Menü: die Ordnerliste der Seite E-Mail liegt versiegelt im Mail-Vorrat und steht nach einem Neustart sofort da; das „⋯“ am Ordner ist ein kleines Menü daneben wie bei Apple Mail (Rechtsklick, Blatt auf dem Handy), Umbenennen und neue Ordner direkt in der Zeile; iPhone mit Symbolen
 - **V01.0.892** · 2026-10-21 · reMarkable-Dokumente sauber formatiert: ein Leser für alle Blätter und E-Books (Überschriften, Zeilen, Nummern, Tabellen, Zitate), kleinerer Kopf, ohne „Gestaltete Blätter“ dasselbe Blatt in Schwarz-Weiß, Dokumente im Format des Geräts statt A4, Wächter-Test test_rmformat
 - **V01.0.891** · 2026-10-21 · Tagesaktuell: der Stand nennt immer seinen Tag („Stand gestern 18:00“), das Wetter nimmt „heute“ von der Uhr statt aus einer Vorhersage von gestern, der Morgenbericht nennt Mails mit Tag und nur noch ungelesene, die Websuche sucht bei Fragen nach Heutigem im Zeitraum mit Datum je Treffer, und was nicht aktuell ist, sagt ein fester Satz des Panels; eine geöffnete Mail gilt als gelesen
 - **V01.0.890** · 2026-10-21 · Fix iPhone-App: die Kontakte-Karte lädt die .vcf-Datei zum Teilen als Daten (die App ließ sich seit V01.0.888 nicht bauen)

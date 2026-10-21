@@ -15,6 +15,8 @@ The fake mailbox (helpers.FakeMailbox); dates relative to now, no wall clock in 
 import asyncio
 import datetime
 import email.utils
+import threading
+import time
 import unittest
 
 from tests import helpers
@@ -161,6 +163,69 @@ class Folders(Base):
 
     def test_a_small_folder_has_no_mark(self):
         self.assertEqual(self.get("/api/profile/mail/folder", account=self.acct, folder="Klein")["vor"], "")
+
+
+class Tree(Base):
+    """Ordner (Dominik 2026-10-21 „1“): the folder list kept in the Mail-Vorrat comes at once after a restart, with
+    „neu“, and is read anew behind; a new or renamed folder drops it; sealed on the disk."""
+    NAME = "Nachladen Rita"
+
+    def setUp(self):
+        super().setUp()
+        import postfach
+        self.pf = postfach
+        postfach._trees.clear()
+        mailvorrat.forget(self.uid)
+        self.addCleanup(postfach._trees.clear)
+
+    def test_at_once_after_a_restart(self):
+        first = self.get("/api/profile/mail/tree")
+        self.assertNotIn("neu", first)
+        mailvorrat.flush()
+        with open(mailvorrat._file(self.uid), "rb") as f:
+            self.assertNotIn(b"Archive", f.read())                                  # sealed, never plain
+        self.pf._trees.clear()                                                      # a restart
+        slow = threading.Event()
+
+        class Slow(FMB):
+            def __init__(s, *a, **k):
+                slow.wait(5)
+                super().__init__(*a, **k)
+        mail.IMAP = Slow
+        t0 = time.time()
+        got = self.get("/api/profile/mail/tree")
+        self.assertLess(time.time() - t0, 1)                                        # not waiting for the mailbox
+        self.assertTrue(got["neu"])
+        self.assertGreater(got["stand"], 0)
+        self.assertEqual([f["name"] for f in got["accounts"][0]["folders"]], [f["name"] for f in first["accounts"][0]["folders"]])
+        slow.set()
+        for _ in range(50):
+            if self.uid in self.pf._trees and self.uid not in self.pf._tree_busy:
+                break
+            time.sleep(0.1)
+        self.assertNotIn("neu", self.get("/api/profile/mail/tree"))                # read anew behind
+
+    def test_a_mailbox_down_keeps_its_list(self):
+        self.get("/api/profile/mail/tree")
+        self.pf._trees.clear()
+
+        class Down(FMB):
+            def __init__(s, *a, **k):
+                raise OSError("timed out")
+        mail.IMAP = Down
+        live = self.get("/api/profile/mail/tree", fresh="true")
+        self.assertTrue(live["accounts"][0]["error"])
+        kept, _ = mailvorrat.tree(self.uid)
+        self.assertFalse(kept["accounts"][0]["error"])                              # the older list stays
+
+    def test_a_new_folder_drops_it(self):
+        self.get("/api/profile/mail/tree")
+        r = self.c.post("/api/profile/mail/folder/new", json={"account": self.acct, "folder": "", "name": "Steuer"})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(mailvorrat.tree(self.uid), (None, 0))
+        got = self.get("/api/profile/mail/tree")
+        self.assertNotIn("neu", got)
+        self.assertIn("Steuer", [f["name"] for f in got["accounts"][0]["folders"]])
 
 
 class Guard(Base):

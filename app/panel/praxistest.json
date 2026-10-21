@@ -2517,6 +2517,13 @@
 "v": 892,
 "titel": "reMarkable sauber formatiert",
 "text": "A: Im Chat „Erstell eine Notiz auf dem reMarkable mit dem Rezept für Kirschkuchen“: Zutaten als Punkte, Schritte als 1. 2. 3. untereinander, eine Tabelle als Tabelle, kein ** oder ## im Text, Kopf kleiner als bisher. B: Morgenblatt und Wochenrückblick: Überschriften statt **Wetter**. C: Mit „Gestaltete Blätter“ aus: dasselbe Blatt in Schwarz-Weiß bzw. ein E-Book mit Überschriften und Listen. D: Ein Dokument aus „Dokumente erstellen“ aufs reMarkable schicken: es füllt den Bildschirm (nicht mehr klein in A4)."
+},
+{
+"id": "P384",
+"v": 893,
+"titel": "Ordner sofort und Ordner-Menü",
+"text": "A: Pi auf V01.0.893. E-Mail öffnen, die Ordner (Postfächer) einmal zeigen lassen. B: Pi neu starten, E-Mail öffnen, Ordner zeigen: die Liste steht sofort da, statt „Lade die Ordner …“; ein paar Sekunden später stimmen die Ungelesen-Zahlen. C: Einen Ordner anlegen: er steht gleich in der Liste. D: iPhone-App: Meine Sachen → E-Mail → Ordner: sofort da. E: Am eigenen Ordner auf „⋯“ tippen (oder Rechtsklick): ein kleines Menü direkt daneben, nichts verschiebt sich; „Umbenennen“: der Name wird in der Zeile bearbeitbar, Enter speichert; auf dem Handy kommt das Menü von unten; im Dunkelmodus gut lesbar. F: iPhone: lang auf einen Ordner drücken: Menü mit Symbolen.",
+"thread": "Kalender und E-Mail in den Apps"
 }
 ]
 }

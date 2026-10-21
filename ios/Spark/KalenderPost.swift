@@ -1381,17 +1381,21 @@ struct MailFolders: View {
                             Button { if f.role != "group" { pick(f) } } label: { row(f) }
                                 .swipeActions(edge: .trailing) {
                                     if f.own {
-                                        Button("Entfernen", role: .destructive) { removing = f }
-                                        Button("Umbenennen") { name = f.title; naming = (f.account, "", f.name) }.tint(.blue)
+                                        Button(role: .destructive) { removing = f } label: { Label("Entfernen", systemImage: "trash") }
+                                        Button { name = f.title; naming = (f.account, "", f.name) } label: { Label("Umbenennen", systemImage: "pencil") }.tint(.blue)
                                     }
                                 }
+                                // like Apple Mail (Dominik 2026-10-21 „besser integriert“): long press, each with its symbol
                                 .contextMenu {
+                                    if f.own {
+                                        Button { name = f.title; naming = (f.account, "", f.name) } label: { Label("Umbenennen", systemImage: "pencil") }
+                                    }
                                     if f.own || f.role == "inbox" {
-                                        Button("Ordner darin anlegen") { name = ""; naming = (f.account, f.name, "") }
+                                        Button { name = ""; naming = (f.account, f.name, "") } label: { Label("Neuer Ordner darin", systemImage: "folder.badge.plus") }
                                     }
                                     if f.own {
-                                        Button("Umbenennen") { name = f.title; naming = (f.account, "", f.name) }
-                                        Button("Entfernen", role: .destructive) { removing = f }
+                                        Divider()
+                                        Button(role: .destructive) { removing = f } label: { Label("Ordner entfernen", systemImage: "trash") }
                                     }
                                 }
                         }
@@ -1460,10 +1464,13 @@ struct MailFolders: View {
         }
     }
 
-    private func load(fresh: Bool) async {
+    /// a kept list (Mail-Vorrat, Dominik 2026-10-21 „1“) comes at once with „neu“: asked again after 3 s, at most 5 times
+    private func load(fresh: Bool, tries: Int = 0) async {
         guard let api = SparkAPI.current else { loading = false; return }
+        var again = false
         do {
             let d = try await api.object("GET", "api/profile/mail/tree", query: fresh ? ["fresh": "true"] : [:], timeout: 60)
+            again = d["neu"] as? Bool ?? false
             accounts = (d["accounts"] as? [[String: Any]] ?? []).prefix(4).map { a -> Box in
                 let id = a["id"] as? String ?? "", delim = a["delim"] as? String ?? "/"
                 let fs = (a["folders"] as? [[String: Any]] ?? []).prefix(80).compactMap { f -> MailFolder? in
@@ -1482,6 +1489,10 @@ struct MailFolders: View {
             self.error = error.localizedDescription
         }
         loading = false
+        if again && tries < 5 {
+            try? await Task.sleep(nanoseconds: 3_000_000_000)
+            await load(fresh: false, tries: tries + 1)
+        }
     }
 
     private func save(_ n: (account: String, inside: String, folder: String)) async {

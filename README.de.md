@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.893** Ordner sofort und Ordner-Menü: die Ordnerliste der Seite E-Mail liegt versiegelt im Mail-Vorrat und steht nach einem Neustart sofort da; das „⋯“ am Ordner ist ein kleines Menü daneben wie bei Apple Mail (Rechtsklick, Blatt auf dem Handy), Umbenennen und neue Ordner direkt in der Zeile; iPhone mit Symbolen
 - **V01.0.892** reMarkable-Dokumente sauber formatiert: Listen, Nummern, Tabellen, kleinerer Kopf, Gerätformat
 - **V01.0.891** Tagesaktuell: der Stand nennt immer seinen Tag („Stand gestern 18:00“), das Wetter nimmt „heute“ von der Uhr statt aus einer Vorhersage von gestern, der Morgenbericht nennt Mails mit Tag und nur noch ungelesene, die Websuche sucht bei Fragen nach Heutigem im Zeitraum mit Datum je Treffer, und was nicht aktuell ist, sagt ein fester Satz des Panels; eine geöffnete Mail gilt als gelesen
 - **V01.0.890** Fix iPhone-App: die Kontakte-Karte lädt die .vcf-Datei zum Teilen als Daten (die App ließ sich seit V01.0.888 nicht bauen)
@@ -50,7 +51,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.886** Werkstatt übersichtlich: eigene Seite Zustand → Werkstatt mit vier Kacheln, Verlauf und Ergebnis, das erklärt, was rot heißt und was als Nächstes geht (Ursache untersuchen, nur die roten noch mal testen, für Claude kopieren)
 - **V01.0.885** Musik bearbeiten auf eigener Seite über die ganze Breite: große Welle, Werkzeuge links, Einstellungen in der Mitte, Fassungen rechts, Knopf in einer festen Leiste unten; auf dem Handy und in der iPhone-App dieselbe Ordnung
 - **V01.0.884** Fix iPhone-App: der Inhalt einer formatierten Mail blieb leer (die Sperrregel der Web-Ansicht wurde nicht übersetzt); im Dunkelmodus erscheint eine schlichte Mail hell auf dunklem Grund wie bei Apple Mail, eine Mail mit eigenen Farben bleibt auf Weiß
-- **V01.0.883** Der Begleiter am PC und Mac zeigt das Spark-Update: „Spark-Update läuft: 40 % · Schritt“ im Zustand, beim Neustart „Spark startet für das Update neu …“
+
 
 
 

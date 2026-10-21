@@ -29,6 +29,7 @@ import time
 
 import features
 import mail
+import mailvorrat
 import notaus
 import profiles
 import tidy
@@ -39,12 +40,14 @@ MANY = 50          # messages one request of the page changes at most (Mehrfacha
 TREE_MAX = 80      # folders per mailbox the page lists
 LIST_MAX = 50      # messages of a folder the page lists (newest first)
 TREE_SECONDS = 60  # the folder tree with its unread counts is kept this long
+TREE_STALE = 24 * 3600   # an older one in memory comes at once and is read anew behind
 ARCHIVE_NAMES = ("Archive", "Archiv", "Archives", "Archivio")
 # folders a message never goes to: the mail program's own ones (tidy.Box.is_special plus the names without flags)
 NEVER = re.compile(r"(?i)^(trash|papierkorb|gelöscht\w*|deleted( items| messages)?|junk|spam|"
                    r"sent( items| messages)?|gesendet\w*|drafts?|entwürfe)$")
 _lock = threading.Lock()
-_trees = {}   # uid -> (time, tree): the folder tree of the page, memory only
+_trees = {}   # uid -> (time, tree): the folder tree of the page (kept on the disk in the Mail-Vorrat, mailvorrat.tree)
+_tree_busy = set()   # profiles whose folder tree is read in the background
 _today = {"day": "", "n": 0, "del": 0}   # Live: messages ordered / deleted on the page today (numbers, never which)
 
 
@@ -211,10 +214,42 @@ ORDER = {"inbox": 0, "drafts": 1, "sent": 2, "archive": 3, "folder": 4, "group":
 
 def tree(uid, fresh=False):
     """The page E-Mail (Ordner): per mailbox its folders with what they are for, how many unread and whether the
-    profile may rename or remove them; kept TREE_SECONDS. Folder names come from the mail server: data for esc()."""
+    profile may rename or remove them; kept TREE_SECONDS. Folder names come from the mail server: data for esc().
+    Older (up to TREE_STALE in memory, else the Mail-Vorrat, Dominik 2026-10-21 „1“) it comes at once with „stand“
+    and „neu“ while it is read anew behind (the page asks again); fresh (Neu laden) always waits for the mailbox."""
     hit = _trees.get(uid)
     if hit and not fresh and time.time() - hit[0] < TREE_SECONDS:
         return hit[1]
+    if not fresh:
+        old, at = (hit[1], hit[0]) if hit and time.time() - hit[0] < TREE_STALE else mailvorrat.tree(uid)
+        if old:
+            if not hit:
+                mailvorrat.used()
+                print(f"mail: tree from supply | {profiles.log_name(profiles.by_id(uid))}", flush=True)
+            _tree_behind(uid)
+            return dict(old, stand=int(at), neu=True)
+    return _read_tree(uid)
+
+
+def _tree_behind(uid):
+    """One reading of the folder lists in the background per profile."""
+    with _lock:
+        if uid in _tree_busy:
+            return
+        _tree_busy.add(uid)
+
+    def run():
+        try:
+            _read_tree(uid)
+        except Exception as e:
+            print(f"mail: tree refresh failed ({type(e).__name__})", flush=True)
+        finally:
+            with _lock:
+                _tree_busy.discard(uid)
+    threading.Thread(target=run, name="mail-ordner", daemon=True).start()
+
+
+def _read_tree(uid):
     out = []
     for acct in mail.get(uid)["accounts"]:
         row = {"id": acct["id"], "name": acct.get("name", ""), "delim": "/", "folders": [], "error": False}
@@ -235,6 +270,10 @@ def tree(uid, fresh=False):
         out.append(row)
     res = {"accounts": out}
     _trees[uid] = (time.time(), res)
+    try:
+        mailvorrat.keep_tree(uid, res)
+    except OSError:
+        print("mail: supply not written", flush=True)
     return res
 
 
@@ -500,6 +539,7 @@ def folder_op(uid, account_id, op, folder="", name=""):
             _today.update(day=day, n=0)
         _today["n"] += 1   # Live: a number, never which folder
     _trees.pop(uid, None)
+    mailvorrat.drop_tree(uid)   # the kept list no longer fits: the next one waits for the mailbox
     return out
 
 

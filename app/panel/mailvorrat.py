@@ -5,6 +5,8 @@ not answer instead of saying „nicht erreichbar“.
 
     USERS_DIR/<user id>/mail-vorrat.bin   sealed with AES-GCM (vorrat.Vorrat, the one way for such a supply)
 
+- The folder list of the page (postfach.tree: names, what they are for, unread counts), so „Postfächer“ is there at
+  once after a restart (Dominik 2026-10-21 „1“).
 - Per mailbox at most HEADS headers (sender, subject, time, read and flag marks) of the last DAYS days, the newest;
   per profile at most TEXTS message texts (the newest fetched ahead and the ones opened), each at most TEXT_MAX
   characters of plain text. Never an attachment, never HTML, never a picture.
@@ -31,7 +33,9 @@ TEXT_MAX = 4000       # characters of one text (mail.MAX_TEXT)
 WRITE_EVERY = 300     # seconds: a profile's file is written at most this often; flush() writes the rest
 IDLE_DAYS = 14        # a supply nobody read for this long is deleted (sweep)
 
-_v = Vorrat(NAME, IDLE_DAYS, WRITE_EVERY, empty=lambda: {"heads": {}, "texts": {}, "at": {}})
+TREE_DAYS = 7         # the kept folder list (postfach.tree) is shown at most this old, fetched anew behind
+
+_v = Vorrat(NAME, IDLE_DAYS, WRITE_EVERY, empty=lambda: {"heads": {}, "texts": {}, "at": {}, "tree": {}})
 _lock = _v.lock
 _used = DayCounter(antworten=0)   # Live: answers from the supply today (a number, never what)
 
@@ -158,13 +162,45 @@ def changed(uid, aid, u, action):
     _save(uid)
 
 
+def keep_tree(uid, res, now=None):
+    """The page read the folder lists (postfach.tree): kept; a mailbox that did not answer keeps its older list."""
+    now = time.time() if now is None else now
+    d = _load(uid)
+    old = {a.get("id"): a for a in (d.get("tree") or {}).get("accounts", [])}
+    rows = [old[a["id"]] if a.get("error") and a.get("id") in old else a for a in res.get("accounts", [])][:4]
+    with _lock:
+        d["tree"] = {"at": int(now), "accounts": rows}
+    _save(uid, now)
+
+
+def tree(uid, now=None):
+    """(the kept folder lists, when they were read) or (None, 0) without one or when older than TREE_DAYS."""
+    now = time.time() if now is None else now
+    t = _load(uid).get("tree") or {}
+    if not t.get("accounts") or now - t.get("at", 0) > TREE_DAYS * 86400:
+        return None, 0
+    return {"accounts": t["accounts"]}, t["at"]
+
+
+def drop_tree(uid):
+    """A folder was made, renamed or removed: the kept list no longer fits and goes."""
+    d = _load(uid)
+    with _lock:
+        if not d.pop("tree", None):
+            return
+        d["tree"] = {}
+    _save(uid, force=True)
+
+
 def drop(uid, aid):
-    """One mailbox removed: its headers and texts go."""
+    """One mailbox removed: its headers, texts and folders go."""
     d = _load(uid)
     with _lock:
         d["heads"].pop(aid, None)
         d["at"].pop(aid, None)
         d["texts"] = {k: v for k, v in d["texts"].items() if not k.startswith(aid + ":")}
+        if d.get("tree"):
+            d["tree"]["accounts"] = [a for a in d["tree"].get("accounts", []) if a.get("id") != aid]
     _save(uid, force=True)
 
 

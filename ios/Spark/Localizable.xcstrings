@@ -12101,16 +12101,6 @@
         }
       }
     },
-    "Ordner darin anlegen": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "New folder inside"
-          }
-        }
-      }
-    },
     "Ordner umbenennen": {
       "localizations": {
         "en": {
@@ -15997,6 +15987,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Once a day when the iPhone connects to the car: appointments, deadlines and weather, spoken. Only on this iPhone. In the car Spark is not interrupted by talking; to interrupt, tap „Mit Spark sprechen“."
+          }
+        }
+      }
+    },
+    "Neuer Ordner darin": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New folder inside"
+          }
+        }
+      }
+    },
+    "Ordner entfernen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove folder"
           }
         }
       }

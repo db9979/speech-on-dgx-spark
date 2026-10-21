@@ -5197,7 +5197,15 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "Liste bis 10 Minuten nimmt er so, eine ältere holt er neu und wartet darauf höchstens 2 Sekunden, sonst antwortet er mit dem älteren Stand und sagt die Uhrzeit dazu. Ordnen auf der Seite zieht im Vorrat mit (gelesen, markiert, archiviert, gelöscht). Gelöscht wird der Vorrat mit dem Postfach, mit allen Postfächern, mit dem Profil und nach 14 Tagen, in denen niemand die Mails gelesen hat. vorrat.py ist die eine Bauweise für solche Vorräte anderer Dienste. Live (Knoten E-Mail): Profile mit Vorrat und wie oft heute daraus geantwortet wurde, nur Zahlen."
+"text": "Liste bis 10 Minuten nimmt er so, eine ältere holt er neu und wartet darauf höchstens 2 Sekunden, sonst antwortet er mit dem älteren Stand und sagt die Uhrzeit dazu. Ordnen auf der Seite zieht im Vorrat mit (gelesen, markiert, archiviert, gelöscht). Gelöscht wird der Vorrat mit dem Postfach, mit allen Postfächern, mit dem Profil und nach 14 Tagen, in denen niemand die Mails gelesen hat. vorrat.py ist die eine Bauweise für solche Vorräte anderer Dienste. Live (Knoten E-Mail): Profile mit Vorrat und wie oft heute daraus geantwortet wurde, nur Zahlen. Ordner sofort und Ordner-Menü (V01.0.893, Dominik 2026-10-21 „1“ und „besser integriert“): auch die Ordnerliste der Seite (Namen, wofür, ungelesen) liegt im Mail-Vorrat; nach einem Neustart steht „Postfächer“ sofort da und wird dahinter neu gelesen (höchstens 7 Tage alt), ein Postfach, das nicht antwortet, behält seine ältere Liste; ein neuer, umbenannter oder entfernter Ordner verwirft sie. Das „⋯“ an einem eigenen Ordner (auch Rechtsklick) öffnet ein kleines Menü direkt daneben, wie bei Apple Mail: Umbenennen, Neuer Ordner darin, Ordner entfernen (nur leere); auf dem Handy kommt es als Blatt von unten, Esc oder ein Klick daneben schlie"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "ßt es, nichts darunter verschiebt sich. Umbenennen und neue Ordner tippt man direkt in der Zeile (Enter behält, Esc verwirft). Auf dem iPhone dasselbe mit langem Drücken oder Wischen, jeweils mit Symbol."
 },
 {
 "lang": "de",
@@ -14397,7 +14405,15 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "d is taken as it is, an older one is fetched anew with at most 2 seconds of waiting, otherwise it answers with the older state and says the time. Ordering on the page follows in the supply (read, flagged, archived, deleted). The supply goes with the mailbox, with all mailboxes, with the profile and after 14 days in which nobody read the mail. vorrat.py is the one way to build such supplies for other services. Live (node Mail): profiles with a supply and how often it answered today, numbers only."
+"text": "d is taken as it is, an older one is fetched anew with at most 2 seconds of waiting, otherwise it answers with the older state and says the time. Ordering on the page follows in the supply (read, flagged, archived, deleted). The supply goes with the mailbox, with all mailboxes, with the profile and after 14 days in which nobody read the mail. vorrat.py is the one way to build such supplies for other services. Live (node Mail): profiles with a supply and how often it answered today, numbers only. Folders at once and folder menu (V01.0.893, Dominik 2026-10-21 \"1\" and \"better integrated\"): the page's folder list (names, what for, unread) is in the mail supply too; after a restart \"Mailboxes\" is there at once and read anew behind (at most 7 days old), a mailbox that does not answer keeps its older list; a new, renamed or removed folder drops it. The \"⋯\" at an own folder (or a right click) opens a small menu right beside it, like Apple Mail: Rename, New folder inside, Remove folder (empty ones only); on a phone it comes as a sheet from below, Esc or a click beside it closes it, nothing below moves. Renaming and new folders are typed right in the row (Enter keeps, Esc drops). On the iPho"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "ne the same with a long press or a swipe, each with its symbol."
 },
 {
 "lang": "en",

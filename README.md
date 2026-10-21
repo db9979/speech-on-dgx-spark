@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.893** Folders at once and folder menu: the Mail page's folder list is kept sealed in the mail supply and is there at once after a restart; the "⋯" at a folder is a small menu beside it like Apple Mail (right click, a sheet on a phone), renaming and new folders right in the row; iPhone with symbols
 - **V01.0.892** reMarkable documents well formatted: lists, numbers, tables, smaller head, device format
 - **V01.0.891** Up to date: a stand always names its day („as of yesterday 18:00“), the weather takes „today“ from the clock instead of a forecast of yesterday, the morning briefing names mails with their day and only unread ones, the web search looks within a period with a date per hit for questions about today, and a fixed sentence of the panel says what is not current; an opened mail counts as read
 - **V01.0.890** Fix iPhone app: the contact card loads the .vcf file for Share as data (the app did not build since V01.0.888)
@@ -50,7 +51,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.886** Workshop made clear: own page Status → Workshop with four tiles, history and a result that explains what red means and what comes next (find the cause, test only the red ones again, copy for Claude)
 - **V01.0.885** Editing music on a page of its own over the whole width: big wave, tools on the left, settings in the middle, versions on the right, the button in a fixed bar at the bottom; the same order on a phone and in the iPhone app
 - **V01.0.884** Fix iPhone app: the content of a formatted mail stayed empty (the web view's blocking rule did not compile); in dark mode a plain mail shows light on dark like Apple Mail, a mail with its own colours keeps its white page
-- **V01.0.883** The companion on PC and Mac shows the Spark's update: "Spark-Update läuft: 40 % · step" in its state, during the restart "Spark startet für das Update neu …"
+
 
 
 
