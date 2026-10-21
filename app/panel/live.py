@@ -1404,6 +1404,11 @@ def snapshot(view="admin", now=None):
     except Exception:
         offen = {"on": False}
     try:
+        import contacts
+        kon = contacts.for_live()
+    except Exception:
+        kon = {}
+    try:
         import nasquelle
         nql = nasquelle.for_live()
     except Exception:
@@ -1551,6 +1556,8 @@ def snapshot(view="admin", now=None):
                          + (f", {lst['dav']['saved']} aus Erinnerungen" if lst["dav"].get("on") else "")
                          + (f", {lst['link']['links']} Mitschreib-Links, {lst['link']['added']} darüber eingetragen,"
                             f" {lst['link']['refused']} abgelehnt" if lst["link"].get("on") else ""))
+        if x["id"] == "contacts" and (kon.get("books") or kon.get("spark") or kon.get("today")):   # Seite Kontakte: numbers only, never a name
+            x["sub"] += f" · {kon['books']} Adressbücher, {kon['spark']} Karten auf dem Spark, heute {kon['today']} auf der Seite geändert"
         if x["id"] == "cal" and offen.get("on"):   # Offen (vorgaenge.py): numbers only, never a title
             x["sub"] += (f" · Offen: {offen['braucht']} brauchen jemanden bei {offen['profiles']} Profilen, {offen['spaeter']} später,"
                          f" heute {offen['erledigt']} erledigt, {offen['wieder']} wieder da, {offen['streams']} Seiten verbunden,"

@@ -2140,3 +2140,30 @@ textarea{resize:none}textarea[data-fest]{resize:vertical}textarea.feldplatz{padd
 .vgs-h:hover,.vgs-r:hover{background:color-mix(in srgb,var(--line) 50%,transparent)}.vgs-c{margin-left:auto;color:var(--mut)}
 .vgs-r span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.vgstrip .ic-lnk{margin:2px 8px 6px}
 .vgdet .vk{box-shadow:none;border:0;padding:0 0 10px;border-bottom:1px solid var(--line);border-radius:0}.vgdet .vg-facts{margin:10px 0}
+/* Kontakte wie Apple Kontakte (kontakte.js, Apple-Stil „6a“): the list with its letter bar at the right edge, the card
+   with the round initials and the five buttons, the form with − per field and „+ hinzufügen“ per kind */
+.kon .ld-split:has(>.ld-detail:not([hidden])){grid-template-columns:minmax(240px,320px) minmax(0,1fr);gap:16px}
+.kon .ld-detail{padding:16px 20px}
+.kontools{display:flex;flex-direction:column;gap:6px;padding:0 4px 6px}.kontools input{width:100%}
+.konbooks:empty{display:none}
+.konwrap{display:flex;gap:2px;min-width:0}.konrows{flex:1;min-width:0}
+.konlet{position:sticky;top:0;align-self:flex-start;display:flex;flex-direction:column;flex:none}
+.konlet:empty{display:none}
+.konlet button{font:inherit;font-size:11px;font-weight:700;line-height:1.35;padding:0 4px;border:0;background:none;color:var(--acc);cursor:pointer}
+.konav{border-radius:99px;background:color-mix(in srgb,var(--mut) 22%,transparent);color:var(--fg);font-size:12.5px;font-weight:600}
+.konav.big{display:grid;place-items:center;width:72px;height:72px;font-size:26px;margin:0 auto 8px}
+.konhead{text-align:center;margin-bottom:12px}.konhead h3{margin:0;font-size:20px}
+.konacts{display:flex;justify-content:center;gap:6px;margin-top:12px}
+.konact{display:flex;flex-direction:column;align-items:center;gap:2px;flex:1 1 0;min-width:0;max-width:72px;padding:7px 2px;border-radius:12px;border:0;font:inherit;font-size:11.5px;
+  background:color-mix(in srgb,var(--acc) 10%,transparent);color:var(--acc);cursor:pointer;text-decoration:none}
+.konact i{font-style:normal;font-size:18px;line-height:1}.konact:disabled{opacity:.4;cursor:default}
+.konf{padding:8px 2px;border-bottom:1px solid var(--line);overflow-wrap:anywhere}.konf small{display:block;color:var(--mut);font-size:12px}
+.konfoot{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:12px}
+.konform label{display:block;margin:8px 0 2px;font-size:12.5px;color:var(--mut)}.konform label :is(input,select,textarea){width:100%;margin-top:2px}
+.konnames{display:flex;flex-direction:column;gap:6px}.konnames input{width:100%}
+.konsec{margin-top:10px}.konrow{display:flex;gap:6px;align-items:center;margin:4px 0;min-width:0}
+.konrow input{flex:1;min-width:0;width:auto}.konrow select{flex:none;width:auto;max-width:7.5em}
+.konadr{flex-wrap:wrap}.konadr input{flex:1 1 40%}
+.konminus{flex:none;width:24px;height:24px;border-radius:99px;border:0;background:#ef4444;color:#fff;font-weight:700;line-height:1;cursor:pointer;padding:0}
+.konadd{margin:2px 0 4px;font-size:13px}
+.postwho{cursor:pointer}.postwho:hover{color:var(--acc)}

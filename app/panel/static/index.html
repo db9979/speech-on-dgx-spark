@@ -59,7 +59,7 @@
 <button class="b" id="logoutbtn" type="button" style="order:4;display:none">Abmelden</button>
 </div>
 <button class="ib" id="mmenu" type="button" title="Menü" aria-label="Menü"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
-<nav><button type="button" class="navfind" id="findbtn" aria-label="Suchen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><span>Suchen …</span><kbd>Strg K</kbd></button><button data-s="chat"><i class="ni" data-ni="chat"></i>Assistent</button><button data-s="chats" hidden><i class="ni" data-ni="chats"></i>Chats <span class="ncnt" id="cxcnt" hidden></span></button><button data-s="cal" hidden><i class="ni" data-ni="cal"></i>Kalender</button><button data-s="post" hidden><i class="ni" data-ni="post"></i>E-Mail</button><button data-s="listen" hidden><i class="ni" data-ni="listen"></i>Listen</button><button data-s="offen" hidden><i class="ni" data-ni="offen"></i>Offen</button><button type="button" class="navme" id="navme"><i class="ni" data-ni="me"></i>Ich <span class="medot" hidden></span></button><span class="navgrp">Spark verwalten</span><button data-s="mon" class="on"><i class="ni" data-ni="mon"></i>Zustand <span class="hdot" id="hdot"></span></button><button data-s="feat"><i class="ni" data-ni="feat"></i>Funktionen <span class="ncnt" id="featdirty" hidden>1</span></button><button data-s="prof"><i class="ni" data-ni="prof"></i>Personen und Geräte</button><button data-s="cfg"><i class="ni" data-ni="cfg"></i>Einstellungen <span class="ncnt" id="dirtycnt" hidden></span><span id="updbadge" class="pill warn" style="display:none">Update</span></button></nav></header>
+<nav><button type="button" class="navfind" id="findbtn" aria-label="Suchen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><span>Suchen …</span><kbd>Strg K</kbd></button><button data-s="chat"><i class="ni" data-ni="chat"></i>Assistent</button><button data-s="chats" hidden><i class="ni" data-ni="chats"></i>Chats <span class="ncnt" id="cxcnt" hidden></span></button><button data-s="cal" hidden><i class="ni" data-ni="cal"></i>Kalender</button><button data-s="post" hidden><i class="ni" data-ni="post"></i>E-Mail</button><button data-s="listen" hidden><i class="ni" data-ni="listen"></i>Listen</button><button data-s="offen" hidden><i class="ni" data-ni="offen"></i>Offen</button><button data-s="kontakte" hidden><i class="ni" data-ni="kontakte"></i>Kontakte</button><button type="button" class="navme" id="navme"><i class="ni" data-ni="me"></i>Ich <span class="medot" hidden></span></button><span class="navgrp">Spark verwalten</span><button data-s="mon" class="on"><i class="ni" data-ni="mon"></i>Zustand <span class="hdot" id="hdot"></span></button><button data-s="feat"><i class="ni" data-ni="feat"></i>Funktionen <span class="ncnt" id="featdirty" hidden>1</span></button><button data-s="prof"><i class="ni" data-ni="prof"></i>Personen und Geräte</button><button data-s="cfg"><i class="ni" data-ni="cfg"></i>Einstellungen <span class="ncnt" id="dirtycnt" hidden></span><span id="updbadge" class="pill warn" style="display:none">Update</span></button></nav></header>
 <main>
 <div class="ptabs subnav" id="subnav" hidden></div>
 <button class="b cfgback" id="subback" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg><span>Zustand</span></button>
@@ -323,6 +323,7 @@
       <div data-show="chat.transit" style="margin-left:18px"><label>Adresse des Fahrplandienstes</label><input id="chat.transit_url" placeholder="https://v6.db.transport.rest" autocomplete="off"><div class="fh">Leer = v6.db.transport.rest. Auch ein eigener db-rest oder ein regionaler Dienst (z. B. v6.vbb.transport.rest).</div></div>
       <div class="setrow"><div class="lbl"><b>Reddit und Feeds</b><span>Eigener Reddit-Posteingang, Subreddits und RSS-Feeds lesen, nie posten.</span></div><label class="tgl"><input type="checkbox" id="chat.feeds"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Kontakte</b><span>Telefonnummern, E-Mail-Adressen und Geburtstage aus dem eigenen Adressbuch.</span></div><label class="tgl"><input type="checkbox" id="chat.contacts"><i></i></label></div>
+      <div class="setrow" data-show="chat.contacts" style="margin-left:18px"><div class="lbl"><b>Kontakte ändern</b><span>Auf der Seite Kontakte bearbeiten, anlegen und löschen, zurück ins eigene Adressbuch oder auf dem Spark.</span></div><label class="tgl"><input type="checkbox" id="chat.contacts_edit"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Home Assistant</b><span>Licht, Geräte und Heizung per Sprache, jedes Profil mit seinem eigenen Home Assistant.</span></div><label class="tgl"><input type="checkbox" id="chat.homeassistant"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Home Assistant Assist (Wyoming)</b><span>Home Assistant nutzt Spracherkennung und Stimme des Spark (Voice PE, HA-App), nur von erlaubten Adressen.</span></div><label class="tgl"><input type="checkbox" id="chat.wyoming"><i></i></label></div>
       <div data-show="chat.wyoming" style="margin-left:18px">
@@ -837,6 +838,9 @@
 <section id="offen"><div class="card" id="vgroot"></div>
     <div id="vgbox" class="vgset" hidden></div>
 </section>
+<section id="kontakte"><div class="card" id="konroot"></div>
+    <div id="conbox" class="konset" hidden></div>
+</section>
 <section id="chats"><div class="card cx" id="cxbox">
   <div class="cx-off mut" id="cxoff" hidden></div>
   <div class="cx-split" id="cxsplit">
@@ -1241,7 +1245,6 @@
     <div id="bildbox" class="ptab"></div>
     <div id="musikbox" class="ptab"></div>
     <div id="wxbox" class="ptab"></div>
-    <div id="conbox" class="ptab"></div>
     <div id="trbox" class="ptab"></div>
     <div id="wissbox" class="ptab"></div>
     <div id="feedbox" class="ptab"></div>
@@ -1341,6 +1344,7 @@
 <script src="/static/js/kalender.js"></script>
 <script src="/static/js/post.js"></script>
 <script src="/static/js/listen.js"></script>
+<script src="/static/js/kontakte.js"></script>
 <script src="/static/js/mitschreib.js"></script>
 <script src="/static/js/offen.js"></script>
 <script src="/static/js/android.js"></script>

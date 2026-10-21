@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.888** Kontakte wie Apple Kontakte (Stufe 3a): eigene Seite im Menü mit Adressbüchern als Gruppen, Suche, A–Z mit Buchstabenleiste, Karte mit Nachricht, Anruf, Mail, Termin, Teilen und „Mit Anna“ (nächster Termin, letzte Mail); Tipp auf den Absender einer Mail öffnet die Karte; mit dem Admin-Schalter „Kontakte ändern“ (aus) Bearbeiten mit − und + je Feld, zurück ins eigene Adressbuch mit ETag, neue Karten auch „Auf dem Spark“; iPhone unter Meine Sachen
 - **V01.0.887** Ältere E-Mails nachladen: am Ende der Liste kommen die nächsten 50 älteren Mails von selbst, im Eingang und in jedem Ordner, bis zur ersten Mail; die Suche geht über das ganze Postfach beim Mailserver; Panel, iPhone und spark-tui (bis 200)
 - **V01.0.886** Werkstatt übersichtlich: eigene Seite Zustand → Werkstatt mit vier Kacheln, Verlauf und Ergebnis, das erklärt, was rot heißt und was als Nächstes geht (Ursache untersuchen, nur die roten noch mal testen, für Claude kopieren)
 - **V01.0.885** Musik bearbeiten auf eigener Seite über die ganze Breite: große Welle, Werkzeuge links, Einstellungen in der Mitte, Fassungen rechts, Knopf in einer festen Leiste unten; auf dem Handy und in der iPhone-App dieselbe Ordnung
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.881** Tests des Update-Fensters wackeln nicht mehr: sie schalten ihre Schritte selbst weiter
 - **V01.0.880** Kalender wie Apple Kalender (Stufe 2): Seitenleiste mit Monat und Kalendern zum Ein- und Ausblenden, Jahresansicht; in freie Zeit ziehen oder doppelklicken legt an, Inspektor mit Ort, Wiederholen, Erinnerung, Personen, Notiz und Link, Schließen speichert, untere Kante ändert die Dauer, zwei Minuten „Rückgängig“; wiederholte Termine ändern, verschieben und löschen mit „Nur dieser Termin“ oder „Alle künftigen“; Personen nur als Liste ohne Einladung; Handy mit Wochenstreifen; iPhone-App mit Formular in Gruppen und Rückgängig
 - **V01.0.879** Vorrat je Profil: der Assistent nimmt Kalender, Mail, Wetter und Pakete aus dem Speicher, solange frisch genug, bei langsamem Dienst nach höchstens 2 s den älteren Stand mit Uhrzeit, „schau nochmal nach“ fragt neu; eine Runde je Minute hält aktive Profile frisch, Tagesbriefing 10 min vorher geschrieben, Wetter und Pakete versiegelt auf der Platte, Home Assistant live über WebSocket; Zustand → Prüfen je Dienst; ohne Schalter
-- **V01.0.878** Update sperrt sofort beim Klick: Sicherung, Laden, Prüfen, Modell-Rechner und Neustart als Schritte im selben Fenster auf allen Geräten; jedes frühe Ende löst die Sperre und nennt den Grund
 
 
 

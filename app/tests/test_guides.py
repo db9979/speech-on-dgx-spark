@@ -159,8 +159,9 @@ class DesignKlar(unittest.TestCase):
         # Chats (plan messenger.md) right below the assistant, shown only to profiles that may use them;
         # Kalender and E-Mail (plan kalender-mail.md 1a 2a, V01.0.805, V01.0.809) after Chats, shown only with
         # the calendar or mail function; Listen (plan listen-teilen.md 1a) after E-Mail, shown only with the lists; Offen
-        # (plan assistent-zentrale.md 7a) after Listen, shown only with „Alles Offene im Assistenten“
-        self.assertEqual(re.findall(r'data-s="(\w+)"', nav), ["chat", "chats", "cal", "post", "listen", "offen", "mon", "feat", "prof", "cfg"])
+        # (plan assistent-zentrale.md 7a) after Listen, shown only with „Alles Offene im Assistenten“; Kontakte
+        # (Apple-Stil 6a) after Offen, shown only with Kontakte
+        self.assertEqual(re.findall(r'data-s="(\w+)"', nav), ["chat", "chats", "cal", "post", "listen", "offen", "kontakte", "mon", "feat", "prof", "cfg"])
         self.assertLess(nav.index('id="findbtn"'), nav.index('data-s="chat"'))
         self.assertLess(nav.index('id="navme"'), nav.index("Spark verwalten"))
         self.assertLess(nav.index("Spark verwalten"), nav.index('data-s="mon"'))

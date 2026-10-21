@@ -244,6 +244,7 @@
     "weather_url": "https://api.open-meteo.com/v1/forecast",
     "geocode_url": "https://geocoding-api.open-meteo.com/v1/search",
     "contacts": false,
+    "contacts_edit": false,
     "parcels": false,
     "telegram": false,
     "tasks": true,

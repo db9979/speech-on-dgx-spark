@@ -154,6 +154,10 @@ THINGS = {
               (("DELETE",), r"/api/profile/listen/(?:einkauf|aufgaben|l[0-9a-f]{8})/links/k[0-9a-f]{8}"),
               (("POST",), r"/api/profile/tasks/(?:u_[0-9a-f]{12}\.)?(?:einkauf|aufgaben|l[0-9a-f]{8})/(?:add|done|undo)"),
               (("DELETE",), r"/api/profile/tasks/(?:einkauf|aufgaben|l[0-9a-f]{8})/[0-9a-f]{10}")),
+    # Kontakte (contacts.py, Apple-Stil „6a“): the page's cards, „Mit Anna“, a card as .vcf; changing, adding and
+    # deleting only with Kontakte ändern (its own function, checked there again; the address books stay in the browser)
+    "contacts": ((("GET",), r"/api/profile/contacts/page"), (("GET",), r"/api/profile/contacts/(?:with|vcf)/[csv][0-9a-f]{12}")),
+    "kontakteaendern": ((("POST",), r"/api/profile/contacts/card"), (("PUT", "DELETE"), r"/api/profile/contacts/card/[cs][0-9a-f]{12}")),
     # Offen (vorgaenge.py, plan assistent-zentrale): the cards, one button, „gesehen“; the app asks again when it
     # comes to the front (the event stream stays with the browser)
     "vorgaenge": ((("GET", "DELETE"), r"/api/profile/vorgaenge"), (("POST",), r"/api/profile/vorgaenge/(?:act|seen)")),

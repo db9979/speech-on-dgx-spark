@@ -1958,7 +1958,7 @@
 "id": "P303",
 "v": 803,
 "titel": "Anrufe per Assistent",
-"text": "A: Funktionen → Chats → „Anrufe per Assistent“ an (braucht „Anrufe (Sprache und Video)“). B: Im Panel dem Assistenten „Videoanruf mit <Name>“ sagen: er fragt „Soll ich <Name> per Spark-Videoanruf anrufen?“, darunter die Karte „Wartet auf dein Ja: Anruf“. „Ja“: Chats öffnet sich und der Videoanruf klingelt bei der anderen Person. C: Dasselbe mit „Nein“: nichts passiert. D: Am Lautsprecher „Ruf <Name> an“, dann „Ja“: aufs Handy kommt „📞 <Name> anrufen“; antippen, unten steht „<Name> anrufen? · Anrufen · Nicht jetzt“, „Anrufen“ startet den Anruf. E: iPhone-App (neuer TestFlight-Build): „Ruf <Name> an“, „Ja“: Apples Anruf-Fenster startet den Anruf. F: Android-App 1.4.2: „Ruf <Kontakt> übers Telefon an“ (Kontakt aus Ich → Kontakte), „Ja“: die Telefon-App öffnet sich mit der Nummer. G: Zustand → Live, Kachel Chats: „per Assistent heute … gefragt, … gestartet …“; Zustand → Logs, Bereich chats: „call assistant …“ ohne Namen.",
+"text": "A: Funktionen → Chats → „Anrufe per Assistent“ an (braucht „Anrufe (Sprache und Video)“). B: Im Panel dem Assistenten „Videoanruf mit <Name>“ sagen: er fragt „Soll ich <Name> per Spark-Videoanruf anrufen?“, darunter die Karte „Wartet auf dein Ja: Anruf“. „Ja“: Chats öffnet sich und der Videoanruf klingelt bei der anderen Person. C: Dasselbe mit „Nein“: nichts passiert. D: Am Lautsprecher „Ruf <Name> an“, dann „Ja“: aufs Handy kommt „📞 <Name> anrufen“; antippen, unten steht „<Name> anrufen? · Anrufen · Nicht jetzt“, „Anrufen“ startet den Anruf. E: iPhone-App (neuer TestFlight-Build): „Ruf <Name> an“, „Ja“: Apples Anruf-Fenster startet den Anruf. F: Android-App 1.4.2: „Ruf <Kontakt> übers Telefon an“ (Kontakt aus Kontakte → Einstellungen), „Ja“: die Telefon-App öffnet sich mit der Nummer. G: Zustand → Live, Kachel Chats: „per Assistent heute … gefragt, … gestartet …“; Zustand → Logs, Bereich chats: „call assistant …“ ohne Namen.",
 "thread": "Anrufe, Videoanrufe, Nachrichten an andere Nutzer"
 },
 {
@@ -2490,6 +2490,13 @@
 "titel": "Ältere Mails nachladen",
 "text": "A: Pi auf V01.0.887. E-Mail öffnen und ans Ende der Liste scrollen: „Lädt ältere Mails …“, dann hängen die nächsten 50 an, ohne dass die Liste springt; weiter scrollen bis „Keine älteren Mails“ (auch Mails älter als 30 Tage). B: Nach einem Wort suchen, das nur in einer alten Mail steht (z. B. im Text): beim Scrollen ans Ende kommt sie. C: Einen Ordner mit vielen Mails öffnen: dasselbe Nachladen. D: iPhone-App: Meine Sachen → E-Mail, ans Ende scrollen: die älteren kommen. E: uConsole: spark-tui mails --anzahl 120 zeigt 120 Mails, spark-tui mail 110 öffnet eine. F: Zustand → Live bei E-Mail: „heute n ältere Seiten geladen“.",
 "thread": "Kalender und E-Mail in den Apps"
+},
+{
+"id": "P380",
+"v": 888,
+"titel": "Kontakte wie Apple Kontakte",
+"text": "A: Update auf V01.0.888. Funktionen → Kontakte an, ein Adressbuch unter Kontakte → Einstellungen. Menü Kontakte: links Suche, Adressbücher als Chips, A bis Z mit Buchstabenleiste; ein Buchstabe springt dorthin. B: Einen Kontakt antippen: Karte mit Initialen, Nachricht, Anruf, Mail, Termin, Teilen; „Mit …“ zeigt den nächsten Termin und die letzte Mail (wenn vorhanden). Teilen lädt eine .vcf. C: Seite E-Mail, eine Mail öffnen, auf den Absender tippen: seine Karte öffnet sich. D: Funktionen → Kontakte → „Kontakte ändern“ an. Karte → Bearbeiten: Telefon mit + hinzufügen, eins mit − entfernen, Fertig: das iPhone (iCloud-Kontakte) zeigt dieselbe Änderung, Foto bleibt. E: „+ Neuer Kontakt“ ins iCloud-Adressbuch und einer „Auf dem Spark“; einen davon löschen (Rückfrage). F: Dieselbe Karte am iPhone ändern, dann im Panel ohne Neuladen speichern: Hinweis „inzwischen geändert“, nichts überschrieben. G: iPhone-App: Meine Sachen → Kontakte, A–Z, Karte, Bearbeiten, Wischen entfernt ein Feld. Schalter aus: Bearbeiten verschwindet überall.",
+"thread": "Mail, Kalender, Kontakte wie bei Apple"
 }
 ]
 }

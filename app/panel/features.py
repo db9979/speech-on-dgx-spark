@@ -48,7 +48,7 @@ ME_PAGES = (("overbox", "Überblick", "Overview"), ("bgbox", "Mein Zustand", "My
             ("logbox", "Werkzeug-Verlauf", "Tool history"),
             ("agentbox", "Aufträge", "Jobs"), ("mymcpbox", "Meine MCP-Dienste", "My MCP services"), ("wxbox", "Wetter", "Weather"), ("feedbox", "Reddit und Feeds", "Reddit and feeds"),
             ("probox", "Von selbst", "By itself"), ("notebox", "Mitteilungen", "Notifications"),
-            ("wissbox", "Was ich über dich weiß", "What I know about you"), ("writebox", "Schreibhilfe", "Writing help"), ("conbox", "Kontakte", "Contacts"),
+            ("wissbox", "Was ich über dich weiß", "What I know about you"), ("writebox", "Schreibhilfe", "Writing help"),
             ("habox", "Smart Home", "Smart home"), ("roombox", "Raum-Modus", "Room mode"), ("espbox", "Lautsprecher", "Speakers"), ("telbox", "Telefon", "Phone"),
             ("trbox", "Bus und Bahn", "Bus and train"), ("tgbox", "Telegram", "Telegram"), ("appbox", "iPhone-App", "iPhone app"),
             ("andbox", "Android-App", "Android app"), ("deskbox", "Begleiter", "Companion"), ("pebbox", "Pebble-Uhr", "Pebble watch"),
@@ -61,7 +61,8 @@ ME_PAGES = (("overbox", "Überblick", "Overview"), ("bgbox", "Mein Zustand", "My
 # (me=<id>) of every way, card and app; kalender.js OWN_PAGES carries the same (test_app_gleichstand).
 # (id, section, name de, name en)
 OWN_PAGES = (("calbox", "cal", "Kalender", "Calendar"), ("mailbox", "post", "E-Mail", "E-mail"),
-             ("taskbox", "listen", "Listen", "Lists"), ("vgbox", "offen", "Offen", "Open"))
+             ("taskbox", "listen", "Listen", "Lists"), ("vgbox", "offen", "Offen", "Open"),
+             ("conbox", "kontakte", "Kontakte", "Contacts"))
 # Ich pages every profile has, whatever is switched on (me.js meAll shows them for every profile too)
 ME_ALWAYS = frozenset(("setbox", "factbox", "logbox", "secbox"))
 # Ich pages the iPhone app leaves out, each with its reason; every other page can be opened in the app
@@ -366,6 +367,9 @@ FEATURES = (
     F("schreib", "Schreibhilfe", "Writing help", "post", ("write_help",), me="writebox", guide="schreib"),
     F("schreibapps", "Schreibhilfe in anderen Programmen", "Writing help in other programs", "post", ("write_apps",), parent="schreib", me="writebox", guide="schreibapps"),
     F("contacts", "Kontakte", "Contacts", "post", ("contacts",), me="conbox", guide="contacts"),
+    # contacts.py page Kontakte (Apple-Stil „6a“): a card changed in its own address book (ETag), new ones there or on the Spark
+    F("kontakteaendern", "Kontakte ändern", "Edit contacts", "post", ("contacts_edit", "contacts"), parent="contacts",
+      me="conbox", guide="kontakteaendern"),
     # home
     F("ha", "Home Assistant", "Home Assistant", "home", ("homeassistant",), me="habox", guide="ha"),
     F("room", "Raum-Modus", "Room mode", "home", ("room",), me="roombox", guide="room"),
