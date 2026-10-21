@@ -2455,6 +2455,13 @@
 "titel": "Kalender wie Apple Kalender",
 "text": "A: Update auf V01.0.880. Seite Kalender am Rechner, Woche: links Monat und Kalender, einen Kalender ausblenden und wieder ein. B: In freie Zeit von 10 bis 11 Uhr ziehen: der Inspektor öffnet sich, Titel tippen, Erinnerung 15 Min., Person „Anna <anna@example.org>“, Esc: der Termin steht da, „Rückgängig“ unten nimmt ihn zurück. C: Einen Termin anlegen mit Wiederholen „Wöchentlich“; einen späteren davon verschieben: Frage „Nur dieser Termin“ / „Alle künftigen“, beides einmal probieren, iPhone-Kalender (iCloud) zeigt dasselbe. D: Untere Kante eines Termins ziehen: neue Dauer. Ansicht „Jahr“ zeigt zwölf Monate. E: Handy-Seite: Wochenstreifen oben, Tag antippen, lange drücken in freie Zeit legt an. F: iPhone-App: Kalender mit Wochenstreifen, Wischen wechselt den Tag, + öffnet das Formular in Gruppen, Serie fragt, danach „Rückgängig“. G: Anna bekommt keine Einladungs-Mail.",
 "thread": "Mail, Kalender, Kontakte wie bei Apple"
+},
+{
+"id": "P375",
+"v": 882,
+"titel": "Besprechungs-Aufgaben unter Offen",
+"text": "A: Update, Admin: Listen, „Besprechungen mitschreiben“ und „Alles Offene im Assistenten“ an. B: Im Begleiter eine Besprechung mitschreiben, beenden, zwei Aufgaben „Ausgewählte auf die Liste“. C: Seite Offen → Braucht dich: zwei Karten „Aus Besprechung“ mit Liste und „bis“; im Gespräch keine neue Karte. D: Auf einer Karte „Erledigt“: auf der Seite Listen ist der Eintrag abgehakt; „Zurückholen“ holt beides zurück. E: Auf der Seite Listen einen Eintrag abhaken: die Karte steht unter Erledigt; löschen: sie ist weg. F: „Nicht wichtig“ blendet nur die Karte aus, der Eintrag bleibt.",
+"thread": "Besprechungs-Aufgaben in Listen"
 }
 ]
 }

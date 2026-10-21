@@ -519,21 +519,7 @@ async def _change(uid, lst, picked, action, by):
     d = _load(uid)
     tgt = d["targets"].get(lst)
     if not tgt:
-        ids = {x["id"] for x in picked}
-        with _lock:
-            d = _load(uid)
-            hit = [x for x in d["items"] if x["id"] in ids and x["list"] == lst
-                   and (bool(x.get("done")) == (action == "undo") or action == "delete")]
-            if action == "delete":
-                d["items"] = [x for x in d["items"] if x not in hit]
-            for x in (hit if action != "delete" else ()):
-                if action == "undo":
-                    x.pop("done", None)
-                    x.pop("done_by", None)
-                else:
-                    x["done"], x["done_by"] = int(time.time()), by or uid
-            _save(uid, d)
-        return len(hit)
+        return _change_here(uid, lst, {x["id"] for x in picked}, action, by)
     if action == "undo":
         return 0   # a CalDAV list keeps what was ticked off itself
     acc = _account(uid, tgt["acc"])
@@ -562,6 +548,63 @@ async def _change(uid, lst, picked, action, by):
                 n += 1
             else:
                 raise ValueError(f"the server answered {r.status_code}")
+    return n
+
+
+def _change_here(uid, lst, ids, action, by, card=True):
+    """_change on a list the Spark keeps (no waiting). card: the meeting's card under Offen follows (vorgaenge.py),
+    False when the card itself asked."""
+    with _lock:
+        d = _load(uid)
+        hit = [x for x in d["items"] if x["id"] in ids and x["list"] == lst
+               and (bool(x.get("done")) == (action == "undo") or action == "delete")]
+        if action == "delete":
+            d["items"] = [x for x in d["items"] if x not in hit]
+        for x in (hit if action != "delete" else ()):
+            if action == "undo":
+                x.pop("done", None)
+                x.pop("done_by", None)
+            else:
+                x["done"], x["done_by"] = int(time.time()), by or uid
+        _save(uid, d)
+    if card:
+        card_follows(uid, lst, [x["id"] for x in hit], action)
+    return len(hit)
+
+
+def card_key(lst, eid):
+    """The key of a meeting task's card under Offen (vorgaenge.py, art „besprechung“)."""
+    return f"besprechung:{lst}:{eid}"
+
+
+def card_follows(uid, lst, ids, action):
+    """Ticked off, deleted or taken back on the list (page, voice, app, Reminders): the card under Offen does the same;
+    nothing when there is none (only entries from a meeting have one)."""
+    import vorgaenge
+    for eid in ids:
+        key = card_key(lst, eid)
+        if action == "undo":
+            vorgaenge.reopen(uid, key)
+        else:
+            vorgaenge.done(uid, key, wie="erledigt" if action == "done" else "ausblenden")
+
+
+def tick_from_card(uid, lst, eid, action):
+    """The card's „Erledigt“ or „Zurückholen“ (vorgaenge._source_act) on its entry, with the journal line of every
+    outcome; only on a list the Spark keeps (a meeting's cards are made only there). Returns how many."""
+    what = "undo" if action == "undo" else "done"
+    try:
+        notaus.stop("aktion", uid)
+        if not known(uid, lst) or _load(uid)["targets"].get(lst):
+            _log(what, lst, uid, "refused (not on the Spark)")
+            return 0
+        n = _change_here(uid, lst, {eid}, action, uid, card=False)
+    except notaus.NotausAktiv:
+        _log(what, lst, uid, "refused notaus")
+        raise
+    _log(what, lst, uid, f"{n} entries from card")
+    if n:
+        _count.bump(what, n)
     return n
 
 

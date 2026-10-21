@@ -2733,6 +2733,7 @@ async def _meet_to_list(uid, m, picks, lst):
             t = m["tasks"][i]
             by_due.setdefault((t.get("due") or "")[:10], []).append(i)
     n = 0
+    before = {x["id"] for x in tasks._load(uid)["items"]}
     for due, idx in by_due.items():
         try:
             added = await tasks.add(uid, lst, [_meet_entry(m["tasks"][i]["text"]) for i in idx], by=uid,
@@ -2743,6 +2744,13 @@ async def _meet_to_list(uid, m, picks, lst):
             raise HTTPException(502, "Die Liste hat die Aufgaben nicht angenommen.")
         m["listed"].update(idx)
         n += len(added)
+    # each new entry also a card under Offen (vorgaenge.py, when that function is allowed; only lists on the Spark)
+    new = [(x["id"], x["text"], x.get("due", "")) for x in tasks._load(uid)["items"]
+           if x["id"] not in before and x["list"] == lst and x.get("src") == "besprechung"]
+    if new:
+        import vorgaenge
+        when = datetime.datetime.fromtimestamp(m["t0"], _zone(uid)).strftime("%d.%m. %H:%M")
+        vorgaenge.from_meeting(uid, lst, tasks.name_of(uid, lst), new, when)
     return n
 
 

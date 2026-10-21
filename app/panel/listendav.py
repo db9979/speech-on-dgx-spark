@@ -159,6 +159,8 @@ def _put(uid, lid, name, body, headers):
             x = have
         tasks._save(uid, d)
     tasks._log(what, lid, uid, "1 entries from calendar app")
+    if what in ("done", "undo"):
+        tasks.card_follows(uid, lid, [x["id"]], what)
     if what != "edit":
         tasks._count.bump(what, 1)
     if what == "add":
@@ -179,6 +181,7 @@ def _delete(uid, lid, name, headers):
         tasks._save(uid, d)
     tasks._log("delete", lid, uid, "1 entries from calendar app")
     tasks._count.bump("delete", 1)
+    tasks.card_follows(uid, lid, [have["id"]], "delete")
     return 204
 
 

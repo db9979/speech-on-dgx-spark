@@ -51,6 +51,48 @@ class Vorgaenge(unittest.TestCase):
         for k in [k for k in guard._rate if str(k[0]).startswith("vorgaenge")]:
             guard._rate.pop(k, None)
 
+    def test_a_meeting_task_is_a_card_that_follows_its_list_entry(self):
+        """Besprechungs-Aufgaben (Dominik 2026-10-20 „ok“ 4a): one card per entry under Offen, never in the conversation;
+        „Erledigt“ ticks the entry off and „Zurückholen“ brings it back; ticked off, taken back or deleted on the list,
+        the card follows; overdue it stays open; „Nicht wichtig“ leaves the entry on the list."""
+        import tasks
+        helpers.keep_chat(self, "tasks")
+        helpers.set_config(tasks=True)
+        a = profile("Offen Bert")
+        uid = uid_of("Offen Bert")
+        asyncio.run(tasks.add(uid, "aufgaben", ["Angebot schicken", "Raum buchen"], src="besprechung", due="2026-01-02", qty=False))
+        rows = {x["text"]: x["id"] for x in tasks._load(uid)["items"]}
+        self.assertEqual(vorgaenge.from_meeting(uid, "aufgaben", "Aufgaben",
+                                                [(rows["Angebot schicken"], "Angebot schicken", "2026-01-02"),
+                                                 (rows["Raum buchen"], "Raum buchen", "")], "20.10. 14:00"), 2)
+        self.assertEqual(vorgaenge.from_meeting(uid, "aufgaben", "Aufgaben",
+                                                [(rows["Raum buchen"], "Raum buchen", "")], "20.10. 14:00"), 0)   # once
+        items = {x["titel"]: x for x in a.get("/api/profile/vorgaenge").json()["items"]}
+        x = items["Angebot schicken"]
+        self.assertEqual((x["art"], x["frist"], x["gruppe"], x["zeile"]), ("besprechung", "2026-01-02", "braucht", "Besprechung 20.10. 14:00"))
+        self.assertEqual(sorted(k["k"] for k in x["acts"]), ["ausblenden", "erledigt", "spaeter"])
+        self.assertEqual(cards_in_convos(uid), [])                                   # not into the conversation
+        self.assertFalse(vorgaenge._stale(vorgaenge._load(uid)["items"][0], datetime.datetime(2026, 12, 1).timestamp()))
+        # the card's „Erledigt“ ticks the entry off; „Zurückholen“ brings both back
+        r = a.post("/api/profile/vorgaenge/act", json={"id": x["id"], "act": "erledigt", "rev": x["rev"]})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertTrue(next(y for y in tasks._load(uid)["items"] if y["id"] == rows["Angebot schicken"]).get("done"))
+        r = a.post("/api/profile/vorgaenge/act", json={"id": x["id"], "act": "zurueck", "rev": r.json()["item"]["rev"]})
+        self.assertFalse(next(y for y in tasks._load(uid)["items"] if y["id"] == rows["Angebot schicken"]).get("done"))
+        self.assertEqual(r.json()["item"]["gruppe"], "braucht")
+        # ticked off on the list: the card is done; taken back: open again; deleted: gone
+        a.post("/api/profile/tasks/aufgaben/done", json={"ids": [rows["Angebot schicken"]]})
+        state = lambda t: next(y for y in vorgaenge._load(uid)["items"] if y["titel"] == t)["zustand"]   # noqa: E731
+        self.assertEqual(state("Angebot schicken"), "erledigt")
+        a.post("/api/profile/tasks/aufgaben/undo", json={"ids": [rows["Angebot schicken"]]})
+        self.assertEqual(state("Angebot schicken"), "offen")
+        # „Nicht wichtig“ hides the card only
+        y = next(z for z in a.get("/api/profile/vorgaenge").json()["items"] if z["titel"] == "Raum buchen")
+        a.post("/api/profile/vorgaenge/act", json={"id": y["id"], "act": "ausblenden", "rev": y["rev"]})
+        self.assertIn("Raum buchen", [z["text"] for z in asyncio.run(tasks.items(uid, "aufgaben"))])
+        a.delete(f"/api/profile/tasks/aufgaben/{rows['Angebot schicken']}")
+        self.assertEqual(state("Angebot schicken"), "weg")
+
     def test_a_reminder_that_rang_becomes_one_card_in_todays_conversation(self):
         a = profile("Offen Olga")
         uid = uid_of("Offen Olga")

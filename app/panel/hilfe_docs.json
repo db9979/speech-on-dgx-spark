@@ -3909,7 +3909,15 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "ie sich („Im Gespräch beantwortet“, „Neuer Vorschlag“, „Abgelaufen“). Beim Druck prüft das Panel wieder Besitzer, Stand, Notaus und die Schalter des Moduls (etwa „Mails senden“); der Text einer Mail bleibt nur, solange sie wartet. Die Karte kommt mit dem Schalter „Alles Offene im Assistenten“, auch ohne „Ablauf und Freigabe zeigen“; ohne ihn bleibt die Ja/Nein-Karte von „Ablauf und Freigabe zeigen“. Wichtige Mails als Karte und Knöpfe im Begleiter und in Telegram folgen in Stufe 3. Technik: profiles.pending_set meldet jeden wartenden Vorschlag an vorgaenge.from_pending (Art vorschlag, Schlüssel vorschlag:<name>:<zeit>, Wörter aus card() des Moduls: calendars, senden, tidy). Der Ja-Knopf (vs_ja, Stufe ja) ruft dieselbe Funktion wie das getippte „Ja“ (calendars.carry, senden.carry, tidy.carry_out) und antwortet {text, gelungen}; vorgaenge.sweep schließt die Karten nach jeder Antwort und jede Minute. Die Freigabe-Karte (ablauf.waiting) trägt die Nummer (vg), Panel und iPhone zeigen dann die Karte. Live (Kalender-Knoten) zählt wartende Vorschläge und heute per Knopf bestätigte."
+"text": "ie sich („Im Gespräch beantwortet“, „Neuer Vorschlag“, „Abgelaufen“). Beim Druck prüft das Panel wieder Besitzer, Stand, Notaus und die Schalter des Moduls (etwa „Mails senden“); der Text einer Mail bleibt nur, solange sie wartet. Die Karte kommt mit dem Schalter „Alles Offene im Assistenten“, auch ohne „Ablauf und Freigabe zeigen“; ohne ihn bleibt die Ja/Nein-Karte von „Ablauf und Freigabe zeigen“. Wichtige Mails als Karte und Knöpfe im Begleiter und in Telegram folgen in Stufe 3. Besprechungs-Aufgaben unter Offen (V01.0.882): Legt der Spark-Begleiter Aufgaben einer Besprechung auf eine Liste („Ausgewählte auf die Liste“), wird jede neue Aufgabe zusätzlich eine Karte „Aus Besprechung“ unter Offen (nicht im Gespräch), mit Liste, Besprechungszeit und „bis“ als Frist. „Erledigt“ hakt den Listeneintrag ab, „Zurückholen“ holt ihn zurück, „Nicht wichtig“ blendet nur die Karte aus. Umgekehrt folgt die Karte der Liste: abgehakt (Seite, Stimme, App, iPhone-Erinnerungen) ist sie erledigt, zurückgeholt wieder offen, gelöscht weg. Überfällige Aufgaben bleiben offen. Technik: Art besprechung in vorgaenge.ARTEN, Schlüssel besprechung:<Liste>:<Eintrag>, vorgaenge.from_meeting, tasks.card_follows"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": " und tasks.tick_from_card. Technik: profiles.pending_set meldet jeden wartenden Vorschlag an vorgaenge.from_pending (Art vorschlag, Schlüssel vorschlag:<name>:<zeit>, Wörter aus card() des Moduls: calendars, senden, tidy). Der Ja-Knopf (vs_ja, Stufe ja) ruft dieselbe Funktion wie das getippte „Ja“ (calendars.carry, senden.carry, tidy.carry_out) und antwortet {text, gelungen}; vorgaenge.sweep schließt die Karten nach jeder Antwort und jede Minute. Die Freigabe-Karte (ablauf.waiting) trägt die Nummer (vg), Panel und iPhone zeigen dann die Karte. Live (Kalender-Knoten) zählt wartende Vorschläge und heute per Knopf bestätigte."
 },
 {
 "lang": "de",
@@ -13005,7 +13013,15 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "h as \"Send mails\"); a mail's text stays only while it waits. The card comes with the switch \"Everything open in the assistant\", also without \"Show steps and approvals\"; without it the yes/no card of \"Show steps and approvals\" stays. Important mails as cards and buttons in the companion and in Telegram follow in stage 3. Technology: profiles.pending_set reports every waiting proposal to vorgaenge.from_pending (kind vorschlag, key vorschlag:<name>:<time>, words from the module's card(): calendars, senden, tidy). The yes button (vs_ja, stage ja) calls the same function as the typed \"yes\" (calendars.carry, senden.carry, tidy.carry_out) and answers {text, gelungen}; vorgaenge.sweep closes the cards after every answer and every minute. The approval card (ablauf.waiting) carries the number (vg), the panel and the iPhone then show the card. Live (calendar node) counts waiting proposals and those confirmed by button today."
+"text": "h as \"Send mails\"); a mail's text stays only while it waits. The card comes with the switch \"Everything open in the assistant\", also without \"Show steps and approvals\"; without it the yes/no card of \"Show steps and approvals\" stays. Important mails as cards and buttons in the companion and in Telegram follow in stage 3. Meeting tasks under Open (V01.0.882): When the Spark companion puts a meeting's tasks onto a list (\"Ausgewählte auf die Liste\"), every new task also becomes a card \"From a meeting\" under Open (not in the conversation), with the list, the meeting time and \"due\" as its deadline. \"Done\" ticks the list entry off, \"Bring back\" brings it back, \"Not important\" only hides the card. The other way round the card follows the list: ticked off (page, voice, app, iPhone Reminders) it is done, taken back it is open again, deleted it is gone. Overdue tasks stay open. Technology: kind besprechung in vorgaenge.ARTEN, key besprechung:<list>:<entry>, vorgaenge.from_meeting, tasks.card_follows and tasks.tick_from_card. Technology: profiles.pending_set reports every waiting proposal to vorgaenge.from_pending (kind vorschlag, key vorschlag:<name>:<time>, words from the module's card(): ca"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "lendars, senden, tidy). The yes button (vs_ja, stage ja) calls the same function as the typed \"yes\" (calendars.carry, senden.carry, tidy.carry_out) and answers {text, gelungen}; vorgaenge.sweep closes the cards after every answer and every minute. The approval card (ablauf.waiting) carries the number (vg), the panel and the iPhone then show the card. Live (calendar node) counts waiting proposals and those confirmed by button today."
 },
 {
 "lang": "en",

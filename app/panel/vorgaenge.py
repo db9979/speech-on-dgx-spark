@@ -57,6 +57,11 @@ ARTEN = {
     # stage 2: a proposal waiting for a yes (calendars, senden, tidy); it lives as long as the proposal does
     "vorschlag": {"de": "Wartet auf dein Ja", "en": "Waiting for your yes", "sym": "check", "mail": False, "dringend": False,
                   "acts": ("vs_ja", "vs_aendern", "vs_nein")},
+    # a task from a meeting in the Begleiter, put onto a list (thread „Besprechungs-Aufgaben in Listen“, Dominik
+    # 2026-10-20 „ok“ 4a): one card per task, only under Offen (say=False); „Erledigt“ ticks the entry off, the list
+    # ticking it off closes the card (tasks.card_follows); overdue stays open
+    "besprechung": {"de": "Aus Besprechung", "en": "From a meeting", "sym": "check", "mail": False, "dringend": False,
+                    "acts": ("erledigt", "ausblenden")},
 }
 # every button there is; "direkt" runs here at once (Rückgängig with "zurueck"), "seite" only opens the place where
 # the person goes on (the mail page's preview sheet sends, the Kalender's „Eintragen“ saves), nothing runs here
@@ -335,6 +340,8 @@ def _allowed_acts(uid, x):
     if x["zustand"] in ("erledigt", "weg"):
         return {"zurueck"}
     out = {"erledigt", "spaeter"} | ({"zurueck"} if x["zustand"] == "spaeter" else set())
+    if x["art"] == "besprechung":      # „Nicht wichtig“ hides the card, the entry stays on the list
+        out.add("ausblenden")
     if x["art"] == "fuerdich":
         out.add("ausblenden")
         import fuerdich
@@ -378,7 +385,7 @@ def act(uid, vid, name, rev=None, wann="", wo="web", now=None):
     where = WO.get(wo, "Rechner")
     if x["art"] == "vorschlag":
         return _vorschlag_act(uid, x, name, where, now)
-    extra = (_source_act(uid, x, name) or {}) if x["art"] == "fuerdich" and name != "spaeter" else {}
+    extra = (_source_act(uid, x, name) or {}) if x["art"] in ("fuerdich", "besprechung") and name != "spaeter" else {}
     if AKTIONEN[name]["stufe"] == "seite":
         print(f"vorgang: knopf {name} seite {x['art']} | {profiles.log_name(profiles.by_id(uid))}", flush=True)
         return dict(extra, item=public(uid, x), rev=d["rev"])
@@ -408,6 +415,8 @@ def act(uid, vid, name, rev=None, wann="", wo="web", now=None):
 
 def _source_act(uid, x, name):
     """The source's own function behind a button (its own checks and journal lines)."""
+    if x["art"] == "besprechung":
+        return _meeting_act(uid, x, name)
     import fuerdich
     k = x["key"].split(":", 1)[1]
     if name in ("erledigt", "ausblenden"):
@@ -430,6 +439,31 @@ def _source_act(uid, x, name):
         import datetime as dt
         return {"draft": fuerdich.cancel_draft(uid, src, dt.date.today())}
     return None
+
+
+def _meeting_act(uid, x, name):
+    """A meeting task's card: „Erledigt“ ticks its entry off, „Zurückholen“ brings it back (tasks.tick_from_card);
+    „Nicht wichtig“ only hides the card, the entry stays on the list."""
+    import tasks
+    _, lst, eid = x["key"].split(":", 2)
+    if name in ("erledigt", "zurueck"):
+        try:
+            tasks.tick_from_card(uid, lst, eid, "done" if name == "erledigt" else "undo")
+        except notaus.NotausAktiv:
+            raise _refuse("notaus", 503, "Notaus: gerade wird nichts geändert.")
+    return None
+
+
+def from_meeting(uid, lst, list_name, entries, when):
+    """begleiter.py, a meeting's tasks onto a list: one card per new entry [(entry id, text, due)] under Offen, never
+    into the conversation (say=False). when: "20.10. 14:00", the meeting's start. Returns how many are new."""
+    import tasks
+    n = 0
+    for eid, text, due in entries:
+        _, new = put(uid, "besprechung", tasks.card_key(lst, eid), text, f"Besprechung {when}",
+                     [["Liste", list_name]], due or "", say=False)
+        n += new
+    return n
 
 
 # ---------------------------------------------------------------- Stufe 2: a proposal waiting for a yes
@@ -637,6 +671,8 @@ def _stale(x, now):
     since = max(x["t"], x.get("wieder", 0))      # one back from „Später“ counts from its return
     if x["art"] == "erinnerung":
         return now - since > ERINNERUNG_STUNDEN * 3600
+    if x["art"] == "besprechung":      # a task stays open while its entry is (overdue too); the list closes it
+        return False
     if x.get("frist"):
         try:
             return datetime.date.fromisoformat(x["frist"]) < datetime.date.fromtimestamp(now) - datetime.timedelta(days=1)
