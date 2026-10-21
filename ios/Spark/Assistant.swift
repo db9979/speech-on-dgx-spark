@@ -690,7 +690,9 @@ final class Conversation: ObservableObject {
         guard wasHeard, let api = SparkAPI.current else { base("nichts gehört"); return }
         if !(Prefs.handsFree || canWake) { audio.stopInput() }
         phase = .transcribing
-        let woke = fromWake, how = opened
+        // in the car a follow-up is never compared with the voiceprint: the car's microphone made the own voice
+        // "foreign" and every follow-up ended (Dominik's drive 2026-10-21 16:35); the Spark checks only the known words
+        let woke = fromWake, how = inCar ? "car" : opened
         task = Task {
             do {
                 let heardBack = try await api.transcribe(wav: wav, language: Store.language, opened: how)

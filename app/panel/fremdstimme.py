@@ -18,6 +18,10 @@ The panel decides with a fixed rule, never the model:
    A recording counts when it is the profile's voice, or clearly the voice of another profile in the
    household. Too little speech to tell ("Und morgen?") also counts, so a short follow-up is never lost.
    Anything else is "foreign voice": no text, the question is never asked.
+4. The car is never checked: the iPhone app sends "car" for its hands-free follow-ups in CarPlay, which is not
+   in OPEN. Through the car's microphone the own voice did not match the voiceprint, so every follow-up was
+   dropped as a foreign voice (Dominik 2026-10-21); in the closed car there is no TV, the radio is paused
+   while Spark talks, and the conversation began with a tap on the car's screen.
 
 Only the decision and its numbers go to the journal, never the words, the voiceprint or a name."""
 import re
