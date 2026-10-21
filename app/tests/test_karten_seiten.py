@@ -10,11 +10,11 @@ the own page, „Im Kalender ansehen“ (that day) or „Mail öffnen“ (that m
 Fixed dates (2026-03), the fake mailbox and CalDAV server; no wall clock.
 """
 import asyncio
-import os
 import types
 import unittest
 
 from tests import helpers
+from tests.test_ui_browser import browser_ok
 
 helpers.start()
 import panel  # noqa: E402
@@ -93,7 +93,7 @@ class Events(unittest.TestCase):
         self.assertEqual(drain(q), [{"type": "goto", "to": "cal", "day": "2026-03-10"}])
 
 
-@unittest.skipUnless(os.environ.get("SPEECH_UI_TESTS", "1") == "1", "browser tests off")
+@unittest.skipUnless(browser_ok(), "no Playwright/Chromium here")
 class Page(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

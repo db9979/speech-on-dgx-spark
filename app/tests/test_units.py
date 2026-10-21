@@ -208,7 +208,7 @@ class AsrFrontEnd(unittest.TestCase):
 class WithoutPanel(unittest.TestCase):
     """Install mode "api": the command line speech-spark and the watchdog of its own."""
 
-    def info(self, mode, **hosts):
+    def info(self, mode, bin_first=None, **hosts):
         import json
         import os
         import subprocess
@@ -224,6 +224,8 @@ class WithoutPanel(unittest.TestCase):
             with open(os.path.join(etc, "mode"), "w") as f:
                 f.write(mode + "\n")
             env = dict(os.environ, SPEECH_SPARK_ETC=etc, SPEECH_SPARK_PREFIX=helpers.TMP)
+            if bin_first:
+                env["PATH"] = bin_first + os.pathsep + env.get("PATH", "/usr/bin:/bin")
             p = subprocess.run(["bash", os.path.join(helpers.APP, "speech-spark.sh"), "info"], env=env,
                                capture_output=True, text=True, timeout=30)
             self.assertEqual(p.returncode, 0, p.stderr)
@@ -236,6 +238,19 @@ class WithoutPanel(unittest.TestCase):
         self.assertIn(":31002/v1/audio/speech", out)
         self.assertIn("Authorization: Bearer sk-test123", out)
         self.assertIn("from the network", out)
+
+    def test_info_without_an_address(self):
+        """Werkstatt 2026-10-21: hostname -I fails without a network (the sandbox has no netlink); under pipefail
+        "speech-spark info" ended without a word."""
+        import os
+        import tempfile
+        with tempfile.TemporaryDirectory() as b:
+            with open(os.path.join(b, "hostname"), "w") as f:
+                f.write("#!/bin/sh\nexit 1\n")
+            os.chmod(os.path.join(b, "hostname"), 0o755)
+            out = self.info("api", bin_first=b)
+        self.assertIn("http://?:31001/v1/audio/transcriptions", out)
+        self.assertIn("Authorization: Bearer sk-test123", out)
 
     def test_info_local_only(self):
         out = self.info("full", asr="127.0.0.1", tts="127.0.0.1")

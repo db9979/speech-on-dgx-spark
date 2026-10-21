@@ -466,7 +466,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Werkstatt
     "werkstatt": {
-        "stand": "7693f50cc8",
+        "stand": "5bb801c557",
         "bezug": {
             "werkstattseite.auftrag_geben": ["s1"], "werkstattseite.nacht_art": ["s1"], "werkstattseite.NACHT_FENSTER_H": ["s1"],
             "werkstatt.pruefen": ["s2"], "werkstatt.TEXT_MAX": ["s2"],
@@ -553,11 +553,12 @@ SEITEN = {
             S("s8", "schritt", ("Selbsttests", "Self-tests"),
               ("in {werkstatt.TEILE} Teilen, zweimal rot ist rot", "in {werkstatt.TEILE} parts, red twice is red"),
               ("werkstatt.testlauf lässt die Selbsttests der Kopie laufen wie GitHub; wer beim zweiten Versuch grün wird, "
-               "zählt als wackelig. werkstatt.namen_testen lässt bei „Rote Tests noch mal“ jeden genannten Test einzeln in "
-               "einem eigenen Prozess laufen: jetzt grün oder weiter rot.",
+               "zählt als wackelig. Übersprungene Tests (kein Browser in der Kopie) zählen als nicht gelaufen, nie als "
+               "grün. werkstatt.namen_testen lässt bei „Rote Tests noch mal“ jeden genannten Test einzeln in einem eigenen "
+               "Prozess laufen: jetzt grün, weiter rot oder nicht gelaufen.",
                "werkstatt.testlauf runs the copy's self-tests like GitHub; whatever turns green on the second try counts as "
-               "wobbly. For \"Red tests again\" werkstatt.namen_testen runs each named test alone in its own process: green "
-               "now or still red.")),
+               "wobbly. Skipped tests (no browser in the copy) count as not run, never as green. For \"Red tests again\" "
+               "werkstatt.namen_testen runs each named test alone in its own process: green now, still red or not run.")),
             S("s9", "schritt", ("Ergebnis als Daten", "Result as data"),
               ("die letzten {werkstatt.AUFTRAEGE_MAX}", "the last {werkstatt.AUFTRAEGE_MAX}"),
               ("werkstatt.pruefe_ergebnis nimmt nur bekannte Felder, Zahlen im Rahmen und Wörter aus festen Listen; ein Patch "

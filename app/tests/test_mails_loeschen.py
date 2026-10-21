@@ -13,10 +13,10 @@ The fake mailbox (helpers.FakeMailbox); no wall clock, no network.
 import asyncio
 import contextlib
 import io
-import os
 import unittest
 
 from tests import helpers
+from tests.test_ui_browser import browser_ok
 
 helpers.start()
 import panel  # noqa: E402,F401
@@ -207,7 +207,7 @@ class Hint(Base):
         self.assertEqual(r.status_code, 400)
 
 
-@unittest.skipUnless(os.environ.get("SPEECH_UI_TESTS", "1") == "1", "browser tests off")
+@unittest.skipUnless(browser_ok(), "no Playwright/Chromium here")
 class Page(unittest.TestCase):
     """The page: the trash symbol and the Delete key, „Rückgängig“, „Endgültig löschen“ after the question, dragging a
     mail onto a folder of the folder box (it opens while dragging), and the rule hint with „Nur Regel“."""

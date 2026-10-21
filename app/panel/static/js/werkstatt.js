@@ -101,7 +101,7 @@ function wkDetail(){const det=$('wkdetail'),box=$('wkbox'),d=WK.d;if(!det||!d)re
   acts.appendChild(wkBtn(t('Löschen','Delete'),'g',()=>wkWeg(a.id)));
   det.appendChild(acts)}
 function wkTests(det,a,ts){const s=wkEl('div','wkstats');
-  [[ts.gruen,t('grün','green'),'ok'],[ts.rot,t('rot','red'),ts.rot?'bad':''],[ts.wackelig,t('wackelig','flaky'),ts.wackelig?'warn':'']].forEach(([n,w,c])=>{
+  [[ts.gruen,t('grün','green'),'ok'],[ts.rot,t('rot','red'),ts.rot?'bad':''],[ts.wackelig,t('wackelig','flaky'),ts.wackelig?'warn':'']].concat(ts.nicht_gelaufen?[[ts.nicht_gelaufen,t('nicht gelaufen','did not run'),'']]:[]).forEach(([n,w,c])=>{
     const x=wkEl('div','wkstat '+c);x.appendChild(wkEl('b','',String(n||0)));x.appendChild(wkEl('span','',w));s.appendChild(x)});det.appendChild(s);
   const alle=(ts.gruen||0)+(ts.rot||0)+(ts.wackelig||0);
   if(a.grund!=='ok')return;
@@ -110,6 +110,7 @@ function wkTests(det,a,ts){const s=wkEl('div','wkstats');
   else if(ts.rot)wkErkl(det,[t('Was heißt „rot“?','What does "red" mean?'),t(ts.rot+' von '+alle+' Selbsttests haben in der Kopie auf dem Modell-Rechner nicht bestanden. Ein Update über das Panel gibt es nur für Versionen, die auf GitHub grün waren; rot in der Kopie heißt deshalb meist: der Test braucht etwas, das die abgeschottete Kopie nicht hat (Internet, Daten, Browser). Dein Spark läuft davon unberührt, du musst nichts sofort tun.',ts.rot+' of '+alle+' self-tests did not pass in the copy on the model computer. An update through the panel only comes for versions that were green on GitHub; red in the copy therefore mostly means: the test needs something the sealed-off copy does not have (internet, data, browser). Your Spark is not affected, nothing to do right away.')]);
   else if(ts.wackelig)wkErkl(det,[t('Wackelig:','Flaky:'),t('Diese Tests waren erst beim zweiten Versuch grün, meist weil der Rechner gerade beschäftigt war. Alles bestanden, nichts zu tun.','These tests were green only on the second try, mostly because the computer was busy. All passed, nothing to do.')]);
   else wkErkl(det,[t('Alles grün:','All green:'),t('Der Code dieser Version besteht alle Selbsttests auch in der Kopie. Nichts zu tun.','The code of this version passes all self-tests in the copy too. Nothing to do.')],'ok');
+  if(ts.nicht_gelaufen)wkErkl(det,[t('Nicht gelaufen:','Did not run:'),t(ts.nicht_gelaufen+' Tests brauchen, was die Kopie absichtlich nicht hat (einen Browser für die Seiten-Tests, Dateien außerhalb von app/). Sie zählen nicht als grün; auf GitHub laufen sie bei jeder Version.',ts.nicht_gelaufen+' tests need what the copy does not have on purpose (a browser for the page tests, files outside app/). They do not count as green; on GitHub they run for every version.')]);
   [[ts.rot_namen,t('Rote Tests, nach Bereich','Red tests, by area'),'bad'],[ts.wackelig_namen,t('Wackelige Tests','Flaky tests'),'warn']].forEach(([liste,h,c])=>{
     if(!(liste||[]).length)return;wkHead(det,h);const g={};liste.forEach(n=>{const m=n.split('.')[0];(g[m]=g[m]||[]).push(n)});
     const w=wkEl('div','wkrot');Object.entries(g).forEach(([m,ns])=>{const x=wkEl('details','wkmod');const su=wkEl('summary');su.appendChild(wkEl('span','wkdot '+c));
@@ -129,7 +130,7 @@ function wkAntwort(det,a){if(a.aufgabe){wkHead(det,t('Deine Beschreibung','Your 
 function wkVorlage(a){const n=((a.tests||{}).rot_namen||[]).concat((a.tests||{}).rot?[]:(a.tests||{}).wackelig_namen||[]);
   const s=t('Diese Selbsttests sind im Testlauf der Werkstatt (Kopie ohne Internet und ohne Daten) rot, auf GitHub aber grün. Warum? ','These self-tests are red in the workshop test run (copy without internet and data), but green on GitHub. Why? ')+n.join(', ');return s.slice(0,2000)}
 function wkFuerClaude(a){const ts=a.tests||{},z=[t('Werkstatt-Ergebnis vom Spark','Workshop result from the Spark')+(a.version?' ('+a.version+')':'')+': '+wkArt(a.art)+', '+wkZeit(a.zeit)];
-  if(a.art==='tests'||a.art==='nachtest')z.push(ts.gruen+t(' grün, ',' green, ')+ts.rot+t(' rot, ',' red, ')+ts.wackelig+t(' wackelig',' flaky'));
+  if(a.art==='tests'||a.art==='nachtest')z.push(ts.gruen+t(' grün, ',' green, ')+ts.rot+t(' rot, ',' red, ')+ts.wackelig+t(' wackelig',' flaky')+(ts.nicht_gelaufen?', '+ts.nicht_gelaufen+t(' nicht gelaufen',' did not run'):''));
   if((ts.rot_namen||[]).length)z.push(t('Rot: ','Red: ')+ts.rot_namen.join(' '));
   if((ts.wackelig_namen||[]).length)z.push(t('Wackelig: ','Flaky: ')+ts.wackelig_namen.join(' '));
   if(a.aufgabe&&a.art!=='nachtest')z.push(t('Beschreibung: ','Description: ')+a.aufgabe);

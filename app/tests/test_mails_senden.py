@@ -24,6 +24,7 @@ import os
 import unittest
 
 from tests import helpers
+from tests.test_ui_browser import browser_ok
 
 helpers.start()
 import panel  # noqa: E402
@@ -351,7 +352,7 @@ class Voice(unittest.TestCase):
         self.assertEqual(FakeSMTP.sent, [])
 
 
-@unittest.skipUnless(os.environ.get("SPEECH_UI_TESTS", "1") == "1", "browser tests off")
+@unittest.skipUnless(browser_ok(), "no Playwright/Chromium here")
 class Page(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

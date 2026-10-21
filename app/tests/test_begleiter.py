@@ -445,6 +445,7 @@ class Updates(unittest.TestCase):
     def test_program_sees_and_loads_the_update_only_with_its_key(self):
         files = {"SparkBegleiter-x64.exe": EXE, "SparkBegleiter-arm64.exe": EXE}
         asyncio.run(begleiter.fetch("windows", github(win_meta("1.0.350"), files)))
+        vorher = begleiter.platforms()     # another test in the same run may have paired a Mac (Werkstatt 2026-10-21)
         c = profile("DkUwe")
         r = c.post("/api/profile/desk/pair", json={"base": "http://192.168.178.171:31080"})
         prog = TestClient(panel.app, client=HOME)
@@ -461,7 +462,8 @@ class Updates(unittest.TestCase):
         self.assertEqual(prog.get("/api/desk/update?arch=../x").status_code, 400)
         self.assertIn(TestClient(panel.app, client=HOME).get("/api/desk/update?arch=x64").status_code, (401, 403))
         self.assertEqual(c.get("/api/profile/desk").json()["devices"][0]["version"], "1.0.350")
-        self.assertEqual(begleiter.platforms(), ["windows"])
+        self.assertEqual(begleiter.platforms(), [p for p in ("windows", "mac") if p == "windows" or p in vorher],
+                         "pairing a Windows program adds Windows and nothing else")
 
     def test_looking_for_updates_asks_github_now(self):
         """V01.0.377: "Nach Updates suchen" (the program fetches its config) looks at GitHub itself, not only the

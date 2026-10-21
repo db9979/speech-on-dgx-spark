@@ -70,12 +70,20 @@ mode() { local m; m=$(cat "$ETC/mode" 2>/dev/null || true); case "$m" in api) ec
 version() { head -1 "$PREFIX/app/VERSION" 2>/dev/null || echo "?"; }
 health() { curl -fs --max-time 3 "http://127.0.0.1:$1/health" 2>/dev/null || true; }
 
+# the first LAN address, "?" without one (hostname -I fails without a network or in a sandbox without netlink;
+# under pipefail a failing hostname ended "speech-spark info" without a word, Werkstatt 2026-10-21)
+lan_ip() {
+  local ip
+  ip=$({ hostname -I 2>/dev/null || true; } | awk '{print $1}')
+  echo "${ip:-?}"
+}
+
 # the address other machines use: the first LAN address, or 127.0.0.1 when the APIs only listen there
 api_host() {
   if [ "$(cfg '.asr.host')" = 127.0.0.1 ] && [ "$(cfg '.tts.host')" = 127.0.0.1 ]; then
     echo 127.0.0.1
   else
-    hostname -I 2>/dev/null | awk '{print $1}'
+    lan_ip
   fi
 }
 
@@ -100,7 +108,7 @@ cmd_info() {
   out=$(
     echo "Speech on DGX Spark $(version)"
     if [ "$(mode)" = api ]; then echo "Installed: only the models with their APIs (no web panel)"
-    else echo "Installed: complete, with the web panel on http://$(hostname -I 2>/dev/null | awk '{print $1}'):$(cfg .panel.port)"; fi
+    else echo "Installed: complete, with the web panel on http://$(lan_ip):$(cfg .panel.port)"; fi
     echo
     if [ "$(cfg .asr.enabled)" = true ]; then
       echo "Speech recognition (ASR): $(asr_model)"
@@ -814,7 +822,7 @@ tor_zertifikat() {
   [ -s "$ETC/tls/tor-cert.pem" ] && return 0
   svc=$(panel_user)
   san="DNS:localhost,DNS:$(hostname),DNS:$(hostname).local,IP:127.0.0.1"
-  for ip in $(hostname -I 2>/dev/null); do case "$ip" in *:*) ;; *) san="$san,IP:$ip" ;; esac; done
+  for ip in $(hostname -I 2>/dev/null || true); do case "$ip" in *:*) ;; *) san="$san,IP:$ip" ;; esac; done
   runuser -u "$svc" -- sh -c 'umask 077; mkdir -p "$1"' sh "$ETC/tls"
   runuser -u "$svc" -- openssl req -x509 -newkey ec -pkeyopt ec_paramgen_curve:prime256v1 -nodes -days 3650 \
     -subj "/CN=$(hostname) speech-spark tor" -addext "subjectAltName=$san" \
@@ -912,7 +920,7 @@ umzug_einspielen() {
 # B6c: what stays to do by hand after a move, for the computer that runs the panel now
 umzug_handgriffe() {
   local ip
-  ip=$(hostname -I 2>/dev/null | awk '{print $1}')
+  ip=$(lan_ip)
   echo
   echo "Noch von Hand (das Panel läuft jetzt auf $ip):"
   echo "  - Router: Weiterleitung 31443 und TURN (UDP 3478, 49160-49200) auf $ip"
@@ -934,7 +942,7 @@ umzug_geben() {
   if ! printf '%s\n' "$pw" | as_panel_user umziehen.py packen >"$tmp/umzug.bin"; then
     rm -rf "$tmp"; die "the move backup could not be made"
   fi
-  echo "Auf dem neuen Rechner: sudo speech-spark umziehen --von $(hostname -I 2>/dev/null | awk '{print $1}')"
+  echo "Auf dem neuen Rechner: sudo speech-spark umziehen --von $(lan_ip)"
   if ! TEILEN_TLS="$tmp" teilen_py warten "$tmp/ergebnis.json" "$tmp" \
      || [ "$(jq -r '.umzug_ok // false' "$tmp/ergebnis.json")" != true ]; then
     rm -rf "$tmp"

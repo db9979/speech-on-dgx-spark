@@ -16100,6 +16100,26 @@
           }
         }
       }
+    },
+    "nicht gelaufen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "did not run"
+          }
+        }
+      }
+    },
+    "Nicht gelaufen: Diese Tests brauchen, was die Kopie absichtlich nicht hat (Browser, Dateien außerhalb von app/). Sie zählen nicht als grün; auf GitHub laufen sie bei jeder Version.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Did not run: these tests need what the copy does not have on purpose (a browser, files outside app/). They do not count as green; on GitHub they run for every version."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

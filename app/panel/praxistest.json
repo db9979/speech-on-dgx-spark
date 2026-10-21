@@ -2531,6 +2531,13 @@
 "titel": "Wissenskarte",
 "text": "A: Update, Admin: Funktionen → Eigene Dokumente → Wissensbuch an und darunter Wissenskarte an. B: Einige zusammengehörige Dokumente hochladen (z. B. Versicherung, Schadenmeldung und Rechnung des Autos) und ein paar ruhige Minuten warten. C: Im Menü Wissensbuch → Karte: Punkte mit Verbindungen, links die Dokumente, rechts die Auswahl mit Quelle; eine Ursache (rot gestrichelt) nur, wenn das Dokument den Grund nennt. D: Einen Punkt ziehen, ein Dokument auf die Karte ziehen (nur seine Verbindungen), „In die Mitte“, Zoom mit Rad oder zwei Fingern. E: Eine Verbindung wählen und „Stimmt nicht“: sie verschwindet und kommt nicht wieder. F: Export als Mermaid, Graphviz, SVG und PNG; Wissensbuch → Seiten → „Als Obsidian-Ordner herunterladen“: auf den Seiten stehen die Verbindungen als Links. G: Am Handy dieselbe Seite. H: iPhone-App: Meine Sachen → Dokumente → Wissensbuch → Karte, Punkt antippen, „In die Mitte“, nach links wischen „Stimmt nicht“. I: Zustand → Live zeigt die Zeile Wissenskarte nur mit Zahlen.",
 "thread": "Wissensgraph aus Dokumenten"
+},
+{
+"id": "P386",
+"v": 896,
+"titel": "Werkstatt zählt ehrlich",
+"text": "A: Update. Zustand → Werkstatt → Alles testen (oder den Nachtlauf abwarten). B: Im Ergebnis stehen grün, rot, wackelig und „nicht gelaufen“ (die Seiten-Tests, die einen Browser brauchen) mit einem Satz, warum. C: Rot ist höchstens noch ein Rest; „Für Claude kopieren“ nennt auch „nicht gelaufen“. D: iPhone-App: Spark verwalten → Werkstatt → Ergebnis zeigt die Zeile „nicht gelaufen“. E: Auf tars: sudo speech-spark info zeigt die Adressen.",
+"thread": "Werkstatt übersichtlich bedienen"
 }
 ]
 }

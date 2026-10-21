@@ -201,7 +201,7 @@ def sandbox(art):
          "IPAddressDeny": "any", "IPAddressAllow": "localhost",
          "InaccessiblePaths": "-/var/lib/speech-spark -/etc/speech-spark -/root -/home",
          "MemoryMax": "12G" if art in ("tests", "nachtest") else "8G", "CPUQuota": "800%" if art in ("tests", "nachtest") else "400%",
-         "Nice": "19", "IOSchedulingClass": "idle", "RuntimeMaxSec": str(GRENZE_S[art]),
+         "CPUSchedulingPolicy": "idle", "IOSchedulingClass": "idle", "RuntimeMaxSec": str(GRENZE_S[art]),
          "LogNamespace": "speech-spark", "KillMode": "control-group"}
     out = []
     for k, v in p.items():
@@ -352,6 +352,7 @@ def pruefe_ergebnis(r):
            "version": r["version"] if isinstance(r.get("version"), str) and VERSION.match(r["version"]) else ""}
     t = r.get("tests") if isinstance(r.get("tests"), dict) else {}
     out["tests"] = {"gruen": _zahl(t.get("gruen")), "rot": _zahl(t.get("rot")), "wackelig": _zahl(t.get("wackelig")),
+                    "nicht_gelaufen": _zahl(t.get("nicht_gelaufen")),
                     "rot_namen": _namen(t.get("rot_namen")), "wackelig_namen": _namen(t.get("wackelig_namen"))}
     patch = r.get("patch") if isinstance(r.get("patch"), str) else ""
     out["gekuerzt"] = len(patch) > PATCH_MAX
@@ -475,11 +476,13 @@ def kopie(quelle, ziel, rev=""):
 
 
 def nacht_zaehlen(teile):
-    """The parts of a test run: [(exit code, output, report)] -> {gruen, rot, wackelig, rot_namen, wackelig_namen}.
-    A part's report names what failed the first time; failed twice is red, the rest of those is wobbly."""
-    lief, rot, wack = 0, [], []
+    """The parts of a test run: [(exit code, output, report)] -> {gruen, rot, wackelig, nicht_gelaufen, rot_namen,
+    wackelig_namen}. A part's report names what failed the first time; failed twice is red, the rest of those is
+    wobbly. Skipped tests (no browser in the copy, files outside app/) did not run: counted apart, never green."""
+    lief, rot, wack, nicht = 0, [], [], 0
     for code, ausgabe, bericht in teile:
         lief += _zahl((bericht or {}).get("ran"))
+        nicht += _zahl((bericht or {}).get("skipped"))
         erst = [n for n in (bericht or {}).get("failed_first", []) if isinstance(n, str)]
         zweimal = set()
         for z in (ausgabe or "").splitlines():
@@ -491,8 +494,8 @@ def nacht_zaehlen(teile):
             rot.append("selftest")            # broke before any report
         rot += [n for n in erst if n in zweimal]
         wack += [n for n in erst if n not in zweimal]
-    return {"gruen": max(0, lief - len(rot) - len(wack)), "rot": len(rot), "wackelig": len(wack),
-            "rot_namen": rot[:NAMEN_MAX], "wackelig_namen": wack[:NAMEN_MAX]}
+    return {"gruen": max(0, lief - len(rot) - len(wack) - nicht), "rot": len(rot), "wackelig": len(wack),
+            "nicht_gelaufen": nicht, "rot_namen": rot[:NAMEN_MAX], "wackelig_namen": wack[:NAMEN_MAX]}
 
 
 def testlauf(app, python, teile=TEILE):
@@ -537,8 +540,9 @@ def module_testen(app, python, module):
 
 
 def namen_testen(app, python, liste):
-    """The named tests again (nachtest), each in its own process like selftest.py's second try: green or red."""
-    gruen, rot = 0, []
+    """The named tests again (nachtest), each in its own process like selftest.py's second try: green, red or not
+    run (skipped, "OK (skipped=1)")."""
+    gruen, rot, nicht = 0, [], 0
     env = {"PATH": os.path.dirname(python) + ":/usr/bin:/bin", "LANG": "C.UTF-8", "HOME": os.environ.get("HOME", ARBEIT),
            "SPEECH_SPARK_NO_BROWSER": "1", "PYTHONDONTWRITEBYTECODE": "1"}
     for n in namen(" ".join(liste)):
@@ -546,13 +550,16 @@ def namen_testen(app, python, liste):
             p = subprocess.run([python, "-W", "ignore", "selftest.py", "--rerun", os.path.join(app, "tests"), n],
                                cwd=app, env=env, capture_output=True, timeout=TEST_S)
             ok = p.returncode == 0
+            uebersprungen = ok and b"skipped=" in (p.stdout or b"") + (p.stderr or b"")
         except subprocess.TimeoutExpired:
-            ok = False
-        if ok:
+            ok = uebersprungen = False
+        if uebersprungen:
+            nicht += 1
+        elif ok:
             gruen += 1
         else:
             rot.append(n)
-    return {"gruen": gruen, "rot": len(rot), "wackelig": 0, "rot_namen": rot, "wackelig_namen": []}
+    return {"gruen": gruen, "rot": len(rot), "wackelig": 0, "nicht_gelaufen": nicht, "rot_namen": rot, "wackelig_namen": []}
 
 
 def version(ordner):

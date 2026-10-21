@@ -65,7 +65,9 @@ class Runner(unittest.TestCase):
                 with open(os.path.join(d, "tests", name), "w") as f:
                     f.write(textwrap.dedent(text))
             env = dict(os.environ, FLAKY_MARK=os.path.join(d, "mark"))
-            env.pop("GITHUB_ACTIONS", None)
+            # the outer run's report (Werkstatt and GitHub parts): the inner run must not write into it
+            for k in ("GITHUB_ACTIONS", "SELFTEST_REPORT", "SELFTEST_NOTE", "SELFTEST_DAUER"):
+                env.pop(k, None)
             out = os.path.join(d, "summary.md")
             if summary:
                 env["GITHUB_STEP_SUMMARY"] = out
@@ -177,6 +179,17 @@ class Runner(unittest.TestCase):
             with mock.patch.dict(os.environ, {"SELFTEST_NOTE": note}):
                 selftest.total(d, 2)
             self.assertFalse(os.path.exists(note), "all green and steady: no note")
+
+    def test_the_report_counts_skipped_tests(self):
+        """The Werkstatt shows skipped tests as "did not run", never as green (2026-10-21)."""
+        with tempfile.TemporaryDirectory() as d:
+            path = os.path.join(d, "teil.json")
+            result = unittest.TestResult()
+            result.testsRun, result.skipped = 5, [(self, "no browser"), (self, "app/-only copy")]
+            with mock.patch.dict(os.environ, {"SELFTEST_REPORT": path}):
+                selftest._report([], result)
+            with open(path, encoding="utf-8") as f:
+                self.assertEqual(json.load(f)["skipped"], 2)
 
     def test_cut_is_complete_and_the_same_everywhere(self):
         keys = [f"test_x{i}.C{j}" for i in range(30) for j in range(4)]

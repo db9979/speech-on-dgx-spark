@@ -976,8 +976,14 @@ struct WerkstattEinsView: View {
                     LabeledContent("grün") { Text(verbatim: "\(WerkstattView.num(ts["gruen"]))").foregroundStyle(.green) }
                     LabeledContent("rot") { Text(verbatim: "\(rot)").foregroundStyle(rot > 0 ? .red : .secondary) }
                     LabeledContent("wackelig") { Text(verbatim: "\(WerkstattView.num(ts["wackelig"]))") }
+                    if WerkstattView.num(ts["nicht_gelaufen"]) > 0 {
+                        LabeledContent("nicht gelaufen") { Text(verbatim: "\(WerkstattView.num(ts["nicht_gelaufen"]))").foregroundStyle(.secondary) }
+                    }
                 }
             } footer: {
+                if WerkstattView.num(ts["nicht_gelaufen"]) > 0 {
+                    Text("Nicht gelaufen: Diese Tests brauchen, was die Kopie absichtlich nicht hat (Browser, Dateien außerhalb von app/). Sie zählen nicht als grün; auf GitHub laufen sie bei jeder Version.")
+                }
                 if rot > 0 && art == "tests" {
                     Text("Rot heißt: der Test hat in der Kopie nicht bestanden. Ein Update gibt es nur für Versionen, die auf GitHub grün waren; meist fehlt der Kopie etwas (Internet, Daten, Browser). Dein Spark läuft davon unberührt.")
                 }

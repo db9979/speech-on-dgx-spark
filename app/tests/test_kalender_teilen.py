@@ -19,6 +19,7 @@ import unittest
 from zoneinfo import ZoneInfo
 
 from tests import helpers
+from tests.test_ui_browser import browser_ok
 
 helpers.start()
 import panel  # noqa: E402
@@ -203,7 +204,7 @@ class Share(unittest.TestCase):
         self.assertEqual(live, {"on": True, "shares": 1, "owners": 1})
 
 
-@unittest.skipUnless(__import__("os").environ.get("SPEECH_UI_TESTS", "1") == "1", "browser tests off")
+@unittest.skipUnless(browser_ok(), "no Playwright/Chromium here")
 class Page(unittest.TestCase):
     """Kalender → Einstellungen: „Teilen“ at each calendar with a choice per other profile; „Mit dir geteilt“."""
     @classmethod

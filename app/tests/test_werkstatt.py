@@ -171,12 +171,13 @@ class Ergebnis(unittest.TestCase):
         self.assertFalse(werkstatt.messen_faellig(None))
 
     def test_counting_a_test_run(self):
-        teile = [(0, "", {"ran": 100, "failed_first": []}),
+        teile = [(0, "", {"ran": 100, "failed_first": [], "skipped": 7}),
                  (1, "selftest: failed twice: test_a.X.y\n", {"ran": 50, "failed_first": ["test_a.X.y", "test_b.X.z"]}),
                  (1, "", {"ran": 40, "failed_first": ["test_c.X.y"]}),   # too many for a second try: red
                  (1, "Traceback", {})]
         n = werkstatt.nacht_zaehlen(teile)
-        self.assertEqual((n["gruen"], n["rot"], n["wackelig"]), (186, 3, 1))
+        self.assertEqual((n["gruen"], n["rot"], n["wackelig"], n["nicht_gelaufen"]), (179, 3, 1, 7),
+                         "a skipped test did not run: never green (no browser in the copy, 2026-10-21)")
         self.assertEqual(n["rot_namen"], ["test_a.X.y", "test_c.X.y", "selftest"], "a part that broke before its report is red too")
         self.assertEqual(n["wackelig_namen"], ["test_b.X.z"])
 
@@ -238,6 +239,10 @@ class OpenCodeRechte(unittest.TestCase):
                 self.assertIn("-" + path, p["InaccessiblePaths"].split())
             self.assertEqual(int(p["RuntimeMaxSec"]), werkstatt.GRENZE_S[art])
             self.assertIn("MemoryMax", p)
+            # last in line, but at nice 0: with Nice=19 test_loopwacht could not see embed_worker lower its own
+            # priority and was red in every Werkstatt run (2026-10-21)
+            self.assertEqual((p["CPUSchedulingPolicy"], p["IOSchedulingClass"]), ("idle", "idle"))
+            self.assertNotIn("Nice", p)
         self.assertNotEqual(werkstatt.USER, "root")
 
     def test_the_sandbox_reaches_only_the_llm_tor(self):
@@ -364,7 +369,8 @@ class Lauf(unittest.TestCase):
         for name, text in (("app/x.py", "x = 1\n"), ("app/selftest.py", SELFTEST),
                            ("app/VERSION", "V01.0.900\n"),
                            ("app/tests/test_x.py", "import unittest\nclass T(unittest.TestCase):\n    def test_ok(self):\n        pass\n"),
-                           ("app/tests/test_rot.py", "import unittest\nclass R(unittest.TestCase):\n    def test_rot(self):\n        self.fail()\n")):
+                           ("app/tests/test_rot.py", "import unittest\nclass R(unittest.TestCase):\n    def test_rot(self):\n        self.fail()\n"),
+                           ("app/tests/test_aus.py", "import unittest\nclass A(unittest.TestCase):\n    def test_aus(self):\n        self.skipTest('no browser')\n")):
             with open(os.path.join(self.quelle, name), "w") as f:
                 f.write(text)
         git = ["git", "-C", self.quelle, "-c", "user.name=t", "-c", "user.email=t@t"]
@@ -421,9 +427,10 @@ class Lauf(unittest.TestCase):
         self.bereit.return_value = False
         err = io.StringIO()
         with mock.patch.object(sys, "stderr", err):
-            r = werkstatt.lauf(self.order("nachtest", "/nichts", "test_x.T.test_ok test_rot.R.test_rot test_fehlt.A.b"))
+            r = werkstatt.lauf(self.order("nachtest", "/nichts", "test_x.T.test_ok test_rot.R.test_rot test_fehlt.A.b test_aus.A.test_aus"))
         self.assertEqual(r["grund"], "ok", err.getvalue())
-        self.assertEqual((r["tests"]["gruen"], r["tests"]["rot"]), (1, 2))
+        self.assertEqual((r["tests"]["gruen"], r["tests"]["rot"], r["tests"]["nicht_gelaufen"]), (1, 2, 1))
+        self.assertEqual(werkstatt.pruefe_ergebnis(r)["tests"]["nicht_gelaufen"], 1)
         self.assertEqual(r["tests"]["rot_namen"], ["test_rot.R.test_rot", "test_fehlt.A.b"])
         self.assertEqual(r["version"], "V01.0.900")
         self.bereit.assert_not_called()

@@ -12,11 +12,11 @@ Fixed dates (2026-03), the fake CalDAV server; times are passed in, no wall cloc
 """
 import asyncio
 import datetime
-import os
 import unittest
 import zoneinfo
 
 from tests import helpers
+from tests.test_ui_browser import browser_ok
 
 helpers.start()
 import panel  # noqa: E402,F401
@@ -96,7 +96,7 @@ class Api(unittest.TestCase):
             helpers.set_config(calendar=True)
 
 
-@unittest.skipUnless(os.environ.get("SPEECH_UI_TESTS", "1") == "1", "browser tests off")
+@unittest.skipUnless(browser_ok(), "no Playwright/Chromium here")
 class Page(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

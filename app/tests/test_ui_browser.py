@@ -32,6 +32,19 @@ def browser_ok():
     return bool(chromium()) or bool(glob.glob(os.path.expanduser("~/.cache/ms-playwright/chromium-*")))
 
 
+class BrowserThere(unittest.TestCase):
+    def test_browser_tests_skip_only_where_the_browser_is_missing_on_purpose(self):
+        """Every page test skips with browser_ok() (2026-10-21: twelve modules asked only an unused switch and were
+        red in the Werkstatt copy, which has no browser on purpose). On GitHub none of them may skip."""
+        if os.environ.get("GITHUB_ACTIONS") == "true":
+            self.assertTrue(browser_ok(), "GitHub installs Chromium: the page tests must run there")
+        here = os.path.dirname(os.path.abspath(__file__))
+        for name in sorted(os.listdir(here)):
+            if name.startswith("test_") and name.endswith(".py"):
+                with open(os.path.join(here, name), encoding="utf-8") as f:
+                    self.assertNotIn("SPEECH_UI" + "_TESTS", f.read(), name)
+
+
 # what the hands-free test shows when the microphone did not come back
 STATE = ("JSON.stringify({hidden:document.hidden,rec:!!chat.rec,live:micLive(),resume:chat.resumeMic,hands:S.hands,"
          "ctrl:!!chat.ctrl,playing:playing(),asr:!!chat.asrBusy,pctx:chat.pctx&&[chat.pctx.state,chat.pctx.currentTime],"

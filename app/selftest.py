@@ -151,8 +151,9 @@ class _Timed(unittest.TextTestResult):
 
 
 def _report(names, result, red=None):
-    """$SELFTEST_REPORT: what failed the first time, what stayed red (red; until the second try ran, the same) and
-    what passed only the second time (wobbly), for --sum and the note on GitHub."""
+    """$SELFTEST_REPORT: what failed the first time, what stayed red (red; until the second try ran, the same),
+    what passed only the second time (wobbly) and how many were skipped, for --sum, the note on GitHub and the
+    Werkstatt (skipped tests did not run, so they are not green)."""
     path = os.environ.get("SELFTEST_REPORT")
     if not path:
         return
@@ -160,7 +161,7 @@ def _report(names, result, red=None):
     red = names if red is None else red
     with open(path, "w", encoding="utf-8") as f:
         json.dump({"failed_first": names, "red": red, "wobbly": [n for n in names if n not in red],
-                   "ran": result.testsRun, "dauer": dur}, f)
+                   "ran": result.testsRun, "skipped": len(getattr(result, "skipped", [])), "dauer": dur}, f)
 
 
 def run_part(argv, k, n):

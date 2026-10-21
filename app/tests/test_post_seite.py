@@ -15,10 +15,10 @@ Fixed dates, a fake mailbox; no wall clock, no network.
 import asyncio
 import email
 import email.policy
-import os
 import unittest
 
 from tests import helpers
+from tests.test_ui_browser import browser_ok
 
 helpers.start()
 import panel  # noqa: E402
@@ -146,7 +146,7 @@ class Api(Fake):
         self.assertEqual(seen, [(100, mail.DAYS, mail.INBOX_MAX), (0, 1, 1)])
 
 
-@unittest.skipUnless(os.environ.get("SPEECH_UI_TESTS", "1") == "1", "browser tests off")
+@unittest.skipUnless(browser_ok(), "no Playwright/Chromium here")
 class Page(Fake):
     @classmethod
     def setUpClass(cls):
