@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.884** Fix iPhone app: the content of a formatted mail stayed empty (the web view's blocking rule did not compile); in dark mode a plain mail shows light on dark like Apple Mail, a mail with its own colours keeps its white page
 - **V01.0.883** The companion on PC and Mac shows the Spark's update: "Spark-Update läuft: 40 % · step" in its state, during the restart "Spark startet für das Update neu …"
 - **V01.0.882** Meeting tasks under Open: every task the Spark companion puts onto a list from a meeting also becomes a card "From a meeting" under Open (not in the conversation); "Done" ticks the entry off, ticked off, brought back or deleted on the list the card follows, overdue it stays open
 - **V01.0.881** Update window tests no longer flaky: they move their steps on themselves
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.877** For you from the supply: the last reading per mailbox stays sealed in the profile, there at once after a restart; when a mailbox does not answer its entries come with "Stand hh:mm" in the tab, when read aloud and under Today
 - **V01.0.876** Everything open in the assistant (stage 2): the assistant's proposals (new appointment, move, delete, mail by voice, tidy-up, draft) as a card "Waiting for your yes" under the answer and under Open, with "Add"/"Send" (the same as a typed yes), "Change …" (form or writing window, filled in) and "Cancel"; also confirm a speaker's proposal on the phone; iPhone
 - **V01.0.875** Write link (lists stage 4): a link with QR code for people without a profile who only put something on one list (optionally see the open entries), expiring after 7 days to 1 year, revocable at any time, only the hash kept, wrong codes lock like a PIN; in the panel and on the iPhone, its own admin switch, off at first
-- **V01.0.874** Mail like Apple Mail (stage 1): mailboxes on the left with Unread, Flagged and With attachment, a list with the time, a head like Apple Mail; mails with HTML formatted, cleaned by the Spark in a frame without script, pictures from outside only after "Load pictures" through the Spark, links only after the question with the real address; reply and new mail in a window of their own, "Send" with 10 s "Undo" (text of the Spark still with the preview); on a phone the mail bar stands at the bottom instead of over the subject; iPhone app formatted and with undo
 
 
 All versions: [CHANGELOG.md](CHANGELOG.md)

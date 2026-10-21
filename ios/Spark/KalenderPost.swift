@@ -1783,6 +1783,7 @@ struct MailView: View {
     @State private var page: String?
     @State private var pageHeight: CGFloat = 120
     @State private var linkAsk: URL?
+    @Environment(\.colorScheme) private var scheme
     private var flagged: Bool { flaggedNow ?? item.flagged }
 
     var body: some View {
@@ -1834,7 +1835,7 @@ struct MailView: View {
                             .font(.footnote).foregroundStyle(.secondary)
                     }
                     Section {
-                        MailPageView(html: page, height: $pageHeight) { url in
+                        MailPageView(html: page, dark: scheme == .dark, height: $pageHeight) { url in
                             if url.scheme?.lowercased() == "mailto" {
                                 let to = String(url.absoluteString.dropFirst(7).prefix { $0 != "?" }).removingPercentEncoding ?? ""
                                 if talk.allowed.areas.contains("mailsend") { writing = MailDraft(to: String(to.prefix(2000))) }
@@ -2060,10 +2061,15 @@ struct MailView: View {
 /// keeps no data; every tap on a link is stopped and handed to `link` (the question with its address), never followed.
 struct MailPageView: UIViewRepresentable {
     let html: String
+    /// dark mode: a plain mail (no colours of its own) in light letters on the list's own background, like Apple Mail;
+    /// a mail with its own colours keeps its white page
+    var dark = false
     @Binding var height: CGFloat
     let link: (URL) -> Void
     private static var rules: WKContentRuleList?
-    private static let block = #"[{"trigger":{"url-filter":"^(https?|ftp|wss?):"},"action":{"type":"block"}}]"#
+    /// WebKit's rules know no „|“: a filter with one compiled to nothing and the mail stayed empty (Dominik 2026-10-21)
+    private static let block = "[" + ["^https?:", "^ftp:", "^wss?:"].map { #"{"trigger":{"url-filter":"\#($0)"},"action":{"type":"block"}}"# }
+        .joined(separator: ",") + "]"
 
     func makeCoordinator() -> Coordinator { Coordinator(self) }
 
@@ -2076,14 +2082,30 @@ struct MailPageView: UIViewRepresentable {
         v.navigationDelegate = context.coordinator
         v.scrollView.isScrollEnabled = false
         v.isOpaque = false
-        v.backgroundColor = .white
-        context.coordinator.show(v, html)
+        v.layer.cornerRadius = 10
+        v.clipsToBounds = true
+        context.coordinator.show(v, page)
         return v
     }
 
     func updateUIView(_ v: WKWebView, context: Context) {
         context.coordinator.parent = self
-        if context.coordinator.shown != html { context.coordinator.show(v, html) }
+        if context.coordinator.shown != page { context.coordinator.show(v, page) }
+    }
+
+    /// whether the mail brings colours of its own (then it stays on white)
+    var plain: Bool { html.range(of: #"(?i)bgcolor|background|[^-]color\s*:"#, options: .regularExpression, range: Self.bodyRange(html)) == nil }
+
+    private static func bodyRange(_ h: String) -> Range<String.Index> {
+        (h.range(of: "<body")?.lowerBound ?? h.startIndex)..<h.endIndex
+    }
+
+    /// the page as shown: in dark mode a plain mail gets light letters on no background of its own
+    var page: String {
+        guard dark && plain, let end = html.range(of: "</head>") else { return html }
+        let css = "<style>html{color-scheme:dark}body{color:#e9ebf2;background:transparent}a[href]{color:#9aa8ff}"
+            + "blockquote{border-left-color:#3b4357;color:#a3abbf}</style>"
+        return html.replacingCharacters(in: end.lowerBound..<end.lowerBound, with: css)
     }
 
     @MainActor final class Coordinator: NSObject, WKNavigationDelegate {
@@ -2094,6 +2116,7 @@ struct MailPageView: UIViewRepresentable {
         /// the page only once the blocking rule is in place; without it nothing is shown (never loads from outside)
         func show(_ v: WKWebView, _ html: String) {
             shown = html
+            v.backgroundColor = parent.dark && parent.plain ? .clear : .white
             Task { @MainActor in
                 if MailPageView.rules == nil {
                     MailPageView.rules = try? await WKContentRuleListStore.default()

@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.884** Fix iPhone-App: der Inhalt einer formatierten Mail blieb leer (die Sperrregel der Web-Ansicht wurde nicht übersetzt); im Dunkelmodus erscheint eine schlichte Mail hell auf dunklem Grund wie bei Apple Mail, eine Mail mit eigenen Farben bleibt auf Weiß
 - **V01.0.883** Der Begleiter am PC und Mac zeigt das Spark-Update: „Spark-Update läuft: 40 % · Schritt“ im Zustand, beim Neustart „Spark startet für das Update neu …“
 - **V01.0.882** Besprechungs-Aufgaben unter Offen: jede Aufgabe, die der Spark-Begleiter aus einer Besprechung auf eine Liste legt, wird auch eine Karte „Aus Besprechung“ unter Offen (nicht im Gespräch); „Erledigt“ hakt den Eintrag ab, abgehakt, zurückgeholt oder gelöscht auf der Liste folgt die Karte, überfällig bleibt sie offen
 - **V01.0.881** Tests des Update-Fensters wackeln nicht mehr: sie schalten ihre Schritte selbst weiter
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.877** Für dich aus dem Vorrat: die letzte Lesung je Postfach bleibt versiegelt im Profil, nach einem Neustart sofort da; antwortet ein Postfach nicht, kommen seine Einträge mit „Stand hh:mm“ im Tab, beim Vorlesen und unter Heute
 - **V01.0.876** Alles Offene im Assistenten (Stufe 2): Vorschläge des Assistenten (neuer Termin, verschieben, löschen, Mail per Sprache, Aufräumen, Entwurf) als Karte „Wartet auf dein Ja“ unter der Antwort und unter Offen, mit „Eintragen“/„Senden“ (dasselbe wie ein getipptes Ja), „Ändern …“ (Formular oder Schreibfenster, ausgefüllt) und „Abbrechen“; auch vom Lautsprecher am Handy bestätigen; iPhone
 - **V01.0.875** Mitschreib-Link (Listen Stufe 4): ein Link mit QR-Code für Leute ohne Profil, die nur etwas auf eine Liste setzen (auf Wunsch die offenen Einträge sehen), mit Ablauf 7 Tage bis 1 Jahr, jederzeit widerrufbar, nur der Hash gespeichert, falsche Codes sperren wie eine PIN; im Panel und im iPhone, eigener Admin-Schalter, zuerst aus
-- **V01.0.874** E-Mail wie Apple Mail (Stufe 1): Postfächer links mit Ungelesen, Markiert und Mit Anhang, Liste mit Uhrzeit, Kopf wie Apple Mail; Mails mit HTML formatiert, vom Spark bereinigt in einem Rahmen ohne Skript, Bilder von außen erst nach „Bilder laden“ über den Spark, Links erst nach der Frage mit der echten Adresse; Antworten und Neue Mail im eigenen Fenster, „Senden“ mit 10 s „Rückgängig“ (Text vom Spark weiter mit Vorschau); am Handy steht die Mail-Leiste unten statt über dem Betreff; iPhone-App formatiert und mit Rückgängig
 
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)

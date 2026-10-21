@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.884** · 2026-10-21 · Fix iPhone-App: der Inhalt einer formatierten Mail blieb leer (die Sperrregel der Web-Ansicht wurde nicht übersetzt); im Dunkelmodus erscheint eine schlichte Mail hell auf dunklem Grund wie bei Apple Mail, eine Mail mit eigenen Farben bleibt auf Weiß
 - **V01.0.883** · 2026-10-21 · Begleiter zeigt das Spark-Update: „Spark-Update läuft: 40 % · Schritt“ im Zustand am PC und Mac, beim Neustart „Spark startet für das Update neu …“; Update-Tests laufen auch in einer Kopie nur mit app/
 - **V01.0.882** · 2026-10-21 · Besprechungs-Aufgaben unter Offen: jede Aufgabe, die der Spark-Begleiter aus einer Besprechung auf eine Liste legt, wird auch eine Karte „Aus Besprechung“ unter Offen (nicht im Gespräch); „Erledigt“ hakt den Eintrag ab, abgehakt, zurückgeholt oder gelöscht auf der Liste folgt die Karte, überfällig bleibt sie offen
 - **V01.0.881** · 2026-10-21 · Fix: die Tests des Update-Fensters (test_ruhige_seiten) schalten ihre Schritte selbst und warten auf das Neuladen, statt Antworten mitzuzählen; unter Last nicht mehr ab und zu rot

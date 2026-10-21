@@ -288,5 +288,21 @@ class Api(unittest.TestCase):
             helpers.set_config(mail=True)
 
 
+class AppRegeln(unittest.TestCase):
+    """The iPhone app's blocking rules for a mail (MailPageView): WebKit compiles no „|“ in a url-filter, and without
+    the rules the app shows nothing at all (Dominik 2026-10-21: the mail stayed empty)."""
+
+    def test_every_filter_compiles(self):
+        import re
+        from tests.test_app_gleichstand import IOS, need, read
+        swift = read(need(IOS), "Spark", "KalenderPost.swift")
+        m = re.search(r"static let block = (.+)", swift)
+        self.assertIsNotNone(m, "MailPageView.block is gone")
+        filters = re.findall(r'"(\^[^"]*)"', m.group(1))
+        self.assertEqual(sorted(filters), ["^ftp:", "^https?:", "^wss?:"])
+        for f in filters:
+            self.assertNotRegex(f, r"[|()]", f"{f}: WebKit's content rules know no alternatives")
+
+
 if __name__ == "__main__":
     unittest.main()

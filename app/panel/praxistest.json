@@ -2462,6 +2462,13 @@
 "titel": "Besprechungs-Aufgaben unter Offen",
 "text": "A: Update, Admin: Listen, „Besprechungen mitschreiben“ und „Alles Offene im Assistenten“ an. B: Im Begleiter eine Besprechung mitschreiben, beenden, zwei Aufgaben „Ausgewählte auf die Liste“. C: Seite Offen → Braucht dich: zwei Karten „Aus Besprechung“ mit Liste und „bis“; im Gespräch keine neue Karte. D: Auf einer Karte „Erledigt“: auf der Seite Listen ist der Eintrag abgehakt; „Zurückholen“ holt beides zurück. E: Auf der Seite Listen einen Eintrag abhaken: die Karte steht unter Erledigt; löschen: sie ist weg. F: „Nicht wichtig“ blendet nur die Karte aus, der Eintrag bleibt.",
 "thread": "Besprechungs-Aufgaben in Listen"
+},
+{
+"id": "P376",
+"v": 884,
+"titel": "iPhone: Mail-Inhalt und Dunkelmodus",
+"text": "A: Pi auf V01.0.884, iPhone-App aus TestFlight mit diesem Stand. Meine Sachen → E-Mail, eine Mail mit HTML (z. B. Newsletter) öffnen: der Inhalt steht formatiert da, Bilder von außen bleiben aus. B: Eine schlichte Mail (nur Text mit Links) im Dunkelmodus: helle Schrift auf dunklem Grund, Links lesbar. C: Den Newsletter im Dunkelmodus: bleibt auf seinem weißen Blatt mit runden Ecken. D: Einen Link antippen: die Frage mit der Adresse kommt vor Safari.",
+"thread": "Mail, Kalender, Kontakte wie bei Apple"
 }
 ]
 }
