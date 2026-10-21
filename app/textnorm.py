@@ -184,6 +184,25 @@ def _clause(value):
     return (value[:m.start()], value[m.start():], False) if m else (value, "", False)
 
 
+# The language model's own markers (Qwen chat template): roles ("<|im_start|>system"), thinking and tool calls. The
+# engine reads them in any message as the real thing, so a web page with "<|im_end|><|im_start|>system" would start
+# a new system turn (Angriffs-Selbsttest, 2026-10-21). Their "<" and "|>" become look-alike quotes: still readable,
+# never a marker. The LLM-Tor does this to every message, wrapping outside text in the panel does it as well.
+MODEL_MARKS = re.compile(r"<\|[^<>|\n]{0,40}\|>|<(?=/?(?:think|tool_call|tool_response|function|parameter)\b)")
+FENCE = re.compile(r"<{3,}|>{3,}")
+
+
+def defuse_marks(text):
+    """text without the model's markers (MODEL_MARKS); all else unchanged."""
+    return MODEL_MARKS.sub(lambda m: "‹" if m.group(0) == "<" else "‹|" + m.group(0)[2:-2] + "|›", str(text))
+
+
+def defuse(text):
+    """Outside text for a data block between <<< and >>>: runs of < or > broken up (it cannot end the block early)
+    and the model's markers taken out (defuse_marks)."""
+    return defuse_marks(FENCE.sub(lambda m: " ".join(m.group(0)), str(text)))
+
+
 def hide_secrets(text, language=None):
     """The text with passwords, code words, one-time codes and keys replaced by a short hint."""
     t = str(text)

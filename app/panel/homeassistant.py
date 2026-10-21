@@ -500,10 +500,16 @@ async def _areas(c, item):
 
 
 def free_text(result):
-    """Does a states text carry words other people chose (a media title, a long text state, every
+    """Does a states text carry words other people chose (a media title, a text state, every
     attribute of one entity)? Then it counts as outside text in chat.py."""
     r = str(result)
-    return "playing=" in r or "\nattributes: " in r or "…" in r
+    return "playing=" in r or "\nattributes: " in r or "…" in r or "„" in r
+
+
+# a state in words (a text sensor, an input_text, a notification): somebody else's words, however short; numbers,
+# dates and the fixed one-word states (on, heat_cool, not_home) have none of these signs. Until the Angriffs-Selbsttest
+# (2026-10-21) only states over 40 characters counted, and a 37-character order in a text sensor saved a memory note.
+WORDS = re.compile(r"[^\w.:+\-]")
 
 
 def _line(s, names, area):
@@ -513,6 +519,8 @@ def _line(s, names, area):
     state = str(s.get("state", ""))
     if len(state) > 40:  # a text sensor (news, messages ...): free text from somewhere else, kept short
         state = state[:40] + "…"
+    elif WORDS.search(state):   # shorter words of the same kind: marked, free_text() sees them
+        state = "„" + state + "“"
     val = state + (f" {a['unit_of_measurement']}" if a.get("unit_of_measurement") else "")
     extra = []
     if dom == "climate":

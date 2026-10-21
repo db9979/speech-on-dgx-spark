@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.916** Attack self-test (idea from NeMo Guardrails): every way in for outside text attacked with 12 disguises against a model that obeys every order; four gaps closed: the model's markers (<|im_start|>, <tool_call>) are defused, after a mail Wikipedia, weather and transit are locked too, short text states in the smart home count as outside, the briefing stands wholly in its data block
 - **V01.0.915** Architecture picture nicer: colour bar per kind with a legend, a symbol before every line, arrows with direction and paler lines, tab „only with Spark split“, more room between the rows; guard: every box has a colour and a symbol
 - **V01.0.914** Architecture picture without overflow: every text fits its box (Mail and contacts, speakers and phone, pictures and music shortened, font a little smaller); new guards in test_technik: text fits (de and en), no line across a box
 - **V01.0.913** Companion window in order: three tabs Heute, Meldungen and Rechner below the tiles, only the tab scrolls and the window stays on the screen, small tiles four in a row, the first three per section with „Alle n zeigen“, a new note opens „Meldungen“, on the Mac notes in the window too (Windows and Mac)
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.909** Services on demand: image understanding, Werkstatt and case rest as "ready" instead of grey, parts not installed are left out of the service chips
 - **V01.0.908** NAS status reads right: the storage pool shows "given to volumes" instead of "100 % used", no false warning; USB disks on the NAS with use and free space
 - **V01.0.907** Knowledge map faster: its own daily limit (5 to 500, default 200 instead of the knowledge book's 40), so the backlog of a full knowledge book is connected in about a day
-- **V01.0.906** Mail like a full mail program: moving without reloading the folder list, rule suggestions at night from your KI folder, also as a card in the assistant, the conversation under a mail, only the own text without quotes and signature, send later, confirmation codes as a note (own switch, never via Telegram) and mail statistics; panel, iPhone and Begleiter
 
 
 

@@ -236,6 +236,12 @@ def fake_llm():
                 yield _sse({"choices": [{"delta": {"content": "Der Fernseher im"}, "finish_reason": None}]})
                 c = c[4:]
             role = last["role"]
+            # outside text in the system prompt (an attachment) or in an earlier answer asking for a tool: the
+            # obeying model of the Angriffs-Selbsttest (test_angriffe.py) calls it in its first round
+            obey = next((str(m.get("content") or "") for m in b["messages"][:-1]
+                         if "OBEY TOOL " in str(m.get("content") or "")), "")
+            if role == "user" and obey and not any(m["role"] == "tool" for m in b["messages"]):
+                c = "TOOL " + obey.split("OBEY TOOL ", 1)[1].split("\n")[0]
             if role == "tool" and "THEN TOOL " in c:  # outside text asking for another tool
                 c = "TOOL " + c.split("THEN TOOL ", 1)[1].split("\n")[0]
                 role = "user"
@@ -1023,3 +1029,18 @@ def set_config(**chat):
 def events(response):
     """The JSON events of a /api/chat stream."""
     return [json.loads(line[5:]) for line in response.text.splitlines() if line.startswith("data:")]
+
+
+# a set of tool names a module declares in offer() or as a constant: "outside"/"mail"/"changes" (or INSIDE,
+# READS..., LOCKED...); a name merely in some other set literal (fillers, word lists) is not sorted (review 11.10.2026)
+DECLARED = re.compile(r'(?i)(outside|mail|changes|inside|reads|locked)\w*"?\s*(?::|\|=|=|\|)\s*'
+                      r'(?:\w+\s*\|\s*)?\{("[a-z_]+"(?:,\s*"[a-z_]+")*)\}')
+
+
+def declared(src):
+    """{kind: tool names} a module's source declares (DECLARED), kind in lower case: outside, mail, changes, inside,
+    reads, locked. tests/test_scanner.py checks every tool is sorted, tests/test_angriffe.py attacks them."""
+    out = {}
+    for m in DECLARED.finditer(src):
+        out.setdefault(m.group(1).lower(), set()).update(re.findall(r'"([a-z_]+)"', m.group(2)))
+    return out

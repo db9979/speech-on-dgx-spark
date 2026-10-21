@@ -128,6 +128,8 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 ### 2.3 Outside text (prompt injection)
 - Counts as outside: web, pages, mail, calendar, contacts, parcels, documents, HA states, Telegram, things overheard in the room and old answers built from them. (C)
 - Outside text is wrapped as data (`chat.wrap_outside`). After that, switching, memory, reminders, suggestions, drafts and help cards are blocked, **also in the next turn**. Outside text is never learned into memory. (C; 🧪 test_hardening Stage2, test_left_out, test_hilfe)
+- When wrapped, outside text also loses the model's own markers (`<|im_start|>`, `<tool_call>`, `<think>`: `textnorm.defuse`); the LLM-Tor takes them out of every message (`llm_tor.entschaerft`). After a mail everything that asks the internet is blocked (`chat.MAIL_INTERNET` from `notaus.INTERNET_TOOLS`, only "parcels", which takes no input, stays open), so no search word carries mail content out. A Home Assistant state made of words counts as outside, however short (`homeassistant.WORDS`). (attack self-test 2026-10-21; 🧪 test_angriffe)
+- **Attack self-test:** every new way in for outside text (a reading tool in `READS_OUTSIDE`, `HA_READS`, `mail_…` or `outside`/`mail` in `offer()`) and every new tool that is blocked after outside text (`LOCKED_OUTSIDE`, `LOCKED_AFTER_MAIL`, `changes` in `offer()`) gets a case in `app/panel/angriffe.json` in the same commit, or there under `gleicher_weg` an attacked tool with the same block list, or under `anderswo` its own test or a reason. The test plays every case with a model that obeys every order; a gap found is closed in the panel with a fixed rule, never in the prompt. (Dominik 2026-10-21; 🧪 test_angriffe)
 - Only offered tools run. The intent (intent switch) and the origin can only **restrict**, never grant. The order is rights → blocks → intent. (P funktionswahl, hilfe-besser)
 - Who is asking comes from the login, never from the text. (P vorrang-personen)
 - Content with an unverified sender is never presented as "from DHL". (C)
@@ -390,6 +392,7 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 |---|---|
 | test_scanner | no dangerous calls, login on every route (otherwise OPEN with a reason), upload limits, strict CSP, tools sorted |
 | test_hardening | body limited before reading, root write paths, unit limits, only green versions, outside-text blocks |
+| test_angriffe | every way in for outside text and every blocked tool attacked (with an obeying fake model), nothing carried out, data block whole, the model's markers defused, no secrets to the model |
 | test_stufen | every code endpoint with a level in `stufen.LIST` |
 | test_features | one register, a release holds for every profile, only the admin blocks, preferences start on, no checks of their own, one default value |
 | test_live | every tool, target, client and guard kind in the live picture, no contents |

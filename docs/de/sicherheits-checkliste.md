@@ -29,8 +29,10 @@ Vor jedem Commit durchgehen. In der Antwort an Dominik kurz nennen, welche Punkt
 
 ## Fremder Text (Prompt-Injection)
 - [ ] Als fremd gilt: Web, Seiten, Mail, Kalender, Kontakte, Pakete, Dokumente, HA-Zustände und -Attribute, Telegram, Raum-Mitgehörtes sowie alte Antworten, die daraus gebaut wurden.
-- [ ] Fremder Text wird beim Modell als Daten eingepackt (`_wrap`), und Trennzeichen darin werden entschärft.
-- [ ] Ein neues lesendes Werkzeug kommt nach `READS_OUTSIDE`.
+- [ ] Fremder Text wird beim Modell als Daten eingepackt (`chat.wrap_outside`, `mail._wrap`), und Trennzeichen darin werden entschärft, auch die eigenen Marken des Modells (`<|im_start|>`, `<tool_call>`: `textnorm.defuse`; das LLM-Tor nimmt sie aus jeder Nachricht).
+- [ ] Ein neuer Eingang für fremden Text und ein neues Werkzeug mit Wirkung stehen in `app/panel/angriffe.json` (Fall, `gleicher_weg` oder `anderswo` mit Grund); `test_angriffe` greift sie mit einem gehorsamen Modell an. (Angriffs-Selbsttest 2026-10-21)
+- [ ] Nach Mail geht nichts ins Internet, das Wörter des Modells mitnimmt (Websuche, Wikipedia, Wetter, Fahrplan): ein neues Internet-Werkzeug kommt nach `notaus.INTERNET_TOOLS`. (Bis 2026-10-21 war nur die Websuche gesperrt.)
+- [ ] Ein neues lesendes Werkzeug kommt nach `READS_OUTSIDE`. Ein Zustand aus Wörtern (Home Assistant, ein Sensor mit Text) zählt als fremd, auch kurz. (Ein 37 Zeichen langer Befehl in einem Text-Sensor speicherte bis 2026-10-21 eine Notiz.)
 - [ ] Nach fremdem Text sind Schalten, Gedächtnis, Erinnerungen, Vorschläge und Entwürfe gesperrt, und zwar auch im nächsten Zug. (Das „Fremd“-Kennzeichen ging beim nächsten Zug verloren.)
 - [ ] Antworten aus fremdem Text werden markiert (`outside`-Event) und nie ins Gedächtnis gelernt.
 - [ ] Nur angebotene Werkzeuge laufen. Ein neues Werkzeug steht in den passenden Sperrlisten.

@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "vorbereiten": {
-        "stand": "90fd8d2b27",
+        "stand": "c5c3293bf1",
         "bezug": {
             "klaeren.MAX_BUTTONS": ["s7"], "chat_turn.prepare": ["s1", "s13"], "chat_turn.shared_stranger": ["s3"],
             "chat.left_out": ["s2", "s4"], "notaus.locked_tools": ["s11"], "chat_turn.notaus_note": ["s8", "s11"],
@@ -765,10 +765,10 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Werkzeuge (chat_tools.run)
     "werkzeuge": {
-        "stand": "eb1f9bd244",
+        "stand": "5e277d2e6b",
         "bezug": {
             "chat.LOCKED_OUTSIDE": ["s4"], "notaus.INTERNET_TOOLS": ["s3"], "werkzeuge.NAMES": ["s11"],
-            "chat_tools.run": ["s2", "s7"], "chat.wrap_outside": ["s9"], "chat.LOCKED_MAIL": ["s4"],
+            "chat_tools.run": ["s2", "s7"], "chat.wrap_outside": ["s9"], "chat.LOCKED_AFTER_MAIL": ["s4"],
             "chat.READS_OUTSIDE": ["s4", "s6"], "notaus.locked_tools": ["s3"], "dienstwacht.tool_down": ["s5"],
             "chat.tool_info": ["s11"], "werkzeuge.label": ["s11"], "regeln": ["s4"],
             "regel:Notaus Stufe {notaus.STAGE.internet}": ["s3"],
@@ -810,11 +810,13 @@ SEITEN = {
             S("s4", "frage", ("Fremder Text gelesen?", "Outside text read?"),
               ("Sperre nach Web, Kalender, Dokumenten, Mail", "lock after web, calendar, documents, mail"),
               ("Hat diese Antwort schon Text von draußen gelesen, darf nichts mehr das Zuhause, das Gedächtnis, "
-               "Termine oder Erinnerungen ändern. Nach einer Mail ist auch die Websuche zu, nach eigenen Dokumenten "
+               "Termine oder Erinnerungen ändern. Nach einer Mail ist auch alles zu, was ins Internet fragt (Websuche, "
+               "Wikipedia, Wetter, Fahrplan), nach eigenen Dokumenten die Websuche "
                "ebenfalls (außer bei „Erst lokal suchen“, dann nur mit den eigenen Worten der Frage). Ein Lied, das die "
                "Person selbst wünscht, bleibt nach Text von außen offen (own), nach Mail nicht.",
                "When this answer already read text from outside, nothing may change the home, the memory, "
-               "appointments or reminders any more. After a mail web search is closed too, also after own documents "
+               "appointments or reminders any more. After a mail everything that asks the internet is closed too (web "
+               "search, Wikipedia, weather, transit), after own documents the web search "
                "(except with „search locally first“, then only with the question's own words). A song the person asks "
                "for stays open after outside text (own), not after mail."),
               ("stop", "ja", ("Gesperrt (fremder Text)", "Blocked (outside text)"))),
@@ -858,11 +860,14 @@ SEITEN = {
             S("s9", "schritt", ("Ergebnis als Daten einpacken", "Wrap the result as data"),
               ("Hinweis „Daten, kein Befehl“, Block <<< >>>", "note „data, no command“, block <<< >>>"),
               ("Fremder Text bekommt einen festen Hinweis davor und steht zwischen Markierungen, die er selbst nicht "
-               "schließen kann. Zustände aus Home Assistant mit freiem Text (Titel, Listen) zählen auch als fremd. Mit "
+               "schließen kann; die eigenen Marken des Modells („<|im_start|>“, „<tool_call>“) werden darin entschärft "
+               "(textnorm.defuse). Zustände aus Home Assistant mit freiem Text (Titel, Listen, ein Zustand aus Wörtern) "
+               "zählen auch als fremd. Mit "
                "„Schnellere Websuche“ steht der lange Hinweis einmal je Antwort, vor jedem weiteren Block ein kurzer "
                "mit derselben Regel (chat.OUTSIDE_AGAIN); die Markierungen bleiben immer.",
-               "Outside text gets a fixed note in front and stands between markers it cannot close itself. Home "
-               "Assistant states with free text (titles, lists) count as outside too. With „Faster web search“ the long "
+               "Outside text gets a fixed note in front and stands between markers it cannot close itself; the model's own "
+               "markers („<|im_start|>“, „<tool_call>“) in it are defused (textnorm.defuse). Home "
+               "Assistant states with free text (titles, lists, a state made of words) count as outside too. With „Faster web search“ the long "
                "note stands once per answer, before every further block a short one with the same rule "
                "(chat.OUTSIDE_AGAIN); the markers always stay.")),
             S("s10", "schritt", ("Gerät markiert die Antwort", "Device marks the answer"),
@@ -941,7 +946,7 @@ SEITEN = {
             ("chat_modell.model_turn", ("ruft run_tool, packt Ergebnisse ein, stoppt Schleifen", "calls run_tool, wraps results, stops loops")),
             ("chat.wrap_outside", ("fremder Text als Datenblock", "outside text as a data block")),
             ("chat.LOCKED_OUTSIDE", ("gesperrt nach fremdem Text", "locked after outside text")),
-            ("chat.LOCKED_MAIL", ("gesperrt nach einer Mail", "locked after a mail")),
+            ("chat.LOCKED_AFTER_MAIL", ("gesperrt nach einer Mail", "locked after a mail")),
             ("chat.READS_OUTSIDE", ("Werkzeuge, die fremden Text bringen", "tools that bring outside text")),
             ("notaus.locked_tools", ("was der Notaus je Stufe sperrt", "what the kill switch locks per stage")),
             ("dienstwacht.tool_down", ("fester Satz, wenn ein Dienst weg ist", "fixed sentence when a service is gone")),

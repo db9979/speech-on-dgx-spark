@@ -222,7 +222,7 @@ MAX_MIXED = 2
 
 # The answer before rested on outside text: which tools stay locked in this turn, and how that is said.
 # mail: anyone can send one, so its words must not go to the web or into an appointment either.
-LOCKS = {"mail": ("einer E-Mail", chat.LOCKED_MAIL), "outside": ("Text von außen (Web, Kalender, Dokument, Bild "
+LOCKS = {"mail": ("einer E-Mail", chat.LOCKED_AFTER_MAIL), "outside": ("Text von außen (Web, Kalender, Dokument, Bild "
                                                                  "oder Smart-Home-Namen)", chat.LOCKED_OUTSIDE)}
 LOCK_NAMES = {"home_assistant": "Smart Home schalten", "home_assistant_action": "Smart Home schalten",
               "memory_save": "dir etwas merken", "memory_forget": "etwas vergessen",

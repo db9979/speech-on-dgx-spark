@@ -6,7 +6,7 @@ asr: asr_proxy.py asr_server.py common.py parakeet.py llmstart.py modelle.py mod
 tts: tts_proxy.py tts_server.py common.py textnorm.py tempo.py kurzref.py llmstart.py modelle.py modelle.json bildmodell.py musikmodell.py config.default.json
 bild: bild_server.py bedarf.py bildmodell.py musikmodell.py common.py llmstart.py modelle.py modelle.json config.default.json
 musik: musik_server.py musikmodell.py bedarf.py bildmodell.py common.py llmstart.py modelle.py modelle.json config.default.json
-llmtor: llm_tor.py einordnung.py llmstart.py modelle.py modelle.json bildmodell.py musikmodell.py common.py config.default.json
+llmtor: llm_tor.py einordnung.py textnorm.py llmstart.py modelle.py modelle.json bildmodell.py musikmodell.py common.py config.default.json
 tlstor: tlstor.py common.py llmstart.py modelle.py modelle.json bildmodell.py musikmodell.py config.default.json
 waerter: tarswart.py werkstatt.py rechner.py common.py llmstart.py modelle.py modelle.json bildmodell.py musikmodell.py config.default.json
 notasr: asr_proxy.py common.py parakeet.py llmstart.py modelle.py modelle.json bildmodell.py musikmodell.py config.default.json

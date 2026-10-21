@@ -1541,7 +1541,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "Lautsprecher reicht der Geräteschlüssel nicht: chat_turn.shared_stranger gibt Persönliches nur frei, wenn die Inhaberstimme in derselben Aufnahme sicher erkannt ist. 5. Freigabe und Sperre: Jede Funktion ist aus, bis der Admin sie freigibt; dann gilt sie für jedes Profil, außer der Admin sperrt einzelne (features.blocked). Was nicht erlaubt ist, wird gar nicht erst als Werkzeug angeboten. 6. Fremdes bleibt Daten: Was ein Werkzeug von außen liest, kommt als markierter Datenblock zum Modell. Ab da sind 13 handelnde Werkzeuge gesperrt, auch im nächsten Zug, und nichts davon wird ins Gedächtnis gelernt. Verbindungen nach außen laufen nur über den Wächter (netguard.allowed). Eine Mail mit HTML zeigt die Seite nur so, wie der Spark sie bereinigt hat (mailansicht.clean: feste Liste erlaubter Tags, kein Skript), in einem Rahmen ohne Skript mit eigener CSP; Bilder von außen erst nach eigenem Klick über den Wächter, ein Link erst nach der Frage mit seiner echten Adresse. 7. Sprachmodell schlägt vor: Das Modell formuliert und wählt aus dem, was nach den Schritten davor übrig ist. Ruft es ein Werkzeug, das nicht angeboten war, läuft es nicht. 8. Ändert es etwas?: Lesen geht sofort. Wer etwas ä"
+"text": "Lautsprecher reicht der Geräteschlüssel nicht: chat_turn.shared_stranger gibt Persönliches nur frei, wenn die Inhaberstimme in derselben Aufnahme sicher erkannt ist. 5. Freigabe und Sperre: Jede Funktion ist aus, bis der Admin sie freigibt; dann gilt sie für jedes Profil, außer der Admin sperrt einzelne (features.blocked). Was nicht erlaubt ist, wird gar nicht erst als Werkzeug angeboten. 6. Fremdes bleibt Daten: Was ein Werkzeug von außen liest, kommt als markierter Datenblock zum Modell (textnorm.defuse: Blockende und die eigenen Marken des Modells wie „<|im_start|>“ oder „<tool_call>“ werden entschärft; das LLM-Tor tut das für jede Nachricht noch einmal, llm_tor.entschaerft). Ab da sind 13 handelnde Werkzeuge gesperrt, auch im nächsten Zug, und nichts davon wird ins Gedächtnis gelernt; nach einer Mail sind es 19, dazu gehört alles, was ins Internet fragt (Websuche, Wikipedia, Wetter, Fahrplan), damit kein Suchwort Mail-Inhalt hinausträgt. Ob das hält, prüft der Angriffs-Selbsttest mit einem Modell, das jedem Befehl gehorcht (panel/angriffe.json). Verbindungen nach außen laufen nur über den Wächter (netguard.allowed). Eine Mail mit HTML zeigt die Seite nur so, wie der Spark sie b"
 },
 {
 "lang": "de",
@@ -1549,7 +1549,15 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ndert (Licht, Mail senden, Termin, Anruf), legt einen Vorschlag ab; er läuft erst nach einem schlichten „Ja“ auf genau diesen Vorschlag, vom selben Gerät, oder dem Ja-Knopf seiner Karte „Wartet auf dein Ja“ (eigenes Profil, dieselbe Funktion wie das getippte Ja). Home Assistant nur aus einer Allowlist. Mail löscht nur die Person selbst (in den Papierkorb, endgültig nur nach Rückfrage), nie das Modell. Knöpfe auf Karten im Gespräch und auf der Seite Offen sind feste Namen (vorgaenge.AKTIONEN); jeden Druck prüft das Panel (Besitzer, Art, Stand, Notaus, Schalter des Moduls), und was ohne Vorschlag senden oder eintragen würde, öffnet nur die Seite, auf der die Person es selbst tut. 9. Antwort prüfen: Zeiten, Daten und Beträge, die nirgends in den Quellen stehen, fallen heraus (answercheck.unsupported). Passwörter, Codes und Schlüssel werden nie gesprochen (textnorm.hide_secrets). Die Oberfläche zeigt Modelltext nie als HTML. 10. Spuren: Logs nur mit festen Wörtern und Zahlen. Änderungen an Zugängen und Schutz schreibt guard.log mit einer SHA-256-Kette; der Wachposten meldet Auffälliges an die Admins. Geheimnisse liegen versiegelt im vault (vault.seal)."
+"text": "ereinigt hat (mailansicht.clean: feste Liste erlaubter Tags, kein Skript), in einem Rahmen ohne Skript mit eigener CSP; Bilder von außen erst nach eigenem Klick über den Wächter, ein Link erst nach der Frage mit seiner echten Adresse. 7. Sprachmodell schlägt vor: Das Modell formuliert und wählt aus dem, was nach den Schritten davor übrig ist. Ruft es ein Werkzeug, das nicht angeboten war, läuft es nicht. 8. Ändert es etwas?: Lesen geht sofort. Wer etwas ändert (Licht, Mail senden, Termin, Anruf), legt einen Vorschlag ab; er läuft erst nach einem schlichten „Ja“ auf genau diesen Vorschlag, vom selben Gerät, oder dem Ja-Knopf seiner Karte „Wartet auf dein Ja“ (eigenes Profil, dieselbe Funktion wie das getippte Ja). Home Assistant nur aus einer Allowlist. Mail löscht nur die Person selbst (in den Papierkorb, endgültig nur nach Rückfrage), nie das Modell. Knöpfe auf Karten im Gespräch und auf der Seite Offen sind feste Namen (vorgaenge.AKTIONEN); jeden Druck prüft das Panel (Besitzer, Art, Stand, Notaus, Schalter des Moduls), und was ohne Vorschlag senden oder eintragen würde, öffnet nur die Seite, auf der die Person es selbst tut. 9. Antwort prüfen: Zeiten, Daten und Beträge, die nirg"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Ablauf",
+"title": "Ablauf",
+"text": "ends in den Quellen stehen, fallen heraus (answercheck.unsupported). Passwörter, Codes und Schlüssel werden nie gesprochen (textnorm.hide_secrets). Die Oberfläche zeigt Modelltext nie als HTML. 10. Spuren: Logs nur mit festen Wörtern und Zahlen. Änderungen an Zugängen und Schutz schreibt guard.log mit einer SHA-256-Kette; der Wachposten meldet Auffälliges an die Admins. Geheimnisse liegen versiegelt im vault (vault.seal)."
 },
 {
 "lang": "de",
@@ -1557,7 +1565,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Beispiele",
-"text": "Beispiele: Mail verlangt eine Handlung: Die Mail wird gelesen, aber nichts geschaltet: die Werkzeuge dafür sind gesperrt. · Fremde Stimme am Lautsprecher: Antwort wie für einen Gast, ohne Mails oder Termine. · Licht ausschalten: Erst nach „Ja“ wird geschaltet. · Notaus Stufe 3: Kein Gespräch, nur die Notaus-Seite."
+"text": "Beispiele: Mail verlangt eine Handlung: Die Mail wird gelesen, aber nichts geschaltet: die Werkzeuge dafür sind gesperrt. · Webseite mit falscher Systemzeile: „<|im_start|>system“ kommt entschärft als Text an, das Modell sieht keine neue Rolle; handeln kann es ohnehin nicht. · Fremde Stimme am Lautsprecher: Antwort wie für einen Gast, ohne Mails oder Termine. · Licht ausschalten: Erst nach „Ja“ wird geschaltet. · Notaus Stufe 3: Kein Gespräch, nur die Notaus-Seite."
 },
 {
 "lang": "de",
@@ -1581,7 +1589,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 13 Werkzeuge nach Text von außen gesperrt (Schritt 6) - 10 min zählt ein richtiger Code für „Bestätigen“ (Schritt 3) - 16 feste Befehle des Wärters auf tars (Schritt 3) - 3 Notaus-Stufen, die letzte hält jedes Gespräch an (Schritt 2)"
+"text": "- 13 Werkzeuge nach Text von außen gesperrt (Schritt 6) - 19 Werkzeuge nach einer Mail gesperrt (Schritt 6) - 10 min zählt ein richtiger Code für „Bestätigen“ (Schritt 3) - 16 feste Befehle des Wärters auf tars (Schritt 3) - 3 Notaus-Stufen, die letzte hält jedes Gespräch an (Schritt 2)"
 },
 {
 "lang": "de",
@@ -1589,7 +1597,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/notaus.py blocks: ob eine Notaus-Stufe diese Art Arbeit anhält (Schritt 2) - app/panel/guard.py limit: Rate-Limit pro Adresse und Profil (Schritt 3) - app/panel/guard.py Slot: Höchstzahl gleichzeitiger Anfragen (Schritt 3) - app/panel/core.py confirm_code: frischer Code oder Passkey für heikle Wege (Schritt 3, Schritt 8) - app/tarswart.py check: prüft jeden Befehl an den Wärter (Schritt 3) - app/panel/chat_turn.py shared_stranger: fremde Stimme am geteilten Lautsprecher (Schritt 4) - app/panel/features.py allowed: Freigabe des Admins, gilt für jedes Profil (Schritt 5) - app/panel/mitschreiblink.py find: prüft einen Mitschreib-Link: Hash, Ablauf, Freigabe, Liste (Schritt 3, Schritt 5) - app/panel/features.py blocked: Sperre einzelner Profile (Schritt 5) - app/panel/geteilt.py put: Teilen mit einem anderen Profil, zurückziehen wirkt sofort (Schritt 5) - app/panel/chat.py wrap_outside: Text von außen als Datenblock (Schritt 6) - app/panel/mailansicht.py clean: HTML einer Mail nur bereinigt, ohne Skript und ohne Laden von außen (Schritt 6) - app/panel/netguard.py allowed: ob eine Verbindung nach außen sein darf (Schritt 6) - app/panel/answercheck.py unsupported: Zahl ohne Q"
+"text": "- app/panel/notaus.py blocks: ob eine Notaus-Stufe diese Art Arbeit anhält (Schritt 2) - app/panel/guard.py limit: Rate-Limit pro Adresse und Profil (Schritt 3) - app/panel/guard.py Slot: Höchstzahl gleichzeitiger Anfragen (Schritt 3) - app/panel/core.py confirm_code: frischer Code oder Passkey für heikle Wege (Schritt 3, Schritt 8) - app/tarswart.py check: prüft jeden Befehl an den Wärter (Schritt 3) - app/panel/chat_turn.py shared_stranger: fremde Stimme am geteilten Lautsprecher (Schritt 4) - app/panel/features.py allowed: Freigabe des Admins, gilt für jedes Profil (Schritt 5) - app/panel/mitschreiblink.py find: prüft einen Mitschreib-Link: Hash, Ablauf, Freigabe, Liste (Schritt 3, Schritt 5) - app/panel/features.py blocked: Sperre einzelner Profile (Schritt 5) - app/panel/geteilt.py put: Teilen mit einem anderen Profil, zurückziehen wirkt sofort (Schritt 5) - app/panel/chat.py wrap_outside: Text von außen als Datenblock (Schritt 6) - app/textnorm.py defuse: Blockende und Marken des Modells in fremdem Text entschärfen (Schritt 6) - app/llm_tor.py entschaerft: Marken des Modells aus jeder Nachricht nehmen (Schritt 6) - app/panel/mailansicht.py clean: HTML einer Mail nur bereinigt"
 },
 {
 "lang": "de",
@@ -1597,7 +1605,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "uelle fällt heraus (Schritt 9) - app/textnorm.py hide_secrets: Geheimnisse werden nie gesprochen (Schritt 9) - app/panel/guard.py log: Änderungsprotokoll mit Prüfkette (Schritt 10) - app/panel/vault.py seal: Geheimnisse versiegelt ablegen (Schritt 10)"
+"text": ", ohne Skript und ohne Laden von außen (Schritt 6) - app/panel/netguard.py allowed: ob eine Verbindung nach außen sein darf (Schritt 6) - app/panel/answercheck.py unsupported: Zahl ohne Quelle fällt heraus (Schritt 9) - app/textnorm.py hide_secrets: Geheimnisse werden nie gesprochen (Schritt 9) - app/panel/guard.py log: Änderungsprotokoll mit Prüfkette (Schritt 10) - app/panel/vault.py seal: Geheimnisse versiegelt ablegen (Schritt 10)"
 },
 {
 "lang": "de",
@@ -1605,7 +1613,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "Selbsttests: test_hardening, test_gaeste, test_kontext_trennung, test_scanner, test_stufen, test_notaus, test_waerter, test_protokoll, test_wachposten, test_markdown"
+"text": "Selbsttests: test_hardening, test_angriffe, test_gaeste, test_kontext_trennung, test_scanner, test_stufen, test_notaus, test_waerter, test_protokoll, test_wachposten, test_markdown"
 },
 {
 "lang": "de",
@@ -2069,7 +2077,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "1. Modell ruft ein Werkzeug: Höchstens 4 Aufrufe pro Runde laufen, und ein wegen Fehlern gestopptes Werkzeug läuft nicht mehr. Gedächtnis-Notizen sind auf 3 pro Antwort begrenzt. 2. In dieser Runde angeboten?: Nur Werkzeuge aus der Liste dieser Runde laufen. Die Liste ist schon um Sperren gekürzt; alles andere bekommt „nicht verfügbar, nicht noch einmal aufrufen“ oder, nach einer Mail, den Grund der Mail-Sperre. 3. Notaus hält es an?: Der Notaus wird bei jedem Aufruf gelesen, also greift er auch mitten in einer Antwort. Ab Stufe 1 sind die Werkzeuge gesperrt, die selbst ins Internet gehen; ab Stufe 2 oder mit dem eigenen Notaus des Profils jedes Werkzeug, das etwas ändert. 4. Fremder Text gelesen?: Hat diese Antwort schon Text von draußen gelesen, darf nichts mehr das Zuhause, das Gedächtnis, Termine oder Erinnerungen ändern. Nach einer Mail ist auch die Websuche zu, nach eigenen Dokumenten ebenfalls (außer bei „Erst lokal suchen“, dann nur mit den eigenen Worten der Frage). Ein Lied, das die Person selbst wünscht, bleibt nach Text von außen offen (own), nach Mail nicht. 5. Dienst gerade weg?: Sieht der Dienst-Wächter den Dienst dieses Werkzeugs gerade ausgefallen (und der Schalter"
+"text": "1. Modell ruft ein Werkzeug: Höchstens 4 Aufrufe pro Runde laufen, und ein wegen Fehlern gestopptes Werkzeug läuft nicht mehr. Gedächtnis-Notizen sind auf 3 pro Antwort begrenzt. 2. In dieser Runde angeboten?: Nur Werkzeuge aus der Liste dieser Runde laufen. Die Liste ist schon um Sperren gekürzt; alles andere bekommt „nicht verfügbar, nicht noch einmal aufrufen“ oder, nach einer Mail, den Grund der Mail-Sperre. 3. Notaus hält es an?: Der Notaus wird bei jedem Aufruf gelesen, also greift er auch mitten in einer Antwort. Ab Stufe 1 sind die Werkzeuge gesperrt, die selbst ins Internet gehen; ab Stufe 2 oder mit dem eigenen Notaus des Profils jedes Werkzeug, das etwas ändert. 4. Fremder Text gelesen?: Hat diese Antwort schon Text von draußen gelesen, darf nichts mehr das Zuhause, das Gedächtnis, Termine oder Erinnerungen ändern. Nach einer Mail ist auch alles zu, was ins Internet fragt (Websuche, Wikipedia, Wetter, Fahrplan), nach eigenen Dokumenten die Websuche ebenfalls (außer bei „Erst lokal suchen“, dann nur mit den eigenen Worten der Frage). Ein Lied, das die Person selbst wünscht, bleibt nach Text von außen offen (own), nach Mail nicht. 5. Dienst gerade weg?: Sieht der Dienst-Wä"
 },
 {
 "lang": "de",
@@ -2077,7 +2085,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": " dafür ist an), kommt sofort ein fester Satz mit der Uhrzeit des Ausfalls statt eines Versuchs. Die Websuche fragt erst unten und kann dann aufs eigene Archiv ausweichen. 6. Lesen markieren: Werkzeuge, die fremden Text bringen (Websuche, Dokumente, Kalender, frühere Gespräche, Kamera), setzen die Marke schon vor dem Lauf. Ab dann sind die Sperren aus Schritt 4 für den Rest der Antwort aktiv. document_search bringt mit dem Wissensbuch zuerst die passende Seite, dann die Stellen; beides ist fremder Text. 7. Werkzeug ausführen: Erweiterungen bekommen Profil, Gerät und Herkunft vom Panel, nie vom Modell. Smart-Home-Änderungen brauchen das Codewort in der letzten Nachricht, wenn eines eingestellt ist. Verbindungen zu Diensten draußen gehen über den Wächter. Home Assistant liest Zustände aus der Kopie der Live-Verbindung (halive.states), solange sie für genau diese Adresse und diesen Schlüssel steht, sonst über HTTP. Den Zeitraum der Websuche bestimmen die eigenen Worte der Frage und die Suchwörter (frisch.zeitraum), nie die Zeitangabe des Panels. 8. Fehler als Satz: Ist ein Dienst nicht erreichbar, wird daraus ein kurzer Ergebnis-Text („nicht erreichbar“, „Suche fehlgeschlagen, nicht ra"
+"text": "chter den Dienst dieses Werkzeugs gerade ausgefallen (und der Schalter dafür ist an), kommt sofort ein fester Satz mit der Uhrzeit des Ausfalls statt eines Versuchs. Die Websuche fragt erst unten und kann dann aufs eigene Archiv ausweichen. 6. Lesen markieren: Werkzeuge, die fremden Text bringen (Websuche, Dokumente, Kalender, frühere Gespräche, Kamera), setzen die Marke schon vor dem Lauf. Ab dann sind die Sperren aus Schritt 4 für den Rest der Antwort aktiv. document_search bringt mit dem Wissensbuch zuerst die passende Seite, dann die Stellen; beides ist fremder Text. 7. Werkzeug ausführen: Erweiterungen bekommen Profil, Gerät und Herkunft vom Panel, nie vom Modell. Smart-Home-Änderungen brauchen das Codewort in der letzten Nachricht, wenn eines eingestellt ist. Verbindungen zu Diensten draußen gehen über den Wächter. Home Assistant liest Zustände aus der Kopie der Live-Verbindung (halive.states), solange sie für genau diese Adresse und diesen Schlüssel steht, sonst über HTTP. Den Zeitraum der Websuche bestimmen die eigenen Worte der Frage und die Suchwörter (frisch.zeitraum), nie die Zeitangabe des Panels. 8. Fehler als Satz: Ist ein Dienst nicht erreichbar, wird daraus ein kur"
 },
 {
 "lang": "de",
@@ -2085,7 +2093,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ten“). Ein angebotenes Werkzeug ohne passende Einrichtung meldet „unbekannt“. 9. Ergebnis als Daten einpacken: Fremder Text bekommt einen festen Hinweis davor und steht zwischen Markierungen, die er selbst nicht schließen kann. Zustände aus Home Assistant mit freiem Text (Titel, Listen) zählen auch als fremd. Mit „Schnellere Websuche“ steht der lange Hinweis einmal je Antwort, vor jedem weiteren Block ein kurzer mit derselben Regel (chat.OUTSIDE_AGAIN); die Markierungen bleiben immer. 10. Gerät markiert die Antwort: Das Gerät erfährt, dass die Antwort auf fremdem Text beruht. Solche Antworten gehen später nicht noch einmal ans Modell. 11. Festhalten: Die Log-Zeile nennt den Namen nur, wenn er angeboten war, sonst „unbekannt“. Was eine Tat war, merkt sich taten für die Handlungs-Prüfung. Menschen sehen die verständlichen Namen aus werkzeuge.py. 12. Zweimal gescheitert?: Scheitert ein Werkzeug 2 Mal mit denselben Angaben oder 3 Mal überhaupt, wird es für diese Antwort gestoppt und das Modell hört, dass es ehrlich sagen soll, was nicht ging. 13. Ergebnis zurück ans Modell: Das Modell bekommt das Ergebnis in der nächsten Runde als Daten. Was es daraus sagt, prüft wieder die Antwort (An"
+"text": "zer Ergebnis-Text („nicht erreichbar“, „Suche fehlgeschlagen, nicht raten“). Ein angebotenes Werkzeug ohne passende Einrichtung meldet „unbekannt“. 9. Ergebnis als Daten einpacken: Fremder Text bekommt einen festen Hinweis davor und steht zwischen Markierungen, die er selbst nicht schließen kann; die eigenen Marken des Modells („<|im_start|>“, „<tool_call>“) werden darin entschärft (textnorm.defuse). Zustände aus Home Assistant mit freiem Text (Titel, Listen, ein Zustand aus Wörtern) zählen auch als fremd. Mit „Schnellere Websuche“ steht der lange Hinweis einmal je Antwort, vor jedem weiteren Block ein kurzer mit derselben Regel (chat.OUTSIDE_AGAIN); die Markierungen bleiben immer. 10. Gerät markiert die Antwort: Das Gerät erfährt, dass die Antwort auf fremdem Text beruht. Solche Antworten gehen später nicht noch einmal ans Modell. 11. Festhalten: Die Log-Zeile nennt den Namen nur, wenn er angeboten war, sonst „unbekannt“. Was eine Tat war, merkt sich taten für die Handlungs-Prüfung. Menschen sehen die verständlichen Namen aus werkzeuge.py. 12. Zweimal gescheitert?: Scheitert ein Werkzeug 2 Mal mit denselben Angaben oder 3 Mal überhaupt, wird es für diese Antwort gestoppt und das M"
 },
 {
 "lang": "de",
@@ -2093,7 +2101,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "twort-Prüfung, Taten prüfen)."
+"text": "odell hört, dass es ehrlich sagen soll, was nicht ging. 13. Ergebnis zurück ans Modell: Das Modell bekommt das Ergebnis in der nächsten Runde als Daten. Was es daraus sagt, prüft wieder die Antwort (Antwort-Prüfung, Taten prüfen)."
 },
 {
 "lang": "de",
@@ -2133,7 +2141,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/chat_tools.py run: die Prüfungen und alle eingebauten Werkzeuge (Schritt 2, Schritt 7) - app/panel/chat_modell.py model_turn: ruft run_tool, packt Ergebnisse ein, stoppt Schleifen (Schritt 1) - app/panel/chat.py wrap_outside: fremder Text als Datenblock (Schritt 9) - app/panel/chat.py LOCKED_OUTSIDE: gesperrt nach fremdem Text (Schritt 4) - app/panel/chat.py LOCKED_MAIL: gesperrt nach einer Mail (Schritt 4) - app/panel/chat.py READS_OUTSIDE: Werkzeuge, die fremden Text bringen (Schritt 4, Schritt 6) - app/panel/notaus.py locked_tools: was der Notaus je Stufe sperrt (Schritt 3) - app/panel/dienstwacht.py tool_down: fester Satz, wenn ein Dienst weg ist (Schritt 5) - app/panel/chat.py tool_info: Zahlen für Logs → Anfragen (Schritt 11) - app/panel/werkzeuge.py label: verständlicher Name eines Werkzeugs (Schritt 11)"
+"text": "- app/panel/chat_tools.py run: die Prüfungen und alle eingebauten Werkzeuge (Schritt 2, Schritt 7) - app/panel/chat_modell.py model_turn: ruft run_tool, packt Ergebnisse ein, stoppt Schleifen (Schritt 1) - app/panel/chat.py wrap_outside: fremder Text als Datenblock (Schritt 9) - app/panel/chat.py LOCKED_OUTSIDE: gesperrt nach fremdem Text (Schritt 4) - app/panel/chat.py LOCKED_AFTER_MAIL: gesperrt nach einer Mail (Schritt 4) - app/panel/chat.py READS_OUTSIDE: Werkzeuge, die fremden Text bringen (Schritt 4, Schritt 6) - app/panel/notaus.py locked_tools: was der Notaus je Stufe sperrt (Schritt 3) - app/panel/dienstwacht.py tool_down: fester Satz, wenn ein Dienst weg ist (Schritt 5) - app/panel/chat.py tool_info: Zahlen für Logs → Anfragen (Schritt 11) - app/panel/werkzeuge.py label: verständlicher Name eines Werkzeugs (Schritt 11)"
 },
 {
 "lang": "de",
@@ -13125,7 +13133,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "ersonal things only when the owner's voice is surely recognised in the same recording. 5. Release and block: Every function is off until the admin releases it; then it counts for every profile, unless the admin blocks single ones (features.blocked). What is not allowed is not even offered as a tool. 6. Outside stays data: What a tool reads from outside reaches the model as a marked block of data. From then on 13 acting tools are locked, in the next turn too, and nothing of it is learned into memory. Connections to the outside go only through the guard (netguard.allowed). A mail with HTML is shown only as the Spark cleaned it (mailansicht.clean: a fixed list of allowed tags, no script), in a frame without script with its own CSP; pictures from outside only after the own click and through the guard, a link only after the question with its real address. 7. The language model proposes: The model words the answer and picks from what is left after the steps before. If it calls a tool that was not offered, it does not run. 8. Does it change something?: Reading happens at once. Whatever changes something (light, sending mail, appointment, call) leaves a proposal; it runs only after a plain"
+"text": "ersonal things only when the owner's voice is surely recognised in the same recording. 5. Release and block: Every function is off until the admin releases it; then it counts for every profile, unless the admin blocks single ones (features.blocked). What is not allowed is not even offered as a tool. 6. Outside stays data: What a tool reads from outside reaches the model as a marked block of data (textnorm.defuse: the block's end and the model's own markers such as „<|im_start|>“ or „<tool_call>“ are defused; the LLM-Tor does it once more for every message, llm_tor.entschaerft). From then on 13 acting tools are locked, in the next turn too, and nothing of it is learned into memory; after a mail it is 19, everything that asks the internet among them (web search, Wikipedia, weather, transit), so no search word carries mail content out. Whether this holds is checked by the attack self-test with a model that obeys every order (panel/angriffe.json). Connections to the outside go only through the guard (netguard.allowed). A mail with HTML is shown only as the Spark cleaned it (mailansicht.clean: a fixed list of allowed tags, no script), in a frame without script with its own CSP; pictures"
 },
 {
 "lang": "en",
@@ -13133,7 +13141,15 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": " „yes“ to exactly that proposal, from the same device, or the yes button of its card „Waiting for your yes“ (own profile, the same function as the typed yes). Home Assistant only from an allowlist. Only the person deletes mail (into the trash, for good only after a question), never the model. Buttons on cards in the conversation and on the page Open are fixed names (vorgaenge.AKTIONEN); the panel checks every press (owner, kind, state, kill switch, the module's switches), and what would send or enter something without a proposal only opens the page where the person does it. 9. Check the answer: Times, dates and amounts that are nowhere in the sources are dropped (answercheck.unsupported). Passwords, codes and keys are never spoken (textnorm.hide_secrets). The pages never show model text as HTML. 10. Traces: Logs carry only fixed words and numbers. Changes to access and protection are written by guard.log with a SHA-256 chain; the Wachposten tells the admins about anything unusual. Secrets lie sealed in the vault (vault.seal)."
+"text": " from outside only after the own click and through the guard, a link only after the question with its real address. 7. The language model proposes: The model words the answer and picks from what is left after the steps before. If it calls a tool that was not offered, it does not run. 8. Does it change something?: Reading happens at once. Whatever changes something (light, sending mail, appointment, call) leaves a proposal; it runs only after a plain „yes“ to exactly that proposal, from the same device, or the yes button of its card „Waiting for your yes“ (own profile, the same function as the typed yes). Home Assistant only from an allowlist. Only the person deletes mail (into the trash, for good only after a question), never the model. Buttons on cards in the conversation and on the page Open are fixed names (vorgaenge.AKTIONEN); the panel checks every press (owner, kind, state, kill switch, the module's switches), and what would send or enter something without a proposal only opens the page where the person does it. 9. Check the answer: Times, dates and amounts that are nowhere in the sources are dropped (answercheck.unsupported). Passwords, codes and keys are never spoken (textn"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Way",
+"title": "Way",
+"text": "orm.hide_secrets). The pages never show model text as HTML. 10. Traces: Logs carry only fixed words and numbers. Changes to access and protection are written by guard.log with a SHA-256 chain; the Wachposten tells the admins about anything unusual. Secrets lie sealed in the vault (vault.seal)."
 },
 {
 "lang": "en",
@@ -13141,7 +13157,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Examples",
-"text": "Examples: A mail demands an action: The mail is read, but nothing is switched: the tools for it are locked. · A stranger's voice at the speaker: An answer as for a guest, without mails or appointments. · Switch off the light: Switched only after „yes“. · Kill switch stage 3: No conversation, only the kill switch page."
+"text": "Examples: A mail demands an action: The mail is read, but nothing is switched: the tools for it are locked. · A web page with a fake system line: „<|im_start|>system“ arrives defused as text, the model sees no new role; it could not act anyway. · A stranger's voice at the speaker: An answer as for a guest, without mails or appointments. · Switch off the light: Switched only after „yes“. · Kill switch stage 3: No conversation, only the kill switch page."
 },
 {
 "lang": "en",
@@ -13165,7 +13181,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 13 tools locked after outside text (step 6) - 10 min a right code counts for „Confirm“ (step 3) - 16 fixed commands of the Wärter on tars (step 3) - 3 kill switch stages, the last stops every conversation (step 2)"
+"text": "- 13 tools locked after outside text (step 6) - 19 tools locked after a mail (step 6) - 10 min a right code counts for „Confirm“ (step 3) - 16 fixed commands of the Wärter on tars (step 3) - 3 kill switch stages, the last stops every conversation (step 2)"
 },
 {
 "lang": "en",
@@ -13173,7 +13189,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/notaus.py blocks: whether a kill switch stage stops this kind of work (step 2) - app/panel/guard.py limit: rate limit per address and profile (step 3) - app/panel/guard.py Slot: cap on parallel requests (step 3) - app/panel/core.py confirm_code: fresh code or passkey for sensitive ways (step 3, step 8) - app/tarswart.py check: checks every command to the Wärter (step 3) - app/panel/chat_turn.py shared_stranger: stranger's voice at a shared speaker (step 4) - app/panel/features.py allowed: the admin's release, for every profile (step 5) - app/panel/mitschreiblink.py find: checks a write link: hash, expiry, release, list (step 3, step 5) - app/panel/features.py blocked: block of single profiles (step 5) - app/panel/geteilt.py put: share with another profile, taking back works at once (step 5) - app/panel/chat.py wrap_outside: outside text as a block of data (step 6) - app/panel/mailansicht.py clean: a mail's HTML only cleaned, without script and without loads from outside (step 6) - app/panel/netguard.py allowed: whether a connection out may happen (step 6) - app/panel/answercheck.py unsupported: a figure without a source is dropped (step 9) - app/textnorm.py hide_secrets"
+"text": "- app/panel/notaus.py blocks: whether a kill switch stage stops this kind of work (step 2) - app/panel/guard.py limit: rate limit per address and profile (step 3) - app/panel/guard.py Slot: cap on parallel requests (step 3) - app/panel/core.py confirm_code: fresh code or passkey for sensitive ways (step 3, step 8) - app/tarswart.py check: checks every command to the Wärter (step 3) - app/panel/chat_turn.py shared_stranger: stranger's voice at a shared speaker (step 4) - app/panel/features.py allowed: the admin's release, for every profile (step 5) - app/panel/mitschreiblink.py find: checks a write link: hash, expiry, release, list (step 3, step 5) - app/panel/features.py blocked: block of single profiles (step 5) - app/panel/geteilt.py put: share with another profile, taking back works at once (step 5) - app/panel/chat.py wrap_outside: outside text as a block of data (step 6) - app/textnorm.py defuse: defuse the block's end and the model's markers in outside text (step 6) - app/llm_tor.py entschaerft: take the model's markers out of every message (step 6) - app/panel/mailansicht.py clean: a mail's HTML only cleaned, without script and without loads from outside (step 6) - app/panel"
 },
 {
 "lang": "en",
@@ -13181,7 +13197,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": ": secrets are never spoken (step 9) - app/panel/guard.py log: change log with its chain (step 10) - app/panel/vault.py seal: store secrets sealed (step 10)"
+"text": "/netguard.py allowed: whether a connection out may happen (step 6) - app/panel/answercheck.py unsupported: a figure without a source is dropped (step 9) - app/textnorm.py hide_secrets: secrets are never spoken (step 9) - app/panel/guard.py log: change log with its chain (step 10) - app/panel/vault.py seal: store secrets sealed (step 10)"
 },
 {
 "lang": "en",
@@ -13189,7 +13205,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "Self-tests: test_hardening, test_gaeste, test_kontext_trennung, test_scanner, test_stufen, test_notaus, test_waerter, test_protokoll, test_wachposten, test_markdown"
+"text": "Self-tests: test_hardening, test_angriffe, test_gaeste, test_kontext_trennung, test_scanner, test_stufen, test_notaus, test_waerter, test_protokoll, test_wachposten, test_markdown"
 },
 {
 "lang": "en",
@@ -13645,7 +13661,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "1. The model calls a tool: At most 4 calls per round run, and a tool stopped after errors does not run again. Memory notes are limited to 3 per answer. 2. Offered in this round?: Only tools on this round's list run. The list is already cut by the locks; anything else gets „not available, do not call it again“ or, after a mail, the reason of the mail lock. 3. Kill switch holds it?: The kill switch is read for every call, so it also applies in the middle of an answer. From stage 1 the tools that go to the internet by themselves are locked; from stage 2 or with the profile's own kill switch every tool that changes something. 4. Outside text read?: When this answer already read text from outside, nothing may change the home, the memory, appointments or reminders any more. After a mail web search is closed too, also after own documents (except with „search locally first“, then only with the question's own words). A song the person asks for stays open after outside text (own), not after mail. 5. Service gone right now?: When the service watch sees this tool's service down (and its switch is on), a fixed sentence with the time of the outage comes at once instead of a try. Web search check"
+"text": "1. The model calls a tool: At most 4 calls per round run, and a tool stopped after errors does not run again. Memory notes are limited to 3 per answer. 2. Offered in this round?: Only tools on this round's list run. The list is already cut by the locks; anything else gets „not available, do not call it again“ or, after a mail, the reason of the mail lock. 3. Kill switch holds it?: The kill switch is read for every call, so it also applies in the middle of an answer. From stage 1 the tools that go to the internet by themselves are locked; from stage 2 or with the profile's own kill switch every tool that changes something. 4. Outside text read?: When this answer already read text from outside, nothing may change the home, the memory, appointments or reminders any more. After a mail everything that asks the internet is closed too (web search, Wikipedia, weather, transit), after own documents the web search (except with „search locally first“, then only with the question's own words). A song the person asks for stays open after outside text (own), not after mail. 5. Service gone right now?: When the service watch sees this tool's service down (and its switch is on), a fixed sentence w"
 },
 {
 "lang": "en",
@@ -13653,7 +13669,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "s further down and then can fall back to the own archive. 6. Mark reading: Tools that bring outside text (web search, documents, calendar, earlier conversations, camera) set the mark before they run. From then on the locks of step 4 hold for the rest of the answer. With the knowledge book document_search brings the fitting page first, then the passages; both are outside text. 7. Run the tool: Extensions get profile, device and origin from the panel, never from the model. Smart home changes need the code word in the latest message when one is set. Connections to outside services go through the guard. Home Assistant reads states from the live connection's copy (halive.states) while it stands for exactly this address and key, else over HTTP. The period of the web search comes from the question's own words and the query (frisch.zeitraum), never from the panel's time note. 8. Errors as a sentence: When a service cannot be reached, it becomes a short result text („not reachable“, „search failed, do not guess“). An offered tool without a matching setup answers „unknown“. 9. Wrap the result as data: Outside text gets a fixed note in front and stands between markers it cannot close itself. "
+"text": "ith the time of the outage comes at once instead of a try. Web search checks further down and then can fall back to the own archive. 6. Mark reading: Tools that bring outside text (web search, documents, calendar, earlier conversations, camera) set the mark before they run. From then on the locks of step 4 hold for the rest of the answer. With the knowledge book document_search brings the fitting page first, then the passages; both are outside text. 7. Run the tool: Extensions get profile, device and origin from the panel, never from the model. Smart home changes need the code word in the latest message when one is set. Connections to outside services go through the guard. Home Assistant reads states from the live connection's copy (halive.states) while it stands for exactly this address and key, else over HTTP. The period of the web search comes from the question's own words and the query (frisch.zeitraum), never from the panel's time note. 8. Errors as a sentence: When a service cannot be reached, it becomes a short result text („not reachable“, „search failed, do not guess“). An offered tool without a matching setup answers „unknown“. 9. Wrap the result as data: Outside text get"
 },
 {
 "lang": "en",
@@ -13661,7 +13677,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "Home Assistant states with free text (titles, lists) count as outside too. With „Faster web search“ the long note stands once per answer, before every further block a short one with the same rule (chat.OUTSIDE_AGAIN); the markers always stay. 10. Device marks the answer: The device learns that the answer rests on outside text. Such answers do not go to the model again later. 11. Record: The log line names the tool only when it was offered, else „unbekannt“. What was a deed is noted by taten for the action check. People see the readable names from werkzeuge.py. 12. Failed twice?: When a tool fails 2 times with the same details or 3 times at all, it is stopped for this answer and the model is told to say honestly what did not work. 13. Result back to the model: The model gets the result as data in the next round. What it says from it is checked again by the answer (answer check, check deeds)."
+"text": "s a fixed note in front and stands between markers it cannot close itself; the model's own markers („<|im_start|>“, „<tool_call>“) in it are defused (textnorm.defuse). Home Assistant states with free text (titles, lists, a state made of words) count as outside too. With „Faster web search“ the long note stands once per answer, before every further block a short one with the same rule (chat.OUTSIDE_AGAIN); the markers always stay. 10. Device marks the answer: The device learns that the answer rests on outside text. Such answers do not go to the model again later. 11. Record: The log line names the tool only when it was offered, else „unbekannt“. What was a deed is noted by taten for the action check. People see the readable names from werkzeuge.py. 12. Failed twice?: When a tool fails 2 times with the same details or 3 times at all, it is stopped for this answer and the model is told to say honestly what did not work. 13. Result back to the model: The model gets the result as data in the next round. What it says from it is checked again by the answer (answer check, check deeds)."
 },
 {
 "lang": "en",
@@ -13701,7 +13717,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/chat_tools.py run: the checks and all built-in tools (step 2, step 7) - app/panel/chat_modell.py model_turn: calls run_tool, wraps results, stops loops (step 1) - app/panel/chat.py wrap_outside: outside text as a data block (step 9) - app/panel/chat.py LOCKED_OUTSIDE: locked after outside text (step 4) - app/panel/chat.py LOCKED_MAIL: locked after a mail (step 4) - app/panel/chat.py READS_OUTSIDE: tools that bring outside text (step 4, step 6) - app/panel/notaus.py locked_tools: what the kill switch locks per stage (step 3) - app/panel/dienstwacht.py tool_down: fixed sentence when a service is gone (step 5) - app/panel/chat.py tool_info: numbers for Logs → Requests (step 11) - app/panel/werkzeuge.py label: readable name of a tool (step 11)"
+"text": "- app/panel/chat_tools.py run: the checks and all built-in tools (step 2, step 7) - app/panel/chat_modell.py model_turn: calls run_tool, wraps results, stops loops (step 1) - app/panel/chat.py wrap_outside: outside text as a data block (step 9) - app/panel/chat.py LOCKED_OUTSIDE: locked after outside text (step 4) - app/panel/chat.py LOCKED_AFTER_MAIL: locked after a mail (step 4) - app/panel/chat.py READS_OUTSIDE: tools that bring outside text (step 4, step 6) - app/panel/notaus.py locked_tools: what the kill switch locks per stage (step 3) - app/panel/dienstwacht.py tool_down: fixed sentence when a service is gone (step 5) - app/panel/chat.py tool_info: numbers for Logs → Requests (step 11) - app/panel/werkzeuge.py label: readable name of a tool (step 11)"
 },
 {
 "lang": "en",

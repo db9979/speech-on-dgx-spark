@@ -921,14 +921,14 @@ async def prepare(request):
     if ex["hints"] and not pics:
         system = per_turn(system, " ".join(ex["hints"]))
     # once mail or other outside text was read in this answer, nothing in it may change the home or
-    # the memory, and after mail no words go to the web (see LOCKED_OUTSIDE / LOCKED_MAIL)
+    # the memory, and after mail no words go to the web (see LOCKED_OUTSIDE / LOCKED_AFTER_MAIL)
     # (after the person's own documents also no web search: a document could ask to carry its text away;
     # with "Erst lokal suchen" it stays open, but only the person's own words go out, see chat_tools.py)
     def locked(st):
         # the Notaus is read again for every tool call: switched on during an answer it holds the next call off
         # (ex["own"]: asked for in the person's own words, e.g. a song after a web search about chords; outside
         # text stays data for it, mail and the Notaus still lock it)
-        return ((chat.LOCKED_MAIL | ex["changes"]) if st["mail"] else ((chat.LOCKED_OUTSIDE | ex["changes"]) - ex["own"])
+        return ((chat.LOCKED_AFTER_MAIL | ex["changes"]) if st["mail"] else ((chat.LOCKED_OUTSIDE | ex["changes"]) - ex["own"])
                 if st["outside"] else set()) | ({"web_search"} if st.get("docs") and not web_own else set()) \
             | notaus.locked_tools(notaus.level(), ex["changes"], bool(who and notaus.own(who["id"])))
     # what this request cannot reach: said plainly, so the model does not make up appointments or mails

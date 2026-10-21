@@ -29,8 +29,10 @@ Go through before every commit. In the answer to Dominik briefly name which poin
 
 ## Outside text (prompt injection)
 - [ ] Counts as outside: web, pages, mail, calendar, contacts, parcels, documents, HA states and attributes, Telegram, things overheard in the room as well as old answers built from them.
-- [ ] Outside text is wrapped as data for the model (`_wrap`), and delimiters inside it are defused.
-- [ ] A new reading tool goes into `READS_OUTSIDE`.
+- [ ] Outside text is wrapped as data for the model (`chat.wrap_outside`, `mail._wrap`), and delimiters inside it are defused, the model's own markers too (`<|im_start|>`, `<tool_call>`: `textnorm.defuse`; the LLM-Tor takes them out of every message).
+- [ ] A new way in for outside text and a new tool with an effect stand in `app/panel/angriffe.json` (a case, `gleicher_weg` or `anderswo` with a reason); `test_angriffe` attacks them with an obeying model. (attack self-test 2026-10-21)
+- [ ] After mail nothing goes to the internet that takes the model's words along (web search, Wikipedia, weather, transit): a new internet tool goes into `notaus.INTERNET_TOOLS`. (Until 2026-10-21 only the web search was blocked.)
+- [ ] A new reading tool goes into `READS_OUTSIDE`. A state made of words (Home Assistant, a sensor with text) counts as outside, short ones too. (Until 2026-10-21 a 37-character order in a text sensor saved a note.)
 - [ ] After outside text, switching, memory, reminders, suggestions and drafts are blocked, and that also in the next turn. (The "outside" mark got lost in the next turn.)
 - [ ] Answers from outside text are marked (`outside` event) and never learned into memory.
 - [ ] Only offered tools run. A new tool is listed in the matching block lists.

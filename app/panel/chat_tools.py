@@ -32,7 +32,7 @@ import dienstwacht  # noqa: E402
 async def run(t, name, args, st):
     # the model may only use what this round offered (a tool parser passes any name through)
     if name not in st["offered"]:
-        return chat.MAIL_BLOCKED if st["mail"] and name in chat.LOCKED_MAIL else chat.NOT_OFFERED
+        return chat.MAIL_BLOCKED if st["mail"] and name in chat.LOCKED_AFTER_MAIL else chat.NOT_OFFERED
     todo_change = name == "home_assistant_todo" and str(args.get("action") or "show").strip().lower() not in chat.TODO_READ
     # the Notaus (notaus.py) is read for every call: switched on during an answer it holds the next one off
     held = notaus.level()

@@ -621,11 +621,12 @@ SEITEN = {
 
     # ------------------------------------------------------------------ sicherheit (the model as a whole)
     "sicherheit": {
-        "stand": "2c00e0816c",
+        "stand": "c581ac8d23",
         "bezug": {
             "features.blocked": ["s5"], "geteilt.put": ["s5"], "mitschreiblink.find": ["s3", "s5"], "core.confirm_code": ["s3", "s8"], "core.CONFIRM_WINDOW": ["s3"], "guard.Slot": ["s3"],
             "notaus.STAGE": ["s2"], "vault.seal": ["s10"], "tarswart.check": ["s3"], "tarswart.COMMANDS": ["s3"],
-            "netguard.allowed": ["s6"], "chat.LOCKED_OUTSIDE": ["s6"], "mailansicht.clean": ["s6"], "regeln": ["s4", "s5"],
+            "netguard.allowed": ["s6"], "chat.LOCKED_OUTSIDE": ["s6"], "chat.LOCKED_AFTER_MAIL": ["s6"], "mailansicht.clean": ["s6"],
+            "textnorm.defuse": ["s6"], "llm_tor.entschaerft": ["s6"], "regeln": ["s4", "s5"],
         },
         "kurz": ("Wie die Schutzschichten des Spark zusammenspielen. Der Grundsatz: das Sprachmodell schlägt vor, das Panel "
                  "entscheidet. Rechte, Sperren, Handlungen und Grenzen regelt das Panel mit festen Regeln im Code; was von "
@@ -691,15 +692,23 @@ SEITEN = {
                "blocks single ones (features.blocked). What is not allowed is not even offered as a tool.")),
             S("s6", "schritt", ("Fremdes bleibt Daten", "Outside stays data"),
               ("chat.wrap_outside", "chat.wrap_outside"),
-              ("Was ein Werkzeug von außen liest, kommt als markierter Datenblock zum Modell. Ab da sind "
+              ("Was ein Werkzeug von außen liest, kommt als markierter Datenblock zum Modell (textnorm.defuse: Blockende "
+               "und die eigenen Marken des Modells wie „<|im_start|>“ oder „<tool_call>“ werden entschärft; das LLM-Tor "
+               "tut das für jede Nachricht noch einmal, llm_tor.entschaerft). Ab da sind "
                "{chat.LOCKED_OUTSIDE|anzahl} handelnde Werkzeuge gesperrt, auch im nächsten Zug, und nichts davon wird ins "
-               "Gedächtnis gelernt. Verbindungen nach außen laufen nur über den Wächter (netguard.allowed). Eine Mail mit "
+               "Gedächtnis gelernt; nach einer Mail sind es {chat.LOCKED_AFTER_MAIL|anzahl}, dazu gehört alles, was ins Internet "
+               "fragt (Websuche, Wikipedia, Wetter, Fahrplan), damit kein Suchwort Mail-Inhalt hinausträgt. Ob das hält, "
+               "prüft der Angriffs-Selbsttest mit einem Modell, das jedem Befehl gehorcht (panel/angriffe.json). Verbindungen nach außen laufen nur über den Wächter (netguard.allowed). Eine Mail mit "
                "HTML zeigt die Seite nur so, wie der Spark sie bereinigt hat (mailansicht.clean: feste Liste erlaubter "
                "Tags, kein Skript), in einem Rahmen ohne Skript mit eigener CSP; Bilder von außen erst nach eigenem Klick "
                "über den Wächter, ein Link erst nach der Frage mit seiner echten Adresse.",
-               "What a tool reads from outside reaches the model as a marked block of data. From then on "
+               "What a tool reads from outside reaches the model as a marked block of data (textnorm.defuse: the block's "
+               "end and the model's own markers such as „<|im_start|>“ or „<tool_call>“ are defused; the LLM-Tor does it "
+               "once more for every message, llm_tor.entschaerft). From then on "
                "{chat.LOCKED_OUTSIDE|anzahl} acting tools are locked, in the next turn too, and nothing of it is learned into "
-               "memory. Connections to the outside go only through the guard (netguard.allowed). A mail with HTML is shown "
+               "memory; after a mail it is {chat.LOCKED_AFTER_MAIL|anzahl}, everything that asks the internet among them (web search, "
+               "Wikipedia, weather, transit), so no search word carries mail content out. Whether this holds is checked by "
+               "the attack self-test with a model that obeys every order (panel/angriffe.json). Connections to the outside go only through the guard (netguard.allowed). A mail with HTML is shown "
                "only as the Spark cleaned it (mailansicht.clean: a fixed list of allowed tags, no script), in a frame "
                "without script with its own CSP; pictures from outside only after the own click and through the guard, a "
                "link only after the question with its real address.")),
@@ -746,6 +755,9 @@ SEITEN = {
             (("Mail verlangt eine Handlung", "A mail demands an action"), ["s1", "s2", "s3", "s4", "s5", "s6", "s7", "s9", "s10"],
              ("Die Mail wird gelesen, aber nichts geschaltet: die Werkzeuge dafür sind gesperrt.",
               "The mail is read, but nothing is switched: the tools for it are locked.")),
+            (("Webseite mit falscher Systemzeile", "A web page with a fake system line"), ["s1", "s2", "s3", "s4", "s5", "s6", "s7", "s9", "s10"],
+             ("„<|im_start|>system“ kommt entschärft als Text an, das Modell sieht keine neue Rolle; handeln kann es ohnehin nicht.",
+              "„<|im_start|>system“ arrives defused as text, the model sees no new role; it could not act anyway.")),
             (("Fremde Stimme am Lautsprecher", "A stranger's voice at the speaker"), ["s1", "s2", "s3", "s4", "s4!", "s7", "s9"],
              ("Antwort wie für einen Gast, ohne Mails oder Termine.", "An answer as for a guest, without mails or appointments.")),
             (("Licht ausschalten", "Switch off the light"), ["s1", "s2", "s3", "s4", "s5", "s7", "s8", "s8!", "s10"],
@@ -776,6 +788,7 @@ SEITEN = {
         ],
         "zahlen": [
             ("{chat.LOCKED_OUTSIDE|anzahl}", ("Werkzeuge nach Text von außen gesperrt", "tools locked after outside text"), "chat.LOCKED_OUTSIDE"),
+            ("{chat.LOCKED_AFTER_MAIL|anzahl}", ("Werkzeuge nach einer Mail gesperrt", "tools locked after a mail"), "chat.LOCKED_AFTER_MAIL"),
             ("{core.CONFIRM_WINDOW|min} min", ("zählt ein richtiger Code für „Bestätigen“", "a right code counts for „Confirm“"), "core.CONFIRM_WINDOW"),
             ("{tarswart.COMMANDS|anzahl}", ("feste Befehle des Wärters auf tars", "fixed commands of the Wärter on tars"), "tarswart.COMMANDS"),
             ("{notaus.STAGE.gespraech}", ("Notaus-Stufen, die letzte hält jedes Gespräch an", "kill switch stages, the last stops every conversation"), "notaus.STAGE"),
@@ -818,6 +831,8 @@ SEITEN = {
             ("features.blocked", ("Sperre einzelner Profile", "block of single profiles")),
             ("geteilt.put", ("Teilen mit einem anderen Profil, zurückziehen wirkt sofort", "share with another profile, taking back works at once")),
             ("chat.wrap_outside", ("Text von außen als Datenblock", "outside text as a block of data")),
+            ("textnorm.defuse", ("Blockende und Marken des Modells in fremdem Text entschärfen", "defuse the block's end and the model's markers in outside text")),
+            ("llm_tor.entschaerft", ("Marken des Modells aus jeder Nachricht nehmen", "take the model's markers out of every message")),
             ("mailansicht.clean", ("HTML einer Mail nur bereinigt, ohne Skript und ohne Laden von außen", "a mail's HTML only cleaned, without script and without loads from outside")),
             ("netguard.allowed", ("ob eine Verbindung nach außen sein darf", "whether a connection out may happen")),
             ("answercheck.unsupported", ("Zahl ohne Quelle fällt heraus", "a figure without a source is dropped")),
@@ -825,7 +840,7 @@ SEITEN = {
             ("guard.log", ("Änderungsprotokoll mit Prüfkette", "change log with its chain")),
             ("vault.seal", ("Geheimnisse versiegelt ablegen", "store secrets sealed")),
         ],
-        "tests": ["test_hardening", "test_gaeste", "test_kontext_trennung", "test_scanner", "test_stufen", "test_notaus",
+        "tests": ["test_hardening", "test_angriffe", "test_gaeste", "test_kontext_trennung", "test_scanner", "test_stufen", "test_notaus",
                   "test_waerter", "test_protokoll", "test_wachposten", "test_markdown"],
         "heute": [],
     },

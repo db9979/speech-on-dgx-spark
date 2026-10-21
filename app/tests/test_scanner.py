@@ -14,7 +14,7 @@ import os
 import re
 import unittest
 
-from tests import helpers  # noqa: F401  (paths of a test install before chat is imported)
+from tests import helpers  # paths of a test install before chat is imported; helpers.declared
 
 APP = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PANEL = os.path.join(APP, "panel")
@@ -188,12 +188,7 @@ class Scanner(unittest.TestCase):
             with open(m.__file__, encoding="utf-8") as f:
                 src = f.read()
             names = set(re.findall(r'"name": "([a-z_]+)"', src))
-            # only sets given as "outside"/"mail"/"changes" (or INSIDE, READS..., LOCKED...): a name that is merely
-            # in some other set literal (fillers, word lists) is not sorted (review 11.10.2026)
-            sets = set()
-            for m2 in re.finditer(r'(?i)(outside|mail|changes|inside|reads|locked)\w*"?\s*(?::|\|=|=|\|)\s*'
-                                  r'(?:\w+\s*\|\s*)?\{("[a-z_]+"(?:,\s*"[a-z_]+")*)\}', src):
-                sets |= set(re.findall(r'"([a-z_]+)"', m2.group(2)))
+            sets = set().union(*helpers.declared(src).values())   # only declared sets (helpers.DECLARED)
             missing = names - sets - set(getattr(m, "INSIDE", set()))
             self.assertEqual(missing, set(), f"{m.__name__}: say in offer() whether the tool reads outside text, "
                                              "mail or changes something, or put it into INSIDE")

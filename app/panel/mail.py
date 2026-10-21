@@ -29,6 +29,7 @@ import time
 
 import hintergrund
 from common import DayCounter
+from textnorm import defuse
 import mailvorrat
 import netguard
 import profiles
@@ -752,9 +753,8 @@ def known(uid, sender):
 
 def _wrap(text):
     """Mail text inside the untrusted block; markers in the mail itself are broken up, so a message
-    cannot end the block early and put words outside it."""
-    text = re.sub(r"<{3,}|>{3,}", lambda m: " ".join(m.group(0)), text)
-    return UNTRUSTED + "\n<<<\n" + text + "\n>>>"
+    cannot end the block early and put words outside it, and the model's own markers are taken out (textnorm.defuse)."""
+    return UNTRUSTED + "\n<<<\n" + defuse(text) + "\n>>>"
 
 
 def message(uid, ref, folder="INBOX"):

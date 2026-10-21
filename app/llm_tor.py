@@ -5,6 +5,8 @@ This service sits on llm.port (31006, on the network like the speech APIs) and a
 - the API key (api.key, like ASR and TTS), a size limit before a byte is read, CORS only with a key;
 - a field guard: only the request fields in FELDER pass (no token ids, no logit_bias, n is 1, top_logprobs at most
   TOP_MAX, max_tokens within the context); the model name is always the catalog's, whatever the client sends;
+- the model's own markers ("<|im_start|>", "<tool_call>" ...) taken out of every message's text (entschaerft), so
+  outside text in a message can never start a turn or a tool call;
 - sampling values sent always (the catalog's, where the client sends none), so no generation_config of a repository
   decides them;
 - POST /v1/systemone: typed questions about a text answered with probabilities (choice, score, yes/no), rebuilt from
@@ -32,6 +34,7 @@ from fastapi.responses import JSONResponse, Response, StreamingResponse
 
 import einordnung
 import modelle
+from textnorm import defuse_marks
 from common import (BodyLimit, GateFull, KeyedCORS, PrioGate, api_key_dependency, api_key_ok, check_memory, inside,
                     load_config, outside_view, quiet_access_log, stage_of)
 
@@ -77,6 +80,18 @@ def zum_sehen(body, m, c):
     return body.get("model") == "sehen" or (not m["kann_sehen"] and hat_bild(body))
 
 
+def entschaerft(msg):
+    """One message with the model's own markers taken out of its text (textnorm.defuse_marks): a web page or a mail
+    with "<|im_start|>system" or "<tool_call>" in it is only text for the engine, never a new turn or a tool call."""
+    c = msg.get("content")
+    if isinstance(c, str):
+        return dict(msg, content=defuse_marks(c))
+    if isinstance(c, list):
+        return dict(msg, content=[dict(p, text=defuse_marks(p["text"])) if isinstance(p, dict) and isinstance(p.get("text"), str)
+                                  else p for p in c])
+    return msg
+
+
 def pruefe(body, m, served):
     """The request as the engine gets it: only FELDER, the catalog's model name and sampling, limits checked; no
     tools for a model without them (the image understanding model answers a picture question in plain text)."""
@@ -86,6 +101,7 @@ def pruefe(body, m, served):
     if not isinstance(msgs, list) or not 0 < len(msgs) <= MAX_MESSAGES or not all(isinstance(x, dict) for x in msgs):
         raise Abgelehnt("messages")
     out = {k: body[k] for k in FELDER if k in body}
+    out["messages"] = [entschaerft(x) for x in msgs]
     if out.pop("n", 1) not in (1, None):
         raise Abgelehnt("n")
     if "tools" in out and (not isinstance(out["tools"], list) or len(out["tools"]) > MAX_TOOLS):
@@ -351,6 +367,7 @@ async def systemone(request: Request):
     for name, q in questions.items():
         n = len(q["criteria"]) if q["type"] != "noul" else 2
         msgs, opts = frage_prompt(state, q, list(range(n)), fence)
+        msgs = [entschaerft(x) for x in msgs]
         req = {"model": served, "messages": msgs, "max_tokens": 1, "temperature": 0, "logprobs": True,
                "top_logprobs": TOP_MAX, "chat_template_kwargs": {"enable_thinking": False}}
         try:

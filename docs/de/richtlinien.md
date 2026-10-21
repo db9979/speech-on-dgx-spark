@@ -128,6 +128,8 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
 ### 2.3 Fremder Text (Prompt-Injection)
 - Als fremd gilt: Web, Seiten, Mail, Kalender, Kontakte, Pakete, Dokumente, HA-Zustände, Telegram, im Raum Mitgehörtes und alte Antworten, die daraus gebaut wurden. (C)
 - Fremder Text wird als Daten eingepackt (`chat.wrap_outside`). Danach sind Schalten, Gedächtnis, Erinnerungen, Vorschläge, Entwürfe und Hilfe-Karten gesperrt, **auch im nächsten Zug**. Fremder Text wird nie ins Gedächtnis gelernt. (C; 🧪 test_hardening Stage2, test_left_out, test_hilfe)
+- Beim Einpacken verliert fremder Text auch die eigenen Marken des Modells (`<|im_start|>`, `<tool_call>`, `<think>`: `textnorm.defuse`); das LLM-Tor nimmt sie aus jeder Nachricht (`llm_tor.entschaerft`). Nach einer Mail ist alles gesperrt, was ins Internet fragt (`chat.MAIL_INTERNET` aus `notaus.INTERNET_TOOLS`, nur „Pakete“ ohne Eingabe bleibt offen), damit kein Suchwort Mail-Inhalt hinausträgt. Ein Zustand aus Home Assistant aus Wörtern zählt als fremd, auch wenn er kurz ist (`homeassistant.WORDS`). (Angriffs-Selbsttest 2026-10-21; 🧪 test_angriffe)
+- **Angriffs-Selbsttest:** Jeder neue Eingang für fremden Text (ein lesendes Werkzeug unter `READS_OUTSIDE`, `HA_READS`, `mail_…` oder `outside`/`mail` in `offer()`) und jedes neue Werkzeug, das nach fremdem Text gesperrt ist (`LOCKED_OUTSIDE`, `LOCKED_AFTER_MAIL`, `changes` in `offer()`), bekommt im selben Commit einen Fall in `app/panel/angriffe.json`, oder dort unter `gleicher_weg` ein angegriffenes Werkzeug mit derselben Sperrliste bzw. unter `anderswo` einen eigenen Test oder Grund. Der Test spielt jeden Fall mit einem Modell, das jedem Befehl gehorcht; eine gefundene Lücke wird im Panel mit einer festen Regel geschlossen, nie im Prompt. (Dominik 2026-10-21; 🧪 test_angriffe)
 - Es laufen nur angebotene Werkzeuge. Die Absicht (Weiche) und die Herkunft können nur **einschränken**, nie freigeben. Die Reihenfolge ist Rechte → Sperren → Absicht. (P funktionswahl, hilfe-besser)
 - Wer fragt, kommt aus der Anmeldung, nie aus dem Text. (P vorrang-personen)
 - Inhalte mit ungeprüftem Absender werden nie als „von DHL“ ausgegeben. (C)
@@ -390,6 +392,7 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
 |---|---|
 | test_scanner | keine gefährlichen Aufrufe, Login an jeder Route (sonst OPEN mit Grund), Upload-Limits, strenge CSP, Werkzeuge sortiert |
 | test_hardening | Body vor dem Lesen begrenzt, root-Schreibwege, Unit-Limits, nur grüne Versionen, Fremdtext-Sperren |
+| test_angriffe | jeder Eingang für fremden Text und jedes gesperrte Werkzeug angegriffen (mit gehorsamem Schein-Modell), nichts ausgeführt, Datenblock ganz, Marken des Modells entschärft, keine Geheimnisse ans Modell |
 | test_stufen | jeder Code-Endpunkt mit Stufe in `stufen.LIST` |
 | test_features | ein Register, Freigabe gilt für jedes Profil, Sperre nur durch den Admin, Vorlieben starten an, keine eigene Prüfung, ein Standardwert |
 | test_live | jedes Werkzeug, Ziel, jeder Client und jede guard-Art im Live-Bild, keine Inhalte |

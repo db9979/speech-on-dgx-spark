@@ -1497,13 +1497,13 @@ flowchart TD
 3. <a id="kn-sicherheit-s3"></a>**Signed in and within limits?**: Size limit and origin check (CSRF) before reading, then a rate limit per address and a cap on parallel requests for the model, recognition and output (guard.Slot). Secrets, roles and backups also need a fresh code or passkey (core.confirm_code, 10 minutes). The models on tars are reached only through the TLS-Tor; commands there are checked by the Wärter (tarswart.check: signature, time, one-time number, one of 16 fixed commands).
 4. <a id="kn-sicherheit-s4"></a>**Who asks, surely known?**: The profile comes from the cookie, the app key or a linked account. At a shared speaker the device key is not enough: chat_turn.shared_stranger allows personal things only when the owner's voice is surely recognised in the same recording.
 5. <a id="kn-sicherheit-s5"></a>**Release and block**: Every function is off until the admin releases it; then it counts for every profile, unless the admin blocks single ones (features.blocked). What is not allowed is not even offered as a tool.
-6. <a id="kn-sicherheit-s6"></a>**Outside stays data**: What a tool reads from outside reaches the model as a marked block of data. From then on 13 acting tools are locked, in the next turn too, and nothing of it is learned into memory. Connections to the outside go only through the guard (netguard.allowed). A mail with HTML is shown only as the Spark cleaned it (mailansicht.clean: a fixed list of allowed tags, no script), in a frame without script with its own CSP; pictures from outside only after the own click and through the guard, a link only after the question with its real address.
+6. <a id="kn-sicherheit-s6"></a>**Outside stays data**: What a tool reads from outside reaches the model as a marked block of data (textnorm.defuse: the block's end and the model's own markers such as „<|im_start|>“ or „<tool_call>“ are defused; the LLM-Tor does it once more for every message, llm_tor.entschaerft). From then on 13 acting tools are locked, in the next turn too, and nothing of it is learned into memory; after a mail it is 19, everything that asks the internet among them (web search, Wikipedia, weather, transit), so no search word carries mail content out. Whether this holds is checked by the attack self-test with a model that obeys every order (panel/angriffe.json). Connections to the outside go only through the guard (netguard.allowed). A mail with HTML is shown only as the Spark cleaned it (mailansicht.clean: a fixed list of allowed tags, no script), in a frame without script with its own CSP; pictures from outside only after the own click and through the guard, a link only after the question with its real address.
 7. <a id="kn-sicherheit-s7"></a>**The language model proposes**: The model words the answer and picks from what is left after the steps before. If it calls a tool that was not offered, it does not run.
 8. <a id="kn-sicherheit-s8"></a>**Does it change something?**: Reading happens at once. Whatever changes something (light, sending mail, appointment, call) leaves a proposal; it runs only after a plain „yes“ to exactly that proposal, from the same device, or the yes button of its card „Waiting for your yes“ (own profile, the same function as the typed yes). Home Assistant only from an allowlist. Only the person deletes mail (into the trash, for good only after a question), never the model. Buttons on cards in the conversation and on the page Open are fixed names (vorgaenge.AKTIONEN); the panel checks every press (owner, kind, state, kill switch, the module's switches), and what would send or enter something without a proposal only opens the page where the person does it.
 9. <a id="kn-sicherheit-s9"></a>**Check the answer**: Times, dates and amounts that are nowhere in the sources are dropped (answercheck.unsupported). Passwords, codes and keys are never spoken (textnorm.hide_secrets). The pages never show model text as HTML.
 10. <a id="kn-sicherheit-s10"></a>**Traces**: Logs carry only fixed words and numbers. Changes to access and protection are written by guard.log with a SHA-256 chain; the Wachposten tells the admins about anything unusual. Secrets lie sealed in the vault (vault.seal).
 
-**Examples:** A mail demands an action: The mail is read, but nothing is switched: the tools for it are locked. · A stranger's voice at the speaker: An answer as for a guest, without mails or appointments. · Switch off the light: Switched only after „yes“. · Kill switch stage 3: No conversation, only the kill switch page.
+**Examples:** A mail demands an action: The mail is read, but nothing is switched: the tools for it are locked. · A web page with a fake system line: „<|im_start|>system“ arrives defused as text, the model sees no new role; it could not act anyway. · A stranger's voice at the speaker: An answer as for a guest, without mails or appointments. · Switch off the light: Switched only after „yes“. · Kill switch stage 3: No conversation, only the kill switch page.
 
 #### Rules
 
@@ -1534,6 +1534,7 @@ Applies at: [step 4](#kn-sicherheit-s4), [step 5](#kn-sicherheit-s5)
 #### Numbers (from the code)
 
 - **13** tools locked after outside text ([step 6](#kn-sicherheit-s6))
+- **19** tools locked after a mail ([step 6](#kn-sicherheit-s6))
 - **10 min** a right code counts for „Confirm“ ([step 3](#kn-sicherheit-s3))
 - **16** fixed commands of the Wärter on tars ([step 3](#kn-sicherheit-s3))
 - **3** kill switch stages, the last stops every conversation ([step 2](#kn-sicherheit-s2))
@@ -1551,6 +1552,8 @@ Applies at: [step 4](#kn-sicherheit-s4), [step 5](#kn-sicherheit-s5)
 - `app/panel/features.py` `blocked`: block of single profiles ([step 5](#kn-sicherheit-s5))
 - `app/panel/geteilt.py` `put`: share with another profile, taking back works at once ([step 5](#kn-sicherheit-s5))
 - `app/panel/chat.py` `wrap_outside`: outside text as a block of data ([step 6](#kn-sicherheit-s6))
+- `app/textnorm.py` `defuse`: defuse the block's end and the model's markers in outside text ([step 6](#kn-sicherheit-s6))
+- `app/llm_tor.py` `entschaerft`: take the model's markers out of every message ([step 6](#kn-sicherheit-s6))
 - `app/panel/mailansicht.py` `clean`: a mail's HTML only cleaned, without script and without loads from outside ([step 6](#kn-sicherheit-s6))
 - `app/panel/netguard.py` `allowed`: whether a connection out may happen ([step 6](#kn-sicherheit-s6))
 - `app/panel/answercheck.py` `unsupported`: a figure without a source is dropped ([step 9](#kn-sicherheit-s9))
@@ -1558,7 +1561,7 @@ Applies at: [step 4](#kn-sicherheit-s4), [step 5](#kn-sicherheit-s5)
 - `app/panel/guard.py` `log`: change log with its chain ([step 10](#kn-sicherheit-s10))
 - `app/panel/vault.py` `seal`: store secrets sealed ([step 10](#kn-sicherheit-s10))
 
-Self-tests: `test_hardening`, `test_gaeste`, `test_kontext_trennung`, `test_scanner`, `test_stufen`, `test_notaus`, `test_waerter`, `test_protokoll`, `test_wachposten`, `test_markdown`
+Self-tests: `test_hardening`, `test_angriffe`, `test_gaeste`, `test_kontext_trennung`, `test_scanner`, `test_stufen`, `test_notaus`, `test_waerter`, `test_protokoll`, `test_wachposten`, `test_markdown`
 
 ### Login, profile
 
@@ -2077,12 +2080,12 @@ flowchart TD
 1. <a id="kn-werkzeuge-s1"></a>**The model calls a tool**: At most 4 calls per round run, and a tool stopped after errors does not run again. Memory notes are limited to 3 per answer.
 2. <a id="kn-werkzeuge-s2"></a>**Offered in this round?**: Only tools on this round's list run. The list is already cut by the locks; anything else gets „not available, do not call it again“ or, after a mail, the reason of the mail lock.
 3. <a id="kn-werkzeuge-s3"></a>**Kill switch holds it?**: The kill switch is read for every call, so it also applies in the middle of an answer. From stage 1 the tools that go to the internet by themselves are locked; from stage 2 or with the profile's own kill switch every tool that changes something.
-4. <a id="kn-werkzeuge-s4"></a>**Outside text read?**: When this answer already read text from outside, nothing may change the home, the memory, appointments or reminders any more. After a mail web search is closed too, also after own documents (except with „search locally first“, then only with the question's own words). A song the person asks for stays open after outside text (own), not after mail.
+4. <a id="kn-werkzeuge-s4"></a>**Outside text read?**: When this answer already read text from outside, nothing may change the home, the memory, appointments or reminders any more. After a mail everything that asks the internet is closed too (web search, Wikipedia, weather, transit), after own documents the web search (except with „search locally first“, then only with the question's own words). A song the person asks for stays open after outside text (own), not after mail.
 5. <a id="kn-werkzeuge-s5"></a>**Service gone right now?**: When the service watch sees this tool's service down (and its switch is on), a fixed sentence with the time of the outage comes at once instead of a try. Web search checks further down and then can fall back to the own archive.
 6. <a id="kn-werkzeuge-s6"></a>**Mark reading**: Tools that bring outside text (web search, documents, calendar, earlier conversations, camera) set the mark before they run. From then on the locks of step 4 hold for the rest of the answer. With the knowledge book document_search brings the fitting page first, then the passages; both are outside text.
 7. <a id="kn-werkzeuge-s7"></a>**Run the tool**: Extensions get profile, device and origin from the panel, never from the model. Smart home changes need the code word in the latest message when one is set. Connections to outside services go through the guard. Home Assistant reads states from the live connection's copy (halive.states) while it stands for exactly this address and key, else over HTTP. The period of the web search comes from the question's own words and the query (frisch.zeitraum), never from the panel's time note.
 8. <a id="kn-werkzeuge-s8"></a>**Errors as a sentence**: When a service cannot be reached, it becomes a short result text („not reachable“, „search failed, do not guess“). An offered tool without a matching setup answers „unknown“.
-9. <a id="kn-werkzeuge-s9"></a>**Wrap the result as data**: Outside text gets a fixed note in front and stands between markers it cannot close itself. Home Assistant states with free text (titles, lists) count as outside too. With „Faster web search“ the long note stands once per answer, before every further block a short one with the same rule (chat.OUTSIDE_AGAIN); the markers always stay.
+9. <a id="kn-werkzeuge-s9"></a>**Wrap the result as data**: Outside text gets a fixed note in front and stands between markers it cannot close itself; the model's own markers („<|im_start|>“, „<tool_call>“) in it are defused (textnorm.defuse). Home Assistant states with free text (titles, lists, a state made of words) count as outside too. With „Faster web search“ the long note stands once per answer, before every further block a short one with the same rule (chat.OUTSIDE_AGAIN); the markers always stay.
 10. <a id="kn-werkzeuge-s10"></a>**Device marks the answer**: The device learns that the answer rests on outside text. Such answers do not go to the model again later.
 11. <a id="kn-werkzeuge-s11"></a>**Record**: The log line names the tool only when it was offered, else „unbekannt“. What was a deed is noted by taten for the action check. People see the readable names from werkzeuge.py.
 12. <a id="kn-werkzeuge-s12"></a>**Failed twice?**: When a tool fails 2 times with the same details or 3 times at all, it is stopped for this answer and the model is told to say honestly what did not work.
@@ -2127,7 +2130,7 @@ Applies at: [step 4](#kn-werkzeuge-s4)
 - `app/panel/chat_modell.py` `model_turn`: calls run_tool, wraps results, stops loops ([step 1](#kn-werkzeuge-s1))
 - `app/panel/chat.py` `wrap_outside`: outside text as a data block ([step 9](#kn-werkzeuge-s9))
 - `app/panel/chat.py` `LOCKED_OUTSIDE`: locked after outside text ([step 4](#kn-werkzeuge-s4))
-- `app/panel/chat.py` `LOCKED_MAIL`: locked after a mail ([step 4](#kn-werkzeuge-s4))
+- `app/panel/chat.py` `LOCKED_AFTER_MAIL`: locked after a mail ([step 4](#kn-werkzeuge-s4))
 - `app/panel/chat.py` `READS_OUTSIDE`: tools that bring outside text ([step 4](#kn-werkzeuge-s4), [step 6](#kn-werkzeuge-s6))
 - `app/panel/notaus.py` `locked_tools`: what the kill switch locks per stage ([step 3](#kn-werkzeuge-s3))
 - `app/panel/dienstwacht.py` `tool_down`: fixed sentence when a service is gone ([step 5](#kn-werkzeuge-s5))
