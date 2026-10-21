@@ -1,5 +1,5 @@
 """Zustand → Technik, Knoten-Seiten: the pages of outside services, internet and Spark split
-(aussen, internet, teilen, werkstatt). Rules and placeholders as in technik_seiten.py; the engine and the order are in technik_knoten.py."""
+(aussen, internet, teilen, werkstatt, post). Rules and placeholders as in technik_seiten.py; the engine and the order are in technik_knoten.py."""
 from technik_seiten import S
 
 SEITEN = {
@@ -623,6 +623,159 @@ SEITEN = {
             ("werkstatt.pruefe_ergebnis", ("Ergebnis als Daten", "result as data")),
         ],
         "tests": ["test_werkstatt"],
+        "heute": [],
+    },
+    # ------------------------------------------------------------------ Post, Kalender, Kontakte
+    "post": {
+        "stand": "69dfad70c1",
+        "bezug": {
+            "kalenderserver.login": ["s2", "s10"], "kontaktserver._write": ["s10"], "kontaktserver.MAX_CARDS": ["s10"],
+            "mail.MAX_ACCOUNTS": ["s3"], "mail.lookup": ["s1", "s5", "s7"], "calendars.view": ["s1"],
+            "netguard.IMAP4_SSL": ["s4"], "mail.TIMEOUT": ["s4"], "kalenderspiegel.objects": ["s4"],
+            "mailvorrat.keep_heads": ["s6"], "mailvorrat.HEADS": ["s6"], "mailvorrat.TEXTS": ["s6"], "vorrat.seal": ["s6"],
+            "frisch.stand": ["s7"], "senden.preview": ["s9"], "senden.send": ["s9"], "senden.MAX_DAY": ["s9"],
+            "contacts.save": ["s9"],
+        },
+        "kurz": ("Die Seiten E-Mail, Kalender und Kontakte und der Assistent lesen dieselben Daten: Postfächer per IMAP, "
+                 "Kalender und Adressbücher per CalDAV und CardDAV beim Anbieter, dazu die Spark-Kalender und das Adressbuch "
+                 "„Auf dem Spark“. Was zuletzt kam, liegt versiegelt im Profil, damit Seite und Antwort sofort da sind; jede "
+                 "Antwort aus dem Vorrat nennt ihren Stand. Kalender- und Kontakte-Apps kommen durch eine eigene Tür.",
+                 "The pages E-mail, Calendar and Contacts and the assistant read the same data: mailboxes by IMAP, "
+                 "calendars and address books by CalDAV and CardDAV at the provider, plus the Spark calendars and the "
+                 "address book \"On the Spark\". What came last lies sealed in the profile, so page and answer are there at "
+                 "once; every answer from the supply names its time. Calendar and contacts apps come through a door of "
+                 "their own."),
+        "warum": ("Mails, Termine und Kontakte sind die privatesten Daten eines Profils und kommen von fremden Leuten. "
+                  "Deshalb sind sie immer Daten, nie Befehle, liegen nur versiegelt auf der Platte, und alles, was nach "
+                  "außen geht (senden, ändern, löschen), braucht einen eigenen Schalter und den Tipp des Menschen.",
+                  "Mail, appointments and contacts are a profile's most private data and come from other people. So they "
+                  "are always data, never commands, lie on the disk only sealed, and everything that goes out (send, "
+                  "change, delete) needs a switch of its own and the person's tap."),
+        "ablauf": [
+            S("s1", "start", ("Seite, Frage oder App", "Page, question or app"),
+              ("E-Mail, Kalender, Kontakte, Assistent", "E-mail, Calendar, Contacts, assistant"),
+              ("Das Profil öffnet eine eigene Seite (calendars.view für den Kalender, mail.lookup für die Mails) oder fragt "
+               "den Assistenten, der dieselben Helfer nimmt. Oder eine Kalender- oder Kontakte-App auf dem Handy meldet sich.",
+               "The profile opens a page of its own (calendars.view for the calendar, mail.lookup for mail) or asks the "
+               "assistant, which takes the same helpers. Or a calendar or contacts app on the phone signs in.")),
+            S("s2", "frage", ("Eine Kalender- oder Kontakte-App?", "A calendar or contacts app?"),
+              ("/caldav/ und /carddav/", "/caldav/ and /carddav/"),
+              ("Apps kommen nicht durch die Anmeldung des Panels, sondern durch kalenderserver.login: Profil-Kennung und "
+               "App-Passwort.",
+               "Apps do not come through the panel's login but through kalenderserver.login: profile id and app password."),
+              ("ok", "ja", "s10")),
+            S("s3", "frage", ("Freigegeben und eingerichtet?", "Released and set up?"),
+              ("Admin-Schalter, höchstens {mail.MAX_ACCOUNTS} Postfächer", "admin switch, at most {mail.MAX_ACCOUNTS} mailboxes"),
+              ("Jede Seite braucht ihren Admin-Schalter, das Profil darf nicht gesperrt sein, Gäste nie. Ohne Postfach oder "
+               "Kalender zeigt die Seite einen Hinweis mit Weg zu den Einstellungen.",
+               "Every page needs its admin switch, the profile must not be blocked, guests never. Without a mailbox or "
+               "calendar the page shows a hint with the way to its settings."),
+              ("stop", "nein", ("Hinweis mit Weg", "Hint with a way"))),
+            S("s4", "schritt", ("Abruf beim Anbieter", "Fetch from the provider"),
+              ("über den Wächter, {mail.TIMEOUT} s je Postfach", "through the guard, {mail.TIMEOUT} s per mailbox"),
+              ("Mails per IMAP über netguard.IMAP4_SSL, das die Adresse prüft; Kalender über eine verschlüsselte Kopie je "
+               "Kalender, die nur Änderungen holt (kalenderspiegel.objects). Was kommt, ist Text fremder Leute: das Modell "
+               "bekommt es eingezäunt als Daten.",
+               "Mail by IMAP through netguard.IMAP4_SSL, which checks the address; calendars through an encrypted copy per "
+               "calendar that fetches only changes (kalenderspiegel.objects). What comes is other people's text: the model "
+               "gets it fenced as data.")),
+            S("s5", "frage", ("Rechtzeitig zurück?", "Back in time?"),
+              ("sonst der Vorrat", "else the supply"),
+              ("Der Assistent wartet nur kurz (mail.lookup). Ist der Anbieter langsam oder weg, antwortet er aus der letzten "
+               "Liste oder dem Vorrat, nie mit einer von vor Tagen.",
+               "The assistant waits only briefly (mail.lookup). If the provider is slow or away, it answers from the last "
+               "listing or the supply, never with one from days ago."),
+              ("ok", "nein", "s7")),
+            S("s6", "schritt", ("Vorrat versiegelt", "Supply sealed"),
+              ("{mailvorrat.HEADS} Kopfzeilen je Postfach, {mailvorrat.TEXTS} Texte", "{mailvorrat.HEADS} headers per mailbox, {mailvorrat.TEXTS} texts"),
+              ("mailvorrat.keep_heads behält die neuesten Kopfzeilen, dazu die zuletzt gelesenen Texte; vorrat.seal "
+               "versiegelt sie mit dem Schlüssel des Spark im Ordner des Profils.",
+               "mailvorrat.keep_heads keeps the newest headers, plus the texts read last; vorrat.seal seals them with the "
+               "Spark's key in the profile's folder.")),
+            S("s7", "schritt", ("Antwort mit Stand", "Answer with its time"),
+              ("der Stand nennt den Tag", "the time names the day"),
+              ("Kommt etwas nicht frisch vom Anbieter, sagt frisch.stand mit festem Satz, von wann es ist („Stand gestern "
+               "18:00“). Die Seiten zeigen sofort, was da ist, und laden im Hintergrund nach.",
+               "When something is not fresh from the provider, frisch.stand says with a fixed sentence when it is from "
+               "(\"as of yesterday 18:00\"). The pages show at once what is there and load the rest behind.")),
+            S("s8", "frage", ("Etwas ändern?", "Change something?"),
+              ("senden, ordnen, Kontakt ändern", "send, order, change a contact"),
+              ("Lesen ist alles, was ohne weitere Schalter geht.", "Reading is all that works without further switches."),
+              ("ok", "nein", "s11")),
+            S("s9", "schritt", ("Ändern mit Prüfung", "Change with a check"),
+              ("eigener Schalter, Tipp des Menschen", "switch of its own, the person's tap"),
+              ("Eine Mail geht erst nach dem Vorschau-Blatt und dem Tipp auf Senden raus (senden.preview, senden.send, "
+               "höchstens {senden.MAX_DAY} am Tag). contacts.save schreibt eine Karte mit If-Match zurück: hat sie sich "
+               "inzwischen geändert, wird nichts überschrieben.",
+               "A mail goes out only after the preview sheet and the tap on Send (senden.preview, senden.send, at most "
+               "{senden.MAX_DAY} a day). contacts.save writes a card back with If-Match: if it changed meanwhile, nothing is "
+               "overwritten."),
+              ("ok", ("fertig", "done"), "s11")),
+            S("s10", "schritt", ("Tür für Apps", "Door for apps"),
+              ("nur die eigenen Kalender und Kontakte", "only the own calendars and contacts"),
+              ("kalenderserver.login weist fremde Webseiten ab, sperrt falsche Passwörter wie eine PIN, hält Mein Notaus "
+               "und den Schalter ein und zählt die Lastgrenze. Danach sieht die App nur die Spark-Kalender und das Adressbuch "
+               "„Auf dem Spark“ des Profils; kontaktserver._write nimmt je Karte eine vCard, höchstens "
+               "{kontaktserver.MAX_CARDS}, und schreibt nur mit „Kontakte ändern“.",
+               "kalenderserver.login refuses other sites' web pages, locks wrong passwords like a PIN, keeps My emergency "
+               "stop and the switch and counts the rate limit. Then the app sees only the profile's Spark calendars and the "
+               "address book \"On the Spark\"; kontaktserver._write takes one vCard per card, at most "
+               "{kontaktserver.MAX_CARDS}, and writes only with \"Edit contacts\".")),
+            S("s11", "ende", ("Nur eigene Daten", "Own data only"),
+              ("users/ID/, versiegelt", "users/ID/, sealed"),
+              ("Kein Profil sieht die Post, Termine oder Kontakte eines anderen, außer einem Kalender, den der Besitzer "
+               "teilt.",
+               "No profile sees another one's mail, appointments or contacts, except a calendar its owner shares.")),
+        ],
+        "beispiele": [
+            (("Wie viele ungelesene Mails?", "How many unread mails?"), ["s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s8!"],
+             ("Antwort aus dem Postfach, frisch.", "Answer from the mailbox, fresh.")),
+            (("Postfach antwortet nicht", "Mailbox does not answer"), ["s1", "s2", "s3", "s4", "s5", "s5!", "s7", "s8", "s8!"],
+             ("Antwort aus dem Vorrat mit Stand.", "Answer from the supply with its time.")),
+            (("Mail senden", "Send a mail"), ["s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9", "s9!"],
+             ("Erst nach dem Tipp auf Senden.", "Only after the tap on Send.")),
+            (("Kontakte-App des iPhone", "The iPhone's Contacts app"), ["s1", "s2", "s2!", "s10", "s11"],
+             ("Nur das Adressbuch „Auf dem Spark“.", "Only the address book \"On the Spark\".")),
+        ],
+        "zahlen": [
+            ("{mail.MAX_ACCOUNTS}", ("Postfächer höchstens je Profil", "mailboxes at most per profile"), "mail.MAX_ACCOUNTS"),
+            ("{mail.TIMEOUT} s", ("wartet ein Postfach höchstens", "a mailbox is waited for at most"), "mail.TIMEOUT"),
+            ("{mailvorrat.HEADS}", ("Kopfzeilen je Postfach im Vorrat", "headers per mailbox in the supply"), "mailvorrat.HEADS"),
+            ("{mailvorrat.TEXTS}", ("Mailtexte je Profil im Vorrat", "mail texts per profile in the supply"), "mailvorrat.TEXTS"),
+            ("{senden.MAX_DAY}", ("Mails höchstens am Tag", "mails at most a day"), "senden.MAX_DAY"),
+            ("{kontaktserver.MAX_CARDS}", ("Karten im Adressbuch „Auf dem Spark“", "cards in the address book \"On the Spark\""),
+             "kontaktserver.MAX_CARDS"),
+        ],
+        "einstellen": [
+            ("Funktionen → Post und Kontakte: E-Mail lesen, Mails ordnen und senden, Kalender, Kontakte, Kontakte ändern, "
+             "Kalender-Server und Kontakte für Kontakte-Apps.",
+             "Features → Mail and contacts: reading e-mail, order and send mail, calendar, contacts, edit contacts, calendar "
+             "server and contacts for contacts apps."),
+            ("Postfächer, Kalender und Adressbücher richtet jedes Profil auf seiner Seite unter Einstellungen ein.",
+             "Each profile sets up mailboxes, calendars and address books on its page under settings."),
+        ],
+        "sehen": [
+            ("Die Seiten E-Mail, Kalender und Kontakte im Menü, auf dem iPhone unter Assistent.",
+             "The pages E-mail, Calendar and Contacts in the menu, on the iPhone under Assistant."),
+            ("Zustand → Live: Abrufe, Vorrat und Türen nur mit Art, Anzahl und Status, nie Inhalte.",
+             "Status → Live: fetches, supply and doors only with kind, count and status, never contents."),
+        ],
+        "code": [
+            ("mail.lookup", ("Mails mit Stand", "mail with its time")),
+            ("calendars.view", ("Termine für die Seite", "appointments for the page")),
+            ("netguard.IMAP4_SSL", ("IMAP nur zu geprüften Adressen", "IMAP only to checked addresses")),
+            ("kalenderspiegel.objects", ("Kalender-Kopie holt Änderungen", "calendar copy fetches changes")),
+            ("mailvorrat.keep_heads", ("Vorrat der Kopfzeilen", "supply of headers")),
+            ("vorrat.seal", ("versiegelt auf der Platte", "sealed on the disk")),
+            ("frisch.stand", ("Stand mit Tag", "time with its day")),
+            ("senden.preview", ("Vorschau-Blatt", "preview sheet")),
+            ("senden.send", ("senden nach dem Tipp", "send after the tap")),
+            ("contacts.save", ("Karte zurück mit If-Match", "card back with If-Match")),
+            ("kalenderserver.login", ("Tür für Kalender- und Kontakte-Apps", "door for calendar and contacts apps")),
+            ("kontaktserver._write", ("Karte einer Kontakte-App", "card from a contacts app")),
+        ],
+        "tests": ["test_mailvorrat", "test_vorrat", "test_mails_senden", "test_kalenderserver", "test_kontaktserver",
+                  "test_kontakte_seite", "test_kalenderspiegel"],
         "heute": [],
     },
     # ------------------------------------------------------------------ Browser und Handy

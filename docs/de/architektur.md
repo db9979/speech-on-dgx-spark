@@ -35,6 +35,7 @@ flowchart TB
       waechter["Wächter<br/>netguard.py"]
       betrieb["Logs und Live<br/>tracelog · live"]
       werkstatt["Werkstatt<br/>werkstatt.py"]
+      post["Post, Kalender, Kontakte<br/>mail · calendars · contacts"]
     end
     subgraph z_modelle["Modelle · auf dem DGX"]
       llm["Sprachmodell<br/>:31006 → :31016"]
@@ -83,6 +84,9 @@ flowchart TB
   zugang --> state
   tts --> ablage
   zugang --> werkstatt
+  werkzeuge --> post
+  post --> waechter
+  post --> users
 ```
 <!-- /technik:bild -->
 
@@ -253,18 +257,14 @@ Eigene Dokumente, Gedächtnis, frühere Gespräche, Kiwix und Wikipedia, erstell
 
 ### Anbindungen
 
-Home Assistant, Mail, Kalender, Aufgaben, Wetter, reMarkable, MCP und was der Spark von selbst tut.
+Home Assistant, Aufgaben, Für dich, Wetter, reMarkable, MCP und was der Spark von selbst tut.
 
 | Modul | Aufgabe |
 |---|---|
 | `app/panel/aendern.py` | Ändern per Sprache: Lautstärke, Termine und anderes nach „Ja“ |
 | `app/panel/agent.py` | Aufträge im Hintergrund, Zeitpläne, Routinen |
-| `app/panel/antwortvorschlag.py` | Antwortvorschläge beim Antworten auf eine Mail: drei Richtungen, umformen, nur im Speicher |
 | `app/panel/auftragsplan.py` | Aufträge mit Plan, Rückfrage, Vorschlag mit Ja und Nachschieben |
 | `app/panel/beobachten.py` | Beobachten: Funde prüfen, nur Neues melden (Eigene Aufgaben) |
-| `app/panel/calendars.py` | Kalender und Tagesbriefing, einzelne Kalender mit anderen Profilen geteilt |
-| `app/panel/contacts.py` | Kontakte per CardDAV: Seite Kontakte wie Apple, ändern nur mit Schalter, zurück mit ETag |
-| `app/panel/einladung.py` | Einladungen aus Mails: eine .ics-Einladung mit einem Tipp in den Kalender, Antwort an den Einladenden |
 | `app/panel/extras.py` | Kleine Zusatzdienste mit ihren Werkzeugen |
 | `app/panel/feeds.py` | Reddit und Feeds: eigener Reddit-Posteingang, Subreddits und RSS, nur lesen |
 | `app/panel/fuerdich.py` | Für dich: findet Rechnungen, Verträge, Bestellungen, Angebote, offene Antworten, Phishing; letzte Lesung versiegelt |
@@ -273,40 +273,51 @@ Home Assistant, Mail, Kalender, Aufgaben, Wetter, reMarkable, MCP und was der Sp
 | `app/panel/hamelden.py` | Home Assistant meldet Ereignisse an den Spark |
 | `app/panel/homeassistant.py` | Home Assistant pro Profil |
 | `app/panel/ichweiss.py` | Was ich über dich weiß: Interessen mit Beleg, Wiederkehrendes, Woche, Monat und ein Netz-Tipp am Tag |
-| `app/panel/kalenderserver.py` | Kalender-Server: die Spark-Kalender eines Profils für Kalender-Apps (CalDAV unter /caldav/, App-Passwort) |
-| `app/panel/kalenderspiegel.py` | Spark-Kalender: verschlüsselte Kopie jedes CalDAV-Kalenders, holt nur Änderungen, Änderungen der Seite sofort |
-| `app/panel/kalserie.py` | Kalender wie Apple: Wiederholen, Erinnerung, Personen ohne Einladung, Serie nur dieser oder alle künftigen |
-| `app/panel/kontaktkarte.py` | Kontakte ändern: Felder prüfen, nur die Zeilen der Seite in der vCard ersetzen, Rest bleibt |
-| `app/panel/kontaktserver.py` | Kontakte-Server: das Adressbuch „Auf dem Spark“ für Kontakte-Apps (CardDAV unter /carddav/) |
 | `app/panel/listendav.py` | Listen in Erinnerungen: die Spark-Listen eines Profils als Aufgabenlisten (VTODO) des Kalender-Servers |
-| `app/panel/mail.py` | Mail lesen per IMAP |
-| `app/panel/mailansicht.py` | Mail formatiert (Seite E-Mail, iPhone): HTML bereinigt, Rahmen ohne Skript, Bilder von außen nur per Klick |
-| `app/panel/mailidle.py` | Neue Mails sofort: IMAP IDLE für Profile, die ihre Mails gerade lesen, höchstens 4 Verbindungen |
-| `app/panel/mailregeln.py` | Mail-Regeln der Seite E-Mail: wenn Absender/Betreff, dann Ordner, gelesen, markieren; nie löschen; Regel-Vorschlag |
-| `app/panel/mailstil.py` | Mailstil: lernt aus gesendeten Mails, wie das Profil schreibt, für Mail-Entwürfe |
-| `app/panel/mailvorrat.py` | Mail-Vorrat: neueste Kopfzeilen und Texte versiegelt im Profil, Antwort mit Stand bei Ausfall |
 | `app/panel/mcp.py` | Werkzeuge von MCP-Servern, die der Admin einträgt |
 | `app/panel/mcpserver.py` | Der Spark als MCP-Server für andere Programme |
 | `app/panel/meinmcp.py` | Eigene MCP-Dienste pro Profil |
 | `app/panel/mitschreiblink.py` | Mitschreib-Link: Leute ohne Profil setzen etwas auf eine Liste (Code nach dem #, nur Hash, mit Ablauf) |
 | `app/panel/parcels.py` | Pakete aus Versand-Mails |
-| `app/panel/postfach.py` | Mails ordnen auf der Seite E-Mail: gelesen, markieren, Archiv, Ordner, Mehrfachauswahl, Löschen in den Papierkorb |
 | `app/panel/proactive.py` | Meldet sich von selbst, wenn etwas Echtes passiert |
 | `app/panel/remarkable.py` | reMarkable-Notizbücher als Wissen |
 | `app/panel/rmaufgaben.py` | Aufgabenblatt zum Ankreuzen aufs reMarkable |
 | `app/panel/rmliste.py` | Werkzeug: was auf dem reMarkable liegt und welche Aufgaben dort stehen |
 | `app/panel/rmpapier.py` | Gestaltete Blätter fürs reMarkable |
 | `app/panel/rmplus.py` | Mehr mit dem reMarkable: Senden, Ordner, Abgleich |
-| `app/panel/senden.py` | Mails senden auf der Seite E-Mail: Vorschau-Blatt, SMTP über TLS, Kopie in Gesendet |
-| `app/panel/sparkkalender.py` | Spark-Kalender ohne Konto: Termine nur auf dem Spark, verschlüsselt im Profil, beantwortet CalDAV im Panel selbst |
 | `app/panel/tasks.py` | Listen für Einkauf und Aufgaben |
-| `app/panel/tidy.py` | Posteingang aufräumen |
 | `app/panel/transit.py` | Bus und Bahn |
 | `app/panel/vorgaenge.py` | Alles Offene im Assistenten: Karten mit Knöpfen, Später, Seite Offen, Ja-Knopf, Telegram-Knöpfe |
 | `app/panel/vorrat.py` | Vorrat je Profil: Antworten aus dem Speicher, solange frisch genug; versiegelt auf der Platte (Mail, Wetter, Pakete) |
 | `app/panel/vorwaermen.py` | Vorwärmen: liest beim Anmelden Kalender, Mails, Für dich und Kontakte vorab in den Speicher |
 | `app/panel/weather.py` | Wetter von Open-Meteo als feste Sätze |
 | `app/panel/zustand_wz.py` | Werkzeug: Zustand des Spark per Sprache („Läuft alles?“) |
+
+### Post, Kalender, Kontakte
+
+Die eigenen Seiten E-Mail, Kalender und Kontakte, der Abruf beim Anbieter, der versiegelte Vorrat und die Türen für Kalender- und Kontakte-Apps.
+
+| Modul | Aufgabe |
+|---|---|
+| `app/panel/antwortvorschlag.py` | Antwortvorschläge beim Antworten auf eine Mail: drei Richtungen, umformen, nur im Speicher |
+| `app/panel/calendars.py` | Kalender und Tagesbriefing, einzelne Kalender mit anderen Profilen geteilt |
+| `app/panel/contacts.py` | Kontakte per CardDAV: Seite Kontakte wie Apple, ändern nur mit Schalter, zurück mit ETag |
+| `app/panel/einladung.py` | Einladungen aus Mails: eine .ics-Einladung mit einem Tipp in den Kalender, Antwort an den Einladenden |
+| `app/panel/kalenderserver.py` | Kalender-Server: die Spark-Kalender eines Profils für Kalender-Apps (CalDAV unter /caldav/, App-Passwort) |
+| `app/panel/kalenderspiegel.py` | Spark-Kalender: verschlüsselte Kopie jedes CalDAV-Kalenders, holt nur Änderungen, Änderungen der Seite sofort |
+| `app/panel/kalserie.py` | Kalender wie Apple: Wiederholen, Erinnerung, Personen ohne Einladung, Serie nur dieser oder alle künftigen |
+| `app/panel/kontaktkarte.py` | Kontakte ändern: Felder prüfen, nur die Zeilen der Seite in der vCard ersetzen, Rest bleibt |
+| `app/panel/kontaktserver.py` | Kontakte-Server: das Adressbuch „Auf dem Spark“ für Kontakte-Apps (CardDAV unter /carddav/) |
+| `app/panel/mail.py` | Mail lesen per IMAP |
+| `app/panel/mailansicht.py` | Mail formatiert (Seite E-Mail, iPhone): HTML bereinigt, Rahmen ohne Skript, Bilder von außen nur per Klick |
+| `app/panel/mailidle.py` | Neue Mails sofort: IMAP IDLE für Profile, die ihre Mails gerade lesen, höchstens 4 Verbindungen |
+| `app/panel/mailregeln.py` | Mail-Regeln der Seite E-Mail: wenn Absender/Betreff, dann Ordner, gelesen, markieren; nie löschen; Regel-Vorschlag |
+| `app/panel/mailstil.py` | Mailstil: lernt aus gesendeten Mails, wie das Profil schreibt, für Mail-Entwürfe |
+| `app/panel/mailvorrat.py` | Mail-Vorrat: neueste Kopfzeilen und Texte versiegelt im Profil, Antwort mit Stand bei Ausfall |
+| `app/panel/postfach.py` | Mails ordnen auf der Seite E-Mail: gelesen, markieren, Archiv, Ordner, Mehrfachauswahl, Löschen in den Papierkorb |
+| `app/panel/senden.py` | Mails senden auf der Seite E-Mail: Vorschau-Blatt, SMTP über TLS, Kopie in Gesendet |
+| `app/panel/sparkkalender.py` | Spark-Kalender ohne Konto: Termine nur auf dem Spark, verschlüsselt im Profil, beantwortet CalDAV im Panel selbst |
+| `app/panel/tidy.py` | Posteingang aufräumen |
 
 ### Geräte und Kanäle
 
@@ -3610,6 +3621,95 @@ flowchart TD
 - `app/werkstatt.py` `pruefe_ergebnis`: Ergebnis als Daten ([Schritt 9](#kn-werkstatt-s9))
 
 Selbsttests: `test_werkstatt`
+
+### Post, Kalender, Kontakte
+
+Die Seiten E-Mail, Kalender und Kontakte und der Assistent lesen dieselben Daten: Postfächer per IMAP, Kalender und Adressbücher per CalDAV und CardDAV beim Anbieter, dazu die Spark-Kalender und das Adressbuch „Auf dem Spark“. Was zuletzt kam, liegt versiegelt im Profil, damit Seite und Antwort sofort da sind; jede Antwort aus dem Vorrat nennt ihren Stand. Kalender- und Kontakte-Apps kommen durch eine eigene Tür.
+
+**Warum:** Mails, Termine und Kontakte sind die privatesten Daten eines Profils und kommen von fremden Leuten. Deshalb sind sie immer Daten, nie Befehle, liegen nur versiegelt auf der Platte, und alles, was nach außen geht (senden, ändern, löschen), braucht einen eigenen Schalter und den Tipp des Menschen.
+
+#### Ablauf
+
+```mermaid
+flowchart TD
+  s1(["1. Seite, Frage oder App"])
+  s2{{"2. Eine Kalender- oder Kontakte-App?"}}
+  s3{{"3. Freigegeben und eingerichtet?"}}
+  s4["4. Abruf beim Anbieter"]
+  s5{{"5. Rechtzeitig zurück?"}}
+  s6["6. Vorrat versiegelt"]
+  s7["7. Antwort mit Stand"]
+  s8{{"8. Etwas ändern?"}}
+  s9["9. Ändern mit Prüfung"]
+  s10["10. Tür für Apps"]
+  s11(["11. Nur eigene Daten"])
+  s1 --> s2
+  s2 -->|nein| s3
+  s3 -->|ja| s4
+  s4 --> s5
+  s5 -->|ja| s6
+  s6 --> s7
+  s7 --> s8
+  s8 -->|ja| s9
+  s9 --> s10
+  s10 --> s11
+  s2 -.->|ja| s10
+  s3x(["Hinweis mit Weg"])
+  s3 -->|nein| s3x
+  s5 -.->|nein| s7
+  s8 -.->|nein| s11
+  s9 -.->|fertig| s11
+```
+
+1. <a id="kn-post-s1"></a>**Seite, Frage oder App**: Das Profil öffnet eine eigene Seite (calendars.view für den Kalender, mail.lookup für die Mails) oder fragt den Assistenten, der dieselben Helfer nimmt. Oder eine Kalender- oder Kontakte-App auf dem Handy meldet sich.
+2. <a id="kn-post-s2"></a>**Eine Kalender- oder Kontakte-App?**: Apps kommen nicht durch die Anmeldung des Panels, sondern durch kalenderserver.login: Profil-Kennung und App-Passwort.
+3. <a id="kn-post-s3"></a>**Freigegeben und eingerichtet?**: Jede Seite braucht ihren Admin-Schalter, das Profil darf nicht gesperrt sein, Gäste nie. Ohne Postfach oder Kalender zeigt die Seite einen Hinweis mit Weg zu den Einstellungen.
+4. <a id="kn-post-s4"></a>**Abruf beim Anbieter**: Mails per IMAP über netguard.IMAP4_SSL, das die Adresse prüft; Kalender über eine verschlüsselte Kopie je Kalender, die nur Änderungen holt (kalenderspiegel.objects). Was kommt, ist Text fremder Leute: das Modell bekommt es eingezäunt als Daten.
+5. <a id="kn-post-s5"></a>**Rechtzeitig zurück?**: Der Assistent wartet nur kurz (mail.lookup). Ist der Anbieter langsam oder weg, antwortet er aus der letzten Liste oder dem Vorrat, nie mit einer von vor Tagen.
+6. <a id="kn-post-s6"></a>**Vorrat versiegelt**: mailvorrat.keep_heads behält die neuesten Kopfzeilen, dazu die zuletzt gelesenen Texte; vorrat.seal versiegelt sie mit dem Schlüssel des Spark im Ordner des Profils.
+7. <a id="kn-post-s7"></a>**Antwort mit Stand**: Kommt etwas nicht frisch vom Anbieter, sagt frisch.stand mit festem Satz, von wann es ist („Stand gestern 18:00“). Die Seiten zeigen sofort, was da ist, und laden im Hintergrund nach.
+8. <a id="kn-post-s8"></a>**Etwas ändern?**: Lesen ist alles, was ohne weitere Schalter geht.
+9. <a id="kn-post-s9"></a>**Ändern mit Prüfung**: Eine Mail geht erst nach dem Vorschau-Blatt und dem Tipp auf Senden raus (senden.preview, senden.send, höchstens 30 am Tag). contacts.save schreibt eine Karte mit If-Match zurück: hat sie sich inzwischen geändert, wird nichts überschrieben.
+10. <a id="kn-post-s10"></a>**Tür für Apps**: kalenderserver.login weist fremde Webseiten ab, sperrt falsche Passwörter wie eine PIN, hält Mein Notaus und den Schalter ein und zählt die Lastgrenze. Danach sieht die App nur die Spark-Kalender und das Adressbuch „Auf dem Spark“ des Profils; kontaktserver._write nimmt je Karte eine vCard, höchstens 2000, und schreibt nur mit „Kontakte ändern“.
+11. <a id="kn-post-s11"></a>**Nur eigene Daten**: Kein Profil sieht die Post, Termine oder Kontakte eines anderen, außer einem Kalender, den der Besitzer teilt.
+
+**Beispiele:** Wie viele ungelesene Mails?: Antwort aus dem Postfach, frisch. · Postfach antwortet nicht: Antwort aus dem Vorrat mit Stand. · Mail senden: Erst nach dem Tipp auf Senden. · Kontakte-App des iPhone: Nur das Adressbuch „Auf dem Spark“.
+
+#### Zahlen (aus dem Code)
+
+- **4** Postfächer höchstens je Profil ([Schritt 3](#kn-post-s3))
+- **15 s** wartet ein Postfach höchstens ([Schritt 4](#kn-post-s4))
+- **300** Kopfzeilen je Postfach im Vorrat ([Schritt 6](#kn-post-s6))
+- **40** Mailtexte je Profil im Vorrat ([Schritt 6](#kn-post-s6))
+- **30** Mails höchstens am Tag ([Schritt 9](#kn-post-s9))
+- **2000** Karten im Adressbuch „Auf dem Spark“ ([Schritt 10](#kn-post-s10))
+
+#### Einstellen
+
+- Funktionen → Post und Kontakte: E-Mail lesen, Mails ordnen und senden, Kalender, Kontakte, Kontakte ändern, Kalender-Server und Kontakte für Kontakte-Apps.
+- Postfächer, Kalender und Adressbücher richtet jedes Profil auf seiner Seite unter Einstellungen ein.
+
+#### Was du siehst
+
+- Die Seiten E-Mail, Kalender und Kontakte im Menü, auf dem iPhone unter Assistent.
+- Zustand → Live: Abrufe, Vorrat und Türen nur mit Art, Anzahl und Status, nie Inhalte.
+
+#### Im Code
+
+- `app/panel/mail.py` `lookup`: Mails mit Stand ([Schritt 1](#kn-post-s1), [Schritt 5](#kn-post-s5), [Schritt 7](#kn-post-s7))
+- `app/panel/calendars.py` `view`: Termine für die Seite ([Schritt 1](#kn-post-s1))
+- `app/panel/netguard.py` `IMAP4_SSL`: IMAP nur zu geprüften Adressen ([Schritt 4](#kn-post-s4))
+- `app/panel/kalenderspiegel.py` `objects`: Kalender-Kopie holt Änderungen ([Schritt 4](#kn-post-s4))
+- `app/panel/mailvorrat.py` `keep_heads`: Vorrat der Kopfzeilen ([Schritt 6](#kn-post-s6))
+- `app/panel/vorrat.py` `seal`: versiegelt auf der Platte ([Schritt 6](#kn-post-s6))
+- `app/panel/frisch.py` `stand`: Stand mit Tag ([Schritt 7](#kn-post-s7))
+- `app/panel/senden.py` `preview`: Vorschau-Blatt ([Schritt 9](#kn-post-s9))
+- `app/panel/senden.py` `send`: senden nach dem Tipp ([Schritt 9](#kn-post-s9))
+- `app/panel/contacts.py` `save`: Karte zurück mit If-Match ([Schritt 9](#kn-post-s9))
+- `app/panel/kalenderserver.py` `login`: Tür für Kalender- und Kontakte-Apps ([Schritt 2](#kn-post-s2), [Schritt 10](#kn-post-s10))
+- `app/panel/kontaktserver.py` `_write`: Karte einer Kontakte-App ([Schritt 10](#kn-post-s10))
+
+Selbsttests: `test_mailvorrat`, `test_vorrat`, `test_mails_senden`, `test_kalenderserver`, `test_kontaktserver`, `test_kontakte_seite`, `test_kalenderspiegel`
 
 ### journald
 
