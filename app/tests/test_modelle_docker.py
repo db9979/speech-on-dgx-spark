@@ -43,6 +43,11 @@ class Rezept(unittest.TestCase):
             self.assertNotIn("--trust-remote-code", d["args"])
             self.assertLessEqual(d["laden_s"], 3600)
 
+    def test_flash_next_leaves_memory_free(self):
+        # qwen38 v1.37.0, same image: PyTorch keeps at most 95 % and gives blocks back early (17-19 GiB stay free)
+        a = args()
+        self.assertIn("PYTORCH_CUDA_ALLOC_CONF=per_process_memory_fraction:0.95,garbage_collection_threshold:0.8", a)
+
     def test_container_has_no_network_and_no_rights(self):
         a = args()
         self.assertEqual(a[:2], ["run", "--rm"])

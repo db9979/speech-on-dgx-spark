@@ -2601,6 +2601,13 @@
 "titel": "NAS: Pool vergeben, nicht voll",
 "text": "A: Update, ein paar Minuten warten (oder Funktionen → Speicher und NAS → Zustand der NAS → „Jetzt lesen“). B: Zustand → Dienste, Karte „Zustand der NAS“: kein Hinweis „Speicherbereich 2 zu 100 % belegt“ mehr; „Storage Pool 1“ grün mit „ganz an Volumes vergeben (11165 GB), der freie Platz steht beim Volume“; „Volume 1“ mit % belegt und GB frei. C: Die USB-Platte an der NAS steht als „USB-Platte 2“ mit % belegt und GB frei (wie DSM: rund 7181 von 11086 GB benutzt); steht dort „Größe nicht lesbar“ oder fehlt sie, Bescheid geben. D: Die Admins bekommen einmal „Zustand der NAS wieder in Ordnung“ für die alte Fehlwarnung. E: Sprache (Admin-Profil): „Wie voll ist die NAS?“ nennt Volume, Pool „an Volumes vergeben“ und die USB-Platte. F: Zustand → Live: Zeile „Zustand der NAS“ mit Volumes, Pools, USB-Platten, Festplatten.",
 "thread": "NAS-Speicheranzeige richtig deuten"
+},
+{
+"id": "P396",
+"v": 910,
+"titel": "Flash Next neu messen",
+"text": "A: Update (tars zuerst). B: Auf tars `sudo speech-spark modelle messen flash`. C: Ergebnis auf der Karte „Qwen3.8 Flash Next“: „Modelle auf interner NVMe“, „frei nach Laden“ deutlich über 0,1 GiB (qwen38: 17 bis 19 GiB), tok/s näher an 47.",
+"thread": "Eigene Modell-Installation statt qwen38"
 }
 ]
 }

@@ -100,7 +100,10 @@ DOCKER = {"b12x": {
                  "VLLM_USE_AOT_COMPILE": "1", "VLLM_USE_MEGA_AOT_ARTIFACT": "1", "VLLM_USE_V2_MODEL_RUNNER": "1",
                  "B12X_POLICY_MODE": "auto", "VLLM_MXFP8_LM_HEAD": "1", "VLLM_B12X_MOE_FP4_LAYER_MAX_INPUT_SCALE": "w13",
                  "VLLM_B12X_MOE_FP4_FORCE_A16": "1", "B12X_W4A16_A4_PREFILL": "1",
-                 "VLLM_ENGINE_READY_TIMEOUT_S": "3600"},     # the first start loads and tunes for well over 10 minutes
+                 "VLLM_ENGINE_READY_TIMEOUT_S": "3600",      # the first start loads and tunes for well over 10 minutes
+                 # PyTorch keeps at most 95 % for itself and gives freed blocks back early: qwen38 v1.37.0 runs the same
+                 # image with it and keeps 17-19 GiB free after loading (Dominik 2026-10-21 "1"; without it 0.1 GiB)
+                 "PYTORCH_CUDA_ALLOC_CONF": "per_process_memory_fraction:0.95,garbage_collection_threshold:0.8"},
     "args": ["--dtype", "bfloat16", "--block-size", "16", "--load-format", "b12x", "--enable-prefix-caching",
              "--enable-chunked-prefill", "--mamba-cache-mode", "align", "--max-num-batched-tokens", "4096",
              "--gdn-decode-kernel", "b12x", "--linear-backend", "b12x", "--moe-backend", "b12x",
@@ -1027,6 +1030,33 @@ def _bild_frage(m, url, frage):
                                                     {"type": "text", "text": frage}]}], 120)
 
 
+ABLAGEN = ("nvme", "usb", "andere", "unbekannt")
+
+
+def ablage(ordner, sys_dev="/sys/dev/block"):
+    """Where the model files lie, as a fixed word of ABLAGEN: the device under the folder from /sys (no command, no
+    path in the result). The engine reads the b12x table from disk on every token: on a USB disk qwen38 measured
+    15.7 instead of 23.4 tok/s (2026-10-21), so the measurement says where it read from."""
+    try:
+        p = os.path.realpath(ordner)
+        while not os.path.exists(p) and p != os.path.dirname(p):
+            p = os.path.dirname(p)
+        dev = os.stat(p).st_dev
+        geraet = os.path.realpath(os.path.join(sys_dev, f"{os.major(dev)}:{os.minor(dev)}"))
+        if not os.path.isdir(geraet):
+            return "unbekannt"
+        if os.path.exists(os.path.join(geraet, "partition")):
+            geraet = os.path.dirname(geraet)
+        if "/usb" in geraet:
+            return "usb"
+        if os.path.basename(geraet).startswith("nvme"):
+            return "nvme"
+        with open(os.path.join(geraet, "removable")) as f:
+            return "usb" if f.read().strip() == "1" else "andere"
+    except (OSError, ValueError):
+        return "unbekannt"
+
+
 class Speicher(threading.Thread):
     """Samples MemAvailable every half second; tiefst = the lowest value seen."""
     def __init__(self):
@@ -1100,7 +1130,8 @@ def messen_lauf(m, port=MESS_PORT, einheit="", log=print):
     frei_start = speicher.tiefst
     speicher.start()
     r = {"art": m["art"], "repo": m["repo"], "anteil": m["anteil"], "kontext": m["kontext"], "zeit": int(time.time()),
-         "frei_start_gib": round(frei_start, 1)}
+         "frei_start_gib": round(frei_start, 1), "ablage": ablage(hf_ordner(m))}
+    log(f"modelle: messung {mid} ablage {r['ablage']}")
     try:
         r["laden_s"] = warte_bereit(m, port, einheit, laden_frist(m))
         r["frei_geladen_gib"] = round(mem_available_gib(), 1)
@@ -1179,6 +1210,10 @@ def zeile(mid, r):
         return f"modelle: ergebnis {mid} abgebrochen {r.get('grund', '?')}"
     teile = [f"{r.get('tok_s')} tok/s", f"erste {r.get('erste_s')} s", f"belegt {r.get('belegt_gib')} GiB",
              f"laden {r.get('laden_s')} s"]
+    if r.get("ablage") in ABLAGEN:
+        teile.append(f"ablage {r['ablage']}")
+    if "frei_geladen_gib" in r:
+        teile.append(f"frei geladen {r['frei_geladen_gib']} GiB")
     if "mtp_annahme" in r:
         teile.append(f"mtp {int(r['mtp_annahme'] * 100)} %")
     if "erste_warm_s" in r:

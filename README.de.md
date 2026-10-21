@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.910** Flash Next lässt mehr Speicher frei, Messung zeigt NVMe oder USB
 - **V01.0.909** Dienste auf Abruf: Bildverständnis, Werkstatt und Gehäuse stehen in Ruhe als „bereit“ statt grau, nicht installierte Teile fehlen in den Dienste-Chips
 - **V01.0.908** NAS-Anzeige richtig: der Speicherpool heißt „an Volumes vergeben“ statt „100 % belegt“, keine Fehlwarnung mehr; USB-Platten an der NAS mit Belegung und freiem Platz
 - **V01.0.907** Wissenskarte schneller: eigene Tagesgrenze „Karte: Dokumente pro Tag und Profil“ (5 bis 500, Standard 200 statt der 40 des Wissensbuchs), so ist der Rückstand eines vollen Wissensbuchs in rund einem Tag verbunden
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.903** Doku aktuell, Teil 3: „Alle Funktionen“ in der Doku (de und en): jede der 234 Funktionen mit Schalter-Weg, worauf sie aufbaut, Ich-Seite und erstem Satz ihrer Anleitung, geschrieben von hilfe.py --docs, damit auch die Hilfe sie findet; Wächter test_doku_stand.Funktionen
 - **V01.0.902** Doku aktuell, Teil 2: Englisch gleichauf (iPhone-App: Hey Siri, CarPlay-Symbol und Simulator, Push-Fehler; zwei falsche Versionsangaben), Werkstatt in der iPhone-Doku, Überblick statt Monitoring in der App; neuer Wächter test_doku_stand.Gleichstand: Deutsch und Englisch je Abschnitt gleich viele Absätze mit denselben Versionen
 - **V01.0.901** Doku aktuell, Teil 1: jeder Weg in docs/ und den READMEs führt zur heutigen Stelle (Ich → Überblick statt „Heute“, Einstellungen → Update, eigene Seiten Kalender, E-Mail, Kontakte, Funktionen → Mein Tag und Zugang, kein „Monitoring“ mehr); test_sprunglinks prüft jetzt auch die Doku, aus der die Hilfe antwortet; Regel „Ganze Doku immer aktuell“ in der Richtlinie
-- **V01.0.900** Alles Offene im Assistenten (Stufen 3 und 4): Chat-Nachrichten, Geteiltes, wichtige Mails, Fragen laufender Aufträge, MCP-Freigaben und für Admins ausgefallene Dienste als Karten unter Offen (nie mit Text); Knöpfe „Erledigt“/„Später“ unter Telegram-Meldungen und „Erledigt“ im Begleiter mit denselben Prüfungen; „Was ist offen?“ per Stimme (nur lesen); Live je Art; iPhone
 
 
 

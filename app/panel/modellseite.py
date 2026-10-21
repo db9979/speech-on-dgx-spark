@@ -46,7 +46,8 @@ from core import admin_code, auth  # noqa: E402
 LIVE_EVERY = 30          # seconds the Live view reuses the budget (systemctl and /proc are not read on every look)
 MESSWERTE = ("tok_s", "erste_s", "belegt_gib", "laden_s", "mtp_annahme", "erste_warm_s", "zwischenspeicher", "werkzeug", "bild_text", "bild_szene", "bild_ok", "ok",
              "par2_tok_s", "par2_summe", "par2_erste_s", "par4_tok_s", "par4_summe", "par4_erste_s", "lang_tokens",
-             "lang_erste_s", "lang_tok_s", "platz_64k", "par2_fehler", "par4_fehler", "lang_fehler")
+             "lang_erste_s", "lang_tok_s", "platz_64k", "par2_fehler", "par4_fehler", "lang_fehler", "ablage", "frei_geladen_gib",
+             "frei_tiefst_gib")
 _live = {"t": None, "v": None}
 LAGE_S = 10              # seconds the banner and the chat reuse what the language model does (lage)
 _lage = {"t": None, "v": None}

@@ -11,9 +11,12 @@ const MD_REGEL={alle:['Alle Modelle passen gleichzeitig in den Speicher.','All m
   ein_platz:['Knapp: Modelle bei Bedarf (Bilder malen, Bildverständnis, Nachsortieren) laden nacheinander, nie gleichzeitig.','Tight: models on demand (painting pictures, image understanding, re-ranking) load one after the other, never at once.'],
   zu_knapp:['Zu knapp: neben den festen Modellen bleibt weniger als die Reserve. Ein kleineres Modell wählen oder qwen38 im 1M-Modus abschalten.','Too tight: beside the fixed models less than the reserve is left. Choose a smaller model or switch qwen38 out of its 1M mode.']};
 function mdGib(v){return v==null?'–':(Math.round(v*10)/10).toLocaleString(L==='en'?'en':'de')+' GiB'}
+const MD_ABLAGE={nvme:()=>t('Modelle auf interner NVMe','models on internal NVMe'),usb:()=>t('Modelle auf USB-Platte (langsamer)','models on USB disk (slower)'),
+  andere:()=>t('Modelle auf anderer Platte','models on another disk'),unbekannt:()=>t('Ablage unbekannt','storage unknown')};
 function mdMess(m){const x=m.messung||{};if(!Object.keys(x).length)return '';if(x.ok===false)return t('abgebrochen','broke off');
   const ja=v=>v?t('ok','ok'):t('falsch','wrong');
   return [x.tok_s!=null?x.tok_s+' tok/s':'',x.erste_s!=null?t('erste ','first ')+x.erste_s+' s':'',x.mtp_annahme!=null?'MTP '+Math.round(x.mtp_annahme*100)+' %':'',x.erste_warm_s!=null?t('warm ','warm ')+x.erste_warm_s+' s':'',x.zwischenspeicher!=null?t('Zwischenspeicher ','Prefix cache ')+Math.round(x.zwischenspeicher*100)+' %':'',
+    x.frei_geladen_gib!=null?t('frei nach Laden ','free after loading ')+mdGib(x.frei_geladen_gib):'',x.ablage?(MD_ABLAGE[x.ablage]||MD_ABLAGE.unbekannt)():'',
     ...[2,4].map(n=>x['par'+n+'_tok_s']!=null?n+t(' gleichzeitig ',' at once ')+x['par'+n+'_tok_s']+t(' tok/s je Antwort',' tok/s per answer'):x['par'+n+'_fehler']?n+t(' gleichzeitig: Fehler',' at once: error'):''),
     x.lang_tokens!=null?Math.round(x.lang_tokens/1000)+t('K Tokens: erste ','K tokens: first ')+x.lang_erste_s+' s':x.lang_fehler?t('lange Frage: Fehler','long question: error'):'',
     x.platz_64k!=null?t('Platz für ','Room for ')+x.platz_64k+t(' × 64K',' × 64K'):'',

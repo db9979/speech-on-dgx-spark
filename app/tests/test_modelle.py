@@ -309,6 +309,34 @@ class Pruefen(unittest.TestCase):
             self.assertTrue(modelle.VERBOTEN.search(name), name)
 
 
+class Ablage(unittest.TestCase):
+    """Where the model files lie, from /sys only, as a fixed word: a USB disk makes the b12x table slow."""
+    def sys_baum(self, geraet, removable="0", partition=True):
+        t = tempfile.mkdtemp()
+        self.addCleanup(__import__("shutil").rmtree, t)
+        dev = os.stat(t).st_dev
+        ziel = os.path.join(t, "devices", geraet)
+        teil = os.path.join(ziel, "p1") if partition else ziel
+        os.makedirs(teil)
+        if partition:
+            open(os.path.join(teil, "partition"), "w").write("1")
+        open(os.path.join(ziel, "removable"), "w").write(removable)
+        os.makedirs(os.path.join(t, "block"))
+        os.symlink(teil, os.path.join(t, "block", f"{os.major(dev)}:{os.minor(dev)}"))
+        return t, os.path.join(t, "block")
+
+    def test_words(self):
+        for geraet, rem, wort in (("pci0000:00/nvme/nvme0/nvme0n1", "0", "nvme"),
+                                  ("pci0000:00/usb2/2-1/host0/sda", "0", "usb"),
+                                  ("platform/mmc/mmcblk0", "1", "usb"), ("platform/ata/sda", "0", "andere")):
+            ordner, sys_dev = self.sys_baum(geraet, rem)
+            self.assertEqual(modelle.ablage(os.path.join(ordner, "gibt-es-nicht", "hub"), sys_dev), wort, geraet)
+        self.assertEqual(modelle.ablage("/", "/gibt-es-nicht"), "unbekannt")
+        for w in modelle.ABLAGEN:
+            self.assertIn(f"ablage {w}", modelle.zeile("x", {"ok": True, "ablage": w}))
+        self.assertNotIn("ablage", modelle.zeile("x", {"ok": True, "ablage": "/mnt/geheim"}))
+
+
 class Messen(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
