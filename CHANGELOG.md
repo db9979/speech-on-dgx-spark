@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.917** · 2026-10-21 · Flash Next nur noch mit Anteil 0,70: die Variante 0,65 startete auf tars nie und ist aus dem Katalog
 - **V01.0.916** · 2026-10-21 · Angriffs-Selbsttest (Idee aus NeMo Guardrails): jeder Weg für fremden Text mit 12 Tarnungen gegen ein Modell angegriffen, das jedem Befehl gehorcht; vier Lücken geschlossen: Marken des Modells (<|im_start|>, <tool_call>) werden entschärft, nach einer Mail auch Wikipedia, Wetter und Fahrplan gesperrt, kurze Text-Zustände im Smart Home zählen als fremd, das Briefing steht ganz im Datenblock
 - **V01.0.915** · 2026-10-21 · Technik-Schaubild schöner: Farbstreifen je Art mit Legende, Symbol vor jeder Zeile, Pfeile mit Richtung und hellere Linien, Schild „nur bei Spark teilen“, mehr Luft zwischen den Reihen; Wächter: jeder Kasten hat Farbe und Symbol
 - **V01.0.914** · 2026-10-21 · Technik-Schaubild ohne Überlauf: jeder Text passt in seinen Kasten (Post und Kontakte, Lautsprecher/Telefon, Bilder und Musik gekürzt, Schrift etwas kleiner); neue Wächter in test_technik: Text passt (de und en), keine Linie quer durch einen Kasten

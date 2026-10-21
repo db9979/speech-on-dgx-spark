@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.917** Flash-Next-Variante 0,65 entfernt (startete nie)
 - **V01.0.916** Angriffs-Selbsttest (Idee aus NeMo Guardrails): jeder Weg für fremden Text mit 12 Tarnungen gegen ein Modell angegriffen, das jedem Befehl gehorcht; vier Lücken geschlossen: Marken des Modells (<|im_start|>, <tool_call>) werden entschärft, nach einer Mail auch Wikipedia, Wetter und Fahrplan gesperrt, kurze Text-Zustände im Smart Home zählen als fremd, das Briefing steht ganz im Datenblock
 - **V01.0.915** Technik-Schaubild schöner: Farbstreifen je Art mit Legende, Symbol vor jeder Zeile, Pfeile mit Richtung und hellere Linien, Schild „nur bei Spark teilen“, mehr Luft zwischen den Reihen; Wächter: jeder Kasten hat Farbe und Symbol
 - **V01.0.914** Technik-Schaubild ohne Überlauf: jeder Text passt in seinen Kasten (Post und Kontakte, Lautsprecher/Telefon, Bilder und Musik gekürzt, Schrift etwas kleiner); neue Wächter in test_technik: Text passt (de und en), keine Linie quer durch einen Kasten
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.910** Flash Next lässt mehr Speicher frei, Messung zeigt NVMe oder USB
 - **V01.0.909** Dienste auf Abruf: Bildverständnis, Werkstatt und Gehäuse stehen in Ruhe als „bereit“ statt grau, nicht installierte Teile fehlen in den Dienste-Chips
 - **V01.0.908** NAS-Anzeige richtig: der Speicherpool heißt „an Volumes vergeben“ statt „100 % belegt“, keine Fehlwarnung mehr; USB-Platten an der NAS mit Belegung und freiem Platz
-- **V01.0.907** Wissenskarte schneller: eigene Tagesgrenze „Karte: Dokumente pro Tag und Profil“ (5 bis 500, Standard 200 statt der 40 des Wissensbuchs), so ist der Rückstand eines vollen Wissensbuchs in rund einem Tag verbunden
 
 
 

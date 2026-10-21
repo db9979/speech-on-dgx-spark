@@ -18,7 +18,6 @@ import modelle  # noqa: E402
 import dockertor  # noqa: E402
 
 FN = "qwen38-flash-next-fp4"
-FN65 = "qwen38-flash-next-fp4-065"
 
 
 def args(**k):
@@ -134,8 +133,9 @@ class Rezept(unittest.TestCase):
         with self.assertRaises(modelle.Fehler):
             modelle.pruefe_eintrag(dict(m, art="sehen"))
         self.assertFalse(m["gewerblich"])                            # Qwen Community License + NVIDIA agreement
-        self.assertEqual((m["anteil"], modelle.eintrag(FN65)["anteil"]), (0.7, 0.65))
-        self.assertEqual(modelle.eintrag(FN65)["vllm"]["docker"], "b12x")
+        self.assertEqual(m["anteil"], 0.7)
+        with self.assertRaises(modelle.Fehler):
+            modelle.eintrag("qwen38-flash-next-fp4-065")            # share 0.65 never started (tars 2026-10-21)
         eigen = dict(m, id="eigen-flash", eigen=True)
         with self.assertRaises(modelle.Fehler):
             modelle.eigen_ok(eigen)                                  # an own entry never brings a recipe
@@ -153,7 +153,7 @@ class Rezept(unittest.TestCase):
             with self.assertRaises(modelle.Fehler) as e:
                 modelle.wechsel_pruefen("llm", FN, cfg(), 200, messung=messung)
             self.assertEqual(str(e.exception), wort)
-        self.assertEqual(modelle.messliste(["flash"]), [FN, FN65])
+        self.assertEqual(modelle.messliste(["flash"]), [FN])
         self.assertEqual(modelle.laden_frist(m), modelle.DOCKER["b12x"]["laden_s"])
         self.assertEqual(modelle.laden_frist(modelle.eintrag("qwen38-27b-nvfp4")), modelle.GESUND_S)
 

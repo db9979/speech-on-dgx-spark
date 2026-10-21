@@ -233,16 +233,6 @@
       "betrieb": "resident"
     },
     {
-      "id": "qwen38-flash-next-fp4-065",
-      "basis": "qwen38-flash-next-fp4",
-      "name": {
-        "de": "Qwen3.8 Flash Next FP4, Anteil 0,65 (Docker, nur privat)",
-        "en": "Qwen3.8 Flash Next FP4, share 0.65 (Docker, private use only)"
-      },
-      "need_gib": 79,
-      "anteil": 0.65
-    },
-    {
       "revision": "",
       "gewerblich": true,
       "gemessen": false,

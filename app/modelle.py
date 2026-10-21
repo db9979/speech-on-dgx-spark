@@ -434,7 +434,7 @@ def messliste(was, kat=None):
     wunsch = {"fp8": ("qwen38-27b-fp8",), "gemma": ("gemma-4-26b-a4b",), "kolibri": ("kolibri-1-nvfp4",),
               "vl30": ("qwen3-vl-30b-a3b-fp8",), "dspark": ("qwen38-27b-nvfp4-dspark",),
               "qwen36": ("qwen36-35b-a3b-nvfp4", "qwen36-35b-a3b-nvfp4-ohne-mtp"),     # Dominik 2026-10-18 „ja 1“
-              "flash": ("qwen38-flash-next-fp4", "qwen38-flash-next-fp4-065")}     # Docker, both memory shares
+              "flash": ("qwen38-flash-next-fp4",)}     # Docker; share 0.65 never started (tars 2026-10-21)
     wunsch.update({i: (i,) for i, m in kat.items() if m.get("eigen") or docker_bild(m)})   # an own model by its id
     if any(w not in ("llm", "sehen") and w not in wunsch for w in was):
         raise Fehler("was")
@@ -2008,9 +2008,10 @@ def cli(args, log=print):
             log(" ".join(messen_wunsch_nehmen()))
             return 0
         if cmd == "ergebnis":
-            data = read_json(MESSUNG, {})
+            data, kat = read_json(MESSUNG, {}), katalog()
             for mid, r in (data.get("modelle") or {}).items():
-                log(zeile(mid, r))
+                if mid in kat:                      # an entry taken out of the catalog keeps no line (Flash Next 0.65)
+                    log(zeile(mid, r))
             return 0
     except Fehler as e:
         print(f"modelle: abgelehnt {e}", flush=True)
