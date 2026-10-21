@@ -182,7 +182,8 @@ def for_live(now=None):
     d = cached(now=now)
     if d is None:
         return {"on": True, "ok": False, "notbetrieb": weg(now)}
-    units = [u for u in (d.get("einheiten") or {}).values() if isinstance(u, dict) and u.get("state") != "unknown"]
+    units = [u for u in (d.get("einheiten") or {}).values()
+             if isinstance(u, dict) and u.get("state") != "unknown" and u.get("da") is not False]   # installed ones only
     v = str(d.get("version") or "")
     return {"on": True, "ok": True, "aktiv": sum(u.get("state") == "active" for u in units), "n": len(units),
             "version": v if v.startswith("V") and len(v) <= 20 else "", "pause": bool((d.get("pause") or {}).get("on"))}

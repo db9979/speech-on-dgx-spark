@@ -371,7 +371,9 @@ SEITEN = {
                "systemd, rechenteile.messen die Teile des Panels aus seinen Threads und Hilfsprozessen; rechnerblick.spitze "
                "nennt den größten ab {rechnerblick.LEERLAUF_PCT} %, darunter ist Leerlauf. rechnerblick.wer hält die "
                "Liste ruhig: immer {rechnerblick.ZEILEN} Zeilen in fester Reihenfolge, gewählt über 20 Minuten, 0 % statt "
-               "weg; beide Karten zeigen dieselben Zeilen auf gleicher Höhe (Spiegel-Karten).",
+               "weg; beide Karten zeigen dieselben Zeilen auf gleicher Höhe (Spiegel-Karten). Dienste, die nur für einen "
+               "Auftrag starten (rechnerblick.ABRUF: Bildverständnis, Werkstatt, Gehäuse), stehen in Ruhe als „bereit“; "
+               "was auf dem DGX nicht installiert ist, fehlt.",
                "rechner.messen measures CPU, memory, disk, network, temperature and power; the Wärter sends the DGX's "
                "values with its status. rechnerblick.warnungen warns by fixed rules: the panel computer from "
                "{rechnerblick.TEMP_WARN} °C, throttled or short of power, less than {rechnerblick.RAM_MIN_GIB} GiB free; "
@@ -380,7 +382,9 @@ SEITEN = {
                "rechenteile.messen the panel's parts from its threads and worker processes; rechnerblick.spitze names "
                "the biggest from {rechnerblick.LEERLAUF_PCT} % on, below that it is idle. rechnerblick.wer keeps the "
                "list still: always {rechnerblick.ZEILEN} lines in a fixed order, chosen over 20 minutes, 0 % instead of "
-               "gone; both cards show the same rows at the same height (mirror cards).")),
+               "gone; both cards show the same rows at the same height (mirror cards). Services that start only for a "
+               "job (rechnerblick.ABRUF: image understanding, Werkstatt, case) rest as „ready“; what is not installed on "
+               "the DGX is left out.")),
             S("s10", "schritt", ("Steuerzentrale am Bildschirm", "Control centre on the screen"),
               ("tty1, nur lokal mit Schlüssel", "tty1, local only with a key"),
               ("Ist Funktionen → Steuerzentrale am Bildschirm an, startet schirm.abgleich den Dienst und lässt ihn beim "

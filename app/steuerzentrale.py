@@ -50,9 +50,9 @@ SCHRITT = {"asr": "asr", "weiche": "weiche", "llm": "llm", "tool": "tool", "tts"
 DIENST = {"ok": "g", "load": "y", "down": "r", "off": "d", "pause": "b"}
 STUFE = {"bad": "r", "warn": "y", "info": "m"}
 RECHNER = {"modell": "Modell-Rechner", "panel": "Panel-Rechner"}
-TEIL = {"asr": "Hören (ASR)", "tts": "Sprechen (TTS)", "llm": "Sprachmodell", "bild": "Bilder", "musik": "Musik", "werkstatt": "Werkstatt",
+TEIL = {"asr": "Hören (ASR)", "tts": "Sprechen (TTS)", "llm": "Sprachmodell", "sehen": "Bildverständnis", "bild": "Bilder", "musik": "Musik", "werkstatt": "Werkstatt",
         "waerter": "Wärter", "turn": "TURN", "gehaeuse": "Gehäuse", "notasr": "Notbetrieb-ASR"}
-ZUSTAND = {"active": "läuft", "inactive": "aus", "activating": "startet", "deactivating": "stoppt", "failed": "Fehler"}
+ZUSTAND = {"active": "läuft", "bereit": "bereit", "inactive": "aus", "activating": "startet", "deactivating": "stoppt", "failed": "Fehler"}
 
 
 # ---------------------------------------------------------------- the picture as a grid of (glyph, colour)
@@ -521,7 +521,7 @@ def rechts(R, d, x, w, top, bot):
     y += h + 1
     svc = live.get("svc") or {}
     mod = [(m.get("id"), m.get("state")) for m in (karten.get("modell") or {}).get("dienste") or []]
-    zeilen = [(TEIL.get(k, k), ZUSTAND.get(s, s), "g" if s == "active" else "y" if s == "activating" else "r" if s == "failed" else "d")
+    zeilen = [(TEIL.get(k, k), ZUSTAND.get(s, s), "g" if s in ("active", "bereit") else "y" if s == "activating" else "r" if s == "failed" else "d")
               for k, s in mod] \
         or [(TEIL[k], (svc.get(k) or {}).get("word") or "–", DIENST.get((svc.get(k) or {}).get("st"), "d")) for k in ("asr", "llm", "tts")]
     zeilen = zeilen[:6]

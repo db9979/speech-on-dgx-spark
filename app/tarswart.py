@@ -81,8 +81,9 @@ def version():
 
 
 def _states(units):
-    """{unit: {"state", "seit"}} from one systemctl show for all units (blocks in the asked order)."""
-    code, out = run(["systemctl", "show", *units, "-p", "Id,ActiveState,ActiveEnterTimestampMonotonic"])
+    """{unit: {"state", "seit", "eintritt", "da"}} from one systemctl show for all units (blocks in the asked order);
+    "da" is False for a unit that is not installed (LoadState not-found, e.g. the Werkstatt without --werkstatt)."""
+    code, out = run(["systemctl", "show", *units, "-p", "Id,ActiveState,ActiveEnterTimestampMonotonic,LoadState"])
     got = {}
     for block in out.split("\n\n") if code == 0 else []:
         props = dict(x.split("=", 1) for x in block.splitlines() if "=" in x)
@@ -96,7 +97,7 @@ def _states(units):
         except ValueError:
             t = 0
         got[unit] = {"state": state, "seit": round(time.monotonic() - t) if state == "active" and t else None,
-                     "eintritt": int(t * 1e6)}
+                     "eintritt": int(t * 1e6), "da": props.get("LoadState") != "not-found"}
     return {u: got.get(u, {"state": "unknown", "seit": None, "eintritt": 0}) for u in units}
 
 

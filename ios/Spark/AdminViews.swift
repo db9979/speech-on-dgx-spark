@@ -378,15 +378,15 @@ struct StatusView: View {
         ["ok": .green, "warn": .orange, "bad": .red][c["stufe"] as? String ?? ""] ?? .primary
     }
 
-    /// "3 / 4 aktiv": the computer's services that run
+    /// "9 / 9 bereit": the computer's services that run or rest ready for a job ("bereit", rechnerblick.ABRUF)
     static func dienste(_ c: [String: Any]) -> String {
         let all = c["dienste"] as? [[String: Any]] ?? []
-        let on = all.filter { $0["state"] as? String == "active" }.count
-        return "\(on) / \(all.count) " + String(localized: "aktiv")
+        let on = all.filter { ["active", "bereit"].contains($0["state"] as? String ?? "") }.count
+        return "\(on) / \(all.count) " + String(localized: "bereit")
     }
 
     static func color(_ state: String) -> Color {
-        ["active": .green, "activating": .orange, "failed": .red, "inactive": .secondary][state] ?? .primary
+        ["active": .green, "bereit": .green, "activating": .orange, "failed": .red, "inactive": .secondary][state] ?? .primary
     }
 
     /// (name, state) of the speech services, their engines and the language model units

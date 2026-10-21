@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.909** · 2026-10-21 · Dienste auf Abruf: Bildverständnis, Werkstatt und Gehäuse stehen in Ruhe als „bereit“ statt grau, nicht installierte Teile fehlen in den Dienste-Chips
 - **V01.0.908** · 2026-10-21 · Zustand der NAS: der Speicherpool heißt „an Volumes vergeben“ statt „belegt“ und löst nie mehr „zu 100 % belegt“ aus (freier Platz steht beim Volume), Hinweise nennen Volume-Namen, USB- und eSATA-Platten an der NAS mit Belegung und freiem Platz (hrStorageTable)
 - **V01.0.907** · 2026-10-21 · Wissenskarte schneller: eigene Tagesgrenze „Karte: Dokumente pro Tag und Profil“ (5 bis 500, Standard 200 statt der 40 des Wissensbuchs), so ist der Rückstand eines vollen Wissensbuchs in rund einem Tag verbunden
 - **V01.0.906** · 2026-10-21 · Mail wie ein großes Mailprogramm: Verschieben ohne Neuladen der Ordnerliste, Regel-Vorschläge nachts aus deinem KI-Ordner, auch als Karte im Assistenten, Unterhaltung unter einer Mail, nur der eigene Text ohne Zitate und Signatur, Später senden, Bestätigungscodes als Mitteilung (eigener Schalter, nie über Telegram) und Mail-Statistik; Panel, iPhone und Begleiter

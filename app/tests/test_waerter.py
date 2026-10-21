@@ -21,7 +21,8 @@ from fastapi.testclient import TestClient  # noqa: E402
 
 KEY = secrets.token_bytes(32)
 SHOW = ("Id=speech-spark-asr.service\nActiveState=active\nActiveEnterTimestampMonotonic={t}\n\n"
-        "Id=speech-spark-tts.service\nActiveState=failed\nActiveEnterTimestampMonotonic=0\n")
+        "Id=speech-spark-tts.service\nActiveState=failed\nActiveEnterTimestampMonotonic=0\nLoadState=loaded\n\n"
+        "Id=speech-spark-werkstatt.service\nActiveState=inactive\nActiveEnterTimestampMonotonic=0\nLoadState=not-found\n")
 
 
 def body(cmd="status", args=(), ts=None, nonce=None, daten=None):
@@ -76,7 +77,8 @@ class Waerter(Base):
         d = r.json()
         self.assertEqual(d["einheiten"]["speech-spark-asr"]["state"], "active")
         self.assertAlmostEqual(d["einheiten"]["speech-spark-asr"]["seit"], 90, delta=3)
-        self.assertEqual(d["einheiten"]["speech-spark-tts"], {"state": "failed", "seit": None, "eintritt": 0})
+        self.assertEqual(d["einheiten"]["speech-spark-tts"], {"state": "failed", "seit": None, "eintritt": 0, "da": True})
+        self.assertIs(d["einheiten"]["speech-spark-werkstatt"]["da"], False, "not installed: the panel leaves its chip out")
         self.assertEqual(d["einheiten"]["speech-spark-llm"], {"state": "unknown", "seit": None, "eintritt": 0})
         self.assertEqual(d["gpu"]["name"], "GB10")
         self.assertEqual(len([c for c in self.run.calls if c[:2] == ["systemctl", "show"]]), 1, "one call for all")

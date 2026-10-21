@@ -9841,12 +9841,12 @@
         }
       }
     },
-    "aktiv": {
+    "bereit": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "active"
+            "value": "ready"
           }
         }
       }

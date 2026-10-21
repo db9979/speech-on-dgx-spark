@@ -46,6 +46,12 @@ DIENSTE_S = 15         # seconds the panel computer's unit states are kept
 MODELL_TEILE = ("asr", "tts", "llm", "llmtor", "sehen", "bild", "musik", "werkstatt")
 PANEL_UNITS = {"turn": "speech-spark-turn", "notasr": "speech-spark-notasr", "gehaeuse": "speech-spark-gehaeuse",
                "schirm": "speech-spark-schirm"}
+# the parts that run only for a job and then stop again: the image understanding (the LLM-Tor starts it for a picture
+# question), one Werkstatt order, the case's setup (Einrichten/Entfernen; the case itself runs in the panel). Resting
+# („inactive“) is their normal state, so the chip says BEREIT instead of looking like an outage (Dominik 2026-10-21:
+# Gehäuse, Bildverständnis and Werkstatt stood grey under „7 von 9 laufen“); a Gehäuse with the switch off is not shown
+ABRUF = ("sehen", "werkstatt", "gehaeuse")
+BEREIT = "bereit"
 ZAHLEN = {"cpu": (0, 100), "kerne": (0, 4096), "last": (0, 10000), "ram_total": (0, 65536), "ram_frei": (0, 65536),
           "ram_cache": (0, 65536), "ram_pct": (0, 100), "swap": (0, 65536), "platte_total": (0, 1e6),
           "platte_frei": (0, 1e6), "platte_pct": (0, 100), "netz_rx": (0, 1e18), "netz_tx": (0, 1e18),
@@ -289,8 +295,14 @@ def alerts():
             for a, v in w.items() if a in texte]
 
 
+def _zustand(teil, st):
+    """The chip's state: systemd's word, a resting on-demand part (ABRUF) as BEREIT."""
+    return BEREIT if teil in ABRUF and st == "inactive" else st
+
+
 def _dienste_panel(now):
-    """The panel computer's own units that are installed: the panel itself, TURN, Notbetrieb, Gehäuse."""
+    """The panel computer's own units that are installed: the panel itself, TURN, Notbetrieb, Gehäuse (only with its
+    switch on), Steuerzentrale."""
     with _lock:
         if now - _dienste["t"] < DIENSTE_S:
             return list(_dienste["d"])
@@ -300,11 +312,15 @@ def _dienste_panel(now):
     for block in txt.split("\n\n") if code == 0 else []:
         props = dict(x.split("=", 1) for x in block.splitlines() if "=" in x)
         seen[props.get("Id", "").removesuffix(".service")] = props
+    import gehaeuse as case
+    gehaeuse = case.admin_on()
     for teil, unit in PANEL_UNITS.items():
         props = seen.get(unit) or {}
         st = props.get("ActiveState", "")
+        if teil == "gehaeuse" and not gehaeuse and st != "failed":
+            continue
         if props.get("LoadState") == "loaded" and st.replace("-", "").isalpha() and len(st) <= 20:
-            out.append({"id": teil, "state": st, **_name(DIENST_NAMEN, teil)})
+            out.append({"id": teil, "state": _zustand(teil, st), **_name(DIENST_NAMEN, teil)})
     with _lock:
         _dienste.update(t=now, d=out)
     return out
@@ -314,9 +330,12 @@ def _dienste_modell(d):
     units = (d or {}).get("einheiten") or {}
     out = []
     for teil in MODELL_TEILE:
-        st = (units.get(UNITS.get(teil) or OWN_LLM_UNITS.get(teil) or ON_DEMAND_UNITS.get(teil)) or {}).get("state")
+        u = units.get(UNITS.get(teil) or OWN_LLM_UNITS.get(teil) or ON_DEMAND_UNITS.get(teil)) or {}
+        st = u.get("state")
+        if u.get("da") is False:      # not installed there (the Wärter's LoadState not-found, e.g. no --werkstatt)
+            continue
         if isinstance(st, str) and st != "unknown" and st.replace("-", "").isalpha() and len(st) <= 20:
-            out.append({"id": teil, "state": st, **_name(DIENST_NAMEN, teil)})
+            out.append({"id": teil, "state": _zustand(teil, st), **_name(DIENST_NAMEN, teil)})
     return out + ([{"id": "waerter", "state": "active", **_name(DIENST_NAMEN, "waerter")}] if d else [])
 
 

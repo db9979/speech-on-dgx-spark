@@ -178,6 +178,29 @@ class Karten(unittest.TestCase):
         self.assertEqual(len(m["kurven"]["gpu"]), 2)
         self.assertNotIn("gpu", p["kurven"])
 
+    def test_parts_on_demand_rest_ready_not_grey(self):
+        """Dominik 2026-10-21: Gehäuse, Bildverständnis and Werkstatt stood grey under „7 von 9 laufen“. A part that
+        starts only for a job (rechnerblick.ABRUF) and rests says „bereit“; one not installed on the model computer
+        (the Wärter's "da" False) has no chip; the Gehäuse only with its switch on, but always when its setup failed."""
+        self.status["einheiten"].update({"speech-spark-sehen": {"state": "inactive", "da": True},
+                                         "speech-spark-werkstatt": {"state": "inactive", "da": False},
+                                         "speech-spark-bild": {"state": "inactive"}})
+        m = rechnerblick._dienste_modell(self.status)
+        self.assertIn(("sehen", "bereit"), [(x["id"], x["state"]) for x in m])
+        self.assertNotIn("werkstatt", [x["id"] for x in m])
+        self.assertIn(("bild", "inactive"), [(x["id"], x["state"]) for x in m], "a server that should always run stays grey")
+        show = ("Id=speech-spark-gehaeuse.service\nActiveState={}\nLoadState=loaded\n\n"
+                "Id=speech-spark-turn.service\nActiveState=inactive\nLoadState=loaded\n")
+        import gehaeuse
+        for an, st, want in ((True, "inactive", "bereit"), (False, "inactive", None), (False, "failed", "failed"),
+                             (True, "activating", "activating")):
+            rechnerblick._dienste.update(t=0.0, d=[])
+            with mock.patch.object(rechnerblick, "run", return_value=(0, show.format(st))), \
+                    mock.patch.object(gehaeuse, "admin_on", return_value=an):
+                d = dict((x["id"], x["state"]) for x in rechnerblick._dienste_panel(5000.0))
+            self.assertEqual(d.get("gehaeuse"), want, (an, st))
+            self.assertEqual(d["turn"], "inactive", "only the parts on demand rest ready")
+
     def test_the_same_status_counts_once(self):
         self.runde(1000.0)
         self.runde(1003.0, t=53.0)

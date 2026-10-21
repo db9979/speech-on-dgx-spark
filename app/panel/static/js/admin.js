@@ -251,10 +251,11 @@ function zRCard(c){const card=document.createElement('div');card.className='card
       null,null,hg.jetzt_s||bad?'bad':hg.n?'warn':'ok')}
   card.appendChild(zRWer(c));
   const D=c.dienste||[],r=document.createElement('div');r.className='zrrow zrsvc';const k=document.createElement('small');
-  k.textContent=t('Dienste','Services')+' · '+D.filter(x=>x.state==='active').length+t(' von ',' of ')+D.length+t(' laufen',' running');
+  // „bereit“ (rechnerblick.ABRUF): a part that starts only for a job and rests now, counted as fine, hollow green dot
+  k.textContent=t('Dienste','Services')+' · '+D.filter(x=>x.state==='active'||x.state==='bereit').length+t(' von ',' of ')+D.length+t(' bereit',' ready');
   const w=document.createElement('div');w.className='zrchips';
-  for(const x of D){const sp=document.createElement('span');sp.dataset.lvl=x.state==='active'?'ok':x.state==='failed'?'bad':x.state==='activating'?'warn':'';
-    sp.textContent=zNm(x)||x.id;sp.title=sp.textContent;w.appendChild(sp)}
+  for(const x of D){const sp=document.createElement('span');sp.dataset.lvl=x.state==='active'?'ok':x.state==='bereit'?'rest':x.state==='failed'?'bad':x.state==='activating'?'warn':'';
+    sp.textContent=zNm(x)||x.id;sp.title=sp.textContent+(x.state==='bereit'?t(' · bereit, startet bei Bedarf',' · ready, starts when needed'):'');w.appendChild(sp)}
   r.append(k,w);card.appendChild(r);
   return card}
 // a poll only puts in what changed (Richtlinie 6 „Ruhig, nichts springt“): same cards, same rows, each row that differs
