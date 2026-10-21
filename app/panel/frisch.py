@@ -1,0 +1,200 @@
+"""Tagesaktuell (Dominik 2026-10-21 „sämtliche Informationen immer aktuell überprüfen, ob das aktuelle Daten sind“):
+fixed rules of the panel, never of the model, that hold every source against today's date.
+
+- stand(): the one way to say how old a reading is, always with its day („heute 06:40“, „gestern 18:00“,
+  „Montag 19.10., 18:00“). vorrat.stand (calendar, weather, parcels), mail._as_of and the morning briefing take it;
+  a reading from yesterday never sounds like one from this morning again („Stand 18:00“ was said at 7 in the morning).
+- The web search (chat.web_search): the person's own words or the query asking for today (HEUTE) or the last days
+  (WOCHE) ask SearXNG for that period (time_range), news words also in its news category; every hit carries its date
+  („Datum: heute 06:10“ / „ohne Datum“), and for such a question a hit dated before the period is dropped. When no hit
+  of the period is left, the result says so with the newest date found, and the answer says it too (nachsatz).
+- nachsatz(): the rule „Stand nennen“ of the Antwort-Prüfung (chat.answer_check): a reading that was not current
+  (vorrat „alt“) or a search without a hit of its period, and the answer did not say so: the panel adds one fixed
+  sentence. The morning briefing as a push gets the same sentence (chat.due_briefings).
+
+Logs: „frisch:“ with fixed words and numbers only; Live (node Websuche): today's numbers, never a query or a title.
+"""
+import datetime
+import re
+import threading
+import time
+
+# own words or the query: the person wants what is new today (time_range day) or of the last days (week)
+HEUTE = re.compile(r"(?i)\b(heute\w*|heutig\w*|aktuell\w*|neueste\w*|neuste\w*|tagesaktuell\w*|nachrichten|news|"
+                   r"schlagzeilen|today\w*|latest|breaking|morgenbericht|tagesbriefing)\b")
+WOCHE = re.compile(r"(?i)\b(gestern|vorgestern|diese[rnms]? woche|letzte[rn]? tage|in den letzten tagen|"
+                   r"seit (?:montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag)|am wochenende|"
+                   r"yesterday|this week|past few days|recent\w*)\b")
+NEWS = re.compile(r"(?i)\b(nachrichten|news|schlagzeilen|meldung(?:en)?|headlines?|politisch|tagesschau)\b")
+# how far back a dated hit may be for that period (a day: also last evening's news in the morning, said with its day)
+WINDOW = {"day": 36 * 3600, "week": 8 * 86400}
+WEEKDAYS = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"]
+_lock = threading.Lock()
+_today = {"day": "", "searches": 0, "old": 0, "dropped": 0, "hints": 0}   # Live: numbers of today, RAM only
+
+
+def _zone(zone):
+    if zone is not None:
+        return zone
+    import chat     # late: chat imports this module's users
+    return chat.system_zone()
+
+
+def stand(when, now=None, zone=None):
+    """„heute 06:40“, „gestern 18:00“, „Montag 19.10., 18:00“ (within the week), „19.10.2025, 18:00“ for a
+    reading at the unix time `when`; the day always comes with it."""
+    zone = _zone(zone)
+    at = datetime.datetime.fromtimestamp(when, zone)
+    today = datetime.datetime.fromtimestamp(time.time() if now is None else now, zone).date()
+    days = (today - at.date()).days
+    if days == 0:
+        return f"heute {at:%H:%M}"
+    if days == 1:
+        return f"gestern {at:%H:%M}"
+    if 1 < days < 7:
+        return f"{WEEKDAYS[at.weekday()]} {at:%d.%m.}, {at:%H:%M}"
+    return f"{at:%d.%m.%Y}, {at:%H:%M}"
+
+
+def is_today(when, now=None, zone=None):
+    zone = _zone(zone)
+    return (datetime.datetime.fromtimestamp(when, zone).date()
+            == datetime.datetime.fromtimestamp(time.time() if now is None else now, zone).date())
+
+
+def zeitraum(*texts):
+    """"day", "week" or "" for the person's words and the query (fixed words only, never the model's judgement)."""
+    t = " ".join(str(x or "")[:400] for x in texts)
+    return "day" if HEUTE.search(t) else "week" if WOCHE.search(t) else ""
+
+
+def news(*texts):
+    return bool(NEWS.search(" ".join(str(x or "")[:400] for x in texts)))
+
+
+def hit_time(x):
+    """The unix time a search hit was published (SearXNG publishedDate / pubdate), or None."""
+    raw = str((x or {}).get("publishedDate") or (x or {}).get("pubdate") or "").strip()
+    if not re.match(r"\d{4}-\d{2}-\d{2}", raw):
+        return None
+    try:
+        d = datetime.datetime.fromisoformat(raw[:25].replace("Z", "+00:00").replace(" ", "T", 1))
+    except ValueError:
+        try:
+            d = datetime.datetime.fromisoformat(raw[:10])
+        except ValueError:
+            return None
+    if d.tzinfo is None:
+        d = d.replace(tzinfo=datetime.timezone.utc)
+    t = d.timestamp()
+    return t if t <= time.time() + 86400 else None    # a date in the future is no date
+
+
+def _count(key, n=1):
+    day = time.strftime("%Y-%m-%d")
+    with _lock:
+        if _today["day"] != day:
+            _today.update(day=day, searches=0, old=0, dropped=0, hints=0)
+        _today[key] += n
+
+
+def sieve(results, period, now=None, zone=None, note=True):
+    """The hits of a search for `period` ("day"/"week"/""): (kept hits, each with "_when", the newest dated time or None,
+    whether a hit of the period is among them). For a period, hits dated before it are dropped. note: the answer says
+    it when nothing of the period was found (not for the briefing's topics: a quiet topic is no news)."""
+    now = time.time() if now is None else now
+    for x in results:
+        x["_when"] = hit_time(x)
+    dated = [x["_when"] for x in results if x["_when"]]
+    newest = max(dated) if dated else None
+    if not period:
+        return results, newest, True
+    edge = now - WINDOW[period]
+    kept = [x for x in results if not x["_when"] or x["_when"] >= edge]
+    dropped = len(results) - len(kept)
+    inside = any(x["_when"] and x["_when"] >= edge for x in kept)
+    _count("searches")
+    if dropped:
+        _count("dropped", dropped)
+        print(f"frisch: search dropped | {dropped} old hits | {period}", flush=True)
+    if not inside:
+        _count("old")
+        print(f"frisch: search without a current hit | {period}", flush=True)
+        if note:
+            note_search(newest or 0)
+    return kept, newest, inside
+
+
+def hit_line(x, now=None, zone=None):
+    """„Datum: heute 06:10“ or „Datum: unbekannt“ for the text the model gets."""
+    return f"Datum: {stand(x['_when'], now, zone)}" if x.get("_when") else "Datum: unbekannt"
+
+
+def nothing_current(period, newest, now=None, zone=None):
+    """The line on top of a search result without a hit of its period."""
+    span = "von heute" if period == "day" else "aus den letzten Tagen"
+    old = f" Der neueste Treffer mit Datum ist von {stand(newest, now, zone)}." if newest else ""
+    return (f"Kein Treffer {span} gefunden.{old} Say clearly that you found nothing {span} and give the date of what "
+            "you report; never present an older hit as today's news.")
+
+
+# ---------------------------------------------------------------- the answer's notes (vorrat's turn state)
+def note_search(newest):
+    """A search of this answer had no hit of its period (newest: its newest dated hit or 0)."""
+    import vorrat
+    cur = vorrat.current()
+    if cur is not None:
+        cur.setdefault("frisch", {})["suche"] = newest
+
+
+DIENST_NAME = {"mail": ("E-Mails", "e-mail"), "calendar": ("Kalender", "calendar"), "weather": ("Wetter", "weather"),
+               "parcels": ("Pakete", "parcels")}
+
+
+def nachsatz(turn_state, said, en=False, now=None, zone=None):
+    """The fixed sentence the panel adds when this answer used a reading that was not current, or a search found
+    nothing of its period, and the answer did not say so itself; "" otherwise."""
+    cur = turn_state if isinstance(turn_state, dict) else {}
+    said = str(said or "")
+    parts = []
+    for d, when in sorted((cur.get("when") or {}).items()):
+        if d not in DIENST_NAME or not when:
+            continue
+        at = stand(when, now, zone)
+        if at.split(" ")[-1] in said and ("gestern" not in at or "gestern" in said.lower()):
+            continue   # the answer said the time (and the day, when it was not today)
+        name = DIENST_NAME[d][1 if en else 0]
+        parts.append(f"{name}: as of {at}" if en else f"{name}: Stand {at} Uhr")
+        print(f"frisch: hint said | {d} | {'today' if is_today(when, now, zone) else 'older'}", flush=True)
+    if "suche" in (cur.get("frisch") or {}):
+        newest = cur["frisch"]["suche"]
+        low = said.lower()
+        if not any(w in low for w in ("nichts aktuelles", "nichts von heute", "nicht von heute", "keine aktuellen",
+                                      "nothing current", "nothing from today")) \
+                and not (newest and stand(newest, now, zone).split(",")[0].split(" ")[0] in low):
+            if en:
+                parts.append("I found nothing current on the web" + (f", the newest hit is from {stand(newest, now, zone)}" if newest else ""))
+            else:
+                parts.append("Aktuelles von heute habe ich im Netz nicht gefunden"
+                             + (f", der neueste Treffer ist von {stand(newest, now, zone)}" if newest else ""))
+            print("frisch: hint said | search | older", flush=True)
+    if not parts:
+        return ""
+    _count("hints")
+    return ("Not quite current: " if en else "Nicht ganz aktuell: ") + "; ".join(parts) + "."
+
+
+def for_live():
+    """Today: searches for a period, of them without a current hit, old hits dropped, hints added (numbers only)."""
+    day = time.strftime("%Y-%m-%d")
+    with _lock:
+        return {k: _today[k] for k in ("searches", "old", "dropped", "hints")} if _today["day"] == day \
+            else {"searches": 0, "old": 0, "dropped": 0, "hints": 0}
+
+
+def live_sub():
+    c = for_live()
+    if not (c["searches"] or c["hints"]):
+        return ""
+    return (f" · tagesaktuell: heute {c['searches']} Suchen mit Zeitraum, {c['old']} ohne Treffer von heute, "
+            f"{c['dropped']} alte Treffer verworfen, {c['hints']} Stand-Hinweise")

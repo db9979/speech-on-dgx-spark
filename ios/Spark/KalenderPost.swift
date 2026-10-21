@@ -2061,6 +2061,16 @@ struct MailView: View {
             if let kept { Merken.keepObject(kept, d) }
             keptAt = nil
             error = nil
+            // Tagesaktuell (Dominik 2026-10-21): an opened mail counts as read, like Apple Mail; only with Mails ordnen
+            if item.unread, talk.allowed.areas.contains("mailmanage") {
+                let id = item.id, src = folder?.name ?? "INBOX"
+                Task {
+                    if (try? await api.object("POST", "api/profile/mail/act",
+                                              body: ["id": id, "action": "read", "folder": "", "mid": "", "src": src])) != nil {
+                        await post.load(true)
+                    }
+                }
+            }
         } catch {
             if m == nil { self.error = error.localizedDescription }
         }

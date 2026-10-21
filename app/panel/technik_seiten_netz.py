@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "aussen": {
-        "stand": "54f45464b3",
+        "stand": "2349f80163",
         "bezug": {
             "dienstwacht.TIMEOUT": ["s5"], "notaus.locked_tools": ["s3"], "dienstwacht.tool_down": ["s5"],
             "netguard.client": ["s8", "s9", "s10"], "netguard.IMAP4_SSL": ["s9"],
@@ -68,10 +68,14 @@ SEITEN = {
               ("netguard.DIRECT_OK", "netguard.DIRECT_OK"),
               ("Das Sprachmodell, SearXNG an der eingetragenen Adresse, Wetter, Fahrplan, Wikipedia und feste Dienste "
                "wie Apple-Push laufen direkt, ohne Wächter. Welche Module das dürfen und warum, steht in "
-               "netguard.DIRECT_OK; ein Selbsttest meldet jedes Modul, das direkt verbindet und dort fehlt.",
+               "netguard.DIRECT_OK; ein Selbsttest meldet jedes Modul, das direkt verbindet und dort fehlt. Fragt die "
+               "Person nach Heutigem oder den letzten Tagen (feste Wörter, frisch.zeitraum), sucht SearXNG nur in diesem "
+               "Zeitraum (bei Nachrichten auch in seiner Kategorie News); jeder Treffer trägt sein Datum, ältere fallen weg.",
                "The language model, SearXNG at the entered address, weather, transit, Wikipedia and fixed services "
                "like Apple push go directly, without the guard. Which modules may do that and why is listed in "
-               "netguard.DIRECT_OK; a self-test reports every module that connects directly and is missing there."),
+               "netguard.DIRECT_OK; a self-test reports every module that connects directly and is missing there. When "
+               "the person asks for today or the last days (fixed words, frisch.zeitraum), SearXNG searches only that "
+               "period (for news also its news category); every hit carries its date, older ones are dropped."),
               ("ok", "ja", "s9")),
             S("s7", "schritt", ("Stufe des Dienstes", "Level of the service"),
               ("Heimnetz · Nutzer · nur Internet", "home · user · internet only"),

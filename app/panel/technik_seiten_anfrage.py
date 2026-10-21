@@ -509,12 +509,12 @@ SEITEN = {
         "heute": [],
     },
     "antwort": {
-        "stand": "25182bf158",
+        "stand": "b5ed43f446",
         "bezug": {
             "chat.MAX_SAVES": ["s11"], "chat.LOOP_SAME": ["s11"], "chat._answer": ["s4", "s5", "s11"], "chat_modell.model_turn": ["s4", "s11"], "chat_ton.speech_out": ["s8"],
             "chat.split_sentences": ["s5"], "chat.said_key": ["s8"], "chat.no_code": ["s8"],
             "chat.loop_count": ["s11"], "answercheck.known": ["s6"], "answercheck.unsupported": ["s6"],
-            "answercheck.fresh": ["s6"], "taten.announces": ["s7", "s12"], "vorrat.WAIT": ["s11"],
+            "answercheck.fresh": ["s6"], "taten.announces": ["s7", "s12"], "vorrat.WAIT": ["s11"], "frisch.nachsatz": ["s12"],
         },
         "kurz": ("Hier entsteht die Antwort: Das Panel fragt das Sprachmodell in Runden, lässt angebotene Werkzeuge "
                  "laufen, prüft jeden fertigen Satz mit festen Regeln und schickt Text und Ton als einen Strom ans Gerät. "
@@ -640,7 +640,7 @@ SEITEN = {
                "die Gruppe des ersten Werkzeugs und das feste Hinweiswort (weiche.learn), nie ein Wort der Frage. "
                "Lesende Werkzeuge (Kalender, Wetter, Pakete) nehmen ihre Daten aus dem Speicher ihres Dienstes, solange "
                "sie frisch genug sind (Vorrat je Profil, vorrat.take); ein älterer Stand wartet höchstens {vorrat.WAIT} s "
-               "auf den Server und kommt sonst mit „Stand hh:mm“, „schau nochmal nach“ fragt immer den Server. Jede "
+               "auf den Server und kommt sonst mit Stand und Tag („Stand gestern 18:00“, frisch.stand), „schau nochmal nach“ fragt immer den Server. Jede "
                "Antwort hält fest, wie lange die Werkzeuge warteten und woher jeder Dienst kam (latency, Zustand → Prüfen).",
                "Half words before the call are taken back, a finished sentence stays. Every call goes through "
                "chat_tools.run; the result comes back as a tool message. A tool that fails twice the same way is "
@@ -648,18 +648,22 @@ SEITEN = {
                "first tool and the fixed hint word (weiche.learn), never a word of the question. Reading tools (calendar, "
                "weather, parcels) take their data from their service's memory while it is fresh enough (Vorrat je "
                "Profil, vorrat.take); an older reading waits at most {vorrat.WAIT} s for the server and otherwise comes "
-               "with „as of hh:mm“, „look again“ always asks the server. Every answer keeps how long the tools waited "
+               "with its time and day („as of yesterday 18:00“, frisch.stand), „look again“ always asks the server. Every answer keeps how long the tools waited "
                "and where each service came from (latency, Status → Checks)."),
               ("zurueck", ("nächste Runde", "next round"), "s4")),
             S("s12", "schritt", ("Ehrliche Schlusssätze", "Honest closing sentences"),
               ("feste Sätze statt der weggelassenen", "fixed sentences instead of the dropped ones"),
               ("Fiel ein Satz wegen einer Zahl weg, sagt das Panel „Genauere Angaben dazu habe ich nicht.“; fiel eine "
-               "Tat weg, einen festen Satz aus taten.sentence. Beide Sätze kommen vom Panel, nie vom Modell. Antwortet das "
+               "Tat weg, einen festen Satz aus taten.sentence. Kam ein Dienst nur mit einem älteren Stand oder fand eine Suche nach Heutigem "
+               "nichts von heute, und die Antwort sagt das nicht selbst, hängt das Panel „Nicht ganz aktuell: Wetter: Stand gestern "
+               "23:10 Uhr.“ an (frisch.nachsatz, Regel „Stand nennen“ der Antwort-Prüfung). Alle Sätze kommen vom Panel, nie vom Modell. Antwortet das "
                "Sprachmodell nicht, weil es gerade wechselt, neu startet oder gemessen wird, sagt das Panel das mit der "
                "erwarteten Zeit (llmstart.satz, auch in der Wartungspause eines Wechsels).",
                "When a sentence fell out because of a figure, the panel says „I have no more precise details on "
-               "that.“; when a deed fell out, a fixed sentence from taten.sentence. Both come from the panel, never "
-               "from the model. When the language model does not answer because it is switching, restarting or "
+               "that.“; when a deed fell out, a fixed sentence from taten.sentence. When a service came only with an "
+               "older reading or a search for today found nothing of today, and the answer does not say so itself, the panel "
+               "adds „Not quite current: weather: as of yesterday 23:10.“ (frisch.nachsatz, rule „name the stand“ of the "
+               "answer check). All of them come from the panel, never from the model. When the language model does not answer because it is switching, restarting or "
                "being measured, the panel says so with the expected time (llmstart.satz, also during a switch's "
                "maintenance pause).")),
             S("s13", "schritt", ("Nachfragen des Panels", "The panel's own questions"),
@@ -750,14 +754,15 @@ SEITEN = {
             ("taten.check", ("Tat behauptet, aber kein Werkzeug hat es geschafft", "deed claimed, no tool managed it")),
             ("taten.announces", ("Werkzeugaufruf oder Tat nur angekündigt", "tool call or deed only announced")),
             ("taten.sentence", ("der feste ehrliche Satz", "the fixed honest sentence")),
+            ("frisch.nachsatz", ("Stand-Hinweis, wenn etwas nicht aktuell war", "stand note when something was not current")),
         ],
-        "tests": ["test_panel", "test_taten", "test_handlungsregel", "test_fast_start", "test_morgen_termine"],
+        "tests": ["test_panel", "test_taten", "test_handlungsregel", "test_fast_start", "test_morgen_termine", "test_tagesaktuell"],
         "heute": [],
     },
 
     # ------------------------------------------------------------------ Werkzeuge (chat_tools.run)
     "werkzeuge": {
-        "stand": "02aae99b69",
+        "stand": "886eccfdbc",
         "bezug": {
             "chat.LOCKED_OUTSIDE": ["s4"], "notaus.INTERNET_TOOLS": ["s3"], "werkzeuge.NAMES": ["s11"],
             "chat_tools.run": ["s2", "s7"], "chat.wrap_outside": ["s9"], "chat.LOCKED_MAIL": ["s4"],
@@ -833,11 +838,14 @@ SEITEN = {
               ("Erweiterungen bekommen Profil, Gerät und Herkunft vom Panel, nie vom Modell. Smart-Home-Änderungen "
                "brauchen das Codewort in der letzten Nachricht, wenn eines eingestellt ist. Verbindungen zu Diensten "
                "draußen gehen über den Wächter. Home Assistant liest Zustände aus der Kopie der Live-Verbindung "
-               "(halive.states), solange sie für genau diese Adresse und diesen Schlüssel steht, sonst über HTTP.",
+               "(halive.states), solange sie für genau diese Adresse und diesen Schlüssel steht, sonst über HTTP. Den "
+               "Zeitraum der Websuche bestimmen die eigenen Worte der Frage und die Suchwörter (frisch.zeitraum), nie "
+               "die Zeitangabe des Panels.",
                "Extensions get profile, device and origin from the panel, never from the model. Smart home changes need "
                "the code word in the latest message when one is set. Connections to outside services go through the "
                "guard. Home Assistant reads states from the live connection's copy (halive.states) while it stands for "
-               "exactly this address and key, else over HTTP.")),
+               "exactly this address and key, else over HTTP. The period of the web search comes from the question's own "
+               "words and the query (frisch.zeitraum), never from the panel's time note.")),
             S("s8", "schritt", ("Fehler als Satz", "Errors as a sentence"),
               ("„nicht erreichbar“, nie raten", "„not reachable“, never guess"),
               ("Ist ein Dienst nicht erreichbar, wird daraus ein kurzer Ergebnis-Text („nicht erreichbar“, „Suche "

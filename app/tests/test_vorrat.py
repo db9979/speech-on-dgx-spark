@@ -27,6 +27,7 @@ from tests import helpers
 helpers.start()
 import panel  # noqa: E402,F401
 import calendars  # noqa: E402
+import frisch  # noqa: E402
 import latency  # noqa: E402
 import parcels  # noqa: E402
 import vault  # noqa: E402
@@ -119,7 +120,8 @@ class Take(unittest.TestCase):
         self.assertEqual(len(calls), 1)   # asked anew behind it
         vorrat.use(st)
         at = datetime.datetime.fromtimestamp(when, ZONE)
-        self.assertIn(f"As of {at:%H:%M}", vorrat.stand("weather"))
+        self.assertIn(f"As of {frisch.stand(when, zone=ZONE)}: ", vorrat.stand("weather"))   # with its day (Tagesaktuell)
+        self.assertIn(f"{at:%H:%M}", vorrat.stand("weather"))
 
     def test_old_reading_when_the_server_fails(self):
         when = time.time() - vorrat.DIENSTE["weather"][0] - 60

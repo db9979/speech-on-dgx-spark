@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.891** Tagesaktuell: der Stand nennt immer seinen Tag („Stand gestern 18:00“), das Wetter nimmt „heute“ von der Uhr statt aus einer Vorhersage von gestern, der Morgenbericht nennt Mails mit Tag und nur noch ungelesene, die Websuche sucht bei Fragen nach Heutigem im Zeitraum mit Datum je Treffer, und was nicht aktuell ist, sagt ein fester Satz des Panels; eine geöffnete Mail gilt als gelesen
 - **V01.0.890** Fix iPhone-App: die Kontakte-Karte lädt die .vcf-Datei zum Teilen als Daten (die App ließ sich seit V01.0.888 nicht bauen)
 - **V01.0.889** CarPlay Runde 2: kein Ins-Wort-Fallen im Auto, „Nicht erkannt“ statt stillem Ende, Funkaussetzer beenden nichts, Mails und Fristen hängen nicht, „Mein Tag“, „Erinnerung sprechen“, Briefing beim Einsteigen
 - **V01.0.888** Kontakte wie Apple Kontakte (Stufe 3a): eigene Seite im Menü mit Adressbüchern als Gruppen, Suche, A–Z mit Buchstabenleiste, Karte mit Nachricht, Anruf, Mail, Termin, Teilen und „Mit Anna“ (nächster Termin, letzte Mail); Tipp auf den Absender einer Mail öffnet die Karte; mit dem Admin-Schalter „Kontakte ändern“ (aus) Bearbeiten mit − und + je Feld, zurück ins eigene Adressbuch mit ETag, neue Karten auch „Auf dem Spark“; iPhone unter Meine Sachen
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.884** Fix iPhone-App: der Inhalt einer formatierten Mail blieb leer (die Sperrregel der Web-Ansicht wurde nicht übersetzt); im Dunkelmodus erscheint eine schlichte Mail hell auf dunklem Grund wie bei Apple Mail, eine Mail mit eigenen Farben bleibt auf Weiß
 - **V01.0.883** Der Begleiter am PC und Mac zeigt das Spark-Update: „Spark-Update läuft: 40 % · Schritt“ im Zustand, beim Neustart „Spark startet für das Update neu …“
 - **V01.0.882** Besprechungs-Aufgaben unter Offen: jede Aufgabe, die der Spark-Begleiter aus einer Besprechung auf eine Liste legt, wird auch eine Karte „Aus Besprechung“ unter Offen (nicht im Gespräch); „Erledigt“ hakt den Eintrag ab, abgehakt, zurückgeholt oder gelöscht auf der Liste folgt die Karte, überfällig bleibt sie offen
-- **V01.0.881** Tests des Update-Fensters wackeln nicht mehr: sie schalten ihre Schritte selbst weiter
 
 
 

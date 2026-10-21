@@ -543,7 +543,7 @@ def lookup(uid, query="", days=7, unread=False, limit=8, stale=False, budget=Non
         if old:
             return old[1], old[0]
         kept = None if words else _supply(uid, accts, days, unread, limit)
-        if kept:
+        if kept and time.time() - kept[1] < vorrat.DIENSTE["mail"][1]:   # Tagesaktuell: never a listing of days ago
             return kept
     if not done.wait(budget):
         raise TimeoutError("still loading")
@@ -722,10 +722,14 @@ def listing(uid, query="", days=7, unread=False, limit=8, zone=None):
 
 
 def _as_of(t):
-    """The line the assistant gets with an older listing (lookup's as_of), its time in the Spark's zone."""
+    """The line the assistant gets with an older listing (lookup's as_of): its time with the day (frisch.stand, the
+    Spark's zone), and the answer's note, so frisch.nachsatz says it when the answer does not."""
     if not t:
         return ""
-    return f"\n(Listing as of {local(datetime.datetime.fromtimestamp(t, datetime.timezone.utc)):%H:%M}; the mailboxes are being read again right now.)"
+    import frisch
+    vorrat.note("mail", "alt", t)
+    at = frisch.stand(t)
+    return f"\n(Listing as of {at}; the mailboxes are being read again right now. Say „Stand {at} Uhr“.)"
 
 
 def known(uid, sender):
@@ -1098,10 +1102,14 @@ def attachment(uid, query="", days=30, most=30 * 1024 * 1024):
 
 
 def briefing(uid):
-    """One part of the daily briefing: the unread messages of the last two days."""
-    (found, errors, _), as_of = lookup(uid, "", 2, True, 8, fresh=ASK_FRESH, wait=ASK_WAIT)
-    lines = [f"from {known(uid, h['from']).split(' <')[0]}: {h['subject'] or '(no subject)'}" for _, _, h in found]
-    out = ("Unread e-mails (last 2 days, up to 8):\n" + "\n".join(lines)) if lines else "Unread e-mails: none."
+    """One part of the daily briefing: the unread messages of the last two days, each with its day (Tagesaktuell: one of
+    yesterday never sounds new), from a listing at most CACHE_SECONDS old, so a mail read meanwhile is not named."""
+    import frisch
+    (found, errors, _), as_of = lookup(uid, "", 2, True, 8, fresh=CACHE_SECONDS, wait=ASK_WAIT)
+    lines = [f"{frisch.stand(h['date'].timestamp())} from {known(uid, h['from']).split(' <')[0]}: {h['subject'] or '(no subject)'}"
+             for _, _, h in found]
+    out = ("Unread e-mails (last 2 days, up to 8, with the day they came; say „gestern“ for yesterday's):\n"
+           + "\n".join(lines)) if lines else "Unread e-mails: none."
     out += "".join(f"\nMailbox '{n}' could not be read: {e}" for n, e in errors) + _as_of(as_of)
     return _wrap(out)
 

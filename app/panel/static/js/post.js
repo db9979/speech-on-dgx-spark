@@ -1,6 +1,6 @@
 // E-Mail (Dominik 2026-10-18, plan kalender-mail/plan.md 2a 4a): the profile's mailboxes as a page of its own in the
 // menu. „Posteingang“ lists the newest messages of every mailbox (GET /api/profile/mail/inbox) and shows one as plain
-// text (GET /api/profile/mail/message, it stays unread); „Einstellungen“ holds everything set up for mail (#mailbox
+// text (GET /api/profile/mail/message; with Mails ordnen it is then marked read, postSeen); „Einstellungen“ holds everything set up for mail (#mailbox
 // with Aufräumen, Mailstil and Pakete in #parbox; pages of Ich until V01.0.807). Sender, subject and text come from
 // other people: in the page only through esc(); a mail's HTML only as the Spark cleaned it (mailansicht.py), in a frame
 // where nothing runs, pictures from outside only after „Bilder laden“, a link only after its address was shown.
@@ -68,7 +68,13 @@ async function postRead(id){POST.sel=id;POST.msg=null;if(POST.sug[id]&&POST.sug[
   catch(e){if(seq===POST.mseq)POST.msg={err:e.message||t('Nicht erreicht','Not reached')}}
   postDraw();
   // Antwortvorschläge „1a“: a mail that stays open a moment gets its answers prepared, „Antworten“ finds them ready
-  if(SEND_ON&&POST.msg&&!POST.msg.err)setTimeout(()=>{if(POST.sel===id&&seq===POST.mseq)postSuggest(id)},POST_SUG_MS)}
+  if(SEND_ON&&POST.msg&&!POST.msg.err)setTimeout(()=>{if(POST.sel===id&&seq===POST.mseq)postSuggest(id)},POST_SUG_MS);
+  // Tagesaktuell (Dominik 2026-10-21): an opened mail counts as read, like Apple Mail; only with Mails ordnen (the server's mark)
+  if(ORD_ON&&POST.msg&&!POST.msg.err)setTimeout(()=>{if(POST.sel===id&&seq===POST.mseq)postSeen(id)},POST_SEEN_MS)}
+const POST_SEEN_MS=600;
+async function postSeen(id){const x=POST.data&&POST.data.items.find(i=>i.id===id);if(!x||!x.unread)return;   // quiet: no note, no error
+  const {r}=await apiTry('/api/profile/mail/act',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,action:'read',folder:'',mid:'',src:postSrc(),sure:false})});
+  if(r.ok){x.unread=false;postDraw()}}
 // Antwortvorschläge (antwortvorschlag.py): three answers per mail, asked once, kept on the Spark for a while
 const POST_SUG_MS=1200;
 async function postSuggest(id){if(POST.sug[id])return;   // asked once; a failed one again when the mail is opened anew

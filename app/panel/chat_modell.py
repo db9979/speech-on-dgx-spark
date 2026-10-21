@@ -7,6 +7,7 @@ import asyncio
 import calendars
 import chat
 import fixes
+import frisch
 import gedaechtnis
 import homeassistant
 import httpx
@@ -396,6 +397,17 @@ async def model_turn(*, acked, body, c, came_from, carry, ccfg, cfg, check_on, e
             trace["said"] += note
             st["shown"] += len(note) + 1
             await sentences.put(note)
+        stand_note = frisch.nachsatz(getattr(turn, "vorrat", None), trace["said"],
+                                     chat.guess_language(messages[-1]["content"]) == "English",
+                                     zone=chat.user_zone(body.get("tz"))) if check_on else ""
+        if stand_note:
+            # Tagesaktuell (frisch.py, rule „Stand nennen“ of the Antwort-Prüfung): a reading that was not current or a
+            # search without a hit of today, and the answer did not say so: one fixed sentence of the panel
+            trace["calls"].append({"name": "Antwort-Prüfung", "args": "", "result": "Stand-Hinweis angehängt (nicht ganz aktuell)"})
+            await out.put({"type": "text", "delta": (" " if st["shown"] else "") + stand_note})
+            trace["said"] += (" " if trace["said"] else "") + stand_note
+            st["shown"] += len(stand_note) + 1
+            await sentences.put(stand_note)
         fix_asked = False
         if taten.ANNOUNCED in st["held_acts"] and st["ran"]:
             # an announcement before a tool call that did come: left out, the tool's answer says the rest

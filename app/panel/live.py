@@ -1372,6 +1372,11 @@ def snapshot(view="admin", now=None):
         vsub = lambda d: ""   # noqa: E731
         vround, halv, vkept = {}, {}, {}
     try:
+        import frisch
+        fsub = frisch.live_sub()
+    except Exception:
+        fsub = ""
+    try:
         import antwortvorschlag
         avs = antwortvorschlag.for_live()
     except Exception:
@@ -1570,6 +1575,8 @@ def snapshot(view="admin", now=None):
             x["sub"] += f" · versiegelt bei {vkept[x['id']]} Profilen"
         if x["id"] == "cal" and vround.get("rounds"):   # Vorrat je Profil: one round for all services (numbers)
             x["sub"] += f" · Vorrat: heute {vround['rounds']} Runden, {vround['refreshed']} Dienste aufgefrischt"
+        if x["id"] == "web":   # Tagesaktuell (frisch.py): searches for a period, old hits dropped, hints (numbers only)
+            x["sub"] += fsub
         if x["id"] == "ha" and halv.get("open"):   # Home Assistant live: connections and state changes today (numbers)
             x["sub"] += f" · live: {halv['open']} Verbindungen, heute {halv['changes']} Änderungen"
         if x["id"] == "nasquelle" and nql.get("on"):   # Wissensordner: folders, documents, failing (no path, no name)

@@ -297,7 +297,8 @@ SEARCH_HINT = ("Du kannst mit dem Werkzeug web_search im Internet suchen. Nutze 
                "oder dir unbekannte Informationen braucht, sonst nicht. Bei Ergebnissen, Spielen, Nachrichten und "
                "allem, was nach deinem Wissensstand passiert sein kann, suchst du immer, statt aus eigenem Wissen "
                "zu antworten oder zu sagen, dass etwas nicht stattgefunden hat. Fasse das Gefundene in eigenen Worten "
-               "kurz zusammen und lies keine Adressen oder Links vor.")
+               "kurz zusammen und lies keine Adressen oder Links vor. Jeder Treffer trägt sein Datum: was nicht von "
+               "heute ist, sagst du mit seinem Tag, und Älteres gibst du nie als heutige Neuigkeit aus.")
 
 
 # Memory per profile. The tools only ever act on the profile of the request (cookie or device
@@ -1270,6 +1271,8 @@ class _SearxResults(html.parser.HTMLParser):
         if tag == "article" and "result" in cls:
             self.cur = {"title": "", "url": "", "content": ""}
             self.results.append(self.cur)
+        elif self.cur is not None and tag == "time" and a.get("datetime"):
+            self.cur["publishedDate"] = a["datetime"]   # Tagesaktuell (frisch.py): the hit's date
         elif self.cur is not None:
             if tag == "a" and self.field is None and not self.cur["url"] and self._in_h3:
                 self.cur["url"], self.field = a.get("href", ""), "title"
@@ -1297,20 +1300,11 @@ class SearchUnreachable(RuntimeError):
     """SearXNG answered, but none of its search engines did."""
 
 
-async def web_search(c, ccfg, query):
-    """Returns (text for the LLM, [{title, url}])."""
-    fast = ccfg.get("search_fast") is True
-    key = (re.sub(r"\s+", " ", str(query)).strip().lower(), int(ccfg.get("search_results") or 5),
-           int(ccfg.get("search_pages") or 0))
-    hit = _search_cache.get(key) if fast else None
-    if hit and time.time() - hit[0] < SEARCH_CACHE:
-        print("chat: web search from memory", flush=True)
-        return hit[1], [dict(x) for x in hit[2]]
-    url = ccfg["search_url"].rstrip("/")
-    url = url if url.endswith("/search") else url + "/search"
-    r = await c.get(url, params={"q": query, "format": "json"}, timeout=10, follow_redirects=True)
+async def _searx(c, url, params):
+    """The raw hits of one SearXNG search (JSON, else its normal page)."""
+    r = await c.get(url, params=dict(params, format="json"), timeout=10, follow_redirects=True)
     if r.status_code == 403:  # JSON not enabled on this instance: read the normal results page
-        r = await c.get(url, params={"q": query}, timeout=10, follow_redirects=True, headers={
+        r = await c.get(url, params=params, timeout=10, follow_redirects=True, headers={
             "User-Agent": "Mozilla/5.0 (X11; Linux aarch64) speech-on-dgx-spark",
             "Accept": "text/html", "Accept-Language": "de-DE,de;q=0.9,en;q=0.8"})
         if r.status_code == 429:
@@ -1318,26 +1312,59 @@ async def web_search(c, ccfg, query):
         r.raise_for_status()
         p = _SearxResults()
         p.feed(r.text)
-        raw = [{k: v.strip() for k, v in x.items()} for x in p.results]
-    else:
-        if r.status_code == 429:
-            raise RuntimeError("SearXNG rate limiter blocks the Spark (429): allow its IP in limiter.toml (pass_ip)")
-        r.raise_for_status()
-        data = r.json()
-        raw = data.get("results", [])
-        if not raw and data.get("unresponsive_engines") and not data.get("answers"):
-            # every engine failed: the internet is gone (or SearXNG cannot reach it), not "nothing found"
-            raise SearchUnreachable("no search engine answers (internet gone?)")
+        return [{k: v.strip() for k, v in x.items()} for x in p.results]
+    if r.status_code == 429:
+        raise RuntimeError("SearXNG rate limiter blocks the Spark (429): allow its IP in limiter.toml (pass_ip)")
+    r.raise_for_status()
+    data = r.json()
+    raw = data.get("results", [])
+    if not raw and data.get("unresponsive_engines") and not data.get("answers"):
+        # every engine failed: the internet is gone (or SearXNG cannot reach it), not "nothing found"
+        raise SearchUnreachable("no search engine answers (internet gone?)")
+    return raw
+
+
+async def web_search(c, ccfg, query, period="", news=False, topic=False):
+    """Returns (text for the LLM, [{title, url}]). period "day"/"week" (frisch.zeitraum on the person's words and the
+    query; the briefing's topics "day"): SearXNG searches that period (news words in its news category too), every hit
+    carries its date and hits dated before the period are dropped (Tagesaktuell, frisch.py). topic: a briefing topic,
+    whose quiet day needs no extra sentence in the answer."""
+    import frisch
+    period = period if period in frisch.WINDOW else ""
+    fast = ccfg.get("search_fast") is True
+    key = (re.sub(r"\s+", " ", str(query)).strip().lower(), int(ccfg.get("search_results") or 5),
+           int(ccfg.get("search_pages") or 0), period, bool(news), bool(topic))
+    hit = _search_cache.get(key) if fast else None
+    if hit and time.time() - hit[0] < SEARCH_CACHE:
+        print("chat: web search from memory", flush=True)
+        if hit[3] is not None:   # that search had no hit of its period: this answer says so too (frisch.nachsatz)
+            frisch.note_search(hit[3])
+        return hit[1], [dict(x) for x in hit[2]]
+    url = ccfg["search_url"].rstrip("/")
+    url = url if url.endswith("/search") else url + "/search"
+    params = {"q": query}
+    if period:
+        params["time_range"] = period
+        if news:
+            params["categories"] = "news,general"
+    raw = await _searx(c, url, params)
+    if period and not [x for x in raw if str(x.get("url", "")).startswith(("http://", "https://"))]:
+        # no engine of this SearXNG knows the period (or nothing that new): once without it, the dates decide below
+        print(f"frisch: search without period | {period}", flush=True)
+        raw = await _searx(c, url, {"q": query})
     results = [x for x in raw if str(x.get("url", "")).startswith(("http://", "https://"))]
+    results, newest, inside = frisch.sieve(results, period, note=not topic)
     results = results[:int(ccfg.get("search_results") or 5)]
-    if not results:
+    if not results and not period:
         return "No results found. Tell the user that nothing was found; do not guess.", []
+    if not results:
+        return frisch.nothing_current(period, newest), []
     pages = int(ccfg.get("search_pages") or 0)
     texts = await asyncio.gather(*(page_text(c, x["url"], seconds=PAGE_SECONDS, query=query) if fast else
                                    page_text(c, x["url"]) for x in results[:pages]))
-    lines = [f"Search results for: {query}"]
+    lines = [f"Search results for: {query}"] + ([frisch.nothing_current(period, newest)] if not inside else [])
     for i, x in enumerate(results):
-        lines.append(f"[{i + 1}] {x.get('title', '')} ({x['url']})\n{(x.get('content') or '').strip()}")
+        lines.append(f"[{i + 1}] {x.get('title', '')} ({x['url']}) {frisch.hit_line(x)}\n{(x.get('content') or '').strip()}")
         if i < len(texts) and texts[i]:
             lines.append(f"Page text: {texts[i]}")
     text, sources = "\n\n".join(lines)[:12000], [{"title": x.get("title") or x["url"], "url": x["url"]} for x in results]
@@ -1347,7 +1374,7 @@ async def web_search(c, ccfg, query):
             _search_cache.pop(k, None)
         while len(_search_cache) >= SEARCH_CACHE_MAX:
             _search_cache.pop(next(iter(_search_cache)))
-        _search_cache[key] = (now, text, sources)
+        _search_cache[key] = (now, text, sources, None if inside or topic else (newest or 0))
         print(f"chat: web search, {sum(bool(t) for t in texts)} of {len(texts)} pages in time", flush=True)
     return text, [dict(x) for x in sources]
 
@@ -1511,7 +1538,7 @@ async def morning_briefing(uid, tz="", markdown=False):
             quick = dict(ccfg, search_pages=0, search_results=3)
             for q in cal.get("topics", [])[:4]:
                 try:
-                    parts.append(f"Topic '{q}':\n{(await web_search(c, quick, q))[0][:2000]}")
+                    parts.append(f"Topic '{q}':\n{(await web_search(c, quick, q, 'day', True, True))[0][:2000]}")
                 except Exception:
                     pass
         parts += [x for _, x in await extras.briefing(uid, zone)]
@@ -1523,6 +1550,23 @@ async def morning_briefing(uid, tz="", markdown=False):
         return await llm.complete(BRIEF_MD_SYSTEM if markdown else BRIEF_SYSTEM, "\n\n".join(parts)[:20000],
                                   "Tagesüberblick", 500, temperature=0.2, who=uid, ccfg=ccfg, c=c,
                                   thinking=None if ccfg.get("thinking") else False)
+
+
+async def briefing_checked(uid, tz="", markdown=True):
+    """morning_briefing for the push (due_briefings) run like an answer of the assistant, so its services note an older
+    reading (vorrat); a part that was not current gets the fixed sentence of frisch.nachsatz at the end (Tagesaktuell,
+    Dominik 2026-10-21: „falls es Bedenken gibt, dass die Informationen aktuell sind, soll er das mitteilen“)."""
+    import frisch
+    state = vorrat.begin("", tz)
+
+    async def run():   # its own task: the notes stay with this briefing
+        vorrat.use(state)
+        return await morning_briefing(uid, tz, markdown)
+    text = await asyncio.ensure_future(run())
+    note = frisch.nachsatz(state, text or "", zone=user_zone(tz)) if text else ""
+    if note:
+        print("briefing: with a note on an older reading", flush=True)
+    return f"{text}\n\n{note}" if note else text
 
 
 BRIEF_AHEAD = 10 * 60   # s before a profile's briefing time its text is written ahead (Vorrat je Profil)
@@ -1556,7 +1600,7 @@ async def due_briefings(now=None):
             _brief_ready[uid] = (time.time(), day, None)
             try:
                 await vorrang.quiet("Briefing")
-                _brief_ready[uid] = (time.time(), day, await morning_briefing(uid, s.get("tz", ""), markdown=True))
+                _brief_ready[uid] = (time.time(), day, await briefing_checked(uid, s.get("tz", "")))
                 print("briefing: written ahead", flush=True)
             except Exception as e:
                 print("briefing: ahead failed", type(e).__name__, flush=True)
@@ -1570,7 +1614,7 @@ async def due_briefings(now=None):
             if ready and ready[1] == day and ready[2] and time.time() - ready[0] < BRIEF_KEEP:
                 text = ready[2]
             else:
-                text = await morning_briefing(uid, s.get("tz", ""), markdown=True)
+                text = await briefing_checked(uid, s.get("tz", ""))
         except Exception as e:
             print("briefing:", type(e).__name__, e, flush=True)
             continue

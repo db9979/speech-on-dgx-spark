@@ -32,7 +32,6 @@ import asyncio
 import base64
 import concurrent.futures
 import contextvars
-import datetime
 import json
 import os
 import re
@@ -259,18 +258,25 @@ def note(dienst, kind, when=None):
 
 
 def stand(dienst):
-    """For the tool's text: „As of 14:05 …“ when this answer took an older reading of the service, else ""."""
+    """For the tool's text: „As of heute 14:05 …“ when this answer took an older reading of the service, else ""; the day
+    always comes with the time (frisch.stand: a reading of last evening never sounds like this morning's)."""
     cur = _turn.get()
     when = cur and cur["when"].get(dienst)
     if not when:
         return ""
+    import frisch
     try:
         import chat
         zone = chat.user_zone(cur.get("tz"))
     except Exception:
         zone = None
-    at = datetime.datetime.fromtimestamp(when, zone)
-    return f"\n(As of {at:%H:%M}: the service is slow right now, this is its last reading. Say that time, e.g. „Stand {at:%H:%M} Uhr“.)"
+    at = frisch.stand(when, zone=zone)
+    return f"\n(As of {at}: the service is slow right now, this is its last reading. Say that, e.g. „Stand {at} Uhr“.)"
+
+
+def current():
+    """The notes of the answer that runs in this context (begin/use), or None outside an answer (frisch.py adds its own)."""
+    return _turn.get()
 
 
 def seen(turn_state):

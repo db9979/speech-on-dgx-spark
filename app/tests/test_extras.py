@@ -35,12 +35,16 @@ def fake_weather():
         WX_CALLS.append(("forecast", latitude, longitude))
         today = datetime.date.today()
         days = [(today + datetime.timedelta(days=i)).isoformat() for i in range(7)]
-        hours = [f"{today.isoformat()}T{h:02d}:00" for h in range(24)]
-        return {"current": {"time": f"{today.isoformat()}T08:00", "temperature_2m": 12.4, "weather_code": 3},
+        # like the real service: „current“ is of this hour; rain from two hours on (Tagesaktuell: now comes from the clock)
+        now = datetime.datetime.now()
+        start = datetime.datetime.combine(today, datetime.time())
+        hours = [f"{start + datetime.timedelta(hours=h):%Y-%m-%dT%H}:00" for h in range(48)]
+        rain = now.hour + 2 + (now.date() - today).days * 24
+        return {"current": {"time": f"{now:%Y-%m-%dT%H}:00", "temperature_2m": 12.4, "weather_code": 3},
                 "daily": {"time": days, "weather_code": [61] + [1] * 6, "temperature_2m_max": [16.2, -0.4] + [20] * 5,
                           "temperature_2m_min": [8.9, -3.0] + [10] * 5, "precipitation_probability_max": [80, 70] + [0] * 5,
                           "precipitation_sum": [4.2, 1.0] + [0] * 5, "wind_gusts_10m_max": [55, 20] + [10] * 5},
-                "hourly": {"time": hours, "precipitation_probability": [0] * 14 + [90] * 10, "temperature_2m": [10] * 24}}
+                "hourly": {"time": hours, "precipitation_probability": [0] * rain + [90] * (48 - rain), "temperature_2m": [10] * 48}}
     return app
 
 
@@ -145,7 +149,9 @@ class Weather(unittest.TestCase):
         helpers.set_config(deny={})                      # released: works at once
         out = ask(a, "TOOL weather {}")
         self.assertIn("Heute in Ulm, Baden-Württemberg: leichter Regen, 9 bis 16 Grad, Regenrisiko 80 Prozent (etwa 4 Liter)", out)
-        self.assertIn("Regen wahrscheinlich ab 14 Uhr", out)
+        at = re.search(r"Regen wahrscheinlich ab (\d+) Uhr", out)   # two hours from the clock's hour, never a fixed one
+        self.assertTrue(at, out)
+        self.assertIn(int(at.group(1)), {(datetime.datetime.now().hour + k) % 24 for k in (1, 2)})
         tomorrow = ask(a, 'TOOL weather {"date": "%s"}' % (TODAY + datetime.timedelta(days=1)).isoformat())
         self.assertIn("Morgen in Ulm, Baden-Württemberg: meist sonnig, minus 3 bis 0 Grad", tomorrow)
         self.assertIn("Heute in Ulm", ask(a, "TOOL daily_briefing {}"))

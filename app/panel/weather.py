@@ -255,20 +255,49 @@ def _label(day, today):
         f"{WEEKDAYS[day.weekday()]}, {day.day}.{day.month}."
 
 
-async def report(lat, lon, name, first=None, days=1, uid=None):
-    """Fixed sentences for days from `first` (a date in the place's time zone; default today); uid: the profile's own
-    place (forecast)."""
+CURRENT_MAX = 2 * 3600   # „Jetzt …“ only from a reading at most this old (a kept forecast may be hours old)
+
+
+def place_now(d, now=None):
+    """Now at the forecast's place, from the clock (Tagesaktuell, frisch.py): never the first day of the data, which is
+    yesterday for a forecast read before midnight. The offset comes with the forecast (timezone auto)."""
+    off = d.get("utc_offset_seconds")
+    t = time.time() if now is None else now
+    if isinstance(off, (int, float)) and abs(off) <= 14 * 3600:
+        return datetime.datetime.fromtimestamp(t, datetime.timezone(datetime.timedelta(seconds=int(off))))
+    return datetime.datetime.fromtimestamp(t).astimezone()
+
+
+def _current_fresh(cur, here):
+    """The forecast's „current“ block is from the last CURRENT_MAX seconds (its time is local to the place)."""
+    try:
+        at = datetime.datetime.fromisoformat(str(cur.get("time") or "")[:16]).replace(tzinfo=here.tzinfo)
+    except ValueError:
+        return False
+    return 0 <= (here - at).total_seconds() <= CURRENT_MAX
+
+
+async def report(lat, lon, name, first=None, days=1, uid=None, now=None):
+    """Fixed sentences for days from `first` (a date in the place's time zone; default today by the clock); uid: the
+    profile's own place (forecast)."""
     d = await forecast(lat, lon, 7, uid)
     dates = [datetime.date.fromisoformat(x) for x in (d.get("daily") or {}).get("time") or []]
     if not dates:
         return f"Für {name} gibt es gerade keine Vorhersage."
-    today = dates[0]
+    here = place_now(d, now)
+    today = here.date()
     first = first or today
     out = []
     cur = d.get("current") or {}
+    if first == today and today not in dates:
+        print("frisch: weather forecast without today | not said", flush=True)
+        return f"Für {name} habe ich gerade keine Vorhersage für heute."
     if first == today and isinstance(cur.get("temperature_2m"), (int, float)):
-        out.append(f"Jetzt in {name}: {_deg(cur['temperature_2m'])} Grad, {CODES.get(_n(cur.get('weather_code')), 'wechselhaft')}.")
-        r = rain_hours(d, str(cur.get("time") or ""))
+        if _current_fresh(cur, here):
+            out.append(f"Jetzt in {name}: {_deg(cur['temperature_2m'])} Grad, {CODES.get(_n(cur.get('weather_code')), 'wechselhaft')}.")
+        else:
+            print("frisch: weather current too old | not said", flush=True)
+        r = rain_hours(d, here.strftime("%Y-%m-%dT%H:%M"))
         if r:
             out.append(r)
     found = [first + datetime.timedelta(days=k) for k in range(max(1, min(7, days)))]
@@ -279,19 +308,21 @@ async def report(lat, lon, name, first=None, days=1, uid=None):
     return " ".join(out)
 
 
-async def notable_tomorrow(uid):
+async def notable_tomorrow(uid, now=None):
     """(fixed sentence, ["rain", "frost", "heat", "storm"]) when tomorrow's weather is worth a word, else ("", [])."""
     w = get(uid)
     if not w:
         return "", []
     d = await forecast(w["lat"], w["lon"], 3, uid)
     dy = d.get("daily") or {}
-    if len(dy.get("time") or []) < 2:
+    tomorrow = (place_now(d, now).date() + datetime.timedelta(days=1)).isoformat()   # by the clock, not the data's first day
+    if tomorrow not in (dy.get("time") or []):
         return "", []
+    idx = dy["time"].index(tomorrow)
 
     def at(k):
         v = dy.get(k) or []
-        return v[1] if len(v) > 1 else None
+        return v[idx] if len(v) > idx else None
     why = []
     if (_n(at("precipitation_probability_max")) or 0) >= 60:
         why.append("rain")
@@ -301,7 +332,7 @@ async def notable_tomorrow(uid):
         why.append("heat")
     if (_n(at("wind_gusts_10m_max")) or 0) >= 60:
         why.append("storm")
-    return (day_sentence(d, 1, w["name"], "Morgen"), why) if why else ("", [])
+    return (day_sentence(d, idx, w["name"], "Morgen"), why) if why else ("", [])
 
 
 # ---------------------------------------------------------------- assistant tool

@@ -2504,6 +2504,13 @@
 "titel": "CarPlay Runde 2",
 "text": "A: iPhone-App aus TestFlight mit V01.0.889 oder neuer. B: Im Auto „Mit Spark sprechen“, eine Frage, die Antwort ganz anhören: danach kommt der Zuhör-Ton und Spark hört weiter zu; eine Folgefrage stellen. C: Während Spark spricht laut reden: die Antwort läuft weiter; „Mit Spark sprechen“ antippen unterbricht. D: „Neue Mails vorlesen“: sofort „Ich schaue in deine Mails …“, dann die Antwort; die Zeile hängt nie. E: „Mein Tag“ und „Erinnerung sprechen“ („morgen um 8 an Brot“) ausprobieren. F: App: Einstellungen → CarPlay → „Briefing beim Einsteigen“ an, beim nächsten Einsteigen kommt es einmal von selbst. G: Nach der Fahrt „Ton-Protokoll kopieren“ in den Thread: jede Zeile „Ende: …“ nennt den Grund.",
 "thread": "CarPlay stabil und bedienbar"
+},
+{
+"id": "P382",
+"v": 891,
+"titel": "Tagesaktuell: Stand mit Tag, Wetter, Mails, Websuche",
+"text": "A: Pi auf V01.0.891. Morgens „Guten Morgen“: das Wetter beschreibt heute (nicht gestern), Mails im Bericht stehen mit „heute“ oder „gestern“, eine schon gelesene Mail fehlt. B: „Was gibt es heute Neues zu …?“: die Antwort nennt das Datum der Meldungen; findet sich nichts von heute, sagt sie das. C: Unter Logs → Anfragen bei der Websuche Zeilen „frisch: …“. D: Mit „Mails ordnen“: eine ungelesene Mail auf der Seite E-Mail öffnen, der blaue Punkt verschwindet, in Apple Mail ist sie gelesen; dasselbe in der iPhone-App. E: Zustand → Live, Websuche: „tagesaktuell: heute n Suchen …“.",
+"thread": "Immer tagesaktuelle Informationen"
 }
 ]
 }

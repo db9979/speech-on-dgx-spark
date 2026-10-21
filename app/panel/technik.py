@@ -153,6 +153,7 @@ MODULE = {
     "fuerdich": ("dienste", "Für dich: findet Rechnungen, Verträge, Bestellungen, Angebote, offene Antworten, Phishing; letzte Lesung versiegelt"),
     "mailansicht": ("dienste", "Mail formatiert (Seite E-Mail, iPhone): HTML bereinigt, Rahmen ohne Skript, Bilder von außen nur per Klick"),
     "mailvorrat": ("dienste", "Mail-Vorrat: neueste Kopfzeilen und Texte versiegelt im Profil, Antwort mit Stand bei Ausfall"),
+    "frisch": ("gespraech", "Tagesaktuell: jede Quelle gegen heute geprüft, Websuche mit Zeitraum, Stand mit Tag, Hinweis wenn alt"),
     "vorrat": ("dienste", "Vorrat je Profil: Antworten aus dem Speicher, solange frisch genug; versiegelt auf der Platte (Mail, Wetter, Pakete)"),
     "mailidle": ("dienste", "Neue Mails sofort: IMAP IDLE für Profile, die ihre Mails gerade lesen, höchstens 4 Verbindungen"),
     "mailstil": ("dienste", "Mailstil: lernt aus gesendeten Mails, wie das Profil schreibt, für Mail-Entwürfe"),

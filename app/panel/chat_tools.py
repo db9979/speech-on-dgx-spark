@@ -13,6 +13,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import calendars  # noqa: E402
 import documents  # noqa: E402,F401  (loaded before the tools on purpose)
 import extras  # noqa: E402
+import frisch  # noqa: E402
 from textnorm import guess_language  # noqa: E402
 import homeassistant  # noqa: E402
 import kiwix  # noqa: E402
@@ -93,7 +94,9 @@ async def run(t, name, args, st):
         try:
             if gone:          # SearXNG or the internet is gone: straight to the archive, else the fixed sentence
                 raise dienstwacht.Down(gone)
-            result, sources = await chat.web_search(t.c, t.ccfg, query)
+            # Tagesaktuell (frisch.py): the person's own words and the query decide the period, fixed words only
+            own = getattr(t, "ask_text", "") or ""
+            result, sources = await chat.web_search(t.c, t.ccfg, query, frisch.zeitraum(own, query), frisch.news(own, query))
             await t.out.put({"type": "sources", "items": sources})
             return result
         except Exception as e:
@@ -502,7 +505,7 @@ async def briefing_text(t, st):
     jobs = [calendars.events(t.who["id"], today, today + datetime.timedelta(days=2), zone)
             if t.cal["calendars"] else asyncio.sleep(0)]
     quick = dict(t.ccfg, search_pages=0, search_results=3)
-    jobs += [chat.web_search(t.c, quick, q) for q in topics]
+    jobs += [chat.web_search(t.c, quick, q, "day", True, True) for q in topics]   # the day's news on each topic (frisch.py)
     if t.mailbox:   # last, so the topics above are searched before any mail is read
         st["mail"] = True
         jobs.append(asyncio.to_thread(mail.briefing, t.who["id"]))
