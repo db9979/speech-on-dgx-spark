@@ -224,9 +224,12 @@ async def _wait(uid, jid, q, choices, task):
     _asks[key] = {"event": asyncio.Event(), "loop": asyncio.get_running_loop(), "answer": None}
     agent._set_job(uid, jid, ask={"q": q, "choices": choices, "t": int(time.time())})
     print(f"agent: job asks | choices {len(choices)}", flush=True)
+    import vorgaenge     # its card under Offen; the answer (or no answer in time) closes it
+    vg, _ = vorgaenge.put(uid, "auftrag", f"auftrag:{jid}", "Dein Auftrag hat eine Frage", f"„{task[:80]}“",
+                          daten={"weg": "Ich → Aufträge"}, wieder=True)
     try:
         await push.send(uid, "❓ Dein Auftrag hat eine Frage", f"„{task[:80]}“ wartet auf deine Antwort.\n"
-                        "Antworten: Ich → Aufträge", tag="agent", private=True)
+                        "Antworten: Ich → Aufträge", tag="agent", private=True, vg=vg["id"] if vg else "")
     except Exception as e:
         print("agent: job question push failed |", type(e).__name__, flush=True)
     try:
@@ -236,6 +239,7 @@ async def _wait(uid, jid, q, choices, task):
         answer = None
     finally:
         _asks.pop(key, None)
+    vorgaenge.done(uid, f"auftrag:{jid}", "geantwortet" if answer else "abgelaufen")
     item = agent.job(uid, jid) or {}
     asks = (item.get("asks") or []) + [{"q": q, "a": answer or ""}]
     agent._set_job(uid, jid, ask=None, asks=asks[-MAX_ASKS:])

@@ -248,6 +248,8 @@ ALLTAG = [
     ("Keine Meldungen bis morgen", "@proactive_pause"),
     ("Ist die Synology voll?", "@nas_zustand"),
     ("Wie viel Platz ist noch auf dem NAS?", "@nas_zustand"),
+    ("Was ist noch offen?", "@offen_zeigen"),
+    ("Gibt es noch offene Sachen?", "@offen_zeigen"),
     ("Leg die Rechnung auf der NAS ab", "dokument+@nas_ablegen"),
     ("Schick den Artikel aufs reMarkable", "@remarkable_page"),
     ("Was liegt auf meinem reMarkable?", "@remarkable_library"),
@@ -261,9 +263,11 @@ def byword(tool, text):
     import nasablage
     import naszustand
     import remarkable
+    import vorgaenge
     words = {"speaker_volume": aendern.VOLUME_WORDS, "undo_last": aendern.UNDO_WORDS,
              "proactive_pause": aendern.PAUSE_WORDS, "nas_ablegen": nasablage.WORDS, "nas_zustand": naszustand.WORDS,
-             "remarkable_page": remarkable.WORDS, "remarkable_library": remarkable.WORDS}
+             "remarkable_page": remarkable.WORDS, "remarkable_library": remarkable.WORDS,
+             "offen_zeigen": vorgaenge.WORDS}
     return bool(words[tool].search(text))
 
 

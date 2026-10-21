@@ -162,7 +162,8 @@ KURZ = (("speaker_volume", "Mach leiser", "Quieter"),
         ("proactive_pause", "Meld dich heute nicht mehr", "No more notes today"),
         ("remarkable_page", "Schick den Artikel aufs reMarkable", "Send the article to the reMarkable"),
         ("remarkable_library", "Was liegt auf meinem reMarkable?", "What is on my reMarkable?"),
-        ("nas_zustand", "Ist die Synology voll?", "Is the Synology full?"))
+        ("nas_zustand", "Ist die Synology voll?", "Is the Synology full?"),
+        ("offen_zeigen", "Was ist noch offen?", "What is still open?"))
 # easily mixed up: (de, en, the Weiche group it lands in or "" for a plain answer, what happens de/en, a tool that
 # must be usable for the line to show or "")
 VERWECHSELT = (

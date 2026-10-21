@@ -268,7 +268,11 @@ def put(kind, owner, item, to, level):
 # ---------------------------------------------------------------- the note to the other profile
 async def tell(to, owner, kind):
     """One note to the other profile on a new share: at once, or counted into one after NOTE_GAP. Its words are
-    fixed, with the owner's name only (the title stays on the page Ich → Geteilt)."""
+    fixed, with the owner's name only (the title stays on the page Ich → Geteilt). A card under Offen too (one per
+    owner and kind, a new share opens it again); into the conversation only when the note is wanted."""
+    import vorgaenge
+    vorgaenge.put(to, "geteilt", f"geteilt:{kind}:{owner}", f"{_name(owner)} hat etwas mit dir geteilt", WORD[kind],
+                  daten={"weg": "Ich → Geteilt"}, say=features.pref_on("teilenhinweis", to), wieder=True)
     if not features.pref_on("teilenhinweis", to):
         print(f"geteilt: note skipped, switched off | {profiles.log_name(profiles.by_id(to))}", flush=True)
         return

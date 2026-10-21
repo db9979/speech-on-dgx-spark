@@ -30,8 +30,9 @@ const vgFrist=f=>{if(!f)return null;const d=new Date(f+'T12:00'),n=new Date(),da
 const WO_EN={Rechner:'computer',Handy:'phone',iPhone:'iPhone',Begleiter:'companion',Telegram:'Telegram'};
 // how a proposal's card („Wartet auf dein Ja“, Stufe 2) ended when not by its yes
 const VG_WIE={vs_nein:['Abgebrochen','Cancelled'],vs_aendern:['Weiter auf der Seite','Continued on the page'],beantwortet:['Im Gespräch beantwortet','Answered in the conversation'],
-  ersetzt:['Neuer Vorschlag','New proposal'],fehler:['Nicht ausgeführt','Not done']};
-const vgSym=x=>x.sym==='bell'?'bell':x.sym==='check'?'check':'mail';
+  ersetzt:['Neuer Vorschlag','New proposal'],fehler:['Nicht ausgeführt','Not done'],cx_gelesen:['Gelesen','Read'],
+  geantwortet:['Beantwortet','Answered'],bestaetigt:['Bestätigt','Confirmed'],abgelehnt:['Abgelehnt','Declined'],wieder_da:['Läuft wieder','Running again']};
+const VG_SYMS=new Set(['bell','check','mail','chat','share','warn','spark']),vgSym=x=>VG_SYMS.has(x.sym)?x.sym:'mail';
 // the line under a card: what happened, where and when
 function vgState(x){if(x.zustand==='spaeter')return x.spaeter_bis?t('Später: wieder da ','Later: back ')+vgWhen(x.spaeter_bis):t('Später, ohne Zeit','Later, no time');
   if(x.zustand==='erledigt'||x.zustand==='weg'){const how=x.wie==='abgelaufen'?t('Abgelaufen','Expired'):x.wie==='vs_ja'&&x.fertig?(L==='en'?x.fertig[1]:x.fertig[0])
@@ -78,7 +79,10 @@ function vgGo(x,k,d){const z=x.daten||{};
   else if(k==='fd_reply'&&window.postFromFuer)postFromFuer(z.ref);
   else if(k==='fd_cancel'&&window.postFromFuer&&d.draft)postFromFuer('',d.draft)
   else if(k==='vs_aendern'&&d.event&&typeof fuerEvent==='function'&&typeof KAL!=='undefined')fuerEvent({event:d.event})   // the Kalender's form, filled
-  else if(k==='vs_aendern'&&d.draft&&window.postFromFuer)postFromFuer('',d.draft)}   // the writing window, filled; only its sheet sends
+  else if(k==='vs_aendern'&&d.draft&&window.postFromFuer)postFromFuer('',d.draft)   // the writing window, filled; only its sheet sends
+  else if(k==='oeffnen'&&z.weg)wayGo(z.weg)   // stages 3+4: only the place where it goes on (a fixed way of the panel)
+  else if(k==='cx_antworten'&&z.chat&&typeof cxOpen==='function'){goSec('chats');cxOpen(z.chat)}
+  else if(k==='ml_lesen'&&z.ref&&typeof postRead==='function'){icTabSet('post','show');goSec('post');postRead(z.ref)}}
 // ---------------------------------------------------------------- in the conversation (chat.js openConvo)
 window.vgMount=(b,m)=>{const d=b.parentNode;d.classList.add('vgmsg');d.dataset.vg=m.vg;vgFill(d)};
 function vgFill(d){const x=VG.items.get(d.dataset.vg),b=d.querySelector('.bubble');if(!x||!b)return;   // unknown: the sentence stays

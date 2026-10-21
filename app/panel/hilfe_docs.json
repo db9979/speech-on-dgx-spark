@@ -1861,7 +1861,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Alltagsquote",
 "title": "Alltagsquote",
-"text": "- Die Testsätze (168) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (211) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt."
+"text": "- Die Testsätze (168) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (213) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt."
 },
 {
 "lang": "de",
@@ -1869,7 +1869,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Werkzeugnamen",
 "title": "Werkzeugnamen",
-"text": "- Überall, wo ein Werkzeug sichtbar wird, steht ein lesbarer Name aus einer Tabelle (90 Werkzeuge), zum Beispiel „Postfach-Überblick“ statt mail_tidy_overview."
+"text": "- Überall, wo ein Werkzeug sichtbar wird, steht ein lesbarer Name aus einer Tabelle (91 Werkzeuge), zum Beispiel „Postfach-Überblick“ statt mail_tidy_overview."
 },
 {
 "lang": "de",
@@ -1877,7 +1877,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 23 Gruppen der Weiche (Schritt 4, Schritt 6) - 2 Gruppen höchstens, die noch eingrenzen (Schritt 6) - 80 Zeichen höchstens für eine Folgefrage (Schritt 8) - 4 Sekunden höchstens für die Wahl des Modells (Schritt 10) - 300 ms Wartezeit mit „Schneller Antwortbeginn“ (Schritt 10) - 80 % Standard-Schwelle der Einordnung (Schritt 10) - 168 eingebaute Testsätze (Schritt 4, Schritt 5) - 211 Alltagssätze zum Messen (Schritt 14) - 20 Versionen für Rückgängig (Schritt 4)"
+"text": "- 23 Gruppen der Weiche (Schritt 4, Schritt 6) - 2 Gruppen höchstens, die noch eingrenzen (Schritt 6) - 80 Zeichen höchstens für eine Folgefrage (Schritt 8) - 4 Sekunden höchstens für die Wahl des Modells (Schritt 10) - 300 ms Wartezeit mit „Schneller Antwortbeginn“ (Schritt 10) - 80 % Standard-Schwelle der Einordnung (Schritt 10) - 168 eingebaute Testsätze (Schritt 4, Schritt 5) - 213 Alltagssätze zum Messen (Schritt 14) - 20 Versionen für Rückgängig (Schritt 4)"
 },
 {
 "lang": "de",
@@ -2085,7 +2085,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 4 Aufrufe pro Runde (Schritt 1) - 3 Gedächtnis-Notizen pro Antwort (Schritt 1) - 13 Werkzeuge gesperrt nach fremdem Text (Schritt 4) - 7 Werkzeuge ohne Internet bei Notaus (Schritt 3) - 90 Werkzeuge mit verständlichem Namen (Schritt 11)"
+"text": "- 4 Aufrufe pro Runde (Schritt 1) - 3 Gedächtnis-Notizen pro Antwort (Schritt 1) - 13 Werkzeuge gesperrt nach fremdem Text (Schritt 4) - 7 Werkzeuge ohne Internet bei Notaus (Schritt 3) - 91 Werkzeuge mit verständlichem Namen (Schritt 11)"
 },
 {
 "lang": "de",
@@ -3933,7 +3933,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "ie sich („Im Gespräch beantwortet“, „Neuer Vorschlag“, „Abgelaufen“). Beim Druck prüft das Panel wieder Besitzer, Stand, Notaus und die Schalter des Moduls (etwa „Mails senden“); der Text einer Mail bleibt nur, solange sie wartet. Die Karte kommt mit dem Schalter „Alles Offene im Assistenten“, auch ohne „Ablauf und Freigabe zeigen“; ohne ihn bleibt die Ja/Nein-Karte von „Ablauf und Freigabe zeigen“. Wichtige Mails als Karte und Knöpfe im Begleiter und in Telegram folgen in Stufe 3. Besprechungs-Aufgaben unter Offen (V01.0.882): Legt der Spark-Begleiter Aufgaben einer Besprechung auf eine Liste („Ausgewählte auf die Liste“), wird jede neue Aufgabe zusätzlich eine Karte „Aus Besprechung“ unter Offen (nicht im Gespräch), mit Liste, Besprechungszeit und „bis“ als Frist. „Erledigt“ hakt den Listeneintrag ab, „Zurückholen“ holt ihn zurück, „Nicht wichtig“ blendet nur die Karte aus. Umgekehrt folgt die Karte der Liste: abgehakt (Seite, Stimme, App, iPhone-Erinnerungen) ist sie erledigt, zurückgeholt wieder offen, gelöscht weg. Überfällige Aufgaben bleiben offen. Technik: Art besprechung in vorgaenge.ARTEN, Schlüssel besprechung:<Liste>:<Eintrag>, vorgaenge.from_meeting, tasks.card_follows"
+"text": "ie sich („Im Gespräch beantwortet“, „Neuer Vorschlag“, „Abgelaufen“). Beim Druck prüft das Panel wieder Besitzer, Stand, Notaus und die Schalter des Moduls (etwa „Mails senden“); der Text einer Mail bleibt nur, solange sie wartet. Die Karte kommt mit dem Schalter „Alles Offene im Assistenten“, auch ohne „Ablauf und Freigabe zeigen“; ohne ihn bleibt die Ja/Nein-Karte von „Ablauf und Freigabe zeigen“. Alles Offene, Stufen 3 und 4 (V01.0.900, Dominik 2026-10-21 „weiter bis zum ende“): Neue Arten von Karten unter Offen: Nachricht (ein neuer Chat, solange keine Seite offen ist; eine Karte je Chat, nur Name und „Neue Nachricht“, nie der Text; „Antworten …“ öffnet den Chat, „Gelesen“ und das Lesen des Chats schließen sie, eine neue Nachricht öffnet sie wieder), Geteilt (jemand teilt etwas mit dir; eine Karte je Person und Art, „Ansehen …“ öffnet Ich → Geteilt; ins Gespräch nur mit „Hinweis auf Geteiltes“), Wichtige Mail (Von selbst meldet eine wichtige Mail; die Karte hat „Lesen …“, „Antwort entwerfen …“ nur mit „Mails senden“, und „Erledigt“), Dienst (nur für Admins mit dem Dienst-Wächter: ein Dienst fällt aus oder meldet ein Problem; „Ansehen …“ öffnet Zustand → Überblick, geht es wiede"
 },
 {
 "lang": "de",
@@ -3941,7 +3941,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": " und tasks.tick_from_card. Technik: profiles.pending_set meldet jeden wartenden Vorschlag an vorgaenge.from_pending (Art vorschlag, Schlüssel vorschlag:<name>:<zeit>, Wörter aus card() des Moduls: calendars, senden, tidy). Der Ja-Knopf (vs_ja, Stufe ja) ruft dieselbe Funktion wie das getippte „Ja“ (calendars.carry, senden.carry, tidy.carry_out) und antwortet {text, gelungen}; vorgaenge.sweep schließt die Karten nach jeder Antwort und jede Minute. Die Freigabe-Karte (ablauf.waiting) trägt die Nummer (vg), Panel und iPhone zeigen dann die Karte. Live (Kalender-Knoten) zählt wartende Vorschläge und heute per Knopf bestätigte."
+"text": "r, schließt sie sich mit „Läuft wieder“; von der Karte wird nichts neu gestartet), Auftrag fragt (ein laufender Auftrag hat eine Frage; beantwortet wird unter Ich → Aufträge, die Antwort oder das Ende der Wartezeit schließt die Karte) und Freigabe (ein MCP-Programm möchte etwas tun; die Karte öffnet nur Ich → Spark als MCP-Server, bestätigt wird allein dort, nach 15 Minuten ist sie abgelaufen). Unter einer Telegram-Meldung zu einer Karte stehen deren direkte Knöpfe („Erledigt“, „Gelesen“, „Später“ für morgen früh); das Panel nimmt einen Druck nur aus dem eigenen privaten Chat des Profils an, höchstens 20 je Minute, prüft wie bei der Karte und nimmt danach die Knöpfe weg. Der Begleiter zeigt bei solchen Meldungen „Erledigt“. „Was ist offen?“ fragt per Stimme oder getippt; das Panel nennt die Zahl und bis zu acht Titel (Dringendes zuerst) und wie viel auf später liegt, ändert aber nichts (Werkzeug offen_zeigen, nur lesen; weil Titel Absender und Betreff enthalten können, gilt die Antwort wie eine aus Mails). Pebble und Lautsprecher erreichen das über dieselbe Frage. Zustand → Live nennt die offenen Karten je Art als Zahl. Technik: vorgaenge.ARTEN (nachricht, geteilt, mail, dienst, au"
 },
 {
 "lang": "de",
@@ -11285,7 +11285,7 @@
 "file": "Architecture and data flow",
 "head": "Everyday score",
 "title": "Everyday score",
-"text": "- The test sentences (168) hold every reported wrong turn and must all pass. The everyday sentences (211) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up."
+"text": "- The test sentences (168) hold every reported wrong turn and must all pass. The everyday sentences (213) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up."
 },
 {
 "lang": "en",
@@ -11293,7 +11293,7 @@
 "file": "Architecture and data flow",
 "head": "Tool names",
 "title": "Tool names",
-"text": "- Wherever a tool shows, a readable name comes from one table (90 tools), for example „Mailbox overview“ instead of mail_tidy_overview."
+"text": "- Wherever a tool shows, a readable name comes from one table (91 tools), for example „Mailbox overview“ instead of mail_tidy_overview."
 },
 {
 "lang": "en",
@@ -11301,7 +11301,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 23 groups of the switch (step 4, step 6) - 2 groups at most that still narrow (step 6) - 80 characters at most for a follow-up (step 8) - 4 seconds at most for the model's pick (step 10) - 300 ms waiting with „Fast answer start“ (step 10) - 80 % default threshold of the classification (step 10) - 168 built-in test sentences (step 4, step 5) - 211 everyday sentences for measuring (step 14) - 20 versions for undo (step 4)"
+"text": "- 23 groups of the switch (step 4, step 6) - 2 groups at most that still narrow (step 6) - 80 characters at most for a follow-up (step 8) - 4 seconds at most for the model's pick (step 10) - 300 ms waiting with „Fast answer start“ (step 10) - 80 % default threshold of the classification (step 10) - 168 built-in test sentences (step 4, step 5) - 213 everyday sentences for measuring (step 14) - 20 versions for undo (step 4)"
 },
 {
 "lang": "en",
@@ -11501,7 +11501,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 4 calls per round (step 1) - 3 memory notes per answer (step 1) - 13 tools locked after outside text (step 4) - 7 tools without internet with the kill switch (step 3) - 90 tools with a readable name (step 11)"
+"text": "- 4 calls per round (step 1) - 3 memory notes per answer (step 1) - 13 tools locked after outside text (step 4) - 7 tools without internet with the kill switch (step 3) - 91 tools with a readable name (step 11)"
 },
 {
 "lang": "en",
@@ -13285,7 +13285,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "h as \"Send mails\"); a mail's text stays only while it waits. The card comes with the switch \"Everything open in the assistant\", also without \"Show steps and approvals\"; without it the yes/no card of \"Show steps and approvals\" stays. Important mails as cards and buttons in the companion and in Telegram follow in stage 3. Meeting tasks under Open (V01.0.882): When the Spark companion puts a meeting's tasks onto a list (\"Ausgewählte auf die Liste\"), every new task also becomes a card \"From a meeting\" under Open (not in the conversation), with the list, the meeting time and \"due\" as its deadline. \"Done\" ticks the list entry off, \"Bring back\" brings it back, \"Not important\" only hides the card. The other way round the card follows the list: ticked off (page, voice, app, iPhone Reminders) it is done, taken back it is open again, deleted it is gone. Overdue tasks stay open. Technology: kind besprechung in vorgaenge.ARTEN, key besprechung:<list>:<entry>, vorgaenge.from_meeting, tasks.card_follows and tasks.tick_from_card. Technology: profiles.pending_set reports every waiting proposal to vorgaenge.from_pending (kind vorschlag, key vorschlag:<name>:<time>, words from the module's card(): ca"
+"text": "h as \"Send mails\"); a mail's text stays only while it waits. The card comes with the switch \"Everything open in the assistant\", also without \"Show steps and approvals\"; without it the yes/no card of \"Show steps and approvals\" stays. Everything open, stages 3 and 4 (V01.0.900, Dominik 2026-10-21 \"weiter bis zum ende\"): New kinds of cards under Open: Message (a new chat message while no page is open; one card per chat, only the name and \"New message\", never the text; \"Reply …\" opens the chat, \"Read\" and reading the chat close it, a new message opens it again), Shared (someone shares something with you; one card per person and kind, \"Show …\" opens Me → Shared; into the conversation only with \"Note on shared things\"), Important mail (By itself reports an important mail; the card has \"Read …\", \"Draft a reply …\" only with \"Send mails\", and \"Done\"), Service (admins with the service watch only: a service is down or reports a problem; \"Show …\" opens Status → Overview, when it works again the card closes with \"Running again\"; nothing is restarted from the card), Job asks (a running job has a question; it is answered under Me → Jobs, the answer or the end of the wait closes the card) and Appr"
 },
 {
 "lang": "en",
@@ -13293,7 +13293,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "lendars, senden, tidy). The yes button (vs_ja, stage ja) calls the same function as the typed \"yes\" (calendars.carry, senden.carry, tidy.carry_out) and answers {text, gelungen}; vorgaenge.sweep closes the cards after every answer and every minute. The approval card (ablauf.waiting) carries the number (vg), the panel and the iPhone then show the card. Live (calendar node) counts waiting proposals and those confirmed by button today."
+"text": "oval (an MCP program wants to do something; the card only opens Me → Spark as MCP server, confirming happens there alone, after 15 minutes it has expired). Under a Telegram note about a card stand its direct buttons (\"Done\", \"Read\", \"Later\" for tomorrow morning); the panel takes a press only from the profile's own private chat, at most 20 a minute, checks it like the card and then removes the buttons. The companion shows \"Done\" on such notes. \"What is open?\" by voice or typed: the panel names the number and up to eight titles (urgent first) and how much waits for later, but changes nothing (tool offen_zeigen, read only; since titles may hold a sender and a subject, the answer counts like one made from mail). Pebble and speakers reach it with the same question. Status → Live counts the open cards per kind. Technique: vorgaenge.ARTEN (nachricht, geteilt, mail, dienst, auftrag, freigabe), vorgaenge.knoepfe, vorgaenge.OFFEN_STUNDEN, telegram.vg_keyboard/on_press, begleiter._vg_act; tests Stufe34 in app/tests/test_vorgaenge.py. Meeting tasks under Open (V01.0.882): When the Spark companion puts a meeting's tasks onto a list (\"Ausgewählte auf die Liste\"), every new task also becomes a ca"
 },
 {
 "lang": "en",

@@ -596,6 +596,9 @@ struct ChatsView: View {
     @State private var refusing = false
     @State private var keysAt = Date.distantPast
 
+    /// start: a chat to open at once (a card „Antworten …“ under Offen)
+    init(start: String? = nil) { _path = State(initialValue: start.map { [$0] } ?? []) }
+
     private var searching: Bool { query.trimmingCharacters(in: .whitespacesAndNewlines).count >= 2 }
 
     var body: some View {

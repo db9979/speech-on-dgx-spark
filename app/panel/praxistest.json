@@ -2559,6 +2559,20 @@
 "titel": "Kiwix automatisch als Wissen",
 "text": "A: Update auf V01.0.898. Funktionen → Websuche → „Erst lokal suchen“: neue Zeile „Zeitgrenze für das Kiwix-Archiv (ms)“ mit 900. B: „Wer war Albert Einstein?“ fragen: die Antwort beginnt mit „Laut deinem Archiv …“, darunter steht als Quelle „Albert Einstein (Wikipedia, Stand …)“, der Link öffnet den Artikel im Kiwix. C: Zustand → Prüfen → „Erst lokal testen“ mit „Wie funktioniert git rebase?“: Archiv mit Treffer; Logs → Bereich „Wissen“: Zeile „kiwix: search …“ bzw. „lokal: …“. D: Funktionen → Websuche → Eigenes Kiwix-Archiv: ein Buch per Ziehen oder ◀ nach vorn holen, speichern, die Reihenfolge bleibt. E: „Kiwix prüfen“: bei mehr als 5 Büchern steht der Hinweis „Je Frage höchstens 5 …“; ein Buch, das das Kiwix nicht mehr kennt, steht rot als „Nicht mehr im Kiwix und übersprungen“. F: Mit einem Buch, das älter als ein Jahr ist, und Antwort-Prüfung an: nennt die Antwort das Jahr nicht, endet sie mit „Nicht ganz aktuell: Archiv: Stand …“.",
 "thread": "Kiwix automatisch als Wissen"
+},
+{
+"id": "P390",
+"v": 900,
+"titel": "Alles Offene: Chats, Geteiltes, Mails als Karten",
+"text": "Mit „Alles Offene im Assistenten“ an: von einem zweiten Profil eine Chat-Nachricht schicken, während das Panel zu ist. Unter Offen steht „Nachricht“ mit dem Namen, ohne Text; „Antworten …“ öffnet den Chat, danach ist die Karte „Gelesen“. Ein Dokument teilen lassen: Karte „Geteilt“, „Ansehen …“ öffnet Ich → Geteilt. Kommt eine wichtige Mail (Von selbst), hat ihre Karte „Lesen …“. Am iPhone unter Meine Sachen → Offen dasselbe prüfen.",
+"thread": "Zentraler Assistenten-Chat mit Karten"
+},
+{
+"id": "P391",
+"v": 900,
+"titel": "Alles Offene: Telegram-Knöpfe, Begleiter, „Was ist offen?“",
+"text": "Mit Telegram verbunden eine Erinnerung klingeln lassen: unter der Telegram-Meldung stehen „Erledigt“ und „Später“; „Erledigt“ drücken, die Knöpfe verschwinden und unter Offen steht „Erledigt · am Telegram“. Im Begleiter bei einer solchen Meldung „Erledigt“ drücken. Am Lautsprecher „Was ist noch offen?“ fragen: die Antwort nennt Zahl und Titel, nichts wird erledigt. Als Admin einen Dienst kurz stoppen: Karte „Dienst“, danach „Läuft wieder“.",
+"thread": "Zentraler Assistenten-Chat mit Karten"
 }
 ]
 }

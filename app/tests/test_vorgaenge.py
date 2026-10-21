@@ -221,8 +221,10 @@ class Vorgaenge(unittest.TestCase):
         self.assertNotEqual(y["rev"], vorgaenge.view(uid)["rev"])
         # Live: numbers only
         live = vorgaenge.for_live()
-        self.assertEqual(set(live), {"on", "profiles", "braucht", "spaeter", "erledigt", "wieder", "streams", "warten", "ja"})
-        self.assertTrue(all(isinstance(v, (int, bool)) for v in live.values()))
+        self.assertEqual(set(live), {"on", "profiles", "braucht", "spaeter", "erledigt", "wieder", "streams", "warten", "ja", "arten"})
+        self.assertTrue(all(isinstance(v, (int, bool)) for k, v in live.items() if k != "arten"))
+        self.assertTrue(set(live["arten"]) <= {a["de"] for a in vorgaenge.ARTEN.values()})   # by kind: fixed names, numbers
+        self.assertTrue(all(isinstance(v, int) for v in live["arten"].values()))
 
 
 
@@ -330,3 +332,168 @@ class Vorschlaege(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class Stufe34(unittest.TestCase):
+    """Stages 3 and 4 (Dominik 2026-10-21 „weiter bis zum ende“): chats, shares, important mails, services (admins),
+    questions of jobs and MCP approvals as cards; the buttons under a Telegram note and the Begleiter's „Erledigt“
+    run the same checks as the card; „Was ist offen?“ only reads. No clock of the run is read."""
+    def setUp(self):
+        helpers.keep_chat(self, "reminders", "vorgaenge", "chats")
+        helpers.set_config(reminders=True, vorgaenge=True, chats=True)
+        for k in [k for k in guard._rate if str(k[0]).startswith("vorgaenge")]:
+            guard._rate.pop(k, None)
+
+    def test_a_chat_message_is_one_card_without_its_text_and_reading_closes_it(self):
+        import chats
+        a, b = profile("Offen Chat A"), profile("Offen Chat B")
+        ua, ub = uid_of("Offen Chat A"), uid_of("Offen Chat B")
+        cid = a.post("/api/chats/open", json={"to": ub}).json()["id"]
+        meta = chats._index()[cid]
+        with mock.patch.object(chats, "listening", return_value=False):
+            asyncio.run(chats._notify(ub, cid, meta, ua, "Geheimer Text", 1000.0))
+            asyncio.run(chats._notify(ub, cid, meta, ua, "Noch einer", 1001.0))
+        mine = [x for x in vorgaenge._load(ub)["items"] if x["art"] == "nachricht"]
+        self.assertEqual(len(mine), 1)                                    # one card per chat
+        x = mine[0]
+        self.assertEqual((x["key"], x["zeile"], x["daten"]), ("chat:" + cid, "Neue Nachricht", {"chat": cid}))
+        self.assertNotIn("Geheim", str(x))                                # never the text
+        self.assertEqual(cards_in_convos(ub), [])                         # only under Offen
+        r = b.post("/api/profile/vorgaenge/act", json={"id": x["id"], "act": "cx_gelesen", "rev": x["rev"]})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual((r.json()["item"]["zustand"], r.json()["item"]["wie"]), ("erledigt", "cx_gelesen"))
+        with mock.patch.object(chats, "listening", return_value=False):   # a new message opens it again
+            asyncio.run(chats._notify(ub, cid, meta, ua, "Dritte", 1002.0))
+        self.assertEqual(next(y for y in vorgaenge._load(ub)["items"] if y["key"] == "chat:" + cid)["zustand"], "offen")
+        chats.read(ub, cid)                                               # reading the chat closes it
+        y = next(y for y in vorgaenge._load(ub)["items"] if y["key"] == "chat:" + cid)
+        self.assertEqual((y["zustand"], y["wie"]), ("erledigt", "cx_gelesen"))
+        self.assertEqual(a.post("/api/profile/vorgaenge/act", json={"id": x["id"], "act": "cx_gelesen"}).status_code, 404)
+
+    def test_a_share_is_a_card_and_a_mail_reply_needs_the_mail_switch(self):
+        import geteilt
+        profile("Offen Teil A"), profile("Offen Teil B")
+        ua, ub = uid_of("Offen Teil A"), uid_of("Offen Teil B")
+        asyncio.run(geteilt.tell(ub, ua, "doc"))
+        asyncio.run(geteilt.tell(ub, ua, "doc"))                          # a second share: still one card
+        x = next(y for y in vorgaenge._load(ub)["items"] if y["art"] == "geteilt")
+        self.assertEqual((x["key"], x["titel"], x["daten"]), (f"geteilt:doc:{ua}", "Offen Teil A hat etwas mit dir geteilt",
+                                                             {"weg": "Ich → Geteilt"}))
+        self.assertEqual([m["vg"] for m in cards_in_convos(ub)], [x["id"]])   # the note is on: the card once in the conversation
+        self.assertEqual([k["k"] for k in vorgaenge.public(ub, x)["acts"]], ["oeffnen", "erledigt", "spaeter"])
+        m, _ = vorgaenge.put(ub, "mail", "mail:a1:42", "Wichtige Mail von Bank", "Kontoauszug",
+                             daten={"ref": "a1:42", "folder": "INBOX", "addr": "bank@example.org"})
+        acts = lambda: [k["k"] for k in vorgaenge.public(ub, m)["acts"]]  # noqa: E731
+        real = vorgaenge.features.allowed
+        with mock.patch.object(vorgaenge.features, "allowed", side_effect=lambda k, *a: k != "mailsend" and real(k, *a)):
+            self.assertEqual(acts(), ["ml_lesen", "erledigt", "spaeter"])
+        with mock.patch.object(vorgaenge.features, "allowed", side_effect=lambda k, *a: True):
+            self.assertEqual(acts(), ["ml_lesen", "fd_reply", "erledigt", "spaeter"])
+
+    def test_stage_four_cards_close_at_their_source_and_never_confirm(self):
+        import dienstwacht
+        profile("Offen Admin")
+        uid = uid_of("Offen Admin")
+        with mock.patch.object(dienstwacht, "recipients", return_value=[uid]), \
+                mock.patch.object(dienstwacht, "_read", return_value={"queue": {}}):
+            dienstwacht._queue_all({"k": "down", "s": "tts", "t": 1000}, 1000.0)
+            x = next(y for y in vorgaenge._load(uid)["items"] if y["art"] == "dienst")
+            self.assertEqual((x["key"], x["titel"], x["daten"]), ("dienst:tts", "Sprechen ist ausgefallen", {"weg": "Zustand → Überblick"}))
+            self.assertNotIn("neustart", str(vorgaenge.public(uid, x)["acts"]).lower())    # nothing restarts from a card
+            dienstwacht._queue_all({"k": "up", "s": "tts", "t": 1100}, 1100.0)
+        y = next(y for y in vorgaenge._load(uid)["items"] if y["key"] == "dienst:tts")
+        self.assertEqual((y["zustand"], y["wie"]), ("erledigt", "wieder_da"))
+        # an MCP approval: the card only opens the page; „Erledigt“ is no button of it, the decision closes it
+        f, _ = vorgaenge.put(uid, "freigabe", "freigabe:ab12cd34", "„Notizen“ möchte etwas tun", "Licht an",
+                             daten={"weg": "Ich → Spark als MCP-Server"}, now=1000.0)
+        self.assertEqual([k["k"] for k in vorgaenge.public(uid, f)["acts"]], ["oeffnen", "spaeter"])
+        with self.assertRaises(vorgaenge.HTTPException) as e:
+            vorgaenge.act(uid, f["id"], "erledigt")
+        self.assertEqual(e.exception.status_code, 403)
+        self.assertEqual(vorgaenge.knoepfe(uid, f["id"]), [("spaeter", "Später")])     # Telegram: no yes, ever
+        self.assertTrue(vorgaenge._stale(f, 1000.0 + 16 * 60))                          # gone with the action's 15 min
+        vorgaenge.done(uid, "freigabe:ab12cd34", "abgelehnt")
+        self.assertEqual(next(y for y in vorgaenge._load(uid)["items"] if y["id"] == f["id"])["zustand"], "weg")
+        # a job's question: no answer in time closes its card as „Abgelaufen“
+        import auftragsplan
+        with mock.patch.object(auftragsplan, "ASK_SECONDS", 0.01), mock.patch.object(auftragsplan.agent, "_set_job"), \
+                mock.patch.object(auftragsplan.agent, "job", return_value={}):
+            self.assertIsNone(asyncio.run(auftragsplan._wait(uid, "j1a2b3c4d5", "Welche Farbe?", [], "Bild malen")))
+        j = next(y for y in vorgaenge._load(uid)["items"] if y["key"] == "auftrag:j1a2b3c4d5")
+        self.assertEqual((j["zustand"], j["wie"], j["daten"]), ("weg", "abgelaufen", {"weg": "Ich → Aufträge"}))
+
+    def test_telegram_buttons_are_the_direct_ones_and_only_from_the_own_chat(self):
+        import telegram
+        profile("Offen Tele")
+        uid = uid_of("Offen Tele")
+        x, _ = vorgaenge.put(uid, "erinnerung", "erinnerung:tg1", "Erinnerung: Müll")
+        keys = telegram.vg_keyboard(uid, x["id"])
+        self.assertEqual([b["callback_data"] for b in keys["inline_keyboard"][0]],
+                         [f"vg:{x['id']}:erledigt", f"vg:{x['id']}:spaeter"])
+        self.assertIsNone(telegram.vg_keyboard(uid, "nonsense"))
+        calls = []
+
+        async def fake(c, method, **p):
+            calls.append((method, p))
+        q = lambda frm, data: {"id": "q1", "data": data, "from": {"id": frm},  # noqa: E731
+                               "message": {"message_id": 7, "chat": {"id": 555, "type": "private"}}}
+        with mock.patch.object(telegram, "call", fake), mock.patch.object(telegram, "owner", return_value=uid):
+            asyncio.run(telegram.on_press(None, q(999, f"vg:{x['id']}:erledigt")))      # someone else's press
+            self.assertEqual(vorgaenge._load(uid)["items"][-1]["zustand"], "offen")
+            asyncio.run(telegram.on_press(None, q(555, f"vg:{x['id']}:fd_remind")))     # not a button of this note
+            self.assertEqual(vorgaenge._load(uid)["items"][-1]["zustand"], "offen")
+            asyncio.run(telegram.on_press(None, q(555, f"vg:{x['id']}:erledigt")))
+        y = next(y for y in vorgaenge._load(uid)["items"] if y["id"] == x["id"])
+        self.assertEqual((y["zustand"], y["wo"]), ("erledigt", "Telegram"))
+        self.assertEqual([m for m, _ in calls].count("answerCallbackQuery"), 3)          # Telegram always gets its answer
+        self.assertIn("editMessageReplyMarkup", [m for m, _ in calls])
+
+    def test_the_begleiter_closes_a_vorgang_note_with_the_cards_checks(self):
+        import begleiter
+        profile("Offen Desk")
+        uid = uid_of("Offen Desk")
+        x, _ = vorgaenge.put(uid, "erinnerung", "erinnerung:bg1", "Erinnerung: Tee")
+        note = {"tag": "", "vg": x["id"], "ref": ""}
+        self.assertEqual(begleiter.note_acts(uid, note), ["done", "reply", "later", "open"])
+        self.assertEqual(begleiter._vg_act({"id": uid, "name": "Offen Desk"}, x["id"])["ok"], True)
+        self.assertEqual(next(y for y in vorgaenge._load(uid)["items"] if y["id"] == x["id"])["wo"], "Begleiter")
+        self.assertEqual(begleiter.note_acts(uid, note), ["reply", "later", "open"])        # closed: no „Erledigt“
+
+    def test_what_is_open_only_reads_and_counts_as_mail(self):
+        profile("Offen Frage")
+        uid = uid_of("Offen Frage")
+        ctx = {"who": {"id": uid}, "own": True, "text": "Was ist noch offen?"}
+        o = vorgaenge.offer(ctx)
+        self.assertEqual(([t["function"]["name"] for t in o["tools"]], o["mail"]), (["offen_zeigen"], {"offen_zeigen"}))
+        self.assertIsNone(vorgaenge.offer(dict(ctx, text="Wie wird das Wetter?")))
+        self.assertIsNone(vorgaenge.offer(dict(ctx, client="mcp")))
+        self.assertIsNone(vorgaenge.offer(dict(ctx, own=False)))
+        self.assertEqual(asyncio.run(vorgaenge.tool("offen_zeigen", {}, ctx)), "Nichts offen.")
+        vorgaenge.put(uid, "erinnerung", "erinnerung:of1", "Erinnerung: Brot", now=1000.0)
+        vorgaenge.put(uid, "geteilt", "geteilt:doc:x", "Anna hat etwas mit dir geteilt", "Dokument", now=2000.0)
+        before = [dict(y) for y in vorgaenge._load(uid)["items"]]
+        out = asyncio.run(vorgaenge.tool("offen_zeigen", {}, ctx))
+        self.assertTrue(out.startswith("Offen: 2. Erinnerung: Erinnerung: Brot; Geteilt: Anna"), out)   # urgent first
+        self.assertEqual(vorgaenge._load(uid)["items"], before)            # reading changes nothing
+        with mock.patch.object(vorgaenge.features, "allowed", return_value=False):
+            self.assertIsNone(vorgaenge.offer(ctx))
+            self.assertIn("aus", asyncio.run(vorgaenge.tool("offen_zeigen", {}, ctx)))
+
+    def test_a_source_module_registers_its_own_buttons(self):
+        """vorgaenge.QUELLEN: a module's kind with its own buttons; act() checks first, then runs the module's rule."""
+        profile("Offen Quelle")
+        uid = uid_of("Offen Quelle")
+        ran = []
+        arten, aktionen = dict(vorgaenge.ARTEN), dict(vorgaenge.AKTIONEN)
+        self.addCleanup(lambda: (vorgaenge.ARTEN.clear(), vorgaenge.ARTEN.update(arten), vorgaenge.AKTIONEN.clear(),
+                                 vorgaenge.AKTIONEN.update(aktionen), vorgaenge.QUELLEN.pop("probe", None)))
+        vorgaenge.ARTEN["probe"] = {"de": "Probe", "en": "Probe", "sym": "check", "mail": False, "dringend": False,
+                                    "acts": ("pr_tun", "pr_nie")}
+        vorgaenge.AKTIONEN.update(pr_tun={"de": "Tun", "en": "Do", "stufe": "direkt"}, pr_nie={"de": "Nie", "en": "Never", "stufe": "direkt"})
+        vorgaenge.QUELLEN["probe"] = {"acts": lambda u, x: {"pr_tun"}, "run": lambda u, x, n: ran.append(n) or {"text": "getan"}}
+        x, _ = vorgaenge.put(uid, "probe", "probe:1", "Eine Probe")
+        self.assertEqual([k["k"] for k in vorgaenge.public(uid, x)["acts"]], ["pr_tun", "spaeter"])
+        with self.assertRaises(vorgaenge.HTTPException):
+            vorgaenge.act(uid, x["id"], "pr_nie")                         # its rules do not allow it now
+        self.assertEqual(vorgaenge.act(uid, x["id"], "pr_tun")["text"], "getan")
+        self.assertEqual(ran, ["pr_tun"])

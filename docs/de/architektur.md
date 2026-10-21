@@ -302,7 +302,7 @@ Home Assistant, Mail, Kalender, Aufgaben, Wetter, reMarkable, MCP und was der Sp
 | `app/panel/tasks.py` | Listen für Einkauf und Aufgaben |
 | `app/panel/tidy.py` | Posteingang aufräumen |
 | `app/panel/transit.py` | Bus und Bahn |
-| `app/panel/vorgaenge.py` | Alles Offene im Assistenten: Karten mit Knöpfen im Gespräch, Später, Seite Offen, Vorschläge mit Ja-Knopf |
+| `app/panel/vorgaenge.py` | Alles Offene im Assistenten: Karten mit Knöpfen, Später, Seite Offen, Ja-Knopf, Telegram-Knöpfe |
 | `app/panel/vorrat.py` | Vorrat je Profil: Antworten aus dem Speicher, solange frisch genug; versiegelt auf der Platte (Mail, Wetter, Pakete) |
 | `app/panel/vorwaermen.py` | Vorwärmen: liest beim Anmelden Kalender, Mails, Für dich und Kontakte vorab in den Speicher |
 | `app/panel/weather.py` | Wetter von Open-Meteo als feste Sätze |
@@ -1863,11 +1863,11 @@ Gilt bei: [Schritt 9](#kn-weiche-s9)
 
 #### Alltagsquote
 
-- Die Testsätze (168) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (211) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt.
+- Die Testsätze (168) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (213) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt.
 
 #### Werkzeugnamen
 
-- Überall, wo ein Werkzeug sichtbar wird, steht ein lesbarer Name aus einer Tabelle (90 Werkzeuge), zum Beispiel „Postfach-Überblick“ statt mail_tidy_overview.
+- Überall, wo ein Werkzeug sichtbar wird, steht ein lesbarer Name aus einer Tabelle (91 Werkzeuge), zum Beispiel „Postfach-Überblick“ statt mail_tidy_overview.
 
 #### Zahlen (aus dem Code)
 
@@ -1878,7 +1878,7 @@ Gilt bei: [Schritt 9](#kn-weiche-s9)
 - **300 ms** Wartezeit mit „Schneller Antwortbeginn“ ([Schritt 10](#kn-weiche-s10))
 - **80 %** Standard-Schwelle der Einordnung ([Schritt 10](#kn-weiche-s10))
 - **168** eingebaute Testsätze ([Schritt 4](#kn-weiche-s4), [Schritt 5](#kn-weiche-s5))
-- **211** Alltagssätze zum Messen ([Schritt 14](#kn-weiche-s14))
+- **213** Alltagssätze zum Messen ([Schritt 14](#kn-weiche-s14))
 - **20** Versionen für Rückgängig ([Schritt 4](#kn-weiche-s4))
 
 #### Einstellen
@@ -2095,7 +2095,7 @@ Gilt bei: [Schritt 4](#kn-werkzeuge-s4)
 - **3** Gedächtnis-Notizen pro Antwort ([Schritt 1](#kn-werkzeuge-s1))
 - **13** Werkzeuge gesperrt nach fremdem Text ([Schritt 4](#kn-werkzeuge-s4))
 - **7** Werkzeuge ohne Internet bei Notaus ([Schritt 3](#kn-werkzeuge-s3))
-- **90** Werkzeuge mit verständlichem Namen ([Schritt 11](#kn-werkzeuge-s11))
+- **91** Werkzeuge mit verständlichem Namen ([Schritt 11](#kn-werkzeuge-s11))
 
 #### Einstellen
 

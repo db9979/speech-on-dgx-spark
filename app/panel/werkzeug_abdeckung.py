@@ -32,6 +32,7 @@ TOOLS = {
     "rmtodo": ("remarkable_library",),
     "nasablage": ("nas_ablegen",),
     "naszustand": ("nas_zustand",),
+    "vorgaenge": ("offen_zeigen",),   # „Was ist offen?“ (read only); the cards' buttons do the rest
     "rmsend": ("remarkable_note", "remarkable_sent"),
     "rmweb": ("remarkable_page", "remarkable_attachment"),
     "rmaufgaben": ("remarkable_sheet",),   # every sheet on request goes through it (rmplus.SHEETS)
@@ -107,7 +108,7 @@ RULES = {
 }
 
 WITHOUT = {
-    "vorgaenge": "ohne Werkzeug: Karten und Knöpfe im Gespräch und auf der Seite Offen (vorgaenge.AKTIONEN), Vorschläge der Werkzeuge mit Ja-Knopf (Stufe 2); „Was ist offen?“ per Stimme kommt in Stufe 4",
+
     "calserver": "kein Werkzeug: Kalender-Apps erreichen den Spark über CalDAV (kalenderserver.py), Termine per Sprache über calendar_add",
     "ablauf": "Einstellung, wie Antworten gezeigt werden (ablauf.py)",
     "auftragsplan": "Werkzeuge nur innerhalb eines Auftrags (auftragsplan.py), Antworten und Ja unter Ich → Aufträge",
@@ -277,7 +278,7 @@ BY_WORD = {"remarkable_note": "remarkable", "remarkable_sent": "remarkable", "re
            "remarkable_attachment": "remarkable", "remarkable_library": "rmliste", "remarkable_sheet": "remarkable", "spark_zustand": "zustand_wz",
            "home_rules_list": "hamelden", "home_rule_delete": "hamelden", "speaker_volume": "aendern",
            "proactive_pause": "aendern", "undo_last": "aendern", "nas_ablegen": "nasablage",
-           "nas_zustand": "naszustand"}
+           "nas_zustand": "naszustand", "offen_zeigen": "vorgaenge"}
 
 # one typical request per tool of a Weiche group, German and English: it must reach that group
 # (tests/test_werkzeug_abdeckung.py). The one list of example sentences: „Das kannst du auch sagen“ (saetze.py) shows

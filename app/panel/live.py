@@ -60,7 +60,7 @@ TOOLS = {
     "home_assistant_states": "ha", "home_assistant_todo": "ha", "web_search": "web", "read_page": "pages",
     "archive_search": "kiwix", "article_more": "wiki", "wikipedia": "wiki", "mail_draft": "mail", "mail_list": "mail",
     "mail_read": "mail", "mail_search": "mail", "mail_tidy_overview": "mail", "mail_tidy_propose": "mail",
-    "fuer_dich": "mail", "fuer_dich_tun": "mail",
+    "fuer_dich": "mail", "fuer_dich_tun": "mail", "offen_zeigen": "cal",   # Offen lives on the Kalender node
     "contacts_search": "contacts", "remarkable_note": "rm", "remarkable_page": "rm", "remarkable_attachment": "rm", "remarkable_sent": "rm", "remarkable_sheet": "rm", "remarkable_library": "rm", "iphone_action": "push", "weather": "weather",
     "parcels": "parcels", "transit": "transit", "feeds_news": "feeds", "document_search": "mem", "document_list": "mem", "history_search": "mem", "local_search": "mem",
     "memory_forget": "mem", "memory_save": "mem", "reminder_cancel": "mem", "reminder_list": "mem", "reminder_set": "mem",
@@ -1586,7 +1586,8 @@ def snapshot(view="admin", now=None):
         if x["id"] == "cal" and offen.get("on"):   # Offen (vorgaenge.py): numbers only, never a title
             x["sub"] += (f" · Offen: {offen['braucht']} brauchen jemanden bei {offen['profiles']} Profilen, {offen['spaeter']} später,"
                          f" heute {offen['erledigt']} erledigt, {offen['wieder']} wieder da, {offen['streams']} Seiten verbunden,"
-                         f" {offen['warten']} Vorschläge warten auf ein Ja, heute {offen['ja']} per Knopf bestätigt")
+                         f" {offen['warten']} Vorschläge warten auf ein Ja, heute {offen['ja']} per Knopf bestätigt"
+                         + ("; offen je Art: " + ", ".join(f"{k} {n}" for k, n in offen["arten"].items()) if offen.get("arten") else ""))
         if x["id"] in ("cal", "mail") and warm.get("profiles"):   # Vorwärmen: how many profiles, how long ago (no name)
             x["sub"] += f" · {warm['profiles']} Profile vorgewärmt, zuletzt vor {warm['ago']} min"
         if x["id"] in ("cal", "mail", "weather", "parcels"):   # Vorrat je Profil: today's share from the store (numbers)

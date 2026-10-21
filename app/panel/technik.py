@@ -174,7 +174,7 @@ MODULE = {
     "kontaktserver": ("dienste", "Kontakte-Server: das Adressbuch „Auf dem Spark“ für Kontakte-Apps (CardDAV unter /carddav/)"),
     "kontaktkarte": ("dienste", "Kontakte ändern: Felder prüfen, nur die Zeilen der Seite in der vCard ersetzen, Rest bleibt"),
     "tasks": ("dienste", "Listen für Einkauf und Aufgaben"),
-    "vorgaenge": ("dienste", "Alles Offene im Assistenten: Karten mit Knöpfen im Gespräch, Später, Seite Offen, Vorschläge mit Ja-Knopf"),
+    "vorgaenge": ("dienste", "Alles Offene im Assistenten: Karten mit Knöpfen, Später, Seite Offen, Ja-Knopf, Telegram-Knöpfe"),
     "weather": ("dienste", "Wetter von Open-Meteo als feste Sätze"),
     "transit": ("dienste", "Bus und Bahn"),
     "feeds": ("dienste", "Reddit und Feeds: eigener Reddit-Posteingang, Subreddits und RSS, nur lesen"),

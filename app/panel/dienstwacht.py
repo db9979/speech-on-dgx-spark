@@ -750,10 +750,17 @@ def recipients():
 
 
 def _queue_all(item, now):
+    import vorgaenge
     q = _read()["queue"]
     for uid in recipients():
         x = q.setdefault(uid, {"items": [], "tried": 0})
         x["items"] = (x["items"] + [dict(item, q=now)])[-MAX_QUEUE:]
+        key = "dienst:" + item["s"]     # its card under Offen (admins only): a fixed sentence, closed when fine again
+        if item["k"] in ("down", "warn"):
+            vorgaenge.put(uid, "dienst", key, SVC[item["s"]][0] + (" ist ausgefallen" if item["k"] == "down" else " meldet ein Problem"),
+                          SVC[item["s"]][2], daten={"weg": "Zustand → Überblick"}, now=now, wieder=True)
+        else:
+            vorgaenge.done(uid, key, "wieder_da")
 
 
 def night(uid, now):

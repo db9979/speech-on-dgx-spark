@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.900** Alles Offene im Assistenten (Stufen 3 und 4): Chat-Nachrichten, Geteiltes, wichtige Mails, Fragen laufender Aufträge, MCP-Freigaben und für Admins ausgefallene Dienste als Karten unter Offen (nie mit Text); Knöpfe „Erledigt“/„Später“ unter Telegram-Meldungen und „Erledigt“ im Begleiter mit denselben Prüfungen; „Was ist offen?“ per Stimme (nur lesen); Live je Art; iPhone
 - **V01.0.899** Fix Selbsttests: der Einladungs-Test ließ einen Spark-Kalender und ausgeschaltete Schalter zurück, spätere Kalender-Seitentests wurden rot; jede Testklasse stellt jetzt alles zurück
 - **V01.0.898** Kiwix als Wissen: eigene Zeitgrenze im Vorlauf von „Erst lokal suchen“ (Standard 900 ms), je Frage die passenden Bücher (deutsche Wikipedia plus die Fachbücher, deren Titel zur Frage passt), Archiv-Artikel als Quelle mit Stand unter der Antwort, Bücher per Ziehen ordnen, „Kiwix prüfen“ meldet Bücher, die das Kiwix nicht mehr kennt; ist ein Buch älter als ein Jahr, nennt die Antwort seinen Stand
 - **V01.0.897** Kontakte wie Apple Kontakte (Stufe 3b): der Spark als CardDAV-Server, das Adressbuch „Auf dem Spark“ erscheint in der Kontakte-App des iPhone (Schalter „Kontakte für Kontakte-Apps“, aus); Einladungen aus Mails: eine .ics-Einladung mit einem Tipp in den Kalender, Zusagen, Vielleicht, Absagen an den Einladenden (Schalter „Einladungen aus Mails“, aus), Panel und iPhone; Kontaktkarte mit Linien-Symbolen, „Nachricht“ am PC kopiert die Nummer
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.893** Ordner sofort und Ordner-Menü: die Ordnerliste der Seite E-Mail liegt versiegelt im Mail-Vorrat und steht nach einem Neustart sofort da; das „⋯“ am Ordner ist ein kleines Menü daneben wie bei Apple Mail (Rechtsklick, Blatt auf dem Handy), Umbenennen und neue Ordner direkt in der Zeile; iPhone mit Symbolen
 - **V01.0.892** reMarkable-Dokumente sauber formatiert: Listen, Nummern, Tabellen, kleinerer Kopf, Gerätformat
 - **V01.0.891** Tagesaktuell: der Stand nennt immer seinen Tag („Stand gestern 18:00“), das Wetter nimmt „heute“ von der Uhr statt aus einer Vorhersage von gestern, der Morgenbericht nennt Mails mit Tag und nur noch ungelesene, die Websuche sucht bei Fragen nach Heutigem im Zeitraum mit Datum je Treffer, und was nicht aktuell ist, sagt ein fester Satz des Panels; eine geöffnete Mail gilt als gelesen
-- **V01.0.890** Fix iPhone-App: die Kontakte-Karte lädt die .vcf-Datei zum Teilen als Daten (die App ließ sich seit V01.0.888 nicht bauen)
 
 
 

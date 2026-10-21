@@ -489,9 +489,17 @@ def note_weg(x):
     return NOTE_WEG.get(x.get("tag", "")) or wege.find(x.get("title", "") + ". " + x.get("body", ""))
 
 
+def _vg_done(uid, vg):
+    """The Vorgang's direct button that closes it („Erledigt“, a chat's „Gelesen“), or ""."""
+    import vorgaenge
+    return next((k for k, _ in vorgaenge.knoepfe(uid, vg) if k in ("erledigt", "cx_gelesen")), "")
+
+
 def note_acts(uid, x):
     """The buttons of one note (part actions on): by its kind; the Für-dich ones only with a card behind it."""
     acts = NOTE_ACTS.get(x.get("tag", ""), NOTE_ACTS_PLAIN)
+    if acts is NOTE_ACTS_PLAIN and x.get("vg") and _vg_done(uid, x["vg"]):   # a note about a Vorgang of Offen
+        return ["done"] + list(acts)
     if "done" in acts and not (x.get("ref") and features.allowed("fuerdich", uid)):
         return ["open"]
     if "read" in acts:
@@ -800,7 +808,21 @@ async def program_note_act(request: Request):
             print(f"begleiter: meldung knopf abgelehnt grund=post_aus {profiles.log_name(prof)}", flush=True)
             raise HTTPException(403, f"{PART_NAMES['post']} ist für dieses Gerät aus (Ich → Begleiter).")
         return await _mail_read(prof, x["ref"], "meldung")
+    if act == "done" and x.get("vg") and x.get("tag", "") not in NOTE_ACTS:
+        return _vg_act(prof, x["vg"])
     return _fd_act(prof, x["ref"], act, "meldung")
+
+
+def _vg_act(prof, vg):
+    """„Erledigt“ on a note about a Vorgang: the same checks as its card (vorgaenge.act, wo "desk")."""
+    import vorgaenge
+    k = _vg_done(prof["id"], vg)
+    if not k:
+        print(f"begleiter: meldung knopf abgelehnt grund=vorgang_zu {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(404, "Das ist schon erledigt.")
+    vorgaenge.act(prof["id"], vg, k, wo="desk")
+    print(f"begleiter: meldung knopf=erledigt ok {profiles.log_name(prof)}", flush=True)
+    return {"ok": True, "text": "Erledigt."}
 
 
 def _fd_act(prof, ref, act, where):

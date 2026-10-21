@@ -15,8 +15,8 @@ struct Vorgang: Identifiable {
     let id: String
     let art: String
     let artName: String
-    let bell: Bool
-    let check: Bool
+    /// the kind's picture (vorgaenge.ARTEN sym): bell, check, mail, chat, share, warn, spark
+    let sym: String
     let urgent: Bool
     let title: String
     let line: String
@@ -43,8 +43,7 @@ struct Vorgang: Identifiable {
         id = d["id"] as? String ?? ""
         art = d["art"] as? String ?? ""
         artName = (en ? d["art_en"] : d["art_de"]) as? String ?? ""
-        bell = d["sym"] as? String == "bell"
-        check = d["sym"] as? String == "check"
+        sym = d["sym"] as? String ?? "mail"
         urgent = d["dringend"] as? Bool ?? false
         title = String((d["titel"] as? String ?? "").prefix(200))
         line = String((d["zeile"] as? String ?? "").prefix(200))
@@ -140,6 +139,15 @@ final class VorgangStore: ObservableObject {
     }
 }
 
+/// the picture of a kind (vorgaenge.ARTEN sym), the same set as the panel's offen.js
+func vorgangSymbol(_ sym: String) -> String {
+    ["bell": "bell", "check": "checkmark.seal", "chat": "bubble.left", "share": "square.and.arrow.up",
+     "warn": "exclamationmark.triangle", "spark": "sparkles"][sym] ?? "envelope"
+}
+
+/// a chat the card „Antworten …“ opens (ChatsView starts in it)
+struct ChatStart: Identifiable { let id: String }
+
 /// the line under a card: what happened, where and when
 func vorgangState(_ x: Vorgang) -> String {
     let f = Date.FormatStyle(date: .abbreviated, time: .shortened)
@@ -149,7 +157,9 @@ func vorgangState(_ x: Vorgang) -> String {
     guard x.done else { return "" }
     let ended: [String: String] = ["vs_nein": String(localized: "Abgebrochen"), "vs_aendern": String(localized: "Weiter auf der Seite"),
                                    "beantwortet": String(localized: "Im Gespräch beantwortet"), "ersetzt": String(localized: "Neuer Vorschlag"),
-                                   "fehler": String(localized: "Nicht ausgeführt")]
+                                   "fehler": String(localized: "Nicht ausgeführt"), "cx_gelesen": String(localized: "Gelesen"),
+                                   "geantwortet": String(localized: "Beantwortet"), "bestaetigt": String(localized: "Bestätigt"),
+                                   "abgelehnt": String(localized: "Abgelehnt"), "wieder_da": String(localized: "Läuft wieder")]
     let how = x.how == "abgelaufen" ? String(localized: "Abgelaufen") : x.how == "vs_ja" && !x.fertig.isEmpty ? x.fertig
         : ended[x.how] ?? (x.state == "weg" ? String(localized: "Nicht wichtig")
         : x.how == "fd_remind" ? String(localized: "Erinnerung gesetzt") : String(localized: "Erledigt"))
@@ -163,6 +173,9 @@ struct VorgangKarte: View {
     @State private var writing: MailDraft?
     @State private var adding: FuerEvent?
     @State private var note: (String, Bool)?
+    @State private var chat: ChatStart?
+    @State private var reading: MailItem?
+    @Environment(\.openURL) private var openURL
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -177,7 +190,7 @@ struct VorgangKarte: View {
                 if let n = note { Text(verbatim: n.0).font(.caption).foregroundStyle(n.1 ? Color.secondary : Color.red) }
             } else {
                 HStack(spacing: 6) {
-                    Image(systemName: x.bell ? "bell" : x.check ? "checkmark.seal" : "envelope").foregroundStyle(.tint)
+                    Image(systemName: vorgangSymbol(x.sym)).foregroundStyle(.tint)
                     Text(verbatim: x.artName.uppercased()).font(.caption).foregroundStyle(.secondary)
                     Spacer()
                     if !x.due.isEmpty { Text(verbatim: x.due).font(.caption).foregroundStyle(.orange) }
@@ -210,6 +223,8 @@ struct VorgangKarte: View {
         .background(RoundedRectangle(cornerRadius: 14).fill(Color(.secondarySystemBackground)))
         .overlay(alignment: .leading) { if x.urgent && !x.done { Rectangle().fill(.orange).frame(width: 3).clipShape(Capsule()) } }
         .sheet(item: $writing) { d in MailWrite(draft: d) }
+        .sheet(item: $chat) { c in ChatsView(start: c.id) }
+        .sheet(item: $reading) { m in NavigationStack { MailView(item: m, box: "", folder: nil, post: PostModel()) } }
         .sheet(item: $adding) { e in
             NavigationStack {
                 List { Section("Eintragen") { QuickAdd(text: e.line) { _, _ in adding = nil } } }
@@ -243,6 +258,13 @@ struct VorgangKarte: View {
                 if let e = d["event"] as? String, !e.isEmpty { adding = FuerEvent(line: e) }
                 if let m = d["draft"] as? [String: Any] {
                     writing = MailDraft(to: m["to"] as? String ?? "", subject: m["subject"] as? String ?? "", text: m["text"] as? String ?? "")
+                }
+            case "oeffnen":   // stages 3+4: only the place in the panel where it goes on (a fixed way, Sprung-Link)
+                if let w = z["weg"], let u = SparkAPI.wayLink(w) { openURL(u) }
+            case "cx_antworten": if let c = z["chat"], !c.isEmpty { chat = ChatStart(id: c) }
+            case "ml_lesen":
+                if let r = z["ref"], !r.isEmpty {
+                    reading = MailItem(id: r, from: z["addr"] ?? "", subject: z["subject"] ?? "", date: x.made ?? Date(), unread: false, box: 0)
                 }
             default: break
             }

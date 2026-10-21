@@ -1317,14 +1317,16 @@ async def _notify(u, cid, meta, sender, text, now):
     the text only when u wants it (chat_push_text); the apps fetch the rest from the Spark."""
     if not usable(u) or listening(u) or _muted_until(meta, u, now):
         return 0
+    who = name_of(sender) or "Jemand"
+    title = "💬 " + (who if meta.get("kind") in TWO else _title(cid, meta, u, {}) + " · " + who)
+    import vorgaenge     # a card under Offen (only who, never the text); reading the chat closes it
+    vorgaenge.put(u, "nachricht", "chat:" + cid, title[2:], "Neue Nachricht", daten={"chat": cid}, now=now, wieder=True)
     import room
     if room.night(u):
         return 0
     import push
     if not push.reachable(u, private=True):
         return 0
-    who = name_of(sender) or "Jemand"
-    title = "💬 " + (who if meta.get("kind") in TWO else _title(cid, meta, u, {}) + " · " + who)
     body = ("🔒 Neue Nachricht" if meta.get("kind") == "priv" else
             text[:200] if profiles.settings(u).get("chat_push_text") is True else "Neue Nachricht")
     n = await push.send(u, title, body, tag="chat-" + cid, private=True, why="Chat", to="every")
@@ -1351,6 +1353,8 @@ def read(uid, cid, now=None):
         _tell(others, {"type": "chat", "id": cid, "read": True})
         if others and RID.fullmatch(others[0]):
             _far_read(uid, cid, others[0], now)
+    import vorgaenge
+    vorgaenge.done(uid, "chat:" + cid, "cx_gelesen")
 
 
 def _far_read(uid, cid, rid, now):

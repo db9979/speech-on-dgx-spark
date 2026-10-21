@@ -16310,6 +16310,46 @@
           }
         }
       }
+    },
+    "Beantwortet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Answered"
+          }
+        }
+      }
+    },
+    "Bestätigt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmed"
+          }
+        }
+      }
+    },
+    "Abgelehnt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Declined"
+          }
+        }
+      }
+    },
+    "Läuft wieder": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Running again"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

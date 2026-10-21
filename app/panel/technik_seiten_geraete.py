@@ -992,7 +992,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ MCP-Programme
     "mcpc": {
-        "stand": "c134e66cb3",
+        "stand": "340774468c",
         "bezug": {
             "mcpserver.MAX_CONNS": ["s3"], "mcpserver.mcp_post": ["s1"], "mcpserver.origin_ok": ["s2"],
             "mcpserver.check_conn": ["s3"], "mcpserver.is_local": ["s4"], "mcpserver.find": ["s3"],

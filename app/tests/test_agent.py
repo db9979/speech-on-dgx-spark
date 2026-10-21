@@ -114,7 +114,7 @@ class Base(unittest.TestCase):
     def setUp(self):
         self.sent = []
 
-        async def send(uid, title, body, tag="", private=True):
+        async def send(uid, title, body, tag="", private=True, **more):   # more: why, to, ref, vg like push.send
             self.sent.append((uid, title, body, tag, private))
             return 1
         import push

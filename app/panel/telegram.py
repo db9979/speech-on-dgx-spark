@@ -590,11 +590,11 @@ async def forget_code(c, uid, cid, m, text):
 async def poll_once(c, wait=25):
     """Fetches and handles waiting updates; returns how many came."""
     offset = int(_state().get("offset") or 0)
-    ups = await call(c, "getUpdates", offset=offset, timeout=wait, allowed_updates=["message"])
+    ups = await call(c, "getUpdates", offset=offset, timeout=wait, allowed_updates=["message", "callback_query"])
     for u in ups or []:
         _save_state(offset=int(u["update_id"]) + 1)   # first: a message that breaks the handler is not retried forever
         try:
-            await handle(c, u)
+            await (on_press(c, u["callback_query"]) if isinstance(u.get("callback_query"), dict) else handle(c, u))
         except Exception as e:
             print("telegram: message", type(e).__name__, safe(e, 160), flush=True)
     return len(ups or [])
@@ -671,16 +671,76 @@ async def loop():
             await asyncio.sleep(15)
 
 
-async def notify(uid, text, private=True):
-    """A reminder, briefing or proactive note as a Telegram message (when the profile wants that)."""
+def vg_keyboard(uid, vg):
+    """The buttons of a Vorgang under its note (Alles Offene im Assistenten, stage 3): only its direct ones and
+    „Später“ (vorgaenge.knoepfe); the press comes back as a callback_query and runs the same checks as the card."""
+    import vorgaenge
+    row = [{"text": "Später" if k == "spaeter" else de, "callback_data": f"vg:{vg}:{k}"}
+           for k, de in vorgaenge.knoepfe(uid, vg)] if vorgaenge.ID.fullmatch(str(vg or "")) else []
+    return {"inline_keyboard": [row[:3]]} if row else None
+
+
+VG_PRESS = re.compile(r"vg:(v[0-9a-f]{10}):([a-z_]{2,16})")
+PRESS_MAX = 20                 # button presses per profile and minute
+_presses = {}
+
+
+async def on_press(c, q):
+    """A button under a note (callback_query): only from the profile's own private chat, only the buttons that
+    note carries, the same checks as the card (vorgaenge.act, wo "tg"). Telegram always gets its answer."""
+    msg = q.get("message") or {}
+    chat_ = msg.get("chat") or {}
+    cid, qid = chat_.get("id"), str(q.get("id") or "")[:64]
+    m = VG_PRESS.fullmatch(str(q.get("data") or ""))
+    uid = owner(cid) if chat_.get("type") == "private" and isinstance(cid, int) else None
+    if not qid:
+        return
+    if not uid or (q.get("from") or {}).get("id") != cid or not m:
+        print("telegram: knopf abgelehnt grund=fremd", flush=True)
+        await call(c, "answerCallbackQuery", callback_query_id=qid)
+        return
+    now = time.time()
+    seen = [t for t in _presses.get(uid, []) if now - t < 60]
+    _presses[uid] = seen + [now]
+    if len(seen) >= PRESS_MAX or notaus.own(uid) or features.blocked("telegram", uid):
+        print(f"telegram: knopf abgelehnt grund=gesperrt | {profiles.log_name(profiles.by_id(uid))}", flush=True)
+        await call(c, "answerCallbackQuery", callback_query_id=qid, text="Gerade nicht möglich.")
+        return
+    import vorgaenge
+    vid, k = m.group(1), m.group(2)
+    if k not in dict(vorgaenge.knoepfe(uid, vid)):
+        say = "Das ist schon erledigt oder geht nur im Panel."
+        print(f"telegram: knopf abgelehnt grund=nicht_offen | {profiles.log_name(profiles.by_id(uid))}", flush=True)
+    else:
+        try:
+            await asyncio.to_thread(vorgaenge.act, uid, vid, k, None, "morgen" if k == "spaeter" else "", "tg")
+            say = "Später: morgen früh" if k == "spaeter" else "Erledigt"
+            print(f"telegram: knopf ok | {profiles.log_name(profiles.by_id(uid))}", flush=True)
+        except HTTPException as e:
+            d = e.detail
+            say = str(d.get("text") if isinstance(d, dict) else d)[:180]
+            print(f"telegram: knopf abgelehnt grund=vorgang | {profiles.log_name(profiles.by_id(uid))}", flush=True)
+    await call(c, "answerCallbackQuery", callback_query_id=qid, text=say)
+    if msg.get("message_id"):       # the buttons go; the note stays
+        try:
+            await call(c, "editMessageReplyMarkup", chat_id=cid, message_id=msg["message_id"],
+                       reply_markup={"inline_keyboard": []})
+        except ValueError as e:
+            print("telegram: buttons not removed", safe(e, 120), flush=True)
+
+
+async def notify(uid, text, private=True, vg=""):
+    """A reminder, briefing or proactive note as a Telegram message (when the profile wants that); vg: the
+    Vorgang it is about, its direct buttons go under it (vg_keyboard)."""
     if not push_on(uid, private):
         return 0
     if notaus.refuse("aussen"):
         print("telegram: note refused, notaus", flush=True)
         return 0
+    keys = vg_keyboard(uid, vg) if vg else None
     try:
         async with httpx.AsyncClient(timeout=20) as c:
-            await call(c, "sendMessage", chat_id=link(uid)["chat"], text=text[:4000])
+            await call(c, "sendMessage", chat_id=link(uid)["chat"], text=text[:4000], **({"reply_markup": keys} if keys else {}))
         return 1
     except (httpx.HTTPError, ValueError) as e:
         print("telegram: notify", type(e).__name__, safe(e, 120), flush=True)

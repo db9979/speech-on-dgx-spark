@@ -38,8 +38,9 @@ import rufen
 import senden
 import fuerdich
 import ichweiss
+import vorgaenge
 
-SERVICES = [roomfar, weather, contacts, parcels, fuerdich, tasks, transit, feeds, wiki, agent, senden, messages, remarkable, hamelden, hilfe, begleiter, meinmcp, docmake, bilder, musik, tagebuch, zustand_wz, rmliste, aendern, nasablage, naszustand, telefon_anruf, rufen]
+SERVICES = [roomfar, weather, contacts, parcels, fuerdich, tasks, transit, feeds, wiki, agent, senden, messages, remarkable, hamelden, hilfe, begleiter, meinmcp, docmake, bilder, musik, tagebuch, zustand_wz, rmliste, aendern, nasablage, naszustand, telefon_anruf, rufen, vorgaenge]
 
 
 def offer(ctx):

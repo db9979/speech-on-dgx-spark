@@ -918,8 +918,12 @@ async def check_mail(uid, p):
         seen.add(key)
         _mut(uid, lambda s, key=key: s.update(mail_seen=(s.get("mail_seen", []) + [key])[-200:]))
         who = h["from"].split(" <")[0].strip() or h["from"]
+        import vorgaenge     # its card with Lesen and Antwort (Alles Offene im Assistenten, stage 3); the note carries it
+        addr = h["from"].split("<")[-1].rstrip(">").strip() if "<" in h["from"] else h["from"]
+        x, _ = vorgaenge.put(uid, "mail", f"mail:{key}", f"Wichtige Mail von {who}", h["subject"] or "ohne Betreff",
+                             daten={"ref": key, "folder": "INBOX", "addr": addr, "subject": h["subject"] or ""})
         await deliver(uid, "mail", f"Neue Mail von {who}: {(h['subject'] or 'ohne Betreff')[:120]}.",
-                      why=why, data=f"{h['from']}: {h['subject']}"[:300], mail=True)
+                      why=why, data=f"{h['from']}: {h['subject']}"[:300], mail=True, vg=x["id"] if x else None)
 
 
 # ---------------------------------------------------------------- 8: weather for tomorrow

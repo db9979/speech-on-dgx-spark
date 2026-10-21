@@ -47,8 +47,8 @@ from core import assistant, json_body, own_profile
 
 router = APIRouter()
 
-# the kinds (stage 1: Für dich and reminders; stage 2 proposals of Kalender and E-Mail; stages 3-4 Nachrichten, Geteilt,
-# Dienste)
+# the kinds (stage 1: Für dich and reminders; stage 2 proposals of Kalender and E-Mail; stage 3 people and mail:
+# Nachrichten, Geteiltes, Wichtige Mail; stage 4 Dienste for admins, Aufträge, MCP-Freigaben)
 ARTEN = {
     "fuerdich": {"de": "Für dich", "en": "For you", "sym": "mail", "mail": True, "dringend": False,
                  "acts": ("fd_remind", "fd_event", "fd_reply", "fd_cancel", "fd_more", "erledigt", "ausblenden")},
@@ -62,7 +62,35 @@ ARTEN = {
     # ticking it off closes the card (tasks.card_follows); overdue stays open
     "besprechung": {"de": "Aus Besprechung", "en": "From a meeting", "sym": "check", "mail": False, "dringend": False,
                     "acts": ("erledigt", "ausblenden")},
+    # stage 3: new chat messages while no page was open (chats._notify), one card per chat, only under Offen; reading
+    # the chat closes it (chats.read), a new message opens it again
+    "nachricht": {"de": "Nachricht", "en": "Message", "sym": "chat", "mail": False, "dringend": False,
+                  "acts": ("cx_antworten", "cx_gelesen")},
+    # something shared with this profile (geteilt.tell): one card per sharing profile and kind
+    "geteilt": {"de": "Geteilt", "en": "Shared", "sym": "share", "mail": False, "dringend": False,
+                "acts": ("oeffnen", "erledigt")},
+    # an important new mail (proactive.check_mail, Von selbst „Wichtige Mail“): its card goes with the note
+    "mail": {"de": "Wichtige Mail", "en": "Important mail", "sym": "mail", "mail": True, "dringend": False,
+             "acts": ("ml_lesen", "fd_reply", "erledigt")},
+    # stage 4: a watched service is down or warns (dienstwacht, admins only); it closes itself when the service is
+    # fine again, „Ansehen“ opens Zustand → Überblick, nothing is restarted from a card
+    "dienst": {"de": "Dienst", "en": "Service", "sym": "warn", "mail": False, "dringend": True,
+               "acts": ("oeffnen", "erledigt")},
+    # a running job asks a question (auftragsplan._wait); answered on Ich → Aufträge, the answer closes it
+    "auftrag": {"de": "Auftrag fragt", "en": "Job asks", "sym": "spark", "mail": False, "dringend": True,
+                "acts": ("oeffnen",)},
+    # an MCP program wants an action (mcpserver.propose); only Ich → Spark als MCP-Server confirms, never a card
+    "freigabe": {"de": "Freigabe", "en": "Approval", "sym": "check", "mail": False, "dringend": True,
+                 "acts": ("oeffnen",)},
 }
+# a source module's own buttons for its kind (a new art in ARTEN, its buttons in AKTIONEN): {"acts": fn(uid, x) -> the
+# buttons its rules allow now, "run": fn(uid, x, name) -> dict for the answer or None}; raising HTTPException refuses.
+# The module registers itself (QUELLEN["regel"] = {...}); act() still checks owner, kind, state, rev and Notaus first.
+QUELLEN = {}
+# how long a card of a kind stays open at most (hours) before it goes as „Abgelaufen“; the others: ALT_TAGE
+OFFEN_STUNDEN = {"erinnerung": 12, "freigabe": 0.25, "auftrag": 1, "dienst": 24}
+# how a source closed a card (done(wie)): these count as „weg“, every other one as „erledigt“
+WEG_WIE = ("ausblenden", "abgelaufen", "abgelehnt")
 # every button there is; "direkt" runs here at once (Rückgängig with "zurueck"), "seite" only opens the place where
 # the person goes on (the mail page's preview sheet sends, the Kalender's „Eintragen“ saves), nothing runs here
 AKTIONEN = {
@@ -79,6 +107,11 @@ AKTIONEN = {
     "vs_ja": {"de": "Ja", "en": "Yes", "stufe": "ja"},
     "vs_aendern": {"de": "Ändern …", "en": "Change …", "stufe": "seite"},
     "vs_nein": {"de": "Abbrechen", "en": "Cancel", "stufe": "direkt"},
+    # stage 3+4: opening the place where it goes on (daten "weg", a fixed way of the panel; "chat", "ref")
+    "oeffnen": {"de": "Ansehen …", "en": "Show …", "stufe": "seite"},
+    "cx_antworten": {"de": "Antworten …", "en": "Reply …", "stufe": "seite"},
+    "cx_gelesen": {"de": "Gelesen", "en": "Read", "stufe": "direkt"},
+    "ml_lesen": {"de": "Lesen …", "en": "Read …", "stufe": "seite"},
 }
 # Stufe 2 (plan Kalender und E-Mail): the proposals that become a card „Wartet auf dein Ja“: the name of the waiting
 # file (profiles.pending_set) → the module with card(uid, p) and its yes (calendars.carry, senden.carry, tidy.carry_out)
@@ -97,11 +130,10 @@ ABEND, MORGEN = 18, 8
 ZUSTAENDE = ("offen", "gesehen", "spaeter", "erledigt", "weg")
 ERLEDIGT_TAGE = 7               # done and gone ones stay this long under „Erledigt“ (with „Zurückholen“)
 ALT_TAGE = 30                   # an open one without a deadline goes after this ("weg")
-ERINNERUNG_STUNDEN = 12         # a reminder that rang and was not pressed is gone after this
 MAX_ITEMS = 300
 # what a button that opens a page needs (Für dich: the calendar line, the mail's number, folder, sender, subject);
 # a sender and a subject are outside text, shown and handed on as text only
-DATEN = ("event", "ref", "folder", "fd", "addr", "subject")
+DATEN = ("event", "ref", "folder", "fd", "addr", "subject", "chat", "weg")
 MAX_TEXT = 160
 FELD_MAX = 600                  # a line of a card: the text of a mail to send is read before „Senden“
 ID = re.compile(r"v[0-9a-f]{10}")
@@ -177,10 +209,11 @@ def _clean(v, n=MAX_TEXT):
 
 
 # ---------------------------------------------------------------- making and closing
-def put(uid, art, key, titel, zeile="", felder=(), frist="", daten=None, say=False, now=None, knopf=""):
+def put(uid, art, key, titel, zeile="", felder=(), frist="", daten=None, say=False, now=None, knopf="", wieder=False):
     """Makes the Vorgang of key (or updates the words of the one there is). Returns (item, new) or (None, False) when
     the function is off for this profile. say: a new one also goes as a card into today's main conversation.
-    knopf: the yes button's word of a proposal (KNOPF)."""
+    knopf: the yes button's word of a proposal (KNOPF). wieder: a done one of the same key opens again and counts as
+    new (a new chat message after reading, a second share of the same profile)."""
     if not features.allowed("vorgaenge", uid) or art not in ARTEN or not KEY.fullmatch(str(key)):
         return None, False
     now = now or time.time()
@@ -191,6 +224,11 @@ def put(uid, art, key, titel, zeile="", felder=(), frist="", daten=None, say=Fal
 
     def fn(d):
         x = next((y for y in d["items"] if y["key"] == key), None)
+        if x is not None and wieder and x["zustand"] in ("erledigt", "weg"):
+            x.update(words)
+            _set(x, "offen", now=now)
+            x["t"] = int(now)
+            return x, True
         if x is not None:
             x.update(words)
             return x, False
@@ -249,7 +287,7 @@ def done(uid, key, wie="erledigt", wo=""):
     def fn(d):
         x = next((y for y in d["items"] if y["key"] == key and y["zustand"] not in ("erledigt", "weg")), None)
         if x:
-            _set(x, "erledigt" if wie == "erledigt" else "weg", wie, wo)
+            _set(x, "weg" if wie in WEG_WIE else "erledigt", wie, wo)
         return bool(x)
     hit = _mut(uid, fn)
     if hit:
@@ -320,6 +358,17 @@ def public(uid, x):
             **({"fertig": list(KNOPF[x["knopf"]][1])} if x.get("knopf") in KNOPF else {})}
 
 
+def knoepfe(uid, vid):
+    """The buttons a short note may carry (Telegram, Begleiter): the open Vorgang's direct ones and „Später“ with
+    „Morgen früh“; the ones that open a page or need the preview (Ja) stay on the card. [] when none."""
+    x = next((y for y in _load(uid)["items"] if y["id"] == vid), None)
+    if x is None or x["zustand"] in ("erledigt", "weg") or x["art"] == "vorschlag":
+        return []
+    ok = _allowed_acts(uid, x)
+    return [(k, AKTIONEN[k]["de"]) for k in ARTEN[x["art"]]["acts"] + ("spaeter",)
+            if k in ok and AKTIONEN[k]["stufe"] == "direkt"]
+
+
 def counts(items):
     out = {"braucht": 0, "spaeter": 0, "erledigt": 0}
     for x in items:
@@ -342,6 +391,12 @@ def _allowed_acts(uid, x):
     out = {"erledigt", "spaeter"} | ({"zurueck"} if x["zustand"] == "spaeter" else set())
     if x["art"] == "besprechung":      # „Nicht wichtig“ hides the card, the entry stays on the list
         out.add("ausblenden")
+    if x["art"] in ("nachricht", "geteilt", "mail", "dienst", "auftrag", "freigabe"):   # stages 3+4: the kind's own buttons
+        out |= set(ARTEN[x["art"]]["acts"])
+        if x["art"] == "mail" and not features.allowed("mailsend", uid):   # a reply only where mail may be written
+            out.discard("fd_reply")
+    if x["art"] in QUELLEN:
+        out |= set(QUELLEN[x["art"]]["acts"](uid, x))
     if x["art"] == "fuerdich":
         out.add("ausblenden")
         import fuerdich
@@ -385,7 +440,8 @@ def act(uid, vid, name, rev=None, wann="", wo="web", now=None):
     where = WO.get(wo, "Rechner")
     if x["art"] == "vorschlag":
         return _vorschlag_act(uid, x, name, where, now)
-    extra = (_source_act(uid, x, name) or {}) if x["art"] in ("fuerdich", "besprechung") and name != "spaeter" else {}
+    extra = (_source_act(uid, x, name) or {}) if x["art"] in ("fuerdich", "besprechung", "nachricht") and name != "spaeter" else \
+        (QUELLEN[x["art"]]["run"](uid, x, name) or {}) if x["art"] in QUELLEN and name not in ("spaeter", "zurueck") else {}
     if AKTIONEN[name]["stufe"] == "seite":
         print(f"vorgang: knopf {name} seite {x['art']} | {profiles.log_name(profiles.by_id(uid))}", flush=True)
         return dict(extra, item=public(uid, x), rev=d["rev"])
@@ -394,7 +450,7 @@ def act(uid, vid, name, rev=None, wann="", wo="web", now=None):
         y = next((z for z in d2["items"] if z["id"] == vid), None)
         if y is None:
             return None
-        if name in ("erledigt", "fd_remind", "fd_more"):
+        if name in ("erledigt", "fd_remind", "fd_more", "cx_gelesen"):
             _set(y, "erledigt", name, where, now)
         elif name == "ausblenden":
             _set(y, "weg", name, where, now)
@@ -417,6 +473,14 @@ def _source_act(uid, x, name):
     """The source's own function behind a button (its own checks and journal lines)."""
     if x["art"] == "besprechung":
         return _meeting_act(uid, x, name)
+    if x["art"] == "nachricht":     # „Gelesen“: the chat itself counts it read (its own checks, the sender sees it)
+        if name == "cx_gelesen":
+            import chats
+            try:
+                chats.read(uid, x["key"].split(":", 1)[1])
+            except LookupError:
+                raise _refuse("quelle_fehlt", 404, "Diesen Chat gibt es nicht mehr.")
+        return None
     import fuerdich
     k = x["key"].split(":", 1)[1]
     if name in ("erledigt", "ausblenden"):
@@ -669,8 +733,8 @@ async def due(now=None):
 
 def _stale(x, now):
     since = max(x["t"], x.get("wieder", 0))      # one back from „Später“ counts from its return
-    if x["art"] == "erinnerung":
-        return now - since > ERINNERUNG_STUNDEN * 3600
+    if x["art"] in OFFEN_STUNDEN:
+        return now - since > OFFEN_STUNDEN[x["art"]] * 3600
     if x["art"] == "besprechung":      # a task stays open while its entry is (overdue too); the list closes it
         return False
     if x.get("frist"):
@@ -679,6 +743,58 @@ def _stale(x, now):
         except ValueError:
             return False
     return now - since > ALT_TAGE * 86400
+
+
+# ---------------------------------------------------------------- „Was ist offen?“ (stage 4, read only)
+# The question by voice or typed: the panel lists the open cards itself (newest and urgent first), the model only
+# says it. Nothing is closed by the tool; that stays with the cards' buttons. Titles may hold a sender or a subject
+# (outside text): the answer of this turn is treated like one made from mail (no tool that changes anything after).
+WORDS = re.compile(r"(?i)\b(was (ist|steht|liegt) (noch )?(offen|an)|was (ist|bleibt) (noch )?zu tun|"
+                   r"(noch )?offene (sachen|punkte|vorgänge|karten)|was braucht mich|(hab(e)? ich|gibt es) (noch )?was offen(es)?|"
+                   r"what('s| is) (still )?open|anything open)\b")
+OFFEN_TOOL = {"type": "function", "function": {
+    "name": "offen_zeigen",
+    "description": "Lists what is still open for the user on the page Offen (cards of mails, reminders, proposals, "
+                   "messages, shares, questions of jobs): how many, the newest titles, how many wait for later. Read "
+                   "only; closing goes with the cards' buttons. Use it when the user asks what is still open or to do.",
+    "parameters": {"type": "object", "properties": {}}}}
+OFFEN_HINT = ("Fragt jemand, was noch offen ist oder was ihn braucht, ruf offen_zeigen und antworte nur aus dessen "
+              "Ergebnis. Erledigen geht nur mit den Knöpfen der Karten.")
+OFFEN_MAX = 8
+
+
+def offer(ctx):
+    """Only in the profile's own session, only with the function on, only when the words ask what is open."""
+    who = ctx.get("who")
+    if not who or not ctx.get("own") or ctx.get("private") is False or ctx.get("client") == "mcp":
+        return None
+    if not features.allowed("vorgaenge", who["id"]) or not WORDS.search(str(ctx.get("text") or "")):
+        return None
+    return {"tools": [OFFEN_TOOL], "hint": OFFEN_HINT, "keep": {"offen_zeigen"}, "mail": {"offen_zeigen"},
+            "filler": {"offen_zeigen": ("Ich schaue, was offen ist.", "Let me see what is open.")}}
+
+
+def offen_text(uid):
+    """The panel's own sentence: the number, up to OFFEN_MAX titles (urgent and newest first), the later ones."""
+    items = _load(uid)["items"]
+    need = sorted((x for x in items if group_of(x) == "braucht"), key=lambda x: (not ARTEN[x["art"]]["dringend"], -x["t"]))
+    later = sum(1 for x in items if group_of(x) == "spaeter")
+    if not need:
+        return "Nichts offen." + (f" Für später zurückgelegt: {later}." if later else "")
+    rows = [f"{ARTEN[x['art']]['de']}: {x['titel']}" + (f" ({x['zeile']})" if x.get("zeile") else "") for x in need[:OFFEN_MAX]]
+    more = len(need) - len(rows)
+    return (f"Offen: {len(need)}. " + "; ".join(rows) + "." + (f" Dazu {more} weitere." if more > 0 else "")
+            + (f" Für später zurückgelegt: {later}." if later else "") + " Alles steht unter Offen, mit Knöpfen.")
+
+
+async def tool(name, args, ctx):
+    uid = (ctx.get("who") or {}).get("id")
+    if name != "offen_zeigen" or not uid or not features.allowed("vorgaenge", uid):
+        print("vorgang: werkzeug abgelehnt | aus", flush=True)
+        return "Alles Offene im Assistenten ist aus."
+    out = offen_text(uid)
+    print(f"vorgang: werkzeug offen | {profiles.log_name(profiles.by_id(uid))}", flush=True)
+    return out
 
 
 # ---------------------------------------------------------------- the sources (stage 1)
@@ -751,18 +867,23 @@ def for_live():
     if not features.admin_on("vorgaenge"):
         return {"on": False}
     braucht = spaeter = profs = warten = 0
+    arten = {}           # the open ones by kind (stages 3+4: Nachricht, Geteilt, Wichtige Mail, Dienst …)
     for uid in profiles.user_ids():
         if not os.path.exists(_file(uid)):
             continue
         items = _load(uid)["items"]
         c = counts(items)
         warten += sum(1 for x in items if x["art"] == "vorschlag" and group_of(x) == "braucht")
+        for x in items:
+            if group_of(x) == "braucht":
+                arten[x["art"]] = arten.get(x["art"], 0) + 1
         braucht += c["braucht"]
         spaeter += c["spaeter"]
         profs += 1 if c["braucht"] or c["spaeter"] else 0
     t = today_counts()
     return {"on": True, "profiles": profs, "braucht": braucht, "spaeter": spaeter, "erledigt": t.get("erledigt", 0),
-            "wieder": t.get("wieder", 0), "streams": streams(), "warten": warten, "ja": t.get("ja", 0)}
+            "wieder": t.get("wieder", 0), "streams": streams(), "warten": warten, "ja": t.get("ja", 0),
+            "arten": {ARTEN[k]["de"]: arten[k] for k in ARTEN if arten.get(k)}}
 
 
 def card(uid):

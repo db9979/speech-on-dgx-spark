@@ -55,6 +55,7 @@ NAMES = {
     "remarkable_library": ("reMarkable-Ablage", "reMarkable library"),
     "nas_ablegen": ("Auf der NAS ablegen", "Save to the NAS"),
     "nas_zustand": ("Zustand der NAS", "NAS status"),
+    "offen_zeigen": ("Was offen ist", "What is open"),
     "pc_action": ("Rechner-Aktion", "Computer action"), "pc_send": ("An den Rechner", "Send to computer"),
     "pc_look": ("Bildschirm ansehen", "Look at the screen"),
     # tools outside the switch's groups, the panel's own steps and tools only programs call over MCP

@@ -808,10 +808,13 @@ async def propose(c, name, args, now=None):
         items.append({"id": aid, "conn": c["id"], "by": c["name"], "tool": name, "what": what, "item": item,
                       "t": int(now), "state": "wait"})
         _save_actions(uid, items)
+    import vorgaenge     # its card under Offen only opens the page; confirming stays there (decide closes the card)
+    vg, _ = vorgaenge.put(uid, "freigabe", f"freigabe:{aid}", f"„{c['name']}“ möchte etwas tun", what,
+                          daten={"weg": "Ich → Spark als MCP-Server"}, now=now)
     try:
         import push
         await push.send(uid, "Spark: bitte bestätigen", f"„{c['name']}“ möchte: {what}. "
-                        "Bestätigen unter Ich → Spark als MCP-Server.", tag="mcp")
+                        "Bestätigen unter Ich → Spark als MCP-Server.", tag="mcp", vg=vg["id"] if vg else "")
     except Exception as e:
         print("mcp-server: push", type(e).__name__, flush=True)
     return (f"Vorgeschlagen, noch NICHT ausgeführt: {what}. Die Person entscheidet auf dem Spark "
@@ -892,6 +895,8 @@ async def decide(uid, aid, yes, now=None):
             if y["id"] == aid:
                 y.update(state=state, result=result, decided=int(now))
         _save_actions(uid, items)
+    import vorgaenge
+    vorgaenge.done(uid, f"freigabe:{aid}", "bestaetigt" if state in ("done", "fail") else "abgelehnt")
     guard.log("mcp_action", uid=uid, detail=f"{x['by'][:40]}: {x['what'][:120]} → {state}")
     print(f"mcp-server: confirmed action {x['tool'] if x.get('tool') in MCP_ACTS else '?'} {state} | "
           f"{profiles.log_name(profiles.by_id(uid))}", flush=True)
