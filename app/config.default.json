@@ -261,6 +261,7 @@
     "kiwix_books": [],
     "local_first": false,
     "local_first_ms": 400,
+    "local_first_kiwix_ms": 900,
     "roles": false,
     "agent": false,
     "agent_mcp": false,

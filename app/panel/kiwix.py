@@ -26,6 +26,8 @@ from urllib.parse import quote, unquote, urljoin, urlsplit
 
 import httpx
 
+import documents
+import frisch
 import netguard
 import features
 from common import load_config
@@ -285,16 +287,46 @@ async def chosen():
         books = []
     ids = chosen_ids()
     if ids:
-        # chosen by name without date (also older choices with a date): the newest file of that name
+        # chosen by name without date (also older choices with a date): the newest file of that name. A choice the
+        # catalog no longer lists (the Kiwix dropped or renamed the book) is left out while the catalog is readable:
+        # every search there would end in a 404; "Kiwix prüfen" names it (missing)
         known = newest(books)
         out = []
         for i in ids:
-            b = known.get(key(i)) or {"id": i, "key": key(i), "title": i, "lang": "", "group": _group("", i),
-                                      "date": "", "count": 0}
-            if b not in out:
+            b = known.get(key(i)) or (None if known else {"id": i, "key": key(i), "title": i, "lang": "",
+                                                          "group": _group("", i), "date": "", "count": 0})
+            if b and b not in out:
                 out.append(b)
         return out
     return default_books(list(newest(books).values()))
+
+
+def _book_words(b):
+    """The words that say what a book is about: title, description, kind and its name without date and format."""
+    name = " ".join(x for x in key(b["id"]).split("_") if x not in ("maxi", "mini", "nopic", "all"))
+    return set(documents._terms(" ".join((b.get("title", ""), b.get("desc", ""), b.get("group", ""), name)))) - {"de", "en"}
+
+
+def pick(books, words):
+    """The books one question asks (Dominik 2026-10-21 „welche Bücher am besten zu nutzen sind“), a fixed rule:
+    the biggest German Wikipedia always (else the first chosen book), then the books whose title, description or
+    kind share a word with the question, most shared words first; a word found in half of the chosen books or more
+    says nothing (Wikipedia, Docs ...). Free places go to the next books of the admin's order. At most
+    MAX_SEARCH_BOOKS. words: the question's stems (documents._terms)."""
+    if len(books) <= MAX_SEARCH_BOOKS:
+        return list(books)
+    wp = [b for b in books if _german(b) and (b.get("group") == "wikipedia" or b["id"].lower().startswith("wikipedia"))]
+    anchor = max(wp, key=lambda b: b.get("count", 0)) if wp else books[0]
+    bw = {b["id"]: _book_words(b) for b in books}
+    seen = {}
+    for ws in bw.values():
+        for w in ws:
+            seen[w] = seen.get(w, 0) + 1
+    asked = {w for w in words if len(w) >= 3 and seen.get(w, 0) * 2 < len(books)}
+    rest = [b for b in books if b is not anchor]
+    fit = sorted((b for b in rest if bw[b["id"]] & asked), key=lambda b: -len(bw[b["id"]] & asked))
+    out = [anchor] + fit + [b for b in rest if b not in fit]
+    return out[:MAX_SEARCH_BOOKS]
 
 
 def _german(b):
@@ -305,6 +337,11 @@ async def wiki_books():
     """The chosen Wikipedia books, German first, then English, then the rest."""
     wp = [b for b in await chosen() if b.get("group") == "wikipedia" or b["id"].lower().startswith("wikipedia")]
     return sorted(wp, key=lambda b: 0 if _german(b) else 1 if ("_en_" in b["id"] or b.get("lang") == "en") else 2)
+
+
+def source(b, title, path):
+    """One line under the answer: the article with its book and the book's date, linked into the own Kiwix."""
+    return {"title": f"{title} ({label(b)})", "url": f"{base()}/content/{b['id']}/{quote(path, safe='/')}"}
 
 
 def label(b):
@@ -567,9 +604,8 @@ async def search(query, book=""):
     """Full text in the chosen books (or the one named): a fixed text for the model."""
     t0 = time.monotonic()
     books = await chosen()
-    if book:
-        books = [b for b in books if b["id"] == book or b["title"].lower() == str(book).lower()] or books
-    books = books[:MAX_SEARCH_BOOKS]
+    named = [b for b in books if b["id"] == book or b["title"].lower() == str(book).lower()] if book else []
+    books = named[:MAX_SEARCH_BOOKS] or pick(books, documents._terms(str(query or "")[:400]))
     if not books:
         return "Im Kiwix-Archiv sind keine Bücher ausgewählt oder es ist nicht erreichbar.", []
     found = await asyncio.gather(*(fulltext(b["id"], query) for b in books), return_exceptions=True)
@@ -581,6 +617,7 @@ async def search(query, book=""):
         return f"Im Kiwix-Archiv steht nichts zu „{query}“.", []
     best_b, (title, path, _) = hits[0]
     got = await article(best_b["id"], path)
+    frisch.note_archive(best_b.get("date"))     # an old book gets its date said (Tagesaktuell)
     lines = [f"Aus dem eigenen Kiwix-Archiv ({label(best_b)}), Artikel „{title}“"
              f" [article: {ref(best_b['id'], path, title)}]: {got[0] if got else ''}"]
     others = hits[1:6]
@@ -588,8 +625,7 @@ async def search(query, book=""):
         lines.append("Weitere Treffer (mit article_more lesbar): " + "; ".join(
             f"„{t}“ aus {b['title']} [article: {ref(b['id'], p, t)}]" + (f" – {s[:160]}" if s else "")
             for b, (t, p, s) in others))
-    sources = [{"title": f"{t} ({b['title']})", "url": f"{base()}/content/{b['id']}/{quote(p, safe='/')}"}
-               for b, (t, p, _) in hits[:6]]
+    sources = [source(b, t, p) for b, (t, p, _) in hits[:6]]
     return "\n".join(lines), sources
 
 
@@ -623,7 +659,7 @@ async def web_instead(query):
 async def check():
     """For "Kiwix prüfen": reachable? which books? one test lookup with its time."""
     t0 = time.monotonic()
-    out = {"ok": False, "url": base(), "books": [], "ms": 0, "test": None, "error": ""}
+    out = {"ok": False, "url": base(), "books": [], "ms": 0, "test": None, "error": "", "most": MAX_SEARCH_BOOKS}
     if not out["url"]:
         out["error"] = "Keine Kiwix-Adresse eingetragen."
         return out
@@ -632,6 +668,8 @@ async def check():
         out["ms"] = int((time.monotonic() - t0) * 1000)
         out["books"] = books
         out["chosen"] = [b["id"] for b in await chosen()]
+        known = newest(books)
+        out["missing"] = [i for i in chosen_ids() if key(i) not in known] if known else []
         out["picked"] = bool(chosen_ids())     # False: the default (German and English Wikipedia)
         out["ok"] = bool(books)
         if not books:
@@ -643,5 +681,7 @@ async def check():
             out["test"] = {"book": wp[0]["title"], "hits": len(hits), "ms": int((time.monotonic() - t1) * 1000)}
     except (httpx.HTTPError, ValueError) as e:
         out["error"] = f"Kiwix nicht erreichbar ({type(e).__name__}: {str(e)[:120]})"
+    if out.get("missing"):
+        print(f"kiwix: chosen books missing in catalog n={len(out['missing'])}", flush=True)
     log("check", "", len(out["books"]), t0)
     return out

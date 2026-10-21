@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.898** Kiwix als Wissen: eigene Zeitgrenze im Vorlauf von „Erst lokal suchen“ (Standard 900 ms), je Frage die passenden Bücher (deutsche Wikipedia plus die Fachbücher, deren Titel zur Frage passt), Archiv-Artikel als Quelle mit Stand unter der Antwort, Bücher per Ziehen ordnen, „Kiwix prüfen“ meldet Bücher, die das Kiwix nicht mehr kennt; ist ein Buch älter als ein Jahr, nennt die Antwort seinen Stand
 - **V01.0.897** Kontakte wie Apple Kontakte (Stufe 3b): der Spark als CardDAV-Server, das Adressbuch „Auf dem Spark“ erscheint in der Kontakte-App des iPhone (Schalter „Kontakte für Kontakte-Apps“, aus); Einladungen aus Mails: eine .ics-Einladung mit einem Tipp in den Kalender, Zusagen, Vielleicht, Absagen an den Einladenden (Schalter „Einladungen aus Mails“, aus), Panel und iPhone; Kontaktkarte mit Linien-Symbolen, „Nachricht“ am PC kopiert die Nummer
 - **V01.0.896** Werkstatt zählt ehrlich: Seiten-Tests ohne Browser stehen als „nicht gelaufen“ statt rot oder grün; Fix `speech-spark info` ohne IP
 - **V01.0.895** Fix iPhone-App: die Wissenskarte rechnet die Plätze der Punkte in Double (cos und sin waren mehrdeutig, die App ließ sich seit V01.0.894 nicht bauen)
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.891** Tagesaktuell: der Stand nennt immer seinen Tag („Stand gestern 18:00“), das Wetter nimmt „heute“ von der Uhr statt aus einer Vorhersage von gestern, der Morgenbericht nennt Mails mit Tag und nur noch ungelesene, die Websuche sucht bei Fragen nach Heutigem im Zeitraum mit Datum je Treffer, und was nicht aktuell ist, sagt ein fester Satz des Panels; eine geöffnete Mail gilt als gelesen
 - **V01.0.890** Fix iPhone-App: die Kontakte-Karte lädt die .vcf-Datei zum Teilen als Daten (die App ließ sich seit V01.0.888 nicht bauen)
 - **V01.0.889** CarPlay Runde 2: kein Ins-Wort-Fallen im Auto, „Nicht erkannt“ statt stillem Ende, Funkaussetzer beenden nichts, Mails und Fristen hängen nicht, „Mein Tag“, „Erinnerung sprechen“, Briefing beim Einsteigen
-- **V01.0.888** Kontakte wie Apple Kontakte (Stufe 3a): eigene Seite im Menü mit Adressbüchern als Gruppen, Suche, A–Z mit Buchstabenleiste, Karte mit Nachricht, Anruf, Mail, Termin, Teilen und „Mit Anna“ (nächster Termin, letzte Mail); Tipp auf den Absender einer Mail öffnet die Karte; mit dem Admin-Schalter „Kontakte ändern“ (aus) Bearbeiten mit − und + je Feld, zurück ins eigene Adressbuch mit ETag, neue Karten auch „Auf dem Spark“; iPhone unter Meine Sachen
 
 
 

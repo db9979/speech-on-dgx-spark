@@ -154,7 +154,13 @@ class Rule(unittest.TestCase):
             new = {k: dict(v) for k, v in cfg.items()}
             new["chat"].update(bad)
             self.assertEqual(ADMIN.put("/api/config", json=new).status_code, 400, bad)
-        self.assertEqual(lokal.budget({"local_first_ms": 9999}), lokal.DEFAULT_MS)
+        for bad in ({"local_first_kiwix_ms": 100}, {"local_first_kiwix_ms": 2500}, {"local_first_kiwix_ms": True}):
+            new = {k: dict(v) for k, v in cfg.items()}
+            new["chat"].update(bad)
+            self.assertEqual(ADMIN.put("/api/config", json=new).status_code, 400, bad)
+        self.assertEqual(lokal.budget({"local_first_ms": 9999, "local_first_kiwix_ms": 1}),
+                         (lokal.DEFAULT_MS, lokal.DEFAULT_KIWIX_MS))
+        self.assertEqual(lokal.budget({"local_first_ms": 300, "local_first_kiwix_ms": 1200}), (300, 1200))
         row = logfilter.parse("lokal: Klasse wissen (Wissensfrage) | Dokumente 1 | 80 ms | weiter: Treffer an das Modell")
         self.assertEqual(row["area"], "wissen")
 
@@ -275,6 +281,17 @@ class Turn(unittest.TestCase):
         msg = local_msg(helpers.LLM_CALLS[0])
         self.assertIn("theoretischer Physiker", msg)
         self.assertIn("[article: k", msg)                                   # "Erzähl mehr" reads on
+        r = c.post("/api/chat", json={"messages": [{"role": "user", "content": "Wer war Albert Einstein?"}], "convo": "neu"})
+        src = [x for e in helpers.events(r) if e["type"] == "sources" for x in e["items"]]
+        self.assertEqual(src[0]["title"], "Albert Einstein (Wikipedia, Stand 2025-01-15)")   # under the answer, dated
+        self.assertEqual(src[0]["url"], f"http://127.0.0.1:{KIWIX_PORT}/content/wikipedia_de_all_maxi_2025-01/A/Albert_Einstein")
+        # an old book: the panel says its date when the answer did not (frisch.nachsatz; no real clock: every book is old)
+        import frisch
+        was, frisch.ARCHIV_TAGE = frisch.ARCHIV_TAGE, -1
+        try:
+            self.assertIn("Archiv: Stand 2025-01-15", ask(c, "Wer war Albert Einstein?"))
+        finally:
+            frisch.ARCHIV_TAGE = was
         self.assertIn("article_more", offered(helpers.LLM_CALLS[0]))
         self.assertNotIn("memory_save", offered(helpers.LLM_CALLS[0]))
         helpers.LLM_CALLS.clear()
@@ -290,6 +307,15 @@ class Turn(unittest.TestCase):
         self.assertLess(time.monotonic() - t0, 2.0)
         self.assertEqual((res["late"], res["hits"]), (["kiwix"], []))
         self.assertIn("Archiv zu langsam", lokal.log_line("wissen", "Wissensfrage", ["kiwix"], res))
+
+    def test_the_archive_has_its_own_limit(self):
+        helpers.set_config(kiwix=True, kiwix_url=f"http://127.0.0.1:{KIWIX_PORT}", kiwix_books=[])
+        asyncio.run(kiwix.chosen())
+        SLOW[0] = 0.5     # slower than the own documents may take, within the archive's own limit
+        res = asyncio.run(lokal.look(None, "Wer war Albert Einstein?", ["kiwix"], (200, 1900)))
+        self.assertEqual((res["late"], [h["src"] for h in res["hits"]]), ([], ["kiwix"]))
+        res = asyncio.run(lokal.look(None, "Wer war Albert Einstein?", ["kiwix"], (1900, 200)))
+        self.assertEqual(res["late"], ["kiwix"])          # the archive does not borrow the others' time
 
     def test_admin_test_button(self):
         r = ADMIN.post("/api/admin/lokal/test", json={"text": "Was gibt es heute für Nachrichten?"})

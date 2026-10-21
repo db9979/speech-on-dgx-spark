@@ -9,8 +9,9 @@ fixed rules of the panel, never of the model, that hold every source against tod
   („Datum: heute 06:10“ / „ohne Datum“), and for such a question a hit dated before the period is dropped. When no hit
   of the period is left, the result says so with the newest date found, and the answer says it too (nachsatz).
 - nachsatz(): the rule „Stand nennen“ of the Antwort-Prüfung (chat.answer_check): a reading that was not current
-  (vorrat „alt“) or a search without a hit of its period, and the answer did not say so: the panel adds one fixed
-  sentence. The morning briefing as a push gets the same sentence (chat.due_briefings).
+  (vorrat „alt“), a search without a hit of its period or an article from an own Kiwix book older than ARCHIV_TAGE
+  (note_archive), and the answer did not say so: the panel adds one fixed sentence. The morning briefing as a push
+  gets the same sentence (chat.due_briefings).
 
 Logs: „frisch:“ with fixed words and numbers only; Live (node Websuche): today's numbers, never a query or a title.
 """
@@ -147,6 +148,31 @@ def note_search(newest):
         cur.setdefault("frisch", {})["suche"] = newest
 
 
+ARCHIV_TAGE = 365   # an archive book (own Kiwix) older than this gets its date said (Dominik 2026-10-21)
+
+
+def note_archive(date, turn_state=None):
+    """An answer read an article from an own Kiwix book of this date ("2024-03" or "2024-03-15"); the oldest counts.
+    turn_state: the answer's notes where no tool runs yet (the quick look of „Erst lokal suchen“)."""
+    import vorrat
+    cur = turn_state if isinstance(turn_state, dict) else vorrat.current()
+    date = str(date or "")[:10]
+    if cur is not None and re.fullmatch(r"\d{4}-\d{2}(-\d{2})?", date):
+        f = cur.setdefault("frisch", {})
+        if not f.get("archiv") or date < f["archiv"]:
+            f["archiv"] = date
+
+
+def archive_old(date, now=None, zone=None):
+    """The book's date („2024-03“) lies more than ARCHIV_TAGE days before today."""
+    try:
+        d = datetime.date.fromisoformat(date if len(date) == 10 else date + "-01")
+    except ValueError:
+        return False
+    today = datetime.datetime.fromtimestamp(time.time() if now is None else now, _zone(zone)).date()
+    return (today - d).days > ARCHIV_TAGE
+
+
 DIENST_NAME = {"mail": ("E-Mails", "e-mail"), "calendar": ("Kalender", "calendar"), "weather": ("Wetter", "weather"),
                "parcels": ("Pakete", "parcels")}
 
@@ -178,6 +204,10 @@ def nachsatz(turn_state, said, en=False, now=None, zone=None):
                 parts.append("Aktuelles von heute habe ich im Netz nicht gefunden"
                              + (f", der neueste Treffer ist von {stand(newest, now, zone)}" if newest else ""))
             print("frisch: hint said | search | older", flush=True)
+    old = (cur.get("frisch") or {}).get("archiv")
+    if old and archive_old(old, now, zone) and old[:4] not in said:   # the answer did not name the archive's year
+        parts.append(f"archive: as of {old}" if en else f"Archiv: Stand {old}")
+        print("frisch: hint said | archive | older", flush=True)
     if not parts:
         return ""
     _count("hints")

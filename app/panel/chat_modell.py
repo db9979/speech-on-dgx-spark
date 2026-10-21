@@ -187,6 +187,11 @@ async def model_turn(*, acked, body, c, came_from, carry, ccfg, cfg, check_on, e
                     await out.put({"type": "outside"})
                 if any(h["src"] == "docs" for h in found["hits"]):
                     st["docs"] = True
+                arch = [h for h in found["hits"] if h.get("source")]
+                if arch:     # an archive article stands under the answer like a web page, with its book's date
+                    await out.put({"type": "sources", "items": [h["source"] for h in arch]})
+                    for h in arch:   # an old book gets its date said (frisch.nachsatz)
+                        frisch.note_archive(h.get("date"), getattr(turn, "vorrat", None))
         direct = getattr(turn, "direct", None)
         if direct and direct not in locked(st):
             # "Eindeutiges direkt abrufen": the panel calls the one tool the question names (intent.DIRECT), the

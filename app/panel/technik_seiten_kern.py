@@ -241,7 +241,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Wissen: how a question finds passages
     "wissen": {
-        "stand": "5762a1085f",
+        "stand": "e36260e3c2",
         "bezug": {
             "lokal.MAX_HITS": ["s5"], "wissen.search": ["s1", "s8", "s9"], "documents.search": ["s5", "s6"],
             "documents._terms": ["s5"], "documents.match_docs": ["s4"], "docembed.query": ["s3"],
@@ -524,9 +524,15 @@ SEITEN = {
                  "same time and only briefly. Meaning search only rides along when its model already runs and is free; "
                  "it is not woken for it."),
                 ("Eine Stelle zählt nur, wenn sie mindestens {lokal.COVER} der Suchwörter enthält. Was zu spät kommt, "
-                 "wird nicht abgewartet.",
+                 "wird nicht abgewartet. Das Kiwix hat eine eigene Zeitgrenze (Standard {lokal.DEFAULT_KIWIX_MS} ms, "
+                 "die übrigen Quellen {lokal.DEFAULT_MS} ms) und fragt je Frage höchstens {kiwix.MAX_SEARCH_BOOKS} "
+                 "Bücher: die größte deutsche Wikipedia und die Bücher, deren Titel oder Beschreibung zur Frage passt "
+                 "(kiwix.pick). Ein Archiv-Artikel steht als Quelle mit Stand unter der Antwort.",
                  "A passage only counts when it holds at least {lokal.COVER} of the search words. What comes too late "
-                 "is not waited for."),
+                 "is not waited for. The Kiwix has its own time limit (default {lokal.DEFAULT_KIWIX_MS} ms, the other "
+                 "sources {lokal.DEFAULT_MS} ms) and asks at most {kiwix.MAX_SEARCH_BOOKS} books per question: the "
+                 "biggest German Wikipedia and the books whose title or description fits the question (kiwix.pick). "
+                 "An archive article stands as a dated source under the answer."),
             ]),
             (("Gedächtnis", "Memory"), [
                 ("Das Gedächtnis wird nicht durchsucht. Das Panel sortiert die Fakten mit festen Regeln in drei Blöcke "

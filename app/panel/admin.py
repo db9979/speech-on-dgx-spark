@@ -847,6 +847,9 @@ def validate(new):
     ms = ch.get("local_first_ms", 400)
     if not isinstance(ms, int) or isinstance(ms, bool) or not 200 <= ms <= 1500:
         raise HTTPException(400, "local_first_ms: 200 to 1500")
+    ms = ch.get("local_first_kiwix_ms", 900)
+    if not isinstance(ms, int) or isinstance(ms, bool) or not 200 <= ms <= 2000:
+        raise HTTPException(400, "local_first_kiwix_ms: 200 to 2000")
     m = ch.get("doc_max_mb", 100)
     if not isinstance(m, int) or isinstance(m, bool) or not 20 <= m <= 300:
         raise HTTPException(400, "doc_max_mb: 20 to 300")

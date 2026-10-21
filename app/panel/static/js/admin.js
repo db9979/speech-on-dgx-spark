@@ -820,11 +820,18 @@ const kxNum=n=>n?n.toLocaleString(L==='en'?'en':'de')+' '+t('Artikel','articles'
 const kxMeta=b=>[kxLang(b.lang),b.flavour,kxNum(b.count),kxSize(b.size),b.date].filter(Boolean).join(' · ');
 function kxChips(){const box=$('kxsel'),sel=kxSel(),known=Object.fromEntries((KX.books||[]).map(b=>[b.key||kxKey(b.id),b]));box.textContent='';
   if(!sel.length){const m=document.createElement('span');m.className='mut';m.textContent=t('Keine Auswahl: deutsche und englische Wikipedia.','No choice: German and English Wikipedia.');box.appendChild(m);return}
-  sel.forEach(id=>{const b=known[id],c=document.createElement('span');c.className='kxchip';c.title=id;
+  // one question asks at most kiwix.MAX_SEARCH_BOOKS (KX.most from the check): the German Wikipedia, the books that
+  // fit its words, then this order (kiwix.pick); drag a chip or tap ◀ to move it forward
+  const move=(id,to)=>{const l=kxSel().filter(y=>y!==id);l.splice(Math.max(0,to),0,id);kxSet(l)};
+  sel.forEach((id,i)=>{const b=known[id],c=document.createElement('span');c.className='kxchip';c.title=id;c.draggable=true;
+    c.ondragstart=e=>{KX.drag=id;try{e.dataTransfer.setData('text/plain',id)}catch{}};c.ondragover=e=>e.preventDefault();
+    c.ondrop=e=>{e.preventDefault();if(KX.drag&&KX.drag!==id)move(KX.drag,kxSel().indexOf(id));KX.drag=''};
+    if(i){const f=document.createElement('button');f.type='button';f.textContent='◀';f.title=t('Weiter nach vorn','Move forward');f.setAttribute('aria-label',f.title);f.onclick=()=>move(id,i-1);c.appendChild(f)}
     const n=document.createElement('span');n.textContent=b?b.title:id;c.appendChild(n);
     if(b){const m=document.createElement('small');m.textContent=[kxLang(b.lang),b.flavour,b.date].filter(Boolean).join(', ');c.appendChild(m)}
     const x=document.createElement('button');x.type='button';x.textContent='×';x.setAttribute('aria-label',t('Entfernen','Remove'));x.onclick=()=>kxSet(kxSel().filter(y=>y!==id));c.appendChild(x);
-    box.appendChild(c)})}
+    box.appendChild(c)});
+  if(KX.most&&sel.length>KX.most){const m=document.createElement('span');m.className='mut';m.textContent=t(`Je Frage höchstens ${KX.most}: die deutsche Wikipedia, die zur Frage passenden Bücher, dann diese Reihenfolge (ziehen oder ◀).`,`At most ${KX.most} per question: the German Wikipedia, the books fitting the question, then this order (drag or ◀).`);box.appendChild(m)}}
 function kxPicker(){const box=$('kxpick');box.hidden=false;box.textContent='';const bar=document.createElement('div');bar.className='kxbar';
   const q=document.createElement('input');q.type='search';q.placeholder=t('Suchen: Titel, Name, Beschreibung','Search: title, name, description');q.value=KX.q;q.maxLength=60;
   q.oninput=()=>{KX.q=q.value;KX.max=30;kxList()};
@@ -857,16 +864,17 @@ function kxList(){const list=$('kxlist');if(!list||!KX.books)return;list.textCon
   if(full){const m=document.createElement('div');m.className='kxmore';m.textContent=t('10 Bücher gewählt, mehr geht nicht.','10 books chosen, that is the most.');list.prepend(m)}}
 $('kxload').onclick=async()=>{if(KX.books&&!$('kxpick').hidden){$('kxpick').hidden=true;return}
   $('kxmsg').textContent=t('Lade …','Loading …');
-  try{const d=await kxCheck(),best={};(d.books||[]).forEach(b=>{b.key=b.key||kxKey(b.id);const o=best[b.key];if(!o||(b.date||'')+b.id>(o.date||'')+o.id)best[b.key]=b});KX.books=Object.values(best);$('kxmsg').textContent=d.ok?t(`${KX.books.length} Bücher im Kiwix`,`${KX.books.length} books in the Kiwix`):(d.error||'');kxChips();if(d.ok)kxPicker()}
+  try{const d=await kxCheck(),best={};KX.most=d.most||0;(d.books||[]).forEach(b=>{b.key=b.key||kxKey(b.id);const o=best[b.key];if(!o||(b.date||'')+b.id>(o.date||'')+o.id)best[b.key]=b});KX.books=Object.values(best);$('kxmsg').textContent=d.ok?t(`${KX.books.length} Bücher im Kiwix`,`${KX.books.length} books in the Kiwix`):(d.error||'');kxChips();if(d.ok)kxPicker()}
   catch(e){$('kxmsg').textContent=e.message}};
 $('kxgo').onclick=async()=>{$('kxgomsg').textContent=t('Prüfe …','Checking …');$('kxout').textContent='';
-  try{const d=await kxCheck(),out=$('kxout');$('kxgomsg').textContent='';
+  try{const d=await kxCheck(),out=$('kxout');KX.most=d.most||0;$('kxgomsg').textContent='';
     const line=(txt,cls)=>{const x=document.createElement('div');if(cls)x.className=cls;x.textContent=txt;out.appendChild(x)};
     if(!d.ok){line(d.error||t('Nicht erreichbar','Not reachable'),'err');return}
     line(t(`Erreichbar in ${d.ms} ms, ${d.books.length} Bücher; durchsucht werden ${(d.chosen||[]).length}.`,`Reachable in ${d.ms} ms, ${d.books.length} books; ${(d.chosen||[]).length} are searched.`));
     if(d.test)line(t(`Testsuche in „${d.test.book}“: ${d.test.hits} Treffer in ${d.test.ms} ms.`,`Test search in "${d.test.book}": ${d.test.hits} hits in ${d.test.ms} ms.`));
     else line(t('Kein Wikipedia-Buch gewählt: Testsuche übersprungen.','No Wikipedia book chosen: test search skipped.'),'mut');
-    const known=Object.fromEntries(d.books.map(b=>[b.id,b]));line((d.picked?t('Durchsucht:','Searched:'):t('Keine Auswahl, durchsucht:','No choice, searched:'))+' '+((d.chosen||[]).map(id=>known[id]?known[id].title+(known[id].lang?' ('+known[id].lang+')':''):id).join(', ')||t('nichts','nothing')),'mut')}
+    const known=Object.fromEntries(d.books.map(b=>[b.id,b]));line((d.picked?t('Durchsucht:','Searched:'):t('Keine Auswahl, durchsucht:','No choice, searched:'))+' '+((d.chosen||[]).map(id=>known[id]?known[id].title+(known[id].lang?' ('+known[id].lang+')':''):id).join(', ')||t('nichts','nothing')),'mut');
+    if((d.missing||[]).length)line(t(`Nicht mehr im Kiwix und übersprungen: ${d.missing.join(', ')}. Unter „Bücher auswählen“ neu wählen.`,`No longer in the Kiwix and skipped: ${d.missing.join(', ')}. Pick again under "Choose books".`),'err')}
   catch(e){$('kxgomsg').textContent=e.message}};
 // "Erst lokal suchen" (lokal.py): one sentence through the rule and the quick look (built with textContent only)
 const LKKIND={wissen:t('Wissensfrage: erst lokal nachsehen','Knowledge question: look locally first'),lokal:t('Eigene Quelle genannt: nur lokal, kein Web','Own source named: local only, no web'),
@@ -879,8 +887,8 @@ if($('lkgo'))$('lkgo').onclick=async()=>{const text=$('lktext').value.trim();if(
     if(r.words&&r.words.length)line(t('Suchwörter: ','Search words: ')+r.words.join(', '),'mut');
     if(r.kind==='wissen'){
       if(!r.sources.length)line(t('Keine eigene Quelle: kein Profil angemeldet und kein Kiwix eingerichtet.','No own source: no profile signed in and no Kiwix set up.'),'mut');
-      r.sources.forEach(k=>line(`${LKSRC[k]||k}: `+(k in r.n?t(`${r.n[k]} Treffer`,`${r.n[k]} hits`):r.late.includes(k)?t(`zu langsam (über ${r.budget} ms)`,`too slow (over ${r.budget} ms)`):t('nicht erreichbar','not reachable'))));
-      if(r.sources.length)line(t(`Zusammen ${r.ms} ms von höchstens ${r.budget} ms.`,`Together ${r.ms} ms of at most ${r.budget} ms.`),'mut');
+      r.sources.forEach(k=>line(`${LKSRC[k]||k}: `+(k in r.n?t(`${r.n[k]} Treffer`,`${r.n[k]} hits`):r.late.includes(k)?t(`zu langsam (über ${k==='kiwix'?r.kiwix_budget:r.budget} ms)`,`too slow (over ${k==='kiwix'?r.kiwix_budget:r.budget} ms)`):t('nicht erreichbar','not reachable'))));
+      if(r.sources.length){const most=r.sources.includes('kiwix')?Math.max(r.budget,r.kiwix_budget):r.budget;line(t(`Zusammen ${r.ms} ms von höchstens ${most} ms.`,`Together ${r.ms} ms of at most ${most} ms.`),'mut')}
       r.hits.forEach(h=>line(`✓ ${h.title} (${h.chars} ${t('Zeichen','chars')})`));
       if(r.sources.length&&!r.hits.length)line(t('Lokal nichts Passendes: das Modell antwortet aus eigenem Wissen oder sucht im Web.','Nothing fitting locally: the model answers from its own knowledge or searches the web.'),'mut')}
     if(r.profile)line(t(`Profil: ${r.profile}`,`Profile: ${r.profile}`),'mut')}

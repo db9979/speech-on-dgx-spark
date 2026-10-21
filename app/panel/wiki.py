@@ -19,6 +19,7 @@ import time
 
 import httpx
 
+import frisch
 import kiwix
 import features
 from common import load_config
@@ -123,6 +124,7 @@ async def search(query, uid=None, use_online=True):
         try:
             found = await kiwix.wiki_lookup(q)
             if found:
+                frisch.note_archive(found["book"].get("date"))   # an old book gets its date said (Tagesaktuell)
                 out = (f"Aus dem eigenen Kiwix-Archiv ({kiwix.label(found['book'])}), Artikel „{found['title']}“ "
                        f"[article: {found['ref']}]: {found['text']}")
         except (httpx.HTTPError, ValueError) as e:

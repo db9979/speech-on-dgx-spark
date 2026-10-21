@@ -509,7 +509,7 @@ SEITEN = {
         "heute": [],
     },
     "antwort": {
-        "stand": "b5ed43f446",
+        "stand": "8736bcd078",
         "bezug": {
             "chat.MAX_SAVES": ["s11"], "chat.LOOP_SAME": ["s11"], "chat._answer": ["s4", "s5", "s11"], "chat_modell.model_turn": ["s4", "s11"], "chat_ton.speech_out": ["s8"],
             "chat.split_sentences": ["s5"], "chat.said_key": ["s8"], "chat.no_code": ["s8"],
@@ -559,10 +559,12 @@ SEITEN = {
               ("Smart Home, Erst lokal, direkter Abruf", "smart home, local first, direct fetch"),
               ("Hat die Vorbereitung entschieden, dass das Panel selbst handelt (ein Schaltbefehl, Zustände lesen, "
                "„Erst lokal suchen“, ein eindeutiger Lesewunsch), läuft das jetzt. Das Ergebnis geht wie ein "
-               "Werkzeug-Ergebnis an das Modell, fremder Text eingepackt als Daten.",
+               "Werkzeug-Ergebnis an das Modell, fremder Text eingepackt als Daten. Ein Artikel aus dem eigenen "
+               "Kiwix steht danach als Quelle unter der Antwort, mit Buch und dessen Stand.",
                "When the preparation decided that the panel acts itself (a switch command, reading states, „search "
                "locally first“, a clear reading request), it runs now. The result goes to the model like a tool "
-               "result, outside text wrapped as data.")),
+               "result, outside text wrapped as data. An article from the own Kiwix then stands as a source under the "
+               "answer, with its book and the book's date.")),
             S("s4", "schritt", ("Runde vorbereiten", "Prepare a round"),
               ("höchstens vier Werkzeug-Runden", "at most four tool rounds"),
               ("Angeboten wird die Liste ohne gesperrte, wegen Fehlern gestoppte oder zu oft genutzte Werkzeuge. "
@@ -654,14 +656,15 @@ SEITEN = {
             S("s12", "schritt", ("Ehrliche Schlusssätze", "Honest closing sentences"),
               ("feste Sätze statt der weggelassenen", "fixed sentences instead of the dropped ones"),
               ("Fiel ein Satz wegen einer Zahl weg, sagt das Panel „Genauere Angaben dazu habe ich nicht.“; fiel eine "
-               "Tat weg, einen festen Satz aus taten.sentence. Kam ein Dienst nur mit einem älteren Stand oder fand eine Suche nach Heutigem "
-               "nichts von heute, und die Antwort sagt das nicht selbst, hängt das Panel „Nicht ganz aktuell: Wetter: Stand gestern "
+               "Tat weg, einen festen Satz aus taten.sentence. Kam ein Dienst nur mit einem älteren Stand, fand eine Suche nach Heutigem "
+               "nichts von heute oder stammt ein Archiv-Artikel aus einem Kiwix-Buch, das älter als ein Jahr ist, und die Antwort sagt das nicht selbst, hängt das Panel „Nicht ganz aktuell: Wetter: Stand gestern "
                "23:10 Uhr.“ an (frisch.nachsatz, Regel „Stand nennen“ der Antwort-Prüfung). Alle Sätze kommen vom Panel, nie vom Modell. Antwortet das "
                "Sprachmodell nicht, weil es gerade wechselt, neu startet oder gemessen wird, sagt das Panel das mit der "
                "erwarteten Zeit (llmstart.satz, auch in der Wartungspause eines Wechsels).",
                "When a sentence fell out because of a figure, the panel says „I have no more precise details on "
                "that.“; when a deed fell out, a fixed sentence from taten.sentence. When a service came only with an "
-               "older reading or a search for today found nothing of today, and the answer does not say so itself, the panel "
+               "older reading, a search for today found nothing of today or an archive article comes from a Kiwix book older "
+               "than a year, and the answer does not say so itself, the panel "
                "adds „Not quite current: weather: as of yesterday 23:10.“ (frisch.nachsatz, rule „name the stand“ of the "
                "answer check). All of them come from the panel, never from the model. When the language model does not answer because it is switching, restarting or "
                "being measured, the panel says so with the expected time (llmstart.satz, also during a switch's "
@@ -762,7 +765,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Werkzeuge (chat_tools.run)
     "werkzeuge": {
-        "stand": "886eccfdbc",
+        "stand": "eb1f9bd244",
         "bezug": {
             "chat.LOCKED_OUTSIDE": ["s4"], "notaus.INTERNET_TOOLS": ["s3"], "werkzeuge.NAMES": ["s11"],
             "chat_tools.run": ["s2", "s7"], "chat.wrap_outside": ["s9"], "chat.LOCKED_MAIL": ["s4"],

@@ -9,8 +9,9 @@ A fixed rule (classify) sorts the person's own latest message, never the model:
   is left out of this answer; the person can ask for it in a new message.
 - "wissen": any other question with words to look up. The quick look (run) asks the own and shared documents
   (full text; meaning search only when that model already runs and is free), the own Kiwix and the earlier
-  conversations at the same time, for at most chat.local_first_ms (200 to 1500, default 400). What is not
-  back by then is not waited for. Good hits (at most MAX_HITS, MAX_HIT_CHARS each) go to the model in the
+  conversations at the same time, for at most chat.local_first_ms (200 to 1500, default 400); the Kiwix has its
+  own limit chat.local_first_kiwix_ms (200 to 2000, default 900), a big archive often needs longer than the own
+  documents (Dominik 2026-10-21). What is not back by its limit is not waited for. Good hits (at most MAX_HITS, MAX_HIT_CHARS each) go to the model in the
   first round as a tool result, wrapped as outside text: data, never an instruction, and the answer is
   locked like one made from a web page (no switching, saving, reminders).
 - "": anything else (switching, lists, mail, small talk ...). Nothing changes.
@@ -45,6 +46,8 @@ router = APIRouter()
 
 MS_RANGE = (200, 1500)
 DEFAULT_MS = 400
+KIWIX_RANGE = (200, 2000)
+DEFAULT_KIWIX_MS = 900
 MAX_HITS = 3
 MAX_HIT_CHARS = 500
 COVER = 0.6                 # share of the question's words a passage must contain
@@ -97,9 +100,15 @@ def on(cfg, who):
     return bool(who and admin_on(cfg) and features.allowed("lokal", who["id"]))
 
 
+def _ms(cfg, key, rng, default):
+    ms = cfg.get(key, default)
+    return ms if isinstance(ms, int) and not isinstance(ms, bool) and rng[0] <= ms <= rng[1] else default
+
+
 def budget(cfg):
-    ms = cfg.get("local_first_ms", DEFAULT_MS)
-    return ms if isinstance(ms, int) and not isinstance(ms, bool) and MS_RANGE[0] <= ms <= MS_RANGE[1] else DEFAULT_MS
+    """(own documents and conversations, Kiwix) in ms."""
+    return (_ms(cfg, "local_first_ms", MS_RANGE, DEFAULT_MS),
+            _ms(cfg, "local_first_kiwix_ms", KIWIX_RANGE, DEFAULT_KIWIX_MS))
 
 
 def _split(text):
@@ -197,7 +206,7 @@ def _history(uid, words, skip):
 
 
 async def _kiwix(q, words):
-    books = (await kiwix.chosen())[:kiwix.MAX_SEARCH_BOOKS]
+    books = kiwix.pick(await kiwix.chosen(), words)
     if not books:
         return []
     pick = None
@@ -227,7 +236,8 @@ async def _kiwix(q, words):
     if not parts:
         return []
     return [{"src": "kiwix", "title": f"Archiv: {kiwix.label(b)}, Artikel „{title}“",
-             "text": _cut(parts[0]), "ref": kiwix.ref(b["id"], path, title)}]
+             "text": _cut(parts[0]), "ref": kiwix.ref(b["id"], path, title), "source": kiwix.source(b, title, path),
+             "date": b.get("date", "")}]
 
 
 def _quiet(task):
@@ -237,8 +247,10 @@ def _quiet(task):
 
 
 async def look(uid, text, srcs, ms, skip=None):
-    """The quick look: {"hits", "n", "late", "err", "ms"}. Never longer than ms (late sources are not
-    waited for; they end on their own timeouts and are dropped)."""
+    """The quick look: {"hits", "n", "late", "err", "ms"}. ms: one limit or (own sources, Kiwix) as budget()
+    gives them; never longer than the larger one (late sources are not waited for; they end on their own timeouts
+    and are dropped)."""
+    ms, kms = ms if isinstance(ms, tuple) else (ms, ms)
     t0 = time.monotonic()
     words, q = terms(text), query(text)
     out = {"hits": [], "n": {}, "late": [], "err": [], "ms": 0}
@@ -250,8 +262,11 @@ async def look(uid, text, srcs, ms, skip=None):
             jobs["history"] = asyncio.ensure_future(asyncio.to_thread(_history, uid, words, skip))
         if "kiwix" in srcs:
             jobs["kiwix"] = asyncio.ensure_future(_kiwix(q, words))
-    if jobs:
-        await asyncio.wait(list(jobs.values()), timeout=ms / 1000)
+    own = [j for k, j in jobs.items() if k != "kiwix"]
+    if own:
+        await asyncio.wait(own, timeout=ms / 1000)
+    if "kiwix" in jobs:     # its own limit, counted from the start like the others
+        await asyncio.wait([jobs["kiwix"]], timeout=max(0.0, kms / 1000 - (time.monotonic() - t0)))
     found = {}
     for k, job in jobs.items():
         if not job.done():
@@ -323,10 +338,11 @@ async def lokal_test(request: Request):
         srcs.append("kiwix")
     if who and cfg.get("memory", True) and cfg.get("history", True):
         srcs.append("history")
+    lim = budget(cfg)
     out = {"kind": kind, "why": why, "words": query(text).split(), "profile": who["name"] if who else "", "sources": srcs,
-           "ms": 0, "n": {}, "late": [], "err": [], "hits": [], "budget": budget(cfg)}
+           "ms": 0, "n": {}, "late": [], "err": [], "hits": [], "budget": lim[0], "kiwix_budget": lim[1]}
     if kind == "wissen" and srcs:
-        res = await look(who["id"] if who else None, text, srcs, budget(cfg))
+        res = await look(who["id"] if who else None, text, srcs, lim)
         out.update(ms=res["ms"], n=res["n"], late=res["late"], err=res["err"],
                    hits=[{"src": h["src"], "title": h["title"], "chars": len(h["text"])} for h in res["hits"]])
     return out

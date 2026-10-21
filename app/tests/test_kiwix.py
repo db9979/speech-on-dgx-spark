@@ -8,6 +8,9 @@ admin (redirects to another host, paths out of the book, DOCTYPEs and huge answe
 Run:  python -m unittest discover -s app/tests -t app     (from the repository root)
 """
 import asyncio
+import contextlib
+import datetime
+import io
 import unittest
 
 from tests import helpers
@@ -384,6 +387,87 @@ class Tools(unittest.TestCase):
         helpers.set_config(kiwix_books=["wikivoyage_de_all_maxi_2024-11"])
         self.assertEqual(asyncio.run(kiwix.chosen())[0]["title"], "Wikivoyage")
         self.assertEqual(asyncio.run(kiwix.wiki_books()), [])
+        # a choice the Kiwix no longer lists (dropped or renamed by an update): skipped and named by the check
+        helpers.set_config(kiwix_books=["wikivoyage_de_all_maxi", "wikipedia_de_mathematics_mini"])
+        self.assertEqual([b["id"] for b in asyncio.run(kiwix.chosen())], ["wikivoyage_de_all_maxi_2024-11"])
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            d = ADMIN.post("/api/admin/kiwix/check").json()
+        self.assertEqual(d["missing"], ["wikipedia_de_mathematics_mini"])
+        self.assertIn("kiwix: chosen books missing in catalog n=1", out.getvalue())
+
+
+class ArchiveAge(unittest.TestCase):
+    """An answer from an own Kiwix book older than frisch.ARCHIV_TAGE says the book's date (Antwort-Prüfung, fixed
+    sentence of the panel); a fixed clock, never the real one."""
+    NOW = datetime.datetime(2026, 10, 21, 12, 0, tzinfo=datetime.timezone.utc).timestamp()
+    UTC = datetime.timezone.utc
+
+    def test_old_book_gets_its_date_said(self):
+        import frisch
+        import vorrat
+        st = vorrat.begin("Wer war Einstein?")
+        frisch.note_archive("2025-03-02", st)
+        frisch.note_archive("2024-11", st)          # the oldest book of the answer counts
+        frisch.note_archive("kein Datum", st)
+        self.assertEqual(st["frisch"]["archiv"], "2024-11")
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.assertEqual(frisch.nachsatz(st, "Einstein war Physiker.", now=self.NOW, zone=self.UTC),
+                             "Nicht ganz aktuell: Archiv: Stand 2024-11.")
+        self.assertIn("frisch: hint said | archive | older", out.getvalue())
+        self.assertEqual(frisch.nachsatz(st, "Laut deinem Archiv (Stand 2024) war er Physiker.", now=self.NOW, zone=self.UTC), "")
+        self.assertEqual(frisch.nachsatz(st, "x", en=True, now=self.NOW, zone=self.UTC), "Not quite current: archive: as of 2024-11.")
+        young = vorrat.begin("")
+        frisch.note_archive("2026-01", young)       # younger than a year: nothing to add
+        self.assertEqual(frisch.nachsatz(young, "Einstein war Physiker.", now=self.NOW, zone=self.UTC), "")
+
+    def test_archive_search_notes_its_book(self):
+        import frisch
+        import vorrat
+        reset()
+        helpers.set_config(kiwix=True, kiwix_url=f"http://127.0.0.1:{PORT}", kiwix_books=["wikivoyage_de_all_maxi"])
+        st = vorrat.begin("")
+
+        async def go():
+            vorrat.use(st)
+            return await kiwix.search("Sauerteig")
+        try:
+            asyncio.run(go())
+        finally:
+            helpers.set_config(kiwix=False, kiwix_url="", kiwix_books=[])
+        self.assertEqual(st["frisch"]["archiv"], "2024-11-02")
+        self.assertFalse(frisch.archive_old("2026-01-15", now=self.NOW, zone=self.UTC))
+        self.assertTrue(frisch.archive_old("2024-11-02", now=self.NOW, zone=self.UTC))
+
+
+class Pick(unittest.TestCase):
+    """Which books one question asks (kiwix.pick): a fixed rule on the question's words, never the model."""
+    BOOKS = [dict(id=i, title=t, desc=d, group=g, lang=lang, count=n) for i, t, d, g, lang, n in (
+        ("wikipedia_en_history_nopic", "History by Wikipedia", "History articles", "wikipedia", "en", 40000),
+        ("wikipedia_de_all_maxi_2025-01", "Wikipedia", "Die freie Enzyklopädie", "wikipedia", "de", 2900000),
+        ("wikipedia_de_mathematics_mini", "Mathematik von Wikipedia", "Mathematik", "wikipedia", "de", 30000),
+        ("wikipedia_de_climate-change_maxi", "Klimawandel von Wikipedia", "Klimawandel", "wikipedia", "de", 3000),
+        ("wikipedia_en_comics", "Comics by Wikipedia", "Comics", "wikipedia", "en", 20000),
+        ("python_en_tutorials", "Python Tutorials", "Python programming tutorials", "other", "en", 100),
+        ("git_en_docs", "Git Docs", "Git documentation", "other", "en", 100),
+        ("wikiquote_de_all", "Wikiquote", "Sammlung von Zitaten", "wikiquote", "de", 1000))]
+
+    def titles(self, q):
+        import lokal
+        return [b["title"] for b in kiwix.pick(self.BOOKS, lokal.terms(q))]
+
+    def test_fitting_books_first_german_wikipedia_always(self):
+        self.assertEqual(self.titles("Wie funktioniert git rebase?")[:2], ["Wikipedia", "Git Docs"])
+        self.assertEqual(self.titles("Wie sortiere ich eine Liste in Python?")[:2], ["Wikipedia", "Python Tutorials"])
+        self.assertEqual(self.titles("Ein Zitat von Goethe")[:2], ["Wikipedia", "Wikiquote"])
+        # nothing special asked: the admin's order after the German Wikipedia; a word in half the books says nothing
+        self.assertEqual(self.titles("Wer war Albert Einstein?"),
+                         ["Wikipedia", "History by Wikipedia", "Mathematik von Wikipedia", "Klimawandel von Wikipedia",
+                          "Comics by Wikipedia"])
+        self.assertEqual(self.titles("Was steht in der Wikipedia über Einstein?"), self.titles("Wer war Albert Einstein?"))
+        self.assertEqual(len(self.titles("Python Git Comics Zitat Klimawandel Mathematik")), kiwix.MAX_SEARCH_BOOKS)
+        self.assertEqual(kiwix.pick(self.BOOKS[:3], ["python"]), self.BOOKS[:3])   # few books: all of them
 
 
 if __name__ == "__main__":

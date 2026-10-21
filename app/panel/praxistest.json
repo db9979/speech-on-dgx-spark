@@ -2552,6 +2552,13 @@
 "titel": "Einladung aus einer Mail in den Kalender",
 "text": "A: Update auf V01.0.897. Funktionen → E-Mail lesen → „Einladungen aus Mails“ an (für die Antwort auch „Mails senden“). B: Von einem anderen Konto (z. B. Outlook oder Google) eine Einladung an dein Postfach schicken. Auf der Seite E-Mail öffnen: unter dem Betreff stehen Titel, Zeit, Ort und wer einlädt. C: „Zusagen“: der Termin steht im Kalender, der Einladende bekommt die Zusage (Häkchen „Antwort an … senden“). D: Die Einladung ändern (andere Uhrzeit) und neu öffnen, „Zusagen“: der Termin ist verschoben, nicht doppelt. E: Die Einladung beim Einladenden absagen: die Absage-Mail zeigt „Aus dem Kalender entfernen“, nach dem Tipp ist er weg. F: Dasselbe in der iPhone-App unter E-Mail. G: Kontakte: die Karte zeigt Linien-Symbole; „Nachricht“ am Windows-PC kopiert die Nummer und sagt es.",
 "thread": "Mail, Kalender, Kontakte wie bei Apple"
+},
+{
+"id": "P389",
+"v": 898,
+"titel": "Kiwix automatisch als Wissen",
+"text": "A: Update auf V01.0.898. Funktionen → Websuche → „Erst lokal suchen“: neue Zeile „Zeitgrenze für das Kiwix-Archiv (ms)“ mit 900. B: „Wer war Albert Einstein?“ fragen: die Antwort beginnt mit „Laut deinem Archiv …“, darunter steht als Quelle „Albert Einstein (Wikipedia, Stand …)“, der Link öffnet den Artikel im Kiwix. C: Zustand → Prüfen → „Erst lokal testen“ mit „Wie funktioniert git rebase?“: Archiv mit Treffer; Logs → Bereich „Wissen“: Zeile „kiwix: search …“ bzw. „lokal: …“. D: Funktionen → Websuche → Eigenes Kiwix-Archiv: ein Buch per Ziehen oder ◀ nach vorn holen, speichern, die Reihenfolge bleibt. E: „Kiwix prüfen“: bei mehr als 5 Büchern steht der Hinweis „Je Frage höchstens 5 …“; ein Buch, das das Kiwix nicht mehr kennt, steht rot als „Nicht mehr im Kiwix und übersprungen“. F: Mit einem Buch, das älter als ein Jahr ist, und Antwort-Prüfung an: nennt die Antwort das Jahr nicht, endet sie mit „Nicht ganz aktuell: Archiv: Stand …“.",
+"thread": "Kiwix automatisch als Wissen"
 }
 ]
 }
