@@ -16,6 +16,8 @@ Fake mailbox and SMTP, a Spark calendar; fixed dates (2026-03), no wall clock.
 import asyncio
 import email.message
 import email.policy
+import json
+import os
 import unittest
 
 from tests import helpers
@@ -62,6 +64,19 @@ def letter(cal):
     return m
 
 
+def snapshot():
+    """The chat switches as they are, to put back when a class ends (the next test module gets the config it had)."""
+    with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
+        return dict(json.load(f)["chat"])
+
+
+def restore(old):
+    with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
+        c = json.load(f)
+    c["chat"] = old
+    helpers.write_config(c)
+
+
 def profile(name):
     r = ADMIN.post("/api/admin/profiles", json={"name": name, "pin": "1234"})
     assert r.status_code in (200, 409), r.text
@@ -73,6 +88,7 @@ def profile(name):
 class Invite(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        cls.config = snapshot()
         helpers.set_config(calendar=True, mail=True, mail_invites=True, mail_send=True)
         cls.c, cls.uid = profile("Ida Invite")
         for x in calendars.get(cls.uid)["calendars"]:
@@ -90,7 +106,8 @@ class Invite(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         mail.get, mail.message, mail.whole, senden._smtp = cls.real
-        helpers.set_config(mail_invites=False, mail_send=False, mail=False)
+        calendars.remove(cls.uid, cls.cal["id"])
+        restore(cls.config)
 
     def setUp(self):
         guard.reset()
@@ -213,13 +230,14 @@ class Page(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         from tests.test_ui_browser import Browser
+        cls.config = snapshot()
         Browser.setUpClass.__func__(cls)
         helpers.set_config(calendar=True, mail=True, mail_invites=True, mail_send=False)
         import profiles
         cls.uid = next(u for u in profiles.user_ids() if (profiles.by_id(u) or {}).get("name") == "Uitest")
-        if not any(x.get("spark") for x in calendars.get(cls.uid)["calendars"]):
-            calendars.add_spark(cls.uid, "Zuhause")
-        cls.cid = next(x["id"] for x in calendars.get(cls.uid)["calendars"] if x.get("spark"))
+        before = {x["id"] for x in calendars.get(cls.uid)["calendars"]}
+        calendars.add_spark(cls.uid, "Zuhause")   # removed again at the end: later page tests see Uitest as it was
+        cls.cid = next(x["id"] for x in calendars.get(cls.uid)["calendars"] if x["id"] not in before)
         cls.real = (mail.get, mail.message, mail.whole)
         box = {"accounts": [{"id": "m0000abcd", "name": "Ui", "host": "imap.example.org", "port": 993, "user": ME,
                              "password": "pw"}]}
@@ -230,7 +248,8 @@ class Page(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         mail.get, mail.message, mail.whole = cls.real
-        helpers.set_config(mail_invites=False, mail=False)
+        calendars.remove(cls.uid, cls.cid)
+        restore(cls.config)
 
     def test_bar_accept(self):
         from tests.test_ui_browser import Browser, async_playwright
@@ -248,6 +267,8 @@ class Page(unittest.TestCase):
                     self.assertIn("Planung Einladung", text)
                     self.assertIn("Olga Organ", text)
                     self.assertIsNone(await pg.query_selector(".einbar input[data-ein=reply]"))   # no „Mails senden“
+                    await pg.evaluate("(()=>{const s=document.querySelector('.einbar select');if(!s)return;"   # Uitest may have more
+                                      "s.value=[...s.options].find(o=>o.textContent==='Zuhause').value;s.dispatchEvent(new Event('change'))})()")
                     await pg.click(".einbar button[data-ein=accept]")
                     await b.until(pg, "document.querySelector('.einbar').textContent.includes('Im Kalender „Zuhause“.')")
                     self.assertEqual(len(sparkkalender.calendar(self.uid, self.cid)["items"]), 1)

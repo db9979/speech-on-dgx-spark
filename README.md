@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.899** Fix self-tests: the invitation test left a Spark calendar and switches turned off behind, later calendar page tests went red; every test class now puts everything back
 - **V01.0.898** Kiwix as knowledge: own time limit in the quick look of “Look locally first” (default 900 ms), per question the fitting books (German Wikipedia plus the specialist books whose title fits the question), archive article as a dated source under the answer, order books by dragging, “Check Kiwix” names books the Kiwix no longer knows; a book older than a year gets its date said in the answer
 - **V01.0.897** Contacts like Apple Contacts (stage 3b): the Spark as a CardDAV server, the address book "On the Spark" shows in the iPhone's Contacts app (switch "Contacts for contacts apps", off); invitations from mail: an .ics invitation into the calendar with one tap, Accept, Maybe, Decline to the organiser (switch "Invitations from mail", off), panel and iPhone; the contact card with line symbols, "Message" on a PC copies the number
 - **V01.0.896** Workshop counts honestly: page tests without a browser show as "did not run" instead of red or green; fix `speech-spark info` without an IP
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.892** reMarkable documents well formatted: lists, numbers, tables, smaller head, device format
 - **V01.0.891** Up to date: a stand always names its day („as of yesterday 18:00“), the weather takes „today“ from the clock instead of a forecast of yesterday, the morning briefing names mails with their day and only unread ones, the web search looks within a period with a date per hit for questions about today, and a fixed sentence of the panel says what is not current; an opened mail counts as read
 - **V01.0.890** Fix iPhone app: the contact card loads the .vcf file for Share as data (the app did not build since V01.0.888)
-- **V01.0.889** CarPlay round 2: no barge-in in the car, „not recognised“ instead of a silent end, drop-outs end nothing, mail and deadlines never hang, „My day“, „Speak a reminder“, briefing when getting in
 
 
 

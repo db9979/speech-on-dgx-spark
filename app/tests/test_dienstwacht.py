@@ -374,11 +374,12 @@ class Probes(Base):
             json.dump({"calendars": [{"id": "c1", "url": "https://spark.invalid/c1/", "spark": True},
                                      {"id": "c2", "url": "https://caldav.example/cal/"}]}, f)
         try:
-            parts = dw._cal_parts()
-            self.assertEqual([p["url"] for p in parts.values()], ["https://caldav.example/"])
+            # only Anna's: a page test before (test_kalender_serie) may leave another profile's calendar behind
+            mine = lambda: [p["url"] for p in dw._cal_parts().values() if self.anna in p["uids"]]
+            self.assertEqual(mine(), ["https://caldav.example/"])
             with open(path, "w") as f:
                 json.dump({"calendars": [{"id": "c1", "url": "https://spark.invalid/c1/", "spark": True}]}, f)
-            self.assertEqual(dw._cal_parts(), {})
+            self.assertEqual(mine(), [])
         finally:
             os.remove(path)
 

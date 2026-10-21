@@ -12,6 +12,8 @@ server for the iPhone's Kontakte app.
 """
 import asyncio
 import base64
+import json
+import os
 import unittest
 
 from tests import helpers
@@ -48,6 +50,8 @@ def basic(user, pw):
 class Server(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
+            cls.config = dict(json.load(f)["chat"])   # put back at the end: the next module gets the config it had
         helpers.set_config(calendar=True, calendar_server=True, contacts=True, contacts_edit=True, contacts_server=True)
         cls.c, cls.uid = profile("Karla Kasten")
         cls.o, cls.oid = profile("Karla Olsen")
@@ -60,7 +64,10 @@ class Server(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        helpers.set_config(calendar_server=False, contacts=False, contacts_edit=False, contacts_server=False)
+        with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
+            c = json.load(f)
+        c["chat"] = cls.config
+        helpers.write_config(c)
         guard.reset()
 
     def setUp(self):
