@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.903** Doku aktuell, Teil 3: „Alle Funktionen“ in der Doku (de und en): jede der 234 Funktionen mit Schalter-Weg, worauf sie aufbaut, Ich-Seite und erstem Satz ihrer Anleitung, geschrieben von hilfe.py --docs, damit auch die Hilfe sie findet; Wächter test_doku_stand.Funktionen
 - **V01.0.902** Doku aktuell, Teil 2: Englisch gleichauf (iPhone-App: Hey Siri, CarPlay-Symbol und Simulator, Push-Fehler; zwei falsche Versionsangaben), Werkstatt in der iPhone-Doku, Überblick statt Monitoring in der App; neuer Wächter test_doku_stand.Gleichstand: Deutsch und Englisch je Abschnitt gleich viele Absätze mit denselben Versionen
 - **V01.0.901** Doku aktuell, Teil 1: jeder Weg in docs/ und den READMEs führt zur heutigen Stelle (Ich → Überblick statt „Heute“, Einstellungen → Update, eigene Seiten Kalender, E-Mail, Kontakte, Funktionen → Mein Tag und Zugang, kein „Monitoring“ mehr); test_sprunglinks prüft jetzt auch die Doku, aus der die Hilfe antwortet; Regel „Ganze Doku immer aktuell“ in der Richtlinie
 - **V01.0.900** Alles Offene im Assistenten (Stufen 3 und 4): Chat-Nachrichten, Geteiltes, wichtige Mails, Fragen laufender Aufträge, MCP-Freigaben und für Admins ausgefallene Dienste als Karten unter Offen (nie mit Text); Knöpfe „Erledigt“/„Später“ unter Telegram-Meldungen und „Erledigt“ im Begleiter mit denselben Prüfungen; „Was ist offen?“ per Stimme (nur lesen); Live je Art; iPhone
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.896** Werkstatt zählt ehrlich: Seiten-Tests ohne Browser stehen als „nicht gelaufen“ statt rot oder grün; Fix `speech-spark info` ohne IP
 - **V01.0.895** Fix iPhone-App: die Wissenskarte rechnet die Plätze der Punkte in Double (cos und sin waren mehrdeutig, die App ließ sich seit V01.0.894 nicht bauen)
 - **V01.0.894** Wissenskarte (Stufe 1): das Wissensbuch bekommt einen eigenen Menüpunkt mit Seiten und Karte; Verbindungen zwischen den Seiten, jede mit Quelle und nach festen Regeln geprüft, „Stimmt nicht“, Export als Mermaid, Graphviz, SVG, PNG und Obsidian-Links, Karte nativ auf dem iPhone (ab Werk aus)
-- **V01.0.893** Ordner sofort und Ordner-Menü: die Ordnerliste der Seite E-Mail liegt versiegelt im Mail-Vorrat und steht nach einem Neustart sofort da; das „⋯“ am Ordner ist ein kleines Menü daneben wie bei Apple Mail (Rechtsklick, Blatt auf dem Handy), Umbenennen und neue Ordner direkt in der Zeile; iPhone mit Symbolen
 
 
 

@@ -5,7 +5,8 @@ and suggests settings, and "Frag Spark" (the face at the bottom right) knows the
 Knowledge: only texts that ship with the panel: the guides (static/js/guides.js), the switches and settings with
 their sentences (index.html, the Ich settings in me.js), the function register (features.py) and the paragraphs of
 docs/de and docs/en (copied into hilfe_docs.json, `python3 hilfe.py --docs` writes it after the generated parts of
-architektur.md/architecture.md, technik.py; a self-test keeps it equal).
+architektur.md/architecture.md, technik.py, and the list „Alle Funktionen“ in assistent.md/assistant.md; a self-test
+keeps it equal).
 Searched here by fixed rules (words, nothing leaves the house). Per hit the profile's own state: on, off and why
 (features.reason); for admins also "Sicherheit auf einen Blick" as counts. Never keys, addresses, PINs or the
 names of other profiles.
@@ -555,6 +556,62 @@ def me_settings():
         out.append({"k": k.group(1), "need": need.group(1) if need else "", "de": _js(lab.group(1)), "en": _js(lab.group(2)),
                     "hde": _js(hlp.group(1)) if hlp else "", "hen": _js(hlp.group(2)) if hlp else ""})
     return out
+
+
+# Alle Funktionen (Dominik 2026-10-21 „ganze Doku immer aktuell“): docs/de/assistent.md and docs/en/assistant.md list
+# every function of features.py with its way, what it builds on, its Ich page and the first sentence of its guide.
+# `hilfe.py --docs` writes it between the <!-- funktionen:liste --> marks, so a new function is in the docs and in
+# the help's index by itself (test_doku_stand.Funktionen).
+FUNK_DOCS = {"de": ("de", "assistent.md"), "en": ("en", "assistant.md")}
+FUNK_MARK = re.compile(r"(<!-- funktionen:liste -->\n).*?(<!-- /funktionen:liste -->)", re.S)
+
+
+def _first_sentence(s):
+    m = re.match(r"(.+?[.!?])(\s|$)", s)
+    s = m.group(1) if m else s
+    return s if len(s) <= 240 else s[:237].rstrip() + " …"
+
+
+def funktionen_liste(lang="de"):
+    """The list of every function for the docs, by group in the order of Funktionen."""
+    en = lang == "en"
+    g = {x["id"]: x for x in guides()}
+    names = {f.key: (f.en if en else f.de) for f in features.FEATURES}
+    pages = {k: (b if en else a) for k, a, b in features.ME_PAGES}
+    own = {k: (b if en else a) for k, _, a, b in features.OWN_PAGES}
+    q = (lambda s: f'"{s}"') if en else (lambda s: f"„{s}“")
+    out = []
+    for gid, gde, gen in features.GROUPS:
+        rows = [f for f in features.FEATURES if f.group == gid]
+        if not rows:
+            continue
+        out.append(f"### {gen if en else gde}\n")
+        for f in rows:
+            bits = [f"{'Features' if en else 'Funktionen'} → {gen if en else gde} → {q(names[f.key])}"]
+            if f.parent:
+                bits.append(("builds on " if en else "baut auf ") + q(names[f.parent]))
+            if f.me in pages:
+                bits.append(f"{'Me' if en else 'Ich'} → {pages[f.me]}")
+            elif f.me in own:
+                bits.append(f"{own[f.me]} → {'Settings' if en else 'Einstellungen'}")
+            what = g[f.guide]["sec"].get("what") if f.guide in g else None
+            first = _first_sentence(what[1 if en else 0][0]) if what and what[1 if en else 0] else ""
+            out.append(f"- **{names[f.key]}** ({'; '.join(bits)})" + (f": {first}" if first else "") + "\n")
+    return "\n".join(out)
+
+
+def write_funktionen(root=REPO_DOCS):
+    """Writes the list into both docs; the files it changed."""
+    changed = []
+    for lang, (sub, name) in FUNK_DOCS.items():
+        path = os.path.join(root, sub, name)
+        old = _read(root, sub, name)
+        new = FUNK_MARK.sub(lambda m: m.group(1) + funktionen_liste(lang) + m.group(2), old)
+        if new != old:
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(new)
+            changed.append(path)
+    return changed
 
 
 def cfg_pages():
@@ -1475,6 +1532,8 @@ async def card_action(cid: str, request: Request, prof=Depends(browser_profile))
 if __name__ == "__main__" and "--docs" in sys.argv:
     import technik   # first the generated parts of the architecture docs (Zustand → Technik), then the index
     for p in technik.write_docs():
+        print("written", p)
+    for p in write_funktionen():
         print("written", p)
     with open(DOCS_FILE, "w", encoding="utf-8") as f:
         json.dump(build_docs(), f, ensure_ascii=False, indent=0)

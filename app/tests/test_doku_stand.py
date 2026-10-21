@@ -8,7 +8,8 @@ every feature is switched per profile; nothing turned red. These tests do:
 - the ports table of the architecture docs names every port and every speech-spark unit install.sh writes,
 - the Technik boxes of the models show the ports from config.default.json,
 - every local link and picture in the READMEs exists,
-- docs/de and docs/en (and both READMEs) hold the same parts with the same versions (Gleichstand).
+- docs/de and docs/en (and both READMEs) hold the same parts with the same versions (Gleichstand),
+- every function of features.py is in the docs, the list „Alle Funktionen“ is current (Funktionen).
 
 The README and docs parts skip in a copy with only app/; the help and Technik parts always run. No clock.
 """
@@ -198,3 +199,25 @@ class Gleichstand(unittest.TestCase):
                 if len(ua) != len(ub) or va != vb:
                     bad.append(f"{a} „{ha[:50]}“ {len(ua)} parts {sorted(va - vb)} / {b} „{hb[:50]}“ {len(ub)} parts {sorted(vb - va)}")
         self.assertEqual(bad, [], "\n".join(bad))
+
+
+@unittest.skipUnless(docs_here(), "README and docs/ not here (app/ alone)")
+class Funktionen(unittest.TestCase):
+    """Every function is in the docs (and so in the help): „Alle Funktionen“ in assistent.md/assistant.md is written
+    from features.py and the guides by `hilfe.py --docs`; a new or renamed function turns this red until it ran."""
+
+    def test_the_list_is_current(self):
+        import hilfe
+        for lang, (sub, name) in hilfe.FUNK_DOCS.items():
+            m = hilfe.FUNK_MARK.search(read(os.path.join(ROOT, "docs", sub, name)))
+            self.assertIsNotNone(m, f"{name}: the marks <!-- funktionen:liste --> are missing")
+            self.assertEqual(m.group(0), m.group(1) + hilfe.funktionen_liste(lang) + m.group(2),
+                             f"{name}: run python3 app/panel/hilfe.py --docs")
+
+    def test_every_function_is_named(self):
+        import features
+        de = read(os.path.join(ROOT, "docs", "de", "assistent.md"))
+        en = read(os.path.join(ROOT, "docs", "en", "assistant.md"))
+        for f in features.FEATURES:
+            self.assertIn(f"**{f.de}**", de, f.key)
+            self.assertIn(f"**{f.en}**", en, f.key)

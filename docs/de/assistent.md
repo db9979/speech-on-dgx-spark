@@ -657,3 +657,499 @@ Das Panel gibt es auf Deutsch und Englisch; der Knopf oben rechts schaltet um (S
 - *Verlauf offline lesen*: Nur ein Browser, dem das Profil beim zweiten Anmeldeschritt vertraut, behält eine Kopie der letzten 30 Gespräche und die Seite selbst. Ohne Verbindung zum Spark öffnet das Panel sie zum Lesen; Fragen ohne Verbindung (höchstens 10) gehen raus, sobald der Spark wieder antwortet. Jeder andere Browser speichert nichts und löscht beim nächsten Öffnen, was er hatte; Abmelden löscht immer.
 
 Immer, ohne Schalter: Unter einer Antwort bleiben Quellen, Dokument-Fundstellen und erstellte Dokumente mit ihr gespeichert und erscheinen auf jedem Gerät wieder. Die iPhone-App holt Neues beim Öffnen und im laufenden Gespräch nach (neuer TestFlight-Build nötig).
+
+## Alle Funktionen
+
+Jede Funktion des Spark mit ihrem Schalter, worauf sie aufbaut, wo man sie einrichtet und was sie tut (der erste Satz ihrer Anleitung unter Funktionen → Anleitungen). Die Liste schreibt `hilfe.py --docs` aus `features.py` und den Anleitungen; eine neue Funktion steht damit von selbst hier und in der Hilfe.
+
+<!-- funktionen:liste -->
+### Gespräch
+
+- **Websuche** (Funktionen → Gespräch → „Websuche“): Braucht eine Frage aktuelle Informationen (Nachrichten, Öffnungszeiten, Preise), sucht der Assistent selbst im Netz und antwortet aus den Treffern.
+
+- **Schnellere Websuche** (Funktionen → Gespräch → „Schnellere Websuche“; baut auf „Websuche“): Die Websuche wartet nicht mehr auf die langsamste Seite: Jede Seite hat höchstens 3 Sekunden, was bis dahin nicht da ist, bleibt der kurze Ausschnitt aus der Trefferliste.
+
+- **Wikipedia direkt** (Funktionen → Gespräch → „Wikipedia direkt“; Ich → Gespräch): Bei Wissensfragen holt der Spark die Einleitung des passenden Wikipedia-Artikels und gibt nur sie dem Sprachmodell.
+
+- **Eigenes Kiwix-Archiv** (Funktionen → Gespräch → „Eigenes Kiwix-Archiv“; Ich → Gespräch): Der Spark schlägt in deinem eigenen kiwix-serve nach: Wissensfragen zuerst in dessen Wikipedia-Büchern, „Schau in meinem Archiv …“ im Volltext aller gewählten Bücher, „Erzähl mehr“ liest bis zu drei Teile eines Artikels.
+
+- **Erst lokal suchen** (Funktionen → Gespräch → „Erst lokal suchen“; Ich → Gespräch): Bei Wissensfragen schaut der Spark selbst zuerst in deinen Dokumenten (auch den gemeinsamen), im Kiwix-Archiv und in früheren Gesprächen, alles gleichzeitig, höchstens 0,4 Sekunden lang (das Kiwix-Archiv bis 0,9 Sekunden, es fragt je Fra …
+
+- **Rollen per Sprache** (Funktionen → Gespräch → „Rollen per Sprache“; Ich → Gespräch): Du speicherst bis zu 8 Rollen, etwa „Butler“ oder „Erklärbär“, und wechselst per Sprache.
+
+- **Eigener Gesprächsstil** (Funktionen → Gespräch → „Eigener Gesprächsstil“; Ich → Gespräch): Jedes Profil sagt in eigenen Worten, wie der Assistent mit ihm reden soll: Anrede, Ton, Form, z.
+
+- **Rückfrage ohne Weckwort** (Funktionen → Gespräch → „Rückfrage ohne Weckwort“; Ich → Gespräch): Nach der Antwort auf eine gesprochene Frage hört der Assistent noch ein paar Sekunden zu.
+
+- **Eigene Stimme überhören** (Funktionen → Gespräch → „Eigene Stimme überhören“; Ich → Gespräch): Jedes Gerät filtert nur sein eigenes Echo.
+
+- **Aus Korrekturen lernen** (Funktionen → Gespräch → „Aus Korrekturen lernen“; baut auf „Gedächtnis“; Ich → Gespräch): Korrigierst du den Assistenten („Nein, mein Bruder heißt Tim“, „Du sollst bei Terminen immer nachsehen“), macht er daraus einen kurzen Satz und fragt: „Soll ich mir merken …?“ Gespeichert wird erst nach deinem „Ja“, in deinem Gedächtnis.
+
+- **Rückfrage statt Raten** (Funktionen → Gespräch → „Rückfrage statt Raten“; Ich → Gespräch): Passt ein Befehl auf mehrere Geräte („Schalte den Fernseher im Wohnzimmer ein“, dort stehen ein Fernseher und eine Apple-TV-Box), rät der Assistent nicht: Er fragt „Welches meinst du?“ und zeigt die passenden Geräte als Knöpfe.
+
+- **Auswahl merken** (Funktionen → Gespräch → „Auswahl merken“; baut auf „Rückfrage statt Raten“; Ich → Gespräch): Nach deiner Auswahl fragt der Assistent: „Soll ich mir merken, dass ‚Fernseher im Wohnzimmer‘ der Samsung ist?“ Nach „Ja“ schaltet derselbe Satz künftig sofort dieses Gerät.
+
+- **Ablauf und Freigabe zeigen** (Funktionen → Gespräch → „Ablauf und Freigabe zeigen“): Unter jeder Antwort steht zugeklappt, welche Werkzeuge der Assistent benutzt hat, z.
+
+- **Bilder erkennen** (Funktionen → Gespräch → „Bilder erkennen“; Ich → Gespräch): Du hängst ein Foto an und fragst dazu: „Was ist das für eine Pflanze?“, „Was steht auf dem Schild?“, „Was bedeutet die Fehlermeldung?“.
+
+- **Hilfe zum Spark** (Funktionen → Gespräch → „Hilfe zum Spark“; Ich → Gespräch): Fragst du den Assistenten etwas zum Spark selbst („Was macht die Gezielte Werkzeugwahl?“, „Wo stelle ich die Stimme ein?“), schaut er in den Anleitungen, den Schaltern und der Doku des Spark nach und antwortet daraus, mit dem Weg im Pane …
+
+- **Einstellungen vorschlagen** (Funktionen → Gespräch → „Einstellungen vorschlagen“; baut auf „Hilfe zum Spark“; Ich → Gespräch): Passt eine Einstellung zu deiner Frage, zeigt der Assistent unter der Antwort eine Karte: welche Schalter, vorher und nachher.
+
+- **Frag Spark auf jeder Seite** (Funktionen → Gespräch → „Frag Spark auf jeder Seite“; baut auf „Hilfe zum Spark“; Ich → Gespräch): Der Kopf unten rechts ist auf jeder Seite der Assistent.
+
+- **Funktionen vorschlagen** (Funktionen → Gespräch → „Funktionen vorschlagen“; baut auf „Hilfe zum Spark“; Ich → Gespräch): Fragst du nach etwas, das bei dir noch aus ist („Was steht heute im Kalender?“ bei ausgeschaltetem Kalender), sagt der Assistent das ehrlich und zeigt darunter „Einrichten“.
+
+- **Das kannst du auch sagen** (Funktionen → Gespräch → „Das kannst du auch sagen“; baut auf „Funktionen vorschlagen“; Ich → Was ich kann): Der Assistent zeigt Funktionen, die bei dir schon an sind, die du aber noch nie benutzt hast, jeweils mit einem Satz, den du so sagen kannst.
+
+- **Tipps beim Sprechen** (Funktionen → Gespräch → „Tipps beim Sprechen“; baut auf „Das kannst du auch sagen“; Ich → Gespräch): Am Lautsprecher, am Telefon, im Auto und an der Uhr gibt es keine Knöpfe.
+
+- **Vorrang für Personen** (Funktionen → Gespräch → „Vorrang für Personen“): Reden mehrere Personen gleichzeitig mit dem Spark, bekommen ausgewählte Profile ihre Antwort zuerst.
+
+- **Hinweis, wenn ein Dienst fehlt** (Funktionen → Gespräch → „Hinweis, wenn ein Dienst fehlt“; baut auf „Dienst-Wächter“; Ich → Gespräch): Sieht der Dienst-Wächter einen Dienst als weg, sagt der Assistent das sofort, wenn jemand ihn braucht, z.
+
+- **Verlauf sofort abgleichen** (Funktionen → Gespräch → „Verlauf sofort abgleichen“; Ich → Gespräch): Was du auf einem Gerät fragst, steht sofort auch im offenen Panel deiner anderen Geräte, ohne Neuladen; ein gelöschtes Gespräch verschwindet dort sofort.
+
+- **Ein Gespräch für alle Kanäle** (Funktionen → Gespräch → „Ein Gespräch für alle Kanäle“; Ich → Gespräch): Telegram, Siri, der Begleiter, die Uhr und deine Stimme am Lautsprecher schreiben ins heutige Hauptgespräch statt in eigene Tagesgespräche.
+
+- **Verlauf offline lesen** (Funktionen → Gespräch → „Verlauf offline lesen“; Ich → Gespräch): Ein Browser, dem du beim zweiten Anmeldeschritt vertraust („Diesem Browser vertrauen“), behält eine Kopie deiner letzten 30 Gespräche.
+
+- **Einstellungs-Assistent** (Funktionen → Gespräch → „Einstellungs-Assistent“): Was schiefgeht, wird ein Fall: ein Werkzeug scheitert, ein Fehler, eine Frage, die keine Regel erkennt und in der Websuche landet, eine Absage („kann ich nicht“), dieselbe Frage zweimal, ein 👎 oder „Falsch zugeordnet“ auf der Weiche.
+
+- **Anfragen erklären** (Funktionen → Gespräch → „Anfragen erklären“; baut auf „Einstellungs-Assistent“): Unter Zustand → Logs → Anfragen erklärt ein Knopf eine Anfrage in festen Sätzen: welche Absicht die Weiche sah, welche Werkzeuge liefen, wo es hakte.
+
+- **Den Assistenten nach Vorschlägen fragen** (Funktionen → Gespräch → „Den Assistenten nach Vorschlägen fragen“; baut auf „Einstellungs-Assistent“; Ich → Gespräch): Admin-Profile fragen „Was schlägt der Einstellungs-Assistent vor?“ und hören die offenen Vorschläge.
+
+- **Hinweis bei neuem Vorschlag** (Funktionen → Gespräch → „Hinweis bei neuem Vorschlag“; baut auf „Einstellungs-Assistent“; Ich → Gespräch): Kommt ein neuer Vorschlag, bekommen Admin-Profile einen kurzen Hinweis mit dem Titel, höchstens drei am Tag.
+
+- **Fälle als Meldung vorbereiten** (Funktionen → Gespräch → „Fälle als Meldung vorbereiten“; baut auf „Einstellungs-Assistent“): Hilft nichts aus dem Katalog, wird der Fall ein Entwurf unter Probleme melden, mit festen Sätzen und Vorschau vor dem Senden.
+
+- **Autopilot für kleine Änderungen** (Funktionen → Gespräch → „Autopilot für kleine Änderungen“; baut auf „Einstellungs-Assistent“): Stufe A und B mit grünem Prüfstand und mindestens zwei Meldungen übernimmt er selbst: eine am Tag, höchstens drei Schritte, zurück, wenn es schlechter wird.
+
+- **Ideen außerhalb des Katalogs** (Funktionen → Gespräch → „Ideen außerhalb des Katalogs“; baut auf „Einstellungs-Assistent“): Hat der feste Katalog für einen Fall nichts, schreibt das lokale Sprachmodell eine Idee dazu: Text, höchstens eine Einstellung mit Sprung-Link und Schritte zum Kopieren.
+
+- **Fall analysieren** (Funktionen → Gespräch → „Fall analysieren“; baut auf „Einstellungs-Assistent“): Das lokale Sprachmodell liest einen Fall und wählt eine Regel aus festen Vorlagen: Pflicht-Wort, Werkzeug-Hinweis, zusätzliches Werkzeug für eine Gruppe, Wort oder Testsatz für die Weiche.
+
+- **Automatisch zurücknehmen** (Funktionen → Gespräch → „Automatisch zurücknehmen“; baut auf „Einstellungs-Assistent“): Die Nachkontrolle prüft jede übernommene Änderung nach ihrer Wartezeit: kam der Fall wieder, wurde ein Testsatz rot oder sank die 👍-Quote ihrer Gruppe um mindestens 15 Punkte (ab 10 Bewertungen davor und danach), heißt das Ergebnis „schl …
+
+- **Schritte für die Umgebung** (Funktionen → Gespräch → „Schritte für die Umgebung“; baut auf „Einstellungs-Assistent“): Liegt es an einem Dienst außerhalb des Spark (Suche, Wiki, NAS, Netz), zeigt der Vorschlag Schritte zum Kopieren.
+
+- **Vorschläge für mein Profil** (Funktionen → Gespräch → „Vorschläge für mein Profil“; baut auf „Einstellungs-Assistent“; Ich → Gespräch): Aus den eigenen 👎 eines Profils kommen Vorschläge für dessen Einstellungen, z.
+
+- **👍/👎 unter Antworten** (Funktionen → Gespräch → „👍/👎 unter Antworten“; baut auf „Einstellungs-Assistent“; Ich → Gespräch): Unter jeder Antwort 👍 oder 👎.
+
+- **„Warum?“ für alle Profile** (Funktionen → Gespräch → „„Warum?“ für alle Profile“; baut auf „Einstellungs-Assistent“; Ich → Gespräch): Fragst du „Warum hast du eben im Web gesucht?“ oder „Warum hast du gerade nicht nachgesehen?“, erklärt der Spark den Weg seiner letzten Antwort: wie er die Frage verstanden hat und wo er nachgesehen hat, in festen, einfachen Sätzen, ohne …
+
+- **Spark-Tagebuch** (Funktionen → Gespräch → „Spark-Tagebuch“; Ich → Gespräch): Der Spark notiert, was er selbst für dich getan hat: Geräte geschaltet, Erinnerungen gestellt, Mail-Entwürfe abgelegt, Dokumente erstellt, Dateien aufs reMarkable gelegt, Nachrichten geschickt.
+
+- **Zustand per Sprache** (Funktionen → Gespräch → „Zustand per Sprache“): Fragst du „Läuft alles?“, „Ist Home Assistant erreichbar?“, „Wann wurde zuletzt gesichert?“, „Gibt es ein Update?“, „Ist der Notaus an?“ oder „Ist mein Postfach verbunden?“, liest der Spark seinen eigenen Zustand nach und antwortet nur d …
+
+- **Rückgängig per Sprache** (Funktionen → Gespräch → „Rückgängig per Sprache“): Sagst du „Mach das rückgängig“, schlägt der Spark vor, seine letzte Tat für dich zurückzunehmen: eine Erinnerung löschen, einen Listeneintrag entfernen, eine Notiz vergessen, einen Termin wieder austragen, ein Gerät zurückschalten, die L …
+
+- **Rückmeldung, wenn es behoben ist** (Funktionen → Gespräch → „Rückmeldung, wenn es behoben ist“; baut auf „👍/👎 unter Antworten“; Ich → Gespräch): Hilft eine Änderung nach deinem 👎, sagt der Assistent dir das einmal.
+
+### Tempo und Genauigkeit
+
+- **Bei der Werkzeugwahl nachdenken** (Funktionen → Tempo und Genauigkeit → „Bei der Werkzeugwahl nachdenken“; Ich → Gespräch): Das Modell denkt kurz nach, bevor es ein Werkzeug wählt (Kalender, Mail, Websuche …).
+
+- **Gezielte Werkzeugwahl** (Funktionen → Tempo und Genauigkeit → „Gezielte Werkzeugwahl“; Ich → Gespräch): Feste Regeln im Panel erkennen an deinen eigenen Worten, worum es geht (Smart Home, Termin, Mail, Websuche, Erinnerung, Liste, Wetter …).
+
+- **Eindeutiges direkt abrufen** (Funktionen → Tempo und Genauigkeit → „Eindeutiges direkt abrufen“; Ich → Gespräch): Bei kurzen, eindeutigen Lesefragen ruft das Panel das passende Werkzeug selbst auf, nach festen Regeln: „Habe ich neue Mails?“ (Mail-Liste), „Welche Erinnerungen habe ich?“, „Wie ist das Wetter?“ (heute, am eigenen Ort), „Wo ist mein Pak …
+
+- **Namen fürs Hören** (Funktionen → Tempo und Genauigkeit → „Namen fürs Hören“): Die Spracherkennung bekommt bei jeder Aufnahme eine kurze Liste mit Namen: alle Profile, die Kontakte des Profils und die Räume und Geräte aus seinem Home Assistant.
+
+- **Einfaches sofort beantworten** (Funktionen → Tempo und Genauigkeit → „Einfaches sofort beantworten“): Ein paar einfache Fragen beantwortet das Panel selbst mit einem festen Satz, ohne Sprachmodell: die Uhrzeit („Wie spät ist es?“), das Datum und den Wochentag („Welcher Tag ist heute?“), einfache Rechnungen („Was ist 17 mal 23?“) und Einh …
+
+- **Großes Gedächtnis kürzen** (Funktionen → Tempo und Genauigkeit → „Großes Gedächtnis kürzen“): Hat sich der Spark für ein Profil sehr viel gemerkt (mehr als etwa 6000 Zeichen), bekommt das Sprachmodell nur die neuesten Fakten als festen Teil und dazu höchstens fünf ältere, die Wörter mit der Frage teilen.
+
+- **Sofortige Rückmeldung** (Funktionen → Tempo und Genauigkeit → „Sofortige Rückmeldung“; baut auf „Gezielte Werkzeugwahl“; Ich → Gespräch): Gleich nach deiner Frage sagt der Spark in einem kurzen Satz, was er jetzt tut, zum Beispiel „Ich schau in deinen Kalender.“ oder „Ich suche kurz im Netz.“.
+
+- **Weiche abstimmen** (Funktionen → Tempo und Genauigkeit → „Weiche abstimmen“; baut auf „Gezielte Werkzeugwahl“): Auf Funktionen → Weiche startet „Abstimmen“ einen Lauf: Das Sprachmodell schlägt für Gruppen, die Alltagssätze oft verfehlen, bis zu 6 Wörter vor.
+
+- **Vorab holen bei Rückfrage** (Funktionen → Tempo und Genauigkeit → „Vorab holen bei Rückfrage“; baut auf „Gezielte Werkzeugwahl“; Ich → Gespräch): Endet eine Antwort mit einer Rückfrage („Für welchen Tag?“), holt das Panel schon, was die nächste Antwort wahrscheinlich braucht: Kalender der nächsten Tage, neueste Mails, Wetter am Heimatort oder Pakete.
+
+- **Einordnung mit Wahrscheinlichkeit** (Funktionen → Tempo und Genauigkeit → „Einordnung mit Wahrscheinlichkeit“; Ich → Gespräch): Das Sprachmodell auf dem Spark beantwortet feste Fragen des Panels mit Wahrscheinlichkeiten statt mit Text (/v1/systemone des LLM-Tors oder von qwen38).
+
+- **Einordnung beim Postfach aufräumen** (Funktionen → Tempo und Genauigkeit → „Einordnung beim Postfach aufräumen“; baut auf „Einordnung mit Wahrscheinlichkeit“; Ich → Gespräch): Mails, die beim Aufräumen keine feste Regel einordnet, bekommen ihre Kategorie mit echter Wahrscheinlichkeit.
+
+- **Einordnung im Qualitätstest** (Funktionen → Tempo und Genauigkeit → „Einordnung im Qualitätstest“; baut auf „Einordnung mit Wahrscheinlichkeit“): Der Qualitätstest (Zustand → Prüfen) holt zu jeder Frage eine zweite Meinung: wie gut die Antwort die Frage beantwortet (0 bis 2) und wie wahrscheinlich sie etwas erfindet.
+
+- **Einordnung im Einstellungs-Assistenten** (Funktionen → Tempo und Genauigkeit → „Einordnung im Einstellungs-Assistenten“; baut auf „Einordnung mit Wahrscheinlichkeit“): Der Einstellungs-Assistent wählt zu einem Fall den passenden Vorschlag aus seinem festen Katalog.
+
+- **Antworten im Hintergrund prüfen** (Funktionen → Tempo und Genauigkeit → „Antworten im Hintergrund prüfen“; baut auf „Einordnung mit Wahrscheinlichkeit“; Ich → Gespräch): Nach einer Antwort, für die Werkzeuge gelaufen sind, fragt das Panel im Hintergrund, ob die Antwort Angaben nennt, die in keinem Ergebnis stehen.
+
+- **Beschwerde erkennen** (Funktionen → Tempo und Genauigkeit → „Beschwerde erkennen“; baut auf „Einordnung mit Wahrscheinlichkeit“; Ich → Gespräch): Sagt jemand gleich nach einer Handlung „geht immer noch nicht“ oder „ist noch an“, erkennt das Panel das an einer festen Wortliste, sonst mit der Einordnung ab 80 %.
+
+### Meine Daten
+
+- **Gedächtnis** (Funktionen → Meine Daten → „Gedächtnis“; Ich → Gedächtnis): Der Assistent merkt sich Dinge über dich, zum Beispiel Namen, Vorlieben oder wo etwas liegt, und nutzt sie in späteren Gesprächen.
+
+- **Gedächtnis prüfen** (Funktionen → Meine Daten → „Gedächtnis prüfen“; baut auf „Gedächtnis“; Ich → Gedächtnis): Jeder Eintrag im Gedächtnis behält, woher er kommt (von dir im Gespräch, aus einer Korrektur, automatisch gelernt, hier geändert), aus welchem Gespräch und wann du ihn zuletzt bestätigt hast.
+
+- **Nachfrage zum Gedächtnis** (Funktionen → Meine Daten → „Nachfrage zum Gedächtnis“; baut auf „Gedächtnis prüfen“; Ich → Gespräch): Passt ein Eintrag, den die Prüfung als vielleicht veraltet markiert hat, zu deiner Frage, fragt der Spark nach der Antwort einmal: „Kurz nachgefragt: Stimmt das noch: …?“ Ob und wann, entscheidet das Panel mit festen Regeln, nie das Spra …
+
+- **Themen im Gedächtnis** (Funktionen → Meine Daten → „Themen im Gedächtnis“; baut auf „Gedächtnis prüfen“; Ich → Gedächtnis): Unter Ich → Gedächtnis stehen die Einträge in Gruppen: Person, Zuhause, Unterwegs, Arbeit, Gesundheit, Gerade dran, Sonstiges.
+
+- **Frühere Gespräche** (Funktionen → Meine Daten → „Frühere Gespräche“; Ich → Gespräch): Du kannst nach früheren Gesprächen fragen.
+
+- **Eigene Dokumente** (Funktionen → Meine Daten → „Eigene Dokumente“; Ich → Dokumente): Du lädst Dokumente hoch, der Assistent sucht darin, wenn eine Frage dazu passt.
+
+- **Bilder und Scans lesen** (Funktionen → Meine Daten → „Bilder und Scans lesen“; baut auf „Eigene Dokumente“; Ich → Dokumente): Fotos (Rechnung, Typenschild, Whiteboard) und PDF-Seiten ohne Text gehen in deine Dokumente.
+
+- **Bedeutungssuche** (Funktionen → Meine Daten → „Bedeutungssuche“; baut auf „Eigene Dokumente“; Ich → Dokumente): Die Dokumentensuche findet nicht nur gleiche Wörter, sondern auch Stellen mit ähnlicher Bedeutung: „Autoversicherung“ findet „Kfz-Haftpflicht“, „wann muss ich kündigen“ findet „Kündigungsfrist“.
+
+- **Originale aufbewahren** (Funktionen → Meine Daten → „Originale aufbewahren“; baut auf „Eigene Dokumente“; Ich → Dokumente): Die hochgeladene Datei bleibt auf dem Spark (Fotos verkleinert, ohne Ort und Kameradaten).
+
+- **Lange Dokumente nachts lesen** (Funktionen → Meine Daten → „Lange Dokumente nachts lesen“; baut auf „Eigene Dokumente“; Ich → Dokumente): Tagsüber liest der Spark nur kurze Dokumente (bis 10 Seiten) in Gesprächspausen.
+
+- **Gemeinsame Dokumente** (Funktionen → Meine Daten → „Gemeinsame Dokumente“; baut auf „Eigene Dokumente“; Ich → Dokumente): Ein Profil gibt einzelne Dokumente mit „Für alle“ frei, zum Beispiel Bedienungsanleitungen.
+
+- **Teilen mit Profilen** (Funktionen → Meine Daten → „Teilen mit Profilen“; Ich → Geteilt): Ein Profil teilt ein Dokument mit einzelnen anderen Profilen, zum Beispiel den Mietvertrag mit dem Partner.
+
+- **Hinweis auf Geteiltes** (Funktionen → Meine Daten → „Hinweis auf Geteiltes“; baut auf „Teilen mit Profilen“; Ich → Geteilt): Teilt jemand etwas mit dir, kommt eine Mitteilung auf dein gerade genutztes Gerät: „Anna hat etwas mit dir geteilt“, ohne den Titel.
+
+- **Docling-Server** (Funktionen → Meine Daten → „Docling-Server“; baut auf „Eigene Dokumente“; Ich → Dokumente): Ein Docling-Server im eigenen Netz liest hochgeladene PDF-, Word-, PowerPoint- und Excel-Dateien und Scans ein zweites Mal, in Gesprächspausen.
+
+- **reMarkable-Notizen** (Funktionen → Meine Daten → „reMarkable-Notizen“; baut auf „Bilder und Scans lesen“; Ich → reMarkable): Du verbindest dein my.remarkable-Konto.
+
+- **Aufs reMarkable schicken** (Funktionen → Meine Daten → „Aufs reMarkable schicken“; baut auf „reMarkable-Notizen“; Ich → reMarkable): Unter jeder Antwort steht „Aufs reMarkable“; ein Klick legt sie als neues Dokument in den Ordner „Spark“.
+
+- **Neueste zuerst** (Funktionen → Meine Daten → „Neueste zuerst“; baut auf „reMarkable-Notizen“; Ich → reMarkable): Bei ähnlich guten Treffern in deinen Dokumenten und reMarkable-Notizen nimmt der Assistent die neuere und nennt ihr Datum.
+
+- **Morgenblatt** (Funktionen → Meine Daten → „Morgenblatt“; baut auf „Aufs reMarkable schicken“; Ich → reMarkable): Morgenblatt mit Terminen und Linien für Notizen, Antworten auf „@Spark“-Fragen auf Papier, Aufgaben aus der Handschrift, Zusammenfassungen von Besprechungen, ein Wochenrückblick, Webseiten und Mail-Anhänge, ein Eingang pro Tag und eine S …
+
+- **@Spark auf Papier** (Funktionen → Meine Daten → „@Spark auf Papier“; baut auf „Aufs reMarkable schicken“; Ich → reMarkable): Morgenblatt mit Terminen und Linien für Notizen, Antworten auf „@Spark“-Fragen auf Papier, Aufgaben aus der Handschrift, Zusammenfassungen von Besprechungen, ein Wochenrückblick, Webseiten und Mail-Anhänge, ein Eingang pro Tag und eine S …
+
+- **Aufgaben vom reMarkable** (Funktionen → Meine Daten → „Aufgaben vom reMarkable“; baut auf „Aufs reMarkable schicken“; Ich → reMarkable): Morgenblatt mit Terminen und Linien für Notizen, Antworten auf „@Spark“-Fragen auf Papier, Aufgaben aus der Handschrift, Zusammenfassungen von Besprechungen, ein Wochenrückblick, Webseiten und Mail-Anhänge, ein Eingang pro Tag und eine S …
+
+- **Besprechungen zusammenfassen** (Funktionen → Meine Daten → „Besprechungen zusammenfassen“; baut auf „Aufs reMarkable schicken“; Ich → reMarkable): Morgenblatt mit Terminen und Linien für Notizen, Antworten auf „@Spark“-Fragen auf Papier, Aufgaben aus der Handschrift, Zusammenfassungen von Besprechungen, ein Wochenrückblick, Webseiten und Mail-Anhänge, ein Eingang pro Tag und eine S …
+
+- **Wochenrückblick** (Funktionen → Meine Daten → „Wochenrückblick“; baut auf „Aufs reMarkable schicken“; Ich → reMarkable): Morgenblatt mit Terminen und Linien für Notizen, Antworten auf „@Spark“-Fragen auf Papier, Aufgaben aus der Handschrift, Zusammenfassungen von Besprechungen, ein Wochenrückblick, Webseiten und Mail-Anhänge, ein Eingang pro Tag und eine S …
+
+- **Webseiten und Anhänge aufs reMarkable** (Funktionen → Meine Daten → „Webseiten und Anhänge aufs reMarkable“; baut auf „Aufs reMarkable schicken“; Ich → reMarkable): Morgenblatt mit Terminen und Linien für Notizen, Antworten auf „@Spark“-Fragen auf Papier, Aufgaben aus der Handschrift, Zusammenfassungen von Besprechungen, ein Wochenrückblick, Webseiten und Mail-Anhänge, ein Eingang pro Tag und eine S …
+
+- **Eingang pro Tag** (Funktionen → Meine Daten → „Eingang pro Tag“; baut auf „Aufs reMarkable schicken“; Ich → reMarkable): Morgenblatt mit Terminen und Linien für Notizen, Antworten auf „@Spark“-Fragen auf Papier, Aufgaben aus der Handschrift, Zusammenfassungen von Besprechungen, ein Wochenrückblick, Webseiten und Mail-Anhänge, ein Eingang pro Tag und eine S …
+
+- **Spark-Anleitung auf dem reMarkable** (Funktionen → Meine Daten → „Spark-Anleitung auf dem reMarkable“; baut auf „Aufs reMarkable schicken“; Ich → reMarkable): Morgenblatt mit Terminen und Linien für Notizen, Antworten auf „@Spark“-Fragen auf Papier, Aufgaben aus der Handschrift, Zusammenfassungen von Besprechungen, ein Wochenrückblick, Webseiten und Mail-Anhänge, ein Eingang pro Tag und eine S …
+
+- **Gestaltete Blätter zum Ankreuzen** (Funktionen → Meine Daten → „Gestaltete Blätter zum Ankreuzen“; baut auf „Aufs reMarkable schicken“; Ich → reMarkable): Was der Spark aufs reMarkable legt, kommt als gestaltetes Blatt genau im Format deines Geräts (reMarkable 1 und 2, Paper Pro, Paper Pro Move), mit „Kann weg“ oben rechts: ankreuzen, dann legt der Spark es in den Papierkorb.
+
+- **Ordner nach Art** (Funktionen → Meine Daten → „Ordner nach Art“; baut auf „Aufs reMarkable schicken“; Ich → reMarkable): Was der Spark aufs reMarkable legt, kommt als gestaltetes Blatt genau im Format deines Geräts (reMarkable 1 und 2, Paper Pro, Paper Pro Move), mit „Kann weg“ oben rechts: ankreuzen, dann legt der Spark es in den Papierkorb.
+
+- **Selbst aufräumen** (Funktionen → Meine Daten → „Selbst aufräumen“; baut auf „Ordner nach Art“; Ich → reMarkable): Was der Spark aufs reMarkable legt, kommt als gestaltetes Blatt genau im Format deines Geräts (reMarkable 1 und 2, Paper Pro, Paper Pro Move), mit „Kann weg“ oben rechts: ankreuzen, dann legt der Spark es in den Papierkorb.
+
+- **Aufgabenblatt zum Ankreuzen** (Funktionen → Meine Daten → „Aufgabenblatt zum Ankreuzen“; baut auf „Gestaltete Blätter zum Ankreuzen“; Ich → reMarkable): Ein lebendes Blatt im Ordner „Aufgaben“ mit dem, was offen ist: Aufgaben aus deinen Notizen (Erinnern, Weg, Später), Gedächtnis-Einträge, die vielleicht nicht mehr stimmen (Stimmt, Stimmt nicht), und Vorschläge für deine Einstellungen.
+
+- **Dokumente erstellen** (Funktionen → Meine Daten → „Dokumente erstellen“; baut auf „Eigene Dokumente“; Ich → Dokumente): Der Spark schreibt auf Bitte einen Brief, Bericht, ein Protokoll, eine Notiz, Einladung, Präsentation oder Tabelle und legt die Datei unter Ich → Dokumente ab (Word, PDF, PowerPoint, Excel, Markdown, Text oder CSV).
+
+- **Eigene Vorlagen** (Funktionen → Meine Daten → „Eigene Vorlagen“; baut auf „Dokumente erstellen“; Ich → Dokumente): Profile laden eigene Word- oder PowerPoint-Vorlagen hoch (.docx, .dotx, .pptx, .potx).
+
+- **Bilder aus dem Kiwix** (Funktionen → Meine Daten → „Bilder aus dem Kiwix“; baut auf „Dokumente erstellen“; Ich → Dokumente): Für die Titelfolie und Folien vom Typ „Bild und Text“ holt der Spark ein passendes Bild aus der Wikipedia in deinem eigenen Kiwix.
+
+- **Bilder malen** (Funktionen → Meine Daten → „Bilder malen“; Ich → Bilder): Der Spark malt auf Bitte ein Bild, eine Zeichnung, ein Logo oder eine Malvorlage, selbst und ohne Internet, mit FLUX.2 [klein] von Black Forest Labs.
+
+- **Bilder ändern** (Funktionen → Meine Daten → „Bilder ändern“; baut auf „Bilder malen“; Ich → Bilder): Der Spark ändert ein eigenes Foto oder ein gemaltes Bild nach deinem Satz, selbst und ohne Internet, mit demselben FLUX.2 [klein] wie beim Malen: Himmel blau, als Aquarell, eine Sache hinzufügen oder entfernen.
+
+- **Musik machen** (Funktionen → Meine Daten → „Musik machen“; Ich → Musik): Der Spark macht auf Bitte ein Lied oder Musikstück, selbst und ohne Internet, mit ACE-Step 1.5 auf dem Modell-Rechner.
+
+- **Musik bearbeiten** (Funktionen → Meine Daten → „Musik bearbeiten“; baut auf „Musik machen“; Ich → Musik): Der Spark bearbeitet ein Lied unter Ich → Musik, selbst und ohne Internet, mit demselben ACE-Step wie beim Machen: einen Abschnitt neu machen, vorne oder hinten verlängern, die Musikrichtung ändern (Rock, Jazz, Reggae, …, wie nah am Orig …
+
+- **Steckbrief und Tags** (Funktionen → Meine Daten → „Steckbrief und Tags“; baut auf „Eigene Dokumente“; Ich → Dokumente): Das Sprachmodell liest in ruhigen Minuten (oder nachts) den Anfang jedes Dokuments einmal und notiert einen Steckbrief: Titel, Art, Absender, Datum, Frist, Nummer und 3 bis 6 Schlagwörter.
+
+- **Suchprüfung** (Funktionen → Meine Daten → „Suchprüfung“; baut auf „Eigene Dokumente“; Ich → Dokumente): Prüffragen mit bekannter richtiger Stelle zeigen, wie oft die Suche in deinen Dokumenten das Richtige findet.
+
+- **Treffer nachsortieren** (Funktionen → Meine Daten → „Treffer nachsortieren“; baut auf „Eigene Dokumente“; Ich → Dokumente): Die Dokumentensuche mischt Wortsuche und Bedeutungssuche und findet so 30 Kandidaten.
+
+- **Wissensbuch** (Funktionen → Meine Daten → „Wissensbuch“; baut auf „Eigene Dokumente“; Wissensbuch → Einstellungen): Der Spark arbeitet jedes deiner Dokumente einmal in Seiten ein, etwa „Auto“, „Versicherungen“ oder „Werkstatt Müller“, und schreibt dort kurze Sätze, jeder mit seiner Quelle.
+
+- **Wissenskarte** (Funktionen → Meine Daten → „Wissenskarte“; baut auf „Wissensbuch“; Wissensbuch → Einstellungen): Die Seiten deines Wissensbuchs werden Punkte einer Karte, und der Spark verbindet sie: „Golf versichert bei Nordstern“, „Parkschaden erhöht den Beitrag, +18 %“.
+
+- **Prüffragen vom Spark** (Funktionen → Meine Daten → „Prüffragen vom Spark“; baut auf „Suchprüfung“; Ich → Dokumente): Damit die Suchprüfung genug Fragen hat, schreibt das Sprachmodell in ruhigen Minuten zu einer zufälligen Stelle deiner Dokumente eine Frage, die nur diese Stelle beantwortet, mit eigenen Worten.
+
+- **Speicher und NAS** (Funktionen → Meine Daten → „Speicher und NAS“; Ich → Speicher): Unter Ich → Speicher verbindest du jeden Ort einmal: deine NAS (Synology, QNAP, Fritzbox), eine Cloud mit WebDAV (Nextcloud, ownCloud, HiDrive, MagentaCLOUD) oder einen SFTP-Server.
+
+- **Kopie meiner Daten** (Funktionen → Meine Daten → „Kopie meiner Daten“; baut auf „Speicher und NAS“; Ich → Speicher): Eine verschlüsselte Kopie deiner Daten an einem deiner Orte (NAS, Cloud mit WebDAV, SFTP, SMB-Freigabe im Heimnetz) oder in einem Ordner, den der Admin auf dem Spark eingehängt hat (NFS, SMB, USB-Platte).
+
+- **Wissensordner** (Funktionen → Meine Daten → „Wissensordner“; baut auf „Speicher und NAS“; Ich → Speicher): Du wählst Ordner auf deiner NAS oder Cloud, z.
+
+- **Haushaltsordner** (Funktionen → Meine Daten → „Haushaltsordner“; baut auf „Wissensordner“; Ich → Speicher): Ein Ordner auf der NAS für alle im Haushalt, z.
+
+- **Ablage-Ordner** (Funktionen → Meine Daten → „Ablage-Ordner“; baut auf „Speicher und NAS“; Ich → Speicher): Ein Ordner „spark_ablage“ auf deiner NAS im Heimnetz ist der einzige Ort, an dem der Spark schreibt.
+
+- **Zustand der NAS** (Funktionen → Meine Daten → „Zustand der NAS“; baut auf „Speicher und NAS“): Der Spark liest alle paar Minuten, wie es deiner NAS geht: Belegung der Speicherbereiche, RAID, Zustand und Temperatur der Festplatten, Systemtemperatur, Lüfter, Laufzeit, DSM-Version und ob ein Update bereitsteht.
+
+- **Speicher im Heimnetz** (Funktionen → Meine Daten → „Speicher im Heimnetz“; baut auf „Kopie meiner Daten“; Ich → Speicher): Profile dürfen Orte mit Adressen im Heimnetz für ihre Kopie nutzen (NAS, Fritzbox, Nextcloud zu Hause).
+
+- **Ordner auf dem Spark** (Funktionen → Meine Daten → „Ordner auf dem Spark“; baut auf „Kopie meiner Daten“; Ich → Speicher): Profile legen ihre Kopie in einem Unterordner eines Ordners ab, den du auf dem Spark eingehängt hast, z.
+
+- **Originale auslagern** (Funktionen → Meine Daten → „Originale auslagern“; baut auf „Kopie meiner Daten“; Ich → Speicher): Originale von Dokumenten, die 30 Tage weder geändert noch geöffnet wurden, liegen nur noch in der Kopie an deinem Ort; das spart Platz auf dem Spark.
+
+### Mein Tag
+
+- **Funktionen vorschlagen von selbst** (Funktionen → Mein Tag → „Funktionen vorschlagen von selbst“; baut auf „Von selbst melden“; Ich → Von selbst): Höchstens einmal pro Woche kommt unter „Von selbst“ ein Vorschlag als Mitteilung, z.
+
+- **Von selbst melden** (Funktionen → Mein Tag → „Von selbst melden“; Ich → Von selbst): Der Assistent meldet sich, wenn wirklich etwas ist: vor Terminen, bei eigenen Smart-Home-Regeln, Mails von gewählten Absendern, Wetter für morgen, Geburtstagen, Paketen, mit einer Nachfrage oder einer Begrüßung.
+
+- **Sofort-Meldungen aus Home Assistant** (Funktionen → Mein Tag → „Sofort-Meldungen aus Home Assistant“; baut auf „Von selbst melden“; Ich → Von selbst): Deine Smart-Home-Regeln hören direkt auf Home Assistant, statt einmal pro Minute nachzusehen.
+
+- **Haus-Meldungen über Lautsprecher** (Funktionen → Mein Tag → „Haus-Meldungen über Lautsprecher“; baut auf „Von selbst melden“; Ich → Von selbst): Eine Regel oder ein Ereignis aus Home Assistant sagt seinen eigenen Satz auch laut auf gewählten Lautsprechern, z.
+
+- **Home Assistant meldet an Spark** (Funktionen → Mein Tag → „Home Assistant meldet an Spark“; baut auf „Von selbst melden“; Ich → Von selbst): Home Assistant schickt dem Spark ein Ereignis, z.
+
+- **Smart-Home-Regel per Sprache** (Funktionen → Mein Tag → „Smart-Home-Regel per Sprache“; baut auf „Von selbst melden“; Ich → Von selbst): „Sag mir Bescheid, wenn jemand an der Haustür ist“ oder „Melde dich, wenn Anna heimkommt“: Der Spark sucht das Gerät, nennt die Regel und legt sie nach deinem „Ja“ an.
+
+- **Wichtige Mails erkennen** (Funktionen → Mein Tag → „Wichtige Mails erkennen“; baut auf „Von selbst melden“; E-Mail → Einstellungen): Von selbst melden sagt neue Mails sonst nur von Absendern auf deiner Liste.
+
+- **Kamerabild beschreiben** (Funktionen → Mein Tag → „Kamerabild beschreiben“; baut auf „Von selbst melden“; Ich → Von selbst): Trifft eine Regel zu, holt der Spark ein Standbild einer Kamera aus Home Assistant und lässt das lokale Sprachmodell in wenigen Worten sagen, was zu sehen ist, z.
+
+- **Timer und Erinnerungen** (Funktionen → Mein Tag → „Timer und Erinnerungen“): Timer und Erinnerungen per Sprache.
+
+- **Mitteilung ans genutzte Gerät** (Funktionen → Mein Tag → „Mitteilung ans genutzte Gerät“; baut auf „Timer und Erinnerungen“): Eine Mitteilung (Erinnerung, Von selbst, Auftrag, Dienst-Wächter …) geht an das Gerät, das du gerade benutzt: die offene Seite, an der du in den letzten zwei Minuten getippt oder geklickt hast, die iPhone- oder Android-App im Vordergrund …
+
+- **Alles Offene im Assistenten** (Funktionen → Mein Tag → „Alles Offene im Assistenten“; baut auf „Timer und Erinnerungen“; Offen → Einstellungen): Was dich braucht, kommt als Karte mit Knöpfen ins Gespräch des Tages: dringende Funde aus „Für dich“ (Rechnung, Vertrag, Antwort, Verdacht) und Erinnerungen, die geklingelt haben.
+
+- **Listen für Einkauf und Aufgaben** (Funktionen → Mein Tag → „Listen für Einkauf und Aufgaben“; Listen → Einstellungen): Die Seite Listen im Menü: Einkauf, Aufgaben und eigene Listen (Baumarkt, Urlaub, …).
+
+- **Listen teilen** (Funktionen → Mein Tag → „Listen teilen“; baut auf „Listen für Einkauf und Aufgaben“; Listen → Einstellungen): Du teilst eine deiner Listen mit einem anderen Profil: auf der Seite Listen an der Liste „⋯“ → „Teilen …“ und je Person „Sehen“ oder „Mitschreiben“ (eintragen und abhaken).
+
+- **Hinweis bei neuen Einträgen** (Funktionen → Mein Tag → „Hinweis bei neuen Einträgen“; baut auf „Listen teilen“; Listen → Einstellungen): Du teilst eine deiner Listen mit einem anderen Profil: auf der Seite Listen an der Liste „⋯“ → „Teilen …“ und je Person „Sehen“ oder „Mitschreiben“ (eintragen und abhaken).
+
+- **Listen in Erinnerungen** (Funktionen → Mein Tag → „Listen in Erinnerungen“; baut auf „Listen für Einkauf und Aufgaben“; Listen → Einstellungen): Deine Listen auf dem Spark (Einkauf, Aufgaben, eigene Listen) erscheinen in der Erinnerungen-App des iPhone, über denselben Zugang wie deine Spark-Kalender.
+
+- **Mitschreib-Link** (Funktionen → Mein Tag → „Mitschreib-Link“; baut auf „Listen für Einkauf und Aufgaben“; Listen → Einstellungen): Ein Link für Leute ohne Profil, etwa Besuch, Großeltern oder die Putzhilfe: wer ihn öffnet, setzt etwas auf eine deiner Listen, mit einem Namen, wenn er mag.
+
+- **Mein Zustand** (Funktionen → Mein Tag → „Mein Zustand“; Ich → Mein Zustand): Unter Ich → Mein Zustand siehst du, was der Spark im Hintergrund für dich erledigt: Dokumente lesen, Bedeutungssuche, Steckbriefe, reMarkable abgleichen, Postfach aufräumen, Kontakte holen, Aufträge, Morgenbriefing, Gedächtnis aufräumen.
+
+- **Aufträge** (Funktionen → Mein Tag → „Aufträge“; Ich → Aufträge): Der Assistent arbeitet länger für dich: „Recherchiere …, sag mir Bescheid“ läuft im Hintergrund (suchen, Seiten lesen, zusammenfassen), das Ergebnis kommt per Mitteilung und steht unter Ich → Aufträge.
+
+- **Beobachten** (Funktionen → Mein Tag → „Beobachten“; baut auf „Aufträge“; Ich → Aufträge): Der Spark prüft regelmäßig im Internet, ob es etwas Neues gibt (Firmware, neue Folge, Preis unter einer Grenze), und meldet sich nur dann.
+
+- **Aufträge mit Plan, Rückfrage und Vorschlag** (Funktionen → Mein Tag → „Aufträge mit Plan, Rückfrage und Vorschlag“; baut auf „Aufträge“; Ich → Aufträge): Ein Auftrag schreibt seine Schritte als Liste und hakt sie ab, du siehst das live unter Ich → Aufträge.
+
+- **Dienste per MCP** (Funktionen → Mein Tag → „Dienste per MCP“; baut auf „Aufträge“): Werkzeuge fremder Dienste, die das MCP-Protokoll sprechen (z.
+
+- **Eigene MCP-Dienste** (Funktionen → Mein Tag → „Eigene MCP-Dienste“; baut auf „Dienste per MCP“; Ich → Meine MCP-Dienste): Jedes Profil bindet eigene MCP-Dienste an (z.
+
+- **Eigene MCP-Dienste in Aufträgen** (Funktionen → Mein Tag → „Eigene MCP-Dienste in Aufträgen“; baut auf „Eigene MCP-Dienste“; Ich → Meine MCP-Dienste): Hintergrundaufträge (Agent-Funktionen) dürfen die lesenden Werkzeuge deiner eigenen Dienste nutzen, nie die handelnden.
+
+- **Eigene MCP-Dienste mit Anmeldung** (Funktionen → Mein Tag → „Eigene MCP-Dienste mit Anmeldung“; baut auf „Eigene MCP-Dienste“; Ich → Meine MCP-Dienste): Dienste, die eine Anmeldung (OAuth) statt eines Schlüssels wollen: Der Spark meldet sich beim Dienst als Programm an, du meldest dich dort an, die Zugangsdaten bleiben verschlüsselt auf dem Spark.
+
+- **Chats** (Funktionen → Mein Tag → „Chats“; Ich → Gespräch): Schreiben wie im Messenger, aber auf deinem Spark: im Menü „Chats“ (am Handy der Tab „Chats“) links die Liste, rechts der Chat.
+
+- **Nachricht an alle** (Funktionen → Mein Tag → „Nachricht an alle“; baut auf „Chats“; Ich → Gespräch): Die feste Gruppe „Alle“ in den Chats: Wer mitmacht, ist drin, ohne Admins; „Sag allen, wir fahren um acht“ schreibt nach deinem „Ja“ dort hinein.
+
+- **Gruppen-Chats** (Funktionen → Mein Tag → „Gruppen-Chats“; baut auf „Chats“; Ich → Gespräch): „＋ Neuer Chat“ → „Neue Gruppe“: Name, Personen auswählen, fertig.
+
+- **Fotos, Dateien und Sprache in Chats** (Funktionen → Mein Tag → „Fotos, Dateien und Sprache in Chats“; baut auf „Chats“; Ich → Gespräch): Im Chat links neben dem Eingabefeld: 📎 schickt ein Foto oder eine Datei (PDF, Word, Excel, PowerPoint, OpenDocument, Text), 🎤 nimmt eine Sprachnachricht auf (bis 5 Minuten, darunter steht, was gesagt wurde).
+
+- **In einen Chat einladen** (Funktionen → Mein Tag → „In einen Chat einladen“; baut auf „Chats“; Ich → Gespräch): Chats → ＋ Neuer Chat → „Jemanden einladen“: ein Link und ein QR-Code für eine Person, die noch kein Profil hat.
+
+- **Private Chats (Ende-zu-Ende)** (Funktionen → Mein Tag → „Private Chats (Ende-zu-Ende)“; baut auf „Chats“; Ich → Gespräch): Chats → ＋ Neuer Chat → „🔒 Privat“ neben einer Person: ein Chat zu zweit, den nur eure Geräte lesen können.
+
+- **Chats mit anderen Sparks** (Funktionen → Mein Tag → „Chats mit anderen Sparks“; baut auf „Chats“): Chats → ＋ Neuer Chat → „🌐 Jemand auf einem anderen Spark“: Dort steht deine Spark-Adresse (z.
+
+- **Fotos und Dateien zu anderen Sparks** (Funktionen → Mein Tag → „Fotos und Dateien zu anderen Sparks“; baut auf „Chats mit anderen Sparks“): In Chats mit Personen auf anderen Sparks gehen auch Fotos, Dateien (PDF, Office, Text bis 25 MB) und Sprachnachrichten (bis 5 Minuten), mit denselben Knöpfen wie in jedem Chat.
+
+- **Gruppen mit anderen Sparks** (Funktionen → Mein Tag → „Gruppen mit anderen Sparks“; baut auf „Chats mit anderen Sparks“): In eine Gruppe kommen auch Personen auf anderen Sparks: Die Admins der Gruppe wählen beim Erstellen oder unter „Personen hinzufügen“ ihre Kontakte mit 🌐.
+
+- **Anrufe (Sprache und Video)** (Funktionen → Mein Tag → „Anrufe (Sprache und Video)“; baut auf „Chats“): In einem Chat zu zweit oben 📞 oder 🎥: Alle offenen Chats-Seiten der anderen Person klingeln, ihr Handy meldet „Name ruft an“.
+
+- **Anrufe von unterwegs** (Funktionen → Mein Tag → „Anrufe von unterwegs“; baut auf „Anrufe (Sprache und Video)“): Ein eigener Vermittler (TURN) auf dem Spark: Ist eines der Geräte im Mobilfunk oder hinter einem fremden Router, laufen Ton und Bild über ihn.
+
+- **Anrufe per Assistent** (Funktionen → Mein Tag → „Anrufe per Assistent“; baut auf „Anrufe (Sprache und Video)“): Dem Assistenten sagen oder schreiben: „Ruf Sabine an“, „Videoanruf mit Sabine“, „Ruf Sabine per Video an“.
+
+- **Kalender** (Funktionen → Mein Tag → „Kalender“; Kalender → Einstellungen): Der Assistent liest deine Termine vor und trägt neue ein, aber erst nach deinem „Ja“.
+
+- **Kalender teilen** (Funktionen → Mein Tag → „Kalender teilen“; baut auf „Kalender“; Kalender → Einstellungen): Du teilst einen deiner Kalender mit einem anderen Profil, „Sehen“ oder „Sehen + eintragen“: Kalender → Einstellungen → „Teilen“ an der Karte des Kalenders, im Fenster die Person suchen.
+
+- **Kalender-Server für Kalender-Apps** (Funktionen → Mein Tag → „Kalender-Server für Kalender-Apps“; baut auf „Kalender“; Kalender → Einstellungen): Deine Spark-Kalender erscheinen im Kalender des iPhone (oder in Thunderbird, DAVx5) und lassen sich dort ändern: der Spark ist dafür ein CalDAV-Server.
+
+- **Wetter** (Funktionen → Mein Tag → „Wetter“; Ich → Wetter): Die Vorhersage für deinen Ort: jetzt, heute, morgen und bis zu 7 Tage, mit Regen in den nächsten Stunden.
+
+- **Reddit und Feeds** (Funktionen → Mein Tag → „Reddit und Feeds“; Ich → Reddit und Feeds): Der Spark liest deinen Reddit-Posteingang, Subreddits und andere Feeds (Blogs, YouTube, Mastodon).
+
+- **Neues aus Feeds melden** (Funktionen → Mein Tag → „Neues aus Feeds melden“; baut auf „Von selbst melden“; Ich → Von selbst): Der Spark liest deinen Reddit-Posteingang, Subreddits und andere Feeds (Blogs, YouTube, Mastodon).
+
+### Post und Kontakte
+
+- **E-Mail lesen** (Funktionen → Post und Kontakte → „E-Mail lesen“; E-Mail → Einstellungen): Der Assistent liest deinen Posteingang der letzten 30 Tage vor.
+
+- **Postfach aufräumen** (Funktionen → Post und Kontakte → „Postfach aufräumen“; baut auf „E-Mail lesen“; E-Mail → Einstellungen): Werbung, Newsletter und Ähnliches kommen in eigene Ordner (Hauptordner frei wählbar, sonst „Spark“).
+
+- **Mails ordnen** (Funktionen → Post und Kontakte → „Mails ordnen“; baut auf „E-Mail lesen“; E-Mail → Einstellungen): Auf der Seite E-Mail markierst du eine Mail als gelesen oder ungelesen, markierst sie mit ★, archivierst sie oder schiebst sie in einen deiner Ordner, auch mehrere auf einmal („Auswählen“, dann Häkchen, oder ⌘/Strg-Klick).
+
+- **Mails senden** (Funktionen → Post und Kontakte → „Mails senden“; baut auf „E-Mail lesen“; E-Mail → Einstellungen): Auf der Seite E-Mail schreibst du eine neue Mail, antwortest auf eine oder leitest sie weiter (auf Wunsch mit ihren Anhängen).
+
+- **Mails löschen** (Funktionen → Post und Kontakte → „Mails löschen“; baut auf „Mails ordnen“; E-Mail → Einstellungen): Auf der Seite E-Mail löschst du eine Mail mit dem Papierkorb-Symbol, der Taste Entf oder indem du sie auf den Papierkorb ziehst, auch mehrere angehakte auf einmal.
+
+- **Einladungen aus Mails** (Funktionen → Post und Kontakte → „Einladungen aus Mails“; baut auf „E-Mail lesen“; E-Mail → Einstellungen): Hat eine Mail eine Einladung (.ics) dabei, zeigt die Seite E-Mail über dem Text, was, wann, wo und wer einlädt.
+
+- **Neue Mails sofort** (Funktionen → Post und Kontakte → „Neue Mails sofort“; baut auf „E-Mail lesen“; E-Mail → Einstellungen): Neue Mails stehen nach wenigen Sekunden auf der Seite E-Mail, nicht erst nach dem nächsten Abruf alle fünf Minuten, und deine Mail-Regeln sortieren sie gleich ein.
+
+- **Mailstil lernen** (Funktionen → Post und Kontakte → „Mailstil lernen“; baut auf „E-Mail lesen“; E-Mail → Einstellungen): Der Spark liest deine gesendeten Mails und merkt sich, wie du schreibst: Anrede, Begrüßung, Gruß, Länge, Ton und typische Wendungen, getrennt nach Privat, Beruflich und Unbekannt.
+
+- **Pakete** (Funktionen → Post und Kontakte → „Pakete“; baut auf „E-Mail lesen“; E-Mail → Einstellungen): Aus den Versandmails von DHL, Hermes, DPD, GLS, UPS und Amazon der letzten 14 Tage: was heute kommt, was unterwegs ist, was zur Abholung liegt und was zugestellt wurde.
+
+- **Für dich aus Mails** (Funktionen → Post und Kontakte → „Für dich aus Mails“; baut auf „E-Mail lesen“; E-Mail → Einstellungen): Der Spark schaut deine Mails der letzten 30 Tage durch und zeigt, was dich braucht oder gut zu wissen ist: Rechnungen mit Betrag und Frist, Verträge und Abos, die sich verlängern (mit Kündigungsfrist), Bestellungen, Angebote mit Ablaufda …
+
+- **Was ich über dich weiß** (Funktionen → Post und Kontakte → „Was ich über dich weiß“; baut auf „Für dich aus Mails“; Ich → Was ich über dich weiß): Eine Seite unter Ich, die zeigt, was der Spark über dich weiß und woher: Interessen mit Beleg (zum Beispiel zwei Bestellungen bei einem Shop), die erst zählen, wenn du „Stimmt“ sagst; Rechnungen, die jeden Monat kommen, mit „Monatlich er …
+
+- **Schreibhilfe** (Funktionen → Post und Kontakte → „Schreibhilfe“; Ich → Schreibhilfe): Text hineinkopieren und wählen, was passieren soll: korrigieren (nur Fehler), glätten, kürzer, freundlicher, förmlicher, übersetzen oder eine Antwort auf eine erhaltene Mail entwerfen.
+
+- **Schreibhilfe in anderen Programmen** (Funktionen → Post und Kontakte → „Schreibhilfe in anderen Programmen“; baut auf „Schreibhilfe“; Ich → Schreibhilfe): Die Schreibhilfe direkt dort, wo du schreibst: Mac-Schnellaktion (Rechtsklick → Dienste → „Mit Spark verbessern“, in Apple Mail, Pages, Word, Excel …), Windows-Programm für x64 und ARM (Text markieren, Strg+Alt+S), Office-Add-in mit Knop …
+
+- **Kontakte** (Funktionen → Post und Kontakte → „Kontakte“; Kontakte → Einstellungen): Der Assistent kennt Telefonnummern, E-Mail-Adressen und Geburtstage aus deinem Adressbuch.
+
+- **Kontakte ändern** (Funktionen → Post und Kontakte → „Kontakte ändern“; baut auf „Kontakte“; Kontakte → Einstellungen): Auf der Seite Kontakte änderst du eine Karte wie bei Apple: „Bearbeiten“, je Feld ein Minus zum Entfernen, je Art ein „+ hinzufügen“ für Telefon, E-Mail, Adresse und Webseite, „Fertig“ speichert.
+
+- **Kontakte für Kontakte-Apps** (Funktionen → Post und Kontakte → „Kontakte für Kontakte-Apps“; baut auf „Kontakte“; Kontakte → Einstellungen): Das Adressbuch „Auf dem Spark“ erscheint in der Kontakte-App des iPhone (oder in Thunderbird, DAVx5 auf Android), in beide Richtungen, wenn „Kontakte ändern“ an ist; sonst nur zum Lesen.
+
+### Zuhause
+
+- **Home Assistant** (Funktionen → Zuhause → „Home Assistant“; Ich → Smart Home): Licht, Geräte und Heizung per Sprache steuern und Werte abfragen.
+
+- **Raum-Modus** (Funktionen → Zuhause → „Raum-Modus“; Ich → Raum-Modus): Für eine gewählte Zeit hört der Assistent dem Gespräch im Raum zu und hilft in einer Pause: offene Fragen beantworten, Termine oder Einkäufe vorschlagen, bei „kalt“ oder „dunkel“ den echten Wert nennen.
+
+- **Fernsehstimmen überhören** (Funktionen → Zuhause → „Fernsehstimmen überhören“; baut auf „Raum-Modus“; Ich → Raum-Modus): Im Raum-Modus zählen nur Stimmen, die der Spark kennt: Fernseher, Radio und Besuch lösen keine Fragen und Vorschläge aus.
+
+- **Raum-Modus für Home Assistant** (Funktionen → Zuhause → „Raum-Modus für Home Assistant“; baut auf „Raum-Modus“; Ich → Raum-Modus): Home Assistant sieht, an welchem Gerät der Raum-Modus gerade zuhört und bis wann, und kann ihn beenden, z.
+
+- **Eigene Lautsprecher (ESP32)** (Funktionen → Zuhause → „Eigene Lautsprecher (ESP32)“; Ich → Lautsprecher): Ein kleines ESP32-S3-Board mit Mikrofon und Lautsprecher wird zum Sprachassistenten im Raum.
+
+- **Stopp beim Vorlesen** (Funktionen → Zuhause → „Stopp beim Vorlesen“; baut auf „Eigene Lautsprecher (ESP32)“; Ich → Lautsprecher): Während ein eigener Lautsprecher spricht, bleibt sein Mikrofon an.
+
+- **Raum-Modus aus der Ferne starten** (Funktionen → Zuhause → „Raum-Modus aus der Ferne starten“; baut auf „Raum-Modus“; Ich → Raum-Modus): Du sagst oder schreibst an einem Gerät „Raummodus im Wohnzimmer an“, und dein Lautsprecher im Wohnzimmer hört zu.
+
+- **Durchsagen auf Lautsprechern** (Funktionen → Zuhause → „Durchsagen auf Lautsprechern“; baut auf „Chats“; Ich → Gespräch): „Durchsage im Wohnzimmer: Essen ist fertig“: Der Lautsprecher spielt einen Ton und sagt den Satz.
+
+- **Home Assistant Assist (Wyoming)** (Funktionen → Zuhause → „Home Assistant Assist (Wyoming)“): Home Assistant nutzt die Spracherkennung und die Stimme des Spark.
+
+- **Telefon** (Funktionen → Zuhause → „Telefon“; Ich → Telefon): Vom Telefon im Haus (DECT-Mobilteil, IP-Telefon) den Spark anrufen und mit ihm sprechen wie mit einem Lautsprecher: fragen, „Stopp“ oder # unterbricht, „Tschüss“ oder Auflegen beendet.
+
+- **Telefon: Gäste annehmen** (Funktionen → Zuhause → „Telefon: Gäste annehmen“; baut auf „Telefon“): Ein Mobilteil ohne Profil und, mit „Anrufe von außen“, eine unbekannte oder unterdrückte Nummer bekommen Frage und Antwort als Gast.
+
+- **Telefon: Anrufe von außen** (Funktionen → Zuhause → „Telefon: Anrufe von außen“; baut auf „Telefon“): Von unterwegs den Spark anrufen: eine unter Ich → Telefon bestätigte Nummer wählt ihr Profil.
+
+- **Telefon: der Spark ruft an** (Funktionen → Zuhause → „Telefon: der Spark ruft an“; baut auf „Telefon“; Ich → Telefon): Der Spark ruft selbst an: Weckruf und Erinnerung per Anruf, die ein Profil selbst bestellt, und der Rückruf für Anrufer von außen mit unsicherer Stimme.
+
+- **Telefon: Anruf bei Dienstausfall** (Funktionen → Zuhause → „Telefon: Anruf bei Dienstausfall“; baut auf „Telefon: der Spark ruft an“): Ist ein Dienst des Dienst-Wächters 10 Minuten oder länger weg, ruft der Spark den Admin an, zusätzlich zum Hinweis, höchstens einmal je Stunde.
+
+### Unterwegs und Geräte
+
+- **Bus und Bahn** (Funktionen → Unterwegs und Geräte → „Bus und Bahn“; Ich → Bus und Bahn): Die nächsten Abfahrten an deiner Haltestelle und Verbindungen zu einem Ziel, mit Verspätungen und Gleis.
+
+- **Telegram** (Funktionen → Unterwegs und Geräte → „Telegram“; Ich → Telegram): Du schreibst dem Assistenten über einen eigenen Telegram-Bot oder schickst eine Sprachnachricht, von überall.
+
+- **Android-App** (Funktionen → Unterwegs und Geräte → „Android-App“; Ich → Android-App): Eine App fürs Android-Handy, ohne Play Store: Sie zeigt den Spark so wie die Seite am Handy und kann zusätzlich Mitteilungen bei geschlossener App zeigen, als Assistenten-App starten und Text aus anderen Apps an Spark teilen.
+
+- **Android: Mitteilungen sofort** (Funktionen → Unterwegs und Geräte → „Android: Mitteilungen sofort“; baut auf „Android-App“; Ich → Android-App): Ohne Google-Dienst kommen Hinweise auf Android sonst alle 15 Minuten.
+
+- **Android: Update in der App** (Funktionen → Unterwegs und Geräte → „Android: Update in der App“; baut auf „Android-App“; Ich → Android-App): Hat der Spark eine neuere Android-App, zeigt die App oben einen Streifen „Jetzt aktualisieren“.
+
+- **Android: Spark als Assistent** (Funktionen → Unterwegs und Geräte → „Android: Spark als Assistent“; baut auf „Android-App“; Ich → Android-App): Spark wird der Assistent des Handys: Power- oder Home-Taste lang drücken, und ein Blatt mit dem Gesicht legt sich über die offene App.
+
+- **Android: Fingerabdruck für Admins** (Funktionen → Unterwegs und Geräte → „Android: Fingerabdruck für Admins“; baut auf „Android-App“; Ich → Android-App): Ist in der Android-App ein Profil mit Admin-Rolle oder das Panel-Passwort angemeldet, zeigt die App den Spark erst nach Fingerabdruck, Gesicht oder Displaysperre: beim Öffnen und wieder nach 5 Minuten im Hintergrund.
+
+- **Spark-Begleiter am PC und Mac** (Funktionen → Unterwegs und Geräte → „Spark-Begleiter am PC und Mac“; Ich → Begleiter): Ein kleines Programm in der Windows-Taskleiste (x64 und ARM) und der Mac-Menüleiste.
+
+- **Begleiter darf am PC handeln** (Funktionen → Unterwegs und Geräte → „Begleiter darf am PC handeln“; baut auf „Spark-Begleiter am PC und Mac“; Ich → Begleiter): Der Spark darf auf deinem gekoppelten Rechner eine Seite oder ein freigegebenes Programm öffnen, ein Programm nach vorn holen, das vordere Fenster schließen, minimieren oder auf Vollbild stellen, feste Tasten drücken (weiter, zurück, Lee …
+
+- **Besprechungen mitschreiben** (Funktionen → Unterwegs und Geräte → „Besprechungen mitschreiben“; baut auf „Spark-Begleiter am PC und Mac“; Ich → Begleiter): Der Spark-Begleiter schreibt eine Besprechung mit, wenn du im Begleiter „Besprechung mitschreiben“ klickst (oder Strg+Alt+R, Mac ⌥⌘R): Mikrofon und Ton des Rechners gehen in Stücken an die Spracherkennung.
+
+- **Bildschirm zeigen und bedienen** (Funktionen → Unterwegs und Geräte → „Bildschirm zeigen und bedienen“; baut auf „Spark-Begleiter am PC und Mac“; Ich → Begleiter): Du siehst den Bildschirm deines eigenen PCs oder Macs im Panel, in der iPhone- oder Android-App und kannst ihn, wenn die Person am Rechner „Erlauben“ wählt, mit Maus und Tastatur bedienen: tippen ist klicken, ziehen bewegt die Maus, Text …
+
+- **Spark bedient den Rechner** (Funktionen → Unterwegs und Geräte → „Spark bedient den Rechner“; baut auf „Spark-Begleiter am PC und Mac“; Ich → Begleiter): Auf deinen Zuruf erledigt der Spark eine Aufgabe an deinem eigenen PC oder Mac Schritt für Schritt: er schaut auf den Bildschirm und schlägt jeweils einen Klick, ein Scrollen, eine Taste oder einen Text vor.
+
+- **Pebble-Uhr** (Funktionen → Unterwegs und Geräte → „Pebble-Uhr“; Ich → Pebble-Uhr): Die Uhr-App „Spark“ für Pebble Time 2, Core 2 Duo und Pebble Round 2 bekommt Adresse und Schlüssel über einen Einrichtungscode, statt dass du beides am Handy abtippst.
+
+- **Uhr: Nachfragen zum Antippen** (Funktionen → Unterwegs und Geräte → „Uhr: Nachfragen zum Antippen“; baut auf „Pebble-Uhr“; Ich → Pebble-Uhr): Unter einer Antwort auf der Pebble-Uhr stehen bis zu drei passende Folgefragen, etwa „Und morgen?“.
+
+- **Uhr: Schnellbefehle** (Funktionen → Unterwegs und Geräte → „Uhr: Schnellbefehle“; baut auf „Pebble-Uhr“; Ich → Pebble-Uhr): Eigene feste Sätze auf der Pebble-Uhr, etwa „Licht Wohnzimmer aus“ oder „Timer 10 Minuten“.
+
+- **Uhr: Erinnerungen und Timer am Handgelenk** (Funktionen → Unterwegs und Geräte → „Uhr: Erinnerungen und Timer am Handgelenk“; baut auf „Pebble-Uhr“; Ich → Pebble-Uhr): Deine nächsten 8 Erinnerungen und Timer liegen als Weckzeit auf der Pebble-Uhr und vibrieren pünktlich, auch wenn das Handy gerade weg ist.
+
+- **Spark-Zifferblatt** (Funktionen → Unterwegs und Geräte → „Spark-Zifferblatt“; baut auf „Pebble-Uhr“; Ich → Pebble-Uhr): Ein eigenes Zifferblatt für die Pebble-Uhr: Uhrzeit und Datum, darunter dein nächster Termin, die nächste Erinnerung, das Wetter und ein Tipp.
+
+- **Uhr: Mein Tag und meine Woche** (Funktionen → Unterwegs und Geräte → „Uhr: Mein Tag und meine Woche“; baut auf „Pebble-Uhr“; Ich → Pebble-Uhr): Oben in der Liste der Uhr (lang OBEN) stehen „Mein Tag“ und „Meine Woche“.
+
+- **Uhr: Meldungen für Admins** (Funktionen → Unterwegs und Geräte → „Uhr: Meldungen für Admins“; baut auf „Pebble-Uhr“; Ich → Pebble-Uhr): Antwortet ein Dienst nicht (Sprachmodell, Spracherkennung, Home Assistant …), zeigt das Spark-Zifferblatt der Admins oben einen roten Streifen und vibriert einmal.
+
+- **Uhr: Schnell merken** (Funktionen → Unterwegs und Geräte → „Uhr: Schnell merken“; baut auf „Pebble-Uhr“; Ich → Pebble-Uhr): In der Liste der Uhr (lang OBEN) „Merken“ wählen und einen Satz sagen, etwa „Das Auto steht auf Ebene 3“.
+
+- **Uhr: Ort beim Merken** (Funktionen → Unterwegs und Geräte → „Uhr: Ort beim Merken“; baut auf „Pebble-Uhr“; Ich → Pebble-Uhr): Beim Merken hängt das Handy den Ort an den Satz, auf etwa 100 Meter gerundet, etwa „Das Auto steht auf Ebene 3 (Ort 48.137, 11.575)“.
+
+- **Uhr: Nachrichten** (Funktionen → Unterwegs und Geräte → „Uhr: Nachrichten“; baut auf „Pebble-Uhr“; Ich → Pebble-Uhr): In der Liste der Uhr (lang OBEN) steht „Nachrichten“: die letzten 8 Chats mit der Zahl der ungelesenen.
+
+- **Uhr: Antwortvorschläge** (Funktionen → Unterwegs und Geräte → „Uhr: Antwortvorschläge“; baut auf „Pebble-Uhr“; Ich → Pebble-Uhr): Kam die letzte Nachricht von jemand anderem, schlägt das Sprachmodell bis zu drei kurze Antworten vor; sie stehen unter den festen Sätzen.
+
+- **Uhr: Fernbedienung** (Funktionen → Unterwegs und Geräte → „Uhr: Fernbedienung“; baut auf „Pebble-Uhr“; Ich → Pebble-Uhr): „Fernbedienung“ in der Liste der Uhr zeigt bis zu 12 Geräte, die du unter Ich → Pebble-Uhr ausgewählt hast, und deine eigenen Lautsprecher.
+
+- **Uhr: Schritte, Puls und Schlaf** (Funktionen → Unterwegs und Geräte → „Uhr: Schritte, Puls und Schlaf“; baut auf „Pebble-Uhr“; Ich → Pebble-Uhr): Die Uhr schickt beim Öffnen der App ihre Zahlen des Tages: Schritte, letzter Puls und Schlaf.
+
+- **Terminal-Client** (Funktionen → Unterwegs und Geräte → „Terminal-Client“; Ich → Terminal): Das Programm „spark-tui“ bringt den Spark ins Terminal, etwa auf die ClockworkPi uConsole oder per SSH: Chat mit deinem Verlauf, Heute und deine Aufträge.
+
+- **Geräte-Updates** (Funktionen → Unterwegs und Geräte → „Geräte-Updates“; Ich → Gespräch): Der Spark holt neue Firmware für die Lautsprecher, die Android-App und den Spark-Begleiter von GitHub, prüft jede Datei per Prüfsumme und sagt dir einmal Bescheid, wenn eine neue Version bereitliegt.
+
+- **Lautsprecher nachts aktualisieren** (Funktionen → Unterwegs und Geräte → „Lautsprecher nachts aktualisieren“; baut auf „Geräte-Updates“; Ich → Gespräch): Die Lautsprecher holen neue Firmware nur beim Start.
+
+- **Hinweis auf neue XiaoZhi-Version** (Funktionen → Unterwegs und Geräte → „Hinweis auf neue XiaoZhi-Version“; baut auf „Geräte-Updates“): Die Lautsprecher-Firmware baut auf XiaoZhi (github.com/78/xiaozhi-esp32) an einem festen Stand.
+
+- **Spark als MCP-Server** (Funktionen → Unterwegs und Geräte → „Spark als MCP-Server“; Ich → Spark als MCP-Server): Andere Programme (Open WebUI, n8n, Home Assistant, Claude …) nutzen den Spark über das Model Context Protocol: Sprache in Text, Text in Sprache, Wikipedia und Kiwix, eigene Dokumente, Termine, Erinnerungen und „Spark fragen“.
+
+- **MCP-Server von außen (OAuth)** (Funktionen → Unterwegs und Geräte → „MCP-Server von außen (OAuth)“; baut auf „Spark als MCP-Server“; Ich → Spark als MCP-Server): Programme im Internet wie claude.ai oder ChatGPT verbinden sich über deinen Reverse-Proxy mit dem Spark.
+
+- **MCP: Handeln mit Bestätigung** (Funktionen → Unterwegs und Geräte → „MCP: Handeln mit Bestätigung“; baut auf „Spark als MCP-Server“; Ich → Spark als MCP-Server): Ein Programm darf Smart Home schalten, Termine eintragen und Erinnerungen anlegen, aber nur als Vorschlag.
+
+- **iPhone-App** (Funktionen → Unterwegs und Geräte → „iPhone-App“; Ich → iPhone-App): Eine eigene App fürs iPhone: Knopf drücken, fragen, die Antwort kommt mit der Spark-Stimme, auch bei gesperrtem Bildschirm.
+
+- **Push an die iPhone-App** (Funktionen → Unterwegs und Geräte → „Push an die iPhone-App“; baut auf „iPhone-App“; Ich → iPhone-App): Erinnerungen, Morgenrunde und Hinweise von selbst kommen auf dem iPhone auch dann, wenn die App geschlossen ist.
+
+- **Panel-Bereiche in der iPhone-App** (Funktionen → Unterwegs und Geräte → „Panel-Bereiche in der iPhone-App“; baut auf „iPhone-App“; Ich → iPhone-App): Die iPhone-App zeigt Teile des Panels selbst: Gedächtnis, die nächsten Termine, die Erinnerungen des Spark und Gesprächseinstellungen.
+
+- **Apps merken sich den letzten Stand** (Funktionen → Unterwegs und Geräte → „Apps merken sich den letzten Stand“): Die iPhone- und die Android-App behalten den letzten Stand einiger Seiten auf dem Handy: die Gespräche (die 20 neuesten mit je 50 Nachrichten), die Chats, die eigenen Einstellungen und Funktionen und in der iPhone-App die Zahlen auf den …
+
+- **Prüfzugang für die iPhone-App** (Funktionen → Unterwegs und Geräte → „Prüfzugang für die iPhone-App“; baut auf „iPhone-App“): Für Apples Prüfung im App Store: Statt des Kopplungslinks, der nur 10 Minuten gilt, bekommt der Prüfer die Adresse deines Panels und einen Code aus zwölf Buchstaben und Ziffern.
+
+- **Spark-Update über die iPhone-App** (Funktionen → Unterwegs und Geräte → „Spark-Update über die iPhone-App“; baut auf „iPhone-App“): Ausgewählte Profile bekommen eine Mitteilung, wenn eine neue Version mit grünen Tests bereitliegt, und sehen in der App unter Einstellungen → Spark-Version, was sich ändert.
+
+### Zugang
+
+- **Sprechererkennung** (Funktionen → Zugang → „Sprechererkennung“; Ich → Sprechererkennung): Der Assistent erkennt dich an der Stimme, auch an einem fremden Gerät, und antwortet dann mit deinem Gedächtnis und deinen Einstellungen.
+
+- **Codewort am Lautsprecher** (Funktionen → Zugang → „Codewort am Lautsprecher“; baut auf „Sprechererkennung“; Ich → Lautsprecher): Ein Lautsprecher im Raum gibt Persönliches nur deiner sicher erkannten Stimme.
+
+- **Zweiter Anmeldeschritt** (Funktionen → Zugang → „Zweiter Anmeldeschritt“; Ich → Sicherheit): Zur Anmeldung mit Name und PIN kommt ein Code aus einer Authenticator-App.
+
+- **Probleme melden** (Funktionen → Zugang → „Probleme melden“; Ich → Probleme melden): Etwas klappt nicht?
+
+- **Admin über Meldungen informieren** (Funktionen → Zugang → „Admin über Meldungen informieren“; baut auf „Probleme melden“; Ich → Probleme melden): Sendet ein Profil eine Meldung an GitHub oder legt sie nur auf dem Spark ab, sagt der Assistent es den Admin-Profilen (Rolle Admin, der Haupt-Admin zuerst): bei offener Seite im Assistenten, sonst als Mitteilung aufs Gerät.
+
+- **Verbrauchszähler** (Funktionen → Zugang → „Verbrauchszähler“; Ich → Verbrauch): Der Spark zählt, wie viel seine Modelle arbeiten: gelesene und geschriebene Tokens beim Sprachmodell (davon aus dem Zwischenspeicher), Fragen an die Einordnung, Sekunden beim Hören und Sprechen, Texte der Bedeutungssuche, nachsortierte T …
+
+- **Kontingent** (Funktionen → Zugang → „Kontingent“; baut auf „Verbrauchszähler“; Ich → Verbrauch): Jedes Profil hat beim Sprachmodell eine Grenze für den Tag, die Woche (ab Montag) und den Monat (ab dem 1.), jede einzeln, 0 heißt keine.
+
+- **Dienst-Wächter** (Funktionen → Zugang → „Dienst-Wächter“; Ich → Gespräch): Der Spark schaut selbst, ob seine Dienste antworten: Sprachmodell, Hören, Sprechen, das Internet, die Websuche (SearXNG), das eigene Kiwix-Archiv, Home Assistant, die Mail- und Kalender-Server und das NAS der Sicherung, jeweils nur, was …
+
+- **Rundlauf prüfen** (Funktionen → Zugang → „Rundlauf prüfen“; baut auf „Dienst-Wächter“): Alle paar Minuten macht der Spark einen echten Probelauf: Sprechen sagt einen festen Satz, Hören schreibt ihn wieder auf, und das Sprachmodell beantwortet eine feste Frage mit höchstens drei Wörtern.
+
+- **Wachposten** (Funktionen → Zugang → „Wachposten“): Der Spark sagt seinen Admins von selbst, wenn sich an den Türen etwas tut: eine Sperre nach falschen Anmeldungen, ein neuer Zugang (vertrauter Browser, Passkey, Programm per MCP, gekoppelter Spark, benutzte Einladung), geänderter Schutz …
+
+- **Wartungspause** (Funktionen → Zugang → „Wartungspause“): Bevor du das Sprachmodell (eigenes oder qwen38), die Spracherkennung oder die Sprachausgabe neu einspielst, hältst du den Spark kurz an.
+
+- **Wartungspause bei Neustart** (Funktionen → Zugang → „Wartungspause bei Neustart“; baut auf „Wartungspause“): Der Spark merkt selbst, wenn das Sprachmodell (eigenes oder qwen38), die Spracherkennung oder die Sprachausgabe neu startet oder umschaltet, und pausiert genau diesen Teil bis zu 30 Minuten, wie mit dem Knopf.
+
+- **Notbetrieb mit Parakeet** (Funktionen → Zugang → „Notbetrieb mit Parakeet“): Läuft das Panel auf einem eigenen Rechner (Spark teilen) und ist der DGX weg, antwortet der Spark sonst auf jede Frage mit „Der Spark macht gerade Pause.“ Mit diesem Schalter hört der Panel-Rechner selbst: Parakeet erkennt die Sprache au …
+
+- **Gehäuse** (Funktionen → Zugang → „Gehäuse“): Steckt der Panel-Rechner in einem SunFounder Pironman 5, steuert der Spark dessen Teile selbst, ohne SunFounders Software: Das kleine Display zeigt dem Admin abwechselnd Zustand und Zahlen (Spark, Dienste und Wartung, Pi, DGX weg oder in …
+
+- **Steuerzentrale am Bildschirm** (Funktionen → Zugang → „Steuerzentrale am Bildschirm“): Ein Bildschirm am HDMI-Ausgang des Panel-Rechners zeigt die Steuerzentrale: oben Zustand und Tageszahlen, in der Mitte, welche Anfrage gerade durch welche Stufe läuft und auf welchem Rechner (bei Spark teilen tars und Pi mit CPU, GPU, Sp …
+
+- **Modelle wechseln** (Funktionen → Zugang → „Modelle wechseln“): Unter Zustand → Modelle wechselt ein Admin das Modell einer Art: Sprachmodell, Bildverständnis, Spracherkennung, Sprachausgabe oder Bilder malen.
+
+- **Eigene Modelle** (Funktionen → Zugang → „Eigene Modelle“; baut auf „Modelle wechseln“): Unter Zustand → Modelle fügt ein Admin ein Modell von Hugging Face hinzu, für das Sprachmodell oder das Bildverständnis.
+
+- **Werkstatt** (Funktionen → Zugang → „Werkstatt“): Auf der Seite Zustand → Werkstatt lässt ein Admin den Modell-Rechner in einer abgeschotteten Kopie des Codes arbeiten.
+
+- **Jede Nacht testen** (Funktionen → Zugang → „Jede Nacht testen“; baut auf „Werkstatt“): Einmal pro Nacht startet die Werkstatt von selbst den Testlauf (alle Selbsttests wie auf GitHub, ohne Sprachmodell).
+<!-- /funktionen:liste -->

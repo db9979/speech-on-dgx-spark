@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.903** Docs current, part 3: „All functions“ in the docs (de and en): each of the 234 functions with its switch way, what it builds on, its Me page and the first sentence of its guide, written by hilfe.py --docs, so the help finds them too; guard test_doku_stand.Funktionen
 - **V01.0.902** Docs current, part 2: English caught up (iPhone app: Hey Siri, CarPlay icon and simulator, push errors; two wrong version numbers), Workshop in the iPhone docs, Summary instead of Monitoring in the app; new guard test_doku_stand.Gleichstand: German and English hold the same parts with the same versions per section
 - **V01.0.901** Docs current, part 1: every way in docs/ and the READMEs leads to today's place (Me → Overview instead of "Today", Settings → Update, own pages Calendar, E-mail, Contacts, Features → My day and Access, no more „Monitoring“); test_sprunglinks now checks the docs the help answers from; rule „All docs always current“ in the guideline
 - **V01.0.900** Everything open in the assistant (stages 3 and 4): chat messages, shared things, important mails, questions of running jobs, MCP approvals and, for admins, services that are down as cards under Open (never with text); "Done"/"Later" under Telegram notes and "Done" in the companion with the same checks; "What is open?" by voice (read only); Live per kind; iPhone
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.896** Workshop counts honestly: page tests without a browser show as "did not run" instead of red or green; fix `speech-spark info` without an IP
 - **V01.0.895** Fix iPhone app: the knowledge map computes the points' places in Double (cos and sin were ambiguous, the app did not build since V01.0.894)
 - **V01.0.894** Knowledge map (stage 1): the knowledge book gets its own menu entry with Pages and Map; connections between pages, each with its source and checked by fixed rules, "Wrong", export as Mermaid, Graphviz, SVG, PNG and Obsidian links, native map on the iPhone (off by default)
-- **V01.0.893** Folders at once and folder menu: the Mail page's folder list is kept sealed in the mail supply and is there at once after a restart; the "⋯" at a folder is a small menu beside it like Apple Mail (right click, a sheet on a phone), renaming and new folders right in the row; iPhone with symbols
 
 
 

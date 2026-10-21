@@ -657,3 +657,499 @@ The panel is available in English and German; the button at the top right switch
 - *Read history offline*: only a browser the profile trusts at the second sign-in step keeps a copy of the last 30 conversations and the page itself. Without a connection to the Spark the panel opens it for reading; questions without a connection (at most 10) go out once the Spark answers again. Every other browser stores nothing and deletes what it had the next time it opens; signing out always deletes.
 
 Always, without a switch: what stood under an answer (sources, document passages, created documents) is kept with it and shows again on every device. The iPhone app fetches what is new when opened and during a conversation (needs a new TestFlight build).
+
+## All functions
+
+Every function of the Spark with its switch, what it builds on, where you set it up and what it does (the first sentence of its guide under Features → Guides). `hilfe.py --docs` writes this list from `features.py` and the guides, so a new function stands here and in the help by itself.
+
+<!-- funktionen:liste -->
+### Conversation
+
+- **Web search** (Features → Conversation → "Web search"): When a question needs current information (news, opening hours, prices), the assistant searches the web itself and answers from the results.
+
+- **Faster web search** (Features → Conversation → "Faster web search"; builds on "Web search"): The web search no longer waits for the slowest page: each page gets at most 3 seconds, what is not there by then stays the short snippet from the result list.
+
+- **Wikipedia straight away** (Features → Conversation → "Wikipedia straight away"; Me → Conversation): For knowledge questions the Spark fetches the intro of the matching Wikipedia article and gives only that to the language model.
+
+- **Own Kiwix archive** (Features → Conversation → "Own Kiwix archive"; Me → Conversation): The Spark looks things up in your own kiwix-serve: knowledge questions first in its Wikipedia books, "Look in my archive …" in the full text of all chosen books, "Tell me more" reads up to three parts of an article.
+
+- **Look locally first** (Features → Conversation → "Look locally first"; Me → Conversation): For knowledge questions the Spark itself first looks in your documents (shared ones too), the Kiwix archive and earlier conversations, all at once, for at most 0.4 seconds (the Kiwix archive up to 0.9 seconds; per question it asks the Ge …
+
+- **Roles by voice** (Features → Conversation → "Roles by voice"; Me → Conversation): You save up to 8 roles, such as "Butler" or "Explainer", and switch by voice.
+
+- **Own conversation style** (Features → Conversation → "Own conversation style"; Me → Conversation): Each profile says in its own words how the assistant should talk to it: form of address, tone, form, e.g.
+
+- **Follow-up without wake word** (Features → Conversation → "Follow-up without wake word"; Me → Conversation): After answering a spoken question the assistant keeps listening for a few seconds, so "And tomorrow?" or "Make it brighter" works without another "Hey Spark".
+
+- **Ignore my own voice** (Features → Conversation → "Ignore my own voice"; Me → Conversation): Every device only filters its own echo.
+
+- **Learning from corrections** (Features → Conversation → "Learning from corrections"; builds on "Memory"; Me → Conversation): If you correct the assistant ("No, my brother is called Tim", "You should always check the calendar for appointments"), it turns this into a short sentence and asks: "Shall I remember …?" It is stored only after your "yes", in your memory.
+
+- **Ask instead of guessing** (Features → Conversation → "Ask instead of guessing"; Me → Conversation): If a command fits several devices ("Turn on the TV in the living room", with a TV and an Apple TV box there), the assistant does not guess: it asks "Which one do you mean?" and shows the fitting devices as buttons.
+
+- **Remember the choice** (Features → Conversation → "Remember the choice"; builds on "Ask instead of guessing"; Me → Conversation): After your choice the assistant asks: "Shall I remember that ‘TV in the living room’ is the Samsung?" After "yes" the same sentence switches that device straight away.
+
+- **Show steps and approvals** (Features → Conversation → "Show steps and approvals"): Below every answer a folded line shows which tools the assistant used, e.g.
+
+- **Picture recognition** (Features → Conversation → "Picture recognition"; Me → Conversation): You attach a photo and ask about it: "What plant is this?", "What does the sign say?", "What does the error message mean?".
+
+- **Help with the Spark** (Features → Conversation → "Help with the Spark"; Me → Conversation): When you ask the assistant about the Spark itself ("What does targeted tool choice do?", "Where do I set the voice?"), it looks in the Spark's guides, switches and docs and answers from them, with the path in the panel and whether it is …
+
+- **Suggesting settings** (Features → Conversation → "Suggesting settings"; builds on "Help with the Spark"; Me → Conversation): When a setting fits your question, the assistant shows a card below the answer: which switches, before and after.
+
+- **Ask Spark on every page** (Features → Conversation → "Ask Spark on every page"; builds on "Help with the Spark"; Me → Conversation): The face at the bottom right is the assistant on every page.
+
+- **Suggesting functions** (Features → Conversation → "Suggesting functions"; builds on "Help with the Spark"; Me → Conversation): When you ask for something that is still off for you ("What is on my calendar today?" with the calendar off), the assistant says so plainly and shows "Set up" below.
+
+- **You can also say** (Features → Conversation → "You can also say"; builds on "Suggesting functions"; Me → What I can do): The assistant shows functions that are on for you but that you never used, each with a sentence you can say as it stands.
+
+- **Tips while talking** (Features → Conversation → "Tips while talking"; builds on "You can also say"; Me → Conversation): At a speaker, on the phone, in the car and at the watch there are no buttons.
+
+- **Priority for people** (Features → Conversation → "Priority for people"): When several people talk to the Spark at once, chosen profiles get their answer first.
+
+- **Note when a service is missing** (Features → Conversation → "Note when a service is missing"; builds on "Service watch"; Me → Conversation): When the service watch sees a service gone, the assistant says so at once when somebody needs it, e.g.
+
+- **Instant history sync** (Features → Conversation → "Instant history sync"; Me → Conversation): What you ask on one device shows up at once in the open panel on your other devices, without reloading; a deleted conversation disappears there at once.
+
+- **One conversation for all channels** (Features → Conversation → "One conversation for all channels"; Me → Conversation): Telegram, Siri, the companion, the watch and your voice at a speaker write into today's main conversation instead of their own conversation per day.
+
+- **Read history offline** (Features → Conversation → "Read history offline"; Me → Conversation): A browser you trust at the second sign-in step ("trust this browser") keeps a copy of your last 30 conversations.
+
+- **Settings assistant** (Features → Conversation → "Settings assistant"): Whatever goes wrong becomes a case: a tool fails, an error, a question no rule recognizes that ends in the web search, a refusal ("I cannot"), the same question twice, a 👎 or "Wrongly sorted" on the Weiche.
+
+- **Explain requests** (Features → Conversation → "Explain requests"; builds on "Settings assistant"): Under Status → Logs → Requests a button explains a request in fixed sentences: which intent the Weiche saw, which tools ran, where it got stuck.
+
+- **Ask the assistant for proposals** (Features → Conversation → "Ask the assistant for proposals"; builds on "Settings assistant"; Me → Conversation): Admin profiles ask "What does the settings assistant propose?" and hear the open proposals.
+
+- **Note on a new proposal** (Features → Conversation → "Note on a new proposal"; builds on "Settings assistant"; Me → Conversation): When a new proposal comes, admin profiles get a short note with its title, at most three a day.
+
+- **Prepare cases as reports** (Features → Conversation → "Prepare cases as reports"; builds on "Settings assistant"): When nothing from the catalog helps, the case becomes a draft under Reporting problems, with fixed sentences and a preview before sending.
+
+- **Autopilot for small changes** (Features → Conversation → "Autopilot for small changes"; builds on "Settings assistant"): He takes stage A and B with a green test bench and at least two reports himself: one a day, at most three steps, back when it gets worse.
+
+- **Ideas outside the catalog** (Features → Conversation → "Ideas outside the catalog"; builds on "Settings assistant"): When the fixed catalog has nothing for a case, the local language model writes an idea: text, at most one setting with a jump link and steps to copy.
+
+- **Analyse a case** (Features → Conversation → "Analyse a case"; builds on "Settings assistant"): The local language model reads a case and picks a rule from fixed templates: must word, tool hint, extra tool for a group, word or test sentence for the Weiche.
+
+- **Undo automatically** (Features → Conversation → "Undo automatically"; builds on "Settings assistant"): The re-check looks at every taken change after its waiting time: when the case came back, a test sentence turned red or the 👍 share of its group fell by at least 15 points (from 10 ratings before and after), the result is "worse".
+
+- **Steps for the environment** (Features → Conversation → "Steps for the environment"; builds on "Settings assistant"): When a service outside the Spark is the cause (search, wiki, NAS, network), the proposal shows steps to copy.
+
+- **Proposals for my profile** (Features → Conversation → "Proposals for my profile"; builds on "Settings assistant"; Me → Conversation): A profile's own 👎 lead to proposals for its settings, e.g.
+
+- **👍/👎 under answers** (Features → Conversation → "👍/👎 under answers"; builds on "Settings assistant"; Me → Conversation): Under every answer 👍 or 👎.
+
+- **"Why?" for every profile** (Features → Conversation → ""Why?" for every profile"; builds on "Settings assistant"; Me → Conversation): When you ask "Why did you just search the web?" or "Why didn't you look it up?", the Spark explains the way of its last answer: how it understood the question and where it looked, in fixed plain sentences, without rules, tool names or se …
+
+- **Spark diary** (Features → Conversation → "Spark diary"; Me → Conversation): The Spark notes what it did for you itself: devices switched, reminders set, mail drafts saved, documents made, files put on the reMarkable, messages sent.
+
+- **Status by voice** (Features → Conversation → "Status by voice"): When you ask "Is everything running?", "Is Home Assistant reachable?", "When was the last backup?", "Is there an update?", "Is the emergency stop on?" or "Is my mailbox connected?", the Spark reads its own state and answers only from it …
+
+- **Undo by voice** (Features → Conversation → "Undo by voice"): When you say "Undo that", the Spark proposes to take back its last deed for you: delete a reminder, remove a list entry, forget a note, take an appointment out again, switch a device back, set the volume back, the pause of notes, restore …
+
+- **Feedback when it is fixed** (Features → Conversation → "Feedback when it is fixed"; builds on "👍/👎 under answers"; Me → Conversation): When a change helps after your 👎, the assistant tells you once.
+
+### Speed and accuracy
+
+- **Thinking while choosing tools** (Features → Speed and accuracy → "Thinking while choosing tools"; Me → Conversation): The model thinks briefly before it picks a tool (calendar, mail, web search …).
+
+- **Targeted tool choice** (Features → Speed and accuracy → "Targeted tool choice"; Me → Conversation): Fixed rules in the panel recognize from your own words what it is about (smart home, appointment, mail, web search, reminder, list, weather …).
+
+- **Fetch clear questions directly** (Features → Speed and accuracy → "Fetch clear questions directly"; Me → Conversation): For short, clear questions the panel calls the matching tool itself, by fixed rules: "Do I have new mail?" (mail list), "Which reminders do I have?", "What is the weather like?" (today, at home), "Where is my parcel?" and "Which appointm …
+
+- **Names for listening** (Features → Speed and accuracy → "Names for listening"): The speech recognition gets a short list of names with every recording: all profiles, the profile's contacts and the rooms and devices from its Home Assistant.
+
+- **Answer simple things at once** (Features → Speed and accuracy → "Answer simple things at once"): The panel answers a few simple questions itself with a fixed sentence, without the language model: the time ("What time is it?"), the date and weekday ("What day is it today?"), simple arithmetic ("What is 17 times 23?") and German unit …
+
+- **Trim a large memory** (Features → Speed and accuracy → "Trim a large memory"): When the Spark has remembered a lot for a profile (more than about 6000 characters), the language model only gets the newest facts as a fixed part plus at most five older ones that share words with the question.
+
+- **Instant acknowledgement** (Features → Speed and accuracy → "Instant acknowledgement"; builds on "Targeted tool choice"; Me → Conversation): Right after your question the Spark says in a short sentence what it is doing now, for example "Let me check your calendar." or "Let me search the web.".
+
+- **Tune the switch** (Features → Speed and accuracy → "Tune the switch"; builds on "Targeted tool choice"): On Features → Routing, "Tune" starts a run: the language model proposes up to 6 words for groups that everyday sentences often miss.
+
+- **Fetch ahead on a question back** (Features → Speed and accuracy → "Fetch ahead on a question back"; builds on "Targeted tool choice"; Me → Conversation): When an answer ends with a question back ("For which day?"), the panel already fetches what the next answer will most likely need: the calendar of the next days, the newest mails, the weather at home or parcels.
+
+- **Classification with probabilities** (Features → Speed and accuracy → "Classification with probabilities"; Me → Conversation): The language model on the Spark answers fixed questions of the panel with probabilities instead of text (/v1/systemone of the LLM-Tor or of qwen38).
+
+- **Classification when tidying the inbox** (Features → Speed and accuracy → "Classification when tidying the inbox"; builds on "Classification with probabilities"; Me → Conversation): Mails no fixed rule sorts while tidying get their category with a real probability.
+
+- **Classification in the quality test** (Features → Speed and accuracy → "Classification in the quality test"; builds on "Classification with probabilities"): The quality test (Status → Checks) gets a second opinion per question: how well the answer answers it (0 to 2) and how likely it makes something up.
+
+- **Classification in the settings assistant** (Features → Speed and accuracy → "Classification in the settings assistant"; builds on "Classification with probabilities"): The settings assistant picks the fitting proposal for a case from its fixed catalog.
+
+- **Check answers in the background** (Features → Speed and accuracy → "Check answers in the background"; builds on "Classification with probabilities"; Me → Conversation): After an answer for which tools ran, the panel asks in the background whether the answer names details that are in no result.
+
+- **Recognize complaints** (Features → Speed and accuracy → "Recognize complaints"; builds on "Classification with probabilities"; Me → Conversation): When somebody says "still does not work" or "it is still on" right after a deed, the panel recognizes it from a fixed word list, otherwise with the classification from 80 %.
+
+### My data
+
+- **Memory** (Features → My data → "Memory"; Me → Memory): The assistant remembers things about you, such as names, preferences or where something is, and uses them later.
+
+- **Memory check** (Features → My data → "Memory check"; builds on "Memory"; Me → Memory): Every entry in the memory keeps where it came from (from you in a conversation, from a correction, learned automatically, changed here), which conversation and when you last confirmed it.
+
+- **Memory check-back** (Features → My data → "Memory check-back"; builds on "Memory check"; Me → Conversation): When an entry the check marked as maybe out of date fits your question, the Spark asks once after the answer: "Quick check: is this still right: …?" Whether and when, the panel decides with fixed rules, never the language model.
+
+- **Memory topics** (Features → My data → "Memory topics"; builds on "Memory check"; Me → Memory): Under Me → Memory the entries are in groups: person, home, on the move, work, health, right now, other.
+
+- **Past conversations** (Features → My data → "Past conversations"; Me → Conversation): You can ask about past conversations.
+
+- **Own documents** (Features → My data → "Own documents"; Me → Documents): You upload documents, the assistant searches them when a question fits.
+
+- **Read pictures and scans** (Features → My data → "Read pictures and scans"; builds on "Own documents"; Me → Documents): Photos (invoice, rating plate, whiteboard) and PDF pages without text go into your documents.
+
+- **Meaning search** (Features → My data → "Meaning search"; builds on "Own documents"; Me → Documents): The document search finds not only the same words but also passages with a similar meaning: "car insurance" finds "motor liability", "when do I have to cancel" finds "notice period".
+
+- **Keep originals** (Features → My data → "Keep originals"; builds on "Own documents"; Me → Documents): The uploaded file stays on the Spark (photos made smaller, without location or camera data).
+
+- **Read long documents at night** (Features → My data → "Read long documents at night"; builds on "Own documents"; Me → Documents): By day the Spark reads only short documents (up to 10 pages) in quiet moments.
+
+- **Shared documents** (Features → My data → "Shared documents"; builds on "Own documents"; Me → Documents): A profile shares single documents with "For everyone", for example manuals.
+
+- **Sharing with profiles** (Features → My data → "Sharing with profiles"; Me → Shared): A profile shares a document with single other profiles, for example the lease with the partner.
+
+- **Note on shared things** (Features → My data → "Note on shared things"; builds on "Sharing with profiles"; Me → Shared): When someone shares something with you, a note comes to the device you use right now: "Anna shared something with you", without the title.
+
+- **Docling server** (Features → My data → "Docling server"; builds on "Own documents"; Me → Documents): A Docling server in your own network reads uploaded PDF, Word, PowerPoint and Excel files and scans a second time, in quiet moments.
+
+- **reMarkable notes** (Features → My data → "reMarkable notes"; builds on "Read pictures and scans"; Me → reMarkable): You connect your my.remarkable account.
+
+- **Sending to the reMarkable** (Features → My data → "Sending to the reMarkable"; builds on "reMarkable notes"; Me → reMarkable): Below every answer there is "To the reMarkable"; a click puts it as a new document into the folder "Spark".
+
+- **Newest first** (Features → My data → "Newest first"; builds on "reMarkable notes"; Me → reMarkable): With similar hits in your documents and reMarkable notes the assistant takes the newer one and names its date.
+
+- **Morning sheet** (Features → My data → "Morning sheet"; builds on "Sending to the reMarkable"; Me → reMarkable): A morning sheet with appointments and lines for notes, answers to "@Spark" questions on paper, tasks from handwriting, meeting summaries, a week in review, web pages and mail attachments, one inbox per day and a Spark guide that keeps it …
+
+- **@Spark on paper** (Features → My data → "@Spark on paper"; builds on "Sending to the reMarkable"; Me → reMarkable): A morning sheet with appointments and lines for notes, answers to "@Spark" questions on paper, tasks from handwriting, meeting summaries, a week in review, web pages and mail attachments, one inbox per day and a Spark guide that keeps it …
+
+- **Tasks from the reMarkable** (Features → My data → "Tasks from the reMarkable"; builds on "Sending to the reMarkable"; Me → reMarkable): A morning sheet with appointments and lines for notes, answers to "@Spark" questions on paper, tasks from handwriting, meeting summaries, a week in review, web pages and mail attachments, one inbox per day and a Spark guide that keeps it …
+
+- **Meeting summaries** (Features → My data → "Meeting summaries"; builds on "Sending to the reMarkable"; Me → reMarkable): A morning sheet with appointments and lines for notes, answers to "@Spark" questions on paper, tasks from handwriting, meeting summaries, a week in review, web pages and mail attachments, one inbox per day and a Spark guide that keeps it …
+
+- **Week in review** (Features → My data → "Week in review"; builds on "Sending to the reMarkable"; Me → reMarkable): A morning sheet with appointments and lines for notes, answers to "@Spark" questions on paper, tasks from handwriting, meeting summaries, a week in review, web pages and mail attachments, one inbox per day and a Spark guide that keeps it …
+
+- **Web pages and attachments to the reMarkable** (Features → My data → "Web pages and attachments to the reMarkable"; builds on "Sending to the reMarkable"; Me → reMarkable): A morning sheet with appointments and lines for notes, answers to "@Spark" questions on paper, tasks from handwriting, meeting summaries, a week in review, web pages and mail attachments, one inbox per day and a Spark guide that keeps it …
+
+- **Daily inbox** (Features → My data → "Daily inbox"; builds on "Sending to the reMarkable"; Me → reMarkable): A morning sheet with appointments and lines for notes, answers to "@Spark" questions on paper, tasks from handwriting, meeting summaries, a week in review, web pages and mail attachments, one inbox per day and a Spark guide that keeps it …
+
+- **Spark guide on the reMarkable** (Features → My data → "Spark guide on the reMarkable"; builds on "Sending to the reMarkable"; Me → reMarkable): A morning sheet with appointments and lines for notes, answers to "@Spark" questions on paper, tasks from handwriting, meeting summaries, a week in review, web pages and mail attachments, one inbox per day and a Spark guide that keeps it …
+
+- **Designed sheets to tick** (Features → My data → "Designed sheets to tick"; builds on "Sending to the reMarkable"; Me → reMarkable): What the Spark puts on the reMarkable comes as a designed sheet exactly in your device’s format (reMarkable 1 and 2, Paper Pro, Paper Pro Move), with "Kann weg" at the top right: tick it and the Spark puts it into the trash.
+
+- **Folders by kind** (Features → My data → "Folders by kind"; builds on "Sending to the reMarkable"; Me → reMarkable): What the Spark puts on the reMarkable comes as a designed sheet exactly in your device’s format (reMarkable 1 and 2, Paper Pro, Paper Pro Move), with "Kann weg" at the top right: tick it and the Spark puts it into the trash.
+
+- **Tidy up by itself** (Features → My data → "Tidy up by itself"; builds on "Folders by kind"; Me → reMarkable): What the Spark puts on the reMarkable comes as a designed sheet exactly in your device’s format (reMarkable 1 and 2, Paper Pro, Paper Pro Move), with "Kann weg" at the top right: tick it and the Spark puts it into the trash.
+
+- **Task sheet to tick** (Features → My data → "Task sheet to tick"; builds on "Designed sheets to tick"; Me → reMarkable): A living sheet in the folder "Aufgaben" with what is open: tasks from your notes (remind, remove, later), memory entries that may no longer be true (true, not true) and proposals for your settings.
+
+- **Creating documents** (Features → My data → "Creating documents"; builds on "Own documents"; Me → Documents): On request the Spark writes a letter, report, minutes, a note, invitation, presentation or spreadsheet and puts the file under Me → Documents (Word, PDF, PowerPoint, Excel, Markdown, text or CSV).
+
+- **Own templates** (Features → My data → "Own templates"; builds on "Creating documents"; Me → Documents): Profiles upload own Word or PowerPoint templates (.docx, .dotx, .pptx, .potx).
+
+- **Pictures from the Kiwix** (Features → My data → "Pictures from the Kiwix"; builds on "Creating documents"; Me → Documents): For the title slide and "Picture and text" slides the Spark fetches a fitting picture from the Wikipedia in your own Kiwix.
+
+- **Painting pictures** (Features → My data → "Painting pictures"; Me → Pictures): On request the Spark paints a picture, a drawing, a logo or a colouring page, itself and without the internet, with FLUX.2 [klein] by Black Forest Labs.
+
+- **Changing pictures** (Features → My data → "Changing pictures"; builds on "Painting pictures"; Me → Pictures): The Spark changes an own photo or a painted picture after your sentence, itself and without the internet, with the same FLUX.2 [klein] as for painting: sky blue, as a watercolour, add or remove a thing.
+
+- **Making music** (Features → My data → "Making music"; Me → Music): The Spark makes a song or piece of music on request, itself and without the internet, with ACE-Step 1.5 on the model computer.
+
+- **Editing music** (Features → My data → "Editing music"; builds on "Making music"; Me → Music): The Spark edits a song under Me → Music, itself and without the internet, with the same ACE-Step as for making: make a section new, extend at the front or back, change the music style (rock, jazz, reggae, …, you decide how close to the o …
+
+- **Document card and tags** (Features → My data → "Document card and tags"; builds on "Own documents"; Me → Documents): In quiet minutes (or at night) the language model reads the beginning of each document once and notes a card: title, kind, sender, date, deadline, number and 3 to 6 keywords.
+
+- **Search check** (Features → My data → "Search check"; builds on "Own documents"; Me → Documents): Test questions with a known right place show how often the search in your documents finds the right thing.
+
+- **Re-rank hits** (Features → My data → "Re-rank hits"; builds on "Own documents"; Me → Documents): The document search mixes word search and meaning search and so finds 30 candidates.
+
+- **Knowledge book** (Features → My data → "Knowledge book"; builds on "Own documents"; Knowledge book → Settings): The Spark works each of your documents once into pages, such as "Car", "Insurance" or "Garage Müller", and writes short sentences there, each with its source.
+
+- **Knowledge map** (Features → My data → "Knowledge map"; builds on "Knowledge book"; Knowledge book → Settings): The pages of your knowledge book become points on a map, and the Spark connects them: "Golf insured with Nordstern", "parking damage raises the premium, +18 %".
+
+- **Test questions by the Spark** (Features → My data → "Test questions by the Spark"; builds on "Search check"; Me → Documents): So the search check has enough questions, the language model writes, in quiet minutes, a question about a random place in your documents that only this place answers, in its own words.
+
+- **Storage and NAS** (Features → My data → "Storage and NAS"; Me → Storage): Under Me → Storage you connect every place once: your NAS (Synology, QNAP, Fritzbox), a cloud with WebDAV (Nextcloud, ownCloud, HiDrive, MagentaCLOUD) or an SFTP server.
+
+- **Copy of my data** (Features → My data → "Copy of my data"; builds on "Storage and NAS"; Me → Storage): An encrypted copy of your data at one of your places (NAS, cloud with WebDAV, SFTP, SMB share at home) or in a folder the admin mounted on the Spark (NFS, SMB, USB disk).
+
+- **Knowledge folders** (Features → My data → "Knowledge folders"; builds on "Storage and NAS"; Me → Storage): You pick folders on your NAS or cloud, e.g.
+
+- **Household folder** (Features → My data → "Household folder"; builds on "Knowledge folders"; Me → Storage): A folder on the NAS for everyone in the household, e.g.
+
+- **Filing folder** (Features → My data → "Filing folder"; builds on "Storage and NAS"; Me → Storage): A folder "spark_ablage" on your NAS at home is the only place the Spark writes to.
+
+- **NAS status** (Features → My data → "NAS status"; builds on "Storage and NAS"): Every few minutes the Spark reads how your NAS is doing: use of the storage areas, RAID, state and temperature of the disks, system temperature, fans, uptime, DSM version and whether an update is ready.
+
+- **Storage in the home network** (Features → My data → "Storage in the home network"; builds on "Copy of my data"; Me → Storage): Profiles may use places with addresses in the home network for their copy (NAS, Fritzbox, Nextcloud at home).
+
+- **Folder on the Spark** (Features → My data → "Folder on the Spark"; builds on "Copy of my data"; Me → Storage): Profiles put their copy in a subfolder of a folder you mounted on the Spark, e.g.
+
+- **Move originals out** (Features → My data → "Move originals out"; builds on "Copy of my data"; Me → Storage): Originals of documents neither changed nor opened for 30 days live only in the copy at your place; that saves space on the Spark.
+
+### My day
+
+- **Suggesting functions by itself** (Features → My day → "Suggesting functions by itself"; builds on "Speaking up by itself"; Me → By itself): At most once a week a suggestion arrives under "By itself" as a notification, e.g.
+
+- **Speaking up by itself** (Features → My day → "Speaking up by itself"; Me → By itself): The assistant speaks up when something is really up: before appointments, on your own smart-home rules, mails from chosen senders, tomorrow's weather, birthdays, parcels, a follow-up or a greeting.
+
+- **Instant notes from Home Assistant** (Features → My day → "Instant notes from Home Assistant"; builds on "Speaking up by itself"; Me → By itself): Your smart home rules listen to Home Assistant directly instead of looking once a minute.
+
+- **House notes on speakers** (Features → My day → "House notes on speakers"; builds on "Speaking up by itself"; Me → By itself): A rule or an event from Home Assistant also says its own sentence aloud on chosen speakers, e.g.
+
+- **Home Assistant tells the Spark** (Features → My day → "Home Assistant tells the Spark"; builds on "Speaking up by itself"; Me → By itself): Home Assistant sends the Spark an event, e.g.
+
+- **Smart home rule by voice** (Features → My day → "Smart home rule by voice"; builds on "Speaking up by itself"; Me → By itself): "Tell me when someone is at the front door" or "Let me know when Anna comes home": the Spark finds the device, names the rule and adds it after your "yes".
+
+- **Recognize important mail** (Features → My day → "Recognize important mail"; builds on "Speaking up by itself"; E-mail → Settings): Speaking up by itself otherwise only names new mail from senders on your list.
+
+- **Describe a camera picture** (Features → My day → "Describe a camera picture"; builds on "Speaking up by itself"; Me → By itself): When a rule applies, the Spark fetches a still picture of a camera from Home Assistant and lets the local language model say in a few words what is seen, e.g.
+
+- **Timers and reminders** (Features → My day → "Timers and reminders"): Timers and reminders by voice.
+
+- **Notes to the device in use** (Features → My day → "Notes to the device in use"; builds on "Timers and reminders"): A note (reminder, by itself, job, service watch …) goes to the device you are using right now: the open page you typed or clicked on in the last two minutes, the iPhone or Android app in front, or the Spark companion on the computer you …
+
+- **Everything open in the assistant** (Features → My day → "Everything open in the assistant"; builds on "Timers and reminders"; Open → Settings): What needs you comes as a card with buttons into the day's conversation: urgent finds from "For you" (bill, contract, reply, suspicion) and reminders that rang.
+
+- **Lists for shopping and tasks** (Features → My day → "Lists for shopping and tasks"; Lists → Settings): The page Lists in the menu: shopping, tasks and your own lists (DIY store, holiday, …).
+
+- **Share lists** (Features → My day → "Share lists"; builds on "Lists for shopping and tasks"; Lists → Settings): You share one of your lists with another profile: on the page Lists at the list "⋯" → "Share …" and per person "See" or "Write along" (put on and tick off).
+
+- **Note on new entries** (Features → My day → "Note on new entries"; builds on "Share lists"; Lists → Settings): You share one of your lists with another profile: on the page Lists at the list "⋯" → "Share …" and per person "See" or "Write along" (put on and tick off).
+
+- **Lists in Reminders** (Features → My day → "Lists in Reminders"; builds on "Lists for shopping and tasks"; Lists → Settings): Your lists on the Spark (shopping, tasks, own lists) show in the iPhone's Reminders app, through the same access as your Spark calendars.
+
+- **Write link** (Features → My day → "Write link"; builds on "Lists for shopping and tasks"; Lists → Settings): A link for people without a profile, such as visitors, grandparents or the cleaner: whoever opens it puts something on one of your lists, with a name if they like.
+
+- **My status** (Features → My day → "My status"; Me → My status): Under Me → My status you see what the Spark does for you in the background: reading documents, meaning search, document cards, comparing the reMarkable, tidying the inbox, fetching contacts, jobs, the morning briefing, tidying memory.
+
+- **Jobs** (Features → My day → "Jobs"; Me → Jobs): The assistant works longer for you: "Research …, let me know" runs in the background (search, read pages, sum up), the result comes as a notification and is listed under Me → Jobs.
+
+- **Watching** (Features → My day → "Watching"; builds on "Jobs"; Me → Jobs): The Spark checks the web regularly for something new (firmware, a new episode, a price below a limit) and only then tells you.
+
+- **Jobs with plan, questions and proposals** (Features → My day → "Jobs with plan, questions and proposals"; builds on "Jobs"; Me → Jobs): A job writes its steps as a list and ticks them off; you see it live under Me → Jobs.
+
+- **Services over MCP** (Features → My day → "Services over MCP"; builds on "Jobs"): Tools of outside services that speak MCP (e.g.
+
+- **Own MCP services** (Features → My day → "Own MCP services"; builds on "Services over MCP"; Me → My MCP services): Every profile connects its own MCP services (e.g.
+
+- **Own MCP services in jobs** (Features → My day → "Own MCP services in jobs"; builds on "Own MCP services"; Me → My MCP services): Background jobs (agent functions) may use the reading tools of your own services, never the acting ones.
+
+- **Own MCP services with sign-in** (Features → My day → "Own MCP services with sign-in"; builds on "Own MCP services"; Me → My MCP services): Services that want a sign-in (OAuth) instead of a key: the Spark registers at the service as a program, you sign in there, the access stays encrypted on the Spark.
+
+- **Chats** (Features → My day → "Chats"; Me → Conversation): Writing like in a messenger, but on your Spark: "Chats" in the menu (on a phone the "Chats" tab), the list on the left, the chat on the right.
+
+- **Message to everybody** (Features → My day → "Message to everybody"; builds on "Chats"; Me → Conversation): The fixed group "Alle" (everybody) in the chats: who takes part is in it, without admins; "Tell everybody we leave at eight" writes into it after your "Yes".
+
+- **Group chats** (Features → My day → "Group chats"; builds on "Chats"; Me → Conversation): "＋ New chat" → "New group": a name, pick the people, done.
+
+- **Photos, files and voice in chats** (Features → My day → "Photos, files and voice in chats"; builds on "Chats"; Me → Conversation): In the chat left of the input field: 📎 sends a photo or a file (PDF, Word, Excel, PowerPoint, OpenDocument, text), 🎤 records a voice message (up to 5 minutes, with what was said underneath).
+
+- **Invite into a chat** (Features → My day → "Invite into a chat"; builds on "Chats"; Me → Conversation): Chats → ＋ New chat → "Invite someone": a link and a QR code for a person who has no profile yet.
+
+- **Private chats (end-to-end)** (Features → My day → "Private chats (end-to-end)"; builds on "Chats"; Me → Conversation): Chats → ＋ New chat → "🔒 Private" beside a person: a chat for two that only your devices can read.
+
+- **Chats with other Sparks** (Features → My day → "Chats with other Sparks"; builds on "Chats"): Chats → ＋ New chat → "🌐 Someone on another Spark": your Spark address (e.g.
+
+- **Photos and files to other Sparks** (Features → My day → "Photos and files to other Sparks"; builds on "Chats with other Sparks"): In chats with people on other Sparks photos, files (PDF, Office, text up to 25 MB) and voice messages (up to 5 minutes) go too, with the same buttons as in any chat.
+
+- **Groups with other Sparks** (Features → My day → "Groups with other Sparks"; builds on "Chats with other Sparks"): People on other Sparks can join a group too: the group's admins pick their contacts marked 🌐 when creating it or under "Add people".
+
+- **Calls (voice and video)** (Features → My day → "Calls (voice and video)"; builds on "Chats"): In a chat for two, 📞 or 🎥 at the top: every open Chats page of the other person rings, their phone says "Name is calling".
+
+- **Calls when away** (Features → My day → "Calls when away"; builds on "Calls (voice and video)"): An own relay (TURN) on the Spark: when one of the devices is on a mobile network or behind someone else's router, sound and picture go through it.
+
+- **Calls by the assistant** (Features → My day → "Calls by the assistant"; builds on "Calls (voice and video)"): Say or write to the assistant: "Call Sabine", "Video call Sabine".
+
+- **Calendar** (Features → My day → "Calendar"; Calendar → Settings): The assistant reads your appointments and adds new ones, but only after your "Yes".
+
+- **Share calendars** (Features → My day → "Share calendars"; builds on "Calendar"; Calendar → Settings): You share one of your calendars with another profile, "See" or "See + add": Calendar → Settings → "Share" on the calendar's card, find the person in the window.
+
+- **Calendar server for calendar apps** (Features → My day → "Calendar server for calendar apps"; builds on "Calendar"; Calendar → Settings): Your Spark calendars show in the iPhone's calendar (or in Thunderbird, DAVx5) and can be changed there: the Spark is a CalDAV server for them.
+
+- **Weather** (Features → My day → "Weather"; Me → Weather): The forecast for your place: now, today, tomorrow and up to 7 days, with rain in the next hours.
+
+- **Reddit and feeds** (Features → My day → "Reddit and feeds"; Me → Reddit and feeds): The Spark reads your Reddit inbox, subreddits and other feeds (blogs, YouTube, Mastodon).
+
+- **Telling news from feeds** (Features → My day → "Telling news from feeds"; builds on "Speaking up by itself"; Me → By itself): The Spark reads your Reddit inbox, subreddits and other feeds (blogs, YouTube, Mastodon).
+
+### Mail and contacts
+
+- **Reading e-mail** (Features → Mail and contacts → "Reading e-mail"; E-mail → Settings): The assistant reads your inbox of the last 30 days.
+
+- **Inbox tidying** (Features → Mail and contacts → "Inbox tidying"; builds on "Reading e-mail"; E-mail → Settings): Advertising, newsletters and the like go into their own folders (main folder of your choice, else "Spark").
+
+- **Order mail** (Features → Mail and contacts → "Order mail"; builds on "Reading e-mail"; E-mail → Settings): On the E-mail page you mark a mail read or unread, flag it with ★, archive it or move it into one of your folders, also several at once ("Select", then ticks, or ⌘/Ctrl-click).
+
+- **Send mail** (Features → Mail and contacts → "Send mail"; builds on "Reading e-mail"; E-mail → Settings): On the E-mail page you write a new mail, answer one or forward it (with its attachments if wanted).
+
+- **Delete mail** (Features → Mail and contacts → "Delete mail"; builds on "Order mail"; E-mail → Settings): On the E-mail page you delete a mail with the trash symbol, the Delete key or by dragging it onto the trash, also several ticked ones at once.
+
+- **Invitations from mail** (Features → Mail and contacts → "Invitations from mail"; builds on "Reading e-mail"; E-mail → Settings): If a mail carries an invitation (.ics), the E-mail page shows above its text what, when, where and who invites.
+
+- **New mail at once** (Features → Mail and contacts → "New mail at once"; builds on "Reading e-mail"; E-mail → Settings): New mail is on the E-mail page within a few seconds, not only at the next fetch every five minutes, and your mail rules sort it at once.
+
+- **Learn mail style** (Features → Mail and contacts → "Learn mail style"; builds on "Reading e-mail"; E-mail → Settings): The Spark reads your sent mails and remembers how you write: form of address, greeting, sign-off, length, tone and typical phrases, split into Private, Work and Unknown.
+
+- **Parcels** (Features → Mail and contacts → "Parcels"; builds on "Reading e-mail"; E-mail → Settings): From the shipping mails of DHL, Hermes, DPD, GLS, UPS and Amazon of the last 14 days: what comes today, what is on its way, what waits for pick-up and what was delivered.
+
+- **For you from mail** (Features → Mail and contacts → "For you from mail"; builds on "Reading e-mail"; E-mail → Settings): The Spark looks through your mails of the last 30 days and shows what needs you or is good to know: bills with amount and deadline, contracts and subscriptions that renew (with the last day to cancel), orders, offers with an end date, qu …
+
+- **What I know about you** (Features → Mail and contacts → "What I know about you"; builds on "For you from mail"; Me → What I know about you): A page under Me that shows what the Spark knows about you and where from: interests with evidence (for example two orders from a shop) that count only once you say "Right"; bills that come every month, with "Remind me monthly"; your week …
+
+- **Writing help** (Features → Mail and contacts → "Writing help"; Me → Writing help): Paste a text and pick what should happen: correct (only mistakes), smooth, shorter, friendlier, more formal, translate, or draft a reply to a mail you received.
+
+- **Writing help in other programs** (Features → Mail and contacts → "Writing help in other programs"; builds on "Writing help"; Me → Writing help): The writing help right where you write: Mac quick action (right-click → Services → "Mit Spark verbessern", in Apple Mail, Pages, Word, Excel …), Windows program for x64 and ARM (mark text, Ctrl+Alt+S), Office add-in with a button in Outl …
+
+- **Contacts** (Features → Mail and contacts → "Contacts"; Contacts → Settings): The assistant knows phone numbers, e-mail addresses and birthdays from your address book.
+
+- **Edit contacts** (Features → Mail and contacts → "Edit contacts"; builds on "Contacts"; Contacts → Settings): On the page Contacts you change a card like on Apple: "Edit", a minus per field to remove it, an "+ add" per kind for phone, e-mail, address and website, "Done" saves.
+
+- **Contacts for contacts apps** (Features → Mail and contacts → "Contacts for contacts apps"; builds on "Contacts"; Contacts → Settings): The address book "On the Spark" shows in the iPhone's Contacts app (or Thunderbird, DAVx5 on Android), both ways when "Edit contacts" is on; otherwise read only.
+
+### Home
+
+- **Home Assistant** (Features → Home → "Home Assistant"; Me → Smart home): Control lights, devices and heating by voice and ask for values.
+
+- **Room mode** (Features → Home → "Room mode"; Me → Room mode): For a chosen time the assistant listens to the conversation in the room and helps in a pause: answers open questions, suggests appointments or shopping items, gives the real value on "cold" or "dark".
+
+- **Ignore TV voices** (Features → Home → "Ignore TV voices"; builds on "Room mode"; Me → Room mode): In room mode only voices the Spark knows count: TV, radio and visitors trigger no questions or suggestions.
+
+- **Room mode for Home Assistant** (Features → Home → "Room mode for Home Assistant"; builds on "Room mode"; Me → Room mode): Home Assistant sees on which device room mode listens right now and until when, and can end it, e.g.
+
+- **Own speakers (ESP32)** (Features → Home → "Own speakers (ESP32)"; Me → Speakers): A small ESP32-S3 board with a microphone and speaker becomes a voice assistant in the room.
+
+- **Stop while it speaks** (Features → Home → "Stop while it speaks"; builds on "Own speakers (ESP32)"; Me → Speakers): While an own speaker talks its microphone stays on.
+
+- **Start room mode from afar** (Features → Home → "Start room mode from afar"; builds on "Room mode"; Me → Room mode): You say or type "Raummodus im Wohnzimmer an" on one device and your living room speaker listens.
+
+- **Announcements on speakers** (Features → Home → "Announcements on speakers"; builds on "Chats"; Me → Conversation): "Announcement in the living room: dinner is ready": the speaker plays a tone and says it.
+
+- **Home Assistant Assist (Wyoming)** (Features → Home → "Home Assistant Assist (Wyoming)"): Home Assistant uses the Spark's speech recognition and voice.
+
+- **Phone** (Features → Home → "Phone"; Me → Phone): Call the Spark from a phone in the house (DECT handset, IP phone) and talk to it like to a speaker: ask, "Stopp" or # interrupts, "Tschüss" or hanging up ends.
+
+- **Phone: take guests** (Features → Home → "Phone: take guests"; builds on "Phone"): A handset without a profile and, with "Calls from outside", an unknown or hidden number get questions and answers as a guest.
+
+- **Phone: calls from outside** (Features → Home → "Phone: calls from outside"; builds on "Phone"): Call the Spark from on the go: a number confirmed under Me → Phone picks its profile.
+
+- **Phone: the Spark calls** (Features → Home → "Phone: the Spark calls"; builds on "Phone"; Me → Phone): The Spark calls by itself: wake-up call and reminder by call a profile orders itself, and the call back for callers from outside with an unsure voice.
+
+- **Phone: call on outages** (Features → Home → "Phone: call on outages"; builds on "Phone: the Spark calls"): If a service of the service watch is gone 10 minutes or longer, the Spark calls the admin besides the note, at most once an hour.
+
+### On the go and devices
+
+- **Bus and train** (Features → On the go and devices → "Bus and train"; Me → Bus and train): The next departures at your stop and connections to a destination, with delays and platform.
+
+- **Telegram** (Features → On the go and devices → "Telegram"; Me → Telegram): You write to the assistant through your own Telegram bot or send a voice message, from anywhere.
+
+- **Android app** (Features → On the go and devices → "Android app"; Me → Android app): An app for Android phones, without the Play Store: it shows the Spark like the page on the phone and can also show notes while closed, start as the assistant app and share text from other apps to Spark.
+
+- **Android: notes at once** (Features → On the go and devices → "Android: notes at once"; builds on "Android app"; Me → Android app): Without a Google service notes on Android come every 15 minutes.
+
+- **Android: update in the app** (Features → On the go and devices → "Android: update in the app"; builds on "Android app"; Me → Android app): When the Spark has a newer Android app, the app shows a strip "Update now" at the top.
+
+- **Android: Spark as assistant** (Features → On the go and devices → "Android: Spark as assistant"; builds on "Android app"; Me → Android app): Spark becomes the phone's assistant: long-press the power or home button and a sheet with the face lies over the open app.
+
+- **Android: fingerprint for admins** (Features → On the go and devices → "Android: fingerprint for admins"; builds on "Android app"; Me → Android app): When a profile with an admin role or the panel password is signed in to the Android app, the app shows the Spark only after the fingerprint, face or screen lock: when opened and again after 5 minutes in the background.
+
+- **Spark companion on PC and Mac** (Features → On the go and devices → "Spark companion on PC and Mac"; Me → Companion): A small program in the Windows taskbar (x64 and ARM) and the Mac menu bar.
+
+- **Companion may act on the PC** (Features → On the go and devices → "Companion may act on the PC"; builds on "Spark companion on PC and Mac"; Me → Companion): The Spark may open a page or a released program on your paired computer, bring a program to the front, close, minimize or full-screen the front window, press fixed keys (next, previous, space, undo, copy, paste, save …), type your own wo …
+
+- **Write along in meetings** (Features → On the go and devices → "Write along in meetings"; builds on "Spark companion on PC and Mac"; Me → Companion): The Spark companion writes along in a meeting when you click "Besprechung mitschreiben" in the companion (or Ctrl+Alt+R, Mac ⌥⌘R): the microphone and the computer's sound go to speech recognition in pieces.
+
+- **Show and operate the screen** (Features → On the go and devices → "Show and operate the screen"; builds on "Spark companion on PC and Mac"; Me → Companion): You see the screen of your own PC or Mac in the panel or in the iPhone or Android app and, when the person at the computer picks "Allow", operate it with mouse and keyboard: a tap is a click, dragging moves the mouse, text and fixed keys …
+
+- **Spark operates the computer** (Features → On the go and devices → "Spark operates the computer"; builds on "Spark companion on PC and Mac"; Me → Companion): On your word the Spark does a task on your own PC or Mac step by step: it looks at the screen and proposes one click, scroll, key or text at a time.
+
+- **Pebble watch** (Features → On the go and devices → "Pebble watch"; Me → Pebble watch): The "Spark" watch app for Pebble Time 2, Core 2 Duo and Pebble Round 2 gets address and key from a setup code instead of typing both on the phone.
+
+- **Watch: follow-ups to tap** (Features → On the go and devices → "Watch: follow-ups to tap"; builds on "Pebble watch"; Me → Pebble watch): Under an answer on the Pebble watch there are up to three fitting follow-up questions, e.g.
+
+- **Watch: quick commands** (Features → On the go and devices → "Watch: quick commands"; builds on "Pebble watch"; Me → Pebble watch): Your own fixed sentences on the Pebble watch, e.g.
+
+- **Watch: reminders and timers on the wrist** (Features → On the go and devices → "Watch: reminders and timers on the wrist"; builds on "Pebble watch"; Me → Pebble watch): Your next 8 reminders and timers are kept as wake-ups on the Pebble watch and vibrate on time, even when the phone is away.
+
+- **Spark watchface** (Features → On the go and devices → "Spark watchface"; builds on "Pebble watch"; Me → Pebble watch): A watchface of its own for the Pebble watch: time and date, below your next appointment, the next reminder, the weather and a hint.
+
+- **Watch: my day and my week** (Features → On the go and devices → "Watch: my day and my week"; builds on "Pebble watch"; Me → Pebble watch): At the top of the watch list (hold UP) are "Mein Tag" and "Meine Woche".
+
+- **Watch: notes for admins** (Features → On the go and devices → "Watch: notes for admins"; builds on "Pebble watch"; Me → Pebble watch): When a service does not answer (language model, speech recognition, Home Assistant …), the admins' Spark watchface shows a red bar on top and vibrates once.
+
+- **Watch: quick notes** (Features → On the go and devices → "Watch: quick notes"; builds on "Pebble watch"; Me → Pebble watch): In the watch list (hold UP) pick "Merken" and say a sentence, e.g.
+
+- **Watch: place with a note** (Features → On the go and devices → "Watch: place with a note"; builds on "Pebble watch"; Me → Pebble watch): When noting, the phone adds the place to the sentence, rounded to about 100 metres, e.g.
+
+- **Watch: messages** (Features → On the go and devices → "Watch: messages"; builds on "Pebble watch"; Me → Pebble watch): The watch list (hold UP) has „Nachrichten“: the latest 8 chats with the number of unread ones.
+
+- **Watch: reply suggestions** (Features → On the go and devices → "Watch: reply suggestions"; builds on "Pebble watch"; Me → Pebble watch): When the last message came from somebody else, the language model suggests up to three short replies; they come below the fixed sentences.
+
+- **Watch: remote** (Features → On the go and devices → "Watch: remote"; builds on "Pebble watch"; Me → Pebble watch): „Fernbedienung“ in the watch list shows up to 12 devices you picked under Me → Pebble watch, and your own speakers.
+
+- **Watch: steps, pulse and sleep** (Features → On the go and devices → "Watch: steps, pulse and sleep"; builds on "Pebble watch"; Me → Pebble watch): When the app opens, the watch sends its numbers of the day: steps, last pulse and sleep.
+
+- **Terminal client** (Features → On the go and devices → "Terminal client"; Me → Terminal): The "spark-tui" program brings the Spark into a terminal, e.g.
+
+- **Device updates** (Features → On the go and devices → "Device updates"; Me → Conversation): The Spark fetches new firmware for the speakers, the Android app and the Spark companion from GitHub, checks every file by checksum and tells you once when a new version is ready.
+
+- **Update speakers at night** (Features → On the go and devices → "Update speakers at night"; builds on "Device updates"; Me → Conversation): The speakers fetch new firmware only when they start.
+
+- **Note on a new XiaoZhi version** (Features → On the go and devices → "Note on a new XiaoZhi version"; builds on "Device updates"): The speaker firmware builds on XiaoZhi (github.com/78/xiaozhi-esp32) at a fixed point.
+
+- **Spark as MCP server** (Features → On the go and devices → "Spark as MCP server"; Me → Spark as MCP server): Other programs (Open WebUI, n8n, Home Assistant, Claude …) use the Spark over the Model Context Protocol: speech to text, text to speech, Wikipedia and Kiwix, own documents, appointments, reminders and "Ask Spark".
+
+- **MCP server from outside (OAuth)** (Features → On the go and devices → "MCP server from outside (OAuth)"; builds on "Spark as MCP server"; Me → Spark as MCP server): Programs on the internet like claude.ai or ChatGPT connect to the Spark through your reverse proxy.
+
+- **MCP: acting with confirmation** (Features → On the go and devices → "MCP: acting with confirmation"; builds on "Spark as MCP server"; Me → Spark as MCP server): A program may switch the smart home, enter appointments and set reminders, but only as a proposal.
+
+- **iPhone app** (Features → On the go and devices → "iPhone app"; Me → iPhone app): An own app for the iPhone: press the button, ask, the answer comes in the Spark voice, also with the screen locked.
+
+- **Push to the iPhone app** (Features → On the go and devices → "Push to the iPhone app"; builds on "iPhone app"; Me → iPhone app): Reminders, the morning briefing and notes come to the iPhone even when the app is closed.
+
+- **Panel areas in the iPhone app** (Features → On the go and devices → "Panel areas in the iPhone app"; builds on "iPhone app"; Me → iPhone app): The iPhone app shows parts of the panel itself: memory, the next appointments, the Spark's reminders and conversation settings.
+
+- **Apps keep the last state** (Features → On the go and devices → "Apps keep the last state"): The iPhone and the Android app keep the last state of some pages on the phone: the conversations (the 20 newest with 50 messages each), the chats, the own settings and functions and in the iPhone app the numbers on the tiles of "My thing …
+
+- **Review access for the iPhone app** (Features → On the go and devices → "Review access for the iPhone app"; builds on "iPhone app"): For Apple's App Store review: instead of the pairing link that works only 10 minutes, the reviewer gets your panel's address and a code of twelve letters and digits.
+
+- **Spark update from the iPhone app** (Features → On the go and devices → "Spark update from the iPhone app"; builds on "iPhone app"): Chosen profiles get a notification when a new version with green tests is ready and see in the app under Settings → Spark version what changes.
+
+### Access
+
+- **Speaker recognition** (Features → Access → "Speaker recognition"; Me → Speaker identification): The assistant recognises you by voice, even on someone else's device, and then answers with your memory and settings.
+
+- **Code word at a speaker** (Features → Access → "Code word at a speaker"; builds on "Speaker recognition"; Me → Speakers): A speaker in a room gives personal things only to your clearly recognised voice.
+
+- **Second sign-in step** (Features → Access → "Second sign-in step"; Me → Security): Signing in with name and PIN also needs a code from an authenticator app.
+
+- **Reporting problems** (Features → Access → "Reporting problems"; Me → Reporting problems): Something does not work?
+
+- **Tell admins about reports** (Features → Access → "Tell admins about reports"; builds on "Reporting problems"; Me → Reporting problems): When a profile sends a report to GitHub or keeps it on the Spark only, the assistant tells the admin profiles (role Admin, the main admin first): in the assistant when the page is open, else as a note on the device.
+
+- **Usage counter** (Features → Access → "Usage counter"; Me → Usage): The Spark counts how much its models work: tokens read and written at the language model (of them from the cache), questions to the classifier, seconds of listening and speaking, texts of the meaning search, re-ranked hits and pictures.
+
+- **Quota** (Features → Access → "Quota"; builds on "Usage counter"; Me → Usage): Every profile has a language model limit for the day, the week (from Monday) and the month (from the 1st), each on its own, 0 means none.
+
+- **Service watch** (Features → Access → "Service watch"; Me → Conversation): The Spark looks by itself whether its services answer: language model, listening, speaking, the internet, the web search (SearXNG), the own Kiwix archive, Home Assistant, the mail and calendar servers and the NAS of the backup, each only …
+
+- **Round-trip check** (Features → Access → "Round-trip check"; builds on "Service watch"): Every few minutes the Spark makes a real test run: Speaking says a fixed sentence, Listening writes it down again, and the language model answers a fixed question in at most three words.
+
+- **Sentry** (Features → Access → "Sentry"): The Spark tells its admins by itself when something happens at the doors: a lockout after wrong sign-ins, a new way in (trusted browser, passkey, program over MCP, paired Spark, used invitation), changed protection (admin password, secon …
+
+- **Maintenance pause** (Features → Access → "Maintenance pause"): Before you put a new language model (own or qwen38), speech recognition or speech output in place, you pause the Spark for a while.
+
+- **Maintenance pause on restart** (Features → Access → "Maintenance pause on restart"; builds on "Maintenance pause"): The Spark notices by itself when the language model (own or qwen38), the speech recognition or the speech output restarts or switches, and pauses just that part for up to 30 minutes, like with the button.
+
+- **Emergency mode with Parakeet** (Features → Access → "Emergency mode with Parakeet"): When the panel runs on a computer of its own (Spark split) and the DGX is gone, the Spark otherwise answers every question with "The Spark is taking a break right now." With this switch the panel computer hears by itself: Parakeet recogn …
+
+- **Case** (Features → Access → "Case"): If the panel computer sits in a SunFounder Pironman 5, the Spark drives its parts itself, without SunFounder's software: the small display shows the admin status and numbers in turn (Spark, services and maintenance, Pi, DGX gone or pause …
+
+- **Control centre on the screen** (Features → Access → "Control centre on the screen"): A screen on the panel computer's HDMI output shows the control centre: state and the day's numbers on top, in the middle which request runs through which stage right now and on which computer (with Spark split tars and the Pi with CPU, G …
+
+- **Switch models** (Features → Access → "Switch models"): Under Status → Models an admin switches the model of a kind: language model, image understanding, speech recognition, speech output or painting pictures.
+
+- **Own models** (Features → Access → "Own models"; builds on "Switch models"): Under Status → Models an admin adds a model from Hugging Face, for the language model or image understanding.
+
+- **Workshop** (Features → Access → "Workshop"): On the page Status → Workshop an admin lets the model computer work in a sealed-off copy of the code.
+
+- **Test every night** (Features → Access → "Test every night"; builds on "Workshop"): Once a night the workshop starts the test run by itself (all self-tests as on GitHub, without a language model).
+<!-- /funktionen:liste -->
