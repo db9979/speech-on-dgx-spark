@@ -19,7 +19,7 @@ flowchart TB
     geraet["Browser and phone<br/>static/js"]
     apps["Apps<br/>iPhone, Android"]
     kanaele["Telegram, Siri, watch<br/>Kanäle"]
-    lautsprecher["Speakers, phone<br/>esp32 · :31003 · :31060"]
+    lautsprecher["Speakers, phone<br/>:31003 · :31060"]
     mcpc["MCP programs<br/>/mcp"]
   end
   subgraph z_spark["DGX Spark · inside"]
@@ -35,13 +35,13 @@ flowchart TB
       waechter["Guard<br/>netguard.py"]
       betrieb["Logs and live<br/>tracelog · live"]
       werkstatt["Workshop<br/>werkstatt.py"]
-      post["Mail, calendar, contacts<br/>mail · calendars · contacts"]
+      post["Mail and contacts<br/>/caldav · /carddav"]
     end
     subgraph z_modelle["Models · on the DGX"]
       llm["Language model<br/>:31006 → :31016"]
       asr["Speech recognition<br/>:31001 → :31011"]
       tts["Speech output<br/>:31002 → :31012"]
-      bild["Pictures and music<br/>:31005→:31015 · :31004→:31014"]
+      bild["Pictures and music<br/>:31005 · :31004"]
       teilen["Spark split<br/>TLS-Tor · :31007"]
     end
     subgraph z_speicher["Storage"]
@@ -293,7 +293,7 @@ Home Assistant, tasks, For you, weather, reMarkable, MCP and what the Spark does
 | `app/panel/weather.py` | Weather straight from Open-Meteo (no key): the panel turns the numbers into fixed German sentences, the language model only reads them out. |
 | `app/panel/zustand_wz.py` | Zustand per Sprache: the tool spark_zustand. |
 
-### Mail, calendar, contacts
+### Mail and contacts
 
 The own pages E-mail, Calendar and Contacts, fetching from the provider, the sealed supply and the doors for calendar and contacts apps.
 
@@ -3625,7 +3625,7 @@ flowchart TD
 
 Self-tests: `test_werkstatt`
 
-### Mail, calendar, contacts
+### Mail and contacts
 
 The pages E-mail, Calendar and Contacts and the assistant read the same data: mailboxes by IMAP, calendars and address books by CalDAV and CardDAV at the provider, plus the Spark calendars and the address book "On the Spark". What came last lies sealed in the profile, so page and answer are there at once; every answer from the supply names its time. Calendar and contacts apps come through a door of their own.
 

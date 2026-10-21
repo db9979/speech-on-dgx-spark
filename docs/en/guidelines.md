@@ -413,7 +413,7 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 | test_selftest_runner | one second attempt, > 5 no attempt, warning |
 | test_vorpush | quick test before a push: one guard list, every name exists, docs point to `tools/vorpush.py`, every module runs, the browser test only for pages, a red main stops the push |
 | test_rauchtest | every module loads, `restart-map` complete |
-| test_technik | every module, every file in `state/` and `users/` in the architecture docs and in the backup or local list, doc blocks current, Architecture page admin only |
+| test_technik | every module, every file in `state/` and `users/` in the architecture docs and in the backup or local list, doc blocks current, Architecture page admin only; in the picture every text fits its box (de and en) and no line runs across a box |
 | test_doku_stand | README diagram with every public port, table "Processes and ports" with every port and service, ports of the model boxes in Technik, links in the README, no stale sentences (`STALE`) in README, docs and help, German and English equal per section (`Gleichstand`), every function in "All functions" (`Funktionen`), every way in described (`WegeHinein`) |
 | test_changelog | CHANGELOG format |
 | test_releases_aufraeumen | only the newest release per series |

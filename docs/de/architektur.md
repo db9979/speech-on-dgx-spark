@@ -19,7 +19,7 @@ flowchart TB
     geraet["Browser und Handy<br/>static/js"]
     apps["Apps<br/>iPhone, Android"]
     kanaele["Telegram, Siri, Uhr<br/>Kanäle"]
-    lautsprecher["Lautsprecher, Telefon<br/>esp32 · :31003 · :31060"]
+    lautsprecher["Lautsprecher/Telefon<br/>:31003 · :31060"]
     mcpc["MCP-Programme<br/>/mcp"]
   end
   subgraph z_spark["DGX Spark · intern"]
@@ -35,13 +35,13 @@ flowchart TB
       waechter["Wächter<br/>netguard.py"]
       betrieb["Logs und Live<br/>tracelog · live"]
       werkstatt["Werkstatt<br/>werkstatt.py"]
-      post["Post, Kalender, Kontakte<br/>mail · calendars · contacts"]
+      post["Post und Kontakte<br/>/caldav · /carddav"]
     end
     subgraph z_modelle["Modelle · auf dem DGX"]
       llm["Sprachmodell<br/>:31006 → :31016"]
       asr["Spracherkennung<br/>:31001 → :31011"]
       tts["Sprachausgabe<br/>:31002 → :31012"]
-      bild["Bilder und Musik<br/>:31005→:31015 · :31004→:31014"]
+      bild["Bilder und Musik<br/>:31005 · :31004"]
       teilen["Spark teilen<br/>TLS-Tor · :31007"]
     end
     subgraph z_speicher["Speicher"]
@@ -293,7 +293,7 @@ Home Assistant, Aufgaben, Für dich, Wetter, reMarkable, MCP und was der Spark v
 | `app/panel/weather.py` | Wetter von Open-Meteo als feste Sätze |
 | `app/panel/zustand_wz.py` | Werkzeug: Zustand des Spark per Sprache („Läuft alles?“) |
 
-### Post, Kalender, Kontakte
+### Post und Kontakte
 
 Die eigenen Seiten E-Mail, Kalender und Kontakte, der Abruf beim Anbieter, der versiegelte Vorrat und die Türen für Kalender- und Kontakte-Apps.
 
@@ -1081,7 +1081,7 @@ Gilt bei: [Schritt 1](#kn-kanaele-s1), [Schritt 9](#kn-kanaele-s9), [Schritt 11]
 
 Selbsttests: `test_telegram_tasks`, `test_pebble`, `test_verlauf_sync`, `test_notaus`
 
-### Lautsprecher, Telefon
+### Lautsprecher/Telefon
 
 Eigene Lautsprecher sind ESP32-Boards mit der offenen XiaoZhi-Firmware. Sie hören auf ihr Weckwort, schicken den Ton über eine WebSocket-Verbindung an den Spark und spielen die Antwort ab. Jeder Lautsprecher ist ein Geräteschlüssel seines Profils. Home Assistant Assist nutzt über Wyoming nur Spracherkennung und Stimme des Spark.
 
@@ -3625,7 +3625,7 @@ flowchart TD
 
 Selbsttests: `test_werkstatt`
 
-### Post, Kalender, Kontakte
+### Post und Kontakte
 
 Die Seiten E-Mail, Kalender und Kontakte und der Assistent lesen dieselben Daten: Postfächer per IMAP, Kalender und Adressbücher per CalDAV und CardDAV beim Anbieter, dazu die Spark-Kalender und das Adressbuch „Auf dem Spark“. Was zuletzt kam, liegt versiegelt im Profil, damit Seite und Antwort sofort da sind; jede Antwort aus dem Vorrat nennt ihren Stand. Kalender- und Kontakte-Apps kommen durch eine eigene Tür.
 

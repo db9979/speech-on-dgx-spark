@@ -49,8 +49,8 @@ html.tk-lock{overflow:hidden}
 @media (prefers-reduced-motion:reduce){.tk-edge.on{animation:none}}
 .tk-node{cursor:pointer}
 .tk-node rect{fill:var(--card);stroke:var(--line);stroke-width:1.2}
-.tk-node text{fill:var(--fg);font:600 13.5px var(--font,system-ui)}
-.tk-node .tk-sub{fill:var(--mut);font:11.5px ui-monospace,SFMono-Regular,Menlo,monospace}
+.tk-node text{fill:var(--fg);font:600 13px var(--font,system-ui)}
+.tk-node .tk-sub{fill:var(--mut);font:11px ui-monospace,SFMono-Regular,Menlo,monospace}
 .tk-node:hover rect,.tk-node:focus-visible rect{stroke:var(--acc)}
 .tk-node:focus{outline:none}
 .tk-node.sel rect{stroke:var(--acc);stroke-width:2.2;fill:color-mix(in srgb,var(--acc) 9%,var(--card))}

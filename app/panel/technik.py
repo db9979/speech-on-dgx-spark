@@ -49,7 +49,7 @@ GRUPPEN = {
     "dienste": ("Anbindungen", "Connections",
                 "Home Assistant, Aufgaben, Für dich, Wetter, reMarkable, MCP und was der Spark von selbst tut.",
                 "Home Assistant, tasks, For you, weather, reMarkable, MCP and what the Spark does by itself."),
-    "post": ("Post, Kalender, Kontakte", "Mail, calendar, contacts",
+    "post": ("Post und Kontakte", "Mail and contacts",
              "Die eigenen Seiten E-Mail, Kalender und Kontakte, der Abruf beim Anbieter, der versiegelte Vorrat und die "
              "Türen für Kalender- und Kontakte-Apps.",
              "The own pages E-mail, Calendar and Contacts, fetching from the provider, the sealed supply and the doors "
@@ -341,7 +341,7 @@ KNOTEN = {
     "kanaele": (704, 34, "Telegram, Siri, Uhr", "Telegram, Siri, watch", "Kanäle", "geraete",
                 "Kurze Fragen ohne Browser; den Verlauf speichert das Panel selbst.",
                 "Short questions without a browser; the panel keeps the history itself.", []),
-    "lautsprecher": (364, 34, "Lautsprecher, Telefon", "Speakers, phone", "esp32 · :31003 · :31060", "",
+    "lautsprecher": (364, 34, "Lautsprecher/Telefon", "Speakers, phone", ":31003 · :31060", "",
                      "ESP32-Lautsprecher, Home Assistant Assist und Anrufe über die Telefonanlage.",
                      "ESP32 speakers, Home Assistant Assist and calls through the telephone system.",
                      ["esp32.py", "wyoming.py", "telefon.py", "telefon_ton.py", "telefon_ich.py", "telefon_anruf.py"]),
@@ -389,7 +389,7 @@ KNOTEN = {
             "Proxy nimmt an, die Engine läuft nur lokal.", "The proxy accepts, the engine runs locally only.", []),
     "tts": (896, 388, "Sprachausgabe", "Speech output", ":31002 → :31012", "",
             "Qwen3-TTS mit eigenen Stimmen.", "Qwen3-TTS with own voices.", ["tts_proxy.py", "tts_server.py", "tempo.py", "kurzref.py", "textnorm.py"]),
-    "bild": (896, 450, "Bilder und Musik", "Pictures and music", ":31005→:31015 · :31004→:31014", "",
+    "bild": (896, 450, "Bilder und Musik", "Pictures and music", ":31005 · :31004", "",
              "FLUX.2 klein (:31005 → :31015) und ACE-Step 1.5 (:31004 → :31014) auf dem Spark, nur lokal; jede Engine lädt "
              "beim ersten Auftrag und entlädt nach Ruhe. Immer nur eine zur Zeit: eine Warteschlange im Panel, die Sperre "
              "bedarf.lock auf dem Spark.",
@@ -427,7 +427,7 @@ KNOTEN = {
                   "Admins only: test run, code measurement, diagnosis and repair in a sandbox on the DGX, without data and "
                   "internet; numbers and a patch to look at come out, nothing is installed.",
                   ["werkstatt.py", "werkstattseite.py"]),
-    "post": (534, 436, "Post, Kalender, Kontakte", "Mail, calendar, contacts", "mail · calendars · contacts", "post",
+    "post": (534, 436, "Post und Kontakte", "Mail and contacts", "/caldav · /carddav", "post",
              "Eigene Seiten E-Mail, Kalender, Kontakte; Abruf beim Anbieter über den Wächter, Vorrat versiegelt, "
              "Antwort mit Stand, Kalender- und Kontakte-Apps durch eine eigene Tür.",
              "Own pages E-mail, Calendar, Contacts; fetched from the provider through the guard, supply sealed, answer "

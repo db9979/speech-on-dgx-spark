@@ -819,8 +819,8 @@
 "lang": "de",
 "src": "architektur",
 "file": "Architektur und Datenfluss",
-"head": "Post, Kalender, Kontakte",
-"title": "Post, Kalender, Kontakte",
+"head": "Post und Kontakte",
+"title": "Post und Kontakte",
 "text": "Die eigenen Seiten E-Mail, Kalender und Kontakte, der Abruf beim Anbieter, der versiegelte Vorrat und die Türen für Kalender- und Kontakte-Apps."
 },
 {
@@ -1211,15 +1211,15 @@
 "lang": "de",
 "src": "architektur",
 "file": "Architektur und Datenfluss",
-"head": "Lautsprecher, Telefon",
-"title": "Lautsprecher, Telefon",
+"head": "Lautsprecher/Telefon",
+"title": "Lautsprecher/Telefon",
 "text": "Eigene Lautsprecher sind ESP32-Boards mit der offenen XiaoZhi-Firmware. Sie hören auf ihr Weckwort, schicken den Ton über eine WebSocket-Verbindung an den Spark und spielen die Antwort ab. Jeder Lautsprecher ist ein Geräteschlüssel seines Profils. Home Assistant Assist nutzt über Wyoming nur Spracherkennung und Stimme des Spark."
 },
 {
 "lang": "de",
 "src": "architektur",
 "file": "Architektur und Datenfluss",
-"head": "Lautsprecher, Telefon",
+"head": "Lautsprecher/Telefon",
 "title": "Warum",
 "text": "Warum: Ein Lautsprecher steht im Raum, jeder kann mit ihm reden. Deshalb bekommt Persönliches nur die Stimme, die sicher als die des Profils erkannt ist (oder das Codewort sagt), und ein Board bekommt seinen Schlüssel nur einmal und nur an die Adresse, die den Code gezeigt hat."
 },
@@ -3475,15 +3475,15 @@
 "lang": "de",
 "src": "architektur",
 "file": "Architektur und Datenfluss",
-"head": "Post, Kalender, Kontakte",
-"title": "Post, Kalender, Kontakte",
+"head": "Post und Kontakte",
+"title": "Post und Kontakte",
 "text": "Die Seiten E-Mail, Kalender und Kontakte und der Assistent lesen dieselben Daten: Postfächer per IMAP, Kalender und Adressbücher per CalDAV und CardDAV beim Anbieter, dazu die Spark-Kalender und das Adressbuch „Auf dem Spark“. Was zuletzt kam, liegt versiegelt im Profil, damit Seite und Antwort sofort da sind; jede Antwort aus dem Vorrat nennt ihren Stand. Kalender- und Kontakte-Apps kommen durch eine eigene Tür."
 },
 {
 "lang": "de",
 "src": "architektur",
 "file": "Architektur und Datenfluss",
-"head": "Post, Kalender, Kontakte",
+"head": "Post und Kontakte",
 "title": "Warum",
 "text": "Warum: Mails, Termine und Kontakte sind die privatesten Daten eines Profils und kommen von fremden Leuten. Deshalb sind sie immer Daten, nie Befehle, liegen nur versiegelt auf der Platte, und alles, was nach außen geht (senden, ändern, löschen), braucht einen eigenen Schalter und den Tipp des Menschen."
 },
@@ -12419,8 +12419,8 @@
 "lang": "en",
 "src": "architecture",
 "file": "Architecture and data flow",
-"head": "Mail, calendar, contacts",
-"title": "Mail, calendar, contacts",
+"head": "Mail and contacts",
+"title": "Mail and contacts",
 "text": "The own pages E-mail, Calendar and Contacts, fetching from the provider, the sealed supply and the doors for calendar and contacts apps."
 },
 {
@@ -14987,15 +14987,15 @@
 "lang": "en",
 "src": "architecture",
 "file": "Architecture and data flow",
-"head": "Mail, calendar, contacts",
-"title": "Mail, calendar, contacts",
+"head": "Mail and contacts",
+"title": "Mail and contacts",
 "text": "The pages E-mail, Calendar and Contacts and the assistant read the same data: mailboxes by IMAP, calendars and address books by CalDAV and CardDAV at the provider, plus the Spark calendars and the address book \"On the Spark\". What came last lies sealed in the profile, so page and answer are there at once; every answer from the supply names its time. Calendar and contacts apps come through a door of their own."
 },
 {
 "lang": "en",
 "src": "architecture",
 "file": "Architecture and data flow",
-"head": "Mail, calendar, contacts",
+"head": "Mail and contacts",
 "title": "Why",
 "text": "Why: Mail, appointments and contacts are a profile's most private data and come from other people. So they are always data, never commands, lie on the disk only sealed, and everything that goes out (send, change, delete) needs a switch of its own and the person's tap."
 },

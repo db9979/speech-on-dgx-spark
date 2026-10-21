@@ -413,7 +413,7 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
 | test_selftest_runner | ein zweiter Versuch, > 5 kein Versuch, Warnung |
 | test_vorpush | Schnelltest vor dem Push: eine Wächter-Liste, jeder Name existiert, Doku zeigt auf `tools/vorpush.py`, alle Module laufen, der Browser-Test nur bei Seiten, rotes main stoppt den Push |
 | test_rauchtest | jedes Modul lädt, `restart-map` vollständig |
-| test_technik | jedes Modul, jede Datei in `state/` und `users/` in der Architektur-Doku und in Sicherung oder lokaler Liste, Doku-Blöcke aktuell, Seite Technik nur für Admins |
+| test_technik | jedes Modul, jede Datei in `state/` und `users/` in der Architektur-Doku und in Sicherung oder lokaler Liste, Doku-Blöcke aktuell, Seite Technik nur für Admins; im Bild passt jeder Text in seinen Kasten (de und en) und keine Linie läuft quer durch einen Kasten |
 | test_doku_stand | README-Schaubild mit jedem öffentlichen Port, Tabelle „Prozesse und Ports“ mit jedem Port und Dienst, Ports der Modell-Kästen in Technik, Links im README, keine veralteten Sätze (`STALE`) in README, Doku und Hilfe, Deutsch und Englisch je Abschnitt gleich (`Gleichstand`), jede Funktion in „Alle Funktionen“ (`Funktionen`), jeder Weg hinein beschrieben (`WegeHinein`) |
 | test_changelog | CHANGELOG-Format |
 | test_releases_aufraeumen | nur neuestes Release pro Reihe |

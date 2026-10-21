@@ -8,6 +8,7 @@ import ast
 import asyncio
 import json
 import os
+import re
 import unittest
 
 from tests import helpers
@@ -133,6 +134,35 @@ class Parts(unittest.TestCase):
             for p, q in zip(pts, pts[1:]):
                 self.assertTrue(p[0] == q[0] or p[1] == q[1], f"{e}: right angles only")
                 self.assertTrue(all(0 <= c[0] <= technik.BILD[0] and 0 <= c[1] <= technik.BILD[1] for c in (p, q)), e)
+
+    def test_lines_pass_no_box(self):
+        """Dominik 2026-10-21 „nicht schön“: a line runs only along or between boxes, never across one on its way."""
+        W, H = technik.KASTEN
+        box = {k: (v[0], v[1], v[0] + W, v[1] + H) for k, v in technik.KNOTEN.items()}
+        for e, pts in technik.LINIEN.items():
+            ends = set(e.split(">"))
+            for p, q in zip(pts, pts[1:]):
+                x1, x2 = sorted((p[0], q[0]))
+                y1, y2 = sorted((p[1], q[1]))
+                for k, b in box.items():
+                    across = (b[1] < y1 < b[3] and b[0] < x2 and x1 < b[2]) if y1 == y2 else \
+                             (b[0] < x1 < b[2] and b[1] < y2 and y1 < b[3])
+                    self.assertFalse(k not in ends and across, f"{e} crosses {k}")
+
+    def test_box_texts_fit(self):
+        """Dominik 2026-10-21 „Texte über Rand“: name and line of every box (German and English) fit inside the box,
+        measured with the font sizes of technik.css (a proportional font: narrow and wide letters; the line is monospace)."""
+        css = open(os.path.join(PANEL, "static", "technik.css"), encoding="utf-8").read()
+        name_px = float(re.search(r"\.tk-node text\{[^}]*font:600 ([\d.]+)px", css).group(1))
+        sub_px = float(re.search(r"\.tk-node \.tk-sub\{[^}]*font:([\d.]+)px", css).group(1))
+        room = technik.KASTEN[0] - 12 - 8          # technik.js writes the text 12 from the left edge; 8 stay free right
+
+        def wide(c):
+            return .28 if c in "ilIj.,:;|!'" else .36 if c in "frt ()-/" else .9 if c in "mwMW" else .7 if c.isupper() else .56
+        for k, v in technik.KNOTEN.items():
+            for name in (v[2], v[3]):
+                self.assertLessEqual(sum(wide(c) for c in name) * name_px, room, f"{k}: name „{name}“ too long for its box")
+            self.assertLessEqual(len(v[4]) * .6 * sub_px, room, f"{k}: line „{v[4]}“ too long for its box")
 
     def test_edges_and_steps_name_real_nodes(self):
         for a, b in technik.KANTEN:
