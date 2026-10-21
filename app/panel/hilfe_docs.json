@@ -7269,7 +7269,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Die Oberfläche",
 "title": "Die Oberfläche",
-"text": "Das Menü (seit V01.0.145, Design „Klar“) steht am Rechner als Leiste links, am Handy unten (Assistent, Ich, Zustand, Verwalten). Ganz oben sucht Suchen (Strg K bzw. ⌘ K, seit V01.0.265) in Seiten, Schaltern, Einstellungen, Ich, Prüfen, Logs und Anleitungen; ein Treffer öffnet die Stelle und markiert sie. Seit V01.0.521 steht der Knopf auch für angemeldete Profile in der Leiste, am Handy sitzt eine Lupe oben im Assistenten (Admin und Profil), das Suchfenster passt auf schmale Bildschirme und schließt mit ✕. Steht in einem Hinweis oder einer Antwort ein Weg wie „Einstellungen → Spark → Betrieb“ oder „Ich → Dokumente“, ist er ein Link, der genau dorthin springt (seit V01.0.433). Darunter stehen Assistent und Ich für dich selbst, dann unter *Spark verwalten* die Admin-Seiten Zustand, Funktionen, Personen und Geräte und Einstellungen (seit V01.0.265; „Einbinden“ gibt es nicht mehr). Zustand, Funktionen und Personen und Geräte zeigen ihre Unterseiten wie Einstellungen: am Rechner als zweite Spalte, am Handy als Liste mit einer Zeile Stand, die die Seite öffnet (oben „zurück“); neben „Einstellungen“ zählt eine Zahl die ungespeicherten Seiten. Am Rechner öffnet „Ich“ seit V01.0.147 als Sei"
+"text": "Das Menü (seit V01.0.145, Design „Klar“) steht am Rechner als Leiste links, am Handy unten (Assistent, Ich, Zustand, Verwalten). Ganz oben sucht Suchen (Strg K bzw. ⌘ K, seit V01.0.265) in Seiten, Schaltern, Einstellungen, Ich, Prüfen, Logs und Anleitungen; ein Treffer öffnet die Stelle und markiert sie. Seit V01.0.521 steht der Knopf auch für angemeldete Profile in der Leiste, am Handy sitzt eine Lupe oben im Assistenten (Admin und Profil), das Suchfenster passt auf schmale Bildschirme und schließt mit ✕. Steht in einem Hinweis oder einer Antwort ein Weg wie „Einstellungen → Spark → Betrieb“ oder „Ich → Dokumente“, ist er ein Link, der genau dorthin springt (seit V01.0.435). Darunter stehen Assistent und Ich für dich selbst, dann unter *Spark verwalten* die Admin-Seiten Zustand, Funktionen, Personen und Geräte und Einstellungen (seit V01.0.265; „Einbinden“ gibt es nicht mehr). Zustand, Funktionen und Personen und Geräte zeigen ihre Unterseiten wie Einstellungen: am Rechner als zweite Spalte, am Handy als Liste mit einer Zeile Stand, die die Seite öffnet (oben „zurück“); neben „Einstellungen“ zählt eine Zahl die ungespeicherten Seiten. Am Rechner öffnet „Ich“ seit V01.0.147 als Sei"
 },
 {
 "lang": "de",
@@ -7717,7 +7717,7 @@
 "file": "iPhone-App „Spark“",
 "head": "Panel-Bereiche in der App",
 "title": "Panel-Bereiche in der App",
-"text": "en und gezielte Werkzeugwahl. Das Gedächtnis steht seit V01.0.723 unter Meine Sachen. - Spark verwalten (nur für Profile mit Rolle Admin oder Verwalter): Nach Face ID gilt die App so, wie dein Profil angemeldet ist, ohne eigene Admin-Anmeldung (seit V01.0.541). Der App-Schlüssel zählt nur, wenn er nach dem Einschalten deines zweiten Anmeldeschritts angelegt wurde; das Panel-Passwort geht nur im Browser. Darin: Monitoring („Braucht dich“, Speicher, CPU/GPU, Dienste), Logs (Diagnose wie im Panel mit Bereichen und Zeitraum, „Kopieren für Thread“ und Teilen) und Prüfen (Funktionsprüfung, Qualitätstest, Vorrang prüfen). Unter Ändern: Funktionen (die einfachen Ein/Aus-Schalter; heikle wie „Port“, zweiter Anmeldeschritt für Profile und die iPhone-Schalter selbst bleiben im Browser), Personen und Geräte (Profil anlegen, Geräte entfernen, neue PIN, zweiten Schritt zurücksetzen, Profil löschen; Code nur bei „Schutz ändern“) und Sicherungen (jetzt sichern; alte löschen nur als Admin; Zurückspielen und Herunterladen im Browser). Ein Verwalter sieht nur Monitoring, Logs und Personen und Geräte; dort hebt er Sperren eines Profils auf, schaltet aber keine Funktion und sperrt nichts (das macht nur"
+"text": "en und gezielte Werkzeugwahl. Das Gedächtnis steht seit V01.0.723 unter Meine Sachen. - Spark verwalten (nur für Profile mit Rolle Admin oder Verwalter): Nach Face ID gilt die App so, wie dein Profil angemeldet ist, ohne eigene Admin-Anmeldung (seit V01.0.541). Der App-Schlüssel zählt nur, wenn er nach dem Einschalten deines zweiten Anmeldeschritts angelegt wurde; das Panel-Passwort geht nur im Browser. Darin: Überblick („Braucht dich“, Speicher, CPU/GPU, Dienste), Logs (Diagnose wie im Panel mit Bereichen und Zeitraum, „Kopieren für Thread“ und Teilen), Prüfen (Funktionsprüfung, Qualitätstest, Vorrang prüfen) und Werkstatt (seit V01.0.886, nur Admin: die Ergebnisse der Werkstatt, das neueste oben, je mit Erklärung und nächstem Schritt; Ursache untersuchen und Reparieren öffnen die Seite Zustand → Werkstatt des Panels in der App). Unter Ändern: Funktionen (die einfachen Ein/Aus-Schalter; heikle wie „Port“, zweiter Anmeldeschritt für Profile und die iPhone-Schalter selbst bleiben im Browser), Personen und Geräte (Profil anlegen, Geräte entfernen, neue PIN, zweiten Schritt zurücksetzen, Profil löschen; Code nur bei „Schutz ändern“) und Sicherungen (jetzt sichern; alte löschen nur als"
 },
 {
 "lang": "de",
@@ -7725,7 +7725,15 @@
 "file": "iPhone-App „Spark“",
 "head": "Panel-Bereiche in der App",
 "title": "Panel-Bereiche in der App",
-"text": " der Admin, seit V01.0.551). - Stimme einlernen: Die App zeigt drei Sätze, du liest sie vor, gespeichert wird mit dem Code aus der Authenticator-App. Darunter „Anlernen“ für jeden deiner Lautsprecher (der Lautsprecher fragt dann nach fünf Sätzen). Braucht die Sprechererkennung vom Admin und den zweiten Anmeldeschritt deines Profils. - Von selbst: Wetter-Ort, Pakete aus E-Mails, Bus und Bahn (Haltestelle suchen und setzen), deine Aufträge ansehen und stoppen, Raum-Modus „+30 Min.“ (höchstens vier Stunden ab jetzt). Die Schalter Wetter, Pakete, Bus und Bahn, Aufträge gibt es hier auch. - Sicherheit: deine Geräte (wischen zum Entfernen), letzte Anmeldungen, überall abmelden, zweiten Schritt ausschalten oder neue Wiederherstellungscodes (mit Code). Einrichten geht nur im Browser mit PIN: sonst könnte jemand mit deinem entsperrten iPhone allein einen eigenen zweiten Schritt setzen. - Konten verbinden: E-Mail, Kalender, Kontakte, Smart Home und Telegram. Nur mit dem zweiten Anmeldeschritt deines Profils und frischem Code. Der Spark prüft die Verbindung, speichert Passwort oder Token verschlüsselt und gibt es nie heraus; das iPhone behält es nicht."
+"text": " Admin; Zurückspielen und Herunterladen im Browser). Ein Verwalter sieht nur Überblick, Logs und Personen und Geräte; dort hebt er Sperren eines Profils auf, schaltet aber keine Funktion und sperrt nichts (das macht nur der Admin, seit V01.0.551). - Stimme einlernen: Die App zeigt drei Sätze, du liest sie vor, gespeichert wird mit dem Code aus der Authenticator-App. Darunter „Anlernen“ für jeden deiner Lautsprecher (der Lautsprecher fragt dann nach fünf Sätzen). Braucht die Sprechererkennung vom Admin und den zweiten Anmeldeschritt deines Profils. - Von selbst: Wetter-Ort, Pakete aus E-Mails, Bus und Bahn (Haltestelle suchen und setzen), deine Aufträge ansehen und stoppen, Raum-Modus „+30 Min.“ (höchstens vier Stunden ab jetzt). Die Schalter Wetter, Pakete, Bus und Bahn, Aufträge gibt es hier auch. - Sicherheit: deine Geräte (wischen zum Entfernen), letzte Anmeldungen, überall abmelden, zweiten Schritt ausschalten oder neue Wiederherstellungscodes (mit Code). Einrichten geht nur im Browser mit PIN: sonst könnte jemand mit deinem entsperrten iPhone allein einen eigenen zweiten Schritt setzen. - Konten verbinden: E-Mail, Kalender, Kontakte, Smart Home und Telegram. Nur mit dem zweite"
+},
+{
+"lang": "de",
+"src": "iphone-app",
+"file": "iPhone-App „Spark“",
+"head": "Panel-Bereiche in der App",
+"title": "Panel-Bereiche in der App",
+"text": "n Anmeldeschritt deines Profils und frischem Code. Der Spark prüft die Verbindung, speichert Passwort oder Token verschlüsselt und gibt es nie heraus; das iPhone behält es nicht."
 },
 {
 "lang": "de",
@@ -16805,7 +16813,15 @@
 "file": "iPhone app \"Spark\"",
 "head": "Using it",
 "title": "Using it",
-"text": "- The assistant's face at the top is the same as in the panel (robot, comic or comic woman; since V01.0.521 you pick it yourself at the top of Settings → *Face* in the app or in the panel under Me → Conversation, else the admin's default applies; the app takes it over when it opens and after the pick, with the next TestFlight build). It blinks, looks around, listens with a red antenna, thinks with a turning arc and moves its mouth while speaking. Tapping it works like the button. With \"Face shows what it does\" on in the panel (V01.0.323), the app's face shows the same as the panel: a magnifier while searching, a calendar sheet, a letter, a light bulb for the smart home, a note pad when remembering, think bubbles, a tick with a wink after something was done, a question mark on an error and \"zzz\" after 5 quiet minutes. Driven only by the Spark's events, never by the answer's text. - Big button: tap, speak; the app notices when you are done (or tap again). Tapping while the Spark speaks stops it. - Questions can also be typed. Top left starts a new conversation; after 10 minutes of quiet it starts anew by itself."
+"text": "- The assistant's face at the top is the same as in the panel (robot, comic or comic woman; since V01.0.521 you pick it yourself at the top of Settings → *Face* in the app or in the panel under Me → Conversation, else the admin's default applies; the app takes it over when it opens and after the pick, with the next TestFlight build). It blinks, looks around, listens with a red antenna, thinks with a turning arc and moves its mouth while speaking. Tapping it works like the button. With \"Face shows what it does\" on in the panel (V01.0.323), the app's face shows the same as the panel: a magnifier while searching, a calendar sheet, a letter, a light bulb for the smart home, a note pad when remembering, think bubbles, a tick with a wink after something was done, a question mark on an error and \"zzz\" after 5 quiet minutes. Driven only by the Spark's events, never by the answer's text. - Big button: tap, speak; the app notices when you are done (or tap again). Tapping while the Spark speaks stops it. - Questions can also be typed. Top left starts a new conversation; after 10 minutes of quiet it starts anew by itself. - \"Hey Siri, Frag Spark\" (or \"Hey Siri, Spark fragen\"): Siri asks for th"
+},
+{
+"lang": "en",
+"src": "iphone-app",
+"file": "iPhone app \"Spark\"",
+"head": "Using it",
+"title": "Using it",
+"text": "e question and reads the answer aloud."
 },
 {
 "lang": "en",
@@ -16893,7 +16909,7 @@
 "file": "iPhone app \"Spark\"",
 "head": "Panel areas in the app",
 "title": "Panel areas in the app",
-"text": "mory is under My things. - Manage the Spark (only for profiles with the Admin or Manager role): after Face ID the app counts the way your profile is signed in, without an admin sign-in of its own (since V01.0.541). The app key only counts if it was created after your second login step was switched on; the panel password works only in the browser. Inside: Monitoring (\"Needs you\", memory, CPU/GPU, services), Logs (diagnosis as in the panel with areas and time span, \"Copy for thread\" and share) and Checks (function check, quality test, priority check). Under Change: Features (the plain on/off switches; sensitive ones like \"Port\", the second login step for profiles and the iPhone switches themselves stay in the browser), People and devices (create a profile, remove devices, new PIN, reset the second step, delete a profile; a code only at \"change protection\") and Backups (back up now; deleting old ones only as admin; restoring and downloading in the browser). A manager sees only monitoring, logs and people and devices; there they lift a profile's blocks but switch no function and block nothing (only the admin does, since V01.0.551). - Teach your voice: the app shows three sentences, you"
+"text": "mory is under My things. - Manage the Spark (only for profiles with the Admin or Manager role): after Face ID the app counts the way your profile is signed in, without an admin sign-in of its own (since V01.0.541). The app key only counts if it was created after your second login step was switched on; the panel password works only in the browser. Inside: Summary (\"Needs you\", memory, CPU/GPU, services), Logs (diagnosis as in the panel with areas and time span, \"Copy for thread\" and share), Checks (function check, quality test, priority check) and Workshop (since V01.0.886, admin only: the workshop's results, newest first, each with what it means and the next step; looking into a cause and repairing open the panel's page Status → Workshop in the app). Under Change: Features (the plain on/off switches; sensitive ones like \"Port\", the second login step for profiles and the iPhone switches themselves stay in the browser), People and devices (create a profile, remove devices, new PIN, reset the second step, delete a profile; a code only at \"change protection\") and Backups (back up now; deleting old ones only as admin; restoring and downloading in the browser). A manager sees only the su"
 },
 {
 "lang": "en",
@@ -16901,7 +16917,15 @@
 "file": "iPhone app \"Spark\"",
 "head": "Panel areas in the app",
 "title": "Panel areas in the app",
-"text": " read them aloud, saving needs the code from the authenticator app. Below, \"Teach\" for each of your speakers (the speaker then asks for five sentences). Needs speaker recognition from the admin and your profile's second login step. - Proactive: weather place, parcels from e-mails, bus and train (search and set a stop), look at and stop your jobs, room mode \"+30 min\" (at most four hours from now). The switches weather, parcels, bus and train and jobs are here too. - Security: your devices (swipe to remove), recent logins, log out everywhere, turn the second step off or new recovery codes (with a code). Setting it up works only in the browser with the PIN: otherwise someone with your unlocked iPhone alone could set their own second step. - Connect accounts: mail, calendar, contacts, smart home and Telegram. Only with your profile's second login step and a fresh code. The Spark checks the connection, stores password or token encrypted and never hands it out; the iPhone does not keep it."
+"text": "mmary, logs and people and devices; there they lift a profile's blocks but switch no function and block nothing (only the admin does, since V01.0.551). - Teach your voice: the app shows three sentences, you read them aloud, saving needs the code from the authenticator app. Below, \"Teach\" for each of your speakers (the speaker then asks for five sentences). Needs speaker recognition from the admin and your profile's second login step. - Proactive: weather place, parcels from e-mails, bus and train (search and set a stop), look at and stop your jobs, room mode \"+30 min\" (at most four hours from now). The switches weather, parcels, bus and train and jobs are here too. - Security: your devices (swipe to remove), recent logins, log out everywhere, turn the second step off or new recovery codes (with a code). Setting it up works only in the browser with the PIN: otherwise someone with your unlocked iPhone alone could set their own second step. - Connect accounts: mail, calendar, contacts, smart home and Telegram. Only with your profile's second login step and a fresh code. The Spark checks the connection, stores password or token encrypted and never hands it out; the iPhone does not keep"
+},
+{
+"lang": "en",
+"src": "iphone-app",
+"file": "iPhone app \"Spark\"",
+"head": "Panel areas in the app",
+"title": "Panel areas in the app",
+"text": " it."
 },
 {
 "lang": "en",
@@ -17131,6 +17155,14 @@
 "lang": "en",
 "src": "iphone-app",
 "file": "iPhone app \"Spark\"",
+"head": "Push notifications with the app closed",
+"title": "Push notifications with the app closed",
+"text": "The test says BadDeviceToken: \"Development\" and \"Production\" are swapped. InvalidProviderToken: Key ID or Team ID do not match the key. TopicDisallowed: the bundle ID does not match."
+},
+{
+"lang": "en",
+"src": "iphone-app",
+"file": "iPhone app \"Spark\"",
 "head": "CarPlay",
 "title": "CarPlay",
 "text": "An own \"Spark\" icon in the car. Tap → \"Mit Spark sprechen\" → talk. The conversation goes on hands-free until no voice comes for 15 seconds; interrupting works as in the app. In the car a quieter voice over the road noise counts too, and only a pause of 1.6 seconds ends a question, so Spark does not stop in mid-sentence (since V01.0.734). The car shows only the state, never text, with the profile's face (robot or comic, as in the app) as a still picture matching the state; when only the car starts the app, it asks the Spark for the face itself (since V01.0.676; Apple allows no animation in CarPlay). Answers are short in the car. Smart home in the car only with its own switch \"Smart home in the car too\" and the code word. Route and call only after \"Ja\"."
@@ -17142,6 +17174,22 @@
 "head": "CarPlay",
 "title": "Apple's grant",
 "text": "Apple's grant: Apple granted the CarPlay category \"Voice-based conversational app\"; it is ticked for the App ID io.github.db9979.speechspark under developer.apple.com → Identifiers → Additional Capabilities (CarPlay Voice Based Conversation), and since V01.0.676 ios/Spark.entitlements contains com.apple.developer.carplay-voice-based-conversation. The TestFlight build fetches the matching profile itself; without the tick on the App ID the build cannot be signed. If the icon does not appear: iPhone → Settings → General → CarPlay → your car → Customize, add Spark. Try it without a car: Simulator → I/O → External Displays → CarPlay."
+},
+{
+"lang": "en",
+"src": "iphone-app",
+"file": "iPhone app \"Spark\"",
+"head": "CarPlay",
+"title": "CarPlay",
+"text": "When the icon does not show: iPhone → Settings → General → CarPlay → your car → Customize, add Spark there."
+},
+{
+"lang": "en",
+"src": "iphone-app",
+"file": "iPhone app \"Spark\"",
+"head": "CarPlay",
+"title": "CarPlay",
+"text": "Trying it without a car: Xcode → Open Developer Tool → Simulator, there I/O → External Displays → CarPlay."
 },
 {
 "lang": "en",
@@ -17525,7 +17573,7 @@
 "file": "Security and operation",
 "head": "Kill switch (Notaus)",
 "title": "Kill switch (Notaus)",
-"text": "he panel: sudo rm /var/lib/speech-spark/state/notaus.json. - Visible: red band on every page, a card under Status (kinds and counts since it was triggered, never contents), a push to the admin profiles when triggered and lifted, an entry in the admin log. Status → Live and the live monitor /live show a red band with stage, time, channel and per kind \"held\" with a count (never the reason or a name) and keep running in stage 3 (reading only; pairing a new monitor waits). - ESP32 speakers (firmware build 6 and later, since V01.0.368): hold the BOOT button for 5 seconds. The firmware then sends the fixed wake word \"spark-notaus\" (only the button sends it, never speech recognition). Only a speaker of an admin profile triggers the big emergency stop, stage 2, and announces it; otherwise it says \"only for an admin's speaker\". Never *My kill switch*: a button press does not say who pressed it. - Pebble watch (watch app 1.6.0 and later, since V01.0.368): hold SELECT for 3 seconds until it buzzes long, then let go. The watch sends the fixed sentence \"Spark, Notaus\" (as above: the big one only for admin profiles). \"Spark, Mein Notaus\" works by dictation. - iPhone app (since V01.0.370, with th"
+"text": "he panel: sudo rm /var/lib/speech-spark/state/notaus.json. - Visible: red band on every page, a card under Status (kinds and counts since it was triggered, never contents), a push to the admin profiles when triggered and lifted, an entry in the admin log. Status → Live and the live monitor /live show a red band with stage, time, channel and per kind \"held\" with a count (never the reason or a name) and keep running in stage 3 (reading only; pairing a new monitor waits). - ESP32 speakers (firmware build 6 and later, since V01.0.364): hold the BOOT button for 5 seconds. The firmware then sends the fixed wake word \"spark-notaus\" (only the button sends it, never speech recognition). Only a speaker of an admin profile triggers the big emergency stop, stage 2, and announces it; otherwise it says \"only for an admin's speaker\". Never *My kill switch*: a button press does not say who pressed it. - Pebble watch (watch app 1.6.0 and later, since V01.0.364): hold SELECT for 3 seconds until it buzzes long, then let go. The watch sends the fixed sentence \"Spark, Notaus\" (as above: the big one only for admin profiles). \"Spark, Mein Notaus\" works by dictation. - iPhone app (since V01.0.370, with th"
 },
 {
 "lang": "en",
@@ -17533,7 +17581,7 @@
 "file": "Security and operation",
 "head": "Kill switch (Notaus)",
 "title": "Kill switch (Notaus)",
-"text": "e next TestFlight build): emergency stop button behind a question and the Siri shortcut \"Spark Notaus\"; without an admin role only *My kill switch*, never lifting in the app. - Emergency stop by itself (since V01.0.368, switch under *Settings → Security*, off; changing it needs the admin code): the guard switches on stage 1 \"Outside closed\" by fixed rules, never higher: 20 wrong sign-ins, PINs, codes or emergency stop keys from outside in 10 minutes; an MCP flood from outside (30 MCP requests turned away by the rate limit in 10 minutes); 15 connections refused by netguard in 10 minutes (such as 169.254.x, home addresses or the Spark's own services, where outside text tries to steer the Spark; refusals by the emergency stop itself do not count). Counted in memory only. Channel \"Wächter\" in the push, the admin log and Status → Live; lifting as always."
+"text": "e next TestFlight build): emergency stop button behind a question and the Siri shortcut \"Spark Notaus\"; without an admin role only *My kill switch*, never lifting in the app. - Emergency stop by itself (since V01.0.364, switch under *Settings → Security*, off; changing it needs the admin code): the guard switches on stage 1 \"Outside closed\" by fixed rules, never higher: 20 wrong sign-ins, PINs, codes or emergency stop keys from outside in 10 minutes; an MCP flood from outside (30 MCP requests turned away by the rate limit in 10 minutes); 15 connections refused by netguard in 10 minutes (such as 169.254.x, home addresses or the Spark's own services, where outside text tries to steer the Spark; refusals by the emergency stop itself do not count). Counted in memory only. Channel \"Wächter\" in the push, the admin log and Status → Live; lifting as always."
 },
 {
 "lang": "en",

@@ -7,7 +7,8 @@ every feature is switched per profile; nothing turned red. These tests do:
 - the README diagram names every public port of config.default.json,
 - the ports table of the architecture docs names every port and every speech-spark unit install.sh writes,
 - the Technik boxes of the models show the ports from config.default.json,
-- every local link and picture in the READMEs exists.
+- every local link and picture in the READMEs exists,
+- docs/de and docs/en (and both READMEs) hold the same parts with the same versions (Gleichstand).
 
 The README and docs parts skip in a copy with only app/; the help and Technik parts always run. No clock.
 """
@@ -140,3 +141,60 @@ class Readme(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+# German and English say the same (Dominik 2026-10-21 „ganze Doku immer aktuell“): every docs/de file has its docs/en
+# twin, and README.de.md its README.md; each section holds as many paragraphs, list rows and table rows and names the
+# same versions, so a part written only in one language turns this red. The help answers in both languages.
+TWINS = (("android-app", "android-app"), ("apis-und-einbinden", "apis-and-integration"), ("app-datenschutz", "app-privacy"),
+         ("architektur", "architecture"), ("assistent", "assistant"), ("installation", "installation"),
+         ("iphone-app", "iphone-app"), ("iphone-veroeffentlichen", "iphone-publishing"), ("richtlinien", "guidelines"),
+         ("sicherheit-und-betrieb", "security-and-operation"), ("sicherheits-checkliste", "security-checklist"),
+         ("spark-teilen", "spark-split"), ("technik", "technical"))
+UNIT = re.compile(r"\s*(?:[-*] |\d+\. |\||```|<!--|> )")
+
+
+def sections(text):
+    """[(heading, [unit])]: a unit is a paragraph, a list row or a table row; wrapped lines belong to their unit."""
+    out, blank, fence = [("", [])], True, False
+    for line in text.split("\n"):
+        if line.startswith("```"):
+            fence = not fence
+        if line.startswith("#") and not fence:
+            out.append((line, []))
+            blank = True
+            continue
+        if not line.strip():
+            blank = True
+            continue
+        units = out[-1][1]
+        if blank or not units or (UNIT.match(line) and not fence):
+            units.append(line)
+        else:
+            units[-1] += " " + line.strip()
+        blank = False
+    return out
+
+
+@unittest.skipUnless(docs_here(), "README and docs/ not here (app/ alone)")
+class Gleichstand(unittest.TestCase):
+    def test_every_file_has_its_twin(self):
+        de = {n[:-3] for n in os.listdir(os.path.join(ROOT, "docs", "de")) if n.endswith(".md")}
+        en = {n[:-3] for n in os.listdir(os.path.join(ROOT, "docs", "en")) if n.endswith(".md")}
+        self.assertEqual(de, {a for a, _ in TWINS})
+        self.assertEqual(en, {b for _, b in TWINS})
+
+    def test_german_and_english_say_the_same(self):
+        pairs = [(os.path.join("docs", "de", a + ".md"), os.path.join("docs", "en", b + ".md")) for a, b in TWINS]
+        bad = []
+        for a, b in pairs + [("README.de.md", "README.md")]:
+            sa, sb = sections(read(os.path.join(ROOT, a))), sections(read(os.path.join(ROOT, b)))
+            if len(sa) != len(sb):
+                bad.append(f"{a}: {len(sa)} sections, {b}: {len(sb)}")
+                continue
+            for (ha, ua), (hb, ub) in zip(sa, sb):
+                va = set(re.findall(r"V01\.0\.\d+", " ".join(ua)))
+                vb = set(re.findall(r"V01\.0\.\d+", " ".join(ub)))
+                if len(ua) != len(ub) or va != vb:
+                    bad.append(f"{a} „{ha[:50]}“ {len(ua)} parts {sorted(va - vb)} / {b} „{hb[:50]}“ {len(ub)} parts {sorted(vb - va)}")
+        self.assertEqual(bad, [], "\n".join(bad))
