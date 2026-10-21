@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.895** Fix iPhone app: the knowledge map computes the points' places in Double (cos and sin were ambiguous, the app did not build since V01.0.894)
 - **V01.0.894** Knowledge map (stage 1): the knowledge book gets its own menu entry with Pages and Map; connections between pages, each with its source and checked by fixed rules, "Wrong", export as Mermaid, Graphviz, SVG, PNG and Obsidian links, native map on the iPhone (off by default)
 - **V01.0.893** Folders at once and folder menu: the Mail page's folder list is kept sealed in the mail supply and is there at once after a restart; the "⋯" at a folder is a small menu beside it like Apple Mail (right click, a sheet on a phone), renaming and new folders right in the row; iPhone with symbols
 - **V01.0.892** reMarkable documents well formatted: lists, numbers, tables, smaller head, device format
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.888** Contacts like Apple Contacts (stage 3a): a page of its own in the menu with address books as groups, search, A–Z with a letter bar, the card with Message, Call, Mail, Event, Share and "With Anna" (next appointment, latest mail); tapping a mail's sender opens the card; with the admin switch "Edit contacts" (off) editing with − and + per field, back into the own address book with its ETag, new cards also "On the Spark"; iPhone under My things
 - **V01.0.887** Load older mail: at the end of the list the next 50 older mails come by themselves, in the inbox and in every folder, down to the first mail; a search goes over the whole mailbox on the mail server; panel, iPhone and spark-tui (up to 200)
 - **V01.0.886** Workshop made clear: own page Status → Workshop with four tiles, history and a result that explains what red means and what comes next (find the cause, test only the red ones again, copy for Claude)
-- **V01.0.885** Editing music on a page of its own over the whole width: big wave, tools on the left, settings in the middle, versions on the right, the button in a fixed bar at the bottom; the same order on a phone and in the iPhone app
 
 
 

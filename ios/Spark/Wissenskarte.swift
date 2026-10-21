@@ -94,12 +94,17 @@ final class WissenskarteModel: ObservableObject {
         }
         let inner = points.filter { near.contains($0.id) }
         let outer = points.filter { $0.id != first.id && !near.contains($0.id) }
-        let r = min(size.width, size.height) / 2 - 44
+        let r: CGFloat = min(size.width, size.height) / 2 - 44
         var out = [first.id: mid]
-        for (ring, list, radius) in [(0, inner, r * (outer.isEmpty ? 0.8 : 0.5)), (1, outer, r)] where !list.isEmpty {
-            for (i, p) in list.enumerated() {
-                let angle = Double(i) / Double(list.count) * 2 * .pi + (ring == 1 ? 0.3 : 0) - .pi / 2
-                out[p.id] = CGPoint(x: mid.x + radius * cos(angle), y: mid.y + radius * sin(angle))
+        let rings: [(shift: CGFloat, list: [WkPoint], radius: CGFloat)] = [(0, inner, r * (outer.isEmpty ? 0.8 : 0.5)), (0.3, outer, r)]
+        for ring in rings where !ring.list.isEmpty {
+            for (i, p) in ring.list.enumerated() {
+                // all in Double, so cos and sin have one meaning (Double and CGFloat both have them)
+                let angle: Double = Double(i) / Double(ring.list.count) * 2 * Double.pi + Double(ring.shift) - Double.pi / 2
+                let radius = Double(ring.radius)
+                let x: Double = Double(mid.x) + radius * cos(angle)
+                let y: Double = Double(mid.y) + radius * sin(angle)
+                out[p.id] = CGPoint(x: x, y: y)
             }
         }
         return out
