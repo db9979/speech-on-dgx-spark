@@ -266,12 +266,13 @@ def listing(uid, account_id, folder, query=""):
         box.select(folder)
         uids = sorted(box.search("ALL"))[-(mail.HEADER_SCAN if words else LIST_MAX):]
         heads = mail.head_rows(box.c, uids)
-    hits = [(u, h) for u, h in heads.items() if mail.fits(words, h)]
-    items = sorted(({"id": f"{acct['id']}:{u}", "from": mail.known(uid, h["from"]), "subject": h["subject"] or "",
-                     "date": int(h["date"].timestamp()), "unread": bool(h["unread"]), "flagged": bool(h["flagged"]),
-                     "attach": bool(h["attach"]), "box": 0} for u, h in hits), key=lambda x: x["date"], reverse=True)[:LIST_MAX]
-    return {"connected": True, "boxes": [acct.get("name", "")], "errors": [], "items": items, "folder": folder,
-            "account": acct["id"]}
+    hits = sorted(((acct["id"], u, h) for u, h in heads.items() if mail.fits(words, h)),
+                  key=lambda x: x[2]["date"], reverse=True)[:LIST_MAX]
+    # Ältere nachladen (mail.more): below the lowest UID shown; a folder read whole without a search has nothing older
+    low = min((u for _, u, _ in hits), default=None)
+    whole = not words and len(uids) < LIST_MAX
+    return {"connected": True, "boxes": [acct.get("name", "")], "errors": [], "items": mail.items(uid, hits, [acct["id"]]),
+            "folder": folder, "account": acct["id"], "vor": "" if whole else mail.token({acct["id"]: low})}
 
 
 def _source(box, src, moving):

@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.887** · 2026-10-21 · Ältere E-Mails nachladen: am Ende der Liste kommen die nächsten 50 älteren Mails von selbst, im Eingang und in jedem Ordner, bis zur ersten Mail; die Suche geht über das ganze Postfach beim Mailserver; Panel, iPhone und spark-tui (bis 200)
 - **V01.0.886** · 2026-10-21 · Werkstatt mit eigener Seite Zustand → Werkstatt statt Kasten unter Funktionen: vier Kacheln (Alles testen, Problem untersuchen, Reparatur versuchen, Sprachmodell messen), links der Verlauf, rechts das Ergebnis mit großen Zahlen, Erklärung „Was heißt rot?“, roten Tests nach Bereich und nächsten Schritten (Ursache untersuchen, Nur die roten noch mal testen, Für Claude kopieren, Löschen); auch in der iPhone-App unter Spark verwalten → Werkstatt
 - **V01.0.885** · 2026-10-21 · Musik bearbeiten auf eigener Seite über die ganze Breite: große Welle, Werkzeuge links, Einstellungen in der Mitte, Fassungen rechts, Knopf in einer festen Leiste unten; auf dem Handy und in der iPhone-App dieselbe Ordnung
 - **V01.0.884** · 2026-10-21 · Fix iPhone-App: der Inhalt einer formatierten Mail blieb leer (die Sperrregel der Web-Ansicht wurde nicht übersetzt); im Dunkelmodus erscheint eine schlichte Mail hell auf dunklem Grund wie bei Apple Mail, eine Mail mit eigenen Farben bleibt auf Weiß

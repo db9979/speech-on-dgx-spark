@@ -1230,9 +1230,13 @@ async def profile_mail_test(prof=Depends(browser_profile)):
 
 
 @router.get("/api/profile/mail/inbox", dependencies=[Depends(assistant), Depends(mail_on)])
-async def profile_mail_inbox(request: Request, q: str = "", days: int = 14, unread: bool = False, prof=Depends(own_profile)):
-    """The page E-Mail (post.js): the newest messages of the own mailboxes, only sender, subject and time."""
+async def profile_mail_inbox(request: Request, q: str = "", days: int = 14, unread: bool = False, vor: str = "",
+                             prof=Depends(own_profile)):
+    """The page E-Mail (post.js): the newest messages of the own mailboxes, only sender, subject and time. vor (the
+    mark of the last page): the next older page (Ältere nachladen, mail.more), a search over the whole mailbox."""
     guard.limit(request, "post", prof["id"])
+    if vor:
+        return await _older(request, prof, vor, q, unread, "INBOX")
     try:
         r = await asyncio.wait_for(asyncio.to_thread(mail.inbox, prof["id"], q[:100], days, unread), 45)
     except asyncio.TimeoutError:
@@ -1242,6 +1246,23 @@ async def profile_mail_inbox(request: Request, q: str = "", days: int = 14, unre
         print(f"mail: inbox not readable | {len(r['errors'])} of {len(r['boxes'])} mailboxes | {profiles.log_name(prof)}", flush=True)
     if r.get("loading"):
         print(f"mail: inbox loading | {len(r['boxes'])} mailboxes | {profiles.log_name(prof)}", flush=True)
+    return r
+
+
+async def _older(request, prof, vor, q, unread, folder):
+    """Ältere nachladen: the page after the mark vor, straight from the mailboxes (every outcome logs a line)."""
+    guard.limit(request, "postmehr", prof["id"])
+    try:
+        r = await asyncio.wait_for(asyncio.to_thread(mail.more, prof["id"], vor[:200], q[:100], bool(unread), folder), 45)
+    except ValueError:
+        print(f"mail: older page refused | {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(400, "Unbekannte Stelle in der Liste. Bitte die Seite neu laden.")
+    except asyncio.TimeoutError:
+        print(f"mail: older page too slow | {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(504, "Die Postfächer haben zu lange gebraucht. Bitte gleich noch einmal.")
+    if r["errors"]:
+        print(f"mail: older page not readable | {len(r['errors'])} mailboxes | {profiles.log_name(prof)}", flush=True)
+    print(f"mail: older page | {len(r['items'])} | {'end' if not r['vor'] else 'more'} | {profiles.log_name(prof)}", flush=True)
     return r
 
 
@@ -1367,9 +1388,15 @@ async def profile_mail_tree(request: Request, fresh: bool = False, prof=Depends(
 
 
 @router.get("/api/profile/mail/folder", dependencies=[Depends(assistant), Depends(mail_on), Depends(mailmanage_on)])
-async def profile_mail_folder(request: Request, account: str = "", folder: str = "", q: str = "", prof=Depends(browser_profile)):
-    """Ordner: the newest messages of one folder (EXAMINE, header fields only), with a search q like the inbox."""
+async def profile_mail_folder(request: Request, account: str = "", folder: str = "", q: str = "", vor: str = "",
+                              prof=Depends(browser_profile)):
+    """Ordner: the newest messages of one folder (EXAMINE, header fields only), with a search q like the inbox; vor:
+    the next older page of it (mail.more)."""
     guard.limit(request, "post", prof["id"])
+    if vor:
+        if not mail.folder_ok(folder) or not vor.startswith(account[:20] + ":"):
+            raise HTTPException(400, "Unbekannter Ordner.")
+        return await _older(request, prof, vor, q, False, folder[:200])
     return await _ordnen(prof, "folder", postfach.listing, account[:20], folder[:200], q[:100])
 
 

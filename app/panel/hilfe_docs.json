@@ -5173,6 +5173,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "Ältere E-Mails nachladen (V01.0.887, Dominik 2026-10-21 „1a 2a 5a 6a“; mail.more, Teil von „E-Mail lesen“, kein eigener Schalter): Kommt man auf der Seite E-Mail ans Ende der Liste, holt der Spark die nächsten 50 älteren Mails, im Eingang und in jedem Ordner, ohne Grenze an Tagen bis zur ersten Mail des Postfachs. Ein Platzhalter in fester Höhe am Listenende sorgt dafür, dass nichts springt; am Ende steht „Keine älteren Mails“. Die Suche geht dabei über das ganze Postfach: der Mailserver sucht in Absender, Betreff und Text (auch mit Umlauten, CHARSET UTF-8), seitenweise wie die Liste; hat:anhang prüft der Spark an der Kopfzeile. Die Stelle, an der es weitergeht, ist die Marke vor (je Postfach die UID, unter der die nächste Seite beginnt); sie nennt nur eigene Postfächer, sonst lehnt der Spark ab. Jedes Postfach geht in seiner Reihenfolge weiter, die Postfächer werden nach Datum gemischt, so fällt keine Mail heraus; Mails mit neuer Nummer, aber altem Datum (zurückgeholt aus einem Ordner, falsche Uhr des Absenders) kommen mit der zweiten Seite. Geholt wird direkt beim Postfach (nur lesen, Kopfzeilen), nichts davon kommt auf die Platte oder in den Mail-Vorrat; die Seiten bleiben 10 Mi"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "nuten im Speicher, höchstens 10 je Profil, und gehen, sobald auf der Seite eine Mail geordnet wird. Eigenes Rate-Limit (30 Seiten je Minute). spark-tui mails --anzahl N zeigt bis zu 200 Mails und lädt dafür nach, spark-tui mail N öffnet jede davon. Live (Knoten E-Mail): ältere Seiten heute, nur die Zahl."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "Spark-Kalender, Stufe 1: eine Kopie auf dem Spark (V01.0.830, Dominik 2026-10-19 „1a 2a“): Jeder CalDAV-Kalender (iCloud, Nextcloud, …) hat jetzt eine Kopie auf dem Spark. Beim ersten Mal holt der Spark ihn ganz, danach fragt er den Server nur noch, was sich geändert hat (WebDAV-Abgleich mit Sync-Token; ein Server ohne diesen Abgleich wird über die Kennzeichen seiner Termine verglichen, einer, der beides nicht kann, wie bisher monatsweise gelesen) und holt nur diese Termine. Die Seite Kalender, Heute, der Assistent und das Briefing lesen aus der Kopie in Millisekunden statt 1 bis 8 Sekunden. Für Profile, die in den letzten 24 Stunden aktiv waren, gleicht der Spark alle 2 Minuten im Hintergrund ab; nach einer eigenen Änderung (Eintragen, Verschieben, Löschen) beim nächsten Blick sofort. Die Kopie liegt nur verschlüsselt auf der Platte (kalender-spiegel/, Schlüssel wie bei den Passwörtern), höchstens 5000 Termine je Kalender, und wird mit dem Kalender oder dem Profil gelöscht. Abo-Links (.ics, webcal://) bleiben wie bisher. Zustand → Live zeigt beim Kalender, wie viele Kalender als Kopie da sind, wie viele Termine und wann zuletzt abgeglichen wurde; das Log schreibt „calendar: mirror"
 },
 {
@@ -14270,6 +14286,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "d is taken as it is, an older one is fetched anew with at most 2 seconds of waiting, otherwise it answers with the older state and says the time. Ordering on the page follows in the supply (read, flagged, archived, deleted). The supply goes with the mailbox, with all mailboxes, with the profile and after 14 days in which nobody read the mail. vorrat.py is the one way to build such supplies for other services. Live (node Mail): profiles with a supply and how often it answered today, numbers only."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "Load older mail (V01.0.887, Dominik 2026-10-21 \"1a 2a 5a 6a\"; mail.more, part of \"Read mail\", no switch of its own): at the end of the list on the Mail page the Spark fetches the next 50 older mails, in the inbox and in every folder, with no limit of days down to the mailbox's first mail. A placeholder of fixed height at the end of the list keeps anything from jumping; at the end it says \"No older mail\". A search goes over the whole mailbox: the mail server searches sender, subject and text (umlauts too, CHARSET UTF-8), page by page like the list; has:attachment is checked by the Spark on the header. Where it goes on is the mark vor (per mailbox the UID below which the next page starts); it names only the profile's own mailboxes, anything else is refused. Each mailbox goes on in its own order and the mailboxes are merged by date, so no mail falls out; mails with a new number but an old date (moved back from a folder, the sender's clock off) come with the second page. It is fetched straight from the mailbox (read only, headers), nothing of it goes onto the disk or into the mail supply; the pages stay 10 minutes in memory, at most 10 per profile, and go as soon as a mail is ordered o"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "n the page. Own rate limit (30 pages a minute). spark-tui mails --anzahl N shows up to 200 mails and loads them for it, spark-tui mail N opens any of them. Live (node Mail): older pages today, the number only."
 },
 {
 "lang": "en",

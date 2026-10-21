@@ -8,7 +8,7 @@
     echo 'Text' | spark-tui frage 'Fasse das zusammen'                       the piped text goes with the question
     spark-tui kalender [--woche N]                                           the appointments of a week (0 = this one)
     spark-tui neu 'Morgen 15 Uhr Zahnarzt' [--ja]                            Schnell eintragen: shows, asks, then saves
-    spark-tui mails [--anzahl N]                                             the newest mails by day (sender, subject)
+    spark-tui mails [--anzahl N]                                             the newest mails by day (sender, subject), up to 200
     spark-tui mail N                                                         mail number N of that list as plain text
     spark-tui status                                                         reachable? what may this terminal do?
     spark-tui update                                                         the newest version from the Spark
@@ -405,8 +405,22 @@ def cmd_new(args):
     print("Eingetragen.")
 
 
+MAIL_MAX = 200   # mails spark-tui lists at most; beyond the first page the older ones are loaded page by page
+
+
 def mail_items(sp, n):
-    return (sp.call("GET", "/api/profile/mail/inbox").get("items") or [])[:max(1, min(n, 50))]
+    """The newest n mails; more than the first page follows the mark „vor“ to the older ones (Ältere nachladen)."""
+    n = max(1, min(n, MAIL_MAX))
+    r = sp.call("GET", "/api/profile/mail/inbox")
+    items, seen = [], set()
+    while True:
+        for x in r.get("items") or []:
+            if x.get("id") not in seen:
+                seen.add(x.get("id"))
+                items.append(x)
+        if len(items) >= n or not r.get("vor"):
+            return items[:n]
+        r = sp.call("GET", "/api/profile/mail/inbox?" + urllib.parse.urlencode({"vor": r["vor"]}))
 
 
 def mail_lines(items):
@@ -434,7 +448,7 @@ def cmd_mail(args):
     """One mail as plain text (it stays unread); other people's words, never run or opened."""
     sp = Spark(need())
     try:
-        items = mail_items(sp, 50)
+        items = mail_items(sp, args.nummer)
         if not 1 <= args.nummer <= len(items):
             sys.exit(f"Nummer 1 bis {len(items)} (siehe spark-tui mails).")
         m = sp.call("GET", "/api/profile/mail/message?" + urllib.parse.urlencode({"id": items[args.nummer - 1]["id"]}))
@@ -853,7 +867,7 @@ def main(argv=None):
     n.add_argument("text", nargs="*")
     n.add_argument("--ja", action="store_true", help="ohne Rückfrage eintragen")
     m = sub.add_parser("mails", help="die neuesten Mails nach Tagen")
-    m.add_argument("--anzahl", type=int, default=20)
+    m.add_argument("--anzahl", type=int, default=20, help="bis 200, ältere werden nachgeladen")
     r = sub.add_parser("mail", help="eine Mail aus der Liste als Text")
     r.add_argument("nummer", type=int)
     sub.add_parser("status", help="erreichbar? was darf dieses Terminal?")

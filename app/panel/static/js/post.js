@@ -37,13 +37,32 @@ const postFuer=x=>typeof FUER!=='undefined'&&FUER&&FUER.items?FUER.items.find(i=
 async function postFuerLoad(){if(typeof FUER_ON==='undefined'||!FUER_ON||FUER)return;
   try{const d=await (await api('/api/profile/fuerdich')).json();if(!d.loading&&!FUER){FUER=d;postDraw()}}catch(e){}}
 // again: mailboxes still loading in the background (mail.inbox) are asked for once more after 3 s, at most 5 times
-async function postLoad(again){if(!PROFILE||!MAIL_ON)return;const seq=++POST.seq;POST.busy=!again;POST.tries=again?(POST.tries||0)+1:0;postDraw();
+async function postLoad(again){if(!PROFILE||!MAIL_ON)return;const seq=++POST.seq;POST.moreFail='';POST.more=false;POST.busy=!again;POST.tries=again?(POST.tries||0)+1:0;postDraw();
   try{const d=await (await api(POST.box?'/api/profile/mail/folder?'+new URLSearchParams({account:POST.box.account,folder:POST.box.folder,q:postQ()})
       :'/api/profile/mail/inbox?'+new URLSearchParams({q:postQ(),unread:POST.unread?'true':'false'}))).json();
     if(seq!==POST.seq)return;if(!(d.loading&&POST.data&&again))POST.data=d;POST.err='';
     if(d.loading&&POST.tries<5)setTimeout(()=>{if(seq===POST.seq&&$('postview'))postLoad(true)},3000)}
   catch(e){if(seq!==POST.seq)return;POST.err=e.message||t('Nicht erreicht','Not reached')}
   POST.busy=false;postDraw();postFuerLoad()}
+// Ältere nachladen (Dominik 2026-10-21 „1a 2a 5a“): at the end of the list the next older page (mark vor, mail.more),
+// in the inbox and in a folder, with the search over the whole mailbox; rows already there are not shown twice
+async function postMore(){const d=POST.data;if(!d||!d.vor||POST.more||POST.busy)return;const seq=POST.seq;POST.more=true;postMoreBtn();
+  try{const r=await (await api(POST.box?'/api/profile/mail/folder?'+new URLSearchParams({account:POST.box.account,folder:POST.box.folder,q:postQ(),vor:d.vor})
+      :'/api/profile/mail/inbox?'+new URLSearchParams({q:postQ(),unread:POST.unread?'true':'false',vor:d.vor}))).json();
+    if(seq!==POST.seq||POST.data!==d)return;const have=new Set(d.items.map(x=>x.id));
+    d.items=d.items.concat((r.items||[]).filter(x=>!have.has(x.id)));d.vor=r.vor||'';d.moreErr=(r.errors||[]).length?r.errors:null;POST.moreFail=''}
+  catch(e){if(seq===POST.seq)POST.moreFail=e.message||t('Nicht erreicht','Not reached')}
+  POST.more=false;if(seq===POST.seq)postDraw()}
+// the end of the list: one row of fixed height (nothing jumps); it loads by itself when it comes into view
+function postMoreRow(d){if(!d||(!d.vor&&!(d.items||[]).length))return'';const end=!d.vor;
+  return `<div class="ld-more" data-more="1"><button class="lnk" type="button" data-k="more"${end||POST.more?' disabled':''}>${esc(end?t('Keine älteren Mails','No older mail')
+    :POST.more?t('Lädt ältere Mails …','Loading older mail …'):POST.moreFail?t('Nicht geladen, noch einmal','Not loaded, try again'):t('Ältere Mails laden','Load older mail'))}</button></div>`}
+function postMoreBtn(){const b=document.querySelector('#postview [data-k=more]');if(b){b.disabled=true;b.textContent=t('Lädt ältere Mails …','Loading older mail …')}}
+function postMoreWatch(list){if(POST.moreObs)POST.moreObs.disconnect();const row=list.querySelector('[data-more]');if(!row)return;
+  const b=row.querySelector('[data-k=more]');if(b)b.onclick=()=>postMore();
+  if(!('IntersectionObserver' in window)||POST.moreFail)return;   // after a failure only the button tries again
+  POST.moreObs=new IntersectionObserver(es=>{if(es.some(x=>x.isIntersecting))postMore()},{root:/auto|scroll/.test(getComputedStyle(list).overflowY)?list:null,rootMargin:'0px 0px 300px 0px'});
+  POST.moreObs.observe(row)}
 async function postRead(id){POST.sel=id;POST.msg=null;if(POST.sug[id]&&POST.sug[id].err)delete POST.sug[id];const seq=++POST.mseq;postDraw();
   try{const m=await (await api('/api/profile/mail/message?'+new URLSearchParams(POST.box?{id,folder:POST.box.folder}:{id}))).json();if(seq===POST.mseq)POST.msg=m}
   catch(e){if(seq===POST.mseq)POST.msg={err:e.message||t('Nicht erreicht','Not reached')}}
@@ -111,6 +130,7 @@ function postPaint(w){const d=POST.data;w.classList.toggle('ld-sel',!!POST.sel);
   const tr=w.querySelector('[data-k=tree]');if(tr){tr.classList.toggle('on',postFoldOn());tr.setAttribute('aria-pressed',String(postFoldOn()))}
   w.querySelector('.postwarn').innerHTML=(POST.err?`<div class="note warn">${esc(t('Die Mails kamen nicht an: ','The mail did not arrive: ')+POST.err)}</div>`:'')+
     (d&&d.errors&&d.errors.length?`<div class="note warn">${esc(t('Nicht erreicht: ','Not reached: ')+d.errors.join(', '))}</div>`:'')+
+    (d&&d.moreErr?`<div class="note warn">${esc(t('Ältere Mails nicht erreicht: ','Older mail not reached: ')+d.moreErr.join(', '))}</div>`:'')+
     (d&&d.loading?`<div class="note">${esc(t('Die Postfächer laden noch …','The mailboxes are still loading …'))}</div>`:'');
   const many=d&&d.boxes&&d.boxes.length>1,items=postItems(),list=w.querySelector('.ld-list');
   list.classList.toggle('busy',POST.busy);
@@ -126,6 +146,7 @@ function postPaint(w){const d=POST.data;w.classList.toggle('ld-sel',!!POST.sel);
       `${fd||many?`<span class="postchips">${fd?`<span class="postfd${fd.urgent?' hot':''}">${esc(FUER_KIND[fd.kind]||fd.kind)}</span>`:''}${many?`<span class="ld-badge off">${esc(d.boxes[x.box]||'')}</span>`:''}</span>`:''}</span></div>`}).join('')
     ||(POST.busy?'':`<div class="ld-empty mut">${esc(POST.box?(postQ()?t('Keine passende Mail in diesem Ordner.','No matching mail in this folder.'):t('Dieser Ordner ist leer.','This folder is empty.'))
       :postQ()||POST.unread?t('Keine passende Mail in den letzten 14 Tagen.','No matching mail in the last 14 days.'):t('Keine Mail in den letzten 14 Tagen.','No mail in the last 14 days.'))}</div>`);
+  if(!POST.busy)list.insertAdjacentHTML('beforeend',postMoreRow(d));postMoreWatch(list);
   list.querySelectorAll('[data-pick]').forEach(c=>{c.onclick=e=>e.stopPropagation();c.onchange=()=>{const id=c.dataset.pick;
     POST.pick=c.checked?[...POST.pick,id].slice(-50):POST.pick.filter(x=>x!==id);postUndo(w)}});
   list.querySelectorAll('[data-id]').forEach(r=>{r.onclick=e=>{if(POST.swiped){POST.swiped=false;return}

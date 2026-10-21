@@ -2483,6 +2483,13 @@
 "titel": "Werkstatt auf eigener Seite",
 "text": "A: Update, Admin: Funktionen → Werkstatt an (der Kasten dort zeigt nur noch den Hinweis). B: Zustand → Werkstatt: oben vier Kacheln, links der Verlauf, rechts der letzte Testlauf mit grün, rot, wackelig und „Was heißt rot?“. C: Bei roten Tests „Rote Tests, nach Bereich“ aufklappen: die Namen stehen da. D: „Nur die roten noch mal testen“: links „läuft“, danach ein Ergebnis „Rote Tests noch mal“ mit jetzt grün oder weiter rot. E: „Ursache untersuchen“: das Formular ist mit den Namen vorbelegt, Starten fragt nach dem Code. F: „Für Claude kopieren“ und in einen Thread einfügen: Version, Zahlen und Namen stehen drin. G: Am Handy: Liste, Tipp öffnet das Ergebnis, „‹ Werkstatt“ zurück. H: iPhone-App: Spark verwalten → Werkstatt zeigt den Verlauf, ein Ergebnis öffnet sich, Löschen geht.",
 "thread": "Werkstatt übersichtlich bedienen"
+},
+{
+"id": "P379",
+"v": 887,
+"titel": "Ältere Mails nachladen",
+"text": "A: Pi auf V01.0.887. E-Mail öffnen und ans Ende der Liste scrollen: „Lädt ältere Mails …“, dann hängen die nächsten 50 an, ohne dass die Liste springt; weiter scrollen bis „Keine älteren Mails“ (auch Mails älter als 30 Tage). B: Nach einem Wort suchen, das nur in einer alten Mail steht (z. B. im Text): beim Scrollen ans Ende kommt sie. C: Einen Ordner mit vielen Mails öffnen: dasselbe Nachladen. D: iPhone-App: Meine Sachen → E-Mail, ans Ende scrollen: die älteren kommen. E: uConsole: spark-tui mails --anzahl 120 zeigt 120 Mails, spark-tui mail 110 öffnet eine. F: Zustand → Live bei E-Mail: „heute n ältere Seiten geladen“.",
+"thread": "Kalender und E-Mail in den Apps"
 }
 ]
 }

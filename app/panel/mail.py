@@ -170,7 +170,7 @@ def forget(uid):
 
 def _drop(uid):
     _epoch[0] += 1
-    for d in (_cache, _bodies):
+    for d in (_cache, _bodies, _pages):
         for k in [k for k in d if k[0] == uid]:
             d.pop(k, None)
 
@@ -598,6 +598,8 @@ def changed(uid, ref, action):
     fetched anew. read/unread and flag/unflag set its mark; archive and move take it out; back (into the inbox) drops
     the listings."""
     _bodies.pop((uid, str(ref)), None)
+    for k in [k for k in _pages if k[0] == uid]:   # older pages are fetched anew rather than followed
+        _pages.pop(k, None)
     m = re.fullmatch(r"(m[0-9a-f]{8}):(\d{1,10})", str(ref))
     if action == "back" or not m:
         _epoch[0] += 1
@@ -822,11 +824,196 @@ def inbox(uid, query="", days=14, unread=False, limit=INBOX_MAX, budget=None):
                                 max(1, min(INBOX_MAX, int(limit))), stale=True, budget=VIEW_BUDGET if budget is None else budget)
     except TimeoutError:
         return {"connected": True, "boxes": [a.get("name", "") for a in accts], "errors": [], "items": [], "loading": True}
+    shown = [x for x in found if x[0] in order]
     return {"connected": True, "boxes": [a.get("name", "") for a in accts], "errors": [n for n, _ in errors],
-            "items": [{"id": f"{aid}:{u}", "from": known(uid, h["from"]), "subject": h["subject"] or "",
-                       "date": int(h["date"].timestamp()), "unread": bool(h["unread"]),
-                       "flagged": bool(h.get("flagged")), "attach": bool(h.get("attach")), "box": order.index(aid)}
-                      for aid, u, h in found if aid in order]}
+            "items": items(uid, shown, order), "vor": token({a: (min((u for x, u, _ in shown if x == a), default=None), days) for a in order})}
+
+
+def items(uid, found, order):
+    """The rows of the page E-Mail: header fields only, `box` the mailbox's place in the profile's list (inbox, more,
+    postfach.listing)."""
+    return [{"id": f"{aid}:{u}", "from": known(uid, h["from"]), "subject": h["subject"] or "",
+             "date": int(h["date"].timestamp()), "unread": bool(h["unread"]), "flagged": bool(h.get("flagged")),
+             "attach": bool(h.get("attach")), "box": order.index(aid) if aid in order else 0} for aid, u, h in found]
+
+
+# ---------------------------------------------------------------- Ältere nachladen
+# (Dominik 2026-10-21 „1a 2a 5a 6a“, part of E-Mail lesen, no switch of its own): the page asks for the next PAGE
+# older messages when it is scrolled to the end of the list, in the inbox and in every folder, with a search over the
+# whole mailbox by the server. Straight from the mailbox (EXAMINE, header fields with PEEK); nothing of it goes onto
+# the disk or into the Mail-Vorrat, the pages are kept PAGE_SECONDS in memory only.
+#
+# The mark „vor“ says where each mailbox goes on: "<mailbox id>:<UID>" joined by ".", the next page is made of the
+# messages below that UID ("<id>:" = from the newest on; a mailbox with nothing older is left out; "" = the end). The
+# first page (inbox: the period's newest by date) adds "~<days>": also the messages at or above that UID from before
+# the period, which the first page could not show (moved back from a folder, a sender's clock far off).
+# Each mailbox goes on in UID order, the mailboxes are merged by date, so a page is always the next piece of every
+# mailbox and nothing is skipped. Only the profile's own mailboxes are taken; anything else is refused.
+PAGE = 50              # messages one page lists
+PAGE_SCAN = 600        # headers one page looks at per mailbox at most (a search the server cannot do by itself)
+PAGE_CHUNK = 100       # headers fetched in one go
+PAGE_SECONDS = 600     # a page is kept this long in memory
+PAGES_KEPT = 10        # pages kept per profile (at most PAGE * PAGES_KEPT headers)
+_MARK = re.compile(r"(m[0-9a-f]{8}):(\d{0,10})(?:~(\d{1,2}))?")
+_pages = {}            # (uid, folder, query, unread, mark) -> (time, page)
+_older_today = DayCounter(seiten=0)   # Live: older pages loaded today (a number, never what)
+
+
+def token(parts):
+    """The mark of the next page from {mailbox id: UID, (UID, days of the first page) or None (from the newest on)};
+    0 means nothing older and is left out."""
+    out = []
+    for a, x in parts.items():
+        u, days = x if isinstance(x, tuple) else (x, 0)
+        if u != 0:
+            out.append(f"{a}:{'' if u is None else u}" + (f"~{days}" if days and u is not None else ""))
+    return ".".join(out)
+
+
+def _marks(text, own):
+    """{mailbox id: (UID or None, days)} from a mark; ValueError for anything but the profile's own mailboxes."""
+    out = {}
+    for part in str(text or "").split(".")[:MAX_ACCOUNTS + 1]:
+        m = _MARK.fullmatch(part)
+        if not m or m.group(1) not in own or m.group(1) in out:
+            raise ValueError("unknown mark")
+        out[m.group(1)] = (int(m.group(2)) if m.group(2) else None, min(DAYS, int(m.group(3) or 0)))
+    return out
+
+
+def _criteria(words, unread):
+    """IMAP SEARCH keys for the words (mail._words), the first word beyond ASCII as a UTF-8 literal, and the words only
+    the header can tell (fits() checks them on the rows). Words are [\\w@.-] only, so a quote never gets in."""
+    crit, lit, after = (["UNSEEN"] if unread else []), None, []
+    for w in words:
+        op, _, rest = w.partition(":")
+        if w == "ist:ungelesen":
+            crit.append("UNSEEN")
+        elif w == "ist:markiert":
+            crit.append("FLAGGED")
+        elif w == "hat:anhang":
+            after.append(w)          # multipart/mixed in the header; the server has no key for it
+        else:
+            key, text = ({"from": "FROM", "subject": "SUBJECT"}[op], rest) if rest and op in ("from", "subject") else ("TEXT", w)
+            if text.isascii():
+                crit += [key, f'"{text}"']
+            elif lit is None:
+                lit = (key, text)
+            else:                    # a second word beyond ASCII: its longest ASCII part narrows, the header decides
+                part = max(re.findall(r"[A-Za-z0-9@.\-]{3,}", text), key=len, default="")
+                if part:
+                    crit += [key, f'"{part}"']
+                if key != "TEXT":
+                    after.append(w)
+    return crit, lit, after
+
+
+def _search_older(s, crit, lit):
+    """UIDs for the keys; with a literal UTF-8 (CHARSET), and where the server refuses it its longest ASCII part."""
+    if lit:
+        s.c.literal = lit[1].encode()
+        try:
+            typ, data = s.c.uid("SEARCH", "CHARSET", "UTF-8", *crit, lit[0])
+        except imaplib.IMAP4.error:
+            typ, data = "NO", []
+        finally:
+            s.c.literal = None
+        if typ == "OK":
+            return [int(x) for x in b" ".join(x for x in data if x).split() if x.isdigit()]
+        part = max(re.findall(r"[A-Za-z0-9@.\-]{3,}", lit[1]), key=len, default="")
+        crit = crit + ([lit[0], f'"{part}"'] if part else [])
+    return s.search(*(crit or ["ALL"]))
+
+
+def _older(acct, folder, words, unread, below, days, want):
+    """One mailbox: (rows in UID order, newest first, of which the first `extra` are the ones from before the first
+    page's period; the rest goes on below the last of them, and `low` is the lowest UID looked at, 0 when the mailbox
+    has nothing older)."""
+    crit, lit, after = _criteria(words, unread)
+    with _Session(acct, folder) as s:
+        extra = []
+        if below is not None and days:
+            extra = sorted((u for u in _search_older(s, crit + ["UID", f"{below}:*", "BEFORE", _since(days)], lit)
+                            if u >= below), reverse=True)[:PAGE]
+        uids = [] if below is not None and below <= 1 else sorted(
+            (u for u in _search_older(s, crit + (["UID", f"1:{below - 1}"] if below else []), lit)
+             if below is None or u < below), reverse=True)
+        heads = s.headers(extra)
+        rows = [(acct["id"], u, heads[u]) for u in extra if u in heads and fits(after, heads[u])]
+        n_extra, looked = len(rows), 0
+        while looked < min(len(uids), PAGE_SCAN) and len(rows) - n_extra < want:
+            chunk = uids[looked:looked + PAGE_CHUNK]
+            heads = s.headers(chunk)
+            rows += [(acct["id"], u, heads[u]) for u in chunk if u in heads and fits(after, heads[u])]
+            looked += len(chunk)
+    return rows, n_extra, (uids[looked - 1] if looked < len(uids) else 0)
+
+
+def more(uid, mark, query="", unread=False, folder="INBOX"):
+    """The page after `mark` (see above): {items, errors, boxes, vor}. folder other than the inbox: one mailbox
+    (postfach.listing gives its first mark). Mailboxes that do not answer are named in errors and tried again with
+    the next page."""
+    accts = get(uid)["accounts"]
+    order = [a["id"] for a in accts]
+    byid = {a["id"]: a for a in accts}
+    marks = _marks(mark, byid)
+    if folder != "INBOX" and len(marks) != 1:
+        raise ValueError("a folder belongs to one mailbox")
+    words = _words(str(query)[:100])
+    key = (uid, folder, " ".join(words), bool(unread), str(mark))
+    hit = _pages.get(key)
+    if hit and time.time() - hit[0] < PAGE_SECONDS:
+        return hit[1]
+    errors, got = [], {}
+
+    def one(aid):
+        try:
+            return aid, _older(byid[aid], folder, words, unread, *marks[aid], PAGE), None
+        except (ValueError, LookupError, OSError, imaplib.IMAP4.error) as e:
+            return aid, None, byid[aid].get("name", "") or type(e).__name__
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, len(marks))) as ex:
+        for aid, res, err in ex.map(one, list(marks)):
+            got[aid] = res
+            if err:
+                errors.append(err)
+    # merged by date of each mailbox's next row: every mailbox shows a piece from its start, nothing in between is left
+    taken = {aid: 0 for aid in got}
+    found = []
+    while len(found) < PAGE:
+        heads = [(r[0][taken[a]][2]["date"], a) for a, r in got.items() if r and taken[a] < len(r[0])]
+        if not heads:
+            break
+        a = max(heads)[1]
+        found.append(got[a][0][taken[a]])
+        taken[a] += 1
+    nxt = {}
+    for aid, res in got.items():
+        below, days = marks[aid]
+        if res is None:                       # did not answer: the same place next time
+            nxt[aid] = (below, days)
+            continue
+        rows, n_extra, low = res
+        k = taken[aid]
+        if k < n_extra:                       # not all of the period's leftovers yet: they come again
+            nxt[aid] = (below, days)
+        elif k - n_extra < len(rows) - n_extra:
+            nxt[aid] = rows[k - 1][1] if k > n_extra else below
+        else:
+            nxt[aid] = low                    # all of it shown: below what was looked at, 0 at the end
+    page = {"connected": True, "boxes": [a.get("name", "") for a in accts], "errors": errors,
+            "items": items(uid, sorted(found, key=lambda x: x[2]["date"], reverse=True), order), "vor": token(nxt)}
+    with _lock:
+        _pages[key] = (time.time(), page)
+        mine = sorted((t, k) for k, (t, _) in _pages.items() if k[0] == uid)
+        for _, k in mine[:-PAGES_KEPT]:
+            _pages.pop(k, None)
+    _older_today.bump("seiten")
+    return page
+
+
+def older_today():
+    """Live (node E-Mail): older pages loaded today, a number."""
+    return _older_today.counts()["seiten"]
 
 
 def show(uid, ref, folder="INBOX"):

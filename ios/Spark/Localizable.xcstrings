@@ -15450,6 +15450,56 @@
           }
         }
       }
+    },
+    "Keine älteren Mails": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No older mail"
+          }
+        }
+      }
+    },
+    "Lädt ältere Mails …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loading older mail …"
+          }
+        }
+      }
+    },
+    "Nicht geladen, noch einmal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not loaded, try again"
+          }
+        }
+      }
+    },
+    "Ältere Mails laden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Load older mail"
+          }
+        }
+      }
+    },
+    "Ältere Mails nicht erreicht: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Older mail not reached: %@"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

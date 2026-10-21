@@ -1343,6 +1343,7 @@ def snapshot(view="admin", now=None):
         post_idle = mailidle.for_live()
         import mailvorrat
         post_supply = mailvorrat.for_live()
+        post_older = mail.older_today()
         import mailansicht
         post_view = mailansicht.counts()
         import fuerdich
@@ -1353,6 +1354,7 @@ def snapshot(view="admin", now=None):
         post_idle, post_view = {}, {}
         post_rules = {}
         post_supply = {}
+        post_older = 0
         post_fd = {}
     try:
         import vorwaermen
@@ -1523,6 +1525,8 @@ def snapshot(view="admin", now=None):
             x["sub"] += f" · sofort: {post_idle['open']} Verbindungen, heute {post_idle['new']} neue Mails"
         if x["id"] == "mail" and post_supply.get("profiles"):   # Mail-Vorrat: profiles with a supply, answers from it (numbers)
             x["sub"] += f" · Vorrat bei {post_supply['profiles']} Profilen" + (f", heute {post_supply['answers']}× daraus geantwortet" if post_supply.get("answers") else "")
+        if x["id"] == "mail" and post_older:     # Ältere nachladen: older pages loaded today (a number, never what)
+            x["sub"] += f" · heute {post_older} ältere Seiten geladen"
         if x["id"] == "mail" and post_fd.get("answers"):   # Für dich: mailboxes answered from its kept reading today (a number)
             x["sub"] += f" · Für dich heute {post_fd['answers']}× aus der letzten Lesung"
         if x["id"] == "mail" and post_sent:      # Mails senden: mails sent from the page today (a number, never to whom)

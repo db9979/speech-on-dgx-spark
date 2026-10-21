@@ -934,6 +934,11 @@ final class PostModel: ObservableObject {
     @Published var note: String?
     @Published var undo: MailUndo?
     @Published var hint: MailHint?
+    /// Ältere nachladen (Dominik 2026-10-21 „1a 2a 5a“): the mark of the next older page (mail.more), "" at the end
+    @Published var vor = ""
+    @Published var more = false
+    @Published var moreFail: String?
+    @Published var moreErr: [String] = []
 
     func load(_ on: Bool) async {
         guard on else { Merken.drop("post"); Merken.dropAll("mail-"); items = []; loading = false; return }
@@ -1078,6 +1083,29 @@ final class PostModel: ObservableObject {
     private func show(_ d: [String: Any]) {
         let r = SparkAPI.inbox(d)
         items = r.items; boxes = r.boxes; connected = r.connected; errors = r.errors
+        vor = String((d["vor"] as? String ?? "").prefix(200)); moreFail = nil; moreErr = []
+    }
+
+    /// at the end of the list: the next older page, in the inbox or the folder, with the search; never kept on the iPhone
+    func older() async {
+        guard !vor.isEmpty, !more, let api = SparkAPI.current else { return }
+        more = true
+        defer { more = false }
+        let mark = vor
+        var q = ["q": String(query.prefix(100)), "vor": mark]
+        if let f = folder { q["account"] = f.account; q["folder"] = f.name }
+        do {
+            let d = try await api.object("GET", folder == nil ? "api/profile/mail/inbox" : "api/profile/mail/folder", query: q, timeout: 60)
+            guard mark == vor else { return }   // the list was loaded anew meanwhile
+            let r = SparkAPI.inbox(d), have = Set(items.map(\.id))
+            items += r.items.filter { !have.contains($0.id) }
+            items = Array(items.prefix(2000))
+            vor = items.count >= 2000 ? "" : String((d["vor"] as? String ?? "").prefix(200))
+            moreErr = r.errors
+            moreFail = nil
+        } catch {
+            moreFail = error.localizedDescription
+        }
     }
 }
 
@@ -1142,6 +1170,27 @@ struct PostView: View {
                     Text(verbatim: Self.day(day))
                 }
             }
+            if m.connected && !m.loading && (!m.vor.isEmpty || !m.items.isEmpty) {
+                // one row of fixed height at the end (nothing jumps); it loads the older mails when it comes into view
+                HStack(spacing: 8) {
+                    Spacer()
+                    if m.vor.isEmpty {
+                        Text("Keine älteren Mails")
+                    } else if m.more {
+                        ProgressView()
+                        Text("Lädt ältere Mails …")
+                    } else if m.moreFail != nil {
+                        Button("Nicht geladen, noch einmal") { Task { await m.older() } }
+                    } else {
+                        Text("Ältere Mails laden")
+                    }
+                    Spacer()
+                }
+                .font(.footnote).foregroundStyle(.secondary).frame(minHeight: 44)
+                .listRowBackground(Color.clear)
+                .onAppear { if m.moreFail == nil { Task { await m.older() } } }
+            }
+            if !m.moreErr.isEmpty { Text("Ältere Mails nicht erreicht: \(m.moreErr.joined(separator: ", "))").foregroundStyle(.red) }
             if !m.errors.isEmpty { Text("Nicht erreicht: \(m.errors.joined(separator: ", "))").foregroundStyle(.red) }
             if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
         }

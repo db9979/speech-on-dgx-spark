@@ -571,6 +571,17 @@ class FakeMailbox:
     after_login = ("IMAP4REV1", "MOVE")
     validity = b"1"
     copyuid = True
+    since = False      # SINCE by the Date header (test_mail_nachladen); else every message counts as recent
+
+    @staticmethod
+    def _day(m, default):
+        import email.utils as _eu
+        for ln in m["raw"].decode(errors="replace").split("\r\n"):
+            if ln.lower().startswith("date:"):
+                return _eu.parsedate_to_datetime(ln[5:].strip()).date()
+            if not ln:
+                break
+        return default
 
     @classmethod
     def reset(cls, inbox=(), sent=()):
@@ -681,9 +692,23 @@ class FakeMailbox:
         if cmd == "SEARCH":
             hit = list(box)
             a = list(args)
+            if getattr(self, "literal", None) is not None:   # imaplib sends it as the last argument (CHARSET UTF-8)
+                a.append('"' + self.literal.decode() + '"')
             while a:
                 k = a.pop(0)
-                if k == "UID":
+                if k == "CHARSET":
+                    a.pop(0)
+                elif k == "BEFORE":         # the Date header stands in for the arrival time
+                    import datetime as _dt
+                    day = _dt.datetime.strptime(a.pop(0), "%d-%b-%Y").date()
+                    hit = [m for m in hit if FakeMailbox._day(m, day) < day]
+                elif k == "FLAGGED":
+                    hit = [m for m in hit if "\\Flagged" in m["flags"]]
+                elif k == "SUBJECT":
+                    w = a.pop(0).strip('"').lower()
+                    hit = [m for m in hit if any(ln.lower().startswith("subject:") and w in ln.lower()
+                                                 for ln in m["raw"].decode().split("\r\n"))]
+                elif k == "UID":
                     spec = a.pop(0)
                     if ":" in spec:
                         lo = int(spec.split(":")[0])
@@ -691,6 +716,10 @@ class FakeMailbox:
                     else:
                         want = {int(x) for x in spec.split(",")}
                         hit = [m for m in hit if m["uid"] in want]
+                elif k == "SINCE" and FakeMailbox.since:   # by the Date header, only where a test asks for it
+                    import datetime as _dt
+                    day = _dt.datetime.strptime(a.pop(0), "%d-%b-%Y").date()
+                    hit = [m for m in hit if FakeMailbox._day(m, day) >= day]
                 elif k == "SINCE":
                     a.pop(0)
                 elif k == "UNSEEN":
