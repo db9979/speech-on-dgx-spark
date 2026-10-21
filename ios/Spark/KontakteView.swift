@@ -359,7 +359,9 @@ struct KontaktDetail: View {
     private func load(_ c: SparkKontakt) async {
         guard let api = SparkAPI.current else { return }
         if let d = try? await api.object("GET", "/api/profile/contacts/with/" + c.id, query: ["tz": TimeZone.current.identifier]) { with = d }
-        if let data = try? await api.call("GET", "/api/profile/contacts/vcf/" + c.id) {
+        if let got = try? await URLSession.shared.data(for: api.request("api/profile/contacts/vcf/" + c.id)),
+           (try? SparkAPI.check(got.0, got.1)) != nil {
+            let data = got.0
             let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
             try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
             let safe = c.name.filter { $0.isLetter || $0.isNumber || $0 == " " }

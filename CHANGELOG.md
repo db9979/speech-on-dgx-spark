@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.890** · 2026-10-21 · Fix iPhone-App: die Kontakte-Karte lädt die .vcf-Datei zum Teilen als Daten (die App ließ sich seit V01.0.888 nicht bauen)
 - **V01.0.889** · 2026-10-21 · CarPlay Runde 2: im Auto kein Ins-Wort-Fallen mehr (der Autolautsprecher brach die Antwort ab), Zuhör-Ton landet nicht mehr im Mikrofon, „Nicht erkannt, tipp zum Sprechen“ statt stillem Ende, Funkaussetzer bis 5 s beenden nichts, Mails, Fristen und Termine sagen sofort einen Satz und geben nach 30 s auf, neue Zeilen „Mein Tag“ und „Erinnerung sprechen“, Briefing beim Einsteigen (App-Schalter, aus), jedes Gesprächsende mit Grund im Ton-Protokoll
 - **V01.0.888** · 2026-10-21 · Kontakte wie Apple Kontakte (Stufe 3a): eigene Seite im Menü mit Adressbüchern als Gruppen, Suche, A–Z mit Buchstabenleiste, Karte mit Nachricht, Anruf, Mail, Termin, Teilen und „Mit Anna“ (nächster Termin, letzte Mail); Tipp auf den Absender einer Mail öffnet die Karte; mit dem Admin-Schalter „Kontakte ändern“ (aus) Bearbeiten mit − und + je Feld, zurück ins eigene Adressbuch mit ETag, neue Karten auch „Auf dem Spark“; iPhone unter Meine Sachen
 - **V01.0.887** · 2026-10-21 · Ältere E-Mails nachladen: am Ende der Liste kommen die nächsten 50 älteren Mails von selbst, im Eingang und in jedem Ordner, bis zur ersten Mail; die Suche geht über das ganze Postfach beim Mailserver; Panel, iPhone und spark-tui (bis 200)
