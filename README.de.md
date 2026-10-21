@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.885** Musik bearbeiten auf eigener Seite über die ganze Breite: große Welle, Werkzeuge links, Einstellungen in der Mitte, Fassungen rechts, Knopf in einer festen Leiste unten; auf dem Handy und in der iPhone-App dieselbe Ordnung
 - **V01.0.884** Fix iPhone-App: der Inhalt einer formatierten Mail blieb leer (die Sperrregel der Web-Ansicht wurde nicht übersetzt); im Dunkelmodus erscheint eine schlichte Mail hell auf dunklem Grund wie bei Apple Mail, eine Mail mit eigenen Farben bleibt auf Weiß
 - **V01.0.883** Der Begleiter am PC und Mac zeigt das Spark-Update: „Spark-Update läuft: 40 % · Schritt“ im Zustand, beim Neustart „Spark startet für das Update neu …“
 - **V01.0.882** Besprechungs-Aufgaben unter Offen: jede Aufgabe, die der Spark-Begleiter aus einer Besprechung auf eine Liste legt, wird auch eine Karte „Aus Besprechung“ unter Offen (nicht im Gespräch); „Erledigt“ hakt den Eintrag ab, abgehakt, zurückgeholt oder gelöscht auf der Liste folgt die Karte, überfällig bleibt sie offen
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.878** Update sperrt sofort beim Klick: Sicherung, Laden, Prüfen, Modell-Rechner und Neustart als Schritte im selben Fenster auf allen Geräten; jedes frühe Ende löst die Sperre und nennt den Grund
 - **V01.0.877** Für dich aus dem Vorrat: die letzte Lesung je Postfach bleibt versiegelt im Profil, nach einem Neustart sofort da; antwortet ein Postfach nicht, kommen seine Einträge mit „Stand hh:mm“ im Tab, beim Vorlesen und unter Heute
 - **V01.0.876** Alles Offene im Assistenten (Stufe 2): Vorschläge des Assistenten (neuer Termin, verschieben, löschen, Mail per Sprache, Aufräumen, Entwurf) als Karte „Wartet auf dein Ja“ unter der Antwort und unter Offen, mit „Eintragen“/„Senden“ (dasselbe wie ein getipptes Ja), „Ändern …“ (Formular oder Schreibfenster, ausgefüllt) und „Abbrechen“; auch vom Lautsprecher am Handy bestätigen; iPhone
-- **V01.0.875** Mitschreib-Link (Listen Stufe 4): ein Link mit QR-Code für Leute ohne Profil, die nur etwas auf eine Liste setzen (auf Wunsch die offenen Einträge sehen), mit Ablauf 7 Tage bis 1 Jahr, jederzeit widerrufbar, nur der Hash gespeichert, falsche Codes sperren wie eine PIN; im Panel und im iPhone, eigener Admin-Schalter, zuerst aus
 
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)

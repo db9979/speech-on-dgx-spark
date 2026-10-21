@@ -1654,11 +1654,42 @@ body.inchats:not(.appview):not(.kbd) .cx-comp{padding-right:96px}
 .mu-mini[hidden]{display:none}.mu-mt{flex:1;min-width:0;display:flex;align-items:center;gap:8px;border:0;background:none;padding:0;font:inherit;color:inherit;cursor:pointer;text-align:left}
 .mu-mt b{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px}.mu-mt small{font-variant-numeric:tabular-nums}
 .blquick{gap:6px;flex-wrap:wrap;margin:4px 0 8px}
-/* Musik bearbeiten (musik.js muEditor, muUpload): the wave with the chosen part, the kinds, the versions, the upload card */
+/* Musik bearbeiten (musik.js muBench, muUpload): the song's own page over the whole width (Dominik 2026-10-21 „1“):
+   head with ▶, the big wave with the chosen part, tools | fields | versions (the page keeps its one bar), the bar
+   with the button at the bottom; on a phone one column, the tools as a row to swipe, the versions behind a button */
 .mu-up[hidden],.mu-rng[hidden]{display:none}.mu-up>b{display:block;margin-bottom:4px}.mu-rights{display:flex;gap:8px;align-items:flex-start;margin-top:8px;font-size:13px}
 .mu-rights input{width:auto;margin-top:2px}.mu-up input[type=file]{min-width:0;max-width:100%}
-.mu-edit{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}.mu-edit>summary{cursor:pointer;font-weight:600}
-.mu-edit>.ld-chips{margin:10px 0 6px}.mu-wave{display:block;width:100%;height:64px;margin:6px 0;cursor:crosshair;touch-action:none;border-radius:8px;background:color-mix(in srgb,var(--line) 30%,transparent)}
+.mu-bench{border:1px solid var(--line);border-radius:14px;background:var(--card);display:flex;flex-direction:column;min-width:0;container-type:inline-size}
+/* while a song is edited the Ich menu steps aside, so the page gets the whole width (back with „‹ Lieder“) */
+@media (min-width:761px){#profmodal .mewrap:has(>.mebody>#musikbox.on .mu-bench){grid-template-columns:minmax(0,1fr)}
+  #profmodal .mewrap:has(>.mebody>#musikbox.on .mu-bench)>.menav,#profmodal:has(#musikbox.on .mu-bench) #profhead{display:none}
+  body.adm #profmodal:has(#musikbox.on .mu-bench) .mehead{grid-template-columns:minmax(0,1fr)}
+  body.adm #profmodal:has(#musikbox.on .mu-bench) #mepage,body.adm #profmodal:has(#musikbox.on .mu-bench) #setscope{grid-column:1}}
+.mu-bh{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line)}
+.mu-bt{flex:1;min-width:0}.mu-bt b{display:block;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mu-bt small{font-size:12.5px}
+.mu-bh .mu-player{width:min(360px,42%);margin:0}
+.mu-wbox{padding:14px 16px 8px}.mu-wbox .mu-rng{margin:4px 0 0}
+.mu-wave{display:block;width:100%;height:64px;margin:6px 0;cursor:crosshair;touch-action:none;border-radius:8px;background:color-mix(in srgb,var(--line) 30%,transparent)}
+.mu-bench .mu-wave{height:120px;border-radius:10px}
+.mu-cols{display:grid;grid-template-columns:200px minmax(0,1fr) 260px;border-top:1px solid var(--line);min-height:0}
+.mu-cols>*{min-width:0}
+.mu-tools.ld-chips{display:flex;flex-direction:column;flex-wrap:nowrap;align-items:stretch;gap:2px;margin:0;padding:10px;border-right:1px solid var(--line)}
+.mu-tools .ld-chip{border:0;border-radius:10px;background:none;color:var(--fg);font-size:14px;padding:9px 12px;text-align:left}
+.mu-tools .ld-chip.on{background:color-mix(in srgb,var(--acc) 12%,transparent);color:var(--acc)}
+.mu-bmain{padding:10px 20px 14px}.mu-bmain .mu-opt{margin:4px 0 10px}
+.mu-ver{padding:10px;border-left:1px solid var(--line)}.mu-ver h4{margin:4px 6px 8px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut)}
+.mu-ver .ld-row{border:1px solid var(--line);border-radius:10px;margin-bottom:6px}.mu-ver .ld-row.on{border-color:var(--acc)}
+.mu-bbar{position:sticky;bottom:0;z-index:2;display:flex;align-items:center;gap:10px;padding:10px 16px;border-top:1px solid var(--line);border-radius:0 0 14px 14px;
+  background:color-mix(in srgb,var(--card) 94%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.mu-bbar .fh{margin:0;min-width:0}.mu-bbar .mu-sp{flex:1}.mu-vt{display:none}
+@container (max-width:899.98px){.mu-cols{grid-template-columns:190px minmax(0,1fr)}.mu-ver{grid-column:1/-1;border-left:0;border-top:1px solid var(--line)}
+  .mu-ver .ld-row{display:inline-flex;width:calc(50% - 6px);margin-right:6px;vertical-align:top}}
+@container (max-width:639.98px){.mu-bh{flex-wrap:wrap;padding:10px 12px}.mu-bh .mu-player{width:100%}.mu-wbox{padding:10px 12px 6px}.mu-bench .mu-wave{height:96px}
+  .mu-cols{display:block}
+  .mu-tools.ld-chips{flex-direction:row;overflow-x:auto;padding:10px 12px;border-right:0;border-bottom:1px solid var(--line);scrollbar-width:none}
+  .mu-tools .ld-chip{border:1px solid var(--line);border-radius:99px;padding:6px 12px;white-space:nowrap;flex:none}
+  .mu-bmain{padding:8px 12px 12px}.mu-ver{display:none;border-left:0;border-top:1px solid var(--line)}.mu-ver.open{display:block}
+  .mu-vt{display:inline-flex}.mu-bbar{padding:8px 12px;flex-wrap:wrap}.mu-bbar .fh{order:-1;width:100%}.mu-bbar .fh:empty,.mu-bbar .mu-done,.mu-bbar .mu-sp{display:none}.mu-bbar .b.p{flex:1}}
 .mu-wave[hidden]{display:none}.mu-rng,.mu-opt{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:flex-end;margin:6px 0}.mu-opt textarea,.mu-opt>input{width:100%;box-sizing:border-box}
 .mu-f{display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--mut)}.mu-f .num{width:90px}.mu-opt .ld-chips{margin:0}
 .mu-near{display:flex;align-items:center;gap:8px;width:100%}.mu-near input{flex:1;min-width:0;width:auto;padding:0;accent-color:var(--acc)}
@@ -1666,7 +1697,7 @@ body.inchats:not(.appview):not(.kbd) .cx-comp{padding-right:96px}
 .mu-part.drag{opacity:.6;box-shadow:var(--shadow)}.mu-part.drop{border-top:3px solid var(--acc)}.mu-part textarea{width:100%;box-sizing:border-box;margin-top:4px}
 .mu-part-h{display:flex;align-items:center;gap:6px}.mu-part-h select{width:auto}.mu-grip{cursor:grab;touch-action:none;border:0;background:none;font-size:18px;padding:2px 6px;color:var(--mut)}
 .mu-mv{padding:2px 8px;min-width:0}.mu-f[hidden],.mu-near[hidden]{display:none}
-.mu-edit>.b.p{margin-top:6px}.mu-lab{font-size:13px;margin-top:-4px}.mu-fam{margin-top:12px}.mu-fam h4{margin:0 0 4px;font-size:13px;color:var(--mut)}
+.mu-lab{font-size:13px;margin-top:-4px}.mu-fam{margin-top:12px}.mu-fam h4{margin:0 0 4px;font-size:13px;color:var(--mut)}
 /* Zustand → Praxistest (praxistest.js) */
 .pt-sum{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 12px}.pt-n{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 12px;min-width:84px}
 .pt-n b{display:block;font-size:20px}.pt-n small{color:var(--mut)}

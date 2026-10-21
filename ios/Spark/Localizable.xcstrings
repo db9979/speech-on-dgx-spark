@@ -13831,16 +13831,6 @@
         }
       }
     },
-    "Was ändern": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "What to change"
-          }
-        }
-      }
-    },
     "Bereich (Sekunden)": {
       "localizations": {
         "en": {
@@ -14017,16 +14007,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Parts outside the range keep the original sound. Every change is a new version, the original stays."
-          }
-        }
-      }
-    },
-    "Vorschläge machen": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Make suggestions"
           }
         }
       }
@@ -15267,6 +15247,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "1 hour before"
+          }
+        }
+      }
+    },
+    "Vorschlag machen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make a suggestion"
+          }
+        }
+      }
+    },
+    "%lld Vorschläge machen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make %lld suggestions"
           }
         }
       }

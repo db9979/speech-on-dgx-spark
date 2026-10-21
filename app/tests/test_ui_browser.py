@@ -1115,6 +1115,76 @@ class Browser(unittest.TestCase):
             c["music"]["enabled"] = False
             helpers.write_config(c)
 
+    def test_musik_bench(self):
+        """Musik bearbeiten as the song's own page (Dominik 2026-10-21 „1“, musik-bearbeiten/vorschlag-1.png): „Bearbeiten“
+        in the details opens it over the whole width; the big wave, tools left of the fields and the versions right on a
+        computer, the tools as one row on a phone with the versions behind a button; the bar with the button stays at
+        the bottom; a tap on a version edits that one, „‹ Lieder“ goes back; no sideways scrolling, strict CSP."""
+        import musik
+        import profiles
+        me = next(u for u in profiles._load()["users"] if u["name"] == "Uitest")["id"]
+        with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
+            c = json.load(f)
+        c["chat"]["musik"] = True
+        c["chat"]["musik_bearbeiten"] = True
+        c.setdefault("music", {})["enabled"] = True
+        helpers.write_config(c)
+        musik.clear(me)
+        orig = musik.keep(me, b"ID3" + b"\0" * 64, {"wish": "Swing über einen <b>Admin</b>", "caption": "big band swing", "sung": False,
+                                                     "length_s": 120, "seconds": 20.0, "src": "seite"})
+        musik.keep(me, b"ID3" + b"\0" * 64, {"wish": orig["wish"], "caption": "reggae", "sung": False, "length_s": 120, "kind": "edit",
+                                              "root": orig["id"], "von": orig["id"], "label": ["Reggae 1", "Reggae 1"], "src": "seite"})
+
+        async def go():
+            async with async_playwright() as p:
+                for name, w, h in VIEWS:
+                    br, pg, errors = await self.page(p, w, h, csp=True)
+                    try:
+                        await pg.evaluate("MU.bench='';MU.sel='';openMe('musikbox')")
+                        await pg.wait_for_selector("#musikbox .ld-row", state="visible", timeout=20000)
+                        await pg.click("#musikbox .ld-row:has-text('Admin') .ld-mid")
+                        await pg.click("#musikbox .ld-detail button:has-text('Bearbeiten')")
+                        await pg.wait_for_selector("#musikbox .mu-bench .mu-cols", state="visible", timeout=20000)
+                        self.assertIsNone(await pg.query_selector("#musikbox .ld-list"), name)   # the page instead of the list
+                        self.assertIn("Swing über einen <b>Admin</b>", await pg.inner_text("#musikbox .mu-bt b"))
+                        box = lambda sel: pg.evaluate(f"(()=>{{const r=document.querySelector('{sel}').getBoundingClientRect();return [r.left,r.top,r.width,r.height]}})()")
+                        wave, tools, main = await box("#musikbox .mu-wave"), await box("#musikbox .mu-tools"), await box("#musikbox .mu-bmain")
+                        self.assertGreaterEqual(wave[3], 90, name)
+                        if w >= 1000:
+                            self.assertLess(tools[0] + tools[2], main[0] + 2, name)            # tools left of the fields
+                            self.assertTrue(await pg.is_visible("#musikbox .mu-ver"), name)     # versions beside them
+                            self.assertGreater(main[2], 400, name)
+                            self.assertFalse(await pg.is_visible("#ptabs"), name)              # the Ich menu steps aside
+                        else:
+                            self.assertLess(tools[1] + tools[3], main[1] + 2, name)            # tools as a row above
+                            self.assertFalse(await pg.is_visible("#musikbox .mu-ver"), name)
+                            await pg.click("#musikbox .mu-vt")
+                            self.assertTrue(await pg.is_visible("#musikbox .mu-ver"), name)
+                        self.assertTrue(await pg.is_visible("#musikbox .mu-bbar .b.p"), name)
+                        await pg.click("#musikbox .mu-tools button[data-k=richtung]")
+                        await pg.wait_for_selector("#musikbox .mu-bmain .mu-near", state="visible")
+                        if os.environ.get("MU_SHOT"):
+                            await pg.screenshot(path=os.environ["MU_SHOT"] + "bench-" + name + ".png", full_page=False)
+                        over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                        self.assertLessEqual(over, 1, f"{name}: {over}px zu breit")
+                        # a tap on the version edits that one; „‹ Lieder“ goes back to the list
+                        await pg.click("#musikbox .mu-ver .ld-row:has-text('Reggae 1') .ld-mid")
+                        await pg.wait_for_selector("#musikbox .mu-ver .ld-row.on:has-text('Reggae 1')", state="attached", timeout=20000)
+                        await pg.click("#musikbox .mu-bh button:has-text('Lieder')")
+                        await pg.wait_for_selector("#musikbox .ld-detail .mu-player", state="visible", timeout=20000)   # its details
+                        self.assertIsNone(await pg.query_selector("#musikbox .mu-bench"), name)
+                        self.assertEqual(errors, [], name)
+                    finally:
+                        await br.close()
+        try:
+            self.run_async(go())
+        finally:
+            musik.clear(me)
+            c["chat"]["musik"] = False
+            c["chat"]["musik_bearbeiten"] = False
+            c["music"]["enabled"] = False
+            helpers.write_config(c)
+
     def test_bilder_page(self):
         """Ich → Bilder (bilder.js, Bilder malen): the form, the gallery and a picture's details with download; on a
         computer and a phone, with the strict CSP, without sideways scrolling. The chat shows a painted picture under

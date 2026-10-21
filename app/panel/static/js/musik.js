@@ -35,7 +35,7 @@ function musikAtt(a){const d=icEl('div','mem');d.appendChild(document.createText
 // count and the "⋯" menu, the form as a card (length as chips, singing as a switch), search and quick filters, the songs
 // grouped by day as ld- rows with ▶ in front, the details beside (computer) or as their own page (phone). One player
 // (MU.au) for the rows, the details and the bar "spielt gerade" at the bottom, so two songs never play at once.
-const MU={d:null,sel:'',q:'',f:'all',play:'',au:null,ed:''};
+const MU={d:null,sel:'',q:'',f:'all',play:'',au:null,bench:''};
 const MULENS=[30,60,120,180,240,300,420,600];
 const muDay=s=>{const d=new Date((s||0)*1000);d.setHours(0,0,0,0);return Math.round((new Date().setHours(0,0,0,0)-d)/864e5)};
 // the time on the right of a row: today the clock, before that weekday and date
@@ -120,6 +120,9 @@ async function showMusik(){const box=$('musikbox');if(!box)return;if(!PROFILE||!
   // Fassungen: a version lists under its song (root); one whose song was deleted stands on its own
   const ids=new Set(d.songs.map(x=>x.id)),rootOf=x=>x.root&&ids.has(x.root)?x.root:x.id,fam=id=>d.songs.filter(x=>rootOf(x)===id);
   const roots=d.songs.filter(x=>rootOf(x)===x.id),nUp=roots.filter(x=>x.kind==='upload').length,nEd=roots.filter(x=>fam(x.id).length>1).length;
+  // Bearbeiten (Dominik 2026-10-21 „1“): the song's own page over the whole width instead of the list
+  const benched=ed.on&&d.songs.find(x=>x.id===MU.bench);if(MU.bench&&!benched)MU.bench='';
+  if(benched){wrap.textContent='';wrap.appendChild(muBench(benched,ed,lim,jobs,fam(rootOf(benched))));muSync();return}
   const tools=icEl('div','ld-tools'+(d.songs.length<6?' few':''));const q=document.createElement('input');q.type='search';q.value=MU.q;
   q.placeholder=t('Lieder suchen','Search songs');q.setAttribute('aria-label',t('Lieder suchen','Search songs'));
   const chips=icEl('div','ld-chips');const nSung=roots.filter(s=>s.sung).length;
@@ -156,9 +159,9 @@ async function showMusik(){const box=$('musikbox');if(!box)return;if(!PROFILE||!
       own.onclick=async()=>{const r3=await apiTry('/api/musik/'+encodeURIComponent(s.id)+'/eigenes',{method:'POST'});if(!r3.r.ok){alert(String(r3.d.detail||''));return}showMusik()};acts.appendChild(own)}
     if(ed.on&&!s.heard){const hr=icEl('button','b',t('Tempo und Tonart erkennen','Detect tempo and key'));hr.type='button';hr.disabled=jobs.length>0;
       hr.onclick=async()=>{hr.disabled=true;const r3=await apiTry('/api/musik/'+encodeURIComponent(s.id)+'/erkennen',{method:'POST'});if(!r3.r.ok){alert(String(r3.d.detail||''));hr.disabled=false;return}showMusik()};acts.appendChild(hr)}
+    if(ed.on){const eb=icEl('button','b p',t('Bearbeiten','Edit'));eb.type='button';eb.onclick=()=>{MU.bench=s.id;showMusik();box.scrollIntoView({block:'start'})};acts.prepend(eb);dl.className='b'}
     acts.appendChild(del);det.append(back,icEl('h3','',muTitle(s)),pl,facts,acts);
     if(s.kind==='edit')det.insertBefore(icEl('div','mut mu-lab',muLabel(s)),pl);
-    if(ed.on)det.appendChild(muEditor(s,ed,lim,jobs.length>0));
     // the versions of this song: ▶ in each row plays through the one player, so original and version can be heard in turn
     const others=fam(rootOf(s)).filter(x=>x.id!==s.id);if(others.length){const fv=icEl('div','mu-fam');fv.appendChild(icEl('h4','',t(`Fassungen (${others.length+1})`,`Versions (${others.length+1})`)));
       for(const x of others.sort((a,b)=>(a.t||0)-(b.t||0))){const row=icEl('div','ld-row');row.dataset.id=x.id;row.tabIndex=0;row.setAttribute('role','button');
@@ -194,8 +197,9 @@ async function muClear(){if(!confirm(t('Alle deine Lieder löschen? Das lässt s
   const r=await apiTry('/api/musik',{method:'DELETE'});if(!r.r.ok){alert(String(r.d.detail||''));return}if(MU.au){MU.au.pause();MU.play=''}MU.sel='';showMusik()}
 
 // ---------------------------------------------------------------- Musik bearbeiten
-// (musik-experte/plan.md, Dominik 2026-10-20 „alles nach Empfehlung“) in the details of a song: the wave with the chosen
-// part, the kind as chips with its few fields. With the music model a job (up to three suggestions, each a new version),
+// (musik-experte/plan.md, Dominik 2026-10-20 „alles nach Empfehlung“; own page over the whole width since Dominik
+// 2026-10-21 „1“, musik-bearbeiten/vorschlag-1.png): the head with ▶, the big wave with the chosen part, the tools on the
+// left, their few fields in the middle, the versions on the right, the button in a bar at the bottom. With the music model a job (up to three suggestions, each a new version),
 // cutting and tempo at once; the original always stays. The panel checks every number again with fixed rules.
 const MUARTS=[['abschnitt','Abschnitt neu','Part anew',1],['verlaengern','Verlängern','Extend',1],['richtung','Musikrichtung','Genre',1],
   ['remix','Remix','Remix',1],['text','Text ändern','Change lyrics',1],['schneiden','Schneiden & Blenden','Cut & fade',0],['tempo','Tempo & Tonart','Tempo & key',0]];
@@ -241,16 +245,22 @@ async function muWave(s,w){w.done=true;try{const r=await api(muFile(s.id));if(!r
     const C=window.OfflineAudioContext||window.webkitOfflineAudioContext;const a=await new C(1,1,44100).decodeAudioData(buf);
     const ch=a.getChannelData(0),n=400,step=Math.max(1,Math.floor(ch.length/n)),pk=new Float32Array(n);
     for(let i=0;i<n;i++){let m=0;const o=i*step;for(let k=0;k<step&&o+k<ch.length;k+=4){const v=Math.abs(ch[o+k]);if(v>m)m=v}pk[i]=m}w.peaks=pk;w.draw()}
-  catch(e){w.cv.hidden=true}}
-function muEditor(s,ed,lim,busy){const box=document.createElement('details');box.className='mu-edit';box.open=MU.ed===s.id;
-  box.appendChild(icEl('summary','',t('Bearbeiten','Edit')));const len=s.length_s||0,R={a:0,b:len};
+  catch(e){w.draw()}}   // undecodable: the range is still picked on the empty wave
+function muBench(s,ed,lim,jobs,family){const busy=jobs.length>0,box=icEl('div','mu-bench');const len=s.length_s||0,R={a:0,b:len};
+  // the head: back to the songs, the title with its facts, ▶ with the time (the one player of the page)
+  const back=icEl('button','b',t('‹ Lieder','‹ Songs'));back.type='button';back.onclick=()=>{MU.bench='';MU.sel=s.id;showMusik()};
+  const ti=icEl('div','mu-bt');ti.append(icEl('b','',muTitle(s)),icEl('small','mut',[muLen(len),s.kind==='upload'?t('hochgeladen','uploaded'):muSing(s),s.bpm?s.bpm+' BPM':'',s.key||'',s.kind==='edit'?muLabel(s):''].filter(Boolean).join(' · ')));
+  const pl=icEl('div','mu-player');pl.dataset.id=s.id;const pb=icEl('button','mu-pb');pb.type='button';pb.dataset.muplay=s.id;pb.onclick=()=>muToggle(s);
+  const rg=document.createElement('input');rg.type='range';rg.min='0';rg.max=String(Math.round(len));rg.value='0';rg.setAttribute('aria-label',t('Stelle im Lied','Position in the song'));
+  rg.oninput=()=>{if(MU.play!==s.id)muToggle(s);const a=muAu();if(isFinite(a.duration))a.currentTime=+rg.value};pl.append(pb,icEl('small','mu-t','0:00'),rg,icEl('small','',muClock(len)));
+  const head=icEl('div','mu-bh');head.append(back,ti,pl);
   // the part of the song: wave, from and to (also typed)
   const w={done:false,peaks:null,cv:document.createElement('canvas')};w.cv.className='mu-wave';w.cv.setAttribute('role','img');
   w.cv.setAttribute('aria-label',t('Welle des Liedes mit dem gewählten Bereich','Wave of the song with the chosen part'));
   const va=muNumber(0,0,len,0.5),vb=muNumber(Math.round(len*10)/10,0,len,0.5);va.setAttribute('aria-label',t('Von Sekunde','From second'));vb.setAttribute('aria-label',t('Bis Sekunde','To second'));
   const rl=icEl('small','mut');
   const show=()=>{va.value=String(Math.round(R.a*10)/10);vb.value=String(Math.round(R.b*10)/10);rl.textContent=t(`Bereich ${muSec(R.a)}–${muSec(R.b)} s (${muSec(R.b-R.a)} s)`,`Part ${muSec(R.a)}–${muSec(R.b)} s (${muSec(R.b-R.a)} s)`);w.draw()};
-  w.draw=()=>{const cv=w.cv,dpr=window.devicePixelRatio||1,W=Math.max(1,cv.clientWidth||300),H=64;cv.width=W*dpr;cv.height=H*dpr;const g=cv.getContext('2d');if(!g)return;
+  w.draw=()=>{const cv=w.cv,dpr=window.devicePixelRatio||1,W=Math.max(1,cv.clientWidth||300),H=Math.max(40,cv.clientHeight||64);cv.width=W*dpr;cv.height=H*dpr;const g=cv.getContext('2d');if(!g)return;
     g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,W,H);const css=getComputedStyle(cv),acc=css.getPropertyValue('--acc').trim()||'#2f6fde',mut=css.getPropertyValue('--mut').trim()||'#888';
     if(len>0){g.fillStyle=acc;g.globalAlpha=.16;g.fillRect(R.a/len*W,0,(R.b-R.a)/len*W,H);g.globalAlpha=1}
     const pk=w.peaks;if(!pk)return;const n=pk.length;let top=0;for(const v of pk)top=Math.max(top,v);top=top||1;
@@ -303,15 +313,30 @@ function muEditor(s,ed,lim,busy){const box=document.createElement('details');box
       get=()=>({von:R.a,bis:R.b,einblenden:+fi.value||0,ausblenden:+fo.value||0})}
     else{const tp=muNumber(100,75,125,5),ht=muNumber(0,-4,4,1);
       opt.append(muField(t('Tempo (%)','Tempo (%)'),tp),muField(t('Tonart (Halbtöne)','Key (half tones)'),ht));get=()=>({tempo:Math.round(+tp.value),halbtoene:Math.round(+ht.value)})}};
-  const arts=muChips(MUARTS.map(([k,de,en])=>[k,de,en]),art,k=>{art=k;paint()},t('Was ändern','What to change'));
+  const arts=muChips(MUARTS.map(([k,de,en])=>[k,de,en]),art,k=>{art=k;paint()},t('Werkzeuge','Tools'));arts.classList.add('mu-tools');
+  // the versions of this song: ▶ plays through the one player (original and versions in turn), a tap edits that one
+  const ver=icEl('div','mu-ver');ver.appendChild(icEl('h4','',t(`Fassungen (${family.length})`,`Versions (${family.length})`)));
+  for(const x of family.slice().sort((a,b)=>(a.t||0)-(b.t||0))){const row=icEl('div','ld-row'+(x.id===s.id?' on':''));row.dataset.id=x.id;row.tabIndex=0;row.setAttribute('role','button');
+    const vb=icEl('button','ld-ico mu');vb.type='button';vb.dataset.muplay=x.id;vb.onclick=e=>{e.stopPropagation();muToggle(x)};
+    const mid=icEl('span','ld-mid');mid.append(icEl('b','',x.kind==='edit'?muLabel(x):t('Original','Original')),icEl('small','',muLen(x.length_s)+' · '+muShort(x.t)));
+    const pick=()=>{if(x.id!==s.id){MU.bench=x.id;showMusik()}};row.append(vb,mid);row.onclick=pick;row.onkeydown=e=>{if((e.key==='Enter'||e.key===' ')&&e.target===row){e.preventDefault();pick()}};ver.appendChild(row)}
+  ver.appendChild(icEl('div','fh',t('Ein Tipp auf eine Fassung bearbeitet diese.','A tap on a version edits that one.')));
   go.onclick=async()=>{const b=get();if(!b)return;go.disabled=true;msg.textContent=t('wird angenommen …','being accepted …');
     const r=await apiTry('/api/musik/'+encodeURIComponent(s.id)+'/bearbeiten',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({art},b))});
     if(!r.r.ok){msg.textContent=String(r.d.detail||t('Ging nicht.','Did not work.'));go.disabled=false;return}
-    if(r.d.song)MU.sel=r.d.song.id;showMusik()};
-  box.ontoggle=()=>{MU.ed=box.open?s.id:'';if(box.open){if(!w.done)muWave(s,w);requestAnimationFrame(show)}};
-  box.append(arts,w.cv,rng,opt,icEl('div','fh',t('Teile außerhalb des Bereichs bleiben im Originalklang. Jede Änderung ist eine neue Fassung, das Original bleibt; KI-Fassungen sind gekennzeichnet.',
-    'Parts outside the range keep the original sound. Every change is a new version, the original stays; AI versions are marked.')),go,msg);
-  paint();if(box.open){muWave(s,w);requestAnimationFrame(show)}return box}
+    showMusik()};
+  // the versions on a phone: behind a button in the bar at the bottom
+  const vt=icEl('button','b mu-vt',t(`Fassungen (${family.length})`,`Versions (${family.length})`));vt.type='button';vt.onclick=()=>{ver.classList.toggle('open');if(ver.classList.contains('open'))ver.scrollIntoView({block:'nearest'})};
+  const stop=icEl('button','b mu-done',t('Fertig','Done'));stop.type='button';stop.onclick=back.onclick;
+  const waveBox=icEl('div','mu-wbox');waveBox.append(w.cv,rng);
+  const main=icEl('div','mu-bmain');main.append(opt,icEl('div','fh',t('Teile außerhalb des Bereichs bleiben im Originalklang. Jede Änderung ist eine neue Fassung, das Original bleibt; KI-Fassungen sind gekennzeichnet.',
+    'Parts outside the range keep the original sound. Every change is a new version, the original stays; AI versions are marked.')));
+  const cols=icEl('div','mu-cols');cols.append(arts,main,ver);
+  const bar=icEl('div','mu-bbar');bar.append(vt,msg,icEl('span','mu-sp'),stop,go);
+  box.append(head,waveBox,cols,bar);paint();muWave(s,w);requestAnimationFrame(show);
+  // a song being made (also the change just started): its line in the bar until it is done, then the new version
+  if(busy)muFollow(jobs[0].id,msg,x=>{msg.textContent=muJobLine(x);if(x.state==='done'||x.state==='error')setTimeout(showMusik,x.state==='error'?4000:0)});
+  if(typeof ResizeObserver!=='undefined')new ResizeObserver(()=>w.draw()).observe(w.cv);return box}
 // Eigene Datei hochladen: only with the tick for the rights; the file goes as it is, the model computer reads it in
 function muUpload(ed){const c=icEl('div','mu-new mu-up');c.hidden=true;if(!ed.on)return c;
   const f=document.createElement('input');f.type='file';f.accept='audio/*,.mp3,.wav,.flac,.m4a,.ogg';f.id='mufile';f.setAttribute('aria-label',t('Musikdatei','Music file'));

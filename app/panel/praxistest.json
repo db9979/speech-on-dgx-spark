@@ -2469,6 +2469,13 @@
 "titel": "iPhone: Mail-Inhalt und Dunkelmodus",
 "text": "A: Pi auf V01.0.884, iPhone-App aus TestFlight mit diesem Stand. Meine Sachen → E-Mail, eine Mail mit HTML (z. B. Newsletter) öffnen: der Inhalt steht formatiert da, Bilder von außen bleiben aus. B: Eine schlichte Mail (nur Text mit Links) im Dunkelmodus: helle Schrift auf dunklem Grund, Links lesbar. C: Den Newsletter im Dunkelmodus: bleibt auf seinem weißen Blatt mit runden Ecken. D: Einen Link antippen: die Frage mit der Adresse kommt vor Safari.",
 "thread": "Mail, Kalender, Kontakte wie bei Apple"
+},
+{
+"id": "P377",
+"v": 885,
+"titel": "Musik bearbeiten: eigene Seite",
+"text": "Unter Ich → Musik ein Lied öffnen → „Bearbeiten“: die Seite nimmt die ganze Breite, das Ich-Menü ist weg. Auf der großen Welle einen Bereich ziehen, links „Musikrichtung“ wählen, rechts die Fassungen mit ▶ vergleichen, unten „Vorschläge machen“; der Stand des Auftrags steht in der Leiste. „‹ Lieder“ führt zurück. Am Handy: Werkzeuge wischen, „Fassungen“ unten. iPhone-App: Lied nach rechts wischen → Bearbeiten, Werkzeug-Leiste, Knopf unten.",
+"thread": "Musik bearbeiten und remixen"
 }
 ]
 }

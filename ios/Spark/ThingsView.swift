@@ -884,9 +884,25 @@ struct SongEditView: View {
 
     var body: some View {
         Form {
+            // the same order as the panel's own page (Dominik 2026-10-21 „1“): the song on top, the tools as one row to
+            // swipe, their fields below, the button fixed at the bottom
             Section {
-                Text(verbatim: song.label.isEmpty ? song.title : song.label).lineLimit(2)
-                Picker("Was ändern", selection: $art) { ForEach(Self.arts, id: \.0) { Text($0.1).tag($0.0) } }
+                Text(verbatim: song.label.isEmpty ? song.title : song.label).font(.headline).lineLimit(2)
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        ForEach(Self.arts, id: \.0) { a in
+                            Button { art = a.0 } label: {
+                                Text(a.1).font(.subheadline.weight(art == a.0 ? .semibold : .regular))
+                                    .padding(.horizontal, 12).padding(.vertical, 7)
+                                    .background(Capsule().fill(art == a.0 ? Color.accentColor : Color.secondary.opacity(0.12)))
+                                    .foregroundStyle(art == a.0 ? Color.white : Color.primary)
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityAddTraits(art == a.0 ? .isSelected : [])
+                        }
+                    }
+                    .padding(.vertical, 2)
+                }
             }
             if art == "abschnitt" || art == "schneiden" {
                 Section("Bereich (Sekunden)") {
@@ -949,11 +965,13 @@ struct SongEditView: View {
             if let error { Text(SparkAPI.way(error)).foregroundStyle(.red) }
         }
         .navigationTitle("Bearbeiten")
-        .toolbar {
-            ToolbarItem(placement: .cancellationAction) { Button("Abbrechen") { dismiss() } }
-            ToolbarItem(placement: .confirmationAction) {
-                Button(model ? "Vorschläge machen" : "Neue Fassung") { Task { await send() } }.disabled(sending)
+        .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Abbrechen") { dismiss() } } }
+        .safeAreaInset(edge: .bottom) {
+            Button { Task { await send() } } label: {
+                Text(model ? (many > 1 ? "\(many) Vorschläge machen" : "Vorschlag machen") : "Neue Fassung").frame(maxWidth: .infinity)
             }
+            .buttonStyle(.borderedProminent).controlSize(.large).disabled(sending)
+            .padding(.horizontal).padding(.vertical, 8).background(.bar)
         }
         .onAppear {
             to = Double(song.seconds)
