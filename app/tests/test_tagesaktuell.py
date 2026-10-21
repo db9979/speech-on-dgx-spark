@@ -270,9 +270,10 @@ class Mail(Base):
         self.assertIn("E-Mails: Stand", frisch.nachsatz(st, "Du hast zwei Mails."))
 
     def test_a_supply_of_days_ago_is_no_answer(self):
-        saved = (mail.ASK_WAIT, mail._supply, mail._find)
-        self.addCleanup(lambda: (setattr(mail, "ASK_WAIT", saved[0]), setattr(mail, "_supply", saved[1]),
-                                 setattr(mail, "_find", saved[2])))
+        # mail._find goes back in Base.tearDown; a cleanup runs after it and would put this test's fake back for
+        # every later test (test_tidy, test_telegram_tasks found no mail, Angriffs-Selbsttest 2026-10-21)
+        saved = (mail.ASK_WAIT, mail._supply)
+        self.addCleanup(lambda: (setattr(mail, "ASK_WAIT", saved[0]), setattr(mail, "_supply", saved[1])))
         mail.ASK_WAIT = 0.1
         mail._supply = lambda *a: (([(A1["id"], 9, head(9))], [], False), time.time() - 2 * 86400)
         fast = mail._find

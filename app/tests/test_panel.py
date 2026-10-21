@@ -305,7 +305,10 @@ class HomeAssistant(unittest.TestCase):
         a.put("/api/profile/homeassistant", json={"url": f"http://127.0.0.1:{helpers.HA_PORT}", "token": helpers.HA_TOKEN})
         a.put("/api/profile/homeassistant/code", json={"code": "Apollo dreizehn"})
         import homeassistant
+        import klaeren
         homeassistant._VERIFY_WAIT = 0.05
+        # the unclear TV below leaves a question waiting (klaeren is on by default); later tests start without one
+        self.addCleanup(klaeren._waiting.clear)
         box = {"entity_id": "media_player.wz_appletv", "state": "off", "attributes": {"friendly_name": "Apple TV Wohnzimmer"}}
         helpers.HA_STATES.append(box)
         tv = next(x for x in helpers.HA_STATES if x["entity_id"] == "media_player.samsung")
