@@ -272,7 +272,7 @@ MODULE = {
     "auslassen": ("betrieb", "Ordner auslassen: Liste je Profil mit Ordnern und Namen, die der Spark nie liest; schon Gelesenes verlässt die Suche"),
     "nasablage": ("betrieb", "Ablage-Ordner: spark_ablage im Heimnetz, der einzige Ordner, in den der Spark schreibt; Eingang wird zu Dokumenten"),
     "gehaeuse": ("teilen", "Gehäuse des Panel-Rechners (Pironman 5): OLED-Seiten für den Admin, Status-LEDs, Lüftergrenzen"),
-    "naszustand": ("betrieb", "Zustand der NAS: Belegung, RAID, Festplatten und Temperatur über SNMPv3 (nur lesen, nur Admin)"),
+    "naszustand": ("betrieb", "Zustand der NAS: Volumes, Pools, USB-Platten, RAID, Festplatten und Temperatur über SNMPv3 (nur lesen, nur Admin)"),
     "nashilfe": ("betrieb", "NAS im Heimnetz finden (nur mDNS) und Rechte am Ort zeigen, mit Warnung bei Admin-Konto"),
     "update": ("betrieb", "Updates von GitHub, nur nach grünem Test"),
     "ghtoken": ("betrieb", "Lese-Token für GitHub"),

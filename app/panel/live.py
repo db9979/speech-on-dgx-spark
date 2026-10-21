@@ -1635,8 +1635,9 @@ def snapshot(view="admin", now=None):
             x["sub"] = rdl["sub"]
         if x["id"] == "schirm" and szr.get("on"):   # Steuerzentrale: shows or not, on or dark by the times (no content)
             x["sub"] = ("zeigt" if szr.get("sieht") else "wartet auf den Bildschirm") + ("" if szr.get("an") else " · dunkel nach Zeitplan")
-        if x["id"] == "naszustand" and nzs.get("on"):   # Zustand der NAS: volumes, disks, open problems (no address)
-            x["sub"] = (f"{nzs.get('vols', 0)} Speicherbereiche · {nzs.get('disks', 0)} Festplatten"
+        if x["id"] == "naszustand" and nzs.get("on"):   # Zustand der NAS: volumes, pools, USB disks, disks, open problems (no address)
+            x["sub"] = (f"{nzs.get('vols', 0)} Volumes · {nzs.get('pools', 0)} Pools"
+                        + (f" · {nzs['usb']} USB-Platten" if nzs.get("usb") else "") + f" · {nzs.get('disks', 0)} Festplatten"
                         + ("" if nzs.get("ok") else " · antwortet nicht") + (f" · {nzs['warn']} Hinweise" if nzs.get("warn") else ""))
         if x["id"] == "issues":
             x["sub"] = (f"{meld.get('drafts', 0)} Entwürfe · {meld.get('sent_today', 0)} heute gesendet"

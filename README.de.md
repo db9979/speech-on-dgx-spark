@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.908** NAS-Anzeige richtig: der Speicherpool heißt „an Volumes vergeben“ statt „100 % belegt“, keine Fehlwarnung mehr; USB-Platten an der NAS mit Belegung und freiem Platz
 - **V01.0.907** Wissenskarte schneller: eigene Tagesgrenze „Karte: Dokumente pro Tag und Profil“ (5 bis 500, Standard 200 statt der 40 des Wissensbuchs), so ist der Rückstand eines vollen Wissensbuchs in rund einem Tag verbunden
 - **V01.0.906** Mail wie ein großes Mailprogramm: Verschieben ohne Neuladen der Ordnerliste, Regel-Vorschläge nachts aus deinem KI-Ordner, auch als Karte im Assistenten, Unterhaltung unter einer Mail, nur der eigene Text ohne Zitate und Signatur, Später senden, Bestätigungscodes als Mitteilung (eigener Schalter, nie über Telegram) und Mail-Statistik; Panel, iPhone und Begleiter
 - **V01.0.905** Doku aktuell, Teil 5 (Technik): eigener Kasten „Post, Kalender, Kontakte“ im Bild unter Zustand → Technik mit Knoten-Seite (Seite, Frage oder App; Abruf über den Wächter; Vorrat versiegelt; Antwort mit Stand; Ändern nur mit Vorschau oder If-Match; Tür für Kalender- und Kontakte-Apps), die Mail-, Kalender- und Kontakte-Module bilden dort eine eigene Gruppe; das README-Schaubild zeigt die eigenen Seiten und Kalender- und Kontakte-Apps als Weg hinein
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.901** Doku aktuell, Teil 1: jeder Weg in docs/ und den READMEs führt zur heutigen Stelle (Ich → Überblick statt „Heute“, Einstellungen → Update, eigene Seiten Kalender, E-Mail, Kontakte, Funktionen → Mein Tag und Zugang, kein „Monitoring“ mehr); test_sprunglinks prüft jetzt auch die Doku, aus der die Hilfe antwortet; Regel „Ganze Doku immer aktuell“ in der Richtlinie
 - **V01.0.900** Alles Offene im Assistenten (Stufen 3 und 4): Chat-Nachrichten, Geteiltes, wichtige Mails, Fragen laufender Aufträge, MCP-Freigaben und für Admins ausgefallene Dienste als Karten unter Offen (nie mit Text); Knöpfe „Erledigt“/„Später“ unter Telegram-Meldungen und „Erledigt“ im Begleiter mit denselben Prüfungen; „Was ist offen?“ per Stimme (nur lesen); Live je Art; iPhone
 - **V01.0.899** Fix Selbsttests: der Einladungs-Test ließ einen Spark-Kalender und ausgeschaltete Schalter zurück, spätere Kalender-Seitentests wurden rot; jede Testklasse stellt jetzt alles zurück
-- **V01.0.898** Kiwix als Wissen: eigene Zeitgrenze im Vorlauf von „Erst lokal suchen“ (Standard 900 ms), je Frage die passenden Bücher (deutsche Wikipedia plus die Fachbücher, deren Titel zur Frage passt), Archiv-Artikel als Quelle mit Stand unter der Antwort, Bücher per Ziehen ordnen, „Kiwix prüfen“ meldet Bücher, die das Kiwix nicht mehr kennt; ist ein Buch älter als ein Jahr, nennt die Antwort seinen Stand
 
 
 

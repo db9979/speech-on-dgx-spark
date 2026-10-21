@@ -26,10 +26,17 @@ function nzRows(d){const v=d.values,l=d.last||{};if(!v)return `<div class="mut">
   const pill=(cls,w)=>`<span class="pill ${cls}">${esc(w)}</span>`;
   const head=`<div class="zrow">${l.ok?pill('ok',t('antwortet','answers')):pill('bad',nzWhy(l.why))}<span><b>${esc(v.model||'NAS')}</b>${v.dsm?' · '+esc(v.dsm):''}${v.update===true?' · '+esc(t('Update verfügbar','update ready')):''}
     <div class="mut">${esc(t('gelesen','read'))} ${esc(new Date(v.t*1000).toLocaleString())}${typeof v.temp==='number'?' · '+esc(t('System','system'))+' '+v.temp+' °C':''}${v.fans?' · '+esc(t('Lüfter','fans'))+' '+esc(nzWord(v.fans==='fehler'?'ausgefallen':'ok')):''}</div></span></div>`;
-  const vols=(v.vols||[]).map(x=>`<div class="zrow">${pill(x.st==='ok'?(typeof x.pct==='number'&&x.pct>=d.full_pct?'warn':'ok'):x.st==='beschädigt'||x.st==='ausgefallen'?'bad':'warn',nzWord(x.st))}<span><b>${esc(x.name||t('Speicherbereich','Storage area')+' '+x.n)}</b>${typeof x.pct==='number'?`<div class="mut">${esc(t(`${x.pct} % belegt, ${x.free_gb} GB frei von ${x.total_gb} GB`,`${x.pct} % used, ${x.free_gb} GB free of ${x.total_gb} GB`))}</div>`:''}</span></div>`).join('');
+  // kind from the panel (naszustand.art): a pool's "used" is what it gave to volumes (never "full"), the room for files is the volume's
+  const nzSize=x=>{const k=x.kind;if(typeof x.pct!=='number'||k==='cache')return '';
+    const s=k==='pool'?(x.free_gb===0?t(`ganz an Volumes vergeben (${x.total_gb} GB), der freie Platz steht beim Volume`,`fully given to volumes (${x.total_gb} GB), the free room shows at the volume`)
+      :t(`${x.total_gb-x.free_gb} von ${x.total_gb} GB an Volumes vergeben, ${x.free_gb} GB noch nicht vergeben`,`${x.total_gb-x.free_gb} of ${x.total_gb} GB given to volumes, ${x.free_gb} GB not yet given`))
+      :t(`${x.pct} % belegt, ${x.free_gb} GB frei von ${x.total_gb} GB`,`${x.pct} % used, ${x.free_gb} GB free of ${x.total_gb} GB`);
+    return `<div class="mut">${esc(s)}</div>`};
+  const vols=(v.vols||[]).map(x=>`<div class="zrow">${pill(x.st==='ok'?(x.kind==='vol'&&typeof x.pct==='number'&&x.pct>=d.full_pct?'warn':'ok'):x.st==='beschädigt'||x.st==='ausgefallen'?'bad':'warn',nzWord(x.st))}<span><b>${esc(x.name||t('Speicherbereich','Storage area')+' '+x.n)}</b>${nzSize(x)}</span></div>`).join('');
+  const usb=(v.usb||[]).map(x=>`<div class="zrow">${pill(typeof x.pct==='number'&&x.pct>=d.full_pct?'warn':'ok',typeof x.pct==='number'?nzWord('ok'):t('unbekannt','unknown'))}<span><b>${esc(t(x.name,x.en||x.name))}</b>${typeof x.pct==='number'?`<div class="mut">${esc(t(`${x.pct} % belegt, ${x.free_gb} GB frei von ${x.total_gb} GB`,`${x.pct} % used, ${x.free_gb} GB free of ${x.total_gb} GB`))}</div>`:`<div class="mut">${esc(t('Größe nicht lesbar','size not readable'))}</div>`}</span></div>`).join('');
   const disks=(v.disks||[]).map(x=>{const w=x.health&&x.health!=='ok'?x.health:x.st;return `<div class="zrow">${pill(w==='ok'?(typeof x.temp==='number'&&x.temp>=d.temp_max?'warn':'ok'):'bad',nzWord(w))}<span><b>${esc(t('Festplatte','Disk'))} ${x.n}</b>${typeof x.temp==='number'?' · '+x.temp+' °C':''}</span></div>`}).join('');
   const probs=(d.problems||[]).length?`<div class="note">${esc(d.problems.map(p=>t(p.de,p.en)).join(' · '))}</div>`:'';
-  return probs+head+vols+disks}
+  return probs+head+vols+usb+disks}
 async function zNasZustand(){const box=$('znaszustand');if(!box||document.hidden)return;
   const {r,d}=await apiTry('/api/admin/naszustand');if(!r.ok)return;
   box.hidden=!(d.on&&d.set);if(box.hidden)return;$('znaszustandlist').innerHTML=nzRows(d)}

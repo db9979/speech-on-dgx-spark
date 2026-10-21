@@ -2,7 +2,8 @@
 
 The admin lets the Spark read how the NAS is doing over SNMPv3 (DSM → Systemsteuerung → Terminal & SNMP → SNMP:
 SNMPv3 with a user, SHA and AES): volume use, RAID state, the disks' state and temperature, the system temperature,
-fans, power, uptime, the DSM version and whether an update is ready (Synology MIB 1.3.6.1.4.1.6574). Reading only:
+fans, power, uptime, the DSM version and whether an update is ready (Synology MIB 1.3.6.1.4.1.6574), and USB or eSATA
+disks plugged into the NAS (HOST-RESOURCES-MIB hrStorageTable, only mounts like /volumeUSB1/usbshare). Reading only:
 the Spark never sets anything over SNMP and never uses the DSM web interface.
 
     STATE/naszustand.json  {"host", "port", "user", "auth" (sealed), "priv" (sealed), "last": {"t", "ok", "why"},
@@ -15,13 +16,17 @@ Rules (fixed, never decided by the model):
   shown again, logged or sent to the apps. Changing them needs an admin (panel password or a profile with the Admin role, stufen.py).
 - Answers are data: only the OIDs asked for are taken (_parse), numbers outside sane ranges, rows beyond MAX_ROWS and
   texts that are no plain names are dropped and counted ("verworfen"). The tool nas_zustand answers with fixed
-  words and these numbers only (chat.INSIDE); volume names are kept only when they look like "Volume 1".
+  words and these numbers only (chat.INSIDE); volume names are kept only when they look like "Volume 1", a USB disk is
+  named by fixed words and its number ("USB-Platte 2"), never by the path.
+- The Synology RAID table lists storage pools and volumes. A pool's free space is what is not yet given to a volume
+  (Dominik 2026-10-21: "Storage Pool 1 … 0 GB frei" was read as full), so a pool is shown as "an Volumes vergeben" and
+  never warned of as full; only volumes and USB disks are (art()).
 - Read every READ_EVERY seconds (after a failure every RETRY), never while the Spark updates or the Notaus holds
   things off, in a quiet moment (vorrang.speaking).
 
 Notes (Dienst-Wächter, dienstwacht.py): service "naszustand" ("Zustand der NAS") is gone when the NAS has not
 answered for a few minutes, and back when it answers again. A volume over chat.nas_full_pct (90), a degraded or
-crashed RAID, a disk with a warning, a temperature over chat.nas_temp_max (60 °C) or a failed fan or power supply is
+crashed RAID (pool or volume), a disk with a warning, a USB disk over the same limit, a temperature over chat.nas_temp_max (60 °C) or a failed fan or power supply is
 told to the admins once (after SEEN_N readings in a row) and again when it is fine (dienstwacht.warn).
 
 Zustand → Dienste: card "Zustand der NAS" (naszustand.js); Live: target "Zustand der NAS" (live.py "naszustand",
@@ -57,6 +62,8 @@ HOST = re.compile(r"[a-z0-9.\-]{1,253}|[0-9a-f:.]{2,45}")
 USER = re.compile(r"[A-Za-z0-9._\-]{1,32}")
 NICE = re.compile(r"[A-Za-z0-9 ._+\-]{1,40}")
 VOL_NAME = re.compile(r"(Volume|Speicherpool|Storage Pool|Pool|SSD Cache|Cache|Group|Gruppe) ?\d{1,2}")
+POOL_NAME = re.compile(r"(Speicherpool|Storage Pool|Pool|Group|Gruppe) ?\d{1,2}")
+CACHE_NAME = re.compile(r"(SSD Cache|Cache) ?\d{1,2}")
 
 # the Synology MIB (SYNOLOGY-SYSTEM-MIB, -DISK-MIB, -RAID-MIB) and sysUpTime
 SYS = "1.3.6.1.4.1.6574.1"
@@ -67,6 +74,10 @@ DISK = "1.3.6.1.4.1.6574.2.1.1"
 DISK_COLS = {"5": "st", "6": "temp", "13": "health"}
 RAID = "1.3.6.1.4.1.6574.3.1.1"
 RAID_COLS = {"2": "name", "3": "st", "4": "free", "5": "total"}
+# HOST-RESOURCES-MIB hrStorageTable: descr (mount path), allocation unit, size and used in units (Integer32)
+HR = "1.3.6.1.2.1.25.2.3.1"
+HR_COLS = {"3": "descr", "4": "unit", "5": "size", "6": "used"}
+USB_PATH = re.compile(r"/volume(USB|SATA)(\d{1,2})/(?:usb|sata)share(?:\d{1,2}(?:-(\d{1,2}))?)?")
 # diskStatus: 1 normal, 2 initialized, 3 not initialized, 4 system partition failed, 5 crashed
 DISK_ST = {1: "ok", 2: "ok", 3: "neu", 4: "fehler", 5: "defekt"}
 # diskHealthStatus (DSM 7): 1 normal, 2 warning, 3 critical, 4 failing
@@ -88,6 +99,12 @@ WHY = {"offline": ("antwortet nicht", "not answering"), "auth": ("Benutzer oder 
        "other": ("Fehler", "error")}
 _lock = threading.Lock()
 _mem = {"running": False}
+
+
+def art(name):
+    """What a row of the RAID table is: "pool" (free = not yet given to a volume), "cache" or "vol"."""
+    name = name or ""
+    return "pool" if POOL_NAME.fullmatch(name) else "cache" if CACHE_NAME.fullmatch(name) else "vol"
 
 
 class Problem(Exception):
@@ -200,7 +217,7 @@ def _plain(v):
 
 
 async def _query(ip, port, d):
-    """{oid: value} for SCALARS and the DISK and RAID tables. Raises Problem."""
+    """{oid: value} for SCALARS, the DISK and RAID tables and the hrStorageTable columns. Raises Problem."""
     from pysnmp.hlapi.v3arch.asyncio import (ContextData, ObjectIdentity, ObjectType, SnmpEngine, UdpTransportTarget,
                                              bulk_walk_cmd, get_cmd)
     user = _user(d)
@@ -216,7 +233,7 @@ async def _query(ip, port, d):
             raise Problem("bad")
         for oid, v in binds:
             out[str(oid)] = _plain(v)
-        for base in (DISK, RAID):
+        for base in (DISK, RAID) + tuple(f"{HR}.{c}" for c in HR_COLS):
             n = 0
             async for err, status, _, binds in bulk_walk_cmd(eng, user, target, ContextData(), 0, 25,
                                                              ObjectType(ObjectIdentity(base)), lexicographicMode=False):
@@ -241,9 +258,41 @@ def _int(v, lo, hi):
     return v if isinstance(v, int) and not isinstance(v, bool) and lo <= v <= hi else None
 
 
+def _u32(v):
+    """hrStorageSize/Used are Integer32: a big disk wraps to a negative number (net-snmp), read it as unsigned."""
+    v = _int(v, -2 ** 31, 2 ** 31 - 1)
+    return None if v is None else v + 2 ** 32 if v < 0 else v
+
+
+def _usb(rows):
+    """USB and eSATA disks from the hrStorageTable rows: only mounts like /volumeUSB2/usbshare, named by number."""
+    out, dropped = [], 0
+    for i, r in sorted(rows.items()):
+        m = USB_PATH.fullmatch(r.get("descr").strip()) if isinstance(r.get("descr"), str) else None
+        if not m:
+            continue          # memory, / and the volumes: not asked for, not counted
+        if len(out) >= MAX_ROWS:
+            dropped += 1
+            continue
+        unit, size, used = _int(r.get("unit"), 1, 2 ** 24), _u32(r.get("size")), _u32(r.get("used"))
+        if size == 2 ** 31 - 1 or used == 2 ** 31 - 1 or (size is not None and used is not None and used > size):
+            size = used = None      # capped by the agent or odd: no numbers rather than wrong ones
+            dropped += 1
+        n = int(m.group(2))
+        part = int(m.group(3)) if m.group(3) else 0
+        name = ("USB-Platte" if m.group(1) == "USB" else "eSATA-Platte") + f" {n}" + (f" Teil {part}" if part else "")
+        en = ("USB disk" if m.group(1) == "USB" else "eSATA disk") + f" {n}" + (f" part {part}" if part else "")
+        total = size * unit if unit and size else None
+        free = (size - used) * unit if total and used is not None else None
+        out.append({"n": n, "name": name, "en": en, "pct": round(100 * used / size) if free is not None else None,
+                    "free_gb": free // 2 ** 30 if free is not None else None,
+                    "total_gb": total // 2 ** 30 if total else None})
+    return out, dropped
+
+
 def _parse(raw):
     """Only the asked-for OIDs, sane numbers and plain names: {"up_s", "sys", "temp", "power", "fans", "model",
-    "dsm", "update", "disks": [...], "vols": [...], "dropped"}."""
+    "dsm", "update", "disks": [...], "vols": [...] (each with "kind" pool, cache or vol), "usb": [...], "dropped"}."""
     raw = raw if isinstance(raw, dict) else {}
     dropped = 0
     out = {}
@@ -263,17 +312,21 @@ def _parse(raw):
         out[k] = v if NICE.fullmatch(v) else ""
         dropped += bool(v) and not out[k]
     rows = {}
-    for base, cols, kind in ((DISK, DISK_COLS, "disk"), (RAID, RAID_COLS, "raid")):
+    for base, cols, kind, top in ((DISK, DISK_COLS, "disk", 1000), (RAID, RAID_COLS, "raid", 1000), (HR, HR_COLS, "hr", 65535)):
         for oid, v in raw.items():
             if not oid.startswith(base + "."):
                 continue
             rest = oid[len(base) + 1:].split(".")
-            if len(rest) != 2 or rest[0] not in cols or not rest[1].isdigit() or int(rest[1]) > 1000:
+            if len(rest) != 2 or rest[0] not in cols or not rest[1].isdigit() or int(rest[1]) > top:
                 dropped += 1
                 continue
             rows.setdefault((kind, int(rest[1])), {})[cols[rest[0]]] = v
     disks, vols = [], []
+    usb, n = _usb({i: r for (kind, i), r in rows.items() if kind == "hr"})
+    dropped += n
     for (kind, i), r in sorted(rows.items()):
+        if kind == "hr":
+            continue
         if kind == "disk":
             if len(disks) >= MAX_ROWS:
                 dropped += 1
@@ -292,12 +345,13 @@ def _parse(raw):
                 free = total = None
                 dropped += 1
             name = r.get("name").strip() if isinstance(r.get("name"), str) else ""
-            vols.append({"n": len(vols) + 1, "name": name if VOL_NAME.fullmatch(name) else "",
+            name = name if VOL_NAME.fullmatch(name) else ""
+            vols.append({"n": len(vols) + 1, "name": name, "kind": art(name),
                          "st": RAID_ST.get(_int(r.get("st"), 1, 21)),
                          "pct": round(100 * (total - free) / total) if free is not None and total else None,
                          "free_gb": free // 2 ** 30 if free is not None and total else None,
                          "total_gb": total // 2 ** 30 if total else None})
-    out["disks"], out["vols"], out["dropped"] = disks, vols, dropped
+    out["disks"], out["vols"], out["usb"], out["dropped"] = disks, vols, usb, dropped
     if out["up_s"] is None and not disks and not vols and out["temp"] is None:
         raise Problem("bad")
     return out
@@ -334,11 +388,15 @@ def problems(v, c=None):
     full, hot = limits(c)
     out = []
     for x in v.get("vols") or []:
-        label = f"Speicherbereich {x['n']}"
+        de, en = (x["name"], x["name"]) if x.get("name") else (f"Speicherbereich {x['n']}", f"Storage area {x['n']}")
         if x.get("st") in RAID_BAD:
-            out.append((f"raid{x['n']}", f"{label} {x['st']}", f"Storage area {x['n']} {WORDS_EN[x['st']]}"))
+            out.append((f"raid{x['n']}", f"{de} {x['st']}", f"{en} {WORDS_EN[x['st']]}"))
+        # a pool's "used" is what it gave to volumes, a cache is always full: only a volume can run out of room
+        if art(x.get("name")) == "vol" and isinstance(x.get("pct"), int) and x["pct"] >= full:
+            out.append((f"voll{x['n']}", f"{de} zu {x['pct']} % belegt", f"{en} {x['pct']} % full"))
+    for i, x in enumerate(v.get("usb") or [], 1):
         if isinstance(x.get("pct"), int) and x["pct"] >= full:
-            out.append((f"voll{x['n']}", f"{label} zu {x['pct']} % belegt", f"Storage area {x['n']} {x['pct']} % full"))
+            out.append((f"usbvoll{i}", f"{x['name']} zu {x['pct']} % belegt", f"{x.get('en') or x['name']} {x['pct']} % full"))
     for x in v.get("disks") or []:
         bad = x.get("st") if x.get("st") in ("fehler", "defekt") else x.get("health") if x.get("health") not in (None, "ok") else ""
         if bad:
@@ -398,7 +456,7 @@ async def read_once(why="auto", now=None):
         d.update(last={"t": int(now), "ok": True}, values=v, warn=warn, seen=seen, reads=int(d.get("reads") or 0) + 1)
         _write(d)
     if why != "auto" or not was_ok or v["dropped"]:     # every good reading counts; a line when it means something
-        print(f"naszustand: gelesen | {len(v['vols'])} bereiche | {len(v['disks'])} platten | {len(warn)} hinweise"
+        print(f"naszustand: gelesen | {len(v['vols'])} bereiche | {len(v['usb'])} usb | {len(v['disks'])} platten | {len(warn)} hinweise"
               f" | {v['dropped']} verworfen | {why}", flush=True)
     return {"ok": True, "values": v}
 
@@ -453,6 +511,8 @@ def public(d=None, c=None):
     d = _read() if d is None else d
     full, hot = limits(c)
     v = d.get("values") or None
+    if v:      # the kind from the name also for a reading stored before it was kept (art(): one source for the page)
+        v = dict(v, vols=[dict(x, kind=art(x.get("name"))) for x in v.get("vols") or []])
     return {"on": switched(c), "set": set_up(), "host": d.get("host", ""), "port": int(d.get("port") or PORT),
             "user": d.get("user", ""), "has_auth": bool(d.get("auth")), "has_priv": bool(d.get("priv")),
             "last": d.get("last"), "values": v, "running": _mem["running"],
@@ -461,13 +521,14 @@ def public(d=None, c=None):
 
 
 def for_live():
-    """Live: whether it answers, volumes, disks and open problems (numbers only)."""
+    """Live: whether it answers, volumes, pools, USB disks, disks and open problems (numbers only)."""
     if not admin_on() or not set_up():
         return {"on": False}
     d = _read()
     v = d.get("values") or {}
-    return {"on": True, "ok": reachable(), "vols": len(v.get("vols") or []), "disks": len(v.get("disks") or []),
-            "warn": len(d.get("warn") or {})}
+    kinds = [art(x.get("name")) for x in v.get("vols") or []]
+    return {"on": True, "ok": reachable(), "vols": kinds.count("vol"), "pools": kinds.count("pool"),
+            "usb": len(v.get("usb") or []), "disks": len(v.get("disks") or []), "warn": len(d.get("warn") or {})}
 
 
 def alerts():
@@ -501,11 +562,18 @@ def text(part="alles"):
         for x in v.get("vols") or []:
             name = x["name"] or f"Speicherbereich {x['n']}"
             line = f"{name}: {x['st'] or 'Zustand unbekannt'}"
-            if isinstance(x.get("pct"), int):
+            kind = art(x.get("name"))
+            if kind == "pool" and isinstance(x.get("pct"), int):
+                line += (f", ganz an Volumes vergeben ({x['total_gb']} GB)" if x["free_gb"] == 0 else
+                         f", {x['total_gb'] - x['free_gb']} von {x['total_gb']} GB an Volumes vergeben, {x['free_gb']} GB noch nicht vergeben")
+            elif kind == "vol" and isinstance(x.get("pct"), int):
                 line += f", {x['pct']} % belegt, {x['free_gb']} GB frei von {x['total_gb']} GB"
             out.append(line + ".")
         if not v.get("vols"):
             out.append("Speicherbereiche: keine gemeldet.")
+        for x in v.get("usb") or []:
+            out.append(f"{x['name']}: " + (f"{x['pct']} % belegt, {x['free_gb']} GB frei von {x['total_gb']} GB."
+                                           if isinstance(x.get("pct"), int) else "Größe nicht lesbar."))
     if part in ("alles", "platten"):
         for x in v.get("disks") or []:
             st = x["health"] if x.get("health") not in (None, "ok") else x.get("st") or "unbekannt"
@@ -529,7 +597,8 @@ WORDS = re.compile(r"(?i)\b(nas|synology|diskstation|festplatte\w*|raid|volume\w
 PARTS = ("alles", "platz", "platten", "system")
 TOOL = {"type": "function", "function": {
     "name": "nas_zustand",
-    "description": "How the user's NAS is doing, read by the panel over SNMP: storage areas (state, % used, GB free), "
+    "description": "How the user's NAS is doing, read by the panel over SNMP: volumes (state, % used, GB free), storage "
+                   "pools (how much is given to volumes, not free space), USB disks on the NAS (% used, GB free), "
                    "disks (state, temperature), system temperature, fans, uptime, DSM version and update. Only for "
                    "the admin. Answer only from this result, never guess that all is well.",
     "parameters": {"type": "object", "properties": {

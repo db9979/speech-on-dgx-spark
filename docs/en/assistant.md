@@ -891,7 +891,7 @@ Every function of the Spark with its switch, what it builds on, where you set it
 
 - **Filing folder** (Features → My data → "Filing folder"; builds on "Storage and NAS"; Me → Storage): A folder "spark_ablage" on your NAS at home is the only place the Spark writes to.
 
-- **NAS status** (Features → My data → "NAS status"; builds on "Storage and NAS"): Every few minutes the Spark reads how your NAS is doing: use of the storage areas, RAID, state and temperature of the disks, system temperature, fans, uptime, DSM version and whether an update is ready.
+- **NAS status** (Features → My data → "NAS status"; builds on "Storage and NAS"): Every few minutes the Spark reads how your NAS is doing: use of the volumes, how much of the storage pool is given to volumes (that is not "full"), USB disks on the NAS, RAID, state and temperature of the disks, system temperature, fans, …
 
 - **Storage in the home network** (Features → My data → "Storage in the home network"; builds on "Copy of my data"; Me → Storage): Profiles may use places with addresses in the home network for their copy (NAS, Fritzbox, Nextcloud at home).
 

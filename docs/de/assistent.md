@@ -891,7 +891,7 @@ Jede Funktion des Spark mit ihrem Schalter, worauf sie aufbaut, wo man sie einri
 
 - **Ablage-Ordner** (Funktionen → Meine Daten → „Ablage-Ordner“; baut auf „Speicher und NAS“; Ich → Speicher): Ein Ordner „spark_ablage“ auf deiner NAS im Heimnetz ist der einzige Ort, an dem der Spark schreibt.
 
-- **Zustand der NAS** (Funktionen → Meine Daten → „Zustand der NAS“; baut auf „Speicher und NAS“): Der Spark liest alle paar Minuten, wie es deiner NAS geht: Belegung der Speicherbereiche, RAID, Zustand und Temperatur der Festplatten, Systemtemperatur, Lüfter, Laufzeit, DSM-Version und ob ein Update bereitsteht.
+- **Zustand der NAS** (Funktionen → Meine Daten → „Zustand der NAS“; baut auf „Speicher und NAS“): Der Spark liest alle paar Minuten, wie es deiner NAS geht: Belegung der Volumes, wie viel vom Speicherpool an Volumes vergeben ist (das ist kein „voll“), USB-Platten an der NAS, RAID, Zustand und Temperatur der Festplatten, Systemtempera …
 
 - **Speicher im Heimnetz** (Funktionen → Meine Daten → „Speicher im Heimnetz“; baut auf „Kopie meiner Daten“; Ich → Speicher): Profile dürfen Orte mit Adressen im Heimnetz für ihre Kopie nutzen (NAS, Fritzbox, Nextcloud zu Hause).
 

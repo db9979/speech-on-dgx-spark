@@ -8405,7 +8405,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Meine Daten",
 "title": "Meine Daten",
-"text": "- Zustand der NAS (Funktionen → Meine Daten → „Zustand der NAS“; baut auf „Speicher und NAS“): Der Spark liest alle paar Minuten, wie es deiner NAS geht: Belegung der Speicherbereiche, RAID, Zustand und Temperatur der Festplatten, Systemtemperatur, Lüfter, Laufzeit, DSM-Version und ob ein Update bereitsteht."
+"text": "- Zustand der NAS (Funktionen → Meine Daten → „Zustand der NAS“; baut auf „Speicher und NAS“): Der Spark liest alle paar Minuten, wie es deiner NAS geht: Belegung der Volumes, wie viel vom Speicherpool an Volumes vergeben ist (das ist kein „voll“), USB-Platten an der NAS, RAID, Zustand und Temperatur der Festplatten, Systemtempera …"
 },
 {
 "lang": "de",
@@ -19749,7 +19749,7 @@
 "file": "Assistant and panel",
 "head": "My data",
 "title": "My data",
-"text": "- NAS status (Features → My data → \"NAS status\"; builds on \"Storage and NAS\"): Every few minutes the Spark reads how your NAS is doing: use of the storage areas, RAID, state and temperature of the disks, system temperature, fans, uptime, DSM version and whether an update is ready."
+"text": "- NAS status (Features → My data → \"NAS status\"; builds on \"Storage and NAS\"): Every few minutes the Spark reads how your NAS is doing: use of the volumes, how much of the storage pool is given to volumes (that is not \"full\"), USB disks on the NAS, RAID, state and temperature of the disks, system temperature, fans, …"
 },
 {
 "lang": "en",

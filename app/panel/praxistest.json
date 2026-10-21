@@ -1183,7 +1183,7 @@
 "id": "P192",
 "v": 447,
 "titel": "Zustand der NAS (Synology S6, nächste freie Version, Thread „Synology nahtlos einbinden“)",
-"text": "DSM: Systemsteuerung → Terminal & SNMP → SNMP → SNMP-Dienst an, nur SNMPv3, eigener Benutzer, SHA mit Passwort, Datenschutz AES mit zweitem Passwort. A: Funktionen → unter „Speicher und NAS“ „Zustand der NAS“ an, Name/IP, Benutzer, beide Passwörter → „Speichern“ (Code) → „Zuletzt gelesen …“. Falsches Passwort → „Benutzer oder Passwort abgelehnt“. Zustand → Dienste: Karte „Zustand der NAS“ mit Modell, DSM, Volume (%, GB frei), Festplatten mit °C. Sprache (Admin-Profil): „Wie voll ist die NAS?“, „Geht es den Festplatten gut?“ → Zahlen aus dem Ergebnis; ein Nicht-Admin-Profil bekommt das Werkzeug nicht. Hinweis testen: „Hinweis ab Belegung“ unter die aktuelle Belegung stellen → nach zwei Lesungen (etwa 10 min) ein Hinweis an die Admins („Zustand der NAS: Speicherbereich 1 zu N % belegt“), zurückstellen → „wieder in Ordnung“. SNMP-Dienst in DSM aus → nach einigen Minuten „Zustand der NAS antwortet … nicht“, wieder an → „läuft wieder“. Live: Ziel „Zustand der NAS“ mit Zahlen. Logs → Diagnose, Bereich NAS: „naszustand: …“ ohne Adresse.",
+"text": "DSM: Systemsteuerung → Terminal & SNMP → SNMP → SNMP-Dienst an, nur SNMPv3, eigener Benutzer, SHA mit Passwort, Datenschutz AES mit zweitem Passwort. A: Funktionen → unter „Speicher und NAS“ „Zustand der NAS“ an, Name/IP, Benutzer, beide Passwörter → „Speichern“ (Code) → „Zuletzt gelesen …“. Falsches Passwort → „Benutzer oder Passwort abgelehnt“. Zustand → Dienste: Karte „Zustand der NAS“ mit Modell, DSM, Volume (%, GB frei), Festplatten mit °C. Sprache (Admin-Profil): „Wie voll ist die NAS?“, „Geht es den Festplatten gut?“ → Zahlen aus dem Ergebnis; ein Nicht-Admin-Profil bekommt das Werkzeug nicht. Hinweis testen: „Hinweis ab Belegung“ unter die aktuelle Belegung stellen → nach zwei Lesungen (etwa 10 min) ein Hinweis an die Admins („Zustand der NAS: Volume 1 zu N % belegt“), zurückstellen → „wieder in Ordnung“. SNMP-Dienst in DSM aus → nach einigen Minuten „Zustand der NAS antwortet … nicht“, wieder an → „läuft wieder“. Live: Ziel „Zustand der NAS“ mit Zahlen. Logs → Diagnose, Bereich NAS: „naszustand: …“ ohne Adresse.",
 "thread": "Synology nahtlos einbinden"
 },
 {
@@ -2594,6 +2594,13 @@
 "titel": "Wissenskarte schneller",
 "text": "A: Update. B: Funktionen → Eigene Dokumente → Wissensbuch → Wissenskarte: darunter „Karte: Dokumente pro Tag und Profil“ steht auf 200. C: Am nächsten Tag zeigt Wissensbuch → Karte oben viel weniger wartende Dokumente und Punkte mit Verbindungen. D: Eine Zahl unter 5 oder über 500 wird beim Speichern abgelehnt.",
 "thread": "Wissensgraph aus Dokumenten"
+},
+{
+"id": "P395",
+"v": 908,
+"titel": "NAS: Pool vergeben, nicht voll",
+"text": "A: Update, ein paar Minuten warten (oder Funktionen → Speicher und NAS → Zustand der NAS → „Jetzt lesen“). B: Zustand → Dienste, Karte „Zustand der NAS“: kein Hinweis „Speicherbereich 2 zu 100 % belegt“ mehr; „Storage Pool 1“ grün mit „ganz an Volumes vergeben (11165 GB), der freie Platz steht beim Volume“; „Volume 1“ mit % belegt und GB frei. C: Die USB-Platte an der NAS steht als „USB-Platte 2“ mit % belegt und GB frei (wie DSM: rund 7181 von 11086 GB benutzt); steht dort „Größe nicht lesbar“ oder fehlt sie, Bescheid geben. D: Die Admins bekommen einmal „Zustand der NAS wieder in Ordnung“ für die alte Fehlwarnung. E: Sprache (Admin-Profil): „Wie voll ist die NAS?“ nennt Volume, Pool „an Volumes vergeben“ und die USB-Platte. F: Zustand → Live: Zeile „Zustand der NAS“ mit Volumes, Pools, USB-Platten, Festplatten.",
+"thread": "NAS-Speicheranzeige richtig deuten"
 }
 ]
 }
