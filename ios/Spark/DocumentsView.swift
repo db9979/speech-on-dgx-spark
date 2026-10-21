@@ -974,7 +974,8 @@ struct WbPage: Identifiable, Hashable {
 }
 
 /// Meine Sachen → Dokumente → Wissensbuch: the pages by kind, what waits for the owner (contradictions and
-/// out-of-date sentences) and the Obsidian folder, the same as Ich → Dokumente → Wissensbuch in the panel. Only
+/// out-of-date sentences), the map (Wissenskarte.swift) and the Obsidian folder, the same as the menu page
+/// Wissensbuch in the panel. Only
 /// while the admin released it for the profile; the Spark checks every change (iphone.THINGS "wissensbuch").
 @MainActor
 final class WissensbuchModel: ObservableObject {
@@ -1051,6 +1052,9 @@ struct WissensbuchView: View {
     var body: some View {
         List {
             if m.loading { ProgressView() }
+            if Conversation.shared.allowed.areas.contains("wissenskarte") && !m.pages.isEmpty {
+                NavigationLink { WissenskarteView() } label: { Label("Karte", systemImage: "point.3.connected.trianglepath.dotted") }
+            }
             if !m.contradictions.isEmpty {
                 Section {
                     ForEach(Array(m.contradictions.enumerated()), id: \.offset) { _, g in
@@ -1158,6 +1162,9 @@ struct WbPageView: View {
                         Label("Stimmt nicht", systemImage: "xmark")
                     }
                 }
+            }
+            if Conversation.shared.allowed.areas.contains("wissenskarte") {
+                NavigationLink { WissenskarteView(around: page.id) } label: { Label("Auf der Karte", systemImage: "point.3.connected.trianglepath.dotted") }
             }
             if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
         }

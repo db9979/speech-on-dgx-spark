@@ -123,6 +123,7 @@ MODULE = {
     "doclingdienst": ("wissen", "Docling-Server im Heimnetz: Dokumente und Scans besser lesen"),
     "suchpruefung": ("wissen", "Suchprüfung: Prüffragen messen, wie gut die Dokumentensuche trifft"),
     "wissensbuch": ("wissen", "Wissensbuch: Seiten aus den eigenen Dokumenten, jeder Satz mit Quelle"),
+    "wissenskarte": ("wissen", "Wissenskarte: geprüfte Verbindungen zwischen den Seiten des Wissensbuchs, jede mit Quelle"),
     "nachsortieren": ("wissen", "Treffer nachsortieren: ein Cross-Encoder auf dem Prozessor ordnet die Kandidaten"),
     "docembed": ("wissen", "Bedeutungsvektoren für die Dokumentsuche"),
     "embed_worker": ("wissen", "Das Vektormodell im eigenen Prozess"),

@@ -127,6 +127,9 @@ THINGS = {
                     (("DELETE",), r"/api/profile/wissensbuch/satz/[0-9]{1,12}"),
                     (("POST",), r"/api/profile/wissensbuch/satz/[0-9]{1,12}/(?:stimmt|noch)"),
                     (("POST",), r"/api/profile/wissensbuch/ablegen")),
+    # Wissenskarte (wissenskarte.py): see the part of the map around a page or of a document, "Stimmt nicht" for one
+    # connection; the export as text stays in the browser
+    "wissenskarte": ((("GET",), r"/api/profile/wissenskarte"), (("DELETE",), r"/api/profile/wissenskarte/kante/[0-9]{1,12}")),
     # Kalender (plan kalender-mail Stufe 4, Apple-Stil „4a“ „5a“): the page's view (own and shared calendars), add,
     # change, delete, a series' one or future occurrences, „Rückgängig“; the tap is the yes, calendars.py checks like
     # on the page (own CalDAV, with the etag)

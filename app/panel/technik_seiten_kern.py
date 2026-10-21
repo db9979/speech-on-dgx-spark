@@ -241,7 +241,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Wissen: how a question finds passages
     "wissen": {
-        "stand": "79ad084d24",
+        "stand": "5762a1085f",
         "bezug": {
             "lokal.MAX_HITS": ["s5"], "wissen.search": ["s1", "s8", "s9"], "documents.search": ["s5", "s6"],
             "documents._terms": ["s5"], "documents.match_docs": ["s4"], "docembed.query": ["s3"],
@@ -250,7 +250,8 @@ SEITEN = {
             "regeln": ["s1", "s8"], "regel:Geteilte Dokumente": ["s8"], "regel:Gedächtnis": ["s13"],
             "regel:Erst lokal suchen": ["s5"], "regel:Wissensbuch": ["s13"], "wissensbuch.answer_block": ["s13"],
             "wissensbuch.PAGES_PER_DOC": ["s13"], "wissensbuch.MAX_PAGES": ["s13"],
-            "wissensbuch.SAMPLE": ["s13"],
+            "wissensbuch.SAMPLE": ["s13"], "wissenskarte.view": ["s13"], "wissenskarte.check_edge": ["s13"],
+            "wissenskarte.EDGES_PER_DOC": ["s13"], "wissenskarte.VIEW_NODES": ["s13"], "wissenskarte.MAX_EDGES": ["s13"],
         },
         "kurz": ("Wissen ist alles, was der Spark selbst weiß, ohne ins Internet zu gehen: die hochgeladenen Dokumente "
                  "jedes Profils (eine SQLite-Datei wissen.db pro Profil), das Gedächtnis, frühere Gespräche, das eigene "
@@ -416,6 +417,9 @@ SEITEN = {
             ("{wissensbuch.PAGES_PER_DOC}", ("Seiten, die ein Dokument im Wissensbuch ändern darf", "pages one document may change in the knowledge book"), "wissensbuch.PAGES_PER_DOC"),
             ("{wissensbuch.MAX_PAGES}", ("Seiten im Wissensbuch pro Profil", "pages in the knowledge book per profile"), "wissensbuch.MAX_PAGES"),
             ("{wissensbuch.SAMPLE}", ("Sätze, die das Modell nachts gegen ihre Quelle prüft (Standard)", "sentences the model checks against their source at night (default)"), "wissensbuch.SAMPLE"),
+            ("{wissenskarte.EDGES_PER_DOC}", ("Verbindungen, die ein Dokument in die Wissenskarte bringen darf", "connections one document may bring into the knowledge map"), "wissenskarte.EDGES_PER_DOC"),
+            ("{wissenskarte.MAX_EDGES}", ("Verbindungen in der Wissenskarte pro Profil", "connections in the knowledge map per profile"), "wissenskarte.MAX_EDGES"),
+            ("{wissenskarte.VIEW_NODES}", ("Punkte, die die Karte auf einmal zeigt", "points the map shows at once"), "wissenskarte.VIEW_NODES"),
         ],
         "einstellen": [
             ("Funktionen → Eigene Dokumente und darunter Bedeutungssuche an: Stellen bekommen einen Bedeutungsvektor "
@@ -432,6 +436,10 @@ SEITEN = {
              "wie viele Dokumente am Tag.",
              "Features → Own documents and below it Knowledge book on: pages from the own documents, with how many "
              "documents a day."),
+            ("Funktionen → Eigene Dokumente → Wissensbuch und darunter Wissenskarte an: Verbindungen zwischen den "
+             "Seiten, zu sehen im Menü Wissensbuch auf der Seite Karte.",
+             "Features → Own documents → Knowledge book and below it Knowledge map on: connections between the "
+             "pages, shown in the menu Knowledge book on the page Map."),
         ],
         "sehen": [
             ("Zustand → Logs → Anfragen: der Schritt „Nachsortieren“ mit Zahl der Kandidaten, behaltenen Stellen und "
@@ -484,6 +492,30 @@ SEITEN = {
                  "words. Export as Obsidian folder (ZIP); at night a copy into the filing folder when the profile files "
                  "automatically and the book changed."),
             ]),
+            (("Wissenskarte", "Knowledge map"), [
+                ("Ist die Wissenskarte an, bekommt das Sprachmodell nach dem Wissensbuch dasselbe Dokument noch einmal "
+                 "mit höchstens {wissenskarte.NODES_PER_DOC} Seiten, die das Panel auswählt (die Seiten des Dokuments "
+                 "und Seiten, deren Titel es nennt). Das Modell schlägt Verbindungen als JSON vor, jede mit einer Art "
+                 "aus einer festen Liste und der Nummer ihrer Stelle.",
+                 "When the knowledge map is on, the language model gets the same document again after the knowledge "
+                 "book, with at most {wissenskarte.NODES_PER_DOC} pages the panel picks (the document's pages and "
+                 "pages whose title it names). The model proposes connections as JSON, each with a kind from a fixed "
+                 "list and the number of its passage."),
+                ("Das Panel behält eine Verbindung nur, wenn beide Seiten angeboten waren, beide in der Stelle genannt "
+                 "sind, jede Zahl des Zusatzes in der Stelle steht und eine Ursache (führte zu, verursacht, erhöht, "
+                 "senkt) ein Wort des Grundes in der Stelle hat. Höchstens {wissenskarte.EDGES_PER_DOC} je Dokument; "
+                 "„Stimmt nicht“ bringt dieselbe Verbindung aus demselben Dokument nie wieder.",
+                 "The panel keeps a connection only when both pages were offered, both are named in the passage, "
+                 "every number of the detail stands in the passage and a cause (led to, causes, raises, lowers) has a "
+                 "word of reason in the passage. At most {wissenskarte.EDGES_PER_DOC} per document; „Not right“ never "
+                 "brings the same connection back from the same document."),
+                ("Die Karte zeichnen Browser und App mit eigenem Code aus Namen und Arten, nie aus SVG, Mermaid oder "
+                 "DOT des Modells. Das Panel liefert nur den sichtbaren Teil mit höchstens {wissenskarte.VIEW_NODES} "
+                 "Punkten; der Export als Mermaid- oder Graphviz-Text entsteht aus festem Code mit gereinigten Namen.",
+                 "Browser and app draw the map with their own code from names and kinds, never from SVG, Mermaid or "
+                 "DOT of the model. The panel only answers the visible part with at most {wissenskarte.VIEW_NODES} "
+                 "points; the export as Mermaid or Graphviz text comes from fixed code with cleaned names."),
+            ]),
             (("Erst lokal suchen", "Look locally first"), [
                 ("Vor der ersten Runde schaut das Panel selbst in Dokumente, Kiwix und frühere Gespräche, gleichzeitig "
                  "und nur kurz. Die Bedeutungssuche fährt nur mit, wenn ihr Modell schon läuft und frei ist; es wird "
@@ -515,10 +547,12 @@ SEITEN = {
             ("wissen.where", ("Herkunft einer Stelle für das Modell", "source of a passage for the model")),
             ("lokal.look", ("der kurze Blick vor der Antwort", "the quick look before the answer")),
             ("wissensbuch.answer_block", ("passende Seiten des Wissensbuchs mit Quellen", "fitting pages of the knowledge book with sources")),
+            ("wissenskarte.check_edge", ("feste Regeln für jede vorgeschlagene Verbindung", "fixed rules for every proposed connection")),
+            ("wissenskarte.view", ("der sichtbare Teil der Karte", "the visible part of the map")),
             ("gedaechtnis.hint_lines", ("Fakten in drei Blöcken", "facts in three blocks")),
         ],
         "tests": ["test_wissen", "test_nachsortieren", "test_abschnitte", "test_lokal", "test_kiwix", "test_gedaechtnis",
-                  "test_suchpruefung", "test_wissensbuch"],
+                  "test_suchpruefung", "test_wissensbuch", "test_wissenskarte"],
         "heute": [],
     },
 

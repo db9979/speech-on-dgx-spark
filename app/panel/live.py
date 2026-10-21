@@ -174,6 +174,8 @@ TARGETS = {
     "pruef": ("Suchprüfung", "Prüffragen und Trefferquote · auf dem Spark", "spark", False),
     # Wissensbuch (wissensbuch.py): shown while it is on, pages, sentences and documents waiting (numbers only)
     "wbuch": ("Wissensbuch", "Seiten aus den eigenen Dokumenten · auf dem Spark", "spark", False),
+    # Wissenskarte (wissenskarte.py): shown while it is on, checked connections, discarded ones and documents waiting (numbers only)
+    "wkarte": ("Wissenskarte", "Verbindungen zwischen Wissensbuch-Seiten · auf dem Spark", "spark", False),
     # Teilen mit Profilen (geteilt.py): shown while it is on, single shares and today's changes (numbers only)
     "geteilt": ("Geteilt", "Teilen mit Profilen · auf dem Spark", "spark", False),
     # Den Spark anrufen (telefon.py): the PBX in the home network; signed in, calls now and today in numbers, never a number
@@ -1298,6 +1300,13 @@ def snapshot(view="admin", now=None):
     if wbk.get("on"):
         used.add("wbuch")
     try:
+        import wissenskarte
+        wkk = wissenskarte.for_live()
+    except Exception:
+        wkk = {"on": False}
+    if wkk.get("on"):
+        used.add("wkarte")
+    try:
         import geteilt
         tei = geteilt.for_live()
     except Exception:
@@ -1657,6 +1666,10 @@ def snapshot(view="admin", now=None):
                         + (f" · {wbk['widerspruch']} Widersprüche" if wbk.get("widerspruch") else "")
                         + (f" · {wbk['veraltet']} veraltet?" if wbk.get("veraltet") else "")
                         + (" · arbeitet" if wbk.get("running") else ""))
+        if x["id"] == "wkarte":    # Wissenskarte: connections, discarded, documents waiting, profiles, numbers only (never a title)
+            x["sub"] = (f"{wkk.get('verbindungen', 0)} Verbindungen · {wkk.get('punkte', 0)} Punkte · {wkk.get('warten', 0)} Dokumente warten"
+                        + f" · {wkk.get('profile', 0)} Profile"
+                        + (" · arbeitet" if wkk.get("running") else ""))
         if x["id"] == "modell" and mr.get("on"):   # Modell-Rechner: reachable, units active, version (no address)
             x["sub"] = (("nicht erreichbar" + (" · Notbetrieb" if mr.get("notbetrieb") else "")) if not mr.get("ok") else
                         f"{mr.get('aktiv', 0)} von {mr.get('n', 0)} Diensten aktiv" + (f" · {mr['version']}" if mr.get("version") else "")

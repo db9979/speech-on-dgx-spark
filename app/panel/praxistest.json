@@ -2524,6 +2524,13 @@
 "titel": "Ordner sofort und Ordner-Menü",
 "text": "A: Pi auf V01.0.893. E-Mail öffnen, die Ordner (Postfächer) einmal zeigen lassen. B: Pi neu starten, E-Mail öffnen, Ordner zeigen: die Liste steht sofort da, statt „Lade die Ordner …“; ein paar Sekunden später stimmen die Ungelesen-Zahlen. C: Einen Ordner anlegen: er steht gleich in der Liste. D: iPhone-App: Meine Sachen → E-Mail → Ordner: sofort da. E: Am eigenen Ordner auf „⋯“ tippen (oder Rechtsklick): ein kleines Menü direkt daneben, nichts verschiebt sich; „Umbenennen“: der Name wird in der Zeile bearbeitbar, Enter speichert; auf dem Handy kommt das Menü von unten; im Dunkelmodus gut lesbar. F: iPhone: lang auf einen Ordner drücken: Menü mit Symbolen.",
 "thread": "Kalender und E-Mail in den Apps"
+},
+{
+"id": "P385",
+"v": 894,
+"titel": "Wissenskarte",
+"text": "A: Update, Admin: Funktionen → Eigene Dokumente → Wissensbuch an und darunter Wissenskarte an. B: Einige zusammengehörige Dokumente hochladen (z. B. Versicherung, Schadenmeldung und Rechnung des Autos) und ein paar ruhige Minuten warten. C: Im Menü Wissensbuch → Karte: Punkte mit Verbindungen, links die Dokumente, rechts die Auswahl mit Quelle; eine Ursache (rot gestrichelt) nur, wenn das Dokument den Grund nennt. D: Einen Punkt ziehen, ein Dokument auf die Karte ziehen (nur seine Verbindungen), „In die Mitte“, Zoom mit Rad oder zwei Fingern. E: Eine Verbindung wählen und „Stimmt nicht“: sie verschwindet und kommt nicht wieder. F: Export als Mermaid, Graphviz, SVG und PNG; Wissensbuch → Seiten → „Als Obsidian-Ordner herunterladen“: auf den Seiten stehen die Verbindungen als Links. G: Am Handy dieselbe Seite. H: iPhone-App: Meine Sachen → Dokumente → Wissensbuch → Karte, Punkt antippen, „In die Mitte“, nach links wischen „Stimmt nicht“. I: Zustand → Live zeigt die Zeile Wissenskarte nur mit Zahlen.",
+"thread": "Wissensgraph aus Dokumenten"
 }
 ]
 }

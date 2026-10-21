@@ -2195,6 +2195,14 @@
 "lang": "de",
 "src": "architektur",
 "file": "Architektur und Datenfluss",
+"head": "Wissenskarte",
+"title": "Wissenskarte",
+"text": "- Ist die Wissenskarte an, bekommt das Sprachmodell nach dem Wissensbuch dasselbe Dokument noch einmal mit höchstens 12 Seiten, die das Panel auswählt (die Seiten des Dokuments und Seiten, deren Titel es nennt). Das Modell schlägt Verbindungen als JSON vor, jede mit einer Art aus einer festen Liste und der Nummer ihrer Stelle. - Das Panel behält eine Verbindung nur, wenn beide Seiten angeboten waren, beide in der Stelle genannt sind, jede Zahl des Zusatzes in der Stelle steht und eine Ursache (führte zu, verursacht, erhöht, senkt) ein Wort des Grundes in der Stelle hat. Höchstens 30 je Dokument; „Stimmt nicht“ bringt dieselbe Verbindung aus demselben Dokument nie wieder. - Die Karte zeichnen Browser und App mit eigenem Code aus Namen und Arten, nie aus SVG, Mermaid oder DOT des Modells. Das Panel liefert nur den sichtbaren Teil mit höchstens 150 Punkten; der Export als Mermaid- oder Graphviz-Text entsteht aus festem Code mit gereinigten Namen."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
 "head": "Erst lokal suchen",
 "title": "Erst lokal suchen",
 "text": "- Vor der ersten Runde schaut das Panel selbst in Dokumente, Kiwix und frühere Gespräche, gleichzeitig und nur kurz. Die Bedeutungssuche fährt nur mit, wenn ihr Modell schon läuft und frei ist; es wird dafür nicht geweckt. - Eine Stelle zählt nur, wenn sie mindestens 0.6 der Suchwörter enthält. Was zu spät kommt, wird nicht abgewartet."
@@ -2213,7 +2221,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 30 Kandidaten für das Nachsortieren (Schritt 9) - -4.0 Untergrenze des Cross-Encoders (Schritt 10) - 0.4 Gewicht der Kontextzeile (Schritt 5) - 8 s längstes Warten auf den Fragevektor (Schritt 3) - 8.5 GiB freier Speicher, damit das Vektormodell startet (Schritt 3) - 1.5 GiB dasselbe auf einem Panel-Rechner (Spark teilen) (Schritt 3) - 3 Treffer höchstens bei „Erst lokal suchen“ (Schritt 5) - 5 Seiten, die ein Dokument im Wissensbuch ändern darf (Schritt 13) - 300 Seiten im Wissensbuch pro Profil (Schritt 13) - 50 Sätze, die das Modell nachts gegen ihre Quelle prüft (Standard) (Schritt 13)"
+"text": "- 30 Kandidaten für das Nachsortieren (Schritt 9) - -4.0 Untergrenze des Cross-Encoders (Schritt 10) - 0.4 Gewicht der Kontextzeile (Schritt 5) - 8 s längstes Warten auf den Fragevektor (Schritt 3) - 8.5 GiB freier Speicher, damit das Vektormodell startet (Schritt 3) - 1.5 GiB dasselbe auf einem Panel-Rechner (Spark teilen) (Schritt 3) - 3 Treffer höchstens bei „Erst lokal suchen“ (Schritt 5) - 5 Seiten, die ein Dokument im Wissensbuch ändern darf (Schritt 13) - 300 Seiten im Wissensbuch pro Profil (Schritt 13) - 50 Sätze, die das Modell nachts gegen ihre Quelle prüft (Standard) (Schritt 13) - 30 Verbindungen, die ein Dokument in die Wissenskarte bringen darf (Schritt 13) - 3000 Verbindungen in der Wissenskarte pro Profil (Schritt 13) - 150 Punkte, die die Karte auf einmal zeigt (Schritt 13)"
 },
 {
 "lang": "de",
@@ -2221,7 +2229,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Einstellen",
 "title": "Einstellen",
-"text": "- Funktionen → Eigene Dokumente und darunter Bedeutungssuche an: Stellen bekommen einen Bedeutungsvektor (Standard aus). - Funktionen → Eigene Dokumente und darunter Treffer nachsortieren an: dazu Modellgröße und wie lange höchstens gewartet wird. - Funktionen → Eigene Dokumente und darunter Steckbrief und Tags an: Suche nach Tags und Art. - Funktionen → Eigene Dokumente und darunter Gemeinsame Dokumente an: Dokumente „Für alle“. - Funktionen → Eigene Dokumente und darunter Wissensbuch an: Seiten aus den eigenen Dokumenten, dazu wie viele Dokumente am Tag."
+"text": "- Funktionen → Eigene Dokumente und darunter Bedeutungssuche an: Stellen bekommen einen Bedeutungsvektor (Standard aus). - Funktionen → Eigene Dokumente und darunter Treffer nachsortieren an: dazu Modellgröße und wie lange höchstens gewartet wird. - Funktionen → Eigene Dokumente und darunter Steckbrief und Tags an: Suche nach Tags und Art. - Funktionen → Eigene Dokumente und darunter Gemeinsame Dokumente an: Dokumente „Für alle“. - Funktionen → Eigene Dokumente und darunter Wissensbuch an: Seiten aus den eigenen Dokumenten, dazu wie viele Dokumente am Tag. - Funktionen → Eigene Dokumente → Wissensbuch und darunter Wissenskarte an: Verbindungen zwischen den Seiten, zu sehen im Menü Wissensbuch auf der Seite Karte."
 },
 {
 "lang": "de",
@@ -2237,7 +2245,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/wissen.py search: eigene und geteilte Dokumente, Mischung, Nachsortieren (Schritt 1, Schritt 8, Schritt 9) - app/panel/documents.py search: Volltext und Vektoren, Rangmischung (Schritt 5, Schritt 6) - app/panel/documents.py _terms: Suchwörter aus der Frage (Schritt 5) - app/panel/documents.py match_docs: Dokumente mit Tags und Art (Schritt 4) - app/panel/docembed.py query: Fragevektor oder nichts (Schritt 3) - app/panel/docembed.py _call: ein Auftrag an den Modellprozess (Schritt 3) - app/panel/nachsortieren.py rank: Cross-Encoder oder Reihenfolge der Mischung (Schritt 10) - app/panel/wissen.py recent_window: „zuletzt notiert“ als feste Regel (Schritt 11) - app/panel/wissen.py where: Herkunft einer Stelle für das Modell (Schritt 13) - app/panel/lokal.py look: der kurze Blick vor der Antwort (Schritt 5) - app/panel/wissensbuch.py answer_block: passende Seiten des Wissensbuchs mit Quellen (Schritt 13) - app/panel/gedaechtnis.py hint_lines: Fakten in drei Blöcken (Schritt 13)"
+"text": "- app/panel/wissen.py search: eigene und geteilte Dokumente, Mischung, Nachsortieren (Schritt 1, Schritt 8, Schritt 9) - app/panel/documents.py search: Volltext und Vektoren, Rangmischung (Schritt 5, Schritt 6) - app/panel/documents.py _terms: Suchwörter aus der Frage (Schritt 5) - app/panel/documents.py match_docs: Dokumente mit Tags und Art (Schritt 4) - app/panel/docembed.py query: Fragevektor oder nichts (Schritt 3) - app/panel/docembed.py _call: ein Auftrag an den Modellprozess (Schritt 3) - app/panel/nachsortieren.py rank: Cross-Encoder oder Reihenfolge der Mischung (Schritt 10) - app/panel/wissen.py recent_window: „zuletzt notiert“ als feste Regel (Schritt 11) - app/panel/wissen.py where: Herkunft einer Stelle für das Modell (Schritt 13) - app/panel/lokal.py look: der kurze Blick vor der Antwort (Schritt 5) - app/panel/wissensbuch.py answer_block: passende Seiten des Wissensbuchs mit Quellen (Schritt 13) - app/panel/wissenskarte.py check_edge: feste Regeln für jede vorgeschlagene Verbindung (Schritt 13) - app/panel/wissenskarte.py view: der sichtbare Teil der Karte (Schritt 13) - app/panel/gedaechtnis.py hint_lines: Fakten in drei Blöcken (Schritt 13)"
 },
 {
 "lang": "de",
@@ -2245,7 +2253,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "Selbsttests: test_wissen, test_nachsortieren, test_abschnitte, test_lokal, test_kiwix, test_gedaechtnis, test_suchpruefung, test_wissensbuch"
+"text": "Selbsttests: test_wissen, test_nachsortieren, test_abschnitte, test_lokal, test_kiwix, test_gedaechtnis, test_suchpruefung, test_wissensbuch, test_wissenskarte"
 },
 {
 "lang": "de",
@@ -4614,6 +4622,30 @@
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
 "text": "J-MM-TT.zip“ nach spark_ablage/Erstellt/, nur wenn sich das Buch seit der letzten Kopie geändert hat. Protokoll: wissen: wissensbuch abgelegt | …, … ablegen abgelehnt | …, … export | 1 datei, … nas abgelegt | 1 datei."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Wissenskarte (V01.0.894, Plan *wissensgraph* Stufe 1, Dominik 2026-10-21 „alles umsetzen wie empfohlen“): Admin-Schalter *Funktionen → Eigene Dokumente → Wissensbuch → Wissenskarte* (chat.knowledge_map, ab Werk aus, Kind von wissensbuch; kein Profilschalter, Gäste nie). Das Wissensbuch hat jetzt einen eigenen Eintrag im Menü (*Wissensbuch*, volle Seite mit den Reitern *Seiten* und *Karte*; der alte Kasten unter Ich → Dokumente ist weg, die Ich-Seite wbbox bleibt das Ziel jedes Wegs). Nach dem Wissensbuch-Schritt bekommt das Sprachmodell dasselbe Dokument noch einmal mit höchstens 12 Seiten, die das Panel auswählt (die Seiten des Dokuments, dann Seiten, deren ganzer Titel im Text steht), und schlägt als JSON Verbindungen vor, je mit einer Art aus der festen Liste wissenskarte.ARTEN (gehört zu, Teil von, besitzt, bezahlt an, versichert bei, Vertrag mit, arbeitet bei, wohnt in, liegt in, betrifft, Frist für, ersetzt, hängt ab von; Ursachen: führte zu, verursacht, erhöht, senkt) und der Nummer ihrer Stelle. Das Panel entscheidet mit festen Regeln (check_edge): beide Enden angeboten, beide in der Stelle genannt, Zusatz eine Zeile bis 40 Zeichen ohne Link oder Befehl mit Zahlenprobe, ein"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "e Ursache nur mit einem Wort des Grundes in der Stelle (SIGNALE), höchstens 30 Verbindungen je Dokument und 3000 je Profil, „Stimmt nicht“ (wk_block) für immer. Vorhandene Dokumente werden nach und nach nachgearbeitet (Fingerabdruck wb_docs.sig), gelöschte nehmen ihre Verbindungen sofort mit (documents.on_gone). Die Karte zeichnen Browser (eigener SVG-Code mit textContent) und iPhone (SwiftUI) selbst aus dem JSON von GET /api/profile/wissenskarte (höchstens 150 Punkte und 400 Verbindungen, um eine Seite, eines Dokuments oder die am besten verbundenen); das Modell liefert nie SVG, Mermaid oder DOT. Export als Mermaid- oder Graphviz-Text aus festem Code (Namen gereinigt, keine click-, style- oder Link-Zeilen), als SVG und PNG aus dem Browser, im Obsidian-Ordner jede Verbindung als [[Link]] mit Art. Punkte ziehen, Dokument auf die Karte ziehen, „In die Mitte“, Zoom mit Rad und zwei Fingern. Zustand → Live nur Verbindungen, Punkte, wartende Dokumente und Profile; Protokoll nur feste Wörter und Zahlen (wissen: wissenskarte verbunden | n verbindungen | m verworfen | …). Tabellen wk_edges, wk_docs, wk_block in users/<profil>/wissen.db. Als Nächstes: Stufe 2 (alle Dokumente, Inseln, Filter"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": ", nach einem Messtest mit 5000 Dokumenten), Stufe 3 (Werkzeuge wissen_weg und schaubild nach Messung), Stufe 4 (Code-Dateien mit festem Leser)."
 },
 {
 "lang": "de",
@@ -7685,7 +7717,7 @@
 "file": "iPhone-App „Spark“",
 "head": "Meine Sachen",
 "title": "Meine Sachen",
-"text": "te, soweit der Admin sie erlaubt, und „Ausgelassene Ordner“ (seit V01.0.778): die Liste der Ordner und Namen, die der Spark nie liest, mit „Wieder zulassen“, Namensregeln hinzufügen (mit Rückfrage, wie viele Dokumente die Suche verlassen) und per Wischen entfernen; einen einzelnen Ordner auslassen geht im Ordnerbaum im Panel. - Wissensbuch (seit V01.0.787, Plan *wissensbuch* Stufe E, nur wenn der Admin das Wissensbuch freigegeben hat): unter Dokumente die Zeile „Wissensbuch“ mit den Seiten nach Art, oben Widersprüche („Stimmt“ behält einen Wert) und veraltete Sätze („Stimmt noch“, „Stimmt nicht“). Eine Seite zeigt jeden Satz mit seiner Quelle; nach links wischen ist „Stimmt nicht“. „Als Obsidian-Ordner laden“ holt das Buch als ZIP zum Teilen. Im Gespräch steht unter einer Antwort aus mindestens zwei Quellen „Ins Wissensbuch“; erst dein Tippen legt sie ab. Neu schreiben und Seiten löschen gehen im Panel unter Ich → Dokumente → Wissensbuch. Android zeigt das alles über die Panel-Ansicht. - Vom Spark erstellt: die Dokumente, die der Spark gemacht hat, wie bisher. - Bilder: alle gemalten Bilder als Raster, ein Tippen zeigt eines groß mit Wunsch und Zeit, Teilen und Löschen. Oben ein Fe"
+"text": "te, soweit der Admin sie erlaubt, und „Ausgelassene Ordner“ (seit V01.0.778): die Liste der Ordner und Namen, die der Spark nie liest, mit „Wieder zulassen“, Namensregeln hinzufügen (mit Rückfrage, wie viele Dokumente die Suche verlassen) und per Wischen entfernen; einen einzelnen Ordner auslassen geht im Ordnerbaum im Panel. - Wissensbuch (seit V01.0.787, Plan *wissensbuch* Stufe E, nur wenn der Admin das Wissensbuch freigegeben hat): unter Dokumente die Zeile „Wissensbuch“ mit den Seiten nach Art, oben Widersprüche („Stimmt“ behält einen Wert) und veraltete Sätze („Stimmt noch“, „Stimmt nicht“). Eine Seite zeigt jeden Satz mit seiner Quelle; nach links wischen ist „Stimmt nicht“. „Als Obsidian-Ordner laden“ holt das Buch als ZIP zum Teilen. Im Gespräch steht unter einer Antwort aus mindestens zwei Quellen „Ins Wissensbuch“; erst dein Tippen legt sie ab. Neu schreiben und Seiten löschen gehen im Panel unter Ich → Dokumente → Wissensbuch. Android zeigt das alles über die Panel-Ansicht. - Wissenskarte (seit V01.0.894, Plan *wissensgraph* Stufe 1, nur wenn der Admin die Wissenskarte freigegeben hat): im Wissensbuch oben „Karte“ und auf jeder Seite „Auf der Karte“. Die App zeichnet di"
 },
 {
 "lang": "de",
@@ -7693,7 +7725,15 @@
 "file": "iPhone-App „Spark“",
 "head": "Meine Sachen",
 "title": "Meine Sachen",
-"text": "ld „Was soll ich malen?“; solange gemalt wird, schaut die App alle 4 Sekunden nach. Ändern, Schnellknöpfe und eigene Fotos gehen weiter im Panel unter Ich → Bilder. - Musik: alle Lieder nach Tag gruppiert wie im Panel (Heute, Gestern, Letzte 7 Tage, Älter), mit Abspielen direkt in der App, Länge, mit oder ohne Gesang, Uhrzeit oder Tag, wischen zum Löschen. Oben „Was für Musik?“ mit der Länge zur Wahl (dieselben Längen wie die Chips im Panel, bis zur Grenze des Admins) macht ein Stück ohne Gesang; Gesang und eigener Liedtext gehen im Panel unter Ich → Musik. - Gedächtnis: alle gemerkten Fakten mit Suche, „aus einem Gespräch gelernt“ oder „selbst gesagt“ mit Datum. Wischen zum Ändern oder Löschen, „Auswählen“ löscht mehrere, „Aufräumen vorschlagen“ fragt das Sprachmodell nach doppelten Einträgen, erst nach deinem „Übernehmen“ ändert sich etwas. Alles auf einmal vergessen geht weiter nur im Browser."
+"text": "e Punkte selbst (die Seite in der Mitte, ihre Nachbarn im Ring, der Rest außen, Ursachen rot gestrichelt); ein Tippen zeigt die Verbindungen des Punktes mit Quelle, „In die Mitte“ nimmt ihn als Mitte, nach links wischen „Stimmt nicht“. „Alles“ zeigt wieder die am besten verbundenen Punkte. Der Spark prüft jede Änderung (iphone.THINGS „wissenskarte“); der Export bleibt im Browser. - Vom Spark erstellt: die Dokumente, die der Spark gemacht hat, wie bisher. - Bilder: alle gemalten Bilder als Raster, ein Tippen zeigt eines groß mit Wunsch und Zeit, Teilen und Löschen. Oben ein Feld „Was soll ich malen?“; solange gemalt wird, schaut die App alle 4 Sekunden nach. Ändern, Schnellknöpfe und eigene Fotos gehen weiter im Panel unter Ich → Bilder. - Musik: alle Lieder nach Tag gruppiert wie im Panel (Heute, Gestern, Letzte 7 Tage, Älter), mit Abspielen direkt in der App, Länge, mit oder ohne Gesang, Uhrzeit oder Tag, wischen zum Löschen. Oben „Was für Musik?“ mit der Länge zur Wahl (dieselben Längen wie die Chips im Panel, bis zur Grenze des Admins) macht ein Stück ohne Gesang; Gesang und eigener Liedtext gehen im Panel unter Ich → Musik. - Gedächtnis: alle gemerkten Fakten mit Suche, „aus ei"
+},
+{
+"lang": "de",
+"src": "iphone-app",
+"file": "iPhone-App „Spark“",
+"head": "Meine Sachen",
+"title": "Meine Sachen",
+"text": "nem Gespräch gelernt“ oder „selbst gesagt“ mit Datum. Wischen zum Ändern oder Löschen, „Auswählen“ löscht mehrere, „Aufräumen vorschlagen“ fragt das Sprachmodell nach doppelten Einträgen, erst nach deinem „Übernehmen“ ändert sich etwas. Alles auf einmal vergessen geht weiter nur im Browser."
 },
 {
 "lang": "de",
@@ -11491,6 +11531,14 @@
 "lang": "en",
 "src": "architecture",
 "file": "Architecture and data flow",
+"head": "Knowledge map",
+"title": "Knowledge map",
+"text": "- When the knowledge map is on, the language model gets the same document again after the knowledge book, with at most 12 pages the panel picks (the document's pages and pages whose title it names). The model proposes connections as JSON, each with a kind from a fixed list and the number of its passage. - The panel keeps a connection only when both pages were offered, both are named in the passage, every number of the detail stands in the passage and a cause (led to, causes, raises, lowers) has a word of reason in the passage. At most 30 per document; „Not right“ never brings the same connection back from the same document. - Browser and app draw the map with their own code from names and kinds, never from SVG, Mermaid or DOT of the model. The panel only answers the visible part with at most 150 points; the export as Mermaid or Graphviz text comes from fixed code with cleaned names."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
 "head": "Look locally first",
 "title": "Look locally first",
 "text": "- Before the first round the panel itself looks in documents, Kiwix and earlier conversations, at the same time and only briefly. Meaning search only rides along when its model already runs and is free; it is not woken for it. - A passage only counts when it holds at least 0.6 of the search words. What comes too late is not waited for."
@@ -11509,7 +11557,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 30 candidates for re-ranking (step 9) - -4.0 cross-encoder's lower limit (step 10) - 0.4 weight of the context line (step 5) - 8 s longest wait for the question vector (step 3) - 8.5 GiB free memory for the vector model to start (step 3) - 1.5 GiB the same on a panel computer (Spark teilen) (step 3) - 3 hits at most with „Look locally first“ (step 5) - 5 pages one document may change in the knowledge book (step 13) - 300 pages in the knowledge book per profile (step 13) - 50 sentences the model checks against their source at night (default) (step 13)"
+"text": "- 30 candidates for re-ranking (step 9) - -4.0 cross-encoder's lower limit (step 10) - 0.4 weight of the context line (step 5) - 8 s longest wait for the question vector (step 3) - 8.5 GiB free memory for the vector model to start (step 3) - 1.5 GiB the same on a panel computer (Spark teilen) (step 3) - 3 hits at most with „Look locally first“ (step 5) - 5 pages one document may change in the knowledge book (step 13) - 300 pages in the knowledge book per profile (step 13) - 50 sentences the model checks against their source at night (default) (step 13) - 30 connections one document may bring into the knowledge map (step 13) - 3000 connections in the knowledge map per profile (step 13) - 150 points the map shows at once (step 13)"
 },
 {
 "lang": "en",
@@ -11517,7 +11565,7 @@
 "file": "Architecture and data flow",
 "head": "Settings",
 "title": "Settings",
-"text": "- Features → Own documents and below it Meaning search on: passages get a meaning vector (default off). - Features → Own documents and below it Re-rank hits on: with model size and the longest wait. - Features → Own documents and below it Document card and tags on: search by tags and kind. - Features → Own documents and below it Shared documents on: documents „for everyone“. - Features → Own documents and below it Knowledge book on: pages from the own documents, with how many documents a day."
+"text": "- Features → Own documents and below it Meaning search on: passages get a meaning vector (default off). - Features → Own documents and below it Re-rank hits on: with model size and the longest wait. - Features → Own documents and below it Document card and tags on: search by tags and kind. - Features → Own documents and below it Shared documents on: documents „for everyone“. - Features → Own documents and below it Knowledge book on: pages from the own documents, with how many documents a day. - Features → Own documents → Knowledge book and below it Knowledge map on: connections between the pages, shown in the menu Knowledge book on the page Map."
 },
 {
 "lang": "en",
@@ -11533,7 +11581,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/wissen.py search: own and shared documents, mix, re-ranking (step 1, step 8, step 9) - app/panel/documents.py search: full text and vectors, rank fusion (step 5, step 6) - app/panel/documents.py _terms: search words from the question (step 5) - app/panel/documents.py match_docs: documents with tags and kind (step 4) - app/panel/docembed.py query: question vector or nothing (step 3) - app/panel/docembed.py _call: one job for the model process (step 3) - app/panel/nachsortieren.py rank: cross-encoder or the mix's order (step 10) - app/panel/wissen.py recent_window: „noted lately“ as a fixed rule (step 11) - app/panel/wissen.py where: source of a passage for the model (step 13) - app/panel/lokal.py look: the quick look before the answer (step 5) - app/panel/wissensbuch.py answer_block: fitting pages of the knowledge book with sources (step 13) - app/panel/gedaechtnis.py hint_lines: facts in three blocks (step 13)"
+"text": "- app/panel/wissen.py search: own and shared documents, mix, re-ranking (step 1, step 8, step 9) - app/panel/documents.py search: full text and vectors, rank fusion (step 5, step 6) - app/panel/documents.py _terms: search words from the question (step 5) - app/panel/documents.py match_docs: documents with tags and kind (step 4) - app/panel/docembed.py query: question vector or nothing (step 3) - app/panel/docembed.py _call: one job for the model process (step 3) - app/panel/nachsortieren.py rank: cross-encoder or the mix's order (step 10) - app/panel/wissen.py recent_window: „noted lately“ as a fixed rule (step 11) - app/panel/wissen.py where: source of a passage for the model (step 13) - app/panel/lokal.py look: the quick look before the answer (step 5) - app/panel/wissensbuch.py answer_block: fitting pages of the knowledge book with sources (step 13) - app/panel/wissenskarte.py check_edge: fixed rules for every proposed connection (step 13) - app/panel/wissenskarte.py view: the visible part of the map (step 13) - app/panel/gedaechtnis.py hint_lines: facts in three blocks (step 13)"
 },
 {
 "lang": "en",
@@ -11541,7 +11589,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "Self-tests: test_wissen, test_nachsortieren, test_abschnitte, test_lokal, test_kiwix, test_gedaechtnis, test_suchpruefung, test_wissensbuch"
+"text": "Self-tests: test_wissen, test_nachsortieren, test_abschnitte, test_lokal, test_kiwix, test_gedaechtnis, test_suchpruefung, test_wissensbuch, test_wissenskarte"
 },
 {
 "lang": "en",
@@ -13838,6 +13886,30 @@
 "head": "Voice chat",
 "title": "Filing answers, Kiwix, Obsidian and NAS (V01.0.781, plan *wissensbuch*, stage D)",
 "text": "k changed since the last copy. Journal: wissen: wissensbuch abgelegt | …, … ablegen abgelehnt | …, … export | 1 datei, … nas abgelegt | 1 datei."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "Knowledge map (V01.0.894, plan *wissensgraph* stage 1, Dominik 2026-10-21 \"do everything as recommended\"): admin switch *Features → Own documents → Knowledge book → Knowledge map* (chat.knowledge_map, off by default, child of wissensbuch; no profile switch, never guests). The knowledge book now has its own menu entry (*Knowledge book*, a full page with the tabs *Pages* and *Map*; the old box under Me → Documents is gone, the Me page wbbox stays the target of every way). After the knowledge book step the language model gets the same document again with at most 12 pages the panel picks (the document's pages, then pages whose whole title stands in the text) and proposes connections as JSON, each with a kind from the fixed list wissenskarte.ARTEN (belongs to, part of, owns, paid to, insured with, contract with, works at, lives in, located in, concerns, deadline for, replaces, depends on; causes: led to, causes, raises, lowers) and the number of its passage. The panel decides by fixed rules (check_edge): both ends offered, both named in the passage, the detail one line of up to 40 characters without link or command and with the number probe, a cause only with a word of reason in the pas"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "sage (SIGNALE), at most 30 connections per document and 3000 per profile, \"Wrong\" (wk_block) for good. Existing documents are worked in bit by bit (fingerprint wb_docs.sig), deleted ones take their connections at once (documents.on_gone). Browser (own SVG code with textContent) and iPhone (SwiftUI) draw the map themselves from the JSON of GET /api/profile/wissenskarte (at most 150 points and 400 connections, around a page, of a document or the best connected ones); the model never delivers SVG, Mermaid or DOT. Export as Mermaid or Graphviz text from fixed code (names cleaned, no click, style or link lines), as SVG and PNG from the browser, in the Obsidian folder every connection as a [[link]] with its kind. Drag points, drag a document onto the map, \"To the middle\", zoom with the wheel and two fingers. Status → Live only connections, points, waiting documents and profiles; the journal only fixed words and numbers (wissen: wissenskarte verbunden | n verbindungen | m verworfen | …). Tables wk_edges, wk_docs, wk_block in users/<profile>/wissen.db. Next: stage 2 (all documents, islands, filters, after a measuring test with 5000 documents), stage 3 (tools wissen_weg and schaubild after "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "measuring), stage 4 (code files with a fixed reader)."
 },
 {
 "lang": "en",
@@ -16741,7 +16813,7 @@
 "file": "iPhone app \"Spark\"",
 "head": "My things",
 "title": "My things",
-"text": "he admin allows them, and \"Left-out folders\" (since V01.0.778): the list of folders and names the Spark never reads, with \"Let in again\", adding name rules (asking first how many documents leave the search) and removing them with a swipe; leaving out a single folder happens in the folder tree in the panel. - Knowledge book (since V01.0.787, plan *wissensbuch* stage E, only when the admin released the knowledge book): below Documents the row \"Knowledge book\" with the pages by kind, on top contradictions (\"Right\" keeps one value) and out-of-date sentences (\"Still right\", \"Wrong\"). A page shows every sentence with its source; swiping left is \"Wrong\". \"Load as an Obsidian folder\" fetches the book as a ZIP to share. In the conversation, an answer from at least two sources shows \"To the knowledge book\"; only your tap files it. Writing a page again and deleting pages stay in the panel under Me → Documents → Knowledge book. Android shows all of it through the panel view. - Made by the Spark: the documents the Spark made, as before. - Pictures: all painted pictures as a grid; a tap shows one large with wish and time, share and delete. At the top a field \"What shall I paint?\"; while painting"
+"text": "he admin allows them, and \"Left-out folders\" (since V01.0.778): the list of folders and names the Spark never reads, with \"Let in again\", adding name rules (asking first how many documents leave the search) and removing them with a swipe; leaving out a single folder happens in the folder tree in the panel. - Knowledge book (since V01.0.787, plan *wissensbuch* stage E, only when the admin released the knowledge book): below Documents the row \"Knowledge book\" with the pages by kind, on top contradictions (\"Right\" keeps one value) and out-of-date sentences (\"Still right\", \"Wrong\"). A page shows every sentence with its source; swiping left is \"Wrong\". \"Load as an Obsidian folder\" fetches the book as a ZIP to share. In the conversation, an answer from at least two sources shows \"To the knowledge book\"; only your tap files it. Writing a page again and deleting pages stay in the panel under Me → Documents → Knowledge book. Android shows all of it through the panel view. - Knowledge map (since V01.0.894, plan *wissensgraph* stage 1, only when the admin released the knowledge map): in the knowledge book \"Map\" on top and \"On the map\" on every page. The app draws the points itself (the page i"
 },
 {
 "lang": "en",
@@ -16749,7 +16821,15 @@
 "file": "iPhone app \"Spark\"",
 "head": "My things",
 "title": "My things",
-"text": ", the app looks again every 4 seconds. Changing, quick buttons and own photos stay in the panel under Me → Pictures. - Music: all songs grouped by day like in the panel (Today, Yesterday, Last 7 days, Older), played right in the app, with length, with or without singing, the time or day, swipe to delete. At the top \"What kind of music?\" with the length to pick (the same lengths as the chips in the panel, up to the admin's limit) makes a piece without singing; singing and own lyrics work in the panel under Me → Music. - Memory: all remembered facts with search, \"learned from a conversation\" or \"said yourself\" with the date. Swipe to change or delete, \"Select\" deletes several, \"Suggest tidying up\" asks the language model about double entries, and only your \"Accept\" changes anything. Forgetting everything at once stays in the browser."
+"text": "n the middle, its neighbours in a ring, the rest outside, causes as dashed red lines); a tap shows the point's connections with their source, \"To the middle\" takes it as the middle, swipe left for \"Wrong\". \"All\" shows the best connected points again. The Spark checks every change (iphone.THINGS \"wissenskarte\"); the export stays in the browser. - Made by the Spark: the documents the Spark made, as before. - Pictures: all painted pictures as a grid; a tap shows one large with wish and time, share and delete. At the top a field \"What shall I paint?\"; while painting, the app looks again every 4 seconds. Changing, quick buttons and own photos stay in the panel under Me → Pictures. - Music: all songs grouped by day like in the panel (Today, Yesterday, Last 7 days, Older), played right in the app, with length, with or without singing, the time or day, swipe to delete. At the top \"What kind of music?\" with the length to pick (the same lengths as the chips in the panel, up to the admin's limit) makes a piece without singing; singing and own lyrics work in the panel under Me → Music. - Memory: all remembered facts with search, \"learned from a conversation\" or \"said yourself\" with the date. S"
+},
+{
+"lang": "en",
+"src": "iphone-app",
+"file": "iPhone app \"Spark\"",
+"head": "My things",
+"title": "My things",
+"text": "wipe to change or delete, \"Select\" deletes several, \"Suggest tidying up\" asks the language model about double entries, and only your \"Accept\" changes anything. Forgetting everything at once stays in the browser."
 },
 {
 "lang": "en",

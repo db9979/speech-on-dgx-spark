@@ -169,7 +169,6 @@ async function showDocs(){if(!DOCS_ON){$('docbox').style.display='none';return}$
   if(typeof mkShow==='function')mkShow(I);
   if(typeof sprShow==='function')sprShow();
   if(typeof auShow==='function')auShow();
-  if(typeof wbShow==='function')wbShow();
   $('docsw').innerHTML=I?DOCSW.filter(([k])=>k==='due'?I.allow.brief:I.allow[k]).map(([k,l,h])=>`<div class="setrow"><div class="lbl"><b>${esc(l)}</b><span>${esc(h)}</span></div><label class="tgl"><input type="checkbox" data-docsw="${k}"${I.on[k]?' checked':''}><i></i></label></div>`).join(''):'';
   if(I&&I.space){const pct=Math.min(100,Math.round(100*I.used/I.space));$('docspace').hidden=false;
     $('docspacet').textContent=t(`${docSize(I.used)} von ${docSize(I.space)} belegt`,`${docSize(I.used)} of ${docSize(I.space)} used`);

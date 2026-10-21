@@ -62,7 +62,8 @@ ME_PAGES = (("overbox", "Überblick", "Overview"), ("bgbox", "Mein Zustand", "My
 # (id, section, name de, name en)
 OWN_PAGES = (("calbox", "cal", "Kalender", "Calendar"), ("mailbox", "post", "E-Mail", "E-mail"),
              ("taskbox", "listen", "Listen", "Lists"), ("vgbox", "offen", "Offen", "Open"),
-             ("conbox", "kontakte", "Kontakte", "Contacts"))
+             ("conbox", "kontakte", "Kontakte", "Contacts"),
+             ("wbbox", "wbuch", "Wissensbuch", "Knowledge book"))
 # Ich pages every profile has, whatever is switched on (me.js meAll shows them for every profile too)
 ME_ALWAYS = frozenset(("setbox", "factbox", "logbox", "secbox"))
 # Ich pages the iPhone app leaves out, each with its reason; every other page can be opened in the app
@@ -241,8 +242,11 @@ FEATURES = (
       guide="nachsortieren"),
     # Wissensbuch (wissensbuch.py, plan wissensbuch after Karpathy's LLM Wiki): own documents worked once into pages
     # with a source per sentence; the panel's fixed rules decide what stays, never the model
-    F("wissensbuch", "Wissensbuch", "Knowledge book", "data", ("knowledge_book",), parent="documents", me="docbox",
+    F("wissensbuch", "Wissensbuch", "Knowledge book", "data", ("knowledge_book",), parent="documents", me="wbbox",
       guide="wissensbuch"),
+    # Wissenskarte (wissenskarte.py, plan wissensgraph): the pages of the Wissensbuch as a map with checked connections
+    F("wissenskarte", "Wissenskarte", "Knowledge map", "data", ("knowledge_map",), parent="wissensbuch", me="wbbox",
+      guide="wissenskarte"),
     F("suchfragen", "Prüffragen vom Spark", "Test questions by the Spark", "data", ("search_check_auto",),
       parent="suchpruefung", me="docbox", guide="suchfragen"),
     # everyday

@@ -16010,6 +16010,96 @@
           }
         }
       }
+    },
+    "Noch keine Verbindungen. Sie entstehen nur, wenn niemand mit dem Spark spricht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No connections yet. They are only made while nobody talks to the Spark."
+          }
+        }
+      }
+    },
+    "Die Karte zeigt nur einen Teil. Tippe auf einen Punkt und dann „In die Mitte“.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The map shows only a part. Tap a point and then \"To the middle\"."
+          }
+        }
+      }
+    },
+    "Wissenskarte": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Knowledge map"
+          }
+        }
+      }
+    },
+    "Alles": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All"
+          }
+        }
+      }
+    },
+    "Verbindungen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connections"
+          }
+        }
+      }
+    },
+    "Nach links wischen: „Stimmt nicht“ entfernt die Verbindung für immer aus diesem Dokument.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Swipe left: \"Wrong\" removes the connection for good from this document."
+          }
+        }
+      }
+    },
+    "In die Mitte": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To the middle"
+          }
+        }
+      }
+    },
+    "Karte": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Map"
+          }
+        }
+      }
+    },
+    "Auf der Karte": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On the map"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

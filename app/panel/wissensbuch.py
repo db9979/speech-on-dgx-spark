@@ -675,12 +675,18 @@ def _file_name(title, have):
 
 def export_files(uid):
     """{file name: Markdown} of the whole book as an Obsidian folder: one note per page, [[links]] where a sentence
-    names another page, sources as footnotes, and an index by kind. Sentences and titles are text, never markup
+    names another page and for every connection of the Wissenskarte (with its kind), sources as footnotes, and an
+    index by kind. Sentences and titles are text, never markup
     the panel runs; only the owner downloads it."""
     pages = [p for p in index(uid) if p["n"]]
     have = set()
     names = {p["id"]: _file_name(p["title"], have) for p in pages}
     titles = sorted(((p["title"], names[p["id"]]) for p in pages if len(p["title"]) >= 4), key=lambda x: -len(x[0]))
+    try:
+        import wissenskarte    # the map's connections as [[links]] with their kind (plan wissensgraph Stufe 1)
+        links = wissenskarte.links_for(uid)
+    except Exception:   # noqa: BLE001
+        links = {}
     out = {}
     for p in pages:
         full = page(uid, p["id"]) or {"saetze": []}
@@ -697,6 +703,10 @@ def export_files(uid):
             mark = " (Widerspruch)" if s["mark"] == "widerspruch" else ""
             mark += " (veraltet?)" if s["flag"] == "veraltet" else ""
             lines.append(f"- {text}{mark} [^{num}]")
+        for art, other, detail, src in links.get(p["id"], ()):
+            if other in names:
+                num = notes.setdefault(src, len(notes) + 1)
+                lines.append(f"- {art} [[{names[other]}]]" + (f" ({detail})" if detail else "") + f" [^{num}]")
         body = (f"# {p['title']}\n\nArt: {p['art']}\n\n" + "\n".join(lines) + "\n\n"
                 + "\n".join(f"[^{n}]: {src}" for src, n in notes.items()) + "\n")
         out[names[p["id"]] + ".md"] = body
@@ -1157,5 +1167,23 @@ def admin_state():
     return for_live()
 
 
+def _own_count(uid):
+    if not os.path.exists(documents.db_path(uid)):
+        return 0
+    with _Db(uid) as con:
+        return con.execute("SELECT COUNT(*) FROM wb_pages").fetchone()[0]
+
+
+def _own_clear(uid):
+    """Ich → Daten löschen while the admin blocked the book for this profile: every page and what belongs to it."""
+    if not os.path.exists(documents.db_path(uid)):
+        return
+    with _Db(uid) as con:
+        for t in ("wb_pages", "wb_sent", "wb_docs", "wb_block", "wb_log", "wb_check", "wb_state", "wb_kiwix"):
+            con.execute(f"DELETE FROM {t}")
+    print("wissen: wissensbuch geleert | daten loeschen", flush=True)
+
+
+features.OWN["wissensbuch"] = (_own_count, _own_clear)
 if forget not in documents.GONE:     # deleted or left-out documents: their sentences go at once (documents.on_gone)
     documents.GONE.append(forget)

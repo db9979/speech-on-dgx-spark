@@ -10,7 +10,7 @@ namespace SparkBegleiter;
 /// </summary>
 internal static class Wege
 {
-    public const string Roots = "Einstellungen|Funktionen|Zustand|Personen und Geräte|Ich|Settings|Features|Status|People and devices|Me|Kalender|Calendar|E-Mail|E-mail|Kontakte|Contacts";
+    public const string Roots = "Einstellungen|Funktionen|Zustand|Personen und Geräte|Ich|Settings|Features|Status|People and devices|Me|Kalender|Calendar|E-Mail|E-mail|Kontakte|Contacts|Wissensbuch|Knowledge book";
 
     private static readonly Regex Way = new(
         @"(?<![\w-])(?<!Mein )(?<!My )(?<!→ )(?:" + Roots + @")\s*→[^\n.;:()!?]{1,160}",
