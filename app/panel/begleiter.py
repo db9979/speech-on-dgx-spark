@@ -81,7 +81,7 @@ import verbrauch
 import profiles
 import schreib
 import signatur
-from common import STATE, load_config, model_url, no_think, write_json
+from common import STATE, edit_distance, load_config, model_url, no_think, write_json
 from textnorm import plain_markdown
 from core import assistant, auth, browser_profile, confirm_code, json_body
 
@@ -1107,17 +1107,6 @@ async def program_screen(request: Request, image: UploadFile = File(...), questi
 _WAKE_HEY = re.compile(r"^(hey|hei|hej|he|hi|ey|hallo|hello|ok|okay|oh)$", re.I)
 
 
-def _lev(a, b):
-    d = list(range(len(b) + 1))
-    for i in range(1, len(a) + 1):
-        p, d[0] = d[0], i
-        for j in range(1, len(b) + 1):
-            q = d[j]
-            d[j] = min(d[j] + 1, d[j - 1] + 1, p + (a[i - 1] != b[j - 1]))
-            p = q
-    return d[len(b)]
-
-
 def match_wake(text):
     """The rest of the sentence after "Hey Spark" (as the browser's matchWake), or None without the word."""
     text = str(text or "")
@@ -1125,7 +1114,7 @@ def match_wake(text):
 
     def spark(w):
         w = w.lower()
-        return _lev(w, "spark") <= 1 or _lev(w, "sparks") <= 1 or bool(re.match(r"spar[ck]", w))
+        return edit_distance(w, "spark", 1) <= 1 or edit_distance(w, "sparks", 1) <= 1 or bool(re.match(r"spar[ck]", w))
     for i, m in enumerate(toks):
         w, end = m.group(0), -1
         if re.match(r"he[yij]?spar[ck]", w, re.I):

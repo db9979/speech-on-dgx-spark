@@ -83,6 +83,21 @@ def no_think(text):
     return text.rsplit("</think>", 1)[-1].replace("<think>", "").strip()
 
 
+def edit_distance(a, b, limit):
+    """Edit distance of a and b, or limit + 1 once it is above limit (misheard or mistyped words)."""
+    if abs(len(a) - len(b)) > limit:
+        return limit + 1
+    prev = list(range(len(b) + 1))
+    for i, ca in enumerate(a, 1):
+        cur = [i]
+        for j, cb in enumerate(b, 1):
+            cur.append(min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (ca != cb)))
+        if min(cur) > limit:
+            return limit + 1
+        prev = cur
+    return prev[-1]
+
+
 def load_config(section=None):
     """The configuration with the shipped default for every key that is missing (plan „Vereinheitlichen“,
     V01.0.268): one place for defaults instead of a `.get(key, default)` at every caller."""

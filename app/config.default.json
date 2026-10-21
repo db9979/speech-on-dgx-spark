@@ -260,6 +260,7 @@
     "wiki_url": "",
     "kiwix": false,
     "kiwix_url": "",
+    "kiwix_link_url": "",
     "kiwix_books": [],
     "local_first": false,
     "local_first_ms": 400,

@@ -2235,7 +2235,7 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 #### Erst lokal suchen
 
 - Vor der ersten Runde schaut das Panel selbst in Dokumente, Kiwix und frühere Gespräche, gleichzeitig und nur kurz. Die Bedeutungssuche fährt nur mit, wenn ihr Modell schon läuft und frei ist; es wird dafür nicht geweckt.
-- Eine Stelle zählt nur, wenn sie mindestens 0.6 der Suchwörter enthält. Was zu spät kommt, wird nicht abgewartet. Das Kiwix hat eine eigene Zeitgrenze (Standard 900 ms, die übrigen Quellen 400 ms) und fragt je Frage höchstens 5 Bücher: die größte deutsche Wikipedia und die Bücher, deren Titel oder Beschreibung zur Frage passt (kiwix.pick). Ein Archiv-Artikel steht als Quelle mit Stand unter der Antwort.
+- Eine Stelle zählt nur, wenn sie mindestens 0.6 der Suchwörter enthält (ein langes Wort darf um ein bis zwei Buchstaben vertippt sein, lokal.same). Was zu spät kommt, wird nicht abgewartet. Das Kiwix hat eine eigene Zeitgrenze (Standard 900 ms, die übrigen Quellen 400 ms) und fragt je Frage höchstens 5 Bücher: die größte deutsche Wikipedia und die Bücher, deren Titel oder Beschreibung zur Frage passt (kiwix.pick). Ein Archiv-Artikel steht als Quelle mit Stand unter der Antwort.
 
 #### Gedächtnis
 

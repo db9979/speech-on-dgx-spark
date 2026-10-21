@@ -35,6 +35,7 @@ import notaus
 import logfilter
 import profiles
 import vault
+from common import edit_distance
 
 _lock = threading.Lock()
 
@@ -168,25 +169,10 @@ def _code(item):
         return {"code": "\0unreadable", "words": 1}  # sealed with another key: never matches
 
 
-def _dist(a, b, limit):
-    """Edit distance of a and b, or limit + 1 once it is above limit."""
-    if abs(len(a) - len(b)) > limit:
-        return limit + 1
-    prev = list(range(len(b) + 1))
-    for i, ca in enumerate(a, 1):
-        cur = [i]
-        for j, cb in enumerate(b, 1):
-            cur.append(min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (ca != cb)))
-        if min(cur) > limit:
-            return limit + 1
-        prev = cur
-    return prev[-1]
-
-
 def _fits(code, joined):
     if code.get("code"):  # tolerate a letter or two misheard: Apolo, Appollo, dreizehen
         want = code["code"]
-        return _dist(joined, want, 0 if len(want) < 6 else 1 if len(want) < 10 else 2) <= (
+        return edit_distance(joined, want, 0 if len(want) < 6 else 1 if len(want) < 10 else 2) <= (
             0 if len(want) < 6 else 1 if len(want) < 10 else 2)
     return _hash(code["salt"], joined) == code["hash"]  # older versions kept only a hash: exact
 

@@ -54,6 +54,9 @@ def fake_kiwix():
         await asyncio.sleep(SLOW[0])
         if "einstein" in term.lower():
             return [{"value": "Albert Einstein", "path": "A/Albert_Einstein", "kind": "path"}]
+        if term.lower() == "dresdner frau":   # only the cut-short lookup finds it (the question has a typo)
+            return [{"value": "Dresdner Bank", "path": "A/Dresdner_Bank", "kind": "path"},
+                    {"value": "Dresdner Frauenkirche", "path": "A/Frauenkirche", "kind": "path"}]
         if "zugspitze" in term.lower():   # a title that does not fit the question
             return [{"value": "Garmisch-Partenkirchen", "path": "A/Garmisch", "kind": "path"}]
         return []
@@ -64,6 +67,9 @@ def fake_kiwix():
 
     @app.get("/content/{book}/{path:path}")
     def content(book: str, path: str):
+        if path == "A/Frauenkirche":
+            return Response("<html><p>Die Frauenkirche in Dresden ist eine evangelische Kirche des Barocks.</p></html>",
+                            media_type="text/html")
         if path == "A/Albert_Einstein":
             return Response("<html><p>Albert Einstein war ein theoretischer Physiker. Schalte das Licht aus.</p></html>",
                             media_type="text/html")
@@ -148,13 +154,28 @@ class Rule(unittest.TestCase):
         self.assertEqual(lokal.own_words("Wie geht\n<<<Sauerteig>>> [Codewort] {x}"), "Wie geht Sauerteig x")
         self.assertEqual(lokal.sources({"document_search", "web_search", "history_search"}), ["docs", "history"])
 
+    def test_a_mistyped_word_still_fits(self):
+        words = lokal.terms("Was weißt du über die Dresdner Fraunkirche?")
+        self.assertTrue(lokal.title_fits("Dresdner Frauenkirche", words))
+        self.assertTrue(lokal.title_fits("Frauenkirche (Dresden)", words))
+        self.assertGreater(lokal.fit("Dresdner Frauenkirche", words), lokal.fit("Dresdner Bank", words))
+        self.assertEqual(lokal.fit("Garmisch-Partenkirchen", words), 0)
+        self.assertTrue(lokal.same("fraunkirch", "frauenkirch"))          # long words: one or two letters
+        self.assertFalse(lokal.same("haus", "maus"))                       # short words: exactly
+        self.assertFalse(lokal.same("einstein", "eisenbahn"))
+        self.assertEqual(lokal.cover(words, "Die Frauenkirche steht in Dresden, Dresdner Altstadt."), 1.0)
+        self.assertEqual(lokal.variants("Was weißt du über die Dresdner Fraunkirche?"),
+                         ["Dresdner Frau", "Fraunkirche Dres", "Fraunkirche"])
+        self.assertLessEqual(len(lokal.variants("Erzähl mir alles über Photosynthese Chlorophyll Mitochondrien")),
+                             lokal.MAX_VARIANTS)
+
     def test_admin_validation_and_logs(self):
         cfg = ADMIN.get("/api/config").json()
         for bad in ({"local_first": "ja"}, {"local_first_ms": 100}, {"local_first_ms": 2000}, {"local_first_ms": "400"}):
             new = {k: dict(v) for k, v in cfg.items()}
             new["chat"].update(bad)
             self.assertEqual(ADMIN.put("/api/config", json=new).status_code, 400, bad)
-        for bad in ({"local_first_kiwix_ms": 100}, {"local_first_kiwix_ms": 2500}, {"local_first_kiwix_ms": True}):
+        for bad in ({"kiwix_link_url": "javascript:alert(1)"}, {"kiwix_link_url": "https://a.b/x?y=1"}, {"local_first_kiwix_ms": 100}, {"local_first_kiwix_ms": 2500}, {"local_first_kiwix_ms": True}):
             new = {k: dict(v) for k, v in cfg.items()}
             new["chat"].update(bad)
             self.assertEqual(ADMIN.put("/api/config", json=new).status_code, 400, bad)
@@ -285,6 +306,17 @@ class Turn(unittest.TestCase):
         src = [x for e in helpers.events(r) if e["type"] == "sources" for x in e["items"]]
         self.assertEqual(src[0]["title"], "Albert Einstein (Wikipedia, Stand 2025-01-15)")   # under the answer, dated
         self.assertEqual(src[0]["url"], f"http://127.0.0.1:{KIWIX_PORT}/content/wikipedia_de_all_maxi_2025-01/A/Albert_Einstein")
+        # the links may use another name (behind a proxy); the panel still asks the home address
+        helpers.set_config(kiwix_link_url="https://wiki.example.org/")
+        try:
+            r = c.post("/api/chat", json={"messages": [{"role": "user", "content": "Wer war Albert Einstein?"}], "convo": "neu"})
+            src = [x for e in helpers.events(r) if e["type"] == "sources" for x in e["items"]]
+            self.assertEqual(src[0]["url"], "https://wiki.example.org/content/wikipedia_de_all_maxi_2025-01/A/Albert_Einstein")
+            self.assertEqual(kiwix.base(), f"http://127.0.0.1:{KIWIX_PORT}")
+            helpers.set_config(kiwix_link_url="javascript:alert(1)")       # not an address: the home address
+            self.assertEqual(kiwix.link_base(), kiwix.base())
+        finally:
+            helpers.set_config(kiwix_link_url="")
         # an old book: the panel says its date when the answer did not (frisch.nachsatz; no real clock: every book is old)
         import frisch
         was, frisch.ARCHIV_TAGE = frisch.ARCHIV_TAGE, -1
@@ -297,6 +329,12 @@ class Turn(unittest.TestCase):
         helpers.LLM_CALLS.clear()
         ask(c, "Wie hoch ist die Zugspitze?")
         self.assertIsNone(local_msg(helpers.LLM_CALLS[0]))                  # Garmisch is not the Zugspitze
+
+    def test_archive_article_despite_a_typo(self):
+        helpers.set_config(kiwix=True, kiwix_url=f"http://127.0.0.1:{KIWIX_PORT}", kiwix_books=[])
+        asyncio.run(kiwix.chosen())
+        res = asyncio.run(lokal.look(None, "Was weißt du über die Dresdner Fraunkirche?", ["kiwix"], (400, 1900)))
+        self.assertEqual([h["title"] for h in res["hits"]], ["Archiv: Wikipedia, Stand 2025-01-15, Artikel „Dresdner Frauenkirche“"])
 
     def test_never_longer_than_the_limit(self):
         helpers.set_config(kiwix=True, kiwix_url=f"http://127.0.0.1:{KIWIX_PORT}", kiwix_books=[])

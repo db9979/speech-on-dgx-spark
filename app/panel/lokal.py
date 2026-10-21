@@ -39,7 +39,7 @@ import kiwix
 import profiles
 import recall
 import features
-from common import load_config
+from common import edit_distance, load_config
 from core import auth
 
 router = APIRouter()
@@ -51,6 +51,8 @@ DEFAULT_KIWIX_MS = 900
 MAX_HITS = 3
 MAX_HIT_CHARS = 500
 COVER = 0.6                 # share of the question's words a passage must contain
+PREFIX = 4                  # letters of a long word kept when the title lookup completes it (variants)
+MAX_VARIANTS = 3            # further title lookups per book when the whole question found no title
 MAX_TEST = 500
 SOURCES = {"docs": "document_search", "kiwix": "archive_search", "history": "history_search"}
 LABELS = {"docs": "Dokumente", "kiwix": "Archiv", "history": "Verlauf"}
@@ -132,17 +134,65 @@ def query(text):
     return " ".join(w for w, _ in _split(text))
 
 
+def same(a, b):
+    """Two stems are the same word; a long word may be mistyped by a letter (6 to 9 letters) or two (10 and more):
+    „fraunkirch“ is „frauenkirch“ (Dominik 2026-10-21: „was weißt du über die Dresdner Fraunkirche?“ found nothing)."""
+    if a == b:
+        return True
+    n = min(len(a), len(b))
+    most = 0 if n < 6 else 1 if n < 10 else 2
+    return most > 0 and edit_distance(a, b, most) <= most
+
+
+def _found(word, terms):
+    return word in terms or any(same(word, t) for t in terms)
+
+
 def cover(words, text):
-    """Share of the words that occur in the text."""
-    ws = set(words)
-    return len(ws & set(documents._terms(text))) / len(ws) if ws else 0.0
+    """Share of the words that occur in the text (same(): a mistyped long word counts)."""
+    ws, ts = set(words), set(documents._terms(text))
+    return sum(_found(w, ts) for w in ws) / len(ws) if ws else 0.0
 
 
 def title_fits(title, words):
     """An article title that names what is asked ("Albert Einstein" for "Wer war Einstein?")."""
     tw = set(documents._terms(title)) - ASK_WORDS
-    both = tw & set(words)
+    both = [t for t in tw if _found(t, set(words))]
     return bool(both) and len(both) / len(tw) >= 0.5
+
+
+def fit(title, words):
+    """How many of the question's words a fitting title names (0: it does not fit); the best title wins
+    („Dresdner Frauenkirche“ before „Dresdner Bank“)."""
+    if not title_fits(title, words):
+        return 0
+    tw = set(documents._terms(title))
+    return sum(_found(w, tw) for w in set(words))
+
+
+def _best(books, results, words):
+    """(book, title, path) with the best fitting title of the lookups (results in the order of books × lookups), or None."""
+    best, top = None, 0
+    per = len(results) // len(books) if books else 1
+    for i, res in enumerate(results):
+        for title, path in res if isinstance(res, list) else []:
+            n = fit(title, words)
+            if n > top:
+                best, top = (books[i // per], title, path), n
+    return best
+
+
+def variants(text):
+    """Further title lookups when the whole question found no title (a mistyped word): every long word alone, and the
+    question with a long word cut to its first PREFIX letters at the end, where the suggestion completes it („Dresdner
+    Frau…“ for „Dresdner Fraunkirche“). At most MAX_VARIANTS, longest words first; fixed rule, never the model."""
+    said = [w for w, _ in _split(text)]
+    long = sorted((w for w in said if len(w) >= 2 * PREFIX), key=len, reverse=True)[:2]
+    out = []
+    for w in long:
+        out.append(" ".join([x for x in said if x != w] + [w[:PREFIX]]))
+    out += long
+    return [q for q in dict.fromkeys(out) if q][:MAX_VARIANTS]
 
 
 # a short answer to the assistant's question before („Ja“, „Nein danke“, ablauf.short_reply) is never a knowledge
@@ -209,15 +259,13 @@ async def _kiwix(q, words):
     books = kiwix.pick(await kiwix.chosen(), words)
     if not books:
         return []
-    pick = None
     got = await asyncio.gather(*(kiwix.suggest(b["id"], q) for b in books), return_exceptions=True)
-    for b, res in zip(books, got):
-        for title, path in res if isinstance(res, list) else []:
-            if title_fits(title, words):
-                pick = (b, title, path)
-                break
-        if pick:
-            break
+    pick = _best(books, got, words)
+    more = variants(q) if not pick else []
+    if more:   # a mistyped word: the long words alone and cut short (variants), same rule for the titles
+        tries = await asyncio.gather(*(kiwix.suggest(b["id"], v) for b in books for v in more), return_exceptions=True)
+        pick = _best(books, tries, words)
+        got += tries
     if not pick:
         found = await asyncio.gather(*(kiwix.fulltext(b["id"], q) for b in books), return_exceptions=True)
         if all(isinstance(r, Exception) for r in got + found):

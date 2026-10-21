@@ -162,7 +162,7 @@ OHNE = {
         "esp32", "esp32_ota_http", "esp32_repo", "esp32_stop", "esp32_url", "face", "face_life", "feature_tips", "feature_sentences", "feature_sentences_voice", "show_steps", "tagebuch", "status_voice", "undo_voice", "berater_why",
         "feature_tips_push", "feeds", "follow_up", "geocode_url", "ha_camera", "ha_events", "ha_live", "ha_loud",
         "ha_voice_rules", "history", "history_live", "history_offline", "history_one", "homeassistant", "images", "iphone", "iphone_panel", "iphone_push",
-        "iphone_update", "iphone_review", "kiwix", "kiwix_books", "kiwix_url", "klaeren", "klaeren_merken", "learn_fixes", "llm_key_from", "llm_model",
+        "iphone_update", "iphone_review", "kiwix", "kiwix_books", "kiwix_link_url", "kiwix_url", "klaeren", "klaeren_merken", "learn_fixes", "llm_key_from", "llm_model",
         "llm_timeout", "mail", "mail_code", "mail_idle", "mail_insight", "mail_style", "mail_tidy", "max_tokens", "note_device", "mcp_own", "mcp_own_jobs", "mcp_own_oauth", "mcp_server",
         "mcp_server_act", "memory", "memory_ask", "memory_check", "memory_stale_months", "memory_topics", "messages_all", "messages_announce", "my_status", "nas_on", "nas_sources", "nas_shared", "nas_max_docs", "nas_sources_every", "nas_drop", "nas_drop_every", "nas_status", "nas_full_pct", "nas_temp_max",
         "deny", "no_self_echo", "own_style", "parcels", "pebble", "pebble_follow", "pebble_quick", "pebble_remind", "pebble_face", "pebble_day", "pebble_alerts", "pebble_note", "pebble_place", "pebble_chat", "pebble_reply", "pebble_remote", "pebble_health", "terminal", "person_priority",

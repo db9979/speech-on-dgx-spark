@@ -59,6 +59,13 @@ def base():
     return url if URL.fullmatch(url) else ""
 
 
+def link_base():
+    """Where the links under an answer point (chat.kiwix_link_url, e.g. the archive's name behind a proxy); the panel
+    itself always asks base(). Empty: base() (Dominik 2026-10-21: links with the DNS name, not IP and port)."""
+    url = str(ccfg().get("kiwix_link_url") or "").strip().rstrip("/")
+    return url if URL.fullmatch(url) else base()
+
+
 features.READY["kiwix"] = lambda c: bool(base())   # the archive address is part of "on"
 
 
@@ -341,7 +348,7 @@ async def wiki_books():
 
 def source(b, title, path):
     """One line under the answer: the article with its book and the book's date, linked into the own Kiwix."""
-    return {"title": f"{title} ({label(b)})", "url": f"{base()}/content/{b['id']}/{quote(path, safe='/')}"}
+    return {"title": f"{title} ({label(b)})", "url": f"{link_base()}/content/{b['id']}/{quote(path, safe='/')}"}
 
 
 def label(b):

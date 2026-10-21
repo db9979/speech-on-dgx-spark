@@ -2229,7 +2229,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Erst lokal suchen",
 "title": "Erst lokal suchen",
-"text": "- Vor der ersten Runde schaut das Panel selbst in Dokumente, Kiwix und frühere Gespräche, gleichzeitig und nur kurz. Die Bedeutungssuche fährt nur mit, wenn ihr Modell schon läuft und frei ist; es wird dafür nicht geweckt. - Eine Stelle zählt nur, wenn sie mindestens 0.6 der Suchwörter enthält. Was zu spät kommt, wird nicht abgewartet. Das Kiwix hat eine eigene Zeitgrenze (Standard 900 ms, die übrigen Quellen 400 ms) und fragt je Frage höchstens 5 Bücher: die größte deutsche Wikipedia und die Bücher, deren Titel oder Beschreibung zur Frage passt (kiwix.pick). Ein Archiv-Artikel steht als Quelle mit Stand unter der Antwort."
+"text": "- Vor der ersten Runde schaut das Panel selbst in Dokumente, Kiwix und frühere Gespräche, gleichzeitig und nur kurz. Die Bedeutungssuche fährt nur mit, wenn ihr Modell schon läuft und frei ist; es wird dafür nicht geweckt. - Eine Stelle zählt nur, wenn sie mindestens 0.6 der Suchwörter enthält (ein langes Wort darf um ein bis zwei Buchstaben vertippt sein, lokal.same). Was zu spät kommt, wird nicht abgewartet. Das Kiwix hat eine eigene Zeitgrenze (Standard 900 ms, die übrigen Quellen 400 ms) und fragt je Frage höchstens 5 Bücher: die größte deutsche Wikipedia und die Bücher, deren Titel oder Beschreibung zur Frage passt (kiwix.pick). Ein Archiv-Artikel steht als Quelle mit Stand unter der Antwort."
 },
 {
 "lang": "de",
@@ -6629,7 +6629,15 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Kiwix im Vorlauf (V01.0.898, Dominik 2026-10-21)",
-"text": "ch und dessen Stand („Albert Einstein (Wikipedia, Stand 2025-01)“), verlinkt ins eigene Kiwix. Ist das Buch älter als ein Jahr (frisch.ARCHIV_TAGE) und nennt die Antwort sein Jahr nicht, hängt die Antwort-Prüfung den festen Satz „Nicht ganz aktuell: Archiv: Stand 2024-11.“ an (frisch.note_archive, frisch.nachsatz, wie bei alten Mail- oder Wetterständen); das gilt auch für archive_search und wikipedia aus dem Kiwix. Ein gewähltes Buch, das der Katalog des Kiwix nicht mehr kennt (durch ein Update ersetzt oder entfernt), wird übersprungen, solange der Katalog lesbar ist; „Kiwix prüfen“ nennt es („Nicht mehr im Kiwix und übersprungen“), das Journal kiwix: chosen books missing in catalog n=1. Selbsttests test_lokal.Turn.test_the_archive_has_its_own_limit, test_kiwix.Pick, test_kiwix.ArchiveAge."
+"text": "ch und dessen Stand („Albert Einstein (Wikipedia, Stand 2025-01)“), verlinkt ins eigene Kiwix; mit „Adresse für Links“ (chat.kiwix_link_url, frei lassen = Adresse des Kiwix, Ändern mit zweitem Anmeldeschritt) zeigen die Links auf einen anderen Namen, etwa den hinter dem eigenen Proxy, gefragt wird das Kiwix weiter über die Adresse im Heimnetz (V01.0.912). Ist das Buch älter als ein Jahr (frisch.ARCHIV_TAGE) und nennt die Antwort sein Jahr nicht, hängt die Antwort-Prüfung den festen Satz „Nicht ganz aktuell: Archiv: Stand 2024-11.“ an (frisch.note_archive, frisch.nachsatz, wie bei alten Mail- oder Wetterständen); das gilt auch für archive_search und wikipedia aus dem Kiwix. Ein gewähltes Buch, das der Katalog des Kiwix nicht mehr kennt (durch ein Update ersetzt oder entfernt), wird übersprungen, solange der Katalog lesbar ist; „Kiwix prüfen“ nennt es („Nicht mehr im Kiwix und übersprungen“), das Journal kiwix: chosen books missing in catalog n=1. Ein vertipptes langes Wort passt trotzdem (V01.0.912, Dominik 2026-10-21 „Dresdner Fraunkirche“ fand nichts): lokal.same lässt bei 6 bis 9 Buchstaben einen, ab 10 Buchstaben zwei falsche Buchstaben zu (Editierabstand, common.edit_distance),"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Kiwix im Vorlauf (V01.0.898, Dominik 2026-10-21)",
+"text": " kürzere Wörter müssen genau stimmen; das gilt für Titel und Treffer aller Quellen des Vorlaufs. Findet die ganze Frage keinen Titel, fragt das Panel bis zu 3 weitere Titelvorschläge je Buch ab (lokal.variants: ein langes Wort auf seine ersten 4 Buchstaben gekürzt am Ende, „Dresdner Frau…“, oder ein langes Wort allein), und von allen passenden Titeln gewinnt der, der die meisten Wörter der Frage nennt (lokal.fit: „Dresdner Frauenkirche“ vor „Dresdner Bank“). Selbsttests test_lokal.Turn.test_archive_article_despite_a_typo, test_lokal.Turn.test_the_archive_has_its_own_limit, test_kiwix.Pick, test_kiwix.ArchiveAge."
 },
 {
 "lang": "de",
@@ -13765,7 +13773,7 @@
 "file": "Architecture and data flow",
 "head": "Look locally first",
 "title": "Look locally first",
-"text": "- Before the first round the panel itself looks in documents, Kiwix and earlier conversations, at the same time and only briefly. Meaning search only rides along when its model already runs and is free; it is not woken for it. - A passage only counts when it holds at least 0.6 of the search words. What comes too late is not waited for. The Kiwix has its own time limit (default 900 ms, the other sources 400 ms) and asks at most 5 books per question: the biggest German Wikipedia and the books whose title or description fits the question (kiwix.pick). An archive article stands as a dated source under the answer."
+"text": "- Before the first round the panel itself looks in documents, Kiwix and earlier conversations, at the same time and only briefly. Meaning search only rides along when its model already runs and is free; it is not woken for it. - A passage only counts when it holds at least 0.6 of the search words (a long word may be mistyped by one or two letters, lokal.same). What comes too late is not waited for. The Kiwix has its own time limit (default 900 ms, the other sources 400 ms) and asks at most 5 books per question: the biggest German Wikipedia and the books whose title or description fits the question (kiwix.pick). An archive article stands as a dated source under the answer."
 },
 {
 "lang": "en",
@@ -18013,7 +18021,15 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Kiwix in the quick look (V01.0.898, Dominik 2026-10-21)",
-"text": "\"), linked into the own Kiwix. When the book is older than a year (frisch.ARCHIV_TAGE) and the answer does not name its year, the answer check adds the fixed sentence \"Not quite current: archive: as of 2024-11.\" (frisch.note_archive, frisch.nachsatz, like old mail or weather readings); this also holds for archive_search and wikipedia from the Kiwix. A chosen book the Kiwix catalog no longer knows (replaced or removed by an update) is skipped while the catalog is readable; \"Check Kiwix\" names it (\"No longer in the Kiwix and skipped\"), the journal kiwix: chosen books missing in catalog n=1. Self-tests test_lokal.Turn.test_the_archive_has_its_own_limit, test_kiwix.Pick, test_kiwix.ArchiveAge."
+"text": "\"), linked into the own Kiwix; with \"Address for links\" (chat.kiwix_link_url, empty = the Kiwix address, changing it needs the second sign-in step) the links point to another name, such as the one behind the own proxy, while the Kiwix is still asked at the home address (V01.0.912). When the book is older than a year (frisch.ARCHIV_TAGE) and the answer does not name its year, the answer check adds the fixed sentence \"Not quite current: archive: as of 2024-11.\" (frisch.note_archive, frisch.nachsatz, like old mail or weather readings); this also holds for archive_search and wikipedia from the Kiwix. A chosen book the Kiwix catalog no longer knows (replaced or removed by an update) is skipped while the catalog is readable; \"Check Kiwix\" names it (\"No longer in the Kiwix and skipped\"), the journal kiwix: chosen books missing in catalog n=1. A mistyped long word still fits (V01.0.912, Dominik 2026-10-21 \"Dresdner Fraunkirche\" found nothing): lokal.same allows one wrong letter for 6 to 9 letters and two from 10 letters (edit distance, common.edit_distance), shorter words must match exactly; this holds for titles and hits of all sources of the quick look. When the whole question finds no t"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Kiwix in the quick look (V01.0.898, Dominik 2026-10-21)",
+"text": "itle, the panel asks up to 3 further title suggestions per book (lokal.variants: a long word cut to its first 4 letters at the end, \"Dresdner Frau…\", or a long word alone), and of all fitting titles the one naming most words of the question wins (lokal.fit: \"Dresdner Frauenkirche\" before \"Dresdner Bank\"). Self-tests test_lokal.Turn.test_archive_article_despite_a_typo, test_lokal.Turn.test_the_archive_has_its_own_limit, test_kiwix.Pick, test_kiwix.ArchiveAge."
 },
 {
 "lang": "en",

@@ -2615,6 +2615,13 @@
 "titel": "CarPlay Folgefragen",
 "text": "A: iPhone-App aus TestFlight mit V01.0.911 oder neuer. B: Im Auto „Mit Spark sprechen“, eine Frage, die Antwort anhören, nach dem Zuhör-Ton eine Folgefrage stellen: Spark beantwortet sie, kein „Nicht erkannt“. C: Noch zwei Folgefragen hintereinander. D: Nach der Fahrt „Ton-Protokoll kopieren“: keine Zeile „Ende: fremde Stimme“.",
 "thread": "CarPlay stabil und bedienbar"
+},
+{
+"id": "P398",
+"v": 912,
+"titel": "Kiwix mit Tippfehler",
+"text": "A: Update auf V01.0.912, Erst lokal suchen und Eigenes Kiwix-Archiv an. B: „Was weißt du über die Dresdner Fraunkirche?“ fragen (mit Tippfehler): die Antwort kommt „laut deinem Archiv“, darunter die Quelle „Dresdner Frauenkirche (Wikipedia, Stand …)“ bzw. „Frauenkirche (Dresden)“. C: Zustand → Prüfen → „Erst lokal testen“ mit demselben Satz: Archiv 1 Treffer. D: Ein kurzes vertipptes Wort („Huas“ statt „Haus“) findet weiterhin nichts. E: Funktionen → Websuche → Eigenes Kiwix-Archiv → „Adresse für Links“ https://wiki.metaluna9.i234.me eintragen (zweiter Anmeldeschritt): der Link unter der Antwort zeigt auf diesen Namen.",
+"thread": "Kiwix automatisch als Wissen"
 }
 ]
 }

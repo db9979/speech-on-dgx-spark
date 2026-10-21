@@ -2235,7 +2235,7 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 #### Look locally first
 
 - Before the first round the panel itself looks in documents, Kiwix and earlier conversations, at the same time and only briefly. Meaning search only rides along when its model already runs and is free; it is not woken for it.
-- A passage only counts when it holds at least 0.6 of the search words. What comes too late is not waited for. The Kiwix has its own time limit (default 900 ms, the other sources 400 ms) and asks at most 5 books per question: the biggest German Wikipedia and the books whose title or description fits the question (kiwix.pick). An archive article stands as a dated source under the answer.
+- A passage only counts when it holds at least 0.6 of the search words (a long word may be mistyped by one or two letters, lokal.same). What comes too late is not waited for. The Kiwix has its own time limit (default 900 ms, the other sources 400 ms) and asks at most 5 books per question: the biggest German Wikipedia and the books whose title or description fits the question (kiwix.pick). An archive article stands as a dated source under the answer.
 
 #### Memory
 
