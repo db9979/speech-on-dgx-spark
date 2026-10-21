@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.892** reMarkable documents well formatted: lists, numbers, tables, smaller head, device format
 - **V01.0.891** Up to date: a stand always names its day („as of yesterday 18:00“), the weather takes „today“ from the clock instead of a forecast of yesterday, the morning briefing names mails with their day and only unread ones, the web search looks within a period with a date per hit for questions about today, and a fixed sentence of the panel says what is not current; an opened mail counts as read
 - **V01.0.890** Fix iPhone app: the contact card loads the .vcf file for Share as data (the app did not build since V01.0.888)
 - **V01.0.889** CarPlay round 2: no barge-in in the car, „not recognised“ instead of a silent end, drop-outs end nothing, mail and deadlines never hang, „My day“, „Speak a reminder“, briefing when getting in
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.885** Editing music on a page of its own over the whole width: big wave, tools on the left, settings in the middle, versions on the right, the button in a fixed bar at the bottom; the same order on a phone and in the iPhone app
 - **V01.0.884** Fix iPhone app: the content of a formatted mail stayed empty (the web view's blocking rule did not compile); in dark mode a plain mail shows light on dark like Apple Mail, a mail with its own colours keeps its white page
 - **V01.0.883** The companion on PC and Mac shows the Spark's update: "Spark-Update läuft: 40 % · step" in its state, during the restart "Spark startet für das Update neu …"
-- **V01.0.882** Meeting tasks under Open: every task the Spark companion puts onto a list from a meeting also becomes a card "From a meeting" under Open (not in the conversation); "Done" ticks the entry off, ticked off, brought back or deleted on the list the card follows, overdue it stays open
 
 
 

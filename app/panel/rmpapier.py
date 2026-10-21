@@ -118,6 +118,80 @@ GRAY = {"acc": (52, 56, 66), "acc2": (100, 104, 114), "fg": (0, 0, 0), "mut": (8
 _KEEP = set("☐☑✓✔•–—„“”‚‘’…€·×→←↑↓≈≤≥°")
 TIDY_MD = re.compile(r"\*\*|__|`")
 LINK = re.compile(r"\[([^\]]{1,200})\]\((https?://[^)\s]{1,300})\)")
+ITALIC = re.compile(r"(?<![\w*])[*_](?=\S)([^*_\n]{1,200}?)(?<=\S)[*_](?![\w*])")
+GAP = re.compile(r"(?<=\S)[ ]+([,.:;!?])(?=\s|$)")      # „Blech :“ after an emoji was left out
+
+
+# ---------------------------------------------------------------- reading the text (one reader for every document)
+# Every document the Spark puts on the reMarkable reads its text here (Dominik 2026-10-21 „1a 2a 3a 4a 5a“): the designed
+# sheet, the plain sheet and the EPUB draw the same blocks, so a list stays a list and a table a table everywhere.
+HEAD = re.compile(r"^\s{0,3}#{1,6}\s+(.+?)\s*#*\s*$")
+BUL = re.compile(r"^\s*[-*•+]\s+(.+)$")
+NUM = re.compile(r"^\s*(\d{1,3})[.)]\s+(.+)$")
+RULE = re.compile(r"^\s*([-*_])(\s*\1){2,}\s*$")
+TROW = re.compile(r"^\s*\|.*\|\s*$")
+TSEP = re.compile(r"^\s*\|?(\s*:?-{2,}:?\s*\|)+\s*(:?-{2,}:?\s*)?\|?\s*$")
+QUOTE = re.compile(r"^\s*>\s?(.*)$")
+FENCE = re.compile(r"^\s*(```|~~~)")
+TABLE_COLS = 3              # wider tables become one line per row („Spalte: Wert“)
+MAX_BLOCKS = 600
+
+
+def inline(s):
+    """One line without Markdown marks: **fett**, *kursiv*, `code`, [Link](url) -> Link (url)."""
+    return ITALIC.sub(r"\1", TIDY_MD.sub("", LINK.sub(r"\1 (\2)", str(s or "")))).strip()
+
+
+def _cells(line):
+    return [inline(c) for c in line.strip().strip("|").split("|")]
+
+
+def blocks(body):
+    """The text as blocks: ("h", text), ("p", [lines]), ("ul", [items]), ("ol", [(number, text)]), ("table", [row, ...]),
+    ("quote", [lines]), ("hr", None), ("pre", [lines]). A single line break stays one; a line that is only "**Teil**"
+    is a heading (heads())."""
+    out, lines, i = [], heads(str(body or "")).replace("\r", "").split("\n"), 0
+
+    def add(kind, data):
+        if out and out[-1][0] == kind and kind in ("ul", "ol", "p", "quote"):
+            out[-1][1].extend(data)
+        else:
+            out.append((kind, list(data) if isinstance(data, list) else data))
+    while i < len(lines) and len(out) < MAX_BLOCKS:
+        ln = lines[i]
+        i += 1
+        if not ln.strip():
+            if out and out[-1][0] in ("p", "quote"):
+                out.append(("gap", None))
+            continue
+        if FENCE.match(ln):
+            pre = []
+            while i < len(lines) and not FENCE.match(lines[i]):
+                pre.append(lines[i].rstrip())
+                i += 1
+            i += 1
+            out.append(("pre", pre))
+        elif TROW.match(ln):
+            rows = [_cells(ln)]
+            while i < len(lines) and TROW.match(lines[i]):
+                if not TSEP.match(lines[i]):
+                    rows.append(_cells(lines[i]))
+                i += 1
+            out.append(("table", rows))
+        elif HEAD.match(ln):
+            out.append(("h", inline(HEAD.match(ln).group(1))))
+        elif RULE.match(ln):
+            out.append(("hr", None))
+        elif NUM.match(ln):
+            m = NUM.match(ln)
+            add("ol", [(m.group(1), inline(m.group(2)))])
+        elif BUL.match(ln):
+            add("ul", [inline(BUL.match(ln).group(1))])
+        elif QUOTE.match(ln):
+            add("quote", [inline(QUOTE.match(ln).group(1))])
+        else:
+            add("p", [inline(ln)])
+    return [b for b in out if b[0] != "gap"]
 
 
 def clean(s, n=4000):
@@ -129,20 +203,20 @@ def clean(s, n=4000):
         o = ord(ch)
         if ch in "\n\t" or (32 <= o < 0x2000) or ch in _KEEP:
             out.append(" " if ch == "\t" else ch)
-    return "".join(out)
+    return GAP.sub(r"\1", "".join(out))
 
 
 class Sheet:
     """One PDF in the page format of a model. Positions are mm from the top left; every box is recorded in fields."""
 
-    def __init__(self, m, label, title, sub="", code="", weg=True):
+    def __init__(self, m, label, title, sub="", code="", weg=True, plain=False):
         from fpdf import FPDF
         import docrender
         self.m, (self.W, self.H) = m, m["mm"]
         self.small = self.W < 120
         self.s = 0.84 if self.small else 1.0
         self.M = 7.0 if self.small else 11.0
-        self.c = COLOR if m["color"] else GRAY
+        self.c = COLOR if m["color"] and not plain else GRAY
         self.label, self.title, self.sub, self.code, self.weg = label, title, sub, code, weg
         self.fields, self.n_sec, self.page = [], 0, -1
         doc = self.doc = FPDF(unit="mm", format=(self.W, self.H))
@@ -232,10 +306,11 @@ class Sheet:
 
     def _header(self):
         d, top = self.doc, self.M + 5
-        lab, tit, sub = 7 * self.s, 17 * self.s if not self.small else 15 * self.s, 8.5 * self.s
+        # a small head, so the first page keeps room for the text (Dominik 2026-10-21 „Überschriften etwas kleiner“)
+        lab, tit, sub = 6.5 * self.s, 13 * self.s if not self.small else 12 * self.s, 8 * self.s
         d.set_font(self.fam, "B", tit / self.s * self.s)
         lines = d.multi_cell(self.width - 10, tit * 0.42, self.tx(self.title), dry_run=True, output="LINES")[:3]
-        h = 8 + 4 + len(lines) * tit * 0.42 + (5 if self.sub else 0)
+        h = 7 + 3 + len(lines) * tit * 0.42 + (4.5 if self.sub else 0)
         d.set_fill_color(*self.c["acc"])
         d.rect(self.M, top, self.width, h, style="F", round_corners=True, corner_radius=2.4)
         if self.m["color"]:
@@ -244,31 +319,31 @@ class Sheet:
         d.set_text_color(255, 255, 255)
         d.set_font(self.fam, "B", lab)
         d.set_char_spacing(0.8)
-        d.set_xy(self.M + 5, top + 3.5)
+        d.set_xy(self.M + 5, top + 3)
         d.cell(self.width - 10, 3.5, self.tx(("SPARK · " + self.label).upper()))
         d.set_char_spacing(0)
         d.set_font(self.fam, "B", tit)
-        d.set_xy(self.M + 5, top + 8)
+        d.set_xy(self.M + 5, top + 7)
         d.multi_cell(self.width - 10, tit * 0.42, self.tx("\n".join(lines)))
         if self.sub:
             d.set_font(self.fam, "", sub)
             d.set_x(self.M + 5)
-            d.cell(self.width - 10, 5, self.tx(self.sub))
-        d.set_y(top + h + 4)
+            d.cell(self.width - 10, 4.5, self.tx(self.sub))
+        d.set_y(top + h + 3)
 
     # -- building blocks
     def section(self, title):
         self.n_sec += 1
-        self.need(16 * self.s)
+        self.need(15 * self.s)
         d = self.doc
-        y = d.get_y() + 2.5
-        self.font(11, True, "acc2")
+        y = d.get_y() + 2
+        self.font(10, True, "acc2")
         d.set_xy(self.M, y)
         num = f"{self.n_sec:02d}"
         d.cell(d.get_string_width(num) + 2, 6 * self.s, num)
-        self.font(11, True)
+        self.font(10, True)
         d.cell(self.width - 12, 6 * self.s, self.tx(title)[:80])
-        y += 6.5 * self.s
+        y += 6 * self.s
         d.set_draw_color(*self.c["acc"])
         d.set_line_width(0.45)
         d.line(self.M, y, self.W - self.M, y)
@@ -419,28 +494,88 @@ class Sheet:
             d.line(self.M, y, self.W - self.M, y)
             y += 8.0
 
-    def text(self, body):
-        """Text with "## " headings, "- " bullets and paragraphs."""
-        para = []
+    def numbered(self, num, text, size=9.5):
+        d = self.doc
+        self.need(size * self.s * 0.5)
+        y = d.get_y()
+        self.font(size, True, "acc")
+        d.set_xy(self.M, y)
+        d.cell(5.5, size * self.s * 0.47, f"{num}.")
+        d.set_y(y)
+        self.para(text, size, indent=6.0)
+        d.set_y(d.get_y() - 0.6)
+        self._after_list = True
 
-        def flush():
-            if para:
-                self.para(" ".join(para))
-                para.clear()
-        for raw in clean(heads(body), 30000).splitlines():
-            ln = raw.strip()
-            if not ln:
-                flush()
-                continue
-            if re.match(r"^#{1,4}\s", ln):
-                flush()
-                self.section(re.sub(r"^#{1,4}\s+", "", ln))
-            elif re.match(r"^[-*•]\s+", ln):
-                flush()
-                self.bullet(re.sub(r"^[-*•]\s+", "", ln))
-            else:
-                para.append(ln)
-        flush()
+    def quote(self, text):
+        d = self.doc
+        y = d.get_y()
+        self.para(text, 9.5, "mut", indent=4.0)
+        d.set_draw_color(*self.c["acc2"])
+        d.set_line_width(0.8)
+        if d.page == self.page + 1 and d.get_y() > y:
+            d.line(self.M + 1, y, self.M + 1, d.get_y() - 1.6)
+
+    def rule(self):
+        d = self.doc
+        self.need(5)
+        y = d.get_y() + 1.5
+        d.set_draw_color(*self.c["line"])
+        d.set_line_width(0.3)
+        d.line(self.M, y, self.W - self.M, y)
+        d.set_y(y + 2.5)
+
+    def table(self, rows, size=8.5):
+        """A table with its first row as head; more than TABLE_COLS columns become one line per row."""
+        d = self.doc
+        n = max(len(r) for r in rows)
+        rows = [r + [""] * (n - len(r)) for r in rows]
+        if n > TABLE_COLS or len(rows) < 2:
+            head = rows[0]
+            for r in rows[1:] or rows:
+                self.bullet(" · ".join(f"{h}: {v}" if h and v and r is not head else v or h for h, v in zip(head, r)))
+            return
+        lh, pad = size * self.s * 0.47, 1.4
+        w = self.width / n
+        for k, r in enumerate(rows):
+            self.font(size, k == 0)
+            cells = [d.multi_cell(w - 2 * pad, lh, self.tx(c), dry_run=True, output="LINES") or [""] for c in r]
+            h = max(len(c) for c in cells) * lh + 2 * pad
+            if k and d.get_y() + h > self.bottom:
+                self._page()
+            y = d.get_y()
+            if k == 0:
+                d.set_fill_color(*self.c["tint"])
+                d.rect(self.M, y, self.width, h, style="F")
+            for j, c in enumerate(cells):
+                d.set_xy(self.M + j * w + pad, y + pad)
+                d.multi_cell(w - 2 * pad, lh, "\n".join(c))
+            d.set_draw_color(*self.c["line"])
+            d.set_line_width(0.2)
+            d.line(self.M, y + h, self.W - self.M, y + h)
+            d.set_y(y + h)
+        d.set_y(d.get_y() + 2)
+
+    def text(self, body):
+        """Text as blocks (blocks(): headings, paragraphs with their lines, lists, numbers, tables, quotes)."""
+        for kind, data in blocks(str(body or "")[:30000]):
+            if kind == "h":
+                self.section(data)
+            elif kind == "p":
+                self.para("\n".join(data))
+            elif kind == "ul":
+                for x in data:
+                    self.bullet(x)
+            elif kind == "ol":
+                for num, x in data:
+                    self.numbered(num, x)
+            elif kind == "table":
+                self.table(data)
+            elif kind == "quote":
+                self.quote("\n".join(data))
+            elif kind == "hr":
+                self.rule()
+            elif kind == "pre":
+                self.para("\n".join(data), 8.5)
 
     def finish(self):
         return bytes(self.doc.output()), self.fields, self.page + 1
@@ -466,6 +601,16 @@ def build_text(m, label, title, body, sub="", notes=True):
     if notes:
         sh.lines()
     return sh.finish()
+
+
+def plain_pdf(uid, label, title, body, sub=""):
+    """Without „Gestaltete Blätter“ (Morgenblatt, Wochenrückblick): the same reader and layout in the device's format,
+    black and white, no boxes (nothing is read back), ruled lines and a lined page for handwriting."""
+    sh = Sheet(model(model_key(uid)), label, title, sub, _code(label, title, time.time()), weg=False, plain=True)
+    sh.text(body)
+    sh.lines()
+    sh.lined_page()
+    return sh.finish()[0]
 
 
 def build_morning(m, title, sub, overview, todo):

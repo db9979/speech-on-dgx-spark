@@ -125,18 +125,17 @@ class Switches(Plus):
 
 
 class Sheet(Plus):
-    def test_pdf_is_valid_with_umlauts_and_ruled_pages(self):
-        pdf = rmplus.sheet("Morgenblatt Sa 11.10.", "## Termine\n09:00 Zahnarzt – „Müller“ (Praxis)\n\n" + "Wort " * 900)
-        self.assertTrue(pdf.startswith(b"%PDF-1.4") and pdf.rstrip().endswith(b"%%EOF"))
-        xref = int(pdf.rsplit(b"startxref", 1)[1].split()[0])
-        self.assertTrue(pdf[xref:].startswith(b"xref"))
-        offs = [int(x.split()[0]) for x in pdf[xref:].split(b"\n")[3:] if x.endswith(b" n ")]
-        for i, o in enumerate(offs, 1):
-            self.assertTrue(pdf[o:].startswith(b"%d 0 obj" % i), i)
-        self.assertIn("Müller".encode("cp1252"), pdf)
-        self.assertIn(b"\\(Praxis\\)", pdf)                                  # brackets escaped
-        self.assertGreaterEqual(pdf.count(b"/Type /Page "), 3)               # long text, then an extra ruled page
-        self.assertNotIn(b"/FontFile", pdf)                                  # nothing embedded
+    def test_plain_sheet_reads_its_text_and_has_ruled_pages(self):
+        # without „Gestaltete Blätter“ the same reader and layout as the designed sheet (rmpapier.plain_pdf)
+        from pypdf import PdfReader
+        pdf = rmpapier.plain_pdf("nobody", "Morgenblatt", "Morgenblatt Sa 11.10.",
+                                 "**Termine**\n09:00 Zahnarzt – „Müller“ (Praxis)\n\n" + "Wort " * 900)
+        pages = PdfReader(io.BytesIO(pdf)).pages
+        text = "".join(p.extract_text() for p in pages)
+        self.assertIn("Müller", text)
+        self.assertIn("Termine", text)
+        self.assertNotIn("**", text)
+        self.assertGreaterEqual(len(pages), 3)                                # long text, then an extra ruled page
 
     def test_questions_and_tasks_on_paper(self):
         self.assertEqual(rmplus.asks("Einkauf\n@Spark Wie lange hält Sauerteig?\n\nMilch"), ["Wie lange hält Sauerteig?"])
@@ -390,7 +389,7 @@ class WebAndMail(Plus):
         c, uid = self.on("Rpattach", "rmweb")
         real_get, real_att = mail.get, mail.attachment
         mail.get = lambda u: {"accounts": [{"id": "m1"}]}
-        pdf = rmplus.sheet("Rechnung", "Betrag 12 €", ruled=False)
+        pdf = rmpapier.plain_pdf("nobody", "Rechnung", "Rechnung", "Betrag 12 €")
         mail.attachment = lambda u, q, days, most: ("Rechnung 10-2026.pdf", pdf, "pdf") if "bank" in q.lower() else None
         try:
             ctx = {"who": {"id": uid}, "own": True}

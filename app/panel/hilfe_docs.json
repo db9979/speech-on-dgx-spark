@@ -6469,6 +6469,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "reMarkable-Dokumente sauber formatiert (V01.0.892, Dominik 2026-10-21 „1a 2a 3a 4a 5a“, Kopf kleiner): Jedes Dokument, das der Spark aufs reMarkable legt, liest seinen Text über einen gemeinsamen Leser (rmpapier.blocks): Überschriften („## …“ und Zeilen nur aus „Teil“), Absätze mit ihren einzelnen Zeilen, Punkte, nummerierte Schritte, Tabellen, Zitate, Trennlinien und Codeblöcke; „fett“, „*kursiv*“, „code“ und „Link“ verlieren ihre Zeichen, ein weggelassenes Emoji hinterlässt keine Lücke mehr. Das gestaltete Blatt (Sheet.text) zeichnet daraus Abschnitte, Punkte, Nummern (1. 2. 3. in der Akzentfarbe) und Tabellen bis 3 Spalten mit Kopfzeile; breitere Tabellen werden zu „Spalte: Wert“-Zeilen. Der Kopf ist kleiner (Titel 13 statt 17 pt, Abschnitte 10 pt), damit auf der ersten Seite mehr Platz bleibt. Ohne „Gestaltete Blätter“ kommen Morgenblatt und Wochenrückblick als dasselbe Blatt in Schwarz-Weiß ohne Kästchen (rmpapier.plain_pdf, Gerätformat, ersetzt das alte Helvetica-PDF), Antworten, Besprechungen, Eingang, Anleitung und Webseiten als EPUB mit echten Überschriften, Listen und Tabellen (remarkable.epub_body). Antworten fürs reMarkable werden nicht mehr vorher flach gemacht (textno"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "rm.plain_markdown entfällt dort). Dokumente aus „Dokumente erstellen“ kommen im Seitenformat des Geräts statt A4 (docrender.render(…, page=…), schmale Seiten mit kleinen Rändern und kleinerem Titel, docrender.SMALL_PAGE); Briefe und eigene Vorlagen bleiben A4. Wächter-Test test_rmformat: baut für jede Art (rmpapier.ARTEN, Anleitung, Abgleich-Blatt, Dokument) auf jedem Modell ein Musterblatt und wird rot bei Markdown-Resten, Text rechts über dem Rand, verlorenen Nummern oder einer neuen Art ohne Muster. Bilder vorher/nachher: /mnt/project-files/remarkable-format/."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "Kreuze in anderen Einheiten (V01.0.500, Dominik 2026-10-13 „aktueller abgleich passt nicht“): Der Move lieferte bei manchen Blättern Striche in Einheiten wie für 1620 Punkte Breite, obwohl die Seite 954 nennt; jedes Kreuz lag 0,59-mal zu klein. Der Abgleich probiert jetzt jede mögliche Breite (rmpapier.widths, fit), und beim Lesen nimmt best_map statt des Abgleichs eine andere Breite nur, wenn die Tinte damit klar besser in den Kästchen liegt (doppelt so viel und mindestens INK_MIN); Handschrift allein verschiebt nichts. Das Journal nennt Seitengröße, benutzte Einheiten und wo die Tinte liegt („page 954x1696 … units 1620 | ink x … y …“). Selbsttests test_rmpapier.Tasks.test_ticks_in_larger_units_than_the_page_says_still_hit_their_boxes und test_handwriting_alone_never_moves_the_mapping."
 },
 {
@@ -15574,6 +15590,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "arkable/papier/zurueck). A sheet with handwriting is never filled with new text: a new version is made and the old one goes to the archive. Calibration: the calibration sheet has four circles; the crosses give a mapping per model (least squares, kept only when every circle fits within 2.5 mm). Under Paper a control picture per sheet shows the boxes in the colour of what was read and the strokes on top. Endpoints (profile browser login, CSRF, rate limits rmsend, rmpic, rm, body 1 KB): GET /api/profile/remarkable/papier, GET …/papier/{id}/{page}.png, POST …/papier/abgleich, POST …/papier/einsortieren (409 while a sync runs), POST …/papier/zurueck. One cloud job per profile at a time; the sync writes back only its own fields so a sheet placed meanwhile is not lost. Journal with numbers only (\"remarkable: sheet read | 2 ticked, 0 unclear, 1 done\"), live overview \"Blatt gelesen: n angekreuzt, n unklar\". Next (after the test with the Move): the task sheet for admin points (2b, executed directly) and the field test on paper."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "reMarkable documents well formatted (V01.0.892, Dominik 2026-10-21 \"1a 2a 3a 4a 5a\", smaller head): every document the Spark puts on the reMarkable reads its text through one shared reader (rmpapier.blocks): headings (\"## …\" and lines that are only \"part\"), paragraphs with their single lines, bullets, numbered steps, tables, quotes, rules and code blocks; \"bold\", \"*italic*\", \"code\" and \"link\" lose their marks, and a left-out emoji no longer leaves a gap. The designed sheet (Sheet.text) draws sections, bullets, numbers (1. 2. 3. in the accent colour) and tables of up to 3 columns with a head row; wider tables become \"column: value\" lines. The head is smaller (title 13 instead of 17 pt, sections 10 pt) so the first page keeps more room. Without \"Designed sheets\" the morning sheet and the weekly review come as the same sheet in black and white without boxes (rmpapier.plain_pdf, device format, replaces the old Helvetica PDF); answers, meetings, inbox, guide and web pages as EPUB with real headings, lists and tables (remarkable.epub_body). Answers for the reMarkable are no longer flattened first (textnorm.plain_markdown is gone there). Documents from \"Create documents\" come in the devic"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "e's page format instead of A4 (docrender.render(…, page=…), narrow pages with small margins and a smaller title, docrender.SMALL_PAGE); letters and own templates stay A4. Guard test test_rmformat: builds a sample sheet for every kind (rmpapier.ARTEN, guide, calibration sheet, document) on every model and turns red on leftover Markdown, text past the right margin, lost numbers or a new kind without a sample. Pictures before/after: /mnt/project-files/remarkable-format/."
 },
 {
 "lang": "en",

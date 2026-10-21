@@ -91,91 +91,6 @@ def _seen(p, name, key):
         del s[:-MAX_SEEN]
 
 
-# ---------------------------------------------------------------- a sheet as PDF (Morgenblatt, Wochenrückblick)
-W, H, M = 260, 462, 18      # points: the Paper Pro Move's screen (954 × 1696 px at 264 ppi); larger ones scale it
-SIZE, LEAD, WRAP = 8.5, 11.5, 50
-
-
-def _pdf_text(s):
-    s = str(s).replace("\t", " ")
-    b = s.encode("cp1252", "replace")
-    return b.replace(b"\\", b"\\\\").replace(b"(", b"\\(").replace(b")", b"\\)")
-
-
-def _wrap_lines(text):
-    out = []
-    for para in str(text or "").replace("\r", "").split("\n"):
-        para = re.sub(r"\s+", " ", para).strip()
-        if not para:
-            out.append("")
-            continue
-        line = ""
-        for w in para.split(" "):
-            while len(w) > WRAP:
-                if line:
-                    out.append(line)
-                    line = ""
-                out.append(w[:WRAP])
-                w = w[WRAP:]
-            if line and len(line) + 1 + len(w) > WRAP:
-                out.append(line)
-                line = w
-            else:
-                line = (line + " " + w).strip()
-        out.append(line)
-    while out and not out[-1]:
-        out.pop()
-    return out
-
-
-def sheet(title, text, ruled=True):
-    """A small PDF: title, the text, then ruled lines for handwriting to the end of the page and one more
-    ruled page. Only built-in Helvetica (WinAnsi), no fonts or pictures are embedded."""
-    lines = _wrap_lines(text)
-    pages, cur, y = [], [], H - M - 14
-    cur.append(b"BT /F2 12 Tf %d %.1f Td (" % (M, y) + _pdf_text(title[:60]) + b") Tj ET")
-    y -= 20
-    for ln in lines:
-        if y < M + LEAD:
-            pages.append(cur)
-            cur, y = [], H - M - 4
-        if ln:
-            bold = ln.startswith("## ")
-            cur.append(b"BT /F%d %.1f Tf %d %.1f Td (" % (2 if bold else 1, SIZE, M, y) + _pdf_text(ln[3:] if bold else ln) + b") Tj ET")
-        y -= LEAD
-    if ruled:
-        y -= 6
-        if y > M + 40:
-            cur.append(b"BT /F2 %.1f Tf %d %.1f Td (Notizen) Tj ET" % (SIZE, M, y))
-            y -= 8
-        cur.append(b"0.75 G 0.4 w")
-        while y > M + 20:
-            y -= 22
-            cur.append(b"%d %.1f m %d %.1f l S" % (M, y, W - M, y))
-        pages.append(cur)
-        cur = [b"0.75 G 0.4 w"] + [b"%d %.1f m %d %.1f l S" % (M, yy, W - M, yy) for yy in range(H - M - 22, M + 10, -22)]
-    pages.append(cur)
-    objs = [b"<< /Type /Catalog /Pages 2 0 R >>", None,
-            b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
-            b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>"]
-    kids = []
-    for pg in pages:
-        stream = b"\n".join(pg)
-        objs.append(b"<< /Length %d >>\nstream\n" % len(stream) + stream + b"\nendstream")
-        objs.append(b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 %d %d] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> "
-                    b"/Contents %d 0 R >>" % (W, H, len(objs)))
-        kids.append(len(objs))
-    objs[1] = b"<< /Type /Pages /Kids [" + b" ".join(b"%d 0 R" % k for k in kids) + b"] /Count %d >>" % len(kids)
-    out, offs = bytearray(b"%PDF-1.4\n%\xe2\xe3\xcf\xd3\n"), []
-    for i, o in enumerate(objs, 1):
-        offs.append(len(out))
-        out += b"%d 0 obj\n" % i + o + b"\nendobj\n"
-    xref = len(out)
-    out += b"xref\n0 %d\n0000000000 65535 f \n" % (len(objs) + 1) + b"".join(b"%010d 00000 n \n" % x for x in offs)
-    out += b"trailer\n<< /Size %d /Root 1 0 R >>\nstartxref\n%d\n%%%%EOF\n" % (len(objs) + 1, xref)
-    return bytes(out)
-
-
 # ---------------------------------------------------------------- the language model (no tools)
 async def _llm(system, user, max_tokens=700, job="reMarkable"):
     text = await llm.complete(system, user[:24000], job, max_tokens, temperature=0.2, timeout=180,
@@ -226,7 +141,7 @@ async def morning(uid, local):
         r = await rmpapier.place(uid, "morgen", title, built, "morgen")
         print("remarkable: morning sheet sent", flush=True)
         return r
-    r = await remarkable.place(uid, title, sheet(title, text), "pdf", auto=True, art="morgen")
+    r = await remarkable.place(uid, title, rmpapier.plain_pdf(uid, "Morgenblatt", title, text), "pdf", auto=True, art="morgen")
     print("remarkable: morning sheet sent", flush=True)
     return r
 
@@ -335,7 +250,7 @@ async def meeting(uid, doc, name, pages):
         r = await rmpapier.place(uid, "besprechung", title, rmpapier.built_text(
             uid, "Besprechung", name.rsplit("/", 1)[-1][:70], out), "text")
     else:
-        r = await remarkable.place(uid, title, remarkable.epub(title, out.replace("## ", "")), auto=True, art="besprechung")
+        r = await remarkable.place(uid, title, remarkable.epub(title, out), auto=True, art="besprechung")
     import push
     await push.send(uid, "📝 Besprechung zusammengefasst", (name.rsplit("/", 1)[-1] + ": " + re.sub(r"#+ ", "", out))[:600],
                     tag="rm", why="reMarkable")
@@ -404,7 +319,8 @@ async def week(uid, local):
     if features.allowed("rmpapier", uid):
         return await rmpapier.place(uid, "woche", title, rmpapier.built_text(
             uid, "Wochenrückblick", f"Kalenderwoche {local:%V}", out, f"{monday:%d.%m.} bis {local:%d.%m.%Y}"), "text")
-    return await remarkable.place(uid, title, sheet(title, out), "pdf", auto=True, art="woche")
+    return await remarkable.place(uid, title, rmpapier.plain_pdf(uid, "Wochenrückblick", title, out,
+                                                                  f"{monday:%d.%m.} bis {local:%d.%m.%Y}"), "pdf", auto=True, art="woche")
 
 
 # ---------------------------------------------------------------- 7 Eingang: one document per day
@@ -562,7 +478,7 @@ async def guide(uid, force=False):
     if not force and p.get("guide") == k and mine:
         return None
     stamp = datetime.datetime.now(_zone(uid)).strftime("%d.%m.%Y")
-    body = re.sub(r"(?m)^## ", "", text) + f"\n\nStand: {stamp}"
+    body = text + f"\n\nStand: {stamp}"
     if features.allowed("rmpapier", uid):      # on top as a favourite with "Ordner nach Art"
         r = await rmpapier.place(uid, "", "Spark-Anleitung", rmpapier.built_text(
             uid, "Anleitung", "Spark-Anleitung", text, "Stand: " + stamp), "text", own="guide", pinned=True)

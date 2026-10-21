@@ -2511,6 +2511,12 @@
 "titel": "Tagesaktuell: Stand mit Tag, Wetter, Mails, Websuche",
 "text": "A: Pi auf V01.0.891. Morgens „Guten Morgen“: das Wetter beschreibt heute (nicht gestern), Mails im Bericht stehen mit „heute“ oder „gestern“, eine schon gelesene Mail fehlt. B: „Was gibt es heute Neues zu …?“: die Antwort nennt das Datum der Meldungen; findet sich nichts von heute, sagt sie das. C: Unter Logs → Anfragen bei der Websuche Zeilen „frisch: …“. D: Mit „Mails ordnen“: eine ungelesene Mail auf der Seite E-Mail öffnen, der blaue Punkt verschwindet, in Apple Mail ist sie gelesen; dasselbe in der iPhone-App. E: Zustand → Live, Websuche: „tagesaktuell: heute n Suchen …“.",
 "thread": "Immer tagesaktuelle Informationen"
+},
+{
+"id": "P383",
+"v": 892,
+"titel": "reMarkable sauber formatiert",
+"text": "A: Im Chat „Erstell eine Notiz auf dem reMarkable mit dem Rezept für Kirschkuchen“: Zutaten als Punkte, Schritte als 1. 2. 3. untereinander, eine Tabelle als Tabelle, kein ** oder ## im Text, Kopf kleiner als bisher. B: Morgenblatt und Wochenrückblick: Überschriften statt **Wetter**. C: Mit „Gestaltete Blätter“ aus: dasselbe Blatt in Schwarz-Weiß bzw. ein E-Book mit Überschriften und Listen. D: Ein Dokument aus „Dokumente erstellen“ aufs reMarkable schicken: es füllt den Bildschirm (nicht mehr klein in A4)."
 }
 ]
 }

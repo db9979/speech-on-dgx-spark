@@ -1134,8 +1134,9 @@ def own_template(uid, tid):
     return None
 
 
-def build(uid, d, fmt=None, v=None):
-    """(bytes, file name, content type) of a version in a format; raises ValueError."""
+def build(uid, d, fmt=None, v=None, page=None):
+    """(bytes, file name, content type) of a version in a format; raises ValueError. page: a PDF in this screen size
+    in mm (the reMarkable's own format)."""
     fmt = fmt or d["format"]
     if fmt not in docrender.FORMATS:
         raise ValueError("format: " + ", ".join(docrender.FORMATS))
@@ -1148,7 +1149,7 @@ def build(uid, d, fmt=None, v=None):
     if not _render_sem.acquire(timeout=60):
         raise ValueError("gerade beschäftigt, bitte gleich noch einmal")
     try:
-        data = docrender.render(c, fmt, d.get("style") or "spark-hell", picture_paths(uid), base)
+        data = docrender.render(c, fmt, d.get("style") or "spark-hell", picture_paths(uid), base, page)
     finally:
         _render_sem.release()
     if len(data) > MAX_FILE:
@@ -1616,9 +1617,11 @@ async def _send(uid, d, to, fmt, device="", account="", mail_to="", subject=""):
     notaus.stop("aktion", uid)
     if to in ("rm", "tg", "mail"):
         notaus.stop("internet", uid)
-    if to == "rm":
-        fmt = "pdf"
-    data, name, _ = await asyncio.to_thread(build, uid, d, fmt)
+    page = None
+    if to == "rm":   # in the device's own page format, not A4 (rmpapier.model; Dominik 2026-10-21 „4a“)
+        import rmpapier
+        fmt, page = "pdf", rmpapier.model(rmpapier.model_key(uid))["mm"]
+    data, name, _ = await asyncio.to_thread(build, uid, d, fmt, None, page)
     if to == "pc":
         import begleiter
         devs = begleiter.inbox_devices(uid)

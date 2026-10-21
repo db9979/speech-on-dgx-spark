@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.892** · 2026-10-21 · reMarkable-Dokumente sauber formatiert: ein Leser für alle Blätter und E-Books (Überschriften, Zeilen, Nummern, Tabellen, Zitate), kleinerer Kopf, ohne „Gestaltete Blätter“ dasselbe Blatt in Schwarz-Weiß, Dokumente im Format des Geräts statt A4, Wächter-Test test_rmformat
 - **V01.0.891** · 2026-10-21 · Tagesaktuell: der Stand nennt immer seinen Tag („Stand gestern 18:00“), das Wetter nimmt „heute“ von der Uhr statt aus einer Vorhersage von gestern, der Morgenbericht nennt Mails mit Tag und nur noch ungelesene, die Websuche sucht bei Fragen nach Heutigem im Zeitraum mit Datum je Treffer, und was nicht aktuell ist, sagt ein fester Satz des Panels; eine geöffnete Mail gilt als gelesen
 - **V01.0.890** · 2026-10-21 · Fix iPhone-App: die Kontakte-Karte lädt die .vcf-Datei zum Teilen als Daten (die App ließ sich seit V01.0.888 nicht bauen)
 - **V01.0.889** · 2026-10-21 · CarPlay Runde 2: im Auto kein Ins-Wort-Fallen mehr (der Autolautsprecher brach die Antwort ab), Zuhör-Ton landet nicht mehr im Mikrofon, „Nicht erkannt, tipp zum Sprechen“ statt stillem Ende, Funkaussetzer bis 5 s beenden nichts, Mails, Fristen und Termine sagen sofort einen Satz und geben nach 30 s auf, neue Zeilen „Mein Tag“ und „Erinnerung sprechen“, Briefing beim Einsteigen (App-Schalter, aus), jedes Gesprächsende mit Grund im Ton-Protokoll

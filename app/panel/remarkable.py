@@ -60,7 +60,6 @@ import vault
 import vorrang
 import core
 from core import assistant, browser_profile, secret_profile
-from textnorm import plain_markdown
 
 router = APIRouter()
 
@@ -793,10 +792,43 @@ def crc32c(data):
     return c ^ 0xFFFFFFFF
 
 
+EPUB_CSS = ("body{font-family:serif;line-height:1.4}h1{font-size:1.35em;margin:0 0 .6em}h2{font-size:1.1em;"
+            "margin:1.1em 0 .3em;border-bottom:1px solid #999}ul,ol{margin:.3em 0 .6em 1.2em;padding:0}li{margin:.15em 0}"
+            "table{border-collapse:collapse;margin:.4em 0 .8em;width:100%}th,td{border-bottom:1px solid #999;padding:.2em .4em;"
+            "text-align:left;vertical-align:top}th{font-weight:bold}blockquote{margin:.4em 0;padding-left:.6em;"
+            "border-left:3px solid #999;color:#444}pre{white-space:pre-wrap;font-size:.85em}")
+
+
+def epub_body(text):
+    """The text as XHTML from the same reader as the sheets (rmpapier.blocks): headings, lines, lists, tables."""
+    import rmpapier
+    e, out = html.escape, []
+    for kind, data in rmpapier.blocks(text):
+        if kind == "h":
+            out.append(f"<h2>{e(data)}</h2>")
+        elif kind == "p":
+            out.append("<p>" + "<br/>".join(e(x) for x in data) + "</p>")
+        elif kind == "ul":
+            out.append("<ul>" + "".join(f"<li>{e(x)}</li>" for x in data) + "</ul>")
+        elif kind == "ol":
+            out.append("<ol>" + "".join(f'<li value="{int(n)}">{e(x)}</li>' for n, x in data) + "</ol>")
+        elif kind == "table":
+            head, rows = data[0], data[1:]
+            out.append("<table><tr>" + "".join(f"<th>{e(c)}</th>" for c in head) + "</tr>"
+                       + "".join("<tr>" + "".join(f"<td>{e(c)}</td>" for c in r) + "</tr>" for r in rows) + "</table>")
+        elif kind == "quote":
+            out.append("<blockquote>" + "<br/>".join(e(x) for x in data) + "</blockquote>")
+        elif kind == "hr":
+            out.append("<hr/>")
+        elif kind == "pre":
+            out.append("<pre>" + e("\n".join(data)) + "</pre>")
+    return "".join(out)
+
+
 def epub(title, text):
-    """A small EPUB (reflows on the device, every character works): the text as paragraphs."""
+    """A small EPUB (reflows on the device, every character works): the text read like a sheet (epub_body)."""
     t = html.escape(title)
-    body = "".join(f"<p>{html.escape(p).replace(chr(10), '<br/>')}</p>" for p in re.split(r"\n\s*\n", text) if p.strip())
+    body = epub_body(text)
     ident = "urn:uuid:" + str(uuid.uuid4())
     out = io.BytesIO()
     with zipfile.ZipFile(out, "w") as z:
@@ -816,7 +848,8 @@ def epub(title, text):
                    f'xmlns:epub="http://www.idpf.org/2007/ops"><head><title>{t}</title></head><body><nav epub:type="toc">'
                    f'<ol><li><a href="text.xhtml">{t}</a></li></ol></nav></body></html>', zipfile.ZIP_DEFLATED)
         z.writestr("text.xhtml", f'<?xml version="1.0" encoding="utf-8"?><html xmlns="http://www.w3.org/1999/xhtml">'
-                   f'<head><title>{t}</title></head><body><h1>{t}</h1>{body}</body></html>', zipfile.ZIP_DEFLATED)
+                   f'<head><title>{t}</title><style>{EPUB_CSS}</style></head><body><h1>{t}</h1>{body}</body></html>',
+                   zipfile.ZIP_DEFLATED)
     return out.getvalue()
 
 
@@ -916,7 +949,6 @@ async def send(uid, title, text, art="antwort"):
     folder is gone)."""
     art = art if art in ("antwort", "besprechung") else "antwort"
     text = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", "", str(text or ""))[:MAX_SEND].strip()
-    text = plain_markdown(text)   # an answer's Markdown signs stay off the paper
     if not text:
         raise ValueError("nothing to send")
     title = _clean(title, 80) or "Vom Spark"

@@ -24,6 +24,7 @@ import re
 import symbole
 
 FORMATS = ("docx", "pptx", "xlsx", "pdf", "md", "txt", "csv")
+SMALL_PAGE = 150   # mm: a narrower page (a reMarkable screen) gets small margins and a smaller title
 CTYPE = {"docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
          "pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
          "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -1761,9 +1762,11 @@ def xlsx(c, style, pictures=None, base=None):
 
 
 # ---------------------------------------------------------------- PDF
-def pdf(c, style, pictures=None, base=None):
+def pdf(c, style, pictures=None, base=None, page=None):
+    """page: (width, height) in mm for a screen (the reMarkable's format, rmpapier.model); letters and own templates
+    stay A4."""
     if not c.get("letter") and base is None:
-        return _pdf_designed(c, style, pictures)
+        return _pdf_designed(c, style, pictures, page)
     from fpdf import FPDF
     from fpdf.fonts import FontFace
     reg, bold = _font_files()
@@ -1858,9 +1861,10 @@ def pdf(c, style, pictures=None, base=None):
     return bytes(doc.output())
 
 
-def _pdf_designed(c, style, pictures=None):
+def _pdf_designed(c, style, pictures=None, page=None):
     """The Spark's own PDF: the same layout as the Word file (title block, numbered headings, cards, box, tables
-    with a colored head), page numbers in the footer."""
+    with a colored head), page numbers in the footer. page: a narrow screen's (width, height) in mm, with small
+    margins and a smaller title (SMALL_PAGE)."""
     from fpdf import FPDF
     from fpdf.fonts import FontFace
     st = _print_style(style)
@@ -1887,10 +1891,14 @@ def _pdf_designed(c, style, pictures=None):
             self.cell(self.epw / 2, 5, title_[:90])
             self.cell(self.epw / 2, 5, f"{'Seite' if not en else 'Page'} {self.page_no()} / {{nb}}", align="R")
 
-    doc = Doc(format="A4")
+    small = bool(page) and page[0] < SMALL_PAGE
+    doc = Doc(format=tuple(page) if page else "A4")
     doc.alias_nb_pages()
-    doc.set_auto_page_break(True, margin=20)
-    doc.set_margins(22, 18, 20)
+    doc.set_auto_page_break(True, margin=16 if small else 20)
+    if small:
+        doc.set_margins(8, 9, 8)
+    else:
+        doc.set_margins(22, 18, 20)
     if reg:
         doc.add_font("DejaVu", "", reg)
         doc.add_font("DejaVu", "B", bold)
@@ -1919,7 +1927,7 @@ def _pdf_designed(c, style, pictures=None):
 
     # ---- title block
     label = KIND_LABEL.get(c.get("kind"), ("", ""))[1 if en else 0]
-    tsize = 24 if len(title_) <= 50 else 19
+    tsize = (17 if len(title_) <= 50 else 14) if small else 24 if len(title_) <= 50 else 19
     th = height_of(title_, tsize, W - 16)
     sub = tx(c.get("subtitle"))
     info = " · ".join(tx(x) for x in (c.get("author"), c.get("date")) if x)
@@ -2070,7 +2078,7 @@ def _pdf_designed(c, style, pictures=None):
                         rr.cell(tx(row[i] if i < len(row) else ""))
             doc.ln(4)
         if s.get("chart"):
-            need(90)
+            need(min(W, 160) * 0.54 + 4)   # the picture's own height (1200 × 640), so a narrow page keeps it below its heading
             doc.image(io.BytesIO(chart_png(s["chart"], st)), w=min(W, 160), x=L + (W - min(W, 160)) / 2)
             if s["chart"].get("source"):
                 para(("Quelle: " if not en else "Source: ") + s["chart"]["source"], 8, False, mut, 1, align="C")
@@ -2202,8 +2210,9 @@ def flat(c):
     return dict(c, sections=secs)
 
 
-def render(c, fmt, style_key="spark-hell", pictures=None, base=None):
-    """The file in this format: bytes. pictures(section) -> [paths] (already checked), base: an own template."""
+def render(c, fmt, style_key="spark-hell", pictures=None, base=None, page=None):
+    """The file in this format: bytes. pictures(section) -> [paths] (already checked), base: an own template,
+    page: a PDF for a screen of this size in mm (the reMarkable's format)."""
     if fmt not in BUILD:
         raise ValueError("format: " + ", ".join(FORMATS))
     st = style_of(style_key)
@@ -2211,6 +2220,8 @@ def render(c, fmt, style_key="spark-hell", pictures=None, base=None):
         base = None
     if base or fmt not in ("docx", "pptx", "pdf"):
         c = flat(c)
+    if fmt == "pdf" and page:
+        return pdf(c, st, pictures, base, page)
     return BUILD[fmt](c, st, pictures, base)
 
 
