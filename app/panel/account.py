@@ -1890,7 +1890,7 @@ def profile_settings(request: Request):
 
 # which functions the admin released for this profile (features.py), only for a signed-in profile
 ALLOW = {"tool_think": "toolthink", "route": "routing", "direct_read": "direct", "fix_learn": "fixes", "style": "style", "roles": "roles",
-         "wiki": "wiki", "kiwix": "kiwix", "local": "lokal", "follow": "follow", "echo": "selfecho", "barge_hold": "anhalten", "images": "images",
+         "wiki": "wiki", "kiwix": "kiwix", "local": "lokal", "follow": "follow", "echo": "selfecho", "barge_hold": "anhalten", "turn_tone": "satzende", "images": "images",
          "prefetch": "vorab", "instant_ack": "ack", "spark_help": "hilfe", "tips_on": "tipps", "pro_tips": "tippspush", "voice_tips": "tippsstimme", "systemone_on": "einordnung",
          "devup": "geraeteupdate", "devup_night": "geraetenacht", "report": "melden", "doc_make": "erstellen",
          "doc_make_templates": "erstellenvorlagen", "doc_make_wikipics": "erstellenbilder", "bilder": "bilder", "bilder_aendern": "bildaendern", "musik": "musik", "musik_bearbeiten": "musikbearbeiten", "svcwatch": "dienstwacht", "svchint": "dienstnutzer",

@@ -385,7 +385,7 @@ async function loadCfg(){CFG=await (await api('/api/config')).json();
   for(const[sec,o]of Object.entries(CFG))for(const[k,v]of Object.entries(o)){const el=$(sec+'.'+k);if(!el)continue;
     if(el.type==='checkbox')el.checked=v;else{if(el.tagName==='SELECT'&&![...el.options].some(o=>o.value==v))el.add(new Option(v));el.value=Array.isArray(v)?v.join(', '):v}};instrHint();ttsVoiceOpts();try{kxChips()}catch{};
   await setReady();getDefaults=await renderSet($('chatdefaults'),{...SDEF,...(CFG.chat.defaults||{})},null);if(window.faceTiles)faceTiles($('pane-talk'));if(typeof presetMove==='function')presetMove();
-  asrRec();cfgDeps();if(typeof guidesCount==='function')guidesCount();if(typeof tgAdmin==='function')tgAdmin();visionLoad();bildTestLoad();musikModelLoad();dlLoad();if(typeof nzLoad==='function')nzLoad();if(typeof gehLoad==='function')gehLoad();if(typeof telLoad==='function')telLoad();if(typeof apnsAdmin==='function')apnsAdmin();if(typeof iupdAdmin==='function')iupdAdmin();if(typeof coadmAdmin==='function')coadmAdmin();if(typeof espAdmin==='function')espAdmin();if(typeof andAdmin==='function')andAdmin();if(typeof deskAdmin==='function')deskAdmin();if(typeof agentAdmin==='function')agentAdmin();if(typeof vbAdmin==='function')vbAdmin();document.querySelectorAll('.pane').forEach(p=>markDirty(p,false));document.querySelectorAll('.savemsg').forEach(m=>m.textContent='');glance();glanceLoad();llmModels()}
+  asrRec();cfgDeps();if(typeof guidesCount==='function')guidesCount();if(typeof tgAdmin==='function')tgAdmin();visionLoad();satzendeLoad();bildTestLoad();musikModelLoad();dlLoad();if(typeof nzLoad==='function')nzLoad();if(typeof gehLoad==='function')gehLoad();if(typeof telLoad==='function')telLoad();if(typeof apnsAdmin==='function')apnsAdmin();if(typeof iupdAdmin==='function')iupdAdmin();if(typeof coadmAdmin==='function')coadmAdmin();if(typeof espAdmin==='function')espAdmin();if(typeof andAdmin==='function')andAdmin();if(typeof deskAdmin==='function')deskAdmin();if(typeof agentAdmin==='function')agentAdmin();if(typeof vbAdmin==='function')vbAdmin();document.querySelectorAll('.pane').forEach(p=>markDirty(p,false));document.querySelectorAll('.savemsg').forEach(m=>m.textContent='');glance();glanceLoad();llmModels()}
 let getDefaults=null;
 // Sprachmodell (V01.0.292): a choice of the models the configured server reports (/api/admin/llm-models). The text
 // field chat.llm_model stays what is saved; the list only fills it. Without a list (server down, no address) or
@@ -1150,6 +1150,10 @@ function visionShow(r){if(!r){$('visionmsg').textContent=t('Noch nicht geprüft.
   const when=new Date(r.t*1000).toLocaleString([], {dateStyle:'short',timeStyle:'short'});
   $('visionmsg').innerHTML=r.ok?`<span class="ok">✓ ${t('Kann Bilder','Sees pictures')}</span> · ${esc(when)} · ${esc(String(r.seconds))} s`
     :`<span class="err">✗ ${esc(r.error||t('kann keine Bilder','sees no pictures'))}</span> · ${esc(when)}`}
+// Satzende am Tonfall (satzende.py): the measurement's numbers, never words
+async function satzendeLoad(){if(!$('satzendemsg'))return;try{const d=await (await api('/api/admin/satzende')).json();
+  $('satzendemsg').textContent=!d.n?t('Noch keine Pause gemessen.','No pause measured yet.'):`${d.n} / ${d.rows} ${t('Pausen','pauses')}${d.measuring?'':' · '+t('Messung fertig','measurement done')} · `+
+    `${t('mit Zahl','with a number')} ${d.rated} · ${t('Treffer','hits')} ${d.hits} · ${t('Fehlalarme','false alarms')} ${d.false} · ${t('gespart','saved')} ${d.saved_s} s`+(d.ms!=null?` · ${d.ms} ms`:'')}catch{}}
 async function visionLoad(){if(!$('visiongo'))return;try{visionShow((await (await api('/api/admin/vision-test')).json()).last)}catch{}}
 // Einordnung mit Wahrscheinlichkeit (systemone.py): one question of the switch through qwen38's /v1/systemone
 // the label mass (how much of the probability fell on any option) and the option orders qwen38 asked in

@@ -203,6 +203,7 @@ Prepares a request, asks the language model in rounds and checks what is said.
 | `app/panel/rechnen.py` | Rechnen mit festem Werkzeug: a language model cannot calculate, so the panel does it. |
 | `app/panel/roles.py` | Roles: each profile keeps a few ways the assistant should answer ("Butler: höflich und trocken", "Erklärbär: erklär alles wie für Kinder") and switches betwe … |
 | `app/panel/saetze.py` | Das kannst du auch sagen. |
+| `app/panel/satzende.py` | Satzende am Tonfall: messen. |
 | `app/panel/schreib.py` | Schreibhilfe: the Spark corrects, smooths, shortens, translates or drafts a text, for mails and anything else the person writes (Word, Excel, Pages ...). |
 | `app/panel/sofort.py` | Einfaches sofort beantworten: a few plain questions get a fixed sentence from the panel, without the language model, so the first sound comes at once. |
 | `app/panel/spickzettel.py` | Spickzettel zum Ausdrucken. |
@@ -457,6 +458,7 @@ Speech recognition and speech output as their own services, ahead of everything 
 | `app/musik_server.py` | Musik machen: the music service. |
 | `app/musikmodell.py` | Musik machen: the one list of the music models, where they lie and how they are fetched and checked. |
 | `app/parakeet.py` | Second recognizer: parakeet-primeline (German fine-tune of NVIDIA Parakeet TDT 0.6B v3), int8 ONNX on the CPU via sherpa-onnx. |
+| `app/smartturn.py` | Satzende am Tonfall (panel satzende.py, admin chat.turn_tone, off by default): Smart Turn v3.2 on the model computer. |
 | `app/tempo.py` | Speaking tempo for streamed speech: WSOLA time stretching that keeps the pitch. |
 | `app/textnorm.py` | Text clean-up before speech synthesis. |
 | `app/tts_proxy.py` | Qwen3-TTS front end for the vllm-omni engine (backend "vllm-omni"). |
@@ -693,6 +695,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `state/regel-versionen.json` | Rule versions | – | yes |
 | `state/revoked.json` | Revoked sessions | – | no |
 | `state/rundlauf.json` | Test runs of the round-trip check (times in ms, fixed words) | – | no |
+| `state/satzende.json` | Turn end by tone: measurement at speaking pauses (numbers only) | – | no |
 | `state/schirm.key` | Key of the control centre on the screen (only the service user reads it) | service user only | no |
 | `state/secret.key` | Key for everything sealed | is the key | no |
 | `state/setup.json` | Setup wizard done | – | yes |
@@ -2719,7 +2722,7 @@ flowchart TD
 
 1. <a id="kn-asr-s1"></a>**A recording arrives**: The browser sends the recording to the panel. Each caller may only so often per minute (profile 240), guests share 3 places at once.
 2. <a id="kn-asr-s2"></a>**At most 50 MB**: read_audio reads the recording in pieces and stops at 50 MB. Only a signed-in profile may send a wake word; it then goes to the model as a hint. With „Names for listening“ hoerwoerter.prompt adds the names of the profiles and the profile's contacts, rooms and devices (at most 100, shared speakers only profile names).
-3. <a id="kn-asr-s3"></a>**Alongside on the CPU**: While the GPU recognizes, the CPU already runs speaker identification (when on and a profile asks), the room voice, the check for an unknown voice and the measure of how much of the recording is really voice.
+3. <a id="kn-asr-s3"></a>**Alongside on the CPU**: While the GPU recognizes, the CPU already runs speaker identification (when on and a profile asks), the room voice, the check for an unknown voice and the measure of how much of the recording is really voice. At a speaking pause with „Turn end by tone“ satzende.start also asks Smart Turn on the model computer (asr_proxy.turn), only for a number to measure.
 4. <a id="kn-asr-s4"></a>**To the ASR service**: The panel sends the recording with the API key to the proxy. stufe.asr_level adds the profile's stage, but not at a shared speaker. Only the panel can set a stage: with the key from vorrang-key and only from this machine, else it is normal.
 5. <a id="kn-asr-s5"></a>**Key and size fine?**: BodyLimit refuses requests that are too large or lack the right key before anything is read. Without a key set, only this machine itself may ask.
 6. <a id="kn-asr-s6"></a>**Engine ready?**: engine_status asks the engine's /health. If it does not answer, the proxy reads its state and that of the systemd unit and names the reason.
@@ -2764,6 +2767,8 @@ flowchart TD
 - `app/common.py` `audio_rate_ok`: sample rate from the file header ([step 8](#kn-asr-s8))
 - `app/asr_proxy.py` `transcriptions`: the proxy in front of the engine ([step 4](#kn-asr-s4))
 - `app/asr_proxy.py` `engine_status`: ready, loading, error or off ([step 6](#kn-asr-s6))
+- `app/asr_proxy.py` `turn`: Smart Turn: how finished the end sounds, 0 to 1 ([step 3](#kn-asr-s3))
+- `app/panel/satzende.py` `start`: measure a pause, numbers only ([step 3](#kn-asr-s3))
 - `app/parakeet.py` `Recognizer`: Parakeet on the CPU ([step 9](#kn-asr-s9))
 - `app/panel/stille.py` `check`: silence and fillers ([step 10](#kn-asr-s10))
 - `app/panel/echo.py` `check`: the Spark's own voice ([step 10](#kn-asr-s10))
@@ -3318,7 +3323,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Seal**: vault.seal turns the value into „enc1:“ and a Fernet token (encrypted and protected against change). A value already sealed stays as it is.
 5. <a id="kn-state-s5"></a>**Write atomically**: common.write_json writes into a fresh temporary file next to it, never through a link, gives it the rights of the old file (a new one is readable for the service only) and then swaps it in one step. A crash in the middle leaves the old file whole.
 6. <a id="kn-state-s6"></a>**Read**: A sealed value is opened with the key. If the key does not fit (backup from another Spark), an empty value comes back and the account has to be entered again. Older unsealed values are read and sealed the next time they are saved.
-7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 36), otherwise the line gives its reason (dateien.STATE_LOCAL, 84). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
+7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 36), otherwise the line gives its reason (dateien.STATE_LOCAL, 85). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
 8. <a id="kn-state-s8"></a>**Move backup?**: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup.
 9. <a id="kn-state-s9"></a>**Fine when restoring?**: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays.
 10. <a id="kn-state-s10"></a>**Put in place with a way back**: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back.
@@ -3329,7 +3334,7 @@ flowchart TD
 #### Numbers (from the code)
 
 - **36** files in every backup ([step 7](#kn-state-s7))
-- **84** files and folders that stay out with a reason ([step 7](#kn-state-s7))
+- **85** files and folders that stay out with a reason ([step 7](#kn-state-s7))
 - **8 MB** largest file when restoring ([step 9](#kn-state-s9))
 - **12** characters the move password has at least ([step 8](#kn-state-s8))
 

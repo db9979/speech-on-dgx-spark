@@ -4,11 +4,12 @@ from technik_seiten import S
 
 SEITEN = {
     "asr": {
-        "stand": "50784a52ab",
+        "stand": "1cea7b6fc6",
         "bezug": {
             "parakeet.MAX_AUDIO_S": ["s9"], "common.NOTASR_PORT": ["s9"], "common.NOTASR_IDLE": ["s9"], "admin.test_asr": ["s1"], "admin._test_asr": ["s2", "s4"],
             "common.BodyLimit": ["s5"], "common.PrioGate": ["s7"], "common.audio_rate_ok": ["s8"],
             "asr_proxy.transcriptions": ["s4"], "asr_proxy.engine_status": ["s6"], "parakeet.Recognizer": ["s9"],
+            "satzende.start": ["s3"], "asr_proxy.turn": ["s3"],
         },
         "kurz": ("Die Spracherkennung macht aus einer Aufnahme Text. Das Panel nimmt die Aufnahme an, prüft sie und "
                  "reicht sie an den ASR-Dienst weiter. Dieser Proxy prüft Schlüssel, Größe und Abtastrate, lässt "
@@ -44,10 +45,12 @@ SEITEN = {
               ("Stimme, Stille, fremde Stimme", "voice, silence, other voice"),
               ("Während die Grafikkarte erkennt, laufen auf dem Prozessor schon die Sprechererkennung (wenn an und "
                "ein Profil fragt), die Raum-Stimme, die Prüfung auf eine fremde Stimme und die Messung, wie viel der "
-               "Aufnahme wirklich Stimme ist.",
+               "Aufnahme wirklich Stimme ist. Bei einer Sprechpause mit „Satzende am Tonfall“ fragt satzende.start "
+               "nebenbei Smart Turn auf dem Modell-Rechner (asr_proxy.turn), nur für eine Zahl zur Messung.",
                "While the GPU recognizes, the CPU already runs speaker identification (when on and a profile asks), "
                "the room voice, the check for an unknown voice and the measure of how much of the recording is "
-               "really voice.")),
+               "really voice. At a speaking pause with „Turn end by tone“ satzende.start also asks Smart Turn on the "
+               "model computer (asr_proxy.turn), only for a number to measure.")),
             S("s4", "schritt", ("An den ASR-Dienst", "To the ASR service"),
               ("mit API-Schlüssel und Stufe", "with API key and stage"),
               ("Das Panel schickt die Aufnahme mit dem API-Schlüssel an den Proxy. stufe.asr_level legt die Stufe des "
@@ -179,6 +182,8 @@ SEITEN = {
             ("common.audio_rate_ok", ("Abtastrate aus dem Dateikopf", "sample rate from the file header")),
             ("asr_proxy.transcriptions", ("der Proxy vor der Engine", "the proxy in front of the engine")),
             ("asr_proxy.engine_status", ("bereit, lädt, Fehler oder aus", "ready, loading, error or off")),
+            ("asr_proxy.turn", ("Smart Turn: wie fertig das Ende klingt, 0 bis 1", "Smart Turn: how finished the end sounds, 0 to 1")),
+            ("satzende.start", ("Pause messen, nur Zahlen", "measure a pause, numbers only")),
             ("parakeet.Recognizer", ("Parakeet auf dem Prozessor", "Parakeet on the CPU")),
             ("stille.check", ("Stille und Füllwörter", "silence and fillers")),
             ("echo.check", ("die eigene Stimme des Spark", "the Spark's own voice")),

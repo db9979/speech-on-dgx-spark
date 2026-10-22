@@ -805,6 +805,38 @@ if [ "$WITH_MUSIK" = 1 ]; then
   fi
 fi
 
+# ---------------------------------------------------------------- Satzende am Tonfall (Smart Turn, app/smartturn.py)
+# The 8 MB int8 ONNX model of Smart Turn v3.2 (BSD-2-Clause) from the pinned pipecat-ai wheel on PyPI: the wheel and the
+# model are checked against their SHA-256 in app/smartturn.py, only the model is kept (root's, read-only). The service
+# checks it again before every load. Small, so always there on the model computer; the admin switch decides its use.
+if [ "$WITH_ASR" = 1 ]; then
+  ST_PATH=$(sed -n 's/^WHEEL_PATH = "\([0-9a-f]\{2\}\/[0-9a-f]\{2\}\/[0-9a-f]\{60\}\)".*$/\1/p' "$INSTALL_FROM/app/smartturn.py")
+  ST_VER=$(sed -n 's/^WHEEL_VERSION = "\([0-9.]*\)".*$/\1/p' "$INSTALL_FROM/app/smartturn.py")
+  ST_WHEEL=$(sed -n 's/^WHEEL_SHA256 = "\([0-9a-f]\{64\}\)"$/\1/p' "$INSTALL_FROM/app/smartturn.py")
+  ST_SHA=$(sed -n 's/^MODEL_SHA256 = "\([0-9a-f]\{64\}\)"$/\1/p' "$INSTALL_FROM/app/smartturn.py")
+  ST_MEMBER=$(sed -n 's/^MEMBER = "\([A-Za-z0-9_.\/-]*\)"$/\1/p' "$INSTALL_FROM/app/smartturn.py")
+  ST_DEST="$PREFIX/smartturn/$(basename "$ST_MEMBER")"
+  if [ -n "$ST_PATH" ] && [ -n "$ST_VER" ] && [ -n "$ST_WHEEL" ] && [ -n "$ST_SHA" ] && [ -n "$ST_MEMBER" ]; then
+    if [ -L "$PREFIX/smartturn" ] || [ "$(sha256sum "$ST_DEST" 2>/dev/null | cut -c1-64)" != "$ST_SHA" ]; then
+      say "Satzende am Tonfall: Smart Turn v3.2 (pipecat-ai $ST_VER, checked with SHA-256)"
+      stmp=$(mktemp -d)
+      if curl -fsSL --proto '=https' --max-filesize 30000000 -o "$stmp/w.whl" \
+           "https://files.pythonhosted.org/packages/$ST_PATH/pipecat_ai-$ST_VER-py3-none-any.whl" \
+         && [ "$(sha256sum "$stmp/w.whl" | cut -c1-64)" = "$ST_WHEEL" ] \
+         && python3 -I -c 'import sys, zipfile; open(sys.argv[3], "wb").write(zipfile.ZipFile(sys.argv[1]).read(sys.argv[2]))' \
+              "$stmp/w.whl" "$ST_MEMBER" "$stmp/m.onnx" \
+         && [ "$(sha256sum "$stmp/m.onnx" | cut -c1-64)" = "$ST_SHA" ]; then
+        rm -rf -- "$PREFIX/smartturn" && install -d -m 755 "$PREFIX/smartturn" && install -m 644 "$stmp/m.onnx" "$ST_DEST"
+      else
+        warn "Smart Turn download failed or does not match its SHA-256; Satzende am Tonfall measures nothing"
+      fi
+      rm -rf -- "$stmp"
+    fi
+  else
+    warn "app/smartturn.py names no Smart Turn wheel or hash"
+  fi
+fi
+
 # ---------------------------------------------------------------- models (ASR / transformers TTS)
 # An update downloads only when the chosen models changed since the last complete download
 # ($PREFIX/.models, root's file); the services fetch a model that went missing themselves, only its pinned commit and

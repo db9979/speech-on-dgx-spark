@@ -111,6 +111,8 @@ FEATURES = (
     # zwischenruf.py (plan ins-wort-fallen): a barge-in only pauses the answer; fixed words decide on, stop or question
     F("anhalten", "Ins Wort fallen: erst anhalten", "Barge-in: pause first", "talk", ("barge_hold",), me="setbox",
       guide="anhalten"),
+    # satzende.py, smartturn.py (plan ins-wort-fallen B1): Smart Turn hears at each pause whether you sound done; measures only
+    F("satzende", "Satzende am Tonfall", "Turn end by tone", "talk", ("turn_tone",), me="setbox", guide="satzende"),
     F("fixes", "Aus Korrekturen lernen", "Learning from corrections", "talk", ("learn_fixes",),
       parent="memory", me="setbox", guide="fixes"),
     F("klaeren", "Rückfrage statt Raten", "Ask instead of guessing", "talk", ("klaeren",), me="setbox",

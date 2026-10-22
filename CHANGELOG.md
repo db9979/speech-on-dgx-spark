@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.946** · 2026-10-22 · Satzende am Tonfall (Schalter, aus): Smart Turn auf dem Modell-Rechner misst an jeder Sprechpause, ob du fertig klingst; nur Zahlen, entscheidet noch nichts, Auswertung nach 200 Pausen oder 7 Tagen unter dem Schalter
 - **V01.0.945** · 2026-10-22 · Netzduell Schritt 1: Spielprofile „Nur Krisenspiel“ – der Admin legt ein Profil an, das nur das Krisenspiel sieht (alle anderen Seiten und Schnittstellen 403, nie Assistent, Modell oder Werkzeug, nie mit Admin-Rolle); dazu blendet ein Profil ohne Admin-Anmeldung nur noch die Admin-Seiten aus statt auch Listen, Offen, Kontakte, Wissensbuch und Krisenspiel
 - **V01.0.944** · 2026-10-22 · Ins Wort fallen: erst anhalten auch in der iPhone-App: ein „mhm“ pausiert die Antwort nur, „Stopp“ beendet sie, ein Satz wird die neue Frage; ohne Entscheidung nach 4 s läuft sie weiter
 - **V01.0.943** · 2026-10-22 · IT-Krisenspiel (Paket 9): vier Kampagnen ketten drei Szenarien über mehrere Spieltage; was ein Kapitel hinterlässt (Audit, Versicherung, erschöpftes Team, Ruf, eingespielt) ist feste Regel und wirkt im nächsten; Pause beliebig lang, Note aus dem Schnitt, Erfolg „Durchgehalten“; auch in der iPhone-App

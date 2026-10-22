@@ -20,6 +20,7 @@ from fastapi.responses import JSONResponse, PlainTextResponse, Response, Streami
 
 from common import (ASR_ISO, audio_rate_ok, BodyLimit, GateFull, KeyedCORS, PrioGate, inside, outside_view, api_key_dependency, api_key_ok,
                     engine_crash_reason, load_config, NOTASR_IDLE, NOTASR_PORT, quiet_access_log, SpeechMark, stage_of, STATE)
+import smartturn
 
 UNIT = "speech-spark-asr-engine"
 NAME_TO_ISO = {v.lower(): k for k, v in ASR_ISO.items()}
@@ -35,7 +36,7 @@ app = FastAPI(title="Qwen3-ASR via vLLM (DGX Spark)")
 app.add_middleware(SpeechMark)
 app.add_middleware(KeyedCORS)
 # bodies are refused before they are read when too large or without the API key
-app.add_middleware(BodyLimit, default=201 * 1024**2, gate=api_key_ok, gated=("/v1/",))
+app.add_middleware(BodyLimit, limits=[("/v1/turn", smartturn.MAX_BYTES)], default=201 * 1024**2, gate=api_key_ok, gated=("/v1/",))
 auth = [Depends(api_key_dependency())]
 client = httpx.AsyncClient(timeout=httpx.Timeout(900, connect=5))
 started = time.time()
@@ -222,6 +223,25 @@ async def read_upload(upload):
 # form fields that go on to the engine (OpenAI's transcription API); anything else stays here, so a
 # client cannot switch on engine options nobody checked
 ENGINE_FIELDS = {"prompt", "temperature", "stream"}
+
+
+@app.post("/v1/turn", dependencies=auth)
+async def turn(request: Request):
+    """Satzende am Tonfall (smartturn.py, panel satzende.py): how finished the end of a recording sounds, 0 to 1.
+    Only a number for the panel's measurement, nothing here decides; 503 without the model file."""
+    data = await request.body()
+    if not smartturn.present():
+        raise HTTPException(503, "turn model not installed")
+    try:
+        audio = smartturn.pcm(data)
+    except ValueError as e:
+        raise HTTPException(415, str(e))
+    try:
+        p, ms = await asyncio.to_thread(smartturn.predict, audio)
+    except Exception as e:
+        fail(f"turn: {type(e).__name__}")
+        raise HTTPException(503, "turn model failed")
+    return {"p": p, "ms": ms}
 
 
 @app.post("/v1/audio/transcriptions", dependencies=auth)

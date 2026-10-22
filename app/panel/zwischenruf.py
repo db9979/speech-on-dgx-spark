@@ -15,7 +15,6 @@ here with a fixed rule, never the model (idea from sonia-assistant, plan "Ins Wo
 
 The page plays on by itself when no decision comes within HOLD_MAX seconds (recognition down or slow). Only the
 decision and its fixed reason go to the journal and to Live, never the words."""
-import json
 import re
 
 HOLD_MAX = 4   # seconds the page waits for a decision before the answer plays on (chat.js, Assistant.swift)
@@ -86,21 +85,11 @@ def note(decision, why, client=""):
         pass
 
 
-def attach(res, uid, asked=False, client=""):
-    """The answer of /api/test/asr with the decision added ("barge"); left as it was when it is no recognition
-    (an error: the page plays on by itself) or the profile may not use it."""
+def attach(got, uid, asked=False, client=""):
+    """The answer of /api/test/asr (a dict, admin.answer_dict) with the decision added ("barge"); left as it was when
+    the profile may not use it."""
     if not on(uid):
-        return res
-    got = res
-    if not isinstance(res, dict):
-        if getattr(res, "status_code", 0) != 200:
-            return res
-        try:
-            got = json.loads(bytes(res.body))
-        except (ValueError, TypeError, AttributeError):
-            return res
-        if not isinstance(got, dict):
-            return res
+        return got
     decision, why = decide(got.get("text"), got.get("ignored") or "", asked)
     note(decision, why, client)
     return dict(got, barge=decision)

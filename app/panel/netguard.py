@@ -160,6 +160,7 @@ DIRECT_OK = {
     "zertpin": ("geprueft", "Zertifikat lesen nach resolve()"),
     "halive": ("geprueft", "WebSocket zum eigenen Home Assistant nach resolve() mit Heimnetz-Regeln (HOME), nur lesen"),
     "asr_proxy": ("lokal", "Spracherkennung: Proxy zur Engine auf localhost"),
+    "satzende": ("lokal", "die eigene Spracherkennung (POST /v1/turn, Smart Turn auf dem Modell-Rechner über common.model_url)"),
     "tts_proxy": ("lokal", "Sprachausgabe: Proxy zur Engine auf localhost"),
     "bench": ("lokal", "Messung der eigenen Dienste auf localhost (Kommandozeile)"),
 }

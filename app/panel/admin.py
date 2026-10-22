@@ -20,6 +20,7 @@ import undo  # noqa: E402
 import echo  # noqa: E402
 import stille  # noqa: E402
 import fremdstimme  # noqa: E402
+import satzende  # noqa: E402
 import guard  # noqa: E402
 import llm  # noqa: E402
 import kiwix  # noqa: E402
@@ -1164,22 +1165,53 @@ async def read_audio(file):
 
 @router.post("/api/test/asr", dependencies=[Depends(assistant)])
 async def test_asr(request: Request, file: UploadFile = File(...), language: str = Form("auto"), wake: str = Form(""),
-                   room: str = Form(""), opened: str = Form(""), hold: str = Form(""), asked: str = Form("")):
+                   room: str = Form(""), opened: str = Form(""), hold: str = Form(""), asked: str = Form(""),
+                   turn: str = Form(""), turns: str = Form("", max_length=400)):
     """Load limits (per caller per minute, guests only a few at once), then the transcription. hold: the page paused
-    the answer for this barge-in and asks whether it plays on (zwischenruf.py; asked: the answer ended on a question)."""
+    the answer for this barge-in and asks whether it plays on (zwischenruf.py; asked: the answer ended on a question).
+    turn: a pause snapshot Satzende am Tonfall measures, turns: what became of earlier ones (satzende.py)."""
     me = profiles.current(request)
     admin = not me and admin_cookie_ok(request)
     guard.limit(request, "asr", me and me["id"], admin)
     slot = None if me or admin else guard.Slot("asr")
     try:
-        res = await _test_asr(request, file, language, wake, room, opened)
-        if hold == "1" and me and fremdstimme.opened(opened) == "barge":
+        if me and turns:
+            satzende.report(me["id"], turns)
+        heard = {"start": (lambda data: satzende.start(me["id"], data, load_config())) if me and turn == "1" else None}
+        res = await _test_asr(request, file, language, wake, room, opened, heard)
+        key = heard.get("key")
+        got = answer_dict(res) if me and (hold == "1" or key) else None
+        if got is None:
+            return res
+        if hold == "1" and fremdstimme.opened(opened) == "barge":
             import zwischenruf
-            res = zwischenruf.attach(res, me["id"], asked == "1", echo.device_of(request).split(":")[0])
-        return res
+            got = zwischenruf.attach(got, me["id"], asked == "1", echo.device_of(request).split(":")[0])
+        if key:
+            await satzende.settle(key)
+            got = dict(got, turn=key)
+        return got
     finally:
         if slot:
             slot.release()
+
+
+@router.get("/api/admin/satzende", dependencies=[Depends(auth)])
+def admin_satzende():
+    """Satzende am Tonfall: the measurement's numbers for Funktionen → Gespräch (satzende.summary), never words."""
+    return satzende.summary()
+
+
+def answer_dict(res):
+    """The recognition's answer as a dict (a 200 JSON answer unpacked), None for an error or anything else."""
+    if isinstance(res, dict):
+        return res
+    if getattr(res, "status_code", 0) != 200:
+        return None
+    try:
+        got = json.loads(bytes(res.body))
+    except (ValueError, TypeError, AttributeError):
+        return None
+    return got if isinstance(got, dict) else None
 
 
 def wav_seconds(data):
@@ -1198,9 +1230,11 @@ def _quiet(task):
     return task
 
 
-async def _test_asr(request, file, language, wake, room, opened=""):
+async def _test_asr(request, file, language, wake, room, opened="", heard=None):
     cfg = load_config()
     data = await read_audio(file)
+    if heard is not None and heard.get("start"):
+        heard["key"] = heard["start"](data)   # a pause snapshot: Smart Turn hears it beside the recognition (satzende.py)
     ended = time.time()   # the recording ended about now (for "speaking pause", echo.py)
     # voices are only told apart for a signed-in profile or device: a guest page gets no token that
     # could open someone's data, and a token only works where it was issued

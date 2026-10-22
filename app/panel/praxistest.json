@@ -2810,6 +2810,13 @@
 "titel": "Spielprofil „Nur Krisenspiel“",
 "text": "A: Personen und Geräte → Profil anlegen mit Haken „Nur Krisenspiel“. B: Mit dem neuen Profil anmelden: oben stehen nur Krisenspiel und Abmelden, die Seite öffnet das Krisenspiel. C: Im Browser /api/memory oder eine andere Seite aufrufen: 403 „Dieses Profil ist nur für das Krisenspiel.“. D: Spiel starten und spielen geht normal. E: Beim Profil den Haken abnehmen: nach neuem Laden ist es ein normales Profil. F: Einem Profil mit Admin-Rolle den Haken geben: abgelehnt. G: Ein normales Profil ohne Admin-Anmeldung sieht wieder Listen, Offen, Kontakte, Wissensbuch und Krisenspiel. H: Zustand → Live: Profile „davon N nur Spiel“.",
 "thread": "IT-Krisenspiel für einzelne Nutzer"
+},
+{
+"id": "P426",
+"v": 946,
+"titel": "Satzende am Tonfall messen",
+"text": "A: Update auf Pi und tars (das Update holt Smart Turn auf tars), Funktionen → Satzende am Tonfall an; im Profil Ich → Gespräch → Natürlicher Sprecherwechsel an. B: Im Browser ein paar Fragen mit kurzen Pausen stellen, mal mit „und …“ am Ende einer Pause. C: Zustand → Logs: Zeilen „hoeren: satzende p=… regel=… weiter=… ms=…“, nie deine Worte; steht dort p=none, fehlt Smart Turn auf tars. D: Unter dem Schalter steht die Zählung (Pausen, Treffer, Fehlalarme, gespart). E: Nach 200 Pausen oder 7 Tagen endet die Messung; dann die Zahlen an Claude für Teil B2 geben. F: Schalter aus: nichts wird gemessen.",
+"thread": "Ideen aus sonia-assistant"
 }
 ]
 }

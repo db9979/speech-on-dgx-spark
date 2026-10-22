@@ -146,7 +146,7 @@ async function startListening(o={}){stopBarge();if(!o.held)stopAnswer();chat.tur
   // how the microphone opened (fremdstimme.py): by itself after an answer it takes only a known voice, never the TV
   rec.opened=o.opened||(o.speaking?'barge':o.follow?'follow':'');
   rec.ondataavailable=e=>{if(e.data.size)parts.push(e.data)};chat.parts=parts;chat.live.last=null;chat.lastVoice=o.speaking?performance.now():null;
-  rec.onstop=()=>{stopVad();chat.rec=null;setTalk();const cancel=chat.cancelRec;chat.cancelRec=false;
+  rec.onstop=()=>{stopVad();chat.rec=null;setTalk();const cancel=chat.cancelRec;chat.cancelRec=false;rec.endVoice=chat.lastVoice||0;turnDone(rec);
     const why=chat.stopWhy;chat.stopWhy=null;
     if(cancel&&chat.held){clearLive();resumeAnswer(chat.held);return}   // nothing to decide: the answer plays on
     if(chat.held){const h=chat.held;h.t=setTimeout(()=>resumeAnswer(h),HOLD_MS)}
@@ -190,14 +190,20 @@ async function toWav(blob,rate=16000){const raw=await audioCtx().decodeAudioData
   for(let i=0;i<pcm.length;i++)v.setInt16(44+2*i,Math.max(-1,Math.min(1,pcm[i]))*32767,true);
   return new Blob([buf],{type:'audio/wav'})}
 async function transcribe(blob,tEnd,rec,opened){chat.asrBusy=true;try{await transcribe2(blob,tEnd,rec,opened)}finally{chat.asrBusy=false}}
-async function asrText(blob,opened,held){
+async function asrText(blob,opened,held,turn){
   let file=blob,name='frage.'+(blob.type.includes('mp4')?'m4a':blob.type.includes('ogg')?'ogg':'webm');
   try{file=await toWav(blob);name='frage.wav'}catch{}            // fall back to the original recording
   const fd=new FormData();fd.append('file',file,name);fd.append('language',(CFG&&CFG.asr.default_language)||'auto');if(opened)fd.append('opened',opened);
   if(held){fd.append('hold','1');if(held.asked)fd.append('asked','1')}
+  if(turn)fd.append('turn','1');if(chat.turnOut&&chat.turnOut.length)fd.append('turns',chat.turnOut.splice(0,8).join(','));
   const d=await (await api('/api/test/asr',{method:'POST',body:fd})).json();
   // recognized voice: a signed one-time token the chat request sends back, kept with its own text
-  return {text:(d.text||'').trim(),speaker:d.speaker||null,ignored:d.ignored||''}}
+  return {text:(d.text||'').trim(),speaker:d.speaker||null,ignored:d.ignored||'',turn:d.turn||''}}
+// Satzende am Tonfall (satzende.py, only measuring): each measured pause is reported with the next recording, as
+// what the word list said there and whether the voice went on after it; numbers only, never the words
+function turnNote(rec,id,x,at){(rec.turns=rec.turns||[]).push({id,st:turnState(x),at});if(rec.endVoice!=null)turnDone(rec)}
+function turnDone(rec){for(const p of rec.turns||[])(chat.turnOut=chat.turnOut||[]).push(p.id+':'+({done:'fertig',open:'offen'}[p.st]||'neutral')+':'+(rec.endVoice>p.at?1:0));
+  rec.turns=[];if(chat.turnOut&&chat.turnOut.length>8)chat.turnOut.splice(0,chat.turnOut.length-8)}
 async function transcribe2(blob,tEnd,rec,opened){const h=opened==='barge'?chat.held:null;chatSay(t('Erkenne Sprache …','Transcribing …'));
   // a live snapshot taken after the last voiced moment already holds the whole question
   const last=chat.live.last;chat.live.last=null;let r=null;
@@ -217,9 +223,9 @@ async function transcribe2(blob,tEnd,rec,opened){const h=opened==='barge'?chat.h
 function liveSnap(pause){const rec=chat.rec,parts=chat.parts;if(!rec||rec.state!=='recording')return;
   if(chat.live.busy){chat.live.want=true;chat.live.pause=chat.live.pause||pause;return}
   chat.live.busy=true;chat.live.want=false;pause=pause||chat.live.pause;chat.live.pause=false;let started=false;
-  const go=()=>{if(started)return;started=true;const at=performance.now(),n=parts.length;
-    const p=asrText(new Blob(parts.slice(0,n),{type:rec.mimeType||'audio/webm'}),rec.opened)
-      .then(r=>{const x=r.text;if(chat.rec===rec&&x){if(S.live)showLive(x);if(pause&&S.turn)turnCheck(x,at,rec)}return r}).catch(()=>null)
+  const go=()=>{if(started)return;started=true;const at=performance.now(),n=parts.length,tt=pause&&ALLOW.turn_tone;
+    const p=asrText(new Blob(parts.slice(0,n),{type:rec.mimeType||'audio/webm'}),rec.opened,null,tt)
+      .then(r=>{const x=r.text;if(tt&&r.turn)turnNote(rec,r.turn,x,at);if(chat.rec===rec&&x){if(S.live)showLive(x);if(pause&&S.turn)turnCheck(x,at,rec)}return r}).catch(()=>null)
       .finally(()=>{chat.live.busy=false;if(chat.live.want&&chat.rec===rec)liveSnap()});
     chat.live.last={at,p,rec}};
   rec.addEventListener('dataavailable',go,{once:true});try{rec.requestData()}catch{go()}setTimeout(go,400)}

@@ -122,6 +122,7 @@ WITHOUT = {
     "follow": "Verhalten am Lautsprecher",
     "selfecho": "Verhalten am Lautsprecher",
     "anhalten": "Verhalten beim Ins-Wort-Fallen",
+    "satzende": "Messung an Sprechpausen, kein Werkzeug",
     "toolthink": "Einstellung, wie Antworten entstehen",
     "routing": "Einstellung, wie Antworten entstehen",
     "direct": "Einstellung, wie Antworten entstehen",
