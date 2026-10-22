@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.936** IT-Krisenspiel (Paket 3): Team mit Fächern und Müdigkeit übernimmt Züge („Wer übernimmt?“, Konsole team/assign); Laufbahn Junior-Admin bis CISO mit mehr Kollegen und Budget
 - **V01.0.935** IT-Krisenspiel (Paket 11): gemeinsam spielen per Einladungslink mit Rollen Technik, Kommunikation und Leitung; Konsole mit Tab für Dateien, nano, vi und vim und Knopf „Groß“
 - **V01.0.934** IT-Krisenspiel: Modus „Uhr läuft“ (10 s = 1 Spielminute, nur bei offener Seite, Pause in Übung und Normal, +5 und Erfolg „Gegen die Uhr“) und Reiter „Anleitung“ mit Schnellstart, Regeln, Konsole, allen Befehlen, Szenarien, Erfolgen und Tipps aus dem Code
 - **V01.0.933** IT-Krisenspiel (Paket 2): Konsole unter der Chronik, getippte Züge wie Knöpfe, Modus „Nur Konsole“ (+5), 🎲 Überraschungs-Szenario, Aufgeben ohne Erfolge; rund 150 Linux-Befehle auf simulierten Rechnern mit sudo, Dateien, Benutzern, Diensten und Firewall, Hilfe mit -h und „Meintest du …?“; nichts läuft wirklich
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.929** reMarkable-Notizbücher mit Datum der letzten Änderung und „Letzter Abgleich“ in Ich → Dokumente
 - **V01.0.928** Was ich über dich weiß aufgeräumt: Reiter, Liste mit Detail, Interessen umbenennen oder einem Thema zuordnen, Absender herausnehmen, Netz-Tipps als Schalter; iPhone
 - **V01.0.927** Unklare Fragen anonym: Fragen, die keine Regel der Weiche erkennt, stehen geschwärzt auf Funktionen → Weiche bei „unklar“ (Namen, Adressen, Nummern, Codes raus, zweite Leck-Prüfung, nie Gäste, nie wer fragte, 7 Tage), mit „Gehört zu …“ zum Feintunen; Schalter unter Gezielte Werkzeugwahl, aus; Vorliebe je Profil unter Ich → Gespräch → Datenschutz
-- **V01.0.926** Lied machen: Beschreibung bis 2000 statt 300 Zeichen, z. B. ein Firmentext als Vorlage; „Text schreiben“ liefert dazu eine kurze Musikbeschreibung fürs Musikmodell (liest höchstens 600), auch in der iPhone-App
 
 
 

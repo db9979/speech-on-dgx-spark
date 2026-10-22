@@ -4861,7 +4861,23 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "), dazu Knöpfe für das Handy. Gespeichert wird über POST /api/profile/krisenspiel/datei nach denselben Regeln wie > (außerhalb von /home/admin und /tmp nur mit sudo, höchstens 200 Zeilen, Platz des Spiels begrenzt), nur in die simulierten Dateien des Spiels, kein Zug und keine Spielminute. Der Knopf Groß lässt die Konsole das ganze Fenster füllen, Esc oder „Klein“ setzen sie zurück. Als Nächstes: Paket 3 (Team und Laufbahn), dann die übrigen Pakete des Plans."
+"text": "), dazu Knöpfe für das Handy. Gespeichert wird über POST /api/profile/krisenspiel/datei nach denselben Regeln wie > (außerhalb von /home/admin und /tmp nur mit sudo, höchstens 200 Zeilen, Platz des Spiels begrenzt), nur in die simulierten Dateien des Spiels, kein Zug und keine Spielminute. Der Knopf Groß lässt die Konsole das ganze Fenster füllen, Esc oder „Klein“ setzen sie zurück."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Team und Laufbahn im Krisenspiel (V01.0.936, Plan Paket 3)",
+"text": "Team und Laufbahn im Krisenspiel (V01.0.936, Plan Paket 3): Jedes Spiel hat ein Team aus Kollegen (kollegen in krisenspiel_szenarien.json: Sandra, Mehmet, Jonas, Lea, Piet, Ayla mit je zwei Fächern aus Netz, Windows, Storage, Forensik, Rechenzentrum, Kommunikation; der Seed wählt sie). Jeder technische Zug trägt sein Fach in den Daten (fach, check_data verlangt es), Züge der Kommunikation haben das Fach Kommunikation, Züge der Leitung bleiben beim Spieler. Über den Zügen wählt „Wer übernimmt?“ einen freien Kollegen, dann einen Zug (POST …/zug mit an): Abgeben kostet 2 Minuten, der Kollege braucht im eigenen Fach 70 % der Zeit des Zugs, sonst 150 %, ab 70 % Müdigkeit 130 % davon; wenn seine Minute kommt, wirkt der Zug wie selbst gemacht (ohne seine Minuten, das Budget geht schon beim Abgeben), die Chronik meldet ihn unter „Team“, der Inspector als Schritt „Team“. Jede Aufgabe macht müde (+15 % im Fach, +25 % fremd), wer frei ist, erholt sich je Zug um 4 %, Lagebesprechung (−10 %) und Essen (−30 %) helfen allen (erholung), bei 100 % nimmt niemand mehr etwas an. An der Konsole zeigt team das Team, assign <kollege> <aufgabe> gibt ab (ohne Angaben: was jetzt geht). Laufbahn (krisenspiel"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Team und Laufbahn im Krisenspiel (V01.0.936, Plan Paket 3)",
+"text": ".RAENGE, laufbahn): Junior-Admin (3 Kollegen), Admin ab 2 Siegen (4), IT-Leiter ab 5 Siegen (5, Budget 110 %), CISO ab 10 Siegen und einer Note A (6, Budget 120 %); der Rang gilt für jedes neue Spiel und steht unter *Bisherige Spiele* mit Fortschritt und Leiter, unter *Neues Spiel* mit Team und Budget. Neue Erfolge „Gut delegiert“ (gewonnen und mindestens vier Aufgaben abgegeben) und „CISO“ (sechzehn Erfolge). Die Anleitung hat den Abschnitt „Team und Laufbahn“ mit den Zahlen aus dem Code und erklärt Tab, „Groß“, nano und vi. Live zählt die heute abgegebenen Aufgaben; Log spiel: zug | delegiert. Als Nächstes: Paket 5 (Lernen), dann die übrigen Pakete des Plans."
 },
 {
 "lang": "de",
@@ -16589,7 +16605,23 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "el/datei by the same rules as > (outside /home/admin and /tmp only with sudo, at most 200 lines, the game's space bounded), only into the game's simulated files, no move and no game minute. The button Large lets the console fill the whole window, Esc or \"Small\" put it back. Next: package 3 (team and career), then the other packages of the plan."
+"text": "el/datei by the same rules as > (outside /home/admin and /tmp only with sudo, at most 200 lines, the game's space bounded), only into the game's simulated files, no move and no game minute. The button Large lets the console fill the whole window, Esc or \"Small\" put it back."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Team and career in the crisis game (V01.0.936, plan package 3)",
+"text": "Team and career in the crisis game (V01.0.936, plan package 3): every game has a team of colleagues (kollegen in krisenspiel_szenarien.json: Sandra, Mehmet, Jonas, Lea, Piet, Ayla with two subjects each out of network, Windows, storage, forensics, data centre, communication; the seed picks them). Every technical move carries its subject in the data (fach, check_data requires it), moves of communication have the subject communication, moves of the lead stay with the player. Above the moves \"Who takes it?\" picks a free colleague, then a move (POST …/zug with an): handing over costs 2 minutes, the colleague needs 70 % of the move's time in their own subject, else 150 %, from 70 % tiredness 130 % of that; when their minute comes, the move works as if done yourself (without its minutes, the budget goes when handing over), the chronicle reports it under \"Team\", the inspector as step \"Team\". Every task makes tired (+15 % in the subject, +25 % outside), who is free rests 4 % per move, the status meeting (−10 %) and food (−30 %) help everyone (erholung), at 100 % nobody takes anything any more. At the console team shows the team, assign <colleague> <task> hands over (without arguments: what"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Team and career in the crisis game (V01.0.936, plan package 3)",
+"text": " is possible now). Career (krisenspiel.RAENGE, laufbahn): junior admin (3 colleagues), admin from 2 wins (4), IT manager from 5 wins (5, budget 110 %), CISO from 10 wins and one grade A (6, budget 120 %); the rank counts for every new game and stands under *Past games* with progress and ladder, under *New game* with team and budget. New achievements \"Well delegated\" (won and at least four tasks handed over) and \"CISO\" (sixteen achievements). The guide has the section \"Team and career\" with the numbers from the code and explains Tab, \"Large\", nano and vi. Live counts the tasks handed over today; log spiel: zug | delegiert. Next: package 5 (learning), then the other packages of the plan."
 },
 {
 "lang": "en",

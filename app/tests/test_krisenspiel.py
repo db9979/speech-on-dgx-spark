@@ -110,6 +110,10 @@ def con(st, line):
     return quiet(K.konsole_zeile, st, line)[0][1]
 
 
+def finish(st, end):
+    quiet(K.finish, st, end)
+
+
 def path_of(won):
     return [x["steps"][0]["daten"]["aktion"] for x in won["trace"][1:]]
 
@@ -435,6 +439,84 @@ class Uhr(unittest.TestCase):
         self.assertNotIn("gegen_uhr", K.erfolge_neu(b, {}))
 
 
+class Team(unittest.TestCase):
+    """Team und Laufbahn (Paket 3): colleagues take moves over by fixed rules, the rank sets team and budget."""
+
+    def test_every_technical_move_has_a_subject(self):
+        for sid, sz in K.SZENARIEN.items():
+            for a in K._all_actions(sz):
+                f = K.fach(a)
+                if a.get("rolle", "technik") == "leitung":
+                    self.assertIsNone(f, a["id"])
+                else:
+                    self.assertIn(f, K.FAECHER, (sid, a["id"]))
+        self.assertGreaterEqual(len(K._DATA["kollegen"]), K.RAENGE[-1][4])
+
+    def test_the_rank_sets_team_and_budget(self):
+        self.assertEqual([K.rang_of(w, a)[0] for w, a in ((0, False), (2, False), (5, False), (10, False), (10, True))],
+                         ["junior", "admin", "itleiter", "itleiter", "ciso"])
+        for r in K.RAENGE:
+            st = K.new_game("san", "normal", 5, now=T0, rang=r[0])
+            self.assertEqual(len(st["kollegen"]), r[4])
+            self.assertEqual(st["m"]["budget"], round(K.SZENARIEN["san"]["budget"] * r[5]))
+        self.assertEqual(K.new_game("san", "normal", 5, now=T0, rang="admin")["kollegen"],
+                         K.new_game("san", "normal", 5, now=T0, rang="admin")["kollegen"])       # the seed draws them
+        with self.assertRaises(ValueError):
+            K.new_game("san", "normal", 5, now=T0, rang="chef")
+        d = {"stats": {"gewonnen": 3}, "erfolge": {}}
+        lb = K.laufbahn(d)
+        self.assertEqual((lb["rang"], lb["naechster"]["rang"], lb["team"]), ("admin", "itleiter", 4))
+
+    def test_a_colleague_takes_a_move_over(self):
+        st = K.new_game("ransomware", "normal", 77, now=T0, rang="admin")
+        k = st["kollegen"][0]
+        a = next(x for x in K._all_actions(K.SZENARIEN["ransomware"]) if x["id"] == "logs")
+        n = K.dauer(st, a, k)
+        f = K.FACH_FAKTOR if "windows" in k["faecher"] else K.FREMD_FAKTOR
+        self.assertEqual(n, max(1, -(-round(a["zeit"] * f * 10) // 10)))
+        with self.assertRaises(ValueError):
+            quiet(K.move, st, "lage", an=k["id"])                       # Leitung stays with the player
+        with self.assertRaises(ValueError):
+            quiet(K.move, st, "logs", an="niemand")
+        left = st["m"]["zeit"]
+        quiet(K.move, st, "logs", an=k["id"])
+        self.assertEqual(st["m"]["zeit"], left - K.ZUWEISEN_MIN)
+        self.assertEqual((k["auftrag"]["aktion"], st["uses"]["logs"], st["delegiert"]), ("logs", 1, 1))
+        self.assertNotIn("logs", [x["id"] for x in K.available(st)])
+        before = set(st["flags"])
+        with self.assertRaises(ValueError):
+            quiet(K.move, st, "isolieren", an=k["id"])                  # busy
+        while k["auftrag"]:
+            quiet(K.move, st, "warten")
+        self.assertGreater(set(st["flags"]) - before, set())            # the move's flags came with the task
+        self.assertIn("team", [c["art"] for c in st["chronik"]])
+        self.assertIn("team", [s["art"] for z in st["trace"] for s in z["steps"]])
+        self.assertGreater(k["muede"], 0)
+        tired = k["muede"]
+        quiet(K.move, st, "lage")
+        self.assertEqual(k["muede"], max(0, tired - 10 - K.MUEDE_RUHE))
+        k["muede"] = K.MUEDE_MAX
+        with self.assertRaises(ValueError):
+            quiet(K.move, st, "isolieren", an=k["id"])                  # too tired
+
+    def test_team_at_the_console_and_the_achievements(self):
+        st = K.new_game("bsi", "normal", 2, now=T0, rang="junior")
+        out = [t for _, t in con(st, "team")["out"]]
+        self.assertEqual(len(out), len(st["kollegen"]))
+        self.assertIn("assign", " ".join(t for _, t in con(st, "assign")["out"]))
+        self.assertEqual(con(st, "assign niemand lesen")["art"], "nicht")
+        who = st["kollegen"][0]["id"]
+        r = con(st, f"assign {who} lesen")
+        self.assertEqual((r["art"], st["kollegen"][0]["auftrag"]["aktion"], st["zug"]), ("zug", "lesen", 1))
+        self.assertEqual(con(st, f"assign {who} ioc")["art"], "nicht")  # busy
+        st["delegiert"] = 4
+        finish(st, "gewonnen")
+        self.assertIn("delegiert", K.erfolge_neu(st, {"erfolge": {}, "stats": {}}))
+        self.assertIn("ciso", K.erfolge_neu(st, {"erfolge": {"bestnote": 1}, "stats": {"gewonnen": 9}}))
+        st["ende"]["note"] = "B"
+        self.assertNotIn("ciso", K.erfolge_neu(st, {"erfolge": {}, "stats": {"gewonnen": 9}}))      # CISO needs a grade A
+
+
 class Anleitung(unittest.TestCase):
     def test_the_guide_names_everything_from_the_code(self):
         g = KA.build(K)
@@ -588,6 +670,26 @@ class Api(unittest.TestCase):
         for word in ("geheim", "siem01", "advisories", "Kskons", "plan.txt"):
             self.assertNotIn(word, log)
 
+    def test_handing_a_move_over_through_the_api(self):
+        c, uid = self.fresh("Ksteam")
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            d = c.post("/api/profile/krisenspiel/neu", json={"szenario": "ransomware", "seed": 77}).json()
+            g = d["spiel"]
+            self.assertEqual((d["laufbahn"]["rang"], g["rang"], len(g["kollegen"])), ("junior", "junior", K.RAENGE[0][4]))
+            who = g["kollegen"][0]["id"]
+            for bad in ({"aktion": "logs", "zug": 0, "an": 5}, {"aktion": "logs", "zug": 0, "an": "x;y"}):
+                self.assertEqual(c.post("/api/profile/krisenspiel/zug", json=bad).status_code, 400, bad)
+            self.assertEqual(c.post("/api/profile/krisenspiel/zug", json={"aktion": "lage", "zug": 0, "an": who}).status_code, 422)
+            g = c.post("/api/profile/krisenspiel/zug", json={"aktion": "logs", "zug": 0, "an": who}).json()["spiel"]
+            k = g["kollegen"][0]
+            self.assertEqual((g["zug"], k["auftrag"]["aktion"], g["delegiert"]), (1, "logs", 1))
+            self.assertGreater(k["rest"], 0)
+            self.assertEqual(ADMIN.get("/api/admin/krisenspiel").json()["delegiert"] >= 1, True)
+        log = out.getvalue()
+        self.assertIn("spiel: zug | delegiert", log)
+        self.assertNotIn(who, log)
+
     def test_the_narrator_changes_no_value(self):
         c, uid = self.fresh("Kserz")
         helpers.set_config(krisenspiel_erzaehler=True)
@@ -691,6 +793,16 @@ class Page(unittest.TestCase):
                                          len(L.LINUX) + len(C.BEFEHLE))
                         over = await pg.evaluate("document.documentElement.scrollWidth-document.documentElement.clientWidth")
                         self.assertLessEqual(over, 1, f"{w}: the guide scrolls sideways")
+                        # Team und Laufbahn: a colleague takes a move over, the career stands on Bisherige Spiele
+                        await pg.evaluate("icTabSet('spiel','spiel');ksOpen()")
+                        await b.until(pg, "!!document.querySelector('#ksview .ks-an')")
+                        await pg.select_option("#ksview .ks-an", index=1)
+                        await b.until(pg, "KS.an!==''")
+                        await pg.evaluate("document.querySelector('#ksview [data-ksmove]:not([disabled])').click()")
+                        await b.until(pg, "!KS.busy&&KS.data.spiel.delegiert===1&&!!document.querySelector('#ksview .ks-k.busy')")
+                        await pg.evaluate("icTabSet('spiel','bisher');ksOpen()")
+                        await b.until(pg, "!!document.querySelector('#ksview .ks-career .ks-ladder')")
+                        self.assertEqual(await pg.evaluate("document.querySelectorAll('#ksview .ks-ladder li').length"), len(K.RAENGE))
                         self.assertEqual(errors, [])
                     finally:
                         await br.close()

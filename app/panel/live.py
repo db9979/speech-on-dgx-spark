@@ -1727,6 +1727,7 @@ def snapshot(view="admin", now=None):
             x["sub"] = (f"{ksp.get('laufend', 0)} laufende Spiele · heute {ksp.get('zuege', 0)} Züge, {ksp.get('spiele', 0)} neue Spiele"
                         + (f" · {ksp.get('erzaehlt', 0)} erzählt, {ksp.get('verworfen', 0)} verworfen" if ksp.get("erzaehlt") or ksp.get("verworfen") else "")
                         + (f" · {ksp.get('konsole', 0)} Konsolen-Zeilen" if ksp.get("konsole") else "")
+                        + (f" · {ksp['delegiert']} ans Team gegeben" if ksp.get("delegiert") else "")
                         + (f" · {ksp['uhr']} mit laufender Uhr" if ksp.get("uhr") else "")
                         + (f" · gemeinsam {ksp['team']['plaetze']} Plätze, {ksp['team']['online']} da, heute {ksp['team']['zuege']} Team-Züge"
                            + (f", {ksp['team']['abgelehnt']} abgelehnt" if ksp['team']['abgelehnt'] else "")

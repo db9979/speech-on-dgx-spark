@@ -3,7 +3,7 @@
 // „Neues Spiel“ picks scenario, level and seed; „Inspector“ shows every step of a move (input, fixed rule, rolls from
 // the seed, narrator); „Bisherige Spiele“ the results, achievements and „Meine Daten löschen“. Every value comes from
 // the panel; texts from the scenarios and the narrator are only ever text (esc), never markup.
-const KS={data:null,msg:'',err:false,busy:false,seq:0,turn:-1,hist:-1,con:null,focus:false,at:0,guide:null,ticked:0,big:false,ed:null,team:null,teamAt:0,made:null};
+const KS={data:null,msg:'',err:false,busy:false,seq:0,turn:-1,hist:-1,con:null,focus:false,at:0,guide:null,ticked:0,big:false,ed:null,team:null,teamAt:0,made:null,an:''};
 const KS_CHRON=6;   // chronicle entries shown above the console, the older ones fold away
 let KS_ON=false;
 const ksP=p=>Array.isArray(p)?p[L==='en'?1:0]:String(p??'');
@@ -13,9 +13,9 @@ const ksEur=v=>Number(v||0).toLocaleString(L==='en'?'en-GB':'de-DE')+' €';
 const ksWhen=s=>s?new Date(s*1000).toLocaleString(L==='en'?'en-GB':'de-DE',{dateStyle:'short',timeStyle:'short'}):'';
 const KSSTAT={Online:['läuft','running','ok'],Degraded:['gestört','degraded','warn'],Critical:['kritisch','critical','bad'],
   Offline:['aus','off','bad'],Isolated:['isoliert','isolated','iso']};
-const KSART={start:['Lage','Situation'],zug:['Zug','Move'],folge:['Folge','Consequence'],neben:['Nebenschauplatz','Side issue'],ende:['Ende','End']};
+const KSART={start:['Lage','Situation'],zug:['Zug','Move'],team:['Team','Team'],folge:['Folge','Consequence'],neben:['Nebenschauplatz','Side issue'],ende:['Ende','End']};
 const KSSTEP={eingabe:['Eingabe','Input'],regel:['Feste Regel','Fixed rule'],zufall:['Zufall aus dem Seed','Chance from the seed'],
-  modell:['Sprachmodell','Language model'],antwort:['Antwort','Answer'],ende:['Ende','End']};
+  modell:['Sprachmodell','Language model'],team:['Team','Team'],antwort:['Antwort','Answer'],ende:['Ende','End']};
 // the menu entry only for a signed-in profile the admin released the game for (start.js, like the Wissensbuch)
 window.ksStart=who=>{KS_ON=!!(who&&who.profile&&who.krisenspiel);
   document.querySelectorAll('nav button[data-s=spiel]').forEach(b=>b.hidden=!KS_ON)};
@@ -46,6 +46,7 @@ function ksPaint(w){const D=KS.data,tab=w.dataset.tab;
       else if(e.key==='Tab'){e.preventDefault();ksTab(inp)}
       else if(e.key==='ArrowUp'&&h.length){e.preventDefault();KS.hist=KS.hist<0?h.length-1:Math.max(0,KS.hist-1);inp.value=h[KS.hist]}
       else if(e.key==='ArrowDown'&&KS.hist>=0){e.preventDefault();KS.hist++;inp.value=KS.hist<h.length?h[KS.hist]:'';if(KS.hist>=h.length)KS.hist=-1}}}
+  const an=w.querySelector('.ks-an');if(an)an.onchange=()=>{KS.an=an.value;ksDraw()};
   ksEdBind(w)}
 // Esc leaves the large console (not while an editor is open: there Esc belongs to vi)
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&KS.big&&!document.querySelector('#ksview .ks-ed')){KS.big=false;ksDraw()}});
@@ -83,8 +84,13 @@ function ksGame(D){const g=D.spiel;
   const all=g.chronik.slice().reverse(),old=all.slice(KS_CHRON);
   const chron=`<div class="ks-chron" aria-live="polite">${all.slice(0,KS_CHRON).map(ev).join('')}${old.length?`<details class="ks-old"><summary>${esc(t(`Ältere (${old.length})`,`Older (${old.length})`))}</summary>${old.map(ev).join('')}</details>`:''}</div>`;
   const cost=a=>Object.entries(a.kosten).map(([k,v])=>k==='budget'?ksEur(v):k==='zeit'?v+' min':(v>0?'+':'')+v+' '+t({stress:'Stress',vertrauen:'Vertrauen',moral:'Moral'}[k]||k,{stress:'stress',vertrauen:'trust',moral:'morale'}[k]||k)).join(' · ');
-  const acts=g.ende?ksEnd(D,g):g.modus==='konsole'?`<div class="ks-only mut">${esc(t('Nur Konsole: jeder Zug wird getippt. „help“ zeigt die Befehle, „hosts“ die Rechner.','Console only: every move is typed. "help" shows the commands, "hosts" the machines.'))}</div>`:`<h4>${esc(t('Deine Züge','Your moves'))}</h4><div class="ks-acts">${g.aktionen.map(a=>`<button type="button" class="b ks-act" data-ksmove="${esc(a.id)}"${a.frei?'':' disabled'} title="${esc(a.frei?'':ksP(a.warum))}"><b>${esc(ksP(a.label))}</b><small>${esc(cost(a))}</small></button>`).join('')}</div>`;
-  return head+mets+`<div class="ks-grid"><div>${assets}${acts}${D.team?`<div class="ks-team">${ksTeamBox(g)}</div>`:''}</div><div><h4>${esc(t('Chronik','Chronicle'))}</h4>${chron}${ksCon(g)}</div></div>`}
+  const kol=g.kollegen||[],me=kol.find(k=>k.id===KS.an&&!k.auftrag&&k.muede<100);if(!me)KS.an='';
+  const team=kol.length?`<h4>${esc(t('Dein Team','Your team'))}</h4><div class="ks-kol">${kol.map(k=>`<div class="ks-k${k.auftrag?' busy':''}"><b>${esc(k.name)}</b><small class="mut">${esc(k.faecher.map(f=>ksP(D.faecher[f]||[f,f])).join(', '))}</small>
+      ${ksBar(t('Müde','Tired'),k.muede,100,k.muede+' %',k.muede>=70)}<small>${k.auftrag?esc(t(`arbeitet: ${ksP(k.auftrag.label)} · noch ${k.rest} min`,`working: ${ksP(k.auftrag.label)} · ${k.rest} min left`)):esc(t('frei','free'))}</small></div>`).join('')}</div>`:'';
+  const who=kol.length&&!g.ende&&g.modus!=='konsole'?`<label class="ks-who">${esc(t('Wer übernimmt?','Who takes it?'))} <select class="ks-an">${[['',t('Ich selbst','Myself')]].concat(kol.filter(k=>!k.auftrag&&k.muede<100).map(k=>[k.id,k.name+' ('+k.faecher.map(f=>ksP(D.faecher[f]||[f,f])).join(', ')+')'])).map(([v,l])=>`<option value="${esc(v)}"${v===KS.an?' selected':''}>${esc(l)}</option>`).join('')}</select></label>`:'';
+  const acts=g.ende?ksEnd(D,g):g.modus==='konsole'?`<div class="ks-only mut">${esc(t('Nur Konsole: jeder Zug wird getippt. „help“ zeigt die Befehle, „hosts“ die Rechner.','Console only: every move is typed. "help" shows the commands, "hosts" the machines.'))}</div>`:`<h4>${esc(t('Deine Züge','Your moves'))}</h4>${who}<div class="ks-acts">${g.aktionen.map(a=>{const off=!a.frei||KS.an&&!a.fach;
+    return `<button type="button" class="b ks-act" data-ksmove="${esc(a.id)}"${off?' disabled':''} title="${esc(!a.frei?ksP(a.warum):KS.an&&!a.fach?t('Bleibt bei der Leitung','Stays with the lead'):'')}"><b>${esc(ksP(a.label))}</b><small>${esc(KS.an&&a.fach?t('Fach: ','Subject: ')+ksP(D.faecher[a.fach]||[a.fach,a.fach]):cost(a))}</small></button>`}).join('')}</div>`;
+  return head+mets+`<div class="ks-grid"><div>${assets}${acts}${team}${D.team?`<div class="ks-team">${ksTeamBox(g)}</div>`:''}</div><div><h4>${esc(t('Chronik','Chronicle'))}</h4>${chron}${ksCon(g)}</div></div>`}
 // the simulated console (krisenkonsole.py): nothing typed here ever runs; the Spark cuts each line by fixed rules and
 // answers from the game. A phone shows it folded unless the game is console only; ↑/↓ the last lines, Tab completes.
 const KSCON={err:'kc-err',zug:'kc-zug'};   // the kinds of console lines and their style
@@ -202,6 +208,7 @@ function ksNew(D){const run=D.spiel&&!D.spiel.ende;
     <div class="row"><label>${esc(t('Spielweise','How to play'))} <select class="ksmodus"><option value="knoepfe">${esc(t('Knöpfe und Konsole','Buttons and console'))}</option><option value="konsole">${esc(t('Nur Konsole (+5 Punkte beim Sieg)','Console only (+5 points when won)'))}</option></select></label>
     <label class="chk"><input type="checkbox" class="ksuhr"> ${esc(t('Uhr läuft (10 Sekunden = 1 Spielminute, +5 Punkte beim Sieg)','Clock running (10 seconds = 1 game minute, +5 points when won)'))}</label></div>
     <div class="mut">${esc(t('Gleicher Seed, gleiche Züge: gleiches Spiel. So könnt ihr euch vergleichen.','Same seed, same moves: the same game. That way you can compare.'))}</div>
+    <div class="mut">${esc(t(`Dein Rang: ${ksP(D.laufbahn.name)} · ${D.laufbahn.team} Kollegen im Team · Budget ×${D.laufbahn.budget}`,`Your rank: ${ksP(D.laufbahn.name)} · ${D.laufbahn.team} colleagues on the team · budget ×${D.laufbahn.budget}`))}</div>
     <div class="row"><button type="button" class="b p" data-ksnew="1">${esc(t('Spiel starten','Start the game'))}</button></div>`}
 // the guide (krisenanleitung.py): sections of fixed blocks, loaded once; **x** is the only emphasis, all text through esc
 const ksB=x=>esc(ksP(x)).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>');
@@ -217,8 +224,14 @@ function ksInspector(D){const g=D.spiel;if(!g)return `<div class="ld-empty mut">
   return `<h3>${esc(t('Inspector','Inspector'))}</h3><div class="mut">${esc(t('Jeder Zug Schritt für Schritt: was du gewählt hast, welche feste Regel gegriffen hat, welche Würfe aus dem Seed kamen und was das Sprachmodell erzählt hat. Werte ändert nur die Regel.','Every move step by step: what you chose, which fixed rule applied, which rolls came from the seed and what the language model told. Only the rule changes values.'))}</div>
     ${g.trace.slice().reverse().map(z=>`<details class="ks-tr"${z.zug===g.zug?' open':''}><summary>${esc(t(`Zug ${z.zug}`,`Move ${z.zug}`))} · ${z.steps.length} ${esc(t('Schritte','steps'))}</summary>
       <ol>${z.steps.map(s=>`<li class="ks-st ${esc(s.art)}"><b>${esc(t(...(KSSTEP[s.art]||[s.art,s.art])))}</b> · ${esc(ksP(s.titel))}${s.ms?` <small class="mut">${s.ms} ms</small>`:''}<pre>${esc(JSON.stringify(s.daten,null,1))}</pre></li>`).join('')}</ol></details>`).join('')}`}
+// Laufbahn (krisenspiel.laufbahn): the rank from the own results, what the next one takes, the whole ladder
+function ksCareer(D){const L0=D.laufbahn,n=L0.naechster;
+  return `<div class="ks-career"><h4>${esc(t('Laufbahn','Career'))}: ${esc(ksP(L0.name))}</h4>
+    <div class="mut">${esc(n?t(`Nächster Rang ${ksP(n.name)}: ${n.gewonnen} gewonnene Spiele (du hast ${L0.gewonnen})${n.note_a?' und einmal Note A':''}.`,`Next rank ${ksP(n.name)}: ${n.gewonnen} games won (you have ${L0.gewonnen})${n.note_a?' and one grade A':''}.`):t('Höchster Rang erreicht.','Highest rank reached.'))}</div>
+    ${n?ksBar(t('Fortschritt','Progress'),Math.min(L0.gewonnen,n.gewonnen),n.gewonnen||1,`${Math.min(L0.gewonnen,n.gewonnen)} / ${n.gewonnen}`,false):''}
+    <ol class="ks-ladder">${L0.raenge.map(r=>`<li class="${r.rang===L0.rang?'on':''}"><b>${esc(ksP(r.name))}</b> <small class="mut">${esc(t(`ab ${r.gewonnen} Siegen${r.note_a?' und Note A':''} · ${r.team} Kollegen · Budget ×${r.budget}`,`from ${r.gewonnen} wins${r.note_a?' and grade A':''} · ${r.team} colleagues · budget ×${r.budget}`))}</small></li>`).join('')}</ol></div>`}
 function ksPast(D){const st=D.stats,have=D.erfolge.filter(e=>e.t).length;
-  return `<h3>${esc(t('Bisherige Spiele','Past games'))}</h3><div class="mut">${esc(t(`${st.gespielt} gespielt · ${st.gewonnen} gewonnen · ${have} von ${D.erfolge.length} Erfolgen`,`${st.gespielt} played · ${st.gewonnen} won · ${have} of ${D.erfolge.length} achievements`))}</div>
+  return `<h3>${esc(t('Bisherige Spiele','Past games'))}</h3>${ksCareer(D)}<div class="mut">${esc(t(`${st.gespielt} gespielt · ${st.gewonnen} gewonnen · ${have} von ${D.erfolge.length} Erfolgen`,`${st.gespielt} played · ${st.gewonnen} won · ${have} of ${D.erfolge.length} achievements`))}</div>
     <ul class="facts">${D.verlauf.map(v=>`<li><span><b>${esc(ksP(v.titel))}</b> · ${esc(ksWhen(v.t))}<br><small class="mut">${esc(t(`${v.zuege} Züge · ${v.minuten} min · Seed ${v.seed}`,`${v.zuege} moves · ${v.minuten} min · seed ${v.seed}`))}</small></span><b class="ks-note small ${KSNOTE[v.note]||''}">${esc(v.note)}</b></li>`).join('')||`<li><span class="mut">${esc(t('Noch keine.','None yet.'))}</span></li>`}</ul>
     <h4>${esc(t('Erfolge','Achievements'))}</h4><div class="ks-ach">${D.erfolge.map(e=>`<div class="ks-a${e.t?' on':''}"><b>${esc(ksP(e.name))}</b><small>${esc(ksP(e.text))}</small>${e.t?`<small class="mut">${esc(ksWhen(e.t))}</small>`:''}</div>`).join('')}</div>
     <div class="row"><button type="button" class="b" data-ksclear="1">${esc(t('Meine Spieldaten löschen','Delete my game data'))}</button></div>`}
@@ -232,7 +245,7 @@ function ksPast(D){const st=D.stats,have=D.erfolge.filter(e=>e.t).length;
     if(B.ksvi==='i'){E.mode='insert';ksDraw()}else if(B.ksvi==='esc'){E.mode='normal';E.cmd=null;ksDraw()}else await ksViCmd({w:'w',q:'q',wq:'wq',qq:'q!'}[B.ksvi]);return}
   if(B.ksinvite||B.ksseat||B.kscopy){await ksTeamClick(B,b);return}
   if(B.ksuhr){await ksSend('/api/profile/krisenspiel/uhr','POST',{aktion:B.ksuhr});return}
-  if(B.ksmove){await ksSend('/api/profile/krisenspiel/zug','POST',{aktion:B.ksmove,zug:KS.data.spiel.zug});return}
+  if(B.ksmove){const an=KS.an;KS.an='';await ksSend('/api/profile/krisenspiel/zug','POST',Object.assign({aktion:B.ksmove,zug:KS.data.spiel.zug},an?{an}:{}));return}
   if(B.ksnew||B.ksagain){const w=$('ksview');let body;
     if(B.ksagain)body={szenario:B.ksagain,stufe:B.ksstufe,seed:+B.ksseed,modus:B.ksmodus,uhr:!!B.ksclock};
     else{const sz=w.querySelector('input[name=kssz]:checked'),sd=w.querySelector('.ksseed').value.trim();body={szenario:sz&&sz.value,stufe:w.querySelector('.ksstufe').value,modus:w.querySelector('.ksmodus').value,uhr:w.querySelector('.ksuhr').checked};

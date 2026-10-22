@@ -2740,6 +2740,13 @@
 "titel": "Krisenspiel gemeinsam, Editor und große Konsole",
 "text": "A: Update, Funktionen → Meine Daten → „Krisenspiel gemeinsam“ an. B: Krisenspiel → Spiel (laufendes Spiel) → Mitspieler: Rolle Technik, „Einladen“: Link und QR-Code stehen da. C: Link am Handy ohne Anmeldung öffnen, Namen eingeben, „Mitspielen“: dieselbe Lage, nur Technik-Züge anklickbar, die anderen grau mit Rollenname. D: Am Handy einen Zug: am Rechner steht er nach spätestens 4 Sekunden in der Chronik mit „Technik (Name)“, der Platz zeigt „dabei“. E: „Entfernen“ oder ein neues Spiel: das Handy meldet „Der Link passt nicht mehr“. F: Konsole: „cat /etc/pas“ + Tab ergänzt zu /etc/passwd; am Handy der Knopf ⇥. G: „nano notiz.txt“: Editor, Text schreiben, Strg+O, Strg+X; „cat notiz.txt“ zeigt ihn. H: „vi notiz.txt“: i, schreiben, Esc, :wq; „vi /etc/hosts“ und :w ohne sudo: Permission denied. I: Knopf „Groß“: die Konsole füllt das Fenster, Esc zurück. J: Zustand → Live: „gemeinsam N Plätze, N da“; Logs „spiel: team …“ ohne Namen.",
 "thread": "IT-Krisenspiel für einzelne Nutzer"
+},
+{
+"id": "P416",
+"v": 936,
+"titel": "Krisenspiel: Team und Laufbahn",
+"text": "A: Update, Krisenspiel → Neues Spiel: unter dem Start steht der Rang (Junior-Admin, 3 Kollegen, Budget 100 %). B: Spiel starten: über den Zügen „Wer übernimmt?“ mit den Kollegen und ihren Fächern. C: Einen Kollegen wählen, dann einen technischen Zug: die Karte des Kollegen zeigt die Aufgabe und die Restminuten, der Zug ist weg, Züge der Leitung sind grau. D: Ein paar Züge weiter meldet die Chronik unter „Team“ die fertige Aufgabe, die Werte ändern sich wie beim eigenen Zug. E: Konsole: „team“ zeigt das Team, „assign <name> <aufgabe>“ gibt ab. F: Lagebesprechung oder Essen senkt die Müdigkeit. G: Bisherige Spiele: die Laufbahn als Leiter mit Fortschritt zum nächsten Rang. H: Logs „spiel: zug | delegiert“; Live „N ans Team gegeben“.",
+"thread": "IT-Krisenspiel für einzelne Nutzer"
 }
 ]
 }

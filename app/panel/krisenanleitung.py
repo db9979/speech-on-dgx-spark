@@ -174,6 +174,39 @@ def build(k):
                           "practice and normal. Win: +5 points, without a pause the achievement \"Against the clock\"."),
                          ("🎲 Überraschung: Das Panel wählt das Szenario, was passiert, siehst du erst im Spiel.",
                           "🎲 Surprise: the panel picks the scenario, what happens you see only in the game."))))
+    S.append(_sek("team", "Team und Laufbahn", "Team and career",
+                  _p("Du hast Kollegen. Jeder kann zwei Fächer besonders gut (Netz, Windows, Storage, Forensik, "
+                     "Rechenzentrum, Kommunikation). Wähle über den Zügen „Wer übernimmt?“ einen Kollegen und dann einen "
+                     "Zug: Er arbeitet ihn in Spielzeit ab, während du weiterspielst. Züge der Leitung (Budget, "
+                     "Lagebesprechung, Essen) bleiben bei dir. An der Konsole: team zeigt das Team, assign <kollege> "
+                     "<aufgabe> gibt eine Aufgabe ab.",
+                     "You have colleagues. Each is especially good at two subjects (network, Windows, storage, forensics, "
+                     "data centre, communication). Pick a colleague under \"Who takes it?\" above the moves and then a move: "
+                     "they work on it in game time while you play on. Moves of the lead (budget, status meeting, food) stay "
+                     "with you. At the console: team shows the team, assign <colleague> <task> hands a task over."),
+                  _liste((f"Abgeben kostet dich {k.ZUWEISEN_MIN} Minuten. Im eigenen Fach braucht der Kollege "
+                          f"{round(k.FACH_FAKTOR * 100)} % der Zeit des Zugs, sonst {round(k.FREMD_FAKTOR * 100)} %; ab "
+                          f"{k.MUEDE_LANGSAM} % Müdigkeit {round(k.MUEDE_FAKTOR * 100)} % davon.",
+                          f"Handing over costs you {k.ZUWEISEN_MIN} minutes. In their own subject the colleague needs "
+                          f"{round(k.FACH_FAKTOR * 100)} % of the move's time, else {round(k.FREMD_FAKTOR * 100)} %; from "
+                          f"{k.MUEDE_LANGSAM} % tiredness {round(k.MUEDE_FAKTOR * 100)} % of that."),
+                         (f"Jede Aufgabe macht müde (+{k.MUEDE_FACH} % im Fach, +{k.MUEDE_FREMD} % fremd), wer frei ist, erholt "
+                          f"sich je Zug um {k.MUEDE_RUHE} %, Lagebesprechung und Essen helfen allen. Bei {k.MUEDE_MAX} % "
+                          "nimmt niemand mehr etwas an.",
+                          f"Every task makes tired (+{k.MUEDE_FACH} % in the subject, +{k.MUEDE_FREMD} % outside), who is free "
+                          f"rests {k.MUEDE_RUHE} % per move, status meeting and food help everyone. At {k.MUEDE_MAX} % nobody "
+                          "takes anything any more."),
+                         ("Ist die Aufgabe fertig, wirkt der Zug wie selbst gemacht (das Budget geht schon beim Abgeben weg); "
+                          "die Chronik meldet es unter „Team“.",
+                          "When the task is done, the move works as if done yourself (the budget goes when handing over); the "
+                          "chronicle reports it under \"Team\".")),
+                  _p("Laufbahn: Dein Rang kommt aus deinen gewonnenen Spielen. Höhere Ränge bringen mehr Kollegen und mehr "
+                     "Notfall-Budget.",
+                     "Career: your rank comes from the games you won. Higher ranks bring more colleagues and more emergency "
+                     "budget."),
+                  _tabelle([("Rang", "Rank"), ("Siege", "Wins"), ("Kollegen", "Colleagues"), ("Budget", "Budget")],
+                           [[list(r[1]), f"{r[2]}" + (" + A" if r[3] else ""), f"{r[4]}", f"{round(r[5] * 100)} %"]
+                            for r in k.RAENGE])))
     S.append(_sek("konsole", "Die Konsole", "The console",
                   _p("Unter der Chronik steht ein Terminal. Du startest auf jump01, dem Linux-Sprungrechner des Admins. "
                      "Von dort erreichst du jeden Rechner des Szenarios mit ssh. Getippte Befehle sind dieselben Züge wie "
@@ -193,10 +226,18 @@ def build(k):
                           "echten Leben.",
                           "sudo <command> runs a command as root. Without sudo Linux says \"Permission denied\", as in real "
                           "life."),
-                         ("Pipes (| grep, | head, | sort, | wc …), > und >> in Dateien, tee. Tab ergänzt, ↑ und ↓ holen "
-                          "frühere Eingaben, ein Tippfehler bekommt „Meintest du …?“.",
-                          "Pipes (| grep, | head, | sort, | wc …), > and >> into files, tee. Tab completes, ↑ and ↓ bring "
-                          "back earlier inputs, a typo gets \"Did you mean …?\"."),
+                         ("Pipes (| grep, | head, | sort, | wc …), > und >> in Dateien, tee. Tab ergänzt Befehle, Rechner, "
+                          "Dateien und Ordner (am Handy der Knopf ⇥), ↑ und ↓ holen frühere Eingaben, ein Tippfehler bekommt "
+                          "„Meintest du …?“. Der Knopf „Groß“ lässt die Konsole das Fenster füllen, Esc setzt sie zurück.",
+                          "Pipes (| grep, | head, | sort, | wc …), > and >> into files, tee. Tab completes commands, machines, "
+                          "files and folders (the button ⇥ on a phone), ↑ and ↓ bring back earlier inputs, a typo gets "
+                          "\"Did you mean …?\". The button \"Large\" lets the console fill the window, Esc puts it back."),
+                         ("nano, vi und vim öffnen eine Datei im Editor. nano: Strg+O speichert, Strg+X beendet. vi: i, a "
+                          "oder o zum Schreiben, Esc zurück, x und dd löschen, :w speichert, :q beendet, :wq beides, :q! "
+                          "ohne Speichern. Außerhalb von /home/admin und /tmp nur mit sudo davor.",
+                          "nano, vi and vim open a file in the editor. nano: Ctrl+O writes, Ctrl+X exits. vi: i, a or o to "
+                          "write, Esc back, x and dd delete, :w writes, :q quits, :wq both, :q! without saving. Outside "
+                          "/home/admin and /tmp only with sudo in front."),
                          ("Windows-Rechner kennen ihre eigenen Befehle (dir, type, ipconfig, Get-Service, Get-WinEvent …), "
                           "Linux-Befehle nur auf Linux und Netzgeräten.",
                           "Windows machines know their own commands (dir, type, ipconfig, Get-Service, Get-WinEvent …), "

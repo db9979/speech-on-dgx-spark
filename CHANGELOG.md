@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.936** · 2026-10-22 · IT-Krisenspiel (Paket 3): Team und Laufbahn. Kollegen mit je zwei Fächern übernehmen technische Züge und arbeiten sie in Spielzeit ab („Wer übernimmt?“, an der Konsole team und assign), Müdigkeit bremst sie; Laufbahn Junior-Admin, Admin, IT-Leiter, CISO mit mehr Kollegen und Budget; Erfolge „Gut delegiert“ und „CISO“; Anleitung „Team und Laufbahn“
 - **V01.0.935** · 2026-10-22 · IT-Krisenspiel (Paket 11): gemeinsam spielen mit bis zu drei Mitspielern per Einladungslink (mit oder ohne Profil, Rollen Technik, Kommunikation, Leitung, eigener Schalter „Krisenspiel gemeinsam“); Konsole mit Tab für Dateien und Knopf ⇥, Editoren nano, vi und vim, Knopf „Groß“
 - **V01.0.934** · 2026-10-22 · IT-Krisenspiel: Modus „Uhr läuft“ (10 s = 1 Spielminute, nur bei offener Seite, Pause in Übung und Normal, +5 und Erfolg „Gegen die Uhr“) und Reiter „Anleitung“ mit Schnellstart, Regeln, Konsole, allen Befehlen, Szenarien, Erfolgen und Tipps aus dem Code
 - **V01.0.933** · 2026-10-22 · IT-Krisenspiel (Paket 2): Konsole unter der Chronik, getippte Züge wie Knöpfe, Modus „Nur Konsole“ (+5), 🎲 Überraschungs-Szenario, Aufgeben ohne Erfolge; rund 150 Linux-Befehle auf simulierten Rechnern mit sudo, Dateien, Benutzern, Diensten und Firewall, Hilfe mit -h und „Meintest du …?“; nichts läuft wirklich

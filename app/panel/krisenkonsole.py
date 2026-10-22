@@ -52,6 +52,8 @@ BEFEHLE = {
     "hosts": (None, "frei", "Die Rechner dieses Szenarios", "The machines of this scenario", "hosts"),
     "ssh": (None, "frei", "Auf einen anderen Rechner wechseln", "Switch to another machine", "ssh <rechner>"),
     "exit": (None, "frei", "Zurück zu jump01", "Back to jump01", "exit"),
+    "team": (None, "frei", "Die Kollegen, ihre Fächer, Müdigkeit und Aufgaben", "The colleagues, their subjects, tiredness and tasks", "team"),
+    "assign": (None, "frei", "Eine Aufgabe an einen Kollegen geben (ohne Angabe: was geht)", "Hand a task to a colleague (without: what can be handed over)", "assign <kollege> <aufgabe>"),
     "dir": (WIN, "frei", "Dateien auflisten", "List files", "dir [pfad]"),
     "type": (WIN, "lesen", "Datei zeigen", "Show a file", "type <datei>"),
     "tracert": (WIN, "lesen", "Weg zu einem Rechner", "Route to a machine", "tracert <rechner|ip>"),
@@ -338,7 +340,7 @@ def run(st, zeile, offered, holds, lang="de", names=None):
     k = st.setdefault("konsole", fresh(sid))
     h = _host(sid, k["host"])
     en = lang == "en"
-    res = {"out": [], "art": "frei", "zug": None, "falsch": None, "wirkung": None, "clear": False, "editor": False}
+    res = {"out": [], "art": "frei", "zug": None, "falsch": None, "wirkung": None, "clear": False, "editor": False, "an": None}
     out = res["out"]
     parts, redir, err = parse(zeile)
     if parts == [] and not err:
@@ -354,6 +356,7 @@ def run(st, zeile, offered, holds, lang="de", names=None):
         return res
     c = krisenlinux.Ctx(st, h, world(sid), holds, en, lambda x: _status(st, x), lambda a: (names or {}).get(a, a),
                         world(sid)["hosts"])
+    c.offered = offered
     tok, root = parts[0], False
     if tok[0].lower() == "sudo" and _has(h, krisenlinux.LINUX["sudo"][0]):
         if len(tok) == 1 or tok[1].lower() in ("-h", "--help", "/?"):
@@ -494,6 +497,43 @@ def _help(c, args):
     return rows
 
 
+def _team(st, c, name, args, res):
+    """team: the colleagues (Paket 3); assign <kollege> <aufgabe>: the same as handing a move over by button."""
+    ks = st.get("kollegen") or []
+    gone = st["m"]["zeit_start"] - st["m"]["zeit"]
+    if name == "team":
+        if not ks:
+            return ["team: no colleagues in this game"]
+        rows = []
+        for x in ks:
+            job = (c.say("arbeitet: ", "working: ") + x["auftrag"]["label"][1 if c.en else 0]
+                   + f" ({c.say('noch', 'left')} {max(0, x['auftrag']['fertig'] - gone)} min)") if x["auftrag"] else c.say("frei", "free")
+            rows.append(f"{x['id']:<8} {', '.join(x['faecher']):<24} {c.say('müde', 'tired')} {x['muede']:>3} %   {job}")
+        return rows
+    offer = [a for a in c.offered.values() if a.get("fach") and a["frei"]]
+    if len(args) < 2:
+        return ([c.say("Aufruf: assign <kollege> <aufgabe>, zum Beispiel assign ", "Usage: assign <colleague> <task>, for example assign ")
+                 + (ks[0]["id"] if ks else "sandra") + " " + (offer[0]["id"] if offer else "logs"),
+                 c.say("Aufgaben, die jetzt gehen:", "Tasks that can be handed over now:")]
+                + [f"  {a['id']:<16} {a['label'][1 if c.en else 0]} ({a['fach']})" for a in offer])
+    who = next((x for x in ks if args[0].lower() in (x["id"], x["name"].lower())), None)
+    if not who:
+        res["art"] = "nicht"
+        return [f"assign: {args[0][:30]}: no such colleague (team shows them)"]
+    if who["auftrag"]:
+        res["art"] = "nicht"
+        return [f"assign: {who['id']} is busy ({max(0, who['auftrag']['fertig'] - gone)} min left)"]
+    if who["muede"] >= 100:
+        res["art"] = "nicht"
+        return [f"assign: {who['id']} is too tired (a status meeting or food helps)"]
+    a = next((x for x in offer if x["id"] == args[1].lower()), None)
+    if not a:
+        res["art"] = "nicht"
+        return [f"assign: {args[1][:40]}: not a task to hand over right now (assign shows them)"]
+    res.update(art="zug", zug=a["id"], an=who["id"])
+    return []
+
+
 def _builtin(st, c, name, args, res):
     """The console's own commands and the Windows ones."""
     sid = st["szenario"]
@@ -519,6 +559,8 @@ def _builtin(st, c, name, args, res):
         k["host"] = t["id"]
         note = " (out-of-band console)" if _status(st, t) in ("Offline", "Isolated") else ""
         return [f"Connected to {t['id']} ({t['ip']}), {OS_NAMES[t['os']]}{note}"]
+    if name in ("team", "assign"):
+        return _team(st, c, name, args, res)
     if name == "exit":
         k["host"] = first_host(sid)
         return [f"Connection to {c.hid} closed."]

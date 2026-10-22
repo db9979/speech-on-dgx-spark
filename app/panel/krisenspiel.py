@@ -108,7 +108,9 @@ ERFOLGE = (("feuertaufe", ("Feuertaufe", "Baptism of fire"), ("Das erste Spiel z
            ("allrounder", ("Allrounder", "All-rounder"), ("Jedes Szenario mindestens einmal gewonnen.", "Won every scenario at least once.")),
            ("bestnote", ("Bestnote", "Top grade"), ("Ein Spiel mit der Note A abgeschlossen.", "Finished a game with grade A.")),
            ("ohne_knopf", ("Ohne Knopf gelöst", "Solved without a button"), ("Gewonnen, jeder Zug an der Konsole getippt.", "Won with every move typed at the console.")),
-           ("gegen_uhr", ("Gegen die Uhr", "Against the clock"), ("Mit laufender Uhr gewonnen, ohne Pause.", "Won with the clock running, without a pause.")))
+           ("gegen_uhr", ("Gegen die Uhr", "Against the clock"), ("Mit laufender Uhr gewonnen, ohne Pause.", "Won with the clock running, without a pause.")),
+           ("delegiert", ("Gut delegiert", "Well delegated"), ("Gewonnen und mindestens vier Aufgaben ans Team gegeben.", "Won and handed at least four tasks to the team.")),
+           ("ciso", ("CISO", "CISO"), ("Den höchsten Rang der Laufbahn erreicht.", "Reached the highest rank of the career.")))
 ERFOLG_IDS = tuple(e[0] for e in ERFOLGE)
 # roles of a game played together (Paket 11, krisenteam.py): every move has one (data key "rolle", else technik);
 # Leitung may take every move, the others only their own; a game alone is played as Leitung
@@ -120,7 +122,66 @@ def darf(rolle, a):
     """May this role take the move a (krisenteam)?"""
     return rolle == "leitung" or a.get("rolle", "technik") == rolle
 
-_day = DayCounter(zuege=0, spiele=0, erzaehlt=0, verworfen=0, konsole=0)   # Zustand → Live, numbers only
+
+# Team und Laufbahn (Paket 3): colleagues with two subjects each take a move over and work on it in game time while
+# the player goes on (delegieren). A move of the role Leitung stays with the player. Fixed rules: ZUWEISEN_MIN minutes
+# to hand it over, the move's minutes times FACH_FAKTOR (its subject) or FREMD_FAKTOR, tired colleagues (MUEDE_LANGSAM)
+# times MUEDE_FAKTOR; when it is done its effects apply (without its minutes, the budget went at the start).
+FAECHER = {"netz": ("Netz", "Network"), "windows": ("Windows", "Windows"), "storage": ("Storage", "Storage"),
+           "forensik": ("Forensik", "Forensics"), "rz": ("Rechenzentrum", "Data centre"),
+           "kommunikation": ("Kommunikation", "Communication")}
+ZUWEISEN_MIN = 2
+FACH_FAKTOR, FREMD_FAKTOR = 0.7, 1.5
+MUEDE_LANGSAM, MUEDE_FAKTOR, MUEDE_MAX = 70, 1.3, 100
+MUEDE_FACH, MUEDE_FREMD, MUEDE_RUHE = 15, 25, 4    # tiredness after a task (own subject, other), less per move idle
+ZUWEISEN_LABEL = ("Aufgabe ans Team geben", "Hand a task to the team")
+# Laufbahn: the rank from the profile's results; it sets the team's size and the emergency budget
+# (id, name, games won, a game with grade A needed, colleagues, budget factor)
+RAENGE = (("junior", ("Junior-Admin", "Junior admin"), 0, False, 3, 1.0),
+          ("admin", ("Admin", "Admin"), 2, False, 4, 1.0),
+          ("itleiter", ("IT-Leiter", "IT manager"), 5, False, 5, 1.1),
+          ("ciso", ("CISO", "CISO"), 10, True, 6, 1.2))
+RANG_IDS = tuple(r[0] for r in RAENGE)
+
+
+def fach(a):
+    """The subject of a move: kommunikation for that role, None for Leitung (not to hand over)."""
+    r = a.get("rolle", "technik")
+    return None if r == "leitung" else "kommunikation" if r == "kommunikation" else a.get("fach")
+
+
+def rang_of(gewonnen, bestnote):
+    """The highest rank these results reach (fixed thresholds in RAENGE)."""
+    return [r for r in RAENGE if gewonnen >= r[2] and (bestnote or not r[3])][-1]
+
+
+def laufbahn(d):
+    """For the page: the rank now, the next one and what it takes (numbers from the profile's stats)."""
+    won = d["stats"].get("gewonnen", 0)
+    best = "bestnote" in d["erfolge"]
+    r = rang_of(won, best)
+    i = RANG_IDS.index(r[0])
+    nxt = RAENGE[i + 1] if i + 1 < len(RAENGE) else None
+    return {"rang": r[0], "name": list(r[1]), "gewonnen": won, "team": r[4], "budget": r[5],
+            "naechster": {"rang": nxt[0], "name": list(nxt[1]), "gewonnen": nxt[2], "note_a": nxt[3], "team": nxt[4]} if nxt else None,
+            "raenge": [{"rang": x[0], "name": list(x[1]), "gewonnen": x[2], "note_a": x[3], "team": x[4], "budget": x[5]} for x in RAENGE]}
+
+
+def _kollegen(seed, n):
+    pool = _DATA.get("kollegen", [])
+    pick = sorted(_rng(seed, "kollegen").sample(range(len(pool)), min(n, len(pool))))
+    return [{"id": pool[i]["id"], "name": pool[i]["name"], "faecher": list(pool[i]["faecher"]), "muede": 0, "auftrag": None,
+             "erledigt": 0} for i in pick]
+
+
+def dauer(st, a, k):
+    """Game minutes a colleague needs for the move a (fixed rule)."""
+    f = FACH_FAKTOR if fach(a) in k["faecher"] else FREMD_FAKTOR
+    if k["muede"] >= MUEDE_LANGSAM:
+        f *= MUEDE_FAKTOR
+    return max(1, -(-round(a.get("zeit", 1) * f * 10) // 10))
+
+_day = DayCounter(zuege=0, spiele=0, erzaehlt=0, verworfen=0, konsole=0, delegiert=0)   # Zustand → Live, numbers only
 _locks = {}
 _locks_lock = threading.Lock()
 
@@ -141,8 +202,9 @@ def _pair(x):
 
 
 COND_KEYS = {"flags", "ohne", "irgendein", "var", "status", "zug_ab", "min_ab", "alt", "vertrauen_unter", "stress_ueber", "moral_unter"}
-EFF_KEYS = {"zeit", "stress", "vertrauen", "moral", "kosten", "budget", "setzt", "details", "flags", "weg", "text", "je", "wenn"}
-ACT_KEYS = EFF_KEYS | {"id", "label", "einmal", "max", "rolle"}
+EFF_KEYS = {"zeit", "stress", "vertrauen", "moral", "kosten", "budget", "setzt", "details", "flags", "weg", "text", "je", "wenn",
+            "erholung"}
+ACT_KEYS = EFF_KEYS | {"id", "label", "einmal", "max", "rolle", "fach"}
 TICK_KEYS = EFF_KEYS | {"id", "chance", "einmal"}
 
 
@@ -192,6 +254,12 @@ def check_data(d=None):
             bad.append(f"allgemein {a.get('id')}: label")
         if a.get("rolle", "technik") not in ROLLEN:
             bad.append(f"allgemein {a.get('id')}: rolle")
+    ks = d.get("kollegen", [])
+    if len(ks) < max(r[4] for r in RAENGE) or len({k.get("id") for k in ks}) != len(ks):
+        bad.append("kollegen: too few or ids twice")
+    for k in ks:
+        if not k.get("name") or not k.get("faecher") or any(f not in FAECHER for f in k["faecher"]):
+            bad.append(f"kollegen {k.get('id')}")
     for t in d.get("neben_allgemein", []) + d.get("ticks_allgemein", []):
         eff(t, None, "allgemein " + t.get("id", "?"), TICK_KEYS)
     for sz in d.get("szenarien", []):
@@ -227,6 +295,9 @@ def check_data(d=None):
                 bad.append(f"{sid} {a.get('id')}: label")
             if a.get("rolle", "technik") not in ROLLEN:
                 bad.append(f"{sid} {a.get('id')}: rolle")
+            if a.get("rolle", "technik") == "technik" and a.get("fach") not in FAECHER or a.get("fach") == "kommunikation" \
+                    or "fach" in a and a.get("rolle", "technik") != "technik":
+                bad.append(f"{sid} {a.get('id')}: fach")
         for t in sz.get("ticks", []) + sz.get("neben", []):
             eff(t, sz, f"{sid} {t.get('id')}", TICK_KEYS)
             if not isinstance(t.get("chance"), int) or not 0 < t["chance"] <= 100:
@@ -337,6 +408,9 @@ def _apply(st, e, rec):
             rec["assets"].append([a, old, status])
     for a, t in (e.get("details") or {}).items():
         st["assets"][a]["details"] = list(t)
+    if e.get("erholung"):
+        for k in st.get("kollegen") or ():
+            k["muede"] = max(0, k["muede"] - e["erholung"])
     for f in e.get("flags") or ():
         if f not in st["flags"]:
             st["flags"][f] = st["zug"]
@@ -416,21 +490,24 @@ def available(st):
         cost = {k: a[k] for k in ("zeit", "budget", "stress", "vertrauen", "moral") if a.get(k)}
         free = not a.get("budget") or st["m"]["budget"] >= a["budget"]
         out.append({"id": a["id"], "label": a["label"], "kosten": cost, "frei": free, "rolle": a.get("rolle", "technik"),
+                    "fach": fach(a),
                     "warum": [] if free else ["Das Notfall-Budget reicht nicht.", "The emergency budget is not enough."]})
     return out
 
 
-def new_game(szenario, stufe, seed=None, lang="de", now=None, modus="knoepfe", uhr=False):
+def new_game(szenario, stufe, seed=None, lang="de", now=None, modus="knoepfe", uhr=False, rang="junior"):
     """A fresh game: variants drawn from the seed, the start effects applied. modus „konsole“: moves only by typing;
-    uhr: the clock runs in real time (uhr_ticken)."""
-    if szenario not in SZENARIEN or stufe not in STUFEN or modus not in MODI:
-        raise ValueError("szenario, stufe, modus")
+    uhr: the clock runs in real time (uhr_ticken); rang (Laufbahn): the team's size and the budget factor, the
+    colleagues drawn from the seed."""
+    if szenario not in SZENARIEN or stufe not in STUFEN or modus not in MODI or rang not in RANG_IDS:
+        raise ValueError("szenario, stufe, modus, rang")
+    r = RAENGE[RANG_IDS.index(rang)]
     sz = SZENARIEN[szenario]
     s = STUFEN[stufe]
     seed = secrets.randbelow(SEED_MAX + 1) if seed is None else int(seed)
     now = time.time() if now is None else now
     var = {k: vals[_rng(seed, "var", k).randrange(len(vals))][0] for k, vals in sorted(sz.get("varianten", {}).items())}
-    budget = round(sz["budget"] * s["budget"])
+    budget = round(sz["budget"] * s["budget"] * r[5])
     st = {"v": 1, "id": secrets.token_hex(8), "szenario": szenario, "stufe": stufe, "seed": seed, "var": var,
           "lang": "en" if lang == "en" else "de", "start": int(now), "zug": 0, "max_stress": START["stress"],
           "m": {"zeit": s["zeit"], "zeit_start": s["zeit"], "stress": START["stress"], "vertrauen": START["vertrauen"],
@@ -438,7 +515,8 @@ def new_game(szenario, stufe, seed=None, lang="de", now=None, modus="knoepfe", u
           "assets": {x["id"]: {"status": "Online", "details": list(x["details"])} for x in sz["assets"]},
           "flags": {}, "flag_min": {}, "uses": {}, "done": [], "chronik": [], "trace": [], "ende": None,
           "modus": modus, "knoepfe": 0, "konsole": krisenkonsole.fresh(szenario),
-          "uhr": {"t": now, "rest": 0.0, "offen": 0, "pause": False, "pausen": 0} if uhr else None}
+          "uhr": {"t": now, "rest": 0.0, "offen": 0, "pause": False, "pausen": 0} if uhr else None,
+          "rang": rang, "kollegen": _kollegen(seed, r[4]), "delegiert": 0}
     rec = _rec()
     for e in sz.get("start", []):
         if holds(e.get("wenn"), st):
@@ -447,7 +525,8 @@ def new_game(szenario, stufe, seed=None, lang="de", now=None, modus="knoepfe", u
     st["chronik"].append({"zug": 0, "min": 0, "art": "start", "text": _text(sz["start_text"], st)})
     st["trace"].append({"zug": 0, "steps": [
         _step("eingabe", ("Neues Spiel", "New game"), {"szenario": szenario, "stufe": stufe, "seed": seed, "modus": modus,
-                                                     "uhr": bool(uhr)}),
+                                                     "uhr": bool(uhr), "rang": rang,
+                                                     "kollegen": [k["id"] for k in st["kollegen"]]}),
         _step("zufall", ("Varianten aus dem Seed", "Variants from the seed"), {"varianten": var}),
         _step("regel", ("Startlage", "Starting situation"), {"systeme": rec["assets"], "werte": rec["delta"]})]})
     return st
@@ -457,12 +536,12 @@ def _step(art, titel, daten, ms=0.0):
     return {"art": art, "titel": list(titel), "daten": daten, "ms": round(ms, 1)}
 
 
-def move(st, aktion, now=None, a=None, via="knopf", rolle=None, wer=None):
+def move(st, aktion, now=None, a=None, via="knopf", rolle=None, wer=None, an=None):
     """One move by the panel's fixed rules. Returns the facts of the move (fixed texts) for the narrator.
     Raises ValueError when the move is not offered right now. a: a move of the console that is no action of the
     scenario (a wrong command, reading for LESEN_MAX minutes) with its own fixed effects; via: knopf or konsole.
     rolle and wer: a player of a game together (krisenteam) takes only the moves of its role; wer stands in the
-    chronicle ({"rolle", "name"})."""
+    chronicle ({"rolle", "name"}). an: a colleague's id (Paket 3): the move is handed over and done in game time."""
     if st.get("ende"):
         raise ValueError("over")
     t0 = time.perf_counter()
@@ -475,6 +554,16 @@ def move(st, aktion, now=None, a=None, via="knopf", rolle=None, wer=None):
         a = next(x for x in _all_actions(sz) if x["id"] == aktion)
         if rolle and not darf(rolle, a):
             raise ValueError("not this role")
+    task = None
+    if an is not None:
+        k = next((x for x in st.get("kollegen") or () if x["id"] == an), None)
+        if aktion is None or not k or k["auftrag"] or k["muede"] >= MUEDE_MAX or not fach(a):
+            raise ValueError("not to hand over")
+        n = dauer(st, a, k)
+        task = (a, k, n)
+        a = {"id": "zuweisen", "label": list(ZUWEISEN_LABEL), "zeit": ZUWEISEN_MIN, "budget": a.get("budget", 0),
+             "text": [f"{k['name']} übernimmt: {a['label'][0]} (fertig in etwa {n} Minuten).",
+                      f"{k['name']} takes over: {a['label'][1]} (done in about {n} minutes)."]}
     aktion = a["id"]
     pre_assets = {k: v["status"] for k, v in st["assets"].items()}
     m = st["m"]
@@ -489,6 +578,13 @@ def move(st, aktion, now=None, a=None, via="knopf", rolle=None, wer=None):
         clock, st["uhr"]["offen"] = st["uhr"]["offen"], 0
     steps = [_step("eingabe", ("Zug", "Move"), dict({"zug": st["zug"], "aktion": aktion, "label": a["label"], "weg": via},
                                                     **({"rolle": rolle} if rolle else {})))]
+    if task:
+        ta, tk, n = task
+        st["uses"][ta["id"]] = st["uses"].get(ta["id"], 0) + 1
+        tk["auftrag"] = {"aktion": ta["id"], "label": list(ta["label"]), "start": minutes_gone(st), "fertig": minutes_gone(st) + n}
+        st["delegiert"] = st.get("delegiert", 0) + 1
+        steps[0]["daten"].update(an=tk["id"], aufgabe=ta["id"], dauer=n, fach=fach(ta), passt=fach(ta) in tk["faecher"],
+                                 muede=tk["muede"])
     rec = _rec()
     _effect(st, a, rec)
     rec["minuten"] += reading + clock
@@ -514,6 +610,7 @@ def move(st, aktion, now=None, a=None, via="knopf", rolle=None, wer=None):
                         "stress": d_stress, "moral": d_moral, "vertrauen": d_trust}))
     texts = [{"art": "zug", "text": [" ".join(x[0] for x in rec["texte"]), " ".join(x[1] for x in rec["texte"])]}] \
         if rec["texte"] else []
+    _team_tick(st, rec, texts, steps)
     rolls = []
     # events that follow (ticks): in order, each once unless the data says otherwise
     for t in list(_DATA.get("ticks_allgemein", [])) + list(sz.get("ticks", [])):
@@ -566,6 +663,35 @@ def move(st, aktion, now=None, a=None, via="knopf", rolle=None, wer=None):
     st["trace"].append({"zug": st["zug"], "steps": steps})
     st["trace"] = st["trace"][-TRACE_MAX:]
     return {"label": a["label"], "texte": texts, "systeme": rec["assets"], "minute": gone}
+
+
+def _team_tick(st, rec, texts, steps):
+    """The colleagues after the minutes of a move: a task whose minute has come applies its move's effects (without
+    its minutes and budget), tiredness goes up by the subject, idle colleagues rest a little."""
+    gone = minutes_gone(st)
+    sz = SZENARIEN[st["szenario"]]
+    for k in st.get("kollegen") or ():
+        t = k["auftrag"]
+        if not t:
+            k["muede"] = max(0, k["muede"] - MUEDE_RUHE)
+            continue
+        if t["fertig"] > gone:
+            continue
+        a = next((x for x in _all_actions(sz) if x["id"] == t["aktion"]), None)
+        k["auftrag"] = None
+        if not a:
+            continue
+        r2 = _rec()
+        _effect(st, {x: v for x, v in a.items() if x not in ("zeit", "budget")}, r2)
+        rec["assets"] += r2["assets"]
+        own = fach(a) in k["faecher"]
+        k["muede"] = min(MUEDE_MAX, k["muede"] + (MUEDE_FACH if own else MUEDE_FREMD))
+        k["erledigt"] = k.get("erledigt", 0) + 1
+        texts.append({"art": "team", "text": [f"{k['name']} ist fertig: {a['label'][0]}. " + " ".join(x[0] for x in r2["texte"]),
+                                              f"{k['name']} is done: {a['label'][1]}. " + " ".join(x[1] for x in r2["texte"])]})
+        steps.append(_step("team", ("Aufgabe des Teams fertig (feste Regel)", "Team task done (fixed rule)"),
+                           {"kollege": k["id"], "aktion": a["id"], "minute": gone, "werte": r2["delta"], "systeme": r2["assets"],
+                            "flags": r2["flags"], "muede": k["muede"]}))
 
 
 def _end(st):
@@ -636,7 +762,10 @@ def erfolge_neu(st, prof_data):
              "kuehl": won and st.get("max_stress", 100) < 70, "ernstfall": won and st["stufe"] == "ernstfall",
              "allrounder": all(won_by.get(k) for k in SZENARIEN), "bestnote": e["note"] == "A",
              "ohne_knopf": won and st.get("knoepfe", 0) == 0,
-             "gegen_uhr": won and bool(st.get("uhr")) and st["uhr"]["pausen"] == 0}
+             "gegen_uhr": won and bool(st.get("uhr")) and st["uhr"]["pausen"] == 0,
+             "delegiert": won and st.get("delegiert", 0) >= 4,
+             "ciso": rang_of(prof_data.get("stats", {}).get("gewonnen", 0) + won,
+                             "bestnote" in have or e["note"] == "A")[0] == RANG_IDS[-1]}
     return [k for k in ERFOLG_IDS if rules[k] and k not in have]
 
 
@@ -773,7 +902,7 @@ def konsole_zeile(st, zeile, lang="de"):
         k["verlauf"] = (k["verlauf"] + [typed])[-krisenkonsole.VERLAUF:]
     facts = None
     if res["zug"]:
-        facts = move(st, res["zug"], via="konsole")
+        facts = move(st, res["zug"], via="konsole", an=res.get("an"))
     elif res["falsch"]:
         facts = move(st, None, a=dict(res["falsch"], id="konsole_falsch", label=list(FALSCH_LABEL)), via="konsole")
     elif res["wirkung"]:
@@ -802,6 +931,7 @@ def view(d, uid=None):
            "stufen": [{"id": k, "name": list(v["name"]), "zeit": v["zeit"]} for k, v in STUFEN.items()],
            "erfolge": [{"id": k, "name": list(n), "text": list(t), "t": d["erfolge"].get(k, 0)} for k, n, t in ERFOLGE],
            "verlauf": [dict(x, titel=SZENARIEN[x["szenario"]]["titel"]) for x in d["verlauf"] if x.get("szenario") in SZENARIEN],
+           "laufbahn": laufbahn(d), "faecher": {k: list(v) for k, v in FAECHER.items()},
            "stats": {"gespielt": d["stats"].get("gespielt", 0), "gewonnen": d["stats"].get("gewonnen", 0),
                      "beste": d["stats"].get("beste", {})},
            "spiel": None}
@@ -815,6 +945,9 @@ def view(d, uid=None):
                         "chronik": st["chronik"], "trace": st["trace"], "ende": st["ende"],
                         "modus": st.get("modus", "knoepfe"), "uhr": _uhr_view(st),
                         "aktionen": [] if st["ende"] or st.get("modus") == "konsole" else available(st),
+                        "rang": st.get("rang", "junior"), "delegiert": st.get("delegiert", 0),
+                        "kollegen": [dict(x, rest=max(0, x["auftrag"]["fertig"] - minutes_gone(st)) if x["auftrag"] else 0)
+                                     for x in st.get("kollegen") or ()],
                         "konsole": dict(krisenkonsole.hilfe_daten(st["szenario"]), host=k["host"], zeilen=k["zeilen"],
                                         verlauf=k["verlauf"], lesen=k["min"], lesen_max=krisenkonsole.LESEN_MAX,
                                         **krisenkonsole.tab_daten(st, holds, st.get("lang", "de")))}
@@ -889,7 +1022,7 @@ async def neu(request: Request, prof=Depends(browser_profile)):
             d = load(uid)
             if d["spiel"] and not d["spiel"].get("ende"):
                 print("spiel: altes spiel ersetzt | nicht beendet", flush=True)
-            d["spiel"] = new_game(sid, stufe, seed, _lang(b), modus=modus, uhr=uhr)
+            d["spiel"] = new_game(sid, stufe, seed, _lang(b), modus=modus, uhr=uhr, rang=laufbahn(d)["rang"])
             save(uid, d)
             return d
     d = await asyncio.to_thread(go)
@@ -932,10 +1065,11 @@ async def zug(request: Request, prof=Depends(browser_profile)):
     _need(uid)
     guard.limit(request, "spiel", uid)
     b = await json_body(request, BODY)
-    aktion, turn, lang = b.get("aktion"), b.get("zug"), _lang(b)
-    if not isinstance(aktion, str) or not re.fullmatch(r"[a-z0-9_]{1,40}", aktion) or not isinstance(turn, int):
+    aktion, turn, lang, an = b.get("aktion"), b.get("zug"), _lang(b), b.get("an")
+    if not isinstance(aktion, str) or not re.fullmatch(r"[a-z0-9_]{1,40}", aktion) or not isinstance(turn, int) \
+            or an is not None and (not isinstance(an, str) or not re.fullmatch(r"[a-z0-9_]{1,20}", an)):
         print("spiel: zug abgelehnt | eingabe", flush=True)
-        raise HTTPException(400, "aktion, zug")
+        raise HTTPException(400, "aktion, zug, an")
 
     def go():
         with _lock(uid):
@@ -954,7 +1088,7 @@ async def zug(request: Request, prof=Depends(browser_profile)):
                 print("spiel: uhr | abgelaufen", flush=True)
                 return d, facts, 200
             try:
-                facts = move(st, aktion)
+                facts = move(st, aktion, an=an)
             except ValueError:
                 return None, None, 422
             if st.get("ende"):
@@ -968,7 +1102,9 @@ async def zug(request: Request, prof=Depends(browser_profile)):
         print(f"spiel: zug abgelehnt | {why}", flush=True)
         raise HTTPException(422 if code == 423 else code, why)
     _day.bump("zuege")
-    print(f"spiel: zug | ok | {round((time.perf_counter() - t0) * 1000)} ms", flush=True)
+    if an:
+        _day.bump("delegiert")
+    print(f"spiel: zug | {'delegiert' if an else 'ok'} | {round((time.perf_counter() - t0) * 1000)} ms", flush=True)
     return view(await _narrated(uid, d, facts, lang), uid)
 
 
@@ -1160,7 +1296,7 @@ def for_live():
         _live.update(at=time.time(), d={"laufend": running, "profile": profs, "uhr": clocks})
     t = _day.today()
     return dict(_live["d"], on=True, zuege=t["zuege"], spiele=t["spiele"], erzaehlt=t["erzaehlt"], verworfen=t["verworfen"],
-                konsole=t["konsole"])
+                konsole=t["konsole"], delegiert=t["delegiert"])
 
 
 def _own_count(uid):
