@@ -211,6 +211,7 @@ Bereitet eine Anfrage vor, fragt das Sprachmodell in Runden und prüft, was gesa
 | `app/panel/taten.py` | Handlungs-Prüfung: hat ein Werkzeug wirklich getan, was der Satz sagt |
 | `app/panel/tipps.py` | Schlägt passende Funktionen vor, die noch aus sind |
 | `app/panel/vorab.py` | Holt bei einer Rückfrage die Antwort schon vorab |
+| `app/panel/zwischenruf.py` | Ins Wort fallen: die Antwort hält an, feste Wörter entscheiden weiter, stopp oder neue Frage |
 
 ### Weiche und Werkzeugnamen
 
@@ -794,7 +795,7 @@ flowchart TD
 2. <a id="kn-geraet-s2"></a>**Sichere Verbindung?**: Browser geben das Mikrofon nur auf einer sicheren Seite frei. Ohne https zeigt die Seite einen Hinweis mit der https-Adresse des Panels und nimmt nichts auf.
 3. <a id="kn-geraet-s3"></a>**Aufnehmen, Satzende erkennen**: MediaRecorder nimmt auf, ein Pegelmesser hört auf Stille. Etwa jede Sekunde geht die Aufnahme bis jetzt zur Spracherkennung und erscheint als blasse Blase. Endet der Satz mit Punkt, Frage- oder Ausrufezeichen, ist die Frage sofort fertig; endet er auf „und“, „weil“, „ähm“ oder einem Komma, wartet die Seite etwas länger.
 4. <a id="kn-geraet-s4"></a>**Ton an /api/test/asr**: Die Seite wandelt die Aufnahme in ein einfaches WAV in Mono (sonst geht das Original). Der Spark prüft das Rate-Limit (240 pro Minute für ein Profil, Gäste höchstens 3 gleichzeitig), liest höchstens 50 MB und schickt den Ton an die Spracherkennung. Nebenher misst er auf der CPU, wie viel davon Stimme ist und wessen Stimme es ist.
-5. <a id="kn-geraet-s5"></a>**Stille, eigene oder fremde Stimme?**: Feste Regeln, kein Modell: ein „Ja“ aus Stille oder einem Klick (stille.check), die eigene Stimme des Spark von einem anderen Gerät (echo.check) und bei selbst geöffnetem Mikrofon eine fremde Stimme, etwa vom Fernseher (fremdstimme.check), sind keine Frage. Die Antwort ist dann leerer Text mit dem Grund.
+5. <a id="kn-geraet-s5"></a>**Stille, eigene oder fremde Stimme?**: Feste Regeln, kein Modell: ein „Ja“ aus Stille oder einem Klick (stille.check), die eigene Stimme des Spark von einem anderen Gerät (echo.check) und bei selbst geöffnetem Mikrofon eine fremde Stimme, etwa vom Fernseher (fremdstimme.check), sind keine Frage. Die Antwort ist dann leerer Text mit dem Grund. Hat die Seite die Antwort fürs Ins-Wort-Fallen nur angehalten (hold), sagt zwischenruf.decide mit festen Wörtern dazu: weiter (nichts, Überhörtes, „mhm“), stopp („Stopp“) oder frage (alles andere); ohne Entscheidung nach 4 s spielt die Seite weiter.
 6. <a id="kn-geraet-s6"></a>**Frage an /api/chat**: Die Seite schickt die letzten Nachrichten des offenen Gesprächs, seine Kennung, Stimme, Tempo und, wenn die Stimme erkannt wurde, ein signiertes Einmal-Token. Der Spark prüft das Rate-Limit (120 pro Minute für ein Profil, Gäste höchstens 4 gleichzeitig), lässt Hintergrundarbeit warten (vorrang) und sagt den anderen offenen Seiten des Profils „antwortet gerade“ (nur die Art des Geräts).
 7. <a id="kn-geraet-s7"></a>**Text und Ton in einem Strom**: Die Antwort kommt als Ereignisse: Textstücke, Tonstücke, Suche, Quellen, Rückfragen, Fehler. Der Text wird höchstens einmal pro Bild neu gezeichnet. Der Ton läuft in einem eigenen Audio-Kontext mit der Rate der Sprachausgabe; jedes Stück endet mit einer kurzen Blende, damit die Nähte nicht knacken.
 8. <a id="kn-geraet-s8"></a>**Spricht jemand dazwischen?**: Während die Antwort spielt, hört das Mikrofon weiter. Ist der Pegel eine Weile deutlich über der eigenen Ausgabe und dem Raum (Fernseher), bricht die Antwort ab, und die schon laufende Aufnahme wird die nächste Frage.
@@ -822,6 +823,7 @@ Gilt bei: [Schritt 6](#kn-geraet-s6), [Schritt 10](#kn-geraet-s10)
 - **50** Gespräche pro Profil ([Schritt 10](#kn-geraet-s10))
 - **4 MB** größtes Gespräch beim Speichern ([Schritt 10](#kn-geraet-s10))
 - **8** offene Seiten mit Sofort-Abgleich pro Profil ([Schritt 11](#kn-geraet-s11))
+- **4 s** so lange wartet eine angehaltene Antwort auf die Entscheidung ([Schritt 5](#kn-geraet-s5))
 
 #### Einstellen
 
@@ -841,6 +843,7 @@ Gilt bei: [Schritt 6](#kn-geraet-s6), [Schritt 10](#kn-geraet-s10)
 - `app/panel/admin.py` `read_audio`: liest die Aufnahme mit Größengrenze ([Schritt 4](#kn-geraet-s4))
 - `app/panel/stille.py` `check`: Stille wird nie zu Worten ([Schritt 5](#kn-geraet-s5))
 - `app/panel/echo.py` `check`: die eigene Stimme des Spark ist keine Frage ([Schritt 5](#kn-geraet-s5))
+- `app/panel/zwischenruf.py` `decide`: angehaltene Antwort: weiter, stopp oder neue Frage nach festen Wörtern ([Schritt 5](#kn-geraet-s5))
 - `app/panel/chat.py` `chat`: Grenzen, Vorrang, „antwortet gerade“, dann der Strom ([Schritt 6](#kn-geraet-s6), [Schritt 7](#kn-geraet-s7))
 - `app/panel/account.py` `profile_save_convo`: speichert nur die neuen Nachrichten ([Schritt 10](#kn-geraet-s10))
 - `app/panel/account.py` `profile_convos`: Liste und Änderungen seit ?since= ([Schritt 11](#kn-geraet-s11))
@@ -2750,7 +2753,7 @@ flowchart TD
 
 #### Im Code
 
-- `app/panel/admin.py` `test_asr`: Ratenlimit und Plätze für Gäste ([Schritt 1](#kn-asr-s1))
+- `app/panel/admin.py` `test_asr`: Ratenlimit und Plätze für Gäste; bei angehaltener Antwort die Entscheidung aus zwischenruf.py ([Schritt 1](#kn-asr-s1))
 - `app/panel/admin.py` `_test_asr`: der Weg im Panel: lesen, nebenbei prüfen, weiterreichen ([Schritt 2](#kn-asr-s2), [Schritt 4](#kn-asr-s4))
 - `app/panel/stufe.py` `asr_level`: Stufe des Profils, nicht am geteilten Lautsprecher ([Schritt 4](#kn-asr-s4))
 - `app/common.py` `BodyLimit`: Größe und Schlüssel vor dem Lesen ([Schritt 5](#kn-asr-s5))

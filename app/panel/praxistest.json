@@ -2782,6 +2782,13 @@
 "titel": "Krisenspiel: Anleitung, QR-Code, Ausschalten",
 "text": "A: Krisenspiel → Anleitung: unter dem Inhaltsverzeichnis stehen alle Abschnitte; ein Klick auf „Erfolge“ springt dorthin. B: Spiel → Mitspieler → Einladen: der QR-Code ist ganz zu sehen (drei Ecken-Quadrate) und mit dem Handy lesbar. C: Konsole: ssh auf einen Rechner, sudo poweroff: „Connection … closed by remote host“, die Eingabezeile steht wieder auf jump01. D: sudo reboot hält die Verbindung.",
 "thread": "IT-Krisenspiel für einzelne Nutzer"
+},
+{
+"id": "P422",
+"v": 942,
+"titel": "Ins Wort fallen: erst anhalten",
+"text": "A: Update, Funktionen → Ins Wort fallen: erst anhalten an; als Profil Ich → Gespräch → Ins Wort fallen an. B: Im Browser eine lange Frage stellen („Erzähl mir ausführlich etwas über Leipzig“). C: Während der Antwort „mhm“ oder „genau“ sagen: die Antwort hält kurz an und läuft an derselben Stelle weiter. D: Einmal husten: sie läuft weiter. E: „Stopp“ sagen: sie endet, das Gesagte bleibt stehen. F: Bei der nächsten Antwort „Und wie ist das Wetter dort?“ sagen: neue Frage. G: Zustand → Logs: „hoeren: zwischenruf weiter | listening words“, nie deine Worte. H: Schalter aus: wie vorher bricht kurze Stimme die Antwort ab. Android-App wie Browser.",
+"thread": "Ideen aus sonia-assistant"
 }
 ]
 }

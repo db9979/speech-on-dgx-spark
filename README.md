@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.942** Barge-in: pause first (switch, off): a "mhm", a cough or the own voice only pauses the answer and it plays on, "stop" ends it, a real sentence becomes the new question; fixed words in the panel, never the model; browser and Android, iPhone follows
 - **V01.0.941** Crisis game: guide links jump, QR codes fully visible, switching off ends the console session
 - **V01.0.940** IT crisis game (package 7): own page in the iPhone app (My things → Crisis game) with moves, console and debrief
 - **V01.0.939** IT crisis game (package 6): daily and weekly challenge with a board (without name, with name or not at all) and mutators with bonus points
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.935** IT crisis game (package 11): play together by invitation link with the roles Engineering, Communication and Lead; console with Tab for files, nano, vi and vim and a "Large" button
 - **V01.0.934** IT crisis game: mode "clock running" (10 s = 1 game minute, only while the page is open, pause in practice and normal, +5 and achievement "Against the clock") and tab "Guide" with quick start, rules, console, all commands, scenarios, achievements and tips from the code
 - **V01.0.933** IT crisis game (package 2): console under the chronicle, typed moves like buttons, mode "console only" (+5), 🎲 surprise scenario, no achievements when given up; about 150 Linux commands on simulated machines with sudo, files, users, services and firewall, help with -h and "Did you mean …?"; nothing really runs
-- **V01.0.932** IT crisis game (package 1): own page "Crisis game" with five scenarios (ransomware, SAN, power, BGP, BSI), crisis dashboard, inspector, grades and achievements; the panel decides by fixed rules and seed, the narrator (own switch) only retells; both switches off
 
 
 

@@ -1139,14 +1139,19 @@ async def read_audio(file):
 
 @router.post("/api/test/asr", dependencies=[Depends(assistant)])
 async def test_asr(request: Request, file: UploadFile = File(...), language: str = Form("auto"), wake: str = Form(""),
-                   room: str = Form(""), opened: str = Form("")):
-    """Load limits (per caller per minute, guests only a few at once), then the transcription."""
+                   room: str = Form(""), opened: str = Form(""), hold: str = Form(""), asked: str = Form("")):
+    """Load limits (per caller per minute, guests only a few at once), then the transcription. hold: the page paused
+    the answer for this barge-in and asks whether it plays on (zwischenruf.py; asked: the answer ended on a question)."""
     me = profiles.current(request)
     admin = not me and admin_cookie_ok(request)
     guard.limit(request, "asr", me and me["id"], admin)
     slot = None if me or admin else guard.Slot("asr")
     try:
-        return await _test_asr(request, file, language, wake, room, opened)
+        res = await _test_asr(request, file, language, wake, room, opened)
+        if hold == "1" and me and fremdstimme.opened(opened) == "barge":
+            import zwischenruf
+            res = zwischenruf.attach(res, me["id"], asked == "1", echo.device_of(request).split(":")[0])
+        return res
     finally:
         if slot:
             slot.release()

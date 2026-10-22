@@ -23,14 +23,14 @@ function playCtx(){const AC=window.AudioContext||window.webkitAudioContext;
   if(!chat.pctx){try{chat.pctx=new AC({sampleRate:24000,latencyHint:'interactive'})}catch{chat.pctx=new AC()}
     chat.out=chat.pctx.createAnalyser();chat.out.fftSize=512;chat.out.connect(chat.pctx.destination);   /* the face's mouth follows this level */
     chat.gain=chat.pctx.createGain();chat.gain.connect(chat.out)}   // Stop fades out through this instead of cutting off
-  if(chat.pctx.state!=='running')chat.pctx.resume().catch(()=>{});return chat.pctx}
+  if(chat.pctx.state!=='running'&&!chat.held)chat.pctx.resume().catch(()=>{});return chat.pctx}
 const TAIL=120;   // 5 ms at 24 kHz
 function pcmNode(ctx,f,at){const ab=ctx.createBuffer(1,f.length,24000);ab.copyToChannel(f,0);const src=ctx.createBufferSource();src.buffer=ab;src.connect(chat.gain);
   src.start(at);chat.sources.push(src);src.onended=()=>{chat.sources=chat.sources.filter(x=>x!==src)};return src}
 // Audio the browser does not play (it holds back sound until the page was touched, or iOS paused
 // it for a call or another app): say so instead of only showing the text, and play on the next tap.
-function audioBlocked(ctx){if(ctx.state==='running'||chat.blockedHint)return;chat.blockedHint=setTimeout(()=>{chat.blockedHint=null;
-  if(ctx.state==='running')return;chatSay(t('Der Browser spielt gerade keinen Ton ab. Einmal tippen, dann spricht der Assistent.','The browser is not playing sound right now. Tap once and the assistant speaks.'));
+function audioBlocked(ctx){if(ctx.state==='running'||chat.blockedHint||chat.held)return;chat.blockedHint=setTimeout(()=>{chat.blockedHint=null;
+  if(ctx.state==='running'||chat.held)return;chatSay(t('Der Browser spielt gerade keinen Ton ab. Einmal tippen, dann spricht der Assistent.','The browser is not playing sound right now. Tap once and the assistant speaks.'));
   document.addEventListener('pointerdown',()=>{ctx.resume().catch(()=>{})},{once:true})},600)}
 function playPcm(b64){const ctx=playCtx(),bin=atob(b64),n=bin.length>>1;if(!n)return;audioBlocked(ctx);let f=new Float32Array(n);
   for(let i=0;i<n;i++){let v=bin.charCodeAt(2*i)|(bin.charCodeAt(2*i+1)<<8);if(v>=32768)v-=65536;f[i]=v/32768}
@@ -57,10 +57,23 @@ function playPcm(b64){const ctx=playCtx(),bin=atob(b64),n=bin.length>>1;if(!n)re
   if(body.length)pcmNode(ctx,body,at);const tAt=at+body.length/24000;
   chat.tail={src:pcmNode(ctx,faded,tAt),at:tAt,data};chat.playEnd=tAt+k/24000}
 function stopAnswer(){stopBarge();if(chat.ctrl){chat.ctrl.abort();chat.ctrl=null}
+  const h=chat.held;if(h){clearTimeout(h.t);chat.held=null;chat.afterHeld=null}
   // a short fade instead of cutting the voice off mid-sound (that clicks); then full volume again
   if(chat.pctx&&chat.sources.length){const t0=chat.pctx.currentTime,g=chat.gain.gain;g.cancelScheduledValues(t0);g.setValueAtTime(g.value,t0);
     g.linearRampToValueAtTime(0,t0+0.015);g.setValueAtTime(1,t0+0.03);chat.sources.forEach(x=>{try{x.stop(t0+0.02)}catch{}})}
-  chat.sources=[];chat.tail=null;chat.playEnd=0;$('chatstop').disabled=!chat.rec}
+  chat.sources=[];chat.tail=null;chat.playEnd=0;$('chatstop').disabled=!chat.rec;if(h&&chat.pctx)chat.pctx.resume().catch(()=>{})}
+// Ins Wort fallen: erst anhalten (zwischenruf.py, admin chat.barge_hold): a barge-in only pauses the answer. The speech
+// context stops (the stream goes on filling it behind), the recording goes to the panel with "hold", and the panel's
+// fixed words decide: "weiter" plays on where it stopped, "stopp" ends it, anything else ends it and is the question.
+// Without a decision HOLD_MS after the recording ended (zwischenruf.HOLD_MAX) the answer plays on.
+const HOLD_MS=4000;
+function holdAnswer(){const c=chat.pctx;if(!c||c.state!=='running'||chat.held)return false;
+  const h=chat.held={asked:/\?[\s"'»«“”)\]]*$/.test(chat.said||'')};   // the answer so far ends on a question: "ja" answers it
+  const t0=c.currentTime,g=chat.gain.gain;g.cancelScheduledValues(t0);g.setValueAtTime(g.value,t0);g.linearRampToValueAtTime(0,t0+0.015);
+  setTimeout(()=>{if(chat.held===h)c.suspend().catch(()=>{})},25);return true}
+function resumeAnswer(h){if(!chat.held||(h&&chat.held!==h))return;clearTimeout(chat.held.t);chat.held=null;const c=chat.pctx;
+  if(c){c.resume().catch(()=>{});const t0=c.currentTime,g=chat.gain.gain;g.cancelScheduledValues(t0);g.setValueAtTime(0,t0);g.linearRampToValueAtTime(1,t0+0.015)}
+  setTalk();chatSay(t('Weiter …','Going on …'));startBarge();const f=chat.afterHeld;chat.afterHeld=null;if(f)f()}
 // Still speaking until the last sample has left the speaker: currentTime is where the browser
 // computes audio, the device plays it later (output latency, much more over Bluetooth). Without
 // this, hands-free listening and "Bereit" started while the last syllable was still playing.
@@ -90,7 +103,7 @@ function micLost(s){if(chat.stream!==s)return;chat.stream=null;stopBarge();
   if(was||S.hands){chat.resumeMic=!!S.hands;chatSay(t('Das System hat das Mikrofon beendet (Bildschirm gesperrt, Anruf oder andere App). ','The system ended the microphone (screen locked, a call or another app). ')+
     (S.hands||$('chatwake').checked?t('Es geht wieder an, sobald die Seite offen ist.','It comes back once the page is open again.'):t('Tippe „Sprechen“.','Tap "Speak".')))}}
 function micBack(){if(document.hidden)return;
-  [chat.ctx,chat.pctx].forEach(c=>{if(c&&c.state!=='running'&&c.state!=='closed')c.resume().catch(()=>{})});
+  [chat.ctx,chat.held?null:chat.pctx].forEach(c=>{if(c&&c.state!=='running'&&c.state!=='closed')c.resume().catch(()=>{})});
   let guest=true;try{guest=isGuest()}catch{}
   if(($('chatwake').checked||(window.room&&room.on))&&!wake.on&&!guest)startWake();
   if(chat.resumeMic&&S.hands&&!chat.rec&&!chat.ctrl&&!playing()&&!chat.asrBusy){chat.resumeMic=false;startListening({opened:'hands'})}}
@@ -124,7 +137,7 @@ function stopVad(){chat.micLevel=0;chat.micPaused=false;if(chat.vad){clearInterv
 // priority for people (stufe.py): a profile with Vorrang says "recording starts" before it is sent
 let VOR_ON=false;
 function vorSpricht(){if(PROFILE&&VOR_ON)api('/api/vorrang/spricht',{method:'POST'}).catch(()=>{})}
-async function startListening(o={}){stopBarge();stopAnswer();chat.turnWait=null;chat.stopWhy=null;chat.resumeMic=false;
+async function startListening(o={}){stopBarge();if(!o.held)stopAnswer();chat.turnWait=null;chat.stopWhy=null;chat.resumeMic=false;
   if(!window.isSecureContext||!navigator.mediaDevices){showSecure();chatSay(t('Mikrofon braucht https, siehe Hinweis oben.','The microphone needs https, see the note above.'));return}
   try{await getMic()}
   catch(e){chatSay(micError(e));return}
@@ -135,9 +148,11 @@ async function startListening(o={}){stopBarge();stopAnswer();chat.turnWait=null;
   rec.ondataavailable=e=>{if(e.data.size)parts.push(e.data)};chat.parts=parts;chat.live.last=null;chat.lastVoice=o.speaking?performance.now():null;
   rec.onstop=()=>{stopVad();chat.rec=null;setTalk();const cancel=chat.cancelRec;chat.cancelRec=false;
     const why=chat.stopWhy;chat.stopWhy=null;
+    if(cancel&&chat.held){clearLive();resumeAnswer(chat.held);return}   // nothing to decide: the answer plays on
+    if(chat.held){const h=chat.held;h.t=setTimeout(()=>resumeAnswer(h),HOLD_MS)}
     if(cancel){clearLive();if(why!=='lost')chatSay(why==='quiet'&&S.hands?t('Nichts gehört, Mikrofon aus. Tippe „Sprechen“ oder sag „Hey Spark“.','Heard nothing, microphone off. Tap "Speak" or say "Hey Spark".'):t('Bereit.','Ready.'));return}
     transcribe(new Blob(parts,{type:rec.mimeType||'audio/webm'}),performance.now(),rec,rec.opened)};
-  if(rec.state==='inactive')rec.start();chat.rec=rec;setTalk();vorSpricht();chatSay(o.speaking?t('Unterbrochen, ich höre zu …','Interrupted, listening …'):o.follow?t('Noch eine Frage? Ich höre kurz zu …','Anything else? Listening briefly …'):t('Ich höre zu …','Listening …'));startVad(o)}
+  if(rec.state==='inactive')rec.start();chat.rec=rec;setTalk();vorSpricht();chatSay(o.held?t('Angehalten, ich höre zu …','Paused, listening …'):o.speaking?t('Unterbrochen, ich höre zu …','Interrupted, listening …'):o.follow?t('Noch eine Frage? Ich höre kurz zu …','Anything else? Listening briefly …'):t('Ich höre zu …','Listening …'));startVad(o)}
 // Barge-in: while the answer plays, the microphone keeps listening (the browser's echo
 // cancellation removes most of the assistant's own voice). A recorder starts at the first sign of
 // speech so the beginning is not lost; if the speech holds for 250 ms the answer stops and that
@@ -160,7 +175,7 @@ function startBarge(){if(chat.barge||!micLive()||!S.barge||(window.room&&room.sp
       if(!pre){parts=[];pre=new MediaRecorder(chat.stream,mime?{mimeType:mime}:{});pre.ondataavailable=e=>{if(e.data.size)parts.push(e.data)};pre.start()}}
     else{voiced=Math.max(0,voiced-dt*0.5);if(pre&&voiced===0){pre.onstop=null;try{pre.stop()}catch{}pre=null}}
     if(voiced>=250&&m>Math.max(thr*0.5,amb*b[3]*0.8)){const rec=pre;pre=null;stopBarge();
-      startListening({rec,parts,floor,speaking:true})}},40);
+      startListening({rec,parts,floor,speaking:true,held:!!(ALLOW.barge_hold&&holdAnswer())})}},40);
   chat.barge={iv,src,stopPre:()=>{if(pre){pre.onstop=null;try{pre.stop()}catch{}pre=null}}}}
 function stopBarge(){if(chat.barge){clearInterval(chat.barge.iv);try{chat.barge.src.disconnect()}catch{}chat.barge.stopPre();chat.barge=null;if(!chat.rec)chat.micLevel=0}}
 function stopListening(cancel){if(chat.rec&&chat.rec.state!=='inactive'){chat.cancelRec=!!cancel;chat.rec.stop()}}
@@ -175,21 +190,26 @@ async function toWav(blob,rate=16000){const raw=await audioCtx().decodeAudioData
   for(let i=0;i<pcm.length;i++)v.setInt16(44+2*i,Math.max(-1,Math.min(1,pcm[i]))*32767,true);
   return new Blob([buf],{type:'audio/wav'})}
 async function transcribe(blob,tEnd,rec,opened){chat.asrBusy=true;try{await transcribe2(blob,tEnd,rec,opened)}finally{chat.asrBusy=false}}
-async function asrText(blob,opened){
+async function asrText(blob,opened,held){
   let file=blob,name='frage.'+(blob.type.includes('mp4')?'m4a':blob.type.includes('ogg')?'ogg':'webm');
   try{file=await toWav(blob);name='frage.wav'}catch{}            // fall back to the original recording
   const fd=new FormData();fd.append('file',file,name);fd.append('language',(CFG&&CFG.asr.default_language)||'auto');if(opened)fd.append('opened',opened);
+  if(held){fd.append('hold','1');if(held.asked)fd.append('asked','1')}
   const d=await (await api('/api/test/asr',{method:'POST',body:fd})).json();
   // recognized voice: a signed one-time token the chat request sends back, kept with its own text
   return {text:(d.text||'').trim(),speaker:d.speaker||null,ignored:d.ignored||''}}
-async function transcribe2(blob,tEnd,rec,opened){chatSay(t('Erkenne Sprache …','Transcribing …'));
+async function transcribe2(blob,tEnd,rec,opened){const h=opened==='barge'?chat.held:null;chatSay(t('Erkenne Sprache …','Transcribing …'));
   // a live snapshot taken after the last voiced moment already holds the whole question
   const last=chat.live.last;chat.live.last=null;let r=null;
-  if(last&&last.rec===rec&&chat.lastVoice!=null&&last.at>chat.lastVoice+150)r=await last.p;
+  if(!h&&last&&last.rec===rec&&chat.lastVoice!=null&&last.at>chat.lastVoice+150)r=await last.p;
   clearLive();
-  if(!r)try{r=await asrText(blob,opened)}catch(e){chatSay(errText(e instanceof TypeError?'net':/asr_down|unreachable/.test(errRaw(e))?'asr_down':/loading/.test(errRaw(e))?'asr_loading':'asr_error',e.message));return}
+  if(!r)try{r=await asrText(blob,opened,h)}catch(e){if(h){resumeAnswer(h);return}chatSay(errText(e instanceof TypeError?'net':/asr_down|unreachable/.test(errRaw(e))?'asr_down':/loading/.test(errRaw(e))?'asr_loading':'asr_error',e.message));return}
   // the Spark's own voice (another device answering, echo.py) counts as silence
   // silence, a click or the chime that came back as "Ja"/"Okay" (stille.py) is no question either
+  if(h){if(chat.held!==h)return;   // decided meanwhile: played on after HOLD_MS, or "Stopp" was tapped
+    const b=r.barge||(r.text?'frage':'weiter');   // without the panel's word (switched off meanwhile): as before
+    if(b==='weiter'){resumeAnswer(h);return}
+    stopAnswer();if(b==='stopp'){setTalk();chatSay(t('Gestoppt.','Stopped.'));return}}
   if(!r.text){chatSay(/foreign/.test(r.ignored)?t('Fremde Stimme überhört, zum Beispiel vom Fernseher.','Ignored a voice that is not yours, for example from the TV.'):/own|pause/.test(r.ignored)?t('Eigene Stimme überhört.','Ignored my own voice.'):r.ignored?t('Nichts gehört.','Heard nothing.'):t('Nichts verstanden.','Did not catch that.'));return}
   chat.asrBusy=false;chat.nextSpoken=true;ask(r.text,(performance.now()-tEnd)/1000,r.speaker)}
 // Live transcript: the recording so far is transcribed about every second and shown as a pale
@@ -247,14 +267,14 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
   // shown formatted while it streams (md.js), at most once per frame; the small answer line gets the plain text
   let drawn=null,frame=0;const draw=()=>{frame=0;md.render(el,drawn);$('fabtext').textContent=md.plain(drawn);$('chatlog').scrollTop=1e9};
   const show=(x,now)=>{drawn=x;if(now){if(frame)cancelAnimationFrame(frame);draw()}else if(!frame)frame=requestAnimationFrame(draw)};let full='',llmS=null,audioS=null,ackS=null,err='';const searches=[],sources=[],mems=[],docs=[],drefs=[],hcards=[],mkcards=[],chcards=[],blcards=[],steps=[],confirms=[],gotos=[];let rateId='',wbId='',more=null;const moreTool=typeof moreTake==='function'?moreTake(text):undefined;if(typeof moreStartGone==='function')moreStartGone();
-  const ctrl=new AbortController();chat.ctrl=ctrl;chat.firstPlay=null;chat.gaps=[];chat.blocks=[];chat.t0b=null;chat.stalls=0;chat.pieceStart=true;setTalk();chatSay(t('Antwort kommt …','Answer coming …'));
+  const ctrl=new AbortController();chat.ctrl=ctrl;chat.said='';chat.firstPlay=null;chat.gaps=[];chat.blocks=[];chat.t0b=null;chat.stalls=0;chat.pieceStart=true;setTalk();chatSay(t('Antwort kommt …','Answer coming …'));
   try{const r=await api('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},signal:ctrl.signal,
       body:JSON.stringify({speak:voiceOn()?undefined:false,messages:chat.msgs.slice(-20).map(m=>({role:m.role,content:m.content,...(m.mail?{mail:true}:{}),...(m.outside?{outside:true}:{}),...(m.screen?{screen:true}:{})})),tab:TAB,tz:(()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone}catch{return ''}})(),voice:PROFILE&&S.voice||undefined,speed:S.speed,length:S.length,convo:chat.cid||undefined,speaker:spk&&spk.token||undefined,images:pids.length?pids:undefined,page:typeof hilfeNow==='function'?hilfeNow():undefined,focus:typeof hilfeFocusTake==='function'?hilfeFocusTake():undefined,view:document.body.classList.contains('appview')?'app':undefined,more:moreTool})});
     const rd=r.body.getReader(),dec=new TextDecoder();let buf='';
     for(;;){const{value,done}=await rd.read();if(done)break;buf+=dec.decode(value,{stream:true});let i;
       while((i=buf.indexOf('\n\n'))>=0){const line=buf.slice(0,i).split('\n').find(l=>l.startsWith('data:'));buf=buf.slice(i+2);if(!line)continue;
         const ev=JSON.parse(line.slice(5));faceEvent(ev);
-        if(ev.type==='text'){full+=ev.delta;el.classList.remove('typing');show(full)}
+        if(ev.type==='text'){full+=ev.delta;chat.said=full;el.classList.remove('typing');show(full)}
         else if(ev.type==='tts_request'){chat.pieceStart=true;chat.blocks.push('| '+ev.chars+t(' Zeichen:',' chars:'))}
         else if(ev.type==='audio'){playPcm(ev.audio);if(chat.pctx.state==='running')chatSay(t('Spricht …','Speaking …'));startBarge()}
         else if(ev.type==='retract'){full=full.slice(0,full.length-ev.drop);show(full)}
@@ -330,9 +350,11 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
   if(err){const d=document.createElement('div');d.className='err';d.textContent=err;el.appendChild(d);$('chatlog').scrollTop=1e9}
   if(err&&!(ttsErr&&full.trim())){chat.errAt=performance.now();chatSay(err);setTalk();return}
   if(aborted){setTalk();return}
-  while(playing()&&!chat.ctrl&&!chat.rec)await new Promise(res=>setTimeout(res,100));   // wait until it has finished speaking
-  setTalk();if(chat.ctrl||chat.rec)return;
-  chatSay(t('Bereit.','Ready.'));if(S.hands)startListening({opened:'hands'});else if(spoken&&followSecs())startListening({follow:followSecs()})}
+  const done=async()=>{while(playing()&&!chat.ctrl&&!chat.rec&&!chat.held)await new Promise(res=>setTimeout(res,100));   // wait until it has finished speaking
+    setTalk();if(chat.held&&!chat.ctrl){chat.afterHeld=done;return}   // paused: once it plays on, the end comes after it
+    if(chat.ctrl||chat.rec||chat.held)return;
+    chatSay(t('Bereit.','Ready.'));if(S.hands)startListening({opened:'hands'});else if(spoken&&followSecs())startListening({follow:followSecs()})};
+  await done()}
 // Ablauf zeigen (ablauf.py): the tools of this answer, folded: „3 Werkzeuge benutzt · 2,1 s“, open: ✓/⚠ name and time
 function stepsFold(steps){const d=document.createElement('details');d.className='steps';const s=document.createElement('summary');
   const sec=x=>(x/1000).toLocaleString(L==='en'?'en':'de',{maximumFractionDigits:1})+' s',all=steps.reduce((a,x)=>a+(x.ms||0),0);
@@ -578,7 +600,7 @@ function attRender(el,att,live,via){
     else if(a.k==='bild'&&!live&&typeof bildAtt==='function')el.appendChild(bildAtt(a))
     else if(a.k==='musik'&&!live&&typeof musikAtt==='function')el.appendChild(musikAtt(a))}}
 // Speaks a text with this profile's voice (reminders, "read again"); Stop and barge-in end it.
-async function sayText(text){stopAnswer();const ctrl=new AbortController();chat.ctrl=ctrl;chat.firstPlay=null;chat.gaps=[];chat.blocks=null;chat.stalls=0;setTalk();chatSay(t('Spricht …','Speaking …'));
+async function sayText(text){stopAnswer();const ctrl=new AbortController();chat.ctrl=ctrl;chat.said=String(text||'');chat.firstPlay=null;chat.gaps=[];chat.blocks=null;chat.stalls=0;setTalk();chatSay(t('Spricht …','Speaking …'));
   try{const r=await api('/api/assistant/say',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text}),signal:ctrl.signal});
     const rd=r.body.getReader(),dec=new TextDecoder();let buf='';
     for(;;){const{value,done}=await rd.read();if(done)break;buf+=dec.decode(value,{stream:true});let i;

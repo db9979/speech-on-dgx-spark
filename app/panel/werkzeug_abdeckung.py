@@ -121,6 +121,7 @@ WITHOUT = {
     "style": "wirkt auf jede Antwort",
     "follow": "Verhalten am Lautsprecher",
     "selfecho": "Verhalten am Lautsprecher",
+    "anhalten": "Verhalten beim Ins-Wort-Fallen",
     "toolthink": "Einstellung, wie Antworten entstehen",
     "routing": "Einstellung, wie Antworten entstehen",
     "direct": "Einstellung, wie Antworten entstehen",

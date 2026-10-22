@@ -107,6 +107,9 @@ FEATURES = (
     F("style", "Eigener Gesprächsstil", "Own conversation style", "talk", ("own_style",), me="setbox", guide="style"),
     F("follow", "Rückfrage ohne Weckwort", "Follow-up without wake word", "talk", ("follow_up",), me="setbox", guide="follow"),
     F("selfecho", "Eigene Stimme überhören", "Ignore my own voice", "talk", ("no_self_echo",), me="setbox", guide="selfecho"),
+    # zwischenruf.py (plan ins-wort-fallen): a barge-in only pauses the answer; fixed words decide on, stop or question
+    F("anhalten", "Ins Wort fallen: erst anhalten", "Barge-in: pause first", "talk", ("barge_hold",), me="setbox",
+      guide="anhalten"),
     F("fixes", "Aus Korrekturen lernen", "Learning from corrections", "talk", ("learn_fixes",),
       parent="memory", me="setbox", guide="fixes"),
     F("klaeren", "Rückfrage statt Raten", "Ask instead of guessing", "talk", ("klaeren",), me="setbox",

@@ -925,7 +925,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "egeln, kein Modell: ein „Ja“ aus Stille oder einem Klick (stille.check), die eigene Stimme des Spark von einem anderen Gerät (echo.check) und bei selbst geöffnetem Mikrofon eine fremde Stimme, etwa vom Fernseher (fremdstimme.check), sind keine Frage. Die Antwort ist dann leerer Text mit dem Grund. 6. Frage an /api/chat: Die Seite schickt die letzten Nachrichten des offenen Gesprächs, seine Kennung, Stimme, Tempo und, wenn die Stimme erkannt wurde, ein signiertes Einmal-Token. Der Spark prüft das Rate-Limit (120 pro Minute für ein Profil, Gäste höchstens 4 gleichzeitig), lässt Hintergrundarbeit warten (vorrang) und sagt den anderen offenen Seiten des Profils „antwortet gerade“ (nur die Art des Geräts). 7. Text und Ton in einem Strom: Die Antwort kommt als Ereignisse: Textstücke, Tonstücke, Suche, Quellen, Rückfragen, Fehler. Der Text wird höchstens einmal pro Bild neu gezeichnet. Der Ton läuft in einem eigenen Audio-Kontext mit der Rate der Sprachausgabe; jedes Stück endet mit einer kurzen Blende, damit die Nähte nicht knacken. 8. Spricht jemand dazwischen?: Während die Antwort spielt, hört das Mikrofon weiter. Ist der Pegel eine Weile deutlich über der eigenen Ausgabe und dem Raum "
+"text": "egeln, kein Modell: ein „Ja“ aus Stille oder einem Klick (stille.check), die eigene Stimme des Spark von einem anderen Gerät (echo.check) und bei selbst geöffnetem Mikrofon eine fremde Stimme, etwa vom Fernseher (fremdstimme.check), sind keine Frage. Die Antwort ist dann leerer Text mit dem Grund. Hat die Seite die Antwort fürs Ins-Wort-Fallen nur angehalten (hold), sagt zwischenruf.decide mit festen Wörtern dazu: weiter (nichts, Überhörtes, „mhm“), stopp („Stopp“) oder frage (alles andere); ohne Entscheidung nach 4 s spielt die Seite weiter. 6. Frage an /api/chat: Die Seite schickt die letzten Nachrichten des offenen Gesprächs, seine Kennung, Stimme, Tempo und, wenn die Stimme erkannt wurde, ein signiertes Einmal-Token. Der Spark prüft das Rate-Limit (120 pro Minute für ein Profil, Gäste höchstens 4 gleichzeitig), lässt Hintergrundarbeit warten (vorrang) und sagt den anderen offenen Seiten des Profils „antwortet gerade“ (nur die Art des Geräts). 7. Text und Ton in einem Strom: Die Antwort kommt als Ereignisse: Textstücke, Tonstücke, Suche, Quellen, Rückfragen, Fehler. Der Text wird höchstens einmal pro Bild neu gezeichnet. Der Ton läuft in einem eigenen Audio-Kontext mit der Rate "
 },
 {
 "lang": "de",
@@ -933,7 +933,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "(Fernseher), bricht die Antwort ab, und die schon laufende Aufnahme wird die nächste Frage. 9. Fehler im Strom?: Ein Fehler erscheint unter der Antwort in einfachen Worten; der Admin sieht zusätzlich die technische Angabe, Gäste nur die Art des Fehlers. Fehlt nur die Sprachausgabe, bleibt die Antwort als Text. 10. Gespräch speichern: Bei einem Profil schickt die Seite nur die neuen Nachrichten (PUT /api/profile/convos mit „add“). Der Spark hängt sie unter einer Sperre an seine Kopie an, damit ein anderes Gerät nichts überschreibt, und behält höchstens 50 Gespräche mit je 60 Nachrichten. 11. Abgleich mit anderen Geräten: Kommt die Seite wieder nach vorn und regelmäßig dazwischen, fragt sie, was sich seit dem letzten Mal geändert hat; ein anderswo gelöschtes Gespräch schließt sich. Mit dem Sofort-Abgleich hält jede sichtbare Seite einen Ereignis-Strom offen, der nur „Gespräch geändert“ und „antwortet gerade“ meldet, nie Inhalte (höchstens 8 pro Profil, je 30 Minuten); eine verdeckte Seite schließt ihn, um den Akku zu schonen, und fragt beim Zurückkommen nach. 12. Bereit: Die Seite wartet, bis die Antwort ausgesprochen ist. Freihändig oder nach einer gesprochenen Frage mit Nachfrage-F"
+"text": "der Sprachausgabe; jedes Stück endet mit einer kurzen Blende, damit die Nähte nicht knacken. 8. Spricht jemand dazwischen?: Während die Antwort spielt, hört das Mikrofon weiter. Ist der Pegel eine Weile deutlich über der eigenen Ausgabe und dem Raum (Fernseher), bricht die Antwort ab, und die schon laufende Aufnahme wird die nächste Frage. 9. Fehler im Strom?: Ein Fehler erscheint unter der Antwort in einfachen Worten; der Admin sieht zusätzlich die technische Angabe, Gäste nur die Art des Fehlers. Fehlt nur die Sprachausgabe, bleibt die Antwort als Text. 10. Gespräch speichern: Bei einem Profil schickt die Seite nur die neuen Nachrichten (PUT /api/profile/convos mit „add“). Der Spark hängt sie unter einer Sperre an seine Kopie an, damit ein anderes Gerät nichts überschreibt, und behält höchstens 50 Gespräche mit je 60 Nachrichten. 11. Abgleich mit anderen Geräten: Kommt die Seite wieder nach vorn und regelmäßig dazwischen, fragt sie, was sich seit dem letzten Mal geändert hat; ein anderswo gelöschtes Gespräch schließt sich. Mit dem Sofort-Abgleich hält jede sichtbare Seite einen Ereignis-Strom offen, der nur „Gespräch geändert“ und „antwortet gerade“ meldet, nie Inhalte (höchstens"
 },
 {
 "lang": "de",
@@ -941,7 +941,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "enster öffnet sie das Mikrofon wieder."
+"text": " 8 pro Profil, je 30 Minuten); eine verdeckte Seite schließt ihn, um den Akku zu schonen, und fragt beim Zurückkommen nach. 12. Bereit: Die Seite wartet, bis die Antwort ausgesprochen ist. Freihändig oder nach einer gesprochenen Frage mit Nachfrage-Fenster öffnet sie das Mikrofon wieder."
 },
 {
 "lang": "de",
@@ -957,7 +957,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 50 MB größte Aufnahme (Schritt 4) - 120 Fragen pro Minute und Profil (Schritt 4, Schritt 6) - 4 Gäste gleichzeitig im Chat (Schritt 4, Schritt 6) - 50 Gespräche pro Profil (Schritt 10) - 4 MB größtes Gespräch beim Speichern (Schritt 10) - 8 offene Seiten mit Sofort-Abgleich pro Profil (Schritt 11)"
+"text": "- 50 MB größte Aufnahme (Schritt 4) - 120 Fragen pro Minute und Profil (Schritt 4, Schritt 6) - 4 Gäste gleichzeitig im Chat (Schritt 4, Schritt 6) - 50 Gespräche pro Profil (Schritt 10) - 4 MB größtes Gespräch beim Speichern (Schritt 10) - 8 offene Seiten mit Sofort-Abgleich pro Profil (Schritt 11) - 4 s so lange wartet eine angehaltene Antwort auf die Entscheidung (Schritt 5)"
 },
 {
 "lang": "de",
@@ -981,7 +981,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/admin.py test_asr: Rate-Limit, Gast-Plätze, dann die Erkennung (Schritt 4) - app/panel/admin.py _test_asr: Spracherkennung mit Stille-, Echo- und Fremdstimmen-Prüfung (Schritt 4, Schritt 5) - app/panel/admin.py read_audio: liest die Aufnahme mit Größengrenze (Schritt 4) - app/panel/stille.py check: Stille wird nie zu Worten (Schritt 5) - app/panel/echo.py check: die eigene Stimme des Spark ist keine Frage (Schritt 5) - app/panel/chat.py chat: Grenzen, Vorrang, „antwortet gerade“, dann der Strom (Schritt 6, Schritt 7) - app/panel/account.py profile_save_convo: speichert nur die neuen Nachrichten (Schritt 10) - app/panel/account.py profile_convos: Liste und Änderungen seit ?since= (Schritt 11) - app/panel/profiles.py append_convo: hängt unter Sperre an (Schritt 10) - app/panel/profiles.py _clean_convo: prüft und kürzt ein Gespräch; eine Beschreibung des Bildschirms (bedienen.look) wird nur als Hinweis gespeichert (Schritt 10) - app/panel/verlauf.py stream: der Sofort-Abgleich je offener Seite (Schritt 11) - app/panel/sse.py Hub.stream: ein Strom je Seite: Warteschlange, Lebenszeichen, Aufräumen (Schritt 11) - app/panel/verlauf.py begin: „antwortet gerade“ für die anderen "
+"text": "- app/panel/admin.py test_asr: Rate-Limit, Gast-Plätze, dann die Erkennung (Schritt 4) - app/panel/admin.py _test_asr: Spracherkennung mit Stille-, Echo- und Fremdstimmen-Prüfung (Schritt 4, Schritt 5) - app/panel/admin.py read_audio: liest die Aufnahme mit Größengrenze (Schritt 4) - app/panel/stille.py check: Stille wird nie zu Worten (Schritt 5) - app/panel/echo.py check: die eigene Stimme des Spark ist keine Frage (Schritt 5) - app/panel/zwischenruf.py decide: angehaltene Antwort: weiter, stopp oder neue Frage nach festen Wörtern (Schritt 5) - app/panel/chat.py chat: Grenzen, Vorrang, „antwortet gerade“, dann der Strom (Schritt 6, Schritt 7) - app/panel/account.py profile_save_convo: speichert nur die neuen Nachrichten (Schritt 10) - app/panel/account.py profile_convos: Liste und Änderungen seit ?since= (Schritt 11) - app/panel/profiles.py append_convo: hängt unter Sperre an (Schritt 10) - app/panel/profiles.py _clean_convo: prüft und kürzt ein Gespräch; eine Beschreibung des Bildschirms (bedienen.look) wird nur als Hinweis gespeichert (Schritt 10) - app/panel/verlauf.py stream: der Sofort-Abgleich je offener Seite (Schritt 11) - app/panel/sse.py Hub.stream: ein Strom je Seite: "
 },
 {
 "lang": "de",
@@ -989,7 +989,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "Seiten (Schritt 6, Schritt 11)"
+"text": "Warteschlange, Lebenszeichen, Aufräumen (Schritt 11) - app/panel/verlauf.py begin: „antwortet gerade“ für die anderen Seiten (Schritt 6, Schritt 11)"
 },
 {
 "lang": "de",
@@ -2669,7 +2669,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/admin.py test_asr: Ratenlimit und Plätze für Gäste (Schritt 1) - app/panel/admin.py _test_asr: der Weg im Panel: lesen, nebenbei prüfen, weiterreichen (Schritt 2, Schritt 4) - app/panel/stufe.py asr_level: Stufe des Profils, nicht am geteilten Lautsprecher (Schritt 4) - app/common.py BodyLimit: Größe und Schlüssel vor dem Lesen (Schritt 5) - app/common.py PrioGate: Warten nach Vorrang (Schritt 7) - app/common.py audio_rate_ok: Abtastrate aus dem Dateikopf (Schritt 8) - app/asr_proxy.py transcriptions: der Proxy vor der Engine (Schritt 4) - app/asr_proxy.py engine_status: bereit, lädt, Fehler oder aus (Schritt 6) - app/parakeet.py Recognizer: Parakeet auf dem Prozessor (Schritt 9) - app/panel/stille.py check: Stille und Füllwörter (Schritt 10) - app/panel/echo.py check: die eigene Stimme des Spark (Schritt 10) - app/panel/speakers.py identify: wessen Stimme, nur bei klarem Treffer (Schritt 11)"
+"text": "- app/panel/admin.py test_asr: Ratenlimit und Plätze für Gäste; bei angehaltener Antwort die Entscheidung aus zwischenruf.py (Schritt 1) - app/panel/admin.py _test_asr: der Weg im Panel: lesen, nebenbei prüfen, weiterreichen (Schritt 2, Schritt 4) - app/panel/stufe.py asr_level: Stufe des Profils, nicht am geteilten Lautsprecher (Schritt 4) - app/common.py BodyLimit: Größe und Schlüssel vor dem Lesen (Schritt 5) - app/common.py PrioGate: Warten nach Vorrang (Schritt 7) - app/common.py audio_rate_ok: Abtastrate aus dem Dateikopf (Schritt 8) - app/asr_proxy.py transcriptions: der Proxy vor der Engine (Schritt 4) - app/asr_proxy.py engine_status: bereit, lädt, Fehler oder aus (Schritt 6) - app/parakeet.py Recognizer: Parakeet auf dem Prozessor (Schritt 9) - app/panel/stille.py check: Stille und Füllwörter (Schritt 10) - app/panel/echo.py check: die eigene Stimme des Spark (Schritt 10) - app/panel/speakers.py identify: wessen Stimme, nur bei klarem Treffer (Schritt 11)"
 },
 {
 "lang": "de",
@@ -6637,7 +6637,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Ins Wort fallen",
-"text": "Ins Wort fallen: Während der Assistent spricht, hört das Mikrofon weiter zu. Wer etwa eine Viertelsekunde lang redet, unterbricht die Antwort, und das Gesagte wird gleich die nächste Frage. Das hängt an der Echounterdrückung des Browsers; unterbricht sich der Assistent mit lautem Lautsprecher selbst, hilft ein Kopfhörer oder der Haken „Ins Wort fallen“ unter dem Gespräch."
+"text": "Ins Wort fallen: Während der Assistent spricht, hört das Mikrofon weiter zu. Wer etwa eine Viertelsekunde lang redet, unterbricht die Antwort, und das Gesagte wird gleich die nächste Frage. Das hängt an der Echounterdrückung des Browsers; unterbricht sich der Assistent mit lautem Lautsprecher selbst, hilft ein Kopfhörer oder der Haken „Ins Wort fallen“ unter dem Gespräch. Mit „Ins Wort fallen: erst anhalten“ (siehe unten) hält die Antwort dabei nur an, und ein „mhm“ lässt sie weiterlaufen."
 },
 {
 "lang": "de",
@@ -7789,7 +7789,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Die Oberfläche",
 "title": "Die Oberfläche",
-"text": "twort freihändig wieder zuhört (hands) oder jemand ihr ins Wort fällt (barge); bei einer fremden Stimme zeigt sie „Nichts gehört, Mikrofon aus.“ - Eigene Stimme überhören (Admin: Funktionen → Eigene Stimme überhören, standardmäßig aus, darunter „Was er überhört“; Profil: Ich → Gespräch, an, sobald der Admin es erlaubt): Jedes Gerät filtert nur sein eigenes Echo. Antwortet der Lautsprecher und das iPhone oder ein Browser daneben hört zu, kam die Spark-Stimme dort bisher als neue Frage an. Der Spark merkt sich 60 Sekunden lang im Arbeitsspeicher, was er auf welchem Gerät gesagt hat (höchstens 20 Stücke, nie auf der Platte). Eine Aufnahme eines Profils, deren Wortpaare zu mindestens 60 % aus diesen Sätzen stammen, gilt als Stille (Browser: „Eigene Stimme überhört.“, iPhone: „Nichts verstanden.“, Lautsprecher: Diagnose „Eigene Stimme überhört“). Mit „dazu alles, solange ein anderes Gerät spricht“ (empfohlen) zählt außerdem eine Aufnahme nicht, die zu mindestens 70 % in die Zeit fällt, in der ein anderes Gerät desselben Profils gerade spricht (plus 1 Sekunde); das sprechende Gerät selbst wird nie gebremst, „Stopp“ geht dort weiter. Sätze unter drei Wörtern („Ja“, „Stopp“) und Sätze mit "
+"text": "twort freihändig wieder zuhört (hands) oder jemand ihr ins Wort fällt (barge); bei einer fremden Stimme zeigt sie „Nichts gehört, Mikrofon aus.“ - Ins Wort fallen: erst anhalten (Admin: Funktionen → Ins Wort fallen: erst anhalten, standardmäßig aus; zwischenruf.py, Idee aus sonia-assistant, Plan „Ins Wort fallen und Satzende am Tonfall“): Ohne den Schalter beendet schon eine Viertelsekunde Stimme über der Antwort diese, auch ein Husten oder ein „mhm“. Mit ihm halten Browser und Android-App die Antwort nur an: Die Sprachausgabe blendet in 15 ms aus und hält, das Sprachmodell schreibt im Hintergrund weiter, und die Aufnahme geht wie bisher an /api/test/asr (opened=barge), dazu hold=1 (und asked=1, wenn die Antwort bis dahin auf eine Frage endet). Das Panel entscheidet mit festen Wörtern, nie das Modell, und antwortet mit barge: weiter (nichts gehört, die eigene Stimme, eine fremde Stimme, Stille oder nur Rückmeldewörter wie „mhm“, „ja“, „okay“, „genau“, „ach so“, „alles klar“, „yeah“, „I see“): Die Antwort läuft an derselben Stelle weiter. stopp (nur Stoppwörter wie „Stopp“, „Halt“, „Ruhe“, „Sei still“, „Das reicht“, „stop“, „be quiet“, auch nach „okay“ oder „Spark“): Die Antwort end"
 },
 {
 "lang": "de",
@@ -7918,6 +7918,14 @@
 "head": "Alle Funktionen",
 "title": "Alle Funktionen",
 "text": "- Eigene Stimme überhören (Funktionen → Gespräch → „Eigene Stimme überhören“; Ich → Gespräch): Jedes Gerät filtert nur sein eigenes Echo."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Alle Funktionen",
+"title": "Alle Funktionen",
+"text": "- Ins Wort fallen: erst anhalten (Funktionen → Gespräch → „Ins Wort fallen: erst anhalten“; Ich → Gespräch): Ohne diesen Schalter beendet schon eine Viertelsekunde Stimme die Antwort, auch ein Husten oder ein „mhm“."
 },
 {
 "lang": "de",
@@ -12837,7 +12845,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "lick (stille.check), the Spark's own voice from another device (echo.check) and, with a microphone the page opened itself, a foreign voice like the TV (fremdstimme.check) are no question. The answer is then empty text with the reason. 6. Question to /api/chat: The page sends the last messages of the open conversation, its id, voice, speed and, when the voice was recognized, a signed one-time token. The Spark checks the rate limit (120 per minute for a profile, guests at most 4 at once), lets background work wait (vorrang) and tells the profile's other open pages „answering“ (only the kind of device). 7. Text and sound in one stream: The answer comes as events: pieces of text, pieces of sound, search, sources, questions back, errors. The text is redrawn at most once per frame. The sound plays in its own audio context at the speech output's rate; every piece ends with a short fade so the seams do not click. 8. Someone talking over it?: While the answer plays, the microphone keeps listening. If the level stays clearly above the own output and the room (TV) for a moment, the answer stops and the recording already running becomes the next question. 9. Error in the stream?: An error show"
+"text": "lick (stille.check), the Spark's own voice from another device (echo.check) and, with a microphone the page opened itself, a foreign voice like the TV (fremdstimme.check) are no question. The answer is then empty text with the reason. When the page only paused the answer for a barge-in (hold), zwischenruf.decide adds with fixed words: on (nothing, ignored, „mhm“), stop („stop“) or question (anything else); without a decision after 4 s the page plays on. 6. Question to /api/chat: The page sends the last messages of the open conversation, its id, voice, speed and, when the voice was recognized, a signed one-time token. The Spark checks the rate limit (120 per minute for a profile, guests at most 4 at once), lets background work wait (vorrang) and tells the profile's other open pages „answering“ (only the kind of device). 7. Text and sound in one stream: The answer comes as events: pieces of text, pieces of sound, search, sources, questions back, errors. The text is redrawn at most once per frame. The sound plays in its own audio context at the speech output's rate; every piece ends with a short fade so the seams do not click. 8. Someone talking over it?: While the answer plays, the m"
 },
 {
 "lang": "en",
@@ -12845,7 +12853,15 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "s under the answer in plain words; the admin also sees the technical detail, guests only the kind of error. If only speech output failed, the answer stays as text. 10. Store the conversation: For a profile the page sends only the new messages (PUT /api/profile/convos with „add“). The Spark appends them to its copy under a lock, so another device overwrites nothing, and keeps at most 50 conversations of 60 messages each. 11. Sync with other devices: When the page comes to the front again, and regularly in between, it asks what changed since last time; a conversation deleted elsewhere closes. With instant sync every visible page keeps an event stream open that only reports „conversation changed“ and „answering“, never contents (at most 8 per profile, 30 minutes each); a hidden page closes it to save the battery and asks again on coming back. 12. Ready: The page waits until the answer is spoken. Hands-free, or after a spoken question with a follow-up window, it opens the microphone again."
+"text": "icrophone keeps listening. If the level stays clearly above the own output and the room (TV) for a moment, the answer stops and the recording already running becomes the next question. 9. Error in the stream?: An error shows under the answer in plain words; the admin also sees the technical detail, guests only the kind of error. If only speech output failed, the answer stays as text. 10. Store the conversation: For a profile the page sends only the new messages (PUT /api/profile/convos with „add“). The Spark appends them to its copy under a lock, so another device overwrites nothing, and keeps at most 50 conversations of 60 messages each. 11. Sync with other devices: When the page comes to the front again, and regularly in between, it asks what changed since last time; a conversation deleted elsewhere closes. With instant sync every visible page keeps an event stream open that only reports „conversation changed“ and „answering“, never contents (at most 8 per profile, 30 minutes each); a hidden page closes it to save the battery and asks again on coming back. 12. Ready: The page waits until the answer is spoken. Hands-free, or after a spoken question with a follow-up window, it open"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Way",
+"title": "Way",
+"text": "s the microphone again."
 },
 {
 "lang": "en",
@@ -12861,7 +12877,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 50 MB largest recording (step 4) - 120 questions per minute and profile (step 4, step 6) - 4 guests in the chat at once (step 4, step 6) - 50 conversations per profile (step 10) - 4 MB largest conversation when storing (step 10) - 8 open pages with instant sync per profile (step 11)"
+"text": "- 50 MB largest recording (step 4) - 120 questions per minute and profile (step 4, step 6) - 4 guests in the chat at once (step 4, step 6) - 50 conversations per profile (step 10) - 4 MB largest conversation when storing (step 10) - 8 open pages with instant sync per profile (step 11) - 4 s how long a paused answer waits for the decision (step 5)"
 },
 {
 "lang": "en",
@@ -12885,7 +12901,15 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/admin.py test_asr: rate limit, guest places, then recognition (step 4) - app/panel/admin.py _test_asr: recognition with silence, echo and foreign voice checks (step 4, step 5) - app/panel/admin.py read_audio: reads the recording with a size limit (step 4) - app/panel/stille.py check: silence never becomes words (step 5) - app/panel/echo.py check: the Spark's own voice is no question (step 5) - app/panel/chat.py chat: limits, priority, „answering“, then the stream (step 6, step 7) - app/panel/account.py profile_save_convo: stores only the new messages (step 10) - app/panel/account.py profile_convos: list and changes since ?since= (step 11) - app/panel/profiles.py append_convo: appends under a lock (step 10) - app/panel/profiles.py _clean_convo: checks and trims a conversation; a description of the screen (bedienen.look) is stored only as a note (step 10) - app/panel/verlauf.py stream: instant sync per open page (step 11) - app/panel/sse.py Hub.stream: one stream per page: queue, keep-alive, cleanup (step 11) - app/panel/verlauf.py begin: „answering“ for the other pages (step 6, step 11)"
+"text": "- app/panel/admin.py test_asr: rate limit, guest places, then recognition (step 4) - app/panel/admin.py _test_asr: recognition with silence, echo and foreign voice checks (step 4, step 5) - app/panel/admin.py read_audio: reads the recording with a size limit (step 4) - app/panel/stille.py check: silence never becomes words (step 5) - app/panel/echo.py check: the Spark's own voice is no question (step 5) - app/panel/zwischenruf.py decide: paused answer: on, stop or new question by fixed words (step 5) - app/panel/chat.py chat: limits, priority, „answering“, then the stream (step 6, step 7) - app/panel/account.py profile_save_convo: stores only the new messages (step 10) - app/panel/account.py profile_convos: list and changes since ?since= (step 11) - app/panel/profiles.py append_convo: appends under a lock (step 10) - app/panel/profiles.py _clean_convo: checks and trims a conversation; a description of the screen (bedienen.look) is stored only as a note (step 10) - app/panel/verlauf.py stream: instant sync per open page (step 11) - app/panel/sse.py Hub.stream: one stream per page: queue, keep-alive, cleanup (step 11) - app/panel/verlauf.py begin: „answering“ for the other pages (ste"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "In the code",
+"title": "In the code",
+"text": "p 6, step 11)"
 },
 {
 "lang": "en",
@@ -14541,7 +14565,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/admin.py test_asr: rate limit and places for guests (step 1) - app/panel/admin.py _test_asr: the way in the panel: read, check alongside, pass on (step 2, step 4) - app/panel/stufe.py asr_level: the profile's stage, not at a shared speaker (step 4) - app/common.py BodyLimit: size and key before reading (step 5) - app/common.py PrioGate: waiting by priority (step 7) - app/common.py audio_rate_ok: sample rate from the file header (step 8) - app/asr_proxy.py transcriptions: the proxy in front of the engine (step 4) - app/asr_proxy.py engine_status: ready, loading, error or off (step 6) - app/parakeet.py Recognizer: Parakeet on the CPU (step 9) - app/panel/stille.py check: silence and fillers (step 10) - app/panel/echo.py check: the Spark's own voice (step 10) - app/panel/speakers.py identify: whose voice, only on a clear match (step 11)"
+"text": "- app/panel/admin.py test_asr: rate limit and places for guests; for a paused answer the decision from zwischenruf.py (step 1) - app/panel/admin.py _test_asr: the way in the panel: read, check alongside, pass on (step 2, step 4) - app/panel/stufe.py asr_level: the profile's stage, not at a shared speaker (step 4) - app/common.py BodyLimit: size and key before reading (step 5) - app/common.py PrioGate: waiting by priority (step 7) - app/common.py audio_rate_ok: sample rate from the file header (step 8) - app/asr_proxy.py transcriptions: the proxy in front of the engine (step 4) - app/asr_proxy.py engine_status: ready, loading, error or off (step 6) - app/parakeet.py Recognizer: Parakeet on the CPU (step 9) - app/panel/stille.py check: silence and fillers (step 10) - app/panel/echo.py check: the Spark's own voice (step 10) - app/panel/speakers.py identify: whose voice, only on a clear match (step 11)"
 },
 {
 "lang": "en",
@@ -18365,7 +18389,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Barge-in",
-"text": "Barge-in: while the assistant speaks, the microphone keeps listening. Talking for about a quarter of a second interrupts the answer, and what you said becomes the next question. This relies on the browser's echo cancellation; if the assistant interrupts itself on loud speakers, use headphones or untick \"barge in\" below the chat."
+"text": "Barge-in: while the assistant speaks, the microphone keeps listening. Talking for about a quarter of a second interrupts the answer, and what you said becomes the next question. This relies on the browser's echo cancellation; if the assistant interrupts itself on loud speakers, use headphones or untick \"barge in\" below the chat. With \"Barge-in: pause first\" (see below) the answer only pauses, and a \"mhm\" lets it play on."
 },
 {
 "lang": "en",
@@ -19469,7 +19493,7 @@
 "file": "Assistant and panel",
 "head": "The panel",
 "title": "The panel",
-"text": "t is the profile's voice or clearly another household profile's, and also when it is too short to compare (\"And tomorrow?\"), so no real follow-up is lost. Otherwise it is a foreign voice: no text, no question, the browser shows \"Ignored a voice that is not yours, for example from the TV.\" (2) Without a voiceprint the page learns the room level while the answer plays, in the moments the Spark itself is quiet (TV, radio, other people). Only a voice clearly louder than that level can interrupt (3.5, 2.5 or 2 times, depending on the sensitivity), and the follow-up and hands-free window start only above twice that level. Someone talking to the device is louder than a TV in the room. The log only says chat: ignored (foreign voice, barge-in) from web | match 0.48 of 0.75 needed, … or chat: open microphone voice checked … | known voice, Live shows \"Fremde Stimme überhört\", never text or name. The iPhone app (from the next TestFlight build) says the same when it listens again hands-free after an answer (hands) or someone talks over it (barge); for a foreign voice it shows \"Nichts gehört, Mikrofon aus.\" - Ignore my own voice (admin: Features → Ignore my own voice, off by default, with \"What "
+"text": "t is the profile's voice or clearly another household profile's, and also when it is too short to compare (\"And tomorrow?\"), so no real follow-up is lost. Otherwise it is a foreign voice: no text, no question, the browser shows \"Ignored a voice that is not yours, for example from the TV.\" (2) Without a voiceprint the page learns the room level while the answer plays, in the moments the Spark itself is quiet (TV, radio, other people). Only a voice clearly louder than that level can interrupt (3.5, 2.5 or 2 times, depending on the sensitivity), and the follow-up and hands-free window start only above twice that level. Someone talking to the device is louder than a TV in the room. The log only says chat: ignored (foreign voice, barge-in) from web | match 0.48 of 0.75 needed, … or chat: open microphone voice checked … | known voice, Live shows \"Fremde Stimme überhört\", never text or name. The iPhone app (from the next TestFlight build) says the same when it listens again hands-free after an answer (hands) or someone talks over it (barge); for a foreign voice it shows \"Nichts gehört, Mikrofon aus.\" - Barge-in: pause first (admin: Features → Barge-in: pause first, off by default; zwische"
 },
 {
 "lang": "en",
@@ -19477,7 +19501,7 @@
 "file": "Assistant and panel",
 "head": "The panel",
 "title": "The panel",
-"text": "it ignores\" below; profile: Me → Conversation, on once the admin allows it): every device only filters its own echo. When the speaker answers and the iPhone or a browser next to it listens, the Spark voice used to arrive there as a new question. The Spark now remembers in memory for 60 seconds what it said on which device (at most 20 pieces, never on disk). A profile's recording whose word pairs come at least 60 % from those sentences counts as silence (browser: \"Ignored my own voice.\", iPhone: \"Nichts verstanden.\", speaker: diagnosis \"Eigene Stimme überhört\"). With \"also everything while another device is speaking\" (recommended), a recording that falls at least 70 % into the time another device of the same profile is speaking (plus 1 second) does not count either; the speaking device itself is never held back, so \"Stopp\" still works there. Sentences under three words (\"Ja\", \"Stopp\") and sentences starting with \"Spark\", \"Jarvis\" or \"Computer\" always count. Only for signed-in profiles (login, iPhone app, speaker), never for guests, so nobody can test what the Spark just said to someone else. The log shows only chat: ignored (own voice) or (speaking pause), never the text. Home Assis"
+"text": "nruf.py, idea from sonia-assistant, plan \"Ins Wort fallen und Satzende am Tonfall\"): without it a quarter of a second of voice over the answer cuts it off, a cough or a \"mhm\" too. With it the browser and the Android app only pause the answer: the speech output fades out in 15 ms and stops, the language model keeps writing behind, and the recording goes to /api/test/asr as before (opened=barge) with hold=1 (and asked=1 when the answer so far ends on a question). The panel decides with fixed words, never the model, and answers with barge: weiter (nothing heard, the own voice, a foreign voice, silence, or only listening words such as \"mhm\", \"ja\", \"okay\", \"genau\", \"ach so\", \"alles klar\", \"yeah\", \"I see\"): the answer plays on where it stopped. stopp (only stop words such as \"Stopp\", \"Halt\", \"Ruhe\", \"Sei still\", \"Das reicht\", \"stop\", \"be quiet\", also after \"okay\" or \"Spark\"): the answer ends, what was spoken stays. frage (anything else, more than four words always): the answer ends, what was spoken stays, the sentence is the new question; after an answer that ended on a question even \"ja\" counts as an answer. Without a decision 4 seconds after the recording ended (recognition down or slo"
 },
 {
 "lang": "en",
@@ -19606,6 +19630,14 @@
 "head": "All functions",
 "title": "All functions",
 "text": "- Ignore my own voice (Features → Conversation → \"Ignore my own voice\"; Me → Conversation): Every device only filters its own echo."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "All functions",
+"title": "All functions",
+"text": "- Barge-in: pause first (Features → Conversation → \"Barge-in: pause first\"; Me → Conversation): Without this switch a quarter of a second of voice ends the answer, a cough or a \"mhm\" too."
 },
 {
 "lang": "en",

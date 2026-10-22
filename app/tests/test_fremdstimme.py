@@ -184,10 +184,10 @@ class Browser(unittest.TestCase):
         js = self.js
         self.assertIn("rec.opened=o.opened||(o.speaking?'barge':o.follow?'follow':'');", js)
         self.assertIn("if(opened)fd.append('opened',opened);", js)
-        self.assertIn("asrText(blob,opened)", js)
+        self.assertIn("asrText(blob,opened,h)", js)
         self.assertIn("rec.opened)", js[js.index("function liveSnap("):])
         self.assertEqual(js.count("startListening({opened:'hands'})"), 2)
-        self.assertIn("startListening({rec,parts,floor,speaking:true})", js)     # barge-in
+        self.assertIn("startListening({rec,parts,floor,speaking:true,held:", js)     # barge-in (paused or ended, zwischenruf.py)
         # the tap and "Hey Spark" stay unmarked
         self.assertIn("if(chat.rec)stopListening(false);else startListening()};", js)
         self.assertIn("chime();wake.busy=false;startListening()", js)

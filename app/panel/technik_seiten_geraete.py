@@ -4,10 +4,10 @@ from technik_seiten import S
 
 SEITEN = {
     "geraet": {
-        "stand": "77d607bade",
+        "stand": "debfc1b9e3",
         "bezug": {
             "account.CONVO_BODY": ["s10"], "admin.test_asr": ["s4"], "admin._test_asr": ["s4", "s5"],
-            "admin.read_audio": ["s4"], "chat.chat": ["s6", "s7"], "account.profile_save_convo": ["s10"],
+            "admin.read_audio": ["s4"], "zwischenruf.decide": ["s5"], "chat.chat": ["s6", "s7"], "account.profile_save_convo": ["s10"],
             "account.profile_convos": ["s11"], "profiles.append_convo": ["s10"], "profiles._clean_convo": ["s10"],
             "verlauf.stream": ["s11"], "sse.Hub.stream": ["s11"], "verlauf.begin": ["s6", "s11"],
             "regeln": ["s6", "s10"],
@@ -68,10 +68,16 @@ SEITEN = {
               ("stille · echo · fremdstimme", "stille · echo · fremdstimme"),
               ("Feste Regeln, kein Modell: ein „Ja“ aus Stille oder einem Klick (stille.check), die eigene Stimme des "
                "Spark von einem anderen Gerät (echo.check) und bei selbst geöffnetem Mikrofon eine fremde Stimme, etwa "
-               "vom Fernseher (fremdstimme.check), sind keine Frage. Die Antwort ist dann leerer Text mit dem Grund.",
+               "vom Fernseher (fremdstimme.check), sind keine Frage. Die Antwort ist dann leerer Text mit dem Grund. Hat "
+               "die Seite die Antwort fürs Ins-Wort-Fallen nur angehalten (hold), sagt zwischenruf.decide mit festen "
+               "Wörtern dazu: weiter (nichts, Überhörtes, „mhm“), stopp („Stopp“) oder frage (alles andere); ohne "
+               "Entscheidung nach {zwischenruf.HOLD_MAX} s spielt die Seite weiter.",
                "Fixed rules, no model: a „yes“ out of silence or a click (stille.check), the Spark's own voice from "
                "another device (echo.check) and, with a microphone the page opened itself, a foreign voice like the TV "
-               "(fremdstimme.check) are no question. The answer is then empty text with the reason."),
+               "(fremdstimme.check) are no question. The answer is then empty text with the reason. When the page only "
+               "paused the answer for a barge-in (hold), zwischenruf.decide adds with fixed words: on (nothing, ignored, "
+               "„mhm“), stop („stop“) or question (anything else); without a decision after {zwischenruf.HOLD_MAX} s the "
+               "page plays on."),
               ("stop", "ja", ("Überhört, nichts gesendet", "Ignored, nothing sent"))),
             S("s6", "schritt", ("Frage an /api/chat", "Question to /api/chat"),
               ("Verlauf, Gespräch, Stimme, Stimm-Token", "history, conversation, voice, voice token"),
@@ -165,6 +171,8 @@ SEITEN = {
             ("{account.CONVO_BODY|mb}", ("größtes Gespräch beim Speichern", "largest conversation when storing"), "account.CONVO_BODY"),
             ("{verlauf.MAX_STREAMS}", ("offene Seiten mit Sofort-Abgleich pro Profil", "open pages with instant sync per profile"),
              "verlauf.MAX_STREAMS"),
+            ("{zwischenruf.HOLD_MAX} s", ("so lange wartet eine angehaltene Antwort auf die Entscheidung",
+                                         "how long a paused answer waits for the decision"), "zwischenruf.HOLD_MAX"),
         ],
         "einstellen": [
             ("Ich → Gespräch: die Gesprächs-Einstellungen des Profils, etwa Freihändig und Unterbrechen.",
@@ -185,6 +193,8 @@ SEITEN = {
             ("admin.read_audio", ("liest die Aufnahme mit Größengrenze", "reads the recording with a size limit")),
             ("stille.check", ("Stille wird nie zu Worten", "silence never becomes words")),
             ("echo.check", ("die eigene Stimme des Spark ist keine Frage", "the Spark's own voice is no question")),
+            ("zwischenruf.decide", ("angehaltene Antwort: weiter, stopp oder neue Frage nach festen Wörtern",
+                                    "paused answer: on, stop or new question by fixed words")),
             ("chat.chat", ("Grenzen, Vorrang, „antwortet gerade“, dann der Strom", "limits, priority, „answering“, then the stream")),
             ("account.profile_save_convo", ("speichert nur die neuen Nachrichten", "stores only the new messages")),
             ("account.profile_convos", ("Liste und Änderungen seit ?since=", "list and changes since ?since=")),

@@ -169,6 +169,7 @@
     "klaeren_merken": true,
     "follow_up": true,
     "no_self_echo": false,
+    "barge_hold": false,
     "images": false,
     "doc_pictures": false,
     "doc_semantic": false,

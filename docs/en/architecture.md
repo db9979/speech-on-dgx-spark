@@ -211,6 +211,7 @@ Prepares a request, asks the language model in rounds and checks what is said.
 | `app/panel/taten.py` | Handlungs-Prüfung: what the Spark did in this answer, and whether a sentence claims a deed that no tool did. |
 | `app/panel/tipps.py` | Funktionen vorschlagen: the assistant points out a function that is not on yet when it would help, and helps setting it up. |
 | `app/panel/vorab.py` | Vorab holen bei Rückfrage. |
+| `app/panel/zwischenruf.py` | Ins Wort fallen: erst anhalten, dann entscheiden (admin chat.barge_hold, off by default). |
 
 ### Switch and tool names
 
@@ -794,7 +795,7 @@ flowchart TD
 2. <a id="kn-geraet-s2"></a>**Secure connection?**: Browsers only hand out the microphone on a secure page. Without https the page shows a note with the panel's https address and records nothing.
 3. <a id="kn-geraet-s3"></a>**Record, find the end of the sentence**: MediaRecorder records, a level meter listens for silence. About every second the recording so far goes to speech recognition and shows as a pale bubble. If the sentence ends with a full stop, question or exclamation mark, the question is done at once; if it ends on „and“, „because“, „uhm“ or a comma, the page waits a little longer.
 4. <a id="kn-geraet-s4"></a>**Sound to /api/test/asr**: The page turns the recording into a plain mono WAV (else the original goes). The Spark checks the rate limit (240 per minute for a profile, guests at most 3 at once), reads at most 50 MB and sends the sound to speech recognition. Alongside it measures on the CPU how much of it is voice and whose voice it is.
-5. <a id="kn-geraet-s5"></a>**Silence, own or foreign voice?**: Fixed rules, no model: a „yes“ out of silence or a click (stille.check), the Spark's own voice from another device (echo.check) and, with a microphone the page opened itself, a foreign voice like the TV (fremdstimme.check) are no question. The answer is then empty text with the reason.
+5. <a id="kn-geraet-s5"></a>**Silence, own or foreign voice?**: Fixed rules, no model: a „yes“ out of silence or a click (stille.check), the Spark's own voice from another device (echo.check) and, with a microphone the page opened itself, a foreign voice like the TV (fremdstimme.check) are no question. The answer is then empty text with the reason. When the page only paused the answer for a barge-in (hold), zwischenruf.decide adds with fixed words: on (nothing, ignored, „mhm“), stop („stop“) or question (anything else); without a decision after 4 s the page plays on.
 6. <a id="kn-geraet-s6"></a>**Question to /api/chat**: The page sends the last messages of the open conversation, its id, voice, speed and, when the voice was recognized, a signed one-time token. The Spark checks the rate limit (120 per minute for a profile, guests at most 4 at once), lets background work wait (vorrang) and tells the profile's other open pages „answering“ (only the kind of device).
 7. <a id="kn-geraet-s7"></a>**Text and sound in one stream**: The answer comes as events: pieces of text, pieces of sound, search, sources, questions back, errors. The text is redrawn at most once per frame. The sound plays in its own audio context at the speech output's rate; every piece ends with a short fade so the seams do not click.
 8. <a id="kn-geraet-s8"></a>**Someone talking over it?**: While the answer plays, the microphone keeps listening. If the level stays clearly above the own output and the room (TV) for a moment, the answer stops and the recording already running becomes the next question.
@@ -822,6 +823,7 @@ Applies at: [step 6](#kn-geraet-s6), [step 10](#kn-geraet-s10)
 - **50** conversations per profile ([step 10](#kn-geraet-s10))
 - **4 MB** largest conversation when storing ([step 10](#kn-geraet-s10))
 - **8** open pages with instant sync per profile ([step 11](#kn-geraet-s11))
+- **4 s** how long a paused answer waits for the decision ([step 5](#kn-geraet-s5))
 
 #### Settings
 
@@ -841,6 +843,7 @@ Applies at: [step 6](#kn-geraet-s6), [step 10](#kn-geraet-s10)
 - `app/panel/admin.py` `read_audio`: reads the recording with a size limit ([step 4](#kn-geraet-s4))
 - `app/panel/stille.py` `check`: silence never becomes words ([step 5](#kn-geraet-s5))
 - `app/panel/echo.py` `check`: the Spark's own voice is no question ([step 5](#kn-geraet-s5))
+- `app/panel/zwischenruf.py` `decide`: paused answer: on, stop or new question by fixed words ([step 5](#kn-geraet-s5))
 - `app/panel/chat.py` `chat`: limits, priority, „answering“, then the stream ([step 6](#kn-geraet-s6), [step 7](#kn-geraet-s7))
 - `app/panel/account.py` `profile_save_convo`: stores only the new messages ([step 10](#kn-geraet-s10))
 - `app/panel/account.py` `profile_convos`: list and changes since ?since= ([step 11](#kn-geraet-s11))
@@ -2750,7 +2753,7 @@ flowchart TD
 
 #### In the code
 
-- `app/panel/admin.py` `test_asr`: rate limit and places for guests ([step 1](#kn-asr-s1))
+- `app/panel/admin.py` `test_asr`: rate limit and places for guests; for a paused answer the decision from zwischenruf.py ([step 1](#kn-asr-s1))
 - `app/panel/admin.py` `_test_asr`: the way in the panel: read, check alongside, pass on ([step 2](#kn-asr-s2), [step 4](#kn-asr-s4))
 - `app/panel/stufe.py` `asr_level`: the profile's stage, not at a shared speaker ([step 4](#kn-asr-s4))
 - `app/common.py` `BodyLimit`: size and key before reading ([step 5](#kn-asr-s5))

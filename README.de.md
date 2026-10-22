@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.942** Ins Wort fallen: erst anhalten (Schalter, aus): ein „mhm“, Husten oder die eigene Stimme hält die Antwort nur an und sie läuft weiter, „Stopp“ beendet sie, ein echter Satz wird die neue Frage; feste Wörter im Panel, nie das Modell; Browser und Android, iPhone folgt
 - **V01.0.941** Krisenspiel: Anleitung springt, QR-Codes ganz sichtbar, Ausschalten trennt die Konsole
 - **V01.0.940** IT-Krisenspiel (Paket 7): eigene Seite in der iPhone-App (Meine Sachen → Krisenspiel) mit Zügen, Konsole und Nachbesprechung
 - **V01.0.939** IT-Krisenspiel (Paket 6): Tages- und Wochen-Herausforderung mit Bestenliste (ohne Namen, mit Namen oder gar nicht) und Mutatoren mit Bonuspunkten
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.935** IT-Krisenspiel (Paket 11): gemeinsam spielen per Einladungslink mit Rollen Technik, Kommunikation und Leitung; Konsole mit Tab für Dateien, nano, vi und vim und Knopf „Groß“
 - **V01.0.934** IT-Krisenspiel: Modus „Uhr läuft“ (10 s = 1 Spielminute, nur bei offener Seite, Pause in Übung und Normal, +5 und Erfolg „Gegen die Uhr“) und Reiter „Anleitung“ mit Schnellstart, Regeln, Konsole, allen Befehlen, Szenarien, Erfolgen und Tipps aus dem Code
 - **V01.0.933** IT-Krisenspiel (Paket 2): Konsole unter der Chronik, getippte Züge wie Knöpfe, Modus „Nur Konsole“ (+5), 🎲 Überraschungs-Szenario, Aufgeben ohne Erfolge; rund 150 Linux-Befehle auf simulierten Rechnern mit sudo, Dateien, Benutzern, Diensten und Firewall, Hilfe mit -h und „Meintest du …?“; nichts läuft wirklich
-- **V01.0.932** IT-Krisenspiel (Paket 1): eigene Seite „Krisenspiel“ mit fünf Szenarien (Ransomware, SAN, Strom, BGP, BSI), Krisen-Dashboard, Inspector, Noten und Erfolgen; das Panel entscheidet mit festen Regeln und Seed, der Erzähler (eigener Schalter) erzählt nur nach; beide Schalter aus
 
 
 

@@ -107,6 +107,7 @@ MODULE = {
     "stille": ("gespraech", "Aus Stille werden nie Wörter"),
     "fremdstimme": ("gespraech", "Fernseher und fremde Stimmen im von selbst geöffneten Mikrofon werden keine Frage"),
     "echo": ("gespraech", "Der Assistent antwortet nicht auf seine eigene Stimme"),
+    "zwischenruf": ("gespraech", "Ins Wort fallen: die Antwort hält an, feste Wörter entscheiden weiter, stopp oder neue Frage"),
     "images": ("gespraech", "Bilder in der Frage: das Sprachmodell sieht sie selbst"),
     "schreib": ("gespraech", "Schreibhilfe: korrigieren, kürzen, übersetzen, entwerfen"),
     "systemone": ("gespraech", "Einordnung mit Wahrscheinlichkeit über das Sprachmodell (LLM-Tor oder qwen38)"),

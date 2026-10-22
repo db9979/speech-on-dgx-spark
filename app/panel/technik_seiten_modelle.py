@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "asr": {
-        "stand": "eebec4cf9f",
+        "stand": "50784a52ab",
         "bezug": {
             "parakeet.MAX_AUDIO_S": ["s9"], "common.NOTASR_PORT": ["s9"], "common.NOTASR_IDLE": ["s9"], "admin.test_asr": ["s1"], "admin._test_asr": ["s2", "s4"],
             "common.BodyLimit": ["s5"], "common.PrioGate": ["s7"], "common.audio_rate_ok": ["s8"],
@@ -170,7 +170,8 @@ SEITEN = {
              "Status → Logs → Requests: how long a recording waited and how many it overtook."),
         ],
         "code": [
-            ("admin.test_asr", ("Ratenlimit und Plätze für Gäste", "rate limit and places for guests")),
+            ("admin.test_asr", ("Ratenlimit und Plätze für Gäste; bei angehaltener Antwort die Entscheidung aus zwischenruf.py",
+                                "rate limit and places for guests; for a paused answer the decision from zwischenruf.py")),
             ("admin._test_asr", ("der Weg im Panel: lesen, nebenbei prüfen, weiterreichen", "the way in the panel: read, check alongside, pass on")),
             ("stufe.asr_level", ("Stufe des Profils, nicht am geteilten Lautsprecher", "the profile's stage, not at a shared speaker")),
             ("common.BodyLimit", ("Größe und Schlüssel vor dem Lesen", "size and key before reading")),
