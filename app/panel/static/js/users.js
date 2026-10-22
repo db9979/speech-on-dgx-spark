@@ -111,7 +111,6 @@ async function profDetail(id,keep){keep=keep||(window.lzKeep&&$('pdetail')?lzKee
       u.mfa?pbtn('pmfa',t('Zurücksetzen','Reset')):`<span class="mut">${t('aus','off')}</span>`)}
     ${role}
     <b>${t('Angemeldete Browser','Signed-in browsers')}</b><ul class="facts" id="psess">${sess}</ul>${trust?`<b>${t('Vertraute Browser','Trusted browsers')}</b><ul class="facts" id="ptrust">${trust}</ul>`:''}
-    ${setRow(esc(t('Nur Krisenspiel','Crisis game only')),esc(t('Das Profil sieht nach der Anmeldung nur das Krisenspiel: kein Assistent, kein Werkzeug, kein Gerät. Nie mit Admin-Rolle.','After signing in the profile sees only the crisis game: no assistant, no tool, no device. Never with an admin role.')),`<label class="chk"><input type="checkbox" id="pspiel"${u.nur_spiel?' checked':''}${u.role?' disabled':''}> ${t('an','on')}</label>`)}
     ${h3(t('Rufname','Call name'))}
     <div class="rowin"><input id="pcall" maxlength="40" value="${esc(u.call||'')}" placeholder="${esc(t('z. B. Thomas M. oder Papa','e.g. Thomas M. or Dad'))}" aria-label="${esc(t('Rufname für Nachrichten','Call name for messages'))}"><button class="b" type="button" id="pcallsave">${t('Speichern','Save')}</button></div>
     <div class="fh">${t('So können andere ihn in Nachrichten nennen, wenn Namen sich ähneln. Muss eindeutig sein.','How others can name this profile in messages when names are alike. Must be unique.')}</div>
@@ -127,8 +126,6 @@ async function profDetail(id,keep){keep=keep||(window.lzKeep&&$('pdetail')?lzKee
   $('ppinlink').onclick=()=>joinPinLink(id,u.name,$('ppinout'));
   if($('premind'))$('premind').onclick=async()=>{try{const r=await (await api('/api/admin/profiles/'+encodeURIComponent(id)+'/remind',jpost('POST',{}))).json();
     ok(r.sent?t('Erinnerung geschickt.','Reminder sent.'):t('Keine Mitteilung möglich: das Profil hat noch kein Gerät mit Mitteilungen.','No notification possible: the profile has no device with notifications yet.'))}catch(e){perr('pmsg',e)}};
-  $('pspiel').onchange=async()=>{try{await api('/api/admin/profiles/'+encodeURIComponent(id)+'/nurspiel',jpost('PUT',{on:$('pspiel').checked}));
-    ok($('pspiel').checked?t('Nur noch Krisenspiel.','Crisis game only now.'):t('Wieder ein normales Profil.','A normal profile again.'));loadProf()}catch(e){perr('pmsg',e)}again()};
   $('pcallsave').onclick=async()=>{try{const r=await (await api('/api/admin/profiles/'+encodeURIComponent(id)+'/call',jpost('PUT',{call:$('pcall').value}))).json();
     ok(r.call?t('Rufname gespeichert: ','Call name saved: ')+r.call:t('Rufname entfernt.','Call name removed.'));loadProf()}catch(e){perr('pmsg',e)}};
   if($('pmfa'))$('pmfa').onclick=()=>resetMfa(id,u.name);$('ppinnew').onclick=()=>newPin(id,u.name);$('pdel').onclick=()=>delProf(id,u.name);
@@ -146,7 +143,7 @@ async function profDetail(id,keep){keep=keep||(window.lzKeep&&$('pdetail')?lzKee
   $('pquotasave').onclick=async()=>{const v=$('pquota').value.trim();
     try{await api('/api/admin/wissen/quota',jpost('POST',{owner:id,mb:v===''?null:Number(v)}));ok(t('Gespeichert.','Saved.'))}catch(e){perr('pmsg',e)}again()}}
 const jpost=(m,b)=>({method:m,headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});
-$('padd').onclick=async()=>{try{await api('/api/admin/profiles',jpost('POST',{name:$('pname').value,pin:$('ppin').value,nur_spiel:$('pspielnew').checked}));$('pspielnew').checked=false;
+$('padd').onclick=async()=>{try{await api('/api/admin/profiles',jpost('POST',{name:$('pname').value,pin:$('ppin').value}));
     $('pmsg').textContent=t('Angelegt: ','Created: ')+$('pname').value;$('pname').value=$('ppin').value='';$('pnew').open=false;loadProf()}catch(e){perr('pmsg',e)}};
 // a new PIN in hidden fields, typed twice, with its rule, never in a browser prompt in plain text (code check 19.10. D10)
 window.newPin=(id,n)=>{const old=$('pinbox');if(old)old.remove();const box=document.createElement('div');box.id='pinbox';box.className='card pinbox';

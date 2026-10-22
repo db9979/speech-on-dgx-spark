@@ -7,7 +7,7 @@ import android.net.Uri
  * jumps there itself (way.js). Same rule as wege.py on the Spark. Only navigation inside the own panel.
  */
 object Wege {
-    private const val ROOTS = "Einstellungen|Funktionen|Zustand|Personen und Geräte|Ich|Settings|Features|Status|People and devices|Me|Kalender|Calendar|E-Mail|E-mail|Kontakte|Contacts|Wissensbuch|Knowledge book|Krisenspiel|Crisis game"
+    private const val ROOTS = "Einstellungen|Funktionen|Zustand|Personen und Geräte|Ich|Settings|Features|Status|People and devices|Me|Kalender|Calendar|E-Mail|E-mail|Kontakte|Contacts|Wissensbuch|Knowledge book"
     private val WAY = Regex("(?<![\\w-])(?<!Mein )(?<!My )(?<!→ )(?:$ROOTS)\\s*→[^\\n.;:()!?]{1,160}")
 
     /** The first way in a text, or null. */

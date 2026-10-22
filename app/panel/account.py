@@ -97,7 +97,7 @@ WHO = {"documents": "documents", "reminders": "reminders", "speaker_id": "speake
        "android": "android", "android_live": "androidlive", "android_update": "androidupdate", "android_assist": "androidassist", "android_lock": "androidlock", "mcp_server": "mcpserver", "my_mcp": "mymcp", "write_help": "schreib", "write_apps": "schreibapps", "desk": "begleiter", "desk_act": "begleitertun", "desk_meeting": "begleitermeeting", "desk_view": "begleiterschirm", "desk_operate": "begleiterbedienen",
        "remarkable": "remarkable", "remarkable_send": "rmsend", "remarkable_fresh": "rmfresh", "remarkable_plus": "rmguide", "remarkable_paper": "rmpapier", "remarkable_tasks": "rmaufgaben", "my_status": "mystatus", "usage_count": "verbrauch", "person_priority": "vorrang",
        "ha_live": "halive", "ha_loud": "haloud", "ha_events": "haevent", "ha_voice_rules": "havoice", "ha_camera": "hacam",
-       "systemone_mail": "mailwichtig", "report": "melden", "doc_make": "erstellen", "bilder": "bilder", "bilder_aendern": "bildaendern", "musik": "musik", "musik_bearbeiten": "musikbearbeiten", "krisenspiel": "krisenspiel", "krisenspiel_erzaehler": "krisenerzaehler", "krisenspiel_team": "krisenteam", "storage": "speicher", "nas": "nas", "nasquelle": "nasquelle", "nas_drop": "nasablage", "nas_status": "naszustand", "nas_shared": "nashaushalt",
+       "systemone_mail": "mailwichtig", "report": "melden", "doc_make": "erstellen", "bilder": "bilder", "bilder_aendern": "bildaendern", "musik": "musik", "musik_bearbeiten": "musikbearbeiten", "storage": "speicher", "nas": "nas", "nasquelle": "nasquelle", "nas_drop": "nasablage", "nas_status": "naszustand", "nas_shared": "nashaushalt",
        "chats": "chats", "chats_groups": "chatgroups", "chats_media": "chatmedia", "chats_invite": "chatinvite", "chats_private": "chatprivate", "chats_verbund": "verbund", "verbund_media": "verbundmedia", "verbund_groups": "verbundgruppen",
        "chats_calls": "anrufe", "calls_turn": "anrufeturn", "telefon": "telefon", "saetze": "tippssaetze"}
 
@@ -156,8 +156,6 @@ def whoami(request: Request, creds: HTTPBasicCredentials | None = Depends(securi
             # the login form's "trust this browser" (days) and a right code that still counts (core.CONFIRM_WINDOW)
             "trust_days": mfa.trust_days(), "confirm_until": confirmed_until(request),
             "profile": prof,
-            # Spielprofil „Nur Krisenspiel“ (nurspiel.py): the page shows the game and nothing else
-            "nur_spiel": bool(prof and profiles.nur_spiel(prof["id"])),
             # which pages the panel shows: the Spark's switches from features.py (one place for "on")
             # a function the admin blocked for this profile (Personen und Geräte → Gesperrte Funktionen) shows no page either
             **{name: features.admin_on(key, chat) and not (prof and features.blocked(key, prof["id"], chat))

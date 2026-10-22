@@ -178,8 +178,6 @@ TARGETS = {
     "wbuch": ("Wissensbuch", "Seiten aus den eigenen Dokumenten · auf dem Spark", "spark", False),
     # Wissenskarte (wissenskarte.py): shown while it is on, checked connections, discarded ones and documents waiting (numbers only)
     "wkarte": ("Wissenskarte", "Verbindungen zwischen Wissensbuch-Seiten · auf dem Spark", "spark", False),
-    # IT-Krisenspiel (krisenspiel.py): shown while it is on, running games, moves and narrations today (numbers only)
-    "spiel": ("Krisenspiel", "IT-Krisenspiel für einzelne Profile · auf dem Spark", "spark", False),
     # Teilen mit Profilen (geteilt.py): shown while it is on, single shares and today's changes (numbers only)
     "geteilt": ("Geteilt", "Teilen mit Profilen · auf dem Spark", "spark", False),
     # Den Spark anrufen (telefon.py): the PBX in the home network; signed in, calls now and today in numbers, never a number
@@ -1325,15 +1323,6 @@ def snapshot(view="admin", now=None):
     if wkk.get("on"):
         used.add("wkarte")
     try:
-        import krisenspiel
-        ksp = krisenspiel.for_live()
-        import krisenteam
-        ksp["team"] = krisenteam.for_live()
-    except Exception:
-        ksp = {"on": False}
-    if ksp.get("on"):
-        used.add("spiel")
-    try:
         import geteilt
         tei = geteilt.for_live()
     except Exception:
@@ -1723,20 +1712,6 @@ def snapshot(view="admin", now=None):
                         + (f" · {wbk['widerspruch']} Widersprüche" if wbk.get("widerspruch") else "")
                         + (f" · {wbk['veraltet']} veraltet?" if wbk.get("veraltet") else "")
                         + (" · arbeitet" if wbk.get("running") else ""))
-        if x["id"] == "spiel":     # Krisenspiel: running games, moves, narrations and console lines today, profiles, numbers only (never a scenario of a person)
-            x["sub"] = (f"{ksp.get('laufend', 0)} laufende Spiele · heute {ksp.get('zuege', 0)} Züge, {ksp.get('spiele', 0)} neue Spiele"
-                        + (f" · {ksp.get('erzaehlt', 0)} erzählt, {ksp.get('verworfen', 0)} verworfen" if ksp.get("erzaehlt") or ksp.get("verworfen") else "")
-                        + (f" · {ksp.get('konsole', 0)} Konsolen-Zeilen" if ksp.get("konsole") else "")
-                        + (f" · {ksp['delegiert']} ans Team gegeben" if ksp.get("delegiert") else "")
-                        + (f" · {ksp['heraus']} Herausforderungen" if ksp.get("heraus") else "")
-                        + (f" · {ksp['kampagnen_laufend']} laufende Kampagnen" if ksp.get("kampagnen_laufend") else "")
-                        + (f" · {ksp['kampagnen']} Kampagnen begonnen" if ksp.get("kampagnen") else "")
-                        + (f" · {ksp['uhr']} mit laufender Uhr" if ksp.get("uhr") else "")
-                        + (f" · gemeinsam {ksp['team']['plaetze']} Plätze, {ksp['team']['online']} da, heute {ksp['team']['zuege']} Team-Züge"
-                           + (f", {ksp['team']['abgelehnt']} abgelehnt" if ksp['team']['abgelehnt'] else "")
-                           if (ksp.get("team") or {}).get("on") else "")
-                        + f" · {ksp.get('profile', 0)} Profile"
-                        + (f", davon {ksp['nur_spiel']} nur Spiel" if ksp.get("nur_spiel") else ""))
         if x["id"] == "wkarte":    # Wissenskarte: connections, discarded, documents waiting, profiles, numbers only (never a title)
             x["sub"] = (f"{wkk.get('verbindungen', 0)} Verbindungen · {wkk.get('punkte', 0)} Punkte · {wkk.get('warten', 0)} Dokumente warten"
                         + f" · {wkk.get('profile', 0)} Profile"

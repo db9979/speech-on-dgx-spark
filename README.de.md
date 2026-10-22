@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.947** IT-Krisenspiel wieder entfernt (auf Wunsch): Spiel, Netzduell und Spielprofile „Nur Krisenspiel“
 - **V01.0.946** Satzende am Tonfall (Schalter, aus): Smart Turn auf dem Modell-Rechner misst an jeder Sprechpause, ob du fertig klingst; nur Zahlen, entscheidet noch nichts, Auswertung nach 200 Pausen oder 7 Tagen unter dem Schalter
 - **V01.0.945** Spielprofile „Nur Krisenspiel“: Mitspieler ohne Assistent
 - **V01.0.944** Ins Wort fallen: erst anhalten auch in der iPhone-App: ein „mhm“ pausiert die Antwort nur, „Stopp“ beendet sie, ein Satz wird die neue Frage; ohne Entscheidung nach 4 s läuft sie weiter
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.940** IT-Krisenspiel (Paket 7): eigene Seite in der iPhone-App (Meine Sachen → Krisenspiel) mit Zügen, Konsole und Nachbesprechung
 - **V01.0.939** IT-Krisenspiel (Paket 6): Tages- und Wochen-Herausforderung mit Bestenliste (ohne Namen, mit Namen oder gar nicht) und Mutatoren mit Bonuspunkten
 - **V01.0.938** IT-Krisenspiel (Paket 4): sieben neue Szenarien (DDoS, Datenleck mit DSGVO-Frist, Innentäter, Cloud-Ausfall, vergiftetes Update, Chef-Betrug, gelöschte Datenbank) mit eigener Konsole
-- **V01.0.937** IT-Krisenspiel (Paket 5): Nachbesprechung mit Quellen (NIST, BSI, DSGVO), Lernmodus mit Tipp, Geist des besten Laufs, Statistik je Szenario
 
 
 

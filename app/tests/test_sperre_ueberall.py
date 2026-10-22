@@ -297,8 +297,6 @@ class OwnData(Base):
 ADMIN_ON_OK = {
     "zustellung.py:for_live": "Spark-wide numbers for Zustand → Live; each note asks features.allowed notedevice (zustellung.pick)",
     "listendav.py:for_live": "Zustand → Live: Spark-wide flag beside a number; each profile's lists ask features.allowed listdav",
-    "krisenteam.py:for_live": "Zustand → Live: Spark-wide flag beside a number; each seat asks features.allowed krisenteam for its owner",
-    "krisenteam.py:_door": "a seat has no profile: Spark-wide door before the code is known; find() then asks features.allowed krisenteam for the owner",
     "mitschreiblink.py:for_live": "Zustand → Live: Spark-wide flag beside a number; each link asks features.allowed listlink for its owner",
     "mitschreiblink.py:_door": "the visitor has no profile: Spark-wide door before the code is known; find() then asks features.allowed listlink for the owner",
     "vorgaenge.py:due": "Spark-wide early out of the minute loop; each profile then features.allowed vorgaenge",
@@ -455,7 +453,6 @@ ADMIN_ON_OK = {
     "suchpruefung.py:admin_on": "Spark switch for the background step, Live and the admin page; per profile suchpruefung.allowed",
     "wissensbuch.py:admin_on": "Spark switch for the background step, Live and the admin page; per profile wissensbuch.allowed",
     "wissenskarte.py:admin_on": "Spark switch for the background step, Live and the admin page; per profile wissenskarte.allowed",
-    "krisenspiel.py:admin_on": "Spark switch for Live and the admin page; per profile features.allowed krisenspiel",
     "tasks.py:admin_on": "Spark switch; per profile features.allowed tasks, endpoints add features.blocked",
     "telegram.py:admin_on": "Spark-wide bot; per profile features.allowed / features.blocked",
     "tidy.py:admin_on": "Spark switch; per profile features.allowed tidy",

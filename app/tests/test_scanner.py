@@ -94,8 +94,6 @@ OPEN = {
     "/api/admin/notaus/mine/off": "an admin lifts a profile's own Notaus: notaus._lift_how (browser at home), fresh code or password",
     "/api/liste/check": "Mitschreib-Link: a visitor without a profile; 404 unless the admin allows it, random code (only its hash kept), expiry, revoke, Origin check, rate limit, lockout like a PIN (mitschreiblink._door)",
     "/api/liste/add": "Mitschreib-Link: only puts entries on the one list of the link; 404 unless allowed, same door as /api/liste/check, Mein Notaus of the owner holds it",
-    "/api/krise/lage": "Krisenspiel gemeinsam: a seat without a profile; 404 unless the admin allows it, random code (only its hash kept), one game, expiry, revoke, Origin check, rate limit, lockout like a PIN (krisenteam._door); fixed values and texts only",
-    "/api/krise/zug": "Krisenspiel gemeinsam: only a move of the seat's role in its one game by the fixed rules; same door as /api/krise/lage",
     "/api/make/dl": "a made document for whoever holds its download link (random token, only its hash kept, 10 minutes, 5 uses, one file of one profile); 404 once off, rate limit",
     "/api/changelog": "Was ist neu: is_admin, else browser_profile (no guests, no device keys), rate limit; read only",
 }

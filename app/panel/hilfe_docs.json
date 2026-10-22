@@ -1597,7 +1597,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/notaus.py blocks: ob eine Notaus-Stufe diese Art Arbeit anhält (Schritt 2) - app/panel/guard.py limit: Rate-Limit pro Adresse und Profil (Schritt 3) - app/panel/guard.py Slot: Höchstzahl gleichzeitiger Anfragen (Schritt 3) - app/panel/core.py confirm_code: frischer Code oder Passkey für heikle Wege (Schritt 3, Schritt 8) - app/tarswart.py check: prüft jeden Befehl an den Wärter (Schritt 3) - app/panel/chat_turn.py shared_stranger: fremde Stimme am geteilten Lautsprecher (Schritt 4) - app/panel/features.py allowed: Freigabe des Admins, gilt für jedes Profil (Schritt 5) - app/panel/mitschreiblink.py find: prüft einen Mitschreib-Link: Hash, Ablauf, Freigabe, Liste (Schritt 3, Schritt 5) - app/panel/krisenteam.py find: prüft einen Platz im Krisenspiel: Hash, Ablauf, Freigabe, dasselbe Spiel (Schritt 3, Schritt 5) - app/panel/nurspiel.py gate: lässt ein Spielprofil nur an Seite, Anmeldung und Spiel, sonst 403 (Schritt 5) - app/panel/features.py blocked: Sperre einzelner Profile (Schritt 5) - app/panel/geteilt.py put: Teilen mit einem anderen Profil, zurückziehen wirkt sofort (Schritt 5) - app/panel/chat.py wrap_outside: Text von außen als Datenblock (Schritt 6) - app/textnor"
+"text": "- app/panel/notaus.py blocks: ob eine Notaus-Stufe diese Art Arbeit anhält (Schritt 2) - app/panel/guard.py limit: Rate-Limit pro Adresse und Profil (Schritt 3) - app/panel/guard.py Slot: Höchstzahl gleichzeitiger Anfragen (Schritt 3) - app/panel/core.py confirm_code: frischer Code oder Passkey für heikle Wege (Schritt 3, Schritt 8) - app/tarswart.py check: prüft jeden Befehl an den Wärter (Schritt 3) - app/panel/chat_turn.py shared_stranger: fremde Stimme am geteilten Lautsprecher (Schritt 4) - app/panel/features.py allowed: Freigabe des Admins, gilt für jedes Profil (Schritt 5) - app/panel/mitschreiblink.py find: prüft einen Mitschreib-Link: Hash, Ablauf, Freigabe, Liste (Schritt 3, Schritt 5) - app/panel/features.py blocked: Sperre einzelner Profile (Schritt 5) - app/panel/geteilt.py put: Teilen mit einem anderen Profil, zurückziehen wirkt sofort (Schritt 5) - app/panel/chat.py wrap_outside: Text von außen als Datenblock (Schritt 6) - app/textnorm.py defuse: Blockende und Marken des Modells in fremdem Text entschärfen (Schritt 6) - app/llm_tor.py entschaerft: Marken des Modells aus jeder Nachricht nehmen (Schritt 6) - app/panel/mailansicht.py clean: HTML einer Mail nur bereinigt"
 },
 {
 "lang": "de",
@@ -1605,7 +1605,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "m.py defuse: Blockende und Marken des Modells in fremdem Text entschärfen (Schritt 6) - app/llm_tor.py entschaerft: Marken des Modells aus jeder Nachricht nehmen (Schritt 6) - app/panel/mailansicht.py clean: HTML einer Mail nur bereinigt, ohne Skript und ohne Laden von außen (Schritt 6) - app/panel/netguard.py allowed: ob eine Verbindung nach außen sein darf (Schritt 6) - app/panel/answercheck.py unsupported: Zahl ohne Quelle fällt heraus (Schritt 9) - app/textnorm.py hide_secrets: Geheimnisse werden nie gesprochen (Schritt 9) - app/panel/guard.py log: Änderungsprotokoll mit Prüfkette (Schritt 10) - app/panel/vault.py seal: Geheimnisse versiegelt ablegen (Schritt 10)"
+"text": ", ohne Skript und ohne Laden von außen (Schritt 6) - app/panel/netguard.py allowed: ob eine Verbindung nach außen sein darf (Schritt 6) - app/panel/answercheck.py unsupported: Zahl ohne Quelle fällt heraus (Schritt 9) - app/textnorm.py hide_secrets: Geheimnisse werden nie gesprochen (Schritt 9) - app/panel/guard.py log: Änderungsprotokoll mit Prüfkette (Schritt 10) - app/panel/vault.py seal: Geheimnisse versiegelt ablegen (Schritt 10)"
 },
 {
 "lang": "de",
@@ -2413,7 +2413,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "innt mit einem Wort aus logfilter.AREAS (33 Bereiche), Profile nur über profiles.log_name. Ein Selbsttest prüft beides. 6. Ende und Bewertung: Am Ende bekommt der Datensatz seinen Zustand: Fehler, wenn ein Fehlerwort gesetzt ist, langsam, wenn der erste Ton später als 5.0 s kam, sonst gut. 7. Anfragen verfolgen an?: Ist nur Live oder der Einstellungs-Assistent an, endet der Datensatz hier. Er wird nirgends geschrieben. 8. Zeile „anfrage:“ ins Journal: Eine Zeile pro Anfrage: Kennung, Kanal, Einordnung, Werkzeuge mit ok oder nicht ok, Zeit bis zur Rückmeldung, bis zum ersten Ton und bis zum Ende. Ohne Namen. 9. Anfrage-Verlauf auf der Platte: Der Datensatz wird angehängt. Wird die Datei zu groß, bleiben nur die letzten 500 Anfragen der letzten 2880 Minuten. Die Datei ist in keiner Sicherung. 10. Admin liest Logs → Anfragen: Nur Admin und Mit-Admins lesen den Verlauf, mit Rate-Limit. Name und Gerät eines Profils stehen nur da, wenn das Profil es erlaubt; sonst heißt es „Profil“. Zu einer Anfrage zeigt das Panel die Journal-Zeilen aus ihrer Zeit. 11. Journal lesen und einordnen: logfilter liest höchstens 20000 Zeilen; an journalctl gehen nur Zahlen aus festen Listen. Jede Zeile bekomm"
+"text": "innt mit einem Wort aus logfilter.AREAS (32 Bereiche), Profile nur über profiles.log_name. Ein Selbsttest prüft beides. 6. Ende und Bewertung: Am Ende bekommt der Datensatz seinen Zustand: Fehler, wenn ein Fehlerwort gesetzt ist, langsam, wenn der erste Ton später als 5.0 s kam, sonst gut. 7. Anfragen verfolgen an?: Ist nur Live oder der Einstellungs-Assistent an, endet der Datensatz hier. Er wird nirgends geschrieben. 8. Zeile „anfrage:“ ins Journal: Eine Zeile pro Anfrage: Kennung, Kanal, Einordnung, Werkzeuge mit ok oder nicht ok, Zeit bis zur Rückmeldung, bis zum ersten Ton und bis zum Ende. Ohne Namen. 9. Anfrage-Verlauf auf der Platte: Der Datensatz wird angehängt. Wird die Datei zu groß, bleiben nur die letzten 500 Anfragen der letzten 2880 Minuten. Die Datei ist in keiner Sicherung. 10. Admin liest Logs → Anfragen: Nur Admin und Mit-Admins lesen den Verlauf, mit Rate-Limit. Name und Gerät eines Profils stehen nur da, wenn das Profil es erlaubt; sonst heißt es „Profil“. Zu einer Anfrage zeigt das Panel die Journal-Zeilen aus ihrer Zeit. 11. Journal lesen und einordnen: logfilter liest höchstens 20000 Zeilen; an journalctl gehen nur Zahlen aus festen Listen. Jede Zeile bekomm"
 },
 {
 "lang": "de",
@@ -3173,7 +3173,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 36), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 85). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, v"
+"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 35), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 85). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, v"
 },
 {
 "lang": "de",
@@ -3197,7 +3197,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 36 Dateien in jeder Sicherung (Schritt 7) - 85 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
+"text": "- 35 Dateien in jeder Sicherung (Schritt 7) - 85 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
 },
 {
 "lang": "de",
@@ -3589,7 +3589,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "1. Ein Dienst schreibt eine Zeile: Panel, ASR, TTS, Engines und Wächter schreiben mit print. systemd gibt die Zeile an das Journal; jede Einheit hat LogNamespace=speech-spark. 2. Feste Wörter und Zahlen: Jede Zeile des Panels beginnt mit einem Wort aus logfilter.AREAS (33 Bereiche) und trägt nur feste Wörter und Zahlen. Ein Profil steht dort nur über profiles.log_name: sein Name nur mit seiner Zustimmung, sonst „Profil“ und das Ende der ID. test_log_luecken verlangt für jede Aktion eine Zeile je Ergebnis. 3. Ausführlich an?: Für einige Bereiche kann der Admin zusätzliche Zeilen einschalten, höchstens 240 Minuten. Auch sie tragen nur Zahlen und Entscheidungen; ein Neustart schaltet sie aus. 4. Abfragen still: Erfolgreiche Statusabfragen, die das Panel alle paar Sekunden stellt, schreiben keine Zeile. 5. Eigener Bereich mit Grenze: install.sh schreibt die Grenze für Platz und Alter aus logs.max_mb und logs.keep_days. Ältere Zeilen löscht journald selbst. Eine Änderung wirkt nach dem nächsten Update oder install.sh. 6. Admin öffnet die Diagnose: Nur der Admin, höchstens 60 Abrufe pro Minute. 7. Filter aus der festen Liste?: Bereiche, Zeitfenster (bis 24 Stunden) und Zeilenzahl (bis 10"
+"text": "1. Ein Dienst schreibt eine Zeile: Panel, ASR, TTS, Engines und Wächter schreiben mit print. systemd gibt die Zeile an das Journal; jede Einheit hat LogNamespace=speech-spark. 2. Feste Wörter und Zahlen: Jede Zeile des Panels beginnt mit einem Wort aus logfilter.AREAS (32 Bereiche) und trägt nur feste Wörter und Zahlen. Ein Profil steht dort nur über profiles.log_name: sein Name nur mit seiner Zustimmung, sonst „Profil“ und das Ende der ID. test_log_luecken verlangt für jede Aktion eine Zeile je Ergebnis. 3. Ausführlich an?: Für einige Bereiche kann der Admin zusätzliche Zeilen einschalten, höchstens 240 Minuten. Auch sie tragen nur Zahlen und Entscheidungen; ein Neustart schaltet sie aus. 4. Abfragen still: Erfolgreiche Statusabfragen, die das Panel alle paar Sekunden stellt, schreiben keine Zeile. 5. Eigener Bereich mit Grenze: install.sh schreibt die Grenze für Platz und Alter aus logs.max_mb und logs.keep_days. Ältere Zeilen löscht journald selbst. Eine Änderung wirkt nach dem nächsten Update oder install.sh. 6. Admin öffnet die Diagnose: Nur der Admin, höchstens 60 Abrufe pro Minute. 7. Filter aus der festen Liste?: Bereiche, Zeitfenster (bis 24 Stunden) und Zeilenzahl (bis 10"
 },
 {
 "lang": "de",
@@ -3613,7 +3613,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 33 Bereiche der Diagnose (Schritt 2) - 20000 Zeilen pro Abruf höchstens gelesen (Schritt 8) - 2 MB Journal-Text pro Abruf höchstens (Schritt 8) - 1000 Zeilen höchstens angezeigt (Schritt 7) - 240 Minuten „Ausführlich“ höchstens (Schritt 3)"
+"text": "- 32 Bereiche der Diagnose (Schritt 2) - 20000 Zeilen pro Abruf höchstens gelesen (Schritt 8) - 2 MB Journal-Text pro Abruf höchstens (Schritt 8) - 1000 Zeilen höchstens angezeigt (Schritt 7) - 240 Minuten „Ausführlich“ höchstens (Schritt 3)"
 },
 {
 "lang": "de",
@@ -4774,198 +4774,6 @@
 "head": "Sprach-Chat",
 "title": "Wissenskarte schneller (V01.0.907, Dominik 2026-10-21 „1“)",
 "text": "Wissenskarte schneller (V01.0.907, Dominik 2026-10-21 „1“): Die Wissenskarte hat eine eigene Tagesgrenze *Funktionen → Eigene Dokumente → Wissensbuch → Wissenskarte → Karte: Dokumente pro Tag und Profil* (chat.knowledge_map_day, 5 bis 500, Standard 200; vorher galt chat.knowledge_book_day mit 40). Ein Kartenschritt nennt nur Verbindungen und ist kurz, so ist der Rückstand eines vollen Wissensbuchs (etwa 150 Dokumente) in rund einem Tag eingearbeitet. Weiterhin nur in ruhigen Minuten, erst wenn das Wissensbuch nichts zu tun hat, ein Dokument je Schritt hinter der Sprache."
-},
-{
-"lang": "de",
-"src": "assistent",
-"file": "Assistent und Oberfläche",
-"head": "Sprach-Chat",
-"title": "Sprach-Chat",
-"text": "IT-Krisenspiel (V01.0.932, Plan krisenspiel/plan.md Paket 1, Dominik 2026-10-22 „so umsetzen aber den Szenarien-Ausbau auf 5“): Admin-Schalter *Funktionen → Meine Daten → IT-Krisenspiel* (chat.krisenspiel, ab Werk aus; freigegeben für jedes Profil, das der Admin nicht sperrt, Gäste nie). Ein Textabenteuer für ein Profil: Ein IT-Notfall läuft als Krisen-Dashboard auf einer eigenen Seite im Menü Krisenspiel mit den Reitern *Spiel*, *Neues Spiel*, *Inspector* und *Bisherige Spiele*. Fünf Szenarien: Ransomware im Mittelstand, SAN-Ausfall, Stromausfall im Rechenzentrum, BGP-Hijacking und BSI-Eilmeldung zu einer VPN-Lücke; jedes mit eigenen Systemen, Zügen, Folgen und Nebenschauplätzen und mit Varianten (wo es anfing, ob die Sicherung sauber ist …), die der Seed beim Start auswählt. Drei Stufen: Übung (180 Minuten, mehr Budget), Normal (120) und Ernstfall (100, weniger Budget, mehr Druck). Oben stehen Zeit, Stress, Vertrauen der Geschäftsleitung, Team-Moral, Notfall-Budget und Schaden, darunter die Systeme mit Zustand (läuft, gestört, kritisch, aus, isoliert), die Züge mit ihren Kosten und die Chronik. Das Panel entscheidet alles mit festen Regeln (krisenspiel.py, Szenarien als Daten in "
-},
-{
-"lang": "de",
-"src": "assistent",
-"file": "Assistent und Oberfläche",
-"head": "Sprach-Chat",
-"title": "Sprach-Chat",
-"text": "krisenspiel_szenarien.json, geprüft von check_data): jeder Zug hat feste Folgen, ausgefallene Systeme kosten Schaden pro Minute, Stress, Moral und Vertrauen ändern sich nach festen Formeln, Zufall kommt nur aus dem Seed (gleicher Seed und gleiche Züge ergeben dasselbe Spiel, „Nochmal mit diesem Seed“ zum Vergleichen). Das Spiel endet gewonnen, wenn die Zeit abläuft, das Vertrauen oder die Moral bei 0 ist, nach 80 Zügen oder beim Aufgeben (zählt als F); die Note A bis F und zwölf Erfolge (etwa „Zero Data Loss“, „Ransomware unter 30 Minuten“, „Allrounder“) rechnet fester Code aus. Der *Inspector* zeigt jeden Zug Schritt für Schritt: Eingabe, feste Regel mit allen Werten, Würfe aus dem Seed, Erzähler. Krisenspiel mit Erzähler (chat.krisenspiel_erzaehler, eigener Schalter unter dem Spiel, aus): das Sprachmodell erzählt einen Zug in zwei bis vier Sätzen nach; es bekommt nur die festen Texte des Zugs, seine Antwort muss ein Absatz von 30 bis 700 Zeichen ohne Links, Auszeichnung oder Code sein und darf nur Zahlen aus den Fakten nennen, sonst bleibt der feste Text. Es ändert nie einen Wert, läuft hinter der Sprache, wartet höchstens 8 Sekunden und während einer Modellpause gar nicht. Seit "
-},
-{
-"lang": "de",
-"src": "assistent",
-"file": "Assistent und Oberfläche",
-"head": "Sprach-Chat",
-"title": "Sprach-Chat",
-"text": "Paket 2 lassen sich die Züge auch eintippen (Konsole, siehe unten). Gespeichert in users/<profil>/krisenspiel.json (ein laufendes Spiel, die letzten 20 Ergebnisse, Erfolge); *Meine Spieldaten löschen* geht auch, wenn der Admin das Spiel für das Profil gesperrt hat. Zustand → Live (Ziel „Krisenspiel“) zeigt nur laufende Spiele, Züge, neue Spiele, erzählt/verworfen und Profile; Logs (Bereich „Krisenspiel“) nur feste Wörter und Zahlen (spiel: neu | ransomware | normal | Profil …, spiel: zug | ok | 3 ms, spiel: erzaehler | zahl | 812 ms, spiel: ende | gewonnen | note B | 9 zuege | 2 erfolge). API: GET /api/profile/krisenspiel, POST /api/profile/krisenspiel/neu ({szenario, stufe, seed?}), POST /api/profile/krisenspiel/zug ({aktion, zug}; ein alter Zug gibt 409), DELETE /api/profile/krisenspiel (aufgeben), DELETE /api/profile/krisenspiel/daten."
-},
-{
-"lang": "de",
-"src": "assistent",
-"file": "Assistent und Oberfläche",
-"head": "Sprach-Chat",
-"title": "Sprach-Chat",
-"text": "Konsole im Krisenspiel (V01.0.933, Paket 2, Dominik 2026-10-22 „1a 2b 3a“, „Befehle erweitern, damit wir auch cmd in der Linux-Welt erlernen“, „-h als Hilfe“, „durchsimuliert“): Unter der Chronik steht eine Konsole (am Handy einklappbar). Nichts davon läuft wirklich: kein Prozess, keine Shell, kein Netz, kein Dateizugriff; das Panel schneidet jede Zeile nach festen Regeln (höchstens 200 Zeichen, nur Buchstaben, Ziffern und _ . : / = , @ * ' \" | \\ + - ~ ? > $ ^ ( ) [ ] { }, nie ${ oder $(, Anführungszeichen wie in der Shell, Pipes nur in Textbefehle, ein > oder >> am Ende) und schlägt sie nach (krisenkonsole.py, Daten in krisenspiel_konsole.json). Jedes Spiel beginnt auf jump01, dem Linux-Sprungrechner des Admins; hosts zeigt die Rechner des Szenarios, ssh <rechner> wechselt, exit geht zurück. Getippte Züge sind dieselben Züge wie die Knöpfe mit denselben festen Folgen (etwa sudo iptables -I FORWARD -j DROP auf fw01, Disable-ADAccount svc_backup auf dc01, controller show auf san01); ein falsches Ziel ist ein eigener Zug mit festen Folgen (Stop-VM erp01 auf hv01 hält das ERP an und kostet). Rund 150 Linux-Befehle in acht Gruppen (Dateien, Text, System, Benutzer und Rechte, Netzwerk, "
-},
-{
-"lang": "de",
-"src": "assistent",
-"file": "Assistent und Oberfläche",
-"head": "Sprach-Chat",
-"title": "Sprach-Chat",
-"text": "Platten, Archive, Prozesse und Dienste) sind durchsimuliert (krisenlinux.py): ein Dateisystem je Rechner mit /etc, /var/log, den Dateien des Szenarios und allem, was man selbst anlegt (mkdir, touch, cp, mv, rm, ln, tar, gzip, zip, scp auf andere Rechner, >, >>, tee), Benutzer und Gruppen (useradd, usermod -aG, passwd), Mounts, Firewall-Regeln (iptables), Rechte (chmod), Dienste und Prozesse. Wo Linux root braucht, braucht es hier sudo, sonst kommt „Permission denied“. Dienste treffen das Spiel: sudo systemctl stop postgresql auf erp01 (auch kill, pkill) ist ein Zug „Dienst an der Konsole angehalten“: das System läuft nur noch eingeschränkt, 2 Minuten, Stress und 2.000 € Schaden; systemctl start gibt es zurück, sudo reboot kostet 5 Minuten. Muster (grep, sed, find -name) sind nur Text mit ^ und $ beziehungsweise * und ?, nie ein regulärer Ausdruck. Hilfe überall: help zeigt alle Befehle nach Gruppen, help netz eine Gruppe mit Erklärung, <befehl> -h, --help, /? oder man <befehl> zeigt Aufruf, Optionen und ein Beispiel (bei df, du, free, ls, sort ist -h die Option „lesbar“), ein Tippfehler bekommt „Meintest du: ping?“. Tab ergänzt Befehle und Rechner, ↑ und ↓ holen frühere Eingaben. L"
-},
-{
-"lang": "de",
-"src": "assistent",
-"file": "Assistent und Oberfläche",
-"head": "Sprach-Chat",
-"title": "Sprach-Chat",
-"text": "esende Befehle kosten eine Spielminute, zehn Minuten Lesen sind ein eigener Zug „Analyse an der Konsole“. Was man anlegt, ist begrenzt (200 Dateien je Rechner, 100 KB je Spiel). Unter Neues Spiel steht neben den fünf Szenarien 🎲 Überraschung: Das Panel wählt eines per Zufall (mit Seed wiederholbar), was passiert, sieht man erst im Spiel (szenario: \"zufall\"). Beim neuen Spiel gibt es den Modus nur Konsole: keine Knöpfe, alles wird getippt, ein Sieg bringt 5 Punkte mehr und den Erfolg „Ohne Knopf gelöst“ (jetzt dreizehn Erfolge). Ein aufgegebenes Spiel bringt keinen Erfolg, auch nicht „Feuertaufe“. Live zählt nur die Konsolen-Zeilen, die Logs schreiben nur die Art (spiel: konsole | zug | 3 ms, spiel: konsole abgelehnt | alter zug), nie die Zeile. API: POST /api/profile/krisenspiel/konsole ({zeile, zug}; ein alter Zug gibt 409, im Modus „nur Konsole“ gibt …/zug 422), POST /api/profile/krisenspiel/neu nimmt modus (knoepfe oder konsole)."
-},
-{
-"lang": "de",
-"src": "assistent",
-"file": "Assistent und Oberfläche",
-"head": "Sprach-Chat",
-"title": "Sprach-Chat",
-"text": "Uhr läuft und Anleitung im Krisenspiel (V01.0.934, Dominik 2026-10-22 „Variante 2“ und „1“): Unter *Neues Spiel* gibt es den Schalter Uhr läuft (aus): zehn echte Sekunden sind eine Spielminute, die Restzeit oben zählt sichtbar herunter. Die offene, sichtbare Seite fragt alle 20 Sekunden nach (POST /api/profile/krisenspiel/uhr mit {aktion: \"tick\"}), zwischen zwei Anfragen zählen höchstens 60 Sekunden, eine geschlossene Seite verliert also kaum Zeit. Die vergangenen Minuten nimmt der nächste Zug mit (Schaden pro Minute inklusive), der Inspector zeigt sie als „davon_uhr“; reichen sie bis 0, ist die Uhr ein eigener Zug und das Spiel endet mit „Die Zeit ist abgelaufen“. Das Panel rechnet nach fester Regel (uhr_ticken), Seed und Würfe bleiben gleich. Pause und Weiter gibt es in Übung und Normal ({aktion: \"pause\"|\"weiter\"}), im Ernstfall nicht. Ein Sieg mit laufender Uhr bringt 5 Punkte mehr, ohne Pause den Erfolg „Gegen die Uhr“ (jetzt vierzehn Erfolge). Neuer Reiter Anleitung (GET /api/profile/krisenspiel/anleitung, krisenanleitung.py): Worum es geht, Schnellstart, die Werte, Züge und Zufall, Spielende und Noten, Stufen und Uhr, die Konsole, ein Rundgang zum Ausprobieren, alle Befehle n"
-},
-{
-"lang": "de",
-"src": "assistent",
-"file": "Assistent und Oberfläche",
-"head": "Sprach-Chat",
-"title": "Sprach-Chat",
-"text": "ach Gruppen mit Beispiel, die Szenarien, die Erfolge, Inspector und Erzähler, Tipps und Hilfe bei Problemen; mit Inhaltsverzeichnis. Befehle, Zahlen, Szenarien und Erfolge kommen aus dem Code, die Anleitung ist damit immer vollständig. Live zählt Spiele mit laufender Uhr; Logs spiel: neu | … | uhr, spiel: uhr | pause, spiel: uhr | abgelaufen."
-},
-{
-"lang": "de",
-"src": "assistent",
-"file": "Assistent und Oberfläche",
-"head": "Sprach-Chat",
-"title": "Sprach-Chat",
-"text": "Krisenspiel gemeinsam, Editor und große Konsole (V01.0.935, Plan Paket 11, Dominik 2026-10-22 „mache selbständig weiter“, „in console sollte tab gehen und der codeviewer nano und vi“, „console sollte rauslösbar sein“): Eigener Admin-Schalter *Funktionen → Meine Daten → Krisenspiel gemeinsam* (chat.krisenspiel_team, ab Werk aus, unter IT-Krisenspiel; krisenteam.py). Unter *Krisenspiel → Spiel → Mitspieler* lädt ein Profil bis zu drei Mitspieler in sein laufendes Spiel ein, mit oder ohne Profil, jeden mit einer Rolle: Technik nimmt die technischen Züge, Kommunikation Meldungen, Anrufe und Kunden, Leitung jeden Zug; der Besitzer spielt als Leitung. Jeder Zug der Szenarien trägt seine Rolle in den Daten (rolle, ohne Angabe Technik; check_data prüft sie, krisenspiel.darf). Der Link https://<panel>/#krise=<code> steht nur einmal da (mit QR-Code): Code nach dem „#“, zufällig (192 Bit), gespeichert nur als Hash in state/krisenspiel-team.json, gilt nur für dieses eine Spiel und höchstens 24 Stunden, „Entfernen“ nimmt ihn zurück, ein neues Spiel, ein ausgeschalteter Schalter oder ein gesperrtes Profil beenden alle Plätze sofort. Die Seite des Mitspielers (krisegast.js, POST /api/krise/lage u"
-},
-{
-"lang": "de",
-"src": "assistent",
-"file": "Assistent und Oberfläche",
-"head": "Sprach-Chat",
-"title": "Sprach-Chat",
-"text": "nd /api/krise/zug) zeigt Werte, Systeme, Chronik und das Team, nie die Worte des Erzählers, den Inspector, die Konsole oder Verlauf und Erfolge des Besitzers, und bietet nur die Züge der eigenen Rolle an (fremde grau mit Rollenname). Alle Seiten fragen alle 4 Sekunden nach; in der Chronik steht, wer welchen Zug genommen hat. Falsche Codes sperren wie eine PIN, jede Anfrage zählt gegen das Rate-Limit krisegast, fremde Seiten (Origin) werden abgewiesen; nie Assistent, Werkzeug oder Modell. Live zeigt offene Plätze, anwesende Mitspieler und Team-Züge heute; Logs spiel: team | einladung | technik, spiel: team zug | ok | kommunikation, spiel: team abgelehnt | falscher code, nie Code oder Name. In der Konsole ergänzt Tab jetzt auch Dateien und Ordner (relativ zum Arbeitsordner, mehrere Treffer bis zum gemeinsamen Anfang und als Liste), nach ssh die Rechner, nach man die Befehle; am Handy macht der Knopf ⇥ dasselbe, der Prompt zeigt den Arbeitsordner. nano, vi und vim öffnen eine Datei im Editor über der Konsole: nano mit Kopfzeile, Strg+O speichert, Strg+X beendet (fragt bei Änderungen), vi und vim mit Modi (i, a, A, I, o schreiben, Esc zurück, x, dd, h j k l, :w, :q, :wq, :x, :q!, :Zahl"
-},
-{
-"lang": "de",
-"src": "assistent",
-"file": "Assistent und Oberfläche",
-"head": "Sprach-Chat",
-"title": "Sprach-Chat",
-"text": "), dazu Knöpfe für das Handy. Gespeichert wird über POST /api/profile/krisenspiel/datei nach denselben Regeln wie > (außerhalb von /home/admin und /tmp nur mit sudo, höchstens 200 Zeilen, Platz des Spiels begrenzt), nur in die simulierten Dateien des Spiels, kein Zug und keine Spielminute. Der Knopf Groß lässt die Konsole das ganze Fenster füllen, Esc oder „Klein“ setzen sie zurück."
-},
-{
-"lang": "de",
-"src": "assistent",
-"file": "Assistent und Oberfläche",
-"head": "Sprach-Chat",
-"title": "Team und Laufbahn im Krisenspiel (V01.0.936, Plan Paket 3)",
-"text": "Team und Laufbahn im Krisenspiel (V01.0.936, Plan Paket 3): Jedes Spiel hat ein Team aus Kollegen (kollegen in krisenspiel_szenarien.json: Sandra, Mehmet, Jonas, Lea, Piet, Ayla mit je zwei Fächern aus Netz, Windows, Storage, Forensik, Rechenzentrum, Kommunikation; der Seed wählt sie). Jeder technische Zug trägt sein Fach in den Daten (fach, check_data verlangt es), Züge der Kommunikation haben das Fach Kommunikation, Züge der Leitung bleiben beim Spieler. Über den Zügen wählt „Wer übernimmt?“ einen freien Kollegen, dann einen Zug (POST …/zug mit an): Abgeben kostet 2 Minuten, der Kollege braucht im eigenen Fach 70 % der Zeit des Zugs, sonst 150 %, ab 70 % Müdigkeit 130 % davon; wenn seine Minute kommt, wirkt der Zug wie selbst gemacht (ohne seine Minuten, das Budget geht schon beim Abgeben), die Chronik meldet ihn unter „Team“, der Inspector als Schritt „Team“. Jede Aufgabe macht müde (+15 % im Fach, +25 % fremd), wer frei ist, erholt sich je Zug um 4 %, Lagebesprechung (−10 %) und Essen (−30 %) helfen allen (erholung), bei 100 % nimmt niemand mehr etwas an. An der Konsole zeigt team das Team, assign <kollege> <aufgabe> gibt ab (ohne Angaben: was jetzt geht). Laufbahn (krisenspiel"
-},
-{
-"lang": "de",
-"src": "assistent",
-"file": "Assistent und Oberfläche",
-"head": "Sprach-Chat",
-"title": "Team und Laufbahn im Krisenspiel (V01.0.936, Plan Paket 3)",
-"text": ".RAENGE, laufbahn): Junior-Admin (3 Kollegen), Admin ab 2 Siegen (4), IT-Leiter ab 5 Siegen (5, Budget 110 %), CISO ab 10 Siegen und einer Note A (6, Budget 120 %); der Rang gilt für jedes neue Spiel und steht unter *Bisherige Spiele* mit Fortschritt und Leiter, unter *Neues Spiel* mit Team und Budget. Neue Erfolge „Gut delegiert“ (gewonnen und mindestens vier Aufgaben abgegeben) und „CISO“ (sechzehn Erfolge). Die Anleitung hat den Abschnitt „Team und Laufbahn“ mit den Zahlen aus dem Code und erklärt Tab, „Groß“, nano und vi. Live zählt die heute abgegebenen Aufgaben; Log spiel: zug | delegiert. Als Nächstes: Paket 5 (Lernen), dann die übrigen Pakete des Plans."
-},
-{
-"lang": "de",
-"src": "assistent",
-"file": "Assistent und Oberfläche",
-"head": "Sprach-Chat",
-"title": "Lernen im Krisenspiel (V01.0.937, Plan Paket 5)",
-"text": "Lernen im Krisenspiel (V01.0.937, Plan Paket 5): Nach jedem Spiel steht unter der Note die Nachbesprechung (krisenspiel.nachbesprechung): feste Lehren aus den Szenario-Daten (lehren je Szenario, lehren_allgemein für alle) mit ihrer Quelle (NIST SP 800-61 Rev. 2, BSI-Standard 200-4, DSGVO Art. 33, BSI IT-Grundschutz, RFC 6811 und 9162, BSI-Gesetz, Polizei ZAC), was gut lief zuerst. Die Bedingung einer Lehre prüft die Züge in ihrer Reihenfolge (genutzt, fehlt, vor, ohne_vor), das Ende (ende) und Werte wie jede andere Regel; auch abgegebene Aufgaben zählen. check_data prüft Text, Quelle und Zugnamen. Lernmodus (Häkchen unter *Neues Spiel*, POST …/neu mit lernen): vor jedem Zug ein Tipp (krisenspiel.tipp: das Panel probiert jeden angebotenen Zug auf einer Kopie und nimmt den, der dem Ziel am nächsten kommt, dann mehr Lage-Wissen, dann weniger Schaden), der Knopf ist markiert; ein Lernspiel bringt keine Erfolge und zählt nicht für Laufbahn und Bestwert. Geist (krisenspiel.geist): hat das Profil dasselbe Szenario auf derselben Stufe schon ohne Tipps beendet, zeigt eine Zeile, wo der beste Lauf nach gleich vielen Zügen stand (Minute und Schaden, aus kurve im Verlauf). Unter *Bisherige Spi"
-},
-{
-"lang": "de",
-"src": "assistent",
-"file": "Assistent und Oberfläche",
-"head": "Sprach-Chat",
-"title": "Lernen im Krisenspiel (V01.0.937, Plan Paket 5)",
-"text": "ele* eine Statistik je Szenario (gespielt, gewonnen, Schnitt, Bestwert, Minuten) und die Verteilung der Noten. Die Anleitung hat den Abschnitt „Lernen: Tipp, Nachbesprechung, Geist“. Log spiel: neu | … | lernen. Als Nächstes: Paket 4 (mehr Szenarien), dann die übrigen Pakete des Plans."
-},
-{
-"lang": "de",
-"src": "assistent",
-"file": "Assistent und Oberfläche",
-"head": "Sprach-Chat",
-"title": "Sieben neue Szenarien im Krisenspiel (V01.0.938, Plan Paket 4)",
-"text": "Sieben neue Szenarien im Krisenspiel (V01.0.938, Plan Paket 4): Zu Ransomware, SAN, Strom, BGP und BSI kommen DDoS auf den Webshop (Volumen- oder Anfrageflut, mit oder ohne Erpressung: Provider-Filter, Schutzdienst, WAF-Regel, Notseite; Schutzgeld zahlen hilft nicht), Datenleck mit Meldefrist (offener Cloud-Speicher oder API-Lücke, klein oder groß: Probe prüfen, Quelle finden und schließen, Datenschutzbeauftragte, Risikobewertung, Meldung nach Art. 33 DSGVO vor dem Fristende, Betroffene nach Art. 34 bei hohem Risiko), Innentäter (Admin vor dem Ausscheiden, eigenes oder Dienstkonto, mit oder ohne Zeitbombe: Beweise vor dem Gespräch, Personal und Recht, Upload sperren, Cronjobs suchen), Cloud-Ausfall (Region oder DNS des Anbieters, mit oder ohne zweite Region: Statusseite, Umschalten, Aufbau aus dem Backup, Zweitanbieter für DNS, Notbetrieb), Vergiftetes Update (Hintertür im Monitoring, nur dort oder auch im AD, still oder aktiv: isolieren, C2 sperren, neu aufsetzen statt deinstallieren, krbtgt zweimal, melden), Chef-Betrug (gekapertes Postfach oder ähnliche Domain, Überweisung frisch oder von gestern: zuerst die Bank, dann Kopfzeilen, Weiterleitungsregeln, Rückruf-Prüfung aller Zahl"
-},
-{
-"lang": "de",
-"src": "assistent",
-"file": "Assistent und Oberfläche",
-"head": "Sprach-Chat",
-"title": "Sieben neue Szenarien im Krisenspiel (V01.0.938, Plan Paket 4)",
-"text": "ungen, keine Schuldzuweisung) und Datenbank gelöscht (Sicherung gut oder seit Wochen leer, mit oder ohne verzögertes Replikat: Schreibzugriffe stoppen, Replikat anhalten, Rücksicherung, Transaktionslogs bis kurz vor dem Löschen; eine leere Datenbank löst nichts). Jedes Szenario hat Varianten aus dem Seed, Rollen und Fächer für das Team, Nebenschauplätze, mindestens vier Lehren mit Quelle (u. a. DSGVO Art. 33/34, BSI IT-Grundschutz CON.3, ORP.2, ORP.3, ORP.4, OPS.2.2, CISA ED 21-01) und eine eigene Konsole mit Rechnern, Dateien und falschen Zügen; neue Spiel-Befehle aws, dns, blocklist, geoblock, scale, pay, risk, image, Get-ADUser, Get-InboxRule, crontab, apt, mysql, mysqlbinlog. Die Selbsttests spielen jede Variante jedes Szenarios auf jeder Stufe bis zum Sieg, auch nur getippt. Als Nächstes: Paket 6 (Herausforderungen), dann die übrigen Pakete des Plans."
-},
-{
-"lang": "de",
-"src": "assistent",
-"file": "Assistent und Oberfläche",
-"head": "Sprach-Chat",
-"title": "Herausforderungen im Krisenspiel (V01.0.939, Plan Paket 6)",
-"text": "Herausforderungen im Krisenspiel (V01.0.939, Plan Paket 6): Unter *Neues Spiel* stehen die Tages- und die Wochen-Herausforderung (krisenspiel.herausforderung): Szenario, Seed und Mutatoren aus dem Datum in Europe/Berlin, für jedes Profil dieses Spark gleich, Stufe Normal und Team wie beim Rang Admin (gleiche Bedingungen unabhängig von der Laufbahn). Der erste Versuch zählt für die Bestenliste (board, gelesen aus den eigenen Spieldateien der Profile, kein eigener Zustand), weitere Versuche und Lernspiele nicht. Jedes Profil wählt, wie es dort steht: ohne Namen (Standard), mit Namen oder gar nicht (POST /api/profile/krisenspiel/bestenliste); wer seine Spieldaten löscht, verschwindet aus der Liste. Mutatoren (krisenspiel.MUTATOREN): Sparkurs (halbes Budget, +5), Eile (ein Fünftel weniger Zeit, +5), Presse im Nacken (Vertrauen −20, +4), Nach der Nachtschicht (Team 40 % müde, Moral −15, +4); die Tages-Herausforderung hat einen, die Wochen-Herausforderung zwei, im freien Spiel wählt man sie selbst; ein Sieg bringt ihre Punkte. Neue Erfolge „Herausforderung angenommen“ und „Mutig“. Die Selbsttests gewinnen jedes Szenario in jeder Variante mit jedem Paar Mutatoren. Live zählt die heute beg"
-},
-{
-"lang": "de",
-"src": "assistent",
-"file": "Assistent und Oberfläche",
-"head": "Sprach-Chat",
-"title": "Herausforderungen im Krisenspiel (V01.0.939, Plan Paket 6)",
-"text": "onnenen Herausforderungen; Logs spiel: neu | … | tag, spiel: bestenliste | anonym/name/aus. Die Anleitung hat den Abschnitt „Herausforderungen und Mutatoren“. Als Nächstes: Paket 7 (iPhone nativ)."
-},
-{
-"lang": "de",
-"src": "assistent",
-"file": "Assistent und Oberfläche",
-"head": "Sprach-Chat",
-"title": "Krisenspiel in der iPhone-App (V01.0.940, Plan Paket 7)",
-"text": "Krisenspiel in der iPhone-App (V01.0.940, Plan Paket 7): In der App unter *Meine Sachen → Krisenspiel* (KrisenspielView.swift, nur mit der Freigabe des Spiels, iphone.THINGS[\"krisenspiel\"]: das Spiel lesen, ein Zug, eine getippte Zeile, ein neues Spiel) stehen die Werte oben als Balken, die Systeme mit Ampel, die Züge als Knöpfe (mit Tipp im Lernmodus), die Konsole mit Tastaturleiste (help, hosts, ssh, sudo, |, -h), die Chronik und am Ende Note, Gründe und Nachbesprechung mit Quelle. Ohne laufendes Spiel startet die App die Tages- oder Wochen-Herausforderung oder ein Überraschungs-Szenario. Jeder Wert und jede Regel kommt vom Spark, die App zeigt nur Texte; Anleitung, Inspector, Bestenliste und gemeinsam spielen bleiben auf der Seite Krisenspiel im Panel („Im Panel öffnen“)."
-},
-{
-"lang": "de",
-"src": "assistent",
-"file": "Assistent und Oberfläche",
-"head": "Sprach-Chat",
-"title": "Krisenspiel: Anleitung, QR-Code und Ausschalten (V01.0.941)",
-"text": "Krisenspiel: Anleitung, QR-Code und Ausschalten (V01.0.941): Die Abschnitte der Anleitung stehen wieder unter dem Inhaltsverzeichnis, ein Klick springt hin (sie waren als Seiten-Abschnitt versteckt). Jeder QR-Code des Panels (mfa._qr_svg) hat eine viewBox und wird bei kleiner Anzeige ganz verkleinert statt rechts und unten abgeschnitten (Mitspieler-Einladung, Mitschreib-Link, Einladungen, Apps). In der Konsole trennt ein Rechner, den du mit sudo shutdown, poweroff oder halt ausschaltest, die Verbindung: du bist wieder auf jump01 (reboot und shutdown -r halten sie)."
-},
-{
-"lang": "de",
-"src": "assistent",
-"file": "Assistent und Oberfläche",
-"head": "Sprach-Chat",
-"title": "Kampagnen im Krisenspiel (V01.0.943, Plan Paket 9)",
-"text": "Kampagnen im Krisenspiel (V01.0.943, Plan Paket 9): Unter *Neues Spiel* stehen vier Kampagnen (Daten kampagnen in krisenspiel_szenarien.json, geprüft von check_data): Die Angriffswelle (Chef-Betrug → Ransomware → Datenleck), Die schwarze Woche (Stromausfall → SAN → Cloud), Gift in der Lieferkette (Update → Innentäter → BSI-Eilmeldung) und Netz unter Feuer (DDoS → BGP → gelöschte Datenbank), jedes Kapitel an einem Spieltag mit eigenem Einleitungssatz. Die Stufe gilt für alle Kapitel, die Seeds der Kapitel kommen aus dem Seed der Kampagne. Was ein Kapitel hinterlässt, ist feste Regel (krisenspiel.ERBE, nie das Modell): Audit (nicht gewonnen oder Note D bis F: ein Fünftel weniger Budget), Versicherung zahlt (gewonnen ohne Datenverlust: ein Fünftel mehr), Erschöpftes Team (Moral unter 40 %: Moral −15, Team 30 % müde), Ruf beschädigt (Vertrauen unter 40 %: −15) und Eingespielt (Note A oder B: Stress −10, Moral +5). Zwischen den Kapiteln darf beliebig lange Pause sein, ein laufendes Kapitel bleibt gespeichert („Weiterspielen“ zeigt es wieder); wer stattdessen ein anderes Spiel startet, gibt das Kapitel auf. Am Ende zählt der Schnitt der Kapitel als Note (die letzten 10 Kampagnen stehen u"
-},
-{
-"lang": "de",
-"src": "assistent",
-"file": "Assistent und Oberfläche",
-"head": "Sprach-Chat",
-"title": "Kampagnen im Krisenspiel (V01.0.943, Plan Paket 9)",
-"text": "nter der Liste), dazu der Erfolg „Durchgehalten“. „Kampagne beenden“ (DELETE /api/profile/krisenspiel/kampagne) beendet sie ohne Wertung, das laufende Spiel bleibt als freies Spiel. Start und Weiter über POST …/neu mit kampagne (eine Kennung oder weiter), nie zusammen mit Lernmodus, Mutatoren oder Herausforderung. Logs spiel: kampagne | start|weiter|kapitel N von M|ende|ersetzt|beendet, spiel: kampagne abgelehnt | keine kampagne; Live zeigt laufende und heute begonnene Kampagnen als Zahl. In der iPhone-App stehen unter *Krisenspiel* die Kampagnen zum Starten, eine laufende mit Kapitel und Einleitungssatz und „Nächstes Kapitel“. test_krisenspiel prüft jedes Kapitel ab dem zweiten mit dem schlechtesten Erbe (Audit, Erschöpft, Ruf) auf jeder Variante auf Gewinnbarkeit. Als Nächstes: das Netzduell (eigener Reiter, nur Terminal), danach Paket 8 (Sprache)."
-},
-{
-"lang": "de",
-"src": "assistent",
-"file": "Assistent und Oberfläche",
-"head": "Sprach-Chat",
-"title": "Spielprofile „Nur Krisenspiel“ (V01.0.945, Netzduell Schritt 1)",
-"text": "Spielprofile „Nur Krisenspiel“ (V01.0.945, Netzduell Schritt 1): Unter *Personen und Geräte* legt der Admin ein Profil mit dem Haken „Nur Krisenspiel“ an oder schaltet es beim Profil um (PUT /api/admin/profiles/{id}/nurspiel, nie für ein Profil mit Admin-Rolle, auch keine Admin-Rolle danach). So ein Profil sieht nach der Anmeldung nur das Krisenspiel und „Abmelden“: features.blocked sperrt jede Funktion außer dem Krisenspiel (und dem zweiten Anmeldeschritt), und eine eigene Middleware (nurspiel.py) lässt es nur an die Seite, die Anmeldung, die eigene Sicherheit und das Spiel; jeder andere Weg (Assistent, Sprache, Geräte, MCP, Telegram, Telefon, jede Einstellung) antwortet 403, bevor die Route läuft. test_nurspiel geht dafür jede Route des Panels durch. Live zählt die Spielprofile mit, Logs spiel: nur spiel | an|aus|profil angelegt, spiel: nur spiel gesperrt | <bereich>. Nebenbei behoben: ein Profil ohne Admin-Anmeldung sah Listen, Offen, Kontakte, Wissensbuch und Krisenspiel nicht im Menü (die Regel ließ nur Assistent, Chats, Kalender und E-Mail durch); jetzt fehlen nur die Seiten von „Spark verwalten“."
 },
 {
 "lang": "de",
@@ -8646,30 +8454,6 @@
 "head": "Meine Daten",
 "title": "Meine Daten",
 "text": "- Musik bearbeiten (Funktionen → Meine Daten → „Musik bearbeiten“; baut auf „Musik machen“; Ich → Musik): Der Spark bearbeitet ein Lied unter Ich → Musik, selbst und ohne Internet, mit demselben ACE-Step wie beim Machen: einen Abschnitt neu machen, vorne oder hinten verlängern, die Musikrichtung ändern (Rock, Jazz, Reggae, …, wie nah am Orig …"
-},
-{
-"lang": "de",
-"src": "assistent",
-"file": "Assistent und Oberfläche",
-"head": "Meine Daten",
-"title": "Meine Daten",
-"text": "- IT-Krisenspiel (Funktionen → Meine Daten → „IT-Krisenspiel“; Krisenspiel → Einstellungen): Ein Text-Abenteuer im Rechenzentrum mit zwölf Szenarien: Ransomware, SAN-Ausfall, Stromausfall, BGP-Hijacking, BSI-Eilmeldung, DDoS, Datenleck mit Meldefrist, Innentäter, Cloud-Ausfall, vergiftetes Update, Chef-Betrug und gelöschte Daten …"
-},
-{
-"lang": "de",
-"src": "assistent",
-"file": "Assistent und Oberfläche",
-"head": "Meine Daten",
-"title": "Meine Daten",
-"text": "- Krisenspiel mit Erzähler (Funktionen → Meine Daten → „Krisenspiel mit Erzähler“; baut auf „IT-Krisenspiel“; Krisenspiel → Einstellungen): Das Sprachmodell erzählt jeden Zug in zwei bis vier Sätzen nach, wie eine Szene im Rechenzentrum."
-},
-{
-"lang": "de",
-"src": "assistent",
-"file": "Assistent und Oberfläche",
-"head": "Meine Daten",
-"title": "Meine Daten",
-"text": "- Krisenspiel gemeinsam (Funktionen → Meine Daten → „Krisenspiel gemeinsam“; baut auf „IT-Krisenspiel“; Krisenspiel → Einstellungen): Bis zu drei Mitspieler kommen in dein laufendes Krisenspiel, mit oder ohne Profil, jeder mit einer Rolle: Technik nimmt die technischen Züge, Kommunikation Meldungen, Anrufe und Kunden, Leitung alles (Budget, Lagebesprechung)."
 },
 {
 "lang": "de",
@@ -13549,7 +13333,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/notaus.py blocks: whether a kill switch stage stops this kind of work (step 2) - app/panel/guard.py limit: rate limit per address and profile (step 3) - app/panel/guard.py Slot: cap on parallel requests (step 3) - app/panel/core.py confirm_code: fresh code or passkey for sensitive ways (step 3, step 8) - app/tarswart.py check: checks every command to the Wärter (step 3) - app/panel/chat_turn.py shared_stranger: stranger's voice at a shared speaker (step 4) - app/panel/features.py allowed: the admin's release, for every profile (step 5) - app/panel/mitschreiblink.py find: checks a write link: hash, expiry, release, list (step 3, step 5) - app/panel/krisenteam.py find: checks a seat in the crisis game: hash, expiry, release, the same game (step 3, step 5) - app/panel/nurspiel.py gate: lets a game profile reach only the page, sign-in and game, else 403 (step 5) - app/panel/features.py blocked: block of single profiles (step 5) - app/panel/geteilt.py put: share with another profile, taking back works at once (step 5) - app/panel/chat.py wrap_outside: outside text as a block of data (step 6) - app/textnorm.py defuse: defuse the block's end and the model's markers in outside "
+"text": "- app/panel/notaus.py blocks: whether a kill switch stage stops this kind of work (step 2) - app/panel/guard.py limit: rate limit per address and profile (step 3) - app/panel/guard.py Slot: cap on parallel requests (step 3) - app/panel/core.py confirm_code: fresh code or passkey for sensitive ways (step 3, step 8) - app/tarswart.py check: checks every command to the Wärter (step 3) - app/panel/chat_turn.py shared_stranger: stranger's voice at a shared speaker (step 4) - app/panel/features.py allowed: the admin's release, for every profile (step 5) - app/panel/mitschreiblink.py find: checks a write link: hash, expiry, release, list (step 3, step 5) - app/panel/features.py blocked: block of single profiles (step 5) - app/panel/geteilt.py put: share with another profile, taking back works at once (step 5) - app/panel/chat.py wrap_outside: outside text as a block of data (step 6) - app/textnorm.py defuse: defuse the block's end and the model's markers in outside text (step 6) - app/llm_tor.py entschaerft: take the model's markers out of every message (step 6) - app/panel/mailansicht.py clean: a mail's HTML only cleaned, without script and without loads from outside (step 6) - app/panel"
 },
 {
 "lang": "en",
@@ -13557,7 +13341,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "text (step 6) - app/llm_tor.py entschaerft: take the model's markers out of every message (step 6) - app/panel/mailansicht.py clean: a mail's HTML only cleaned, without script and without loads from outside (step 6) - app/panel/netguard.py allowed: whether a connection out may happen (step 6) - app/panel/answercheck.py unsupported: a figure without a source is dropped (step 9) - app/textnorm.py hide_secrets: secrets are never spoken (step 9) - app/panel/guard.py log: change log with its chain (step 10) - app/panel/vault.py seal: store secrets sealed (step 10)"
+"text": "/netguard.py allowed: whether a connection out may happen (step 6) - app/panel/answercheck.py unsupported: a figure without a source is dropped (step 9) - app/textnorm.py hide_secrets: secrets are never spoken (step 9) - app/panel/guard.py log: change log with its chain (step 10) - app/panel/vault.py seal: store secrets sealed (step 10)"
 },
 {
 "lang": "en",
@@ -14333,7 +14117,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "1. A request comes in: Chat, writing help, creating documents and what the Spark does by itself create a record at the start: channel, kind (profile, guest, admin, Spark) and device. Before any switch aktiv.py counts the request for „Aktiv 10 min“ (OLED, Monitoring, Live): a profile once, a guest per device as a shortened hash, nothing of the Spark itself, in memory only. 2. Anything switched on?: If neither „Trace requests“ nor the live page nor the settings assistant is on, there is no record. Only the modules' journal lines remain. 3. Steps with fixed words: Each step (switch, model round, tool, check, speech output) is added with kind, name and time. A value goes in only if it is a number or a short fixed word; anything else is dropped. Question, answer, arguments and results never go in. 4. Live page on?: With the live page on, live.py sees each step at once: which service is asked, what the guard decides, what comes back. Everything stays in memory and is gone after a restart. 5. Journal lines of the modules: Independently each module writes its lines into the Spark's journal. Every line starts with a word from logfilter.AREAS (33 areas), profiles only through profiles.log_na"
+"text": "1. A request comes in: Chat, writing help, creating documents and what the Spark does by itself create a record at the start: channel, kind (profile, guest, admin, Spark) and device. Before any switch aktiv.py counts the request for „Aktiv 10 min“ (OLED, Monitoring, Live): a profile once, a guest per device as a shortened hash, nothing of the Spark itself, in memory only. 2. Anything switched on?: If neither „Trace requests“ nor the live page nor the settings assistant is on, there is no record. Only the modules' journal lines remain. 3. Steps with fixed words: Each step (switch, model round, tool, check, speech output) is added with kind, name and time. A value goes in only if it is a number or a short fixed word; anything else is dropped. Question, answer, arguments and results never go in. 4. Live page on?: With the live page on, live.py sees each step at once: which service is asked, what the guard decides, what comes back. Everything stays in memory and is gone after a restart. 5. Journal lines of the modules: Independently each module writes its lines into the Spark's journal. Every line starts with a word from logfilter.AREAS (32 areas), profiles only through profiles.log_na"
 },
 {
 "lang": "en",
@@ -15085,7 +14869,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 36), otherwise the line gives its reason (dateien.STATE_LOCAL, 85). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe, vorrat) read it again."
+"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 35), otherwise the line gives its reason (dateien.STATE_LOCAL, 85). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe, vorrat) read it again."
 },
 {
 "lang": "en",
@@ -15101,7 +14885,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 36 files in every backup (step 7) - 85 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
+"text": "- 35 files in every backup (step 7) - 85 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
 },
 {
 "lang": "en",
@@ -15477,7 +15261,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "1. A service writes a line: Panel, ASR, TTS, engines and watchers write with print. systemd hands the line to the journal; every unit has LogNamespace=speech-spark. 2. Fixed words and numbers: Every line of the panel starts with a word from logfilter.AREAS (33 areas) and carries only fixed words and numbers. A profile appears there only through profiles.log_name: its name only with its consent, else „Profil“ and the end of its ID. test_log_luecken wants a line for every outcome of every action. 3. Detail on?: For some areas the admin can switch on extra lines, at most 240 minutes. They too carry only numbers and decisions; a restart switches them off. 4. Polls quiet: Successful status polls the panel makes every few seconds write no line. 5. Own part with a limit: install.sh writes the limit for space and age from logs.max_mb and logs.keep_days. journald deletes older lines itself. A change applies after the next update or install.sh. 6. The admin opens the diagnosis: Admin only, at most 60 calls per minute. 7. Filter from the fixed list?: Areas, time window (up to 24 hours) and number of lines (up to 1000) come only from fixed lists. Nothing the browser sends reaches a shell. 8. R"
+"text": "1. A service writes a line: Panel, ASR, TTS, engines and watchers write with print. systemd hands the line to the journal; every unit has LogNamespace=speech-spark. 2. Fixed words and numbers: Every line of the panel starts with a word from logfilter.AREAS (32 areas) and carries only fixed words and numbers. A profile appears there only through profiles.log_name: its name only with its consent, else „Profil“ and the end of its ID. test_log_luecken wants a line for every outcome of every action. 3. Detail on?: For some areas the admin can switch on extra lines, at most 240 minutes. They too carry only numbers and decisions; a restart switches them off. 4. Polls quiet: Successful status polls the panel makes every few seconds write no line. 5. Own part with a limit: install.sh writes the limit for space and age from logs.max_mb and logs.keep_days. journald deletes older lines itself. A change applies after the next update or install.sh. 6. The admin opens the diagnosis: Admin only, at most 60 calls per minute. 7. Filter from the fixed list?: Areas, time window (up to 24 hours) and number of lines (up to 1000) come only from fixed lists. Nothing the browser sends reaches a shell. 8. R"
 },
 {
 "lang": "en",
@@ -15501,7 +15285,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 33 areas of the diagnosis (step 2) - 20000 lines read per call at most (step 8) - 2 MB journal text per call at most (step 8) - 1000 lines shown at most (step 7) - 240 minutes of „detail“ at most (step 3)"
+"text": "- 32 areas of the diagnosis (step 2) - 20000 lines read per call at most (step 8) - 2 MB journal text per call at most (step 8) - 1000 lines shown at most (step 7) - 240 minutes of „detail“ at most (step 3)"
 },
 {
 "lang": "en",
@@ -16638,198 +16422,6 @@
 "head": "Voice chat",
 "title": "Knowledge map faster (V01.0.907, Dominik 2026-10-21 \"1\")",
 "text": "Knowledge map faster (V01.0.907, Dominik 2026-10-21 \"1\"): the knowledge map has its own daily limit *Features → Own documents → Knowledge book → Knowledge map → Map: documents per day and profile* (chat.knowledge_map_day, 5 to 500, default 200; before, chat.knowledge_book_day with 40 applied). A map step only names connections and is short, so the backlog of a full knowledge book (about 150 documents) is worked in within about a day. Still only in quiet minutes, only when the knowledge book has nothing to do, one document per step behind speech."
-},
-{
-"lang": "en",
-"src": "assistant",
-"file": "Assistant and panel",
-"head": "Voice chat",
-"title": "Voice chat",
-"text": "IT crisis game (V01.0.932, plan krisenspiel/plan.md package 1, Dominik 2026-10-22 \"build it so, but with 5 scenarios\"): admin switch *Features → My data → IT crisis game* (chat.krisenspiel, off by default; released for every profile the admin does not block, never for guests). A text adventure for one profile: an IT emergency runs as a crisis dashboard on a page of its own in the menu Crisis game with the tabs *Game*, *New game*, *Inspector* and *Past games*. Five scenarios: ransomware at a mid-size company, SAN outage, power cut in the data centre, BGP hijacking and a BSI alert about a VPN hole; each with its own systems, moves, consequences and side issues and with variants (where it started, whether the backup is clean …) that the seed picks at the start. Three levels: practice (180 minutes, more budget), normal (120) and emergency (100, less budget, more pressure). On top: time, stress, the management's trust, team morale, emergency budget and damage; below, the systems with their state (running, degraded, critical, off, isolated), the moves with their costs and the chronicle. The panel decides everything by fixed rules (krisenspiel.py, scenarios as data in krisenspiel_szenarie"
-},
-{
-"lang": "en",
-"src": "assistant",
-"file": "Assistant and panel",
-"head": "Voice chat",
-"title": "Voice chat",
-"text": "n.json, checked by check_data): every move has fixed effects, systems that are down cost damage per minute, stress, morale and trust change by fixed formulas, chance only comes from the seed (the same seed and the same moves give the same game, \"Again with this seed\" to compare). The game ends when it is won, when time runs out, when trust or morale reach 0, after 80 moves or when given up (counts as F); the grade A to F and twelve achievements (such as \"Zero data loss\", \"Ransomware under 30 minutes\", \"All-rounder\") are fixed code. The *Inspector* shows every move step by step: input, the fixed rule with all values, rolls from the seed, narrator. Crisis game with narrator (chat.krisenspiel_erzaehler, own switch under the game, off): the language model retells a move in two to four sentences; it only gets the fixed texts of the move, its answer has to be one paragraph of 30 to 700 characters without links, markup or code and may only name numbers from the facts, else the fixed text stays. It never changes a value, runs behind speech, waits at most 8 seconds and not at all during a model pause. Since package 2 the moves can be typed too (console, see below). Stored in users/<profile>"
-},
-{
-"lang": "en",
-"src": "assistant",
-"file": "Assistant and panel",
-"head": "Voice chat",
-"title": "Voice chat",
-"text": "/krisenspiel.json (one running game, the last 20 results, achievements); *Delete my game data* also works while the admin blocked the game for the profile. Status → Live (target \"Crisis game\") only shows running games, moves, new games, narrated/dropped and profiles; Logs (area \"Crisis game\") only fixed words and numbers (spiel: neu | ransomware | normal | Profil …, spiel: zug | ok | 3 ms, spiel: erzaehler | zahl | 812 ms, spiel: ende | gewonnen | note B | 9 zuege | 2 erfolge). API: GET /api/profile/krisenspiel, POST /api/profile/krisenspiel/neu ({szenario, stufe, seed?}), POST /api/profile/krisenspiel/zug ({aktion, zug}; a stale move gives 409), DELETE /api/profile/krisenspiel (give up), DELETE /api/profile/krisenspiel/daten."
-},
-{
-"lang": "en",
-"src": "assistant",
-"file": "Assistant and panel",
-"head": "Voice chat",
-"title": "Voice chat",
-"text": "Console in the crisis game (V01.0.933, package 2, Dominik 2026-10-22 \"1a 2b 3a\", \"extend the commands so we learn cmd in the Linux world too\", \"-h as help\", \"fully simulated\"): Under the chronicle there is a console (collapsible on a phone). None of it really runs: no process, no shell, no network, no file access; the panel cuts every line by fixed rules (at most 200 characters, only letters, digits and _ . : / = , @ * ' \" | \\ + - ~ ? > $ ^ ( ) [ ] { }, never ${ or $(, quotes as in the shell, pipes only into text commands, one > or >> at the end) and looks it up (krisenkonsole.py, data in krisenspiel_konsole.json). Every game starts on jump01, the admin's Linux jump host; hosts shows the machines of the scenario, ssh <machine> switches, exit goes back. Typed moves are the same moves as the buttons with the same fixed effects (such as sudo iptables -I FORWARD -j DROP on fw01, Disable-ADAccount svc_backup on dc01, controller show on san01); a wrong target is a move of its own with fixed effects (Stop-VM erp01 on hv01 stops the ERP and costs). About 150 Linux commands in eight groups (files, text, system, users and permissions, network, disks, archives, processes and services) are ful"
-},
-{
-"lang": "en",
-"src": "assistant",
-"file": "Assistant and panel",
-"head": "Voice chat",
-"title": "Voice chat",
-"text": "ly simulated (krisenlinux.py): a file system per machine with /etc, /var/log, the files of the scenario and everything one makes (mkdir, touch, cp, mv, rm, ln, tar, gzip, zip, scp to other machines, >, >>, tee), users and groups (useradd, usermod -aG, passwd), mounts, firewall rules (iptables), modes (chmod), services and processes. Where Linux needs root, sudo is needed here, else \"Permission denied\". Services hit the game: sudo systemctl stop postgresql on erp01 (also kill, pkill) is a move \"Service stopped at the console\": the system only runs in part, 2 minutes, stress and 2,000 € damage; systemctl start gives it back, sudo reboot costs 5 minutes. Patterns (grep, sed, find -name) are plain text with ^ and $ or * and ?, never a regular expression. Help everywhere: help shows all commands by group, help netz one group with explanations, <command> -h, --help, /? or man <command> shows usage, options and an example (with df, du, free, ls, sort -h is the option \"readable\"), a typo gets \"Did you mean: ping?\". Tab completes commands and machines, ↑ and ↓ bring back earlier inputs. Reading commands cost a game minute, ten minutes of reading are a move of their own \"Analysis at the cons"
-},
-{
-"lang": "en",
-"src": "assistant",
-"file": "Assistant and panel",
-"head": "Voice chat",
-"title": "Voice chat",
-"text": "ole\". What one makes is bounded (200 files per machine, 100 KB per game). Next to the five scenarios New game offers 🎲 Surprise: the panel picks one by chance (repeatable with a seed), what happens one sees only in the game (szenario: \"zufall\"). A new game offers the mode console only: no buttons, everything is typed, a win brings 5 more points and the achievement \"Solved without a button\" (now thirteen achievements). A game given up earns no achievement, not even \"Baptism of fire\". Live only counts console lines, the logs only write the kind (spiel: konsole | zug | 3 ms, spiel: konsole abgelehnt | alter zug), never the line. API: POST /api/profile/krisenspiel/konsole ({zeile, zug}; an old move gives 409, in the mode \"console only\" …/zug gives 422), POST /api/profile/krisenspiel/neu takes modus (knoepfe or konsole)."
-},
-{
-"lang": "en",
-"src": "assistant",
-"file": "Assistant and panel",
-"head": "Voice chat",
-"title": "Voice chat",
-"text": "Clock running and guide in the crisis game (V01.0.934, Dominik 2026-10-22 \"Variante 2\" and \"1\"): *New game* has the switch Clock running (off): ten real seconds are a game minute, the time left on top counts down visibly. The open, visible page asks every 20 seconds (POST /api/profile/krisenspiel/uhr with {aktion: \"tick\"}), at most 60 seconds count between two requests, so a closed page hardly loses time. The next move takes the passed minutes along (damage per minute included), the inspector shows them as \"davon_uhr\"; when they reach 0, the clock is a move of its own and the game ends with \"Time ran out\". The panel counts by a fixed rule (uhr_ticken), seed and rolls stay the same. Pause and go on exist in practice and normal ({aktion: \"pause\"|\"weiter\"}), not in emergency. A win with the clock running brings 5 more points, without a pause the achievement \"Against the clock\" (now fourteen achievements). New tab Guide (GET /api/profile/krisenspiel/anleitung, krisenanleitung.py): what it is about, quick start, the values, moves and chance, end and grades, levels and clock, the console, a tour to try, all commands by group with an example, the scenarios, the achievements, inspector and"
-},
-{
-"lang": "en",
-"src": "assistant",
-"file": "Assistant and panel",
-"head": "Voice chat",
-"title": "Voice chat",
-"text": " narrator, tips and help with problems; with a table of contents. Commands, numbers, scenarios and achievements come from the code, so the guide is always complete. Live counts games with the clock running; logs spiel: neu | … | uhr, spiel: uhr | pause, spiel: uhr | abgelaufen."
-},
-{
-"lang": "en",
-"src": "assistant",
-"file": "Assistant and panel",
-"head": "Voice chat",
-"title": "Voice chat",
-"text": "Crisis game together, editor and large console (V01.0.935, plan package 11, Dominik 2026-10-22 \"carry on by yourself\", \"tab should work in the console, and the code viewer nano and vi\", \"the console should be detachable\"): own admin switch *Features → My data → Crisis game together* (chat.krisenspiel_team, off by default, below IT crisis game; krisenteam.py). Under *Crisis game → Game → Players* a profile invites up to three players into its running game, with or without a profile, each with a role: Engineering takes the technical moves, Communication reports, calls and customers, Lead every move; the owner plays as Lead. Every move of the scenarios carries its role in the data (rolle, without it Engineering; check_data checks it, krisenspiel.darf). The link https://<panel>/#krise=<code> shows only once (with a QR code): the code after the \"#\", random (192 bits), kept only as a hash in state/krisenspiel-team.json, works only for this one game and at most 24 hours, \"Remove\" takes it back, a new game, a switch turned off or a blocked profile end every seat at once. The player's page (krisegast.js, POST /api/krise/lage and /api/krise/zug) shows values, systems, chronicle and the team,"
-},
-{
-"lang": "en",
-"src": "assistant",
-"file": "Assistant and panel",
-"head": "Voice chat",
-"title": "Voice chat",
-"text": " never the narrator's words, the inspector, the console or the owner's history and achievements, and offers only the moves of its own role (others grey with the role's name). Every page asks every 4 seconds; the chronicle shows who took which move. Wrong codes lock like a PIN, every request counts against the rate limit krisegast, other sites (Origin) are refused; never the assistant, a tool or the model. Live shows open seats, players present and team moves today; logs spiel: team | einladung | technik, spiel: team zug | ok | kommunikation, spiel: team abgelehnt | falscher code, never the code or a name. At the console Tab now also completes files and folders (relative to the working directory, several hits up to their common start and as a list), after ssh the machines, after man the commands; on a phone the button ⇥ does the same, the prompt shows the working directory. nano, vi and vim open a file in an editor over the console: nano with its title bar, Ctrl+O writes, Ctrl+X exits (asks when changed), vi and vim with modes (i, a, A, I, o to write, Esc back, x, dd, h j k l, :w, :q, :wq, :x, :q!, :number), plus buttons for the phone. Saving goes through POST /api/profile/krisenspi"
-},
-{
-"lang": "en",
-"src": "assistant",
-"file": "Assistant and panel",
-"head": "Voice chat",
-"title": "Voice chat",
-"text": "el/datei by the same rules as > (outside /home/admin and /tmp only with sudo, at most 200 lines, the game's space bounded), only into the game's simulated files, no move and no game minute. The button Large lets the console fill the whole window, Esc or \"Small\" put it back."
-},
-{
-"lang": "en",
-"src": "assistant",
-"file": "Assistant and panel",
-"head": "Voice chat",
-"title": "Team and career in the crisis game (V01.0.936, plan package 3)",
-"text": "Team and career in the crisis game (V01.0.936, plan package 3): every game has a team of colleagues (kollegen in krisenspiel_szenarien.json: Sandra, Mehmet, Jonas, Lea, Piet, Ayla with two subjects each out of network, Windows, storage, forensics, data centre, communication; the seed picks them). Every technical move carries its subject in the data (fach, check_data requires it), moves of communication have the subject communication, moves of the lead stay with the player. Above the moves \"Who takes it?\" picks a free colleague, then a move (POST …/zug with an): handing over costs 2 minutes, the colleague needs 70 % of the move's time in their own subject, else 150 %, from 70 % tiredness 130 % of that; when their minute comes, the move works as if done yourself (without its minutes, the budget goes when handing over), the chronicle reports it under \"Team\", the inspector as step \"Team\". Every task makes tired (+15 % in the subject, +25 % outside), who is free rests 4 % per move, the status meeting (−10 %) and food (−30 %) help everyone (erholung), at 100 % nobody takes anything any more. At the console team shows the team, assign <colleague> <task> hands over (without arguments: what"
-},
-{
-"lang": "en",
-"src": "assistant",
-"file": "Assistant and panel",
-"head": "Voice chat",
-"title": "Team and career in the crisis game (V01.0.936, plan package 3)",
-"text": " is possible now). Career (krisenspiel.RAENGE, laufbahn): junior admin (3 colleagues), admin from 2 wins (4), IT manager from 5 wins (5, budget 110 %), CISO from 10 wins and one grade A (6, budget 120 %); the rank counts for every new game and stands under *Past games* with progress and ladder, under *New game* with team and budget. New achievements \"Well delegated\" (won and at least four tasks handed over) and \"CISO\" (sixteen achievements). The guide has the section \"Team and career\" with the numbers from the code and explains Tab, \"Large\", nano and vi. Live counts the tasks handed over today; log spiel: zug | delegiert. Next: package 5 (learning), then the other packages of the plan."
-},
-{
-"lang": "en",
-"src": "assistant",
-"file": "Assistant and panel",
-"head": "Voice chat",
-"title": "Learning in the crisis game (V01.0.937, plan package 5)",
-"text": "Learning in the crisis game (V01.0.937, plan package 5): after every game the debrief stands below the grade (krisenspiel.nachbesprechung): fixed lessons from the scenario data (lehren per scenario, lehren_allgemein for all) with their source (NIST SP 800-61 Rev. 2, BSI standard 200-4, GDPR Art. 33, BSI IT-Grundschutz, RFC 6811 and 9162, BSI Act, police ZAC), what went well first. A lesson's condition checks the moves in their order (genutzt, fehlt, vor, ohne_vor), the end (ende) and values like every other rule; tasks handed over count too. check_data checks text, source and move names. Learning mode (tick under *New game*, POST …/neu with lernen): a hint before every move (krisenspiel.tipp: the panel tries every offered move on a copy and takes the one that comes closest to the goal, then more knowledge of the situation, then less damage), its button is marked; a learning game earns no achievements and does not count for career and best score. Ghost (krisenspiel.geist): if the profile finished the same scenario on the same level before without hints, a line shows where the best run stood after as many moves (minute and damage, from kurve in the history). Under *Past games* statis"
-},
-{
-"lang": "en",
-"src": "assistant",
-"file": "Assistant and panel",
-"head": "Voice chat",
-"title": "Learning in the crisis game (V01.0.937, plan package 5)",
-"text": "tics per scenario (played, won, average, best, minutes) and the spread of grades. The guide has the section \"Learning: hint, debrief, ghost\". Log spiel: neu | … | lernen. Next: package 4 (more scenarios), then the other packages of the plan."
-},
-{
-"lang": "en",
-"src": "assistant",
-"file": "Assistant and panel",
-"head": "Voice chat",
-"title": "Seven new scenarios in the crisis game (V01.0.938, plan package 4)",
-"text": "Seven new scenarios in the crisis game (V01.0.938, plan package 4): besides ransomware, SAN, power, BGP and BSI there are DDoS on the web shop (volume or request flood, with or without extortion: provider filter, protection service, WAF rule, emergency page; paying protection money does not help), data leak with a reporting deadline (open cloud storage or API hole, small or large: check the sample, find and close the source, data protection officer, risk assessment, report under GDPR Art. 33 before the deadline, people affected under Art. 34 at high risk), insider (admin about to leave, own or service account, with or without a time bomb: evidence before the talk, HR and legal, block the upload, search cron jobs), cloud outage (the provider's region or DNS, with or without a second region: status page, switch over, rebuild from the backup, second DNS provider, emergency operation), poisoned update (back door in the monitoring, only there or also in AD, quiet or active: isolate, block C2, rebuild instead of uninstalling, krbtgt twice, report), CEO fraud (hijacked mailbox or similar domain, transfer fresh or from yesterday: the bank first, then headers, forwarding rules, call-back ch"
-},
-{
-"lang": "en",
-"src": "assistant",
-"file": "Assistant and panel",
-"head": "Voice chat",
-"title": "Seven new scenarios in the crisis game (V01.0.938, plan package 4)",
-"text": "eck of all payments, no blame) and database deleted (backup good or empty for weeks, with or without a delayed replica: stop writes, stop the replica, restore, transaction logs up to just before the deletion; an empty database solves nothing). Every scenario has variants from the seed, roles and subjects for the team, side issues, at least four lessons with a source (among them GDPR Art. 33/34, BSI IT-Grundschutz CON.3, ORP.2, ORP.3, ORP.4, OPS.2.2, CISA ED 21-01) and its own console with machines, files and wrong moves; new game commands aws, dns, blocklist, geoblock, scale, pay, risk, image, Get-ADUser, Get-InboxRule, crontab, apt, mysql, mysqlbinlog. The self-tests play every variant of every scenario on every level to a win, also typed only. Next: package 6 (challenges), then the other packages of the plan."
-},
-{
-"lang": "en",
-"src": "assistant",
-"file": "Assistant and panel",
-"head": "Voice chat",
-"title": "Challenges in the crisis game (V01.0.939, plan package 6)",
-"text": "Challenges in the crisis game (V01.0.939, plan package 6): under *New game* are the daily and the weekly challenge (krisenspiel.herausforderung): scenario, seed and mutators from the date in Europe/Berlin, the same for every profile of this Spark, level Normal and team as at the rank Admin (equal conditions whatever the career). The first try counts for the board (board, read from the profiles' own game files, no state of its own), later tries and learning games do not. Every profile chooses how it stands there: without name (default), with name or not at all (POST /api/profile/krisenspiel/bestenliste); whoever deletes their game data leaves the board. Mutators (krisenspiel.MUTATOREN): austerity (half the budget, +5), hurry (a fifth less time, +5), press on your heels (trust −20, +4), after the night shift (team 40 % tired, morale −15, +4); the daily challenge has one, the weekly challenge two, in free play you pick them yourself; a win adds their points. New achievements \"Challenge accepted\" and \"Bold\". The self-tests win every scenario in every variant with every pair of mutators. Live counts the challenges started today; logs spiel: neu | … | tag, spiel: bestenliste | anonym/nam"
-},
-{
-"lang": "en",
-"src": "assistant",
-"file": "Assistant and panel",
-"head": "Voice chat",
-"title": "Challenges in the crisis game (V01.0.939, plan package 6)",
-"text": "e/aus. The guide has the section \"Challenges and mutators\". Next: package 7 (iPhone native)."
-},
-{
-"lang": "en",
-"src": "assistant",
-"file": "Assistant and panel",
-"head": "Voice chat",
-"title": "Crisis game in the iPhone app (V01.0.940, plan package 7)",
-"text": "Crisis game in the iPhone app (V01.0.940, plan package 7): in the app under *My things → Crisis game* (KrisenspielView.swift, only with the game's release, iphone.THINGS[\"krisenspiel\"]: read the game, a move, a typed line, a new game) are the values on top as bars, the systems with traffic lights, the moves as buttons (with the hint in learning mode), the console with a key bar (help, hosts, ssh, sudo, |, -h), the chronicle and at the end grade, reasons and debrief with source. Without a running game the app starts the daily or weekly challenge or a surprise scenario. Every value and rule comes from the Spark, the app only shows texts; guide, inspector, board and playing together stay on the page Crisis game in the panel (\"Open in the panel\")."
-},
-{
-"lang": "en",
-"src": "assistant",
-"file": "Assistant and panel",
-"head": "Voice chat",
-"title": "Crisis game: guide, QR code and switching off (V01.0.941)",
-"text": "Crisis game: guide, QR code and switching off (V01.0.941): the parts of the guide show again under the table of contents, a click jumps there (they were hidden as a page section). Every QR code of the panel (mfa._qr_svg) has a viewBox and shrinks as a whole when shown small instead of being cut off on the right and bottom (player invitation, note-taking link, invitations, apps). At the console a machine you switch off with sudo shutdown, poweroff or halt closes the connection: you are back on jump01 (reboot and shutdown -r keep it)."
-},
-{
-"lang": "en",
-"src": "assistant",
-"file": "Assistant and panel",
-"head": "Voice chat",
-"title": "Campaigns in the crisis game (V01.0.943, plan package 9)",
-"text": "Campaigns in the crisis game (V01.0.943, plan package 9): under *New game* there are four campaigns (data kampagnen in krisenspiel_szenarien.json, checked by check_data): The attack wave (CEO fraud → ransomware → data leak), The black week (power cut → SAN → cloud), Poison in the supply chain (update → insider → BSI alert) and Network under fire (DDoS → BGP → deleted database), each chapter on a game day with its own opening sentence. The level holds for all chapters, the chapters' seeds come from the campaign's seed. What a chapter leaves behind is a fixed rule (krisenspiel.ERBE, never the model): Audit (not won or grade D to F: a fifth less budget), Insurance pays (won without data loss: a fifth more), Exhausted team (morale below 40 %: morale −15, team 30 % tired), Reputation damaged (trust below 40 %: −15) and Well-rehearsed (grade A or B: stress −10, morale +5). Between chapters the pause may be as long as you like, a running chapter stays saved (\"Play on\" shows it again); whoever starts another game instead gives the chapter up. At the end the chapters' average is the grade (the last 10 campaigns are listed), plus the achievement \"Saw it through\". \"End the campaign\" (DELETE /"
-},
-{
-"lang": "en",
-"src": "assistant",
-"file": "Assistant and panel",
-"head": "Voice chat",
-"title": "Campaigns in the crisis game (V01.0.943, plan package 9)",
-"text": "api/profile/krisenspiel/kampagne) ends it without a score, the running game stays as a free game. Start and continue through POST …/neu with kampagne (an id or weiter), never together with learning mode, mutators or a challenge. Logs spiel: kampagne | start|weiter|kapitel N von M|ende|ersetzt|beendet, spiel: kampagne abgelehnt | keine kampagne; Live shows running campaigns and those begun today as numbers. In the iPhone app *Crisis game* lists the campaigns to start, a running one with its chapter and opening sentence and \"Next chapter\". test_krisenspiel checks every chapter from the second on with the worst heritage (audit, exhausted, reputation) on every variant for winnability. Next: the Netzduell (own tab, terminal only), then package 8 (speech)."
-},
-{
-"lang": "en",
-"src": "assistant",
-"file": "Assistant and panel",
-"head": "Voice chat",
-"title": "Game profiles \"Crisis game only\" (V01.0.945, network duel step 1)",
-"text": "Game profiles \"Crisis game only\" (V01.0.945, network duel step 1): under *People and devices* the admin creates a profile with the tick \"Crisis game only\" or switches it at the profile (PUT /api/admin/profiles/{id}/nurspiel, never for a profile with an admin role, and no admin role afterwards). Such a profile sees only the crisis game and \"Sign out\" after signing in: features.blocked blocks every function but the crisis game (and the second sign-in step), and a middleware of its own (nurspiel.py) lets it reach only the page, the sign-in, its own security and the game; every other way (assistant, voice, devices, MCP, Telegram, phone, every setting) answers 403 before the route runs. test_nurspiel walks every route of the panel for it. Live counts the game profiles, logs spiel: nur spiel | an|aus|profil angelegt, spiel: nur spiel gesperrt | <area>. Fixed along the way: a profile without the admin login did not see Lists, Open, Contacts, Knowledge book and Crisis game in the menu (the rule only let Assistant, Chats, Calendar and E-mail through); now only the pages of \"Manage Spark\" are missing."
 },
 {
 "lang": "en",
@@ -20390,30 +19982,6 @@
 "head": "My data",
 "title": "My data",
 "text": "- Editing music (Features → My data → \"Editing music\"; builds on \"Making music\"; Me → Music): The Spark edits a song under Me → Music, itself and without the internet, with the same ACE-Step as for making: make a section new, extend at the front or back, change the music style (rock, jazz, reggae, …, you decide how close to the o …"
-},
-{
-"lang": "en",
-"src": "assistant",
-"file": "Assistant and panel",
-"head": "My data",
-"title": "My data",
-"text": "- IT crisis game (Features → My data → \"IT crisis game\"; Crisis game → Settings): A text adventure in the data centre with twelve scenarios: ransomware, SAN outage, power cut, BGP hijacking, BSI alert, DDoS, data leak with a reporting deadline, insider, cloud outage, poisoned update, CEO fraud and a deleted database."
-},
-{
-"lang": "en",
-"src": "assistant",
-"file": "Assistant and panel",
-"head": "My data",
-"title": "My data",
-"text": "- Crisis game with narrator (Features → My data → \"Crisis game with narrator\"; builds on \"IT crisis game\"; Crisis game → Settings): The language model retells every move in two to four sentences, like a scene in the data centre."
-},
-{
-"lang": "en",
-"src": "assistant",
-"file": "Assistant and panel",
-"head": "My data",
-"title": "My data",
-"text": "- Crisis game together (Features → My data → \"Crisis game together\"; builds on \"IT crisis game\"; Crisis game → Settings): Up to three players join your running crisis game, with or without a profile, each with a role: Engineering takes the technical moves, Communication reports, calls and customers, Lead everything (budget, status meeting)."
 },
 {
 "lang": "en",

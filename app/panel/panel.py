@@ -105,14 +105,11 @@ import doclingdienst  # noqa: E402
 import suchpruefung  # noqa: E402
 import wissensbuch  # noqa: E402
 import wissenskarte  # noqa: E402
-import krisenspiel  # noqa: E402
-import krisenteam  # noqa: E402
 import mcpserver  # noqa: E402
 import meinmcp  # noqa: E402
 import live  # noqa: E402
 import hamelden  # noqa: E402
 import notaus  # noqa: E402
-import nurspiel  # noqa: E402
 import hilfe  # noqa: E402
 import tipps  # noqa: E402
 import saetze  # noqa: E402
@@ -164,7 +161,7 @@ import einladung  # noqa: E402
 
 # no /docs, /redoc or /openapi.json: a map of every path for guests, and Swagger from a CDN
 app = FastAPI(title="Speech on DGX Spark", docs_url=None, redoc_url=None, openapi_url=None)
-for _module in (account, admin, chat, chats, chatsec, verbund, anrufe, update, system, proactive, room, roomlive, tidy, mailstil, fuerdich, ichweiss, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, terminal, android, appupdate, appmerken, pruefzugang, apns, transit, feeds, logfilter, agent, auftragsplan, images, messages, intent, wissen, tracelog, lokal, features, remarkable, rmplus, rmpapier, join, onboard, hintergrund, stufe, today, offsite, doclingdienst, suchpruefung, wissensbuch, wissenskarte, krisenspiel, krisenteam, mcpserver, meinmcp, live, hamelden, notaus, hilfe, tipps, saetze, spickzettel, schreib, begleiter, fernsicht, systemone, geraeteupdate, meldung, ghtoken, docmake, weiche, weiche_abstimmen, weiche_unklar, dienstwacht, wartung, faelle, berater, speicher, nashilfe, nas, nasquelle, auslassen, nasablage, naszustand, gehaeuse, schirm, verlauf, klaeren, technik, bilder, musik, verbrauch, modellseite, werkstattseite, praxistest, telefon, telefon_ich, kalenderserver, kontaktserver, einladung, zustellung, geteilt, vorgaenge, mailansicht, mitschreiblink):
+for _module in (account, admin, chat, chats, chatsec, verbund, anrufe, update, system, proactive, room, roomlive, tidy, mailstil, fuerdich, ichweiss, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, terminal, android, appupdate, appmerken, pruefzugang, apns, transit, feeds, logfilter, agent, auftragsplan, images, messages, intent, wissen, tracelog, lokal, features, remarkable, rmplus, rmpapier, join, onboard, hintergrund, stufe, today, offsite, doclingdienst, suchpruefung, wissensbuch, wissenskarte, mcpserver, meinmcp, live, hamelden, notaus, hilfe, tipps, saetze, spickzettel, schreib, begleiter, fernsicht, systemone, geraeteupdate, meldung, ghtoken, docmake, weiche, weiche_abstimmen, weiche_unklar, dienstwacht, wartung, faelle, berater, speicher, nashilfe, nas, nasquelle, auslassen, nasablage, naszustand, gehaeuse, schirm, verlauf, klaeren, technik, bilder, musik, verbrauch, modellseite, werkstattseite, praxistest, telefon, telefon_ich, kalenderserver, kontaktserver, einladung, zustellung, geteilt, vorgaenge, mailansicht, mitschreiblink):
     app.include_router(_module.router)
 app.middleware("http")(update_lock)
 
@@ -259,17 +256,6 @@ async def sessions(request: Request, call_next):
             for c in raw:
                 response.headers.append("set-cookie", c if "secure" in c.lower() else c + "; Secure")
     return response
-
-
-@app.middleware("http")
-async def game_only(request: Request, call_next):
-    """Spielprofile „Nur Spiel“ (nurspiel.py): such a profile reaches only the page, its login and the game."""
-    held = nurspiel.gate(request)
-    if held:
-        r = JSONResponse({"detail": held[1]}, status_code=held[0], headers={"Cache-Control": "no-store"})
-        protect(request, r)
-        return r
-    return await call_next(request)
 
 
 @app.middleware("http")

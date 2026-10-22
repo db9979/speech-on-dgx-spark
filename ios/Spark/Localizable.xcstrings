@@ -17001,16 +17001,6 @@
         }
       }
     },
-    "Noch kein Spiel. Starte eine Herausforderung oder ein Überraschungs-Szenario; alles Weitere gibt es auf der Seite Krisenspiel im Panel.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No game yet. Start a challenge or a surprise scenario; everything else is on the page Crisis game in the panel."
-          }
-        }
-      }
-    },
     "Schaden": {
       "localizations": {
         "en": {
@@ -17127,16 +17117,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Open in the panel (guide, inspector, playing together)"
-          }
-        }
-      }
-    },
-    "Krisenspiel": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Crisis game"
           }
         }
       }

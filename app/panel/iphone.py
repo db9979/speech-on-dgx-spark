@@ -174,9 +174,6 @@ THINGS = {
               (("GET",), rf"/api/musik/job/{_DOC}"),
               (("GET",), rf"/api/musik/{_DOC}/datei"), (("DELETE",), rf"/api/musik/{_DOC}"),
               (("POST",), rf"/api/musik/{_DOC}/(?:bearbeiten|erkennen|eigenes)"), (("POST",), r"/api/musik/hochladen")),
-    # IT-Krisenspiel (krisenspiel.py, Paket 7): the game, a move, a typed line, a new game (also a challenge); the
-    # guide, the inspector, the board choice, giving up and playing together stay on the panel's page
-    "krisenspiel": ((("GET",), r"/api/profile/krisenspiel"), (("POST",), r"/api/profile/krisenspiel/(?:zug|konsole|neu)")),
 }
 # what hello tells the app (the app shows an area where it is true)
 RIGHTS_PANEL = ("app_mine", "app_voice", "app_auto", "app_security", "app_accounts")

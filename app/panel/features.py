@@ -25,7 +25,6 @@ from typing import NamedTuple
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 import guard
-import nurspiel
 import profiles
 from common import STATE, load_config, write_json
 from core import acting_profile, assistant, auth, json_body
@@ -64,8 +63,7 @@ ME_PAGES = (("overbox", "Überblick", "Overview"), ("bgbox", "Mein Zustand", "My
 OWN_PAGES = (("calbox", "cal", "Kalender", "Calendar"), ("mailbox", "post", "E-Mail", "E-mail"),
              ("taskbox", "listen", "Listen", "Lists"), ("vgbox", "offen", "Offen", "Open"),
              ("conbox", "kontakte", "Kontakte", "Contacts"),
-             ("wbbox", "wbuch", "Wissensbuch", "Knowledge book"),
-             ("ksbox", "spiel", "Krisenspiel", "Crisis game"))
+             ("wbbox", "wbuch", "Wissensbuch", "Knowledge book"))
 # Ich pages every profile has, whatever is switched on (me.js meAll shows them for every profile too)
 ME_ALWAYS = frozenset(("setbox", "factbox", "logbox", "secbox"))
 # Ich pages the iPhone app leaves out, each with its reason; every other page can be opened in the app
@@ -245,13 +243,6 @@ FEATURES = (
     # (Abschnitt neu, Verlängern, Musikrichtung, Remix, Schneiden, Tempo und Tonart); the panel picks the song
     F("musikbearbeiten", "Musik bearbeiten", "Editing music", "data", ("musik_bearbeiten",), parent="musik",
       me="musikbox", guide="musikbearbeiten"),
-    # IT-Krisenspiel (krisenspiel.py, plan krisenspiel): a text adventure for one profile, the panel's fixed rules
-    # decide every value; the narrator (own switch) only retells a move in words
-    F("krisenspiel", "IT-Krisenspiel", "IT crisis game", "data", ("krisenspiel",), me="ksbox", guide="krisenspiel"),
-    F("krisenerzaehler", "Krisenspiel mit Erzähler", "Crisis game with narrator", "data", ("krisenspiel_erzaehler",),
-      parent="krisenspiel", me="ksbox", guide="krisenerzaehler"),
-    F("krisenteam", "Krisenspiel gemeinsam", "Crisis game together", "data", ("krisenspiel_team",),
-      parent="krisenspiel", me="ksbox", guide="krisenteam"),
     F("docbrief", "Steckbrief und Tags", "Document card and tags", "data", ("doc_brief",),
       parent="documents", me="docbox", guide="docbrief"),
     # Suchprüfung (suchpruefung.py, plan suche-schaerfen, Stufe 1): test questions measure how often the search
@@ -787,8 +778,6 @@ def blocked(key, uid, c=None):
     c = chat_cfg() if c is None else c
     deny = c.get("deny") if isinstance(c.get("deny"), dict) else {}
     review = REVIEW(uid) if REVIEW else ()
-    if uid and key not in NO_BLOCK and nurspiel.SPIEL not in chain(key) and profiles.nur_spiel(uid):
-        return True     # a profile „Nur Krisenspiel“ (nurspiel.py): the game and nothing else
     return any(uid in (deny.get(k) or ()) or k in review for k in chain(key) if k not in NO_BLOCK)
 
 

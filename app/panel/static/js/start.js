@@ -48,7 +48,6 @@ async function startPage(){let who=null;try{who=await (await /*raw: the first wh
   if(window.postStart)postStart(who);
   if(window.lstStart)lstStart(who);   // Listen (listen.js): the menu entry only for a profile that may use lists
   if(window.wbStart)wbStart(who);   // Wissensbuch (wissensbuch.js): the menu entry only when the admin released it
-  if(window.ksStart)ksStart(who);   // Krisenspiel (krisenspiel.js): the menu entry only when the admin released it
   if(window.vgStart)vgStart(who);   // Offen (offen.js): the menu entry, the cards in the conversation and their stream
   if(window.konStart)konStart(who);   // Kontakte (kontakte.js): the menu entry only for a profile with contacts
   // a program's OAuth sign-in (mcpserver.py): kept until the profile is signed in, then Ich → Spark als MCP-Server asks
@@ -66,10 +65,6 @@ async function startPage(){let who=null;try{who=await (await /*raw: the first wh
     // with only what it may (Assistent, Ich); guests keep the plain page with the assistant
     if(who.profile){document.body.classList.remove('guest');document.body.classList.add('adm','prof')}}
   else{$('logoutbtn').style.display='inline-block';document.body.classList.add('adm');hdrH();if(typeof grundLoad==='function')grundLoad()}
-  // Spielprofil „Nur Krisenspiel“ (nurspiel.py): the menu shows the game only, it is the start page
-  if(who.nur_spiel){document.body.classList.add('nurspiel');const n=document.querySelector('nav');
-    if(n&&!$('nsout')){const b=document.createElement('button');b.type='button';b.id='nsout';b.textContent=t('Abmelden','Sign out');b.onclick=()=>$('proflogout').click();n.appendChild(b)}
-    goSec('spiel');return}
   document.querySelector('nav button[data-s=chat]').click();       // the assistant is the start page
   placeBack();   // a reload the page did itself: back to the same place (base.js placeNow)
   // "Im Panel öffnen" in the iPhone app: #go=<page>, #cfg=<settings page> or #me=<Ich area>, only known names

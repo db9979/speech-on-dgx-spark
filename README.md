@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.947** IT crisis game removed again (as requested): game, net duel and „crisis game only“ profiles
 - **V01.0.946** Turn end by tone (switch, off): Smart Turn on the model computer measures at each speaking pause whether you sound done; numbers only, decides nothing yet, summary after 200 pauses or 7 days below the switch
 - **V01.0.945** Game profiles "Crisis game only": players without the assistant
 - **V01.0.944** Barge-in: pause first in the iPhone app too: a "mhm" only pauses the answer, "stop" ends it, a sentence becomes the new question; without a decision after 4 s it plays on
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.940** IT crisis game (package 7): own page in the iPhone app (My things → Crisis game) with moves, console and debrief
 - **V01.0.939** IT crisis game (package 6): daily and weekly challenge with a board (without name, with name or not at all) and mutators with bonus points
 - **V01.0.938** IT crisis game (package 4): seven new scenarios (DDoS, data leak with GDPR deadline, insider, cloud outage, poisoned update, CEO fraud, deleted database) with their own console
-- **V01.0.937** IT crisis game (package 5): debrief with sources (NIST, BSI, GDPR), learning mode with a hint, ghost of the best run, statistics per scenario
 
 
 

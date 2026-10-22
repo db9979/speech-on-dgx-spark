@@ -37,7 +37,6 @@ OHNE = {
     "mailsend": "gesendete Mails liegen im Postfach unter Gesendet; im Spark bleibt nur die Vorschau höchstens 10 Minuten, ein Vorschlag per Sprache 5 Minuten; geplante Mails (Später senden) versiegelt bis zum Senden, sie gehen mit den Daten von E-Mail lesen",
     "mailcode": "keine eigenen Daten: ein Code lebt nur mit seiner Mitteilung im Speicher, nie auf der Platte",
     "bildaendern": "geänderte und hochgeladene Bilder liegen bei den Bildern (features.OWN bilder, Ich → Bilder)",
-    "krisenerzaehler": "speichert nichts Eigenes; erzählte Sätze liegen im Spielstand des Krisenspiels (features.OWN krisenspiel)",
     "musikbearbeiten": "Fassungen und hochgeladene Dateien liegen bei den Liedern (features.OWN musik, Ich → Musik)",
     "teilen": "teilt nur eigene Dokumente, Kalender und Listen, keine Kopie; jede Freigabe zieht Ich → Geteilt einzeln zurück, und ein gelöschtes Dokument ist nicht mehr geteilt",
     "documents": "alle Dokumente auf einmal wären zu einschneidend; jedes Dokument hat sein eigenes Löschen unter Ich → Dokumente",

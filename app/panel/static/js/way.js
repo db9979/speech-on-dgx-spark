@@ -7,8 +7,8 @@
 // A link only moves to the place; it never switches, saves or sends anything.
 const WAY_ROOTS=[['Personen und Geräte','prof'],['People and devices','prof'],['Einstellungen','cfg'],['Settings','cfg'],
   ['Funktionen','feat'],['Features','feat'],['Zustand','mon'],['Status','mon'],['Ich','me'],['Me','me'],['Kalender','o:calbox'],['Calendar','o:calbox'],
-  ['E-Mail','o:mailbox'],['E-mail','o:mailbox'],['Listen','o:taskbox'],['Lists','o:taskbox'],['Offen','o:vgbox'],['Open','o:vgbox'],['Kontakte','o:conbox'],['Contacts','o:conbox'],['Wissensbuch','o:wbbox'],['Knowledge book','o:wbbox'],['Krisenspiel','o:ksbox'],['Crisis game','o:ksbox']];   // the pages of their own (kalender.js OWN_PAGES), both languages
-const WAY_RX=/(Personen und Geräte|People and devices|Einstellungen|Settings|Funktionen|Features|Zustand|Status|Ich|Me|Kalender|Calendar|E-Mail|E-mail|Listen|Lists|Offen|Open|Kontakte|Contacts|Wissensbuch|Knowledge book|Krisenspiel|Crisis game)\s*→/g;
+  ['E-Mail','o:mailbox'],['E-mail','o:mailbox'],['Listen','o:taskbox'],['Lists','o:taskbox'],['Offen','o:vgbox'],['Open','o:vgbox'],['Kontakte','o:conbox'],['Contacts','o:conbox'],['Wissensbuch','o:wbbox'],['Knowledge book','o:wbbox']];   // the pages of their own (kalender.js OWN_PAGES), both languages
+const WAY_RX=/(Personen und Geräte|People and devices|Einstellungen|Settings|Funktionen|Features|Zustand|Status|Ich|Me|Kalender|Calendar|E-Mail|E-mail|Listen|Lists|Offen|Open|Kontakte|Contacts|Wissensbuch|Knowledge book)\s*→/g;
 const WAY_ARROW=/^\s*→\s*/;
 // the names a step can match inside a page: rows, headings, folded parts, tabs
 const WAY_SEL='.setrow .lbl>b, label, summary, h2, h3, .ptabs button, .ltabs button, .lchips button, [data-tab], [data-area], .mgrp, .fgrp>summary b, .zk';

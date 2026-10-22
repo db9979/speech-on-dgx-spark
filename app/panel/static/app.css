@@ -62,7 +62,7 @@ body.guest #themebtn{margin-left:auto}
 /* login */
 body.guest nav,body.guest #hdr,body.guest #fab,body.guest #logoutbtn{display:none!important}
 /* a signed-in profile without admin login (start.js): the admin's shell without the pages of „Spark verwalten“; its own
-   pages (Assistent, Chats, Kalender, E-Mail, Listen, Offen, Kontakte, Wissensbuch, Krisenspiel) show as they are released */
+   pages (Assistent, Chats, Kalender, E-Mail, Listen, Offen, Kontakte, Wissensbuch) show as they are released */
 body.prof #hdr,body.prof #fab,body.prof #logoutbtn,body.prof .navgrp,body.prof nav button:is([data-s=mon],[data-s=feat],[data-s=prof],[data-s=cfg]),
 body.prof #mbar button[data-m=mon],body.prof #mbar button[data-m=more],body.prof #mmenu{display:none!important}
 body.mgr .mainonly,body.coadm .pwonly,nav button[hidden]{display:none!important}   /* an admin profile (coadmin.js): .pwonly only with the panel password; a Verwalter does not see .mainonly */
@@ -2240,84 +2240,3 @@ textarea{resize:none}textarea[data-fest]{resize:vertical}textarea.feldplatz{padd
 .wiss-int .ld-mid small.wiss-old{color:var(--warn)}.wiss-dl{margin-top:12px}.wiss-dl h4,.ld-detail .wiss-dl{font-size:11.5px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
 .wiss-no{margin:8px 0}.wiss-no summary{cursor:pointer;font-size:13px;color:var(--mut);padding:6px 8px}.wiss-add{margin:8px 0;flex-wrap:wrap}.wiss-add input{flex:1;min-width:0}
 .wiss-edit{flex-wrap:wrap;margin-top:6px}.wiss-edit input,.wiss-edit select{flex:1 1 160px;min-width:0;width:auto}.ld-detail .wiss-chips{margin-top:6px}.wiss-chips .chip .b{min-height:0;min-width:0}
-/* IT-Krisenspiel (krisenspiel.js): the dashboard, the systems, the chronicle, the moves, the grade */
-.ks h3{margin:0 0 4px}.ks h4{margin:14px 0 6px}
-.ks-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
-.ks-mets{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin:12px 0}
-.ks-met{border:1px solid var(--line);border-radius:12px;padding:8px 10px;display:flex;flex-direction:column;gap:3px}
-.ks-met span{font-size:12px;color:var(--mut)}.ks-met b{font-size:18px}
-.ks-met i{display:block;height:6px;border-radius:99px;background:var(--line);overflow:hidden}.ks-met em{display:block;height:100%;background:var(--acc);transition:width .4s}
-.ks-met.bad{border-color:color-mix(in srgb,var(--bad) 50%,var(--line))}.ks-met.bad em{background:var(--bad)}
-.ks-met.dmg b{color:var(--badt)}
-.ks-grid{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:16px}
-@media (max-width:900px){.ks-grid{grid-template-columns:1fr}}
-.ks-assets{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}
-.ks-asset{border:1px solid var(--line);border-left:4px solid var(--ok);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:3px}
-.ks-asset.warn{border-left-color:var(--warn)}.ks-asset.bad{border-left-color:var(--bad)}.ks-asset.iso{border-left-color:var(--acc2)}
-.ks-asset .pill{align-self:flex-start}.pill.iso{background:color-mix(in srgb,var(--acc2) 16%,transparent)}
-.ks-acts{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
-.ks-act{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left}.ks-act small{color:var(--mut)}
-.ks-chron{display:flex;flex-direction:column;gap:8px}
-.ks-ev{border-left:3px solid var(--line);padding:2px 0 2px 10px}.ks-ev p{margin:2px 0}
-.ks-ev.neben{border-left-color:var(--warn)}.ks-ev.folge{border-left-color:var(--acc2)}.ks-ev.ende{border-left-color:var(--acc)}
-.ks-end{display:flex;gap:16px;align-items:flex-start;border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:12px}
-.ks-note{font-size:44px;font-weight:700;width:64px;text-align:center;border-radius:12px;background:var(--line)}
-.ks-note.small{font-size:16px;width:auto;padding:2px 10px}
-.ks-note.nA,.ks-note.nB{color:var(--okt)}.ks-note.nE,.ks-note.nF{color:var(--badt)}
-.ks-pick{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px;margin:10px 0}
-.ks-sz{border:1px solid var(--line);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:4px;cursor:pointer}
-.ks-sz input{width:auto}.ks-sz:has(input:checked){border-color:var(--acc)}
-.ks input.ksseed{width:120px}.ks select.ksstufe{width:auto}
-.ks-tr{border:1px solid var(--line);border-radius:10px;padding:6px 10px;margin:6px 0}.ks-tr ol{padding-left:18px}
-.ks-st pre{max-height:220px;margin:4px 0 8px}.ks-st.modell b{color:var(--acc)}.ks-st.zufall b{color:var(--warnt)}
-.ks-ach{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px}
-.ks-a{border:1px dashed var(--line);border-radius:10px;padding:8px;display:flex;flex-direction:column;gap:2px;opacity:.6}
-.ks-a.on{border-style:solid;border-color:var(--ok);opacity:1}
-/* the crisis game's console (Paket 2): a terminal look in both themes; only the output scrolls, like a real one */
-.ks-condet{margin-top:14px;border:1px solid var(--line);border-radius:12px;overflow:hidden}
-.ks-condet>summary{padding:8px 12px;cursor:pointer;font-weight:600}
-.ks-con{background:#0d1117;color:#c9d1d9;font:12.5px/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;padding:10px 12px;max-height:340px;overflow:auto;white-space:pre-wrap;word-break:break-word}
-.ks-con .kc-p,.ks-cline .kc-p{color:#7ee787}.ks-con .kc-err{color:#ff7b72}.ks-con .kc-zug{color:#79c0ff}.ks-con .kc-in{color:#f0f6fc}
-.ks-cline{display:flex;gap:8px;align-items:center;background:#0d1117;padding:6px 12px 10px;font:12.5px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
-.ks-cline .ks-in{flex:1;background:transparent;border:0;color:#f0f6fc;font:inherit;padding:2px 0;box-shadow:none;outline:none}
-/* the large console (Dominik 2026-10-22 „rauslösbar“): it fills the window, Esc or „Klein“ puts it back */
-.ks-condet>summary{display:flex;gap:8px;align-items:center}.ks-condet>summary small{flex:1}.ks-bigbtn{padding:2px 10px;font-size:12px}
-.ks-condet.ks-big{position:fixed;inset:12px;z-index:60;margin:0;display:flex;flex-direction:column;background:var(--card);box-shadow:0 10px 40px #0008}
-.ks-condet.ks-big>.ks-con{flex:1;max-height:none}.ks-condet.ks-big>.ks-ed{flex:1}
-.ks-tabkey{padding:0 10px;background:transparent;color:#7ee787;border-color:#30363d}
-/* nano, vi and vim: the file in a terminal-coloured text field, nano's bar on top, the keys below */
-.ks-ed{display:flex;flex-direction:column;background:#0d1117;color:#c9d1d9;font:12.5px/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
-.ks-edhead{display:flex;justify-content:space-between;gap:10px;background:#c9d1d9;color:#0d1117;padding:2px 10px}
-.ks-edtext{flex:1;min-height:260px;background:transparent;color:inherit;font:inherit;border:0;border-radius:0;padding:8px 12px;resize:vertical;outline:none;box-shadow:none;tab-size:4;white-space:pre;overflow:auto}
-.ks-ed.vi .ks-edtext[readonly]{caret-color:#7ee787}
-.ks-edfoot{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:4px 10px 8px;border-top:1px solid #30363d}.ks-edfoot>span{flex:1;min-width:140px}
-.ks-edfoot .b,.ks-edkeys .b{padding:2px 10px;font:inherit;background:transparent;color:#c9d1d9;border-color:#30363d}
-.ks-edfoot .ks-edcmd{flex:1;background:transparent;border:0;color:#f0f6fc;font:inherit;padding:0;box-shadow:none;outline:none}
-.ks-edkeys{display:flex;flex-wrap:wrap;gap:6px;padding:0 10px 8px}
-/* Team und Laufbahn (Paket 3): the colleagues as small cards, the career ladder */
-.ks-kol{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
-.ks-k{border:1px solid var(--line);border-radius:12px;padding:8px;display:flex;flex-direction:column;gap:3px}.ks-k.busy{border-color:var(--acc)}
-.ks-k .ks-met{border:0;padding:0}.ks-who{display:flex;gap:8px;align-items:center;margin:0 0 8px}.ks-who select{width:auto}
-.ks-career{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:8px 0}.ks-ladder{margin:6px 0 0;padding-left:20px}
-.ks-ladder li.on b{color:var(--acc)}
-.ks-hers{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:8px;margin:6px 0 8px}.ks-her,.ks-kamp{border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:4px;align-items:flex-start;min-width:0}
-.ks-board{margin:4px 0;padding-left:22px;width:100%}.ks-board li{display:flex;justify-content:space-between;gap:8px}.ks-board li.ich{font-weight:600}.ks-muts{flex-wrap:wrap}
-/* Lernen (Paket 5): the hint, the ghost, the debrief */
-.ks-tipp{border:1px solid var(--acc);border-radius:12px;padding:8px 12px;margin:6px 0}.ks-act.ks-hint{border-color:var(--acc);box-shadow:0 0 0 2px color-mix(in srgb,var(--acc) 35%,transparent)}
-.ks-geist{margin:2px 0 6px;font-size:13px}
-.ks-lehren{list-style:none;margin:6px 0;padding:0;display:flex;flex-direction:column;gap:6px}
-.ks-lehren li{border-left:3px solid var(--warn);padding:2px 0 2px 10px;display:flex;flex-direction:column}.ks-lehren li.gut{border-left-color:var(--ok)}
-/* playing together (krisenteam): the owner's seats; a seat's page in a wide card */
-.ks-team{margin-top:14px}.ks-team .row{flex-wrap:wrap;gap:8px;align-items:center}.ks-team select{width:auto}
-.kgcard{width:min(1100px,100%);max-height:calc(100dvh - 24px);overflow:auto}.kg-team{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
-.ks-only{border:1px dashed var(--line);border-radius:12px;padding:12px;margin-top:12px}
-.ks-old>summary{cursor:pointer;color:var(--mut);font-size:13px;margin:4px 0}
-/* „Uhr läuft“ and the guide of the crisis game: tables wrap instead of scrolling, the table of contents wraps too */
-.ks-uhr{display:flex;gap:10px;align-items:center;margin:4px 0 8px}
-.ks-guide .ks-gsec{scroll-margin-top:70px;margin-top:18px}.ks-guide p,.ks-guide li{line-height:1.5}
-.ks-toc{display:flex;flex-wrap:wrap;gap:6px 14px;margin:8px 0 4px}
-.ks-tab{width:100%;border-collapse:collapse;font-size:13px;margin:6px 0 12px}
-.ks-tab th,.ks-tab td{border-bottom:1px solid var(--line);padding:5px 6px;text-align:left;vertical-align:top;overflow-wrap:anywhere}
-.ks-code{white-space:pre-wrap;background:#0d1117;color:#c9d1d9;border-radius:10px;padding:10px 12px;font:12.5px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
-/* Spielprofil „Nur Krisenspiel“ (nurspiel.py): the menu shows the game only, no assistant, search, Ich or helper */
-body.nurspiel nav>*:not([data-s=spiel]):not(#nsout),body.nurspiel #fab{display:none!important}

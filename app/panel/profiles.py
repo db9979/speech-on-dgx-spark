@@ -187,7 +187,7 @@ def admin_list(q="", show="", sort="name", page=0, per=None, now=None, extra=Non
                 and not any(want in x["name"].lower() for x in mine):
             continue
         row = {"id": u["id"], "name": u["name"], "call": u.get("call", ""), "created": u.get("created"),
-               "last": last_use(u["id"], last, devs), "devices": len(mine), "nur_spiel": u.get("nur_spiel") is True}
+               "last": last_use(u["id"], last, devs), "devices": len(mine)}
         if show == "idle" and row["last"] and now - row["last"] < IDLE_DAYS * 86400:
             continue
         if show == "idle" and not row["last"] and now - int(row["created"] or 0) < IDLE_DAYS * 86400:
@@ -272,50 +272,16 @@ def short_pins():
     return [u["name"] for u in _load()["users"] if u.get("short")]
 
 
-def add_user(name, pin, nur_spiel=False):
+def add_user(name, pin):
     with _lock:
         d = _load()
         if _taken(d, name):
             raise ValueError("a profile with this name exists")
         u = {"id": "u_" + secrets.token_hex(6), "name": name.strip(), "pin": _pin_hash(pin), "created": int(time.time()),
              "short": len(str(pin)) < STRONG_PIN}
-        if nur_spiel:
-            u["nur_spiel"] = True
         d["users"].append(u)
         _write(_path("profiles.json"), d)
         return u["id"]
-
-
-# Spielprofile „Nur Spiel“ (nurspiel.py): the ids, read again only when profiles.json changed (features.blocked asks often)
-_spiel = {"key": None, "ids": frozenset()}
-
-
-def nur_spiel(uid):
-    """The profile may only play the Krisenspiel (nurspiel.py)."""
-    try:
-        st = os.stat(_path("profiles.json"))
-        key = (st.st_mtime_ns, st.st_size)
-    except OSError:
-        key = None
-    if key != _spiel["key"]:
-        _spiel.update(key=key, ids=frozenset(u["id"] for u in _load()["users"] if u.get("nur_spiel") is True))
-    return uid in _spiel["ids"]
-
-
-def set_nur_spiel(uid, on):
-    """Personen und Geräte → the profile → „Nur Krisenspiel“; False when there is no such profile."""
-    with _lock:
-        d = _load()
-        for u in d["users"]:
-            if u["id"] == uid:
-                if on:
-                    u["nur_spiel"] = True
-                else:
-                    u.pop("nur_spiel", None)
-                _write(_path("profiles.json"), d)
-                _spiel["key"] = None
-                return True
-    return False
 
 
 def _renew_pin(uid, pin):

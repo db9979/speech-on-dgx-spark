@@ -147,8 +147,7 @@ struct ThingsView: View {
 
     /// whether the profile has any part of Meine Sachen (the button beside the conversation and the row in Einstellungen)
     static func any(_ a: Allowed) -> Bool {
-        a.make || !a.areas.isDisjoint(with: ["documents", "bilder", "musik", "memory", "calendar", "mail", "tasks", "vorgaenge", "contacts",
-                                             "krisenspiel"])
+        a.make || !a.areas.isDisjoint(with: ["documents", "bilder", "musik", "memory", "calendar", "mail", "tasks", "vorgaenge", "contacts"])
     }
 
     private var a: Allowed { talk.allowed }
@@ -156,7 +155,6 @@ struct ThingsView: View {
         !a.areas.contains("documents") && !a.make && !a.areas.contains("bilder") && !a.areas.contains("musik")
             && !a.areas.contains("memory") && !a.areas.contains("calendar") && !a.areas.contains("mail")
             && !a.areas.contains("tasks") && !a.areas.contains("vorgaenge") && !a.areas.contains("contacts")
-            && !a.areas.contains("krisenspiel")
     }
 
     var body: some View {
@@ -170,7 +168,7 @@ struct ThingsView: View {
                 // Kalender, E-Mail (KalenderPost.swift), Listen (ListenView.swift), Offen (Vorgaenge.swift), Kontakte: pages of their
                 // own, like in the panel's menu
                 if a.areas.contains("calendar") || a.areas.contains("mail") || a.areas.contains("tasks") || a.areas.contains("vorgaenge")
-                    || a.areas.contains("contacts") || a.areas.contains("krisenspiel") {
+                    || a.areas.contains("contacts") {
                     Section {
                         if a.areas.contains("calendar") {
                             NavigationLink { KalenderView() } label: { Label("Kalender", systemImage: "calendar") }
@@ -186,9 +184,6 @@ struct ThingsView: View {
                         }
                         if a.areas.contains("contacts") {
                             NavigationLink { KontakteView() } label: { Label("Kontakte", systemImage: "person.crop.circle") }
-                        }
-                        if a.areas.contains("krisenspiel") {   // KrisenspielView.swift
-                            NavigationLink { KrisenspielView() } label: { Label("Krisenspiel", systemImage: "flame") }
                         }
                     }
                 }
