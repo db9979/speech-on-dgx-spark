@@ -2726,6 +2726,13 @@
 "titel": "Krisenspiel-Konsole: Züge tippen, Linux üben",
 "text": "A: Update, Krisenspiel → Neues Spiel → Ransomware, Normal, Modus „Nur Konsole“ → Spiel starten: keine Knöpfe, unter der Chronik die Konsole auf jump01. B: help: Befehle nach Gruppen; ls -h und tar --help zeigen Aufruf, Optionen und Beispiel; pign erp01 → „Meintest du: ping?“. C: echo test > notiz.txt, cat notiz.txt, sudo useradd -m bob, grep ^bob /etc/passwd; useradd ohne sudo → Permission denied. D: ssh erp01, sudo systemctl stop postgresql: neuer Zug in der Chronik, ERP gestört, Schaden steigt; sudo systemctl start postgresql gibt es zurück. E: ssh fw01, sudo iptables -I FORWARD -j DROP: derselbe Zug wie der Knopf „Netzsegmente trennen“. F: ls; rm oder echo ${HOME} → refused. G: Spiel nur mit Tippen gewinnen: 5 Punkte mehr und Erfolg „Ohne Knopf gelöst“. H: Neues Spiel → 🎲 Überraschung: ein Szenario per Zufall; mit Seed zweimal gestartet dasselbe. I: Zustand → Logs nur „spiel: konsole | …“ ohne die getippte Zeile; Live zählt Konsolen-Zeilen.",
 "thread": "IT-Krisenspiel für einzelne Nutzer"
+},
+{
+"id": "P414",
+"v": 934,
+"titel": "Krisenspiel: Uhr läuft und Anleitung",
+"text": "A: Update, Krisenspiel → Anleitung: Inhaltsverzeichnis mit 14 Abschnitten, ein Klick springt hin; unter „Alle Befehle“ jede Gruppe mit Tabelle (Befehl, Was er tut, Beispiel); am Handy nichts seitlich verschoben. B: Neues Spiel → Normal, „Uhr läuft“ an → Spiel starten: oben zählt die Zeit alle 10 Sekunden eine Minute herunter, darunter „Uhr läuft: 10 s = 1 min“ und Pause. C: Eine Minute warten, dann einen Zug machen: Inspector zeigt „davon_uhr“ mit den gewarteten Minuten. D: Pause: die Zeit steht; Weiter: sie läuft wieder. E: Seite schließen, nach 10 Minuten wieder öffnen: höchstens eine Spielminute ist vergangen. F: Ernstfall mit Uhr: kein Pause-Knopf; laufen lassen bis 0: „Die Zeit ist abgelaufen“. G: Mit Uhr und ohne Pause gewinnen: +5 Punkte („Uhr lief“) und Erfolg „Gegen die Uhr“. H: Zustand → Live: „N mit laufender Uhr“; Logs „spiel: uhr | pause“ ohne Inhalte.",
+"thread": "IT-Krisenspiel für einzelne Nutzer"
 }
 ]
 }

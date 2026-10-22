@@ -4821,7 +4821,23 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "esende Befehle kosten eine Spielminute, zehn Minuten Lesen sind ein eigener Zug „Analyse an der Konsole“. Was man anlegt, ist begrenzt (200 Dateien je Rechner, 100 KB je Spiel). Unter Neues Spiel steht neben den fünf Szenarien 🎲 Überraschung: Das Panel wählt eines per Zufall (mit Seed wiederholbar), was passiert, sieht man erst im Spiel (szenario: \"zufall\"). Beim neuen Spiel gibt es den Modus nur Konsole: keine Knöpfe, alles wird getippt, ein Sieg bringt 5 Punkte mehr und den Erfolg „Ohne Knopf gelöst“ (jetzt dreizehn Erfolge). Ein aufgegebenes Spiel bringt keinen Erfolg, auch nicht „Feuertaufe“. Live zählt nur die Konsolen-Zeilen, die Logs schreiben nur die Art (spiel: konsole | zug | 3 ms, spiel: konsole abgelehnt | alter zug), nie die Zeile. API: POST /api/profile/krisenspiel/konsole ({zeile, zug}; ein alter Zug gibt 409, im Modus „nur Konsole“ gibt …/zug 422), POST /api/profile/krisenspiel/neu nimmt modus (knoepfe oder konsole). Als Nächstes: Paket 11 (Gäste per Link mitspielen lassen), dann die übrigen Pakete des Plans."
+"text": "esende Befehle kosten eine Spielminute, zehn Minuten Lesen sind ein eigener Zug „Analyse an der Konsole“. Was man anlegt, ist begrenzt (200 Dateien je Rechner, 100 KB je Spiel). Unter Neues Spiel steht neben den fünf Szenarien 🎲 Überraschung: Das Panel wählt eines per Zufall (mit Seed wiederholbar), was passiert, sieht man erst im Spiel (szenario: \"zufall\"). Beim neuen Spiel gibt es den Modus nur Konsole: keine Knöpfe, alles wird getippt, ein Sieg bringt 5 Punkte mehr und den Erfolg „Ohne Knopf gelöst“ (jetzt dreizehn Erfolge). Ein aufgegebenes Spiel bringt keinen Erfolg, auch nicht „Feuertaufe“. Live zählt nur die Konsolen-Zeilen, die Logs schreiben nur die Art (spiel: konsole | zug | 3 ms, spiel: konsole abgelehnt | alter zug), nie die Zeile. API: POST /api/profile/krisenspiel/konsole ({zeile, zug}; ein alter Zug gibt 409, im Modus „nur Konsole“ gibt …/zug 422), POST /api/profile/krisenspiel/neu nimmt modus (knoepfe oder konsole)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Uhr läuft und Anleitung im Krisenspiel (V01.0.934, Dominik 2026-10-22 „Variante 2“ und „1“): Unter *Neues Spiel* gibt es den Schalter Uhr läuft (aus): zehn echte Sekunden sind eine Spielminute, die Restzeit oben zählt sichtbar herunter. Die offene, sichtbare Seite fragt alle 20 Sekunden nach (POST /api/profile/krisenspiel/uhr mit {aktion: \"tick\"}), zwischen zwei Anfragen zählen höchstens 60 Sekunden, eine geschlossene Seite verliert also kaum Zeit. Die vergangenen Minuten nimmt der nächste Zug mit (Schaden pro Minute inklusive), der Inspector zeigt sie als „davon_uhr“; reichen sie bis 0, ist die Uhr ein eigener Zug und das Spiel endet mit „Die Zeit ist abgelaufen“. Das Panel rechnet nach fester Regel (uhr_ticken), Seed und Würfe bleiben gleich. Pause und Weiter gibt es in Übung und Normal ({aktion: \"pause\"|\"weiter\"}), im Ernstfall nicht. Ein Sieg mit laufender Uhr bringt 5 Punkte mehr, ohne Pause den Erfolg „Gegen die Uhr“ (jetzt vierzehn Erfolge). Neuer Reiter Anleitung (GET /api/profile/krisenspiel/anleitung, krisenanleitung.py): Worum es geht, Schnellstart, die Werte, Züge und Zufall, Spielende und Noten, Stufen und Uhr, die Konsole, ein Rundgang zum Ausprobieren, alle Befehle n"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "ach Gruppen mit Beispiel, die Szenarien, die Erfolge, Inspector und Erzähler, Tipps und Hilfe bei Problemen; mit Inhaltsverzeichnis. Befehle, Zahlen, Szenarien und Erfolge kommen aus dem Code, die Anleitung ist damit immer vollständig. Live zählt Spiele mit laufender Uhr; Logs spiel: neu | … | uhr, spiel: uhr | pause, spiel: uhr | abgelaufen. Als Nächstes: Paket 11 (Gäste per Link mitspielen lassen), dann die übrigen Pakete des Plans."
 },
 {
 "lang": "de",
@@ -16501,7 +16517,23 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "ole\". What one makes is bounded (200 files per machine, 100 KB per game). Next to the five scenarios New game offers 🎲 Surprise: the panel picks one by chance (repeatable with a seed), what happens one sees only in the game (szenario: \"zufall\"). A new game offers the mode console only: no buttons, everything is typed, a win brings 5 more points and the achievement \"Solved without a button\" (now thirteen achievements). A game given up earns no achievement, not even \"Baptism of fire\". Live only counts console lines, the logs only write the kind (spiel: konsole | zug | 3 ms, spiel: konsole abgelehnt | alter zug), never the line. API: POST /api/profile/krisenspiel/konsole ({zeile, zug}; an old move gives 409, in the mode \"console only\" …/zug gives 422), POST /api/profile/krisenspiel/neu takes modus (knoepfe or konsole). Next: package 11 (let guests join by link), then the other packages of the plan."
+"text": "ole\". What one makes is bounded (200 files per machine, 100 KB per game). Next to the five scenarios New game offers 🎲 Surprise: the panel picks one by chance (repeatable with a seed), what happens one sees only in the game (szenario: \"zufall\"). A new game offers the mode console only: no buttons, everything is typed, a win brings 5 more points and the achievement \"Solved without a button\" (now thirteen achievements). A game given up earns no achievement, not even \"Baptism of fire\". Live only counts console lines, the logs only write the kind (spiel: konsole | zug | 3 ms, spiel: konsole abgelehnt | alter zug), never the line. API: POST /api/profile/krisenspiel/konsole ({zeile, zug}; an old move gives 409, in the mode \"console only\" …/zug gives 422), POST /api/profile/krisenspiel/neu takes modus (knoepfe or konsole)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "Clock running and guide in the crisis game (V01.0.934, Dominik 2026-10-22 \"Variante 2\" and \"1\"): *New game* has the switch Clock running (off): ten real seconds are a game minute, the time left on top counts down visibly. The open, visible page asks every 20 seconds (POST /api/profile/krisenspiel/uhr with {aktion: \"tick\"}), at most 60 seconds count between two requests, so a closed page hardly loses time. The next move takes the passed minutes along (damage per minute included), the inspector shows them as \"davon_uhr\"; when they reach 0, the clock is a move of its own and the game ends with \"Time ran out\". The panel counts by a fixed rule (uhr_ticken), seed and rolls stay the same. Pause and go on exist in practice and normal ({aktion: \"pause\"|\"weiter\"}), not in emergency. A win with the clock running brings 5 more points, without a pause the achievement \"Against the clock\" (now fourteen achievements). New tab Guide (GET /api/profile/krisenspiel/anleitung, krisenanleitung.py): what it is about, quick start, the values, moves and chance, end and grades, levels and clock, the console, a tour to try, all commands by group with an example, the scenarios, the achievements, inspector and"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": " narrator, tips and help with problems; with a table of contents. Commands, numbers, scenarios and achievements come from the code, so the guide is always complete. Live counts games with the clock running; logs spiel: neu | … | uhr, spiel: uhr | pause, spiel: uhr | abgelaufen. Next: package 11 (let guests join by link), then the other packages of the plan."
 },
 {
 "lang": "en",

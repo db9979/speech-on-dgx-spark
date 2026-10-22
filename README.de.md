@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.934** IT-Krisenspiel: Modus „Uhr läuft“ (10 s = 1 Spielminute, nur bei offener Seite, Pause in Übung und Normal, +5 und Erfolg „Gegen die Uhr“) und Reiter „Anleitung“ mit Schnellstart, Regeln, Konsole, allen Befehlen, Szenarien, Erfolgen und Tipps aus dem Code
 - **V01.0.933** IT-Krisenspiel (Paket 2): Konsole unter der Chronik, getippte Züge wie Knöpfe, Modus „Nur Konsole“ (+5), 🎲 Überraschungs-Szenario, Aufgeben ohne Erfolge; rund 150 Linux-Befehle auf simulierten Rechnern mit sudo, Dateien, Benutzern, Diensten und Firewall, Hilfe mit -h und „Meintest du …?“; nichts läuft wirklich
 - **V01.0.932** IT-Krisenspiel (Paket 1): eigene Seite „Krisenspiel“ mit fünf Szenarien (Ransomware, SAN, Strom, BGP, BSI), Krisen-Dashboard, Inspector, Noten und Erfolgen; das Panel entscheidet mit festen Regeln und Seed, der Erzähler (eigener Schalter) erzählt nur nach; beide Schalter aus
 - **V01.0.931** Live-Übersicht: ein Anruf ist eine Karte „Telefon“, die Fragen darin stehen auf ihr („db · Anruf · 2 Fragen“) statt als eigene Telefon-Karten
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.927** Unklare Fragen anonym: Fragen, die keine Regel der Weiche erkennt, stehen geschwärzt auf Funktionen → Weiche bei „unklar“ (Namen, Adressen, Nummern, Codes raus, zweite Leck-Prüfung, nie Gäste, nie wer fragte, 7 Tage), mit „Gehört zu …“ zum Feintunen; Schalter unter Gezielte Werkzeugwahl, aus; Vorliebe je Profil unter Ich → Gespräch → Datenschutz
 - **V01.0.926** Lied machen: Beschreibung bis 2000 statt 300 Zeichen, z. B. ein Firmentext als Vorlage; „Text schreiben“ liefert dazu eine kurze Musikbeschreibung fürs Musikmodell (liest höchstens 600), auch in der iPhone-App
 - **V01.0.925** Rechnen mit festem Werkzeug: das Panel rechnet, nicht das Sprachmodell (eigener Parser statt eval, Decimal, Prozent, Klammern, Wurzel, harte Grenzen), Datumsrechnung (Tage bis, Wochentag, Datum in n Tagen), Antwort-Prüfung rechnet Sätze wie „17 mal 23 ist 381“ nach und berichtigt sie; Einfaches sofort beantworten nutzt denselben Rechner
-- **V01.0.924** E-Mail und Kalender: der Reiter „Einstellungen“ bleibt nach mehreren Reiterwechseln nicht mehr leer; das gilt für jede Seite mit Reitern
 
 
 

@@ -1725,6 +1725,7 @@ def snapshot(view="admin", now=None):
             x["sub"] = (f"{ksp.get('laufend', 0)} laufende Spiele · heute {ksp.get('zuege', 0)} Züge, {ksp.get('spiele', 0)} neue Spiele"
                         + (f" · {ksp.get('erzaehlt', 0)} erzählt, {ksp.get('verworfen', 0)} verworfen" if ksp.get("erzaehlt") or ksp.get("verworfen") else "")
                         + (f" · {ksp.get('konsole', 0)} Konsolen-Zeilen" if ksp.get("konsole") else "")
+                        + (f" · {ksp['uhr']} mit laufender Uhr" if ksp.get("uhr") else "")
                         + f" · {ksp.get('profile', 0)} Profile")
         if x["id"] == "wkarte":    # Wissenskarte: connections, discarded, documents waiting, profiles, numbers only (never a title)
             x["sub"] = (f"{wkk.get('verbindungen', 0)} Verbindungen · {wkk.get('punkte', 0)} Punkte · {wkk.get('warten', 0)} Dokumente warten"

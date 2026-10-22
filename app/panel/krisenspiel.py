@@ -24,9 +24,11 @@ the admin did not block; guests never. One running game and the last VERLAUF_MAX
 users/<id>/krisenspiel.json. The journal gets fixed words and numbers only (spiel: …), Live only counts.
 
     GET    /api/profile/krisenspiel            scenarios, the running game, the inspector, achievements, history
-    POST   /api/profile/krisenspiel/neu        {szenario|zufall, stufe, modus?, seed?, lang}: a new game (replaces the running one)
+    GET    /api/profile/krisenspiel/anleitung  the guide (krisenanleitung.py), the same for everyone
+    POST   /api/profile/krisenspiel/neu        {szenario|zufall, stufe, modus?, uhr?, seed?, lang}: a new game (replaces the running one)
     POST   /api/profile/krisenspiel/zug        {aktion, zug, lang}: one move; zug must be the game's turn (no double tap)
     POST   /api/profile/krisenspiel/konsole    {zeile, zug, lang}: one line at the console (never run, krisenkonsole)
+    POST   /api/profile/krisenspiel/uhr        {aktion: tick|pause|weiter}: „Uhr läuft“, real time as game time
     DELETE /api/profile/krisenspiel            give up the running game (counts as F)
     DELETE /api/profile/krisenspiel/daten      delete the game, the history and the achievements (also while blocked)
     GET    /api/admin/krisenspiel              Zustand → Live: running games, moves today, profiles (numbers only)
@@ -39,6 +41,7 @@ import os
 import random
 import re
 import secrets
+import sys
 import threading
 import time
 
@@ -46,6 +49,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 
 import features
 import guard
+import krisenanleitung
 import krisenkonsole
 import profiles
 from common import DayCounter, load_config, no_think, read_json, write_json
@@ -71,6 +75,13 @@ SEED_MAX = 999999
 KONSOLE_BONUS = 5        # points for a game won in the mode „nur Konsole“
 MODI = ("knoepfe", "konsole")
 ZUFALL = "zufall"         # szenario of a new game: one of the scenarios by chance
+# „Uhr läuft“ (Dominik 2026-10-22 „Variante 2“): real time passes as game time while the page is open
+UHR_S = 10               # real seconds per game minute
+UHR_LUECKE = 60          # real seconds counted at most between two requests (the open page asks every UHR_POLL)
+UHR_POLL = 20            # seconds between the page's ticks while it is visible
+UHR_BONUS = 5            # points for a game won with the clock running
+UHR_PAUSE = ("uebung", "normal")   # levels with a pause button
+UHR_LABEL = ("Die Uhr ist abgelaufen", "The clock ran out")
 ERZAEHL_S = 8            # seconds the narrator may take, else the fixed text stays
 ERZAEHL_MIN, ERZAEHL_MAX = 30, 700   # characters of a narration
 BODY = 2000              # bytes of a request body
@@ -93,7 +104,8 @@ ERFOLGE = (("feuertaufe", ("Feuertaufe", "Baptism of fire"), ("Das erste Spiel z
            ("ernstfall", ("Ernstfall bestanden", "Emergency passed"), ("Auf der Stufe Ernstfall gewonnen.", "Won on the level Emergency.")),
            ("allrounder", ("Allrounder", "All-rounder"), ("Jedes Szenario mindestens einmal gewonnen.", "Won every scenario at least once.")),
            ("bestnote", ("Bestnote", "Top grade"), ("Ein Spiel mit der Note A abgeschlossen.", "Finished a game with grade A.")),
-           ("ohne_knopf", ("Ohne Knopf gelöst", "Solved without a button"), ("Gewonnen, jeder Zug an der Konsole getippt.", "Won with every move typed at the console.")))
+           ("ohne_knopf", ("Ohne Knopf gelöst", "Solved without a button"), ("Gewonnen, jeder Zug an der Konsole getippt.", "Won with every move typed at the console.")),
+           ("gegen_uhr", ("Gegen die Uhr", "Against the clock"), ("Mit laufender Uhr gewonnen, ohne Pause.", "Won with the clock running, without a pause.")))
 ERFOLG_IDS = tuple(e[0] for e in ERFOLGE)
 
 _day = DayCounter(zuege=0, spiele=0, erzaehlt=0, verworfen=0, konsole=0)   # Zustand → Live, numbers only
@@ -339,6 +351,37 @@ def minutes_gone(st):
     return st["m"]["zeit_start"] - st["m"]["zeit"]
 
 
+def uhr_ticken(st, now):
+    """„Uhr läuft“: the real seconds since the last request become game minutes (UHR_S each, at most UHR_LUECKE
+    seconds per request, so a closed page hardly loses time); they wait in uhr.offen and the next move takes them
+    along (its inspector shows „davon_uhr“). When they use up the time left, the clock is a move of its own and the
+    game ends by time. Returns the facts of that move or None. now comes from the caller, the rule is fixed."""
+    u = st.get("uhr")
+    if not u or st.get("ende"):
+        return None
+    gap = max(0.0, min(now - u["t"], UHR_LUECKE))
+    u["t"] = now
+    if u["pause"]:
+        return None
+    sec = u["rest"] + gap
+    n = int(sec // UHR_S)
+    u["rest"], u["offen"] = round(sec - n * UHR_S, 3), u["offen"] + n
+    if u["offen"] >= st["m"]["zeit"]:
+        return move(st, None, a={"id": "uhr", "label": list(UHR_LABEL)}, via="uhr")
+    return None
+
+
+def uhr_pause(st, on, now):
+    """Pause or go on (only on UHR_PAUSE levels); the seconds up to now still count. False if not allowed."""
+    u = st.get("uhr")
+    if not u or st.get("ende") or st["stufe"] not in UHR_PAUSE or u["pause"] == on:
+        return False
+    uhr_ticken(st, now)
+    u["pause"] = on
+    u["pausen"] += 1 if on else 0
+    return True
+
+
 def _all_actions(sz):
     return list(sz["aktionen"]) + list(_DATA.get("allgemein", []))
 
@@ -361,8 +404,9 @@ def available(st):
     return out
 
 
-def new_game(szenario, stufe, seed=None, lang="de", now=None, modus="knoepfe"):
-    """A fresh game: variants drawn from the seed, the start effects applied. modus „konsole“: moves only by typing."""
+def new_game(szenario, stufe, seed=None, lang="de", now=None, modus="knoepfe", uhr=False):
+    """A fresh game: variants drawn from the seed, the start effects applied. modus „konsole“: moves only by typing;
+    uhr: the clock runs in real time (uhr_ticken)."""
     if szenario not in SZENARIEN or stufe not in STUFEN or modus not in MODI:
         raise ValueError("szenario, stufe, modus")
     sz = SZENARIEN[szenario]
@@ -377,7 +421,8 @@ def new_game(szenario, stufe, seed=None, lang="de", now=None, modus="knoepfe"):
                 "moral": START["moral"], "kosten": 0, "budget": budget, "budget_start": budget},
           "assets": {x["id"]: {"status": "Online", "details": list(x["details"])} for x in sz["assets"]},
           "flags": {}, "flag_min": {}, "uses": {}, "done": [], "chronik": [], "trace": [], "ende": None,
-          "modus": modus, "knoepfe": 0, "konsole": krisenkonsole.fresh(szenario)}
+          "modus": modus, "knoepfe": 0, "konsole": krisenkonsole.fresh(szenario),
+          "uhr": {"t": now, "rest": 0.0, "offen": 0, "pause": False, "pausen": 0} if uhr else None}
     rec = _rec()
     for e in sz.get("start", []):
         if holds(e.get("wenn"), st):
@@ -385,7 +430,8 @@ def new_game(szenario, stufe, seed=None, lang="de", now=None, modus="knoepfe"):
     _clamp(st)
     st["chronik"].append({"zug": 0, "min": 0, "art": "start", "text": _text(sz["start_text"], st)})
     st["trace"].append({"zug": 0, "steps": [
-        _step("eingabe", ("Neues Spiel", "New game"), {"szenario": szenario, "stufe": stufe, "seed": seed, "modus": modus}),
+        _step("eingabe", ("Neues Spiel", "New game"), {"szenario": szenario, "stufe": stufe, "seed": seed, "modus": modus,
+                                                     "uhr": bool(uhr)}),
         _step("zufall", ("Varianten aus dem Seed", "Variants from the seed"), {"varianten": var}),
         _step("regel", ("Startlage", "Starting situation"), {"systeme": rec["assets"], "werte": rec["delta"]})]})
     return st
@@ -418,13 +464,16 @@ def move(st, aktion, now=None, a=None, via="knopf"):
         st["knoepfe"] = st.get("knoepfe", 0) + 1
     k = st.setdefault("konsole", krisenkonsole.fresh(st["szenario"]))
     reading, k["min"] = k.get("min", 0), 0
+    clock = 0
+    if st.get("uhr"):
+        clock, st["uhr"]["offen"] = st["uhr"]["offen"], 0
     steps = [_step("eingabe", ("Zug", "Move"), {"zug": st["zug"], "aktion": aktion, "label": a["label"], "weg": via})]
     rec = _rec()
     _effect(st, a, rec)
-    rec["minuten"] += reading
+    rec["minuten"] += reading + clock
     minutes = rec["minuten"]
     steps.append(_step("regel", ("Folgen des Zugs (feste Regel)", "Effects of the move (fixed rule)"),
-                       {"minuten": minutes, "davon_lesen": reading, "werte": rec["delta"], "systeme": rec["assets"], "flags": rec["flags"],
+                       {"minuten": minutes, "davon_lesen": reading, "davon_uhr": clock, "werte": rec["delta"], "systeme": rec["assets"], "flags": rec["flags"],
                         "weg": rec["weg"], "bedingte_folgen": rec["je"]}))
     # time passes: the systems that were down during the move cost per minute
     per_min = sum(x["schaden_min"] * FAKTOR[pre_assets[x["id"]]] for x in sz["assets"])
@@ -523,7 +572,7 @@ def bewerten(st, end):
     loss = "datenverlust" in st["flags"]
     p = (50 if won else 0) + (20 * m["zeit"] / m["zeit_start"] if won else 0) \
         + 15 * max(0.0, 1 - m["kosten"] / ref) + 10 * m["vertrauen"] / 100 + 5 * m["moral"] / 100 - (10 if loss else 0) \
-        + (KONSOLE_BONUS if won and st.get("modus") == "konsole" else 0)
+        + (KONSOLE_BONUS if won and st.get("modus") == "konsole" else 0) + (UHR_BONUS if won and st.get("uhr") else 0)
     p = max(0, min(100, round(p)))
     note = next(n for floor, n in NOTEN if p >= floor) if end != "aufgegeben" else "F"
     eur = lambda v: f"{v:,}".replace(",", ".")
@@ -535,6 +584,8 @@ def bewerten(st, end):
            ["Datenverlust: ja." if loss else "Kein Datenverlust.", "Data loss: yes." if loss else "No data loss."]]
     if won and st.get("modus") == "konsole":
         why.append([f"Nur Konsole: +{KONSOLE_BONUS} Punkte.", f"Console only: +{KONSOLE_BONUS} points."])
+    if won and st.get("uhr"):
+        why.append([f"Uhr lief: +{UHR_BONUS} Punkte.", f"Clock running: +{UHR_BONUS} points."])
     return p, note, why
 
 
@@ -562,7 +613,8 @@ def erfolge_neu(st, prof_data):
              "teamgeist": won and m["moral"] >= 70, "vertrauen": won and m["vertrauen"] >= 80,
              "kuehl": won and st.get("max_stress", 100) < 70, "ernstfall": won and st["stufe"] == "ernstfall",
              "allrounder": all(won_by.get(k) for k in SZENARIEN), "bestnote": e["note"] == "A",
-             "ohne_knopf": won and st.get("knoepfe", 0) == 0}
+             "ohne_knopf": won and st.get("knoepfe", 0) == 0,
+             "gegen_uhr": won and bool(st.get("uhr")) and st["uhr"]["pausen"] == 0}
     return [k for k in ERFOLG_IDS if rules[k] and k not in have]
 
 
@@ -738,11 +790,22 @@ def view(d, uid=None):
                         "assets": [{"id": x["id"], "name": x["name"], "typ": x["typ"], "status": st["assets"][x["id"]]["status"],
                                     "details": st["assets"][x["id"]]["details"]} for x in sz["assets"]],
                         "chronik": st["chronik"], "trace": st["trace"], "ende": st["ende"],
-                        "modus": st.get("modus", "knoepfe"),
+                        "modus": st.get("modus", "knoepfe"), "uhr": _uhr_view(st),
                         "aktionen": [] if st["ende"] or st.get("modus") == "konsole" else available(st),
                         "konsole": dict(krisenkonsole.hilfe_daten(st["szenario"]), host=k["host"], zeilen=k["zeilen"],
                                         verlauf=k["verlauf"], lesen=k["min"], lesen_max=krisenkonsole.LESEN_MAX)}
     return out
+
+
+def _uhr_view(st):
+    """The clock for the page: minutes waiting for the next move, seconds since the last request (the page counts
+    on from there) and the rule's numbers, so the time on top runs down between two requests."""
+    u = st.get("uhr")
+    if not u:
+        return None
+    return {"offen": u["offen"], "rest": u["rest"], "seit": round(max(0.0, min(time.time() - u["t"], UHR_LUECKE)), 1),
+            "pause": u["pause"], "pausen": u["pausen"], "pause_ok": st["stufe"] in UHR_PAUSE, "s": UHR_S,
+            "poll": UHR_POLL, "luecke": UHR_LUECKE}
 
 
 # ---------------------------------------------------------------- endpoints
@@ -768,6 +831,19 @@ def show(request: Request, prof=Depends(own_profile)):
     return view(load(uid), uid)
 
 
+_anleitung = []
+
+
+@router.get("/api/profile/krisenspiel/anleitung", dependencies=[Depends(assistant)])
+def anleitung(request: Request, prof=Depends(own_profile)):
+    """The guide (tab „Anleitung“): fixed texts, every number, command, scenario and achievement from the code."""
+    _need(prof["id"])
+    guard.limit(request, "spiel", prof["id"])
+    if not _anleitung:
+        _anleitung.append(krisenanleitung.build(sys.modules[__name__]))
+    return {"abschnitte": _anleitung[0]}
+
+
 @router.post("/api/profile/krisenspiel/neu", dependencies=[Depends(assistant)])
 async def neu(request: Request, prof=Depends(browser_profile)):
     uid = prof["id"]
@@ -775,25 +851,26 @@ async def neu(request: Request, prof=Depends(browser_profile)):
     guard.limit(request, "spiel", uid)
     b = await json_body(request, BODY)
     sid, stufe, seed, modus = b.get("szenario"), b.get("stufe", "normal"), b.get("seed"), b.get("modus", "knoepfe")
+    uhr = b.get("uhr", False)
     if sid == ZUFALL and (seed is None or isinstance(seed, int) and not isinstance(seed, bool)):
         n = len(SZENARIEN)                      # Dominik 2026-10-22: „Überraschung, was passiert“; with a seed repeatable
         sid = sorted(SZENARIEN)[secrets.randbelow(n) if seed is None else random.Random(f"zufall:{seed}").randrange(n)]
-    if sid not in SZENARIEN or stufe not in STUFEN or modus not in MODI or seed is not None and (
+    if sid not in SZENARIEN or stufe not in STUFEN or modus not in MODI or not isinstance(uhr, bool) or seed is not None and (
             not isinstance(seed, int) or isinstance(seed, bool) or not 0 <= seed <= SEED_MAX):
         print("spiel: neu abgelehnt | eingabe", flush=True)
-        raise HTTPException(400, "szenario, stufe, seed, modus")
+        raise HTTPException(400, "szenario, stufe, seed, modus, uhr")
 
     def go():
         with _lock(uid):
             d = load(uid)
             if d["spiel"] and not d["spiel"].get("ende"):
                 print("spiel: altes spiel ersetzt | nicht beendet", flush=True)
-            d["spiel"] = new_game(sid, stufe, seed, _lang(b), modus=modus)
+            d["spiel"] = new_game(sid, stufe, seed, _lang(b), modus=modus, uhr=uhr)
             save(uid, d)
             return d
     d = await asyncio.to_thread(go)
     _day.bump("spiele")
-    print(f"spiel: neu | {sid} | {stufe} | {modus} | {profiles.log_name(prof)}", flush=True)
+    print(f"spiel: neu | {sid} | {stufe} | {modus}{' | uhr' if uhr else ''} | {profiles.log_name(prof)}", flush=True)
     return view(d, uid)
 
 
@@ -846,6 +923,12 @@ async def zug(request: Request, prof=Depends(browser_profile)):
                 return None, None, 409
             if st.get("modus") == "konsole":
                 return None, None, 423
+            facts = uhr_ticken(st, time.time())
+            if st.get("ende"):                  # the clock ran out before this move
+                _book(d, time.time())
+                save(uid, d)
+                print("spiel: uhr | abgelaufen", flush=True)
+                return d, facts, 200
             try:
                 facts = move(st, aktion)
             except ValueError:
@@ -886,6 +969,12 @@ async def konsole(request: Request, prof=Depends(browser_profile)):
                 return None, None, "", 404
             if st["zug"] != turn:
                 return None, None, "", 409
+            facts = uhr_ticken(st, time.time())
+            if st.get("ende"):                  # the clock ran out before this line
+                _book(d, time.time())
+                save(uid, d)
+                print("spiel: uhr | abgelaufen", flush=True)
+                return d, facts, "uhr", 200
             facts, res = konsole_zeile(st, zeile, lang)
             if st.get("ende"):
                 _book(d, time.time())
@@ -901,6 +990,48 @@ async def konsole(request: Request, prof=Depends(browser_profile)):
     if facts:
         _day.bump("zuege")
     print(f"spiel: konsole | {art} | {round((time.perf_counter() - t0) * 1000)} ms", flush=True)
+    return view(await _narrated(uid, d, facts, lang), uid)
+
+
+@router.post("/api/profile/krisenspiel/uhr", dependencies=[Depends(assistant)])
+async def uhr(request: Request, prof=Depends(browser_profile)):
+    """„Uhr läuft“: the open page ticks every UHR_POLL seconds while it is visible (tick), pause and weiter on the
+    levels UHR_PAUSE. Only the fixed rule of uhr_ticken turns real seconds into game minutes."""
+    uid = prof["id"]
+    _need(uid)
+    guard.limit(request, "spiel", uid)
+    b = await json_body(request, BODY)
+    aktion, lang = b.get("aktion"), _lang(b)
+    if aktion not in ("tick", "pause", "weiter"):
+        print("spiel: uhr abgelehnt | eingabe", flush=True)
+        raise HTTPException(400, "aktion")
+
+    def go():
+        with _lock(uid):
+            d = load(uid)
+            st = d["spiel"]
+            if not st or st.get("ende") or not st.get("uhr"):
+                return None, None, 404
+            now = time.time()
+            if aktion == "tick":
+                facts = uhr_ticken(st, now)
+            elif not uhr_pause(st, aktion == "pause", now):
+                return None, None, 422
+            else:
+                facts = None
+            if st.get("ende"):
+                _book(d, now)
+            save(uid, d)
+            return d, facts, 200
+    d, facts, code = await asyncio.to_thread(go)
+    if code != 200:
+        why = {404: "keine uhr", 422: "keine pause"}[code]
+        print(f"spiel: uhr abgelehnt | {why}", flush=True)
+        raise HTTPException(code, why)
+    if d["spiel"].get("ende"):
+        print("spiel: uhr | abgelaufen", flush=True)
+    elif aktion != "tick":
+        print(f"spiel: uhr | {aktion}", flush=True)
     return view(await _narrated(uid, d, facts, lang), uid)
 
 
@@ -946,14 +1077,15 @@ def for_live():
     if not admin_on():
         return {"on": False}
     if _live["d"] is None or time.time() - _live["at"] >= LIVE_CACHE:
-        running = profs = 0
+        running = profs = clocks = 0
         for uid in profiles.user_ids():
             if not os.path.exists(_file(uid)):
                 continue
             profs += 1
             st = load(uid)["spiel"]
             running += bool(st and not st.get("ende"))
-        _live.update(at=time.time(), d={"laufend": running, "profile": profs})
+            clocks += bool(st and not st.get("ende") and st.get("uhr"))
+        _live.update(at=time.time(), d={"laufend": running, "profile": profs, "uhr": clocks})
     t = _day.today()
     return dict(_live["d"], on=True, zuege=t["zuege"], spiele=t["spiele"], erzaehlt=t["erzaehlt"], verworfen=t["verworfen"],
                 konsole=t["konsole"])

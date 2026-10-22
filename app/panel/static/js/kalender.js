@@ -15,7 +15,7 @@ const OWN_PAGES={calbox:['cal',t('Kalender','Calendar'),t('Termine','Appointment
   taskbox:['listen',t('Listen','Lists'),t('Listen','Lists')],vgbox:['offen',t('Offen','Open'),t('Offen','Open')],
   conbox:['kontakte',t('Kontakte','Contacts'),t('Kontakte','Contacts')],
   wbbox:['wbuch',t('Wissensbuch','Knowledge book'),t('Seiten','Pages'),[['karte',t('Karte','Map'),()=>typeof WK_ON!=='undefined'&&WK_ON]]],
-  ksbox:['spiel',t('Krisenspiel','Crisis game'),t('Spiel','Game'),[['neu',t('Neues Spiel','New game'),()=>true],['inspector',t('Inspector','Inspector'),()=>true],['bisher',t('Bisherige Spiele','Past games'),()=>true]]]};
+  ksbox:['spiel',t('Krisenspiel','Crisis game'),t('Spiel','Game'),[['neu',t('Neues Spiel','New game'),()=>true],['inspector',t('Inspector','Inspector'),()=>true],['bisher',t('Bisherige Spiele','Past games'),()=>true],['anleitung',t('Anleitung','Guide'),()=>true]]]};
 // [section, name, first tab, [more tabs: key, name, shown?]]; every page ends with the tab „Einstellungen“
 function ownPage(id){const p=OWN_PAGES[id];if(!p)return false;
   if($('profmodal').style.display==='grid'&&window.closeProf)closeProf();

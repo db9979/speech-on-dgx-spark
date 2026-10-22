@@ -18,6 +18,7 @@ from tests.test_ui_browser import browser_ok
 
 helpers.start()
 import features  # noqa: E402
+import krisenanleitung as KA  # noqa: E402
 import krisenkonsole as C  # noqa: E402
 import krisenlinux as L  # noqa: E402
 import krisenspiel as K  # noqa: E402
@@ -354,6 +355,79 @@ class Linux(unittest.TestCase):
             json.dumps(st)
 
 
+class Uhr(unittest.TestCase):
+    """„Uhr läuft“: real seconds become game minutes by a fixed rule; the caller hands in the time, so no clock here."""
+
+    def test_seconds_become_minutes_on_the_next_move(self):
+        st = K.new_game("ransomware", "normal", 1, now=T0, uhr=True)
+        self.assertIsNone(K.uhr_ticken(st, T0 + 35))
+        self.assertEqual((st["uhr"]["offen"], st["uhr"]["rest"]), (3, 5.0))
+        K.uhr_ticken(st, T0 + 5000)                      # a closed page: at most UHR_LUECKE seconds count
+        self.assertEqual((st["uhr"]["offen"], st["uhr"]["rest"]), (9, 5.0))
+        left = st["m"]["zeit"]
+        quiet(K.move, st, "warten")
+        step = st["trace"][-1]["steps"][1]["daten"]
+        self.assertEqual((step["davon_uhr"], step["minuten"], st["uhr"]["offen"]), (9, 14, 0))
+        self.assertEqual(st["m"]["zeit"], left - 14)
+        self.assertEqual(K.new_game("ransomware", "normal", 1, now=T0)["uhr"], None)
+
+    def test_pause_only_where_allowed_and_time_runs_out(self):
+        st = K.new_game("san", "uebung", 2, now=T0, uhr=True)
+        self.assertTrue(K.uhr_pause(st, True, T0 + 10))
+        self.assertFalse(K.uhr_pause(st, True, T0 + 11))
+        K.uhr_ticken(st, T0 + 50)
+        self.assertEqual(st["uhr"]["offen"], 1)            # the ten seconds before the pause, none in it
+        self.assertTrue(K.uhr_pause(st, False, T0 + 60))
+        self.assertEqual(st["uhr"]["pausen"], 1)
+        hard = K.new_game("san", "ernstfall", 2, now=T0, uhr=True)
+        self.assertFalse(K.uhr_pause(hard, True, T0 + 1))
+        now = T0
+        while not hard["ende"]:
+            now += K.UHR_POLL
+            facts = K.uhr_ticken(hard, now)
+        self.assertEqual((hard["ende"]["art"], hard["m"]["zeit"]), ("zeit", 0))
+        self.assertEqual(hard["trace"][-1]["steps"][0]["daten"]["aktion"], "uhr")
+        self.assertEqual(facts["texte"] if facts else None, facts and facts["texte"])
+        self.assertEqual(round((now - T0) / K.UHR_S), K.STUFEN["ernstfall"]["zeit"])
+        self.assertIsNone(K.uhr_ticken(hard, now + 100))
+
+    def test_a_win_with_the_clock_counts_more(self):
+        seed = seeds_for_variants("bgp")[0]
+        moves = path_of(solve(K.new_game("bgp", "normal", seed, now=T0)))
+        a, b = K.new_game("bgp", "normal", seed, now=T0), K.new_game("bgp", "normal", seed, now=T0, uhr=True)
+        for x in moves:
+            quiet(K.move, a, x)
+            quiet(K.move, b, x)
+        self.assertEqual((a["ende"]["art"], b["ende"]["art"]), ("gewonnen", "gewonnen"))
+        self.assertEqual(b["ende"]["punkte"], min(100, a["ende"]["punkte"] + K.UHR_BONUS))
+        self.assertIn(["Uhr lief: +5 Punkte.", "Clock running: +5 points."], b["ende"]["gruende"])
+        self.assertIn("gegen_uhr", K.erfolge_neu(b, {}))
+        self.assertNotIn("gegen_uhr", K.erfolge_neu(a, {}))
+        b["uhr"]["pausen"] = 1
+        self.assertNotIn("gegen_uhr", K.erfolge_neu(b, {}))
+
+
+class Anleitung(unittest.TestCase):
+    def test_the_guide_names_everything_from_the_code(self):
+        g = KA.build(K)
+        text = json.dumps(g, ensure_ascii=False)
+        cmds = [r[0] for sec in g if sec["id"] == "befehle" for bl in sec["bloecke"] if bl["art"] == "tabelle" for r in bl["zeilen"]]
+        self.assertEqual(sorted(cmds), sorted(set(L.LINUX) | set(C.BEFEHLE)))
+        for sz in K._DATA["szenarien"]:
+            self.assertIn(sz["titel"][0], text)
+            self.assertIn(sz["titel"][1], text)
+        for _, name, _ in K.ERFOLGE:
+            self.assertIn(name[0], text)
+        for sec in g:
+            self.assertEqual(len(sec["titel"]), 2)
+            for bl in sec["bloecke"]:
+                pairs = [bl["text"]] if bl["art"] == "p" else bl.get("punkte", []) + bl.get("kopf", [])
+                for x in pairs:
+                    self.assertTrue(len(x) == 2 and all(x), (sec["id"], x))
+        for n in (str(K.KONSOLE_BONUS), f"{K.STUFEN['ernstfall']['zeit']} min", str(C.LESEN_MAX)):
+            self.assertIn(n, text)
+
+
 class Api(unittest.TestCase):
     def setUp(self):
         helpers.keep_chat(self, "krisenspiel", "krisenspiel_erzaehler", "deny")
@@ -438,6 +512,18 @@ class Api(unittest.TestCase):
                       for _ in range(2)}
             self.assertEqual(len(picked), 1)                     # a surprise with a seed is repeatable
             self.assertLessEqual(picked, set(K.SZENARIEN))
+            self.assertEqual(c.post("/api/profile/krisenspiel/uhr", json={"aktion": "tick"}).status_code, 404)   # no clock
+            self.assertEqual(c.post("/api/profile/krisenspiel/neu", json={"szenario": "bsi", "uhr": "ja"}).status_code, 400)
+            g = c.post("/api/profile/krisenspiel/neu", json={"szenario": "bsi", "seed": 2, "uhr": True}).json()["spiel"]
+            self.assertEqual((g["uhr"]["offen"], g["uhr"]["s"], g["uhr"]["pause_ok"]), (0, K.UHR_S, True))
+            self.assertEqual(c.post("/api/profile/krisenspiel/uhr", json={"aktion": "tick"}).status_code, 200)
+            self.assertTrue(c.post("/api/profile/krisenspiel/uhr", json={"aktion": "pause"}).json()["spiel"]["uhr"]["pause"])
+            self.assertEqual(c.post("/api/profile/krisenspiel/uhr", json={"aktion": "pause"}).status_code, 422)
+            self.assertEqual(c.post("/api/profile/krisenspiel/uhr", json={"aktion": "kaputt"}).status_code, 400)
+            self.assertEqual(c.post("/api/profile/krisenspiel/uhr", json={"aktion": "weiter"}).status_code, 200)
+            self.assertEqual(ADMIN.get("/api/admin/krisenspiel").json()["uhr"] >= 0, True)
+            guide = c.get("/api/profile/krisenspiel/anleitung").json()["abschnitte"]
+            self.assertEqual([x["id"] for x in guide][:2], ["worum", "schnellstart"])
             g = c.post("/api/profile/krisenspiel/neu", json={"szenario": "bsi", "seed": 2, "modus": "konsole"}).json()["spiel"]
             self.assertEqual(c.post("/api/profile/krisenspiel/zug", json={"aktion": "lesen", "zug": 0}).status_code, 422)
             for bad in ({"zeile": 5, "zug": 0}, {"zeile": "ls", "zug": "0"}, {"zeile": "x" * 401, "zug": 0}, {"zeile": "ls", "zug": True}):
@@ -450,7 +536,9 @@ class Api(unittest.TestCase):
             g = c.post("/api/profile/krisenspiel/konsole", json={"zeile": "geheim; rm -rf /", "zug": 1}).json()["spiel"]
             self.assertEqual(g["konsole"]["zeilen"][-1]["k"], "err")
         log = out.getvalue()
-        for want in ("spiel: neu | bsi | normal | konsole", "spiel: zug abgelehnt | nur konsole", "spiel: konsole abgelehnt | eingabe",
+        for want in ("spiel: neu | bsi | normal | konsole", "spiel: neu | bsi | normal | knoepfe | uhr", "spiel: uhr | pause",
+                     "spiel: uhr | weiter", "spiel: uhr abgelehnt | keine uhr", "spiel: uhr abgelehnt | keine pause",
+                     "spiel: uhr abgelehnt | eingabe", "spiel: zug abgelehnt | nur konsole", "spiel: konsole abgelehnt | eingabe",
                      "spiel: konsole | frei", "spiel: konsole | zug", "spiel: konsole abgelehnt | alter zug", "spiel: konsole | abgelehnt"):
             self.assertIn(want, log)
         for word in ("geheim", "siem01", "advisories", "Kskons"):
@@ -550,6 +638,15 @@ class Page(unittest.TestCase):
                         await b.until(pg, "document.querySelectorAll('#ksview .ks-tr').length===3")
                         over = await pg.evaluate("document.documentElement.scrollWidth-document.documentElement.clientWidth")
                         self.assertLessEqual(over, 1, f"{w}: the page scrolls sideways")
+                        # the guide: every section with its table of contents, every command in its tables
+                        await pg.evaluate("icTabSet('spiel','anleitung');ksOpen()")
+                        await b.until(pg, "!!document.querySelector('#ksview .ks-guide')")
+                        self.assertEqual(await pg.evaluate("document.querySelectorAll('#ksview .ks-toc a').length"),
+                                         len(KA.build(K)))
+                        self.assertEqual(await pg.evaluate("document.querySelectorAll('#ksview .ks-tab td:first-child code').length"),
+                                         len(L.LINUX) + len(C.BEFEHLE))
+                        over = await pg.evaluate("document.documentElement.scrollWidth-document.documentElement.clientWidth")
+                        self.assertLessEqual(over, 1, f"{w}: the guide scrolls sideways")
                         self.assertEqual(errors, [])
                     finally:
                         await br.close()

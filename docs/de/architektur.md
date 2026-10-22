@@ -243,6 +243,7 @@ Eigene Dokumente, Gedächtnis, frühere Gespräche, Kiwix und Wikipedia, erstell
 | `app/panel/folien.py` | Folientypen und feste Regeln für erstellte Dokumente |
 | `app/panel/gedaechtnis.py` | Gedächtnis mit Beleg und Prüfung |
 | `app/panel/kiwix.py` | Eigenes Kiwix als Wissensquelle ohne Internet |
+| `app/panel/krisenanleitung.py` | Anleitung des Krisenspiels: feste Texte, Befehle, Szenarien und Erfolge aus dem Code |
 | `app/panel/krisenkonsole.py` | Konsole des Krisenspiels: simuliertes Terminal, feste Befehlsliste, nichts wird ausgeführt |
 | `app/panel/krisenlinux.py` | Linux an der Konsole des Krisenspiels: rund 150 Befehle mit Hilfe, Dateien, Benutzer und Dienste nur simuliert |
 | `app/panel/krisenspiel.py` | IT-Krisenspiel: Szenarien als Daten, feste Regeln mit Seed, Note und Erfolge; der Erzähler nur in Worten |

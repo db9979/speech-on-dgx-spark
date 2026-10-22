@@ -243,6 +243,7 @@ Own documents, memory, earlier conversations, Kiwix and Wikipedia, created docum
 | `app/panel/folien.py` | Slide types and the fixed rules for documents the Spark writes. |
 | `app/panel/gedaechtnis.py` | Gedächtnis mit Beleg und Prüfung. |
 | `app/panel/kiwix.py` | The person's own Kiwix (kiwix-serve with ZIM files: Wikipedia, Wikivoyage, handbooks ...) as a knowledge source that works without the internet. |
+| `app/panel/krisenanleitung.py` | Anleitung des IT-Krisenspiels. |
 | `app/panel/krisenkonsole.py` | Konsole des IT-Krisenspiels: a simulated terminal under the chronicle. |
 | `app/panel/krisenlinux.py` | Linux an der Konsole des Krisenspiels: about 120 commands of the list at linux-commands.labex.io, simulated on the machines of the scenario. |
 | `app/panel/krisenspiel.py` | IT-Krisenspiel: a text adventure for one profile at a time. |
