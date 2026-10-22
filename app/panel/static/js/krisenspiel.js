@@ -3,7 +3,7 @@
 // „Neues Spiel“ picks scenario, level and seed; „Inspector“ shows every step of a move (input, fixed rule, rolls from
 // the seed, narrator); „Bisherige Spiele“ the results, achievements and „Meine Daten löschen“. Every value comes from
 // the panel; texts from the scenarios and the narrator are only ever text (esc), never markup.
-const KS={data:null,msg:'',err:false,busy:false,seq:0,turn:-1,hist:-1,con:null,focus:false,at:0,guide:null,ticked:0};
+const KS={data:null,msg:'',err:false,busy:false,seq:0,turn:-1,hist:-1,con:null,focus:false,at:0,guide:null,ticked:0,big:false,ed:null,team:null,teamAt:0,made:null};
 const KS_CHRON=6;   // chronicle entries shown above the console, the older ones fold away
 let KS_ON=false;
 const ksP=p=>Array.isArray(p)?p[L==='en'?1:0]:String(p??'');
@@ -36,15 +36,19 @@ async function ksSend(p,method,b){if(KS.busy)return null;KS.busy=true;document.q
 function ksPaint(w){const D=KS.data,tab=w.dataset.tab;
   if(!D){w.innerHTML=`<div class="ld-empty mut">${esc(KS.err?KS.msg:t('Lade das Krisenspiel …','Loading the crisis game …'))}</div>`;return}
   if(tab==='anleitung'){ksGuide(w);return}
+  const keep=w.querySelector('.ks-in'),kv=keep?keep.value:'',kf=!!keep&&document.activeElement===keep;   // a redraw (a move of a co-player) keeps what is typed
   w.innerHTML=(tab==='neu'?ksNew(D):tab==='inspector'?ksInspector(D):tab==='bisher'?ksPast(D):ksGame(D))+`<div class="ksmsg ${KS.err?'err':'mut'}" role="status">${esc(KS.msg)}</div>`;
   const con=w.querySelector('.ks-con');if(con)con.scrollTop=con.scrollHeight;
   const det=w.querySelector('.ks-condet');if(det)det.ontoggle=()=>{KS.con=det.open};
-  const inp=w.querySelector('.ks-in');if(inp){if(KS.focus)inp.focus({preventScroll:true});
+  const inp=w.querySelector('.ks-in');if(inp){if(kv)inp.value=kv;if(KS.focus||kf)inp.focus({preventScroll:true});
     inp.onkeydown=e=>{const h=KS.data.spiel.konsole.verlauf;
       if(e.key==='Enter'){e.preventDefault();ksType(inp)}
       else if(e.key==='Tab'){e.preventDefault();ksTab(inp)}
       else if(e.key==='ArrowUp'&&h.length){e.preventDefault();KS.hist=KS.hist<0?h.length-1:Math.max(0,KS.hist-1);inp.value=h[KS.hist]}
-      else if(e.key==='ArrowDown'&&KS.hist>=0){e.preventDefault();KS.hist++;inp.value=KS.hist<h.length?h[KS.hist]:'';if(KS.hist>=h.length)KS.hist=-1}}}}
+      else if(e.key==='ArrowDown'&&KS.hist>=0){e.preventDefault();KS.hist++;inp.value=KS.hist<h.length?h[KS.hist]:'';if(KS.hist>=h.length)KS.hist=-1}}}
+  ksEdBind(w)}
+// Esc leaves the large console (not while an editor is open: there Esc belongs to vi)
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&KS.big&&!document.querySelector('#ksview .ks-ed')){KS.big=false;ksDraw()}});
 function ksBar(label,val,max,shown,bad,cls){const pc=Math.max(0,Math.min(100,Math.round(100*val/(max||1))));
   return `<div class="ks-met${bad?' bad':''}${cls?' '+cls:''}"><span>${esc(label)}</span><b>${esc(shown)}</b><i><em style="width:${pc}%"></em></i></div>`}
 // „Uhr läuft“ (krisenspiel.uhr_ticken): the minutes the clock took since the last answer count down here, the panel
@@ -75,27 +79,116 @@ function ksGame(D){const g=D.spiel;
   const head=head0+clock;
   const assets=`<div class="ks-assets">${g.assets.map(a=>{const s=KSSTAT[a.status]||[a.status,a.status,''];
     return `<div class="ks-asset ${s[2]}"><b>${esc(a.name)}</b><small class="mut">${esc(ksP(a.typ))}</small><span class="pill ${s[2]}">${esc(t(s[0],s[1]))}</span><small>${esc(ksP(a.details))}</small></div>`}).join('')}</div>`;
-  const ev=c=>`<div class="ks-ev ${esc(c.art)}"><small class="mut">${esc(t(...(KSART[c.art]||[c.art,c.art])))} · ${esc(t('Minute ','minute '))}${c.min}</small><p>${esc(c.erzaehlt&&c.lang===(L==='en'?'en':'de')?c.erzaehlt:ksP(c.text))}</p>${c.erzaehlt&&c.lang===(L==='en'?'en':'de')?`<details><summary>${esc(t('Feste Fakten','Fixed facts'))}</summary><small>${esc(ksP(c.text))}</small></details>`:''}</div>`;
+  const ev=c=>`<div class="ks-ev ${esc(c.art)}"><small class="mut">${esc(t(...(KSART[c.art]||[c.art,c.art])))} · ${esc(t('Minute ','minute '))}${c.min}${c.wer?' · '+esc(ksP(D.rollen[c.wer.rolle]||[c.wer.rolle,c.wer.rolle]))+(c.wer.name?' ('+esc(c.wer.name)+')':''):''}</small><p>${esc(c.erzaehlt&&c.lang===(L==='en'?'en':'de')?c.erzaehlt:ksP(c.text))}</p>${c.erzaehlt&&c.lang===(L==='en'?'en':'de')?`<details><summary>${esc(t('Feste Fakten','Fixed facts'))}</summary><small>${esc(ksP(c.text))}</small></details>`:''}</div>`;
   const all=g.chronik.slice().reverse(),old=all.slice(KS_CHRON);
   const chron=`<div class="ks-chron" aria-live="polite">${all.slice(0,KS_CHRON).map(ev).join('')}${old.length?`<details class="ks-old"><summary>${esc(t(`Ältere (${old.length})`,`Older (${old.length})`))}</summary>${old.map(ev).join('')}</details>`:''}</div>`;
   const cost=a=>Object.entries(a.kosten).map(([k,v])=>k==='budget'?ksEur(v):k==='zeit'?v+' min':(v>0?'+':'')+v+' '+t({stress:'Stress',vertrauen:'Vertrauen',moral:'Moral'}[k]||k,{stress:'stress',vertrauen:'trust',moral:'morale'}[k]||k)).join(' · ');
   const acts=g.ende?ksEnd(D,g):g.modus==='konsole'?`<div class="ks-only mut">${esc(t('Nur Konsole: jeder Zug wird getippt. „help“ zeigt die Befehle, „hosts“ die Rechner.','Console only: every move is typed. "help" shows the commands, "hosts" the machines.'))}</div>`:`<h4>${esc(t('Deine Züge','Your moves'))}</h4><div class="ks-acts">${g.aktionen.map(a=>`<button type="button" class="b ks-act" data-ksmove="${esc(a.id)}"${a.frei?'':' disabled'} title="${esc(a.frei?'':ksP(a.warum))}"><b>${esc(ksP(a.label))}</b><small>${esc(cost(a))}</small></button>`).join('')}</div>`;
-  return head+mets+`<div class="ks-grid"><div>${assets}${acts}</div><div><h4>${esc(t('Chronik','Chronicle'))}</h4>${chron}${ksCon(g)}</div></div>`}
+  return head+mets+`<div class="ks-grid"><div>${assets}${acts}${D.team?`<div class="ks-team">${ksTeamBox(g)}</div>`:''}</div><div><h4>${esc(t('Chronik','Chronicle'))}</h4>${chron}${ksCon(g)}</div></div>`}
 // the simulated console (krisenkonsole.py): nothing typed here ever runs; the Spark cuts each line by fixed rules and
 // answers from the game. A phone shows it folded unless the game is console only; ↑/↓ the last lines, Tab completes.
 const KSCON={err:'kc-err',zug:'kc-zug'};   // the kinds of console lines and their style
 function ksCon(g){const k=g.konsole;if(!k)return '';
-  const open=KS.con!==null?KS.con:(g.modus==='konsole'||!matchMedia('(max-width:700px)').matches);
+  const open=KS.big||(KS.con!==null?KS.con:(g.modus==='konsole'||!matchMedia('(max-width:700px)').matches));
   const rows=k.zeilen.map(z=>z.k==='in'?`<div class="kc-in"><span class="kc-p">admin@${esc(z.h||'')}:~$</span> ${esc(z.s)}</div>`:`<div class="${KSCON[z.k]||'kc-out'}">${esc(z.s)}</div>`).join('');
-  return `<details class="ks-condet"${open?' open':''}><summary>${esc(t('Konsole','Console'))} <small class="mut">${esc(k.host)}${k.lesen?esc(t(` · ${k.lesen} min gelesen`,` · ${k.lesen} min read`)):''}</small></summary>
-    <div class="ks-con" role="log">${rows||`<div class="kc-out mut">${esc(t('Tippe help für die Befehle. Nichts hier läuft wirklich.','Type help for the commands. Nothing here really runs.'))}</div>`}</div>
-    ${g.ende?'':`<div class="ks-cline"><span class="kc-p">admin@${esc(k.host)}:~$</span><input class="ks-in" type="text" maxlength="200" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="${esc(t('Befehl','Command'))}"></div>`}</details>`}
+  const ed=!g.ende&&k.editor?ksEd(k.editor):'';
+  return `<details class="ks-condet${KS.big?' ks-big':''}"${open?' open':''}><summary>${esc(t('Konsole','Console'))} <small class="mut">${esc(k.host)}${k.lesen?esc(t(` · ${k.lesen} min gelesen`,` · ${k.lesen} min read`)):''}</small>
+    <button type="button" class="b ks-bigbtn" data-ksbig="1" title="${esc(KS.big?t('Zurück in die Seite (Esc)','Back into the page (Esc)'):t('Groß: Konsole füllt das Fenster','Large: the console fills the window'))}">${esc(KS.big?t('Klein','Small'):t('Groß','Large'))}</button></summary>
+    ${ed||`<div class="ks-con" role="log">${rows||`<div class="kc-out mut">${esc(t('Tippe help für die Befehle. Nichts hier läuft wirklich.','Type help for the commands. Nothing here really runs.'))}</div>`}</div>
+    ${g.ende?'':`<div class="ks-cline"><span class="kc-p">admin@${esc(k.host)}:${esc(ksShort(k.cwd))}$</span><input class="ks-in" type="text" maxlength="200" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="${esc(t('Befehl','Command'))}"><button type="button" class="b ks-tabkey" data-kstabkey="1" title="${esc(t('Vervollständigen (Tab)','Complete (Tab)'))}">⇥</button></div>`}`}</details>`}
+const ksShort=c=>!c?'~':c==='/home/admin'?'~':c.startsWith('/home/admin/')?'~'+c.slice(11):c;
 async function ksType(inp){const z=inp.value;if(!z.trim()||KS.busy||!KS.data||!KS.data.spiel)return;KS.hist=-1;KS.focus=true;
   inp.value='';await ksSend('/api/profile/krisenspiel/konsole','POST',{zeile:z,zug:KS.data.spiel.zug})}
-function ksTab(inp){const k=KS.data.spiel.konsole,v=inp.value,parts=v.split(' '),last=parts[parts.length-1].toLowerCase();
-  const pool=parts.length===1?k.befehle:k.hosts,hit=pool.filter(x=>x.startsWith(last));
-  if(hit.length===1){parts[parts.length-1]=hit[0];inp.value=parts.join(' ')+' '}
-  else if(hit.length>1)ksSay(hit.join('  '))}
+// Tab like bash: the first word from the commands, after ssh the machines, after man and help the commands, else
+// files and directories of the machine (relative to the working directory); several hits complete their common
+// start and are listed
+function ksTab(inp){const k=KS.data.spiel.konsole,v=inp.value,parts=v.split(' '),last=parts[parts.length-1],first=parts[0].replace(/^sudo$/,'')||parts[1]||'';
+  let pool,base='',word=last;
+  if(parts.length===1||parts.length===2&&parts[0]==='sudo')pool=k.befehle;
+  else if(['ssh','ping','traceroute','tracert','nmap','telnet','nc'].includes(first.toLowerCase()))pool=k.hosts;
+  else if(['man','help','which','whereis','type'].includes(first.toLowerCase())&&parts.length===2)pool=k.befehle;
+  else{const abs=last.startsWith('/')?last:last.startsWith('~/')?'/home/admin/'+last.slice(2):(k.cwd==='/'?'':k.cwd)+'/'+last;
+    const cut=abs.lastIndexOf('/')+1,dir=abs.slice(0,cut);base=last.slice(0,last.length-(abs.length-cut));word=abs.slice(cut);
+    pool=k.pfade.filter(p=>p.startsWith(dir)&&p.length>dir.length&&!p.slice(dir.length).replace(/\/$/,'').includes('/')).map(p=>p.slice(dir.length))}
+  const hit=(pool||[]).filter(x=>x.startsWith(word));if(!hit.length)return;
+  let pre=hit[0];for(const h of hit)while(!h.startsWith(pre))pre=pre.slice(0,-1);
+  parts[parts.length-1]=base+pre+(hit.length===1&&!pre.endsWith('/')?' ':'');inp.value=parts.join(' ');
+  if(hit.length>1&&pre===word)ksSay(hit.join('  '))}
+// nano, vi and vim (krisenlinux._edit): the text lives in the page until it is written; the Spark keeps it in the
+// game's simulated files (POST …/datei), nothing reaches a disk. nano: Ctrl+O writes, Ctrl+X leaves (asks first when
+// changed); vi and vim: i, a, o, A to write, Esc back, x and dd, h j k l, :w :q :wq :x :q!
+function ksEdSync(e){if(!KS.ed||KS.ed.pfad!==e.pfad||KS.ed.art!==e.art){const text=e.zeilen.join('\n')+(e.zeilen.length?'\n':'');KS.ed={pfad:e.pfad,art:e.art,text,saved:text,mode:'normal',cmd:null,ask:false,note:e.neu?t('[ Neue Datei ]','[ New File ]'):'',d:false}}return KS.ed}
+function ksEd(e){const E=ksEdSync(e),vi=E.art!=='nano',dirty=E.text!==E.saved;
+  const head=vi?'':`<div class="ks-edhead"><span>GNU nano 7.2</span><b>${esc(e.pfad)}</b><span>${dirty?esc(t('Geändert','Modified')):''}</span></div>`;
+  const ro=!e.schreiben?esc(t(' [nur lesen: sudo davor zum Speichern]',' [read-only: put sudo in front to write]')):'';
+  const foot=vi?`<div class="ks-edfoot vi">${E.cmd!==null?`<span>:</span><input class="ks-edcmd" type="text" maxlength="40" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="${esc(t('vi-Befehl','vi command'))}" value="${esc(E.cmd)}">`
+      :`<span>${esc(E.mode==='insert'?'-- INSERT --':(E.note||`"${e.pfad}"${e.neu?' [New]':''} ${E.text.split('\n').length-(E.text.endsWith('\n')?1:0)}L`))}${ro}</span>`}</div>`
+    :`<div class="ks-edfoot">${E.ask?`<span>${esc(t('Geänderten Puffer speichern? J Ja · N Nein · Esc Abbrechen','Save modified buffer? Y Yes · N No · Esc Cancel'))}</span>`
+      :`<span>${esc(E.note)}${ro}</span><button type="button" class="b" data-ksed="save">^O ${esc(t('Speichern','Write Out'))}</button><button type="button" class="b" data-ksed="exit">^X ${esc(t('Beenden','Exit'))}</button>`}</div>`;
+  const viKeys=vi?`<div class="ks-edkeys">${[['i','i'],['esc','Esc'],['w',':w'],['q',':q'],['wq',':wq'],['qq',':q!']].map(([k,l])=>`<button type="button" class="b" data-ksvi="${k}">${esc(l)}</button>`).join('')}</div>`:'';
+  return `<div class="ks-ed ${vi?'vi':'nano'}">${head}<textarea class="ks-edtext" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="${esc(e.pfad)}"${vi&&E.mode!=='insert'?' readonly':''}>${esc(E.text)}</textarea>${foot}${viKeys}</div>`}
+async function ksEdSave(){const E=KS.ed,g=KS.data.spiel;const d=await ksSend('/api/profile/krisenspiel/datei','POST',{aktion:'speichern',text:E.text,zug:g.zug});
+  if(!d)return false;const z=d.spiel.konsole.zeilen,last=z.length?z[z.length-1]:null;
+  if(last&&last.k==='err'){E.note=last.s;ksDraw();return false}E.saved=E.text;E.note=last?last.s:'';ksDraw();return true}
+async function ksEdClose(){KS.ed=null;KS.focus=true;await ksSend('/api/profile/krisenspiel/datei','POST',{aktion:'schliessen',zug:KS.data.spiel.zug})}
+async function ksViCmd(c){const E=KS.ed,dirty=E.text!==E.saved;E.cmd=null;c=c.trim();
+  if(c==='w')await ksEdSave();
+  else if(c==='wq'||c==='x'){if(await ksEdSave())await ksEdClose()}
+  else if(c==='q'){if(dirty){E.note='E37: No write since last change (add ! to override)';ksDraw()}else await ksEdClose()}
+  else if(c==='q!')await ksEdClose();
+  else if(/^\d+$/.test(c)){ksDraw();const ta=document.querySelector('#ksview .ks-edtext');if(ta){const ls=E.text.split('\n'),n=Math.min(+c,ls.length)-1;ta.selectionStart=ta.selectionEnd=ls.slice(0,Math.max(0,n)).join('\n').length+(n>0?1:0)}}
+  else{E.note=`E492: Not an editor command: ${c}`;ksDraw()}}
+function ksEdBind(w){const ta=w.querySelector('.ks-edtext');if(!ta||!KS.ed)return;const E=KS.ed,vi=E.art!=='nano';
+  ta.oninput=()=>{E.text=ta.value;E.note=''};
+  if(E.pos!=null){ta.selectionStart=ta.selectionEnd=Math.min(E.pos,ta.value.length);E.pos=null}
+  if(!w.querySelector('.ks-edcmd'))ta.focus({preventScroll:true});
+  const line=()=>{const p=ta.selectionStart,s=ta.value.lastIndexOf('\n',p-1)+1,e0=ta.value.indexOf('\n',p);return [s,e0<0?ta.value.length:e0]};
+  const mode=m=>{E.mode=m;E.note='';E.pos=ta.selectionStart;ksDraw()};
+  ta.onkeydown=async ev=>{const k=ev.key;
+    if(!vi){if(E.ask){ev.preventDefault();if(/^[yj]$/i.test(k)){E.ask=false;if(await ksEdSave())await ksEdClose()}else if(/^n$/i.test(k)){E.ask=false;await ksEdClose()}else if(k==='Escape'||ev.ctrlKey&&k==='c'){E.ask=false;ksDraw()}return}
+      if(ev.ctrlKey&&(k==='o'||k==='s')){ev.preventDefault();await ksEdSave()}
+      else if(ev.ctrlKey&&k==='x'){ev.preventDefault();if(E.text!==E.saved){E.ask=true;ksDraw()}else await ksEdClose()}
+      else if(k==='Tab'){ev.preventDefault();document.execCommand('insertText',false,'\t')}
+      return}
+    if(E.mode==='insert'){if(k==='Escape'){ev.preventDefault();mode('normal')}else if(k==='Tab'){ev.preventDefault();document.execCommand('insertText',false,'\t')}return}
+    if(ev.ctrlKey||ev.metaKey||ev.altKey||k.startsWith('Arrow')||k.startsWith('Page')||k==='Home'||k==='End')return;
+    ev.preventDefault();const p=ta.selectionStart,[s,e0]=line();
+    if(k==='d'){if(E.d){E.d=false;const end=Math.min(e0+1,ta.value.length);E.text=ta.value.slice(0,s)+ta.value.slice(end);E.pos=s;ksDraw()}else E.d=true;return}
+    E.d=false;
+    if(k===':'){E.cmd='';E.pos=p;ksDraw();const c=document.querySelector('#ksview .ks-edcmd');if(c)c.focus();return}
+    if(k==='i')mode('insert');
+    else if(k==='a'){ta.selectionStart=ta.selectionEnd=Math.min(p+1,e0);mode('insert')}
+    else if(k==='A'){ta.selectionStart=ta.selectionEnd=e0;mode('insert')}
+    else if(k==='I'){ta.selectionStart=ta.selectionEnd=s;mode('insert')}
+    else if(k==='o'){E.text=ta.value.slice(0,e0)+'\n'+ta.value.slice(e0);E.pos=e0+1;E.mode='insert';ksDraw()}
+    else if(k==='x'&&p<e0){E.text=ta.value.slice(0,p)+ta.value.slice(p+1);E.pos=p;ksDraw()}
+    else if(k==='h')ta.selectionStart=ta.selectionEnd=Math.max(s,p-1);
+    else if(k==='l')ta.selectionStart=ta.selectionEnd=Math.min(e0,p+1);
+    else if(k==='j'||k==='k'){const col=p-s;if(k==='j'&&e0<ta.value.length){const n2=ta.value.indexOf('\n',e0+1);ta.selectionStart=ta.selectionEnd=Math.min(e0+1+col,n2<0?ta.value.length:n2)}
+      else if(k==='k'&&s>0){const s2=ta.value.lastIndexOf('\n',s-2)+1;ta.selectionStart=ta.selectionEnd=Math.min(s2+col,s-1)}}};
+  const c=w.querySelector('.ks-edcmd');if(c){c.focus();c.onkeydown=ev=>{if(ev.key==='Enter'){ev.preventDefault();ksViCmd(c.value)}else if(ev.key==='Escape'){ev.preventDefault();E.cmd=null;ksDraw()}};c.oninput=()=>{E.cmd=c.value}}}
+// Gemeinsam spielen (krisenteam.py): seats with a role by an invitation link; the link and its QR code only right
+// after making it. While seats are open the page asks every poll seconds for the move and redraws on a new one.
+function ksTeamBox(g){const T=KS.team,R=KS.data.rollen;
+  if(!T)return `<h4>${esc(t('Mitspieler','Players'))}</h4><div class="mut">${esc(t('Lädt …','Loading …'))}</div>`;
+  const rows=T.plaetze.map(p=>`<div class="setrow"><div class="lbl"><b>${esc(ksP(R[p.rolle]))}${p.name?' · '+esc(p.name):''}</b><span>${p.online?`<span class="pill ok">${esc(t('dabei','here'))}</span>`:esc(p.name?t('gerade nicht da','not here right now'):t('noch nicht beigetreten','not joined yet'))}</span></div><button type="button" class="b" data-ksseat="${esc(p.id)}">${esc(t('Entfernen','Remove'))}</button></div>`).join('');
+  const made=KS.made?`<div class="mitmade"><div class="jqr">${KS.made.qr||''}</div><div class="sp"><input readonly value="${esc(KS.made.link)}" aria-label="${esc(t('Der Link','The link'))}" class="ks-teamlink">
+    <div class="row"><button type="button" class="b" data-kscopy="1">${esc(t('Kopieren','Copy'))}</button></div><div class="fh">${esc(t('Nur jetzt sichtbar: weitergeben oder den QR-Code zeigen.','Visible only now: pass it on or show the QR code.'))}</div></div></div>`:'';
+  const add=!g.ende&&T.plaetze.length<T.max?`<div class="row"><select class="ks-rolle" aria-label="${esc(t('Rolle','Role'))}">${T.rollen.map(r=>`<option value="${esc(r.id)}">${esc(ksP(r.name))}</option>`).join('')}</select><button type="button" class="b" data-ksinvite="1">${esc(t('Einladen','Invite'))}</button></div>`:'';
+  return `<h4>${esc(t('Mitspieler','Players'))}</h4><div class="mut">${esc(t(`Du spielst als Leitung. Bis zu ${T.max} Mitspieler per Link, mit oder ohne Profil; der Link gilt nur für dieses Spiel und höchstens ${T.stunden} Stunden.`,`You play as Lead. Up to ${T.max} players by link, with or without a profile; the link works only for this game and at most ${T.stunden} hours.`))}</div>${rows}${made}${add}`}
+async function ksTeamLoad(){const g=KS.data&&KS.data.spiel;if(!KS.data||!KS.data.team)return;KS.teamAt=Date.now();
+  const {r,d}=await apiTry('/api/profile/krisenspiel/team');if(!r.ok)return;const before=KS.team;KS.team=d;
+  if(g&&(d.spiel!==g.id||d.zug!==g.zug||d.ende!==!!g.ende)){await ksLoad();return}
+  const box=document.querySelector('#ksview .ks-team');if(box&&JSON.stringify(before)!==JSON.stringify(d))box.innerHTML=ksTeamBox(g)}
+async function ksTeamClick(B,b){const g=KS.data.spiel;
+  if(B.kscopy){const f=document.querySelector('#ksview .ks-teamlink');try{await navigator.clipboard.writeText(f.value);b.textContent=t('Kopiert','Copied')}catch{f.select()}return}
+  const o=B.ksinvite?xjson('POST',{rolle:document.querySelector('#ksview .ks-rolle').value,base:location.origin}):{method:'DELETE'};
+  const {r,d}=await apiTry('/api/profile/krisenspiel/team'+(B.ksseat?'/'+encodeURIComponent(B.ksseat):''),o);
+  if(!r.ok){ksSay(errSay(r.status,d.detail,''),true);return}
+  KS.team=d;KS.made=B.ksinvite?{link:d.link,qr:d.qr}:null;const box=document.querySelector('#ksview .ks-team');if(box)box.innerHTML=ksTeamBox(g)}
+setInterval(()=>{const D=KS.data,w=$('ksview');if(!D||!D.team||!D.spiel||!w||w.dataset.tab!=='spiel'||w.offsetParent===null||document.visibilityState!=='visible'||KS.busy)return;
+  const T=KS.team;if(T&&(!T.plaetze.length||D.spiel.ende)&&Date.now()-KS.teamAt<60000)return;   // nobody invited: once a minute
+  if(Date.now()-KS.teamAt>=(T?T.poll:4)*1000)ksTeamLoad()},1000);
 function ksEnd(D,g){const e=g.ende,names=Object.fromEntries(D.erfolge.map(x=>[x.id,x.name]));
   return `<div class="ks-end"><div class="ks-note ${KSNOTE[e.note]||''}">${esc(e.note)}</div><div><h4>${esc(t(`${e.punkte} von 100 Punkten`,`${e.punkte} of 100 points`))}</h4>
     <ul class="facts small">${e.gruende.map(x=>`<li><span>${esc(ksP(x))}</span></li>`).join('')}</ul>
@@ -129,9 +222,15 @@ function ksPast(D){const st=D.stats,have=D.erfolge.filter(e=>e.t).length;
     <ul class="facts">${D.verlauf.map(v=>`<li><span><b>${esc(ksP(v.titel))}</b> · ${esc(ksWhen(v.t))}<br><small class="mut">${esc(t(`${v.zuege} Züge · ${v.minuten} min · Seed ${v.seed}`,`${v.zuege} moves · ${v.minuten} min · seed ${v.seed}`))}</small></span><b class="ks-note small ${KSNOTE[v.note]||''}">${esc(v.note)}</b></li>`).join('')||`<li><span class="mut">${esc(t('Noch keine.','None yet.'))}</span></li>`}</ul>
     <h4>${esc(t('Erfolge','Achievements'))}</h4><div class="ks-ach">${D.erfolge.map(e=>`<div class="ks-a${e.t?' on':''}"><b>${esc(ksP(e.name))}</b><small>${esc(ksP(e.text))}</small>${e.t?`<small class="mut">${esc(ksWhen(e.t))}</small>`:''}</div>`).join('')}</div>
     <div class="row"><button type="button" class="b" data-ksclear="1">${esc(t('Meine Spieldaten löschen','Delete my game data'))}</button></div>`}
-{document.body.addEventListener('click',async e=>{const b=e.target.closest('#ksview [data-ksuhr],#ksview [data-ksmove],#ksview [data-ksnew],#ksview [data-ksagain],#ksview [data-ksgive],#ksview [data-ksclear],#ksview [data-kstab]');if(!b)return;const B=b.dataset;KS.focus=false;
+{document.body.addEventListener('click',async e=>{const b=e.target.closest('#ksview [data-ksbig],#ksview [data-kstabkey],#ksview [data-ksed],#ksview [data-ksvi],#ksview [data-ksinvite],#ksview [data-ksseat],#ksview [data-kscopy],#ksview [data-ksuhr],#ksview [data-ksmove],#ksview [data-ksnew],#ksview [data-ksagain],#ksview [data-ksgive],#ksview [data-ksclear],#ksview [data-kstab]');if(!b)return;const B=b.dataset;KS.focus=false;
   const go=k=>{icTabSet('spiel',k);ksOpen()};
   if(B.kstab){go(B.kstab);return}
+  if(B.ksbig){e.preventDefault();KS.big=!KS.big;KS.con=true;ksDraw();return}
+  if(B.kstabkey){const i=document.querySelector('#ksview .ks-in');if(i){ksTab(i);i.focus()}return}
+  if(B.ksed){if(B.ksed==='save')await ksEdSave();else if(KS.ed.text!==KS.ed.saved){KS.ed.ask=true;ksDraw()}else await ksEdClose();return}
+  if(B.ksvi){const E=KS.ed,ta=document.querySelector('#ksview .ks-edtext');if(ta)E.pos=ta.selectionStart;
+    if(B.ksvi==='i'){E.mode='insert';ksDraw()}else if(B.ksvi==='esc'){E.mode='normal';E.cmd=null;ksDraw()}else await ksViCmd({w:'w',q:'q',wq:'wq',qq:'q!'}[B.ksvi]);return}
+  if(B.ksinvite||B.ksseat||B.kscopy){await ksTeamClick(B,b);return}
   if(B.ksuhr){await ksSend('/api/profile/krisenspiel/uhr','POST',{aktion:B.ksuhr});return}
   if(B.ksmove){await ksSend('/api/profile/krisenspiel/zug','POST',{aktion:B.ksmove,zug:KS.data.spiel.zug});return}
   if(B.ksnew||B.ksagain){const w=$('ksview');let body;

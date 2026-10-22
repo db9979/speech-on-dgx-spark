@@ -2733,6 +2733,13 @@
 "titel": "Krisenspiel: Uhr läuft und Anleitung",
 "text": "A: Update, Krisenspiel → Anleitung: Inhaltsverzeichnis mit 14 Abschnitten, ein Klick springt hin; unter „Alle Befehle“ jede Gruppe mit Tabelle (Befehl, Was er tut, Beispiel); am Handy nichts seitlich verschoben. B: Neues Spiel → Normal, „Uhr läuft“ an → Spiel starten: oben zählt die Zeit alle 10 Sekunden eine Minute herunter, darunter „Uhr läuft: 10 s = 1 min“ und Pause. C: Eine Minute warten, dann einen Zug machen: Inspector zeigt „davon_uhr“ mit den gewarteten Minuten. D: Pause: die Zeit steht; Weiter: sie läuft wieder. E: Seite schließen, nach 10 Minuten wieder öffnen: höchstens eine Spielminute ist vergangen. F: Ernstfall mit Uhr: kein Pause-Knopf; laufen lassen bis 0: „Die Zeit ist abgelaufen“. G: Mit Uhr und ohne Pause gewinnen: +5 Punkte („Uhr lief“) und Erfolg „Gegen die Uhr“. H: Zustand → Live: „N mit laufender Uhr“; Logs „spiel: uhr | pause“ ohne Inhalte.",
 "thread": "IT-Krisenspiel für einzelne Nutzer"
+},
+{
+"id": "P415",
+"v": 935,
+"titel": "Krisenspiel gemeinsam, Editor und große Konsole",
+"text": "A: Update, Funktionen → Meine Daten → „Krisenspiel gemeinsam“ an. B: Krisenspiel → Spiel (laufendes Spiel) → Mitspieler: Rolle Technik, „Einladen“: Link und QR-Code stehen da. C: Link am Handy ohne Anmeldung öffnen, Namen eingeben, „Mitspielen“: dieselbe Lage, nur Technik-Züge anklickbar, die anderen grau mit Rollenname. D: Am Handy einen Zug: am Rechner steht er nach spätestens 4 Sekunden in der Chronik mit „Technik (Name)“, der Platz zeigt „dabei“. E: „Entfernen“ oder ein neues Spiel: das Handy meldet „Der Link passt nicht mehr“. F: Konsole: „cat /etc/pas“ + Tab ergänzt zu /etc/passwd; am Handy der Knopf ⇥. G: „nano notiz.txt“: Editor, Text schreiben, Strg+O, Strg+X; „cat notiz.txt“ zeigt ihn. H: „vi notiz.txt“: i, schreiben, Esc, :wq; „vi /etc/hosts“ und :w ohne sudo: Permission denied. I: Knopf „Groß“: die Konsole füllt das Fenster, Esc zurück. J: Zustand → Live: „gemeinsam N Plätze, N da“; Logs „spiel: team …“ ohne Namen.",
+"thread": "IT-Krisenspiel für einzelne Nutzer"
 }
 ]
 }

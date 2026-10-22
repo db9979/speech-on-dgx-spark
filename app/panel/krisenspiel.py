@@ -28,9 +28,11 @@ users/<id>/krisenspiel.json. The journal gets fixed words and numbers only (spie
     POST   /api/profile/krisenspiel/neu        {szenario|zufall, stufe, modus?, uhr?, seed?, lang}: a new game (replaces the running one)
     POST   /api/profile/krisenspiel/zug        {aktion, zug, lang}: one move; zug must be the game's turn (no double tap)
     POST   /api/profile/krisenspiel/konsole    {zeile, zug, lang}: one line at the console (never run, krisenkonsole)
+    POST   /api/profile/krisenspiel/datei      {aktion: speichern|schliessen, text?, zug}: the file open in nano or vi
     POST   /api/profile/krisenspiel/uhr        {aktion: tick|pause|weiter}: „Uhr läuft“, real time as game time
     DELETE /api/profile/krisenspiel            give up the running game (counts as F)
     DELETE /api/profile/krisenspiel/daten      delete the game, the history and the achievements (also while blocked)
+    (playing together, krisenteam.py: /api/profile/krisenspiel/team and the seats' /api/krise/lage, /api/krise/zug)
     GET    /api/admin/krisenspiel              Zustand → Live: running games, moves today, profiles (numbers only)
 """
 import asyncio
@@ -51,6 +53,7 @@ import features
 import guard
 import krisenanleitung
 import krisenkonsole
+import krisenlinux
 import profiles
 from common import DayCounter, load_config, no_think, read_json, write_json
 from core import assistant, auth, browser_profile, json_body, own_profile
@@ -107,6 +110,15 @@ ERFOLGE = (("feuertaufe", ("Feuertaufe", "Baptism of fire"), ("Das erste Spiel z
            ("ohne_knopf", ("Ohne Knopf gelöst", "Solved without a button"), ("Gewonnen, jeder Zug an der Konsole getippt.", "Won with every move typed at the console.")),
            ("gegen_uhr", ("Gegen die Uhr", "Against the clock"), ("Mit laufender Uhr gewonnen, ohne Pause.", "Won with the clock running, without a pause.")))
 ERFOLG_IDS = tuple(e[0] for e in ERFOLGE)
+# roles of a game played together (Paket 11, krisenteam.py): every move has one (data key "rolle", else technik);
+# Leitung may take every move, the others only their own; a game alone is played as Leitung
+ROLLEN = {"technik": ("Technik", "Engineering"), "kommunikation": ("Kommunikation", "Communication"),
+          "leitung": ("Leitung", "Lead")}
+
+
+def darf(rolle, a):
+    """May this role take the move a (krisenteam)?"""
+    return rolle == "leitung" or a.get("rolle", "technik") == rolle
 
 _day = DayCounter(zuege=0, spiele=0, erzaehlt=0, verworfen=0, konsole=0)   # Zustand → Live, numbers only
 _locks = {}
@@ -130,7 +142,7 @@ def _pair(x):
 
 COND_KEYS = {"flags", "ohne", "irgendein", "var", "status", "zug_ab", "min_ab", "alt", "vertrauen_unter", "stress_ueber", "moral_unter"}
 EFF_KEYS = {"zeit", "stress", "vertrauen", "moral", "kosten", "budget", "setzt", "details", "flags", "weg", "text", "je", "wenn"}
-ACT_KEYS = EFF_KEYS | {"id", "label", "einmal", "max"}
+ACT_KEYS = EFF_KEYS | {"id", "label", "einmal", "max", "rolle"}
 TICK_KEYS = EFF_KEYS | {"id", "chance", "einmal"}
 
 
@@ -178,6 +190,8 @@ def check_data(d=None):
         eff(a, None, "allgemein " + a.get("id", "?"), ACT_KEYS)
         if not _pair(a.get("label")):
             bad.append(f"allgemein {a.get('id')}: label")
+        if a.get("rolle", "technik") not in ROLLEN:
+            bad.append(f"allgemein {a.get('id')}: rolle")
     for t in d.get("neben_allgemein", []) + d.get("ticks_allgemein", []):
         eff(t, None, "allgemein " + t.get("id", "?"), TICK_KEYS)
     for sz in d.get("szenarien", []):
@@ -211,6 +225,8 @@ def check_data(d=None):
             eff(a, sz, f"{sid} {a.get('id')}", ACT_KEYS)
             if not _pair(a.get("label")):
                 bad.append(f"{sid} {a.get('id')}: label")
+            if a.get("rolle", "technik") not in ROLLEN:
+                bad.append(f"{sid} {a.get('id')}: rolle")
         for t in sz.get("ticks", []) + sz.get("neben", []):
             eff(t, sz, f"{sid} {t.get('id')}", TICK_KEYS)
             if not isinstance(t.get("chance"), int) or not 0 < t["chance"] <= 100:
@@ -399,7 +415,7 @@ def available(st):
             continue
         cost = {k: a[k] for k in ("zeit", "budget", "stress", "vertrauen", "moral") if a.get(k)}
         free = not a.get("budget") or st["m"]["budget"] >= a["budget"]
-        out.append({"id": a["id"], "label": a["label"], "kosten": cost, "frei": free,
+        out.append({"id": a["id"], "label": a["label"], "kosten": cost, "frei": free, "rolle": a.get("rolle", "technik"),
                     "warum": [] if free else ["Das Notfall-Budget reicht nicht.", "The emergency budget is not enough."]})
     return out
 
@@ -441,10 +457,12 @@ def _step(art, titel, daten, ms=0.0):
     return {"art": art, "titel": list(titel), "daten": daten, "ms": round(ms, 1)}
 
 
-def move(st, aktion, now=None, a=None, via="knopf"):
+def move(st, aktion, now=None, a=None, via="knopf", rolle=None, wer=None):
     """One move by the panel's fixed rules. Returns the facts of the move (fixed texts) for the narrator.
     Raises ValueError when the move is not offered right now. a: a move of the console that is no action of the
-    scenario (a wrong command, reading for LESEN_MAX minutes) with its own fixed effects; via: knopf or konsole."""
+    scenario (a wrong command, reading for LESEN_MAX minutes) with its own fixed effects; via: knopf or konsole.
+    rolle and wer: a player of a game together (krisenteam) takes only the moves of its role; wer stands in the
+    chronicle ({"rolle", "name"})."""
     if st.get("ende"):
         raise ValueError("over")
     t0 = time.perf_counter()
@@ -455,6 +473,8 @@ def move(st, aktion, now=None, a=None, via="knopf"):
         if aktion not in offer or not offer[aktion]["frei"]:
             raise ValueError("not offered")
         a = next(x for x in _all_actions(sz) if x["id"] == aktion)
+        if rolle and not darf(rolle, a):
+            raise ValueError("not this role")
     aktion = a["id"]
     pre_assets = {k: v["status"] for k, v in st["assets"].items()}
     m = st["m"]
@@ -467,7 +487,8 @@ def move(st, aktion, now=None, a=None, via="knopf"):
     clock = 0
     if st.get("uhr"):
         clock, st["uhr"]["offen"] = st["uhr"]["offen"], 0
-    steps = [_step("eingabe", ("Zug", "Move"), {"zug": st["zug"], "aktion": aktion, "label": a["label"], "weg": via})]
+    steps = [_step("eingabe", ("Zug", "Move"), dict({"zug": st["zug"], "aktion": aktion, "label": a["label"], "weg": via},
+                                                    **({"rolle": rolle} if rolle else {})))]
     rec = _rec()
     _effect(st, a, rec)
     rec["minuten"] += reading + clock
@@ -531,7 +552,8 @@ def move(st, aktion, now=None, a=None, via="knopf"):
     _clamp(st)
     gone = minutes_gone(st)
     for x in texts:
-        st["chronik"].append({"zug": st["zug"], "min": gone, "art": x["art"], "text": x["text"]})
+        st["chronik"].append(dict({"zug": st["zug"], "min": gone, "art": x["art"], "text": x["text"]},
+                                  **({"wer": wer} if wer and x["art"] == "zug" else {})))
     end = _end(st)
     if end:
         finish(st, end)
@@ -774,6 +796,7 @@ def konsole_zeile(st, zeile, lang="de"):
 def view(d, uid=None):
     st = d["spiel"]
     out = {"on": True, "erzaehler": bool(uid and features.allowed("krisenerzaehler", uid)),
+           "team": bool(uid and features.allowed("krisenteam", uid)), "rollen": {k: list(v) for k, v in ROLLEN.items()},
            "szenarien": [{"id": s["id"], "titel": s["titel"], "kurz": s["kurz"], "systeme": len(s["assets"])}
                          for s in _DATA["szenarien"]],
            "stufen": [{"id": k, "name": list(v["name"]), "zeit": v["zeit"]} for k, v in STUFEN.items()],
@@ -793,7 +816,8 @@ def view(d, uid=None):
                         "modus": st.get("modus", "knoepfe"), "uhr": _uhr_view(st),
                         "aktionen": [] if st["ende"] or st.get("modus") == "konsole" else available(st),
                         "konsole": dict(krisenkonsole.hilfe_daten(st["szenario"]), host=k["host"], zeilen=k["zeilen"],
-                                        verlauf=k["verlauf"], lesen=k["min"], lesen_max=krisenkonsole.LESEN_MAX)}
+                                        verlauf=k["verlauf"], lesen=k["min"], lesen_max=krisenkonsole.LESEN_MAX,
+                                        **krisenkonsole.tab_daten(st, holds, st.get("lang", "de")))}
     return out
 
 
@@ -991,6 +1015,54 @@ async def konsole(request: Request, prof=Depends(browser_profile)):
         _day.bump("zuege")
     print(f"spiel: konsole | {art} | {round((time.perf_counter() - t0) * 1000)} ms", flush=True)
     return view(await _narrated(uid, d, facts, lang), uid)
+
+
+@router.post("/api/profile/krisenspiel/datei", dependencies=[Depends(assistant)])
+async def datei(request: Request, prof=Depends(browser_profile)):
+    """nano, vi and vim at the console (Dominik 2026-10-22): {aktion: speichern | schliessen, text?, zug}. The text goes
+    into the game's simulated file system like > does (krisenlinux.save), never onto the Spark's disk; no move, no
+    minute."""
+    uid = prof["id"]
+    _need(uid)
+    guard.limit(request, "spiel", uid)
+    b = await json_body(request, krisenlinux.EDIT_BYTES + 1000)
+    aktion, text, turn, lang = b.get("aktion"), b.get("text", ""), b.get("zug"), _lang(b)
+    if aktion not in ("speichern", "schliessen") or not isinstance(text, str) or len(text) > krisenlinux.EDIT_BYTES \
+            or not isinstance(turn, int) or isinstance(turn, bool):
+        print("spiel: datei abgelehnt | eingabe", flush=True)
+        raise HTTPException(400, "aktion, text, zug")
+
+    def go():
+        with _lock(uid):
+            d = load(uid)
+            st = d["spiel"]
+            if not st or st.get("ende"):
+                return None, "kein spiel"
+            if st["zug"] != turn:
+                return None, "alter zug"
+            c = krisenkonsole.ctx(st, holds, lang)
+            if not krisenlinux.editor_view(c):
+                return None, "kein editor"
+            k = st["konsole"]
+            e = k["editor"]
+            if aktion == "speichern":
+                err = krisenlinux.save(c, text)
+                n = len([x for x in text.split("\n")]) - (1 if text.endswith("\n") else 0)
+                msg = ("err", "[ " + err + " ]") if err else \
+                    ("out", f'"{e["pfad"]}" {n}L written' if e["art"] != "nano" else f"[ Wrote {n} lines ]")
+                k["zeilen"] = (k["zeilen"] + [{"k": msg[0], "s": msg[1]}])[-krisenkonsole.PUFFER:]
+                why = "fehler" if err else "gespeichert"
+            else:
+                k.pop("editor", None)
+                why = "zu"
+            save(uid, d)
+            return d, why
+    d, why = await asyncio.to_thread(go)
+    if not d:
+        print(f"spiel: datei abgelehnt | {why}", flush=True)
+        raise HTTPException(404 if why in ("kein spiel", "kein editor") else 409, why)
+    print(f"spiel: datei | {why}", flush=True)
+    return view(d, uid)
 
 
 @router.post("/api/profile/krisenspiel/uhr", dependencies=[Depends(assistant)])

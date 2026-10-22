@@ -279,6 +279,34 @@ class Linux(unittest.TestCase):
         r, _ = self.say(st, "sudo reboot")
         self.assertEqual((r["art"], st["trace"][-1]["steps"][0]["daten"]["aktion"]), ("wirkung", "konsole_neustart"))
 
+    def test_editors_and_tab_data(self):
+        """nano, vi and vim open a file in the page's editor; writing goes through the same rules as >."""
+        st = K.new_game("bsi", "normal", 2, now=T0)
+        self.assertIn("ein Dateiname fehlt", self.say(st, "nano")[1][0])
+        self.assertIn("Is a directory", self.say(st, "vi /etc")[1][0])
+        self.assertIn("No such file", self.say(st, "vim /gibts/nicht.txt")[1][0])
+        r, out = self.say(st, "nano README.txt")
+        self.assertEqual((r["editor"], r["art"], out), (True, "frei", []))
+        e = C.tab_daten(st, K.holds)["editor"]
+        self.assertEqual((e["art"], e["pfad"], e["schreiben"], e["neu"]), ("nano", "/home/admin/README.txt", True, False))
+        self.assertEqual(L.save(C.ctx(st, K.holds), "eins\nzwei\n"), "")
+        self.assertEqual(self.say(st, "cat README.txt")[1], ["eins", "zwei"])
+        self.say(st, "vi /etc/hosts")
+        self.assertFalse(C.tab_daten(st, K.holds)["editor"]["schreiben"])
+        self.assertEqual(L.save(C.ctx(st, K.holds), "x"), "/etc/hosts: Permission denied")
+        self.say(st, "sudo vim neu.txt")
+        e = C.tab_daten(st, K.holds)["editor"]
+        self.assertEqual((e["art"], e["neu"], e["root"], e["zeilen"]), ("vim", True, True, []))
+        self.assertIn("200", L.save(C.ctx(st, K.holds), "x\n" * (L.LINE_MAX + 1)))
+        self.assertEqual(L.save(C.ctx(st, K.holds), "x" * 500), "")
+        self.assertEqual(len(self.say(st, "cat neu.txt")[1][0]), 200)
+        d = C.tab_daten(st, K.holds)
+        self.assertEqual(d["cwd"], "/home/admin")
+        self.assertIn("/home/admin/neu.txt", d["pfade"])
+        self.assertIn("/etc/", d["pfade"])
+        self.say(st, "ssh dc01")                                       # a Windows machine: no paths, no editor
+        self.assertEqual(C.tab_daten(st, K.holds), {"cwd": "", "pfade": [], "editor": None})
+
     def test_files_stay_and_travel(self):
         st = K.new_game("bsi", "normal", 2, now=T0)
         self.say(st, "echo eins > notiz.txt")
@@ -535,13 +563,29 @@ class Api(unittest.TestCase):
             self.assertEqual(c.post("/api/profile/krisenspiel/konsole", json={"zeile": "ls", "zug": 0}).status_code, 409)
             g = c.post("/api/profile/krisenspiel/konsole", json={"zeile": "geheim; rm -rf /", "zug": 1}).json()["spiel"]
             self.assertEqual(g["konsole"]["zeilen"][-1]["k"], "err")
+            # nano, vi and vim: the file comes back through …/datei, never a move
+            self.assertEqual(c.post("/api/profile/krisenspiel/datei", json={"aktion": "speichern", "text": "x", "zug": 1}).status_code, 404)
+            g = c.post("/api/profile/krisenspiel/konsole", json={"zeile": "nano /tmp/plan.txt", "zug": 1}).json()["spiel"]
+            self.assertEqual(g["konsole"]["editor"]["pfad"], "/tmp/plan.txt")
+            for bad in ({"aktion": "loeschen", "zug": 1}, {"aktion": "speichern", "text": 5, "zug": 1},
+                        {"aktion": "speichern", "text": "x" * (L.EDIT_BYTES + 1), "zug": 1}, {"aktion": "speichern", "zug": True}):
+                self.assertEqual(c.post("/api/profile/krisenspiel/datei", json=bad).status_code, 400, bad)
+            self.assertEqual(c.post("/api/profile/krisenspiel/datei", json={"aktion": "speichern", "text": "a", "zug": 0}).status_code, 409)
+            g = c.post("/api/profile/krisenspiel/datei", json={"aktion": "speichern", "text": "geheimplan\nzwei\n", "zug": 1}).json()["spiel"]
+            self.assertEqual((g["zug"], g["konsole"]["zeilen"][-1]["s"]), (1, "[ Wrote 2 lines ]"))
+            self.assertEqual(g["konsole"]["editor"]["zeilen"], ["geheimplan", "zwei"])
+            g = c.post("/api/profile/krisenspiel/datei", json={"aktion": "schliessen", "zug": 1}).json()["spiel"]
+            self.assertIsNone(g["konsole"]["editor"])
+            self.assertIn("/tmp/plan.txt", g["konsole"]["pfade"])
         log = out.getvalue()
         for want in ("spiel: neu | bsi | normal | konsole", "spiel: neu | bsi | normal | knoepfe | uhr", "spiel: uhr | pause",
                      "spiel: uhr | weiter", "spiel: uhr abgelehnt | keine uhr", "spiel: uhr abgelehnt | keine pause",
                      "spiel: uhr abgelehnt | eingabe", "spiel: zug abgelehnt | nur konsole", "spiel: konsole abgelehnt | eingabe",
-                     "spiel: konsole | frei", "spiel: konsole | zug", "spiel: konsole abgelehnt | alter zug", "spiel: konsole | abgelehnt"):
+                     "spiel: konsole | frei", "spiel: konsole | zug", "spiel: konsole abgelehnt | alter zug", "spiel: konsole | abgelehnt",
+                     "spiel: datei | gespeichert", "spiel: datei | zu", "spiel: datei abgelehnt | kein editor",
+                     "spiel: datei abgelehnt | eingabe", "spiel: datei abgelehnt | alter zug"):
             self.assertIn(want, log)
-        for word in ("geheim", "siem01", "advisories", "Kskons"):
+        for word in ("geheim", "siem01", "advisories", "Kskons", "plan.txt"):
             self.assertNotIn(word, log)
 
     def test_the_narrator_changes_no_value(self):

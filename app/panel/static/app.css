@@ -2279,6 +2279,23 @@ textarea{resize:none}textarea[data-fest]{resize:vertical}textarea.feldplatz{padd
 .ks-con .kc-p,.ks-cline .kc-p{color:#7ee787}.ks-con .kc-err{color:#ff7b72}.ks-con .kc-zug{color:#79c0ff}.ks-con .kc-in{color:#f0f6fc}
 .ks-cline{display:flex;gap:8px;align-items:center;background:#0d1117;padding:6px 12px 10px;font:12.5px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 .ks-cline .ks-in{flex:1;background:transparent;border:0;color:#f0f6fc;font:inherit;padding:2px 0;box-shadow:none;outline:none}
+/* the large console (Dominik 2026-10-22 „rauslösbar“): it fills the window, Esc or „Klein“ puts it back */
+.ks-condet>summary{display:flex;gap:8px;align-items:center}.ks-condet>summary small{flex:1}.ks-bigbtn{padding:2px 10px;font-size:12px}
+.ks-condet.ks-big{position:fixed;inset:12px;z-index:60;margin:0;display:flex;flex-direction:column;background:var(--card);box-shadow:0 10px 40px #0008}
+.ks-condet.ks-big>.ks-con{flex:1;max-height:none}.ks-condet.ks-big>.ks-ed{flex:1}
+.ks-tabkey{padding:0 10px;background:transparent;color:#7ee787;border-color:#30363d}
+/* nano, vi and vim: the file in a terminal-coloured text field, nano's bar on top, the keys below */
+.ks-ed{display:flex;flex-direction:column;background:#0d1117;color:#c9d1d9;font:12.5px/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.ks-edhead{display:flex;justify-content:space-between;gap:10px;background:#c9d1d9;color:#0d1117;padding:2px 10px}
+.ks-edtext{flex:1;min-height:260px;background:transparent;color:inherit;font:inherit;border:0;border-radius:0;padding:8px 12px;resize:vertical;outline:none;box-shadow:none;tab-size:4;white-space:pre;overflow:auto}
+.ks-ed.vi .ks-edtext[readonly]{caret-color:#7ee787}
+.ks-edfoot{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:4px 10px 8px;border-top:1px solid #30363d}.ks-edfoot>span{flex:1;min-width:140px}
+.ks-edfoot .b,.ks-edkeys .b{padding:2px 10px;font:inherit;background:transparent;color:#c9d1d9;border-color:#30363d}
+.ks-edfoot .ks-edcmd{flex:1;background:transparent;border:0;color:#f0f6fc;font:inherit;padding:0;box-shadow:none;outline:none}
+.ks-edkeys{display:flex;flex-wrap:wrap;gap:6px;padding:0 10px 8px}
+/* playing together (krisenteam): the owner's seats; a seat's page in a wide card */
+.ks-team{margin-top:14px}.ks-team .row{flex-wrap:wrap;gap:8px;align-items:center}.ks-team select{width:auto}
+.kgcard{width:min(1100px,100%);max-height:calc(100dvh - 24px);overflow:auto}.kg-team{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
 .ks-only{border:1px dashed var(--line);border-radius:12px;padding:12px;margin-top:12px}
 .ks-old>summary{cursor:pointer;color:var(--mut);font-size:13px;margin:4px 0}
 /* „Uhr läuft“ and the guide of the crisis game: tables wrap instead of scrolling, the table of contents wraps too */

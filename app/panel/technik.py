@@ -142,6 +142,7 @@ MODULE = {
     "bilder": ("wissen", "Bilder malen: Wunsch prüfen, Auftrag, Ablage, Bildkarte"),
     "krisenanleitung": ("wissen", "Anleitung des Krisenspiels: feste Texte, Befehle, Szenarien und Erfolge aus dem Code"),
     "krisenkonsole": ("wissen", "Konsole des Krisenspiels: simuliertes Terminal, feste Befehlsliste, nichts wird ausgeführt"),
+    "krisenteam": ("wissen", "Krisenspiel gemeinsam: Plätze mit Rolle per Einladungslink (Code nach dem #, nur Hash), alle sehen dieselbe Lage"),
     "krisenlinux": ("wissen", "Linux an der Konsole des Krisenspiels: rund 150 Befehle mit Hilfe, Dateien, Benutzer und Dienste nur simuliert"),
     "krisenspiel": ("wissen", "IT-Krisenspiel: Szenarien als Daten, feste Regeln mit Seed, Note und Erfolge; der Erzähler nur in Worten"),
     "musik": ("wissen", "Musik machen: Wunsch prüfen, Modell wählen, Auftrag, Ablage, Liedkarte, Musik testen je Modell"),

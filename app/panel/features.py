@@ -244,6 +244,8 @@ FEATURES = (
     F("krisenspiel", "IT-Krisenspiel", "IT crisis game", "data", ("krisenspiel",), me="ksbox", guide="krisenspiel"),
     F("krisenerzaehler", "Krisenspiel mit Erzähler", "Crisis game with narrator", "data", ("krisenspiel_erzaehler",),
       parent="krisenspiel", me="ksbox", guide="krisenerzaehler"),
+    F("krisenteam", "Krisenspiel gemeinsam", "Crisis game together", "data", ("krisenspiel_team",),
+      parent="krisenspiel", me="ksbox", guide="krisenteam"),
     F("docbrief", "Steckbrief und Tags", "Document card and tags", "data", ("doc_brief",),
       parent="documents", me="docbox", guide="docbrief"),
     # Suchprüfung (suchpruefung.py, plan suche-schaerfen, Stufe 1): test questions measure how often the search

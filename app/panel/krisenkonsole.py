@@ -185,6 +185,25 @@ def hilfe_daten(sid):
     return {"befehle": sorted(set(BEFEHLE) | set(krisenlinux.LINUX)), "hosts": [h["id"] for h in world(sid)["hosts"]]}
 
 
+def ctx(st, holds, lang="de", names=None):
+    """The simulation's view of the machine the console is on (krisenlinux.Ctx)."""
+    sid = st["szenario"]
+    k = st.setdefault("konsole", fresh(sid))
+    return krisenlinux.Ctx(st, _host(sid, k["host"]), world(sid), holds, lang == "en", lambda x: _status(st, x),
+                           lambda a: (names or {}).get(a, a), world(sid)["hosts"])
+
+
+def tab_daten(st, holds, lang="de"):
+    """For Tab on the page: the working directory and every path of the machine (directories end in /); Windows
+    machines have none."""
+    c = ctx(st, holds, lang)
+    if not _has(c.h, UNIX):
+        return {"cwd": "", "pfade": [], "editor": None}
+    files, dirs = krisenlinux.tree(c)
+    return {"cwd": c.cwd, "pfade": sorted([d.rstrip("/") + "/" for d in dirs if d != "/"] + list(files)),
+            "editor": krisenlinux.editor_view(c)}
+
+
 def _lines(lines, st, holds):
     out = []
     for x in lines:
@@ -319,7 +338,7 @@ def run(st, zeile, offered, holds, lang="de", names=None):
     k = st.setdefault("konsole", fresh(sid))
     h = _host(sid, k["host"])
     en = lang == "en"
-    res = {"out": [], "art": "frei", "zug": None, "falsch": None, "wirkung": None, "clear": False}
+    res = {"out": [], "art": "frei", "zug": None, "falsch": None, "wirkung": None, "clear": False, "editor": False}
     out = res["out"]
     parts, redir, err = parse(zeile)
     if parts == [] and not err:
@@ -374,6 +393,7 @@ def run(st, zeile, offered, holds, lang="de", names=None):
                 out.append(("err", "bash: " + e))
     if c.effekt and not res["zug"] and not res["falsch"]:
         res.update(art="wirkung", wirkung=c.effekt)
+    res["editor"] = c.editor
     out += [("out", s) for s in lines[:AUSGABE_MAX]]
     if len(lines) > AUSGABE_MAX:
         out.append(("err", f"... {len(lines) - AUSGABE_MAX} more lines (use | head, | tail or | grep)"))

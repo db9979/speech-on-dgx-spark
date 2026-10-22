@@ -247,6 +247,7 @@ Own documents, memory, earlier conversations, Kiwix and Wikipedia, created docum
 | `app/panel/krisenkonsole.py` | Konsole des IT-Krisenspiels: a simulated terminal under the chronicle. |
 | `app/panel/krisenlinux.py` | Linux an der Konsole des Krisenspiels: about 120 commands of the list at linux-commands.labex.io, simulated on the machines of the scenario. |
 | `app/panel/krisenspiel.py` | IT-Krisenspiel: a text adventure for one profile at a time. |
+| `app/panel/krisenteam.py` | Krisenspiel gemeinsam: up to PLAETZE more players join the running game of a profile, each with a role (Technik, Kommunikation, Leitung, krisenspiel.ROLLEN), … |
 | `app/panel/lokal.py` | Erst lokal suchen: before anything goes outside, the panel looks in the person's own sources itself. |
 | `app/panel/memtidy.py` | Weekly memory cleanup per profile: the language model looks at the remembered facts and proposes which ones to merge (duplicates, the same thing said twice) … |
 | `app/panel/musik.py` | Musik machen: songs from a wish, made on the model computer by ACE-Step 1.5 (musik_server.py, music.port 31004, installed with `install.sh --musik 2b\|xl`). |
@@ -641,6 +642,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `state/iphone-update.json` | Update from the iPhone app | – | no |
 | `state/join.json` | Invitations (hashes) | hashes only | yes |
 | `state/kalender-spiegel` | Spark calendar: copy of every CalDAV calendar (one file per calendar entry) | sealed | no |
+| `state/krisenspiel-team.json` | Crisis game together: seats with role and name (hashes of the links) | hashes only | yes |
 | `state/latency.json` | Waiting times | – | no |
 | `state/live-monitors.json` | Wall monitors | – | no |
 | `state/livecheck.json` | Live check | – | no |
@@ -1527,6 +1529,7 @@ Applies at: [step 4](#kn-sicherheit-s4), [step 5](#kn-sicherheit-s5)
 | Profile | released functions on own data | sign-in; secrets with a fresh code |
 | Other profile | only what the owner shares with it one by one (see), while shared; for the assistant only text | geteilt.put with a fresh code, release „Sharing with profiles“ |
 | Someone with a write link | without a profile only entries on exactly one list, optionally see the open texts; no ticking off, no deleting, no tool, no model | mitschreiblink.find: only the hash, expiry, revoke, release „Write link“; wrong tries lock like a PIN |
+| Player in the crisis game | with or without a profile only one running game of a profile: see fixed values and texts, the moves of its own role; no console, no tool, no model | krisenteam.find: only the hash, one game, expiry, revoke, release „Crisis game together“; wrong tries lock like a PIN |
 | Manager | look after people, switch no functions, no logs | role, checked on the server |
 | Admin | releases, blocks, kill switch, logs, live | sign-in with the second step; „Change protection“ asks every time |
 
@@ -1560,6 +1563,7 @@ Applies at: [step 4](#kn-sicherheit-s4), [step 5](#kn-sicherheit-s5)
 - `app/panel/chat_turn.py` `shared_stranger`: stranger's voice at a shared speaker ([step 4](#kn-sicherheit-s4))
 - `app/panel/features.py` `allowed`: the admin's release, for every profile ([step 5](#kn-sicherheit-s5))
 - `app/panel/mitschreiblink.py` `find`: checks a write link: hash, expiry, release, list ([step 3](#kn-sicherheit-s3), [step 5](#kn-sicherheit-s5))
+- `app/panel/krisenteam.py` `find`: checks a seat in the crisis game: hash, expiry, release, the same game ([step 3](#kn-sicherheit-s3), [step 5](#kn-sicherheit-s5))
 - `app/panel/features.py` `blocked`: block of single profiles ([step 5](#kn-sicherheit-s5))
 - `app/panel/geteilt.py` `put`: share with another profile, taking back works at once ([step 5](#kn-sicherheit-s5))
 - `app/panel/chat.py` `wrap_outside`: outside text as a block of data ([step 6](#kn-sicherheit-s6))
@@ -3308,7 +3312,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Seal**: vault.seal turns the value into „enc1:“ and a Fernet token (encrypted and protected against change). A value already sealed stays as it is.
 5. <a id="kn-state-s5"></a>**Write atomically**: common.write_json writes into a fresh temporary file next to it, never through a link, gives it the rights of the old file (a new one is readable for the service only) and then swaps it in one step. A crash in the middle leaves the old file whole.
 6. <a id="kn-state-s6"></a>**Read**: A sealed value is opened with the key. If the key does not fit (backup from another Spark), an empty value comes back and the account has to be entered again. Older unsealed values are read and sealed the next time they are saved.
-7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 35), otherwise the line gives its reason (dateien.STATE_LOCAL, 84). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
+7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 36), otherwise the line gives its reason (dateien.STATE_LOCAL, 84). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
 8. <a id="kn-state-s8"></a>**Move backup?**: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup.
 9. <a id="kn-state-s9"></a>**Fine when restoring?**: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays.
 10. <a id="kn-state-s10"></a>**Put in place with a way back**: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back.
@@ -3318,7 +3322,7 @@ flowchart TD
 
 #### Numbers (from the code)
 
-- **35** files in every backup ([step 7](#kn-state-s7))
+- **36** files in every backup ([step 7](#kn-state-s7))
 - **84** files and folders that stay out with a reason ([step 7](#kn-state-s7))
 - **8 MB** largest file when restoring ([step 9](#kn-state-s9))
 - **12** characters the move password has at least ([step 8](#kn-state-s8))

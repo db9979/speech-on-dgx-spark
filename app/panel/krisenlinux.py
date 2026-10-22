@@ -75,8 +75,9 @@ LINUX = {
     "nl": (U, "text", "frei", "Zeilen nummerieren", "Number lines", "nl <datei>", "", ""),
     "tee": (U, "text", "frei", "Ausgabe auch in eine Datei", "Output to a file too", "tee [-a] <datei>", "-a anhängen; steht hinter einem |: ls | tee liste.txt", "-a append; goes after a |: ls | tee list.txt"),
     "column": (U, "text", "frei", "In Spalten setzen", "Set in columns", "column -t <datei>", "", ""),
-    "vi": (U, "text", "frei", "Editor", "Editor", "vi <datei>", "", ""),
-    "nano": (U, "text", "frei", "Editor", "Editor", "nano <datei>", "", ""),
+    "vi": (U, "text", "frei", "Editor mit Modi: i schreiben, Esc, :w speichern, :q beenden", "Editor with modes: i insert, Esc, :w write, :q quit", "vi <datei>", "", ""),
+    "vim": (U, "text", "frei", "Editor wie vi", "Editor like vi", "vim <datei>", "", ""),
+    "nano": (U, "text", "frei", "Einfacher Editor: Strg+O speichern, Strg+X beenden", "Simple editor: Ctrl+O write, Ctrl+X exit", "nano <datei>", "", ""),
     "top": (U, "system", "lesen", "Last und Prozesse", "Load and processes", "top", "", ""),
     "htop": (U, "system", "lesen", "Last und Prozesse", "Load and processes", "htop", "", ""),
     "free": (U, "system", "lesen", "Arbeitsspeicher", "Memory", "free [-h]", "-h lesbar", "-h readable"),
@@ -217,6 +218,7 @@ class Ctx:
         self.k = st["konsole"]
         self.effekt = None          # a move for the game (a stopped service, a reboot)
         self.lesen = False          # a reading command (costs a minute)
+        self.editor = False         # nano, vi or vim opened a file (the page shows the editor)
 
     @property
     def hid(self):
@@ -337,6 +339,56 @@ def _content(c, path):
     if isinstance(v, dict):
         return None, f"{path}: binary file ({'gzip' if 'gz' in v else 'archive'} data)"
     return v, ""
+
+
+# ---------------------------------------------------------------- nano, vi and vim (Dominik 2026-10-22)
+EDITOREN = ("nano", "vi", "vim")
+EDIT_BYTES = 20_000      # what the page may send back for one file
+
+
+def _edit(c, name, args, root):
+    """Opens a file in the page's editor: only the path, the editor and root are kept in the game (konsole.editor);
+    the text comes back by save() and goes through write() like > does."""
+    pl = _plain(args)
+    if not pl:
+        return [f"{name}: {c.say('ein Dateiname fehlt', 'a file name is needed')}: {name} <datei>"]
+    p = norm(c, pl[0])
+    files, dirs = tree(c)
+    if len(p) > MAX_PATH:
+        return [f"{name}: {pl[0]}: File name too long"]
+    if p in dirs:
+        return [f"{name}: {pl[0]}: Is a directory"]
+    if isinstance(files.get(p), dict):
+        return [f"{name}: {pl[0]}: binary file, not shown"]
+    if p not in files and posixpath.dirname(p) not in dirs:
+        return [f"{name}: {pl[0]}: No such file or directory"]
+    c.k["editor"] = {"host": c.hid, "pfad": p, "root": bool(root), "art": name}
+    c.editor = True
+    return []
+
+
+def editor_view(c):
+    """The open editor for the page: path, lines, new file, may it be written; None without one."""
+    e = c.k.get("editor")
+    if not e or e.get("host") != c.hid:
+        return None
+    files, _ = tree(c)
+    v = files.get(e["pfad"])
+    return {"art": e["art"], "pfad": e["pfad"], "zeilen": list(v) if isinstance(v, list) else [],
+            "neu": e["pfad"] not in files, "schreiben": _writable(c, e["pfad"], e["root"]), "root": e["root"]}
+
+
+def save(c, text):
+    """The editor's text into its file (write, like >): "" or an error line; the editor stays open."""
+    e = c.k.get("editor")
+    if not e or e.get("host") != c.hid:
+        return "no file open"
+    lines = str(text or "").replace("\r\n", "\n").split("\n")
+    if lines and lines[-1] == "":
+        lines.pop()
+    if len(lines) > LINE_MAX:
+        return f"{e['pfad']}: {c.say(f'höchstens {LINE_MAX} Zeilen', f'at most {LINE_MAX} lines')}"
+    return write(c, e["pfad"], [x[:200] for x in lines], False, e["root"])
 
 
 def write(c, path, lines, append, root):
@@ -1518,8 +1570,8 @@ def _misc(c, args, root, name):
             elif name == "chmod":
                 c.sim()["mode"][p] = _mode(pl[0], c.sim()["mode"].get(p) or MODES["d" if p in dirs else "f"])
         return out
-    if name in ("vi", "nano"):
-        return ["spark: no full-screen editor here; write with echo 'text' > file or echo 'text' >> file"]
+    if name in EDITOREN:
+        return _edit(c, name, args, root)
     if name in ("nice",):
         return ["spark: nice only changes the priority; type the command itself"]
     if name == "renice":

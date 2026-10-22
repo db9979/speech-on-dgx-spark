@@ -147,6 +147,7 @@ WITHOUT = {
     "wissenskarte": "arbeitet im Hintergrund, die Karte steht im Wissensbuch (Seite Karte)",
     "krisenspiel": "ein Spiel auf seiner eigenen Seite (Krisenspiel), nichts zu fragen",
     "krisenerzaehler": "erzählt nur die Züge auf der Seite Krisenspiel",
+    "krisenteam": "krisenteam.py: kein Werkzeug, Mitspieler per Link auf der Seite Krisenspiel (nur feste Züge, nie das Modell)",
     "suchfragen": "schreibt im Hintergrund Prüffragen für die Suchprüfung",
     "nachsortieren": "wirkt beim Suchen in den Dokumenten",
     "rmfresh": "wirkt beim Abgleich",

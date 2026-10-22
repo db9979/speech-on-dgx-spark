@@ -184,6 +184,7 @@
     "musik_bearbeiten": false,
     "krisenspiel": false,
     "krisenspiel_erzaehler": false,
+    "krisenspiel_team": false,
     "remarkable": false,
     "remarkable_send": false,
     "remarkable_fresh": false,

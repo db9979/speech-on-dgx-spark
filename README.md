@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.935** IT crisis game (package 11): play together by invitation link with the roles Engineering, Communication and Lead; console with Tab for files, nano, vi and vim and a "Large" button
 - **V01.0.934** IT crisis game: mode "clock running" (10 s = 1 game minute, only while the page is open, pause in practice and normal, +5 and achievement "Against the clock") and tab "Guide" with quick start, rules, console, all commands, scenarios, achievements and tips from the code
 - **V01.0.933** IT crisis game (package 2): console under the chronicle, typed moves like buttons, mode "console only" (+5), 🎲 surprise scenario, no achievements when given up; about 150 Linux commands on simulated machines with sudo, files, users, services and firewall, help with -h and "Did you mean …?"; nothing really runs
 - **V01.0.932** IT crisis game (package 1): own page "Crisis game" with five scenarios (ransomware, SAN, power, BGP, BSI), crisis dashboard, inspector, grades and achievements; the panel decides by fixed rules and seed, the narrator (own switch) only retells; both switches off
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.928** What I know about you tidied: tabs, list with details, rename an interest or give it a topic, take a sender out, web tips as a switch; iPhone
 - **V01.0.927** Unclear questions, anonymous: questions no rule of the switch recognizes show redacted on Features → Routing at “unclear” (names, addresses, numbers, codes removed, second leak check, never guests, never who asked, 7 days), with “Belongs to …” for tuning; switch under Targeted tool choice, off; preference per profile under Me → Conversation → Privacy
 - **V01.0.926** Making a song: description up to 2000 instead of 300 characters, e.g. a firm's text as the template; "Write lyrics" adds a short music description for the music model (reads at most 600), also in the iPhone app
-- **V01.0.925** Exact calculations: the panel computes, not the language model (own parser instead of eval, Decimal, percent, brackets, roots, hard limits), date arithmetic (days until, weekday, date in n days), the answer check recomputes sentences like "17 times 23 is 381" and corrects them; Answer simple things at once uses the same calculator
 
 
 

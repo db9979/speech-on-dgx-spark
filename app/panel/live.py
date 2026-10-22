@@ -1327,6 +1327,8 @@ def snapshot(view="admin", now=None):
     try:
         import krisenspiel
         ksp = krisenspiel.for_live()
+        import krisenteam
+        ksp["team"] = krisenteam.for_live()
     except Exception:
         ksp = {"on": False}
     if ksp.get("on"):
@@ -1726,6 +1728,9 @@ def snapshot(view="admin", now=None):
                         + (f" · {ksp.get('erzaehlt', 0)} erzählt, {ksp.get('verworfen', 0)} verworfen" if ksp.get("erzaehlt") or ksp.get("verworfen") else "")
                         + (f" · {ksp.get('konsole', 0)} Konsolen-Zeilen" if ksp.get("konsole") else "")
                         + (f" · {ksp['uhr']} mit laufender Uhr" if ksp.get("uhr") else "")
+                        + (f" · gemeinsam {ksp['team']['plaetze']} Plätze, {ksp['team']['online']} da, heute {ksp['team']['zuege']} Team-Züge"
+                           + (f", {ksp['team']['abgelehnt']} abgelehnt" if ksp['team']['abgelehnt'] else "")
+                           if (ksp.get("team") or {}).get("on") else "")
                         + f" · {ksp.get('profile', 0)} Profile")
         if x["id"] == "wkarte":    # Wissenskarte: connections, discarded, documents waiting, profiles, numbers only (never a title)
             x["sub"] = (f"{wkk.get('verbindungen', 0)} Verbindungen · {wkk.get('punkte', 0)} Punkte · {wkk.get('warten', 0)} Dokumente warten"

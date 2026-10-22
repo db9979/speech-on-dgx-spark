@@ -247,6 +247,7 @@ Eigene Dokumente, Gedächtnis, frühere Gespräche, Kiwix und Wikipedia, erstell
 | `app/panel/krisenkonsole.py` | Konsole des Krisenspiels: simuliertes Terminal, feste Befehlsliste, nichts wird ausgeführt |
 | `app/panel/krisenlinux.py` | Linux an der Konsole des Krisenspiels: rund 150 Befehle mit Hilfe, Dateien, Benutzer und Dienste nur simuliert |
 | `app/panel/krisenspiel.py` | IT-Krisenspiel: Szenarien als Daten, feste Regeln mit Seed, Note und Erfolge; der Erzähler nur in Worten |
+| `app/panel/krisenteam.py` | Krisenspiel gemeinsam: Plätze mit Rolle per Einladungslink (Code nach dem #, nur Hash), alle sehen dieselbe Lage |
 | `app/panel/lokal.py` | Erst lokal suchen, bevor etwas nach außen geht |
 | `app/panel/memtidy.py` | Wöchentliches Aufräumen des Gedächtnisses |
 | `app/panel/musik.py` | Musik machen: Wunsch prüfen, Modell wählen, Auftrag, Ablage, Liedkarte, Musik testen je Modell |
@@ -641,6 +642,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `state/iphone-update.json` | Update aus der iPhone-App | – | nein |
 | `state/join.json` | Einladungen (Hashes) | nur Hashes | ja |
 | `state/kalender-spiegel` | Spark-Kalender: Kopie jedes CalDAV-Kalenders (je Kalender-Eintrag eine Datei) | versiegelt | nein |
+| `state/krisenspiel-team.json` | Krisenspiel gemeinsam: Plätze mit Rolle und Namen (Hashes der Links) | nur Hashes | ja |
 | `state/latency.json` | Wartezeiten | – | nein |
 | `state/live-monitors.json` | Wandmonitore | – | nein |
 | `state/livecheck.json` | Echtprüfung | – | nein |
@@ -1527,6 +1529,7 @@ Gilt bei: [Schritt 4](#kn-sicherheit-s4), [Schritt 5](#kn-sicherheit-s5)
 | Profil | freigegebene Funktionen auf eigene Daten | Anmeldung; Geheimnisse mit frischem Code |
 | Anderes Profil | nur, was der Besitzer einzeln mit ihm teilt (Sehen), solange er teilt; für den Assistenten nur Text | geteilt.put mit frischem Code, Freigabe „Teilen mit Profilen“ |
 | Jemand mit Mitschreib-Link | ohne Profil nur Einträge auf genau eine Liste, auf Wunsch die offenen Texte sehen; kein Abhaken, kein Löschen, kein Werkzeug, kein Modell | mitschreiblink.find: nur der Hash, Ablauf, Widerruf, Freigabe „Mitschreib-Link“; Fehlversuche sperren wie eine PIN |
+| Mitspieler im Krisenspiel | ohne oder mit Profil nur ein laufendes Spiel eines Profils: feste Werte und Texte sehen, die Züge der eigenen Rolle; keine Konsole, kein Werkzeug, kein Modell | krisenteam.find: nur der Hash, ein Spiel, Ablauf, Widerruf, Freigabe „Krisenspiel gemeinsam“; Fehlversuche sperren wie eine PIN |
 | Verwalter | Personen betreuen, keine Funktionen schalten, keine Logs | Rolle, auf dem Server geprüft |
 | Admin | Freigaben, Sperren, Notaus, Logs, Live | Anmeldung mit zweitem Schritt; „Schutz ändern“ fragt jedes Mal |
 
@@ -1560,6 +1563,7 @@ Gilt bei: [Schritt 4](#kn-sicherheit-s4), [Schritt 5](#kn-sicherheit-s5)
 - `app/panel/chat_turn.py` `shared_stranger`: fremde Stimme am geteilten Lautsprecher ([Schritt 4](#kn-sicherheit-s4))
 - `app/panel/features.py` `allowed`: Freigabe des Admins, gilt für jedes Profil ([Schritt 5](#kn-sicherheit-s5))
 - `app/panel/mitschreiblink.py` `find`: prüft einen Mitschreib-Link: Hash, Ablauf, Freigabe, Liste ([Schritt 3](#kn-sicherheit-s3), [Schritt 5](#kn-sicherheit-s5))
+- `app/panel/krisenteam.py` `find`: prüft einen Platz im Krisenspiel: Hash, Ablauf, Freigabe, dasselbe Spiel ([Schritt 3](#kn-sicherheit-s3), [Schritt 5](#kn-sicherheit-s5))
 - `app/panel/features.py` `blocked`: Sperre einzelner Profile ([Schritt 5](#kn-sicherheit-s5))
 - `app/panel/geteilt.py` `put`: Teilen mit einem anderen Profil, zurückziehen wirkt sofort ([Schritt 5](#kn-sicherheit-s5))
 - `app/panel/chat.py` `wrap_outside`: Text von außen als Datenblock ([Schritt 6](#kn-sicherheit-s6))
@@ -3308,7 +3312,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Versiegeln**: vault.seal macht aus dem Wert „enc1:“ und ein Fernet-Token (verschlüsselt und gegen Änderung geschützt). Ein schon versiegelter Wert bleibt, wie er ist.
 5. <a id="kn-state-s5"></a>**Atomar schreiben**: common.write_json schreibt in eine frische Zwischendatei daneben, nie durch einen Link, gibt ihr die Rechte der alten Datei (eine neue ist nur für den Dienst lesbar) und tauscht sie dann in einem Schritt aus. Ein Absturz mittendrin lässt die alte Datei ganz.
 6. <a id="kn-state-s6"></a>**Lesen**: Ein versiegelter Wert wird mit dem Schlüssel geöffnet. Passt der Schlüssel nicht (Sicherung von einem anderen Spark), kommt ein leerer Wert zurück und der Zugang muss neu eingetragen werden. Ältere unversiegelte Werte werden gelesen und beim nächsten Speichern versiegelt.
-7. <a id="kn-state-s7"></a>**Kommt in die Sicherung?**: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 35), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 84). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile.
+7. <a id="kn-state-s7"></a>**Kommt in die Sicherung?**: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 36), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 84). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile.
 8. <a id="kn-state-s8"></a>**Umzugs-Sicherung?**: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung.
 9. <a id="kn-state-s9"></a>**Beim Wiederherstellen in Ordnung?**: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt.
 10. <a id="kn-state-s10"></a>**Einsetzen mit Rückweg**: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück.
@@ -3318,7 +3322,7 @@ flowchart TD
 
 #### Zahlen (aus dem Code)
 
-- **35** Dateien in jeder Sicherung ([Schritt 7](#kn-state-s7))
+- **36** Dateien in jeder Sicherung ([Schritt 7](#kn-state-s7))
 - **84** Dateien und Ordner, die mit Grund draußen bleiben ([Schritt 7](#kn-state-s7))
 - **8 MB** größte Datei beim Wiederherstellen ([Schritt 9](#kn-state-s9))
 - **12** Zeichen hat das Umzugs-Passwort mindestens ([Schritt 8](#kn-state-s8))
