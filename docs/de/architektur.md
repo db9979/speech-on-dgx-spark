@@ -168,6 +168,7 @@ Jede Anfrage geht zuerst hier durch: Größe, Herkunft, Notaus, Anmeldung, Profi
 | `app/panel/netguard.py` | Wächter: wohin eine Verbindung nach außen darf |
 | `app/panel/notaus.py` | Notaus in drei Stufen, von außen nach innen |
 | `app/panel/notzugang.py` | Wieder hinein nach einem Aussperren (nur per sudo am Spark) |
+| `app/panel/nurspiel.py` | Spielprofile „Nur Krisenspiel“: nur Seite, Anmeldung und Spiel, jede andere Route 403 |
 | `app/panel/panel.py` | Startet das Panel, Middleware (Notaus, Herkunft, Größe), liefert die Seite aus |
 | `app/panel/passkey.py` | Passkeys statt Code (Face ID, Touch ID, Windows Hello) |
 | `app/panel/profiles.py` | Profile, Geräte, Sitzungen, Gespräche und Gedächtnis pro Profil |
@@ -1533,6 +1534,7 @@ Gilt bei: [Schritt 4](#kn-sicherheit-s4), [Schritt 5](#kn-sicherheit-s5)
 | Anderes Profil | nur, was der Besitzer einzeln mit ihm teilt (Sehen), solange er teilt; für den Assistenten nur Text | geteilt.put mit frischem Code, Freigabe „Teilen mit Profilen“ |
 | Jemand mit Mitschreib-Link | ohne Profil nur Einträge auf genau eine Liste, auf Wunsch die offenen Texte sehen; kein Abhaken, kein Löschen, kein Werkzeug, kein Modell | mitschreiblink.find: nur der Hash, Ablauf, Widerruf, Freigabe „Mitschreib-Link“; Fehlversuche sperren wie eine PIN |
 | Mitspieler im Krisenspiel | ohne oder mit Profil nur ein laufendes Spiel eines Profils: feste Werte und Texte sehen, die Züge der eigenen Rolle; keine Konsole, kein Werkzeug, kein Modell | krisenteam.find: nur der Hash, ein Spiel, Ablauf, Widerruf, Freigabe „Krisenspiel gemeinsam“; Fehlversuche sperren wie eine PIN |
+| Spielprofil „Nur Krisenspiel“ | Name und PIN, danach nur das Krisenspiel, die eigene Sicherheit und Abmelden; kein Assistent, keine Sprache, kein Gerät, keine Einstellung | nurspiel.gate: feste Liste erlaubter Wege vor jeder Route, sonst 403; features.blocked sperrt jede andere Funktion; nie mit Admin-Rolle |
 | Verwalter | Personen betreuen, keine Funktionen schalten, keine Logs | Rolle, auf dem Server geprüft |
 | Admin | Freigaben, Sperren, Notaus, Logs, Live | Anmeldung mit zweitem Schritt; „Schutz ändern“ fragt jedes Mal |
 
@@ -1567,6 +1569,7 @@ Gilt bei: [Schritt 4](#kn-sicherheit-s4), [Schritt 5](#kn-sicherheit-s5)
 - `app/panel/features.py` `allowed`: Freigabe des Admins, gilt für jedes Profil ([Schritt 5](#kn-sicherheit-s5))
 - `app/panel/mitschreiblink.py` `find`: prüft einen Mitschreib-Link: Hash, Ablauf, Freigabe, Liste ([Schritt 3](#kn-sicherheit-s3), [Schritt 5](#kn-sicherheit-s5))
 - `app/panel/krisenteam.py` `find`: prüft einen Platz im Krisenspiel: Hash, Ablauf, Freigabe, dasselbe Spiel ([Schritt 3](#kn-sicherheit-s3), [Schritt 5](#kn-sicherheit-s5))
+- `app/panel/nurspiel.py` `gate`: lässt ein Spielprofil nur an Seite, Anmeldung und Spiel, sonst 403 ([Schritt 5](#kn-sicherheit-s5))
 - `app/panel/features.py` `blocked`: Sperre einzelner Profile ([Schritt 5](#kn-sicherheit-s5))
 - `app/panel/geteilt.py` `put`: Teilen mit einem anderen Profil, zurückziehen wirkt sofort ([Schritt 5](#kn-sicherheit-s5))
 - `app/panel/chat.py` `wrap_outside`: Text von außen als Datenblock ([Schritt 6](#kn-sicherheit-s6))

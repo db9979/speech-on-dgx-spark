@@ -54,7 +54,8 @@ MANAGER = tuple((frozenset(m), re.compile(p)) for m, p in (
     # no /api/admin/switches: only the admin switches functions (Dominik 2026-10-14); blocks he only lifts (features.py)
     (("GET",), r"/api/admin/features"), (("PUT",), rf"/api/admin/features/[a-z0-9_]+/profiles/{_P}"),
     (("GET", "POST"), r"/api/admin/profiles"), (("GET", "PUT", "DELETE"), rf"/api/admin/profiles/{_P}"),
-    (("PUT",), rf"/api/admin/profiles/{_P}/call"), (("DELETE",), rf"/api/admin/profiles/{_P}/mfa"),
+    (("PUT",), rf"/api/admin/profiles/{_P}/call"), (("PUT",), rf"/api/admin/profiles/{_P}/nurspiel"),
+    (("DELETE",), rf"/api/admin/profiles/{_P}/mfa"),
     (("DELETE",), rf"/api/admin/profiles/{_P}/sessions/[0-9a-f]{{16}}"),
     (("DELETE",), rf"/api/admin/profiles/{_P}/trusted/[0-9a-f]{{16}}"),
     (("POST",), r"/api/admin/devices"), (("PUT", "DELETE"), rf"/api/admin/devices/{_D}"),
@@ -137,6 +138,8 @@ def set_role(uid, new, by="main"):
         raise LookupError("no such profile")
     if new and new not in ROLES:
         raise ValueError("role must be admin, manager or empty")
+    if new and profiles.nur_spiel(uid):
+        raise ValueError("Ein Profil „Nur Krisenspiel“ bekommt keine Admin-Rolle.")
     if new and not mfa.enabled(uid):
         raise ValueError("Erst braucht das Profil seinen zweiten Anmeldeschritt (Ich → Sicherheit).")
     with _lock:

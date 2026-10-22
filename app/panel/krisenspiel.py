@@ -1765,6 +1765,7 @@ def for_live():
         return {"on": False}
     if _live["d"] is None or time.time() - _live["at"] >= LIVE_CACHE:
         running = profs = clocks = camps = 0
+        only = sum(1 for uid in profiles.user_ids() if profiles.nur_spiel(uid))   # Spielprofile „Nur Krisenspiel“ (nurspiel.py)
         for uid in profiles.user_ids():
             if not os.path.exists(_file(uid)):
                 continue
@@ -1774,7 +1775,7 @@ def for_live():
             camps += bool(d["kampagne"])
             running += bool(st and not st.get("ende"))
             clocks += bool(st and not st.get("ende") and st.get("uhr"))
-        _live.update(at=time.time(), d={"laufend": running, "profile": profs, "uhr": clocks, "kampagnen_laufend": camps})
+        _live.update(at=time.time(), d={"laufend": running, "profile": profs, "uhr": clocks, "kampagnen_laufend": camps, "nur_spiel": only})
     t = _day.today()
     return dict(_live["d"], on=True, zuege=t["zuege"], spiele=t["spiele"], erzaehlt=t["erzaehlt"], verworfen=t["verworfen"],
                 konsole=t["konsole"], delegiert=t["delegiert"], heraus=t["heraus"], kampagnen=t["kampagnen"])

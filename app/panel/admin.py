@@ -136,13 +136,37 @@ async def admin_add_profile(request: Request):
         raise HTTPException(400, "name: 1 to 40 characters")
     if not profiles.valid_pin(pin):
         raise HTTPException(400, "PIN: 4 to 64 characters without spaces")
+    spiel = body.get("nur_spiel", False)
+    if not isinstance(spiel, bool):
+        raise HTTPException(400, "nur_spiel: true or false")
     try:
-        uid = profiles.add_user(name, pin)
+        uid = profiles.add_user(name, pin, nur_spiel=spiel)
     except ValueError as e:
         raise HTTPException(409, str(e))
-    import onboard
-    onboard.save_state(uid, fresh=True)   # "Los geht's" opens at the first sign-in, as after an invitation (code check D6)
+    if spiel:
+        print("spiel: nur spiel | profil angelegt", flush=True)
+    else:
+        import onboard
+        onboard.save_state(uid, fresh=True)   # "Los geht's" opens at the first sign-in, as after an invitation (code check D6)
     return {"id": uid}
+
+
+@router.put("/api/admin/profiles/{uid}/nurspiel", dependencies=[Depends(auth), Depends(admin_code)])
+async def admin_nur_spiel(uid: str, request: Request):
+    """Spielprofil „Nur Krisenspiel“ (nurspiel.py) on or off; an admin profile never is one."""
+    _no_admin_profile(request, uid)
+    on = (await json_body(request, 200)).get("on")
+    if not isinstance(on, bool):
+        print("spiel: nur spiel abgelehnt | eingabe", flush=True)
+        raise HTTPException(400, "on: true or false")
+    if on and coadmin.role(uid):
+        print("spiel: nur spiel abgelehnt | admin rolle", flush=True)
+        raise HTTPException(409, "Ein Profil mit Admin-Rolle wird kein Spielprofil.")
+    if not profiles.set_nur_spiel(uid, on):
+        print("spiel: nur spiel abgelehnt | kein profil", flush=True)
+        raise HTTPException(404, "no such profile")
+    print(f"spiel: nur spiel | {'an' if on else 'aus'}", flush=True)
+    return {"ok": True, "nur_spiel": on}
 
 
 def _no_admin_profile(request, *uids):
@@ -199,7 +223,8 @@ def admin_profile(uid: str, request: Request):
     me = acting_profile(request)
     out = dict(u, **_profile_extra(uid), last=profiles.last_use(uid, last), devices=devs,
                facts=len(profiles.memory(uid)), sessions=profiles.sessions(uid), trusted=mfa.list_trusted(uid),
-               features={"on": on, "of": of}, main=not me or me["role"] == "admin", owner=not me)
+               features={"on": on, "of": of}, main=not me or me["role"] == "admin", owner=not me,
+               nur_spiel=profiles.nur_spiel(uid))
     if not me or coadmin.role(me["id"]) != "manager":
         out["rights"] = _rights(uid)
     return out

@@ -61,8 +61,9 @@ body.guest #themebtn{margin-left:auto}
 @media (display-mode:standalone){header{padding-top:max(12px,env(safe-area-inset-top))}main{padding-bottom:max(48px,env(safe-area-inset-bottom))}}
 /* login */
 body.guest nav,body.guest #hdr,body.guest #fab,body.guest #logoutbtn{display:none!important}
-/* a signed-in profile without admin login (start.js): the admin's shell with only Assistent, Chats, Kalender, E-Mail and Ich */
-body.prof #hdr,body.prof #fab,body.prof #logoutbtn,body.prof .navgrp,body.prof nav button[data-s]:not([data-s=chat]):not([data-s=chats]):not([data-s=cal]):not([data-s=post]),
+/* a signed-in profile without admin login (start.js): the admin's shell without the pages of „Spark verwalten“; its own
+   pages (Assistent, Chats, Kalender, E-Mail, Listen, Offen, Kontakte, Wissensbuch, Krisenspiel) show as they are released */
+body.prof #hdr,body.prof #fab,body.prof #logoutbtn,body.prof .navgrp,body.prof nav button:is([data-s=mon],[data-s=feat],[data-s=prof],[data-s=cfg]),
 body.prof #mbar button[data-m=mon],body.prof #mbar button[data-m=more],body.prof #mmenu{display:none!important}
 body.mgr .mainonly,body.coadm .pwonly,nav button[hidden]{display:none!important}   /* an admin profile (coadmin.js): .pwonly only with the panel password; a Verwalter does not see .mainonly */
 .modal{position:fixed;inset:0;z-index:50;display:grid;place-items:center;align-items:safe center;overflow-y:auto;background:rgba(10,12,20,.45);backdrop-filter:blur(4px);padding:16px}
@@ -2318,3 +2319,5 @@ textarea{resize:none}textarea[data-fest]{resize:vertical}textarea.feldplatz{padd
 .ks-tab{width:100%;border-collapse:collapse;font-size:13px;margin:6px 0 12px}
 .ks-tab th,.ks-tab td{border-bottom:1px solid var(--line);padding:5px 6px;text-align:left;vertical-align:top;overflow-wrap:anywhere}
 .ks-code{white-space:pre-wrap;background:#0d1117;color:#c9d1d9;border-radius:10px;padding:10px 12px;font:12.5px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+/* Spielprofil „Nur Krisenspiel“ (nurspiel.py): the menu shows the game only, no assistant, search, Ich or helper */
+body.nurspiel nav>*:not([data-s=spiel]):not(#nsout),body.nurspiel #fab{display:none!important}

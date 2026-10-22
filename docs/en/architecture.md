@@ -168,6 +168,7 @@ Every request passes here first: size, origin, kill switch, login, profile and r
 | `app/panel/netguard.py` | Outbound connections to addresses that people or outside text choose: web pages from search results, calendars, address books, task lists, mail servers and H … |
 | `app/panel/notaus.py` | Notaus: three stages that stop the Spark from the outside in. |
 | `app/panel/notzugang.py` | Back in when locked out: sudo speech-spark notzugang. |
+| `app/panel/nurspiel.py` | Spielprofile „Nur Spiel“. |
 | `app/panel/panel.py` | Speech on DGX Spark: web panel for config and monitoring. |
 | `app/panel/passkey.py` | Passkeys (Face ID, Touch ID, Windows Hello; WebAuthn) instead of typing the six-digit code. |
 | `app/panel/profiles.py` | User profiles for the assistant: who is talking, and what the assistant remembers about them. |
@@ -1533,6 +1534,7 @@ Applies at: [step 4](#kn-sicherheit-s4), [step 5](#kn-sicherheit-s5)
 | Other profile | only what the owner shares with it one by one (see), while shared; for the assistant only text | geteilt.put with a fresh code, release „Sharing with profiles“ |
 | Someone with a write link | without a profile only entries on exactly one list, optionally see the open texts; no ticking off, no deleting, no tool, no model | mitschreiblink.find: only the hash, expiry, revoke, release „Write link“; wrong tries lock like a PIN |
 | Player in the crisis game | with or without a profile only one running game of a profile: see fixed values and texts, the moves of its own role; no console, no tool, no model | krisenteam.find: only the hash, one game, expiry, revoke, release „Crisis game together“; wrong tries lock like a PIN |
+| Game profile „Crisis game only“ | name and PIN, then only the crisis game, its own security and signing out; no assistant, no voice, no device, no setting | nurspiel.gate: fixed list of allowed ways before every route, else 403; features.blocked blocks every other function; never with an admin role |
 | Manager | look after people, switch no functions, no logs | role, checked on the server |
 | Admin | releases, blocks, kill switch, logs, live | sign-in with the second step; „Change protection“ asks every time |
 
@@ -1567,6 +1569,7 @@ Applies at: [step 4](#kn-sicherheit-s4), [step 5](#kn-sicherheit-s5)
 - `app/panel/features.py` `allowed`: the admin's release, for every profile ([step 5](#kn-sicherheit-s5))
 - `app/panel/mitschreiblink.py` `find`: checks a write link: hash, expiry, release, list ([step 3](#kn-sicherheit-s3), [step 5](#kn-sicherheit-s5))
 - `app/panel/krisenteam.py` `find`: checks a seat in the crisis game: hash, expiry, release, the same game ([step 3](#kn-sicherheit-s3), [step 5](#kn-sicherheit-s5))
+- `app/panel/nurspiel.py` `gate`: lets a game profile reach only the page, sign-in and game, else 403 ([step 5](#kn-sicherheit-s5))
 - `app/panel/features.py` `blocked`: block of single profiles ([step 5](#kn-sicherheit-s5))
 - `app/panel/geteilt.py` `put`: share with another profile, taking back works at once ([step 5](#kn-sicherheit-s5))
 - `app/panel/chat.py` `wrap_outside`: outside text as a block of data ([step 6](#kn-sicherheit-s6))

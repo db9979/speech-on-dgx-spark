@@ -262,6 +262,15 @@ def build(k):
                                                  for i in (0, 1)]] for x in k._DATA.get("kampagnen", [])]),
                   _tabelle([("Folge", "Consequence"), ("Wann", "When"), ("Wirkung", "Effect")],
                            [[list(n), list(w), list(t)] for _, n, t, w in k.ERBE])))
+    S.append(_sek("spielprofile", "Spielprofile", "Game profiles",
+                  _p("Wer nur spielen soll, bekommt vom Admin ein Profil „Nur Krisenspiel“ (Personen und Geräte, Haken beim "
+                     "Anlegen oder beim Profil). Nach der Anmeldung mit Name und PIN zeigt die Seite nur das Krisenspiel und "
+                     "„Abmelden“: kein Assistent, keine Sprache, kein Gerät, keine Einstellung. Szenarien, Kampagnen, "
+                     "Herausforderungen und das gemeinsame Spiel gehen wie bei jedem Profil.",
+                     "Whoever should only play gets a profile \"Crisis game only\" from the admin (People and devices, tick "
+                     "when creating it or at the profile). After signing in with name and PIN the page shows only the crisis "
+                     "game and \"Sign out\": no assistant, no voice, no device, no setting. Scenarios, campaigns, challenges "
+                     "and playing together work as for every profile.")))
     S.append(_sek("konsole", "Die Konsole", "The console",
                   _p("Unter der Chronik steht ein Terminal. Du startest auf jump01, dem Linux-Sprungrechner des Admins. "
                      "Von dort erreichst du jeden Rechner des Szenarios mit ssh. Getippte Befehle sind dieselben Züge wie "

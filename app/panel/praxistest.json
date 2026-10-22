@@ -2803,6 +2803,13 @@
 "titel": "Ins Wort fallen: erst anhalten am iPhone",
 "text": "A: Update und neue TestFlight-App, Funktionen → Ins Wort fallen: erst anhalten an; in der App Einstellungen → Ins Wort fallen an. B: Eine lange Frage stellen. C: Während der Antwort „mhm“ sagen: sie hält kurz an und läuft an derselben Stelle weiter. D: „Stopp“ sagen: sie endet. E: Bei der nächsten Antwort „Und morgen?“ sagen: neue Frage. F: WLAN kurz aus, dabei „mhm“ sagen: nach 4 Sekunden läuft die Antwort weiter. G: Im Auto bleibt Ins Wort fallen aus.",
 "thread": "Ideen aus sonia-assistant"
+},
+{
+"id": "P425",
+"v": 945,
+"titel": "Spielprofil „Nur Krisenspiel“",
+"text": "A: Personen und Geräte → Profil anlegen mit Haken „Nur Krisenspiel“. B: Mit dem neuen Profil anmelden: oben stehen nur Krisenspiel und Abmelden, die Seite öffnet das Krisenspiel. C: Im Browser /api/memory oder eine andere Seite aufrufen: 403 „Dieses Profil ist nur für das Krisenspiel.“. D: Spiel starten und spielen geht normal. E: Beim Profil den Haken abnehmen: nach neuem Laden ist es ein normales Profil. F: Einem Profil mit Admin-Rolle den Haken geben: abgelehnt. G: Ein normales Profil ohne Admin-Anmeldung sieht wieder Listen, Offen, Kontakte, Wissensbuch und Krisenspiel. H: Zustand → Live: Profile „davon N nur Spiel“.",
+"thread": "IT-Krisenspiel für einzelne Nutzer"
 }
 ]
 }

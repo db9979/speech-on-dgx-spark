@@ -1597,7 +1597,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/notaus.py blocks: ob eine Notaus-Stufe diese Art Arbeit anhält (Schritt 2) - app/panel/guard.py limit: Rate-Limit pro Adresse und Profil (Schritt 3) - app/panel/guard.py Slot: Höchstzahl gleichzeitiger Anfragen (Schritt 3) - app/panel/core.py confirm_code: frischer Code oder Passkey für heikle Wege (Schritt 3, Schritt 8) - app/tarswart.py check: prüft jeden Befehl an den Wärter (Schritt 3) - app/panel/chat_turn.py shared_stranger: fremde Stimme am geteilten Lautsprecher (Schritt 4) - app/panel/features.py allowed: Freigabe des Admins, gilt für jedes Profil (Schritt 5) - app/panel/mitschreiblink.py find: prüft einen Mitschreib-Link: Hash, Ablauf, Freigabe, Liste (Schritt 3, Schritt 5) - app/panel/krisenteam.py find: prüft einen Platz im Krisenspiel: Hash, Ablauf, Freigabe, dasselbe Spiel (Schritt 3, Schritt 5) - app/panel/features.py blocked: Sperre einzelner Profile (Schritt 5) - app/panel/geteilt.py put: Teilen mit einem anderen Profil, zurückziehen wirkt sofort (Schritt 5) - app/panel/chat.py wrap_outside: Text von außen als Datenblock (Schritt 6) - app/textnorm.py defuse: Blockende und Marken des Modells in fremdem Text entschärfen (Schritt 6) - app/llm_tor.py entsch"
+"text": "- app/panel/notaus.py blocks: ob eine Notaus-Stufe diese Art Arbeit anhält (Schritt 2) - app/panel/guard.py limit: Rate-Limit pro Adresse und Profil (Schritt 3) - app/panel/guard.py Slot: Höchstzahl gleichzeitiger Anfragen (Schritt 3) - app/panel/core.py confirm_code: frischer Code oder Passkey für heikle Wege (Schritt 3, Schritt 8) - app/tarswart.py check: prüft jeden Befehl an den Wärter (Schritt 3) - app/panel/chat_turn.py shared_stranger: fremde Stimme am geteilten Lautsprecher (Schritt 4) - app/panel/features.py allowed: Freigabe des Admins, gilt für jedes Profil (Schritt 5) - app/panel/mitschreiblink.py find: prüft einen Mitschreib-Link: Hash, Ablauf, Freigabe, Liste (Schritt 3, Schritt 5) - app/panel/krisenteam.py find: prüft einen Platz im Krisenspiel: Hash, Ablauf, Freigabe, dasselbe Spiel (Schritt 3, Schritt 5) - app/panel/nurspiel.py gate: lässt ein Spielprofil nur an Seite, Anmeldung und Spiel, sonst 403 (Schritt 5) - app/panel/features.py blocked: Sperre einzelner Profile (Schritt 5) - app/panel/geteilt.py put: Teilen mit einem anderen Profil, zurückziehen wirkt sofort (Schritt 5) - app/panel/chat.py wrap_outside: Text von außen als Datenblock (Schritt 6) - app/textnor"
 },
 {
 "lang": "de",
@@ -1605,7 +1605,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "aerft: Marken des Modells aus jeder Nachricht nehmen (Schritt 6) - app/panel/mailansicht.py clean: HTML einer Mail nur bereinigt, ohne Skript und ohne Laden von außen (Schritt 6) - app/panel/netguard.py allowed: ob eine Verbindung nach außen sein darf (Schritt 6) - app/panel/answercheck.py unsupported: Zahl ohne Quelle fällt heraus (Schritt 9) - app/textnorm.py hide_secrets: Geheimnisse werden nie gesprochen (Schritt 9) - app/panel/guard.py log: Änderungsprotokoll mit Prüfkette (Schritt 10) - app/panel/vault.py seal: Geheimnisse versiegelt ablegen (Schritt 10)"
+"text": "m.py defuse: Blockende und Marken des Modells in fremdem Text entschärfen (Schritt 6) - app/llm_tor.py entschaerft: Marken des Modells aus jeder Nachricht nehmen (Schritt 6) - app/panel/mailansicht.py clean: HTML einer Mail nur bereinigt, ohne Skript und ohne Laden von außen (Schritt 6) - app/panel/netguard.py allowed: ob eine Verbindung nach außen sein darf (Schritt 6) - app/panel/answercheck.py unsupported: Zahl ohne Quelle fällt heraus (Schritt 9) - app/textnorm.py hide_secrets: Geheimnisse werden nie gesprochen (Schritt 9) - app/panel/guard.py log: Änderungsprotokoll mit Prüfkette (Schritt 10) - app/panel/vault.py seal: Geheimnisse versiegelt ablegen (Schritt 10)"
 },
 {
 "lang": "de",
@@ -4958,6 +4958,14 @@
 "head": "Sprach-Chat",
 "title": "Kampagnen im Krisenspiel (V01.0.943, Plan Paket 9)",
 "text": "nter der Liste), dazu der Erfolg „Durchgehalten“. „Kampagne beenden“ (DELETE /api/profile/krisenspiel/kampagne) beendet sie ohne Wertung, das laufende Spiel bleibt als freies Spiel. Start und Weiter über POST …/neu mit kampagne (eine Kennung oder weiter), nie zusammen mit Lernmodus, Mutatoren oder Herausforderung. Logs spiel: kampagne | start|weiter|kapitel N von M|ende|ersetzt|beendet, spiel: kampagne abgelehnt | keine kampagne; Live zeigt laufende und heute begonnene Kampagnen als Zahl. In der iPhone-App stehen unter *Krisenspiel* die Kampagnen zum Starten, eine laufende mit Kapitel und Einleitungssatz und „Nächstes Kapitel“. test_krisenspiel prüft jedes Kapitel ab dem zweiten mit dem schlechtesten Erbe (Audit, Erschöpft, Ruf) auf jeder Variante auf Gewinnbarkeit. Als Nächstes: das Netzduell (eigener Reiter, nur Terminal), danach Paket 8 (Sprache)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Spielprofile „Nur Krisenspiel“ (V01.0.945, Netzduell Schritt 1)",
+"text": "Spielprofile „Nur Krisenspiel“ (V01.0.945, Netzduell Schritt 1): Unter *Personen und Geräte* legt der Admin ein Profil mit dem Haken „Nur Krisenspiel“ an oder schaltet es beim Profil um (PUT /api/admin/profiles/{id}/nurspiel, nie für ein Profil mit Admin-Rolle, auch keine Admin-Rolle danach). So ein Profil sieht nach der Anmeldung nur das Krisenspiel und „Abmelden“: features.blocked sperrt jede Funktion außer dem Krisenspiel (und dem zweiten Anmeldeschritt), und eine eigene Middleware (nurspiel.py) lässt es nur an die Seite, die Anmeldung, die eigene Sicherheit und das Spiel; jeder andere Weg (Assistent, Sprache, Geräte, MCP, Telegram, Telefon, jede Einstellung) antwortet 403, bevor die Route läuft. test_nurspiel geht dafür jede Route des Panels durch. Live zählt die Spielprofile mit, Logs spiel: nur spiel | an|aus|profil angelegt, spiel: nur spiel gesperrt | <bereich>. Nebenbei behoben: ein Profil ohne Admin-Anmeldung sah Listen, Offen, Kontakte, Wissensbuch und Krisenspiel nicht im Menü (die Regel ließ nur Assistent, Chats, Kalender und E-Mail durch); jetzt fehlen nur die Seiten von „Spark verwalten“."
 },
 {
 "lang": "de",
@@ -13533,7 +13541,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/notaus.py blocks: whether a kill switch stage stops this kind of work (step 2) - app/panel/guard.py limit: rate limit per address and profile (step 3) - app/panel/guard.py Slot: cap on parallel requests (step 3) - app/panel/core.py confirm_code: fresh code or passkey for sensitive ways (step 3, step 8) - app/tarswart.py check: checks every command to the Wärter (step 3) - app/panel/chat_turn.py shared_stranger: stranger's voice at a shared speaker (step 4) - app/panel/features.py allowed: the admin's release, for every profile (step 5) - app/panel/mitschreiblink.py find: checks a write link: hash, expiry, release, list (step 3, step 5) - app/panel/krisenteam.py find: checks a seat in the crisis game: hash, expiry, release, the same game (step 3, step 5) - app/panel/features.py blocked: block of single profiles (step 5) - app/panel/geteilt.py put: share with another profile, taking back works at once (step 5) - app/panel/chat.py wrap_outside: outside text as a block of data (step 6) - app/textnorm.py defuse: defuse the block's end and the model's markers in outside text (step 6) - app/llm_tor.py entschaerft: take the model's markers out of every message (step 6) - app/pa"
+"text": "- app/panel/notaus.py blocks: whether a kill switch stage stops this kind of work (step 2) - app/panel/guard.py limit: rate limit per address and profile (step 3) - app/panel/guard.py Slot: cap on parallel requests (step 3) - app/panel/core.py confirm_code: fresh code or passkey for sensitive ways (step 3, step 8) - app/tarswart.py check: checks every command to the Wärter (step 3) - app/panel/chat_turn.py shared_stranger: stranger's voice at a shared speaker (step 4) - app/panel/features.py allowed: the admin's release, for every profile (step 5) - app/panel/mitschreiblink.py find: checks a write link: hash, expiry, release, list (step 3, step 5) - app/panel/krisenteam.py find: checks a seat in the crisis game: hash, expiry, release, the same game (step 3, step 5) - app/panel/nurspiel.py gate: lets a game profile reach only the page, sign-in and game, else 403 (step 5) - app/panel/features.py blocked: block of single profiles (step 5) - app/panel/geteilt.py put: share with another profile, taking back works at once (step 5) - app/panel/chat.py wrap_outside: outside text as a block of data (step 6) - app/textnorm.py defuse: defuse the block's end and the model's markers in outside "
 },
 {
 "lang": "en",
@@ -13541,7 +13549,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "nel/mailansicht.py clean: a mail's HTML only cleaned, without script and without loads from outside (step 6) - app/panel/netguard.py allowed: whether a connection out may happen (step 6) - app/panel/answercheck.py unsupported: a figure without a source is dropped (step 9) - app/textnorm.py hide_secrets: secrets are never spoken (step 9) - app/panel/guard.py log: change log with its chain (step 10) - app/panel/vault.py seal: store secrets sealed (step 10)"
+"text": "text (step 6) - app/llm_tor.py entschaerft: take the model's markers out of every message (step 6) - app/panel/mailansicht.py clean: a mail's HTML only cleaned, without script and without loads from outside (step 6) - app/panel/netguard.py allowed: whether a connection out may happen (step 6) - app/panel/answercheck.py unsupported: a figure without a source is dropped (step 9) - app/textnorm.py hide_secrets: secrets are never spoken (step 9) - app/panel/guard.py log: change log with its chain (step 10) - app/panel/vault.py seal: store secrets sealed (step 10)"
 },
 {
 "lang": "en",
@@ -16806,6 +16814,14 @@
 "head": "Voice chat",
 "title": "Campaigns in the crisis game (V01.0.943, plan package 9)",
 "text": "api/profile/krisenspiel/kampagne) ends it without a score, the running game stays as a free game. Start and continue through POST …/neu with kampagne (an id or weiter), never together with learning mode, mutators or a challenge. Logs spiel: kampagne | start|weiter|kapitel N von M|ende|ersetzt|beendet, spiel: kampagne abgelehnt | keine kampagne; Live shows running campaigns and those begun today as numbers. In the iPhone app *Crisis game* lists the campaigns to start, a running one with its chapter and opening sentence and \"Next chapter\". test_krisenspiel checks every chapter from the second on with the worst heritage (audit, exhausted, reputation) on every variant for winnability. Next: the Netzduell (own tab, terminal only), then package 8 (speech)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Game profiles \"Crisis game only\" (V01.0.945, network duel step 1)",
+"text": "Game profiles \"Crisis game only\" (V01.0.945, network duel step 1): under *People and devices* the admin creates a profile with the tick \"Crisis game only\" or switches it at the profile (PUT /api/admin/profiles/{id}/nurspiel, never for a profile with an admin role, and no admin role afterwards). Such a profile sees only the crisis game and \"Sign out\" after signing in: features.blocked blocks every function but the crisis game (and the second sign-in step), and a middleware of its own (nurspiel.py) lets it reach only the page, the sign-in, its own security and the game; every other way (assistant, voice, devices, MCP, Telegram, phone, every setting) answers 403 before the route runs. test_nurspiel walks every route of the panel for it. Live counts the game profiles, logs spiel: nur spiel | an|aus|profil angelegt, spiel: nur spiel gesperrt | <area>. Fixed along the way: a profile without the admin login did not see Lists, Open, Contacts, Knowledge book and Crisis game in the menu (the rule only let Assistant, Chats, Calendar and E-mail through); now only the pages of \"Manage Spark\" are missing."
 },
 {
 "lang": "en",

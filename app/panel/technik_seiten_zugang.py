@@ -621,9 +621,9 @@ SEITEN = {
 
     # ------------------------------------------------------------------ sicherheit (the model as a whole)
     "sicherheit": {
-        "stand": "5fe99668e9",
+        "stand": "f0c18a21cc",
         "bezug": {
-            "features.blocked": ["s5"], "geteilt.put": ["s5"], "mitschreiblink.find": ["s3", "s5"], "krisenteam.find": ["s3", "s5"], "core.confirm_code": ["s3", "s8"], "core.CONFIRM_WINDOW": ["s3"], "guard.Slot": ["s3"],
+            "features.blocked": ["s5"], "geteilt.put": ["s5"], "mitschreiblink.find": ["s3", "s5"], "krisenteam.find": ["s3", "s5"], "nurspiel.gate": ["s5"], "core.confirm_code": ["s3", "s8"], "core.CONFIRM_WINDOW": ["s3"], "guard.Slot": ["s3"],
             "notaus.STAGE": ["s2"], "vault.seal": ["s10"], "tarswart.check": ["s3"], "tarswart.COMMANDS": ["s3"],
             "netguard.allowed": ["s6"], "chat.LOCKED_OUTSIDE": ["s6"], "chat.LOCKED_AFTER_MAIL": ["s6"], "mailansicht.clean": ["s6"],
             "textnorm.defuse": ["s6"], "llm_tor.entschaerft": ["s6"], "regeln": ["s4", "s5"],
@@ -786,6 +786,11 @@ SEITEN = {
               "with or without a profile only one running game of a profile: see fixed values and texts, the moves of its own role; no console, no tool, no model"),
              ("krisenteam.find: nur der Hash, ein Spiel, Ablauf, Widerruf, Freigabe „Krisenspiel gemeinsam“; Fehlversuche sperren wie eine PIN",
               "krisenteam.find: only the hash, one game, expiry, revoke, release „Crisis game together“; wrong tries lock like a PIN")],
+            [("Spielprofil „Nur Krisenspiel“", "Game profile „Crisis game only“"),
+             ("Name und PIN, danach nur das Krisenspiel, die eigene Sicherheit und Abmelden; kein Assistent, keine Sprache, kein Gerät, keine Einstellung",
+              "name and PIN, then only the crisis game, its own security and signing out; no assistant, no voice, no device, no setting"),
+             ("nurspiel.gate: feste Liste erlaubter Wege vor jeder Route, sonst 403; features.blocked sperrt jede andere Funktion; nie mit Admin-Rolle",
+              "nurspiel.gate: fixed list of allowed ways before every route, else 403; features.blocked blocks every other function; never with an admin role")],
             [("Verwalter", "Manager"), ("Personen betreuen, keine Funktionen schalten, keine Logs", "look after people, switch no functions, no logs"),
              ("Rolle, auf dem Server geprüft", "role, checked on the server")],
             [("Admin", "Admin"), ("Freigaben, Sperren, Notaus, Logs, Live", "releases, blocks, kill switch, logs, live"),
@@ -834,6 +839,7 @@ SEITEN = {
             ("features.allowed", ("Freigabe des Admins, gilt für jedes Profil", "the admin's release, for every profile")),
             ("mitschreiblink.find", ("prüft einen Mitschreib-Link: Hash, Ablauf, Freigabe, Liste", "checks a write link: hash, expiry, release, list")),
             ("krisenteam.find", ("prüft einen Platz im Krisenspiel: Hash, Ablauf, Freigabe, dasselbe Spiel", "checks a seat in the crisis game: hash, expiry, release, the same game")),
+            ("nurspiel.gate", ("lässt ein Spielprofil nur an Seite, Anmeldung und Spiel, sonst 403", "lets a game profile reach only the page, sign-in and game, else 403")),
             ("features.blocked", ("Sperre einzelner Profile", "block of single profiles")),
             ("geteilt.put", ("Teilen mit einem anderen Profil, zurückziehen wirkt sofort", "share with another profile, taking back works at once")),
             ("chat.wrap_outside", ("Text von außen als Datenblock", "outside text as a block of data")),

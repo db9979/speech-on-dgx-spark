@@ -112,6 +112,7 @@ import meinmcp  # noqa: E402
 import live  # noqa: E402
 import hamelden  # noqa: E402
 import notaus  # noqa: E402
+import nurspiel  # noqa: E402
 import hilfe  # noqa: E402
 import tipps  # noqa: E402
 import saetze  # noqa: E402
@@ -258,6 +259,17 @@ async def sessions(request: Request, call_next):
             for c in raw:
                 response.headers.append("set-cookie", c if "secure" in c.lower() else c + "; Secure")
     return response
+
+
+@app.middleware("http")
+async def game_only(request: Request, call_next):
+    """Spielprofile „Nur Spiel“ (nurspiel.py): such a profile reaches only the page, its login and the game."""
+    held = nurspiel.gate(request)
+    if held:
+        r = JSONResponse({"detail": held[1]}, status_code=held[0], headers={"Cache-Control": "no-store"})
+        protect(request, r)
+        return r
+    return await call_next(request)
 
 
 @app.middleware("http")

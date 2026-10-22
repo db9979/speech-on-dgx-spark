@@ -1735,7 +1735,8 @@ def snapshot(view="admin", now=None):
                         + (f" · gemeinsam {ksp['team']['plaetze']} Plätze, {ksp['team']['online']} da, heute {ksp['team']['zuege']} Team-Züge"
                            + (f", {ksp['team']['abgelehnt']} abgelehnt" if ksp['team']['abgelehnt'] else "")
                            if (ksp.get("team") or {}).get("on") else "")
-                        + f" · {ksp.get('profile', 0)} Profile")
+                        + f" · {ksp.get('profile', 0)} Profile"
+                        + (f", davon {ksp['nur_spiel']} nur Spiel" if ksp.get("nur_spiel") else ""))
         if x["id"] == "wkarte":    # Wissenskarte: connections, discarded, documents waiting, profiles, numbers only (never a title)
             x["sub"] = (f"{wkk.get('verbindungen', 0)} Verbindungen · {wkk.get('punkte', 0)} Punkte · {wkk.get('warten', 0)} Dokumente warten"
                         + f" · {wkk.get('profile', 0)} Profile"

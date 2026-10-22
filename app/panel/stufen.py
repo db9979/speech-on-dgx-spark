@@ -100,6 +100,7 @@ LIST = {
     # ------------------------------------------------------------------ people and the Spark (confirm)
     ("PUT", "/api/admin/profiles/{uid}"): (CONFIRM, "Personen", "PIN einer Person setzen", "Set a person's PIN"),
     ("DELETE", "/api/admin/profiles/{uid}"): (CONFIRM, "Personen", "Person löschen", "Delete a person"),
+    ("PUT", "/api/admin/profiles/{uid}/nurspiel"): (CONFIRM, "Personen", "Profil „Nur Krisenspiel“ an- oder ausschalten", "Turn a profile „Crisis game only“ on or off"),
     ("POST", "/api/admin/devices"): (CONFIRM, "Personen", "Geräte-Schlüssel anlegen", "Add a device key"),
     ("PUT", "/api/admin/devices/{did}"): (CONFIRM, "Personen", "Geräte-Schlüssel ändern", "Change a device key"),
     ("PUT", "/api/admin/join"): (CONFIRM, "Personen", "Einladungen erlauben", "Allow invitations"),

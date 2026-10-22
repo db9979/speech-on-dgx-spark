@@ -156,6 +156,8 @@ def whoami(request: Request, creds: HTTPBasicCredentials | None = Depends(securi
             # the login form's "trust this browser" (days) and a right code that still counts (core.CONFIRM_WINDOW)
             "trust_days": mfa.trust_days(), "confirm_until": confirmed_until(request),
             "profile": prof,
+            # Spielprofil „Nur Krisenspiel“ (nurspiel.py): the page shows the game and nothing else
+            "nur_spiel": bool(prof and profiles.nur_spiel(prof["id"])),
             # which pages the panel shows: the Spark's switches from features.py (one place for "on")
             # a function the admin blocked for this profile (Personen und Geräte → Gesperrte Funktionen) shows no page either
             **{name: features.admin_on(key, chat) and not (prof and features.blocked(key, prof["id"], chat))

@@ -25,6 +25,7 @@ from typing import NamedTuple
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 import guard
+import nurspiel
 import profiles
 from common import STATE, load_config, write_json
 from core import acting_profile, assistant, auth, json_body
@@ -784,6 +785,8 @@ def blocked(key, uid, c=None):
     c = chat_cfg() if c is None else c
     deny = c.get("deny") if isinstance(c.get("deny"), dict) else {}
     review = REVIEW(uid) if REVIEW else ()
+    if uid and key not in NO_BLOCK and nurspiel.SPIEL not in chain(key) and profiles.nur_spiel(uid):
+        return True     # a profile „Nur Krisenspiel“ (nurspiel.py): the game and nothing else
     return any(uid in (deny.get(k) or ()) or k in review for k in chain(key) if k not in NO_BLOCK)
 
 
