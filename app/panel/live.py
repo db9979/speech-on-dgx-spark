@@ -707,12 +707,25 @@ def _req(rec, view, now):
             "voice": not getattr(rec, "auto", False) and (rec.client in VOICE or any((s.get("x") or {}).get("voice") for s in rec.steps[:1])),
             "auto": bool(getattr(rec, "auto", False)), "src": getattr(rec, "src", "") if getattr(rec, "auto", False) else "", "direct": bool(getattr(rec, "direct", False)),
             "prio": bool(getattr(rec, "prio", False)),
+            "call": getattr(rec, "call", ""),   # a question in a phone call (telefon.py): drawn on the call's card
             "quiet": bool(getattr(rec, "quiet", False)),   # text only, no speech (Antworten vorlesen aus)
             "net": bool(getattr(rec, "net", False)), "intent": rec.intent, "stage": stage, "tool": tool,
             "to": target(tool) if stage == "tool" else ("qwen" if stage == "llm" else ""),
             "steps": steps, "marks": dict(rec.marks), "age": round((end or now) - rec.t0, 2),
             "done": bool(end), "left": max(0, int(FADE - (now - gone))) if gone else None, "last": bool(end and not gone),
             "ago": int(now - end) if end else None, "err": bool(rec.errors)}
+
+
+def _calls(reqs):
+    """One card per call (Dominik 2026-10-22: one call showed three phones): each question asked in a phone call is a
+    request of its own (chat) with the call's id; the picture draws it on the call's card, the card counts them."""
+    by = {r["id"]: r for r in reqs}
+    for r in reqs:
+        p = by.get(r["call"]) if r["call"] != r["id"] else None
+        if p is None or p["call"]:
+            r["call"] = ""
+        else:
+            p["fragen"] = p.get("fragen", 0) + 1
 
 
 def _conns(now):
@@ -1186,6 +1199,7 @@ def snapshot(view="admin", now=None):
         for k in [k for k, r in _run.items() if (g := _gone_from(r)) and now - g > FADE]:
             _run.pop(k, None)
         reqs = [_req(r, view, now) for r in sorted(_run.values(), key=lambda r: r.t0)]
+        _calls(reqs)
         cnt = _count.counts(now)
         guard_items, door_items = list(_guard)[-12:][::-1], list(_door)[-12:][::-1]
         rets, events = list(_rets)[-12:][::-1], list(_events)[-(60 if view == "admin" else 14):][::-1]

@@ -1309,7 +1309,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Was du siehst",
 "title": "Was du siehst",
-"text": "- Ich → Lautsprecher → Prüfen: was der Lautsprecher zuletzt getan hat (nur im Speicher, weg nach einem Neustart). - Zustand → Live: Anfragen vom Lautsprecher und von Home Assistant, abgewiesene Wyoming-Adressen unter Eingang. - Zustand → Live: die Telefonanlage mit angemeldet ja/nein und den Anrufen von heute in Zahlen."
+"text": "- Ich → Lautsprecher → Prüfen: was der Lautsprecher zuletzt getan hat (nur im Speicher, weg nach einem Neustart). - Zustand → Live: Anfragen vom Lautsprecher und von Home Assistant, abgewiesene Wyoming-Adressen unter Eingang. - Zustand → Live: die Telefonanlage mit angemeldet ja/nein und den Anrufen von heute in Zahlen. - Zustand → Live: jeder Anruf als eine Karte „Telefon“, die Fragen darin auf ihr (Kennung des Anrufs, nur vom Panel gesetzt)."
 },
 {
 "lang": "de",
@@ -4381,7 +4381,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Anrufe in Live, Überblick und Steuerzentrale (V01.0.731)",
-"text": "Anrufe in Live, Überblick und Steuerzentrale (V01.0.731): Jedes Gespräch am Telefon steht vom Abheben bis zum Auflegen als eine Anfrage unter den Geräten, als „Telefon“ (mit dem Namen des Mobilteils, wenn das Profil Namen in Live erlaubt), Grund „Anruf“ oder „Spark ruft an“. Nie eine Nummer. Die Fragen im Gespräch erscheinen zusätzlich als eigene Anfragen."
+"text": "Anrufe in Live, Überblick und Steuerzentrale (V01.0.731): Jedes Gespräch am Telefon steht vom Abheben bis zum Auflegen als eine Anfrage unter den Geräten, als „Telefon“ (mit dem Namen des Mobilteils, wenn das Profil Namen in Live erlaubt), Grund „Anruf“ oder „Spark ruft an“. Nie eine Nummer. Die Fragen im Gespräch sind eigene Anfragen, stehen aber seit V01.0.931 auf der Karte ihres Anrufs (eine Karte je Anruf, z. B. „db · Anruf · 2 Fragen“), ihre Wege beginnen dort; vorher bekam jede Frage eine eigene Karte „Telefon“, sodass ein Anruf wie drei Telefone aussah. In der Liste darunter stehen sie weiter einzeln."
 },
 {
 "lang": "de",
@@ -13013,7 +13013,7 @@
 "file": "Architecture and data flow",
 "head": "What you see",
 "title": "What you see",
-"text": "- Me → Speakers → Check: what the speaker did lately (memory only, gone after a restart). - Status → Live: requests from a speaker and from Home Assistant, refused Wyoming addresses under input. - Status → Live: the telephone system with signed in yes/no and today's calls in numbers."
+"text": "- Me → Speakers → Check: what the speaker did lately (memory only, gone after a restart). - Status → Live: requests from a speaker and from Home Assistant, refused Wyoming addresses under input. - Status → Live: the telephone system with signed in yes/no and today's calls in numbers. - Status → Live: each call as one \"Telefon\" card, its questions on it (the call's id, set by the panel only)."
 },
 {
 "lang": "en",
@@ -16005,7 +16005,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Calls in Live, Summary and the control centre (V01.0.731)",
-"text": "Calls in Live, Summary and the control centre (V01.0.731): Every phone call stands as one request under the devices from picking up to hanging up, as \"Telefon\" (with the handset's name when the profile allows names in Live), reason \"Anruf\" or \"Spark ruft an\". Never a number. The questions in the call show as requests of their own as well."
+"text": "Calls in Live, Summary and the control centre (V01.0.731): Every phone call stands as one request under the devices from picking up to hanging up, as \"Telefon\" (with the handset's name when the profile allows names in Live), reason \"Anruf\" or \"Spark ruft an\". Never a number. The questions in the call are requests of their own but since V01.0.931 stand on their call's card (one card per call, e.g. \"db · Anruf · 2 questions\"), their ways start there; before, each question got its own \"Telefon\" card, so one call looked like three phones. The list below still shows them one by one."
 },
 {
 "lang": "en",

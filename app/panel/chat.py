@@ -1824,6 +1824,7 @@ def start_trace(request, turn, t_req, t0):
     if getattr(tr, "watched", False):   # Zustand → Live: from the internet? (shown under "Über das Internet")
         import live
         live.came_in(request, tr)
+        tr.call = str(request.scope.get("speech_call") or "")[:6]   # a question in a phone call (telefon.py, live._calls)
     route = getattr(turn, "route", None)
     tr.intent = route.label() if route else ""
     ask_text = getattr(turn, "ask_text", "") or ""

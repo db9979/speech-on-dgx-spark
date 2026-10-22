@@ -114,7 +114,9 @@ function bus(d,pos,H,reqs){const on=reqs.filter(r=>(pos['r'+r.id]||{}).bus).sort
   o+=`<text class="bmono" x="${BUSX-6}" y="${bot+12}" text-anchor="end">sched-bus · ${run.length} ${tt('aktiv','active')} · ${tt('heute','today')} ${today}</text></g>`;
   return o}
 const LV_ROW=46;   // the smallest step between two target boxes in the computer picture
-function layout(d,ph){const W=ph?360:1140,pos={},reqs=d.reqs.slice(-7),lan=reqs.filter(r=>!r.net).slice(-4),net=reqs.filter(r=>r.net).slice(-3);
+// a question in a phone call has no card of its own: it starts at the call's card (live._calls, Dominik 2026-10-22)
+const inCall=(r,list)=>r.call&&list.some(x=>x.id===r.call);
+function layout(d,ph){const W=ph?360:1140,pos={},top=d.reqs.filter(r=>!inCall(r,d.reqs)).slice(-7),reqs=d.reqs.filter(r=>top.includes(r)||inCall(r,top)),cards=top,lan=cards.filter(r=>!r.net).slice(-4),net=cards.filter(r=>r.net).slice(-3);
   const T=d.targets,order=[...folded(d,T.filter(x=>x.zone!=='net'),0),...folded(d,T.filter(x=>x.zone==='net'),1)];let H;
   if(!ph){H=520;const box=el('lvflow');if(LV.fit&&box&&box.clientWidth>200&&box.clientHeight>200)H=Math.max(420,Math.min(900,Math.round(W*box.clientHeight/box.clientWidth)));
     // every target box keeps room for its two lines (40 high, 46 apart): with many targets the picture grows instead of
@@ -132,7 +134,8 @@ function layout(d,ph){const W=ph?360:1140,pos={},reqs=d.reqs.slice(-7),lan=reqs.
     const nt=order.filter(x=>x.zone==='net');pos._nety=NETY;pos.guard=null;pos._net1=null;
     if(nt.length){const a=pos[nt[0].id].y,b=pos[nt[nt.length-1].id].y+th;pos.guard={x:790,y:Math.min(H-70,(a+b)/2-17),w:30,h:34};pos._net1=Math.round(a-GAP/2-(step-th)/2)}}
   else{const row=(arr,y,h,per)=>{arr.forEach((n,i)=>{const r=Math.floor(i/per),c=i%per,cnt=Math.min(per,arr.length-r*per),w=(W-8*(cnt+1))/cnt;pos[n.k]={x:8+c*(w+8),y:y+r*(h+8),w,h}});return y+Math.ceil(arr.length/per)*(h+8)};
-    let y=row(reqs.map(r=>({k:'r'+r.id})),26,52,3);y=Math.max(y,84)+30;const sy=y;y=row(STAGES.map(s=>({k:s[0]})),y,48,3);y+=30;const ty=y;y=row(order.map(x=>({k:x.id})),y,44,3);H=y+40;pos._sy=sy;pos._ty=ty}
+    let y=row(cards.map(r=>({k:'r'+r.id})),26,52,3);y=Math.max(y,84)+30;const sy=y;y=row(STAGES.map(s=>({k:s[0]})),y,48,3);y+=30;const ty=y;y=row(order.map(x=>({k:x.id})),y,44,3);H=y+40;pos._sy=sy;pos._ty=ty}
+  reqs.filter(r=>inCall(r,cards)).forEach(r=>{const p=pos['r'+r.call];if(p)pos['r'+r.id]=Object.assign({},p,{sub:1})});
   return {pos,W,H,reqs,order}}
 // quiet targets fold into one box (Dominik 2026-10-11 internet "+ N ruhig", 2026-10-16 home and Spark "+ N bereit":
 // "nur aktuell benutzte anzeigen"): the server marks a target quiet when nothing runs there, no ⚠ and no step in the
@@ -259,7 +262,7 @@ function flow(){const d=LV.data,ph=PH(),{pos,W,H,reqs,order}=layout(d,ph);busNew
       <text class="a" data-w="${room}" x="${p.x+10}" y="${p.y+(ph?20:Math.min(p.h/2-1,24))}">${lvE(a)}</text><text class="b${o.cd?' cd':''}" data-w="${room}" x="${p.x+10}" y="${p.y+(ph?36:Math.min(p.h/2+13,38))}">${lvE(b)}</text>
       ${k&&!ph&&!o.dev?`<circle class="badge" cx="${p.x+p.w-16}" cy="${p.y+p.h/2}" r="10"/><text class="bt" text-anchor="middle" x="${p.x+p.w-16}" y="${p.y+p.h/2+3.5}">${k}</text>`:''}</g>`};
   if(!ph)s+=bus(d,pos,H,reqs);
-  reqs.filter(r=>!(pos['r'+r.id]||{}).bus).forEach(r=>{const sub=(r.prio?'★ ':'')+(r.done?doneTxt(r):(ph?(r.net?'Internet':r.who):`${r.who}${r.intent?' · '+r.intent:''}${r.net?' · Internet':''}`));
+  reqs.filter(r=>{const p=pos['r'+r.id]||{};return !p.bus&&!p.sub}).forEach(r=>{const sub=(r.prio?'★ ':'')+(r.done?doneTxt(r):(ph?(r.net?'Internet':r.who):`${r.who}${r.intent?' · '+r.intent:''}${r.fragen?' · '+r.fragen+' '+tt(r.fragen>1?'Fragen':'Frage',r.fragen>1?'questions':'question'):''}${r.net?' · Internet':''}`));
     s+=node('r'+r.id,ph?r.dev.slice(0,12):r.dev,sub,!r.done,{dev:1,cd:r.done,stroke:r.done?'':col(r.id),dot:r.done?'var(--mut)':col(r.id),cls:' dv'+(r.age<1.2?' pop':''),
       attrs:`id="lvd${r.id}" data-req="${lvE(r.id)}" ${r.done?`style="opacity:${op(r,d)}"`:''}`,
       tip:`${r.dev} · ${r.who} · ${r.id}${r.intent?' · '+r.intent:''}${r.net?' · '+tt('kam über das Internet','came through the internet'):''} · ${r.done?tt('fertig','done'):KIND[r.stage]||r.stage}`})});

@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.931** · 2026-10-22 · Live-Übersicht: eine Karte je Anruf, die Fragen im Anruf stehen auf ihr statt als eigene Telefon-Karten
 - **V01.0.930** · 2026-10-22 · Rechnen genauer: Zahlwörter („sechs mal sechs“), Rechnung in der Frage macht das Werkzeug zur Pflicht, „@Spark prüf das“ prüft Rechnungen auf reMarkable-Seiten („bitte prüfen“, Seite bleibt), Belege zusammenrechnen
 - **V01.0.929** · 2026-10-22 · Ich → Dokumente zeigt reMarkable-Notizbücher mit dem Tag ihrer letzten Änderung auf dem Gerät statt dem Tag der Übernahme und sortiert „Neueste zuerst“ danach; bei der Quelle reMarkable steht „Letzter Abgleich hh:mm · N Seiten neu“; auch in der iPhone-App
 - **V01.0.928** · 2026-10-22 · Was ich über dich weiß aufgeräumt: Reiter, Liste mit Detail, Interessen umbenennen oder einem Thema zuordnen, Absender herausnehmen, Netz-Tipps als Schalter; iPhone

@@ -1200,6 +1200,7 @@ Gilt bei: [Schritt 5](#kn-lautsprecher-s5), [Schritt 9](#kn-lautsprecher-s9)
 - Ich → Lautsprecher → Prüfen: was der Lautsprecher zuletzt getan hat (nur im Speicher, weg nach einem Neustart).
 - Zustand → Live: Anfragen vom Lautsprecher und von Home Assistant, abgewiesene Wyoming-Adressen unter Eingang.
 - Zustand → Live: die Telefonanlage mit angemeldet ja/nein und den Anrufen von heute in Zahlen.
+- Zustand → Live: jeder Anruf als eine Karte „Telefon“, die Fragen darin auf ihr (Kennung des Anrufs, nur vom Panel gesetzt).
 
 #### Im Code
 

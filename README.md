@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.931** Live overview: one call is one "Telefon" card, its questions stand on it ("db · Anruf · 2 questions") instead of as phone cards of their own
 - **V01.0.930** Exact calculations, more: number words ("six times six"), a calculation in the question makes the tool required, "@Spark prüf das" checks calculations on reMarkable pages ("please check", page unchanged), adding up receipts
 - **V01.0.929** reMarkable notebooks with the date of their last change and "last comparison" in Me → Documents
 - **V01.0.928** What I know about you tidied: tabs, list with details, rename an interest or give it a topic, take a sender out, web tips as a switch; iPhone
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.924** E-mail and Calendar: the tab "Settings" no longer stays empty after several tab changes; this holds for every page with tabs
 - **V01.0.923** What I know about you: for "Topic unclear" pick a topic there is (confirmed interests as chips, a list with the fixed topics, suggestions while typing) instead of only typing one; iPhone
 - **V01.0.922** What I know about you: proposals are topics instead of sender names (fixed topic list, senders as chips, example subjects, "Topic unclear" with an own topic), never your own addresses or services like GitHub, "Right" confirms the topic, the web tip searches only the topic word; iPhone
-- **V01.0.921** Attack probe in the workshop (stage 2 of the attack self-test): the tile "Probe attacks" measures how often the running language model would follow an order hidden in outside text, per disguise and tool; no tool runs, numbers only; its own switch under Features → Workshop, off; in the iPhone app too
 
 
 

@@ -1200,6 +1200,7 @@ Applies at: [step 5](#kn-lautsprecher-s5), [step 9](#kn-lautsprecher-s9)
 - Me → Speakers → Check: what the speaker did lately (memory only, gone after a restart).
 - Status → Live: requests from a speaker and from Home Assistant, refused Wyoming addresses under input.
 - Status → Live: the telephone system with signed in yes/no and today's calls in numbers.
+- Status → Live: each call as one "Telefon" card, its questions on it (the call's id, set by the panel only).
 
 #### In the code
 

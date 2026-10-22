@@ -117,6 +117,30 @@ class Live(unittest.TestCase):
         # Logs → Anfragen is off: nothing was written
         self.assertEqual(ADMIN.get("/api/admin/traces?minutes=60").json()["items"], [])
 
+    def test_one_card_per_phone_call(self):
+        """Dominik 2026-10-22: one call showed three phones. The questions in a call are requests of their own
+        (chat.start_trace takes the call's id from the scope telefon.py sets), the picture draws them on the call's
+        card (live._calls): one card, it counts the questions; an unknown or nested call id is no card's."""
+        import chat
+        from types import SimpleNamespace
+        from starlette.requests import Request
+        call = live.begin("telefon", "Flur", t=1000.0, why="Anruf")
+        turn = SimpleNamespace(body={"client": "telefon"}, who=None, device_owner=False, route=None, heard=True,
+                               own_browser=True, carry=False, messages=[], tools=[], need=[], cal_note=[])
+        scope = {"type": "http", "method": "POST", "path": "/api/chat", "query_string": b"", "headers": [],
+                 "client": ("192.168.1.1", 0), "server": ("127.0.0.1", 0), "scheme": "http", "speech_call": call.id}
+        q1 = chat.start_trace(Request(scope), turn, 1001.0, 1001.0)
+        q2 = chat.start_trace(Request(scope), turn, 1003.0, 1003.0)
+        other = chat.start_trace(Request(dict(scope, speech_call="")), turn, 1004.0, 1004.0)
+        lost = live.begin("web", "", t=1005.0)
+        lost.call = "abcdef"
+        live.end(q1)
+        by = {r["id"]: r for r in live.snapshot(now=1006.0)["reqs"]}
+        self.assertEqual((by[q1.id]["call"], by[q2.id]["call"]), (call.id, call.id))
+        self.assertEqual(by[call.id]["fragen"], 2)
+        self.assertEqual((by[call.id]["call"], by[other.id]["call"], by[lost.id]["call"]), ("", "", ""))
+        self.assertNotIn("fragen", by[other.id])
+
     def test_last_action_stays_until_a_new_one_comes(self):
         """Dominik 2026-10-10: the last action stays on the picture; it fades only once something new came."""
         rec = tracelog.start(1000.0, "web")

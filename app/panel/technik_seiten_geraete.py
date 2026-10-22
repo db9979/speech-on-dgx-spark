@@ -667,7 +667,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Lautsprecher, HA
     "lautsprecher": {
-        "stand": "b7fb8cbd82",
+        "stand": "05dd31d6a2",
         "bezug": {
             "wyoming.MAX_CONNS": ["s5"], "esp32.ota": ["s1"], "esp32._activation": ["s2"],
             "esp32.same_board": ["s3"], "esp32.speaker_ws": ["s5"], "esp32.still_allowed": ["s5"],
@@ -960,6 +960,8 @@ SEITEN = {
              "Status → Live: requests from a speaker and from Home Assistant, refused Wyoming addresses under input."),
             ("Zustand → Live: die Telefonanlage mit angemeldet ja/nein und den Anrufen von heute in Zahlen.",
              "Status → Live: the telephone system with signed in yes/no and today's calls in numbers."),
+            ("Zustand → Live: jeder Anruf als eine Karte „Telefon“, die Fragen darin auf ihr (Kennung des Anrufs, nur vom Panel gesetzt).",
+             "Status → Live: each call as one \"Telefon\" card, its questions on it (the call's id, set by the panel only)."),
         ],
         "code": [
             ("esp32.ota", ("Start-Prüfung: Code, Schlüssel einmal, Update", "start check: code, key once, update")),

@@ -1607,6 +1607,8 @@ class Call:
         data = json.dumps(body).encode()
         scope = {"type": "http", "method": "POST", "path": "/api/chat", "query_string": b"", "headers": [],
                  "client": (self.agent.pbx[0], 0), "server": ("127.0.0.1", 0), "scheme": "http"}
+        if self.live is not None:   # set only here: the question shows on the call's card in Live (live._calls)
+            scope["speech_call"] = self.live.id
         if uid:   # set only here, never by a request: the profile and whose voice it was (chat_turn.shared_stranger)
             scope.update({"speech_profile": uid, "speech_channel": "telefon", "speech_voice": voice or "",
                           "speech_voice_why": why})
