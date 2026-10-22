@@ -14511,12 +14511,12 @@
         }
       }
     },
-    "Ohne Gesang wird es instrumental. Mit Gesang und leerem Liedtext schreibt der Spark den Text zuerst ins Feld; Künstlernamen werden dabei zu Stilwörtern.": {
+    "Ohne Gesang wird es instrumental. Mit Gesang und leerem Liedtext schreibt der Spark den Text zuerst ins Feld; Künstlernamen werden dabei zu Stilwörtern. Die Beschreibung darf bis 2000 Zeichen lang sein, z. B. ein Firmentext als Vorlage.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Without singing it is instrumental. With singing and empty lyrics the Spark first writes the lyrics into the field; artist names become style words."
+            "value": "Without singing it is instrumental. With singing and empty lyrics the Spark first writes the lyrics into the field; artist names become style words. The description may be up to 2000 characters long, e.g. a firm's text as the template."
           }
         }
       }

@@ -76,6 +76,8 @@ async function showMusik(){const box=$('musikbox');if(!box)return;if(!PROFILE||!
   // a new song: the wish grows with its text (feld.js), the length as chips, singing as a switch
   const f=icEl('div','mu-new');const ta=document.createElement('textarea');ta.id='muwish';ta.rows=2;ta.maxLength=lim.wish;
   ta.setAttribute('aria-label',t('Was für Musik soll ich machen?','What kind of music shall I make?'));
+  // the short music description from Text schreiben goes to the music model; own typing drops it again
+  let cap='';ta.addEventListener('input',e=>{if(e.isTrusted)cap=''});
   ta.placeholder=t('Was für Musik soll ich machen? z. B. Ruhiges Klavierstück mit Streichern zum Einschlafen','What kind of music shall I make? e.g. Calm piano piece with strings for falling asleep');
   let secs=lim.default_s;const lens=icEl('div','ld-chips mu-len');lens.setAttribute('role','group');lens.setAttribute('aria-label',t('Länge','Length'));
   const pickLen=v=>{secs=v;lens.querySelectorAll('button').forEach(b=>{const o=+b.dataset.s===v;b.classList.toggle('on',o);b.setAttribute('aria-pressed',String(o))})};
@@ -92,25 +94,25 @@ async function showMusik(){const box=$('musikbox');if(!box)return;if(!PROFILE||!
   const go=icEl('button','b p',t('Lied machen','Make the song'));go.type='button';go.id='mugo';ta.dataset.senden='mugo';
   const msg=icEl('div','fh');msg.id='mumsg';msg.setAttribute('role','status');
   const opts=icEl('div','mu-opts');opts.append(lens,sungL,lang,icEl('span','mu-sp'),go);
-  f.append(ta,opts,lyBox,msg,icEl('div','fh',t('Ohne Gesang wird es instrumental. Mit Gesang und leerem Liedtext schreibt der Spark den Text zuerst ins Feld. Jedes Lied ist als KI-erzeugt gekennzeichnet; Sexuelles, Gewalt, Hass und Künstlernamen macht der Spark nicht, „im Stil von“ wird beim Textschreiben zu Stilwörtern.',
-    'Without singing it is instrumental. With singing and empty lyrics the Spark first writes the lyrics into the field. Every song is marked as made by an AI; the Spark makes nothing sexual, violent or hateful and uses no artist names; when writing lyrics, "in the style of" becomes style words.')));
+  f.append(ta,opts,lyBox,msg,icEl('div','fh',t(`Ohne Gesang wird es instrumental. Mit Gesang und leerem Liedtext schreibt der Spark den Text zuerst ins Feld. Jedes Lied ist als KI-erzeugt gekennzeichnet; Sexuelles, Gewalt, Hass und Künstlernamen macht der Spark nicht, „im Stil von“ wird beim Textschreiben zu Stilwörtern. Die Beschreibung darf bis ${lim.wish} Zeichen lang sein, z. B. ein Firmentext als Vorlage: „Text schreiben“ macht daraus den Liedtext und eine kurze Musikbeschreibung, denn das Musikmodell selbst liest höchstens ${lim.caption} Zeichen.`,
+    `Without singing it is instrumental. With singing and empty lyrics the Spark first writes the lyrics into the field. Every song is marked as made by an AI; the Spark makes nothing sexual, violent or hateful and uses no artist names; when writing lyrics, "in the style of" becomes style words. The description may be up to ${lim.wish} characters long, e.g. a firm's text as the template: "Write lyrics" turns it into lyrics and a short music description, as the music model itself reads at most ${lim.caption} characters.`)));
   wrap.append(f,up);pickLen(lim.default_s);showSung();
   const write=async()=>{const w=ta.value.trim();if(!w){ta.focus();return false}
     wr.disabled=go.disabled=true;msg.textContent=t('Das Sprachmodell schreibt den Liedtext …','The language model writes the lyrics …');
     const r=await apiTry('/api/musik/liedtext',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wunsch:w,sekunden:secs,sprache:lang.value})});
     wr.disabled=go.disabled=false;if(!r.r.ok){msg.textContent=String(r.d.detail||t('Ging nicht.','Did not work.'));return false}
-    ly.value=r.d.liedtext||'';if(r.d.wunsch){ta.value=r.d.wunsch;ta.dispatchEvent(new Event('input'))}
+    ly.value=r.d.liedtext||'';if(r.d.wunsch){ta.value=r.d.wunsch;ta.dispatchEvent(new Event('input'))}cap=r.d.beschreibung||'';
     msg.textContent=(r.d.namen?t('Künstlernamen sind jetzt Stilwörter in der Beschreibung. ','Artist names are style words in the description now. '):'')
       +t('Der Text steht im Feld: prüfen, ändern, dann „Lied machen“.','The lyrics are in the field: check, change, then "Make the song".');ly.focus();return true};
   wr.onclick=write;
   go.onclick=async()=>{const w=ta.value.trim();if(!w){ta.focus();return}if(sung.checked&&!ly.value.trim()){await write();return}
     go.disabled=true;msg.textContent=t('wird angenommen …','being accepted …');
     const r2=await apiTry('/api/musik',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({wunsch:w,sekunden:secs,gesang:sung.checked,sprache:lang.value,liedtext:sung.checked?ly.value:''})});
+      body:JSON.stringify({wunsch:w,sekunden:secs,gesang:sung.checked,sprache:lang.value,liedtext:sung.checked?ly.value:'',beschreibung:sung.checked?cap:''})});
     if(!r2.r.ok){msg.textContent=String(r2.d.detail||t('Ging nicht.','Did not work.'));go.disabled=false;return}
-    ta.value='';ly.value='';showMusik()};
+    ta.value='';ly.value='';cap='';showMusik()};
   // „Nochmal machen“: the form with the wish, length, singing and lyrics of a song; nothing is sent before „Lied machen“
-  const again=s=>{ta.value=s.wish||s.caption||'';const l=MULENS.filter(x=>x<=lim.max_s).reduce((a,x)=>Math.abs(x-(s.length_s||0))<Math.abs(a-(s.length_s||0))?x:a,lim.default_s);
+  const again=s=>{ta.value=s.wish||s.caption||'';cap='';const l=MULENS.filter(x=>x<=lim.max_s).reduce((a,x)=>Math.abs(x-(s.length_s||0))<Math.abs(a-(s.length_s||0))?x:a,lim.default_s);
     pickLen(l);sung.checked=!!s.sung;if(s.language&&[...lang.options].some(o=>o.value===s.language))lang.value=s.language;ly.value=s.lyrics||'';showSung();
     MU.sel='';wrap.classList.remove('ld-sel');const det=wrap.querySelector('.ld-detail');if(det)det.hidden=true;
     f.scrollIntoView({block:'nearest'});ta.focus();ta.dispatchEvent(new Event('input'))};

@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.926** Lied machen: Beschreibung bis 2000 statt 300 Zeichen, z. B. ein Firmentext als Vorlage; „Text schreiben“ liefert dazu eine kurze Musikbeschreibung fürs Musikmodell (liest höchstens 600), auch in der iPhone-App
 - **V01.0.925** Rechnen mit festem Werkzeug: das Panel rechnet, nicht das Sprachmodell (eigener Parser statt eval, Decimal, Prozent, Klammern, Wurzel, harte Grenzen), Datumsrechnung (Tage bis, Wochentag, Datum in n Tagen), Antwort-Prüfung rechnet Sätze wie „17 mal 23 ist 381“ nach und berichtigt sie; Einfaches sofort beantworten nutzt denselben Rechner
 - **V01.0.924** E-Mail und Kalender: der Reiter „Einstellungen“ bleibt nach mehreren Reiterwechseln nicht mehr leer; das gilt für jede Seite mit Reitern
 - **V01.0.923** Was ich über dich weiß: bei „Thema unklar“ ein vorhandenes Thema wählen (bestätigte Interessen als Chips, Auswahlliste mit den festen Themen, Vorschläge beim Tippen) statt nur eintippen; iPhone
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.919** Einstellungen am Handy bündig: im iPhone-Browser standen Titel und Zeile jeder Einstellung mittig statt links neben dem Symbol
 - **V01.0.918** ROT-FIX: zwei Testreste behoben, die nach der neuen Aufteilung der Testläufe andere Tests störten (test_tagesaktuell ließ einen falschen Mail-Abruf stehen, test_panel eine offene Rückfrage)
 - **V01.0.917** Flash-Next-Variante 0,65 entfernt (startete nie)
-- **V01.0.916** Angriffs-Selbsttest (Idee aus NeMo Guardrails): jeder Weg für fremden Text mit 12 Tarnungen gegen ein Modell angegriffen, das jedem Befehl gehorcht; vier Lücken geschlossen: Marken des Modells (<|im_start|>, <tool_call>) werden entschärft, nach einer Mail auch Wikipedia, Wetter und Fahrplan gesperrt, kurze Text-Zustände im Smart Home zählen als fremd, das Briefing steht ganz im Datenblock
 
 
 

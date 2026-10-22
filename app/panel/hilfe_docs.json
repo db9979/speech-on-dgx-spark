@@ -5005,7 +5005,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "; „so wie“ zählt nicht mehr, und die Künstler-Regel gilt für Wunsch und Beschreibung, nicht für den eigenen Liedtext (dort ist „wie von selbst“ nur eine Zeile). Im Gespräch (musik_machen, Anfrage 18adb7): nennt beschreibung_en einen Künstler, sagt das Ergebnis dem Sprachmodell fest, die Beschreibung nur mit Stil- und Klangwörtern noch einmal zu schicken (musik.ARTIST_AGAIN), und die eigenen Worte der Person verlieren den Satzteil „im Stil von …“, bevor sie Titel des Liedes werden. Wortliste und Geheimnisse prüft das Panel vor dem Sprachmodell und danach am Text. Gilt mit dem Schalter Musik machen, ohne eigenen Schalter; Notaus (Aufträge) und die Wartungspause des Sprachmodells halten es an. Auch in der iPhone-App (Musik: „Mit Gesang“, Liedtext, „Text schreiben“). Zustand → Live: Ziel „Musik machen“ zusätzlich „N Liedtexte geschrieben“. Logs (Bereich „Musik“): musik: liedtext geschrieben 2 teile stil statt namen fuer …, musik: liedtext nicht geschrieben aus|notaus|wartung|leer|wortliste|geheim|kuenstler|sprachmodell <Fehlerart> fuer …; nie Beschreibung oder Text. API (Profil, auch die App): POST /api/musik/liedtext ({wunsch, sekunden, sprache} → {liedtext, wunsch, teile, namen}, 16 "
+"text": "; „so wie“ zählt nicht mehr, und die Künstler-Regel gilt für Wunsch und Beschreibung, nicht für den eigenen Liedtext (dort ist „wie von selbst“ nur eine Zeile). Im Gespräch (musik_machen, Anfrage 18adb7): nennt beschreibung_en einen Künstler, sagt das Ergebnis dem Sprachmodell fest, die Beschreibung nur mit Stil- und Klangwörtern noch einmal zu schicken (musik.ARTIST_AGAIN), und die eigenen Worte der Person verlieren den Satzteil „im Stil von …“, bevor sie Titel des Liedes werden. Wortliste und Geheimnisse prüft das Panel vor dem Sprachmodell und danach am Text. Gilt mit dem Schalter Musik machen, ohne eigenen Schalter; Notaus (Aufträge) und die Wartungspause des Sprachmodells halten es an. Auch in der iPhone-App (Musik: „Mit Gesang“, Liedtext, „Text schreiben“). Zustand → Live: Ziel „Musik machen“ zusätzlich „N Liedtexte geschrieben“. Logs (Bereich „Musik“): musik: liedtext geschrieben 2 teile stil statt namen fuer …, musik: liedtext nicht geschrieben aus|notaus|wartung|leer|wortliste|geheim|kuenstler|sprachmodell <Fehlerart> fuer …; nie Beschreibung oder Text. API (Profil, auch die App): POST /api/musik/liedtext ({wunsch, sekunden, sprache} → {liedtext, wunsch, teile, namen, besc"
 },
 {
 "lang": "de",
@@ -5013,7 +5013,15 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "KB, 10 je Minute)."
+"text": "hreibung}, 16 KB, 10 je Minute)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Lange Beschreibung als Vorlage (V01.0.926, Dominik 2026-10-22 „wir benötigen um einiges mehr an eingabe zeichen“): Die eigene Beschreibung unter *Ich → Musik* (und in der iPhone-App) darf jetzt bis 2000 Zeichen lang sein statt 300 (musik.MAX_WISH), etwa eine Seite, z. B. ein Firmentext als Vorlage für ein Lied; so viel wie beim Dokument-Wunsch (docmake.MAX_WISH). Das Musikmodell selbst liest höchstens 600 Zeichen (musik.MAX_CAPTION); darum liefert „Text schreiben“ zusätzlich eine kurze englische Musikbeschreibung (beschreibung: Stil, Stimmung, Instrumente, Tempo, Stimme, ohne Namen; mit „im Stil von“ verworfen), die Seite und App bei „Lied machen“ mitschicken, solange die Beschreibung nicht von Hand geändert wurde. Ohne sie gehen die ersten 600 Zeichen der eigenen Worte ans Musikmodell. Die Musikbeschreibung prüft das Panel wie den Wunsch (Wortliste, Geheimnisse, Künstler). Körpergrenze 16 KB und Rate-Limits bleiben. API: POST /api/musik nimmt zusätzlich beschreibung (höchstens 600 Zeichen)."
 },
 {
 "lang": "de",
@@ -16549,7 +16557,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": " longer counts, and the artist rule holds for the wish and the description, not for own lyrics (there \"wie von selbst\" is just a line). In the conversation (musik_machen, request 18adb7): when beschreibung_en names an artist, the result tells the language model in fixed words to send the description again with style and sound words only (musik.ARTIST_AGAIN), and the person's own words lose the clause \"im Stil von …\" before they become the song's title. The panel checks the word list and secrets before the language model and on the lyrics afterwards. Works with the switch Making music, no switch of its own; Notaus (jobs) and the maintenance pause of the language model hold it off. Also in the iPhone app (Music: \"With singing\", lyrics, \"Write lyrics\"). State → Live: target \"Making music\" also \"N lyrics written\". Logs (area \"Musik\"): musik: liedtext geschrieben 2 teile stil statt namen fuer …, musik: liedtext nicht geschrieben aus|notaus|wartung|leer|wortliste|geheim|kuenstler|sprachmodell <error kind> fuer …; never the description or the lyrics. API (profile, also the app): POST /api/musik/liedtext ({wunsch, sekunden, sprache} → {liedtext, wunsch, teile, namen}, 16 KB, 10 per minute)"
+"text": " longer counts, and the artist rule holds for the wish and the description, not for own lyrics (there \"wie von selbst\" is just a line). In the conversation (musik_machen, request 18adb7): when beschreibung_en names an artist, the result tells the language model in fixed words to send the description again with style and sound words only (musik.ARTIST_AGAIN), and the person's own words lose the clause \"im Stil von …\" before they become the song's title. The panel checks the word list and secrets before the language model and on the lyrics afterwards. Works with the switch Making music, no switch of its own; Notaus (jobs) and the maintenance pause of the language model hold it off. Also in the iPhone app (Music: \"With singing\", lyrics, \"Write lyrics\"). State → Live: target \"Making music\" also \"N lyrics written\". Logs (area \"Musik\"): musik: liedtext geschrieben 2 teile stil statt namen fuer …, musik: liedtext nicht geschrieben aus|notaus|wartung|leer|wortliste|geheim|kuenstler|sprachmodell <error kind> fuer …; never the description or the lyrics. API (profile, also the app): POST /api/musik/liedtext ({wunsch, sekunden, sprache} → {liedtext, wunsch, teile, namen, beschreibung}, 16 KB, "
 },
 {
 "lang": "en",
@@ -16557,7 +16565,15 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "."
+"text": "10 per minute)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "Long description as a template (V01.0.926, Dominik 2026-10-22 \"wir benötigen um einiges mehr an eingabe zeichen\"): The own description under *Me → Music* (and in the iPhone app) may now be up to 2000 characters long instead of 300 (musik.MAX_WISH), about one page, e.g. a firm's text as the template for a song; as much as the document wish (docmake.MAX_WISH). The music model itself reads at most 600 characters (musik.MAX_CAPTION); so \"Write lyrics\" also returns a short English music description (beschreibung: style, mood, instruments, tempo, voice, no names; dropped with \"in the style of\"), which the page and the app send with \"Make the song\" as long as the description was not changed by hand. Without it the first 600 characters of the own words go to the music model. The panel checks the music description like the wish (word list, secrets, artists). The 16 KB body limit and the rate limits stay. API: POST /api/musik also takes beschreibung (at most 600 characters)."
 },
 {
 "lang": "en",

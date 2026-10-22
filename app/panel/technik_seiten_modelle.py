@@ -380,7 +380,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Bilder malen (and Musik machen in the same box)
     "bild": {
-        "stand": "b139481dcb",
+        "stand": "f368ac974e",
         "bezug": {
             "bilder.MAX_PICS": ["s4"], "schwer.WAITING": ["s4"], "bilder.JOB_SECONDS": ["s5"], "bilder.NSFW_MAX": ["s8"],
             "schwer.run": ["s5"], "schwer.pick": ["s5"], "schwer.hint": ["s5"], "schwer.BUNDLE": ["s5"],

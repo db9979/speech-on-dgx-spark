@@ -409,19 +409,24 @@ extension SparkAPI {
     }
 
     /// Make one from the person's own description and length; with singing the lyrics in the language of the phone.
-    func makeSong(_ wish: String, seconds: Int, lyrics: String? = nil) async throws {
-        var body: [String: Any] = ["wunsch": String(wish.prefix(500)), "sekunden": seconds]
-        if let lyrics { body.merge(["gesang": true, "sprache": Self.songLanguage, "liedtext": String(lyrics.prefix(3000))]) { $1 } }
+    /// The description may be a whole page (a firm's text as the template); the short music description from Text
+    /// schreiben goes to the music model, which reads at most 600 characters.
+    func makeSong(_ wish: String, seconds: Int, lyrics: String? = nil, caption: String = "") async throws {
+        var body: [String: Any] = ["wunsch": String(wish.prefix(2000)), "sekunden": seconds]
+        if let lyrics {
+            body.merge(["gesang": true, "sprache": Self.songLanguage, "liedtext": String(lyrics.prefix(3000)),
+                        "beschreibung": String(caption.prefix(600))]) { $1 }
+        }
         _ = try await call("POST", "api/musik", body: body)
     }
 
     /// Text schreiben: the language model writes the lyrics from the description; artist names become style words in
     /// the description. Nothing is made yet, the person reads both first.
-    func writeLyrics(_ wish: String, seconds: Int) async throws -> (lyrics: String, wish: String, names: Bool) {
-        let d = try await object("POST", "api/musik/liedtext", body: ["wunsch": String(wish.prefix(500)), "sekunden": seconds,
+    func writeLyrics(_ wish: String, seconds: Int) async throws -> (lyrics: String, wish: String, names: Bool, caption: String) {
+        let d = try await object("POST", "api/musik/liedtext", body: ["wunsch": String(wish.prefix(2000)), "sekunden": seconds,
                                                                     "sprache": Self.songLanguage], timeout: 120)
-        return (String((d["liedtext"] as? String ?? "").prefix(3000)), String((d["wunsch"] as? String ?? wish).prefix(300)),
-                d["namen"] as? Bool ?? false)
+        return (String((d["liedtext"] as? String ?? "").prefix(3000)), String((d["wunsch"] as? String ?? wish).prefix(2000)),
+                d["namen"] as? Bool ?? false, String((d["beschreibung"] as? String ?? "").prefix(600)))
     }
 
     static var songLanguage: String { Locale.current.language.languageCode?.identifier == "en" ? "en" : "de" }
@@ -661,12 +666,14 @@ struct SongsView: View {
     @State private var lyrics = ""
     @State private var writing = false
     @State private var note: String?
+    // the music description from Text schreiben and the description it belongs to; own changes drop it
+    @State private var caption = ("", "")
 
     var body: some View {
         List {
             Section {
                 HStack {
-                    TextField("Was für Musik?", text: $wish, axis: .vertical).lineLimit(1...3)
+                    TextField("Was für Musik?", text: $wish, axis: .vertical).lineLimit(1...8)
                     Button("Machen") { Task { await make() } }
                         .buttonStyle(.borderedProminent)
                         .disabled(wish.trimmingCharacters(in: .whitespaces).count < 3 || writing)
@@ -690,7 +697,7 @@ struct SongsView: View {
                     if let note { Text(note).font(.footnote).foregroundStyle(.secondary) }
                 }
                 if m.making > 0 { Label("Wird gemacht …", systemImage: "music.note") .foregroundStyle(.secondary) }
-            } footer: { Text("Ohne Gesang wird es instrumental. Mit Gesang und leerem Liedtext schreibt der Spark den Text zuerst ins Feld; Künstlernamen werden dabei zu Stilwörtern.") }
+            } footer: { Text("Ohne Gesang wird es instrumental. Mit Gesang und leerem Liedtext schreibt der Spark den Text zuerst ins Feld; Künstlernamen werden dabei zu Stilwörtern. Die Beschreibung darf bis 2000 Zeichen lang sein, z. B. ein Firmentext als Vorlage.") }
             if !m.loading && m.songs.isEmpty { Text("Noch keine Musik.").foregroundStyle(.secondary) }
             // grouped by day like the list under Ich → Musik in the panel
             ForEach(Self.days(m.songs), id: \.0) { day, songs in
@@ -809,7 +816,7 @@ struct SongsView: View {
         defer { writing = false }
         do {
             guard let r = try await SparkAPI.current?.writeLyrics(wish, seconds: m.length) else { return }
-            (lyrics, wish) = (r.lyrics, r.wish)
+            (lyrics, wish, caption) = (r.lyrics, r.wish, (r.caption, r.wish))
             note = (r.names ? String(localized: "Künstlernamen sind jetzt Stilwörter in der Beschreibung.") + " " : "")
                 + String(localized: "Der Text steht im Feld: prüfen, ändern, dann „Machen“.")
             m.error = nil
@@ -822,8 +829,9 @@ struct SongsView: View {
             return
         }
         do {
-            try await SparkAPI.current?.makeSong(wish, seconds: m.length, lyrics: sung ? lyrics : nil)
-            (wish, lyrics, note) = ("", "", nil)
+            try await SparkAPI.current?.makeSong(wish, seconds: m.length, lyrics: sung ? lyrics : nil,
+                                                 caption: caption.1 == wish ? caption.0 : "")
+            (wish, lyrics, note, caption) = ("", "", nil, ("", ""))
             await m.load()
             await m.follow()
         } catch { m.error = error.localizedDescription }

@@ -125,6 +125,26 @@ class Rules(On):
         self.assertEqual(asked, [])
         self.assertIn("liedtext nicht geschrieben leer", log)
 
+    def test_a_long_text_as_template_gives_a_short_music_description(self):
+        # Dominik 2026-10-22: a firm's text (about a page) as the template; the music model reads only MAX_CAPTION
+        firm = ("Die Muster GmbH baut seit 1950 Fahrräder in Handarbeit. " * 40)[:musik.MAX_WISH]
+        self.assertGreater(musik.MAX_WISH, 1500)
+        self.assertLessEqual(musik.MAX_WISH, 4000)
+        res, asked, _l = write(self.prof, firm, {"liedtext": LYRICS, "stil": "", "namen": [],
+                                                 "musik": "upbeat folk pop, acoustic guitar, warm male voice"})
+        self.assertIsInstance(res, dict, res)
+        self.assertEqual(len(asked[0][1]), len(firm) + len("<<<WUNSCH\n\nWUNSCH>>>"))
+        self.assertEqual(res["wunsch"], firm)
+        self.assertEqual(res["beschreibung"], "upbeat folk pop, acoustic guitar, warm male voice")
+        res, _a, _l = write(self.prof, firm + "x" * 500, {"liedtext": LYRICS, "musik": "x" * 900})
+        self.assertEqual(len(res["wunsch"]), musik.MAX_WISH)
+        self.assertEqual(len(res["beschreibung"]), musik.MAX_CAPTION)
+
+    def test_a_music_description_with_a_clause_is_dropped(self):
+        res, _a, _l = write(self.prof, "Ein Lied über den Sommer", {"liedtext": LYRICS, "musik": "swing that sounds like Frank Sinatra"})
+        self.assertIsInstance(res, dict, res)
+        self.assertEqual(res["beschreibung"], "")
+
     def test_journal_never_names_wish_or_lyrics(self):
         _r, _a, log = write(self.prof, DOMINIK, {"liedtext": LYRICS, "stil": "swing", "namen": ["Frank Sinatra"]})
         for word in ("Systemadministrator", "Server", "sinatra", "Texterin"):
@@ -181,6 +201,35 @@ class Access(On):
                     asyncio.run(musik.write_lyrics(self.prof, "Sommer"))
             finally:
                 block(self.prof["id"], False)
+
+    def test_make_takes_the_long_text_and_the_short_description(self):
+        firm = ("Die Muster GmbH baut seit 1950 Fahrräder in Handarbeit. " * 40)[:musik.MAX_WISH]
+        try:
+            with contextlib.redirect_stdout(io.StringIO()):
+                r = self.c.post("/api/musik", json={"wunsch": firm, "sekunden": 60, "gesang": True, "sprache": "de",
+                                                    "liedtext": LYRICS, "beschreibung": "folk pop, acoustic guitar"})
+                self.assertEqual(r.status_code, 200, r.text)
+                j = next(iter(musik._jobs.values()))
+                self.assertEqual(j["wish"], firm)
+                self.assertEqual(j["caption"], "folk pop, acoustic guitar")
+                musik._jobs.clear()
+                musik._recent.clear()
+                # without a description the first MAX_CAPTION characters of the own words go to the music model
+                r = self.c.post("/api/musik", json={"wunsch": firm, "sekunden": 60})
+                self.assertEqual(r.status_code, 200, r.text)
+                j = next(iter(musik._jobs.values()))
+                self.assertEqual(j["caption"], firm[:musik.MAX_CAPTION].strip())
+                musik._jobs.clear()
+                musik._recent.clear()
+                # the description is checked like the wish: an artist clause is refused, nothing starts
+                r = self.c.post("/api/musik", json={"wunsch": "Sommer", "sekunden": 60, "gesang": True, "liedtext": LYRICS,
+                                                    "beschreibung": "swing in the style of Frank Sinatra"})
+                self.assertEqual(r.status_code, 409)
+                self.assertEqual(musik._jobs, {})
+        finally:
+            musik._jobs.clear()
+            musik._recent.clear()
+            musik.clear(self.prof["id"])
 
     def test_off_without_music(self):
         helpers.set_config(musik=False)

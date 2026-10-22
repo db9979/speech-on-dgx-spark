@@ -59,7 +59,7 @@ KEY = "musik"
 EDIT_KEY = "musikbearbeiten"   # Musik bearbeiten (features.py, chat.musik_bearbeiten; builds on Musik machen)
 VARIANTS = {"2b": ("2B turbo + 1,7B", "2B turbo + 1.7B"), "2b-klein": ("2B turbo + 0,6B", "2B turbo + 0.6B"),
             "xl": ("XL turbo + 1,7B", "XL turbo + 1.7B")}   # musikmodell.VARIANTS (the panel has no model files)
-MAX_WISH = 300
+MAX_WISH = 2000           # the own words, e.g. a firm's text as the template for a song (Dominik 2026-10-22)
 MAX_CAPTION = 600            # musik_server.MAX_CAPTION
 MAX_LYRICS = 3000
 MAX_SONGS = 200             # songs per profile, whatever the space
@@ -223,7 +223,7 @@ def admin_on():
 def limits(c=None):
     c = cfg() if c is None else c
     return {"day": int(c["day_limit"]), "store_mb": int(c["store_mb"]), "max_s": int(c["max_s"]),
-            "default_s": min(DEFAULT_S, int(c["max_s"])), "wish": MAX_WISH, "lyrics": MAX_LYRICS, "songs": MAX_SONGS}
+            "default_s": min(DEFAULT_S, int(c["max_s"])), "wish": MAX_WISH, "caption": MAX_CAPTION, "lyrics": MAX_LYRICS, "songs": MAX_SONGS}
 
 
 def model(c=None):
@@ -303,8 +303,9 @@ TEXT_SYSTEM = (
     "chorus, each part on its own line block starting with [verse], [chorus] or [bridge]; short singable lines, "
     "rhymes where they come naturally, nothing sexual, no violence, no hate, no artist names. If the description "
     "names artists or bands (also misspelt), list them in \"namen\" and describe their style in English genre "
-    "words in \"stil\" (for example \"big band, swing, crooner vocals\"), never the names. Answer only with JSON: "
-    "{{\"liedtext\": \"...\", \"stil\": \"...\", \"namen\": [\"...\"]}}")
+    "words in \"stil\" (for example \"big band, swing, crooner vocals\"), never the names. In \"musik\" describe the "
+    "music for the music model in English (genre, mood, instruments, tempo, voice), at most 60 words, no names. "
+    "Answer only with JSON: {{\"liedtext\": \"...\", \"musik\": \"...\", \"stil\": \"...\", \"namen\": [\"...\"]}}")
 TAG = re.compile(r"(?im)^\s*\[(verse|chorus|bridge|intro|outro|pre-chorus)[^\]]*\]")
 TEXT_REFUSED = {"sprachmodell": ("Das Sprachmodell hat gerade keinen Liedtext geschrieben; bitte noch einmal.",
                                  "The language model wrote no lyrics just now; please try again."),
@@ -319,7 +320,7 @@ def text_pairs(seconds):
 
 
 def parse_text(raw):
-    """(lyrics, style, names) from the model's JSON; ValueError when there is no usable lyrics."""
+    """(lyrics, style, names, music) from the model's JSON; ValueError when there is no usable lyrics."""
     m = re.search(r"\{.*\}", str(raw or ""), re.S)
     d = json.loads(m.group(0)) if m else {}
     if not isinstance(d, dict):
@@ -329,7 +330,7 @@ def parse_text(raw):
         raise ValueError("kein liedtext")
     names = d.get("namen") if isinstance(d.get("namen"), list) else []
     names = [n for n in (clean(x, 60) for x in names[:8]) if len(n) >= 3]
-    return lyrics, clean(d.get("stil"), MAX_STYLE), names
+    return lyrics, clean(d.get("stil"), MAX_STYLE), names, clean(d.get("musik"), MAX_CAPTION)
 
 
 def strip_names(wish, names, style):
@@ -383,20 +384,22 @@ async def write_lyrics(prof, wish, seconds=None, language="de"):
         raw = await asyncio.wait_for(llm.complete(
             TEXT_SYSTEM.format(lang=LANG_NAMES[language], pairs=pairs), "<<<WUNSCH\n" + wish + "\nWUNSCH>>>",
             TEXT_JOB, 1200, temperature=0.7, timeout=TEXT_SECONDS, who=uid), TEXT_SECONDS)
-        lyrics, style, names = parse_text(raw)
+        lyrics, style, names, music = parse_text(raw)
     except Exception as e:
         _no_text(f"sprachmodell {type(e).__name__}", prof)
         raise ValueError(TEXT_REFUSED["sprachmodell"])
     if ARTIST.search(style):
         style = ""
+    if ARTIST.search(music):
+        music = ""
     # the names behind „im Stil von“ count as names whatever the model says (fixed rule, not the model's list)
     for m in CLAUSE.finditer(wish):
         names += [n for n in (x.strip(" ,;") for x in re.split(r"(?i),|\bund\b|\band\b|&", m.group(0)[m.end(1) - m.start():]))
                   if len(n) >= 3 and n.lower() not in names]
     new_wish, cut = strip_names(wish, names, style)
-    left = [n for n in names if re.search(r"(?i)(?<!\w)" + re.escape(n) + r"(?!\w)", new_wish + "\n" + lyrics + " " + style)]
+    left = [n for n in names if re.search(r"(?i)(?<!\w)" + re.escape(n) + r"(?!\w)", new_wish + "\n" + lyrics + " " + style + " " + music)]
     # the model was told no artist names: its own lyrics count like a description here (stricter than own lyrics)
-    why = "kuenstler" if left else refuse_text(uid, new_wish, style, lyrics)
+    why = "kuenstler" if left else refuse_text(uid, new_wish, style, music, lyrics)
     if why:
         _count.bump("refused")
         _no_text(why, prof)
@@ -406,7 +409,8 @@ async def write_lyrics(prof, wish, seconds=None, language="de"):
     _live(f"Liedtext geschrieben ({parts} Teile)")
     print(f"musik: liedtext geschrieben {parts} teile{' stil statt namen' if cut else ''} fuer {profiles.log_name(prof)}",
           flush=True)
-    return {"liedtext": lyrics, "wunsch": new_wish, "teile": parts, "namen": cut}
+    # beschreibung: the short description the music model gets instead of a long wish (a whole firm's text)
+    return {"liedtext": lyrics, "wunsch": new_wish, "teile": parts, "namen": cut, "beschreibung": music}
 
 # ---------------------------------------------------------------- storage (users/<id>/musik/)
 def _dir(uid):
@@ -1369,14 +1373,17 @@ def musik_list(request: Request, prof=Depends(own_profile)):
 
 @router.post("/api/musik", dependencies=[Depends(assistant)])
 async def musik_make(request: Request, prof=Depends(browser_profile)):
-    """Ich → Musik: the person's own description, the length and, for singing, the language and the lyrics."""
+    """Ich → Musik: the person's own description, the length and, for singing, the language and the lyrics; with
+    beschreibung (from Text schreiben) that short description goes to the music model, else the first MAX_CAPTION
+    characters of the own words."""
     uid = _prof(request, prof)["id"]
     guard.limit(request, "musikmachen", uid)
     body = await json_body(request, 16 * 1024, lenient=True)
     wish = clean(body.get("wunsch"), MAX_WISH)
     sung = body.get("gesang") is True
     try:
-        return start(prof, wish, wish, body.get("sekunden"), sung, str(body.get("sprache") or ""),
+        return start(prof, clean(body.get("beschreibung"), MAX_CAPTION) or wish, wish, body.get("sekunden"), sung,
+                     str(body.get("sprache") or ""),
                      str(body.get("liedtext") or ""), "seite", "web")
     except ValueError as e:
         raise HTTPException(409, e.args[0][0] if e.args and isinstance(e.args[0], tuple) else "geht nicht")
