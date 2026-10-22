@@ -45,6 +45,7 @@ TOOLS = {
     "telefonanrufen": ("anruf_planen",),
     "tagebuch": ("spark_tagebuch",),
     "sparkzustand": ("spark_zustand",),
+    "rechnen": ("rechnen",),
     # everyday
     "reminders": ("reminder_set", "reminder_list", "reminder_cancel"),
     "tasks": ("tasks_show", "tasks_add", "tasks_change"),
@@ -277,7 +278,7 @@ PANEL_STEPS = {"local_search"}
 
 # tools a module offers only when the person's own words name it: the Weiche keeps them (extras "keep")
 BY_WORD = {"remarkable_note": "remarkable", "remarkable_sent": "remarkable", "remarkable_page": "remarkable",
-           "remarkable_attachment": "remarkable", "remarkable_library": "rmliste", "remarkable_sheet": "remarkable", "spark_zustand": "zustand_wz",
+           "remarkable_attachment": "remarkable", "remarkable_library": "rmliste", "remarkable_sheet": "remarkable", "spark_zustand": "zustand_wz", "rechnen": "rechnen",
            "home_rules_list": "hamelden", "home_rule_delete": "hamelden", "speaker_volume": "aendern",
            "proactive_pause": "aendern", "undo_last": "aendern", "nas_ablegen": "nasablage",
            "nas_zustand": "naszustand", "offen_zeigen": "vorgaenge"}

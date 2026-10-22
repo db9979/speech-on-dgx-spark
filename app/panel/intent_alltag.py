@@ -253,6 +253,9 @@ ALLTAG = [
     ("Leg die Rechnung auf der NAS ab", "dokument+@nas_ablegen"),
     ("Schick den Artikel aufs reMarkable", "@remarkable_page"),
     ("Was liegt auf meinem reMarkable?", "@remarkable_library"),
+    ("Rechne 19 Prozent von 249 Euro aus", "@rechnen"),
+    ("Wie viele Tage sind es noch bis Weihnachten?", "@rechnen"),
+    ("Was sind 3,5 Prozent Zinsen auf 12000 Euro im Jahr?", "@rechnen"),
 ]
 
 
@@ -262,12 +265,13 @@ def byword(tool, text):
     import aendern
     import nasablage
     import naszustand
+    import rechnen
     import remarkable
     import vorgaenge
     words = {"speaker_volume": aendern.VOLUME_WORDS, "undo_last": aendern.UNDO_WORDS,
              "proactive_pause": aendern.PAUSE_WORDS, "nas_ablegen": nasablage.WORDS, "nas_zustand": naszustand.WORDS,
              "remarkable_page": remarkable.WORDS, "remarkable_library": remarkable.WORDS,
-             "offen_zeigen": vorgaenge.WORDS}
+             "offen_zeigen": vorgaenge.WORDS, "rechnen": rechnen.WORDS}
     return bool(words[tool].search(text))
 
 

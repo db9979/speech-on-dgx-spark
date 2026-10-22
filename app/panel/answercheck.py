@@ -10,8 +10,10 @@ Antwort-Prüfung erweitern (chat.answer_check_more, plan genauer-und-schneller, 
 (MORE_SLACK: "14 Grad" for 14.3 is right, "20 Grad" for 14.3 is not), and a quoted name („Kaffee mit Anke“) must be
 in it in every data answer, not only in one that read the calendar.
 """
+import decimal
 import re
 
+import rechnen
 import taten
 
 MONTHS = {m: i + 1 for i, m in enumerate(
@@ -115,13 +117,28 @@ def _money(low):
                 yield m
 
 
+def calc_facts(values):
+    """The panel's own results (rechnen.py) as figures the answer may name: an amount of money (to the cent) and, for
+    the extended check, a percentage, km or degrees (in tenths)."""
+    out = set()
+    for v in values:
+        if v is None or abs(v) >= 10 ** 12:
+            continue
+        cents = int(abs(v).quantize(decimal.Decimal("0.01"), rounding=decimal.ROUND_HALF_UP) * 100)
+        out.add(("m", cents // 100, cents % 100))
+        tenths = int((v * 10).to_integral_value(rounding=decimal.ROUND_HALF_UP))
+        out |= {(k, tenths) for k in MORE}
+    return out
+
+
 def known(texts, more=False):
     """Every figure the model was given. A score "3:1" in a result also stands for the time-like
-    reading and the other way round, so neither spelling is held back. more: temperatures, km, percentages too."""
+    reading and the other way round, so neither spelling is held back. more: temperatures, km, percentages too.
+    A result of the tool rechnen counts as money and, with more, as a percentage too (calc_facts)."""
     have = set()
     for t in texts:
         if isinstance(t, str):
-            have |= facts(t) | (more_facts(t) if more else set())
+            have |= facts(t) | (more_facts(t) if more else set()) | calc_facts([rechnen.value(t)])
     for k in list(have):
         if k[0] == "t":
             have.add(("s", k[1], k[2]))

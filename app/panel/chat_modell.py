@@ -6,6 +6,7 @@ import answercheck
 import asyncio
 import calendars
 import chat
+import features
 import fixes
 import frisch
 import gedaechtnis
@@ -102,7 +103,10 @@ async def model_turn(*, acked, body, c, came_from, carry, ccfg, cfg, check_on, e
               "act": bool(ccfg.get("action_check", True)) and (not tools or any(t["function"]["name"] in taten.KIND
                                                                                 for t in tools)),
               "ran": 0, "acts": [], "held_acts": [], "fails": {}, "stopped": set(), "looked": False,
-              "names": {t["function"]["name"] for t in tools or []}}
+              "names": {t["function"]["name"] for t in tools or []},
+              # Rechnen mit festem Werkzeug (rechnen.fix): sums in the answer are computed again, in this language
+              "calc": ("en" if chat.guess_language(str(messages[-1]["content"])) == "English" else "de")
+              if who and features.allowed("rechnen", who["id"], ccfg) else None}
         if carry:
             await out.put({"type": carry})
         msgs, finish = list(messages), None
@@ -380,7 +384,7 @@ async def model_turn(*, acked, body, c, came_from, carry, ccfg, cfg, check_on, e
             # tell the browser how much of the shown text to drop.
             ends = [m.end() for m in chat.BOUNDARY.finditer(buf + " ")]
             keep = buf[:min(ends[-1], len(buf))] if ends else ""
-            if not (st["check"] or st["echo"] or st["act"]):
+            if not chat.holds(st):
                 await out.put({"type": "truncated", "drop": len(buf) - len(keep)})
             buf = keep
         if buf.strip():
@@ -388,6 +392,9 @@ async def model_turn(*, acked, body, c, came_from, carry, ccfg, cfg, check_on, e
             await speak(buf.strip(), st, "\n\n" if lead.count("\n") > 1 else "\n" if "\n" in lead else " ")
         if tr and st["check"] and used:
             tr.step("check", "Antwort-Prüfung", time.time(), held=len(st["dropped"]))
+        if st.get("calc_fixed"):   # Logs → Anfragen: the panel put the right result into the answer
+            trace["calls"].append({"name": "Antwort-Prüfung", "args": "",
+                                   "result": f"{st['calc_fixed']} Rechnungen nachgerechnet und berichtigt"})
         if st["echoed"]:   # Logs → Anfragen: sentences the model wrote a second time, left out
             trace["calls"].append({"name": "Wiederholung weggelassen", "args": "",
                                    "result": f"{st['echoed']} schon gesagte Sätze nicht noch einmal gezeigt oder gesagt"})

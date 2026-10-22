@@ -159,7 +159,7 @@ OHNE = {
         "desk_act", "desk_meeting", "desk_view", "desk_operate", "dev_updates_night", "dev_updates_night_at", "dev_updates_upstream",
         "direct_read", "hoer_namen", "memory_trim", "sofort", "search_fast", "doc_brief", "doc_make", "doc_make_templates", "doc_make_wikipics", "bilder", "bilder_aendern", "musik", "musik_bearbeiten", "doc_max_mb", "doc_night", "doc_night_from", "docling", "search_check", "search_check_auto", "search_check_day", "knowledge_book", "knowledge_book_day", "knowledge_book_sample", "knowledge_map_day", "knowledge_map", "rerank", "rerank_model", "rerank_ms",
         "doc_night_to", "doc_originals", "doc_pictures", "doc_quota_mb", "doc_semantic", "doc_shared", "documents", "share",
-        "esp32", "esp32_ota_http", "esp32_repo", "esp32_stop", "esp32_url", "face", "face_life", "feature_tips", "feature_sentences", "feature_sentences_voice", "show_steps", "tagebuch", "status_voice", "undo_voice", "berater_why",
+        "esp32", "esp32_ota_http", "esp32_repo", "esp32_stop", "esp32_url", "face", "face_life", "feature_tips", "feature_sentences", "feature_sentences_voice", "show_steps", "tagebuch", "status_voice", "rechnen", "undo_voice", "berater_why",
         "feature_tips_push", "feeds", "follow_up", "geocode_url", "ha_camera", "ha_events", "ha_live", "ha_loud",
         "ha_voice_rules", "history", "history_live", "history_offline", "history_one", "homeassistant", "images", "iphone", "iphone_panel", "iphone_push",
         "iphone_update", "iphone_review", "kiwix", "kiwix_books", "kiwix_link_url", "kiwix_url", "klaeren", "klaeren_merken", "learn_fixes", "llm_key_from", "llm_model",

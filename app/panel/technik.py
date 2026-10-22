@@ -192,6 +192,7 @@ MODULE = {
     "rmliste": ("dienste", "Werkzeug: was auf dem reMarkable liegt und welche Aufgaben dort stehen"),
     "aendern": ("dienste", "Ändern per Sprache: Lautstärke, Termine und anderes nach „Ja“"),
     "zustand_wz": ("dienste", "Werkzeug: Zustand des Spark per Sprache („Läuft alles?“)"),
+    "rechnen": ("gespraech", "Rechnen mit festem Werkzeug: eigener Parser statt eval, Datumsrechnung, Nachrechnen in Antworten"),
     "rmplus": ("dienste", "Mehr mit dem reMarkable: Senden, Ordner, Abgleich"),
     "rmpapier": ("dienste", "Gestaltete Blätter fürs reMarkable"),
     "rmaufgaben": ("dienste", "Aufgabenblatt zum Ankreuzen aufs reMarkable"),

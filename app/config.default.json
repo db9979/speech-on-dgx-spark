@@ -151,6 +151,7 @@
     "feature_tips": true,
     "tagebuch": false,
     "status_voice": false,
+    "rechnen": false,
     "undo_voice": true,
     "berater_why": false,
     "feature_tips_push": false,

@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.925** · 2026-10-22 · Rechnen mit festem Werkzeug: das Panel rechnet, nicht das Sprachmodell (eigener Parser statt eval, Decimal, Prozent, Klammern, Wurzel, harte Grenzen), Datumsrechnung (Tage bis, Wochentag, Datum in n Tagen), Antwort-Prüfung rechnet Sätze wie „17 mal 23 ist 381“ nach und berichtigt sie; Einfaches sofort beantworten nutzt denselben Rechner
 - **V01.0.924** · 2026-10-22 · E-Mail und Kalender: der Reiter „Einstellungen“ bleibt nach mehreren Reiterwechseln nicht mehr leer; das gilt für jede Seite mit Reitern
 - **V01.0.923** · 2026-10-22 · Was ich über dich weiß: bei „Thema unklar“ ein vorhandenes Thema wählen (bestätigte Interessen als Chips, Auswahlliste mit den festen Themen, Vorschläge beim Tippen) statt nur eintippen; iPhone
 - **V01.0.922** · 2026-10-22 · Was ich über dich weiß: Vorschläge sind Themen statt Absendernamen (feste Themenliste, Absender als Chips, Beispiel-Betreffe, „Thema unklar“ mit eigenem Thema), eigene Adressen und Dienste wie GitHub nie, „Stimmt“ bestätigt das Thema, Netz-Tipp sucht nur das Themawort; iPhone

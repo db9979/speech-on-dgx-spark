@@ -36,13 +36,30 @@ class Rules(unittest.TestCase):
         self.assertEqual(sofort.answer("Wie viel ist 120 geteilt durch 7?", NOW)[1], "120 geteilt durch 7 ist etwa 17,14.")
         self.assertEqual(sofort.answer("What is 6 times 7?", NOW, en=True)[1], "6 times 7 is 42.")
         self.assertIsNone(sofort.answer("Was ist 5 durch 0?", NOW))
+        # the same core as the tool rechnen (rechnen.calc): brackets, percent, roots, never eval
+        self.assertEqual(sofort.answer("Wie viel sind 19 Prozent von 249 Euro?", NOW),
+                         ("rechnen", "19 Prozent von 249 Euro ist 47,31."))
+        self.assertEqual(sofort.answer("Rechne (3 + 4) * 5", NOW)[1], "(3 plus 4) mal 5 ist 35.")
+        self.assertEqual(sofort.answer("17 x 23", NOW)[1], "17 mal 23 ist 391.")
+        self.assertIsNone(sofort.answer("Was ist __import__('os')?", NOW))
+        self.assertIsNone(sofort.answer("Was ist 9 hoch 9 hoch 9?", NOW))
+
+    def test_date_arithmetic(self):
+        self.assertEqual(sofort.answer("Wie viele Tage bis Weihnachten?", NOW),
+                         ("tage", "Vom Freitag, dem 16. Oktober 2026 bis Donnerstag, dem 24. Dezember 2026 sind es 69 "
+                                  "Tage (9 Wochen und 6 Tage)."))
+        self.assertEqual(sofort.answer("Welcher Wochentag ist der 24.12.2026?", NOW)[1], "Der 24.12.2026 ist ein Donnerstag.")
+        self.assertEqual(sofort.answer("Welches Datum ist in 90 Tagen?", NOW)[1],
+                         "90 Tage nach dem 16.10.2026 ist Donnerstag, der 14. Januar 2027.")
+        self.assertEqual(sofort.answer("How many days until Christmas?", NOW, en=True)[0], "tage")
+        self.assertIsNone(sofort.answer("Welcher Wochentag ist der 31.2.2026?", NOW))
 
     def test_units(self):
         self.assertEqual(sofort.answer("Wie viel sind 3 Zoll in Zentimeter?", NOW), ("einheit", "3 Zoll sind etwa 7,6 Zentimeter."))
         self.assertEqual(sofort.answer("Hey Spark, wie viel sind 180 Grad in Fahrenheit?", NOW)[0], "einheit")
 
     def test_anything_more_goes_to_the_model(self):
-        for q in ("Wie spät ist es in Tokio?", "Was ist der Sinn des Lebens?", "Was ist 3 mal 4 und dann mal 5?",
+        for q in ("Wie spät ist es in Tokio?", "Was ist der Sinn des Lebens?", "Was ist 3 mal 4 und dann mal 5?", "Was ist 2026?",
                   "Stell einen Timer auf 10 Minuten", "Welcher Tag ist heute? Und wie wird das Wetter?",
                   "Rechne mir aus, wie viel Miete ich im Jahr zahle", "x" * 90, ""):
             self.assertIsNone(sofort.answer(q, NOW), q)

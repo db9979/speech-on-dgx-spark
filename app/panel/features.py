@@ -125,6 +125,8 @@ FEATURES = (
     # chat.memory_split (plan genauer-und-schneller, 4): a long memory keeps a fixed core, older facts only when they fit
     # sofort.py (plan genauer-und-schneller, 6): time, date, arithmetic and units as the panel's fixed sentence
     F("sofort", "Einfaches sofort beantworten", "Answer simple things at once", "speed", ("sofort",), guide="sofort"),
+    # rechnen.py (Dominik 2026-10-22): the tool rechnen and the check of sums, the panel computes, never the model
+    F("rechnen", "Rechnen mit festem Werkzeug", "Exact calculations", "talk", ("rechnen",), guide="rechnen"),
     F("gedkurz", "Großes Gedächtnis kürzen", "Trim a large memory", "speed", ("memory_trim",), guide="gedkurz"),
     F("ack", "Sofortige Rückmeldung", "Instant acknowledgement", "speed", ("instant_ack",),
       parent="routing", me="setbox", guide="ack"),

@@ -68,7 +68,7 @@ TOOLS = {
     "agent_schedule": "mem", "agent_task": "mem", "routine_save": "mem", "agent_watch": "mem",
     # inside a job (auftragsplan.py): plan, question and proposal stay on the Spark
     "job_plan": "mem", "job_propose": "mem", "job_ask": "mem",
-    "spark_hilfe": "hilfe", "spark_vorschlag": "hilfe", "spark_tagebuch": "mem", "spark_zustand": "mem", "pc_action": "desk", "pc_send": "desk", "pc_look": "desk",
+    "spark_hilfe": "hilfe", "spark_vorschlag": "hilfe", "spark_tagebuch": "mem", "spark_zustand": "mem", "rechnen": "rechnen", "pc_action": "desk", "pc_send": "desk", "pc_look": "desk",
     # tools only programs use over MCP (mcpserver.py; transcribe/speak/voices show as Hören/Sprechen)
     "today": "cal", "action_status": "mem", "Vorschlag": "mem",
     # notes the Spark sends (push.py) and what it says by itself (proactive.py, live.note)
@@ -119,6 +119,8 @@ TARGETS = {
     "rm": ("reMarkable", "Cloud · Internet", "net", True),
     "push": ("Apple Push", "APNs · Internet", "net", True),
     "hilfe": ("Spark-Hilfe", "Anleitungen · auf dem Spark", "spark", False),
+    # Rechnen mit festem Werkzeug (rechnen.py): the panel computes, nothing leaves the Spark
+    "rechnen": ("Rechnen", "fester Rechner · auf dem Spark", "spark", False),
     "webpush": ("Web Push", "Push-Dienst des Browsers · Internet", "net", False),
     "tg": ("Telegram", "Bot-API · Internet", "net", False),
     "android": ("Android-App", "wartet, bis die App abholt", "spark", False),
@@ -188,7 +190,7 @@ TARGETS = {
 RETURNS = {"cal": "Termine oder Aufgaben", "ha": "Zustände oder Schaltung", "web": "Suchergebnisse", "pages": "Seitentext", "kiwix": "Archiv-Treffer",
            "wiki": "Artikel", "mail": "Mails (nur Anzahl und Größe)", "contacts": "Kontakte", "rm": "Ablage", "push": "Zustellung",
            "weather": "Wetterwerte", "parcels": "Sendungen", "transit": "Verbindungen", "feeds": "Beiträge", "mem": "eigene Daten",
-           "hilfe": "Anleitungen oder Vorschlagskarte", "webpush": "Zustellung", "tg": "Zustellung",
+           "hilfe": "Anleitungen oder Vorschlagskarte", "rechnen": "Ergebnis", "webpush": "Zustellung", "tg": "Zustellung",
            "android": "liegt bereit", "desk": "liegt bereit", "page": "liegt bereit",
            "github": "Stand und Testergebnis", "nas": "Ablage bestätigt", "speicher": "Ablage bestätigt oder Datei geholt", "nasquelle": "Ordnerliste und Dateien", "nasablage": "Ablage bestätigt oder Datei geholt", "naszustand": "Belegung und Zustand in Zahlen", "docling": "Text des Dokuments", "mcp": "Antwort des Dienstes",
            "issues": "Nummer der Meldung", "make": "Gliederung, Auftrag oder Zustellung", "bild": "Bild (Größe und Sekunden)",

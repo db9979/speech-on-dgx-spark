@@ -233,7 +233,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Antwort bauen (chat._answer)
     "weiche": {
-        "stand": "c07c5029a8",
+        "stand": "b2c8b7d88a",
         "bezug": {
             "intent.GROUPS": ["s4", "s6"], "intent_bench.BENCH": ["s4", "s5"], "intent_alltag.ALLTAG": ["s14"],
             "weiche.KEEP_VERSIONS": ["s4"], "intent.Route": ["s6"], "intent.follow_up": ["s8"],
@@ -509,12 +509,13 @@ SEITEN = {
         "heute": [],
     },
     "antwort": {
-        "stand": "8736bcd078",
+        "stand": "87eae9d59b",
         "bezug": {
             "chat.MAX_SAVES": ["s11"], "chat.LOOP_SAME": ["s11"], "chat._answer": ["s4", "s5", "s11"], "chat_modell.model_turn": ["s4", "s11"], "chat_ton.speech_out": ["s8"],
             "chat.split_sentences": ["s5"], "chat.said_key": ["s8"], "chat.no_code": ["s8"],
             "chat.loop_count": ["s11"], "answercheck.known": ["s6"], "answercheck.unsupported": ["s6"],
-            "answercheck.fresh": ["s6"], "taten.announces": ["s7", "s12"], "vorrat.WAIT": ["s11"], "frisch.nachsatz": ["s12"],
+            "answercheck.fresh": ["s6"], "rechnen.fix": ["s6"],
+            "taten.announces": ["s7", "s12"], "vorrat.WAIT": ["s11"], "frisch.nachsatz": ["s12"],
         },
         "kurz": ("Hier entsteht die Antwort: Das Panel fragt das Sprachmodell in Runden, lässt angebotene Werkzeuge "
                  "laufen, prüft jeden fertigen Satz mit festen Regeln und schickt Text und Ton als einen Strom ans Gerät. "
@@ -536,7 +537,7 @@ SEITEN = {
                "Systemprompt und die angebotenen Werkzeuge vor; _answer übernimmt. Ist das Sprachmodell pausiert "
                "(Wartungspause, Notbetrieb), kommt sofort ein fester Satz; im Notbetrieb mit Parakeet vorher die festen "
                "Befehle ohne Modell (notbetrieb.antwort: Home Assistant, Uhrzeit, Erinnerungen). Mit „Einfaches sofort "
-               "beantworten“ bekommen Uhrzeit, Datum, einfache Rechnungen und Einheiten als ganzer kurzer Satz den "
+               "beantworten“ bekommen Uhrzeit, Datum, Rechnungen (rechnen.calc), Datumsrechnungen und Einheiten als ganzer kurzer Satz den "
                "festen Satz des Panels, ohne Modell und ohne Sofort-Satz davor (sofort.answer, höchstens "
                "{sofort.MAX_CHARS} Zeichen).",
                "chat() checks the rate limit, sets the mark „speech is running“ (background work waits) and shows the "
@@ -544,7 +545,7 @@ SEITEN = {
                "the offered tools; _answer takes over. When the language model pauses (maintenance pause, emergency "
                "mode), a fixed sentence comes at once; in emergency mode with Parakeet the fixed commands come first, "
                "without a model (notbetrieb.antwort: Home Assistant, time, reminders). With „Answer simple things at "
-               "once“ the time, the date, simple arithmetic and units as a whole short sentence get the panel's fixed "
+               "once“ the time, the date, calculations (rechnen.calc), date calculations and units as a whole short sentence get the panel's fixed "
                "sentence, without a model and without an instant sentence before it (sofort.answer, at most "
                "{sofort.MAX_CHARS} characters).")),
             S("s2", "schritt", ("Strom öffnen, Sofort-Satz", "Open the stream, instant sentence"),
@@ -591,12 +592,16 @@ SEITEN = {
                "mit allem, was das Modell bekommen hat. Nach einem Kalender-Abruf zählen nur Angaben aus dieser "
                "Antwort, nicht aus früheren; ein zitierter Termin-Titel muss im Ergebnis stehen. Mit „Antwort-Prüfung "
                "erweitern“ auch Temperaturen, km und Prozent (gerundet zählt, answercheck.MORE_SLACK) und jeder "
-               "zitierte Name in jeder Datenantwort.",
+               "zitierte Name in jeder Datenantwort. Mit „Rechnen mit festem Werkzeug“ rechnet rechnen.fix vorher jede "
+               "Rechnung im Satz nach („17 mal 23 ist 381“) und setzt das Ergebnis des Panels ein; seine Ergebnisse "
+               "zählen hier als belegt (answercheck.calc_facts). Solange das an ist, kommt jeder Satz erst fertig.",
                "For data questions answercheck compares every time, date, score and amount in the sentence with "
                "everything the model was given. After a calendar read only figures from this answer count, not from "
                "earlier ones; a quoted appointment title must be in the result. With „Extended answer check“ also "
                "temperatures, km and percentages (rounded counts, answercheck.MORE_SLACK) and every quoted name in "
-               "every data answer."),
+               "every data answer. With „Exact calculations“ rechnen.fix first computes every calculation in the "
+               "sentence again („17 times 23 is 381“) and puts in the panel's result; its results count as proven here "
+               "(answercheck.calc_facts). While that is on, every sentence comes only when it is complete."),
               ("info", "ja", ("Satz fällt weg, am Ende ein ehrlicher Satz", "Sentence dropped, an honest sentence at the end"))),
             S("s7", "frage", ("Tat ohne Werkzeug?", "Deed without a tool?"),
               ("Taten prüfen", "check deeds"),
@@ -754,6 +759,7 @@ SEITEN = {
             ("answercheck.known", ("alle Angaben, die das Modell bekommen hat", "every figure the model was given")),
             ("answercheck.unsupported", ("Angaben im Satz ohne Beleg", "figures in the sentence without proof")),
             ("answercheck.fresh", ("nach dem Kalender nur Angaben dieser Antwort", "after the calendar only this answer's figures")),
+            ("rechnen.fix", ("Rechnungen im Satz nachrechnen und berichtigen", "compute calculations in the sentence again and correct them")),
             ("taten.check", ("Tat behauptet, aber kein Werkzeug hat es geschafft", "deed claimed, no tool managed it")),
             ("taten.announces", ("Werkzeugaufruf oder Tat nur angekündigt", "tool call or deed only announced")),
             ("taten.sentence", ("der feste ehrliche Satz", "the fixed honest sentence")),
@@ -765,7 +771,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Werkzeuge (chat_tools.run)
     "werkzeuge": {
-        "stand": "5e277d2e6b",
+        "stand": "2a69f608c0",
         "bezug": {
             "chat.LOCKED_OUTSIDE": ["s4"], "notaus.INTERNET_TOOLS": ["s3"], "werkzeuge.NAMES": ["s11"],
             "chat_tools.run": ["s2", "s7"], "chat.wrap_outside": ["s9"], "chat.LOCKED_AFTER_MAIL": ["s4"],

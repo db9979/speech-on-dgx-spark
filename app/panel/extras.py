@@ -28,6 +28,7 @@ import docmake
 import bilder
 import musik
 import tagebuch
+import rechnen
 import zustand_wz
 import rmliste
 import nasablage
@@ -40,7 +41,7 @@ import fuerdich
 import ichweiss
 import vorgaenge
 
-SERVICES = [roomfar, weather, contacts, parcels, fuerdich, tasks, transit, feeds, wiki, agent, senden, messages, remarkable, hamelden, hilfe, begleiter, meinmcp, docmake, bilder, musik, tagebuch, zustand_wz, rmliste, aendern, nasablage, naszustand, telefon_anruf, rufen, vorgaenge]
+SERVICES = [roomfar, weather, contacts, parcels, fuerdich, tasks, transit, feeds, wiki, agent, senden, messages, remarkable, hamelden, hilfe, begleiter, meinmcp, docmake, bilder, musik, tagebuch, zustand_wz, rechnen, rmliste, aendern, nasablage, naszustand, telefon_anruf, rufen, vorgaenge]
 
 
 def offer(ctx):

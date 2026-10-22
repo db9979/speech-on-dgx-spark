@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.925** Exact calculations: the panel computes, not the language model (own parser instead of eval, Decimal, percent, brackets, roots, hard limits), date arithmetic (days until, weekday, date in n days), the answer check recomputes sentences like "17 times 23 is 381" and corrects them; Answer simple things at once uses the same calculator
 - **V01.0.924** E-mail and Calendar: the tab "Settings" no longer stays empty after several tab changes; this holds for every page with tabs
 - **V01.0.923** What I know about you: for "Topic unclear" pick a topic there is (confirmed interests as chips, a list with the fixed topics, suggestions while typing) instead of only typing one; iPhone
 - **V01.0.922** What I know about you: proposals are topics instead of sender names (fixed topic list, senders as chips, example subjects, "Topic unclear" with an own topic), never your own addresses or services like GitHub, "Right" confirms the topic, the web tip searches only the topic word; iPhone
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.918** RED FIX: two test leftovers fixed that disturbed other tests after the test parts were cut anew (test_tagesaktuell left a fake mail lookup behind, test_panel an open question)
 - **V01.0.917** Flash Next variant 0.65 removed (never started)
 - **V01.0.916** Attack self-test (idea from NeMo Guardrails): every way in for outside text attacked with 12 disguises against a model that obeys every order; four gaps closed: the model's markers (<|im_start|>, <tool_call>) are defused, after a mail Wikipedia, weather and transit are locked too, short text states in the smart home count as outside, the briefing stands wholly in its data block
-- **V01.0.915** Architecture picture nicer: colour bar per kind with a legend, a symbol before every line, arrows with direction and paler lines, tab „only with Spark split“, more room between the rows; guard: every box has a colour and a symbol
 
 
 

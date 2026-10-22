@@ -199,6 +199,7 @@ Bereitet eine Anfrage vor, fragt das Sprachmodell in Runden und prüft, was gesa
 | `app/panel/images.py` | Bilder in der Frage: das Sprachmodell sieht sie selbst |
 | `app/panel/klaeren.py` | Rückfrage, Korrektur und Merken von Zuordnungen |
 | `app/panel/llm.py` | Der eine Weg zum Sprachmodell: Adresse, Schlüssel, Modellname, Aufruf |
+| `app/panel/rechnen.py` | Rechnen mit festem Werkzeug: eigener Parser statt eval, Datumsrechnung, Nachrechnen in Antworten |
 | `app/panel/roles.py` | Rollen: wie der Assistent antworten soll |
 | `app/panel/saetze.py` | Zeigt Sätze für Funktionen, die an sind und noch nie benutzt wurden |
 | `app/panel/schreib.py` | Schreibhilfe: korrigieren, kürzen, übersetzen, entwerfen |
@@ -1881,11 +1882,11 @@ Gilt bei: [Schritt 9](#kn-weiche-s9)
 
 #### Alltagsquote
 
-- Die Testsätze (168) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (213) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt.
+- Die Testsätze (168) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (216) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt.
 
 #### Werkzeugnamen
 
-- Überall, wo ein Werkzeug sichtbar wird, steht ein lesbarer Name aus einer Tabelle (91 Werkzeuge), zum Beispiel „Postfach-Überblick“ statt mail_tidy_overview.
+- Überall, wo ein Werkzeug sichtbar wird, steht ein lesbarer Name aus einer Tabelle (92 Werkzeuge), zum Beispiel „Postfach-Überblick“ statt mail_tidy_overview.
 
 #### Zahlen (aus dem Code)
 
@@ -1896,7 +1897,7 @@ Gilt bei: [Schritt 9](#kn-weiche-s9)
 - **300 ms** Wartezeit mit „Schneller Antwortbeginn“ ([Schritt 10](#kn-weiche-s10))
 - **80 %** Standard-Schwelle der Einordnung ([Schritt 10](#kn-weiche-s10))
 - **168** eingebaute Testsätze ([Schritt 4](#kn-weiche-s4), [Schritt 5](#kn-weiche-s5))
-- **213** Alltagssätze zum Messen ([Schritt 14](#kn-weiche-s14))
+- **216** Alltagssätze zum Messen ([Schritt 14](#kn-weiche-s14))
 - **20** Versionen für Rückgängig ([Schritt 4](#kn-weiche-s4))
 
 #### Einstellen
@@ -1975,12 +1976,12 @@ flowchart TD
   s11 -.->|nächste Runde| s4
 ```
 
-1. <a id="kn-antwort-s1"></a>**Frage kommt an**: chat() prüft das Rate-Limit, setzt die Marke „Sprache läuft“ (Hintergrundarbeit wartet) und zeigt den anderen Geräten des Profils „antwortet gerade“. Dann bereitet chat_turn.prepare Rechte, Sperren, Systemprompt und die angebotenen Werkzeuge vor; _answer übernimmt. Ist das Sprachmodell pausiert (Wartungspause, Notbetrieb), kommt sofort ein fester Satz; im Notbetrieb mit Parakeet vorher die festen Befehle ohne Modell (notbetrieb.antwort: Home Assistant, Uhrzeit, Erinnerungen). Mit „Einfaches sofort beantworten“ bekommen Uhrzeit, Datum, einfache Rechnungen und Einheiten als ganzer kurzer Satz den festen Satz des Panels, ohne Modell und ohne Sofort-Satz davor (sofort.answer, höchstens 80 Zeichen).
+1. <a id="kn-antwort-s1"></a>**Frage kommt an**: chat() prüft das Rate-Limit, setzt die Marke „Sprache läuft“ (Hintergrundarbeit wartet) und zeigt den anderen Geräten des Profils „antwortet gerade“. Dann bereitet chat_turn.prepare Rechte, Sperren, Systemprompt und die angebotenen Werkzeuge vor; _answer übernimmt. Ist das Sprachmodell pausiert (Wartungspause, Notbetrieb), kommt sofort ein fester Satz; im Notbetrieb mit Parakeet vorher die festen Befehle ohne Modell (notbetrieb.antwort: Home Assistant, Uhrzeit, Erinnerungen). Mit „Einfaches sofort beantworten“ bekommen Uhrzeit, Datum, Rechnungen (rechnen.calc), Datumsrechnungen und Einheiten als ganzer kurzer Satz den festen Satz des Panels, ohne Modell und ohne Sofort-Satz davor (sofort.answer, höchstens 80 Zeichen).
 2. <a id="kn-antwort-s2"></a>**Strom öffnen, Sofort-Satz**: Zwei Warteschlangen verbinden alles: eine für die Ereignisse ans Gerät, eine für Sätze an die Sprachausgabe. Ist die Sofortige Rückmeldung frei, spielt sofort ein aufgenommener Satz (ohne GPU); bleibt die Antwort danach still, kommt einmal ein Brücken-Satz.
 3. <a id="kn-antwort-s3"></a>**Was das Panel selbst erledigt**: Hat die Vorbereitung entschieden, dass das Panel selbst handelt (ein Schaltbefehl, Zustände lesen, „Erst lokal suchen“, ein eindeutiger Lesewunsch), läuft das jetzt. Das Ergebnis geht wie ein Werkzeug-Ergebnis an das Modell, fremder Text eingepackt als Daten. Ein Artikel aus dem eigenen Kiwix steht danach als Quelle unter der Antwort, mit Buch und dessen Stand.
 4. <a id="kn-antwort-s4"></a>**Runde vorbereiten**: Angeboten wird die Liste ohne gesperrte, wegen Fehlern gestoppte oder zu oft genutzte Werkzeuge. Verlangt die Frage ein Werkzeug, muss das Modell eines wählen (tool_choice), mit eigener Temperatur. Die fünfte Runde hat keine Liste mehr: das Modell hört, dass es jetzt antworten soll. Geräte ohne Bildschirm (Lautsprecher, Telefon, Uhr, Siri, Android-Assistent, CarPlay) bekommen höchstens 700 Tokens; eine längere Antwort endet am letzten ganzen Satz.
 5. <a id="kn-antwort-s5"></a>**Streamen und in Sätze schneiden**: Die Antwort kommt Stück für Stück. Denktext und als Text geschriebene Werkzeugaufrufe werden nie gezeigt oder gesprochen. split_sentences schneidet fertige Sätze ab („z. B.“ und „5. Oktober“ sind kein Satzende); ein langer erster Satz geht schon am Komma los, damit der erste Ton früh kommt.
-6. <a id="kn-antwort-s6"></a>**Zahl ohne Beleg?**: Bei Datenfragen vergleicht answercheck jede Uhrzeit, jedes Datum, jeden Spielstand und Betrag im Satz mit allem, was das Modell bekommen hat. Nach einem Kalender-Abruf zählen nur Angaben aus dieser Antwort, nicht aus früheren; ein zitierter Termin-Titel muss im Ergebnis stehen. Mit „Antwort-Prüfung erweitern“ auch Temperaturen, km und Prozent (gerundet zählt, answercheck.MORE_SLACK) und jeder zitierte Name in jeder Datenantwort.
+6. <a id="kn-antwort-s6"></a>**Zahl ohne Beleg?**: Bei Datenfragen vergleicht answercheck jede Uhrzeit, jedes Datum, jeden Spielstand und Betrag im Satz mit allem, was das Modell bekommen hat. Nach einem Kalender-Abruf zählen nur Angaben aus dieser Antwort, nicht aus früheren; ein zitierter Termin-Titel muss im Ergebnis stehen. Mit „Antwort-Prüfung erweitern“ auch Temperaturen, km und Prozent (gerundet zählt, answercheck.MORE_SLACK) und jeder zitierte Name in jeder Datenantwort. Mit „Rechnen mit festem Werkzeug“ rechnet rechnen.fix vorher jede Rechnung im Satz nach („17 mal 23 ist 381“) und setzt das Ergebnis des Panels ein; seine Ergebnisse zählen hier als belegt (answercheck.calc_facts). Solange das an ist, kommt jeder Satz erst fertig.
 7. <a id="kn-antwort-s7"></a>**Tat ohne Werkzeug?**: Behauptet ein Satz eine Tat („ist jetzt an“, „habe eingetragen“), muss in dieser Antwort ein Werkzeug dieser Art geklappt haben (taten.check). Ein Satz, der einen Werkzeugaufruf oder eine Tat nur ankündigt („Ich rufe das Timer-Werkzeug auf …“), wird nie gesagt; kommt danach kein Werkzeug, sagt das Panel am Ende seinen festen Satz (taten.announces). Klappt ein Werkzeug der behaupteten Art später in derselben Antwort („Ich mache das Lied.“ vor musik_machen), fällt der Satz still weg. Gilt, wenn ein änderndes Werkzeug oder gar keines angeboten war.
 8. <a id="kn-antwort-s8"></a>**Zeigen und sprechen**: Ein geprüfter Satz geht als Text ans Gerät und in die Warteschlange der Sprachausgabe; Codeblöcke werden nur gezeigt. Ein schon gesagter Satz aus einer früheren Runde wird ausgelassen. Die Sprachausgabe fasst nach dem ersten Satz alles Wartende zu einem Stück zusammen, damit die Stimme ruhig bleibt.
 9. <a id="kn-antwort-s9"></a>**Datenfrage ohne Nachsehen?**: Braucht die Frage ein Werkzeug und das Modell antwortet ohne eines, wird die ganze Runde nie gesagt. Das Modell wird einmal neu gefragt, mit dem Hinweis, zuerst das Werkzeug zu nutzen.
@@ -2025,6 +2026,7 @@ flowchart TD
 - `app/panel/answercheck.py` `known`: alle Angaben, die das Modell bekommen hat ([Schritt 6](#kn-antwort-s6))
 - `app/panel/answercheck.py` `unsupported`: Angaben im Satz ohne Beleg ([Schritt 6](#kn-antwort-s6))
 - `app/panel/answercheck.py` `fresh`: nach dem Kalender nur Angaben dieser Antwort ([Schritt 6](#kn-antwort-s6))
+- `app/panel/rechnen.py` `fix`: Rechnungen im Satz nachrechnen und berichtigen ([Schritt 6](#kn-antwort-s6))
 - `app/panel/taten.py` `check`: Tat behauptet, aber kein Werkzeug hat es geschafft ([Schritt 7](#kn-antwort-s7))
 - `app/panel/taten.py` `announces`: Werkzeugaufruf oder Tat nur angekündigt ([Schritt 7](#kn-antwort-s7), [Schritt 12](#kn-antwort-s12))
 - `app/panel/taten.py` `sentence`: der feste ehrliche Satz ([Schritt 12](#kn-antwort-s12))
@@ -2113,7 +2115,7 @@ Gilt bei: [Schritt 4](#kn-werkzeuge-s4)
 - **3** Gedächtnis-Notizen pro Antwort ([Schritt 1](#kn-werkzeuge-s1))
 - **13** Werkzeuge gesperrt nach fremdem Text ([Schritt 4](#kn-werkzeuge-s4))
 - **7** Werkzeuge ohne Internet bei Notaus ([Schritt 3](#kn-werkzeuge-s3))
-- **91** Werkzeuge mit verständlichem Namen ([Schritt 11](#kn-werkzeuge-s11))
+- **92** Werkzeuge mit verständlichem Namen ([Schritt 11](#kn-werkzeuge-s11))
 
 #### Einstellen
 

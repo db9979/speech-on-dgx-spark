@@ -53,6 +53,7 @@ import vorab  # noqa: E402  (fetching ahead when the answer asks back)
 import vorrat  # noqa: E402  (Vorrat je Profil: answers from what the services keep in memory)
 import ack  # noqa: E402  (the instant ready-made sentence)
 import sofort  # noqa: E402  (Einfaches sofort beantworten: fixed sentences, no model)
+import rechnen  # noqa: E402  (Rechnen mit festem Werkzeug: sums in an answer computed again)
 import verbrauch  # noqa: E402  (Verbrauchszähler: tokens per task and profile)
 from common import load_config, model_url  # noqa: E402
 from core import admin_cookie_ok, api_headers, app_version, assistant, json_body  # noqa: E402
@@ -135,6 +136,12 @@ def no_code(piece, st):
         if not st.get("code"):
             keep.append(part)
     return " ".join(x.strip() for x in keep if x.strip())
+
+
+def holds(st):
+    """True while the sentences of this answer are shown only once complete (answer check, a second round, the check
+    of deeds, the recomputed sums of Rechnen mit festem Werkzeug): nothing is streamed word by word then."""
+    return bool(st["check"] or st["echo"] or st["act"] or st.get("calc"))
 
 
 def said_key(piece):
@@ -2078,6 +2085,14 @@ async def _answer(request, turn):
             print("chat: a sentence already said in this answer - not shown, not spoken again", flush=True)
             st["echoed"] += 1
             return
+        if st.get("calc"):
+            # Rechnen mit festem Werkzeug (rechnen.fix): a sum in the sentence is computed again, a wrong result
+            # replaced by the panel's; the panel's results count as known figures for the answer check below
+            piece, fixed_n, values = rechnen.fix(piece, st["calc"] == "en")
+            st["calc_vals"] = st.get("calc_vals", []) + values
+            if fixed_n:
+                print(f"chat: answer check: rechnung korrigiert ({fixed_n})", flush=True)
+                st["calc_fixed"] = st.get("calc_fixed", 0) + fixed_n
         if st["check"]:
             src = st["msgs"] or messages
             key = (id(src), len(src))   # the figures change only when a round or tool result is added
@@ -2085,7 +2100,7 @@ async def _answer(request, turn):
             if st.get("known_key") != key:
                 st["known"] = answercheck.known([m.get("content") for m in src], more)
                 st["known_key"] = key
-            have = set(st["known"])
+            have = set(st["known"]) | answercheck.calc_facts(st.get("calc_vals", []))
             if st.get("cal"):   # appointments: times, dates and titles only from this answer's question and results
                 have = answercheck.fresh(st["msgs"] or messages, have)
                 old = answercheck.unquoted(piece, answercheck.fresh_texts(st["msgs"] or messages))
@@ -2112,7 +2127,7 @@ async def _answer(request, turn):
                 return
         if said:
             st["seen"].add(said)
-        if st["check"] or st["echo"] or st["act"]:   # held until the sentence was complete: shown now
+        if holds(st):   # held until the sentence was complete: shown now
             piece_shown = (gap if st["shown"] else "") + piece
             await out.put({"type": "text", "delta": piece_shown})
             trace["said"] += piece_shown
@@ -2130,7 +2145,7 @@ async def _answer(request, turn):
             # answer, before a memory note): it stays and is spoken
             st["first"] = False
             await speak(rest, st)
-        elif rest and (st["check"] or st["echo"] or st["act"]):
+        elif rest and holds(st):
             pass  # held back, never shown
         elif rest:
             # words written before the tool call without a sentence end ("Der Fernseher im"):
@@ -2176,7 +2191,7 @@ async def _answer(request, turn):
             if tr:
                 tr.mark("first", time.time())
         st["n"] += 1
-        if not (st["check"] or st["echo"] or st["act"]):
+        if not holds(st):
             await out.put({"type": "text", "delta": text})
             trace["said"] += text
             st["shown"] += len(text)
@@ -2286,7 +2301,7 @@ async def _answer(request, turn):
             await take(text, st, rec)
         if st["head"]:   # a short answer that only looked like the start of the note
             text, st["head"] = st["head"], None
-            if not (st["check"] or st["echo"] or st["act"]):
+            if not holds(st):
                 await out.put({"type": "text", "delta": text})
                 trace["said"] += text
                 st["shown"] += len(text)

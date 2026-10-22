@@ -199,6 +199,7 @@ Prepares a request, asks the language model in rounds and checks what is said.
 | `app/panel/images.py` | Pictures for the assistant: the person attaches a photo (panel, iPhone app, Telegram) and the language model looks at it itself. |
 | `app/panel/klaeren.py` | Rückfrage, Korrektur und Merken. |
 | `app/panel/llm.py` | One way to the language model (Große Aufräumaktion step 3, Richtlinie Teil 17): its address, key, model name and the plain call. |
+| `app/panel/rechnen.py` | Rechnen mit festem Werkzeug: a language model cannot calculate, so the panel does it. |
 | `app/panel/roles.py` | Roles: each profile keeps a few ways the assistant should answer ("Butler: höflich und trocken", "Erklärbär: erklär alles wie für Kinder") and switches betwe … |
 | `app/panel/saetze.py` | Das kannst du auch sagen. |
 | `app/panel/schreib.py` | Schreibhilfe: the Spark corrects, smooths, shortens, translates or drafts a text, for mails and anything else the person writes (Word, Excel, Pages ...). |
@@ -1881,11 +1882,11 @@ Applies at: [step 9](#kn-weiche-s9)
 
 #### Everyday score
 
-- The test sentences (168) hold every reported wrong turn and must all pass. The everyday sentences (213) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up.
+- The test sentences (168) hold every reported wrong turn and must all pass. The everyday sentences (216) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up.
 
 #### Tool names
 
-- Wherever a tool shows, a readable name comes from one table (91 tools), for example „Mailbox overview“ instead of mail_tidy_overview.
+- Wherever a tool shows, a readable name comes from one table (92 tools), for example „Mailbox overview“ instead of mail_tidy_overview.
 
 #### Numbers (from the code)
 
@@ -1896,7 +1897,7 @@ Applies at: [step 9](#kn-weiche-s9)
 - **300 ms** waiting with „Fast answer start“ ([step 10](#kn-weiche-s10))
 - **80 %** default threshold of the classification ([step 10](#kn-weiche-s10))
 - **168** built-in test sentences ([step 4](#kn-weiche-s4), [step 5](#kn-weiche-s5))
-- **213** everyday sentences for measuring ([step 14](#kn-weiche-s14))
+- **216** everyday sentences for measuring ([step 14](#kn-weiche-s14))
 - **20** versions for undo ([step 4](#kn-weiche-s4))
 
 #### Settings
@@ -1975,12 +1976,12 @@ flowchart TD
   s11 -.->|next round| s4
 ```
 
-1. <a id="kn-antwort-s1"></a>**Question arrives**: chat() checks the rate limit, sets the mark „speech is running“ (background work waits) and shows the profile's other devices „answering“. Then chat_turn.prepare works out rights, locks, system prompt and the offered tools; _answer takes over. When the language model pauses (maintenance pause, emergency mode), a fixed sentence comes at once; in emergency mode with Parakeet the fixed commands come first, without a model (notbetrieb.antwort: Home Assistant, time, reminders). With „Answer simple things at once“ the time, the date, simple arithmetic and units as a whole short sentence get the panel's fixed sentence, without a model and without an instant sentence before it (sofort.answer, at most 80 characters).
+1. <a id="kn-antwort-s1"></a>**Question arrives**: chat() checks the rate limit, sets the mark „speech is running“ (background work waits) and shows the profile's other devices „answering“. Then chat_turn.prepare works out rights, locks, system prompt and the offered tools; _answer takes over. When the language model pauses (maintenance pause, emergency mode), a fixed sentence comes at once; in emergency mode with Parakeet the fixed commands come first, without a model (notbetrieb.antwort: Home Assistant, time, reminders). With „Answer simple things at once“ the time, the date, calculations (rechnen.calc), date calculations and units as a whole short sentence get the panel's fixed sentence, without a model and without an instant sentence before it (sofort.answer, at most 80 characters).
 2. <a id="kn-antwort-s2"></a>**Open the stream, instant sentence**: Two queues connect everything: one for events to the device, one for sentences to speech output. When the instant acknowledgement is allowed, a recorded sentence plays at once (no GPU); if the answer then stays silent, one bridge sentence follows.
 3. <a id="kn-antwort-s3"></a>**What the panel does itself**: When the preparation decided that the panel acts itself (a switch command, reading states, „search locally first“, a clear reading request), it runs now. The result goes to the model like a tool result, outside text wrapped as data. An article from the own Kiwix then stands as a source under the answer, with its book and the book's date.
 4. <a id="kn-antwort-s4"></a>**Prepare a round**: Offered is the list without locked tools, tools stopped after errors or used too often. When the question needs a tool, the model must choose one (tool_choice), with its own temperature. The fifth round has no list: the model is told to answer now. Devices without a screen (speaker, phone, watch, Siri, Android assistant, CarPlay) get at most 700 tokens; a longer answer ends at its last full sentence.
 5. <a id="kn-antwort-s5"></a>**Stream and cut into sentences**: The answer comes piece by piece. Thinking and tool calls written as text are never shown or spoken. split_sentences cuts finished sentences off („z. B.“ and „5. Oktober“ are no sentence end); a long first sentence goes at a comma, so the first sound comes early.
-6. <a id="kn-antwort-s6"></a>**Figure without proof?**: For data questions answercheck compares every time, date, score and amount in the sentence with everything the model was given. After a calendar read only figures from this answer count, not from earlier ones; a quoted appointment title must be in the result. With „Extended answer check“ also temperatures, km and percentages (rounded counts, answercheck.MORE_SLACK) and every quoted name in every data answer.
+6. <a id="kn-antwort-s6"></a>**Figure without proof?**: For data questions answercheck compares every time, date, score and amount in the sentence with everything the model was given. After a calendar read only figures from this answer count, not from earlier ones; a quoted appointment title must be in the result. With „Extended answer check“ also temperatures, km and percentages (rounded counts, answercheck.MORE_SLACK) and every quoted name in every data answer. With „Exact calculations“ rechnen.fix first computes every calculation in the sentence again („17 times 23 is 381“) and puts in the panel's result; its results count as proven here (answercheck.calc_facts). While that is on, every sentence comes only when it is complete.
 7. <a id="kn-antwort-s7"></a>**Deed without a tool?**: When a sentence claims a deed („is on now“, „entered it“), a tool of that kind must have worked in this answer (taten.check). A sentence that only announces a tool call or a deed („I'm calling the timer tool …“) is never said; when no tool follows, the panel says its fixed sentence at the end (taten.announces). When a tool of the claimed kind works later in the same answer („I'm making the song.“ before musik_machen), the sentence is left out silently. Applies when a changing tool or none at all was offered.
 8. <a id="kn-antwort-s8"></a>**Show and speak**: A checked sentence goes to the device as text and into the speech output queue; code blocks are only shown. A sentence already said in an earlier round is left out. After the first sentence speech output joins everything waiting into one piece, so the voice stays calm.
 9. <a id="kn-antwort-s9"></a>**Data question without looking?**: When the question needs a tool and the model answers without one, the whole round is never said. The model is asked once more, told to use the tool first.
@@ -2025,6 +2026,7 @@ flowchart TD
 - `app/panel/answercheck.py` `known`: every figure the model was given ([step 6](#kn-antwort-s6))
 - `app/panel/answercheck.py` `unsupported`: figures in the sentence without proof ([step 6](#kn-antwort-s6))
 - `app/panel/answercheck.py` `fresh`: after the calendar only this answer's figures ([step 6](#kn-antwort-s6))
+- `app/panel/rechnen.py` `fix`: compute calculations in the sentence again and correct them ([step 6](#kn-antwort-s6))
 - `app/panel/taten.py` `check`: deed claimed, no tool managed it ([step 7](#kn-antwort-s7))
 - `app/panel/taten.py` `announces`: tool call or deed only announced ([step 7](#kn-antwort-s7), [step 12](#kn-antwort-s12))
 - `app/panel/taten.py` `sentence`: the fixed honest sentence ([step 12](#kn-antwort-s12))
@@ -2113,7 +2115,7 @@ Applies at: [step 4](#kn-werkzeuge-s4)
 - **3** memory notes per answer ([step 1](#kn-werkzeuge-s1))
 - **13** tools locked after outside text ([step 4](#kn-werkzeuge-s4))
 - **7** tools without internet with the kill switch ([step 3](#kn-werkzeuge-s3))
-- **91** tools with a readable name ([step 11](#kn-werkzeuge-s11))
+- **92** tools with a readable name ([step 11](#kn-werkzeuge-s11))
 
 #### Settings
 
