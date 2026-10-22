@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.938** IT-Krisenspiel (Paket 4): sieben neue Szenarien (DDoS, Datenleck mit DSGVO-Frist, Innentäter, Cloud-Ausfall, vergiftetes Update, Chef-Betrug, gelöschte Datenbank) mit eigener Konsole
 - **V01.0.937** IT-Krisenspiel (Paket 5): Nachbesprechung mit Quellen (NIST, BSI, DSGVO), Lernmodus mit Tipp, Geist des besten Laufs, Statistik je Szenario
 - **V01.0.936** IT-Krisenspiel (Paket 3): Team mit Fächern und Müdigkeit übernimmt Züge („Wer übernimmt?“, Konsole team/assign); Laufbahn Junior-Admin bis CISO mit mehr Kollegen und Budget
 - **V01.0.935** IT-Krisenspiel (Paket 11): gemeinsam spielen per Einladungslink mit Rollen Technik, Kommunikation und Leitung; Konsole mit Tab für Dateien, nano, vi und vim und Knopf „Groß“
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.931** Live-Übersicht: ein Anruf ist eine Karte „Telefon“, die Fragen darin stehen auf ihr („db · Anruf · 2 Fragen“) statt als eigene Telefon-Karten
 - **V01.0.930** Rechnen genauer: Zahlwörter („sechs mal sechs“), Rechnung in der Frage macht das Werkzeug zur Pflicht, „@Spark prüf das“ prüft Rechnungen auf reMarkable-Seiten („bitte prüfen“, Seite bleibt), Belege zusammenrechnen
 - **V01.0.929** reMarkable-Notizbücher mit Datum der letzten Änderung und „Letzter Abgleich“ in Ich → Dokumente
-- **V01.0.928** Was ich über dich weiß aufgeräumt: Reiter, Liste mit Detail, Interessen umbenennen oder einem Thema zuordnen, Absender herausnehmen, Netz-Tipps als Schalter; iPhone
 
 
 

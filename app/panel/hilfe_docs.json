@@ -4900,6 +4900,22 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Sieben neue Szenarien im Krisenspiel (V01.0.938, Plan Paket 4)",
+"text": "Sieben neue Szenarien im Krisenspiel (V01.0.938, Plan Paket 4): Zu Ransomware, SAN, Strom, BGP und BSI kommen DDoS auf den Webshop (Volumen- oder Anfrageflut, mit oder ohne Erpressung: Provider-Filter, Schutzdienst, WAF-Regel, Notseite; Schutzgeld zahlen hilft nicht), Datenleck mit Meldefrist (offener Cloud-Speicher oder API-Lücke, klein oder groß: Probe prüfen, Quelle finden und schließen, Datenschutzbeauftragte, Risikobewertung, Meldung nach Art. 33 DSGVO vor dem Fristende, Betroffene nach Art. 34 bei hohem Risiko), Innentäter (Admin vor dem Ausscheiden, eigenes oder Dienstkonto, mit oder ohne Zeitbombe: Beweise vor dem Gespräch, Personal und Recht, Upload sperren, Cronjobs suchen), Cloud-Ausfall (Region oder DNS des Anbieters, mit oder ohne zweite Region: Statusseite, Umschalten, Aufbau aus dem Backup, Zweitanbieter für DNS, Notbetrieb), Vergiftetes Update (Hintertür im Monitoring, nur dort oder auch im AD, still oder aktiv: isolieren, C2 sperren, neu aufsetzen statt deinstallieren, krbtgt zweimal, melden), Chef-Betrug (gekapertes Postfach oder ähnliche Domain, Überweisung frisch oder von gestern: zuerst die Bank, dann Kopfzeilen, Weiterleitungsregeln, Rückruf-Prüfung aller Zahl"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sieben neue Szenarien im Krisenspiel (V01.0.938, Plan Paket 4)",
+"text": "ungen, keine Schuldzuweisung) und Datenbank gelöscht (Sicherung gut oder seit Wochen leer, mit oder ohne verzögertes Replikat: Schreibzugriffe stoppen, Replikat anhalten, Rücksicherung, Transaktionslogs bis kurz vor dem Löschen; eine leere Datenbank löst nichts). Jedes Szenario hat Varianten aus dem Seed, Rollen und Fächer für das Team, Nebenschauplätze, mindestens vier Lehren mit Quelle (u. a. DSGVO Art. 33/34, BSI IT-Grundschutz CON.3, ORP.2, ORP.3, ORP.4, OPS.2.2, CISA ED 21-01) und eine eigene Konsole mit Rechnern, Dateien und falschen Zügen; neue Spiel-Befehle aws, dns, blocklist, geoblock, scale, pay, risk, image, Get-ADUser, Get-InboxRule, crontab, apt, mysql, mysqlbinlog. Die Selbsttests spielen jede Variante jedes Szenarios auf jeder Stufe bis zum Sieg, auch nur getippt. Als Nächstes: Paket 6 (Herausforderungen), dann die übrigen Pakete des Plans."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Dokumentliste für viele Dateien (V01.0.413)",
 "text": "Dokumentliste für viele Dateien (V01.0.413): Ich → Dokumente zeigt jedes Dokument als eine kompakte Zeile (Symbol, Titel, Art · Absender · Quelle, Datum und Größe) statt als Karte mit allen Knöpfen; Abzeichen nur, wenn etwas wichtig ist („Frist 20.12.“, „liest 3/12“, „nicht lesbar“, „für alle“, „Suche aus“). Die Liste scrollt mit der Seite (vorher ein Kasten mit 28 % Bildschirmhöhe), zeigt 50 Zeilen und dann „Weitere zeigen“ und ist beim Sortieren nach Datum in Heute, Letzte 7 Tage, Monate und Jahre gegliedert. Oben: ein Suchfeld filtert sofort nach Titel, Dateiname, Absender, Art, Nummer und Tags, Enter sucht zusätzlich im Inhalt (ersetzt „Suche ausprobieren“, Treffer öffnen das Dokument); Quelle (Hochgeladen, iPhone-App, Begleiter, reMarkable, Aufträge, Von anderen), Sortierung (Neueste, Name, Frist, Größe; Quelle und Sortierung merkt sich der Browser) und Schnellfilter mit Anzahl (Frist offen, Wird gelesen, Nicht lesbar, Für alle, Suche aus) plus Tags als Auswahlliste. Ein Klick öffnet den Detailbereich, auf breiten Seiten neben der Liste, schmal als eigene Seite mit „Zurück zur Liste“: Steckbrief, Zustand mit Balken, Tags direkt bearbeiten, Schalter „Der Assistent sucht darin“ "
 },
@@ -8565,7 +8581,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Meine Daten",
 "title": "Meine Daten",
-"text": "- IT-Krisenspiel (Funktionen → Meine Daten → „IT-Krisenspiel“; Krisenspiel → Einstellungen): Ein Text-Abenteuer im Rechenzentrum: Ransomware, SAN-Ausfall, Stromausfall, BGP-Hijacking oder eine BSI-Eilmeldung."
+"text": "- IT-Krisenspiel (Funktionen → Meine Daten → „IT-Krisenspiel“; Krisenspiel → Einstellungen): Ein Text-Abenteuer im Rechenzentrum mit zwölf Szenarien: Ransomware, SAN-Ausfall, Stromausfall, BGP-Hijacking, BSI-Eilmeldung, DDoS, Datenleck mit Meldefrist, Innentäter, Cloud-Ausfall, vergiftetes Update, Chef-Betrug und gelöschte Daten …"
 },
 {
 "lang": "de",
@@ -16660,6 +16676,22 @@
 "src": "assistant",
 "file": "Assistant and panel",
 "head": "Voice chat",
+"title": "Seven new scenarios in the crisis game (V01.0.938, plan package 4)",
+"text": "Seven new scenarios in the crisis game (V01.0.938, plan package 4): besides ransomware, SAN, power, BGP and BSI there are DDoS on the web shop (volume or request flood, with or without extortion: provider filter, protection service, WAF rule, emergency page; paying protection money does not help), data leak with a reporting deadline (open cloud storage or API hole, small or large: check the sample, find and close the source, data protection officer, risk assessment, report under GDPR Art. 33 before the deadline, people affected under Art. 34 at high risk), insider (admin about to leave, own or service account, with or without a time bomb: evidence before the talk, HR and legal, block the upload, search cron jobs), cloud outage (the provider's region or DNS, with or without a second region: status page, switch over, rebuild from the backup, second DNS provider, emergency operation), poisoned update (back door in the monitoring, only there or also in AD, quiet or active: isolate, block C2, rebuild instead of uninstalling, krbtgt twice, report), CEO fraud (hijacked mailbox or similar domain, transfer fresh or from yesterday: the bank first, then headers, forwarding rules, call-back ch"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Seven new scenarios in the crisis game (V01.0.938, plan package 4)",
+"text": "eck of all payments, no blame) and database deleted (backup good or empty for weeks, with or without a delayed replica: stop writes, stop the replica, restore, transaction logs up to just before the deletion; an empty database solves nothing). Every scenario has variants from the seed, roles and subjects for the team, side issues, at least four lessons with a source (among them GDPR Art. 33/34, BSI IT-Grundschutz CON.3, ORP.2, ORP.3, ORP.4, OPS.2.2, CISA ED 21-01) and its own console with machines, files and wrong moves; new game commands aws, dns, blocklist, geoblock, scale, pay, risk, image, Get-ADUser, Get-InboxRule, crontab, apt, mysql, mysqlbinlog. The self-tests play every variant of every scenario on every level to a win, also typed only. Next: package 6 (challenges), then the other packages of the plan."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
 "title": "Document list for many files (V01.0.413)",
 "text": "Document list for many files (V01.0.413): Me → Documents shows every document as one compact row (icon, title, kind · sender · source, date and size) instead of a card with all buttons; badges only when something matters (\"due 20/12\", \"reading 3/12\", \"not readable\", \"for everyone\", \"search off\"). The list scrolls with the page (before, a box of 28 % of the screen height), shows 50 rows and then \"Show more\", and is grouped into Today, Last 7 days, months and years when sorted by date. At the top a search field filters at once by title, file name, sender, kind, number and tags, Enter also searches the content (replaces \"Try a search\", hits open the document); source (uploaded, iPhone app, companion, reMarkable, jobs, from others), sort order (newest, name, deadline, size; source and sort order stay in the browser) and quick filters with counts (deadline open, being read, not readable, for everyone, search off) plus tags as a list. A click opens the details, beside the list on wide pages, as their own page with \"Back to the list\" on narrow ones: card, state with bar, tags edited in place, switches \"The assistant searches it\" and \"For everyone\", open original, read text (with \"Belongs "
 },
@@ -20205,7 +20237,7 @@
 "file": "Assistant and panel",
 "head": "My data",
 "title": "My data",
-"text": "- IT crisis game (Features → My data → \"IT crisis game\"; Crisis game → Settings): A text adventure in the data centre: ransomware, SAN outage, power cut, BGP hijacking or a BSI alert."
+"text": "- IT crisis game (Features → My data → \"IT crisis game\"; Crisis game → Settings): A text adventure in the data centre with twelve scenarios: ransomware, SAN outage, power cut, BGP hijacking, BSI alert, DDoS, data leak with a reporting deadline, insider, cloud outage, poisoned update, CEO fraud and a deleted database."
 },
 {
 "lang": "en",

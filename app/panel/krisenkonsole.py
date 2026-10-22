@@ -101,6 +101,21 @@ BEFEHLE = {
     "meeting": (None, "spiel", "Lagebesprechung", "Status meeting", "meeting"),
     "wait": (None, "spiel", "Abwarten", "Wait", "wait"),
     "sleep": (UNIX, "spiel", "Abwarten", "Wait", "sleep 300"),
+    # Paket 4: the commands of the new scenarios
+    "geoblock": (None, "spiel", "Länder an der Firewall sperren", "Block countries at the firewall", "geoblock <land>"),
+    "scale": (None, "spiel", "Server hochskalieren", "Scale servers up", "scale web <anzahl>"),
+    "pay": (None, "spiel", "Eine Forderung bezahlen", "Pay a demand", "pay <wer>"),
+    "aws": (None, "spiel", "Cloud-Konsole des Anbieters", "The provider's cloud console", "aws status|support|failover|restore|ls|private <bucket>"),
+    "dns": (None, "spiel", "DNS-Einträge umstellen", "Change DNS records", "dns switch | dns region"),
+    "risk": (None, "spiel", "Risiko für Betroffene bewerten", "Assess the risk for the people affected", "risk"),
+    "image": (None, "spiel", "Beweis-Image eines Geräts ziehen", "Take a forensic image of a device", "image <rechner>"),
+    "blocklist": (None, "spiel", "Domains an Firewall, DNS und Mailfilter sperren", "Block domains at firewall, DNS and mail filter", "blocklist add <domain>"),
+    "get-aduser": (WIN, "spiel", "AD-Konten zeigen", "Show AD accounts", "Get-ADUser -Filter *"),
+    "get-inboxrule": (WIN, "spiel", "Regeln eines Postfachs", "Rules of a mailbox", "Get-InboxRule -Mailbox <name>"),
+    "crontab": (UNIX, "spiel", "Geplante Aufgaben", "Scheduled tasks", "crontab -l | crontab -r"),
+    "apt": (UNIX, "spiel", "Pakete verwalten", "Manage packages", "apt remove <paket>"),
+    "mysql": (UNIX, "spiel", "Datenbank-Befehl", "Database command", "mysql -e \"STOP REPLICA\""),
+    "mysqlbinlog": (UNIX, "spiel", "Transaktionslogs nachspielen", "Replay transaction logs", "mysqlbinlog --stop-datetime=<zeit>"),
 }
 # the extra groups of „help“ besides krisenlinux.GRUPPEN
 EIGENE = {"konsole": ("Konsole", "Console"), "windows": ("Windows", "Windows"), "spiel": ("Im Spiel", "In the game")}

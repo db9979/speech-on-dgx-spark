@@ -121,7 +121,8 @@ def path_of(won):
 class Engine(unittest.TestCase):
     def test_the_scenarios_are_consistent(self):
         self.assertEqual(K.check_data(), [])
-        self.assertEqual(set(K.SZENARIEN), {"ransomware", "san", "strom", "bgp", "bsi"})
+        self.assertEqual(set(K.SZENARIEN), {"ransomware", "san", "strom", "bgp", "bsi", "ddos", "datenleck", "insider", "cloud",
+                                             "lieferkette", "chefbetrug", "geloescht"})
         broken = copy.deepcopy(K._DATA)
         broken["szenarien"][0]["aktionen"][0]["setzt"] = {"gibtsnicht": "Online"}
         self.assertTrue(K.check_data(broken))

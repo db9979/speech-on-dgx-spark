@@ -60,12 +60,12 @@ def build(k):
     n_cmd = len(krisenlinux.LINUX)
     S = []
     S.append(_sek("worum", "Worum es geht", "What it is about",
-                  _p("Du leitest den IT-Notfall eines Unternehmens: Ransomware, ein ausgefallener Speicher, Stromausfall, "
-                     "gestohlene Internet-Routen oder eine Warnung des BSI. Jede Minute kostet Geld, die Geschäftsleitung "
+                  _p(f"Du leitest den IT-Notfall eines Unternehmens, {len(k.SZENARIEN)} Szenarien von Ransomware über "
+                     "Stromausfall, DDoS und Datenleck bis zum Chef-Betrug. Jede Minute kostet Geld, die Geschäftsleitung "
                      "will Antworten und das Team wird müde. Du entscheidest, was als Nächstes passiert: mit Knöpfen oder "
                      "an einer Konsole wie ein echter Admin.",
-                     "You lead a company's IT emergency: ransomware, a failed storage, a power cut, stolen internet routes "
-                     "or a warning from the BSI. Every minute costs money, the management wants answers and the team gets "
+                     f"You lead a company's IT emergency, {len(k.SZENARIEN)} scenarios from ransomware via power cut, DDoS "
+                     "and data leak to CEO fraud. Every minute costs money, the management wants answers and the team gets "
                      "tired. You decide what happens next: with buttons or at a console like a real admin."),
                   _p("Alles ist simuliert. Das Panel rechnet jeden Wert mit festen Regeln aus den Szenario-Daten, der Zufall "
                      "kommt nur aus dem Seed. Gleicher Seed und gleiche Züge ergeben dasselbe Spiel, so könnt ihr euch "

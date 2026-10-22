@@ -2754,6 +2754,13 @@
 "titel": "Krisenspiel: Nachbesprechung, Lernmodus, Geist",
 "text": "A: Update, ein Spiel zu Ende spielen (oder aufgeben): unter der Note steht „Nachbesprechung“ mit „Gut:“ zuerst, dann „Besser:“, jeweils mit Quelle. B: Neues Spiel mit Häkchen „Lernmodus“: über den Zügen ein Tipp, der passende Knopf ist markiert; den Tipps folgen gewinnt meist. C: Am Ende: keine Erfolge, Bisherige Spiele zeigt „Lernmodus“. D: Dasselbe Szenario auf derselben Stufe noch einmal ohne Lernmodus: die Zeile „Geist“ zeigt, wo der beste Lauf nach gleich vielen Zügen stand. E: Bisherige Spiele: Statistik je Szenario und Noten A bis F. F: Anleitung: Abschnitt „Lernen: Tipp, Nachbesprechung, Geist“. G: Logs „spiel: neu | … | lernen“.",
 "thread": "IT-Krisenspiel für einzelne Nutzer"
+},
+{
+"id": "P418",
+"v": 938,
+"titel": "Krisenspiel: sieben neue Szenarien",
+"text": "A: Update, Krisenspiel → Neues Spiel: zwölf Szenarien und 🎲. B: DDoS: „Datenverkehr analysieren“, dann je nach Art Provider oder WAF-Regel, dann „Webshop wieder freigeben“. C: Datenleck: Probe prüfen, Quelle suchen und schließen, Datenschutzbeauftragte, Meldung; wer zu lange wartet, sieht „Meldefrist überschritten“. D: Innentäter: „Den Admin direkt zur Rede stellen“ vor „Beweise sichern“ gibt in der Nachbesprechung „Besser:“. E: Chef-Betrug: erst die Bank anrufen. F: Datenbank gelöscht: „Leere Datenbank anlegen“ gewinnt nicht, die Hotline glüht. G: Konsole je Szenario: hosts, help zeigt unter „Im Spiel“ die neuen Befehle (aws, dns, blocklist, mysql …), z. B. „aws status“ im Cloud-Ausfall. H: Anleitung → Die Szenarien: alle zwölf.",
+"thread": "IT-Krisenspiel für einzelne Nutzer"
 }
 ]
 }

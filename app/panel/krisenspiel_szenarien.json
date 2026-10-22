@@ -527,6 +527,4841 @@
   {"id": "homeoffice", "wenn": {"flags": ["vpn_aus"], "zug_ab": 2}, "chance": 40, "vertrauen": -5, "stress": 4,
    "text": ["Nebenschauplatz: Der Vertriebsleiter kann sein Angebot nicht abschicken und beschwert sich beim Chef.", "Side issue: the head of sales cannot send his quote and complains to the boss."]}
  ]
+},
+{
+ "id": "ddos",
+ "titel": [
+  "DDoS auf den Webshop",
+  "DDoS on the web shop"
+ ],
+ "kurz": [
+  "Eine Flut von Anfragen legt den Webshop lahm. Erst verstehen, welche Art von Angriff, dann gezielt abwehren.",
+  "A flood of requests takes the web shop down. First understand which kind of attack, then fend it off on purpose."
+ ],
+ "kosten_ref": 250000,
+ "budget": 30000,
+ "varianten": {
+  "art": [
+   [
+    "volumen",
+    [
+     "eine Volumenflut",
+     "a volume flood"
+    ]
+   ],
+   [
+    "anwendung",
+    [
+     "eine Anfrageflut auf die Suche",
+     "a request flood on the search"
+    ]
+   ]
+  ],
+  "erpressung": [
+   [
+    "ja",
+    [
+     "mit Erpresser-Mail",
+     "with an extortion mail"
+    ]
+   ],
+   [
+    "nein",
+    [
+     "ohne Forderung",
+     "without a demand"
+    ]
+   ]
+  ]
+ },
+ "start_text": [
+  "Black Friday, 11:02 Uhr: Der Webshop antwortet nicht mehr, die Partner-API läuft zäh. Das Monitoring zeigt {art}, {erpressung}.",
+  "Black Friday, 11:02: the web shop no longer answers, the partner API is sluggish. The monitoring shows {art}, {erpressung}."
+ ],
+ "assets": [
+  {
+   "id": "edge",
+   "name": "Internet-Leitung",
+   "typ": [
+    "Netzwerk",
+    "Network"
+   ],
+   "schaden_min": 0,
+   "details": [
+    "2 × 10 Gbit/s",
+    "2 × 10 Gbit/s"
+   ]
+  },
+  {
+   "id": "fw",
+   "name": "Firewall",
+   "typ": [
+    "Netzwerk",
+    "Network"
+   ],
+   "schaden_min": 0,
+   "details": [
+    "Cluster aus zwei Geräten",
+    "cluster of two devices"
+   ]
+  },
+  {
+   "id": "lb",
+   "name": "Load Balancer",
+   "typ": [
+    "Netzwerk",
+    "Network"
+   ],
+   "schaden_min": 300,
+   "details": [
+    "verteilt auf 4 Webserver",
+    "spreads over 4 web servers"
+   ]
+  },
+  {
+   "id": "web",
+   "name": "Webshop",
+   "typ": [
+    "Webshop",
+    "Web shop"
+   ],
+   "schaden_min": 1500,
+   "details": [
+    "Umsatz am stärksten Tag des Jahres",
+    "revenue on the strongest day of the year"
+   ]
+  },
+  {
+   "id": "api",
+   "name": "Partner-API",
+   "typ": [
+    "API",
+    "API"
+   ],
+   "schaden_min": 400,
+   "details": [
+    "Händler bestellen hier",
+    "dealers order here"
+   ]
+  }
+ ],
+ "start": [
+  {
+   "setzt": {
+    "web": "Critical",
+    "api": "Degraded"
+   },
+   "details": {
+    "web": [
+     "Zeitüberschreitung",
+     "time-outs"
+    ],
+    "api": [
+     "Antwortzeit 9 s",
+     "response time 9 s"
+    ]
+   }
+  },
+  {
+   "wenn": {
+    "var": {
+     "art": "volumen"
+    }
+   },
+   "setzt": {
+    "edge": "Critical"
+   },
+   "details": {
+    "edge": [
+     "Leitung voll",
+     "line full"
+    ]
+   }
+  },
+  {
+   "wenn": {
+    "var": {
+     "art": "anwendung"
+    }
+   },
+   "setzt": {
+    "lb": "Critical"
+   },
+   "details": {
+    "lb": [
+     "alle Webserver am Anschlag",
+     "all web servers at their limit"
+    ]
+   }
+  }
+ ],
+ "ziel": [
+  {
+   "flags": [
+    "abgewehrt",
+    "laeuft"
+   ]
+  }
+ ],
+ "lehren": [
+  {
+   "id": "schutzgeld",
+   "wenn": {
+    "genutzt": [
+     "zahlen"
+    ]
+   },
+   "text": [
+    "Schutzgeld gezahlt: Die Angreifer machen weiter oder kommen wieder. BSI und Polizei raten davon ab.",
+    "Protection money paid: the attackers go on or come back. The BSI and the police advise against it."
+   ],
+   "bezug": "BSI, DDoS-Abwehr: Maßnahmenkatalog",
+   "gut": false
+  },
+  {
+   "id": "geoblock",
+   "wenn": {
+    "genutzt": [
+     "geoblock"
+    ]
+   },
+   "text": [
+    "Länder gesperrt: Botnetze sitzen überall, ausgesperrt waren vor allem echte Kunden.",
+    "Countries blocked: botnets sit everywhere, it mostly locked out real customers."
+   ],
+   "bezug": "BSI, DDoS-Abwehr: Maßnahmenkatalog",
+   "gut": false
+  },
+  {
+   "id": "erst_analyse",
+   "wenn": {
+    "vor": [
+     "analyse",
+     "shop_hoch"
+    ]
+   },
+   "text": [
+    "Erst die Art des Angriffs bestimmt, dann gezielt abgewehrt.",
+    "First determined the kind of attack, then fended it off on purpose."
+   ],
+   "bezug": "NIST SP 800-61 Rev. 2, 3.2 Erkennung und Analyse",
+   "gut": true
+  },
+  {
+   "id": "ddos_info",
+   "wenn": {
+    "genutzt": [
+     "kunden_info"
+    ]
+   },
+   "text": [
+    "Kunden früh über die Störung informiert.",
+    "Told the customers early about the outage."
+   ],
+   "bezug": "BSI-Standard 200-4, Krisenkommunikation",
+   "gut": true
+  },
+  {
+   "id": "ddos_still",
+   "wenn": {
+    "fehlt": [
+     "kunden_info"
+    ]
+   },
+   "text": [
+    "Die Kunden haben nichts erfahren und spekulierten im Netz.",
+    "The customers heard nothing and speculated online."
+   ],
+   "bezug": "BSI-Standard 200-4, Krisenkommunikation",
+   "gut": false
+  }
+ ],
+ "aktionen": [
+  {
+   "id": "analyse",
+   "label": [
+    "Datenverkehr analysieren",
+    "Analyse the traffic"
+   ],
+   "fach": "netz",
+   "einmal": true,
+   "flags": [
+    "analysiert"
+   ],
+   "je": [
+    {
+     "wenn": {
+      "var": {
+       "art": "volumen"
+      }
+     },
+     "flags": [
+      "volumen_erkannt"
+     ],
+     "text": [
+      "80 Gbit/s UDP aus tausenden Quellen, die Leitung ist voll, bevor etwas den Shop erreicht.",
+      "80 Gbit/s of UDP from thousands of sources, the line is full before anything reaches the shop."
+     ]
+    },
+    {
+     "wenn": {
+      "var": {
+       "art": "anwendung"
+      }
+     },
+     "flags": [
+      "anwendung_erkannt"
+     ],
+     "text": [
+      "Die Leitung ist frei, aber 40.000 Suchanfragen pro Sekunde treffen die Webserver, alle mit demselben Muster.",
+      "The line is free, but 40,000 searches per second hit the web servers, all with the same pattern."
+     ]
+    }
+   ],
+   "zeit": 5,
+   "text": [
+    "Ihr schaut auf Leitung, Firewall und Load Balancer.",
+    "You look at line, firewall and load balancer."
+   ]
+  },
+  {
+   "id": "provider",
+   "label": [
+    "Provider um Filterung bitten",
+    "Ask the provider to filter"
+   ],
+   "rolle": "kommunikation",
+   "einmal": true,
+   "wenn": {
+    "flags": [
+     "analysiert"
+    ]
+   },
+   "flags": [
+    "provider"
+   ],
+   "je": [
+    {
+     "wenn": {
+      "var": {
+       "art": "volumen"
+      }
+     },
+     "flags": [
+      "abgewehrt"
+     ],
+     "setzt": {
+      "edge": "Online"
+     },
+     "details": {
+      "edge": [
+       "Flut wird beim Provider gefiltert",
+       "flood filtered at the provider"
+      ]
+     },
+     "text": [
+      "Der Provider filtert die UDP-Flut vor eurer Leitung. Die Leitung atmet auf.",
+      "The provider filters the UDP flood before your line. The line breathes again."
+     ]
+    },
+    {
+     "wenn": {
+      "var": {
+       "art": "anwendung"
+      }
+     },
+     "text": [
+      "Der Provider sieht normale Datenmengen. Gegen gültige HTTP-Anfragen kann er nichts tun.",
+      "The provider sees normal amounts of data. Against valid HTTP requests it can do nothing."
+     ]
+    }
+   ],
+   "zeit": 15,
+   "text": [
+    "Ihr ruft das NOC des Providers an.",
+    "You call the provider's NOC."
+   ]
+  },
+  {
+   "id": "scrubbing",
+   "label": [
+    "DDoS-Schutzdienst buchen (Umleitung per DNS)",
+    "Book a DDoS protection service (redirect via DNS)"
+   ],
+   "fach": "netz",
+   "einmal": true,
+   "wenn": {
+    "flags": [
+     "analysiert"
+    ]
+   },
+   "budget": 12000,
+   "flags": [
+    "umgeleitet"
+   ],
+   "setzt": {
+    "edge": "Online"
+   },
+   "details": {
+    "edge": [
+     "über den Schutzdienst",
+     "through the protection service"
+    ]
+   },
+   "je": [
+    {
+     "wenn": {
+      "var": {
+       "art": "volumen"
+      }
+     },
+     "flags": [
+      "abgewehrt"
+     ],
+     "text": [
+      "Die Volumenflut bleibt im Schutzdienst hängen.",
+      "The volume flood gets stuck in the protection service."
+     ]
+    },
+    {
+     "wenn": {
+      "flags": [
+       "waf"
+      ]
+     },
+     "flags": [
+      "abgewehrt"
+     ],
+     "text": [
+      "Schutzdienst und eigene Regel halten die Anfrageflut fern.",
+      "Protection service and own rule keep the request flood away."
+     ]
+    },
+    {
+     "wenn": {
+      "var": {
+       "art": "anwendung"
+      },
+      "ohne": [
+       "waf"
+      ]
+     },
+     "text": [
+      "Die Leitung ist frei, aber die Suchanfragen sehen echt aus und kommen weiter durch.",
+      "The line is free, but the searches look genuine and keep coming through."
+     ]
+    }
+   ],
+   "zeit": 20,
+   "text": [
+    "Der Datenverkehr läuft jetzt über die Filter des Schutzdienstes.",
+    "The traffic now runs through the protection service's filters."
+   ]
+  },
+  {
+   "id": "waf_regel",
+   "label": [
+    "Rate-Limit und WAF-Regel für die Suche",
+    "Rate limit and WAF rule for the search"
+   ],
+   "fach": "netz",
+   "einmal": true,
+   "wenn": {
+    "flags": [
+     "anwendung_erkannt"
+    ]
+   },
+   "flags": [
+    "waf",
+    "abgewehrt"
+   ],
+   "setzt": {
+    "lb": "Online"
+   },
+   "details": {
+    "lb": [
+     "Regel greift",
+     "rule works"
+    ]
+   },
+   "zeit": 10,
+   "text": [
+    "Je Adresse höchstens 5 Suchen pro Sekunde, das Muster der Flut wird blockiert.",
+    "At most 5 searches per second per address, the flood's pattern is blocked."
+   ]
+  },
+  {
+   "id": "geoblock",
+   "label": [
+    "Ganze Länder sperren",
+    "Block whole countries"
+   ],
+   "fach": "netz",
+   "einmal": true,
+   "wenn": {
+    "flags": [
+     "analysiert"
+    ]
+   },
+   "kosten": 8000,
+   "vertrauen": -3,
+   "zeit": 5,
+   "text": [
+    "Die Firewall sperrt Anfragen aus zwölf Ländern. Die Flut wird kaum kleiner, Kunden im Ausland stehen vor der Tür.",
+    "The firewall blocks requests from twelve countries. The flood hardly shrinks, customers abroad are locked out."
+   ]
+  },
+  {
+   "id": "skalieren",
+   "label": [
+    "Webserver hochskalieren",
+    "Scale up the web servers"
+   ],
+   "fach": "rz",
+   "einmal": true,
+   "budget": 4000,
+   "setzt": {
+    "web": "Degraded"
+   },
+   "details": {
+    "web": [
+     "langsam, aber erreichbar",
+     "slow, but reachable"
+    ]
+   },
+   "zeit": 10,
+   "text": [
+    "Acht Webserver mehr. Das kostet, und die Flut wächst einfach mit.",
+    "Eight more web servers. That costs, and the flood simply grows with it."
+   ]
+  },
+  {
+   "id": "notseite",
+   "label": [
+    "Statische Notseite ausliefern",
+    "Serve a static emergency page"
+   ],
+   "fach": "netz",
+   "einmal": true,
+   "vertrauen": 3,
+   "zeit": 5,
+   "text": [
+    "Statt Fehlern sehen Kunden eine freundliche Seite mit Hinweis auf die Hotline.",
+    "Instead of errors customers see a friendly page pointing to the hotline."
+   ]
+  },
+  {
+   "id": "shop_hoch",
+   "label": [
+    "Webshop wieder freigeben",
+    "Release the web shop again"
+   ],
+   "fach": "netz",
+   "einmal": true,
+   "wenn": {
+    "flags": [
+     "abgewehrt"
+    ]
+   },
+   "flags": [
+    "laeuft"
+   ],
+   "vertrauen": 5,
+   "setzt": {
+    "web": "Online",
+    "api": "Online",
+    "lb": "Online",
+    "edge": "Online"
+   },
+   "details": {
+    "web": [
+     "läuft",
+     "running"
+    ],
+    "api": [
+     "normal",
+     "normal"
+    ],
+    "lb": [
+     "normal",
+     "normal"
+    ],
+    "edge": [
+     "normal",
+     "normal"
+    ]
+   },
+   "zeit": 5,
+   "text": [
+    "Der Shop nimmt wieder Bestellungen an, die Partner-API ist schnell.",
+    "The shop takes orders again, the partner API is fast."
+   ]
+  },
+  {
+   "id": "zahlen",
+   "label": [
+    "Schutzgeld zahlen",
+    "Pay the protection money"
+   ],
+   "rolle": "leitung",
+   "einmal": true,
+   "wenn": {
+    "var": {
+     "erpressung": "ja"
+    }
+   },
+   "budget": 8000,
+   "flags": [
+    "gezahlt"
+   ],
+   "vertrauen": -5,
+   "zeit": 5,
+   "text": [
+    "Ihr zahlt 2 Bitcoin. Die Flut stoppt für eine Viertelstunde.",
+    "You pay 2 bitcoin. The flood stops for a quarter of an hour."
+   ]
+  },
+  {
+   "id": "polizei",
+   "label": [
+    "Anzeige bei der Polizei (ZAC)",
+    "Report to the police (ZAC)"
+   ],
+   "rolle": "kommunikation",
+   "einmal": true,
+   "wenn": {
+    "var": {
+     "erpressung": "ja"
+    }
+   },
+   "flags": [
+    "polizei"
+   ],
+   "vertrauen": 3,
+   "zeit": 10,
+   "text": [
+    "Die ZAC nimmt die Anzeige auf und bittet um die Erpresser-Mail und die Logs.",
+    "The ZAC takes the report and asks for the extortion mail and the logs."
+   ]
+  },
+  {
+   "id": "kunden_info",
+   "label": [
+    "Kunden auf der Statusseite informieren",
+    "Inform the customers on the status page"
+   ],
+   "rolle": "kommunikation",
+   "einmal": true,
+   "flags": [
+    "informiert"
+   ],
+   "vertrauen": 4,
+   "zeit": 5,
+   "text": [
+    "Statusseite und Social Media melden die Störung und die Hotline.",
+    "Status page and social media report the outage and the hotline."
+   ]
+  }
+ ],
+ "ticks": [
+  {
+   "id": "zweite_welle",
+   "wenn": {
+    "var": {
+     "erpressung": "ja"
+    },
+    "ohne": [
+     "abgewehrt"
+    ],
+    "zug_ab": 3
+   },
+   "chance": 40,
+   "kosten": 15000,
+   "stress": 6,
+   "einmal": false,
+   "text": [
+    "Die Angreifer legen nach: eine zweite Welle mit doppelter Stärke.",
+    "The attackers add more: a second wave twice as strong."
+   ]
+  },
+  {
+   "id": "nach_zahlung",
+   "wenn": {
+    "flags": [
+     "gezahlt"
+    ],
+    "ohne": [
+     "abgewehrt"
+    ],
+    "alt": {
+     "gezahlt": 2
+    }
+   },
+   "chance": 100,
+   "stress": 8,
+   "vertrauen": -4,
+   "text": [
+    "Nach der Pause geht die Flut weiter, dazu eine neue Forderung.",
+    "After the break the flood goes on, with a new demand."
+   ]
+  }
+ ],
+ "neben": [
+  {
+   "id": "partner",
+   "wenn": {
+    "status": {
+     "api": [
+      "Degraded",
+      "Critical"
+     ]
+    },
+    "zug_ab": 3
+   },
+   "chance": 35,
+   "vertrauen": -3,
+   "stress": 3,
+   "text": [
+    "Nebenschauplatz: Ein großer Händler droht, heute bei der Konkurrenz zu bestellen.",
+    "Side issue: a big dealer threatens to order from the competition today."
+   ]
+  },
+  {
+   "id": "social",
+   "wenn": {
+    "status": {
+     "web": [
+      "Critical"
+     ]
+    },
+    "ohne": [
+     "informiert"
+    ],
+    "zug_ab": 2
+   },
+   "chance": 35,
+   "vertrauen": -4,
+   "text": [
+    "Nebenschauplatz: In den sozialen Netzwerken heißt es, der Shop sei gehackt worden.",
+    "Side issue: on social media people say the shop was hacked."
+   ]
+  }
+ ]
+},
+{
+ "id": "datenleck",
+ "titel": [
+  "Datenleck mit Meldefrist",
+  "Data leak with a reporting deadline"
+ ],
+ "kurz": [
+  "Kundendaten werden in einem Forum angeboten. Quelle finden, schließen und rechtzeitig melden: Die DSGVO gibt 72 Stunden.",
+  "Customer data is offered in a forum. Find the source, close it and report in time: the GDPR gives 72 hours."
+ ],
+ "kosten_ref": 300000,
+ "budget": 30000,
+ "varianten": {
+  "quelle": [
+   [
+    "cloud",
+    [
+     "ein offener Cloud-Speicher",
+     "an open cloud storage"
+    ]
+   ],
+   [
+    "api",
+    [
+     "eine Lücke in der Kunden-API",
+     "a hole in the customer API"
+    ]
+   ]
+  ],
+  "umfang": [
+   [
+    "klein",
+    [
+     "12.000 Datensätze ohne Passwörter",
+     "12,000 records without passwords"
+    ]
+   ],
+   [
+    "gross",
+    [
+     "380.000 Datensätze mit Passwort-Hashes",
+     "380,000 records with password hashes"
+    ]
+   ]
+  ]
+ },
+ "start_text": [
+  "Montag, 08:40 Uhr: Ein Sicherheitsforscher schreibt, in einem Forum würden eure Kundendaten verkauft, angeblich {umfang}. Die Uhr der Meldefrist läuft ab jetzt.",
+  "Monday, 08:40: a security researcher writes that your customer data is sold in a forum, allegedly {umfang}. The clock of the reporting deadline runs from now."
+ ],
+ "assets": [
+  {
+   "id": "shop",
+   "name": "Webshop",
+   "typ": [
+    "Webshop",
+    "Web shop"
+   ],
+   "schaden_min": 300,
+   "details": [
+    "Kundenkonten",
+    "customer accounts"
+   ]
+  },
+  {
+   "id": "api",
+   "name": "Kunden-API",
+   "typ": [
+    "API",
+    "API"
+   ],
+   "schaden_min": 200,
+   "details": [
+    "App und Partner",
+    "app and partners"
+   ]
+  },
+  {
+   "id": "bucket",
+   "name": "Cloud-Speicher",
+   "typ": [
+    "Storage",
+    "Storage"
+   ],
+   "schaden_min": 0,
+   "details": [
+    "Exporte für das Marketing",
+    "exports for marketing"
+   ]
+  },
+  {
+   "id": "crm",
+   "name": "CRM",
+   "typ": [
+    "CRM",
+    "CRM"
+   ],
+   "schaden_min": 200,
+   "details": [
+    "Kundendaten",
+    "customer data"
+   ]
+  },
+  {
+   "id": "siem",
+   "name": "SIEM",
+   "typ": [
+    "Logs",
+    "Logs"
+   ],
+   "schaden_min": 0,
+   "details": [
+    "Zugriffslogs 90 Tage",
+    "access logs 90 days"
+   ]
+  }
+ ],
+ "start": [
+  {
+   "wenn": {
+    "var": {
+     "quelle": "cloud"
+    }
+   },
+   "setzt": {
+    "bucket": "Critical"
+   },
+   "details": {
+    "bucket": [
+     "öffentlich lesbar (noch unbemerkt)",
+     "publicly readable (not noticed yet)"
+    ]
+   }
+  },
+  {
+   "wenn": {
+    "var": {
+     "quelle": "api"
+    }
+   },
+   "setzt": {
+    "api": "Critical"
+   },
+   "details": {
+    "api": [
+     "liefert fremde Kundendaten (noch unbemerkt)",
+     "returns other customers' data (not noticed yet)"
+    ]
+   }
+  },
+  {
+   "setzt": {
+    "crm": "Degraded"
+   },
+   "details": {
+    "crm": [
+     "Daten im Netz angeboten",
+     "data offered online"
+    ]
+   }
+  }
+ ],
+ "ziel": [
+  {
+   "flags": [
+    "quelle_zu",
+    "gemeldet"
+   ]
+  },
+  {
+   "irgendein": [
+    "betroffene_informiert",
+    "kein_hohes_risiko"
+   ]
+  }
+ ],
+ "lehren": [
+  {
+   "id": "frist",
+   "wenn": {
+    "flags": [
+     "frist_verpasst"
+    ]
+   },
+   "text": [
+    "Die Meldung an die Aufsichtsbehörde kam zu spät. Die 72 Stunden laufen ab Kenntnis, eine erste Meldung darf unvollständig sein.",
+    "The report to the supervisory authority came too late. The 72 hours run from knowledge, a first report may be incomplete."
+   ],
+   "bezug": "DSGVO Art. 33",
+   "gut": false
+  },
+  {
+   "id": "echt_zuerst",
+   "wenn": {
+    "vor": [
+     "probe",
+     "melden"
+    ]
+   },
+   "text": [
+    "Erst geprüft, ob die Daten echt sind, dann gemeldet.",
+    "First checked whether the data is genuine, then reported."
+   ],
+   "bezug": "NIST SP 800-61 Rev. 2, 3.2 Erkennung und Analyse",
+   "gut": true
+  },
+  {
+   "id": "dsb_frueh",
+   "wenn": {
+    "vor": [
+     "dsb",
+     "melden"
+    ]
+   },
+   "text": [
+    "Den Datenschutzbeauftragten vor der Meldung eingebunden.",
+    "Involved the data protection officer before the report."
+   ],
+   "bezug": "DSGVO Art. 38, 39",
+   "gut": true
+  },
+  {
+   "id": "betroffene_fehlt",
+   "wenn": {
+    "flags": [
+     "hohes_risiko"
+    ],
+    "fehlt": [
+     "betroffene"
+    ]
+   },
+   "text": [
+    "Hohes Risiko, aber die Betroffenen wurden nicht informiert.",
+    "High risk, but the people affected were not informed."
+   ],
+   "bezug": "DSGVO Art. 34",
+   "gut": false
+  },
+  {
+   "id": "beweise_weg",
+   "wenn": {
+    "flags": [
+     "beweise_geloescht"
+    ]
+   },
+   "text": [
+    "Logs gelöscht: Damit fehlt der Nachweis, welche Daten abgeflossen sind.",
+    "Logs deleted: the proof of which data left is gone."
+   ],
+   "bezug": "BSI, Leitfaden IT-Forensik",
+   "gut": false
+  },
+  {
+   "id": "forum",
+   "wenn": {
+    "genutzt": [
+     "forum"
+    ]
+   },
+   "text": [
+    "Den Forum-Betreiber um Löschung gebeten: Was einmal verkauft ist, kommt nicht zurück. Die Zeit fehlt anderswo.",
+    "Asked the forum operator for deletion: what is sold once does not come back. The time is missing elsewhere."
+   ],
+   "bezug": "BSI-Standard 200-4, Krisenkommunikation",
+   "gut": false
+  }
+ ],
+ "aktionen": [
+  {
+   "id": "probe",
+   "label": [
+    "Datenprobe aus dem Forum prüfen",
+    "Check the data sample from the forum"
+   ],
+   "fach": "forensik",
+   "einmal": true,
+   "flags": [
+    "echt"
+   ],
+   "je": [
+    {
+     "wenn": {
+      "var": {
+       "umfang": "klein"
+      }
+     },
+     "text": [
+      "Echt: Namen, Adressen und Bestellungen, keine Passwörter.",
+      "Genuine: names, addresses and orders, no passwords."
+     ]
+    },
+    {
+     "wenn": {
+      "var": {
+       "umfang": "gross"
+      }
+     },
+     "stress": 6,
+     "text": [
+      "Echt, und dabei sind Passwort-Hashes mit veraltetem Verfahren.",
+      "Genuine, including password hashes with an outdated scheme."
+     ]
+    }
+   ],
+   "zeit": 10,
+   "text": [
+    "Ihr vergleicht die Probe mit dem CRM.",
+    "You compare the sample with the CRM."
+   ]
+  },
+  {
+   "id": "quelle_suchen",
+   "label": [
+    "Zugriffslogs nach der Quelle durchsuchen",
+    "Search the access logs for the source"
+   ],
+   "fach": "forensik",
+   "einmal": true,
+   "wenn": {
+    "flags": [
+     "echt"
+    ]
+   },
+   "flags": [
+    "quelle_bekannt"
+   ],
+   "je": [
+    {
+     "wenn": {
+      "var": {
+       "quelle": "cloud"
+      }
+     },
+     "flags": [
+      "quelle_cloud"
+     ],
+     "details": {
+      "bucket": [
+       "öffentlich lesbar seit 3 Wochen",
+       "publicly readable for 3 weeks"
+      ]
+     },
+     "text": [
+      "Ein Marketing-Export liegt seit drei Wochen öffentlich lesbar im Cloud-Speicher.",
+      "A marketing export has been publicly readable in the cloud storage for three weeks."
+     ]
+    },
+    {
+     "wenn": {
+      "var": {
+       "quelle": "api"
+      }
+     },
+     "flags": [
+      "quelle_api"
+     ],
+     "details": {
+      "api": [
+       "Kundennummer wird nicht geprüft",
+       "customer number not checked"
+      ]
+     },
+     "text": [
+      "Jemand hat die Kunden-API mit fortlaufenden Kundennummern abgefragt; sie prüft nicht, wem die Nummer gehört.",
+      "Someone queried the customer API with consecutive customer numbers; it does not check whose number it is."
+     ]
+    }
+   ],
+   "zeit": 15,
+   "text": [
+    "Ihr sucht im SIEM nach großen Abrufen.",
+    "You search the SIEM for large downloads."
+   ]
+  },
+  {
+   "id": "bucket_zu",
+   "label": [
+    "Cloud-Speicher auf privat stellen",
+    "Set the cloud storage to private"
+   ],
+   "fach": "netz",
+   "einmal": true,
+   "wenn": {
+    "flags": [
+     "quelle_cloud"
+    ]
+   },
+   "flags": [
+    "quelle_zu"
+   ],
+   "setzt": {
+    "bucket": "Online"
+   },
+   "details": {
+    "bucket": [
+     "privat",
+     "private"
+    ]
+   },
+   "zeit": 5,
+   "text": [
+    "Der Export ist nicht mehr öffentlich.",
+    "The export is no longer public."
+   ]
+  },
+  {
+   "id": "api_fix",
+   "label": [
+    "API-Regel: nur eigene Kundendaten",
+    "API rule: only own customer data"
+   ],
+   "fach": "netz",
+   "einmal": true,
+   "wenn": {
+    "flags": [
+     "quelle_api"
+    ]
+   },
+   "flags": [
+    "quelle_zu"
+   ],
+   "setzt": {
+    "api": "Online"
+   },
+   "details": {
+    "api": [
+     "geprüft",
+     "checked"
+    ]
+   },
+   "zeit": 15,
+   "text": [
+    "Das API-Gateway prüft jetzt, ob die Kundennummer zum angemeldeten Konto gehört.",
+    "The API gateway now checks whether the customer number belongs to the signed-in account."
+   ]
+  },
+  {
+   "id": "api_aus",
+   "label": [
+    "Kunden-API abschalten",
+    "Switch the customer API off"
+   ],
+   "fach": "netz",
+   "einmal": true,
+   "wenn": {
+    "ohne": [
+     "quelle_zu"
+    ]
+   },
+   "vertrauen": -2,
+   "flags": [
+    "api_aus"
+   ],
+   "setzt": {
+    "api": "Offline"
+   },
+   "details": {
+    "api": [
+     "abgeschaltet",
+     "switched off"
+    ]
+   },
+   "zeit": 3,
+   "text": [
+    "Die API ist aus. App und Partner zeigen Fehler.",
+    "The API is off. App and partners show errors."
+   ]
+  },
+  {
+   "id": "dsb",
+   "label": [
+    "Datenschutzbeauftragten einbinden",
+    "Involve the data protection officer"
+   ],
+   "rolle": "kommunikation",
+   "einmal": true,
+   "flags": [
+    "dsb"
+   ],
+   "zeit": 5,
+   "text": [
+    "Die Datenschutzbeauftragte übernimmt Bewertung und Formular.",
+    "The data protection officer takes over the assessment and the form."
+   ]
+  },
+  {
+   "id": "risiko",
+   "label": [
+    "Risiko für die Betroffenen bewerten",
+    "Assess the risk for the people affected"
+   ],
+   "rolle": "kommunikation",
+   "einmal": true,
+   "wenn": {
+    "flags": [
+     "echt",
+     "dsb"
+    ]
+   },
+   "flags": [
+    "bewertet"
+   ],
+   "je": [
+    {
+     "wenn": {
+      "var": {
+       "umfang": "klein"
+      }
+     },
+     "flags": [
+      "kein_hohes_risiko"
+     ],
+     "text": [
+      "Kein hohes Risiko: keine Passwörter, keine Bankdaten. Die Meldung an die Behörde reicht.",
+      "No high risk: no passwords, no bank data. The report to the authority is enough."
+     ]
+    },
+    {
+     "wenn": {
+      "var": {
+       "umfang": "gross"
+      }
+     },
+     "flags": [
+      "hohes_risiko"
+     ],
+     "text": [
+      "Hohes Risiko: Passwort-Hashes. Die Betroffenen müssen informiert werden.",
+      "High risk: password hashes. The people affected must be informed."
+     ]
+    }
+   ],
+   "zeit": 10,
+   "text": [
+    "Ihr bewertet Art der Daten, Menge und Folgen.",
+    "You assess the kind of data, amount and consequences."
+   ]
+  },
+  {
+   "id": "melden",
+   "label": [
+    "Meldung an die Aufsichtsbehörde (Art. 33)",
+    "Report to the supervisory authority (Art. 33)"
+   ],
+   "rolle": "kommunikation",
+   "einmal": true,
+   "wenn": {
+    "flags": [
+     "echt"
+    ]
+   },
+   "flags": [
+    "gemeldet"
+   ],
+   "vertrauen": 3,
+   "je": [
+    {
+     "wenn": {
+      "ohne": [
+       "dsb"
+      ]
+     },
+     "zeit": 10,
+     "text": [
+      "Ohne Datenschutzbeauftragte dauert das Formular länger.",
+      "Without the data protection officer the form takes longer."
+     ]
+    }
+   ],
+   "zeit": 15,
+   "text": [
+    "Die Meldung geht an die Landesdatenschutzbehörde.",
+    "The report goes to the state data protection authority."
+   ]
+  },
+  {
+   "id": "betroffene",
+   "label": [
+    "Betroffene per E-Mail informieren",
+    "Inform the people affected by mail"
+   ],
+   "rolle": "kommunikation",
+   "einmal": true,
+   "wenn": {
+    "flags": [
+     "echt"
+    ]
+   },
+   "budget": 3000,
+   "flags": [
+    "betroffene_informiert"
+   ],
+   "vertrauen": 4,
+   "zeit": 15,
+   "text": [
+    "Alle Betroffenen bekommen eine klare Mail: was passiert ist, was sie tun sollten.",
+    "Everyone affected gets a clear mail: what happened, what they should do."
+   ]
+  },
+  {
+   "id": "passwoerter",
+   "label": [
+    "Passwort-Reset für alle Kunden erzwingen",
+    "Force a password reset for all customers"
+   ],
+   "fach": "netz",
+   "einmal": true,
+   "wenn": {
+    "flags": [
+     "echt"
+    ]
+   },
+   "moral": -2,
+   "flags": [
+    "pw_reset"
+   ],
+   "je": [
+    {
+     "wenn": {
+      "var": {
+       "umfang": "gross"
+      }
+     },
+     "vertrauen": 3,
+     "text": [
+      "Die gestohlenen Hashes sind damit wertlos.",
+      "The stolen hashes are worthless now."
+     ]
+    }
+   ],
+   "zeit": 10,
+   "text": [
+    "Beim nächsten Anmelden muss jeder ein neues Passwort setzen.",
+    "At the next sign-in everyone must set a new password."
+   ]
+  },
+  {
+   "id": "forum",
+   "label": [
+    "Forum-Betreiber zur Löschung auffordern",
+    "Ask the forum operator to delete it"
+   ],
+   "rolle": "kommunikation",
+   "einmal": true,
+   "zeit": 10,
+   "text": [
+    "Keine Antwort. Das Angebot steht weiter dort.",
+    "No answer. The offer stays there."
+   ]
+  },
+  {
+   "id": "presse",
+   "label": [
+    "Pressemitteilung veröffentlichen",
+    "Publish a press release"
+   ],
+   "rolle": "kommunikation",
+   "einmal": true,
+   "wenn": {
+    "flags": [
+     "gemeldet"
+    ]
+   },
+   "flags": [
+    "presse"
+   ],
+   "vertrauen": 5,
+   "zeit": 10,
+   "text": [
+    "Eine kurze, ehrliche Mitteilung: was passiert ist und was ihr tut.",
+    "A short, honest statement: what happened and what you do."
+   ]
+  }
+ ],
+ "ticks": [
+  {
+   "id": "frist",
+   "wenn": {
+    "flags": [
+     "echt"
+    ],
+    "ohne": [
+     "gemeldet",
+     "frist_verpasst"
+    ],
+    "zug_ab": 9
+   },
+   "chance": 100,
+   "vertrauen": -15,
+   "stress": 8,
+   "flags": [
+    "frist_verpasst"
+   ],
+   "text": [
+    "Die Rechtsabteilung schlägt Alarm: Die Meldefrist ist überschritten.",
+    "The legal department raises the alarm: the reporting deadline has passed."
+   ]
+  },
+  {
+   "id": "abfluss",
+   "wenn": {
+    "ohne": [
+     "quelle_zu",
+     "api_aus"
+    ],
+    "zug_ab": 2
+   },
+   "chance": 45,
+   "kosten": 20000,
+   "stress": 4,
+   "einmal": false,
+   "text": [
+    "Neue Datensätze tauchen im Forum auf: Die Quelle ist noch offen.",
+    "New records show up in the forum: the source is still open."
+   ]
+  }
+ ],
+ "neben": [
+  {
+   "id": "journalist",
+   "wenn": {
+    "zug_ab": 4,
+    "ohne": [
+     "presse"
+    ]
+   },
+   "chance": 35,
+   "vertrauen": -4,
+   "stress": 3,
+   "text": [
+    "Nebenschauplatz: Ein Journalist fragt, ob ihr gehackt wurdet, und will bis Mittag eine Antwort.",
+    "Side issue: a journalist asks whether you were hacked and wants an answer by noon."
+   ]
+  },
+  {
+   "id": "hotline",
+   "wenn": {
+    "flags": [
+     "betroffene_informiert"
+    ]
+   },
+   "chance": 40,
+   "moral": -3,
+   "text": [
+    "Nebenschauplatz: Die Hotline ist überlastet, viele Kunden fragen nach.",
+    "Side issue: the hotline is overloaded, many customers ask."
+   ]
+  }
+ ]
+},
+{
+ "id": "insider",
+ "titel": [
+  "Innentäter",
+  "Insider"
+ ],
+ "kurz": [
+  "Ein Admin, der nächste Woche geht, lädt nachts Daten hoch. Beweise sichern, Zugänge schließen, nichts überstürzen.",
+  "An admin who leaves next week uploads data at night. Secure evidence, close the access, rush nothing."
+ ],
+ "kosten_ref": 250000,
+ "budget": 30000,
+ "varianten": {
+  "absicht": [
+   [
+    "daten",
+    [
+     "Konstruktionsdaten",
+     "design data"
+    ]
+   ],
+   [
+    "sabotage",
+    [
+     "Konstruktionsdaten und noch etwas",
+     "design data and something else"
+    ]
+   ]
+  ],
+  "konto": [
+   [
+    "eigenes",
+    [
+     "sein eigenes Konto",
+     "his own account"
+    ]
+   ],
+   [
+    "dienst",
+    [
+     "ein Dienstkonto",
+     "a service account"
+    ]
+   ]
+  ]
+ },
+ "start_text": [
+  "Dienstag, 07:30 Uhr: Der Proxy meldet nachts 40 GB Upload zu einem privaten Cloud-Speicher. Es geht um {absicht}, der Absender ist ein Admin, der nächste Woche das Unternehmen verlässt.",
+  "Tuesday, 07:30: the proxy reports 40 GB uploaded at night to a private cloud storage. It is about {absicht}, the sender is an admin who leaves the company next week."
+ ],
+ "assets": [
+  {
+   "id": "ad",
+   "name": "Active Directory",
+   "typ": [
+    "Verzeichnis",
+    "Directory"
+   ],
+   "schaden_min": 0,
+   "details": [
+    "alle Konten",
+    "all accounts"
+   ]
+  },
+  {
+   "id": "fs",
+   "name": "Fileserver Konstruktion",
+   "typ": [
+    "Fileserver",
+    "File server"
+   ],
+   "schaden_min": 300,
+   "details": [
+    "CAD-Daten",
+    "CAD data"
+   ]
+  },
+  {
+   "id": "erp",
+   "name": "ERP-System",
+   "typ": [
+    "ERP",
+    "ERP"
+   ],
+   "schaden_min": 1200,
+   "details": [
+    "Aufträge und Fertigung",
+    "orders and production"
+   ]
+  },
+  {
+   "id": "backup",
+   "name": "Backup",
+   "typ": [
+    "Backup",
+    "Backup"
+   ],
+   "schaden_min": 0,
+   "details": [
+    "täglich",
+    "daily"
+   ]
+  },
+  {
+   "id": "proxy",
+   "name": "Web-Proxy",
+   "typ": [
+    "Netzwerk",
+    "Network"
+   ],
+   "schaden_min": 0,
+   "details": [
+    "alles ins Internet",
+    "everything to the internet"
+   ]
+  }
+ ],
+ "start": [
+  {
+   "setzt": {
+    "fs": "Degraded",
+    "proxy": "Degraded"
+   },
+   "details": {
+    "fs": [
+     "ungewöhnlich viele Lesezugriffe",
+     "unusually many reads"
+    ],
+    "proxy": [
+     "großer Upload",
+     "large upload"
+    ]
+   }
+  }
+ ],
+ "ziel": [
+  {
+   "flags": [
+    "zugang_zu",
+    "beweise",
+    "upload_gesperrt"
+   ]
+  },
+  {
+   "irgendein": [
+    "bombe_entschaerft",
+    "kein_task",
+    "erp_zurueck"
+   ]
+  },
+  {
+   "status": {
+    "erp": [
+     "Online"
+    ]
+   }
+  }
+ ],
+ "lehren": [
+  {
+   "id": "beweise_vor_gespraech",
+   "wenn": {
+    "ohne_vor": [
+     "beweise",
+     "gespraech"
+    ]
+   },
+   "text": [
+    "Den Admin angesprochen, bevor die Beweise gesichert waren: Er war gewarnt.",
+    "Confronted the admin before the evidence was secured: he was warned."
+   ],
+   "bezug": "BSI, Leitfaden IT-Forensik",
+   "gut": false
+  },
+  {
+   "id": "recht_frueh",
+   "wenn": {
+    "vor": [
+     "hr",
+     "sperren"
+    ]
+   },
+   "text": [
+    "Personal- und Rechtsabteilung vor dem Sperren eingebunden: Das hält auch vor Gericht.",
+    "Involved HR and legal before locking: that also holds in court."
+   ],
+   "bezug": "BSI IT-Grundschutz ORP.2 Personal",
+   "gut": true
+  },
+  {
+   "id": "dienstkonto",
+   "wenn": {
+    "flags": [
+     "konto_dienst"
+    ]
+   },
+   "text": [
+    "Ein Dienstkonto mit bekanntem Passwort war der Weg. Dienstkonten brauchen eigene Passwörter und Rechte nur für ihren Zweck.",
+    "A service account with a known password was the way. Service accounts need their own passwords and rights only for their purpose."
+   ],
+   "bezug": "BSI IT-Grundschutz ORP.4 Identitäts- und Berechtigungsmanagement",
+   "gut": false
+  },
+  {
+   "id": "tasks_gesucht",
+   "wenn": {
+    "genutzt": [
+     "aufgaben"
+    ]
+   },
+   "text": [
+    "Nach geplanten Aufgaben gesucht: So findet man Zeitbomben.",
+    "Searched for scheduled tasks: that is how time bombs are found."
+   ],
+   "bezug": "BSI IT-Grundschutz ORP.2 Personal, Ausscheiden",
+   "gut": true
+  },
+  {
+   "id": "geloescht",
+   "wenn": {
+    "flags": [
+     "konto_geloescht"
+    ]
+   },
+   "text": [
+    "Konto gelöscht statt gesperrt: Postfach und Spuren waren weg.",
+    "Account deleted instead of locked: mailbox and traces were gone."
+   ],
+   "bezug": "BSI, Leitfaden IT-Forensik",
+   "gut": false
+  }
+ ],
+ "aktionen": [
+  {
+   "id": "proxy_logs",
+   "label": [
+    "Proxy-Logs zum Upload lesen",
+    "Read the proxy logs of the upload"
+   ],
+   "fach": "forensik",
+   "einmal": true,
+   "flags": [
+    "upload_gesehen"
+   ],
+   "je": [
+    {
+     "wenn": {
+      "var": {
+       "konto": "eigenes"
+      }
+     },
+     "text": [
+      "Absender ist das Konto des Admins selbst, nachts zwischen 1 und 3 Uhr.",
+      "The sender is the admin's own account, at night between 1 and 3."
+     ]
+    },
+    {
+     "wenn": {
+      "var": {
+       "konto": "dienst"
+      }
+     },
+     "text": [
+      "Absender ist das Dienstkonto svc_deploy, angemeldet vom Rechner des Admins.",
+      "The sender is the service account svc_deploy, signed in from the admin's computer."
+     ]
+    }
+   ],
+   "zeit": 5,
+   "text": [
+    "Ihr lest, wer wann was wohin geladen hat.",
+    "You read who uploaded what where and when."
+   ]
+  },
+  {
+   "id": "upload_sperren",
+   "label": [
+    "Upload-Ziel am Proxy sperren",
+    "Block the upload target at the proxy"
+   ],
+   "fach": "netz",
+   "einmal": true,
+   "wenn": {
+    "flags": [
+     "upload_gesehen"
+    ]
+   },
+   "flags": [
+    "upload_gesperrt"
+   ],
+   "setzt": {
+    "proxy": "Online",
+    "fs": "Online"
+   },
+   "details": {
+    "proxy": [
+     "Ziel gesperrt",
+     "target blocked"
+    ],
+    "fs": [
+     "normal",
+     "normal"
+    ]
+   },
+   "zeit": 5,
+   "text": [
+    "Der private Cloud-Speicher ist am Proxy gesperrt.",
+    "The private cloud storage is blocked at the proxy."
+   ]
+  },
+  {
+   "id": "hr",
+   "label": [
+    "Personal- und Rechtsabteilung einbinden",
+    "Involve HR and legal"
+   ],
+   "rolle": "kommunikation",
+   "einmal": true,
+   "flags": [
+    "hr"
+   ],
+   "vertrauen": 3,
+   "zeit": 5,
+   "text": [
+    "Personal und Recht sind im Boot und sagen, was erlaubt ist.",
+    "HR and legal are on board and say what is allowed."
+   ]
+  },
+  {
+   "id": "beweise",
+   "label": [
+    "Beweise sichern (Logs, Image des Laptops)",
+    "Secure evidence (logs, image of the laptop)"
+   ],
+   "fach": "forensik",
+   "einmal": true,
+   "wenn": {
+    "flags": [
+     "upload_gesehen"
+    ]
+   },
+   "flags": [
+    "beweise"
+   ],
+   "je": [
+    {
+     "wenn": {
+      "flags": [
+       "spuren_weg"
+      ]
+     },
+     "text": [
+      "Ein Teil der Logs auf dem Fileserver fehlt schon, das Image hilft.",
+      "Part of the logs on the file server are already gone, the image helps."
+     ]
+    }
+   ],
+   "zeit": 15,
+   "text": [
+    "Logs, Proxy-Daten und ein Image des Laptops liegen versiegelt bereit.",
+    "Logs, proxy data and an image of the laptop are sealed and ready."
+   ]
+  },
+  {
+   "id": "konten_pruefen",
+   "label": [
+    "Konten und Rechte des Admins prüfen",
+    "Check the admin's accounts and rights"
+   ],
+   "fach": "windows",
+   "einmal": true,
+   "wenn": {
+    "flags": [
+     "upload_gesehen"
+    ]
+   },
+   "flags": [
+    "konten_bekannt"
+   ],
+   "je": [
+    {
+     "wenn": {
+      "var": {
+       "konto": "dienst"
+      }
+     },
+     "flags": [
+      "konto_dienst"
+     ],
+     "text": [
+      "Neben seinem Konto kennt er das Passwort von svc_deploy, das nie geändert wurde.",
+      "Besides his account he knows the password of svc_deploy, which was never changed."
+     ]
+    },
+    {
+     "wenn": {
+      "var": {
+       "konto": "eigenes"
+      }
+     },
+     "text": [
+      "Nur sein eigenes Konto, aber mit Domain-Admin-Rechten.",
+      "Only his own account, but with domain admin rights."
+     ]
+    }
+   ],
+   "zeit": 10,
+   "text": [
+    "Ihr prüft, welche Konten er nutzt.",
+    "You check which accounts he uses."
+   ]
+  },
+  {
+   "id": "sperren",
+   "label": [
+    "Konto des Admins sperren",
+    "Lock the admin's account"
+   ],
+   "fach": "windows",
+   "einmal": true,
+   "wenn": {
+    "flags": [
+     "upload_gesehen"
+    ]
+   },
+   "moral": -3,
+   "flags": [
+    "admin_gesperrt"
+   ],
+   "zeit": 5,
+   "text": [
+    "Das Konto ist gesperrt, seine Sitzungen beendet.",
+    "The account is locked, his sessions ended."
+   ]
+  },
+  {
+   "id": "dienst_sperren",
+   "label": [
+    "Dienstkonto svc_deploy sperren, Passwort neu",
+    "Lock the service account svc_deploy, new password"
+   ],
+   "fach": "windows",
+   "einmal": true,
+   "wenn": {
+    "flags": [
+     "konto_dienst"
+    ]
+   },
+   "flags": [
+    "dienst_gesperrt"
+   ],
+   "zeit": 10,
+   "text": [
+    "svc_deploy hat ein neues Passwort, Deployments laufen mit dem neuen Konto.",
+    "svc_deploy has a new password, deployments run with the new account."
+   ]
+  },
+  {
+   "id": "aufgaben",
+   "label": [
+    "Geplante Aufgaben und Skripte durchsuchen",
+    "Search scheduled tasks and scripts"
+   ],
+   "fach": "windows",
+   "einmal": true,
+   "wenn": {
+    "flags": [
+     "upload_gesehen"
+    ]
+   },
+   "je": [
+    {
+     "wenn": {
+      "var": {
+       "absicht": "sabotage"
+      },
+      "ohne": [
+       "bombe_hoch"
+      ]
+     },
+     "flags": [
+      "bombe_gefunden"
+     ],
+     "text": [
+      "Auf dem ERP-Server löscht ein neuer Cronjob am Freitag um 18 Uhr die Datenbank.",
+      "On the ERP server a new cron job deletes the database on Friday at 6 pm."
+     ]
+    },
+    {
+     "wenn": {
+      "var": {
+       "absicht": "daten"
+      }
+     },
+     "flags": [
+      "kein_task"
+     ],
+     "text": [
+      "Nichts Auffälliges. Es ging ihm nur um die Daten.",
+      "Nothing unusual. He was only after the data."
+     ]
+    }
+   ],
+   "zeit": 15,
+   "text": [
+    "Ihr geht Cronjobs und geplante Aufgaben auf allen Servern durch.",
+    "You go through cron jobs and scheduled tasks on all servers."
+   ]
+  },
+  {
+   "id": "entschaerfen",
+   "label": [
+    "Den gefundenen Cronjob entfernen",
+    "Remove the cron job found"
+   ],
+   "fach": "windows",
+   "einmal": true,
+   "wenn": {
+    "flags": [
+     "bombe_gefunden"
+    ],
+    "ohne": [
+     "bombe_hoch"
+    ]
+   },
+   "flags": [
+    "bombe_entschaerft"
+   ],
+   "stress": -4,
+   "zeit": 5,
+   "text": [
+    "Der Cronjob ist entfernt und gesichert.",
+    "The cron job is removed and saved."
+   ]
+  },
+  {
+   "id": "erp_restore",
+   "label": [
+    "ERP-Datenbank aus dem Backup holen",
+    "Restore the ERP database from the backup"
+   ],
+   "fach": "storage",
+   "einmal": true,
+   "wenn": {
+    "flags": [
+     "bombe_hoch"
+    ]
+   },
+   "flags": [
+    "erp_zurueck",
+    "datenverlust"
+   ],
+   "setzt": {
+    "erp": "Online"
+   },
+   "details": {
+    "erp": [
+     "aus dem Backup, Stand heute Nacht",
+     "from the backup, as of last night"
+    ]
+   },
+   "zeit": 25,
+   "text": [
+    "Die Datenbank kommt aus der Nachtsicherung zurück.",
+    "The database comes back from the nightly backup."
+   ]
+  },
+  {
+   "id": "gespraech",
+   "label": [
+    "Den Admin direkt zur Rede stellen",
+    "Confront the admin directly"
+   ],
+   "rolle": "leitung",
+   "einmal": true,
+   "flags": [
+    "gewarnt"
+   ],
+   "je": [
+    {
+     "wenn": {
+      "var": {
+       "absicht": "sabotage"
+      },
+      "ohne": [
+       "bombe_entschaerft"
+      ]
+     },
+     "flags": [
+      "bombe_vorgezogen"
+     ],
+     "text": [
+      "Kurz darauf ändert jemand die Zeit eines Cronjobs auf dem ERP-Server.",
+      "Shortly after someone changes the time of a cron job on the ERP server."
+     ]
+    }
+   ],
+   "zeit": 10,
+   "text": [
+    "Er streitet alles ab und geht nach Hause.",
+    "He denies everything and goes home."
+   ]
+  }
+ ],
+ "ticks": [
+  {
+   "id": "zu_eigen",
+   "wenn": {
+    "var": {
+     "konto": "eigenes"
+    },
+    "flags": [
+     "admin_gesperrt"
+    ],
+    "ohne": [
+     "zugang_zu"
+    ]
+   },
+   "chance": 100,
+   "flags": [
+    "zugang_zu"
+   ],
+   "text": [
+    "Der Admin hat keinen Weg mehr hinein.",
+    "The admin has no way in any more."
+   ]
+  },
+  {
+   "id": "zu_dienst",
+   "wenn": {
+    "flags": [
+     "admin_gesperrt",
+     "dienst_gesperrt"
+    ],
+    "ohne": [
+     "zugang_zu"
+    ]
+   },
+   "chance": 100,
+   "flags": [
+    "zugang_zu"
+   ],
+   "text": [
+    "Konto und Dienstkonto sind zu: kein Weg mehr hinein.",
+    "Account and service account are closed: no way in any more."
+   ]
+  },
+  {
+   "id": "zeitbombe",
+   "wenn": {
+    "var": {
+     "absicht": "sabotage"
+    },
+    "ohne": [
+     "bombe_entschaerft",
+     "bombe_hoch"
+    ],
+    "zug_ab": 7
+   },
+   "chance": 100,
+   "kosten": 60000,
+   "stress": 12,
+   "flags": [
+    "bombe_hoch"
+   ],
+   "setzt": {
+    "erp": "Offline"
+   },
+   "details": {
+    "erp": [
+     "Datenbank gelöscht",
+     "database deleted"
+    ]
+   },
+   "text": [
+    "Das ERP meldet: Datenbank gelöscht. Ein geplanter Job hat zugeschlagen.",
+    "The ERP reports: database deleted. A scheduled job struck."
+   ]
+  },
+  {
+   "id": "zeitbombe_jetzt",
+   "wenn": {
+    "flags": [
+     "bombe_vorgezogen"
+    ],
+    "ohne": [
+     "bombe_entschaerft",
+     "bombe_hoch"
+    ]
+   },
+   "chance": 100,
+   "kosten": 60000,
+   "stress": 12,
+   "flags": [
+    "bombe_hoch"
+   ],
+   "setzt": {
+    "erp": "Offline"
+   },
+   "details": {
+    "erp": [
+     "Datenbank gelöscht",
+     "database deleted"
+    ]
+   },
+   "text": [
+    "Das ERP meldet: Datenbank gelöscht. Der Job lief früher als geplant.",
+    "The ERP reports: database deleted. The job ran earlier than planned."
+   ]
+  },
+  {
+   "id": "abfluss",
+   "wenn": {
+    "ohne": [
+     "upload_gesperrt"
+    ],
+    "zug_ab": 2
+   },
+   "chance": 50,
+   "kosten": 20000,
+   "einmal": false,
+   "text": [
+    "Weitere 5 GB fließen ab.",
+    "Another 5 GB leave."
+   ]
+  },
+  {
+   "id": "spuren",
+   "wenn": {
+    "ohne": [
+     "beweise",
+     "admin_gesperrt"
+    ],
+    "zug_ab": 4
+   },
+   "chance": 35,
+   "flags": [
+    "spuren_weg"
+   ],
+   "stress": 4,
+   "text": [
+    "Auf dem Fileserver wurden Logs gelöscht.",
+    "Logs were deleted on the file server."
+   ]
+  }
+ ],
+ "neben": [
+  {
+   "id": "kollegen",
+   "wenn": {
+    "flags": [
+     "admin_gesperrt"
+    ]
+   },
+   "chance": 40,
+   "moral": -4,
+   "text": [
+    "Nebenschauplatz: Im Team wird getuschelt, warum der Kollege gesperrt ist.",
+    "Side issue: the team whispers about why the colleague is locked out."
+   ]
+  },
+  {
+   "id": "projekt",
+   "wenn": {
+    "zug_ab": 3
+   },
+   "chance": 25,
+   "stress": 3,
+   "text": [
+    "Nebenschauplatz: Ein Projektleiter braucht dringend den Admin für ein Update.",
+    "Side issue: a project lead urgently needs the admin for an update."
+   ]
+  }
+ ]
+},
+{
+ "id": "cloud",
+ "titel": [
+  "Cloud-Ausfall",
+  "Cloud outage"
+ ],
+ "kurz": [
+  "Beim Cloud-Anbieter fällt etwas Großes aus, eure Kunden-App mit. Lage lesen, umschalten oder warten, aber nicht blind.",
+  "Something big fails at the cloud provider, and your customer app with it. Read the situation, switch over or wait, but not blindly."
+ ],
+ "kosten_ref": 300000,
+ "budget": 30000,
+ "varianten": {
+  "ausfall": [
+   [
+    "region",
+    [
+     "Die ganze Region ist ausgefallen",
+     "The whole region is down"
+    ]
+   ],
+   [
+    "dns",
+    [
+     "Der DNS-Dienst des Anbieters ist ausgefallen",
+     "The provider's DNS service is down"
+    ]
+   ]
+  ],
+  "zweite": [
+   [
+    "ja",
+    [
+     "eine zweite Region steht bereit",
+     "a second region is ready"
+    ]
+   ],
+   [
+    "nein",
+    [
+     "eine zweite Region gibt es nicht",
+     "there is no second region"
+    ]
+   ]
+  ]
+ },
+ "start_text": [
+  "Mittwoch, 09:15 Uhr: Die Kunden-App lädt nicht mehr. Laut Architektur-Doku: {zweite}.",
+  "Wednesday, 09:15: the customer app no longer loads. According to the architecture docs: {zweite}."
+ ],
+ "assets": [
+  {
+   "id": "app",
+   "name": "Kunden-App",
+   "typ": [
+    "App",
+    "App"
+   ],
+   "schaden_min": 1200,
+   "details": [
+    "Bestellungen und Konten",
+    "orders and accounts"
+   ]
+  },
+  {
+   "id": "db",
+   "name": "Cloud-Datenbank",
+   "typ": [
+    "Datenbank",
+    "Database"
+   ],
+   "schaden_min": 500,
+   "details": [
+    "verwaltet vom Anbieter",
+    "managed by the provider"
+   ]
+  },
+  {
+   "id": "dns",
+   "name": "DNS",
+   "typ": [
+    "Netzwerk",
+    "Network"
+   ],
+   "schaden_min": 400,
+   "details": [
+    "beim Cloud-Anbieter",
+    "at the cloud provider"
+   ]
+  },
+  {
+   "id": "vor_ort",
+   "name": "Rechenzentrum vor Ort",
+   "typ": [
+    "Rechenzentrum",
+    "Data centre"
+   ],
+   "schaden_min": 0,
+   "details": [
+    "klein, für den Notbetrieb",
+    "small, for emergency operation"
+   ]
+  }
+ ],
+ "start": [
+  {
+   "wenn": {
+    "var": {
+     "ausfall": "region"
+    }
+   },
+   "setzt": {
+    "app": "Offline",
+    "db": "Offline"
+   },
+   "details": {
+    "app": [
+     "keine Antwort",
+     "no answer"
+    ],
+    "db": [
+     "Region nicht erreichbar",
+     "region not reachable"
+    ]
+   }
+  },
+  {
+   "wenn": {
+    "var": {
+     "ausfall": "dns"
+    }
+   },
+   "setzt": {
+    "dns": "Critical",
+    "app": "Critical"
+   },
+   "details": {
+    "dns": [
+     "Namen lösen nicht auf",
+     "names do not resolve"
+    ],
+    "app": [
+     "nicht auffindbar",
+     "cannot be found"
+    ]
+   }
+  }
+ ],
+ "ziel": [
+  {
+   "flags": [
+    "laeuft"
+   ]
+  }
+ ],
+ "lehren": [
+  {
+   "id": "eine_region",
+   "wenn": {
+    "var": {
+     "zweite": "nein"
+    },
+    "flags": [
+     "region_weg"
+    ]
+   },
+   "text": [
+    "Ohne zweite Region gab es keinen schnellen Weg zurück. Kritische Dienste brauchen einen Plan für den Ausfall des Anbieters.",
+    "Without a second region there was no quick way back. Critical services need a plan for the provider failing."
+   ],
+   "bezug": "BSI IT-Grundschutz OPS.2.2 Cloud-Nutzung",
+   "gut": false
+  },
+  {
+   "id": "erst_lage",
+   "wenn": {
+    "vor": [
+     "status_lesen",
+     "pruefen"
+    ]
+   },
+   "text": [
+    "Erst die Lage beim Anbieter gelesen, dann gehandelt.",
+    "First read the situation at the provider, then acted."
+   ],
+   "bezug": "NIST SP 800-61 Rev. 2, 3.2 Erkennung und Analyse",
+   "gut": true
+  },
+  {
+   "id": "cloud_info",
+   "wenn": {
+    "genutzt": [
+     "kunden"
+    ]
+   },
+   "text": [
+    "Kunden über die Statusseite informiert.",
+    "Informed the customers on the status page."
+   ],
+   "bezug": "BSI-Standard 200-4, Krisenkommunikation",
+   "gut": true
+  },
+  {
+   "id": "nur_gewartet",
+   "wenn": {
+    "flags": [
+     "anbieter_ok"
+    ],
+    "fehlt": [
+     "failover",
+     "dns_umstellen",
+     "restore_region"
+    ]
+   },
+   "text": [
+    "Nur gewartet, bis der Anbieter zurück war: Das klappt, aber ihr hattet es nicht in der Hand.",
+    "Only waited until the provider was back: that works, but it was not in your hands."
+   ],
+   "bezug": "BSI-Standard 200-4, Notfallvorsorge",
+   "gut": false
+  },
+  {
+   "id": "geuebt",
+   "wenn": {
+    "genutzt": [
+     "failover"
+    ]
+   },
+   "text": [
+    "Auf die zweite Region umgeschaltet: Wer das übt, ist in Minuten zurück.",
+    "Switched to the second region: those who practise it are back in minutes."
+   ],
+   "bezug": "BSI-Standard 200-4, Notfallübungen",
+   "gut": true
+  }
+ ],
+ "aktionen": [
+  {
+   "id": "status_lesen",
+   "label": [
+    "Statusseite des Anbieters lesen",
+    "Read the provider's status page"
+   ],
+   "fach": "rz",
+   "einmal": true,
+   "flags": [
+    "lage_klar"
+   ],
+   "je": [
+    {
+     "wenn": {
+      "var": {
+       "ausfall": "region"
+      }
+     },
+     "flags": [
+      "region_weg"
+     ],
+     "text": [
+      "„Erhöhte Fehlerraten in eu-central“: die ganze Region, keine Prognose.",
+      "\"Elevated error rates in eu-central\": the whole region, no estimate."
+     ]
+    },
+    {
+     "wenn": {
+      "var": {
+       "ausfall": "dns"
+      }
+     },
+     "flags": [
+      "dns_weg"
+     ],
+     "text": [
+      "Der DNS-Dienst des Anbieters antwortet nicht. Server und Datenbank laufen.",
+      "The provider's DNS service does not answer. Servers and database run."
+     ]
+    }
+   ],
+   "zeit": 3,
+   "text": [
+    "Ihr lest die Statusseite des Anbieters.",
+    "You read the provider's status page."
+   ]
+  },
+  {
+   "id": "ticket",
+   "label": [
+    "Ticket beim Anbieter eröffnen",
+    "Open a ticket with the provider"
+   ],
+   "rolle": "kommunikation",
+   "einmal": true,
+   "flags": [
+    "ticket"
+   ],
+   "zeit": 5,
+   "text": [
+    "Ticket eröffnet. Antwort: „Wir arbeiten daran.“",
+    "Ticket opened. Answer: \"We are working on it.\""
+   ]
+  },
+  {
+   "id": "failover",
+   "label": [
+    "Auf die zweite Region umschalten",
+    "Switch over to the second region"
+   ],
+   "fach": "rz",
+   "einmal": true,
+   "wenn": {
+    "flags": [
+     "region_weg"
+    ],
+    "var": {
+     "zweite": "ja"
+    }
+   },
+   "flags": [
+    "umgeschaltet"
+   ],
+   "setzt": {
+    "db": "Online",
+    "app": "Degraded"
+   },
+   "details": {
+    "db": [
+     "zweite Region",
+     "second region"
+    ],
+    "app": [
+     "startet in der zweiten Region",
+     "starts in the second region"
+    ]
+   },
+   "zeit": 20,
+   "text": [
+    "Die Datenbank-Kopie in der zweiten Region wird zur Hauptdatenbank, die App startet dort.",
+    "The database copy in the second region becomes the main database, the app starts there."
+   ]
+  },
+  {
+   "id": "restore_region",
+   "label": [
+    "Datenbank aus dem Backup in einer anderen Region aufbauen",
+    "Rebuild the database from the backup in another region"
+   ],
+   "fach": "storage",
+   "einmal": true,
+   "wenn": {
+    "flags": [
+     "region_weg"
+    ],
+    "var": {
+     "zweite": "nein"
+    }
+   },
+   "budget": 6000,
+   "flags": [
+    "umgeschaltet",
+    "datenverlust"
+   ],
+   "setzt": {
+    "db": "Online",
+    "app": "Degraded"
+   },
+   "details": {
+    "db": [
+     "Stand heute Nacht",
+     "as of last night"
+    ],
+    "app": [
+     "startet in der neuen Region",
+     "starts in the new region"
+    ]
+   },
+   "zeit": 35,
+   "text": [
+    "Aus der Nachtsicherung entsteht eine neue Datenbank in einer anderen Region.",
+    "A new database in another region comes from the nightly backup."
+   ]
+  },
+  {
+   "id": "dns_region",
+   "label": [
+    "DNS auf die neue Region zeigen lassen",
+    "Point DNS to the new region"
+   ],
+   "fach": "netz",
+   "einmal": true,
+   "wenn": {
+    "flags": [
+     "umgeschaltet"
+    ]
+   },
+   "setzt": {
+    "app": "Online"
+   },
+   "details": {
+    "app": [
+     "läuft in der neuen Region",
+     "runs in the new region"
+    ]
+   },
+   "zeit": 5,
+   "text": [
+    "Die Namen zeigen jetzt auf die neue Region.",
+    "The names now point to the new region."
+   ]
+  },
+  {
+   "id": "dns_umstellen",
+   "label": [
+    "DNS auf den Zweitanbieter umstellen",
+    "Switch DNS to the second provider"
+   ],
+   "fach": "netz",
+   "einmal": true,
+   "wenn": {
+    "flags": [
+     "dns_weg"
+    ]
+   },
+   "flags": [
+    "dns_ok"
+   ],
+   "setzt": {
+    "dns": "Online",
+    "app": "Online"
+   },
+   "details": {
+    "dns": [
+     "beim Zweitanbieter",
+     "at the second provider"
+    ],
+    "app": [
+     "wieder auffindbar",
+     "found again"
+    ]
+   },
+   "zeit": 10,
+   "text": [
+    "Die Zonen liegen jetzt beim Zweitanbieter, die Namen lösen wieder auf.",
+    "The zones now sit with the second provider, names resolve again."
+   ]
+  },
+  {
+   "id": "notbetrieb",
+   "label": [
+    "Notbetrieb im eigenen Rechenzentrum hochfahren",
+    "Start emergency operation in the own data centre"
+   ],
+   "fach": "rz",
+   "einmal": true,
+   "budget": 5000,
+   "flags": [
+    "notbetrieb"
+   ],
+   "setzt": {
+    "vor_ort": "Degraded"
+   },
+   "details": {
+    "vor_ort": [
+     "Notbetrieb",
+     "emergency operation"
+    ]
+   },
+   "vertrauen": 3,
+   "zeit": 30,
+   "text": [
+    "Eine abgespeckte App läuft im eigenen Rechenzentrum: nur Anmelden und Bestellstatus.",
+    "A slimmed-down app runs in the own data centre: only sign-in and order status."
+   ]
+  },
+  {
+   "id": "pruefen",
+   "label": [
+    "App von außen Ende-zu-Ende prüfen",
+    "Check the app end to end from outside"
+   ],
+   "fach": "rz",
+   "einmal": true,
+   "wenn": {
+    "status": {
+     "app": [
+      "Online"
+     ]
+    }
+   },
+   "flags": [
+    "laeuft"
+   ],
+   "zeit": 5,
+   "text": [
+    "Anmelden, bestellen, bezahlen: alles geht.",
+    "Sign in, order, pay: everything works."
+   ]
+  },
+  {
+   "id": "kunden",
+   "label": [
+    "Kunden über die Statusseite informieren",
+    "Inform the customers on the status page"
+   ],
+   "rolle": "kommunikation",
+   "einmal": true,
+   "flags": [
+    "informiert"
+   ],
+   "vertrauen": 4,
+   "zeit": 5,
+   "text": [
+    "Die Statusseite nennt die Störung und den Notbetrieb.",
+    "The status page names the outage and the emergency operation."
+   ]
+  }
+ ],
+ "ticks": [
+  {
+   "id": "anbieter_zurueck",
+   "wenn": {
+    "zug_ab": 9,
+    "ohne": [
+     "anbieter_ok"
+    ]
+   },
+   "chance": 25,
+   "flags": [
+    "anbieter_ok"
+   ],
+   "einmal": false,
+   "je": [
+    {
+     "wenn": {
+      "var": {
+       "ausfall": "region"
+      }
+     },
+     "setzt": {
+      "app": "Online",
+      "db": "Online"
+     },
+     "details": {
+      "app": [
+       "wieder in der alten Region",
+       "back in the old region"
+      ],
+      "db": [
+       "wieder da",
+       "back"
+      ]
+     }
+    },
+    {
+     "wenn": {
+      "var": {
+       "ausfall": "dns"
+      }
+     },
+     "setzt": {
+      "app": "Online",
+      "dns": "Online"
+     },
+     "details": {
+      "app": [
+       "wieder auffindbar",
+       "found again"
+      ],
+      "dns": [
+       "wieder da",
+       "back"
+      ]
+     }
+    }
+   ],
+   "text": [
+    "Der Anbieter meldet: Störung behoben.",
+    "The provider reports: outage fixed."
+   ]
+  },
+  {
+   "id": "bestellungen",
+   "wenn": {
+    "ohne": [
+     "umgeschaltet",
+     "dns_ok",
+     "anbieter_ok",
+     "notbetrieb"
+    ],
+    "zug_ab": 3
+   },
+   "chance": 40,
+   "kosten": 20000,
+   "stress": 4,
+   "einmal": false,
+   "text": [
+    "Bestellungen gehen verloren, das Callcenter läuft voll.",
+    "Orders are lost, the call centre fills up."
+   ]
+  }
+ ],
+ "neben": [
+  {
+   "id": "vorstand",
+   "wenn": {
+    "zug_ab": 3,
+    "ohne": [
+     "informiert"
+    ]
+   },
+   "chance": 35,
+   "vertrauen": -4,
+   "text": [
+    "Nebenschauplatz: Der Vorstand fragt, warum ihr „in der Cloud“ trotzdem ausfallt.",
+    "Side issue: the board asks why you go down even though you are \"in the cloud\"."
+   ]
+  },
+  {
+   "id": "presse_cloud",
+   "wenn": {
+    "zug_ab": 5
+   },
+   "chance": 25,
+   "stress": 3,
+   "text": [
+    "Nebenschauplatz: Die Nachrichten melden einen großen Cloud-Ausfall, Kunden fragen nach.",
+    "Side issue: the news report a big cloud outage, customers ask."
+   ]
+  }
+ ]
+},
+{
+ "id": "lieferkette",
+ "titel": [
+  "Vergiftetes Update",
+  "Poisoned update"
+ ],
+ "kurz": [
+  "Der Hersteller eures Monitorings warnt: Ein Update enthielt eine Hintertür. Was ist betroffen, wie weit ist der Angreifer gekommen?",
+  "The vendor of your monitoring warns: an update contained a back door. What is affected, how far did the attacker get?"
+ ],
+ "kosten_ref": 250000,
+ "budget": 35000,
+ "varianten": {
+  "weit": [
+   [
+    "nur",
+    [
+     "nur der Monitoring-Server",
+     "only the monitoring server"
+    ]
+   ],
+   [
+    "ad",
+    [
+     "der Monitoring-Server und das AD",
+     "the monitoring server and the AD"
+    ]
+   ]
+  ],
+  "aktiv": [
+   [
+    "ja",
+    [
+     "hat nach außen telefoniert",
+     "called home"
+    ]
+   ],
+   [
+    "nein",
+    [
+     "war noch still",
+     "was still quiet"
+    ]
+   ]
+  ]
+ },
+ "start_text": [
+  "Donnerstag, 16:05 Uhr: Der Hersteller eures Monitorings meldet, Update 4.2.1 enthielt eine Hintertür. Ihr habt es vor zwei Wochen installiert.",
+  "Thursday, 16:05: the vendor of your monitoring reports that update 4.2.1 contained a back door. You installed it two weeks ago."
+ ],
+ "assets": [
+  {
+   "id": "mon",
+   "name": "Monitoring-Server",
+   "typ": [
+    "Monitoring",
+    "Monitoring"
+   ],
+   "schaden_min": 100,
+   "details": [
+    "sieht und darf fast alles",
+    "sees and may do almost everything"
+   ]
+  },
+  {
+   "id": "ad",
+   "name": "Active Directory",
+   "typ": [
+    "Verzeichnis",
+    "Directory"
+   ],
+   "schaden_min": 300,
+   "details": [
+    "alle Konten",
+    "all accounts"
+   ]
+  },
+  {
+   "id": "fw",
+   "name": "Firewall",
+   "typ": [
+    "Netzwerk",
+    "Network"
+   ],
+   "schaden_min": 0,
+   "details": [
+    "ausgehender Verkehr",
+    "outgoing traffic"
+   ]
+  },
+  {
+   "id": "erp",
+   "name": "ERP-System",
+   "typ": [
+    "ERP",
+    "ERP"
+   ],
+   "schaden_min": 600,
+   "details": [
+    "Aufträge",
+    "orders"
+   ]
+  },
+  {
+   "id": "siem",
+   "name": "SIEM",
+   "typ": [
+    "Logs",
+    "Logs"
+   ],
+   "schaden_min": 0,
+   "details": [
+    "DNS- und Firewall-Logs",
+    "DNS and firewall logs"
+   ]
+  }
+ ],
+ "start": [
+  {
+   "setzt": {
+    "mon": "Critical"
+   },
+   "details": {
+    "mon": [
+     "Update 4.2.1 mit Hintertür",
+     "update 4.2.1 with a back door"
+    ]
+   }
+  }
+ ],
+ "ziel": [
+  {
+   "flags": [
+    "mon_sauber",
+    "c2_gesperrt"
+   ]
+  },
+  {
+   "irgendein": [
+    "ad_sauber",
+    "ad_ok"
+   ]
+  }
+ ],
+ "lehren": [
+  {
+   "id": "downgrade",
+   "wenn": {
+    "genutzt": [
+     "downgrade"
+    ]
+   },
+   "text": [
+    "Das Update deinstalliert: Eine Hintertür bleibt oft in einem zweiten Dienst. Neu aufsetzen ist der sichere Weg.",
+    "Uninstalled the update: a back door often stays in a second service. Rebuilding is the safe way."
+   ],
+   "bezug": "CISA Emergency Directive 21-01",
+   "gut": false
+  },
+  {
+   "id": "erst_isolieren",
+   "wenn": {
+    "vor": [
+     "isolieren",
+     "neu_aufsetzen"
+    ]
+   },
+   "text": [
+    "Erst isoliert, dann neu aufgesetzt: Der Angreifer konnte nicht nachlegen.",
+    "Isolated first, then rebuilt: the attacker could not add more."
+   ],
+   "bezug": "NIST SP 800-61 Rev. 2, 3.3 Eindämmung, Beseitigung, Wiederherstellung",
+   "gut": true
+  },
+  {
+   "id": "krbtgt",
+   "wenn": {
+    "genutzt": [
+     "krbtgt"
+    ]
+   },
+   "text": [
+    "krbtgt zweimal zurückgesetzt: gefälschte Kerberos-Tickets sind damit wertlos.",
+    "Reset krbtgt twice: forged Kerberos tickets are worthless now."
+   ],
+   "bezug": "BSI, Active Directory nach Kompromittierung",
+   "gut": true
+  },
+  {
+   "id": "melden_fehlt",
+   "wenn": {
+    "flags": [
+     "kontakt"
+    ],
+    "fehlt": [
+     "melden"
+    ]
+   },
+   "text": [
+    "Die Hintertür hatte Kontakt nach außen, gemeldet habt ihr es nicht.",
+    "The back door had contact to the outside, you did not report it."
+   ],
+   "bezug": "BSI-Gesetz, Meldepflicht",
+   "gut": false
+  },
+  {
+   "id": "hinweis_schnell",
+   "wenn": {
+    "vor": [
+     "hinweis",
+     "isolieren"
+    ]
+   },
+   "text": [
+    "Den Herstellerhinweis sofort gelesen und danach gehandelt.",
+    "Read the vendor's advisory at once and acted on it."
+   ],
+   "bezug": "BSI IT-Grundschutz OPS.1.1.3 Patch- und Änderungsmanagement",
+   "gut": true
+  }
+ ],
+ "aktionen": [
+  {
+   "id": "hinweis",
+   "label": [
+    "Herstellerhinweis und IoCs lesen",
+    "Read the vendor advisory and IoCs"
+   ],
+   "fach": "forensik",
+   "einmal": true,
+   "flags": [
+    "iocs"
+   ],
+   "zeit": 5,
+   "text": [
+    "Der Hinweis nennt zwei C2-Domains, einen Dateinamen und den Rat: neu aufsetzen.",
+    "The advisory names two C2 domains, a file name and the advice: rebuild."
+   ]
+  },
+  {
+   "id": "isolieren",
+   "label": [
+    "Monitoring-Server isolieren",
+    "Isolate the monitoring server"
+   ],
+   "fach": "netz",
+   "einmal": true,
+   "flags": [
+    "mon_isoliert"
+   ],
+   "moral": -2,
+   "setzt": {
+    "mon": "Isolated"
+   },
+   "details": {
+    "mon": [
+     "isoliert",
+     "isolated"
+    ]
+   },
+   "zeit": 3,
+   "text": [
+    "Der Monitoring-Server hängt nur noch an der Konsole. Die Überwachung ist blind.",
+    "The monitoring server only hangs on the console. Monitoring is blind."
+   ]
+  },
+  {
+   "id": "c2_sperren",
+   "label": [
+    "C2-Domains an Firewall und DNS sperren",
+    "Block the C2 domains at firewall and DNS"
+   ],
+   "fach": "netz",
+   "einmal": true,
+   "wenn": {
+    "flags": [
+     "iocs"
+    ]
+   },
+   "flags": [
+    "c2_gesperrt"
+   ],
+   "setzt": {
+    "fw": "Online"
+   },
+   "details": {
+    "fw": [
+     "C2 gesperrt",
+     "C2 blocked"
+    ]
+   },
+   "zeit": 5,
+   "text": [
+    "Die Domains aus dem Hinweis sind gesperrt.",
+    "The domains from the advisory are blocked."
+   ]
+  },
+  {
+   "id": "dns_logs",
+   "label": [
+    "DNS-Logs nach den C2-Domains durchsuchen",
+    "Search the DNS logs for the C2 domains"
+   ],
+   "fach": "forensik",
+   "einmal": true,
+   "wenn": {
+    "flags": [
+     "iocs"
+    ]
+   },
+   "je": [
+    {
+     "wenn": {
+      "var": {
+       "aktiv": "ja"
+      }
+     },
+     "flags": [
+      "kontakt"
+     ],
+     "stress": 5,
+     "text": [
+      "Treffer: Der Monitoring-Server hat seit neun Tagen alle paar Stunden nach außen gefragt.",
+      "Hits: the monitoring server has asked outside every few hours for nine days."
+     ]
+    },
+    {
+     "wenn": {
+      "var": {
+       "aktiv": "nein"
+      }
+     },
+     "flags": [
+      "kein_kontakt"
+     ],
+     "text": [
+      "Keine Treffer. Die Hintertür war noch still.",
+      "No hits. The back door was still quiet."
+     ]
+    }
+   ],
+   "zeit": 15,
+   "text": [
+    "Ihr sucht zwei Wochen DNS-Logs durch.",
+    "You search two weeks of DNS logs."
+   ]
+  },
+  {
+   "id": "ad_pruefen",
+   "label": [
+    "AD auf neue Konten und gefälschte Tickets prüfen",
+    "Check AD for new accounts and forged tickets"
+   ],
+   "fach": "windows",
+   "einmal": true,
+   "wenn": {
+    "flags": [
+     "iocs"
+    ]
+   },
+   "je": [
+    {
+     "wenn": {
+      "var": {
+       "weit": "ad"
+      }
+     },
+     "flags": [
+      "ad_drin"
+     ],
+     "setzt": {
+      "ad": "Critical"
+     },
+     "details": {
+      "ad": [
+       "fremdes Konto, verdächtige Tickets",
+       "foreign account, suspicious tickets"
+      ]
+     },
+     "text": [
+      "Ein neues Konto in „Domain Admins“ und Kerberos-Tickets mit zehn Jahren Laufzeit.",
+      "A new account in \"Domain Admins\" and Kerberos tickets valid for ten years."
+     ]
+    },
+    {
+     "wenn": {
+      "var": {
+       "weit": "nur"
+      }
+     },
+     "flags": [
+      "ad_ok"
+     ],
+     "text": [
+      "Keine fremden Konten, keine auffälligen Tickets. Das AD ist sauber.",
+      "No foreign accounts, no odd tickets. The AD is clean."
+     ]
+    }
+   ],
+   "zeit": 15,
+   "text": [
+    "Ihr prüft Konten, Gruppen und Kerberos-Ereignisse.",
+    "You check accounts, groups and Kerberos events."
+   ]
+  },
+  {
+   "id": "krbtgt",
+   "label": [
+    "krbtgt zweimal zurücksetzen, fremde Konten entfernen",
+    "Reset krbtgt twice, remove foreign accounts"
+   ],
+   "fach": "windows",
+   "einmal": true,
+   "wenn": {
+    "flags": [
+     "ad_drin"
+    ]
+   },
+   "moral": -4,
+   "flags": [
+    "ad_sauber"
+   ],
+   "setzt": {
+    "ad": "Online"
+   },
+   "details": {
+    "ad": [
+     "bereinigt",
+     "cleaned"
+    ]
+   },
+   "zeit": 20,
+   "text": [
+    "krbtgt ist zweimal zurückgesetzt, das fremde Konto entfernt. Alle melden sich neu an.",
+    "krbtgt is reset twice, the foreign account removed. Everyone signs in again."
+   ]
+  },
+  {
+   "id": "neu_aufsetzen",
+   "label": [
+    "Monitoring-Server sauber neu aufsetzen",
+    "Rebuild the monitoring server cleanly"
+   ],
+   "fach": "rz",
+   "einmal": true,
+   "wenn": {
+    "flags": [
+     "iocs"
+    ]
+   },
+   "flags": [
+    "mon_sauber"
+   ],
+   "setzt": {
+    "mon": "Online"
+   },
+   "details": {
+    "mon": [
+     "neu, Version 4.2.3",
+     "new, version 4.2.3"
+    ]
+   },
+   "zeit": 20,
+   "text": [
+    "Neue Maschine, geprüfte Version 4.2.3, Konfiguration aus der Doku.",
+    "New machine, checked version 4.2.3, configuration from the docs."
+   ]
+  },
+  {
+   "id": "downgrade",
+   "label": [
+    "Update einfach deinstallieren",
+    "Simply uninstall the update"
+   ],
+   "fach": "rz",
+   "einmal": true,
+   "flags": [
+    "downgrade"
+   ],
+   "zeit": 5,
+   "text": [
+    "Version 4.2.0 ist wieder drauf. Der zweite Dienst der Hintertür läuft weiter.",
+    "Version 4.2.0 is back on. The back door's second service keeps running."
+   ]
+  },
+  {
+   "id": "dienstkonten",
+   "label": [
+    "Passwörter der Dienstkonten des Monitorings ändern",
+    "Change the monitoring's service account passwords"
+   ],
+   "fach": "windows",
+   "einmal": true,
+   "flags": [
+    "dk_neu"
+   ],
+   "vertrauen": 2,
+   "zeit": 10,
+   "text": [
+    "Alle Konten, die das Monitoring kannte, haben neue Passwörter.",
+    "All accounts the monitoring knew have new passwords."
+   ]
+  },
+  {
+   "id": "melden",
+   "label": [
+    "Vorfall dem BSI melden",
+    "Report the incident to the BSI"
+   ],
+   "rolle": "kommunikation",
+   "einmal": true,
+   "wenn": {
+    "flags": [
+     "iocs"
+    ]
+   },
+   "flags": [
+    "gemeldet"
+   ],
+   "vertrauen": 4,
+   "zeit": 10,
+   "text": [
+    "Die Meldung geht ans BSI, ihr bekommt die neuesten IoCs zurück.",
+    "The report goes to the BSI, you get the latest IoCs in return."
+   ]
+  },
+  {
+   "id": "lieferant",
+   "label": [
+    "Hersteller nach Details fragen",
+    "Ask the vendor for details"
+   ],
+   "rolle": "kommunikation",
+   "einmal": true,
+   "zeit": 10,
+   "text": [
+    "Der Hersteller verweist auf den Hinweis und eine FAQ.",
+    "The vendor points to the advisory and an FAQ."
+   ]
+  }
+ ],
+ "ticks": [
+  {
+   "id": "seitwaerts",
+   "wenn": {
+    "var": {
+     "weit": "ad"
+    },
+    "ohne": [
+     "mon_isoliert",
+     "c2_gesperrt"
+    ],
+    "zug_ab": 3
+   },
+   "chance": 45,
+   "kosten": 20000,
+   "stress": 6,
+   "einmal": false,
+   "text": [
+    "Im AD tauchen Anmeldungen zu ungewöhnlicher Zeit auf.",
+    "Sign-ins at unusual times show up in AD."
+   ]
+  },
+  {
+   "id": "abfluss",
+   "wenn": {
+    "var": {
+     "aktiv": "ja"
+    },
+    "ohne": [
+     "c2_gesperrt",
+     "mon_isoliert"
+    ],
+    "zug_ab": 2
+   },
+   "chance": 40,
+   "kosten": 15000,
+   "einmal": false,
+   "text": [
+    "Der Monitoring-Server schickt Daten nach außen.",
+    "The monitoring server sends data outside."
+   ]
+  }
+ ],
+ "neben": [
+  {
+   "id": "blind",
+   "wenn": {
+    "flags": [
+     "mon_isoliert"
+    ],
+    "ohne": [
+     "mon_sauber"
+    ],
+    "zug_ab": 3
+   },
+   "chance": 35,
+   "setzt": {
+    "erp": "Degraded"
+   },
+   "details": {
+    "erp": [
+     "Datenträger voll",
+     "disk full"
+    ]
+   },
+   "stress": 3,
+   "text": [
+    "Nebenschauplatz: Ohne Monitoring fällt ein voller Datenträger am ERP erst spät auf.",
+    "Side issue: without monitoring a full disk on the ERP is noticed late."
+   ]
+  },
+  {
+   "id": "andere",
+   "wenn": {
+    "zug_ab": 4
+   },
+   "chance": 30,
+   "stress": 2,
+   "text": [
+    "Nebenschauplatz: Ein Partner fragt, ob ihr das Update auch hattet.",
+    "Side issue: a partner asks whether you had the update too."
+   ]
+  }
+ ]
+},
+{
+ "id": "chefbetrug",
+ "titel": [
+  "Chef-Betrug",
+  "CEO fraud"
+ ],
+ "kurz": [
+  "Die Buchhaltung hat nach einer Mail „vom Chef“ 240.000 € überwiesen. Jetzt zählt jede Minute bei der Bank, und das Loch muss zu.",
+  "Accounting transferred 240,000 € after a mail \"from the boss\". Now every minute at the bank counts, and the hole must be closed."
+ ],
+ "kosten_ref": 400000,
+ "budget": 25000,
+ "varianten": {
+  "weg": [
+   [
+    "postfach",
+    [
+     "über das gekaperte Postfach des Finanzchefs",
+     "through the hijacked mailbox of the CFO"
+    ]
+   ],
+   [
+    "domain",
+    [
+     "über eine täuschend ähnliche Domain",
+     "through a deceptively similar domain"
+    ]
+   ]
+  ],
+  "frisch": [
+   [
+    "ja",
+    [
+     "vor einer Stunde",
+     "an hour ago"
+    ]
+   ],
+   [
+    "nein",
+    [
+     "gestern Nachmittag",
+     "yesterday afternoon"
+    ]
+   ]
+  ]
+ },
+ "start_text": [
+  "Freitag, 10:20 Uhr: Die Buchhaltung fragt nach, ob die dringende Überweisung an den „neuen Lieferanten“ angekommen ist. Sie ging {frisch} raus. Der Chef weiß von nichts.",
+  "Friday, 10:20: accounting asks whether the urgent transfer to the \"new supplier\" arrived. It went out {frisch}. The boss knows nothing about it."
+ ],
+ "assets": [
+  {
+   "id": "mail",
+   "name": "E-Mail",
+   "typ": [
+    "Mail",
+    "Mail"
+   ],
+   "schaden_min": 200,
+   "details": [
+    "Exchange Online",
+    "Exchange Online"
+   ]
+  },
+  {
+   "id": "konten",
+   "name": "Benutzerkonten",
+   "typ": [
+    "Verzeichnis",
+    "Directory"
+   ],
+   "schaden_min": 0,
+   "details": [
+    "mit und ohne MFA",
+    "with and without MFA"
+   ]
+  },
+  {
+   "id": "fibu",
+   "name": "Buchhaltung",
+   "typ": [
+    "Finanzen",
+    "Finance"
+   ],
+   "schaden_min": 300,
+   "details": [
+    "Zahlungen und Rechnungen",
+    "payments and invoices"
+   ]
+  },
+  {
+   "id": "bank",
+   "name": "Online-Banking",
+   "typ": [
+    "Bank",
+    "Bank"
+   ],
+   "schaden_min": 0,
+   "details": [
+    "Hausbank",
+    "house bank"
+   ]
+  }
+ ],
+ "start": [
+  {
+   "setzt": {
+    "fibu": "Critical",
+    "mail": "Degraded"
+   },
+   "details": {
+    "fibu": [
+     "Zahlungen gestoppt",
+     "payments stopped"
+    ],
+    "mail": [
+     "Absender unklar",
+     "sender unclear"
+    ]
+   }
+  },
+  {
+   "wenn": {
+    "var": {
+     "frisch": "nein"
+    }
+   },
+   "kosten": 240000
+  }
+ ],
+ "ziel": [
+  {
+   "flags": [
+    "bank_informiert",
+    "polizei",
+    "zahlungen_geprueft"
+   ]
+  },
+  {
+   "irgendein": [
+    "postfach_sicher",
+    "domain_gesperrt"
+   ]
+  }
+ ],
+ "lehren": [
+  {
+   "id": "bank_zuerst",
+   "wenn": {
+    "ohne_vor": [
+     "bank",
+     "header"
+    ]
+   },
+   "text": [
+    "Erst analysiert, dann die Bank angerufen: Bei Überweisungen zählt jede Minute für den Rückruf.",
+    "Analysed first, then called the bank: with transfers every minute counts for the recall."
+   ],
+   "bezug": "BSI, Business E-Mail Compromise",
+   "gut": false
+  },
+  {
+   "id": "schuld",
+   "wenn": {
+    "genutzt": [
+     "schuld"
+    ]
+   },
+   "text": [
+    "Die Buchhalterin bloßgestellt: Wer Angst hat, meldet den nächsten Fehler später.",
+    "Blamed the accountant: whoever is afraid reports the next mistake later."
+   ],
+   "bezug": "BSI IT-Grundschutz ORP.3 Sensibilisierung und Schulung",
+   "gut": false
+  },
+  {
+   "id": "vier_augen",
+   "wenn": {
+    "genutzt": [
+     "zahlungen"
+    ]
+   },
+   "text": [
+    "Offene Zahlungen per Rückruf geprüft: Das Vier-Augen-Prinzip mit bekannter Telefonnummer stoppt Chef-Betrug.",
+    "Checked open payments by call-back: the four-eyes principle with a known phone number stops CEO fraud."
+   ],
+   "bezug": "BSI IT-Grundschutz ORP.3",
+   "gut": true
+  },
+  {
+   "id": "regeln_fehlt",
+   "wenn": {
+    "flags": [
+     "postfach_kaputt"
+    ],
+    "fehlt": [
+     "regeln"
+    ]
+   },
+   "text": [
+    "Weiterleitungsregeln im Postfach nicht geprüft: Die Betrüger lesen vielleicht weiter mit.",
+    "Forwarding rules in the mailbox not checked: the fraudsters may still be reading."
+   ],
+   "bezug": "BSI, Business E-Mail Compromise",
+   "gut": false
+  },
+  {
+   "id": "warnen",
+   "wenn": {
+    "genutzt": [
+     "warnen"
+    ]
+   },
+   "text": [
+    "Alle Mitarbeiter gewarnt: Der nächste Versuch läuft ins Leere.",
+    "Warned all staff: the next attempt comes to nothing."
+   ],
+   "bezug": "BSI-Standard 200-4, Krisenkommunikation",
+   "gut": true
+  }
+ ],
+ "aktionen": [
+  {
+   "id": "bank",
+   "label": [
+    "Hausbank anrufen: Überweisung zurückrufen",
+    "Call the house bank: recall the transfer"
+   ],
+   "rolle": "kommunikation",
+   "einmal": true,
+   "flags": [
+    "bank_informiert"
+   ],
+   "je": [
+    {
+     "wenn": {
+      "var": {
+       "frisch": "ja"
+      },
+      "ohne": [
+       "geld_weg"
+      ]
+     },
+     "flags": [
+      "geld_zurueck"
+     ],
+     "vertrauen": 8,
+     "text": [
+      "Glück: Das Geld lag noch bei der Empfängerbank und wird eingefroren.",
+      "Lucky: the money was still at the receiving bank and is frozen."
+     ]
+    },
+    {
+     "wenn": {
+      "irgendein": [
+       "geld_weg"
+      ]
+     },
+     "text": [
+      "Das Geld ist schon weitergeleitet. Die Bank versucht es, macht aber wenig Hoffnung.",
+      "The money has already been passed on. The bank tries, but gives little hope."
+     ]
+    },
+    {
+     "wenn": {
+      "var": {
+       "frisch": "nein"
+      }
+     },
+     "text": [
+      "Das Geld ist schon weitergeleitet. Die Bank versucht es, macht aber wenig Hoffnung.",
+      "The money has already been passed on. The bank tries, but gives little hope."
+     ]
+    }
+   ],
+   "zeit": 5,
+   "text": [
+    "Die Bank nimmt den Rückruf auf.",
+    "The bank takes the recall."
+   ]
+  },
+  {
+   "id": "header",
+   "label": [
+    "Kopfzeilen der Betrugsmail prüfen",
+    "Check the headers of the fraud mail"
+   ],
+   "fach": "forensik",
+   "einmal": true,
+   "flags": [
+    "header"
+   ],
+   "je": [
+    {
+     "wenn": {
+      "var": {
+       "weg": "postfach"
+      }
+     },
+     "flags": [
+      "postfach_kaputt"
+     ],
+     "setzt": {
+      "mail": "Critical"
+     },
+     "details": {
+      "mail": [
+       "Postfach des Finanzchefs übernommen",
+       "CFO's mailbox taken over"
+      ]
+     },
+     "text": [
+      "Die Mail kam wirklich aus dem Postfach des Finanzchefs, angemeldet aus dem Ausland, ohne MFA.",
+      "The mail really came from the CFO's mailbox, signed in from abroad, without MFA."
+     ]
+    },
+    {
+     "wenn": {
+      "var": {
+       "weg": "domain"
+      }
+     },
+     "flags": [
+      "fremde_domain"
+     ],
+     "text": [
+      "Absender firrna-gmbh.de statt firma-gmbh.de, registriert vor vier Tagen.",
+      "Sender firrna-gmbh.de instead of firma-gmbh.de, registered four days ago."
+     ]
+    }
+   ],
+   "zeit": 10,
+   "text": [
+    "Ihr lest die Kopfzeilen der Mail.",
+    "You read the mail's headers."
+   ]
+  },
+  {
+   "id": "sitzungen",
+   "label": [
+    "Sitzungen des Finanzchefs beenden, Passwort neu, MFA an",
+    "End the CFO's sessions, new password, MFA on"
+   ],
+   "fach": "windows",
+   "einmal": true,
+   "wenn": {
+    "flags": [
+     "postfach_kaputt"
+    ]
+   },
+   "flags": [
+    "postfach_sicher"
+   ],
+   "setzt": {
+    "mail": "Online",
+    "konten": "Online"
+   },
+   "details": {
+    "mail": [
+     "gesichert",
+     "secured"
+    ],
+    "konten": [
+     "MFA Pflicht",
+     "MFA mandatory"
+    ]
+   },
+   "zeit": 10,
+   "text": [
+    "Alle Sitzungen sind beendet, neues Passwort, MFA ist Pflicht.",
+    "All sessions ended, new password, MFA is mandatory."
+   ]
+  },
+  {
+   "id": "regeln",
+   "label": [
+    "Weiterleitungsregeln im Postfach prüfen",
+    "Check forwarding rules in the mailbox"
+   ],
+   "fach": "windows",
+   "einmal": true,
+   "wenn": {
+    "flags": [
+     "postfach_kaputt"
+    ]
+   },
+   "flags": [
+    "regeln_weg"
+   ],
+   "zeit": 10,
+   "text": [
+    "Eine Regel leitete jede Mail mit „Rechnung“ an eine fremde Adresse und löschte sie dann.",
+    "A rule forwarded every mail with \"invoice\" to a foreign address and then deleted it."
+   ]
+  },
+  {
+   "id": "domain_sperren",
+   "label": [
+    "Ähnliche Domain sperren und Löschung beantragen",
+    "Block the similar domain and request its removal"
+   ],
+   "fach": "netz",
+   "einmal": true,
+   "wenn": {
+    "flags": [
+     "fremde_domain"
+    ]
+   },
+   "flags": [
+    "domain_gesperrt"
+   ],
+   "setzt": {
+    "mail": "Online"
+   },
+   "details": {
+    "mail": [
+     "Domain gesperrt",
+     "domain blocked"
+    ]
+   },
+   "zeit": 10,
+   "text": [
+    "Der Mailfilter weist die Domain ab, der Registrar prüft die Löschung.",
+    "The mail filter rejects the domain, the registrar checks the removal."
+   ]
+  },
+  {
+   "id": "polizei",
+   "label": [
+    "Anzeige bei der Polizei (ZAC)",
+    "Report to the police (ZAC)"
+   ],
+   "rolle": "kommunikation",
+   "einmal": true,
+   "flags": [
+    "polizei"
+   ],
+   "vertrauen": 2,
+   "zeit": 10,
+   "text": [
+    "Die ZAC nimmt die Anzeige auf und meldet das Empfängerkonto.",
+    "The ZAC takes the report and flags the receiving account."
+   ]
+  },
+  {
+   "id": "zahlungen",
+   "label": [
+    "Alle offenen Zahlungen per Rückruf prüfen",
+    "Check all open payments by call-back"
+   ],
+   "rolle": "leitung",
+   "einmal": true,
+   "flags": [
+    "zahlungen_geprueft"
+   ],
+   "moral": -2,
+   "setzt": {
+    "fibu": "Online"
+   },
+   "details": {
+    "fibu": [
+     "Zahlungen mit Rückruf",
+     "payments with call-back"
+    ]
+   },
+   "zeit": 10,
+   "text": [
+    "Jede offene Zahlung wird mit einer bekannten Telefonnummer bestätigt.",
+    "Every open payment is confirmed through a known phone number."
+   ]
+  },
+  {
+   "id": "schuld",
+   "label": [
+    "Die Buchhalterin zur Verantwortung ziehen",
+    "Hold the accountant responsible"
+   ],
+   "rolle": "leitung",
+   "einmal": true,
+   "moral": -12,
+   "vertrauen": -2,
+   "zeit": 5,
+   "text": [
+    "Das Gespräch endet in Tränen, das Team schweigt betreten.",
+    "The talk ends in tears, the team falls silent."
+   ]
+  },
+  {
+   "id": "warnen",
+   "label": [
+    "Alle Mitarbeiter warnen",
+    "Warn all staff"
+   ],
+   "rolle": "kommunikation",
+   "einmal": true,
+   "flags": [
+    "gewarnt"
+   ],
+   "vertrauen": 2,
+   "zeit": 5,
+   "text": [
+    "Eine kurze Warnung mit Beispiel geht an alle.",
+    "A short warning with an example goes to everyone."
+   ]
+  },
+  {
+   "id": "versicherung",
+   "label": [
+    "Cyberversicherung informieren",
+    "Inform the cyber insurance"
+   ],
+   "rolle": "kommunikation",
+   "einmal": true,
+   "flags": [
+    "versichert"
+   ],
+   "je": [
+    {
+     "wenn": {
+      "irgendein": [
+       "geld_weg"
+      ]
+     },
+     "kosten": -60000,
+     "text": [
+      "Ein Teil des Schadens ist versichert.",
+      "Part of the damage is insured."
+     ]
+    },
+    {
+     "wenn": {
+      "var": {
+       "frisch": "nein"
+      }
+     },
+     "kosten": -60000,
+     "text": [
+      "Ein Teil des Schadens ist versichert.",
+      "Part of the damage is insured."
+     ]
+    }
+   ],
+   "zeit": 5,
+   "text": [
+    "Die Versicherung nimmt den Schaden auf.",
+    "The insurance records the damage."
+   ]
+  }
+ ],
+ "ticks": [
+  {
+   "id": "geld_weg",
+   "wenn": {
+    "var": {
+     "frisch": "ja"
+    },
+    "ohne": [
+     "bank_informiert",
+     "geld_weg"
+    ],
+    "zug_ab": 2
+   },
+   "chance": 100,
+   "kosten": 240000,
+   "stress": 10,
+   "flags": [
+    "geld_weg"
+   ],
+   "text": [
+    "Die Empfängerbank hat das Geld weitergeleitet. Es ist weg.",
+    "The receiving bank passed the money on. It is gone."
+   ]
+  },
+  {
+   "id": "zweite_rechnung",
+   "wenn": {
+    "ohne": [
+     "postfach_sicher",
+     "domain_gesperrt",
+     "gewarnt",
+     "zahlungen_geprueft"
+    ],
+    "zug_ab": 4
+   },
+   "chance": 40,
+   "stress": 6,
+   "vertrauen": -3,
+   "text": [
+    "Eine zweite gefälschte Rechnung ist eingegangen und fast bezahlt worden.",
+    "A second forged invoice came in and was almost paid."
+   ]
+  }
+ ],
+ "neben": [
+  {
+   "id": "chef",
+   "wenn": {
+    "zug_ab": 2
+   },
+   "chance": 35,
+   "stress": 4,
+   "text": [
+    "Nebenschauplatz: Der Chef will wissen, wie das passieren konnte, und zwar jetzt.",
+    "Side issue: the boss wants to know how this could happen, and now."
+   ]
+  },
+  {
+   "id": "lieferant_echt",
+   "wenn": {
+    "flags": [
+     "zahlungen_geprueft"
+    ]
+   },
+   "chance": 30,
+   "vertrauen": -2,
+   "text": [
+    "Nebenschauplatz: Ein echter Lieferant beschwert sich über die verzögerte Zahlung.",
+    "Side issue: a real supplier complains about the delayed payment."
+   ]
+  }
+ ]
+},
+{
+ "id": "geloescht",
+ "titel": [
+  "Datenbank gelöscht",
+  "Database deleted"
+ ],
+ "kurz": [
+  "Beim Aufräumen hat ein Admin auf dem falschen Server die Produktionsdatenbank gelöscht. Jetzt zeigt sich, ob die Sicherungen taugen.",
+  "While tidying up an admin deleted the production database on the wrong server. Now it shows whether the backups are any good."
+ ],
+ "kosten_ref": 300000,
+ "budget": 30000,
+ "varianten": {
+  "sicherung": [
+   [
+    "ok",
+    [
+     "Die Nachtsicherung ist laut Plan vollständig",
+     "The nightly backup is complete according to plan"
+    ]
+   ],
+   [
+    "leer",
+    [
+     "Die Nachtsicherung ist laut Plan vollständig",
+     "The nightly backup is complete according to plan"
+    ]
+   ]
+  ],
+  "replikat": [
+   [
+    "ja",
+    [
+     "ein verzögertes Replikat (eine Stunde)",
+     "a delayed replica (one hour)"
+    ]
+   ],
+   [
+    "nein",
+    [
+     "kein Replikat",
+     "no replica"
+    ]
+   ]
+  ]
+ },
+ "start_text": [
+  "Samstag, 14:10 Uhr: „Ich glaube, ich habe die falsche Datenbank gelöscht.“ Das Kundenportal zeigt nur noch Fehler. {sicherung}, dazu gibt es {replikat}.",
+  "Saturday, 14:10: \"I think I deleted the wrong database.\" The customer portal only shows errors. {sicherung}, and there is {replikat}."
+ ],
+ "assets": [
+  {
+   "id": "db",
+   "name": "Produktionsdatenbank",
+   "typ": [
+    "Datenbank",
+    "Database"
+   ],
+   "schaden_min": 1000,
+   "details": [
+    "Kunden, Verträge, Zahlungen",
+    "customers, contracts, payments"
+   ]
+  },
+  {
+   "id": "portal",
+   "name": "Kundenportal",
+   "typ": [
+    "Webportal",
+    "Web portal"
+   ],
+   "schaden_min": 600,
+   "details": [
+    "Kunden melden sich hier an",
+    "customers sign in here"
+   ]
+  },
+  {
+   "id": "backup",
+   "name": "Backup",
+   "typ": [
+    "Backup",
+    "Backup"
+   ],
+   "schaden_min": 0,
+   "details": [
+    "nächtlich, plus Transaktionslogs",
+    "nightly, plus transaction logs"
+   ]
+  },
+  {
+   "id": "replica",
+   "name": "Replikat",
+   "typ": [
+    "Datenbank",
+    "Database"
+   ],
+   "schaden_min": 0,
+   "details": [
+    "läuft eine Stunde hinterher",
+    "runs one hour behind"
+   ]
+  }
+ ],
+ "start": [
+  {
+   "setzt": {
+    "db": "Offline",
+    "portal": "Critical"
+   },
+   "details": {
+    "db": [
+     "Datenbank gelöscht",
+     "database deleted"
+    ],
+    "portal": [
+     "Fehlerseite",
+     "error page"
+    ]
+   }
+  }
+ ],
+ "ziel": [
+  {
+   "flags": [
+    "db_zurueck",
+    "laeuft"
+   ]
+  }
+ ],
+ "lehren": [
+  {
+   "id": "ungetestet",
+   "wenn": {
+    "var": {
+     "sicherung": "leer"
+    }
+   },
+   "text": [
+    "Die Nachtsicherung war seit Wochen leer. Eine Sicherung zählt erst, wenn die Wiederherstellung geübt ist.",
+    "The nightly backup had been empty for weeks. A backup only counts once the restore has been practised."
+   ],
+   "bezug": "BSI IT-Grundschutz CON.3 Datensicherungskonzept",
+   "gut": false
+  },
+  {
+   "id": "erst_stoppen",
+   "wenn": {
+    "vor": [
+     "stoppen",
+     "portal_hoch"
+    ]
+   },
+   "text": [
+    "Zuerst die Schreibzugriffe gestoppt: Es kam nichts Neues dazu, was später fehlt.",
+    "Stopped writes first: nothing new came in that would be missing later."
+   ],
+   "bezug": "NIST SP 800-61 Rev. 2, 3.3 Eindämmung, Beseitigung, Wiederherstellung",
+   "gut": true
+  },
+  {
+   "id": "pitr",
+   "wenn": {
+    "genutzt": [
+     "binlog"
+    ]
+   },
+   "text": [
+    "Mit den Transaktionslogs bis kurz vor dem Löschen nachgespielt: kein Datenverlust.",
+    "Replayed the transaction logs up to just before the deletion: no data loss."
+   ],
+   "bezug": "BSI IT-Grundschutz CON.3",
+   "gut": true
+  },
+  {
+   "id": "leer_neu",
+   "wenn": {
+    "genutzt": [
+     "leer_anlegen"
+    ]
+   },
+   "text": [
+    "Eine leere Datenbank angelegt, damit das Portal läuft: Alle Kundendaten waren weg.",
+    "Created an empty database so the portal runs: all customer data was gone."
+   ],
+   "bezug": "BSI-Standard 200-4, Wiederanlauf",
+   "gut": false
+  },
+  {
+   "id": "replikat_gehalten",
+   "wenn": {
+    "genutzt": [
+     "replikat_halten"
+    ]
+   },
+   "text": [
+    "Das verzögerte Replikat angehalten, bevor es das Löschen übernahm.",
+    "Stopped the delayed replica before it took over the deletion."
+   ],
+   "bezug": "BSI IT-Grundschutz CON.3",
+   "gut": true
+  },
+  {
+   "id": "anschreien",
+   "wenn": {
+    "genutzt": [
+     "anschreien"
+    ]
+   },
+   "text": [
+    "Den Admin angeschrien: Er hat den Fehler sofort gemeldet. So etwas soll so bleiben.",
+    "Shouted at the admin: he reported the mistake at once. That should stay so."
+   ],
+   "bezug": "BSI IT-Grundschutz ORP.3 Sensibilisierung und Schulung",
+   "gut": false
+  }
+ ],
+ "aktionen": [
+  {
+   "id": "stoppen",
+   "label": [
+    "Portal in Wartung, Schreibzugriffe stoppen",
+    "Portal into maintenance, stop writes"
+   ],
+   "fach": "rz",
+   "einmal": true,
+   "flags": [
+    "gestoppt"
+   ],
+   "vertrauen": 2,
+   "setzt": {
+    "portal": "Offline"
+   },
+   "details": {
+    "portal": [
+     "Wartungsseite",
+     "maintenance page"
+    ]
+   },
+   "zeit": 3,
+   "text": [
+    "Das Portal zeigt eine Wartungsseite, nichts schreibt mehr.",
+    "The portal shows a maintenance page, nothing writes any more."
+   ]
+  },
+  {
+   "id": "hergang",
+   "label": [
+    "Mit dem Admin klären, was genau passiert ist",
+    "Clarify with the admin what exactly happened"
+   ],
+   "rolle": "leitung",
+   "einmal": true,
+   "flags": [
+    "hergang"
+   ],
+   "moral": 3,
+   "zeit": 5,
+   "text": [
+    "14:02 Uhr, DROP DATABASE auf db01 statt auf dem Testsystem. Er ist kreidebleich.",
+    "14:02, DROP DATABASE on db01 instead of the test system. He is white as a sheet."
+   ]
+  },
+  {
+   "id": "backup_pruefen",
+   "label": [
+    "Letzte Sicherung prüfen",
+    "Check the last backup"
+   ],
+   "fach": "storage",
+   "einmal": true,
+   "flags": [
+    "backup_geprueft"
+   ],
+   "je": [
+    {
+     "wenn": {
+      "var": {
+       "sicherung": "ok"
+      }
+     },
+     "flags": [
+      "backup_ok"
+     ],
+     "text": [
+      "Vollständig, 02:00 Uhr, dazu die Transaktionslogs bis 14:01 Uhr.",
+      "Complete, 02:00, plus the transaction logs up to 14:01."
+     ]
+    },
+    {
+     "wenn": {
+      "var": {
+       "sicherung": "leer"
+      }
+     },
+     "flags": [
+      "backup_leer"
+     ],
+     "stress": 10,
+     "setzt": {
+      "backup": "Critical"
+     },
+     "details": {
+      "backup": [
+       "seit Wochen 0 Byte",
+       "0 bytes for weeks"
+      ]
+     },
+     "text": [
+      "Die Sicherungsdateien sind seit sechs Wochen 0 Byte groß. Niemand hat es gemerkt.",
+      "The backup files have been 0 bytes for six weeks. Nobody noticed."
+     ]
+    }
+   ],
+   "zeit": 10,
+   "text": [
+    "Ihr prüft die Nachtsicherung.",
+    "You check the nightly backup."
+   ]
+  },
+  {
+   "id": "replikat_halten",
+   "label": [
+    "Verzögertes Replikat sofort anhalten",
+    "Stop the delayed replica at once"
+   ],
+   "fach": "storage",
+   "einmal": true,
+   "wenn": {
+    "var": {
+     "replikat": "ja"
+    },
+    "ohne": [
+     "replikat_weg"
+    ]
+   },
+   "flags": [
+    "replikat_gehalten"
+   ],
+   "zeit": 3,
+   "text": [
+    "Das Replikat ist angehalten. Das Löschen kommt dort nicht mehr an.",
+    "The replica is stopped. The deletion no longer reaches it."
+   ]
+  },
+  {
+   "id": "replikat_hoch",
+   "label": [
+    "Replikat zur neuen Produktion machen",
+    "Make the replica the new production"
+   ],
+   "fach": "storage",
+   "einmal": true,
+   "wenn": {
+    "flags": [
+     "replikat_gehalten"
+    ],
+    "ohne": [
+     "db_zurueck"
+    ]
+   },
+   "flags": [
+    "db_zurueck",
+    "datenverlust"
+   ],
+   "setzt": {
+    "db": "Online",
+    "replica": "Degraded"
+   },
+   "details": {
+    "db": [
+     "vom Replikat, Stand 13:10",
+     "from the replica, as of 13:10"
+    ],
+    "replica": [
+     "ist jetzt Produktion",
+     "is production now"
+    ]
+   },
+   "zeit": 15,
+   "text": [
+    "Das Replikat ist jetzt die Produktion, Stand 13:10 Uhr.",
+    "The replica is production now, as of 13:10."
+   ]
+  },
+  {
+   "id": "restore",
+   "label": [
+    "Sicherung von heute Nacht zurückspielen",
+    "Restore last night's backup"
+   ],
+   "fach": "storage",
+   "einmal": true,
+   "wenn": {
+    "flags": [
+     "backup_ok"
+    ],
+    "ohne": [
+     "db_zurueck"
+    ]
+   },
+   "flags": [
+    "db_zurueck",
+    "datenverlust"
+   ],
+   "setzt": {
+    "db": "Online"
+   },
+   "details": {
+    "db": [
+     "Stand 02:00 Uhr",
+     "as of 02:00"
+    ]
+   },
+   "zeit": 30,
+   "text": [
+    "Die Nachtsicherung läuft zurück.",
+    "The nightly backup is restored."
+   ]
+  },
+  {
+   "id": "binlog",
+   "label": [
+    "Transaktionslogs bis kurz vor dem Löschen nachspielen",
+    "Replay the transaction logs up to just before the deletion"
+   ],
+   "fach": "storage",
+   "einmal": true,
+   "wenn": {
+    "flags": [
+     "db_zurueck"
+    ],
+    "ohne": [
+     "leer_neu",
+     "binlog_ok"
+    ],
+    "irgendein": [
+     "backup_ok",
+     "replikat_gehalten"
+    ]
+   },
+   "flags": [
+    "binlog_ok"
+   ],
+   "weg": [
+    "datenverlust"
+   ],
+   "details": {
+    "db": [
+     "vollständig bis 14:01",
+     "complete up to 14:01"
+    ]
+   },
+   "zeit": 15,
+   "text": [
+    "Die Transaktionen bis 14:01 Uhr laufen nach. Es fehlt nichts.",
+    "The transactions up to 14:01 are replayed. Nothing is missing."
+   ]
+  },
+  {
+   "id": "datenrettung",
+   "label": [
+    "Datenrettung von der Platte beauftragen",
+    "Order data recovery from the disk"
+   ],
+   "fach": "storage",
+   "einmal": true,
+   "wenn": {
+    "flags": [
+     "backup_leer"
+    ],
+    "ohne": [
+     "db_zurueck"
+    ]
+   },
+   "budget": 15000,
+   "flags": [
+    "db_zurueck",
+    "datenverlust"
+   ],
+   "setzt": {
+    "db": "Online"
+   },
+   "details": {
+    "db": [
+     "aus der Datenrettung, lückenhaft",
+     "from data recovery, with gaps"
+    ]
+   },
+   "zeit": 45,
+   "text": [
+    "Ein Dienstleister holt die gelöschten Dateien von der Platte zurück, das meiste ist lesbar.",
+    "A service provider recovers the deleted files from the disk, most of it is readable."
+   ]
+  },
+  {
+   "id": "leer_anlegen",
+   "label": [
+    "Leere Datenbank anlegen und weitermachen",
+    "Create an empty database and carry on"
+   ],
+   "fach": "storage",
+   "einmal": true,
+   "wenn": {
+    "ohne": [
+     "db_zurueck",
+     "leer_neu"
+    ]
+   },
+   "flags": [
+    "leer_neu",
+    "datenverlust"
+   ],
+   "vertrauen": -15,
+   "setzt": {
+    "db": "Degraded"
+   },
+   "details": {
+    "db": [
+     "leer",
+     "empty"
+    ]
+   },
+   "zeit": 5,
+   "text": [
+    "Das Portal läuft wieder, aber alle Kunden, Verträge und Zahlungen sind weg.",
+    "The portal runs again, but all customers, contracts and payments are gone."
+   ]
+  },
+  {
+   "id": "portal_hoch",
+   "label": [
+    "Kundenportal wieder freigeben",
+    "Release the customer portal again"
+   ],
+   "fach": "rz",
+   "einmal": true,
+   "wenn": {
+    "irgendein": [
+     "db_zurueck",
+     "leer_neu"
+    ],
+    "ohne": [
+     "laeuft"
+    ]
+   },
+   "flags": [
+    "laeuft"
+   ],
+   "setzt": {
+    "portal": "Online"
+   },
+   "details": {
+    "portal": [
+     "läuft",
+     "running"
+    ]
+   },
+   "je": [
+    {
+     "wenn": {
+      "ohne": [
+       "db_zurueck"
+      ]
+     },
+     "text": [
+      "Das Portal läuft, aber jeder Kunde sieht ein leeres Konto.",
+      "The portal runs, but every customer sees an empty account."
+     ]
+    }
+   ],
+   "zeit": 5,
+   "text": [
+    "Das Portal nimmt wieder Anmeldungen an.",
+    "The portal takes sign-ins again."
+   ]
+  },
+  {
+   "id": "kunden",
+   "label": [
+    "Kunden über die Störung informieren",
+    "Inform the customers about the outage"
+   ],
+   "rolle": "kommunikation",
+   "einmal": true,
+   "flags": [
+    "informiert"
+   ],
+   "vertrauen": 4,
+   "zeit": 5,
+   "text": [
+    "Die Startseite nennt die Störung und eine Prognose.",
+    "The start page names the outage and an estimate."
+   ]
+  },
+  {
+   "id": "anschreien",
+   "label": [
+    "Den Admin zur Rede stellen",
+    "Give the admin a dressing-down"
+   ],
+   "rolle": "leitung",
+   "einmal": true,
+   "moral": -10,
+   "zeit": 5,
+   "text": [
+    "Der Admin verstummt. Das Team auch.",
+    "The admin falls silent. So does the team."
+   ]
+  }
+ ],
+ "ticks": [
+  {
+   "id": "replikat_weg",
+   "wenn": {
+    "var": {
+     "replikat": "ja"
+    },
+    "ohne": [
+     "replikat_gehalten",
+     "replikat_weg"
+    ],
+    "zug_ab": 4
+   },
+   "chance": 100,
+   "flags": [
+    "replikat_weg"
+   ],
+   "stress": 8,
+   "setzt": {
+    "replica": "Critical"
+   },
+   "details": {
+    "replica": [
+     "Datenbank gelöscht",
+     "database deleted"
+    ]
+   },
+   "text": [
+    "Das verzögerte Replikat hat das Löschen jetzt auch übernommen.",
+    "The delayed replica has now taken over the deletion too."
+   ]
+  },
+  {
+   "id": "leere_konten",
+   "wenn": {
+    "flags": [
+     "leer_neu"
+    ],
+    "ohne": [
+     "db_zurueck"
+    ],
+    "zug_ab": 1
+   },
+   "chance": 60,
+   "vertrauen": -8,
+   "kosten": 30000,
+   "einmal": false,
+   "text": [
+    "Kunden melden leere Konten und fehlende Verträge, die Hotline glüht.",
+    "Customers report empty accounts and missing contracts, the hotline is red-hot."
+   ]
+  },
+  {
+   "id": "anrufe",
+   "wenn": {
+    "status": {
+     "portal": [
+      "Critical"
+     ]
+    },
+    "zug_ab": 2
+   },
+   "chance": 40,
+   "vertrauen": -3,
+   "einmal": false,
+   "text": [
+    "Die Hotline meldet viele Anrufe: Kunden sehen Fehler beim Anmelden.",
+    "The hotline reports many calls: customers see errors when signing in."
+   ]
+  }
+ ],
+ "neben": [
+  {
+   "id": "wochenende",
+   "wenn": {
+    "zug_ab": 3
+   },
+   "chance": 30,
+   "moral": -3,
+   "text": [
+    "Nebenschauplatz: Zwei Kollegen sind auf einer Hochzeit und nicht erreichbar.",
+    "Side issue: two colleagues are at a wedding and cannot be reached."
+   ]
+  },
+  {
+   "id": "chef_frage",
+   "wenn": {
+    "zug_ab": 4,
+    "ohne": [
+     "informiert"
+    ]
+   },
+   "chance": 35,
+   "vertrauen": -5,
+   "text": [
+    "Nebenschauplatz: Der Chef liest auf Social Media vom Ausfall, bevor ihr ihn informiert.",
+    "Side issue: the boss reads about the outage on social media before you inform him."
+   ]
+  }
+ ]
 }
 ]
 }

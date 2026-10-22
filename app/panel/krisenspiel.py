@@ -1,6 +1,6 @@
 """IT-Krisenspiel (plan krisenspiel/plan.md, Dominik 2026-10-22 „so umsetzen aber den Szenarien-Ausbau auf 5“, Paket 1):
 a text adventure for one profile at a time. An IT emergency (ransomware, SAN outage, power cut, BGP hijacking, BSI
-alert) runs as a crisis dashboard: time left, stress, the management's trust, team morale, damage and emergency
+alert; Paket 4: DDoS, data leak, insider, cloud outage, poisoned update, CEO fraud, deleted database) runs as a crisis dashboard: time left, stress, the management's trust, team morale, damage and emergency
 budget on top, the systems with their state, the chronicle with the moves and the inspector with every step.
 
 The panel decides everything by fixed rules, never the language model:
