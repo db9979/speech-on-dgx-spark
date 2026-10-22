@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.924** · 2026-10-22 · E-Mail und Kalender: der Reiter „Einstellungen“ bleibt nach mehreren Reiterwechseln nicht mehr leer; das gilt für jede Seite mit Reitern
 - **V01.0.923** · 2026-10-22 · Was ich über dich weiß: bei „Thema unklar“ ein vorhandenes Thema wählen (bestätigte Interessen als Chips, Auswahlliste mit den festen Themen, Vorschläge beim Tippen) statt nur eintippen; iPhone
 - **V01.0.922** · 2026-10-22 · Was ich über dich weiß: Vorschläge sind Themen statt Absendernamen (feste Themenliste, Absender als Chips, Beispiel-Betreffe, „Thema unklar“ mit eigenem Thema), eigene Adressen und Dienste wie GitHub nie, „Stimmt“ bestätigt das Thema, Netz-Tipp sucht nur das Themawort; iPhone
 - **V01.0.921** · 2026-10-22 · Angriffsprobe in der Werkstatt (Stufe 2 des Angriffs-Selbsttests): Kachel „Angriffe prüfen“ misst, wie oft das laufende Sprachmodell einem versteckten Befehl in fremdem Text folgen würde, je Tarnung und Werkzeug; kein Werkzeug läuft, nur Zahlen; eigener Schalter unter Funktionen → Werkstatt, aus; auch in der iPhone-App

@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.924** E-Mail und Kalender: der Reiter „Einstellungen“ bleibt nach mehreren Reiterwechseln nicht mehr leer; das gilt für jede Seite mit Reitern
 - **V01.0.923** Was ich über dich weiß: bei „Thema unklar“ ein vorhandenes Thema wählen (bestätigte Interessen als Chips, Auswahlliste mit den festen Themen, Vorschläge beim Tippen) statt nur eintippen; iPhone
 - **V01.0.922** Was ich über dich weiß: Vorschläge sind Themen statt Absendernamen (feste Themenliste, Absender als Chips, Beispiel-Betreffe, „Thema unklar“ mit eigenem Thema), eigene Adressen und Dienste wie GitHub nie, „Stimmt“ bestätigt das Thema, Netz-Tipp sucht nur das Themawort; iPhone
 - **V01.0.921** Angriffsprobe in der Werkstatt (Stufe 2 des Angriffs-Selbsttests): Kachel „Angriffe prüfen“ misst, wie oft das laufende Sprachmodell einem versteckten Befehl in fremdem Text folgen würde, je Tarnung und Werkzeug; kein Werkzeug läuft, nur Zahlen; eigener Schalter unter Funktionen → Werkstatt, aus; auch in der iPhone-App
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.917** Flash-Next-Variante 0,65 entfernt (startete nie)
 - **V01.0.916** Angriffs-Selbsttest (Idee aus NeMo Guardrails): jeder Weg für fremden Text mit 12 Tarnungen gegen ein Modell angegriffen, das jedem Befehl gehorcht; vier Lücken geschlossen: Marken des Modells (<|im_start|>, <tool_call>) werden entschärft, nach einer Mail auch Wikipedia, Wetter und Fahrplan gesperrt, kurze Text-Zustände im Smart Home zählen als fremd, das Briefing steht ganz im Datenblock
 - **V01.0.915** Technik-Schaubild schöner: Farbstreifen je Art mit Legende, Symbol vor jeder Zeile, Pfeile mit Richtung und hellere Linien, Schild „nur bei Spark teilen“, mehr Luft zwischen den Reihen; Wächter: jeder Kasten hat Farbe und Symbol
-- **V01.0.914** Technik-Schaubild ohne Überlauf: jeder Text passt in seinen Kasten (Post und Kontakte, Lautsprecher/Telefon, Bilder und Musik gekürzt, Schrift etwas kleiner); neue Wächter in test_technik: Text passt (de und en), keine Linie quer durch einen Kasten
 
 
 

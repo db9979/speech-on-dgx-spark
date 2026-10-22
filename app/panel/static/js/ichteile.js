@@ -27,7 +27,10 @@ const MT={};
 window.icTabs=(key,items)=>{const wrap=el('div','ic-tabwrap'),nav=el('div','ic-tabs');nav.setAttribute('role','tablist');const body=el('div','ic-tabbody');
   let cur=items.find(x=>x.k===MT[key])||items.find(x=>x.hot)||items[0];
   const draw=()=>{nav.querySelectorAll('button').forEach(b=>{const on=b.dataset.k===cur.k;b.classList.toggle('on',on);b.setAttribute('aria-selected',on?'true':'false')});
-    body.textContent='';const n=cur.body();if(n)body.appendChild(n)};
+    // a box that lives in the page (Einstellungen: #mailbox, #calbox …) goes back home before the body is cleared, else
+    // it left the document and the second visit of its tab found nothing (Dominik 2026-10-22: Einstellungen leer)
+    for(const c of [...body.children])if(c._icHome){c.hidden=true;c._icHome.appendChild(c)}
+    body.textContent='';const n=cur.body();if(n){if(n.isConnected&&!n._icHome)n._icHome=n.parentNode;body.appendChild(n)}};
   for(const it of items){const b=el('button');b.type='button';b.dataset.k=it.k;b.setAttribute('role','tab');b.appendChild(document.createTextNode(it.label));
     if(it.n!==''&&it.n!=null){const i=el('i',it.hot?'hot':'',String(it.n));b.appendChild(i)}
     b.onclick=()=>{cur=it;MT[key]=it.k;draw()};nav.appendChild(b)}

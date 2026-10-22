@@ -184,6 +184,16 @@ class Page(Fake):
                         await pg.evaluate("goSec('post')")
                         await pg.evaluate("goSec('cal')")
                         await b.until(pg, "$('kalroot').contains($('calbox'))&&!$('calbox').hidden")
+                        # several tab changes on the page itself, without leaving it: Einstellungen is there every time
+                        # (Dominik 2026-10-22: after some tab changes the tab Einstellungen stayed empty)
+                        for sec, root, box in (("post", "postroot", "mailbox"), ("cal", "kalroot", "calbox")):
+                            await pg.evaluate(f"goSec('{sec}')")
+                            for k in ("show", "set", "show", "set", "show", "set"):
+                                await pg.click(f"#{root} .ic-tabs button[data-k={k}]")
+                                if k == "set":
+                                    await b.until(pg, f"$('{root}').contains($('{box}'))&&!$('{box}').hidden&&$('{box}').innerText.trim().length>0")
+                                else:
+                                    await b.until(pg, f"!$('{root}').contains($('{box}'))&&!!$('{box}')")
                         await pg.evaluate("icTabSet('post','show');goSec('post')")
                         await b.until(pg, "!POST.busy&&!!POST.data&&POST.data.items.length===2")
                         await b.until(pg, "document.querySelectorAll('#postview .ld-row').length===2")
