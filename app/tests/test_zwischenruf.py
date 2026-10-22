@@ -23,6 +23,8 @@ import panel  # noqa: E402
 import zwischenruf  # noqa: E402
 from fastapi import FastAPI, Request  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
+from tests.test_iphone import pair, uid_of  # noqa: E402
+from tests.test_iphone import profile as iphone_profile  # noqa: E402
 from tests.test_ui_browser import browser_ok, chromium  # noqa: E402
 
 try:
@@ -33,6 +35,7 @@ except ImportError:  # the panel venv on the Spark has no browser
 SR = 16000
 ASR_TEXT = ["mhm"]
 JS = os.path.join(os.path.dirname(__file__), "..", "panel", "static", "js")
+IOS = os.path.join(os.path.dirname(__file__), "..", "..", "ios")
 
 
 def speech(total_s=2.0):
@@ -191,6 +194,39 @@ class Page(unittest.TestCase):
         # an error or no decision in time: the answer plays on
         self.assertIn("if(h){resumeAnswer(h);return}", js)
         self.assertIn("setTimeout(()=>resumeAnswer(h),HOLD_MS)", js)
+
+
+class IPhone(unittest.TestCase):
+    """The iPhone app pauses too: hello says whether it may (the same switch and admin block as the page)."""
+    def tearDown(self):
+        helpers.set_config(iphone=False, barge_hold=False, deny={})
+
+    def test_hello_says_whether_the_app_only_pauses(self):
+        helpers.set_config(iphone=True)
+        r = pair(iphone_profile("Zwischen Ida"))
+        self.assertEqual(r.status_code, 200, r.text)
+        h = {"X-Speech-Device": r.json()["token"]}
+        app = TestClient(panel.app)
+        self.assertIs(app.get("/api/iphone/hello", headers=h).json()["barge_hold"], False)
+        helpers.set_config(barge_hold=True)
+        self.assertIs(app.get("/api/iphone/hello", headers=h).json()["barge_hold"], True)
+        helpers.set_config(deny={"anhalten": [uid_of("Zwischen Ida")]})
+        self.assertIs(app.get("/api/iphone/hello", headers=h).json()["barge_hold"], False)
+
+    @unittest.skipUnless(os.path.isdir(IOS), "only the app/ folder here")
+    def test_the_app_pauses_and_plays_on_by_itself(self):
+        with open(os.path.join(IOS, "Spark", "Assistant.swift"), encoding="utf-8") as f:
+            swift = f.read()
+        # one number: the app waits as long as zwischenruf.HOLD_MAX says
+        self.assertIn(f"static let holdMax: TimeInterval = {zwischenruf.HOLD_MAX}", swift)
+        self.assertIn("if allowed.bargeHold && audio.pause() {", swift)
+        self.assertIn("hold: asked != nil, asked: asked == true", swift)
+        self.assertIn('if b == "weiter" { resumeHeld(); return }', swift)
+        # nothing heard, a recognition error or no decision in time: the answer plays on
+        self.assertIn("if held != nil { resumeHeld(); return }", swift)
+        self.assertIn("withTimeInterval: Self.holdMax", swift)
+        with open(os.path.join(IOS, "Shared", "SparkAPI.swift"), encoding="utf-8") as f:
+            self.assertIn('bargeHold: d["barge_hold"] as? Bool ?? false', f.read())
 
 
 @unittest.skipUnless(browser_ok(), "no Playwright/Chromium here")

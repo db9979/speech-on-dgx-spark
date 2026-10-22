@@ -204,6 +204,13 @@ final class Conversation: ObservableObject {
     /// (Dominik 2026-10-21 „4“; the Spark's own tool limit is 25 s).
     static let carSlow: TimeInterval = 30
     private var streamDone = true
+    /// "Ins Wort fallen: erst anhalten" (zwischenruf.py, V01.0.944): talking over the answer only paused it. held: the
+    /// answer so far ended on a question (then even "ja" is a new question); answerTask: the answer that keeps coming
+    /// behind; heldTimer: the answer plays on after zwischenruf.HOLD_MAX seconds without a decision.
+    private var held: Bool?
+    private var answerTask: Task<Void, Never>?
+    private var heldTimer: Timer?
+    static let holdMax: TimeInterval = 4
     private var last = Date.distantPast
     private var lastActivity = Date()
     private var errorAt = Date.distantPast
@@ -449,6 +456,7 @@ final class Conversation: ObservableObject {
     /// Waiting for the wake word, or quiet. why: a fixed word for the Ton-Protokoll, why a conversation in the car ended
     /// (CarPlay Runde 2: the drive of 2026-10-21 showed conversations ending without a reason); line: the caller.
     private func base(_ why: String = "", line: Int = #line) {
+        if held != nil { resumeHeld(); return }   // nothing to decide about (nothing heard, silence): the answer plays on
         if inCar && phase != .idle && phase != .waiting {
             AudioEngine.note("Ende: " + (why.isEmpty ? "ohne Grund, Zeile \(line)" : why))
         }
@@ -500,6 +508,7 @@ final class Conversation: ObservableObject {
     func stop(_ why: String = "gestoppt") {
         task?.cancel()
         task = nil
+        dropHeld()
         audio.stopPlaying()
         streamDone = true
         pcm = []
@@ -672,6 +681,15 @@ final class Conversation: ObservableObject {
             if loudSince == nil { loudSince = now }
             if let s = loudSince, now.timeIntervalSince(s) > 0.35 {
                 loudSince = nil
+                if allowed.bargeHold && audio.pause() {
+                    // only paused: the answer keeps coming behind, the Spark decides weiter, stopp or frage
+                    let said = messages.last?.role == "assistant" ? messages.last?.text ?? "" : ""
+                    held = said.range(of: #"\?[\s"'»«“”)\]]*$"#, options: .regularExpression) != nil
+                    answerTask = task
+                    task = nil
+                    listen(preroll: 0.6, fromWake: false, opened: "barge")
+                    return
+                }
                 task?.cancel()
                 audio.stopPlaying()
                 streamDone = true
@@ -692,13 +710,29 @@ final class Conversation: ObservableObject {
         phase = .transcribing
         // in the car a follow-up is never compared with the voiceprint: the car's microphone made the own voice
         // "foreign" and every follow-up ended (Dominik's drive 2026-10-21 16:35); the Spark checks only the known words
-        let woke = fromWake, how = inCar ? "car" : opened
+        let woke = fromWake, how = inCar ? "car" : opened, asked = held
+        if asked != nil {
+            heldTimer?.invalidate()
+            heldTimer = Timer.scheduledTimer(withTimeInterval: Self.holdMax, repeats: false) { [weak self] _ in
+                MainActor.assumeIsolated { if self?.held != nil { self?.resumeHeld() } }
+            }
+        }
         task = Task {
             do {
-                let heardBack = try await api.transcribe(wav: wav, language: Store.language, opened: how)
+                let heardBack = try await api.transcribe(wav: wav, language: Store.language, opened: how,
+                                                         hold: asked != nil, asked: asked == true)
                 var text = heardBack.text
                 let ignored = heardBack.ignored
                 guard !Task.isCancelled else { return }
+                if asked != nil {
+                    guard held != nil else { return }   // played on meanwhile (no decision in time)
+                    let b = heardBack.barge.isEmpty ? (text.isEmpty ? "weiter" : "frage") : heardBack.barge
+                    if b == "weiter" { resumeHeld(); return }
+                    if b == "stopp" { stop("Stopp gesagt"); return }
+                    dropHeld()   // a new question: the paused answer ends, what was said of it stays
+                    audio.stopPlaying()
+                    streamDone = true
+                }
                 if woke { text = wake.strip(text) }
                 if text.isEmpty && inCar && !ignored.isEmpty {
                     // the Spark did not know the voice (fremdstimme.py, the car's microphone sounds different): the car
@@ -736,9 +770,35 @@ final class Conversation: ObservableObject {
                 }
                 await send(text, api)
             } catch {
+                if held != nil { resumeHeld(); return }   // no recognition: the answer plays on
                 fail(error)
             }
         }
+    }
+
+    /// The paused answer plays on where it stopped (zwischenruf.py "weiter", or no decision in time).
+    private func resumeHeld() {
+        guard held != nil else { return }
+        heldTimer?.invalidate()
+        heldTimer = nil
+        held = nil
+        task?.cancel()
+        task = answerTask
+        answerTask = nil
+        pcm = []
+        level = 0
+        audio.unpause()
+        phase = .speaking
+        if streamDone && !audio.busy { answered() }
+    }
+
+    /// The paused answer ends (stop, a new question).
+    private func dropHeld() {
+        heldTimer?.invalidate()
+        heldTimer = nil
+        held = nil
+        answerTask?.cancel()
+        answerTask = nil
     }
 
     static func yes(_ t: String) -> Bool {
@@ -845,7 +905,7 @@ final class Conversation: ObservableObject {
                 case .drop(let n): edit { $0.text = String($0.text.dropLast(n)) }
                 case .audio(let pcm):
                     audio.play(pcm)
-                    phase = .speaking
+                    if held == nil { phase = .speaking }   // paused: the pieces wait, the microphone listens
                 case .mark(let m): edit { $0.mark = $0.mark == "mail" ? "mail" : $0.mark == "screen" ? "screen" : m }
                 case .error(let e): error = e
                 case .reminderSet(let r):
@@ -871,7 +931,7 @@ final class Conversation: ObservableObject {
             last = Date()
             messages.removeAll { $0.id == answer.id && $0.text.isEmpty }
             save(api)
-            if !audio.busy { answered() }
+            if !audio.busy && held == nil { answered() }
             return
         } catch is CancellationError {
         } catch {
@@ -1026,6 +1086,7 @@ final class Conversation: ObservableObject {
 
     private func fail(_ e: Error) {
         if e is CancellationError || (e as? URLError)?.code == .cancelled { return }
+        if held != nil { streamDone = true; error = e.localizedDescription; return }   // the paused answer broke off
         if NetWatch.offline(e) {
             unreachable = true
             certBad = NetWatch.certificate(e)

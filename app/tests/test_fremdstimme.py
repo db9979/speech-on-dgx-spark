@@ -217,8 +217,8 @@ class App(unittest.TestCase):
             api = f.read()
         self.assertIn('listen(preroll: 0.6, fromWake: false, opened: "barge")', a)
         self.assertIn('listen(preroll: 0, fromWake: false, opened: "hands")', a)
-        self.assertIn("api.transcribe(wav: wav, language: Store.language, opened: how)", a)
-        self.assertIn('let woke = fromWake, how = inCar ? "car" : opened', a)   # never a voiceprint in the car
+        self.assertIn("api.transcribe(wav: wav, language: Store.language, opened: how,", a)
+        self.assertIn('let woke = fromWake, how = inCar ? "car" : opened, asked = held', a)   # never a voiceprint in the car
         self.assertIn('name=\\"opened\\"', api)
 
 

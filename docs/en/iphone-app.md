@@ -49,7 +49,7 @@ In the app under **Settings (gear)**:
 | Switch | What it does |
 |---|---|
 | Hands-free | After each answer the app listens again (its chime and clicks never count as a question, see "Silence never becomes words" in assistant.md). 8 seconds of silence: microphone off. Since V01.0.272 a value of your profile: browser and app show the same (like "Interrupt"). |
-| Interrupt | Just start talking to stop the answer and be heard. The iPhone filters the Spark's own voice out of the microphone. |
+| Interrupt | Just start talking to stop the answer and be heard. The iPhone filters the Spark's own voice out of the microphone. With "Barge-in: pause first" (admin, Features → Conversation) the answer only pauses: a "mhm" lets it play on, "stop" ends it, a sentence becomes the new question; without a decision after 4 seconds it plays on (see assistant.md). |
 | Read answers aloud | Off: answers as text only. The switch belongs to the profile (like in the browser, all devices). "Read aloud on this iPhone" applies to this iPhone only. In CarPlay the app always speaks (since V01.0.409). |
 | Wake word | "Hey Spark", "Jarvis" or "Computer". The iPhone recognizes it itself, offline and without Apple's servers; only then does anything go to your Spark. If the iPhone cannot do German offline, it stays off. |
 | On battery | How long the wake word listens on battery after the last use (charger only, 30 minutes, 1 or 3 hours). Always on the charger. Default since V01.0.668: charger only (battery). |

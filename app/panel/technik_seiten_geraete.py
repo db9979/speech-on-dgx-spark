@@ -69,15 +69,15 @@ SEITEN = {
               ("Feste Regeln, kein Modell: ein „Ja“ aus Stille oder einem Klick (stille.check), die eigene Stimme des "
                "Spark von einem anderen Gerät (echo.check) und bei selbst geöffnetem Mikrofon eine fremde Stimme, etwa "
                "vom Fernseher (fremdstimme.check), sind keine Frage. Die Antwort ist dann leerer Text mit dem Grund. Hat "
-               "die Seite die Antwort fürs Ins-Wort-Fallen nur angehalten (hold), sagt zwischenruf.decide mit festen "
+               "die Seite oder die iPhone-App die Antwort fürs Ins-Wort-Fallen nur angehalten (hold), sagt zwischenruf.decide mit festen "
                "Wörtern dazu: weiter (nichts, Überhörtes, „mhm“), stopp („Stopp“) oder frage (alles andere); ohne "
-               "Entscheidung nach {zwischenruf.HOLD_MAX} s spielt die Seite weiter.",
+               "Entscheidung nach {zwischenruf.HOLD_MAX} s spielt sie weiter.",
                "Fixed rules, no model: a „yes“ out of silence or a click (stille.check), the Spark's own voice from "
                "another device (echo.check) and, with a microphone the page opened itself, a foreign voice like the TV "
-               "(fremdstimme.check) are no question. The answer is then empty text with the reason. When the page only "
-               "paused the answer for a barge-in (hold), zwischenruf.decide adds with fixed words: on (nothing, ignored, "
-               "„mhm“), stop („stop“) or question (anything else); without a decision after {zwischenruf.HOLD_MAX} s the "
-               "page plays on."),
+               "(fremdstimme.check) are no question. The answer is then empty text with the reason. When the page or the iPhone "
+               "app only paused the answer for a barge-in (hold), zwischenruf.decide adds with fixed words: on (nothing, ignored, "
+               "„mhm“), stop („stop“) or question (anything else); without a decision after {zwischenruf.HOLD_MAX} s it "
+               "plays on."),
               ("stop", "ja", ("Überhört, nichts gesendet", "Ignored, nothing sent"))),
             S("s6", "schritt", ("Frage an /api/chat", "Question to /api/chat"),
               ("Verlauf, Gespräch, Stimme, Stimm-Token", "history, conversation, voice, voice token"),
@@ -211,7 +211,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Apps
     "apps": {
-        "stand": "62ff4d7c38",
+        "stand": "bffa3fb7e9",
         "bezug": {
             "android.TOKEN_SECONDS": ["s3"], "android.TOKEN_USES": ["s3"], "iphone.profile_pair": ["s1", "s2"],
             "kopplung.Codes.new": ["s3"], "kopplung.Codes.take": ["s4"], "iphone.app_pair": ["s4", "s5"],
@@ -315,7 +315,8 @@ SEITEN = {
                "Chats macht die App ihren eigenen Schlüssel im Secure Enclave; der Spark bekommt nur die öffentliche Hälfte. "
                "Das Blatt der Android-App über anderen Apps fragt als Gerät „android“, nur solange „Android: Spark als "
                "Assistent“ freigegeben ist (android.assist_gate). Ob die App den letzten Stand der Seiten behalten darf, sagt "
-               "hello mit „keep“ (appmerken.keep); bei Nein löscht sie ihn. Mit „Mitteilung ans genutzte Gerät“ "
+               "hello mit „keep“ (appmerken.keep); bei Nein löscht sie ihn. Mit „barge_hold“ hält sie die Antwort fürs Ins-Wort-Fallen nur "
+                "an (zwischenruf.py). Mit „Mitteilung ans genutzte Gerät“ "
                "sagen App und Seiten jede Minute nur, ob sie gerade benutzt werden (POST /api/zustellung/da, der Begleiter "
                "mit seiner Leerlaufzeit); zustellung.pick schickt eine Mitteilung dann an das Gerät mit der letzten Eingabe "
                "der letzten {zustellung.ACTIVE} Sekunden, sonst gleich an die Handy-App. Hat niemand sie gesehen, schickt "
@@ -327,7 +328,8 @@ SEITEN = {
                "only the call's random number; the app asks the Spark who calls. For private chats the app makes its own "
                "key in the Secure Enclave; the Spark only gets the public half. The Android app's sheet over other apps asks as "
                "device „android“ only while „Android: Spark as assistant“ is released (android.assist_gate). Whether the app may keep the pages' last state, hello says with "
-               "„keep“ (appmerken.keep); on no it deletes it. With „Notes to the device in use“ the app and the pages only say "
+               "„keep“ (appmerken.keep); on no it deletes it. With „barge_hold“ it only pauses the answer for a barge-in "
+               "(zwischenruf.py). With „Notes to the device in use“ the app and the pages only say "
                "every minute whether they are in use right now (POST /api/zustellung/da, the companion with its idle time); "
                "zustellung.pick then sends a note to the device with the last input within the last {zustellung.ACTIVE} "
                "seconds, else to the phone app at once. If nobody saw it, zustellung.follow sends it once to the phone after "

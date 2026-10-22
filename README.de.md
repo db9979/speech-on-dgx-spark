@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.944** Ins Wort fallen: erst anhalten auch in der iPhone-App: ein „mhm“ pausiert die Antwort nur, „Stopp“ beendet sie, ein Satz wird die neue Frage; ohne Entscheidung nach 4 s läuft sie weiter
 - **V01.0.943** IT-Krisenspiel (Paket 9): Kampagnen über mehrere Spieltage, Folgen wirken ins nächste Kapitel
 - **V01.0.942** Ins Wort fallen: erst anhalten (Schalter, aus): ein „mhm“, Husten oder die eigene Stimme hält die Antwort nur an und sie läuft weiter, „Stopp“ beendet sie, ein echter Satz wird die neue Frage; feste Wörter im Panel, nie das Modell; Browser und Android, iPhone folgt
 - **V01.0.941** Krisenspiel: Anleitung springt, QR-Codes ganz sichtbar, Ausschalten trennt die Konsole
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.937** IT-Krisenspiel (Paket 5): Nachbesprechung mit Quellen (NIST, BSI, DSGVO), Lernmodus mit Tipp, Geist des besten Laufs, Statistik je Szenario
 - **V01.0.936** IT-Krisenspiel (Paket 3): Team mit Fächern und Müdigkeit übernimmt Züge („Wer übernimmt?“, Konsole team/assign); Laufbahn Junior-Admin bis CISO mit mehr Kollegen und Budget
 - **V01.0.935** IT-Krisenspiel (Paket 11): gemeinsam spielen per Einladungslink mit Rollen Technik, Kommunikation und Leitung; Konsole mit Tab für Dateien, nano, vi und vim und Knopf „Groß“
-- **V01.0.934** IT-Krisenspiel: Modus „Uhr läuft“ (10 s = 1 Spielminute, nur bei offener Seite, Pause in Übung und Normal, +5 und Erfolg „Gegen die Uhr“) und Reiter „Anleitung“ mit Schnellstart, Regeln, Konsole, allen Befehlen, Szenarien, Erfolgen und Tipps aus dem Code
 
 
 

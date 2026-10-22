@@ -49,7 +49,7 @@ In der App unter **Einstellungen (Zahnrad)**:
 | Schalter | Was er tut |
 |---|---|
 | Freihändig | Nach jeder Antwort hört die App wieder zu (ihr Signalton und Klicks zählen nicht als Frage, siehe „Stille wird nie zu Wörtern“ in assistent.md). 8 Sekunden Stille: Mikrofon aus. Seit V01.0.272 ein Wert deines Profils: Browser und App zeigen denselben (wie „Ins Wort fallen“). |
-| Ins Wort fallen | Einfach losreden hält die Antwort an und hört zu. Das iPhone filtert die eigene Spark-Stimme aus dem Mikrofon. |
+| Ins Wort fallen | Einfach losreden hält die Antwort an und hört zu. Das iPhone filtert die eigene Spark-Stimme aus dem Mikrofon. Mit „Ins Wort fallen: erst anhalten“ (Admin, Funktionen → Gespräch) pausiert die Antwort nur: ein „mhm“ lässt sie weiterlaufen, „Stopp“ beendet sie, ein Satz wird die neue Frage; ohne Entscheidung nach 4 Sekunden läuft sie weiter (siehe assistent.md). |
 | Antworten vorlesen | Aus: Antworten nur als Text. Der Schalter gehört zum Profil (wie im Browser, alle Geräte). „Auf diesem iPhone vorlesen“ gilt nur für dieses iPhone. In CarPlay spricht die App immer (seit V01.0.409). |
 | Weckwort | „Hey Spark“, „Jarvis“ oder „Computer“. Das iPhone erkennt das Wort selbst, ohne Internet und ohne Apple-Server; erst danach geht etwas an deinen Spark. Kann das iPhone kein Deutsch ohne Internet, bleibt es aus (Einstellungen → Allgemein → Tastatur → Diktat). |
 | Am Akku | Wie lange das Weckwort am Akku nach der letzten Nutzung zuhört (nur am Ladekabel, 30 Minuten, 1 oder 3 Stunden). Am Ladekabel immer. Standard seit V01.0.668: nur am Ladekabel (Akku). |

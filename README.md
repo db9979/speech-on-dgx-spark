@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.944** Barge-in: pause first in the iPhone app too: a "mhm" only pauses the answer, "stop" ends it, a sentence becomes the new question; without a decision after 4 s it plays on
 - **V01.0.943** IT crisis game (package 9): campaigns over several game days, consequences carry into the next chapter
 - **V01.0.942** Barge-in: pause first (switch, off): a "mhm", a cough or the own voice only pauses the answer and it plays on, "stop" ends it, a real sentence becomes the new question; fixed words in the panel, never the model; browser and Android, iPhone follows
 - **V01.0.941** Crisis game: guide links jump, QR codes fully visible, switching off ends the console session
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.937** IT crisis game (package 5): debrief with sources (NIST, BSI, GDPR), learning mode with a hint, ghost of the best run, statistics per scenario
 - **V01.0.936** IT crisis game (package 3): a team with subjects and tiredness takes moves over ("Who takes it?", console team/assign); career from junior admin to CISO with more colleagues and budget
 - **V01.0.935** IT crisis game (package 11): play together by invitation link with the roles Engineering, Communication and Lead; console with Tab for files, nano, vi and vim and a "Large" button
-- **V01.0.934** IT crisis game: mode "clock running" (10 s = 1 game minute, only while the page is open, pause in practice and normal, +5 and achievement "Against the clock") and tab "Guide" with quick start, rules, console, all commands, scenarios, achievements and tips from the code
 
 
 

@@ -136,6 +136,8 @@ struct Allowed: Equatable, Codable {
     var calls = false
     /// "Apps merken sich den letzten Stand" (appmerken.py): the app may keep the last state; else it deletes it
     var keep = false
+    /// "Ins Wort fallen: erst anhalten" (zwischenruf.py): talking over the answer only pauses it, the Spark decides
+    var bargeHold = false
 }
 
 /// A device of the profile in room mode (from /api/room/active): only where and until when, never what was heard.
@@ -359,7 +361,8 @@ struct SparkAPI {
                        areas: Set(((d["areas"] as? [String: Any]) ?? [:]).compactMap { $0.value as? Bool == true ? $0.key : nil }),
                        adminRole: ["admin", "manager"].contains(d["admin_role"] as? String ?? "") ? d["admin_role"] as? String ?? "" : "",
                        report: d["report"] as? Bool ?? false, make: d["make"] as? Bool ?? false,
-                       calls: d["calls"] as? Bool ?? false, keep: d["keep"] as? Bool ?? false)
+                       calls: d["calls"] as? Bool ?? false, keep: d["keep"] as? Bool ?? false,
+                       bargeHold: d["barge_hold"] as? Bool ?? false)
     }
 
     /// Where the profile's devices listen in room mode right now (names and end times only).
@@ -488,7 +491,10 @@ struct SparkAPI {
     /// The recorded question (WAV) as text.
     /// opened: how the microphone opened by itself ("barge", "hands"); the Spark then takes only a known voice.
     /// ignored: the Spark's reason when it did not take the recording ("foreign voice", fremdstimme.py), else "".
-    func transcribe(wav: Data, language: String, opened: String = "") async throws -> (text: String, ignored: String) {
+    /// hold: the answer is only paused for this barge-in (asked: it ended on a question); barge is then the Spark's
+    /// decision "weiter", "stopp" or "frage" (zwischenruf.py), else "".
+    func transcribe(wav: Data, language: String, opened: String = "", hold: Bool = false,
+                    asked: Bool = false) async throws -> (text: String, ignored: String, barge: String) {
         let boundary = "spark-" + UUID().uuidString
         var r = request("api/test/asr", method: "POST")
         r.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
@@ -497,6 +503,10 @@ struct SparkAPI {
         if !opened.isEmpty {
             body.append(Data("--\(boundary)\r\nContent-Disposition: form-data; name=\"opened\"\r\n\r\n\(opened)\r\n".utf8))
         }
+        if hold {
+            body.append(Data("--\(boundary)\r\nContent-Disposition: form-data; name=\"hold\"\r\n\r\n1\r\n".utf8))
+            if asked { body.append(Data("--\(boundary)\r\nContent-Disposition: form-data; name=\"asked\"\r\n\r\n1\r\n".utf8)) }
+        }
         body.append(Data("--\(boundary)\r\nContent-Disposition: form-data; name=\"file\"; filename=\"frage.wav\"\r\nContent-Type: audio/wav\r\n\r\n".utf8))
         body.append(wav)
         body.append(Data("\r\n--\(boundary)--\r\n".utf8))
@@ -504,7 +514,8 @@ struct SparkAPI {
         let (data, response) = try await URLSession.shared.data(for: r)
         try Self.check(data, response)
         let d = Self.object(data)
-        return ((d["text"] as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines), d["ignored"] as? String ?? "")
+        return ((d["text"] as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines), d["ignored"] as? String ?? "",
+                d["barge"] as? String ?? "")
     }
 
     /// A question for Siri: the answer as text (the Spark keeps follow-ups for ten minutes).

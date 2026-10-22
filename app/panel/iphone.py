@@ -397,7 +397,9 @@ def app_hello(prof=Depends(own_profile), request: Request = None):
             "calls": _calls_on(prof["id"]),
             # "Apps merken sich den letzten Stand" (appmerken.py): the app may keep the last state on the phone;
             # without it the app deletes what it kept
-            "keep": appmerken.keep(prof, request)}
+            "keep": appmerken.keep(prof, request),
+            # "Ins Wort fallen: erst anhalten" (zwischenruf.py): talking over the answer only pauses it
+            "barge_hold": features.allowed("anhalten", prof["id"])}
 
 
 def _calls_on(uid):

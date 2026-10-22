@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.944** · 2026-10-22 · Ins Wort fallen: erst anhalten auch in der iPhone-App: ein „mhm“ pausiert die Antwort nur, „Stopp“ beendet sie, ein Satz wird die neue Frage; ohne Entscheidung nach 4 s läuft sie weiter
 - **V01.0.943** · 2026-10-22 · IT-Krisenspiel (Paket 9): vier Kampagnen ketten drei Szenarien über mehrere Spieltage; was ein Kapitel hinterlässt (Audit, Versicherung, erschöpftes Team, Ruf, eingespielt) ist feste Regel und wirkt im nächsten; Pause beliebig lang, Note aus dem Schnitt, Erfolg „Durchgehalten“; auch in der iPhone-App
 - **V01.0.942** · 2026-10-22 · Ins Wort fallen: erst anhalten (Schalter, aus): ein „mhm“, Husten oder die eigene Stimme hält die Antwort nur an und sie läuft weiter, „Stopp“ beendet sie, ein echter Satz wird die neue Frage; feste Wörter im Panel, nie das Modell; Browser und Android, iPhone folgt
 - **V01.0.941** · 2026-10-22 · Krisenspiel: Abschnitte der Anleitung sichtbar und Inhaltsverzeichnis springt; QR-Codes mit viewBox, nicht mehr abgeschnitten (alle Einladungen); shutdown, poweroff oder halt an der Konsole trennt die Verbindung zurück auf jump01

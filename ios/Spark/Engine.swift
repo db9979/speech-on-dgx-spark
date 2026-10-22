@@ -62,6 +62,10 @@ final class AudioEngine {
     private(set) var outLevel: Float = 0
 
     var busy: Bool { queued > 0 }
+    /// "Ins Wort fallen: erst anhalten" (zwischenruf.py): the answer is paused, new pieces wait until it plays on
+    private(set) var paused = false
+    /// pieces arrived while paused that resume() still has to schedule (the settle time ended meanwhile)
+    private var resumeLater = false
     var listening: Bool { tapOn }
 
     init() {
@@ -273,8 +277,33 @@ final class AudioEngine {
             return max(wait, Self.settle) + ahead
         }
         schedule(nextId, buffer)
-        node.play()
+        if !paused { node.play() }
         return ahead
+    }
+
+    /// Pauses what is playing (kept, nothing lost); false when nothing plays.
+    @discardableResult
+    func pause() -> Bool {
+        guard !paused, queued > 0 else { return false }
+        paused = true
+        node.pause()
+        outLevel = 0
+        Self.note("angehalten")
+        return true
+    }
+
+    /// Plays on where pause() stopped.
+    func unpause() {
+        guard paused else { return }
+        paused = false
+        Self.note("weiter")
+        try? ensureRunning()
+        if resumeLater {
+            resumeLater = false
+            resume()
+        } else if !holding {
+            node.play()
+        }
     }
 
     /// Before an answer arrives: set the engine up now, so the configuration change that
@@ -323,6 +352,7 @@ final class AudioEngine {
     /// After the engine was restarted: schedule again what has not been played and start the player.
     private func resume() {
         guard !pending.isEmpty, engine.isRunning, !holding else { return }
+        guard !paused else { resumeLater = true; return }
         Self.note("spiele \(pending.count) Stücke")
         generation += 1
         node.stop()
@@ -332,6 +362,8 @@ final class AudioEngine {
     }
 
     func stopPlaying() {
+        paused = false
+        resumeLater = false
         holding = false
         heard = false
         generation += 1
