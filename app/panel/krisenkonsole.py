@@ -411,6 +411,12 @@ def run(st, zeile, offered, holds, lang="de", names=None):
                 out.append(("err", "bash: " + e))
     if c.effekt and not res["zug"] and not res["falsch"]:
         res.update(art="wirkung", wirkung=c.effekt)
+    # a machine switched off ends the ssh session (Dominik 2026-10-22): back on the jump host, like exit
+    bye = f"Connection to {c.hid} closed by remote host."
+    if (name in ("halt", "poweroff") or name == "shutdown" and not {"-r", "--reboot"} & set(args)) \
+            and (bye in lines or res["art"] in ("zug", "falsch")) and k["host"] != first_host(sid):
+        lines = [x for x in lines if x != bye] + [bye]
+        k["host"] = first_host(sid)
     res["editor"] = c.editor
     out += [("out", s) for s in lines[:AUSGABE_MAX]]
     if len(lines) > AUSGABE_MAX:
@@ -451,6 +457,9 @@ def _answer(res, st, c, name, args, kind, offered, holds, root):
             return []
         res["art"] = "lesen"
         return _lines(e["ausgabe"], st, holds)
+    if name == "shutdown" and _has(c.h, krisenlinux.LINUX["poweroff"][0]):   # no move of the scenario: as on Linux
+        res["art"] = "frei"
+        return krisenlinux.run(c, "reboot" if {"-r", "--reboot"} & set(args) else "poweroff", [], root)
     if kind == "spiel":
         res["art"] = "nicht"
         out.append(("err", f"{name}: no such object on {c.hid}"))

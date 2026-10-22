@@ -341,6 +341,9 @@ def _qr_svg(text):
         import segno
         buf = io.BytesIO()
         segno.make(text, error="m").save(buf, kind="svg", scale=5, border=2, xmldecl=False, dark="#000", light="#fff")
-        return buf.getvalue().decode()
+        svg = buf.getvalue().decode()
+        # a viewBox, so a size from CSS scales the whole code instead of cutting off its right and bottom edge
+        m = re.match(r'<svg [^>]*?width="(\d+)" height="(\d+)"', svg)
+        return svg.replace("<svg ", f'<svg viewBox="0 0 {m.group(1)} {m.group(2)}" ', 1) if m and "viewBox" not in svg else svg
     except Exception:
         return ""

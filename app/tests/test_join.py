@@ -138,6 +138,7 @@ class Invite(unittest.TestCase):
     def test_join_makes_a_profile_signs_in_and_uses_the_code_up(self):
         code, made = invite("Ina Neu")
         self.assertIn("<svg", made["qr"])
+        self.assertIn('viewBox="0 0 ', made["qr"])         # a CSS size scales the whole code (Dominik 2026-10-22: cut off)
         c = TestClient(panel.app)
         d = c.post("/api/join/check", json={"code": code}).json()
         self.assertEqual((d["kind"], d["name"], d["pin_min"]), ("new", "Ina Neu", 6))

@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.941** · 2026-10-22 · Krisenspiel: Abschnitte der Anleitung sichtbar und Inhaltsverzeichnis springt; QR-Codes mit viewBox, nicht mehr abgeschnitten (alle Einladungen); shutdown, poweroff oder halt an der Konsole trennt die Verbindung zurück auf jump01
 - **V01.0.940** · 2026-10-22 · IT-Krisenspiel (Paket 7): in der iPhone-App unter Meine Sachen → Krisenspiel mit Werten, Systemen, Zügen, Konsole mit Tastaturleiste, Chronik und Nachbesprechung; startet Herausforderungen und Überraschungs-Szenario, alles nach den Regeln des Spark
 - **V01.0.939** · 2026-10-22 · IT-Krisenspiel (Paket 6): Tages- und Wochen-Herausforderung (dasselbe Spiel für alle Profile aus dem Datum), Bestenliste des ersten Versuchs ohne Namen, mit Namen oder gar nicht, vier Mutatoren mit Bonuspunkten (Sparkurs, Eile, Presse im Nacken, Nach der Nachtschicht), Erfolge „Herausforderung angenommen“ und „Mutig“
 - **V01.0.938** · 2026-10-22 · IT-Krisenspiel (Paket 4): sieben neue Szenarien, zusammen zwölf: DDoS auf den Webshop, Datenleck mit DSGVO-Meldefrist, Innentäter, Cloud-Ausfall, vergiftetes Update, Chef-Betrug und gelöschte Datenbank, jeweils mit Varianten, Lehren mit Quelle, eigener Konsole und neuen Spiel-Befehlen (aws, dns, blocklist, mysql, crontab, Get-ADUser, Get-InboxRule …)

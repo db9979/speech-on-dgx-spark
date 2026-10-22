@@ -235,8 +235,8 @@ async function ksGuide(w){if(!KS.guide){w.innerHTML=`<div class="ld-empty mut">$
     :b.art==='code'?`<pre class="ks-code">${esc(b.zeilen.join('\n'))}</pre>`
     :`<table class="ks-tab"><thead><tr>${b.kopf.map(x=>`<th>${esc(ksP(x))}</th>`).join('')}</tr></thead><tbody>${b.zeilen.map(r=>`<tr>${r.map((x,i)=>i===0&&!Array.isArray(x)?`<td><code>${esc(x)}</code></td>`:`<td>${esc(ksP(x))}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
   w.innerHTML=`<div class="ks-guide"><h3>${esc(t('Anleitung','Guide'))}</h3><nav class="ks-toc">${G.map(s=>`<a href="#ksg-${esc(s.id)}" data-ksgo="${esc(s.id)}">${esc(ksP(s.titel))}</a>`).join('')}</nav>
-    ${G.map(s=>`<section id="ksg-${esc(s.id)}"><h4>${esc(ksP(s.titel))}</h4>${s.bloecke.map(blk).join('')}</section>`).join('')}</div>`;
-  w.querySelectorAll('[data-ksgo]').forEach(a=>a.onclick=e=>{e.preventDefault();const x=document.getElementById('ksg-'+a.dataset.ksgo);if(x)x.scrollIntoView({behavior:'smooth',block:'start'})})}
+    ${G.map(s=>`<div class="ks-gsec" id="ksg-${esc(s.id)}"><h4>${esc(ksP(s.titel))}</h4>${s.bloecke.map(blk).join('')}</div>`).join('')}</div>`;
+  w.querySelectorAll('[data-ksgo]').forEach(a=>a.onclick=e=>{e.preventDefault();const x=document.getElementById('ksg-'+a.dataset.ksgo);if(x)x.scrollIntoView({block:'start'})})}
 function ksInspector(D){const g=D.spiel;if(!g)return `<div class="ld-empty mut">${esc(t('Noch kein Spiel.','No game yet.'))}</div>`;
   return `<h3>${esc(t('Inspector','Inspector'))}</h3><div class="mut">${esc(t('Jeder Zug Schritt für Schritt: was du gewählt hast, welche feste Regel gegriffen hat, welche Würfe aus dem Seed kamen und was das Sprachmodell erzählt hat. Werte ändert nur die Regel.','Every move step by step: what you chose, which fixed rule applied, which rolls came from the seed and what the language model told. Only the rule changes values.'))}</div>
     ${g.trace.slice().reverse().map(z=>`<details class="ks-tr"${z.zug===g.zug?' open':''}><summary>${esc(t(`Zug ${z.zug}`,`Move ${z.zug}`))} · ${z.steps.length} ${esc(t('Schritte','steps'))}</summary>

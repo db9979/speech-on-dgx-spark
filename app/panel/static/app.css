@@ -2313,7 +2313,7 @@ textarea{resize:none}textarea[data-fest]{resize:vertical}textarea.feldplatz{padd
 .ks-old>summary{cursor:pointer;color:var(--mut);font-size:13px;margin:4px 0}
 /* „Uhr läuft“ and the guide of the crisis game: tables wrap instead of scrolling, the table of contents wraps too */
 .ks-uhr{display:flex;gap:10px;align-items:center;margin:4px 0 8px}
-.ks-guide section{scroll-margin-top:70px;margin-top:18px}.ks-guide p,.ks-guide li{line-height:1.5}
+.ks-guide .ks-gsec{scroll-margin-top:70px;margin-top:18px}.ks-guide p,.ks-guide li{line-height:1.5}
 .ks-toc{display:flex;flex-wrap:wrap;gap:6px 14px;margin:8px 0 4px}
 .ks-tab{width:100%;border-collapse:collapse;font-size:13px;margin:6px 0 12px}
 .ks-tab th,.ks-tab td{border-bottom:1px solid var(--line);padding:5px 6px;text-align:left;vertical-align:top;overflow-wrap:anywhere}

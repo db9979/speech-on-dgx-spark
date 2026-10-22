@@ -4940,6 +4940,14 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Krisenspiel: Anleitung, QR-Code und Ausschalten (V01.0.941)",
+"text": "Krisenspiel: Anleitung, QR-Code und Ausschalten (V01.0.941): Die Abschnitte der Anleitung stehen wieder unter dem Inhaltsverzeichnis, ein Klick springt hin (sie waren als Seiten-Abschnitt versteckt). Jeder QR-Code des Panels (mfa._qr_svg) hat eine viewBox und wird bei kleiner Anzeige ganz verkleinert statt rechts und unten abgeschnitten (Mitspieler-Einladung, Mitschreib-Link, Einladungen, Apps). In der Konsole trennt ein Rechner, den du mit sudo shutdown, poweroff oder halt ausschaltest, die Verbindung: du bist wieder auf jump01 (reboot und shutdown -r halten sie)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Dokumentliste für viele Dateien (V01.0.413)",
 "text": "Dokumentliste für viele Dateien (V01.0.413): Ich → Dokumente zeigt jedes Dokument als eine kompakte Zeile (Symbol, Titel, Art · Absender · Quelle, Datum und Größe) statt als Karte mit allen Knöpfen; Abzeichen nur, wenn etwas wichtig ist („Frist 20.12.“, „liest 3/12“, „nicht lesbar“, „für alle“, „Suche aus“). Die Liste scrollt mit der Seite (vorher ein Kasten mit 28 % Bildschirmhöhe), zeigt 50 Zeilen und dann „Weitere zeigen“ und ist beim Sortieren nach Datum in Heute, Letzte 7 Tage, Monate und Jahre gegliedert. Oben: ein Suchfeld filtert sofort nach Titel, Dateiname, Absender, Art, Nummer und Tags, Enter sucht zusätzlich im Inhalt (ersetzt „Suche ausprobieren“, Treffer öffnen das Dokument); Quelle (Hochgeladen, iPhone-App, Begleiter, reMarkable, Aufträge, Von anderen), Sortierung (Neueste, Name, Frist, Größe; Quelle und Sortierung merkt sich der Browser) und Schnellfilter mit Anzahl (Frist offen, Wird gelesen, Nicht lesbar, Für alle, Suche aus) plus Tags als Auswahlliste. Ein Klick öffnet den Detailbereich, auf breiten Seiten neben der Liste, schmal als eigene Seite mit „Zurück zur Liste“: Steckbrief, Zustand mit Balken, Tags direkt bearbeiten, Schalter „Der Assistent sucht darin“ "
 },
@@ -16734,6 +16742,14 @@
 "head": "Voice chat",
 "title": "Crisis game in the iPhone app (V01.0.940, plan package 7)",
 "text": "Crisis game in the iPhone app (V01.0.940, plan package 7): in the app under *My things → Crisis game* (KrisenspielView.swift, only with the game's release, iphone.THINGS[\"krisenspiel\"]: read the game, a move, a typed line, a new game) are the values on top as bars, the systems with traffic lights, the moves as buttons (with the hint in learning mode), the console with a key bar (help, hosts, ssh, sudo, |, -h), the chronicle and at the end grade, reasons and debrief with source. Without a running game the app starts the daily or weekly challenge or a surprise scenario. Every value and rule comes from the Spark, the app only shows texts; guide, inspector, board and playing together stay on the page Crisis game in the panel (\"Open in the panel\"). Next: package 9 (chain crises), then the other packages of the plan."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Crisis game: guide, QR code and switching off (V01.0.941)",
+"text": "Crisis game: guide, QR code and switching off (V01.0.941): the parts of the guide show again under the table of contents, a click jumps there (they were hidden as a page section). Every QR code of the panel (mfa._qr_svg) has a viewBox and shrinks as a whole when shown small instead of being cut off on the right and bottom (player invitation, note-taking link, invitations, apps). At the console a machine you switch off with sudo shutdown, poweroff or halt closes the connection: you are back on jump01 (reboot and shutdown -r keep it)."
 },
 {
 "lang": "en",

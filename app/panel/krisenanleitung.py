@@ -258,6 +258,10 @@ def build(k):
                           "free, ls and sort -h means \"readable\", there --help helps."),
                          ("hosts zeigt die Rechner mit Adresse, System und Zustand; ssh dc01 wechselt, exit geht zurück.",
                           "hosts shows the machines with address, system and state; ssh dc01 switches, exit goes back."),
+                         ("Schaltest du einen Rechner mit sudo shutdown, poweroff oder halt aus, trennt er die Verbindung: "
+                          "du bist wieder auf jump01. reboot und shutdown -r halten die Verbindung.",
+                          "If you switch a machine off with sudo shutdown, poweroff or halt, it closes the connection: you "
+                          "are back on jump01. reboot and shutdown -r keep the connection."),
                          ("sudo <befehl> führt einen Befehl als root aus. Ohne sudo sagt Linux „Permission denied“, wie im "
                           "echten Leben.",
                           "sudo <command> runs a command as root. Without sudo Linux says \"Permission denied\", as in real "

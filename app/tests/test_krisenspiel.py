@@ -284,6 +284,24 @@ class Linux(unittest.TestCase):
         r, _ = self.say(st, "sudo reboot")
         self.assertEqual((r["art"], st["trace"][-1]["steps"][0]["daten"]["aktion"]), ("wirkung", "konsole_neustart"))
 
+    def test_switching_a_machine_off_ends_the_session(self):
+        # Dominik 2026-10-22: „shutdown auf einem host sollte auch disconnecten“
+        st = K.new_game("ransomware", "normal", 1, now=T0)
+        first = C.first_host("ransomware")
+        self.say(st, "ssh erp01")
+        self.say(st, "poweroff")                                           # no root: refused, still connected
+        self.assertEqual(st["konsole"]["host"], "erp01")
+        self.say(st, "sudo reboot")                                        # back after the restart
+        self.assertEqual(st["konsole"]["host"], "erp01")
+        r, out = self.say(st, "sudo poweroff")
+        self.assertEqual((st["konsole"]["host"], out[-1]), (first, "Connection to erp01 closed by remote host."))
+        self.say(st, "ssh erp01")
+        self.assertIn("Interactive authentication required", " ".join(self.say(st, "shutdown -h now")[1]))
+        self.assertEqual(st["konsole"]["host"], "erp01")
+        r, out = self.say(st, "sudo shutdown -h now")
+        self.assertEqual((st["konsole"]["host"], out[-1]), (first, "Connection to erp01 closed by remote host."))
+        self.assertEqual(out.count("Connection to erp01 closed by remote host."), 1)
+
     def test_editors_and_tab_data(self):
         """nano, vi and vim open a file in the page's editor; writing goes through the same rules as >."""
         st = K.new_game("bsi", "normal", 2, now=T0)
@@ -994,6 +1012,11 @@ class Page(unittest.TestCase):
                                          len(KA.build(K)))
                         self.assertEqual(await pg.evaluate("document.querySelectorAll('#ksview .ks-tab td:first-child code').length"),
                                          len(L.LINUX) + len(C.BEFEHLE))
+                        # every part shows (a <section> would be hidden as a page of the panel) and a link jumps to it
+                        self.assertEqual(await pg.evaluate("[...document.querySelectorAll('#ksview .ks-gsec')].filter(x=>x.offsetHeight>0).length"),
+                                         len(KA.build(K)))
+                        await pg.evaluate("document.querySelector('#ksview [data-ksgo=konsole]').click()")
+                        await b.until(pg, "Math.abs(document.getElementById('ksg-konsole').getBoundingClientRect().top)<200")
                         over = await pg.evaluate("document.documentElement.scrollWidth-document.documentElement.clientWidth")
                         self.assertLessEqual(over, 1, f"{w}: the guide scrolls sideways")
                         # Team und Laufbahn: a colleague takes a move over, the career stands on Bisherige Spiele

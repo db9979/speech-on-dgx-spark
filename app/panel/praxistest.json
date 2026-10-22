@@ -2775,6 +2775,13 @@
 "titel": "Krisenspiel in der iPhone-App",
 "text": "A: Pi und TestFlight-App aktualisieren, Krisenspiel freigegeben. B: App → Meine Sachen: Zeile „Krisenspiel“. C: Ohne laufendes Spiel: „Herausforderungen“ mit Tages- und Wochen-Herausforderung und „Überraschungs-Szenario starten“. D: Ein Spiel starten: Balken für Zeit, Stress, Vertrauen, Moral, Budget, darunter Züge, Konsole, Systeme, Chronik. E: Einen Zug tippen: Werte und Chronik ändern sich wie im Panel. F: In der Konsole „hosts“ eingeben: die Ausgabe erscheint, die Tastaturleiste hat help, hosts, ssh, sudo, |, -h. G: Spiel im Panel weiterspielen: dieselbe Lage. H: Ende: Note, Gründe, Nachbesprechung mit Quelle. I: Admin sperrt das Spiel für das Profil: die Zeile verschwindet.",
 "thread": "IT-Krisenspiel für einzelne Nutzer"
+},
+{
+"id": "P421",
+"v": 941,
+"titel": "Krisenspiel: Anleitung, QR-Code, Ausschalten",
+"text": "A: Krisenspiel → Anleitung: unter dem Inhaltsverzeichnis stehen alle Abschnitte; ein Klick auf „Erfolge“ springt dorthin. B: Spiel → Mitspieler → Einladen: der QR-Code ist ganz zu sehen (drei Ecken-Quadrate) und mit dem Handy lesbar. C: Konsole: ssh auf einen Rechner, sudo poweroff: „Connection … closed by remote host“, die Eingabezeile steht wieder auf jump01. D: sudo reboot hält die Verbindung.",
+"thread": "IT-Krisenspiel für einzelne Nutzer"
 }
 ]
 }
