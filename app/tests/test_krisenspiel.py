@@ -517,6 +517,100 @@ class Team(unittest.TestCase):
         self.assertNotIn("ciso", K.erfolge_neu(st, {"erfolge": {}, "stats": {"gewonnen": 9}}))      # CISO needs a grade A
 
 
+class Lernen(unittest.TestCase):
+    """Lernen (Paket 5): the debrief by fixed rules with its source, the hint one move ahead, a learning game earns
+    nothing and counts for nothing, the ghost of the best run, the statistics."""
+
+    def test_every_scenario_has_lessons_with_a_source(self):
+        self.assertEqual(K.check_data(), [])
+        for sid, sz in K.SZENARIEN.items():
+            self.assertGreaterEqual(len(sz.get("lehren", [])), 4, sid)
+            self.assertTrue(any(x.get("gut") for x in sz["lehren"]), sid)
+        bad = copy.deepcopy(K._DATA)
+        bad["szenarien"][0]["lehren"].append({"id": "x", "wenn": {"vor": ["isolieren"]}, "text": ["a", "b"], "bezug": "y"})
+        bad["szenarien"][0]["lehren"].append({"id": "z", "wenn": {"genutzt": ["gibtsnicht"]}, "text": ["a", "b"], "bezug": "y"})
+        bad["szenarien"][0]["lehren"].append({"id": "w", "wenn": {}, "text": ["a", "b"], "bezug": ""})
+        found = " ".join(K.check_data(bad))
+        for part in ("takes two moves", "unknown move", "text, bezug"):
+            self.assertIn(part, found)
+
+    def test_the_debrief_follows_the_moves(self):
+        st = K.new_game("ransomware", "normal", 3, now=T0)
+        st["folge"] = ["isolieren", "wiederherstellen", "bericht"]
+        finish(st, "gewonnen")
+        ids = [x["id"] for x in st["ende"]["lehren"]]
+        self.assertIn("erst_eindaemmen", ids)
+        self.assertIn("bericht_ja", ids)
+        self.assertIn("keine_anzeige", ids)
+        self.assertNotIn("bericht_nie", ids)
+        self.assertNotIn("zeit_aus", ids)
+        gut = [x["gut"] for x in st["ende"]["lehren"]]
+        self.assertEqual(gut, sorted(gut, reverse=True))                # what went well first
+        self.assertTrue(all(x["bezug"] for x in st["ende"]["lehren"]))
+        st = K.new_game("ransomware", "normal", 3, now=T0)
+        st["folge"] = ["wiederherstellen", "isolieren"]
+        finish(st, "zeit")
+        ids = [x["id"] for x in st["ende"]["lehren"]]
+        self.assertNotIn("erst_eindaemmen", ids)
+        self.assertIn("zeit_aus", ids)
+        self.assertIn("bericht_nie", ids)
+
+    def test_the_moves_taken_are_recorded_also_when_handed_over(self):
+        st = K.new_game("ransomware", "normal", 77, now=T0, rang="admin")
+        quiet(K.move, st, "lage")
+        quiet(K.move, st, "logs", an=st["kollegen"][0]["id"])
+        self.assertEqual(st["folge"][:1], ["lage"])
+        self.assertIn("logs", st["folge"])
+        self.assertEqual([k[0] for k in st["kurve"]], [1, 2])
+
+    def test_the_hint_looks_one_move_ahead_and_changes_nothing(self):
+        wins = 0
+        for sid in sorted(K.SZENARIEN):
+            st = K.new_game(sid, "normal", 11, now=T0)
+            before = json.dumps(st, sort_keys=True)
+            h = quiet(K.tipp, st)[0]
+            self.assertEqual(json.dumps(st, sort_keys=True), before, sid)
+            self.assertIn(h["aktion"], [a["id"] for a in K.available(st) if a["frei"]])
+            for _ in range(K.MAX_ZUEGE):
+                if st["ende"]:
+                    break
+                quiet(K.move, st, quiet(K.tipp, st)[0]["aktion"])
+            wins += st["ende"] and st["ende"]["art"] == "gewonnen"
+            self.assertIsNone(quiet(K.tipp, st)[0])
+        self.assertGreaterEqual(wins, len(K.SZENARIEN) - 1)          # following the hint mostly wins
+
+    def test_a_learning_game_earns_and_counts_nothing(self):
+        d = {"spiel": None, "verlauf": [], "erfolge": {}, "stats": {}}
+        st = K.new_game("san", "normal", 4, now=T0, lernen=True)
+        finish(st, "gewonnen")
+        self.assertEqual(K.erfolge_neu(st, d), [])
+        d["spiel"] = st
+        quiet(K._book, d, T0)
+        self.assertEqual((d["stats"]["gespielt"], d["stats"].get("gewonnen", 0), d["stats"].get("beste", {})), (1, 0, {}))
+        self.assertEqual(d["stats"]["je"]["san"]["gespielt"], 1)
+        self.assertEqual(d["stats"]["je"]["san"]["gewonnen"], 0)
+        self.assertEqual((d["verlauf"][0]["lernen"], d["verlauf"][0]["kurve"]), (True, []))
+
+    def test_the_ghost_is_the_best_own_run(self):
+        d = {"spiel": None, "verlauf": [], "erfolge": {}, "stats": {}}
+        for seed, end in ((4, "zeit"), (5, "gewonnen")):
+            st = K.new_game("san", "normal", seed, now=T0)
+            quiet(K.move, st, "lage")
+            quiet(K.move, st, "lage")
+            finish(st, end)
+            d["spiel"] = st
+            quiet(K._book, d, T0)
+        self.assertEqual(d["stats"]["noten"].get(d["verlauf"][0]["note"], 0) >= 1, True)
+        st = K.new_game("san", "normal", 9, now=T0)
+        self.assertEqual(K.geist(d, st)["seed"], 5)
+        self.assertIsNone(K.geist(d, st)["bei"])
+        quiet(K.move, st, "lage")
+        bei = K.geist(d, st)["bei"]
+        self.assertEqual((bei["zug"], bei["min"]), tuple(d["verlauf"][0]["kurve"][0][:2]))
+        self.assertIsNone(K.geist(d, K.new_game("san", "uebung", 9, now=T0)))
+        self.assertNotIn("kurve", K.view(d)["verlauf"][0])
+
+
 class Anleitung(unittest.TestCase):
     def test_the_guide_names_everything_from_the_code(self):
         g = KA.build(K)
@@ -610,6 +704,26 @@ class Api(unittest.TestCase):
                      "spiel: ende | aufgegeben | note F", "spiel: aufgeben abgelehnt | kein spiel", "spiel: daten geloescht"):
             self.assertIn(want, log)
 
+
+    def test_a_learning_game_through_the_api(self):
+        c, uid = self.fresh("Kslernen")
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.assertEqual(c.post("/api/profile/krisenspiel/neu", json={"szenario": "san", "lernen": "ja"}).status_code, 400)
+            g = c.post("/api/profile/krisenspiel/neu", json={"szenario": "san", "seed": 4, "lernen": True}).json()["spiel"]
+            self.assertTrue(g["lernen"])
+            self.assertIn(g["tipp"]["aktion"], [a["id"] for a in g["aktionen"] if a["frei"]])
+            g = c.post("/api/profile/krisenspiel/zug", json={"aktion": g["tipp"]["aktion"], "zug": 0}).json()["spiel"]
+            self.assertEqual(g["zug"], 1)
+            d = c.delete("/api/profile/krisenspiel").json()
+            self.assertTrue(d["spiel"]["ende"]["lehren"])
+            self.assertTrue(d["verlauf"][0]["lernen"])
+            self.assertNotIn("kurve", d["verlauf"][0])
+            g = c.post("/api/profile/krisenspiel/neu", json={"szenario": "san", "seed": 4}).json()["spiel"]
+            self.assertEqual((g["lernen"], g["tipp"]), (False, None))
+        self.assertIn("spiel: neu | san | normal | knoepfe | lernen", out.getvalue())
+        self.assertIn("spiel: neu abgelehnt | eingabe", out.getvalue())
+        quiet(c.delete, "/api/profile/krisenspiel/daten")
 
     def test_the_console_through_the_api(self):
         c, uid = self.fresh("Kskons")
@@ -803,6 +917,19 @@ class Page(unittest.TestCase):
                         await pg.evaluate("icTabSet('spiel','bisher');ksOpen()")
                         await b.until(pg, "!!document.querySelector('#ksview .ks-career .ks-ladder')")
                         self.assertEqual(await pg.evaluate("document.querySelectorAll('#ksview .ks-ladder li').length"), len(K.RAENGE))
+                        # Lernen: the hint marks a move, giving up shows the debrief, the statistics on Bisherige Spiele
+                        await pg.evaluate("icTabSet('spiel','neu');ksOpen()")
+                        await b.until(pg, "!!document.querySelector('#ksview .kslernen')")
+                        await pg.check("#ksview input[name=kssz][value=san]")
+                        await pg.check("#ksview .kslernen")
+                        await pg.click("#ksview [data-ksnew]")
+                        await b.until(pg, "!!document.querySelector('#ksview .ks-tipp')&&!!document.querySelector('#ksview .ks-act.ks-hint')")
+                        self.assertEqual(await pg.evaluate("document.querySelector('#ksview .ks-act.ks-hint').dataset.ksmove"),
+                                         await pg.evaluate("KS.data.spiel.tipp.aktion"))
+                        await pg.evaluate("window.confirm=()=>true;document.querySelector('#ksview [data-ksgive]').click()")
+                        await b.until(pg, "!!document.querySelector('#ksview .ks-lehren li')")
+                        await pg.evaluate("icTabSet('spiel','bisher');ksOpen()")
+                        await b.until(pg, "!!document.querySelector('#ksview .ks-tab tbody tr')")
                         self.assertEqual(errors, [])
                     finally:
                         await br.close()

@@ -1,5 +1,5 @@
 {
-"_": "Krisenspiel (krisenspiel.py): the scenarios as data. Every effect here is applied by the panel's fixed rules; the language model only retells what happened. Texts are [German, English]. Conditions (wenn): flags (all set), ohne (none set), irgendein (one set), var (variant values), status (asset in one of the states), zug_ab, min_ab (game minutes gone), alt (flag set at least n turns ago), vertrauen_unter, stress_ueber, moral_unter. Effects: zeit (minutes), stress, vertrauen, moral (points), kosten (damage in euros), budget (spent from the emergency budget), setzt (asset -> state), details (asset -> text), flags, weg (flags removed), text, je (more effects, each with its own wenn, checked against the state before the move). A move may name its rolle for a game together (technik, kommunikation, leitung; without it technik; Leitung may take every move). A technical move names its fach (netz, windows, storage, forensik, rz) so a colleague can take it over; erholung lowers the tiredness of the whole team. kollegen: the colleagues a game draws from (id, name, faecher).",
+"_": "Krisenspiel (krisenspiel.py): the scenarios as data. Every effect here is applied by the panel's fixed rules; the language model only retells what happened. Texts are [German, English]. Conditions (wenn): flags (all set), ohne (none set), irgendein (one set), var (variant values), status (asset in one of the states), zug_ab, min_ab (game minutes gone), alt (flag set at least n turns ago), vertrauen_unter, stress_ueber, moral_unter. Effects: zeit (minutes), stress, vertrauen, moral (points), kosten (damage in euros), budget (spent from the emergency budget), setzt (asset -> state), details (asset -> text), flags, weg (flags removed), text, je (more effects, each with its own wenn, checked against the state before the move). A move may name its rolle for a game together (technik, kommunikation, leitung; without it technik; Leitung may take every move). A technical move names its fach (netz, windows, storage, forensik, rz) so a colleague can take it over; erholung lowers the tiredness of the whole team. kollegen: the colleagues a game draws from (id, name, faecher). lehren and lehren_allgemein: the debrief after a game (Paket 5): wenn may name genutzt (all these moves taken), fehlt (none of them), vor [a, b] (a first before b), ohne_vor [a, b] (b without a before it), ende (how it ended) and every condition of a move; text, bezug (the guideline), gut (what went well).",
 "kollegen": [
  {"id": "sandra", "name": "Sandra", "faecher": ["netz", "forensik"]},
  {"id": "mehmet", "name": "Mehmet", "faecher": ["windows", "storage"]},
@@ -36,6 +36,12 @@
  {"id": "bericht_versaeumt", "wenn": {"alt": {"bericht_gefordert": 2}}, "chance": 100, "vertrauen": -10, "weg": ["bericht_gefordert"], "einmal": false,
   "text": ["Die Geschäftsführung hat vergeblich auf den Zwischenbericht gewartet und ist verärgert.", "The management waited for the update in vain and is annoyed."]}
 ],
+"lehren_allgemein": [
+ {"id": "bericht_nie", "wenn": {"fehlt": ["bericht"]}, "text": ["Die Geschäftsleitung hat nie einen Zwischenstand bekommen. Feste Meldezeiten an die Leitung gehören in jeden Notfallplan.", "The management never got an update. Fixed reporting times to the management belong in every emergency plan."], "bezug": "BSI-Standard 200-4, Krisenkommunikation", "gut": false},
+ {"id": "bericht_ja", "wenn": {"genutzt": ["bericht"]}, "text": ["Du hast die Geschäftsleitung auf dem Laufenden gehalten.", "You kept the management up to date."], "bezug": "BSI-Standard 200-4, Krisenkommunikation", "gut": true},
+ {"id": "lage_nie", "wenn": {"fehlt": ["lage"], "stress_ueber": 69}, "text": ["Der Stress war hoch, eine Lagebesprechung gab es nie. Kurze Lagebesprechungen in festem Takt ordnen die Arbeit.", "Stress was high and there was never a status meeting. Short status meetings at a fixed rhythm put the work in order."], "bezug": "BSI-Standard 200-4, Stabsarbeit", "gut": false},
+ {"id": "zeit_aus", "wenn": {"ende": ["zeit"]}, "text": ["Die Zeit lief ab. Wer früh eindämmt und Aufgaben ans Team verteilt, gewinnt Zeit.", "Time ran out. Containing early and handing tasks to the team wins time."], "bezug": "NIST SP 800-61 Rev. 2, 3.3 Eindämmung, Beseitigung, Wiederherstellung", "gut": false}
+],
 "szenarien": [
 {
  "id": "ransomware",
@@ -64,6 +70,15 @@
   {"wenn": {"var": {"tag": "freitag"}}, "moral": -10, "stress": 5}
  ],
  "ziel": [{"flags": ["eingedaemmt", "wiederhergestellt"]}],
+ "lehren": [
+  {"id": "erst_eindaemmen", "wenn": {"vor": ["isolieren", "wiederherstellen"]}, "text": ["Erst eingedämmt, dann wiederhergestellt: die richtige Reihenfolge.", "Contained first, then restored: the right order."], "bezug": "NIST SP 800-61 Rev. 2, 3.3 Eindämmung, Beseitigung, Wiederherstellung", "gut": true},
+  {"id": "loesegeld", "wenn": {"genutzt": ["loesegeld"]}, "text": ["Kontakt mit den Erpressern: BSI und Polizei raten vom Zahlen ab. Es gibt keine Garantie für einen Schlüssel, und das Geld finanziert die nächste Tat.", "Contact with the extortionists: the BSI and the police advise against paying. There is no guarantee of a key, and the money pays for the next attack."], "bezug": "BSI, Ransomware-Empfehlungen", "gut": false},
+  {"id": "keine_anzeige", "wenn": {"fehlt": ["polizei"]}, "text": ["Keine Anzeige erstattet: Die Zentralen Ansprechstellen Cybercrime (ZAC) der Polizei helfen und sichern Spuren.", "No report to the police: the central cybercrime contact points (ZAC) of the police help and secure evidence."], "bezug": "Polizei, Zentrale Ansprechstellen Cybercrime", "gut": false},
+  {"id": "dsgvo_fehlt", "wenn": {"fehlt": ["datenschutz"]}, "text": ["Der Datenschutzbeauftragte wurde nicht eingebunden. Sind personenbezogene Daten betroffen, muss die Aufsichtsbehörde binnen 72 Stunden informiert werden.", "The data protection officer was not involved. If personal data is affected, the supervisory authority must be told within 72 hours."], "bezug": "DSGVO Art. 33", "gut": false},
+  {"id": "dsgvo_ja", "wenn": {"genutzt": ["datenschutz"]}, "text": ["Datenschutz früh eingebunden: Die 72-Stunden-Frist ist im Blick.", "Data protection involved early: the 72-hour deadline is in view."], "bezug": "DSGVO Art. 33", "gut": true},
+  {"id": "backup_ungeprueft", "wenn": {"ohne_vor": ["backup_pruefen", "wiederherstellen"]}, "text": ["Wiederhergestellt, ohne das Backup vorher zu prüfen. Ein befallenes Backup bringt die Verschlüsselung zurück.", "Restored without checking the backup first. An infected backup brings the encryption back."], "bezug": "BSI IT-Grundschutz CON.3 Datensicherungskonzept", "gut": false},
+  {"id": "ursache_offen", "wenn": {"fehlt": ["logs", "forensik"]}, "text": ["Der Angriffsweg wurde nie untersucht. Ohne Ursache kommt der Angreifer wieder.", "The way in was never examined. Without the cause the attacker comes back."], "bezug": "NIST SP 800-61 Rev. 2, 3.2 Erkennung und Analyse", "gut": false}
+ ],
  "aktionen": [
   {"id": "isolieren", "label": ["Netzsegmente trennen", "Separate the network segments"], "fach": "netz", "einmal": true,
    "zeit": 5, "stress": 5, "flags": ["isoliert"],
@@ -166,6 +181,12 @@
    "details": {"san": ["Pfadfehler, I/O-Timeouts", "path errors, I/O timeouts"], "cluster": ["Datastores nicht erreichbar", "datastores not reachable"], "db": ["Datenbank offline", "database offline"], "erp": ["keine Datenbank", "no database"], "web": ["Fehler beim Bezahlen", "errors at checkout"]}}
  ],
  "ziel": [{"flags": ["san_ok", "db_ok", "laeuft"]}],
+ "lehren": [
+  {"id": "neustart_zu_frueh", "wenn": {"genutzt": ["neustart"]}, "text": ["Alle VMs sofort neu gestartet, bevor das SAN wieder lief: Das kostet Daten. Erst die Ursache, dann der Wiederanlauf.", "All VMs restarted at once before the SAN was back: that costs data. First the cause, then the restart."], "bezug": "BSI-Standard 200-4, Wiederanlauf", "gut": false},
+  {"id": "ohne_taillog", "wenn": {"ohne_vor": ["taillog", "db_restore"]}, "text": ["Datenbank zurückgeholt ohne Tail-Log-Sicherung: Die letzten Buchungen sind weg.", "Database restored without a tail-log backup: the last bookings are gone."], "bezug": "BSI IT-Grundschutz CON.3 Datensicherungskonzept", "gut": false},
+  {"id": "erst_logs", "wenn": {"vor": ["diagnose", "failover"]}, "text": ["Erst die Logs gelesen, dann umgeschaltet: So findet man die Ursache.", "Read the logs first, then switched over: that is how the cause is found."], "bezug": "NIST SP 800-61 Rev. 2, 3.2 Erkennung und Analyse", "gut": true},
+  {"id": "keine_wartungsseite", "wenn": {"fehlt": ["wartungsseite"]}, "text": ["Kunden sahen Fehlerseiten statt einer Wartungsseite.", "Customers saw error pages instead of a maintenance page."], "bezug": "BSI-Standard 200-4, Krisenkommunikation", "gut": false}
+ ],
  "aktionen": [
   {"id": "diagnose", "label": ["SAN-Logs und Controller prüfen", "Check SAN logs and controllers"], "fach": "storage", "einmal": true,
    "zeit": 10, "flags": ["diagnose"],
@@ -265,6 +286,12 @@
   {"wenn": {"var": {"nea": "startet_nicht"}}, "setzt": {"nea": "Critical"}, "details": {"nea": ["Startfehler", "start failure"]}, "stress": 10}
  ],
  "ziel": [{"flags": ["strom_zurueck", "hochgefahren"]}],
+ "lehren": [
+  {"id": "alles_an", "wenn": {"genutzt": ["alles_an"]}, "text": ["Alles gleichzeitig eingeschaltet: Einschaltstrom und falsche Reihenfolge kosten Daten. Ein Wiederanlaufplan legt die Reihenfolge fest.", "Everything switched on at once: inrush current and the wrong order cost data. A restart plan sets the order."], "bezug": "BSI-Standard 200-4, Wiederanlauf", "gut": false},
+  {"id": "reihenfolge", "wenn": {"genutzt": ["hochfahren"]}, "text": ["In Reihenfolge hochgefahren: Storage, Netz, Cluster.", "Started in order: storage, network, cluster."], "bezug": "BSI-Standard 200-4, Wiederanlauf", "gut": true},
+  {"id": "kein_lastabwurf", "wenn": {"fehlt": ["lastabwurf"]}, "text": ["Ohne Lastabwurf reichen Notstrom und Kühlung kürzer.", "Without load shedding, emergency power and cooling last less long."], "bezug": "BSI IT-Grundschutz INF.2 Rechenzentrum", "gut": false},
+  {"id": "hotline_weg", "wenn": {"fehlt": ["telefon_um"]}, "text": ["Die Hotline war während des Ausfalls nicht erreichbar.", "The hotline could not be reached during the outage."], "bezug": "BSI-Standard 200-4, Krisenkommunikation", "gut": false}
+ ],
  "aktionen": [
   {"id": "nea_manuell", "label": ["Notstrom von Hand starten", "Start the generator by hand"], "fach": "rz", "einmal": true, "wenn": {"var": {"nea": "startet_nicht"}, "ohne": ["nea_laeuft"]},
    "zeit": 10, "stress": 5, "flags": ["nea_laeuft"], "setzt": {"nea": "Online", "klima": "Degraded"}, "details": {"nea": ["von Hand gestartet", "started by hand"], "klima": ["halbe Leistung am Notstrom", "half power on backup power"]},
@@ -356,6 +383,12 @@
    "details": {"bgp": ["fremde Ankündigung", "foreign announcement"], "portal": ["von außen nicht erreichbar", "not reachable from outside"], "mail": ["Zustellung verzögert", "delivery delayed"], "vpn": ["Abbrüche", "drop-outs"]}}
  ],
  "ziel": [{"flags": ["route_sauber", "kunden_informiert"]}, {"irgendein": ["zert_widerrufen", "kein_zert"]}],
+ "lehren": [
+  {"id": "keine_roa", "wenn": {"fehlt": ["roa"], "var": {"rpki": "nein"}}, "text": ["Ohne ROAs kann jeder dein Präfix ankündigen. RPKI-ROAs gehören vorbeugend angelegt.", "Without ROAs anyone can announce your prefix. RPKI ROAs belong in place beforehand."], "bezug": "RFC 6811, BGP Prefix Origin Validation", "gut": false},
+  {"id": "kunden_frueh", "wenn": {"genutzt": ["kunden"]}, "text": ["Kunden gewarnt: Das hält das Vertrauen.", "Customers warned: that keeps their trust."], "bezug": "BSI-Standard 200-4, Krisenkommunikation", "gut": true},
+  {"id": "erst_pruefen", "wenn": {"vor": ["looking_glass", "spezifischer"]}, "text": ["Erst in Looking Glasses geprüft, dann reagiert.", "Checked in looking glasses first, then reacted."], "bezug": "NIST SP 800-61 Rev. 2, 3.2 Erkennung und Analyse", "gut": true},
+  {"id": "ct_ungeprueft", "wenn": {"fehlt": ["ct_logs"]}, "text": ["Die Certificate-Transparency-Logs blieben ungeprüft; ein falsches Zertifikat fällt dort früh auf.", "The certificate transparency logs stayed unchecked; a false certificate shows up there early."], "bezug": "RFC 9162, Certificate Transparency", "gut": false}
+ ],
  "aktionen": [
   {"id": "looking_glass", "label": ["Route in Looking Glasses prüfen", "Check the route in looking glasses"], "fach": "netz", "einmal": true,
    "zeit": 5, "flags": ["erkannt"], "details": {"bgp": ["AS 64666 kündigt 203.0.113.0/24 an", "AS 64666 announces 203.0.113.0/24"]},
@@ -431,6 +464,12 @@
   {"wenn": {"var": {"patch": "da"}}, "flags": ["patch_da"]}
  ],
  "ziel": [{"flags": ["gepatcht"]}, {"irgendein": ["sauber_geprueft", "bereinigt"]}, {"status": {"vpn": ["Online"]}}],
+ "lehren": [
+  {"id": "nicht_gemeldet", "wenn": {"fehlt": ["melden"], "flags": ["drin_erkannt"]}, "text": ["Der Angriff wurde nicht gemeldet. Betreiber kritischer Anlagen müssen erhebliche Störungen dem BSI melden; auch sonst hilft die Meldung allen.", "The attack was not reported. Operators of critical facilities must report significant incidents to the BSI; otherwise too, the report helps everyone."], "bezug": "BSI-Gesetz, Meldepflichten", "gut": false},
+  {"id": "frueh_abgesichert", "wenn": {"irgendein": ["mitigiert", "vpn_aus"]}, "text": ["Das Gateway früh abgesichert, bevor der Patch kam.", "Secured the gateway early, before the patch came."], "bezug": "NIST SP 800-61 Rev. 2, 3.3 Eindämmung, Beseitigung, Wiederherstellung", "gut": true},
+  {"id": "neu_vor_patch", "wenn": {"genutzt": ["neu"]}, "text": ["Neu aufgesetzt, bevor der Patch da war: Die Lücke blieb offen.", "Rebuilt before the patch was there: the hole stayed open."], "bezug": "NIST SP 800-61 Rev. 2, 3.3 Eindämmung, Beseitigung, Wiederherstellung", "gut": false},
+  {"id": "passwoerter", "wenn": {"genutzt": ["passwoerter"]}, "text": ["Zugangsdaten zurückgesetzt: Gestohlene Passwörter sind wertlos.", "Credentials reset: stolen passwords are worthless."], "bezug": "NIST SP 800-61 Rev. 2, 3.3 Eindämmung, Beseitigung, Wiederherstellung", "gut": true}
+ ],
  "aktionen": [
   {"id": "lesen", "label": ["Meldung und Herstellerhinweis lesen", "Read the alert and the vendor advisory"], "fach": "forensik", "einmal": true,
    "zeit": 5, "flags": ["verstanden"],

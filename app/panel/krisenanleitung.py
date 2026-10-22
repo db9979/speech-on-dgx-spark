@@ -207,6 +207,27 @@ def build(k):
                   _tabelle([("Rang", "Rank"), ("Siege", "Wins"), ("Kollegen", "Colleagues"), ("Budget", "Budget")],
                            [[list(r[1]), f"{r[2]}" + (" + A" if r[3] else ""), f"{r[4]}", f"{round(r[5] * 100)} %"]
                             for r in k.RAENGE])))
+    S.append(_sek("lernen", "Lernen: Tipp, Nachbesprechung, Geist", "Learning: hint, debrief, ghost",
+                  _p("Nach jedem Spiel kommt die Nachbesprechung: was gut lief und was besser geht, mit der Quelle "
+                     "dahinter (NIST SP 800-61, BSI-Standard 200-4, DSGVO und andere). Feste Regeln prüfen deine Züge "
+                     "und ihre Reihenfolge, kein Modell.",
+                     "After every game comes the debrief: what went well and what could be better, with the source behind "
+                     "it (NIST SP 800-61, BSI standard 200-4, GDPR and others). Fixed rules check your moves and their "
+                     "order, no model."),
+                  _liste(("Lernmodus (Häkchen bei „Neues Spiel“): vor jedem Zug ein Tipp, der Knopf ist markiert. Das Panel "
+                          "rechnet dafür einen Zug voraus. Ein Spiel mit Tipps bringt keine Erfolge und zählt nicht für "
+                          "Laufbahn und Bestwert.",
+                          "Learning mode (tick at \"New game\"): a hint before every move, its button is marked. The panel "
+                          "calculates one move ahead for it. A game with hints earns no achievements and does not count "
+                          "for career and best score."),
+                         ("Geist: Hast du dasselbe Szenario auf derselben Stufe schon gespielt, zeigt eine Zeile, wo dein "
+                          "bester Lauf nach gleich vielen Zügen stand (Minute und Schaden).",
+                          "Ghost: if you played the same scenario on the same level before, a line shows where your best run "
+                          "stood after as many moves (minute and damage)."),
+                         ("Statistik unter „Bisherige Spiele“: je Szenario gespielt, gewonnen, Schnitt, Bestwert, "
+                          "Minuten, dazu deine Noten.",
+                          "Statistics under \"Past games\": per scenario played, won, average, best, minutes, and your "
+                          "grades."))))
     S.append(_sek("konsole", "Die Konsole", "The console",
                   _p("Unter der Chronik steht ein Terminal. Du startest auf jump01, dem Linux-Sprungrechner des Admins. "
                      "Von dort erreichst du jeden Rechner des Szenarios mit ssh. Getippte Befehle sind dieselben Züge wie "

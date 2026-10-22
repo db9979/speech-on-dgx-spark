@@ -4884,6 +4884,22 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Lernen im Krisenspiel (V01.0.937, Plan Paket 5)",
+"text": "Lernen im Krisenspiel (V01.0.937, Plan Paket 5): Nach jedem Spiel steht unter der Note die Nachbesprechung (krisenspiel.nachbesprechung): feste Lehren aus den Szenario-Daten (lehren je Szenario, lehren_allgemein für alle) mit ihrer Quelle (NIST SP 800-61 Rev. 2, BSI-Standard 200-4, DSGVO Art. 33, BSI IT-Grundschutz, RFC 6811 und 9162, BSI-Gesetz, Polizei ZAC), was gut lief zuerst. Die Bedingung einer Lehre prüft die Züge in ihrer Reihenfolge (genutzt, fehlt, vor, ohne_vor), das Ende (ende) und Werte wie jede andere Regel; auch abgegebene Aufgaben zählen. check_data prüft Text, Quelle und Zugnamen. Lernmodus (Häkchen unter *Neues Spiel*, POST …/neu mit lernen): vor jedem Zug ein Tipp (krisenspiel.tipp: das Panel probiert jeden angebotenen Zug auf einer Kopie und nimmt den, der dem Ziel am nächsten kommt, dann mehr Lage-Wissen, dann weniger Schaden), der Knopf ist markiert; ein Lernspiel bringt keine Erfolge und zählt nicht für Laufbahn und Bestwert. Geist (krisenspiel.geist): hat das Profil dasselbe Szenario auf derselben Stufe schon ohne Tipps beendet, zeigt eine Zeile, wo der beste Lauf nach gleich vielen Zügen stand (Minute und Schaden, aus kurve im Verlauf). Unter *Bisherige Spi"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Lernen im Krisenspiel (V01.0.937, Plan Paket 5)",
+"text": "ele* eine Statistik je Szenario (gespielt, gewonnen, Schnitt, Bestwert, Minuten) und die Verteilung der Noten. Die Anleitung hat den Abschnitt „Lernen: Tipp, Nachbesprechung, Geist“. Log spiel: neu | … | lernen. Als Nächstes: Paket 4 (mehr Szenarien), dann die übrigen Pakete des Plans."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Dokumentliste für viele Dateien (V01.0.413)",
 "text": "Dokumentliste für viele Dateien (V01.0.413): Ich → Dokumente zeigt jedes Dokument als eine kompakte Zeile (Symbol, Titel, Art · Absender · Quelle, Datum und Größe) statt als Karte mit allen Knöpfen; Abzeichen nur, wenn etwas wichtig ist („Frist 20.12.“, „liest 3/12“, „nicht lesbar“, „für alle“, „Suche aus“). Die Liste scrollt mit der Seite (vorher ein Kasten mit 28 % Bildschirmhöhe), zeigt 50 Zeilen und dann „Weitere zeigen“ und ist beim Sortieren nach Datum in Heute, Letzte 7 Tage, Monate und Jahre gegliedert. Oben: ein Suchfeld filtert sofort nach Titel, Dateiname, Absender, Art, Nummer und Tags, Enter sucht zusätzlich im Inhalt (ersetzt „Suche ausprobieren“, Treffer öffnen das Dokument); Quelle (Hochgeladen, iPhone-App, Begleiter, reMarkable, Aufträge, Von anderen), Sortierung (Neueste, Name, Frist, Größe; Quelle und Sortierung merkt sich der Browser) und Schnellfilter mit Anzahl (Frist offen, Wird gelesen, Nicht lesbar, Für alle, Suche aus) plus Tags als Auswahlliste. Ein Klick öffnet den Detailbereich, auf breiten Seiten neben der Liste, schmal als eigene Seite mit „Zurück zur Liste“: Steckbrief, Zustand mit Balken, Tags direkt bearbeiten, Schalter „Der Assistent sucht darin“ "
 },
@@ -16622,6 +16638,22 @@
 "head": "Voice chat",
 "title": "Team and career in the crisis game (V01.0.936, plan package 3)",
 "text": " is possible now). Career (krisenspiel.RAENGE, laufbahn): junior admin (3 colleagues), admin from 2 wins (4), IT manager from 5 wins (5, budget 110 %), CISO from 10 wins and one grade A (6, budget 120 %); the rank counts for every new game and stands under *Past games* with progress and ladder, under *New game* with team and budget. New achievements \"Well delegated\" (won and at least four tasks handed over) and \"CISO\" (sixteen achievements). The guide has the section \"Team and career\" with the numbers from the code and explains Tab, \"Large\", nano and vi. Live counts the tasks handed over today; log spiel: zug | delegiert. Next: package 5 (learning), then the other packages of the plan."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Learning in the crisis game (V01.0.937, plan package 5)",
+"text": "Learning in the crisis game (V01.0.937, plan package 5): after every game the debrief stands below the grade (krisenspiel.nachbesprechung): fixed lessons from the scenario data (lehren per scenario, lehren_allgemein for all) with their source (NIST SP 800-61 Rev. 2, BSI standard 200-4, GDPR Art. 33, BSI IT-Grundschutz, RFC 6811 and 9162, BSI Act, police ZAC), what went well first. A lesson's condition checks the moves in their order (genutzt, fehlt, vor, ohne_vor), the end (ende) and values like every other rule; tasks handed over count too. check_data checks text, source and move names. Learning mode (tick under *New game*, POST …/neu with lernen): a hint before every move (krisenspiel.tipp: the panel tries every offered move on a copy and takes the one that comes closest to the goal, then more knowledge of the situation, then less damage), its button is marked; a learning game earns no achievements and does not count for career and best score. Ghost (krisenspiel.geist): if the profile finished the same scenario on the same level before without hints, a line shows where the best run stood after as many moves (minute and damage, from kurve in the history). Under *Past games* statis"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Learning in the crisis game (V01.0.937, plan package 5)",
+"text": "tics per scenario (played, won, average, best, minutes) and the spread of grades. The guide has the section \"Learning: hint, debrief, ghost\". Log spiel: neu | … | lernen. Next: package 4 (more scenarios), then the other packages of the plan."
 },
 {
 "lang": "en",

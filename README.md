@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.937** IT crisis game (package 5): debrief with sources (NIST, BSI, GDPR), learning mode with a hint, ghost of the best run, statistics per scenario
 - **V01.0.936** IT crisis game (package 3): a team with subjects and tiredness takes moves over ("Who takes it?", console team/assign); career from junior admin to CISO with more colleagues and budget
 - **V01.0.935** IT crisis game (package 11): play together by invitation link with the roles Engineering, Communication and Lead; console with Tab for files, nano, vi and vim and a "Large" button
 - **V01.0.934** IT crisis game: mode "clock running" (10 s = 1 game minute, only while the page is open, pause in practice and normal, +5 and achievement "Against the clock") and tab "Guide" with quick start, rules, console, all commands, scenarios, achievements and tips from the code
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.930** Exact calculations, more: number words ("six times six"), a calculation in the question makes the tool required, "@Spark prüf das" checks calculations on reMarkable pages ("please check", page unchanged), adding up receipts
 - **V01.0.929** reMarkable notebooks with the date of their last change and "last comparison" in Me → Documents
 - **V01.0.928** What I know about you tidied: tabs, list with details, rename an interest or give it a topic, take a sender out, web tips as a switch; iPhone
-- **V01.0.927** Unclear questions, anonymous: questions no rule of the switch recognizes show redacted on Features → Routing at “unclear” (names, addresses, numbers, codes removed, second leak check, never guests, never who asked, 7 days), with “Belongs to …” for tuning; switch under Targeted tool choice, off; preference per profile under Me → Conversation → Privacy
 
 
 

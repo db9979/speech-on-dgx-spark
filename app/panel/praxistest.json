@@ -2747,6 +2747,13 @@
 "titel": "Krisenspiel: Team und Laufbahn",
 "text": "A: Update, Krisenspiel → Neues Spiel: unter dem Start steht der Rang (Junior-Admin, 3 Kollegen, Budget 100 %). B: Spiel starten: über den Zügen „Wer übernimmt?“ mit den Kollegen und ihren Fächern. C: Einen Kollegen wählen, dann einen technischen Zug: die Karte des Kollegen zeigt die Aufgabe und die Restminuten, der Zug ist weg, Züge der Leitung sind grau. D: Ein paar Züge weiter meldet die Chronik unter „Team“ die fertige Aufgabe, die Werte ändern sich wie beim eigenen Zug. E: Konsole: „team“ zeigt das Team, „assign <name> <aufgabe>“ gibt ab. F: Lagebesprechung oder Essen senkt die Müdigkeit. G: Bisherige Spiele: die Laufbahn als Leiter mit Fortschritt zum nächsten Rang. H: Logs „spiel: zug | delegiert“; Live „N ans Team gegeben“.",
 "thread": "IT-Krisenspiel für einzelne Nutzer"
+},
+{
+"id": "P417",
+"v": 937,
+"titel": "Krisenspiel: Nachbesprechung, Lernmodus, Geist",
+"text": "A: Update, ein Spiel zu Ende spielen (oder aufgeben): unter der Note steht „Nachbesprechung“ mit „Gut:“ zuerst, dann „Besser:“, jeweils mit Quelle. B: Neues Spiel mit Häkchen „Lernmodus“: über den Zügen ein Tipp, der passende Knopf ist markiert; den Tipps folgen gewinnt meist. C: Am Ende: keine Erfolge, Bisherige Spiele zeigt „Lernmodus“. D: Dasselbe Szenario auf derselben Stufe noch einmal ohne Lernmodus: die Zeile „Geist“ zeigt, wo der beste Lauf nach gleich vielen Zügen stand. E: Bisherige Spiele: Statistik je Szenario und Noten A bis F. F: Anleitung: Abschnitt „Lernen: Tipp, Nachbesprechung, Geist“. G: Logs „spiel: neu | … | lernen“.",
+"thread": "IT-Krisenspiel für einzelne Nutzer"
 }
 ]
 }

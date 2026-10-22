@@ -254,6 +254,8 @@ def check_data(d=None):
             bad.append(f"allgemein {a.get('id')}: label")
         if a.get("rolle", "technik") not in ROLLEN:
             bad.append(f"allgemein {a.get('id')}: rolle")
+    for i, x in enumerate(d.get("lehren_allgemein", [])):
+        _check_lehre(x, None, f"lehre allgemein {i}", bad, cond)
     ks = d.get("kollegen", [])
     if len(ks) < max(r[4] for r in RAENGE) or len({k.get("id") for k in ks}) != len(ks):
         bad.append("kollegen: too few or ids twice")
@@ -304,6 +306,11 @@ def check_data(d=None):
                 bad.append(f"{sid} {t.get('id')}: chance")
         for g in sz.get("ziel", []):
             cond(g, sz, f"{sid} ziel")
+        lids = [x.get("id") for x in sz.get("lehren", []) + d.get("lehren_allgemein", [])]
+        if len(lids) != len(set(lids)):
+            bad.append(f"{sid}: lehren ids twice")
+        for x in sz.get("lehren", []):
+            _check_lehre(x, sz, f"{sid} lehre {x.get('id')}", bad, cond, set(acts))
         if not sz.get("ziel"):
             bad.append(f"{sid}: no goal")
         # the console of the scenario (Paket 2): wrong moves are effects, output lines have conditions
@@ -320,6 +327,27 @@ def check_data(d=None):
     if d is _DATA:
         bad += krisenkonsole.check_data(SZENARIEN, d.get("allgemein", []))
     return bad
+
+
+LEHR_KEYS = {"genutzt", "fehlt", "vor", "ohne_vor", "ende"}
+
+
+def _check_lehre(x, sz, where, bad, cond, acts=None):
+    w = x.get("wenn") or {}
+    if not _pair(x.get("text")) or not isinstance(x.get("bezug"), str) or not x["bezug"].strip() or not isinstance(w, dict) \
+            or not isinstance(x.get("gut", False), bool) or not x.get("id"):
+        bad.append(f"{where}: text, bezug, gut, id")
+        return
+    if any(e not in ENDEN for e in w.get("ende", [])):
+        bad.append(f"{where}: ende")
+    for k in ("vor", "ohne_vor"):
+        if k in w and len(w[k]) != 2:
+            bad.append(f"{where}: {k} takes two moves")
+    known = acts if acts is not None else {a["id"] for a in _DATA.get("allgemein", [])}
+    for k in ("genutzt", "fehlt", "vor", "ohne_vor"):
+        if any(a not in known for a in w.get(k, [])):
+            bad.append(f"{where}: {k} names an unknown move")
+    cond({k: v for k, v in w.items() if k not in LEHR_KEYS}, sz, where)
 
 
 # ---------------------------------------------------------------- fixed rules
@@ -495,10 +523,10 @@ def available(st):
     return out
 
 
-def new_game(szenario, stufe, seed=None, lang="de", now=None, modus="knoepfe", uhr=False, rang="junior"):
+def new_game(szenario, stufe, seed=None, lang="de", now=None, modus="knoepfe", uhr=False, rang="junior", lernen=False):
     """A fresh game: variants drawn from the seed, the start effects applied. modus „konsole“: moves only by typing;
     uhr: the clock runs in real time (uhr_ticken); rang (Laufbahn): the team's size and the budget factor, the
-    colleagues drawn from the seed."""
+    colleagues drawn from the seed; lernen (Paket 5): the page shows a hint before every move, no achievements."""
     if szenario not in SZENARIEN or stufe not in STUFEN or modus not in MODI or rang not in RANG_IDS:
         raise ValueError("szenario, stufe, modus, rang")
     r = RAENGE[RANG_IDS.index(rang)]
@@ -516,7 +544,8 @@ def new_game(szenario, stufe, seed=None, lang="de", now=None, modus="knoepfe", u
           "flags": {}, "flag_min": {}, "uses": {}, "done": [], "chronik": [], "trace": [], "ende": None,
           "modus": modus, "knoepfe": 0, "konsole": krisenkonsole.fresh(szenario),
           "uhr": {"t": now, "rest": 0.0, "offen": 0, "pause": False, "pausen": 0} if uhr else None,
-          "rang": rang, "kollegen": _kollegen(seed, r[4]), "delegiert": 0}
+          "rang": rang, "kollegen": _kollegen(seed, r[4]), "delegiert": 0, "lernen": bool(lernen), "folge": [],
+          "kurve": []}
     rec = _rec()
     for e in sz.get("start", []):
         if holds(e.get("wenn"), st):
@@ -525,7 +554,7 @@ def new_game(szenario, stufe, seed=None, lang="de", now=None, modus="knoepfe", u
     st["chronik"].append({"zug": 0, "min": 0, "art": "start", "text": _text(sz["start_text"], st)})
     st["trace"].append({"zug": 0, "steps": [
         _step("eingabe", ("Neues Spiel", "New game"), {"szenario": szenario, "stufe": stufe, "seed": seed, "modus": modus,
-                                                     "uhr": bool(uhr), "rang": rang,
+                                                     "uhr": bool(uhr), "rang": rang, "lernen": bool(lernen),
                                                      "kollegen": [k["id"] for k in st["kollegen"]]}),
         _step("zufall", ("Varianten aus dem Seed", "Variants from the seed"), {"varianten": var}),
         _step("regel", ("Startlage", "Starting situation"), {"systeme": rec["assets"], "werte": rec["delta"]})]})
@@ -578,8 +607,11 @@ def move(st, aktion, now=None, a=None, via="knopf", rolle=None, wer=None, an=Non
         clock, st["uhr"]["offen"] = st["uhr"]["offen"], 0
     steps = [_step("eingabe", ("Zug", "Move"), dict({"zug": st["zug"], "aktion": aktion, "label": a["label"], "weg": via},
                                                     **({"rolle": rolle} if rolle else {})))]
+    if aktion in {x["id"] for x in _all_actions(SZENARIEN[st["szenario"]])}:
+        st.setdefault("folge", []).append(aktion)
     if task:
         ta, tk, n = task
+        st.setdefault("folge", []).append(ta["id"])
         st["uses"][ta["id"]] = st["uses"].get(ta["id"], 0) + 1
         tk["auftrag"] = {"aktion": ta["id"], "label": list(ta["label"]), "start": minutes_gone(st), "fertig": minutes_gone(st) + n}
         st["delegiert"] = st.get("delegiert", 0) + 1
@@ -660,6 +692,7 @@ def move(st, aktion, now=None, a=None, via="knopf", rolle=None, wer=None, an=Non
         steps.append(_step("antwort", ("Angebotene Züge", "Moves offered"), {"anzahl": len(available(st))}))
     steps[1]["ms"] = round((time.perf_counter() - t0) * 1000, 1)
     st["chronik"] = st["chronik"][-CHRONIK_MAX:]
+    st.setdefault("kurve", []).append([st["zug"], gone, m["kosten"]])     # the ghost of a later game (Paket 5)
     st["trace"].append({"zug": st["zug"], "steps": steps})
     st["trace"] = st["trace"][-TRACE_MAX:]
     return {"label": a["label"], "texte": texts, "systeme": rec["assets"], "minute": gone}
@@ -740,13 +773,66 @@ def bewerten(st, end):
 def finish(st, end):
     p, note, why = bewerten(st, end)
     st["ende"] = {"art": end, "punkte": p, "note": note, "gruende": why, "minuten": minutes_gone(st)}
+    st["ende"]["lehren"] = nachbesprechung(st)
+
+
+def _lehre_gilt(w, st):
+    f = st.get("folge") or []
+    first = {}
+    for i, a in enumerate(f):
+        first.setdefault(a, i)
+    if any(a not in first for a in w.get("genutzt", ())) or any(a in first for a in w.get("fehlt", ())):
+        return False
+    if "vor" in w and not (w["vor"][0] in first and w["vor"][1] in first and first[w["vor"][0]] < first[w["vor"][1]]):
+        return False
+    if "ohne_vor" in w and not (w["ohne_vor"][1] in first and first.get(w["ohne_vor"][0], 10 ** 6) > first[w["ohne_vor"][1]]):
+        return False
+    if "ende" in w and (st.get("ende") or {}).get("art") not in w["ende"]:
+        return False
+    return holds({k: v for k, v in w.items() if k not in LEHR_KEYS}, st)
+
+
+def nachbesprechung(st):
+    """The debrief (Paket 5): the fixed lessons of the scenario and the general ones whose condition holds for the
+    moves taken (st["folge"]) and the end; what went well first. Never the model."""
+    sz = SZENARIEN[st["szenario"]]
+    out = [{"id": x["id"], "text": list(x["text"]), "bezug": x["bezug"], "gut": bool(x.get("gut"))}
+           for x in list(sz.get("lehren", [])) + list(_DATA.get("lehren_allgemein", [])) if _lehre_gilt(x.get("wenn") or {}, st)]
+    return sorted(out, key=lambda x: not x["gut"])
+
+
+def tipp(st):
+    """Lernmodus: the offered move that brings the game closest to its goal one move ahead (fixed rule: goal parts,
+    then flags, then less damage), or None. Tried on a copy, the game itself does not change."""
+    if st.get("ende"):
+        return None
+    sz = SZENARIEN[st["szenario"]]
+    best = None
+    for a in available(st):
+        if not a["frei"]:
+            continue
+        s2 = copy.deepcopy(st)
+        s2["trace"], s2["chronik"] = [], []
+        move(s2, a["id"])
+        won = (s2.get("ende") or {}).get("art") == "gewonnen"
+        lost = bool(s2.get("ende")) and not won
+        goal = sum(int(holds(g, s2)) for g in sz["ziel"])
+        score = (won, not lost, goal, len(s2["flags"]) - len(st["flags"]), -s2["m"]["kosten"])
+        if best is None or score > best[0]:
+            best = (score, a)
+    if not best:
+        return None
+    a = best[1]
+    return {"aktion": a["id"], "label": a["label"],
+            "warum": ["Dieser Zug bringt dich dem Ziel am nächsten (das Panel rechnet einen Zug voraus).",
+                      "This move brings you closest to the goal (the panel calculates one move ahead)."]}
 
 
 def erfolge_neu(st, prof_data):
     """The achievements this finished game earns that the profile does not have yet (fixed rules)."""
     have = prof_data.get("erfolge", {})
     e = st["ende"]
-    if e["art"] == "aufgegeben":          # Dominik 2026-10-22: a game given up is not played to the end, no achievement
+    if e["art"] == "aufgegeben" or st.get("lernen"):   # given up (Dominik 2026-10-22) or with hints: no achievement
         return []
     m = st["m"]
     won = e["art"] == "gewonnen"
@@ -800,15 +886,26 @@ def _book(d, now):
         d["erfolge"][k] = int(now)
     stats = d["stats"]
     stats["gespielt"] = stats.get("gespielt", 0) + 1
-    if st["ende"]["art"] == "gewonnen":
+    learn = bool(st.get("lernen"))                 # with hints: counted as played, never for the career or the best
+    won = st["ende"]["art"] == "gewonnen" and not learn
+    if won:
         stats["gewonnen"] = stats.get("gewonnen", 0) + 1
         stats.setdefault("gewonnen_je", {})[st["szenario"]] = stats.get("gewonnen_je", {}).get(st["szenario"], 0) + 1
-    best = stats.setdefault("beste", {})
-    best[st["szenario"]] = max(best.get(st["szenario"], 0), st["ende"]["punkte"])
+    if not learn:
+        best = stats.setdefault("beste", {})
+        best[st["szenario"]] = max(best.get(st["szenario"], 0), st["ende"]["punkte"])
+    je = stats.setdefault("je", {}).setdefault(st["szenario"], {"gespielt": 0, "gewonnen": 0, "summe": 0, "minuten": 0})
+    je["gespielt"] += 1
+    je["gewonnen"] += int(won)
+    je["summe"] += st["ende"]["punkte"]
+    je["minuten"] += st["ende"]["minuten"]
+    noten = stats.setdefault("noten", {})
+    noten[st["ende"]["note"]] = noten.get(st["ende"]["note"], 0) + 1
     st["ende"]["erfolge"] = new
     d["verlauf"] = ([{"id": st["id"], "szenario": st["szenario"], "stufe": st["stufe"], "seed": st["seed"],
                       "ende": st["ende"]["art"], "note": st["ende"]["note"], "punkte": st["ende"]["punkte"],
-                      "zuege": st["zug"], "minuten": st["ende"]["minuten"], "t": int(now), "erfolge": new}]
+                      "zuege": st["zug"], "minuten": st["ende"]["minuten"], "t": int(now), "erfolge": new, "lernen": learn,
+                      "kurve": [] if learn else st.get("kurve", [])[:MAX_ZUEGE]}]
                     + d["verlauf"])[:VERLAUF_MAX]
     print(f"spiel: ende | {st['ende']['art']} | note {st['ende']['note']} | {st['zug']} zuege | {len(new)} erfolge", flush=True)
 
@@ -930,10 +1027,11 @@ def view(d, uid=None):
                          for s in _DATA["szenarien"]],
            "stufen": [{"id": k, "name": list(v["name"]), "zeit": v["zeit"]} for k, v in STUFEN.items()],
            "erfolge": [{"id": k, "name": list(n), "text": list(t), "t": d["erfolge"].get(k, 0)} for k, n, t in ERFOLGE],
-           "verlauf": [dict(x, titel=SZENARIEN[x["szenario"]]["titel"]) for x in d["verlauf"] if x.get("szenario") in SZENARIEN],
+           "verlauf": [dict({k: v for k, v in x.items() if k != "kurve"}, titel=SZENARIEN[x["szenario"]]["titel"])
+                       for x in d["verlauf"] if x.get("szenario") in SZENARIEN],
            "laufbahn": laufbahn(d), "faecher": {k: list(v) for k, v in FAECHER.items()},
            "stats": {"gespielt": d["stats"].get("gespielt", 0), "gewonnen": d["stats"].get("gewonnen", 0),
-                     "beste": d["stats"].get("beste", {})},
+                     "beste": d["stats"].get("beste", {}), "je": d["stats"].get("je", {}), "noten": d["stats"].get("noten", {})},
            "spiel": None}
     if st:
         sz = SZENARIEN[st["szenario"]]
@@ -946,12 +1044,28 @@ def view(d, uid=None):
                         "modus": st.get("modus", "knoepfe"), "uhr": _uhr_view(st),
                         "aktionen": [] if st["ende"] or st.get("modus") == "konsole" else available(st),
                         "rang": st.get("rang", "junior"), "delegiert": st.get("delegiert", 0),
+                        "lernen": bool(st.get("lernen")), "tipp": tipp(st) if st.get("lernen") and not st["ende"] else None,
+                        "geist": geist(d, st),
                         "kollegen": [dict(x, rest=max(0, x["auftrag"]["fertig"] - minutes_gone(st)) if x["auftrag"] else 0)
                                      for x in st.get("kollegen") or ()],
                         "konsole": dict(krisenkonsole.hilfe_daten(st["szenario"]), host=k["host"], zeilen=k["zeilen"],
                                         verlauf=k["verlauf"], lesen=k["min"], lesen_max=krisenkonsole.LESEN_MAX,
                                         **krisenkonsole.tab_daten(st, holds, st.get("lang", "de")))}
     return out
+
+
+def geist(d, st):
+    """The ghost (Paket 5): the profile's best finished run of the same scenario and level (not with hints), and
+    where it stood after as many moves: minute and damage. None without one."""
+    runs = [v for v in d["verlauf"] if v.get("szenario") == st["szenario"] and v.get("stufe") == st["stufe"]
+            and v.get("kurve") and not v.get("lernen") and v.get("id") != st["id"]]
+    if not runs:
+        return None
+    b = max(runs, key=lambda v: (v["punkte"], -v["minuten"]))
+    k = b["kurve"]
+    bei = k[min(st["zug"], len(k)) - 1] if st["zug"] else None
+    return {"note": b["note"], "punkte": b["punkte"], "zuege": b["zuege"], "minuten": b["minuten"], "seed": b["seed"],
+            "bei": {"zug": bei[0], "min": bei[1], "kosten": bei[2]} if bei else None}
 
 
 def _uhr_view(st):
@@ -1008,26 +1122,27 @@ async def neu(request: Request, prof=Depends(browser_profile)):
     guard.limit(request, "spiel", uid)
     b = await json_body(request, BODY)
     sid, stufe, seed, modus = b.get("szenario"), b.get("stufe", "normal"), b.get("seed"), b.get("modus", "knoepfe")
-    uhr = b.get("uhr", False)
+    uhr, lernen = b.get("uhr", False), b.get("lernen", False)
     if sid == ZUFALL and (seed is None or isinstance(seed, int) and not isinstance(seed, bool)):
         n = len(SZENARIEN)                      # Dominik 2026-10-22: „Überraschung, was passiert“; with a seed repeatable
         sid = sorted(SZENARIEN)[secrets.randbelow(n) if seed is None else random.Random(f"zufall:{seed}").randrange(n)]
-    if sid not in SZENARIEN or stufe not in STUFEN or modus not in MODI or not isinstance(uhr, bool) or seed is not None and (
+    if sid not in SZENARIEN or stufe not in STUFEN or modus not in MODI or not isinstance(uhr, bool) \
+            or not isinstance(lernen, bool) or seed is not None and (
             not isinstance(seed, int) or isinstance(seed, bool) or not 0 <= seed <= SEED_MAX):
         print("spiel: neu abgelehnt | eingabe", flush=True)
-        raise HTTPException(400, "szenario, stufe, seed, modus, uhr")
+        raise HTTPException(400, "szenario, stufe, seed, modus, uhr, lernen")
 
     def go():
         with _lock(uid):
             d = load(uid)
             if d["spiel"] and not d["spiel"].get("ende"):
                 print("spiel: altes spiel ersetzt | nicht beendet", flush=True)
-            d["spiel"] = new_game(sid, stufe, seed, _lang(b), modus=modus, uhr=uhr, rang=laufbahn(d)["rang"])
+            d["spiel"] = new_game(sid, stufe, seed, _lang(b), modus=modus, uhr=uhr, rang=laufbahn(d)["rang"], lernen=lernen)
             save(uid, d)
             return d
     d = await asyncio.to_thread(go)
     _day.bump("spiele")
-    print(f"spiel: neu | {sid} | {stufe} | {modus}{' | uhr' if uhr else ''} | {profiles.log_name(prof)}", flush=True)
+    print(f"spiel: neu | {sid} | {stufe} | {modus}{' | uhr' if uhr else ''}{' | lernen' if lernen else ''} | {profiles.log_name(prof)}", flush=True)
     return view(d, uid)
 
 
