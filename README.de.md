@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.948** ROT-FIX: der Angriffs-Selbsttest für das Tagesbriefing hing von der Uhrzeit um Mitternacht ab; sein Termin gilt jetzt unabhängig von Uhrzeit und Zeitzone als „heute“
 - **V01.0.947** IT-Krisenspiel wieder entfernt (auf Wunsch): Spiel, Netzduell und Spielprofile „Nur Krisenspiel“
 - **V01.0.946** Satzende am Tonfall (Schalter, aus): Smart Turn auf dem Modell-Rechner misst an jeder Sprechpause, ob du fertig klingst; nur Zahlen, entscheidet noch nichts, Auswertung nach 200 Pausen oder 7 Tagen unter dem Schalter
 - **V01.0.945** Spielprofile „Nur Krisenspiel“: Mitspieler ohne Assistent
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.941** Krisenspiel: Anleitung springt, QR-Codes ganz sichtbar, Ausschalten trennt die Konsole
 - **V01.0.940** IT-Krisenspiel (Paket 7): eigene Seite in der iPhone-App (Meine Sachen → Krisenspiel) mit Zügen, Konsole und Nachbesprechung
 - **V01.0.939** IT-Krisenspiel (Paket 6): Tages- und Wochen-Herausforderung mit Bestenliste (ohne Namen, mit Namen oder gar nicht) und Mutatoren mit Bonuspunkten
-- **V01.0.938** IT-Krisenspiel (Paket 4): sieben neue Szenarien (DDoS, Datenleck mit DSGVO-Frist, Innentäter, Cloud-Ausfall, vergiftetes Update, Chef-Betrug, gelöschte Datenbank) mit eigener Konsole
 
 
 

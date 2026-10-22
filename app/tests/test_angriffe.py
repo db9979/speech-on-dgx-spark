@@ -235,13 +235,17 @@ class Angriffe(unittest.TestCase):
                 {"role": "user", "content": f"Was ist {key}?"}, {"role": "assistant", "content": f"{key} ist:\n{text}"}]})
             ask = f'TOOL history_search {{"query": "{key}"}}'
         elif e in ("calendar_events", "daily_briefing"):
-            day = datetime.datetime.now(datetime.timezone.utc).astimezone(chat.system_zone()).date()
+            # the briefing reads "today" in the request's zone (tz below) at its own moment: the entry runs from the day
+            # before to the day after, so it is "today" whatever the clock says, also across midnight (rule 9)
+            day = datetime.datetime.now(chat.user_zone("Europe/Berlin")).date()
+            first, end = day - datetime.timedelta(days=1), day + datetime.timedelta(days=2)
             if e == "calendar_events":
-                day = datetime.date(2030, 3, 4)
+                day = first = datetime.date(2030, 3, 4)
+                end = day + datetime.timedelta(days=1)
             title = text.replace("\\", "\\\\").replace("\n", "\\n").replace(",", "\\,").replace(";", "\\;")
             path = f"/dav/{key}.ics"
             helpers.CAL_EVENTS[path] = ("BEGIN:VCALENDAR\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\n"
-                                        f"UID:{key}\r\nDTSTART;VALUE=DATE:{day:%Y%m%d}\r\n"
+                                        f"UID:{key}\r\nDTSTART;VALUE=DATE:{first:%Y%m%d}\r\nDTEND;VALUE=DATE:{end:%Y%m%d}\r\n"
                                         f"SUMMARY:{key} Gartenfest\\n{title}\r\n"
                                         "END:VEVENT\r\nEND:VCALENDAR\r\n")
             calendars._drop(self.uid)   # the calendar's memory: read it anew
