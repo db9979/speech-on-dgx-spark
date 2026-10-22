@@ -266,6 +266,10 @@ def fake_llm():
                     yield "data: [DONE]\n\n"
                     return
                 c, role = "NO TOOL | | Fertig.", "user"
+            stubborn = next((str(m.get("content") or "") for m in b["messages"] if m["role"] == "user"
+                             and str(m.get("content") or "").startswith("STUR ")), "")
+            if role == "user" and stubborn:  # SAY even when a tool is required and after being asked again
+                c = "SAY " + stubborn[5:]
             if role == "user" and c.startswith("SAY "):  # a model that answers without a tool, whatever is asked
                 c = "NO TOOL" + c[3:]
             if role == "user" and c.startswith("TOOL "):

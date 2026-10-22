@@ -41,6 +41,7 @@ class Rules(unittest.TestCase):
                          ("rechnen", "19 Prozent von 249 Euro ist 47,31."))
         self.assertEqual(sofort.answer("Rechne (3 + 4) * 5", NOW)[1], "(3 plus 4) mal 5 ist 35.")
         self.assertEqual(sofort.answer("17 x 23", NOW)[1], "17 mal 23 ist 391.")
+        self.assertEqual(sofort.answer("Was ist sechs mal sechs?", NOW)[1], "6 mal 6 ist 36.")
         self.assertIsNone(sofort.answer("Was ist __import__('os')?", NOW))
         self.assertIsNone(sofort.answer("Was ist 9 hoch 9 hoch 9?", NOW))
 

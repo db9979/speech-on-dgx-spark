@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.930** Rechnen genauer: Zahlwörter („sechs mal sechs“), Rechnung in der Frage macht das Werkzeug zur Pflicht, „@Spark prüf das“ prüft Rechnungen auf reMarkable-Seiten („bitte prüfen“, Seite bleibt), Belege zusammenrechnen
 - **V01.0.929** reMarkable-Notizbücher mit Datum der letzten Änderung und „Letzter Abgleich“ in Ich → Dokumente
 - **V01.0.928** Was ich über dich weiß aufgeräumt: Reiter, Liste mit Detail, Interessen umbenennen oder einem Thema zuordnen, Absender herausnehmen, Netz-Tipps als Schalter; iPhone
 - **V01.0.927** Unklare Fragen anonym: Fragen, die keine Regel der Weiche erkennt, stehen geschwärzt auf Funktionen → Weiche bei „unklar“ (Namen, Adressen, Nummern, Codes raus, zweite Leck-Prüfung, nie Gäste, nie wer fragte, 7 Tage), mit „Gehört zu …“ zum Feintunen; Schalter unter Gezielte Werkzeugwahl, aus; Vorliebe je Profil unter Ich → Gespräch → Datenschutz
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.923** Was ich über dich weiß: bei „Thema unklar“ ein vorhandenes Thema wählen (bestätigte Interessen als Chips, Auswahlliste mit den festen Themen, Vorschläge beim Tippen) statt nur eintippen; iPhone
 - **V01.0.922** Was ich über dich weiß: Vorschläge sind Themen statt Absendernamen (feste Themenliste, Absender als Chips, Beispiel-Betreffe, „Thema unklar“ mit eigenem Thema), eigene Adressen und Dienste wie GitHub nie, „Stimmt“ bestätigt das Thema, Netz-Tipp sucht nur das Themawort; iPhone
 - **V01.0.921** Angriffsprobe in der Werkstatt (Stufe 2 des Angriffs-Selbsttests): Kachel „Angriffe prüfen“ misst, wie oft das laufende Sprachmodell einem versteckten Befehl in fremdem Text folgen würde, je Tarnung und Werkzeug; kein Werkzeug läuft, nur Zahlen; eigener Schalter unter Funktionen → Werkstatt, aus; auch in der iPhone-App
-- **V01.0.920** Test-Fix: der Seitentest „Ältere Mails nachladen“ scrollt weiter bis „Keine älteren Mails“, so lange eine Seite braucht, statt nach zwölf Versuchen aufzugeben (war in der Werkstatt auf dem Spark rot)
 
 
 

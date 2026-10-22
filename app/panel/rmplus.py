@@ -9,7 +9,9 @@ review and daily inbox keep a preference to switch them off; guests never.
 1 rmmorning   Morgenblatt: the daily briefing (chat.morning_briefing) as a PDF with ruled lines for notes,
               once a day from rm_morning_at (two hours' window, the panel may have been off).
 2 rmask       "@Spark" on a page: the question after it is answered from the own documents (and the web
-              search when the Spark has one) and put next to it as "Antwort: …".
+              search when the Spark has one) and put next to it as "Antwort: …". With Rechnen mit festem Werkzeug
+              „@Spark prüf das“ gets the panel's check of the page's calculations (rechnen.check, no model), and a
+              sum in the model's answer is computed again (rechnen.fix).
 3 rmtodo      Lines starting with ☐, [ ], "TODO" or "Aufgabe:" become proposals under Ich → reMarkable;
               a reminder only after the person's click (POST /api/profile/remarkable/todo).
 4 rmmeet      A notebook called Besprechung / Meeting / Protokoll …, quiet for QUIET seconds: a summary with
@@ -41,6 +43,7 @@ import llm
 import guard
 import hintergrund
 import profiles
+import rechnen
 import remarkable
 import rmaufgaben
 import rmpapier
@@ -184,8 +187,28 @@ def todos(text):
     return [re.sub(r"\s+", " ", m.group(1)).strip(" .") for m in TODO.finditer(str(text or ""))][:20]
 
 
+# „@Spark prüf das“, „@Spark stimmt das?“: the page's calculations are computed again by the panel (rechnen.check)
+CHECK = re.compile(r"(?i)\b(prüf\w*|pruef\w*|kontrollier\w*|nachrechn\w*|rechne\w* nach|stimm(?:t|en)|richtig|"
+                   r"check\w*|korrigier\w*)\b")
+
+
+def sums_on(uid, q, page):
+    """The panel's fixed check of the calculations on a page when the question asks for it (Rechnen mit festem
+    Werkzeug on), else None: the model answers as before. The page is only data; nothing on it is changed."""
+    if not features.allowed("rechnen", uid) or not CHECK.search(q):
+        return None
+    text = re.sub(r"(?m)^\s*(?:Bild:.*|.*@\s?spark\b.*)$", "", str(page.get("text") or ""), flags=re.I)
+    found = rechnen.check(text)
+    print(f"remarkable: @Spark rechnungen geprueft {len(found)}, bitte pruefen {sum(1 for f in found if not f[1])}",
+          flush=True)
+    return rechnen.check_text(found) if found else None
+
+
 async def answer(uid, q, page):
     import wissen
+    checked = sums_on(uid, q, page)
+    if checked:
+        return await _place_answer(uid, q, page, checked)
     found = await wissen.search(uid, q, k=4)
     today = datetime.datetime.now(_zone(uid)).strftime("%d.%m.%Y")
     parts = [f"Heute ist der {today}. Die Frage der Person: {q}",
@@ -209,6 +232,16 @@ async def answer(uid, q, page):
           f"web search {'yes' if web else 'no'}", flush=True)
     if not text:
         return None
+    if features.allowed("rechnen", uid):   # a sum the model wrote is computed again (rechnen.fix), line by line
+        fixed = [rechnen.fix(line) for line in text.split("\n")]
+        if any(f[1] for f in fixed):
+            print(f"remarkable: @Spark rechnung korrigiert ({sum(f[1] for f in fixed)})", flush=True)
+            text = "\n".join(f[0] for f in fixed)
+    return await _place_answer(uid, q, page, text)
+
+
+async def _place_answer(uid, q, page, text):
+    """The answer as a new document next to the question (rmpapier sheet or EPUB)."""
     short = " ".join(q.split()[:7]).rstrip("?.!,")
     body = f"Frage (aus „{page['name']}“, Seite {page['page']}):\n{q}\n\n{text}"
     if features.allowed("rmpapier", uid):
@@ -398,7 +431,9 @@ GUIDE = (
     ("rmask", "@Spark: Fragen auf Papier",
      "Schreib in ein gelesenes Notizbuch „@Spark“ und dahinter deine Frage, zum Beispiel „@Spark Wie lange hält "
      "Sauerteig im Kühlschrank?“. Nach dem nächsten Abgleich liegt die Antwort als „Antwort: …“ neben deinen "
-     "Notizen. Der Spark nutzt dafür deine Dokumente und, wenn vorhanden, die Websuche."),
+     "Notizen. Der Spark nutzt dafür deine Dokumente und, wenn vorhanden, die Websuche. Mit „Rechnen mit festem "
+     "Werkzeug“ rechnet „@Spark prüf das“ jede Rechnung auf der Seite nach („17 · 23 = 381“: bitte prüfen, das "
+     "Panel rechnet 391); deine Seite bleibt, wie sie ist."),
     ("rmtodo", "Aufgaben aus der Handschrift",
      "Beginne eine Zeile mit ☐, [ ], „TODO“ oder „Aufgabe:“. Der Spark sammelt solche Zeilen unter Ich → reMarkable "
      "und meldet sich kurz. Eine Erinnerung wird erst daraus, wenn du dort auf „Erinnern“ tippst."),

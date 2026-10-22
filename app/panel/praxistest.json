@@ -2705,6 +2705,13 @@
 "v": 929,
 "titel": "reMarkable: Datum und letzter Abgleich",
 "text": "A: Ich → Dokumente, Quelle reMarkable: neben der Anzahl steht „Letzter Abgleich hh:mm · N Seiten neu“. B: Auf dem reMarkable in einem ausgewählten Heft etwas schreiben, ein paar Minuten warten: das Heft steht mit dem heutigen Datum oben unter „Heute“, die Zeile nennt neue Seiten. C: Ein Heft öffnen: „Hinzugefügt“ nennt den Tag der Übernahme, „Geändert“ die letzte Änderung. D: iPhone-App Dokumente, Quelle reMarkable: dieselbe Zeile und dieselben Daten."
+},
+{
+"id": "P411",
+"v": 930,
+"titel": "Rechnen: Zahlwörter, Papier, Belege",
+"text": "A: Update, Funktionen → Gespräch → Rechnen mit festem Werkzeug an. B: Frag „Was ist sechs mal sechs und daraus die Wurzel?“: unter Logs → Anfragen läuft das Werkzeug Rechnen (Weiche „Pflicht rechnen“), Antwort 36 und 6. C: Auf dem reMarkable eine Seite mit „17 · 23 = 381“ und „12 + 30 = 42“ schreiben, darunter „@Spark prüf das“: nach dem Abgleich liegt daneben „2 Rechnungen nachgerechnet, 1 bitte prüfen“ mit dem Wert 391; die Seite selbst ist unverändert. D: „Was habe ich im Oktober zusammen getankt?“ (mit Tankbelegen in den Dokumenten): jeder Beleg mit Betrag, die Summe vom Panel. E: Zustand → Logs: „remarkable: @Spark rechnungen geprueft 2, bitte pruefen 1“, nie die Zahlen der Seite.",
+"thread": "Rechnen mit festem Werkzeug"
 }
 ]
 }

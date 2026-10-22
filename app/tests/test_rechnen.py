@@ -82,6 +82,55 @@ class Core(unittest.TestCase):
         self.assertEqual(rechnen.say(D(120) / 7, True), "about 17.14")
 
 
+class Words(unittest.TestCase):
+    def test_number_words_become_digits(self):
+        self.assertEqual(rechnen.digits("Was ist sechs mal sechs?"), "Was ist 6 mal 6?")
+        self.assertEqual(rechnen.digits("sechsunddreißig plus zweihundertfünfzig"), "36 plus 250")
+        self.assertEqual(rechnen.digits("drei Komma fünf mal zwei"), "3,5 mal 2")
+        self.assertEqual(rechnen.digits("zwei Millionen dreihunderttausend"), "2300000")
+        self.assertEqual(rechnen.digits("eine Million durch vier"), "1000000 durch 4")
+        self.assertEqual(rechnen.digits("thirty-six times two hundred and fifty", True), "36 times 250")
+        for plain in ("Mal ein Bild von einem Hund", "Ich hätte gern eine Pizza", "Und dann?"):
+            self.assertEqual(rechnen.digits(plain), plain)
+        self.assertEqual(value("sechs mal sechs"), 36)
+        self.assertEqual(value("einhundertzwanzig geteilt durch sieben") * 7, 120)
+
+    def test_a_calculation_in_own_words_needs_the_tool(self):
+        for q in ("Was ist sechs mal sechs und daraus die Wurzel?", "Was sind 3,5 Prozent Zinsen auf 12000 Euro?",
+                  "Wie viele Tage bis Weihnachten?", "Rechne 17*23", "Wie viel sind 19 % von 249 €?"):
+            self.assertTrue(rechnen.wants(q), q)
+        for q in ("Mach das Licht an", "Termin um 14:30", "Wie wird das Wetter morgen?", "10-12 Uhr",
+                  "Welche Rechnungen kamen diese Woche?", "Was kostet 1 Liter Milch?"):
+            self.assertFalse(rechnen.wants(q), q)
+
+
+class Paper(unittest.TestCase):
+    PAGE = ("Hausaufgaben\n17 · 23 = 381\n12 + 30 = 42\nBild: ein Haus\n3x4=12\n"
+            "zwölf mal zwölf ist hundertvierundvierzig\nEinkaufen: Milch\n@Spark prüf das")
+
+    def test_every_calculation_on_a_page_is_checked(self):
+        found = rechnen.check(self.PAGE)
+        self.assertEqual(found[0], ("17 · 23 = 381", False, "391"))
+        self.assertEqual([f[1] for f in found], [False, True, True, True])
+        text = rechnen.check_text(found)
+        self.assertIn("1 bitte prüfen", text)
+        self.assertIn("bitte prüfen, das Panel rechnet 391", text)
+        self.assertIn("falsch gelesen", text)   # handwriting may be read wrong: never "falsch" for the person
+        self.assertIn("keine Rechnung", rechnen.check_text([]))
+
+    def test_at_spark_check_needs_the_switch_and_a_check_word(self):
+        import rmplus
+        helpers.keep_chat(self, "rechnen")
+        uid = profile("Rechnen5").get("/api/whoami").json()["profile"]["id"]
+        page = {"text": self.PAGE, "name": "Heft", "page": 1}
+        helpers.set_config(rechnen=False)
+        self.assertIsNone(rmplus.sums_on(uid, "prüf das", page))
+        helpers.set_config(rechnen=True)
+        self.assertIn("das Panel rechnet 391", rmplus.sums_on(uid, "prüf das", page))
+        self.assertIsNone(rmplus.sums_on(uid, "Wie lange hält Sauerteig?", page))
+        self.assertIsNone(rmplus.sums_on(uid, "Stimmt das?", {"text": "Nur Text", "name": "Heft", "page": 1}))
+
+
 class Days(unittest.TestCase):
     def test_days_until_and_between(self):
         self.assertIn("69 Tage (9 Wochen und 6 Tage)", rechnen.days("tage_bis", TODAY, bis="Weihnachten"))
@@ -131,6 +180,9 @@ class Tool(unittest.TestCase):
         self.assertNotIn("rechnen", extras.offer(dict(ctx, own=False))["run"])       # another voice
         self.assertNotIn("rechnen", extras.offer(dict(ctx, client="mcp"))["run"])    # a program over MCP
         self.assertNotIn("rechnen", extras.offer(dict(ctx, text="Wie wird das Wetter?"))["run"])
+        self.assertEqual(extras.offer(dict(ctx, text="Was ist sechs mal sechs?"))["must"], "rechnen")
+        self.assertIsNone(extras.offer(dict(ctx, text="Was haben die Rechnungen zusammen gekostet?"))["must"])
+        self.assertIn("rechnen", extras.offer(dict(ctx, text="Was haben die Rechnungen zusammen gekostet?"))["run"])
 
 
 class Check(unittest.TestCase):
@@ -140,6 +192,8 @@ class Check(unittest.TestCase):
         self.assertEqual(rechnen.fix("3 x 4 sind 13 Stück.")[:2], ("3 x 4 sind 12 Stück.", 1))
         self.assertEqual(rechnen.fix("1.200 + 300 ergibt 1.400 Euro.")[:2], ("1.200 + 300 ergibt 1.500 Euro.", 1))
         self.assertEqual(rechnen.fix("6 times 7 is 41.", True)[:2], ("6 times 7 is 42.", 1))
+        self.assertEqual(rechnen.fix("Sechs mal sechs ist fünfunddreißig.")[:2], ("6 mal 6 ist 36.", 1))
+        self.assertEqual(rechnen.fix("Sechs mal sechs ist sechsunddreißig.")[:2], ("Sechs mal sechs ist sechsunddreißig.", 0))
 
     def test_right_rounded_or_no_sum_stays(self):
         for s in ("2 + 2 ist 4.", "Das macht 120 / 7 = 17,14.", "120 geteilt durch 7 ist etwa 17.",
@@ -166,8 +220,10 @@ class Chat(unittest.TestCase):
 
     def test_the_model_says_a_wrong_sum_the_panel_corrects_it(self):
         helpers.set_config(rechnen=True, sofort=False)
-        said = self.ask(profile("Rechnen2"), "SAY | | 17 mal 23 ist 381.")
+        said = self.ask(profile("Rechnen2"), "STUR | | 17 mal 23 ist 381.")
         self.assertEqual(said, "17 mal 23 ist 391.")
+        # a question with a sum needs the tool: the first round is told to call rechnen
+        self.assertEqual(helpers.LLM_CALLS[0]["tool_choice"]["function"]["name"], "rechnen")
 
     def test_off_nothing_is_changed(self):
         helpers.set_config(rechnen=False, sofort=False)

@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.930** Exact calculations, more: number words ("six times six"), a calculation in the question makes the tool required, "@Spark prüf das" checks calculations on reMarkable pages ("please check", page unchanged), adding up receipts
 - **V01.0.929** reMarkable notebooks with the date of their last change and "last comparison" in Me → Documents
 - **V01.0.928** What I know about you tidied: tabs, list with details, rename an interest or give it a topic, take a sender out, web tips as a switch; iPhone
 - **V01.0.927** Unclear questions, anonymous: questions no rule of the switch recognizes show redacted on Features → Routing at “unclear” (names, addresses, numbers, codes removed, second leak check, never guests, never who asked, 7 days), with “Belongs to …” for tuning; switch under Targeted tool choice, off; preference per profile under Me → Conversation → Privacy
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.923** What I know about you: for "Topic unclear" pick a topic there is (confirmed interests as chips, a list with the fixed topics, suggestions while typing) instead of only typing one; iPhone
 - **V01.0.922** What I know about you: proposals are topics instead of sender names (fixed topic list, senders as chips, example subjects, "Topic unclear" with an own topic), never your own addresses or services like GitHub, "Right" confirms the topic, the web tip searches only the topic word; iPhone
 - **V01.0.921** Attack probe in the workshop (stage 2 of the attack self-test): the tile "Probe attacks" measures how often the running language model would follow an order hidden in outside text, per disguise and tool; no tool runs, numbers only; its own switch under Features → Workshop, off; in the iPhone app too
-- **V01.0.920** Test fix: the page test "load older mail" scrolls on until "No older mail", however long a page takes, instead of giving up after twelve tries (was red in the workshop on the Spark)
 
 
 

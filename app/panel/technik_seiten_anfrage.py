@@ -524,7 +524,7 @@ SEITEN = {
         "heute": [],
     },
     "antwort": {
-        "stand": "87eae9d59b",
+        "stand": "40adc2b06e",
         "bezug": {
             "chat.MAX_SAVES": ["s11"], "chat.LOOP_SAME": ["s11"], "chat._answer": ["s4", "s5", "s11"], "chat_modell.model_turn": ["s4", "s11"], "chat_ton.speech_out": ["s8"],
             "chat.split_sentences": ["s5"], "chat.said_key": ["s8"], "chat.no_code": ["s8"],
@@ -608,14 +608,14 @@ SEITEN = {
                "Antwort, nicht aus früheren; ein zitierter Termin-Titel muss im Ergebnis stehen. Mit „Antwort-Prüfung "
                "erweitern“ auch Temperaturen, km und Prozent (gerundet zählt, answercheck.MORE_SLACK) und jeder "
                "zitierte Name in jeder Datenantwort. Mit „Rechnen mit festem Werkzeug“ rechnet rechnen.fix vorher jede "
-               "Rechnung im Satz nach („17 mal 23 ist 381“) und setzt das Ergebnis des Panels ein; seine Ergebnisse "
+               "Rechnung im Satz nach, auch mit Zahlwörtern („17 mal 23 ist 381“, „sechs mal sechs ist 35“) und setzt das Ergebnis des Panels ein; seine Ergebnisse "
                "zählen hier als belegt (answercheck.calc_facts). Solange das an ist, kommt jeder Satz erst fertig.",
                "For data questions answercheck compares every time, date, score and amount in the sentence with "
                "everything the model was given. After a calendar read only figures from this answer count, not from "
                "earlier ones; a quoted appointment title must be in the result. With „Extended answer check“ also "
                "temperatures, km and percentages (rounded counts, answercheck.MORE_SLACK) and every quoted name in "
                "every data answer. With „Exact calculations“ rechnen.fix first computes every calculation in the "
-               "sentence again („17 times 23 is 381“) and puts in the panel's result; its results count as proven here "
+               "sentence again, number words too („17 times 23 is 381“, „six times six is 35“) and puts in the panel's result; its results count as proven here "
                "(answercheck.calc_facts). While that is on, every sentence comes only when it is complete."),
               ("info", "ja", ("Satz fällt weg, am Ende ein ehrlicher Satz", "Sentence dropped, an honest sentence at the end"))),
             S("s7", "frage", ("Tat ohne Werkzeug?", "Deed without a tool?"),

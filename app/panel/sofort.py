@@ -7,7 +7,8 @@ fixed rules, only when the whole short sentence is one of these questions:
     the time ("Wie spät ist es?", notbetrieb.UHR)                  "Es ist 14 Uhr 20."
     the date or the weekday ("Welcher Tag ist heute?")             "Heute ist Freitag, der 17. Oktober 2026."
     arithmetic ("Was ist 17 mal 23?", "Rechne (3 + 4) mal 5")      "17 mal 23 ist 391."
-      with percent, brackets, powers and roots: rechnen.calc, the same core as the tool rechnen
+      with percent, brackets, powers and roots: rechnen.calc, the same core as the tool rechnen; number words
+      count too ("Was ist sechs mal sechs?" → "6 mal 6 ist 36.", rechnen.digits)
     date arithmetic ("Wie viele Tage bis Weihnachten?", "Welcher Wochentag ist der 24.12.2026?",
       "Welches Datum ist in 90 Tagen?"): rechnen.days                 "Vom … bis … sind es 63 Tage …"
     units ("Wie viel sind 3 Zoll in Zentimeter?", room._CONV)      "3 Zoll sind etwa 7,6 Zentimeter."
@@ -109,10 +110,11 @@ def answer(text, now, en=False):
         return "uhrzeit", notbetrieb.uhrzeit(now, en)[0]
     if _DAY.fullmatch(text):
         return "datum", _date(text, now, en)
-    said = _days(text, now, en)
+    written = rechnen.digits(text, en)   # "Was ist sechs mal sechs?" → "Was ist 6 mal 6?"
+    said = _days(written, now, en)
     if said:
         return "tage", said
-    m = _MATH.fullmatch(text)
+    m = _MATH.fullmatch(written)
     said = _math(m, en) if m else None
     if said:
         return "rechnen", said
