@@ -2789,6 +2789,13 @@
 "titel": "Ins Wort fallen: erst anhalten",
 "text": "A: Update, Funktionen → Ins Wort fallen: erst anhalten an; als Profil Ich → Gespräch → Ins Wort fallen an. B: Im Browser eine lange Frage stellen („Erzähl mir ausführlich etwas über Leipzig“). C: Während der Antwort „mhm“ oder „genau“ sagen: die Antwort hält kurz an und läuft an derselben Stelle weiter. D: Einmal husten: sie läuft weiter. E: „Stopp“ sagen: sie endet, das Gesagte bleibt stehen. F: Bei der nächsten Antwort „Und wie ist das Wetter dort?“ sagen: neue Frage. G: Zustand → Logs: „hoeren: zwischenruf weiter | listening words“, nie deine Worte. H: Schalter aus: wie vorher bricht kurze Stimme die Antwort ab. Android-App wie Browser.",
 "thread": "Ideen aus sonia-assistant"
+},
+{
+"id": "P423",
+"v": 943,
+"titel": "Krisenspiel: Kampagnen",
+"text": "A: Krisenspiel → Neues Spiel: vier Kampagnen-Karten mit Tagen und Szenarien. B: Kampagne starten (Stufe Übung): Kapitel 1 läuft, im Kopf steht „Kampagne Kapitel 1/3“. C: Aufgeben: am Ende „Kampagne: weiter mit Kapitel 2“, darunter „Audit“ und „Nächstes Kapitel“. D: Nächstes Kapitel: Budget ist ein Fünftel kleiner, im Kopf steht „Audit“. E: Seite schließen, später „Weiterspielen“: dasselbe Kapitel. F: Ein freies Spiel starten: das Kapitel zählt als aufgegeben. G: Letztes Kapitel zu Ende: „Kampagne beendet: Note …“ und die Liste unter den Kampagnen. H: iPhone-App → Krisenspiel: Abschnitt „Kampagne“ mit Start bzw. „Nächstes Kapitel“. I: Zustand → Live: laufende Kampagnen als Zahl.",
+"thread": "IT-Krisenspiel für einzelne Nutzer"
 }
 ]
 }

@@ -243,6 +243,25 @@ def build(k):
                      f"{k.HERAUS['woche'][0]}, in free play you pick them yourself. A win adds their points."),
                   _tabelle([("Mutator", "Mutator"), ("Regel", "Rule"), ("Punkte", "Points")],
                            [[list(n), list(t), [f"+{b}", f"+{b}"]] for _, n, t, b in k.MUTATOREN])))
+    S.append(_sek("kampagnen", "Kampagnen", "Campaigns",
+                  _p(f"Eine Kampagne kettet {k.KAMPAGNE_KAPITEL[0]} bis {k.KAMPAGNE_KAPITEL[1]} Szenarien über mehrere "
+                     "Spieltage. Was ein Kapitel hinterlässt, wirkt im nächsten: ein Audit kürzt das Budget, die "
+                     "Versicherung zahlt, ein müdes Team oder ein beschädigter Ruf starten schlechter. Die Regeln sind fest, "
+                     "kein Modell entscheidet.",
+                     f"A campaign chains {k.KAMPAGNE_KAPITEL[0]} to {k.KAMPAGNE_KAPITEL[1]} scenarios over several game days. "
+                     "What a chapter leaves behind works in the next one: an audit cuts the budget, the insurance pays, a "
+                     "tired team or a damaged reputation start worse. The rules are fixed, no model decides."),
+                  _p("Zwischen den Kapiteln darfst du beliebig lange pausieren, auch ein laufendes Kapitel bleibt gespeichert. "
+                     "Startest du stattdessen ein anderes Spiel, zählt das laufende Kapitel als aufgegeben. Am Ende steht der "
+                     "Schnitt aller Kapitel als Note.",
+                     "Between chapters you may pause as long as you like, a running chapter stays saved too. If you start "
+                     "another game instead, the running chapter counts as given up. At the end the average of all "
+                     "chapters is the grade."),
+                  _tabelle([("Kampagne", "Campaign"), ("Kapitel", "Chapters")],
+                           [[list(x["titel"]), [" → ".join(k.SZENARIEN[c["szenario"]]["titel"][i] for c in x["kapitel"])
+                                                 for i in (0, 1)]] for x in k._DATA.get("kampagnen", [])]),
+                  _tabelle([("Folge", "Consequence"), ("Wann", "When"), ("Wirkung", "Effect")],
+                           [[list(n), list(w), list(t)] for _, n, t, w in k.ERBE])))
     S.append(_sek("konsole", "Die Konsole", "The console",
                   _p("Unter der Chronik steht ein Terminal. Du startest auf jump01, dem Linux-Sprungrechner des Admins. "
                      "Von dort erreichst du jeden Rechner des Szenarios mit ssh. Getippte Befehle sind dieselben Züge wie "

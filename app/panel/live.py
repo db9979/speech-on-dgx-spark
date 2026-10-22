@@ -1729,6 +1729,8 @@ def snapshot(view="admin", now=None):
                         + (f" · {ksp.get('konsole', 0)} Konsolen-Zeilen" if ksp.get("konsole") else "")
                         + (f" · {ksp['delegiert']} ans Team gegeben" if ksp.get("delegiert") else "")
                         + (f" · {ksp['heraus']} Herausforderungen" if ksp.get("heraus") else "")
+                        + (f" · {ksp['kampagnen_laufend']} laufende Kampagnen" if ksp.get("kampagnen_laufend") else "")
+                        + (f" · {ksp['kampagnen']} Kampagnen begonnen" if ksp.get("kampagnen") else "")
                         + (f" · {ksp['uhr']} mit laufender Uhr" if ksp.get("uhr") else "")
                         + (f" · gemeinsam {ksp['team']['plaetze']} Plätze, {ksp['team']['online']} da, heute {ksp['team']['zuege']} Team-Züge"
                            + (f", {ksp['team']['abgelehnt']} abgelehnt" if ksp['team']['abgelehnt'] else "")

@@ -17091,6 +17091,26 @@
         }
       }
     },
+    "Kampagne": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Campaign"
+          }
+        }
+      }
+    },
+    "Nächstes Kapitel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next chapter"
+          }
+        }
+      }
+    },
     "Überraschungs-Szenario starten": {
       "localizations": {
         "en": {

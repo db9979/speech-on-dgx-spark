@@ -71,6 +71,10 @@ final class KrisenspielModel: ObservableObject {
     @Published var consoleOnly = false
     @Published var end: [String: Any]?
     @Published var challenges: [KsChallenge] = []
+    /// Kampagnen (Paket 9): the running campaign as one line and its next chapter, else the campaigns to start
+    @Published var campaign = ""
+    @Published var campaignNext = ""
+    @Published var campaigns: [KsChallenge] = []
 
     let en = Locale.current.language.languageCode?.identifier == "en"
 
@@ -123,7 +127,22 @@ final class KrisenspielModel: ObservableObject {
         else { await send("api/profile/krisenspiel/neu", ["szenario": "zufall"]) }
     }
 
+    func startCampaign(_ id: String) async { await send("api/profile/krisenspiel/neu", ["kampagne": id]) }
+
     private func show(_ d: [String: Any]) {
+        if let k = d["kampagne"] as? [String: Any] {
+            let n = (k["n"] as? NSNumber)?.intValue ?? 0
+            let at = ((k["kapitel"] as? NSNumber)?.intValue ?? 0) + 1
+            campaign = p(k["titel"]) + (en ? " · chapter \(at) of \(n)" : " · Kapitel \(at) von \(n)")
+            campaignNext = p((k["naechstes"] as? [String: Any])?["text"])
+        } else {
+            campaign = ""
+            campaignNext = ""
+        }
+        campaigns = (d["kampagnen"] as? [[String: Any]] ?? []).compactMap { k in
+            guard let id = k["id"] as? String else { return nil }
+            return KsChallenge(id: id, name: p(k["titel"]), scenario: p(k["kurz"]), mine: "")
+        }
         challenges = (d["herausforderungen"] as? [[String: Any]] ?? []).compactMap { h in
             guard let art = h["art"] as? String else { return nil }
             let me = h["ich"] as? [String: Any]
@@ -305,6 +324,25 @@ struct KrisenspielView: View {
                 }
             }
             if !m.running {
+                Section("Kampagne") {
+                    if m.campaign.isEmpty {
+                        ForEach(m.campaigns) { k in
+                            Button { Task { await m.startCampaign(k.id) } } label: {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(verbatim: k.name)
+                                    Text(verbatim: k.scenario).font(.caption).foregroundStyle(.secondary)
+                                }
+                            }
+                            .disabled(m.busy)
+                        }
+                    } else {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(verbatim: m.campaign)
+                            if !m.campaignNext.isEmpty { Text(verbatim: m.campaignNext).font(.caption).foregroundStyle(.secondary) }
+                        }
+                        Button("Nächstes Kapitel") { Task { await m.startCampaign("weiter") } }.disabled(m.busy)
+                    }
+                }
                 Section("Herausforderungen") {
                     ForEach(m.challenges) { h in
                         Button { Task { await m.start(challenge: h.id) } } label: {

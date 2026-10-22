@@ -69,7 +69,7 @@ setInterval(ksTick,1000);
 function ksGame(D){const g=D.spiel;
   if(!g)return `<div class="ld-empty mut">${esc(t('Noch kein Spiel. Unter „Neues Spiel“ wählst du ein Szenario.','No game yet. Pick a scenario under "New game".'))}</div><div class="row"><button type="button" class="b p" data-kstab="neu">${esc(t('Neues Spiel','New game'))}</button></div>`;
   const m=g.m,stufe=(D.stufen.find(s=>s.id===g.stufe)||{name:[g.stufe,g.stufe]}).name;
-  const head0=`<div class="ks-head"><div><h3>${esc(ksP(g.titel))}</h3><div class="mut">${esc(ksP(stufe))}${g.modus==='konsole'?esc(t(' · nur Konsole',' · console only')):''}${g.lernen?esc(t(' · Lernmodus',' · learning mode')):''}${g.heraus?esc(t(' · Herausforderung',' · challenge')):''}${(g.mutatoren||[]).length?' · '+esc(g.mutatoren.map(x=>ksMutName(D,x)).join(', ')):''} · Seed ${esc(String(g.seed))} · ${esc(t(`Zug ${g.zug} · Minute ${g.min}`,`Move ${g.zug} · minute ${g.min}`))}</div></div>
+  const head0=`<div class="ks-head"><div><h3>${esc(ksP(g.titel))}</h3><div class="mut">${esc(ksP(stufe))}${g.modus==='konsole'?esc(t(' · nur Konsole',' · console only')):''}${g.lernen?esc(t(' · Lernmodus',' · learning mode')):''}${g.heraus?esc(t(' · Herausforderung',' · challenge')):''}${g.kampagne?esc(t(` · Kampagne Kapitel ${g.kampagne.kapitel+1}/${g.kampagne.n}`,` · campaign chapter ${g.kampagne.kapitel+1}/${g.kampagne.n}`)):''}${(g.erbe||[]).length?' · '+esc(g.erbe.map(x=>ksErbe(D,x)).join(', ')):''}${(g.mutatoren||[]).length?' · '+esc(g.mutatoren.map(x=>ksMutName(D,x)).join(', ')):''} · Seed ${esc(String(g.seed))} · ${esc(t(`Zug ${g.zug} · Minute ${g.min}`,`Move ${g.zug} · minute ${g.min}`))}</div></div>
     ${g.ende?'':`<button type="button" class="b" data-ksgive="1">${esc(t('Aufgeben','Give up'))}</button>`}</div>`;
   const left=ksLeft(g),u=g.uhr;
   const clock=u&&!g.ende?`<div class="ks-uhr"><span class="mut">${esc(u.pause?t('Uhr angehalten','Clock paused'):t(`Uhr läuft: ${u.s} s = 1 min`,`Clock running: ${u.s} s = 1 min`))}</span>${u.pause_ok?`<button type="button" class="b" data-ksuhr="${u.pause?'weiter':'pause'}">${esc(u.pause?t('Weiter','Go on'):t('Pause','Pause'))}</button>`:''}</div>`:'';
@@ -203,7 +203,25 @@ function ksEnd(D,g){const e=g.ende,names=Object.fromEntries(D.erfolge.map(x=>[x.
     <ul class="facts small">${e.gruende.map(x=>`<li><span>${esc(ksP(x))}</span></li>`).join('')}</ul>
     ${(e.erfolge||[]).length?`<div>${e.erfolge.map(k=>`<span class="pill ok">${esc(ksP(names[k]||[k,k]))}</span>`).join(' ')}</div>`:''}
     ${(e.lehren||[]).length?`<h4>${esc(t('Nachbesprechung','Debrief'))}</h4><ul class="ks-lehren">${e.lehren.map(x=>`<li class="${x.gut?'gut':'besser'}"><span>${esc(x.gut?t('Gut: ','Good: '):t('Besser: ','Better: '))}${esc(ksP(x.text))}</span><small class="mut">${esc(x.bezug)}</small></li>`).join('')}</ul>`:''}
-    <div class="row"><button type="button" class="b p" data-ksagain="${esc(g.szenario)}" data-ksstufe="${esc(g.stufe)}" data-ksseed="${esc(String(g.seed))}" data-ksmodus="${esc(g.modus||'knoepfe')}" data-ksclock="${g.uhr?1:''}" data-kslearn="${g.lernen?1:''}" data-ksmuts="${esc((g.heraus?[]:g.mutatoren||[]).join(','))}">${esc(t('Nochmal mit diesem Seed','Again with this seed'))}</button><button type="button" class="b" data-kstab="neu">${esc(t('Neues Spiel','New game'))}</button></div></div></div>`}
+    ${ksKampEnd(D,g)}<div class="row"><button type="button" class="b p" data-ksagain="${esc(g.szenario)}" data-ksstufe="${esc(g.stufe)}" data-ksseed="${esc(String(g.seed))}" data-ksmodus="${esc(g.modus||'knoepfe')}" data-ksclock="${g.uhr?1:''}" data-kslearn="${g.lernen?1:''}" data-ksmuts="${esc((g.heraus?[]:g.mutatoren||[]).join(','))}">${esc(t('Nochmal mit diesem Seed','Again with this seed'))}</button><button type="button" class="b" data-kstab="neu">${esc(t('Neues Spiel','New game'))}</button></div></div></div>`}
+// Kampagnen (Paket 9): chapters over several game days; what a chapter leaves behind (fixed rules) shows as chips
+const ksErbe=(D,id)=>{const x=(D.erbe||[]).find(e=>e.id===id);return x?ksP(x.name):id};
+const ksErbeChips=(D,ids)=>ids.map(id=>{const x=(D.erbe||[]).find(e=>e.id===id);return `<span class="pill${id==='versicherung'||id==='eingespielt'?' ok':''}" title="${esc(x?ksP(x.text):'')}">${esc(ksErbe(D,id))}</span>`}).join(' ');
+function ksKampEnd(D,g){const c=g.kampagne;if(!c)return '';const K=D.kampagne;
+  if(K&&K.lauf===c.lauf&&K.naechstes)return `<div class="ks-kamp"><b>${esc(t(`Kampagne: weiter mit Kapitel ${K.kapitel+1} von ${K.n}`,`Campaign: on to chapter ${K.kapitel+1} of ${K.n}`))}</b>
+    <small>${esc(ksP(K.naechstes.text))}</small>${K.erbe.length?`<div>${esc(t('Das nimmst du mit: ','You take along: '))}${ksErbeChips(D,K.erbe)}</div>`:`<small class="mut">${esc(t('Keine Folgen fürs nächste Kapitel.','No consequences for the next chapter.'))}</small>`}
+    <button type="button" class="b p" data-kskamp="weiter">${esc(t('Nächstes Kapitel','Next chapter'))}</button></div>`;
+  const last=(D.kampagnen_verlauf||[])[0];
+  return !K&&last&&c.kapitel===c.n-1?`<div class="ks-kamp"><b>${esc(t(`Kampagne beendet: Note ${last.note}, ${last.punkte} Punkte im Schnitt`,`Campaign over: grade ${last.note}, ${last.punkte} points on average`))}</b></div>`:''}
+function ksKamp(D){const K=D.kampagne,done=D.kampagnen_verlauf||[];
+  if(K)return `<h4>${esc(t('Deine Kampagne','Your campaign'))}</h4><div class="ks-kamp"><b>${esc(ksP(K.titel))}</b><small>${esc(t(`Kapitel ${K.kapitel+1} von ${K.n}`,`Chapter ${K.kapitel+1} of ${K.n}`))} · Seed ${K.seed}</small>
+    ${K.ergebnisse.length?`<ol class="ks-board">${K.ergebnisse.map(r=>`<li><span>${esc(ksP((D.szenarien.find(s=>s.id===r.szenario)||{titel:[r.szenario,r.szenario]}).titel))}</span><span>${r.punkte} · ${esc(r.note)}</span></li>`).join('')}</ol>`:''}
+    ${K.naechstes?`<small>${esc(ksP(K.naechstes.text))}</small>`:''}${K.erbe.length?`<div>${ksErbeChips(D,K.erbe)}</div>`:''}
+    <div class="row"><button type="button" class="b p" data-kskamp="weiter">${esc(t('Weiterspielen','Play on'))}</button><button type="button" class="b" data-kskampend="1">${esc(t('Kampagne beenden','End the campaign'))}</button></div></div>`;
+  return `<h4>${esc(t('Kampagnen','Campaigns'))}</h4><div class="ks-hers ks-kamps">${D.kampagnen.map(k=>`<div class="ks-kamp"><b>${esc(ksP(k.titel))}</b><small>${esc(ksP(k.kurz))}</small>
+    <small class="mut">${esc(k.kapitel.map(c=>t(`Tag ${c.tag}: `,`Day ${c.tag}: `)+ksP(c.titel)).join(' → '))}</small>
+    <button type="button" class="b" data-kskamp="${esc(k.id)}">${esc(t('Kampagne starten','Start the campaign'))}</button></div>`).join('')}</div>
+    ${done.length?`<ol class="ks-board">${done.map(x=>`<li><span>${esc(ksP(x.titel))}</span><span>${x.punkte} · ${esc(x.note)}</span></li>`).join('')}</ol>`:''}`}
 // Herausforderungen (Paket 6): the same game for every profile on one day or week, with mutators; the board shows
 // first tries (by name only where the profile wants it)
 const ksMutName=(D,id)=>{const m=D.mutatoren.find(x=>x.id===id);return m?ksP(m.name):id};
@@ -216,7 +234,7 @@ function ksHeraus(D){const H=D.herausforderungen||[];if(!H.length)return '';
     <label>${esc(t('In den Bestenlisten','On the boards'))} <select class="ksboard">${[['anonym',t('ohne Namen','without name')],['name',t('mit meinem Namen','with my name')],['aus',t('gar nicht','not at all')]].map(([v,l])=>`<option value="${v}"${D.bestenliste===v?' selected':''}>${esc(l)}</option>`).join('')}</select></label>`}
 function ksNew(D){const run=D.spiel&&!D.spiel.ende;
   return `<h3>${esc(t('Neues Spiel','New game'))}</h3>${run?`<div class="mut">${esc(t('Ein neues Spiel ersetzt das laufende.','A new game replaces the running one.'))}</div>`:''}
-    ${ksHeraus(D)}<h4>${esc(t('Frei spielen','Free play'))}</h4>
+    ${ksHeraus(D)}${ksKamp(D)}<h4>${esc(t('Frei spielen','Free play'))}</h4>
     <div class="ks-pick">${D.szenarien.map((s,i)=>`<label class="ks-sz"><input type="radio" name="kssz" value="${esc(s.id)}"${i?'':' checked'}><b>${esc(ksP(s.titel))}</b><small>${esc(ksP(s.kurz))}</small><small class="mut">${esc(t(`${s.systeme} Systeme`,`${s.systeme} systems`))}${D.stats.beste[s.id]?esc(t(` · bisher bestes Ergebnis ${D.stats.beste[s.id]} Punkte`,` · best so far ${D.stats.beste[s.id]} points`)):''}</small></label>`).join('')}<label class="ks-sz"><input type="radio" name="kssz" value="zufall"><b>${esc(t('🎲 Überraschung','🎲 Surprise'))}</b><small>${esc(t('Eines der Szenarien per Zufall: Was passiert, siehst du erst im Spiel.','One of the scenarios by chance: you see what happens only in the game.'))}</small></label></div>
     <div class="row"><label>${esc(t('Stufe','Level'))} <select class="ksstufe">${D.stufen.map(s=>`<option value="${esc(s.id)}"${s.id==='normal'?' selected':''}>${esc(ksP(s.name))} (${s.zeit} min)</option>`).join('')}</select></label>
     <label>Seed <input class="ksseed" type="number" min="0" max="999999" inputmode="numeric" placeholder="${esc(t('zufällig','random'))}"></label></div>
@@ -258,7 +276,7 @@ function ksPast(D){const st=D.stats,have=D.erfolge.filter(e=>e.t).length;
     <ul class="facts">${D.verlauf.map(v=>`<li><span><b>${esc(ksP(v.titel))}</b> · ${esc(ksWhen(v.t))}<br><small class="mut">${esc(t(`${v.zuege} Züge · ${v.minuten} min · Seed ${v.seed}`,`${v.zuege} moves · ${v.minuten} min · seed ${v.seed}`))}${v.lernen?esc(t(' · Lernmodus',' · learning mode')):''}${v.heraus?esc(t(' · Herausforderung',' · challenge')):''}${(v.mutatoren||[]).length?' · '+esc(v.mutatoren.map(x=>ksMutName(D,x)).join(', ')):''}</small></span><b class="ks-note small ${KSNOTE[v.note]||''}">${esc(v.note)}</b></li>`).join('')||`<li><span class="mut">${esc(t('Noch keine.','None yet.'))}</span></li>`}</ul>
     <h4>${esc(t('Erfolge','Achievements'))}</h4><div class="ks-ach">${D.erfolge.map(e=>`<div class="ks-a${e.t?' on':''}"><b>${esc(ksP(e.name))}</b><small>${esc(ksP(e.text))}</small>${e.t?`<small class="mut">${esc(ksWhen(e.t))}</small>`:''}</div>`).join('')}</div>
     <div class="row"><button type="button" class="b" data-ksclear="1">${esc(t('Meine Spieldaten löschen','Delete my game data'))}</button></div>`}
-{document.body.addEventListener('click',async e=>{const b=e.target.closest('#ksview [data-ksbig],#ksview [data-kstabkey],#ksview [data-ksed],#ksview [data-ksvi],#ksview [data-ksinvite],#ksview [data-ksseat],#ksview [data-kscopy],#ksview [data-ksuhr],#ksview [data-ksmove],#ksview [data-ksnew],#ksview [data-ksheraus],#ksview [data-ksagain],#ksview [data-ksgive],#ksview [data-ksclear],#ksview [data-kstab]');if(!b)return;const B=b.dataset;KS.focus=false;
+{document.body.addEventListener('click',async e=>{const b=e.target.closest('#ksview [data-ksbig],#ksview [data-kstabkey],#ksview [data-ksed],#ksview [data-ksvi],#ksview [data-ksinvite],#ksview [data-ksseat],#ksview [data-kscopy],#ksview [data-ksuhr],#ksview [data-ksmove],#ksview [data-ksnew],#ksview [data-ksheraus],#ksview [data-kskamp],#ksview [data-kskampend],#ksview [data-ksagain],#ksview [data-ksgive],#ksview [data-ksclear],#ksview [data-kstab]');if(!b)return;const B=b.dataset;KS.focus=false;
   const go=k=>{icTabSet('spiel',k);ksOpen()};
   if(B.kstab){go(B.kstab);return}
   if(B.ksbig){e.preventDefault();KS.big=!KS.big;KS.con=true;ksDraw();return}
@@ -269,8 +287,12 @@ function ksPast(D){const st=D.stats,have=D.erfolge.filter(e=>e.t).length;
   if(B.ksinvite||B.ksseat||B.kscopy){await ksTeamClick(B,b);return}
   if(B.ksuhr){await ksSend('/api/profile/krisenspiel/uhr','POST',{aktion:B.ksuhr});return}
   if(B.ksmove){const an=KS.an;KS.an='';await ksSend('/api/profile/krisenspiel/zug','POST',Object.assign({aktion:B.ksmove,zug:KS.data.spiel.zug},an?{an}:{}));return}
-  if(B.ksnew||B.ksagain||B.ksheraus){const w=$('ksview');let body;
-    if(B.ksheraus)body={herausforderung:B.ksheraus,modus:w.querySelector('.ksmodus').value,uhr:w.querySelector('.ksuhr').checked};
+  if(B.kskampend){if(!confirm(t('Kampagne beenden? Sie zählt dann nicht.','End the campaign? It does not count then.')))return;await ksSend('/api/profile/krisenspiel/kampagne','DELETE');return}
+  if(B.ksnew||B.ksagain||B.ksheraus||B.kskamp){const w=$('ksview');let body;
+    if(B.kskamp){const sel=w.querySelector('.ksstufe'),mo=w.querySelector('.ksmodus'),u=w.querySelector('.ksuhr');
+      if(B.kskamp!=='weiter'&&KS.data.kampagne&&!confirm(t('Die laufende Kampagne endet ohne Wertung. Neue Kampagne starten?','The running campaign ends without a score. Start a new campaign?')))return;
+      body=Object.assign({kampagne:B.kskamp},B.kskamp==='weiter'?{}:{stufe:sel?sel.value:'normal'},mo?{modus:mo.value}:{},u?{uhr:u.checked}:{})}
+    else if(B.ksheraus)body={herausforderung:B.ksheraus,modus:w.querySelector('.ksmodus').value,uhr:w.querySelector('.ksuhr').checked};
     else if(B.ksagain)body={szenario:B.ksagain,stufe:B.ksstufe,seed:+B.ksseed,modus:B.ksmodus,uhr:!!B.ksclock,lernen:!!B.kslearn,mutatoren:B.ksmuts?B.ksmuts.split(','):[]};
     else{const sz=w.querySelector('input[name=kssz]:checked'),sd=w.querySelector('.ksseed').value.trim();body={szenario:sz&&sz.value,stufe:w.querySelector('.ksstufe').value,modus:w.querySelector('.ksmodus').value,uhr:w.querySelector('.ksuhr').checked,lernen:w.querySelector('.kslernen').checked,mutatoren:[...w.querySelectorAll('.ksmut:checked')].map(x=>x.value)};
       if(sd!==''){const n=+sd;if(!Number.isInteger(n)||n<0||n>999999){ksSay(t('Der Seed ist eine Zahl von 0 bis 999999.','The seed is a number from 0 to 999999.'),true);return}body.seed=n}}

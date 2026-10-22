@@ -1,5 +1,5 @@
 {
-"_": "Krisenspiel (krisenspiel.py): the scenarios as data. Every effect here is applied by the panel's fixed rules; the language model only retells what happened. Texts are [German, English]. Conditions (wenn): flags (all set), ohne (none set), irgendein (one set), var (variant values), status (asset in one of the states), zug_ab, min_ab (game minutes gone), alt (flag set at least n turns ago), vertrauen_unter, stress_ueber, moral_unter. Effects: zeit (minutes), stress, vertrauen, moral (points), kosten (damage in euros), budget (spent from the emergency budget), setzt (asset -> state), details (asset -> text), flags, weg (flags removed), text, je (more effects, each with its own wenn, checked against the state before the move). A move may name its rolle for a game together (technik, kommunikation, leitung; without it technik; Leitung may take every move). A technical move names its fach (netz, windows, storage, forensik, rz) so a colleague can take it over; erholung lowers the tiredness of the whole team. kollegen: the colleagues a game draws from (id, name, faecher). lehren and lehren_allgemein: the debrief after a game (Paket 5): wenn may name genutzt (all these moves taken), fehlt (none of them), vor [a, b] (a first before b), ohne_vor [a, b] (b without a before it), ende (how it ended) and every condition of a move; text, bezug (the guideline), gut (what went well).",
+"_": "Krisenspiel (krisenspiel.py): the scenarios as data. Every effect here is applied by the panel's fixed rules; the language model only retells what happened. Texts are [German, English]. Conditions (wenn): flags (all set), ohne (none set), irgendein (one set), var (variant values), status (asset in one of the states), zug_ab, min_ab (game minutes gone), alt (flag set at least n turns ago), vertrauen_unter, stress_ueber, moral_unter. Effects: zeit (minutes), stress, vertrauen, moral (points), kosten (damage in euros), budget (spent from the emergency budget), setzt (asset -> state), details (asset -> text), flags, weg (flags removed), text, je (more effects, each with its own wenn, checked against the state before the move). A move may name its rolle for a game together (technik, kommunikation, leitung; without it technik; Leitung may take every move). A technical move names its fach (netz, windows, storage, forensik, rz) so a colleague can take it over; erholung lowers the tiredness of the whole team. kollegen: the colleagues a game draws from (id, name, faecher). lehren and lehren_allgemein: the debrief after a game (Paket 5): wenn may name genutzt (all these moves taken), fehlt (none of them), vor [a, b] (a first before b), ohne_vor [a, b] (b without a before it), ende (how it ended) and every condition of a move; text, bezug (the guideline), gut (what went well). kampagnen (Paket 9): chains of two to five chapters (szenario, tag of the campaign, text before the chapter); what a chapter leaves behind is fixed code (krisenspiel.ERBE).",
 "kollegen": [
  {"id": "sandra", "name": "Sandra", "faecher": ["netz", "forensik"]},
  {"id": "mehmet", "name": "Mehmet", "faecher": ["windows", "storage"]},
@@ -5363,5 +5363,155 @@
   }
  ]
 }
+],
+"kampagnen": [
+ {
+  "id": "angriffswelle",
+  "titel": [
+   "Die Angriffswelle",
+   "The attack wave"
+  ],
+  "kurz": [
+   "Eine Gruppe kommt dreimal wieder: erst der Chef-Betrug, dann die Ransomware, zuletzt das Datenleck.",
+   "One group comes back three times: first the CEO fraud, then the ransomware, last the data leak."
+  ],
+  "kapitel": [
+   {
+    "szenario": "chefbetrug",
+    "tag": 1,
+    "text": [
+     "Montag: In der Buchhaltung liegt eine dringende Mail vom Chef.",
+     "Monday: an urgent mail from the boss waits in accounting."
+    ]
+   },
+   {
+    "szenario": "ransomware",
+    "tag": 3,
+    "text": [
+     "Mittwoch: Dieselbe Gruppe ist zurück, diesmal mit Verschlüsselung.",
+     "Wednesday: the same group is back, this time with encryption."
+    ]
+   },
+   {
+    "szenario": "datenleck",
+    "tag": 5,
+    "text": [
+     "Freitag: Die Angreifer drohen, erbeutete Daten zu veröffentlichen.",
+     "Friday: the attackers threaten to publish stolen data."
+    ]
+   }
+  ]
+ },
+ {
+  "id": "schwarze_woche",
+  "titel": [
+   "Die schwarze Woche",
+   "The black week"
+  ],
+  "kurz": [
+   "Erst fällt der Strom, dann das SAN, am Ende auch noch die Cloud.",
+   "First the power fails, then the SAN, and in the end the cloud as well."
+  ],
+  "kapitel": [
+   {
+    "szenario": "strom",
+    "tag": 1,
+    "text": [
+     "Montag: Im Rechenzentrum fällt der Strom aus.",
+     "Monday: the power fails in the data centre."
+    ]
+   },
+   {
+    "szenario": "san",
+    "tag": 2,
+    "text": [
+     "Dienstag: Nach dem Stromausfall meldet das SAN Fehler.",
+     "Tuesday: after the power cut the SAN reports errors."
+    ]
+   },
+   {
+    "szenario": "cloud",
+    "tag": 4,
+    "text": [
+     "Donnerstag: Auch der Cloud-Anbieter hat einen schlechten Tag.",
+     "Thursday: the cloud provider has a bad day too."
+    ]
+   }
+  ]
+ },
+ {
+  "id": "lieferkette",
+  "titel": [
+   "Gift in der Lieferkette",
+   "Poison in the supply chain"
+  ],
+  "kurz": [
+   "Ein Update, ein Konto im eigenen Haus und eine Lücke im VPN: alles vom selben Hersteller.",
+   "An update, an account in your own house and a hole in the VPN: all from the same vendor."
+  ],
+  "kapitel": [
+   {
+    "szenario": "lieferkette",
+    "tag": 1,
+    "text": [
+     "Tag 1: Ein Update des Herstellers verhält sich seltsam.",
+     "Day 1: an update from the vendor behaves strangely."
+    ]
+   },
+   {
+    "szenario": "insider",
+    "tag": 4,
+    "text": [
+     "Tag 4: Die Spuren führen zu einem Konto im eigenen Haus.",
+     "Day 4: the traces lead to an account in your own house."
+    ]
+   },
+   {
+    "szenario": "bsi",
+    "tag": 8,
+    "text": [
+     "Tag 8: Das BSI warnt vor einer Lücke im VPN-Gateway desselben Herstellers.",
+     "Day 8: the BSI warns of a hole in the same vendor's VPN gateway."
+    ]
+   }
+  ]
+ },
+ {
+  "id": "netz_unter_feuer",
+  "titel": [
+   "Netz unter Feuer",
+   "Network under fire"
+  ],
+  "kurz": [
+   "Drei Tage, drei Angriffe aufs Netz: Überlast, falsche Routen und am Ende eine gelöschte Datenbank.",
+   "Three days, three attacks on the network: overload, false routes and in the end a deleted database."
+  ],
+  "kapitel": [
+   {
+    "szenario": "ddos",
+    "tag": 1,
+    "text": [
+     "Tag 1: Der Webshop bricht unter Anfragen zusammen.",
+     "Day 1: the web shop collapses under requests."
+    ]
+   },
+   {
+    "szenario": "bgp",
+    "tag": 2,
+    "text": [
+     "Tag 2: Plötzlich läuft euer Verkehr über ein fremdes Netz.",
+     "Day 2: suddenly your traffic runs through a foreign network."
+    ]
+   },
+   {
+    "szenario": "geloescht",
+    "tag": 3,
+    "text": [
+     "Tag 3: Im Trubel löscht jemand die Datenbank.",
+     "Day 3: in the turmoil someone deletes the database."
+    ]
+   }
+  ]
+ }
 ]
 }

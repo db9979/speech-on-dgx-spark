@@ -4933,7 +4933,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Krisenspiel in der iPhone-App (V01.0.940, Plan Paket 7)",
-"text": "Krisenspiel in der iPhone-App (V01.0.940, Plan Paket 7): In der App unter *Meine Sachen → Krisenspiel* (KrisenspielView.swift, nur mit der Freigabe des Spiels, iphone.THINGS[\"krisenspiel\"]: das Spiel lesen, ein Zug, eine getippte Zeile, ein neues Spiel) stehen die Werte oben als Balken, die Systeme mit Ampel, die Züge als Knöpfe (mit Tipp im Lernmodus), die Konsole mit Tastaturleiste (help, hosts, ssh, sudo, |, -h), die Chronik und am Ende Note, Gründe und Nachbesprechung mit Quelle. Ohne laufendes Spiel startet die App die Tages- oder Wochen-Herausforderung oder ein Überraschungs-Szenario. Jeder Wert und jede Regel kommt vom Spark, die App zeigt nur Texte; Anleitung, Inspector, Bestenliste und gemeinsam spielen bleiben auf der Seite Krisenspiel im Panel („Im Panel öffnen“). Als Nächstes: Paket 9 (Kettenkrisen), dann die übrigen Pakete des Plans."
+"text": "Krisenspiel in der iPhone-App (V01.0.940, Plan Paket 7): In der App unter *Meine Sachen → Krisenspiel* (KrisenspielView.swift, nur mit der Freigabe des Spiels, iphone.THINGS[\"krisenspiel\"]: das Spiel lesen, ein Zug, eine getippte Zeile, ein neues Spiel) stehen die Werte oben als Balken, die Systeme mit Ampel, die Züge als Knöpfe (mit Tipp im Lernmodus), die Konsole mit Tastaturleiste (help, hosts, ssh, sudo, |, -h), die Chronik und am Ende Note, Gründe und Nachbesprechung mit Quelle. Ohne laufendes Spiel startet die App die Tages- oder Wochen-Herausforderung oder ein Überraschungs-Szenario. Jeder Wert und jede Regel kommt vom Spark, die App zeigt nur Texte; Anleitung, Inspector, Bestenliste und gemeinsam spielen bleiben auf der Seite Krisenspiel im Panel („Im Panel öffnen“)."
 },
 {
 "lang": "de",
@@ -4942,6 +4942,22 @@
 "head": "Sprach-Chat",
 "title": "Krisenspiel: Anleitung, QR-Code und Ausschalten (V01.0.941)",
 "text": "Krisenspiel: Anleitung, QR-Code und Ausschalten (V01.0.941): Die Abschnitte der Anleitung stehen wieder unter dem Inhaltsverzeichnis, ein Klick springt hin (sie waren als Seiten-Abschnitt versteckt). Jeder QR-Code des Panels (mfa._qr_svg) hat eine viewBox und wird bei kleiner Anzeige ganz verkleinert statt rechts und unten abgeschnitten (Mitspieler-Einladung, Mitschreib-Link, Einladungen, Apps). In der Konsole trennt ein Rechner, den du mit sudo shutdown, poweroff oder halt ausschaltest, die Verbindung: du bist wieder auf jump01 (reboot und shutdown -r halten sie)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Kampagnen im Krisenspiel (V01.0.943, Plan Paket 9)",
+"text": "Kampagnen im Krisenspiel (V01.0.943, Plan Paket 9): Unter *Neues Spiel* stehen vier Kampagnen (Daten kampagnen in krisenspiel_szenarien.json, geprüft von check_data): Die Angriffswelle (Chef-Betrug → Ransomware → Datenleck), Die schwarze Woche (Stromausfall → SAN → Cloud), Gift in der Lieferkette (Update → Innentäter → BSI-Eilmeldung) und Netz unter Feuer (DDoS → BGP → gelöschte Datenbank), jedes Kapitel an einem Spieltag mit eigenem Einleitungssatz. Die Stufe gilt für alle Kapitel, die Seeds der Kapitel kommen aus dem Seed der Kampagne. Was ein Kapitel hinterlässt, ist feste Regel (krisenspiel.ERBE, nie das Modell): Audit (nicht gewonnen oder Note D bis F: ein Fünftel weniger Budget), Versicherung zahlt (gewonnen ohne Datenverlust: ein Fünftel mehr), Erschöpftes Team (Moral unter 40 %: Moral −15, Team 30 % müde), Ruf beschädigt (Vertrauen unter 40 %: −15) und Eingespielt (Note A oder B: Stress −10, Moral +5). Zwischen den Kapiteln darf beliebig lange Pause sein, ein laufendes Kapitel bleibt gespeichert („Weiterspielen“ zeigt es wieder); wer stattdessen ein anderes Spiel startet, gibt das Kapitel auf. Am Ende zählt der Schnitt der Kapitel als Note (die letzten 10 Kampagnen stehen u"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Kampagnen im Krisenspiel (V01.0.943, Plan Paket 9)",
+"text": "nter der Liste), dazu der Erfolg „Durchgehalten“. „Kampagne beenden“ (DELETE /api/profile/krisenspiel/kampagne) beendet sie ohne Wertung, das laufende Spiel bleibt als freies Spiel. Start und Weiter über POST …/neu mit kampagne (eine Kennung oder weiter), nie zusammen mit Lernmodus, Mutatoren oder Herausforderung. Logs spiel: kampagne | start|weiter|kapitel N von M|ende|ersetzt|beendet, spiel: kampagne abgelehnt | keine kampagne; Live zeigt laufende und heute begonnene Kampagnen als Zahl. In der iPhone-App stehen unter *Krisenspiel* die Kampagnen zum Starten, eine laufende mit Kapitel und Einleitungssatz und „Nächstes Kapitel“. test_krisenspiel prüft jedes Kapitel ab dem zweiten mit dem schlechtesten Erbe (Audit, Erschöpft, Ruf) auf jeder Variante auf Gewinnbarkeit. Als Nächstes: das Netzduell (eigener Reiter, nur Terminal), danach Paket 8 (Sprache)."
 },
 {
 "lang": "de",
@@ -16765,7 +16781,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Crisis game in the iPhone app (V01.0.940, plan package 7)",
-"text": "Crisis game in the iPhone app (V01.0.940, plan package 7): in the app under *My things → Crisis game* (KrisenspielView.swift, only with the game's release, iphone.THINGS[\"krisenspiel\"]: read the game, a move, a typed line, a new game) are the values on top as bars, the systems with traffic lights, the moves as buttons (with the hint in learning mode), the console with a key bar (help, hosts, ssh, sudo, |, -h), the chronicle and at the end grade, reasons and debrief with source. Without a running game the app starts the daily or weekly challenge or a surprise scenario. Every value and rule comes from the Spark, the app only shows texts; guide, inspector, board and playing together stay on the page Crisis game in the panel (\"Open in the panel\"). Next: package 9 (chain crises), then the other packages of the plan."
+"text": "Crisis game in the iPhone app (V01.0.940, plan package 7): in the app under *My things → Crisis game* (KrisenspielView.swift, only with the game's release, iphone.THINGS[\"krisenspiel\"]: read the game, a move, a typed line, a new game) are the values on top as bars, the systems with traffic lights, the moves as buttons (with the hint in learning mode), the console with a key bar (help, hosts, ssh, sudo, |, -h), the chronicle and at the end grade, reasons and debrief with source. Without a running game the app starts the daily or weekly challenge or a surprise scenario. Every value and rule comes from the Spark, the app only shows texts; guide, inspector, board and playing together stay on the page Crisis game in the panel (\"Open in the panel\")."
 },
 {
 "lang": "en",
@@ -16774,6 +16790,22 @@
 "head": "Voice chat",
 "title": "Crisis game: guide, QR code and switching off (V01.0.941)",
 "text": "Crisis game: guide, QR code and switching off (V01.0.941): the parts of the guide show again under the table of contents, a click jumps there (they were hidden as a page section). Every QR code of the panel (mfa._qr_svg) has a viewBox and shrinks as a whole when shown small instead of being cut off on the right and bottom (player invitation, note-taking link, invitations, apps). At the console a machine you switch off with sudo shutdown, poweroff or halt closes the connection: you are back on jump01 (reboot and shutdown -r keep it)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Campaigns in the crisis game (V01.0.943, plan package 9)",
+"text": "Campaigns in the crisis game (V01.0.943, plan package 9): under *New game* there are four campaigns (data kampagnen in krisenspiel_szenarien.json, checked by check_data): The attack wave (CEO fraud → ransomware → data leak), The black week (power cut → SAN → cloud), Poison in the supply chain (update → insider → BSI alert) and Network under fire (DDoS → BGP → deleted database), each chapter on a game day with its own opening sentence. The level holds for all chapters, the chapters' seeds come from the campaign's seed. What a chapter leaves behind is a fixed rule (krisenspiel.ERBE, never the model): Audit (not won or grade D to F: a fifth less budget), Insurance pays (won without data loss: a fifth more), Exhausted team (morale below 40 %: morale −15, team 30 % tired), Reputation damaged (trust below 40 %: −15) and Well-rehearsed (grade A or B: stress −10, morale +5). Between chapters the pause may be as long as you like, a running chapter stays saved (\"Play on\" shows it again); whoever starts another game instead gives the chapter up. At the end the chapters' average is the grade (the last 10 campaigns are listed), plus the achievement \"Saw it through\". \"End the campaign\" (DELETE /"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Campaigns in the crisis game (V01.0.943, plan package 9)",
+"text": "api/profile/krisenspiel/kampagne) ends it without a score, the running game stays as a free game. Start and continue through POST …/neu with kampagne (an id or weiter), never together with learning mode, mutators or a challenge. Logs spiel: kampagne | start|weiter|kapitel N von M|ende|ersetzt|beendet, spiel: kampagne abgelehnt | keine kampagne; Live shows running campaigns and those begun today as numbers. In the iPhone app *Crisis game* lists the campaigns to start, a running one with its chapter and opening sentence and \"Next chapter\". test_krisenspiel checks every chapter from the second on with the worst heritage (audit, exhausted, reputation) on every variant for winnability. Next: the Netzduell (own tab, terminal only), then package 8 (speech)."
 },
 {
 "lang": "en",

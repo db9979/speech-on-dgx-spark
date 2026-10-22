@@ -115,7 +115,9 @@ ERFOLGE = (("feuertaufe", ("Feuertaufe", "Baptism of fire"), ("Das erste Spiel z
            ("ciso", ("CISO", "CISO"), ("Den höchsten Rang der Laufbahn erreicht.", "Reached the highest rank of the career.")),
            ("herausforderung", ("Herausforderung angenommen", "Challenge accepted"),
             ("Eine Tages- oder Wochen-Herausforderung beim ersten Versuch gewonnen.", "Won a daily or weekly challenge at the first try.")),
-           ("mutig", ("Mutig", "Bold"), ("Mit mindestens zwei Mutatoren gewonnen.", "Won with at least two mutators.")))
+           ("mutig", ("Mutig", "Bold"), ("Mit mindestens zwei Mutatoren gewonnen.", "Won with at least two mutators.")),
+           ("durchgehalten", ("Durchgehalten", "Saw it through"),
+            ("Eine Kampagne bis zum Ende des letzten Kapitels gespielt.", "Played a campaign to the end of its last chapter.")))
 ERFOLG_IDS = tuple(e[0] for e in ERFOLGE)
 # roles of a game played together (Paket 11, krisenteam.py): every move has one (data key "rolle", else technik);
 # Leitung may take every move, the others only their own; a game alone is played as Leitung
@@ -186,7 +188,7 @@ def dauer(st, a, k):
         f *= MUEDE_FAKTOR
     return max(1, -(-round(a.get("zeit", 1) * f * 10) // 10))
 
-_day = DayCounter(zuege=0, spiele=0, erzaehlt=0, verworfen=0, konsole=0, delegiert=0, heraus=0)   # Zustand → Live, numbers only
+_day = DayCounter(zuege=0, spiele=0, erzaehlt=0, verworfen=0, konsole=0, delegiert=0, heraus=0, kampagnen=0)   # Zustand → Live, numbers only
 _locks = {}
 _locks_lock = threading.Lock()
 
@@ -200,6 +202,7 @@ def _load_data():
 
 _DATA = _load_data()
 SZENARIEN = {s["id"]: s for s in _DATA["szenarien"]}
+KAMPAGNEN = {k["id"]: k for k in _DATA.get("kampagnen", [])}
 
 
 def _pair(x):
@@ -329,6 +332,22 @@ def check_data(d=None):
             for x in f["zeilen"]:
                 if isinstance(x, list):
                     cond(x[1], sz, f"{sid} datei {f['pfad']}")
+    known = {x["id"] for x in d["szenarien"]}
+    for k in d.get("kampagnen", []):
+        where = f"kampagne {k.get('id')}"
+        if set(k) != {"id", "titel", "kurz", "kapitel"} or not _pair(k.get("titel")) or not _pair(k.get("kurz")):
+            bad.append(f"{where}: keys id, titel, kurz, kapitel")
+            continue
+        if not KAMPAGNE_KAPITEL[0] <= len(k["kapitel"]) <= KAMPAGNE_KAPITEL[1]:
+            bad.append(f"{where}: {KAMPAGNE_KAPITEL[0]} to {KAMPAGNE_KAPITEL[1]} chapters")
+        days = [c.get("tag") for c in k["kapitel"]]
+        if any(not isinstance(x, int) or x < 1 for x in days) or days != sorted(set(days)):
+            bad.append(f"{where}: tag rises from 1")
+        for c in k["kapitel"]:
+            if set(c) != {"szenario", "tag", "text"} or c.get("szenario") not in known or not _pair(c.get("text")):
+                bad.append(f"{where}: chapter {c}")
+    if len({k.get("id") for k in d.get("kampagnen", [])}) != len(d.get("kampagnen", [])):
+        bad.append("kampagnen: ids twice")
     if d is _DATA:
         bad += krisenkonsole.check_data(SZENARIEN, d.get("allgemein", []))
     return bad
@@ -529,13 +548,15 @@ def available(st):
 
 
 def new_game(szenario, stufe, seed=None, lang="de", now=None, modus="knoepfe", uhr=False, rang="junior", lernen=False,
-             mutatoren=(), heraus=None):
+             mutatoren=(), heraus=None, erbe=(), kampagne=None):
     """A fresh game: variants drawn from the seed, the start effects applied. modus „konsole“: moves only by typing;
     uhr: the clock runs in real time (uhr_ticken); rang (Laufbahn): the team's size and the budget factor, the
     colleagues drawn from the seed; lernen (Paket 5): the page shows a hint before every move, no achievements;
-    mutatoren (Paket 6): extra rules for more points; heraus: the key of a challenge this game is."""
+    mutatoren (Paket 6): extra rules for more points; heraus: the key of a challenge this game is; erbe and
+    kampagne (Paket 9): what the chapter before left behind, the campaign and chapter this game is."""
     if szenario not in SZENARIEN or stufe not in STUFEN or modus not in MODI or rang not in RANG_IDS \
-            or any(x not in MUT_IDS for x in mutatoren) or len(set(mutatoren)) != len(mutatoren):
+            or any(x not in MUT_IDS for x in mutatoren) or len(set(mutatoren)) != len(mutatoren) \
+            or any(x not in ERBE_IDS for x in erbe) or len(set(erbe)) != len(erbe):
         raise ValueError("szenario, stufe, modus, rang, mutatoren")
     r = RAENGE[RANG_IDS.index(rang)]
     sz = SZENARIEN[szenario]
@@ -553,8 +574,10 @@ def new_game(szenario, stufe, seed=None, lang="de", now=None, modus="knoepfe", u
           "modus": modus, "knoepfe": 0, "konsole": krisenkonsole.fresh(szenario),
           "uhr": {"t": now, "rest": 0.0, "offen": 0, "pause": False, "pausen": 0} if uhr else None,
           "rang": rang, "kollegen": _kollegen(seed, r[4]), "delegiert": 0, "lernen": bool(lernen), "folge": [],
-          "kurve": [], "mutatoren": sorted(mutatoren), "heraus": heraus}
+          "kurve": [], "mutatoren": sorted(mutatoren), "heraus": heraus, "erbe": [x for x in ERBE_IDS if x in erbe],
+          "kampagne": kampagne}
     _mutieren(st)
+    _erben(st)
     rec = _rec()
     for e in sz.get("start", []):
         if holds(e.get("wenn"), st):
@@ -565,6 +588,7 @@ def new_game(szenario, stufe, seed=None, lang="de", now=None, modus="knoepfe", u
         _step("eingabe", ("Neues Spiel", "New game"), {"szenario": szenario, "stufe": stufe, "seed": seed, "modus": modus,
                                                      "uhr": bool(uhr), "rang": rang, "lernen": bool(lernen),
                                                      "mutatoren": sorted(mutatoren), "herausforderung": heraus,
+                                                     "erbe": st["erbe"], "kampagne": kampagne,
                                                      "kollegen": [k["id"] for k in st["kollegen"]]}),
         _step("zufall", ("Varianten aus dem Seed", "Variants from the seed"), {"varianten": var}),
         _step("regel", ("Startlage", "Starting situation"), {"systeme": rec["assets"], "werte": rec["delta"]})]})
@@ -614,6 +638,97 @@ def herausforderung(art, now=None):
     sid = sorted(SZENARIEN)[r.randrange(len(SZENARIEN))]
     return {"art": art, "key": key, "name": list(HERAUS[art][1]), "szenario": sid, "stufe": "normal",
             "seed": r.randrange(SEED_MAX + 1), "mutatoren": sorted(r.sample(MUT_IDS, HERAUS[art][0]))}
+
+
+# Kampagnen (Paket 9): chains of chapters over several game days (data: kampagnen); what a finished chapter leaves
+# behind (ERBE) is fixed code from its end and values, never the model; it changes the start of the next chapter.
+# A campaign can wait between chapters as long as it likes; a chapter replaced by another game counts as given up.
+KAMPAGNE_KAPITEL = (2, 5)
+KAMPAGNEN_MAX = 10       # finished campaigns kept per profile
+ERBE = (("audit", ("Audit", "Audit"), ("Ein Audit prüft den letzten Fall: ein Fünftel weniger Notfall-Budget.",
+                                       "An audit checks the last case: a fifth less emergency budget."),
+         ("Kapitel nicht gewonnen oder Note D bis F.", "Chapter not won or grade D to F.")),
+        ("versicherung", ("Versicherung zahlt", "Insurance pays"), ("Die Cyber-Versicherung erstattet: ein Fünftel mehr Notfall-Budget.",
+                                                                  "The cyber insurance pays: a fifth more emergency budget."),
+         ("Gewonnen ohne Datenverlust.", "Won without data loss.")),
+        ("erschoepft", ("Erschöpftes Team", "Exhausted team"), ("Die Moral startet 15 Punkte tiefer, das Team ist zu 30 % müde.",
+                                                               "Morale starts 15 points lower, the team is 30 % tired."),
+         ("Moral am Ende unter 40 %.", "Morale below 40 % at the end.")),
+        ("ruf", ("Ruf beschädigt", "Reputation damaged"), ("Das Vertrauen startet 15 Punkte tiefer.", "Trust starts 15 points lower."),
+         ("Vertrauen am Ende unter 40 %.", "Trust below 40 % at the end.")),
+        ("eingespielt", ("Eingespielt", "Well-rehearsed"), ("Der Stress startet 10 Punkte tiefer, die Moral 5 Punkte höher.",
+                                                          "Stress starts 10 points lower, morale 5 points higher."),
+         ("Gewonnen mit Note A oder B.", "Won with grade A or B.")))
+ERBE_IDS = tuple(x[0] for x in ERBE)
+
+
+def erbe_aus(st):
+    """What a finished chapter leaves to the next one, by fixed rules in the order of ERBE."""
+    e, m = st["ende"], st["m"]
+    won = e["art"] == "gewonnen"
+    rules = {"audit": not won or e["note"] in ("D", "E", "F"), "versicherung": won and "datenverlust" not in st["flags"],
+             "erschoepft": m["moral"] < 40, "ruf": m["vertrauen"] < 40, "eingespielt": won and e["note"] in ("A", "B")}
+    return [k for k in ERBE_IDS if rules[k]]
+
+
+def _erben(st):
+    m = st["m"]
+    for x in st.get("erbe") or ():
+        if x == "audit":
+            m["budget"] = m["budget_start"] = m["budget"] * 4 // 5
+        elif x == "versicherung":
+            m["budget"] = m["budget_start"] = m["budget"] * 6 // 5
+        elif x == "erschoepft":
+            m["moral"] -= 15
+            for k in st["kollegen"]:
+                k["muede"] = max(k.get("muede", 0), 30)
+        elif x == "ruf":
+            m["vertrauen"] -= 15
+        elif x == "eingespielt":
+            m["stress"] -= 10
+            m["moral"] += 5
+
+
+def kampagne_start(d, kid, stufe, seed=None, now=None):
+    """A new campaign for the profile (replaces a running one); its chapters' seeds come from its own seed."""
+    if kid not in KAMPAGNEN or stufe not in STUFEN:
+        raise ValueError("kampagne, stufe")
+    seed = secrets.randbelow(SEED_MAX + 1) if seed is None else int(seed)
+    d["kampagne"] = {"id": kid, "lauf": secrets.token_hex(6), "stufe": stufe, "seed": seed, "kapitel": 0, "erbe": [],
+                     "ergebnisse": [], "t": int(time.time() if now is None else now)}
+    return d["kampagne"]
+
+
+def kapitel_spiel(d, lang="de", modus="knoepfe", uhr=False, now=None):
+    """The game of the campaign's next chapter, with what the chapter before left behind."""
+    k = d["kampagne"]
+    kd = KAMPAGNEN[k["id"]]
+    c = kd["kapitel"][k["kapitel"]]
+    seed = _rng(k["seed"], "kapitel", k["kapitel"]).randrange(SEED_MAX + 1)
+    return new_game(c["szenario"], k["stufe"], seed, lang, now=now, modus=modus, uhr=uhr, rang=laufbahn(d)["rang"],
+                    erbe=k["erbe"], kampagne={"id": k["id"], "lauf": k["lauf"], "kapitel": k["kapitel"], "n": len(kd["kapitel"])})
+
+
+def _kapitel_fertig(d, st, now):
+    """A finished chapter into its campaign: the result, the heritage for the next one, at the end the total."""
+    k, c = d.get("kampagne"), st.get("kampagne")
+    if not k or not c or c.get("lauf") != k["lauf"] or c.get("kapitel") != k["kapitel"]:
+        return
+    erbe = erbe_aus(st)
+    k["ergebnisse"].append({"szenario": st["szenario"], "ende": st["ende"]["art"], "note": st["ende"]["note"],
+                            "punkte": st["ende"]["punkte"], "erbe": erbe})
+    k["kapitel"] += 1
+    k["erbe"] = erbe
+    n = len(KAMPAGNEN[k["id"]]["kapitel"])
+    if k["kapitel"] < n:
+        print(f"spiel: kampagne | kapitel {k['kapitel']} von {n} | {len(erbe)} folgen", flush=True)
+        return
+    p = round(sum(x["punkte"] for x in k["ergebnisse"]) / n)
+    note = next(x for floor, x in NOTEN if p >= floor)
+    d["kampagnen"] = ([{"id": k["id"], "stufe": k["stufe"], "seed": k["seed"], "punkte": p, "note": note, "t": int(now),
+                        "ergebnisse": k["ergebnisse"]}] + d.get("kampagnen", []))[:KAMPAGNEN_MAX]
+    d["kampagne"] = None
+    print(f"spiel: kampagne | ende | note {d['kampagnen'][0]['note']}", flush=True)
 
 
 def _step(art, titel, daten, ms=0.0):
@@ -915,7 +1030,8 @@ def erfolge_neu(st, prof_data):
              "ciso": rang_of(prof_data.get("stats", {}).get("gewonnen", 0) + won,
                              "bestnote" in have or e["note"] == "A")[0] == RANG_IDS[-1],
              "herausforderung": won and bool(st.get("heraus")) and st["heraus"] not in prof_data.get("heraus", {}),
-             "mutig": won and len(st.get("mutatoren") or ()) >= 2}
+             "mutig": won and len(st.get("mutatoren") or ()) >= 2,
+             "durchgehalten": bool(st.get("kampagne")) and st["kampagne"]["kapitel"] == st["kampagne"]["n"] - 1}
     return [k for k in ERFOLG_IDS if rules[k] and k not in have]
 
 
@@ -937,7 +1053,9 @@ def load(uid):
             "erfolge": {k: int(v) for k, v in (d.get("erfolge") or {}).items() if k in ERFOLG_IDS and isinstance(v, (int, float))},
             "stats": d.get("stats") if isinstance(d.get("stats"), dict) else {},
             "heraus": {k: v for k, v in (d.get("heraus") or {}).items() if isinstance(v, dict)},
-            "bestenliste": d.get("bestenliste") if d.get("bestenliste") in BOARD_ZEIGEN else BOARD_ZEIGEN[0]}
+            "bestenliste": d.get("bestenliste") if d.get("bestenliste") in BOARD_ZEIGEN else BOARD_ZEIGEN[0],
+            "kampagne": d["kampagne"] if isinstance(d.get("kampagne"), dict) and d["kampagne"].get("id") in KAMPAGNEN else None,
+            "kampagnen": [x for x in d.get("kampagnen") or [] if isinstance(x, dict) and x.get("id") in KAMPAGNEN][:KAMPAGNEN_MAX]}
 
 
 def save(uid, d):
@@ -978,10 +1096,11 @@ def _book(d, now):
     d["verlauf"] = ([{"id": st["id"], "szenario": st["szenario"], "stufe": st["stufe"], "seed": st["seed"],
                       "ende": st["ende"]["art"], "note": st["ende"]["note"], "punkte": st["ende"]["punkte"],
                       "zuege": st["zug"], "minuten": st["ende"]["minuten"], "t": int(now), "erfolge": new, "lernen": learn,
-                      "heraus": key, "mutatoren": st.get("mutatoren") or [],
+                      "heraus": key, "mutatoren": st.get("mutatoren") or [], "kampagne": (st.get("kampagne") or {}).get("id"),
                       "kurve": [] if learn else st.get("kurve", [])[:MAX_ZUEGE]}]
                     + d["verlauf"])[:VERLAUF_MAX]
     print(f"spiel: ende | {st['ende']['art']} | note {st['ende']['note']} | {st['zug']} zuege | {len(new)} erfolge", flush=True)
+    _kapitel_fertig(d, st, now)
 
 
 # ---------------------------------------------------------------- the narrator (language model, only words)
@@ -1106,6 +1225,12 @@ def view(d, uid=None):
            "laufbahn": laufbahn(d), "faecher": {k: list(v) for k, v in FAECHER.items()},
            "mutatoren": [{"id": k, "name": list(n), "text": list(t), "bonus": b} for k, n, t, b in MUTATOREN],
            "herausforderungen": heraus_view(d, uid), "bestenliste": d.get("bestenliste", BOARD_ZEIGEN[0]),
+           "kampagnen": [{"id": k["id"], "titel": k["titel"], "kurz": k["kurz"],
+                          "kapitel": [{"szenario": c["szenario"], "titel": SZENARIEN[c["szenario"]]["titel"], "tag": c["tag"]}
+                                      for c in k["kapitel"]]} for k in _DATA.get("kampagnen", [])],
+           "erbe": [{"id": k, "name": list(n), "text": list(t), "wann": list(w)} for k, n, t, w in ERBE],
+           "kampagne": kampagne_view(d.get("kampagne")),
+           "kampagnen_verlauf": [dict(x, titel=KAMPAGNEN[x["id"]]["titel"]) for x in d.get("kampagnen") or []],
            "stats": {"gespielt": d["stats"].get("gespielt", 0), "gewonnen": d["stats"].get("gewonnen", 0),
                      "beste": d["stats"].get("beste", {}), "je": d["stats"].get("je", {}), "noten": d["stats"].get("noten", {})},
            "spiel": None}
@@ -1121,6 +1246,7 @@ def view(d, uid=None):
                         "aktionen": [] if st["ende"] or st.get("modus") == "konsole" else available(st),
                         "rang": st.get("rang", "junior"), "delegiert": st.get("delegiert", 0),
                         "mutatoren": st.get("mutatoren") or [], "heraus": st.get("heraus"),
+                        "erbe": st.get("erbe") or [], "kampagne": st.get("kampagne"),
                         "lernen": bool(st.get("lernen")), "tipp": tipp(st) if st.get("lernen") and not st["ende"] else None,
                         "geist": geist(d, st),
                         "kollegen": [dict(x, rest=max(0, x["auftrag"]["fertig"] - minutes_gone(st)) if x["auftrag"] else 0)
@@ -1129,6 +1255,18 @@ def view(d, uid=None):
                                         verlauf=k["verlauf"], lesen=k["min"], lesen_max=krisenkonsole.LESEN_MAX,
                                         **krisenkonsole.tab_daten(st, holds, st.get("lang", "de")))}
     return out
+
+
+def kampagne_view(k):
+    """The running campaign: its chapters with results so far, the next chapter's text and what it inherits."""
+    if not k:
+        return None
+    kd = KAMPAGNEN[k["id"]]
+    nxt = kd["kapitel"][k["kapitel"]] if k["kapitel"] < len(kd["kapitel"]) else None
+    return {"id": k["id"], "titel": kd["titel"], "stufe": k["stufe"], "seed": k["seed"], "kapitel": k["kapitel"],
+            "n": len(kd["kapitel"]), "erbe": k["erbe"], "ergebnisse": k["ergebnisse"], "lauf": k["lauf"],
+            "naechstes": {"szenario": nxt["szenario"], "titel": SZENARIEN[nxt["szenario"]]["titel"], "tag": nxt["tag"],
+                          "text": nxt["text"]} if nxt else None}
 
 
 def geist(d, st):
@@ -1234,6 +1372,14 @@ async def neu(request: Request, prof=Depends(browser_profile)):
     b = await json_body(request, BODY)
     sid, stufe, seed, modus = b.get("szenario"), b.get("stufe", "normal"), b.get("seed"), b.get("modus", "knoepfe")
     uhr, lernen, muts, her = b.get("uhr", False), b.get("lernen", False), b.get("mutatoren", []), b.get("herausforderung")
+    kamp = b.get("kampagne")
+    if kamp is not None:
+        if kamp != "weiter" and kamp not in KAMPAGNEN or her is not None or lernen or muts or sid is not None \
+                or modus not in MODI or not isinstance(uhr, bool) or stufe not in STUFEN or seed is not None and (
+                not isinstance(seed, int) or isinstance(seed, bool) or not 0 <= seed <= SEED_MAX):
+            print("spiel: neu abgelehnt | eingabe", flush=True)
+            raise HTTPException(400, "kampagne")
+        return await _kapitel_neu(request, prof, b, kamp, stufe, seed, modus, uhr)
     if her is not None:
         if her not in HERAUS:
             print("spiel: neu abgelehnt | eingabe", flush=True)
@@ -1255,8 +1401,7 @@ async def neu(request: Request, prof=Depends(browser_profile)):
     def go():
         with _lock(uid):
             d = load(uid)
-            if d["spiel"] and not d["spiel"].get("ende"):
-                print("spiel: altes spiel ersetzt | nicht beendet", flush=True)
+            _ersetzen(d)
             d["spiel"] = new_game(sid, stufe, seed, _lang(b), modus=modus, uhr=uhr, lernen=lernen, mutatoren=muts,
                                   rang=HERAUS_RANG if her else laufbahn(d)["rang"], heraus=h["key"] if her else None)
             save(uid, d)
@@ -1267,6 +1412,77 @@ async def neu(request: Request, prof=Depends(browser_profile)):
         _day.bump("heraus")
     print(f"spiel: neu | {sid} | {stufe} | {modus}{' | uhr' if uhr else ''}{' | lernen' if lernen else ''}"
           f"{' | ' + her if her else ''}{f' | {len(muts)} mutatoren' if muts else ''} | {profiles.log_name(prof)}", flush=True)
+    return view(d, uid)
+
+
+def _ersetzen(d):
+    """Before a new game: a running one is replaced; a running chapter of the campaign counts as given up."""
+    st = d["spiel"]
+    if not st or st.get("ende"):
+        return
+    print("spiel: altes spiel ersetzt | nicht beendet", flush=True)
+    k, c = d.get("kampagne"), st.get("kampagne")
+    if k and c and c.get("lauf") == k["lauf"] and c.get("kapitel") == k["kapitel"]:
+        finish(st, "aufgegeben")
+        _book(d, time.time())
+
+
+async def _kapitel_neu(request, prof, b, kamp, stufe, seed, modus, uhr):
+    """POST …/neu with kampagne: an id starts that campaign at chapter 1, „weiter“ the next chapter of the running one;
+    an open chapter game is simply shown again (played on later, the game is saved)."""
+    uid = prof["id"]
+
+    def go():
+        with _lock(uid):
+            d = load(uid)
+            if kamp == "weiter":
+                k = d["kampagne"]
+                if not k:
+                    return d, "keine"
+                st = d["spiel"]
+                c = (st or {}).get("kampagne") or {}
+                if st and not st.get("ende") and c.get("lauf") == k["lauf"] and c.get("kapitel") == k["kapitel"]:
+                    return d, "offen"
+            else:
+                if d["kampagne"]:
+                    print("spiel: kampagne | ersetzt", flush=True)
+                kampagne_start(d, kamp, stufe, seed)
+            _ersetzen(d)
+            if not d["kampagne"]:              # the replaced game was the last chapter of the running campaign
+                return d, "keine"
+            d["spiel"] = kapitel_spiel(d, _lang(b), modus, uhr)
+            save(uid, d)
+            return d, "neu"
+    d, how = await asyncio.to_thread(go)
+    if how == "keine":
+        print("spiel: kampagne abgelehnt | keine kampagne", flush=True)
+        raise HTTPException(404, "no campaign")
+    if how == "offen":
+        print("spiel: kampagne | weiter | offen", flush=True)
+        return view(d, uid)
+    k = d["kampagne"]
+    _day.bump("spiele")
+    if k["kapitel"] == 0:
+        _day.bump("kampagnen")
+    print(f"spiel: kampagne | {'start' if k['kapitel'] == 0 else 'weiter'} | {k['id']} | kapitel {k['kapitel'] + 1} | "
+          f"{k['stufe']} | {modus}{' | uhr' if uhr else ''} | {profiles.log_name(prof)}", flush=True)
+    return view(d, uid)
+
+
+@router.delete("/api/profile/krisenspiel/kampagne", dependencies=[Depends(assistant)])
+def kampagne_beenden(request: Request, prof=Depends(browser_profile)):
+    """Ends the running campaign without a result; a running chapter game stays as a free game."""
+    uid = prof["id"]
+    _need(uid)
+    guard.limit(request, "spiel", uid)
+    with _lock(uid):
+        d = load(uid)
+        if not d["kampagne"]:
+            print("spiel: kampagne abgelehnt | keine kampagne", flush=True)
+            raise HTTPException(404, "no campaign")
+        d["kampagne"] = None
+        save(uid, d)
+    print("spiel: kampagne | beendet", flush=True)
     return view(d, uid)
 
 
@@ -1548,18 +1764,20 @@ def for_live():
     if not admin_on():
         return {"on": False}
     if _live["d"] is None or time.time() - _live["at"] >= LIVE_CACHE:
-        running = profs = clocks = 0
+        running = profs = clocks = camps = 0
         for uid in profiles.user_ids():
             if not os.path.exists(_file(uid)):
                 continue
             profs += 1
-            st = load(uid)["spiel"]
+            d = load(uid)
+            st = d["spiel"]
+            camps += bool(d["kampagne"])
             running += bool(st and not st.get("ende"))
             clocks += bool(st and not st.get("ende") and st.get("uhr"))
-        _live.update(at=time.time(), d={"laufend": running, "profile": profs, "uhr": clocks})
+        _live.update(at=time.time(), d={"laufend": running, "profile": profs, "uhr": clocks, "kampagnen_laufend": camps})
     t = _day.today()
     return dict(_live["d"], on=True, zuege=t["zuege"], spiele=t["spiele"], erzaehlt=t["erzaehlt"], verworfen=t["verworfen"],
-                konsole=t["konsole"], delegiert=t["delegiert"], heraus=t["heraus"])
+                konsole=t["konsole"], delegiert=t["delegiert"], heraus=t["heraus"], kampagnen=t["kampagnen"])
 
 
 def _own_count(uid):

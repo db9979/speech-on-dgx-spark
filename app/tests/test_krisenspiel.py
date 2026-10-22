@@ -718,6 +718,115 @@ class Herausforderung(unittest.TestCase):
         quiet(c2.delete, "/api/profile/krisenspiel/daten")
 
 
+class Kampagne(unittest.TestCase):
+    """Kampagnen (Paket 9): chapters chained by fixed rules, what a chapter leaves behind changes the next start, every
+    chapter winnable even with the worst heritage, a replaced chapter counts as given up, the total at the end."""
+
+    def setUp(self):
+        Api.setUp(self)
+
+    def test_the_data_is_sound_and_covers_the_scenarios(self):
+        self.assertEqual(K.check_data(), [])
+        self.assertGreaterEqual(len(K.KAMPAGNEN), 3)
+        bad = copy.deepcopy(K._DATA)
+        bad["kampagnen"][0]["kapitel"][0]["szenario"] = "gibtsnicht"
+        bad["kampagnen"][1]["kapitel"][1]["tag"] = 1
+        bad["kampagnen"].append(copy.deepcopy(bad["kampagnen"][2]))
+        text = " ".join(K.check_data(bad))
+        for want in ("chapter", "tag rises", "ids twice"):
+            self.assertIn(want, text)
+
+    def test_the_heritage_follows_fixed_rules(self):
+        st = K.new_game("san", "normal", 3, now=T0)
+        finish(st, "zeit")
+        self.assertEqual(K.erbe_aus(st), ["audit"])
+        st = K.new_game("san", "normal", 3, now=T0)
+        st["m"].update(moral=20, vertrauen=30)
+        finish(st, "aufgegeben")
+        self.assertEqual(K.erbe_aus(st), ["audit", "erschoepft", "ruf"])
+        won = K.new_game("san", "normal", 3, now=T0)
+        won["ende"] = {"art": "gewonnen", "note": "B"}
+        self.assertEqual(K.erbe_aus(won), ["versicherung", "eingespielt"])
+        won["ende"]["note"], won["flags"]["datenverlust"] = "D", 1
+        self.assertEqual(K.erbe_aus(won), ["audit"])
+        plain = K.new_game("san", "normal", 3, now=T0)
+        for x, check in (("audit", lambda m: m["budget"] == plain["m"]["budget"] * 4 // 5),
+                         ("versicherung", lambda m: m["budget"] == plain["m"]["budget"] * 6 // 5),
+                         ("erschoepft", lambda m: m["moral"] == plain["m"]["moral"] - 15),
+                         ("ruf", lambda m: m["vertrauen"] == plain["m"]["vertrauen"] - 15),
+                         ("eingespielt", lambda m: m["stress"] == plain["m"]["stress"] - 10)):
+            g = K.new_game("san", "normal", 3, now=T0, erbe=[x])
+            self.assertTrue(check(g["m"]), x)
+        self.assertTrue(all(k["muede"] >= 30 for k in K.new_game("san", "normal", 3, now=T0, erbe=["erschoepft"])["kollegen"]))
+        with self.assertRaises(ValueError):
+            K.new_game("san", "normal", 3, now=T0, erbe=["gibtsnicht"])
+
+    def test_every_chapter_can_be_won_with_the_worst_heritage(self):
+        worst = ["audit", "erschoepft", "ruf"]
+        for k in K.KAMPAGNEN.values():
+            for c in k["kapitel"][1:]:
+                for seed in seeds_for_variants(c["szenario"]):
+                    self.assertIsNotNone(solve(K.new_game(c["szenario"], "normal", seed, now=T0, erbe=worst)), (k["id"], c, seed))
+
+    def test_a_campaign_through_the_api(self):
+        c, uid = Api.fresh(self, "Kskamp")
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            for bad in ({"kampagne": "gibtsnicht"}, {"kampagne": "angriffswelle", "lernen": True},
+                        {"kampagne": "angriffswelle", "szenario": "san"}, {"kampagne": "angriffswelle", "herausforderung": "tag"},
+                        {"kampagne": "angriffswelle", "mutatoren": ["eile"]}, {"kampagne": "angriffswelle", "stufe": "x"}):
+                self.assertEqual(c.post("/api/profile/krisenspiel/neu", json=bad).status_code, 400, bad)
+            self.assertEqual(c.post("/api/profile/krisenspiel/neu", json={"kampagne": "weiter"}).status_code, 404)
+            self.assertEqual(c.delete("/api/profile/krisenspiel/kampagne").status_code, 404)
+            kd = K.KAMPAGNEN["angriffswelle"]["kapitel"]
+            d = c.post("/api/profile/krisenspiel/neu", json={"kampagne": "angriffswelle", "stufe": "uebung", "seed": 77}).json()
+            self.assertEqual((d["spiel"]["szenario"], d["spiel"]["stufe"], d["spiel"]["kampagne"]["kapitel"], d["kampagne"]["kapitel"]),
+                             (kd[0]["szenario"], "uebung", 0, 0))
+            seed0 = d["spiel"]["seed"]
+            again = c.post("/api/profile/krisenspiel/neu", json={"kampagne": "weiter"}).json()   # the open chapter stays
+            self.assertEqual(again["spiel"]["id"], d["spiel"]["id"])
+            d = c.delete("/api/profile/krisenspiel").json()                    # given up: chapter 2 with an audit
+            self.assertEqual((d["kampagne"]["kapitel"], d["kampagne"]["erbe"]), (1, ["audit"]))
+            self.assertEqual(d["kampagne"]["naechstes"]["szenario"], kd[1]["szenario"])
+            d = c.post("/api/profile/krisenspiel/neu", json={"kampagne": "weiter"}).json()
+            self.assertEqual((d["spiel"]["szenario"], d["spiel"]["erbe"]), (kd[1]["szenario"], ["audit"]))
+            d = c.post("/api/profile/krisenspiel/neu", json={"szenario": "san"}).json()   # replaced: chapter 2 counts as given up
+            self.assertEqual(d["kampagne"]["kapitel"], 2)
+            self.assertEqual([r["ende"] for r in d["kampagne"]["ergebnisse"]], ["aufgegeben", "aufgegeben"])
+            c.post("/api/profile/krisenspiel/neu", json={"kampagne": "weiter"})
+            d = c.delete("/api/profile/krisenspiel").json()                    # the last chapter: the campaign is over
+            self.assertIsNone(d["kampagne"])
+            self.assertEqual((d["kampagnen_verlauf"][0]["id"], d["kampagnen_verlauf"][0]["note"]), ("angriffswelle", "F"))
+            self.assertEqual(d["verlauf"][0]["kampagne"], "angriffswelle")
+            self.assertNotIn("durchgehalten", K.load(uid)["erfolge"])         # given up: no achievement
+            # the same campaign seed gives the same chapters
+            d = c.post("/api/profile/krisenspiel/neu", json={"kampagne": "angriffswelle", "stufe": "uebung", "seed": 77}).json()
+            self.assertEqual(d["spiel"]["seed"], seed0)
+            d = c.delete("/api/profile/krisenspiel/kampagne").json()
+            self.assertIsNone(d["kampagne"])
+            self.assertFalse(d["spiel"]["ende"])                               # the game stays, as a free one
+        log = out.getvalue()
+        for want in ("spiel: kampagne | start | angriffswelle | kapitel 1 | uebung | knoepfe", "spiel: kampagne | weiter | offen",
+                     "spiel: kampagne | kapitel 1 von 3 | 1 folgen", "spiel: kampagne | ende | note F", "spiel: kampagne | beendet",
+                     "spiel: kampagne abgelehnt | keine kampagne", "spiel: neu abgelehnt | eingabe"):
+            self.assertIn(want, log)
+        self.assertNotIn("Kskamp", log)
+        K._live.update(at=0.0, d=None)
+        self.assertGreaterEqual(K.for_live()["kampagnen"], 2)
+        quiet(c.delete, "/api/profile/krisenspiel/daten")
+
+    def test_the_last_chapter_played_out_earns_the_achievement(self):
+        d = {"kampagne": None, "kampagnen": [], "verlauf": [], "erfolge": {}, "stats": {}, "heraus": {}, "spiel": None}
+        K.kampagne_start(d, "schwarze_woche", "normal", 4, now=T0)
+        d["kampagne"]["kapitel"] = len(K.KAMPAGNEN["schwarze_woche"]["kapitel"]) - 1
+        st = solve(K.kapitel_spiel(d, now=T0))
+        self.assertIn("durchgehalten", K.erfolge_neu(st, d))
+        d["spiel"] = st
+        quiet(K._book, d, T0)
+        self.assertIsNone(d["kampagne"])
+        self.assertEqual(len(d["kampagnen"]), 1)
+
+
 class Anleitung(unittest.TestCase):
     def test_the_guide_names_everything_from_the_code(self):
         g = KA.build(K)
@@ -1049,6 +1158,14 @@ class Page(unittest.TestCase):
                         await b.until(pg, "!KS.busy&&KS.data.bestenliste==='name'")
                         await pg.click("#ksview [data-ksheraus=tag]")
                         await b.until(pg, "!KS.busy&&!!KS.data.spiel&&!!KS.data.spiel.heraus&&KS.data.spiel.mutatoren.length===1")
+                        # Kampagnen: one card each, starting one opens its first chapter, the card shows the campaign
+                        await pg.evaluate("icTabSet('spiel','neu');ksOpen()")
+                        await b.until(pg, f"document.querySelectorAll('#ksview .ks-kamp').length==={len(K.KAMPAGNEN)}")
+                        await pg.evaluate("window.confirm=()=>true")
+                        await pg.click("#ksview [data-kskamp=angriffswelle]")
+                        await b.until(pg, "!KS.busy&&!!KS.data.spiel&&!!KS.data.spiel.kampagne&&!!KS.data.kampagne")
+                        await pg.evaluate("document.querySelector('#ksview [data-ksgive]').click()")
+                        await b.until(pg, "!KS.busy&&!!document.querySelector('#ksview .ks-end [data-kskamp=weiter]')")
                         self.assertEqual(errors, [])
                     finally:
                         await br.close()
