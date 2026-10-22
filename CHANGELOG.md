@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.932** · 2026-10-22 · IT-Krisenspiel (Paket 1): eigene Seite „Krisenspiel“ mit fünf Szenarien (Ransomware, SAN, Strom, BGP, BSI), Krisen-Dashboard, Inspector, Noten und Erfolgen; das Panel entscheidet mit festen Regeln und Seed, der Erzähler (eigener Schalter) erzählt nur nach; beide Schalter aus
 - **V01.0.931** · 2026-10-22 · Live-Übersicht: eine Karte je Anruf, die Fragen im Anruf stehen auf ihr statt als eigene Telefon-Karten
 - **V01.0.930** · 2026-10-22 · Rechnen genauer: Zahlwörter („sechs mal sechs“), Rechnung in der Frage macht das Werkzeug zur Pflicht, „@Spark prüf das“ prüft Rechnungen auf reMarkable-Seiten („bitte prüfen“, Seite bleibt), Belege zusammenrechnen
 - **V01.0.929** · 2026-10-22 · Ich → Dokumente zeigt reMarkable-Notizbücher mit dem Tag ihrer letzten Änderung auf dem Gerät statt dem Tag der Übernahme und sortiert „Neueste zuerst“ danach; bei der Quelle reMarkable steht „Letzter Abgleich hh:mm · N Seiten neu“; auch in der iPhone-App

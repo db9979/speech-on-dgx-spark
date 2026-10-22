@@ -243,6 +243,7 @@ Own documents, memory, earlier conversations, Kiwix and Wikipedia, created docum
 | `app/panel/folien.py` | Slide types and the fixed rules for documents the Spark writes. |
 | `app/panel/gedaechtnis.py` | Gedächtnis mit Beleg und Prüfung. |
 | `app/panel/kiwix.py` | The person's own Kiwix (kiwix-serve with ZIM files: Wikipedia, Wikivoyage, handbooks ...) as a knowledge source that works without the internet. |
+| `app/panel/krisenspiel.py` | IT-Krisenspiel: a text adventure for one profile at a time. |
 | `app/panel/lokal.py` | Erst lokal suchen: before anything goes outside, the panel looks in the person's own sources itself. |
 | `app/panel/memtidy.py` | Weekly memory cleanup per profile: the language model looks at the remembered facts and proposes which ones to merge (duplicates, the same thing said twice) … |
 | `app/panel/musik.py` | Musik machen: songs from a wish, made on the model computer by ACE-Step 1.5 (musik_server.py, music.port 31004, installed with `install.sh --musik 2b\|xl`). |
@@ -550,6 +551,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `users/ID/fuerdich-vorrat.bin` | For you: the last reading per mailbox (found entries with sender, subject and time, no mail text) | Mails | sealed | yes | – |
 | `users/ID/fuerdich.json` | For you: what you marked as done or not interesting (only checksums) | Settings | – | yes | – |
 | `users/ID/vorgaenge.json` | Open: what needs you, what you put off for later and what is done (titles and state of the cards); a proposal waiting for your yes, with the mail's text only until it is answered | Queue | – | yes | – |
+| `users/ID/krisenspiel.json` | IT crisis game: the running game with chronicle and inspector, the last 20 results, achievements (game data only) | State | – | yes | – |
 | `users/ID/interessen.json` | What I know about you: confirmed and refused interests with topic and senders and the last web tip (no subject, never a mail) | Settings | – | yes | – |
 | `users/ID/mailstil.json` | Mail style (only the summary, never a mail) | Settings | – | yes | – |
 | `users/ID/mail-regeln.json` | Mail rules of the E-mail page and rule suggestions (senders, words, folders; never a mail) | Settings | – | yes | – |
@@ -2462,7 +2464,7 @@ flowchart TD
 2. <a id="kn-betrieb-s2"></a>**Anything switched on?**: If neither „Trace requests“ nor the live page nor the settings assistant is on, there is no record. Only the modules' journal lines remain.
 3. <a id="kn-betrieb-s3"></a>**Steps with fixed words**: Each step (switch, model round, tool, check, speech output) is added with kind, name and time. A value goes in only if it is a number or a short fixed word; anything else is dropped. Question, answer, arguments and results never go in.
 4. <a id="kn-betrieb-s4"></a>**Live page on?**: With the live page on, live.py sees each step at once: which service is asked, what the guard decides, what comes back. Everything stays in memory and is gone after a restart.
-5. <a id="kn-betrieb-s5"></a>**Journal lines of the modules**: Independently each module writes its lines into the Spark's journal. Every line starts with a word from logfilter.AREAS (32 areas), profiles only through profiles.log_name. A self-test checks both.
+5. <a id="kn-betrieb-s5"></a>**Journal lines of the modules**: Independently each module writes its lines into the Spark's journal. Every line starts with a word from logfilter.AREAS (33 areas), profiles only through profiles.log_name. A self-test checks both.
 6. <a id="kn-betrieb-s6"></a>**End and verdict**: At the end the record gets its state: error if an error word is set, slow if the first sound came later than 5.0 s, else good.
 7. <a id="kn-betrieb-s7"></a>**Trace requests on?**: If only Live or the settings assistant is on, the record ends here. It is written nowhere.
 8. <a id="kn-betrieb-s8"></a>**Line „anfrage:“ into the journal**: One line per request: id, channel, class, tools with ok or not ok, time to the instant reply, to the first sound and to the end. Without names.
@@ -3768,7 +3770,7 @@ flowchart TD
 ```
 
 1. <a id="kn-journal-s1"></a>**A service writes a line**: Panel, ASR, TTS, engines and watchers write with print. systemd hands the line to the journal; every unit has LogNamespace=speech-spark.
-2. <a id="kn-journal-s2"></a>**Fixed words and numbers**: Every line of the panel starts with a word from logfilter.AREAS (32 areas) and carries only fixed words and numbers. A profile appears there only through profiles.log_name: its name only with its consent, else „Profil“ and the end of its ID. test_log_luecken wants a line for every outcome of every action.
+2. <a id="kn-journal-s2"></a>**Fixed words and numbers**: Every line of the panel starts with a word from logfilter.AREAS (33 areas) and carries only fixed words and numbers. A profile appears there only through profiles.log_name: its name only with its consent, else „Profil“ and the end of its ID. test_log_luecken wants a line for every outcome of every action.
 3. <a id="kn-journal-s3"></a>**Detail on?**: For some areas the admin can switch on extra lines, at most 240 minutes. They too carry only numbers and decisions; a restart switches them off.
 4. <a id="kn-journal-s4"></a>**Polls quiet**: Successful status polls the panel makes every few seconds write no line.
 5. <a id="kn-journal-s5"></a>**Own part with a limit**: install.sh writes the limit for space and age from logs.max_mb and logs.keep_days. journald deletes older lines itself. A change applies after the next update or install.sh.
@@ -3784,7 +3786,7 @@ flowchart TD
 
 #### Numbers (from the code)
 
-- **32** areas of the diagnosis ([step 2](#kn-journal-s2))
+- **33** areas of the diagnosis ([step 2](#kn-journal-s2))
 - **20000** lines read per call at most ([step 8](#kn-journal-s8))
 - **2 MB** journal text per call at most ([step 8](#kn-journal-s8))
 - **1000** lines shown at most ([step 7](#kn-journal-s7))

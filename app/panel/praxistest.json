@@ -2712,6 +2712,13 @@
 "titel": "Rechnen: Zahlwörter, Papier, Belege",
 "text": "A: Update, Funktionen → Gespräch → Rechnen mit festem Werkzeug an. B: Frag „Was ist sechs mal sechs und daraus die Wurzel?“: unter Logs → Anfragen läuft das Werkzeug Rechnen (Weiche „Pflicht rechnen“), Antwort 36 und 6. C: Auf dem reMarkable eine Seite mit „17 · 23 = 381“ und „12 + 30 = 42“ schreiben, darunter „@Spark prüf das“: nach dem Abgleich liegt daneben „2 Rechnungen nachgerechnet, 1 bitte prüfen“ mit dem Wert 391; die Seite selbst ist unverändert. D: „Was habe ich im Oktober zusammen getankt?“ (mit Tankbelegen in den Dokumenten): jeder Beleg mit Betrag, die Summe vom Panel. E: Zustand → Logs: „remarkable: @Spark rechnungen geprueft 2, bitte pruefen 1“, nie die Zahlen der Seite.",
 "thread": "Rechnen mit festem Werkzeug"
+},
+{
+"id": "P412",
+"v": 932,
+"titel": "IT-Krisenspiel: fünf Szenarien, Inspector, Erzähler",
+"text": "A: Update, Funktionen → Meine Daten → IT-Krisenspiel an. Im Menü steht „Krisenspiel“. B: Neues Spiel → Ransomware, Normal, Seed 4711 → Spiel starten: oben Zeit 120 min, Stress, Vertrauen, Moral, Budget, Schaden; die Systeme mit Zustand. C: Ein paar Züge machen (Netzsegmente trennen, Lage …): Zeit sinkt, Schaden steigt, die Chronik wächst; Inspector zeigt je Zug Eingabe, feste Regel, Würfe aus dem Seed. D: Spiel zu Ende spielen: Note A bis F mit Gründen, ggf. Erfolge; „Nochmal mit diesem Seed“ und dieselben Züge ergeben dasselbe Ergebnis. E: Funktionen → Meine Daten → IT-Krisenspiel → Krisenspiel mit Erzähler an: nach einem Zug steht ein kurzer erzählter Text, „Feste Fakten“ zeigt den Originaltext; die Werte sind dieselben wie ohne Erzähler. F: Ein anderes Profil sperren (Personen und Geräte → Gesperrte Funktionen): dort kein Menüeintrag; ein Gast sieht das Spiel nie. G: Zustand → Logs nur „spiel: …“ mit Wörtern und Zahlen, nie Szenario-Texte; Live nur Anzahlen. H: Bisherige Spiele → Meine Spieldaten löschen: alles leer.",
+"thread": "IT-Krisenspiel für einzelne Nutzer"
 }
 ]
 }

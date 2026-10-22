@@ -453,6 +453,7 @@ ADMIN_ON_OK = {
     "suchpruefung.py:admin_on": "Spark switch for the background step, Live and the admin page; per profile suchpruefung.allowed",
     "wissensbuch.py:admin_on": "Spark switch for the background step, Live and the admin page; per profile wissensbuch.allowed",
     "wissenskarte.py:admin_on": "Spark switch for the background step, Live and the admin page; per profile wissenskarte.allowed",
+    "krisenspiel.py:admin_on": "Spark switch for Live and the admin page; per profile features.allowed krisenspiel",
     "tasks.py:admin_on": "Spark switch; per profile features.allowed tasks, endpoints add features.blocked",
     "telegram.py:admin_on": "Spark-wide bot; per profile features.allowed / features.blocked",
     "tidy.py:admin_on": "Spark switch; per profile features.allowed tidy",

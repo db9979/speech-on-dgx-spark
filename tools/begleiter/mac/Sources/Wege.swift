@@ -5,7 +5,7 @@ import Foundation
 /// "Einstellungen → …" without "Panel" right before it is the Begleiter's or the Mac's own settings.
 /// Only navigation: the link opens the panel in the browser, nothing else.
 enum Wege {
-    static let roots = "Einstellungen|Funktionen|Zustand|Personen und Geräte|Ich|Settings|Features|Status|People and devices|Me|Kalender|Calendar|E-Mail|E-mail|Kontakte|Contacts|Wissensbuch|Knowledge book"
+    static let roots = "Einstellungen|Funktionen|Zustand|Personen und Geräte|Ich|Settings|Features|Status|People and devices|Me|Kalender|Calendar|E-Mail|E-mail|Kontakte|Contacts|Wissensbuch|Knowledge book|Krisenspiel|Crisis game"
     private static let rx = try? NSRegularExpression(
         pattern: "(?<![\\w-])(?<!Mein )(?<!My )(?<!→ )(?:\(roots))\\s*→[^\\n.;:()!?]{1,160}")
     private static let plain = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~")

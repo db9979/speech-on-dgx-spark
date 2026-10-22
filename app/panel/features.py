@@ -63,7 +63,8 @@ ME_PAGES = (("overbox", "Überblick", "Overview"), ("bgbox", "Mein Zustand", "My
 OWN_PAGES = (("calbox", "cal", "Kalender", "Calendar"), ("mailbox", "post", "E-Mail", "E-mail"),
              ("taskbox", "listen", "Listen", "Lists"), ("vgbox", "offen", "Offen", "Open"),
              ("conbox", "kontakte", "Kontakte", "Contacts"),
-             ("wbbox", "wbuch", "Wissensbuch", "Knowledge book"))
+             ("wbbox", "wbuch", "Wissensbuch", "Knowledge book"),
+             ("ksbox", "spiel", "Krisenspiel", "Crisis game"))
 # Ich pages every profile has, whatever is switched on (me.js meAll shows them for every profile too)
 ME_ALWAYS = frozenset(("setbox", "factbox", "logbox", "secbox"))
 # Ich pages the iPhone app leaves out, each with its reason; every other page can be opened in the app
@@ -238,6 +239,11 @@ FEATURES = (
     # (Abschnitt neu, Verlängern, Musikrichtung, Remix, Schneiden, Tempo und Tonart); the panel picks the song
     F("musikbearbeiten", "Musik bearbeiten", "Editing music", "data", ("musik_bearbeiten",), parent="musik",
       me="musikbox", guide="musikbearbeiten"),
+    # IT-Krisenspiel (krisenspiel.py, plan krisenspiel): a text adventure for one profile, the panel's fixed rules
+    # decide every value; the narrator (own switch) only retells a move in words
+    F("krisenspiel", "IT-Krisenspiel", "IT crisis game", "data", ("krisenspiel",), me="ksbox", guide="krisenspiel"),
+    F("krisenerzaehler", "Krisenspiel mit Erzähler", "Crisis game with narrator", "data", ("krisenspiel_erzaehler",),
+      parent="krisenspiel", me="ksbox", guide="krisenerzaehler"),
     F("docbrief", "Steckbrief und Tags", "Document card and tags", "data", ("doc_brief",),
       parent="documents", me="docbox", guide="docbrief"),
     # Suchprüfung (suchpruefung.py, plan suche-schaerfen, Stufe 1): test questions measure how often the search

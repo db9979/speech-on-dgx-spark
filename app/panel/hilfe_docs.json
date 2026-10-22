@@ -2413,7 +2413,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "innt mit einem Wort aus logfilter.AREAS (32 Bereiche), Profile nur über profiles.log_name. Ein Selbsttest prüft beides. 6. Ende und Bewertung: Am Ende bekommt der Datensatz seinen Zustand: Fehler, wenn ein Fehlerwort gesetzt ist, langsam, wenn der erste Ton später als 5.0 s kam, sonst gut. 7. Anfragen verfolgen an?: Ist nur Live oder der Einstellungs-Assistent an, endet der Datensatz hier. Er wird nirgends geschrieben. 8. Zeile „anfrage:“ ins Journal: Eine Zeile pro Anfrage: Kennung, Kanal, Einordnung, Werkzeuge mit ok oder nicht ok, Zeit bis zur Rückmeldung, bis zum ersten Ton und bis zum Ende. Ohne Namen. 9. Anfrage-Verlauf auf der Platte: Der Datensatz wird angehängt. Wird die Datei zu groß, bleiben nur die letzten 500 Anfragen der letzten 2880 Minuten. Die Datei ist in keiner Sicherung. 10. Admin liest Logs → Anfragen: Nur Admin und Mit-Admins lesen den Verlauf, mit Rate-Limit. Name und Gerät eines Profils stehen nur da, wenn das Profil es erlaubt; sonst heißt es „Profil“. Zu einer Anfrage zeigt das Panel die Journal-Zeilen aus ihrer Zeit. 11. Journal lesen und einordnen: logfilter liest höchstens 20000 Zeilen; an journalctl gehen nur Zahlen aus festen Listen. Jede Zeile bekomm"
+"text": "innt mit einem Wort aus logfilter.AREAS (33 Bereiche), Profile nur über profiles.log_name. Ein Selbsttest prüft beides. 6. Ende und Bewertung: Am Ende bekommt der Datensatz seinen Zustand: Fehler, wenn ein Fehlerwort gesetzt ist, langsam, wenn der erste Ton später als 5.0 s kam, sonst gut. 7. Anfragen verfolgen an?: Ist nur Live oder der Einstellungs-Assistent an, endet der Datensatz hier. Er wird nirgends geschrieben. 8. Zeile „anfrage:“ ins Journal: Eine Zeile pro Anfrage: Kennung, Kanal, Einordnung, Werkzeuge mit ok oder nicht ok, Zeit bis zur Rückmeldung, bis zum ersten Ton und bis zum Ende. Ohne Namen. 9. Anfrage-Verlauf auf der Platte: Der Datensatz wird angehängt. Wird die Datei zu groß, bleiben nur die letzten 500 Anfragen der letzten 2880 Minuten. Die Datei ist in keiner Sicherung. 10. Admin liest Logs → Anfragen: Nur Admin und Mit-Admins lesen den Verlauf, mit Rate-Limit. Name und Gerät eines Profils stehen nur da, wenn das Profil es erlaubt; sonst heißt es „Profil“. Zu einer Anfrage zeigt das Panel die Journal-Zeilen aus ihrer Zeit. 11. Journal lesen und einordnen: logfilter liest höchstens 20000 Zeilen; an journalctl gehen nur Zahlen aus festen Listen. Jede Zeile bekomm"
 },
 {
 "lang": "de",
@@ -3589,7 +3589,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "1. Ein Dienst schreibt eine Zeile: Panel, ASR, TTS, Engines und Wächter schreiben mit print. systemd gibt die Zeile an das Journal; jede Einheit hat LogNamespace=speech-spark. 2. Feste Wörter und Zahlen: Jede Zeile des Panels beginnt mit einem Wort aus logfilter.AREAS (32 Bereiche) und trägt nur feste Wörter und Zahlen. Ein Profil steht dort nur über profiles.log_name: sein Name nur mit seiner Zustimmung, sonst „Profil“ und das Ende der ID. test_log_luecken verlangt für jede Aktion eine Zeile je Ergebnis. 3. Ausführlich an?: Für einige Bereiche kann der Admin zusätzliche Zeilen einschalten, höchstens 240 Minuten. Auch sie tragen nur Zahlen und Entscheidungen; ein Neustart schaltet sie aus. 4. Abfragen still: Erfolgreiche Statusabfragen, die das Panel alle paar Sekunden stellt, schreiben keine Zeile. 5. Eigener Bereich mit Grenze: install.sh schreibt die Grenze für Platz und Alter aus logs.max_mb und logs.keep_days. Ältere Zeilen löscht journald selbst. Eine Änderung wirkt nach dem nächsten Update oder install.sh. 6. Admin öffnet die Diagnose: Nur der Admin, höchstens 60 Abrufe pro Minute. 7. Filter aus der festen Liste?: Bereiche, Zeitfenster (bis 24 Stunden) und Zeilenzahl (bis 10"
+"text": "1. Ein Dienst schreibt eine Zeile: Panel, ASR, TTS, Engines und Wächter schreiben mit print. systemd gibt die Zeile an das Journal; jede Einheit hat LogNamespace=speech-spark. 2. Feste Wörter und Zahlen: Jede Zeile des Panels beginnt mit einem Wort aus logfilter.AREAS (33 Bereiche) und trägt nur feste Wörter und Zahlen. Ein Profil steht dort nur über profiles.log_name: sein Name nur mit seiner Zustimmung, sonst „Profil“ und das Ende der ID. test_log_luecken verlangt für jede Aktion eine Zeile je Ergebnis. 3. Ausführlich an?: Für einige Bereiche kann der Admin zusätzliche Zeilen einschalten, höchstens 240 Minuten. Auch sie tragen nur Zahlen und Entscheidungen; ein Neustart schaltet sie aus. 4. Abfragen still: Erfolgreiche Statusabfragen, die das Panel alle paar Sekunden stellt, schreiben keine Zeile. 5. Eigener Bereich mit Grenze: install.sh schreibt die Grenze für Platz und Alter aus logs.max_mb und logs.keep_days. Ältere Zeilen löscht journald selbst. Eine Änderung wirkt nach dem nächsten Update oder install.sh. 6. Admin öffnet die Diagnose: Nur der Admin, höchstens 60 Abrufe pro Minute. 7. Filter aus der festen Liste?: Bereiche, Zeitfenster (bis 24 Stunden) und Zeilenzahl (bis 10"
 },
 {
 "lang": "de",
@@ -3613,7 +3613,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 32 Bereiche der Diagnose (Schritt 2) - 20000 Zeilen pro Abruf höchstens gelesen (Schritt 8) - 2 MB Journal-Text pro Abruf höchstens (Schritt 8) - 1000 Zeilen höchstens angezeigt (Schritt 7) - 240 Minuten „Ausführlich“ höchstens (Schritt 3)"
+"text": "- 33 Bereiche der Diagnose (Schritt 2) - 20000 Zeilen pro Abruf höchstens gelesen (Schritt 8) - 2 MB Journal-Text pro Abruf höchstens (Schritt 8) - 1000 Zeilen höchstens angezeigt (Schritt 7) - 240 Minuten „Ausführlich“ höchstens (Schritt 3)"
 },
 {
 "lang": "de",
@@ -4774,6 +4774,30 @@
 "head": "Sprach-Chat",
 "title": "Wissenskarte schneller (V01.0.907, Dominik 2026-10-21 „1“)",
 "text": "Wissenskarte schneller (V01.0.907, Dominik 2026-10-21 „1“): Die Wissenskarte hat eine eigene Tagesgrenze *Funktionen → Eigene Dokumente → Wissensbuch → Wissenskarte → Karte: Dokumente pro Tag und Profil* (chat.knowledge_map_day, 5 bis 500, Standard 200; vorher galt chat.knowledge_book_day mit 40). Ein Kartenschritt nennt nur Verbindungen und ist kurz, so ist der Rückstand eines vollen Wissensbuchs (etwa 150 Dokumente) in rund einem Tag eingearbeitet. Weiterhin nur in ruhigen Minuten, erst wenn das Wissensbuch nichts zu tun hat, ein Dokument je Schritt hinter der Sprache."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "IT-Krisenspiel (V01.0.932, Plan krisenspiel/plan.md Paket 1, Dominik 2026-10-22 „so umsetzen aber den Szenarien-Ausbau auf 5“): Admin-Schalter *Funktionen → Meine Daten → IT-Krisenspiel* (chat.krisenspiel, ab Werk aus; freigegeben für jedes Profil, das der Admin nicht sperrt, Gäste nie). Ein Textabenteuer für ein Profil: Ein IT-Notfall läuft als Krisen-Dashboard auf einer eigenen Seite im Menü Krisenspiel mit den Reitern *Spiel*, *Neues Spiel*, *Inspector* und *Bisherige Spiele*. Fünf Szenarien: Ransomware im Mittelstand, SAN-Ausfall, Stromausfall im Rechenzentrum, BGP-Hijacking und BSI-Eilmeldung zu einer VPN-Lücke; jedes mit eigenen Systemen, Zügen, Folgen und Nebenschauplätzen und mit Varianten (wo es anfing, ob die Sicherung sauber ist …), die der Seed beim Start auswählt. Drei Stufen: Übung (180 Minuten, mehr Budget), Normal (120) und Ernstfall (100, weniger Budget, mehr Druck). Oben stehen Zeit, Stress, Vertrauen der Geschäftsleitung, Team-Moral, Notfall-Budget und Schaden, darunter die Systeme mit Zustand (läuft, gestört, kritisch, aus, isoliert), die Züge mit ihren Kosten und die Chronik. Das Panel entscheidet alles mit festen Regeln (krisenspiel.py, Szenarien als Daten in "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "krisenspiel_szenarien.json, geprüft von check_data): jeder Zug hat feste Folgen, ausgefallene Systeme kosten Schaden pro Minute, Stress, Moral und Vertrauen ändern sich nach festen Formeln, Zufall kommt nur aus dem Seed (gleicher Seed und gleiche Züge ergeben dasselbe Spiel, „Nochmal mit diesem Seed“ zum Vergleichen). Das Spiel endet gewonnen, wenn die Zeit abläuft, das Vertrauen oder die Moral bei 0 ist, nach 80 Zügen oder beim Aufgeben (zählt als F); die Note A bis F und zwölf Erfolge (etwa „Zero Data Loss“, „Ransomware unter 30 Minuten“, „Allrounder“) rechnet fester Code aus. Der *Inspector* zeigt jeden Zug Schritt für Schritt: Eingabe, feste Regel mit allen Werten, Würfe aus dem Seed, Erzähler. Krisenspiel mit Erzähler (chat.krisenspiel_erzaehler, eigener Schalter unter dem Spiel, aus): das Sprachmodell erzählt einen Zug in zwei bis vier Sätzen nach; es bekommt nur die festen Texte des Zugs, seine Antwort muss ein Absatz von 30 bis 700 Zeichen ohne Links, Auszeichnung oder Code sein und darf nur Zahlen aus den Fakten nennen, sonst bleibt der feste Text. Es ändert nie einen Wert, läuft hinter der Sprache, wartet höchstens 8 Sekunden und während einer Modellpause gar nicht. Einge"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "tippte Befehle gibt es in Paket 1 nicht; die Konsole kommt in Paket 2 und wird nur simuliert. Gespeichert in users/<profil>/krisenspiel.json (ein laufendes Spiel, die letzten 20 Ergebnisse, Erfolge); *Meine Spieldaten löschen* geht auch, wenn der Admin das Spiel für das Profil gesperrt hat. Zustand → Live (Ziel „Krisenspiel“) zeigt nur laufende Spiele, Züge, neue Spiele, erzählt/verworfen und Profile; Logs (Bereich „Krisenspiel“) nur feste Wörter und Zahlen (spiel: neu | ransomware | normal | Profil …, spiel: zug | ok | 3 ms, spiel: erzaehler | zahl | 812 ms, spiel: ende | gewonnen | note B | 9 zuege | 2 erfolge). API: GET /api/profile/krisenspiel, POST /api/profile/krisenspiel/neu ({szenario, stufe, seed?}), POST /api/profile/krisenspiel/zug ({aktion, zug}; ein alter Zug gibt 409), DELETE /api/profile/krisenspiel (aufgeben), DELETE /api/profile/krisenspiel/daten. Als Nächstes: Paket 2 (simulierte Konsole), Paket 11 (Gäste per Link mitspielen lassen), dann die übrigen Pakete des Plans."
 },
 {
 "lang": "de",
@@ -8438,6 +8462,22 @@
 "head": "Meine Daten",
 "title": "Meine Daten",
 "text": "- Musik bearbeiten (Funktionen → Meine Daten → „Musik bearbeiten“; baut auf „Musik machen“; Ich → Musik): Der Spark bearbeitet ein Lied unter Ich → Musik, selbst und ohne Internet, mit demselben ACE-Step wie beim Machen: einen Abschnitt neu machen, vorne oder hinten verlängern, die Musikrichtung ändern (Rock, Jazz, Reggae, …, wie nah am Orig …"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
+"text": "- IT-Krisenspiel (Funktionen → Meine Daten → „IT-Krisenspiel“; Krisenspiel → Einstellungen): Ein Text-Abenteuer im Rechenzentrum: Ransomware, SAN-Ausfall, Stromausfall, BGP-Hijacking oder eine BSI-Eilmeldung."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
+"text": "- Krisenspiel mit Erzähler (Funktionen → Meine Daten → „Krisenspiel mit Erzähler“; baut auf „IT-Krisenspiel“; Krisenspiel → Einstellungen): Das Sprachmodell erzählt jeden Zug in zwei bis vier Sätzen nach, wie eine Szene im Rechenzentrum."
 },
 {
 "lang": "de",
@@ -14085,7 +14125,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "1. A request comes in: Chat, writing help, creating documents and what the Spark does by itself create a record at the start: channel, kind (profile, guest, admin, Spark) and device. Before any switch aktiv.py counts the request for „Aktiv 10 min“ (OLED, Monitoring, Live): a profile once, a guest per device as a shortened hash, nothing of the Spark itself, in memory only. 2. Anything switched on?: If neither „Trace requests“ nor the live page nor the settings assistant is on, there is no record. Only the modules' journal lines remain. 3. Steps with fixed words: Each step (switch, model round, tool, check, speech output) is added with kind, name and time. A value goes in only if it is a number or a short fixed word; anything else is dropped. Question, answer, arguments and results never go in. 4. Live page on?: With the live page on, live.py sees each step at once: which service is asked, what the guard decides, what comes back. Everything stays in memory and is gone after a restart. 5. Journal lines of the modules: Independently each module writes its lines into the Spark's journal. Every line starts with a word from logfilter.AREAS (32 areas), profiles only through profiles.log_na"
+"text": "1. A request comes in: Chat, writing help, creating documents and what the Spark does by itself create a record at the start: channel, kind (profile, guest, admin, Spark) and device. Before any switch aktiv.py counts the request for „Aktiv 10 min“ (OLED, Monitoring, Live): a profile once, a guest per device as a shortened hash, nothing of the Spark itself, in memory only. 2. Anything switched on?: If neither „Trace requests“ nor the live page nor the settings assistant is on, there is no record. Only the modules' journal lines remain. 3. Steps with fixed words: Each step (switch, model round, tool, check, speech output) is added with kind, name and time. A value goes in only if it is a number or a short fixed word; anything else is dropped. Question, answer, arguments and results never go in. 4. Live page on?: With the live page on, live.py sees each step at once: which service is asked, what the guard decides, what comes back. Everything stays in memory and is gone after a restart. 5. Journal lines of the modules: Independently each module writes its lines into the Spark's journal. Every line starts with a word from logfilter.AREAS (33 areas), profiles only through profiles.log_na"
 },
 {
 "lang": "en",
@@ -15229,7 +15269,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "1. A service writes a line: Panel, ASR, TTS, engines and watchers write with print. systemd hands the line to the journal; every unit has LogNamespace=speech-spark. 2. Fixed words and numbers: Every line of the panel starts with a word from logfilter.AREAS (32 areas) and carries only fixed words and numbers. A profile appears there only through profiles.log_name: its name only with its consent, else „Profil“ and the end of its ID. test_log_luecken wants a line for every outcome of every action. 3. Detail on?: For some areas the admin can switch on extra lines, at most 240 minutes. They too carry only numbers and decisions; a restart switches them off. 4. Polls quiet: Successful status polls the panel makes every few seconds write no line. 5. Own part with a limit: install.sh writes the limit for space and age from logs.max_mb and logs.keep_days. journald deletes older lines itself. A change applies after the next update or install.sh. 6. The admin opens the diagnosis: Admin only, at most 60 calls per minute. 7. Filter from the fixed list?: Areas, time window (up to 24 hours) and number of lines (up to 1000) come only from fixed lists. Nothing the browser sends reaches a shell. 8. R"
+"text": "1. A service writes a line: Panel, ASR, TTS, engines and watchers write with print. systemd hands the line to the journal; every unit has LogNamespace=speech-spark. 2. Fixed words and numbers: Every line of the panel starts with a word from logfilter.AREAS (33 areas) and carries only fixed words and numbers. A profile appears there only through profiles.log_name: its name only with its consent, else „Profil“ and the end of its ID. test_log_luecken wants a line for every outcome of every action. 3. Detail on?: For some areas the admin can switch on extra lines, at most 240 minutes. They too carry only numbers and decisions; a restart switches them off. 4. Polls quiet: Successful status polls the panel makes every few seconds write no line. 5. Own part with a limit: install.sh writes the limit for space and age from logs.max_mb and logs.keep_days. journald deletes older lines itself. A change applies after the next update or install.sh. 6. The admin opens the diagnosis: Admin only, at most 60 calls per minute. 7. Filter from the fixed list?: Areas, time window (up to 24 hours) and number of lines (up to 1000) come only from fixed lists. Nothing the browser sends reaches a shell. 8. R"
 },
 {
 "lang": "en",
@@ -15253,7 +15293,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 32 areas of the diagnosis (step 2) - 20000 lines read per call at most (step 8) - 2 MB journal text per call at most (step 8) - 1000 lines shown at most (step 7) - 240 minutes of „detail“ at most (step 3)"
+"text": "- 33 areas of the diagnosis (step 2) - 20000 lines read per call at most (step 8) - 2 MB journal text per call at most (step 8) - 1000 lines shown at most (step 7) - 240 minutes of „detail“ at most (step 3)"
 },
 {
 "lang": "en",
@@ -16390,6 +16430,30 @@
 "head": "Voice chat",
 "title": "Knowledge map faster (V01.0.907, Dominik 2026-10-21 \"1\")",
 "text": "Knowledge map faster (V01.0.907, Dominik 2026-10-21 \"1\"): the knowledge map has its own daily limit *Features → Own documents → Knowledge book → Knowledge map → Map: documents per day and profile* (chat.knowledge_map_day, 5 to 500, default 200; before, chat.knowledge_book_day with 40 applied). A map step only names connections and is short, so the backlog of a full knowledge book (about 150 documents) is worked in within about a day. Still only in quiet minutes, only when the knowledge book has nothing to do, one document per step behind speech."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "IT crisis game (V01.0.932, plan krisenspiel/plan.md package 1, Dominik 2026-10-22 \"build it so, but with 5 scenarios\"): admin switch *Features → My data → IT crisis game* (chat.krisenspiel, off by default; released for every profile the admin does not block, never for guests). A text adventure for one profile: an IT emergency runs as a crisis dashboard on a page of its own in the menu Crisis game with the tabs *Game*, *New game*, *Inspector* and *Past games*. Five scenarios: ransomware at a mid-size company, SAN outage, power cut in the data centre, BGP hijacking and a BSI alert about a VPN hole; each with its own systems, moves, consequences and side issues and with variants (where it started, whether the backup is clean …) that the seed picks at the start. Three levels: practice (180 minutes, more budget), normal (120) and emergency (100, less budget, more pressure). On top: time, stress, the management's trust, team morale, emergency budget and damage; below, the systems with their state (running, degraded, critical, off, isolated), the moves with their costs and the chronicle. The panel decides everything by fixed rules (krisenspiel.py, scenarios as data in krisenspiel_szenarie"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "n.json, checked by check_data): every move has fixed effects, systems that are down cost damage per minute, stress, morale and trust change by fixed formulas, chance only comes from the seed (the same seed and the same moves give the same game, \"Again with this seed\" to compare). The game ends when it is won, when time runs out, when trust or morale reach 0, after 80 moves or when given up (counts as F); the grade A to F and twelve achievements (such as \"Zero data loss\", \"Ransomware under 30 minutes\", \"All-rounder\") are fixed code. The *Inspector* shows every move step by step: input, the fixed rule with all values, rolls from the seed, narrator. Crisis game with narrator (chat.krisenspiel_erzaehler, own switch under the game, off): the language model retells a move in two to four sentences; it only gets the fixed texts of the move, its answer has to be one paragraph of 30 to 700 characters without links, markup or code and may only name numbers from the facts, else the fixed text stays. It never changes a value, runs behind speech, waits at most 8 seconds and not at all during a model pause. There are no typed commands in package 1; the console comes in package 2 and is only simul"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "ated. Stored in users/<profile>/krisenspiel.json (one running game, the last 20 results, achievements); *Delete my game data* also works while the admin blocked the game for the profile. Status → Live (target \"Crisis game\") only shows running games, moves, new games, narrated/dropped and profiles; Logs (area \"Crisis game\") only fixed words and numbers (spiel: neu | ransomware | normal | Profil …, spiel: zug | ok | 3 ms, spiel: erzaehler | zahl | 812 ms, spiel: ende | gewonnen | note B | 9 zuege | 2 erfolge). API: GET /api/profile/krisenspiel, POST /api/profile/krisenspiel/neu ({szenario, stufe, seed?}), POST /api/profile/krisenspiel/zug ({aktion, zug}; a stale move gives 409), DELETE /api/profile/krisenspiel (give up), DELETE /api/profile/krisenspiel/daten. Next: package 2 (simulated console), package 11 (let guests join by link), then the other packages of the plan."
 },
 {
 "lang": "en",
@@ -19934,6 +19998,22 @@
 "head": "My data",
 "title": "My data",
 "text": "- Editing music (Features → My data → \"Editing music\"; builds on \"Making music\"; Me → Music): The Spark edits a song under Me → Music, itself and without the internet, with the same ACE-Step as for making: make a section new, extend at the front or back, change the music style (rock, jazz, reggae, …, you decide how close to the o …"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
+"text": "- IT crisis game (Features → My data → \"IT crisis game\"; Crisis game → Settings): A text adventure in the data centre: ransomware, SAN outage, power cut, BGP hijacking or a BSI alert."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
+"text": "- Crisis game with narrator (Features → My data → \"Crisis game with narrator\"; builds on \"IT crisis game\"; Crisis game → Settings): The language model retells every move in two to four sentences, like a scene in the data centre."
 },
 {
 "lang": "en",

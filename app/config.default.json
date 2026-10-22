@@ -182,6 +182,8 @@
     "bilder_aendern": false,
     "musik": false,
     "musik_bearbeiten": false,
+    "krisenspiel": false,
+    "krisenspiel_erzaehler": false,
     "remarkable": false,
     "remarkable_send": false,
     "remarkable_fresh": false,

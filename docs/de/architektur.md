@@ -243,6 +243,7 @@ Eigene Dokumente, Gedächtnis, frühere Gespräche, Kiwix und Wikipedia, erstell
 | `app/panel/folien.py` | Folientypen und feste Regeln für erstellte Dokumente |
 | `app/panel/gedaechtnis.py` | Gedächtnis mit Beleg und Prüfung |
 | `app/panel/kiwix.py` | Eigenes Kiwix als Wissensquelle ohne Internet |
+| `app/panel/krisenspiel.py` | IT-Krisenspiel: Szenarien als Daten, feste Regeln mit Seed, Note und Erfolge; der Erzähler nur in Worten |
 | `app/panel/lokal.py` | Erst lokal suchen, bevor etwas nach außen geht |
 | `app/panel/memtidy.py` | Wöchentliches Aufräumen des Gedächtnisses |
 | `app/panel/musik.py` | Musik machen: Wunsch prüfen, Modell wählen, Auftrag, Ablage, Liedkarte, Musik testen je Modell |
@@ -550,6 +551,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `users/ID/fuerdich-vorrat.bin` | Für dich: die letzte Lesung je Postfach (gefundene Einträge mit Absender, Betreff und Zeit, kein Mailtext) | Mails | versiegelt | ja | – |
 | `users/ID/fuerdich.json` | Für dich: was du als erledigt oder uninteressant markiert hast (nur Prüfsummen) | Einstellungen | – | ja | – |
 | `users/ID/vorgaenge.json` | Offen: was dich braucht, was du auf später gelegt hast und was erledigt ist (Titel und Zustand der Karten); ein Vorschlag, der auf dein Ja wartet, mit dem Text der Mail nur bis zur Antwort | Warteschlange | – | ja | – |
+| `users/ID/krisenspiel.json` | IT-Krisenspiel: das laufende Spiel mit Chronik und Inspector, die letzten 20 Ergebnisse, Erfolge (nur Spieldaten) | Zustand | – | ja | – |
 | `users/ID/interessen.json` | Was ich über dich weiß: bestätigte und abgelehnte Interessen mit Thema und Absendern und der letzte Netz-Tipp (kein Betreff, keine Mail) | Einstellungen | – | ja | – |
 | `users/ID/mailstil.json` | Mailstil (nur die Zusammenfassung, keine Mail) | Einstellungen | – | ja | – |
 | `users/ID/mail-regeln.json` | Mail-Regeln der Seite E-Mail und Regel-Vorschläge (Absender, Wörter, Ordner; keine Mail) | Einstellungen | – | ja | – |
@@ -2462,7 +2464,7 @@ flowchart TD
 2. <a id="kn-betrieb-s2"></a>**Etwas eingeschaltet?**: Ist weder „Anfragen verfolgen“ noch die Live-Seite noch der Einstellungs-Assistent an, gibt es keinen Datensatz. Übrig bleiben nur die Journal-Zeilen der Module.
 3. <a id="kn-betrieb-s3"></a>**Schritte mit festen Wörtern**: Jeder Schritt (Weiche, Modellrunde, Werkzeug, Prüfung, Sprachausgabe) kommt mit Art, Name und Zeit dazu. Ein Wert geht nur hinein, wenn er eine Zahl oder ein kurzes festes Wort ist; alles andere wird verworfen. Frage, Antwort, Argumente und Ergebnisse kommen nie hinein.
 4. <a id="kn-betrieb-s4"></a>**Live-Seite an?**: Bei eingeschalteter Live-Seite sieht live.py jeden Schritt sofort: welcher Dienst gefragt wird, was der Wächter entscheidet, was zurückkommt. Alles bleibt im Speicher und ist nach einem Neustart weg.
-5. <a id="kn-betrieb-s5"></a>**Journal-Zeilen der Module**: Unabhängig davon schreibt jedes Modul seine Zeilen ins Journal des Spark. Jede Zeile beginnt mit einem Wort aus logfilter.AREAS (32 Bereiche), Profile nur über profiles.log_name. Ein Selbsttest prüft beides.
+5. <a id="kn-betrieb-s5"></a>**Journal-Zeilen der Module**: Unabhängig davon schreibt jedes Modul seine Zeilen ins Journal des Spark. Jede Zeile beginnt mit einem Wort aus logfilter.AREAS (33 Bereiche), Profile nur über profiles.log_name. Ein Selbsttest prüft beides.
 6. <a id="kn-betrieb-s6"></a>**Ende und Bewertung**: Am Ende bekommt der Datensatz seinen Zustand: Fehler, wenn ein Fehlerwort gesetzt ist, langsam, wenn der erste Ton später als 5.0 s kam, sonst gut.
 7. <a id="kn-betrieb-s7"></a>**Anfragen verfolgen an?**: Ist nur Live oder der Einstellungs-Assistent an, endet der Datensatz hier. Er wird nirgends geschrieben.
 8. <a id="kn-betrieb-s8"></a>**Zeile „anfrage:“ ins Journal**: Eine Zeile pro Anfrage: Kennung, Kanal, Einordnung, Werkzeuge mit ok oder nicht ok, Zeit bis zur Rückmeldung, bis zum ersten Ton und bis zum Ende. Ohne Namen.
@@ -3768,7 +3770,7 @@ flowchart TD
 ```
 
 1. <a id="kn-journal-s1"></a>**Ein Dienst schreibt eine Zeile**: Panel, ASR, TTS, Engines und Wächter schreiben mit print. systemd gibt die Zeile an das Journal; jede Einheit hat LogNamespace=speech-spark.
-2. <a id="kn-journal-s2"></a>**Feste Wörter und Zahlen**: Jede Zeile des Panels beginnt mit einem Wort aus logfilter.AREAS (32 Bereiche) und trägt nur feste Wörter und Zahlen. Ein Profil steht dort nur über profiles.log_name: sein Name nur mit seiner Zustimmung, sonst „Profil“ und das Ende der ID. test_log_luecken verlangt für jede Aktion eine Zeile je Ergebnis.
+2. <a id="kn-journal-s2"></a>**Feste Wörter und Zahlen**: Jede Zeile des Panels beginnt mit einem Wort aus logfilter.AREAS (33 Bereiche) und trägt nur feste Wörter und Zahlen. Ein Profil steht dort nur über profiles.log_name: sein Name nur mit seiner Zustimmung, sonst „Profil“ und das Ende der ID. test_log_luecken verlangt für jede Aktion eine Zeile je Ergebnis.
 3. <a id="kn-journal-s3"></a>**Ausführlich an?**: Für einige Bereiche kann der Admin zusätzliche Zeilen einschalten, höchstens 240 Minuten. Auch sie tragen nur Zahlen und Entscheidungen; ein Neustart schaltet sie aus.
 4. <a id="kn-journal-s4"></a>**Abfragen still**: Erfolgreiche Statusabfragen, die das Panel alle paar Sekunden stellt, schreiben keine Zeile.
 5. <a id="kn-journal-s5"></a>**Eigener Bereich mit Grenze**: install.sh schreibt die Grenze für Platz und Alter aus logs.max_mb und logs.keep_days. Ältere Zeilen löscht journald selbst. Eine Änderung wirkt nach dem nächsten Update oder install.sh.
@@ -3784,7 +3786,7 @@ flowchart TD
 
 #### Zahlen (aus dem Code)
 
-- **32** Bereiche der Diagnose ([Schritt 2](#kn-journal-s2))
+- **33** Bereiche der Diagnose ([Schritt 2](#kn-journal-s2))
 - **20000** Zeilen pro Abruf höchstens gelesen ([Schritt 8](#kn-journal-s8))
 - **2 MB** Journal-Text pro Abruf höchstens ([Schritt 8](#kn-journal-s8))
 - **1000** Zeilen höchstens angezeigt ([Schritt 7](#kn-journal-s7))

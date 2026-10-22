@@ -59,7 +59,7 @@ function enter(){ON=true;B.classList.add('appview');
   const sec=document.querySelector('main>section.on');TAB=secTab(sec);
   apFace();render()}
 // which tab a section of the page belongs to (Assistent → Spark, Chats → Chats, the rest → Verwalten)
-function secTab(sec){return !sec||sec.id==='chat'?'spark':sec.id==='chats'?'chats':sec.id==='cal'||sec.id==='post'||sec.id==='listen'||sec.id==='offen'||sec.id==='kontakte'||sec.id==='wbuch'?'today':'manage'}
+function secTab(sec){return !sec||sec.id==='chat'?'spark':sec.id==='chats'?'chats':sec.id==='cal'||sec.id==='post'||sec.id==='listen'||sec.id==='offen'||sec.id==='kontakte'||sec.id==='wbuch'||sec.id==='spiel'?'today':'manage'}
 function leave(stillPhone){const page=B.classList.contains('appage');ON=false;B.classList.remove('appview','appage','apmsgs','aptabs','apsub','aptab-docs');sheet.hidden=true;
   // on a wider screen phone.js has put its parts back already: only the face (never touched by phone.js here) moves
   const f=$('face'),fm=marks.get(f);if(fm){fm.parentNode.insertBefore(f,fm);fm.remove();marks.delete(f)}

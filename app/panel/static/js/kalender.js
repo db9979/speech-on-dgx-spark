@@ -14,7 +14,8 @@ const KAL_H=44;   // pixels per hour in the day and week view
 const OWN_PAGES={calbox:['cal',t('Kalender','Calendar'),t('Termine','Appointments')],mailbox:['post',t('E-Mail','E-mail'),t('Posteingang','Inbox'),[['fuer',t('Für dich','For you'),()=>typeof FUER_ON!=='undefined'&&FUER_ON],['regeln',t('Regeln','Rules'),()=>typeof ORD_ON!=='undefined'&&ORD_ON]]],
   taskbox:['listen',t('Listen','Lists'),t('Listen','Lists')],vgbox:['offen',t('Offen','Open'),t('Offen','Open')],
   conbox:['kontakte',t('Kontakte','Contacts'),t('Kontakte','Contacts')],
-  wbbox:['wbuch',t('Wissensbuch','Knowledge book'),t('Seiten','Pages'),[['karte',t('Karte','Map'),()=>typeof WK_ON!=='undefined'&&WK_ON]]]};
+  wbbox:['wbuch',t('Wissensbuch','Knowledge book'),t('Seiten','Pages'),[['karte',t('Karte','Map'),()=>typeof WK_ON!=='undefined'&&WK_ON]]],
+  ksbox:['spiel',t('Krisenspiel','Crisis game'),t('Spiel','Game'),[['neu',t('Neues Spiel','New game'),()=>true],['inspector',t('Inspector','Inspector'),()=>true],['bisher',t('Bisherige Spiele','Past games'),()=>true]]]};
 // [section, name, first tab, [more tabs: key, name, shown?]]; every page ends with the tab „Einstellungen“
 function ownPage(id){const p=OWN_PAGES[id];if(!p)return false;
   if($('profmodal').style.display==='grid'&&window.closeProf)closeProf();

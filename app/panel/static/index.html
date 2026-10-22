@@ -59,7 +59,7 @@
 <button class="b" id="logoutbtn" type="button" style="order:4;display:none">Abmelden</button>
 </div>
 <button class="ib" id="mmenu" type="button" title="Menü" aria-label="Menü"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
-<nav><button type="button" class="navfind" id="findbtn" aria-label="Suchen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><span>Suchen …</span><kbd>Strg K</kbd></button><button data-s="chat"><i class="ni" data-ni="chat"></i>Assistent</button><button data-s="chats" hidden><i class="ni" data-ni="chats"></i>Chats <span class="ncnt" id="cxcnt" hidden></span></button><button data-s="cal" hidden><i class="ni" data-ni="cal"></i>Kalender</button><button data-s="post" hidden><i class="ni" data-ni="post"></i>E-Mail</button><button data-s="listen" hidden><i class="ni" data-ni="listen"></i>Listen</button><button data-s="offen" hidden><i class="ni" data-ni="offen"></i>Offen</button><button data-s="kontakte" hidden><i class="ni" data-ni="kontakte"></i>Kontakte</button><button data-s="wbuch" hidden><i class="ni" data-ni="wbuch"></i>Wissensbuch</button><button type="button" class="navme" id="navme"><i class="ni" data-ni="me"></i>Ich <span class="medot" hidden></span></button><span class="navgrp">Spark verwalten</span><button data-s="mon" class="on"><i class="ni" data-ni="mon"></i>Zustand <span class="hdot" id="hdot"></span></button><button data-s="feat"><i class="ni" data-ni="feat"></i>Funktionen <span class="ncnt" id="featdirty" hidden>1</span></button><button data-s="prof"><i class="ni" data-ni="prof"></i>Personen und Geräte</button><button data-s="cfg"><i class="ni" data-ni="cfg"></i>Einstellungen <span class="ncnt" id="dirtycnt" hidden></span><span id="updbadge" class="pill warn" style="display:none">Update</span></button></nav></header>
+<nav><button type="button" class="navfind" id="findbtn" aria-label="Suchen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><span>Suchen …</span><kbd>Strg K</kbd></button><button data-s="chat"><i class="ni" data-ni="chat"></i>Assistent</button><button data-s="chats" hidden><i class="ni" data-ni="chats"></i>Chats <span class="ncnt" id="cxcnt" hidden></span></button><button data-s="cal" hidden><i class="ni" data-ni="cal"></i>Kalender</button><button data-s="post" hidden><i class="ni" data-ni="post"></i>E-Mail</button><button data-s="listen" hidden><i class="ni" data-ni="listen"></i>Listen</button><button data-s="offen" hidden><i class="ni" data-ni="offen"></i>Offen</button><button data-s="kontakte" hidden><i class="ni" data-ni="kontakte"></i>Kontakte</button><button data-s="wbuch" hidden><i class="ni" data-ni="wbuch"></i>Wissensbuch</button><button data-s="spiel" hidden><i class="ni" data-ni="spiel"></i>Krisenspiel</button><button type="button" class="navme" id="navme"><i class="ni" data-ni="me"></i>Ich <span class="medot" hidden></span></button><span class="navgrp">Spark verwalten</span><button data-s="mon" class="on"><i class="ni" data-ni="mon"></i>Zustand <span class="hdot" id="hdot"></span></button><button data-s="feat"><i class="ni" data-ni="feat"></i>Funktionen <span class="ncnt" id="featdirty" hidden>1</span></button><button data-s="prof"><i class="ni" data-ni="prof"></i>Personen und Geräte</button><button data-s="cfg"><i class="ni" data-ni="cfg"></i>Einstellungen <span class="ncnt" id="dirtycnt" hidden></span><span id="updbadge" class="pill warn" style="display:none">Update</span></button></nav></header>
 <main>
 <div class="ptabs subnav" id="subnav" hidden></div>
 <button class="b cfgback" id="subback" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg><span>Zustand</span></button>
@@ -462,6 +462,8 @@
         <label>Platz pro Profil (MB)</label><input class="num" id="music.store_mb" type="number" min="50" max="20000"><div class="fh">50 bis 20000, Standard 500. Ein Lied von 2 Minuten braucht rund 3 MB.</div>
         <label>Längstes Lied (Sekunden)</label><input class="num" id="music.max_s" type="number" min="30" max="600"><div class="fh">30 bis 600, Standard 300. Ohne Angabe wird ein Lied 2 Minuten lang.</div></div>
       <div class="setrow" data-show="chat.musik" style="margin-left:18px"><div class="lbl"><b>Musik bearbeiten</b><span>Ein Lied verlängern, umbauen, in eine andere Musikrichtung bringen, schneiden; das Original bleibt, eigene Lieder nur mit Rechte-Haken.</span></div><label class="tgl"><input type="checkbox" id="chat.musik_bearbeiten"><i></i></label></div>
+      <div class="setrow"><div class="lbl"><b>IT-Krisenspiel</b><span>Ein Text-Abenteuer im Rechenzentrum für einzelne Profile; jeden Wert ändert das Panel nach festen Regeln, nie das Modell.</span></div><label class="tgl"><input type="checkbox" id="chat.krisenspiel"><i></i></label></div>
+      <div class="setrow" data-show="chat.krisenspiel" style="margin-left:18px"><div class="lbl"><b>Krisenspiel mit Erzähler</b><span>Das Sprachmodell erzählt jeden Zug in zwei bis vier Sätzen nach; geprüft nach festen Regeln, sonst der feste Text.</span></div><label class="tgl"><input type="checkbox" id="chat.krisenspiel_erzaehler"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Aus Korrekturen lernen</b><span>Nach einer Korrektur schlägt der Assistent einen Satz zum Merken vor und speichert ihn erst nach „Ja“.</span></div><label class="tgl"><input type="checkbox" id="chat.learn_fixes"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Ablauf und Freigabe zeigen</b><span>Unter jeder Antwort zugeklappt die benutzten Werkzeuge; ein Vorschlag oder eine Rückfrage als Karte mit Knöpfen zum Antippen.</span></div><label class="tgl"><input type="checkbox" id="chat.show_steps"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Rückfrage statt Raten</b><span>Passt ein Befehl auf mehrere Geräte oder auf keins genau, fragt der Assistent nach und zeigt die Auswahl, statt zu raten.</span></div><label class="tgl"><input type="checkbox" id="chat.klaeren"><i></i></label></div>
@@ -846,6 +848,9 @@
 </section>
 <section id="wbuch"><div class="card" id="wbroot"></div>
     <div id="wbbox" hidden></div>
+</section>
+<section id="spiel"><div class="card" id="ksroot"></div>
+    <div id="ksbox" hidden></div>
 </section>
 <section id="offen"><div class="card" id="vgroot"></div>
     <div id="vgbox" class="vgset" hidden></div>
@@ -1369,6 +1374,7 @@
 <script src="/static/js/suchpruefung.js"></script>
 <script src="/static/js/auslassen.js"></script>
 <script src="/static/js/wissensbuch.js"></script>
+<script src="/static/js/krisenspiel.js"></script>
 <script src="/static/js/tipps.js"></script>
 <script src="/static/js/saetze.js"></script>
 <script src="/static/js/schreib.js"></script>

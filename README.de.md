@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.932** IT-Krisenspiel (Paket 1): eigene Seite „Krisenspiel“ mit fünf Szenarien (Ransomware, SAN, Strom, BGP, BSI), Krisen-Dashboard, Inspector, Noten und Erfolgen; das Panel entscheidet mit festen Regeln und Seed, der Erzähler (eigener Schalter) erzählt nur nach; beide Schalter aus
 - **V01.0.931** Live-Übersicht: ein Anruf ist eine Karte „Telefon“, die Fragen darin stehen auf ihr („db · Anruf · 2 Fragen“) statt als eigene Telefon-Karten
 - **V01.0.930** Rechnen genauer: Zahlwörter („sechs mal sechs“), Rechnung in der Frage macht das Werkzeug zur Pflicht, „@Spark prüf das“ prüft Rechnungen auf reMarkable-Seiten („bitte prüfen“, Seite bleibt), Belege zusammenrechnen
 - **V01.0.929** reMarkable-Notizbücher mit Datum der letzten Änderung und „Letzter Abgleich“ in Ich → Dokumente
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.925** Rechnen mit festem Werkzeug: das Panel rechnet, nicht das Sprachmodell (eigener Parser statt eval, Decimal, Prozent, Klammern, Wurzel, harte Grenzen), Datumsrechnung (Tage bis, Wochentag, Datum in n Tagen), Antwort-Prüfung rechnet Sätze wie „17 mal 23 ist 381“ nach und berichtigt sie; Einfaches sofort beantworten nutzt denselben Rechner
 - **V01.0.924** E-Mail und Kalender: der Reiter „Einstellungen“ bleibt nach mehreren Reiterwechseln nicht mehr leer; das gilt für jede Seite mit Reitern
 - **V01.0.923** Was ich über dich weiß: bei „Thema unklar“ ein vorhandenes Thema wählen (bestätigte Interessen als Chips, Auswahlliste mit den festen Themen, Vorschläge beim Tippen) statt nur eintippen; iPhone
-- **V01.0.922** Was ich über dich weiß: Vorschläge sind Themen statt Absendernamen (feste Themenliste, Absender als Chips, Beispiel-Betreffe, „Thema unklar“ mit eigenem Thema), eigene Adressen und Dienste wie GitHub nie, „Stimmt“ bestätigt das Thema, Netz-Tipp sucht nur das Themawort; iPhone
 
 
 

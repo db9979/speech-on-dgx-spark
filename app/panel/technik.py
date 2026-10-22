@@ -140,6 +140,7 @@ MODULE = {
     "wiki": ("wissen", "Wikipedia für „Was ist …?“"),
     "docmake": ("wissen", "Dokumente erstellen: Aufträge, Vorlagen, Ablage"),
     "bilder": ("wissen", "Bilder malen: Wunsch prüfen, Auftrag, Ablage, Bildkarte"),
+    "krisenspiel": ("wissen", "IT-Krisenspiel: Szenarien als Daten, feste Regeln mit Seed, Note und Erfolge; der Erzähler nur in Worten"),
     "musik": ("wissen", "Musik machen: Wunsch prüfen, Modell wählen, Auftrag, Ablage, Liedkarte, Musik testen je Modell"),
     "schwer": ("wissen", "Schwere Aufträge: eine Warteschlange für Bild und Musik, immer nur ein Modell, Platz und Wartezeit"),
     "docrender": ("wissen", "Baut die Dateien (Word, PDF, PowerPoint, Excel) mit festem Code"),

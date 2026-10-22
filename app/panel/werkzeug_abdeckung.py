@@ -145,6 +145,8 @@ WITHOUT = {
     "suchpruefung": "misst im Hintergrund, wie gut die Suche trifft (Ich → Dokumente)",
     "wissensbuch": "arbeitet im Hintergrund, Fragen beantwortet document_search aus den Seiten",
     "wissenskarte": "arbeitet im Hintergrund, die Karte steht im Wissensbuch (Seite Karte)",
+    "krisenspiel": "ein Spiel auf seiner eigenen Seite (Krisenspiel), nichts zu fragen",
+    "krisenerzaehler": "erzählt nur die Züge auf der Seite Krisenspiel",
     "suchfragen": "schreibt im Hintergrund Prüffragen für die Suchprüfung",
     "nachsortieren": "wirkt beim Suchen in den Dokumenten",
     "rmfresh": "wirkt beim Abgleich",
