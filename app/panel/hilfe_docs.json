@@ -5877,7 +5877,23 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "h über dich weiß“ (nur „Netz-Tipp gefunden“). Logs (Bereich „mail“): ichweiss: angesehen vorschlaege=2 interessen=1 wiederkehrend=1 …, ichweiss: interesse als=yes …, ichweiss: erinnerung monatlich gesetzt …, ichweiss: netztipp gefunden|ohne treffer|fehler=…, ichweiss: kopfzeilen gelesen ordner=2 absender=5, fuerdich: mehr davon …. API (Profil): GET /api/profile/ichweiss, POST /api/profile/ichweiss/interest {\"name\", \"state\": \"yes\"|\"no\"|\"forget\", \"src\", \"web\"}, POST /api/profile/ichweiss/recurring {\"id\"}, DELETE /api/profile/ichweiss; dazu POST /api/profile/fuerdich/act {\"id\", \"do\": \"more\"}."
+"text": "h über dich weiß“ (nur „Netz-Tipp gefunden“). Logs (Bereich „mail“): ichweiss: angesehen vorschlaege=2 interessen=1 wiederkehrend=1 …, ichweiss: interesse als=yes …, ichweiss: erinnerung monatlich gesetzt …, ichweiss: netztipp gefunden|ohne treffer|fehler=…, ichweiss: kopfzeilen gelesen ordner=2 absender=5, fuerdich: mehr davon …. API (Profil): GET /api/profile/ichweiss, POST /api/profile/ichweiss/interest {\"name\", \"state\": \"yes\"|\"no\"|\"forget\", \"src\", \"web\"}, POST /api/profile/ichweiss/recurring {\"id\"}, DELETE /api/profile/ichweiss; dazu POST /api/profile/fuerdich/act {\"id\", \"do\": \"more\"}. Themen statt Absendernamen (seit V01.0.922, Dominik 2026-10-22 „ok“, Plan interessen-themen/plan.md): Ein Vorschlag ist ein Thema aus einer festen Liste (ichweiss.TOPICS, etwa 25 Themen wie „Musikproduktion & Samples“, „Smart Home & IoT“, „Essen bestellen“; je Thema feste Wörter und Absender-Domains, ganze Wörter, kein Modell). Ein Absender bekommt das Thema, dessen Wörter in mindestens zwei und mindestens einem Drittel seiner Mails (Betreff und Absendername) stehen oder dessen Domain er hat. Unter dem Thema stehen die Absender als Chips (✕ lässt einen weg) und bis zu drei Betreffe als Beispiel; "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Betreffe zeigt die Seite nur als Text, sie bleiben im Speicher und kommen nie in eine Datei, ein Log oder die Suche. Ein Absender mit Angeboten oder Newslettern, aber ohne Thema steht als „Thema unklar“ da: Betreffe aufklappen und ein eigenes Thema eintippen, zu dem er dann gehört. Nie vorgeschlagen werden die eigenen Adressen und der Profilname, Dienste und Konten (zum Beispiel notifications@github.com, Adressen wie security@, account@) und Maschinenmails (Auto-Submitted); ein Absender nur mit Bestellungen nur, wenn er ein Thema hat. „Stimmt“ bestätigt das Thema mit seinen Absendern: dazu passen auch Angebote neuer Absender mit denselben Wörtern, und der Netz-Tipp sucht nach dem Themawort, nie nach einem Absender. „Mehr davon“ an einer Karte nimmt das Thema des Shops, wenn es eins gibt. Früher bestätigte Absender fragt die Seite einmal „Zu welchem Thema gehört das?“ mit „Übernehmen“ oder „So lassen“. In interessen.json kommen Thema und Absender dazu. iPhone: dieselben Vorschläge mit Absender-Menü, „Thema unklar“ und der Frage nach dem Thema. API: POST /api/profile/ichweiss/interest nimmt dazu topic und senders (höchstens 20) und die Zustände adopt {\"name\", \"topic\"} und keep {\"name"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "\"}."
 },
 {
 "lang": "de",
@@ -8893,7 +8909,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Post und Kontakte",
 "title": "Post und Kontakte",
-"text": "- Was ich über dich weiß (Funktionen → Post und Kontakte → „Was ich über dich weiß“; baut auf „Für dich aus Mails“; Ich → Was ich über dich weiß): Eine Seite unter Ich, die zeigt, was der Spark über dich weiß und woher: Interessen mit Beleg (zum Beispiel zwei Bestellungen bei einem Shop), die erst zählen, wenn du „Stimmt“ sagst; Rechnungen, die jeden Monat kommen, mit „Monatlich er …"
+"text": "- Was ich über dich weiß (Funktionen → Post und Kontakte → „Was ich über dich weiß“; baut auf „Für dich aus Mails“; Ich → Was ich über dich weiß): Eine Seite unter Ich, die zeigt, was der Spark über dich weiß und woher: Interessen als Themen mit Beleg (zum Beispiel „Smart Home & IoT“ aus Newslettern über ESP32 und Zigbee, mit den Absendern und bis zu drei Betreffen), die erst zähle …"
 },
 {
 "lang": "de",
@@ -17333,7 +17349,15 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "g monatlich gesetzt …, ichweiss: netztipp gefunden|ohne treffer|fehler=…, ichweiss: kopfzeilen gelesen ordner=2 absender=5, fuerdich: mehr davon …. API (profile): GET /api/profile/ichweiss, POST /api/profile/ichweiss/interest {\"name\", \"state\": \"yes\"|\"no\"|\"forget\", \"src\", \"web\"}, POST /api/profile/ichweiss/recurring {\"id\"}, DELETE /api/profile/ichweiss; plus POST /api/profile/fuerdich/act {\"id\", \"do\": \"more\"}."
+"text": "g monatlich gesetzt …, ichweiss: netztipp gefunden|ohne treffer|fehler=…, ichweiss: kopfzeilen gelesen ordner=2 absender=5, fuerdich: mehr davon …. API (profile): GET /api/profile/ichweiss, POST /api/profile/ichweiss/interest {\"name\", \"state\": \"yes\"|\"no\"|\"forget\", \"src\", \"web\"}, POST /api/profile/ichweiss/recurring {\"id\"}, DELETE /api/profile/ichweiss; plus POST /api/profile/fuerdich/act {\"id\", \"do\": \"more\"}. Topics instead of sender names (since V01.0.922, Dominik 2026-10-22 \"ok\", plan interessen-themen/plan.md): a proposal is a topic from a fixed list (ichweiss.TOPICS, about 25 topics such as \"Music production & samples\", \"Smart home & IoT\", \"Food delivery\"; per topic fixed words and sender domains, whole words, no model). A sender gets the topic whose words stand in at least two and at least a third of its mails (subject and sender name) or whose domain it has. Under the topic its senders show as chips (✕ leaves one out) and up to three subjects as examples; the page shows subjects as text only, they stay in memory and never go into a file, a log or the search. A sender with offers or newsletters but no topic shows \"Topic unclear\": open its subjects and type a topic of your own "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "that it then belongs to. Never proposed: your own addresses and the profile name, services and accounts (for example notifications@github.com, addresses like security@, account@) and machine mail (Auto-Submitted); a sender with orders only just when it has a topic. \"Right\" confirms the topic with its senders: offers of new senders with the same words fit too, and the web tip searches for the topic word, never for a sender. \"More of this\" on a card takes the shop's topic when there is one. Senders confirmed earlier are asked once \"Which topic is this?\" with \"Take it\" or \"Leave it\". interessen.json gains topic and senders. iPhone: the same proposals with a senders menu, \"Topic unclear\" and the topic question. API: POST /api/profile/ichweiss/interest also takes topic and senders (at most 20) and the states adopt {\"name\", \"topic\"} and keep {\"name\"}."
 },
 {
 "lang": "en",
@@ -20277,7 +20301,7 @@
 "file": "Assistant and panel",
 "head": "Mail and contacts",
 "title": "Mail and contacts",
-"text": "- What I know about you (Features → Mail and contacts → \"What I know about you\"; builds on \"For you from mail\"; Me → What I know about you): A page under Me that shows what the Spark knows about you and where from: interests with evidence (for example two orders from a shop) that count only once you say \"Right\"; bills that come every month, with \"Remind me monthly\"; your week …"
+"text": "- What I know about you (Features → Mail and contacts → \"What I know about you\"; builds on \"For you from mail\"; Me → What I know about you): A page under Me that shows what the Spark knows about you and where from: interests as topics with evidence (for example \"Smart home & IoT\" from newsletters about ESP32 and Zigbee, with the senders and up to three subjects) that count on …"
 },
 {
 "lang": "en",

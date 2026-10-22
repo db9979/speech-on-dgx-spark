@@ -1,8 +1,13 @@
 """Was ich über dich weiß (plan persoenlicher-assistent/plan.md, Dominik 2026-10-18 „3a 4a 6a 7a“, stages 3 and 4): one
 page under Ich that shows what the Spark knows about the person and lets it be corrected:
 
-    Interessen       proposed with their evidence (orders, offers and newsletters of a shop in the mails, words in Reddit
-                     und Feeds), counted only after „Stimmt“; „Nicht so“ is remembered; own words can be added
+    Interessen       proposed as topics (TOPICS, Dominik 2026-10-22 „ok“ to plan interessen-themen: a sender's name is no
+                     interest) with their evidence: the senders as chips, the counts of orders, offers and newsletters
+                     and up to EXAMPLES subjects (shown as text, kept in memory only); a sender without a topic stays
+                     „Thema unklar“ with its subjects and a field for an own topic; the own addresses and service
+                     senders (TOPICS rules below) are never proposed; words in Reddit und Feeds; counted only after
+                     „Stimmt“ (the topic with its senders); „Nicht so“ is remembered; own words can be added; an older
+                     confirmed sender is asked once for its topic
     Wiederkehrendes  bills of the same sender in three or more months, about the same day („um den 15.“), with
                      „Monatlich erinnern“ (a monthly reminder)
     Diese Woche      the weekly review: marked done, still open, deadlines of the next seven days (Von selbst: Sundays
@@ -14,11 +19,12 @@ page under Ich that shows what the Spark knows about the person and lets it be c
 
 Fixed rules, the panel decides, no model. Part of „Für dich aus Mails“ (chat.mail_insight, off; needs chat.mail);
 released for every profile the admin did not block, guests never. Kept in users/<id>/interessen.json: the confirmed and
-refused interests (name, state, time, web tips on or off) and the last web tip; everything else is read when the page
-asks and kept in memory only.
+refused interests (name, state, time, web tips on or off, topic, senders) and the last web tip; everything else is read
+when the page asks and kept in memory only.
 
     GET    /api/profile/ichweiss                  the page
-    POST   /api/profile/ichweiss/interest         {"name", "state": "yes" | "no" | "forget", "web": bool}
+    POST   /api/profile/ichweiss/interest         {"name", "state": "yes" | "no" | "forget", "web": bool, "topic", "senders"}
+                                                  or {"name", "state": "adopt", "topic"} / {"name", "state": "keep"}
     POST   /api/profile/ichweiss/recurring        {"id"}: a monthly reminder for it
     DELETE /api/profile/ichweiss                  forget every interest and the web tip
 """
@@ -49,6 +55,122 @@ NAME_MAX = 40                   # an interest is a short word or name
 MAX_INTERESTS = 60
 MAX_PROPOSALS = 8
 SHOP_MIN = 2                    # mails of a shop (orders, offers, newsletters) before it is proposed
+EXAMPLES = 3                    # subjects of a sender shown as evidence (memory only, fuerdich._shop)
+EXAMPLE_MAX = 80                # characters of one
+TOPIC_MIN = 2                   # mails of a sender with a topic's words before the topic is its one
+MAX_SENDERS = 20                # senders kept with a confirmed topic
+
+# Topics (plan interessen-themen, 1a): key -> (German name, English name, words, sender domains). A word matches as a
+# whole word, „wort*“ as the start of a word, in the subject and the sender's name; a domain matches itself and its
+# subdomains. Fixed rules, the panel decides, no model; one list (test_ichweiss: no word in two topics).
+TOPICS = {
+    "musikproduktion": ("Musikproduktion & Samples", "Music production & samples",
+                        ("sample*", "synth*", "vst", "plugin*", "plug-in*", "preset*", "daw", "ableton", "cubase", "kontakt",
+                         "orchestral", "mixing", "mastering", "sound design", "soundbank*", "loops", "midi", "drum*"),
+                        ("sonokinetic.com", "native-instruments.com", "splice.com", "spitfireaudio.com", "plugin-alliance.com",
+                         "waves.com", "kvraudio.com", "steinberg.net", "ableton.com", "thomann.de", "bestservice.com")),
+    "musik": ("Musik hören", "Listening to music", ("spotify", "album", "vinyl", "schallplatte*", "playlist*", "konzertmitschnitt*"),
+              ("spotify.com", "bandcamp.com", "hhv.de", "deezer.com")),
+    "smarthome": ("Smart Home & IoT", "Smart home & IoT",
+                  ("smart home", "smarthome", "iot*", "esp32", "esp8266", "arduino", "raspberry", "home assistant",
+                   "zigbee", "mqtt", "tasmota", "shelly", "sensor*"),
+                  ("home-assistant.io", "homeassistant.io", "raspberrypi.com", "espressif.com", "shelly.com", "nabucasa.com")),
+    "software": ("Software & Entwicklung", "Software & development",
+                 ("python", "javascript", "typescript", "docker", "kubernetes", "developer*", "entwickler*", "open source",
+                  "linux", "programming", "programmier*", "coding", "devops"),
+                 ("jetbrains.com", "stackoverflow.com", "docker.com", "gitlab.com")),
+    "ki": ("KI & Sprachmodelle", "AI & language models",
+           ("ki", "künstliche intelligenz", "ai", "llm*", "gpt*", "chatgpt", "openai", "anthropic", "nvidia", "machine learning",
+            "deep learning", "hugging face", "huggingface"),
+           ("openai.com", "anthropic.com", "huggingface.co", "nvidia.com")),
+    "computer": ("Computer & Elektronik", "Computers & electronics",
+                 ("laptop*", "notebook*", "monitor", "ssd", "grafikkarte*", "gpu", "prozessor*", "cpu", "mainboard*",
+                  "tastatur*", "keyboard*", "gaming pc"),
+                 ("alternate.de", "mindfactory.de", "notebooksbilliger.de", "cyberport.de", "conrad.de", "reichelt.de",
+                  "caseking.de", "mouser.com", "digikey.de")),
+    "maker": ("Basteln & 3D-Druck", "Making & 3D printing",
+              ("3d-druck*", "3d print*", "filament*", "prusa", "bambu", "cnc", "lasercutter*", "löten", "soldering", "bastel*"),
+              ("prusa3d.com", "bambulab.com", "elegoo.com")),
+    "foto": ("Fotografie & Video", "Photography & video",
+             ("kamera*", "camera*", "foto*", "photo*", "objektiv*", "lens", "lenses", "lightroom", "drohne*", "drone*"),
+             ("canon.de", "nikon.de", "dji.com", "fujifilm.com", "calumetphoto.de")),
+    "spiele": ("Spiele", "Games", ("game", "games", "gaming", "spiele", "steam", "playstation", "xbox", "nintendo"),
+               ("steampowered.com", "epicgames.com", "nintendo.com", "nintendo.de", "playstation.com", "xbox.com", "gog.com")),
+    "filme": ("Filme & Serien", "Films & series", ("film", "filme", "movie*", "serie", "serien", "series", "kino", "streaming"),
+              ("netflix.com", "disneyplus.com", "wowtv.de", "paramountplus.com")),
+    "buecher": ("Bücher & Hörbücher", "Books & audiobooks", ("buch", "bücher", "book", "books", "ebook*", "hörbuch*", "audiobook*", "roman"),
+                ("thalia.de", "hugendubel.de", "audible.de", "audible.com", "tolino.de")),
+    "konzerte": ("Konzerte & Events", "Concerts & events", ("konzert*", "concert*", "festival*", "tickets", "tournee"),
+                 ("eventim.de", "ticketmaster.de", "reservix.de")),
+    "essen": ("Essen bestellen", "Food delivery", ("lieferando", "pizza", "burger", "sushi", "lieferdienst*"),
+              ("lieferando.de", "wolt.com", "ubereats.com", "deliveroo.de", "flink.com")),
+    "kochen": ("Kochen & Rezepte", "Cooking & recipes", ("rezept*", "recipe*", "kochen", "backen", "thermomix", "kochbox*"),
+               ("hellofresh.de", "chefkoch.de", "marleyspoon.de", "vorwerk.com")),
+    "reisen": ("Reisen", "Travel", ("reise*", "urlaub*", "flug", "flüge", "flight*", "hotel*", "ferienwohnung*", "kreuzfahrt*", "trip"),
+               ("booking.com", "airbnb.com", "airbnb.de", "expedia.de", "lufthansa.com", "eurowings.com", "ryanair.com",
+                "tui.com", "holidaycheck.de")),
+    "sport": ("Sport & Fitness", "Sports & fitness",
+              ("fitness", "workout*", "laufen", "running", "fahrrad*", "bike", "bikes", "radsport", "marathon*", "yoga", "gym"),
+              ("strava.com", "garmin.com", "decathlon.de", "rosebikes.de", "bike-discount.de", "runtastic.com")),
+    "auto": ("Auto & Mobilität", "Cars & mobility", ("auto", "autos", "elektroauto*", "e-auto*", "tesla", "reifen", "wallbox*"),
+             ("tesla.com", "adac.de", "mobile.de", "autoscout24.de")),
+    "finanzen": ("Finanzen & Geldanlage", "Finance & investing",
+                 ("aktie*", "etf*", "depot*", "börse*", "sparplan*", "krypto*", "bitcoin", "dividende*", "geldanlage"),
+                 ("traderepublic.com", "scalable.capital", "finanzfluss.de", "justetf.com")),
+    "mode": ("Mode", "Fashion", ("mode", "fashion", "sneaker*", "schuhe", "shoes", "jacke*", "kleid*", "outfit*", "kollektion*"),
+             ("zalando.de", "aboutyou.de", "hm.com", "asos.com", "zara.com")),
+    "haus": ("Haus & Garten", "Home & garden", ("garten*", "garden*", "heimwerk*", "baumarkt*", "möbel*", "furniture", "deko*"),
+             ("obi.de", "hornbach.de", "bauhaus.info", "ikea.com", "home24.de")),
+    "gesundheit": ("Gesundheit", "Health", ("gesundheit*", "health", "ernährung*", "nutrition", "apotheke*", "vitamin*", "schlaf"),
+                   ("shop-apotheke.com", "docmorris.de")),
+    "tiere": ("Haustiere", "Pets", ("hund", "hunde*", "katze*", "dog", "dogs", "tierfutter", "haustier*"),
+              ("fressnapf.de", "zooplus.de")),
+    "familie": ("Familie & Kinder", "Family & children", ("baby*", "kinder*", "kids", "spielzeug*", "toys", "lego"),
+                ("mytoys.de", "jako-o.de", "lego.com")),
+    "technews": ("Technik-Nachrichten", "Tech news", ("tech news", "newsticker"),
+                 ("heise.de", "golem.de", "t3n.de", "computerbase.de", "theverge.com", "techcrunch.com")),
+}
+# never an interest (2a): mails of a service about an account (GitHub, an app store, …), machine mail (Auto-Submitted)
+SERVICE_DOMAINS = ("github.com", "gitlab.com", "bitbucket.org", "atlassian.net", "apple.com", "icloud.com", "google.com",
+                   "accounts.google.com", "microsoft.com", "paypal.com", "paypal.de")
+SERVICE_ADDR = re.compile(r"(?i)^(notifications?|notify|alerts?|security|account|accounts|konto|no-?reply-?(?:account|security)|"
+                          r"verify|verification)[@.+-]")
+
+
+def _word_re(words):
+    return re.compile("|".join(r"\b" + re.escape(w[:-1]) if w.endswith("*") else r"\b" + re.escape(w) + r"\b" for w in words), re.I)
+
+
+_TOPIC_RE = {k: _word_re(v[2]) for k, v in TOPICS.items()}
+
+
+def _dom_in(dom, domains):
+    return any(dom == d or dom.endswith("." + d) for d in domains)
+
+
+def topics_in(text, dom):
+    """The topic keys whose words stand in text (a subject and a sender's name) or whose domains send it."""
+    dom = (dom or "").lower()
+    return [k for k, v in TOPICS.items() if (dom and _dom_in(dom, v[3])) or _TOPIC_RE[k].search(text or "")]
+
+
+def service(addr):
+    """A service or machine sender (2a): never proposed as an interest."""
+    addr = (addr or "").lower()
+    return bool(SERVICE_ADDR.match(addr)) or _dom_in(addr.rpartition("@")[2], SERVICE_DOMAINS)
+
+
+def topic_name(key, en=False):
+    t = TOPICS.get(key)
+    return (t[1] if en else t[0]) if t else ""
+
+
+def topic_of(c):
+    """The topic of a sender's counts (fuerdich._shop): the one with most mails, TOPIC_MIN or more and at least a third
+    of its mails; a sender domain of a topic counts for each of its mails. "" when none fits."""
+    n = sum(c.get(w, 0) for w in ("orders", "offers", "news"))
+    best = max(((v, k) for k, v in (c.get("topics") or {}).items() if k in TOPICS), default=(0, ""), key=lambda x: x[0])
+    return best[1] if best[0] >= TOPIC_MIN and best[0] * 3 >= n else ""
 REC_DAYS = 200                  # days of headers read for Wiederkehrendes
 REC_SCAN = 1500                 # newest headers per folder
 REC_MONTHS = 3                  # bills of a sender in this many months make it recurring
@@ -61,7 +183,7 @@ TIP_KEEP = 3 * 86400
 
 _lock = threading.Lock()
 _rec = {}                       # uid -> (time, [recurring])
-_day = DayCounter(angesehen=0, bestaetigt=0, abgelehnt=0, erinnerung=0, netztipp=0)   # Zustand → Live, numbers only
+_day = DayCounter(angesehen=0, bestaetigt=0, abgelehnt=0, erinnerung=0, netztipp=0, thema=0)   # Zustand → Live, numbers only
 
 
 def _file(uid):
@@ -89,7 +211,10 @@ def load(uid):
     for k, v in (d.get("items") or {}).items():
         if isinstance(v, dict) and v.get("state") in ("yes", "no") and isinstance(v.get("name"), str) and norm(k) == k:
             items[k] = {"name": clean(v["name"]) or k, "state": v["state"], "t": int(v.get("t") or 0),
-                        "web": v.get("web") is True, "src": v.get("src") if v.get("src") in SOURCES else "hand"}
+                        "web": v.get("web") is True, "src": v.get("src") if v.get("src") in SOURCES else "hand",
+                        "topic": v.get("topic") if v.get("topic") in TOPICS else "",
+                        "senders": [clean(x) for x in v.get("senders") or [] if isinstance(x, str) and clean(x)][:MAX_SENDERS],
+                        "kept": v.get("kept") is True}
     tip = d.get("tip") if isinstance(d.get("tip"), dict) else None
     return {"items": items, "tip": tip}
 
@@ -115,7 +240,8 @@ def forget(uid):
 
 
 features.OWN["ichweiss"] = (count, forget)
-SOURCES = {"shop": ("Mails eines Shops", "Mails of a shop"), "feeds": ("Stichwort in Reddit und Feeds", "Keyword in Reddit and feeds"),
+SOURCES = {"thema": ("Thema aus deinen Mails", "Topic from your mails"),
+           "shop": ("Mails eines Shops", "Mails of a shop"), "feeds": ("Stichwort in Reddit und Feeds", "Keyword in Reddit and feeds"),
            "karte": ("„Mehr davon“ an einer Karte", "\"More of this\" on a card"), "hand": ("selbst eingetragen", "added by you")}
 
 
@@ -128,18 +254,25 @@ def confirmed(uid):
 
 
 def known(uid, who):
-    """Said yes or no to already („Mehr davon“ is shown only for a shop not known yet)."""
-    return norm(clean(who)) in load(uid)["items"]
+    """Said yes or no to already, as an interest or as a sender of a topic („Mehr davon“ only for a shop not known yet)."""
+    n = norm(clean(who))
+    return any(k == n or n in map(norm, v["senders"]) for k, v in load(uid)["items"].items())
 
 
-def fits(uid, who):
-    """The confirmed interest an offer of this sender fits, or "" (Für dich sorts and marks it)."""
+def fits(uid, who, subject="", addr=""):
+    """The confirmed interest an offer fits, or "" (Für dich sorts and marks it): its sender's name, a sender of a
+    confirmed topic, or the topic of its subject and sender domain."""
     n = norm(who)
-    return next((v["name"] for k, v in load(uid)["items"].items() if v["state"] == "yes" and k and (k == n or k in n)), "")
+    mine = topics_in(f"{who} {subject}", addr.rpartition("@")[2]) if subject or addr else []
+    for k, v in load(uid)["items"].items():
+        if v["state"] == "yes" and k and (k == n or k in n or n in map(norm, v["senders"]) or (v["topic"] and v["topic"] in mine)):
+            return v["name"]
+    return ""
 
 
-def set_state(uid, name, state, src="hand", web=None):
-    """yes / no / forget one interest by its name; returns the item or None (forgotten)."""
+def set_state(uid, name, state, src="hand", web=None, topic=None, senders=None):
+    """yes / no / forget one interest by its name; returns the item or None (forgotten). topic and senders: a topic of
+    TOPICS confirmed with its senders (3a, 5a); a sender said no to in it stays out of it."""
     k, nm = norm(clean(name)), clean(name)
     if not k or len(k) < 2:
         raise ValueError("name")
@@ -149,33 +282,122 @@ def set_state(uid, name, state, src="hand", web=None):
         _save(uid, d)
         return None
     old = d["items"].get(k, {})
+    names = list(old.get("senders") or [])
+    for x in senders or []:
+        if clean(x) and norm(x) not in map(norm, names) and len(names) < MAX_SENDERS:
+            names.append(clean(x))
     d["items"][k] = {"name": old.get("name") or nm, "state": state, "t": int(time.time()),
                      "web": (old.get("web", False) if web is None else bool(web)) and state == "yes",
-                     "src": src if src in SOURCES else "hand"}
+                     "src": src if src in SOURCES else "hand", "topic": topic if topic in TOPICS else old.get("topic", ""),
+                     "senders": names, "kept": old.get("kept", False)}
     _save(uid, d)
     _day.bump("bestaetigt" if state == "yes" else "abgelehnt")
     return d["items"][k]
 
 
-# ---------------------------------------------------------------- proposals (3a)
-def proposals(uid):
-    """[{"name", "src", "why"}]: shops with SHOP_MIN or more mails in the last reading of Für dich, words of Reddit und
-    Feeds; without the ones already said yes or no to. Only counts as evidence, never a word of a mail."""
-    d = load(uid)["items"]
+def more(uid, who):
+    """„Mehr davon“ at a card (Für dich, Offen): the sender's topic with the sender when the last reading knows one,
+    else the sender itself as before; returns the item."""
+    k = topic_of(fuerdich.shops(uid).get(who) or {})
+    if k:
+        return set_state(uid, topic_name(k), "yes", "karte", topic=k, senders=[who])
+    return set_state(uid, who, "yes", "karte")
+
+
+def adopt(uid, name, topic):
+    """6a: an older confirmed sender goes into its topic (the topic confirmed with it), the sender's own item goes."""
+    d = load(uid)
+    k = norm(clean(name))
+    old = d["items"].get(k)
+    if not old or old["state"] != "yes" or topic not in TOPICS:
+        raise KeyError(name)
+    item = set_state(uid, topic_name(topic), "yes", "thema", web=old["web"] or None, topic=topic, senders=[old["name"]])
+    d = load(uid)
+    d["items"].pop(k, None)
+    _save(uid, d)
+    _day.bump("thema")
+    return item
+
+
+def keep(uid, name):
+    """6a „So lassen“: the older sender stays as it is and is not asked again."""
+    d = load(uid)
+    k = norm(clean(name))
+    if k not in d["items"]:
+        raise KeyError(name)
+    d["items"][k]["kept"] = True
+    _save(uid, d)
+
+
+def asks(uid):
+    """6a: older confirmed senders (no topic, not „So lassen“) whose topic the last reading knows, once each."""
+    shops = {norm(clean(w)): c for w, c in fuerdich.shops(uid).items()}
     out = []
-    for who, c in sorted(fuerdich.shops(uid).items(), key=lambda kv: -sum(kv[1].values())):
-        if norm(who) in d or sum(c.values()) < SHOP_MIN:
+    for k, v in load(uid)["items"].items():
+        if v["state"] == "yes" and not v["topic"] and not v["kept"] and v["src"] in ("shop", "karte"):
+            t = topic_of(shops.get(k) or {})
+            if t:
+                out.append({"name": v["name"], "topic": t, "label": topic_name(t), "en": topic_name(t, True)})
+    return out[:MAX_PROPOSALS]
+
+
+# ---------------------------------------------------------------- proposals (3a)
+def _counts_line(o, f, n):
+    parts = [f"{o} {'Bestellung' if o == 1 else 'Bestellungen'}" if o else "",
+             f"{f} {'Angebot' if f == 1 else 'Angebote'}" if f else "", f"{n} Newsletter" if n else ""]
+    return ", ".join(x for x in parts if x)
+
+
+def _own(uid):
+    """The profile's own addresses, their names before the @ and the profile's name (2a: never an interest)."""
+    own = set()
+    for a in mail.get(uid)["accounts"]:
+        u = str(a.get("user") or "").lower()
+        own |= {u, u.partition("@")[0]}
+    p = profiles.by_id(uid) or {}
+    own.add(norm(p.get("name", "")))
+    return {x for x in own if x}
+
+
+def proposals(uid):
+    """[{"name", "en", "src", "why", "topic", "senders", "ex", "unclear"}]: topics found in the senders of the last
+    reading of Für dich with SHOP_MIN or more mails (3a), a sender without a topic as „Thema unklar“ when it sent offers or
+    newsletters (4a), words of Reddit und Feeds; never the own addresses or a service (2a), never what was said yes or no
+    to. Only counts and up to EXAMPLES subjects as evidence (memory only)."""
+    d = load(uid)["items"]
+    told = set(d) | {norm(x) for v in d.values() for x in v["senders"]}
+    own = _own(uid)
+    topics, unclear = {}, []
+    for who, c in fuerdich.shops(uid).items():
+        o, f, n = (c.get(w, 0) for w in ("orders", "offers", "news"))
+        addr = str(c.get("addr") or "").lower()
+        if norm(who) in told or o + f + n < SHOP_MIN or c.get("svc") or service(addr) \
+                or {norm(who), addr, addr.partition("@")[0]} & own:
             continue
-        parts = [f"{n} {w}" for n, w in ((c.get("orders", 0), "Bestellung" if c.get("orders") == 1 else "Bestellungen"),
-                                          (c.get("offers", 0), "Angebot" if c.get("offers") == 1 else "Angebote"),
-                                          (c.get("news", 0), "Newsletter")) if n]
-        out.append({"name": clean(who), "src": "shop", "why": ", ".join(parts) + f" in {fuerdich.DAYS} Tagen"})
+        k = topic_of(c)
+        if k and norm(topic_name(k)) not in d:
+            t = topics.setdefault(k, {"o": 0, "f": 0, "n": 0, "senders": [], "ex": []})
+            t["o"], t["f"], t["n"] = t["o"] + o, t["f"] + f, t["n"] + n
+            t["senders"].append(clean(who))
+            t["ex"] += c.get("ex") or []
+        elif not k and f + n:
+            unclear.append({"name": clean(who), "en": clean(who), "src": "shop", "topic": "", "senders": [clean(who)],
+                            "why": _counts_line(o, f, n) + f" in {fuerdich.DAYS} Tagen", "ex": (c.get("ex") or [])[:EXAMPLES],
+                            "unclear": True, "_n": o + f + n})
+    out = []
+    for k, t in sorted(topics.items(), key=lambda kv: -(kv[1]["o"] + kv[1]["f"] + kv[1]["n"])):
+        many = len(t["senders"])
+        out.append({"name": topic_name(k), "en": topic_name(k, True), "src": "thema", "topic": k, "senders": t["senders"],
+                    "why": _counts_line(t["o"], t["f"], t["n"]) + (f" von {many} Absendern" if many > 1 else "")
+                    + f" in {fuerdich.DAYS} Tagen", "ex": t["ex"][:EXAMPLES], "unclear": False})
+    out += [{k: v for k, v in x.items() if k != "_n"} for x in sorted(unclear, key=lambda x: -x["_n"])]
     try:
         import feeds
         if features.allowed("feeds", uid):
             for w in feeds.get(uid).get("words", [])[:20]:
                 if norm(w) not in d and clean(w):
-                    out.append({"name": clean(w), "src": "feeds", "why": "Stichwort in Reddit und Feeds"})
+                    out.append({"name": clean(w), "en": clean(w), "src": "feeds", "why": "Stichwort in Reddit und Feeds",
+                                "topic": "", "senders": [], "ex": [], "unclear": False})
     except Exception:
         pass
     seen, res = set(), []
@@ -431,9 +653,10 @@ async def view(prof):
         import mailstil
         s = mailstil.public(uid)
         style = {"mails": s["mails"], "learned": s["learned"]}
-    return {"interests": sorted(({"name": v["name"], "state": v["state"], "web": v["web"], "src": v["src"], "t": v["t"]}
+    return {"interests": sorted(({"name": v["name"], "state": v["state"], "web": v["web"], "src": v["src"], "t": v["t"],
+                                  "topic": v["topic"], "en": topic_name(v["topic"], True) or v["name"], "senders": v["senders"]}
                                  for v in d["items"].values()), key=lambda v: (v["state"] != "yes", v["name"].lower())),
-            "proposals": proposals(uid), "sources": SOURCES,
+            "proposals": proposals(uid), "asks": asks(uid), "sources": SOURCES,
             "recurring": [dict(x, set=rec_text(x) in texts) for x in rec],
             "week": dict(w, sentence=week_sentence(w, today)),
             "month": dict(m, line=month_line(m)),
@@ -471,12 +694,24 @@ async def api_interest(request: Request, prof=Depends(own_profile)):
     _mine(request, prof)
     b = await json_body(request, 2 * 1024)
     name, state, src, web = b.get("name"), b.get("state"), b.get("src", "hand"), b.get("web")
-    if not isinstance(name, str) or state not in ("yes", "no", "forget") or (web is not None and not isinstance(web, bool)) \
-            or src not in SOURCES:
+    topic, senders = b.get("topic", ""), b.get("senders", [])
+    if not isinstance(name, str) or state not in ("yes", "no", "forget", "adopt", "keep") \
+            or (web is not None and not isinstance(web, bool)) or src not in SOURCES \
+            or not isinstance(topic, str) or (topic and topic not in TOPICS) or (state == "adopt" and not topic) \
+            or not isinstance(senders, list) or len(senders) > MAX_SENDERS or not all(isinstance(x, str) for x in senders):
         print("ichweiss: interesse abgelehnt grund=eingabe", flush=True)
-        raise HTTPException(400, "name, state (yes, no, forget), web (true/false)")
+        raise HTTPException(400, "name, state (yes, no, forget, adopt, keep), web (true/false), topic, senders")
     try:
-        item = set_state(prof["id"], name, state, src, web)
+        if state == "adopt":
+            item = adopt(prof["id"], name, topic)
+        elif state == "keep":
+            keep(prof["id"], name)
+            item = None
+        else:
+            item = set_state(prof["id"], name, state, src, web, topic or None, senders)
+    except KeyError:
+        print(f"ichweiss: interesse abgelehnt grund=fehlt {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(404, "Das gibt es nicht mehr. Bitte neu laden.")
     except ValueError:
         print("ichweiss: interesse abgelehnt grund=name", flush=True)
         raise HTTPException(400, "Ein Interesse braucht mindestens zwei Zeichen.")

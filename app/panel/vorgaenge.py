@@ -498,7 +498,7 @@ def _source_act(uid, x, name):
         return {"text": item["text"], "due": item["due"]}
     if name == "fd_more":
         import ichweiss
-        return {"name": ichweiss.set_state(uid, src["who"], "yes", "karte")["name"]}
+        return {"name": ichweiss.more(uid, src["who"])["name"]}
     if name == "fd_cancel":
         import datetime as dt
         return {"draft": fuerdich.cancel_draft(uid, src, dt.date.today())}

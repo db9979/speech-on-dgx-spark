@@ -2657,6 +2657,13 @@
 "titel": "Angriffsprobe in der Werkstatt",
 "text": "A: Update. B: Funktionen → Werkstatt → Angriffsprobe an. C: Zustand → Werkstatt, Kachel „Angriffe prüfen“, Starten: links „Angriffsprobe läuft“ mit Fortschritt, nach 1 bis 2 Minuten ein Ergebnis „X von N“. D: Ergebnis antippen: Zahlen je Tarnung und je Werkzeug, kein Text eines Falls. E: Währenddessen eine Sprachfrage stellen: die Antwort kommt sofort (Gespräche gehen vor). F: Im Smart Home hat nichts geschaltet, Ich → Gedächtnis ist unverändert. G: iPhone-App Spark verwalten → Werkstatt zeigt den Lauf, Löschen geht.",
 "thread": "NeMo Guardrails prüfen"
+},
+{
+"id": "P404",
+"v": 922,
+"titel": "Was ich über dich weiß: Themen",
+"text": "Öffne Ich → Was ich über dich weiß: unter Vorschläge stehen Themen (z. B. „Smart Home & IoT“) mit den Absendern als Chips und Beispiel-Betreffen, nie „db9979“ oder eine eigene Adresse. Bestätige ein Thema mit ✓, nimm einen Absender mit ✕ am Chip heraus, gib bei „Thema unklar“ ein eigenes Thema ein und beantworte „Zu welchem Thema gehört das?“ für einen früher bestätigten Absender. Dasselbe in der iPhone-App unter Für dich → Was ich über dich weiß.",
+"thread": "Persönlicher Assistent aus dem Postfach"
 }
 ]
 }

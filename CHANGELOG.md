@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.922** · 2026-10-22 · Was ich über dich weiß: Vorschläge sind Themen statt Absendernamen (feste Themenliste, Absender als Chips, Beispiel-Betreffe, „Thema unklar“ mit eigenem Thema), eigene Adressen und Dienste wie GitHub nie, „Stimmt“ bestätigt das Thema, Netz-Tipp sucht nur das Themawort; iPhone
 - **V01.0.921** · 2026-10-22 · Angriffsprobe in der Werkstatt (Stufe 2 des Angriffs-Selbsttests): Kachel „Angriffe prüfen“ misst, wie oft das laufende Sprachmodell einem versteckten Befehl in fremdem Text folgen würde, je Tarnung und Werkzeug; kein Werkzeug läuft, nur Zahlen; eigener Schalter unter Funktionen → Werkstatt, aus; auch in der iPhone-App
 - **V01.0.920** · 2026-10-22 · Test-Fix: der Seitentest „Ältere Mails nachladen“ scrollt weiter bis „Keine älteren Mails“, so lange eine Seite braucht, statt nach zwölf Versuchen aufzugeben (war in der Werkstatt auf dem Spark rot)
 - **V01.0.919** · 2026-10-21 · Einstellungen am Handy bündig: Safari zentrierte den Inhalt der Einstellungszeilen (Block-Knopf), jetzt eine linksbündige Spalte; Browser-Test prüft dieselbe linke Kante bei 390 px, Regel „Mehrzeilige Knöpfe als Spalte“ in der Richtlinie

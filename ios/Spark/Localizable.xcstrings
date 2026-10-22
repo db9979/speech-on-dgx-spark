@@ -16690,6 +16690,126 @@
           }
         }
       }
+    },
+    "Thema unklar": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Topic unclear"
+          }
+        }
+      }
+    },
+    "Absender": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Senders"
+          }
+        }
+      }
+    },
+    "Nicht „%@“": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not \"%@\""
+          }
+        }
+      }
+    },
+    "Zu welchem Thema gehört das?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Which topic is this?"
+          }
+        }
+      }
+    },
+    "„%@“ gehört wohl zu %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\"%1$@\" seems to belong to %2$@"
+          }
+        }
+      }
+    },
+    "Du hast den Absender früher bestätigt. Als Thema passen auch neue Absender, und der Netz-Tipp sucht nach dem Thema.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You confirmed the sender before. As a topic, new senders fit too and the web tip searches for the topic."
+          }
+        }
+      }
+    },
+    "So lassen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave it"
+          }
+        }
+      }
+    },
+    "Absender: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Senders: %@"
+          }
+        }
+      }
+    },
+    "Betreffe zeigen und eigenes Thema": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show subjects and an own topic"
+          }
+        }
+      }
+    },
+    "Thema, z. B. Wandern": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Topic, e.g. hiking"
+          }
+        }
+      }
+    },
+    "Als Thema merken": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep as topic"
+          }
+        }
+      }
+    },
+    "Bleibt, wie es ist.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stays as it is."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

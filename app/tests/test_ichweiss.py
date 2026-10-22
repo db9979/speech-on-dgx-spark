@@ -53,6 +53,30 @@ class Rules(unittest.TestCase):
         self.assertEqual(ichweiss.norm("Rose  Bikes"), "rose bikes")
         self.assertLessEqual(len(ichweiss.clean("x" * 100)), ichweiss.NAME_MAX)
 
+    def test_topics_come_from_fixed_words(self):
+        """Plan interessen-themen (Dominik 2026-10-22 „ok“): a topic from fixed words and domains, never a sender's name;
+        each word in one topic only; service and machine senders are never an interest."""
+        self.assertEqual(ichweiss.topics_in("IoTThinks New ESP32 board", "iotthinks.example"), ["smarthome"])
+        self.assertEqual(ichweiss.topics_in("Sonokinetic New orchestral sample library", "x.example"), ["musikproduktion"])
+        self.assertEqual(ichweiss.topics_in("Neuigkeiten", "lieferando.de"), ["essen"])
+        self.assertEqual(ichweiss.topics_in("Automatisch verlängert", "x.example"), [])        # a whole word, not a part
+        self.assertEqual(ichweiss.topics_in("Dein Gutschein-Code", "news.example"), [])
+        self.assertTrue(ichweiss.service("notifications@github.com"))
+        self.assertTrue(ichweiss.service("noreply@mail.github.com"))
+        self.assertTrue(ichweiss.service("security@shop.example"))
+        self.assertFalse(ichweiss.service("newsletter@lieferando.de"))
+        self.assertEqual(ichweiss.topic_of({"news": 6, "topics": {"smarthome": 3}}), "smarthome")
+        self.assertEqual(ichweiss.topic_of({"news": 9, "topics": {"smarthome": 2}}), "")          # under a third
+        self.assertEqual(ichweiss.topic_of({"news": 1, "topics": {"smarthome": 1}}), "")          # one mail is no topic
+        seen = {}
+        for k, (de, en, words, doms) in ichweiss.TOPICS.items():
+            self.assertTrue(de and en and words, k)
+            self.assertLessEqual(len(de), ichweiss.NAME_MAX, k)
+            self.assertEqual(ichweiss.clean(de), de, k)                     # a topic is a valid interest name
+            for w in list(words) + list(doms):
+                self.assertNotIn(w.lower(), seen, f"{w} in {k} and {seen.get(w.lower())}")
+                seen[w.lower()] = k
+
     def test_web_tip_takes_only_https(self):
         self.assertEqual(ichweiss._safe_url("https://shop.example/a?b=1"), ("https://shop.example/a?b=1", "shop.example"))
         for bad in ("http://shop.example/", "javascript:alert(1)", "https://shop.example/<x>", "ftp://a.example"):
@@ -90,22 +114,29 @@ class IchWeiss(unittest.TestCase):
         with contextlib.redirect_stdout(out):
             d = p.get("/api/profile/ichweiss").json()
         names = [x["name"] for x in d["proposals"]]
-        self.assertIn("Rose Bikes", names)
-        rose = next(x for x in d["proposals"] if x["name"] == "Rose Bikes")
-        self.assertEqual(rose["why"], "2 Bestellungen in 30 Tagen")
+        self.assertIn("Sport & Fitness", names)                            # the topic, not the shop's name
+        self.assertNotIn("Rose Bikes", names)
+        rose = next(x for x in d["proposals"] if x["name"] == "Sport & Fitness")
+        self.assertEqual((rose["why"], rose["senders"], rose["topic"], rose["en"]),
+                         ("2 Bestellungen in 30 Tagen", ["Rose Bikes"], "sport", "Sports & fitness"))
         self.assertEqual(d["interests"], [])
         self.assertNotIn("Rose", out.getvalue())                          # the log names no shop
-        self.assertEqual(p.post("/api/profile/ichweiss/interest", json={"name": "Rose Bikes", "state": "yes", "src": "shop"}).status_code, 200)
+        yes = {"name": "Sport & Fitness", "state": "yes", "src": "thema", "topic": "sport", "senders": ["Rose Bikes"]}
+        self.assertEqual(p.post("/api/profile/ichweiss/interest", json=yes).status_code, 200)
         d = p.get("/api/profile/ichweiss").json()
-        self.assertEqual([x["name"] for x in d["interests"]], ["Rose Bikes"])
-        self.assertNotIn("Rose Bikes", [x["name"] for x in d["proposals"]])
-        self.assertEqual(ichweiss.fits(uid, "Rose Bikes"), "Rose Bikes")
+        self.assertEqual([(x["name"], x["senders"]) for x in d["interests"]], [("Sport & Fitness", ["Rose Bikes"])])
+        self.assertNotIn("Sport & Fitness", [x["name"] for x in d["proposals"]])
+        self.assertEqual(ichweiss.fits(uid, "Rose Bikes"), "Sport & Fitness")
+        self.assertEqual(ichweiss.fits(uid, "Neuer Laden", "Laufschuhe für den Marathon", "news@neu.example"), "Sport & Fitness")
         # „Nicht so“ is remembered: no proposal again
-        p.post("/api/profile/ichweiss/interest", json={"name": "Rose Bikes", "state": "no", "src": "shop"})
-        self.assertNotIn("Rose Bikes", [x["name"] for x in p.get("/api/profile/ichweiss").json()["proposals"]])
+        p.post("/api/profile/ichweiss/interest", json=dict(yes, state="no"))
+        self.assertNotIn("Sport & Fitness", [x["name"] for x in p.get("/api/profile/ichweiss").json()["proposals"]])
         self.assertEqual(ichweiss.fits(uid, "Rose Bikes"), "")
         for bad in ({"name": "x", "state": "yes"}, {"name": "Rad", "state": "maybe"}, {"name": ["a"], "state": "yes"},
-                    {"name": "Rad", "state": "yes", "web": "ja"}, {"name": "Rad", "state": "yes", "src": "modell"}):
+                    {"name": "Rad", "state": "yes", "web": "ja"}, {"name": "Rad", "state": "yes", "src": "modell"},
+                    {"name": "Rad", "state": "yes", "topic": "quatsch"}, {"name": "Rad", "state": "adopt"},
+                    {"name": "Rad", "state": "yes", "senders": "Rose"}, {"name": "Rad", "state": "yes", "senders": [1]},
+                    {"name": "Rad", "state": "yes", "senders": ["a"] * 21}):
             self.assertEqual(p.post("/api/profile/ichweiss/interest", json=bad).status_code, 400, bad)
         with open(profiles._path(uid, "interessen.json")) as f:
             raw = f.read()
@@ -114,6 +145,65 @@ class IchWeiss(unittest.TestCase):
         self.assertEqual(features.OWN["ichweiss"][0](uid), 1)
         self.assertEqual(p.delete("/api/profile/ichweiss").status_code, 200)
         self.assertFalse(os.path.exists(profiles._path(uid, "interessen.json")))
+
+    def test_topics_instead_of_senders(self):
+        """Plan interessen-themen 1a-6a: topics with the senders as chips and up to three subjects as evidence, a sender
+        without a topic as „Thema unklar“, never the own address or a service (GitHub), a chip said no to stays out, an
+        own topic for an unclear sender, older confirmed senders asked once for their topic; subjects only on the page,
+        never in the log or a file."""
+        news = {"List-Unsubscribe": "<mailto:x@example.org>"}
+        for subj in ("ESP32 Neuigkeiten", "Neuer Zigbee-Sensor", "IoT Wochenbrief"):
+            FMB.put("INBOX", helpers.box_mail("IoTThinks <news@iotthinks.example>", subj, headers=news))
+        for subj in ("Neuigkeiten aus dem Oktober", "Unser Herbstbrief"):
+            FMB.put("INBOX", helpers.box_mail("hasso <brief@hasso.example>", subj, headers=news))
+        for i in range(3):
+            FMB.put("INBOX", helpers.box_mail("db9979 <notifications@github.com>", f"[db9979/speech] Run {i} failed",
+                                              headers={"List-Id": "db9979/speech <speech.db9979.github.com>"}))
+            FMB.put("INBOX", helpers.box_mail(f"Ich <{helpers.MAIL_USER}>", f"Notiz {i}", headers=news))
+        p, uid = self.setup_profile("Wissthema")
+        p.get("/api/profile/fuerdich")
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            d = p.get("/api/profile/ichweiss").json()
+        props = {x["name"]: x for x in d["proposals"]}
+        iot = props["Smart Home & IoT"]
+        self.assertEqual((iot["senders"], iot["why"], iot["unclear"]), (["IoTThinks"], "3 Newsletter in 30 Tagen", False))
+        self.assertEqual(sorted(iot["ex"]), ["ESP32 Neuigkeiten", "IoT Wochenbrief", "Neuer Zigbee-Sensor"])
+        self.assertTrue(props["hasso"]["unclear"])
+        self.assertEqual(len(props["hasso"]["ex"]), 2)
+        flat = str(d["proposals"])
+        for never in ("db9979", "github", helpers.MAIL_USER, "Ich"):           # own and service senders are no interest
+            self.assertNotIn(never, [x["name"] for x in d["proposals"]])
+            self.assertNotIn(never, [s for x in d["proposals"] for s in x["senders"]])
+        self.assertNotIn("db9979", flat)
+        for word in ("ESP32", "Zigbee", "Herbstbrief", "IoTThinks", "hasso"):   # the log has counts only
+            self.assertNotIn(word, out.getvalue())
+        # 6a: an older confirmed sender is asked once for its topic, „Übernehmen“ moves it into the topic
+        ichweiss.set_state(uid, "IoTThinks", "yes", "shop")
+        d = p.get("/api/profile/ichweiss").json()
+        self.assertEqual([(x["name"], x["topic"]) for x in d["asks"]], [("IoTThinks", "smarthome")])
+        self.assertNotIn("Smart Home & IoT", [x["name"] for x in d["proposals"]])
+        self.assertEqual(p.post("/api/profile/ichweiss/interest", json={"name": "IoTThinks", "state": "adopt", "topic": "smarthome"}).status_code, 200)
+        d = p.get("/api/profile/ichweiss").json()
+        self.assertEqual([(x["name"], x["senders"]) for x in d["interests"]], [("Smart Home & IoT", ["IoTThinks"])])
+        self.assertEqual(d["asks"], [])
+        self.assertEqual(p.post("/api/profile/ichweiss/interest", json={"name": "IoTThinks", "state": "adopt", "topic": "smarthome"}).status_code, 404)
+        # „So lassen“: asked no more, the sender stays
+        ichweiss.set_state(uid, "Rose Bikes", "yes", "shop")
+        self.assertEqual([x["name"] for x in p.get("/api/profile/ichweiss").json()["asks"]], ["Rose Bikes"])
+        self.assertEqual(p.post("/api/profile/ichweiss/interest", json={"name": "Rose Bikes", "state": "keep"}).status_code, 200)
+        d = p.get("/api/profile/ichweiss").json()
+        self.assertEqual(d["asks"], [])
+        self.assertIn("Rose Bikes", [x["name"] for x in d["interests"]])
+        # an own topic for the unclear sender (4a): the sender belongs to it from now on
+        self.assertEqual(p.post("/api/profile/ichweiss/interest", json={"name": "Wandern", "state": "yes", "src": "hand",
+                                                                        "senders": ["hasso"]}).status_code, 200)
+        self.assertNotIn("hasso", [x["name"] for x in p.get("/api/profile/ichweiss").json()["proposals"]])
+        self.assertEqual(ichweiss.fits(uid, "hasso"), "Wandern")
+        with open(profiles._path(uid, "interessen.json")) as f:
+            raw = f.read()
+        for word in ("ESP32", "Zigbee", "Herbstbrief", "Oktober", "iotthinks.example"):   # subjects never in the file
+            self.assertNotIn(word, raw)
 
     def test_more_of_this_on_a_card(self):
         p, uid = self.setup_profile("Wissb")

@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.922** Was ich über dich weiß: Vorschläge sind Themen statt Absendernamen (feste Themenliste, Absender als Chips, Beispiel-Betreffe, „Thema unklar“ mit eigenem Thema), eigene Adressen und Dienste wie GitHub nie, „Stimmt“ bestätigt das Thema, Netz-Tipp sucht nur das Themawort; iPhone
 - **V01.0.921** Angriffsprobe in der Werkstatt (Stufe 2 des Angriffs-Selbsttests): Kachel „Angriffe prüfen“ misst, wie oft das laufende Sprachmodell einem versteckten Befehl in fremdem Text folgen würde, je Tarnung und Werkzeug; kein Werkzeug läuft, nur Zahlen; eigener Schalter unter Funktionen → Werkstatt, aus; auch in der iPhone-App
 - **V01.0.920** Test-Fix: der Seitentest „Ältere Mails nachladen“ scrollt weiter bis „Keine älteren Mails“, so lange eine Seite braucht, statt nach zwölf Versuchen aufzugeben (war in der Werkstatt auf dem Spark rot)
 - **V01.0.919** Einstellungen am Handy bündig: im iPhone-Browser standen Titel und Zeile jeder Einstellung mittig statt links neben dem Symbol
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.915** Technik-Schaubild schöner: Farbstreifen je Art mit Legende, Symbol vor jeder Zeile, Pfeile mit Richtung und hellere Linien, Schild „nur bei Spark teilen“, mehr Luft zwischen den Reihen; Wächter: jeder Kasten hat Farbe und Symbol
 - **V01.0.914** Technik-Schaubild ohne Überlauf: jeder Text passt in seinen Kasten (Post und Kontakte, Lautsprecher/Telefon, Bilder und Musik gekürzt, Schrift etwas kleiner); neue Wächter in test_technik: Text passt (de und en), keine Linie quer durch einen Kasten
 - **V01.0.913** Begleiter-Fenster geordnet: drei Reiter Heute, Meldungen und Rechner unter den Kacheln, nur der Reiter rollt und das Fenster bleibt im Bildschirm, kleine Kacheln zu viert, je Abschnitt die ersten drei mit „Alle n zeigen“, neue Meldung öffnet „Meldungen“, am Mac jetzt auch Meldungen im Fenster (Windows und Mac)
-- **V01.0.912** Erst lokal suchen findet auch mit Tippfehler: ein langes Wort darf um ein bis zwei Buchstaben vertippt sein („Dresdner Fraunkirche“ findet den Kiwix-Artikel), ohne Titel fragt der Spark gekürzte Wörter nach, und der Titel mit den meisten Wörtern der Frage gewinnt; Archiv-Links auf Wunsch mit eigenem Namen (Adresse für Links)
 
 
 

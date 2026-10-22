@@ -3,32 +3,67 @@ import SwiftUI
 /// „Was ich über dich weiß“ (ichweiss.py, plan persoenlicher-assistent, stages 3 and 4): the same page as Ich → Was ich
 /// über dich weiß in the panel (GET api/profile/ichweiss). Interests count only after „Stimmt“; „Nicht so“ is
 /// remembered; what comes back every month gets „Monatlich erinnern“; the week and this month's sum come from checked
-/// values. Shop names and web titles are outside text: shown verbatim; the web tip opens only as an https link.
+/// values. Shop names, subjects and web titles are outside text: shown verbatim; the web tip opens only as an https link.
+/// Proposals are topics (plan interessen-themen): the senders and up to three subjects as evidence, „Thema unklar“ with
+/// an own topic, older confirmed senders asked once for their topic.
+private var wissEnglish: Bool { Locale.current.language.languageCode?.identifier == "en" }
+
 struct WissInterest: Identifiable, Hashable {
     let name: String
+    let en: String
     let state: String
     let web: Bool
     let src: String
+    let senders: [String]
     var id: String { name.lowercased() }
+    var label: String { wissEnglish && !en.isEmpty ? en : name }
 
     init(_ d: [String: Any]) {
         name = String((d["name"] as? String ?? "").prefix(40))
+        en = String((d["en"] as? String ?? "").prefix(40))
         state = d["state"] as? String ?? ""
         web = d["web"] as? Bool ?? false
         src = d["src"] as? String ?? "hand"
+        senders = (d["senders"] as? [String] ?? []).prefix(20).map { String($0.prefix(40)) }
     }
 }
 
 struct WissProposal: Identifiable, Hashable {
     let name: String
+    let en: String
     let src: String
     let why: String
+    let topic: String
+    let senders: [String]
+    let examples: [String]
+    let unclear: Bool
+    var id: String { name.lowercased() }
+    var label: String { wissEnglish && !en.isEmpty ? en : name }
+
+    init(_ d: [String: Any]) {
+        name = String((d["name"] as? String ?? "").prefix(40))
+        en = String((d["en"] as? String ?? "").prefix(40))
+        src = d["src"] as? String ?? "hand"
+        why = String((d["why"] as? String ?? "").prefix(120))
+        topic = String((d["topic"] as? String ?? "").prefix(40))
+        senders = (d["senders"] as? [String] ?? []).prefix(20).map { String($0.prefix(40)) }
+        examples = (d["ex"] as? [String] ?? []).prefix(3).map { String($0.prefix(80)) }
+        unclear = d["unclear"] as? Bool ?? false
+    }
+}
+
+/// 6a: an older confirmed sender and the topic the last reading found for it.
+struct WissAsk: Identifiable, Hashable {
+    let name: String
+    let topic: String
+    let label: String
     var id: String { name.lowercased() }
 
     init(_ d: [String: Any]) {
         name = String((d["name"] as? String ?? "").prefix(40))
-        src = d["src"] as? String ?? "hand"
-        why = String((d["why"] as? String ?? "").prefix(120))
+        topic = String((d["topic"] as? String ?? "").prefix(40))
+        let de = String((d["label"] as? String ?? "").prefix(40)), en = String((d["en"] as? String ?? "").prefix(40))
+        label = wissEnglish && !en.isEmpty ? en : de
     }
 }
 
@@ -69,6 +104,7 @@ struct WissTip: Hashable {
 final class WissModel: ObservableObject {
     @Published var interests: [WissInterest] = []
     @Published var proposals: [WissProposal] = []
+    @Published var asks: [WissAsk] = []
     @Published var recurring: [WissRecurring] = []
     @Published var week = ""
     @Published var month = ""
@@ -89,6 +125,7 @@ final class WissModel: ObservableObject {
             let d = try await api.object("GET", "api/profile/ichweiss", timeout: 60)
             interests = (d["interests"] as? [[String: Any]] ?? []).prefix(60).map(WissInterest.init)
             proposals = (d["proposals"] as? [[String: Any]] ?? []).prefix(8).map(WissProposal.init)
+            asks = (d["asks"] as? [[String: Any]] ?? []).prefix(8).map(WissAsk.init)
             recurring = (d["recurring"] as? [[String: Any]] ?? []).prefix(30).map(WissRecurring.init)
             week = String(((d["week"] as? [String: Any])?["sentence"] as? String ?? "").prefix(400))
             month = String(((d["month"] as? [String: Any])?["line"] as? String ?? "").prefix(200))
@@ -103,14 +140,17 @@ final class WissModel: ObservableObject {
         }
     }
 
-    func set(_ name: String, _ state: String, src: String = "hand", web: Bool? = nil) async {
+    func set(_ name: String, _ state: String, src: String = "hand", web: Bool? = nil, topic: String = "",
+             senders: [String] = [], label: String? = nil) async {
         guard let api = SparkAPI.current else { return }
-        var body: [String: Any] = ["name": name, "state": state, "src": src]
+        var body: [String: Any] = ["name": name, "state": state, "src": src, "topic": topic, "senders": senders]
         if let web { body["web"] = web }
         do {
             _ = try await api.object("POST", "api/profile/ichweiss/interest", body: body)
-            note = state == "yes" ? String(localized: "Gemerkt: „\(name)“ interessiert dich.")
-                : state == "no" ? String(localized: "Kommt nicht wieder als Vorschlag.") : String(localized: "Vergessen.")
+            let shown = label ?? name
+            note = state == "yes" || state == "adopt" ? String(localized: "Gemerkt: „\(shown)“ interessiert dich.")
+                : state == "no" ? String(localized: "Kommt nicht wieder als Vorschlag.")
+                : state == "keep" ? String(localized: "Bleibt, wie es ist.") : String(localized: "Vergessen.")
             await load()
         } catch {
             note = error.localizedDescription
@@ -160,11 +200,44 @@ struct IchWeissView: View {
                 Section("Vorschläge") {
                     ForEach(m.proposals) { x in
                         VStack(alignment: .leading, spacing: 4) {
-                            Text(verbatim: x.name).font(.headline)
+                            HStack {
+                                Text(verbatim: x.label).font(.headline)
+                                if x.unclear { Text("Thema unklar").font(.caption2).foregroundStyle(.orange) }
+                            }
                             Text("Beleg: \(x.why)").font(.caption).foregroundStyle(.secondary)
+                            if !x.unclear && !x.senders.isEmpty {
+                                Text(verbatim: x.senders.joined(separator: " · ")).font(.caption)
+                            }
+                            if !x.unclear && !x.examples.isEmpty {
+                                Text(verbatim: x.examples.map { "„\($0)“" }.joined(separator: ", ")).font(.caption).italic().foregroundStyle(.secondary)
+                            }
+                            if x.unclear { WissOwnTopic(sender: x.name, examples: x.examples, m: m) }
                             HStack(spacing: 16) {
-                                Button("Stimmt") { Task { await m.set(x.name, "yes", src: x.src) } }
-                                Button("Nicht so") { Task { await m.set(x.name, "no", src: x.src) } }
+                                Button("Stimmt") { Task { await m.set(x.name, "yes", src: x.src, topic: x.topic, senders: x.senders, label: x.label) } }
+                                Button("Nicht so") { Task { await m.set(x.name, "no", src: x.src, topic: x.topic) } }
+                                if !x.unclear && !x.senders.isEmpty {
+                                    Menu("Absender") {
+                                        ForEach(x.senders, id: \.self) { n in
+                                            Button("Nicht „\(n)“") { Task { await m.set(n, "no", src: "shop") } }
+                                        }
+                                    }
+                                }
+                            }
+                            .font(.callout).buttonStyle(.borderless)
+                        }
+                    }
+                }
+            }
+            if !m.asks.isEmpty {
+                Section("Zu welchem Thema gehört das?") {
+                    ForEach(m.asks) { x in
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("„\(x.name)“ gehört wohl zu \(x.label)")
+                            Text("Du hast den Absender früher bestätigt. Als Thema passen auch neue Absender, und der Netz-Tipp sucht nach dem Thema.")
+                                .font(.caption).foregroundStyle(.secondary)
+                            HStack(spacing: 16) {
+                                Button("Übernehmen") { Task { await m.set(x.name, "adopt", topic: x.topic, label: x.label) } }
+                                Button("So lassen") { Task { await m.set(x.name, "keep") } }
                             }
                             .font(.callout).buttonStyle(.borderless)
                         }
@@ -174,7 +247,10 @@ struct IchWeissView: View {
             Section("Interessen") {
                 ForEach(m.interests.filter { $0.state == "yes" }) { x in
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(verbatim: x.name)
+                        Text(verbatim: x.label)
+                        if !x.senders.isEmpty {
+                            Text("Absender: \(x.senders.joined(separator: ", "))").font(.caption).foregroundStyle(.secondary)
+                        }
                         if m.tips {
                             Toggle("Tipps aus dem Netz", isOn: Binding(get: { x.web }, set: { v in Task { await m.set(x.name, "yes", src: x.src, web: v) } }))
                                 .font(.caption)
@@ -255,5 +331,30 @@ struct IchWeissView: View {
         guard v.count >= 2 else { return }
         own = ""
         Task { await m.set(String(v.prefix(40)), "yes") }
+    }
+}
+
+/// „Thema unklar“ (4a): the subjects as evidence and a field for an own topic that this sender belongs to.
+struct WissOwnTopic: View {
+    let sender: String
+    let examples: [String]
+    @ObservedObject var m: WissModel
+    @State private var topic = ""
+
+    var body: some View {
+        DisclosureGroup("Betreffe zeigen und eigenes Thema") {
+            ForEach(examples, id: \.self) { e in Text(verbatim: "„\(e)“").font(.caption).italic() }
+            HStack {
+                TextField("Thema, z. B. Wandern", text: $topic)
+                Button("Als Thema merken") {
+                    let v = String(topic.trimmingCharacters(in: .whitespaces).prefix(40))
+                    guard v.count >= 2 else { return }
+                    topic = ""
+                    Task { await m.set(v, "yes", senders: [sender]) }
+                }
+                .disabled(topic.trimmingCharacters(in: .whitespaces).count < 2)
+            }
+        }
+        .font(.caption)
     }
 }

@@ -386,13 +386,24 @@ def _raw_text(msg):
 
 
 def _shop(shops, h):
-    """Counts a shop's orders, offers and newsletters from the header alone (Was ich über dich weiß, ichweiss.py)."""
+    """Counts a shop's orders, offers and newsletters from the header alone (Was ich über dich weiß, ichweiss.py), with
+    the topics its subjects and domain name (ichweiss.TOPICS), whether it is a service or machine sender, and up to
+    ichweiss.EXAMPLES subjects of its offers and newsletters (memory only, shown as evidence)."""
+    import ichweiss     # the topics are its list; it imports this module
     subj, name = h["subject"], who(h["from"])
     what = "orders" if ORDER.search(subj) else "offers" if (h["bulk"] or h["cat"]) and OFFER.search(subj) else \
         "news" if h["bulk"] or h["cat"] in ("werbung", "newsletter") else ""
     if what and name and len(shops) < 300:
         c = shops.setdefault(name, {})
         c[what] = c.get(what, 0) + 1
+        c["addr"] = email.utils.parseaddr(h["from"])[1].lower()[:200]
+        if h.get("auto"):
+            c["svc"] = True
+        for k in ichweiss.topics_in(f"{name} {subj}", domain(h["from"])):
+            c.setdefault("topics", {})[k] = c.get("topics", {}).get(k, 0) + 1
+        ex = c.setdefault("ex", [])
+        if what != "orders" and subj and len(ex) < ichweiss.EXAMPLES:
+            ex.append(_one(subj, ichweiss.EXAMPLE_MAX))
 
 
 def _account(acct, uid, today, now, shops=None):
@@ -597,7 +608,7 @@ def public(uid, items, errors, today=None):
                     "who": x.get("who", ""), "subject": x.get("subject", ""), "sent": x["sent"], "day": x.get("day", ""),
                     "amount": x.get("amount", ""), "ref": x.get("ref", ""), "folder": x.get("box", "INBOX"), "addr": x.get("addr", ""),
                     "acts": acts(uid, x), "event": event_line(x, today),
-                    "fits": ichweiss.fits(uid, x.get("who", "")) if wiss and x["kind"] in SHOP_KINDS else ""})
+                    "fits": ichweiss.fits(uid, x.get("who", ""), x.get("subject", ""), x.get("addr", "")) if wiss and x["kind"] in SHOP_KINDS else ""})
     # an offer that fits a confirmed interest comes first among the offers (stage 3, „3a 4a“)
     out.sort(key=lambda y: (not y["urgent"], not y["fits"], y["day"] or "9999", y["sent"]))
     counts = {k: sum(1 for y in out if y["kind"] == k) for k in KINDS}
@@ -898,7 +909,7 @@ async def api_act(request: Request, prof=Depends(own_profile)):
         return {"ok": True, "text": item["text"], "due": item["due"]}
     if do == "more":
         import ichweiss
-        item = ichweiss.set_state(uid, x["who"], "yes", "karte")
+        item = ichweiss.more(uid, x["who"])
         print(f"fuerdich: mehr davon {profiles.log_name(prof)}", flush=True)
         return {"ok": True, "name": item["name"]}
     print(f"fuerdich: kuendigung entworfen {profiles.log_name(prof)}", flush=True)

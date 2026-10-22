@@ -99,8 +99,8 @@ DATEIEN = [
            "For you: what you marked as done or not interesting (only checksums)", art="Einstellungen"),
     profil("vorgaenge.json", "Offen: was dich braucht, was du auf später gelegt hast und was erledigt ist (Titel und Zustand der Karten); ein Vorschlag, der auf dein Ja wartet, mit dem Text der Mail nur bis zur Antwort",
            "Open: what needs you, what you put off for later and what is done (titles and state of the cards); a proposal waiting for your yes, with the mail's text only until it is answered", art="Warteschlange"),
-    profil("interessen.json", "Was ich über dich weiß: bestätigte und abgelehnte Interessen und der letzte Netz-Tipp (keine Mail)",
-           "What I know about you: confirmed and refused interests and the last web tip (never a mail)", art="Einstellungen"),
+    profil("interessen.json", "Was ich über dich weiß: bestätigte und abgelehnte Interessen mit Thema und Absendern und der letzte Netz-Tipp (kein Betreff, keine Mail)",
+           "What I know about you: confirmed and refused interests with topic and senders and the last web tip (no subject, never a mail)", art="Einstellungen"),
     profil("mailstil.json", "Mailstil (nur die Zusammenfassung, keine Mail)", "Mail style (only the summary, never a mail)", art="Einstellungen"),
     profil("mail-regeln.json", "Mail-Regeln der Seite E-Mail und Regel-Vorschläge (Absender, Wörter, Ordner; keine Mail)",
            "Mail rules of the E-mail page and rule suggestions (senders, words, folders; never a mail)", art="Einstellungen"),  # mailregeln.py
