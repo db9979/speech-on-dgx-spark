@@ -4925,7 +4925,15 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Herausforderungen im Krisenspiel (V01.0.939, Plan Paket 6)",
-"text": "onnenen Herausforderungen; Logs spiel: neu | … | tag, spiel: bestenliste | anonym/name/aus. Die Anleitung hat den Abschnitt „Herausforderungen und Mutatoren“. Als Nächstes: Paket 7 (iPhone nativ), dann die übrigen Pakete des Plans."
+"text": "onnenen Herausforderungen; Logs spiel: neu | … | tag, spiel: bestenliste | anonym/name/aus. Die Anleitung hat den Abschnitt „Herausforderungen und Mutatoren“. Als Nächstes: Paket 7 (iPhone nativ)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Krisenspiel in der iPhone-App (V01.0.940, Plan Paket 7)",
+"text": "Krisenspiel in der iPhone-App (V01.0.940, Plan Paket 7): In der App unter *Meine Sachen → Krisenspiel* (KrisenspielView.swift, nur mit der Freigabe des Spiels, iphone.THINGS[\"krisenspiel\"]: das Spiel lesen, ein Zug, eine getippte Zeile, ein neues Spiel) stehen die Werte oben als Balken, die Systeme mit Ampel, die Züge als Knöpfe (mit Tipp im Lernmodus), die Konsole mit Tastaturleiste (help, hosts, ssh, sudo, |, -h), die Chronik und am Ende Note, Gründe und Nachbesprechung mit Quelle. Ohne laufendes Spiel startet die App die Tages- oder Wochen-Herausforderung oder ein Überraschungs-Szenario. Jeder Wert und jede Regel kommt vom Spark, die App zeigt nur Texte; Anleitung, Inspector, Bestenliste und gemeinsam spielen bleiben auf der Seite Krisenspiel im Panel („Im Panel öffnen“). Als Nächstes: Paket 9 (Kettenkrisen), dann die übrigen Pakete des Plans."
 },
 {
 "lang": "de",
@@ -16717,7 +16725,15 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Challenges in the crisis game (V01.0.939, plan package 6)",
-"text": "e/aus. The guide has the section \"Challenges and mutators\". Next: package 7 (iPhone native), then the other packages of the plan."
+"text": "e/aus. The guide has the section \"Challenges and mutators\". Next: package 7 (iPhone native)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Crisis game in the iPhone app (V01.0.940, plan package 7)",
+"text": "Crisis game in the iPhone app (V01.0.940, plan package 7): in the app under *My things → Crisis game* (KrisenspielView.swift, only with the game's release, iphone.THINGS[\"krisenspiel\"]: read the game, a move, a typed line, a new game) are the values on top as bars, the systems with traffic lights, the moves as buttons (with the hint in learning mode), the console with a key bar (help, hosts, ssh, sudo, |, -h), the chronicle and at the end grade, reasons and debrief with source. Without a running game the app starts the daily or weekly challenge or a surprise scenario. Every value and rule comes from the Spark, the app only shows texts; guide, inspector, board and playing together stay on the page Crisis game in the panel (\"Open in the panel\"). Next: package 9 (chain crises), then the other packages of the plan."
 },
 {
 "lang": "en",

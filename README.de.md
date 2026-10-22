@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.940** IT-Krisenspiel (Paket 7): eigene Seite in der iPhone-App (Meine Sachen → Krisenspiel) mit Zügen, Konsole und Nachbesprechung
 - **V01.0.939** IT-Krisenspiel (Paket 6): Tages- und Wochen-Herausforderung mit Bestenliste (ohne Namen, mit Namen oder gar nicht) und Mutatoren mit Bonuspunkten
 - **V01.0.938** IT-Krisenspiel (Paket 4): sieben neue Szenarien (DDoS, Datenleck mit DSGVO-Frist, Innentäter, Cloud-Ausfall, vergiftetes Update, Chef-Betrug, gelöschte Datenbank) mit eigener Konsole
 - **V01.0.937** IT-Krisenspiel (Paket 5): Nachbesprechung mit Quellen (NIST, BSI, DSGVO), Lernmodus mit Tipp, Geist des besten Laufs, Statistik je Szenario
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.933** IT-Krisenspiel (Paket 2): Konsole unter der Chronik, getippte Züge wie Knöpfe, Modus „Nur Konsole“ (+5), 🎲 Überraschungs-Szenario, Aufgeben ohne Erfolge; rund 150 Linux-Befehle auf simulierten Rechnern mit sudo, Dateien, Benutzern, Diensten und Firewall, Hilfe mit -h und „Meintest du …?“; nichts läuft wirklich
 - **V01.0.932** IT-Krisenspiel (Paket 1): eigene Seite „Krisenspiel“ mit fünf Szenarien (Ransomware, SAN, Strom, BGP, BSI), Krisen-Dashboard, Inspector, Noten und Erfolgen; das Panel entscheidet mit festen Regeln und Seed, der Erzähler (eigener Schalter) erzählt nur nach; beide Schalter aus
 - **V01.0.931** Live-Übersicht: ein Anruf ist eine Karte „Telefon“, die Fragen darin stehen auf ihr („db · Anruf · 2 Fragen“) statt als eigene Telefon-Karten
-- **V01.0.930** Rechnen genauer: Zahlwörter („sechs mal sechs“), Rechnung in der Frage macht das Werkzeug zur Pflicht, „@Spark prüf das“ prüft Rechnungen auf reMarkable-Seiten („bitte prüfen“, Seite bleibt), Belege zusammenrechnen
 
 
 

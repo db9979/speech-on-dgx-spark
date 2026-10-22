@@ -17000,6 +17000,126 @@
           }
         }
       }
+    },
+    "Noch kein Spiel. Starte eine Herausforderung oder ein Überraschungs-Szenario; alles Weitere gibt es auf der Seite Krisenspiel im Panel.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No game yet. Start a challenge or a surprise scenario; everything else is on the page Crisis game in the panel."
+          }
+        }
+      }
+    },
+    "Schaden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Damage"
+          }
+        }
+      }
+    },
+    "Nachbesprechung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Debrief"
+          }
+        }
+      }
+    },
+    "Züge": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moves"
+          }
+        }
+      }
+    },
+    "Konsole": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Console"
+          }
+        }
+      }
+    },
+    "Befehl": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Command"
+          }
+        }
+      }
+    },
+    "Systeme": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Systems"
+          }
+        }
+      }
+    },
+    "Chronik": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chronicle"
+          }
+        }
+      }
+    },
+    "Herausforderungen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Challenges"
+          }
+        }
+      }
+    },
+    "Überraschungs-Szenario starten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start a surprise scenario"
+          }
+        }
+      }
+    },
+    "Im Panel öffnen (Anleitung, Inspector, gemeinsam spielen)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open in the panel (guide, inspector, playing together)"
+          }
+        }
+      }
+    },
+    "Krisenspiel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crisis game"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

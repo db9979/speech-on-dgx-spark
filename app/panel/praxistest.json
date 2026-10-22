@@ -2768,6 +2768,13 @@
 "titel": "Krisenspiel: Herausforderungen und Mutatoren",
 "text": "A: Update, Krisenspiel → Neues Spiel: oben zwei Karten „Tages-Herausforderung“ und „Wochen-Herausforderung“ mit Szenario, Mutatoren und Seed. B: „Annehmen“: das Spiel startet, im Kopf steht „Herausforderung“ und der Mutator. C: Zu Ende spielen oder aufgeben: die Karte zeigt „Dein erster Versuch“, die Liste dich als „Du“. D: Ein zweites Profil nimmt dieselbe Herausforderung an: dasselbe Szenario und derselbe Seed; in der Liste steht das erste Profil als „Ein Profil“. E: Beim ersten Profil „In den Bestenlisten: mit meinem Namen“: das zweite sieht den Namen; „gar nicht“: es verschwindet dort. F: Freies Spiel mit Häkchen „Sparkurs“: Budget halb, beim Sieg „Mutatoren: +5 Punkte“. G: Anleitung → Herausforderungen und Mutatoren. H: Live „N Herausforderungen“; Logs „spiel: bestenliste | name“ ohne Namen.",
 "thread": "IT-Krisenspiel für einzelne Nutzer"
+},
+{
+"id": "P420",
+"v": 940,
+"titel": "Krisenspiel in der iPhone-App",
+"text": "A: Pi und TestFlight-App aktualisieren, Krisenspiel freigegeben. B: App → Meine Sachen: Zeile „Krisenspiel“. C: Ohne laufendes Spiel: „Herausforderungen“ mit Tages- und Wochen-Herausforderung und „Überraschungs-Szenario starten“. D: Ein Spiel starten: Balken für Zeit, Stress, Vertrauen, Moral, Budget, darunter Züge, Konsole, Systeme, Chronik. E: Einen Zug tippen: Werte und Chronik ändern sich wie im Panel. F: In der Konsole „hosts“ eingeben: die Ausgabe erscheint, die Tastaturleiste hat help, hosts, ssh, sudo, |, -h. G: Spiel im Panel weiterspielen: dieselbe Lage. H: Ende: Note, Gründe, Nachbesprechung mit Quelle. I: Admin sperrt das Spiel für das Profil: die Zeile verschwindet.",
+"thread": "IT-Krisenspiel für einzelne Nutzer"
 }
 ]
 }
