@@ -18,6 +18,8 @@ from tests.test_ui_browser import browser_ok
 
 helpers.start()
 import features  # noqa: E402
+import krisenkonsole as C  # noqa: E402
+import krisenlinux as L  # noqa: E402
 import krisenspiel as K  # noqa: E402
 import live  # noqa: E402
 import panel  # noqa: E402
@@ -93,6 +95,24 @@ def seeds_for_variants(sid):
     return sorted(out.values())
 
 
+def typed(sid, aktion):
+    """(host or None, a line) that the console turns into this move."""
+    for e in C.world(sid)["befehle"] + C._DATA["allgemein"]:
+        z = e.get("zug")
+        if z == aktion or isinstance(z, list) and aktion in z:
+            return e.get("host"), " ".join((["sudo"] if e["befehl"] in L.ROOT else []) + [e["befehl"]] + e.get("args", []))
+    raise AssertionError((sid, aktion))
+
+
+def con(st, line):
+    """One typed line, quiet: the console's result."""
+    return quiet(K.konsole_zeile, st, line)[0][1]
+
+
+def path_of(won):
+    return [x["steps"][0]["daten"]["aktion"] for x in won["trace"][1:]]
+
+
 class Engine(unittest.TestCase):
     def test_the_scenarios_are_consistent(self):
         self.assertEqual(K.check_data(), [])
@@ -127,6 +147,7 @@ class Engine(unittest.TestCase):
             K.move(st, "gibtsnicht")
         K.finish(st, "aufgegeben")
         self.assertEqual(st["ende"]["note"], "F")
+        self.assertEqual(K.erfolge_neu(st, {}), [])        # given up is not played to the end: not even „Feuertaufe“
         with self.assertRaises(ValueError):
             K.move(st, "warten")
 
@@ -150,6 +171,187 @@ class Engine(unittest.TestCase):
         self.assertEqual(d["stats"]["gewonnen"], 1)
         self.assertEqual(d["verlauf"][0]["note"], won["ende"]["note"])
         self.assertEqual(K.erfolge_neu(won, d), [])
+
+    def test_console_lines_never_run(self):
+        st = K.new_game("ransomware", "normal", 3, now=T0)
+        bad = ["x; rm -rf /", "ls && reboot", "cat $(id)", "echo ${HOME}", "echo `id`", "a < b", "ls > a > b",
+               "ls\nreboot", "ls & whoami", "%PATH%", "x" * 201, "cat \"unclosed", "ls | sh", "ls | bash -c id",
+               "Get-WinEvent | Invoke-Expression", "ls | xargs rm"]
+        def boom(*a, **kw):
+            raise AssertionError("the console started something")
+        with mock.patch("subprocess.Popen", boom), mock.patch("os.system", boom), mock.patch("os.popen", boom), \
+                mock.patch("socket.socket", boom), mock.patch("builtins.exec", boom), mock.patch("builtins.eval", boom):
+            for z in bad:
+                r = con(st, z)
+                self.assertIn(r["art"], ("abgelehnt",), z)
+            for z in ("help", "hosts", "ssh dc01", "dir", "type C:/Windows/NTDS/notes.txt | grep -i SVC | head -n 1",
+                      "ping fs01", "nslookup ex01", "Get-Service", "foo", "Get-WinEvent -LogName Security", "exit",
+                      "sudo bash", "python -c 1", "curl http://x", "rm -rf /", "ping 1.2.3.4 > /etc/passwd"):
+                quiet(K.konsole_zeile, st, z)
+        self.assertEqual([x["s"] for x in st["konsole"]["zeilen"] if x["k"] == "err"][-4:],
+                         ["foo: command not found", "sudo: a root shell is not simulated here; put sudo in front of each command",
+                          "python: command not found", "bash: /etc/passwd: Permission denied"])
+        self.assertIn("rm: refusing to remove '/' (the game keeps its system folders)", [x["s"] for x in st["konsole"]["zeilen"]])
+        self.assertNotIn("/etc/passwd", st["konsole"].get("sim", {}).get("jump01", {}).get("neu", {}))
+        self.assertIn("svc_backup: backup service account, member of Domain Admins (!)", [x["s"] for x in st["konsole"]["zeilen"]])
+        self.assertIn("konto_gefunden", st["flags"])   # the typed Get-WinEvent was the move „logs“
+
+    def test_typing_is_the_same_move_as_the_button(self):
+        a, b = K.new_game("san", "normal", 11, now=T0), K.new_game("san", "normal", 11, now=T0, modus="konsole")
+        quiet(K.move, a, "diagnose")
+        quiet(K.konsole_zeile, b, "ssh san01")
+        quiet(K.konsole_zeile, b, "controller show")
+        for k in ("m", "assets", "flags", "zug"):
+            self.assertEqual(a[k], b[k], k)
+        self.assertEqual((a["knoepfe"], b["knoepfe"]), (1, 0))
+        self.assertEqual(b["trace"][-1]["steps"][0]["daten"]["weg"], "konsole")
+
+    def test_every_scenario_can_be_won_by_typing_only(self):
+        for sid in K.SZENARIEN:
+            seed = seeds_for_variants(sid)[0]
+            moves = path_of(solve(K.new_game(sid, "normal", seed, now=T0)))
+            st = K.new_game(sid, "normal", seed, now=T0, modus="konsole")
+            for aktion in moves:
+                host, line = typed(sid, aktion)
+                if host:
+                    quiet(K.konsole_zeile, st, "ssh " + host)
+                r = con(st, line)
+                self.assertEqual((r["art"], r["zug"]), ("zug", aktion), (sid, line))
+            self.assertEqual(st["ende"]["art"], "gewonnen", sid)
+            self.assertEqual(st["knoepfe"], 0)
+            self.assertIn(["Nur Konsole: +5 Punkte.", "Console only: +5 points."], st["ende"]["gruende"])
+            d = {"spiel": st, "verlauf": [], "erfolge": {}, "stats": {}}
+            quiet(K._book, d, T0)
+            self.assertIn("ohne_knopf", d["erfolge"])
+
+    def test_a_wrong_target_costs_and_reading_takes_time(self):
+        st = K.new_game("ransomware", "normal", 3, now=T0)
+        quiet(K.konsole_zeile, st, "ssh hv01")
+        before = st["m"]["kosten"]
+        r = con(st, "Stop-VM erp01")
+        self.assertEqual(r["art"], "falsch")
+        self.assertEqual(st["assets"]["erp"]["status"], "Offline")
+        self.assertGreater(st["m"]["kosten"], before + 15000)
+        self.assertEqual(st["chronik"][-1]["text"][0][:12], "Falsche VM: ")
+        turn, left = st["zug"], st["m"]["zeit"]
+        for i in range(C.LESEN_MAX - 1):
+            quiet(K.konsole_zeile, st, "ping fs01")
+        self.assertEqual((st["zug"], st["konsole"]["min"]), (turn, C.LESEN_MAX - 1))
+        quiet(K.konsole_zeile, st, "hosts")          # free
+        quiet(K.konsole_zeile, st, "ping fs01")      # the tenth minute: a move of its own
+        self.assertEqual((st["zug"], st["konsole"]["min"], st["m"]["zeit"]), (turn + 1, 0, left - C.LESEN_MAX))
+        self.assertEqual(st["trace"][-1]["steps"][0]["daten"]["aktion"], "konsole_lesen")
+
+
+class Linux(unittest.TestCase):
+    """The Linux commands of the console (krisenlinux): simulated on the game's machines, never run."""
+
+    def say(self, st, line):
+        r = con(st, line)
+        return r, [t for _, t in r["out"]]
+
+    def test_root_where_linux_needs_it(self):
+        st = K.new_game("ransomware", "normal", 3, now=T0)
+        self.assertEqual(self.say(st, "whoami")[1], ["admin"])
+        self.assertEqual(self.say(st, "sudo whoami")[1], ["root"])
+        self.assertIn("Permission denied", self.say(st, "useradd bob")[1][0])
+        self.assertEqual(self.say(st, "echo x > /etc/motd")[1], ["bash: /etc/motd: Permission denied"])
+        self.assertEqual(self.say(st, "sudo useradd -m bob")[1], [])
+        self.assertEqual(self.say(st, "grep ^bob /etc/passwd")[1], ["bob:x:1001:1001::/home/bob:/bin/bash"])
+        self.assertIn("Permission denied", self.say(st, "iptables -L")[1][0])
+        self.assertEqual(self.say(st, "sudo iptables -A INPUT -s 10.0.50.77 -j DROP")[1], [])
+        self.assertIn("-s 10.0.50.77 -j DROP", " ".join(self.say(st, "sudo iptables -L")[1]))
+
+    def test_a_stopped_service_hits_the_game_and_comes_back(self):
+        st = K.new_game("ransomware", "normal", 1, now=T0)
+        self.say(st, "ssh erp01")
+        r, out = self.say(st, "systemctl stop postgresql")
+        self.assertEqual((r["art"], st["assets"]["erp"]["status"]), ("lesen", "Online"))   # no root, no effect
+        turn, cost = st["zug"], st["m"]["kosten"]
+        r, _ = self.say(st, "sudo systemctl stop postgresql")
+        self.assertEqual((r["art"], st["zug"], st["assets"]["erp"]["status"]), ("wirkung", turn + 1, "Degraded"))
+        self.assertGreaterEqual(st["m"]["kosten"], cost + 2000)
+        self.assertEqual(st["trace"][-1]["steps"][0]["daten"]["aktion"], "konsole_dienst")
+        self.assertIn("inactive", " ".join(self.say(st, "systemctl status postgresql")[1]))
+        r, _ = self.say(st, "sudo systemctl start postgresql")
+        self.assertEqual((r["art"], st["assets"]["erp"]["status"]), ("wirkung", "Online"))
+        r, _ = self.say(st, "sudo reboot")
+        self.assertEqual((r["art"], st["trace"][-1]["steps"][0]["daten"]["aktion"]), ("wirkung", "konsole_neustart"))
+
+    def test_files_stay_and_travel(self):
+        st = K.new_game("bsi", "normal", 2, now=T0)
+        self.say(st, "echo eins > notiz.txt")
+        self.say(st, "echo zwei >> notiz.txt")
+        self.say(st, "mkdir -p fall/2026")
+        self.say(st, "cp notiz.txt fall/2026/")
+        self.assertEqual(self.say(st, "cat fall/2026/notiz.txt")[1], ["eins", "zwei"])
+        self.assertEqual(self.say(st, "cat notiz.txt | grep -c e")[1], ["2"])
+        self.say(st, "tar -czf fall.tgz fall")
+        self.say(st, "rm -r fall")
+        self.assertIn("No such file", self.say(st, "ls fall")[1][0])
+        self.say(st, "tar -xzf fall.tgz")
+        self.assertEqual(self.say(st, "cat fall/2026/notiz.txt")[1], ["eins", "zwei"])
+        self.assertEqual(self.say(st, "scp notiz.txt siem01:/tmp/")[1][-1][:9], "notiz.txt")
+        self.say(st, "ssh siem01")
+        self.assertEqual(self.say(st, "cat /tmp/notiz.txt")[1], ["eins", "zwei"])
+        self.say(st, "exit")
+        self.assertEqual(self.say(st, "hostname")[1], ["jump01"])
+        for i in range(L.SIM_MAX + 5):                # the game's disk is bounded
+            r, out = self.say(st, f"touch f{i}")
+        self.assertIn(L.VOLL[7:], out[0])
+        self.assertLess(len(json.dumps(st)), 4 * L.SIM_BYTES)
+
+    def test_every_command_has_its_help(self):
+        st = K.new_game("ransomware", "normal", 3, now=T0)
+        for host in ("jump01", "dc01"):
+            st["konsole"]["host"] = host
+            for name in sorted(set(L.LINUX) | set(C.BEFEHLE)):
+                spec = C._spec(name)
+                if not C._has(C._host("ransomware", host), spec[0]):
+                    continue
+                for h in ("--help", "/?") + (() if name in C.HFLAG else ("-h",)):
+                    r, out = self.say(st, f"{name} {h}")
+                    self.assertTrue(out and out[0].startswith(name + " - "), (host, name, h, out))
+                    self.assertEqual(r["art"], "frei")
+        st["konsole"]["host"] = "jump01"
+        self.assertNotIn("df - ", self.say(st, "df -h")[1][0])
+        self.assertEqual(self.say(st, "man tar")[1][0], "tar - Archiv packen oder auspacken")
+        shown = " ".join(self.say(st, "help")[1])
+        for name, spec in L.LINUX.items():
+            self.assertIn(" " + name + " ", shown + " ", name)
+        self.assertEqual(self.say(st, "pign fs01")[1], ["pign: command not found", "Meintest du: ping?"])
+        self.assertEqual(con(st, "pign fs01")["art"], "unbekannt")
+
+    def test_a_pattern_is_never_a_regular_expression(self):
+        st = K.new_game("ransomware", "normal", 3, now=T0)
+        self.assertEqual(self.say(st, "grep '.*' /etc/hostname")[1], [])
+        self.assertEqual(self.say(st, "grep 'jump0[1]' /etc/hostname")[1], [])
+        self.assertEqual(self.say(st, "grep ^jump /etc/hostname")[1], ["jump01"])
+        self.assertEqual(self.say(st, "grep 01$ /etc/hostname")[1], ["jump01"])
+        self.assertEqual(self.say(st, "find / -name 'host*'")[1], ["/etc/hostname", "/etc/hosts"])
+        self.assertFalse({"re", "fnmatch", "glob"} & {getattr(v, "__name__", "") for v in vars(L).values()
+                                                     if type(v) is type(json)})   # krisenlinux imports no pattern module
+        with mock.patch("re.compile", side_effect=AssertionError("a pattern became a regular expression")), \
+                mock.patch("re.search", side_effect=AssertionError), mock.patch("re.match", side_effect=AssertionError):
+            for line in ("grep -r 'a(b|c)*' /etc", "sed 's/(a+)+$/x/g' /etc/hosts", "awk '{print $1}' /etc/hosts | sort -u",
+                         "find / -name '*[a-z]*'"):
+                self.say(st, line)
+
+    def test_no_command_breaks_on_any_machine(self):
+        for sid in K.SZENARIEN:
+            st = K.new_game(sid, "normal", 3, now=T0)
+            for h in C.world(sid)["hosts"]:
+                for name in sorted(set(L.LINUX) | set(C.BEFEHLE)):
+                    if name in ("ssh", "exit"):
+                        continue
+                    for a in ("", "-l /etc", "x y", "sudo"):
+                        line = (f"sudo {name} x" if a == "sudo" else f"{name} {a}").strip()
+                        if st["ende"]:
+                            st = K.new_game(sid, "normal", 3, now=T0)
+                        st["konsole"]["host"] = h["id"]
+                        r = con(st, line)
+                        self.assertLessEqual(len(r["out"]), C.AUSGABE_MAX + 1, line)
+            json.dumps(st)
 
 
 class Api(unittest.TestCase):
@@ -209,6 +411,7 @@ class Api(unittest.TestCase):
             d = c.delete("/api/profile/krisenspiel").json()
             self.assertEqual(d["spiel"]["ende"]["note"], "F")
             self.assertEqual(d["verlauf"][0]["ende"], "aufgegeben")
+            self.assertEqual([x["id"] for x in d["erfolge"] if x["t"]], [])
             self.assertEqual(c.delete("/api/profile/krisenspiel").status_code, 404)
             self.assertEqual(c.delete("/api/profile/krisenspiel/daten").json(), {"ok": True})
             d = c.get("/api/profile/krisenspiel").json()
@@ -222,6 +425,36 @@ class Api(unittest.TestCase):
                      "spiel: zug abgelehnt | eingabe", "spiel: zug | ok", "spiel: zug abgelehnt | alter zug",
                      "spiel: ende | aufgegeben | note F", "spiel: aufgeben abgelehnt | kein spiel", "spiel: daten geloescht"):
             self.assertIn(want, log)
+
+
+    def test_the_console_through_the_api(self):
+        c, uid = self.fresh("Kskons")
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            g = c.post("/api/profile/krisenspiel/neu", json={"szenario": "bsi", "seed": 2, "modus": "konsole"}).json()["spiel"]
+            self.assertEqual((g["modus"], g["aktionen"], g["konsole"]["host"]), ("konsole", [], "jump01"))
+            self.assertEqual(c.post("/api/profile/krisenspiel/neu", json={"szenario": "bsi", "modus": "x"}).status_code, 400)
+            picked = {c.post("/api/profile/krisenspiel/neu", json={"szenario": "zufall", "seed": 77}).json()["spiel"]["szenario"]
+                      for _ in range(2)}
+            self.assertEqual(len(picked), 1)                     # a surprise with a seed is repeatable
+            self.assertLessEqual(picked, set(K.SZENARIEN))
+            g = c.post("/api/profile/krisenspiel/neu", json={"szenario": "bsi", "seed": 2, "modus": "konsole"}).json()["spiel"]
+            self.assertEqual(c.post("/api/profile/krisenspiel/zug", json={"aktion": "lesen", "zug": 0}).status_code, 422)
+            for bad in ({"zeile": 5, "zug": 0}, {"zeile": "ls", "zug": "0"}, {"zeile": "x" * 401, "zug": 0}, {"zeile": "ls", "zug": True}):
+                self.assertEqual(c.post("/api/profile/krisenspiel/konsole", json=bad).status_code, 400, bad)
+            g = c.post("/api/profile/krisenspiel/konsole", json={"zeile": "ssh siem01", "zug": 0}).json()["spiel"]
+            g = c.post("/api/profile/krisenspiel/konsole", json={"zeile": "cat /srv/advisories/bsi-warnung.txt", "zug": 0}).json()["spiel"]
+            self.assertEqual(g["zug"], 1)
+            self.assertIn("BSI-Warnung (Stufe rot): kritische Schwachstelle im VPN-Gateway, aktiv ausgenutzt.", [x["s"] for x in g["konsole"]["zeilen"]])
+            self.assertEqual(c.post("/api/profile/krisenspiel/konsole", json={"zeile": "ls", "zug": 0}).status_code, 409)
+            g = c.post("/api/profile/krisenspiel/konsole", json={"zeile": "geheim; rm -rf /", "zug": 1}).json()["spiel"]
+            self.assertEqual(g["konsole"]["zeilen"][-1]["k"], "err")
+        log = out.getvalue()
+        for want in ("spiel: neu | bsi | normal | konsole", "spiel: zug abgelehnt | nur konsole", "spiel: konsole abgelehnt | eingabe",
+                     "spiel: konsole | frei", "spiel: konsole | zug", "spiel: konsole abgelehnt | alter zug", "spiel: konsole | abgelehnt"):
+            self.assertIn(want, log)
+        for word in ("geheim", "siem01", "advisories", "Kskons"):
+            self.assertNotIn(word, log)
 
     def test_the_narrator_changes_no_value(self):
         c, uid = self.fresh("Kserz")
@@ -290,7 +523,8 @@ class Page(unittest.TestCase):
                         quiet(K._own_clear, uid)
                         await pg.evaluate("KS_ON=true;KS.data=null;icTabSet('spiel','neu');goSec('spiel')")
                         await b.until(pg, "!!document.querySelector('#ksview [data-ksnew]')")
-                        self.assertEqual(await pg.evaluate("document.querySelectorAll('#ksview input[name=kssz]').length"), 5)
+                        self.assertEqual(await pg.evaluate("[...document.querySelectorAll('#ksview input[name=kssz]')].map(x => x.value).join()"),
+                         ",".join(x["id"] for x in K._DATA["szenarien"]) + ",zufall")          # five and the surprise
                         await pg.check("#ksview input[name=kssz][value=bgp]")
                         await pg.fill("#ksview .ksseed", "4711")
                         await pg.click("#ksview [data-ksnew]")
@@ -299,8 +533,21 @@ class Page(unittest.TestCase):
                                          len(K.SZENARIEN["bgp"]["assets"]))
                         await pg.evaluate("document.querySelector('#ksview [data-ksmove]:not([disabled])').click()")
                         await b.until(pg, "!KS.busy&&KS.data.spiel.zug===1")
+                        # the console: open on a phone too once tapped; typed lines answer, a typed move counts
+                        await pg.evaluate("document.querySelector('#ksview .ks-condet').open=true")
+                        await pg.fill("#ksview .ks-in", "hosts")
+                        await pg.press("#ksview .ks-in", "Enter")
+                        await b.until(pg, "!KS.busy&&[...document.querySelectorAll('#ksview .ks-con .kc-out')].some(x=>x.textContent.startsWith('edge1'))")
+                        await pg.fill("#ksview .ks-in", "crt")
+                        await pg.press("#ksview .ks-in", "Tab")
+                        self.assertEqual(await pg.input_value("#ksview .ks-in"), "crtsh ")
+                        await pg.press("#ksview .ks-in", "Enter")
+                        await b.until(pg, "!KS.busy&&KS.data.spiel.zug===2")
+                        self.assertEqual(await pg.evaluate("document.activeElement===document.querySelector('#ksview .ks-in')"), True)
+                        await pg.press("#ksview .ks-in", "ArrowUp")
+                        self.assertEqual(await pg.input_value("#ksview .ks-in"), "crtsh")
                         await pg.evaluate("icTabSet('spiel','inspector');ksOpen()")
-                        await b.until(pg, "document.querySelectorAll('#ksview .ks-tr').length===2")
+                        await b.until(pg, "document.querySelectorAll('#ksview .ks-tr').length===3")
                         over = await pg.evaluate("document.documentElement.scrollWidth-document.documentElement.clientWidth")
                         self.assertLessEqual(over, 1, f"{w}: the page scrolls sideways")
                         self.assertEqual(errors, [])

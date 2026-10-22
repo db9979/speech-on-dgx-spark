@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.933** IT crisis game (package 2): console under the chronicle, typed moves like buttons, mode "console only" (+5), 🎲 surprise scenario, no achievements when given up; about 150 Linux commands on simulated machines with sudo, files, users, services and firewall, help with -h and "Did you mean …?"; nothing really runs
 - **V01.0.932** IT crisis game (package 1): own page "Crisis game" with five scenarios (ransomware, SAN, power, BGP, BSI), crisis dashboard, inspector, grades and achievements; the panel decides by fixed rules and seed, the narrator (own switch) only retells; both switches off
 - **V01.0.931** Live overview: one call is one "Telefon" card, its questions stand on it ("db · Anruf · 2 questions") instead of as phone cards of their own
 - **V01.0.930** Exact calculations, more: number words ("six times six"), a calculation in the question makes the tool required, "@Spark prüf das" checks calculations on reMarkable pages ("please check", page unchanged), adding up receipts
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.926** Making a song: description up to 2000 instead of 300 characters, e.g. a firm's text as the template; "Write lyrics" adds a short music description for the music model (reads at most 600), also in the iPhone app
 - **V01.0.925** Exact calculations: the panel computes, not the language model (own parser instead of eval, Decimal, percent, brackets, roots, hard limits), date arithmetic (days until, weekday, date in n days), the answer check recomputes sentences like "17 times 23 is 381" and corrects them; Answer simple things at once uses the same calculator
 - **V01.0.924** E-mail and Calendar: the tab "Settings" no longer stays empty after several tab changes; this holds for every page with tabs
-- **V01.0.923** What I know about you: for "Topic unclear" pick a topic there is (confirmed interests as chips, a list with the fixed topics, suggestions while typing) instead of only typing one; iPhone
 
 
 

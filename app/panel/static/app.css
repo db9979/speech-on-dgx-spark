@@ -2272,3 +2272,12 @@ textarea{resize:none}textarea[data-fest]{resize:vertical}textarea.feldplatz{padd
 .ks-ach{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px}
 .ks-a{border:1px dashed var(--line);border-radius:10px;padding:8px;display:flex;flex-direction:column;gap:2px;opacity:.6}
 .ks-a.on{border-style:solid;border-color:var(--ok);opacity:1}
+/* the crisis game's console (Paket 2): a terminal look in both themes; only the output scrolls, like a real one */
+.ks-condet{margin-top:14px;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.ks-condet>summary{padding:8px 12px;cursor:pointer;font-weight:600}
+.ks-con{background:#0d1117;color:#c9d1d9;font:12.5px/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;padding:10px 12px;max-height:340px;overflow:auto;white-space:pre-wrap;word-break:break-word}
+.ks-con .kc-p,.ks-cline .kc-p{color:#7ee787}.ks-con .kc-err{color:#ff7b72}.ks-con .kc-zug{color:#79c0ff}.ks-con .kc-in{color:#f0f6fc}
+.ks-cline{display:flex;gap:8px;align-items:center;background:#0d1117;padding:6px 12px 10px;font:12.5px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.ks-cline .ks-in{flex:1;background:transparent;border:0;color:#f0f6fc;font:inherit;padding:2px 0;box-shadow:none;outline:none}
+.ks-only{border:1px dashed var(--line);border-radius:12px;padding:12px;margin-top:12px}
+.ks-old>summary{cursor:pointer;color:var(--mut);font-size:13px;margin:4px 0}

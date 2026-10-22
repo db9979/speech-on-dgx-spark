@@ -4789,7 +4789,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "krisenspiel_szenarien.json, geprüft von check_data): jeder Zug hat feste Folgen, ausgefallene Systeme kosten Schaden pro Minute, Stress, Moral und Vertrauen ändern sich nach festen Formeln, Zufall kommt nur aus dem Seed (gleicher Seed und gleiche Züge ergeben dasselbe Spiel, „Nochmal mit diesem Seed“ zum Vergleichen). Das Spiel endet gewonnen, wenn die Zeit abläuft, das Vertrauen oder die Moral bei 0 ist, nach 80 Zügen oder beim Aufgeben (zählt als F); die Note A bis F und zwölf Erfolge (etwa „Zero Data Loss“, „Ransomware unter 30 Minuten“, „Allrounder“) rechnet fester Code aus. Der *Inspector* zeigt jeden Zug Schritt für Schritt: Eingabe, feste Regel mit allen Werten, Würfe aus dem Seed, Erzähler. Krisenspiel mit Erzähler (chat.krisenspiel_erzaehler, eigener Schalter unter dem Spiel, aus): das Sprachmodell erzählt einen Zug in zwei bis vier Sätzen nach; es bekommt nur die festen Texte des Zugs, seine Antwort muss ein Absatz von 30 bis 700 Zeichen ohne Links, Auszeichnung oder Code sein und darf nur Zahlen aus den Fakten nennen, sonst bleibt der feste Text. Es ändert nie einen Wert, läuft hinter der Sprache, wartet höchstens 8 Sekunden und während einer Modellpause gar nicht. Einge"
+"text": "krisenspiel_szenarien.json, geprüft von check_data): jeder Zug hat feste Folgen, ausgefallene Systeme kosten Schaden pro Minute, Stress, Moral und Vertrauen ändern sich nach festen Formeln, Zufall kommt nur aus dem Seed (gleicher Seed und gleiche Züge ergeben dasselbe Spiel, „Nochmal mit diesem Seed“ zum Vergleichen). Das Spiel endet gewonnen, wenn die Zeit abläuft, das Vertrauen oder die Moral bei 0 ist, nach 80 Zügen oder beim Aufgeben (zählt als F); die Note A bis F und zwölf Erfolge (etwa „Zero Data Loss“, „Ransomware unter 30 Minuten“, „Allrounder“) rechnet fester Code aus. Der *Inspector* zeigt jeden Zug Schritt für Schritt: Eingabe, feste Regel mit allen Werten, Würfe aus dem Seed, Erzähler. Krisenspiel mit Erzähler (chat.krisenspiel_erzaehler, eigener Schalter unter dem Spiel, aus): das Sprachmodell erzählt einen Zug in zwei bis vier Sätzen nach; es bekommt nur die festen Texte des Zugs, seine Antwort muss ein Absatz von 30 bis 700 Zeichen ohne Links, Auszeichnung oder Code sein und darf nur Zahlen aus den Fakten nennen, sonst bleibt der feste Text. Es ändert nie einen Wert, läuft hinter der Sprache, wartet höchstens 8 Sekunden und während einer Modellpause gar nicht. Seit "
 },
 {
 "lang": "de",
@@ -4797,7 +4797,31 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "tippte Befehle gibt es in Paket 1 nicht; die Konsole kommt in Paket 2 und wird nur simuliert. Gespeichert in users/<profil>/krisenspiel.json (ein laufendes Spiel, die letzten 20 Ergebnisse, Erfolge); *Meine Spieldaten löschen* geht auch, wenn der Admin das Spiel für das Profil gesperrt hat. Zustand → Live (Ziel „Krisenspiel“) zeigt nur laufende Spiele, Züge, neue Spiele, erzählt/verworfen und Profile; Logs (Bereich „Krisenspiel“) nur feste Wörter und Zahlen (spiel: neu | ransomware | normal | Profil …, spiel: zug | ok | 3 ms, spiel: erzaehler | zahl | 812 ms, spiel: ende | gewonnen | note B | 9 zuege | 2 erfolge). API: GET /api/profile/krisenspiel, POST /api/profile/krisenspiel/neu ({szenario, stufe, seed?}), POST /api/profile/krisenspiel/zug ({aktion, zug}; ein alter Zug gibt 409), DELETE /api/profile/krisenspiel (aufgeben), DELETE /api/profile/krisenspiel/daten. Als Nächstes: Paket 2 (simulierte Konsole), Paket 11 (Gäste per Link mitspielen lassen), dann die übrigen Pakete des Plans."
+"text": "Paket 2 lassen sich die Züge auch eintippen (Konsole, siehe unten). Gespeichert in users/<profil>/krisenspiel.json (ein laufendes Spiel, die letzten 20 Ergebnisse, Erfolge); *Meine Spieldaten löschen* geht auch, wenn der Admin das Spiel für das Profil gesperrt hat. Zustand → Live (Ziel „Krisenspiel“) zeigt nur laufende Spiele, Züge, neue Spiele, erzählt/verworfen und Profile; Logs (Bereich „Krisenspiel“) nur feste Wörter und Zahlen (spiel: neu | ransomware | normal | Profil …, spiel: zug | ok | 3 ms, spiel: erzaehler | zahl | 812 ms, spiel: ende | gewonnen | note B | 9 zuege | 2 erfolge). API: GET /api/profile/krisenspiel, POST /api/profile/krisenspiel/neu ({szenario, stufe, seed?}), POST /api/profile/krisenspiel/zug ({aktion, zug}; ein alter Zug gibt 409), DELETE /api/profile/krisenspiel (aufgeben), DELETE /api/profile/krisenspiel/daten."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Konsole im Krisenspiel (V01.0.933, Paket 2, Dominik 2026-10-22 „1a 2b 3a“, „Befehle erweitern, damit wir auch cmd in der Linux-Welt erlernen“, „-h als Hilfe“, „durchsimuliert“): Unter der Chronik steht eine Konsole (am Handy einklappbar). Nichts davon läuft wirklich: kein Prozess, keine Shell, kein Netz, kein Dateizugriff; das Panel schneidet jede Zeile nach festen Regeln (höchstens 200 Zeichen, nur Buchstaben, Ziffern und _ . : / = , @ * ' \" | \\ + - ~ ? > $ ^ ( ) [ ] { }, nie ${ oder $(, Anführungszeichen wie in der Shell, Pipes nur in Textbefehle, ein > oder >> am Ende) und schlägt sie nach (krisenkonsole.py, Daten in krisenspiel_konsole.json). Jedes Spiel beginnt auf jump01, dem Linux-Sprungrechner des Admins; hosts zeigt die Rechner des Szenarios, ssh <rechner> wechselt, exit geht zurück. Getippte Züge sind dieselben Züge wie die Knöpfe mit denselben festen Folgen (etwa sudo iptables -I FORWARD -j DROP auf fw01, Disable-ADAccount svc_backup auf dc01, controller show auf san01); ein falsches Ziel ist ein eigener Zug mit festen Folgen (Stop-VM erp01 auf hv01 hält das ERP an und kostet). Rund 150 Linux-Befehle in acht Gruppen (Dateien, Text, System, Benutzer und Rechte, Netzwerk, "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Platten, Archive, Prozesse und Dienste) sind durchsimuliert (krisenlinux.py): ein Dateisystem je Rechner mit /etc, /var/log, den Dateien des Szenarios und allem, was man selbst anlegt (mkdir, touch, cp, mv, rm, ln, tar, gzip, zip, scp auf andere Rechner, >, >>, tee), Benutzer und Gruppen (useradd, usermod -aG, passwd), Mounts, Firewall-Regeln (iptables), Rechte (chmod), Dienste und Prozesse. Wo Linux root braucht, braucht es hier sudo, sonst kommt „Permission denied“. Dienste treffen das Spiel: sudo systemctl stop postgresql auf erp01 (auch kill, pkill) ist ein Zug „Dienst an der Konsole angehalten“: das System läuft nur noch eingeschränkt, 2 Minuten, Stress und 2.000 € Schaden; systemctl start gibt es zurück, sudo reboot kostet 5 Minuten. Muster (grep, sed, find -name) sind nur Text mit ^ und $ beziehungsweise * und ?, nie ein regulärer Ausdruck. Hilfe überall: help zeigt alle Befehle nach Gruppen, help netz eine Gruppe mit Erklärung, <befehl> -h, --help, /? oder man <befehl> zeigt Aufruf, Optionen und ein Beispiel (bei df, du, free, ls, sort ist -h die Option „lesbar“), ein Tippfehler bekommt „Meintest du: ping?“. Tab ergänzt Befehle und Rechner, ↑ und ↓ holen frühere Eingaben. L"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "esende Befehle kosten eine Spielminute, zehn Minuten Lesen sind ein eigener Zug „Analyse an der Konsole“. Was man anlegt, ist begrenzt (200 Dateien je Rechner, 100 KB je Spiel). Unter Neues Spiel steht neben den fünf Szenarien 🎲 Überraschung: Das Panel wählt eines per Zufall (mit Seed wiederholbar), was passiert, sieht man erst im Spiel (szenario: \"zufall\"). Beim neuen Spiel gibt es den Modus nur Konsole: keine Knöpfe, alles wird getippt, ein Sieg bringt 5 Punkte mehr und den Erfolg „Ohne Knopf gelöst“ (jetzt dreizehn Erfolge). Ein aufgegebenes Spiel bringt keinen Erfolg, auch nicht „Feuertaufe“. Live zählt nur die Konsolen-Zeilen, die Logs schreiben nur die Art (spiel: konsole | zug | 3 ms, spiel: konsole abgelehnt | alter zug), nie die Zeile. API: POST /api/profile/krisenspiel/konsole ({zeile, zug}; ein alter Zug gibt 409, im Modus „nur Konsole“ gibt …/zug 422), POST /api/profile/krisenspiel/neu nimmt modus (knoepfe oder konsole). Als Nächstes: Paket 11 (Gäste per Link mitspielen lassen), dann die übrigen Pakete des Plans."
 },
 {
 "lang": "de",
@@ -16445,7 +16469,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "n.json, checked by check_data): every move has fixed effects, systems that are down cost damage per minute, stress, morale and trust change by fixed formulas, chance only comes from the seed (the same seed and the same moves give the same game, \"Again with this seed\" to compare). The game ends when it is won, when time runs out, when trust or morale reach 0, after 80 moves or when given up (counts as F); the grade A to F and twelve achievements (such as \"Zero data loss\", \"Ransomware under 30 minutes\", \"All-rounder\") are fixed code. The *Inspector* shows every move step by step: input, the fixed rule with all values, rolls from the seed, narrator. Crisis game with narrator (chat.krisenspiel_erzaehler, own switch under the game, off): the language model retells a move in two to four sentences; it only gets the fixed texts of the move, its answer has to be one paragraph of 30 to 700 characters without links, markup or code and may only name numbers from the facts, else the fixed text stays. It never changes a value, runs behind speech, waits at most 8 seconds and not at all during a model pause. There are no typed commands in package 1; the console comes in package 2 and is only simul"
+"text": "n.json, checked by check_data): every move has fixed effects, systems that are down cost damage per minute, stress, morale and trust change by fixed formulas, chance only comes from the seed (the same seed and the same moves give the same game, \"Again with this seed\" to compare). The game ends when it is won, when time runs out, when trust or morale reach 0, after 80 moves or when given up (counts as F); the grade A to F and twelve achievements (such as \"Zero data loss\", \"Ransomware under 30 minutes\", \"All-rounder\") are fixed code. The *Inspector* shows every move step by step: input, the fixed rule with all values, rolls from the seed, narrator. Crisis game with narrator (chat.krisenspiel_erzaehler, own switch under the game, off): the language model retells a move in two to four sentences; it only gets the fixed texts of the move, its answer has to be one paragraph of 30 to 700 characters without links, markup or code and may only name numbers from the facts, else the fixed text stays. It never changes a value, runs behind speech, waits at most 8 seconds and not at all during a model pause. Since package 2 the moves can be typed too (console, see below). Stored in users/<profile>"
 },
 {
 "lang": "en",
@@ -16453,7 +16477,31 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "ated. Stored in users/<profile>/krisenspiel.json (one running game, the last 20 results, achievements); *Delete my game data* also works while the admin blocked the game for the profile. Status → Live (target \"Crisis game\") only shows running games, moves, new games, narrated/dropped and profiles; Logs (area \"Crisis game\") only fixed words and numbers (spiel: neu | ransomware | normal | Profil …, spiel: zug | ok | 3 ms, spiel: erzaehler | zahl | 812 ms, spiel: ende | gewonnen | note B | 9 zuege | 2 erfolge). API: GET /api/profile/krisenspiel, POST /api/profile/krisenspiel/neu ({szenario, stufe, seed?}), POST /api/profile/krisenspiel/zug ({aktion, zug}; a stale move gives 409), DELETE /api/profile/krisenspiel (give up), DELETE /api/profile/krisenspiel/daten. Next: package 2 (simulated console), package 11 (let guests join by link), then the other packages of the plan."
+"text": "/krisenspiel.json (one running game, the last 20 results, achievements); *Delete my game data* also works while the admin blocked the game for the profile. Status → Live (target \"Crisis game\") only shows running games, moves, new games, narrated/dropped and profiles; Logs (area \"Crisis game\") only fixed words and numbers (spiel: neu | ransomware | normal | Profil …, spiel: zug | ok | 3 ms, spiel: erzaehler | zahl | 812 ms, spiel: ende | gewonnen | note B | 9 zuege | 2 erfolge). API: GET /api/profile/krisenspiel, POST /api/profile/krisenspiel/neu ({szenario, stufe, seed?}), POST /api/profile/krisenspiel/zug ({aktion, zug}; a stale move gives 409), DELETE /api/profile/krisenspiel (give up), DELETE /api/profile/krisenspiel/daten."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "Console in the crisis game (V01.0.933, package 2, Dominik 2026-10-22 \"1a 2b 3a\", \"extend the commands so we learn cmd in the Linux world too\", \"-h as help\", \"fully simulated\"): Under the chronicle there is a console (collapsible on a phone). None of it really runs: no process, no shell, no network, no file access; the panel cuts every line by fixed rules (at most 200 characters, only letters, digits and _ . : / = , @ * ' \" | \\ + - ~ ? > $ ^ ( ) [ ] { }, never ${ or $(, quotes as in the shell, pipes only into text commands, one > or >> at the end) and looks it up (krisenkonsole.py, data in krisenspiel_konsole.json). Every game starts on jump01, the admin's Linux jump host; hosts shows the machines of the scenario, ssh <machine> switches, exit goes back. Typed moves are the same moves as the buttons with the same fixed effects (such as sudo iptables -I FORWARD -j DROP on fw01, Disable-ADAccount svc_backup on dc01, controller show on san01); a wrong target is a move of its own with fixed effects (Stop-VM erp01 on hv01 stops the ERP and costs). About 150 Linux commands in eight groups (files, text, system, users and permissions, network, disks, archives, processes and services) are ful"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "ly simulated (krisenlinux.py): a file system per machine with /etc, /var/log, the files of the scenario and everything one makes (mkdir, touch, cp, mv, rm, ln, tar, gzip, zip, scp to other machines, >, >>, tee), users and groups (useradd, usermod -aG, passwd), mounts, firewall rules (iptables), modes (chmod), services and processes. Where Linux needs root, sudo is needed here, else \"Permission denied\". Services hit the game: sudo systemctl stop postgresql on erp01 (also kill, pkill) is a move \"Service stopped at the console\": the system only runs in part, 2 minutes, stress and 2,000 € damage; systemctl start gives it back, sudo reboot costs 5 minutes. Patterns (grep, sed, find -name) are plain text with ^ and $ or * and ?, never a regular expression. Help everywhere: help shows all commands by group, help netz one group with explanations, <command> -h, --help, /? or man <command> shows usage, options and an example (with df, du, free, ls, sort -h is the option \"readable\"), a typo gets \"Did you mean: ping?\". Tab completes commands and machines, ↑ and ↓ bring back earlier inputs. Reading commands cost a game minute, ten minutes of reading are a move of their own \"Analysis at the cons"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "ole\". What one makes is bounded (200 files per machine, 100 KB per game). Next to the five scenarios New game offers 🎲 Surprise: the panel picks one by chance (repeatable with a seed), what happens one sees only in the game (szenario: \"zufall\"). A new game offers the mode console only: no buttons, everything is typed, a win brings 5 more points and the achievement \"Solved without a button\" (now thirteen achievements). A game given up earns no achievement, not even \"Baptism of fire\". Live only counts console lines, the logs only write the kind (spiel: konsole | zug | 3 ms, spiel: konsole abgelehnt | alter zug), never the line. API: POST /api/profile/krisenspiel/konsole ({zeile, zug}; an old move gives 409, in the mode \"console only\" …/zug gives 422), POST /api/profile/krisenspiel/neu takes modus (knoepfe or konsole). Next: package 11 (let guests join by link), then the other packages of the plan."
 },
 {
 "lang": "en",

@@ -32,6 +32,7 @@ STATIC = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "panel",
 # in the style sheets is a box inside the page and shows its content in full or „Weitere … zeigen“
 FENSTER = {
     "pre": "code and machine output keep their lines",
+    ".ks-con": "the crisis game's terminal: follows the newest line like a real one, the input stays below",
     ".modal": "a window over the page: the one bar while it is open",
     ".ullog": "update progress, follows the newest line",
     ".mdstand": "model install progress, follows the newest line",

@@ -2719,6 +2719,13 @@
 "titel": "IT-Krisenspiel: fünf Szenarien, Inspector, Erzähler",
 "text": "A: Update, Funktionen → Meine Daten → IT-Krisenspiel an. Im Menü steht „Krisenspiel“. B: Neues Spiel → Ransomware, Normal, Seed 4711 → Spiel starten: oben Zeit 120 min, Stress, Vertrauen, Moral, Budget, Schaden; die Systeme mit Zustand. C: Ein paar Züge machen (Netzsegmente trennen, Lage …): Zeit sinkt, Schaden steigt, die Chronik wächst; Inspector zeigt je Zug Eingabe, feste Regel, Würfe aus dem Seed. D: Spiel zu Ende spielen: Note A bis F mit Gründen, ggf. Erfolge; „Nochmal mit diesem Seed“ und dieselben Züge ergeben dasselbe Ergebnis. E: Funktionen → Meine Daten → IT-Krisenspiel → Krisenspiel mit Erzähler an: nach einem Zug steht ein kurzer erzählter Text, „Feste Fakten“ zeigt den Originaltext; die Werte sind dieselben wie ohne Erzähler. F: Ein anderes Profil sperren (Personen und Geräte → Gesperrte Funktionen): dort kein Menüeintrag; ein Gast sieht das Spiel nie. G: Zustand → Logs nur „spiel: …“ mit Wörtern und Zahlen, nie Szenario-Texte; Live nur Anzahlen. H: Bisherige Spiele → Meine Spieldaten löschen: alles leer.",
 "thread": "IT-Krisenspiel für einzelne Nutzer"
+},
+{
+"id": "P413",
+"v": 933,
+"titel": "Krisenspiel-Konsole: Züge tippen, Linux üben",
+"text": "A: Update, Krisenspiel → Neues Spiel → Ransomware, Normal, Modus „Nur Konsole“ → Spiel starten: keine Knöpfe, unter der Chronik die Konsole auf jump01. B: help: Befehle nach Gruppen; ls -h und tar --help zeigen Aufruf, Optionen und Beispiel; pign erp01 → „Meintest du: ping?“. C: echo test > notiz.txt, cat notiz.txt, sudo useradd -m bob, grep ^bob /etc/passwd; useradd ohne sudo → Permission denied. D: ssh erp01, sudo systemctl stop postgresql: neuer Zug in der Chronik, ERP gestört, Schaden steigt; sudo systemctl start postgresql gibt es zurück. E: ssh fw01, sudo iptables -I FORWARD -j DROP: derselbe Zug wie der Knopf „Netzsegmente trennen“. F: ls; rm oder echo ${HOME} → refused. G: Spiel nur mit Tippen gewinnen: 5 Punkte mehr und Erfolg „Ohne Knopf gelöst“. H: Neues Spiel → 🎲 Überraschung: ein Szenario per Zufall; mit Seed zweimal gestartet dasselbe. I: Zustand → Logs nur „spiel: konsole | …“ ohne die getippte Zeile; Live zählt Konsolen-Zeilen.",
+"thread": "IT-Krisenspiel für einzelne Nutzer"
 }
 ]
 }

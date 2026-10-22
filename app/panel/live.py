@@ -1721,9 +1721,10 @@ def snapshot(view="admin", now=None):
                         + (f" · {wbk['widerspruch']} Widersprüche" if wbk.get("widerspruch") else "")
                         + (f" · {wbk['veraltet']} veraltet?" if wbk.get("veraltet") else "")
                         + (" · arbeitet" if wbk.get("running") else ""))
-        if x["id"] == "spiel":     # Krisenspiel: running games, moves and narrations today, profiles, numbers only (never a scenario of a person)
+        if x["id"] == "spiel":     # Krisenspiel: running games, moves, narrations and console lines today, profiles, numbers only (never a scenario of a person)
             x["sub"] = (f"{ksp.get('laufend', 0)} laufende Spiele · heute {ksp.get('zuege', 0)} Züge, {ksp.get('spiele', 0)} neue Spiele"
                         + (f" · {ksp.get('erzaehlt', 0)} erzählt, {ksp.get('verworfen', 0)} verworfen" if ksp.get("erzaehlt") or ksp.get("verworfen") else "")
+                        + (f" · {ksp.get('konsole', 0)} Konsolen-Zeilen" if ksp.get("konsole") else "")
                         + f" · {ksp.get('profile', 0)} Profile")
         if x["id"] == "wkarte":    # Wissenskarte: connections, discarded, documents waiting, profiles, numbers only (never a title)
             x["sub"] = (f"{wkk.get('verbindungen', 0)} Verbindungen · {wkk.get('punkte', 0)} Punkte · {wkk.get('warten', 0)} Dokumente warten"
