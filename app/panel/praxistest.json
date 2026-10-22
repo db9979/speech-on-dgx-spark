@@ -2692,6 +2692,13 @@
 "titel": "Unklare Fragen anonym",
 "text": "A: Update. B: Funktionen → Gezielte Werkzeugwahl → Unklare Fragen anonym merken an. C: Als Profil eine Frage stellen, die keine Regel kennt, mit Name und Nummer, z. B. „Erzähl Frau Müller von den 3 Quasaren“. D: Funktionen → Weiche → unklar: der Satz steht als „Erzähl Frau [PERSON] von den [ZAHL] Quasaren“ mit ×1, ohne Profil und Uhrzeit. E: „Gehört zu …“: Falsch zugeordnet öffnet sich mit dem Satz, ein Wort übernehmen, Prüfen und speichern; der Satz ist aus der Liste weg. F: Ich → Gespräch → Datenschutz „Unklare Fragen anonym zur Verbesserung“ aus: eine neue unklare Frage erscheint nicht. G: „Alle löschen“ leert die Liste.",
 "thread": "Unklare Fragen anonym anzeigen"
+},
+{
+"id": "P409",
+"v": 928,
+"titel": "Was ich über dich weiß: aufgeräumt und bearbeitbar",
+"text": "Öffne Ich → Was ich über dich weiß: oben stehen die Reiter Zu klären, Interessen, Wiederkehrend und Woche & Gemerkt; Zu klären öffnet zuerst, wenn etwas wartet. Unter Interessen ein Interesse anklicken: im Detail einen Absender mit ✕ herausnehmen, mit ✎ umbenennen oder ein altes Absender-Interesse (orange „Thema fehlt“) einem Thema zuordnen, „Tipps aus dem Netz“ ein- und ausschalten, Vergessen. Dasselbe in der iPhone-App unter Für dich → Was ich über dich weiß.",
+"thread": "Persönlicher Assistent aus dem Postfach"
 }
 ]
 }

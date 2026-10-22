@@ -25,6 +25,8 @@ when the page asks and kept in memory only.
     GET    /api/profile/ichweiss                  the page
     POST   /api/profile/ichweiss/interest         {"name", "state": "yes" | "no" | "forget", "web": bool, "topic", "senders"}
                                                   or {"name", "state": "adopt", "topic"} / {"name", "state": "keep"}
+                                                  / {"name", "state": "rename", "to"} (a new name or a topic)
+                                                  / {"name", "state": "drop", "senders": [one]} (a sender out)
     POST   /api/profile/ichweiss/recurring        {"id"}: a monthly reminder for it
     DELETE /api/profile/ichweiss                  forget every interest and the web tip
 """
@@ -175,8 +177,9 @@ def choices(uid):
     """[{"name", "en", "topic"}] to pick an own topic from (Dominik 2026-10-22 „Themen auswählen von den vorhandenen“):
     the confirmed interests first, then the topics of TOPICS not confirmed yet."""
     yes = [v for v in load(uid)["items"].values() if v["state"] == "yes"]
+    # an older confirmed sender (no topic) is no topic to pick; it gets one with rename() (Dominik 2026-10-22)
     out = [{"name": v["name"], "en": topic_name(v["topic"], True) or v["name"], "topic": v["topic"]}
-           for v in sorted(yes, key=lambda v: v["name"].lower())]
+           for v in sorted(yes, key=lambda v: v["name"].lower()) if not _old_sender(v)]
     have = {v["topic"] for v in yes} | {norm(v["name"]) for v in yes}
     out += [{"name": v[0], "en": v[1], "topic": k} for k, v in TOPICS.items() if k not in have and norm(v[0]) not in have]
     return out
@@ -335,6 +338,48 @@ def adopt(uid, name, topic):
     d = load(uid)
     d["items"].pop(k, None)
     _save(uid, d)
+    _day.bump("thema")
+    return item
+
+
+def _old_sender(v):
+    """A sender confirmed before the topics (V01.0.922): a shop or „Mehr davon“ without a topic."""
+    return v["src"] in ("shop", "karte") and not v["topic"]
+
+
+def drop(uid, name, sender):
+    """✕ at a sender in the details of a confirmed interest (Dominik 2026-10-22 „ok“ to the tidy page): the sender
+    leaves it and stays out (a „Nicht so“ for its name); returns the item."""
+    d = load(uid); k = norm(clean(name)); item = d["items"].get(k)
+    if not item or norm(sender) not in map(norm, item["senders"]):
+        raise KeyError(name)
+    item["senders"] = [x for x in item["senders"] if norm(x) != norm(sender)]
+    _save(uid, d)
+    set_state(uid, sender, "no", "shop")
+    return load(uid)["items"][k]
+
+
+def rename(uid, name, to):
+    """Renames an interest or gives it a topic (Dominik 2026-10-22 „nicht löschbar oder bearbeitbar“): to is a topic of
+    the list (German or English name: that topic), a confirmed interest (joined with it) or a new name. An older
+    confirmed sender becomes a sender of the new one; web tips and senders go along. Returns the item."""
+    d = load(uid)
+    k = norm(clean(name))
+    old = d["items"].get(k)
+    if not old:
+        raise KeyError(name)
+    t = topic_by_name(to)
+    new = topic_name(t) if t else clean(to)
+    if len(norm(new)) < 2:
+        raise ValueError("name")
+    if norm(new) == k and (t or "") == old["topic"]:
+        return old
+    senders = old["senders"] + ([old["name"]] if _old_sender(old) else [])
+    d["items"].pop(k)
+    _save(uid, d)
+    target = load(uid)["items"].get(norm(new), {})
+    item = set_state(uid, new, old["state"], "thema" if t else target.get("src") or "hand",
+                     web=(old["web"] or target.get("web", False)) and old["state"] == "yes", topic=t or None, senders=senders)
     _day.bump("thema")
     return item
 
@@ -674,7 +719,8 @@ async def view(prof):
         s = mailstil.public(uid)
         style = {"mails": s["mails"], "learned": s["learned"]}
     return {"interests": sorted(({"name": v["name"], "state": v["state"], "web": v["web"], "src": v["src"], "t": v["t"],
-                                  "topic": v["topic"], "en": topic_name(v["topic"], True) or v["name"], "senders": v["senders"]}
+                                  "topic": v["topic"], "en": topic_name(v["topic"], True) or v["name"], "senders": v["senders"],
+                                  "old": _old_sender(v)}
                                  for v in d["items"].values()), key=lambda v: (v["state"] != "yes", v["name"].lower())),
             "proposals": proposals(uid), "asks": asks(uid), "choices": choices(uid), "sources": SOURCES,
             "recurring": [dict(x, set=rec_text(x) in texts) for x in rec],
@@ -714,19 +760,25 @@ async def api_interest(request: Request, prof=Depends(own_profile)):
     _mine(request, prof)
     b = await json_body(request, 2 * 1024)
     name, state, src, web = b.get("name"), b.get("state"), b.get("src", "hand"), b.get("web")
-    topic, senders = b.get("topic", ""), b.get("senders", [])
-    if not isinstance(name, str) or state not in ("yes", "no", "forget", "adopt", "keep") \
+    topic, senders, to = b.get("topic", ""), b.get("senders", []), b.get("to", "")
+    if not isinstance(name, str) or state not in ("yes", "no", "forget", "adopt", "keep", "rename", "drop") \
+            or not isinstance(to, str) or (state == "rename" and len(to.strip()) < 2) \
             or (web is not None and not isinstance(web, bool)) or src not in SOURCES \
             or not isinstance(topic, str) or (topic and topic not in TOPICS) or (state == "adopt" and not topic) \
-            or not isinstance(senders, list) or len(senders) > MAX_SENDERS or not all(isinstance(x, str) for x in senders):
+            or not isinstance(senders, list) or len(senders) > MAX_SENDERS or not all(isinstance(x, str) for x in senders) \
+            or (state == "drop" and len(senders) != 1):
         print("ichweiss: interesse abgelehnt grund=eingabe", flush=True)
-        raise HTTPException(400, "name, state (yes, no, forget, adopt, keep), web (true/false), topic, senders")
+        raise HTTPException(400, "name, state (yes, no, forget, adopt, keep, rename, drop), web (true/false), topic, senders, to")
     try:
         if state == "adopt":
             item = adopt(prof["id"], name, topic)
         elif state == "keep":
             keep(prof["id"], name)
             item = None
+        elif state == "rename":
+            item = rename(prof["id"], name, to)
+        elif state == "drop":
+            item = drop(prof["id"], name, senders[0])
         else:
             item = set_state(prof["id"], name, state, src, web, topic or None, senders)
     except KeyError:

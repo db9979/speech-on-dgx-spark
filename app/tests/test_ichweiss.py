@@ -203,13 +203,35 @@ class IchWeiss(unittest.TestCase):
         # an own topic picked from the ones there are (Dominik 2026-10-22): the confirmed first, then the list; a list
         # topic named in German or English is that topic
         ch = p.get("/api/profile/ichweiss").json()["choices"]
-        self.assertEqual([x["name"] for x in ch[:3]], ["Rose Bikes", "Smart Home & IoT", "Wandern"])
+        # an older confirmed sender (no topic) is no topic to pick (Dominik 2026-10-22: the chips looked like entries)
+        self.assertEqual([x["name"] for x in ch[:2]], ["Smart Home & IoT", "Wandern"])
+        self.assertNotIn("Rose Bikes", [x["name"] for x in ch])
+        self.assertTrue(next(x for x in p.get("/api/profile/ichweiss").json()["interests"] if x["name"] == "Rose Bikes")["old"])
         self.assertEqual([x["topic"] for x in ch].count("smarthome"), 1)              # a confirmed topic only once
         self.assertIn({"name": "Essen bestellen", "en": "Food delivery", "topic": "essen"}, ch)
         self.assertEqual(p.post("/api/profile/ichweiss/interest", json={"name": "food delivery", "state": "yes",
                                                                         "senders": ["Pizzaladen"]}).status_code, 200)
         item = next(x for x in p.get("/api/profile/ichweiss").json()["interests"] if x["name"] == "Essen bestellen")
         self.assertEqual((item["topic"], item["senders"]), ("essen", ["Pizzaladen"]))
+        # rename a confirmed interest (Dominik 2026-10-22): an old sender name becomes a sender of the topic it gets
+        r = p.post("/api/profile/ichweiss/interest", json={"name": "Rose Bikes", "state": "rename", "to": "Sport & Fitness"})
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual((r.json()["item"]["topic"], r.json()["item"]["senders"]), ("sport", ["Rose Bikes"]))
+        names = [x["name"] for x in p.get("/api/profile/ichweiss").json()["interests"]]
+        self.assertIn("Sport & Fitness", names)
+        self.assertNotIn("Rose Bikes", names)
+        self.assertEqual(ichweiss.fits(uid, "Rose Bikes"), "Sport & Fitness")
+        r = p.post("/api/profile/ichweiss/interest", json={"name": "Wandern", "state": "rename", "to": "Bergwandern"})
+        self.assertEqual((r.json()["item"]["name"], r.json()["item"]["senders"]), ("Bergwandern", ["hasso"]))
+        self.assertEqual(ichweiss.fits(uid, "hasso"), "Bergwandern")
+        # ✕ at a sender in the details: it leaves the topic and stays out
+        r = p.post("/api/profile/ichweiss/interest", json={"name": "Sport & Fitness", "state": "drop", "senders": ["Rose Bikes"]})
+        self.assertEqual((r.status_code, r.json()["item"]["senders"]), (200, []))
+        self.assertEqual(ichweiss.fits(uid, "Rose Bikes"), "")
+        self.assertEqual(p.post("/api/profile/ichweiss/interest", json={"name": "Sport & Fitness", "state": "drop", "senders": ["Rose Bikes"]}).status_code, 404)
+        self.assertEqual(p.post("/api/profile/ichweiss/interest", json={"name": "Sport & Fitness", "state": "drop", "senders": []}).status_code, 400)
+        self.assertEqual(p.post("/api/profile/ichweiss/interest", json={"name": "Gibtsnicht", "state": "rename", "to": "Xyz"}).status_code, 404)
+        self.assertEqual(p.post("/api/profile/ichweiss/interest", json={"name": "Bergwandern", "state": "rename", "to": " x "}).status_code, 400)
         with open(profiles._path(uid, "interessen.json")) as f:
             raw = f.read()
         for word in ("ESP32", "Zigbee", "Herbstbrief", "Oktober", "iotthinks.example"):   # subjects never in the file

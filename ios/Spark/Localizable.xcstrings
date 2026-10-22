@@ -13011,16 +13011,6 @@
         }
       }
     },
-    "z. B. Rennrad": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "e.g. road bike"
-          }
-        }
-      }
-    },
     "Wieder vorschlagen dürfen": {
       "localizations": {
         "en": {
@@ -13047,16 +13037,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tip for \"%@\" · %@"
-          }
-        }
-      }
-    },
-    "Wiederkehrendes": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Recurring"
           }
         }
       }
@@ -16817,6 +16797,176 @@
           "stringUnit": {
             "state": "translated",
             "value": "or type one, e.g. hiking"
+          }
+        }
+      }
+    },
+    "Geändert: „%@“": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Changed: \"%@\""
+          }
+        }
+      }
+    },
+    "Früher bestätigter Absender, ordne ihn unten einem Thema zu.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sender confirmed earlier, give it a topic below."
+          }
+        }
+      }
+    },
+    "Umbenennen oder Thema zuordnen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rename or give a topic"
+          }
+        }
+      }
+    },
+    "Bereich": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Section"
+          }
+        }
+      }
+    },
+    "Zu klären (%lld)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To sort out (%lld)"
+          }
+        }
+      }
+    },
+    "Zu klären": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To sort out"
+          }
+        }
+      }
+    },
+    "Wiederkehrend": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recurring"
+          }
+        }
+      }
+    },
+    "Woche": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Week"
+          }
+        }
+      }
+    },
+    "Interessen zählen erst nach „Stimmt“. Feste Regeln, kein Modell, alles bleibt auf dem Spark.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Interests count only after \"Right\". Fixed rules, no model, everything stays on the Spark."
+          }
+        }
+      }
+    },
+    "Nichts zu klären. Neue Vorschläge kommen mit der nächsten Lesung von Für dich.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing to sort out. New proposals come with the next reading of For you."
+          }
+        }
+      }
+    },
+    "Netz-Tipps": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Web tips"
+          }
+        }
+      }
+    },
+    "alter Absender, Thema fehlt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "old sender, no topic yet"
+          }
+        }
+      }
+    },
+    "＋ Interesse hinzufügen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "＋ Add an interest"
+          }
+        }
+      }
+    },
+    "Nicht so (%lld)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not really (%lld)"
+          }
+        }
+      }
+    },
+    "Herausnehmen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Take out"
+          }
+        }
+      }
+    },
+    "Höchstens ein Tipp am Tag, zwischen 10 und 19 Uhr. An die Suche geht nur dieses Wort.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At most one tip a day, between 10 am and 7 pm. Only this word goes to the search."
+          }
+        }
+      }
+    },
+    "Absender herausgenommen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sender taken out."
           }
         }
       }

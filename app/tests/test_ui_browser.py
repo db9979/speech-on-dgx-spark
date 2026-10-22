@@ -1155,6 +1155,64 @@ class Browser(unittest.TestCase):
             c["music"]["enabled"] = False
             helpers.write_config(c)
 
+    def test_ichweiss_page(self):
+        """Ich → Was ich über dich weiß tidied (Dominik 2026-10-22 „ok“, interessen-themen/seite-aufraeumen.md): one title,
+        tabs with „Zu klären“ first while something waits, words on the buttons, the interests as a list with details
+        beside it (a page of its own on the phone) holding the senders, ✎ rename, the web tips as a switch and Vergessen;
+        on a computer and a phone, with the strict CSP, without sideways scrolling."""
+        fake = {"interests": [{"name": "Smart Home & IoT", "en": "Smart home & IoT", "state": "yes", "web": True, "src": "thema", "topic": "smarthome",
+                               "senders": ["IoTThinks", "Shelly"], "old": False},
+                              {"name": "Archon Studio", "en": "", "state": "yes", "web": False, "src": "shop", "topic": "", "senders": [], "old": True},
+                              {"name": "db9979", "en": "", "state": "no", "web": False, "src": "shop", "topic": "", "senders": [], "old": False}],
+                "proposals": [{"name": "Musikproduktion & Samples", "en": "Music production & samples", "src": "thema", "topic": "musik",
+                               "senders": ["Loopmasters"], "ex": ["Neue <b>Drum</b> Kits"], "why": "4 Newsletter in 30 Tagen", "unclear": False}],
+                "asks": [{"name": "Archon Studio", "topic": "spiele", "label": "Spiele", "en": "Games"}],
+                "choices": [{"name": "Smart Home & IoT", "en": "Smart home & IoT", "topic": "smarthome"}],
+                "sources": {"thema": ["Thema aus deinen Mails", "Topic from your mail"], "shop": ["Mails eines Shops", "A shop's mail"]},
+                "recurring": [], "week": {"sentence": "Deine Woche: 3 erledigt, 2 offen."}, "month": {"line": "Diesen Monat 12,00 €"},
+                "facts": {"count": 0, "items": []}, "style": {"mails": 0}, "tips": True,
+                "tip": {"name": "Smart Home & IoT", "title": "Matter im Test", "url": "https://example.org/a", "domain": "example.org"}, "loading": []}
+        helpers.set_config(mail_insight=True)
+
+        async def go():
+            async with async_playwright() as p:
+                for name, w, h in VIEWS:
+                    br, pg, errors = await self.page(p, w, h, csp=True)
+                    try:
+                        await pg.route("**/api/profile/ichweiss", lambda route: route.fulfill(json=fake))
+                        await pg.evaluate("openMe('wissbox')")
+                        await pg.wait_for_selector("#wissbox .ic-tabs button.on", state="visible", timeout=20000)
+                        self.assertEqual(await pg.inner_text("#wissbox .ic-tabs button.on"), "Zu klären\n2", name)
+                        self.assertEqual(await pg.evaluate("document.querySelectorAll('#wissbox h3.sec').length"), 0, name)   # one title
+                        self.assertTrue(await pg.is_visible("#wissbox button[data-wiss-yes]:has-text('Stimmt')"), name)
+                        self.assertTrue(await pg.is_visible("#wissbox button[data-wiss-adopt]:has-text('Übernehmen')"), name)
+                        self.assertIsNone(await pg.query_selector("#wissbox .wiss-ex b"))           # a subject is text, never HTML
+                        await pg.click("#wissbox .ic-tabs button[data-k=int]")
+                        await pg.wait_for_selector("#wissbox .ld-row[data-wiss-row]", state="visible")
+                        self.assertEqual(await pg.evaluate("document.querySelectorAll('#wissbox .ld-row[data-wiss-row]').length"), 2, name)
+                        self.assertIn("Thema fehlt", await pg.inner_text("#wissbox .ld-row[data-wiss-row='Archon Studio']"))
+                        if w <= 760:   # the phone: the list first, a tap opens the details as a page with „‹ Interessen“
+                            self.assertFalse(await pg.is_visible("#wissbox .ld-detail"), name)
+                            await pg.click("#wissbox .ld-row[data-wiss-row='Smart Home & IoT']")
+                            self.assertTrue(await pg.is_visible("#wissbox .ld-detail .ld-back"), name)
+                        det = await pg.inner_text("#wissbox .ld-detail")
+                        for word in ("IoTThinks", "Umbenennen oder Thema zuordnen", "Tipps aus dem Netz", "Matter im Test", "Vergessen"):
+                            self.assertIn(word, det, name)
+                        self.assertTrue(await pg.evaluate("document.querySelector('#wissbox input[data-wiss-web]').checked"), name)
+                        await pg.click("#wissbox button[data-wiss-rename]")
+                        self.assertTrue(await pg.is_visible("#wissbox select[data-wiss-edit-pick]"), name)
+                        if os.environ.get("WISS_SHOT"):
+                            await pg.screenshot(path=os.environ["WISS_SHOT"] + name + ".png", full_page=True)
+                        over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                        self.assertLessEqual(over, 1, f"{name}: {over}px zu breit")
+                        self.assertEqual(errors, [], name)
+                    finally:
+                        await br.close()
+        try:
+            self.run_async(go())
+        finally:
+            helpers.set_config(mail_insight=False)
+
     def test_musik_bench(self):
         """Musik bearbeiten as the song's own page (Dominik 2026-10-21 „1“, musik-bearbeiten/vorschlag-1.png): „Bearbeiten“
         in the details opens it over the whole width; the big wave, tools left of the fields and the versions right on a

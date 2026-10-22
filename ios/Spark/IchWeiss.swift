@@ -15,10 +15,13 @@ struct WissInterest: Identifiable, Hashable {
     let web: Bool
     let src: String
     let senders: [String]
+    /// An older confirmed sender name without a topic: ✎ assigns it to a topic (rename in ichweiss.py).
+    let old: Bool
     var id: String { name.lowercased() }
     var label: String { wissEnglish && !en.isEmpty ? en : name }
 
     init(_ d: [String: Any]) {
+        old = d["old"] as? Bool ?? false
         name = String((d["name"] as? String ?? "").prefix(40))
         en = String((d["en"] as? String ?? "").prefix(40))
         state = d["state"] as? String ?? ""
@@ -156,16 +159,19 @@ final class WissModel: ObservableObject {
     }
 
     func set(_ name: String, _ state: String, src: String = "hand", web: Bool? = nil, topic: String = "",
-             senders: [String] = [], label: String? = nil) async {
+             senders: [String] = [], to: String = "", label: String? = nil) async {
         guard let api = SparkAPI.current else { return }
         var body: [String: Any] = ["name": name, "state": state, "src": src, "topic": topic, "senders": senders]
         if let web { body["web"] = web }
+        if !to.isEmpty { body["to"] = to }
         do {
             _ = try await api.object("POST", "api/profile/ichweiss/interest", body: body)
             let shown = label ?? name
             note = state == "yes" || state == "adopt" ? String(localized: "Gemerkt: „\(shown)“ interessiert dich.")
                 : state == "no" ? String(localized: "Kommt nicht wieder als Vorschlag.")
-                : state == "keep" ? String(localized: "Bleibt, wie es ist.") : String(localized: "Vergessen.")
+                : state == "keep" ? String(localized: "Bleibt, wie es ist.")
+                : state == "rename" ? String(localized: "Geändert: „\(shown)“")
+                : state == "drop" ? String(localized: "Absender herausgenommen.") : String(localized: "Vergessen.")
             await load()
         } catch {
             note = error.localizedDescription
@@ -199,120 +205,31 @@ struct IchWeissView: View {
     @StateObject private var m = WissModel()
     @State private var own = ""
     @State private var asking = false
+    @State private var tab = WissTab.open
+    @State private var chosen = false
+    private var open: Int { m.proposals.count + m.asks.count }
 
     var body: some View {
+        // the same tabs as the panel (Dominik 2026-10-22 „ok“, interessen-themen/seite-aufraeumen.md): „Zu klären“
+        // first while something waits, the interests as a list that opens each one's own page
         List {
             Section {
-                Text("Was der Spark über dich weiß und woher: Interessen zählen erst, wenn du „Stimmt“ sagst. Feste Regeln, kein Modell, alles bleibt auf dem Spark.")
+                Picker("Bereich", selection: $tab) {
+                    Text(open > 0 ? String(localized: "Zu klären (\(open))") : String(localized: "Zu klären")).tag(WissTab.open)
+                    Text("Interessen").tag(WissTab.interests)
+                    Text("Wiederkehrend").tag(WissTab.recurring)
+                    Text("Woche").tag(WissTab.week)
+                }
+                .pickerStyle(.segmented)
+                Text("Interessen zählen erst nach „Stimmt“. Feste Regeln, kein Modell, alles bleibt auf dem Spark.")
                     .font(.footnote).foregroundStyle(.secondary)
                 if let n = m.note { Text(verbatim: n).font(.footnote) }
             }
-            Section("Diese Woche") {
-                if !m.week.isEmpty { Text(verbatim: m.week) }
-                if !m.month.isEmpty { Text(verbatim: m.month).font(.subheadline).foregroundStyle(.secondary) }
-            }
-            if !m.proposals.isEmpty {
-                Section("Vorschläge") {
-                    ForEach(m.proposals) { x in
-                        VStack(alignment: .leading, spacing: 4) {
-                            HStack {
-                                Text(verbatim: x.label).font(.headline)
-                                if x.unclear { Text("Thema unklar").font(.caption2).foregroundStyle(.orange) }
-                            }
-                            Text("Beleg: \(x.why)").font(.caption).foregroundStyle(.secondary)
-                            if !x.unclear && !x.senders.isEmpty {
-                                Text(verbatim: x.senders.joined(separator: " · ")).font(.caption)
-                            }
-                            if !x.unclear && !x.examples.isEmpty {
-                                Text(verbatim: x.examples.map { "„\($0)“" }.joined(separator: ", ")).font(.caption).italic().foregroundStyle(.secondary)
-                            }
-                            if x.unclear { WissOwnTopic(sender: x.name, examples: x.examples, m: m) }
-                            HStack(spacing: 16) {
-                                Button("Stimmt") { Task { await m.set(x.name, "yes", src: x.src, topic: x.topic, senders: x.senders, label: x.label) } }
-                                Button("Nicht so") { Task { await m.set(x.name, "no", src: x.src, topic: x.topic) } }
-                                if !x.unclear && !x.senders.isEmpty {
-                                    Menu("Absender") {
-                                        ForEach(x.senders, id: \.self) { n in
-                                            Button("Nicht „\(n)“") { Task { await m.set(n, "no", src: "shop") } }
-                                        }
-                                    }
-                                }
-                            }
-                            .font(.callout).buttonStyle(.borderless)
-                        }
-                    }
-                }
-            }
-            if !m.asks.isEmpty {
-                Section("Zu welchem Thema gehört das?") {
-                    ForEach(m.asks) { x in
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("„\(x.name)“ gehört wohl zu \(x.label)")
-                            Text("Du hast den Absender früher bestätigt. Als Thema passen auch neue Absender, und der Netz-Tipp sucht nach dem Thema.")
-                                .font(.caption).foregroundStyle(.secondary)
-                            HStack(spacing: 16) {
-                                Button("Übernehmen") { Task { await m.set(x.name, "adopt", topic: x.topic, label: x.label) } }
-                                Button("So lassen") { Task { await m.set(x.name, "keep") } }
-                            }
-                            .font(.callout).buttonStyle(.borderless)
-                        }
-                    }
-                }
-            }
-            Section("Interessen") {
-                ForEach(m.interests.filter { $0.state == "yes" }) { x in
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(verbatim: x.label)
-                        if !x.senders.isEmpty {
-                            Text("Absender: \(x.senders.joined(separator: ", "))").font(.caption).foregroundStyle(.secondary)
-                        }
-                        if m.tips {
-                            Toggle("Tipps aus dem Netz", isOn: Binding(get: { x.web }, set: { v in Task { await m.set(x.name, "yes", src: x.src, web: v) } }))
-                                .font(.caption)
-                        }
-                    }
-                    .swipeActions { Button(role: .destructive) { Task { await m.set(x.name, "forget") } } label: { Label("Vergessen", systemImage: "trash") } }
-                }
-                HStack {
-                    TextField("z. B. Rennrad", text: $own).onSubmit { add() }
-                    Button("Hinzufügen") { add() }.disabled(own.trimmingCharacters(in: .whitespaces).count < 2)
-                }
-            }
-            let no = m.interests.filter { $0.state == "no" }
-            if !no.isEmpty {
-                Section("Nicht so") {
-                    ForEach(no) { x in
-                        Text(verbatim: x.name)
-                            .swipeActions { Button { Task { await m.set(x.name, "forget") } } label: { Label("Wieder vorschlagen dürfen", systemImage: "arrow.uturn.backward") } }
-                    }
-                }
-            }
-            if let tip = m.tip {
-                Section("Aus dem Netz") {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(verbatim: tip.title)
-                        Text("Tipp zu „\(tip.name)“ · \(tip.domain)").font(.caption).foregroundStyle(.secondary)
-                        if let u = tip.url { Link("Öffnen", destination: u).font(.callout) }
-                    }
-                }
-            }
-            Section("Wiederkehrendes") {
-                if m.recurring.isEmpty {
-                    Text(m.waiting ? String(localized: "Lese die Kopfzeilen deiner Mails …") : String(localized: "Nichts gefunden, was jeden Monat kommt.")).foregroundStyle(.secondary)
-                }
-                ForEach(m.recurring) { x in
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Rechnung \(x.who) kommt um den \(x.day).")
-                        Text("in \(x.months) Monaten").font(.caption).foregroundStyle(.secondary)
-                        Button(x.set ? String(localized: "Erinnerung ist da") : String(localized: "Monatlich erinnern")) { Task { await m.remindMonthly(x) } }
-                            .disabled(x.set).font(.callout).buttonStyle(.borderless)
-                    }
-                }
-            }
-            Section("Gemerkt") {
-                Text("\(m.facts) gemerkte Fakten")
-                Text(SparkAPI.way(String(localized: "Ändern und vergessen unter Ich → Gedächtnis"))).font(.caption).foregroundStyle(.secondary)
-                if m.styleMails > 0 { Text("Mailstil aus \(m.styleMails) eigenen Mails gelernt") }
+            switch tab {
+            case .open: openTab
+            case .interests: interestsTab
+            case .recurring: recurringTab
+            case .week: weekTab
             }
             if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
         }
@@ -332,6 +249,7 @@ struct IchWeissView: View {
         .refreshable { await m.load() }
         .task {
             await m.load()
+            if !chosen { chosen = true; tab = open > 0 ? .open : .interests }
             var tries = 0   // the headers of Wiederkehrendes may still be read on the Spark, like the panel (ichweiss.js)
             while m.waiting && tries < 5 {
                 tries += 1
@@ -341,11 +259,224 @@ struct IchWeissView: View {
         }
     }
 
+    @ViewBuilder private var openTab: some View {
+        if m.proposals.isEmpty && m.asks.isEmpty {
+            Section { Text("Nichts zu klären. Neue Vorschläge kommen mit der nächsten Lesung von Für dich.").foregroundStyle(.secondary) }
+        }
+        if !m.proposals.isEmpty {
+            Section("Vorschläge") {
+                ForEach(m.proposals) { x in
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack {
+                            Text(verbatim: x.label).font(.headline)
+                            if x.unclear { Text("Thema unklar").font(.caption2).foregroundStyle(.orange) }
+                        }
+                        Text("Beleg: \(x.why)").font(.caption).foregroundStyle(.secondary)
+                        if !x.unclear && !x.senders.isEmpty {
+                            Text(verbatim: x.senders.joined(separator: " · ")).font(.caption)
+                        }
+                        if !x.unclear && !x.examples.isEmpty {
+                            Text(verbatim: x.examples.map { "„\($0)“" }.joined(separator: ", ")).font(.caption).italic().foregroundStyle(.secondary)
+                        }
+                        if x.unclear { WissOwnTopic(sender: x.name, examples: x.examples, m: m) }
+                        HStack(spacing: 16) {
+                            Button("Stimmt") { Task { await m.set(x.name, "yes", src: x.src, topic: x.topic, senders: x.senders, label: x.label) } }
+                                .buttonStyle(.borderedProminent)
+                            Button("Nicht so") { Task { await m.set(x.name, "no", src: x.src, topic: x.topic) } }
+                                .buttonStyle(.bordered)
+                            if !x.unclear && !x.senders.isEmpty {
+                                Menu("Absender") {
+                                    ForEach(x.senders, id: \.self) { n in
+                                        Button("Nicht „\(n)“") { Task { await m.set(n, "no", src: "shop") } }
+                                    }
+                                }
+                                .buttonStyle(.borderless)
+                            }
+                        }
+                        .font(.callout)
+                    }
+                }
+            }
+        }
+        if !m.asks.isEmpty {
+            Section("Zu welchem Thema gehört das?") {
+                ForEach(m.asks) { x in
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("„\(x.name)“ gehört wohl zu \(x.label)")
+                        Text("Du hast den Absender früher bestätigt. Als Thema passen auch neue Absender, und der Netz-Tipp sucht nach dem Thema.")
+                            .font(.caption).foregroundStyle(.secondary)
+                        HStack(spacing: 16) {
+                            Button("Übernehmen") { Task { await m.set(x.name, "adopt", topic: x.topic, label: x.label) } }
+                                .buttonStyle(.borderedProminent)
+                            Button("So lassen") { Task { await m.set(x.name, "keep") } }
+                                .buttonStyle(.bordered)
+                        }
+                        .font(.callout)
+                    }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder private var interestsTab: some View {
+        Section {
+            ForEach(m.interests.filter { $0.state == "yes" }) { x in
+                NavigationLink {
+                    WissDetail(name: x.name, m: m)
+                } label: {
+                    VStack(alignment: .leading, spacing: 2) {
+                        HStack {
+                            Text(verbatim: x.label)
+                            if x.web { Text("Netz-Tipps").font(.caption2).foregroundStyle(.tint) }
+                        }
+                        if x.old {
+                            Text("alter Absender, Thema fehlt").font(.caption).foregroundStyle(.orange)
+                        } else if !x.senders.isEmpty {
+                            Text(verbatim: x.senders.joined(separator: ", ")).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                        }
+                    }
+                }
+                .swipeActions { Button(role: .destructive) { Task { await m.set(x.name, "forget") } } label: { Label("Vergessen", systemImage: "trash") } }
+            }
+            HStack {
+                TextField("＋ Interesse hinzufügen", text: $own).onSubmit { add() }
+                Button("Hinzufügen") { add() }.disabled(own.trimmingCharacters(in: .whitespaces).count < 2)
+            }
+        }
+        let no = m.interests.filter { $0.state == "no" }
+        if !no.isEmpty {
+            Section {
+                DisclosureGroup("Nicht so (\(no.count))") {
+                    ForEach(no) { x in
+                        Text(verbatim: x.name)
+                            .swipeActions { Button { Task { await m.set(x.name, "forget") } } label: { Label("Wieder vorschlagen dürfen", systemImage: "arrow.uturn.backward") } }
+                    }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder private var recurringTab: some View {
+        Section {
+            if m.recurring.isEmpty {
+                Text(m.waiting ? String(localized: "Lese die Kopfzeilen deiner Mails …") : String(localized: "Nichts gefunden, was jeden Monat kommt.")).foregroundStyle(.secondary)
+            }
+            ForEach(m.recurring) { x in
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Rechnung \(x.who) kommt um den \(x.day).")
+                    Text("in \(x.months) Monaten").font(.caption).foregroundStyle(.secondary)
+                    Button(x.set ? String(localized: "Erinnerung ist da") : String(localized: "Monatlich erinnern")) { Task { await m.remindMonthly(x) } }
+                        .disabled(x.set).font(.callout).buttonStyle(.borderless)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder private var weekTab: some View {
+        Section("Diese Woche") {
+            if !m.week.isEmpty { Text(verbatim: m.week) }
+            if !m.month.isEmpty { Text(verbatim: m.month).font(.subheadline).foregroundStyle(.secondary) }
+        }
+        if let tip = m.tip { Section("Aus dem Netz") { WissTipRow(tip: tip) } }
+        Section("Gemerkt") {
+            Text("\(m.facts) gemerkte Fakten")
+            Text(SparkAPI.way(String(localized: "Ändern und vergessen unter Ich → Gedächtnis"))).font(.caption).foregroundStyle(.secondary)
+            if m.styleMails > 0 { Text("Mailstil aus \(m.styleMails) eigenen Mails gelernt") }
+        }
+    }
+
     private func add() {
         let v = own.trimmingCharacters(in: .whitespaces)
         guard v.count >= 2 else { return }
         own = ""
         Task { await m.set(String(v.prefix(40)), "yes") }
+    }
+}
+
+/// ✎ on a confirmed interest: rename it or assign it to a topic; an old sender name becomes a sender of that topic.
+struct WissRename: View {
+    let item: WissInterest
+    @ObservedObject var m: WissModel
+    var done: () -> Void = {}
+    @State private var to = ""
+
+    var body: some View {
+        Group {
+            let picks = m.choices.filter { $0.name.lowercased() != item.name.lowercased() }
+            if !picks.isEmpty {
+                Menu("Vorhandenes Thema wählen …") {
+                    ForEach(picks) { c in
+                        Button(c.label) { to = c.name }
+                    }
+                }
+            }
+            HStack {
+                TextField("oder eintippen, z. B. Wandern", text: $to)
+                Button("Speichern") {
+                    let v = String(to.trimmingCharacters(in: .whitespaces).prefix(40))
+                    guard v.count >= 2 else { return }
+                    to = ""
+                    Task { await m.set(item.name, "rename", to: v, label: v); done() }
+                }
+                .disabled(to.trimmingCharacters(in: .whitespaces).count < 2)
+            }
+        }
+    }
+}
+
+enum WissTab { case open, interests, recurring, week }
+
+/// The tip of the day: title as text, the link only when it is https.
+struct WissTipRow: View {
+    let tip: WissTip
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(verbatim: tip.title)
+            Text("Tipp zu „\(tip.name)“ · \(tip.domain)").font(.caption).foregroundStyle(.secondary)
+            if let u = tip.url { Link("Öffnen", destination: u).font(.callout) }
+        }
+    }
+}
+
+/// One confirmed interest as its own page: its senders (✕ takes one out), rename or a topic, the web tips as a switch
+/// with the last tip, and „Vergessen“.
+struct WissDetail: View {
+    let name: String
+    @ObservedObject var m: WissModel
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        List {
+            if let x = m.interests.first(where: { $0.name == name && $0.state == "yes" }) {
+                if x.old {
+                    Section { Text("Früher bestätigter Absender, ordne ihn unten einem Thema zu.").font(.footnote).foregroundStyle(.secondary) }
+                }
+                if !x.senders.isEmpty {
+                    Section("Absender") {
+                        ForEach(x.senders, id: \.self) { n in
+                            Text(verbatim: n)
+                                .swipeActions { Button(role: .destructive) { Task { await m.set(x.name, "drop", senders: [n]) } } label: { Label("Herausnehmen", systemImage: "minus.circle") } }
+                        }
+                    }
+                }
+                Section("Umbenennen oder Thema zuordnen") { WissRename(item: x, m: m, done: { dismiss() }) }
+                if m.tips {
+                    Section {
+                        Toggle("Tipps aus dem Netz", isOn: Binding(get: { x.web }, set: { v in Task { await m.set(x.name, "yes", src: x.src, web: v) } }))
+                        if let tip = m.tip, tip.name.lowercased() == x.name.lowercased() { WissTipRow(tip: tip) }
+                    } footer: {
+                        Text("Höchstens ein Tipp am Tag, zwischen 10 und 19 Uhr. An die Suche geht nur dieses Wort.")
+                    }
+                }
+                Section {
+                    Button("Vergessen", role: .destructive) { Task { await m.set(x.name, "forget"); dismiss() } }
+                }
+            } else if let n = m.note {
+                Text(verbatim: n)
+            }
+        }
+        .navigationTitle(m.interests.first(where: { $0.name == name })?.label ?? name)
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 
