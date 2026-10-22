@@ -24,11 +24,21 @@ function wissProposal(x){const E=icEl,box=E('div','wiss-prop'),head=E('div','wis
   if(ex&&!x.unclear)box.appendChild(E('small','ic-meta wiss-ex',t('z. B. ','e.g. ')+ex));
   if(x.unclear){const d=E('details','wiss-more');d.appendChild(E('summary','',t('Betreffe zeigen und eigenes Thema','Show subjects and an own topic')));
     if(ex)d.appendChild(E('small','ic-meta wiss-ex',ex));
-    const f=E('form','row'),inp=E('input');inp.maxLength=40;inp.placeholder=t('Thema, z. B. Wandern','Topic, e.g. hiking');inp.dataset.wissOwn=x.name;
-    const go=E('button','b',t('Als Thema merken','Keep as topic'));go.type='submit';f.append(inp,go);
-    f.onsubmit=e=>{e.preventDefault();const v=inp.value.trim();if(v.length>=2)wissSet(v,'yes',{src:'hand',senders:[x.name]})};d.appendChild(f);box.appendChild(d)}
+    // an own topic: picked from the ones there are (confirmed first, then the list) or typed; typing suggests them too
+    const ch=WISS.choices||[],f=E('form','row'),pick=E('select'),inp=E('input');pick.dataset.wissPick=x.name;
+    pick.appendChild(E('option','',t('Vorhandenes Thema wählen …','Pick a topic …'))).value='';
+    for(const c of ch){const o=E('option','',wissName(c));o.value=c.name;pick.appendChild(o)}
+    pick.onchange=()=>{if(pick.value)inp.value=pick.value};
+    inp.maxLength=40;inp.placeholder=t('oder eintippen, z. B. Wandern','or type one, e.g. hiking');inp.dataset.wissOwn=x.name;inp.setAttribute('list','wisstopics');
+    const go=E('button','b',t('Als Thema merken','Keep as topic'));go.type='submit';f.append(pick,inp,go);
+    f.onsubmit=e=>{e.preventDefault();const v=inp.value.trim();if(v.length>=2)wissSet(v,'yes',{src:'hand',senders:[x.name]})};d.appendChild(f);
+    const mine=ch.filter(c=>!c.topic||(WISS.interests||[]).some(i=>i.state==='yes'&&i.name===c.name)).slice(0,6);
+    if(mine.length){const row=E('div','wiss-chips');for(const c of mine){const b=E('button','chip',wissName(c));b.type='button';b.dataset.wissChoice=c.name;
+        b.title=t('Zu diesem Thema','To this topic');b.onclick=()=>wissSet(c.name,'yes',{src:'hand',senders:[x.name]});row.appendChild(b)}d.appendChild(row)}
+    box.appendChild(d)}
   return box}
 function wissRender(){const d=WISS,box=$('wissbox'),E=icEl;if(!box||!d)return;box.textContent='';
+  const dl=E('datalist');dl.id='wisstopics';for(const c of d.choices||[]){const o=E('option');o.value=wissName(c);dl.appendChild(o)}box.appendChild(dl);
   box.appendChild(E('h3','sec',t('Was ich über dich weiß','What I know about you')));
   box.appendChild(E('div','intro',t('Was der Spark über dich weiß und woher: Interessen zählen erst, wenn du „Stimmt“ sagst; alles hier kannst du ändern oder vergessen. Feste Regeln, kein Modell, alles bleibt auf dem Spark.',
     'What the Spark knows about you and where from: interests count only once you say "Right"; you can change or forget everything here. Fixed rules, no model, everything stays on the Spark.')));

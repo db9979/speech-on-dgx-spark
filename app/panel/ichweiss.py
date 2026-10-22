@@ -165,6 +165,23 @@ def topic_name(key, en=False):
     return (t[1] if en else t[0]) if t else ""
 
 
+def topic_by_name(name):
+    """The key of a topic named so (German or English, any case), else "" (an own topic picked or typed, 4a)."""
+    n = norm(clean(name))
+    return next((k for k, v in TOPICS.items() if n and n in (norm(v[0]), norm(v[1]))), "")
+
+
+def choices(uid):
+    """[{"name", "en", "topic"}] to pick an own topic from (Dominik 2026-10-22 „Themen auswählen von den vorhandenen“):
+    the confirmed interests first, then the topics of TOPICS not confirmed yet."""
+    yes = [v for v in load(uid)["items"].values() if v["state"] == "yes"]
+    out = [{"name": v["name"], "en": topic_name(v["topic"], True) or v["name"], "topic": v["topic"]}
+           for v in sorted(yes, key=lambda v: v["name"].lower())]
+    have = {v["topic"] for v in yes} | {norm(v["name"]) for v in yes}
+    out += [{"name": v[0], "en": v[1], "topic": k} for k, v in TOPICS.items() if k not in have and norm(v[0]) not in have]
+    return out
+
+
 def topic_of(c):
     """The topic of a sender's counts (fuerdich._shop): the one with most mails, TOPIC_MIN or more and at least a third
     of its mails; a sender domain of a topic counts for each of its mails. "" when none fits."""
@@ -273,6 +290,9 @@ def fits(uid, who, subject="", addr=""):
 def set_state(uid, name, state, src="hand", web=None, topic=None, senders=None):
     """yes / no / forget one interest by its name; returns the item or None (forgotten). topic and senders: a topic of
     TOPICS confirmed with its senders (3a, 5a); a sender said no to in it stays out of it."""
+    if not topic and topic_by_name(name):     # a topic of the list typed or picked by its name: that topic
+        topic = topic_by_name(name)
+        name = topic_name(topic)
     k, nm = norm(clean(name)), clean(name)
     if not k or len(k) < 2:
         raise ValueError("name")
@@ -656,7 +676,7 @@ async def view(prof):
     return {"interests": sorted(({"name": v["name"], "state": v["state"], "web": v["web"], "src": v["src"], "t": v["t"],
                                   "topic": v["topic"], "en": topic_name(v["topic"], True) or v["name"], "senders": v["senders"]}
                                  for v in d["items"].values()), key=lambda v: (v["state"] != "yes", v["name"].lower())),
-            "proposals": proposals(uid), "asks": asks(uid), "sources": SOURCES,
+            "proposals": proposals(uid), "asks": asks(uid), "choices": choices(uid), "sources": SOURCES,
             "recurring": [dict(x, set=rec_text(x) in texts) for x in rec],
             "week": dict(w, sentence=week_sentence(w, today)),
             "month": dict(m, line=month_line(m)),

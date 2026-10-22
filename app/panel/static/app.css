@@ -2235,4 +2235,4 @@ textarea{resize:none}textarea[data-fest]{resize:vertical}textarea.feldplatz{padd
 .einreply{margin-top:6px;font-size:13px}.einacts{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.einacts .b{flex:1 1 auto}
 /* Was ich über dich weiß, Vorschläge als Themen (ichweiss.js, plan interessen-themen): senders as chips, subjects as evidence */
 .wiss-head{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.wiss-chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}.wiss-chips .chip .b{border:0;background:none;padding:0;cursor:pointer;color:inherit;font-size:inherit}
-.wiss-ex{display:block;font-style:italic;white-space:normal}.wiss-more summary{cursor:pointer;font-size:12px;color:var(--mut);margin-top:4px}.wiss-more .row{margin-top:6px}
+.wiss-ex{display:block;font-style:italic;white-space:normal}.wiss-more summary{cursor:pointer;font-size:12px;color:var(--mut);margin-top:4px}.wiss-more .row{margin-top:6px;flex-wrap:wrap}.wiss-chips button.chip{cursor:pointer;border:0;font:inherit;font-size:11.5px}

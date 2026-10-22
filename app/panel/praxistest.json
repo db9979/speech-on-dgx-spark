@@ -2664,6 +2664,13 @@
 "titel": "Was ich über dich weiß: Themen",
 "text": "Öffne Ich → Was ich über dich weiß: unter Vorschläge stehen Themen (z. B. „Smart Home & IoT“) mit den Absendern als Chips und Beispiel-Betreffen, nie „db9979“ oder eine eigene Adresse. Bestätige ein Thema mit ✓, nimm einen Absender mit ✕ am Chip heraus, gib bei „Thema unklar“ ein eigenes Thema ein und beantworte „Zu welchem Thema gehört das?“ für einen früher bestätigten Absender. Dasselbe in der iPhone-App unter Für dich → Was ich über dich weiß.",
 "thread": "Persönlicher Assistent aus dem Postfach"
+},
+{
+"id": "P405",
+"v": 923,
+"titel": "Was ich über dich weiß: Thema wählen",
+"text": "Öffne Ich → Was ich über dich weiß und bei einem Vorschlag mit „Thema unklar“ „Betreffe zeigen und eigenes Thema“: wähle ein Thema aus „Vorhandenes Thema wählen …“ oder tippe auf einen Chip eines bestätigten Interesses; beim Tippen erscheinen Vorschläge. Danach steht der Absender unter diesem Thema. Dasselbe in der iPhone-App.",
+"thread": "Persönlicher Assistent aus dem Postfach"
 }
 ]
 }

@@ -52,6 +52,19 @@ struct WissProposal: Identifiable, Hashable {
     }
 }
 
+/// A topic to pick for „Thema unklar“: the confirmed interests first, then the fixed list (choices in ichweiss.py).
+struct WissChoice: Identifiable, Hashable {
+    let name: String
+    let label: String
+    var id: String { name.lowercased() }
+
+    init(_ d: [String: Any]) {
+        name = String((d["name"] as? String ?? "").prefix(40))
+        let en = String((d["en"] as? String ?? "").prefix(40))
+        label = wissEnglish && !en.isEmpty ? en : name
+    }
+}
+
 /// 6a: an older confirmed sender and the topic the last reading found for it.
 struct WissAsk: Identifiable, Hashable {
     let name: String
@@ -105,6 +118,7 @@ final class WissModel: ObservableObject {
     @Published var interests: [WissInterest] = []
     @Published var proposals: [WissProposal] = []
     @Published var asks: [WissAsk] = []
+    @Published var choices: [WissChoice] = []
     @Published var recurring: [WissRecurring] = []
     @Published var week = ""
     @Published var month = ""
@@ -126,6 +140,7 @@ final class WissModel: ObservableObject {
             interests = (d["interests"] as? [[String: Any]] ?? []).prefix(60).map(WissInterest.init)
             proposals = (d["proposals"] as? [[String: Any]] ?? []).prefix(8).map(WissProposal.init)
             asks = (d["asks"] as? [[String: Any]] ?? []).prefix(8).map(WissAsk.init)
+            choices = (d["choices"] as? [[String: Any]] ?? []).prefix(100).map(WissChoice.init)
             recurring = (d["recurring"] as? [[String: Any]] ?? []).prefix(30).map(WissRecurring.init)
             week = String(((d["week"] as? [String: Any])?["sentence"] as? String ?? "").prefix(400))
             month = String(((d["month"] as? [String: Any])?["line"] as? String ?? "").prefix(200))
@@ -344,8 +359,15 @@ struct WissOwnTopic: View {
     var body: some View {
         DisclosureGroup("Betreffe zeigen und eigenes Thema") {
             ForEach(examples, id: \.self) { e in Text(verbatim: "„\(e)“").font(.caption).italic() }
+            if !m.choices.isEmpty {
+                Menu("Vorhandenes Thema wählen …") {
+                    ForEach(m.choices) { c in
+                        Button(c.label) { topic = c.name }
+                    }
+                }
+            }
             HStack {
-                TextField("Thema, z. B. Wandern", text: $topic)
+                TextField("oder eintippen, z. B. Wandern", text: $topic)
                 Button("Als Thema merken") {
                     let v = String(topic.trimmingCharacters(in: .whitespaces).prefix(40))
                     guard v.count >= 2 else { return }

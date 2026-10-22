@@ -200,6 +200,16 @@ class IchWeiss(unittest.TestCase):
                                                                         "senders": ["hasso"]}).status_code, 200)
         self.assertNotIn("hasso", [x["name"] for x in p.get("/api/profile/ichweiss").json()["proposals"]])
         self.assertEqual(ichweiss.fits(uid, "hasso"), "Wandern")
+        # an own topic picked from the ones there are (Dominik 2026-10-22): the confirmed first, then the list; a list
+        # topic named in German or English is that topic
+        ch = p.get("/api/profile/ichweiss").json()["choices"]
+        self.assertEqual([x["name"] for x in ch[:3]], ["Rose Bikes", "Smart Home & IoT", "Wandern"])
+        self.assertEqual([x["topic"] for x in ch].count("smarthome"), 1)              # a confirmed topic only once
+        self.assertIn({"name": "Essen bestellen", "en": "Food delivery", "topic": "essen"}, ch)
+        self.assertEqual(p.post("/api/profile/ichweiss/interest", json={"name": "food delivery", "state": "yes",
+                                                                        "senders": ["Pizzaladen"]}).status_code, 200)
+        item = next(x for x in p.get("/api/profile/ichweiss").json()["interests"] if x["name"] == "Essen bestellen")
+        self.assertEqual((item["topic"], item["senders"]), ("essen", ["Pizzaladen"]))
         with open(profiles._path(uid, "interessen.json")) as f:
             raw = f.read()
         for word in ("ESP32", "Zigbee", "Herbstbrief", "Oktober", "iotthinks.example"):   # subjects never in the file

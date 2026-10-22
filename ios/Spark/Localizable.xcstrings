@@ -16781,16 +16781,6 @@
         }
       }
     },
-    "Thema, z. B. Wandern": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Topic, e.g. hiking"
-          }
-        }
-      }
-    },
     "Als Thema merken": {
       "localizations": {
         "en": {
@@ -16807,6 +16797,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Stays as it is."
+          }
+        }
+      }
+    },
+    "Vorhandenes Thema wählen …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pick a topic …"
+          }
+        }
+      }
+    },
+    "oder eintippen, z. B. Wandern": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "or type one, e.g. hiking"
           }
         }
       }

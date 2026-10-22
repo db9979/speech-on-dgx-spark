@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.923** What I know about you: for "Topic unclear" pick a topic there is (confirmed interests as chips, a list with the fixed topics, suggestions while typing) instead of only typing one; iPhone
 - **V01.0.922** What I know about you: proposals are topics instead of sender names (fixed topic list, senders as chips, example subjects, "Topic unclear" with an own topic), never your own addresses or services like GitHub, "Right" confirms the topic, the web tip searches only the topic word; iPhone
 - **V01.0.921** Attack probe in the workshop (stage 2 of the attack self-test): the tile "Probe attacks" measures how often the running language model would follow an order hidden in outside text, per disguise and tool; no tool runs, numbers only; its own switch under Features → Workshop, off; in the iPhone app too
 - **V01.0.920** Test fix: the page test "load older mail" scrolls on until "No older mail", however long a page takes, instead of giving up after twelve tries (was red in the workshop on the Spark)
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.916** Attack self-test (idea from NeMo Guardrails): every way in for outside text attacked with 12 disguises against a model that obeys every order; four gaps closed: the model's markers (<|im_start|>, <tool_call>) are defused, after a mail Wikipedia, weather and transit are locked too, short text states in the smart home count as outside, the briefing stands wholly in its data block
 - **V01.0.915** Architecture picture nicer: colour bar per kind with a legend, a symbol before every line, arrows with direction and paler lines, tab „only with Spark split“, more room between the rows; guard: every box has a colour and a symbol
 - **V01.0.914** Architecture picture without overflow: every text fits its box (Mail and contacts, speakers and phone, pictures and music shortened, font a little smaller); new guards in test_technik: text fits (de and en), no line across a box
-- **V01.0.913** Companion window in order: three tabs Heute, Meldungen and Rechner below the tiles, only the tab scrolls and the window stays on the screen, small tiles four in a row, the first three per section with „Alle n zeigen“, a new note opens „Meldungen“, on the Mac notes in the window too (Windows and Mac)
 
 
 
