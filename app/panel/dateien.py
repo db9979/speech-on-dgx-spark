@@ -99,6 +99,8 @@ DATEIEN = [
            "For you: what you marked as done or not interesting (only checksums)", art="Einstellungen"),
     profil("vorgaenge.json", "Offen: was dich braucht, was du auf später gelegt hast und was erledigt ist (Titel und Zustand der Karten); ein Vorschlag, der auf dein Ja wartet, mit dem Text der Mail nur bis zur Antwort",
            "Open: what needs you, what you put off for later and what is done (titles and state of the cards); a proposal waiting for your yes, with the mail's text only until it is answered", art="Warteschlange"),
+    profil("dungeon-helden.json", "KI-Dungeon-Master: deine Helden mit Stufe, Werten, Ausrüstung und Fähigkeiten (nur Spieldaten)",
+           "AI Dungeon Master: your heroes with level, values, equipment and abilities (game data only)", art="Zustand"),  # dungeon.py
     profil("interessen.json", "Was ich über dich weiß: bestätigte und abgelehnte Interessen mit Thema und Absendern und der letzte Netz-Tipp (kein Betreff, keine Mail)",
            "What I know about you: confirmed and refused interests with topic and senders and the last web tip (no subject, never a mail)", art="Einstellungen"),
     profil("mailstil.json", "Mailstil (nur die Zusammenfassung, keine Mail)", "Mail style (only the summary, never a mail)", art="Einstellungen"),
@@ -193,6 +195,9 @@ DATEIEN = [
     state("verbrauch-kontingent.json", "eigene Kontingente und Nachschlag", "Own quotas and extras", sicherung="json"),  # Kontingent: the admin's own limits per profile (verbrauch.py)
     state("iphone-pruef.json", "Prüfzugänge für die iPhone-App (Hashes)", "Review accesses for the iPhone app (hashes)", sicherung="json", schutz=("nur Hashes", "hashes only")),  # Apple's app review (pruefzugang.py)
     state("mitschreib-links.json", "Mitschreib-Links für Listen (Hashes)", "Write links for lists (hashes)", sicherung="json", schutz=("nur Hashes", "hashes only")),  # links for people without a profile to put entries on one list (mitschreiblink.py)
+    state("dungeon-runden.json", "KI-Dungeon-Master: Runden mit Plätzen (Hashes der Links), Helden, Aktionen und Erzählung", "AI Dungeon Master: rounds with seats (hashes of the links), heroes, actions and narration", sicherung="json", schutz=("nur Hashes", "hashes only")),  # rounds of the game (dungeon.py)
+    state("dungeon-figuren.json", "KI-Dungeon-Master: Helden von Gästen zum Mitnehmen (Hashes der Figur-Codes)", "AI Dungeon Master: heroes of guests to take along (hashes of the hero codes)", sicherung="json", schutz=("nur Hashes", "hashes only")),  # Figur-Codes (dungeon.py)
+    state("dungeon-regeln.json", "KI-Dungeon-Master: eigene Regeln und Katalog-Einträge des Admins", "AI Dungeon Master: the admin's own rules and catalog entries", sicherung="json"),  # Funktionen → KI-Dungeon-Master (dungeon.py)
     state("join.json", "Einladungen (Hashes)", "Invitations (hashes)", sicherung="json", schutz=("nur Hashes", "hashes only")),  # new people by invitation: the switch, invitations (code hashes) (join.py)
     # state/: every other file or folder, with the reason it stays out of a backup
     state("secret.key", "Schlüssel für alles Versiegelte", "Key for everything sealed", lokal="Schlüssel: nur verschlüsselt in der Umzugs-Sicherung (move-keys.json)", schutz=("ist der Schlüssel", "is the key")),

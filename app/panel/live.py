@@ -178,6 +178,8 @@ TARGETS = {
     "wbuch": ("Wissensbuch", "Seiten aus den eigenen Dokumenten · auf dem Spark", "spark", False),
     # Wissenskarte (wissenskarte.py): shown while it is on, checked connections, discarded ones and documents waiting (numbers only)
     "wkarte": ("Wissenskarte", "Verbindungen zwischen Wissensbuch-Seiten · auf dem Spark", "spark", False),
+    # KI-Dungeon-Master (dungeon.py): shown while it is on, rounds, players, guests, turns, loot and levels today (numbers only)
+    "dungeon": ("Dungeon-Master", "Rollenspiel-Runden mit dem eigenen Sprachmodell · auf dem Spark", "spark", False),
     # Teilen mit Profilen (geteilt.py): shown while it is on, single shares and today's changes (numbers only)
     "geteilt": ("Geteilt", "Teilen mit Profilen · auf dem Spark", "spark", False),
     # Den Spark anrufen (telefon.py): the PBX in the home network; signed in, calls now and today in numbers, never a number
@@ -1323,6 +1325,13 @@ def snapshot(view="admin", now=None):
     if wkk.get("on"):
         used.add("wkarte")
     try:
+        import dungeon
+        dgn = dungeon.for_live()
+    except Exception:
+        dgn = {"on": False}
+    if dgn.get("on"):
+        used.add("dungeon")
+    try:
         import geteilt
         tei = geteilt.for_live()
     except Exception:
@@ -1712,6 +1721,13 @@ def snapshot(view="admin", now=None):
                         + (f" · {wbk['widerspruch']} Widersprüche" if wbk.get("widerspruch") else "")
                         + (f" · {wbk['veraltet']} veraltet?" if wbk.get("veraltet") else "")
                         + (" · arbeitet" if wbk.get("running") else ""))
+        if x["id"] == "dungeon":   # Dungeon-Master: rounds, players and guests, turns, loot and levels today (numbers only, never a name or a text)
+            x["sub"] = (f"{dgn.get('runden', 0)} Runden · {dgn.get('spieler', 0)} Spieler, {dgn.get('online', 0)} da, {dgn.get('gaeste', 0)} Gäste"
+                        + f" · heute {dgn.get('zuege', 0)} Züge, {dgn.get('beute', 0)} Beute, {dgn.get('stufen', 0)} Stufen"
+                        + (f" · {dgn['ausfall']} ohne Erzählung" if dgn.get("ausfall") else "")
+                        + (f" · {dgn['verworfen']} Teile verworfen" if dgn.get("verworfen") else "")
+                        + (f" · {dgn['abgelehnt']} abgelehnt" if dgn.get("abgelehnt") else "")
+                        + (" · erzählt gerade" if dgn.get("denkt") else ""))
         if x["id"] == "wkarte":    # Wissenskarte: connections, discarded, documents waiting, profiles, numbers only (never a title)
             x["sub"] = (f"{wkk.get('verbindungen', 0)} Verbindungen · {wkk.get('punkte', 0)} Punkte · {wkk.get('warten', 0)} Dokumente warten"
                         + f" · {wkk.get('profile', 0)} Profile"

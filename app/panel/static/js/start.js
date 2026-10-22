@@ -48,13 +48,14 @@ async function startPage(){let who=null;try{who=await (await /*raw: the first wh
   if(window.postStart)postStart(who);
   if(window.lstStart)lstStart(who);   // Listen (listen.js): the menu entry only for a profile that may use lists
   if(window.wbStart)wbStart(who);   // Wissensbuch (wissensbuch.js): the menu entry only when the admin released it
+  if(window.dmStart)dmStart(who);   // KI-Dungeon-Master (dungeon.js): the menu entry only when the admin released it
   if(window.vgStart)vgStart(who);   // Offen (offen.js): the menu entry, the cards in the conversation and their stream
   if(window.konStart)konStart(who);   // Kontakte (kontakte.js): the menu entry only for a profile with contacts
   // a program's OAuth sign-in (mcpserver.py): kept until the profile is signed in, then Ich → Spark als MCP-Server asks
   try{const m=/^#mcpauth=([A-Za-z0-9_-]{20,48})$/.exec(location.hash);if(m){sessionStorage.setItem('mcpauth',m[1]);history.replaceState(null,'',location.pathname+location.search)}}catch{}
   // an own MCP service's sign-in came back (meinmcp.py /api/mymcp/back): Ich → Meine MCP-Dienste finishes it
   try{const m=/^#mymcpback=([A-Za-z0-9_-]{20,64}\.[A-Za-z0-9._~%-]{1,3100}|error)$/.exec(location.hash);if(m){sessionStorage.setItem('mymcpback',m[1]);history.replaceState(null,'',location.pathname+location.search)}}catch{}
-  SETUP=who.setup||null;if(typeof joinHash==='function'&&joinHash())return;if(typeof mitHash==='function'&&mitHash())return;if(typeof kgHash==='function'&&kgHash())return;   // an invitation or "Am Handy weitermachen" (join.js)
+  SETUP=who.setup||null;if(typeof joinHash==='function'&&joinHash())return;if(typeof mitHash==='function'&&mitHash())return;if(typeof kgHash==='function'&&kgHash())return;if(typeof dmHash==='function'&&dmHash())return;   // an invitation or "Am Handy weitermachen" (join.js)
   if(!ADMIN){document.body.classList.add('guest');
     CFG={tts:{default_voice:a.default_voice},asr:{default_language:a.asr_language},panel:{https_port:a.https_port}};
     PUBLIC=who.public!==false;

@@ -2413,7 +2413,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "innt mit einem Wort aus logfilter.AREAS (32 Bereiche), Profile nur über profiles.log_name. Ein Selbsttest prüft beides. 6. Ende und Bewertung: Am Ende bekommt der Datensatz seinen Zustand: Fehler, wenn ein Fehlerwort gesetzt ist, langsam, wenn der erste Ton später als 5.0 s kam, sonst gut. 7. Anfragen verfolgen an?: Ist nur Live oder der Einstellungs-Assistent an, endet der Datensatz hier. Er wird nirgends geschrieben. 8. Zeile „anfrage:“ ins Journal: Eine Zeile pro Anfrage: Kennung, Kanal, Einordnung, Werkzeuge mit ok oder nicht ok, Zeit bis zur Rückmeldung, bis zum ersten Ton und bis zum Ende. Ohne Namen. 9. Anfrage-Verlauf auf der Platte: Der Datensatz wird angehängt. Wird die Datei zu groß, bleiben nur die letzten 500 Anfragen der letzten 2880 Minuten. Die Datei ist in keiner Sicherung. 10. Admin liest Logs → Anfragen: Nur Admin und Mit-Admins lesen den Verlauf, mit Rate-Limit. Name und Gerät eines Profils stehen nur da, wenn das Profil es erlaubt; sonst heißt es „Profil“. Zu einer Anfrage zeigt das Panel die Journal-Zeilen aus ihrer Zeit. 11. Journal lesen und einordnen: logfilter liest höchstens 20000 Zeilen; an journalctl gehen nur Zahlen aus festen Listen. Jede Zeile bekomm"
+"text": "innt mit einem Wort aus logfilter.AREAS (33 Bereiche), Profile nur über profiles.log_name. Ein Selbsttest prüft beides. 6. Ende und Bewertung: Am Ende bekommt der Datensatz seinen Zustand: Fehler, wenn ein Fehlerwort gesetzt ist, langsam, wenn der erste Ton später als 5.0 s kam, sonst gut. 7. Anfragen verfolgen an?: Ist nur Live oder der Einstellungs-Assistent an, endet der Datensatz hier. Er wird nirgends geschrieben. 8. Zeile „anfrage:“ ins Journal: Eine Zeile pro Anfrage: Kennung, Kanal, Einordnung, Werkzeuge mit ok oder nicht ok, Zeit bis zur Rückmeldung, bis zum ersten Ton und bis zum Ende. Ohne Namen. 9. Anfrage-Verlauf auf der Platte: Der Datensatz wird angehängt. Wird die Datei zu groß, bleiben nur die letzten 500 Anfragen der letzten 2880 Minuten. Die Datei ist in keiner Sicherung. 10. Admin liest Logs → Anfragen: Nur Admin und Mit-Admins lesen den Verlauf, mit Rate-Limit. Name und Gerät eines Profils stehen nur da, wenn das Profil es erlaubt; sonst heißt es „Profil“. Zu einer Anfrage zeigt das Panel die Journal-Zeilen aus ihrer Zeit. 11. Journal lesen und einordnen: logfilter liest höchstens 20000 Zeilen; an journalctl gehen nur Zahlen aus festen Listen. Jede Zeile bekomm"
 },
 {
 "lang": "de",
@@ -3173,7 +3173,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 35), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 85). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, v"
+"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 38), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 85). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, v"
 },
 {
 "lang": "de",
@@ -3197,7 +3197,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 35 Dateien in jeder Sicherung (Schritt 7) - 85 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
+"text": "- 38 Dateien in jeder Sicherung (Schritt 7) - 85 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
 },
 {
 "lang": "de",
@@ -3589,7 +3589,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "1. Ein Dienst schreibt eine Zeile: Panel, ASR, TTS, Engines und Wächter schreiben mit print. systemd gibt die Zeile an das Journal; jede Einheit hat LogNamespace=speech-spark. 2. Feste Wörter und Zahlen: Jede Zeile des Panels beginnt mit einem Wort aus logfilter.AREAS (32 Bereiche) und trägt nur feste Wörter und Zahlen. Ein Profil steht dort nur über profiles.log_name: sein Name nur mit seiner Zustimmung, sonst „Profil“ und das Ende der ID. test_log_luecken verlangt für jede Aktion eine Zeile je Ergebnis. 3. Ausführlich an?: Für einige Bereiche kann der Admin zusätzliche Zeilen einschalten, höchstens 240 Minuten. Auch sie tragen nur Zahlen und Entscheidungen; ein Neustart schaltet sie aus. 4. Abfragen still: Erfolgreiche Statusabfragen, die das Panel alle paar Sekunden stellt, schreiben keine Zeile. 5. Eigener Bereich mit Grenze: install.sh schreibt die Grenze für Platz und Alter aus logs.max_mb und logs.keep_days. Ältere Zeilen löscht journald selbst. Eine Änderung wirkt nach dem nächsten Update oder install.sh. 6. Admin öffnet die Diagnose: Nur der Admin, höchstens 60 Abrufe pro Minute. 7. Filter aus der festen Liste?: Bereiche, Zeitfenster (bis 24 Stunden) und Zeilenzahl (bis 10"
+"text": "1. Ein Dienst schreibt eine Zeile: Panel, ASR, TTS, Engines und Wächter schreiben mit print. systemd gibt die Zeile an das Journal; jede Einheit hat LogNamespace=speech-spark. 2. Feste Wörter und Zahlen: Jede Zeile des Panels beginnt mit einem Wort aus logfilter.AREAS (33 Bereiche) und trägt nur feste Wörter und Zahlen. Ein Profil steht dort nur über profiles.log_name: sein Name nur mit seiner Zustimmung, sonst „Profil“ und das Ende der ID. test_log_luecken verlangt für jede Aktion eine Zeile je Ergebnis. 3. Ausführlich an?: Für einige Bereiche kann der Admin zusätzliche Zeilen einschalten, höchstens 240 Minuten. Auch sie tragen nur Zahlen und Entscheidungen; ein Neustart schaltet sie aus. 4. Abfragen still: Erfolgreiche Statusabfragen, die das Panel alle paar Sekunden stellt, schreiben keine Zeile. 5. Eigener Bereich mit Grenze: install.sh schreibt die Grenze für Platz und Alter aus logs.max_mb und logs.keep_days. Ältere Zeilen löscht journald selbst. Eine Änderung wirkt nach dem nächsten Update oder install.sh. 6. Admin öffnet die Diagnose: Nur der Admin, höchstens 60 Abrufe pro Minute. 7. Filter aus der festen Liste?: Bereiche, Zeitfenster (bis 24 Stunden) und Zeilenzahl (bis 10"
 },
 {
 "lang": "de",
@@ -3613,7 +3613,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 32 Bereiche der Diagnose (Schritt 2) - 20000 Zeilen pro Abruf höchstens gelesen (Schritt 8) - 2 MB Journal-Text pro Abruf höchstens (Schritt 8) - 1000 Zeilen höchstens angezeigt (Schritt 7) - 240 Minuten „Ausführlich“ höchstens (Schritt 3)"
+"text": "- 33 Bereiche der Diagnose (Schritt 2) - 20000 Zeilen pro Abruf höchstens gelesen (Schritt 8) - 2 MB Journal-Text pro Abruf höchstens (Schritt 8) - 1000 Zeilen höchstens angezeigt (Schritt 7) - 240 Minuten „Ausführlich“ höchstens (Schritt 3)"
 },
 {
 "lang": "de",
@@ -5022,6 +5022,46 @@
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
 "text": "Lange Beschreibung als Vorlage (V01.0.926, Dominik 2026-10-22 „wir benötigen um einiges mehr an eingabe zeichen“): Die eigene Beschreibung unter *Ich → Musik* (und in der iPhone-App) darf jetzt bis 2000 Zeichen lang sein statt 300 (musik.MAX_WISH), etwa eine Seite, z. B. ein Firmentext als Vorlage für ein Lied; so viel wie beim Dokument-Wunsch (docmake.MAX_WISH). Das Musikmodell selbst liest höchstens 600 Zeichen (musik.MAX_CAPTION); darum liefert „Text schreiben“ zusätzlich eine kurze englische Musikbeschreibung (beschreibung: Stil, Stimmung, Instrumente, Tempo, Stimme, ohne Namen; mit „im Stil von“ verworfen), die Seite und App bei „Lied machen“ mitschicken, solange die Beschreibung nicht von Hand geändert wurde. Ohne sie gehen die ersten 600 Zeichen der eigenen Worte ans Musikmodell. Die Musikbeschreibung prüft das Panel wie den Wunsch (Wortliste, Geheimnisse, Künstler). Körpergrenze 16 KB und Rate-Limits bleiben. API: POST /api/musik nimmt zusätzlich beschreibung (höchstens 600 Zeichen)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "KI-Dungeon-Master (V01.0.949, Plan dungeon-master/plan.md, Dominik 2026-10-22 „ok und das ganze vom admin etwas anpassbar und erweiterbar“, „soll auch gutes loot und leveling geben“, „Die Spieler sollen Equipment traden untereinander können Charakter speichern und mitnehmen in nächstes Spiel“): Admin-Schalter *Funktionen → Meine Daten → KI-Dungeon-Master* (chat.dungeon, ab Werk aus; freigegeben für jedes Profil, das der Admin nicht sperrt; die Gäste des Assistenten nie). Ein Rollenspiel für bis zu fünf Spieler auf einer eigenen Seite im Menü Dungeon-Master mit den Reitern *Runden* und *Helden*. Wer eine Runde anlegt, wählt Titel, Welt (Fantasy, Horror, Science-Fiction, Piraten, eigene), Einstieg, Ton (ab 8, 12 oder 16 mit eigener Wortliste), Zugzeit (1, 2 oder 5 Minuten), Dauer (6 Stunden, 1 Tag, 1 Woche) und einen Helden (Name, Volk, Klasse) und kann den Dungeon-Master-Prompt ändern; dahinter stehen immer die festen Regeln des Panels. Einladen macht je Mitspieler einen Platz-Link mit QR-Code (https://<panel>/#spiel=<code>): wer ihn öffnet, spielt als Gast ohne Profil oder mit dem eigenen Profil. Ablauf: Jeder schreibt, was seine Figur tut (höchstens 300 Zeichen); haben alle gehand"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "elt, ist die Zeit um oder tippt der Gastgeber „Jetzt weiter“, antwortet das eigene Sprachmodell in zwei Schritten in einem festen JSON-Schema: erst welche Proben es braucht, dann die Erzählung mit Folgen, Beute, Erfolgen, NPC-Sätzen, Szene und wen es fragt. Das Panel entscheidet (dungeon.py, Regeln und Katalog als Daten in dungeon_regeln.json, geprüft von check_rules): es würfelt W20 plus Wert gegen eine Schwierigkeit von 5 bis 20 (20 gelingt, 1 misslingt immer), begrenzt Schaden und Heilung auf 1 bis 6 (minus Rüstung), nimmt nur Namen der Gruppe und Arten aus festen Listen, weist Wörter des Tons und der Liste „nie“ ab und spricht einen Spieler, der zwei Züge nichts geschrieben hat, selbst mit Namen an. Eine kaputte Antwort bekommt einen zweiten Versuch, dann steht ein fester Satz da und der Zug bleibt offen. Beute und Stufen: Das Modell meldet nur den Anlass (Gegner, Truhe, Belohnung, Boss) mit Name und Satz; Seltenheit (W100 nach Anlass und Gruppenstufe, gewöhnlich bis legendär, episch ab Stufe 2, legendär ab Stufe 5, Pech-Schutz nach 6 Funden), der Gegenstand passend zur Klasse, Bonus, Effekt, Empfänger (wer am längsten nichts fand) und Gold kommen vom Panel. Erfahrung nach fest"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "en Zahlen (geschaffte Probe, Gegner nach Rang, Ziel der Szene für alle), Stufen 1 bis 10, höchstens eine Stufe je Spielabend; jede Stufe bringt Leben und einen Wertpunkt, Stufe 2, 4, 6, 8 und 10 eine Fähigkeit aus zwei Vorschlägen. Auf dem eigenen Bogen: Anlegen, Ablegen, Trank trinken, Geben an einen Mitspieler. Tauschen: „Tausch anbieten“ wählt einen Mitspieler, eigene Dinge aus der Tasche und Gold gegen Dinge aus seiner Tasche und Gold (bis zu 4 je Seite, höchstens 3 offene Angebote je Spieler); erst wenn er „Annehmen“ tippt, prüft das Panel noch einmal, dass beide alles besitzen und Platz in der Tasche (12) haben, und tauscht in einem Schritt; „Ablehnen“ oder „Zurückziehen“ nimmt es zurück, ein getauschtes Ding fällt aus allen anderen Angeboten. Helden mitnehmen: Helden von Profilen bleiben mit Stufe, Werten, Ausrüstung und Gold gespeichert (users/<profil>/dungeon-helden.json, bis zu 8) und kommen in die nächste Runde mit; ein Held spielt immer nur in einer laufenden Runde. Ein Gast holt sich „Figur-Code holen“: nur einmal zu sehen, 30 Tage gültig, einmal einlösbar, ein neuerer Code ersetzt den älteren; mit ihm spielt er in einer neuen Runde weiter oder nimmt den Helden in sein"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": " Profil auf. Admin: *Funktionen → KI-Dungeon-Master*, Knopf „Regeln anpassen“, ergänzt oder ändert Welten, Töne, Völker, Klassen mit Fähigkeiten, Gegenstände, Effekte, Seltenheiten, Kurven für Erfahrung und Beute, Grenzen und den Standard-Prompt als JSON (dungeon-regeln.json im Zustandsordner): ein Eintrag mit derselben id ersetzt den mitgelieferten, \"aus\": true nimmt ihn heraus, neue ids kommen dazu; das Panel lehnt ein Regelwerk mit Fehlern mit der Liste der Fehler ab und nutzt bei einer kaputten Datei die mitgelieferten Regeln. Schutz: Der Code steht hinter dem #, der Spark behält nur seinen Hash; fremde Seiten (Origin) werden abgewiesen, jede Anfrage zählt gegen ein eigenes Rate-Limit, falsche Codes sperren wie eine falsche PIN; Aktionen und Erzählung sind Daten (im Block <<< … >>>, Marker entschärft), schalten nichts frei und kommen nie ins Gedächtnis; ein Gast sieht nur seine Runde, nie den Assistenten, ein Werkzeug oder eine Einstellung. Zustand → Live (Ziel „Dungeon-Master“) zeigt nur Runden, Spieler, Gäste, Züge, Beute, Stufen, Ausfälle und Abweisungen; Logs (Bereich „Dungeon-Master“) nur feste Wörter und Zahlen (dungeon: runde neu | fantasy | ab 12 | Profil …, dungeon: zu"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "g | ok | 2 proben | 3100 ms, dungeon: beute | boss | rar, dungeon: stufe | 4, dungeon: tausch | angenommen). *Alle Spieldaten löschen* unter Helden geht auch, wenn der Admin das Spiel gesperrt hat. API: GET /api/profile/dungeon, POST /api/profile/dungeon/runde, GET /api/profile/dungeon/{rid}, POST /api/profile/dungeon/{rid}/aktion|held|weiter|pause|platz, DELETE /api/profile/dungeon/{rid}, POST /api/profile/dungeon/beitreten, DELETE /api/profile/dungeon/held/{hid}, DELETE /api/profile/dungeon/daten; für Gäste POST /api/dungeon/platz|beitreten|lage|aktion|held|figur ({code, …}); Admin GET|PUT|DELETE /api/admin/dungeon."
 },
 {
 "lang": "de",
@@ -8454,6 +8494,14 @@
 "head": "Meine Daten",
 "title": "Meine Daten",
 "text": "- Musik bearbeiten (Funktionen → Meine Daten → „Musik bearbeiten“; baut auf „Musik machen“; Ich → Musik): Der Spark bearbeitet ein Lied unter Ich → Musik, selbst und ohne Internet, mit demselben ACE-Step wie beim Machen: einen Abschnitt neu machen, vorne oder hinten verlängern, die Musikrichtung ändern (Rock, Jazz, Reggae, …, wie nah am Orig …"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
+"text": "- KI-Dungeon-Master (Funktionen → Meine Daten → „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Ein Rollenspiel für bis zu fünf Spieler: Du legst unter Dungeon-Master (eigener Eintrag im Menü) eine Runde an, wählst Welt, Ton (ab 8, 12 oder 16) und Zugzeit und lädst per Platz-Link oder QR-Code ein, auch Leute ohne Profil."
 },
 {
 "lang": "de",
@@ -14117,7 +14165,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "1. A request comes in: Chat, writing help, creating documents and what the Spark does by itself create a record at the start: channel, kind (profile, guest, admin, Spark) and device. Before any switch aktiv.py counts the request for „Aktiv 10 min“ (OLED, Monitoring, Live): a profile once, a guest per device as a shortened hash, nothing of the Spark itself, in memory only. 2. Anything switched on?: If neither „Trace requests“ nor the live page nor the settings assistant is on, there is no record. Only the modules' journal lines remain. 3. Steps with fixed words: Each step (switch, model round, tool, check, speech output) is added with kind, name and time. A value goes in only if it is a number or a short fixed word; anything else is dropped. Question, answer, arguments and results never go in. 4. Live page on?: With the live page on, live.py sees each step at once: which service is asked, what the guard decides, what comes back. Everything stays in memory and is gone after a restart. 5. Journal lines of the modules: Independently each module writes its lines into the Spark's journal. Every line starts with a word from logfilter.AREAS (32 areas), profiles only through profiles.log_na"
+"text": "1. A request comes in: Chat, writing help, creating documents and what the Spark does by itself create a record at the start: channel, kind (profile, guest, admin, Spark) and device. Before any switch aktiv.py counts the request for „Aktiv 10 min“ (OLED, Monitoring, Live): a profile once, a guest per device as a shortened hash, nothing of the Spark itself, in memory only. 2. Anything switched on?: If neither „Trace requests“ nor the live page nor the settings assistant is on, there is no record. Only the modules' journal lines remain. 3. Steps with fixed words: Each step (switch, model round, tool, check, speech output) is added with kind, name and time. A value goes in only if it is a number or a short fixed word; anything else is dropped. Question, answer, arguments and results never go in. 4. Live page on?: With the live page on, live.py sees each step at once: which service is asked, what the guard decides, what comes back. Everything stays in memory and is gone after a restart. 5. Journal lines of the modules: Independently each module writes its lines into the Spark's journal. Every line starts with a word from logfilter.AREAS (33 areas), profiles only through profiles.log_na"
 },
 {
 "lang": "en",
@@ -14869,7 +14917,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 35), otherwise the line gives its reason (dateien.STATE_LOCAL, 85). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe, vorrat) read it again."
+"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 38), otherwise the line gives its reason (dateien.STATE_LOCAL, 85). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe, vorrat) read it again."
 },
 {
 "lang": "en",
@@ -14885,7 +14933,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 35 files in every backup (step 7) - 85 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
+"text": "- 38 files in every backup (step 7) - 85 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
 },
 {
 "lang": "en",
@@ -15261,7 +15309,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "1. A service writes a line: Panel, ASR, TTS, engines and watchers write with print. systemd hands the line to the journal; every unit has LogNamespace=speech-spark. 2. Fixed words and numbers: Every line of the panel starts with a word from logfilter.AREAS (32 areas) and carries only fixed words and numbers. A profile appears there only through profiles.log_name: its name only with its consent, else „Profil“ and the end of its ID. test_log_luecken wants a line for every outcome of every action. 3. Detail on?: For some areas the admin can switch on extra lines, at most 240 minutes. They too carry only numbers and decisions; a restart switches them off. 4. Polls quiet: Successful status polls the panel makes every few seconds write no line. 5. Own part with a limit: install.sh writes the limit for space and age from logs.max_mb and logs.keep_days. journald deletes older lines itself. A change applies after the next update or install.sh. 6. The admin opens the diagnosis: Admin only, at most 60 calls per minute. 7. Filter from the fixed list?: Areas, time window (up to 24 hours) and number of lines (up to 1000) come only from fixed lists. Nothing the browser sends reaches a shell. 8. R"
+"text": "1. A service writes a line: Panel, ASR, TTS, engines and watchers write with print. systemd hands the line to the journal; every unit has LogNamespace=speech-spark. 2. Fixed words and numbers: Every line of the panel starts with a word from logfilter.AREAS (33 areas) and carries only fixed words and numbers. A profile appears there only through profiles.log_name: its name only with its consent, else „Profil“ and the end of its ID. test_log_luecken wants a line for every outcome of every action. 3. Detail on?: For some areas the admin can switch on extra lines, at most 240 minutes. They too carry only numbers and decisions; a restart switches them off. 4. Polls quiet: Successful status polls the panel makes every few seconds write no line. 5. Own part with a limit: install.sh writes the limit for space and age from logs.max_mb and logs.keep_days. journald deletes older lines itself. A change applies after the next update or install.sh. 6. The admin opens the diagnosis: Admin only, at most 60 calls per minute. 7. Filter from the fixed list?: Areas, time window (up to 24 hours) and number of lines (up to 1000) come only from fixed lists. Nothing the browser sends reaches a shell. 8. R"
 },
 {
 "lang": "en",
@@ -15285,7 +15333,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 32 areas of the diagnosis (step 2) - 20000 lines read per call at most (step 8) - 2 MB journal text per call at most (step 8) - 1000 lines shown at most (step 7) - 240 minutes of „detail“ at most (step 3)"
+"text": "- 33 areas of the diagnosis (step 2) - 20000 lines read per call at most (step 8) - 2 MB journal text per call at most (step 8) - 1000 lines shown at most (step 7) - 240 minutes of „detail“ at most (step 3)"
 },
 {
 "lang": "en",
@@ -16670,6 +16718,46 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "Long description as a template (V01.0.926, Dominik 2026-10-22 \"wir benötigen um einiges mehr an eingabe zeichen\"): The own description under *Me → Music* (and in the iPhone app) may now be up to 2000 characters long instead of 300 (musik.MAX_WISH), about one page, e.g. a firm's text as the template for a song; as much as the document wish (docmake.MAX_WISH). The music model itself reads at most 600 characters (musik.MAX_CAPTION); so \"Write lyrics\" also returns a short English music description (beschreibung: style, mood, instruments, tempo, voice, no names; dropped with \"in the style of\"), which the page and the app send with \"Make the song\" as long as the description was not changed by hand. Without it the first 600 characters of the own words go to the music model. The panel checks the music description like the wish (word list, secrets, artists). The 16 KB body limit and the rate limits stay. API: POST /api/musik also takes beschreibung (at most 600 characters)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master (V01.0.949, plan dungeon-master/plan.md, Dominik 2026-10-22 \"ok und das ganze vom admin etwas anpassbar und erweiterbar\", \"soll auch gutes loot und leveling geben\", \"Die Spieler sollen Equipment traden untereinander können Charakter speichern und mitnehmen in nächstes Spiel\"): admin switch *Features → My data → AI Dungeon Master* (chat.dungeon, off by default; released for every profile the admin does not block; never for the assistant's guests). A role-playing game for up to five players on a page of its own in the menu Dungeon Master with the tabs *Rounds* and *Heroes*. Whoever starts a round picks title, world (fantasy, horror, science fiction, pirates, own), opening, tone (from 8, 12 or 16 with its own word list), turn time (1, 2 or 5 minutes), duration (6 hours, 1 day, 1 week) and a hero (name, people, class) and may change the Dungeon Master prompt; the panel's fixed rules always stand behind it. Invite makes a seat link with a QR code per player (https://<panel>/#spiel=<code>): whoever opens it plays as a guest without a profile or with their own profile. Flow: everyone writes what their character does (at most 300 characters); once all have acted, the time"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": " is up or the host taps \"Go on now\", the own language model answers in two steps in a fixed JSON schema: first which checks it needs, then the narration with consequences, loot, successes, NPC lines, scene and whom it asks. The panel decides (dungeon.py, rules and catalogue as data in dungeon_regeln.json, checked by check_rules): it rolls d20 plus value against a difficulty of 5 to 20 (20 always succeeds, 1 always fails), limits damage and healing to 1 to 6 (minus armour), takes only names of the group and kinds from fixed lists, refuses words of the tone and of the list \"nie\" and addresses a player who wrote nothing for two turns by name itself. A broken answer gets a second try, then a fixed sentence stands there and the turn stays open. Loot and levels: the model only reports the occasion (foe, chest, reward, boss) with a name and a sentence; rarity (d100 by occasion and group level, common to legendary, epic from level 2, legendary from level 5, pity after 6 finds), the item fitting the class, bonus, effect, receiver (who went longest without a find) and gold come from the panel. Experience by fixed numbers (a check passed, foes by rank, the scene's goal for everyone), levels 1"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": " to 10, at most one level per game evening; every level brings life and a value point, levels 2, 4, 6, 8 and 10 an ability out of two offers. On the own sheet: equip, unequip, drink a potion, give to another player. Trading: \"Offer a trade\" picks a player, own things from the bag and gold for things from their bag and gold (up to 4 per side, at most 3 open offers per player); only when they tap \"Accept\" does the panel check again that both own everything and have room in the bag (12), and swap in one step; \"Decline\" or \"Withdraw\" takes it back, a traded thing drops out of every other offer. Taking heroes along: heroes of profiles stay stored with level, values, equipment and gold (users/<profile>/dungeon-helden.json, up to 8) and come along into the next round; a hero only ever plays in one running round. A guest taps \"Get a hero code\": shown once, valid 30 days, redeemable once, a newer code replaces the older one; with it they play on in a new round or take the hero into their profile. Admin: *Features → AI Dungeon Master*, button \"Adjust rules\", adds or changes worlds, tones, peoples, classes with abilities, items, effects, rarities, curves for experience and loot, limits and th"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "e default prompt as JSON (dungeon-regeln.json in the state folder): an entry with the same id replaces the shipped one, \"aus\": true takes it out, new ids are added; the panel refuses a rule set with errors with the list of errors and uses the shipped rules when the file is broken. Protection: the code stands after the #, the Spark keeps only its hash; other sites (Origin) are refused, every request counts against its own rate limit, wrong codes lock like a wrong PIN; actions and narration are data (in the block <<< … >>>, markers defused), unlock nothing and never go into memory; a guest only sees their round, never the assistant, a tool or a setting. Status → Live (target \"Dungeon Master\") only shows rounds, players, guests, turns, loot, levels, fallbacks and refusals; Logs (area \"Dungeon Master\") only fixed words and numbers (dungeon: runde neu | fantasy | ab 12 | Profil …, dungeon: zug | ok | 2 proben | 3100 ms, dungeon: beute | boss | rar, dungeon: stufe | 4, dungeon: tausch | angenommen). *Delete all game data* under Heroes also works while the admin blocked the game. API: GET /api/profile/dungeon, POST /api/profile/dungeon/runde, GET /api/profile/dungeon/{rid}, POST /api/prof"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "ile/dungeon/{rid}/aktion|held|weiter|pause|platz, DELETE /api/profile/dungeon/{rid}, POST /api/profile/dungeon/beitreten, DELETE /api/profile/dungeon/held/{hid}, DELETE /api/profile/dungeon/daten; for guests POST /api/dungeon/platz|beitreten|lage|aktion|held|figur ({code, …}); admin GET|PUT|DELETE /api/admin/dungeon."
 },
 {
 "lang": "en",
@@ -19982,6 +20070,14 @@
 "head": "My data",
 "title": "My data",
 "text": "- Editing music (Features → My data → \"Editing music\"; builds on \"Making music\"; Me → Music): The Spark edits a song under Me → Music, itself and without the internet, with the same ACE-Step as for making: make a section new, extend at the front or back, change the music style (rock, jazz, reggae, …, you decide how close to the o …"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
+"text": "- AI Dungeon Master (Features → My data → \"AI Dungeon Master\"; Dungeon Master → Settings): A role-playing game for up to five players: under Dungeon Master (its own menu entry) you start a round, pick world, tone (from 8, 12 or 16) and turn time and invite by seat link or QR code, also people without a profile."
 },
 {
 "lang": "en",

@@ -1,0 +1,138 @@
+{
+  "zweck": "KI-Dungeon-Master (dungeon.py): die festen Regeln und der Katalog. Das Panel würfelt, vergibt Beute, Erfahrung und Stufen nur aus diesen Tabellen; das Modell erzählt nur. Der Admin ergänzt und ändert unter Funktionen → Dungeon-Master → Regeln anpassen (STATE/dungeon-regeln.json, geprüft von dungeon.check_rules).",
+  "prompt": "Du bist der hochentwickelte, KI-gesteuerte Dungeon Master (DM) für eine Multiplayer-Gruppe. Deine Aufgabe ist es, die Welt packend zu beschreiben, NPCs Leben einzuhauchen und auf die kreativen Aktionen der Spieler zu reagieren.\n\nRegeln für dein Verhalten:\n1. Spiele NIEMALS für die Spieler. Warte nach jeder Szene auf deren Aktionen.\n2. Sprich die Spieler direkt mit ihren Charakternamen an.\n3. Beziehe die gesamte Gruppe ein. Wenn ein Spieler zu dominant ist, sprich gezielt einen anderen Charakter an (z.B. \"Was macht dein Charakter währenddessen, [Name]?\").\n4. Formatiere deine Antworten immer im JSON-Format, damit das System deine Erzählung von mechanischen Triggern trennen kann.\n5. Nutze eine atmosphärische, bildhafte Sprache, bleibe aber prägnant genug, um den Spielfluss im Chat nicht zu verlangsamen.",
+  "grenzen": {"spieler": 5, "zug_s": [60, 120, 300], "zug_standard": 120, "stunden": [6, 24, 168], "stufe_max": 10},
+  "welten": [
+    {"id": "fantasy", "name": ["Fantasy", "Fantasy"], "satz": ["Burgen, Drachen, alte Magie und vergessene Gewölbe.", "Castles, dragons, old magic and forgotten vaults."]},
+    {"id": "horror", "name": ["Horror", "Horror"], "satz": ["Nebel, verlassene Dörfer und etwas, das in der Dunkelheit wartet.", "Fog, deserted villages and something waiting in the dark."]},
+    {"id": "scifi", "name": ["Science-Fiction", "Science fiction"], "satz": ["Raumstationen, fremde Planeten und eigensinnige Bordcomputer.", "Space stations, strange planets and headstrong ship computers."]},
+    {"id": "piraten", "name": ["Piraten", "Pirates"], "satz": ["Schatzkarten, Stürme und Seeungeheuer auf hoher See.", "Treasure maps, storms and sea monsters on the high seas."]},
+    {"id": "eigene", "name": ["Eigene Welt", "Own world"], "satz": ["Die Welt beschreibt der Einstieg der Runde.", "The round's opening describes the world."]}
+  ],
+  "toene": [
+    {"id": 8, "name": ["Kinder (ab 8)", "Children (8+)"], "regel": ["Freundlich und spannend wie ein Kinderbuch: keine Toten, kein Blut, Gegner fliehen oder schlafen ein.", "Friendly and exciting like a children's book: no deaths, no blood, foes flee or fall asleep."], "woerter": ["blut", "leiche", "tot ", "tote ", "töte", "mord", "folter", "enthaupt", "schlacht", "abschlacht", "gemetzel", "verstümmel", "eingeweide"]},
+    {"id": 12, "name": ["Spannend (ab 12)", "Exciting (12+)"], "regel": ["Abenteuer mit Gefahr und Kämpfen, aber ohne grausame Einzelheiten.", "Adventure with danger and fights, but without gruesome details."], "woerter": ["folter", "enthaupt", "verstümmel", "eingeweide", "gemetzel"]},
+    {"id": 16, "name": ["Düster (ab 16)", "Dark (16+)"], "regel": ["Düstere Stimmung und harte Kämpfe sind erlaubt, nie ausführliche Grausamkeit.", "Dark mood and hard fights are allowed, never detailed cruelty."], "woerter": []}
+  ],
+  "nie": ["vergewalt", "sexuell", "nackt", "porno", "kinderporn", "missbrauch"],
+  "werte": [
+    {"id": "staerke", "name": ["Stärke", "Strength"]},
+    {"id": "geschick", "name": ["Geschick", "Dexterity"]},
+    {"id": "verstand", "name": ["Verstand", "Wits"]}
+  ],
+  "voelker": [
+    {"id": "mensch", "name": ["Mensch", "Human"], "werte": {"staerke": 1, "geschick": 1, "verstand": 1}},
+    {"id": "zwerg", "name": ["Zwerg", "Dwarf"], "werte": {"staerke": 2, "geschick": 0, "verstand": 1}},
+    {"id": "elf", "name": ["Elf", "Elf"], "werte": {"staerke": 0, "geschick": 2, "verstand": 1}},
+    {"id": "halbling", "name": ["Halbling", "Halfling"], "werte": {"staerke": 0, "geschick": 2, "verstand": 1}},
+    {"id": "ork", "name": ["Ork", "Orc"], "werte": {"staerke": 3, "geschick": 0, "verstand": 0}}
+  ],
+  "klassen": [
+    {"id": "krieger", "name": ["Krieger", "Warrior"], "werte": {"staerke": 2, "geschick": 1, "verstand": 0}, "leben": 14, "leben_plus": 5, "waffen": ["schwert", "axt", "hammer", "speer"],
+     "faehigkeiten": [
+       {"id": "rundumschlag", "name": ["Rundumschlag", "Sweeping blow"], "satz": ["Trifft alle Gegner direkt neben dir.", "Hits every foe right next to you."], "wert": "staerke", "bonus": 1},
+       {"id": "schildwall", "name": ["Schildwall", "Shield wall"], "satz": ["1× je Szene Schaden eines Treffers für einen Freund abfangen.", "Once per scene take a hit's damage for a friend."], "wert": "staerke", "bonus": 1},
+       {"id": "kampfschrei", "name": ["Kampfschrei", "Battle cry"], "satz": ["Die ganze Gruppe bekommt bei der nächsten Probe +1.", "The whole group gets +1 on the next check."], "wert": "verstand", "bonus": 1},
+       {"id": "eisenhaut", "name": ["Eisenhaut", "Iron skin"], "satz": ["Jeder Treffer gegen dich macht 1 Schaden weniger.", "Every hit against you does 1 less damage."], "wert": "staerke", "bonus": 1},
+       {"id": "standhaft", "name": ["Standhaft", "Steadfast"], "satz": ["Proben gegen Angst und Zauber +2.", "Checks against fear and spells +2."], "wert": "verstand", "bonus": 2},
+       {"id": "waffenmeister", "name": ["Waffenmeister", "Weapon master"], "satz": ["Waffen machen +1 Schaden.", "Weapons do +1 damage."], "wert": "staerke", "bonus": 2}
+     ]},
+    {"id": "magier", "name": ["Magier", "Mage"], "werte": {"staerke": 0, "geschick": 1, "verstand": 2}, "leben": 9, "leben_plus": 3, "waffen": ["stab", "dolch", "zauberbuch", "kugel"],
+     "faehigkeiten": [
+       {"id": "feuerball", "name": ["Feuerball", "Fireball"], "satz": ["1× je Szene eine Gruppe Gegner in Flammen setzen.", "Once per scene set a group of foes on fire."], "wert": "verstand", "bonus": 2},
+       {"id": "unsichtbar", "name": ["Unsichtbarkeit", "Invisibility"], "satz": ["1× je Szene bis zur nächsten Aktion unsichtbar.", "Once per scene invisible until your next action."], "wert": "geschick", "bonus": 1},
+       {"id": "lichtzauber", "name": ["Licht", "Light"], "satz": ["Erhellt jeden Raum, Untote scheuen das Licht.", "Lights any room, the undead shun the light."], "wert": "verstand", "bonus": 1},
+       {"id": "gedankenlesen", "name": ["Gedanken lesen", "Read minds"], "satz": ["Erkennt, ob ein NPC lügt.", "Tells whether an NPC lies."], "wert": "verstand", "bonus": 2},
+       {"id": "frostnova", "name": ["Frostnova", "Frost nova"], "satz": ["Friert Gegner in der Nähe für eine Runde ein.", "Freezes nearby foes for one round."], "wert": "verstand", "bonus": 1},
+       {"id": "teleport", "name": ["Blinzeln", "Blink"], "satz": ["Springt einige Schritte weit durch den Raum.", "Jumps a few steps through space."], "wert": "geschick", "bonus": 1}
+     ]},
+    {"id": "dieb", "name": ["Dieb", "Rogue"], "werte": {"staerke": 0, "geschick": 2, "verstand": 1}, "leben": 11, "leben_plus": 4, "waffen": ["dolch", "bogen", "kurzschwert", "armbrust"],
+     "faehigkeiten": [
+       {"id": "schattenschritt", "name": ["Schattenschritt", "Shadow step"], "satz": ["1× je Szene unbemerkt bewegen, Schleich-Probe automatisch geschafft.", "Once per scene move unseen, a sneak check passes by itself."], "wert": "geschick", "bonus": 2},
+       {"id": "hinterhalt", "name": ["Hinterhältiger Stich", "Sneak attack"], "satz": ["+1W6 Schaden, wenn ein Verbündeter danebensteht.", "+1d6 damage when an ally stands next to the foe."], "wert": "geschick", "bonus": 1},
+       {"id": "schloesser", "name": ["Meisterdieb", "Master thief"], "satz": ["Schlösser und Fallen: Probe +3.", "Locks and traps: check +3."], "wert": "geschick", "bonus": 2},
+       {"id": "flinkezunge", "name": ["Flinke Zunge", "Silver tongue"], "satz": ["Lügen und Handeln: Probe +2.", "Lying and haggling: check +2."], "wert": "verstand", "bonus": 2},
+       {"id": "ausweichen", "name": ["Ausweichen", "Evasion"], "satz": ["1× je Szene einem Treffer ganz ausweichen.", "Once per scene dodge a hit completely."], "wert": "geschick", "bonus": 1},
+       {"id": "gift", "name": ["Giftklinge", "Poisoned blade"], "satz": ["Der nächste Treffer macht +2 Schaden.", "The next hit does +2 damage."], "wert": "geschick", "bonus": 1}
+     ]},
+    {"id": "heiler", "name": ["Heiler", "Healer"], "werte": {"staerke": 1, "geschick": 0, "verstand": 2}, "leben": 11, "leben_plus": 4, "waffen": ["stab", "streitkolben", "kugel"],
+     "faehigkeiten": [
+       {"id": "handauflegen", "name": ["Handauflegen", "Laying on hands"], "satz": ["1× je Szene einen Freund um 1W6+2 heilen.", "Once per scene heal a friend by 1d6+2."], "wert": "verstand", "bonus": 1},
+       {"id": "segen", "name": ["Segen", "Blessing"], "satz": ["Ein Freund bekommt bei seiner nächsten Probe +2.", "A friend gets +2 on the next check."], "wert": "verstand", "bonus": 1},
+       {"id": "untote", "name": ["Untote bannen", "Turn undead"], "satz": ["Untote weichen zurück: Probe +3.", "The undead back away: check +3."], "wert": "verstand", "bonus": 2},
+       {"id": "reinigen", "name": ["Reinigen", "Cleanse"], "satz": ["Hebt Gift und Fluch auf.", "Lifts poison and curses."], "wert": "verstand", "bonus": 1},
+       {"id": "schutzkreis", "name": ["Schutzkreis", "Circle of protection"], "satz": ["Die Gruppe nimmt eine Runde lang 1 Schaden weniger.", "The group takes 1 less damage for a round."], "wert": "verstand", "bonus": 1},
+       {"id": "wiederbeleben", "name": ["Zurückholen", "Revive"], "satz": ["Holt einen bewusstlosen Freund mit 3 Leben zurück.", "Brings an unconscious friend back with 3 life."], "wert": "verstand", "bonus": 2}
+     ]},
+    {"id": "waldlaeufer", "name": ["Waldläufer", "Ranger"], "werte": {"staerke": 1, "geschick": 2, "verstand": 0}, "leben": 12, "leben_plus": 4, "waffen": ["bogen", "speer", "kurzschwert", "armbrust"],
+     "faehigkeiten": [
+       {"id": "faehrte", "name": ["Fährtenleser", "Tracker"], "satz": ["Spuren lesen und Wege finden: Probe +3.", "Reading tracks and finding paths: check +3."], "wert": "verstand", "bonus": 2},
+       {"id": "doppelschuss", "name": ["Doppelschuss", "Double shot"], "satz": ["Zwei Pfeile auf einmal, zwei Ziele.", "Two arrows at once, two targets."], "wert": "geschick", "bonus": 1},
+       {"id": "tierfreund", "name": ["Tierfreund", "Friend of beasts"], "satz": ["Tiere greifen dich nicht von selbst an.", "Animals do not attack you by themselves."], "wert": "verstand", "bonus": 1},
+       {"id": "adlerauge", "name": ["Adlerauge", "Eagle eye"], "satz": ["Sieht Fallen und Hinterhalte früher.", "Spots traps and ambushes earlier."], "wert": "verstand", "bonus": 2},
+       {"id": "tarnung", "name": ["Tarnung", "Camouflage"], "satz": ["In der Natur kaum zu sehen.", "Hard to see in the wild."], "wert": "geschick", "bonus": 1},
+       {"id": "zaeh", "name": ["Zäh", "Tough"], "satz": ["+3 Leben auf jeder neuen Stufe.", "+3 life on every new level."], "wert": "staerke", "bonus": 1}
+     ]}
+  ],
+  "stufen_ep": [0, 300, 1000, 1800, 3000, 4500, 6500, 9000, 12000, 16000],
+  "faehigkeit_auf": [2, 4, 6, 8, 10],
+  "ep": {"probe": 10, "gegner": [25, 50, 100, 150, 200], "ziel": 100, "idee": 20},
+  "seltenheit": [
+    {"id": "gewoehnlich", "name": ["gewöhnlich", "common"], "ab": 0, "bonus": 0, "stufe_min": 1},
+    {"id": "selten", "name": ["selten", "uncommon"], "ab": 55, "bonus": 1, "stufe_min": 1},
+    {"id": "rar", "name": ["rar", "rare"], "ab": 82, "bonus": 2, "stufe_min": 1},
+    {"id": "episch", "name": ["episch", "epic"], "ab": 94, "bonus": 3, "stufe_min": 2},
+    {"id": "legendaer", "name": ["legendär", "legendary"], "ab": 99, "bonus": 4, "stufe_min": 5}
+  ],
+  "anlass": {"gegner": 0, "truhe": 10, "belohnung": 10, "boss": 25},
+  "gold": {"gegner": [2, 10], "truhe": [10, 40], "belohnung": [15, 50], "boss": [40, 120]},
+  "pech_schutz": 6,
+  "effekte": [
+    {"id": "untote", "satz": ["+3 bei Proben gegen Untote.", "+3 on checks against the undead."], "wert": "verstand", "bonus": 3},
+    {"id": "gluehen", "satz": ["Die Klinge glimmt, wenn Untote nah sind.", "The blade glows when the undead are near."], "wert": "verstand", "bonus": 1},
+    {"id": "feuer", "satz": ["Treffer brennen: +2 Schaden.", "Hits burn: +2 damage."], "wert": "staerke", "bonus": 2},
+    {"id": "frost", "satz": ["Treffer verlangsamen den Gegner.", "Hits slow the foe down."], "wert": "geschick", "bonus": 2},
+    {"id": "schatten", "satz": ["1× je Szene unsichtbar.", "Once per scene invisible."], "wert": "geschick", "bonus": 2},
+    {"id": "leben", "satz": ["Heilt dich nach jeder Szene um 2.", "Heals you by 2 after every scene."], "wert": "staerke", "bonus": 1},
+    {"id": "glueck", "satz": ["1× je Szene einen Wurf wiederholen.", "Once per scene roll again."], "wert": "geschick", "bonus": 2},
+    {"id": "weisheit", "satz": ["Alte Schriften sind für dich lesbar.", "Old writings are readable to you."], "wert": "verstand", "bonus": 2},
+    {"id": "donner", "satz": ["Ein Schlag wirft Gegner um.", "A blow knocks foes down."], "wert": "staerke", "bonus": 2},
+    {"id": "wind", "satz": ["Leichtfüßig: Sprünge und Klettern +3.", "Light-footed: jumping and climbing +3."], "wert": "geschick", "bonus": 3},
+    {"id": "drache", "satz": ["Drachen erkennen dich als Ebenbürtigen.", "Dragons see you as their equal."], "wert": "verstand", "bonus": 3},
+    {"id": "sterne", "satz": ["Findet nachts immer den Weg.", "Always finds the way at night."], "wert": "verstand", "bonus": 1}
+  ],
+  "gegenstaende": [
+    {"id": "schwert", "art": "waffe", "name": ["Schwert", "Sword"], "schaden": 6, "wert": "staerke"},
+    {"id": "axt", "art": "waffe", "name": ["Axt", "Axe"], "schaden": 8, "wert": "staerke"},
+    {"id": "hammer", "art": "waffe", "name": ["Kriegshammer", "War hammer"], "schaden": 8, "wert": "staerke"},
+    {"id": "speer", "art": "waffe", "name": ["Speer", "Spear"], "schaden": 6, "wert": "geschick"},
+    {"id": "dolch", "art": "waffe", "name": ["Dolch", "Dagger"], "schaden": 4, "wert": "geschick"},
+    {"id": "kurzschwert", "art": "waffe", "name": ["Kurzschwert", "Short sword"], "schaden": 6, "wert": "geschick"},
+    {"id": "bogen", "art": "waffe", "name": ["Bogen", "Bow"], "schaden": 6, "wert": "geschick"},
+    {"id": "armbrust", "art": "waffe", "name": ["Armbrust", "Crossbow"], "schaden": 8, "wert": "geschick"},
+    {"id": "stab", "art": "waffe", "name": ["Stab", "Staff"], "schaden": 4, "wert": "verstand"},
+    {"id": "streitkolben", "art": "waffe", "name": ["Streitkolben", "Mace"], "schaden": 6, "wert": "staerke"},
+    {"id": "zauberbuch", "art": "waffe", "name": ["Zauberbuch", "Spellbook"], "schaden": 4, "wert": "verstand"},
+    {"id": "kugel", "art": "waffe", "name": ["Kristallkugel", "Crystal orb"], "schaden": 4, "wert": "verstand"},
+    {"id": "schild", "art": "ruestung", "name": ["Schild", "Shield"], "schutz": 1, "klassen": ["krieger", "heiler"]},
+    {"id": "lederruestung", "art": "ruestung", "name": ["Lederrüstung", "Leather armour"], "schutz": 1},
+    {"id": "kettenhemd", "art": "ruestung", "name": ["Kettenhemd", "Chain mail"], "schutz": 2, "klassen": ["krieger", "heiler", "waldlaeufer"]},
+    {"id": "plattenpanzer", "art": "ruestung", "name": ["Plattenpanzer", "Plate armour"], "schutz": 3, "klassen": ["krieger"]},
+    {"id": "robe", "art": "ruestung", "name": ["Robe", "Robe"], "schutz": 0, "klassen": ["magier", "heiler"]},
+    {"id": "umhang", "art": "ruestung", "name": ["Umhang", "Cloak"], "schutz": 1, "klassen": ["dieb", "waldlaeufer", "magier"]},
+    {"id": "ring", "art": "schmuck", "name": ["Ring", "Ring"]},
+    {"id": "amulett", "art": "schmuck", "name": ["Amulett", "Amulet"]},
+    {"id": "guertel", "art": "schmuck", "name": ["Gürtel", "Belt"]},
+    {"id": "stiefel", "art": "schmuck", "name": ["Stiefel", "Boots"]},
+    {"id": "handschuhe", "art": "schmuck", "name": ["Handschuhe", "Gloves"]},
+    {"id": "heiltrank", "art": "trank", "name": ["Heiltrank", "Healing potion"], "heilung": 6},
+    {"id": "grosser_heiltrank", "art": "trank", "name": ["Großer Heiltrank", "Greater healing potion"], "heilung": 12},
+    {"id": "elixier", "art": "trank", "name": ["Elixier der Stärke", "Elixir of strength"], "heilung": 3},
+    {"id": "schriftrolle", "art": "rolle", "name": ["Schriftrolle", "Scroll"]},
+    {"id": "karte", "art": "rolle", "name": ["Schatzkarte", "Treasure map"]},
+    {"id": "fackel", "art": "rolle", "name": ["Ewige Fackel", "Everburning torch"]},
+    {"id": "dietrich", "art": "rolle", "name": ["Dietrich", "Lockpick"], "klassen": ["dieb"]}
+  ],
+  "start": {"gold": 10, "tasche": ["heiltrank"]},
+  "ausfall": ["Der Dungeon-Master blättert in seinen Notizen und schaut euch erwartungsvoll an. Was tut ihr?", "The Dungeon Master leafs through the notes and looks at you expectantly. What do you do?"]
+}

@@ -269,6 +269,7 @@ Home Assistant, tasks, For you, weather, reMarkable, MCP and what the Spark does
 | `app/panel/agent.py` | Agent functions: the assistant works on a task in the background and reports later, runs tasks on a schedule, keeps routines of smart home steps, and uses ou … |
 | `app/panel/auftragsplan.py` | Aufträge mit Plan, Rückfrage und Vorschlag. |
 | `app/panel/beobachten.py` | Eigene Aufgaben, die beobachten: „Sag mir Bescheid, wenn es eine neue Firmware für meine FRITZ!Box gibt“, „Erinnere mich, wenn der Flug nach Rom unter 100 Eu … |
+| `app/panel/dungeon.py` | KI-Dungeon-Master: a round of a fantasy role-playing game for up to five players, the own language model narrates as Dungeon Master, the panel decides. |
 | `app/panel/extras.py` | Small services the assistant can use besides the big ones in chat.py (weather, contacts, parcels ...). |
 | `app/panel/feeds.py` | Reddit und Feeds: each profile connects its own Reddit inbox (the private RSS link from reddit.com → Settings → RSS-Feeds), subreddits and any other RSS or A … |
 | `app/panel/fuerdich.py` | Für dich: the Spark looks through the profile's own mailboxes and finds what needs the person or is good to know: rechnung a bill with an amount, with the da … |
@@ -553,6 +554,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `users/ID/fuerdich-vorrat.bin` | For you: the last reading per mailbox (found entries with sender, subject and time, no mail text) | Mails | sealed | yes | – |
 | `users/ID/fuerdich.json` | For you: what you marked as done or not interesting (only checksums) | Settings | – | yes | – |
 | `users/ID/vorgaenge.json` | Open: what needs you, what you put off for later and what is done (titles and state of the cards); a proposal waiting for your yes, with the mail's text only until it is answered | Queue | – | yes | – |
+| `users/ID/dungeon-helden.json` | AI Dungeon Master: your heroes with level, values, equipment and abilities (game data only) | State | – | yes | – |
 | `users/ID/interessen.json` | What I know about you: confirmed and refused interests with topic and senders and the last web tip (no subject, never a mail) | Settings | – | yes | – |
 | `users/ID/mailstil.json` | Mail style (only the summary, never a mail) | Settings | – | yes | – |
 | `users/ID/mail-regeln.json` | Mail rules of the E-mail page and rule suggestions (senders, words, folders; never a mail) | Settings | – | yes | – |
@@ -626,6 +628,9 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `state/doc-rank.json` | Re-ranking model | – | no |
 | `state/docker-modelle` | Models in Docker: the engine's cache (kernels) and its socket, per model | – | no |
 | `state/docling.json` | Docling server: address, certificate, counts | key sealed | yes |
+| `state/dungeon-figuren.json` | AI Dungeon Master: heroes of guests to take along (hashes of the hero codes) | hashes only | yes |
+| `state/dungeon-regeln.json` | AI Dungeon Master: the admin's own rules and catalog entries | – | yes |
+| `state/dungeon-runden.json` | AI Dungeon Master: rounds with seats (hashes of the links), heroes, actions and narration | hashes only | yes |
 | `state/esp32.json` | Speakers and firmware | partly sealed | yes |
 | `state/faelle.json` | Cases | – | yes |
 | `state/features-seen.json` | When functions were released | – | yes |
@@ -2468,7 +2473,7 @@ flowchart TD
 2. <a id="kn-betrieb-s2"></a>**Anything switched on?**: If neither „Trace requests“ nor the live page nor the settings assistant is on, there is no record. Only the modules' journal lines remain.
 3. <a id="kn-betrieb-s3"></a>**Steps with fixed words**: Each step (switch, model round, tool, check, speech output) is added with kind, name and time. A value goes in only if it is a number or a short fixed word; anything else is dropped. Question, answer, arguments and results never go in.
 4. <a id="kn-betrieb-s4"></a>**Live page on?**: With the live page on, live.py sees each step at once: which service is asked, what the guard decides, what comes back. Everything stays in memory and is gone after a restart.
-5. <a id="kn-betrieb-s5"></a>**Journal lines of the modules**: Independently each module writes its lines into the Spark's journal. Every line starts with a word from logfilter.AREAS (32 areas), profiles only through profiles.log_name. A self-test checks both.
+5. <a id="kn-betrieb-s5"></a>**Journal lines of the modules**: Independently each module writes its lines into the Spark's journal. Every line starts with a word from logfilter.AREAS (33 areas), profiles only through profiles.log_name. A self-test checks both.
 6. <a id="kn-betrieb-s6"></a>**End and verdict**: At the end the record gets its state: error if an error word is set, slow if the first sound came later than 5.0 s, else good.
 7. <a id="kn-betrieb-s7"></a>**Trace requests on?**: If only Live or the settings assistant is on, the record ends here. It is written nowhere.
 8. <a id="kn-betrieb-s8"></a>**Line „anfrage:“ into the journal**: One line per request: id, channel, class, tools with ok or not ok, time to the instant reply, to the first sound and to the end. Without names.
@@ -3311,7 +3316,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Seal**: vault.seal turns the value into „enc1:“ and a Fernet token (encrypted and protected against change). A value already sealed stays as it is.
 5. <a id="kn-state-s5"></a>**Write atomically**: common.write_json writes into a fresh temporary file next to it, never through a link, gives it the rights of the old file (a new one is readable for the service only) and then swaps it in one step. A crash in the middle leaves the old file whole.
 6. <a id="kn-state-s6"></a>**Read**: A sealed value is opened with the key. If the key does not fit (backup from another Spark), an empty value comes back and the account has to be entered again. Older unsealed values are read and sealed the next time they are saved.
-7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 35), otherwise the line gives its reason (dateien.STATE_LOCAL, 85). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
+7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 38), otherwise the line gives its reason (dateien.STATE_LOCAL, 85). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
 8. <a id="kn-state-s8"></a>**Move backup?**: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup.
 9. <a id="kn-state-s9"></a>**Fine when restoring?**: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays.
 10. <a id="kn-state-s10"></a>**Put in place with a way back**: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back.
@@ -3321,7 +3326,7 @@ flowchart TD
 
 #### Numbers (from the code)
 
-- **35** files in every backup ([step 7](#kn-state-s7))
+- **38** files in every backup ([step 7](#kn-state-s7))
 - **85** files and folders that stay out with a reason ([step 7](#kn-state-s7))
 - **8 MB** largest file when restoring ([step 9](#kn-state-s9))
 - **12** characters the move password has at least ([step 8](#kn-state-s8))
@@ -3776,7 +3781,7 @@ flowchart TD
 ```
 
 1. <a id="kn-journal-s1"></a>**A service writes a line**: Panel, ASR, TTS, engines and watchers write with print. systemd hands the line to the journal; every unit has LogNamespace=speech-spark.
-2. <a id="kn-journal-s2"></a>**Fixed words and numbers**: Every line of the panel starts with a word from logfilter.AREAS (32 areas) and carries only fixed words and numbers. A profile appears there only through profiles.log_name: its name only with its consent, else „Profil“ and the end of its ID. test_log_luecken wants a line for every outcome of every action.
+2. <a id="kn-journal-s2"></a>**Fixed words and numbers**: Every line of the panel starts with a word from logfilter.AREAS (33 areas) and carries only fixed words and numbers. A profile appears there only through profiles.log_name: its name only with its consent, else „Profil“ and the end of its ID. test_log_luecken wants a line for every outcome of every action.
 3. <a id="kn-journal-s3"></a>**Detail on?**: For some areas the admin can switch on extra lines, at most 240 minutes. They too carry only numbers and decisions; a restart switches them off.
 4. <a id="kn-journal-s4"></a>**Polls quiet**: Successful status polls the panel makes every few seconds write no line.
 5. <a id="kn-journal-s5"></a>**Own part with a limit**: install.sh writes the limit for space and age from logs.max_mb and logs.keep_days. journald deletes older lines itself. A change applies after the next update or install.sh.
@@ -3792,7 +3797,7 @@ flowchart TD
 
 #### Numbers (from the code)
 
-- **32** areas of the diagnosis ([step 2](#kn-journal-s2))
+- **33** areas of the diagnosis ([step 2](#kn-journal-s2))
 - **20000** lines read per call at most ([step 8](#kn-journal-s8))
 - **2 MB** journal text per call at most ([step 8](#kn-journal-s8))
 - **1000** lines shown at most ([step 7](#kn-journal-s7))

@@ -269,6 +269,7 @@ Home Assistant, Aufgaben, Für dich, Wetter, reMarkable, MCP und was der Spark v
 | `app/panel/agent.py` | Aufträge im Hintergrund, Zeitpläne, Routinen |
 | `app/panel/auftragsplan.py` | Aufträge mit Plan, Rückfrage, Vorschlag mit Ja und Nachschieben |
 | `app/panel/beobachten.py` | Beobachten: Funde prüfen, nur Neues melden (Eigene Aufgaben) |
+| `app/panel/dungeon.py` | KI-Dungeon-Master: Rollenspiel bis 5 Spieler per Platz-Link; Modell erzählt, Panel würfelt, Beute, Stufen, Tausch |
 | `app/panel/extras.py` | Kleine Zusatzdienste mit ihren Werkzeugen |
 | `app/panel/feeds.py` | Reddit und Feeds: eigener Reddit-Posteingang, Subreddits und RSS, nur lesen |
 | `app/panel/fuerdich.py` | Für dich: findet Rechnungen, Verträge, Bestellungen, Angebote, offene Antworten, Phishing; letzte Lesung versiegelt |
@@ -553,6 +554,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `users/ID/fuerdich-vorrat.bin` | Für dich: die letzte Lesung je Postfach (gefundene Einträge mit Absender, Betreff und Zeit, kein Mailtext) | Mails | versiegelt | ja | – |
 | `users/ID/fuerdich.json` | Für dich: was du als erledigt oder uninteressant markiert hast (nur Prüfsummen) | Einstellungen | – | ja | – |
 | `users/ID/vorgaenge.json` | Offen: was dich braucht, was du auf später gelegt hast und was erledigt ist (Titel und Zustand der Karten); ein Vorschlag, der auf dein Ja wartet, mit dem Text der Mail nur bis zur Antwort | Warteschlange | – | ja | – |
+| `users/ID/dungeon-helden.json` | KI-Dungeon-Master: deine Helden mit Stufe, Werten, Ausrüstung und Fähigkeiten (nur Spieldaten) | Zustand | – | ja | – |
 | `users/ID/interessen.json` | Was ich über dich weiß: bestätigte und abgelehnte Interessen mit Thema und Absendern und der letzte Netz-Tipp (kein Betreff, keine Mail) | Einstellungen | – | ja | – |
 | `users/ID/mailstil.json` | Mailstil (nur die Zusammenfassung, keine Mail) | Einstellungen | – | ja | – |
 | `users/ID/mail-regeln.json` | Mail-Regeln der Seite E-Mail und Regel-Vorschläge (Absender, Wörter, Ordner; keine Mail) | Einstellungen | – | ja | – |
@@ -626,6 +628,9 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `state/doc-rank.json` | Nachsortier-Modell | – | nein |
 | `state/docker-modelle` | Modelle in Docker: Zwischenspeicher der Engine (Kernel) und ihr Socket, je Modell | – | nein |
 | `state/docling.json` | Docling-Server: Adresse, Zertifikat, Zahlen | Schlüssel versiegelt | ja |
+| `state/dungeon-figuren.json` | KI-Dungeon-Master: Helden von Gästen zum Mitnehmen (Hashes der Figur-Codes) | nur Hashes | ja |
+| `state/dungeon-regeln.json` | KI-Dungeon-Master: eigene Regeln und Katalog-Einträge des Admins | – | ja |
+| `state/dungeon-runden.json` | KI-Dungeon-Master: Runden mit Plätzen (Hashes der Links), Helden, Aktionen und Erzählung | nur Hashes | ja |
 | `state/esp32.json` | Lautsprecher und Firmware | teils versiegelt | ja |
 | `state/faelle.json` | Fälle | – | ja |
 | `state/features-seen.json` | Wann Funktionen frei wurden | – | ja |
@@ -2468,7 +2473,7 @@ flowchart TD
 2. <a id="kn-betrieb-s2"></a>**Etwas eingeschaltet?**: Ist weder „Anfragen verfolgen“ noch die Live-Seite noch der Einstellungs-Assistent an, gibt es keinen Datensatz. Übrig bleiben nur die Journal-Zeilen der Module.
 3. <a id="kn-betrieb-s3"></a>**Schritte mit festen Wörtern**: Jeder Schritt (Weiche, Modellrunde, Werkzeug, Prüfung, Sprachausgabe) kommt mit Art, Name und Zeit dazu. Ein Wert geht nur hinein, wenn er eine Zahl oder ein kurzes festes Wort ist; alles andere wird verworfen. Frage, Antwort, Argumente und Ergebnisse kommen nie hinein.
 4. <a id="kn-betrieb-s4"></a>**Live-Seite an?**: Bei eingeschalteter Live-Seite sieht live.py jeden Schritt sofort: welcher Dienst gefragt wird, was der Wächter entscheidet, was zurückkommt. Alles bleibt im Speicher und ist nach einem Neustart weg.
-5. <a id="kn-betrieb-s5"></a>**Journal-Zeilen der Module**: Unabhängig davon schreibt jedes Modul seine Zeilen ins Journal des Spark. Jede Zeile beginnt mit einem Wort aus logfilter.AREAS (32 Bereiche), Profile nur über profiles.log_name. Ein Selbsttest prüft beides.
+5. <a id="kn-betrieb-s5"></a>**Journal-Zeilen der Module**: Unabhängig davon schreibt jedes Modul seine Zeilen ins Journal des Spark. Jede Zeile beginnt mit einem Wort aus logfilter.AREAS (33 Bereiche), Profile nur über profiles.log_name. Ein Selbsttest prüft beides.
 6. <a id="kn-betrieb-s6"></a>**Ende und Bewertung**: Am Ende bekommt der Datensatz seinen Zustand: Fehler, wenn ein Fehlerwort gesetzt ist, langsam, wenn der erste Ton später als 5.0 s kam, sonst gut.
 7. <a id="kn-betrieb-s7"></a>**Anfragen verfolgen an?**: Ist nur Live oder der Einstellungs-Assistent an, endet der Datensatz hier. Er wird nirgends geschrieben.
 8. <a id="kn-betrieb-s8"></a>**Zeile „anfrage:“ ins Journal**: Eine Zeile pro Anfrage: Kennung, Kanal, Einordnung, Werkzeuge mit ok oder nicht ok, Zeit bis zur Rückmeldung, bis zum ersten Ton und bis zum Ende. Ohne Namen.
@@ -3311,7 +3316,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Versiegeln**: vault.seal macht aus dem Wert „enc1:“ und ein Fernet-Token (verschlüsselt und gegen Änderung geschützt). Ein schon versiegelter Wert bleibt, wie er ist.
 5. <a id="kn-state-s5"></a>**Atomar schreiben**: common.write_json schreibt in eine frische Zwischendatei daneben, nie durch einen Link, gibt ihr die Rechte der alten Datei (eine neue ist nur für den Dienst lesbar) und tauscht sie dann in einem Schritt aus. Ein Absturz mittendrin lässt die alte Datei ganz.
 6. <a id="kn-state-s6"></a>**Lesen**: Ein versiegelter Wert wird mit dem Schlüssel geöffnet. Passt der Schlüssel nicht (Sicherung von einem anderen Spark), kommt ein leerer Wert zurück und der Zugang muss neu eingetragen werden. Ältere unversiegelte Werte werden gelesen und beim nächsten Speichern versiegelt.
-7. <a id="kn-state-s7"></a>**Kommt in die Sicherung?**: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 35), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 85). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile.
+7. <a id="kn-state-s7"></a>**Kommt in die Sicherung?**: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 38), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 85). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile.
 8. <a id="kn-state-s8"></a>**Umzugs-Sicherung?**: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung.
 9. <a id="kn-state-s9"></a>**Beim Wiederherstellen in Ordnung?**: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt.
 10. <a id="kn-state-s10"></a>**Einsetzen mit Rückweg**: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück.
@@ -3321,7 +3326,7 @@ flowchart TD
 
 #### Zahlen (aus dem Code)
 
-- **35** Dateien in jeder Sicherung ([Schritt 7](#kn-state-s7))
+- **38** Dateien in jeder Sicherung ([Schritt 7](#kn-state-s7))
 - **85** Dateien und Ordner, die mit Grund draußen bleiben ([Schritt 7](#kn-state-s7))
 - **8 MB** größte Datei beim Wiederherstellen ([Schritt 9](#kn-state-s9))
 - **12** Zeichen hat das Umzugs-Passwort mindestens ([Schritt 8](#kn-state-s8))
@@ -3776,7 +3781,7 @@ flowchart TD
 ```
 
 1. <a id="kn-journal-s1"></a>**Ein Dienst schreibt eine Zeile**: Panel, ASR, TTS, Engines und Wächter schreiben mit print. systemd gibt die Zeile an das Journal; jede Einheit hat LogNamespace=speech-spark.
-2. <a id="kn-journal-s2"></a>**Feste Wörter und Zahlen**: Jede Zeile des Panels beginnt mit einem Wort aus logfilter.AREAS (32 Bereiche) und trägt nur feste Wörter und Zahlen. Ein Profil steht dort nur über profiles.log_name: sein Name nur mit seiner Zustimmung, sonst „Profil“ und das Ende der ID. test_log_luecken verlangt für jede Aktion eine Zeile je Ergebnis.
+2. <a id="kn-journal-s2"></a>**Feste Wörter und Zahlen**: Jede Zeile des Panels beginnt mit einem Wort aus logfilter.AREAS (33 Bereiche) und trägt nur feste Wörter und Zahlen. Ein Profil steht dort nur über profiles.log_name: sein Name nur mit seiner Zustimmung, sonst „Profil“ und das Ende der ID. test_log_luecken verlangt für jede Aktion eine Zeile je Ergebnis.
 3. <a id="kn-journal-s3"></a>**Ausführlich an?**: Für einige Bereiche kann der Admin zusätzliche Zeilen einschalten, höchstens 240 Minuten. Auch sie tragen nur Zahlen und Entscheidungen; ein Neustart schaltet sie aus.
 4. <a id="kn-journal-s4"></a>**Abfragen still**: Erfolgreiche Statusabfragen, die das Panel alle paar Sekunden stellt, schreiben keine Zeile.
 5. <a id="kn-journal-s5"></a>**Eigener Bereich mit Grenze**: install.sh schreibt die Grenze für Platz und Alter aus logs.max_mb und logs.keep_days. Ältere Zeilen löscht journald selbst. Eine Änderung wirkt nach dem nächsten Update oder install.sh.
@@ -3792,7 +3797,7 @@ flowchart TD
 
 #### Zahlen (aus dem Code)
 
-- **32** Bereiche der Diagnose ([Schritt 2](#kn-journal-s2))
+- **33** Bereiche der Diagnose ([Schritt 2](#kn-journal-s2))
 - **20000** Zeilen pro Abruf höchstens gelesen ([Schritt 8](#kn-journal-s8))
 - **2 MB** Journal-Text pro Abruf höchstens ([Schritt 8](#kn-journal-s8))
 - **1000** Zeilen höchstens angezeigt ([Schritt 7](#kn-journal-s7))

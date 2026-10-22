@@ -63,7 +63,8 @@ ME_PAGES = (("overbox", "Überblick", "Overview"), ("bgbox", "Mein Zustand", "My
 OWN_PAGES = (("calbox", "cal", "Kalender", "Calendar"), ("mailbox", "post", "E-Mail", "E-mail"),
              ("taskbox", "listen", "Listen", "Lists"), ("vgbox", "offen", "Offen", "Open"),
              ("conbox", "kontakte", "Kontakte", "Contacts"),
-             ("wbbox", "wbuch", "Wissensbuch", "Knowledge book"))
+             ("wbbox", "wbuch", "Wissensbuch", "Knowledge book"),
+             ("dmbox", "dungeon", "Dungeon-Master", "Dungeon Master"))
 # Ich pages every profile has, whatever is switched on (me.js meAll shows them for every profile too)
 ME_ALWAYS = frozenset(("setbox", "factbox", "logbox", "secbox"))
 # Ich pages the iPhone app leaves out, each with its reason; every other page can be opened in the app
@@ -243,6 +244,9 @@ FEATURES = (
     # (Abschnitt neu, Verlängern, Musikrichtung, Remix, Schneiden, Tempo und Tonart); the panel picks the song
     F("musikbearbeiten", "Musik bearbeiten", "Editing music", "data", ("musik_bearbeiten",), parent="musik",
       me="musikbox", guide="musikbearbeiten"),
+    # KI-Dungeon-Master (dungeon.py, plan dungeon-master): a role-playing round for up to five players, also without a
+    # profile by seat link; the model narrates, the panel rolls and gives loot, experience, levels and trades by fixed rules
+    F("dungeon", "KI-Dungeon-Master", "AI Dungeon Master", "data", ("dungeon",), me="dmbox", guide="dungeon"),
     F("docbrief", "Steckbrief und Tags", "Document card and tags", "data", ("doc_brief",),
       parent="documents", me="docbox", guide="docbrief"),
     # Suchprüfung (suchpruefung.py, plan suche-schaerfen, Stufe 1): test questions measure how often the search

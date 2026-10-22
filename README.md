@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.949** AI Dungeon Master (switch, off): role-playing game for up to five, guests by link too; loot, levels, trading and heroes to take along, rules adjustable by the admin
 - **V01.0.948** Red fix: the attack self-test for the daily briefing depended on the time around midnight; its appointment now counts as "today" whatever the clock and time zone
 - **V01.0.947** IT crisis game removed again (as requested): game, net duel and „crisis game only“ profiles
 - **V01.0.946** Turn end by tone (switch, off): Smart Turn on the model computer measures at each speaking pause whether you sound done; numbers only, decides nothing yet, summary after 200 pauses or 7 days below the switch
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.942** Barge-in: pause first (switch, off): a "mhm", a cough or the own voice only pauses the answer and it plays on, "stop" ends it, a real sentence becomes the new question; fixed words in the panel, never the model; browser and Android, iPhone follows
 - **V01.0.941** Crisis game: guide links jump, QR codes fully visible, switching off ends the console session
 - **V01.0.940** IT crisis game (package 7): own page in the iPhone app (My things → Crisis game) with moves, console and debrief
-- **V01.0.939** IT crisis game (package 6): daily and weekly challenge with a board (without name, with name or not at all) and mutators with bonus points
 
 
 

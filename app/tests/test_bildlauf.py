@@ -71,6 +71,7 @@ FENSTER = {
     "body.kiosk": "the Live page as a kiosk screen",
     "#tkbox.tk-full #tkview": "Technik full screen",
     "#tkbox.tk-full .tk-pic": "Technik full screen",
+    ".dm-feed": "Dungeon-Master: the story of a round, like a conversation; the newest line stays in view",
 }
 CSS = ("app.css", "appview.css", "live.css", "technik.css", "weiche.css")
 
