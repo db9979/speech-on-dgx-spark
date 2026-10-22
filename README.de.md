@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.920** Test-Fix: der Seitentest „Ältere Mails nachladen“ scrollt weiter bis „Keine älteren Mails“, so lange eine Seite braucht, statt nach zwölf Versuchen aufzugeben (war in der Werkstatt auf dem Spark rot)
 - **V01.0.919** Einstellungen am Handy bündig: im iPhone-Browser standen Titel und Zeile jeder Einstellung mittig statt links neben dem Symbol
 - **V01.0.918** ROT-FIX: zwei Testreste behoben, die nach der neuen Aufteilung der Testläufe andere Tests störten (test_tagesaktuell ließ einen falschen Mail-Abruf stehen, test_panel eine offene Rückfrage)
 - **V01.0.917** Flash-Next-Variante 0,65 entfernt (startete nie)
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.913** Begleiter-Fenster geordnet: drei Reiter Heute, Meldungen und Rechner unter den Kacheln, nur der Reiter rollt und das Fenster bleibt im Bildschirm, kleine Kacheln zu viert, je Abschnitt die ersten drei mit „Alle n zeigen“, neue Meldung öffnet „Meldungen“, am Mac jetzt auch Meldungen im Fenster (Windows und Mac)
 - **V01.0.912** Erst lokal suchen findet auch mit Tippfehler: ein langes Wort darf um ein bis zwei Buchstaben vertippt sein („Dresdner Fraunkirche“ findet den Kiwix-Artikel), ohne Titel fragt der Spark gekürzte Wörter nach, und der Titel mit den meisten Wörtern der Frage gewinnt; Archiv-Links auf Wunsch mit eigenem Namen (Adresse für Links)
 - **V01.0.911** CarPlay Folgefragen: im Auto zählt die Folgefrage wieder, statt als fremde Stimme abgewiesen zu werden
-- **V01.0.910** Flash Next lässt mehr Speicher frei, Messung zeigt NVMe oder USB
 
 
 

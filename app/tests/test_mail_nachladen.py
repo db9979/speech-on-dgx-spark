@@ -330,11 +330,14 @@ class Page(unittest.TestCase):
                         await pg.evaluate("MAIL_ON=true;postStart({profile:PROFILE,mail:true});icTabSet('post','show');goSec('post')")
                         await b.until(pg, "!POST.busy&&!!POST.data&&POST.data.items.length>0&&!!document.querySelector('#postview [data-k=more]')")
                         first = await pg.evaluate("POST.data.items.length")
-                        for _ in range(12):
+                        # scroll on like a person until the end, however long a page takes (a slow machine, the
+                        # whole test run): a fixed number of scrolls ran out while the second page was still loading
+                        for _ in range(240):
                             await pg.evaluate("document.querySelector('#postview [data-more]').scrollIntoView({block:'end'})")
                             await pg.wait_for_timeout(250)
-                            if await pg.evaluate("!POST.data.vor&&!POST.more"):
+                            if await pg.evaluate("!POST.data.vor&&!POST.more||!!POST.moreFail"):
                                 break
+                        self.assertEqual(await pg.evaluate("POST.moreFail||''"), "")
                         await b.until(pg, "!POST.data.vor&&!POST.more")
                         ids = await pg.evaluate("[...document.querySelectorAll('#postview .ld-row')].map(r=>r.dataset.id)")
                         self.assertGreater(len(ids), first)

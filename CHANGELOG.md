@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.920** · 2026-10-22 · Test-Fix: der Seitentest „Ältere Mails nachladen“ scrollt weiter bis „Keine älteren Mails“, so lange eine Seite braucht, statt nach zwölf Versuchen aufzugeben (war in der Werkstatt auf dem Spark rot)
 - **V01.0.919** · 2026-10-21 · Einstellungen am Handy bündig: Safari zentrierte den Inhalt der Einstellungszeilen (Block-Knopf), jetzt eine linksbündige Spalte; Browser-Test prüft dieselbe linke Kante bei 390 px, Regel „Mehrzeilige Knöpfe als Spalte“ in der Richtlinie
 - **V01.0.918** · 2026-10-21 · ROT-FIX: zwei Testreste behoben, die nach der neuen Aufteilung der Testläufe andere Tests störten (test_tagesaktuell ließ einen falschen Mail-Abruf stehen, test_panel eine offene Rückfrage)
 - **V01.0.917** · 2026-10-21 · Flash Next nur noch mit Anteil 0,70: die Variante 0,65 startete auf tars nie und ist aus dem Katalog
