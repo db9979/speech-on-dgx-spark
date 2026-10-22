@@ -137,7 +137,9 @@ const docDue=(d,today)=>!!(d.due&&(d.due.length===7?d.due>=today.slice(0,7):d.du
 const docDay=s=>s?(s.length===7?s.slice(5,7)+'/'+s.slice(0,4):L==='en'?s.slice(8,10)+'/'+s.slice(5,7)+'/'+s.slice(0,4):s.slice(8,10)+'.'+s.slice(5,7)+'.'+s.slice(0,4)):'';
 // short form for the badge: day and month in this year, else with a two-digit year
 const docDayS=s=>!s||s.length===7?docDay(s):s.slice(0,4)===docToday().slice(0,4)?(L==='en'?s.slice(8,10)+'/'+s.slice(5,7):s.slice(8,10)+'.'+s.slice(5,7)+'.'):(L==='en'?s.slice(8,10)+'/'+s.slice(5,7)+'/'+s.slice(2,4):s.slice(8,10)+'.'+s.slice(5,7)+'.'+s.slice(2,4));
-const docAdded=d=>d.created?new Date(d.created*1000).toLocaleDateString(L==='en'?'en-GB':'de-DE',{day:'2-digit',month:'2-digit',year:'numeric'}):'';
+// a notebook (reMarkable) by its last change on the device, every other document by when it was added (Dominik 2026-10-22 „1a“)
+const docWhen=d=>d.changed||d.created||0;
+const docDate=s=>s?new Date(s*1000).toLocaleDateString(L==='en'?'en-GB':'de-DE',{day:'2-digit',month:'2-digit',year:'numeric'}):'';
 const docIco=d=>d.kind==='notebook'?['nb','NB']:d.kind==='picture'||/\.(jpe?g|png|webp)$/i.test(d.name)?['img',t('BILD','IMG')]:/\.pdf$/i.test(d.name)?['pdf','PDF']:
   /\.(docx|odt)$/i.test(d.name)?['doc','DOC']:/\.(xlsx|ods|csv)$/i.test(d.name)?['tab',t('TAB','TAB')]:/\.(pptx|odp)$/i.test(d.name)?['doc','PPT']:['txt','TXT'];
 // progress of one document (V01.0.232): pages read of all pages, then pieces with a meaning, and why it
@@ -182,16 +184,22 @@ async function showDocs(){if(!DOCS_ON){$('docbox').style.display='none';return}$
   const pics=I&&I.allow.pictures;
   $('docfile').accept='.pdf,.txt,.md,.docx,.html,.htm,.csv,.xlsx,.pptx,.odt,.ods,.odp,.eml'+(pics?',.jpg,.jpeg,.png,.webp':'');
   docRender()}
+// source reMarkable picked: when the Spark last compared with the account and how many pages it read anew
+function docRmLine(){const r=DOCINFO&&DOCINFO.remarkable;if(DOCV.src!=='remarkable'||!r)return '';
+  if(!r.at)return ' · '+t('noch kein Abgleich','not compared yet');
+  const c=new Date(r.at*1000),hm=c.toLocaleTimeString(L==='en'?'en-GB':'de-DE',{hour:'2-digit',minute:'2-digit'}),
+    day=c.toDateString()===new Date().toDateString()?hm:docDate(r.at)+' '+hm;
+  return ' · '+t(`Letzter Abgleich ${day} · ${r.pages} Seiten neu`,`Last comparison ${day} · ${r.pages} pages new`)+(r.error?' · '+t('mit Fehler','with an error'):'')}
 // a quick filter: does document d belong to it
 function docChipOk(d,c,today){return !c||(c==='due'?docDue(d,today):c==='reading'?d.state==='reading':c==='error'?d.state==='error':c==='shared'?!d.owner&&d.shared:c==='off'?!d.owner&&d.use===false:true)}
 function docMatch(d,q){return !q||[d.title,d.name,d.sender,d.art,d.ref,d.owner,...(d.tags||[])].some(x=>x&&String(x).toLowerCase().includes(q))}
 function docSorted(l,today){const by=DOCV.sort,n=(a,b)=>docTitle(a).localeCompare(docTitle(b),L==='en'?'en':'de',{sensitivity:'base'});
   return l.slice().sort(by==='name'?n:by==='size'?(a,b)=>(b.size||0)-(a.size||0)||n(a,b):
     by==='due'?(a,b)=>{const x=docDue(a,today)?a.due:'9',y=docDue(b,today)?b.due:'9';return x<y?-1:x>y?1:n(a,b)}:
-    (a,b)=>(!!a.owner-!!b.owner)||(b.created||0)-(a.created||0))}
+    (a,b)=>(!!a.owner-!!b.owner)||docWhen(b)-docWhen(a))}
 // the headings while sorted by date: today, the last 7 days, the months of this year, then the years
-function docGroup(d,now){if(d.owner)return t('Von anderen freigegeben','Shared by others');if(!d.created)return t('Älter','Older');
-  const c=new Date(d.created*1000),n=new Date(now);if(c.toDateString()===n.toDateString())return t('Heute','Today');
+function docGroup(d,now){if(d.owner)return t('Von anderen freigegeben','Shared by others');if(!docWhen(d))return t('Älter','Older');
+  const c=new Date(docWhen(d)*1000),n=new Date(now);if(c.toDateString()===n.toDateString())return t('Heute','Today');
   if(now-c<7*864e5)return t('Letzte 7 Tage','Last 7 days');
   return c.getFullYear()===n.getFullYear()?c.toLocaleDateString(L==='en'?'en-GB':'de-DE',{month:'long'}):String(c.getFullYear())}
 function docBadges(d,today){const b=[];
@@ -203,7 +211,7 @@ function docBadges(d,today){const b=[];
   return b.join('')}
 function docRow(d,today){const [c,l]=docIco(d),pk=DOCV.pick,brief=docBrief();
   const sub=[brief&&d.art,brief&&d.sender,d.owner?t('von ','from ')+d.owner:d.place?(d.source==='nas'?'NAS · ':DOCSRC[docSrc(d)]+' · ')+d.place:DOCSRC[docSrc(d)],brief&&d.title?d.name:''].filter(Boolean).join(' · ');
-  const when=d.owner?'':[docAdded(d),d.size?docSize(d.size):''].filter(Boolean).join(' · ');
+  const when=d.owner?'':[docDate(docWhen(d)),d.size?docSize(d.size):''].filter(Boolean).join(' · ');
   return `<div class="ld-row${DOCV.sel===d.id&&!pk?' on':''}" data-doc="${esc(d.id)}" role="button" tabindex="0">`+
     (pk?d.owner?'<span class="ld-pick"></span>':`<input type="checkbox" class="ld-pick" data-pick="${esc(d.id)}"${pk.has(d.id)?' checked':''} aria-label="${esc(t('auswählen','select'))}">`:'')+
     `<span class="ld-ico ${c}" aria-hidden="true">${l}</span><span class="ld-mid"><b>${esc(docTitle(d))}</b><small>${esc(sub)}</small></span>`+
@@ -233,7 +241,7 @@ function docRender(){const I=DOCINFO,brief=docBrief(),today=docToday(),q=DOCV.fi
     html+=docRow(d,today)}
   if(l.length>DOCV.max)html+=`<div class="ld-more"><button class="b" type="button" data-more="1">${esc(t(`Weitere ${Math.min(DOCPAGE,l.length-DOCV.max)} von ${l.length-DOCV.max} zeigen`,`Show ${Math.min(DOCPAGE,l.length-DOCV.max)} more of ${l.length-DOCV.max}`))}</button></div>`;
   $('doclist').innerHTML=html||`<div class="mut ld-empty">${esc(all.length?t('Nichts passt zu Suche und Filter.','Nothing fits the search and filter.'):t('Noch keine Dokumente. Mit „Hinzufügen“ legst du PDFs, Office-Dateien, Texte oder E-Mails ab; der Assistent sucht dann darin.','No documents yet. With "Add" you store PDFs, office files, texts or e-mails; the assistant then searches them.'))}</div>`;
-  $('doccount').textContent=all.length?(l.length===all.length?t(`${all.length} Dokumente`,`${all.length} documents`):t(`${l.length} von ${all.length} Dokumenten`,`${l.length} of ${all.length} documents`)):'';
+  $('doccount').textContent=(all.length?(l.length===all.length?t(`${all.length} Dokumente`,`${all.length} documents`):t(`${l.length} von ${all.length} Dokumenten`,`${l.length} of ${all.length} documents`)):'')+docRmLine();
   $('docpick').hidden=!DOCL.length;$('docpick').textContent=DOCV.pick?t('Fertig','Done'):t('Auswählen','Select');
   docBulk();docDetail()}
 // "Auswählen": the bar with what can be done to the selected own documents (one request, wissen.py batch)
@@ -257,7 +265,7 @@ function docDetail(){const box=$('docdetail'),d=DOCV.pick?null:docFind(DOCV.sel)
   const brief=docBrief(),own=!d.owner,today=docToday(),[st,pct]=own?docState(d):['',null];
   const meta=[[t('Datei','File'),d.name],brief&&[t('Art','Kind'),d.art],brief&&[t('Absender','Sender'),d.sender],brief&&[t('Datum','Date'),docDay(d.date)],
     brief&&[t('Frist','Deadline'),docDay(d.due)],brief&&[t('Nummer','Number'),d.ref],[t('Quelle','Source'),d.owner?t('von ','from ')+d.owner:d.place?(d.source==='nas'?t('Wissensordner','Knowledge folder')+' · NAS · ':DOCSRC[docSrc(d)]+' · ')+d.place:DOCSRC[docSrc(d)]],
-    own&&[t('Hinzugefügt','Added'),docAdded(d)],own&&[t('Größe','Size'),docSize(d.size||0)],own&&[t('Zustand','State'),st]].filter(x=>x&&x[1]);
+    own&&[t('Hinzugefügt','Added'),docDate(d.created)],own&&d.changed&&[t('Geändert','Changed'),docDate(d.changed)],own&&[t('Größe','Size'),docSize(d.size||0)],own&&[t('Zustand','State'),st]].filter(x=>x&&x[1]);
   const pdf=/\.pdf$/i.test(d.name),pic=d.kind==='picture',href='/api/profile/wissen/'+encodeURIComponent(d.id)+'/file'+(pdf||pic?'?view=1':'');
   info.innerHTML=`<button class="b ld-back" type="button" data-dact="back">‹ ${esc(t('Zurück zur Liste','Back to the list'))}</button>`+
     `<h3>${esc(docTitle(d))}</h3><dl class="ld-facts">${meta.map(([k,v])=>`<dt>${esc(k)}</dt><dd${k===t('Frist','Deadline')&&docDue(d,today)?' class="due"':''}>${esc(v)}</dd>`).join('')}</dl>`+

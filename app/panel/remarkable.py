@@ -146,6 +146,17 @@ def save(uid, d):
     profiles._write(_file(uid), d)
 
 
+def last_sync(uid):
+    """Ich → Dokumente, source reMarkable: when the last comparison ran and how many pages it read anew, or None
+    while nothing is connected (numbers only, Dominik 2026-10-22 „1a“)."""
+    if not features.allowed("remarkable", uid):
+        return None
+    d = load(uid)
+    if not d.get("token"):
+        return None
+    return {"at": int(d.get("last") or 0), "pages": int(d.get("last_new") or 0), "error": bool(d.get("error"))}
+
+
 def library(uid):
     return _read(_libfile(uid)).get("items") or {}
 
@@ -761,6 +772,7 @@ async def run(uid):
         _Hints.n = 0
     d = load(uid)
     d["more"] = res["more"]
+    d["last_new"] = res["pages"]
     if uid in _roots:
         d["root"] = _roots[uid]     # what the quick look compares with (due_once)
     save(uid, d)

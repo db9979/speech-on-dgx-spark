@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.929** · 2026-10-22 · Ich → Dokumente zeigt reMarkable-Notizbücher mit dem Tag ihrer letzten Änderung auf dem Gerät statt dem Tag der Übernahme und sortiert „Neueste zuerst“ danach; bei der Quelle reMarkable steht „Letzter Abgleich hh:mm · N Seiten neu“; auch in der iPhone-App
 - **V01.0.928** · 2026-10-22 · Was ich über dich weiß aufgeräumt: Reiter, Liste mit Detail, Interessen umbenennen oder einem Thema zuordnen, Absender herausnehmen, Netz-Tipps als Schalter; iPhone
 - **V01.0.927** · 2026-10-22 · Unklare Fragen anonym: Fragen, die keine Regel der Weiche erkennt, stehen geschwärzt auf Funktionen → Weiche bei „unklar“ (Namen, Adressen, Nummern, Codes raus, zweite Leck-Prüfung, nie Gäste, nie wer fragte, 7 Tage), mit „Gehört zu …“ zum Feintunen; Schalter unter Gezielte Werkzeugwahl, aus; Vorliebe je Profil unter Ich → Gespräch → Datenschutz
 - **V01.0.926** · 2026-10-22 · Lied machen: Beschreibung bis 2000 statt 300 Zeichen, z. B. ein Firmentext als Vorlage; „Text schreiben“ liefert dazu eine kurze Musikbeschreibung fürs Musikmodell (liest höchstens 600), auch in der iPhone-App

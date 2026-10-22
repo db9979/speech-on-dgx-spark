@@ -16970,6 +16970,36 @@
           }
         }
       }
+    },
+    "Letzter Abgleich %@ · %lld Seiten neu": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last comparison %1$@ · %2$lld pages new"
+          }
+        }
+      }
+    },
+    "Noch kein Abgleich mit dem reMarkable": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not compared with the reMarkable yet"
+          }
+        }
+      }
+    },
+    "Der letzte Abgleich hatte einen Fehler (Ich → reMarkable).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The last comparison had an error (Me → reMarkable)."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

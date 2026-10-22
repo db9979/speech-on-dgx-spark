@@ -88,7 +88,7 @@ struct ThingHit: Identifiable {
 
     init(doc: SparkDoc) {
         id = "d" + doc.id; title = doc.shown; kind = "Dokument"; icon = ThingsView.docIcon(doc); tint = .blue
-        when = doc.created; self.doc = doc
+        when = doc.when; self.doc = doc
     }
     init(made: MadeDoc) {
         id = "m" + made.id; title = made.title; kind = "Vom Spark erstellt"; icon = "wand.and.stars"; tint = .indigo

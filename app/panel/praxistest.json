@@ -2699,6 +2699,12 @@
 "titel": "Was ich über dich weiß: aufgeräumt und bearbeitbar",
 "text": "Öffne Ich → Was ich über dich weiß: oben stehen die Reiter Zu klären, Interessen, Wiederkehrend und Woche & Gemerkt; Zu klären öffnet zuerst, wenn etwas wartet. Unter Interessen ein Interesse anklicken: im Detail einen Absender mit ✕ herausnehmen, mit ✎ umbenennen oder ein altes Absender-Interesse (orange „Thema fehlt“) einem Thema zuordnen, „Tipps aus dem Netz“ ein- und ausschalten, Vergessen. Dasselbe in der iPhone-App unter Für dich → Was ich über dich weiß.",
 "thread": "Persönlicher Assistent aus dem Postfach"
+},
+{
+"id": "P410",
+"v": 929,
+"titel": "reMarkable: Datum und letzter Abgleich",
+"text": "A: Ich → Dokumente, Quelle reMarkable: neben der Anzahl steht „Letzter Abgleich hh:mm · N Seiten neu“. B: Auf dem reMarkable in einem ausgewählten Heft etwas schreiben, ein paar Minuten warten: das Heft steht mit dem heutigen Datum oben unter „Heute“, die Zeile nennt neue Seiten. C: Ein Heft öffnen: „Hinzugefügt“ nennt den Tag der Übernahme, „Geändert“ die letzte Änderung. D: iPhone-App Dokumente, Quelle reMarkable: dieselbe Zeile und dieselben Daten."
 }
 ]
 }

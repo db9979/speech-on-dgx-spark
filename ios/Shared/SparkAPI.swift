@@ -206,6 +206,10 @@ struct SparkDoc: Identifiable, Equatable {
     var brief = ""
     /// why it could not be read (state "error"), a fixed sentence of the Spark
     var note = ""
+    /// a notebook (reMarkable): when it last changed on the device
+    var changed = Date(timeIntervalSince1970: 0)
+    /// the date shown and sorted by: a notebook's last change, else when it was added (Dominik 2026-10-22 „1a“)
+    var when: Date { changed.timeIntervalSince1970 > 0 ? changed : created }
     /// the title of the Steckbrief, else the file name
     var shown: String { title.isEmpty ? name : title }
 }
@@ -576,7 +580,8 @@ struct SparkAPI {
                             tags: (d["tags"] as? [String] ?? []).prefix(12).map { String($0.prefix(24)) },
                             source: String((d["source"] as? String ?? "").prefix(12)), place: String((d["place"] as? String ?? "").prefix(300)),
                             art: String((d["art"] as? String ?? "").prefix(60)), sender: String((d["sender"] as? String ?? "").prefix(80)),
-                            brief: String((d["brief"] as? String ?? "").prefix(600)), note: String((d["note"] as? String ?? "").prefix(200)))
+                            brief: String((d["brief"] as? String ?? "").prefix(600)), note: String((d["note"] as? String ?? "").prefix(200)),
+                            changed: Date(timeIntervalSince1970: (d["changed"] as? NSNumber)?.doubleValue ?? 0))
         }
     }
 

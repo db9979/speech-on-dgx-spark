@@ -18,6 +18,11 @@ final class DocumentsModel: ObservableObject {
     /// the content search (Enter in the search field): hits with the document and a piece of its text
     @Published var hits: [ContentHit] = []
     @Published var searching = false
+    /// source reMarkable: the last comparison with the account (GET /api/profile/wissen "remarkable"), nil while none is connected
+    @Published var rmAt: Date?
+    @Published var rmPages = 0
+    @Published var rmError = false
+    @Published var rmOn = false
 
     /// one change, then the list again
     func change(_ what: @escaping (SparkAPI) async throws -> String?) async {
@@ -33,7 +38,15 @@ final class DocumentsModel: ObservableObject {
         guard let api = SparkAPI.current else { return }
         do {
             if let d = try await api.docs() { docs = d; off = false } else { off = true }
-            if !off, let w = try? await api.object("GET", "api/profile/wissen") { allow = (w["allow"] as? [String: Bool]) ?? [:] }
+            if !off, let w = try? await api.object("GET", "api/profile/wissen") {
+                allow = (w["allow"] as? [String: Bool]) ?? [:]
+                let r = w["remarkable"] as? [String: Any]
+                rmOn = r != nil
+                let at = (r?["at"] as? NSNumber)?.doubleValue ?? 0
+                rmAt = at > 0 ? Date(timeIntervalSince1970: at) : nil
+                rmPages = (r?["pages"] as? NSNumber)?.intValue ?? 0
+                rmError = r?["error"] as? Bool ?? false
+            }
             error = nil
         } catch {
             self.error = error.localizedDescription
@@ -150,14 +163,27 @@ struct DocumentsView: View {
         return l
     }
 
+    /// source reMarkable: when the Spark last compared with the account and how many pages it read anew (Dominik 2026-10-22 „1a“)
+    private var rmLine: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            if let at = m.rmAt {
+                Text("Letzter Abgleich \(at.formatted(date: .abbreviated, time: .shortened)) · \(m.rmPages) Seiten neu")
+            } else {
+                Text("Noch kein Abgleich mit dem reMarkable")
+            }
+            if m.rmError { Text(SparkAPI.way(String(localized: "Der letzte Abgleich hatte einen Fehler (Ich → reMarkable)."))).foregroundStyle(.red) }
+        }
+        .font(.caption).foregroundStyle(.secondary)
+    }
+
     /// the groups by time (only for "Neueste zuerst"): this week, this month, older
     private var groups: [(LocalizedStringKey, [SparkDoc])] {
         let l = shown
         guard sort == .newest else { return [("", l)] }
         let now = Date(), cal = Calendar.current
         let week = cal.date(byAdding: .day, value: -7, to: now) ?? now, month = cal.date(byAdding: .day, value: -31, to: now) ?? now
-        return [("Diese Woche", l.filter { $0.created >= week }), ("Diesen Monat", l.filter { $0.created < week && $0.created >= month }),
-                ("Älter", l.filter { $0.created < month })].filter { !$0.1.isEmpty }
+        return [("Diese Woche", l.filter { $0.when >= week }), ("Diesen Monat", l.filter { $0.when < week && $0.when >= month }),
+                ("Älter", l.filter { $0.when < month })].filter { !$0.1.isEmpty }
     }
 
     private var tags: [(String, Int)] {
@@ -177,6 +203,7 @@ struct DocumentsView: View {
             } else {
                 Section { chips }
                     .listRowInsets(EdgeInsets()).listRowBackground(Color.clear)
+                if source == "remarkable" && m.rmOn { rmLine }
             }
             if !m.hits.isEmpty || m.searching {
                 Section("Im Inhalt gefunden") {
@@ -319,7 +346,7 @@ struct DocRow: View {
             }
             Spacer(minLength: 4)
             VStack(alignment: .trailing, spacing: 3) {
-                Text(doc.created, format: .dateTime.day().month()).font(.caption).foregroundStyle(.secondary)
+                Text(doc.when, format: .dateTime.day().month()).font(.caption).foregroundStyle(.secondary)
                 mark
             }
         }
@@ -392,7 +419,7 @@ struct DocDetailView: View {
                     HStack(spacing: 4) {
                         Text(verbatim: DocRow.sourceName(doc))
                         Text(verbatim: "·")
-                        Text(doc.created, format: .dateTime.day().month().year())
+                        Text(doc.when, format: .dateTime.day().month().year())
                         if doc.pages > 0 { Text(verbatim: "·"); Text("\(doc.pages) Seiten") }
                         if doc.size > 0 { Text(verbatim: "·"); Text(verbatim: ByteCountFormatter.string(fromByteCount: Int64(doc.size), countStyle: .file)) }
                     }

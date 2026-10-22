@@ -6732,6 +6732,14 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Datum der letzten Änderung und letzter Abgleich (V01.0.929, Dominik 2026-10-22 „1a“): Ich → Dokumente zeigt ein reMarkable-Notizbuch mit dem Tag, an dem es zuletzt auf dem Gerät geändert wurde, nicht mit dem Tag, an dem es zum ersten Mal übernommen wurde; „Neueste zuerst“ und die Gruppen (Heute, Letzte 7 Tage, Monate) richten sich danach, in der App ebenso. Die Seite eines Dokuments nennt beide Tage („Hinzugefügt“ und „Geändert“). Ist oben die Quelle reMarkable gewählt, steht neben der Anzahl „Letzter Abgleich 10:25 · 3 Seiten neu“ (nur Uhrzeit und Zahl, mit „mit Fehler“, wenn der letzte Abgleich scheiterte); ohne verbundenes Konto fehlt die Zeile. Der Abgleich selbst bleibt, wie er war: alle 30 Minuten, dazwischen alle 3 Minuten ein kurzer Blick aufs Konto, und nach einem Abbruch geht es mit den noch fehlenden Seiten weiter, schon gelesene Seiten werden nie erneut geholt."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Neueste zuerst (V01.0.299)",
 "text": "Neueste zuerst (V01.0.299): Unterschalter unter „reMarkable-Notizen“ (Funktionen, Admin), aus; freigegeben für jedes Profil. Der Spark merkt sich, wann jede Seite zuletzt geändert wurde (neuere reMarkable-Software nennt die Zeit pro Seite, sonst die des Notizbuchs; hochgeladene Dokumente zählen mit ihrem Hochladen). Bei ähnlich guten Treffern rückt die neuere Stelle um höchstens zwei Plätze vor, der Vorteil halbiert sich alle zwei Wochen, ein klar besserer alter Treffer bleibt vorn; das gilt für die Dokumentsuche und für „Erst lokal suchen“. Jeder Treffer trägt dann „geändert am …“, und das Modell soll bei Widerspruch der neueren Stelle folgen und ihr Datum nennen. „Was habe ich zuletzt / heute / gestern / diese Woche / letzten Monat notiert?“ ist eine feste Regel auf die eigenen Worte: die erste Runde muss die Dokumente durchsuchen und bekommt die zuletzt geänderten Seiten, neueste zuerst; ist im Zeitraum nichts, sagt der Assistent das. Neue Notizen kommen schneller an: zwischen den Abgleichen schaut der Spark alle 3 Minuten mit einer einzigen kleinen Anfrage, ob sich im Konto etwas geändert hat, und gleicht nur dann sofort ab (Journal „remarkable: account changed, comparing now“)"
 },
@@ -18238,6 +18246,14 @@
 "head": "Voice chat",
 "title": "Put into (V01.0.291)",
 "text": "Put into (V01.0.291): Under Me → reMarkable the profile picks which of its own folders new documents go to (default \"Spark\", created when needed). The Spark only adds new documents there and never changes anything that exists. If the folder is deleted or in the trash later, it takes \"Spark\" again, says so once and resets the choice."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Date of the last change and last comparison (V01.0.929, Dominik 2026-10-22 \"1a\")",
+"text": "Date of the last change and last comparison (V01.0.929, Dominik 2026-10-22 \"1a\"): Me → Documents shows a reMarkable notebook with the day it last changed on the device, not the day it first came in; \"Neueste zuerst\" and the groups (today, last 7 days, months) follow it, in the app as well. A document's page names both days (\"Added\" and \"Changed\"). With the source reMarkable picked at the top, the count is followed by \"Letzter Abgleich 10:25 · 3 Seiten neu\" (time and number only, with \"mit Fehler\" when the last comparison failed); without a connected account the line is left out. The comparison itself stays as it was: every 30 minutes, in between a short look at the account every 3 minutes, and after a break it goes on with the pages still missing; pages already read are never fetched again."
 },
 {
 "lang": "en",

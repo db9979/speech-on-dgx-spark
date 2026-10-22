@@ -169,6 +169,14 @@ def _docs_on():
         raise HTTPException(403, "documents are turned off (Einstellungen -> Funktionen)")
 
 
+def _rm_last(uid):
+    try:
+        import remarkable   # imports documents and wissen itself: only when asked
+        return remarkable.last_sync(uid)
+    except Exception:
+        return None
+
+
 def add(uid, name, data, text=None, source="upload"):
     """documents.add with this profile's switches, within its quota."""
     import join
@@ -627,6 +635,7 @@ def info(prof=Depends(own_profile)):
             "today": documents.count_today(uid, today(time.time())) if admin_on("pictures") else 0,
             "day_pages": DAY_PAGES, "vectors": [have, total] if admin_on("semantic") else None,
             "heads_left": documents.heads_left(uid),    # Stufe 2: documents whose context lines wait for a quiet moment
+            "remarkable": _rm_last(uid),                # the last comparison with the reMarkable (source filter line)
             "model": docembed.status()["state"] if admin_on("semantic") else None,
             # progress in Ich → Dokumente: the page being read now, or why nothing is read
             "reading": {"doc": _now["doc"], "page": _now["page"]} if _now.get("uid") == uid else None,

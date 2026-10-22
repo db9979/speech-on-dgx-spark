@@ -619,7 +619,7 @@ def _scan_jpegs(data, reader, scans):
 # ---------------------------------------------------------------- storage
 def _row(r, todo, pieces, novec):
     n = pieces.get(r["id"], 0)
-    return {"id": r["id"], "name": r["name"], "size": r["size"], "created": r["created"], "chunks": n,
+    return {"id": r["id"], "name": r["name"], "size": r["size"], "created": r["created"], "changed": r["changed"] or 0, "chunks": n,
             "kind": r["kind"], "state": r["state"], "note": r["note"], "pages": r["pages"], "todo": todo.get(r["id"], 0),
             "vecs": n - novec.get(r["id"], 0), "use": bool(r["use"]), "shared": bool(r["shared"]), "file": bool(r["file"]), "source": r["source"],
             **({"place": r["place"]} if r["source"] == "nas" or r["source"] == "begleiter" and r["place"] else {}), **card(r)}
@@ -787,8 +787,9 @@ def _list_docs(uid, used_only):
         # piece with text and vector, 0.4 s per question at 20000 documents (code check 19.10. B1)
         pieces = dict(con.execute("SELECT doc, COUNT(*) FROM chunks GROUP BY doc").fetchall())
         novec = dict(con.execute("SELECT doc, COUNT(*) FROM chunks WHERE vec IS NULL GROUP BY doc").fetchall())
+        # "Neueste zuerst": a notebook by its last change on the device (Dominik 2026-10-22 „1a“), others when added
         rows = con.execute("SELECT * FROM docs " + ("WHERE use=1 " if used_only else "")
-                           + "ORDER BY created DESC, id").fetchall()
+                           + "ORDER BY COALESCE(NULLIF(changed, 0), created) DESC, id").fetchall()
     return [_row(r, todo, pieces, novec) for r in rows]
 
 

@@ -773,6 +773,27 @@ class Fresh(Base):
         self.assertTrue(documents.search(uid, "Teich anlegen"))
         self.assertEqual(remarkable.load(uid)["root"], CLOUD[0].root)
 
+    def test_list_shows_the_notebooks_change_and_the_last_comparison(self):
+        """Dominik 2026-10-22 „1a“: Ich → Dokumente shows a notebook by its last change on the device (not the day it
+        came in) and sorts by it; the source reMarkable names the last comparison and its new pages (numbers only)."""
+        c, uid = self.paired("Rmlistdate")
+        self.assertEqual(c.get("/api/profile/wissen").json()["remarkable"], {"at": 0, "pages": 0, "error": False})
+        CLOUD[0].doc(NB, "Ideen", [(P1, page_file("Gartenhaus planen"))])
+        c.put("/api/profile/remarkable/pick", json={"ids": [NB], "all": False})
+        run(remarkable.run(uid))
+        got = c.get("/api/profile/wissen").json()["remarkable"]
+        self.assertEqual((got["pages"], got["error"]), (1, False))
+        self.assertGreater(got["at"], 0)
+        older, _ = documents.notebook_put(uid, None, "Alt", [(1, "alt", None)], changed=self.NOW - 400 * self.DAY)
+        newer, _ = documents.notebook_put(uid, None, "Neu", [(1, "neu", None)], changed=self.NOW - self.DAY)
+        rows = {d["id"]: d for d in c.get("/api/profile/docs").json()}
+        self.assertEqual(rows[older]["changed"], self.NOW - 400 * self.DAY)
+        self.assertGreater(rows[older]["created"], rows[older]["changed"])        # came in today, changed long ago
+        ids = [d["id"] for d in c.get("/api/profile/docs").json()]
+        self.assertLess(ids.index(newer), ids.index(older))                      # newest change first
+        c.delete("/api/profile/remarkable")
+        self.assertIsNone(c.get("/api/profile/wissen").json()["remarkable"])       # nothing connected: no line
+
     def test_own_writes_are_no_change_for_the_quick_look(self):
         c, uid = self.paired("Rmownroot")
         CLOUD[0].doc(NB, "Ideen", [(P1, page_file("Gartenhaus planen"))])
