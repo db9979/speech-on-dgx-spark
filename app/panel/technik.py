@@ -283,6 +283,7 @@ MODULE = {
     "wege": ("betrieb", "Sprung-Links in Texten außerhalb des Panels"),
     "praxistest": ("betrieb", "Zustand → Praxistest: die Prüfpunkte aus praxistest.json, je Punkt klappt, Problem oder später (nur Admins)"),
     "weiche_abstimmen": ("weiche", "Weiche abstimmen: Wortvorschläge des Sprachmodells, mit festen Regeln an den Alltagssätzen gemessen"),
+    "weiche_unklar": ("weiche", "Unklare Fragen anonym: feste Schwärzung (wie Probleme melden), Leck-Prüfung, versiegelt, 7 Tage, nur Admin"),
     "werkstattseite": ("betrieb", "Zustand → Werkstatt: Aufträge anfragen, rote Tests noch mal, Ergebnisse mit nächsten Schritten, feste Nachtregel"),
     "angriffsprobe": ("betrieb", "Angriffsprobe: wie oft das echte Sprachmodell Befehlen in fremdem Text folgen würde, nur Zahlen, kein Werkzeug läuft"),
     "modellseite": ("betrieb", "Zustand → Modelle: Katalog, Speicher-Budget, Messen, Wechseln und Zurückholen, eigene Modelle hinzufügen und löschen"),

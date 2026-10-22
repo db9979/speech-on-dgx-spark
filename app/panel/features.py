@@ -132,6 +132,10 @@ FEATURES = (
       parent="routing", me="setbox", guide="ack"),
     # weiche_abstimmen.py (plan opencode-werkstatt, point 1): the model proposes words, fixed rules keep what helps
     F("weicheabstimmen", "Weiche abstimmen", "Tune the switch", "speed", ("route_tune",), parent="routing", guide="weicheabstimmen"),
+    # weiche_unklar.py (plan unklare-fragen): unclear questions kept anonymized for the admin to tune the Weiche with;
+    # a preference, because the Spark keeps something of the profile's questions without being asked
+    F("weicheunklar", "Unklare Fragen anonym merken", "Keep unclear questions anonymously", "speed", ("route_unklar",),
+      pref="unklar_anon", parent="routing", me="setbox", guide="weicheunklar"),
     F("vorab", "Vorab holen bei Rückfrage", "Fetch ahead on a question back", "speed", ("prefetch",),
       parent="routing", me="setbox", guide="vorab"),
     F("hilfe", "Hilfe zum Spark", "Help with the Spark", "talk", ("spark_help",), me="setbox", guide="hilfe"),

@@ -232,6 +232,7 @@ DATEIEN = [
     state("musik-test-2b-klein-2.mp3", "Probestück 2 mit 2B klein (Musik testen)", "Sample 2 with 2B small (Test music)", lokal="entsteht beim nächsten Test neu"),
     state("musik-test-xl-1.mp3", "Probestück 1 mit XL (Musik testen)", "Sample 1 with XL (Test music)", lokal="entsteht beim nächsten Test neu"),
     state("musik-test-xl-2.mp3", "Probestück 2 mit XL (Musik testen)", "Sample 2 with XL (Test music)", lokal="entsteht beim nächsten Test neu"),
+    state("weiche-unklar.json", "Unklare Fragen der Weiche, anonymisiert (höchstens 100, 7 Tage)", "Unclear questions of the switch, anonymized (at most 100, 7 days)", lokal="Hilfe zum Abstimmen, kurz aufbewahrt", schutz=("versiegelt", "sealed")),
     state("weiche-history.json", "Weiche-Änderungen", "Switch changes", lokal="Verlauf der Weiche-Änderungen (die Regeln selbst stehen in config.json)", sonst=True),
     state("bewertungen.json", "Bewertungen pro Tag", "Ratings per day", lokal="Zähler pro Tag", sonst=True),
     state("quality.json", "Letzter Qualitätstest", "Last quality test", lokal="letztes Ergebnis"),

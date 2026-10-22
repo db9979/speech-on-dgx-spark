@@ -66,6 +66,19 @@ function whList(){const d=WH.d,box=$('whlist');const rows=d.groups.slice();rows.
     const small=g.name==='unklar'?t('alle Werkzeuge, so wie ohne Weiche','all tools, as without the switch'):t(`${g.words.length} Wörter`,`${g.words.length} words`)+(own?t(` · ${own} eigene`,` · ${own} own`):'')+t(` · ${g.tools.length} Werkzeuge`,` · ${g.tools.length} tools`)+(g.direct&&g.direct.length?t(' · direkt',' · direct'):'')+(r.off?t(' · grenzt nicht ein',' · does not narrow'):'');
     return `<div class="ld-row${WH.sel===g.name?' on':''}" role="button" tabindex="0" data-wh="pick" data-g="${esc(g.name)}"><span class="ld-ico" style="background:${g.name==='unklar'?'#7b8499':WHC[i%WHC.length]}">${esc((g.label||g.name).slice(0,1))}</span><span class="ld-mid"><b>${esc(g.label)}</b><small>${esc(small)}</small></span><span class="ld-right"><span class="ld-when" title="${esc(t('heute / 7 Tage','today / 7 days'))}">${s.today||0} · ${s.n||0}</span></span></div>`}).join('')
     +(rows.length>10?`<div class="ld-more"><button type="button" class="b" data-wh="more">${esc(WH.more?t('Weniger zeigen','Show fewer'):t(`Weitere zeigen (${rows.length-10})`,`Show more (${rows.length-10})`))}</button></div>`:'')}
+// „Unklare Fragen, anonym“ (weiche_unklar.py, plan unklare-fragen): only the anonymized sentence, its count and the group
+// whose tool the model took; „Gehört zu …“ opens „Falsch zugeordnet“ with it, a taken-over sentence goes from the list
+function whAnon(){const F=WH.d.unklar.fragen||{rows:[]},rows=F.rows||[];
+  const head=`<div class="wh-sec"><div class="wh-h">${esc(t(`Unklare Fragen, anonym (${F.keep_days||7} Tage)`,`Unclear questions, anonymous (${F.keep_days||7} days)`))}</div>`;
+  if(!F.on&&!rows.length)return head+`<div class="mut wh-small">${esc(t('Aus. Einschalten unter Funktionen → Gezielte Werkzeugwahl → Unklare Fragen anonym merken.','Off. Switch on under Features → Targeted tool choice → Keep unclear questions anonymously.'))}</div></div>`;
+  const ph=q=>esc(q).replace(/\[([A-ZÄÖÜ-]+)\]/g,'<code class="wh-ph">[$1]</code>');
+  return head+`<div class="mut wh-small">${esc(t(`${rows.length} gemerkt · ${F.dropped||0} verworfen (die Prüfung fand noch etwas Persönliches) · ohne Profil, Gerät und Uhrzeit`,`${rows.length} kept · ${F.dropped||0} dropped (the check still found something personal) · without profile, device and time`))}${F.on?'':' · '+esc(t('sammeln ist aus','collecting is off'))}</div>`
+    +rows.map(x=>`<div class="wh-uq"><span class="mut">×${x.n}</span><span class="wh-uqt">${ph(x.q)}</span>${x.took?`<span class="wh-tag">${esc(t('Modell nahm: ','model took: ')+whName(x.took))}</span>`:''}<button type="button" class="b" data-wh="uqfix" data-id="${esc(x.id)}">${esc(t('Gehört zu …','Belongs to …'))}</button><button type="button" class="mlink" aria-label="${esc(t('löschen','delete'))}" data-wh="uqdel" data-id="${esc(x.id)}">✕</button></div>`).join('')
+    +(rows.length?`<button type="button" class="mlink" data-wh="uqall">${esc(t('Alle löschen','Delete all'))}</button>`:'')+'</div>'}
+async function whAnonDel(id){if(!id&&!confirm(t('Alle unklaren Fragen löschen?','Delete all unclear questions?')))return;
+  try{const r=await api('/api/admin/weiche/unklar'+(id?'/'+encodeURIComponent(id):''),{method:'DELETE'});if(!r.ok)throw new Error(String(r.status));
+    const F=WH.d.unklar.fragen;F.rows=id?F.rows.filter(x=>x.id!==id):[];if(!id)F.dropped=0;if(WH.sel==='unklar')whDetail()}
+  catch(e){sayToast(t('Löschen ging nicht: ','Could not delete: ')+e.message)}}
 function whGroup(n){const r=whRules();return {own:whParse(r.route_words)[n]||[],not:whParse(r.route_not)[n]||[],extra:whParse(r.route_extra)[n]||[],off:(r.route_off||[]).includes(n),
   tests:(r.route_tests||[]).filter(x=>x.want.split('+').includes(n))}}
 function whChips(list,kind,g){return list.map(w=>`<span class="wh-chip ${kind}">${esc(w)}<button type="button" aria-label="${esc(t('entfernen','remove'))}" data-wh="del" data-kind="${kind}" data-g="${esc(g)}" data-w="${esc(w)}">×</button></span>`).join('')
@@ -74,7 +87,7 @@ function whDetail(){const box=$('whdet'),d=WH.d,n=WH.sel;
   if(n==='unklar'){const s=d.unklar.stats||{};box.innerHTML=`<button type="button" class="b ld-back" data-wh="back">‹ ${esc(t('Gruppen','Groups'))}</button><h3>${esc(t('unklar','unclear'))}</h3>`
     +`<p class="ld-note">${esc(t('Fragen, die keine Regel erkennt. Was sie bekommen, stellst du unten bei „Fragen, die keine Regel erkennt“ ein. Hinweiswörter behalten dabei die Werkzeuge ihrer Gruppe.','Questions no rule recognizes. What they get is set below at “Questions no rule recognizes”. Hint words keep their group’s tools.'))}</p>`
     +`<div class="wh-sec"><div class="wh-h">${esc(t('Zählung','Counts'))}</div>${esc(t(`heute ${s.today||0}, 7 Tage ${s.n||0}`,`today ${s.today||0}, 7 days ${s.n||0}`))}</div>`
-    +`<p class="ld-note">${esc(t('Eine Frage landet hier und gehört woandershin? Oben ausprobieren und „Falsch zugeordnet …“ wählen.','A question lands here but belongs elsewhere? Try it above and choose “Wrongly sorted …”.'))}</p>`;return}
+    +`<p class="ld-note">${esc(t('Eine Frage landet hier und gehört woandershin? Oben ausprobieren und „Falsch zugeordnet …“ wählen.','A question lands here but belongs elsewhere? Try it above and choose “Wrongly sorted …”.'))}</p>`+whAnon();return}
   const g=d.groups.find(x=>x.name===n);if(!g){box.innerHTML='';return}const r=whGroup(n),s=g.stats||{};
   const built=WH.wordsOpen===n?g.words:g.words.slice(0,16);
   const addable=d.known.filter(x=>!g.tools.includes(x)&&!d.keep.includes(x)&&!r.extra.includes(x));
@@ -151,8 +164,8 @@ async function whSave(confirm){const msg=$('whmsg');msg.textContent=t('Prüfe al
 async function whUndo(){if(!confirm(t('Die letzte Änderung der Weiche zurücknehmen?','Take back the last change of the switch?')))return;
   try{WH.d=await (await api('/api/admin/weiche/undo'+(L==='en'?'?lang=en':''),{method:'POST'})).json();WH.edit=null;whRender()}catch(e){$('whmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}}
 // ---------------------------------------------------------------- „Falsch zugeordnet“: from the trial, Logs → Anfragen and the chat
-window.whOpenFix=(text,group)=>{WH.fix={text:text||'',want:'',got:group||'',res:null};if(typeof goSec==='function')goSec('route');
-  const go=()=>{if(!WH.d){setTimeout(go,150);return}whFix();$('whfix').scrollIntoView({behavior:'smooth',block:'start'});if(!WH.fix.text)$('whfixq').focus()};go()};
+window.whOpenFix=(text,group,want,uq)=>{WH.fix={text:text||'',want:want||'',got:group||'',res:null,uq:uq||''};if(typeof goSec==='function')goSec('route');
+  const go=()=>{if(!WH.d){setTimeout(go,150);return}whFix();if(WH.fix.want)whSuggest();$('whfix').scrollIntoView({behavior:'smooth',block:'start'});if(!WH.fix.text)$('whfixq').focus()};go()};
 function whFix(){const box=$('whfix'),f=WH.fix;if(!f){box.hidden=true;return}box.hidden=false;
   box.innerHTML=`<div class="wh-dh"><h3>${esc(t('Falsch zugeordnet','Wrongly sorted'))}</h3><button type="button" class="b" data-wh="fixclose">${esc(t('Schließen','Close'))}</button></div>`
     +(f.got&&!f.text?`<p class="ld-note mut">${esc(t(`Die Anfrage landete bei „${whName(f.got)}“. Die Frage selbst wird nie aufgezeichnet: schreib sie hier noch einmal.`,`The request landed at “${whName(f.got)}”. The question itself is never recorded: type it here again.`))}</p>`:'')
@@ -205,7 +218,10 @@ if($('whbox')){
       whChange(r=>{if(a==='fixuse'){const w=f.res.words[+b.dataset.i];const o=whParse(r.route_words);o[f.want]=[...new Set([...(o[f.want]||[]),w.word])];r.route_words=whJoin(o)}
         if(a==='fixnot'){const o=whParse(r.route_not);o[g]=[...new Set([...(o[g]||[]),b.dataset.w])];r.route_not=whJoin(o)}
         if(keep)whAddTest(r,f.text,f.want)});
-      WH.sel=f.want;WH.fix=null;whFix();whList();whDetail();$('whbar').scrollIntoView({behavior:'smooth',block:'center'})}});
+      if(f.uq)whAnonDel(f.uq);WH.sel=f.want;WH.fix=null;whFix();whList();whDetail();$('whbar').scrollIntoView({behavior:'smooth',block:'center'})}
+    else if(a==='uqfix'){const x=(WH.d.unklar.fragen.rows||[]).find(r=>r.id===b.dataset.id);if(x)window.whOpenFix(x.q,'unklar',x.took,x.id)}
+    else if(a==='uqdel')whAnonDel(b.dataset.id);
+    else if(a==='uqall')whAnonDel('');});
   $('whbox').addEventListener('change',e=>{const x=e.target;
     if(x.dataset.wh==='off'){const g=x.dataset.g;whChange(r=>{const o=new Set(r.route_off||[]);if(x.checked)o.delete(g);else o.add(g);r.route_off=[...o]})}
     else if(x.classList.contains('wh-addtool')&&x.value){const g=x.dataset.g,v=x.value;whChange(r=>{const o=whParse(r.route_extra);o[g]=[...new Set([...(o[g]||[]),v])];r.route_extra=whJoin(o)})}

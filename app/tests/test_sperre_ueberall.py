@@ -362,6 +362,7 @@ ADMIN_ON_OK = {
     "schirm.py:admin_on": "admin only: the control centre on the panel computer's screen, no profile part",
     "notbetrieb.py:admin_on": "Spark-wide emergency mode with Parakeet on the panel computer; the fixed commands keep the turn's own rights (HA, reminders)",
     "weiche_abstimmen.py:an": "admin only: tuning the Weiche's words on its page, no profile part",
+    "weiche_unklar.py:on": "admin only: whether the Weiche page says collecting is on; each turn asks features.allowed (wanted)",
     "werkstattseite.py:_nacht_an": "admin only: the Werkstatt's fixed night rule, no profile part",
     "werkstattseite.py:_an": "admin only: the Werkstatt's sandbox on the model computer, admin-only endpoints, no profile part",
     "angriffsprobe.py:an": "admin only: the Angriffsprobe asks the model from the Werkstatt page, admin-only endpoints, no profile part",

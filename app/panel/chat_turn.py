@@ -1030,6 +1030,9 @@ async def prepare(request):
     if messages[-1]["role"] == "user" and ask_text:
         import weiche   # Funktionen → Weiche, Statistik: only the group and numbers, never a word of the question
         weiche.count(route, len(tools), all_tools, direct)
+        import weiche_unklar   # Funktionen → Weiche → unklar: the question only anonymized, never who asked
+        if weiche_unklar.wanted(who, guest, route, ccfg):
+            weiche_unklar.start(route, ask_text, who["id"])
     check_on = bool(ccfg.get("answer_check", True))
     tool_temp = float(ccfg.get("tool_temperature", 0.1))
     # thinking only while choosing the tool: released by the admin for this profile (never guests)

@@ -70,3 +70,8 @@
   .wh-try .b{flex:1 1 auto}}
 .wh-keep{display:flex;gap:8px;align-items:center;margin:8px 0}.wh-keep input{width:auto;margin:0;flex:none}
 .wh-learn{margin-top:12px}
+/* Unklare Fragen, anonym (weiche_unklar.py): one row per sentence, the placeholders as small codes */
+.wh-uq{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line);font-size:13px}
+.wh-uqt{flex:1 1 220px;min-width:0;overflow-wrap:anywhere}
+.wh-ph{font-size:11px;padding:0 4px;border-radius:4px;background:color-mix(in srgb,var(--acc) 12%,transparent);color:var(--fg)}
+.wh-uq .wh-tag{background:color-mix(in srgb,var(--ok,#2f7d4a) 15%,transparent);color:var(--fg)}

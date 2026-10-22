@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.927** Unclear questions, anonymous: questions no rule of the switch recognizes show redacted on Features → Routing at “unclear” (names, addresses, numbers, codes removed, second leak check, never guests, never who asked, 7 days), with “Belongs to …” for tuning; switch under Targeted tool choice, off; preference per profile under Me → Conversation → Privacy
 - **V01.0.926** Making a song: description up to 2000 instead of 300 characters, e.g. a firm's text as the template; "Write lyrics" adds a short music description for the music model (reads at most 600), also in the iPhone app
 - **V01.0.925** Exact calculations: the panel computes, not the language model (own parser instead of eval, Decimal, percent, brackets, roots, hard limits), date arithmetic (days until, weekday, date in n days), the answer check recomputes sentences like "17 times 23 is 381" and corrects them; Answer simple things at once uses the same calculator
 - **V01.0.924** E-mail and Calendar: the tab "Settings" no longer stays empty after several tab changes; this holds for every page with tabs
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.920** Test fix: the page test "load older mail" scrolls on until "No older mail", however long a page takes, instead of giving up after twelve tries (was red in the workshop on the Spark)
 - **V01.0.919** Settings on the phone line up: in the iPhone browser each setting's title and line sat centred instead of left next to its symbol
 - **V01.0.918** RED FIX: two test leftovers fixed that disturbed other tests after the test parts were cut anew (test_tagesaktuell left a fake mail lookup behind, test_panel an open question)
-- **V01.0.917** Flash Next variant 0.65 removed (never started)
 
 
 

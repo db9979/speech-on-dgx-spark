@@ -168,7 +168,7 @@ OHNE = {
         "deny", "no_self_echo", "own_style", "parcels", "pebble", "pebble_follow", "pebble_quick", "pebble_remind", "pebble_face", "pebble_day", "pebble_alerts", "pebble_note", "pebble_place", "pebble_chat", "pebble_reply", "pebble_remote", "pebble_health", "terminal", "person_priority",
         "person_priority_wait", "prefetch", "presence_penalty", "top_k", "proactive", "remarkable", "remarkable_fresh",
         "remarkable_paper", "remarkable_plus", "remarkable_tasks", "remarkable_send", "reminders", "report_notify", "roles", "room", "room_ha",
-        "room_remote", "room_voices", "route_off", "routing", "search", "search_url",
+        "room_remote", "room_voices", "route_off", "route_unklar", "routing", "search", "search_url",
         "self_echo_mode", "spark_drawer", "spark_help", "spark_suggest", "speaker_code", "speaker_id",
         "speaker_strictness", "storage_folder", "storage_lan", "storage_offload", "storage_own", "storage_root",
         "svc_watch", "svc_watch_users", "grund_internet", "rundlauf", "rundlauf_min", "wachposten", "wartung", "wartung_auto", "notbetrieb_asr", "gehaeuse", "gehaeuse_art", "gehaeuse_wechsel_s", "gehaeuse_hell", "gehaeuse_led_hell", "gehaeuse_nacht", "gehaeuse_nacht_von", "gehaeuse_nacht_bis", "gehaeuse_anzeige", "gehaeuse_drehung", "gehaeuse_seiten_aus", "gehaeuse_reihenfolge", "gehaeuse_luefter_an", "gehaeuse_luefter_aus", "schirm", "schirm_an", "schirm_aus", "schirm_schrift", "modelle_wechseln", "modelle_eigene", "werkstatt", "werkstatt_nacht", "werkstatt_stunde", "angriffsprobe", "route_tune", "system_prompt", "systemone", "systemone_berater",
@@ -223,7 +223,7 @@ OHNE_PROFIL = (
         "report_notify", "rm_inbox", "rm_morning", "rm_morning_at", "rm_week", "rm_tidy", "rm_model", "rm_tasks_cal", "rm_tasks_lists", "rm_tasks_mail",
         "rm_tasks_new", "rm_tasks_note", "role", "roles",
         "room_tell", "speak", "style", "svc_device", "svc_night", "svc_note", "telefon_anrufbar", "tg_ha", "tg_images", "tg_private",
-        "tg_push", "tg_voice", "timing", "trace_name", "turn", "tz", "voice",
+        "tg_push", "tg_voice", "timing", "trace_name", "turn", "unklar_anon", "tz", "voice",
 )
 
 

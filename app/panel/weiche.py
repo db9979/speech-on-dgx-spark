@@ -274,8 +274,10 @@ def suggest(text, want, ch):
     """Words of the sentence that could be the group's own words: whole words of 4 letters and more, not a
     common word, not recognized by any group yet. Fixed rule, at most 5, never from text other than the
     admin's own sentence."""
+    import weiche_unklar
     out = []
-    for w in WORD.findall(str(text or "")[:MAX_Q]):
+    # a placeholder of the anonymizer ([PERSON], [ZAHL] …, weiche_unklar.py) is never a word of a group
+    for w in WORD.findall(weiche_unklar.HOLDER.sub(" ", str(text or "")[:MAX_Q])):
         low = w.lower()
         if low in STOP or low in out or not chat.TOOL_WORD.fullmatch(low):
             continue
@@ -383,6 +385,8 @@ def learn(route, tool, now=None):
         if time.monotonic() - _stats["flushed"] >= FLUSH_S:
             _flush()
     print("weiche: gelernt", group, "| Hinweiswort", "ja" if word else "nein", flush=True)
+    import weiche_unklar   # the anonymous row of this turn (if kept) shows which group the model took
+    weiche_unklar.took(route, group)
     return group
 
 
@@ -480,12 +484,14 @@ def live_today(now=None):
         return None
     rows = sorted(((k, v["today"]) for k, v in s["groups"].items() if v.get("today")), key=lambda x: -x[1])
     n = sum(v for _, v in rows)
+    import weiche_unklar   # „Unklare Fragen, anonym“: only how many sentences are kept, never one of them
+    anon = weiche_unklar.count_today(now) if weiche_unklar.on() else None
     if not n:
-        return {"n": 0, "known": 0, "unklar": 0, "top": [], "folge": 0, "hinweis": 0}
+        return {"n": 0, "known": 0, "unklar": 0, "top": [], "folge": 0, "hinweis": 0, "anon": anon}
     unk = dict(rows).get("unklar", 0)
     return {"n": n, "known": round(100 * (n - unk - dict(rows).get("plaudern", 0)) / n), "unklar": unk,
             "top": [[intent.LABELS.get(k, k), v] for k, v in rows if k not in ("unklar", "plaudern")][:3],
-            "folge": s["total"]["folge_today"], "hinweis": s["total"]["hinweis_today"]}
+            "folge": s["total"]["folge_today"], "hinweis": s["total"]["hinweis_today"], "anon": anon}
 
 
 # ---------------------------------------------------------------- versions (Rückgängig)
@@ -548,7 +554,7 @@ def _view(ch, english=False):
         "tests": {"builtin": sum(1 for x in tests if not x["own"]),
                   "builtin_ok": sum(1 for x in tests if not x["own"] and x["ok"]),
                   "own": [x for x in tests if x["own"]], "wrong": [x for x in tests if not x["ok"]][:50]},
-        "unklar": {"stats": stats["groups"].get("unklar", {})},
+        "unklar": {"stats": stats["groups"].get("unklar", {}), "fragen": _fragen()},
         "alltag": alltag(ch),
         "systemone": ch.get("systemone") is True,
         "steps": list(_steps()),
@@ -559,6 +565,16 @@ def _view(ch, english=False):
         "limits": {"words": intent.MAX_ROUTE_WORDS, "extra": intent.MAX_EXTRA, "tests": MAX_TESTS, "q": MAX_Q,
                    "must": chat.MAX_TOOL_WORDS_CHARS},
     }
+
+
+def _fragen():
+    """„Unklare Fragen, anonym“ (weiche_unklar.py) for the unklar card, or {"on": False} when it cannot be read."""
+    import weiche_unklar
+    try:
+        return weiche_unklar.view()
+    except Exception as e:
+        print("weiche: unklare Fragen nicht lesbar", type(e).__name__, flush=True)
+        return {"on": False, "rows": [], "dropped": 0}
 
 
 def _finden():

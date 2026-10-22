@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "vorbereiten": {
-        "stand": "c5c3293bf1",
+        "stand": "d7762fb0ce",
         "bezug": {
             "klaeren.MAX_BUTTONS": ["s7"], "chat_turn.prepare": ["s1", "s13"], "chat_turn.shared_stranger": ["s3"],
             "chat.left_out": ["s2", "s4"], "notaus.locked_tools": ["s11"], "chat_turn.notaus_note": ["s8", "s11"],
@@ -233,12 +233,12 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Antwort bauen (chat._answer)
     "weiche": {
-        "stand": "b2c8b7d88a",
+        "stand": "500f0aa1cf",
         "bezug": {
             "intent.GROUPS": ["s4", "s6"], "intent_bench.BENCH": ["s4", "s5"], "intent_alltag.ALLTAG": ["s14"],
             "weiche.KEEP_VERSIONS": ["s4"], "intent.Route": ["s6"], "intent.follow_up": ["s8"],
             "intent.ask_model": ["s10"], "intent.pick_in_time": ["s10"], "intent.lean": ["s12"],
-            "weiche.count": ["s14"], "weiche.trace": ["s14"], "intent_alltag.measure": ["s14"], "regeln": ["s9"],
+            "weiche.count": ["s14"], "weiche_unklar.anon": ["s14"], "weiche.trace": ["s14"], "intent_alltag.measure": ["s14"], "regeln": ["s9"],
             "regel:Modell ordnet ein": ["s10"], "regel:Knapp": ["s12"],
             "regel:Einordnung mit Wahrscheinlichkeit": ["s10"],
         },
@@ -397,11 +397,19 @@ SEITEN = {
               ("Jeder Zug schreibt eine Zeile „weiche: Absicht … | Grund … | Hinweis … | Werkzeuge x von y | Pflicht "
                "… | gesperrt … | eingrenzen an/aus“; ein Grundwort steht nur da, wenn es noch in der Nachricht "
                "steht. Gezählt werden je Tag und Gruppe nur Anzahlen ({weiche.KEEP_DAYS} Tage), nie ein Wort der "
-               "Frage. Dann geht die Liste an die Antwort.",
+               "Frage. Mit „Unklare Fragen anonym merken“ kommt eine unklare Frage eines Profils (nie eines Gastes, "
+               "nie mit dem Codewort) zusätzlich geschwärzt auf die Weiche-Seite: feste Regeln wie bei „Probleme "
+               "melden“, Kontaktnamen und jede Zahl werden Platzhalter, eine zweite Prüfung verwirft, was noch "
+               "persönlich wirkt (weiche_unklar.anon); ohne Profil, Gerät und Uhrzeit, versiegelt, höchstens "
+               "{weiche_unklar.MAX_ROWS} Sätze, {weiche_unklar.KEEP_DAYS} Tage. Dann geht die Liste an die Antwort.",
                "Every turn writes a line „weiche: Absicht … | Grund … | Hinweis … | Werkzeuge x von y | Pflicht … | "
                "gesperrt … | eingrenzen an/aus“; a reason word only shows when it is still in the message. Per day "
-               "and group only counts are kept ({weiche.KEEP_DAYS} days), never a word of the question. Then the "
-               "list goes to the answer.")),
+               "and group only counts are kept ({weiche.KEEP_DAYS} days), never a word of the question. With „Keep "
+               "unclear questions anonymously“ an unclear question of a profile (never a guest, never with the code "
+               "word) also goes redacted onto the switch page: fixed rules as in „Report a problem“, contact names and "
+               "every number become placeholders, a second check drops what still looks personal "
+               "(weiche_unklar.anon); without profile, device and time, sealed, at most {weiche_unklar.MAX_ROWS} "
+               "sentences, {weiche_unklar.KEEP_DAYS} days. Then the list goes to the answer.")),
         ],
         "beispiele": [
             (("„Mach das Licht im Wohnzimmer aus“", "„Turn off the living room light“"),
@@ -460,6 +468,12 @@ SEITEN = {
              "Features → Tune the switch (default off): the language model proposes words per group, the panel keeps a "
              "word only when no test sentence flips, the practice half gets better and the check half no worse; it is "
              "saved only with \"Apply\"."),
+            ("Funktionen → Gezielte Werkzeugwahl → Unklare Fragen anonym merken (Standard aus): unklare Fragen der Profile "
+             "stehen geschwärzt bei „unklar“ auf der Weiche, mit „Gehört zu …“ zum Feintunen; jedes Profil kann es unter "
+             "Ich → Gespräch → Datenschutz für sich ausschalten.",
+             "Features → Targeted tool choice → Keep unclear questions anonymously (default off): the profiles' unclear "
+             "questions show redacted at „unclear“ on the switch, with „Belongs to …“ for tuning; every profile can "
+             "switch it off for itself under Me → Conversation → Privacy."),
         ],
         "sehen": [
             ("Funktionen → Weiche: „Satz ausprobieren“ zeigt den ganzen Weg eines Satzes ohne Modell; dazu Testsätze, "
@@ -502,10 +516,11 @@ SEITEN = {
             ("intent.lean", ("kurze Liste bei „Knapp“", "short list with „Lean“")),
             ("intent.forced", ("Pflicht für die erste Runde", "required first tool")),
             ("weiche.count", ("Statistik ohne Inhalt", "statistics without content")),
+            ("weiche_unklar.anon", ("unklare Fragen geschwärzt", "unclear questions redacted")),
             ("weiche.trace", ("Satz ausprobieren", "try a sentence")),
             ("intent_alltag.measure", ("Alltagsquote", "everyday score")),
         ],
-        "tests": ["test_intent", "test_intent_alltag", "test_weiche", "test_werkzeuge", "test_systemone"],
+        "tests": ["test_intent", "test_intent_alltag", "test_weiche", "test_weiche_unklar", "test_werkzeuge", "test_systemone"],
         "heute": [],
     },
     "antwort": {

@@ -223,6 +223,7 @@ Feste Regeln, welche Werkzeuge das Modell für eine Frage sieht. Gibt nie mehr f
 | `app/panel/intent_bench.py` | Testsätze der Weiche |
 | `app/panel/weiche.py` | Seite Funktionen → Weiche und ihre Statistik |
 | `app/panel/weiche_abstimmen.py` | Weiche abstimmen: Wortvorschläge des Sprachmodells, mit festen Regeln an den Alltagssätzen gemessen |
+| `app/panel/weiche_unklar.py` | Unklare Fragen anonym: feste Schwärzung (wie Probleme melden), Leck-Prüfung, versiegelt, 7 Tage, nur Admin |
 | `app/panel/werkzeug_abdeckung.py` | Welche Funktion das Modell mit welchem Werkzeug erreicht (Regel 29) |
 | `app/panel/werkzeuge.py` | Verständliche Namen aller Werkzeuge |
 
@@ -712,6 +713,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `state/wartung.json` | Wartungspause | – | nein |
 | `state/weiche-history.json` | Weiche-Änderungen | – | nein |
 | `state/weiche-stats.json` | Weiche-Statistik | – | nein |
+| `state/weiche-unklar.json` | Unklare Fragen der Weiche, anonymisiert (höchstens 100, 7 Tage) | versiegelt | nein |
 | `state/werkstatt-wunsch.json` | Wunsch des Panels für den nächsten Auftrag der Werkstatt (Art, Text des Admins), Sekunden | – | nein |
 | `state/werkstatt.json` | Ergebnisse der Werkstatt: letzte 20 Aufträge mit Antwort und Patch, Code-Messung je Sprachmodell, letzter Testlauf | – | nein |
 <!-- /technik:speicher -->
@@ -1865,7 +1867,7 @@ flowchart TD
 11. <a id="kn-weiche-s11"></a>**Eingrenzen**: Bei einer klaren Gruppe bleiben ihre Werkzeuge, dazu immer 5 feste (sich etwas merken, eigene Dokumente, PC), die Werkzeuge der Hinweise, die zusätzlichen Werkzeuge des Admins für diese Gruppe (höchstens 6) und was die eigenen Worte ausdrücklich nennen („aufs reMarkable“). Alles nur, soweit schon angeboten. Ist von der Gruppe nichts angeboten oder steht die Gruppe auf „nicht eingrenzen“, bleiben alle.
 12. <a id="kn-weiche-s12"></a>**Knapp?**: Bleibt die Frage ohne Gruppe, steht die Einstellung auf „Knapp“ und verlangt kein Pflicht-Wort ein Werkzeug, bekommt das Modell nur die kurze Liste: Websuche, Wikipedia, Archiv, frühere Gespräche, die festen Werkzeuge und die Werkzeuge der Hinweis-Gruppen. Es liest weniger und beginnt früher.
 13. <a id="kn-weiche-s13"></a>**Erstes Werkzeug festlegen**: Eine einzige klare Gruppe, ein Pflicht-Werkzeug und nur dieses aus der Gruppe angeboten: die erste Runde muss genau dieses rufen („Wie wird das Wetter?“). Ein kurzer, eindeutiger Lesesatz („Wie ist das Wetter heute?“) wird mit „Eindeutiges direkt abrufen“ vom Panel selbst abgerufen, für morgen und übermorgen mit dem Datum, das das Panel ausrechnet.
-14. <a id="kn-weiche-s14"></a>**Journal und Zählung**: Jeder Zug schreibt eine Zeile „weiche: Absicht … | Grund … | Hinweis … | Werkzeuge x von y | Pflicht … | gesperrt … | eingrenzen an/aus“; ein Grundwort steht nur da, wenn es noch in der Nachricht steht. Gezählt werden je Tag und Gruppe nur Anzahlen (8 Tage), nie ein Wort der Frage. Dann geht die Liste an die Antwort.
+14. <a id="kn-weiche-s14"></a>**Journal und Zählung**: Jeder Zug schreibt eine Zeile „weiche: Absicht … | Grund … | Hinweis … | Werkzeuge x von y | Pflicht … | gesperrt … | eingrenzen an/aus“; ein Grundwort steht nur da, wenn es noch in der Nachricht steht. Gezählt werden je Tag und Gruppe nur Anzahlen (8 Tage), nie ein Wort der Frage. Mit „Unklare Fragen anonym merken“ kommt eine unklare Frage eines Profils (nie eines Gastes, nie mit dem Codewort) zusätzlich geschwärzt auf die Weiche-Seite: feste Regeln wie bei „Probleme melden“, Kontaktnamen und jede Zahl werden Platzhalter, eine zweite Prüfung verwirft, was noch persönlich wirkt (weiche_unklar.anon); ohne Profil, Gerät und Uhrzeit, versiegelt, höchstens 100 Sätze, 7 Tage. Dann geht die Liste an die Antwort.
 
 **Beispiele:** „Mach das Licht im Wohnzimmer aus“: Gruppe smarthome (Wort „Licht“): das Modell sieht nur die Smart-Home-Werkzeuge und die festen. · „Und morgen?“ nach einer Wetterfrage: Keine Regel greift, aber die Folgefrage übernimmt „wetter“: nur das Wetter-Werkzeug ist Pflicht. · „Muss ich die Pflanzen gießen?“ mit „Knapp“: Unklar, Hinweis „gießen“ → wetter: kurze Liste plus Wetter-Werkzeug. · „Danke!“: Gruppe plaudern: Antwort ohne Werkzeug.
 
@@ -1906,6 +1908,7 @@ Gilt bei: [Schritt 9](#kn-weiche-s9)
 - Funktionen → Weiche: eigene Wörter je Gruppe, „Nicht bei“, zusätzliche Werkzeuge, Gruppen ohne Eingrenzen, Pflicht-Wörter, eigene Testsätze und was Fragen bekommen, die keine Regel erkennt. Jede Änderung läuft vorher durch alle Testsätze; ändert sich einer, wird erst nach Bestätigung gespeichert. Rückgängig hält die letzten 20 Fassungen.
 - Funktionen → Eindeutiges direkt abrufen: kurze Lesefragen ruft das Panel selbst ab (Standard aus).
 - Funktionen → Weiche abstimmen (Standard aus): das Sprachmodell schlägt Wörter je Gruppe vor, das Panel behält ein Wort nur, wenn kein Testsatz kippt, die Übungshälfte besser und die Prüfhälfte nicht schlechter wird; gespeichert wird erst mit „Übernehmen“.
+- Funktionen → Gezielte Werkzeugwahl → Unklare Fragen anonym merken (Standard aus): unklare Fragen der Profile stehen geschwärzt bei „unklar“ auf der Weiche, mit „Gehört zu …“ zum Feintunen; jedes Profil kann es unter Ich → Gespräch → Datenschutz für sich ausschalten.
 
 #### Was du siehst
 
@@ -1925,10 +1928,11 @@ Gilt bei: [Schritt 9](#kn-weiche-s9)
 - `app/panel/intent.py` `lean`: kurze Liste bei „Knapp“ ([Schritt 12](#kn-weiche-s12))
 - `app/panel/intent.py` `forced`: Pflicht für die erste Runde ([Schritt 13](#kn-weiche-s13))
 - `app/panel/weiche.py` `count`: Statistik ohne Inhalt ([Schritt 14](#kn-weiche-s14))
+- `app/panel/weiche_unklar.py` `anon`: unklare Fragen geschwärzt ([Schritt 14](#kn-weiche-s14))
 - `app/panel/weiche.py` `trace`: Satz ausprobieren ([Schritt 14](#kn-weiche-s14))
 - `app/panel/intent_alltag.py` `measure`: Alltagsquote ([Schritt 14](#kn-weiche-s14))
 
-Selbsttests: `test_intent`, `test_intent_alltag`, `test_weiche`, `test_werkzeuge`, `test_systemone`
+Selbsttests: `test_intent`, `test_intent_alltag`, `test_weiche`, `test_weiche_unklar`, `test_werkzeuge`, `test_systemone`
 
 ### Antwort bauen
 
@@ -3298,7 +3302,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Versiegeln**: vault.seal macht aus dem Wert „enc1:“ und ein Fernet-Token (verschlüsselt und gegen Änderung geschützt). Ein schon versiegelter Wert bleibt, wie er ist.
 5. <a id="kn-state-s5"></a>**Atomar schreiben**: common.write_json schreibt in eine frische Zwischendatei daneben, nie durch einen Link, gibt ihr die Rechte der alten Datei (eine neue ist nur für den Dienst lesbar) und tauscht sie dann in einem Schritt aus. Ein Absturz mittendrin lässt die alte Datei ganz.
 6. <a id="kn-state-s6"></a>**Lesen**: Ein versiegelter Wert wird mit dem Schlüssel geöffnet. Passt der Schlüssel nicht (Sicherung von einem anderen Spark), kommt ein leerer Wert zurück und der Zugang muss neu eingetragen werden. Ältere unversiegelte Werte werden gelesen und beim nächsten Speichern versiegelt.
-7. <a id="kn-state-s7"></a>**Kommt in die Sicherung?**: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 35), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 83). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile.
+7. <a id="kn-state-s7"></a>**Kommt in die Sicherung?**: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 35), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 84). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile.
 8. <a id="kn-state-s8"></a>**Umzugs-Sicherung?**: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung.
 9. <a id="kn-state-s9"></a>**Beim Wiederherstellen in Ordnung?**: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt.
 10. <a id="kn-state-s10"></a>**Einsetzen mit Rückweg**: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück.
@@ -3309,7 +3313,7 @@ flowchart TD
 #### Zahlen (aus dem Code)
 
 - **35** Dateien in jeder Sicherung ([Schritt 7](#kn-state-s7))
-- **83** Dateien und Ordner, die mit Grund draußen bleiben ([Schritt 7](#kn-state-s7))
+- **84** Dateien und Ordner, die mit Grund draußen bleiben ([Schritt 7](#kn-state-s7))
 - **8 MB** größte Datei beim Wiederherstellen ([Schritt 9](#kn-state-s9))
 - **12** Zeichen hat das Umzugs-Passwort mindestens ([Schritt 8](#kn-state-s8))
 

@@ -126,6 +126,7 @@
     "tool_thinking": false,
     "routing": true,
     "route_tune": false,
+    "route_unklar": false,
     "direct_read": true,
     "hoer_namen": false,
     "memory_trim": false,

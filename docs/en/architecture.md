@@ -223,6 +223,7 @@ Fixed rules for which tools the model sees for a question. Never gives more than
 | `app/panel/intent_bench.py` | The Weiche's test bench (intent.py): sentence -> expected group ("" = no rule fits, "+" = two at once). |
 | `app/panel/weiche.py` | Features → Routing: the switch of intent.py, shown and set up in the panel. |
 | `app/panel/weiche_abstimmen.py` | Features → Routing → „Weiche abstimmen“: the language model proposes words for the groups, the panel measures every word with fixed rules and keeps only thos … |
+| `app/panel/weiche_unklar.py` | Features → Routing → unklar: unclear questions, anonymized. |
 | `app/panel/werkzeug_abdeckung.py` | Which function the assistant reaches how. |
 | `app/panel/werkzeuge.py` | The readable name of every tool. |
 
@@ -712,6 +713,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `state/wartung.json` | Maintenance pause | – | no |
 | `state/weiche-history.json` | Switch changes | – | no |
 | `state/weiche-stats.json` | Switch statistics | – | no |
+| `state/weiche-unklar.json` | Unclear questions of the switch, anonymized (at most 100, 7 days) | sealed | no |
 | `state/werkstatt-wunsch.json` | The panel's wish for the Workshop's next order (kind, the admin's text), seconds | – | no |
 | `state/werkstatt.json` | The Workshop's results: last 20 orders with answer and patch, code measurement per language model, last test run | – | no |
 <!-- /technik:speicher -->
@@ -1865,7 +1867,7 @@ flowchart TD
 11. <a id="kn-weiche-s11"></a>**Narrow**: With a clear group its tools stay, plus always 5 fixed ones (remembering something, own documents, PC), the hints' tools, the admin's extra tools for this group (at most 6) and what the own words name explicitly („onto the reMarkable“). All only as far as already offered. If nothing of the group is offered or the group is set to „do not narrow“, all stay.
 12. <a id="kn-weiche-s12"></a>**Lean?**: If the question stays without a group, the setting is „Lean“ and no must word requires a tool, the model only gets the short list: web search, Wikipedia, archive, earlier conversations, the fixed tools and the tools of the hint groups. It reads less and starts sooner.
 13. <a id="kn-weiche-s13"></a>**Fix the first tool**: One single clear group, one required tool and only that one of the group offered: the first round must call exactly that one („What will the weather be?“). A short, clear reading sentence („What is the weather today?“) is fetched by the panel itself with „Fetch clear questions directly“, for tomorrow and the day after with the date the panel works out.
-14. <a id="kn-weiche-s14"></a>**Journal and count**: Every turn writes a line „weiche: Absicht … | Grund … | Hinweis … | Werkzeuge x von y | Pflicht … | gesperrt … | eingrenzen an/aus“; a reason word only shows when it is still in the message. Per day and group only counts are kept (8 days), never a word of the question. Then the list goes to the answer.
+14. <a id="kn-weiche-s14"></a>**Journal and count**: Every turn writes a line „weiche: Absicht … | Grund … | Hinweis … | Werkzeuge x von y | Pflicht … | gesperrt … | eingrenzen an/aus“; a reason word only shows when it is still in the message. Per day and group only counts are kept (8 days), never a word of the question. With „Keep unclear questions anonymously“ an unclear question of a profile (never a guest, never with the code word) also goes redacted onto the switch page: fixed rules as in „Report a problem“, contact names and every number become placeholders, a second check drops what still looks personal (weiche_unklar.anon); without profile, device and time, sealed, at most 100 sentences, 7 days. Then the list goes to the answer.
 
 **Examples:** „Turn off the living room light“: Group smarthome (word „Licht“): the model only sees the smart home tools and the fixed ones. · „And tomorrow?“ after a weather question: No rule fits, but the follow-up takes „wetter“: only the weather tool is required. · „Do I need to water the plants?“ with „Lean“: Unclear, hint „gießen“ → weather: short list plus the weather tool. · „Thanks!“: Group small talk: answer without a tool.
 
@@ -1906,6 +1908,7 @@ Applies at: [step 9](#kn-weiche-s9)
 - Features → Routing: own words per group, „Not with“, extra tools, groups without narrowing, must words, own test sentences and what questions no rule recognizes get. Every change runs through all test sentences first; if one changes, it is saved only after confirming. Undo keeps the last 20 versions.
 - Features → Fetch clear questions directly: the panel fetches short reading questions itself (default off).
 - Features → Tune the switch (default off): the language model proposes words per group, the panel keeps a word only when no test sentence flips, the practice half gets better and the check half no worse; it is saved only with "Apply".
+- Features → Targeted tool choice → Keep unclear questions anonymously (default off): the profiles' unclear questions show redacted at „unclear“ on the switch, with „Belongs to …“ for tuning; every profile can switch it off for itself under Me → Conversation → Privacy.
 
 #### What you see
 
@@ -1925,10 +1928,11 @@ Applies at: [step 9](#kn-weiche-s9)
 - `app/panel/intent.py` `lean`: short list with „Lean“ ([step 12](#kn-weiche-s12))
 - `app/panel/intent.py` `forced`: required first tool ([step 13](#kn-weiche-s13))
 - `app/panel/weiche.py` `count`: statistics without content ([step 14](#kn-weiche-s14))
+- `app/panel/weiche_unklar.py` `anon`: unclear questions redacted ([step 14](#kn-weiche-s14))
 - `app/panel/weiche.py` `trace`: try a sentence ([step 14](#kn-weiche-s14))
 - `app/panel/intent_alltag.py` `measure`: everyday score ([step 14](#kn-weiche-s14))
 
-Self-tests: `test_intent`, `test_intent_alltag`, `test_weiche`, `test_werkzeuge`, `test_systemone`
+Self-tests: `test_intent`, `test_intent_alltag`, `test_weiche`, `test_weiche_unklar`, `test_werkzeuge`, `test_systemone`
 
 ### Build answer
 
@@ -3298,7 +3302,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Seal**: vault.seal turns the value into „enc1:“ and a Fernet token (encrypted and protected against change). A value already sealed stays as it is.
 5. <a id="kn-state-s5"></a>**Write atomically**: common.write_json writes into a fresh temporary file next to it, never through a link, gives it the rights of the old file (a new one is readable for the service only) and then swaps it in one step. A crash in the middle leaves the old file whole.
 6. <a id="kn-state-s6"></a>**Read**: A sealed value is opened with the key. If the key does not fit (backup from another Spark), an empty value comes back and the account has to be entered again. Older unsealed values are read and sealed the next time they are saved.
-7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 35), otherwise the line gives its reason (dateien.STATE_LOCAL, 83). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
+7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 35), otherwise the line gives its reason (dateien.STATE_LOCAL, 84). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
 8. <a id="kn-state-s8"></a>**Move backup?**: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup.
 9. <a id="kn-state-s9"></a>**Fine when restoring?**: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays.
 10. <a id="kn-state-s10"></a>**Put in place with a way back**: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back.
@@ -3309,7 +3313,7 @@ flowchart TD
 #### Numbers (from the code)
 
 - **35** files in every backup ([step 7](#kn-state-s7))
-- **83** files and folders that stay out with a reason ([step 7](#kn-state-s7))
+- **84** files and folders that stay out with a reason ([step 7](#kn-state-s7))
 - **8 MB** largest file when restoring ([step 9](#kn-state-s9))
 - **12** characters the move password has at least ([step 8](#kn-state-s8))
 
