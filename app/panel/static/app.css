@@ -2299,6 +2299,8 @@ textarea{resize:none}textarea[data-fest]{resize:vertical}textarea.feldplatz{padd
 .ks-k .ks-met{border:0;padding:0}.ks-who{display:flex;gap:8px;align-items:center;margin:0 0 8px}.ks-who select{width:auto}
 .ks-career{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:8px 0}.ks-ladder{margin:6px 0 0;padding-left:20px}
 .ks-ladder li.on b{color:var(--acc)}
+.ks-hers{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:8px;margin:6px 0 8px}.ks-her{border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:4px;align-items:flex-start;min-width:0}
+.ks-board{margin:4px 0;padding-left:22px;width:100%}.ks-board li{display:flex;justify-content:space-between;gap:8px}.ks-board li.ich{font-weight:600}.ks-muts{flex-wrap:wrap}
 /* Lernen (Paket 5): the hint, the ghost, the debrief */
 .ks-tipp{border:1px solid var(--acc);border-radius:12px;padding:8px 12px;margin:6px 0}.ks-act.ks-hint{border-color:var(--acc);box-shadow:0 0 0 2px color-mix(in srgb,var(--acc) 35%,transparent)}
 .ks-geist{margin:2px 0 6px;font-size:13px}

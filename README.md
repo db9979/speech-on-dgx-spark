@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.939** IT crisis game (package 6): daily and weekly challenge with a board (without name, with name or not at all) and mutators with bonus points
 - **V01.0.938** IT crisis game (package 4): seven new scenarios (DDoS, data leak with GDPR deadline, insider, cloud outage, poisoned update, CEO fraud, deleted database) with their own console
 - **V01.0.937** IT crisis game (package 5): debrief with sources (NIST, BSI, GDPR), learning mode with a hint, ghost of the best run, statistics per scenario
 - **V01.0.936** IT crisis game (package 3): a team with subjects and tiredness takes moves over ("Who takes it?", console team/assign); career from junior admin to CISO with more colleagues and budget
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.932** IT crisis game (package 1): own page "Crisis game" with five scenarios (ransomware, SAN, power, BGP, BSI), crisis dashboard, inspector, grades and achievements; the panel decides by fixed rules and seed, the narrator (own switch) only retells; both switches off
 - **V01.0.931** Live overview: one call is one "Telefon" card, its questions stand on it ("db · Anruf · 2 questions") instead of as phone cards of their own
 - **V01.0.930** Exact calculations, more: number words ("six times six"), a calculation in the question makes the tool required, "@Spark prüf das" checks calculations on reMarkable pages ("please check", page unchanged), adding up receipts
-- **V01.0.929** reMarkable notebooks with the date of their last change and "last comparison" in Me → Documents
 
 
 

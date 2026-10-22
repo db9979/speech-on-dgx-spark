@@ -612,6 +612,94 @@ class Lernen(unittest.TestCase):
         self.assertNotIn("kurve", K.view(d)["verlauf"][0])
 
 
+class Herausforderung(unittest.TestCase):
+    """Herausforderungen (Paket 6): the same game from the date for every profile, mutators by fixed rules, every
+    scenario winnable with any two mutators, the first try on the board, a name only by choice."""
+
+    def setUp(self):
+        Api.setUp(self)
+
+    def test_the_challenge_comes_from_the_date(self):
+        a, b = K.herausforderung("tag", T0), K.herausforderung("tag", T0 + 60)
+        self.assertEqual(a, b)
+        self.assertNotEqual(a["key"], K.herausforderung("tag", T0 + 86400)["key"])
+        w = K.herausforderung("woche", T0)
+        self.assertEqual((len(a["mutatoren"]), len(w["mutatoren"])), (K.HERAUS["tag"][0], K.HERAUS["woche"][0]))
+        self.assertTrue(w["key"].startswith("woche:"))
+        self.assertIn(a["szenario"], K.SZENARIEN)
+        days = {K.herausforderung("tag", T0 + i * 86400)["szenario"] for i in range(60)}
+        self.assertGreater(len(days), 6)                                # the days bring different scenarios
+
+    def test_mutators_change_the_start_and_the_points(self):
+        plain = K.new_game("san", "normal", 3, now=T0, rang="admin")
+        for mut, check in (("sparkurs", lambda m: m["budget"] == plain["m"]["budget"] // 2),
+                           ("eile", lambda m: m["zeit_start"] == plain["m"]["zeit"] * 4 // 5),
+                           ("presse", lambda m: m["vertrauen"] == plain["m"]["vertrauen"] - 20),
+                           ("muede", lambda m: m["moral"] == plain["m"]["moral"] - 15)):
+            st = K.new_game("san", "normal", 3, now=T0, rang="admin", mutatoren=[mut])
+            self.assertTrue(check(st["m"]), mut)
+        self.assertTrue(all(k["muede"] == 40 for k in K.new_game("san", "normal", 3, now=T0, mutatoren=["muede"])["kollegen"]))
+        with self.assertRaises(ValueError):
+            K.new_game("san", "normal", 3, now=T0, mutatoren=["gibtsnicht"])
+        with self.assertRaises(ValueError):
+            K.new_game("san", "normal", 3, now=T0, mutatoren=["eile", "eile"])
+        st = solve(K.new_game("san", "normal", 3, now=T0, rang="admin", mutatoren=["presse", "sparkurs"]))
+        bonus = K.MUT_BONUS["presse"] + K.MUT_BONUS["sparkurs"]
+        self.assertIn([f"Mutatoren: +{bonus} Punkte.", f"Mutators: +{bonus} points."], st["ende"]["gruende"])
+        self.assertIn("mutig", K.erfolge_neu(st, {"erfolge": {}, "stats": {}}))
+
+    def test_every_scenario_can_be_won_with_any_two_mutators(self):
+        for sid in K.SZENARIEN:
+            for seed in seeds_for_variants(sid):
+                for pair in itertools.combinations(K.MUT_IDS, 2):
+                    won = solve(K.new_game(sid, "normal", seed, now=T0, rang=K.HERAUS_RANG, mutatoren=list(pair)))
+                    self.assertIsNotNone(won, (sid, seed, pair))
+
+    def test_the_board_counts_the_first_try_and_names_only_by_choice(self):
+        orig = K.herausforderung
+        c1, u1 = Api.fresh(self, "Ksboard1")
+        c2, u2 = Api.fresh(self, "Ksboard2")
+        out = io.StringIO()
+        with mock.patch.object(K, "herausforderung", side_effect=lambda art, now=None: orig(art, T0)), contextlib.redirect_stdout(out):
+            h = orig("tag", T0)
+            self.assertEqual(c1.post("/api/profile/krisenspiel/neu", json={"herausforderung": "jahr"}).status_code, 400)
+            self.assertEqual(c1.post("/api/profile/krisenspiel/neu", json={"szenario": "san", "mutatoren": ["x"]}).status_code, 400)
+            self.assertEqual(c1.post("/api/profile/krisenspiel/neu", json={"szenario": "san", "mutatoren": "eile"}).status_code, 400)
+            g = c1.post("/api/profile/krisenspiel/neu", json={"herausforderung": "tag", "lernen": True}).json()["spiel"]
+            self.assertEqual((g["szenario"], g["seed"], g["mutatoren"], g["heraus"], g["lernen"], g["rang"]),
+                             (h["szenario"], h["seed"], h["mutatoren"], h["key"], False, K.HERAUS_RANG))
+            c1.delete("/api/profile/krisenspiel")
+            c1.post("/api/profile/krisenspiel/neu", json={"herausforderung": "tag"})
+            d1 = c1.delete("/api/profile/krisenspiel").json()                  # a second try: not counted
+            self.assertEqual(len(K.load(u1)["heraus"]), 1)
+            quiet(c2.post, "/api/profile/krisenspiel/neu", json={"herausforderung": "tag"})
+            d2 = c2.delete("/api/profile/krisenspiel").json()
+            K._board["d"] = None
+            liste = next(x for x in c2.get("/api/profile/krisenspiel").json()["herausforderungen"] if x["art"] == "tag")["liste"]
+            self.assertEqual(sorted((r["ich"], r["name"]) for r in liste), [(False, None), (True, "Ksboard2")])
+            self.assertEqual(c1.post("/api/profile/krisenspiel/bestenliste", json={"zeigen": "alle"}).status_code, 400)
+            c1.post("/api/profile/krisenspiel/bestenliste", json={"zeigen": "name"})
+            liste = next(x for x in c2.get("/api/profile/krisenspiel").json()["herausforderungen"] if x["art"] == "tag")["liste"]
+            self.assertIn("Ksboard1", [r["name"] for r in liste])
+            c1.post("/api/profile/krisenspiel/bestenliste", json={"zeigen": "aus"})
+            liste = next(x for x in c2.get("/api/profile/krisenspiel").json()["herausforderungen"] if x["art"] == "tag")["liste"]
+            self.assertEqual([r["ich"] for r in liste], [True])
+            mine = next(x for x in c1.get("/api/profile/krisenspiel").json()["herausforderungen"] if x["art"] == "tag")
+            self.assertEqual((sorted(r["ich"] for r in mine["liste"]), mine["ich"]["note"]), ([False, True], "F"))   # „aus“ still sees itself
+            self.assertEqual(d1["verlauf"][0]["heraus"], h["key"])
+            self.assertTrue(d2["spiel"]["ende"])
+            c1.delete("/api/profile/krisenspiel/daten")
+            liste = next(x for x in c2.get("/api/profile/krisenspiel").json()["herausforderungen"] if x["art"] == "tag")["liste"]
+            self.assertEqual([r["ich"] for r in liste], [True])                # own data deleted: off the board
+        log = out.getvalue()
+        for want in ("spiel: neu | " + h["szenario"] + " | normal | knoepfe | tag | 1 mutatoren", "spiel: bestenliste | name",
+                     "spiel: bestenliste | aus", "spiel: bestenliste abgelehnt | eingabe", "spiel: neu abgelehnt | eingabe"):
+            self.assertIn(want, log)
+        self.assertNotIn("Ksboard", log)
+        self.assertGreaterEqual(K.for_live().get("heraus", 0) if K.admin_on() else 1, 1)
+        quiet(c2.delete, "/api/profile/krisenspiel/daten")
+
+
 class Anleitung(unittest.TestCase):
     def test_the_guide_names_everything_from_the_code(self):
         g = KA.build(K)
@@ -931,6 +1019,13 @@ class Page(unittest.TestCase):
                         await b.until(pg, "!!document.querySelector('#ksview .ks-lehren li')")
                         await pg.evaluate("icTabSet('spiel','bisher');ksOpen()")
                         await b.until(pg, "!!document.querySelector('#ksview .ks-tab tbody tr')")
+                        # Herausforderungen: two cards, accepting one starts its game with its mutators
+                        await pg.evaluate("icTabSet('spiel','neu');ksOpen()")
+                        await b.until(pg, "document.querySelectorAll('#ksview .ks-her').length===2")
+                        await pg.select_option("#ksview .ksboard", "name")
+                        await b.until(pg, "!KS.busy&&KS.data.bestenliste==='name'")
+                        await pg.click("#ksview [data-ksheraus=tag]")
+                        await b.until(pg, "!KS.busy&&!!KS.data.spiel&&!!KS.data.spiel.heraus&&KS.data.spiel.mutatoren.length===1")
                         self.assertEqual(errors, [])
                     finally:
                         await br.close()

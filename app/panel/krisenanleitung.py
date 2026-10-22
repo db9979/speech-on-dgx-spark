@@ -228,6 +228,21 @@ def build(k):
                           "Minuten, dazu deine Noten.",
                           "Statistics under \"Past games\": per scenario played, won, average, best, minutes, and your "
                           "grades."))))
+    S.append(_sek("herausforderungen", "Herausforderungen und Mutatoren", "Challenges and mutators",
+                  _p("Unter „Neues Spiel“ stehen die Tages- und die Wochen-Herausforderung: dasselbe Spiel für jedes Profil "
+                     "dieses Spark, gezogen aus dem Datum (Szenario, Seed, Stufe Normal, Team wie beim Rang Admin). Der erste "
+                     "Versuch zählt für die Bestenliste, weitere Versuche nicht, ein Lernspiel nie. In der Liste stehst du ohne "
+                     "Namen, mit deinem Namen oder gar nicht, wie du es wählst.",
+                     "Under \"New game\" are the daily and the weekly challenge: the same game for every profile of this "
+                     "Spark, drawn from the date (scenario, seed, level Normal, team as at the rank Admin). The first try "
+                     "counts for the board, later tries do not, a learning game never. On the board you stand without a "
+                     "name, with your name or not at all, as you choose."),
+                  _p(f"Mutatoren sind Zusatzregeln; die Tages-Herausforderung hat {k.HERAUS['tag'][0]}, die Wochen-Herausforderung "
+                     f"{k.HERAUS['woche'][0]}, im freien Spiel wählst du sie selbst. Ein Sieg bringt ihre Punkte dazu.",
+                     f"Mutators are extra rules; the daily challenge has {k.HERAUS['tag'][0]}, the weekly challenge "
+                     f"{k.HERAUS['woche'][0]}, in free play you pick them yourself. A win adds their points."),
+                  _tabelle([("Mutator", "Mutator"), ("Regel", "Rule"), ("Punkte", "Points")],
+                           [[list(n), list(t), [f"+{b}", f"+{b}"]] for _, n, t, b in k.MUTATOREN])))
     S.append(_sek("konsole", "Die Konsole", "The console",
                   _p("Unter der Chronik steht ein Terminal. Du startest auf jump01, dem Linux-Sprungrechner des Admins. "
                      "Von dort erreichst du jeden Rechner des Szenarios mit ssh. Getippte Befehle sind dieselben Züge wie "

@@ -4916,6 +4916,22 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Herausforderungen im Krisenspiel (V01.0.939, Plan Paket 6)",
+"text": "Herausforderungen im Krisenspiel (V01.0.939, Plan Paket 6): Unter *Neues Spiel* stehen die Tages- und die Wochen-Herausforderung (krisenspiel.herausforderung): Szenario, Seed und Mutatoren aus dem Datum in Europe/Berlin, für jedes Profil dieses Spark gleich, Stufe Normal und Team wie beim Rang Admin (gleiche Bedingungen unabhängig von der Laufbahn). Der erste Versuch zählt für die Bestenliste (board, gelesen aus den eigenen Spieldateien der Profile, kein eigener Zustand), weitere Versuche und Lernspiele nicht. Jedes Profil wählt, wie es dort steht: ohne Namen (Standard), mit Namen oder gar nicht (POST /api/profile/krisenspiel/bestenliste); wer seine Spieldaten löscht, verschwindet aus der Liste. Mutatoren (krisenspiel.MUTATOREN): Sparkurs (halbes Budget, +5), Eile (ein Fünftel weniger Zeit, +5), Presse im Nacken (Vertrauen −20, +4), Nach der Nachtschicht (Team 40 % müde, Moral −15, +4); die Tages-Herausforderung hat einen, die Wochen-Herausforderung zwei, im freien Spiel wählt man sie selbst; ein Sieg bringt ihre Punkte. Neue Erfolge „Herausforderung angenommen“ und „Mutig“. Die Selbsttests gewinnen jedes Szenario in jeder Variante mit jedem Paar Mutatoren. Live zählt die heute beg"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Herausforderungen im Krisenspiel (V01.0.939, Plan Paket 6)",
+"text": "onnenen Herausforderungen; Logs spiel: neu | … | tag, spiel: bestenliste | anonym/name/aus. Die Anleitung hat den Abschnitt „Herausforderungen und Mutatoren“. Als Nächstes: Paket 7 (iPhone nativ), dann die übrigen Pakete des Plans."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Dokumentliste für viele Dateien (V01.0.413)",
 "text": "Dokumentliste für viele Dateien (V01.0.413): Ich → Dokumente zeigt jedes Dokument als eine kompakte Zeile (Symbol, Titel, Art · Absender · Quelle, Datum und Größe) statt als Karte mit allen Knöpfen; Abzeichen nur, wenn etwas wichtig ist („Frist 20.12.“, „liest 3/12“, „nicht lesbar“, „für alle“, „Suche aus“). Die Liste scrollt mit der Seite (vorher ein Kasten mit 28 % Bildschirmhöhe), zeigt 50 Zeilen und dann „Weitere zeigen“ und ist beim Sortieren nach Datum in Heute, Letzte 7 Tage, Monate und Jahre gegliedert. Oben: ein Suchfeld filtert sofort nach Titel, Dateiname, Absender, Art, Nummer und Tags, Enter sucht zusätzlich im Inhalt (ersetzt „Suche ausprobieren“, Treffer öffnen das Dokument); Quelle (Hochgeladen, iPhone-App, Begleiter, reMarkable, Aufträge, Von anderen), Sortierung (Neueste, Name, Frist, Größe; Quelle und Sortierung merkt sich der Browser) und Schnellfilter mit Anzahl (Frist offen, Wird gelesen, Nicht lesbar, Für alle, Suche aus) plus Tags als Auswahlliste. Ein Klick öffnet den Detailbereich, auf breiten Seiten neben der Liste, schmal als eigene Seite mit „Zurück zur Liste“: Steckbrief, Zustand mit Balken, Tags direkt bearbeiten, Schalter „Der Assistent sucht darin“ "
 },
@@ -16686,6 +16702,22 @@
 "head": "Voice chat",
 "title": "Seven new scenarios in the crisis game (V01.0.938, plan package 4)",
 "text": "eck of all payments, no blame) and database deleted (backup good or empty for weeks, with or without a delayed replica: stop writes, stop the replica, restore, transaction logs up to just before the deletion; an empty database solves nothing). Every scenario has variants from the seed, roles and subjects for the team, side issues, at least four lessons with a source (among them GDPR Art. 33/34, BSI IT-Grundschutz CON.3, ORP.2, ORP.3, ORP.4, OPS.2.2, CISA ED 21-01) and its own console with machines, files and wrong moves; new game commands aws, dns, blocklist, geoblock, scale, pay, risk, image, Get-ADUser, Get-InboxRule, crontab, apt, mysql, mysqlbinlog. The self-tests play every variant of every scenario on every level to a win, also typed only. Next: package 6 (challenges), then the other packages of the plan."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Challenges in the crisis game (V01.0.939, plan package 6)",
+"text": "Challenges in the crisis game (V01.0.939, plan package 6): under *New game* are the daily and the weekly challenge (krisenspiel.herausforderung): scenario, seed and mutators from the date in Europe/Berlin, the same for every profile of this Spark, level Normal and team as at the rank Admin (equal conditions whatever the career). The first try counts for the board (board, read from the profiles' own game files, no state of its own), later tries and learning games do not. Every profile chooses how it stands there: without name (default), with name or not at all (POST /api/profile/krisenspiel/bestenliste); whoever deletes their game data leaves the board. Mutators (krisenspiel.MUTATOREN): austerity (half the budget, +5), hurry (a fifth less time, +5), press on your heels (trust −20, +4), after the night shift (team 40 % tired, morale −15, +4); the daily challenge has one, the weekly challenge two, in free play you pick them yourself; a win adds their points. New achievements \"Challenge accepted\" and \"Bold\". The self-tests win every scenario in every variant with every pair of mutators. Live counts the challenges started today; logs spiel: neu | … | tag, spiel: bestenliste | anonym/nam"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Challenges in the crisis game (V01.0.939, plan package 6)",
+"text": "e/aus. The guide has the section \"Challenges and mutators\". Next: package 7 (iPhone native), then the other packages of the plan."
 },
 {
 "lang": "en",

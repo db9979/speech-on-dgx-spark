@@ -37,6 +37,7 @@ users/<id>/krisenspiel.json. The journal gets fixed words and numbers only (spie
 """
 import asyncio
 import copy
+import datetime
 import hashlib
 import json
 import os
@@ -46,6 +47,7 @@ import secrets
 import sys
 import threading
 import time
+import zoneinfo
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 
@@ -110,7 +112,10 @@ ERFOLGE = (("feuertaufe", ("Feuertaufe", "Baptism of fire"), ("Das erste Spiel z
            ("ohne_knopf", ("Ohne Knopf gelöst", "Solved without a button"), ("Gewonnen, jeder Zug an der Konsole getippt.", "Won with every move typed at the console.")),
            ("gegen_uhr", ("Gegen die Uhr", "Against the clock"), ("Mit laufender Uhr gewonnen, ohne Pause.", "Won with the clock running, without a pause.")),
            ("delegiert", ("Gut delegiert", "Well delegated"), ("Gewonnen und mindestens vier Aufgaben ans Team gegeben.", "Won and handed at least four tasks to the team.")),
-           ("ciso", ("CISO", "CISO"), ("Den höchsten Rang der Laufbahn erreicht.", "Reached the highest rank of the career.")))
+           ("ciso", ("CISO", "CISO"), ("Den höchsten Rang der Laufbahn erreicht.", "Reached the highest rank of the career.")),
+           ("herausforderung", ("Herausforderung angenommen", "Challenge accepted"),
+            ("Eine Tages- oder Wochen-Herausforderung beim ersten Versuch gewonnen.", "Won a daily or weekly challenge at the first try.")),
+           ("mutig", ("Mutig", "Bold"), ("Mit mindestens zwei Mutatoren gewonnen.", "Won with at least two mutators.")))
 ERFOLG_IDS = tuple(e[0] for e in ERFOLGE)
 # roles of a game played together (Paket 11, krisenteam.py): every move has one (data key "rolle", else technik);
 # Leitung may take every move, the others only their own; a game alone is played as Leitung
@@ -181,7 +186,7 @@ def dauer(st, a, k):
         f *= MUEDE_FAKTOR
     return max(1, -(-round(a.get("zeit", 1) * f * 10) // 10))
 
-_day = DayCounter(zuege=0, spiele=0, erzaehlt=0, verworfen=0, konsole=0, delegiert=0)   # Zustand → Live, numbers only
+_day = DayCounter(zuege=0, spiele=0, erzaehlt=0, verworfen=0, konsole=0, delegiert=0, heraus=0)   # Zustand → Live, numbers only
 _locks = {}
 _locks_lock = threading.Lock()
 
@@ -523,12 +528,15 @@ def available(st):
     return out
 
 
-def new_game(szenario, stufe, seed=None, lang="de", now=None, modus="knoepfe", uhr=False, rang="junior", lernen=False):
+def new_game(szenario, stufe, seed=None, lang="de", now=None, modus="knoepfe", uhr=False, rang="junior", lernen=False,
+             mutatoren=(), heraus=None):
     """A fresh game: variants drawn from the seed, the start effects applied. modus „konsole“: moves only by typing;
     uhr: the clock runs in real time (uhr_ticken); rang (Laufbahn): the team's size and the budget factor, the
-    colleagues drawn from the seed; lernen (Paket 5): the page shows a hint before every move, no achievements."""
-    if szenario not in SZENARIEN or stufe not in STUFEN or modus not in MODI or rang not in RANG_IDS:
-        raise ValueError("szenario, stufe, modus, rang")
+    colleagues drawn from the seed; lernen (Paket 5): the page shows a hint before every move, no achievements;
+    mutatoren (Paket 6): extra rules for more points; heraus: the key of a challenge this game is."""
+    if szenario not in SZENARIEN or stufe not in STUFEN or modus not in MODI or rang not in RANG_IDS \
+            or any(x not in MUT_IDS for x in mutatoren) or len(set(mutatoren)) != len(mutatoren):
+        raise ValueError("szenario, stufe, modus, rang, mutatoren")
     r = RAENGE[RANG_IDS.index(rang)]
     sz = SZENARIEN[szenario]
     s = STUFEN[stufe]
@@ -545,7 +553,8 @@ def new_game(szenario, stufe, seed=None, lang="de", now=None, modus="knoepfe", u
           "modus": modus, "knoepfe": 0, "konsole": krisenkonsole.fresh(szenario),
           "uhr": {"t": now, "rest": 0.0, "offen": 0, "pause": False, "pausen": 0} if uhr else None,
           "rang": rang, "kollegen": _kollegen(seed, r[4]), "delegiert": 0, "lernen": bool(lernen), "folge": [],
-          "kurve": []}
+          "kurve": [], "mutatoren": sorted(mutatoren), "heraus": heraus}
+    _mutieren(st)
     rec = _rec()
     for e in sz.get("start", []):
         if holds(e.get("wenn"), st):
@@ -555,10 +564,56 @@ def new_game(szenario, stufe, seed=None, lang="de", now=None, modus="knoepfe", u
     st["trace"].append({"zug": 0, "steps": [
         _step("eingabe", ("Neues Spiel", "New game"), {"szenario": szenario, "stufe": stufe, "seed": seed, "modus": modus,
                                                      "uhr": bool(uhr), "rang": rang, "lernen": bool(lernen),
+                                                     "mutatoren": sorted(mutatoren), "herausforderung": heraus,
                                                      "kollegen": [k["id"] for k in st["kollegen"]]}),
         _step("zufall", ("Varianten aus dem Seed", "Variants from the seed"), {"varianten": var}),
         _step("regel", ("Startlage", "Starting situation"), {"systeme": rec["assets"], "werte": rec["delta"]})]})
     return st
+
+
+# Herausforderungen (Paket 6): every profile of this Spark gets the same game on one day (one mutator) or in one week
+# (two), drawn from the date in Europe/Berlin; the board lists each profile's first try, by name only when the
+# profile wants it (BOARD_ZEIGEN), else anonymous, or not at all. Mutators are extra rules; a game won with them earns
+# their points. Fixed rules, never the model.
+MUTATOREN = (("sparkurs", ("Sparkurs", "Austerity"), ("Halbes Notfall-Budget.", "Half the emergency budget."), 5),
+             ("eile", ("Eile", "Hurry"), ("Ein Fünftel weniger Zeit.", "A fifth less time."), 5),
+             ("presse", ("Presse im Nacken", "Press on your heels"), ("Das Vertrauen startet 20 Punkte tiefer.",
+                                                                      "Trust starts 20 points lower."), 4),
+             ("muede", ("Nach der Nachtschicht", "After the night shift"), ("Das Team startet zu 40 % müde, die Moral 15 Punkte tiefer.",
+                                                                           "The team starts 40 % tired, morale 15 points lower."), 4))
+MUT_IDS = tuple(x[0] for x in MUTATOREN)
+MUT_BONUS = {x[0]: x[3] for x in MUTATOREN}
+HERAUS = {"tag": (1, ("Tages-Herausforderung", "Daily challenge")), "woche": (2, ("Wochen-Herausforderung", "Weekly challenge"))}
+HERAUS_RANG = "admin"            # the same team and budget for everyone, whatever the career
+HERAUS_ZONE = zoneinfo.ZoneInfo("Europe/Berlin")
+BOARD_ZEIGEN = ("anonym", "name", "aus")
+BOARD_MAX = 20
+BOARD_CACHE = 20
+
+
+def _mutieren(st):
+    m = st["m"]
+    for x in st.get("mutatoren") or ():
+        if x == "sparkurs":
+            m["budget"] = m["budget_start"] = m["budget"] // 2
+        elif x == "eile":
+            m["zeit"] = m["zeit_start"] = m["zeit"] * 4 // 5
+        elif x == "presse":
+            m["vertrauen"] -= 20
+        elif x == "muede":
+            m["moral"] -= 15
+            for k in st["kollegen"]:
+                k["muede"] = 40
+
+
+def herausforderung(art, now=None):
+    """The challenge of the day or week: its key, scenario, seed and mutators, the same on every computer."""
+    t = datetime.datetime.fromtimestamp(time.time() if now is None else now, HERAUS_ZONE)
+    key = f"tag:{t:%Y-%m-%d}" if art == "tag" else "woche:%d-W%02d" % t.isocalendar()[:2]
+    r = random.Random("krisenspiel:" + key)
+    sid = sorted(SZENARIEN)[r.randrange(len(SZENARIEN))]
+    return {"art": art, "key": key, "name": list(HERAUS[art][1]), "szenario": sid, "stufe": "normal",
+            "seed": r.randrange(SEED_MAX + 1), "mutatoren": sorted(r.sample(MUT_IDS, HERAUS[art][0]))}
 
 
 def _step(art, titel, daten, ms=0.0):
@@ -753,7 +808,8 @@ def bewerten(st, end):
     loss = "datenverlust" in st["flags"]
     p = (50 if won else 0) + (20 * m["zeit"] / m["zeit_start"] if won else 0) \
         + 15 * max(0.0, 1 - m["kosten"] / ref) + 10 * m["vertrauen"] / 100 + 5 * m["moral"] / 100 - (10 if loss else 0) \
-        + (KONSOLE_BONUS if won and st.get("modus") == "konsole" else 0) + (UHR_BONUS if won and st.get("uhr") else 0)
+        + (KONSOLE_BONUS if won and st.get("modus") == "konsole" else 0) + (UHR_BONUS if won and st.get("uhr") else 0) \
+        + (_mut_bonus(st) if won else 0)
     p = max(0, min(100, round(p)))
     note = next(n for floor, n in NOTEN if p >= floor) if end != "aufgegeben" else "F"
     eur = lambda v: f"{v:,}".replace(",", ".")
@@ -767,7 +823,13 @@ def bewerten(st, end):
         why.append([f"Nur Konsole: +{KONSOLE_BONUS} Punkte.", f"Console only: +{KONSOLE_BONUS} points."])
     if won and st.get("uhr"):
         why.append([f"Uhr lief: +{UHR_BONUS} Punkte.", f"Clock running: +{UHR_BONUS} points."])
+    if won and _mut_bonus(st):
+        why.append([f"Mutatoren: +{_mut_bonus(st)} Punkte.", f"Mutators: +{_mut_bonus(st)} points."])
     return p, note, why
+
+
+def _mut_bonus(st):
+    return sum(MUT_BONUS.get(x, 0) for x in st.get("mutatoren") or ())
 
 
 def finish(st, end):
@@ -851,7 +913,9 @@ def erfolge_neu(st, prof_data):
              "gegen_uhr": won and bool(st.get("uhr")) and st["uhr"]["pausen"] == 0,
              "delegiert": won and st.get("delegiert", 0) >= 4,
              "ciso": rang_of(prof_data.get("stats", {}).get("gewonnen", 0) + won,
-                             "bestnote" in have or e["note"] == "A")[0] == RANG_IDS[-1]}
+                             "bestnote" in have or e["note"] == "A")[0] == RANG_IDS[-1],
+             "herausforderung": won and bool(st.get("heraus")) and st["heraus"] not in prof_data.get("heraus", {}),
+             "mutig": won and len(st.get("mutatoren") or ()) >= 2}
     return [k for k in ERFOLG_IDS if rules[k] and k not in have]
 
 
@@ -871,7 +935,9 @@ def load(uid):
         and d["spiel"].get("stufe") in STUFEN else None
     return {"spiel": st, "verlauf": [x for x in d.get("verlauf") or [] if isinstance(x, dict)][:VERLAUF_MAX],
             "erfolge": {k: int(v) for k, v in (d.get("erfolge") or {}).items() if k in ERFOLG_IDS and isinstance(v, (int, float))},
-            "stats": d.get("stats") if isinstance(d.get("stats"), dict) else {}}
+            "stats": d.get("stats") if isinstance(d.get("stats"), dict) else {},
+            "heraus": {k: v for k, v in (d.get("heraus") or {}).items() if isinstance(v, dict)},
+            "bestenliste": d.get("bestenliste") if d.get("bestenliste") in BOARD_ZEIGEN else BOARD_ZEIGEN[0]}
 
 
 def save(uid, d):
@@ -902,9 +968,17 @@ def _book(d, now):
     noten = stats.setdefault("noten", {})
     noten[st["ende"]["note"]] = noten.get(st["ende"]["note"], 0) + 1
     st["ende"]["erfolge"] = new
+    key = st.get("heraus")
+    if key and not learn and key not in d.setdefault("heraus", {}):      # the first try of a challenge counts
+        d["heraus"][key] = {"punkte": st["ende"]["punkte"], "note": st["ende"]["note"], "minuten": st["ende"]["minuten"],
+                            "ende": st["ende"]["art"], "t": int(now)}
+        for k in sorted(d["heraus"], key=lambda k: d["heraus"][k]["t"])[:-VERLAUF_MAX]:
+            del d["heraus"][k]
+        _board["d"] = None
     d["verlauf"] = ([{"id": st["id"], "szenario": st["szenario"], "stufe": st["stufe"], "seed": st["seed"],
                       "ende": st["ende"]["art"], "note": st["ende"]["note"], "punkte": st["ende"]["punkte"],
                       "zuege": st["zug"], "minuten": st["ende"]["minuten"], "t": int(now), "erfolge": new, "lernen": learn,
+                      "heraus": key, "mutatoren": st.get("mutatoren") or [],
                       "kurve": [] if learn else st.get("kurve", [])[:MAX_ZUEGE]}]
                     + d["verlauf"])[:VERLAUF_MAX]
     print(f"spiel: ende | {st['ende']['art']} | note {st['ende']['note']} | {st['zug']} zuege | {len(new)} erfolge", flush=True)
@@ -1030,6 +1104,8 @@ def view(d, uid=None):
            "verlauf": [dict({k: v for k, v in x.items() if k != "kurve"}, titel=SZENARIEN[x["szenario"]]["titel"])
                        for x in d["verlauf"] if x.get("szenario") in SZENARIEN],
            "laufbahn": laufbahn(d), "faecher": {k: list(v) for k, v in FAECHER.items()},
+           "mutatoren": [{"id": k, "name": list(n), "text": list(t), "bonus": b} for k, n, t, b in MUTATOREN],
+           "herausforderungen": heraus_view(d, uid), "bestenliste": d.get("bestenliste", BOARD_ZEIGEN[0]),
            "stats": {"gespielt": d["stats"].get("gespielt", 0), "gewonnen": d["stats"].get("gewonnen", 0),
                      "beste": d["stats"].get("beste", {}), "je": d["stats"].get("je", {}), "noten": d["stats"].get("noten", {})},
            "spiel": None}
@@ -1044,6 +1120,7 @@ def view(d, uid=None):
                         "modus": st.get("modus", "knoepfe"), "uhr": _uhr_view(st),
                         "aktionen": [] if st["ende"] or st.get("modus") == "konsole" else available(st),
                         "rang": st.get("rang", "junior"), "delegiert": st.get("delegiert", 0),
+                        "mutatoren": st.get("mutatoren") or [], "heraus": st.get("heraus"),
                         "lernen": bool(st.get("lernen")), "tipp": tipp(st) if st.get("lernen") and not st["ende"] else None,
                         "geist": geist(d, st),
                         "kollegen": [dict(x, rest=max(0, x["auftrag"]["fertig"] - minutes_gone(st)) if x["auftrag"] else 0)
@@ -1080,6 +1157,40 @@ def _uhr_view(st):
 
 
 # ---------------------------------------------------------------- endpoints
+_board = {"at": 0.0, "d": None}
+
+
+def board(key, uid):
+    """The board of a challenge: every allowed profile's first try, best first; a name only where that profile chose
+    „name“, profiles that chose „aus“ only for themselves. Read from the profiles' own files (cached BOARD_CACHE s)."""
+    if _board["d"] is None or time.time() - _board["at"] >= BOARD_CACHE:
+        idx = {}
+        for u in profiles.user_ids():
+            if os.path.exists(_file(u)) and features.allowed("krisenspiel", u):
+                d = load(u)
+                if d["heraus"]:
+                    idx[u] = (d["bestenliste"], d["heraus"])
+        _board.update(at=time.time(), d=idx)
+    rows = []
+    for u, (zeigen, her) in _board["d"].items():
+        r = her.get(key)
+        if not r or zeigen == "aus" and u != uid:
+            continue
+        p = profiles.by_id(u) or {}
+        rows.append({"ich": u == uid, "name": p.get("name") if zeigen == "name" or u == uid else None,
+                     "punkte": r["punkte"], "note": r["note"], "minuten": r["minuten"], "ende": r["ende"]})
+    rows.sort(key=lambda x: (-x["punkte"], x["minuten"]))
+    return rows[:BOARD_MAX]
+
+
+def heraus_view(d, uid, now=None):
+    out = []
+    for art in HERAUS:
+        h = herausforderung(art, now)
+        out.append(dict(h, titel=SZENARIEN[h["szenario"]]["titel"], ich=d.get("heraus", {}).get(h["key"]), liste=board(h["key"], uid)))
+    return out
+
+
 def admin_on():
     return features.admin_on("krisenspiel")
 
@@ -1122,7 +1233,16 @@ async def neu(request: Request, prof=Depends(browser_profile)):
     guard.limit(request, "spiel", uid)
     b = await json_body(request, BODY)
     sid, stufe, seed, modus = b.get("szenario"), b.get("stufe", "normal"), b.get("seed"), b.get("modus", "knoepfe")
-    uhr, lernen = b.get("uhr", False), b.get("lernen", False)
+    uhr, lernen, muts, her = b.get("uhr", False), b.get("lernen", False), b.get("mutatoren", []), b.get("herausforderung")
+    if her is not None:
+        if her not in HERAUS:
+            print("spiel: neu abgelehnt | eingabe", flush=True)
+            raise HTTPException(400, "herausforderung")
+        h = herausforderung(her)
+        sid, stufe, seed, muts, lernen = h["szenario"], h["stufe"], h["seed"], h["mutatoren"], False
+    if not isinstance(muts, list) or any(x not in MUT_IDS for x in muts) or len(set(muts)) != len(muts):
+        print("spiel: neu abgelehnt | eingabe", flush=True)
+        raise HTTPException(400, "mutatoren")
     if sid == ZUFALL and (seed is None or isinstance(seed, int) and not isinstance(seed, bool)):
         n = len(SZENARIEN)                      # Dominik 2026-10-22: „Überraschung, was passiert“; with a seed repeatable
         sid = sorted(SZENARIEN)[secrets.randbelow(n) if seed is None else random.Random(f"zufall:{seed}").randrange(n)]
@@ -1137,12 +1257,16 @@ async def neu(request: Request, prof=Depends(browser_profile)):
             d = load(uid)
             if d["spiel"] and not d["spiel"].get("ende"):
                 print("spiel: altes spiel ersetzt | nicht beendet", flush=True)
-            d["spiel"] = new_game(sid, stufe, seed, _lang(b), modus=modus, uhr=uhr, rang=laufbahn(d)["rang"], lernen=lernen)
+            d["spiel"] = new_game(sid, stufe, seed, _lang(b), modus=modus, uhr=uhr, lernen=lernen, mutatoren=muts,
+                                  rang=HERAUS_RANG if her else laufbahn(d)["rang"], heraus=h["key"] if her else None)
             save(uid, d)
             return d
     d = await asyncio.to_thread(go)
     _day.bump("spiele")
-    print(f"spiel: neu | {sid} | {stufe} | {modus}{' | uhr' if uhr else ''}{' | lernen' if lernen else ''} | {profiles.log_name(prof)}", flush=True)
+    if her:
+        _day.bump("heraus")
+    print(f"spiel: neu | {sid} | {stufe} | {modus}{' | uhr' if uhr else ''}{' | lernen' if lernen else ''}"
+          f"{' | ' + her if her else ''}{f' | {len(muts)} mutatoren' if muts else ''} | {profiles.log_name(prof)}", flush=True)
     return view(d, uid)
 
 
@@ -1376,6 +1500,30 @@ def aufgeben(request: Request, prof=Depends(browser_profile)):
     return view(d, uid)
 
 
+@router.post("/api/profile/krisenspiel/bestenliste", dependencies=[Depends(assistant)])
+async def bestenliste(request: Request, prof=Depends(browser_profile)):
+    """How the profile stands on the boards of the challenges: anonym (default), name or aus."""
+    uid = prof["id"]
+    _need(uid)
+    guard.limit(request, "spiel", uid)
+    b = await json_body(request, BODY)
+    z = b.get("zeigen")
+    if z not in BOARD_ZEIGEN:
+        print("spiel: bestenliste abgelehnt | eingabe", flush=True)
+        raise HTTPException(400, "zeigen")
+
+    def go():
+        with _lock(uid):
+            d = load(uid)
+            d["bestenliste"] = z
+            save(uid, d)
+            return d
+    d = await asyncio.to_thread(go)
+    _board["d"] = None
+    print(f"spiel: bestenliste | {z}", flush=True)
+    return view(d, uid)
+
+
 @router.delete("/api/profile/krisenspiel/daten", dependencies=[Depends(assistant)])
 def daten_loeschen(request: Request, prof=Depends(browser_profile)):
     """The own game data: allowed also while the admin blocked the game for this profile (Richtlinie Teil 3)."""
@@ -1411,7 +1559,7 @@ def for_live():
         _live.update(at=time.time(), d={"laufend": running, "profile": profs, "uhr": clocks})
     t = _day.today()
     return dict(_live["d"], on=True, zuege=t["zuege"], spiele=t["spiele"], erzaehlt=t["erzaehlt"], verworfen=t["verworfen"],
-                konsole=t["konsole"], delegiert=t["delegiert"])
+                konsole=t["konsole"], delegiert=t["delegiert"], heraus=t["heraus"])
 
 
 def _own_count(uid):
@@ -1426,6 +1574,7 @@ def _own_clear(uid):
         except FileNotFoundError:
             pass
     _live["d"] = None
+    _board["d"] = None
     print("spiel: daten geloescht | eigene daten", flush=True)
 
 

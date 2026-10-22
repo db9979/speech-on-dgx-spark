@@ -2761,6 +2761,13 @@
 "titel": "Krisenspiel: sieben neue Szenarien",
 "text": "A: Update, Krisenspiel → Neues Spiel: zwölf Szenarien und 🎲. B: DDoS: „Datenverkehr analysieren“, dann je nach Art Provider oder WAF-Regel, dann „Webshop wieder freigeben“. C: Datenleck: Probe prüfen, Quelle suchen und schließen, Datenschutzbeauftragte, Meldung; wer zu lange wartet, sieht „Meldefrist überschritten“. D: Innentäter: „Den Admin direkt zur Rede stellen“ vor „Beweise sichern“ gibt in der Nachbesprechung „Besser:“. E: Chef-Betrug: erst die Bank anrufen. F: Datenbank gelöscht: „Leere Datenbank anlegen“ gewinnt nicht, die Hotline glüht. G: Konsole je Szenario: hosts, help zeigt unter „Im Spiel“ die neuen Befehle (aws, dns, blocklist, mysql …), z. B. „aws status“ im Cloud-Ausfall. H: Anleitung → Die Szenarien: alle zwölf.",
 "thread": "IT-Krisenspiel für einzelne Nutzer"
+},
+{
+"id": "P419",
+"v": 939,
+"titel": "Krisenspiel: Herausforderungen und Mutatoren",
+"text": "A: Update, Krisenspiel → Neues Spiel: oben zwei Karten „Tages-Herausforderung“ und „Wochen-Herausforderung“ mit Szenario, Mutatoren und Seed. B: „Annehmen“: das Spiel startet, im Kopf steht „Herausforderung“ und der Mutator. C: Zu Ende spielen oder aufgeben: die Karte zeigt „Dein erster Versuch“, die Liste dich als „Du“. D: Ein zweites Profil nimmt dieselbe Herausforderung an: dasselbe Szenario und derselbe Seed; in der Liste steht das erste Profil als „Ein Profil“. E: Beim ersten Profil „In den Bestenlisten: mit meinem Namen“: das zweite sieht den Namen; „gar nicht“: es verschwindet dort. F: Freies Spiel mit Häkchen „Sparkurs“: Budget halb, beim Sieg „Mutatoren: +5 Punkte“. G: Anleitung → Herausforderungen und Mutatoren. H: Live „N Herausforderungen“; Logs „spiel: bestenliste | name“ ohne Namen.",
+"thread": "IT-Krisenspiel für einzelne Nutzer"
 }
 ]
 }
