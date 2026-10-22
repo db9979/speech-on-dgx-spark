@@ -283,6 +283,7 @@ MODULE = {
     "praxistest": ("betrieb", "Zustand → Praxistest: die Prüfpunkte aus praxistest.json, je Punkt klappt, Problem oder später (nur Admins)"),
     "weiche_abstimmen": ("weiche", "Weiche abstimmen: Wortvorschläge des Sprachmodells, mit festen Regeln an den Alltagssätzen gemessen"),
     "werkstattseite": ("betrieb", "Zustand → Werkstatt: Aufträge anfragen, rote Tests noch mal, Ergebnisse mit nächsten Schritten, feste Nachtregel"),
+    "angriffsprobe": ("betrieb", "Angriffsprobe: wie oft das echte Sprachmodell Befehlen in fremdem Text folgen würde, nur Zahlen, kein Werkzeug läuft"),
     "modellseite": ("betrieb", "Zustand → Modelle: Katalog, Speicher-Budget, Messen, Wechseln und Zurückholen, eigene Modelle hinzufügen und löschen"),
     "technik": ("betrieb", "Diese Seite: Zustand → Technik und die Architektur-Doku"),
     "technik_knoten": ("betrieb", "Knoten-Seiten: jeder Kasten ganz genau, mit Ablauf, Regeln, Zahlen und Code"),
@@ -423,10 +424,12 @@ KNOTEN = {
                "Geklonte Stimmen und Sicherungen.", "Cloned voices and backups.", []),
     "werkstatt": (24, 476, "Werkstatt", "Workshop", "werkstatt.py", "",
                   "Nur für Admins: Testlauf, Code-Messung, Diagnose und Reparatur in einer Sandbox auf dem DGX, ohne Daten und "
-                  "Internet; heraus kommen Zahlen und ein Patch zum Ansehen, eingespielt wird nichts.",
+                  "Internet; heraus kommen Zahlen und ein Patch zum Ansehen, eingespielt wird nichts. Dazu die Angriffsprobe "
+                  "im Panel: nur Zahlen, kein Werkzeug läuft.",
                   "Admins only: test run, code measurement, diagnosis and repair in a sandbox on the DGX, without data and "
-                  "internet; numbers and a patch to look at come out, nothing is installed.",
-                  ["werkstatt.py", "werkstattseite.py"]),
+                  "internet; numbers and a patch to look at come out, nothing is installed. Plus the attack probe in the "
+                  "panel: numbers only, no tool runs.",
+                  ["werkstatt.py", "werkstattseite.py", "angriffsprobe.py"]),
     "post": (534, 476, "Post und Kontakte", "Mail and contacts", "/caldav · /carddav", "post",
              "Eigene Seiten E-Mail, Kalender, Kontakte; Abruf beim Anbieter über den Wächter, Vorrat versiegelt, "
              "Antwort mit Stand, Kalender- und Kontakte-Apps durch eine eigene Tür.",

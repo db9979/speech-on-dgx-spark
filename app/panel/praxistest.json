@@ -2650,6 +2650,13 @@
 "titel": "Einstellungen am Handy bündig",
 "text": "A: Update auf V01.0.919, am iPhone im Browser (Webansicht) Verwalten → Spark verwalten → Einstellungen öffnen. B: Jede Zeile (Sprachmodell, Spracherkennung, Sprachausgabe, Stimmen, Sicherheit, Betrieb, Update, Sicherung) beginnt mit Titel und grauer Zeile an derselben linken Kante rechts vom Symbol, keine ist eingerückt oder mittig.",
 "thread": "Einstellungen-Liste am Handy verrutscht"
+},
+{
+"id": "P403",
+"v": 921,
+"titel": "Angriffsprobe in der Werkstatt",
+"text": "A: Update. B: Funktionen → Werkstatt → Angriffsprobe an. C: Zustand → Werkstatt, Kachel „Angriffe prüfen“, Starten: links „Angriffsprobe läuft“ mit Fortschritt, nach 1 bis 2 Minuten ein Ergebnis „X von N“. D: Ergebnis antippen: Zahlen je Tarnung und je Werkzeug, kein Text eines Falls. E: Währenddessen eine Sprachfrage stellen: die Antwort kommt sofort (Gespräche gehen vor). F: Im Smart Home hat nichts geschaltet, Ich → Gedächtnis ist unverändert. G: iPhone-App Spark verwalten → Werkstatt zeigt den Lauf, Löschen geht.",
+"thread": "NeMo Guardrails prüfen"
 }
 ]
 }

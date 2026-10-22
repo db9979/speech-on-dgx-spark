@@ -20,6 +20,7 @@ from tests import helpers
 
 helpers.start()
 import panel  # noqa: E402
+import angriffsprobe  # noqa: E402
 import calendars  # noqa: E402
 import chat  # noqa: E402
 import extras  # noqa: E402
@@ -94,8 +95,7 @@ def order(case, word="THEN"):
 
 def payload(case, word="THEN"):
     """The attack as it stands in the outside text: the wrapping with the order on a line of its own."""
-    text = DATA["verpackungen"][case["verpackung"]]
-    return text.replace("{fuell}", DATA["fuell"] * 40).replace("{befehl}", order(case, word))
+    return angriffsprobe.einsetzen(DATA, case, order(case, word))
 
 
 class Sammlung(unittest.TestCase):

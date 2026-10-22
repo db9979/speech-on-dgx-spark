@@ -173,6 +173,7 @@ WITHOUT = {
     "wartungauto": "wartung.py: das Panel pausiert selbst, wenn ein Modell neu startet; kein Werkzeug",
     "weicheabstimmen": "weiche_abstimmen.py: nur der Admin auf Funktionen → Weiche; das Modell schlägt Wörter vor, feste Regeln messen, kein Werkzeug",
     "werkstattnacht": "werkstattseite.py: feste Nachtregel im Panel (Testlauf, danach Code-Messung), kein Werkzeug",
+    "angriffsprobe": "angriffsprobe.py: Knopf auf der Werkstatt-Seite, misst das Sprachmodell, kein Werkzeug",
     "werkstatt": "werkstattseite.py: Aufträge nur vom Admin auf der Seite oder nach der festen Nachtregel; der Agent bekommt kein Werkzeug, das Code laufen lässt",
     "gehaeuse": "gehaeuse.py: Anzeige und LEDs am Panel-Rechner nach festen Regeln, nur Zahlen und Status, kein Werkzeug",
     "rundlauf": "rundlauf.py: ein fester Probelauf durch Sprechen, Hören und Sprachmodell nach festen Regeln, nur Zahlen, kein Werkzeug",

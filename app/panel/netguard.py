@@ -141,6 +141,7 @@ DIRECT_OK = {
     "proactive": ("sprachmodell", "Sprachmodell und SearXNG"),
     "push": ("fest", "Browser-Push nur an bekannte Push-Dienste (PUSH_HOSTS)"),
     "quality": ("sprachmodell", "Sprachmodell"),
+    "angriffsprobe": ("sprachmodell", "Sprachmodell"),
     "rmplus": ("sprachmodell", "Sprachmodell und SearXNG; Webseiten gehen über client()"),
     "room": ("suche", "SearXNG für den Raummodus"),
     "schreib": ("sprachmodell", "Sprachmodell"),

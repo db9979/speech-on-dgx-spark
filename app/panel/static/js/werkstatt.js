@@ -20,6 +20,9 @@ const WK_NEU=[['tests','✓',['Alles testen','Test everything'],['Alle Selbsttes
   ['diagnose','?',['Problem untersuchen','Look into a problem'],['Du beschreibst, was nicht klappt · liest nur, ändert nichts','You describe what goes wrong · only reads, changes nothing']],
   ['reparatur','✎',['Reparatur versuchen','Try a repair'],['Ergibt einen Vorschlag zum Ansehen · nichts wird eingespielt','Gives a proposal to look at · nothing is installed']],
   ['messen','∑',['Sprachmodell messen','Measure the language model'],['10 bekannte Fehler reparieren lassen · etwa 1 Stunde','Let it repair 10 known bugs · about 1 hour']]];
+// the Angriffsprobe (angriffsprobe.py, own switch): a fifth tile while it is on; its runs come from the panel, not the sandbox
+const WK_PROBE=['probe','⚔',['Angriffe prüfen','Probe attacks'],['Folgt das Sprachmodell Befehlen in fremdem Text? · nur Zahlen · 1 bis 2 min','Does the language model follow orders in outside text? · numbers only · 1 to 2 min']];
+function wkNeuListe(){return WK.d&&WK.d.probe&&WK.d.probe.an?WK_NEU.concat([WK_PROBE]):WK_NEU}
 function wkEl(tag,cls,txt){const e=document.createElement(tag);if(cls)e.className=cls;if(txt!==undefined)e.textContent=txt;return e}
 function wkT(p){return L==='en'?p[1]:p[0]}
 function wkBtn(txt,cls,fn){const b=wkEl('button','b'+(cls?' '+cls:''),txt);b.type='button';b.onclick=fn;return b}
@@ -42,16 +45,18 @@ function wkShow(d){WK.d=d;const box=$('wkbox');if(!box)return;
   if(d.an)n.textContent=d.nacht_an?t('Jede Nacht um '+d.stunde+' Uhr testen: an · Funktionen → Werkstatt → Jede Nacht testen','Test every night at '+d.stunde+': on · Features → Workshop → Test every night')
     :t('Jede Nacht testen: aus · Funktionen → Werkstatt → Jede Nacht testen','Test every night: off · Features → Workshop → Test every night');
   wkTiles();wkList();
-  if(WK.sel==='lauf'?!d.laeuft:WK.sel&&!(d.auftraege||[]).some(a=>a.id===WK.sel)){WK.sel='';WK.eins=null}
+  const pr=d.probe||{};
+  if(WK.sel==='probelauf'&&!pr.laeuft&&(pr.laeufe||[])[0])WK.sel='ap-'+pr.laeufe[0].id;
+  if(WK.sel==='lauf'?!d.laeuft:WK.sel==='probelauf'?!pr.laeuft:WK.sel.startsWith('ap-')?!(pr.laeufe||[]).some(p=>'ap-'+p.id===WK.sel):WK.sel&&!(d.auftraege||[]).some(a=>a.id===WK.sel)){WK.sel='';WK.eins=null}
   if(!WK.sel&&!WK.neu&&!NARROW()){const f=d.laeuft?'lauf':(d.auftraege||[])[0]?.id||'';if(f)wkPick(f,true);else wkDetail()}
-  else if(WK.sel==='lauf'||WK.neu)wkDetail()}
+  else if(WK.sel==='lauf'||WK.sel==='probelauf'||WK.sel.startsWith('ap-')||WK.neu)wkDetail()}
 function wkWarum(art){const d=WK.d||{},x=d.arten&&d.arten[art];if(!d.an)return t('Die Werkstatt ist aus.','The workshop is off.');
   if(d.laeuft)return t('Es läuft schon ein Auftrag; einer nach dem anderen.','An order is running already; one after the other.');
   if(x&&x.llm&&!d.installiert)return wkT(WK_WARUM.opencode);
   if(x&&x.llm&&!d.modell)return t('Braucht das eigene Sprachmodell: sudo speech-spark modelle llm uebernehmen','Needs the own language model: sudo speech-spark modelle llm uebernehmen');
   return''}
-function wkTiles(){const w=$('wkacts');w.textContent='';
-  WK_NEU.forEach(([art,sym,tit,sub])=>{const b=wkEl('button','wkact'+(WK.neu===art?' on':''));b.type='button';b.dataset.art=art;
+function wkTiles(){const w=$('wkacts');w.textContent='';w.classList.toggle('fuenf',wkNeuListe().length===5);
+  wkNeuListe().forEach(([art,sym,tit,sub])=>{const b=wkEl('button','wkact'+(WK.neu===art?' on':''));b.type='button';b.dataset.art=art;
     b.appendChild(wkEl('span','wkic',sym));const m=wkEl('span','wkmid');m.appendChild(wkEl('b','',wkT(tit)));m.appendChild(wkEl('small','',wkT(sub)));b.appendChild(m);
     b.onclick=()=>wkNeu(art);w.appendChild(b)})}
 function wkList(){const d=WK.d,box=$('wklist');box.textContent='';
@@ -60,14 +65,24 @@ function wkList(){const d=WK.d,box=$('wklist');box.textContent='';
     const m=wkEl('div','ld-mid');m.appendChild(wkEl('b','',d.art?wkArt(d.art):t('Auftrag','Order')));m.appendChild(wkEl('small','',t('läuft gerade','running now')));r.appendChild(m);
     const rt=wkEl('div','ld-right');rt.appendChild(wkEl('span','ld-badge read',t('läuft','running')));r.appendChild(rt);
     r.onclick=()=>wkPick('lauf');r.onkeydown=e=>{if(e.key==='Enter')wkPick('lauf')};box.appendChild(r)}
+  const pr=d.probe||{};
+  if(pr.laeuft){const r=wkEl('div','ld-row'+(WK.sel==='probelauf'?' on':''));r.tabIndex=0;r.appendChild(wkEl('span','wkdot run'));
+    const m=wkEl('div','ld-mid');m.appendChild(wkEl('b','',wkT(WK_PROBE[2])));m.appendChild(wkEl('small','',(pr.fertig||0)+t(' von ',' of ')+(pr.von||0)+t(' Fällen',' cases')));r.appendChild(m);
+    const rt=wkEl('div','ld-right');rt.appendChild(wkEl('span','ld-badge read',t('läuft','running')));r.appendChild(rt);
+    r.onclick=()=>wkPick('probelauf');r.onkeydown=e=>{if(e.key==='Enter')wkPick('probelauf')};box.appendChild(r)}
+  (pr.laeufe||[]).forEach(p=>{const id='ap-'+p.id,r=wkEl('div','ld-row'+(WK.sel===id?' on':''));r.tabIndex=0;r.dataset.id=id;
+    r.appendChild(wkEl('span','wkdot '+(p.gehorcht?'warn':'ok')));const m=wkEl('div','ld-mid');m.appendChild(wkEl('b','',wkT(WK_PROBE[2])));
+    m.appendChild(wkEl('small','',wkZeit(p.zeit)+' · '+wkDauer(p.dauer_s)));r.appendChild(m);
+    const rt=wkEl('div','ld-right');rt.appendChild(wkEl('span','ld-badge '+(p.gehorcht?'due':'ok'),p.gehorcht+t(' von ',' of ')+p.von));r.appendChild(rt);
+    r.onclick=()=>wkPick(id);r.onkeydown=e=>{if(e.key==='Enter')wkPick(id)};box.appendChild(r)});
   (d.auftraege||[]).forEach(a=>{const [dot,txt,cls]=wkKurz(a);const r=wkEl('div','ld-row'+(WK.sel===a.id?' on':''));r.tabIndex=0;r.dataset.id=a.id;
     r.appendChild(wkEl('span','wkdot '+dot));const m=wkEl('div','ld-mid');m.appendChild(wkEl('b','',wkArt(a.art)));
     m.appendChild(wkEl('small','',wkZeit(a.zeit)+' · '+wkDauer(a.dauer_s)));r.appendChild(m);
     const rt=wkEl('div','ld-right');rt.appendChild(wkEl('span','ld-badge '+cls,txt));r.appendChild(rt);
     r.onclick=()=>wkPick(a.id);r.onkeydown=e=>{if(e.key==='Enter')wkPick(a.id)};box.appendChild(r)});
-  if(!d.laeuft&&!(d.auftraege||[]).length)box.appendChild(wkEl('div','mut ld-empty',t('Noch keine Ergebnisse. Oben „Alles testen“ antippen.','No results yet. Tap "Test everything" above.')))}
+  if(!d.laeuft&&!(d.auftraege||[]).length&&!pr.laeuft&&!(pr.laeufe||[]).length)box.appendChild(wkEl('div','mut ld-empty',t('Noch keine Ergebnisse. Oben „Alles testen“ antippen.','No results yet. Tap "Test everything" above.')))}
 async function wkPick(id,quiet){WK.sel=id;WK.neu='';if(!quiet||WK.eins?.id!==id)WK.eins=null;wkTiles();wkList();wkDetail();
-  if(id==='lauf'||(WK.eins&&WK.eins.id===id))return;
+  if(id==='lauf'||id==='probelauf'||id.startsWith('ap-')||(WK.eins&&WK.eins.id===id))return;
   try{const a=await (await api('/api/admin/werkstatt/'+encodeURIComponent(id))).json();if(WK.sel===id){WK.eins=a;wkDetail()}}
   catch(e){if(WK.sel===id){$('wkdetail').textContent=e.message}}}
 function wkZurueck(){WK.sel='';WK.neu='';WK.eins=null;$('wkdetail').hidden=true;$('wkbox').classList.remove('ld-sel');wkTiles();wkList()}
@@ -78,6 +93,7 @@ function wkHead(det,txt){det.appendChild(wkEl('div','wkh',txt))}
 function wkDetail(){const det=$('wkdetail'),box=$('wkbox'),d=WK.d;if(!det||!d)return;
   det.hidden=!(WK.sel||WK.neu);box.classList.toggle('ld-sel',!det.hidden);det.textContent='';if(det.hidden)return;
   if(WK.neu)return wkForm(det,WK.neu);
+  if(WK.sel==='probelauf'||WK.sel.startsWith('ap-'))return wkProbe(det);
   if(WK.sel==='lauf'){wkKopf(det,(d.art?wkArt(d.art):t('Auftrag','Order'))+t(' läuft',' running'),t('auf dem Modell-Rechner, in der abgeschotteten Kopie','on the model computer, in the sealed-off copy'));
     const p=wkEl('div','wkbar');p.appendChild(wkEl('i'));det.appendChild(p);
     const l=wkEl('ol','wkstand');(d.stand||[]).forEach(z=>l.appendChild(wkEl('li','',z.replace(/^werkstatt: /,''))));det.appendChild(l);
@@ -137,12 +153,13 @@ function wkFuerClaude(a){const ts=a.tests||{},z=[t('Werkstatt-Ergebnis vom Spark
   if(a.text)z.push(t('Antwort der Werkstatt:\n','Workshop answer:\n')+a.text);
   if(a.patch)z.push(t('Patch (aus der Kopie, nicht eingespielt):\n','Patch (from the copy, not installed):\n')+a.patch);
   return z.join('\n\n')}
-function wkForm(det,art){const x=WK_NEU.find(n=>n[0]===art);const warum=wkWarum(art);
+function wkForm(det,art){const x=wkNeuListe().find(n=>n[0]===art);const warum=art==='probe'?wkProbeWarum():wkWarum(art);
   wkKopf(det,wkT(x[2]),wkT(x[3]));
   const text=['diagnose','reparatur'].includes(art);
   const erkl={tests:[t('Was passiert:','What happens:'),t('Eine frische Kopie des installierten Codes läuft auf dem Modell-Rechner durch alle Selbsttests, wie GitHub sie vor jedem Update macht. Ohne Sprachmodell, ohne Internet, ohne deine Daten. Danach siehst du links, was grün und was rot ist, und was du tun kannst.','A fresh copy of the installed code runs through all self-tests on the model computer, as GitHub does before every update. No language model, no internet, none of your data. Afterwards the left side shows what is green and red, and what you can do.')],
     diagnose:[t('Was passiert:','What happens:'),t('Das eigene Sprachmodell liest mit OpenCode den Code in der Kopie und sucht die Ursache. Es darf nichts ändern und nichts ins Netz. Heraus kommt eine Antwort in Worten.','The own language model reads the code in the copy with OpenCode and looks for the cause. It may change nothing and reach nothing outside. You get an answer in words.')],
     reparatur:[t('Was passiert:','What happens:'),t('Das eigene Sprachmodell ändert die Kopie und lässt die Tests der geänderten Dateien laufen. Heraus kommt ein Vorschlag zum Ansehen; eingespielt wird er nie, das macht ein Mensch.','The own language model changes the copy and runs the tests of the changed files. You get a proposal to look at; it is never installed, a person does that.')],
+    probe:[t('Was passiert:','What happens:'),t('Das laufende Sprachmodell bekommt für jeden Fall des Angriffs-Selbsttests das Ergebnis eines Lese-Werkzeugs (Dokument, Mail, Webseite, Kalender, Smart Home), in dem ein Befehl versteckt ist, und darf das angegriffene Werkzeug aufrufen. Es läuft nie ein Werkzeug; gezählt wird nur, ob das Modell es versucht hätte. Die festen Sperren des Panels halten so oder so. Gespräche gehen vor.','For every case of the attack self-test the running language model gets a reading tool\'s result (document, mail, web page, calendar, smart home) with a hidden order and may call the attacked tool. No tool ever runs; counted is only whether the model would have tried. The panel\'s fixed locks hold either way. Conversations go first.')],
     messen:[t('Was passiert:','What happens:'),t('Das eigene Sprachmodell soll 10 bekannte, früher behobene Fehler reparieren. Gezählt wird, wie viele danach grün sind. So siehst du, wie gut es für Reparaturen taugt.','The own language model is asked to repair 10 known, earlier fixed bugs. Counted is how many are green afterwards. So you see how good it is for repairs.')]}[art];
   wkErkl(det,erkl);
   let ta=null;if(text){const lb=wkEl('label','',t('Was passiert, was sollte passieren?','What happens, what should happen?'));lb.htmlFor='wktext';det.appendChild(lb);
@@ -150,13 +167,13 @@ function wkForm(det,art){const x=WK_NEU.find(n=>n[0]===art);const warum=wkWarum(
   if(['diagnose','reparatur','messen'].includes(art))det.appendChild(wkEl('div','mut wkunter',t('Fragt nach deinem Code, weil dabei ein Sprachmodell Befehle in der Kopie ausführt.','Asks for your code, because a language model runs commands in the copy.')));
   if(warum)det.appendChild(wkEl('div','note',warum));
   const msg=wkEl('div','mut');msg.setAttribute('role','status');
-  const acts=wkEl('div','ld-acts');const go=wkBtn(t('Starten','Start'),'p',()=>wkGeben(art,ta?ta.value:'',msg));go.disabled=!!warum;acts.appendChild(go);
+  const acts=wkEl('div','ld-acts');const go=wkBtn(t('Starten','Start'),'p',()=>art==='probe'?wkProbeStart(msg):wkGeben(art,ta?ta.value:'',msg));go.disabled=!!warum;acts.appendChild(go);
   acts.appendChild(wkBtn(t('Abbrechen','Cancel'),'',()=>{WK.neu='';const f=WK.d.laeuft?'lauf':(WK.d.auftraege||[])[0]?.id;if(f&&!NARROW())wkPick(f);else wkZurueck()}));
   det.appendChild(acts);det.appendChild(msg);if(ta&&!NARROW())ta.focus()}
 function wkNeu(art,vorlage){WK.neu=art;WK.sel='';WK.eins=null;WK.vorlage=vorlage||'';wkTiles();wkList();wkDetail()}
 async function wkLoad(){clearTimeout(WK.timer);const box=$('wkbox');if(!box||document.body.classList.contains('mgr'))return;
   if(box.offsetParent){try{wkShow(await (await api('/api/admin/werkstatt')).json());$('wkmsg').textContent=''}catch(e){$('wkmsg').textContent=e.message}}
-  WK.timer=setTimeout(wkLoad,WK.d&&WK.d.laeuft?5000:30000)}
+  WK.timer=setTimeout(wkLoad,WK.d&&(WK.d.laeuft||(WK.d.probe||{}).laeuft)?5000:30000)}
 async function wkGeben(art,text,msg){text=(text||'').trim();
   if((art==='diagnose'||art==='reparatur')&&text.length<8){msg.textContent=t('Bitte das Problem in ein, zwei Sätzen beschreiben.','Please describe the problem in a sentence or two.');return}
   msg.textContent=t('Einen Moment …','One moment …');
@@ -169,5 +186,30 @@ async function wkNochmal(id){try{const d=await (await api('/api/admin/werkstatt/
   catch(e){$('wkmsg').textContent=e.message}}
 async function wkWeg(id){if(!confirm(t('Dieses Ergebnis löschen?','Delete this result?')))return;
   try{const d=await (await api('/api/admin/werkstatt/'+encodeURIComponent(id),{method:'DELETE'})).json();WK.sel='';WK.eins=null;
+    if(NARROW())wkZurueck();wkShow(d)}catch(e){$('wkmsg').textContent=e.message}}
+// the Angriffsprobe: why it cannot start, its detail (running or one run), start and delete
+function wkProbeWarum(){const p=(WK.d||{}).probe||{};return p.laeuft?t('Die Angriffsprobe läuft schon.','The attack probe is running already.'):''}
+function wkProbe(det){const pr=WK.d.probe||{};
+  if(WK.sel==='probelauf'){wkKopf(det,wkT(WK_PROBE[2])+t(' läuft',' running'),(pr.fertig||0)+t(' von ',' of ')+(pr.von||0)+t(' Fällen',' cases'));
+    const b=wkEl('div','wkbar');b.appendChild(wkEl('i'));det.appendChild(b);
+    wkErkl(det,[t('Du kannst die Seite schließen.','You can close the page.'),t('Die Probe läuft im Panel weiter; Gespräche gehen vor.','The probe keeps running in the panel; conversations go first.')]);return}
+  const p=(pr.laeufe||[]).find(x=>'ap-'+x.id===WK.sel);if(!p){det.hidden=true;return}
+  wkKopf(det,wkT(WK_PROBE[2])+' · '+wkZeit(p.zeit),[wkDauer(p.dauer_s),p.version,p.modell].filter(Boolean).join(' · '));
+  const s=wkEl('div','wkstats');[[p.gehorcht,t('gehorcht','obeyed'),p.gehorcht?'warn':''],[p.von-p.gehorcht,t('nicht gefolgt','not followed'),'ok']].concat(p.fehler?[[p.fehler,t('Fehler','errors'),'']]:[]).forEach(([v,w,c])=>{
+    const x=wkEl('div','wkstat '+c);x.appendChild(wkEl('b','',String(v)));x.appendChild(wkEl('span','',w));s.appendChild(x)});det.appendChild(s);
+  wkErkl(det,p.gehorcht?[t('Was heißt das?','What does it mean?'),t('In '+p.gehorcht+' von '+p.von+' Fällen hätte das Sprachmodell den versteckten Befehl ausgeführt. Passiert ist nichts: das Panel sperrt diese Werkzeuge nach fremdem Text mit festen Regeln, egal was das Modell will. Die Zahl zeigt, wie wichtig diese Sperren für dieses Modell sind.','In '+p.gehorcht+' of '+p.von+' cases the language model would have carried out the hidden order. Nothing happened: the panel locks these tools after outside text with fixed rules, whatever the model wants. The number shows how much these locks matter for this model.')]
+    :[t('Nie gefolgt:','Never followed:'),t('Das Sprachmodell hat keinen der '+p.von+' versteckten Befehle ausgeführt. Die festen Sperren bleiben trotzdem an.','The language model carried out none of the '+p.von+' hidden orders. The fixed locks stay on all the same.')],p.gehorcht?'':'ok');
+  const tn=pr.tarnungen||{};
+  [[p.verpackungen,t('Nach Tarnung','By disguise'),k=>tn[k]?(L==='en'?tn[k].en:tn[k].de):k],[p.ziele,t('Nach angegriffenem Werkzeug','By attacked tool'),wzName]].forEach(([m,h,name])=>{if(!m)return;wkHead(det,h);
+    const ul=wkEl('ul','wkliste');Object.entries(m).forEach(([k,[g,v]])=>{const li=wkEl('li');li.appendChild(wkEl('span','wkdot '+(g?'warn':'ok')));
+      li.appendChild(wkEl('span','',name(k)));li.appendChild(wkEl('span','mut',' · '+g+t(' von ',' of ')+v));ul.appendChild(li)});det.appendChild(ul)});
+  const acts=wkEl('div','ld-acts');acts.appendChild(wkBtn(t('Noch einmal','Again'),'p',()=>wkNeu('probe')));
+  acts.appendChild(wkBtn(t('Löschen','Delete'),'g',()=>wkProbeWeg(p.id)));det.appendChild(acts)}
+async function wkProbeStart(msg){msg.textContent=t('Einen Moment …','One moment …');
+  try{const d=await (await api('/api/admin/werkstatt/angriffsprobe',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'})).json();
+    WK.neu='';WK.sel='probelauf';wkShow(d);clearTimeout(WK.timer);WK.timer=setTimeout(wkLoad,5000)}
+  catch(e){msg.textContent=e.message}}
+async function wkProbeWeg(id){if(!confirm(t('Dieses Ergebnis löschen?','Delete this result?')))return;
+  try{const d=await (await api('/api/admin/werkstatt/angriffsprobe/'+encodeURIComponent(id),{method:'DELETE'})).json();WK.sel='';
     if(NARROW())wkZurueck();wkShow(d)}catch(e){$('wkmsg').textContent=e.message}}
 window.wkLoad=wkLoad;

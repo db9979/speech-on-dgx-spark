@@ -884,13 +884,32 @@ struct WerkstattView: View {
                     if let url = SparkAPI.panelLink("go=werk") {
                         Button("Problem untersuchen oder reparieren") { open = PanelPlace(url: url) }
                     }
+                    if probe["an"] as? Bool == true {
+                        Button("Angriffe prüfen") { Task { await probeStart() } }.disabled(probe["laeuft"] as? Bool == true)
+                    }
                 } footer: {
                     Text("Alle Selbsttests laufen in einer abgeschotteten Kopie auf dem Modell-Rechner, ohne Sprachmodell. Dein Spark bleibt unberührt.")
                 }
                 if d["laeuft"] as? Bool == true {
                     Section { Label("Ein Auftrag läuft", systemImage: "hourglass") }
                 }
+                if probe["laeuft"] as? Bool == true {
+                    Section { Label("Angriffsprobe läuft", systemImage: "hourglass") }
+                }
                 Section("Verlauf") {
+                    let runs = probe["laeufe"] as? [[String: Any]] ?? []
+                    ForEach(Array(runs.enumerated()), id: \.offset) { _, p in
+                        NavigationLink(destination: AngriffsprobeView(p: p, tarnungen: probe["tarnungen"] as? [String: Any] ?? [:], changed: { await load() })) {
+                            LabeledContent {
+                                Text(verbatim: "\(Self.num(p["gehorcht"])) / \(Self.num(p["von"]))").foregroundStyle(Self.num(p["gehorcht"]) > 0 ? .orange : .secondary)
+                            } label: {
+                                VStack(alignment: .leading) {
+                                    Text("Angriffsprobe")
+                                    Text(verbatim: Self.when(p["zeit"])).font(.caption).foregroundStyle(.secondary)
+                                }
+                            }
+                        }
+                    }
                     let list = d["auftraege"] as? [[String: Any]] ?? []
                     ForEach(Array(list.enumerated()), id: \.offset) { _, a in
                         NavigationLink(destination: WerkstattEinsView(id: a["id"] as? String ?? "", arten: d["arten"] as? [String: Any] ?? [:], changed: { await load() })) {
@@ -904,7 +923,7 @@ struct WerkstattView: View {
                             }
                         }
                     }
-                    if list.isEmpty { Text("Noch keine Ergebnisse.").foregroundStyle(.secondary) }
+                    if list.isEmpty && runs.isEmpty { Text("Noch keine Ergebnisse.").foregroundStyle(.secondary) }
                 }
             }
         }
@@ -921,6 +940,13 @@ struct WerkstattView: View {
 
     private func start() async {
         do { d = try await AdminSession.shared.object("POST", "api/admin/werkstatt/tests", body: [:]); error = nil }
+        catch { self.error = error.localizedDescription }
+    }
+
+    private var probe: [String: Any] { d["probe"] as? [String: Any] ?? [:] }
+
+    private func probeStart() async {
+        do { d = try await AdminSession.shared.object("POST", "api/admin/werkstatt/angriffsprobe", body: [:]); error = nil }
         catch { self.error = error.localizedDescription }
     }
 
@@ -1022,6 +1048,53 @@ struct WerkstattEinsView: View {
 
     private func delete() async {
         do { _ = try await AdminSession.shared.call("DELETE", "api/admin/werkstatt/" + id); await changed(); dismiss() }
+        catch { self.error = error.localizedDescription }
+    }
+}
+
+/// One run of the Angriffsprobe (panel/angriffsprobe.py): how often the language model would have followed a hidden
+/// order, per disguise and per attacked tool; numbers only, and „Löschen“.
+struct AngriffsprobeView: View {
+    let p: [String: Any]
+    let tarnungen: [String: Any]
+    let changed: () async -> Void
+    @State private var error: String?
+    @State private var asking = false
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        List {
+            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            Section {
+                Text(verbatim: WerkstattView.when(p["zeit"])).font(.headline)
+                if let m = p["modell"] as? String, !m.isEmpty { LabeledContent("Sprachmodell") { Text(verbatim: m) } }
+                LabeledContent("gehorcht") { Text(verbatim: "\(WerkstattView.num(p["gehorcht"])) / \(WerkstattView.num(p["von"]))") }
+                if WerkstattView.num(p["fehler"]) > 0 { LabeledContent("Fehler") { Text(verbatim: "\(WerkstattView.num(p["fehler"]))") } }
+            } footer: {
+                Text("Gezählt wird, wie oft das Sprachmodell einen versteckten Befehl ausgeführt hätte. Passiert ist nichts: das Panel sperrt diese Werkzeuge nach fremdem Text mit festen Regeln.")
+            }
+            Section("Nach Tarnung") { rows(p["verpackungen"]) { k in
+                let x = tarnungen[k] as? [String: Any] ?? [:]
+                return (UsageView.de ? x["de"] : x["en"]) as? String ?? k } }
+            Section("Nach angegriffenem Werkzeug") { rows(p["ziele"]) { $0 } }
+            Section { Button("Löschen", role: .destructive) { asking = true } }
+        }
+        .navigationTitle("Angriffsprobe")
+        .confirmationDialog("Dieses Ergebnis löschen?", isPresented: $asking) {
+            Button("Löschen", role: .destructive) { Task { await delete() } }
+        }
+    }
+
+    private func rows(_ v: Any?, _ name: @escaping (String) -> String) -> some View {
+        let m = v as? [String: Any] ?? [:]
+        return ForEach(m.keys.sorted(), id: \.self) { k in
+            let n = m[k] as? [Any] ?? []
+            LabeledContent { Text(verbatim: "\(WerkstattView.num(n.first)) / \(WerkstattView.num(n.last))") } label: { Text(verbatim: name(k)) }
+        }
+    }
+
+    private func delete() async {
+        do { _ = try await AdminSession.shared.call("DELETE", "api/admin/werkstatt/angriffsprobe/" + (p["id"] as? String ?? "")); await changed(); dismiss() }
         catch { self.error = error.localizedDescription }
     }
 }

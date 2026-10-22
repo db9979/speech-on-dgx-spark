@@ -1170,4 +1170,6 @@ Every function of the Spark with its switch, what it builds on, where you set it
 - **Workshop** (Features → Access → "Workshop"): On the page Status → Workshop an admin lets the model computer work in a sealed-off copy of the code.
 
 - **Test every night** (Features → Access → "Test every night"; builds on "Workshop"): Once a night the workshop starts the test run by itself (all self-tests as on GitHub, without a language model).
+
+- **Attack probe** (Features → Access → "Attack probe"; builds on "Workshop"): Measures on a button how often the running language model would follow an order in outside text (document, mail, web page, calendar, smart home).
 <!-- /funktionen:liste -->

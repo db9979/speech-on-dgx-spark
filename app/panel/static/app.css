@@ -1736,6 +1736,7 @@ body.inchats:not(.appview):not(.kbd) .cx-comp{padding-right:96px}
 /* Zustand → Werkstatt (werkstatt.js, Dominik 2026-10-21 „1“): four tiles, the results left, one result right */
 .wknacht{font-size:12.5px;text-align:right}
 .wkacts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:10px 0 12px}
+.wkacts.fuenf{grid-template-columns:repeat(5,minmax(0,1fr))}
 .wkact{display:flex;gap:10px;align-items:center;text-align:left;font:inherit;color:var(--fg);background:var(--card);border:1px solid var(--line);border-radius:12px;padding:9px 11px;cursor:pointer;min-width:0;box-shadow:var(--shadow)}
 .wkact:hover{border-color:color-mix(in srgb,var(--acc) 45%,var(--line))}.wkact.on{border-color:var(--acc);box-shadow:0 0 0 2px color-mix(in srgb,var(--acc) 25%,transparent)}
 .wkact:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
@@ -1766,9 +1767,9 @@ body.inchats:not(.appview):not(.kbd) .cx-comp{padding-right:96px}
 @media (prefers-reduced-motion:reduce){.wkbar i,.wkdot.run{animation:none}}
 .wkstand{margin:6px 0;padding-left:18px;font-size:12.5px;color:var(--mut)}
 #wkdetail textarea{width:100%;margin:4px 0}
-@container (max-width:879.98px){.wkacts{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@container (max-width:879.98px){.wkacts,.wkacts.fuenf{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @container (min-width:660px){#wkbox .ld-split:has(>.ld-detail:not([hidden])){grid-template-columns:minmax(240px,320px) minmax(0,1fr)}}
-@container (max-width:659.98px){.wkacts{grid-template-columns:minmax(0,1fr)}.wkact{padding:8px 10px}#wkbox>.ld-head{flex-wrap:wrap}.wknacht{text-align:left;flex-basis:100%}}
+@container (max-width:659.98px){.wkacts,.wkacts.fuenf{grid-template-columns:minmax(0,1fr)}.wkact{padding:8px 10px}#wkbox>.ld-head{flex-wrap:wrap}.wknacht{text-align:left;flex-basis:100%}}
 /* Personen und Geräte as a tidy list (Dominik 2026-10-17 „sieht nicht professionell aus“): initials in the colours of the
    symbols, one short line of counts, setup as a small bar, a chevron instead of „Details“, toolbar fields of one height */
 #pfilter input,#pfilter select{height:40px;box-sizing:border-box;margin:0}

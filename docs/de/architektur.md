@@ -375,6 +375,7 @@ Live-Übersicht, Logs, Wächter, Sicherung, Update, Hilfe und die Admin-Seiten.
 |---|---|
 | `app/panel/admin.py` | Admin-Seiten: Zustand, Einstellungen, Dienste, Stimmen |
 | `app/panel/aktiv.py` | Aktiv in den letzten 10 Minuten: Profile und Gäste als Zahl, nur im Speicher (OLED, Monitoring, Live) |
+| `app/panel/angriffsprobe.py` | Angriffsprobe: wie oft das echte Sprachmodell Befehlen in fremdem Text folgen würde, nur Zahlen, kein Werkzeug läuft |
 | `app/panel/auslassen.py` | Ordner auslassen: Liste je Profil mit Ordnern und Namen, die der Spark nie liest; schon Gelesenes verlässt die Suche |
 | `app/panel/backup.py` | Sicherungen und Wiederherstellen |
 | `app/panel/befund.py` | Befund: die Ursache eines Falls |
@@ -599,6 +600,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `state/admins.json` | Profile als Admins | – | ja |
 | `state/agent.json` | Agent-Stufen, MCP-Dienste | Tokens versiegelt | ja |
 | `state/android` | Android-App zum Download | – | nein |
+| `state/angriffsprobe.json` | Angriffsprobe: die letzten 20 Läufe mit Fall-Kennungen und Zahlen je Tarnung und Werkzeug, nie ein Text | – | nein |
 | `state/apns-tokens.json` | iPhone-Geräte für Push | – | ja |
 | `state/apns.json` | Apple-Push-Schlüssel | Schlüssel versiegelt | ja |
 | `state/audit.log` | Änderungsprotokoll mit Prüfkette, je Datei 1 MB, ein Jahr (audit.log.1 …) | Prüfkette (SHA-256) | nein |
@@ -3294,7 +3296,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Versiegeln**: vault.seal macht aus dem Wert „enc1:“ und ein Fernet-Token (verschlüsselt und gegen Änderung geschützt). Ein schon versiegelter Wert bleibt, wie er ist.
 5. <a id="kn-state-s5"></a>**Atomar schreiben**: common.write_json schreibt in eine frische Zwischendatei daneben, nie durch einen Link, gibt ihr die Rechte der alten Datei (eine neue ist nur für den Dienst lesbar) und tauscht sie dann in einem Schritt aus. Ein Absturz mittendrin lässt die alte Datei ganz.
 6. <a id="kn-state-s6"></a>**Lesen**: Ein versiegelter Wert wird mit dem Schlüssel geöffnet. Passt der Schlüssel nicht (Sicherung von einem anderen Spark), kommt ein leerer Wert zurück und der Zugang muss neu eingetragen werden. Ältere unversiegelte Werte werden gelesen und beim nächsten Speichern versiegelt.
-7. <a id="kn-state-s7"></a>**Kommt in die Sicherung?**: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 35), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 82). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile.
+7. <a id="kn-state-s7"></a>**Kommt in die Sicherung?**: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 35), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 83). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile.
 8. <a id="kn-state-s8"></a>**Umzugs-Sicherung?**: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung.
 9. <a id="kn-state-s9"></a>**Beim Wiederherstellen in Ordnung?**: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt.
 10. <a id="kn-state-s10"></a>**Einsetzen mit Rückweg**: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück.
@@ -3305,7 +3307,7 @@ flowchart TD
 #### Zahlen (aus dem Code)
 
 - **35** Dateien in jeder Sicherung ([Schritt 7](#kn-state-s7))
-- **82** Dateien und Ordner, die mit Grund draußen bleiben ([Schritt 7](#kn-state-s7))
+- **83** Dateien und Ordner, die mit Grund draußen bleiben ([Schritt 7](#kn-state-s7))
 - **8 MB** größte Datei beim Wiederherstellen ([Schritt 9](#kn-state-s9))
 - **12** Zeichen hat das Umzugs-Passwort mindestens ([Schritt 8](#kn-state-s8))
 
@@ -3577,7 +3579,7 @@ flowchart TD
   s6 -.->|ja| s8
 ```
 
-1. <a id="kn-werkstatt-s1"></a>**Auftrag oder Nachtregel**: Ein Admin tippt auf der Seite Zustand → Werkstatt „Alles testen“, „Problem untersuchen“, „Reparatur versuchen“ oder „Sprachmodell messen“ an (werkstattseite.auftrag_geben; die drei mit Sprachmodell brauchen den Code der zweiten Stufe). „Nur die roten noch mal testen“ nennt nur das Ergebnis; die Namen nimmt werkstattseite.nachtest_namen aus dem gespeicherten Ergebnis, nie von der Seite. Ist „Jede Nacht testen“ an, startet werkstattseite.nacht_art in den ersten 5 Stunden nach der eingestellten Stunde einen Testlauf und nach einem Modellwechsel eine Code-Messung.
+1. <a id="kn-werkstatt-s1"></a>**Auftrag oder Nachtregel**: Ein Admin tippt auf der Seite Zustand → Werkstatt „Alles testen“, „Problem untersuchen“, „Reparatur versuchen“ oder „Sprachmodell messen“ an (werkstattseite.auftrag_geben; die drei mit Sprachmodell brauchen den Code der zweiten Stufe). „Nur die roten noch mal testen“ nennt nur das Ergebnis; die Namen nimmt werkstattseite.nachtest_namen aus dem gespeicherten Ergebnis, nie von der Seite. Ist „Jede Nacht testen“ an, startet werkstattseite.nacht_art in den ersten 5 Stunden nach der eingestellten Stunde einen Testlauf und nach einem Modellwechsel eine Code-Messung. Die Kachel „Angriffe prüfen“ (eigener Schalter Angriffsprobe) bleibt im Panel: angriffsprobe.lauf fragt das Sprachmodell je Fall des Angriffs-Selbsttests einmal und zählt nur, ob es dem versteckten Befehl gefolgt wäre; kein Werkzeug läuft, gespeichert werden nur Zahlen.
 2. <a id="kn-werkstatt-s2"></a>**Feste Regeln erfüllt?**: werkstatt.pruefen nimmt nur eine bekannte Art, nichts läuft schon, OpenCode und das eigene Sprachmodell sind da, wo die Art sie braucht. Der Text des Admins wird gesäubert und eingezäunt: er beschreibt nur das Problem. „Rote Tests noch mal“ nimmt nur Testnamen, jeden einmal, höchstens 30.
 3. <a id="kn-werkstatt-s3"></a>**Wunsch an root**: Das Panel schreibt einen Wunsch und darf per sudo nur die feste Einheit speech-spark-werkstatt starten. werkstatt.wunsch_nehmen liest ihn als root genau einmal und prüft alles noch einmal.
 4. <a id="kn-werkstatt-s4"></a>**Sandbox**: werkstatt.sandbox startet den Auftrag mit systemd-run als Nutzer spark-werkstatt: nur sein eigener Ordner ist beschreibbar, Daten, Einstellungen und Schlüssel des Spark sind unsichtbar, Netz nur zu diesem Rechner und dort per nftables nur zum LLM-Tor (prüft den Schlüssel) und zu den freien Ports der eigenen Tests, nie zu einer Engine oder zum Panel; ohne diese Sperre startet kein Auftrag. Speicher- und Zeitgrenze je Art (werkstatt.GRENZE_S).

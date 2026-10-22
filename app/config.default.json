@@ -305,6 +305,7 @@
     "modelle_wechseln": false,
     "werkstatt": false,
     "werkstatt_nacht": false,
+    "angriffsprobe": false,
     "werkstatt_stunde": 3,
     "modelle_eigene": false,
     "memory_check": false,

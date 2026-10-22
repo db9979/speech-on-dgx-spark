@@ -364,6 +364,7 @@ ADMIN_ON_OK = {
     "weiche_abstimmen.py:an": "admin only: tuning the Weiche's words on its page, no profile part",
     "werkstattseite.py:_nacht_an": "admin only: the Werkstatt's fixed night rule, no profile part",
     "werkstattseite.py:_an": "admin only: the Werkstatt's sandbox on the model computer, admin-only endpoints, no profile part",
+    "angriffsprobe.py:an": "admin only: the Angriffsprobe asks the model from the Werkstatt page, admin-only endpoints, no profile part",
     "modellseite.py:_an": "Spark-wide model switch, admin-only endpoints (Zustand → Modelle), no profile involved",
     "modellseite.py:_eigen_an": "Spark-wide own models, admin-only endpoints (Zustand → Modelle), no profile involved",
     "dienstwacht.py:active": "Spark-wide: which services are watched",

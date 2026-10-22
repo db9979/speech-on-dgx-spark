@@ -16620,6 +16620,76 @@
           }
         }
       }
+    },
+    "Angriffe prüfen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Probe attacks"
+          }
+        }
+      }
+    },
+    "Angriffsprobe läuft": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Attack probe running"
+          }
+        }
+      }
+    },
+    "Angriffsprobe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Attack probe"
+          }
+        }
+      }
+    },
+    "gehorcht": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "obeyed"
+          }
+        }
+      }
+    },
+    "Nach Tarnung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "By disguise"
+          }
+        }
+      }
+    },
+    "Nach angegriffenem Werkzeug": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "By attacked tool"
+          }
+        }
+      }
+    },
+    "Gezählt wird, wie oft das Sprachmodell einen versteckten Befehl ausgeführt hätte. Passiert ist nichts: das Panel sperrt diese Werkzeuge nach fremdem Text mit festen Regeln.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Counted is how often the language model would have carried out a hidden order. Nothing happened: the panel locks these tools after outside text with fixed rules."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

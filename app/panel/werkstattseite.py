@@ -23,6 +23,9 @@ Night rule (fixed, in the panel, its own switch „Jede Nacht testen“, chat.we
 starts once; within NACHT_FENSTER_H hours after it, a code measurement when the language model running now has
 none yet (werkstatt.messen_faellig: after a model switch). Nothing starts while an order runs.
 
+The Angriffsprobe (angriffsprobe.py, its own switch under the Werkstatt) runs here in the panel, not in the sandbox:
+it only asks the language model and counts; its button and results share this page.
+
 With the models on another computer (plan Raspberry-Pi split) everything goes through its Wärter (tarswart.py
 werkstatt, werkstatt_auftrag, werkstatt_eins, werkstatt_weg), which checks the same rules with its own state.
 """
@@ -36,6 +39,7 @@ import time
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import angriffsprobe  # noqa: E402
 import core  # noqa: E402
 import features  # noqa: E402
 import guard  # noqa: E402
@@ -58,6 +62,8 @@ GRUND = {"art": "Diese Art von Auftrag gibt es nicht.", "laeuft": "Ein Auftrag l
          "start": "Der Auftrag ließ sich nicht starten. Auf dem Modell-Rechner: sudo ./install.sh --werkstatt",
          "wunsch": "ungültig", "rechner": "Der Modell-Rechner antwortet gerade nicht.",
          "aus": "Die Werkstatt ist aus (Funktionen → Werkstatt).",
+         "probe_aus": "Die Angriffsprobe ist aus (Funktionen → Werkstatt → Angriffsprobe).",
+         "probe_laeuft": "Die Angriffsprobe läuft schon.",
          "namen": "Dieses Ergebnis hat keine roten Tests zum Wiederholen.", "keins": "Kein solcher Auftrag."}
 STATUS = {"laeuft": 409, "aus": 409, "start": 503, "rechner": 503, "opencode": 409, "llm": 409, "namen": 409, "keins": 404}
 
@@ -251,6 +257,7 @@ def for_live(now=None):
             m = d["messungen"].get(d["modell"]) if d["modell"] else None
             _live["v"].update(installiert=d["installiert"], laeuft=d["laeuft"], art=d["art"],
                               nacht=d["nacht"].get("tests") or {}, messung=m and f"{m['gruen']}/{m['von']}")
+        _live["v"]["probe"] = angriffsprobe.for_live()
         _live["t"] = now
     return _live["v"]
 
@@ -265,6 +272,8 @@ def live_sub(v):
         teile.append(f"Nacht {v['nacht'].get('gruen', 0)} grün, {v['nacht'].get('rot', 0)} rot")
     if v.get("messung"):
         teile.append(f"Code-Messung {v['messung']}")
+    if v.get("probe"):
+        teile.append(v["probe"])
     if not v.get("installiert"):
         teile.append("ohne OpenCode")
     return " · ".join(teile)
@@ -280,7 +289,7 @@ def _seite(cfg=None):
     if d is None:
         raise HTTPException(503, GRUND["rechner"])
     c = cfg.get("chat", {})
-    return d | {"an": _an(cfg), "nacht_an": _nacht_an(c),
+    return d | {"an": _an(cfg), "nacht_an": _nacht_an(c), "probe": angriffsprobe.daten(c),
                 "stunde": c.get("werkstatt_stunde", 3), "arten": {k: {"de": v[0], "en": v[1], "llm": v[2], "text": v[3]}
                                                                    for k, v in werkstatt.ARTEN.items()}}
 
@@ -335,6 +344,36 @@ async def _geben(request, art, text):
     guard.log("werkstatt_auftrag", detail=werkstatt.ARTEN[art][0])
     _live["t"] = None
     return await asyncio.to_thread(_seite)
+
+
+@router.post("/api/admin/werkstatt/angriffsprobe", dependencies=[Depends(auth)])
+async def admin_angriffsprobe(request: Request):
+    """„Angriffe prüfen“: one run of the Angriffsprobe in the background (only requests to the language model, no
+    tool runs, no code: not asked for the code)."""
+    guard.limit(request, "werkstatt_auftrag", None, True)
+    await core.json_body(request, MAX_BODY, lenient=True)
+    try:
+        angriffsprobe.starten()
+    except ValueError as e:
+        print(f"werkstatt: angriffsprobe abgelehnt {e}", flush=True)
+        raise HTTPException(409, GRUND["probe_" + str(e)])
+    print("werkstatt: angriffsprobe gestartet", flush=True)
+    guard.log("werkstatt_auftrag", detail="Angriffsprobe")
+    _live["t"] = None
+    return await asyncio.to_thread(_seite)
+
+
+@router.delete("/api/admin/werkstatt/angriffsprobe/{pid}", dependencies=[Depends(auth)])
+def admin_angriffsprobe_weg(request: Request, pid: str):
+    """„Löschen“: one run of the Angriffsprobe."""
+    guard.limit(request, "werkstatt_auftrag", None, True)
+    ok = bool(angriffsprobe.ID.match(pid)) and angriffsprobe.weg(pid)
+    print(f"werkstatt: angriffsprobe weg {'ok' if ok else 'keins'}", flush=True)
+    if not ok:
+        raise HTTPException(404, GRUND["keins"])
+    guard.log("werkstatt_weg")
+    _live["t"] = None
+    return _seite()
 
 
 @router.get("/api/admin/werkstatt/{aid}", dependencies=[Depends(auth)])

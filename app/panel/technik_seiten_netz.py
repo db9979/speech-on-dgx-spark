@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "aussen": {
-        "stand": "67fa1c6aee",
+        "stand": "1e6696aa97",
         "bezug": {
             "dienstwacht.TIMEOUT": ["s5"], "notaus.locked_tools": ["s3"], "dienstwacht.tool_down": ["s5"],
             "netguard.client": ["s8", "s9", "s10"], "netguard.IMAP4_SSL": ["s9"],
@@ -188,7 +188,7 @@ SEITEN = {
         "heute": [("guard_ok", ("verbunden", "connected")), ("guard_bad", ("gesperrt", "blocked"))],
     },
     "internet": {
-        "stand": "08dc558739",
+        "stand": "a275e58f20",
         "bezug": {
             "regeln": ["s3", "s4"], "regel:Seiten aus der Suche": ["s4", "s5"], "regel:Mail, Kalender, Kontakte": ["s4", "s5"],
             "regel:reMarkable": ["s4", "s5"], "regel:Wetter, Fahrplan, Wikipedia": ["s3"], "regel:Telegram": ["s7"],
@@ -500,13 +500,18 @@ SEITEN = {
                "den Code der zweiten Stufe). „Nur die roten noch mal testen“ nennt nur das Ergebnis; die Namen nimmt "
                "werkstattseite.nachtest_namen aus dem gespeicherten Ergebnis, nie von der Seite. Ist „Jede Nacht testen“ an, startet "
                "werkstattseite.nacht_art in den ersten {werkstattseite.NACHT_FENSTER_H} Stunden nach der eingestellten "
-               "Stunde einen Testlauf und nach einem Modellwechsel eine Code-Messung.",
+               "Stunde einen Testlauf und nach einem Modellwechsel eine Code-Messung. Die Kachel „Angriffe prüfen“ "
+               "(eigener Schalter Angriffsprobe) bleibt im Panel: angriffsprobe.lauf fragt das Sprachmodell je Fall des "
+               "Angriffs-Selbsttests einmal und zählt nur, ob es dem versteckten Befehl gefolgt wäre; kein Werkzeug läuft, "
+               "gespeichert werden nur Zahlen.",
                "On the page Status → Workshop an admin taps \"Test everything\", \"Look into a problem\", \"Try a repair\" or "
                "\"Measure the language model\" (werkstattseite.auftrag_geben; the three with the language model need the "
                "second-step code). \"Test only the red ones again\" names only the result; werkstattseite.nachtest_namen takes "
                "the names from the kept result, never from the page. With \"Test every night\" on, werkstattseite.nacht_art starts "
                "a test run in the first {werkstattseite.NACHT_FENSTER_H} hours after the set hour, and a code measurement "
-               "after a model switch.")),
+               "after a model switch. The tile \"Probe attacks\" (its own switch Angriffsprobe) stays in the panel: "
+               "angriffsprobe.lauf asks the language model once per case of the attack self-test and only counts whether it "
+               "would have followed the hidden order; no tool runs, only numbers are kept.")),
             S("s2", "frage", ("Feste Regeln erfüllt?", "Fixed rules met?"),
               ("{werkstatt.ARTEN|anzahl} Arten, Text bis {werkstatt.TEXT_MAX} Zeichen", "{werkstatt.ARTEN|anzahl} kinds, text up to {werkstatt.TEXT_MAX} characters"),
               ("werkstatt.pruefen nimmt nur eine bekannte Art, nichts läuft schon, OpenCode und das eigene Sprachmodell sind "

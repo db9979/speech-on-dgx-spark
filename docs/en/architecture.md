@@ -375,6 +375,7 @@ Live overview, logs, watchers, backup, update, help and the admin pages.
 |---|---|
 | `app/panel/admin.py` | Admin pages: status, configuration, services, logs, tests, cloned voices, benchmark, profiles and devices. |
 | `app/panel/aktiv.py` | Aktiv in den letzten 10 Minuten: how many people used the Spark lately. |
+| `app/panel/angriffsprobe.py` | Angriffsprobe: how often the real language model WOULD follow an order hidden in outside text. |
 | `app/panel/auslassen.py` | Ordner auslassen. |
 | `app/panel/backup.py` | Backups of everything the panel keeps: profiles (memory, conversations, documents, calendars, mail, Home Assistant, voices of speaker ID), cloned voices, set … |
 | `app/panel/befund.py` | Befund: the cause of a case, worked out before any proposal. |
@@ -599,6 +600,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `state/admins.json` | Profiles as admins | – | yes |
 | `state/agent.json` | Agent levels, MCP services | tokens sealed | yes |
 | `state/android` | Android app for download | – | no |
+| `state/angriffsprobe.json` | Attack probe: the last 20 runs with case ids and counts per disguise and tool, never a text | – | no |
 | `state/apns-tokens.json` | iPhones for push | – | yes |
 | `state/apns.json` | Apple push key | key sealed | yes |
 | `state/audit.log` | Change log with hash chain, 1 MB per file, one year (audit.log.1 …) | hash chain (SHA-256) | no |
@@ -3294,7 +3296,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Seal**: vault.seal turns the value into „enc1:“ and a Fernet token (encrypted and protected against change). A value already sealed stays as it is.
 5. <a id="kn-state-s5"></a>**Write atomically**: common.write_json writes into a fresh temporary file next to it, never through a link, gives it the rights of the old file (a new one is readable for the service only) and then swaps it in one step. A crash in the middle leaves the old file whole.
 6. <a id="kn-state-s6"></a>**Read**: A sealed value is opened with the key. If the key does not fit (backup from another Spark), an empty value comes back and the account has to be entered again. Older unsealed values are read and sealed the next time they are saved.
-7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 35), otherwise the line gives its reason (dateien.STATE_LOCAL, 82). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
+7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 35), otherwise the line gives its reason (dateien.STATE_LOCAL, 83). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
 8. <a id="kn-state-s8"></a>**Move backup?**: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup.
 9. <a id="kn-state-s9"></a>**Fine when restoring?**: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays.
 10. <a id="kn-state-s10"></a>**Put in place with a way back**: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back.
@@ -3305,7 +3307,7 @@ flowchart TD
 #### Numbers (from the code)
 
 - **35** files in every backup ([step 7](#kn-state-s7))
-- **82** files and folders that stay out with a reason ([step 7](#kn-state-s7))
+- **83** files and folders that stay out with a reason ([step 7](#kn-state-s7))
 - **8 MB** largest file when restoring ([step 9](#kn-state-s9))
 - **12** characters the move password has at least ([step 8](#kn-state-s8))
 
@@ -3577,7 +3579,7 @@ flowchart TD
   s6 -.->|yes| s8
 ```
 
-1. <a id="kn-werkstatt-s1"></a>**Order or night rule**: On the page Status → Workshop an admin taps "Test everything", "Look into a problem", "Try a repair" or "Measure the language model" (werkstattseite.auftrag_geben; the three with the language model need the second-step code). "Test only the red ones again" names only the result; werkstattseite.nachtest_namen takes the names from the kept result, never from the page. With "Test every night" on, werkstattseite.nacht_art starts a test run in the first 5 hours after the set hour, and a code measurement after a model switch.
+1. <a id="kn-werkstatt-s1"></a>**Order or night rule**: On the page Status → Workshop an admin taps "Test everything", "Look into a problem", "Try a repair" or "Measure the language model" (werkstattseite.auftrag_geben; the three with the language model need the second-step code). "Test only the red ones again" names only the result; werkstattseite.nachtest_namen takes the names from the kept result, never from the page. With "Test every night" on, werkstattseite.nacht_art starts a test run in the first 5 hours after the set hour, and a code measurement after a model switch. The tile "Probe attacks" (its own switch Angriffsprobe) stays in the panel: angriffsprobe.lauf asks the language model once per case of the attack self-test and only counts whether it would have followed the hidden order; no tool runs, only numbers are kept.
 2. <a id="kn-werkstatt-s2"></a>**Fixed rules met?**: werkstatt.pruefen takes only a known kind, nothing runs yet, OpenCode and the own language model are there where the kind needs them. The admin's text is cleaned and fenced: it only describes the problem. "Red tests again" takes only test names, each once, at most 30.
 3. <a id="kn-werkstatt-s3"></a>**Wish to root**: The panel writes a wish and may start only the fixed unit speech-spark-werkstatt through sudo. werkstatt.wunsch_nehmen reads it as root exactly once and checks everything again.
 4. <a id="kn-werkstatt-s4"></a>**Sandbox**: werkstatt.sandbox starts the order with systemd-run as the user spark-werkstatt: only its own folder is writable, the Spark's data, settings and keys are invisible, network only to this computer and there, by nftables, only to the LLM-Tor (it checks the key) and the free ports of its own tests, never an engine or the panel; without this firewall no order starts. A memory and time limit per kind (werkstatt.GRENZE_S).
