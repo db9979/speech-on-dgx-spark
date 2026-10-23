@@ -17191,6 +17191,16 @@
         }
       }
     },
+    "KI-Bild": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI image"
+          }
+        }
+      }
+    },
     "Noch keine Helden.": {
       "localizations": {
         "en": {

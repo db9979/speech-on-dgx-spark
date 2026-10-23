@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.964** KI-Dungeon-Master Stufe 3 mit Bildern: Szenenbild beim Ortswechsel und auf Knopf des Gastgebers (1 je 3 Züge, 12 je Runde, 40 am Tag), Heldenporträt einmal je Stufe, Karte der Orte, Kapitel-Titelbild; nur mit Bilder malen
 - **V01.0.963** KI-Dungeon-Master im Auto: CarPlay-Zeile „Dungeon-Master spielen“ liest die Erzählung vor und nimmt die gesprochene Aktion an; feste Fragen zum Helden (Leben, Tasche, Heiltrank, wer fehlt) beantwortet das Panel
 - **V01.0.962** KI-Dungeon-Master Stufe 4: neun Ausrüstungsplätze wie bei D&D (zweihändige Waffen, Ziehen und Ablegen), Gewicht und Traglast (belastet = Nachteil auf Geschick, Beute ohne Platz bleibt am Boden), Händler mit Preisen vom Panel und Charisma-Rabatt, unerkannte Magie; jede Runde beginnt mit einem Prolog (Ort, Stimmung, Ausgangslage)
 - **V01.0.961** KI-Dungeon-Master im D&D-Look auf der ganzen Seite: Welt, Geschichte, Ton, Volk und Klasse als Karten mit Bildzeichen, je Welt 10 fertige Geschichten, Knopf für hell oder dunkel, Helden als Karten
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.957** KI-Dungeon-Master Spieltisch-Thema: dunkler Tisch mit Pergament-Erzählung, Heldenkarten mit Werten und Ausrüstung, Farben je Welt (vom Admin änderbar), Vollbild-Knopf und „So spielst du“ für Spieler und Gäste
 - **V01.0.956** KI-Dungeon-Master: Vorteil und Nachteil (das Panel würfelt zwei W20), OOC-Zeile nur für den betroffenen Spieler, längere Anfänge, Standard-Prompt mit Sinneseindrücken und Welttreue
 - **V01.0.955** KI-Dungeon-Master Geschichten-Planer: der Admin legt Geschichten mit Akten, Wendepunkten und Tabus an, vom Sprachmodell aus Stichworten entworfen und vom Panel geprüft; im Spiel entscheidet das Modell in festen Grenzen, wann der nächste Akt beginnt; Knöpfe des Spiels im Panel-Stil
-- **V01.0.954** ROT-FIX: ffmpeg im Test-Workflow mit --no-install-recommends (Codecs bleiben) plus robuster apt-Config, damit ein langsamer Paket-Mirror den Lauf nicht mehr abwürgt
 
 
 

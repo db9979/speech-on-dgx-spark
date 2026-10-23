@@ -22,6 +22,7 @@ struct DMHeld: Identifiable {
     let art: String
     let stufe: Int
     let leben: String
+    let bild: Bool
 }
 
 struct DMKampagne: Identifiable {
@@ -33,6 +34,7 @@ struct DMKampagne: Identifiable {
     let entwurf: Bool
     let schreibt: Bool
     let wer: String
+    let titelbild: Int
 }
 
 @MainActor
@@ -54,13 +56,14 @@ final class DungeonModel: ObservableObject {
         helden = (d["helden"] as? [[String: Any]] ?? []).prefix(20).map {
             DMHeld(id: $0["hid"] as? String ?? "", name: $0["name"] as? String ?? "",
                    art: [$0["volk"] as? String ?? "", $0["klasse"] as? String ?? ""].filter { !$0.isEmpty }.joined(separator: " "),
-                   stufe: n($0["stufe"]), leben: "\(n($0["leben"]))/\(n($0["leben_max"]))")
+                   stufe: n($0["stufe"]), leben: "\(n($0["leben"]))/\(n($0["leben_max"]))", bild: $0["bild"] as? Bool ?? false)
         }
         kampagnen = (d["kampagnen"] as? [[String: Any]] ?? []).prefix(20).map {
             let wer = ($0["helden"] as? [String] ?? []) + ($0["gaeste"] as? [String] ?? [])
             return DMKampagne(id: $0["kid"] as? String ?? "", titel: $0["titel"] as? String ?? "", welt: $0["welt"] as? String ?? "",
                               kapitel: n($0["kapitel"]), bisher: $0["bisher"] as? String ?? "", entwurf: $0["entwurf"] as? Bool ?? false,
-                              schreibt: $0["schreibt"] as? Bool ?? false, wer: wer.joined(separator: ", "))
+                              schreibt: $0["schreibt"] as? Bool ?? false, wer: wer.joined(separator: ", "),
+                              titelbild: ($0["titelbilder"] as? [NSNumber] ?? []).last?.intValue ?? 0)
         }
     }
 
@@ -129,9 +132,14 @@ struct DungeonView: View {
             Section("Meine Helden") {
                 if !m.loading && m.helden.isEmpty { Text("Noch keine Helden.").foregroundStyle(.secondary) }
                 ForEach(m.helden) { h in
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(verbatim: h.name).font(.headline)
-                        Text("\(h.art) · Stufe \(h.stufe) · Leben \(h.leben)").font(.subheadline).foregroundStyle(.secondary)
+                    HStack(spacing: 12) {
+                        if h.bild, DMBild.ok(h.id, #"^h[0-9a-f]{10}$"#) {
+                            DMBild(path: "api/profile/dungeon/held/\(h.id)/bild", width: 44, height: 44)
+                        }
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(verbatim: h.name).font(.headline)
+                            Text("\(h.art) · Stufe \(h.stufe) · Leben \(h.leben)").font(.subheadline).foregroundStyle(.secondary)
+                        }
                     }
                     .swipeActions {
                         Button("Löschen", role: .destructive) { Task { await m.send("DELETE", "/api/profile/dungeon/held/" + h.id) } }
@@ -142,6 +150,9 @@ struct DungeonView: View {
                 Section("Kampagnen") {
                     ForEach(m.kampagnen) { k in
                         VStack(alignment: .leading, spacing: 4) {
+                            if k.titelbild > 0, DMBild.ok(k.id, #"^k[0-9a-f]{8}$"#) {
+                                DMBild(path: "api/profile/dungeon/kampagne/\(k.id)/bild/\(k.titelbild)", width: nil, height: 140)
+                            }
                             Text(verbatim: k.titel).font(.headline)
                             Text("\(k.welt) · Kapitel \(k.kapitel)").font(.subheadline).foregroundStyle(.secondary)
                             if k.schreibt {
@@ -173,5 +184,38 @@ struct DungeonView: View {
         if !r.held.isEmpty { a.append(r.held) }
         if !r.laeuft { a.append(String(localized: "beendet")) }
         return a.joined(separator: " · ")
+    }
+}
+
+/// A picture of the game (an own hero's portrait, a chapter's cover), loaded once with the app's key; nothing while
+/// it loads or when it is gone. An AI picture, so it carries the mark „KI-Bild“ as on the panel.
+struct DMBild: View {
+    let path: String
+    let width: CGFloat?
+    let height: CGFloat
+    @State private var image: UIImage?
+
+    static func ok(_ id: String, _ pattern: String) -> Bool { id.range(of: pattern, options: .regularExpression) != nil }
+
+    var body: some View {
+        ZStack(alignment: .topTrailing) {
+            if let image {
+                Image(uiImage: image).resizable().scaledToFill()
+            } else {
+                Color.secondary.opacity(0.15)
+            }
+            if image != nil && width == nil {
+                Text("KI-Bild").font(.caption2.bold()).padding(.horizontal, 6).padding(.vertical, 2)
+                    .background(.black.opacity(0.6), in: Capsule()).foregroundStyle(.white).padding(6)
+            }
+        }
+        .frame(maxWidth: width ?? .infinity, minHeight: height, maxHeight: height)
+        .frame(width: width)
+        .clipShape(RoundedRectangle(cornerRadius: width == nil ? 10 : 22))
+        .accessibilityLabel(Text("KI-Bild"))
+        .task(id: path) {
+            guard let api = SparkAPI.current, let d = try? await api.dungeonPicture(path) else { return }
+            image = UIImage(data: d)
+        }
     }
 }

@@ -3173,7 +3173,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 39), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 86). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, v"
+"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 39), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 87). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, v"
 },
 {
 "lang": "de",
@@ -3197,7 +3197,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 39 Dateien in jeder Sicherung (Schritt 7) - 86 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
+"text": "- 39 Dateien in jeder Sicherung (Schritt 7) - 87 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
 },
 {
 "lang": "de",
@@ -5230,6 +5230,30 @@
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
 "text": "nen Zugs. Jede Erzählung hat dafür eine eigene Nummer (k). POST /api/profile/dungeon/auto ({text, nach, lang}, Antwort {sagen, n, warten, aus}), auch für die iPhone-App freigegeben, eigenes Rate-Limit dungeonauto (60 je Minute); Zustand → Live zählt die Schritte im Auto, Log dungeon: auto | leben."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "KI-Dungeon-Master Stufe 3: Bilder (V01.0.964, Plan dungeon-master/plan.md Abschnitt „Stufe 3“, Dominik 2026-10-23 „ok stufe 3 umsetzten“ = Empfehlungen 1a bis 5a): Bilder gibt es nur, wenn Funktionen → Bilder malen für den Gastgeber freigegeben und das Bildmodell installiert ist; sonst läuft das Spiel wie bisher ohne. Szenenbild: Wechselt der Ort (szene.ort, auch im Prolog), liefert das Modell im selben JSON das Feld bild: eine englische Beschreibung der Szene, höchstens 300 Zeichen. Sie ist nur Daten und wird geprüft wie ein Bildwunsch: Wortliste von „Bilder malen“, Wörter des Tons, die Liste „nie“ und die Tabus der Geschichte, keine Namen von Personen, die der Spark kennt. Davor setzt das Panel den festen Stil der Welt (welten[].bildstil in den Regeln, vom Admin änderbar, nur Buchstaben, Zahlen und Satzzeichen), im Ton ab 8 immer den Bilderbuch-Stil, dahinter „no text, no letters, no watermark“. Gemalt wird 1024×576 über die Warteschlange „Schwere Aufträge“ (ein Modell zur Zeit, Sprache hat Vorrang, Wartungspause „bild“); die Bildprüfung des Bild-Dienstes verwirft NSFW über 0,5, ohne Prüfung gibt es kein Bild. Anzeige: Das neueste Bild steht groß über der Erzählung mit dem Zeiche"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "n „KI-Bild“, im Verlauf erscheint es klein beim Zug, solange gemalt wird steht „Das Szenenbild wird gemalt …“ oder der Platz in der Warteschlange. Gäste holen Bilder über ihren Platz-Code (POST /api/dungeon/bild), nur aus ihrer eigenen Runde. Grenzen: „🖼 Szenenbild jetzt malen“ des Gastgebers nimmt die letzte Beschreibung (sonst Ort und Stimmung); höchstens ein Bild je 3 Züge, 12 je Runde, am Tag 40 für das ganze Spiel auf dem Spark (grenzen.bilder_tag, 0 bis 500, zählt im Rundendatei-Stand, also auch über einen Neustart). Der Knopf ist grau und nennt den Grund. Heldenporträt: Ein Häkchen beim Anlegen oder „🖼 Porträt malen lassen“ im eigenen Bogen malt 512×512 aus Volk, Klasse und dem Satz zur Figur (fester Porträt-Stil), neu malen einmal je Stufe; das Porträt erscheint auf den Heldenkarten, bleibt beim Helden (Profil oder Figur-Code) und geht mit ihm. Karte und Titelbild: Die Seitenspalte zeigt die besuchten Orte als Kette (ohne Modell, höchstens 20, im nächsten Kapitel weiter); beim Kapitelende wird das letzte Szenenbild das Titelbild des Kapitels (höchstens 20 je Kampagne), es steht in der Kampagnenliste und in der iPhone-App unter *Meine Sachen → Dungeon-Master*, dort auch die "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Porträts der eigenen Helden. Ablage dungeon-bild/ im Zustandsordner: Szenenbilder gehen mit der Runde, Porträts mit dem Helden, Titelbilder mit der Kampagne, „Alle Spieldaten löschen“ nimmt alles; einmal je Stunde räumt das Panel Bilder ohne Besitzer weg. Zustand → Live zählt gemalte, verworfene und ausgefallene Bilder und die, die unterwegs sind; Logs: dungeon: bild | ok | szene | 14000 ms, dungeon: bild | abgelehnt | abstand, dungeon: bild | ohne_pruefung | szene | 900 ms, dungeon: portraet | abgelehnt | stufe. API: GET /api/profile/dungeon/{rid}/bild/{b}, GET …/{rid}/portraet/{pid}, POST …/{rid}/bild (Gastgeber), POST …/{rid}/portraet, GET /api/profile/dungeon/held/{hid}/bild, GET /api/profile/dungeon/kampagne/{kid}/bild/{n}; für Gäste POST /api/dungeon/bild|portraet|portraet/malen; Rate-Limit dungeonbild."
 },
 {
 "lang": "de",
@@ -15109,7 +15133,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 39), otherwise the line gives its reason (dateien.STATE_LOCAL, 86). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe, vorrat) read it again."
+"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 39), otherwise the line gives its reason (dateien.STATE_LOCAL, 87). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe, vorrat) read it again."
 },
 {
 "lang": "en",
@@ -15125,7 +15149,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 39 files in every backup (step 7) - 86 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
+"text": "- 39 files in every backup (step 7) - 87 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
 },
 {
 "lang": "en",
@@ -17110,6 +17134,30 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "e); Status → Live counts the steps in the car, log dungeon: auto | leben."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master stage 3: pictures (V01.0.964, plan dungeon-master/plan.md section \"Stufe 3\", Dominik 2026-10-23 \"ok stufe 3 umsetzten\" = recommendations 1a to 5a): pictures come only when Features → Painting pictures is released for the host and the picture model is installed; otherwise the game runs without them as before. Scene picture: when the place changes (szene.ort, also in the prologue), the model gives the field bild in the same JSON: an English description of the scene, at most 300 characters. It is only data and is checked like a picture wish: the word list of \"Painting pictures\", the tone's words, the list \"nie\" and the story's taboos, no names of people the Spark knows. The panel puts the world's fixed style in front (welten[].bildstil in the rules, the admin may change it, only letters, digits and punctuation), in the 8+ tone always the picture-book style, and \"no text, no letters, no watermark\" after it. It is painted at 1024×576 through the queue \"Heavy jobs\" (one model at a time, voice first, maintenance pause \"bild\"); the picture service's check throws away NSFW above 0.5, without the check there is no picture. Display: the newest picture stands large above the "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "narration with the mark \"AI image\", in the log it shows small at its turn, while it is painted \"The scene picture is being painted …\" or the place in the queue shows. Guests get pictures through their seat code (POST /api/dungeon/bild), only of their own round. Limits: the host's \"🖼 Paint the scene now\" takes the last description (else place and mood); at most one picture every 3 turns, 12 per round, 40 a day for the whole game on the Spark (grenzen.bilder_tag, 0 to 500, counted in the rounds file, so also across a restart). The button is grey and names the reason. Hero portrait: a tick when creating or \"🖼 Have a portrait painted\" on the own sheet paints 512×512 from people, class and the sentence about the character (fixed portrait style), painted again once per level; the portrait shows on the hero cards, stays with the hero (profile or hero code) and goes with it. Map and cover: the side column shows the places visited as a chain (without the model, at most 20, carried into the next chapter); when a chapter ends its last scene picture becomes the chapter's cover (at most 20 per campaign), it shows in the campaign list and in the iPhone app under *My things → Dungeon Master*, tog"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "ether with the portraits of the own heroes. Stored in dungeon-bild/ in the state folder: scene pictures go with the round, portraits with the hero, covers with the campaign, \"Delete all game data\" takes everything; once an hour the panel clears pictures nobody owns. Status → Live counts pictures painted, discarded and failed and those on their way; Logs: dungeon: bild | ok | szene | 14000 ms, dungeon: bild | abgelehnt | abstand, dungeon: bild | ohne_pruefung | szene | 900 ms, dungeon: portraet | abgelehnt | stufe. API: GET /api/profile/dungeon/{rid}/bild/{b}, GET …/{rid}/portraet/{pid}, POST …/{rid}/bild (host), POST …/{rid}/portraet, GET /api/profile/dungeon/held/{hid}/bild, GET /api/profile/dungeon/kampagne/{kid}/bild/{n}; for guests POST /api/dungeon/bild|portraet|portraet/malen; rate limit dungeonbild."
 },
 {
 "lang": "en",

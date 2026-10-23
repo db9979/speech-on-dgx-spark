@@ -19,11 +19,15 @@
 - Read aloud: one WAV per turn for every seat (narrator and NPC voice from the rules), only the last turns kept, only a
   seat of the round gets it; speak instead of type: only a WAV within the size, the text only comes back (never sent);
   the app's seat code works only for the own seat and gives no Figur-Code of a profile's hero.
+- Pictures (Stufe 3): a scene on a new place and on the host's button within the game's own limits, the model's
+  description checked like a picture wish, no picture without the picture check or without „Bilder malen“, only a
+  seat of the round sees it; a portrait once per level, the chapter's cover, the map of places.
 - Live only counts; „Alle Spieldaten löschen“ takes heroes, campaigns, rounds and seats.
 
 No wall clock in the checks: expiry and turns use a given now; dice use a seeded random.
 """
 import asyncio
+import base64
 import copy
 import json
 import os
@@ -68,6 +72,7 @@ def code_of(link):
     return link.split("#spiel=", 1)[1]
 
 
+PNG = b"\x89PNG\r\n\x1a\n" + bytes(24)   # what the picture service sends (bilder.paint checks the signature)
 HERO = {"name": "Arvid", "volk": "mensch", "klasse": "krieger", "satz": ""}
 
 
@@ -1294,6 +1299,181 @@ class LiveCounts(Base):
         self.assertEqual((live["on"], live["runden"], live["spieler"], live["gaeste"]), (True, 1, 2, 1))
         self.assertTrue(all(isinstance(x, (bool, int)) for x in live.values()))
         self.assertNotIn("Arvid", json.dumps(live))
+
+
+class Pictures(Base):
+    """Stufe 3 (Dominik 2026-10-23 „ok stufe 3 umsetzten“ = 1a bis 5a): a scene picture on a new place and on the
+    host's button, the game's own limits, the portrait once per level, the chapter's cover and the map; only with
+    „Bilder malen“, checked like a picture wish and by the picture service (no check, no picture)."""
+    def setUp(self):
+        super().setUp()
+        from unittest import mock
+        import bilder
+        helpers.keep_chat(self, "bilder")
+        helpers.set_config(bilder=True)
+        self._image(True)
+        self.addCleanup(self._image, False)
+        dungeon._bilder_jobs.clear()
+        self.addCleanup(dungeon._bilder_jobs.clear)
+        self.addCleanup(lambda: [os.remove(os.path.join(dungeon.BILD_DIR, f)) for f in os.listdir(dungeon.BILD_DIR)]
+                        if os.path.isdir(dungeon.BILD_DIR) else None)
+        self.coros, self.calls, self.nsfw = [], [], [0.01]
+
+        async def no_wait(*a, **k):
+            return 0
+
+        async def call(path, body=None, timeout=0):
+            self.calls.append(body)
+            d = {"png": base64.b64encode(PNG).decode(), "w": body["width"], "h": body["height"], "seconds": 1.0}
+            if self.nsfw[0] is not None:
+                d["nsfw"] = self.nsfw[0]
+            return 200, d
+        for target, new in (("vorrang.quiet", no_wait), ("bilder.call", call)):
+            p = mock.patch(target, new)
+            p.start()
+            self.addCleanup(p.stop)
+        self.assertIs(bilder.call, call)
+        base = dungeon.spawn
+
+        def run(coro, name=""):
+            if name == "dungeon-bild":
+                self.coros.append(coro)              # the test paints them (paint) when it wants
+                return
+            base(coro, name)
+        dungeon.spawn = run
+
+    def _image(self, on):
+        with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
+            c = json.load(f)
+        c.setdefault("image", {})["enabled"] = on
+        helpers.write_config(c)
+
+    def paint(self):
+        while self.coros:
+            asyncio.run(self.coros.pop(0))
+
+    def opening(self, bild="a misty village square with a silent bell tower at dusk", **kw):
+        dungeon.ask_model = fake([{"erzaehlung": "Nebel liegt über Hallstein, die Glocke schweigt seit drei Nächten.",
+                                   "szene": {"ort": "Dorfplatz", "stimmung": "neblig"}, "frage_an": "Arvid", "bild": bild}] * 2)
+        return self.new_round(**kw)
+
+    def test_scene_on_a_new_place_for_every_seat_and_its_limits(self):
+        v = self.opening()
+        rid = v["rid"]
+        self.assertEqual(len(self.coros), 1)
+        self.assertTrue(self.c.get(f"/api/profile/dungeon/{rid}").json()["bild_malt"])
+        self.paint()
+        prompt = self.calls[0]["prompt"]
+        self.assertTrue(prompt.startswith(dungeon.rules()["welten"][0]["bildstil"]))    # the world's fixed style first
+        self.assertTrue(prompt.endswith(dungeon.BILD_ENDE))
+        self.assertEqual((self.calls[0]["width"], self.calls[0]["height"]), (dungeon.BILD_W, dungeon.BILD_H))
+        rd = self.state(rid)
+        b = rd["bilder"][0]["b"]
+        self.assertEqual([x["art"] for x in rd["log"]][-1], "bild")
+        self.assertEqual(rd["orte"], ["Dorfplatz"])
+        r = self.c.get(f"/api/profile/dungeon/{rid}/bild/{b}")
+        self.assertEqual((r.status_code, r.headers["content-type"], r.content), (200, "image/png", PNG))
+        code, gp = self.guest(rid)
+        self.assertEqual(self.v.post("/api/dungeon/bild", json={"code": code, "b": b}).content, PNG)
+        self.assertEqual(self.v.post("/api/dungeon/bild", json={"code": code, "b": "b00000000"}).status_code, 404)
+        self.assertEqual(self.c2.get(f"/api/profile/dungeon/{rid}/bild/{b}").status_code, 404)      # no seat, no picture
+        other = self.new_round(titel="Andere")["rid"]
+        self.assertEqual(self.c.get(f"/api/profile/dungeon/{other}/bild/{b}").status_code, 404)     # only its own round
+        # the host's button: at most one every BILD_ABSTAND turns, BILDER_RUNDE a round, the day's limit
+        r = self.c.post(f"/api/profile/dungeon/{rid}/bild", json={})
+        self.assertEqual((r.status_code, r.json()["detail"]), (409, dungeon._nein("abstand", "de")))
+        self.assertIn("3 Züge", self.c.get(f"/api/profile/dungeon/{rid}").json()["bild_grund"])
+        self.assertEqual(self.v.post("/api/dungeon/lage", json={"code": code}).json()["bild_grund"], "")   # only the host
+        with dungeon._lock:
+            d = dungeon._read()
+            d["runden"][rid]["zug"] = 4
+            dungeon._write(d)
+        r = self.c.post(f"/api/profile/dungeon/{rid}/bild", json={})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.paint()
+        self.assertIn("silent bell tower", self.calls[-1]["prompt"])     # the model's last description
+        self.assertEqual(len(self.state(rid)["bilder"]), 2)
+        for k, v_, why in (("bilder_n", dungeon.BILDER_RUNDE, "runde"), ("bilder_n", 0, "tag")):
+            with dungeon._lock:
+                d = dungeon._read()
+                d["runden"][rid].update({k: v_, "zug": 9})
+                if why == "tag":
+                    d["bilder"] = {"day": dungeon.DayCounter.date(), "n": dungeon.rules()["grenzen"]["bilder_tag"]}
+                dungeon._write(d)
+            self.assertEqual(dungeon.may_paint(dungeon.rules(), dungeon._read(), rid, self.state(rid)), why)
+        self.assertEqual(self.v.post("/api/dungeon/portraet/malen", json={"code": code}).json()["detail"], dungeon._nein("tag", "de"))
+        live = dungeon.for_live()
+        self.assertGreaterEqual(live["gemalt"], 2)
+        self.assertNotIn("bell", json.dumps(live))
+
+    def test_checked_like_a_wish_fail_closed_and_only_with_the_switch(self):
+        v = self.opening(bild="Dora stands naked at the well")              # a refused word and a known person
+        self.assertEqual(self.coros, [])
+        self.assertEqual(self.state(v["rid"]).get("bilder"), None)
+        self.assertEqual(dungeon.picture_text(dungeon.rules(), self.state(v["rid"]), "a portrait of Dora at the well")[1], "person")
+        self.assertEqual(dungeon.picture_text(dungeon.rules(), self.state(v["rid"]), "a dark crypt full of corpses")[1], "wortliste")
+        kid = self.opening(ton=8, titel="Kinder")                           # the youngest tone: the picture book, whatever the world
+        self.nsfw[0] = None                                                  # the picture service without its check
+        self.paint()
+        self.assertTrue(self.calls[-1]["prompt"].startswith(dungeon.BILD_KIND))
+        self.assertEqual(self.state(kid["rid"]).get("bilder"), None)        # no check, no picture
+        self.assertGreaterEqual(dungeon.for_live()["bild_weg"], 1)
+        self.assertEqual(dungeon._bilder_jobs, {})
+        helpers.set_config(bilder=False)                                     # without „Bilder malen“ the game runs without
+        rd = self.state(kid["rid"])
+        self.assertNotIn(" bild ", dungeon.system_text(dungeon.rules(), rd, "erzaehlen"))
+        self.assertEqual(dungeon.may_paint(dungeon.rules(), dungeon._read(), kid["rid"], rd), "aus")
+        self.assertFalse(self.c.get(f"/api/profile/dungeon/{kid['rid']}").json()["bilder_an"])
+        self.assertEqual(self.c.post(f"/api/profile/dungeon/{kid['rid']}/portraet", json={}).status_code, 409)
+        helpers.set_config(bilder=True)
+        self.assertIn(" bild ", dungeon.system_text(dungeon.rules(), rd, "erzaehlen"))
+
+    def test_portrait_once_a_level_cover_map_and_own_data(self):
+        import iphone
+        v = self.new_round(titel="Porträt")
+        rid, host = v["rid"], v["pid"]
+        code, gp = self.guest(rid)
+        r = self.c.post(f"/api/profile/dungeon/{rid}/portraet", json={})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertTrue(r.json()["portraet_malt"])
+        self.assertEqual(self.c.post(f"/api/profile/dungeon/{rid}/portraet", json={}).json()["detail"], dungeon._nein("malt", "de"))
+        self.paint()
+        self.assertIn("a human warrior", self.calls[-1]["prompt"])
+        self.assertEqual((self.calls[-1]["width"], self.calls[-1]["height"]), (dungeon.PORTRAET, dungeon.PORTRAET))
+        h = self.state(rid)["plaetze"][host]["held"]
+        self.assertEqual(h["bild"], 1)
+        self.assertEqual(dungeon.heroes(self.uid)[0]["bild"], 1)                    # the kept hero has it too
+        self.assertEqual(self.c.get(f"/api/profile/dungeon/held/{h['hid']}/bild").content, PNG)
+        self.assertEqual(self.c2.get(f"/api/profile/dungeon/held/{h['hid']}/bild").status_code, 404)
+        self.assertEqual(self.v.post("/api/dungeon/portraet", json={"code": code, "pid": host}).content, PNG)
+        self.assertEqual(self.v.post("/api/dungeon/portraet", json={"code": code, "pid": gp}).status_code, 404)   # none yet
+        self.assertEqual(self.c.post(f"/api/profile/dungeon/{rid}/portraet", json={}).json()["detail"], dungeon._nein("stufe", "de"))
+        self.assertEqual(self.v.post("/api/dungeon/portraet/malen", json={"code": code}).status_code, 200)
+        self.paint()
+        self.assertEqual(self.c.get(f"/api/profile/dungeon/{rid}/portraet/{gp}").content, PNG)
+        self.assertTrue(any(re.fullmatch(p, f"/api/profile/dungeon/held/{h['hid']}/bild") for m, p in (iphone.AREAS | iphone.THINGS)["dungeon"] if "GET" in m))
+        # the map and the chapter's cover: the last scene picture
+        with dungeon._lock:
+            d = dungeon._read()
+            rd = d["runden"][rid]
+            for ort in ("Dorfplatz", "Krypta", "Krypta", "Turm"):
+                dungeon.visit(rd, ort)
+            rd["zug"] = 9
+            job = dungeon.queue_scene(dungeon.rules(), d, rid, rd, "a crypt below a bell tower")
+            dungeon._write(d)
+        asyncio.run(dungeon.paint_scene(rid, *job))
+        self.assertEqual(self.state(rid)["orte"], ["Dorfplatz", "Krypta", "Turm"])
+        r = self.c.post(f"/api/profile/dungeon/{rid}/kapitel", json={})
+        kid = r.json()["kid"]
+        c = dungeon.campaigns(self.uid)[kid]
+        self.assertEqual((c["titelbilder"], c["orte"]), ([1], ["Dorfplatz", "Krypta", "Turm"]))
+        self.assertEqual(self.c.get(f"/api/profile/dungeon/kampagne/{kid}/bild/1").content, PNG)
+        self.assertTrue(any(re.fullmatch(p, f"/api/profile/dungeon/kampagne/{kid}/bild/1") for m, p in (iphone.AREAS | iphone.THINGS)["dungeon"] if "GET" in m))
+        self.assertEqual(self.c2.get(f"/api/profile/dungeon/kampagne/{kid}/bild/1").status_code, 404)
+        self.assertTrue(os.path.exists(dungeon.bild_file(f"{kid}-1")))
+        self.assertEqual(self.c.delete("/api/profile/dungeon/daten").status_code, 200)
+        left = [f for f in os.listdir(dungeon.BILD_DIR) if f.startswith((kid, rid, "held-" + h["hid"]))]
+        self.assertEqual(left, [])
 
 
 if __name__ == "__main__":

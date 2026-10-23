@@ -1721,7 +1721,7 @@ def snapshot(view="admin", now=None):
                         + (f" · {wbk['widerspruch']} Widersprüche" if wbk.get("widerspruch") else "")
                         + (f" · {wbk['veraltet']} veraltet?" if wbk.get("veraltet") else "")
                         + (" · arbeitet" if wbk.get("running") else ""))
-        if x["id"] == "dungeon":   # Dungeon-Master: rounds, players and guests, turns, loot, levels, campaigns, read aloud and spoken today, stories with acts moved on and proposals, markets, purchases and sales (numbers only, never a name or a text)
+        if x["id"] == "dungeon":   # Dungeon-Master: rounds, players and guests, turns, loot, levels, campaigns, read aloud and spoken today, stories with acts moved on and proposals, markets, purchases and sales, pictures painted, discarded and on their way (numbers only, never a name or a text)
             x["sub"] = (f"{dgn.get('runden', 0)} Runden · {dgn.get('spieler', 0)} Spieler, {dgn.get('online', 0)} da, {dgn.get('gaeste', 0)} Gäste"
                         + f" · heute {dgn.get('zuege', 0)} Züge, {dgn.get('beute', 0)} Beute, {dgn.get('stufen', 0)} Stufen"
                         + (f" · {dgn['ausfall']} ohne Erzählung" if dgn.get("ausfall") else "")
@@ -1733,7 +1733,10 @@ def snapshot(view="admin", now=None):
                         + (" · liest vor" if dgn.get("liest") else "") + (" · schreibt Bisher geschah" if dgn.get("schreibt") else "")
                         + f" · {dgn.get('geschichten', 0)} Geschichten, heute {dgn.get('akte', 0)} Akte weiter, {dgn.get('vorschlaege', 0)} Vorschläge"
                         + f" · {dgn.get('maerkte_offen', 0)} Märkte offen, heute {dgn.get('maerkte', 0)} Märkte, {dgn.get('kaeufe', 0)} Käufe, {dgn.get('verkaeufe', 0)} Verkäufe"
-                        + (f" · heute {dgn['auto']} Schritte im Auto" if dgn.get("auto") else ""))
+                        + (f" · heute {dgn['auto']} Schritte im Auto" if dgn.get("auto") else "")
+                        + (f" · heute {dgn.get('gemalt', 0)} Bilder gemalt, {dgn.get('bild_weg', 0)} verworfen, {dgn.get('bild_aus', 0)} ausgefallen"
+                           if dgn.get("gemalt") or dgn.get("bild_weg") or dgn.get("bild_aus") else "")
+                        + (f" · {dgn['bild_wartet']} Bilder unterwegs" if dgn.get("bild_wartet") else ""))
         if x["id"] == "wkarte":    # Wissenskarte: connections, discarded, documents waiting, profiles, numbers only (never a title)
             x["sub"] = (f"{wkk.get('verbindungen', 0)} Verbindungen · {wkk.get('punkte', 0)} Punkte · {wkk.get('warten', 0)} Dokumente warten"
                         + f" · {wkk.get('profile', 0)} Profile"

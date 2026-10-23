@@ -2823,6 +2823,13 @@
 "titel": "Dungeon-Master im Auto (CarPlay)",
 "text": "A: Eine Runde im Panel anlegen, dann im Auto „Dungeon-Master spielen“ antippen: Spark liest den Prolog vor und hört zu. B: Eine Aktion sagen („Ich gehe zum Brunnen“): „Notiert. Wir warten noch auf …“; am Tisch im Panel steht die Aktion. C: Sobald alle gehandelt haben, liest Spark die Erzählung von selbst vor und hört wieder zu. D: „Wie viel Leben habe ich?“, „Was ist in meiner Tasche?“, „Trink einen Heiltrank“, „Wer fehlt noch?“: feste Antworten, der Trank ist danach weg. E: „Danke“: das Spiel im Auto endet. F: Ohne laufende Runde: Spark sagt es, das Mikrofon bleibt zu.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P428",
+"v": 964,
+"titel": "Dungeon-Master: Szenenbilder, Porträt, Karte, Titelbild",
+"text": "Voraussetzung: Funktionen → Bilder malen an und Bildmodell installiert. A: Neue Runde mit Häkchen „Porträt malen lassen“ anlegen: der Prolog kommt, darüber erscheint „Das Szenenbild wird gemalt …“, danach das Bild groß mit „KI-Bild“, das Porträt auf der Heldenkarte. B: Spielen, bis der Ort wechselt: ein neues Szenenbild, im Verlauf klein beim Zug, die Karte rechts wächst. C: „🖼 Szenenbild jetzt malen“ direkt danach: grau mit „Höchstens ein Szenenbild je 3 Züge“. D: Ein Gast am Handy sieht dieselben Bilder und kann sein Porträt malen lassen; ein zweites Mal geht erst auf der nächsten Stufe. E: Kapitel beenden: die Kampagne zeigt das letzte Szenenbild als Titelbild und die Karte, auch in der iPhone-App unter Meine Sachen, Dungeon-Master. F: Bilder malen aus: das Spiel läuft weiter, ohne Bilder und ohne Knopf.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

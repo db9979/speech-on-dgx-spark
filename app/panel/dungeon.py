@@ -114,6 +114,7 @@ HELDEN = "dungeon-helden.json"
 TON_DIR = os.path.join(STATE, "dungeon-ton")
 KAMPAGNEN = "dungeon-kampagnen.json"
 GESCHICHTEN = os.path.join(STATE, "dungeon-geschichten.json")
+BILD_DIR = os.path.join(STATE, "dungeon-bild")
 
 RUNDEN_MAX = 3            # open rounds per host
 ALLE_MAX = 20             # open rounds on the Spark
@@ -178,6 +179,8 @@ _HID = re.compile(r"h[0-9a-f]{10}")
 _IID = re.compile(r"i[0-9a-f]{8}")
 _KID = re.compile(r"k[0-9a-f]{8}")
 _GID = re.compile(r"g[0-9a-f]{8}")
+_BID = re.compile(r"b[0-9a-f]{8}")
+_STIL = re.compile(r"[A-Za-z0-9 ,.'\-]{5,200}")
 _ZEICHEN = re.compile(r"[^\w<>&\"'\s]{1,8}")
 _VOICE = re.compile(r"[\w .\-]{0,40}")
 _WORD = re.compile(r"[a-z0-9_]{1,24}")
@@ -188,6 +191,19 @@ TASCHE = 12               # items in one bag
 ANGEBOTE_MAX = 3          # open trade offers one seat may make
 TAUSCH_TEILE = 4          # items on one side of an offer
 GOLD_MAX = 100000
+BILD_W, BILD_H = 1024, 576   # a scene picture (16:9, multiples of 16)
+PORTRAET = 512            # a hero's portrait (square)
+BILDER_RUNDE = 12         # scene pictures one round paints (and keeps)
+BILD_ABSTAND = 3          # turns between two scene pictures at least
+BILDER_TAG = 40           # pictures of the game a day on the whole Spark, without grenzen.bilder_tag
+BILD_MAX = 300            # the model's description of a picture (English)
+KAPITEL_BILDER = 20       # chapter covers a campaign keeps
+ORTE_KARTE = 20           # places the map keeps
+BILD_STIL = "painted storybook illustration, soft light, rich colours"   # a world without its own bildstil
+BILD_KIND = "friendly children's picture book illustration, soft pastel colours, gentle and cheerful"   # the youngest tone, whatever the world
+PORTRAET_STIL = "painted fantasy character portrait, head and shoulders, plain dark background"
+BILD_ENDE = "no text, no letters, no watermark"
+BILD_GRUENDE = ("pruefung", "ohne_pruefung", "memory", "belegt", "missing", "dienst", "zeit", "wartung")   # why a picture did not come (journal)
 # Ausrüstung, Traglast und Händler (Stufe 4, Dominik 2026-10-23 "ja so umsetzten" = 1a-6a): nine places as in D&D
 SLOTS = ("kopf", "hals", "koerper", "haupthand", "nebenhand", "haende", "fuesse", "ring1", "ring2")
 PLATZ = {"kopf": ("kopf",), "hals": ("hals",), "koerper": ("koerper",), "haupthand": ("haupthand",), "nebenhand": ("nebenhand",),
@@ -219,10 +235,12 @@ _seen = {}                # seat id -> last ask (memory only, so polling never w
 _running = set()          # rounds whose Dungeon Master is answering right now
 _summing = set()          # campaigns whose „Bisher geschah“ is being written right now
 _speaking = set()         # rounds whose last turn is being read aloud right now
+_bilder_jobs = {}          # rid or "h:"+hid -> the heavy job's id of a picture on its way (memory: a restart forgets it)
+_sweep = [0.0]            # last look for portraits and covers nobody keeps (_bild_sweep)
 _tts = [None]             # one TTS job of the game at a time (asyncio.Lock, made in the loop)
 _stimmen = {"t": 0.0, "v": [], "design": False, "laeuft": False}   # the speech output's voices a hero may take, and whether it can make one from a description (STIMMEN_S)
 _day = DayCounter(zuege=0, beute=0, stufen=0, ausfall=0, verworfen=0, abgelehnt=0, runden=0, kapitel=0, vorgelesen=0, gehoert=0, akte=0,
-                  vorschlaege=0, kaeufe=0, verkaeufe=0, maerkte=0, auto=0)
+                  vorschlaege=0, kaeufe=0, verkaeufe=0, maerkte=0, auto=0, gemalt=0, bild_weg=0, bild_aus=0)
 
 
 # ---------------------------------------------------------------- the rules: shipped, the admin's own, merged
@@ -296,6 +314,7 @@ def check_rules(r):
     need(_int(g.get("zug_standard"), 30, 1800) and g.get("zug_standard") in (g.get("zug_s") or []), "grenzen.zug_standard: eine Zahl aus zug_s")
     need(isinstance(g.get("stunden"), list) and 1 <= len(g["stunden"]) <= 5 and all(_int(x, 1, 720) for x in g["stunden"]), "grenzen.stunden: 1 bis 5 Zahlen von 1 bis 720")
     need(_int(g.get("stufe_max"), 2, 20), "grenzen.stufe_max: 2 bis 20")
+    need(_int(g.get("bilder_tag", BILDER_TAG), 0, 500), "grenzen.bilder_tag: 0 bis 500 Bilder am Tag")
     for k in LISTS:
         v = r.get(k)
         need(isinstance(v, list) and 1 <= len(v) <= 200, f"{k}: eine Liste mit 1 bis 200 Einträgen")
@@ -381,6 +400,8 @@ def check_rules(r):
         f = w.get("farben") if isinstance(w, dict) else None
         need(f is None or isinstance(f, dict) and set(f) <= set(FARBEN) and all(isinstance(x, str) and _FARBE.fullmatch(x) for x in f.values()),
              f"welten {w.get('id') if isinstance(w, dict) else '?'}: farben nur {', '.join(FARBEN)} als #rrggbb")
+        bs = w.get("bildstil") if isinstance(w, dict) else None
+        need(bs is None or isinstance(bs, str) and _STIL.fullmatch(bs), f"welten {w.get('id') if isinstance(w, dict) else '?'}: bildstil 5 bis 200 Zeichen, nur Buchstaben, Zahlen und , . ' -")
     for k in ("welten", "toene", "voelker", "klassen"):
         need(all(not isinstance(x, dict) or x.get("zeichen") is None or isinstance(x["zeichen"], str) and _ZEICHEN.fullmatch(x["zeichen"])
                  for x in r.get(k) or []), f"{k}: zeichen ein Bildzeichen (höchstens 8 Zeichen, keine Buchstaben)")
@@ -643,6 +664,8 @@ def fix_hero(r, h):
     six(r, h)
     h["stimme"] = h["stimme"] if isinstance(h.get("stimme"), str) and _VOICE.fullmatch(h["stimme"]) else ""
     h["klang"] = h["klang"] if isinstance(h.get("klang"), str) and KLANG.fullmatch(h["klang"]) else ""
+    if not _int(h.get("bild"), 1, 20):
+        h.pop("bild", None)                   # the level its portrait was painted at
     werte = {w["id"] for w in r["werte"]}
     h["segen"] = [x for x in h.get("segen") or [] if isinstance(x, dict) and x.get("wert") in werte
                   and _int(x.get("bonus"), 1, 4) and _int(x.get("zuege"), 1, 5)][-SEGEN_MAX:]
@@ -754,7 +777,7 @@ def hero_view(r, h, lang, full=True):
     li = 1 if lang == "en" else 0
     k, v = _by(r, "klassen")[h["klasse"]], _by(r, "voelker")[h["volk"]]
     out = {"hid": h["hid"], "name": h["name"], "volk": v["name"][li], "klasse": k["name"][li], "stufe": h["stufe"],
-           "leben": h["leben"], "leben_max": h["leben_max"]}
+           "leben": h["leben"], "leben_max": h["leben_max"], "bild": h.get("bild") is not None}
     if not full:
         return out
     se = r["stufen_ep"]
@@ -763,7 +786,7 @@ def hero_view(r, h, lang, full=True):
     out.update(satz=h.get("satz", ""), ep=h["ep"], ep_naechste=nxt, gold=h["gold"], punkte=h["punkte"],
                werte=[{"id": w["id"], "name": w["name"][li], "kurz": w["name"][li][:3].upper(), "wert": h["werte"].get(w["id"], 10),
                        "mod": mod(h["werte"].get(w["id"], 10)), "gesamt": total(r, h, w["id"])} for w in r["werte"]],
-               wert_max=WERT_MAX, stimme=h.get("stimme", ""), klang=h.get("klang", ""),
+               wert_max=WERT_MAX, stimme=h.get("stimme", ""), klang=h.get("klang", ""), bild_neu=h.get("bild") != h["stufe"],
                schutz=schutz(r, h), an={k: item_view(r, it, lang) if it else None for k, it in h["an"].items()},
                kg=load(r, h), trag=carry(h), belastet=burdened(r, h), rabatt=rabatt(r, h), tasche_max=TASCHE,
                tasche=[item_view(r, x, lang) for x in h["tasche"]],
@@ -902,6 +925,8 @@ def _read():
     d = read_json(FILE, {})
     rs = d.get("runden") if isinstance(d, dict) else None
     out = {"runden": {k: v for k, v in (rs or {}).items() if _RID.fullmatch(k) and isinstance(v, dict)}}
+    if isinstance(d, dict) and isinstance(d.get("bilder"), dict):
+        out["bilder"] = d["bilder"]
     r = None
     for rd in out["runden"].values():                # heroes at a table from before the six values
         for p in (rd.get("plaetze") or {}).values():
@@ -928,17 +953,20 @@ def _prune(d, now):
     for k, v in d["runden"].items():
         if v.get("owner") not in have:
             _ton_drop(k)
+            _bild_drop(k)
             continue
         if v.get("status") == "ende":
             if now - v.get("ende_t", 0) < ENDE_H * 3600:
                 keep[k] = v
             else:
                 _ton_drop(k)
+                _bild_drop(k)
             continue
         if v.get("until", 0) <= now:
             _end(v, now, "zeit")
         keep[k] = v
     d["runden"] = keep
+    _bild_sweep(d, now)
 
 
 def _end(rd, now, why):
@@ -1018,7 +1046,7 @@ def make_round(owner, b, lang, now=None, kampagne=None):
                             "plaetze": {pid: {"h": "", "uid": owner, "held": h, "made": now, "gast": False}}}
         rd = d["runden"][rid]
         if kampagne:
-            rd.update(kid=kampagne["kid"], kapitel=kampagne["kapitel"], vorher=kampagne["vorher"])
+            rd.update(kid=kampagne["kid"], kapitel=kampagne["kapitel"], vorher=kampagne["vorher"], orte=list(kampagne.get("orte") or [])[-ORTE_KARTE:])
             plan = kampagne.get("plan")
             if plan:
                 rd["akt"] = kampagne.get("akt", 0)
@@ -1230,6 +1258,8 @@ def end_chapter(owner, rid, now=None):
         c["vorlesen"] = bool(rd.get("vorlesen"))
         c["plan"], c["akt"] = rd.get("plan"), rd.get("akt", 0)
         kid = kid or "k" + os.urandom(4).hex()
+        c["orte"] = list(rd.get("orte") or [])
+        cover(rid, rd, kid, c)
         c.update(kapitel=rd.get("kapitel", 1), vorher=c.get("bisher", ""), t=now, rid="", schreibt=True, entwurf=True,
                  quelle=[x["text"][:400] for x in rd["log"] if x["art"] == "dm"][-QUELLE_MAX:],
                  helden=[{"uid": p["uid"], "hid": p["held"]["hid"], "name": p["held"]["name"]} for _, p in seated(rd) if p.get("uid")],
@@ -1340,7 +1370,7 @@ def next_chapter(owner, kid, b, lang, now=None):
     rb = {k: c.get(k) for k in ("titel", "welt", "ton", "zug_s", "stunden", "prompt", "vorlesen")}
     rid = make_round(owner, dict(rb, held=held, einstieg=""), c.get("lang") or lang, now,
                      kampagne={"kid": kid, "kapitel": c["kapitel"] + 1, "vorher": c.get("bisher", ""),
-                               "plan": c.get("plan"), "akt": c.get("akt", 0)})
+                               "plan": c.get("plan"), "akt": c.get("akt", 0), "orte": c.get("orte")})
     with _lock:
         ks, c = _campaign(owner, kid)
         c.update(rid=rid, t=int(time.time() if now is None else now))
@@ -1351,9 +1381,11 @@ def next_chapter(owner, kid, b, lang, now=None):
 
 def drop_campaign(owner, kid):
     with _lock:
-        ks, _ = _campaign(owner, kid)
+        ks, c = _campaign(owner, kid)
         ks.pop(kid)
         _save_campaigns(owner, ks)
+        for n in c.get("titelbilder") or []:
+            _bild_rm(f"{kid}-{n}")
     print("dungeon: kampagne geloescht", flush=True)
 
 
@@ -1385,7 +1417,8 @@ def campaign_view(r, uid, lang):
         out.append({"kid": kid, "titel": c.get("titel", ""), "welt": welt["name"][li], "kapitel": c.get("kapitel", 0),
                     "bisher": c.get("bisher", ""), "entwurf": bool(c.get("entwurf")), "schreibt": bool(c.get("schreibt")),
                     "rid": c.get("rid", ""), "t": c.get("t", 0), "helden": [x["name"] for x in c.get("helden") or []],
-                    "gaeste": [h.get("name", "") for h in c.get("gaeste") or []]})
+                    "gaeste": [h.get("name", "") for h in c.get("gaeste") or []],
+                    "titelbilder": list(c.get("titelbilder") or []), "orte": list(c.get("orte") or [])})
     return out
 
 
@@ -1718,11 +1751,16 @@ AUFGABE_PROLOG = {
     "de": "Aufgabe: Eröffne die Runde mit einem Prolog (höchstens {n} Zeichen): Beschreibe den Ort mit allen Sinnen, die "
           "Stimmung und die Ausgangslage, sodass jede Figur der Gruppe darin vorkommt und weiß, wo sie steht und was auf "
           "dem Spiel steht. Höchstens ein NPC spricht. Noch keine Proben, kein Schaden, keine Beute. szene nennt Ort und "
-          "Stimmung. Ende mit einer Frage an die Gruppe; frage_an ist eine Figur.",
+          "Stimmung. Ende mit einer Frage an die Gruppe; frage_an ist eine Figur. {bild}",
     "en": "Task: open the round with a prologue (at most {n} characters): describe the place with all senses, the mood and "
           "the starting situation, so every character of the group is in it and knows where it stands and what is at "
           "stake. At most one NPC speaks. No checks yet, no damage, no loot. szene names place and mood. End with a "
-          "question to the group; frage_an is a character."}
+          "question to the group; frage_an is a character. {bild}"}
+AUFGABE_BILD = {
+    "de": "Wechselt der Ort, beschreibe in bild auf Englisch, was man in der neuen Szene sieht (höchstens {n} Zeichen, "
+          "ohne Namen, ohne Text im Bild), sonst lass bild leer.",
+    "en": "When the place changes, describe in bild in English what one sees in the new scene (at most {n} characters, "
+          "no names, no text in the picture), else leave bild empty."}
 AUFGABE_ERZAEHLEN = {
     "de": "Aufgabe: Erzähle, was nach den Aktionen und den gewürfelten Proben geschieht (höchstens {n} Zeichen), lass "
           "NPCs sprechen, gib Schaden oder Heilung als folgen (zahl 1 bis 6), melde Beute nur als Anlass ({anlaesse}) "
@@ -1730,14 +1768,14 @@ AUFGABE_ERZAEHLEN = {
           "frage_an ist eine Figur, die gerade wenig gesagt hat. Ist eine Aktion unklar oder gar kein Spielzug "
           "(Meta-Kommentar), erzähle sie nicht, sondern schreib dieser Figur in ooc eine kurze Zeile (höchstens {ooc} "
           "Zeichen), was sie stattdessen tun kann. Trifft die Gruppe in einer Siedlung einen Händler, melde ihn in "
-          "haendler (Name und ein Satz); Waren und Preise legt das Panel fest, nenne keine.",
+          "haendler (Name und ein Satz); Waren und Preise legt das Panel fest, nenne keine. {bild}",
     "en": "Task: narrate what happens after the actions and the rolled checks (at most {n} characters), let NPCs "
           "speak, give damage or healing as folgen (zahl 1 to 6), report loot only as an occasion ({anlaesse}) with a "
           "name and one sentence, successes as gegner (rang 1 to 5) or ziel. End with a question to the group; "
           "frage_an is a character that said little. When an action is unclear or no move at all (a meta comment), "
           "do not narrate it but write that character a short line in ooc (at most {ooc} characters) on what it could "
           "do instead. When the group meets a merchant in a settlement, report it in haendler (a name and one "
-          "sentence); the panel sets goods and prices, name none."}
+          "sentence); the panel sets goods and prices, name none. {bild}"}
 
 
 def schema_proben(r):
@@ -1765,6 +1803,7 @@ SCHEMA_ERZAEHLEN = {"type": "object", "additionalProperties": False, "required":
     "haendler": {"type": "object", "additionalProperties": False, "required": ["name"], "properties": {
         "name": {"type": "string", "maxLength": 40}, "satz": {"type": "string", "maxLength": SATZ_MAX}}},
     "frage_an": {"type": "string", "maxLength": NAME_MAX}, "akt_fertig": {"type": "boolean"},
+    "bild": {"type": "string", "maxLength": BILD_MAX + 100},
     "ooc": {"type": "array", "maxItems": 5, "items": {"type": "object", "additionalProperties": False, "required": ["wer", "text"],
             "properties": {"wer": {"type": "string", "maxLength": NAME_MAX}, "text": {"type": "string", "maxLength": OOC_MAX + 60}}}}}}
 
@@ -1810,9 +1849,10 @@ def system_text(r, rd, task):
     ton = _ton(r, rd)
     werte = ", ".join(w["id"] for w in r["werte"])
     t = PANEL_REGELN[lang].format(ton=ton["regel"][1 if lang == "en" else 0])
+    bild = AUFGABE_BILD[lang].format(n=BILD_MAX) if task != "proben" and pictures_on(rd["owner"]) else ""
     t += "\n\n" + (AUFGABE_PROBEN[lang].format(werte=werte, lo=SCHWER[0], hi=SCHWER[1]) if task == "proben" else
-                   AUFGABE_PROLOG[lang].format(n=ERZ_LANG) if task == "prolog" else
-                   AUFGABE_ERZAEHLEN[lang].format(n=erz_max(rd), anlaesse=", ".join(ANLAESSE), ooc=OOC_MAX))
+                   AUFGABE_PROLOG[lang].format(n=ERZ_LANG, bild=bild) if task == "prolog" else
+                   AUFGABE_ERZAEHLEN[lang].format(n=erz_max(rd), anlaesse=", ".join(ANLAESSE), ooc=OOC_MAX, bild=bild)).rstrip()
     if task != "proben" and rd.get("plan") and rd.get("akt", 0) < len(rd["plan"]["akte"]):
         t += " " + AUFGABE_FOLGE[lang]
     return t + "\n\n" + (rd.get("prompt") or r["prompt"])
@@ -1896,7 +1936,12 @@ def check_story(r, rd, obj):
         return None, 1
     names, drop = _name_map(rd), 0
     out = {"text": text, "npc": [], "folgen": [], "beute": None, "erfolg": [], "szene": None, "frage": "", "haendler": None,
-           "akt_fertig": obj.get("akt_fertig") is True, "ooc": []}
+           "akt_fertig": obj.get("akt_fertig") is True, "ooc": [], "bild": ""}
+    if obj.get("bild"):
+        out["bild"], why = picture_text(r, rd, obj["bild"])
+        if why and why != "leer":
+            drop += 1
+            print(f"dungeon: bild | abgelehnt | {why}", flush=True)
     for o in obj.get("ooc") or []:
         pid = names.get(str(o.get("wer", "")).strip().lower()) if isinstance(o, dict) else None
         t = plain(o.get("text") if isinstance(o, dict) else "", OOC_MAX)
@@ -1967,6 +2012,9 @@ def apply(r, rd, wuerfe, story, rid, rng=None):
         if story["szene"] and story["szene"]["ort"] and story["szene"]["ort"] != rd["szene"].get("ort"):
             close_market(rd)                    # a new place: the merchant and what lies on the ground stay behind
             rd["boden"] = []
+            visit(rd, story["szene"]["ort"])
+        if story.get("bild"):
+            rd["bild_text"] = story["bild"]     # the host's „Szenenbild jetzt malen“ paints the last one
         if story["szene"] and (story["szene"]["ort"] or story["szene"]["stimmung"]):
             rd["szene"] = story["szene"]
         if story.get("haendler") and not rd.get("markt"):
@@ -2085,19 +2133,24 @@ async def run_turn(rid, turn):
                 if story:
                     story["folgen"] = [f for f in story["folgen"] if f["pid"] in seats]
                     story["frage"] = story["frage"] if story["frage"] in seats else ""
+                ort0 = cur["szene"].get("ort")
                 apply(r, cur, [w for w in wuerfe if w["pid"] in seats] if story else [], story, rid)
                 if story and cur.get("vorlesen"):
                     e = next(x for x in reversed(cur["log"]) if x["art"] == "dm")
                     said.extend(speak_parts(r, e["text"], e.get("npc") or [], hero_lines(r, cur, turn)))
+                if story and story["bild"] and cur["szene"].get("ort") != ort0:
+                    bild.extend(queue_scene(r, d, rid, cur, story["bild"]) or ())
                 cur["dm"] = ""
                 _write(d)
                 for p in cur["plaetze"].values():
                     if p.get("uid") and p.get("held"):
                         keep_hero(p["uid"], p["held"])
-        said = []
+        said, bild = [], []
         await asyncio.to_thread(keep)
         if said:
             spawn(speak_turn(rid, turn, said), name="dungeon")
+        if bild:
+            spawn(paint_scene(rid, *bild), name="dungeon-bild")
         if why != "ok":
             _day.bump("ausfall")
         _day.bump("zuege")
@@ -2115,6 +2168,9 @@ def prolog(r, rd, story):
     if story:
         if story["szene"] and (story["szene"]["ort"] or story["szene"]["stimmung"]):
             rd["szene"] = story["szene"]
+            visit(rd, story["szene"]["ort"])
+        if story.get("bild"):
+            rd["bild_text"] = story["bild"]
         if story.get("haendler") and not rd.get("markt"):
             open_market(r, rd, story["haendler"]["name"], story["haendler"]["satz"])
         text, npc, frage = story["text"], story["npc"][:1], story["frage"]
@@ -2146,7 +2202,7 @@ async def run_prolog(rid):
                 if story:
                     break
             why = "ok" if story else "ausfall"
-        said = []
+        said, bild = [], []
 
         def keep():
             with _lock:
@@ -2157,12 +2213,16 @@ async def run_prolog(rid):
                 if prolog(r, cur, story) and cur.get("vorlesen"):
                     e = cur["log"][-1]
                     said.extend(speak_parts(r, e["text"], e.get("npc") or []))
+                if story and story["bild"]:
+                    bild.extend(queue_scene(r, d, rid, cur, story["bild"]) or ())
                 cur["dm"] = ""
                 cur["zug_t"] = time.time()            # the turn's time starts with the opening read
                 _write(d)
         await asyncio.to_thread(keep)
         if said:
             spawn(speak_turn(rid, 0, said), name="dungeon")
+        if bild:
+            spawn(paint_scene(rid, *bild), name="dungeon-bild")
         print(f"dungeon: prolog | {why} | {round((time.perf_counter() - t0) * 1000)} ms", flush=True)
     finally:
         _running.discard(rid)
@@ -2448,11 +2508,336 @@ async def hear(rid, wav):
     return {"text": text}
 
 
+# ---------------------------------------------------------------- pictures (Stufe 3)
+def pictures_on(uid):
+    """Pictures only with „Bilder malen“ (the admin's switch and the host's profile); else the game runs without."""
+    import bilder
+    return features.allowed(bilder.KEY, uid)
+
+
+def style(r, rd):
+    """The fixed style in front of every scene: the world's (welten[].bildstil, the admin may change it), the picture
+    book for the youngest tone."""
+    if rd.get("ton") == min(t["id"] for t in r["toene"]):
+        return BILD_KIND
+    welt = _by(r, "welten").get(rd.get("welt")) or {}
+    return welt.get("bildstil") or BILD_STIL
+
+
+def picture_text(r, rd, text):
+    """The model's (or the scene's) description of a picture, checked like a picture wish: plain, BILD_MAX, no word
+    of the tone, „nie“ or the story's taboos, nothing of „Bilder malen“'s word list, no name of a person the Spark
+    knows. Returns (text, "") or ("", why)."""
+    import bilder
+    t = plain(text, BILD_MAX)
+    if len(t) < 8:
+        return "", "leer"
+    if bad_words(r, rd, t):
+        return "", "wortliste"
+    why = bilder.refuse_text(rd["owner"], t)
+    return ("", why) if why else (t, "")
+
+
+def _bild_count(d):
+    """Pictures of the game today on the whole Spark (kept in the rounds file, so a restart does not reset it)."""
+    b = d.get("bilder") if isinstance(d.get("bilder"), dict) else {}
+    return b.get("n", 0) if b.get("day") == DayCounter.date() else 0
+
+
+def _bild_take(d):
+    d["bilder"] = {"day": DayCounter.date(), "n": _bild_count(d) + 1}
+
+
+def may_paint(r, d, rid, rd):
+    """Why the round may not paint a scene now ("" = it may): aus (no „Bilder malen“), malt (one is on its way),
+    abstand (BILD_ABSTAND turns since the last one), runde (BILDER_RUNDE), tag (the day's limit), voll (the heavy
+    jobs' queue)."""
+    import schwer
+    if not pictures_on(rd["owner"]):
+        return "aus"
+    if rid in _bilder_jobs:
+        return "malt"
+    if rd["zug"] - rd.get("bild_zug", -BILD_ABSTAND) < BILD_ABSTAND:
+        return "abstand"
+    if rd.get("bilder_n", 0) >= BILDER_RUNDE:
+        return "runde"
+    if _bild_count(d) >= r["grenzen"].get("bilder_tag", BILDER_TAG):
+        return "tag"
+    if schwer.full():
+        return "voll"
+    return ""
+
+
+def queue_scene(r, d, rid, rd, text):
+    """Inside the lock: a scene picture from this description when the limits allow; returns (bid, prompt) to paint
+    (paint_scene, in the background) or None. The turn counts from here, so the limits hold before it is painted."""
+    if not text or may_paint(r, d, rid, rd):
+        return None
+    bid = "b" + os.urandom(4).hex()
+    rd.update(bild_zug=rd["zug"], bilder_n=rd.get("bilder_n", 0) + 1)
+    _bild_take(d)
+    _bilder_jobs[rid] = secrets.token_hex(6)
+    return bid, f"{style(r, rd)}, {text}, {BILD_ENDE}"
+
+
+def bild_file(name):
+    return os.path.join(BILD_DIR, name + ".png")
+
+
+def _bild_save(name, png):
+    os.makedirs(BILD_DIR, mode=0o700, exist_ok=True)
+    with open(bild_file(name) + ".neu", "wb") as f:
+        f.write(png)
+    os.chmod(bild_file(name) + ".neu", 0o600)
+    os.replace(bild_file(name) + ".neu", bild_file(name))
+
+
+def _bild_rm(name):
+    try:
+        os.remove(bild_file(name))
+    except FileNotFoundError:
+        pass
+
+
+def _bild_drop(rid, keep=()):
+    """The round's scene pictures, but those in keep (bids)."""
+    try:
+        names = os.listdir(BILD_DIR)
+    except FileNotFoundError:
+        return
+    for f in names:
+        if f.startswith(rid + "-") and f[len(rid) + 1:-4] not in keep:
+            _bild_rm(f[:-4])
+
+
+async def _paint(jid, prompt, w, h):
+    """One picture on the heavy jobs' one place (schwer.py, the voice first, Wartungspause „bild“), checked by the
+    picture service (bilder.paint: NSFW above its limit and a missing check give no picture). Returns the PNG or
+    raises ValueError(why)."""
+    import bilder
+    import schwer
+    import vorrang
+    import wartung
+    await vorrang.quiet("Bild malen")
+
+    async def once():
+        await vorrang.quiet("Bild malen")
+        if wartung.paused("bild"):
+            raise ValueError("wartung")
+        return await bilder.paint(prompt, w, h)
+    try:
+        png, _ = await asyncio.wait_for(schwer.run("bild", jid, time.time(), once), bilder.JOB_SECONDS + schwer.WAIT_S)
+    except asyncio.TimeoutError:
+        raise ValueError("zeit")
+    return png
+
+
+def _bild_why(e):
+    why = str(e)
+    return why if why in BILD_GRUENDE else "dienst"
+
+
+async def paint_scene(rid, bid, prompt):
+    """The scene picture in the background: kept as STATE/dungeon-bild/<rid>-<bid>.png, the round's log gets it at
+    its turn. Never raises."""
+    t0 = time.perf_counter()
+    why = "ok"
+    try:
+        png = await _paint(_bilder_jobs.get(rid) or secrets.token_hex(6), prompt, BILD_W, BILD_H)
+
+        def keep():
+            with _lock:
+                d = _read()
+                rd = d["runden"].get(rid)
+                if not rd or rd["status"] == "ende":
+                    return False
+                _bild_save(f"{rid}-{bid}", png)
+                rd["bilder"] = (rd.get("bilder") or []) + [{"b": bid, "n": rd["zug"], "ort": rd["szene"].get("ort", "")}]
+                _bild_drop(rid, {x["b"] for x in rd["bilder"]})
+                _log(rd, "bild", b=bid, ort=rd["szene"].get("ort", ""))
+                _write(d)
+                return True
+        if not await asyncio.to_thread(keep):
+            why = "runde zu"
+    except ValueError as e:
+        why = _bild_why(e)
+    except Exception:   # noqa: BLE001 - every picture ends with a journal line
+        why = "dienst"
+    finally:
+        _bilder_jobs.pop(rid, None)
+    _day.bump("gemalt" if why == "ok" else "bild_weg" if why in ("pruefung", "ohne_pruefung") else "bild_aus")
+    print(f"dungeon: bild | {why} | szene | {round((time.perf_counter() - t0) * 1000)} ms", flush=True)
+
+
+def paint_now(owner, rid):
+    """The host's „Szenenbild jetzt malen“: the model's last description, else the scene's place and mood; the same
+    limits. Returns (bid, prompt) or raises ValueError(why)."""
+    r = rules()
+    with _lock:
+        d = _read()
+        rd = _round(d, rid)
+        if rd["owner"] != owner or rd["status"] != "laeuft":
+            raise LookupError("gastgeber")
+        why = may_paint(r, d, rid, rd)
+        text = ""
+        if not why:
+            text, why = picture_text(r, rd, rd.get("bild_text") or ", ".join(x for x in (rd["szene"].get("ort"), rd["szene"].get("stimmung")) if x))
+        if why:
+            print(f"dungeon: bild | abgelehnt | {why}", flush=True)
+            raise ValueError(why)
+        job = queue_scene(r, d, rid, rd, text)
+        _write(d)
+    print("dungeon: bild | knopf", flush=True)
+    return job
+
+
+def portrait_text(r, h):
+    """The fixed portrait from the hero's people, class and sentence (English names; the sentence checked)."""
+    v, k = _by(r, "voelker")[h["volk"]], _by(r, "klassen")[h["klasse"]]
+    return f"{PORTRAET_STIL}, a {v['name'][1].lower()} {k['name'][1].lower()}" + (f", {h['satz']}" if h.get("satz") else "")
+
+
+def queue_portrait(rid, pid):
+    """A seat asks for its hero's portrait: once per level (h["bild"] holds the level it was painted at), with the
+    day's limit and „Bilder malen“ of the host. Returns (hid, prompt) or raises ValueError(why)."""
+    import schwer
+    r = rules()
+    with _lock:
+        d = _read()
+        rd = _round(d, rid)
+        h = (rd["plaetze"].get(pid) or {}).get("held")
+        if not h or rd["status"] != "laeuft":
+            raise LookupError("held")
+        key = "h:" + h["hid"]
+        why = ("aus" if not pictures_on(rd["owner"]) else "malt" if key in _bilder_jobs else
+               "stufe" if h.get("bild") == h["stufe"] else
+               "tag" if _bild_count(d) >= r["grenzen"].get("bilder_tag", BILDER_TAG) else "voll" if schwer.full() else "")
+        text = ""
+        if not why:
+            text, why = picture_text(r, rd, portrait_text(r, h))
+        if why:
+            print(f"dungeon: portraet | abgelehnt | {why}", flush=True)
+            raise ValueError(why)
+        _bild_take(d)
+        _bilder_jobs[key] = secrets.token_hex(6)
+        _write(d)
+    return h["hid"], f"{text}, {BILD_ENDE}"
+
+
+async def paint_portrait(rid, hid, prompt):
+    """The portrait in the background: STATE/dungeon-bild/held-<hid>.png, the hero keeps the level it was painted
+    at (the kept hero of a profile too). Never raises."""
+    t0 = time.perf_counter()
+    key = "h:" + hid
+    why = "ok"
+    try:
+        png = await _paint(_bilder_jobs.get(key) or secrets.token_hex(6), prompt, PORTRAET, PORTRAET)
+
+        def keep():
+            with _lock:
+                d = _read()
+                rd = d["runden"].get(rid)
+                p = next((p for p in (rd or {}).get("plaetze", {}).values() if (p.get("held") or {}).get("hid") == hid), None)
+                if not p:
+                    return False
+                _bild_save("held-" + hid, png)
+                p["held"]["bild"] = p["held"]["stufe"]
+                _write(d)
+                if p.get("uid"):
+                    keep_hero(p["uid"], p["held"])
+                return True
+        if not await asyncio.to_thread(keep):
+            why = "runde zu"
+    except ValueError as e:
+        why = _bild_why(e)
+    except Exception:   # noqa: BLE001
+        why = "dienst"
+    finally:
+        _bilder_jobs.pop(key, None)
+    _day.bump("gemalt" if why == "ok" else "bild_weg" if why in ("pruefung", "ohne_pruefung") else "bild_aus")
+    print(f"dungeon: bild | {why} | portraet | {round((time.perf_counter() - t0) * 1000)} ms", flush=True)
+
+
+def bild_of(rid, pid, bid):
+    """A scene picture of the round for a seat of it, or LookupError."""
+    rd = _round(_read(), rid)
+    if pid not in rd["plaetze"] or not _BID.fullmatch(str(bid)) or bid not in {x["b"] for x in rd.get("bilder") or []}:
+        raise LookupError("bild")
+    return _png(f"{rid}-{bid}")
+
+
+def portrait_of(rid, pid, of):
+    """The portrait of the hero at seat of, for a seat of the same round."""
+    rd = _round(_read(), rid)
+    h = (rd["plaetze"].get(of) or {}).get("held")
+    if pid not in rd["plaetze"] or not h or h.get("bild") is None:
+        raise LookupError("bild")
+    return _png("held-" + h["hid"])
+
+
+def _png(name):
+    try:
+        with open(bild_file(name), "rb") as f:
+            return f.read()
+    except FileNotFoundError:
+        raise LookupError("bild")
+
+
+def cover(rid, rd, kid, c):
+    """Inside end_chapter: the chapter's last scene picture becomes its cover k-<kid>-<n>.png; the campaign keeps the
+    covers of its last KAPITEL_BILDER chapters."""
+    last = (rd.get("bilder") or [])[-1:]
+    if not last:
+        return
+    try:
+        png = _png(f"{rid}-{last[0]['b']}")
+    except LookupError:
+        return
+    n = rd.get("kapitel", 1)
+    _bild_save(f"{kid}-{n}", png)
+    have = sorted(set(c.get("titelbilder") or []) | {n})
+    for x in have[:-KAPITEL_BILDER]:
+        _bild_rm(f"{kid}-{x}")
+    c["titelbilder"] = have[-KAPITEL_BILDER:]
+
+
+def visit(rd, ort):
+    """The map: the places the group went through, in order, without the model (a place again only after another)."""
+    if ort and (rd.get("orte") or [""])[-1] != ort:
+        rd["orte"] = ((rd.get("orte") or []) + [ort])[-ORTE_KARTE:]
+
+
+def _bild_sweep(d, now):
+    """At most every hour: portraits and covers nobody keeps any more (a hero deleted, a guest's Figur-Code expired,
+    a campaign gone)."""
+    if now - _sweep[0] < 3600:
+        return
+    _sweep[0] = now
+    try:
+        names = os.listdir(BILD_DIR)
+    except FileNotFoundError:
+        return
+    hids, kids = set(), set()
+    for v in d["runden"].values():
+        hids |= {p["held"]["hid"] for p in v["plaetze"].values() if p.get("held")}
+    for f in _read_fig()["figuren"].values():
+        hids.add((f.get("held") or {}).get("hid"))
+    for uid in profiles.user_ids():
+        hids |= {h["hid"] for h in heroes(uid)}
+        for kid, c in campaigns(uid).items():
+            kids.add(kid)
+            hids |= {h.get("hid") for h in c.get("gaeste") or []}
+    for f in names:
+        if f.startswith("held-") and f[5:-4] not in hids or _KID.fullmatch(f.split("-")[0]) and f.split("-")[0] not in kids:
+            _bild_rm(f[:-4])
+
+
 # ---------------------------------------------------------------- what a seat sees
 def view(rid, pid, now=None):
     r = rules()
     now = time.time() if now is None else now
-    rd = _read()["runden"].get(rid)
+    d = _read()
+    rd = d["runden"].get(rid)
     if not rd or pid not in rd["plaetze"]:
         raise LookupError("runde")
     _seen[pid] = now
@@ -2485,7 +2870,33 @@ def view(rid, pid, now=None):
             "markt": market_view(r, rd, me.get("held"), lang), "boden": [item_view(r, x, lang) for x in rd.get("boden") or []],
             "akt": min(rd.get("akt", 0) + 1, len(rd["plan"]["akte"])) if rd.get("plan") else 0,
             "akte": len(rd["plan"]["akte"]) if rd.get("plan") else 0, "erzaehlt": bool(rd.get("plan")) and rd.get("akt", 0) >= len(rd["plan"]["akte"]),
-            "plan": rd.get("plan") if host else None, "akt_min": AKT_MIN}
+            "plan": rd.get("plan") if host else None, "akt_min": AKT_MIN,
+            "bilder": [dict(x) for x in rd.get("bilder") or []][-BILDER_RUNDE:], "orte": list(rd.get("orte") or []),
+            "bild_malt": rid in _bilder_jobs, "bild_hint": _hint(rid, lang), "bilder_an": pictures_on(rd["owner"]),
+            "bild_grund": _nein(may_paint(r, d, rid, rd), lang) if host and may_paint(r, d, rid, rd) else "",
+            "portraet_malt": bool(me.get("held")) and "h:" + me["held"]["hid"] in _bilder_jobs,
+            "portraet_hint": _hint("h:" + me["held"]["hid"], lang) if me.get("held") else ""}
+
+
+BILD_NEIN = {"aus": ("Für diese Runde ist „Bilder malen“ nicht freigegeben.", "Painting pictures is not released for this round."),
+             "malt": ("Ein Bild ist schon unterwegs.", "A picture is on its way already."),
+             "abstand": (f"Höchstens ein Szenenbild je {BILD_ABSTAND} Züge.", f"At most one scene picture every {BILD_ABSTAND} turns."),
+             "runde": (f"Diese Runde hat schon {BILDER_RUNDE} Bilder.", f"This round has {BILDER_RUNDE} pictures already."),
+             "tag": ("Das Tageslimit für Bilder des Spiels ist erreicht.", "The game's picture limit for today is reached."),
+             "voll": ("Die Warteschlange für schwere Aufträge ist voll; bitte später noch einmal.", "The queue of heavy jobs is full; please try again later."),
+             "stufe": ("Das Porträt lässt sich erst auf der nächsten Stufe neu malen.", "The portrait can be painted again on the next level."),
+             "leer": ("Zu dieser Szene gibt es noch keine Beschreibung.", "There is no description of this scene yet."),
+             "wortliste": ("Das malt das Spiel nicht: die Beschreibung fällt unter die festen Regeln.", "The game does not paint that: the description falls under the fixed rules."),
+             "person": ("Bilder von Personen, die der Spark kennt, malt das Spiel nicht.", "The game does not paint people the Spark knows by name.")}
+
+
+def _nein(why, lang):
+    return BILD_NEIN.get(why, BILD_NEIN["aus"])[1 if lang == "en" else 0]
+
+
+def _hint(key, lang):
+    import schwer
+    return schwer.hint(_bilder_jobs[key], lang == "en") if key in _bilder_jobs else ""
 
 
 def hero_act(rid, pid, b):
@@ -2873,7 +3284,7 @@ def for_live():
             "kapitel": t["kapitel"], "schreibt": len(_summing), "vorgelesen": t["vorgelesen"], "liest": len(_speaking),
             "gehoert": t["gehoert"], "geschichten": len(plans()), "akte": t["akte"], "vorschlaege": t["vorschlaege"],
             "maerkte_offen": sum(1 for v in rs if v.get("markt")), "maerkte": t["maerkte"], "kaeufe": t["kaeufe"], "verkaeufe": t["verkaeufe"],
-            "auto": t["auto"]}
+            "auto": t["auto"], "gemalt": t["gemalt"], "bild_weg": t["bild_weg"], "bild_aus": t["bild_aus"], "bild_wartet": len(_bilder_jobs)}
 
 
 def own_count(uid):
@@ -2887,6 +3298,12 @@ def own_clear(uid):
         for k, v in d["runden"].items():
             if v.get("owner") == uid:
                 _ton_drop(k)
+                _bild_drop(k)
+        for h in heroes(uid):
+            _bild_rm("held-" + h["hid"])
+        for kid, c in campaigns(uid).items():
+            for n in c.get("titelbilder") or []:
+                _bild_rm(f"{kid}-{n}")
         d["runden"] = {k: v for k, v in d["runden"].items() if v.get("owner") != uid}
         for v in d["runden"].values():
             v["plaetze"] = {k: p for k, p in v["plaetze"].items() if p.get("uid") != uid}
@@ -2948,7 +3365,7 @@ def _mine(uid, lang):
                         "kapitel": v.get("kapitel", 0), "kapitel_zu": bool(v.get("kapitel_zu")),
                         "spieler": len(seated(v)), "made": v["made"], "held": p["held"]["name"] if p.get("held") else ""})
     return {"on": True, "runden": sorted(out, key=lambda x: -x["made"]), "helden": [hero_view(r, h, lang) for h in heroes(uid)],
-            "wahl": _choices(lang), "runden_max": RUNDEN_MAX, "helden_max": HELDEN_MAX,
+            "wahl": dict(_choices(lang), bilder_an=pictures_on(uid)), "runden_max": RUNDEN_MAX, "helden_max": HELDEN_MAX,
             "kampagnen": campaign_view(r, uid, lang), "kampagnen_max": KAMPAGNEN_MAX, "bisher_max": BISHER_MAX}
 
 
@@ -3243,6 +3660,103 @@ async def ton(rid: str, n: int, request: Request, prof=Depends(own_profile)):
     return Response(wav, media_type="audio/wav", headers={"Cache-Control": "no-store"})
 
 
+def _png_out(png):
+    return Response(png, media_type="image/png", headers={"Cache-Control": "private, max-age=86400", "X-Content-Type-Options": "nosniff"})
+
+
+@router.get("/api/profile/dungeon/{rid}/bild/{b}", dependencies=[Depends(assistant)])
+async def bild(rid: str, b: str, request: Request, prof=Depends(own_profile)):
+    """A scene picture of the round, for a seat of it."""
+    uid = prof["id"]
+    _need(uid)
+    guard.limit(request, "dungeon", uid)
+    try:
+        return _png_out(await asyncio.to_thread(lambda: bild_of(rid, _seat_uid(rid, uid), b)))
+    except KNOWN as e:
+        raise _http(e)
+
+
+@router.get("/api/profile/dungeon/{rid}/portraet/{pid}", dependencies=[Depends(assistant)])
+async def portraet(rid: str, pid: str, request: Request, prof=Depends(own_profile)):
+    """The portrait of the hero at seat pid, for a seat of the same round."""
+    uid = prof["id"]
+    _need(uid)
+    guard.limit(request, "dungeon", uid)
+    try:
+        return _png_out(await asyncio.to_thread(lambda: portrait_of(rid, _seat_uid(rid, uid), pid)))
+    except KNOWN as e:
+        raise _http(e)
+
+
+async def _paint_start(request, key, go, lang):
+    """A picture asked for by a seat (host: the scene; every seat: its portrait): the limits, then in the background."""
+    guard.limit(request, "dungeonbild", key)
+    try:
+        coro = await asyncio.to_thread(go)
+    except ValueError as e:
+        _day.bump("abgelehnt")
+        raise HTTPException(409, _nein(str(e), lang))
+    except KNOWN as e:
+        raise _http(e)
+    spawn(coro, name="dungeon-bild")
+
+
+@router.post("/api/profile/dungeon/{rid}/bild", dependencies=[Depends(assistant)])
+async def bild_malen(rid: str, request: Request, prof=Depends(browser_profile)):
+    """Host: „Szenenbild jetzt malen“ (the same limits as a new place)."""
+    uid = prof["id"]
+    _need(uid)
+    b = await json_body(request, BODY)
+    await _paint_start(request, uid, lambda: paint_scene(rid, *paint_now(uid, rid)), _lang(b))
+    return await asyncio.to_thread(view, rid, _seat_uid(rid, uid))
+
+
+@router.post("/api/profile/dungeon/{rid}/portraet", dependencies=[Depends(assistant)])
+async def portraet_malen(rid: str, request: Request, prof=Depends(browser_profile)):
+    """The own hero's portrait (once per level)."""
+    uid = prof["id"]
+    _need(uid)
+    b = await json_body(request, BODY)
+    await _paint_start(request, uid, lambda: paint_portrait(rid, *queue_portrait(rid, _seat_uid(rid, uid))), _lang(b))
+    return await asyncio.to_thread(view, rid, _seat_uid(rid, uid))
+
+
+@router.get("/api/profile/dungeon/held/{hid}/bild", dependencies=[Depends(assistant)])
+async def held_bild(hid: str, request: Request, prof=Depends(own_profile)):
+    """The portrait of an own kept hero (Meine Helden, the app)."""
+    uid = prof["id"]
+    _need(uid)
+    guard.limit(request, "dungeon", uid)
+
+    def go():
+        h = next((x for x in heroes(uid) if x["hid"] == hid), None)
+        if not h or h.get("bild") is None:
+            raise LookupError("bild")
+        return _png("held-" + hid)
+    try:
+        return _png_out(await asyncio.to_thread(go))
+    except KNOWN as e:
+        raise _http(e)
+
+
+@router.get("/api/profile/dungeon/kampagne/{kid}/bild/{n}", dependencies=[Depends(assistant)])
+async def kampagne_bild(kid: str, n: int, request: Request, prof=Depends(own_profile)):
+    """The cover of chapter n of an own campaign."""
+    uid = prof["id"]
+    _need(uid)
+    guard.limit(request, "dungeon", uid)
+
+    def go():
+        _, c = _campaign(uid, kid)
+        if n not in (c.get("titelbilder") or []):
+            raise LookupError("bild")
+        return _png(f"{kid}-{n}")
+    try:
+        return _png_out(await asyncio.to_thread(go))
+    except KNOWN as e:
+        raise _http(e)
+
+
 @router.get("/api/profile/dungeon/{rid}/probe", dependencies=[Depends(assistant)])
 async def stimm_probe(rid: str, request: Request, stimme: str = "", klang: str = "", prof=Depends(own_profile)):
     """A fixed sentence in a voice the own hero at this table may take, as WAV."""
@@ -3402,6 +3916,8 @@ async def held_weg(hid: str, request: Request, prof=Depends(browser_profile)):
             if not any(h["hid"] == hid for h in hs):
                 raise LookupError("held")
             _save_heroes(uid, [h for h in hs if h["hid"] != hid])
+            if not _in_play(_read(), hid):
+                _bild_rm("held-" + hid)
         print("dungeon: held geloescht", flush=True)
         return _mine(uid, "de")
     try:
@@ -3441,7 +3957,7 @@ async def gast_platz(request: Request):
     p = rd["plaetze"][pid]
     host = profiles.by_id(rd["owner"]) or {}
     out = {"titel": rd["titel"], "von": host.get("name", ""), "frei": not p.get("held"), "until": rd["until"], "welt": rd["welt"],
-           "spieler": len(seated(rd)), "max": rules()["grenzen"]["spieler"], "wahl": _choices(rd["lang"], False),
+           "spieler": len(seated(rd)), "max": rules()["grenzen"]["spieler"], "wahl": dict(_choices(rd["lang"], False), bilder_an=pictures_on(rd["owner"])),
            "profil_genommen": bool(p.get("uid")), "kapitel": rd.get("kapitel", 0),
            "kampagne_helden": [] if p.get("held") else [hero_view(rules(), h, rd["lang"], full=False) for h in
                                                          await asyncio.to_thread(campaign_heroes, rd)]}
@@ -3513,6 +4029,34 @@ async def gast_ton(request: Request):
     except KNOWN as e:
         raise _http(e)
     return Response(wav, media_type="audio/wav", headers={"Cache-Control": "no-store"})
+
+
+@router.post("/api/dungeon/bild")
+async def gast_bild(request: Request):
+    """{"code", "b"}: a scene picture of the seat's round."""
+    b, rid, pid = await _guest(request)
+    try:
+        return _png_out(await asyncio.to_thread(bild_of, rid, pid, b.get("b")))
+    except KNOWN as e:
+        raise _http(e)
+
+
+@router.post("/api/dungeon/portraet")
+async def gast_portraet(request: Request):
+    """{"code", "pid"}: the portrait of a hero of the seat's round."""
+    b, rid, pid = await _guest(request)
+    try:
+        return _png_out(await asyncio.to_thread(portrait_of, rid, pid, str(b.get("pid") or "")))
+    except KNOWN as e:
+        raise _http(e)
+
+
+@router.post("/api/dungeon/portraet/malen")
+async def gast_portraet_malen(request: Request):
+    """{"code"}: the guest's own hero's portrait (once per level, the host's „Bilder malen“ and the game's limits)."""
+    b, rid, pid = await _guest(request)
+    await _paint_start(request, None, lambda: paint_portrait(rid, *queue_portrait(rid, pid)), _lang(b))
+    return await asyncio.to_thread(view, rid, pid)
 
 
 @router.post("/api/dungeon/probe")
