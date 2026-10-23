@@ -14,7 +14,7 @@ function dmMeKurz(v,mode){const h=v.ich;if(!h)return '';const open=v.status!=='e
     <div class="dm-fknoepfe"><button type="button" class="b p" data-dmfen="bogen">📜 ${esc(t('Heldenbogen','Hero sheet'))}</button>${m?`<button type="button" class="b" data-dmfen="haendler">⚖ ${esc(t('Händler','Merchant'))}</button>`:''}${v.karte?`<button type="button" class="b" data-dmfen="karte">🗺 ${esc(t('Karte','Map'))}</button>`:''}</div></div>`}
 // the merchant as big cards: picture in the rarity's frame, lines, price; below what the own bag can sell or have named
 function dmShop(v){const h=v.ich,m=v.markt;
-  const ware=m.ware.map(it=>`<div class="dm-ware ${DMSEL[it.selten]||''}" data-dmi="${esc(it.i)}"><span class="dm-ware-b">${dmDing(it)}</span><b>${esc(it.name)}</b><small>${esc(it.selten_name)}${it.kg?' · '+String(it.kg).replace('.',L==='en'?'.':',')+' kg':''}</small>${it.satz?`<small class="dm-isatz">„${esc(it.satz)}“</small>`:''}<small>${it.zeilen.map(esc).join(' · ')}</small>
+  const ware=m.ware.map(it=>`<div class="dm-ware ${DMSEL[it.selten]||''}" data-dmi="${esc(it.i)}"><span class="dm-ware-b">${dmDing(it)}</span><b>${esc(it.name)}</b><small>${esc(it.selten_name)}${it.kg?' · '+String(it.kg).replace('.',L==='en'?'.':',')+' kg':''}</small>${it.satz?`<small class="dm-isatz">„${esc(it.satz)}“</small>`:''}${it.info?`<small class="dm-iinfo">${esc(it.info)}</small>`:''}<small>${it.zeilen.map(esc).join(' · ')}</small>
     <button type="button" class="b p" data-dmhero="kaufen" data-i="${esc(it.i)}"${h.gold<it.preis?' disabled':''}>${esc(t('Kaufen','Buy'))} · ${it.preis} ${esc(t('Gold','gold'))}</button></div>`).join('');
   const mine=h.tasche.filter(it=>m.verkauf[it.i]||m.erkennen[it.i]).map(it=>dmItem(it,`<div class="dm-iacts">${m.verkauf[it.i]?`<button type="button" class="b" data-dmhero="verkaufen" data-i="${esc(it.i)}">${esc(t('Verkaufen','Sell'))} · ${m.verkauf[it.i]} ${esc(t('Gold','gold'))}</button>`:''}${m.erkennen[it.i]?`<button type="button" class="b" data-dmhero="erkennen" data-i="${esc(it.i)}"${h.gold<m.erkennen[it.i]?' disabled':''}>${esc(t('Erkennen lassen','Have it named'))} · ${m.erkennen[it.i]} ${esc(t('Gold','gold'))}</button>`:''}</div>`)).join('');
   return `${m.satz?`<p class="dm-isatz">„${esc(m.satz)}“</p>`:''}<small class="mut">${esc(t('Preise legt das Panel fest.','The panel sets the prices.'))}${m.rabatt?' '+esc(t('Dein Charisma: '+m.rabatt+' % Rabatt.','Your Charisma: '+m.rabatt+' % off.')):''} · ${esc(t('Dein Gold','Your gold'))}: <b>${h.gold}</b></small>
@@ -32,7 +32,7 @@ function dmDetail(v,f){const it=f.it,h=v.ich,open=v.status!=='ende',kg=it.kg?Str
   const wo={tasche:t('In deiner Tasche','In your bag'),an:t('Angelegt','Equipped'),ware:t('Beim Händler','At the merchant'),boden:t('Liegt hier','Lying here')}[f.wo];
   return `<div class="dm-detail ${DMSEL[it.selten]||''}"><span class="dm-detail-b">${dmDing(it)}</span><div class="dm-detail-t"><small class="mut">${esc(wo)}</small>
     <div><b class="dm-detail-n">${esc(it.name)}</b>${it.n>1?` <span class="pill">×${it.n}</span>`:''}</div><small>${esc(it.selten_name||'')}${kg?' · '+kg:''}</small>
-    ${it.satz?`<p class="dm-isatz">„${esc(it.satz)}“</p>`:''}${(it.zeilen||[]).length?`<ul class="dm-detail-w">${it.zeilen.map(z=>`<li>${esc(z)}</li>`).join('')}</ul>`:''}
+    ${it.satz?`<p class="dm-isatz">„${esc(it.satz)}“</p>`:''}${it.info?`<p class="dm-iinfo">${esc(it.info)}</p>`:''}${(it.zeilen||[]).length?`<ul class="dm-detail-w">${it.zeilen.map(z=>`<li>${esc(z)}</li>`).join('')}</ul>`:''}
     ${it.u?`<small class="mut">${esc(t('Noch nicht erkannt: was es kann, zeigt sich erst, wenn es jemand erkennt.','Not yet identified: what it does shows only once someone identifies it.'))}</small>`:''}${acts}</div></div>`}
 const DMFENK={bogen:'dm-fen dm-fen-bogen',haendler:'dm-fen dm-fen-haendler',ding:'dm-fen dm-fen-ding'};
 function dmFenBox(kind,title,body,neu){return `<div class="${DMFENK[kind]}" data-dmfenbg="${kind==='ding'?'ding':'w'}"><div class="dm-fen-box" role="dialog" aria-modal="true" aria-label="${esc(title)}">
@@ -64,3 +64,21 @@ document.body.addEventListener('click',e=>{const b=e.target.closest('#dmview [da
 document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;
   for(const m of ['g','p']){const W=DMW[m];if((W.w||W.ding)&&document.querySelector(m==='g'?'#dgcard .dm-fen':'#dmview .dm-fen')){dmFenZu(m,W.ding?'ding':'w');return}}
   const k=document.querySelector('.dmk.gross');if(k){DMK.gross=false;k.classList.remove('gross')}});
+// a tap on a value, life, level, protection or a worn thing explains it right below (Dominik 2026-10-23 „bei klicken
+// auf werte etc. soll erklärt werden was das ist und wofür“); one open per table, a second tap closes it
+const DMERK={p:'',g:''};
+function dmErkFix(){return {leben:t('Leben: sinkt durch Treffer und Fallen, Schutz mindert jeden Treffer. Heiltränke, Heilzauber und eine neue Stufe füllen es wieder auf.','Life: drops with hits and traps, protection softens every hit. Healing potions, healing spells and a new level fill it up again.'),
+  stufe:t('Stufe: wächst mit Erfahrung (EP) für gelungene Proben, besiegte Gegner und erreichte Ziele. Jede neue Stufe bringt mehr Leben und einen Punkt für einen Wert.','Level: grows with experience (XP) for checks passed, foes beaten and goals reached. Every new level brings more life and a point for a value.'),
+  schutz:t('Schutz: alles, was du an Rüstung, Helm, Schild, Handschuhen und Stiefeln trägst. Jeder Treffer kostet so viel weniger Leben, mindestens 1.','Protection: all the armour, helmet, shield, gloves and boots you wear. Every hit costs that much less life, at least 1.'),
+  gold:t('Gold: zum Kaufen beim Händler und zum Tauschen. Ein hoher Charisma-Bonus gibt Rabatt.','Gold: for buying from the merchant and for trading. A high Charisma bonus gives a discount.')}}
+function dmErkWert(x,bonus){return `<b>${esc(x.name)} ${x.wert}</b> · ${esc(x.info||'')} <small class="mut">${esc(t('Bei jeder Probe kommt ','On every check ')+dmSign(bonus)+t(' zum Würfel (W20) dazu, mit Ausrüstung und Segen.',' is added to the d20, with equipment and blessings.'))}</small>`}
+function dmErkBtn(mode,key,inner,label){const on=DMERK[mode]===key;return `<button type="button" class="dm-erkb${on?' on':''}" data-dmerk="${esc(key)}" aria-expanded="${on}" aria-label="${esc(label)}">${inner}</button>`}
+function dmErkBox(mode,prefix,map){const k=DMERK[mode];return k&&k.startsWith(prefix)&&map[k.slice(prefix.length)]?`<div class="dm-erk" role="note">${map[k.slice(prefix.length)]}</div>`:''}
+// what a seat card can explain: the six values, protection, life, level and every worn thing
+function dmErkSeat(p){const f=dmErkFix(),m={leben:esc(f.leben),stufe:esc(f.stufe),schutz:esc(f.schutz)};
+  if(p.karte){p.karte.werte.forEach(x=>{m['w:'+x.kurz]=dmErkWert(x,x.mod)});p.karte.dinge.forEach((d,i)=>{m['d:'+i]=`<b>${esc(d.name)}</b> · ${esc(d.info||'')}${d.zeilen.length?` <small class="mut">${d.zeilen.map(esc).join(' · ')}</small>`:''}`})}
+  return m}
+document.body.addEventListener('click',e=>{const b=e.target.closest('#dmview [data-dmerk],#dgcard [data-dmerk]');if(!b)return;
+  const mode=b.closest('#dgcard')?'g':'p',k=b.dataset.dmerk;DMERK[mode]=DMERK[mode]===k?'':k;mode==='g'?dgDraw():dmDraw()});
+// a tool that helped a check, or broke on a natural 1
+function dmTool(e){return e.werkzeug?`<small class="pill ${e.kaputt?'warn':'ok'}">🔧 ${esc(e.werkzeug)} ${esc(e.kaputt?t('zerbrochen','broke'):t('hilft','helps'))}</small> `:''}

@@ -12,12 +12,13 @@ const DMA={p:{n:null,el:null,url:''},g:{n:null,el:null,url:''},rec:null,parts:[]
 const DMHILFE=[['Karte und Gewölbe','Map and vaults','Die Karte zeigt, wo ihr seid, und wächst mit, je mehr ihr entdeckt. Tippe unter „Von hier aus“ einen Weg an, dann steht er in deinem Feld. In Gewölben würfelt das Panel Fallen; die Antwort auf ein Rätsel schreibst du einfach in deine Aktion.','The map shows where you are and grows as you explore. Tap a way under "From here" to put it in your field. In vaults the panel rolls the traps; just write the answer to a riddle into your action.'],
   ['Was du schreibst','What you write','Was deine Figur tut oder sagt, in ein, zwei Sätzen: „Ich schleiche zur Tür und lausche.“ Der Dungeon-Master erzählt, was daraus wird.','What your character does or says, in a sentence or two: "I sneak to the door and listen." The Dungeon Master tells what comes of it.'],
   ['Wann es weitergeht','When it goes on','Alle schreiben gleichzeitig. Haben alle gehandelt oder ist die Zugzeit um, erzählt der Dungeon-Master. „Warten auf“ zeigt, wer noch fehlt; bis dahin kannst du deine Aktion ändern.','Everyone writes at the same time. Once all have acted or the turn time is up, the Dungeon Master narrates. "Waiting for" shows who is still missing; until then you can change your action.'],
-  ['Würfeln','Dice','Würfeln musst du nicht, das macht das Panel: ein W20 plus der Bonus deines Werts (16 gibt +3) gegen eine Schwierigkeit. Bei Vorteil würfelt es zweimal und nimmt den besseren Wurf, bei Nachteil den schlechteren.','You never roll yourself, the panel does: a d20 plus your value\'s bonus (16 gives +3) against a difficulty. With advantage it rolls twice and keeps the better roll, with disadvantage the worse.'],
+  ['Würfeln','Dice','Würfeln musst du nicht, das macht das Panel: ein W20 plus der Bonus deines Werts (16 gibt +3) gegen eine Schwierigkeit. Bei Vorteil würfelt es zweimal und nimmt den besseren Wurf, bei Nachteil den schlechteren. Kommt deine Probe, tippst du auf den großen Würfel oder schüttelst das Handy: er rollt auf die Zahl des Panels, die Leiste zeigt, wie knapp es war.','You never roll yourself, the panel does: a d20 plus your value\'s bonus (16 gives +3) against a difficulty. With advantage it rolls twice and keeps the better roll, with disadvantage the worse. When your check comes, tap the big die or shake your phone: it rolls onto the panel\'s number, the bar shows how close it was.'],
   ['Leben, Beute, Tauschen','Life, loot, trading','Der Balken zeigt dein Leben. Beute landet in deiner Tasche (bis 12 Plätze, gleiche Tränke stapeln sich); Tränke und Zauber nutzt du dort. Tauschen geht per Angebot: erst wenn der andere annimmt, tauscht das Panel.','The bar shows your life. Loot lands in your bag (up to 12 places, the same potions stack); you use potions and spells from there. Trading works by offer: only when the other one accepts does the panel swap.'],
   ['Ausrüstung und Gewicht','Equipment and weight','„📜 Heldenbogen“ in der Seitenspalte öffnet deinen Bogen groß, ein Tipp auf ein Ding zeigt Bild, Beschreibung und Werte. Neun Plätze wie bei D&D: Ziehe ein Ding aus der Tasche auf seinen Platz oder tippe „Anlegen“. Du trägst Stärke mal 3,75 kg; ab drei Vierteln bist du belastet und würfelst Geschick mit Nachteil. Was nicht mehr passt, bleibt unter „Liegt hier“ am Boden.','"📜 Hero sheet" in the side column opens your sheet large, a tap on a thing shows its picture, description and values. Nine places as in D&D: drag a thing from the bag onto its place or tap "Equip". You carry strength times 3.75 kg; from three quarters you are burdened and roll dexterity with disadvantage. What no longer fits stays on the ground under "Lying here".'],
   ['Händler','Merchants','In Siedlungen bietet ein Händler Waren an, „⚖ Händler“ zeigt sie groß. Die Preise macht das Panel, Charisma gibt bis 20 % Rabatt; Verkaufen bringt die Hälfte. Sehr seltene Magie ist erst unerkannt: Eine Rolle des Erkennens oder der Händler nennt, was sie kann.','In settlements a merchant offers goods, "⚖ Merchant" shows them large. The panel sets the prices, Charisma gives up to 20 % off; selling fetches half. Very rare magic is unknown at first: a scroll of knowing or the merchant names what it does.'],
+  ['Werte, Dinge und Werkzeuge','Values, things and tools','Tippe auf einen Wert, auf Leben, Stufe, Schutz oder ein getragenes Ding: darunter steht, was es ist und wofür es zählt. Nennst du in deiner Aktion ein Werkzeug wie Seil oder Dietrich und passt die Probe, gibt es +2; bei einer 1 kann es zerbrechen.','Tap a value, life, level, protection or a worn thing: below it says what it is and what it counts for. If your action names a tool like a rope or lockpick and the check fits, you get +2; on a 1 it can break.'],
   ['Warten und Tischgespräch','Waiting and table talk','Während der Dungeon-Master erzählt, zeigt der Tisch die Würfe schon vorab, dazu Wissenskarten der Welt. Im „💬 Tischgespräch“ unter dem Feld redet ihr miteinander; der Dungeon-Master liest das nie.','While the Dungeon Master narrates, the table already shows the rolls, plus lore cards of the world. In the "💬 Table talk" below the field you talk to each other; the Dungeon Master never reads it.'],
-  ['Hören und Sprechen','Listen and speak','„🔊 Hören“ liest die Erzählung vor. Mit 🎤 sprichst du deine Aktion; der Text landet im Feld, abgeschickt wird mit „Handeln“.','"🔊 Listen" reads the narration aloud. With 🎤 you speak your action; the text lands in the field, "Act" sends it.'],
+  ['Hören und Sprechen','Listen and speak','„🔊 Hören“ liest die Erzählung vor, jede Geschichte mit ihrer eigenen Erzählerstimme und jede Figur mit ihrer eigenen (wenn die Sprachausgabe Stimmen aus Beschreibungen machen kann). Mit 🎤 sprichst du deine Aktion; der Text landet im Feld, abgeschickt wird mit „Handeln“.','"🔊 Listen" reads the narration aloud, every story with its own narrator voice and every character with its own (when the speech output can make voices from descriptions). With 🎤 you speak your action; the text lands in the field, "Act" sends it.'],
   ['Als Gast','As a guest','Am Ende bekommst du einen Figur-Code. Damit spielt dein Held beim nächsten Mal weiter, auch in einem eigenen Profil. Schreib ihn dir auf.','At the end you get a hero code. With it your hero plays on next time, also in a profile of your own. Write it down.']];
 function dmHilfe(){if(DMA.hilfe===null){let seen=false;try{seen=localStorage.getItem('dm-hilfe')==='1';localStorage.setItem('dm-hilfe','1')}catch(e){}DMA.hilfe=!seen}
   return DMA.hilfe?`<div class="dm-guide"><div class="dm-gtop"><h5>${esc(t('So spielst du','How to play'))}</h5><button type="button" class="b" data-dmhilfe="0">${esc(t('Schließen','Close'))}</button></div><div class="dm-gl">${DMHILFE.map(x=>`<div><b>${esc(t(x[0],x[1]))}</b><small>${esc(t(x[2],x[3]))}</small></div>`).join('')}</div></div>`:''}
@@ -53,11 +54,11 @@ function dmOpen(){if(!PROFILE)return;const root=$('dmroot'),box=$('dmbox');if(bo
   dmLoad()}
 window.dmOpen=dmOpen;
 async function dmLoad(){if(!DM.on)return;const seq=++DM.seq;const {r,d}=await apiTry('/api/profile/dungeon?lang='+dmLang());if(seq!==DM.seq)return;
-  if(r.ok){DM.data=d;DM.err=false;DM.msg=''}else{DM.msg=errSay(r.status,d.detail,'');DM.err=true}
+  if(r.ok){DM.data=d;DM.err=false;DM.msg=''}else{DM.msg=dmErr(r.status,d.detail);DM.err=true}
   if(DM.rid&&!(DM.data&&DM.data.runden||[]).some(x=>x.rid===DM.rid)){DM.rid='';DM.v=null}
   if(DM.rid)await dmRound();else dmDraw()}
 async function dmRound(){if(!DM.rid)return;const seq=++DM.seq;const {r,d}=await apiTry('/api/profile/dungeon/'+DM.rid);if(seq!==DM.seq)return;
-  if(r.ok){DM.v=d;DM.at=Date.now()}else{DM.rid='';DM.v=null;DM.msg=errSay(r.status,d.detail,'');DM.err=true}dmDraw();
+  if(r.ok){DM.v=d;DM.at=Date.now()}else{DM.rid='';DM.v=null;DM.msg=dmErr(r.status,d.detail);DM.err=true}dmDraw();
   if(!r.ok){const m=document.querySelector('#dmview .dmmsg');if(m)m.scrollIntoView({block:'center',behavior:'smooth'})}}
 function dmDraw(){const w=$('dmview');if(w)dmPaint(w)}
 function dmPaint(w){const D=DM.data;w.classList.remove('dm-voll');delete w.dataset.welt;dmLook(w,D&&dmWelt(D.wahl,DM.welt).farben);
@@ -66,6 +67,65 @@ function dmPaint(w){const D=DM.data;w.classList.remove('dm-voll');delete w.datas
   if(DM.v){dmTable(w,DM.v,'p');return}
   w.innerHTML=dmTop(t('Runden, Kampagnen und eine neue Runde','Rounds, campaigns and a new round'))+dmRounds(D)+dmCampaigns(D)+dmNew(D)+dmMsg(DM)}
 const dmMsg=S=>`<div class="dmmsg ${S.err?'err':'mut'}" role="status">${esc(S.msg)}</div>`;
+// a refusal of the panel as a sentence with what to do: the reason word of the rule (dungeon._http, one per raise in
+// dungeon*.py, test_dungeon checks every one has its sentence) or the coarse word
+const DMGRUND={
+  'held spielt':['Dieser Held spielt gerade in einer anderen Runde. Beende sie dort oder wähle einen anderen Helden.','This hero is playing in another round right now. End it there or pick another hero.'],
+  'besetzt':['Dieser Platz ist schon besetzt, oder du sitzt schon an diesem Tisch.','This seat is taken already, or you already sit at this table.'],
+  'runden':['Du hast schon so viele offene Runden, wie gehen. Beende eine alte Runde, dann klappt es.','You already have as many open rounds as allowed. End an old round, then it works.'],
+  'helden':['Deine Heldenliste ist voll. Lösche einen alten Helden oder spiele mit einem vorhandenen.','Your hero list is full. Delete an old hero or play with one you have.'],
+  'kampagnen':['Du hast schon so viele Kampagnen, wie gehen. Lösche eine alte Kampagne.','You already have as many campaigns as allowed. Delete an old campaign.'],
+  'geschichten':['Die Liste der Geschichten ist voll. Lösche zuerst eine.','The list of stories is full. Delete one first.'],
+  'figuren':['Gerade warten zu viele Figur-Codes. Probiere es später noch einmal.','Too many hero codes are waiting right now. Try again later.'],
+  'voll':['Alle Plätze dieser Runde sind belegt.','All seats of this round are taken.'],
+  'angebote':['Es warten schon genug Tauschangebote. Warte, bis eines angenommen oder abgelehnt ist.','Enough trade offers are waiting already. Wait until one is accepted or declined.'],
+  'runde':['Diese Runde gibt es nicht mehr oder sie ist vorbei.','This round is gone or over.'],
+  'held':['Diesen Helden gibt es nicht, oder Name, Volk oder Klasse fehlen.','This hero does not exist, or name, people or class are missing.'],
+  'gastgeber':['Das darf nur der Gastgeber der Runde.','Only the host of the round may do this.'],
+  'platz':['Du sitzt nicht an diesem Tisch.','You do not sit at this table.'],
+  'geschichte':['Diese Geschichte gibt es nicht mehr oder sie ist nicht fertig.','This story is gone or not finished.'],
+  'kampagne':['Diese Kampagne gibt es nicht mehr.','This campaign is gone.'],
+  'kapitel laeuft':['Das nächste Kapitel läuft schon. Öffne es aus deinen Runden.','The next chapter is running already. Open it from your rounds.'],
+  'name':['Diesen Namen hat schon jemand am Tisch. Nimm einen anderen.','Someone at the table has this name already. Pick another one.'],
+  'name doppelt':['Diesen Namen hat schon jemand am Tisch. Nimm einen anderen.','Someone at the table has this name already. Pick another one.'],
+  'zug':['Der Zug ist gerade zu, der Dungeon-Master erzählt. Gleich bist du wieder dran.','The turn is closed, the Dungeon Master is narrating. Your turn comes back shortly.'],
+  'alter zug':['Der Zug ist gerade zu. Gleich geht es weiter.','The turn is closed right now. It goes on shortly.'],
+  'pause':['Das Sprachmodell oder die Musik ist gerade pausiert. Probiere es später noch einmal.','The language model or the music is paused right now. Try again later.'],
+  'wartung':['Bilder sind gerade pausiert. Probiere es später noch einmal.','Pictures are paused right now. Try again later.'],
+  'zeit':['Das Bild hat zu lange gedauert. Probiere es noch einmal.','The picture took too long. Try again.'],
+  'bisher':['Die Zusammenfassung wird gerade geschrieben oder passt nicht. Einen Moment, dann noch einmal.','The summary is being written or does not fit. Wait a moment, then try again.'],
+  'vorschlag':['Das Modell hat keinen brauchbaren Vorschlag geliefert. Bitte noch einmal.','The model gave no usable proposal. Please try again.'],
+  'figur':['Der Figur-Code passt nicht oder wurde schon benutzt.','The hero code does not fit or was used already.'],
+  'figur-code':['Der Figur-Code passt nicht oder wurde schon benutzt.','The hero code does not fit or was used already.'],
+  'leer':['Da steht noch nichts. Schreib erst etwas hinein.','There is nothing yet. Write something first.'],
+  'keine aktion':['Schreib erst, was dein Held tut.','First write what your hero does.'],
+  'tasche voll':['Deine Tasche ist voll. Leg erst etwas ab oder verkaufe es.','Your bag is full. Put something down or sell it first.'],
+  'passt nicht':['Das passt nicht zu deiner Klasse oder an diesen Platz.','That does not fit your class or this place.'],
+  'an':['Der andere Held kann das gerade nicht nehmen, seine Tasche ist voll oder zu schwer.','The other hero cannot take it right now, the bag is full or too heavy.'],
+  'kaufen':['Dafür reicht dein Gold nicht, oder der Händler hat es nicht mehr.','You do not have enough gold, or the merchant no longer has it.'],
+  'verkaufen':['Das kauft der Händler nicht.','The merchant does not buy that.'],
+  'erkennen':['Das kann der Händler gerade nicht erkennen, oder dein Gold reicht nicht.','The merchant cannot identify this right now, or your gold is not enough.'],
+  'haendler':['Gerade ist kein Händler da.','There is no merchant here right now.'],
+  'kein trank':['Das ist kein Trank.','That is no potion.'],
+  'kein zauber':['Das ist kein Zauber.','That is no spell.'],
+  'punkt':['Dafür hast du keinen Wertpunkt frei, oder der Wert ist schon ganz oben.','You have no value point for that, or the value is at the top already.'],
+  'faehigkeit':['Diese Fähigkeit steht gerade nicht zur Wahl.','This ability is not on offer right now.'],
+  'fallen':['Das kannst du hier nicht ablegen.','You cannot put that down here.'],
+  'aufheben':['Das liegt nicht mehr hier, oder deine Tasche ist voll.','That is no longer here, or your bag is full.'],
+  'ablegen':['An diesem Platz trägst du nichts.','You wear nothing in this place.'],
+  'tausch':['Dieser Tausch geht so nicht.','This trade does not work like that.'],
+  'angebot':['Dieses Tauschangebot passt nicht mehr: einer hat die Dinge oder das Gold nicht mehr.','This trade offer no longer fits: someone no longer has the things or the gold.'],
+  'stimme':['Diese Stimme gibt es nicht, oder die Sprachausgabe kann sie nicht machen.','This voice does not exist, or the speech output cannot make it.'],
+  'ton':['Diese Aufnahme gibt es nicht mehr.','This recording is gone.'],
+  'bild':['Dieses Bild gibt es nicht mehr.','This picture is gone.'],
+  'stueck':['Dieses Musikstück gibt es nicht mehr.','This piece of music is gone.'],
+  'erzaehlung':['Diese Erzählung gibt es nicht mehr.','This narration is gone.'],
+  'termin':['Dieser Termin passt nicht: er muss in der Zukunft liegen.','This date does not fit: it must lie in the future.'],
+  'daumen':['Das ging nicht.','That did not work.'],
+  'was':['Das ging nicht.','That did not work.'],
+  'eingabe':['Die Eingabe passt nicht. Prüfe die Felder.','The input does not fit. Check the fields.'],
+  'nicht da':['Das gibt es nicht mehr.','That is gone.']};
+const dmErr=(status,d)=>typeof d==='string'&&DMGRUND[d]?t(...DMGRUND[d]):errSay(status,d,'');
 function dmSay(S,x,err){S.msg=String(x||'').slice(0,300);S.err=!!err;document.querySelectorAll(S===DM?'#dmview .dmmsg':'#dgcard .dmmsg').forEach(m=>{m.className='dmmsg '+(err?'err':'mut');m.textContent=S.msg})}
 function dmRounds(D){const st={laeuft:t('läuft','running'),ende:t('beendet','ended')};
   if(!D.runden.length)return `<div class="ic-empty">${esc(t('Noch keine Runde. Leg unten eine an und lade bis zu vier Mitspieler ein, auch Leute ohne Profil.','No round yet. Start one below and invite up to four players, also people without a profile.'))}</div>`;
@@ -209,12 +269,12 @@ async function dmDingFill(w,mode){for(const im of w.querySelectorAll('img[data-d
     try{const r=await /*raw: a guest seat's picture as a blob, api() would open the login on a 401*/fetch('/api/dungeon/ding',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:DG.code,name:n})});
       if(!r.ok){delete DMI[key];continue}DMI[key]=URL.createObjectURL(await r.blob())}catch(e){delete DMI[key];continue}
     document.querySelectorAll(`#dgcard img[data-dmding="${n}"]`).forEach(x=>x.src=DMI[key])}}
-function dmItem(it,acts){return `<div class="dm-item ${DMSEL[it.selten]||''}"${it.i?` data-dmi="${esc(it.i)}"`:''}><div>${dmDing(it)}<b>${esc(it.name)}</b>${it.n>1?` <span class="pill">×${it.n}</span>`:''} <small>${esc(it.selten_name)}</small>${it.kg?` <small>· ${String(it.kg).replace('.',L==='en'?'.':',')} kg</small>`:''}</div>${it.satz?`<small class="dm-isatz">„${esc(it.satz)}“</small>`:''}<small>${it.zeilen.map(esc).join(' · ')}</small>${acts||''}</div>`}
+function dmItem(it,acts){return `<div class="dm-item ${DMSEL[it.selten]||''}"${it.i?` data-dmi="${esc(it.i)}"`:''}><div>${dmDing(it)}<b>${esc(it.name)}</b>${it.n>1?` <span class="pill">×${it.n}</span>`:''} <small>${esc(it.selten_name)}</small>${it.kg?` <small>· ${String(it.kg).replace('.',L==='en'?'.':',')} kg</small>`:''}</div>${it.satz?`<small class="dm-isatz">„${esc(it.satz)}“</small>`:''}${it.info?`<small class="dm-iinfo">${esc(it.info)}</small>`:''}<small>${it.zeilen.map(esc).join(' · ')}</small>${acts||''}</div>`}
 function dmLog(v,e,col){const W=v.werte||{},sys=Array.isArray(e.text)?e.text[L==='en'?1:0]:e.text;
   if(e.art==='dm'){const my=(v.daumen||{})[String(e.n||1)]||0,th=v.ich?`<span class="dm-thumbs">${[[1,'👍',t('Gut erzählt','Well told')],[-1,'👎',t('Nicht so gut','Not so good')]].map(([g,i,l])=>`<button type="button" class="ic-ib${my===g?' on':''}" data-dmdaumen="${g}" data-zug="${e.n||1}" title="${esc(l)}" aria-label="${esc(l)}" aria-pressed="${my===g}">${i}</button>`).join('')}</span>`:'';
     return `<div class="dm-dm"><div class="dm-n">${esc(e.prolog?t('Prolog','Prologue'):t('Zug','Turn')+' '+(e.n||1))}${th}</div><p>${dmSaetze(v,e)}</p>${(e.npc||[]).map(n=>`<div class="dm-npc"><em>${esc(n.name)}</em><p>„${esc(n.sagt)}“</p></div>`).join('')}</div>`}
   if(e.art==='aktion')return `<div class="dm-act"><span class="dm-av" data-c="${col?col(e.pid):0}">${esc((e.name||'?').slice(0,1).toUpperCase())}</span><div class="dm-bub"><b>${esc(e.name)}</b><p>${esc(e.text)}</p></div></div>`;
-  if(e.art==='wurf')return `<div class="dm-wurf ${e.ok?'ok':'bad'}"><span class="dm-d20">${e.w}</span>${e.vt&&(e.ws||[]).length===2?`<small class="pill ${e.vt==='vorteil'?'ok':'warn'}">${esc(e.vt==='vorteil'?t('Vorteil','Advantage'):t('Nachteil','Disadvantage'))} ${e.ws[0]}/${e.ws[1]}</small> `:''}${e.belastet?`<small class="pill warn">${esc(t('belastet','burdened'))}</small> `:''}${esc(e.name)} · ${esc(W[e.wert]||e.wert)} +${e.bonus} = <b>${e.gesamt}</b> ${esc(t('gegen','vs'))} ${e.schwer} · <b>${esc(e.ok?t('geschafft','success'):t('nicht geschafft','failed'))}</b></div>`;
+  if(e.art==='wurf')return `<div class="dm-wurf ${e.ok?'ok':'bad'}"><span class="dm-d20">${e.w}</span>${e.vt&&(e.ws||[]).length===2?`<small class="pill ${e.vt==='vorteil'?'ok':'warn'}">${esc(e.vt==='vorteil'?t('Vorteil','Advantage'):t('Nachteil','Disadvantage'))} ${e.ws[0]}/${e.ws[1]}</small> `:''}${e.belastet?`<small class="pill warn">${esc(t('belastet','burdened'))}</small> `:''}${dmTool(e)}${esc(e.name)} · ${esc(W[e.wert]||e.wert)} +${e.bonus} = <b>${e.gesamt}</b> ${esc(t('gegen','vs'))} ${e.schwer} · <b>${esc(e.ok?t('geschafft','success'):t('nicht geschafft','failed'))}</b></div>${dmLeiste(e,v.werkzeug_bonus)}`;
   if(e.art==='folge')return `<div class="dm-sys ${e.was==='heilung'?'ok':'bad'}">${esc(e.name)}: ${e.was==='heilung'?'+':'−'}${e.zahl} ${esc(t('Leben','life'))} (${esc(t('jetzt','now'))} ${e.leben})</div>`;
   if(e.art==='beute')return `<div class="dm-beute"><div class="dm-n">${esc(t('Beute für ','Loot for '))}${esc(e.name)}</div>${dmItem(e.item)}${e.boden?`<small class="mut">${esc(t('Zu schwer oder kein Platz: liegt hier am Boden.','Too heavy or no room: lies here on the ground.'))}</small>`:''}${e.gold?`<small class="mut">${esc(t('Gold für jeden: ','Gold for everyone: '))}${e.gold}</small>`:''}</div>`;
   if(e.art==='markt')return `<div class="dm-akt">⚖ ${esc(e.name)} ${esc(e.auf?t('bietet hier Waren an.','offers goods here.'):t('zieht weiter.','moves on.'))}</div>`;
@@ -244,9 +304,9 @@ function dmMe(v,mode){const h=v.ich;if(!h)return '';
   const pic=h.bild||v.bilder_an?`<div class="dm-portraet">${h.bild?`<span class="dm-pbig">${dmImg(mode,v,'p',v.pid,h.stufe)}</span>`:''}<div>${v.portraet_malt?`<small class="mut">🖼 ${esc(v.portraet_hint||t('Dein Porträt wird gemalt …','Your portrait is being painted …'))}</small>`
     :v.bilder_an&&h.bild_neu&&open?`<button type="button" class="b" data-dmportraet="1">${esc(h.bild?t('🖼 Porträt neu malen','🖼 Paint the portrait again'):t('🖼 Porträt malen lassen','🖼 Have a portrait painted'))}</button><small class="mut">${esc(t('Einmal je Stufe, aus Volk, Klasse und deinem Satz.','Once per level, from people, class and your sentence.'))}</small>`:''}</div></div>`:'';
   return `<div class="dm-me dm-bogen"><div class="dm-b1"><h4>${esc(h.name)} · ${esc(h.volk)} ${esc(h.klasse)}</h4>${h.satz?`<small class="mut">${esc(h.satz)}</small>`:''}${pic}
-    <div class="dm-line"><span>${esc(t('Stufe','Level'))} ${h.stufe}</span><span>${h.ep}${h.ep_naechste?' / '+h.ep_naechste:''} EP</span></div>${h.ep_naechste?dmBar(h.ep,h.ep_naechste,'ep'):''}
-    <div class="dm-line"><span>${esc(t('Leben','Life'))}</span><span>${h.leben}/${h.leben_max}</span></div>${dmBar(h.leben,h.leben_max,h.leben*3<h.leben_max?'low':'')}
-    <div class="dm-werte">${h.werte.map(x=>`<span title="${esc(x.name+': '+x.wert+t(', Bonus für Würfe ',', bonus for rolls ')+dmSign(x.gesamt))}">${esc(x.kurz)} <b>${x.wert}</b> <small class="mut">${dmSign(x.gesamt)}</small>${h.punkte&&x.wert<h.wert_max?`<button type="button" class="b dm-plus" data-dmhero="punkt" data-wert="${esc(x.id)}" title="${esc(t('Wertpunkt hierhin','Value point here'))}">+1</button>`:''}</span>`).join('')}<span>${esc(t('Schutz','Protection'))} <b>${h.schutz}</b></span><span>${esc(t('Gold','Gold'))} <b>${h.gold}</b></span></div>
+    ${dmErkBtn(mode,'b:stufe',`<span class="dm-line"><span>${esc(t('Stufe','Level'))} ${h.stufe}</span><span>${h.ep}${h.ep_naechste?' / '+h.ep_naechste:''} EP</span></span>${h.ep_naechste?dmBar(h.ep,h.ep_naechste,'ep'):''}`,t('Stufe erklären','Explain level'))}
+    ${dmErkBtn(mode,'b:leben',`<span class="dm-line"><span>${esc(t('Leben','Life'))}</span><span>${h.leben}/${h.leben_max}</span></span>${dmBar(h.leben,h.leben_max,h.leben*3<h.leben_max?'low':'')}`,t('Leben erklären','Explain life'))}
+    <div class="dm-werte">${h.werte.map(x=>`<span>${dmErkBtn(mode,'b:w:'+x.id,`${esc(x.kurz)} <b>${x.wert}</b> <small class="mut">${dmSign(x.gesamt)}</small>`,x.name)}${h.punkte&&x.wert<h.wert_max?`<button type="button" class="b dm-plus" data-dmhero="punkt" data-wert="${esc(x.id)}" title="${esc(t('Wertpunkt hierhin','Value point here'))}">+1</button>`:''}</span>`).join('')}<span>${dmErkBtn(mode,'b:schutz',`${esc(t('Schutz','Protection'))} <b>${h.schutz}</b>`,t('Schutz','Protection'))}</span><span>${dmErkBtn(mode,'b:gold',`${esc(t('Gold','Gold'))} <b>${h.gold}</b>`,t('Gold','Gold'))}</span></div>${dmErkBox(mode,'b:',{...Object.fromEntries(Object.entries(dmErkFix()).map(([k,x])=>[k,esc(x)])),...Object.fromEntries(h.werte.map(x=>['w:'+x.id,dmErkWert(x,x.gesamt)]))})}
     ${(v.stimmen||[]).length?`<div class="dm-voice"><label>${esc(t('Stimme deines Helden','Your hero\'s voice'))}</label><div class="dm-inp"><select data-dmvoice="1" aria-label="${esc(t('Stimme deines Helden','Your hero\'s voice'))}"><option value="">${esc(t('Keine, nur der Erzähler','None, only the narrator'))}</option>${[...new Set([h.stimme,...v.stimmen].filter(Boolean))].map(x=>`<option${x===h.stimme?' selected':''}>${esc(x)}</option>`).join('')}</select><button type="button" class="b" data-dmprobe="1"${h.stimme||h.klang?'':' disabled'}>${esc('▶ '+t('Probe','Sample'))}</button></div>${v.stimme_design?`<input class="dm-klang" data-dmvoice="1" maxlength="80" value="${esc(h.klang||'')}" placeholder="${esc(t('oder beschreiben: tiefe, raue Zwergenstimme','or describe it: deep, rough dwarf voice'))}" aria-label="${esc(t('Stimme beschreiben','Describe the voice'))}">`:''}<small class="mut">${esc(t('Ist Vorlesen an, spricht diese Stimme, was dein Held in Anführungszeichen sagt: „Halt, wer da?“','When reading aloud is on, this voice speaks what your hero says in quotes: "Halt, who goes there?"'))}</small></div>`:''}
     ${(h.segen||[]).length?`<div class="dm-segen">${h.segen.map(x=>`<span class="pill ok">${esc(x.wert)} +${x.bonus} · ${esc(x.zuege===1?t('noch 1 Zug','1 turn left'):t('noch '+x.zuege+' Züge',x.zuege+' turns left'))}${x.name?' · '+esc(x.name):''}</span>`).join(' ')}</div>`:''}
     ${h.punkte?`<div class="dm-hint">${esc(t('Neue Stufe: verteile '+h.punkte+' Wertpunkt'+(h.punkte>1?'e':'')+'.','New level: spend '+h.punkte+' value point'+(h.punkte>1?'s':'')+'.'))}</div>`:''}
@@ -291,17 +351,17 @@ function dmTable(w,v,mode){const fen=dmFenKeep(w),tk=dmTalkKeep(w),keep=w.queryS
   const done=v.plaetze.filter(p=>!p.frei&&p.gehandelt).length,all=v.plaetze.filter(p=>!p.frei).length;
   const seats=v.plaetze.filter(p=>!p.frei),col=pid=>Math.max(0,seats.findIndex(p=>p.pid===pid))%5;
   const group=v.plaetze.map(p=>p.frei?`<div class="dm-seat free"><span class="dm-av">+</span><div><b>${esc(t('Platz frei','Free seat'))}</b><small class="mut">${esc(t('Link verschickt ','Link sent '))}${esc(dmWhen(p.made))}</small></div><button type="button" class="b" data-dmseatdel="${esc(p.pid)}">${esc(t('Zurücknehmen','Take back'))}</button></div>`
-    :`<div class="dm-seat dm-hero${p.ich?' me':''}"><div class="dm-hhead">${dmAv(mode,v,p,col(p.pid))}<div><b>${esc(p.name)}</b> <i>${esc(p.volk)} ${esc(p.klasse)}</i><small class="mut">${esc(t('Stufe','Level'))} ${p.stufe}${p.gastgeber?' · '+esc(t('leitet','hosts')):p.gast?' · '+esc(t('Gast','guest')):''}</small></div>${mode==='p'&&v.gastgeber&&!p.gastgeber?`<button type="button" class="ic-ib" data-dmseatdel="${esc(p.pid)}" title="${esc(t('Platz zurücknehmen','Take the seat back'))}" aria-label="${esc(t('Platz zurücknehmen','Take the seat back'))}">×</button>`:''}</div>
-      <div class="dm-line"><span>${esc(t('Leben','Life'))}</span><span>${p.leben} / ${p.leben_max}</span></div>${dmBar(p.leben,p.leben_max,p.leben*3<p.leben_max?'low':'')}
-      ${p.karte?`<div class="dm-stats">${p.karte.werte.map(x=>`<span title="${esc(x.name)}"><small>${esc(x.kurz)}</small><b>${x.wert}</b><i>${dmSign(x.mod)}</i></span>`).join('')}<span title="${esc(t('Schutz','Protection'))}"><small>${esc(t('SCH','PRO'))}</small><b>${p.karte.schutz}</b></span></div>
-      ${p.karte.dinge.length?`<div class="dm-pills">${p.karte.dinge.map(n=>`<span>${esc(n)}</span>`).join('')}</div>`:''}`:''}
+    :`<div class="dm-seat dm-hero${p.ich?' me':''}"><div class="dm-hhead">${dmAv(mode,v,p,col(p.pid))}<div><b>${esc(p.name)}</b> <i>${esc(p.volk)} ${esc(p.klasse)}</i><small class="mut">${dmErkBtn(mode,`s:${p.pid}:stufe`,esc(t('Stufe','Level'))+' '+p.stufe,t('Stufe erklären','Explain level'))}${p.gastgeber?' · '+esc(t('leitet','hosts')):p.gast?' · '+esc(t('Gast','guest')):''}</small></div>${mode==='p'&&v.gastgeber&&!p.gastgeber?`<button type="button" class="ic-ib" data-dmseatdel="${esc(p.pid)}" title="${esc(t('Platz zurücknehmen','Take the seat back'))}" aria-label="${esc(t('Platz zurücknehmen','Take the seat back'))}">×</button>`:''}</div>
+      ${dmErkBtn(mode,`s:${p.pid}:leben`,`<span class="dm-line"><span>${esc(t('Leben','Life'))}</span><span>${p.leben} / ${p.leben_max}</span></span>${dmBar(p.leben,p.leben_max,p.leben*3<p.leben_max?'low':'')}`,t('Leben erklären','Explain life'))}
+      ${p.karte?`<div class="dm-stats">${p.karte.werte.map(x=>dmErkBtn(mode,`s:${p.pid}:w:${x.kurz}`,`<small>${esc(x.kurz)}</small><b>${x.wert}</b><i>${dmSign(x.mod)}</i>`,x.name)).join('')}${dmErkBtn(mode,`s:${p.pid}:schutz`,`<small>${esc(t('SCH','PRO'))}</small><b>${p.karte.schutz}</b>`,t('Schutz','Protection'))}</div>
+      ${p.karte.dinge.length?`<div class="dm-pills">${p.karte.dinge.map((d,i)=>dmErkBtn(mode,`s:${p.pid}:d:${i}`,esc(d.name),d.name)).join('')}</div>`:''}`:''}${dmErkBox(mode,`s:${p.pid}:`,dmErkSeat(p))}
       <small class="dm-state ${p.gehandelt?'ok':p.online?'':'away'}">${esc(p.gehandelt?t('hat gehandelt','acted'):p.online?t('denkt nach','thinking'):t('nicht da','away'))}</small></div>`).join('');
   const sc=v.szene&&(v.szene.ort||v.szene.stimmung)?`<div class="dm-scene"><i>${esc(t('Ort:','Place:'))}</i> ${esc([v.szene.ort,v.szene.stimmung].filter(Boolean).join(' · '))}</div>`:'';
   const wait=seats.filter(p=>!p.gehandelt).map(p=>p.name);
   const S=mode==='p'?DM:DG,sid=mode==='p'?'dmsend':'dgsend';
   const input=v.status==='ende'||!v.ich?'':`${wait.length&&!v.dm?`<small class="dm-wait">${esc(t('Warten auf: ','Waiting for: '))}<b>${esc(wait.join(', '))}</b></small>`:''}${dmTyping(v)}<div class="dm-inp"><textarea class="dm-in" rows="1" data-zeilen="4" data-senden="${sid}" maxlength="${v.text_max}" placeholder="${esc(t('Was macht ','What does ')+v.ich.name+t('? ',' do? '))}" aria-label="${esc(t('Deine Aktion','Your action'))}"${v.dm?' disabled':''}></textarea><button type="button" class="b dm-mic${DMA.rec&&DMA.mode===mode?' on':''}" data-dmmic="1" title="${esc(t('Sprechen statt tippen','Speak instead of typing'))}" aria-label="${esc(t('Sprechen statt tippen','Speak instead of typing'))}"${v.dm?' disabled':''}>${DMA.rec&&DMA.mode===mode?'● '+esc(t('Fertig','Done')):'🎤'}</button><button type="button" class="b p" id="${sid}" data-dmsend="1"${v.dm?' disabled':''}>${esc(t('Handeln','Act'))}</button></div>${v.meine_aktion?`<small class="mut dm-mine">${esc(t('Deine Aktion für diesen Zug: ','Your action for this turn: '))}${esc(v.meine_aktion)}</small>`:''}`;
   const host=mode==='p'&&v.gastgeber&&v.status!=='ende'?`<h5>${esc(t('Gastgeber','Host'))}</h5><div class="dm-hostb"><button type="button" class="b" data-dmweiter="1"${done&&!v.dm?'':' disabled'}>${esc(t('Jetzt weiter','Go on now'))}</button><button type="button" class="b" data-dmpause="${v.pause?0:1}">${esc(v.pause?t('Weiter','Resume'):t('Pause','Pause'))}</button><button type="button" class="b" data-dmmarkt="${v.markt?0:1}">${esc(v.markt?t('⚖ Markt schließen','⚖ Close market'):t('⚖ Markt öffnen','⚖ Open market'))}</button><button type="button" class="b" data-dmvorlesen="${v.vorlesen?0:1}">${esc(v.vorlesen?t('🔊 Vorlesen aus','🔊 Reading off'):t('🔊 Vorlesen an','🔊 Read aloud'))}</button>${v.bilder_an?`<button type="button" class="b" data-dmbild="1"${v.bild_grund?` disabled title="${esc(v.bild_grund)}"`:''}>${esc(t('🖼 Szenenbild jetzt malen','🖼 Paint the scene now'))}</button>`:''}
-    ${all<v.max?`<button type="button" class="b" data-dminvite="1">${esc(t('Einladen','Invite'))} (${v.max-all-v.plaetze.filter(p=>p.frei).length} ${esc(t('frei','free'))})</button>`:''}<button type="button" class="b" data-dmkap="1">${esc(DM.kap?t('Kapitel wirklich beenden?','Really end the chapter?'):t('Kapitel beenden','End chapter'))}</button><button type="button" class="b danger" data-dmend="1">${esc(DM.ende?t('Wirklich beenden?','Really end?'):t('Runde beenden','End round'))}</button></div>${v.bilder_an&&v.bild_grund&&!v.bild_malt?`<small class="mut dm-bgrund">🖼 ${esc(v.bild_grund)}</small>`:''}${dmPlanHost(v)}${dmTruth(v)}
+    ${all<v.max?`<button type="button" class="b" data-dminvite="1">${esc(t('Einladen','Invite'))} (${v.max-all-v.plaetze.filter(p=>p.frei).length} ${esc(t('frei','free'))})</button>`:''}<button type="button" class="b" data-dmkap="1">${esc(DM.kap?t('Kapitel wirklich beenden?','Really end the chapter?'):t('Kapitel beenden','End chapter'))}</button><button type="button" class="b danger" data-dmend="1">${esc(DM.ende?t('Wirklich beenden?','Really end?'):t('Runde beenden','End round'))}</button></div>${v.bilder_an&&v.bild_grund&&!v.bild_malt?`<small class="mut dm-bgrund">🖼 ${esc(v.bild_grund)}</small>`:''}${dmErzWahl(v)}${dmPlanHost(v)}${dmTruth(v)}
     ${DM.made?`<div class="mitmade"><div class="jqr">${DM.made.qr||''}</div><div class="sp"><input readonly value="${esc(DM.made.link)}" aria-label="${esc(t('Der Link','The link'))}"><small class="mut">${esc(t('Nur jetzt zu sehen. Wer ihn öffnet, sitzt auf diesem Platz: als Gast ohne Profil oder mit seinem Profil.','Shown only now. Whoever opens it takes this seat: as a guest without a profile or with their profile.'))}</small></div></div>`:''}`:'';
   v.mode=mode;const log=v.log.map(e=>dmLog(v,e,col)).join('');
   dmLook(w,v.farben);w.classList.toggle('dm-voll',DMA.voll);w.dataset.welt=v.welt_id||'';
@@ -315,6 +375,7 @@ function dmTable(w,v,mode){const fen=dmFenKeep(w),tk=dmTalkKeep(w),keep=w.queryS
   if(mode==='g')dmImgFill(w);
   dmDingFill(w,mode);
   if(window.dmTon)dmTon(w,v,mode);   // music, sounds and the rolling d20 (dungeon-ton.js)
+  dmWOthers(w,v);                    // another seat threw its die (dungeonwarten.js)
   const f=w.querySelector('.dm-feed');if(f)f.scrollTop=f.scrollHeight;
   const inp=w.querySelector('.dm-in');if(inp){if(kv)inp.value=kv;if(kf)inp.focus({preventScroll:true})}
   const n=(v.ton_zug||[]).length?v.ton_zug[0]:-1,A=DMA[mode];if(A.n===null)A.n=n;else if(n>=0&&n!==A.n){A.n=n;if(mode==='p'&&v.gastgeber&&v.vorlesen)dmPlay(mode,n)}}
@@ -343,7 +404,7 @@ async function dmMic(mode){const S=mode==='p'?DM:DG;
     dmSay(S,t('Erkenne Sprache …','Transcribing …'),false);
     try{const wav=await toWav(new Blob(parts,{type:rec.mimeType||'audio/webm'}));
       const b64=await new Promise((ok,no)=>{const fr=new FileReader();fr.onload=()=>ok(String(fr.result).split(',')[1]||'');fr.onerror=no;fr.readAsDataURL(wav)});
-      let d;if(mode==='p'){const x=await apiTry(`/api/profile/dungeon/${DM.rid}/hoeren`,xjson('POST',{wav:b64}));if(!x.r.ok){dmSay(S,errSay(x.r.status,x.d.detail,''),true);return}d=x.d}
+      let d;if(mode==='p'){const x=await apiTry(`/api/profile/dungeon/${DM.rid}/hoeren`,xjson('POST',{wav:b64}));if(!x.r.ok){dmSay(S,dmErr(x.r.status,x.d.detail),true);return}d=x.d}
       else d=await dgPub('/api/dungeon/hoeren',{code:DG.code,wav:b64});
       const ta=document.querySelector(mode==='p'?'#dmview .dm-in':'#dgcard .dm-in');
       if(ta&&d.text){ta.value=(ta.value.trim()?ta.value.trim()+' ':'')+d.text;ta.focus()}dmSay(S,d.text?'':t('Nichts verstanden.','Nothing understood.'),false)}
@@ -374,9 +435,9 @@ document.body.addEventListener('drop',e=>{const el=e.target.closest&&e.target.cl
   else if(el.dataset.dmbag&&!id.startsWith('i'))dmHeroDo(mode,{was:'ablegen',platz:id})});
 async function dmSend(path,b,S,x){if(S.busy)return null;S.busy=true;
   const o=x?xjson(x.method,Object.assign({lang:dmLang()},x.body||{})):b===null?{method:'DELETE'}:xjson('POST',Object.assign({lang:dmLang()},b||{}));const {r,d}=await apiTry(path,o);S.busy=false;
-  if(!r.ok){dmSay(S,errSay(r.status,d.detail,''),true);return null}S.msg='';S.err=false;return d}
+  if(!r.ok){dmSay(S,dmErr(r.status,d.detail),true);return null}S.msg='';S.err=false;return d}
 // ---------------------------------------------------------------- clicks of the own page
-document.body.addEventListener('click',async e=>{const b=e.target.closest('#dmview [data-dmopen],#dmview [data-dmback],#dmview [data-dmmake],#dmview [data-dmseg],#dmview [data-dmgs],#dmview [data-dmsend],#dmview [data-dmhero],#dmview [data-dmweiter],#dmview [data-dmpause],#dmview [data-dmmarkt],#dmview [data-dminvite],#dmview [data-dmseatdel],#dmview [data-dmend],#dmview [data-dmdelhero],#dmview [data-dmwipe],#dmview [data-dmtx],#dmview [data-dmvorlesen],#dmview [data-dmkap],#dmview [data-dmhear],#dmview [data-dmvoll],#dmview [data-dmhilfe],#dmview [data-dmprobe],#dmview [data-dmmic],#dmview [data-dmkweiter],#dmview [data-dmkedit],#dmview [data-dmksave],#dmview [data-dmkneu],#dmview [data-dmkdel],#dmview [data-dmbild],#dmview [data-dmportraet],#dmview [data-dmtermin],#dmview [data-dmmelden]');
+document.body.addEventListener('click',async e=>{const b=e.target.closest('#dmview [data-dmopen],#dmview [data-dmback],#dmview [data-dmmake],#dmview [data-dmseg],#dmview [data-dmgs],#dmview [data-dmsend],#dmview [data-dmhero],#dmview [data-dmweiter],#dmview [data-dmpause],#dmview [data-dmmarkt],#dmview [data-dminvite],#dmview [data-dmseatdel],#dmview [data-dmend],#dmview [data-dmdelhero],#dmview [data-dmwipe],#dmview [data-dmtx],#dmview [data-dmvorlesen],#dmview [data-dmkap],#dmview [data-dmhear],#dmview [data-dmvoll],#dmview [data-dmhilfe],#dmview [data-dmprobe],#dmview [data-dmerzprobe],#dmview [data-dmerzneu],#dmview [data-dmmic],#dmview [data-dmkweiter],#dmview [data-dmkedit],#dmview [data-dmksave],#dmview [data-dmkneu],#dmview [data-dmkdel],#dmview [data-dmbild],#dmview [data-dmportraet],#dmview [data-dmtermin],#dmview [data-dmmelden]');
   if(!b)return;const B=b.dataset,w=$('dmview'),rid=DM.rid;
   if(B.dmseg!==undefined){b.parentNode.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));if(b.closest('.dmf-welt'))dmWorld(w,B.dmseg);return}
   if(B.dmgs!==undefined){dmStory(w,b);return}
@@ -396,6 +457,7 @@ document.body.addEventListener('click',async e=>{const b=e.target.closest('#dmvi
   if(B.dmvoll){dmVoll(B.dmvoll==='1');return}
   if(B.dmhilfe){DMA.hilfe=B.dmhilfe==='1';dmDraw();return}
   if(B.dmprobe){dmProbe('p',DM.v&&DM.v.ich||{});return}
+  if(B.dmerzprobe){const sel=document.querySelector('#dmview [data-dmerz]');dmProbe('p',{erzaehler:sel?sel.value:''});return}
   if(B.dmmic){dmMic('p');return}
   if(B.dmkedit!==undefined){DM.edit=B.dmkedit;dmDraw();return}
   if(B.dmksave||B.dmkneu||B.dmkdel){const kid=B.dmksave||B.dmkneu||B.dmkdel;
@@ -416,6 +478,7 @@ document.body.addEventListener('click',async e=>{const b=e.target.closest('#dmvi
   else if(B.dmweiter)d=await dmSend(`/api/profile/dungeon/${rid}/weiter`,{},DM);
   else if(B.dmpause)d=await dmSend(`/api/profile/dungeon/${rid}/pause`,{an:B.dmpause==='1'},DM);
   else if(B.dmvorlesen)d=await dmSend(`/api/profile/dungeon/${rid}/vorlesen`,{an:B.dmvorlesen==='1'},DM);
+  else if(B.dmerzneu)d=await dmSend(`/api/profile/dungeon/${rid}/erzaehler`,{k:''},DM);
   else if(B.dmbild)d=await dmSend(`/api/profile/dungeon/${rid}/bild`,{},DM);
   else if(B.dmportraet)d=await dmSend(`/api/profile/dungeon/${rid}/portraet`,{},DM);
   else if(B.dmmelden)d=await dmSend(`/api/profile/dungeon/${rid}/melden`,{an:B.dmmelden==='1'},DM);
@@ -432,11 +495,16 @@ document.body.addEventListener('change',async e=>{const s=e.target.closest('#dmv
   if(s.closest('#dmview')){const d=await dmSend(`/api/profile/dungeon/${DM.rid}/held`,body,DM);if(d){DM.v=d;DM.at=Date.now()}dmDraw()}
   else await dgAct('/api/dungeon/held',body)});
 // a fixed sentence in the hero's voice, fetched when asked (the same playback as the turn read aloud)
-async function dmProbe(mode,h){const A=DMA[mode],voice=h.stimme||'',klang=h.klang||'';if(!voice&&!klang)return;
-  try{let r;if(mode==='p')r=await api(`/api/profile/dungeon/${DM.rid}/probe?stimme=${encodeURIComponent(voice)}&klang=${encodeURIComponent(klang)}&lang=${L==='en'?'en':'de'}`);
+// the host's narrator voice (dungeon_stimmen.py): only with VoiceDesign; pick one of the world's, roll a new one, listen
+function dmErzWahl(v){if(!v.stimme_design||!(v.erzaehler_liste||[]).length)return '';
+  return `<div class="dm-voice dm-erzwahl"><label>${esc(t('🎙 Stimme des Erzählers','🎙 Narrator\'s voice'))}</label><div class="dm-inp"><select data-dmerz="1" aria-label="${esc(t('Stimme des Erzählers','Narrator\'s voice'))}">${v.erzaehler_liste.map(x=>`<option value="${esc(x.k)}"${x.k===v.erzaehler_k?' selected':''}>${esc(x.name)}</option>`).join('')}</select><button type="button" class="b" data-dmerzprobe="1">${esc('▶ '+t('Probe','Sample'))}</button><button type="button" class="b" data-dmerzneu="1">${esc('🎲 '+t('Neu','New'))}</button></div><small class="mut">${esc(t('Jede Geschichte bekommt ihre eigene Erzählerstimme, jede Figur ihre eigene; die Stimmung der Szene färbt den Erzähler.','Every story gets its own narrator voice, every character its own; the mood of the scene colours the narrator.'))}</small></div>`}
+async function dmProbe(mode,h){const A=DMA[mode],voice=h.stimme||'',klang=h.klang||'',erz=h.erzaehler||'';if(!voice&&!klang&&!erz)return;
+  try{let r;if(mode==='p')r=await api(`/api/profile/dungeon/${DM.rid}/probe?stimme=${encodeURIComponent(voice)}&klang=${encodeURIComponent(klang)}&erzaehler=${encodeURIComponent(erz)}&lang=${L==='en'?'en':'de'}`);
     else r=await /*raw: public route of a guest seat*/fetch('/api/dungeon/probe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:DG.code,stimme:voice,klang})});
     if(!r.ok){dmSay(mode==='p'?DM:DG,t('Die Sprachausgabe ist gerade belegt.','The speech output is busy right now.'),1);return}
     if(A.el)A.el.pause();if(A.url)URL.revokeObjectURL(A.url);A.url=URL.createObjectURL(await r.blob());A.el=new Audio(A.url);await A.el.play()}catch(e){}}
+document.body.addEventListener('change',async e=>{const s=e.target.closest('#dmview [data-dmerz]');if(!s||!DM.rid)return;
+  const d=await dmSend(`/api/profile/dungeon/${DM.rid}/erzaehler`,{k:s.value},DM);if(d){DM.v=d;DM.at=Date.now();dmDraw()}});
 document.body.addEventListener('change',async e=>{const s=e.target.closest('#dmview [data-dmgive],#dgcard [data-dmgive]');if(!s||!s.value)return;
   const body={was:'schenken',i:s.dataset.dmgive,an:s.value};
   if(s.closest('#dmview')){const d=await dmSend(`/api/profile/dungeon/${DM.rid}/held`,body,DM);if(d){DM.v=d;DM.at=Date.now()}dmDraw()}
@@ -447,12 +515,8 @@ document.body.addEventListener('change',e=>{const s=e.target.closest('#dmview .d
 async function dgPub(p,b){const r=await /*raw: public route of a guest seat, api() would open the login on a 401*/fetch(p,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b||{})});
   let d={};try{d=await r.json()}catch{}
   if(!r.ok){const e=new Error(typeof d.detail==='string'?d.detail:'');e.status=r.status;throw e}return d}
-const dgErr=e=>e.status===404?t('Der Dungeon-Master ist auf diesem Spark gerade aus.','The Dungeon Master is switched off on this Spark right now.')
+const dgErr=e=>DMGRUND[e.message]?t(...DMGRUND[e.message]):e.status===404?t('Der Dungeon-Master ist auf diesem Spark gerade aus.','The Dungeon Master is switched off on this Spark right now.')
   :e.status===429?t('Zu viele Versuche. Bitte später noch einmal.','Too many attempts. Please try again later.')
-  :e.message==='name doppelt'?t('Diesen Namen hat schon jemand in der Runde.','Someone in the round has this name already.')
-  :e.message==='besetzt'?t('Dieser Platz ist schon besetzt.','This seat is taken already.')
-  :e.message==='alter zug'?t('Der Zug ist gerade zu; gleich geht es weiter.','The turn is closed right now; it goes on in a moment.')
-  :e.message==='figur-code'?t('Der Figur-Code passt nicht oder wurde schon benutzt.','The hero code does not fit or was used already.')
   :e.status===400?t('Der Link passt nicht mehr: abgelaufen, zurückgenommen oder die Runde ist vorbei.','The link does not fit any more: expired, taken back or the round is over.')
   :t('Das hat nicht geklappt.','That did not work.');
 window.dmHash=()=>{const m=/^#spiel=([A-Za-z0-9_-]{32})$/.exec(location.hash);if(!m)return false;
@@ -496,7 +560,7 @@ document.body.addEventListener('click',async e=>{const b=e.target.closest('#dgca
     if(!fig&&typeof held==='object'){if(held.name.length<2){dmSay(DG,t('Bitte gib deiner Figur einen Namen.','Please name your character.'),true);return}try{localStorage.setItem('dgname',held.name)}catch{}}
     b.disabled=true;
     if(wie==='p'){const {r,d}=await apiTry('/api/profile/dungeon/beitreten',xjson('POST',fig?{code:DG.code,figur:fig}:{code:DG.code,held}));b.disabled=false;
-      if(!r.ok){dmSay(DG,errSay(r.status,d.detail,''),true);return}
+      if(!r.ok){dmSay(DG,dmErr(r.status,d.detail),true);return}
       const pt=box.querySelector('.dgf-portraet');let v2=d;if(pt&&pt.checked&&!fig&&typeof held==='object')v2=await dmSend(`/api/profile/dungeon/${d.rid}/portraet`,{},DM)||d;
       $('dgmodal').style.display='none';DM.rid=v2.rid;DM.v=v2;DM.at=Date.now();icTabSet('dungeon','runden');goSec('dungeon');return}
     const pt=box.querySelector('.dgf-portraet'),want=pt&&pt.checked&&!fig;
@@ -512,7 +576,7 @@ document.body.addEventListener('click',async e=>{const b=e.target.closest('#dgca
 async function dmRules(){let m=$('dmadm');if(!m){m=document.createElement('div');m.id='dmadm';m.className='modal';
     m.innerHTML='<div class="card modalcard dmadmcard" id="dmadmcard"></div>';document.body.appendChild(m)}
   m.style.display='grid';const c=$('dmadmcard');c.innerHTML=`<div class="mut">${esc(t('Lade die Regeln …','Loading the rules …'))}</div>`;
-  DMP.g=null;const {r,d}=await apiTry('/api/admin/dungeon?lang='+dmLang());if(!r.ok){c.innerHTML=`<div class="err">${esc(errSay(r.status,d.detail,''))}</div>`;return}
+  DMP.g=null;const {r,d}=await apiTry('/api/admin/dungeon?lang='+dmLang());if(!r.ok){c.innerHTML=`<div class="err">${esc(dmErr(r.status,d.detail))}</div>`;return}
   try{DMA.voices=((await (await api('/api/tts/voices')).json()).voices||[]).filter(x=>typeof x==='string')}catch{DMA.voices=[]}dmRulesDraw(d,'')}
 function dmRulesDraw(d,err){const c=$('dmadmcard'),S=d.summe,txt=JSON.stringify(d.eigene||{},null,2);DMP.d=d;
   if(DMP.g){c.innerHTML=dmPlanForm(d);return}
@@ -539,7 +603,7 @@ document.body.addEventListener('click',async e=>{if(e.target.closest('#dmrules')
   if(Object.values(sv).some(Boolean)||own.stimmen)own.stimmen=sv;
   const keep=$('dmadmtxt').value;const {r,d}=await apiTry('/api/admin/dungeon',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({eigene:own})});
   if(r.ok){dmRulesDraw(d,'');sayToast(t('Regeln gespeichert','Rules saved'));return}
-  const g=await apiTry('/api/admin/dungeon?lang='+dmLang());if(!g.r.ok)return;dmRulesDraw(g.d,Array.isArray(d.detail)?d.detail.map(x=>esc(x)).join('<br>'):esc(errSay(r.status,d.detail,'')));$('dmadmtxt').value=keep});
+  const g=await apiTry('/api/admin/dungeon?lang='+dmLang());if(!g.r.ok)return;dmRulesDraw(g.d,Array.isArray(d.detail)?d.detail.map(x=>esc(x)).join('<br>'):esc(dmErr(r.status,d.detail)));$('dmadmtxt').value=keep});
 // 👍/👎 per narration over all rounds, per world and tone (numbers only; the model learns nothing from them)
 function dmThumbsAdmin(x){if(!x||!x.length)return '';const n=a=>a[L==='en'?1:0];
   return `<h3 class="sec">${esc(t('Wie die Erzählungen ankommen','How the narrations land'))}</h3><div class="dm-sum">${x.map(r=>`<span class="pill">${esc(n(r.welt))} · ${esc(n(r.ton))}: 👍 ${r.hoch} · 👎 ${r.runter}</span>`).join(' ')}</div>`}
@@ -554,7 +618,7 @@ async function dmDingLook(){clearTimeout(DMDT);const box=$('dmding');if(!box)ret
   if(!r.ok||!$('dmding'))return;$('dmding').outerHTML=dmDingAdmin(d);if(d.laeuft)DMDT=setTimeout(dmDingLook,5000)}
 document.body.addEventListener('click',async e=>{const b=e.target.closest('#dmding [data-dmding]');if(!b)return;b.disabled=true;
   const {r,d}=await apiTry('/api/admin/dungeon/dingbilder',{method:b.dataset.dmding==='start'?'POST':'DELETE'});
-  if(!r.ok){b.disabled=false;sayToast(errSay(r.status,d.detail,''));return}$('dmding').outerHTML=dmDingAdmin(d);if(d.laeuft)DMDT=setTimeout(dmDingLook,5000)});
+  if(!r.ok){b.disabled=false;sayToast(dmErr(r.status,d.detail));return}$('dmding').outerHTML=dmDingAdmin(d);if(d.laeuft)DMDT=setTimeout(dmDingLook,5000)});
 // ---------------------------------------------------------------- the admin's stories (Geschichten-Planer)
 // a story: idea, goal, foe, places, taboos and 3 to 5 acts with a turning point; „Vorschlag erzeugen“ lets the model
 // write all of it from keywords, „↻“ one act again; the panel checks both like typed text before anything is kept
@@ -597,7 +661,7 @@ function dmPlanRead(){const c=$('dmadmcard'),q=x=>(c.querySelector(x)||{}).value
       wende:a.querySelector('.dmp-aw').value.trim(),zuege:Math.floor(+a.querySelector('.dmp-az').value||0)}))}}
 const dmPlanErr=(r,d)=>Array.isArray(d.detail)?d.detail.map(x=>esc(x)).join('<br>')
   :d.detail==='kein vorschlag'?esc(t('Das Modell hat keinen brauchbaren Vorschlag geliefert. Bitte noch einmal oder mit anderen Stichworten.','The model gave no usable proposal. Please try again or with other keywords.'))
-  :d.detail==='sprachmodell pausiert'?esc(t('Das Sprachmodell ist gerade pausiert.','The language model is paused right now.')):esc(errSay(r.status,d.detail,''));
+  :d.detail==='sprachmodell pausiert'?esc(t('Das Sprachmodell ist gerade pausiert.','The language model is paused right now.')):esc(dmErr(r.status,d.detail));
 async function dmPlanClick(b,k){const d=DMP.d,w=d.wahl;if(DMP.busy)return;
   if(k==='gneu'){DMP.gid='';DMP.err='';DMP.stich='';DMP.hint='';DMP.g={titel:'',welt:w.welten[0].id,ton:(w.toene[1]||w.toene[0]).id,idee:'',ziel:'',gegner:'',orte:[],tabus:[],
     akte:Array.from({length:d.planer.akte[0]},()=>({titel:'',inhalt:'',wende:'',zuege:6}))};dmRulesDraw(d,'');return}

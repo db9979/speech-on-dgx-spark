@@ -77,7 +77,7 @@ window.dmTon=(w,v,mode)=>{DMT.v=v;DMT.mode=mode;const m=v.musik||{an:false};
   // the log's new entries since the last drawing: the dice roll, the events sound (the first drawing only counts)
   const log=v.log||[],key=log.length?JSON.stringify(log[log.length-1]):'';
   if(DMT.seen[mode]!==null&&DMT.seen[mode]!==key){let i=log.length-1;while(i>=0&&JSON.stringify(log[i])!==DMT.seen[mode])i--;
-    const news=i>=0?log.slice(i+1):[],wuerfe=news.filter(e=>e.art==='wurf');
+    const news=i>=0?log.slice(i+1):[],wuerfe=news.filter(e=>e.art==='wurf'&&!(window.dmWurfGesehen&&dmWurfGesehen(v,e)));   // a die thrown in the wait rolls no more (dungeonwarten.js)
     if(wuerfe.length){dmtRoll(w,wuerfe);dmtPlay('wuerfel',wuerfe[wuerfe.length-1].w)}
     const ev=[...new Set(news.map(e=>DMT_EVENT[e.art]&&DMT_EVENT[e.art](e)).filter(Boolean))];ev.forEach((k,i)=>setTimeout(()=>dmtPlay(k),(wuerfe.length?900:0)+i*400))}
   DMT.seen[mode]=key;

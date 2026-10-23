@@ -9,7 +9,8 @@ back soon. Two things for the players among themselves: „X schreibt …“ (ke
 table talk, a short chat between the seats of a round that the model never sees (not in facts, not in any prompt).
 
 State in the round (dungeon.py's rounds file):
-    rd["warten"]         {"s": step, "satz": key, "karten": [keys], "tipp": key, "w": [dice]}  only while rd["dm"]
+    rd["warten"]         {"s": step, "satz": key, "karten": [keys], "tipp": key, "w": [dice], "wt": time}  only while rd["dm"]
+                         a die has "geworfen" once its seat threw it (throw); the number is the panel's all along
     rd["warten_zuletzt"] {"satz": [...], "karte": [...], "tipp": [...]}  the keys shown last in this round
     rd["tisch"]          [{"n", "pid", "name", "text", "t"}]  the table talk, the last TISCH_MAX
 """
@@ -30,6 +31,7 @@ TITEL_LEN = 40
 TISCH_MAX = 40             # table talk lines kept per round
 TISCH_LEN = 200
 TIPPT_S = 6                # „X schreibt …“ while the last keystroke is this fresh
+WURF_S = 12                # a seat throws its own die (tap or shake); after this the others see it anyway
 
 _data = {}
 _tippt = {}                # rid -> {pid: monotonic time of the last keystroke}; never written to disk
@@ -138,8 +140,30 @@ def step(rd, s, wuerfe=None, rng=None):
     w["s"] = s
     w["satz"] = _pick(rd, "satz", _pool(data()["schritte"][s], rd.get("welt", "")), rng or random.Random(), back=s)[0]
     if wuerfe is not None:
-        w["w"] = [{"name": x["name"], "wert": x["wert"], "w": x["w"], "gesamt": x["gesamt"], "schwer": x["schwer"],
-                   "ok": bool(x["ok"]), "vt": x.get("vt", "")} for x in wuerfe]
+        w["wt"] = time.time()
+        w["w"] = [{"pid": x.get("pid", ""), "name": x["name"], "wert": x["wert"], "w": x["w"], "bonus": x.get("bonus", 0), "gesamt": x["gesamt"], "schwer": x["schwer"],
+                   "ok": bool(x["ok"]), "vt": x.get("vt", ""), "werkzeug": x.get("werkzeug", "")} for x in wuerfe]
+
+
+def throw(rd, pid):
+    """The seat throws its own die (Dominik 2026-10-23 „1 und 2“): from now on the others see the number. The number
+    itself was rolled by the panel before (dungeon.roll); the tap only shows it. Returns whether there was one."""
+    hit = False
+    for x in (rd.get("warten") or {}).get("w") or []:
+        if x.get("pid") == pid and not x.get("geworfen"):
+            x["geworfen"] = hit = True
+    return hit
+
+
+def _die(x, pid, now, wt):
+    """One die as a seat sees it: its own always (the page rolls it on the tap), another's once thrown or WURF_S old."""
+    ich = x.get("pid") == pid
+    offen = ich or x.get("geworfen") or now - (wt or 0) > WURF_S
+    out = {"name": x["name"], "wert": x["wert"], "schwer": x["schwer"], "ich": ich, "geworfen": bool(x.get("geworfen")) or not ich and offen,
+           "werkzeug": x.get("werkzeug", "")}
+    if offen:
+        out.update(w=x["w"], bonus=x.get("bonus", x["gesamt"] - x["w"]), gesamt=x["gesamt"], ok=bool(x["ok"]))
+    return out
 
 
 def end(rd):
@@ -192,5 +216,5 @@ def view(rd, rid, pid, lang):
         tipp = _text({"alle": d["tipps"]}, w["tipp"]) if w.get("tipp") else None
         out["warten"] = {"s": w["s"], "folge": list(FOLGE), "satz": satz[li] if satz else "",
                          "karten": [{"titel": x[li], "text": x[2 + li]} for x in karten], "tipp": tipp[li] if tipp else "",
-                         "w": list(w.get("w") or []), "welt": welt}
+                         "w": [_die(x, pid, time.time(), w.get("wt")) for x in w.get("w") or []], "welt": welt}
     return out

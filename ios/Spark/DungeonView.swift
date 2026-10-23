@@ -79,7 +79,7 @@ final class DungeonModel: ObservableObject {
             loading = false
             return true
         } catch {
-            self.error = error.localizedDescription
+            self.error = Self.grund(error)
             loading = false
             return false
         }
@@ -95,11 +95,27 @@ final class DungeonModel: ObservableObject {
             else { return }
             play = PanelPlace(url: url)
         } catch {
-            self.error = error.localizedDescription
+            self.error = Self.grund(error)
         }
     }
 
     static let en = Locale.current.language.languageCode?.identifier != "de"
+
+    /// a refusal of the Spark: dungeon._http sends the rule's reason word, said here as a sentence like the panel's
+    /// DMGRUND (dungeon.js) does for the table
+    static func grund(_ e: Error) -> String {
+        switch (e as? SparkError)?.message ?? "" {
+        case "held spielt": return String(localized: "Dieser Held spielt gerade in einer Runde. Beende sie dort zuerst.")
+        case "held": return String(localized: "Diesen Helden gibt es nicht mehr.")
+        case "kampagne": return String(localized: "Diese Kampagne gibt es nicht mehr.")
+        case "kapitel laeuft": return String(localized: "Das nächste Kapitel läuft schon. Öffne es aus deinen Runden.")
+        case "runde": return String(localized: "Diese Runde gibt es nicht mehr oder sie ist vorbei.")
+        case "platz": return String(localized: "Du sitzt nicht an diesem Tisch.")
+        case "gastgeber": return String(localized: "Das darf nur der Gastgeber der Runde.")
+        case "nicht da": return String(localized: "Das gibt es nicht mehr.")
+        default: return e.localizedDescription
+        }
+    }
 }
 
 struct DungeonView: View {

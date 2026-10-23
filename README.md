@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.977** AI Dungeon Master: items and values explained (tools +2, break on a 1), throw your own die with a check bar, sparks on a 20 and result sounds, own voices for the narrator per story and every NPC, every refusal as a clear sentence
 - **V01.0.976** AI Dungeon Master: calm ambient music, soft pads instead of drums, 60 to 80 beats per minute, in fights too; the old store is made again
 - **V01.0.975** AI Dungeon Master: a pleasant wait: steps reading, dice, narrating with fixed sentences, rolls before the narration, lore cards of the world and hints from 300 fixed texts without soon repeats, narration sentence by sentence, "is typing …" and table talk only between the players; deleting ended rounds; narration checked against the map
 - **V01.0.974** AI Dungeon Master self-test steady: the pictures test picks a way on the rolled map that leads on instead of into a dead end (was red in 1 of 3 runs)
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.970** AI Dungeon Master with music, sounds and dice: many pieces per world and mood from the own music model, made ahead for the next act and at night, a quiet loop that fades over; sounds and a rolling d20 in the browser (Features → AI Dungeon Master → Adjust rules → Music at the table, off by default)
 - **V01.0.969** AI Dungeon Master with a map: each chapter the panel rolls a net of places in five shapes (scattered, valley, lake, two realms, coast) with fog, the group only moves to neighbouring places, with encounters on the way; random vaults as a grid in five layouts with traps, riddles, guardians, treasure, spring, altar and boss, all rolled and checked by the panel
 - **V01.0.968** AI Dungeon Master stage 5a: "It is your turn" as a note once per turn, a reminder when the turn waits, the host's game date with a calendar file and a note 15 minutes before, "Last time" after a 12-hour break; fixed the error 500 on "Act", no "AI image" mark on the pictures any more
-- **V01.0.967** AI Dungeon Master: pictures for gear and spells, one painted picture per item and spell in each world's style with a rarity frame, at night from 01:00 to 05:00 or at once with "Create pictures now" (at most 300 a day), an own picture for named finds from rare on; own admin switch, needs Painting pictures
 
 
 

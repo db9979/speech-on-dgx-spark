@@ -5373,6 +5373,54 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Gegenstände und Werte erklärt, Werkzeuge mit Wirkung (V01.0.977, Dominik 2026-10-23 „gegenstand beschreibungen fehlen was mach diese, wobei unterstützen diese“, „bei klicken auf werte etc. soll erklärt werden was das ist und wofür“, Werkzeug-Karte „+2 bei passender Probe“ und „1“): Jeder der 137 Gegenstände im Katalog hat eine feste Beschreibung in Deutsch und Englisch (info in dungeon_regeln.json, höchstens 160 Zeichen, alle passend für den jüngsten Ton): was er ist, was er tut und wobei er hilft. Sie steht beim Händler auf jeder Karte, in der Tasche und im Fenster eines Gegenstands. Auf der Heldenkarte am Tisch und im Heldenbogen erklärt ein Tipp auf einen Wert (STÄ, GES, KON, INT, WEI, CHA), auf Schutz, Leben, Stufe, Gold oder ein getragenes Ding direkt darunter, was das ist und wofür es zählt; ein zweiter Tipp schließt die Erklärung. Die sechs Werte erklären sich aus werte[].info, Leben, Stufe, Schutz und Gold mit festen Sätzen. Die zwölf Werkzeuge (Kletterseil, Dietrich, Kompass, Rätselwürfel, Laterne …) haben eine feste Wirkung (hilft: Werte und Wörter): nennt die Aktion das Werkzeug (Name oder eines seiner Wörter) und passt die Probe zu einem seiner Werte,"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": " rechnet das Panel +2 dazu (dungeon.WERKZEUG), höchstens ein Werkzeug je Probe. Bei einer gewürfelten 1 zerbricht das benutzte Werkzeug und verschwindet aus der Tasche; Kompass, Fernrohr, Ewige Fackel und Schatzkarte (fest) gehen nie kaputt. Der Wurf zeigt „🔧 Dietrich hilft“ oder „🔧 Dietrich zerbrochen“, der Erzähler erfährt beides in den Proben. Log: dungeon: werkzeug | kaputt. Eigene Gegenstände des Admins dürfen info und hilft haben, beides wird geprüft (check_rules)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Würfel selbst werfen und Proben-Leiste (V01.0.977, Dominik 2026-10-23 „1 und 2 aber mit funken bei 20 und eigenes geräusch beim würfel ergebniss“): Kommt in der Wartezeit eine Probe für deinen Helden, steht ein großer W20 mit „?“ da: Antippen (oder Schütteln, wo der Browser die Bewegung ohne Nachfrage gibt, etwa Android) lässt ihn etwa eine Sekunde rollen, dann landet er auf der Zahl, die das Panel vorher fest gewürfelt hat (dungeon.roll); der Tipp ändert nichts am Ergebnis. Die anderen Plätze sehen bis dahin „X würfelt …“ ohne Zahl (das Panel schickt sie ihnen nicht), nach dem Wurf (POST /api/profile/dungeon/{rid}/wurf, Gast POST /api/dungeon/wurf, Rate-Limit dungeonwurf) oder spätestens nach 12 Sekunden (dungeon_warten.WURF_S) rollt er bei ihnen ebenfalls. Unter jedem Wurf zeigt die Proben-Leiste Würfel, Bonus und Werkzeug als Balken bis zur roten Linie der Schwierigkeit, mit „ganz knapp!“ oder „knapp daneben“ bei einem Punkt Abstand. Eine 20 sprüht Funken, eine 1 wackelt; dazu eigene Geräusche für geschafft, nicht geschafft, die 20 und die 1, im Browser erzeugt wie die übrigen Geräusche und nur, wenn die Geräusche an sind. Ein schon geworfener Würfel rollt in "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "der Erzählung nicht noch einmal. Wer „Bewegung reduzieren“ eingestellt hat, sieht nur die Zahl. Live: „heute n Würfe selbst geworfen“. Log: dungeon: wurf | geworfen."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: eigene Stimmen für Erzähler und Figuren, klare Meldungen (V01.0.977, Dominik 2026-10-23 „erzähler stimmen und die der npc … generiert je nach stimmung und karakter, auch die des erzählers variieren von geschichte zu geschichte“ und „1-4“, dazu „das besetzt sieht verloren aus und ist auch nicht aussage kräftig“): Kann die Sprachausgabe Stimmen aus einer Beschreibung machen (Einstellungen → Sprachausgabe „VoiceDesign zusätzlich bereitstellen“), liest der Dungeon-Master mit Stimmen aus festen Beschreibungen (dungeon_stimmen.json, dungeon_stimmen.py). Jede neue Geschichte bekommt eine Erzählerstimme ihrer Welt (sechs je Welt und vier für alle, etwa „alter Seebär, rau“ bei Piraten), nie eine der letzten drei Runden desselben Gastgebers; eine Kampagne behält sie von Kapitel zu Kapitel. Der Gastgeber wählt sie unter „🎙 Stimme des Erzählers“ aus der Liste, würfelt mit „🎲 Neu“ eine andere oder hört mit „▶ Probe“ hinein. Die Stimmung der Szene färbt den Erzähler: feste Schlüsselwörter (unheimlich, Kampf, spannend, traurig, fröhlich, ruhig) hängen einen festen Zusatz an, etwa leiser und langsamer im Unheimlichen. Jeder NSC spricht mit seiner eigenen Stimme: Beim ersten Auft"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "ritt nennt das Modell nur Merkmale aus festen Listen (Alter, Geschlecht, Klang, Wesen), das Panel baut daraus die Beschreibung aus festen englischen Wörtern und behält sie für die Runde und die Kampagne (höchstens 40); fehlt ein Merkmal oder passt es nicht, kommt es fest aus dem Namen. Die Merkmale stehen nicht im Verlauf. Ohne VoiceDesign bleibt es bei den festen Stimmen der Regeln. Live: Zahl der NSC-Stimmen. Log: dungeon: erzaehler | neu oder gewaehlt. Jede Ablehnung des Panels sagt jetzt ihren Grund (dungeon._http schickt das feste Grundwort der Regel, etwa held spielt, runden, tasche voll), und die Seite zeigt dazu einen ganzen Satz mit dem, was zu tun ist (DMGRUND in dungeon.js), als Hinweis-Kasten mit ⚠; „besetzt“ beim Start einer Runde heißt jetzt „Dieser Held spielt gerade in einer anderen Runde. Beende sie dort oder wähle einen anderen Helden.“ test_dungeon.Refusals prüft, dass jedes Grundwort seinen Satz hat."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Bilder für Ausrüstung und Zauber (V01.0.967, Plan dungeon-master/plan.md Abschnitt „5i“, Dominik 2026-10-23 „2“ und „die Bildgeneration, aber auch startbar per Knopf direkt“): Eigener Admin-Schalter Funktionen → KI-Dungeon-Master → Bilder für Ausrüstung und Zauber (Standard aus, chat.dungeon_bilder), dazu muss Funktionen → Bilder malen an und das Bildmodell installiert sein. Katalog: Jeder Eintrag des Katalogs (Waffen, Rüstungen, Schmuck, Tränke, Zauber, Schriftrollen, auch die eigenen Einträge des Admins) bekommt je Welt ein Bild im festen Stil der Welt (welten[].bildstil), solange eine Runde im Ton ab 8 offen ist, auch im Bilderbuch-Stil. Den Text baut das Panel fest aus Stil, englischem Namen des Eintrags und einem festen Satz je Art (bei Zaubern dazu der englische Satz des Zaubers), dahinter „no text, no letters, no watermark“; er wird wie ein Bildwunsch geprüft (Wortliste, bekannte Personen), ein abgelehnter Eintrag geht nie an den Bild-Dienst. Gemalt wird 512×512 eins nach dem anderen über die Warteschlange „Schwere Aufträge“ (Sprache hat Vorrang, Wartungspause „bild“) und halb so groß mit den KI-Kennzeichen des Bild-Dienstes abgelegt (dungeon-bild/ding-<ha"
 },
 {
@@ -17502,6 +17550,54 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "AI Dungeon Master: deleting old rounds and narration by the map (V01.0.975, Dominik 2026-10-23 \"old rounds should be deletable\" and \"the story should respect the map and only allow that\"): In the list \"Your rounds\" an ended round has a button \"Delete\" next to \"Open\" (host: the round with its read-aloud sound and pictures is gone) or \"Hide\" (player: only off the own list); the second tap (\"Really?\") confirms. A running round is still only ended by the host. If \"Open\" fails, the page scrolls to the message. Logs: dungeon: runde | geloescht, dungeon: runde | ausgeblendet. The panel now also checks the narration against the map: when it names a place of the map the group cannot be at (neither the place where it stands, nor a neighbour, nor the chosen way), the panel asks once more with the fixed hint to narrate only the place and the ways from the map (dungeon: nachbessern | karte); the scene's place is always the map's anyway."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: items and values explained, tools that work (V01.0.977, Dominik 2026-10-23 \"item descriptions are missing, what do they do, what do they help with\", \"tapping values etc. should explain what it is and what it is for\", tool card \"+2 on a fitting check\" and \"1\"): Each of the 137 items in the catalog has a fixed description in German and English (info in dungeon_regeln.json, at most 160 characters, all fine for the youngest tone): what it is, what it does and what it helps with. It shows on every merchant card, in the bag and in an item's window. On the hero card at the table and in the hero sheet a tap on a value (STR, DEX, CON, INT, WIS, CHA), on protection, life, level, gold or a worn thing explains right below what it is and what it counts for; a second tap closes it. The six values explain themselves from werte[].info, life, level, protection and gold with fixed sentences. The twelve tools (climbing rope, lockpick, compass, puzzle cube, lantern …) have a fixed effect (hilft: values and words): when the action names the tool (its name or one of its words) and the check fits one of its values, the panel adds +2 (dungeon.WERKZEUG), one tool per check at most. On a "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "rolled 1 the tool used breaks and leaves the bag; compass, spyglass, everburning torch and treasure map (fest) never break. The roll shows \"🔧 Lockpick helps\" or \"🔧 Lockpick broke\", the narrator learns both in the checks. Log: dungeon: werkzeug | kaputt. The admin's own items may have info and hilft, both are checked (check_rules)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: throwing your own die and the check bar (V01.0.977, Dominik 2026-10-23 \"1 and 2 but with sparks on a 20 and an own sound for the dice result\"): When a check for your hero comes during the wait, a big d20 with \"?\" shows: a tap (or a shake, where the browser gives motion without asking, such as Android) rolls it for about a second, then it lands on the number the panel rolled before (dungeon.roll); the tap does not change the result. The other seats see \"X is rolling …\" without a number until then (the panel does not send it to them), after the throw (POST /api/profile/dungeon/{rid}/wurf, guest POST /api/dungeon/wurf, rate limit dungeonwurf) or after 12 seconds at the latest (dungeon_warten.WURF_S) it rolls for them too. Below every roll the check bar shows die, bonus and tool as a bar up to the red line of the difficulty, with \"just made it!\" or \"just missed\" one point away. A 20 throws sparks, a 1 wobbles; with own sounds for success, failure, the 20 and the 1, made in the browser like the other sounds and only when sounds are on. A die already thrown does not roll again in the narration. With \"reduce motion\" only the number shows. Live: \"n rolls thrown today\". L"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "og: dungeon: wurf | geworfen."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: own voices for narrator and characters, clear messages (V01.0.977, Dominik 2026-10-23 \"narrator voices and the NPCs' … made by mood and character, the narrator's varying from story to story\" and \"1-4\", plus \"the 'besetzt' looks lost and says nothing\"): When the speech output can make voices from a description (Settings → Speech output \"Also serve VoiceDesign\"), the Dungeon Master reads with voices from fixed descriptions (dungeon_stimmen.json, dungeon_stimmen.py). Every new story gets a narrator voice of its world (six per world and four for all, such as \"old sea dog, rough\" for pirates), never one of the same host's last three rounds; a campaign keeps it from chapter to chapter. The host picks it under \"🎙 Narrator's voice\" from the list, rolls another with \"🎲 New\" or listens with \"▶ Sample\". The scene's mood colours the narrator: fixed key words (eerie, battle, tense, sad, cheerful, calm) add a fixed addition, such as quieter and slower when eerie. Every NPC speaks with its own voice: on its first appearance the model only names traits from fixed lists (age, gender, sound, nature), the panel builds the description from fixed English words and keeps it for the ro"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "und and the campaign (40 at most); a missing or unfitting trait comes from the name, always the same. The traits are not in the log. Without VoiceDesign the fixed voices of the rules stay. Live: number of NPC voices. Log: dungeon: erzaehler | neu or gewaehlt. Every refusal of the panel now says its reason (dungeon._http sends the rule's fixed reason word, such as held spielt, runden, tasche voll), and the page shows a whole sentence with what to do (DMGRUND in dungeon.js) in a notice box with ⚠; \"besetzt\" when starting a round now reads \"This hero is playing in another round right now. End it there or pick another hero.\" test_dungeon.Refusals checks every reason word has its sentence."
 },
 {
 "lang": "en",

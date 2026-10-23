@@ -1,0 +1,56 @@
+{
+  "erzaehler": {
+    "fantasy": [
+      ["alter Barde, warm und ruhig", "old bard, warm and calm", "An old male bard, warm deep voice, calm and kind storytelling"],
+      ["weise Erzählerin, sanft", "wise storyteller, gentle", "A wise older woman, soft clear voice, gentle and patient"],
+      ["Zwergenstimme, tief und kräftig", "dwarven voice, deep and strong", "A gruff male voice, very deep, strong and hearty, a little rough"],
+      ["Elfenstimme, hell und klar", "elven voice, bright and clear", "A young woman, light airy voice, bright, clear and graceful"],
+      ["Wanderer am Feuer, gemütlich", "wanderer by the fire, cosy", "A middle aged man, relaxed friendly voice, cosy and smiling"],
+      ["Chronistin, feierlich", "chronicler, solemn", "A mature woman, rich voice, solemn and measured like a chronicle"]
+    ],
+    "horror": [
+      ["flüsternd und alt", "whispering and old", "An old man, low breathy whisper, slow and eerie"],
+      ["kühl und leise", "cool and quiet", "A woman, cool quiet voice, slow, calm and unsettling"],
+      ["rau und schwer", "rough and heavy", "A man, rough heavy voice, slow, dark and grave"],
+      ["Totengräber, trocken", "gravedigger, dry", "An elderly man, dry crackling voice, slow and matter of fact"],
+      ["Spukhaus-Erzählerin, gedämpft", "haunted house narrator, hushed", "A woman, hushed low voice, tense and careful"],
+      ["Wächter der Gruft, tief", "crypt keeper, deep", "A man, very deep resonant voice, slow and ominous"]
+    ],
+    "scifi": [
+      ["Bordcomputer, ruhig", "ship computer, calm", "A calm neutral female voice, precise, even and slightly cool"],
+      ["Kapitänin, bestimmt", "captain, firm", "A confident woman, firm clear voice, brisk and focused"],
+      ["Funker, lässig", "radio operator, casual", "A young man, casual relaxed voice, quick and friendly"],
+      ["Archivar, nüchtern", "archivist, sober", "A middle aged man, sober clear voice, measured and dry"],
+      ["Forscherin, neugierig", "scientist, curious", "A woman, bright curious voice, lively and thoughtful"],
+      ["Veteran der Flotte, rau", "fleet veteran, rough", "An older man, rough low voice, calm and weary"]
+    ],
+    "piraten": [
+      ["alter Seebär, rau", "old sea dog, rough", "An old man, rough salty voice, hearty and loud, with a grin"],
+      ["Kapitänin, kräftig", "captain, strong", "A strong woman, bold powerful voice, confident and lively"],
+      ["Schiffsjunge, munter", "cabin boy, lively", "A young man, bright cheeky voice, quick and excited"],
+      ["Steuermann, ruhig", "helmsman, calm", "A middle aged man, calm steady voice, warm and dry humour"],
+      ["Hafenwirtin, verschmitzt", "harbour innkeeper, sly", "A woman, warm husky voice, sly and amused"],
+      ["Seemannsgarn-Erzähler, tief", "yarn spinner, deep", "An old man, deep booming voice, dramatic and theatrical"]
+    ],
+    "alle": [
+      ["ruhiger Erzähler", "calm narrator", "A man, calm warm voice, clear and steady storytelling"],
+      ["freundliche Erzählerin", "friendly narrator", "A woman, friendly warm voice, clear and lively storytelling"],
+      ["dramatischer Erzähler", "dramatic narrator", "A man, rich theatrical voice, expressive and dramatic"],
+      ["sanfte Erzählerin", "gentle narrator", "A woman, soft gentle voice, slow and soothing"]
+    ]
+  },
+  "stimmung": {
+    "unheimlich": [["unheim", "düster", "dunkel", "gruselig", "bedrohlich", "eerie", "dark", "creepy", "grim", "ominous"], "speaking hushed and slow, eerie"],
+    "kampf": [["kampf", "schlacht", "wild", "battle", "fight", "fierce"], "speaking with energy and force"],
+    "spannend": [["spann", "gefahr", "angespannt", "hektisch", "tense", "danger", "urgent", "hectic"], "speaking a little faster, tense"],
+    "traurig": [["traurig", "trauer", "einsam", "melanchol", "sad", "lonely", "mournful", "melanchol"], "speaking slowly with sadness"],
+    "froehlich": [["fröhlich", "heiter", "lustig", "fest", "cheerful", "merry", "festive", "joyful", "happy"], "speaking brightly with a smile"],
+    "ruhig": [["ruhig", "still", "friedlich", "sanft", "calm", "quiet", "peaceful", "gentle"], "speaking slowly and softly"]
+  },
+  "npc": {
+    "alter": {"kind": "a child", "jung": "a young", "mittel": "a middle aged", "alt": "an old"},
+    "geschlecht": {"weiblich": "woman", "maennlich": "man", "offen": "person"},
+    "klang": {"tief": "deep voice", "hell": "high voice", "rau": "rough voice", "sanft": "soft voice", "kraeftig": "strong voice", "duenn": "thin voice"},
+    "wesen": {"freundlich": "friendly and warm", "finster": "grim and cold", "listig": "sly and sneaky", "aengstlich": "nervous and timid", "stolz": "proud and haughty", "froehlich": "cheerful and lively", "muede": "tired and slow", "weise": "wise and calm"}
+  }
+}

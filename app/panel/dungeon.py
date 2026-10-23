@@ -70,6 +70,7 @@ Origin is refused (Richtlinie Teil 3 „Links für Leute ohne Profil“). The jo
     POST   /api/profile/dungeon/kampagne/{kid}/weiter   host: {held} the next chapter; DELETE …/{kid} deletes it
     DELETE /api/profile/dungeon/daten             all own data of the game (also while blocked)
     POST   /api/profile/dungeon/{rid}/vorlesen    host: {an} read the narration aloud (narrator and NPC voice)
+    POST   /api/profile/dungeon/{rid}/erzaehler   host: {k} the narrator's voice of the world's list, "" a new one (dungeon_stimmen.py)
     GET    /api/profile/dungeon/{rid}/ton/{n}     the turn n read aloud (WAV, the last TON_ZUEGE turns)
     POST   /api/profile/dungeon/{rid}/hoeren      {wav}: speak instead of type, the text for the own field
     POST   /api/profile/dungeon/{rid}/sitzcode    a code for the own seat, for the app's web view (shown once)
@@ -77,6 +78,7 @@ Origin is refused (Richtlinie Teil 3 „Links für Leute ohne Profil“). The jo
     POST   /api/profile/dungeon/{rid}/daumen      {zug, gut}: 👍/👎 for a narration (dungeon_erzaehler.thumb)
     POST   /api/profile/dungeon/{rid}/tisch       {text}: table talk between the seats, never for the model (dungeon_warten.talk)
     POST   /api/profile/dungeon/{rid}/tippt       {}: „X schreibt …“ for the others, kept in memory only (dungeon_warten.typing)
+    POST   /api/profile/dungeon/{rid}/wurf        {}: the seat throws its own die, the others see the number (dungeon_warten.throw)
     POST   /api/profile/dungeon/{rid}/termin      host: {t} the next game date (0 takes it back); GET …/termin.ics
     POST   /api/dungeon/platz|beitreten|lage|aktion|held|figur|ton|hoeren|termin|daumen|tisch|tippt   the seat of a guest, {code, ...} (dungeon.js)
     GET    /api/admin/dungeon, PUT /api/admin/dungeon, DELETE /api/admin/dungeon   the admin's rules (and stories)
@@ -105,6 +107,7 @@ from fastapi.responses import Response
 import dungeon_karte
 import dungeon_erzaehler as erz
 import dungeon_warten as warten
+import dungeon_stimmen as stimmen
 import features
 import guard
 import mfa
@@ -241,6 +244,8 @@ ERFOLG_ARTEN = ("gegner", "ziel")
 ARTEN = ("waffe", "ruestung", "schmuck", "trank", "zauber", "rolle")
 ZIELE = ("selbst", "gruppe")   # whom a spell reaches
 SEGEN_MAX = 4             # blessings (potions, spells) a hero carries at once
+INFO_MAX = 160            # the fixed description of a catalog item or value (info): what it does, what it helps with
+WERKZEUG = 2              # a tool (hilft) the action names adds this to a fitting check; on a natural 1 it breaks
 WERT_MAX = 20             # a value's score at most (as in D&D); every level's point raises one by 1
 KON = "konstitution"     # the value that adds to life (its bonus on every level, as in D&D)
 _lock = threading.RLock()   # _end and keep_hero run inside it
@@ -254,7 +259,7 @@ _tts = [None]             # one TTS job of the game at a time (asyncio.Lock, mad
 _stimmen = {"t": 0.0, "v": [], "design": False, "laeuft": False}   # the speech output's voices a hero may take, and whether it can make one from a description (STIMMEN_S)
 _day = DayCounter(zuege=0, beute=0, stufen=0, ausfall=0, verworfen=0, abgelehnt=0, runden=0, kapitel=0, vorgelesen=0, gehoert=0, akte=0,
                   vorschlaege=0, kaeufe=0, verkaeufe=0, maerkte=0, auto=0, gemalt=0, bild_weg=0, bild_aus=0, gemeldet=0,
-                  wahrheit=0, zusammengefasst=0, nachgebessert=0, daumen_hoch=0, daumen_runter=0, tisch=0)
+                  wahrheit=0, zusammengefasst=0, nachgebessert=0, daumen_hoch=0, daumen_runter=0, tisch=0, werkzeug=0, kaputt=0, geworfen=0)
 
 
 def _go(coro, name):
@@ -355,6 +360,8 @@ def check_rules(r):
         need(all(_pair(x.get("name"), 40) for x in v if isinstance(x, dict) and k not in ("effekte",)), f"{k}: name als [deutsch, englisch], je höchstens 40 Zeichen")
     werte = {x.get("id") for x in r.get("werte") or [] if isinstance(x, dict)}
     need(len(werte) == 6 and KON in werte, f"werte: genau sechs Werte, darunter {KON}")
+    need(all("info" not in x or _pair(x["info"], INFO_MAX) for x in r.get("werte") or [] if isinstance(x, dict)),
+         f"werte: info als [deutsch, englisch], je höchstens {INFO_MAX} Zeichen")
     vt = r.get("verteilung")
     need(isinstance(vt, list) and len(vt) == len(werte) and all(_int(x, 3, 18) for x in vt), "verteilung: je Wert eine Zahl von 3 bis 18")
     for v in r.get("voelker") or []:
@@ -386,6 +393,13 @@ def check_rules(r):
              f"gegenstaende {x.get('id')}: kg 0 bis 60")
         need("preis" not in x or _int(x["preis"], 1, 10000), f"gegenstaende {x.get('id')}: preis 1 bis 10000")
         need("erkennt" not in x or x.get("art") == "rolle" and x["erkennt"] is True, f"gegenstaende {x.get('id')}: erkennt nur bei rolle, true")
+        need("info" not in x or _pair(x["info"], INFO_MAX), f"gegenstaende {x.get('id')}: info als [deutsch, englisch], je höchstens {INFO_MAX} Zeichen")
+        hf = x.get("hilft")
+        need(hf is None or x.get("art") == "rolle" and isinstance(hf, dict) and set(hf) <= {"werte", "worte", "fest"}
+             and isinstance(hf.get("werte"), list) and hf["werte"] and set(hf["werte"]) <= werte
+             and isinstance(hf.get("worte"), list) and 1 <= len(hf["worte"]) <= 6
+             and all(isinstance(w, str) and 3 <= len(w) <= 30 and w == w.lower() for w in hf["worte"]) and hf.get("fest", True) is True,
+             f"gegenstaende {x.get('id')}: hilft nur bei rolle, {{werte, worte (1 bis 6, klein), fest true}}")
         if x.get("art") in ("trank", "zauber"):
             sg = x.get("segen")
             need(_int(x.get("heilung", 0), 0, 30) and (x.get("heilung") or sg) and (sg is None or isinstance(sg, dict)
@@ -795,11 +809,21 @@ def item_view(r, it, lang):
             zeilen.append(("{} +{} für {} Züge" if not li else "{} +{} for {} turns").format(w[sg["wert"]]["name"][li], sg["bonus"], sg["zuege"]))
     if e:
         zeilen.append(e["satz"][li])
+    if c.get("hilft"):
+        zeilen.append(tool_line(r, c, li))
     name = it.get("eigen") or c["name"][li]
     return {"i": it["i"], "id": it["id"], "art": c["art"], "name": (c["name"][li] + (" (unerkannt)" if not li else " (unknown)")) if u else name,
             "satz": "" if u else it.get("satz", ""), "selten": "" if u else it["s"], "selten_name": ("unerkannt" if not li else "unknown") if u else s["name"][li],
             "zeilen": zeilen, "kg": round(kg(r, it), 1), "n": it.get("n", 1), "platz": list(places(r, c)), "zweihand": bool(c.get("zweihand")),
-            "u": u, "erkennt": bool(c.get("erkennt"))}
+            "u": u, "erkennt": bool(c.get("erkennt")), "info": (c.get("info") or ["", ""])[li]}
+
+
+def tool_line(r, c, li):
+    """What a tool does at the table, in one fixed line."""
+    w = " / ".join(_by(r, "werte")[x]["name"][li] for x in c["hilft"]["werte"])
+    t = (f"+{WERKZEUG} bei {w}-Proben, wenn deine Aktion es nennt" if not li else f"+{WERKZEUG} on {w} checks when your action names it")
+    return t + ((" · geht nie kaputt" if not li else " · never breaks") if c["hilft"].get("fest")
+                else (" · bricht bei einer 1" if not li else " · breaks on a 1"))
 
 
 def hero_view(r, h, lang, full=True):
@@ -814,7 +838,8 @@ def hero_view(r, h, lang, full=True):
     fa = {x["id"]: x for x in k["faehigkeiten"]}
     out.update(satz=h.get("satz", ""), ep=h["ep"], ep_naechste=nxt, gold=h["gold"], punkte=h["punkte"],
                werte=[{"id": w["id"], "name": w["name"][li], "kurz": w["name"][li][:3].upper(), "wert": h["werte"].get(w["id"], 10),
-                       "mod": mod(h["werte"].get(w["id"], 10)), "gesamt": total(r, h, w["id"])} for w in r["werte"]],
+                       "mod": mod(h["werte"].get(w["id"], 10)), "gesamt": total(r, h, w["id"]), "info": (w.get("info") or ["", ""])[li]}
+                      for w in r["werte"]],
                wert_max=WERT_MAX, stimme=h.get("stimme", ""), klang=h.get("klang", ""), bild_neu=h.get("bild") != h["stufe"],
                schutz=schutz(r, h), an={k: item_view(r, it, lang) if it else None for k, it in h["an"].items()},
                kg=load(r, h), trag=carry(h), belastet=burdened(r, h), rabatt=rabatt(r, h), tasche_max=TASCHE,
@@ -831,8 +856,9 @@ def hero_card(r, h, lang):
     and what it wears."""
     li = 1 if lang == "en" else 0
     return {"werte": [{"kurz": w["name"][li][:3].upper(), "name": w["name"][li], "wert": h["werte"].get(w["id"], 10),
-                       "mod": total(r, h, w["id"])} for w in r["werte"]],
-            "schutz": schutz(r, h), "dinge": [item_view(r, it, lang)["name"] for it in worn(h)], "belastet": burdened(r, h)}
+                       "mod": total(r, h, w["id"]), "info": (w.get("info") or ["", ""])[li]} for w in r["werte"]],
+            "schutz": schutz(r, h), "dinge": [{"name": x["name"], "info": x["info"], "zeilen": x["zeilen"]} for x in (item_view(r, it, lang) for it in worn(h))],
+            "belastet": burdened(r, h)}
 
 
 FARBEN = ("grund", "karte", "pergament", "tinte", "gold")   # the colours of a world's table (welten[].farben)
@@ -1083,6 +1109,11 @@ def make_round(owner, b, lang, now=None, kampagne=None):
                 rd["akt"] = kampagne.get("akt", 0)
         if plan:
             rd.update(plan=plan, akt=rd.get("akt", 0), akt_zug=1)
+        if (kampagne or {}).get("stimmen"):
+            rd.update(copy.deepcopy(kampagne["stimmen"]))        # a campaign keeps its narrator and its NPCs' voices
+        else:                                                    # a new story: a narrator none of the owner's last rounds had
+            stimmen.pick(rd, [v.get("erzaehler") for v in sorted(d["runden"].values(), key=lambda v: v.get("made", 0))
+                              if v["owner"] == owner and v is not rd and v.get("erzaehler")])
         dungeon_karte.make(r, rd, start=((kampagne or {}).get("orte") or [""])[-1])   # the chapter goes on where the last one ended
         _log(rd, "system", text=["Die Runde beginnt. Schreibt, was eure Figuren tun.", "The round begins. Write what your characters do."])
         rd["dm"] = "prolog"                   # the Dungeon Master opens it first (run_prolog), the turn waits
@@ -1191,8 +1222,10 @@ def join(rid, pid, b, uid="", now=None):
             h = take_campaign_hero(rd, b["kampagne"])
             if not h:
                 raise LookupError("held")
-        if p.get("held") or (uid and seat_of(rd, uid)[0]) or _in_play(d, h["hid"]):
+        if p.get("held") or (uid and seat_of(rd, uid)[0]):
             raise FileExistsError("besetzt")
+        if _in_play(d, h["hid"]):
+            raise FileExistsError("held spielt")
         if any(x["held"]["name"].lower() == h["name"].lower() for _, x in seated(rd)):
             raise NameError("name")
         p["held"] = h
@@ -1291,6 +1324,7 @@ def end_chapter(owner, rid, now=None):
         c["vorlesen"] = bool(rd.get("vorlesen"))
         c["plan"], c["akt"] = rd.get("plan"), rd.get("akt", 0)
         c.update(erz.keep_chapter(rd))
+        c["stimmen"] = stimmen.keep(rd)
         kid = kid or "k" + os.urandom(4).hex()
         c["orte"] = dungeon_karte.names(rd)[-ORTE_KARTE:]
         cover(rid, rd, kid, c)
@@ -1405,7 +1439,7 @@ def next_chapter(owner, kid, b, lang, now=None):
     rid = make_round(owner, dict(rb, held=held, einstieg=""), c.get("lang") or lang, now,
                      kampagne={"kid": kid, "kapitel": c["kapitel"] + 1, "vorher": c.get("bisher", ""),
                                "plan": c.get("plan"), "akt": c.get("akt", 0), "orte": c.get("orte"),
-                               "wahrheit": c.get("wahrheit"), "faeden": c.get("faeden")})
+                               "wahrheit": c.get("wahrheit"), "faeden": c.get("faeden"), "stimmen": c.get("stimmen")})
     with _lock:
         ks, c = _campaign(owner, kid)
         c.update(rid=rid, t=int(time.time() if now is None else now))
@@ -1824,7 +1858,8 @@ def schema_proben(r):
 SCHEMA_ERZAEHLEN = {"type": "object", "additionalProperties": False, "required": ["erzaehlung", "frage_an"], "properties": {
     "erzaehlung": {"type": "string", "maxLength": ERZ_LANG + 200},
     "npc": {"type": "array", "maxItems": NPC_MAX, "items": {"type": "object", "additionalProperties": False, "required": ["name", "sagt"],
-            "properties": {"name": {"type": "string", "maxLength": 40}, "sagt": {"type": "string", "maxLength": NPC_SAGT}}}},
+            "properties": {"name": {"type": "string", "maxLength": 40}, "sagt": {"type": "string", "maxLength": NPC_SAGT},
+                           "stimme": stimmen.schema()}}},
     "folgen": {"type": "array", "maxItems": FOLGEN_MAX, "items": {"type": "object", "additionalProperties": False,
                "required": ["wer", "art", "zahl"], "properties": {"wer": {"type": "string"}, "art": {"type": "string", "enum": list(FOLGE_ARTEN)},
                                                                    "zahl": {"type": "integer"}}}},
@@ -1894,7 +1929,7 @@ def system_text(r, rd, task):
                    AUFGABE_PROLOG[lang].format(n=ERZ_LANG, bild=bild) if task == "prolog" else
                    AUFGABE_ERZAEHLEN[lang].format(n=erz_max(rd), anlaesse=", ".join(ANLAESSE), ooc=OOC_MAX, bild=bild)).rstrip()
     if task in ("prolog", "erzaehlen"):
-        t += " " + erz.AUFGABE_FAEDEN[lang] + erz.style_text(_me, r, rd, lang)
+        t += " " + erz.AUFGABE_FAEDEN[lang] + erz.style_text(_me, r, rd, lang) + stimmen.AUFGABE[lang]
     if task != "proben" and rd.get("plan") and rd.get("akt", 0) < len(rd["plan"]["akte"]):
         t += " " + AUFGABE_FOLGE[lang]
     if task != "proben":
@@ -1958,11 +1993,30 @@ def roll(r, rd, proben, rng=None):
             vt = "" if vt == "vorteil" else "nachteil"
         ws = [rng.randint(1, 20) for _ in range(2 if vt else 1)]
         w = max(ws) if vt == "vorteil" else min(ws)
-        bonus = total(r, h, p["wert"])
+        tool = used_tool(r, h, p["wert"], (rd["offen"].get(p["pid"]) or {}).get("text", ""))
+        bonus = total(r, h, p["wert"]) + (WERKZEUG if tool else 0)
         ok = w == 20 or (w != 1 and w + bonus >= p["schwer"])
+        extra = {"belastet": True} if last else {}
+        if tool:
+            c = _c(r, tool)
+            extra["werkzeug"] = c["name"][1 if rd["lang"] == "en" else 0]
+            if w == 1 and not c["hilft"].get("fest"):   # a natural 1 breaks the tool (Dominik 2026-10-23 „1“), apply takes it
+                extra["kaputt"] = tool["i"]
         out.append({"pid": p["pid"], "name": h["name"], "wert": p["wert"], "w": w, "bonus": bonus, "gesamt": w + bonus,
-                    "schwer": p["schwer"], "ok": ok, "vt": vt, "ws": ws, **({"belastet": True} if last else {})})
+                    "schwer": p["schwer"], "ok": ok, "vt": vt, "ws": ws, **extra})
     return out
+
+
+def used_tool(r, h, wert, text):
+    """The tool of the bag that helps this check: it helps with the value and the action names it (its name or one of its
+    words, lower case, part of a word). One tool per check, the first in the bag."""
+    low = str(text or "").lower()
+    for it in h.get("tasche") or []:
+        c = _c(r, it)
+        hf = c.get("hilft")
+        if hf and wert in hf["werte"] and any(w in low for w in [n.lower() for n in c["name"]] + hf["worte"]):
+            return it
+    return None
 
 
 def erz_max(rd):
@@ -1979,7 +2033,7 @@ def check_story(r, rd, obj):
     if len(text) < 20 or bad_words(r, rd, text):
         return None, 1
     names, drop = _name_map(rd), 0
-    out = {"text": text, "npc": [], "folgen": [], "beute": None, "erfolg": [], "szene": None, "frage": "", "haendler": None,
+    out = {"text": text, "npc": [], "npc_stimme": [], "folgen": [], "beute": None, "erfolg": [], "szene": None, "frage": "", "haendler": None,
            "akt_fertig": obj.get("akt_fertig") is True, "ooc": [], "bild": "", "ort_id": dungeon_karte.ort_id(obj)}
     if obj.get("bild"):
         out["bild"], why = picture_text(r, rd, obj["bild"])
@@ -1999,6 +2053,8 @@ def check_story(r, rd, obj):
             drop += 1
             continue
         out["npc"].append({"name": name, "sagt": sagt})
+        if isinstance(n.get("stimme"), dict):
+            out["npc_stimme"].append({"name": name, "stimme": n["stimme"]})   # only the fixed lists count (stimmen.learn)
     for f in obj.get("folgen") or []:
         pid = names.get(str(f.get("wer", "")).strip().lower()) if isinstance(f, dict) else None
         if not pid or f.get("art") not in FOLGE_ARTEN or not isinstance(f.get("zahl"), int) or len(out["folgen"]) >= FOLGEN_MAX:
@@ -2050,7 +2106,16 @@ def apply(r, rd, wuerfe, story, rid, rng=None):
                 _log(rd, "aktion", pid=pid, name=rd["plaetze"][pid]["held"]["name"], text=a["text"])
     ep = {pid: 0 for pid, _ in seated(rd)}
     for w in wuerfe:
-        _log(rd, "wurf", **{k: w[k] for k in ("pid", "name", "wert", "w", "bonus", "gesamt", "schwer", "ok", "vt", "ws", "belastet") if k in w})
+        _log(rd, "wurf", **{k: w[k] for k in ("pid", "name", "wert", "w", "bonus", "gesamt", "schwer", "ok", "vt", "ws", "belastet", "werkzeug") if k in w},
+             **({"kaputt": True} if w.get("kaputt") else {}))
+        h = (rd["plaetze"].get(w["pid"]) or {}).get("held")
+        if w.get("werkzeug"):
+            _day.bump("werkzeug")
+        it = next((x for x in (h or {}).get("tasche") or [] if x["i"] == w.get("kaputt")), None)
+        if it:
+            use_one(h, it)
+            _day.bump("kaputt")
+            print("dungeon: werkzeug | kaputt", flush=True)
         if w["ok"]:
             ep[w["pid"]] = ep.get(w["pid"], 0) + r["ep"]["probe"] * w["schwer"] // 10
     if story:
@@ -2163,7 +2228,9 @@ async def run_turn(rid, turn):
                 await asyncio.to_thread(wait_step, rid, turn, "wuerfeln", wuerfe)
             await asyncio.to_thread(wait_step, rid, turn, "erzaehlen")
             facts_w = [{"name": w["name"], "wert": w["wert"], "wurf": w["w"], "gesamt": w["gesamt"], "schwer": w["schwer"],
-                        "geschafft": w["ok"], **({"vorteil": w["vt"]} if w.get("vt") else {})} for w in wuerfe]
+                        "geschafft": w["ok"], **({"vorteil": w["vt"]} if w.get("vt") else {}),
+                        **({"werkzeug": w["werkzeug"]} if w.get("werkzeug") else {}), **({"werkzeug_kaputt": True} if w.get("kaputt") else {})}
+                       for w in wuerfe]
             story, best, extra = None, None, ""
             for _ in range(2):                    # a second try when the first fails the checks (erz.judge: one rewrite)
                 obj = await _ask_json(system_text(r, rd, "erzaehlen") + extra, facts(r, rd, facts_w), SCHEMA_ERZAEHLEN, "erzaehlen", 900)
@@ -2201,9 +2268,11 @@ async def run_turn(rid, turn):
                     erz.learn_people(cur, story)
                     erz.apply_threads(cur, story["faeden"])
                     kurz.append(erz.wants_summary(cur))
+                if story:
+                    stimmen.learn(cur, story["npc_stimme"])
                 if story and cur.get("vorlesen"):
                     e = next(x for x in reversed(cur["log"]) if x["art"] == "dm")
-                    said.extend(speak_parts(r, e["text"], e.get("npc") or [], hero_lines(r, cur, turn)))
+                    said.extend(speak_parts(r, e["text"], e.get("npc") or [], hero_lines(r, cur, turn), cur))
                 if story and story["bild"] and cur["szene"].get("ort") != ort0:
                     bild.extend(queue_scene(r, d, rid, cur, story["bild"]) or ())
                 cur["dm"] = ""
@@ -2289,9 +2358,10 @@ async def run_prolog(rid):
                 if story:
                     erz.learn_people(cur, story)
                     erz.apply_threads(cur, story["faeden"])
+                    stimmen.learn(cur, story["npc_stimme"])
                 if prolog(r, cur, story) and cur.get("vorlesen"):
                     e = cur["log"][-1]
-                    said.extend(speak_parts(r, e["text"], e.get("npc") or []))
+                    said.extend(speak_parts(r, e["text"], e.get("npc") or [], (), cur))
                 if story and story["bild"]:
                     bild.extend(queue_scene(r, d, rid, cur, story["bild"]) or ())
                 cur["dm"] = ""
@@ -2432,11 +2502,14 @@ def hero_lines(r, rd, turn):
     return out
 
 
-def speak_parts(r, story_text, npc, helden=()):
+def speak_parts(r, story_text, npc, helden=(), rd=None):
     """What a turn reads aloud: first what the heroes said in their own voices, then the narration in the narrator's
-    voice, then each NPC in the NPC voice."""
+    voice, then each NPC in its voice. With VoiceDesign the narrator is the round's own with the scene's mood and every
+    NPC has its own (dungeon_stimmen.py); without, the fixed voices of the rules."""
     v = voices(r)
-    parts = list(helden) + [(v["erzaehler"], story_text, "")] + [(v["npc"], f"{n['name']}: {n['sagt']}", "") for n in npc]
+    design = bool(rd) and _stimmen["design"]
+    parts = list(helden) + [(v["erzaehler"], story_text, stimmen.narrator(rd) if design else "")] + \
+        [(v["npc"], f"{n['name']}: {n['sagt']}", stimmen.npc(rd, n["name"]) if design else "") for n in npc]
     out, n = [], 0
     for voice, text, klang in parts:
         if n + len(text) > TON_ZEICHEN:
@@ -3070,6 +3143,7 @@ def view(rid, pid, now=None):
             "meine_aktion": rd["offen"].get(pid, {}).get("text", ""), "plaetze": plaetze,
             "max": r["grenzen"]["spieler"], "log": [e for e in rd["log"] if e["art"] != "ooc" or e.get("pid") == pid][-LOG_ZEIGEN:], "until": rd["until"], "poll": POLL_S,
             "text_max": TEXT_MAX, "werte": {w["id"]: w["name"][li] for w in r["werte"]}, "stimmen": list(_stimmen["v"]), "stimme_design": _stimmen["design"],
+            **stimmen.view(rd, lang, host),
             "angebote": offers_for(r, rd, pid, lang), "tausch_teile": TAUSCH_TEILE,
             "markt": market_view(r, rd, me.get("held"), lang), "boden": [item_view(r, x, lang) for x in rd.get("boden") or []],
             "akt": min(rd.get("akt", 0) + 1, len(rd["plan"]["akte"])) if rd.get("plan") else 0,
@@ -3083,6 +3157,7 @@ def view(rid, pid, now=None):
             "termin": rd.get("termin") or 0, "melden": _wants(me) if me.get("uid") else None, "rueckblick": look_back(rd, pid)}
     out.update(erz.view(rd, pid, host))
     out.update(warten.view(rd, rid, pid, lang))
+    out["werkzeug_bonus"] = WERKZEUG
     import dungeon_dingbild
     import dungeon_musik
     out["musik"] = dungeon_musik.for_view(rid, rd, lang)   # music, the place's sound, victory and door (dungeon_musik.py)
@@ -3499,7 +3574,9 @@ def for_live():
             "termine": sum(1 for v in rs if (v.get("termin") or 0) > now), "gemeldet": t["gemeldet"], 
             "wahrheit": t["wahrheit"], "zusammengefasst": t["zusammengefasst"], "nachgebessert": t["nachgebessert"],
             "daumen_hoch": t["daumen_hoch"], "daumen_runter": t["daumen_runter"],
-            "tisch": t["tisch"], "warten": sum(1 for v in rs if v.get("dm")), **dungeon_karte.for_live(rs)}
+            "tisch": t["tisch"], "warten": sum(1 for v in rs if v.get("dm")),
+            "npc_stimmen": sum(len(v.get("npc_stimmen") or {}) for v in rs),
+            "werkzeug": t["werkzeug"], "kaputt": t["kaputt"], "geworfen": t["geworfen"], **dungeon_karte.for_live(rs)}
 
 
 def own_count(uid):
@@ -3589,12 +3666,18 @@ KNOWN = (ValueError, LookupError, OverflowError, FileExistsError, NameError, Tim
 
 def _http(e):
     """A fixed refusal for an error of the rules above (journal: fixed words)."""
-    code, word = {ValueError: (400, "eingabe"), LookupError: (404, "nicht da"), OverflowError: (409, "voll"),
-                  FileExistsError: (409, "besetzt"), NameError: (409, "name doppelt"), TimeoutError: (409, "alter zug"),
-                  PermissionError: (400, "figur-code")}.get(type(e), (400, "eingabe"))
+    code, word = _NEIN.get(type(e), (400, "eingabe"))
+    # the reason the rule gave (a fixed word of this file, „held spielt“, „runden“ …): the page says it as a sentence
+    # with what to do (dungeon.js DMGRUND); anything else only the coarse word
+    why = e.args[0] if type(e) in _NEIN and e.args and isinstance(e.args[0], str) and _GRUND.fullmatch(e.args[0]) else word
     _day.bump("abgelehnt")
     print(f"dungeon: abgelehnt | {word}", flush=True)
-    return HTTPException(code, word)
+    return HTTPException(code, why)
+
+
+_NEIN = {ValueError: (400, "eingabe"), LookupError: (404, "nicht da"), OverflowError: (409, "voll"), FileExistsError: (409, "besetzt"),
+         NameError: (409, "name doppelt"), TimeoutError: (409, "alter zug"), PermissionError: (400, "figur-code")}
+_GRUND = re.compile(r"[a-z]{2,12}( [a-z]{2,12})?")
 
 
 def _seat_uid(rid, uid):
@@ -3825,6 +3908,36 @@ async def tippt(rid: str, request: Request, prof=Depends(browser_profile)):
     return {"ok": True}
 
 
+@router.post("/api/profile/dungeon/{rid}/wurf", dependencies=[Depends(assistant)])
+async def wurf(rid: str, request: Request, prof=Depends(browser_profile)):
+    """The seat throws its own die (tap or shake): the number the panel rolled shows for the others too."""
+    uid = prof["id"]
+    _need(uid)
+    guard.limit(request, "dungeonwurf", uid)
+    await json_body(request, BODY)
+    return await _throw(rid, lambda: _seat_uid(rid, uid))
+
+
+async def _throw(rid, seat):
+    def go():
+        pid = seat()
+        with _lock:
+            d = _read()
+            hit = warten.throw(_round(d, rid), pid)
+            if hit:
+                _write(d)
+        return hit, view(rid, pid)
+    try:
+        hit, v = await asyncio.to_thread(go)
+    except KNOWN as e:
+        print(f"dungeon: wurf | abgelehnt | {type(e).__name__}", flush=True)
+        raise _http(e)
+    if hit:
+        _day.bump("geworfen")
+    print(f"dungeon: wurf | {'geworfen' if hit else 'keiner'}", flush=True)
+    return v
+
+
 @router.post("/api/profile/dungeon/{rid}/termin", dependencies=[Depends(assistant)])
 async def termin(rid: str, request: Request, prof=Depends(browser_profile)):
     """The host sets the next game date (t epoch seconds, 0 takes it back)."""
@@ -3991,6 +4104,30 @@ async def vorlesen(rid: str, request: Request, prof=Depends(browser_profile)):
         raise _http(e)
 
 
+@router.post("/api/profile/dungeon/{rid}/erzaehler", dependencies=[Depends(assistant)])
+async def erzaehler(rid: str, request: Request, prof=Depends(browser_profile)):
+    """Host: {k} one of the world's narrator voices, "" rolls a new one (dungeon_stimmen.choose)."""
+    uid = prof["id"]
+    _need(uid)
+    guard.limit(request, "dungeon", uid)
+    b = await json_body(request, BODY)
+
+    def go():
+        with _lock:
+            d = _read()
+            rd = _round(d, rid)
+            if rd["owner"] != uid or rd["status"] == "ende":
+                raise LookupError("gastgeber")
+            stimmen.choose(rd, str(b.get("k") or ""))
+            _write(d)
+        print(f"dungeon: erzaehler | {'gewaehlt' if b.get('k') else 'neu'}", flush=True)
+        return view(rid, _seat_uid(rid, uid))
+    try:
+        return await asyncio.to_thread(go)
+    except KNOWN as e:
+        raise _http(e)
+
+
 @router.get("/api/profile/dungeon/{rid}/ton/{n}", dependencies=[Depends(assistant)])
 async def ton(rid: str, n: int, request: Request, prof=Depends(own_profile)):
     uid = prof["id"]
@@ -4101,13 +4238,18 @@ async def kampagne_bild(kid: str, n: int, request: Request, prof=Depends(own_pro
 
 
 @router.get("/api/profile/dungeon/{rid}/probe", dependencies=[Depends(assistant)])
-async def stimm_probe(rid: str, request: Request, stimme: str = "", klang: str = "", prof=Depends(own_profile)):
-    """A fixed sentence in a voice the own hero at this table may take, as WAV."""
+async def stimm_probe(rid: str, request: Request, stimme: str = "", klang: str = "", erzaehler: str = "", prof=Depends(own_profile)):
+    """A fixed sentence in a voice the own hero at this table may take, or (erzaehler) one of the narrator voices of
+    the round's world, as WAV."""
     uid = prof["id"]
     _need(uid)
     guard.limit(request, "dungeonprobe", uid)
     try:
         await asyncio.to_thread(_seat_uid, rid, uid)
+        if erzaehler:
+            if erzaehler not in [x["k"] for x in stimmen.view(_round(_read(), rid), "de", True)["erzaehler_liste"]]:
+                raise ValueError("stimme")
+            stimme, klang = "", stimmen.probe_text(erzaehler)
         wav = await probe(stimme, "en" if request.query_params.get("lang") == "en" else "de", klang[:100])
     except KNOWN as e:
         raise _http(e)
@@ -4410,6 +4552,14 @@ async def gast_tippt(request: Request):
     guard.limit(request, "dungeontippt")
     warten.typing(rid, pid)
     return {"ok": True}
+
+
+@router.post("/api/dungeon/wurf")
+async def gast_wurf(request: Request):
+    """{"code"}: the seat throws its own die, the others see the number."""
+    b, rid, pid = await _guest(request)
+    guard.limit(request, "dungeonwurf")
+    return await _throw(rid, lambda: pid)
 
 
 @router.post("/api/dungeon/termin")

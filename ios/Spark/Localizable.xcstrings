@@ -17350,6 +17350,86 @@
           }
         }
       }
+    },
+    "Dieser Held spielt gerade in einer Runde. Beende sie dort zuerst.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This hero is playing in a round right now. End it there first."
+          }
+        }
+      }
+    },
+    "Diesen Helden gibt es nicht mehr.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This hero is gone."
+          }
+        }
+      }
+    },
+    "Diese Kampagne gibt es nicht mehr.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This campaign is gone."
+          }
+        }
+      }
+    },
+    "Das nächste Kapitel läuft schon. Öffne es aus deinen Runden.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The next chapter is running already. Open it from your rounds."
+          }
+        }
+      }
+    },
+    "Diese Runde gibt es nicht mehr oder sie ist vorbei.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This round is gone or over."
+          }
+        }
+      }
+    },
+    "Du sitzt nicht an diesem Tisch.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You do not sit at this table."
+          }
+        }
+      }
+    },
+    "Das darf nur der Gastgeber der Runde.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only the host of the round may do this."
+          }
+        }
+      }
+    },
+    "Das gibt es nicht mehr.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That is gone."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

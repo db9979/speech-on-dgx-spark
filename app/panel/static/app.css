@@ -2294,6 +2294,8 @@ textarea{resize:none}textarea[data-fest]{resize:vertical}textarea.feldplatz{padd
 .dm-figur{margin-top:12px;display:flex;flex-direction:column;gap:6px}
 .dm-form{display:flex;flex-direction:column;gap:6px;max-width:620px}.dmp-form{max-width:none}.dmp-form textarea{width:100%}.dmp-form .row select{width:auto}.dm-two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .dm-seg{flex-wrap:wrap;align-self:flex-start;max-width:100%}.dmmsg{margin-top:8px;font-size:13px}
+.dmmsg.err:not(:empty){display:flex;gap:8px;align-items:flex-start;padding:9px 12px;border-radius:10px;border:1px solid color-mix(in srgb,var(--badt) 45%,transparent);background:color-mix(in srgb,var(--badt) 9%,transparent);color:inherit;line-height:1.4}
+.dmmsg.err:not(:empty)::before{content:'⚠';color:var(--badt);flex:none}
 .dm-sum{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}.dm-adm-err{margin:8px 0;font-size:13px}
 .dm-pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;padding:10px;border-radius:10px;background:color-mix(in srgb,var(--line) 35%,transparent)}
 .dm-mic{flex:none}.dm-mic.on{background:var(--bad);color:#fff;border-color:var(--bad)}.dm-hear,.dm-help,.dm-full{flex:none}.dm-head>.dm-htitle{flex:1;min-width:0}
@@ -2336,11 +2338,19 @@ textarea{resize:none}textarea[data-fest]{resize:vertical}textarea.feldplatz{padd
 .dm-hhead{display:flex;gap:8px;align-items:flex-start}.dm-hhead>div{flex:1;min-width:0}.dm-hhead small{display:block}
 .dm-tisch .dm-hero b{font-variant:small-caps;letter-spacing:.05em;font-size:16px;color:var(--t-gold)}.dm-tisch .dm-hero i{color:var(--t-mut)}
 .dm-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:8px}
-.dm-stats span{display:flex;flex-direction:column;align-items:center;padding:3px 0;border-radius:7px;background:color-mix(in srgb,var(--t-text,var(--fg)) 7%,transparent)}
+.dm-stats span,.dm-stats .dm-erkb{display:flex;flex-direction:column;align-items:center;padding:3px 0;border-radius:7px;background:color-mix(in srgb,var(--t-text,var(--fg)) 7%,transparent)}
+/* a tap explains a value, life, level or worn thing (dungeonfenster.js dmErk*) */
+.dm-erkb{font:inherit;color:inherit;background:none;border:0;padding:0;margin:0;text-align:inherit;cursor:pointer;display:block;width:100%}
+.dm-werte .dm-erkb,.dm-pills .dm-erkb,small .dm-erkb{display:inline;width:auto}
+.dm-erkb:focus-visible{outline:2px solid var(--t-gold,var(--acc));outline-offset:2px;border-radius:7px}
+.dm-stats .dm-erkb.on,.dm-pills .dm-erkb.on{background:color-mix(in srgb,var(--t-gold,var(--acc)) 22%,transparent)}
+.dm-erk{margin-top:8px;padding:8px 10px;border-radius:9px;font-size:13px;line-height:1.4;background:color-mix(in srgb,var(--t-gold,var(--acc)) 10%,transparent);border:1px solid var(--t-linie,var(--line))}
+.dm-erk small{display:block;margin-top:3px}
+.dm-iinfo{display:block;line-height:1.35}
 .dm-stats small{font-size:10px;letter-spacing:.12em;opacity:.7}.dm-stats b{font-size:15px}.dm-stats i{font-style:normal;font-size:11px;opacity:.75}.dm-voice{display:flex;flex-direction:column;gap:5px;margin-top:10px}.dm-voice select{flex:1;min-width:0}.dm-klang{width:100%}
 .dm-vert{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}.dm-vslot{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 2px;border:1px dashed var(--line);border-radius:10px}
 .dm-vchip{width:44px;height:36px;border-radius:9px;border:1px solid var(--line);background:var(--card);color:var(--fg);font:inherit;font-weight:600;font-size:16px;cursor:grab}.dm-vchip.on{border-color:var(--acc);box-shadow:0 0 0 2px color-mix(in srgb,var(--acc) 35%,transparent)}.dm-vsum{font-size:11px;color:var(--mut)}
-.dm-pills{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}.dm-pills span{font-size:12px;padding:2px 8px;border-radius:99px;border:1px solid var(--t-linie,var(--line))}
+.dm-pills{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}.dm-pills span,.dm-pills .dm-erkb{font-size:12px;padding:2px 8px;border-radius:99px;border:1px solid var(--t-linie,var(--line))}
 .dm-state{display:block;margin-top:6px;font-size:12px;color:var(--t-mut,var(--mut))}.dm-state.ok{color:var(--okt)}.dm-tisch .dm-state.ok{color:var(--t-ok)}.dm-state.away{opacity:.6}
 .dm-av[data-c="0"]{background:#d9b25f;color:#241a08}.dm-av[data-c="1"]{background:#8f95f0;color:#141530}.dm-av[data-c="2"]{background:#6cc58a;color:#0e2716}
 .dm-av[data-c="3"]{background:#e98b7b;color:#2d0f0a}.dm-av[data-c="4"]{background:#7cc8d8;color:#0b2a31}
@@ -2381,6 +2391,29 @@ textarea{resize:none}textarea[data-fest]{resize:vertical}textarea.feldplatz{padd
 .dm-wsatz{margin:0;font-style:italic}.dm-wpunkte{display:inline-block;width:14px;height:14px;margin-right:8px;vertical-align:-2px;border-radius:50%;border:2px solid var(--t-gold,var(--accent));border-right-color:transparent;animation:dmdreh 1s linear infinite}
 @keyframes dmdreh{to{transform:rotate(360deg)}}
 .dm-wdice .dm-wurf{margin:0 0 4px}
+/* throwing the own die and the bar of a check (dungeonwarten.js dmWDie, dmLeiste) */
+.dm-wselbst{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px;margin:4px 0 8px;border:1px solid var(--t-linie,var(--line));border-radius:12px;text-align:center}
+.dm-wgross{position:relative;width:96px;height:96px;padding:0;border:0;background:none;cursor:pointer;color:#fff;touch-action:manipulation}
+.dm-wgross svg{width:100%;height:100%;filter:drop-shadow(0 5px 8px rgba(0,0,0,.3))}.dm-wgross polygon{fill:var(--t-rot,#7b2d26)}.dm-wgross .dm-d20f{fill:color-mix(in srgb,#fff 18%,var(--t-rot,#7b2d26))}
+.dm-wgross span{position:absolute;inset:0;display:grid;place-items:center;padding-top:10px;font-size:24px;font-weight:700;font-variant-numeric:tabular-nums}
+.dm-wgross:not(:disabled){animation:dmwink 2.4s ease-in-out infinite}@keyframes dmwink{0%,100%{transform:rotate(0)}8%{transform:rotate(-8deg)}16%{transform:rotate(6deg)}24%{transform:rotate(0)}}
+.dm-wgross:focus-visible{outline:2px solid var(--t-gold,var(--acc));outline-offset:4px;border-radius:50%}
+.dm-wgross.dm-rollt{animation:dmroll 1s cubic-bezier(.2,.7,.3,1)}
+.dm-wdreht{animation:dmdreh 1.2s linear infinite}
+.dm-leiste{margin:0 0 8px}.dm-lbar{position:relative;display:flex;height:10px;border-radius:6px;background:color-mix(in srgb,var(--t-text,var(--fg)) 8%,transparent);overflow:visible}
+.dm-lbar em{display:block;flex:none;height:100%;transform-origin:left}.dm-lbar em:first-child{border-radius:6px 0 0 6px}
+.dm-lan .dm-lbar em{animation:dmlfill .7s ease-out both}
+@keyframes dmlfill{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.dm-lw{background:var(--t-rot,#a8473c)}.dm-lb{background:var(--t-gold,#c9a24a)}.dm-lt{background:#6d9b4a}
+.dm-lm{background:repeating-linear-gradient(45deg,var(--t-rot,#a8473c) 0 3px,transparent 3px 6px);opacity:.6}
+.dm-lziel{position:absolute;top:-4px;bottom:-4px;width:3px;margin-left:-1px;border-radius:2px;background:var(--badt,#b8432f);box-shadow:0 0 0 1px var(--t-karte,#fff)}
+.dm-leiste small{display:block;margin-top:3px}
+.dm-wurf.dm-wland .dm-d20{position:relative;animation:dmland .4s ease-out}@keyframes dmland{0%{transform:scale(1.35)}100%{transform:scale(1)}}
+.dm-wurf.dm-wland.bad:not(.dm-krit) .dm-d20{animation:dmwackel .45s ease-out}@keyframes dmwackel{25%{transform:translateX(-3px)}50%{transform:translateX(3px)}75%{transform:translateX(-2px)}}
+.dm-funken{position:absolute;left:50%;top:50%;width:0;height:0;pointer-events:none}
+.dm-funken i{position:absolute;width:5px;height:5px;margin:-2px;border-radius:50%;background:#ffd36b;box-shadow:0 0 6px #ffb020;animation:dmfunke 1.1s ease-out forwards}
+@keyframes dmfunke{0%{transform:rotate(var(--a)) translateX(0);opacity:1}100%{transform:rotate(var(--a)) translateX(var(--d));opacity:0}}
+@media (prefers-reduced-motion:reduce){.dm-wgross,.dm-wgross.dm-rollt,.dm-wdreht,.dm-lan .dm-lbar em,.dm-wurf.dm-wland .dm-d20,.dm-funken i{animation:none}}
 .dm-wkarten{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px}.dm-wkarte{display:flex;flex-direction:column;gap:2px;padding:8px 10px;border-radius:10px;border:1px solid var(--t-linie,var(--line));background:color-mix(in srgb,var(--t-karte,var(--card)) 80%,transparent);font-size:13px}.dm-wkarte small{color:var(--t-mut,var(--mut))}
 .dm-wtipp{color:var(--t-mut,var(--mut))}
 .dm-satz{animation:dmsatz .7s ease-out both}@keyframes dmsatz{from{opacity:0;filter:blur(2px)}to{opacity:1;filter:none}}

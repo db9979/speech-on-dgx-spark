@@ -2907,6 +2907,27 @@
 "titel": "Dungeon-Master: Musik ruhig und ambient",
 "text": "A: Nach dem Update ist der alte Musikvorrat weg (Live: weniger Stücke), Funktionen → KI-Dungeon-Master → Regeln anpassen → Musik am Tisch → „Musik jetzt vorbereiten“ füllt ihn neu. B: Am Tisch klingt jede Stimmung ruhig und flächig, ohne Schlagzeug und ohne schnelles Tempo; auch im Kampf nur ein leiser Puls. C: Der Übergang ins nächste Stück blendet langsam (8 s), Lautstärke startet bei 20 %.",
 "thread": "Dungeon-Master: Musik, Geräusche, Würfel"
+},
+{
+"id": "P440",
+"v": 977,
+"titel": "Dungeon-Master: Gegenstände und Werte erklärt",
+"text": "A: Händler öffnen: jede Karte hat unter dem Namen einen Satz, was das Ding tut und wobei es hilft. B: In der Gruppe auf GES deines Helden tippen: darunter steht, was Geschick ist und wofür es zählt; nochmal tippen schließt. C: Auch Leben, Stufe, SCH und ein getragenes Ding erklären sich. D: Ein Kletterseil kaufen und als Aktion „Ich klettere mit dem Seil die Mauer hoch“: im Wurf steht „🔧 Kletterseil hilft“, der Bonus ist um 2 höher. E: Würfelt das Panel dabei eine 1, steht „zerbrochen“ und das Seil ist aus der Tasche weg; ein Kompass bleibt immer.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P441",
+"v": 977,
+"titel": "Dungeon-Master: Würfel selbst werfen",
+"text": "Zwei Plätze, Geräusche an. A: Eine Aktion mit Probe schicken („Ich springe über den Graben“): in der Wartezeit steht bei dir ein großer W20 mit „?“, beim anderen „Name würfelt …“. B: Antippen (Android: Handy schütteln): er rollt, landet auf der Zahl, eigenes Geräusch für geschafft oder nicht geschafft; beim anderen rollt er jetzt auch. C: Unter dem Wurf die Leiste mit roter Linie für die Schwierigkeit. D: Bei einer 20 sprühen Funken, bei einer 1 wackelt der Würfel. E: Kommt die Erzählung, rollt dein Würfel nicht noch einmal. F: Zustand → Überblick → Live: „Würfe selbst geworfen“.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P442",
+"v": 977,
+"titel": "Dungeon-Master: eigene Stimmen und klare Meldungen",
+"text": "Voraussetzung: Einstellungen → Sprachausgabe „VoiceDesign zusätzlich bereitstellen“ an. A: Neue Runde mit „🔊 Vorlesen an“: unter Gastgeber steht „🎙 Stimme des Erzählers“ mit einer Stimme der Welt; „▶ Probe“ spielt sie, „🎲 Neu“ würfelt eine andere. B: Zwei Züge spielen, in denen NSCs sprechen: jede Figur klingt anders und behält ihre Stimme. C: In einer unheimlichen Szene spricht der Erzähler leiser und langsamer. D: Zweite Runde anlegen: sie hat eine andere Erzählerstimme. E: Mit einem Helden, der schon in einer anderen Runde spielt, eine Runde starten: statt „besetzt“ steht ein Hinweis-Kasten „Dieser Held spielt gerade in einer anderen Runde …“.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }
