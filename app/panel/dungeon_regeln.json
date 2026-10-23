@@ -89,7 +89,7 @@
     {"id": "episch", "name": ["episch", "epic"], "ab": 94, "bonus": 3, "stufe_min": 2, "preis": 20},
     {"id": "legendaer", "name": ["legendär", "legendary"], "ab": 99, "bonus": 4, "stufe_min": 5, "preis": 50}
   ],
-  "preise": {"waffe": 15, "ruestung": 20, "schmuck": 30, "trank": 10, "zauber": 25, "rolle": 8},
+  "preise": {"waffe": 15, "ruestung": 20, "schmuck": 30, "trank": 10, "zauber": 25, "rolle": 8, "schatz": 50},
   "anlass": {"gegner": 0, "truhe": 10, "belohnung": 10, "boss": 25},
   "gold": {"gegner": [2, 10], "truhe": [10, 40], "belohnung": [15, 50], "boss": [40, 120]},
   "pech_schutz": 6,

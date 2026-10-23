@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.978** · 2026-10-23 · KI-Dungeon-Master: Platz für die SRD-Daten: zweite Regeldatei dungeon_srd.json, geprüfte Listen für Gegner, Zustände, Hintergründe, Schwierigkeiten, Zauberladungen und Startkräfte, Schätze zum Verkaufen, feste Seltenheit, Gegenstände nur in ihren Welten, bis zu 500 Einträge je Liste
 - **V01.0.977** · 2026-10-23 · KI-Dungeon-Master: Gegenstände und Werte erklärt (Werkzeuge +2, zerbrechen bei einer 1), Würfel selbst werfen mit Proben-Leiste, Funken bei 20 und Ergebnis-Geräuschen, eigene Stimmen für Erzähler je Geschichte und jeden NSC, jede Ablehnung als klarer Satz
 - **V01.0.976** · 2026-10-23 · KI-Dungeon-Master: Musik ruhig und ambient (weiche Flächen statt Schlagzeug, 60 bis 80 Schläge pro Minute, auch im Kampf), längere Überblendung, alter Musikvorrat wird neu gemacht
 - **V01.0.975** · 2026-10-23 · KI-Dungeon-Master: Wartezeit angenehm: Schritte Lesen, Würfeln, Erzählen mit festen Sätzen, Würfe schon vor der Erzählung, Wissenskarten der Welt und Hinweise aus 300 festen Texten ohne baldige Wiederholung, Erzählung Satz für Satz, „schreibt …“ und Tischgespräch nur unter den Spielern; beendete Runden löschen; Erzählung nach der Karte geprüft

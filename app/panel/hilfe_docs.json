@@ -5421,6 +5421,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Platz für die SRD-Daten (V01.0.978, Abstimmung mit dem Datenteil „DnDAppFiles“, Dominik 2026-10-23 „1-6“, „1-3“): Neben dungeon_regeln.json liest das Panel eine zweite mitgelieferte Datei dungeon_srd.json (Daten aus dem D&D-SRD 5.1/5.2, CC-BY-4.0) als Schicht zwischen den Grundregeln und den eigenen Regeln des Admins: gleiche Listen, eine gleiche id ersetzt den Eintrag. Fehlt die Datei, bleibt alles wie vorher; besteht sie check_rules nicht, spielt das Panel ohne sie (Log dungeon: regeln verworfen | srd). Neu im Regelwerk und geprüft: die Listen gegner (Zeichen, Welten, Stufe 0 bis 30, Leben, Rüstung, Angriff, Schaden, Erfahrung, sechs Werte, Größe, Zustände), zustaende (Wirkung nur aus festen Wörtern wie nachteil_angriff oder kein_zug, Dauer in Runden) und hintergruende (Wertboni 0 bis 2, Startausrüstung), die feste Schwierigkeitstabelle sg (sehr leicht 5 bis fast unmöglich 30), ladungen je Stufe und Zaubergrad 1 bis 5, an Klassen start_faehigkeiten und zauber je Grad, an Zaubern grad 0 bis 5. Gegenstände können eine feste seltenheit haben, Schmuck einen festen Wert (sonst gewürfelt), die neue Art Schatz (Edelsteine, Kunst) ist nur zum Verkaufen und stapelt sich"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": ". Gegenstände mit welten gibt es nur in diesen Welten: Beute und Händler bieten nur an, was zur Welt der Runde passt. Jede Liste fasst zusammengeführt bis zu 500 Einträge; die eigene Datei des Admins (*Funktionen → KI-Dungeon-Master* „Regeln anpassen“) bleibt bei höchstens 200 je Liste."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Bilder für Ausrüstung und Zauber (V01.0.967, Plan dungeon-master/plan.md Abschnitt „5i“, Dominik 2026-10-23 „2“ und „die Bildgeneration, aber auch startbar per Knopf direkt“): Eigener Admin-Schalter Funktionen → KI-Dungeon-Master → Bilder für Ausrüstung und Zauber (Standard aus, chat.dungeon_bilder), dazu muss Funktionen → Bilder malen an und das Bildmodell installiert sein. Katalog: Jeder Eintrag des Katalogs (Waffen, Rüstungen, Schmuck, Tränke, Zauber, Schriftrollen, auch die eigenen Einträge des Admins) bekommt je Welt ein Bild im festen Stil der Welt (welten[].bildstil), solange eine Runde im Ton ab 8 offen ist, auch im Bilderbuch-Stil. Den Text baut das Panel fest aus Stil, englischem Namen des Eintrags und einem festen Satz je Art (bei Zaubern dazu der englische Satz des Zaubers), dahinter „no text, no letters, no watermark“; er wird wie ein Bildwunsch geprüft (Wortliste, bekannte Personen), ein abgelehnter Eintrag geht nie an den Bild-Dienst. Gemalt wird 512×512 eins nach dem anderen über die Warteschlange „Schwere Aufträge“ (Sprache hat Vorrang, Wartungspause „bild“) und halb so groß mit den KI-Kennzeichen des Bild-Dienstes abgelegt (dungeon-bild/ding-<ha"
 },
 {
@@ -17598,6 +17614,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "und and the campaign (40 at most); a missing or unfitting trait comes from the name, always the same. The traits are not in the log. Without VoiceDesign the fixed voices of the rules stay. Live: number of NPC voices. Log: dungeon: erzaehler | neu or gewaehlt. Every refusal of the panel now says its reason (dungeon._http sends the rule's fixed reason word, such as held spielt, runden, tasche voll), and the page shows a whole sentence with what to do (DMGRUND in dungeon.js) in a notice box with ⚠; \"besetzt\" when starting a round now reads \"This hero is playing in another round right now. End it there or pick another hero.\" test_dungeon.Refusals checks every reason word has its sentence."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: room for the SRD data (V01.0.978, agreed with the data part \"DnDAppFiles\", Dominik 2026-10-23 \"1-6\", \"1-3\"): Next to dungeon_regeln.json the panel reads a second shipped file dungeon_srd.json (data from the D&D SRD 5.1/5.2, CC-BY-4.0) as a layer between the base rules and the admin's own: the same lists, the same id replaces the entry. Without the file everything stays as before; if it does not pass check_rules, the panel plays without it (log dungeon: regeln verworfen | srd). New in the rules and checked: the lists gegner (sign, worlds, level 0 to 30, life, armour, attack, damage, experience, six values, size, conditions), zustaende (effect only from fixed words like nachteil_angriff or kein_zug, duration in rounds) and hintergruende (value bonuses 0 to 2, starting gear), the fixed difficulty table sg (very easy 5 to nearly impossible 30), ladungen per level and spell grade 1 to 5, on classes start_faehigkeiten and zauber per grade, on spells grad 0 to 5. Items may have a fixed seltenheit, jewellery a fixed value (else drawn), the new kind treasure (gems, art) is only for selling and stacks. Items with welten exist only in those worlds: loot and merchants offer "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "only what fits the round's world. Each merged list holds up to 500 entries; the admin's own file (*Features → AI Dungeon Master* \"Adjust rules\") stays at 200 per list at most."
 },
 {
 "lang": "en",

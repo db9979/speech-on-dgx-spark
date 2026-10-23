@@ -63,8 +63,8 @@ FUNDE_MAX = 2000          # finds the state file remembers
 STOP = ("missing", "ohne_pruefung", "dienst", "zeit", "wartung", "memory", "belegt")   # a run ends on these
 ART_EN = {"waffe": "a weapon", "ruestung": "a piece of armour", "schmuck": "a piece of jewellery",
           "trank": "a potion in a glass bottle", "zauber": "a magic spell, glowing magical energy",
-          "rolle": "a rolled parchment scroll"}
-ZEICHEN = {"waffe": "⚔️", "ruestung": "🛡️", "schmuck": "💍", "trank": "🧪", "zauber": "✨", "rolle": "📜"}
+          "rolle": "a rolled parchment scroll", "schatz": "a precious gem or a small work of art"}
+ZEICHEN = {"waffe": "⚔️", "ruestung": "🛡️", "schmuck": "💍", "trank": "🧪", "zauber": "✨", "rolle": "📜", "schatz": "💎"}
 ITEM_EN = "game item art, one single object in the centre, plain dark background"
 NAME = re.compile(r"ding-[0-9a-f]{16}|fund-i[0-9a-f]{8}|ort-[0-9a-f]{16}")   # ort-: a place of the map (dungeon_karte)
 _lauf = {"task": None, "grund": "", "start": 0.0, "gemalt": 0, "stop": False}

@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.978** AI Dungeon Master: room for the SRD data: a second rules file dungeon_srd.json, checked lists for foes, conditions, backgrounds, difficulties, spell charges and starting powers, treasure to sell, fixed rarity, items only in their worlds, up to 500 entries per list
 - **V01.0.977** AI Dungeon Master: items and values explained (tools +2, break on a 1), throw your own die with a check bar, sparks on a 20 and result sounds, own voices for the narrator per story and every NPC, every refusal as a clear sentence
 - **V01.0.976** AI Dungeon Master: calm ambient music, soft pads instead of drums, 60 to 80 beats per minute, in fights too; the old store is made again
 - **V01.0.975** AI Dungeon Master: a pleasant wait: steps reading, dice, narrating with fixed sentences, rolls before the narration, lore cards of the world and hints from 300 fixed texts without soon repeats, narration sentence by sentence, "is typing …" and table talk only between the players; deleting ended rounds; narration checked against the map
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.971** AI Dungeon Master: better stories with a hidden world truth (people, groups, secrets), open threads, a running summary every 5 turns, one rewrite by fixed rules (too short, hero missing, repeating), style examples per world, more varied narration and 👍/👎 per narration; big windows for hero sheet, merchant and map, a tap on a thing shows its picture, description and values
 - **V01.0.970** AI Dungeon Master with music, sounds and dice: many pieces per world and mood from the own music model, made ahead for the next act and at night, a quiet loop that fades over; sounds and a rolling d20 in the browser (Features → AI Dungeon Master → Adjust rules → Music at the table, off by default)
 - **V01.0.969** AI Dungeon Master with a map: each chapter the panel rolls a net of places in five shapes (scattered, valley, lake, two realms, coast) with fog, the group only moves to neighbouring places, with encounters on the way; random vaults as a grid in five layouts with traps, riddles, guardians, treasure, spring, altar and boss, all rolled and checked by the panel
-- **V01.0.968** AI Dungeon Master stage 5a: "It is your turn" as a note once per turn, a reminder when the turn waits, the host's game date with a calendar file and a note 15 minutes before, "Last time" after a 12-hour break; fixed the error 500 on "Act", no "AI image" mark on the pictures any more
 
 
 

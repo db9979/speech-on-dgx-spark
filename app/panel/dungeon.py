@@ -119,6 +119,7 @@ from core import assistant, auth, browser_profile, json_body, main_loop, own_pro
 router = APIRouter()
 _me = sys.modules[__name__]   # dungeon_erzaehler reads the rounds through this module
 DATA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dungeon_regeln.json")
+SRD = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dungeon_srd.json")   # SRD 5.1/5.2 data (CC-BY-4.0), optional
 VORLAGEN = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dungeon_geschichten.json")
 FILE = os.path.join(STATE, "dungeon-runden.json")
 FIGUREN = os.path.join(STATE, "dungeon-figuren.json")
@@ -227,11 +228,11 @@ PLATZ = {"kopf": ("kopf",), "hals": ("hals",), "koerper": ("koerper",), "hauptha
 PLATZ_ART = {"waffe": ("haupthand",), "ruestung": ("koerper", "kopf", "nebenhand", "haende", "fuesse"),
              "schmuck": ("ring", "kopf", "hals", "haende", "fuesse")}               # what platz an art may name, the first without one
 _PLATZ_TXT = "; ".join(f"{a}: {', '.join(p)}" for a, p in PLATZ_ART.items())
-KG = {"waffe": 2, "ruestung": 8, "schmuck": 0.1, "trank": 0.5, "zauber": 0.1, "rolle": 0.2}   # weight without its own kg
+KG = {"waffe": 2, "ruestung": 8, "schmuck": 0.1, "trank": 0.5, "zauber": 0.1, "rolle": 0.2, "schatz": 0.1}   # weight without its own kg
 TRAG_KG = 3.75            # carry limit per point of Stärke (D&D: 15 lb)
 BELASTET = 0.75           # from three quarters of it a hero is burdened: Geschick checks with disadvantage
 STAPEL = 3                # potions, spells and scrolls of one kind stack on one bag place
-STAPEL_ARTEN = ("trank", "zauber", "rolle")
+STAPEL_ARTEN = ("trank", "zauber", "rolle", "schatz")
 BODEN_MAX = 12            # items lying at a place for the group (until the place changes)
 WARE = (6, 10)            # items a merchant offers
 WARE_MAX = 20             # with what the heroes sold to it
@@ -241,7 +242,15 @@ HAENDLER = ("Fahrender Händler", "Travelling merchant")   # the merchant the ho
 FOLGE_ARTEN = ("schaden", "heilung")
 ANLAESSE = ("gegner", "truhe", "belohnung", "boss")
 ERFOLG_ARTEN = ("gegner", "ziel")
-ARTEN = ("waffe", "ruestung", "schmuck", "trank", "zauber", "rolle")
+ARTEN = ("waffe", "ruestung", "schmuck", "trank", "zauber", "rolle", "schatz")   # schatz: gems and art, only to sell
+LEER_OK = ("gegner", "zustaende", "hintergruende")   # lists of the SRD data (dungeon_srd.json): may be empty
+WIRKUNGEN = ("nachteil_angriff", "vorteil_angriff", "nachteil_proben", "vorteil_gegen", "nachteil_gegen", "kein_zug",
+             "halbe_bewegung", "schaden_pro_zug")   # what a condition does, fixed words only
+GROESSEN = ("winzig", "klein", "mittel", "gross", "riesig")
+SG = ("sehr_leicht", "leicht", "mittel", "schwer", "sehr_schwer", "fast_unmoeglich")   # the fixed difficulty table
+GRAD_MAX = 5              # spell grades 1..5 use charges, grade 0 (cantrips) any time
+LISTE_MAX = 500           # entries per list of the rules in force (shipped, SRD and the admin's)
+EIGENE_MAX = 200          # entries per list in the admin's own file
 ZIELE = ("selbst", "gruppe")   # whom a spell reaches
 SEGEN_MAX = 4             # blessings (potions, spells) a hero carries at once
 INFO_MAX = 160            # the fixed description of a catalog item or value (info): what it does, what it helps with
@@ -277,13 +286,20 @@ def _go(coro, name):
 
 
 # ---------------------------------------------------------------- the rules: shipped, the admin's own, merged
-def _base_rules():
+def _base_rules(srd=True):
+    """The shipped rules: dungeon_regeln.json, the SRD data on top when it is there (same lists, same ids replace), the
+    map's tables."""
     with open(DATA) as f:
-        return dict(json.load(f), **dungeon_karte.tables())
+        r = json.load(f)
+    if srd and os.path.exists(SRD):
+        with open(SRD) as f:
+            r = merge(r, json.load(f))
+    return dict(r, **dungeon_karte.tables())
 
 
 _rules = {"key": None, "r": None}
-LISTS = ("welten", "toene", "voelker", "klassen", "effekte", "gegenstaende", "seltenheit", "werte") + dungeon_karte.LISTS
+LISTS = ("welten", "toene", "voelker", "klassen", "effekte", "gegenstaende", "seltenheit", "werte") + dungeon_karte.LISTS + LEER_OK
+
 
 
 def merge(base, own):
@@ -294,7 +310,7 @@ def merge(base, own):
         if k in ("zweck",):
             continue
         if k in LISTS and isinstance(v, list):
-            have = {x.get("id"): i for i, x in enumerate(r[k])}
+            have = {x.get("id"): i for i, x in enumerate(r.setdefault(k, []))}
             for e in v:
                 if not isinstance(e, dict):
                     continue
@@ -350,7 +366,10 @@ def check_rules(r):
     need(_int(g.get("bilder_tag", BILDER_TAG), 0, 500), "grenzen.bilder_tag: 0 bis 500 Bilder am Tag")
     for k in LISTS:
         v = r.get(k)
-        need(isinstance(v, list) and 1 <= len(v) <= 200, f"{k}: eine Liste mit 1 bis 200 Einträgen")
+        lo = 0 if k in LEER_OK else 1
+        if lo == 0 and v is None:
+            continue
+        need(isinstance(v, list) and lo <= len(v) <= LISTE_MAX, f"{k}: eine Liste mit {lo} bis {LISTE_MAX} Einträgen")
         if not isinstance(v, list):
             continue
         ids = [x.get("id") for x in v if isinstance(x, dict)]
@@ -378,7 +397,7 @@ def check_rules(r):
             need(isinstance(fa, dict) and isinstance(fa.get("id"), str) and _WORD.fullmatch(fa["id"]) and _pair(fa.get("name"), 40)
                  and _pair(fa.get("satz")) and fa.get("wert") in werte and _int(fa.get("bonus"), 0, 3),
                  f"klassen {k.get('id')}: faehigkeit {fa.get('id') if isinstance(fa, dict) else '?'} braucht id, name, satz, wert und bonus 0 bis 3")
-    items = {}
+    items, welten = {}, {str(w.get("id")) for w in r.get("welten") or [] if isinstance(w, dict)}
     for x in r.get("gegenstaende") or []:
         items[x.get("id")] = x
         need(x.get("art") in ARTEN, f"gegenstaende {x.get('id')}: art eine von {', '.join(ARTEN)}")
@@ -386,6 +405,10 @@ def check_rules(r):
             need(_int(x.get("schaden"), 2, 12) and x.get("wert") in werte, f"gegenstaende {x.get('id')}: waffe braucht schaden 2 bis 12 und wert")
         if x.get("art") == "ruestung":
             need(_int(x.get("schutz"), 0, 4), f"gegenstaende {x.get('id')}: schutz 0 bis 4")
+        if x.get("art") == "schmuck":
+            need("wert" not in x or x["wert"] in werte, f"gegenstaende {x.get('id')}: wert bei schmuck einer der Werte")
+        need("seltenheit" not in x or x["seltenheit"] in {str(z.get("id")) for z in r.get("seltenheit") or [] if isinstance(z, dict)},
+             f"gegenstaende {x.get('id')}: seltenheit eine aus seltenheit")
         need("platz" not in x or x.get("art") in PLATZ_ART and x["platz"] in PLATZ_ART[x["art"]],
              f"gegenstaende {x.get('id')}: platz passend zur art ({_PLATZ_TXT})")
         need("zweihand" not in x or x.get("art") == "waffe" and isinstance(x["zweihand"], bool), f"gegenstaende {x.get('id')}: zweihand nur bei waffe, true oder false")
@@ -407,11 +430,49 @@ def check_rules(r):
                  f"gegenstaende {x.get('id')}: heilung 0 bis 30 und/oder segen {{wert, bonus 1 bis 4, zuege 1 bis 5}}")
         if x.get("art") == "zauber":
             need(x.get("ziel") in ZIELE and _pair(x.get("satz")), f"gegenstaende {x.get('id')}: zauber braucht ziel (selbst oder gruppe) und satz")
+        need("grad" not in x or x.get("art") == "zauber" and _int(x["grad"], 0, GRAD_MAX), f"gegenstaende {x.get('id')}: grad nur bei zauber, 0 bis {GRAD_MAX}")
         need("klassen" not in x or isinstance(x["klassen"], list) and set(x["klassen"]) <= kids, f"gegenstaende {x.get('id')}: klassen nur aus den Klassen")
+        need("welten" not in x or isinstance(x["welten"], list) and x["welten"] and set(map(str, x["welten"])) <= welten,
+             f"gegenstaende {x.get('id')}: welten als Liste von Welt-ids")
     for k in r.get("klassen") or []:
         need(all(items.get(w, {}).get("art") == "waffe" for w in k.get("waffen") or []), f"klassen {k.get('id')}: waffen nur Gegenstände der Art waffe")
+        fids = {fa.get("id") for fa in k.get("faehigkeiten") or [] if isinstance(fa, dict)}
+        sf = k.get("start_faehigkeiten", [])
+        need(isinstance(sf, list) and len(sf) <= 2 and set(sf) <= fids, f"klassen {k.get('id')}: start_faehigkeiten höchstens 2 aus den eigenen faehigkeiten")
+        zs = k.get("zauber", {})
+        need(isinstance(zs, dict) and set(zs) <= {str(g) for g in range(GRAD_MAX + 1)}
+             and all(isinstance(v, list) and all(items.get(z, {}).get("art") == "zauber" and items[z].get("grad") == int(g) for z in v)
+                     for g, v in zs.items()),
+             f"klassen {k.get('id')}: zauber als {{\"0\" bis \"{GRAD_MAX}\": [ids von Zaubern genau dieses grads]}}")
+    la = r.get("ladungen")
+    need(la is None or isinstance(la, list) and len(la) == 10 and all(isinstance(x, list) and len(x) == GRAD_MAX and all(_int(n, 0, 9) for n in x) for x in la),
+         f"ladungen: 10 Listen (Stufe 1 bis 10) mit je {GRAD_MAX} Zahlen 0 bis 9 (Grad 1 bis {GRAD_MAX})")
     for e in r.get("effekte") or []:
         need(_pair(e.get("satz")) and e.get("wert") in werte and _int(e.get("bonus"), 0, 4), f"effekte {e.get('id')}: satz, wert und bonus 0 bis 4")
+    zids = set()
+    for z in r.get("zustaende") or []:
+        zids.add(z.get("id"))
+        need(_pair(z.get("info"), INFO_MAX) and isinstance(z.get("wirkung"), list) and z["wirkung"] and set(z["wirkung"]) <= set(WIRKUNGEN)
+             and _int(z.get("runden"), 1, 20), f"zustaende {z.get('id')}: info, wirkung aus {', '.join(WIRKUNGEN)} und runden 1 bis 20")
+    for x in r.get("gegner") or []:
+        num = (("leben", 1, 700), ("ruestung", 5, 30), ("angriff", -2, 20), ("schaden", 2, 12), ("schaden_plus", -2, 20), ("ep", 0, 200000))
+        need(isinstance(x.get("zeichen"), str) and 1 <= len(x["zeichen"]) <= 8 and _pair(x.get("info"), INFO_MAX)
+             and isinstance(x.get("welten"), list) and x["welten"] and set(map(str, x["welten"])) <= welten | {"alle"}
+             and isinstance(x.get("stufe"), (int, float)) and not isinstance(x["stufe"], bool) and 0 <= x["stufe"] <= 30
+             and all(_int(x.get(f), lo, hi) for f, lo, hi in num) and _int(x.get("anzahl_wuerfel", 1), 1, 4)
+             and isinstance(x.get("werte"), dict) and set(x["werte"]) == werte and all(_int(w, 1, 30) for w in x["werte"].values())
+             and x.get("groesse", "mittel") in GROESSEN
+             and isinstance(x.get("zustaende", []), list) and set(x.get("zustaende", [])) <= zids,
+             f"gegner {x.get('id')}: zeichen, info, welten, stufe 0 bis 30, leben, ruestung, angriff, schaden, ep, "
+             f"die sechs werte, groesse ({', '.join(GROESSEN)}) und zustaende aus zustaende")
+    for x in r.get("hintergruende") or []:
+        need(_pair(x.get("info"), INFO_MAX) and isinstance(x.get("werte", {}), dict) and set(x.get("werte", {})) <= werte
+             and all(_int(w, 0, 2) for w in x.get("werte", {}).values())
+             and isinstance(x.get("start", []), list) and set(x.get("start", [])) <= set(items),
+             f"hintergruende {x.get('id')}: info, werte je 0 bis 2, start aus gegenstaende")
+    sg = r.get("sg")
+    need(sg is None or isinstance(sg, dict) and set(sg) == set(SG) and all(_int(sg[k], 1, 40) for k in SG)
+         and [sg[k] for k in SG] == sorted(sg[k] for k in SG), f"sg: {', '.join(SG)} als aufsteigende Zahlen 1 bis 40")
     s = r.get("seltenheit") or []
     need([x.get("ab") for x in s] == sorted(x.get("ab") for x in s if _int(x.get("ab"), 0, 100)) and s and s[0].get("ab") == 0,
          "seltenheit: ab aufsteigend von 0 bis 100")
@@ -495,6 +556,9 @@ def rules():
         if check_rules(r):
             print("dungeon: regeln verworfen | pruefung", flush=True)
             r = base
+            if check_rules(r):                       # the SRD data itself does not pass: the rules without it
+                print("dungeon: regeln verworfen | srd", flush=True)
+                r = _base_rules(srd=False)
         _rules.update(key=key, r=r)
     return _rules["r"]
 
@@ -515,16 +579,16 @@ def _iid():
 
 def item(r, cid, selten="gewoehnlich", rng=None, eigen="", satz=""):
     """One item of the catalog with its rarity: the bonus from the rarity, an effect from the list for the two
-    rarest kinds, for jewellery the value it raises (drawn)."""
+    rarest kinds, for jewellery the value it raises (its own or drawn)."""
     rng = rng or random
     c = _by(r, "gegenstaende")[cid]
-    s = _by(r, "seltenheit").get(selten) or r["seltenheit"][0]
+    s = _by(r, "seltenheit").get(c.get("seltenheit") or selten) or r["seltenheit"][0]   # an entry may fix its rarity
     werte = [w["id"] for w in r["werte"]]
     it = {"i": _iid(), "id": cid, "s": s["id"], "bonus": s["bonus"], "eigen": _clean(eigen, 40), "satz": _clean(satz, SATZ_MAX)}
     if c["art"] == "waffe":
         it["wert"] = c["wert"]
     elif c["art"] == "schmuck":
-        it["wert"] = rng.choice(werte)
+        it["wert"] = c.get("wert") or rng.choice(werte)
     rank = [x["id"] for x in r["seltenheit"]].index(s["id"])
     if rank >= len(r["seltenheit"]) - 2 and c["art"] in PLATZ_ART:
         it["eff"] = rng.choice(r["effekte"])["id"]
@@ -713,6 +777,11 @@ def fix_hero(r, h):
     h["segen"] = [x for x in h.get("segen") or [] if isinstance(x, dict) and x.get("wert") in werte
                   and _int(x.get("bonus"), 1, 4) and _int(x.get("zuege"), 1, 5)][-SEGEN_MAX:]
     return h
+
+
+def in_world(c, welt):
+    """Whether a catalog entry belongs in the round's world: none named belongs everywhere."""
+    return "welten" not in c or welt in c["welten"]
 
 
 def fits(r, h, c):
@@ -905,7 +974,7 @@ def open_market(r, rd, name="", satz="", rng=None):
     ware = []
     for _ in range(rng.randint(*WARE)):
         s = rarity(r, stufe, rng.randint(1, 100) + 2 * stufe)[1]
-        it = item(r, rng.choice(r["gegenstaende"])["id"], s["id"], rng)
+        it = item(r, rng.choice([c for c in r["gegenstaende"] if in_world(c, rd.get("welt"))] or r["gegenstaende"])["id"], s["id"], rng)
         it.pop("u", None)
         ware.append(it)
     rd["markt"] = {"name": name or HAENDLER[li], "satz": satz, "ware": ware}
@@ -921,7 +990,7 @@ def close_market(rd):
         print("dungeon: markt | zu", flush=True)
 
 
-def loot(r, held, anlass, gruppe_stufe, rng=None, eigen="", satz=""):
+def loot(r, held, anlass, gruppe_stufe, rng=None, eigen="", satz="", welt=""):
     """(receiver index, item, gold each) of one find by the panel's rule: rarity by d100 + occasion + level, never
     above what the level allows, pity after pech_schutz finds without „selten“; the receiver is who went longest
     without a find (first seat on a tie); the item fits that hero's class."""
@@ -932,7 +1001,8 @@ def loot(r, held, anlass, gruppe_stufe, rng=None, eigen="", satz=""):
     stufen, s = rarity(r, gruppe_stufe, roll)
     if h.get("ohne_selten", 0) + 1 >= r["pech_schutz"] and len(stufen) > 1 and stufen.index(s) == 0:
         s = stufen[1]
-    pool = [c for c in r["gegenstaende"] if fits(r, h, c)] or r["gegenstaende"]
+    here = [c for c in r["gegenstaende"] if in_world(c, welt)] or r["gegenstaende"]
+    pool = [c for c in here if fits(r, h, c)] or here
     it = item(r, rng.choice(pool)["id"], s["id"], rng, eigen, satz)
     for i, x in enumerate(held):
         x["seit_fund"] = 0 if i == rec else x.get("seit_fund", 0) + 1
@@ -2179,7 +2249,7 @@ def apply(r, rd, wuerfe, story, rid, rng=None):
 def give_loot(r, rd, held, anlass, stufe, rng=None, eigen="", satz=""):
     """A find from the catalog (loot) into the bag of its receiver, or on the ground when it has no place or is too
     heavy (2a); the log and the journal say so."""
-    i, it, gold = loot(r, held, anlass, stufe, rng, eigen, satz)
+    i, it, gold = loot(r, held, anlass, stufe, rng, eigen, satz, rd.get("welt", ""))
     boden = not room(r, held[i], [it])
     if boden:
         rd["boden"] = ((rd.get("boden") or []) + [it])[-BODEN_MAX:]
@@ -4619,7 +4689,7 @@ async def gast_hoeren(request: Request):
 
 # ---------------------------------------------------------------- the admin's rules (Funktionen → Dungeon-Master)
 def _summary(r):
-    return {k: len(r[k]) for k in LISTS} | {"faehigkeiten": sum(len(k["faehigkeiten"]) for k in r["klassen"])}
+    return {k: len(r.get(k) or []) for k in LISTS} | {"faehigkeiten": sum(len(k["faehigkeiten"]) for k in r["klassen"])}
 
 
 @router.get("/api/admin/dungeon", dependencies=[Depends(auth)])
@@ -4643,7 +4713,8 @@ async def admin_save(request: Request):
     own = b.get("eigene")
     if not isinstance(own, dict):
         raise HTTPException(400, "eigene")
-    errs = check_rules(merge(await asyncio.to_thread(_base_rules), own))
+    errs = [f"{k}: höchstens {EIGENE_MAX} eigene Einträge" for k in LISTS if isinstance(own.get(k), list) and len(own[k]) > EIGENE_MAX]
+    errs += check_rules(merge(await asyncio.to_thread(_base_rules), own))
     if errs:
         print(f"dungeon: regeln abgelehnt | {len(errs)} fehler", flush=True)
         raise HTTPException(422, errs[:20])

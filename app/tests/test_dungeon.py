@@ -2147,6 +2147,90 @@ class Waiting(BetterStories):
         self.assertEqual((other["w"], other["geworfen"]), (20, True))
 
 
+class SrdLayer(Base):
+    """The SRD data (dungeon_srd.json) as a layer between the shipped rules and the admin's: lists up to LISTE_MAX,
+    items only of their worlds, a fixed rarity and value, treasure to sell, monsters and conditions by fixed rules."""
+    def setUp(self):
+        super().setUp()
+        self.old = dungeon.SRD
+        dungeon.SRD = os.path.join(helpers.tmpdir() if hasattr(helpers, "tmpdir") else os.path.dirname(dungeon.FILE), "srd-test.json")
+        self.addCleanup(self.undo)
+        base = json.load(open(dungeon.DATA))
+        sword = next(x for x in base["gegenstaende"] if x["id"] == "schwert")
+        ring = next(x for x in base["gegenstaende"] if x["art"] == "schmuck")
+        self.srd = {
+            "gegenstaende": [dict(ring, id="laser", name=["Laserring", "Laser ring"], welten=["scifi"]),
+                             dict(ring, id="ogerhand", name=["Ogerhand", "Ogre hand"], wert="staerke", seltenheit="rar"),
+                             {"id": "rubin", "art": "schatz", "name": ["Rubin", "Ruby"], "kg": 0.1, "preis": 500,
+                              "info": ["Ein roter Edelstein, nur zum Verkaufen.", "A red gem, only to sell."]}]
+                            + [dict(sword, id=f"klinge{i}", name=[f"Klinge {i}", f"Blade {i}"]) for i in range(300)],
+            "zustaende": [{"id": "vergiftet", "name": ["Vergiftet", "Poisoned"], "info": ["Gift.", "Poison."],
+                           "wirkung": ["nachteil_angriff", "nachteil_proben"], "runden": 3}],
+            "gegner": [{"id": "goblin", "zeichen": "👺", "name": ["Goblin", "Goblin"], "info": ["Klein und frech.", "Small and cheeky."],
+                        "welten": ["fantasy"], "stufe": 0.25, "leben": 7, "ruestung": 15, "angriff": 4, "schaden": 6, "schaden_plus": 2,
+                        "ep": 50, "werte": {w["id"]: 10 for w in base["werte"]}, "groesse": "klein", "zustaende": ["vergiftet"]}],
+            "sg": {"sehr_leicht": 5, "leicht": 10, "mittel": 15, "schwer": 20, "sehr_schwer": 25, "fast_unmoeglich": 30}}
+        self.write(self.srd)
+
+    def undo(self):
+        if os.path.exists(dungeon.SRD):
+            os.remove(dungeon.SRD)
+        dungeon.SRD = self.old
+        dungeon._rules["r"] = None
+
+    def write(self, d):
+        with open(dungeon.SRD, "w") as f:
+            json.dump(d, f)
+        dungeon._rules["r"] = None
+
+    def test_layer_lists_and_checks(self):
+        r = dungeon._base_rules()
+        self.assertEqual(dungeon.check_rules(r), [])
+        self.assertGreater(len(r["gegenstaende"]), 200)                   # merged lists go up to LISTE_MAX
+        self.assertIn("goblin", {x["id"] for x in r["gegner"]})
+        spell = next(x for x in r["gegenstaende"] if x["art"] == "zauber")
+        good = {"gegenstaende": [dict(spell, grad=1)], "ladungen": [[2, 0, 0, 0, 0]] * 10,
+                "klassen": [dict(dungeon._by(r, "klassen")["magier"], zauber={"1": [spell["id"]]},
+                                 start_faehigkeiten=[dungeon._by(r, "klassen")["magier"]["faehigkeiten"][0]["id"]])]}
+        self.assertEqual(dungeon.check_rules(dungeon.merge(r, good)), [])
+        self.assertIn("laser", {x["id"] for x in dungeon.rules()["gegenstaende"]})
+        for bad in ({"gegenstaende": [dict(self.srd["gegenstaende"][0], welten=["mond"])]},
+                    {"gegenstaende": [dict(self.srd["gegenstaende"][1], seltenheit="kosmisch")]},
+                    {"zustaende": [dict(self.srd["zustaende"][0], wirkung=["alles_erlaubt"])]},
+                    {"gegner": [dict(self.srd["gegner"][0], zustaende=["verflucht"])]},
+                    {"sg": {"leicht": 10}},
+                    {"ladungen": [[2, 0, 0, 0, 0]] * 9},
+                    {"klassen": [dict(dungeon._by(r, "klassen")["magier"], start_faehigkeiten=["fliegen"])]},
+                    {"klassen": [dict(dungeon._by(r, "klassen")["magier"], zauber={"1": ["schwert"]})]},
+                    {"gegenstaende": [dict(self.srd["gegenstaende"][1], grad=1)]}):
+            self.assertTrue(dungeon.check_rules(dungeon.merge(r, bad)), bad)
+        self.write(dict(self.srd, sg={"leicht": 10}))      # SRD data that does not pass: the rules without it
+        self.assertNotIn("laser", {x["id"] for x in dungeon.rules()["gegenstaende"]})
+
+    def test_admin_keeps_its_own_limit(self):
+        own = {"gegenstaende": [dict(self.srd["gegenstaende"][3], id=f"eigen{i}") for i in range(dungeon.EIGENE_MAX + 1)]}
+        r = ADMIN.put("/api/admin/dungeon", json={"eigene": own})
+        self.assertEqual(r.status_code, 422)
+        self.assertTrue(any(str(dungeon.EIGENE_MAX) in e for e in r.json()["detail"]))
+
+    def test_items_only_of_their_world_fixed_rarity_and_value(self):
+        r = dungeon.rules()
+        heroes = [dungeon.new_hero(r, dict(HERO), rng=random.Random(3))]
+        rng = random.Random(7)
+        for _ in range(200):
+            self.assertNotEqual(dungeon.loot(r, heroes, "gegner", 1, rng, welt="fantasy")[1]["id"], "laser")
+        rd = {"lang": "de", "welt": "fantasy", "plaetze": {}, "log": []}
+        for i in range(30):
+            dungeon.open_market(r, rd, name="Grimm", rng=random.Random(i))
+            self.assertNotIn("laser", {x["id"] for x in rd["markt"]["ware"]})
+        self.assertIn("laser", {dungeon.loot(r, heroes, "gegner", 1, random.Random(i), welt="scifi")[1]["id"] for i in range(400)})
+        it = dungeon.item(r, "ogerhand", "gewoehnlich", random.Random(1))
+        self.assertEqual((it["s"], it["wert"]), ("rar", "staerke"))
+        gem = dungeon.item(r, "rubin", rng=random.Random(1))
+        self.assertEqual(dungeon.places(r, dungeon._c(r, gem)), ())
+        self.assertIn("schatz", dungeon.STAPEL_ARTEN)
+
+
 @unittest.skipUnless(browser_ok(), "no Playwright/Chromium here")
 class Windows(unittest.TestCase):
     """5k (Dominik 2026-10-23 „ok so umsetzten“): hero sheet, merchant and one item open as big windows over the

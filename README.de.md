@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.978** KI-Dungeon-Master: Platz für die SRD-Daten: zweite Regeldatei dungeon_srd.json, geprüfte Listen für Gegner, Zustände, Hintergründe, Schwierigkeiten, Zauberladungen und Startkräfte, Schätze zum Verkaufen, feste Seltenheit, Gegenstände nur in ihren Welten, bis zu 500 Einträge je Liste
 - **V01.0.977** KI-Dungeon-Master: Gegenstände und Werte erklärt (Werkzeuge +2, zerbrechen bei einer 1), Würfel selbst werfen mit Proben-Leiste, Funken bei 20 und Ergebnis-Geräuschen, eigene Stimmen für Erzähler je Geschichte und jeden NSC, jede Ablehnung als klarer Satz
 - **V01.0.976** KI-Dungeon-Master: Musik ruhig und ambient, weiche Flächen statt Schlagzeug, 60 bis 80 Schläge pro Minute, auch im Kampf; der alte Vorrat wird neu gemacht
 - **V01.0.975** KI-Dungeon-Master: Wartezeit angenehm: Schritte Lesen, Würfeln, Erzählen mit festen Sätzen, Würfe schon vor der Erzählung, Wissenskarten der Welt und Hinweise aus 300 festen Texten ohne baldige Wiederholung, Erzählung Satz für Satz, „schreibt …“ und Tischgespräch nur unter den Spielern; beendete Runden löschen; Erzählung nach der Karte geprüft
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.971** KI-Dungeon-Master: bessere Geschichten mit verborgener Welt-Wahrheit (Personen, Gruppen, Geheimnisse), offenen Fäden, laufender Zusammenfassung alle 5 Züge, einmal Nachbessern nach festen Regeln (zu kurz, Held fehlt, Wiederholung), Stilbeispielen je Welt, abwechslungsreicherer Erzählung und 👍/👎 je Erzählung; große Fenster für Heldenbogen, Händler und Karte, ein Tipp auf ein Ding zeigt Bild, Beschreibung und Werte
 - **V01.0.970** KI-Dungeon-Master mit Musik, Geräuschen und Würfeln: viele Stücke je Welt und Stimmung vom eigenen Musikmodell, im Voraus für den nächsten Akt und nachts gemacht, leise Schleife mit Überblendung; Geräusche und rollender d20 im Browser (Funktionen → KI-Dungeon-Master → Regeln anpassen → Musik am Tisch, Standard aus)
 - **V01.0.969** KI-Dungeon-Master mit Karte: das Panel würfelt je Kapitel ein Ortsnetz in fünf Formen (verstreut, Tal, See, zwei Reiche, Küste) mit Nebel, die Gruppe zieht nur zu Nachbarorten, unterwegs Begegnungen; Zufalls-Gewölbe als Raster in fünf Grundrissen mit Fallen, Rätseln, Wächtern, Schatz, Quelle, Altar und Boss, alles vom Panel gewürfelt und geprüft
-- **V01.0.968** KI-Dungeon-Master Stufe 5a: „Du bist dran“ als Mitteilung einmal je Zug, Erinnerung wenn der Zug wartet, Spieltermin des Gastgebers mit Kalenderdatei und Mitteilung 15 Minuten vorher, Rückblick nach 12 Stunden Pause; Fehler 500 bei „Handeln“ behoben, kein „KI-Bild“-Zeichen mehr auf den Bildern
 
 
 
