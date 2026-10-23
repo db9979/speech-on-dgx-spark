@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.950** Tests-Workflow robuster: Install-Netzschritte mit Timeout und drei Versuchen, damit hängende Runner nicht ins 45-min-Limit laufen
 - **V01.0.949** KI-Dungeon-Master (Schalter, aus): Rollenspiel für bis zu fünf, auch Gäste per Link; Beute, Stufen, Tauschen und Helden zum Mitnehmen, Regeln vom Admin anpassbar
 - **V01.0.948** ROT-FIX: der Angriffs-Selbsttest für das Tagesbriefing hing von der Uhrzeit um Mitternacht ab; sein Termin gilt jetzt unabhängig von Uhrzeit und Zeitzone als „heute“
 - **V01.0.947** IT-Krisenspiel wieder entfernt (auf Wunsch): Spiel, Netzduell und Spielprofile „Nur Krisenspiel“
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.943** IT-Krisenspiel (Paket 9): Kampagnen über mehrere Spieltage, Folgen wirken ins nächste Kapitel
 - **V01.0.942** Ins Wort fallen: erst anhalten (Schalter, aus): ein „mhm“, Husten oder die eigene Stimme hält die Antwort nur an und sie läuft weiter, „Stopp“ beendet sie, ein echter Satz wird die neue Frage; feste Wörter im Panel, nie das Modell; Browser und Android, iPhone folgt
 - **V01.0.941** Krisenspiel: Anleitung springt, QR-Codes ganz sichtbar, Ausschalten trennt die Konsole
-- **V01.0.940** IT-Krisenspiel (Paket 7): eigene Seite in der iPhone-App (Meine Sachen → Krisenspiel) mit Zügen, Konsole und Nachbesprechung
 
 
 
