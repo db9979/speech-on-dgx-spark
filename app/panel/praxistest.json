@@ -2858,6 +2858,13 @@
 "titel": "Dungeon-Master: Karte und Zufalls-Gewölbe",
 "text": "A: Funktionen → Meine Daten → KI-Dungeon-Master an, neue Runde anlegen: rechts am Tisch zeigt die Karte den Startort im Westen, Nachbarorte mit Namen, dahinter Wege mit „?“. Unter „Von hier aus“ einen Ort antippen: im Eingabefeld steht „Wir gehen weiter zu …“; nach dem Zug steht die Gruppe dort, neue Orte tauchen auf. ⤢ öffnet die Karte groß. B: Zwei neue Runden vergleichen: andere Form (Tal, See, Küste …), andere Namen. C: Als Gastgeber an einem Ort mit Gewölbe „Gewölbe betreten“: Reiter Gewölbe zeigt das Raster; Räume nach Norden/Süden/Osten/Westen gehen; eine Falle würfelt das Panel (Zeile in der Erzählung), ein Rätsel zeigt Frage und nach 3 falschen Antworten einen Hinweis, Wächter und Boss lassen erst nach einem Sieg weiter. D: Zustand → Überblick → Live zeigt beim Dungeon „n Karten, n im Gewölbe“.",
 "thread": "Dungeon-Master: Karte und Zufalls-Gewölbe"
+},
+{
+"id": "P433",
+"v": 970,
+"titel": "Dungeon-Master: Musik, Geräusche, Würfel",
+"text": "Voraussetzung: Musikmodell installiert. A: Funktionen → KI-Dungeon-Master → Regeln anpassen → Musik am Tisch: „Musik vorbereiten“ an, 12 Stücke, Speichern, dann „Musik jetzt vorbereiten“: die Tabelle zeigt Felder mit ⏳ und füllt sich nach und nach; Live zeigt „Musik … Stücke“. B: Neue Runde: über der Erzählung erscheint die Leiste mit Stimmung und „Stück x von n“, einmal auf den Tisch tippen, die Musik läuft leise und blendet am Ende ins nächste Stück über; ⏭ wechselt. C: Eine Probe: der d20 rollt kurz und bleibt auf der Zahl im Verlauf stehen, mit Würfelklang. D: Ort mit Regen oder Lagerfeuer: leises Regen- oder Feuergeräusch; „Geräusche“ aus: still. E: Händler rufen: die Musik wechselt zu Taverne; ein Akt endet: ein kurzes Sieg-Stück. F: Ein Gast am Handy hört dieselbe Musik und stellt sie für sich aus. G: „Musik vorbereiten“ aus: keine Musik mehr, Geräusche und Würfel bleiben.",
+"thread": "Dungeon-Master: Musik, Geräusche, Würfel"
 }
 ]
 }

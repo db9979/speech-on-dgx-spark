@@ -1195,6 +1195,15 @@ def ruhe(targets, busy, now=None):
         x["quiet"] = not (x["id"] in ALWAYS or x["id"] in busy or a)
 
 
+def _dungeon_musik(m):
+    """The Dungeon-Master's music made ahead (dungeon_musik.for_live): pieces, full fields, making, today (numbers only)."""
+    if not m.get("an") and not m.get("stuecke"):
+        return ""
+    return (f" · Musik {m.get('stuecke', 0)} Stücke ({m.get('mb', 0)} MB), {m.get('voll', 0)} Felder voll"
+            + (", macht ein Stück" if m.get("macht") else "") + (f", {m['wartet']} Felder warten" if m.get("wartet") else "")
+            + f", heute {m.get('gemacht', 0)} gemacht, {m.get('weg', 0)} nicht gekommen")
+
+
 def snapshot(view="admin", now=None):
     now = now or time.time()
     with _lock:
@@ -1334,6 +1343,11 @@ def snapshot(view="admin", now=None):
         dgn["ding"] = dungeon_dingbild.for_live() if dgn.get("on") else {"on": False}
     except Exception:
         dgn["ding"] = {"on": False}
+    try:   # Musik am Tisch (dungeon_musik.py): numbers on the game's line
+        import dungeon_musik
+        dgn["musik"] = dungeon_musik.for_live() if dgn.get("on") else {}
+    except Exception:
+        dgn["musik"] = {}
     if dgn.get("on"):
         used.add("dungeon")
     try:
@@ -1726,7 +1740,7 @@ def snapshot(view="admin", now=None):
                         + (f" · {wbk['widerspruch']} Widersprüche" if wbk.get("widerspruch") else "")
                         + (f" · {wbk['veraltet']} veraltet?" if wbk.get("veraltet") else "")
                         + (" · arbeitet" if wbk.get("running") else ""))
-        if x["id"] == "dungeon":   # Dungeon-Master: rounds, players and guests, turns, loot, levels, campaigns, read aloud and spoken today, stories with acts moved on and proposals, markets, purchases and sales, pictures painted, discarded and on their way, game dates and notes sent (numbers only, never a name or a text)
+        if x["id"] == "dungeon":   # Dungeon-Master: rounds, players and guests, turns, loot, levels, campaigns, read aloud and spoken today, stories with acts moved on and proposals, markets, purchases and sales, pictures painted, discarded and on their way, game dates and notes sent, music pieces made ahead (numbers only, never a name or a text)
             x["sub"] = (f"{dgn.get('runden', 0)} Runden · {dgn.get('spieler', 0)} Spieler, {dgn.get('online', 0)} da, {dgn.get('gaeste', 0)} Gäste"
                         + f" · heute {dgn.get('zuege', 0)} Züge, {dgn.get('beute', 0)} Beute, {dgn.get('stufen', 0)} Stufen"
                         + (f" · {dgn['ausfall']} ohne Erzählung" if dgn.get("ausfall") else "")
@@ -1747,7 +1761,8 @@ def snapshot(view="admin", now=None):
                            + (" · malt Gegenstände" if dgn["ding"]["laeuft"] else "") if dgn.get("ding", {}).get("on") else "")
                         + (f" · {dgn['termine']} Spieltermine" if dgn.get("termine") else "")
                         + (f" · heute {dgn['gemeldet']} Mitteilungen" if dgn.get("gemeldet") else "")
-                        + f" · {dgn.get('karten', 0)} Karten, {dgn.get('gewoelbe_drin', 0)} im Gewölbe")
+                        + f" · {dgn.get('karten', 0)} Karten, {dgn.get('gewoelbe_drin', 0)} im Gewölbe"
+                        + _dungeon_musik(dgn.get("musik") or {}))
         if x["id"] == "wkarte":    # Wissenskarte: connections, discarded, documents waiting, profiles, numbers only (never a title)
             x["sub"] = (f"{wkk.get('verbindungen', 0)} Verbindungen · {wkk.get('punkte', 0)} Punkte · {wkk.get('warten', 0)} Dokumente warten"
                         + f" · {wkk.get('profile', 0)} Profile"

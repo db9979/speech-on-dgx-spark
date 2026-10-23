@@ -3019,6 +3019,8 @@ def view(rid, pid, now=None):
             "portraet_hint": _hint("h:" + me["held"]["hid"], lang) if me.get("held") else "",
             "termin": rd.get("termin") or 0, "melden": _wants(me) if me.get("uid") else None, "rueckblick": look_back(rd, pid)}
     import dungeon_dingbild
+    import dungeon_musik
+    out["musik"] = dungeon_musik.for_view(rid, rd, lang)   # music, the place's sound, victory and door (dungeon_musik.py)
     return dungeon_dingbild.add(r, rd, out)
 
 
