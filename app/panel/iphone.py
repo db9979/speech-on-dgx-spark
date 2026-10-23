@@ -168,9 +168,11 @@ THINGS = {
     # comes to the front (the event stream stays with the browser)
     "vorgaenge": ((("GET", "DELETE"), r"/api/profile/vorgaenge"), (("POST",), r"/api/profile/vorgaenge/(?:act|seen)")),
     # KI-Dungeon-Master (dungeon.py, Stufe 2 „5a“): the rounds, the kept heroes and the campaigns, delete a hero or a
-    # campaign, a code of the own seat to open the table in the app; new rounds and chapters stay in the browser
+    # campaign, a code of the own seat to open the table in the app, the game spoken in the car (CarPlay, dungeon.car);
+    # new rounds and chapters stay in the browser
     "dungeon": ((("GET",), r"/api/profile/dungeon"), (("DELETE",), r"/api/profile/dungeon/held/h[0-9a-f]{10}"),
-                (("DELETE",), r"/api/profile/dungeon/kampagne/k[0-9a-f]{8}"), (("POST",), r"/api/profile/dungeon/r[0-9a-f]{10}/sitzcode")),
+                (("DELETE",), r"/api/profile/dungeon/kampagne/k[0-9a-f]{8}"), (("POST",), r"/api/profile/dungeon/r[0-9a-f]{10}/sitzcode"),
+                (("POST",), r"/api/profile/dungeon/auto")),
     # Musik (musik.py): listen, make from a wish (Text schreiben writes its lyrics first), delete one or all; change
     # an own song, upload an own file and make
     # a version a song of its own only with Musik bearbeiten (musik.EDIT_KEY, checked there)

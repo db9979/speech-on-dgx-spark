@@ -2816,6 +2816,13 @@
 "titel": "Dungeon-Master: Ausrüstung, Traglast und Händler",
 "text": "A: Am Spieltisch im eigenen Bogen: neun Plätze als Figur, die Klassenwaffe liegt in der Haupthand. Ein Ding aus der Tasche auf seinen Platz ziehen (oder „Anlegen“), mit × wieder ablegen. B: Einen Zweihänder anlegen: der Schild kommt in die Tasche. C: Viel Schweres tragen: „belastet“ erscheint, der nächste Geschick-Wurf zeigt Nachteil. „Hinlegen“: das Ding steht unter „Liegt hier“, ein Mitspieler hebt es auf. D: Gastgeber „⚖ Markt öffnen“: Waren mit Preis, etwas kaufen (Gold sinkt, Ware weg), etwas verkaufen (halber Preis). E: Ein unerkanntes Ding beim Händler „Erkennen lassen“: Name, Bonus und Effekt erscheinen. F: Eine Erzählung mit neuem Ort: Markt und Boden sind weg. G: Neue Runde mit einer fertigen Geschichte anlegen: nach wenigen Sekunden steht ein „Prolog“ mit Ort, Stimmung und Ausgangslage, erst dann lässt sich handeln; die Bildlaufleiste am Tisch hat die Farbe der Welt.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P427",
+"v": 963,
+"titel": "Dungeon-Master im Auto (CarPlay)",
+"text": "A: Eine Runde im Panel anlegen, dann im Auto „Dungeon-Master spielen“ antippen: Spark liest den Prolog vor und hört zu. B: Eine Aktion sagen („Ich gehe zum Brunnen“): „Notiert. Wir warten noch auf …“; am Tisch im Panel steht die Aktion. C: Sobald alle gehandelt haben, liest Spark die Erzählung von selbst vor und hört wieder zu. D: „Wie viel Leben habe ich?“, „Was ist in meiner Tasche?“, „Trink einen Heiltrank“, „Wer fehlt noch?“: feste Antworten, der Trank ist danach weg. E: „Danke“: das Spiel im Auto endet. F: Ohne laufende Runde: Spark sagt es, das Mikrofon bleibt zu.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.963** AI Dungeon Master in the car: the CarPlay row "Play Dungeon Master" reads the narration aloud and takes the spoken action; the panel answers fixed questions about the hero (life, bag, potion, who is missing)
 - **V01.0.962** AI Dungeon Master stage 4: nine equipment places as in D&D (two-handed weapons, drag and drop), weight and carry limit (burdened = disadvantage on dexterity, loot without room stays on the ground), merchants with prices by the panel and a Charisma discount, unknown magic; every round opens with a prologue (place, mood, starting situation)
 - **V01.0.961** AI Dungeon Master with the D&D look on the whole page: world, story, tone, people and class as cards with pictures, 10 ready-made stories per world, a light or dark button, heroes as cards
 - **V01.0.960** Tapping a notification opens exactly that note: a card above the conversation with the whole text and the button that fits (iPhone, Android 1.4.4, browser, companion on the Mac)
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.956** AI Dungeon Master: advantage and disadvantage (the panel rolls two d20), an out-of-character line only for the player concerned, longer openings, default prompt with senses and staying true to the world
 - **V01.0.955** AI Dungeon Master story planner: the admin keeps stories with acts, turning points and taboos, drafted by the language model from keywords and checked by the panel; in play the model decides when the next act begins, within fixed limits; the game's buttons in the panel style
 - **V01.0.954** Red fix: ffmpeg in the test workflow installs with --no-install-recommends (codecs stay) plus resilient apt config so a slow package mirror no longer aborts the run
-- **V01.0.953** AI Dungeon Master stage 2: campaigns with "The story so far" and chapters, the story read aloud with narrator and NPC voices, speaking instead of typing, iPhone page; many more items, potions and spells
 
 
 

@@ -5221,7 +5221,15 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "des Dungeon-Masters (Kopf „Prolog“): Ort mit allen Sinnen, Stimmung und Ausgangslage, jede Figur der Gruppe kommt darin vor, höchstens ein NPC spricht, am Ende eine Frage an die Gruppe. Das Modell bekommt dafür Welt, Gruppe, den Einstieg des Gastgebers, „Bisher geschah“ und den ersten Akt der Geschichte; geprüft wird er wie jede Erzählung, Schaden, Beute und Erfolge darin zählen nicht. Bis er steht, wartet der erste Zug (höchstens zwei Versuche), danach beginnt die Zugzeit; mit Vorlesen wird er gesprochen. Antwortet das Modell nicht, steht der Einstieg des Gastgebers oder der Inhalt des ersten Akts als Prolog da. Hing eine Runde nach einem Neustart des Panels beim Erzählen, gibt die nächste Anfrage sie frei. Log dungeon: prolog | ok | 4100 ms. Die Bildlaufleisten am Spieltisch haben jetzt die Farben der Welt."
+"text": "des Dungeon-Masters (Kopf „Prolog“): Ort mit allen Sinnen, Stimmung und Ausgangslage, jede Figur der Gruppe kommt darin vor, höchstens ein NPC spricht, am Ende eine Frage an die Gruppe. Das Modell bekommt dafür Welt, Gruppe, den Einstieg des Gastgebers, „Bisher geschah“ und den ersten Akt der Geschichte; geprüft wird er wie jede Erzählung, Schaden, Beute und Erfolge darin zählen nicht. Bis er steht, wartet der erste Zug (höchstens zwei Versuche), danach beginnt die Zugzeit; mit Vorlesen wird er gesprochen. Antwortet das Modell nicht, steht der Einstieg des Gastgebers oder der Inhalt des ersten Akts als Prolog da. Hing eine Runde nach einem Neustart des Panels beim Erzählen, gibt die nächste Anfrage sie frei. Log dungeon: prolog | ok | 4100 ms. Die Bildlaufleisten am Spieltisch haben jetzt die Farben der Welt. Im Auto (V01.0.963, Dominik 2026-10-23 „Alles umsetzten“): In CarPlay liest die Zeile „Dungeon-Master spielen“ die neueste Erzählung vor und nimmt die gesprochene Aktion an; kurze feste Fragen zum eigenen Helden (Leben, Tasche, Heiltrank trinken, wer fehlt, nochmal; höchstens 60 Zeichen, AUTO_FRAGEN) beantwortet das Panel mit festen Sätzen, alles andere ist die Aktion des offe"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "nen Zugs. Jede Erzählung hat dafür eine eigene Nummer (k). POST /api/profile/dungeon/auto ({text, nach, lang}, Antwort {sagen, n, warten, aus}), auch für die iPhone-App freigegeben, eigenes Rate-Limit dungeonauto (60 je Minute); Zustand → Live zählt die Schritte im Auto, Log dungeon: auto | leben."
 },
 {
 "lang": "de",
@@ -10517,7 +10525,15 @@
 "file": "iPhone-App „Spark“",
 "head": "CarPlay",
 "title": "Stabil im Auto",
-"text": "fragt „Woran soll ich dich erinnern?“, deine Worte werden zu „Erinnere mich …“; nur mit Erinnerungen). - Briefing beim Einsteigen (App: Einstellungen → CarPlay, aus, nur dieses iPhone): einmal am Tag, ein paar Sekunden nach dem Verbinden, „Mein Tag“ von selbst. - Das Ton-Protokoll nennt jetzt jedes Gesprächsende mit Grund („Ende: Stille“, „fremde Stimme“, „Danke gesagt“, „Hinweis gesagt“, „zu langsam“, „Unterbrechung“, „Mikrofon stumm“, „Auto getrennt“ …), ein Ende ohne Grund mit der Zeile im Code, dazu „Zuhören“ und die Töne. - Ton-Protokoll: Einstellungen → „Ton-Protokoll kopieren“ zeigt jetzt auch, was CarPlay tut (verbunden, getrennt, vorn, Hintergrund, Sprechfenster auf/zu oder abgelehnt, welcher Knopf, Tonweg geändert und warum, Unterbrechungen, App gestartet oder beendet). Nur feste Wörter und Uhrzeiten, nie was gesagt wurde. Die letzten 150 Zeilen bleiben auf dem iPhone, auch wenn iOS die App beendet; beim Melden eines Fehlers geht es mit dem Schalter „Ton-Protokoll der App anhängen“ mit."
+"text": "fragt „Woran soll ich dich erinnern?“, deine Worte werden zu „Erinnere mich …“; nur mit Erinnerungen). - Briefing beim Einsteigen (App: Einstellungen → CarPlay, aus, nur dieses iPhone): einmal am Tag, ein paar Sekunden nach dem Verbinden, „Mein Tag“ von selbst. - Das Ton-Protokoll nennt jetzt jedes Gesprächsende mit Grund („Ende: Stille“, „fremde Stimme“, „Danke gesagt“, „Hinweis gesagt“, „zu langsam“, „Unterbrechung“, „Mikrofon stumm“, „Auto getrennt“ …), ein Ende ohne Grund mit der Zeile im Code, dazu „Zuhören“ und die Töne. - Dungeon-Master spielen (seit V01.0.963, Dominik 2026-10-23 „Alles umsetzten“): Die Zeile steht im Auto, solange der KI-Dungeon-Master für dich frei ist. Sie liest die neueste Erzählung deiner laufenden Runde vor (die neueste, in der du sitzt) und hört dann zu. Was du sagst, ist die Aktion deines Helden für den offenen Zug; danach sagt Spark „Notiert. Wir warten noch auf …“ und fragt alle 4 Sekunden nach, bis die nächste Erzählung da ist, die er dann vorliest (höchstens 10 Minuten). Kurze feste Fragen beantwortet das Panel nach seinen Regeln, nie das Modell: „Wie viel Leben habe ich?“, „Was ist in meiner Tasche?“, „Trink einen Heiltrank“, „Wer fehlt noch?“, "
+},
+{
+"lang": "de",
+"src": "iphone-app",
+"file": "iPhone-App „Spark“",
+"head": "CarPlay",
+"title": "Stabil im Auto",
+"text": "„Nochmal“. „Danke“ oder „Ende“ beendet das Spiel im Auto. Der Text steht danach wie immer am Tisch im Panel oder in der App. Ohne laufende Runde sagt Spark das und das Mikrofon bleibt zu. - Ton-Protokoll: Einstellungen → „Ton-Protokoll kopieren“ zeigt jetzt auch, was CarPlay tut (verbunden, getrennt, vorn, Hintergrund, Sprechfenster auf/zu oder abgelehnt, welcher Knopf, Tonweg geändert und warum, Unterbrechungen, App gestartet oder beendet). Nur feste Wörter und Uhrzeiten, nie was gesagt wurde. Die letzten 150 Zeilen bleiben auf dem iPhone, auch wenn iOS die App beendet; beim Melden eines Fehlers geht es mit dem Schalter „Ton-Protokoll der App anhängen“ mit."
 },
 {
 "lang": "de",
@@ -17085,7 +17101,15 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "roup. The model gets world, group, the host's opening, \"The story so far\" and the story's first act; it is checked like every narration, damage, loot and successes in it do not count. The first turn waits until it stands (at most two tries), then the turn time starts; with reading aloud on it is spoken. When the model does not answer, the host's opening or the first act's content stands there as the prologue. When a round hung while narrating after a restart of the panel, the next request frees it. Log dungeon: prolog | ok | 4100 ms. The scroll bars at the table now have the world's colours."
+"text": "roup. The model gets world, group, the host's opening, \"The story so far\" and the story's first act; it is checked like every narration, damage, loot and successes in it do not count. The first turn waits until it stands (at most two tries), then the turn time starts; with reading aloud on it is spoken. When the model does not answer, the host's opening or the first act's content stands there as the prologue. When a round hung while narrating after a restart of the panel, the next request frees it. Log dungeon: prolog | ok | 4100 ms. The scroll bars at the table now have the world's colours. In the car (V01.0.963, Dominik 2026-10-23 \"Alles umsetzten\"): in CarPlay the row \"Play Dungeon Master\" reads the newest narration aloud and takes the spoken action; short fixed questions about the own hero (life, bag, drink a healing potion, who is missing, again; at most 60 characters, AUTO_FRAGEN) are answered by the panel with fixed sentences, everything else is the action of the open turn. For that every narration has its own number (k). POST /api/profile/dungeon/auto ({text, nach, lang}, answer {sagen, n, warten, aus}), also opened for the iPhone app, own rate limit dungeonauto (60 a minut"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "e); Status → Live counts the steps in the car, log dungeon: auto | leben."
 },
 {
 "lang": "en",
@@ -22221,7 +22245,15 @@
 "file": "iPhone app \"Spark\"",
 "head": "CarPlay",
 "title": "Stable in the car",
-"text": "hould I remind you of?\", your words become \"Remind me …\"; only with reminders). - Briefing when getting in (app: Settings → CarPlay, off, only this iPhone): once a day, a few seconds after connecting, \"My day\" by itself. - The sound log now names every end of a conversation with its reason (\"Ende: Stille\", \"fremde Stimme\", \"Danke gesagt\", \"Hinweis gesagt\", \"zu langsam\", \"Unterbrechung\", \"Mikrofon stumm\", \"Auto getrennt\" …), an end without a reason with its line in the code, plus \"Zuhören\" and the tones. - Sound log: Settings → \"Ton-Protokoll kopieren\" now also shows what CarPlay does (connected, disconnected, in front, background, voice window open/closed or refused, which button, sound route changed and why, interruptions, app started or ended). Only fixed words and times, never what was said. The last 150 lines stay on the iPhone even when iOS ends the app; when reporting a problem it goes along with the switch \"Ton-Protokoll der App anhängen\"."
+"text": "hould I remind you of?\", your words become \"Remind me …\"; only with reminders). - Briefing when getting in (app: Settings → CarPlay, off, only this iPhone): once a day, a few seconds after connecting, \"My day\" by itself. - The sound log now names every end of a conversation with its reason (\"Ende: Stille\", \"fremde Stimme\", \"Danke gesagt\", \"Hinweis gesagt\", \"zu langsam\", \"Unterbrechung\", \"Mikrofon stumm\", \"Auto getrennt\" …), an end without a reason with its line in the code, plus \"Zuhören\" and the tones. - Play Dungeon Master (since V01.0.963, Dominik 2026-10-23 \"Alles umsetzten\"): the row stands in the car while the AI Dungeon Master is released for you. It reads the newest narration of your running round aloud (the newest one you sit in) and then listens. What you say is your hero's action for the open turn; then Spark says \"Noted. We are still waiting for …\" and asks every 4 seconds until the next narration is there, which it then reads aloud (at most 10 minutes). The panel answers short fixed questions by its rules, never the model: \"How much life do I have?\", \"What is in my bag?\", \"Drink a potion\", \"Who is missing?\", \"Repeat\". \"Thanks\" or \"End\" ends the game in the car. The tex"
+},
+{
+"lang": "en",
+"src": "iphone-app",
+"file": "iPhone app \"Spark\"",
+"head": "CarPlay",
+"title": "Stable in the car",
+"text": "t then stands at the table in the panel or the app as always. Without a running round Spark says so and the microphone stays closed. - Sound log: Settings → \"Ton-Protokoll kopieren\" now also shows what CarPlay does (connected, disconnected, in front, background, voice window open/closed or refused, which button, sound route changed and why, interruptions, app started or ended). Only fixed words and times, never what was said. The last 150 lines stay on the iPhone even when iOS ends the app; when reporting a problem it goes along with the switch \"Ton-Protokoll der App anhängen\"."
 },
 {
 "lang": "en",

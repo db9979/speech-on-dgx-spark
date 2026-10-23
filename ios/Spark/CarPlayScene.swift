@@ -195,6 +195,15 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
             }
             out.append(due)
         }
+        if areas.contains("dungeon") {   // KI-Dungeon-Master (dungeon.car): the newest narration, then the hero's action by voice
+            let game = CPListItem(text: String(localized: "Dungeon-Master spielen"), detailText: String(localized: "Erzählung hören, Aktion sprechen"),
+                                  image: UIImage(systemName: "shield.lefthalf.filled"))
+            game.handler = { [weak self] _, done in
+                done()
+                self?.playGame()
+            }
+            out.append(game)
+        }
         if let fresh { out.append(fresh) }
         return out
     }
@@ -228,6 +237,12 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
     private func ask(_ question: String, _ kind: String, hint: String? = nil) {
         AudioEngine.note("CarPlay: Knopf \(kind)")
         reachable { Conversation.shared.write(question, hint: hint) }
+    }
+
+    /// „Dungeon-Master spielen“ (Dominik 2026-10-23 „Alles umsetzten“): the game of the own running round, spoken only.
+    private func playGame() {
+        AudioEngine.note("CarPlay: Knopf Dungeon")
+        reachable { Conversation.shared.startGame() }
     }
 
     /// „Erinnerung sprechen“: listens at once, the voice window asks „Woran soll ich dich erinnern?“.

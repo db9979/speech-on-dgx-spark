@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.963** · 2026-10-23 · KI-Dungeon-Master im Auto: CarPlay-Zeile „Dungeon-Master spielen“ liest die Erzählung vor und nimmt die gesprochene Aktion an; feste Fragen zum Helden (Leben, Tasche, Heiltrank, wer fehlt) beantwortet das Panel
 - **V01.0.962** · 2026-10-23 · KI-Dungeon-Master Stufe 4: neun Ausrüstungsplätze wie bei D&D (zweihändige Waffen, Ziehen und Ablegen), Gewicht und Traglast (belastet = Nachteil auf Geschick, Beute ohne Platz bleibt am Boden), Händler mit Preisen vom Panel und Charisma-Rabatt, unerkannte Magie; jede Runde beginnt mit einem Prolog (Ort, Stimmung, Ausgangslage)
 - **V01.0.961** · 2026-10-23 · KI-Dungeon-Master im D&D-Look auf der ganzen Seite: Welt, Geschichte, Ton, Volk und Klasse als Karten mit Bildzeichen, je Welt 10 fertige Geschichten, Knopf für hell oder dunkel, Helden als Karten
 - **V01.0.960** · 2026-10-23 · Mitteilung antippen öffnet genau diese Meldung: Karte über dem Gespräch mit ganzem Text und passendem Knopf (iPhone, Android 1.4.4, Browser, Begleiter Mac)

@@ -13201,6 +13201,26 @@
         }
       }
     },
+    "Dungeon-Master spielen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Play Dungeon Master"
+          }
+        }
+      }
+    },
+    "Erzählung hören, Aktion sprechen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hear the story, speak your action"
+          }
+        }
+      }
+    },
     "Fristen vorlesen": {
       "localizations": {
         "en": {

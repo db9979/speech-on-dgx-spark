@@ -1732,7 +1732,8 @@ def snapshot(view="admin", now=None):
                         + f" · heute {dgn.get('vorgelesen', 0)} vorgelesen, {dgn.get('gehoert', 0)} gesprochen"
                         + (" · liest vor" if dgn.get("liest") else "") + (" · schreibt Bisher geschah" if dgn.get("schreibt") else "")
                         + f" · {dgn.get('geschichten', 0)} Geschichten, heute {dgn.get('akte', 0)} Akte weiter, {dgn.get('vorschlaege', 0)} Vorschläge"
-                        + f" · {dgn.get('maerkte_offen', 0)} Märkte offen, heute {dgn.get('maerkte', 0)} Märkte, {dgn.get('kaeufe', 0)} Käufe, {dgn.get('verkaeufe', 0)} Verkäufe")
+                        + f" · {dgn.get('maerkte_offen', 0)} Märkte offen, heute {dgn.get('maerkte', 0)} Märkte, {dgn.get('kaeufe', 0)} Käufe, {dgn.get('verkaeufe', 0)} Verkäufe"
+                        + (f" · heute {dgn['auto']} Schritte im Auto" if dgn.get("auto") else ""))
         if x["id"] == "wkarte":    # Wissenskarte: connections, discarded, documents waiting, profiles, numbers only (never a title)
             x["sub"] = (f"{wkk.get('verbindungen', 0)} Verbindungen · {wkk.get('punkte', 0)} Punkte · {wkk.get('warten', 0)} Dokumente warten"
                         + f" · {wkk.get('profile', 0)} Profile"

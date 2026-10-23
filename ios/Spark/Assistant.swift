@@ -202,6 +202,16 @@ final class Conversation: ObservableObject {
     private(set) var lastEnd = ""
     /// „Erinnerung sprechen“ (CarPlay): the next question is a reminder („Erinnere mich …“ goes in front)
     private(set) var remindNext = false
+    /// „Dungeon-Master spielen“ (CarPlay, Dominik 2026-10-23 „Alles umsetzten“): what is said goes to the game
+    /// (POST /api/profile/dungeon/auto), not to the assistant. The Spark answers a few fixed questions about the own
+    /// hero by its rules or takes it as the hero's action; the car reads the narration aloud. gameN: the newest
+    /// narration read aloud; gameWait: the Dungeon Master tells or others still act, so the app asks again instead of
+    /// listening (every gamePoll seconds, at most gameMax times).
+    private(set) var game = false
+    private var gameN = 0
+    private var gameWait = false
+    static let gamePoll: TimeInterval = 4
+    static let gameMax = 150
     /// In the car an answer that has not begun after this long is given up, so the car never seems stuck
     /// (Dominik 2026-10-21 „4“; the Spark's own tool limit is 25 s).
     static let carSlow: TimeInterval = 30
@@ -463,6 +473,8 @@ final class Conversation: ObservableObject {
             AudioEngine.note("Ende: " + (why.isEmpty ? "ohne Grund, Zeile \(line)" : why))
         }
         remindNext = false
+        game = false
+        gameWait = false
         loudSince = nil
         if canWake {
             do {
@@ -759,6 +771,7 @@ final class Conversation: ObservableObject {
                 }
                 // „Danke“, „Ende“ in the car: the conversation closes at once instead of after 15 s of quiet (Dominik 2026-10-20 „3a“)
                 if inCar && Self.bye(text) {
+                    game = false
                     carEnd(sad: false)
                     base("Danke gesagt")
                     return
@@ -770,6 +783,7 @@ final class Conversation: ObservableObject {
                         text = String(localized: "Erinnere mich") + " " + text
                     }
                 }
+                if game { playGame(text); return }
                 await send(text, api)
             } catch {
                 if held != nil { resumeHeld(); return }   // no recognition: the answer plays on
@@ -1073,6 +1087,11 @@ final class Conversation: ObservableObject {
             phase = .idle
             if flushNext() { return }
         }
+        if game && gameWait && inCar {   // the Dungeon Master tells or others still act: ask again instead of listening
+            gameWait = false
+            playGame("")
+            return
+        }
         if unasked && inCar {   // a note said by itself or a repeated answer: nothing to answer, the microphone stays closed
             unasked = false
             carEnd(sad: false)
@@ -1149,6 +1168,58 @@ final class Conversation: ObservableObject {
         if phase == .speaking || phase == .thinking || phase == .transcribing { stop("neue Frage") }
         remindNext = true
         listen(preroll: 0, fromWake: false)
+    }
+
+    /// „Dungeon-Master spielen“: the newest narration of the own running round, then the microphone for the hero's action.
+    func startGame() {
+        if phase == .speaking || phase == .thinking || phase == .transcribing { stop("neue Frage") }
+        game = true
+        gameN = 0
+        playGame("")
+    }
+
+    /// One step of the game in the car: sends what was said (or nothing, to hear what is new), waits while the
+    /// Dungeon Master tells or others act, and reads the Spark's sentence aloud. Without a round the microphone stays
+    /// closed afterwards.
+    private func playGame(_ said: String) {
+        guard let api = SparkAPI.current else { base("kein Spark"); return }
+        task?.cancel()
+        audio.stopPlaying()
+        audio.warmUp()
+        lastActivity = Date()
+        phase = .thinking
+        let lang = Locale.current.language.languageCode?.identifier == "en" ? "en" : "de"
+        task = Task {
+            do {
+                var text = said
+                for _ in 0..<Self.gameMax {
+                    let d = try await api.object("POST", "/api/profile/dungeon/auto", body: ["text": text, "nach": gameN, "lang": lang])
+                    guard !Task.isCancelled else { return }
+                    text = ""
+                    if let n = d["n"] as? Int { gameN = n }
+                    gameWait = d["warten"] as? Bool ?? false
+                    if d["aus"] as? Bool == true { game = false }
+                    let say = String((d["sagen"] as? String ?? "").prefix(3000))
+                    if !say.isEmpty {
+                        phase = .speaking
+                        streamDone = false
+                        unasked = !game
+                        for try await pcm in api.say(say) { audio.play(pcm) }
+                        guard !Task.isCancelled else { return }
+                        streamDone = true
+                        if !audio.busy { answered() }
+                        return
+                    }
+                    try await Task.sleep(for: .seconds(Self.gamePoll))
+                }
+                carEnd(sad: false)
+                base("Spiel wartet zu lange")
+            } catch {
+                guard !Task.isCancelled else { return }
+                game = false
+                fail(error)
+            }
+        }
     }
 
     /// A tapped notification: its note from the Spark (only its number came through Apple), shown above the
