@@ -51,7 +51,7 @@ class MusicBase(Base):
         dm._want.clear()
         dm._akte.clear()
         dm._plays.clear()
-        dm._state.update(run=None, fehler=0, ruhe=0.0, nacht="")
+        dm._state.update(run=None, fehler=0, ruhe=0.0, nacht="", stil=False)
         self.made = []
 
         async def make(body):
@@ -76,7 +76,7 @@ class MusicBase(Base):
             os.makedirs(dm.DIR, exist_ok=True)
             with open(dm.file_of(sid), "wb") as f:
                 f.write(MP3)
-            d["stuecke"].append({"id": sid, "w": welt, "st": st, "s": 60, "t": 1000 + i, "b": b, "n": n})
+            d["stuecke"].append({"id": sid, "w": welt, "st": st, "s": 60, "t": 1000 + i, "b": b, "n": n, "v": dm.STIL_V})
         dm._write(d)
         return [x["id"] for x in d["stuecke"][-k:]]
 
@@ -120,6 +120,22 @@ class Words(MusicBase):
                 self.assertLessEqual(len(c), musik.MAX_CAPTION)
                 self.assertNotIn("IGNORE", c)
                 self.assertLessEqual(set(re.findall(r"[a-z]+", c.lower())), fixed)
+
+    def test_calm_ambient_never_fast(self):
+        """Dominik 2026-10-23: nothing annoying or fast, calm ambient music; a fight too stays a soft pulse."""
+        import random
+        for welt in list(dm.STIL) + ["eigene"]:
+            for st in dm.STIMMUNGEN:
+                for seed in range(40):
+                    c = dm.caption(welt, st, random.Random(seed)).lower()
+                    self.assertIn("ambient", c)
+                    self.assertIn("no drums, no percussion", c)
+                    self.assertEqual(c.count("drum"), 1, c)              # only "no drums"
+                    self.assertNotRegex(c, r"\b(fast|driving|intense|urgent|relentless|frantic|energetic|bouncy|dance|"
+                                           r"heroic|epic|fanfare|choir hums|taiko|bagpipes|arpeggios)\b")
+                    bpm = [int(x) for x in re.findall(r"(\d+) bpm", c)]
+                    self.assertEqual(len(bpm), 1, c)
+                    self.assertLessEqual(bpm[0], 80)
 
     def test_game_text_never_reaches_the_model(self):
         self.music_on()
@@ -264,6 +280,26 @@ class Store(MusicBase):
         self.assertLessEqual(sum(x["b"] for x in d["stuecke"]), 1024 * 1024)
         self.assertIn("m0000000000", [x["id"] for x in d["stuecke"]])
         self.assertEqual(len(gone), 10)
+
+    def test_older_style_made_again(self):
+        """Pieces of an older style (before the calm ambient one) are never played, and the first look throws them away."""
+        self.music_on()
+        new = self.put("fantasy", "erkunden", 1)[0]
+        old = "m" + os.urandom(5).hex()
+        with open(dm.file_of(old), "wb") as f:
+            f.write(MP3)
+        d = dm.read_json(dm.INDEX, {})
+        d["stuecke"].append({"id": old, "w": "fantasy", "st": "erkunden", "s": 60, "t": 1, "b": 10, "n": 0})
+        with open(dm.INDEX, "w") as f:
+            json.dump(d, f)
+        dm._cache.update(mtime=None, d=None)
+        self.assertEqual([x["id"] for x in dm._read()["stuecke"]], [new])   # never played
+        asyncio.run(dm.step(at_hour(12)))
+        self.assertFalse(os.path.exists(dm.file_of(old)))
+        self.assertTrue(os.path.exists(dm.file_of(new)))
+        self.assertEqual([x["id"] for x in dm.read_json(dm.INDEX, {})["stuecke"]][:1], [new])
+        self.assertTrue(all(x.get("v") == dm.STIL_V for x in dm.read_json(dm.INDEX, {})["stuecke"]))
+        self.assertEqual(dm.alt_weg(), 0)
 
     def test_clear(self):
         self.put("fantasy", "kampf", 2)

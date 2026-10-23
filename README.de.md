@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.976** KI-Dungeon-Master: Musik ruhig und ambient, weiche Flächen statt Schlagzeug, 60 bis 80 Schläge pro Minute, auch im Kampf; der alte Vorrat wird neu gemacht
 - **V01.0.975** KI-Dungeon-Master: Wartezeit angenehm: Schritte Lesen, Würfeln, Erzählen mit festen Sätzen, Würfe schon vor der Erzählung, Wissenskarten der Welt und Hinweise aus 300 festen Texten ohne baldige Wiederholung, Erzählung Satz für Satz, „schreibt …“ und Tischgespräch nur unter den Spielern; beendete Runden löschen; Erzählung nach der Karte geprüft
 - **V01.0.974** Selbsttest des KI-Dungeon-Masters fest: der Bilder-Test wählt auf der gewürfelten Karte einen Weg, der weiterführt, statt in eine Sackgasse (war 1 von 3 Läufen rot)
 - **V01.0.973** KI-Dungeon-Master-Karte lesbar und mit Bildern: Schrift in Bildschirmgröße, Namen ohne Überlagerung, Standort als Zeile statt Schild; Bilder je Ortsart und Raumart im nächtlichen Lauf und ein eigenes Bild je besuchtem Ort (geprüft, Tageslimit, nur für die eigene Runde), das Zeichen bis dahin
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.969** KI-Dungeon-Master mit Karte: das Panel würfelt je Kapitel ein Ortsnetz in fünf Formen (verstreut, Tal, See, zwei Reiche, Küste) mit Nebel, die Gruppe zieht nur zu Nachbarorten, unterwegs Begegnungen; Zufalls-Gewölbe als Raster in fünf Grundrissen mit Fallen, Rätseln, Wächtern, Schatz, Quelle, Altar und Boss, alles vom Panel gewürfelt und geprüft
 - **V01.0.968** KI-Dungeon-Master Stufe 5a: „Du bist dran“ als Mitteilung einmal je Zug, Erinnerung wenn der Zug wartet, Spieltermin des Gastgebers mit Kalenderdatei und Mitteilung 15 Minuten vorher, Rückblick nach 12 Stunden Pause; Fehler 500 bei „Handeln“ behoben, kein „KI-Bild“-Zeichen mehr auf den Bildern
 - **V01.0.967** KI-Dungeon-Master: Bilder für Ausrüstung und Zauber, ein gemaltes Bild je Gegenstand und Zauber im Stil jeder Welt mit Seltenheitsrahmen, nachts von 01:00 bis 05:00 oder sofort per „Bilder jetzt erstellen“ (höchstens 300 am Tag), eigenes Bild für benannte Fundstücke ab rar; eigener Admin-Schalter, braucht Bilder malen
-- **V01.0.966** Ohne Internet: Zeitserver im Heimnetz für beide Rechner (Einstellungen → Spark → Betrieb), Prüfkarte unter Zustand → Überblick → Ohne Internet (Modelle, Uhren, Namen, was pausiert) und ein Hinweis, wenn der Modell-Rechner wegen der Uhrzeit ablehnt; Sprachdienste und Parakeet laden nur von der eigenen Platte, Wächter-Test gegen Downloads zur Laufzeit
 
 
 

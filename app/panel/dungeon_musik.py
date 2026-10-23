@@ -73,33 +73,33 @@ LISTE = 30                 # pieces of one field a seat gets to choose from
 ID = re.compile(r"m[0-9a-f]{10}")
 GRUENDE = ("memory", "belegt", "missing", "engine", "dienst", "zeit", "pause")   # musik.make's reasons (journal)
 
-# the sound of a world (the admin's own worlds take EIGEN) and of a mood: fixed English words for the music model
-STIL = {"fantasy": "epic medieval fantasy score", "horror": "dark gothic horror score",
-        "scifi": "atmospheric science fiction synth score", "piraten": "swashbuckling pirate adventure score"}
-EIGEN = "cinematic orchestral adventure score"
-ART = {"erkunden": "calm exploration, wonder, gentle and curious", "taverne": "lively tavern folk tune, cheerful, warm",
-       "spannung": "suspenseful, mysterious, slow building tension", "kampf": "intense battle music, driving percussion, heroic",
-       "finale": "grand climactic final battle, choir pads, epic and urgent", "sieg": "short triumphant victory fanfare, joyful"}
+# the sound of a world (the admin's own worlds take EIGEN) and of a mood: fixed English words for the music model.
+# Dominik 2026-10-23 "nichts nervig und zu schnell ... schön ambient music und ruhig": calm ambient in every mood,
+# soft pads and drones instead of drums, a fight only as a low steady pulse, 60 to 80 bpm
+STIL_V = 2                 # the style of the pieces: a piece of an older style is thrown away and made again
+STIL = {"fantasy": "calm ambient medieval fantasy soundscape", "horror": "quiet dark ambient soundscape, eerie but soft",
+        "scifi": "calm ambient space soundscape", "piraten": "calm ambient seafaring soundscape"}
+EIGEN = "calm cinematic ambient soundscape"
+ART = {"erkunden": "peaceful, wonder, gentle and airy", "taverne": "warm cozy tavern ambience, soft and relaxed",
+       "spannung": "mysterious, subdued, slowly evolving tension",
+       "kampf": "restrained tension, low steady pulse, serious but soft, not aggressive",
+       "finale": "solemn and grand, slowly swelling pads, calm intensity", "sieg": "short gentle warm resolution, soft and hopeful"}
 INSTRUMENTE = {
-    "fantasy": ("lute and recorder", "harp and strings", "celtic fiddle and bodhran", "french horns and strings",
-                "hurdy-gurdy and drums", "flute and choir pads", "dulcimer and cello", "bagpipes and war drums"),
-    "horror": ("detuned piano and drones", "low strings and music box", "pipe organ and whispers of strings",
-               "cello and metallic scrapes", "glass harmonica and choir", "prepared piano and taiko"),
-    "scifi": ("analog synthesizers and arpeggios", "ambient pads and pulses", "modular synth and electronic drums",
-              "cinematic strings and synth bass", "glassy bells and deep drones", "retro synthwave lead and drums"),
-    "piraten": ("accordion and fiddle", "concertina and stomping drums", "brass and strings", "tin whistle and guitar",
-                "sea shanty choir hums and drums", "cello, horns and timpani"),
+    "fantasy": ("soft harp and warm pads", "gentle lute and strings", "low flute and drones", "soft choir pads and cello",
+                "dulcimer and ambient strings", "felt piano and harp"),
+    "horror": ("low drones and soft strings", "distant music box and pads", "soft organ drones", "glass harmonica and choir pads",
+               "cello and dark pads"),
+    "scifi": ("warm analog pads and drones", "glassy bells and deep drones", "soft synth pads and slow textures",
+              "ambient strings and synth pads"),
+    "piraten": ("soft accordion and pads", "gentle guitar and warm pads", "low strings and soft whistle", "cello and warm pads"),
 }
-INSTRUMENTE_EIGEN = ("full orchestra", "strings and woodwinds", "piano and strings", "brass and percussion",
-                     "harp and choir pads", "guitar and strings")
-TEMPO = {"erkunden": ("slow tempo", "gentle mid tempo", "flowing tempo"),
-         "taverne": ("bouncy mid tempo", "fast dance tempo", "swinging tempo"),
-         "spannung": ("slow tempo", "creeping tempo", "pulsing mid tempo"),
-         "kampf": ("fast tempo", "very fast tempo", "driving mid tempo"),
-         "finale": ("fast tempo", "relentless tempo", "majestic mid tempo"),
-         "sieg": ("mid tempo", "fast tempo", "proud tempo")}
+INSTRUMENTE_EIGEN = ("soft strings and pads", "felt piano and strings", "harp and choir pads", "ambient guitar and pads")
+_LANGSAM = ("very slow tempo, 60 bpm", "slow tempo, 66 bpm", "slow tempo, 72 bpm")
+TEMPO = {"erkunden": _LANGSAM, "spannung": _LANGSAM, "finale": _LANGSAM, "sieg": _LANGSAM,
+         "taverne": ("slow tempo, 72 bpm", "relaxed tempo, 80 bpm"), "kampf": ("slow steady tempo, 76 bpm", "steady tempo, 80 bpm")}
 TONART = ("in D minor", "in A minor", "in E minor", "in C major", "in G major", "in F major", "in B flat major", "in C minor")
-ENDE = "instrumental, background music for a tabletop role-playing game, no vocals, loops well"
+ENDE = ("instrumental ambient background music for a tabletop role-playing game, quiet and soft dynamics, "
+        "no drums, no percussion, no sudden changes, no vocals, loops well")
 
 # the panel's word lists over the scene, the act and the place (the model's words are data: they only pick one of these)
 _W = lambda s: re.compile(r"(?i)\b(" + s + r")")   # noqa: E731 - a word at its start (German compounds end freely)
@@ -121,7 +121,7 @@ _cache = {"mtime": None, "d": None}
 _want = {}                 # (welt, st) -> {"upto": n, "extra": n}   the queue, in the order asked
 _akte = {}                 # rid -> the act seen last (a new act asks for new pieces)
 _plays = {}                # id -> plays since the index was written last
-_state = {"run": None, "fehler": 0, "ruhe": 0.0, "nacht": ""}
+_state = {"run": None, "fehler": 0, "ruhe": 0.0, "nacht": "", "stil": False}
 _day = DayCounter(gemacht=0, weg=0, geholt=0, entfernt=0)
 
 
@@ -155,7 +155,8 @@ def _read():
     if _cache["mtime"] != m:
         d = read_json(INDEX, {})
         d = d if isinstance(d, dict) else {}
-        d["stuecke"] = [x for x in d.get("stuecke") or [] if isinstance(x, dict) and ID.fullmatch(str(x.get("id")))]
+        d["stuecke"] = [x for x in d.get("stuecke") or [] if isinstance(x, dict) and ID.fullmatch(str(x.get("id")))
+                        and x.get("v") == STIL_V]   # an older style is never played (alt_weg throws it away)
         _cache.update(mtime=m, d=d)
     return _cache["d"]
 
@@ -386,7 +387,7 @@ async def make(welt, st, rng=None):
                 os.replace(file_of(sid) + ".neu", file_of(sid))
                 d = _read()
                 d = {"stuecke": list(d["stuecke"]) + [{"id": sid, "w": welt, "st": st, "s": secs, "t": int(time.time()),
-                                                       "b": len(mp3), "n": 0}]}
+                                                       "b": len(mp3), "n": 0, "v": STIL_V}]}
                 gone = prune(d, s["stuecke"], s["mb"], keep=sid)   # a new act's pieces push out the most played
                 _write(d)
                 w = _want.get((welt, st))
@@ -416,6 +417,24 @@ async def make(welt, st, rng=None):
     return why
 
 
+def alt_weg():
+    """Throws away the pieces of an older style (STIL_V) with their files, so the fields are made again. Returns how
+    many."""
+    with _lock:
+        raw = read_json(INDEX, {})
+        alle = raw.get("stuecke") if isinstance(raw, dict) and isinstance(raw.get("stuecke"), list) else []
+        alt = [x for x in alle if not isinstance(x, dict) or x.get("v") != STIL_V]
+        if not alt:
+            return 0
+        for x in alt:
+            if isinstance(x, dict) and ID.fullmatch(str(x.get("id"))):
+                _rm(x["id"])
+        _write({"stuecke": [x for x in alle if x not in alt]})
+    _day.bump("entfernt", len(alt))
+    print(f"dungeon: musik | neuer stil | {len(alt)} stuecke weg", flush=True)
+    return len(alt)
+
+
 async def step(now=None):
     """One look: the night fills the fields, then one piece when no other heavy job waits. Returns what it did."""
     import notaus
@@ -426,6 +445,9 @@ async def step(now=None):
         with _lock:
             _want.clear()
         return "aus"
+    if not _state.get("stil"):
+        _state["stil"] = True
+        await asyncio.to_thread(alt_weg)
     day = DayCounter.date()
     if night(now) and _state["nacht"] != day and not notaus.blocks("auto"):
         _state["nacht"] = day

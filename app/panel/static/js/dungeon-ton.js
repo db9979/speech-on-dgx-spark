@@ -5,7 +5,7 @@
 // 0.8 s and always stops on the panel's number. Each device keeps its own choice (music, sounds, volume).
 const DMT={ctx:null,out:null,amb:null,ambK:'',noise:null,el:[null,null],g:[null,null],cur:-1,id:'',st:'',last:[],urls:{},v:null,mode:'',
   seen:{p:null,g:null},sieg:{p:null,g:null},tuer:{p:null,g:null},rid:{p:'',g:''},busy:false,duck:1};
-const DMT_FADE=4,DMT_LAUT=25,DMT_URLS=4;
+const DMT_FADE=8,DMT_LAUT=20,DMT_URLS=4;
 function dmtPref(k,d){try{const x=localStorage.getItem('dm-'+k);return x===null?d:x}catch{return d}}
 function dmtSet(k,x){try{localStorage.setItem('dm-'+k,String(x))}catch{}}
 const dmtMusik=()=>dmtPref('musik','1')==='1',dmtFx=()=>dmtPref('fx','1')==='1',dmtLaut=()=>Math.max(0,Math.min(100,+dmtPref('laut',DMT_LAUT)||0));

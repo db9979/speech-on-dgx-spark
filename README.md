@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.976** AI Dungeon Master: calm ambient music, soft pads instead of drums, 60 to 80 beats per minute, in fights too; the old store is made again
 - **V01.0.975** AI Dungeon Master: a pleasant wait: steps reading, dice, narrating with fixed sentences, rolls before the narration, lore cards of the world and hints from 300 fixed texts without soon repeats, narration sentence by sentence, "is typing …" and table talk only between the players; deleting ended rounds; narration checked against the map
 - **V01.0.974** AI Dungeon Master self-test steady: the pictures test picks a way on the rolled map that leads on instead of into a dead end (was red in 1 of 3 runs)
 - **V01.0.973** AI Dungeon Master map readable and with pictures: text at screen size, names without overlap, the place as a line instead of a sign; pictures per kind of place and room in the night run and an own picture per visited place (checked, day limit, only for its own round), the sign until then
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.969** AI Dungeon Master with a map: each chapter the panel rolls a net of places in five shapes (scattered, valley, lake, two realms, coast) with fog, the group only moves to neighbouring places, with encounters on the way; random vaults as a grid in five layouts with traps, riddles, guardians, treasure, spring, altar and boss, all rolled and checked by the panel
 - **V01.0.968** AI Dungeon Master stage 5a: "It is your turn" as a note once per turn, a reminder when the turn waits, the host's game date with a calendar file and a note 15 minutes before, "Last time" after a 12-hour break; fixed the error 500 on "Act", no "AI image" mark on the pictures any more
 - **V01.0.967** AI Dungeon Master: pictures for gear and spells, one painted picture per item and spell in each world's style with a rarity frame, at night from 01:00 to 05:00 or at once with "Create pictures now" (at most 300 a day), an own picture for named finds from rare on; own admin switch, needs Painting pictures
-- **V01.0.966** Without the internet: a time server in the home network for both computers (Settings → Spark → Operation), a check card under Status → Summary → Without the internet (models, clocks, names, what pauses) and a hint when the model computer refuses because of the time; speech servers and Parakeet load only from their own disk, a guard test against downloads at run time
 
 
 

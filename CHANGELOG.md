@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.976** · 2026-10-23 · KI-Dungeon-Master: Musik ruhig und ambient (weiche Flächen statt Schlagzeug, 60 bis 80 Schläge pro Minute, auch im Kampf), längere Überblendung, alter Musikvorrat wird neu gemacht
 - **V01.0.975** · 2026-10-23 · KI-Dungeon-Master: Wartezeit angenehm: Schritte Lesen, Würfeln, Erzählen mit festen Sätzen, Würfe schon vor der Erzählung, Wissenskarten der Welt und Hinweise aus 300 festen Texten ohne baldige Wiederholung, Erzählung Satz für Satz, „schreibt …“ und Tischgespräch nur unter den Spielern; beendete Runden löschen; Erzählung nach der Karte geprüft
 - **V01.0.974** · 2026-10-23 · Selbsttest des KI-Dungeon-Masters fest: der Bilder-Test wählt auf der gewürfelten Karte einen Weg, der weiterführt, statt in eine Sackgasse (war 1 von 3 Läufen rot)
 - **V01.0.973** · 2026-10-23 · KI-Dungeon-Master-Karte lesbar und mit Bildern: Schrift in Bildschirmgröße, Namen ohne Überlagerung, Standort als Zeile statt Schild; Bilder je Ortsart und Raumart im nächtlichen Lauf und ein eigenes Bild je besuchtem Ort (geprüft, Tageslimit, nur für die eigene Runde), das Zeichen bis dahin

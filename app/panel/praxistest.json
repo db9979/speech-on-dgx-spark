@@ -2900,6 +2900,13 @@
 "titel": "Dungeon-Master: Wartezeit angenehm",
 "text": "A: Zwei Plätze handeln: unten in der Erzählung stehen die Schritte Lesen, Würfeln, Erzählen mit einem Satz, drei Wissenskarten und ein Hinweis. B: Gibt es eine Probe, steht der Wurf da, bevor die Erzählung kommt. C: Die Erzählung erscheint Satz für Satz. D: Tippt der andere Platz an seiner Aktion, steht bei dir „✎ Name schreibt …“. E: „💬 Tischgespräch“ aufklappen, „Wer hat den Kompass?“ sagen: der andere sieht es, in der nächsten Erzählung kommt es nicht vor. F: Über mehrere Züge wiederholen sich Sätze und Karten nicht gleich.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P439",
+"v": 976,
+"titel": "Dungeon-Master: Musik ruhig und ambient",
+"text": "A: Nach dem Update ist der alte Musikvorrat weg (Live: weniger Stücke), Funktionen → KI-Dungeon-Master → Regeln anpassen → Musik am Tisch → „Musik jetzt vorbereiten“ füllt ihn neu. B: Am Tisch klingt jede Stimmung ruhig und flächig, ohne Schlagzeug und ohne schnelles Tempo; auch im Kampf nur ein leiser Puls. C: Der Übergang ins nächste Stück blendet langsam (8 s), Lautstärke startet bei 20 %.",
+"thread": "Dungeon-Master: Musik, Geräusche, Würfel"
 }
 ]
 }
