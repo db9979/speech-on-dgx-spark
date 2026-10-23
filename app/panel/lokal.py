@@ -11,7 +11,8 @@ A fixed rule (classify) sorts the person's own latest message, never the model:
   (full text; meaning search only when that model already runs and is free), the own Kiwix and the earlier
   conversations at the same time, for at most chat.local_first_ms (200 to 1500, default 400); the Kiwix has its
   own limit chat.local_first_kiwix_ms (200 to 2000, default 900), a big archive often needs longer than the own
-  documents (Dominik 2026-10-21). What is not back by its limit is not waited for. Good hits (at most MAX_HITS, MAX_HIT_CHARS each) go to the model in the
+  documents (Dominik 2026-10-21). What is not back by its limit is not waited for. Good hits (at most MAX_HITS, MAX_HIT_CHARS each;
+  from a document the part around the question's words, from a table its head and the fitting rows: excerpt) go to the model in the
   first round as a tool result, wrapped as outside text: data, never an instruction, and the answer is
   locked like one made from a web page (no switching, saving, reminders).
 - "": anything else (switching, lists, mail, small talk ...). Nothing changes.
@@ -239,13 +240,58 @@ def _cut(text, n=MAX_HIT_CHARS):
     return text if len(text) <= n else text[:n].rsplit(" ", 1)[0] + " …"
 
 
+def excerpt(text, words, n=MAX_HIT_CHARS):
+    """The part of a passage that holds the question's words, at most about n characters (Dominik 2026-10-23:
+    the first 500 characters of a table left out the row asked for). A table ("| … |" lines): its head and the
+    rows with the rarest of the words (a word in every row, "Karte", counts little; "Durchfall" in one row
+    much; rows worth less than half the best are left out), in their order. Other text: the window with the most different words,
+    cut at word ends, "…" where it was cut. Without any of the words: the start, as _cut."""
+    text = str(text or "")
+    lines = [x.strip() for x in text.split("\n") if x.strip()]
+    if len(lines) >= 2 and all(x.startswith("|") for x in lines):
+        rows = [(i, _hits(x, words)) for i, x in enumerate(lines[1:], 1) if not re.fullmatch(r"[|:\s-]+", x)]
+        often = {w: sum(w in h for _, h in rows) for w in words}
+        weight = lambda h: sum(1 / often[w] for w in h)  # noqa: E731
+        best = sorted((r for r in rows if r[1]), key=lambda r: (-weight(r[1]), r[0]))
+        best = [r for r in best if weight(r[1]) * 2 >= weight(best[0][1])]   # never padded with rows that fit little
+        keep, size = [], len(lines[0])
+        for i, _ in best:
+            if size + len(lines[i]) + 1 > n and keep:
+                break
+            keep.append(i)
+            size += len(lines[i]) + 1
+        if keep:
+            return "\n".join([_cut(lines[0], n)] + [_cut(lines[i], n) for i in sorted(keep)])
+    flat = re.sub(r"\s+", " ", text).strip()
+    if len(flat) <= n:
+        return flat
+    spots = [(m.start(), st[0]) for m in documents._WORD.finditer(flat)
+             if (st := documents._terms(m.group(0))) and any(_found(w, {st[0]}) for w in words)]
+    if not spots:
+        return _cut(flat, n)
+    start = max((max(0, p - n // 4) for p, _ in spots),
+                key=lambda a: (len({w for p, w in spots if a <= p < a + n - 4}), -a))
+    if start:
+        start = flat.find(" ", start) + 1 or start
+    piece = flat[start:start + n - 4]
+    if start + n - 4 < len(flat):
+        piece = piece.rsplit(" ", 1)[0] + " …"
+    return ("… " if start else "") + piece
+
+
+def _hits(text, words):
+    """The question's words found in a text."""
+    ts = set(documents._terms(text))
+    return {w for w in words if _found(w, ts)}
+
+
 # ---------------------------------------------------------------- the sources
 async def _docs(uid, q, words):
     import docembed
     import wissen
     semantic = bool(docembed.status().get("running")) and not docembed._busy()
     hits = await wissen.search(uid, q, k=MAX_HITS, semantic=semantic, keep=False)   # rides along, no keep-awake
-    return [{"src": "docs", "title": "Unterlagen: " + wissen.where(h), "text": _cut(h["text"])}
+    return [{"src": "docs", "title": "Unterlagen: " + wissen.where(h), "text": excerpt(h["text"], words)}
             for h in hits if cover(words, h["name"] + " " + h["text"]) >= COVER]
 
 

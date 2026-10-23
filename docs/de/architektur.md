@@ -249,6 +249,7 @@ Eigene Dokumente, Gedächtnis, frühere Gespräche, Kiwix und Wikipedia, erstell
 | `app/panel/memtidy.py` | Wöchentliches Aufräumen des Gedächtnisses |
 | `app/panel/musik.py` | Musik machen: Wunsch prüfen, Modell wählen, Auftrag, Ablage, Liedkarte, Musik testen je Modell |
 | `app/panel/nachsortieren.py` | Treffer nachsortieren: ein Cross-Encoder auf dem Prozessor ordnet die Kandidaten |
+| `app/panel/pdftabellen.py` | Tabellen in PDFs zeilenweise lesen: eine Zeile bleibt ein Eintrag mit Kopfzeile |
 | `app/panel/recall.py` | Suche in früheren Gesprächen, gelernte Fakten |
 | `app/panel/schwer.py` | Schwere Aufträge: eine Warteschlange für Bild und Musik, immer nur ein Modell, Platz und Wartezeit |
 | `app/panel/suchpruefung.py` | Suchprüfung: Prüffragen messen, wie gut die Dokumentensuche trifft |
@@ -2274,6 +2275,13 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 
 - Vor der ersten Runde schaut das Panel selbst in Dokumente, Kiwix und frühere Gespräche, gleichzeitig und nur kurz. Die Bedeutungssuche fährt nur mit, wenn ihr Modell schon läuft und frei ist; es wird dafür nicht geweckt.
 - Eine Stelle zählt nur, wenn sie mindestens 0.6 der Suchwörter enthält (ein langes Wort darf um ein bis zwei Buchstaben vertippt sein, lokal.same). Was zu spät kommt, wird nicht abgewartet. Das Kiwix hat eine eigene Zeitgrenze (Standard 900 ms, die übrigen Quellen 400 ms) und fragt je Frage höchstens 5 Bücher: die größte deutsche Wikipedia und die Bücher, deren Titel oder Beschreibung zur Frage passt (kiwix.pick). Ein Archiv-Artikel steht als Quelle mit Stand unter der Antwort.
+- Von einer Stelle aus den Dokumenten bekommt das Modell höchstens 500 Zeichen, und zwar das Stück mit den Suchwörtern, nicht den Anfang (lokal.excerpt). Aus einer Tabelle sind das die Kopfzeile und die Zeilen mit den seltensten Suchwörtern: ein Wort, das in jeder Zeile steht („Karte“), zählt wenig, „Durchfall“ in einer Zeile viel; Zeilen mit weniger als halb so viel Gewicht wie die beste kommen nicht dazu.
+
+#### Tabellen in PDFs
+
+- pypdf liest eine Tabelle Zelle für Zelle, jede Zelle auf eigener Zeile; welche Karte zu welcher Beschwerde gehört, ginge verloren. pdftabellen.read sieht sich darum jede PDF-Seite mit pdfium an: die gezeichneten Linien und Kästen geben die Zeilen, senkrechte Linien oder Lücken im Text die Spalten, und jede Zelle bekommt den Text aus ihrem eigenen Kasten. Jede Zeile wird zu einer Zeile „| Durchfall | SR 18 … | Hinweis |“. Eine Seite ohne gezeichnete Tabelle bleibt, wie pypdf sie las. Nach 20 s je Dokument bleiben die übrigen Seiten ebenso.
+- Eine Tabelle bis 2400 Zeichen bleibt eine Stelle. Eine längere wird nur zwischen ihren Zeilen geteilt (documents._rows), und jedes Stück beginnt mit ihrer Kopfzeile.
+- PDFs von vorher sieht das Panel in ruhigen Minuten eins nach dem anderen an (documents.due_tables): ist das Original aufbewahrt und hat es eine Tabelle, wird es neu gelesen; sonst bleibt es, wie es ist. Ohne Original hilft nur neu hochladen.
 
 #### Gedächtnis
 
@@ -2288,6 +2296,9 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - **8.5 GiB** freier Speicher, damit das Vektormodell startet ([Schritt 3](#kn-wissen-s3))
 - **1.5 GiB** dasselbe auf einem Panel-Rechner (Spark teilen) ([Schritt 3](#kn-wissen-s3))
 - **3** Treffer höchstens bei „Erst lokal suchen“ ([Schritt 5](#kn-wissen-s5))
+- **500** Zeichen je Treffer bei „Erst lokal suchen“, um die Suchwörter ([Schritt 5](#kn-wissen-s5))
+- **2400** Zeichen, bis zu denen eine Tabelle eine Stelle bleibt ([Schritt 5](#kn-wissen-s5))
+- **20 s** längste Zeit je PDF für das Lesen der Tabellen ([Schritt 5](#kn-wissen-s5))
 - **5** Seiten, die ein Dokument im Wissensbuch ändern darf ([Schritt 13](#kn-wissen-s13))
 - **300** Seiten im Wissensbuch pro Profil ([Schritt 13](#kn-wissen-s13))
 - **50** Sätze, die das Modell nachts gegen ihre Quelle prüft (Standard) ([Schritt 13](#kn-wissen-s13))
@@ -2322,6 +2333,10 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - `app/panel/wissen.py` `recent_window`: „zuletzt notiert“ als feste Regel ([Schritt 11](#kn-wissen-s11))
 - `app/panel/wissen.py` `where`: Herkunft einer Stelle für das Modell ([Schritt 13](#kn-wissen-s13))
 - `app/panel/lokal.py` `look`: der kurze Blick vor der Antwort ([Schritt 5](#kn-wissen-s5))
+- `app/panel/lokal.py` `excerpt`: das Stück einer Stelle mit den Suchwörtern ([Schritt 5](#kn-wissen-s5))
+- `app/panel/pdftabellen.py` `read`: Tabellen in PDFs zeilenweise lesen ([Schritt 5](#kn-wissen-s5))
+- `app/panel/documents.py` `_rows`: lange Tabellen nur zwischen Zeilen teilen ([Schritt 5](#kn-wissen-s5))
+- `app/panel/documents.py` `due_tables`: PDFs von vorher neu lesen, wenn sie Tabellen haben ([Schritt 5](#kn-wissen-s5))
 - `app/panel/wissensbuch.py` `answer_block`: passende Seiten des Wissensbuchs mit Quellen ([Schritt 13](#kn-wissen-s13))
 - `app/panel/wissenskarte.py` `check_edge`: feste Regeln für jede vorgeschlagene Verbindung ([Schritt 13](#kn-wissen-s13))
 - `app/panel/wissenskarte.py` `view`: der sichtbare Teil der Karte ([Schritt 13](#kn-wissen-s13))

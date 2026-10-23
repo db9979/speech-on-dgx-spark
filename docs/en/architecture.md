@@ -249,6 +249,7 @@ Own documents, memory, earlier conversations, Kiwix and Wikipedia, created docum
 | `app/panel/memtidy.py` | Weekly memory cleanup per profile: the language model looks at the remembered facts and proposes which ones to merge (duplicates, the same thing said twice) … |
 | `app/panel/musik.py` | Musik machen: songs from a wish, made on the model computer by ACE-Step 1.5 (musik_server.py, music.port 31004, installed with `install.sh --musik 2b\|xl`). |
 | `app/panel/nachsortieren.py` | Treffer nachsortieren: a cross-encoder reads the question and each of the mixed search's candidates together and gives a score; the best come first, the ones … |
+| `app/panel/pdftabellen.py` | Tables in PDFs, read row by row. |
 | `app/panel/recall.py` | What a profile talked about before: search in its saved conversations, and facts learned from them automatically (profiles only; guests keep their conversati … |
 | `app/panel/schwer.py` | Schwere Aufträge: one queue and one place on the model computer for the models that load on demand. |
 | `app/panel/suchpruefung.py` | Suchprüfung: how often does the document search find the right passage? |
@@ -2274,6 +2275,13 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 
 - Before the first round the panel itself looks in documents, Kiwix and earlier conversations, at the same time and only briefly. Meaning search only rides along when its model already runs and is free; it is not woken for it.
 - A passage only counts when it holds at least 0.6 of the search words (a long word may be mistyped by one or two letters, lokal.same). What comes too late is not waited for. The Kiwix has its own time limit (default 900 ms, the other sources 400 ms) and asks at most 5 books per question: the biggest German Wikipedia and the books whose title or description fits the question (kiwix.pick). An archive article stands as a dated source under the answer.
+- From a passage of the documents the model gets at most 500 characters, namely the part with the search words, not the start (lokal.excerpt). From a table that is the head row and the rows with the rarest search words: a word in every row („card“) counts little, „diarrhoea“ in one row a lot; rows with less than half the weight of the best are not added.
+
+#### Tables in PDFs
+
+- pypdf reads a table cell by cell, each cell on its own line; which card belongs to which complaint would be lost. pdftabellen.read therefore looks at every PDF page with pdfium: the drawn lines and boxes give the rows, vertical lines or gaps in the text the columns, and each cell gets the text from its own box. Each row becomes one line „| Diarrhoea | SR 18 … | Note |“. A page without a drawn table stays as pypdf read it. After 20 s per document the remaining pages stay so too.
+- A table up to 2400 characters stays one passage. A longer one is cut only between its rows (documents._rows), and every piece starts with its head row.
+- PDFs from before are looked at one by one in quiet minutes (documents.due_tables): if the original is kept and has a table, it is read again; otherwise it stays as it is. Without the original only uploading it again helps.
 
 #### Memory
 
@@ -2288,6 +2296,9 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - **8.5 GiB** free memory for the vector model to start ([step 3](#kn-wissen-s3))
 - **1.5 GiB** the same on a panel computer (Spark teilen) ([step 3](#kn-wissen-s3))
 - **3** hits at most with „Look locally first“ ([step 5](#kn-wissen-s5))
+- **500** characters per hit with „Look locally first“, around the search words ([step 5](#kn-wissen-s5))
+- **2400** characters up to which a table stays one passage ([step 5](#kn-wissen-s5))
+- **20 s** longest time per PDF for reading its tables ([step 5](#kn-wissen-s5))
 - **5** pages one document may change in the knowledge book ([step 13](#kn-wissen-s13))
 - **300** pages in the knowledge book per profile ([step 13](#kn-wissen-s13))
 - **50** sentences the model checks against their source at night (default) ([step 13](#kn-wissen-s13))
@@ -2322,6 +2333,10 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - `app/panel/wissen.py` `recent_window`: „noted lately“ as a fixed rule ([step 11](#kn-wissen-s11))
 - `app/panel/wissen.py` `where`: source of a passage for the model ([step 13](#kn-wissen-s13))
 - `app/panel/lokal.py` `look`: the quick look before the answer ([step 5](#kn-wissen-s5))
+- `app/panel/lokal.py` `excerpt`: the part of a passage with the search words ([step 5](#kn-wissen-s5))
+- `app/panel/pdftabellen.py` `read`: read tables in PDFs row by row ([step 5](#kn-wissen-s5))
+- `app/panel/documents.py` `_rows`: cut long tables only between rows ([step 5](#kn-wissen-s5))
+- `app/panel/documents.py` `due_tables`: read PDFs from before again when they have tables ([step 5](#kn-wissen-s5))
 - `app/panel/wissensbuch.py` `answer_block`: fitting pages of the knowledge book with sources ([step 13](#kn-wissen-s13))
 - `app/panel/wissenskarte.py` `check_edge`: fixed rules for every proposed connection ([step 13](#kn-wissen-s13))
 - `app/panel/wissenskarte.py` `view`: the visible part of the map ([step 13](#kn-wissen-s13))

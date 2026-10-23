@@ -2879,6 +2879,13 @@
 "titel": "Dungeon-Master: große Fenster",
 "text": "A: Am Tisch zeigt die Seitenspalte nur noch eine kurze Karte deines Helden mit „📜 Heldenbogen“. B: „📜 Heldenbogen“: großes Fenster mit Werten links, Ausrüstung und Tasche rechts; ein Ding aus der Tasche auf einen Platz ziehen klappt. C: Ein Ding antippen: eigenes Fenster mit großem Bild, Werten und Knöpfen; Esc schließt nur dieses. D: Gastgeber öffnet den Markt: „⚖ Händler“ zeigt große Karten, „Kaufen“ legt das Ding in die Tasche, das Fenster bleibt offen. E: „🗺 Karte“ öffnet die große Karte. F: Am Handy füllt das Fenster den Bildschirm, ✕ schließt. G: Während ein Fenster offen ist, erzählt der Dungeon-Master weiter: oben steht „Neuer Zug“ mit „Zum Tisch“.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P436",
+"v": 972,
+"titel": "Dokumentsuche: Tabellen in PDFs",
+"text": "Voraussetzung: Funktionen → Eigene Dokumente an, am besten mit Originale aufbewahren. A: Das Sanjeevini-PDF neu hochladen (oder warten, bis Ich → Dokumente nicht mehr „Tabellen zeilenweise lesen: n PDFs warten“ zeigt). B: Im Chat fragen „Welche Sanjeevini-Karte kann ich bei Durchfall nehmen?“: die Antwort nennt die Karte aus der Zeile Durchfall, Quelle das PDF. C: Ansehen des PDFs in Ich → Dokumente: die Tabelle steht als Zeilen „| Durchfall | … |“. D: Logs → Bereich Wissen: „wissen: tabellen geprüft | neu gelesen“ für ein altes PDF mit Tabelle. E: Mit „Erst lokal suchen“ an: Zustand → Prüfen → „Erst lokal testen“ mit derselben Frage findet die Unterlage.",
+"thread": "Dokumentsuche trifft falsche Stelle"
 }
 ]
 }

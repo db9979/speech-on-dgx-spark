@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.972** Document search finds rows in PDF tables: each row stays one line with its cells (pdfium reads lines, boxes and columns), long tables are cut only between rows with the head row in every piece, older PDFs with a kept original are read again in quiet minutes; "Look locally first" shows the part with the search words instead of the first 500 characters
 - **V01.0.971** AI Dungeon Master: better stories with a hidden world truth (people, groups, secrets), open threads, a running summary every 5 turns, one rewrite by fixed rules (too short, hero missing, repeating), style examples per world, more varied narration and 👍/👎 per narration; big windows for hero sheet, merchant and map, a tap on a thing shows its picture, description and values
 - **V01.0.970** AI Dungeon Master with music, sounds and dice: many pieces per world and mood from the own music model, made ahead for the next act and at night, a quiet loop that fades over; sounds and a rolling d20 in the browser (Features → AI Dungeon Master → Adjust rules → Music at the table, off by default)
 - **V01.0.969** AI Dungeon Master with a map: each chapter the panel rolls a net of places in five shapes (scattered, valley, lake, two realms, coast) with fog, the group only moves to neighbouring places, with encounters on the way; random vaults as a grid in five layouts with traps, riddles, guardians, treasure, spring, altar and boss, all rolled and checked by the panel
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.965** TestFlight waits up to 100 minutes for the "Tests" run (before: 30): .960 and .963 did not go up despite green Tests, because Tests on main run one after another and take longer together
 - **V01.0.964** AI Dungeon Master stage 3 with pictures: a scene picture on a new place and on the host's button (1 every 3 turns, 12 per round, 40 a day), hero portrait once per level, map of places, chapter cover; only with Painting pictures
 - **V01.0.963** AI Dungeon Master in the car: the CarPlay row "Play Dungeon Master" reads the narration aloud and takes the spoken action; the panel answers fixed questions about the hero (life, bag, potion, who is missing)
-- **V01.0.962** AI Dungeon Master stage 4: nine equipment places as in D&D (two-handed weapons, drag and drop), weight and carry limit (burdened = disadvantage on dexterity, loot without room stays on the ground), merchants with prices by the panel and a Charisma discount, unknown magic; every round opens with a prologue (place, mood, starting situation)
 
 
 

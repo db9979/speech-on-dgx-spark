@@ -2237,7 +2237,15 @@
 "file": "Architektur und Datenfluss",
 "head": "Erst lokal suchen",
 "title": "Erst lokal suchen",
-"text": "- Vor der ersten Runde schaut das Panel selbst in Dokumente, Kiwix und frühere Gespräche, gleichzeitig und nur kurz. Die Bedeutungssuche fährt nur mit, wenn ihr Modell schon läuft und frei ist; es wird dafür nicht geweckt. - Eine Stelle zählt nur, wenn sie mindestens 0.6 der Suchwörter enthält (ein langes Wort darf um ein bis zwei Buchstaben vertippt sein, lokal.same). Was zu spät kommt, wird nicht abgewartet. Das Kiwix hat eine eigene Zeitgrenze (Standard 900 ms, die übrigen Quellen 400 ms) und fragt je Frage höchstens 5 Bücher: die größte deutsche Wikipedia und die Bücher, deren Titel oder Beschreibung zur Frage passt (kiwix.pick). Ein Archiv-Artikel steht als Quelle mit Stand unter der Antwort."
+"text": "- Vor der ersten Runde schaut das Panel selbst in Dokumente, Kiwix und frühere Gespräche, gleichzeitig und nur kurz. Die Bedeutungssuche fährt nur mit, wenn ihr Modell schon läuft und frei ist; es wird dafür nicht geweckt. - Eine Stelle zählt nur, wenn sie mindestens 0.6 der Suchwörter enthält (ein langes Wort darf um ein bis zwei Buchstaben vertippt sein, lokal.same). Was zu spät kommt, wird nicht abgewartet. Das Kiwix hat eine eigene Zeitgrenze (Standard 900 ms, die übrigen Quellen 400 ms) und fragt je Frage höchstens 5 Bücher: die größte deutsche Wikipedia und die Bücher, deren Titel oder Beschreibung zur Frage passt (kiwix.pick). Ein Archiv-Artikel steht als Quelle mit Stand unter der Antwort. - Von einer Stelle aus den Dokumenten bekommt das Modell höchstens 500 Zeichen, und zwar das Stück mit den Suchwörtern, nicht den Anfang (lokal.excerpt). Aus einer Tabelle sind das die Kopfzeile und die Zeilen mit den seltensten Suchwörtern: ein Wort, das in jeder Zeile steht („Karte“), zählt wenig, „Durchfall“ in einer Zeile viel; Zeilen mit weniger als halb so viel Gewicht wie die beste kommen nicht dazu."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Tabellen in PDFs",
+"title": "Tabellen in PDFs",
+"text": "- pypdf liest eine Tabelle Zelle für Zelle, jede Zelle auf eigener Zeile; welche Karte zu welcher Beschwerde gehört, ginge verloren. pdftabellen.read sieht sich darum jede PDF-Seite mit pdfium an: die gezeichneten Linien und Kästen geben die Zeilen, senkrechte Linien oder Lücken im Text die Spalten, und jede Zelle bekommt den Text aus ihrem eigenen Kasten. Jede Zeile wird zu einer Zeile „| Durchfall | SR 18 … | Hinweis |“. Eine Seite ohne gezeichnete Tabelle bleibt, wie pypdf sie las. Nach 20 s je Dokument bleiben die übrigen Seiten ebenso. - Eine Tabelle bis 2400 Zeichen bleibt eine Stelle. Eine längere wird nur zwischen ihren Zeilen geteilt (documents._rows), und jedes Stück beginnt mit ihrer Kopfzeile. - PDFs von vorher sieht das Panel in ruhigen Minuten eins nach dem anderen an (documents.due_tables): ist das Original aufbewahrt und hat es eine Tabelle, wird es neu gelesen; sonst bleibt es, wie es ist. Ohne Original hilft nur neu hochladen."
 },
 {
 "lang": "de",
@@ -2253,7 +2261,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 30 Kandidaten für das Nachsortieren (Schritt 9) - -4.0 Untergrenze des Cross-Encoders (Schritt 10) - 0.4 Gewicht der Kontextzeile (Schritt 5) - 8 s längstes Warten auf den Fragevektor (Schritt 3) - 8.5 GiB freier Speicher, damit das Vektormodell startet (Schritt 3) - 1.5 GiB dasselbe auf einem Panel-Rechner (Spark teilen) (Schritt 3) - 3 Treffer höchstens bei „Erst lokal suchen“ (Schritt 5) - 5 Seiten, die ein Dokument im Wissensbuch ändern darf (Schritt 13) - 300 Seiten im Wissensbuch pro Profil (Schritt 13) - 50 Sätze, die das Modell nachts gegen ihre Quelle prüft (Standard) (Schritt 13) - 30 Verbindungen, die ein Dokument in die Wissenskarte bringen darf (Schritt 13) - 3000 Verbindungen in der Wissenskarte pro Profil (Schritt 13) - 150 Punkte, die die Karte auf einmal zeigt (Schritt 13) - 200 Dokumente am Tag für die Wissenskarte (Standard) (Schritt 13)"
+"text": "- 30 Kandidaten für das Nachsortieren (Schritt 9) - -4.0 Untergrenze des Cross-Encoders (Schritt 10) - 0.4 Gewicht der Kontextzeile (Schritt 5) - 8 s längstes Warten auf den Fragevektor (Schritt 3) - 8.5 GiB freier Speicher, damit das Vektormodell startet (Schritt 3) - 1.5 GiB dasselbe auf einem Panel-Rechner (Spark teilen) (Schritt 3) - 3 Treffer höchstens bei „Erst lokal suchen“ (Schritt 5) - 500 Zeichen je Treffer bei „Erst lokal suchen“, um die Suchwörter (Schritt 5) - 2400 Zeichen, bis zu denen eine Tabelle eine Stelle bleibt (Schritt 5) - 20 s längste Zeit je PDF für das Lesen der Tabellen (Schritt 5) - 5 Seiten, die ein Dokument im Wissensbuch ändern darf (Schritt 13) - 300 Seiten im Wissensbuch pro Profil (Schritt 13) - 50 Sätze, die das Modell nachts gegen ihre Quelle prüft (Standard) (Schritt 13) - 30 Verbindungen, die ein Dokument in die Wissenskarte bringen darf (Schritt 13) - 3000 Verbindungen in der Wissenskarte pro Profil (Schritt 13) - 150 Punkte, die die Karte auf einmal zeigt (Schritt 13) - 200 Dokumente am Tag für die Wissenskarte (Standard) (Schritt 13)"
 },
 {
 "lang": "de",
@@ -2277,7 +2285,15 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/wissen.py search: eigene und geteilte Dokumente, Mischung, Nachsortieren (Schritt 1, Schritt 8, Schritt 9) - app/panel/documents.py search: Volltext und Vektoren, Rangmischung (Schritt 5, Schritt 6) - app/panel/documents.py _terms: Suchwörter aus der Frage (Schritt 5) - app/panel/documents.py match_docs: Dokumente mit Tags und Art (Schritt 4) - app/panel/docembed.py query: Fragevektor oder nichts (Schritt 3) - app/panel/docembed.py _call: ein Auftrag an den Modellprozess (Schritt 3) - app/panel/nachsortieren.py rank: Cross-Encoder oder Reihenfolge der Mischung (Schritt 10) - app/panel/wissen.py recent_window: „zuletzt notiert“ als feste Regel (Schritt 11) - app/panel/wissen.py where: Herkunft einer Stelle für das Modell (Schritt 13) - app/panel/lokal.py look: der kurze Blick vor der Antwort (Schritt 5) - app/panel/wissensbuch.py answer_block: passende Seiten des Wissensbuchs mit Quellen (Schritt 13) - app/panel/wissenskarte.py check_edge: feste Regeln für jede vorgeschlagene Verbindung (Schritt 13) - app/panel/wissenskarte.py view: der sichtbare Teil der Karte (Schritt 13) - app/panel/gedaechtnis.py hint_lines: Fakten in drei Blöcken (Schritt 13)"
+"text": "- app/panel/wissen.py search: eigene und geteilte Dokumente, Mischung, Nachsortieren (Schritt 1, Schritt 8, Schritt 9) - app/panel/documents.py search: Volltext und Vektoren, Rangmischung (Schritt 5, Schritt 6) - app/panel/documents.py _terms: Suchwörter aus der Frage (Schritt 5) - app/panel/documents.py match_docs: Dokumente mit Tags und Art (Schritt 4) - app/panel/docembed.py query: Fragevektor oder nichts (Schritt 3) - app/panel/docembed.py _call: ein Auftrag an den Modellprozess (Schritt 3) - app/panel/nachsortieren.py rank: Cross-Encoder oder Reihenfolge der Mischung (Schritt 10) - app/panel/wissen.py recent_window: „zuletzt notiert“ als feste Regel (Schritt 11) - app/panel/wissen.py where: Herkunft einer Stelle für das Modell (Schritt 13) - app/panel/lokal.py look: der kurze Blick vor der Antwort (Schritt 5) - app/panel/lokal.py excerpt: das Stück einer Stelle mit den Suchwörtern (Schritt 5) - app/panel/pdftabellen.py read: Tabellen in PDFs zeilenweise lesen (Schritt 5) - app/panel/documents.py _rows: lange Tabellen nur zwischen Zeilen teilen (Schritt 5) - app/panel/documents.py due_tables: PDFs von vorher neu lesen, wenn sie Tabellen haben (Schritt 5) - app/panel/wissensbuch"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Im Code",
+"title": "Im Code",
+"text": ".py answer_block: passende Seiten des Wissensbuchs mit Quellen (Schritt 13) - app/panel/wissenskarte.py check_edge: feste Regeln für jede vorgeschlagene Verbindung (Schritt 13) - app/panel/wissenskarte.py view: der sichtbare Teil der Karte (Schritt 13) - app/panel/gedaechtnis.py hint_lines: Fakten in drei Blöcken (Schritt 13)"
 },
 {
 "lang": "de",
@@ -4668,6 +4684,22 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Tabellen in PDFs zeilenweise (V01.0.972, Dominik 2026-10-23 „1 und 2“, pdftabellen.py, ohne Schalter): Auf „Welche Sanjeevini-Karte kann ich bei Durchfall nehmen?“ nannte der Spark eine falsche Karte, weil pypdf eine Tabelle Zelle für Zelle liest, jede Zelle auf eigener Zeile, und die Zuordnung Beschwerde ↔ Karte dabei verloren ging. Jetzt sieht sich das Panel jede PDF-Seite zusätzlich mit pdfium an (nur die gezeichneten Linien und Kästen, etwa ein Zehntel der Zeit von pypdf): Waagrechte Linien, Zellrahmen oder schattierte Zeilen geben die Zeilen einer Tabelle, senkrechte Linien oder Lücken im Text die Spalten, und jede Zelle bekommt den Text aus ihrem eigenen Kasten, egal ob er oben, mittig oder unten steht. Jede Zeile wird eine Zeile | Durchfall | SR 18 … | Hinweis |. Eine Tabelle bis 2.400 Zeichen bleibt ein Stück; eine längere wird nur zwischen ihren Zeilen geteilt, und jedes Stück beginnt mit ihrer Kopfzeile (documents._rows). Eine Seite ohne gezeichnete Tabelle bleibt, wie pypdf sie las; nach 20 Sekunden je Dokument bleiben die übrigen Seiten ebenso. Schon gespeicherte PDFs sieht das Panel in ruhigen Minuten eins nach dem anderen an (documents.due_tables, Spalte docs.tablev):"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": " ist das Original aufbewahrt (*Funktionen → Eigene Dokumente → Originale aufbewahren*), das PDF als Text gelesen (nicht Seite für Seite vom Sprachmodell, nicht von Docling, das Tabellen selbst behält) und höchstens 20 MB groß, wird es bei einer Tabelle neu gelesen; Logzeile wissen: tabellen geprüft | neu gelesen, keine tabelle oder original fehlt, Ereignis „Tabellen neu lesen“ in der Live-Übersicht; Ich → Dokumente zeigt, wie viele noch warten. Ohne Original hilft nur neu hochladen. Ein PDF ist Text von außen wie bisher; die Grenzen (höchstens 4.000 gezeichnete Teile und 600 Linien je Seite, 20 Sekunden je Dokument) halten ein bösartiges PDF klein. Selbsttest test_pdftabellen."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Treffer nachsortieren (V01.0.520, Plan *suche-schaerfen*, Stufe 3)",
 "text": "Treffer nachsortieren (V01.0.520, Plan *suche-schaerfen*, Stufe 3): Admin-Schalter *Funktionen → Eigene Dokumente → Treffer nachsortieren* (chat.rerank, aus; kein Profil-Schalter, nie für Gäste), darunter *Modell* (chat.rerank_model: „klein“ = mehrsprachiges MiniLM aus mMARCO, etwa 120 MB, Empfehlung; „groß“ = bge-reranker-v2-m3, etwa 570 MB) und *Höchstens warten* (chat.rerank_ms, 300 bis 2000, Standard 800). wissen.search holt dann 30 Kandidaten aus der Mischung; ein Cross-Encoder (nachsortieren.py, eigener Prozess embed_worker.py rank klein|gross, nur Prozessor, niedrige Priorität, startet ab 4 GB bzw. 6 GB freiem Arbeitsspeicher, endet nach 10 Minuten ohne Arbeit) liest Frage und Kontextzeile mit Stelle zusammen und ordnet sie; Stellen unter einer festen Schwelle (Punktzahl −4, etwa 2 %) fallen weg, bleibt nichts, heißt es ehrlich „nichts gefunden“. Eine Suche wartet nie auf den Start des Modells (der läuft allein, diese Suche behält die Reihenfolge der Mischung), nie länger als das Zeitbudget (die späte Antwort wird verworfen) und nie auf eine andere Nachsortierung. „Erst lokal suchen“ sortiert nur nach, wenn das Modell schon läuft. Die Modelldateien kommen einmal von Hugging "
 },
@@ -7037,7 +7069,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Erst lokal suchen (V01.0.264)",
-"text": "mindestens 60 % der Suchwörter enthält (Fragewörter wie „wer“, „wie hoch“ zählen nicht). Höchstens 3 Treffer zu je 500 Zeichen gehen in der ersten Runde als Werkzeugergebnis local_search an das Modell, eingepackt als Text von außen: Daten, nie Anweisung, und die Antwort ist gesperrt wie eine aus dem Web (kein Schalten, Merken, Erinnern). Das Modell nennt kurz die Herkunft („In deinen Unterlagen …“, „Laut deinem Archiv …“); passt nichts, antwortet es bei zeitlosen Fragen aus eigenem Wissen oder sucht im Web. Gesucht wird nur, was die Antwort ohnehin darf (die Werkzeuge document_search, archive_search, history_search dieses Zugs): Gäste, eine fremde Stimme am geteilten Lautsprecher und Telegram ohne persönliche Daten bekommen keinen Vorlauf. Websuche nach Dokumenten: ohne den Schalter ist sie nach einem Dokument gesperrt; mit ihm bleibt sie möglich, aber das Panel schickt nur die Worte der Frage (ohne Codewort, höchstens 120 Zeichen), nie den Suchtext des Modells. Nach Mails bleibt sie gesperrt. Zustand → Prüfen → „Erst lokal testen“ zeigt für einen Satz Klasse, Suchwörter, Treffer je Quelle und Zeiten (Admin, 20 pro Minute); Logs → Bereich „Wissen“ zeigt eine lokal:-Zeile pro Frage "
+"text": "mindestens 60 % der Suchwörter enthält (Fragewörter wie „wer“, „wie hoch“ zählen nicht). Höchstens 3 Treffer zu je 500 Zeichen (seit V01.0.972 das Stück mit den Suchwörtern statt des Anfangs, aus einer Tabelle die Kopfzeile und die Zeilen mit den seltensten Suchwörtern, lokal.excerpt) gehen in der ersten Runde als Werkzeugergebnis local_search an das Modell, eingepackt als Text von außen: Daten, nie Anweisung, und die Antwort ist gesperrt wie eine aus dem Web (kein Schalten, Merken, Erinnern). Das Modell nennt kurz die Herkunft („In deinen Unterlagen …“, „Laut deinem Archiv …“); passt nichts, antwortet es bei zeitlosen Fragen aus eigenem Wissen oder sucht im Web. Gesucht wird nur, was die Antwort ohnehin darf (die Werkzeuge document_search, archive_search, history_search dieses Zugs): Gäste, eine fremde Stimme am geteilten Lautsprecher und Telegram ohne persönliche Daten bekommen keinen Vorlauf. Websuche nach Dokumenten: ohne den Schalter ist sie nach einem Dokument gesperrt; mit ihm bleibt sie möglich, aber das Panel schickt nur die Worte der Frage (ohne Codewort, höchstens 120 Zeichen), nie den Suchtext des Modells. Nach Mails bleibt sie gesperrt. Zustand → Prüfen → „Erst lokal t"
 },
 {
 "lang": "de",
@@ -7045,7 +7077,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Erst lokal suchen (V01.0.264)",
-"text": "mit Klasse, Treffern je Quelle, Zeit und wie es weitergeht, nie die Frage."
+"text": "esten“ zeigt für einen Satz Klasse, Suchwörter, Treffer je Quelle und Zeiten (Admin, 20 pro Minute); Logs → Bereich „Wissen“ zeigt eine lokal:-Zeile pro Frage mit Klasse, Treffern je Quelle, Zeit und wie es weitergeht, nie die Frage."
 },
 {
 "lang": "de",
@@ -14389,7 +14421,15 @@
 "file": "Architecture and data flow",
 "head": "Look locally first",
 "title": "Look locally first",
-"text": "- Before the first round the panel itself looks in documents, Kiwix and earlier conversations, at the same time and only briefly. Meaning search only rides along when its model already runs and is free; it is not woken for it. - A passage only counts when it holds at least 0.6 of the search words (a long word may be mistyped by one or two letters, lokal.same). What comes too late is not waited for. The Kiwix has its own time limit (default 900 ms, the other sources 400 ms) and asks at most 5 books per question: the biggest German Wikipedia and the books whose title or description fits the question (kiwix.pick). An archive article stands as a dated source under the answer."
+"text": "- Before the first round the panel itself looks in documents, Kiwix and earlier conversations, at the same time and only briefly. Meaning search only rides along when its model already runs and is free; it is not woken for it. - A passage only counts when it holds at least 0.6 of the search words (a long word may be mistyped by one or two letters, lokal.same). What comes too late is not waited for. The Kiwix has its own time limit (default 900 ms, the other sources 400 ms) and asks at most 5 books per question: the biggest German Wikipedia and the books whose title or description fits the question (kiwix.pick). An archive article stands as a dated source under the answer. - From a passage of the documents the model gets at most 500 characters, namely the part with the search words, not the start (lokal.excerpt). From a table that is the head row and the rows with the rarest search words: a word in every row („card“) counts little, „diarrhoea“ in one row a lot; rows with less than half the weight of the best are not added."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Tables in PDFs",
+"title": "Tables in PDFs",
+"text": "- pypdf reads a table cell by cell, each cell on its own line; which card belongs to which complaint would be lost. pdftabellen.read therefore looks at every PDF page with pdfium: the drawn lines and boxes give the rows, vertical lines or gaps in the text the columns, and each cell gets the text from its own box. Each row becomes one line „| Diarrhoea | SR 18 … | Note |“. A page without a drawn table stays as pypdf read it. After 20 s per document the remaining pages stay so too. - A table up to 2400 characters stays one passage. A longer one is cut only between its rows (documents._rows), and every piece starts with its head row. - PDFs from before are looked at one by one in quiet minutes (documents.due_tables): if the original is kept and has a table, it is read again; otherwise it stays as it is. Without the original only uploading it again helps."
 },
 {
 "lang": "en",
@@ -14405,7 +14445,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 30 candidates for re-ranking (step 9) - -4.0 cross-encoder's lower limit (step 10) - 0.4 weight of the context line (step 5) - 8 s longest wait for the question vector (step 3) - 8.5 GiB free memory for the vector model to start (step 3) - 1.5 GiB the same on a panel computer (Spark teilen) (step 3) - 3 hits at most with „Look locally first“ (step 5) - 5 pages one document may change in the knowledge book (step 13) - 300 pages in the knowledge book per profile (step 13) - 50 sentences the model checks against their source at night (default) (step 13) - 30 connections one document may bring into the knowledge map (step 13) - 3000 connections in the knowledge map per profile (step 13) - 150 points the map shows at once (step 13) - 200 documents a day for the knowledge map (default) (step 13)"
+"text": "- 30 candidates for re-ranking (step 9) - -4.0 cross-encoder's lower limit (step 10) - 0.4 weight of the context line (step 5) - 8 s longest wait for the question vector (step 3) - 8.5 GiB free memory for the vector model to start (step 3) - 1.5 GiB the same on a panel computer (Spark teilen) (step 3) - 3 hits at most with „Look locally first“ (step 5) - 500 characters per hit with „Look locally first“, around the search words (step 5) - 2400 characters up to which a table stays one passage (step 5) - 20 s longest time per PDF for reading its tables (step 5) - 5 pages one document may change in the knowledge book (step 13) - 300 pages in the knowledge book per profile (step 13) - 50 sentences the model checks against their source at night (default) (step 13) - 30 connections one document may bring into the knowledge map (step 13) - 3000 connections in the knowledge map per profile (step 13) - 150 points the map shows at once (step 13) - 200 documents a day for the knowledge map (default) (step 13)"
 },
 {
 "lang": "en",
@@ -14429,7 +14469,15 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/wissen.py search: own and shared documents, mix, re-ranking (step 1, step 8, step 9) - app/panel/documents.py search: full text and vectors, rank fusion (step 5, step 6) - app/panel/documents.py _terms: search words from the question (step 5) - app/panel/documents.py match_docs: documents with tags and kind (step 4) - app/panel/docembed.py query: question vector or nothing (step 3) - app/panel/docembed.py _call: one job for the model process (step 3) - app/panel/nachsortieren.py rank: cross-encoder or the mix's order (step 10) - app/panel/wissen.py recent_window: „noted lately“ as a fixed rule (step 11) - app/panel/wissen.py where: source of a passage for the model (step 13) - app/panel/lokal.py look: the quick look before the answer (step 5) - app/panel/wissensbuch.py answer_block: fitting pages of the knowledge book with sources (step 13) - app/panel/wissenskarte.py check_edge: fixed rules for every proposed connection (step 13) - app/panel/wissenskarte.py view: the visible part of the map (step 13) - app/panel/gedaechtnis.py hint_lines: facts in three blocks (step 13)"
+"text": "- app/panel/wissen.py search: own and shared documents, mix, re-ranking (step 1, step 8, step 9) - app/panel/documents.py search: full text and vectors, rank fusion (step 5, step 6) - app/panel/documents.py _terms: search words from the question (step 5) - app/panel/documents.py match_docs: documents with tags and kind (step 4) - app/panel/docembed.py query: question vector or nothing (step 3) - app/panel/docembed.py _call: one job for the model process (step 3) - app/panel/nachsortieren.py rank: cross-encoder or the mix's order (step 10) - app/panel/wissen.py recent_window: „noted lately“ as a fixed rule (step 11) - app/panel/wissen.py where: source of a passage for the model (step 13) - app/panel/lokal.py look: the quick look before the answer (step 5) - app/panel/lokal.py excerpt: the part of a passage with the search words (step 5) - app/panel/pdftabellen.py read: read tables in PDFs row by row (step 5) - app/panel/documents.py _rows: cut long tables only between rows (step 5) - app/panel/documents.py due_tables: read PDFs from before again when they have tables (step 5) - app/panel/wissensbuch.py answer_block: fitting pages of the knowledge book with sources (step 13) - app/pa"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "In the code",
+"title": "In the code",
+"text": "nel/wissenskarte.py check_edge: fixed rules for every proposed connection (step 13) - app/panel/wissenskarte.py view: the visible part of the map (step 13) - app/panel/gedaechtnis.py hint_lines: facts in three blocks (step 13)"
 },
 {
 "lang": "en",
@@ -16748,6 +16796,22 @@
 "src": "assistant",
 "file": "Assistant and panel",
 "head": "Voice chat",
+"title": "Voice chat",
+"text": "Tables in PDFs row by row (V01.0.972, Dominik 2026-10-23 \"1 und 2\", pdftabellen.py, no switch): Asked \"Which Sanjeevini card can I take for diarrhoea?\" the Spark named a wrong card, because pypdf reads a table cell by cell, each cell on its own line, and which card belongs to which complaint got lost. Now the panel also looks at every PDF page with pdfium (only the drawn lines and boxes, about a tenth of pypdf's time): horizontal lines, cell frames or shaded rows give a table's rows, vertical lines or gaps in the text its columns, and each cell gets the text from its own box, whether it sits at the top, middle or bottom. Each row becomes one line | Durchfall | SR 18 … | Hinweis |. A table up to 2,400 characters stays one piece; a longer one is cut only between its rows, and every piece starts with its head row (documents._rows). A page without a drawn table stays as pypdf read it; after 20 seconds per document the remaining pages stay so too. PDFs already stored are looked at one by one in quiet minutes (documents.due_tables, column docs.tablev): if the original is kept (*Features → Own documents → Keep originals*), the PDF was read as text (not page by page by the language model, "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "not by Docling, which keeps tables itself) and is at most 20 MB, it is read again when it has a table; log line wissen: tabellen geprüft | neu gelesen, keine tabelle or original fehlt, event \"Tabellen neu lesen\" in the live overview; Me → Documents shows how many still wait. Without the original only uploading it again helps. A PDF is outside text as before; the limits (at most 4,000 drawn parts and 600 lines per page, 20 seconds per document) keep a malicious PDF small. Self-test test_pdftabellen."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
 "title": "Re-rank hits (V01.0.520, plan *suche-schaerfen*, stage 3)",
 "text": "Re-rank hits (V01.0.520, plan *suche-schaerfen*, stage 3): admin switch *Features → Own documents → Re-rank hits* (chat.rerank, off; no profile switch, never for guests), below it *Model* (chat.rerank_model: \"klein\" = multilingual MiniLM from mMARCO, about 120 MB, recommended; \"gross\" = bge-reranker-v2-m3, about 570 MB) and *Wait at most* (chat.rerank_ms, 300 to 2000, default 800). wissen.search then takes 30 candidates from the mix; a cross-encoder (nachsortieren.py, its own process embed_worker.py rank klein|gross, CPU only, low priority, starts from 4 GB or 6 GB of free memory, ends after 10 minutes without work) reads question and context line with passage together and orders them; passages below a fixed floor (score −4, about 2 %) are left out, and when nothing is left it honestly says \"nothing found\". A search never waits for the model to start (the start runs on its own, this search keeps the mix's order), never longer than the time budget (the late answer is dropped) and never for another re-ranking. \"Look locally first\" only re-ranks while the model runs anyway. The model files come once from Hugging Face; their SHA-256 are then kept in state/doc-rank.json (per size) and o"
 },
@@ -19021,7 +19085,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Look locally first (V01.0.264)",
-"text": "ds (question words like \"who\", \"how high\" do not count). At most 3 hits of 500 characters each go to the model in the first round as the tool result local_search, wrapped as outside text: data, never an instruction, and the answer is locked like one from the web (no switching, saving, reminders). The model names the source briefly (\"In your documents …\", \"According to your archive …\"); when nothing fits it answers timeless questions from its own knowledge or searches the web. It only looks where the answer may look anyway (the tools document_search, archive_search, history_search of this turn): guests, a voice not recognised at a shared speaker and Telegram without personal data get no quick look. Web search after documents: without the switch it is locked after a document; with it, it stays possible, but the panel sends only the words of the question (without code word, at most 120 characters), never the model's query. After mail it stays locked. Status → Checks → \"Test looking locally first\" shows class, search words, hits per source and times for one sentence (admin, 20 per minute); Logs → area \"Knowledge\" shows one lokal: line per question with class, hits per source, time and "
+"text": "ds (question words like \"who\", \"how high\" do not count). At most 3 hits of 500 characters each (since V01.0.972 the part with the search words instead of the start, from a table the head row and the rows with the rarest search words, lokal.excerpt) go to the model in the first round as the tool result local_search, wrapped as outside text: data, never an instruction, and the answer is locked like one from the web (no switching, saving, reminders). The model names the source briefly (\"In your documents …\", \"According to your archive …\"); when nothing fits it answers timeless questions from its own knowledge or searches the web. It only looks where the answer may look anyway (the tools document_search, archive_search, history_search of this turn): guests, a voice not recognised at a shared speaker and Telegram without personal data get no quick look. Web search after documents: without the switch it is locked after a document; with it, it stays possible, but the panel sends only the words of the question (without code word, at most 120 characters), never the model's query. After mail it stays locked. Status → Checks → \"Test looking locally first\" shows class, search words, hits per s"
 },
 {
 "lang": "en",
@@ -19029,7 +19093,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Look locally first (V01.0.264)",
-"text": "what happens next, never the question."
+"text": "ource and times for one sentence (admin, 20 per minute); Logs → area \"Knowledge\" shows one lokal: line per question with class, hits per source, time and what happens next, never the question."
 },
 {
 "lang": "en",

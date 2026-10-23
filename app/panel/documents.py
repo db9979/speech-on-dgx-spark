@@ -74,13 +74,17 @@ NEW_COLUMNS = (("shared", "INTEGER DEFAULT 0"), ("title", "TEXT DEFAULT ''"), ("
                # Stufe 2 of plan suche-schaerfen: the version of the context lines of its pieces (0 = to do)
                ("headv", "INTEGER DEFAULT 0"),
                # Wissensordner (nasquelle.py): "<folder id>:<path hash>" and the folder at the place it lies in
-               ("origin", "TEXT DEFAULT ''"), ("place", "TEXT DEFAULT ''"))
+               ("origin", "TEXT DEFAULT ''"), ("place", "TEXT DEFAULT ''"),
+               # tables read row by row (pdftabellen.py, 2026-10-23): the reading of a PDF (0 = from before, due_tables)
+               ("tablev", "INTEGER DEFAULT 0"))
 # when a piece / page last changed (reMarkable: the page's own time, else the document's); 0 = the document's time
 # part: the headings the piece stands under (NULL = not known yet, from before V01.0.519); head: the context line
 # (title, kind, part) that the word search weighs lower (ftshead) and the meaning search reads with the piece
 MORE_COLUMNS = {"chunks": (("changed", "INTEGER DEFAULT 0"), ("part", "TEXT"), ("head", "TEXT DEFAULT ''")),
                 "pagetext": (("changed", "INTEGER DEFAULT 0"),)}
 HEADV = 1                      # raise to build every context line again (in quiet moments, due_heads)
+TABLEV = 1                     # raise to look at every kept PDF again for tables (in quiet moments, due_tables)
+TABLE_AUTO = 20 * 1024 * 1024  # bigger PDFs are read again only by hand (Ich → Dokumente, "Neu lesen")
 HEAD_WEIGHT = 0.4              # the context line counts this much against the piece's own words
 TABLE = 2400                   # a table stays one piece up to this many characters
 FRESH = 1 / 60 - 1 / 62      # the most a fresh piece gains in the search: about two places in the ranking
@@ -368,7 +372,7 @@ def extract(name, data):
     return text
 
 
-def _pdf(data, scans_wanted):
+def _pdf(data, scans_wanted, tables=True):
     try:
         from pypdf import PdfReader
     except ImportError:
@@ -385,9 +389,28 @@ def _pdf(data, scans_wanted):
                 size += len(t)
             if size > MAX_CHARS:
                 break
+        if tables:
+            got = _tables(data, pages)
+            pages = [(p, got.get(p - 1, t)) for p, t in pages]
         return pages, scans, reader if scans_wanted else None
     except Exception as e:
         raise ValueError(f"cannot read this PDF: {type(e).__name__}")
+
+
+def _tables(data, pages):
+    """{page index: text}: the pages with a drawn table read again row by row (pdftabellen.py), one line per row,
+    so a complaint and its card stay together (Dominik 2026-10-23). Every other page stays as pypdf read it."""
+    import pdftabellen
+    return pdftabellen.read(data, {p - 1 for p, _ in pages}) if pages else {}
+
+
+def has_tables(data):
+    """A PDF with at least one table read row by row (due_tables: only then is reading it again worth it)."""
+    try:
+        pages, _, _ = _pdf(data, False, tables=False)
+    except ValueError:
+        return False
+    return bool(_tables(data, pages))
 
 
 def extract_pages(name, data):
@@ -466,7 +489,8 @@ def _is_table(block):
 
 def pieces(text):
     """[(piece, part)]: the text cut at its headings into sections, each section cut as before (_cut), small
-    sections joined with the next; a table stays one piece up to TABLE characters. part: the headings the piece
+    sections joined with the next; a table stays one piece up to TABLE characters, a longer one is cut between
+    its rows with its head in every piece (_rows). part: the headings the piece
     stands under ("" when the text has none). A text without headings is cut exactly as before."""
     text = re.sub(r"[ \t]+", " ", text)
     text = re.sub(r"\n\s*\n+", "\n\n", text).strip()[:MAX_CHARS]
@@ -491,11 +515,11 @@ def pieces(text):
     out, buf, heads = [], [], []
     for n, (h, blocks) in enumerate(secs):
         body = "\n\n".join(blocks)
-        if len(body) <= TABLE and _is_table(blocks[-1]):
+        if _is_table(blocks[-1]) and (len(body) <= TABLE or len(blocks) == 1):
             if buf:
                 out += _with_parts(_cut("\n\n".join(buf)), heads)
                 buf, heads = [], []
-            out.append((body, _part([h])))
+            out += [(p, _part([h])) for p in ([body] if len(body) <= TABLE else _rows(body))]
             continue
         buf.append(body)
         if h and h not in heads:
@@ -505,6 +529,26 @@ def pieces(text):
             buf, heads = [], []
     if buf:
         out += _with_parts(_cut("\n\n".join(buf)), heads)
+    return out
+
+
+def _rows(table):
+    """A table longer than TABLE, cut only between its rows: each piece of about CHUNK characters starts with
+    the table's head (its first row, and the Markdown line under it), so every row keeps the names of its
+    columns. A single row longer than TABLE is cut like text."""
+    lines = table.split("\n")
+    n = 2 if len(lines) > 2 and re.fullmatch(r"\|[\s:|-]*-[\s:|-]*\|?", lines[1].strip()) else 1
+    head, out, cur = "\n".join(lines[:n]), [], []
+    for row in lines[n:]:
+        if cur and len(head) + sum(len(r) + 1 for r in cur) + len(row) > CHUNK:
+            out.append("\n".join([head] + cur))
+            cur = []
+        if len(head) + len(row) > TABLE:
+            out += [head + "\n" + p for p in _cut(row)]
+        else:
+            cur.append(row)
+    if cur or not out:
+        out.append("\n".join([head] + cur))
     return out
 
 
@@ -897,10 +941,10 @@ def add(uid, name, data, text=None, pictures=False, keep=0, source="upload", mos
                                   os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600), "wb") as f:
                     f.write(todo[1] if kind == "picture" else data)
         state = "reading" if todo or (docling and not parts) else "ready"
-        con.execute("INSERT INTO docs (id, name, size, created, kind, state, note, pages, file, source, docling) "
-                    "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+        con.execute("INSERT INTO docs (id, name, size, created, kind, state, note, pages, file, source, docling, tablev) "
+                    "VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
                     (doc_id, name, len(data), int(time.time()), kind, state, note,
-                     len(todo), stored, source, "wait" if docling else ""))
+                     len(todo), stored, source, "wait" if docling else "", TABLEV))
         for i, (page, c, part) in enumerate(parts):
             _put_chunk(con, doc_id, i, page, c, part=part)
         for page, jpeg in todo.items():
@@ -1006,8 +1050,8 @@ def reread(uid, doc_id, pictures=False, docling=False):
         _drop_chunks(con, doc_id)
         con.execute("DELETE FROM pages WHERE doc=?", (doc_id,))
         state = "reading" if todo or (docling and not parts) else "ready"
-        con.execute("UPDATE docs SET kind=?, state=?, note=?, pages=?, docling=? WHERE id=?",
-                    (kind, state, note, len(todo), "wait" if docling else "", doc_id))
+        con.execute("UPDATE docs SET kind=?, state=?, note=?, pages=?, docling=?, tablev=? WHERE id=?",
+                    (kind, state, note, len(todo), "wait" if docling else "", TABLEV, doc_id))
         for i, (page, c, part) in enumerate(parts):
             _put_chunk(con, doc_id, i, page, c, part=part)
         for page, jpeg in todo.items():
@@ -1485,6 +1529,49 @@ def due_heads(uid, most=20):
         for i in ids:
             set_heads(con, i)
     return len(ids)
+
+
+# a PDF that due_tables may read again: read as text from a kept original (not page by page by the language model,
+# not by Docling, which keeps tables itself, not from a place apart), at most TABLE_AUTO big
+_TABLE_DUE = ("COALESCE(tablev, 0)<? AND lower(name) LIKE '%.pdf' AND kind='text' AND COALESCE(docling, '') NOT IN "
+              "('ok', 'wait') AND source<>'nas' AND COALESCE(file, '')<>'' AND COALESCE(size, 0)<=?")
+
+
+def due_tables(uid):
+    """Quiet moments (wissen.due_once): one PDF read before tables were read row by row (tablev < TABLEV) is read
+    again from its original, but only when it has a table (has_tables); every other document is only marked.
+    Returns "neu" (read again), "gleich" (no table), "ohne" (original not here) or "" (nothing left)."""
+    if not os.path.exists(db_path(uid)):
+        return ""
+    with _Db(uid) as con:
+        con.execute("UPDATE docs SET tablev=? WHERE COALESCE(tablev, 0)<? AND NOT (" + _TABLE_DUE + ")",
+                    (TABLEV, TABLEV, TABLEV, TABLE_AUTO))
+        r = con.execute("SELECT id FROM docs WHERE " + _TABLE_DUE + " ORDER BY created LIMIT 1", (TABLEV, TABLE_AUTO)).fetchone()
+    if not r:
+        return ""
+    doc_id, why = r["id"], "ohne"
+    got = None if away(uid, doc_id) else original(uid, doc_id)
+    if got:
+        with open(got[0], "rb") as f:
+            data = f.read(TABLE_AUTO + 1)
+        why = "gleich"
+        if len(data) <= TABLE_AUTO and has_tables(data):
+            try:
+                reread(uid, doc_id)
+                why = "neu"
+            except ValueError:
+                why = "ohne"
+    with _Db(uid) as con:
+        con.execute("UPDATE docs SET tablev=? WHERE id=?", (TABLEV, doc_id))
+    return why
+
+
+def tables_left(uid):
+    """PDFs still to be looked at for tables (due_tables; Ich → Dokumente)."""
+    if not os.path.exists(db_path(uid)):
+        return 0
+    with _Db(uid) as con:
+        return con.execute("SELECT COUNT(*) FROM docs WHERE " + _TABLE_DUE, (TABLEV, TABLE_AUTO)).fetchone()[0]
 
 
 def heads_left(uid):

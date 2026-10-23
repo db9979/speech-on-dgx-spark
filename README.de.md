@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.972** Dokumentsuche trifft Tabellen in PDFs: jede Zeile bleibt eine Zeile mit ihren Zellen (pdfium liest Linien, Kästen und Spalten), lange Tabellen werden nur zwischen Zeilen geteilt mit Kopfzeile in jedem Stück, alte PDFs mit Original werden in ruhigen Minuten neu gelesen; „Erst lokal suchen“ zeigt das Stück mit den Suchwörtern statt der ersten 500 Zeichen
 - **V01.0.971** KI-Dungeon-Master: bessere Geschichten mit verborgener Welt-Wahrheit (Personen, Gruppen, Geheimnisse), offenen Fäden, laufender Zusammenfassung alle 5 Züge, einmal Nachbessern nach festen Regeln (zu kurz, Held fehlt, Wiederholung), Stilbeispielen je Welt, abwechslungsreicherer Erzählung und 👍/👎 je Erzählung; große Fenster für Heldenbogen, Händler und Karte, ein Tipp auf ein Ding zeigt Bild, Beschreibung und Werte
 - **V01.0.970** KI-Dungeon-Master mit Musik, Geräuschen und Würfeln: viele Stücke je Welt und Stimmung vom eigenen Musikmodell, im Voraus für den nächsten Akt und nachts gemacht, leise Schleife mit Überblendung; Geräusche und rollender d20 im Browser (Funktionen → KI-Dungeon-Master → Regeln anpassen → Musik am Tisch, Standard aus)
 - **V01.0.969** KI-Dungeon-Master mit Karte: das Panel würfelt je Kapitel ein Ortsnetz in fünf Formen (verstreut, Tal, See, zwei Reiche, Küste) mit Nebel, die Gruppe zieht nur zu Nachbarorten, unterwegs Begegnungen; Zufalls-Gewölbe als Raster in fünf Grundrissen mit Fallen, Rätseln, Wächtern, Schatz, Quelle, Altar und Boss, alles vom Panel gewürfelt und geprüft
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.965** TestFlight wartet bis zu 100 Minuten auf den „Tests“-Lauf (vorher 30): .960 und .963 kamen trotz grüner Tests nicht hoch, weil Tests auf main nacheinander laufen und zusammen länger brauchen
 - **V01.0.964** KI-Dungeon-Master Stufe 3 mit Bildern: Szenenbild beim Ortswechsel und auf Knopf des Gastgebers (1 je 3 Züge, 12 je Runde, 40 am Tag), Heldenporträt einmal je Stufe, Karte der Orte, Kapitel-Titelbild; nur mit Bilder malen
 - **V01.0.963** KI-Dungeon-Master im Auto: CarPlay-Zeile „Dungeon-Master spielen“ liest die Erzählung vor und nimmt die gesprochene Aktion an; feste Fragen zum Helden (Leben, Tasche, Heiltrank, wer fehlt) beantwortet das Panel
-- **V01.0.962** KI-Dungeon-Master Stufe 4: neun Ausrüstungsplätze wie bei D&D (zweihändige Waffen, Ziehen und Ablegen), Gewicht und Traglast (belastet = Nachteil auf Geschick, Beute ohne Platz bleibt am Boden), Händler mit Preisen vom Panel und Charisma-Rabatt, unerkannte Magie; jede Runde beginnt mit einem Prolog (Ort, Stimmung, Ausgangslage)
 
 
 

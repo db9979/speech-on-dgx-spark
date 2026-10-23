@@ -241,7 +241,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Wissen: how a question finds passages
     "wissen": {
-        "stand": "d46320d4d2",
+        "stand": "40a4247b3a",
         "bezug": {
             "lokal.MAX_HITS": ["s5"], "wissen.search": ["s1", "s8", "s9"], "documents.search": ["s5", "s6"],
             "documents._terms": ["s5"], "documents.match_docs": ["s4"], "docembed.query": ["s3"],
@@ -252,6 +252,8 @@ SEITEN = {
             "wissensbuch.PAGES_PER_DOC": ["s13"], "wissensbuch.MAX_PAGES": ["s13"],
             "wissensbuch.SAMPLE": ["s13"], "wissenskarte.view": ["s13"], "wissenskarte.check_edge": ["s13"],
             "wissenskarte.EDGES_PER_DOC": ["s13"], "wissenskarte.VIEW_NODES": ["s13"], "wissenskarte.MAX_EDGES": ["s13"], "wissenskarte.DAY": ["s13"],
+            "pdftabellen.read": ["s5"], "documents._rows": ["s5"], "documents.due_tables": ["s5"], "lokal.excerpt": ["s5"],
+            "pdftabellen.BUDGET_S": ["s5"], "documents.TABLE": ["s5"], "lokal.MAX_HIT_CHARS": ["s5"],
         },
         "kurz": ("Wissen ist alles, was der Spark selbst weiß, ohne ins Internet zu gehen: die hochgeladenen Dokumente "
                  "jedes Profils (eine SQLite-Datei wissen.db pro Profil), das Gedächtnis, frühere Gespräche, das eigene "
@@ -414,6 +416,9 @@ SEITEN = {
             ("{docembed.MIN_FREE_GIB} GiB", ("freier Speicher, damit das Vektormodell startet", "free memory for the vector model to start"), "docembed.MIN_FREE_GIB"),
             ("{docembed.MIN_FREE_PANEL_GIB} GiB", ("dasselbe auf einem Panel-Rechner (Spark teilen)", "the same on a panel computer (Spark teilen)"), "docembed.MIN_FREE_PANEL_GIB"),
             ("{lokal.MAX_HITS}", ("Treffer höchstens bei „Erst lokal suchen“", "hits at most with „Look locally first“"), "lokal.MAX_HITS"),
+            ("{lokal.MAX_HIT_CHARS}", ("Zeichen je Treffer bei „Erst lokal suchen“, um die Suchwörter", "characters per hit with „Look locally first“, around the search words"), "lokal.MAX_HIT_CHARS"),
+            ("{documents.TABLE}", ("Zeichen, bis zu denen eine Tabelle eine Stelle bleibt", "characters up to which a table stays one passage"), "documents.TABLE"),
+            ("{pdftabellen.BUDGET_S} s", ("längste Zeit je PDF für das Lesen der Tabellen", "longest time per PDF for reading its tables"), "pdftabellen.BUDGET_S"),
             ("{wissensbuch.PAGES_PER_DOC}", ("Seiten, die ein Dokument im Wissensbuch ändern darf", "pages one document may change in the knowledge book"), "wissensbuch.PAGES_PER_DOC"),
             ("{wissensbuch.MAX_PAGES}", ("Seiten im Wissensbuch pro Profil", "pages in the knowledge book per profile"), "wissensbuch.MAX_PAGES"),
             ("{wissensbuch.SAMPLE}", ("Sätze, die das Modell nachts gegen ihre Quelle prüft (Standard)", "sentences the model checks against their source at night (default)"), "wissensbuch.SAMPLE"),
@@ -536,6 +541,39 @@ SEITEN = {
                  "sources {lokal.DEFAULT_MS} ms) and asks at most {kiwix.MAX_SEARCH_BOOKS} books per question: the "
                  "biggest German Wikipedia and the books whose title or description fits the question (kiwix.pick). "
                  "An archive article stands as a dated source under the answer."),
+                ("Von einer Stelle aus den Dokumenten bekommt das Modell höchstens {lokal.MAX_HIT_CHARS} Zeichen, und zwar "
+                 "das Stück mit den Suchwörtern, nicht den Anfang (lokal.excerpt). Aus einer Tabelle sind das die "
+                 "Kopfzeile und die Zeilen mit den seltensten Suchwörtern: ein Wort, das in jeder Zeile steht "
+                 "(„Karte“), zählt wenig, „Durchfall“ in einer Zeile viel; Zeilen mit weniger als halb so viel "
+                 "Gewicht wie die beste kommen nicht dazu.",
+                 "From a passage of the documents the model gets at most {lokal.MAX_HIT_CHARS} characters, namely the "
+                 "part with the search words, not the start (lokal.excerpt). From a table that is the head row and "
+                 "the rows with the rarest search words: a word in every row („card“) counts little, „diarrhoea“ in "
+                 "one row a lot; rows with less than half the weight of the best are not added."),
+            ]),
+            (("Tabellen in PDFs", "Tables in PDFs"), [
+                ("pypdf liest eine Tabelle Zelle für Zelle, jede Zelle auf eigener Zeile; welche Karte zu welcher "
+                 "Beschwerde gehört, ginge verloren. pdftabellen.read sieht sich darum jede PDF-Seite mit pdfium an: "
+                 "die gezeichneten Linien und Kästen geben die Zeilen, senkrechte Linien oder Lücken im Text die "
+                 "Spalten, und jede Zelle bekommt den Text aus ihrem eigenen Kasten. Jede Zeile wird zu einer Zeile "
+                 "„| Durchfall | SR 18 … | Hinweis |“. Eine Seite ohne gezeichnete Tabelle bleibt, wie pypdf sie las. "
+                 "Nach {pdftabellen.BUDGET_S} s je Dokument bleiben die übrigen Seiten ebenso.",
+                 "pypdf reads a table cell by cell, each cell on its own line; which card belongs to which complaint "
+                 "would be lost. pdftabellen.read therefore looks at every PDF page with pdfium: the drawn lines and "
+                 "boxes give the rows, vertical lines or gaps in the text the columns, and each cell gets the text "
+                 "from its own box. Each row becomes one line „| Diarrhoea | SR 18 … | Note |“. A page without a "
+                 "drawn table stays as pypdf read it. After {pdftabellen.BUDGET_S} s per document the remaining "
+                 "pages stay so too."),
+                ("Eine Tabelle bis {documents.TABLE} Zeichen bleibt eine Stelle. Eine längere wird nur zwischen "
+                 "ihren Zeilen geteilt (documents._rows), und jedes Stück beginnt mit ihrer Kopfzeile.",
+                 "A table up to {documents.TABLE} characters stays one passage. A longer one is cut only between its "
+                 "rows (documents._rows), and every piece starts with its head row."),
+                ("PDFs von vorher sieht das Panel in ruhigen Minuten eins nach dem anderen an (documents.due_tables): "
+                 "ist das Original aufbewahrt und hat es eine Tabelle, wird es neu gelesen; sonst bleibt es, wie es "
+                 "ist. Ohne Original hilft nur neu hochladen.",
+                 "PDFs from before are looked at one by one in quiet minutes (documents.due_tables): if the original "
+                 "is kept and has a table, it is read again; otherwise it stays as it is. Without the original only "
+                 "uploading it again helps."),
             ]),
             (("Gedächtnis", "Memory"), [
                 ("Das Gedächtnis wird nicht durchsucht. Das Panel sortiert die Fakten mit festen Regeln in drei Blöcke "
@@ -555,6 +593,10 @@ SEITEN = {
             ("wissen.recent_window", ("„zuletzt notiert“ als feste Regel", "„noted lately“ as a fixed rule")),
             ("wissen.where", ("Herkunft einer Stelle für das Modell", "source of a passage for the model")),
             ("lokal.look", ("der kurze Blick vor der Antwort", "the quick look before the answer")),
+            ("lokal.excerpt", ("das Stück einer Stelle mit den Suchwörtern", "the part of a passage with the search words")),
+            ("pdftabellen.read", ("Tabellen in PDFs zeilenweise lesen", "read tables in PDFs row by row")),
+            ("documents._rows", ("lange Tabellen nur zwischen Zeilen teilen", "cut long tables only between rows")),
+            ("documents.due_tables", ("PDFs von vorher neu lesen, wenn sie Tabellen haben", "read PDFs from before again when they have tables")),
             ("wissensbuch.answer_block", ("passende Seiten des Wissensbuchs mit Quellen", "fitting pages of the knowledge book with sources")),
             ("wissenskarte.check_edge", ("feste Regeln für jede vorgeschlagene Verbindung", "fixed rules for every proposed connection")),
             ("wissenskarte.view", ("der sichtbare Teil der Karte", "the visible part of the map")),

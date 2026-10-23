@@ -179,6 +179,7 @@ async function showDocs(){if(!DOCS_ON){$('docbox').style.display='none';return}$
   const bits=[];
   if(I&&I.allow.pictures)bits.push(t(`heute ${I.today} von ${I.day_pages} Seiten gelesen`,`${I.today} of ${I.day_pages} pages read today`));
   if(I&&I.vectors&&I.allow.semantic)bits.push(t(`Bedeutungssuche: ${I.vectors[0]} von ${I.vectors[1]} Abschnitten vorbereitet`,`Meaning search: ${I.vectors[0]} of ${I.vectors[1]} sections prepared`));
+  if(I&&I.tables_left)bits.push(t(`Tabellen zeilenweise lesen: ${I.tables_left} PDFs warten auf eine ruhige Minute`,`Reading tables row by row: ${I.tables_left} PDFs wait for a quiet minute`));
   if(I&&I.heads_left)bits.push(t(`Zusammenhang der Abschnitte: ${I.heads_left} Dokumente warten auf eine ruhige Minute`,`Context of the sections: ${I.heads_left} documents wait for a quiet minute`));
   $('docuse').textContent=bits.join(' · ');docAgain(l);
   const pics=I&&I.allow.pictures;

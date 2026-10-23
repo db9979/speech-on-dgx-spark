@@ -127,6 +127,7 @@ MODULE = {
     # Wissen
     "wissen": ("wissen", "Wissen aus eigenen Uploads: Schalter und Kontingent"),
     "documents": ("wissen", "Dokumente pro Profil in wissen.db: Text, Abschnitte mit Kontextzeile, Suche"),
+    "pdftabellen": ("wissen", "Tabellen in PDFs zeilenweise lesen: eine Zeile bleibt ein Eintrag mit Kopfzeile"),
     "doclingdienst": ("wissen", "Docling-Server im Heimnetz: Dokumente und Scans besser lesen"),
     "suchpruefung": ("wissen", "Suchprüfung: Prüffragen messen, wie gut die Dokumentensuche trifft"),
     "wissensbuch": ("wissen", "Wissensbuch: Seiten aus den eigenen Dokumenten, jeder Satz mit Quelle"),
