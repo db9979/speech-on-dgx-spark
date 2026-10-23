@@ -73,7 +73,9 @@ Origin is refused (Richtlinie Teil 3 „Links für Leute ohne Profil“). The jo
     GET    /api/profile/dungeon/{rid}/ton/{n}     the turn n read aloud (WAV, the last TON_ZUEGE turns)
     POST   /api/profile/dungeon/{rid}/hoeren      {wav}: speak instead of type, the text for the own field
     POST   /api/profile/dungeon/{rid}/sitzcode    a code for the own seat, for the app's web view (shown once)
-    POST   /api/dungeon/platz|beitreten|lage|aktion|held|figur|ton|hoeren   the seat of a guest, {code, ...} (dungeon.js)
+    POST   /api/profile/dungeon/{rid}/melden      {an}: notes of the own seat (your turn, reminder, game date)
+    POST   /api/profile/dungeon/{rid}/termin      host: {t} the next game date (0 takes it back); GET …/termin.ics
+    POST   /api/dungeon/platz|beitreten|lage|aktion|held|figur|ton|hoeren|termin   the seat of a guest, {code, ...} (dungeon.js)
     GET    /api/admin/dungeon, PUT /api/admin/dungeon, DELETE /api/admin/dungeon   the admin's rules (and stories)
     PUT    /api/admin/dungeon/geschichte/{gid}    a story („neu“ for a new one); DELETE …/{gid} deletes it
     POST   /api/admin/dungeon/geschichte/vorschlag   {welt, ton, akte, stichworte, tabus}: the model proposes a story
@@ -102,7 +104,7 @@ import mfa
 import profiles
 import textnorm
 from common import STATE, DayCounter, load_config, model_url, no_think, read_json, write_json
-from core import assistant, auth, browser_profile, json_body, own_profile, spawn
+from core import assistant, auth, browser_profile, json_body, main_loop, own_profile, spawn
 
 router = APIRouter()
 DATA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dungeon_regeln.json")
@@ -199,6 +201,9 @@ BILDER_TAG = 40           # pictures of the game a day on the whole Spark, witho
 BILD_MAX = 300            # the model's description of a picture (English)
 KAPITEL_BILDER = 20       # chapter covers a campaign keeps
 ORTE_KARTE = 20           # places the map keeps
+ERINNERN_S = 6 * 3600     # a turn open this long without the seat's action: one reminder
+TERMIN_VOR = 15 * 60      # the note before the host's game date
+TERMIN_TAGE = 60          # the date at most this far ahead
 BILD_STIL = "painted storybook illustration, soft light, rich colours"   # a world without its own bildstil
 BILD_KIND = "friendly children's picture book illustration, soft pastel colours, gentle and cheerful"   # the youngest tone, whatever the world
 PORTRAET_STIL = "painted fantasy character portrait, head and shoulders, plain dark background"
@@ -240,7 +245,21 @@ _sweep = [0.0]            # last look for portraits and covers nobody keeps (_bi
 _tts = [None]             # one TTS job of the game at a time (asyncio.Lock, made in the loop)
 _stimmen = {"t": 0.0, "v": [], "design": False, "laeuft": False}   # the speech output's voices a hero may take, and whether it can make one from a description (STIMMEN_S)
 _day = DayCounter(zuege=0, beute=0, stufen=0, ausfall=0, verworfen=0, abgelehnt=0, runden=0, kapitel=0, vorgelesen=0, gehoert=0, akte=0,
-                  vorschlaege=0, kaeufe=0, verkaeufe=0, maerkte=0, auto=0, gemalt=0, bild_weg=0, bild_aus=0)
+                  vorschlaege=0, kaeufe=0, verkaeufe=0, maerkte=0, auto=0, gemalt=0, bild_weg=0, bild_aus=0, gemeldet=0)
+
+
+def _go(coro, name):
+    """spawn from anywhere: in the panel's loop right away, from a worker thread (asyncio.to_thread: a turn that closes
+    after „Handeln“, the minute loop) handed to the panel's own loop; before, a thread had no loop and „Handeln“
+    ended in a 500."""
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        loop = main_loop[0]
+        if loop is not None and loop.is_running():
+            loop.call_soon_threadsafe(spawn, coro, name)
+            return
+    spawn(coro, name)
 
 
 # ---------------------------------------------------------------- the rules: shipped, the admin's own, merged
@@ -2148,9 +2167,9 @@ async def run_turn(rid, turn):
         said, bild = [], []
         await asyncio.to_thread(keep)
         if said:
-            spawn(speak_turn(rid, turn, said), name="dungeon")
+            _go(speak_turn(rid, turn, said), name="dungeon")
         if bild:
-            spawn(paint_scene(rid, *bild), name="dungeon-bild")
+            _go(paint_scene(rid, *bild), name="dungeon-bild")
         if why != "ok":
             _day.bump("ausfall")
         _day.bump("zuege")
@@ -2220,9 +2239,9 @@ async def run_prolog(rid):
                 _write(d)
         await asyncio.to_thread(keep)
         if said:
-            spawn(speak_turn(rid, 0, said), name="dungeon")
+            _go(speak_turn(rid, 0, said), name="dungeon")
         if bild:
-            spawn(paint_scene(rid, *bild), name="dungeon-bild")
+            _go(paint_scene(rid, *bild), name="dungeon-bild")
         print(f"dungeon: prolog | {why} | {round((time.perf_counter() - t0) * 1000)} ms", flush=True)
     finally:
         _running.discard(rid)
@@ -2261,7 +2280,7 @@ def maybe_close(rid, now=None, force=False):
         _running.add(rid)
         turn = rd["zug"]
         _write(d)
-    spawn(run_turn(rid, turn), name="dungeon")
+    _go(run_turn(rid, turn), name="dungeon")
     return True
 
 
@@ -2286,7 +2305,7 @@ async def ask_tts(text, voice, klang=""):
     async with httpx.AsyncClient(timeout=httpx.Timeout(DM_S * 2, connect=5)) as c:
         async with c.stream("POST", model_url("tts", "/v1/audio/speech", cfg), json=body, headers=api_headers()) as r:
             if r.status_code != 200:
-                raise RuntimeError("tts")
+                raise RuntimeError(f"tts {r.status_code}")
             async for part in r.aiter_bytes():
                 out += part
                 if len(out) > TON_BYTES:
@@ -2832,6 +2851,124 @@ def _bild_sweep(d, now):
             _bild_rm(f[:-4])
 
 
+# ---------------------------------------------------------------- staying with it (Stufe 5a): your turn, the date, the look back
+def _wants(p):
+    """A seat of a profile that takes notes of the game (on unless it said no at the table)."""
+    return bool(p.get("uid") and p.get("held") and p.get("melden", True))
+
+
+def due_notes(rd, now):
+    """Inside the lock, once a minute (due_once) and when a turn opens: the notes to send now as [(uid, kind)] and
+    the marks that each goes once: dran (a new turn while away), erinnert (the turn open ERINNERN_S, nothing
+    written yet; half the turn's time when others acted already, the turn closes soon), termin (TERMIN_VOR before the
+    host's date). Fixed kinds, never a text of the game."""
+    out = []
+    if rd.get("status") != "laeuft" or rd.get("pause"):
+        return out
+    for pid, p in rd["plaetze"].items():
+        if not _wants(p) or pid in rd["offen"] or now - _seen.get(pid, 0) < ONLINE_S:
+            continue
+        if p.get("dran") != rd["zug"] and not rd.get("dm"):
+            p["dran"] = rd["zug"]
+            out.append((p["uid"], "dran"))
+        elif p.get("erinnert") != rd["zug"] and now - rd.get("zug_t", now) >= (rd["zug_s"] // 2 if rd["offen"] else ERINNERN_S):
+            p["erinnert"] = rd["zug"]
+            out.append((p["uid"], "erinnert"))
+    t = rd.get("termin") or 0
+    if t and not rd.get("termin_ok") and t - TERMIN_VOR <= now < t + 3600:
+        rd["termin_ok"] = True
+        out += [(p["uid"], "termin") for p in rd["plaetze"].values() if _wants(p)]
+    return out
+
+
+MELDEN = {"dran": ("Du bist dran in „{titel}“ (Zug {zug}).", "It is your turn in \"{titel}\" (turn {zug})."),
+          "erinnert": ("„{titel}“ wartet noch auf deinen Zug {zug}.", "\"{titel}\" is still waiting for your turn {zug}."),
+          "termin": ("„{titel}“ geht um {uhr} weiter.", "\"{titel}\" goes on at {uhr}.")}
+
+
+async def send_notes(rd, notes):
+    """The notes as push notes of the profile (push.send, its own ways and quiet hours). Never raises."""
+    import push
+    en = rd.get("lang") == "en"
+    uhr = time.strftime("%H:%M", time.localtime(rd.get("termin") or 0))
+    for uid, kind in notes:
+        if not features.allowed("dungeon", uid):   # a profile the admin blocked gets nothing of the game
+            print(f"dungeon: melden | {kind} | gesperrt", flush=True)
+            continue
+        try:
+            await push.send(uid, "Dungeon-Master", MELDEN[kind][1 if en else 0].format(titel=rd["titel"], zug=rd["zug"], uhr=uhr),
+                            tag="dungeon", why="Dungeon-Master")
+            _day.bump("gemeldet")
+            print(f"dungeon: melden | {kind}", flush=True)
+        except Exception:   # noqa: BLE001 - a note that did not go out is no error of the game
+            print(f"dungeon: melden | {kind} | nicht gesendet", flush=True)
+
+
+async def due_once(now=None):
+    """Every minute (panel.every_minute): a turn whose time is over closes even when nobody looks (the timer was lazy
+    before), and the notes that are due go out."""
+    if not features.admin_on("dungeon"):
+        return
+    now = time.time() if now is None else now
+    todo = []
+
+    def go():
+        with _lock:
+            d = _read()
+            rids = [k for k, v in d["runden"].items() if v.get("status") == "laeuft"]
+            changed = False
+            for rid in rids:
+                rd = d["runden"][rid]
+                notes = due_notes(rd, now)
+                if notes:
+                    todo.append((copy.deepcopy(rd), notes))
+                    changed = True
+            if changed:
+                _write(d)
+        for rid in rids:
+            maybe_close(rid, now)
+    await asyncio.to_thread(go)
+    for rd, notes in todo:
+        await send_notes(rd, notes)
+
+
+def set_date(owner, rid, t, now=None):
+    """The host's next game date (epoch seconds, within TERMIN_TAGE days; 0 takes it back)."""
+    now = time.time() if now is None else now
+    if not (t == 0 or isinstance(t, int) and not isinstance(t, bool) and now < t <= now + TERMIN_TAGE * 86400):
+        raise ValueError("termin")
+    with _lock:
+        d = _read()
+        rd = _round(d, rid)
+        if rd["owner"] != owner or rd["status"] != "laeuft":
+            raise LookupError("gastgeber")
+        rd.update(termin=t, termin_ok=False)
+        _write(d)
+    print(f"dungeon: termin | {'gesetzt' if t else 'weg'}", flush=True)
+
+
+def ics(rd, rid):
+    """The game date as a calendar file (one event, two hours, the title of the round)."""
+    t = rd.get("termin") or 0
+    if not t:
+        raise LookupError("termin")
+    f = lambda x: time.strftime("%Y%m%dT%H%M%SZ", time.gmtime(x))
+    titel = re.sub(r"[\r\n\;,]", " ", rd["titel"])
+    return ("BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Spark//Dungeon-Master//DE\r\nBEGIN:VEVENT\r\n"
+            f"UID:{rid}-{t}@spark\r\nDTSTAMP:{f(time.time())}\r\nDTSTART:{f(t)}\r\nDTEND:{f(t + 7200)}\r\n"
+            f"SUMMARY:Dungeon-Master: {titel}\r\nBEGIN:VALARM\r\nTRIGGER:-PT15M\r\nACTION:DISPLAY\r\nDESCRIPTION:Dungeon-Master\r\n"
+            "END:VALARM\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n")
+
+
+def look_back(rd, pid):
+    """„Was letztes Mal geschah“ from the round's own log (no model): the last narrations, loot and levels."""
+    log = [e for e in rd["log"] if e["art"] != "ooc" or e.get("pid") == pid]
+    dm = [e["text"] for e in log if e["art"] == "dm"][-2:]
+    beute = [f"{e['name']}: {e['item']['name']}" for e in log if e["art"] == "beute"][-3:]
+    stufen = [f"{e['name']}: {e['stufe']}" for e in log if e["art"] == "stufe"][-3:]
+    return {"erzaehlt": dm, "beute": beute, "stufen": stufen, "zug": rd["zug"]} if dm else None
+
+
 # ---------------------------------------------------------------- what a seat sees
 def view(rid, pid, now=None):
     r = rules()
@@ -2875,7 +3012,8 @@ def view(rid, pid, now=None):
             "bild_malt": rid in _bilder_jobs, "bild_hint": _hint(rid, lang), "bilder_an": pictures_on(rd["owner"]),
             "bild_grund": _nein(may_paint(r, d, rid, rd), lang) if host and may_paint(r, d, rid, rd) else "",
             "portraet_malt": bool(me.get("held")) and "h:" + me["held"]["hid"] in _bilder_jobs,
-            "portraet_hint": _hint("h:" + me["held"]["hid"], lang) if me.get("held") else ""}
+            "portraet_hint": _hint("h:" + me["held"]["hid"], lang) if me.get("held") else "",
+            "termin": rd.get("termin") or 0, "melden": _wants(me) if me.get("uid") else None, "rueckblick": look_back(rd, pid)}
     import dungeon_dingbild
     return dungeon_dingbild.add(r, rd, out)
 
@@ -3286,7 +3424,8 @@ def for_live():
             "kapitel": t["kapitel"], "schreibt": len(_summing), "vorgelesen": t["vorgelesen"], "liest": len(_speaking),
             "gehoert": t["gehoert"], "geschichten": len(plans()), "akte": t["akte"], "vorschlaege": t["vorschlaege"],
             "maerkte_offen": sum(1 for v in rs if v.get("markt")), "maerkte": t["maerkte"], "kaeufe": t["kaeufe"], "verkaeufe": t["verkaeufe"],
-            "auto": t["auto"], "gemalt": t["gemalt"], "bild_weg": t["bild_weg"], "bild_aus": t["bild_aus"], "bild_wartet": len(_bilder_jobs)}
+            "auto": t["auto"], "gemalt": t["gemalt"], "bild_weg": t["bild_weg"], "bild_aus": t["bild_aus"], "bild_wartet": len(_bilder_jobs),
+            "termine": sum(1 for v in rs if (v.get("termin") or 0) > now), "gemeldet": t["gemeldet"]}
 
 
 def own_count(uid):
@@ -3408,7 +3547,7 @@ async def neue_runde(request: Request, prof=Depends(browser_profile)):
         rid = await asyncio.to_thread(make_round, uid, b, _lang(b))
     except KNOWN as e:
         raise _http(e)
-    spawn(run_prolog(rid), name="dungeon-prolog")
+    _go(run_prolog(rid), name="dungeon-prolog")
     return await asyncio.to_thread(view, rid, _seat_uid(rid, uid))
 
 
@@ -3434,7 +3573,7 @@ async def runde(rid: str, request: Request, prof=Depends(own_profile)):
     try:
         pid = await asyncio.to_thread(_seat_uid, rid, uid)
         await asyncio.to_thread(maybe_close, rid)
-        spawn(hero_voices(), name="dungeon")
+        _go(hero_voices(), name="dungeon")
         return await asyncio.to_thread(view, rid, pid)
     except KNOWN as e:
         raise _http(e)
@@ -3533,6 +3672,65 @@ async def pause(rid: str, request: Request, prof=Depends(browser_profile)):
         return await asyncio.to_thread(go)
     except KNOWN as e:
         raise _http(e)
+
+
+@router.post("/api/profile/dungeon/{rid}/melden", dependencies=[Depends(assistant)])
+async def melden(rid: str, request: Request, prof=Depends(browser_profile)):
+    """„Mitteilungen“ of the own seat on or off (a note when it is your turn, a reminder, the game date)."""
+    uid = prof["id"]
+    _need(uid)
+    guard.limit(request, "dungeon", uid)
+    b = await json_body(request, BODY)
+
+    def go():
+        pid = _seat_uid(rid, uid)
+        with _lock:
+            d = _read()
+            _round(d, rid)["plaetze"][pid]["melden"] = bool(b.get("an"))
+            _write(d)
+        print(f"dungeon: melden | {'an' if b.get('an') else 'aus'}", flush=True)
+        return view(rid, pid)
+    try:
+        return await asyncio.to_thread(go)
+    except KNOWN as e:
+        raise _http(e)
+
+
+@router.post("/api/profile/dungeon/{rid}/termin", dependencies=[Depends(assistant)])
+async def termin(rid: str, request: Request, prof=Depends(browser_profile)):
+    """The host sets the next game date (t epoch seconds, 0 takes it back)."""
+    uid = prof["id"]
+    _need(uid)
+    guard.limit(request, "dungeon", uid)
+    b = await json_body(request, BODY)
+
+    def go():
+        set_date(uid, rid, b.get("t"))
+        return view(rid, _seat_uid(rid, uid))
+    try:
+        return await asyncio.to_thread(go)
+    except KNOWN as e:
+        raise _http(e)
+
+
+def _ics_out(rd, rid):
+    return Response(ics(rd, rid), media_type="text/calendar; charset=utf-8",
+                    headers={"Cache-Control": "no-store", "Content-Disposition": 'attachment; filename="dungeon-master.ics"'})
+
+
+@router.get("/api/profile/dungeon/{rid}/termin.ics", dependencies=[Depends(assistant)])
+async def termin_ics(rid: str, request: Request, prof=Depends(own_profile)):
+    """The game date as a calendar file, for a seat of the round."""
+    uid = prof["id"]
+    _need(uid)
+    guard.limit(request, "dungeon", uid)
+    try:
+        _seat_uid(rid, uid)
+        r = _ics_out(_round(_read(), rid), rid)
+    except KNOWN as e:
+        raise _http(e)
+    print("dungeon: termin | kalender", flush=True)
+    return r
 
 
 @router.post("/api/profile/dungeon/{rid}/markt", dependencies=[Depends(assistant)])
@@ -3700,7 +3898,7 @@ async def _paint_start(request, key, go, lang):
         raise HTTPException(409, _nein(str(e), lang))
     except KNOWN as e:
         raise _http(e)
-    spawn(coro, name="dungeon-bild")
+    _go(coro, name="dungeon-bild")
 
 
 @router.post("/api/profile/dungeon/{rid}/bild", dependencies=[Depends(assistant)])
@@ -3770,7 +3968,8 @@ async def stimm_probe(rid: str, request: Request, stimme: str = "", klang: str =
         wav = await probe(stimme, "en" if request.query_params.get("lang") == "en" else "de", klang[:100])
     except KNOWN as e:
         raise _http(e)
-    except (RuntimeError, asyncio.TimeoutError):
+    except (RuntimeError, asyncio.TimeoutError) as e:
+        print(f"dungeon: stimmprobe | fehler | {'klang' if klang else 'stimme'} | {str(e)[:12] or type(e).__name__}", flush=True)
         raise HTTPException(503, "Die Sprachausgabe ist gerade belegt.")
     return Response(wav, media_type="audio/wav", headers={"Cache-Control": "no-store"})
 
@@ -3826,7 +4025,7 @@ async def kapitel(rid: str, request: Request, prof=Depends(browser_profile)):
         kid = await asyncio.to_thread(end_chapter, uid, rid)
     except KNOWN as e:
         raise _http(e)
-    spawn(summarize(uid, kid), name="dungeon")
+    _go(summarize(uid, kid), name="dungeon")
     return dict(await asyncio.to_thread(_mine, uid, _lang(b)), kid=kid)
 
 
@@ -3855,7 +4054,7 @@ async def kampagne_neu_schreiben(kid: str, request: Request, prof=Depends(browse
         await asyncio.to_thread(rewrite_mark, uid, kid)
     except KNOWN as e:
         raise _http(e)
-    spawn(summarize(uid, kid), name="dungeon")
+    _go(summarize(uid, kid), name="dungeon")
     return await asyncio.to_thread(_mine, uid, _lang(b))
 
 
@@ -3868,7 +4067,7 @@ async def kampagne_weiter(kid: str, request: Request, prof=Depends(browser_profi
     b = await json_body(request, BODY)
     try:
         rid = await asyncio.to_thread(next_chapter, uid, kid, b, _lang(b))
-        spawn(run_prolog(rid), name="dungeon-prolog")
+        _go(run_prolog(rid), name="dungeon-prolog")
     except KNOWN as e:
         raise _http(e)
     return await asyncio.to_thread(view, rid, await asyncio.to_thread(_seat_uid, rid, uid))
@@ -3981,7 +4180,7 @@ async def gast_beitreten(request: Request):
 async def gast_lage(request: Request):
     b, rid, pid = await _guest(request)
     await asyncio.to_thread(maybe_close, rid)
-    spawn(hero_voices(), name="dungeon")
+    _go(hero_voices(), name="dungeon")
     try:
         return await asyncio.to_thread(view, rid, pid)
     except KNOWN as e:
@@ -4043,6 +4242,16 @@ async def gast_bild(request: Request):
         raise _http(e)
 
 
+@router.post("/api/dungeon/termin")
+async def gast_termin(request: Request):
+    """{"code"}: the game date of the seat's round as a calendar file."""
+    b, rid, pid = await _guest(request)
+    try:
+        return _ics_out(_round(_read(), rid), rid)
+    except KNOWN as e:
+        raise _http(e)
+
+
 @router.post("/api/dungeon/portraet")
 async def gast_portraet(request: Request):
     """{"code", "pid"}: the portrait of a hero of the seat's round."""
@@ -4070,7 +4279,8 @@ async def gast_probe(request: Request):
         wav = await probe(b.get("stimme"), (await asyncio.to_thread(_read))["runden"][rid].get("lang", "de"), str(b.get("klang") or ""))
     except KNOWN as e:
         raise _http(e)
-    except (RuntimeError, asyncio.TimeoutError):
+    except (RuntimeError, asyncio.TimeoutError) as e:
+        print(f"dungeon: stimmprobe | fehler | {'klang' if b.get('klang') else 'stimme'} | {str(e)[:12] or type(e).__name__}", flush=True)
         raise HTTPException(503, "Die Sprachausgabe ist gerade belegt.")
     return Response(wav, media_type="audio/wav", headers={"Cache-Control": "no-store"})
 

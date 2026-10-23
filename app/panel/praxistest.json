@@ -2828,7 +2828,7 @@
 "id": "P428",
 "v": 964,
 "titel": "Dungeon-Master: Szenenbilder, Porträt, Karte, Titelbild",
-"text": "Voraussetzung: Funktionen → Bilder malen an und Bildmodell installiert. A: Neue Runde mit Häkchen „Porträt malen lassen“ anlegen: der Prolog kommt, darüber erscheint „Das Szenenbild wird gemalt …“, danach das Bild groß mit „KI-Bild“, das Porträt auf der Heldenkarte. B: Spielen, bis der Ort wechselt: ein neues Szenenbild, im Verlauf klein beim Zug, die Karte rechts wächst. C: „🖼 Szenenbild jetzt malen“ direkt danach: grau mit „Höchstens ein Szenenbild je 3 Züge“. D: Ein Gast am Handy sieht dieselben Bilder und kann sein Porträt malen lassen; ein zweites Mal geht erst auf der nächsten Stufe. E: Kapitel beenden: die Kampagne zeigt das letzte Szenenbild als Titelbild und die Karte, auch in der iPhone-App unter Meine Sachen, Dungeon-Master. F: Bilder malen aus: das Spiel läuft weiter, ohne Bilder und ohne Knopf.",
+"text": "Voraussetzung: Funktionen → Bilder malen an und Bildmodell installiert. A: Neue Runde mit Häkchen „Porträt malen lassen“ anlegen: der Prolog kommt, darüber erscheint „Das Szenenbild wird gemalt …“, danach das Bild groß (ohne Zeichen darauf), das Porträt auf der Heldenkarte. B: Spielen, bis der Ort wechselt: ein neues Szenenbild, im Verlauf klein beim Zug, die Karte rechts wächst. C: „🖼 Szenenbild jetzt malen“ direkt danach: grau mit „Höchstens ein Szenenbild je 3 Züge“. D: Ein Gast am Handy sieht dieselben Bilder und kann sein Porträt malen lassen; ein zweites Mal geht erst auf der nächsten Stufe. E: Kapitel beenden: die Kampagne zeigt das letzte Szenenbild als Titelbild und die Karte, auch in der iPhone-App unter Meine Sachen, Dungeon-Master. F: Bilder malen aus: das Spiel läuft weiter, ohne Bilder und ohne Knopf.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 },
 {
@@ -2844,6 +2844,13 @@
 "titel": "Dungeon-Master: Bilder für Ausrüstung und Zauber",
 "text": "Voraussetzung: Funktionen → Bilder malen an und Bildmodell installiert. A: Funktionen → KI-Dungeon-Master → Bilder für Ausrüstung und Zauber an, dann „Regeln anpassen“: unten steht der Abschnitt mit „0/…“. B: „Bilder jetzt erstellen“: die Zahl steigt alle paar Sekunden, „Anhalten“ hält an. C: Am Spieltisch zeigen Tasche, Ausrüstung und Händler die Bilder im Rahmen der Seltenheit (grün, blau, lila, orange), noch nicht gemalte das Zeichen der Art. D: Ein Gast am Handy sieht dieselben Bilder. E: Ein benanntes Fundstück ab rar bekommt innerhalb einer Minute ein eigenes Bild. F: Am nächsten Morgen steht unter „zuletzt“ der nächtliche Lauf. G: Schalter aus: wieder Zeichen, nichts wird gemalt.",
 "thread": "Dungeon-Master: Bilder für Ausrüstung und Zauber"
+},
+{
+"id": "P431",
+"v": 968,
+"titel": "Dungeon-Master: Du bist dran, Spieltermin, Rückblick",
+"text": "Voraussetzung: Ich → Mitteilungen mit iPhone-App oder Browser. A: Runde mit einem zweiten Profil anlegen, das zweite Profil schließt die Seite. Der Gastgeber handelt: Beim neuen Zug kommt beim zweiten Profil „Du bist dran in „Titel“ (Zug n).“ B: Nach der halben Zugzeit kommt einmal „wartet noch auf deinen Zug“. C: Am Tisch „🔔 Mitteilungen an“ antippen: es wird „🔕 Mitteilungen aus“, danach kommt nichts mehr. D: Als Gastgeber in der Seitenspalte einen Spieltermin in 20 Minuten setzen: 5 Minuten später kommt „geht um hh:mm weiter“; „In den Kalender“ öffnet den Termin im Kalender. E: Nach mehr als 12 Stunden die Runde öffnen: oben steht „Was letztes Mal geschah“, „Weiter spielen“ schließt es.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

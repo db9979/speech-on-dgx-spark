@@ -1726,7 +1726,7 @@ def snapshot(view="admin", now=None):
                         + (f" · {wbk['widerspruch']} Widersprüche" if wbk.get("widerspruch") else "")
                         + (f" · {wbk['veraltet']} veraltet?" if wbk.get("veraltet") else "")
                         + (" · arbeitet" if wbk.get("running") else ""))
-        if x["id"] == "dungeon":   # Dungeon-Master: rounds, players and guests, turns, loot, levels, campaigns, read aloud and spoken today, stories with acts moved on and proposals, markets, purchases and sales, pictures painted, discarded and on their way (numbers only, never a name or a text)
+        if x["id"] == "dungeon":   # Dungeon-Master: rounds, players and guests, turns, loot, levels, campaigns, read aloud and spoken today, stories with acts moved on and proposals, markets, purchases and sales, pictures painted, discarded and on their way, game dates and notes sent (numbers only, never a name or a text)
             x["sub"] = (f"{dgn.get('runden', 0)} Runden · {dgn.get('spieler', 0)} Spieler, {dgn.get('online', 0)} da, {dgn.get('gaeste', 0)} Gäste"
                         + f" · heute {dgn.get('zuege', 0)} Züge, {dgn.get('beute', 0)} Beute, {dgn.get('stufen', 0)} Stufen"
                         + (f" · {dgn['ausfall']} ohne Erzählung" if dgn.get("ausfall") else "")
@@ -1744,7 +1744,9 @@ def snapshot(view="admin", now=None):
                         + (f" · {dgn['bild_wartet']} Bilder unterwegs" if dgn.get("bild_wartet") else "")
                         + (f" · Gegenstandsbilder {dgn['ding']['da']}, Fundstücke {dgn['ding']['funde_da']}, heute {dgn['ding']['gemalt']} gemalt, "
                            f"{dgn['ding']['funde']} Funde, {dgn['ding']['verworfen']} verworfen, {dgn['ding']['ausgefallen']} ausgefallen"
-                           + (" · malt Gegenstände" if dgn["ding"]["laeuft"] else "") if dgn.get("ding", {}).get("on") else ""))
+                           + (" · malt Gegenstände" if dgn["ding"]["laeuft"] else "") if dgn.get("ding", {}).get("on") else "")
+                        + (f" · {dgn['termine']} Spieltermine" if dgn.get("termine") else "")
+                        + (f" · heute {dgn['gemeldet']} Mitteilungen" if dgn.get("gemeldet") else ""))
         if x["id"] == "wkarte":    # Wissenskarte: connections, discarded, documents waiting, profiles, numbers only (never a title)
             x["sub"] = (f"{wkk.get('verbindungen', 0)} Verbindungen · {wkk.get('punkte', 0)} Punkte · {wkk.get('warten', 0)} Dokumente warten"
                         + f" · {wkk.get('profile', 0)} Profile"

@@ -423,14 +423,18 @@ async def stability():
                     await vorgaenge.due()
                 except Exception as e:
                     print("vorgang: due", type(e).__name__, flush=True)
-                try:   # Dungeon-Master: pictures of named finds, the catalog's run at night (dungeon_dingbild.py)
-                    await dungeon_dingbild.due()
-                except Exception as e:
-                    print("dungeon: dingbild | due", type(e).__name__, flush=True)
                 try:
                     await extras.due_once()
                 except Exception as e:
                     print("extras:", type(e).__name__, e, flush=True)
+                try:   # Dungeon-Master: a turn whose time is over closes, „Du bist dran“ and the game date (dungeon.py)
+                    await dungeon.due_once()
+                except Exception as e:
+                    print("dungeon: melden", type(e).__name__, flush=True)
+                try:   # Dungeon-Master: pictures of named finds, the catalog's run at night (dungeon_dingbild.py)
+                    await dungeon_dingbild.due()
+                except Exception as e:
+                    print("dungeon: dingbild | due", type(e).__name__, flush=True)
                 try:
                     await agent.due_once()
                 except Exception as e:

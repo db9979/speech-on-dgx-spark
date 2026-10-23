@@ -188,7 +188,7 @@ struct DungeonView: View {
 }
 
 /// A picture of the game (an own hero's portrait, a chapter's cover), loaded once with the app's key; nothing while
-/// it loads or when it is gone. An AI picture, so it carries the mark „KI-Bild“ as on the panel.
+/// it loads or when it is gone. No mark on the picture (Dominik 2026-10-23); the PNG itself says it is AI-made.
 struct DMBild: View {
     let path: String
     let width: CGFloat?
@@ -198,21 +198,17 @@ struct DMBild: View {
     static func ok(_ id: String, _ pattern: String) -> Bool { id.range(of: pattern, options: .regularExpression) != nil }
 
     var body: some View {
-        ZStack(alignment: .topTrailing) {
+        ZStack {
             if let image {
                 Image(uiImage: image).resizable().scaledToFill()
             } else {
                 Color.secondary.opacity(0.15)
             }
-            if image != nil && width == nil {
-                Text("KI-Bild").font(.caption2.bold()).padding(.horizontal, 6).padding(.vertical, 2)
-                    .background(.black.opacity(0.6), in: Capsule()).foregroundStyle(.white).padding(6)
-            }
         }
         .frame(maxWidth: width ?? .infinity, minHeight: height, maxHeight: height)
         .frame(width: width)
         .clipShape(RoundedRectangle(cornerRadius: width == nil ? 10 : 22))
-        .accessibilityLabel(Text("KI-Bild"))
+        .accessibilityLabel(Text("Bild"))
         .task(id: path) {
             guard let api = SparkAPI.current, let d = try? await api.dungeonPicture(path) else { return }
             image = UIImage(data: d)

@@ -1301,6 +1301,162 @@ class LiveCounts(Base):
         self.assertNotIn("Arvid", json.dumps(live))
 
 
+class StayingWithIt(Base):
+    """Stufe 5a (Dominik 2026-10-23 „Alle vorgeschlagenen Punkte 1 bis 8 umsetzen“): „Du bist dran“ once per turn to a
+    profile seat that is away, a reminder when the turn waits, the host's game date with a calendar file and a note
+    before it, the look back from the round's own log; fixed texts, never a text of the game in a note."""
+    def setUp(self):
+        super().setUp()
+        v = self.new_round()
+        self.rid, self.host = v["rid"], v["pid"]
+        r = self.c.post(f"/api/profile/dungeon/{self.rid}/platz", json={"base": BASE})
+        r = self.c2.post("/api/profile/dungeon/beitreten", json={"code": code_of(r.json()["link"]), "held": {"name": "Emma", "volk": "elf", "klasse": "magier"}})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.p2 = r.json()["pid"]
+        self.code, self.gp = self.guest(self.rid)
+        dungeon._seen.clear()                     # everyone away
+        self.sent = []
+
+        async def send(uid, title, body, **k):
+            self.sent.append((uid, body, k.get("tag")))
+        import push
+        old = push.send
+        push.send = send
+        self.addCleanup(setattr, push, "send", old)
+
+    def notes(self, now):
+        with dungeon._lock:
+            d = dungeon._read()
+            out = dungeon.due_notes(d["runden"][self.rid], now)
+            dungeon._write(d)
+        return sorted(out)
+
+    def test_your_turn_once_only_away_profile_seats(self):
+        import time
+        now = time.time()
+        self.assertEqual(self.notes(now), sorted([(self.uid, "dran"), (self.uid2, "dran")]))   # the guest has no profile: no note
+        self.assertEqual(self.notes(now), [])                                                    # once per turn
+        dungeon._seen[self.host] = now
+        with dungeon._lock:
+            d = dungeon._read()
+            for p in d["runden"][self.rid]["plaetze"].values():
+                p.pop("dran", None)
+            d["runden"][self.rid]["plaetze"][self.p2]["melden"] = False
+            dungeon._write(d)
+        self.assertEqual(self.notes(now), [])     # the host is at the table, Emma said no
+
+    def test_reminder_after_long_or_half_the_time(self):
+        import time
+        now = time.time()
+        self.notes(now)
+        self.assertEqual(self.notes(now + dungeon.ERINNERN_S - 60), [])
+        self.assertEqual(self.notes(now + dungeon.ERINNERN_S), sorted([(self.uid, "erinnert"), (self.uid2, "erinnert")]))
+        self.assertEqual(self.notes(now + dungeon.ERINNERN_S + 60), [])
+        with dungeon._lock:                       # the guest acted: the turn closes soon, a reminder at half its time
+            d = dungeon._read()
+            rd = d["runden"][self.rid]
+            rd.update(zug=rd["zug"] + 1, zug_t=now)
+            rd["offen"][self.gp] = {"text": "Ich warte.", "t": now}
+            dungeon._write(d)
+        self.notes(now)
+        self.assertEqual(self.notes(now + 120 // 2), sorted([(self.uid, "erinnert"), (self.uid2, "erinnert")]))
+        dungeon._seen[self.host] = now + 120 // 2
+        with dungeon._lock:
+            d = dungeon._read()
+            d["runden"][self.rid]["offen"][self.host] = {"text": "Ich auch.", "t": now}
+            d["runden"][self.rid]["plaetze"][self.host].pop("erinnert", None)
+            dungeon._write(d)
+        self.assertEqual(self.notes(now + 120 // 2), [])     # who acted gets nothing
+
+    def test_game_date_bounds_calendar_and_note(self):
+        import time
+        now = int(time.time())
+        u = f"/api/profile/dungeon/{self.rid}/termin"
+        for t in (now - 60, now + 61 * 86400, "morgen", True):
+            self.assertEqual(self.c.post(u, json={"t": t}).status_code, 400, t)
+        self.assertEqual(self.c2.post(u, json={"t": now + 3600}).status_code, 404)        # only the host
+        self.assertEqual(self.c.get(u + ".ics").status_code, 404)                          # no date yet
+        r = self.c.post(u, json={"t": now + 3600})
+        self.assertEqual((r.status_code, r.json()["termin"]), (200, now + 3600))
+        r = self.c2.get(u + ".ics")
+        self.assertEqual(r.status_code, 200)
+        self.assertTrue(r.headers["content-type"].startswith("text/calendar"))
+        self.assertIn("DTSTART:" + time.strftime("%Y%m%dT%H%M%SZ", time.gmtime(now + 3600)), r.text)
+        self.assertIn("TRIGGER:-PT15M", r.text)
+        g = self.v.post("/api/dungeon/termin", json={"code": self.code})
+        self.assertEqual((g.status_code, g.text), (200, r.text.replace(r.text.split("DTSTAMP:")[1][:16], g.text.split("DTSTAMP:")[1][:16])))
+        self.assertEqual(self.v.post("/api/dungeon/termin", json={"code": "x" * 32}).status_code, 400)
+        dungeon._seen.clear()
+        self.notes(now)                                                                    # the turn notes out of the way
+        self.assertEqual(self.notes(now + 3600 - dungeon.TERMIN_VOR - 60), [])
+        self.assertEqual(self.notes(now + 3600 - dungeon.TERMIN_VOR), sorted([(self.uid, "termin"), (self.uid2, "termin")]))
+        self.assertEqual(self.notes(now + 3600), [])
+        self.assertEqual(self.c.post(u, json={"t": 0}).json()["termin"], 0)
+
+    def test_notes_on_off_and_look_back(self):
+        u = f"/api/profile/dungeon/{self.rid}"
+        self.assertTrue(self.c2.get(u).json()["melden"])
+        self.assertFalse(self.c2.post(u + "/melden", json={"an": False}).json()["melden"])
+        self.assertIsNone(self.v.post("/api/dungeon/lage", json={"code": self.code}).json()["melden"])   # a guest has no notes
+        with dungeon._lock:
+            d = dungeon._read()
+            d["runden"][self.rid]["log"] += [{"art": "dm", "text": f"Teil {i}"} for i in range(4)] + [
+                {"art": "beute", "name": "Arvid", "item": {"name": "Kurzschwert"}}, {"art": "stufe", "name": "Emma", "stufe": 2}]
+            dungeon._write(d)
+        rb = self.c.get(u).json()["rueckblick"]
+        self.assertEqual((rb["erzaehlt"], rb["beute"], rb["stufen"]), (["Teil 2", "Teil 3"], ["Arvid: Kurzschwert"], ["Emma: 2"]))
+
+    def test_every_minute_closes_a_due_turn_and_sends(self):
+        import time
+        now = time.time()
+        self.assertEqual(self.v.post("/api/dungeon/aktion", json={"code": self.code, "text": "Ich lausche.", "zug": 1}).status_code, 200)
+        dungeon._seen.clear()
+        self.spawned.clear()
+        asyncio.run(dungeon.due_once(now))
+        self.assertEqual(sorted(u for u, _, _ in self.sent), sorted([self.uid, self.uid2]))
+        self.assertTrue(all(tag == "dungeon" and "Die Glocke" in body for _, body, tag in self.sent))
+        self.assertEqual(self.spawned, [])                         # not due yet
+        asyncio.run(dungeon.due_once(now + 121))
+        self.assertEqual(self.spawned, ["dungeon"])                # the timer ran out: the turn closes without a visit
+        self.assertEqual(dungeon.for_live()["gemeldet"] >= 2, True)
+        from unittest import mock
+        self.sent.clear()
+        with mock.patch.object(dungeon.features, "allowed", lambda k, uid, *a: uid != self.uid2):   # the admin blocked Emma
+            asyncio.run(dungeon.send_notes(self.state(self.rid), [(self.uid, "dran"), (self.uid2, "dran")]))
+        self.assertEqual([u for u, _, _ in self.sent], [self.uid])
+        helpers.set_config(dungeon=False)
+        self.sent.clear()
+        asyncio.run(dungeon.due_once(now + 99999))
+        self.assertEqual(self.sent, [])
+
+
+class FromAThread(unittest.TestCase):
+    """Dominik 2026-10-23 16:06: „Handeln“ gave a 500 (no running event loop): the turn closed inside asyncio.to_thread
+    and started the Dungeon Master there. dungeon._go hands it to the panel's own loop (with the real spawn)."""
+    def test_a_turn_closed_in_a_worker_thread_starts(self):
+        import core
+        loop = asyncio.new_event_loop()
+        t = threading.Thread(target=loop.run_forever)
+        t.start()
+        old = core.main_loop[0]
+        core.main_loop[0] = loop
+        ran = threading.Event()
+
+        async def job():
+            ran.set()
+        try:
+            self.assertIs(dungeon.spawn, core.spawn)
+            w = threading.Thread(target=dungeon._go, args=(job(), "dungeon"))   # like maybe_close in _act's go()
+            w.start()
+            w.join()
+            self.assertTrue(ran.wait(5))
+        finally:
+            core.main_loop[0] = old
+            loop.call_soon_threadsafe(loop.stop)
+            t.join()
+            loop.close()
+
+
 class Pictures(Base):
     """Stufe 3 (Dominik 2026-10-23 „ok stufe 3 umsetzten“ = 1a bis 5a): a scene picture on a new place and on the
     host's button, the game's own limits, the portrait once per level, the chapter's cover and the map; only with

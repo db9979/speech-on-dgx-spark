@@ -92,7 +92,7 @@ function dmHeroForm(w,heroes,pre){const vk=(k,a,sub)=>`<input type="hidden" clas
     <label>${esc(t('Werte','Values'))}</label><small class="mut">${esc(t('Die Zahlen 15, 14, 13, 12, 10 und 8 verteilen: ziehen oder zwei antippen tauscht sie. Dahinter das Volk, der Wert und der Bonus für Würfe.','Lay out 15, 14, 13, 12, 10 and 8: drag, or tap two to swap them. After it the people\'s bonus, the value and the bonus for rolls.'))}</small>
     <div class="${pre}vert dm-vert">${w.verteilung?dmVert(w,w.klassen[0].id,w.voelker[0].id):''}</div>
     <label>${esc(t('Ein Satz zu deiner Figur (frei)','One sentence about your character (optional)'))}</label><input class="${pre}satz" maxlength="120" autocomplete="off">
-    ${w.bilder_an?`<label class="dm-check"><input type="checkbox" class="${pre}portraet"> ${esc(t('Porträt malen lassen (KI-Bild aus Volk, Klasse und deinem Satz)','Have a portrait painted (AI image from people, class and your sentence)'))}</label>`:''}</div>`}
+    ${w.bilder_an?`<label class="dm-check"><input type="checkbox" class="${pre}portraet"> ${esc(t('Porträt malen lassen (aus Volk, Klasse und deinem Satz)','Have a portrait painted (from people, class and your sentence)'))}</label>`:''}</div>`}
 function dmHeroBody(box,pre){const sel=box.querySelector('.'+pre+'held');if(sel&&sel.value)return sel.value;
   const v=c=>(box.querySelector('.'+pre+c)||{}).value||'';const vt=box.querySelector('.'+pre+'vert');return {name:v('name').trim(),volk:v('volk'),klasse:v('klasse'),satz:v('satz').trim(),verteilung:vt?dmVertOf(vt):undefined}}
 // the six values of a new hero: the fixed row (15 14 13 12 10 8) laid out by the class, the player drags or taps two numbers to swap them
@@ -163,9 +163,29 @@ async function dmImgFill(w){if(!DG.code)return;for(const im of w.querySelectorAl
     document.querySelectorAll(`#dgcard img[data-dmimg="${im.dataset.dmimg}"]`).forEach(x=>x.src=DMI[key])}}
 function dmAv(mode,v,p,c){return p.bild?`<span class="dm-av dm-avb" data-c="${c}">${dmImg(mode,v,'p',p.pid,p.stufe)}</span>`:`<span class="dm-av" data-c="${c}">${esc((p.name||'?').slice(0,1).toUpperCase())}</span>`}
 function dmScene(v,mode){const b=(v.bilder||[]).slice(-1)[0];if(!b&&!v.bild_malt)return '';
-  return `<figure class="dm-bild${b?'':' leer'}">${b?dmImg(mode,v,'b',b.b)+`<span class="dm-ki">${esc(t('KI-Bild','AI image'))}</span>${b.ort&&!v.bild_malt?`<figcaption>${esc(b.ort)}</figcaption>`:''}`:''}${v.bild_malt?`<div class="dm-malt">🖼 ${esc(v.bild_hint||t('Das Szenenbild wird gemalt …','The scene picture is being painted …'))}</div>`:''}</figure>`}
+  return `<figure class="dm-bild${b?'':' leer'}">${b?dmImg(mode,v,'b',b.b)+`${b.ort&&!v.bild_malt?`<figcaption>${esc(b.ort)}</figcaption>`:''}`:''}${v.bild_malt?`<div class="dm-malt">🖼 ${esc(v.bild_hint||t('Das Szenenbild wird gemalt …','The scene picture is being painted …'))}</div>`:''}</figure>`}
 function dmMap(v){const o=v.orte||[];if(!o.length)return '';
   return `<h5>${esc(t('Karte','Map'))}</h5><div class="dm-karte">${o.map((x,i)=>`<span class="${i===o.length-1?'on':''}">${esc(x)}</span>`).join('<i aria-hidden="true">→</i>')}</div>`}
+// staying with it (Stufe 5a): the game date, „🔔 Mitteilungen“ of the own seat, the look back after a longer break
+const DMRB={};
+function dmDate(v,mode){const host=mode==='p'&&v.gastgeber&&v.status!=='ende',has=v.termin*1000>Date.now();if(!has&&!host&&v.melden==null)return '';
+  const pad=n=>String(n).padStart(2,'0'),d=new Date(has?v.termin*1000:Date.now()+86400000),loc=`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  return `<h5>${esc(t('Spieltermin','Game date'))}</h5><div class="dm-termin">${has?`<b>📅 ${esc(dmWhen(v.termin))}</b><button type="button" class="b" data-dmics="1">${esc(t('In den Kalender','Add to calendar'))}</button>`:`<small class="mut">${esc(t('Noch kein Termin.','No date yet.'))}</small>`}
+    ${host?`<div class="dm-tset"><input type="datetime-local" class="dm-tin" value="${loc}" aria-label="${esc(t('Nächster Spieltermin','Next game date'))}"><button type="button" class="b" data-dmtermin="1">${esc(has?t('Termin ändern','Change date'):t('Termin setzen','Set date'))}</button>${has?`<button type="button" class="b" data-dmtermin="0">${esc(t('Termin weg','Remove date'))}</button>`:''}</div>`:''}
+    ${v.melden!=null&&mode==='p'?`<button type="button" class="b" data-dmmelden="${v.melden?0:1}">${esc(v.melden?t('🔔 Mitteilungen an','🔔 Notes on'):t('🔕 Mitteilungen aus','🔕 Notes off'))}</button><small class="mut">${esc(t('Eine Mitteilung, wenn du dran bist, eine Erinnerung, wenn der Zug auf dich wartet, und eine 15 Minuten vor dem Termin.','A note when it is your turn, a reminder when the turn waits for you and one 15 minutes before the date.'))}</small>`:''}</div>`}
+function dmBack(v){const r=v.rueckblick;if(!r)return '';
+  if(DMRB[v.rid]===undefined){let last=0;try{last=+localStorage.getItem('dm-zuletzt-'+v.rid)||0}catch(e){}DMRB[v.rid]=!!last&&Date.now()-last>12*3600000}
+  try{localStorage.setItem('dm-zuletzt-'+v.rid,String(Date.now()))}catch(e){}
+  if(!DMRB[v.rid])return '';
+  return `<div class="dm-rueck"><h5>${esc(t('Was letztes Mal geschah','Last time'))} · ${esc(t('bis Zug','up to turn'))} ${r.zug}</h5>${r.erzaehlt.map(x=>`<p>${esc(x)}</p>`).join('')}
+    ${r.beute.length?`<small class="mut">${esc(t('Beute: ','Loot: ')+r.beute.join(' · '))}</small>`:''}${r.stufen.length?`<small class="mut">${esc(t('Stufen: ','Levels: ')+r.stufen.join(' · '))}</small>`:''}
+    <button type="button" class="b p" data-dmrueck="1">${esc(t('Weiter spielen','Play on'))}</button></div>`}
+document.body.addEventListener('click',e=>{const b=e.target.closest('[data-dmrueck]');if(!b)return;const m=b.closest('#dgcard')?'g':'p',v=m==='g'?DG.v:DM.v;if(v)DMRB[v.rid]=false;m==='g'?dgDraw():dmDraw()});
+// the date as a calendar file: the browser saves it, the calendar app opens it
+document.body.addEventListener('click',async e=>{const b=e.target.closest('[data-dmics]');if(!b)return;const g=!!b.closest('#dgcard');
+  try{const r=g?await /*raw: public route of a guest seat*/fetch('/api/dungeon/termin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:DG.code})}):await api(`/api/profile/dungeon/${DM.rid}/termin.ics`);
+    if(!r.ok)throw new Error();const u=URL.createObjectURL(await r.blob()),a=document.createElement('a');a.href=u;a.download='dungeon-master.ics';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),5000)}
+  catch(x){dmSay(g?DG:DM,t('Den Termin gibt es nicht mehr.','The date is gone.'),true)}});
 function dmBar(v,max,cls){const pc=Math.max(0,Math.min(100,Math.round(100*v/(max||1))));return `<i class="dm-bar ${cls||''}"><em style="width:${pc}%"></em></i>`}
 // pictures of items and spells (dungeon_dingbild.py, 5i): the picture in its rarity's frame, the kind's sign until it is painted
 function dmDing(it){return it.bild?`<span class="dm-ding"><img alt="" loading="lazy" data-dmding="${esc(it.bild)}"></span>`:it.zeichen?`<span class="dm-ding dm-dz" aria-hidden="true">${esc(it.zeichen)}</span>`:''}
@@ -186,7 +206,7 @@ function dmLog(v,e,col){const W=v.werte||{},sys=Array.isArray(e.text)?e.text[L==
   if(e.art==='handel'){const w={kauf:t('kauft','buys'),verkauf:t('verkauft','sells'),erkannt:t('erkennt','identifies')}[e.was]||e.was;return `<div class="dm-sys mut">⚖ ${esc(e.name)} ${esc(w)} <b>${esc(e.ding)}</b>${e.gold?' · '+e.gold+' '+esc(t('Gold','gold')):''}</div>`}
   if(e.art==='zauber')return `<div class="dm-zauber">✦ ${esc(e.name)} ${esc(t('wirkt','casts'))} <b>${esc(e.zauber)}</b>${e.gruppe?' '+esc(t('auf die Gruppe','on the group')):''}: ${esc(e.satz)}</div>`;
   if(e.art==='ooc')return `<div class="dm-ooc">(OOC: ${esc(e.text)})</div>`;
-  if(e.art==='bild')return (v.bilder||[]).some(x=>x.b===e.b)?`<div class="dm-bildk">${dmImg(v.mode,v,'b',e.b)}<small class="mut">🖼 ${esc(t('KI-Bild','AI image'))}${e.ort?' · '+esc(e.ort):''}</small></div>`:'';
+  if(e.art==='bild')return (v.bilder||[]).some(x=>x.b===e.b)?`<div class="dm-bildk">${dmImg(v.mode,v,'b',e.b)}${e.ort?`<small class="mut">🖼 ${esc(e.ort)}</small>`:''}</div>`:'';
   if(e.art==='akt')return `<div class="dm-akt">❖ ${esc(sys||'')}</div>`;
   if(e.art==='ep')return `<div class="dm-sys mut">${esc(e.name)} +${e.zahl} EP</div>`;
   if(e.art==='stufe')return `<div class="dm-stufe">★ ${esc(e.name)} ${esc(t('erreicht Stufe','reaches level'))} ${e.stufe}!</div>`;
@@ -205,7 +225,7 @@ function dmMe(v,mode){const h=v.ich;if(!h)return '';const others=v.plaetze.filte
   const shop=m&&open?`<div class="dm-markt"><h5>⚖ ${esc(m.name)}</h5>${m.satz?`<small class="dm-isatz">„${esc(m.satz)}“</small>`:''}<small class="mut">${esc(t('Preise legt das Panel fest.','The panel sets the prices.'))}${m.rabatt?' '+esc(t('Dein Charisma: '+m.rabatt+' % Rabatt.','Your Charisma: '+m.rabatt+' % off.')):''}</small>
     ${m.ware.map(it=>dmItem(it,`<div class="dm-iacts"><button type="button" class="b p" data-dmhero="kaufen" data-i="${esc(it.i)}"${h.gold<it.preis?' disabled':''}>${esc(t('Kaufen','Buy'))} · ${it.preis} ${esc(t('Gold','gold'))}</button></div>`)).join('')||`<small class="mut">${esc(t('Ausverkauft.','Sold out.'))}</small>`}</div>`:'';
   const ground=(v.boden||[]).length&&open?`<h5>${esc(t('Liegt hier','Lying here'))}</h5>${v.boden.map(it=>dmItem(it,`<div class="dm-iacts"><button type="button" class="b" data-dmhero="aufheben" data-i="${esc(it.i)}">${esc(t('Aufheben','Pick up'))}</button></div>`)).join('')}`:'';
-  const pic=h.bild||v.bilder_an?`<div class="dm-portraet">${h.bild?`<span class="dm-pbig">${dmImg(mode,v,'p',v.pid,h.stufe)}<span class="dm-ki">${esc(t('KI-Bild','AI image'))}</span></span>`:''}<div>${v.portraet_malt?`<small class="mut">🖼 ${esc(v.portraet_hint||t('Dein Porträt wird gemalt …','Your portrait is being painted …'))}</small>`
+  const pic=h.bild||v.bilder_an?`<div class="dm-portraet">${h.bild?`<span class="dm-pbig">${dmImg(mode,v,'p',v.pid,h.stufe)}</span>`:''}<div>${v.portraet_malt?`<small class="mut">🖼 ${esc(v.portraet_hint||t('Dein Porträt wird gemalt …','Your portrait is being painted …'))}</small>`
     :v.bilder_an&&h.bild_neu&&open?`<button type="button" class="b" data-dmportraet="1">${esc(h.bild?t('🖼 Porträt neu malen','🖼 Paint the portrait again'):t('🖼 Porträt malen lassen','🖼 Have a portrait painted'))}</button><small class="mut">${esc(t('Einmal je Stufe, aus Volk, Klasse und deinem Satz.','Once per level, from people, class and your sentence.'))}</small>`:''}</div></div>`:'';
   return `<div class="dm-me"><h4>${esc(h.name)} · ${esc(h.volk)} ${esc(h.klasse)}</h4>${h.satz?`<small class="mut">${esc(h.satz)}</small>`:''}${pic}
     <div class="dm-line"><span>${esc(t('Stufe','Level'))} ${h.stufe}</span><span>${h.ep}${h.ep_naechste?' / '+h.ep_naechste:''} EP</span></div>${h.ep_naechste?dmBar(h.ep,h.ep_naechste,'ep'):''}
@@ -271,10 +291,10 @@ function dmTable(w,v,mode){const keep=w.querySelector('.dm-in'),kv=keep?keep.val
   dmLook(w,v.farben);w.classList.toggle('dm-voll',DMA.voll);w.dataset.welt=v.welt_id||'';
   w.innerHTML=`<div class="dm-head">${mode==='p'?`<button type="button" class="b" data-dmback="1">${esc(t('← Runden','← Rounds'))}</button>`:''}<div class="dm-htitle"><h3>${esc(v.titel)}</h3>${sc}<small class="mut">${esc(v.welt)} · ${esc(v.ton)}${v.kapitel?' · '+esc(t('Kapitel','Chapter'))+' '+v.kapitel:''}${v.akte?' · '+esc(v.erzaehlt?t('Geschichte erzählt','story told'):t('Akt','Act')+' '+v.akt+'/'+v.akte):''} · ${esc(t('Zug','Turn'))} ${v.zug}${st?' · '+esc(st):''}</small></div>${v.vorlesen?`<button type="button" class="b dm-hear" data-dmhear="1"${v.ton_zug.length?'':' disabled'}>${esc(v.liest?t('🔊 wird gesprochen …','🔊 being spoken …'):t('🔊 Hören','🔊 Listen'))}</button>`:''}${v.ich?`<button type="button" class="b dm-help" data-dmhilfe="${DMA.hilfe?0:1}">${esc('❔ '+t('So spielst du','How to play'))}</button>`:''}${dmModus()}<button type="button" class="b dm-full" data-dmvoll="${DMA.voll?0:1}">${esc(DMA.voll?'✕ '+t('Vollbild aus','Exit full screen'):'⛶ '+t('Vollbild','Full screen'))}</button></div>
     ${v.ich?dmHilfe():''}<div class="dm-grid"><div class="dm-col dm-group"><h5>${esc(t('Gruppe','Group'))} · ${all}/${v.max}</h5>${group}</div>
-    <div class="dm-col dm-story">${dmScene(v,mode)}<div class="dm-feed" aria-live="polite">${log}</div>${input}</div>
+    <div class="dm-col dm-story">${dmBack(v)}${dmScene(v,mode)}<div class="dm-feed" aria-live="polite">${log}</div>${input}</div>
     <div class="dm-col dm-side"><h5>${esc(t('Zug','Turn'))} ${v.zug}</h5><div class="dm-round">${v.plaetze.filter(p=>!p.frei).map(p=>`<span class="${p.gehandelt?'on':''}"></span>`).join('')}</div>
     <small class="mut dm-left">${esc(v.status==='ende'?t('Die Runde ist zu Ende.','The round has ended.'):v.dm?t('Der Dungeon-Master erzählt …','The Dungeon Master is narrating …'):`${done} ${t('von','of')} ${all} ${t('haben gehandelt','have acted')}`+(done&&!v.pause?t(' · weiter spätestens in ',' · goes on at the latest in ')+Math.max(0,Math.round(v.rest-(Date.now()-S.at)/1000))+' s':''))}</small>
-    ${dmMap(v)}${host}${dmMe(v,mode)}</div></div>${dmMsg(S)}`;
+    ${dmMap(v)}${dmDate(v,mode)}${host}${dmMe(v,mode)}</div></div>${dmMsg(S)}`;
   if(mode==='g')dmImgFill(w);
   dmDingFill(w,mode);
   const f=w.querySelector('.dm-feed');if(f)f.scrollTop=f.scrollHeight;
@@ -312,7 +332,7 @@ async function dmMic(mode){const S=mode==='p'?DM:DG;
     catch(e){dmSay(S,mode==='p'?t('Das hat nicht geklappt.','That did not work.'):dgErr(e),true)}};
   rec.start();mode==='p'?dmDraw():dgDraw()}
 // the open page asks every poll seconds while it is to be seen; a redraw only when something changed (typing stays)
-function dmSig(v){return v?[v.zug,v.log.length,v.dm,v.pause,v.status,v.vorlesen,v.liest,(v.ton_zug||[]).join(),v.akt,v.erzaehlt,v.plaetze.map(p=>[p.pid,p.gehandelt,p.online,p.leben,p.stufe].join()).join('|'),v.meine_aktion,JSON.stringify(v.ich),JSON.stringify(v.angebote||[]),JSON.stringify(v.markt||null),(v.boden||[]).map(x=>x.i).join(),v.plaetze.map(p=>(p.tasche||[]).map(x=>x.i).join()).join('|'),(v.bilder||[]).map(x=>x.b).join(),v.bild_malt,v.bild_hint,v.bild_grund,v.portraet_malt,v.portraet_hint,(v.orte||[]).join('|'),v.plaetze.map(p=>p.bild).join()].join('#'):''}
+function dmSig(v){return v?[v.zug,v.log.length,v.dm,v.pause,v.status,v.vorlesen,v.liest,(v.ton_zug||[]).join(),v.akt,v.erzaehlt,v.plaetze.map(p=>[p.pid,p.gehandelt,p.online,p.leben,p.stufe].join()).join('|'),v.meine_aktion,JSON.stringify(v.ich),JSON.stringify(v.angebote||[]),JSON.stringify(v.markt||null),(v.boden||[]).map(x=>x.i).join(),v.plaetze.map(p=>(p.tasche||[]).map(x=>x.i).join()).join('|'),(v.bilder||[]).map(x=>x.b).join(),v.bild_malt,v.bild_hint,v.bild_grund,v.portraet_malt,v.portraet_hint,(v.orte||[]).join('|'),v.plaetze.map(p=>p.bild).join(),v.termin,v.melden].join('#'):''}
 setInterval(async()=>{if(document.visibilityState!=='visible')return;
   if(DM.v&&$('dmview')&&$('dungeon').classList.contains('on')&&!DM.busy&&Date.now()-DM.at>=DM.v.poll*1000){const old=dmSig(DM.v);DM.at=Date.now();
     const {r,d}=await apiTry('/api/profile/dungeon/'+DM.rid);if(r.ok&&DM.v){DM.v=d;DM.at=Date.now();if(dmSig(d)!==old)dmDraw();else dmLeft(DM)}}
@@ -338,7 +358,7 @@ async function dmSend(path,b,S,x){if(S.busy)return null;S.busy=true;
   const o=x?xjson(x.method,Object.assign({lang:dmLang()},x.body||{})):b===null?{method:'DELETE'}:xjson('POST',Object.assign({lang:dmLang()},b||{}));const {r,d}=await apiTry(path,o);S.busy=false;
   if(!r.ok){dmSay(S,errSay(r.status,d.detail,''),true);return null}S.msg='';S.err=false;return d}
 // ---------------------------------------------------------------- clicks of the own page
-document.body.addEventListener('click',async e=>{const b=e.target.closest('#dmview [data-dmopen],#dmview [data-dmback],#dmview [data-dmmake],#dmview [data-dmseg],#dmview [data-dmgs],#dmview [data-dmsend],#dmview [data-dmhero],#dmview [data-dmweiter],#dmview [data-dmpause],#dmview [data-dmmarkt],#dmview [data-dminvite],#dmview [data-dmseatdel],#dmview [data-dmend],#dmview [data-dmdelhero],#dmview [data-dmwipe],#dmview [data-dmtx],#dmview [data-dmvorlesen],#dmview [data-dmkap],#dmview [data-dmhear],#dmview [data-dmvoll],#dmview [data-dmhilfe],#dmview [data-dmprobe],#dmview [data-dmmic],#dmview [data-dmkweiter],#dmview [data-dmkedit],#dmview [data-dmksave],#dmview [data-dmkneu],#dmview [data-dmkdel],#dmview [data-dmbild],#dmview [data-dmportraet]');
+document.body.addEventListener('click',async e=>{const b=e.target.closest('#dmview [data-dmopen],#dmview [data-dmback],#dmview [data-dmmake],#dmview [data-dmseg],#dmview [data-dmgs],#dmview [data-dmsend],#dmview [data-dmhero],#dmview [data-dmweiter],#dmview [data-dmpause],#dmview [data-dmmarkt],#dmview [data-dminvite],#dmview [data-dmseatdel],#dmview [data-dmend],#dmview [data-dmdelhero],#dmview [data-dmwipe],#dmview [data-dmtx],#dmview [data-dmvorlesen],#dmview [data-dmkap],#dmview [data-dmhear],#dmview [data-dmvoll],#dmview [data-dmhilfe],#dmview [data-dmprobe],#dmview [data-dmmic],#dmview [data-dmkweiter],#dmview [data-dmkedit],#dmview [data-dmksave],#dmview [data-dmkneu],#dmview [data-dmkdel],#dmview [data-dmbild],#dmview [data-dmportraet],#dmview [data-dmtermin],#dmview [data-dmmelden]');
   if(!b)return;const B=b.dataset,w=$('dmview'),rid=DM.rid;
   if(B.dmseg!==undefined){b.parentNode.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));if(b.closest('.dmf-welt'))dmWorld(w,B.dmseg);return}
   if(B.dmgs!==undefined){dmStory(w,b);return}
@@ -380,6 +400,10 @@ document.body.addEventListener('click',async e=>{const b=e.target.closest('#dmvi
   else if(B.dmvorlesen)d=await dmSend(`/api/profile/dungeon/${rid}/vorlesen`,{an:B.dmvorlesen==='1'},DM);
   else if(B.dmbild)d=await dmSend(`/api/profile/dungeon/${rid}/bild`,{},DM);
   else if(B.dmportraet)d=await dmSend(`/api/profile/dungeon/${rid}/portraet`,{},DM);
+  else if(B.dmmelden)d=await dmSend(`/api/profile/dungeon/${rid}/melden`,{an:B.dmmelden==='1'},DM);
+  else if(B.dmtermin){const x=w.querySelector('.dm-tin'),tt=B.dmtermin==='1'&&x&&x.value?Math.floor(new Date(x.value).getTime()/1000):0;
+    if(B.dmtermin==='1'&&!(tt*1000>Date.now())){dmSay(DM,t('Bitte einen Zeitpunkt in der Zukunft wählen (höchstens 60 Tage).','Please pick a time in the future (60 days at most).'),true);return}
+    d=await dmSend(`/api/profile/dungeon/${rid}/termin`,{t:tt},DM)}
   else if(B.dminvite){d=await dmSend(`/api/profile/dungeon/${rid}/platz`,{base:location.origin},DM);if(d)DM.made={link:d.link,qr:d.qr}}
   else if(B.dmseatdel)d=await dmSend(`/api/profile/dungeon/${rid}/platz/${B.dmseatdel}`,null,DM);
   else if(B.dmend){if(!DM.ende){DM.ende=true;dmDraw();return}DM.ende=false;
