@@ -17120,6 +17120,166 @@
           }
         }
       }
+    },
+    "Noch keine Runde.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No round yet."
+          }
+        }
+      }
+    },
+    "Spielen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Play"
+          }
+        }
+      }
+    },
+    "Runden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rounds"
+          }
+        }
+      }
+    },
+    "Neue Runden und das nächste Kapitel legst du im Browser an. Spielen öffnet den Spieltisch hier in der App.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You start new rounds and the next chapter in the browser. Play opens the table here in the app."
+          }
+        }
+      }
+    },
+    "Meine Helden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "My heroes"
+          }
+        }
+      }
+    },
+    "Noch keine Helden.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No heroes yet."
+          }
+        }
+      }
+    },
+    "%@ · Stufe %lld · Leben %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · level %lld · life %@"
+          }
+        }
+      }
+    },
+    "Kampagnen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Campaigns"
+          }
+        }
+      }
+    },
+    "%@ · Kapitel %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · chapter %lld"
+          }
+        }
+      }
+    },
+    "Der Dungeon-Master schreibt die Zusammenfassung …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Dungeon Master is writing the summary …"
+          }
+        }
+      }
+    },
+    "Entwurf": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Draft"
+          }
+        }
+      }
+    },
+    "Dungeon-Master": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dungeon Master"
+          }
+        }
+      }
+    },
+    "Kapitel %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chapter %lld"
+          }
+        }
+      }
+    },
+    "Zug %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn %lld"
+          }
+        }
+      }
+    },
+    "%lld Spieler": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld players"
+          }
+        }
+      }
+    },
+    "beendet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ended"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

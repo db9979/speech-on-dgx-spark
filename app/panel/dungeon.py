@@ -39,6 +39,7 @@ Origin is refused (Richtlinie Teil 3 „Links für Leute ohne Profil“). The jo
     STATE/dungeon-figuren.json   {"figuren": {fid: {"h", "held", "until"}}}   heroes of guests taken along (hashes)
     STATE/dungeon-regeln.json    the admin's own rules and catalog entries (check_rules)
     users/<id>/dungeon-helden.json  {"helden": [hero]}
+    users/<id>/dungeon-kampagnen.json  {"kampagnen": {kid: campaign}}   chapters, „Bisher geschah“, the guests' heroes
 
     GET    /api/profile/dungeon                   rules for a new round, own rounds, own heroes
     POST   /api/profile/dungeon/runde             {titel, welt, einstieg, ton, zug_s, stunden, prompt?, held, lang}
@@ -53,8 +54,15 @@ Origin is refused (Richtlinie Teil 3 „Links für Leute ohne Profil“). The jo
     DELETE /api/profile/dungeon/{rid}             host: end the round (heroes of profiles are kept)
     POST   /api/profile/dungeon/beitreten         {code, held}: take a seat with the own login
     DELETE /api/profile/dungeon/held/{hid}        delete an own hero
+    POST   /api/profile/dungeon/{rid}/kapitel     host: close the chapter into its campaign („Bisher geschah“)
+    PUT    /api/profile/dungeon/kampagne/{kid}    host: {bisher} own words; POST …/{kid}/neu writes it again
+    POST   /api/profile/dungeon/kampagne/{kid}/weiter   host: {held} the next chapter; DELETE …/{kid} deletes it
     DELETE /api/profile/dungeon/daten             all own data of the game (also while blocked)
-    POST   /api/dungeon/platz|beitreten|lage|aktion|held|figur   the seat of a guest, {code, ...} (dungeon.js)
+    POST   /api/profile/dungeon/{rid}/vorlesen    host: {an} read the narration aloud (narrator and NPC voice)
+    GET    /api/profile/dungeon/{rid}/ton/{n}     the turn n read aloud (WAV, the last TON_ZUEGE turns)
+    POST   /api/profile/dungeon/{rid}/hoeren      {wav}: speak instead of type, the text for the own field
+    POST   /api/profile/dungeon/{rid}/sitzcode    a code for the own seat, for the app's web view (shown once)
+    POST   /api/dungeon/platz|beitreten|lage|aktion|held|figur|ton|hoeren   the seat of a guest, {code, ...} (dungeon.js)
     GET    /api/admin/dungeon, PUT /api/admin/dungeon, DELETE /api/admin/dungeon   the admin's rules
 """
 import asyncio
@@ -71,13 +79,14 @@ import time
 from urllib.parse import urlsplit
 
 from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import Response
 
 import features
 import guard
 import mfa
 import profiles
 import textnorm
-from common import STATE, DayCounter, no_think, read_json, write_json
+from common import STATE, DayCounter, load_config, model_url, no_think, read_json, write_json
 from core import assistant, auth, browser_profile, json_body, own_profile, spawn
 
 router = APIRouter()
@@ -86,12 +95,23 @@ FILE = os.path.join(STATE, "dungeon-runden.json")
 FIGUREN = os.path.join(STATE, "dungeon-figuren.json")
 EIGENE = os.path.join(STATE, "dungeon-regeln.json")
 HELDEN = "dungeon-helden.json"
+TON_DIR = os.path.join(STATE, "dungeon-ton")
+KAMPAGNEN = "dungeon-kampagnen.json"
 
 RUNDEN_MAX = 3            # open rounds per host
 ALLE_MAX = 20             # open rounds on the Spark
 HELDEN_MAX = 8            # kept heroes per profile
 FIGUREN_MAX = 200         # Figur-Codes on the Spark
 FIGUR_TAGE = 30
+KAMPAGNEN_MAX = 10        # campaigns per host
+BISHER_MAX = 800          # „Bisher geschah“ of a campaign
+QUELLE_MAX = 12           # narrations of a chapter its summary is written from
+GAESTE_MAX = 4            # heroes of guests a campaign keeps for the next chapter
+TON_ZUEGE = 3             # turns read aloud a round keeps
+TON_ZEICHEN = 1800        # characters of one turn read aloud
+TON_BYTES = 32 * 1024 * 1024
+HOER_BYTES = 1024 * 1024  # one recording (16 kHz mono WAV: about 30 s)
+STIMMEN = ("erzaehler", "npc")
 TEXT_MAX = 300            # one action
 NAME_MAX = 24
 SATZ_MAX = 120
@@ -120,9 +140,11 @@ _RID = re.compile(r"r[0-9a-f]{10}")
 _PID = re.compile(r"p[0-9a-f]{8}")
 _HID = re.compile(r"h[0-9a-f]{10}")
 _IID = re.compile(r"i[0-9a-f]{8}")
+_KID = re.compile(r"k[0-9a-f]{8}")
+_VOICE = re.compile(r"[\w .\-]{0,40}")
 _WORD = re.compile(r"[a-z0-9_]{1,24}")
 KEY = "\0dungeongast"     # one lockout entry for every wrong code from one address (guard.py)
-WAS = ("anlegen", "ablegen", "trinken", "schenken", "punkt", "faehigkeit", "tauschen", "annehmen", "ablehnen")
+WAS = ("anlegen", "ablegen", "trinken", "wirken", "schenken", "punkt", "faehigkeit", "tauschen", "annehmen", "ablehnen")
 TASCHE = 12               # items in one bag
 ANGEBOTE_MAX = 3          # open trade offers one seat may make
 TAUSCH_TEILE = 4          # items on one side of an offer
@@ -131,11 +153,16 @@ SLOTS = {"waffe": "waffe", "ruestung": "ruestung", "schmuck": "schmuck"}
 FOLGE_ARTEN = ("schaden", "heilung")
 ANLAESSE = ("gegner", "truhe", "belohnung", "boss")
 ERFOLG_ARTEN = ("gegner", "ziel")
-ARTEN = ("waffe", "ruestung", "schmuck", "trank", "rolle")
+ARTEN = ("waffe", "ruestung", "schmuck", "trank", "zauber", "rolle")
+ZIELE = ("selbst", "gruppe")   # whom a spell reaches
+SEGEN_MAX = 4             # blessings (potions, spells) a hero carries at once
 _lock = threading.RLock()   # _end and keep_hero run inside it
 _seen = {}                # seat id -> last ask (memory only, so polling never writes)
 _running = set()          # rounds whose Dungeon Master is answering right now
-_day = DayCounter(zuege=0, beute=0, stufen=0, ausfall=0, verworfen=0, abgelehnt=0, runden=0)
+_summing = set()          # campaigns whose „Bisher geschah“ is being written right now
+_speaking = set()         # rounds whose last turn is being read aloud right now
+_tts = [None]             # one TTS job of the game at a time (asyncio.Lock, made in the loop)
+_day = DayCounter(zuege=0, beute=0, stufen=0, ausfall=0, verworfen=0, abgelehnt=0, runden=0, kapitel=0, vorgelesen=0, gehoert=0)
 
 
 # ---------------------------------------------------------------- the rules: shipped, the admin's own, merged
@@ -168,7 +195,7 @@ def merge(base, own):
                 else:
                     r[k].append({kk: vv for kk, vv in e.items() if kk != "aus"})
                     have[e.get("id")] = len(r[k]) - 1
-        elif k in ("grenzen", "ep", "anlass", "gold", "start") and isinstance(v, dict):
+        elif k in ("grenzen", "ep", "anlass", "gold", "start", "stimmen") and isinstance(v, dict):
             r[k] = dict(r[k], **v)
         else:
             r[k] = v
@@ -243,8 +270,13 @@ def check_rules(r):
             need(_int(x.get("schaden"), 2, 12) and x.get("wert") in werte, f"gegenstaende {x.get('id')}: waffe braucht schaden 2 bis 12 und wert")
         if x.get("art") == "ruestung":
             need(_int(x.get("schutz"), 0, 4), f"gegenstaende {x.get('id')}: schutz 0 bis 4")
-        if x.get("art") == "trank":
-            need(_int(x.get("heilung"), 1, 30), f"gegenstaende {x.get('id')}: heilung 1 bis 30")
+        if x.get("art") in ("trank", "zauber"):
+            sg = x.get("segen")
+            need(_int(x.get("heilung", 0), 0, 30) and (x.get("heilung") or sg) and (sg is None or isinstance(sg, dict)
+                 and sg.get("wert") in werte and _int(sg.get("bonus"), 1, 4) and _int(sg.get("zuege"), 1, 5)),
+                 f"gegenstaende {x.get('id')}: heilung 0 bis 30 und/oder segen {{wert, bonus 1 bis 4, zuege 1 bis 5}}")
+        if x.get("art") == "zauber":
+            need(x.get("ziel") in ZIELE and _pair(x.get("satz")), f"gegenstaende {x.get('id')}: zauber braucht ziel (selbst oder gruppe) und satz")
         need("klassen" not in x or isinstance(x["klassen"], list) and set(x["klassen"]) <= kids, f"gegenstaende {x.get('id')}: klassen nur aus den Klassen")
     for k in r.get("klassen") or []:
         need(all(items.get(w, {}).get("art") == "waffe" for w in k.get("waffen") or []), f"klassen {k.get('id')}: waffen nur Gegenstände der Art waffe")
@@ -273,6 +305,9 @@ def check_rules(r):
     st = r.get("start") or {}
     need(_int(st.get("gold"), 0, 1000) and isinstance(st.get("tasche"), list) and all(t in items for t in st["tasche"]), "start: gold und tasche aus den Gegenständen")
     need(_pair(r.get("ausfall"), 300), "ausfall: [deutsch, englisch]")
+    sv = r.get("stimmen")
+    need(isinstance(sv, dict) and set(sv) <= set(STIMMEN) and all(isinstance(x, str) and _VOICE.fullmatch(x) for x in sv.values()),
+         "stimmen: erzaehler und npc, je ein Stimmenname (höchstens 40 Zeichen) oder leer")
     return err
 
 
@@ -339,7 +374,7 @@ def new_hero(r, b, rng=None):
          "satz": _clean(b.get("satz"), SATZ_MAX), "stufe": 1, "ep": 0, "werte": werte, "leben": klasse["leben"],
          "leben_max": klasse["leben"], "gold": r["start"]["gold"], "waffe": item(r, klasse["waffen"][0], rng=rng),
          "ruestung": None, "schmuck": None, "tasche": [item(r, x, rng=rng) for x in r["start"]["tasche"]],
-         "faehigkeiten": [], "punkte": 0, "wahl": [], "ohne_selten": 0, "seit_fund": 0, "aufstieg": ""}
+         "faehigkeiten": [], "punkte": 0, "wahl": [], "ohne_selten": 0, "seit_fund": 0, "aufstieg": "", "segen": []}
     return h
 
 
@@ -358,6 +393,9 @@ def fix_hero(r, h):
     h["faehigkeiten"] = [x for x in h.get("faehigkeiten") or [] if x in fa]
     h["wahl"] = [x for x in h.get("wahl") or [] if x in fa][:2]
     h["stufe"] = max(1, min(int(h.get("stufe") or 1), r["grenzen"]["stufe_max"]))
+    werte = {w["id"] for w in r["werte"]}
+    h["segen"] = [x for x in h.get("segen") or [] if isinstance(x, dict) and x.get("wert") in werte
+                  and _int(x.get("bonus"), 1, 4) and _int(x.get("zuege"), 1, 5)][-SEGEN_MAX:]
     return h
 
 
@@ -383,7 +421,20 @@ def total(r, h, wert):
         if e and e["wert"] == wert:
             v += e["bonus"]
     v += sum(fa[x]["bonus"] for x in h["faehigkeiten"] if x in fa and fa[x]["wert"] == wert)
+    v += sum(x["bonus"] for x in h.get("segen") or [] if x["wert"] == wert)
     return v
+
+
+def bless(h, sg, name):
+    """A blessing of a potion or spell: its bonus for the next turns (the newest SEGEN_MAX count)."""
+    h["segen"] = ((h.get("segen") or []) + [{"wert": sg["wert"], "bonus": sg["bonus"], "zuege": sg["zuege"], "von": name[:40]}])[-SEGEN_MAX:]
+
+
+def wear_off(rd):
+    """After a narrated turn every blessing has one turn less."""
+    for _, p in seated(rd):
+        h = p["held"]
+        h["segen"] = [dict(x, zuege=x["zuege"] - 1) for x in h.get("segen") or [] if x["zuege"] > 1]
 
 
 def schutz(r, h):
@@ -405,8 +456,14 @@ def item_view(r, it, lang):
         zeilen.append(("Schutz {}" if not li else "Protection {}").format(c.get("schutz", 0) + it.get("bonus", 0)))
     if it.get("wert") and it.get("bonus"):
         zeilen.append(f"{w[it['wert']]['name'][li]} +{it['bonus']}")
-    if c["art"] == "trank":
-        zeilen.append(("Heilt {}" if not li else "Heals {}").format(c["heilung"]))
+    if c["art"] in ("trank", "zauber"):
+        if c["art"] == "zauber":
+            zeilen.append(c["satz"][li] + (" (ganze Gruppe)" if c["ziel"] == "gruppe" and not li else " (whole group)" if c["ziel"] == "gruppe" else ""))
+        if c.get("heilung"):
+            zeilen.append(("Heilt {}" if not li else "Heals {}").format(c["heilung"] + it.get("bonus", 0)))
+        if c.get("segen"):
+            sg = c["segen"]
+            zeilen.append(("{} +{} für {} Züge" if not li else "{} +{} for {} turns").format(w[sg["wert"]]["name"][li], sg["bonus"], sg["zuege"]))
     if e:
         zeilen.append(e["satz"][li])
     return {"i": it["i"], "id": it["id"], "art": c["art"], "name": it.get("eigen") or c["name"][li], "satz": it.get("satz", ""),
@@ -428,6 +485,8 @@ def hero_view(r, h, lang, full=True):
                schutz=schutz(r, h), slots={s: item_view(r, h[s], lang) if h.get(s) else None for s in SLOTS},
                tasche=[item_view(r, x, lang) for x in h["tasche"]],
                faehigkeiten=[{"id": x, "name": fa[x]["name"][li], "satz": fa[x]["satz"][li]} for x in h["faehigkeiten"] if x in fa],
+               segen=[{"name": x.get("von", ""), "wert": _by(r, "werte")[x["wert"]]["name"][li], "bonus": x["bonus"], "zuege": x["zuege"]}
+                      for x in h.get("segen") or []],
                wahl=[{"id": x, "name": fa[x]["name"][li], "satz": fa[x]["satz"][li]} for x in h["wahl"] if x in fa])
     return out
 
@@ -529,10 +588,13 @@ def _prune(d, now):
     keep = {}
     for k, v in d["runden"].items():
         if v.get("owner") not in have:
+            _ton_drop(k)
             continue
         if v.get("status") == "ende":
             if now - v.get("ende_t", 0) < ENDE_H * 3600:
                 keep[k] = v
+            else:
+                _ton_drop(k)
             continue
         if v.get("until", 0) <= now:
             _end(v, now, "zeit")
@@ -567,7 +629,8 @@ def _in_play(d, hid):
                for p in v["plaetze"].values())
 
 
-def make_round(owner, b, lang, now=None):
+def make_round(owner, b, lang, now=None, kampagne=None):
+    """A new round; kampagne {"kid", "kapitel", "vorher"} makes it the next chapter of a campaign (next_chapter)."""
     r = rules()
     now = int(time.time() if now is None else now)
     g = r["grenzen"]
@@ -602,8 +665,11 @@ def make_round(owner, b, lang, now=None):
                             "einstieg": _clean(b.get("einstieg"), EINSTIEG_MAX), "prompt": prompt, "made": now,
                             "until": now + stunden * 3600, "status": "laeuft", "zug": 1, "zug_t": now, "pause": False,
                             "offen": {}, "still": {}, "szene": {"ort": "", "stimmung": ""}, "log": [], "dm": "",
+                            "stunden": stunden, "vorlesen": bool(b.get("vorlesen")),
                             "plaetze": {pid: {"h": "", "uid": owner, "held": h, "made": now, "gast": False}}}
         rd = d["runden"][rid]
+        if kampagne:
+            rd.update(kid=kampagne["kid"], kapitel=kampagne["kapitel"], vorher=kampagne["vorher"])
         _log(rd, "system", text=["Die Runde beginnt. Schreibt, was eure Figuren tun.", "The round begins. Write what your characters do."])
         _write(d)
     _day.bump("runden")
@@ -683,6 +749,8 @@ def join(rid, pid, b, uid="", now=None):
         h = next((x for x in heroes(uid) if x["hid"] == b["held"]), None)
         if not h:
             raise LookupError("held")
+    elif not uid and isinstance(b.get("kampagne"), str):
+        h = "kampagne"            # taken under the lock below, so two guests never take the same hero
     elif b.get("figur"):
         # a guest's saved hero; taken by a profile it stays in that profile's heroes from now on
         h = take_figure(b.get("figur"), now)
@@ -700,6 +768,12 @@ def join(rid, pid, b, uid="", now=None):
         p = rd["plaetze"].get(pid)
         if not p or rd["status"] == "ende":
             raise LookupError("runde")
+        if h == "kampagne":
+            if p.get("held"):
+                raise FileExistsError("besetzt")
+            h = take_campaign_hero(rd, b["kampagne"])
+            if not h:
+                raise LookupError("held")
         if p.get("held") or (uid and seat_of(rd, uid)[0]) or _in_play(d, h["hid"]):
             raise FileExistsError("besetzt")
         if any(x["held"]["name"].lower() == h["name"].lower() for _, x in seated(rd)):
@@ -754,6 +828,207 @@ def take_figure(code, now):
                     h["aufstieg"] = ""
                 return h
     return None
+
+
+# ---------------------------------------------------------------- campaigns (Stufe 2: chapters with „Bisher geschah“)
+def _kfile(uid):
+    return profiles._path(uid, KAMPAGNEN)
+
+
+def campaigns(uid):
+    d = read_json(_kfile(uid), {})
+    ks = d.get("kampagnen") if isinstance(d, dict) else None
+    return {k: v for k, v in (ks or {}).items() if _KID.fullmatch(k) and isinstance(v, dict)}
+
+
+def _save_campaigns(uid, ks):
+    write_json(_kfile(uid), {"kampagnen": ks}, mode=0o600)
+
+
+def _campaign(uid, kid):
+    ks = campaigns(uid)
+    if not _KID.fullmatch(str(kid)) or kid not in ks:
+        raise LookupError("kampagne")
+    return ks, ks[kid]
+
+
+def end_chapter(owner, rid, now=None):
+    """The host closes a chapter: the round ends (heroes of profiles are kept), its narrations, the heroes of the
+    profiles (by hid) and copies of the guests' heroes go into the campaign (a new one for a round without), and the
+    model writes „Bisher geschah“ in the background (summarize). Returns the campaign's id."""
+    now = int(time.time() if now is None else now)
+    with _lock:
+        d = _read()
+        rd = _round(d, rid)
+        if rd["owner"] != owner or rd.get("kapitel_zu"):
+            raise LookupError("runde")
+        ks = campaigns(owner)
+        kid = rd.get("kid") if rd.get("kid") in ks else None
+        if not kid and len(ks) >= KAMPAGNEN_MAX:
+            raise OverflowError("kampagnen")
+        if rd["status"] != "ende":
+            _end(rd, now, "kapitel")
+        c = ks.get(kid) or {"titel": rd["titel"], "welt": rd["welt"], "ton": rd["ton"], "zug_s": rd["zug_s"],
+                            "stunden": rd.get("stunden") or rules()["grenzen"]["stunden"][0], "lang": rd["lang"],
+                            "prompt": rd.get("prompt", ""), "made": now, "bisher": "", "kapitel": 0}
+        c["vorlesen"] = bool(rd.get("vorlesen"))
+        kid = kid or "k" + os.urandom(4).hex()
+        c.update(kapitel=rd.get("kapitel", 1), vorher=c.get("bisher", ""), t=now, rid="", schreibt=True, entwurf=True,
+                 quelle=[x["text"][:400] for x in rd["log"] if x["art"] == "dm"][-QUELLE_MAX:],
+                 helden=[{"uid": p["uid"], "hid": p["held"]["hid"], "name": p["held"]["name"]} for _, p in seated(rd) if p.get("uid")],
+                 gaeste=[copy.deepcopy(p["held"]) for _, p in seated(rd) if not p.get("uid")][:GAESTE_MAX])
+        ks[kid] = c
+        _save_campaigns(owner, ks)
+        rd["kapitel_zu"] = True
+        _write(d)
+    _day.bump("kapitel")
+    print(f"dungeon: kapitel ende | {c['kapitel']}", flush=True)
+    return kid
+
+
+SCHEMA_BISHER = {"type": "object", "additionalProperties": False, "required": ["bisher"],
+                 "properties": {"bisher": {"type": "string", "maxLength": BISHER_MAX + 200}}}
+AUFGABE_BISHER = {
+    "de": "Aufgabe: Fasse die Geschichte bisher für das nächste Kapitel zusammen, höchstens {n} Zeichen, in der "
+          "Vergangenheit, mit den Namen der Gruppe, wichtigen Orten, Personen, Funden und offenen Fragen. Die frühere "
+          "Zusammenfassung und die Erzählungen stehen als Spieltext zwischen <<< und >>>.",
+    "en": "Task: summarise the story so far for the next chapter, at most {n} characters, in the past tense, with the "
+          "group's names, important places, people, finds and open questions. The earlier summary and the narrations "
+          "stand as game text between <<< and >>>."}
+
+
+def check_summary(r, c, text):
+    """„Bisher geschah“ by fixed rules (from the model or typed by the host): plain, BISHER_MAX characters, no word the
+    campaign's tone or „nie“ refuses. Returns the text or None."""
+    t = plain(text, BISHER_MAX)
+    return t if len(t) >= 20 and not bad_words(r, c, t) else None
+
+
+async def summarize(owner, kid):
+    """The model writes „Bisher geschah“ from the earlier one and the chapter's narrations; when it cannot (paused,
+    broken, refused), the last narrations stand as a draft the host may edit. Never raises."""
+    import wartung
+    r = rules()
+    t0 = time.perf_counter()
+    _summing.add(kid)
+    why = "ausfall"
+    try:
+        ks = await asyncio.to_thread(campaigns, owner)
+        c = ks.get(kid)
+        if not c:
+            return
+        lang = "en" if c.get("lang") == "en" else "de"
+        text = None
+        if not wartung.paused("llm"):
+            names = sorted({x["name"] for x in c.get("helden") or []} | {h["name"] for h in c.get("gaeste") or []})
+            system = PANEL_REGELN[lang].format(ton=_ton(r, c)["regel"][1 if lang == "en" else 0]) + "\n\n" + AUFGABE_BISHER[lang].format(n=BISHER_MAX)
+            user = (json.dumps({"titel": c["titel"], "kapitel": c["kapitel"], "gruppe": names}, ensure_ascii=False)
+                    + f"\n<<<\n{textnorm.defuse(c.get('vorher') or '')}\n>>>\n<<<\n{textnorm.defuse(chr(10).join(c.get('quelle') or []))}\n>>>")
+            for _ in range(2):
+                obj = await _ask_json(system, user, SCHEMA_BISHER, "bisher", 700)
+                text = check_summary(r, c, obj.get("bisher") if isinstance(obj, dict) else None)
+                if text:
+                    why = "ok"
+                    break
+        if not text:
+            text = plain(" ".join(filter(None, [c.get("vorher")] + (c.get("quelle") or [])[-2:])), BISHER_MAX)
+
+        def keep():
+            with _lock:
+                ks = campaigns(owner)
+                if kid in ks:
+                    ks[kid].update(bisher=text, schreibt=False, entwurf=why != "ok")
+                    _save_campaigns(owner, ks)
+        await asyncio.to_thread(keep)
+    finally:
+        _summing.discard(kid)
+    print(f"dungeon: bisher | {why} | {round((time.perf_counter() - t0) * 1000)} ms", flush=True)
+
+
+def edit_summary(owner, kid, text):
+    with _lock:
+        ks, c = _campaign(owner, kid)
+        t = check_summary(rules(), c, text)
+        if not t or c.get("schreibt"):
+            raise ValueError("bisher")
+        c.update(bisher=t, entwurf=False)
+        _save_campaigns(owner, ks)
+    print("dungeon: bisher geaendert", flush=True)
+
+
+def rewrite_mark(owner, kid):
+    """Before summarize runs again: the campaign shows that it is being written."""
+    with _lock:
+        ks, c = _campaign(owner, kid)
+        if c.get("schreibt") or not c.get("quelle"):
+            raise ValueError("bisher")
+        c["schreibt"] = True
+        _save_campaigns(owner, ks)
+
+
+def next_chapter(owner, kid, b, lang, now=None):
+    """The next chapter: a new round with the campaign's settings and its „Bisher geschah“; the host brings a kept
+    hero (by hid) or a new one, the guests get new seat links and take their heroes from the campaign (join)."""
+    ks, c = _campaign(owner, kid)
+    if c.get("schreibt"):
+        raise TimeoutError("bisher")
+    if c.get("rid") and (_read()["runden"].get(c["rid"]) or {}).get("status") == "laeuft":
+        raise FileExistsError("kapitel laeuft")
+    held = b.get("held")
+    if not held:
+        mine = {h["hid"] for h in heroes(owner)}
+        held = next((x["hid"] for x in c.get("helden") or [] if x["uid"] == owner and x["hid"] in mine), None)
+    if not held:
+        raise LookupError("held")
+    rb = {k: c.get(k) for k in ("titel", "welt", "ton", "zug_s", "stunden", "prompt", "vorlesen")}
+    rid = make_round(owner, dict(rb, held=held, einstieg=""), c.get("lang") or lang, now,
+                     kampagne={"kid": kid, "kapitel": c["kapitel"] + 1, "vorher": c.get("bisher", "")})
+    with _lock:
+        ks, c = _campaign(owner, kid)
+        c.update(rid=rid, t=int(time.time() if now is None else now))
+        _save_campaigns(owner, ks)
+    print(f"dungeon: kapitel neu | {c['kapitel'] + 1}", flush=True)
+    return rid
+
+
+def drop_campaign(owner, kid):
+    with _lock:
+        ks, _ = _campaign(owner, kid)
+        ks.pop(kid)
+        _save_campaigns(owner, ks)
+    print("dungeon: kampagne geloescht", flush=True)
+
+
+def campaign_heroes(rd):
+    """The guests' heroes a chapter's campaign keeps (for a free seat of that chapter)."""
+    if not rd.get("kid"):
+        return []
+    c = campaigns(rd["owner"]).get(rd["kid"]) or {}
+    playing = {p["held"]["hid"] for _, p in seated(rd)}
+    return [h for h in (fix_hero(rules(), x) for x in c.get("gaeste") or []) if h and h["hid"] not in playing]
+
+
+def take_campaign_hero(rd, hid):
+    """A guest takes its hero of the last chapter; it leaves the campaign until the chapter ends again."""
+    for h in campaign_heroes(rd):
+        if h["hid"] == hid:
+            ks = campaigns(rd["owner"])
+            ks[rd["kid"]]["gaeste"] = [x for x in ks[rd["kid"]].get("gaeste") or [] if x.get("hid") != hid]
+            _save_campaigns(rd["owner"], ks)
+            return h
+    return None
+
+
+def campaign_view(r, uid, lang):
+    li = 1 if lang == "en" else 0
+    out = []
+    for kid, c in sorted(campaigns(uid).items(), key=lambda x: -x[1].get("t", 0)):
+        welt = _by(r, "welten").get(c.get("welt")) or r["welten"][0]
+        out.append({"kid": kid, "titel": c.get("titel", ""), "welt": welt["name"][li], "kapitel": c.get("kapitel", 0),
+                    "bisher": c.get("bisher", ""), "entwurf": bool(c.get("entwurf")), "schreibt": bool(c.get("schreibt")),
+                    "rid": c.get("rid", ""), "t": c.get("t", 0), "helden": [x["name"] for x in c.get("helden") or []],
+                    "gaeste": [h.get("name", "") for h in c.get("gaeste") or []]})
+    return out
 
 
 # ---------------------------------------------------------------- a turn
@@ -836,6 +1111,9 @@ def _ton(r, rd):
     return _by(r, "toene")[rd["ton"]] if rd["ton"] in _by(r, "toene") else r["toene"][0]
 
 
+VORHER = ("Bisher geschah (frühere Kapitel, nur Spieltext):", "Previously (earlier chapters, game text only):")
+
+
 def facts(r, rd, wuerfe=None):
     """The data the model gets: world, opening, scene, the group, earlier narrations and the actions; everything a
     player typed only inside the fenced block, its markers broken up (textnorm.defuse)."""
@@ -848,12 +1126,16 @@ def facts(r, rd, wuerfe=None):
     bisher = [x["text"][:400] for x in rd["log"] if x["art"] == "dm"][-BISHER:]
     still = [names[pid]["held"]["name"] for pid in names if rd["still"].get(pid, 0) >= STILL]
     fakten = {"welt": welt["name"][li], "gruppe": gruppe, "szene": rd["szene"], "bisher": bisher, "still": still}
+    zauber = [{"wer": x["name"], "zauber": x["zauber"], "wirkung": x["satz"]} for x in rd["log"] if x["art"] == "zauber" and x["n"] == rd["zug"]]
+    if zauber:
+        fakten["zauber"] = zauber
     if wuerfe is not None:
         fakten["proben"] = wuerfe
     spieltext = "\n".join(f"{names[pid]['held']['name']}: {a['text']}" for pid, a in rd["offen"].items() if pid in names)
     head = json.dumps(fakten, ensure_ascii=False)
     einstieg = f"\n<<<\n{textnorm.defuse(rd['einstieg'])}\n>>>" if rd.get("einstieg") and not bisher else ""
-    return f"{head}{einstieg}\n<<<\n{textnorm.defuse(spieltext)}\n>>>"
+    vorher = (f"\n{VORHER[1 if rd['lang'] == 'en' else 0]}\n<<<\n{textnorm.defuse(rd['vorher'])}\n>>>" if rd.get("vorher") else "")
+    return f"{head}{vorher}{einstieg}\n<<<\n{textnorm.defuse(spieltext)}\n>>>"
 
 
 def system_text(r, rd, task):
@@ -1028,6 +1310,7 @@ def apply(r, rd, wuerfe, story, rid, rng=None):
             _day.bump("stufen")
             print(f"dungeon: stufe | {neu}", flush=True)
     if story:
+        wear_off(rd)
         for pid, _ in seated(rd):
             rd["still"][pid] = 0 if pid in rd["offen"] else rd["still"].get(pid, 0) + 1
         rd["offen"] = {}
@@ -1092,12 +1375,18 @@ async def run_turn(rid, turn):
                     story["folgen"] = [f for f in story["folgen"] if f["pid"] in seats]
                     story["frage"] = story["frage"] if story["frage"] in seats else ""
                 apply(r, cur, [w for w in wuerfe if w["pid"] in seats] if story else [], story, rid)
+                if story and cur.get("vorlesen"):
+                    e = next(x for x in reversed(cur["log"]) if x["art"] == "dm")
+                    said.extend(speak_parts(r, e["text"], e.get("npc") or []))
                 cur["dm"] = ""
                 _write(d)
                 for p in cur["plaetze"].values():
                     if p.get("uid") and p.get("held"):
                         keep_hero(p["uid"], p["held"])
+        said = []
         await asyncio.to_thread(keep)
+        if said:
+            spawn(speak_turn(rid, turn, said), name="dungeon")
         if why != "ok":
             _day.bump("ausfall")
         _day.bump("zuege")
@@ -1139,6 +1428,179 @@ def maybe_close(rid, now=None, force=False):
     return True
 
 
+# ---------------------------------------------------------------- read aloud and speak (Stufe 2)
+def voices(r):
+    s = r.get("stimmen") or {}
+    return {k: str(s.get(k) or "") for k in STIMMEN}
+
+
+async def ask_tts(text, voice):
+    """One part spoken by the Spark's speech output as 16-bit mono PCM (tests replace this)."""
+    import httpx
+    from core import api_headers
+    cfg = load_config()
+    body = {"input": text, "response_format": "pcm"}
+    if voice:
+        body["voice"] = voice
+    out = bytearray()
+    async with httpx.AsyncClient(timeout=httpx.Timeout(DM_S * 2, connect=5)) as c:
+        async with c.stream("POST", model_url("tts", "/v1/audio/speech", cfg), json=body, headers=api_headers()) as r:
+            if r.status_code != 200:
+                raise RuntimeError("tts")
+            async for part in r.aiter_bytes():
+                out += part
+                if len(out) > TON_BYTES:
+                    raise RuntimeError("tts")
+    return bytes(out)
+
+
+def _pcm(b):
+    """The samples of a WAV (a TTS that ignores response_format) or the PCM as it came."""
+    if b[:4] == b"RIFF":
+        i = b.find(b"data", 12)
+        return b[i + 8:] if i > 0 else b""
+    return b
+
+
+def ton_file(rid, n):
+    return os.path.join(TON_DIR, f"{rid}-{int(n)}.wav")
+
+
+def _ton_drop(rid, keep=()):
+    try:
+        names = os.listdir(TON_DIR)
+    except FileNotFoundError:
+        return
+    for f in names:
+        if f.startswith(rid + "-") and f not in keep:
+            try:
+                os.remove(os.path.join(TON_DIR, f))
+            except FileNotFoundError:
+                pass
+
+
+def speak_parts(r, story_text, npc):
+    """What a turn reads aloud: the narration in the narrator's voice, then each NPC in the NPC voice."""
+    v = voices(r)
+    parts = [(v["erzaehler"], story_text)] + [(v["npc"], f"{n['name']}: {n['sagt']}") for n in npc]
+    out, n = [], 0
+    for voice, text in parts:
+        if n + len(text) > TON_ZEICHEN:
+            break
+        out.append((voice, text))
+        n += len(text)
+    return out
+
+
+async def speak_turn(rid, n, parts):
+    """The turn n read aloud, once for every seat: one TTS job on the Spark at a time (the TTS slows down with many
+    at once), kept as STATE/dungeon-ton/<rid>-<n>.wav for the last TON_ZUEGE turns. Never raises."""
+    import begleiter
+    import verbrauch
+    import wartung
+    t0 = time.perf_counter()
+    why = "ok"
+    _speaking.add(rid)
+    try:
+        if wartung.paused("tts"):
+            why = "pause"
+            return
+        async with _tts_lock():
+            pcm = bytearray()
+            for voice, text in parts:
+                pcm += _pcm(await asyncio.wait_for(ask_tts(text, voice), DM_S * 2))
+                pcm += b"\0" * 14400        # 0.3 s between the voices
+                if len(pcm) > TON_BYTES:
+                    raise RuntimeError("tts")
+        wav = begleiter.wav_of(bytes(pcm))
+
+        def keep():
+            os.makedirs(TON_DIR, mode=0o700, exist_ok=True)
+            with open(ton_file(rid, n) + ".neu", "wb") as f:
+                f.write(wav)
+            os.chmod(ton_file(rid, n) + ".neu", 0o600)
+            os.replace(ton_file(rid, n) + ".neu", ton_file(rid, n))
+            with _lock:
+                d = _read()
+                rd = d["runden"].get(rid)
+                if rd:
+                    rd["ton_n"] = (rd.get("ton_n") or [])[-(TON_ZUEGE - 1):] + [n]
+                    _write(d)
+                    _ton_drop(rid, {os.path.basename(ton_file(rid, x)) for x in rd["ton_n"]})
+        await asyncio.to_thread(keep)
+        verbrauch.spoken("Dungeon-Master", wav=wav)
+        _day.bump("vorgelesen")
+    except Exception:
+        why = "ausfall"
+    finally:
+        _speaking.discard(rid)
+        print(f"dungeon: vorlesen | {why} | {len(parts)} teile | {round((time.perf_counter() - t0) * 1000)} ms", flush=True)
+
+
+def _tts_lock():
+    if _tts[0] is None:
+        _tts[0] = asyncio.Lock()
+    return _tts[0]
+
+
+def ton_of(rid, pid, n):
+    """The WAV of turn n for a seat of the round, or LookupError."""
+    rd = _round(_read(), rid)
+    if pid not in rd["plaetze"] or not isinstance(n, int) or n not in (rd.get("ton_n") or []):
+        raise LookupError("ton")
+    try:
+        with open(ton_file(rid, n), "rb") as f:
+            return f.read()
+    except FileNotFoundError:
+        raise LookupError("ton")
+
+
+async def ask_asr(wav, lang):
+    """Text of a recording through the Spark's speech recognition (tests replace this)."""
+    import httpx
+    import verbrauch
+    from core import api_headers
+    cfg = load_config()
+    async with httpx.AsyncClient(timeout=httpx.Timeout(DM_S, connect=5)) as c:
+        r = await c.post(model_url("asr", "/v1/audio/transcriptions", cfg), files={"file": ("aktion.wav", wav)},
+                         data={"language": lang, "response_format": "json"}, headers=api_headers())
+    verbrauch.heard("Dungeon-Master", r)
+    r.raise_for_status()
+    return str(r.json().get("text", ""))
+
+
+def _wav_in(b):
+    """The recording of a seat: base64 of a WAV, at most HOER_BYTES; else ValueError."""
+    import base64
+    try:
+        wav = base64.b64decode(str(b.get("wav") or ""), validate=True)
+    except ValueError:
+        raise ValueError("ton")
+    if not 44 < len(wav) <= HOER_BYTES or wav[:4] != b"RIFF" or wav[8:12] != b"WAVE":
+        raise ValueError("ton")
+    return wav
+
+
+async def hear(rid, wav):
+    """Speak instead of type: the recording as text for the seat's own field (never sent by itself)."""
+    import wartung
+    rd = _round(await asyncio.to_thread(_read), rid)
+    if rd["status"] != "laeuft":
+        raise LookupError("runde")
+    if wartung.paused("asr"):
+        print("dungeon: hoeren | pause", flush=True)
+        raise HTTPException(503, "Die Spracherkennung macht gerade Pause.")
+    t0 = time.perf_counter()
+    try:
+        text = _clean(no_think(await asyncio.wait_for(ask_asr(wav, "en" if rd["lang"] == "en" else "de"), DM_S)), TEXT_MAX)
+    except Exception:
+        print("dungeon: hoeren | ausfall", flush=True)
+        raise HTTPException(502, "Die Spracherkennung hat nicht geantwortet.")
+    _day.bump("gehoert")
+    print(f"dungeon: hoeren | ok | {len(text)} zeichen | {round((time.perf_counter() - t0) * 1000)} ms", flush=True)
+    return {"text": text}
+
+
 # ---------------------------------------------------------------- what a seat sees
 def view(rid, pid, now=None):
     r = rules()
@@ -1163,6 +1625,8 @@ def view(rid, pid, now=None):
     left = max(0, int(rd["zug_s"] - (now - rd.get("zug_t", now)))) if rd["offen"] and not rd.get("pause") else rd["zug_s"]
     welt = _by(r, "welten").get(rd["welt"]) or r["welten"][0]
     return {"rid": rid, "pid": pid, "titel": rd["titel"], "welt": welt["name"][li], "ton": _ton(r, rd)["name"][li],
+            "kapitel": rd.get("kapitel", 0), "kapitel_zu": bool(rd.get("kapitel_zu")), "vorlesen": bool(rd.get("vorlesen")),
+            "ton_zug": (rd.get("ton_n") or [])[-1:], "liest": rid in _speaking, "hoer_max": HOER_BYTES,
             "zug": rd["zug"], "status": rd["status"], "pause": bool(rd.get("pause")), "dm": bool(rd.get("dm")),
             "rest": left, "zug_s": rd["zug_s"], "szene": rd["szene"], "gastgeber": host, "lang": lang,
             "ich": hero_view(r, me["held"], lang) if me.get("held") else None,
@@ -1207,8 +1671,26 @@ def hero_act(rid, pid, b):
             if not c or c["art"] != "trank":
                 raise ValueError("kein trank")
             h["tasche"].remove(it)
-            h["leben"] = min(h["leben_max"], h["leben"] + c["heilung"] + it.get("bonus", 0))
-            _log(rd, "folge", pid=pid, name=h["name"], was="heilung", zahl=c["heilung"] + it.get("bonus", 0), leben=h["leben"])
+            if c.get("heilung"):
+                h["leben"] = min(h["leben_max"], h["leben"] + c["heilung"] + it.get("bonus", 0))
+                _log(rd, "folge", pid=pid, name=h["name"], was="heilung", zahl=c["heilung"] + it.get("bonus", 0), leben=h["leben"])
+            if c.get("segen"):
+                bless(h, c["segen"], item_view(r, it, rd["lang"])["name"])
+        elif was == "wirken":
+            # a spell from the bag, used up: its healing and blessing for the hero or the whole group, by the catalog;
+            # the model only hears that it was cast (facts) and narrates it
+            c = _by(r, "gegenstaende").get(it["id"]) if it else None
+            if not c or c["art"] != "zauber":
+                raise ValueError("kein zauber")
+            h["tasche"].remove(it)
+            name = item_view(r, it, rd["lang"])["name"]
+            for x in ([p["held"] for _, p in seated(rd)] if c["ziel"] == "gruppe" else [h]):
+                if c.get("heilung"):
+                    x["leben"] = min(x["leben_max"], x["leben"] + c["heilung"] + it.get("bonus", 0))
+                if c.get("segen"):
+                    bless(x, c["segen"], name)
+            _log(rd, "zauber", pid=pid, name=h["name"], zauber=name, gruppe=c["ziel"] == "gruppe",
+                 satz=c["satz"][1 if rd["lang"] == "en" else 0])
         elif was == "schenken":
             an = rd["plaetze"].get(b.get("an"))
             if not it or not an or not an.get("held") or b.get("an") == pid or len(an["held"]["tasche"]) >= TASCHE:
@@ -1332,26 +1814,32 @@ def for_live():
     return {"on": True, "runden": len(rs), "spieler": len(seats), "online": sum(1 for k, _ in seats if now - _seen.get(k, 0) < ONLINE_S),
             "gaeste": sum(1 for _, p in seats if p.get("gast")), "denkt": len(_running), "zuege": t["zuege"],
             "beute": t["beute"], "stufen": t["stufen"], "ausfall": t["ausfall"], "verworfen": t["verworfen"],
-            "abgelehnt": t["abgelehnt"]}
+            "abgelehnt": t["abgelehnt"], "kampagnen": sum(len(campaigns(u)) for u in profiles.user_ids()),
+            "kapitel": t["kapitel"], "schreibt": len(_summing), "vorgelesen": t["vorgelesen"], "liest": len(_speaking),
+            "gehoert": t["gehoert"]}
 
 
 def own_count(uid):
-    return len(heroes(uid)) + sum(1 for v in _read()["runden"].values() if v.get("owner") == uid)
+    return len(heroes(uid)) + len(campaigns(uid)) + sum(1 for v in _read()["runden"].values() if v.get("owner") == uid)
 
 
 def own_clear(uid):
-    """„Meine Daten löschen“ and a deleted profile: the own heroes, the own rounds, the own seats in other rounds."""
+    """„Meine Daten löschen“ and a deleted profile: the own heroes, campaigns and rounds, the own seats in other rounds."""
     with _lock:
         d = _read()
+        for k, v in d["runden"].items():
+            if v.get("owner") == uid:
+                _ton_drop(k)
         d["runden"] = {k: v for k, v in d["runden"].items() if v.get("owner") != uid}
         for v in d["runden"].values():
             v["plaetze"] = {k: p for k, p in v["plaetze"].items() if p.get("uid") != uid}
             v["offen"] = {k: a for k, a in v["offen"].items() if k in v["plaetze"]}
         _write(d)
-        try:
-            os.remove(_hfile(uid))
-        except FileNotFoundError:
-            pass
+        for f in (_hfile(uid), _kfile(uid)):
+            try:
+                os.remove(f)
+            except FileNotFoundError:
+                pass
     print("dungeon: daten geloescht | eigene daten", flush=True)
 
 
@@ -1390,9 +1878,11 @@ def _mine(uid, lang):
         pid, p = seat_of(v, uid)
         if pid and (v.get("status") != "ende" or now - v.get("ende_t", 0) < ENDE_H * 3600):
             out.append({"rid": rid, "titel": v["titel"], "status": v["status"], "zug": v["zug"], "gastgeber": v["owner"] == uid,
+                        "kapitel": v.get("kapitel", 0), "kapitel_zu": bool(v.get("kapitel_zu")),
                         "spieler": len(seated(v)), "made": v["made"], "held": p["held"]["name"] if p.get("held") else ""})
     return {"on": True, "runden": sorted(out, key=lambda x: -x["made"]), "helden": [hero_view(r, h, lang) for h in heroes(uid)],
-            "wahl": _choices(lang), "runden_max": RUNDEN_MAX, "helden_max": HELDEN_MAX}
+            "wahl": _choices(lang), "runden_max": RUNDEN_MAX, "helden_max": HELDEN_MAX,
+            "kampagnen": campaign_view(r, uid, lang), "kampagnen_max": KAMPAGNEN_MAX, "bisher_max": BISHER_MAX}
 
 
 KNOWN = (ValueError, LookupError, OverflowError, FileExistsError, NameError, TimeoutError, PermissionError)
@@ -1608,6 +2098,152 @@ async def beenden(rid: str, request: Request, prof=Depends(browser_profile)):
         raise _http(e)
 
 
+@router.post("/api/profile/dungeon/{rid}/vorlesen", dependencies=[Depends(assistant)])
+async def vorlesen(rid: str, request: Request, prof=Depends(browser_profile)):
+    """Host: {an: bool} reads every narration aloud from the next turn on."""
+    uid = prof["id"]
+    _need(uid)
+    guard.limit(request, "dungeon", uid)
+    b = await json_body(request, BODY)
+
+    def go():
+        with _lock:
+            d = _read()
+            rd = _round(d, rid)
+            if rd["owner"] != uid or rd["status"] == "ende":
+                raise LookupError("gastgeber")
+            rd["vorlesen"] = bool(b.get("an"))
+            _write(d)
+        print(f"dungeon: vorlesen | {'an' if b.get('an') else 'aus'}", flush=True)
+        return view(rid, _seat_uid(rid, uid))
+    try:
+        return await asyncio.to_thread(go)
+    except KNOWN as e:
+        raise _http(e)
+
+
+@router.get("/api/profile/dungeon/{rid}/ton/{n}", dependencies=[Depends(assistant)])
+async def ton(rid: str, n: int, request: Request, prof=Depends(own_profile)):
+    uid = prof["id"]
+    _need(uid)
+    guard.limit(request, "dungeon", uid)
+    try:
+        wav = await asyncio.to_thread(lambda: ton_of(rid, _seat_uid(rid, uid), n))
+    except KNOWN as e:
+        raise _http(e)
+    return Response(wav, media_type="audio/wav", headers={"Cache-Control": "no-store"})
+
+
+@router.post("/api/profile/dungeon/{rid}/hoeren", dependencies=[Depends(assistant)])
+async def hoeren(rid: str, request: Request, prof=Depends(browser_profile)):
+    """{"wav"}: speak instead of type (base64 of a 16 kHz WAV), the text comes back for the own field."""
+    uid = prof["id"]
+    _need(uid)
+    guard.limit(request, "dungeonohr", uid)
+    b = await json_body(request, HOER_BYTES * 4 // 3 + BODY)
+    try:
+        await asyncio.to_thread(_seat_uid, rid, uid)
+        return await hear(rid, _wav_in(b))
+    except KNOWN as e:
+        raise _http(e)
+
+
+@router.post("/api/profile/dungeon/{rid}/sitzcode", dependencies=[Depends(assistant)])
+async def sitzcode(rid: str, request: Request, prof=Depends(browser_profile)):
+    """The app's table: a code for the profile's own seat of the round (shown once, only its hash kept, a newer one
+    replaces it, it ends with the round); the app opens <panel>/#spiel=<code> in its web view."""
+    uid = prof["id"]
+    _need(uid)
+    guard.limit(request, "dungeon", uid)
+    code = secrets.token_urlsafe(24)
+
+    def go():
+        with _lock:
+            d = _read()
+            rd = _round(d, rid)
+            pid, p = seat_of(rd, uid)
+            if not pid or rd["status"] == "ende":
+                raise LookupError("platz")
+            p["h"] = _hash(code)
+            _write(d)
+    try:
+        await asyncio.to_thread(go)
+    except KNOWN as e:
+        raise _http(e)
+    print("dungeon: sitzcode | app", flush=True)
+    return {"code": code}
+
+
+@router.post("/api/profile/dungeon/{rid}/kapitel", dependencies=[Depends(assistant)])
+async def kapitel(rid: str, request: Request, prof=Depends(browser_profile)):
+    """The host closes the chapter: the round ends into its campaign, „Bisher geschah“ is written in the background."""
+    uid = prof["id"]
+    _need(uid)
+    guard.limit(request, "dungeon", uid)
+    b = await json_body(request, BODY)
+    try:
+        kid = await asyncio.to_thread(end_chapter, uid, rid)
+    except KNOWN as e:
+        raise _http(e)
+    spawn(summarize(uid, kid), name="dungeon")
+    return dict(await asyncio.to_thread(_mine, uid, _lang(b)), kid=kid)
+
+
+@router.put("/api/profile/dungeon/kampagne/{kid}", dependencies=[Depends(assistant)])
+async def kampagne_aendern(kid: str, request: Request, prof=Depends(browser_profile)):
+    """{"bisher"}: the host's own words for „Bisher geschah“ (the same checks as the model's)."""
+    uid = prof["id"]
+    _need(uid)
+    guard.limit(request, "dungeon", uid)
+    b = await json_body(request, BODY)
+    try:
+        await asyncio.to_thread(edit_summary, uid, kid, b.get("bisher"))
+    except KNOWN as e:
+        raise _http(e)
+    return await asyncio.to_thread(_mine, uid, _lang(b))
+
+
+@router.post("/api/profile/dungeon/kampagne/{kid}/neu", dependencies=[Depends(assistant)])
+async def kampagne_neu_schreiben(kid: str, request: Request, prof=Depends(browser_profile)):
+    """„Neu schreiben lassen“: the model writes „Bisher geschah“ of the last chapter again."""
+    uid = prof["id"]
+    _need(uid)
+    guard.limit(request, "dungeon", uid)
+    b = await json_body(request, BODY)
+    try:
+        await asyncio.to_thread(rewrite_mark, uid, kid)
+    except KNOWN as e:
+        raise _http(e)
+    spawn(summarize(uid, kid), name="dungeon")
+    return await asyncio.to_thread(_mine, uid, _lang(b))
+
+
+@router.post("/api/profile/dungeon/kampagne/{kid}/weiter", dependencies=[Depends(assistant)])
+async def kampagne_weiter(kid: str, request: Request, prof=Depends(browser_profile)):
+    """{"held": hid | {...} | ""}: the next chapter as a new round; without a hero the host's hero of the last one."""
+    uid = prof["id"]
+    _need(uid)
+    guard.limit(request, "dungeon", uid)
+    b = await json_body(request, BODY)
+    try:
+        rid = await asyncio.to_thread(next_chapter, uid, kid, b, _lang(b))
+    except KNOWN as e:
+        raise _http(e)
+    return await asyncio.to_thread(view, rid, await asyncio.to_thread(_seat_uid, rid, uid))
+
+
+@router.delete("/api/profile/dungeon/kampagne/{kid}", dependencies=[Depends(assistant)])
+async def kampagne_weg(kid: str, request: Request, prof=Depends(browser_profile)):
+    """Delete a campaign (also while blocked: own data); its rounds and the profiles' heroes stay."""
+    uid = prof["id"]
+    guard.limit(request, "dungeon", uid)
+    try:
+        await asyncio.to_thread(drop_campaign, uid, kid)
+    except KNOWN as e:
+        raise _http(e)
+    return await asyncio.to_thread(_mine, uid, "en" if request.query_params.get("lang") == "en" else "de")
+
+
 @router.post("/api/profile/dungeon/beitreten", dependencies=[Depends(assistant)])
 async def beitreten_profil(request: Request, prof=Depends(browser_profile)):
     """{"code", "held": hid | {name, volk, klasse, satz}}: a profile takes a seat link for its own login."""
@@ -1659,9 +2295,9 @@ def _door(request):
     guard.check(request, KEY)
 
 
-async def _guest(request):
+async def _guest(request, size=BODY):
     _door(request)
-    b = await json_body(request, BODY)
+    b = await json_body(request, size)
     rid, pid = await asyncio.to_thread(find, b.get("code"))
     if not rid:
         _day.bump("abgelehnt")
@@ -1680,7 +2316,9 @@ async def gast_platz(request: Request):
     host = profiles.by_id(rd["owner"]) or {}
     out = {"titel": rd["titel"], "von": host.get("name", ""), "frei": not p.get("held"), "until": rd["until"],
            "spieler": len(seated(rd)), "max": rules()["grenzen"]["spieler"], "wahl": _choices(rd["lang"]),
-           "profil_genommen": bool(p.get("uid"))}
+           "profil_genommen": bool(p.get("uid")), "kapitel": rd.get("kapitel", 0),
+           "kampagne_helden": [] if p.get("held") else [hero_view(rules(), h, rd["lang"], full=False) for h in
+                                                         await asyncio.to_thread(campaign_heroes, rd)]}
     return out
 
 
@@ -1731,12 +2369,35 @@ async def gast_figur(request: Request):
     try:
         rd = _round(await asyncio.to_thread(_read), rid)
         h = rd["plaetze"][pid].get("held")
-        if not h:
+        if not h or rd["plaetze"][pid].get("uid"):      # a profile's hero (the app's own seat code) stays with it
             raise LookupError("held")
         code = await asyncio.to_thread(make_figure, h)
     except KNOWN as e:
         raise _http(e)
     return {"figur": code, "tage": FIGUR_TAGE}
+
+
+@router.post("/api/dungeon/ton")
+async def gast_ton(request: Request):
+    """{"code", "zug"}: the turn read aloud as WAV, the same file for every seat."""
+    b, rid, pid = await _guest(request)
+    try:
+        wav = await asyncio.to_thread(ton_of, rid, pid, b.get("zug"))
+    except KNOWN as e:
+        raise _http(e)
+    return Response(wav, media_type="audio/wav", headers={"Cache-Control": "no-store"})
+
+
+@router.post("/api/dungeon/hoeren")
+async def gast_hoeren(request: Request):
+    """{"code", "wav"}: speak instead of type, the text comes back for the seat's own field."""
+    b, rid, pid = await _guest(request, HOER_BYTES * 4 // 3 + BODY)
+    guard.limit(request, "dungeonohr")
+    try:
+        wav = _wav_in(b)
+        return await hear(rid, wav)
+    except KNOWN as e:
+        raise _http(e)
 
 
 # ---------------------------------------------------------------- the admin's rules (Funktionen → Dungeon-Master)

@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.953** · 2026-10-23 · KI-Dungeon-Master Stufe 2: Kampagnen mit „Bisher geschah“ und Kapiteln, Erzählung vorlesen mit Erzähler- und NPC-Stimme, Sprechen statt Tippen, iPhone-Seite mit Spieltisch in der App; viel mehr Gegenstände, Tränke mit Segen und Zauber zum Wirken
 - **V01.0.952** · 2026-10-23 · ROT-FIX: der .951-Lauf fiel rot, weil der Azure-Mirror die 94 MB ffmpeg-Abhängigkeiten so langsam lieferte, dass das kurze Schritt-Timeout einen noch laufenden Download abwürgte; jetzt macht apt selbst nur bei einer *hängenden* Verbindung Schluss (Acquire::http::Timeout 60, Retries 5) und ein langsamer Download läuft weiter, jeder Netz-Schritt unter großzügigem Deckel, Job-Limit 45 → 60 min
 - **V01.0.951** · 2026-10-23 · ROT-FIX: der .950-Lauf fiel rot, weil beim Jobstart noch unattended-upgrades die dpkg-Sperre hielt und „playwright install --with-deps“ sofort mit „Could not get lock … code 100“ abbrach; jetzt wartet jedes apt per DPkg::Lock::Timeout bis zu 5 min auf die Sperre, statt an der Flake rot zu fallen
 - **V01.0.950** · 2026-10-23 · Tests-Workflow robuster: die Netz-Schritte beim Install (Playwright-Browser, apt) brachen auf manchen Runnern 35-42 min ein und liefen in das 45-min-Limit; jetzt mit kurzem Timeout und drei Versuchen je Schritt, kein Test wird berührt

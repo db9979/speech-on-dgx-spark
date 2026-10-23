@@ -247,7 +247,7 @@ class Things(unittest.TestCase):
              "ichweiss": ("GET", "/api/profile/ichweiss", 200), "tasks": ("GET", "/api/profile/tasks", 200),
              "vorgaenge": ("GET", "/api/profile/vorgaenge", 200), "contacts": ("GET", "/api/profile/contacts/page", 200),
              "kontakteaendern": ("POST", "/api/profile/contacts/card", 400),
-             "einladungen": ("GET", "/api/profile/mail/invite", 400)}
+             "einladungen": ("GET", "/api/profile/mail/invite", 400), "dungeon": ("GET", "/api/profile/dungeon", 200)}
 
     app, uid = Areas.app, Areas.uid
 
@@ -264,11 +264,11 @@ class Things(unittest.TestCase):
     def setUp(self):
         helpers.keep_chat(self, "iphone", "iphone_panel", "bilder", "musik", "deny", "documents", "knowledge_book", "knowledge_map",
                           "calendar", "mail", "mail_manage", "mail_send", "calendar_server", "mail_insight", "tasks", "reminders", "vorgaenge",
-                          "contacts", "contacts_edit", "mail_invites")
+                          "contacts", "contacts_edit", "mail_invites", "dungeon")
         helpers.set_config(iphone=True, iphone_panel=False, bilder=True, musik=True, deny={}, documents=True,
                            knowledge_book=True, knowledge_map=True, calendar=True, mail=True, mail_manage=True, mail_send=True,
                            calendar_server=True, mail_insight=True, tasks=True, reminders=True, vorgaenge=True,
-                           contacts=True, contacts_edit=True, mail_invites=True)
+                           contacts=True, contacts_edit=True, mail_invites=True, dungeon=True)
         for name in ("image", "music"):     # the picture and music models count as installed
             old = self.section(name, enabled=True)
             self.addCleanup(lambda n=name, o=old: self.section(n, **dict({"enabled": False}, **o)))

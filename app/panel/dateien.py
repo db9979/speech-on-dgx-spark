@@ -101,6 +101,8 @@ DATEIEN = [
            "Open: what needs you, what you put off for later and what is done (titles and state of the cards); a proposal waiting for your yes, with the mail's text only until it is answered", art="Warteschlange"),
     profil("dungeon-helden.json", "KI-Dungeon-Master: deine Helden mit Stufe, Werten, Ausrüstung und Fähigkeiten (nur Spieldaten)",
            "AI Dungeon Master: your heroes with level, values, equipment and abilities (game data only)", art="Zustand"),  # dungeon.py
+    profil("dungeon-kampagnen.json", "KI-Dungeon-Master: deine Kampagnen mit „Bisher geschah“, den Erzählungen des letzten Kapitels und den Figuren der Gäste",
+           "AI Dungeon Master: your campaigns with the story so far, the last chapter's narrations and the guests' characters", art="Zustand"),  # dungeon.py
     profil("interessen.json", "Was ich über dich weiß: bestätigte und abgelehnte Interessen mit Thema und Absendern und der letzte Netz-Tipp (kein Betreff, keine Mail)",
            "What I know about you: confirmed and refused interests with topic and senders and the last web tip (no subject, never a mail)", art="Einstellungen"),
     profil("mailstil.json", "Mailstil (nur die Zusammenfassung, keine Mail)", "Mail style (only the summary, never a mail)", art="Einstellungen"),
@@ -197,6 +199,7 @@ DATEIEN = [
     state("mitschreib-links.json", "Mitschreib-Links für Listen (Hashes)", "Write links for lists (hashes)", sicherung="json", schutz=("nur Hashes", "hashes only")),  # links for people without a profile to put entries on one list (mitschreiblink.py)
     state("dungeon-runden.json", "KI-Dungeon-Master: Runden mit Plätzen (Hashes der Links), Helden, Aktionen und Erzählung", "AI Dungeon Master: rounds with seats (hashes of the links), heroes, actions and narration", sicherung="json", schutz=("nur Hashes", "hashes only")),  # rounds of the game (dungeon.py)
     state("dungeon-figuren.json", "KI-Dungeon-Master: Helden von Gästen zum Mitnehmen (Hashes der Figur-Codes)", "AI Dungeon Master: heroes of guests to take along (hashes of the hero codes)", sicherung="json", schutz=("nur Hashes", "hashes only")),  # Figur-Codes (dungeon.py)
+    state("dungeon-ton", "KI-Dungeon-Master: die vorgelesenen letzten Züge einer Runde (WAV, höchstens 3 je Runde)", "AI Dungeon Master: the last turns of a round read aloud (WAV, at most 3 per round)", lokal="Ton der letzten Züge, geht mit der Runde"),  # read aloud (dungeon.py)
     state("dungeon-regeln.json", "KI-Dungeon-Master: eigene Regeln und Katalog-Einträge des Admins", "AI Dungeon Master: the admin's own rules and catalog entries", sicherung="json"),  # Funktionen → KI-Dungeon-Master (dungeon.py)
     state("join.json", "Einladungen (Hashes)", "Invitations (hashes)", sicherung="json", schutz=("nur Hashes", "hashes only")),  # new people by invitation: the switch, invitations (code hashes) (join.py)
     # state/: every other file or folder, with the reason it stays out of a backup

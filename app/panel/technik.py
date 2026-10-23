@@ -169,7 +169,7 @@ MODULE = {
     "parcels": ("dienste", "Pakete aus Versand-Mails"),
     "geteilt": ("dienste", "Teilen mit Profilen: Dokumente an einzelne Profile, Ich → Geteilt, zurückziehen sofort"),
     "calendars": ("post", "Kalender und Tagesbriefing, einzelne Kalender mit anderen Profilen geteilt"),
-    "dungeon": ("dienste", "KI-Dungeon-Master: Rollenspiel bis 5 Spieler per Platz-Link; Modell erzählt, Panel würfelt, Beute, Stufen, Tausch"),
+    "dungeon": ("dienste", "KI-Dungeon-Master: Rollenspiel bis 5 per Platz-Link; Panel würfelt, Beute, Kampagnen, Vorlesen, Sprechen"),
     "mitschreiblink": ("dienste", "Mitschreib-Link: Leute ohne Profil setzen etwas auf eine Liste (Code nach dem #, nur Hash, mit Ablauf)"),
     "listendav": ("dienste", "Listen in Erinnerungen: die Spark-Listen eines Profils als Aufgabenlisten (VTODO) des Kalender-Servers"),
     "kalenderserver": ("post", "Kalender-Server: die Spark-Kalender eines Profils für Kalender-Apps (CalDAV unter /caldav/, App-Passwort)"),

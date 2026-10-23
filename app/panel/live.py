@@ -1721,13 +1721,16 @@ def snapshot(view="admin", now=None):
                         + (f" · {wbk['widerspruch']} Widersprüche" if wbk.get("widerspruch") else "")
                         + (f" · {wbk['veraltet']} veraltet?" if wbk.get("veraltet") else "")
                         + (" · arbeitet" if wbk.get("running") else ""))
-        if x["id"] == "dungeon":   # Dungeon-Master: rounds, players and guests, turns, loot and levels today (numbers only, never a name or a text)
+        if x["id"] == "dungeon":   # Dungeon-Master: rounds, players and guests, turns, loot, levels, campaigns, read aloud and spoken today (numbers only, never a name or a text)
             x["sub"] = (f"{dgn.get('runden', 0)} Runden · {dgn.get('spieler', 0)} Spieler, {dgn.get('online', 0)} da, {dgn.get('gaeste', 0)} Gäste"
                         + f" · heute {dgn.get('zuege', 0)} Züge, {dgn.get('beute', 0)} Beute, {dgn.get('stufen', 0)} Stufen"
                         + (f" · {dgn['ausfall']} ohne Erzählung" if dgn.get("ausfall") else "")
                         + (f" · {dgn['verworfen']} Teile verworfen" if dgn.get("verworfen") else "")
                         + (f" · {dgn['abgelehnt']} abgelehnt" if dgn.get("abgelehnt") else "")
-                        + (" · erzählt gerade" if dgn.get("denkt") else ""))
+                        + (" · erzählt gerade" if dgn.get("denkt") else "")
+                        + f" · {dgn.get('kampagnen', 0)} Kampagnen, heute {dgn.get('kapitel', 0)} Kapitel"
+                        + f" · heute {dgn.get('vorgelesen', 0)} vorgelesen, {dgn.get('gehoert', 0)} gesprochen"
+                        + (" · liest vor" if dgn.get("liest") else "") + (" · schreibt Bisher geschah" if dgn.get("schreibt") else ""))
         if x["id"] == "wkarte":    # Wissenskarte: connections, discarded, documents waiting, profiles, numbers only (never a title)
             x["sub"] = (f"{wkk.get('verbindungen', 0)} Verbindungen · {wkk.get('punkte', 0)} Punkte · {wkk.get('warten', 0)} Dokumente warten"
                         + f" · {wkk.get('profile', 0)} Profile"

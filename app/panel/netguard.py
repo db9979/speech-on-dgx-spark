@@ -112,6 +112,7 @@ DIRECT_OK = {
     "berater": ("sprachmodell", "Sprachmodell für den Einstellungs-Assistenten"),
     "chat": ("sprachmodell", "Sprachmodell und SearXNG; Seiten aus Suchergebnissen gehen über client()"),
     "rundlauf": ("sprachmodell", "Probelauf: Sprechen, Hören und Sprachmodell über common.model_url und llm.py, wie die Funktionsprüfung"),
+    "dungeon": ("sprachmodell", "Sprachausgabe und Spracherkennung des Spiels über common.model_url (eigene Dienste)"),
     "dienstwacht": ("sprachmodell", "Probe des Sprachmodells; die anderen Proben gehen über client() und resolve()"),
     "steuerzentrale": ("lokal", "nur das eigene Panel auf 127.0.0.1 (/api/schirm/zustand), mit dem Schlüssel der Steuerzentrale"),
     "gehaeuse": ("lokal", "eigene Ports auf 127.0.0.1 (Dienste-Seite des Displays) und ein UDP-Socket zum Modell-Rechner, der nichts sendet (eigene Adresse)"),

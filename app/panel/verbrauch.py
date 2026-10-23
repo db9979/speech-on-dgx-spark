@@ -113,6 +113,8 @@ AUFGABEN = {
     # agent, MCP, companion, documents
     "Agent": "agent", "MCP": "agent", "Schreibhilfe": "begleiter", "Begleiter": "begleiter",
     "Dokument erstellen": "dokumente", "Bild malen": "dokumente", "Bild ändern": "dokumente", "Musik machen": "dokumente",
+    # the game (dungeon.py): narration, reading aloud and speaking instead of typing
+    "Dungeon-Master": "sonstige",
 }
 
 WHO = contextvars.ContextVar("verbrauch_who", default=SPARK)

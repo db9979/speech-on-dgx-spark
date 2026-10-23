@@ -2266,6 +2266,7 @@ textarea{resize:none}textarea[data-fest]{resize:vertical}textarea.feldplatz{padd
 .dm-me h4{margin:12px 0 0;font-size:15px}.dm-line{display:flex;justify-content:space-between;font-size:13px;margin-top:6px}
 .dm-werte{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:8px;font-size:13px}.dm-plus{padding:0 6px!important;margin-left:4px;font-size:12px}
 .dm-hint{margin-top:8px;font-size:13px;color:var(--warnt);font-weight:600}
+.dm-segen{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}.dm-zauber{margin:6px 0;padding:6px 10px;border-radius:10px;border:1px solid color-mix(in srgb,var(--acc) 40%,var(--line));font-size:13px}
 .dm-fa{display:flex;flex-direction:column;align-items:flex-start;text-align:left;width:100%;margin-top:6px}.dm-fa-own{font-size:13px;margin-top:4px}
 .dm-slot{display:grid;grid-template-columns:70px minmax(0,1fr);gap:6px;align-items:start;margin-top:6px}
 .dm-item{border:1px solid var(--line);border-left:4px solid var(--line);border-radius:10px;padding:6px 9px;margin-top:6px;display:flex;flex-direction:column;gap:2px;font-size:13px}
@@ -2279,6 +2280,10 @@ textarea{resize:none}textarea[data-fest]{resize:vertical}textarea.feldplatz{padd
 .dm-figur{margin-top:12px;display:flex;flex-direction:column;gap:6px}
 .dm-form{display:flex;flex-direction:column;gap:6px;max-width:620px}.dm-two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .dm-seg{flex-wrap:wrap}.dmmsg{margin-top:8px;font-size:13px}
+.dm-mic{flex:none}.dm-mic.on{background:var(--bad);color:#fff;border-color:var(--bad)}.dm-hear{flex:none;margin-left:auto}
+.dm-kamp{display:flex;flex-direction:column;gap:10px;max-width:820px}.dm-k{border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.dm-k small{display:block}.dm-k .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--mut);margin-top:8px}
+.dm-bisher{margin:4px 0;font-family:Georgia,serif;overflow-wrap:anywhere}.dm-kedit{width:100%}.dm-check{display:flex;gap:8px;align-items:center}
 .dgcard{max-width:1100px;width:calc(100vw - 32px)}.dmadmcard{max-width:900px;width:calc(100vw - 32px)}.dmadmcard textarea{width:100%;min-height:50vh;font:12.5px/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 @media (max-width:980px){.dm-grid{grid-template-columns:1fr}.dm-feed{max-height:55vh}.dm-group{order:2}.dm-story{order:1}.dm-side{order:3}}
 @media (max-width:520px){.dm-two{grid-template-columns:1fr}.dm-slot{grid-template-columns:1fr}}

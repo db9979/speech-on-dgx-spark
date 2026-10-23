@@ -165,10 +165,10 @@ struct ThingsView: View {
                 ForEach(hits) { h in NavigationLink { h.page } label: { row(h) } }
             } else {
                 if let at = m.keptAt { StandNote(at: at, loading: m.loading).listRowBackground(Color.clear) }
-                // Kalender, E-Mail (KalenderPost.swift), Listen (ListenView.swift), Offen (Vorgaenge.swift), Kontakte: pages of their
+                // Kalender, E-Mail (KalenderPost.swift), Listen (ListenView.swift), Offen (Vorgaenge.swift), Kontakte, Dungeon-Master: pages of their
                 // own, like in the panel's menu
                 if a.areas.contains("calendar") || a.areas.contains("mail") || a.areas.contains("tasks") || a.areas.contains("vorgaenge")
-                    || a.areas.contains("contacts") {
+                    || a.areas.contains("contacts") || a.areas.contains("dungeon") {
                     Section {
                         if a.areas.contains("calendar") {
                             NavigationLink { KalenderView() } label: { Label("Kalender", systemImage: "calendar") }
@@ -184,6 +184,9 @@ struct ThingsView: View {
                         }
                         if a.areas.contains("contacts") {
                             NavigationLink { KontakteView() } label: { Label("Kontakte", systemImage: "person.crop.circle") }
+                        }
+                        if a.areas.contains("dungeon") {   // KI-Dungeon-Master (DungeonView.swift)
+                            NavigationLink { DungeonView() } label: { Label("Dungeon-Master", systemImage: "die.face.5") }
                         }
                     }
                 }
