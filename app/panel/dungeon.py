@@ -336,6 +336,10 @@ def check_rules(r):
     st = r.get("start") or {}
     need(_int(st.get("gold"), 0, 1000) and isinstance(st.get("tasche"), list) and all(t in items for t in st["tasche"]), "start: gold und tasche aus den Gegenständen")
     need(_pair(r.get("ausfall"), 300), "ausfall: [deutsch, englisch]")
+    for w in r.get("welten") or []:
+        f = w.get("farben") if isinstance(w, dict) else None
+        need(f is None or isinstance(f, dict) and set(f) <= set(FARBEN) and all(isinstance(x, str) and _FARBE.fullmatch(x) for x in f.values()),
+             f"welten {w.get('id') if isinstance(w, dict) else '?'}: farben nur {', '.join(FARBEN)} als #rrggbb")
     sv = r.get("stimmen")
     need(isinstance(sv, dict) and set(sv) <= set(STIMMEN) and all(isinstance(x, str) and _VOICE.fullmatch(x) for x in sv.values()),
          "stimmen: erzaehler und npc, je ein Stimmenname (höchstens 40 Zeichen) oder leer")
@@ -520,6 +524,17 @@ def hero_view(r, h, lang, full=True):
                       for x in h.get("segen") or []],
                wahl=[{"id": x, "name": fa[x]["name"][li], "satz": fa[x]["satz"][li]} for x in h["wahl"] if x in fa])
     return out
+
+
+def hero_card(r, h, lang):
+    """What every seat sees of a hero at the table: the three values in short, protection and what it wears."""
+    li = 1 if lang == "en" else 0
+    return {"werte": [{"kurz": w["name"][li][:3].upper(), "name": w["name"][li], "wert": total(r, h, w["id"])} for w in r["werte"]],
+            "schutz": schutz(r, h), "dinge": [item_view(r, h[s], lang)["name"] for s in SLOTS if h.get(s)]}
+
+
+FARBEN = ("grund", "karte", "pergament", "tinte", "gold")   # the colours of a world's table (welten[].farben)
+_FARBE = re.compile(r"#[0-9a-fA-F]{6}")
 
 
 def gain(r, h, ep, abend, rng=None):
@@ -1950,13 +1965,14 @@ def view(rid, pid, now=None):
             if host:
                 plaetze.append({"pid": p_id, "frei": True, "made": p.get("made", 0)})
             continue
-        plaetze.append(dict(hero_view(r, p["held"], lang, full=False), pid=p_id, gast=bool(p.get("gast")),
+        plaetze.append(dict(hero_view(r, p["held"], lang, full=False), pid=p_id, gast=bool(p.get("gast")), karte=hero_card(r, p["held"], lang),
                             gastgeber=p.get("uid") == rd["owner"], ich=p_id == pid, gehandelt=p_id in rd["offen"],
                             online=p_id == pid or now - _seen.get(p_id, 0) < ONLINE_S,
                             tasche=[] if p_id == pid else [item_view(r, x, lang) for x in p["held"]["tasche"]]))
     left = max(0, int(rd["zug_s"] - (now - rd.get("zug_t", now)))) if rd["offen"] and not rd.get("pause") else rd["zug_s"]
     welt = _by(r, "welten").get(rd["welt"]) or r["welten"][0]
     return {"rid": rid, "pid": pid, "titel": rd["titel"], "welt": welt["name"][li], "ton": _ton(r, rd)["name"][li],
+            "welt_id": welt["id"], "farben": {k: v for k, v in (welt.get("farben") or {}).items() if k in FARBEN},
             "kapitel": rd.get("kapitel", 0), "kapitel_zu": bool(rd.get("kapitel_zu")), "vorlesen": bool(rd.get("vorlesen")),
             "ton_zug": (rd.get("ton_n") or [])[-1:], "liest": rid in _speaking, "hoer_max": HOER_BYTES,
             "zug": rd["zug"], "status": rd["status"], "pause": bool(rd.get("pause")), "dm": bool(rd.get("dm")),

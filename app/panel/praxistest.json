@@ -2767,6 +2767,13 @@
 "titel": "Dungeon-Master: Vorteil, OOC, längere Anfänge",
 "text": "A: Update, neue Runde mit einem Gast: die erste Erzählung darf länger sein (bis 1500 Zeichen) und beschreibt Gerüche, Licht und Geräusche. B: Eine Aktion mit klarem Vorteil spielen (zum Beispiel „Ich greife den schlafenden Wächter von hinten an“): bei der Probe steht „Vorteil 14/7“ und der höhere Wurf zählt. C: Als Gast eine Meta-Frage schreiben („wie spät ist es?“): nur der Gast sieht eine Zeile „(OOC: …)“, der Gastgeber nicht.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P420",
+"v": 957,
+"titel": "Dungeon-Master: Spieltisch-Thema",
+"text": "A: Update, eine Runde öffnen: dunkler Tisch, Erzählung auf Pergament mit großem Anfangsbuchstaben, Aktionen als Sprechblasen, links Heldenkarten mit Werten und Ausrüstung, oben Titel und Ort. B: Eine Runde mit Welt Horror: Rot statt Gold. C: Handy: Geschichte zuerst, darunter Gruppe und eigener Bogen, nichts ragt seitlich heraus. D: Neue Runde, Helden und Regel-Fenster sehen weiter aus wie das übrige Panel. E: „⛶ Vollbild“: nur der Tisch füllt den Bildschirm, Esc beendet es; am iPhone füllt er das Fenster. F: Als Gast zum ersten Mal Platz nehmen: „So spielst du“ ist offen, „Schließen“ klappt es zu, der Knopf öffnet es wieder.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

@@ -435,6 +435,28 @@ class AdminRules(Base):
         self.assertEqual(ADMIN.delete("/api/admin/dungeon").status_code, 200)
         self.assertIn("dieb", {x["id"] for x in dungeon.rules()["klassen"]})
 
+    def test_table_colours_and_hero_cards(self):
+        r = dungeon.rules()
+        self.assertTrue(all(set(w.get("farben", {})) <= set(dungeon.FARBEN) for w in r["welten"]))
+        bad = dungeon.merge(dungeon._base_rules(), {"welten": [{"id": "fantasy", "name": ["F", "F"], "satz": ["s", "s"],
+                                                                 "farben": {"grund": "red;background:url(x)"}}]})
+        self.assertTrue([e for e in dungeon.check_rules(bad) if "farben" in e])   # only #rrggbb, nothing else into a style
+        v = self.new_round()
+        code, gp = self.guest(v["rid"])
+        g = self.v.post("/api/dungeon/lage", json={"code": code}).json()
+        self.assertEqual((g["welt_id"], g["farben"]["gold"]), ("fantasy", r["welten"][0]["farben"]["gold"]))
+        host = next(p for p in g["plaetze"] if p.get("gastgeber"))
+        self.assertEqual([x["wert"] for x in host["karte"]["werte"]], [dungeon.total(r, self.state(v["rid"])["plaetze"][v["pid"]]["held"], w["id"]) for w in r["werte"]])
+        self.assertEqual(len(host["karte"]["dinge"]), 1)                        # the starting weapon
+
+    def test_full_screen_and_guide_for_every_seat(self):
+        js = open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8").read()
+        for box in ("#dmview", "#dgcard"):                                      # the host's page and the guest's window
+            self.assertIn(box + " [data-dmvoll]", js)
+            self.assertIn(box + " [data-dmhilfe]", js)
+        self.assertIn("document.exitFullscreen", js)                            # Esc and the browser's own exit end it too
+        self.assertIn("try{seen=localStorage", js)                              # the guide's "seen" is a convenience, never needed
+
     def test_broken_file_falls_back(self):
         os.makedirs(os.path.dirname(dungeon.EIGENE), exist_ok=True)
         with open(dungeon.EIGENE, "w") as f:

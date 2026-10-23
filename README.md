@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.957** AI Dungeon Master table theme: dark table with parchment narration, hero cards with values and equipment, colours per world (the admin can change them), a full-screen button and "How to play" for players and guests
 - **V01.0.956** AI Dungeon Master: advantage and disadvantage (the panel rolls two d20), an out-of-character line only for the player concerned, longer openings, default prompt with senses and staying true to the world
 - **V01.0.955** AI Dungeon Master story planner: the admin keeps stories with acts, turning points and taboos, drafted by the language model from keywords and checked by the panel; in play the model decides when the next act begins, within fixed limits; the game's buttons in the panel style
 - **V01.0.954** Red fix: ffmpeg in the test workflow installs with --no-install-recommends (codecs stay) plus resilient apt config so a slow package mirror no longer aborts the run
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.950** Tests workflow more robust: install network steps with a timeout and three tries so stalled runners no longer hit the 45-min cap
 - **V01.0.949** AI Dungeon Master (switch, off): role-playing game for up to five, guests by link too; loot, levels, trading and heroes to take along, rules adjustable by the admin
 - **V01.0.948** Red fix: the attack self-test for the daily briefing depended on the time around midnight; its appointment now counts as "today" whatever the clock and time zone
-- **V01.0.947** IT crisis game removed again (as requested): game, net duel and „crisis game only“ profiles
 
 
 

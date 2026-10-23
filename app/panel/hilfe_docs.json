@@ -5133,6 +5133,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Spieltisch-Thema (V01.0.957, Dominik 2026-10-23 „mir gefällt dieses layout ganz gut … können wir das verbessern?“, „ok“ = Empfehlungen 1a bis 5): Nur der Spieltisch hat ein eigenes Aussehen, Formulare, Heldenliste und Admin bleiben im Panel-Stil: dunkler Grund, Serifenschrift aus dem System (nichts wird nachgeladen), die Erzählung als Pergamentkarte mit Initiale und „Zug n“, Aktionen als Sprechblasen mit dem Avatar in der Farbe des Platzes, Würfe als schmale Zeile, Akt-Zeilen in Gold. Links stehen Heldenkarten aller Spieler mit Lebensbalken, den drei Werten und Schutz als Gitter, angelegter Ausrüstung als Schildchen und dem Status (hat gehandelt, denkt nach, nicht da), der eigene golden umrandet; die Kopfzeile zeigt den Titel in Kapitälchen und den aktuellen Ort; unter der Erzählung stehen „Warten auf: …“, die Eingabe, das Mikrofon und Handeln. Am Handy kommen Geschichte, Gruppe und eigener Bogen untereinander. Farben je Welt (welten[].farben mit grund, karte, pergament, tinte, gold, nur #rrggbb, geprüft von check_rules): Fantasy Pergament und Gold, Horror Blutrot, Science-Fiction Blau, Piraten Türkis, Eigene Welt Violett; der Admin ändert sie unter „Regeln anpas"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "sen“. Vollbild (Dominik „können wir den auch rauslösen in fullscreen?“): „⛶ Vollbild“ in der Kopfzeile, auch für Gäste, zeigt nur den Tisch über den ganzen Bildschirm (Vollbild des Browsers; wo es das nicht gibt, wie im iPhone-Browser, füllt der Tisch das Fenster); der Knopf, Esc oder das Verlassen des Browser-Vollbilds beenden es. So spielst du (Dominik „haben wir auch eine Anleitung für die Spieler?“): „❔ So spielst du“ öffnet über dem Tisch ein kurzes Blatt für Spieler und Gäste (was man schreibt, wann es weitergeht, wie das Panel würfelt, Leben, Beute und Tauschen, Hören und Sprechen, der Figur-Code); beim ersten Platznehmen auf einem Gerät klappt es einmal von selbst auf (gemerkt nur im Browser)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "Stufe M0: Der Spark macht Musik selbst mit ACE-Step 1.5 (MIT-Lizenz), ohne Internet. Das Modell kommt nur mit der Installation auf dem Modell-Rechner: sudo ./install.sh --musik 2b (2B turbo mit 1,7B-Planer, empfohlen), 2b-klein (0,6B-Planer, weniger Speicher) oder xl (XL turbo, klingt besser, braucht mehr); die erste Installation fragt danach, Standard ist keins. Die Engine ist acestep.cpp (ace-server, fest auf einen Commit, für den GB10 mit CUDA gebaut, ohne torch und ohne Docker), die GGUF-Dateien sind fest mit Revision und SHA-256 (musikmodell.py). Der Dienst speech-spark-musik (musik_server.py, nur 127.0.0.1:31004, beim Teilen über das TLS-Tor, API-Schlüssel) lädt die Engine erst für ein Lied (127.0.0.1:31014, vorher Prüfung des freien Speichers) und beendet sie nach 10 Minuten ohne Lied; Bild- und Musik-Dienst teilen dafür bedarf.py. Ein Lied entsteht in zwei Schritten: der kleine Planer legt Aufbau und Klangcodes fest, dann macht das Klangmodell daraus eine MP3 (192 kbit/s). Alle Felder setzt der Dienst selbst; er nimmt nur eine MP3 zurück und schreibt sein eigenes ID3-Kennzeichen hinein („KI-erzeugt mit ACE-Step 1.5“). Der Admin misst: Zustand → Prüfen → „Musik testen“ macht"
 },
 {
@@ -16878,6 +16894,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "AI Dungeon Master: ideas from a DM prompt (V01.0.956, Dominik 2026-10-23 \"haben wir das in diesem stiel umgesetzt oder können wir ideen daraus ziehen?\", \"alles ja\", Gitea dropped): Advantage and disadvantage: the model may report vorteil or nachteil per check (the situation helps or hinders); the panel then rolls two d20 and takes the higher or the lower, the story shows both rolls (\"Advantage 14/7\"); any other value counts as a plain roll. OOC line: when an action is unclear or no move at all (a meta comment), the model does not narrate it but writes that character a short line in ooc (at most 160 characters, only names of the group, checked like the narration) that only this player sees as \"(OOC: …)\". Length: a narration has at most 900 characters, the opening of a round, a chapter or an act up to 1500 (erz_max). Prompt: the default prompt also asks for senses (smells, light, sounds, feelings) and stays with world, tone and what happened so far; the panel's fixed rules still stand behind it."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: table theme (V01.0.957, Dominik 2026-10-23 \"mir gefällt dieses layout ganz gut … können wir das verbessern?\", \"ok\" = recommendations 1a to 5): only the table has a look of its own, forms, hero list and admin keep the panel style: dark ground, a serif font of the system (nothing is loaded), the narration as a parchment card with an initial and \"Turn n\", actions as speech bubbles with the avatar in the seat's colour, rolls as a slim line, act lines in gold. On the left hero cards of all players with life bar, the three values and protection as a grid, equipped items as small tags and the state (acted, thinking, away), the own one framed in gold; the head shows the title in small caps and the current place; under the narration \"Waiting for: …\", the input, the microphone and Act. On a phone story, group and own sheet come one below the other. Colours per world (welten[].farben with grund, karte, pergament, tinte, gold, only #rrggbb, checked by check_rules): fantasy parchment and gold, horror blood red, science fiction blue, pirates turquoise, own world violet; the admin changes them under \"Adjust rules\". Full screen (Dominik \"can we pop it out into full screen?\"): \"⛶"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": " Full screen\" in the header, also for guests, shows only the table across the whole screen (the browser's full screen; where there is none, as in the iPhone browser, the table fills the window); the button, Esc or leaving the browser's full screen end it. How to play (Dominik \"do we also have a guide for the players?\"): \"❔ How to play\" opens a short sheet above the table for players and guests (what you write, when it goes on, how the panel rolls, life, loot and trading, listening and speaking, the hero code); the first time you take a seat on a device it opens once by itself (remembered only in the browser)."
 },
 {
 "lang": "en",

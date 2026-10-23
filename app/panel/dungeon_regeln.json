@@ -4,11 +4,11 @@
   "stimmen": {"erzaehler": "", "npc": ""},
   "grenzen": {"spieler": 5, "zug_s": [60, 120, 300], "zug_standard": 120, "stunden": [6, 24, 168], "stufe_max": 10},
   "welten": [
-    {"id": "fantasy", "name": ["Fantasy", "Fantasy"], "satz": ["Burgen, Drachen, alte Magie und vergessene Gewölbe.", "Castles, dragons, old magic and forgotten vaults."]},
-    {"id": "horror", "name": ["Horror", "Horror"], "satz": ["Nebel, verlassene Dörfer und etwas, das in der Dunkelheit wartet.", "Fog, deserted villages and something waiting in the dark."]},
-    {"id": "scifi", "name": ["Science-Fiction", "Science fiction"], "satz": ["Raumstationen, fremde Planeten und eigensinnige Bordcomputer.", "Space stations, strange planets and headstrong ship computers."]},
-    {"id": "piraten", "name": ["Piraten", "Pirates"], "satz": ["Schatzkarten, Stürme und Seeungeheuer auf hoher See.", "Treasure maps, storms and sea monsters on the high seas."]},
-    {"id": "eigene", "name": ["Eigene Welt", "Own world"], "satz": ["Die Welt beschreibt der Einstieg der Runde.", "The round's opening describes the world."]}
+    {"id": "fantasy", "name": ["Fantasy", "Fantasy"], "satz": ["Burgen, Drachen, alte Magie und vergessene Gewölbe.", "Castles, dragons, old magic and forgotten vaults."], "farben": {"grund": "#17131d", "karte": "#221c29", "pergament": "#efe3c4", "tinte": "#3a2a1a", "gold": "#d9b25f"}},
+    {"id": "horror", "name": ["Horror", "Horror"], "satz": ["Nebel, verlassene Dörfer und etwas, das in der Dunkelheit wartet.", "Fog, deserted villages and something waiting in the dark."], "farben": {"grund": "#120c0d", "karte": "#1e1416", "pergament": "#ddd0c4", "tinte": "#3b1212", "gold": "#c0453f"}},
+    {"id": "scifi", "name": ["Science-Fiction", "Science fiction"], "satz": ["Raumstationen, fremde Planeten und eigensinnige Bordcomputer.", "Space stations, strange planets and headstrong ship computers."], "farben": {"grund": "#0b111c", "karte": "#132036", "pergament": "#dfeaf3", "tinte": "#14324d", "gold": "#5cc8ff"}},
+    {"id": "piraten", "name": ["Piraten", "Pirates"], "satz": ["Schatzkarten, Stürme und Seeungeheuer auf hoher See.", "Treasure maps, storms and sea monsters on the high seas."], "farben": {"grund": "#14110c", "karte": "#221c13", "pergament": "#ecdab4", "tinte": "#4a2c14", "gold": "#2fb7a4"}},
+    {"id": "eigene", "name": ["Eigene Welt", "Own world"], "satz": ["Die Welt beschreibt der Einstieg der Runde.", "The round's opening describes the world."], "farben": {"grund": "#15151b", "karte": "#20202a", "pergament": "#ecebe4", "tinte": "#2a2a33", "gold": "#b9a0ff"}}
   ],
   "toene": [
     {"id": 8, "name": ["Kinder (ab 8)", "Children (8+)"], "regel": ["Freundlich und spannend wie ein Kinderbuch: keine Toten, kein Blut, Gegner fliehen oder schlafen ein.", "Friendly and exciting like a children's book: no deaths, no blood, foes flee or fall asleep."], "woerter": ["blut", "leiche", "tot ", "tote ", "töte", "mord", "folter", "enthaupt", "schlacht", "abschlacht", "gemetzel", "verstümmel", "eingeweide"]},
