@@ -2809,6 +2809,13 @@
 "titel": "Dungeon-Master: D&D-Look, fertige Geschichten, hell und dunkel",
 "text": "A: Dungeon-Master → Runden: die Seite im D&D-Look, Welt als Karte antippen, die Farben wechseln. B: Unter Geschichte stehen 10 Karten der Welt; eine wählen: Titel steht drin, der Ton ist gesetzt, Runde starten, der Plan (nur Gastgeber) zeigt Akt 1. C: Volk und Klasse als Karte wählen, die Werte darunter passen sich an. D: „☀ Hell“ antippen: Seite und Spieltisch werden hell, nach dem Neuladen bleibt es hell. E: Als Gast den Link öffnen: Einladung im selben Look, ohne Geschichten.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P426",
+"v": 962,
+"titel": "Dungeon-Master: Ausrüstung, Traglast und Händler",
+"text": "A: Am Spieltisch im eigenen Bogen: neun Plätze als Figur, die Klassenwaffe liegt in der Haupthand. Ein Ding aus der Tasche auf seinen Platz ziehen (oder „Anlegen“), mit × wieder ablegen. B: Einen Zweihänder anlegen: der Schild kommt in die Tasche. C: Viel Schweres tragen: „belastet“ erscheint, der nächste Geschick-Wurf zeigt Nachteil. „Hinlegen“: das Ding steht unter „Liegt hier“, ein Mitspieler hebt es auf. D: Gastgeber „⚖ Markt öffnen“: Waren mit Preis, etwas kaufen (Gold sinkt, Ware weg), etwas verkaufen (halber Preis). E: Ein unerkanntes Ding beim Händler „Erkennen lassen“: Name, Bonus und Effekt erscheinen. F: Eine Erzählung mit neuem Ort: Markt und Boden sind weg. G: Neue Runde mit einer fertigen Geschichte anlegen: nach wenigen Sekunden steht ein „Prolog“ mit Ort, Stimmung und Ausgangslage, erst dann lässt sich handeln; die Bildlaufleiste am Tisch hat die Farbe der Welt.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

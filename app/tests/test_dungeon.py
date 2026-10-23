@@ -28,6 +28,7 @@ import copy
 import json
 import os
 import random
+import threading
 import unittest
 
 from tests import helpers
@@ -91,9 +92,23 @@ class Base(unittest.TestCase):
         dungeon._rules["r"] = None
         dungeon._running.clear()
         self.spawned = []
-        old = dungeon.spawn
-        dungeon.spawn = lambda coro, name="": (self.spawned.append(name), coro.close())
+        old, old_ask = dungeon.spawn, dungeon.ask_model
+
+        async def silent(*a, **k):
+            raise TimeoutError("test")             # no model unless a test gives one: the prologue falls back
+        dungeon.ask_model = silent
+
+        def run(coro, name=""):
+            if name == "dungeon-prolog":           # the opening runs right away, so the first turn is free
+                t = threading.Thread(target=asyncio.run, args=(coro,))
+                t.start()
+                t.join()
+                return
+            self.spawned.append(name)
+            coro.close()
+        dungeon.spawn = run
         self.addCleanup(setattr, dungeon, "spawn", old)
+        self.addCleanup(setattr, dungeon, "ask_model", old_ask)
         self.v = TestClient(panel.app)   # a guest: no login at all
 
     def new_round(self, held=None, **kw):
@@ -956,6 +971,250 @@ class Stories(Base):
             dungeon._save_campaigns(self.uid, ks)
         v2 = self.c.post(f"/api/profile/dungeon/kampagne/{kid}/weiter", json={}).json()
         self.assertEqual((v2["akt"], v2["akte"]), (2, 3))
+
+
+class Equipment(Base):
+    """Stufe 4 (Dominik 2026-10-23 1a-6a): nine places, weight and the carry limit, the merchant, unknown magic."""
+    def setUp(self):
+        super().setUp()
+        v = self.new_round()
+        self.rid, self.host = v["rid"], v["pid"]
+        self.code, self.gp = self.guest(self.rid)
+        self.r = dungeon.rules()
+
+    def held(self, b):
+        return self.c.post(f"/api/profile/dungeon/{self.rid}/held", json=b)
+
+    def gheld(self, b):
+        return self.v.post("/api/dungeon/held", json=dict(b, code=self.code))
+
+    def edit(self, fn):
+        with dungeon._lock:
+            d = dungeon._read()
+            out = fn(d["runden"][self.rid])
+            dungeon._write(d)
+        return out
+
+    def hero(self, pid):
+        return self.state(self.rid)["plaetze"][pid]["held"]
+
+    def test_nine_places_two_hands_and_rings(self):
+        h = self.hero(self.host)
+        self.assertEqual(set(h["an"]), set(dungeon.SLOTS))
+        first = h["an"]["haupthand"]["i"]                             # the class's weapon in the main hand
+        zh = self.give(self.rid, self.host, "zweihaender", "gewoehnlich")
+        self.assertEqual(self.held({"was": "anlegen", "i": zh}).status_code, 200)
+        h = self.hero(self.host)
+        self.assertEqual(h["an"]["haupthand"]["i"], zh)
+        self.assertIn(first, [x["i"] for x in h["tasche"]])
+        sh = self.give(self.rid, self.host, "schild", "gewoehnlich")   # a shield frees the two-handed weapon
+        self.assertEqual(self.held({"was": "anlegen", "i": sh}).status_code, 200)
+        h = self.hero(self.host)
+        self.assertEqual((h["an"]["nebenhand"]["i"], h["an"]["haupthand"]), (sh, None))
+        self.assertIn(zh, [x["i"] for x in h["tasche"]])
+        a, b = self.give(self.rid, self.host, "ring", "gewoehnlich"), self.give(self.rid, self.host, "ring", "gewoehnlich")
+        self.held({"was": "anlegen", "i": a})
+        self.held({"was": "anlegen", "i": b})
+        h = self.hero(self.host)
+        self.assertEqual((h["an"]["ring1"]["i"], h["an"]["ring2"]["i"]), (a, b))
+        self.assertEqual(self.held({"was": "ablegen", "platz": "ring1"}).status_code, 200)
+        self.assertIsNone(self.hero(self.host)["an"]["ring1"])
+        self.assertEqual(self.held({"was": "ablegen", "platz": "ring1"}).status_code, 400)
+        self.assertEqual(self.held({"was": "ablegen", "platz": "tasche"}).status_code, 400)
+        x = self.give(self.rid, self.gp, "zweihaender", "gewoehnlich")  # a mage gets no two-handed sword
+        self.assertEqual(self.gheld({"was": "anlegen", "i": x}).status_code, 400)
+        pot = self.give(self.rid, self.host, "heiltrank")
+        self.assertEqual(self.held({"was": "anlegen", "i": pot}).status_code, 400)
+        v = self.c.get(f"/api/profile/dungeon/{self.rid}").json()
+        self.assertEqual(set(v["ich"]["an"]), set(dungeon.SLOTS))
+        self.assertIn("Schild", " ".join(next(p for p in v["plaetze"] if p["pid"] == self.host)["karte"]["dinge"]))
+
+    def test_carry_limit_burdened_and_the_ground(self):
+        def weak(rd):
+            rd["plaetze"][self.host]["held"]["werte"]["staerke"] = 6   # 22.5 kg, burdened above 16.9
+        self.edit(weak)
+        h = self.hero(self.host)
+        self.assertEqual(dungeon.carry(h), 22.5)
+        self.assertFalse(dungeon.burdened(self.r, h))
+        self.give(self.rid, self.host, "plattenpanzer", "gewoehnlich")
+        self.assertTrue(dungeon.burdened(self.r, self.hero(self.host)))
+        rd = self.state(self.rid)
+        w = dungeon.roll(self.r, rd, [{"pid": self.host, "wert": "geschick", "schwer": 10}], random.Random(2))[0]
+        self.assertEqual((w["vt"], len(w["ws"]), w.get("belastet")), ("nachteil", 2, True))
+        w = dungeon.roll(self.r, rd, [{"pid": self.host, "wert": "geschick", "schwer": 10, "vt": "vorteil"}], random.Random(2))[0]
+        self.assertEqual((w["vt"], len(w["ws"])), ("", 1))         # advantage and the load cancel
+        w = dungeon.roll(self.r, rd, [{"pid": self.host, "wert": "staerke", "schwer": 10}], random.Random(2))[0]
+        self.assertEqual(w["vt"], "")
+        # nothing is picked up over the limit: it lies on the ground for the group
+        big = self.give(self.rid, self.gp, "plattenpanzer", "gewoehnlich")
+        self.assertEqual(self.gheld({"was": "fallen", "i": big}).status_code, 200)
+        self.assertEqual([x["i"] for x in self.state(self.rid)["boden"]], [big])
+        self.assertEqual(self.held({"was": "aufheben", "i": big}).status_code, 400)
+        self.assertEqual(self.gheld({"was": "aufheben", "i": big}).status_code, 200)
+        self.assertEqual(self.state(self.rid)["boden"], [])
+        # loot with no room goes to the ground, a new place leaves it behind
+        def full(rd):
+            for p in rd["plaetze"].values():
+                p["held"]["tasche"] = [dungeon.item(self.r, "dolch") for _ in range(dungeon.TASCHE)]
+            obj = {"erzaehlung": "Hinter dem Altar liegt eine alte Truhe voller Staub und Münzen.", "frage_an": "Arvid",
+                   "beute": [{"anlass": "truhe", "name": "", "satz": ""}]}
+            story, _ = dungeon.check_story(self.r, rd, obj)
+            dungeon.apply(self.r, rd, [], story, self.rid, random.Random(3))
+            return rd
+        rd = self.edit(full)
+        self.assertEqual(len(rd["boden"]), 1)
+        self.assertTrue(next(e for e in rd["log"] if e["art"] == "beute")["boden"])
+        self.assertEqual([len(p["held"]["tasche"]) for p in rd["plaetze"].values()], [dungeon.TASCHE] * 2)
+
+        def move(rd):
+            story, _ = dungeon.check_story(self.r, rd, {"erzaehlung": "Ihr zieht weiter durch das nasse Moor bis zur Furt.", "frage_an": "Arvid",
+                                                         "szene": {"ort": "Furt", "stimmung": "kalt"}})
+            dungeon.apply(self.r, rd, [], story, self.rid, random.Random(3))
+            return rd
+        self.assertEqual(self.edit(move)["boden"], [])
+
+    def test_merchant_prices_by_the_rules_and_each_good_once(self):
+        self.assertEqual(self.c2.post(f"/api/profile/dungeon/{self.rid}/markt", json={"auf": True}).status_code, 404)  # only the host
+        def story(rd):
+            obj = {"erzaehlung": "Am Brunnen des Dorfes hat ein Händler seinen Karren aufgestellt.", "frage_an": "Arvid",
+                   "haendler": {"name": "Grimm", "satz": "Alles muss raus!", "preis": 0, "ware": ["drachenpanzer"]}}
+            s, drop = dungeon.check_story(self.r, rd, obj)
+            dungeon.apply(self.r, rd, [], s, self.rid, random.Random(4))
+            for p in rd["plaetze"].values():
+                p["held"]["gold"] = 5000
+            return rd
+        rd = self.edit(story)
+        m = rd["markt"]
+        self.assertEqual(m["name"], "Grimm")
+        self.assertTrue(dungeon.WARE[0] <= len(m["ware"]) <= dungeon.WARE[1])
+        self.assertFalse(any(x.get("u") for x in m["ware"]))
+        self.assertIn("haendler", dungeon.facts(self.r, rd))
+        v = self.c.get(f"/api/profile/dungeon/{self.rid}").json()
+        w = v["markt"]["ware"][0]
+        h = self.hero(self.host)
+        self.assertEqual(w["preis"], dungeon.buy_price(self.r, h, m["ware"][0]))
+        self.assertEqual(self.held({"was": "kaufen", "i": w["i"]}).status_code, 200)
+        self.assertEqual(self.hero(self.host)["gold"], 5000 - w["preis"])
+        self.assertIn(w["i"], [x["i"] for x in self.hero(self.host)["tasche"]])
+        self.assertEqual(self.gheld({"was": "kaufen", "i": w["i"]}).status_code, 400)          # sold only once
+        self.assertEqual(self.hero(self.gp)["gold"], 5000)
+        # selling: half its worth, the guest only from its own bag
+        mine = self.give(self.rid, self.gp, "langschwert", "gewoehnlich")
+        self.assertEqual(self.gheld({"was": "verkaufen", "i": w["i"]}).status_code, 400)
+        it = next(x for x in self.hero(self.gp)["tasche"] if x["i"] == mine)
+        self.assertEqual(self.gheld({"was": "verkaufen", "i": mine}).status_code, 200)
+        self.assertEqual(self.hero(self.gp)["gold"], 5000 + dungeon.price(self.r, it) // 2)
+        self.assertIn(mine, [x["i"] for x in self.state(self.rid)["markt"]["ware"]])
+        # Charisma: 5 % a point of its bonus, at most 20
+        self.assertEqual(dungeon.rabatt(self.r, dict(h, werte=dict(h["werte"], charisma=14), an={}, segen=[], faehigkeiten=[])), 10)
+        self.assertEqual(dungeon.rabatt(self.r, dict(h, werte=dict(h["werte"], charisma=20), an={}, segen=[], faehigkeiten=[])), 20)
+        # the host sends it away, a new place closes it too
+        self.assertIsNone(self.c.post(f"/api/profile/dungeon/{self.rid}/markt", json={"auf": False}).json()["markt"])
+        self.assertEqual(self.held({"was": "kaufen", "i": mine}).status_code, 404)
+        self.assertIsNotNone(self.c.post(f"/api/profile/dungeon/{self.rid}/markt", json={"auf": True}).json()["markt"])
+        def move(rd):
+            s, _ = dungeon.check_story(self.r, rd, {"erzaehlung": "Ihr verlasst das Dorf und folgt der Straße nach Norden.", "frage_an": "Arvid",
+                                                    "szene": {"ort": "Nordstraße", "stimmung": ""}})
+            dungeon.apply(self.r, rd, [], s, self.rid, random.Random(4))
+            return rd
+        self.assertNotIn("markt", self.edit(move))
+        live = dungeon.for_live()
+        self.assertGreaterEqual((live["kaeufe"], live["verkaeufe"], live["maerkte"]), (1, 1, 2))
+
+    def test_unknown_magic_scroll_or_merchant_names_it(self):
+        it = dungeon.item(self.r, "langschwert", "episch", random.Random(5))
+        self.assertTrue(it["u"])
+        view = dungeon.item_view(self.r, it, "de")
+        self.assertIn("unerkannt", view["name"])
+        self.assertEqual(view["selten"], "")
+        self.assertEqual(dungeon.sell_price(self.r, it), dungeon.price(self.r, it) // 4)
+        def put(rd):
+            h = rd["plaetze"][self.host]["held"]
+            h["an"]["haupthand"] = it
+            h["gold"] = 1000
+        self.edit(put)
+        h = self.hero(self.host)
+        self.assertEqual(dungeon.total(self.r, h, "staerke"), dungeon.mod(h["werte"]["staerke"]))   # only its base counts
+        self.assertEqual(self.held({"was": "erkennen", "i": it["i"]}).status_code, 400)            # no scroll, no merchant
+        rolle = self.give(self.rid, self.host, "erkennungsrolle", "gewoehnlich")
+        self.assertEqual(self.held({"was": "erkennen", "i": it["i"], "mit": rolle}).status_code, 200)
+        h = self.hero(self.host)
+        self.assertNotIn("u", h["an"]["haupthand"])
+        self.assertNotIn(rolle, [x["i"] for x in h["tasche"]])
+        self.assertEqual(h["gold"], 1000)
+        other = dungeon.item(self.r, "ring", "legendaer", random.Random(6))
+        self.edit(lambda rd: rd["plaetze"][self.host]["held"]["tasche"].append(other))
+        self.c.post(f"/api/profile/dungeon/{self.rid}/markt", json={"auf": True})
+        self.assertEqual(self.held({"was": "erkennen", "i": other["i"]}).status_code, 200)
+        self.assertEqual(self.hero(self.host)["gold"], 1000 - dungeon.name_price(self.r, other))
+
+    def test_stacks_trades_and_heroes_from_before(self):
+        h = self.hero(self.host)
+        h["tasche"] = []
+        for _ in range(dungeon.STAPEL + 1):
+            dungeon.bag_add(self.r, h, dungeon.item(self.r, "heiltrank"))
+        self.assertEqual([x.get("n", 1) for x in h["tasche"]], [dungeon.STAPEL, 1])
+        self.edit(lambda rd: rd["plaetze"][self.host]["held"].update(tasche=h["tasche"]))
+        self.assertEqual(self.held({"was": "trinken", "i": h["tasche"][0]["i"]}).status_code, 200)
+        self.assertEqual(self.hero(self.host)["tasche"][0]["n"], dungeon.STAPEL - 1)
+        # a trade the receiver cannot carry is refused on accept
+        def weak(rd):
+            rd["plaetze"][self.gp]["held"]["werte"]["staerke"] = 3
+        self.edit(weak)
+        heavy = self.give(self.rid, self.host, "plattenpanzer", "gewoehnlich")
+        self.assertEqual(self.held({"was": "tauschen", "an": self.gp, "gebe": [heavy], "will_gold": 0, "gold": 0, "will": []}).status_code, 400)
+        self.held({"was": "tauschen", "an": self.gp, "gebe": [heavy], "will_gold": 1})
+        t = self.v.post("/api/dungeon/lage", json={"code": self.code}).json()["angebote"][0]["t"]
+        self.assertEqual(self.gheld({"was": "annehmen", "t": t}).status_code, 400)
+        # a hero from before Stufe 4: weapon, armour and jewellery onto their places
+        old = {"hid": "h" + "a" * 10, "name": "Alt", "volk": "mensch", "klasse": "krieger", "stufe": 1, "ep": 0, "gold": 0, "punkte": 0,
+               "werte": dict(self.hero(self.host)["werte"]), "leben": 10, "leben_max": 10, "faehigkeiten": [], "wahl": [],
+               "waffe": dungeon.item(self.r, "schwert"), "ruestung": dungeon.item(self.r, "kettenhemd"), "schmuck": dungeon.item(self.r, "amulett"),
+               "tasche": []}
+        h = dungeon.fix_hero(self.r, old)
+        self.assertEqual((h["an"]["haupthand"]["id"], h["an"]["koerper"]["id"], h["an"]["hals"]["id"]), ("schwert", "kettenhemd", "amulett"))
+        self.assertFalse({"waffe", "ruestung", "schmuck"} & set(h))
+
+
+class Prologue(Base):
+    def test_the_dungeon_master_opens_the_round(self):
+        """Dominik 2026-10-23 „nach erstellung eines spiels fehlt der einleitungs text, stimmung und ausgangssituation“."""
+        dungeon.ask_model = fake([{"erzaehlung": "Nebel liegt über Hallstein, die Glocke schweigt seit drei Nächten. Arvid steht am Brunnen.",
+                                   "szene": {"ort": "Dorfplatz", "stimmung": "neblig"}, "frage_an": "Arvid",
+                                   "npc": [{"name": "Küster", "sagt": "Ihr kommt spät."}, {"name": "Magd", "sagt": "Hilfe!"}],
+                                   "folgen": [{"wer": "Arvid", "art": "schaden", "zahl": 6}], "beute": [{"anlass": "boss"}],
+                                   "erfolg": [{"art": "ziel"}]}])
+        v = self.new_round(einstieg="Ein Dorf, eine Glocke.")
+        rd = self.state(v["rid"])
+        e = [x for x in rd["log"] if x["art"] == "dm"]
+        self.assertEqual(len(e), 1)
+        self.assertTrue(e[0]["prolog"])
+        self.assertIn("Nebel", e[0]["text"])
+        self.assertEqual((len(e[0]["npc"]), e[0]["frage"]), (1, "Arvid"))
+        self.assertEqual(rd["szene"], {"ort": "Dorfplatz", "stimmung": "neblig"})
+        self.assertFalse(any(x["art"] in ("folge", "beute", "ep") for x in rd["log"]))   # no consequences in the opening
+        self.assertEqual((rd["dm"], rd["zug"]), ("", 1))
+        self.assertNotIn(v["rid"], dungeon._running)
+        self.assertEqual(self.c.post(f"/api/profile/dungeon/{v['rid']}/aktion", json={"text": "Ich läute.", "zug": 1}).status_code, 200)
+        self.assertIn("prolog", dungeon.system_text(dungeon.rules(), rd, "prolog").lower())
+
+    def test_without_the_model_the_opening_or_the_first_act(self):
+        v = self.new_round(einstieg="Ein Dorf, eine Glocke, ein Schweigen.")
+        e = [x for x in self.state(v["rid"])["log"] if x["art"] == "dm"]
+        self.assertEqual((e[0]["text"], e[0]["prolog"]), ("Ein Dorf, eine Glocke, ein Schweigen.", True))
+        gid, g = next(iter(dungeon.shipped(dungeon.rules(), "de").items()))
+        v = self.new_round(geschichte=gid)
+        e = [x for x in self.state(v["rid"])["log"] if x["art"] == "dm"]
+        self.assertEqual(e[0]["text"], g["akte"][0]["inhalt"])
+        v = self.new_round(titel="Frei")
+        self.assertEqual([x for x in self.state(v["rid"])["log"] if x["art"] == "dm"], [])
+        # left over from a restart while the model answered: the next request frees the round
+        with dungeon._lock:
+            d = dungeon._read()
+            d["runden"][v["rid"]]["dm"] = "prolog"
+            dungeon._write(d)
+        dungeon.maybe_close(v["rid"])
+        self.assertEqual(self.state(v["rid"])["dm"], "")
 
 
 class LiveCounts(Base):

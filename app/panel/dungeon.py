@@ -53,10 +53,12 @@ Origin is refused (Richtlinie Teil 3 „Links für Leute ohne Profil“). The jo
     POST   /api/profile/dungeon/runde             {titel, welt, einstieg, ton, zug_s, stunden, prompt?, held, lang}
     GET    /api/profile/dungeon/{rid}             the round as the own seat sees it (the page polls)
     POST   /api/profile/dungeon/{rid}/aktion      {text, zug}
-    POST   /api/profile/dungeon/{rid}/held        {was: anlegen|ablegen|trinken|schenken|punkt|faehigkeit|
-                                                   tauschen|annehmen|ablehnen, ...}
+    POST   /api/profile/dungeon/{rid}/held        {was: anlegen|ablegen|trinken|wirken|schenken|punkt|faehigkeit|
+                                                   tauschen|annehmen|ablehnen|stimme|kaufen|verkaufen|
+                                                   erkennen|aufheben|fallen, ...}
     POST   /api/profile/dungeon/{rid}/weiter      host: close the turn now (needs at least one action)
     POST   /api/profile/dungeon/{rid}/pause       host: {an: bool}
+    POST   /api/profile/dungeon/{rid}/markt       host: {auf: bool} call a merchant here or send it away
     POST   /api/profile/dungeon/{rid}/platz       host: {base} a new seat link with its QR code, shown once
     DELETE /api/profile/dungeon/{rid}/platz/{pid} host: take a seat back
     DELETE /api/profile/dungeon/{rid}             host: end the round (heroes of profiles are kept)
@@ -179,12 +181,30 @@ _ZEICHEN = re.compile(r"[^\w<>&\"'\s]{1,8}")
 _VOICE = re.compile(r"[\w .\-]{0,40}")
 _WORD = re.compile(r"[a-z0-9_]{1,24}")
 KEY = "\0dungeongast"     # one lockout entry for every wrong code from one address (guard.py)
-WAS = ("anlegen", "ablegen", "trinken", "wirken", "schenken", "punkt", "faehigkeit", "tauschen", "annehmen", "ablehnen", "stimme")
+WAS = ("anlegen", "ablegen", "trinken", "wirken", "schenken", "punkt", "faehigkeit", "tauschen", "annehmen", "ablehnen", "stimme",
+       "kaufen", "verkaufen", "erkennen", "aufheben", "fallen")
 TASCHE = 12               # items in one bag
 ANGEBOTE_MAX = 3          # open trade offers one seat may make
 TAUSCH_TEILE = 4          # items on one side of an offer
 GOLD_MAX = 100000
-SLOTS = {"waffe": "waffe", "ruestung": "ruestung", "schmuck": "schmuck"}
+# Ausrüstung, Traglast und Händler (Stufe 4, Dominik 2026-10-23 "ja so umsetzten" = 1a-6a): nine places as in D&D
+SLOTS = ("kopf", "hals", "koerper", "haupthand", "nebenhand", "haende", "fuesse", "ring1", "ring2")
+PLATZ = {"kopf": ("kopf",), "hals": ("hals",), "koerper": ("koerper",), "haupthand": ("haupthand",), "nebenhand": ("nebenhand",),
+         "haende": ("haende",), "fuesse": ("fuesse",), "ring": ("ring1", "ring2")}    # a catalog item's platz -> the places it fits
+PLATZ_ART = {"waffe": ("haupthand",), "ruestung": ("koerper", "kopf", "nebenhand", "haende", "fuesse"),
+             "schmuck": ("ring", "kopf", "hals", "haende", "fuesse")}               # what platz an art may name, the first without one
+_PLATZ_TXT = "; ".join(f"{a}: {', '.join(p)}" for a, p in PLATZ_ART.items())
+KG = {"waffe": 2, "ruestung": 8, "schmuck": 0.1, "trank": 0.5, "zauber": 0.1, "rolle": 0.2}   # weight without its own kg
+TRAG_KG = 3.75            # carry limit per point of Stärke (D&D: 15 lb)
+BELASTET = 0.75           # from three quarters of it a hero is burdened: Geschick checks with disadvantage
+STAPEL = 3                # potions, spells and scrolls of one kind stack on one bag place
+STAPEL_ARTEN = ("trank", "zauber", "rolle")
+BODEN_MAX = 12            # items lying at a place for the group (until the place changes)
+WARE = (6, 10)            # items a merchant offers
+WARE_MAX = 20             # with what the heroes sold to it
+RABATT = (5, 20)          # per point of the Charisma bonus, at most (percent)
+ERKENNEN = 5              # a merchant names an unknown item for a fifth of its price, at least this much gold
+HAENDLER = ("Fahrender Händler", "Travelling merchant")   # the merchant the host calls without one in the story
 FOLGE_ARTEN = ("schaden", "heilung")
 ANLAESSE = ("gegner", "truhe", "belohnung", "boss")
 ERFOLG_ARTEN = ("gegner", "ziel")
@@ -201,7 +221,7 @@ _speaking = set()         # rounds whose last turn is being read aloud right now
 _tts = [None]             # one TTS job of the game at a time (asyncio.Lock, made in the loop)
 _stimmen = {"t": 0.0, "v": [], "design": False, "laeuft": False}   # the speech output's voices a hero may take, and whether it can make one from a description (STIMMEN_S)
 _day = DayCounter(zuege=0, beute=0, stufen=0, ausfall=0, verworfen=0, abgelehnt=0, runden=0, kapitel=0, vorgelesen=0, gehoert=0, akte=0,
-                  vorschlaege=0)
+                  vorschlaege=0, kaeufe=0, verkaeufe=0, maerkte=0)
 
 
 # ---------------------------------------------------------------- the rules: shipped, the admin's own, merged
@@ -234,7 +254,7 @@ def merge(base, own):
                 else:
                     r[k].append({kk: vv for kk, vv in e.items() if kk != "aus"})
                     have[e.get("id")] = len(r[k]) - 1
-        elif k in ("grenzen", "ep", "anlass", "gold", "start", "stimmen") and isinstance(v, dict):
+        elif k in ("grenzen", "ep", "anlass", "gold", "start", "stimmen", "preise") and isinstance(v, dict):
             r[k] = dict(r[k], **v)
         else:
             r[k] = v
@@ -311,6 +331,13 @@ def check_rules(r):
             need(_int(x.get("schaden"), 2, 12) and x.get("wert") in werte, f"gegenstaende {x.get('id')}: waffe braucht schaden 2 bis 12 und wert")
         if x.get("art") == "ruestung":
             need(_int(x.get("schutz"), 0, 4), f"gegenstaende {x.get('id')}: schutz 0 bis 4")
+        need("platz" not in x or x.get("art") in PLATZ_ART and x["platz"] in PLATZ_ART[x["art"]],
+             f"gegenstaende {x.get('id')}: platz passend zur art ({_PLATZ_TXT})")
+        need("zweihand" not in x or x.get("art") == "waffe" and isinstance(x["zweihand"], bool), f"gegenstaende {x.get('id')}: zweihand nur bei waffe, true oder false")
+        need("kg" not in x or isinstance(x["kg"], (int, float)) and not isinstance(x["kg"], bool) and 0 <= x["kg"] <= 60,
+             f"gegenstaende {x.get('id')}: kg 0 bis 60")
+        need("preis" not in x or _int(x["preis"], 1, 10000), f"gegenstaende {x.get('id')}: preis 1 bis 10000")
+        need("erkennt" not in x or x.get("art") == "rolle" and x["erkennt"] is True, f"gegenstaende {x.get('id')}: erkennt nur bei rolle, true")
         if x.get("art") in ("trank", "zauber"):
             sg = x.get("segen")
             need(_int(x.get("heilung", 0), 0, 30) and (x.get("heilung") or sg) and (sg is None or isinstance(sg, dict)
@@ -343,6 +370,9 @@ def check_rules(r):
     need(set(r.get("gold") or {}) == set(ANLAESSE) and all(isinstance(x, list) and len(x) == 2 and _int(x[0], 0, 1000)
                                                            and _int(x[1], x[0], 5000) for x in r["gold"].values()), "gold: je [von, bis]")
     need(_int(r.get("pech_schutz"), 2, 50), "pech_schutz: 2 bis 50")
+    need(isinstance(r.get("preise"), dict) and set(r["preise"]) == set(ARTEN) and all(_int(x, 1, 10000) for x in r["preise"].values()),
+         f"preise: je art ({', '.join(ARTEN)}) 1 bis 10000 Gold")
+    need(all(_int(x.get("preis"), 1, 1000) for x in r.get("seltenheit") or [] if isinstance(x, dict)), "seltenheit: preis (Faktor) 1 bis 1000")
     st = r.get("start") or {}
     need(_int(st.get("gold"), 0, 1000) and isinstance(st.get("tasche"), list) and all(t in items for t in st["tasche"]), "start: gold und tasche aus den Gegenständen")
     need(_pair(r.get("ausfall"), 300), "ausfall: [deutsch, englisch]")
@@ -431,9 +461,97 @@ def item(r, cid, selten="gewoehnlich", rng=None, eigen="", satz=""):
     elif c["art"] == "schmuck":
         it["wert"] = rng.choice(werte)
     rank = [x["id"] for x in r["seltenheit"]].index(s["id"])
-    if rank >= len(r["seltenheit"]) - 2 and c["art"] in ("waffe", "ruestung", "schmuck"):
+    if rank >= len(r["seltenheit"]) - 2 and c["art"] in PLATZ_ART:
         it["eff"] = rng.choice(r["effekte"])["id"]
+        it["u"] = True                        # the two rarest kinds come unknown: only the base counts until named (5a)
     return it
+
+
+def _c(r, it):
+    return _by(r, "gegenstaende")[it["id"]]
+
+
+def places(r, c):
+    """The places a catalog item can be worn on: its platz, else the first of its art; nothing for the rest."""
+    if c["art"] not in PLATZ_ART:
+        return ()
+    return PLATZ[c.get("platz") or PLATZ_ART[c["art"]][0]]
+
+
+def worn(h):
+    return [it for it in (h.get("an") or {}).values() if it]
+
+
+def kg(r, it):
+    c = _c(r, it)
+    return float(c.get("kg", KG[c["art"]])) * it.get("n", 1)
+
+
+def load(r, h):
+    """What a hero carries in kg: worn and in the bag (gold weighs nothing)."""
+    return round(sum(kg(r, x) for x in worn(h) + list(h["tasche"])), 1)
+
+
+def carry(h):
+    return round(h["werte"].get("staerke", 10) * TRAG_KG, 1)
+
+
+def burdened(r, h):
+    return load(r, h) > BELASTET * carry(h)
+
+
+def _stacks(r, a, b):
+    return (_c(r, a)["art"] in STAPEL_ARTEN and a["id"] == b["id"] and a["s"] == b["s"] and not a.get("eigen") and not b.get("eigen")
+            and a.get("n", 1) + b.get("n", 1) <= STAPEL)
+
+
+def room(r, h, its, worn_too=False):
+    """Whether these items still fit: bag places (a stack takes none more) and the carry limit. Items already worn
+    by the hero (worn_too) weigh already."""
+    bag, n = list(h["tasche"]), 0
+    for it in its:
+        if not any(_stacks(r, x, it) for x in bag):
+            n += 1
+            bag.append(it)
+    return len(h["tasche"]) + n <= TASCHE and load(r, h) + (0 if worn_too else sum(kg(r, x) for x in its)) <= carry(h)
+
+
+def bag_add(r, h, it):
+    """Into the bag, onto a stack of the same kind when there is one."""
+    x = next((x for x in h["tasche"] if _stacks(r, x, it)), None)
+    if x:
+        x["n"] = x.get("n", 1) + it.get("n", 1)
+    else:
+        h["tasche"].append(it)
+
+
+def use_one(h, it):
+    """One of a stack used up (a potion drunk, a spell cast)."""
+    if it.get("n", 1) > 1:
+        it["n"] -= 1
+    else:
+        h["tasche"].remove(it)
+
+
+def nine(r, h):
+    """The nine places (Stufe 4) for a hero from before: weapon in the main hand, armour on the body, jewellery on
+    its place; what has no free place goes into the bag."""
+    if isinstance(h.get("an"), dict):
+        h["an"] = {k: h["an"].get(k) for k in SLOTS}
+        return h
+    an = {k: None for k in SLOTS}
+    cat = _by(r, "gegenstaende")
+    for old in ("waffe", "ruestung", "schmuck"):
+        it = h.pop(old, None)
+        if not isinstance(it, dict) or it.get("id") not in cat:
+            continue
+        free = [k for k in places(r, cat[it["id"]]) if not an[k]]
+        if free:
+            an[free[0]] = it
+        else:
+            h.setdefault("tasche", []).append(it)
+    h["an"] = an
+    return h
 
 
 def mod(score):
@@ -468,8 +586,8 @@ def new_hero(r, b, rng=None):
     werte = {w: x + volk["werte"].get(w, 0) for w, x in spread(r, klasse, b.get("verteilung")).items()}
     h = {"hid": "h" + os.urandom(5).hex(), "name": name, "volk": volk["id"], "klasse": klasse["id"],
          "satz": _clean(b.get("satz"), SATZ_MAX), "stufe": 1, "ep": 0, "werte": werte, "leben": 0,
-         "leben_max": 0, "gold": r["start"]["gold"], "waffe": item(r, klasse["waffen"][0], rng=rng),
-         "ruestung": None, "schmuck": None, "tasche": [item(r, x, rng=rng) for x in r["start"]["tasche"]],
+         "leben_max": 0, "gold": r["start"]["gold"], "an": dict({k: None for k in SLOTS}, haupthand=item(r, klasse["waffen"][0], rng=rng)),
+         "tasche": [item(r, x, rng=rng) for x in r["start"]["tasche"]],
          "faehigkeiten": [], "punkte": 0, "wahl": [], "ohne_selten": 0, "seit_fund": 0, "aufstieg": "", "segen": []}
     h["leben"] = h["leben_max"] = life(r, h)
     return h
@@ -491,7 +609,7 @@ def six(r, h):
     h["leben_max"] = life(r, h)
     h["leben"] = h["leben_max"] if full else max(1, min(int(h.get("leben") or 1), h["leben_max"]))
     cat = _by(r, "gegenstaende")
-    for it in [h.get(s) for s in SLOTS] + list(h.get("tasche") or []):
+    for it in [h.get(s) for s in ("waffe", "ruestung", "schmuck")] + worn(h) + list(h.get("tasche") or []):
         if isinstance(it, dict) and it.get("wert"):
             c = cat.get(it.get("id")) or {}
             it["wert"] = c["wert"] if c.get("art") == "waffe" else _ALT.get(it["wert"], it["wert"])
@@ -509,10 +627,14 @@ def fix_hero(r, h):
         return None
     items = _by(r, "gegenstaende")
     ok = lambda it: isinstance(it, dict) and it.get("id") in items and _IID.fullmatch(str(it.get("i")))
-    h["tasche"] = [x for x in h.get("tasche") or [] if ok(x)][:12]
-    for s in SLOTS:
-        if not ok(h.get(s)):
-            h[s] = None
+    nine(r, h)
+    h["tasche"] = [x for x in h.get("tasche") or [] if ok(x)][:TASCHE]
+    for x in h["tasche"]:
+        if x.get("n") is not None and not (_int(x["n"], 1, STAPEL) and _c(r, x)["art"] in STAPEL_ARTEN):
+            x.pop("n")
+    for k, it in h["an"].items():
+        if it and not (ok(it) and k in places(r, items[it["id"]])):
+            h["an"][k] = None
     fa = {x["id"] for x in _by(r, "klassen")[h["klasse"]]["faehigkeiten"]}
     h["faehigkeiten"] = [x for x in h.get("faehigkeiten") or [] if x in fa]
     h["wahl"] = [x for x in h.get("wahl") or [] if x in fa][:2]
@@ -539,10 +661,9 @@ def total(r, h, wert):
     abilities and blessings."""
     v = mod(h["werte"].get(wert, 10))
     eff, fa = _by(r, "effekte"), {x["id"]: x for x in _by(r, "klassen")[h["klasse"]]["faehigkeiten"]}
-    for s in SLOTS:
-        it = h.get(s)
-        if not it:
-            continue
+    for it in worn(h):
+        if it.get("u"):
+            continue                          # unknown: only its base counts
         if it.get("wert") == wert:
             v += it.get("bonus", 0)
         e = eff.get(it.get("eff"))
@@ -566,23 +687,50 @@ def wear_off(rd):
 
 
 def schutz(r, h):
-    it = h.get("ruestung")
-    if not it:
-        return 0
-    return _by(r, "gegenstaende")[it["id"]].get("schutz", 0) + it.get("bonus", 0)
+    """Protection of everything worn: armour, helmet, shield, gauntlets, boots (an unknown item only its base)."""
+    return sum(_c(r, it).get("schutz", 0) + (0 if it.get("u") else it.get("bonus", 0)) for it in worn(h) if _c(r, it)["art"] == "ruestung")
+
+
+def price(r, it):
+    """What an item is worth by the rules (never the model): the art's price or its own, times its rarity, per piece."""
+    c, s = _c(r, it), _by(r, "seltenheit").get(it["s"]) or r["seltenheit"][0]
+    return max(1, c.get("preis", r["preise"][c["art"]]) * s.get("preis", 1))
+
+
+def rabatt(r, h):
+    """The merchant's discount in percent: 5 per point of the Charisma bonus, at most 20 (4a)."""
+    return min(RABATT[1], RABATT[0] * max(0, total(r, h, "charisma")))
+
+
+def buy_price(r, h, it):
+    """What the merchant asks: its worth less the hero's discount, for every piece of a stack."""
+    return max(1, -(-price(r, it) * (100 - rabatt(r, h)) // 100)) * it.get("n", 1)
+
+
+def sell_price(r, it):
+    """Half its worth, a quarter while unknown, for every piece of a stack."""
+    return max(1, price(r, it) // (4 if it.get("u") else 2)) * it.get("n", 1)
+
+
+def name_price(r, it):
+    return max(ERKENNEN, price(r, it) // 5)
 
 
 def item_view(r, it, lang):
     li = 1 if lang == "en" else 0
     c, s = _by(r, "gegenstaende")[it["id"]], _by(r, "seltenheit").get(it["s"]) or r["seltenheit"][0]
-    e = _by(r, "effekte").get(it.get("eff"))
+    u = bool(it.get("u"))
+    e = None if u else _by(r, "effekte").get(it.get("eff"))
     w = _by(r, "werte")
+    bonus = 0 if u else it.get("bonus", 0)
     zeilen = []
     if c["art"] == "waffe":
-        zeilen.append(("Schaden 1W{} + {}" if not li else "Damage 1d{} + {}").format(c["schaden"], it.get("bonus", 0)))
+        zeilen.append(("Schaden 1W{} + {}" if not li else "Damage 1d{} + {}").format(c["schaden"], bonus) + (" · zweihändig" if not li else " · two-handed") * bool(c.get("zweihand")))
     if c["art"] == "ruestung":
-        zeilen.append(("Schutz {}" if not li else "Protection {}").format(c.get("schutz", 0) + it.get("bonus", 0)))
-    if it.get("wert") and it.get("bonus"):
+        zeilen.append(("Schutz {}" if not li else "Protection {}").format(c.get("schutz", 0) + bonus))
+    if u:
+        zeilen.append("Magisch, noch unerkannt: nur der Grundwert zählt." if not li else "Magic, not yet known: only the base counts.")
+    elif it.get("wert") and it.get("bonus"):
         zeilen.append(f"{w[it['wert']]['name'][li]} +{it['bonus']}")
     if c["art"] in ("trank", "zauber"):
         if c["art"] == "zauber":
@@ -594,8 +742,11 @@ def item_view(r, it, lang):
             zeilen.append(("{} +{} für {} Züge" if not li else "{} +{} for {} turns").format(w[sg["wert"]]["name"][li], sg["bonus"], sg["zuege"]))
     if e:
         zeilen.append(e["satz"][li])
-    return {"i": it["i"], "id": it["id"], "art": c["art"], "name": it.get("eigen") or c["name"][li], "satz": it.get("satz", ""),
-            "selten": it["s"], "selten_name": s["name"][li], "zeilen": zeilen}
+    name = it.get("eigen") or c["name"][li]
+    return {"i": it["i"], "id": it["id"], "art": c["art"], "name": (c["name"][li] + (" (unerkannt)" if not li else " (unknown)")) if u else name,
+            "satz": "" if u else it.get("satz", ""), "selten": "" if u else it["s"], "selten_name": ("unerkannt" if not li else "unknown") if u else s["name"][li],
+            "zeilen": zeilen, "kg": round(kg(r, it), 1), "n": it.get("n", 1), "platz": list(places(r, c)), "zweihand": bool(c.get("zweihand")),
+            "u": u, "erkennt": bool(c.get("erkennt"))}
 
 
 def hero_view(r, h, lang, full=True):
@@ -612,7 +763,8 @@ def hero_view(r, h, lang, full=True):
                werte=[{"id": w["id"], "name": w["name"][li], "kurz": w["name"][li][:3].upper(), "wert": h["werte"].get(w["id"], 10),
                        "mod": mod(h["werte"].get(w["id"], 10)), "gesamt": total(r, h, w["id"])} for w in r["werte"]],
                wert_max=WERT_MAX, stimme=h.get("stimme", ""), klang=h.get("klang", ""),
-               schutz=schutz(r, h), slots={s: item_view(r, h[s], lang) if h.get(s) else None for s in SLOTS},
+               schutz=schutz(r, h), an={k: item_view(r, it, lang) if it else None for k, it in h["an"].items()},
+               kg=load(r, h), trag=carry(h), belastet=burdened(r, h), rabatt=rabatt(r, h), tasche_max=TASCHE,
                tasche=[item_view(r, x, lang) for x in h["tasche"]],
                faehigkeiten=[{"id": x, "name": fa[x]["name"][li], "satz": fa[x]["satz"][li]} for x in h["faehigkeiten"] if x in fa],
                segen=[{"name": x.get("von", ""), "wert": _by(r, "werte")[x["wert"]]["name"][li], "bonus": x["bonus"], "zuege": x["zuege"]}
@@ -627,7 +779,7 @@ def hero_card(r, h, lang):
     li = 1 if lang == "en" else 0
     return {"werte": [{"kurz": w["name"][li][:3].upper(), "name": w["name"][li], "wert": h["werte"].get(w["id"], 10),
                        "mod": total(r, h, w["id"])} for w in r["werte"]],
-            "schutz": schutz(r, h), "dinge": [item_view(r, h[s], lang)["name"] for s in SLOTS if h.get(s)]}
+            "schutz": schutz(r, h), "dinge": [item_view(r, it, lang)["name"] for it in worn(h)], "belastet": burdened(r, h)}
 
 
 FARBEN = ("grund", "karte", "pergament", "tinte", "gold")   # the colours of a world's table (welten[].farben)
@@ -655,6 +807,41 @@ def gain(r, h, ep, abend, rng=None):
     return h["stufe"]
 
 
+def group_level(held):
+    return max(1, round(sum(h["stufe"] for h in held) / max(1, len(held))))
+
+
+def rarity(r, stufe, roll):
+    """(the rarities the level allows, the one this roll reaches)."""
+    stufen = [x for x in r["seltenheit"] if x["stufe_min"] <= stufe] or r["seltenheit"][:1]
+    return stufen, [x for x in stufen if roll >= x["ab"]][-1]
+
+
+def open_market(r, rd, name="", satz="", rng=None):
+    """A merchant at this place: its goods drawn by the panel (rarity by d100 + level as for loot, never above what
+    the level allows), known to it, priced by the rules. The model only names it; it stays until the place changes."""
+    rng = rng or random
+    li = 1 if rd["lang"] == "en" else 0
+    stufe = group_level([p["held"] for _, p in seated(rd)])
+    ware = []
+    for _ in range(rng.randint(*WARE)):
+        s = rarity(r, stufe, rng.randint(1, 100) + 2 * stufe)[1]
+        it = item(r, rng.choice(r["gegenstaende"])["id"], s["id"], rng)
+        it.pop("u", None)
+        ware.append(it)
+    rd["markt"] = {"name": name or HAENDLER[li], "satz": satz, "ware": ware}
+    _log(rd, "markt", name=rd["markt"]["name"], auf=True)
+    _day.bump("maerkte")
+    print(f"dungeon: markt | auf | {len(ware)} waren", flush=True)
+
+
+def close_market(rd):
+    m = rd.pop("markt", None)
+    if m:
+        _log(rd, "markt", name=m["name"], auf=False)
+        print("dungeon: markt | zu", flush=True)
+
+
 def loot(r, held, anlass, gruppe_stufe, rng=None, eigen="", satz=""):
     """(receiver index, item, gold each) of one find by the panel's rule: rarity by d100 + occasion + level, never
     above what the level allows, pity after pech_schutz finds without „selten“; the receiver is who went longest
@@ -663,8 +850,7 @@ def loot(r, held, anlass, gruppe_stufe, rng=None, eigen="", satz=""):
     roll = rng.randint(1, 100) + r["anlass"][anlass] + 2 * gruppe_stufe
     rec = max(range(len(held)), key=lambda i: (held[i].get("seit_fund", 0), -i))
     h = held[rec]
-    stufen = [x for x in r["seltenheit"] if x["stufe_min"] <= gruppe_stufe] or r["seltenheit"][:1]
-    s = [x for x in stufen if roll >= x["ab"]][-1]
+    stufen, s = rarity(r, gruppe_stufe, roll)
     if h.get("ohne_selten", 0) + 1 >= r["pech_schutz"] and len(stufen) > 1 and stufen.index(s) == 0:
         s = stufen[1]
     pool = [c for c in r["gegenstaende"] if fits(r, h, c)] or r["gegenstaende"]
@@ -677,7 +863,6 @@ def loot(r, held, anlass, gruppe_stufe, rng=None, eigen="", satz=""):
     each = gold // len(held)
     for x in held:
         x["gold"] += each
-    h["tasche"] = (h["tasche"] + [it])[-12:]
     return rec, it, each
 
 
@@ -837,6 +1022,8 @@ def make_round(owner, b, lang, now=None, kampagne=None):
         if plan:
             rd.update(plan=plan, akt=rd.get("akt", 0), akt_zug=1)
         _log(rd, "system", text=["Die Runde beginnt. Schreibt, was eure Figuren tun.", "The round begins. Write what your characters do."])
+        rd["dm"] = "prolog"                   # the Dungeon Master opens it first (run_prolog), the turn waits
+        _running.add(rid)
         _write(d)
     _day.bump("runden")
     print(f"dungeon: runde neu | {welt} | ab {ton} | {profiles.log_name(profiles.by_id(owner))}", flush=True)
@@ -1524,19 +1711,30 @@ AUFGABE_PROBEN = {
     "en": "Task: decide which actions need a check (at most one per character, only with real risk). "
           "wert is one of {werte}, schwer from {lo} (easy) to {hi} (nearly impossible); vorteil is vorteil when the "
           "situation helps the character, nachteil when it hinders, else empty."}
+AUFGABE_PROLOG = {
+    "de": "Aufgabe: Eröffne die Runde mit einem Prolog (höchstens {n} Zeichen): Beschreibe den Ort mit allen Sinnen, die "
+          "Stimmung und die Ausgangslage, sodass jede Figur der Gruppe darin vorkommt und weiß, wo sie steht und was auf "
+          "dem Spiel steht. Höchstens ein NPC spricht. Noch keine Proben, kein Schaden, keine Beute. szene nennt Ort und "
+          "Stimmung. Ende mit einer Frage an die Gruppe; frage_an ist eine Figur.",
+    "en": "Task: open the round with a prologue (at most {n} characters): describe the place with all senses, the mood and "
+          "the starting situation, so every character of the group is in it and knows where it stands and what is at "
+          "stake. At most one NPC speaks. No checks yet, no damage, no loot. szene names place and mood. End with a "
+          "question to the group; frage_an is a character."}
 AUFGABE_ERZAEHLEN = {
     "de": "Aufgabe: Erzähle, was nach den Aktionen und den gewürfelten Proben geschieht (höchstens {n} Zeichen), lass "
           "NPCs sprechen, gib Schaden oder Heilung als folgen (zahl 1 bis 6), melde Beute nur als Anlass ({anlaesse}) "
           "mit Name und einem Satz, Erfolge als gegner (rang 1 bis 5) oder ziel. Ende mit einer Frage an die Gruppe; "
           "frage_an ist eine Figur, die gerade wenig gesagt hat. Ist eine Aktion unklar oder gar kein Spielzug "
           "(Meta-Kommentar), erzähle sie nicht, sondern schreib dieser Figur in ooc eine kurze Zeile (höchstens {ooc} "
-          "Zeichen), was sie stattdessen tun kann.",
+          "Zeichen), was sie stattdessen tun kann. Trifft die Gruppe in einer Siedlung einen Händler, melde ihn in "
+          "haendler (Name und ein Satz); Waren und Preise legt das Panel fest, nenne keine.",
     "en": "Task: narrate what happens after the actions and the rolled checks (at most {n} characters), let NPCs "
           "speak, give damage or healing as folgen (zahl 1 to 6), report loot only as an occasion ({anlaesse}) with a "
           "name and one sentence, successes as gegner (rang 1 to 5) or ziel. End with a question to the group; "
           "frage_an is a character that said little. When an action is unclear or no move at all (a meta comment), "
           "do not narrate it but write that character a short line in ooc (at most {ooc} characters) on what it could "
-          "do instead."}
+          "do instead. When the group meets a merchant in a settlement, report it in haendler (a name and one "
+          "sentence); the panel sets goods and prices, name none."}
 
 
 def schema_proben(r):
@@ -1561,6 +1759,8 @@ SCHEMA_ERZAEHLEN = {"type": "object", "additionalProperties": False, "required":
                "properties": {"art": {"type": "string", "enum": list(ERFOLG_ARTEN)}, "rang": {"type": "integer"}}}},
     "szene": {"type": "object", "additionalProperties": False, "properties": {"ort": {"type": "string", "maxLength": 60},
                                                                            "stimmung": {"type": "string", "maxLength": 30}}},
+    "haendler": {"type": "object", "additionalProperties": False, "required": ["name"], "properties": {
+        "name": {"type": "string", "maxLength": 40}, "satz": {"type": "string", "maxLength": SATZ_MAX}}},
     "frage_an": {"type": "string", "maxLength": NAME_MAX}, "akt_fertig": {"type": "boolean"},
     "ooc": {"type": "array", "maxItems": 5, "items": {"type": "object", "additionalProperties": False, "required": ["wer", "text"],
             "properties": {"wer": {"type": "string", "maxLength": NAME_MAX}, "text": {"type": "string", "maxLength": OOC_MAX + 60}}}}}}
@@ -1588,6 +1788,11 @@ def facts(r, rd, wuerfe=None):
     zauber = [{"wer": x["name"], "zauber": x["zauber"], "wirkung": x["satz"]} for x in rd["log"] if x["art"] == "zauber" and x["n"] == rd["zug"]]
     if zauber:
         fakten["zauber"] = zauber
+    if rd.get("markt"):
+        fakten["haendler"] = rd["markt"]["name"]
+    handel = [{"wer": x["name"], "was": x["was"], "ding": x["ding"]} for x in rd["log"] if x["art"] == "handel" and x["n"] == rd["zug"]]
+    if handel:
+        fakten["handel"] = handel
     if wuerfe is not None:
         fakten["proben"] = wuerfe
     spieltext = "\n".join(f"{names[pid]['held']['name']}: {a['text']}" for pid, a in rd["offen"].items() if pid in names)
@@ -1603,6 +1808,7 @@ def system_text(r, rd, task):
     werte = ", ".join(w["id"] for w in r["werte"])
     t = PANEL_REGELN[lang].format(ton=ton["regel"][1 if lang == "en" else 0])
     t += "\n\n" + (AUFGABE_PROBEN[lang].format(werte=werte, lo=SCHWER[0], hi=SCHWER[1]) if task == "proben" else
+                   AUFGABE_PROLOG[lang].format(n=ERZ_LANG) if task == "prolog" else
                    AUFGABE_ERZAEHLEN[lang].format(n=erz_max(rd), anlaesse=", ".join(ANLAESSE), ooc=OOC_MAX))
     if task != "proben" and rd.get("plan") and rd.get("akt", 0) < len(rd["plan"]["akte"]):
         t += " " + AUFGABE_FOLGE[lang]
@@ -1660,12 +1866,15 @@ def roll(r, rd, proben, rng=None):
     for p in proben:
         h = rd["plaetze"][p["pid"]]["held"]
         vt = p.get("vt") or ""
+        last = p["wert"] == "geschick" and burdened(r, h)
+        if last:                                 # burdened: Geschick with disadvantage, advantage cancels it (2a)
+            vt = "" if vt == "vorteil" else "nachteil"
         ws = [rng.randint(1, 20) for _ in range(2 if vt else 1)]
         w = max(ws) if vt == "vorteil" else min(ws)
         bonus = total(r, h, p["wert"])
         ok = w == 20 or (w != 1 and w + bonus >= p["schwer"])
         out.append({"pid": p["pid"], "name": h["name"], "wert": p["wert"], "w": w, "bonus": bonus, "gesamt": w + bonus,
-                    "schwer": p["schwer"], "ok": ok, "vt": vt, "ws": ws})
+                    "schwer": p["schwer"], "ok": ok, "vt": vt, "ws": ws, **({"belastet": True} if last else {})})
     return out
 
 
@@ -1683,7 +1892,7 @@ def check_story(r, rd, obj):
     if len(text) < 20 or bad_words(r, rd, text):
         return None, 1
     names, drop = _name_map(rd), 0
-    out = {"text": text, "npc": [], "folgen": [], "beute": None, "erfolg": [], "szene": None, "frage": "",
+    out = {"text": text, "npc": [], "folgen": [], "beute": None, "erfolg": [], "szene": None, "frage": "", "haendler": None,
            "akt_fertig": obj.get("akt_fertig") is True, "ooc": []}
     for o in obj.get("ooc") or []:
         pid = names.get(str(o.get("wer", "")).strip().lower()) if isinstance(o, dict) else None
@@ -1724,6 +1933,12 @@ def check_story(r, rd, obj):
         ort, st = plain(s.get("ort"), 60), plain(s.get("stimmung"), 30)
         if not bad_words(r, rd, ort + " " + st):
             out["szene"] = {"ort": ort, "stimmung": st}
+    hd = obj.get("haendler")
+    if isinstance(hd, dict):
+        name, satz = plain(hd.get("name"), 40), plain(hd.get("satz"), SATZ_MAX)
+        out["haendler"] = {"name": "" if bad_words(r, rd, name) else name, "satz": "" if bad_words(r, rd, satz) else satz}
+    elif hd is not None:
+        drop += 1
     fr = str(obj.get("frage_an") or "").strip().lower()
     out["frage"] = names.get(fr, "")
     return out, drop
@@ -1735,19 +1950,24 @@ def apply(r, rd, wuerfe, story, rid, rng=None):
     rng = rng or random
     li = 1 if rd["lang"] == "en" else 0
     held = [p["held"] for _, p in seated(rd)]
-    stufe = max(1, round(sum(h["stufe"] for h in held) / max(1, len(held))))
+    stufe = group_level(held)
     if story:
         for pid, a in rd["offen"].items():
             if pid in rd["plaetze"] and rd["plaetze"][pid].get("held"):
                 _log(rd, "aktion", pid=pid, name=rd["plaetze"][pid]["held"]["name"], text=a["text"])
     ep = {pid: 0 for pid, _ in seated(rd)}
     for w in wuerfe:
-        _log(rd, "wurf", **{k: w[k] for k in ("pid", "name", "wert", "w", "bonus", "gesamt", "schwer", "ok", "vt", "ws") if k in w})
+        _log(rd, "wurf", **{k: w[k] for k in ("pid", "name", "wert", "w", "bonus", "gesamt", "schwer", "ok", "vt", "ws", "belastet") if k in w})
         if w["ok"]:
             ep[w["pid"]] = ep.get(w["pid"], 0) + r["ep"]["probe"] * w["schwer"] // 10
     if story:
+        if story["szene"] and story["szene"]["ort"] and story["szene"]["ort"] != rd["szene"].get("ort"):
+            close_market(rd)                    # a new place: the merchant and what lies on the ground stay behind
+            rd["boden"] = []
         if story["szene"] and (story["szene"]["ort"] or story["szene"]["stimmung"]):
             rd["szene"] = story["szene"]
+        if story.get("haendler") and not rd.get("markt"):
+            open_market(r, rd, story["haendler"]["name"], story["haendler"]["satz"], rng)
         names = dict(seated(rd))
         still = [pid for pid in names if rd["still"].get(pid, 0) + (pid not in rd["offen"]) >= STILL]
         frage = story["frage"]
@@ -1769,7 +1989,12 @@ def apply(r, rd, wuerfe, story, rid, rng=None):
         if story["beute"]:
             b = story["beute"]
             i, it, gold = loot(r, held, b["anlass"], stufe, rng, b["name"], b["satz"])
-            _log(rd, "beute", name=held[i]["name"], item=item_view(r, it, rd["lang"]), gold=gold)
+            boden = not room(r, held[i], [it])
+            if boden:                           # no place or too heavy: it lies here for the group (2a)
+                rd["boden"] = ((rd.get("boden") or []) + [it])[-BODEN_MAX:]
+            else:
+                bag_add(r, held[i], it)
+            _log(rd, "beute", name=held[i]["name"], item=item_view(r, it, rd["lang"]), gold=gold, boden=boden)
             _day.bump("beute")
             print(f"dungeon: beute | {b['anlass']} | {it['s']}", flush=True)
         for e in story["erfolg"]:
@@ -1879,6 +2104,68 @@ async def run_turn(rid, turn):
         await asyncio.to_thread(_clear_dm, rid)
 
 
+def prolog(r, rd, story):
+    """The opening into the round: the model's checked narration (place, mood, starting situation; no consequences,
+    loot or successes), or without it the host's opening or the first act's content; nothing when there is neither."""
+    li = 1 if rd["lang"] == "en" else 0
+    names = dict(seated(rd))
+    if story:
+        if story["szene"] and (story["szene"]["ort"] or story["szene"]["stimmung"]):
+            rd["szene"] = story["szene"]
+        if story.get("haendler") and not rd.get("markt"):
+            open_market(r, rd, story["haendler"]["name"], story["haendler"]["satz"])
+        text, npc, frage = story["text"], story["npc"][:1], story["frage"]
+    else:
+        akte = (rd.get("plan") or {}).get("akte") or []
+        text = rd.get("einstieg") or (akte[rd.get("akt", 0)]["inhalt"] if rd.get("akt", 0) < len(akte) else "")
+        npc, frage = [], ""
+    if not text:
+        return False
+    _log(rd, "dm", text=text, npc=npc, frage=names[frage]["held"]["name"] if frage in names else "", prolog=True)
+    return True
+
+
+async def run_prolog(rid):
+    """The Dungeon Master opens a new round or chapter before the first turn: place, mood and the starting situation,
+    checked like every narration (two tries). The first turn waits for it (rd["dm"])."""
+    import wartung
+    r = rules()
+    t0 = time.perf_counter()
+    try:
+        rd = (await asyncio.to_thread(_read))["runden"].get(rid)
+        if not rd:
+            return
+        story, why = None, "pause"
+        if not wartung.paused("llm"):
+            for _ in range(2):
+                obj = await _ask_json(system_text(r, rd, "prolog"), facts(r, rd), SCHEMA_ERZAEHLEN, "prolog", 900)
+                story, drop = check_story(r, rd, obj)
+                if story:
+                    break
+            why = "ok" if story else "ausfall"
+        said = []
+
+        def keep():
+            with _lock:
+                d = _read()
+                cur = d["runden"].get(rid)
+                if not cur or cur["zug"] != 1 or cur["status"] != "laeuft":
+                    return
+                if prolog(r, cur, story) and cur.get("vorlesen"):
+                    e = cur["log"][-1]
+                    said.extend(speak_parts(r, e["text"], e.get("npc") or []))
+                cur["dm"] = ""
+                cur["zug_t"] = time.time()            # the turn's time starts with the opening read
+                _write(d)
+        await asyncio.to_thread(keep)
+        if said:
+            spawn(speak_turn(rid, 0, said), name="dungeon")
+        print(f"dungeon: prolog | {why} | {round((time.perf_counter() - t0) * 1000)} ms", flush=True)
+    finally:
+        _running.discard(rid)
+        await asyncio.to_thread(_clear_dm, rid)
+
+
 def _clear_dm(rid):
     with _lock:
         d = _read()
@@ -1901,6 +2188,10 @@ def maybe_close(rid, now=None, force=False):
             _end(rd, now, "zeit")
             _write(d)
             return False
+        if rd.get("dm") and rid not in _running:
+            rd["dm"] = ""                     # left over from a restart while the model answered: the round goes on
+            _write(d)
+            print("dungeon: zug | frei nach neustart", flush=True)
         if rid in _running or not (due(rd, now) or force and rd["offen"] and rd["status"] == "laeuft" and not rd.get("dm")):
             return False
         rd["dm"] = "denkt"
@@ -2188,6 +2479,7 @@ def view(rid, pid, now=None):
             "max": r["grenzen"]["spieler"], "log": [e for e in rd["log"] if e["art"] != "ooc" or e.get("pid") == pid][-LOG_ZEIGEN:], "until": rd["until"], "poll": POLL_S,
             "text_max": TEXT_MAX, "werte": {w["id"]: w["name"][li] for w in r["werte"]}, "stimmen": list(_stimmen["v"]), "stimme_design": _stimmen["design"],
             "angebote": offers_for(r, rd, pid, lang), "tausch_teile": TAUSCH_TEILE,
+            "markt": market_view(r, rd, me.get("held"), lang), "boden": [item_view(r, x, lang) for x in rd.get("boden") or []],
             "akt": min(rd.get("akt", 0) + 1, len(rd["plan"]["akte"])) if rd.get("plan") else 0,
             "akte": len(rd["plan"]["akte"]) if rd.get("plan") else 0, "erzaehlt": bool(rd.get("plan")) and rd.get("akt", 0) >= len(rd["plan"]["akte"]),
             "plan": rd.get("plan") if host else None, "akt_min": AKT_MIN}
@@ -2211,23 +2503,35 @@ def hero_act(rid, pid, b):
             raise LookupError("held")
         it = next((x for x in h["tasche"] if x["i"] == b.get("i")), None)
         if was == "anlegen":
-            c = _by(r, "gegenstaende").get(it["id"]) if it else None
-            if not c or c["art"] not in SLOTS or not fits(r, h, c):
+            c = _c(r, it) if it else None
+            pl = places(r, c) if c else ()
+            k = b.get("platz") if b.get("platz") in pl else next((x for x in pl if not h["an"][x]), pl[0] if pl else None)
+            if not k or not fits(r, h, c) or it.get("n", 1) != 1:
                 raise ValueError("passt nicht")
+            back = [k]
+            if c.get("zweihand"):
+                back.append("nebenhand")          # a two-handed weapon takes both hands
+            elif k == "nebenhand" and h["an"]["haupthand"] and _c(r, h["an"]["haupthand"]).get("zweihand"):
+                back.append("haupthand")
+            back = [x for x in back if h["an"][x]]
+            if len(h["tasche"]) - 1 + len(back) > TASCHE:
+                raise ValueError("tasche voll")
             h["tasche"].remove(it)
-            if h.get(c["art"]):
-                h["tasche"].append(h[c["art"]])
-            h[c["art"]] = it
+            for x in back:
+                bag_add(r, h, h["an"][x])
+                h["an"][x] = None
+            h["an"][k] = it
         elif was == "ablegen":
-            if b.get("art") not in SLOTS or not h.get(b["art"]) or len(h["tasche"]) >= TASCHE:
+            k = b.get("platz")
+            if k not in SLOTS or not h["an"].get(k) or len(h["tasche"]) >= TASCHE:
                 raise ValueError("ablegen")
-            h["tasche"].append(h.pop(b["art"]))
-            h[b["art"]] = None
+            bag_add(r, h, h["an"][k])
+            h["an"][k] = None
         elif was == "trinken":
-            c = _by(r, "gegenstaende").get(it["id"]) if it else None
+            c = _c(r, it) if it else None
             if not c or c["art"] != "trank":
                 raise ValueError("kein trank")
-            h["tasche"].remove(it)
+            use_one(h, it)
             if c.get("heilung"):
                 h["leben"] = min(h["leben_max"], h["leben"] + c["heilung"] + it.get("bonus", 0))
                 _log(rd, "folge", pid=pid, name=h["name"], was="heilung", zahl=c["heilung"] + it.get("bonus", 0), leben=h["leben"])
@@ -2236,10 +2540,10 @@ def hero_act(rid, pid, b):
         elif was == "wirken":
             # a spell from the bag, used up: its healing and blessing for the hero or the whole group, by the catalog;
             # the model only hears that it was cast (facts) and narrates it
-            c = _by(r, "gegenstaende").get(it["id"]) if it else None
+            c = _c(r, it) if it else None
             if not c or c["art"] != "zauber":
                 raise ValueError("kein zauber")
-            h["tasche"].remove(it)
+            use_one(h, it)
             name = item_view(r, it, rd["lang"])["name"]
             for x in ([p["held"] for _, p in seated(rd)] if c["ziel"] == "gruppe" else [h]):
                 if c.get("heilung"):
@@ -2250,13 +2554,29 @@ def hero_act(rid, pid, b):
                  satz=c["satz"][1 if rd["lang"] == "en" else 0])
         elif was == "schenken":
             an = rd["plaetze"].get(b.get("an"))
-            if not it or not an or not an.get("held") or b.get("an") == pid or len(an["held"]["tasche"]) >= TASCHE:
+            if not it or not an or not an.get("held") or b.get("an") == pid or not room(r, an["held"], [it]):
                 raise ValueError("an")
             h["tasche"].remove(it)
-            an["held"]["tasche"].append(it)
+            bag_add(r, an["held"], it)
             _log(rd, "system", text=[f"{h['name']} gibt {an['held']['name']} etwas.", f"{h['name']} gives {an['held']['name']} something."])
             if an.get("uid"):
                 keep_hero(an["uid"], an["held"])
+        elif was in ("kaufen", "verkaufen", "erkennen"):
+            shop(r, rd, pid, h, was, b, it)
+        elif was == "aufheben":
+            boden = rd.get("boden") or []
+            x = next((x for x in boden if x["i"] == b.get("i")), None)
+            if not x or not room(r, h, [x]):
+                raise ValueError("aufheben")
+            boden.remove(x)
+            bag_add(r, h, x)
+            _log(rd, "system", text=[f"{h['name']} hebt etwas auf.", f"{h['name']} picks something up."])
+        elif was == "fallen":
+            if not it or len(rd.get("boden") or []) >= BODEN_MAX:
+                raise ValueError("fallen")
+            h["tasche"].remove(it)
+            rd["boden"] = (rd.get("boden") or []) + [it]
+            _log(rd, "system", text=[f"{h['name']} legt etwas ab.", f"{h['name']} puts something down."])
         elif was == "punkt":
             if h["punkte"] < 1 or b.get("wert") not in h["werte"] or h["werte"][b["wert"]] >= WERT_MAX:
                 raise ValueError("punkt")
@@ -2277,13 +2597,73 @@ def hero_act(rid, pid, b):
             h["faehigkeiten"].append(b["id"])
             h["wahl"] = []
         elif was in ("tauschen", "annehmen", "ablehnen"):
-            other = trade(rd, pid, was, b)
+            other = trade(r, rd, pid, was, b)
             if other and other.get("uid"):
                 keep_hero(other["uid"], other["held"])
         _write(d)
         if p.get("uid"):
             keep_hero(p["uid"], h)
     print(f"dungeon: held | {was}", flush=True)
+
+
+def shop(r, rd, pid, h, was, b, it):
+    """At the merchant, by fixed prices (never the model): buy one of its goods (each only once), sell from the bag
+    (half its worth, a quarter while unknown), have an unknown item named for gold; an unknown item is also named by
+    a scroll of knowing from the bag (mit), merchant or not."""
+    li = 1 if rd["lang"] == "en" else 0
+    m = rd.get("markt")
+    if was == "erkennen":
+        x = next((x for x in h["tasche"] + worn(h) if x["i"] == b.get("i") and x.get("u")), None)
+        rolle = next((y for y in h["tasche"] if y["i"] == b.get("mit") and _c(r, y).get("erkennt")), None) if b.get("mit") else None
+        if not x or b.get("mit") and not rolle or not rolle and (not m or h["gold"] < name_price(r, x)):
+            raise ValueError("erkennen")
+        if rolle:
+            use_one(h, rolle)
+        else:
+            h["gold"] -= name_price(r, x)
+        x.pop("u")
+        _log(rd, "handel", pid=pid, name=h["name"], was="erkannt", ding=item_view(r, x, rd["lang"])["name"], gold=0 if rolle else name_price(r, x))
+        print(f"dungeon: handel | erkannt | {'rolle' if rolle else 'haendler'}", flush=True)
+        return
+    if not m:
+        raise LookupError("haendler")
+    if was == "kaufen":
+        w = next((x for x in m["ware"] if x["i"] == b.get("i")), None)
+        if not w or h["gold"] < buy_price(r, h, w) or not room(r, h, [w]):
+            raise ValueError("kaufen")
+        preis = buy_price(r, h, w)
+        m["ware"].remove(w)
+        h["gold"] -= preis
+        bag_add(r, h, w)
+        _day.bump("kaeufe")
+    else:
+        if not it:
+            raise ValueError("verkaufen")
+        preis = sell_price(r, it)
+        h["tasche"].remove(it)
+        h["gold"] = min(GOLD_MAX, h["gold"] + preis)
+        if len(m["ware"]) < WARE_MAX:
+            it.pop("u", None)                    # the merchant knows what it bought
+            m["ware"].append(it)
+        _day.bump("verkaeufe")
+        w = it
+    _log(rd, "handel", pid=pid, name=h["name"], was="kauf" if was == "kaufen" else "verkauf", ding=item_view(r, w, rd["lang"])["name"], gold=preis)
+    print(f"dungeon: handel | {'kauf' if was == 'kaufen' else 'verkauf'} | {w['s']}", flush=True)
+
+
+def market_view(r, rd, h, lang):
+    """The merchant as one seat sees it: goods with what it would pay, what its bag would fetch, the price of naming."""
+    m = rd.get("markt")
+    if not m:
+        return None
+    return {"name": m["name"], "satz": m["satz"], "rabatt": rabatt(r, h) if h else 0,
+            "ware": [dict(item_view(r, x, lang), preis=buy_price(r, h, x) if h else buy_price_full(r, x)) for x in m["ware"]],
+            "verkauf": {x["i"]: sell_price(r, x) for x in h["tasche"]} if h else {},
+            "erkennen": {x["i"]: name_price(r, x) for x in (h["tasche"] + worn(h) if h else []) if x.get("u")}}
+
+
+def buy_price_full(r, it):
+    return price(r, it) * it.get("n", 1)
 
 
 def _ids(x):
@@ -2296,7 +2676,7 @@ def _gold(x):
     return x if isinstance(x, int) and not isinstance(x, bool) and 0 <= x <= GOLD_MAX else None
 
 
-def trade(rd, pid, was, b):
+def trade(r, rd, pid, was, b):
     """A trade between two heroes of the round: one makes an offer (bag items and gold for bag items and gold), the
     other accepts or declines; either side may take it back. On accept the panel checks again that both still own
     everything and both bags have room, then swaps in one step. Returns the other seat when items moved."""
@@ -2328,15 +2708,21 @@ def trade(rd, pid, was, b):
         return None
     von = rd["plaetze"].get(t["von"])
     a, z = (von or {}).get("held"), h
-    if (not a or not _owns(a, t["gebe"], t["gold"]) or not _owns(z, t["will"], t["will_gold"])
-            or len(a["tasche"]) - len(t["gebe"]) + len(t["will"]) > TASCHE
-            or len(z["tasche"]) - len(t["will"]) + len(t["gebe"]) > TASCHE):
+    ok = a and _owns(a, t["gebe"], t["gold"]) and _owns(z, t["will"], t["will_gold"])
+    if ok:
+        give = [x for x in a["tasche"] if x["i"] in t["gebe"]]
+        take = [x for x in z["tasche"] if x["i"] in t["will"]]
+        a2 = dict(a, tasche=[x for x in a["tasche"] if x["i"] not in t["gebe"]])
+        z2 = dict(z, tasche=[x for x in z["tasche"] if x["i"] not in t["will"]])
+        ok = room(r, a2, take) and room(r, z2, give)     # bag places and the carry limit after the swap
+    if not ok:
         print("dungeon: tausch | ungueltig", flush=True)
         raise ValueError("tausch")
-    give = [x for x in a["tasche"] if x["i"] in t["gebe"]]
-    take = [x for x in z["tasche"] if x["i"] in t["will"]]
-    a["tasche"] = [x for x in a["tasche"] if x["i"] not in t["gebe"]] + take
-    z["tasche"] = [x for x in z["tasche"] if x["i"] not in t["will"]] + give
+    a["tasche"], z["tasche"] = a2["tasche"], z2["tasche"]
+    for x in take:
+        bag_add(r, a, x)
+    for x in give:
+        bag_add(r, z, x)
     a["gold"] += t["will_gold"] - t["gold"]
     z["gold"] += t["gold"] - t["will_gold"]
     # an item that moved is in no other open offer any more
@@ -2382,7 +2768,8 @@ def for_live():
             "beute": t["beute"], "stufen": t["stufen"], "ausfall": t["ausfall"], "verworfen": t["verworfen"],
             "abgelehnt": t["abgelehnt"], "kampagnen": sum(len(campaigns(u)) for u in profiles.user_ids()),
             "kapitel": t["kapitel"], "schreibt": len(_summing), "vorgelesen": t["vorgelesen"], "liest": len(_speaking),
-            "gehoert": t["gehoert"], "geschichten": len(plans()), "akte": t["akte"], "vorschlaege": t["vorschlaege"]}
+            "gehoert": t["gehoert"], "geschichten": len(plans()), "akte": t["akte"], "vorschlaege": t["vorschlaege"],
+            "maerkte_offen": sum(1 for v in rs if v.get("markt")), "maerkte": t["maerkte"], "kaeufe": t["kaeufe"], "verkaeufe": t["verkaeufe"]}
 
 
 def own_count(uid):
@@ -2498,6 +2885,7 @@ async def neue_runde(request: Request, prof=Depends(browser_profile)):
         rid = await asyncio.to_thread(make_round, uid, b, _lang(b))
     except KNOWN as e:
         raise _http(e)
+    spawn(run_prolog(rid), name="dungeon-prolog")
     return await asyncio.to_thread(view, rid, _seat_uid(rid, uid))
 
 
@@ -2603,6 +2991,32 @@ async def pause(rid: str, request: Request, prof=Depends(browser_profile)):
             rd["zug_t"] = time.time()
             _write(d)
         print(f"dungeon: pause | {'an' if b.get('an') else 'aus'}", flush=True)
+        return view(rid, _seat_uid(rid, uid))
+    try:
+        return await asyncio.to_thread(go)
+    except KNOWN as e:
+        raise _http(e)
+
+
+@router.post("/api/profile/dungeon/{rid}/markt", dependencies=[Depends(assistant)])
+async def markt(rid: str, request: Request, prof=Depends(browser_profile)):
+    uid = prof["id"]
+    _need(uid)
+    guard.limit(request, "dungeon", uid)
+    b = await json_body(request, BODY)
+
+    def go():
+        r = rules()
+        with _lock:
+            d = _read()
+            rd = _round(d, rid)
+            if rd["owner"] != uid or rd["status"] == "ende":
+                raise LookupError("gastgeber")
+            if b.get("auf") and not rd.get("markt"):
+                open_market(r, rd)
+            elif not b.get("auf"):
+                close_market(rd)
+            _write(d)
         return view(rid, _seat_uid(rid, uid))
     try:
         return await asyncio.to_thread(go)
@@ -2820,6 +3234,7 @@ async def kampagne_weiter(kid: str, request: Request, prof=Depends(browser_profi
     b = await json_body(request, BODY)
     try:
         rid = await asyncio.to_thread(next_chapter, uid, kid, b, _lang(b))
+        spawn(run_prolog(rid), name="dungeon-prolog")
     except KNOWN as e:
         raise _http(e)
     return await asyncio.to_thread(view, rid, await asyncio.to_thread(_seat_uid, rid, uid))
