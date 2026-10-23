@@ -24,6 +24,7 @@
 No wall clock in the checks: expiry and turns use a given now; dice use a seeded random.
 """
 import asyncio
+import copy
 import json
 import os
 import random
@@ -78,6 +79,8 @@ class Base(unittest.TestCase):
         helpers.keep_chat(self, "dungeon")
         helpers.set_config(dungeon=True)
         guard.reset()
+        for k in [k for k in guard._rate if str(k[0]).startswith("dungeon")]:
+            guard._rate.pop(k, None)                                    # every test starts with the game's rate limits fresh
         for f in (dungeon.FILE, dungeon.FIGUREN, dungeon.EIGENE, dungeon.GESCHICHTEN):
             if os.path.exists(f):
                 os.remove(f)
@@ -449,6 +452,30 @@ class AdminRules(Base):
         held = self.state(v["rid"])["plaetze"][v["pid"]]["held"]
         self.assertEqual([(x["wert"], x["mod"]) for x in host["karte"]["werte"]], [(held["werte"][w["id"]], dungeon.total(r, held, w["id"])) for w in r["werte"]])
         self.assertEqual(len(host["karte"]["dinge"]), 1)                        # the starting weapon
+
+    def test_pictures_on_the_cards_and_the_light_or_dark_look(self):
+        """Welt, Ton, Volk and Klasse are chosen as cards with a picture (Dominik 2026-10-23); a picture is never text
+        that could carry markup. The whole game page and the guest's window take the look, light or dark by the button."""
+        r = dungeon.rules()
+        self.assertEqual(dungeon.check_rules(r), [])
+        for k in ("welten", "toene", "voelker", "klassen"):
+            self.assertTrue(all(x.get("zeichen") for x in r[k]), k)
+            for z in ("<b>", "Drache", "a b", '"x"'):
+                bad = copy.deepcopy(r)
+                bad[k][0]["zeichen"] = z
+                self.assertTrue([e for e in dungeon.check_rules(bad) if "zeichen" in e], (k, z))
+        wahl = self.c.get("/api/profile/dungeon").json()["wahl"]
+        self.assertEqual(wahl["welten"][0]["farben"], r["welten"][0]["farben"])
+        self.assertTrue(all(x["zeichen"] for k in ("welten", "toene", "voelker", "klassen") for x in wahl[k]))
+        v = self.new_round(welt="horror")
+        code = self.invite(v["rid"])
+        g = self.v.post("/api/dungeon/platz", json={"code": code}).json()
+        self.assertEqual((g["welt"], g["wahl"]["geschichten"]), ("horror", []))   # a guest's form: no stories
+        js = open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8").read()
+        self.assertIn("try{m=localStorage", js)                                  # the choice is a convenience, never needed
+        self.assertIn("try{localStorage.setItem('dm-modus'", js)
+        for where in ("dmTop=", "<div class=\"dm dm-invite\"><div class=\"dm-gtop\">${dmModus()}", "${dmModus()}<button type=\"button\" class=\"b dm-full\""):
+            self.assertIn(where, js)                                             # rounds and heroes, the guest's form, the table
 
     def test_full_screen_and_guide_for_every_seat(self):
         js = open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8").read()
@@ -843,6 +870,33 @@ class Stories(Base):
         self.assertEqual(r.status_code, 200, r.text)
         akte = r.json()["plan"]["akte"]
         self.assertEqual([a["titel"] for a in akte], ["Das Läuten", "Das Rätsel", "Die Krypta"])
+
+    def test_ten_shipped_stories_per_world_in_both_languages(self):
+        """The stories that come with the Spark (Dominik 2026-10-23): ten per world, each by the planner's rules in
+        German and English with nothing cut, chosen as a card under Neue Runde; the story sets world and tone."""
+        r = dungeon.rules()
+        raw = dungeon.read_json(dungeon.VORLAGEN, {})["geschichten"]
+        kind = {"ton": 8}
+        self.assertTrue(dungeon.bad_words(r, kind, "Sie finden eine Leiche."))
+        self.assertFalse(dungeon.bad_words(r, kind, "Die Helden schleichen leise nach Federleicht."))   # a word inside a word
+        self.assertEqual(len({x["id"] for x in raw}), len(raw))
+        for lang in ("de", "en"):
+            ok = dungeon.shipped(r, lang)
+            self.assertEqual(len(ok), len(raw), lang)                            # none refused by check_plan
+            for w in r["welten"]:
+                self.assertEqual(sum(1 for g in ok.values() if g["welt"] == w["id"]), 10, (lang, w["id"]))
+            for x in raw:
+                g, own = ok["v-" + x["id"]], x[lang]
+                self.assertEqual([g["titel"], g["idee"], g["ziel"], g["gegner"]] + [a[k] for a in g["akte"] for k in ("titel", "inhalt", "wende")],
+                                 [own["titel"], own["idee"], own["ziel"], own["gegner"]] + [a[k] for a in own["akte"] for k in ("titel", "inhalt", "wende")], x["id"])
+        gs = [g for g in self.c.get("/api/profile/dungeon?lang=en").json()["wahl"]["geschichten"] if g["von"] == "spark"]
+        self.assertEqual(len(gs), len(raw))
+        g = next(x for x in gs if x["welt"] == "horror" and x["ton"] == 16)
+        v = self.new_round(geschichte=g["gid"], welt="fantasy", ton=8)
+        rd = self.state(v["rid"])
+        self.assertEqual((rd["welt"], rd["ton"], v["plan"]["titel"]), ("horror", 16, dungeon.shipped(r, rd["lang"])[g["gid"]]["titel"]))
+        r2 = self.c.post("/api/profile/dungeon/runde", json={"titel": "X", "welt": "fantasy", "ton": 12, "geschichte": "v-gibt-es-nicht", "held": dict(HERO, name="Ylva")})
+        self.assertEqual(r2.status_code, 404)
 
     def test_round_follows_the_act_model_decides_panel_limits(self):
         gid = self.save().json()["geschichten"][0]["gid"]

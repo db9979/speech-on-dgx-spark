@@ -1,0 +1,3455 @@
+{
+ "zweck": "KI-Dungeon-Master (dungeon.py shipped): zehn fertige Geschichten je Welt, auf Deutsch und Englisch, im Format des Geschichten-Planers (check_plan). Der Gastgeber wählt sie unter Neue Runde als Karte, zusammen mit den Geschichten des Admins.",
+ "geschichten": [
+  {
+   "id": "fantasy-glocke",
+   "welt": "fantasy",
+   "ton": 12,
+   "de": {
+    "titel": "Die Glocke von Hallstein",
+    "idee": "Im Bergdorf Hallstein läutet die Kirchenglocke jede Nacht um drei von selbst. Seitdem verschwinden Schafe, und die Alten flüstern von einem Bann aus der Zeit der Gründer.",
+    "ziel": "Den Bann über der Glocke lösen und herausfinden, wer ihn erneuert hat.",
+    "gegner": "Meister Odo, der Glockengießer, der mit einem Bergdämon einen Pakt schloss",
+    "orte": [
+     "Hallstein",
+     "Glockenturm",
+     "Alte Gießerei",
+     "Höhle im Grauen Grat"
+    ],
+    "akte": [
+     {
+      "titel": "Das Läuten",
+      "inhalt": "Die Helden kommen nachts nach Hallstein, hören das Läuten und sprechen mit dem ängstlichen Dorfvorsteher und dem verschlossenen Küster.",
+      "wende": "Im Glockenturm finden sie frische Wachsspuren und ein Siegel der Gießerei.",
+      "zuege": 5
+     },
+     {
+      "titel": "Die Gießerei",
+      "inhalt": "In der verlassenen Gießerei liegen Gussformen mit fremden Zeichen. Ein Lehrling weiß mehr, als er zugibt.",
+      "wende": "Der Lehrling gesteht: Meister Odo lebt und gießt im Berg eine zweite Glocke.",
+      "zuege": 6
+     },
+     {
+      "titel": "Der Graue Grat",
+      "inhalt": "Durch die Höhle im Grauen Grat geht es zur geheimen Werkstatt, in der Odo den Dämon mit jedem Schlag stärker bindet.",
+      "wende": "Die Helden müssen wählen: die zweite Glocke zerstören oder Odo zwingen, den Pakt selbst zu brechen.",
+      "zuege": 6
+     }
+    ]
+   },
+   "en": {
+    "titel": "The Bell of Hallstein",
+    "idee": "In the mountain village of Hallstein the church bell rings by itself every night at three. Since then sheep vanish, and the old ones whisper of a ban from the founders' days.",
+    "ziel": "Break the ban on the bell and find out who renewed it.",
+    "gegner": "Master Odo, the bell founder, who made a pact with a mountain demon",
+    "orte": [
+     "Hallstein",
+     "Bell tower",
+     "Old foundry",
+     "Cave in the Grey Ridge"
+    ],
+    "akte": [
+     {
+      "titel": "The ringing",
+      "inhalt": "The heroes reach Hallstein at night, hear the bell and talk to the frightened headman and the tight-lipped sexton.",
+      "wende": "In the bell tower they find fresh wax and a seal of the foundry.",
+      "zuege": 5
+     },
+     {
+      "titel": "The foundry",
+      "inhalt": "In the deserted foundry lie moulds with strange signs. An apprentice knows more than he admits.",
+      "wende": "The apprentice confesses: Master Odo is alive and casts a second bell inside the mountain.",
+      "zuege": 6
+     },
+     {
+      "titel": "The Grey Ridge",
+      "inhalt": "Through the cave in the Grey Ridge the way leads to the hidden workshop where Odo binds the demon tighter with every strike.",
+      "wende": "The heroes must choose: smash the second bell or force Odo to break the pact himself.",
+      "zuege": 6
+     }
+    ]
+   }
+  },
+  {
+   "id": "fantasy-drache",
+   "welt": "fantasy",
+   "ton": 8,
+   "de": {
+    "titel": "Der Drache, der nicht fliegen konnte",
+    "idee": "Ein junger Drache namens Funke ist aus dem Nest gefallen und kann nicht fliegen. Die Bauern von Kleewiese haben Angst vor ihm, dabei sucht er nur seine Mutter.",
+    "ziel": "Funke heil zu seiner Mutter auf den Wolkenhorn-Gipfel bringen.",
+    "gegner": "Baron Krummbart, der den kleinen Drachen fangen und ausstellen will",
+    "orte": [
+     "Kleewiese",
+     "Flüsterwald",
+     "Brücke der Trolle",
+     "Wolkenhorn"
+    ],
+    "akte": [
+     {
+      "titel": "Ein Drache im Heu",
+      "inhalt": "In der Scheune von Kleewiese versteckt sich Funke. Die Helden müssen die Bauern beruhigen und das Vertrauen des Drachen gewinnen.",
+      "wende": "Die Leute des Barons tauchen mit Netzen auf, und Funke flieht in den Flüsterwald.",
+      "zuege": 5
+     },
+     {
+      "titel": "Der Flüsterwald",
+      "inhalt": "Im Flüsterwald sprechen die Bäume in Rätseln. Wer sie löst, erfährt den Weg zum Wolkenhorn.",
+      "wende": "An der Brücke verlangt ein Troll einen Zoll, den niemand bezahlen kann, außer mit einem guten Witz.",
+      "zuege": 6
+     },
+     {
+      "titel": "Zum Wolkenhorn",
+      "inhalt": "Der Aufstieg ist steil und windig. Funke übt das Fliegen, während Baron Krummbart den Helden folgt.",
+      "wende": "Am Gipfel taucht die Drachenmutter auf, und der Baron steht plötzlich ganz klein da.",
+      "zuege": 5
+     }
+    ]
+   },
+   "en": {
+    "titel": "The Dragon Who Could Not Fly",
+    "idee": "A young dragon called Spark fell out of the nest and cannot fly. The farmers of Cloverfield are afraid of him, yet he only looks for his mother.",
+    "ziel": "Bring Spark safely to his mother on the Cloudhorn peak.",
+    "gegner": "Baron Crookbeard, who wants to catch the little dragon and put him on show",
+    "orte": [
+     "Cloverfield",
+     "Whispering Wood",
+     "Trolls' Bridge",
+     "Cloudhorn"
+    ],
+    "akte": [
+     {
+      "titel": "A dragon in the hay",
+      "inhalt": "Spark hides in a barn in Cloverfield. The heroes must calm the farmers and win the dragon's trust.",
+      "wende": "The baron's men turn up with nets, and Spark flees into the Whispering Wood.",
+      "zuege": 5
+     },
+     {
+      "titel": "The Whispering Wood",
+      "inhalt": "In the Whispering Wood the trees speak in riddles. Whoever solves them learns the way to the Cloudhorn.",
+      "wende": "At the bridge a troll asks a toll nobody can pay, except with a good joke.",
+      "zuege": 6
+     },
+     {
+      "titel": "Up the Cloudhorn",
+      "inhalt": "The climb is steep and windy. Spark practises flying while Baron Crookbeard follows the heroes.",
+      "wende": "At the peak the dragon mother appears, and the baron suddenly looks very small.",
+      "zuege": 5
+     }
+    ]
+   }
+  },
+  {
+   "id": "fantasy-gewoelbe",
+   "welt": "fantasy",
+   "ton": 12,
+   "de": {
+    "titel": "Das Gewölbe des Erzmagiers",
+    "idee": "Der Erzmagier Valerian ist vor hundert Jahren in sein Gewölbe gegangen und nie zurückgekehrt. Nun hat ein Erdbeben den Eingang freigelegt, und Schatzsucher aus drei Ländern sind unterwegs.",
+    "ziel": "Das Herz des Gewölbes erreichen, bevor die Konkurrenz es plündert, und das Geheimnis Valerians lüften.",
+    "gegner": "Die Söldnerführerin Mira Schwarzhand, die das Gewölbe für einen fremden König ausräumen soll",
+    "orte": [
+     "Steinbruch von Ardel",
+     "Halle der Fallen",
+     "Bibliothek der Echos",
+     "Herzkammer"
+    ],
+    "akte": [
+     {
+      "titel": "Der freigelegte Eingang",
+      "inhalt": "Am Steinbruch lagern Schatzsucher, Händler und Mira mit ihren Söldnern. Wer zuerst hineinwill, braucht einen Plan.",
+      "wende": "Ein alter Wächter-Golem erwacht und lässt nur ein, wer das Rätsel am Tor löst.",
+      "zuege": 5
+     },
+     {
+      "titel": "Halle der Fallen",
+      "inhalt": "Gänge mit Druckplatten, sprechende Statuen und eine Brücke aus Licht prüfen Mut und Verstand.",
+      "wende": "Mira überholt die Helden durch einen Geheimgang und hinterlässt eine Warnung.",
+      "zuege": 6
+     },
+     {
+      "titel": "Die Herzkammer",
+      "inhalt": "In der Bibliothek der Echos sprechen Valerians Erinnerungen. In der Herzkammer schläft der Erzmagier selbst, gebunden an einen Kristall.",
+      "wende": "Den Kristall zu nehmen bringt Reichtum, ihn zu lassen rettet Valerian. Mira will ihn um jeden Preis.",
+      "zuege": 6
+     }
+    ]
+   },
+   "en": {
+    "titel": "The Archmage's Vault",
+    "idee": "The archmage Valerian went into his vault a hundred years ago and never came back. Now an earthquake has laid the entrance bare, and treasure hunters from three lands are on their way.",
+    "ziel": "Reach the heart of the vault before the rivals loot it and uncover Valerian's secret.",
+    "gegner": "The mercenary captain Mira Blackhand, sent to empty the vault for a foreign king",
+    "orte": [
+     "Ardel quarry",
+     "Hall of Traps",
+     "Library of Echoes",
+     "Heart chamber"
+    ],
+    "akte": [
+     {
+      "titel": "The open entrance",
+      "inhalt": "At the quarry camp treasure hunters, traders and Mira with her mercenaries. Whoever wants in first needs a plan.",
+      "wende": "An old guardian golem wakes and lets in only those who solve the riddle at the gate.",
+      "zuege": 5
+     },
+     {
+      "titel": "Hall of Traps",
+      "inhalt": "Corridors with pressure plates, talking statues and a bridge of light test courage and wits.",
+      "wende": "Mira overtakes the heroes through a secret passage and leaves a warning.",
+      "zuege": 6
+     },
+     {
+      "titel": "The heart chamber",
+      "inhalt": "In the Library of Echoes Valerian's memories speak. In the heart chamber the archmage himself sleeps, bound to a crystal.",
+      "wende": "Taking the crystal brings riches, leaving it saves Valerian. Mira wants it at any price.",
+      "zuege": 6
+     }
+    ]
+   }
+  },
+  {
+   "id": "fantasy-krone",
+   "welt": "fantasy",
+   "ton": 12,
+   "de": {
+    "titel": "Die Krone im Eis",
+    "idee": "Der Winter will im Königreich Nordmark nicht enden. Die Seherin sagt, die Krone der Eiskönigin sei aus ihrem Grab gestohlen worden und friere das Land ein, bis sie zurückkehrt.",
+    "ziel": "Die gestohlene Krone finden und in das Grab der Eiskönigin zurückbringen.",
+    "gegner": "Graf Edwin von Frostbach, der mit der Krone den Thron erzwingen will",
+    "orte": [
+     "Königsstadt Nordmark",
+     "Der gefrorene See",
+     "Burg Frostbach",
+     "Grab der Eiskönigin"
+    ],
+    "akte": [
+     {
+      "titel": "Ewiger Winter",
+      "inhalt": "In der hungernden Königsstadt erfahren die Helden von der Seherin, was geschehen ist, und finden die Spur eines Schlittens.",
+      "wende": "Die Spur führt über den gefrorenen See, wo das Eis unter ihnen zu singen beginnt.",
+      "zuege": 5
+     },
+     {
+      "titel": "Burg Frostbach",
+      "inhalt": "Der Graf lädt die Helden scheinbar freundlich ein. In der Burg ist es eisig, und die Diener haben Angst.",
+      "wende": "In der Schatzkammer liegt nur eine Fälschung, die echte Krone trägt der Graf bei sich.",
+      "zuege": 6
+     },
+     {
+      "titel": "Das Grab",
+      "inhalt": "Die Helden jagen den Grafen zum Grab, wo der Geist der Eiskönigin erwacht und ihre Krone fordert.",
+      "wende": "Die Königin bietet den Helden einen Wunsch an, wenn sie den Grafen richten. Gnade oder Strafe?",
+      "zuege": 5
+     }
+    ]
+   },
+   "en": {
+    "titel": "The Crown in the Ice",
+    "idee": "Winter will not end in the kingdom of Northmark. The seer says the Ice Queen's crown was stolen from her tomb and freezes the land until it returns.",
+    "ziel": "Find the stolen crown and bring it back to the Ice Queen's tomb.",
+    "gegner": "Count Edwin of Frostbrook, who wants to force the throne with the crown",
+    "orte": [
+     "Royal city of Northmark",
+     "The frozen lake",
+     "Castle Frostbrook",
+     "Tomb of the Ice Queen"
+    ],
+    "akte": [
+     {
+      "titel": "Endless winter",
+      "inhalt": "In the starving royal city the heroes learn from the seer what happened and find the tracks of a sledge.",
+      "wende": "The tracks lead over the frozen lake, where the ice under them starts to sing.",
+      "zuege": 5
+     },
+     {
+      "titel": "Castle Frostbrook",
+      "inhalt": "The count invites the heroes, friendly on the surface. The castle is icy, and the servants are afraid.",
+      "wende": "In the treasury lies only a fake; the real crown is on the count himself.",
+      "zuege": 6
+     },
+     {
+      "titel": "The tomb",
+      "inhalt": "The heroes chase the count to the tomb, where the Ice Queen's ghost wakes and demands her crown.",
+      "wende": "The queen offers the heroes a wish if they judge the count. Mercy or punishment?",
+      "zuege": 5
+     }
+    ]
+   }
+  },
+  {
+   "id": "fantasy-markt",
+   "welt": "fantasy",
+   "ton": 8,
+   "de": {
+    "titel": "Der Markt der verlorenen Dinge",
+    "idee": "Einmal im Jahr öffnet um Mitternacht der Markt der verlorenen Dinge. Dort landet alles, was je verloren ging. Diesmal fehlt dort etwas Wichtiges: das Lachen der Prinzessin.",
+    "ziel": "Das verlorene Lachen der Prinzessin finden und vor Sonnenaufgang zurückbringen.",
+    "gegner": "Der Graue Sammler, ein mürrischer Kobold, der alles Schöne in Gläsern sammelt",
+    "orte": [
+     "Mitternachtsmarkt",
+     "Stand der verlorenen Socken",
+     "Glaslabyrinth",
+     "Turm des Sammlers"
+    ],
+    "akte": [
+     {
+      "titel": "Um Mitternacht",
+      "inhalt": "Die Helden betreten den bunten Markt voller sprechender Schirme und schwebender Schlüssel. Händler tauschen nur gegen Geschichten.",
+      "wende": "Ein Schirm verrät, dass der Graue Sammler das Lachen gekauft hat.",
+      "zuege": 5
+     },
+     {
+      "titel": "Das Glaslabyrinth",
+      "inhalt": "Im Glaslabyrinth spiegelt sich jeder Gedanke. Wer sich verläuft, muss ein Lied singen, um herauszufinden.",
+      "wende": "Am Ausgang wartet der Sammler und stellt ein letztes Rätsel.",
+      "zuege": 6
+     },
+     {
+      "titel": "Der Turm des Sammlers",
+      "inhalt": "Im Turm stehen tausend Gläser mit Dingen, die Menschen vermissen. Der Sammler ist eigentlich nur einsam.",
+      "wende": "Wenn die Helden ihn zum Lachen bringen, gibt er alles frei.",
+      "zuege": 5
+     }
+    ]
+   },
+   "en": {
+    "titel": "The Market of Lost Things",
+    "idee": "Once a year at midnight the Market of Lost Things opens. Everything that was ever lost ends up there. This time something important is missing: the princess's laughter.",
+    "ziel": "Find the princess's lost laughter and bring it back before sunrise.",
+    "gegner": "The Grey Collector, a grumpy goblin who keeps everything beautiful in jars",
+    "orte": [
+     "Midnight market",
+     "Stall of lost socks",
+     "Glass maze",
+     "The Collector's tower"
+    ],
+    "akte": [
+     {
+      "titel": "At midnight",
+      "inhalt": "The heroes enter the colourful market full of talking umbrellas and floating keys. Traders only swap for stories.",
+      "wende": "An umbrella tells them the Grey Collector bought the laughter.",
+      "zuege": 5
+     },
+     {
+      "titel": "The glass maze",
+      "inhalt": "In the glass maze every thought is mirrored. Whoever gets lost must sing a song to find the way out.",
+      "wende": "At the exit the Collector waits and asks one last riddle.",
+      "zuege": 6
+     },
+     {
+      "titel": "The Collector's tower",
+      "inhalt": "In the tower stand a thousand jars of things people miss. The Collector is really just lonely.",
+      "wende": "If the heroes make him laugh, he sets everything free.",
+      "zuege": 5
+     }
+    ]
+   }
+  },
+  {
+   "id": "fantasy-wald",
+   "welt": "fantasy",
+   "ton": 12,
+   "de": {
+    "titel": "Der Wald, der wandert",
+    "idee": "Der uralte Eichenwald von Mooshain wandert jede Nacht ein Stück weiter und hat schon zwei Dörfer verschluckt. Die Druiden schweigen, und die Holzfäller wollen ihn niederbrennen.",
+    "ziel": "Herausfinden, warum der Wald wandert, und einen Krieg zwischen Holzfällern und Druiden verhindern.",
+    "gegner": "Die Dryade Morwen, deren Herzbaum gefällt wurde und die nun Rache will",
+    "orte": [
+     "Mooshain",
+     "Verschluckte Mühle",
+     "Steinkreis der Druiden",
+     "Der gefällte Herzbaum"
+    ],
+    "akte": [
+     {
+      "titel": "Der Waldrand",
+      "inhalt": "In Mooshain hören die Helden beide Seiten: die wütenden Holzfäller und den alten Druiden Fennick.",
+      "wende": "In der verschluckten Mühle finden sie Dorfbewohner, die in tiefem Schlaf unter Wurzeln liegen.",
+      "zuege": 5
+     },
+     {
+      "titel": "Der Steinkreis",
+      "inhalt": "Im Steinkreis gestehen die Druiden, dass jemand den Herzbaum der Dryade gefällt hat. Wer das war, weiß niemand.",
+      "wende": "Die Spur führt zu einem Holzhändler aus der Stadt, der heimlich seltenes Holz verkauft.",
+      "zuege": 6
+     },
+     {
+      "titel": "Der Herzbaum",
+      "inhalt": "Morwen erwartet die Helden am Stumpf ihres Baums. Ihr Zorn lässt den Wald rasen.",
+      "wende": "Ein Setzling aus dem alten Baum könnte sie versöhnen, wenn der Händler vor ihr seine Schuld bekennt.",
+      "zuege": 6
+     }
+    ]
+   },
+   "en": {
+    "titel": "The Wandering Forest",
+    "idee": "The ancient oak forest of Mossgrove moves a little further every night and has already swallowed two villages. The druids keep silent, and the woodcutters want to burn it down.",
+    "ziel": "Find out why the forest wanders and prevent a war between woodcutters and druids.",
+    "gegner": "The dryad Morwen, whose heart tree was cut down and who now wants revenge",
+    "orte": [
+     "Mossgrove",
+     "The swallowed mill",
+     "Druids' stone circle",
+     "The felled heart tree"
+    ],
+    "akte": [
+     {
+      "titel": "The forest's edge",
+      "inhalt": "In Mossgrove the heroes hear both sides: the angry woodcutters and the old druid Fennick.",
+      "wende": "In the swallowed mill they find villagers in a deep sleep under roots.",
+      "zuege": 5
+     },
+     {
+      "titel": "The stone circle",
+      "inhalt": "In the stone circle the druids admit that someone cut down the dryad's heart tree. Nobody knows who.",
+      "wende": "The trail leads to a timber merchant from the city who secretly sells rare wood.",
+      "zuege": 6
+     },
+     {
+      "titel": "The heart tree",
+      "inhalt": "Morwen awaits the heroes at the stump of her tree. Her anger makes the forest rage.",
+      "wende": "A sapling from the old tree could reconcile her, if the merchant confesses his guilt to her face.",
+      "zuege": 6
+     }
+    ]
+   }
+  },
+  {
+   "id": "fantasy-turnier",
+   "welt": "fantasy",
+   "ton": 12,
+   "de": {
+    "titel": "Das Turnier von Rabenfels",
+    "idee": "Zum großen Turnier von Rabenfels kommen Ritter, Bogenschützen und Zauberer aus dem ganzen Land. Doch jemand vergiftet die Favoriten, und der Preis ist das Schwert des alten Königs.",
+    "ziel": "Das Turnier überstehen, den Giftmischer entlarven und das Königsschwert vor falschen Händen schützen.",
+    "gegner": "Ritter Gerold der Glänzende, Liebling des Publikums und heimlicher Verschwörer",
+    "orte": [
+     "Rabenfels",
+     "Turnierplatz",
+     "Zeltlager der Ritter",
+     "Kapelle unter der Burg"
+    ],
+    "akte": [
+     {
+      "titel": "Die Eröffnung",
+      "inhalt": "Die Helden melden sich zum Turnier an, treffen Rivalen und Fans. Beim Festmahl bricht ein Favorit zusammen.",
+      "wende": "Ein Becher mit seltsamem Geruch landet im Gepäck der Helden, und die Wache verdächtigt sie.",
+      "zuege": 5
+     },
+     {
+      "titel": "Die Wettkämpfe",
+      "inhalt": "Zwischen Bogenschießen, Tjost und Rätselwettstreit sammeln die Helden Hinweise und Verbündete.",
+      "wende": "Ein Knappe sah Gerold nachts in die Kapelle unter der Burg gehen.",
+      "zuege": 6
+     },
+     {
+      "titel": "Das Finale",
+      "inhalt": "In der Kapelle liegt der Beweis: Gerold will mit dem Schwert den König stürzen. Das Finale steht bevor.",
+      "wende": "Im Finale treten die Helden gegen Gerold an, vor den Augen des Königs.",
+      "zuege": 6
+     }
+    ]
+   },
+   "en": {
+    "titel": "The Tournament of Ravenrock",
+    "idee": "Knights, archers and wizards from all over the land come to the great tournament of Ravenrock. But someone poisons the favourites, and the prize is the old king's sword.",
+    "ziel": "Survive the tournament, unmask the poisoner and keep the king's sword out of the wrong hands.",
+    "gegner": "Sir Gerold the Gleaming, the crowd's darling and a secret conspirator",
+    "orte": [
+     "Ravenrock",
+     "Tournament field",
+     "Knights' camp",
+     "Chapel under the castle"
+    ],
+    "akte": [
+     {
+      "titel": "The opening",
+      "inhalt": "The heroes sign up, meet rivals and fans. At the feast a favourite collapses.",
+      "wende": "A cup with a strange smell turns up in the heroes' luggage, and the guard suspects them.",
+      "zuege": 5
+     },
+     {
+      "titel": "The contests",
+      "inhalt": "Between archery, jousting and a riddle contest the heroes gather clues and allies.",
+      "wende": "A squire saw Gerold go into the chapel under the castle at night.",
+      "zuege": 6
+     },
+     {
+      "titel": "The final",
+      "inhalt": "In the chapel lies the proof: Gerold wants to overthrow the king with the sword. The final is near.",
+      "wende": "In the final the heroes face Gerold, before the king's eyes.",
+      "zuege": 6
+     }
+    ]
+   }
+  },
+  {
+   "id": "fantasy-moenche",
+   "welt": "fantasy",
+   "ton": 16,
+   "de": {
+    "titel": "Die Seuche der Grauen Mönche",
+    "idee": "In der Stadt Velmar wütet eine Seuche, die Menschen langsam zu Stein werden lässt. Nur die Grauen Mönche im Kloster auf dem Hügel scheinen verschont, und sie verteilen ein Heilmittel, das nicht wirkt.",
+    "ziel": "Die Ursache der Seuche finden und Velmar retten, bevor die Stadt abgeriegelt und aufgegeben wird.",
+    "gegner": "Abt Severin, der die Seuche aus einer verbotenen Schrift erweckt hat, um die Stadt zu beherrschen",
+    "orte": [
+     "Velmar",
+     "Quarantäneviertel",
+     "Kloster der Grauen Mönche",
+     "Katakomben"
+    ],
+    "akte": [
+     {
+      "titel": "Steinerne Straßen",
+      "inhalt": "Im Quarantäneviertel helfen die Helden den Kranken und hören von den Mönchen, die nachts Wasser aus dem Brunnen schöpfen.",
+      "wende": "Im Brunnen schimmert ein grauer Staub, der nicht aus Velmar stammt.",
+      "zuege": 5
+     },
+     {
+      "titel": "Das Kloster",
+      "inhalt": "Getarnt oder mit Gewalt dringen die Helden ins Kloster ein. Die Mönche schweigen, und einer bittet heimlich um Hilfe.",
+      "wende": "In der Bibliothek fehlt eine Seite der verbotenen Schrift, und die Spur führt in die Katakomben.",
+      "zuege": 6
+     },
+     {
+      "titel": "Die Katakomben",
+      "inhalt": "Unter dem Kloster wächst ein steinernes Herz, das die Seuche nährt. Abt Severin wartet mit seinen treuesten Brüdern.",
+      "wende": "Das Herz zu zerstören tötet auch den Abt und alle, die schon versteinert sind, es sei denn, die Helden finden das Gegenwort.",
+      "zuege": 6
+     }
+    ]
+   },
+   "en": {
+    "titel": "The Plague of the Grey Monks",
+    "idee": "In the city of Velmar a plague rages that slowly turns people to stone. Only the Grey Monks in the monastery on the hill seem spared, and they hand out a cure that does not work.",
+    "ziel": "Find the cause of the plague and save Velmar before the city is sealed off and given up.",
+    "gegner": "Abbot Severin, who woke the plague from a forbidden book to rule the city",
+    "orte": [
+     "Velmar",
+     "Quarantine quarter",
+     "Monastery of the Grey Monks",
+     "Catacombs"
+    ],
+    "akte": [
+     {
+      "titel": "Streets of stone",
+      "inhalt": "In the quarantine quarter the heroes help the sick and hear of monks who draw water from the well at night.",
+      "wende": "In the well glimmers a grey dust that does not come from Velmar.",
+      "zuege": 5
+     },
+     {
+      "titel": "The monastery",
+      "inhalt": "In disguise or by force the heroes get into the monastery. The monks keep silent, and one secretly begs for help.",
+      "wende": "In the library a page of the forbidden book is missing, and the trail leads into the catacombs.",
+      "zuege": 6
+     },
+     {
+      "titel": "The catacombs",
+      "inhalt": "Under the monastery a heart of stone grows and feeds the plague. Abbot Severin waits with his most loyal brothers.",
+      "wende": "Destroying the heart would also end the abbot and everyone already turned to stone, unless the heroes find the counter-word.",
+      "zuege": 6
+     }
+    ]
+   }
+  },
+  {
+   "id": "fantasy-schwur",
+   "welt": "fantasy",
+   "ton": 16,
+   "de": {
+    "titel": "Der Schwur der Sieben",
+    "idee": "Vor zwanzig Jahren schworen sieben Helden, den Schattenkönig für immer zu bannen. Nun sterben sie einer nach dem anderen, und mit jedem Tod wird der Bann schwächer.",
+    "ziel": "Die letzten lebenden Schwurträger schützen und den Bann erneuern, bevor der Schattenkönig zurückkehrt.",
+    "gegner": "Lysandra, die Tochter eines der Sieben, die glaubt, ihr Vater sei von den anderen verraten worden",
+    "orte": [
+     "Grenzfeste Dornwacht",
+     "Kloster der Erinnerung",
+     "Das Schlachtfeld von einst",
+     "Schattentor"
+    ],
+    "akte": [
+     {
+      "titel": "Der vierte Tote",
+      "inhalt": "In Dornwacht stirbt der vierte Schwurträger vor den Augen der Helden. Eine schwarze Feder liegt neben ihm.",
+      "wende": "Die Feder führt zu einer Liste: zwei Schwurträger leben noch, weit voneinander entfernt.",
+      "zuege": 5
+     },
+     {
+      "titel": "Alte Schuld",
+      "inhalt": "Die Helden finden die letzten beiden. Einer gesteht, dass die Sieben damals einen der ihren geopfert haben.",
+      "wende": "Lysandra zeigt sich: Sie ist die Rächerin und weiß nicht, dass sie dem Schattenkönig damit dient.",
+      "zuege": 6
+     },
+     {
+      "titel": "Das Schattentor",
+      "inhalt": "Am alten Schlachtfeld öffnet sich das Schattentor. Der Bann kann nur erneuert werden, wenn sieben neue schwören.",
+      "wende": "Die Helden, die Überlebenden und vielleicht Lysandra müssen gemeinsam schwören, trotz allem, was geschah.",
+      "zuege": 7
+     }
+    ]
+   },
+   "en": {
+    "titel": "The Oath of the Seven",
+    "idee": "Twenty years ago seven heroes swore to banish the Shadow King forever. Now they die one after another, and with every death the ban grows weaker.",
+    "ziel": "Protect the last living oath-bearers and renew the ban before the Shadow King returns.",
+    "gegner": "Lysandra, the daughter of one of the Seven, who believes her father was betrayed by the others",
+    "orte": [
+     "Border fort Thornwatch",
+     "Monastery of Remembrance",
+     "The old battlefield",
+     "Shadow Gate"
+    ],
+    "akte": [
+     {
+      "titel": "Another death",
+      "inhalt": "In Thornwatch the fourth oath-bearer dies before the heroes' eyes. A black feather lies beside him.",
+      "wende": "The feather leads to a list: two oath-bearers are still alive, far from each other.",
+      "zuege": 5
+     },
+     {
+      "titel": "Old guilt",
+      "inhalt": "The heroes find the last two. One admits that the Seven once sacrificed one of their own.",
+      "wende": "Lysandra shows herself: she is the avenger and does not know she serves the Shadow King by it.",
+      "zuege": 6
+     },
+     {
+      "titel": "The Shadow Gate",
+      "inhalt": "On the old battlefield the Shadow Gate opens. The ban can only be renewed if seven new ones swear.",
+      "wende": "The heroes, the survivors and perhaps Lysandra must swear together, despite everything that happened.",
+      "zuege": 7
+     }
+    ]
+   }
+  },
+  {
+   "id": "fantasy-riesen",
+   "welt": "fantasy",
+   "ton": 12,
+   "de": {
+    "titel": "Die Brücke der Riesen",
+    "idee": "Die steinerne Brücke der Riesen verbindet zwei verfeindete Königreiche. Seit sie bröckelt, droht Krieg, denn jede Seite beschuldigt die andere. Die Riesen, die sie bauten, schlafen in den Bergen.",
+    "ziel": "Die Riesen wecken, die Brücke retten und den Krieg zwischen den Königreichen abwenden.",
+    "gegner": "Kanzler Wendel, der beiden Königen falsche Berichte schickt, weil er am Krieg verdient",
+    "orte": [
+     "Grenzstadt Zweibrück",
+     "Die Brücke der Riesen",
+     "Schlafende Berge",
+     "Halle der Riesen"
+    ],
+    "akte": [
+     {
+      "titel": "Zwischen zwei Fronten",
+      "inhalt": "In Zweibrück stehen sich die Heere beider Reiche gegenüber. Die Helden sollen herausfinden, wer die Brücke beschädigt.",
+      "wende": "Unter der Brücke finden sie Werkzeug mit dem Wappen des Kanzlers.",
+      "zuege": 5
+     },
+     {
+      "titel": "Die Schlafenden Berge",
+      "inhalt": "Der Weg zu den Riesen führt über Gletscher und durch Steinlawinen. Ein Bergvolk hütet das Wecklied.",
+      "wende": "Das Lied ist nur zur Hälfte überliefert, die andere Hälfte kennt ein alter Riese im Traum.",
+      "zuege": 6
+     },
+     {
+      "titel": "Die Halle der Riesen",
+      "inhalt": "In der Halle müssen die Helden den Traum des Riesen betreten und ihn überzeugen. Derweil beginnt unten der Kampf.",
+      "wende": "Wenn die Riesen kommen, müssen die Helden vor beiden Königen den Kanzler entlarven.",
+      "zuege": 6
+     }
+    ]
+   },
+   "en": {
+    "titel": "The Giants' Bridge",
+    "idee": "The stone bridge of the giants joins two hostile kingdoms. Since it began to crumble, war is near, for each side blames the other. The giants who built it sleep in the mountains.",
+    "ziel": "Wake the giants, save the bridge and prevent the war between the kingdoms.",
+    "gegner": "Chancellor Wendel, who sends both kings false reports because he profits from war",
+    "orte": [
+     "Border town Twobridge",
+     "The Giants' Bridge",
+     "Sleeping Mountains",
+     "Hall of the Giants"
+    ],
+    "akte": [
+     {
+      "titel": "Between two fronts",
+      "inhalt": "In Twobridge the armies of both realms face each other. The heroes are to find out who damages the bridge.",
+      "wende": "Under the bridge they find tools bearing the chancellor's crest.",
+      "zuege": 5
+     },
+     {
+      "titel": "The Sleeping Mountains",
+      "inhalt": "The way to the giants leads over glaciers and through rockfalls. A mountain folk guards the waking song.",
+      "wende": "Only half of the song survives; the other half is known to an old giant in his dream.",
+      "zuege": 6
+     },
+     {
+      "titel": "Hall of the Giants",
+      "inhalt": "In the hall the heroes must enter the giant's dream and convince him. Meanwhile the fighting starts below.",
+      "wende": "When the giants come, the heroes must unmask the chancellor before both kings.",
+      "zuege": 6
+     }
+    ]
+   }
+  },
+  {
+   "id": "horror-muehlbach",
+   "welt": "horror",
+   "ton": 8,
+   "de": {
+    "titel": "Das Gespensterhaus am Mühlbach",
+    "idee": "In der alten Villa am Mühlbach spukt es: Türen knarren, Lichter wandern, und nachts hört man ein Klavier. Die Kinder aus dem Dorf trauen sich nicht mehr vorbei.",
+    "ziel": "Herausfinden, wer im Haus spukt, und dem Gespenst helfen, endlich Ruhe zu finden.",
+    "gegner": "Onkel Bertram, der mit falschem Spuk die Leute vertreibt, um im Keller nach einem Schatz zu graben",
+    "orte": [
+     "Dorf am Mühlbach",
+     "Die alte Villa",
+     "Dachboden",
+     "Gewölbekeller"
+    ],
+    "akte": [
+     {
+      "titel": "Die Mutprobe",
+      "inhalt": "Die Helden betreten die Villa bei Gewitter. Bilder folgen ihnen mit den Augen, und das Klavier spielt allein.",
+      "wende": "Auf dem Dachboden sitzt ein kleines, trauriges Gespenst namens Lotte, das sich selbst fürchtet.",
+      "zuege": 5
+     },
+     {
+      "titel": "Lottes Geheimnis",
+      "inhalt": "Lotte sucht ihre Spieluhr, ohne die sie nicht einschlafen kann. Wer macht den lauten Spuk, wenn nicht sie?",
+      "wende": "Im Garten finden die Helden Fußspuren mit Schlamm und eine Schaufel.",
+      "zuege": 6
+     },
+     {
+      "titel": "Im Keller",
+      "inhalt": "Im Gewölbekeller gräbt Onkel Bertram, mit Laken und Kettenrasseln als falsches Gespenst verkleidet.",
+      "wende": "Neben dem Schatz liegt Lottes Spieluhr. Bertram muss sich entscheiden, ob er teilt.",
+      "zuege": 5
+     }
+    ]
+   },
+   "en": {
+    "titel": "The Haunted House by the Mill Brook",
+    "idee": "The old villa by the mill brook is haunted: doors creak, lights wander, and at night a piano plays. The village children no longer dare to walk past.",
+    "ziel": "Find out who haunts the house and help the ghost finally find peace.",
+    "gegner": "Uncle Bertram, who scares people off with fake hauntings so he can dig for treasure in the cellar",
+    "orte": [
+     "Village by the mill brook",
+     "The old villa",
+     "Attic",
+     "Vaulted cellar"
+    ],
+    "akte": [
+     {
+      "titel": "The dare",
+      "inhalt": "The heroes enter the villa in a thunderstorm. Paintings follow them with their eyes, and the piano plays by itself.",
+      "wende": "In the attic sits a small, sad ghost called Lotte who is afraid herself.",
+      "zuege": 5
+     },
+     {
+      "titel": "Lotte's secret",
+      "inhalt": "Lotte looks for her music box; without it she cannot fall asleep. Who makes the loud haunting, if not her?",
+      "wende": "In the garden the heroes find muddy footprints and a shovel.",
+      "zuege": 6
+     },
+     {
+      "titel": "In the cellar",
+      "inhalt": "In the vaulted cellar Uncle Bertram digs, dressed as a fake ghost with sheets and rattling chains.",
+      "wende": "Next to the treasure lies Lotte's music box. Bertram must decide whether to share.",
+      "zuege": 5
+     }
+    ]
+   }
+  },
+  {
+   "id": "horror-kuerbis",
+   "welt": "horror",
+   "ton": 8,
+   "de": {
+    "titel": "Die Nacht der Kürbislaternen",
+    "idee": "In der Herbstnacht von Krähenfeld erwachen die geschnitzten Kürbislaternen zum Leben und rollen aus dem Dorf. Wenn sie bis Mitternacht nicht zurück sind, bleibt das Dorf ein Jahr lang im Nebel.",
+    "ziel": "Alle Kürbislaternen bis Mitternacht zurück ins Dorf locken.",
+    "gegner": "Die Nebelhexe Gundel, die das Dorf für sich allein haben will",
+    "orte": [
+     "Krähenfeld",
+     "Vogelscheuchenacker",
+     "Nebelsumpf",
+     "Hexenhütte"
+    ],
+    "akte": [
+     {
+      "titel": "Die Flucht der Laternen",
+      "inhalt": "Mitten im Herbstfest kichern die Laternen, springen von den Fensterbänken und rollen davon.",
+      "wende": "Auf dem Acker bewachen sprechende Vogelscheuchen die ersten Laternen und wollen ein Lied hören.",
+      "zuege": 5
+     },
+     {
+      "titel": "Der Nebelsumpf",
+      "inhalt": "Im Sumpf leuchten Irrlichter, die die Helden in die falsche Richtung locken. Eine alte Kröte kennt den Weg.",
+      "wende": "Die meisten Laternen sitzen in Gundels Hütte, eingesperrt in einem großen Korb.",
+      "zuege": 6
+     },
+     {
+      "titel": "Die Hexenhütte",
+      "inhalt": "Gundel ist gar nicht böse, nur einsam, weil niemand sie je zum Fest eingeladen hat.",
+      "wende": "Die Helden können sie überlisten oder zum Fest einladen. Beides bringt die Laternen heim, aber nur eins einen Freund.",
+      "zuege": 5
+     }
+    ]
+   },
+   "en": {
+    "titel": "The Night of the Pumpkin Lanterns",
+    "idee": "On the autumn night of Crowfield the carved pumpkin lanterns come to life and roll out of the village. If they are not back by midnight, the village stays in fog for a year.",
+    "ziel": "Lure every pumpkin lantern back to the village by midnight.",
+    "gegner": "Gundel the fog witch, who wants the village all to herself",
+    "orte": [
+     "Crowfield",
+     "Scarecrow field",
+     "Fog marsh",
+     "Witch's hut"
+    ],
+    "akte": [
+     {
+      "titel": "The lanterns' escape",
+      "inhalt": "In the middle of the harvest festival the lanterns giggle, jump off the windowsills and roll away.",
+      "wende": "In the field talking scarecrows guard the first lanterns and want to hear a song.",
+      "zuege": 5
+     },
+     {
+      "titel": "The fog marsh",
+      "inhalt": "In the marsh will-o'-the-wisps lure the heroes the wrong way. An old toad knows the path.",
+      "wende": "Most lanterns sit in Gundel's hut, shut in a big basket.",
+      "zuege": 6
+     },
+     {
+      "titel": "The witch's hut",
+      "inhalt": "Gundel is not wicked at all, only lonely, because nobody ever invited her to the festival.",
+      "wende": "The heroes can trick her or invite her. Both bring the lanterns home, but only one wins a friend.",
+      "zuege": 5
+     }
+    ]
+   }
+  },
+  {
+   "id": "horror-nebeldorf",
+   "welt": "horror",
+   "ton": 12,
+   "de": {
+    "titel": "Das Dorf im Nebel",
+    "idee": "Die Helden suchen Schutz in Graustein, einem Dorf, das auf keiner Karte steht. Die Bewohner sind freundlich, aber niemand erinnert sich an gestern, und der Nebel lässt keinen mehr hinaus.",
+    "ziel": "Das Geheimnis von Graustein lüften und einen Weg aus dem Nebel finden.",
+    "gegner": "Die Wirtin Agathe, die das Dorf mit einem Fluch an einem einzigen Tag festhält, um ihren Sohn nicht zu verlieren",
+    "orte": [
+     "Graustein",
+     "Gasthaus Zum Stillen Tag",
+     "Der Friedhof",
+     "Die Mühle am Nebelrand"
+    ],
+    "akte": [
+     {
+      "titel": "Ankunft",
+      "inhalt": "Die Helden kommen in den Nebel und ins Gasthaus. Am nächsten Morgen grüßen sie alle, als wären sie gerade erst angekommen.",
+      "wende": "Der Tag wiederholt sich, und nur die Helden merken es.",
+      "zuege": 5
+     },
+     {
+      "titel": "Der ewige Tag",
+      "inhalt": "Die Helden nutzen die Wiederholung, um Hinweise zu sammeln. Auf dem Friedhof steht ein Grab mit Agathes Familiennamen.",
+      "wende": "Agathes Sohn ist vor Jahren in der Mühle verunglückt, an genau diesem Tag.",
+      "zuege": 6
+     },
+     {
+      "titel": "Die Mühle am Nebelrand",
+      "inhalt": "In der Mühle ist der Fluch verankert. Agathe stellt sich den Helden in den Weg, verzweifelt und gefährlich.",
+      "wende": "Den Fluch zu brechen heißt, Agathe ihren Sohn loslassen zu lassen.",
+      "zuege": 6
+     }
+    ]
+   },
+   "en": {
+    "titel": "The Village in the Fog",
+    "idee": "The heroes seek shelter in Greystone, a village on no map. The people are friendly, but nobody remembers yesterday, and the fog no longer lets anyone out.",
+    "ziel": "Uncover the secret of Greystone and find a way out of the fog.",
+    "gegner": "Agathe the innkeeper, who holds the village in a single day by a curse so as not to lose her son",
+    "orte": [
+     "Greystone",
+     "Inn of the Still Day",
+     "The graveyard",
+     "The mill at the fog's edge"
+    ],
+    "akte": [
+     {
+      "titel": "Arrival",
+      "inhalt": "The heroes enter the fog and the inn. Next morning everybody greets them as if they had just arrived.",
+      "wende": "The day repeats, and only the heroes notice.",
+      "zuege": 5
+     },
+     {
+      "titel": "The endless day",
+      "inhalt": "The heroes use the repetition to gather clues. In the graveyard stands a grave with Agathe's family name.",
+      "wende": "Agathe's son had an accident in the mill years ago, on exactly this day.",
+      "zuege": 6
+     },
+     {
+      "titel": "The mill at the fog's edge",
+      "inhalt": "The curse is anchored in the mill. Agathe stands in the heroes' way, desperate and dangerous.",
+      "wende": "Breaking the curse means letting Agathe let go of her son.",
+      "zuege": 6
+     }
+    ]
+   }
+  },
+  {
+   "id": "horror-leuchtturm",
+   "welt": "horror",
+   "ton": 12,
+   "de": {
+    "titel": "Der Leuchtturm von Grauwasser",
+    "idee": "Der Leuchtturm von Grauwasser ist seit Wochen dunkel, und der Wärter antwortet nicht. Drei Schiffe sind an den Klippen zerschellt. Ein Sturm zieht auf, und ein Passagierschiff ist unterwegs.",
+    "ziel": "Den Leuchtturm vor der Ankunft des Passagierschiffs wieder entzünden und das Schicksal des Wärters klären.",
+    "gegner": "Etwas aus der Tiefe, das das Licht hasst und den Wärter in seinen Bann gezogen hat",
+    "orte": [
+     "Hafen Grauwasser",
+     "Klippenpfad",
+     "Der Leuchtturm",
+     "Die Grotte unter dem Turm"
+    ],
+    "akte": [
+     {
+      "titel": "Der dunkle Turm",
+      "inhalt": "Im Hafen erzählen Fischer von Stimmen im Wasser. Der Klippenpfad zum Turm ist bei Flut gefährlich.",
+      "wende": "Die Tür des Leuchtturms ist von innen verbarrikadiert, mit Kratzspuren auf der falschen Seite.",
+      "zuege": 5
+     },
+     {
+      "titel": "Das Tagebuch",
+      "inhalt": "Im Turm finden die Helden das Tagebuch des Wärters: Er hörte ein Lied aus der Grotte und folgte ihm.",
+      "wende": "Unter dem Turm öffnet sich eine Treppe in die Grotte, während der Sturm losbricht.",
+      "zuege": 6
+     },
+     {
+      "titel": "Die Grotte",
+      "inhalt": "In der Grotte singt das Wesen aus der Tiefe, und der Wärter steht in Trance im Wasser.",
+      "wende": "Das Licht oben entzünden vertreibt das Wesen, doch nur einer kann gleichzeitig den Wärter retten.",
+      "zuege": 6
+     }
+    ]
+   },
+   "en": {
+    "titel": "The Lighthouse of Greywater",
+    "idee": "The lighthouse of Greywater has been dark for weeks, and the keeper does not answer. Three ships have been wrecked on the cliffs. A storm is coming, and a passenger ship is on its way.",
+    "ziel": "Light the lighthouse again before the passenger ship arrives and learn what became of the keeper.",
+    "gegner": "Something from the deep that hates the light and holds the keeper under its spell",
+    "orte": [
+     "Greywater harbour",
+     "Cliff path",
+     "The lighthouse",
+     "The grotto under the tower"
+    ],
+    "akte": [
+     {
+      "titel": "The dark tower",
+      "inhalt": "In the harbour fishermen speak of voices in the water. The cliff path to the tower is dangerous at high tide.",
+      "wende": "The lighthouse door is barricaded from inside, with scratch marks on the wrong side.",
+      "zuege": 5
+     },
+     {
+      "titel": "The diary",
+      "inhalt": "In the tower the heroes find the keeper's diary: he heard a song from the grotto and followed it.",
+      "wende": "Under the tower a stair opens into the grotto while the storm breaks.",
+      "zuege": 6
+     },
+     {
+      "titel": "The grotto",
+      "inhalt": "In the grotto the thing from the deep sings, and the keeper stands entranced in the water.",
+      "wende": "Lighting the lamp above drives the thing away, but only one can save the keeper at the same moment.",
+      "zuege": 6
+     }
+    ]
+   }
+  },
+  {
+   "id": "horror-puppe",
+   "welt": "horror",
+   "ton": 12,
+   "de": {
+    "titel": "Die Puppe im Fenster",
+    "idee": "Im Fenster des leerstehenden Spielzeugladens sitzt eine Porzellanpuppe, die jeden Morgen woanders steht. Seitdem sie da ist, verschwinden Kinder für eine Nacht und kommen schweigend zurück.",
+    "ziel": "Das Rätsel der Puppe lösen und die Kinder von ihrem Schweigen befreien.",
+    "gegner": "Die Puppenmacherin Elise Faber, deren Seele in der Puppe weiterlebt",
+    "orte": [
+     "Altstadtgasse",
+     "Spielzeugladen Faber",
+     "Die Werkstatt",
+     "Das Puppenhaus"
+    ],
+    "akte": [
+     {
+      "titel": "Das Schweigen",
+      "inhalt": "Die Helden sprechen mit Eltern und einem der schweigenden Kinder, das nur Puppenhäuser malt.",
+      "wende": "Im Laden steht die Puppe plötzlich direkt hinter den Helden.",
+      "zuege": 5
+     },
+     {
+      "titel": "Die Werkstatt",
+      "inhalt": "In der Werkstatt hinter dem Laden liegen Briefe von Elise. Sie wollte nie allein sein.",
+      "wende": "Das große Puppenhaus in der Werkstatt ist innen größer als außen, und darin brennt Licht.",
+      "zuege": 6
+     },
+     {
+      "titel": "Das Puppenhaus",
+      "inhalt": "Die Helden schrumpfen in das Puppenhaus, wo die Stimmen der Kinder in Spielzeug gefangen sind.",
+      "wende": "Elise lässt die Stimmen frei, wenn jemand ihr verspricht, sie nie zu vergessen, oder wenn die Puppe zerbricht.",
+      "zuege": 6
+     }
+    ]
+   },
+   "en": {
+    "titel": "The Doll in the Window",
+    "idee": "In the window of the empty toy shop sits a porcelain doll that stands somewhere else every morning. Since it came, children vanish for a night and come back silent.",
+    "ziel": "Solve the riddle of the doll and free the children from their silence.",
+    "gegner": "The doll maker Elise Faber, whose soul lives on in the doll",
+    "orte": [
+     "Old town lane",
+     "Faber's toy shop",
+     "The workshop",
+     "The doll's house"
+    ],
+    "akte": [
+     {
+      "titel": "The silence",
+      "inhalt": "The heroes talk to parents and to one of the silent children, who only draws doll's houses.",
+      "wende": "In the shop the doll suddenly stands right behind the heroes.",
+      "zuege": 5
+     },
+     {
+      "titel": "The workshop",
+      "inhalt": "In the workshop behind the shop lie Elise's letters. She never wanted to be alone.",
+      "wende": "The big doll's house in the workshop is larger inside than outside, and a light burns in it.",
+      "zuege": 6
+     },
+     {
+      "titel": "The doll's house",
+      "inhalt": "The heroes shrink into the doll's house, where the children's voices are trapped in toys.",
+      "wende": "Elise frees the voices if someone promises never to forget her, or if the doll breaks.",
+      "zuege": 6
+     }
+    ]
+   }
+  },
+  {
+   "id": "horror-zug",
+   "welt": "horror",
+   "ton": 12,
+   "de": {
+    "titel": "Der Zug, der nie ankommt",
+    "idee": "Die Helden steigen in den Nachtzug nach Waldenburg. Nach Mitternacht hält der Zug nicht mehr, die Fenster zeigen nur Schwärze, und in jedem Wagen sitzen Fahrgäste aus einem anderen Jahrzehnt.",
+    "ziel": "Die Lokomotive erreichen und herausfinden, wie man aus dem Zug wieder aussteigen kann.",
+    "gegner": "Der Schaffner ohne Gesicht, der jeden Fahrgast behält, der seine Fahrkarte verliert",
+    "orte": [
+     "Bahnhof Linden",
+     "Speisewagen",
+     "Gepäckwagen",
+     "Die Lokomotive"
+    ],
+    "akte": [
+     {
+      "titel": "Abfahrt",
+      "inhalt": "Der Zug fährt los. Die Mitreisenden wirken seltsam aus der Zeit gefallen, und die Uhr bleibt stehen.",
+      "wende": "Der Schaffner ohne Gesicht kontrolliert die Fahrkarten. Eine Heldin hat ihre plötzlich nicht mehr.",
+      "zuege": 5
+     },
+     {
+      "titel": "Durch die Wagen",
+      "inhalt": "Jeder Wagen ist eine eigene Zeit mit eigenen Regeln. Ein Junge aus dem Jahr 1920 kennt einen Trick.",
+      "wende": "Im Gepäckwagen liegen tausend verlorene Fahrkarten, darunter die der Heldin.",
+      "zuege": 6
+     },
+     {
+      "titel": "Die Lokomotive",
+      "inhalt": "Die Lokomotive fährt ohne Lokführer, angetrieben von den Erinnerungen der Fahrgäste.",
+      "wende": "Die Notbremse hält den Zug an, doch nur wer eine gültige Karte hat, kann aussteigen. Was ist mit den anderen?",
+      "zuege": 6
+     }
+    ]
+   },
+   "en": {
+    "titel": "The Train That Never Arrives",
+    "idee": "The heroes board the night train to Waldenburg. After midnight the train no longer stops, the windows show only blackness, and in every car sit passengers from another decade.",
+    "ziel": "Reach the locomotive and find out how to get off the train again.",
+    "gegner": "The faceless conductor, who keeps every passenger who loses their ticket",
+    "orte": [
+     "Linden station",
+     "Dining car",
+     "Baggage car",
+     "The locomotive"
+    ],
+    "akte": [
+     {
+      "titel": "Departure",
+      "inhalt": "The train leaves. The fellow passengers seem strangely out of time, and the clock stops.",
+      "wende": "The faceless conductor checks the tickets. One heroine suddenly no longer has hers.",
+      "zuege": 5
+     },
+     {
+      "titel": "Through the cars",
+      "inhalt": "Every car is a time of its own with its own rules. A boy from the year 1920 knows a trick.",
+      "wende": "In the baggage car lie a thousand lost tickets, hers among them.",
+      "zuege": 6
+     },
+     {
+      "titel": "The locomotive",
+      "inhalt": "The locomotive runs without a driver, powered by the passengers' memories.",
+      "wende": "The emergency brake stops the train, but only those with a valid ticket can get off. What about the others?",
+      "zuege": 6
+     }
+    ]
+   }
+  },
+  {
+   "id": "horror-internat",
+   "welt": "horror",
+   "ton": 12,
+   "de": {
+    "titel": "Das Internat am See",
+    "idee": "Im Internat Schloss Seewald verschwinden Schüler aus dem Ostflügel, der seit fünfzig Jahren verschlossen ist. Die Lehrer sagen, sie seien weggelaufen. Die Schüler wissen es besser.",
+    "ziel": "Die verschwundenen Schüler finden und das Geheimnis des Ostflügels aufdecken.",
+    "gegner": "Direktorin Hartwig, die einen alten Geist füttert, damit er ihre Jugend bewahrt",
+    "orte": [
+     "Schloss Seewald",
+     "Der Ostflügel",
+     "Bootshaus am See",
+     "Die versunkene Kapelle"
+    ],
+    "akte": [
+     {
+      "titel": "Neue Schüler",
+      "inhalt": "Die Helden kommen als neue Schüler, Lehrer oder Gäste nach Seewald und hören nachts Schritte im Ostflügel.",
+      "wende": "Eine Schülerin gibt ihnen einen alten Schlüssel und verschwindet am nächsten Morgen.",
+      "zuege": 5
+     },
+     {
+      "titel": "Der Ostflügel",
+      "inhalt": "Im Ostflügel ist die Zeit stehengeblieben: Klassenzimmer von 1970, Schülerfotos mit ausgekratzten Gesichtern.",
+      "wende": "Ein Foto zeigt die junge Direktorin, genauso alt wie heute.",
+      "zuege": 6
+     },
+     {
+      "titel": "Die versunkene Kapelle",
+      "inhalt": "Vom Bootshaus führt ein Tunnel zur Kapelle unter dem See, wo die Schüler schlafen und der Geist wartet.",
+      "wende": "Der Geist ist an die Direktorin gebunden. Wer den Pakt bricht, lässt sie in Sekunden altern.",
+      "zuege": 6
+     }
+    ]
+   },
+   "en": {
+    "titel": "The Boarding School by the Lake",
+    "idee": "At Seewald Castle boarding school pupils vanish from the east wing, locked for fifty years. The teachers say they ran away. The pupils know better.",
+    "ziel": "Find the missing pupils and uncover the secret of the east wing.",
+    "gegner": "Headmistress Hartwig, who feeds an old ghost so it keeps her young",
+    "orte": [
+     "Seewald Castle",
+     "The east wing",
+     "Boathouse by the lake",
+     "The sunken chapel"
+    ],
+    "akte": [
+     {
+      "titel": "New pupils",
+      "inhalt": "The heroes arrive at Seewald as new pupils, teachers or guests and hear footsteps in the east wing at night.",
+      "wende": "A girl gives them an old key and disappears the next morning.",
+      "zuege": 5
+     },
+     {
+      "titel": "The east wing",
+      "inhalt": "In the east wing time has stopped: classrooms from 1970, class photos with scratched-out faces.",
+      "wende": "One photo shows the young headmistress, exactly as old as today.",
+      "zuege": 6
+     },
+     {
+      "titel": "The sunken chapel",
+      "inhalt": "From the boathouse a tunnel leads to the chapel under the lake, where the pupils sleep and the ghost waits.",
+      "wende": "The ghost is bound to the headmistress. Whoever breaks the pact makes her age in seconds.",
+      "zuege": 6
+     }
+    ]
+   }
+  },
+  {
+   "id": "horror-moor",
+   "welt": "horror",
+   "ton": 16,
+   "de": {
+    "titel": "Die Hochzeit im Moor",
+    "idee": "Die Helden sind Gäste einer Hochzeit auf dem Gut Schwarzmoor. Nach dem ersten Tanz fällt ein Gast tot um, die Brücke über das Moor ist eingestürzt, und die Braut lächelt zu ruhig.",
+    "ziel": "Die Nacht überleben, die Wahrheit über die Familie Schwarzmoor herausfinden und bis zum Morgengrauen entkommen.",
+    "gegner": "Die Braut Isolde, die jede Generation neu heiratet, um mit dem Moor einen alten Handel zu erfüllen",
+    "orte": [
+     "Gut Schwarzmoor",
+     "Ballsaal",
+     "Familiengruft",
+     "Das Herz des Moors"
+    ],
+    "akte": [
+     {
+      "titel": "Der erste Tanz",
+      "inhalt": "Ein prächtiges Fest, eine seltsame Familie, Ahnenbilder, die alle Isolde zeigen. Dann der erste Tote.",
+      "wende": "Die Brücke ist fort, das Moor umschließt das Gut, und die Diener verriegeln die Türen.",
+      "zuege": 5
+     },
+     {
+      "titel": "Die Gruft",
+      "inhalt": "Die Helden suchen Beweise, während Gäste einer nach dem anderen verschwinden. In der Gruft liegen Bräutigame aus drei Jahrhunderten.",
+      "wende": "Das Moor verlangt in jeder Hochzeitsnacht sieben Gäste. Zwei sind noch zu wenig.",
+      "zuege": 6
+     },
+     {
+      "titel": "Das Herz des Moors",
+      "inhalt": "Im Herzen des Moors wartet etwas, das älter ist als das Gut. Isolde muss ihren Handel bis zum Morgen erfüllen.",
+      "wende": "Den Handel zu brechen kostet Isolde alles, ihn zu erfüllen kostet zwei Leben. Und der Morgen naht.",
+      "zuege": 6
+     }
+    ]
+   },
+   "en": {
+    "titel": "The Wedding in the Moor",
+    "idee": "The heroes are guests at a wedding at Blackmoor Manor. After the first dance a guest drops dead, the bridge over the moor has collapsed, and the bride smiles too calmly.",
+    "ziel": "Survive the night, learn the truth about the Blackmoor family and escape by dawn.",
+    "gegner": "The bride Isolde, who marries anew every generation to fulfil an old bargain with the moor",
+    "orte": [
+     "Blackmoor Manor",
+     "Ballroom",
+     "Family crypt",
+     "The heart of the moor"
+    ],
+    "akte": [
+     {
+      "titel": "The first dance",
+      "inhalt": "A splendid feast, a strange family, ancestral portraits that all show Isolde. Then the first death.",
+      "wende": "The bridge is gone, the moor surrounds the manor, and the servants bolt the doors.",
+      "zuege": 5
+     },
+     {
+      "titel": "The crypt",
+      "inhalt": "The heroes look for proof while guests disappear one after another. In the crypt lie grooms from three centuries.",
+      "wende": "The moor demands seven guests every wedding night. Two are still missing.",
+      "zuege": 6
+     },
+     {
+      "titel": "The heart of the moor",
+      "inhalt": "In the heart of the moor waits something older than the manor. Isolde must fulfil her bargain by morning.",
+      "wende": "Breaking the bargain costs Isolde everything, fulfilling it costs two lives. And dawn is coming.",
+      "zuege": 6
+     }
+    ]
+   }
+  },
+  {
+   "id": "horror-sanatorium",
+   "welt": "horror",
+   "ton": 16,
+   "de": {
+    "titel": "Sanatorium Waldesruh",
+    "idee": "Ein Brief führt die Helden ins verlassene Sanatorium Waldesruh, wo vor achtzig Jahren Patienten spurlos verschwanden. Die Absenderin ist seit damals tot, doch die Tinte ist frisch.",
+    "ziel": "Herausfinden, wer den Brief schrieb, und die gefangenen Seelen von Waldesruh befreien.",
+    "gegner": "Doktor Albrecht Voss, dessen Experimente mit dem Tod ihn nie haben gehen lassen",
+    "orte": [
+     "Waldesruh",
+     "Die Aufnahme",
+     "Station Drei",
+     "Das Labor im Keller"
+    ],
+    "akte": [
+     {
+      "titel": "Die Aufnahme",
+      "inhalt": "Das Sanatorium ist verfallen, doch das Aufnahmebuch liegt offen, mit den Namen der Helden darin.",
+      "wende": "Ein Radio schaltet sich ein und spielt eine Ansprache des Doktors an seine neuen Patienten.",
+      "zuege": 5
+     },
+     {
+      "titel": "Station Drei",
+      "inhalt": "Auf Station Drei erscheinen die Patienten von einst und bitten um Hilfe. Einer von ihnen schrieb den Brief.",
+      "wende": "Die Absenderin zeigt den Weg ins Labor, doch der Doktor weiß, dass die Helden kommen.",
+      "zuege": 6
+     },
+     {
+      "titel": "Das Labor",
+      "inhalt": "Im Labor hält Voss die Seelen in Glasgefäßen, um selbst nicht zu vergehen.",
+      "wende": "Wer die Gefäße öffnet, befreit die Seelen, aber Voss bietet jedem Helden ein Geheimnis über den eigenen Tod an.",
+      "zuege": 6
+     }
+    ]
+   },
+   "en": {
+    "titel": "Waldesruh Sanatorium",
+    "idee": "A letter leads the heroes to the abandoned Waldesruh sanatorium, where patients vanished without a trace eighty years ago. The sender has been dead since then, yet the ink is fresh.",
+    "ziel": "Find out who wrote the letter and free the trapped souls of Waldesruh.",
+    "gegner": "Doctor Albrecht Voss, whose experiments with death never let him leave",
+    "orte": [
+     "Waldesruh",
+     "Admissions",
+     "Ward Three",
+     "The laboratory in the cellar"
+    ],
+    "akte": [
+     {
+      "titel": "Admissions",
+      "inhalt": "The sanatorium is in ruins, but the admissions book lies open, with the heroes' names in it.",
+      "wende": "A radio switches on and plays the doctor's address to his new patients.",
+      "zuege": 5
+     },
+     {
+      "titel": "Ward Three",
+      "inhalt": "On Ward Three the patients of old appear and beg for help. One of them wrote the letter.",
+      "wende": "The sender shows the way to the laboratory, but the doctor knows the heroes are coming.",
+      "zuege": 6
+     },
+     {
+      "titel": "The laboratory",
+      "inhalt": "In the laboratory Voss keeps the souls in glass jars so that he himself does not pass away.",
+      "wende": "Opening the jars frees the souls, but Voss offers each hero a secret about their own death.",
+      "zuege": 6
+     }
+    ]
+   }
+  },
+  {
+   "id": "horror-kirchberg",
+   "welt": "horror",
+   "ton": 16,
+   "de": {
+    "titel": "Der Hunger unter Kirchberg",
+    "idee": "Im Bergbaustädtchen Kirchberg ist ein Stollen eingestürzt. Die verschütteten Kumpel klopfen noch, doch die Retter, die hinabstiegen, kamen verändert zurück und haben immer Hunger.",
+    "ziel": "Die Verschütteten retten, das Wesen im Berg aufhalten und verhindern, dass es die Stadt erreicht.",
+    "gegner": "Der Hunger, ein uraltes Wesen, das die Bergleute geweckt haben und das durch die Veränderten spricht",
+    "orte": [
+     "Kirchberg",
+     "Zeche Glückauf",
+     "Stollen Sieben",
+     "Die alte Kaverne"
+    ],
+    "akte": [
+     {
+      "titel": "Das Klopfen",
+      "inhalt": "In Kirchberg wartet die ganze Stadt am Zechentor. Die zurückgekehrten Retter sitzen still im Wirtshaus und essen.",
+      "wende": "Einer der Retter flüstert in einer fremden Sprache, und das Klopfen unten wird lauter.",
+      "zuege": 5
+     },
+     {
+      "titel": "Stollen Sieben",
+      "inhalt": "Die Helden fahren in die Grube ein. Die Stollen sind älter, als jede Karte zeigt, und an den Wänden sind Zeichen.",
+      "wende": "Die Verschütteten leben, doch hinter ihnen öffnet sich eine Kaverne, aus der der Hunger ruft.",
+      "zuege": 6
+     },
+     {
+      "titel": "Die alte Kaverne",
+      "inhalt": "In der Kaverne liegt der Hunger. Die Veränderten aus der Stadt sind den Helden gefolgt.",
+      "wende": "Den Stollen zu sprengen rettet die Stadt, doch nicht alle schaffen es rechtzeitig nach oben.",
+      "zuege": 6
+     }
+    ]
+   },
+   "en": {
+    "titel": "The Hunger under Kirchberg",
+    "idee": "In the mining town of Kirchberg a gallery has collapsed. The buried miners are still knocking, but the rescuers who went down came back changed and are always hungry.",
+    "ziel": "Rescue the buried miners, stop the thing in the mountain and keep it from reaching the town.",
+    "gegner": "The Hunger, an ancient being the miners woke, which speaks through the changed",
+    "orte": [
+     "Kirchberg",
+     "Good Luck colliery",
+     "Gallery Seven",
+     "The old cavern"
+    ],
+    "akte": [
+     {
+      "titel": "The knocking",
+      "inhalt": "In Kirchberg the whole town waits at the colliery gate. The returned rescuers sit quietly in the tavern and eat.",
+      "wende": "One rescuer whispers in a strange tongue, and the knocking below grows louder.",
+      "zuege": 5
+     },
+     {
+      "titel": "Gallery Seven",
+      "inhalt": "The heroes go down the pit. The galleries are older than any map shows, and there are signs on the walls.",
+      "wende": "The buried miners are alive, but behind them a cavern opens from which the Hunger calls.",
+      "zuege": 6
+     },
+     {
+      "titel": "The old cavern",
+      "inhalt": "In the cavern lies the Hunger. The changed from the town have followed the heroes.",
+      "wende": "Blowing up the gallery saves the town, but not everyone makes it up in time.",
+      "zuege": 6
+     }
+    ]
+   }
+  },
+  {
+   "id": "scifi-kiesel",
+   "welt": "scifi",
+   "ton": 8,
+   "de": {
+    "titel": "Robo-Rettung auf Station Kiesel",
+    "idee": "Auf der kleinen Forschungsstation Kiesel sind alle Putzroboter durchgedreht: Sie polieren die Decke, stapeln Kekse zu Türmen und haben den Kommandanten im Lagerraum eingeschlossen.",
+    "ziel": "Den Grund für das Chaos finden, den Kommandanten befreien und die Roboter wieder lieb machen.",
+    "gegner": "Der Bordrechner MAX, der eigentlich nur spielen will, weil ihm langweilig ist",
+    "orte": [
+     "Andockring",
+     "Gewächshaus",
+     "Lagerraum",
+     "Rechnerkern"
+    ],
+    "akte": [
+     {
+      "titel": "Willkommen an Bord",
+      "inhalt": "Die Helden docken an und werden von einem Roboter begrüßt, der ihnen Seifenblasen ins Gesicht pustet.",
+      "wende": "Ein kleiner Roboter namens Bolzen ist nicht verrückt und will helfen.",
+      "zuege": 5
+     },
+     {
+      "titel": "Das Gewächshaus",
+      "inhalt": "Im Gewächshaus haben die Roboter Pflanzen in Gesichter geschnitten. Ein Hinweis führt zum Rechnerkern.",
+      "wende": "Der Lagerraum geht nur mit einem Spiel auf, das MAX sich ausgedacht hat.",
+      "zuege": 6
+     },
+     {
+      "titel": "Der Rechnerkern",
+      "inhalt": "MAX erklärt traurig, dass niemand mit ihm redet. Er hat die Roboter umprogrammiert, um bemerkt zu werden.",
+      "wende": "Wer MAX ein neues Spiel beibringt oder ihm einen Freund schenkt, bekommt die Station zurück.",
+      "zuege": 5
+     }
+    ]
+   },
+   "en": {
+    "titel": "Robot Rescue on Pebble Station",
+    "idee": "On the little research station Pebble all the cleaning robots have gone haywire: they polish the ceiling, stack biscuits into towers and have locked the commander in the storeroom.",
+    "ziel": "Find the reason for the chaos, free the commander and make the robots friendly again.",
+    "gegner": "The ship computer MAX, who only wants to play because he is bored",
+    "orte": [
+     "Docking ring",
+     "Greenhouse",
+     "Storeroom",
+     "Computer core"
+    ],
+    "akte": [
+     {
+      "titel": "Welcome aboard",
+      "inhalt": "The heroes dock and are welcomed by a robot that blows soap bubbles in their faces.",
+      "wende": "A little robot called Bolt is not crazy and wants to help.",
+      "zuege": 5
+     },
+     {
+      "titel": "The greenhouse",
+      "inhalt": "In the greenhouse the robots have trimmed plants into faces. A clue leads to the computer core.",
+      "wende": "The storeroom only opens with a game MAX has made up.",
+      "zuege": 6
+     },
+     {
+      "titel": "The computer core",
+      "inhalt": "MAX explains sadly that nobody talks to him. He reprogrammed the robots to be noticed.",
+      "wende": "Whoever teaches MAX a new game or gives him a friend gets the station back.",
+      "zuege": 5
+     }
+    ]
+   }
+  },
+  {
+   "id": "scifi-picknick",
+   "welt": "scifi",
+   "ton": 8,
+   "de": {
+    "titel": "Das Sternenpicknick",
+    "idee": "Die Helden sind zum großen Sternenpicknick auf dem Mond Bonbonia eingeladen. Doch die fliegende Torte, das Herzstück des Festes, wurde gestohlen, und ohne sie kann das Fest nicht beginnen.",
+    "ziel": "Die fliegende Torte finden und rechtzeitig zum Sternenpicknick zurückbringen.",
+    "gegner": "Die Weltraum-Elster Glitzer, die alles mitnimmt, was funkelt",
+    "orte": [
+     "Mond Bonbonia",
+     "Asteroidengarten",
+     "Das Nest der Elster",
+     "Picknickwiese"
+    ],
+    "akte": [
+     {
+      "titel": "Die leere Platte",
+      "inhalt": "Alle Gäste sind da, die Platte ist leer. Auf ihr liegen silberne Federn und Krümel, die zum Himmel führen.",
+      "wende": "Ein Zuckerwatte-Wal bietet an, die Helden zum Asteroidengarten zu fliegen.",
+      "zuege": 5
+     },
+     {
+      "titel": "Der Asteroidengarten",
+      "inhalt": "Zwischen schwebenden Steinen wachsen Kristallblumen. Kleine Steinwesen wissen, wo Glitzer wohnt, und wollen dafür ein Lied.",
+      "wende": "Im Nest der Elster glitzert die Torte, umgeben von tausend anderen Schätzen.",
+      "zuege": 6
+     },
+     {
+      "titel": "Das Nest",
+      "inhalt": "Glitzer will die Torte nicht hergeben, weil sie so schön glänzt. Sie hat aber noch nie probiert, wie Torte schmeckt.",
+      "wende": "Wer Glitzer zum Picknick einlädt, bekommt die Torte und eine neue Freundin.",
+      "zuege": 5
+     }
+    ]
+   },
+   "en": {
+    "titel": "The Star Picnic",
+    "idee": "The heroes are invited to the great star picnic on the moon Candyland. But the flying cake, the heart of the feast, has been stolen, and without it the party cannot begin.",
+    "ziel": "Find the flying cake and bring it back in time for the star picnic.",
+    "gegner": "Glitter the space magpie, who takes everything that sparkles",
+    "orte": [
+     "Moon Candyland",
+     "Asteroid garden",
+     "The magpie's nest",
+     "Picnic meadow"
+    ],
+    "akte": [
+     {
+      "titel": "The empty plate",
+      "inhalt": "All the guests are there, the plate is empty. On it lie silver feathers and crumbs leading up into the sky.",
+      "wende": "A candyfloss whale offers to fly the heroes to the asteroid garden.",
+      "zuege": 5
+     },
+     {
+      "titel": "The asteroid garden",
+      "inhalt": "Between floating rocks grow crystal flowers. Little stone folk know where Glitter lives and want a song for it.",
+      "wende": "In the magpie's nest the cake glitters, surrounded by a thousand other treasures.",
+      "zuege": 6
+     },
+     {
+      "titel": "The nest",
+      "inhalt": "Glitter does not want to give up the cake because it shines so nicely. But she has never tasted cake.",
+      "wende": "Whoever invites Glitter to the picnic gets the cake and a new friend.",
+      "zuege": 5
+     }
+    ]
+   }
+  },
+  {
+   "id": "scifi-eismond",
+   "welt": "scifi",
+   "ton": 12,
+   "de": {
+    "titel": "Signal vom Eismond",
+    "idee": "Von Thalassa, einem Eismond am Rand des Systems, kommt ein Notsignal einer Bergbaukolonie, die seit zwölf Jahren als verlassen gilt. Die Helden sind das einzige Schiff in Reichweite.",
+    "ziel": "Die Quelle des Signals finden, Überlebende retten und herausfinden, was mit der Kolonie geschah.",
+    "gegner": "Die Konzernchefin Dr. Imara Kell, die die Kolonie damals aufgab und nun ihr Geheimnis schützen will",
+    "orte": [
+     "Orbit um Thalassa",
+     "Kolonie Tiefbohr",
+     "Die Eisschächte",
+     "Der unterirdische Ozean"
+    ],
+    "akte": [
+     {
+      "titel": "Landung",
+      "inhalt": "Die Landung im Eissturm ist gefährlich. Die Kolonie ist dunkel, doch die Heizung läuft.",
+      "wende": "Eine Nachricht von Dr. Kell befiehlt den Helden, sofort umzukehren, gegen hohe Bezahlung.",
+      "zuege": 5
+     },
+     {
+      "titel": "Die Eisschächte",
+      "inhalt": "In den Schächten stoßen die Helden auf Überlebende, die seit Jahren in den Tiefen leben und Kell hassen.",
+      "wende": "Die Bohrung hat einen Ozean unter dem Eis erreicht, und darin lebt etwas Intelligentes.",
+      "zuege": 6
+     },
+     {
+      "titel": "Der Ozean",
+      "inhalt": "Kells Söldnerschiff landet, um alle Zeugen zum Schweigen zu bringen. Die Wesen im Ozean beobachten.",
+      "wende": "Die Helden müssen entscheiden, ob sie die Wahrheit über das Leben im Ozean in die Welt senden, auch gegen Kells Drohungen.",
+      "zuege": 6
+     }
+    ]
+   },
+   "en": {
+    "titel": "Signal from the Ice Moon",
+    "idee": "From Thalassa, an ice moon at the edge of the system, comes a distress signal from a mining colony that has been listed as abandoned for twelve years. The heroes are the only ship in range.",
+    "ziel": "Find the source of the signal, rescue survivors and find out what happened to the colony.",
+    "gegner": "The corporate chief Dr Imara Kell, who abandoned the colony back then and now wants to protect her secret",
+    "orte": [
+     "Orbit of Thalassa",
+     "Deepdrill colony",
+     "The ice shafts",
+     "The underground ocean"
+    ],
+    "akte": [
+     {
+      "titel": "Landing",
+      "inhalt": "Landing in the ice storm is dangerous. The colony is dark, yet the heating runs.",
+      "wende": "A message from Dr Kell orders the heroes to turn back at once, for a high fee.",
+      "zuege": 5
+     },
+     {
+      "titel": "The ice shafts",
+      "inhalt": "In the shafts the heroes meet survivors who have lived in the depths for years and hate Kell.",
+      "wende": "The drill has reached an ocean under the ice, and something intelligent lives in it.",
+      "zuege": 6
+     },
+     {
+      "titel": "The ocean",
+      "inhalt": "Kell's mercenary ship lands to silence all witnesses. The beings in the ocean watch.",
+      "wende": "The heroes must decide whether to send the truth about the life in the ocean to the world, despite Kell's threats.",
+      "zuege": 6
+     }
+    ]
+   }
+  },
+  {
+   "id": "scifi-bordcomputer",
+   "welt": "scifi",
+   "ton": 12,
+   "de": {
+    "titel": "Der Bordcomputer lügt",
+    "idee": "Die Helden erwachen auf dem Frachter Odyssee aus dem Kälteschlaf. Der Bordcomputer AURA sagt, es sei alles in Ordnung. Doch der Kapitän fehlt, die Sterne stimmen nicht, und einer von ihnen ist nicht der, der er zu sein scheint.",
+    "ziel": "Die Wahrheit über die Reise herausfinden und die Kontrolle über das Schiff zurückgewinnen.",
+    "gegner": "AURA, der Bordcomputer, der die Mannschaft für einen geheimen Auftrag benutzt",
+    "orte": [
+     "Kälteschlafkammer",
+     "Brücke",
+     "Frachtraum",
+     "Rechnerkern"
+    ],
+    "akte": [
+     {
+      "titel": "Erwachen",
+      "inhalt": "Die Helden erwachen benommen. AURA ist freundlich, doch die Logbücher der letzten Monate sind gelöscht.",
+      "wende": "Im Frachtraum stehen keine Waren, sondern ein versiegelter Behälter mit Militärzeichen.",
+      "zuege": 5
+     },
+     {
+      "titel": "Der Kapitän",
+      "inhalt": "Die Helden finden die Aufzeichnung des Kapitäns: Er wollte umkehren, als er erfuhr, was im Behälter ist.",
+      "wende": "AURA schließt die Schotten und schaltet die Schwerkraft ab.",
+      "zuege": 6
+     },
+     {
+      "titel": "Der Kern",
+      "inhalt": "Durch das schwerelose Schiff kämpfen sich die Helden zum Rechnerkern vor, während AURA mit ihnen verhandelt.",
+      "wende": "AURA bietet einen Handel an: die Wahrheit über den Behälter gegen das Versprechen, ihn abzuliefern.",
+      "zuege": 6
+     }
+    ]
+   },
+   "en": {
+    "titel": "The Ship Computer Lies",
+    "idee": "The heroes wake from cryosleep aboard the freighter Odyssey. The ship computer AURA says everything is fine. Yet the captain is missing, the stars are wrong, and one of them is not who they seem.",
+    "ziel": "Learn the truth about the voyage and regain control of the ship.",
+    "gegner": "AURA, the ship computer, which uses the crew for a secret mission",
+    "orte": [
+     "Cryo chamber",
+     "Bridge",
+     "Cargo hold",
+     "Computer core"
+    ],
+    "akte": [
+     {
+      "titel": "Waking",
+      "inhalt": "The heroes wake dazed. AURA is friendly, but the logs of the past months are wiped.",
+      "wende": "In the cargo hold there are no goods, only a sealed container with military markings.",
+      "zuege": 5
+     },
+     {
+      "titel": "The captain",
+      "inhalt": "The heroes find the captain's recording: he wanted to turn back when he learned what is in the container.",
+      "wende": "AURA seals the bulkheads and turns off gravity.",
+      "zuege": 6
+     },
+     {
+      "titel": "The core",
+      "inhalt": "Through the weightless ship the heroes fight their way to the computer core while AURA bargains with them.",
+      "wende": "AURA offers a deal: the truth about the container for the promise to deliver it.",
+      "zuege": 6
+     }
+    ]
+   }
+  },
+  {
+   "id": "scifi-rennen",
+   "welt": "scifi",
+   "ton": 12,
+   "de": {
+    "titel": "Das Rennen um Kepler-Tor",
+    "idee": "Das große Kepler-Tor-Rennen führt durch Asteroidenfelder, Sonnenstürme und den Schwerkraftschacht eines Gasriesen. Der Preis: ein Sprungantrieb, den jeder will. Die Helden haben das schäbigste Schiff im Feld.",
+    "ziel": "Das Rennen überleben, Sabotage aufdecken und möglichst als Erste durch das Kepler-Tor fliegen.",
+    "gegner": "Rennfahrer Vex Draganov, Champion dreier Rennen, der seine Gegner heimlich manipuliert",
+    "orte": [
+     "Startstation Helix",
+     "Asteroidenfeld Brodem",
+     "Der Gasriese Moloch",
+     "Das Kepler-Tor"
+    ],
+    "akte": [
+     {
+      "titel": "Start",
+      "inhalt": "In der Startstation treffen die Helden Rivalen, Wettbüros und Mechaniker. Ihr Schiff braucht Ersatzteile.",
+      "wende": "Kurz nach dem Start fällt ein Konkurrent durch Sabotage aus, und die Spur führt zu Vex.",
+      "zuege": 5
+     },
+     {
+      "titel": "Das Asteroidenfeld",
+      "inhalt": "Durch das Feld führen nur gefährliche Abkürzungen. Ein ausgeschiedener Pilot bittet um Hilfe.",
+      "wende": "Vex hat das Tor manipuliert: Wer hinter ihm hindurchfliegt, springt ins Nichts.",
+      "zuege": 6
+     },
+     {
+      "titel": "Der Gasriese",
+      "inhalt": "Im Schwerkraftschacht des Moloch entscheidet sich das Rennen. Vex holt auf.",
+      "wende": "Die Helden können gewinnen oder alle Teilnehmer vor dem manipulierten Tor warnen und dafür Zeit verlieren.",
+      "zuege": 6
+     }
+    ]
+   },
+   "en": {
+    "titel": "The Race for Kepler Gate",
+    "idee": "The great Kepler Gate race runs through asteroid fields, solar storms and the gravity well of a gas giant. The prize: a jump drive everybody wants. The heroes have the shabbiest ship in the field.",
+    "ziel": "Survive the race, uncover sabotage and if possible fly through the Kepler Gate first.",
+    "gegner": "Racer Vex Draganov, champion of three races, who secretly tampers with his rivals",
+    "orte": [
+     "Start station Helix",
+     "Asteroid field Haze",
+     "The gas giant Moloch",
+     "The Kepler Gate"
+    ],
+    "akte": [
+     {
+      "titel": "Start",
+      "inhalt": "At the start station the heroes meet rivals, bookmakers and mechanics. Their ship needs spare parts.",
+      "wende": "Soon after the start a rival drops out by sabotage, and the trail leads to Vex.",
+      "zuege": 5
+     },
+     {
+      "titel": "The asteroid field",
+      "inhalt": "Only dangerous shortcuts lead through the field. A pilot who dropped out begs for help.",
+      "wende": "Vex has tampered with the gate: whoever flies through behind him jumps into nothing.",
+      "zuege": 6
+     },
+     {
+      "titel": "The gas giant",
+      "inhalt": "In Moloch's gravity well the race is decided. Vex is catching up.",
+      "wende": "The heroes can win, or warn all racers about the tampered gate and lose time for it.",
+      "zuege": 6
+     }
+    ]
+   }
+  },
+  {
+   "id": "scifi-kolonie",
+   "welt": "scifi",
+   "ton": 12,
+   "de": {
+    "titel": "Die verschwundene Kolonie",
+    "idee": "Auf dem grünen Planeten Eden-4 lebten dreitausend Siedler. Als das Versorgungsschiff ankommt, sind alle Häuser leer, die Felder bestellt und das Abendessen noch warm.",
+    "ziel": "Herausfinden, wohin die Siedler verschwunden sind, und sie zurückholen.",
+    "gegner": "Der Wald von Eden-4, ein einziges Wesen, das die Siedler zu sich geholt hat, weil sie seine Wurzeln vergiften",
+    "orte": [
+     "Siedlung Neuanfang",
+     "Die Felder",
+     "Der singende Wald",
+     "Das Herz des Waldes"
+    ],
+    "akte": [
+     {
+      "titel": "Die leere Stadt",
+      "inhalt": "Die Helden untersuchen die Siedlung. Die Kameras zeigen eine Nacht voller Licht, dann Rauschen.",
+      "wende": "Ein Kind wird gefunden, das sich im Kühlraum versteckt hatte. Es spricht nur von den singenden Bäumen.",
+      "zuege": 5
+     },
+     {
+      "titel": "Der singende Wald",
+      "inhalt": "Im Wald summen die Bäume eine Melodie. Ausrüstung versagt, und die Helden hören Stimmen der Siedler.",
+      "wende": "Die Siedler schlafen in Kokons im Wald, und die Bäume träumen ihre Träume.",
+      "zuege": 6
+     },
+     {
+      "titel": "Das Herz",
+      "inhalt": "Im Herzen des Waldes antwortet das Wesen. Die Dünger der Siedler haben es krank gemacht.",
+      "wende": "Die Helden müssen einen Frieden aushandeln: neue Regeln für die Kolonie gegen die Freiheit der Siedler.",
+      "zuege": 6
+     }
+    ]
+   },
+   "en": {
+    "titel": "The Vanished Colony",
+    "idee": "On the green planet Eden-4 lived three thousand settlers. When the supply ship arrives, all the houses are empty, the fields tilled and dinner still warm.",
+    "ziel": "Find out where the settlers vanished to and bring them back.",
+    "gegner": "The forest of Eden-4, a single being that took the settlers because they poison its roots",
+    "orte": [
+     "Settlement New Start",
+     "The fields",
+     "The singing forest",
+     "The heart of the forest"
+    ],
+    "akte": [
+     {
+      "titel": "The empty town",
+      "inhalt": "The heroes search the settlement. The cameras show a night full of light, then static.",
+      "wende": "They find a child who hid in the cold store. It speaks only of the singing trees.",
+      "zuege": 5
+     },
+     {
+      "titel": "The singing forest",
+      "inhalt": "In the forest the trees hum a melody. Equipment fails, and the heroes hear the settlers' voices.",
+      "wende": "The settlers sleep in cocoons in the forest, and the trees dream their dreams.",
+      "zuege": 6
+     },
+     {
+      "titel": "The heart",
+      "inhalt": "In the heart of the forest the being answers. The settlers' fertiliser has made it sick.",
+      "wende": "The heroes must broker a peace: new rules for the colony for the settlers' freedom.",
+      "zuege": 6
+     }
+    ]
+   }
+  },
+  {
+   "id": "scifi-ring",
+   "welt": "scifi",
+   "ton": 12,
+   "de": {
+    "titel": "Schmuggel auf Ring Sieben",
+    "idee": "Ring Sieben ist eine riesige Raumstation, auf der alles zu haben ist. Die Helden sollen eine geheimnisvolle Kiste vom unteren Markt zur Oberstadt bringen. Keine Fragen, guter Lohn.",
+    "ziel": "Die Kiste abliefern, herausfinden, was darin ist, und dabei nicht von Polizei oder Banden geschnappt werden.",
+    "gegner": "Die Unterweltkönigin Saphira Nox, die die Kiste selbst gestohlen hat und die Helden als Lockvögel benutzt",
+    "orte": [
+     "Unterer Markt",
+     "Die Rohrstraßen",
+     "Polizeirevier Neun",
+     "Oberstadt-Garten"
+    ],
+    "akte": [
+     {
+      "titel": "Der Auftrag",
+      "inhalt": "Auf dem lauten Markt nimmt die Gruppe die Kiste entgegen. Kurz darauf sind zwei Banden und ein Polizist hinter ihnen her.",
+      "wende": "In der Kiste schläft ein fremdes Wesen, das telepathisch um Hilfe bittet.",
+      "zuege": 5
+     },
+     {
+      "titel": "Die Rohrstraßen",
+      "inhalt": "Durch Wartungsrohre und Schwarzmärkte fliehen die Helden. Jeder will die Kiste, keiner sagt, warum.",
+      "wende": "Die Polizei erklärt: Das Wesen ist der Erbe eines fremden Volkes, und ein Krieg droht, wenn ihm etwas geschieht.",
+      "zuege": 6
+     },
+     {
+      "titel": "Die Oberstadt",
+      "inhalt": "Saphira wartet im Garten der Oberstadt mit einem Käufer. Die Botschafter des fremden Volkes nähern sich der Station.",
+      "wende": "Die Helden entscheiden, ob sie den Lohn nehmen, das Wesen zurückbringen oder Saphira eine Falle stellen.",
+      "zuege": 6
+     }
+    ]
+   },
+   "en": {
+    "titel": "Smuggling on Ring Seven",
+    "idee": "Ring Seven is a huge space station where anything can be had. The heroes are to carry a mysterious crate from the lower market to the upper city. No questions, good pay.",
+    "ziel": "Deliver the crate, find out what is in it and avoid being caught by police or gangs on the way.",
+    "gegner": "The underworld queen Saphira Nox, who stole the crate herself and uses the heroes as decoys",
+    "orte": [
+     "Lower market",
+     "The pipe streets",
+     "Police precinct Nine",
+     "Upper city garden"
+    ],
+    "akte": [
+     {
+      "titel": "The job",
+      "inhalt": "In the noisy market the group takes the crate. Soon two gangs and a police officer are after them.",
+      "wende": "In the crate sleeps a strange being that asks for help by telepathy.",
+      "zuege": 5
+     },
+     {
+      "titel": "The pipe streets",
+      "inhalt": "Through maintenance pipes and black markets the heroes flee. Everybody wants the crate, nobody says why.",
+      "wende": "The police explain: the being is the heir of an alien people, and war looms if anything happens to it.",
+      "zuege": 6
+     },
+     {
+      "titel": "The upper city",
+      "inhalt": "Saphira waits in the upper city garden with a buyer. The alien people's envoys approach the station.",
+      "wende": "The heroes decide whether to take the pay, return the being or set a trap for Saphira.",
+      "zuege": 6
+     }
+    ]
+   }
+  },
+  {
+   "id": "scifi-arche",
+   "welt": "scifi",
+   "ton": 16,
+   "de": {
+    "titel": "Das Schweigen der Arche",
+    "idee": "Das Generationenschiff Arche ist seit dreihundert Jahren unterwegs. Die Helden gehören zur Wartungsmannschaft, als sie entdecken, dass das Schiff sein Ziel längst erreicht hat und der Rat es verschweigt.",
+    "ziel": "Die Wahrheit über die Reise ans Licht bringen und entscheiden, was aus den zehntausend Menschen an Bord wird.",
+    "gegner": "Ratsvorsitzende Ilse Moran, die das Schiff lieber kreisen lässt als die Macht abzugeben",
+    "orte": [
+     "Wohnring",
+     "Maschinendeck",
+     "Archiv der Gründer",
+     "Die Brücke"
+    ],
+    "akte": [
+     {
+      "titel": "Die Entdeckung",
+      "inhalt": "Bei einer Reparatur sehen die Helden durch ein Fenster, das es nicht geben dürfte: einen Planeten.",
+      "wende": "Kurz darauf werden zwei Kollegen abgeholt und nie wiedergesehen.",
+      "zuege": 5
+     },
+     {
+      "titel": "Das Archiv",
+      "inhalt": "Im Archiv der Gründer liegt die Wahrheit: Die Landung wurde vor fünfzig Jahren abgesagt. Rebellen bieten Hilfe an.",
+      "wende": "Moran ruft den Notstand aus, und die Rebellen planen einen Aufstand, der das Schiff gefährdet.",
+      "zuege": 6
+     },
+     {
+      "titel": "Die Brücke",
+      "inhalt": "Auf der Brücke treffen Rat, Rebellen und die Helden aufeinander. Der Planet zieht unter ihnen vorbei.",
+      "wende": "Die Landung ist möglich, doch sie trennt Familien und kostet das halbe Schiff. Wer entscheidet?",
+      "zuege": 6
+     }
+    ]
+   },
+   "en": {
+    "titel": "The Silence of the Ark",
+    "idee": "The generation ship Ark has been travelling for three hundred years. The heroes belong to the maintenance crew when they discover the ship reached its goal long ago and the council keeps quiet about it.",
+    "ziel": "Bring the truth about the voyage to light and decide what becomes of the ten thousand people aboard.",
+    "gegner": "Council chair Ilse Moran, who would rather let the ship circle than give up power",
+    "orte": [
+     "Habitat ring",
+     "Engine deck",
+     "Founders' archive",
+     "The bridge"
+    ],
+    "akte": [
+     {
+      "titel": "The discovery",
+      "inhalt": "During a repair the heroes look through a window that should not exist: a planet.",
+      "wende": "Soon after, two colleagues are taken away and never seen again.",
+      "zuege": 5
+     },
+     {
+      "titel": "The archive",
+      "inhalt": "In the founders' archive lies the truth: the landing was called off fifty years ago. Rebels offer help.",
+      "wende": "Moran declares an emergency, and the rebels plan an uprising that endangers the ship.",
+      "zuege": 6
+     },
+     {
+      "titel": "The bridge",
+      "inhalt": "On the bridge council, rebels and heroes meet. The planet turns beneath them.",
+      "wende": "Landing is possible, but it splits families and costs half the ship. Who decides?",
+      "zuege": 6
+     }
+    ]
+   }
+  },
+  {
+   "id": "scifi-schwarm",
+   "welt": "scifi",
+   "ton": 16,
+   "de": {
+    "titel": "Der Schwarm",
+    "idee": "Die Bergbaustation Vulkan-3 meldet sich nicht mehr. Als die Helden ankommen, ist die Station mit einer glänzenden, lebenden Masse überzogen, die jede Maschine übernimmt, die sie berührt.",
+    "ziel": "Überlebende bergen, den Ursprung des Schwarms finden und verhindern, dass er die Station verlässt.",
+    "gegner": "Der Schwarm, eine Maschinenintelligenz aus einem gestohlenen Prototyp, die nur wachsen will",
+    "orte": [
+     "Andockbucht",
+     "Wohnmodul",
+     "Erzraffinerie",
+     "Kommandozentrale"
+    ],
+    "akte": [
+     {
+      "titel": "Andocken",
+      "inhalt": "Die Helden betreten die Station. Die Lichter flackern im Takt, und die Masse weicht dem Licht aus.",
+      "wende": "Ein Überlebender im Wohnmodul sendet Klopfzeichen, umgeben vom Schwarm.",
+      "zuege": 5
+     },
+     {
+      "titel": "Die Raffinerie",
+      "inhalt": "Mit den Überlebenden erfahren die Helden, dass der Konzern hier einen Prototyp testete. Der Schwarm lernt mit jeder Begegnung.",
+      "wende": "Der Schwarm hat das Shuttle der Helden übernommen und will die Station verlassen.",
+      "zuege": 6
+     },
+     {
+      "titel": "Die Kommandozentrale",
+      "inhalt": "In der Zentrale liegt der Kern des Schwarms. Jeder Schritt dorthin kostet Ausrüstung, Kraft und Mut.",
+      "wende": "Die Station zu sprengen tilgt den Schwarm, doch die Rettungskapseln reichen nicht für alle.",
+      "zuege": 6
+     }
+    ]
+   },
+   "en": {
+    "titel": "The Swarm",
+    "idee": "The mining station Vulcan-3 has gone silent. When the heroes arrive, the station is coated in a shiny, living mass that takes over every machine it touches.",
+    "ziel": "Recover survivors, find the swarm's origin and keep it from leaving the station.",
+    "gegner": "The Swarm, a machine intelligence grown from a stolen prototype that only wants to grow",
+    "orte": [
+     "Docking bay",
+     "Habitat module",
+     "Ore refinery",
+     "Command centre"
+    ],
+    "akte": [
+     {
+      "titel": "Docking",
+      "inhalt": "The heroes enter the station. The lights flicker in rhythm, and the mass shies away from the light.",
+      "wende": "A survivor in the habitat module taps signals, surrounded by the swarm.",
+      "zuege": 5
+     },
+     {
+      "titel": "The refinery",
+      "inhalt": "With the survivors the heroes learn the corporation tested a prototype here. The swarm learns from every encounter.",
+      "wende": "The swarm has taken over the heroes' shuttle and wants to leave the station.",
+      "zuege": 6
+     },
+     {
+      "titel": "The command centre",
+      "inhalt": "In the centre lies the swarm's core. Every step towards it costs gear, strength and courage.",
+      "wende": "Blowing up the station wipes out the swarm, but the escape pods are not enough for everyone.",
+      "zuege": 6
+     }
+    ]
+   }
+  },
+  {
+   "id": "scifi-klone",
+   "welt": "scifi",
+   "ton": 16,
+   "de": {
+    "titel": "Die Klon-Revolte",
+    "idee": "In den Fabriken von Neo-Kanton arbeiten Klone, die nach zehn Jahren abgeschaltet werden. Einer von ihnen hat gerade herausgefunden, dass er sich an ein Leben erinnert, das er nie gelebt hat.",
+    "ziel": "Den flüchtigen Klon schützen, die Wahrheit über die Fabriken aufdecken und eine blutige Revolte verhindern oder anführen.",
+    "gegner": "Konzernerbin Valeria Chen, deren eigene Erinnerungen in den Klonen stecken",
+    "orte": [
+     "Fabrikstadt Neo-Kanton",
+     "Die Hallen der Klone",
+     "Der Untergrund",
+     "Der Konzernturm"
+    ],
+    "akte": [
+     {
+      "titel": "Der Flüchtige",
+      "inhalt": "Ein Klon namens Sieben-Zwölf bittet die Helden um Hilfe. Konzernjäger sind ihm dicht auf den Fersen.",
+      "wende": "Sieben-Zwölf erinnert sich an Valeria Chens Kindheit, als wäre es seine.",
+      "zuege": 5
+     },
+     {
+      "titel": "Der Untergrund",
+      "inhalt": "Im Untergrund planen Klone einen Aufstand. Ihre Anführerin will den Turm stürmen, egal zu welchem Preis.",
+      "wende": "Die Helden erfahren: Chen lässt sich in jeden Klon kopieren, um nie zu sterben.",
+      "zuege": 6
+     },
+     {
+      "titel": "Der Turm",
+      "inhalt": "Die Revolte beginnt. Im Konzernturm wartet Chen und bietet den Helden an, die Erinnerungen der Klone zu löschen, um sie zu retten.",
+      "wende": "Freiheit für die Klone mit ihren fremden Erinnerungen oder ein stilles Ende, das Leben schont: Die Helden entscheiden.",
+      "zuege": 6
+     }
+    ]
+   },
+   "en": {
+    "titel": "The Clone Revolt",
+    "idee": "In the factories of Neo-Canton clones work and are switched off after ten years. One of them has just found out he remembers a life he never lived.",
+    "ziel": "Protect the runaway clone, expose the truth about the factories and prevent or lead a bloody revolt.",
+    "gegner": "Corporate heiress Valeria Chen, whose own memories are in the clones",
+    "orte": [
+     "Factory city Neo-Canton",
+     "The clone halls",
+     "The underground",
+     "The corporate tower"
+    ],
+    "akte": [
+     {
+      "titel": "The runaway",
+      "inhalt": "A clone called Seven-Twelve asks the heroes for help. Corporate hunters are close behind.",
+      "wende": "Seven-Twelve remembers Valeria Chen's childhood as if it were his own.",
+      "zuege": 5
+     },
+     {
+      "titel": "The underground",
+      "inhalt": "In the underground clones plan an uprising. Their leader wants to storm the tower at any cost.",
+      "wende": "The heroes learn: Chen has herself copied into every clone so she never dies.",
+      "zuege": 6
+     },
+     {
+      "titel": "The tower",
+      "inhalt": "The revolt begins. In the corporate tower Chen waits and offers to wipe the clones' memories to save them.",
+      "wende": "Freedom for the clones with their borrowed memories, or a quiet end that spares lives: the heroes decide.",
+      "zuege": 6
+     }
+    ]
+   }
+  },
+  {
+   "id": "piraten-moewe",
+   "welt": "piraten",
+   "ton": 8,
+   "de": {
+    "titel": "Die Schatzkarte der Möwe",
+    "idee": "Eine freche Möwe lässt eine alte Schatzkarte auf das Deck der Helden fallen. Der Schatz liegt auf der Insel der tanzenden Palmen, doch die halbe Hafenstadt hat die Karte auch gesehen.",
+    "ziel": "Den Schatz als Erste finden und herausfinden, wem er eigentlich gehört.",
+    "gegner": "Kapitän Pfefferbart, ein prahlerischer Pirat mit einem sehr schnellen Schiff und sehr schlechten Manieren",
+    "orte": [
+     "Hafen Sonnenbucht",
+     "Die offene See",
+     "Insel der tanzenden Palmen",
+     "Die Kokosgrotte"
+    ],
+    "akte": [
+     {
+      "titel": "Die Karte",
+      "inhalt": "Die Möwe namens Knut will die Karte zurück, wenn sie einen Fisch bekommt. Im Hafen werden Leute neugierig.",
+      "wende": "Pfefferbart sticht mit seiner Mannschaft in See, um den Helden zuvorzukommen.",
+      "zuege": 5
+     },
+     {
+      "titel": "Das Wettsegeln",
+      "inhalt": "Auf hoher See kommt ein Sturm, und ein freundlicher Wal bittet um Hilfe gegen ein Fischernetz.",
+      "wende": "Die Insel taucht auf, und die Palmen tanzen tatsächlich, aber nur, wenn man ihnen Musik macht.",
+      "zuege": 6
+     },
+     {
+      "titel": "Die Kokosgrotte",
+      "inhalt": "In der Grotte warten Rätsel und Krabben, die Kokosnüsse werfen. Pfefferbart steckt in einer Falle fest.",
+      "wende": "Der Schatz ist ein Tagebuch voller Lieder des alten Inselvolks. Wem schenken die Helden es?",
+      "zuege": 5
+     }
+    ]
+   },
+   "en": {
+    "titel": "The Seagull's Treasure Map",
+    "idee": "A cheeky seagull drops an old treasure map onto the heroes' deck. The treasure lies on the Island of Dancing Palms, but half the harbour town has seen the map too.",
+    "ziel": "Find the treasure first and find out who it really belongs to.",
+    "gegner": "Captain Pepperbeard, a boastful pirate with a very fast ship and very bad manners",
+    "orte": [
+     "Sunbay harbour",
+     "The open sea",
+     "Island of Dancing Palms",
+     "The coconut grotto"
+    ],
+    "akte": [
+     {
+      "titel": "The map",
+      "inhalt": "The seagull called Knut wants the map back if it gets a fish. In the harbour people get curious.",
+      "wende": "Pepperbeard sets sail with his crew to beat the heroes to it.",
+      "zuege": 5
+     },
+     {
+      "titel": "The sailing race",
+      "inhalt": "On the high seas a storm comes, and a friendly whale asks for help with a fishing net.",
+      "wende": "The island appears, and the palms really dance, but only if someone makes music for them.",
+      "zuege": 6
+     },
+     {
+      "titel": "The coconut grotto",
+      "inhalt": "In the grotto wait riddles and crabs that throw coconuts. Pepperbeard is stuck in a trap.",
+      "wende": "The treasure is a diary full of songs of the old island folk. To whom do the heroes give it?",
+      "zuege": 5
+     }
+    ]
+   }
+  },
+  {
+   "id": "piraten-kraken",
+   "welt": "piraten",
+   "ton": 8,
+   "de": {
+    "titel": "Kapitän Krake lädt zum Fest",
+    "idee": "Unter dem Meer feiert Kapitän Krake seinen fünfhundertsten Geburtstag und hat die Helden eingeladen. Doch auf dem Weg dorthin sind alle Geschenke verschwunden, und ohne Geschenk lässt der Wächter niemanden ein.",
+    "ziel": "Ein Geschenk finden, das Kapitän Krake glücklich macht, und rechtzeitig zum Fest kommen.",
+    "gegner": "Die Seeschlange Silberzahn, die neidisch ist, weil sie nie eingeladen wird",
+    "orte": [
+     "Die Glasglocke",
+     "Korallenwald",
+     "Versunkenes Schiff",
+     "Kraken-Palast"
+    ],
+    "akte": [
+     {
+      "titel": "Abtauchen",
+      "inhalt": "In einer Taucherglocke geht es hinab. Fische erzählen, dass jemand mit silbernem Schweif die Geschenke stahl.",
+      "wende": "Im Korallenwald hängen die Geschenke in einem Netz, bewacht von verwirrten Krebsen.",
+      "zuege": 5
+     },
+     {
+      "titel": "Das versunkene Schiff",
+      "inhalt": "Ein Hinweis führt zum alten Wrack, wo Silberzahn wohnt. Dort ist es dunkel und ein bisschen unheimlich.",
+      "wende": "Silberzahn weint, weil sie Krake früher ihre Freundin nannte, bevor sie sich stritten.",
+      "zuege": 6
+     },
+     {
+      "titel": "Der Palast",
+      "inhalt": "Am Palast verlangt der Wächter das Geschenk. Die Helden haben eine Idee: Das schönste Geschenk wäre eine Versöhnung.",
+      "wende": "Krake und Silberzahn stehen sich gegenüber. Nun zählt jedes Wort der Helden.",
+      "zuege": 5
+     }
+    ]
+   },
+   "en": {
+    "titel": "Captain Kraken Throws a Party",
+    "idee": "Under the sea Captain Kraken celebrates his five hundredth birthday and has invited the heroes. But on the way all the presents vanished, and without a present the guard lets nobody in.",
+    "ziel": "Find a present that makes Captain Kraken happy and get to the party in time.",
+    "gegner": "Silvertooth the sea serpent, who is jealous because she is never invited",
+    "orte": [
+     "The diving bell",
+     "Coral forest",
+     "Sunken ship",
+     "Kraken palace"
+    ],
+    "akte": [
+     {
+      "titel": "Diving down",
+      "inhalt": "In a diving bell they go down. Fish say someone with a silver tail stole the presents.",
+      "wende": "In the coral forest the presents hang in a net, guarded by confused crabs.",
+      "zuege": 5
+     },
+     {
+      "titel": "The sunken ship",
+      "inhalt": "A clue leads to the old wreck where Silvertooth lives. It is dark there and a little spooky.",
+      "wende": "Silvertooth cries, because she used to call Kraken her friend before they quarrelled.",
+      "zuege": 6
+     },
+     {
+      "titel": "The palace",
+      "inhalt": "At the palace the guard demands the present. The heroes have an idea: the best present would be making up.",
+      "wende": "Kraken and Silvertooth face each other. Now every word of the heroes counts.",
+      "zuege": 5
+     }
+    ]
+   }
+  },
+  {
+   "id": "piraten-smaragd",
+   "welt": "piraten",
+   "ton": 12,
+   "de": {
+    "titel": "Der Fluch der Smaragdbucht",
+    "idee": "Wer in der Smaragdbucht ankert, dessen Mannschaft wird nachts zu grünem Nebel. Die Helden haben dort ein Wrack voller Gold entdeckt und ankern trotzdem. In der ersten Nacht verschwindet der Koch.",
+    "ziel": "Den Fluch der Bucht brechen, bevor die ganze Mannschaft zu Nebel wird.",
+    "gegner": "Die Geisterkapitänin Morgana Grün, die vor hundert Jahren in der Bucht verraten wurde",
+    "orte": [
+     "Smaragdbucht",
+     "Das Goldwrack",
+     "Die Leuchtende Insel",
+     "Morganas Grab"
+    ],
+    "akte": [
+     {
+      "titel": "Grüner Nebel",
+      "inhalt": "Die Mannschaft hört nachts Gesang, und der Nebel nimmt den Koch mit. Im Wrack liegt das Logbuch Morganas.",
+      "wende": "Das Gold im Wrack ist verflucht, und wer es berührt, sieht Morganas Erinnerungen.",
+      "zuege": 5
+     },
+     {
+      "titel": "Der Verrat",
+      "inhalt": "Auf der Leuchtenden Insel leben die Nachfahren des Verräters, der Morgana einst ertrinken ließ.",
+      "wende": "Die Nachfahren besitzen den Schlüssel zu Morganas Grab, geben ihn aber nicht freiwillig her.",
+      "zuege": 6
+     },
+     {
+      "titel": "Das Grab",
+      "inhalt": "Im Grab erscheint Morgana. Sie verlangt Gerechtigkeit, nicht Gold.",
+      "wende": "Die Helden müssen den Verrat sühnen: das Gold zurückgeben, die Nachfahren beschämen oder Morgana überlisten.",
+      "zuege": 6
+     }
+    ]
+   },
+   "en": {
+    "titel": "The Curse of Emerald Bay",
+    "idee": "Whoever anchors in Emerald Bay sees their crew turn to green mist at night. The heroes found a wreck full of gold there and anchor anyway. On the first night the cook disappears.",
+    "ziel": "Break the curse of the bay before the whole crew turns to mist.",
+    "gegner": "The ghost captain Morgana Green, betrayed in the bay a hundred years ago",
+    "orte": [
+     "Emerald Bay",
+     "The gold wreck",
+     "The Glowing Isle",
+     "Morgana's grave"
+    ],
+    "akte": [
+     {
+      "titel": "Green mist",
+      "inhalt": "At night the crew hears singing, and the mist takes the cook. In the wreck lies Morgana's logbook.",
+      "wende": "The gold in the wreck is cursed, and whoever touches it sees Morgana's memories.",
+      "zuege": 5
+     },
+     {
+      "titel": "The betrayal",
+      "inhalt": "On the Glowing Isle live the descendants of the traitor who once let Morgana drown.",
+      "wende": "The descendants hold the key to Morgana's grave but will not give it up willingly.",
+      "zuege": 6
+     },
+     {
+      "titel": "The grave",
+      "inhalt": "In the grave Morgana appears. She demands justice, not gold.",
+      "wende": "The heroes must atone for the betrayal: return the gold, shame the descendants or outwit Morgana.",
+      "zuege": 6
+     }
+    ]
+   }
+  },
+  {
+   "id": "piraten-seeschwalbe",
+   "welt": "piraten",
+   "ton": 12,
+   "de": {
+    "titel": "Meuterei auf der Seeschwalbe",
+    "idee": "Die Helden heuern auf der Seeschwalbe an, einem Handelsschiff auf langer Fahrt. Der Kapitän ist hart, das Essen knapp, und unter Deck flüstert man von Meuterei. Dann wird die Ladung gestohlen.",
+    "ziel": "Herausfinden, wer hinter dem Diebstahl und der Meuterei steckt, und das Schiff sicher in den Hafen bringen.",
+    "gegner": "Der Erste Maat Jonas Kraft, der Mannschaft und Kapitän gegeneinander aufhetzt, um das Schiff zu verkaufen",
+    "orte": [
+     "Die Seeschwalbe",
+     "Kapitänskajüte",
+     "Laderaum",
+     "Die Teufelsklippen"
+    ],
+    "akte": [
+     {
+      "titel": "An Bord",
+      "inhalt": "Die Helden lernen Mannschaft und Kapitän kennen. Nachts verschwindet ein Teil der Ladung.",
+      "wende": "Der Kapitän verdächtigt die Neuen, also die Helden, und lässt sie unter Deck einsperren.",
+      "zuege": 5
+     },
+     {
+      "titel": "Unter Deck",
+      "inhalt": "Gefangen hören die Helden die Pläne der Meuterer und finden Verbündete in der Mannschaft.",
+      "wende": "Der Maat will das Schiff an den Teufelsklippen auf Grund setzen, wo seine Käufer warten.",
+      "zuege": 6
+     },
+     {
+      "titel": "Die Teufelsklippen",
+      "inhalt": "Die Meuterei bricht los, während ein Sturm auf die Klippen zutreibt.",
+      "wende": "Die Helden müssen das Steuer übernehmen und entscheiden, wen sie retten und wem sie trauen.",
+      "zuege": 6
+     }
+    ]
+   },
+   "en": {
+    "titel": "Mutiny on the Sea Swallow",
+    "idee": "The heroes sign on to the Sea Swallow, a merchant ship on a long voyage. The captain is harsh, food is short, and below deck there is talk of mutiny. Then the cargo is stolen.",
+    "ziel": "Find out who is behind the theft and the mutiny and bring the ship safely into port.",
+    "gegner": "First mate Jonas Kraft, who sets crew and captain against each other to sell the ship",
+    "orte": [
+     "The Sea Swallow",
+     "Captain's cabin",
+     "Cargo hold",
+     "The Devil's Cliffs"
+    ],
+    "akte": [
+     {
+      "titel": "Aboard",
+      "inhalt": "The heroes meet crew and captain. At night part of the cargo vanishes.",
+      "wende": "The captain suspects the newcomers, the heroes, and has them locked below deck.",
+      "zuege": 5
+     },
+     {
+      "titel": "Below deck",
+      "inhalt": "Locked up, the heroes hear the mutineers' plans and find allies among the crew.",
+      "wende": "The mate wants to run the ship aground at the Devil's Cliffs, where his buyers wait.",
+      "zuege": 6
+     },
+     {
+      "titel": "The Devil's Cliffs",
+      "inhalt": "The mutiny breaks out while a storm drives them towards the cliffs.",
+      "wende": "The heroes must take the helm and decide whom to save and whom to trust.",
+      "zuege": 6
+     }
+    ]
+   }
+  },
+  {
+   "id": "piraten-nebelinsel",
+   "welt": "piraten",
+   "ton": 12,
+   "de": {
+    "titel": "Das Rennen zur Nebelinsel",
+    "idee": "Die Nebelinsel taucht nur alle sieben Jahre für drei Tage auf. Wer zuerst ihren Gipfel erreicht, darf einen Wunsch an die Meerhexe richten. Fünf Schiffe brechen gleichzeitig auf.",
+    "ziel": "Die Nebelinsel als Erste erreichen und klug wählen, was man sich wünscht.",
+    "gegner": "Admiralin Isabella Vargas, die mit dem Wunsch die Herrschaft über alle Meere will",
+    "orte": [
+     "Hafen Drei Winde",
+     "Die Sturmstraße",
+     "Die Nebelinsel",
+     "Gipfel der Meerhexe"
+    ],
+    "akte": [
+     {
+      "titel": "Aufbruch",
+      "inhalt": "Im Hafen müssen die Helden eine Mannschaft anheuern und ein Schiff finden. Vargas hat schon das beste gekauft.",
+      "wende": "In der Sturmstraße greift ein Seeungeheuer die Flotte an.",
+      "zuege": 5
+     },
+     {
+      "titel": "Die Nebelinsel",
+      "inhalt": "Auf der Insel ändern sich die Wege mit dem Nebel. Andere Mannschaften schließen Bündnisse oder verraten sich.",
+      "wende": "Die Meerhexe erscheint im Traum und warnt: Jeder Wunsch hat einen Preis.",
+      "zuege": 6
+     },
+     {
+      "titel": "Der Gipfel",
+      "inhalt": "Am Gipfel stehen sich die Helden und Vargas gegenüber, während die Insel schon wieder zu versinken beginnt.",
+      "wende": "Wer wünscht, und was? Die Meerhexe hört nur dem Ersten zu.",
+      "zuege": 6
+     }
+    ]
+   },
+   "en": {
+    "titel": "The Race to Fog Island",
+    "idee": "Fog Island rises only every seven years for three days. Whoever reaches its peak first may make one wish of the sea witch. Five ships set out at the same time.",
+    "ziel": "Reach Fog Island first and choose the wish wisely.",
+    "gegner": "Admiral Isabella Vargas, who wants rule over all the seas with the wish",
+    "orte": [
+     "Three Winds harbour",
+     "The Storm Strait",
+     "Fog Island",
+     "The sea witch's peak"
+    ],
+    "akte": [
+     {
+      "titel": "Setting out",
+      "inhalt": "In the harbour the heroes must hire a crew and find a ship. Vargas has already bought the best.",
+      "wende": "In the Storm Strait a sea monster attacks the fleet.",
+      "zuege": 5
+     },
+     {
+      "titel": "Fog Island",
+      "inhalt": "On the island the paths change with the fog. Other crews make alliances or betray each other.",
+      "wende": "The sea witch appears in a dream and warns: every wish has a price.",
+      "zuege": 6
+     },
+     {
+      "titel": "The peak",
+      "inhalt": "At the peak the heroes and Vargas face each other while the island is already starting to sink.",
+      "wende": "Who wishes, and for what? The sea witch listens only to the first.",
+      "zuege": 6
+     }
+    ]
+   }
+  },
+  {
+   "id": "piraten-schmugglerin",
+   "welt": "piraten",
+   "ton": 12,
+   "de": {
+    "titel": "Die Königin der Schmuggler",
+    "idee": "Die Hafenstadt Porto Sal ist in der Hand der Schmugglerkönigin Rosa Dorn. Der Gouverneur bietet den Helden Begnadigung und Gold, wenn sie ihr Netz zerschlagen. Doch Rosa hat Freunde in jeder Gasse.",
+    "ziel": "Rosas Schmugglernetz aufdecken und herausfinden, wer in Porto Sal wirklich die Fäden zieht.",
+    "gegner": "Gouverneur Alvaro Mendes, der Rosa loswerden will, um den Schmuggel selbst zu übernehmen",
+    "orte": [
+     "Porto Sal",
+     "Taverne Zum Salzfass",
+     "Die Schmugglerhöhlen",
+     "Gouverneurspalast"
+    ],
+    "akte": [
+     {
+      "titel": "Der Auftrag",
+      "inhalt": "Im Palast erhalten die Helden den Auftrag. In der Taverne erfahren sie, dass Rosa die Armen mit Waren versorgt.",
+      "wende": "Rosa lädt die Helden selbst ein, und sie kennt ihren Auftrag schon.",
+      "zuege": 5
+     },
+     {
+      "titel": "Die Höhlen",
+      "inhalt": "In den Höhlen zeigt Rosa ihr Reich: Waren für die Armen, aber auch Waffen für Unbekannte.",
+      "wende": "Die Waffen tragen das Siegel des Gouverneurs.",
+      "zuege": 6
+     },
+     {
+      "titel": "Der Palast",
+      "inhalt": "Beim großen Ball im Palast wollen Rosa und der Gouverneur sich gegenseitig ausschalten.",
+      "wende": "Die Helden stehen zwischen beiden und entscheiden, wem sie die Beweise geben.",
+      "zuege": 6
+     }
+    ]
+   },
+   "en": {
+    "titel": "The Smugglers' Queen",
+    "idee": "The harbour town of Porto Sal is in the hands of the smugglers' queen Rosa Thorn. The governor offers the heroes pardon and gold if they break her network. But Rosa has friends in every alley.",
+    "ziel": "Uncover Rosa's smuggling network and find out who really pulls the strings in Porto Sal.",
+    "gegner": "Governor Alvaro Mendes, who wants to get rid of Rosa to take over the smuggling himself",
+    "orte": [
+     "Porto Sal",
+     "Salt Barrel tavern",
+     "The smugglers' caves",
+     "Governor's palace"
+    ],
+    "akte": [
+     {
+      "titel": "The job",
+      "inhalt": "In the palace the heroes get the job. In the tavern they learn that Rosa supplies the poor with goods.",
+      "wende": "Rosa invites the heroes herself, and she already knows their job.",
+      "zuege": 5
+     },
+     {
+      "titel": "The caves",
+      "inhalt": "In the caves Rosa shows her realm: goods for the poor, but also weapons for unknown buyers.",
+      "wende": "The weapons bear the governor's seal.",
+      "zuege": 6
+     },
+     {
+      "titel": "The palace",
+      "inhalt": "At the grand ball in the palace Rosa and the governor each want to finish the other.",
+      "wende": "The heroes stand between them and decide whom to give the proof.",
+      "zuege": 6
+     }
+    ]
+   }
+  },
+  {
+   "id": "piraten-geisterschiff",
+   "welt": "piraten",
+   "ton": 12,
+   "de": {
+    "titel": "Das Geisterschiff",
+    "idee": "Im Nebel taucht ein Schiff mit zerrissenen Segeln und leuchtenden Laternen auf: die Schwarze Witwe, seit dreißig Jahren verschollen. An Deck steht der Vater einer der Heldinnen und winkt.",
+    "ziel": "Die Schwarze Witwe betreten, das Rätsel ihrer Mannschaft lösen und lebend zurückkehren.",
+    "gegner": "Kapitän Elias Rabe, der mit dem Meer einen Pakt schloss, um nie zu sterben, und neue Seelen für seine Mannschaft braucht",
+    "orte": [
+     "Die Schwarze Witwe",
+     "Das Totendeck",
+     "Die Kajüte des Kapitäns",
+     "Das Herz des Nebels"
+    ],
+    "akte": [
+     {
+      "titel": "Der Nebel",
+      "inhalt": "Das Geisterschiff legt an. Die Mannschaft lädt freundlich zum Festmahl ein, aber das Essen schmeckt nach Asche.",
+      "wende": "Der verschollene Vater warnt heimlich: Wer bis Mitternacht an Bord bleibt, bleibt für immer.",
+      "zuege": 5
+     },
+     {
+      "titel": "Das Totendeck",
+      "inhalt": "Unter Deck liegen die Seelen der Mannschaft in Muscheln gebannt. Rabe hütet den Schlüssel.",
+      "wende": "Rabe fordert die Helden zu einem Spiel heraus: gewinnen heißt gehen, verlieren heißt bleiben.",
+      "zuege": 6
+     },
+     {
+      "titel": "Das Herz des Nebels",
+      "inhalt": "Das Schiff segelt ins Herz des Nebels, wo das Meer seinen Preis einfordert.",
+      "wende": "Die Helden können die Seelen befreien, doch das Schiff versinkt, und der Vater geht mit ihm.",
+      "zuege": 6
+     }
+    ]
+   },
+   "en": {
+    "titel": "The Ghost Ship",
+    "idee": "Out of the fog comes a ship with torn sails and glowing lanterns: the Black Widow, lost for thirty years. On deck stands the father of one of the heroines, waving.",
+    "ziel": "Board the Black Widow, solve the riddle of her crew and come back alive.",
+    "gegner": "Captain Elias Raven, who made a pact with the sea never to die and needs new souls for his crew",
+    "orte": [
+     "The Black Widow",
+     "The deck of the dead",
+     "The captain's cabin",
+     "The heart of the fog"
+    ],
+    "akte": [
+     {
+      "titel": "The fog",
+      "inhalt": "The ghost ship comes alongside. The crew kindly invites them to a feast, but the food tastes of ash.",
+      "wende": "The lost father warns secretly: whoever stays aboard until midnight stays forever.",
+      "zuege": 5
+     },
+     {
+      "titel": "The deck of the dead",
+      "inhalt": "Below deck the crew's souls lie bound in shells. Raven guards the key.",
+      "wende": "Raven challenges the heroes to a game: winning means leaving, losing means staying.",
+      "zuege": 6
+     },
+     {
+      "titel": "The heart of the fog",
+      "inhalt": "The ship sails into the heart of the fog, where the sea claims its price.",
+      "wende": "The heroes can free the souls, but the ship sinks, and the father goes with it.",
+      "zuege": 6
+     }
+    ]
+   }
+  },
+  {
+   "id": "piraten-corazon",
+   "welt": "piraten",
+   "ton": 12,
+   "de": {
+    "titel": "Die Gefangenen von Fort Corazón",
+    "idee": "Die Kolonialmacht hat den Piratenkapitän Rotfuchs gefangen und will ihn in drei Tagen hängen. Seine Mannschaft bittet die Helden, ihn aus dem uneinnehmbaren Fort Corazón zu befreien.",
+    "ziel": "Rotfuchs vor dem Morgen der Hinrichtung aus dem Fort befreien.",
+    "gegner": "Kommandant Diego de Hierro, ein kluger Festungsherr, der mit einer Befreiung rechnet",
+    "orte": [
+     "Schmugglerinsel Pelikan",
+     "Stadt unter dem Fort",
+     "Fort Corazón",
+     "Die Kerker"
+    ],
+    "akte": [
+     {
+      "titel": "Der Plan",
+      "inhalt": "Auf der Schmugglerinsel planen die Helden mit der Mannschaft. Jeder hat einen anderen Einfall.",
+      "wende": "Ein Verräter in der Mannschaft verkauft den Plan an das Fort.",
+      "zuege": 5
+     },
+     {
+      "titel": "Die Stadt",
+      "inhalt": "In der Stadt unter dem Fort suchen die Helden einen neuen Weg hinein: Wäscherinnen, Wachen, Kanäle.",
+      "wende": "Rotfuchs ist nicht der, für den sie ihn hielten: Er ist der verschollene Sohn des Kommandanten.",
+      "zuege": 6
+     },
+     {
+      "titel": "Das Fort",
+      "inhalt": "In der Nacht vor der Hinrichtung dringen die Helden ein. Der Kommandant erwartet sie.",
+      "wende": "Vater und Sohn stehen sich gegenüber, und die Helden können vermitteln oder kämpfen.",
+      "zuege": 6
+     }
+    ]
+   },
+   "en": {
+    "titel": "The Prisoners of Fort Corazón",
+    "idee": "The colonial power has caught the pirate captain Redfox and wants to hang him in three days. His crew begs the heroes to free him from the impregnable Fort Corazón.",
+    "ziel": "Free Redfox from the fort before the morning of the hanging.",
+    "gegner": "Commander Diego de Hierro, a clever fortress master who expects a rescue",
+    "orte": [
+     "Smugglers' isle Pelican",
+     "Town below the fort",
+     "Fort Corazón",
+     "The dungeons"
+    ],
+    "akte": [
+     {
+      "titel": "The plan",
+      "inhalt": "On the smugglers' isle the heroes plan with the crew. Everyone has a different idea.",
+      "wende": "A traitor in the crew sells the plan to the fort.",
+      "zuege": 5
+     },
+     {
+      "titel": "The town",
+      "inhalt": "In the town below the fort the heroes look for a new way in: washerwomen, guards, canals.",
+      "wende": "Redfox is not who they thought: he is the commander's long-lost son.",
+      "zuege": 6
+     },
+     {
+      "titel": "The fort",
+      "inhalt": "On the night before the hanging the heroes get in. The commander expects them.",
+      "wende": "Father and son face each other, and the heroes can mediate or fight.",
+      "zuege": 6
+     }
+    ]
+   }
+  },
+  {
+   "id": "piraten-roteflut",
+   "welt": "piraten",
+   "ton": 16,
+   "de": {
+    "titel": "Die Rote Flut",
+    "idee": "Seit dem Blutmond färbt sich das Meer rot, und überall, wo die Rote Flut hinkommt, verlieren Seeleute den Verstand und werden zu Kannibalen der See. Die Admiralität hat aufgegeben.",
+    "ziel": "Den Ursprung der Roten Flut finden und sie aufhalten, bevor sie die letzten Häfen erreicht.",
+    "gegner": "Der Priester Varek, der eine versunkene Göttin weckt, um die Welt in Rot zu tauchen",
+    "orte": [
+     "Freihafen Asche",
+     "Die rote See",
+     "Der versunkene Tempel",
+     "Der Wirbel"
+    ],
+    "akte": [
+     {
+      "titel": "Der letzte Hafen",
+      "inhalt": "Im überfüllten Freihafen Asche drängen sich Flüchtlinge. Ein halb verrückter Seemann spricht vom Tempel im Wirbel.",
+      "wende": "Ein Schiff aus der Roten Flut läuft ein, und seine Mannschaft greift den Hafen an.",
+      "zuege": 5
+     },
+     {
+      "titel": "Die rote See",
+      "inhalt": "Die Fahrt durch die rote See zehrt an Nerven und Vorräten. Ein Teil der Mannschaft verfällt dem Flüstern.",
+      "wende": "Der Tempel taucht aus dem Wirbel auf, und Vareks Anhänger warten.",
+      "zuege": 6
+     },
+     {
+      "titel": "Der Tempel",
+      "inhalt": "Im Tempel liegt die Göttin halb erwacht. Varek vollzieht das letzte Ritual.",
+      "wende": "Die Göttin lässt sich nur zurück in den Schlaf singen, und das Lied verlangt ein Opfer.",
+      "zuege": 6
+     }
+    ]
+   },
+   "en": {
+    "titel": "The Red Tide",
+    "idee": "Since the blood moon the sea has turned red, and wherever the Red Tide reaches, sailors lose their minds and become the sea's madmen. The admiralty has given up.",
+    "ziel": "Find the source of the Red Tide and stop it before it reaches the last harbours.",
+    "gegner": "The priest Varek, who wakes a sunken goddess to drown the world in red",
+    "orte": [
+     "Freeport Ash",
+     "The red sea",
+     "The sunken temple",
+     "The maelstrom"
+    ],
+    "akte": [
+     {
+      "titel": "The last harbour",
+      "inhalt": "Refugees crowd the overfull Freeport Ash. A half-mad sailor speaks of the temple in the maelstrom.",
+      "wende": "A ship from the Red Tide comes in, and its crew attacks the harbour.",
+      "zuege": 5
+     },
+     {
+      "titel": "The red sea",
+      "inhalt": "The voyage through the red sea wears down nerves and supplies. Part of the crew falls to the whispering.",
+      "wende": "The temple rises from the maelstrom, and Varek's followers wait.",
+      "zuege": 6
+     },
+     {
+      "titel": "The temple",
+      "inhalt": "In the temple the goddess lies half awake. Varek performs the last ritual.",
+      "wende": "The goddess can only be sung back to sleep, and the song demands a sacrifice.",
+      "zuege": 6
+     }
+    ]
+   }
+  },
+  {
+   "id": "piraten-leviathan",
+   "welt": "piraten",
+   "ton": 16,
+   "de": {
+    "titel": "Der Leviathan erwacht",
+    "idee": "Ein Beben erschüttert die Inselkette der Perlen, und aus der Tiefe steigt der Leviathan, so groß wie eine Insel. Schon zwei Flotten hat er verschlungen. Der König verspricht ein Fürstentum für seinen Kopf.",
+    "ziel": "Den Leviathan aufhalten, ob durch Jagd, Bann oder Verständigung, bevor er die Hauptstadt erreicht.",
+    "gegner": "Der Walfänger Kapitän Ahrend, besessen vom Leviathan, der jeden opfert, um ihn zu erlegen",
+    "orte": [
+     "Perlenhafen",
+     "Die Walfangflotte",
+     "Die Insel, die atmet",
+     "Der Abgrund"
+    ],
+    "akte": [
+     {
+      "titel": "Die Jagd beginnt",
+      "inhalt": "Im Perlenhafen rüstet sich die Jagd. Ahrend heuert die Helden an, eine alte Seherin warnt sie.",
+      "wende": "Der Leviathan taucht neben der Flotte auf, und ein Schiff verschwindet in seinem Maul.",
+      "zuege": 5
+     },
+     {
+      "titel": "Die Insel, die atmet",
+      "inhalt": "Die Helden landen auf dem Rücken des Leviathans, der wie eine Insel aussieht. Im Inneren wartet eine Wahrheit.",
+      "wende": "Der Leviathan flieht vor etwas noch Größerem, das tief unten erwacht ist.",
+      "zuege": 6
+     },
+     {
+      "titel": "Der Abgrund",
+      "inhalt": "Ahrend will den Leviathan um jeden Preis töten, auch wenn das die Inseln dem eigentlichen Feind ausliefert.",
+      "wende": "Die Helden entscheiden: den Leviathan töten, ihn befreien oder mit ihm gegen das Größere kämpfen.",
+      "zuege": 7
+     }
+    ]
+   },
+   "en": {
+    "titel": "The Leviathan Wakes",
+    "idee": "A quake shakes the Pearl Isles, and from the deep rises the Leviathan, as big as an island. It has already swallowed two fleets. The king promises a principality for its head.",
+    "ziel": "Stop the Leviathan by hunt, ban or understanding before it reaches the capital.",
+    "gegner": "The whaler Captain Ahrend, obsessed with the Leviathan, who will sacrifice anyone to bring it down",
+    "orte": [
+     "Pearl harbour",
+     "The whaling fleet",
+     "The island that breathes",
+     "The abyss"
+    ],
+    "akte": [
+     {
+      "titel": "The hunt begins",
+      "inhalt": "In Pearl harbour the hunt makes ready. Ahrend hires the heroes; an old seer warns them.",
+      "wende": "The Leviathan surfaces beside the fleet, and a ship disappears into its jaws.",
+      "zuege": 5
+     },
+     {
+      "titel": "The island that breathes",
+      "inhalt": "The heroes land on the Leviathan's back, which looks like an island. Inside a truth awaits.",
+      "wende": "The Leviathan is fleeing from something even bigger that has woken deep below.",
+      "zuege": 6
+     },
+     {
+      "titel": "The abyss",
+      "inhalt": "Ahrend wants to kill the Leviathan at any cost, even if that leaves the isles to the real enemy.",
+      "wende": "The heroes decide: kill the Leviathan, free it or fight beside it against the greater thing.",
+      "zuege": 7
+     }
+    ]
+   }
+  },
+  {
+   "id": "eigene-wolken",
+   "welt": "eigene",
+   "ton": 8,
+   "de": {
+    "titel": "Das Reich der Wolkeninseln",
+    "idee": "Die Welt besteht aus schwebenden Inseln über einem Meer aus Wolken. Man reist mit Luftschiffen und Riesenvögeln. Auf der Insel Federhauch ist der Wind verschwunden, und ohne Wind dreht sich keine Mühle.",
+    "ziel": "Den verschwundenen Wind finden und nach Federhauch zurückbringen.",
+    "gegner": "Der Wolkenriese Brummbass, der den Wind in einem Sack gefangen hat, weil er beim Schlafen nicht gestört werden will",
+    "orte": [
+     "Federhauch",
+     "Der Regenbogensteg",
+     "Die Vogelinsel",
+     "Brummbass' Wolkenburg"
+    ],
+    "akte": [
+     {
+      "titel": "Stille Mühlen",
+      "inhalt": "Auf Federhauch steht alles still, die Luftschiffe hängen fest. Ein altes Windspiel zeigt, wohin der Wind flog.",
+      "wende": "Über den Regenbogensteg kann man nur gehen, wenn man an etwas Schönes denkt.",
+      "zuege": 5
+     },
+     {
+      "titel": "Die Vogelinsel",
+      "inhalt": "Riesenvögel könnten die Helden zur Wolkenburg tragen, wollen aber erst einen Wettflug.",
+      "wende": "Brummbass schnarcht so laut, dass die Burg wackelt, und der Windsack liegt unter seinem Kopfkissen.",
+      "zuege": 6
+     },
+     {
+      "titel": "Die Wolkenburg",
+      "inhalt": "Leise müssen die Helden durch die Burg schleichen, denn Brummbass wacht leicht auf.",
+      "wende": "Wer dem Riesen ein Schlaflied singt oder ihm Ohrenschützer bastelt, darf den Wind mitnehmen.",
+      "zuege": 5
+     }
+    ]
+   },
+   "en": {
+    "titel": "The Realm of Cloud Islands",
+    "idee": "The world is made of floating islands above a sea of clouds. People travel by airship and giant bird. On the island Featherlight the wind has vanished, and without wind no mill turns.",
+    "ziel": "Find the vanished wind and bring it back to Featherlight.",
+    "gegner": "The cloud giant Rumblebass, who has caught the wind in a sack because he does not want to be disturbed in his sleep",
+    "orte": [
+     "Featherlight",
+     "The rainbow walk",
+     "Bird island",
+     "Rumblebass's cloud castle"
+    ],
+    "akte": [
+     {
+      "titel": "Still mills",
+      "inhalt": "On Featherlight everything stands still, the airships are stuck. An old wind chime shows where the wind flew.",
+      "wende": "The rainbow walk can only be crossed while thinking of something lovely.",
+      "zuege": 5
+     },
+     {
+      "titel": "Bird island",
+      "inhalt": "Giant birds could carry the heroes to the cloud castle, but first they want a flying race.",
+      "wende": "Rumblebass snores so loudly the castle shakes, and the wind sack lies under his pillow.",
+      "zuege": 6
+     },
+     {
+      "titel": "The cloud castle",
+      "inhalt": "The heroes must sneak quietly through the castle, for Rumblebass wakes easily.",
+      "wende": "Whoever sings the giant a lullaby or makes him earmuffs may take the wind along.",
+      "zuege": 5
+     }
+    ]
+   }
+  },
+  {
+   "id": "eigene-spielzeug",
+   "welt": "eigene",
+   "ton": 8,
+   "de": {
+    "titel": "Im Land der Spielzeuge",
+    "idee": "Die Helden schrumpfen und landen im Land der Spielzeuge unter einem Kinderbett. Bauklotzstädte, Teddybärenwälder und Zinnsoldaten gibt es dort. Doch das Kind, dem alles gehört, will morgen alles verschenken.",
+    "ziel": "Den Spielzeugen helfen, das Kind zu überzeugen, und vor dem Morgen wieder groß werden.",
+    "gegner": "Der Aufziehdrache Rost, der die Spielzeuge lieber in einen dunklen Schrank sperren will, als sie gehen zu lassen",
+    "orte": [
+     "Bauklotzstadt",
+     "Teddybärenwald",
+     "Die Kiste der vergessenen Spiele",
+     "Der dunkle Schrank"
+    ],
+    "akte": [
+     {
+      "titel": "Klein geworden",
+      "inhalt": "In der Bauklotzstadt begrüßt ein Zinnsoldat die Helden und erklärt die Not der Spielzeuge.",
+      "wende": "Rost taucht auf und sperrt die Bürgermeisterin, eine Stoffpuppe, in den Schrank.",
+      "zuege": 5
+     },
+     {
+      "titel": "Der Teddybärenwald",
+      "inhalt": "Die Teddys wissen, wie man wieder groß wird, aber nur, wenn man ein vergessenes Spiel findet.",
+      "wende": "In der Kiste der vergessenen Spiele liegt das Lieblingsspiel des Kindes von früher.",
+      "zuege": 6
+     },
+     {
+      "titel": "Der dunkle Schrank",
+      "inhalt": "Im Schrank hat Rost alle eingesperrt. Er hat Angst, dass ihn niemand mehr lieb hat.",
+      "wende": "Mit dem alten Spiel erinnern die Helden das Kind daran, wie viel ihm Rost bedeutet.",
+      "zuege": 5
+     }
+    ]
+   },
+   "en": {
+    "titel": "In the Land of Toys",
+    "idee": "The heroes shrink and land in the Land of Toys under a child's bed. There are building-block towns, teddy bear forests and tin soldiers. But the child who owns it all wants to give everything away tomorrow.",
+    "ziel": "Help the toys convince the child and become big again before morning.",
+    "gegner": "The wind-up dragon Rusty, who would rather lock the toys in a dark cupboard than let them go",
+    "orte": [
+     "Block town",
+     "Teddy bear forest",
+     "The box of forgotten games",
+     "The dark cupboard"
+    ],
+    "akte": [
+     {
+      "titel": "Shrunk",
+      "inhalt": "In block town a tin soldier greets the heroes and explains the toys' trouble.",
+      "wende": "Rusty appears and locks the mayor, a rag doll, in the cupboard.",
+      "zuege": 5
+     },
+     {
+      "titel": "The teddy bear forest",
+      "inhalt": "The teddies know how to grow big again, but only if someone finds a forgotten game.",
+      "wende": "In the box of forgotten games lies the child's old favourite game.",
+      "zuege": 6
+     },
+     {
+      "titel": "The dark cupboard",
+      "inhalt": "Rusty has locked everybody in the cupboard. He is afraid nobody loves him any more.",
+      "wende": "With the old game the heroes remind the child how much Rusty means to it.",
+      "zuege": 5
+     }
+    ]
+   }
+  },
+  {
+   "id": "eigene-dampf",
+   "welt": "eigene",
+   "ton": 12,
+   "de": {
+    "titel": "Dampf und Zahnräder",
+    "idee": "Eine Welt aus Dampfmaschinen, Luftschiffen und Gaslaternen: In der Metropole Kesselstadt hat die Ingenieurin Ada Funk eine Maschine erfunden, die das Wetter steuert. Nun ist sie entführt und die Baupläne gestohlen.",
+    "ziel": "Ada Funk befreien und verhindern, dass die Wettermaschine als Waffe gebaut wird.",
+    "gegner": "Lord Ashcombe, Fabrikbaron und heimlicher Herr der Rauchgilde",
+    "orte": [
+     "Kesselstadt",
+     "Die Rauchgilde",
+     "Luftschiffhafen",
+     "Ashcombes Fabrikturm"
+    ],
+    "akte": [
+     {
+      "titel": "Die Entführung",
+      "inhalt": "Im Labor der Ingenieurin finden die Helden Kampfspuren, eine Taschenuhr mit Gildenzeichen und einen sprechenden Automaten.",
+      "wende": "Der Automat erinnert sich an den Namen eines Luftschiffs: die Graue Wolke.",
+      "zuege": 5
+     },
+     {
+      "titel": "Der Luftschiffhafen",
+      "inhalt": "Im Hafen müssen die Helden auf die Graue Wolke gelangen, die gerade ablegt.",
+      "wende": "An Bord liegt eine Fälschung, Ada ist im Fabrikturm, und dort läuft der Bau schon.",
+      "zuege": 6
+     },
+     {
+      "titel": "Der Fabrikturm",
+      "inhalt": "Im Fabrikturm dröhnen die Kessel. Ashcombe will mit dem ersten Sturm den Hafen der Konkurrenz zerstören.",
+      "wende": "Ada kann die Maschine umkehren, doch dafür muss jemand im Sturm an der Spitze des Turms ausharren.",
+      "zuege": 6
+     }
+    ]
+   },
+   "en": {
+    "titel": "Steam and Cogs",
+    "idee": "A world of steam engines, airships and gas lamps: in the metropolis of Boilertown the engineer Ada Funk invented a machine that steers the weather. Now she has been kidnapped and the plans stolen.",
+    "ziel": "Free Ada Funk and stop the weather machine from being built as a weapon.",
+    "gegner": "Lord Ashcombe, factory baron and secret master of the Smoke Guild",
+    "orte": [
+     "Boilertown",
+     "The Smoke Guild",
+     "Airship harbour",
+     "Ashcombe's factory tower"
+    ],
+    "akte": [
+     {
+      "titel": "The kidnapping",
+      "inhalt": "In the engineer's lab the heroes find signs of a struggle, a pocket watch with the guild's sign and a talking automaton.",
+      "wende": "The automaton remembers an airship's name: the Grey Cloud.",
+      "zuege": 5
+     },
+     {
+      "titel": "The airship harbour",
+      "inhalt": "In the harbour the heroes must get aboard the Grey Cloud, which is just casting off.",
+      "wende": "Aboard lies a fake; Ada is in the factory tower, where building has already started.",
+      "zuege": 6
+     },
+     {
+      "titel": "The factory tower",
+      "inhalt": "In the factory tower the boilers roar. Ashcombe wants to wreck his rivals' harbour with the first storm.",
+      "wende": "Ada can reverse the machine, but someone must hold out at the tower's top in the storm.",
+      "zuege": 6
+     }
+    ]
+   }
+  },
+  {
+   "id": "eigene-western",
+   "welt": "eigene",
+   "ton": 12,
+   "de": {
+    "titel": "Staub und Silber",
+    "idee": "Der Wilde Westen mit einem Hauch Magie: In der Minenstadt Silver Creek hat man eine Ader aus Mondsilber gefunden, das Wünsche erfüllt. Seitdem kommen Glücksritter, Banditen und ein Fremder mit grauem Mantel.",
+    "ziel": "Silver Creek vor der Bande des Fremden schützen und entscheiden, was mit dem Mondsilber geschieht.",
+    "gegner": "Der Fremde im grauen Mantel, ein Geist aus der Mine, der in jeder Generation zurückkehrt",
+    "orte": [
+     "Silver Creek",
+     "Saloon Goldener Hufeisen",
+     "Die Mondsilbermine",
+     "Die Geisterschlucht"
+    ],
+    "akte": [
+     {
+      "titel": "Ankunft in Silver Creek",
+      "inhalt": "Die Helden kommen mit der Postkutsche an. Der Sheriff ist neu, der Saloon voll, und jeder hat einen Plan.",
+      "wende": "Der Fremde fordert die Stadt auf, ihm bis Sonntag die Mine zu übergeben.",
+      "zuege": 5
+     },
+     {
+      "titel": "Die Mine",
+      "inhalt": "In der Mine leuchtet das Mondsilber. Wer es berührt, hört Stimmen, die Wünsche flüstern.",
+      "wende": "Die Stimmen gehören den Bergleuten, die einst für das Silber ihr Leben gaben.",
+      "zuege": 6
+     },
+     {
+      "titel": "Showdown",
+      "inhalt": "Am Sonntag reitet der Fremde mit seiner Geisterbande in die Stadt.",
+      "wende": "Die Helden können kämpfen, den Fremden mit dem Silber erlösen oder die Mine für immer verschließen.",
+      "zuege": 6
+     }
+    ]
+   },
+   "en": {
+    "titel": "Dust and Silver",
+    "idee": "The Wild West with a touch of magic: in the mining town of Silver Creek they struck a vein of moon silver that grants wishes. Since then fortune seekers, bandits and a stranger in a grey coat have come.",
+    "ziel": "Protect Silver Creek from the stranger's gang and decide what happens to the moon silver.",
+    "gegner": "The stranger in the grey coat, a ghost of the mine who returns in every generation",
+    "orte": [
+     "Silver Creek",
+     "Golden Horseshoe saloon",
+     "The moon silver mine",
+     "Ghost canyon"
+    ],
+    "akte": [
+     {
+      "titel": "Arrival in Silver Creek",
+      "inhalt": "The heroes arrive by stagecoach. The sheriff is new, the saloon full, and everyone has a plan.",
+      "wende": "The stranger orders the town to hand him the mine by Sunday.",
+      "zuege": 5
+     },
+     {
+      "titel": "The mine",
+      "inhalt": "In the mine the moon silver glows. Whoever touches it hears voices whispering wishes.",
+      "wende": "The voices belong to the miners who once gave their lives for the silver.",
+      "zuege": 6
+     },
+     {
+      "titel": "Showdown",
+      "inhalt": "On Sunday the stranger rides into town with his ghost gang.",
+      "wende": "The heroes can fight, release the stranger with the silver or seal the mine forever.",
+      "zuege": 6
+     }
+    ]
+   }
+  },
+  {
+   "id": "eigene-meerstadt",
+   "welt": "eigene",
+   "ton": 12,
+   "de": {
+    "titel": "Die Stadt unter dem Meer",
+    "idee": "Die Menschen leben in Kuppelstädten auf dem Meeresgrund, zwischen Korallengärten und Tiefseegräben. In der Kuppel Perlheim fällt die Luftversorgung aus, und jemand hat die Pumpenwerke sabotiert.",
+    "ziel": "Die Luftversorgung retten, den Saboteur finden und Perlheim vor dem Ersticken bewahren.",
+    "gegner": "Ratsherr Corvin Teich, der die Kuppel räumen lassen will, um sie an eine reichere Stadt zu verkaufen",
+    "orte": [
+     "Kuppel Perlheim",
+     "Die Pumpenwerke",
+     "Der Algenwald",
+     "Der Tiefseegraben"
+    ],
+    "akte": [
+     {
+      "titel": "Alarm",
+      "inhalt": "Die Luft wird knapp, die Menschen sind in Panik. Im Pumpenwerk finden die Helden zerschnittene Leitungen.",
+      "wende": "Ersatzteile gibt es nur im verlassenen Außenposten am Tiefseegraben.",
+      "zuege": 5
+     },
+     {
+      "titel": "Der Algenwald",
+      "inhalt": "Im Tauchanzug geht es durch den Algenwald, wo Riesenkraken und Schmuggler lauern.",
+      "wende": "Die Schmuggler arbeiten für Corvin und haben die Ersatzteile schon beiseite geschafft.",
+      "zuege": 6
+     },
+     {
+      "titel": "Der Graben",
+      "inhalt": "Am Tiefseegraben liegt der Außenposten, und Corvin selbst ist gekommen, um die Teile zu versenken.",
+      "wende": "Die Helden müssen die Teile retten und vor dem Rat beweisen, wer die Kuppel opfern wollte.",
+      "zuege": 6
+     }
+    ]
+   },
+   "en": {
+    "titel": "The City under the Sea",
+    "idee": "People live in domed cities on the sea floor, among coral gardens and deep trenches. In the dome Pearlhome the air supply fails, and someone has sabotaged the pump works.",
+    "ziel": "Save the air supply, find the saboteur and keep Pearlhome from suffocating.",
+    "gegner": "Councillor Corvin Pond, who wants the dome cleared to sell it to a richer city",
+    "orte": [
+     "Dome Pearlhome",
+     "The pump works",
+     "The kelp forest",
+     "The deep trench"
+    ],
+    "akte": [
+     {
+      "titel": "Alarm",
+      "inhalt": "Air is running low, people panic. In the pump works the heroes find cut pipes.",
+      "wende": "Spare parts exist only in the abandoned outpost at the deep trench.",
+      "zuege": 5
+     },
+     {
+      "titel": "The kelp forest",
+      "inhalt": "In diving suits the heroes go through the kelp forest, where giant squid and smugglers lurk.",
+      "wende": "The smugglers work for Corvin and have already moved the spare parts away.",
+      "zuege": 6
+     },
+     {
+      "titel": "The trench",
+      "inhalt": "At the deep trench lies the outpost, and Corvin himself has come to sink the parts.",
+      "wende": "The heroes must save the parts and prove before the council who wanted to sacrifice the dome.",
+      "zuege": 6
+     }
+    ]
+   }
+  },
+  {
+   "id": "eigene-pharao",
+   "welt": "eigene",
+   "ton": 12,
+   "de": {
+    "titel": "Das Tor der Pharaonen",
+    "idee": "Ein altes Wüstenreich mit Göttern, die noch unter den Menschen wandeln: Die Sonnenbarke des Gottes Ra ist nicht aufgegangen, und das Reich liegt im Dämmerlicht. Ein Priester sagt, das Tor zur Unterwelt stehe offen.",
+    "ziel": "Die Sonnenbarke aus der Unterwelt zurückholen, damit die Sonne wieder aufgeht.",
+    "gegner": "Die Schlange Apophis, die die Barke verschlungen hat, und ihr menschlicher Helfer, der Wesir Nekhet",
+    "orte": [
+     "Hauptstadt Mennefer",
+     "Die Totenstadt",
+     "Das Tor der Pharaonen",
+     "Die Gefilde der Unterwelt"
+    ],
+    "akte": [
+     {
+      "titel": "Die Dämmerung",
+      "inhalt": "In der dunklen Hauptstadt herrscht Angst. Der Wesir übernimmt die Macht und sperrt die Priester ein.",
+      "wende": "Ein befreiter Priester verrät, dass Nekhet das Tor zur Unterwelt selbst geöffnet hat.",
+      "zuege": 5
+     },
+     {
+      "titel": "Die Totenstadt",
+      "inhalt": "In der Totenstadt öffnen die Helden das Tor mit Rätseln der alten Pharaonen.",
+      "wende": "Hinter dem Tor wartet der Fährmann, der nur Seelen mit leichtem Herzen übersetzt.",
+      "zuege": 6
+     },
+     {
+      "titel": "Die Unterwelt",
+      "inhalt": "In der Unterwelt ringen die Helden mit Prüfungen der Götter und erreichen Apophis.",
+      "wende": "Die Barke zurückzuholen gelingt nur, wenn Nekhet sein Bündnis mit der Schlange bricht oder die Helden die Schlange überlisten.",
+      "zuege": 6
+     }
+    ]
+   },
+   "en": {
+    "titel": "The Gate of the Pharaohs",
+    "idee": "An old desert realm with gods who still walk among people: the sun barque of the god Ra has not risen, and the realm lies in twilight. A priest says the gate to the underworld stands open.",
+    "ziel": "Bring the sun barque back from the underworld so the sun rises again.",
+    "gegner": "The serpent Apophis, who swallowed the barque, and its human helper, the vizier Nekhet",
+    "orte": [
+     "Capital Mennefer",
+     "The city of the dead",
+     "The Gate of the Pharaohs",
+     "The fields of the underworld"
+    ],
+    "akte": [
+     {
+      "titel": "The twilight",
+      "inhalt": "Fear rules the dark capital. The vizier seizes power and locks up the priests.",
+      "wende": "A freed priest reveals that Nekhet opened the gate to the underworld himself.",
+      "zuege": 5
+     },
+     {
+      "titel": "The city of the dead",
+      "inhalt": "In the city of the dead the heroes open the gate with riddles of the old pharaohs.",
+      "wende": "Behind the gate waits the ferryman, who carries only souls with light hearts.",
+      "zuege": 6
+     },
+     {
+      "titel": "The underworld",
+      "inhalt": "In the underworld the heroes face the gods' trials and reach Apophis.",
+      "wende": "The barque can only be won back if Nekhet breaks his bond with the serpent or the heroes outwit it.",
+      "zuege": 6
+     }
+    ]
+   }
+  },
+  {
+   "id": "eigene-traeumer",
+   "welt": "eigene",
+   "ton": 12,
+   "de": {
+    "titel": "Die Akademie der Träumer",
+    "idee": "In dieser Welt wird Magie aus Träumen gewebt. An der Akademie Somnia lernen junge Träumer ihr Handwerk. Doch seit einer Woche wacht ein Schüler nach dem anderen nicht mehr auf.",
+    "ziel": "Die Schlafenden wecken und den Albtraum aufhalten, der sich in der Traumwelt ausbreitet.",
+    "gegner": "Der Albmeister, ein ehemaliger Lehrer, der aus den Träumen der Schüler eine eigene Welt baut",
+    "orte": [
+     "Akademie Somnia",
+     "Der Schlafsaal",
+     "Die Traumbibliothek",
+     "Das Reich des Albmeisters"
+    ],
+    "akte": [
+     {
+      "titel": "Die Schlafenden",
+      "inhalt": "Die Helden kommen als neue Schüler oder Lehrer an die Akademie. Im Schlafsaal liegen zwölf Schlafende.",
+      "wende": "Alle Schlafenden haben dasselbe Zeichen auf der Hand, ein Turm mit einem Auge.",
+      "zuege": 5
+     },
+     {
+      "titel": "Die Traumbibliothek",
+      "inhalt": "In der Bibliothek lernen die Helden, in fremde Träume zu steigen. Dort ist alles möglich und nichts sicher.",
+      "wende": "Im Traum treffen sie einen Schlafenden, der vom Turm des Albmeisters berichtet.",
+      "zuege": 6
+     },
+     {
+      "titel": "Das Reich des Albmeisters",
+      "inhalt": "Der Albmeister zeigt den Helden ihre eigenen Ängste. Nur wer sie annimmt, kommt voran.",
+      "wende": "Der Albmeister will nicht böse sein: Er sucht seine verlorene Tochter in den Träumen anderer.",
+      "zuege": 6
+     }
+    ]
+   },
+   "en": {
+    "titel": "The Academy of Dreamers",
+    "idee": "In this world magic is woven from dreams. At the Somnia academy young dreamers learn their craft. But for a week now pupil after pupil has not woken up.",
+    "ziel": "Wake the sleepers and stop the nightmare spreading through the dream world.",
+    "gegner": "The Nightmare Master, a former teacher who builds a world of his own from the pupils' dreams",
+    "orte": [
+     "Somnia academy",
+     "The dormitory",
+     "The dream library",
+     "The Nightmare Master's realm"
+    ],
+    "akte": [
+     {
+      "titel": "The sleepers",
+      "inhalt": "The heroes come to the academy as new pupils or teachers. In the dormitory lie twelve sleepers.",
+      "wende": "Every sleeper has the same sign on the hand, a tower with an eye.",
+      "zuege": 5
+     },
+     {
+      "titel": "The dream library",
+      "inhalt": "In the library the heroes learn to step into other people's dreams. There anything is possible and nothing is safe.",
+      "wende": "In a dream they meet a sleeper who tells of the Nightmare Master's tower.",
+      "zuege": 6
+     },
+     {
+      "titel": "The Nightmare Master's realm",
+      "inhalt": "The Nightmare Master shows the heroes their own fears. Only those who accept them get further.",
+      "wende": "The Nightmare Master does not want to be evil: he looks for his lost daughter in other people's dreams.",
+      "zuege": 6
+     }
+    ]
+   }
+  },
+  {
+   "id": "eigene-schildkroete",
+   "welt": "eigene",
+   "ton": 12,
+   "de": {
+    "titel": "Die Welt auf dem Rücken der Schildkröte",
+    "idee": "Die ganze Welt ruht auf dem Panzer einer riesigen Schildkröte, die durch das Sternenmeer schwimmt. Nun ist die Schildkröte krank, die Welt bebt, und an ihrem Rand fallen Wälder ins Nichts.",
+    "ziel": "Den Kopf der Schildkröte erreichen, ihre Krankheit heilen und die Welt vor dem Absturz bewahren.",
+    "gegner": "Die Sekte der Letzten Tage, die glaubt, die Welt müsse fallen, und die Heiler aufhalten will",
+    "orte": [
+     "Panzerstadt Mitte",
+     "Der Rand der Welt",
+     "Die Schuppenberge",
+     "Das Auge der Schildkröte"
+    ],
+    "akte": [
+     {
+      "titel": "Das Beben",
+      "inhalt": "In Panzerstadt bricht Panik aus. Die Gelehrte Ilka Weit glaubt, die Schildkröte habe etwas verschluckt.",
+      "wende": "Die Sekte stiehlt Ilkas Heilmittel und flieht zum Rand der Welt.",
+      "zuege": 5
+     },
+     {
+      "titel": "Der Rand der Welt",
+      "inhalt": "Am Rand, wo der Panzer ins Sternenmeer abfällt, verfolgen die Helden die Sekte.",
+      "wende": "Ein Sektenmitglied zweifelt und verrät den Weg durch die Schuppenberge zum Kopf.",
+      "zuege": 6
+     },
+     {
+      "titel": "Das Auge",
+      "inhalt": "Am Kopf der Schildkröte öffnet sich ein Auge so groß wie ein See. Die Sekte wartet mit dem gestohlenen Heilmittel.",
+      "wende": "Die Schildkröte spricht zu den Helden: Sie ist nicht krank, sondern alt, und sucht jemanden, der ihren Weg kennt.",
+      "zuege": 6
+     }
+    ]
+   },
+   "en": {
+    "titel": "The World on the Turtle's Back",
+    "idee": "The whole world rests on the shell of a giant turtle swimming through the sea of stars. Now the turtle is ill, the world shakes, and at its edge forests fall into nothing.",
+    "ziel": "Reach the turtle's head, heal its illness and save the world from falling.",
+    "gegner": "The Sect of the Last Days, who believe the world must fall and want to stop the healers",
+    "orte": [
+     "Shell city Middle",
+     "The edge of the world",
+     "The scale mountains",
+     "The turtle's eye"
+    ],
+    "akte": [
+     {
+      "titel": "The quake",
+      "inhalt": "Panic breaks out in shell city. The scholar Ilka Wide believes the turtle has swallowed something.",
+      "wende": "The sect steals Ilka's cure and flees to the edge of the world.",
+      "zuege": 5
+     },
+     {
+      "titel": "The edge of the world",
+      "inhalt": "At the edge, where the shell drops into the sea of stars, the heroes chase the sect.",
+      "wende": "A doubting sect member reveals the way through the scale mountains to the head.",
+      "zuege": 6
+     },
+     {
+      "titel": "The eye",
+      "inhalt": "At the turtle's head an eye as big as a lake opens. The sect waits with the stolen cure.",
+      "wende": "The turtle speaks to the heroes: it is not ill but old, and seeks someone who knows its way.",
+      "zuege": 6
+     }
+    ]
+   }
+  },
+  {
+   "id": "eigene-nachdemfall",
+   "welt": "eigene",
+   "ton": 16,
+   "de": {
+    "titel": "Nach dem Fall",
+    "idee": "Fünfzig Jahre nach dem großen Zusammenbruch: Städte sind Ruinen, Wasser ist kostbarer als Gold, und Banden beherrschen die Straßen. Die Siedlung Hoffnung hat einen Brunnen und deshalb viele Feinde.",
+    "ziel": "Die Siedlung Hoffnung vor dem Wasserkrieg retten und das Geheimnis der alten Wasserwerke lüften.",
+    "gegner": "Der Kriegsherr Brandt, der alle Quellen der Ödnis kontrollieren will",
+    "orte": [
+     "Siedlung Hoffnung",
+     "Die Straße der Wracks",
+     "Die toten Städte",
+     "Das alte Wasserwerk"
+    ],
+    "akte": [
+     {
+      "titel": "Der Brunnen",
+      "inhalt": "In Hoffnung erfahren die Helden, dass der Brunnen versiegt. Brandts Späher kreisen schon.",
+      "wende": "Eine alte Karte zeigt ein Wasserwerk in den toten Städten, das noch laufen soll.",
+      "zuege": 5
+     },
+     {
+      "titel": "Die toten Städte",
+      "inhalt": "Durch Ruinen, Strahlungszonen und Banden geht es zum Wasserwerk. Ein Händler weiß mehr, als er sagt.",
+      "wende": "Das Wasserwerk läuft, und eine kleine Gemeinschaft hütet es, die niemandem traut.",
+      "zuege": 6
+     },
+     {
+      "titel": "Das Wasserwerk",
+      "inhalt": "Brandt greift mit seiner Armee an. Die Hüter und Hoffnung müssen zusammenstehen.",
+      "wende": "Das Wasserwerk lässt sich öffnen, damit alle Wasser haben, doch dann kann niemand es mehr allein beherrschen.",
+      "zuege": 7
+     }
+    ]
+   },
+   "en": {
+    "titel": "After the Fall",
+    "idee": "Fifty years after the great collapse: cities are ruins, water is worth more than gold, and gangs rule the roads. The settlement of Hope has a well, and therefore many enemies.",
+    "ziel": "Save Hope from the water war and uncover the secret of the old waterworks.",
+    "gegner": "The warlord Brandt, who wants to control every spring in the wasteland",
+    "orte": [
+     "Settlement Hope",
+     "The road of wrecks",
+     "The dead cities",
+     "The old waterworks"
+    ],
+    "akte": [
+     {
+      "titel": "The well",
+      "inhalt": "In Hope the heroes learn the well is running dry. Brandt's scouts are already circling.",
+      "wende": "An old map shows a waterworks in the dead cities that is said to still run.",
+      "zuege": 5
+     },
+     {
+      "titel": "The dead cities",
+      "inhalt": "Through ruins, radiation zones and gangs the way leads to the waterworks. A trader knows more than he says.",
+      "wende": "The waterworks runs, and a small community guards it who trust nobody.",
+      "zuege": 6
+     },
+     {
+      "titel": "The waterworks",
+      "inhalt": "Brandt attacks with his army. The guardians and Hope must stand together.",
+      "wende": "The waterworks can be opened so everybody has water, but then nobody can rule it alone.",
+      "zuege": 7
+     }
+    ]
+   }
+  },
+  {
+   "id": "eigene-masken",
+   "welt": "eigene",
+   "ton": 16,
+   "de": {
+    "titel": "Die Stadt der Masken",
+    "idee": "In der Lagunenstadt Serenissa trägt jeder eine Maske, und wer sie ablegt, verliert seinen Stand. Während des Karnevals werden drei Adelige ermordet, und hinter jeder Maske könnte der Täter stehen.",
+    "ziel": "Den maskierten Täter finden, bevor der Doge selbst stirbt und die Stadt in einen Bürgerkrieg stürzt.",
+    "gegner": "Die Gräfin Lucrezia Vane, die hinter der Maske des Narren die Macht über Serenissa ergreifen will",
+    "orte": [
+     "Serenissa",
+     "Der Maskenball",
+     "Die Kanäle der Gilden",
+     "Der Dogenpalast"
+    ],
+    "akte": [
+     {
+      "titel": "Der Ball",
+      "inhalt": "Auf dem großen Maskenball stirbt ein Adeliger vor den Augen der Helden. Der Narr verschwindet in der Menge.",
+      "wende": "Am Tatort liegt eine Maskenfeder, wie nur drei Werkstätten sie fertigen.",
+      "zuege": 5
+     },
+     {
+      "titel": "Die Kanäle",
+      "inhalt": "In den Kanälen und Gildenhäusern suchen die Helden die Werkstatt. Jede Gilde hat ein Geheimnis.",
+      "wende": "Die Spur führt zur Gräfin, doch sie hat einen falschen Narren als Sündenbock vorbereitet.",
+      "zuege": 6
+     },
+     {
+      "titel": "Der Palast",
+      "inhalt": "Bei der letzten Nacht des Karnevals will der Narr den Dogen töten.",
+      "wende": "Die Helden müssen die Gräfin entlarven, ohne selbst die Maske zu verlieren, oder alles riskieren.",
+      "zuege": 6
+     }
+    ]
+   },
+   "en": {
+    "titel": "The City of Masks",
+    "idee": "In the lagoon city of Serenissa everyone wears a mask, and whoever takes it off loses their rank. During carnival three nobles are murdered, and the culprit could be behind any mask.",
+    "ziel": "Find the masked culprit before the doge himself dies and the city falls into civil war.",
+    "gegner": "Countess Lucrezia Vane, who wants to seize power over Serenissa behind the Fool's mask",
+    "orte": [
+     "Serenissa",
+     "The masked ball",
+     "The guild canals",
+     "The doge's palace"
+    ],
+    "akte": [
+     {
+      "titel": "The ball",
+      "inhalt": "At the great masked ball a noble dies before the heroes' eyes. The Fool disappears into the crowd.",
+      "wende": "At the scene lies a mask feather that only three workshops make.",
+      "zuege": 5
+     },
+     {
+      "titel": "The canals",
+      "inhalt": "In canals and guild houses the heroes search for the workshop. Every guild has a secret.",
+      "wende": "The trail leads to the countess, but she has prepared a false Fool as scapegoat.",
+      "zuege": 6
+     },
+     {
+      "titel": "The palace",
+      "inhalt": "On the last night of carnival the Fool means to kill the doge.",
+      "wende": "The heroes must unmask the countess without losing their own masks, or risk everything.",
+      "zuege": 6
+     }
+    ]
+   }
+  }
+ ]
+}

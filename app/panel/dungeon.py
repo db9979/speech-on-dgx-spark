@@ -103,6 +103,7 @@ from core import assistant, auth, browser_profile, json_body, own_profile, spawn
 
 router = APIRouter()
 DATA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dungeon_regeln.json")
+VORLAGEN = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dungeon_geschichten.json")
 FILE = os.path.join(STATE, "dungeon-runden.json")
 FIGUREN = os.path.join(STATE, "dungeon-figuren.json")
 EIGENE = os.path.join(STATE, "dungeon-regeln.json")
@@ -174,6 +175,7 @@ _HID = re.compile(r"h[0-9a-f]{10}")
 _IID = re.compile(r"i[0-9a-f]{8}")
 _KID = re.compile(r"k[0-9a-f]{8}")
 _GID = re.compile(r"g[0-9a-f]{8}")
+_ZEICHEN = re.compile(r"[^\w<>&\"'\s]{1,8}")
 _VOICE = re.compile(r"[\w .\-]{0,40}")
 _WORD = re.compile(r"[a-z0-9_]{1,24}")
 KEY = "\0dungeongast"     # one lockout entry for every wrong code from one address (guard.py)
@@ -348,6 +350,9 @@ def check_rules(r):
         f = w.get("farben") if isinstance(w, dict) else None
         need(f is None or isinstance(f, dict) and set(f) <= set(FARBEN) and all(isinstance(x, str) and _FARBE.fullmatch(x) for x in f.values()),
              f"welten {w.get('id') if isinstance(w, dict) else '?'}: farben nur {', '.join(FARBEN)} als #rrggbb")
+    for k in ("welten", "toene", "voelker", "klassen"):
+        need(all(not isinstance(x, dict) or x.get("zeichen") is None or isinstance(x["zeichen"], str) and _ZEICHEN.fullmatch(x["zeichen"])
+                 for x in r.get(k) or []), f"{k}: zeichen ein Bildzeichen (höchstens 8 Zeichen, keine Buchstaben)")
     sv = r.get("stimmen")
     need(isinstance(sv, dict) and set(sv) <= set(STIMMEN) and all(isinstance(x, str) and _VOICE.fullmatch(x) for x in sv.values()),
          "stimmen: erzaehler und npc, je ein Stimmenname (höchstens 40 Zeichen) oder leer")
@@ -626,6 +631,7 @@ def hero_card(r, h, lang):
 
 
 FARBEN = ("grund", "karte", "pergament", "tinte", "gold")   # the colours of a world's table (welten[].farben)
+ZEICHEN = "◆"              # the picture of a world, tone, people or class without its own (zeichen)
 _FARBE = re.compile(r"#[0-9a-fA-F]{6}")
 
 
@@ -784,7 +790,7 @@ def make_round(owner, b, lang, now=None, kampagne=None):
     g = r["grenzen"]
     plan = None
     if b.get("geschichte") and not kampagne:
-        st = plans().get(str(b["geschichte"]))
+        st = story(r, b["geschichte"], lang)
         if not st or check_plan(r, st)[1]:
             raise LookupError("geschichte")
         plan = {k: copy.deepcopy(st[k]) for k in ("titel", "ziel", "gegner", "orte", "tabus", "akte", "idee")}
@@ -1197,6 +1203,35 @@ def campaign_view(r, uid, lang):
 def plans():
     d = read_json(GESCHICHTEN, {})
     return {k: v for k, v in d.items() if _GID.fullmatch(str(k)) and isinstance(v, dict)} if isinstance(d, dict) else {}
+
+
+_vorlagen = {"m": None, "d": []}
+
+
+def shipped(r, lang):
+    """The ready-made stories that come with the panel (dungeon_geschichten.json, ten per world, German and English) in
+    one language: gid "v-<id>" → story, each by check_plan like the admin's own; one the rules refuse now (a world or tone
+    the admin removed, a word of „nie“) is left out."""
+    try:
+        m = os.path.getmtime(VORLAGEN)
+        if _vorlagen["m"] != m:
+            d = read_json(VORLAGEN, {})
+            _vorlagen.update(m=m, d=[x for x in (d.get("geschichten") if isinstance(d, dict) else None) or [] if isinstance(x, dict)])
+    except OSError:
+        return {}
+    li = "en" if lang == "en" else "de"
+    out = {}
+    for x in _vorlagen["d"]:
+        g, err = check_plan(r, dict(x.get(li) or {}, welt=x.get("welt"), ton=x.get("ton"), lang=li))
+        if not err and _WORD.fullmatch(str(x.get("id", "")).replace("-", "_")):
+            out["v-" + x["id"]] = g
+    return out
+
+
+def story(r, gid, lang):
+    """A story to play by its gid: the admin's own, else a shipped one."""
+    gid = str(gid or "")
+    return plans().get(gid) if _GID.fullmatch(gid) else shipped(r, lang).get(gid)
 
 
 def _words(x, n, most):
@@ -2389,19 +2424,26 @@ def _lang(b):
     return "en" if b.get("lang") == "en" else "de"
 
 
-def _choices(lang):
+def _choices(lang, stories=True):
+    """What a new round or hero is chosen from; stories (the admin's and the shipped ones, title and idea) only for a
+    host, not for a guest's seat form."""
     r = rules()
     li = 1 if lang == "en" else 0
-    return {"welten": [{"id": x["id"], "name": x["name"][li], "satz": x["satz"][li]} for x in r["welten"]],
-            "toene": [{"id": x["id"], "name": x["name"][li]} for x in r["toene"]],
-            "voelker": [{"id": x["id"], "name": x["name"][li], "werte": x["werte"]} for x in r["voelker"]],
-            "klassen": [{"id": x["id"], "name": x["name"][li], "reihe": x["reihe"]} for x in r["klassen"]],
+    z = lambda x: x.get("zeichen") or ZEICHEN
+    return {"welten": [{"id": x["id"], "name": x["name"][li], "satz": x["satz"][li], "zeichen": z(x),
+                        "farben": {k: v for k, v in (x.get("farben") or {}).items() if k in FARBEN}} for x in r["welten"]],
+            "toene": [{"id": x["id"], "name": x["name"][li], "zeichen": z(x)} for x in r["toene"]],
+            "voelker": [{"id": x["id"], "name": x["name"][li], "werte": x["werte"], "zeichen": z(x)} for x in r["voelker"]],
+            "klassen": [{"id": x["id"], "name": x["name"][li], "reihe": x["reihe"], "zeichen": z(x),
+                         "leben": x["leben"]} for x in r["klassen"]],
             "werte": [{"id": x["id"], "name": x["name"][li], "kurz": x["name"][li][:3].upper()} for x in r["werte"]],
             "verteilung": sorted(r["verteilung"], reverse=True),
             "zug_s": r["grenzen"]["zug_s"], "zug_standard": r["grenzen"]["zug_standard"], "stunden": r["grenzen"]["stunden"],
             "spieler": r["grenzen"]["spieler"], "prompt": r["prompt"], "text_max": TEXT_MAX,
-            "geschichten": [{"gid": k, "titel": g["titel"], "welt": g["welt"], "ton": g["ton"], "akte": len(g["akte"])}
-                            for k, g in sorted(plans().items(), key=lambda x: x[1].get("titel", ""))]}
+            "geschichten": [{"gid": k, "titel": g["titel"], "welt": g["welt"], "ton": g["ton"], "akte": len(g["akte"]),
+                             "idee": g["idee"], "von": von}
+                            for von, ps in (("admin", sorted(plans().items(), key=lambda x: x[1].get("titel", ""))),
+                                            ("spark", shipped(r, lang).items())) if stories for k, g in ps]}
 
 
 def _mine(uid, lang):
@@ -2411,7 +2453,7 @@ def _mine(uid, lang):
     for rid, v in _read()["runden"].items():
         pid, p = seat_of(v, uid)
         if pid and (v.get("status") != "ende" or now - v.get("ende_t", 0) < ENDE_H * 3600):
-            out.append({"rid": rid, "titel": v["titel"], "status": v["status"], "zug": v["zug"], "gastgeber": v["owner"] == uid,
+            out.append({"rid": rid, "titel": v["titel"], "welt": v["welt"], "status": v["status"], "zug": v["zug"], "gastgeber": v["owner"] == uid,
                         "kapitel": v.get("kapitel", 0), "kapitel_zu": bool(v.get("kapitel_zu")),
                         "spieler": len(seated(v)), "made": v["made"], "held": p["held"]["name"] if p.get("held") else ""})
     return {"on": True, "runden": sorted(out, key=lambda x: -x["made"]), "helden": [hero_view(r, h, lang) for h in heroes(uid)],
@@ -2865,8 +2907,8 @@ async def gast_platz(request: Request):
     rd = _round(await asyncio.to_thread(_read), rid)
     p = rd["plaetze"][pid]
     host = profiles.by_id(rd["owner"]) or {}
-    out = {"titel": rd["titel"], "von": host.get("name", ""), "frei": not p.get("held"), "until": rd["until"],
-           "spieler": len(seated(rd)), "max": rules()["grenzen"]["spieler"], "wahl": _choices(rd["lang"]),
+    out = {"titel": rd["titel"], "von": host.get("name", ""), "frei": not p.get("held"), "until": rd["until"], "welt": rd["welt"],
+           "spieler": len(seated(rd)), "max": rules()["grenzen"]["spieler"], "wahl": _choices(rd["lang"], False),
            "profil_genommen": bool(p.get("uid")), "kapitel": rd.get("kapitel", 0),
            "kampagne_helden": [] if p.get("held") else [hero_view(rules(), h, rd["lang"], full=False) for h in
                                                          await asyncio.to_thread(campaign_heroes, rd)]}

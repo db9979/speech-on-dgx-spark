@@ -5101,7 +5101,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "KI-Dungeon-Master: Geschichten-Planer (V01.0.955, Dominik 2026-10-23 „Können wir auch für den Admin so einen Geschichtengenerator machen“, „natürlich mit LLM-Unterstützung“, „Alles wie empfohlen, nur beim dritten Punkt nehmen wir B. Das Modell soll entscheiden, wann es weitergeht.“): Unter *Funktionen → KI-Dungeon-Master*, Knopf „Regeln anpassen“, Abschnitt Geschichten legt der Admin bis zu 30 Geschichten an: Titel, Welt, Ton, Grundidee, Ziel der Helden, Gegenspieler, bis zu 6 Schauplätze, bis zu 10 Tabus und 3 bis 5 Akte mit Titel, Inhalt, Wendepunkt am Ende und geplanten Zügen (2 bis 30). Vorschlag erzeugen lässt das eigene Sprachmodell die ganze Geschichte aus ein paar Stichworten (höchstens 300 Zeichen) entwerfen, ↻ Neu schreiben einen einzelnen Akt mit einem freien Hinweis; die Stichworte stehen dabei nur als Daten im Block <<< … >>> (Marker entschärft), die Antwort kommt im festen JSON-Schema, und das Panel prüft sie mit denselben Regeln wie eine getippte Geschichte (check_plan: Längen, Anzahl der Akte, Züge, Wörter des Tons, „nie“ und die Tabus); erst „Prüfen und speichern“ behält sie (dungeon-geschichten.json im Zustandsordner). Wer eine Runde anlegt, wählt unter *Dungeon-M"
+"text": "KI-Dungeon-Master: Geschichten-Planer (V01.0.955, Dominik 2026-10-23 „Können wir auch für den Admin so einen Geschichtengenerator machen“, „natürlich mit LLM-Unterstützung“, „Alles wie empfohlen, nur beim dritten Punkt nehmen wir B. Das Modell soll entscheiden, wann es weitergeht.“): Unter *Funktionen → KI-Dungeon-Master*, Knopf „Regeln anpassen“, Abschnitt Geschichten legt der Admin bis zu 30 Geschichten an: Titel, Welt, Ton, Grundidee, Ziel der Helden, Gegenspieler, bis zu 6 Schauplätze, bis zu 10 Tabus und 3 bis 5 Akte mit Titel, Inhalt, Wendepunkt am Ende und geplanten Zügen (2 bis 30). Vorschlag erzeugen lässt das eigene Sprachmodell die ganze Geschichte aus ein paar Stichworten (höchstens 300 Zeichen) entwerfen, ↻ Neu schreiben einen einzelnen Akt mit einem freien Hinweis; die Stichworte stehen dabei nur als Daten im Block <<< … >>> (Marker entschärft), die Antwort kommt im festen JSON-Schema, und das Panel prüft sie mit denselben Regeln wie eine getippte Geschichte (check_plan: Längen, Anzahl der Akte, Züge, Wörter des Tons, „nie“ und die Tabus); erst „Prüfen und speichern“ behält sie (dungeon-geschichten.json im Zustandsordner). Wer eine Runde anlegt, wählt die Geschichte u"
 },
 {
 "lang": "de",
@@ -5109,7 +5109,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "aster → Runden* „Geschichte des Admins“; Welt und Ton kommen dann aus der Geschichte, die Runde bekommt eine Kopie, und ein Kapitel einer Kampagne spielt im selben Akt weiter. Verlauf: Das Modell bekommt nur Ziel, Gegenspieler, Schauplätze und den aktuellen Akt (Datenblock) und meldet mit akt_fertig, wann der Wendepunkt erzählt ist; das Panel nimmt das erst nach 3 Zügen des Akts an, geht immer nur einen Akt weiter, nie zurück, und schaltet selbst weiter, wenn ein Akt anderthalbmal so lange läuft wie geplant (step_act). Nach dem letzten Akt steht „Die Geschichte ist erzählt.“ Die Tabus gelten in jeder Erzählung der Runde wie die Liste „nie“. Spoiler: Die Spieler sehen nur „Akt 2/4“ und „Akt 3 beginnt.“, den Plan sehen nur der Admin und der Gastgeber (aufklappbar am Spieltisch). Zustand → Live zeigt Geschichten, heute weitergeschaltete Akte und Vorschläge (nur Zahlen); Logs nur feste Wörter (dungeon: vorschlag | geschichte | ok | 4100 ms, dungeon: akt | modell | 2, dungeon: geschichte gespeichert | 4 akte). API (Admin): PUT|DELETE /api/admin/dungeon/geschichte/{gid} (neu für eine neue), POST /api/admin/dungeon/geschichte/vorschlag ({welt, ton, akte, stichworte, tabus}), POST /api/adm"
+"text": "nter *Dungeon-Master → Runden* als Karte (seit V01.0.961 zusammen mit den mitgelieferten, siehe unten); Welt und Ton kommen dann aus der Geschichte, die Runde bekommt eine Kopie, und ein Kapitel einer Kampagne spielt im selben Akt weiter. Verlauf: Das Modell bekommt nur Ziel, Gegenspieler, Schauplätze und den aktuellen Akt (Datenblock) und meldet mit akt_fertig, wann der Wendepunkt erzählt ist; das Panel nimmt das erst nach 3 Zügen des Akts an, geht immer nur einen Akt weiter, nie zurück, und schaltet selbst weiter, wenn ein Akt anderthalbmal so lange läuft wie geplant (step_act). Nach dem letzten Akt steht „Die Geschichte ist erzählt.“ Die Tabus gelten in jeder Erzählung der Runde wie die Liste „nie“. Spoiler: Die Spieler sehen nur „Akt 2/4“ und „Akt 3 beginnt.“, den Plan sehen nur der Admin und der Gastgeber (aufklappbar am Spieltisch). Zustand → Live zeigt Geschichten, heute weitergeschaltete Akte und Vorschläge (nur Zahlen); Logs nur feste Wörter (dungeon: vorschlag | geschichte | ok | 4100 ms, dungeon: akt | modell | 2, dungeon: geschichte gespeichert | 4 akte). API (Admin): PUT|DELETE /api/admin/dungeon/geschichte/{gid} (neu für eine neue), POST /api/admin/dungeon/geschichte/"
 },
 {
 "lang": "de",
@@ -5117,7 +5117,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "in/dungeon/geschichte/akt ({plan, n, hinweis}), eigenes Rate-Limit dungeonplan (10 je Minute)."
+"text": "vorschlag ({welt, ton, akte, stichworte, tabus}), POST /api/admin/dungeon/geschichte/akt ({plan, n, hinweis}), eigenes Rate-Limit dungeonplan (10 je Minute)."
 },
 {
 "lang": "de",
@@ -5133,7 +5133,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "KI-Dungeon-Master: Spieltisch-Thema (V01.0.957, Dominik 2026-10-23 „mir gefällt dieses layout ganz gut … können wir das verbessern?“, „ok“ = Empfehlungen 1a bis 5): Nur der Spieltisch hat ein eigenes Aussehen, Formulare, Heldenliste und Admin bleiben im Panel-Stil: dunkler Grund, Serifenschrift aus dem System (nichts wird nachgeladen), die Erzählung als Pergamentkarte mit Initiale und „Zug n“, Aktionen als Sprechblasen mit dem Avatar in der Farbe des Platzes, Würfe als schmale Zeile, Akt-Zeilen in Gold. Links stehen Heldenkarten aller Spieler mit Lebensbalken, den sechs Werten (mit dem Bonus für Würfe) und Schutz als Gitter, angelegter Ausrüstung als Schildchen und dem Status (hat gehandelt, denkt nach, nicht da), der eigene golden umrandet; die Kopfzeile zeigt den Titel in Kapitälchen und den aktuellen Ort; unter der Erzählung stehen „Warten auf: …“, die Eingabe, das Mikrofon und Handeln. Am Handy kommen Geschichte, Gruppe und eigener Bogen untereinander. Farben je Welt (welten[].farben mit grund, karte, pergament, tinte, gold, nur #rrggbb, geprüft von check_rules): Fantasy Pergament und Gold, Horror Blutrot, Science-Fiction Blau, Piraten Türkis, Eigene Welt Violett; der Admin änd"
+"text": "KI-Dungeon-Master: Spieltisch-Thema (V01.0.957, Dominik 2026-10-23 „mir gefällt dieses layout ganz gut … können wir das verbessern?“, „ok“ = Empfehlungen 1a bis 5): Der Spieltisch hat ein eigenes Aussehen (seit V01.0.961 die ganze Seite des Spiels, hell oder dunkel, siehe unten): dunkler Grund, Serifenschrift aus dem System (nichts wird nachgeladen), die Erzählung als Pergamentkarte mit Initiale und „Zug n“, Aktionen als Sprechblasen mit dem Avatar in der Farbe des Platzes, Würfe als schmale Zeile, Akt-Zeilen in Gold. Links stehen Heldenkarten aller Spieler mit Lebensbalken, den sechs Werten (mit dem Bonus für Würfe) und Schutz als Gitter, angelegter Ausrüstung als Schildchen und dem Status (hat gehandelt, denkt nach, nicht da), der eigene golden umrandet; die Kopfzeile zeigt den Titel in Kapitälchen und den aktuellen Ort; unter der Erzählung stehen „Warten auf: …“, die Eingabe, das Mikrofon und Handeln. Am Handy kommen Geschichte, Gruppe und eigener Bogen untereinander. Farben je Welt (welten[].farben mit grund, karte, pergament, tinte, gold, nur #rrggbb, geprüft von check_rules): Fantasy Pergament und Gold, Horror Blutrot, Science-Fiction Blau, Piraten Türkis, Eigene Welt Violett"
 },
 {
 "lang": "de",
@@ -5141,7 +5141,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "ert sie unter „Regeln anpassen“. Vollbild (Dominik „können wir den auch rauslösen in fullscreen?“): „⛶ Vollbild“ in der Kopfzeile, auch für Gäste, zeigt nur den Tisch über den ganzen Bildschirm (Vollbild des Browsers; wo es das nicht gibt, wie im iPhone-Browser, füllt der Tisch das Fenster); der Knopf, Esc oder das Verlassen des Browser-Vollbilds beenden es. So spielst du (Dominik „haben wir auch eine Anleitung für die Spieler?“): „❔ So spielst du“ öffnet über dem Tisch ein kurzes Blatt für Spieler und Gäste (was man schreibt, wann es weitergeht, wie das Panel würfelt, Leben, Beute und Tauschen, Hören und Sprechen, der Figur-Code); beim ersten Platznehmen auf einem Gerät klappt es einmal von selbst auf (gemerkt nur im Browser)."
+"text": "; der Admin ändert sie unter „Regeln anpassen“. Vollbild (Dominik „können wir den auch rauslösen in fullscreen?“): „⛶ Vollbild“ in der Kopfzeile, auch für Gäste, zeigt nur den Tisch über den ganzen Bildschirm (Vollbild des Browsers; wo es das nicht gibt, wie im iPhone-Browser, füllt der Tisch das Fenster); der Knopf, Esc oder das Verlassen des Browser-Vollbilds beenden es. So spielst du (Dominik „haben wir auch eine Anleitung für die Spieler?“): „❔ So spielst du“ öffnet über dem Tisch ein kurzes Blatt für Spieler und Gäste (was man schreibt, wann es weitergeht, wie das Panel würfelt, Leben, Beute und Tauschen, Hören und Sprechen, der Figur-Code); beim ersten Platznehmen auf einem Gerät klappt es einmal von selbst auf (gemerkt nur im Browser)."
 },
 {
 "lang": "de",
@@ -5174,6 +5174,22 @@
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
 "text": "lt vor der gewählten Stimme. Die Stimme entsteht bei jeder Zeile neu und klingt daher ähnlich, nicht immer ganz gleich. Ist VoiceDesign aus, spricht wieder die gewählte Stimme oder der Erzähler."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: D&D-Look, fertige Geschichten, hell oder dunkel (V01.0.961, Dominik 2026-10-23 „diese seite sieht auch ziemlich trist aus das muss angepasst werden das es direkt nach d&d aussieht“, „es soll auch ein auswahl menü geben mit 10 vorgefertigen geschichten je bereich“, „könenn wir auch noch einen hell dunkel modus einbauen?“): Die ganze Seite *Dungeon-Master* (Runden, Kampagnen, Neue Runde, Helden) und das Einladungsfenster eines Gasts haben jetzt den Look des Spieltischs in den Farben der Welt. Neue Runde in vier Schritten: 1 Welt, 2 Geschichte, 3 Die Runde (Titel, Einstieg, Ton, Zeit je Zug, Dauer), 4 Dein Held. Welt, Ton, Volk und Klasse wählt man als Karten mit Bildzeichen (zeichen in den Regeln, nur ein Bildzeichen ohne Buchstaben, höchstens 8 Zeichen, geprüft von check_rules; ohne eigenes ◆); die Volkskarte nennt den Bonus (etwa „GES +2 · INT +1“), die Klassenkarte die zwei wichtigsten Werte und das Leben. Wer eine Welt antippt, sieht die Seite gleich in deren Farben. Fertige Geschichten: Je Welt kommen 10 Geschichten mit dem Spark (dungeon_geschichten.json, Deutsch und Englisch, je 3 Akte mit Wendepunkt, Ziel, Gegenspieler und Schauplätzen, verschiedene Töne). "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Sie stehen als Karten mit Titel, Kurzinhalt, Ton und Zahl der Akte unter Schritt 2, zusammen mit den Geschichten des Admins („vom Admin“) und „Frei erzählen“. Das Panel prüft jede mitgelieferte Geschichte beim Lesen mit denselben Regeln wie eine Geschichte des Admins (check_plan) und lässt eine weg, die die Regeln gerade ablehnen (etwa wenn der Admin eine Welt herausnimmt). Eine gewählte Geschichte gibt ihren Ton vor (die anderen Tonkarten sind gesperrt) und trägt ihren Titel ein, solange man keinen eigenen tippt. Ein Gast sieht keine Geschichten. Hell oder dunkel: Der Knopf „☀ Hell“ oder „☾ Dunkel“ oben auf der Seite, am Spieltisch und im Gast-Fenster schaltet zwischen dem dunklen Gewölbe und hellem Pergament um; beide nehmen die Farben der Welt. Am Anfang folgt das Spiel der Einstellung des Panels oder des Geräts, die Wahl merkt sich nur dieser Browser. Helden stehen als Karten mit Lebensbalken, den sechs Werten mit Bonus, Stufe, EP und Gold. Das Wort „Leiche“ in der Liste des Tons „ab 8“ trifft jetzt nur noch den Anfang eines Worts, „schleichen“ oder „Federleicht“ sind kein Treffer mehr."
 },
 {
 "lang": "de",
@@ -16925,7 +16941,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "AI Dungeon Master: story planner (V01.0.955, Dominik 2026-10-23 \"Können wir auch für den Admin so einen Geschichtengenerator machen\", \"natürlich mit LLM-Unterstützung\", \"Alles wie empfohlen, nur beim dritten Punkt nehmen wir B. Das Modell soll entscheiden, wann es weitergeht.\"): under *Features → AI Dungeon Master*, button \"Adjust rules\", section Stories, the admin keeps up to 30 stories: title, world, tone, idea, the heroes' goal, foe, up to 6 places, up to 10 taboos and 3 to 5 acts with a title, content, a turning point at the end and planned turns (2 to 30). Create a proposal lets the own language model draft the whole story from a few keywords (at most 300 characters), ↻ Write again a single act with a free hint; the keywords stand only as data in the block <<< … >>> (markers defused), the answer comes in a fixed JSON schema, and the panel checks it by the same rules as a typed story (check_plan: lengths, number of acts, turns, words of the tone, \"nie\" and the taboos); only \"Check and save\" keeps it (dungeon-geschichten.json in the state folder). Whoever starts a round picks \"The admin's story\" under *Dungeon Master → Rounds*; world and tone then come from the story, the round "
+"text": "AI Dungeon Master: story planner (V01.0.955, Dominik 2026-10-23 \"Können wir auch für den Admin so einen Geschichtengenerator machen\", \"natürlich mit LLM-Unterstützung\", \"Alles wie empfohlen, nur beim dritten Punkt nehmen wir B. Das Modell soll entscheiden, wann es weitergeht.\"): under *Features → AI Dungeon Master*, button \"Adjust rules\", section Stories, the admin keeps up to 30 stories: title, world, tone, idea, the heroes' goal, foe, up to 6 places, up to 10 taboos and 3 to 5 acts with a title, content, a turning point at the end and planned turns (2 to 30). Create a proposal lets the own language model draft the whole story from a few keywords (at most 300 characters), ↻ Write again a single act with a free hint; the keywords stand only as data in the block <<< … >>> (markers defused), the answer comes in a fixed JSON schema, and the panel checks it by the same rules as a typed story (check_plan: lengths, number of acts, turns, words of the tone, \"nie\" and the taboos); only \"Check and save\" keeps it (dungeon-geschichten.json in the state folder). Whoever starts a round picks the story as a card under *Dungeon Master → Rounds* (since V01.0.961 together with the shipped ones, see"
 },
 {
 "lang": "en",
@@ -16933,7 +16949,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "gets a copy, and a chapter of a campaign plays on in the same act. Flow: the model gets only goal, foe, places and the current act (data block) and reports with akt_fertig when the turning point is told; the panel takes that only after 3 turns of the act, always moves one act on, never back, and moves on by itself when an act runs one and a half times as long as planned (step_act). After the last act \"The story is told.\" stands there. The taboos count in every narration of the round like the list \"nie\". Spoilers: the players only see \"Act 2/4\" and \"Act 3 begins.\", only the admin and the host see the plan (to unfold at the table). Status → Live shows stories, acts moved on today and proposals (numbers only); Logs only fixed words (dungeon: vorschlag | geschichte | ok | 4100 ms, dungeon: akt | modell | 2, dungeon: geschichte gespeichert | 4 akte). API (admin): PUT|DELETE /api/admin/dungeon/geschichte/{gid} (neu for a new one), POST /api/admin/dungeon/geschichte/vorschlag ({welt, ton, akte, stichworte, tabus}), POST /api/admin/dungeon/geschichte/akt ({plan, n, hinweis}), own rate limit dungeonplan (10 a minute)."
+"text": " below); world and tone then come from the story, the round gets a copy, and a chapter of a campaign plays on in the same act. Flow: the model gets only goal, foe, places and the current act (data block) and reports with akt_fertig when the turning point is told; the panel takes that only after 3 turns of the act, always moves one act on, never back, and moves on by itself when an act runs one and a half times as long as planned (step_act). After the last act \"The story is told.\" stands there. The taboos count in every narration of the round like the list \"nie\". Spoilers: the players only see \"Act 2/4\" and \"Act 3 begins.\", only the admin and the host see the plan (to unfold at the table). Status → Live shows stories, acts moved on today and proposals (numbers only); Logs only fixed words (dungeon: vorschlag | geschichte | ok | 4100 ms, dungeon: akt | modell | 2, dungeon: geschichte gespeichert | 4 akte). API (admin): PUT|DELETE /api/admin/dungeon/geschichte/{gid} (neu for a new one), POST /api/admin/dungeon/geschichte/vorschlag ({welt, ton, akte, stichworte, tabus}), POST /api/admin/dungeon/geschichte/akt ({plan, n, hinweis}), own rate limit dungeonplan (10 a minute)."
 },
 {
 "lang": "en",
@@ -16949,7 +16965,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "AI Dungeon Master: table theme (V01.0.957, Dominik 2026-10-23 \"mir gefällt dieses layout ganz gut … können wir das verbessern?\", \"ok\" = recommendations 1a to 5): only the table has a look of its own, forms, hero list and admin keep the panel style: dark ground, a serif font of the system (nothing is loaded), the narration as a parchment card with an initial and \"Turn n\", actions as speech bubbles with the avatar in the seat's colour, rolls as a slim line, act lines in gold. On the left hero cards of all players with life bar, the six values (with the bonus for rolls) and protection as a grid, equipped items as small tags and the state (acted, thinking, away), the own one framed in gold; the head shows the title in small caps and the current place; under the narration \"Waiting for: …\", the input, the microphone and Act. On a phone story, group and own sheet come one below the other. Colours per world (welten[].farben with grund, karte, pergament, tinte, gold, only #rrggbb, checked by check_rules): fantasy parchment and gold, horror blood red, science fiction blue, pirates turquoise, own world violet; the admin changes them under \"Adjust rules\". Full screen (Dominik \"can we pop it ou"
+"text": "AI Dungeon Master: table theme (V01.0.957, Dominik 2026-10-23 \"mir gefällt dieses layout ganz gut … können wir das verbessern?\", \"ok\" = recommendations 1a to 5): the table has a look of its own (since V01.0.961 the whole game page, light or dark, see below): dark ground, a serif font of the system (nothing is loaded), the narration as a parchment card with an initial and \"Turn n\", actions as speech bubbles with the avatar in the seat's colour, rolls as a slim line, act lines in gold. On the left hero cards of all players with life bar, the six values (with the bonus for rolls) and protection as a grid, equipped items as small tags and the state (acted, thinking, away), the own one framed in gold; the head shows the title in small caps and the current place; under the narration \"Waiting for: …\", the input, the microphone and Act. On a phone story, group and own sheet come one below the other. Colours per world (welten[].farben with grund, karte, pergament, tinte, gold, only #rrggbb, checked by check_rules): fantasy parchment and gold, horror blood red, science fiction blue, pirates turquoise, own world violet; the admin changes them under \"Adjust rules\". Full screen (Dominik \"can we"
 },
 {
 "lang": "en",
@@ -16957,7 +16973,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "t into full screen?\"): \"⛶ Full screen\" in the header, also for guests, shows only the table across the whole screen (the browser's full screen; where there is none, as in the iPhone browser, the table fills the window); the button, Esc or leaving the browser's full screen end it. How to play (Dominik \"do we also have a guide for the players?\"): \"❔ How to play\" opens a short sheet above the table for players and guests (what you write, when it goes on, how the panel rolls, life, loot and trading, listening and speaking, the hero code); the first time you take a seat on a device it opens once by itself (remembered only in the browser)."
+"text": " pop it out into full screen?\"): \"⛶ Full screen\" in the header, also for guests, shows only the table across the whole screen (the browser's full screen; where there is none, as in the iPhone browser, the table fills the window); the button, Esc or leaving the browser's full screen end it. How to play (Dominik \"do we also have a guide for the players?\"): \"❔ How to play\" opens a short sheet above the table for players and guests (what you write, when it goes on, how the panel rolls, life, loot and trading, listening and speaking, the hero code); the first time you take a seat on a device it opens once by itself (remembered only in the browser)."
 },
 {
 "lang": "en",
@@ -16990,6 +17006,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "oice or the narrator speaks again."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: D&D look, ready-made stories, light or dark (V01.0.961, Dominik 2026-10-23 \"diese seite sieht auch ziemlich trist aus das muss angepasst werden das es direkt nach d&d aussieht\", \"es soll auch ein auswahl menü geben mit 10 vorgefertigen geschichten je bereich\", \"könenn wir auch noch einen hell dunkel modus einbauen?\"): the whole *Dungeon Master* page (rounds, campaigns, new round, heroes) and a guest's invitation window now have the table's look in the colours of the world. New round in four steps: 1 World, 2 Story, 3 The round (title, opening, tone, time per turn, duration), 4 Your hero. World, tone, people and class are chosen as cards with pictures (zeichen in the rules, only a picture without letters, at most 8 characters, checked by check_rules; without one ◆); the people's card names the bonus (for example \"DEX +2 · INT +1\"), the class card its two main values and life. Tapping a world shows the page in its colours right away. Ready-made stories: 10 stories per world come with the Spark (dungeon_geschichten.json, German and English, 3 acts each with a turning point, goal, foe and places, different tones). They stand as cards with title, summary, tone and num"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "ber of acts under step 2, together with the admin's stories (\"by the admin\") and \"Tell freely\". The panel checks every shipped story when reading it by the same rules as an admin's story (check_plan) and leaves out one the rules refuse right now (for example when the admin takes a world out). A chosen story sets its tone (the other tone cards are locked) and fills in its title as long as you do not type your own. A guest sees no stories. Light or dark: the button \"☀ Light\" or \"☾ Dark\" at the top of the page, at the table and in the guest's window switches between the dark vault and light parchment; both take the colours of the world. At first the game follows the panel's or the device's setting, the choice is kept only in this browser. Heroes stand as cards with a life bar, the six values with bonus, level, XP and gold. The word \"leiche\" in the list of the tone \"from 8\" now only matches the start of a word, so \"schleichen\" or \"Federleicht\" are no longer a hit."
 },
 {
 "lang": "en",

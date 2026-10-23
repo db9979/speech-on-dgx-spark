@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.961** KI-Dungeon-Master im D&D-Look auf der ganzen Seite: Welt, Geschichte, Ton, Volk und Klasse als Karten mit Bildzeichen, je Welt 10 fertige Geschichten, Knopf für hell oder dunkel, Helden als Karten
 - **V01.0.960** Mitteilung antippen öffnet genau diese Meldung: Karte über dem Gespräch mit ganzem Text und passendem Knopf (iPhone, Android 1.4.4, Browser, Begleiter Mac)
 - **V01.0.959** KI-Dungeon-Master: Heldenstimme aus einer Beschreibung („tiefe, raue Zwergenstimme“), wenn VoiceDesign an ist; mit Probe, geprüft wie jede Eingabe
 - **V01.0.958** KI-Dungeon-Master: sechs Werte wie bei D&D (Stärke bis Charisma, Bonus aus dem Wert, Leben aus Konstitution, Standardreihe zum Verteilen per Ziehen, alte Helden umgestellt) und Heldenstimmen (eigene Stimme je Held mit Probe, gesprochen wird die wörtliche Rede)
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.954** ROT-FIX: ffmpeg im Test-Workflow mit --no-install-recommends (Codecs bleiben) plus robuster apt-Config, damit ein langsamer Paket-Mirror den Lauf nicht mehr abwürgt
 - **V01.0.953** KI-Dungeon-Master Stufe 2: Kampagnen mit „Bisher geschah“ und Kapiteln, Erzählung vorlesen mit Erzähler- und NPC-Stimme, Sprechen statt Tippen, iPhone-Seite; viel mehr Gegenstände, Tränke und Zauber
 - **V01.0.952** ROT-FIX: apt bricht jetzt nur eine hängende Verbindung ab und wiederholt sie, ein langsamer ffmpeg-Download läuft weiter; Netz-Schritte unter großzügigem Deckel, Job-Limit auf 60 min
-- **V01.0.951** ROT-FIX: jedes apt wartet jetzt per DPkg::Lock::Timeout auf die dpkg-Sperre, damit der Install nicht an unattended-upgrades („Could not get lock … code 100“) rot fällt
 
 
 

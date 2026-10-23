@@ -2802,6 +2802,13 @@
 "titel": "Mitteilung antippen öffnet die Meldung",
 "text": "A: iPhone: eine Mitteilung des Spark (z. B. Erinnerung in 1 Minute) bei geschlossener App antippen: die App zeigt die Mitteilung als Karte oben im Gespräch, mit Zeit und ganzem Text; ✕ schließt sie. B: Eine Mitteilung mit Weg (z. B. „Lied fertig … Ich → Musik“): Knopf „Öffnen: Ich → Musik“ führt dorthin. C: Chat-Nachricht antippen: „Chat öffnen“ öffnet genau diesen Chat. D: Android-App und Browser: Mitteilung antippen zeigt dieselbe Karte über dem Assistenten. E: Begleiter auf dem Mac: Klick auf die Mitteilung öffnet das Panel mit der Karte.",
 "thread": "Mitteilung öffnet genau die Meldung"
+},
+{
+"id": "P425",
+"v": 961,
+"titel": "Dungeon-Master: D&D-Look, fertige Geschichten, hell und dunkel",
+"text": "A: Dungeon-Master → Runden: die Seite im D&D-Look, Welt als Karte antippen, die Farben wechseln. B: Unter Geschichte stehen 10 Karten der Welt; eine wählen: Titel steht drin, der Ton ist gesetzt, Runde starten, der Plan (nur Gastgeber) zeigt Akt 1. C: Volk und Klasse als Karte wählen, die Werte darunter passen sich an. D: „☀ Hell“ antippen: Seite und Spieltisch werden hell, nach dem Neuladen bleibt es hell. E: Als Gast den Link öffnen: Einladung im selben Look, ohne Geschichten.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }
