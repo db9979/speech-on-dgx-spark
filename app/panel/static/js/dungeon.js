@@ -59,9 +59,10 @@ function dmNew(D){const w=D.wahl;if(D.runden.filter(x=>x.gastgeber&&x.status!=='
   const min=s=>s>=3600?Math.round(s/3600)+' h':s>=60?Math.round(s/60)+' min':s+' s';
   return `<h3 class="sec">${esc(t('Neue Runde','New round'))}</h3><div class="dm-form">
     <label>${esc(t('Titel','Title'))}</label><input class="dmf-titel" maxlength="60" placeholder="${esc(t('Die Glocke von Hallstein','The bell of Hallstein'))}">
-    <label>${esc(t('Welt','World'))}</label><div class="seg dm-seg dmf-welt">${w.welten.map((x,i)=>`<button type="button" data-dmseg="${esc(x.id)}" title="${esc(x.satz)}"${i===0?' class="on"':''}>${esc(x.name)}</button>`).join('')}</div>
+    ${(w.geschichten||[]).length?`<label>${esc(t('Geschichte des Admins (frei)','The admin\'s story (optional)'))}</label><select class="dmf-gesch"><option value="">${esc(t('Keine, der Dungeon-Master erzählt frei','None, the Dungeon Master tells freely'))}</option>${w.geschichten.map(g=>`<option value="${esc(g.gid)}">${esc(g.titel)} · ${g.akte} ${esc(t('Akte','acts'))}</option>`).join('')}</select>`:''}
+    <label>${esc(t('Welt','World'))}</label><div class="lseg dm-seg dmf-welt">${w.welten.map((x,i)=>`<button type="button" data-dmseg="${esc(x.id)}" title="${esc(x.satz)}"${i===0?' class="on"':''}>${esc(x.name)}</button>`).join('')}</div>
     <label>${esc(t('Einstieg (frei)','Opening (optional)'))}</label><textarea class="dmf-einstieg" rows="2" maxlength="400" placeholder="${esc(t('Ein Dorf, dessen Glocke nachts von selbst läutet.','A village whose bell rings by itself at night.'))}"></textarea>
-    <label>${esc(t('Ton','Tone'))}</label><div class="seg dm-seg dmf-ton">${w.toene.map((x,i)=>`<button type="button" data-dmseg="${x.id}"${i===1||w.toene.length===1?' class="on"':''}>${esc(x.name)}</button>`).join('')}</div>
+    <label>${esc(t('Ton','Tone'))}</label><div class="lseg dm-seg dmf-ton">${w.toene.map((x,i)=>`<button type="button" data-dmseg="${x.id}"${i===1||w.toene.length===1?' class="on"':''}>${esc(x.name)}</button>`).join('')}</div>
     <div class="dm-two"><div><label>${esc(t('Zeit je Zug','Time per turn'))}</label><select class="dmf-zug">${w.zug_s.map(s=>`<option value="${s}"${s===w.zug_standard?' selected':''}>${esc(min(s))}</option>`).join('')}</select></div>
     <div><label>${esc(t('Die Runde gilt','The round lasts'))}</label><select class="dmf-stunden">${w.stunden.map(h=>`<option value="${h}">${esc(min(h*3600))}</option>`).join('')}</select></div></div>
     ${dmHeroForm(w,D.helden,'dmf-')}
@@ -83,6 +84,7 @@ function dmLog(v,e){const W=v.werte||{},sys=Array.isArray(e.text)?e.text[L==='en
   if(e.art==='folge')return `<div class="dm-sys ${e.was==='heilung'?'ok':'bad'}">${esc(e.name)}: ${e.was==='heilung'?'+':'−'}${e.zahl} ${esc(t('Leben','life'))} (${esc(t('jetzt','now'))} ${e.leben})</div>`;
   if(e.art==='beute')return `<div class="dm-beute"><div class="dm-n">${esc(t('Beute für ','Loot for '))}${esc(e.name)}</div>${dmItem(e.item)}${e.gold?`<small class="mut">${esc(t('Gold für jeden: ','Gold for everyone: '))}${e.gold}</small>`:''}</div>`;
   if(e.art==='zauber')return `<div class="dm-zauber">✦ ${esc(e.name)} ${esc(t('wirkt','casts'))} <b>${esc(e.zauber)}</b>${e.gruppe?' '+esc(t('auf die Gruppe','on the group')):''}: ${esc(e.satz)}</div>`;
+  if(e.art==='akt')return `<div class="dm-akt">❖ ${esc(sys||'')}</div>`;
   if(e.art==='ep')return `<div class="dm-sys mut">${esc(e.name)} +${e.zahl} EP</div>`;
   if(e.art==='stufe')return `<div class="dm-stufe">★ ${esc(e.name)} ${esc(t('erreicht Stufe','reaches level'))} ${e.stufe}!</div>`;
   return `<div class="dm-sys mut">${esc(sys||'')}</div>`}
@@ -109,7 +111,7 @@ function dmTrade(v,mode){const h=v.ich,others=v.plaetze.filter(p=>!p.frei&&!p.ic
   const side=(a,g)=>[its(a),g?`<span class="dm-tx-it">${g} ${esc(t('Gold','gold'))}</span>`:''].join('')||'–';
   const list=(v.angebote||[]).map(o=>`<div class="dm-tx"><div><small class="mut">${esc(o.mir?t(o.von_name+' bietet dir','Offer from '+o.von_name):t('Dein Angebot an '+o.an_name,'Your offer to '+o.an_name))}</small></div>
     <div class="dm-tx-row"><div>${side(o.gebe,o.gold)}</div><span aria-hidden="true">⇄</span><div>${side(o.will,o.will_gold)}</div></div>
-    <div class="dm-iacts">${o.mir?`<button type="button" class="b pri" data-dmtx="annehmen" data-t="${esc(o.t)}">${esc(t('Annehmen','Accept'))}</button><button type="button" class="b" data-dmtx="ablehnen" data-t="${esc(o.t)}">${esc(t('Ablehnen','Decline'))}</button>`
+    <div class="dm-iacts">${o.mir?`<button type="button" class="b p" data-dmtx="annehmen" data-t="${esc(o.t)}">${esc(t('Annehmen','Accept'))}</button><button type="button" class="b" data-dmtx="ablehnen" data-t="${esc(o.t)}">${esc(t('Ablehnen','Decline'))}</button>`
       :`<button type="button" class="b" data-dmtx="ablehnen" data-t="${esc(o.t)}">${esc(t('Zurückziehen','Withdraw'))}</button>`}</div></div>`).join('');
   if(!others.length&&!list)return '';
   let form='';
@@ -119,7 +121,7 @@ function dmTrade(v,mode){const h=v.ich,others=v.plaetze.filter(p=>!p.frei&&!p.ic
       <h6>${esc(t('Du gibst','You give'))}</h6>${pick(h.tasche,x.gebe,'gebe')}<label>${esc(t('Gold','Gold'))} <input type="number" min="0" max="${h.gold}" value="${x.gold}" data-dmtxgold="gold"></label>
       <h6>${esc(t('Du bekommst von '+o.name,'You get from '+o.name))}</h6>${pick(o.tasche||[],x.will,'will')}<label>${esc(t('Gold','Gold'))} <input type="number" min="0" value="${x.will_gold}" data-dmtxgold="will_gold"></label>
       <small class="mut">${esc(t('Bis zu '+v.tausch_teile+' Dinge je Seite. Erst wenn '+o.name+' annimmt, tauscht das Panel.','Up to '+v.tausch_teile+' things per side. The panel swaps only when '+o.name+' accepts.'))}</small>
-      <div class="dm-iacts"><button type="button" class="b pri" data-dmtx="tauschen">${esc(t('Angebot senden','Send offer'))}</button><button type="button" class="b" data-dmtx="zu">${esc(t('Abbrechen','Cancel'))}</button></div></div>`:'';}
+      <div class="dm-iacts"><button type="button" class="b p" data-dmtx="tauschen">${esc(t('Angebot senden','Send offer'))}</button><button type="button" class="b" data-dmtx="zu">${esc(t('Abbrechen','Cancel'))}</button></div></div>`:'';}
   return `<h5>${esc(t('Tauschen','Trade'))}</h5>${list}${form||(others.length&&v.status!=='ende'?`<button type="button" class="b" data-dmtx="auf">${esc(t('Tausch anbieten','Offer a trade'))}</button>`:'')}`}
 async function dmTx(B,mode,post){const x=TX[mode];
   if(B.dmtx==='auf'){TX[mode]={an:'',gebe:[],will:[],gold:0,will_gold:0};return true}
@@ -141,10 +143,10 @@ function dmTable(w,v,mode){const keep=w.querySelector('.dm-in'),kv=keep?keep.val
   const S=mode==='p'?DM:DG,sid=mode==='p'?'dmsend':'dgsend';
   const input=v.status==='ende'||!v.ich?'':`<div class="dm-inp"><textarea class="dm-in" rows="1" data-zeilen="4" data-senden="${sid}" maxlength="${v.text_max}" placeholder="${esc(t('Was macht ','What does ')+v.ich.name+t('? ',' do? '))}" aria-label="${esc(t('Deine Aktion','Your action'))}"${v.dm?' disabled':''}></textarea><button type="button" class="b dm-mic${DMA.rec&&DMA.mode===mode?' on':''}" data-dmmic="1" title="${esc(t('Sprechen statt tippen','Speak instead of typing'))}" aria-label="${esc(t('Sprechen statt tippen','Speak instead of typing'))}"${v.dm?' disabled':''}>${DMA.rec&&DMA.mode===mode?'● '+esc(t('Fertig','Done')):'🎤'}</button><button type="button" class="b p" id="${sid}" data-dmsend="1"${v.dm?' disabled':''}>${esc(t('Senden','Send'))}</button></div>${v.meine_aktion?`<small class="mut dm-mine">${esc(t('Deine Aktion für diesen Zug: ','Your action for this turn: '))}${esc(v.meine_aktion)}</small>`:''}`;
   const host=mode==='p'&&v.gastgeber&&v.status!=='ende'?`<h5>${esc(t('Gastgeber','Host'))}</h5><div class="dm-hostb"><button type="button" class="b" data-dmweiter="1"${done&&!v.dm?'':' disabled'}>${esc(t('Jetzt weiter','Go on now'))}</button><button type="button" class="b" data-dmpause="${v.pause?0:1}">${esc(v.pause?t('Weiter','Resume'):t('Pause','Pause'))}</button><button type="button" class="b" data-dmvorlesen="${v.vorlesen?0:1}">${esc(v.vorlesen?t('🔊 Vorlesen aus','🔊 Reading off'):t('🔊 Vorlesen an','🔊 Read aloud'))}</button>
-    ${all<v.max?`<button type="button" class="b" data-dminvite="1">${esc(t('Einladen','Invite'))} (${v.max-all-v.plaetze.filter(p=>p.frei).length} ${esc(t('frei','free'))})</button>`:''}<button type="button" class="b" data-dmkap="1">${esc(DM.kap?t('Kapitel wirklich beenden?','Really end the chapter?'):t('Kapitel beenden','End chapter'))}</button><button type="button" class="b danger" data-dmend="1">${esc(DM.ende?t('Wirklich beenden?','Really end?'):t('Runde beenden','End round'))}</button></div>
+    ${all<v.max?`<button type="button" class="b" data-dminvite="1">${esc(t('Einladen','Invite'))} (${v.max-all-v.plaetze.filter(p=>p.frei).length} ${esc(t('frei','free'))})</button>`:''}<button type="button" class="b" data-dmkap="1">${esc(DM.kap?t('Kapitel wirklich beenden?','Really end the chapter?'):t('Kapitel beenden','End chapter'))}</button><button type="button" class="b danger" data-dmend="1">${esc(DM.ende?t('Wirklich beenden?','Really end?'):t('Runde beenden','End round'))}</button></div>${dmPlanHost(v)}
     ${DM.made?`<div class="mitmade"><div class="jqr">${DM.made.qr||''}</div><div class="sp"><input readonly value="${esc(DM.made.link)}" aria-label="${esc(t('Der Link','The link'))}"><small class="mut">${esc(t('Nur jetzt zu sehen. Wer ihn öffnet, sitzt auf diesem Platz: als Gast ohne Profil oder mit seinem Profil.','Shown only now. Whoever opens it takes this seat: as a guest without a profile or with their profile.'))}</small></div></div>`:''}`:'';
   const log=v.log.map(e=>dmLog(v,e)).join('');
-  w.innerHTML=`<div class="dm-head">${mode==='p'?`<button type="button" class="b" data-dmback="1">${esc(t('← Runden','← Rounds'))}</button>`:''}<div><h3>${esc(v.titel)}</h3><small class="mut">${esc(v.welt)} · ${esc(v.ton)}${v.kapitel?' · '+esc(t('Kapitel','Chapter'))+' '+v.kapitel:''} · ${esc(t('Zug','Turn'))} ${v.zug}${st?' · '+esc(st):''}</small></div>${v.vorlesen?`<button type="button" class="b dm-hear" data-dmhear="1"${v.ton_zug.length?'':' disabled'}>${esc(v.liest?t('🔊 wird gesprochen …','🔊 being spoken …'):t('🔊 Hören','🔊 Listen'))}</button>`:''}</div>
+  w.innerHTML=`<div class="dm-head">${mode==='p'?`<button type="button" class="b" data-dmback="1">${esc(t('← Runden','← Rounds'))}</button>`:''}<div><h3>${esc(v.titel)}</h3><small class="mut">${esc(v.welt)} · ${esc(v.ton)}${v.kapitel?' · '+esc(t('Kapitel','Chapter'))+' '+v.kapitel:''}${v.akte?' · '+esc(v.erzaehlt?t('Geschichte erzählt','story told'):t('Akt','Act')+' '+v.akt+'/'+v.akte):''} · ${esc(t('Zug','Turn'))} ${v.zug}${st?' · '+esc(st):''}</small></div>${v.vorlesen?`<button type="button" class="b dm-hear" data-dmhear="1"${v.ton_zug.length?'':' disabled'}>${esc(v.liest?t('🔊 wird gesprochen …','🔊 being spoken …'):t('🔊 Hören','🔊 Listen'))}</button>`:''}</div>
     <div class="dm-grid"><div class="dm-col dm-group"><h5>${esc(t('Gruppe','Group'))} · ${all}/${v.max}</h5>${group}</div>
     <div class="dm-col dm-story">${sc}<div class="dm-feed" aria-live="polite">${log}</div>${input}</div>
     <div class="dm-col dm-side"><h5>${esc(t('Zug','Turn'))} ${v.zug}</h5><div class="dm-round">${v.plaetze.filter(p=>!p.frei).map(p=>`<span class="${p.gehandelt?'on':''}"></span>`).join('')}</div>
@@ -153,6 +155,11 @@ function dmTable(w,v,mode){const keep=w.querySelector('.dm-in'),kv=keep?keep.val
   const f=w.querySelector('.dm-feed');if(f)f.scrollTop=f.scrollHeight;
   const inp=w.querySelector('.dm-in');if(inp){if(kv)inp.value=kv;if(kf)inp.focus({preventScroll:true})}
   const n=v.ton_zug&&v.ton_zug[0]||0,A=DMA[mode];if(n&&n!==A.n){const first=!A.n;A.n=n;if(!first&&mode==='p'&&v.gastgeber&&v.vorlesen)dmPlay(mode,n)}}
+// the admin's story of the round: only the host sees the plan, the players only the act's number
+function dmPlanHost(v){const p=v.plan;if(!p)return '';const cur=v.erzaehlt?-1:v.akt-1;
+  return `<details class="adv dm-plan"><summary>${esc(t('Geschichte: ','Story: ')+p.titel)} · ${esc(t('nur du siehst das','only you see this'))}</summary><small class="mut">${esc(t('Ziel: ','Goal: ')+p.ziel)}${p.gegner?' · '+esc(t('Gegenspieler: ','Foe: ')+p.gegner):''}</small>
+    <ol>${p.akte.map((a,i)=>`<li class="${i===cur?'on':i<cur||cur<0?'mut':''}"><b>${esc(a.titel)}</b> <small>${esc(a.inhalt)}</small><small class="mut">${esc(t('Wendepunkt: ','Turning point: ')+a.wende)} · ${a.zuege} ${esc(t('Züge','turns'))}</small></li>`).join('')}</ol>
+    <small class="mut">${esc(t('Der Dungeon-Master entscheidet, wann der nächste Akt beginnt (frühestens nach '+v.akt_min+' Zügen); läuft ein Akt anderthalbmal so lange wie geplant, geht das Panel selbst weiter.','The Dungeon Master decides when the next act begins (after '+v.akt_min+' turns at the earliest); when an act runs one and a half times as long as planned, the panel moves on by itself.'))}</small></details>`}
 // the turn read aloud: the same WAV for every seat, fetched when asked (the host's device: by itself)
 async function dmPlay(mode,n){const A=DMA[mode];n=n||A.n;if(!n)return;
   try{let blob;if(mode==='p'){const r=await api(`/api/profile/dungeon/${DM.rid}/ton/${n}`);if(!r.ok)return;blob=await r.blob()}
@@ -180,7 +187,7 @@ async function dmMic(mode){const S=mode==='p'?DM:DG;
     catch(e){dmSay(S,mode==='p'?t('Das hat nicht geklappt.','That did not work.'):dgErr(e),true)}};
   rec.start();mode==='p'?dmDraw():dgDraw()}
 // the open page asks every poll seconds while it is to be seen; a redraw only when something changed (typing stays)
-function dmSig(v){return v?[v.zug,v.log.length,v.dm,v.pause,v.status,v.vorlesen,v.liest,(v.ton_zug||[]).join(),v.plaetze.map(p=>[p.pid,p.gehandelt,p.online,p.leben,p.stufe].join()).join('|'),v.meine_aktion,JSON.stringify(v.ich),JSON.stringify(v.angebote||[]),v.plaetze.map(p=>(p.tasche||[]).map(x=>x.i).join()).join('|')].join('#'):''}
+function dmSig(v){return v?[v.zug,v.log.length,v.dm,v.pause,v.status,v.vorlesen,v.liest,(v.ton_zug||[]).join(),v.akt,v.erzaehlt,v.plaetze.map(p=>[p.pid,p.gehandelt,p.online,p.leben,p.stufe].join()).join('|'),v.meine_aktion,JSON.stringify(v.ich),JSON.stringify(v.angebote||[]),v.plaetze.map(p=>(p.tasche||[]).map(x=>x.i).join()).join('|')].join('#'):''}
 setInterval(async()=>{if(document.visibilityState!=='visible')return;
   if(DM.v&&$('dmview')&&$('dungeon').classList.contains('on')&&!DM.busy&&Date.now()-DM.at>=DM.v.poll*1000){const old=dmSig(DM.v);DM.at=Date.now();
     const {r,d}=await apiTry('/api/profile/dungeon/'+DM.rid);if(r.ok&&DM.v){DM.v=d;DM.at=Date.now();if(dmSig(d)!==old)dmDraw();else dmLeft(DM)}}
@@ -203,6 +210,7 @@ document.body.addEventListener('click',async e=>{const b=e.target.closest('#dmvi
   if(B.dmback){DM.rid='';DM.v=null;DM.made=null;await dmLoad();return}
   if(B.dmmake){const q=c=>w.querySelector(c),D=DM.data,body={titel:q('.dmf-titel').value.trim(),welt:q('.dmf-welt .on').dataset.dmseg,einstieg:q('.dmf-einstieg').value.trim(),
       ton:+q('.dmf-ton .on').dataset.dmseg,zug_s:+q('.dmf-zug').value,stunden:+q('.dmf-stunden').value,held:dmHeroBody(w,'dmf-'),vorlesen:q('.dmf-vorlesen').checked};
+    const gs=q('.dmf-gesch');if(gs&&gs.value)body.geschichte=gs.value;
     const p=q('.dmf-prompt').value.trim();if(p&&p!==D.wahl.prompt)body.prompt=p;
     if(body.titel.length<2){dmSay(DM,t('Bitte gib der Runde einen Titel.','Please give the round a title.'),true);return}
     const d=await dmSend('/api/profile/dungeon/runde',body,DM);if(d){DM.rid=d.rid;DM.v=d;DM.at=Date.now();dmDraw()}return}
@@ -237,6 +245,9 @@ document.body.addEventListener('change',async e=>{const s=e.target.closest('#dmv
   const body={was:'schenken',i:s.dataset.dmgive,an:s.value};
   if(s.closest('#dmview')){const d=await dmSend(`/api/profile/dungeon/${DM.rid}/held`,body,DM);if(d){DM.v=d;DM.at=Date.now()}dmDraw()}
   else await dgAct('/api/dungeon/held',body)});
+document.body.addEventListener('change',e=>{const s=e.target.closest('#dmview .dmf-gesch');if(!s)return;
+  const g=((DM.data&&DM.data.wahl.geschichten)||[]).find(x=>x.gid===s.value),f=s.closest('.dm-form');if(!g||!f)return;
+  [['.dmf-welt',g.welt],['.dmf-ton',g.ton]].forEach(([c,id])=>f.querySelectorAll(c+' button').forEach(x=>x.classList.toggle('on',x.dataset.dmseg===String(id))))});
 document.body.addEventListener('change',e=>{const s=e.target.closest('#dmview .dmf-held,#dgcard .dgf-held');if(!s)return;
   const n=s.parentNode.querySelector('.dm-neu');if(n)n.hidden=!!s.value});
 // ---------------------------------------------------------------- a seat link (#spiel=<code>): guest or own profile
@@ -264,7 +275,7 @@ function dgForm(){const I=DG.info,box=dgBox(),w=I.wahl;let name='';try{name=loca
   const mine=DM.on&&DM.data?DM.data.helden:[];
   box.innerHTML=DGHEAD+`<div class="dm-invite"><small class="mut">${esc(I.von?t('Einladung von ','Invitation from ')+I.von:t('Einladung','Invitation'))}</small><h2>${esc(I.titel)}</h2>
     <div class="mut">${I.spieler} ${esc(t('von','of'))} ${I.max} ${esc(t('Plätzen','seats'))} · ${esc(t('gilt bis ','until '))}${esc(dmWhen(I.until))}</div>
-    ${DM.on?`<div class="seg dm-seg dgf-wie"><button type="button" class="on" data-dgwie="p">${esc(t('Mit meinem Profil','With my profile'))}</button><button type="button" data-dgwie="g">${esc(t('Als Gast','As a guest'))}</button></div>`:''}
+    ${DM.on?`<div class="lseg dm-seg dgf-wie"><button type="button" class="on" data-dgwie="p">${esc(t('Mit meinem Profil','With my profile'))}</button><button type="button" data-dgwie="g">${esc(t('Als Gast','As a guest'))}</button></div>`:''}
     ${(I.kampagne_helden||[]).length?`<label>${esc(t('Deine Figur aus dem letzten Kapitel','Your character from the last chapter'))}</label><select class="dgf-kamp"><option value="">${esc(t('Keine, eine neue Figur','None, a new character'))}</option>${I.kampagne_helden.map(h=>`<option value="${esc(h.hid)}">${esc(h.name)} · ${esc(h.klasse)} · ${esc(t('Stufe','level'))} ${h.stufe}</option>`).join('')}</select>`:''}
     <div class="dgf-body">${dmHeroForm(w,DM.on?mine:[],'dgf-')}</div>
     ${`<details class="adv"><summary>${esc(t('Ich habe einen Figur-Code','I have a hero code'))}</summary><input class="dgf-figur" maxlength="32" autocomplete="off" aria-label="${esc(t('Figur-Code','Hero code'))}"></details>`}
@@ -301,12 +312,15 @@ document.body.addEventListener('click',async e=>{const b=e.target.closest('#dgca
 async function dmRules(){let m=$('dmadm');if(!m){m=document.createElement('div');m.id='dmadm';m.className='modal';
     m.innerHTML='<div class="card modalcard dmadmcard" id="dmadmcard"></div>';document.body.appendChild(m)}
   m.style.display='grid';const c=$('dmadmcard');c.innerHTML=`<div class="mut">${esc(t('Lade die Regeln …','Loading the rules …'))}</div>`;
-  const {r,d}=await apiTry('/api/admin/dungeon');if(!r.ok){c.innerHTML=`<div class="err">${esc(errSay(r.status,d.detail,''))}</div>`;return}
+  DMP.g=null;const {r,d}=await apiTry('/api/admin/dungeon?lang='+dmLang());if(!r.ok){c.innerHTML=`<div class="err">${esc(errSay(r.status,d.detail,''))}</div>`;return}
   try{DMA.voices=((await (await api('/api/tts/voices')).json()).voices||[]).filter(x=>typeof x==='string')}catch{DMA.voices=[]}dmRulesDraw(d,'')}
-function dmRulesDraw(d,err){const c=$('dmadmcard'),S=d.summe,txt=JSON.stringify(d.eigene||{},null,2);
+function dmRulesDraw(d,err){const c=$('dmadmcard'),S=d.summe,txt=JSON.stringify(d.eigene||{},null,2);DMP.d=d;
+  if(DMP.g){c.innerHTML=dmPlanForm(d);return}
   const names={welten:t('Welten','Worlds'),toene:t('Töne','Tones'),voelker:t('Völker','Peoples'),klassen:t('Klassen','Classes'),faehigkeiten:t('Fähigkeiten','Abilities'),gegenstaende:t('Gegenstände','Items'),seltenheit:t('Seltenheiten','Rarities'),effekte:t('Effekte','Effects'),werte:t('Werte','Values')};
   c.innerHTML=`<h2>${esc(t('Dungeon-Master: Regeln anpassen','Dungeon Master: adjust rules'))}</h2>
     <div class="pintro">${esc(t('Ergänze oder ändere Welten, Töne, Völker, Klassen mit Fähigkeiten, Gegenstände, Effekte, Kurven und den Standard-Prompt. Ein Eintrag mit derselben id ersetzt den mitgelieferten, "aus": true nimmt ihn heraus. Das Panel prüft alles, bevor es gilt.','Add or change worlds, tones, peoples, classes with abilities, items, effects, curves and the default prompt. An entry with the same id replaces the shipped one, "aus": true takes it out. The panel checks everything before it counts.'))}</div>
+    ${dmPlans(d)}
+    <h3 class="sec">${esc(t('Regeln und Katalog','Rules and catalogue'))}</h3>
     <div class="dm-sum">${Object.entries(names).map(([k,n])=>`<span class="pill">${esc(n)} ${S[k]}</span>`).join(' ')}</div>
     <div class="dm-two">${[['erzaehler',t('Stimme des Erzählers','Narrator voice')],['npc',t('Stimme der NPCs','NPC voice')]].map(([k,n])=>{const cur=((d.eigene||{}).stimmen||{})[k]||'';
       return `<div><label>${esc(n)}</label><select class="dmadm-voice" data-k="${k}"><option value="">${esc(t('Standardstimme','Default voice'))}</option>${[...new Set([cur,...(DMA.voices||[])].filter(Boolean))].map(x=>`<option${x===cur?' selected':''}>${esc(x)}</option>`).join('')}</select></div>`}).join('')}</div>
@@ -317,11 +331,74 @@ function dmRulesDraw(d,err){const c=$('dmadmcard'),S=d.summe,txt=JSON.stringify(
 document.body.addEventListener('click',async e=>{if(e.target.closest('#dmrules')){dmRules();return}
   const b=e.target.closest('#dmadmcard [data-dmadm]');if(!b)return;const k=b.dataset.dmadm;
   if(k==='close'){$('dmadm').style.display='none';return}
+  if(k[0]==='g'){await dmPlanClick(b,k);return}
   if(k==='reset'){if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent=t('Wirklich auf Standard?','Really back to default?');return}
     const {r,d}=await apiTry('/api/admin/dungeon',{method:'DELETE'});if(r.ok)dmRulesDraw(d,'');return}
-  let own;try{own=JSON.parse($('dmadmtxt').value||'{}')}catch{const {r,d}=await apiTry('/api/admin/dungeon');if(r.ok)dmRulesDraw(Object.assign(d,{eigene:{}}),esc(t('Das ist kein gültiges JSON.','This is not valid JSON.')));return}
+  let own;try{own=JSON.parse($('dmadmtxt').value||'{}')}catch{const {r,d}=await apiTry('/api/admin/dungeon?lang='+dmLang());if(r.ok)dmRulesDraw(Object.assign(d,{eigene:{}}),esc(t('Das ist kein gültiges JSON.','This is not valid JSON.')));return}
   const sv={};document.querySelectorAll('#dmadmcard .dmadm-voice').forEach(x=>{sv[x.dataset.k]=x.value});
   if(Object.values(sv).some(Boolean)||own.stimmen)own.stimmen=sv;
   const keep=$('dmadmtxt').value;const {r,d}=await apiTry('/api/admin/dungeon',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({eigene:own})});
   if(r.ok){dmRulesDraw(d,'');sayToast(t('Regeln gespeichert','Rules saved'));return}
-  const g=await apiTry('/api/admin/dungeon');if(!g.r.ok)return;dmRulesDraw(g.d,Array.isArray(d.detail)?d.detail.map(x=>esc(x)).join('<br>'):esc(errSay(r.status,d.detail,'')));$('dmadmtxt').value=keep});
+  const g=await apiTry('/api/admin/dungeon?lang='+dmLang());if(!g.r.ok)return;dmRulesDraw(g.d,Array.isArray(d.detail)?d.detail.map(x=>esc(x)).join('<br>'):esc(errSay(r.status,d.detail,'')));$('dmadmtxt').value=keep});
+// ---------------------------------------------------------------- the admin's stories (Geschichten-Planer)
+// a story: idea, goal, foe, places, taboos and 3 to 5 acts with a turning point; „Vorschlag erzeugen“ lets the model
+// write all of it from keywords, „↻“ one act again; the panel checks both like typed text before anything is kept
+const DMP={d:null,g:null,gid:'',err:'',stich:'',hint:'',busy:false};
+function dmPlans(d){const gs=d.geschichten||[],P=d.planer;
+  return `<h3 class="sec">${esc(t('Geschichten','Stories'))} · ${gs.length}/${P.max}</h3>
+    <div class="fh">${esc(t('Lege fest, wie eine Geschichte verläuft. Wer eine Runde anlegt, wählt sie aus; den Plan sehen nur du und der Gastgeber.','Set how a story runs. Whoever starts a round picks it; only you and the host see the plan.'))}</div>
+    ${gs.length?`<div class="ic-list">${gs.map(g=>`<div class="ic-row"><div class="ic-rmid"><span class="ic-t">${esc(g.titel)}</span><small class="ic-meta">${esc(g.welt_name)} · ${esc(g.ton_name)} · ${g.akte.length} ${esc(t('Akte','acts'))}</small></div><button type="button" class="b" data-dmadm="gedit" data-gid="${esc(g.gid)}">${esc(t('Bearbeiten','Edit'))}</button></div>`).join('')}</div>`:''}
+    <div class="row"><button type="button" class="b"${gs.length>=P.max?' disabled':''} data-dmadm="gneu">${esc(t('Neue Geschichte','New story'))}</button></div>`}
+function dmPlanForm(d){const g=DMP.g,P=d.planer,w=d.wahl;
+  const opt=(a,cur)=>a.map(x=>`<option value="${esc(x.id)}"${String(x.id)===String(cur)?' selected':''}>${esc(x.name)}</option>`).join('');
+  const nums=[];for(let n=P.akte[0];n<=P.akte[1];n++)nums.push(n);
+  const akt=(a,i)=>`<div class="dmp-akt" data-i="${i}"><div class="dm-khead"><b>${esc(t('Akt','Act'))} ${i+1}</b><span><button type="button" class="b" data-dmadm="gakt" data-n="${i+1}"${DMP.busy?' disabled':''} title="${esc(t('Diesen Akt vom Modell neu schreiben lassen','Let the model write this act again'))}">↻ ${esc(t('Neu schreiben','Write again'))}</button>${g.akte.length>P.akte[0]?`<button type="button" class="b" data-dmadm="gminus" data-n="${i}">${esc(t('Entfernen','Remove'))}</button>`:''}</span></div>
+    <label>${esc(t('Titel','Title'))}</label><input class="dmp-at" maxlength="60" value="${esc(a.titel||'')}">
+    <label>${esc(t('Was geschieht','What happens'))}</label><textarea class="dmp-ai" rows="3" maxlength="${P.inhalt}">${esc(a.inhalt||'')}</textarea>
+    <div class="dm-two"><div><label>${esc(t('Wendepunkt am Ende','Turning point at the end'))}</label><input class="dmp-aw" maxlength="${P.wende}" value="${esc(a.wende||'')}"></div>
+    <div><label>${esc(t('Geplante Züge','Planned turns'))}</label><input class="dmp-az" type="number" min="${P.zuege[0]}" max="${P.zuege[1]}" value="${a.zuege||6}"></div></div></div>`;
+  return `<h2>${esc(DMP.gid?t('Geschichte bearbeiten','Edit the story'):t('Neue Geschichte','New story'))}</h2><div class="dm-form dmp-form">
+    <div class="dm-k"><div class="lbl">✨ ${esc(t('Vom Sprachmodell entwerfen lassen','Let the language model draft it'))}</div>
+      <textarea class="dmp-stich" rows="2" maxlength="${P.stichworte}" placeholder="${esc(t('verfluchtes Bergdorf, ein Drache, der nur bewacht, eher düster','a cursed mountain village, a dragon that only guards, rather dark'))}">${esc(DMP.stich)}</textarea>
+      <div class="row"><select class="dmp-n" aria-label="${esc(t('Akte','Acts'))}">${nums.map(n=>`<option value="${n}"${n===g.akte.length?' selected':''}>${n} ${esc(t('Akte','acts'))}</option>`).join('')}</select><button type="button" class="b p" data-dmadm="gvor"${DMP.busy?' disabled':''}>${esc(DMP.busy?t('Das Modell schreibt …','The model is writing …'):t('Vorschlag erzeugen','Create a proposal'))}</button></div>
+      <small class="mut">${esc(t('Das Modell füllt alle Felder; das Panel prüft Länge, Ton und Tabus. Erst „Speichern“ behält die Geschichte.','The model fills every field; the panel checks length, tone and taboos. Only "Save" keeps the story.'))}</small></div>
+    <label>${esc(t('Titel','Title'))}</label><input class="dmp-titel" maxlength="60" value="${esc(g.titel||'')}">
+    <div class="dm-two"><div><label>${esc(t('Welt','World'))}</label><select class="dmp-welt">${opt(w.welten,g.welt)}</select></div><div><label>${esc(t('Ton','Tone'))}</label><select class="dmp-ton">${opt(w.toene,g.ton)}</select></div></div>
+    <label>${esc(t('Grundidee','Idea'))}</label><textarea class="dmp-idee" rows="3" maxlength="${P.idee}">${esc(g.idee||'')}</textarea>
+    <div class="dm-two"><div><label>${esc(t('Ziel der Helden','The heroes\' goal'))}</label><input class="dmp-ziel" maxlength="${P.ziel}" value="${esc(g.ziel||'')}"></div><div><label>${esc(t('Gegenspieler','Foe'))}</label><input class="dmp-gegner" maxlength="${P.ziel}" value="${esc(g.gegner||'')}"></div></div>
+    <label>${esc(t('Schauplätze (mit Komma, bis zu '+P.orte+')','Places (comma separated, up to '+P.orte+')'))}</label><input class="dmp-orte" value="${esc((g.orte||[]).join(', '))}">
+    <label>${esc(t('Tabus: kommt nie vor (mit Komma, bis zu '+P.tabus+')','Taboos: never happens (comma separated, up to '+P.tabus+')'))}</label><input class="dmp-tabus" value="${esc((g.tabus||[]).join(', '))}" placeholder="${esc(t('Spinnen, Folter','spiders, torture'))}">
+    ${g.akte.map(akt).join('')}
+    ${g.akte.length<P.akte[1]?`<div class="row"><button type="button" class="b" data-dmadm="gplus">${esc(t('Akt dazu','Add an act'))}</button></div>`:''}
+    <label>${esc(t('Hinweis fürs Neuschreiben eines Akts (frei)','Hint for writing an act again (optional)'))}</label><input class="dmp-hint" maxlength="${P.stichworte}" value="${esc(DMP.hint)}" placeholder="${esc(t('mehr Rätsel, weniger Kampf','more riddles, less fighting'))}">
+    ${DMP.err?`<div class="err dm-adm-err">${DMP.err}</div>`:''}
+    <div class="row"><button type="button" class="b p" data-dmadm="gsave"${DMP.busy?' disabled':''}>${esc(t('Prüfen und speichern','Check and save'))}</button>${DMP.gid?`<button type="button" class="b danger" data-dmadm="gdel">${esc(t('Löschen','Delete'))}</button>`:''}<button type="button" class="b" data-dmadm="gback">${esc(t('Zurück','Back'))}</button></div></div>`}
+function dmPlanRead(){const c=$('dmadmcard'),q=x=>(c.querySelector(x)||{}).value||'',list=x=>q(x).split(',').map(s=>s.trim()).filter(Boolean);
+  DMP.stich=q('.dmp-stich');DMP.hint=q('.dmp-hint');
+  const ton=q('.dmp-ton');
+  return {titel:q('.dmp-titel').trim(),welt:q('.dmp-welt'),ton:/^\d+$/.test(ton)?+ton:ton,lang:dmLang(),idee:q('.dmp-idee').trim(),ziel:q('.dmp-ziel').trim(),
+    gegner:q('.dmp-gegner').trim(),orte:list('.dmp-orte'),tabus:list('.dmp-tabus'),
+    akte:[...c.querySelectorAll('.dmp-akt')].map(a=>({titel:a.querySelector('.dmp-at').value.trim(),inhalt:a.querySelector('.dmp-ai').value.trim(),
+      wende:a.querySelector('.dmp-aw').value.trim(),zuege:Math.floor(+a.querySelector('.dmp-az').value||0)}))}}
+const dmPlanErr=(r,d)=>Array.isArray(d.detail)?d.detail.map(x=>esc(x)).join('<br>')
+  :d.detail==='kein vorschlag'?esc(t('Das Modell hat keinen brauchbaren Vorschlag geliefert. Bitte noch einmal oder mit anderen Stichworten.','The model gave no usable proposal. Please try again or with other keywords.'))
+  :d.detail==='sprachmodell pausiert'?esc(t('Das Sprachmodell ist gerade pausiert.','The language model is paused right now.')):esc(errSay(r.status,d.detail,''));
+async function dmPlanClick(b,k){const d=DMP.d,w=d.wahl;if(DMP.busy)return;
+  if(k==='gneu'){DMP.gid='';DMP.err='';DMP.stich='';DMP.hint='';DMP.g={titel:'',welt:w.welten[0].id,ton:(w.toene[1]||w.toene[0]).id,idee:'',ziel:'',gegner:'',orte:[],tabus:[],
+    akte:Array.from({length:d.planer.akte[0]},()=>({titel:'',inhalt:'',wende:'',zuege:6}))};dmRulesDraw(d,'');return}
+  if(k==='gedit'){const g=(d.geschichten||[]).find(x=>x.gid===b.dataset.gid);if(!g)return;DMP.gid=g.gid;DMP.err='';DMP.stich='';DMP.hint='';DMP.g=JSON.parse(JSON.stringify(g));dmRulesDraw(d,'');return}
+  if(k==='gback'){DMP.g=null;dmRulesDraw(d,'');return}
+  const g=dmPlanRead();DMP.g=g;
+  if(k==='gplus'){g.akte.push({titel:'',inhalt:'',wende:'',zuege:6});dmRulesDraw(d,'');return}
+  if(k==='gminus'){g.akte.splice(+b.dataset.n,1);dmRulesDraw(d,'');return}
+  if(k==='gdel'){if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent=t('Wirklich löschen?','Really delete?');return}
+    const {r,d:x}=await apiTry('/api/admin/dungeon/geschichte/'+DMP.gid+'?lang='+dmLang(),{method:'DELETE'});if(r.ok){DMP.g=null;dmRulesDraw(x,'')}return}
+  if(k==='gsave'){const {r,d:x}=await apiTry('/api/admin/dungeon/geschichte/'+(DMP.gid||'neu')+'?lang='+dmLang(),xjson('PUT',g));
+    if(r.ok){DMP.g=null;dmRulesDraw(x,'');sayToast(t('Geschichte gespeichert','Story saved'));return}DMP.err=dmPlanErr(r,x);dmRulesDraw(d,'');return}
+  const n=Math.floor(+((($('dmadmcard').querySelector('.dmp-n'))||{}).value||g.akte.length));
+  const body=k==='gvor'?{welt:g.welt,ton:g.ton,akte:n,stichworte:DMP.stich,tabus:g.tabus,lang:g.lang}:{plan:g,n:+b.dataset.n,hinweis:DMP.hint};
+  if(k==='gvor'&&DMP.stich.trim().length<3){DMP.err=esc(t('Bitte ein paar Stichworte eingeben.','Please enter a few keywords.'));dmRulesDraw(d,'');return}
+  DMP.busy=true;DMP.err='';dmRulesDraw(d,'');
+  const {r,d:x}=await apiTry('/api/admin/dungeon/geschichte/'+(k==='gvor'?'vorschlag':'akt'),xjson('POST',body));DMP.busy=false;
+  if(r.ok&&x.plan){DMP.g=Object.assign(x.plan,{lang:g.lang})}else DMP.err=dmPlanErr(r,x);
+  if(DMP.g&&$('dmadm').style.display==='grid')dmRulesDraw(DMP.d,'')}

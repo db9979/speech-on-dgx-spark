@@ -3173,7 +3173,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 38), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 86). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, v"
+"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 39), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 86). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, v"
 },
 {
 "lang": "de",
@@ -3197,7 +3197,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 38 Dateien in jeder Sicherung (Schritt 7) - 86 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
+"text": "- 39 Dateien in jeder Sicherung (Schritt 7) - 86 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
 },
 {
 "lang": "de",
@@ -5094,6 +5094,30 @@
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
 "text": "selbst oder die ganze Gruppe, mit Heilung und/oder Segen nach dem Katalog; der Verlauf zeigt „✦ … wirkt …“, das Modell erfährt nur, wer was gewirkt hat, und erzählt es. Ein Segen zählt bei jeder Probe mit und läuft nach erzählten Zügen ab, höchstens 4 zugleich; der Bogen zeigt „Stärke +2 · noch 2 Züge“. Der Admin legt eigene Tränke und Zauber unter „Regeln anpassen“ an (heilung 0 bis 30, segen {wert, bonus, zuege}, bei Zaubern ziel selbst oder gruppe und satz); das Panel prüft sie wie alles andere."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Geschichten-Planer (V01.0.955, Dominik 2026-10-23 „Können wir auch für den Admin so einen Geschichtengenerator machen“, „natürlich mit LLM-Unterstützung“, „Alles wie empfohlen, nur beim dritten Punkt nehmen wir B. Das Modell soll entscheiden, wann es weitergeht.“): Unter *Funktionen → KI-Dungeon-Master*, Knopf „Regeln anpassen“, Abschnitt Geschichten legt der Admin bis zu 30 Geschichten an: Titel, Welt, Ton, Grundidee, Ziel der Helden, Gegenspieler, bis zu 6 Schauplätze, bis zu 10 Tabus und 3 bis 5 Akte mit Titel, Inhalt, Wendepunkt am Ende und geplanten Zügen (2 bis 30). Vorschlag erzeugen lässt das eigene Sprachmodell die ganze Geschichte aus ein paar Stichworten (höchstens 300 Zeichen) entwerfen, ↻ Neu schreiben einen einzelnen Akt mit einem freien Hinweis; die Stichworte stehen dabei nur als Daten im Block <<< … >>> (Marker entschärft), die Antwort kommt im festen JSON-Schema, und das Panel prüft sie mit denselben Regeln wie eine getippte Geschichte (check_plan: Längen, Anzahl der Akte, Züge, Wörter des Tons, „nie“ und die Tabus); erst „Prüfen und speichern“ behält sie (dungeon-geschichten.json im Zustandsordner). Wer eine Runde anlegt, wählt unter *Dungeon-M"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "aster → Runden* „Geschichte des Admins“; Welt und Ton kommen dann aus der Geschichte, die Runde bekommt eine Kopie, und ein Kapitel einer Kampagne spielt im selben Akt weiter. Verlauf: Das Modell bekommt nur Ziel, Gegenspieler, Schauplätze und den aktuellen Akt (Datenblock) und meldet mit akt_fertig, wann der Wendepunkt erzählt ist; das Panel nimmt das erst nach 3 Zügen des Akts an, geht immer nur einen Akt weiter, nie zurück, und schaltet selbst weiter, wenn ein Akt anderthalbmal so lange läuft wie geplant (step_act). Nach dem letzten Akt steht „Die Geschichte ist erzählt.“ Die Tabus gelten in jeder Erzählung der Runde wie die Liste „nie“. Spoiler: Die Spieler sehen nur „Akt 2/4“ und „Akt 3 beginnt.“, den Plan sehen nur der Admin und der Gastgeber (aufklappbar am Spieltisch). Zustand → Live zeigt Geschichten, heute weitergeschaltete Akte und Vorschläge (nur Zahlen); Logs nur feste Wörter (dungeon: vorschlag | geschichte | ok | 4100 ms, dungeon: akt | modell | 2, dungeon: geschichte gespeichert | 4 akte). API (Admin): PUT|DELETE /api/admin/dungeon/geschichte/{gid} (neu für eine neue), POST /api/admin/dungeon/geschichte/vorschlag ({welt, ton, akte, stichworte, tabus}), POST /api/adm"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "in/dungeon/geschichte/akt ({plan, n, hinweis}), eigenes Rate-Limit dungeonplan (10 je Minute)."
 },
 {
 "lang": "de",
@@ -14949,7 +14973,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 38), otherwise the line gives its reason (dateien.STATE_LOCAL, 86). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe, vorrat) read it again."
+"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 39), otherwise the line gives its reason (dateien.STATE_LOCAL, 86). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe, vorrat) read it again."
 },
 {
 "lang": "en",
@@ -14965,7 +14989,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 38 files in every backup (step 7) - 86 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
+"text": "- 39 files in every backup (step 7) - 86 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
 },
 {
 "lang": "en",
@@ -16822,6 +16846,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ast what and narrates it. A blessing counts in every check and wears off after narrated turns, at most 4 at once; the sheet shows \"Strength +2 · 2 turns left\". The admin adds own potions and spells under \"Adjust rules\" (heilung 0 to 30, segen {wert, bonus, zuege}, for spells ziel selbst or gruppe and satz); the panel checks them like everything else."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: story planner (V01.0.955, Dominik 2026-10-23 \"Können wir auch für den Admin so einen Geschichtengenerator machen\", \"natürlich mit LLM-Unterstützung\", \"Alles wie empfohlen, nur beim dritten Punkt nehmen wir B. Das Modell soll entscheiden, wann es weitergeht.\"): under *Features → AI Dungeon Master*, button \"Adjust rules\", section Stories, the admin keeps up to 30 stories: title, world, tone, idea, the heroes' goal, foe, up to 6 places, up to 10 taboos and 3 to 5 acts with a title, content, a turning point at the end and planned turns (2 to 30). Create a proposal lets the own language model draft the whole story from a few keywords (at most 300 characters), ↻ Write again a single act with a free hint; the keywords stand only as data in the block <<< … >>> (markers defused), the answer comes in a fixed JSON schema, and the panel checks it by the same rules as a typed story (check_plan: lengths, number of acts, turns, words of the tone, \"nie\" and the taboos); only \"Check and save\" keeps it (dungeon-geschichten.json in the state folder). Whoever starts a round picks \"The admin's story\" under *Dungeon Master → Rounds*; world and tone then come from the story, the round "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "gets a copy, and a chapter of a campaign plays on in the same act. Flow: the model gets only goal, foe, places and the current act (data block) and reports with akt_fertig when the turning point is told; the panel takes that only after 3 turns of the act, always moves one act on, never back, and moves on by itself when an act runs one and a half times as long as planned (step_act). After the last act \"The story is told.\" stands there. The taboos count in every narration of the round like the list \"nie\". Spoilers: the players only see \"Act 2/4\" and \"Act 3 begins.\", only the admin and the host see the plan (to unfold at the table). Status → Live shows stories, acts moved on today and proposals (numbers only); Logs only fixed words (dungeon: vorschlag | geschichte | ok | 4100 ms, dungeon: akt | modell | 2, dungeon: geschichte gespeichert | 4 akte). API (admin): PUT|DELETE /api/admin/dungeon/geschichte/{gid} (neu for a new one), POST /api/admin/dungeon/geschichte/vorschlag ({welt, ton, akte, stichworte, tabus}), POST /api/admin/dungeon/geschichte/akt ({plan, n, hinweis}), own rate limit dungeonplan (10 a minute)."
 },
 {
 "lang": "en",

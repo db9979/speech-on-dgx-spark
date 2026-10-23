@@ -2753,6 +2753,13 @@
 "v": 953,
 "titel": "Dungeon-Master: Kampagne, Vorlesen, Sprechen, iPhone",
 "text": "A: Update, Admin: Funktionen → KI-Dungeon-Master, Knopf „Regeln anpassen“: oben Stimme des Erzählers und der NPCs wählen, „Prüfen und speichern“. B: Neue Runde mit Haken „Erzählung vorlesen“, einen Gast einladen, beide handeln: am Rechner des Gastgebers liest der Spark die Erzählung vor, NPC-Sätze mit der zweiten Stimme; am Handy des Gasts „🔊 Hören“ spielt dasselbe. C: Am Handy 🎤 tippen, einen Satz sagen, „Fertig“: der Text steht im Feld und wird erst mit „Senden“ geschickt. D: Gastgeber „Kapitel beenden“: unter Runden → Kampagnen erscheint „Bisher geschah“ nach einigen Sekunden; „Ändern“ und „Speichern“ gehen. E: „Kapitel 2 beginnen“, Gast neu einladen: er wählt „Deine Figur aus dem letzten Kapitel“ und spielt mit seiner Stufe weiter; der Dungeon-Master knüpft an das Bisherige an. F: iPhone-App Meine Sachen → Dungeon-Master: Runden, Helden, Kampagnen stehen da, „Spielen“ öffnet den Spieltisch, 🎤 und „🔊 Hören“ gehen dort; ein Held lässt sich wegwischen. G: Zustand → Live zeigt Kampagnen, Kapitel, vorgelesen und gesprochen nur als Zahlen. H: Beute über mehrere Züge: neue Waffen, Tränke und Zauber tauchen auf; „Trinken“ eines Katzentranks zeigt am Bogen „Geschick +2 · noch 3 Züge“, „Wirken“ eines Gruppenzaubers heilt alle und steht als „✦ … wirkt …“ im Verlauf, der Dungeon-Master erzählt ihn."
+},
+{
+"id": "P418",
+"v": 955,
+"titel": "Dungeon-Master: Geschichten-Planer",
+"text": "A: Update, Admin: Funktionen → KI-Dungeon-Master, Knopf „Regeln anpassen“, Abschnitt Geschichten: „Neue Geschichte“, Stichworte (zum Beispiel „verfluchtes Bergdorf, Drache, eher düster“), 4 Akte, „Vorschlag erzeugen“: nach einigen Sekunden sind alle Felder gefüllt. B: Bei Akt 2 einen Hinweis eintippen und „↻ Neu schreiben“: nur Akt 2 ändert sich. C: Ein Tabu eintragen und das Wort in den Inhalt eines Akts schreiben: „Prüfen und speichern“ lehnt mit Hinweis ab; Wort weg, speichern geht. D: Dungeon-Master → Runden → Neue Runde: „Geschichte des Admins“ wählen, Welt und Ton springen um, Runde starten: oben steht „Akt 1/4“, unter Gastgeber lässt sich „Geschichte“ aufklappen. E: Einen Gast einladen: er sieht „Akt 1/4“, aber keinen Plan. F: Einige Züge spielen: frühestens nach 3 Zügen erscheint „❖ Akt 2 beginnt.“ G: Zustand → Live → Dungeon-Master zeigt Geschichten, Akte und Vorschläge nur als Zahlen.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }
