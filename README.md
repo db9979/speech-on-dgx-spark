@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.967** AI Dungeon Master: pictures for gear and spells, one painted picture per item and spell in each world's style with a rarity frame, at night from 01:00 to 05:00 or at once with "Create pictures now" (at most 300 a day), an own picture for named finds from rare on; own admin switch, needs Painting pictures
 - **V01.0.966** Without the internet: a time server in the home network for both computers (Settings → Spark → Operation), a check card under Status → Summary → Without the internet (models, clocks, names, what pauses) and a hint when the model computer refuses because of the time; speech servers and Parakeet load only from their own disk, a guard test against downloads at run time
 - **V01.0.965** TestFlight waits up to 100 minutes for the "Tests" run (before: 30): .960 and .963 did not go up despite green Tests, because Tests on main run one after another and take longer together
 - **V01.0.964** AI Dungeon Master stage 3 with pictures: a scene picture on a new place and on the host's button (1 every 3 turns, 12 per round, 40 a day), hero portrait once per level, map of places, chapter cover; only with Painting pictures
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.960** Tapping a notification opens exactly that note: a card above the conversation with the whole text and the button that fits (iPhone, Android 1.4.4, browser, companion on the Mac)
 - **V01.0.959** AI Dungeon Master: a hero's voice from a description ("deep, rough dwarf voice") when VoiceDesign is on; with a sample, checked like every input
 - **V01.0.958** AI Dungeon Master: six values as in D&D (strength to charisma, bonus from the score, life from constitution, the standard row laid out by dragging, older heroes carried over) and hero voices (a voice per hero with a sample, it speaks the hero's quoted words)
-- **V01.0.957** AI Dungeon Master table theme: dark table with parchment narration, hero cards with values and equipment, colours per world (the admin can change them), a full-screen button and "How to play" for players and guests
 
 
 

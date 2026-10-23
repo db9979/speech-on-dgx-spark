@@ -104,6 +104,7 @@ OPEN = {
     "/api/dungeon/hoeren": "Dungeon-Master seat link: speak instead of type, a WAV within HOER_BYTES becomes text for the seat's own field (never sent), own rate limit dungeonohr; same door as /api/dungeon/platz",
     "/api/dungeon/bild": "Dungeon-Master seat link: a scene picture (PNG) of this seat's own round only, by its id; same door as /api/dungeon/platz",
     "/api/dungeon/portraet": "Dungeon-Master seat link: the portrait (PNG) of a hero at this seat's own round only; same door as /api/dungeon/platz",
+    "/api/dungeon/ding": "Dungeon-Master seat link: a picture (PNG) of an item or spell by its fixed name (ding-<hash> or fund-<iid>, pattern checked), no personal data, own rate limit dungeonding; same door as /api/dungeon/platz",
     "/api/dungeon/portraet/malen": "Dungeon-Master seat link: paints the seat's own hero's portrait once per level, only with the host's Bilder malen and the game's day limit, own rate limit dungeonbild; same door as /api/dungeon/platz",
     "/api/liste/add": "Mitschreib-Link: only puts entries on the one list of the link; 404 unless allowed, same door as /api/liste/check, Mein Notaus of the owner holds it",
     "/api/make/dl": "a made document for whoever holds its download link (random token, only its hash kept, 10 minutes, 5 uses, one file of one profile); 404 once off, rate limit",

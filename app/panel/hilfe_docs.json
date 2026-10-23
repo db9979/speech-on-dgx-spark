@@ -3173,7 +3173,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 39), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 87). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, v"
+"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 39), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 88). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, v"
 },
 {
 "lang": "de",
@@ -3197,7 +3197,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 39 Dateien in jeder Sicherung (Schritt 7) - 87 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
+"text": "- 39 Dateien in jeder Sicherung (Schritt 7) - 88 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
 },
 {
 "lang": "de",
@@ -5254,6 +5254,30 @@
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
 "text": "Porträts der eigenen Helden. Ablage dungeon-bild/ im Zustandsordner: Szenenbilder gehen mit der Runde, Porträts mit dem Helden, Titelbilder mit der Kampagne, „Alle Spieldaten löschen“ nimmt alles; einmal je Stunde räumt das Panel Bilder ohne Besitzer weg. Zustand → Live zählt gemalte, verworfene und ausgefallene Bilder und die, die unterwegs sind; Logs: dungeon: bild | ok | szene | 14000 ms, dungeon: bild | abgelehnt | abstand, dungeon: bild | ohne_pruefung | szene | 900 ms, dungeon: portraet | abgelehnt | stufe. API: GET /api/profile/dungeon/{rid}/bild/{b}, GET …/{rid}/portraet/{pid}, POST …/{rid}/bild (Gastgeber), POST …/{rid}/portraet, GET /api/profile/dungeon/held/{hid}/bild, GET /api/profile/dungeon/kampagne/{kid}/bild/{n}; für Gäste POST /api/dungeon/bild|portraet|portraet/malen; Rate-Limit dungeonbild."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Bilder für Ausrüstung und Zauber (V01.0.967, Plan dungeon-master/plan.md Abschnitt „5i“, Dominik 2026-10-23 „2“ und „die Bildgeneration, aber auch startbar per Knopf direkt“): Eigener Admin-Schalter Funktionen → KI-Dungeon-Master → Bilder für Ausrüstung und Zauber (Standard aus, chat.dungeon_bilder), dazu muss Funktionen → Bilder malen an und das Bildmodell installiert sein. Katalog: Jeder Eintrag des Katalogs (Waffen, Rüstungen, Schmuck, Tränke, Zauber, Schriftrollen, auch die eigenen Einträge des Admins) bekommt je Welt ein Bild im festen Stil der Welt (welten[].bildstil), solange eine Runde im Ton ab 8 offen ist, auch im Bilderbuch-Stil. Den Text baut das Panel fest aus Stil, englischem Namen des Eintrags und einem festen Satz je Art (bei Zaubern dazu der englische Satz des Zaubers), dahinter „no text, no letters, no watermark“; er wird wie ein Bildwunsch geprüft (Wortliste, bekannte Personen), ein abgelehnter Eintrag geht nie an den Bild-Dienst. Gemalt wird 512×512 eins nach dem anderen über die Warteschlange „Schwere Aufträge“ (Sprache hat Vorrang, Wartungspause „bild“) und halb so groß mit den KI-Kennzeichen des Bild-Dienstes abgelegt (dungeon-bild/ding-<ha"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "sh>.png, der Hash des Textes ist der Name, ein geänderter Stil oder Name malt neu). Wann: nachts von 01:00 bis 05:00 Uhr einmal je Nacht und sofort mit „Bilder jetzt erstellen“ unter Funktionen → KI-Dungeon-Master → Regeln anpassen (Abschnitt „Bilder für Ausrüstung und Zauber“ mit Stand, letztem Lauf und „Anhalten“); höchstens 300 Bilder am Tag. Der Lauf endet bei Notaus, „Anhalten“, ausgeschaltetem Schalter, am Morgen (nur der nächtliche), am Tageslimit, bei voller Warteschlange und wenn Bildmodell oder Bildprüfung fehlen; ein Bild, das die Bildprüfung zweimal zurückhält, wird nicht mehr versucht. Fundstücke: Gibt das Modell einem Fund ab „rar“ einen Namen, malt das Panel innerhalb einer Minute ein eigenes Bild (Stil der Runde, englischer Name aus dem Katalog, Name und Satz des Modells, geprüft wie eine Szenenbeschreibung mit Ton, „nie“ und Tabus); unerkannte Magie erst, wenn sie erkannt ist. Das zählt zum Tageslimit der Spielbilder (grenzen.bilder_tag) und braucht „Bilder malen“ des Gastgebers. Am Tisch: Jeder Gegenstand in Tasche, Ausrüstung, Beute, am Boden und beim Händler zeigt sein Bild im Rahmen der Seltenheit (grün, blau, lila, orange), bis dahin das Zeichen der Art (⚔️ 🛡️"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": " 💍 🧪 ✨ 📜). Profile holen Bilder über GET /api/profile/dungeon/ding/{name}, Gäste über ihren Platz-Code (POST /api/dungeon/ding); Rate-Limit dungeonding. Der Stand liegt in dungeon-dingbilder.json, stündlich räumt das Panel Bilder weg, die kein Eintrag und kein Held mehr braucht. Zustand → Live zählt in der Zeile Dungeon-Master Gegenstandsbilder, Fundstücke, heute gemalte, verworfene und ausgefallene; Logs: dungeon: dingbild | lauf start | knopf, dungeon: dingbild | ok | katalog | 3100 ms, dungeon: dingbild | ok | fund | 3300 ms, dungeon: dingbild | lauf ende | tag | 300 gemalt, dungeon: dingbild | abgelehnt | fund | tag."
 },
 {
 "lang": "de",
@@ -8710,6 +8734,14 @@
 "head": "Meine Daten",
 "title": "Meine Daten",
 "text": "- KI-Dungeon-Master (Funktionen → Meine Daten → „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Ein Rollenspiel für bis zu fünf Spieler: Du legst unter Dungeon-Master (eigener Eintrag im Menü) eine Runde an, wählst Welt, Ton (ab 8, 12 oder 16) und Zugzeit und lädst per Platz-Link oder QR-Code ein, auch Leute ohne Profil."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
+"text": "- Bilder für Ausrüstung und Zauber (Funktionen → Meine Daten → „Bilder für Ausrüstung und Zauber“; baut auf „KI-Dungeon-Master“; Dungeon-Master → Einstellungen): Jeder Gegenstand und jeder Zauber des Dungeon-Masters bekommt ein gemaltes Bild statt nur eines Zeichens: Waffen, Rüstungen, Schmuck, Tränke, Zauber und Schriftrollen, auch deine eigenen Katalog-Einträge, je Welt in ihrem Stil (in einer …"
 },
 {
 "lang": "de",
@@ -15157,7 +15189,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 39), otherwise the line gives its reason (dateien.STATE_LOCAL, 87). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe, vorrat) read it again."
+"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 39), otherwise the line gives its reason (dateien.STATE_LOCAL, 88). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe, vorrat) read it again."
 },
 {
 "lang": "en",
@@ -15173,7 +15205,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 39 files in every backup (step 7) - 87 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
+"text": "- 39 files in every backup (step 7) - 88 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
 },
 {
 "lang": "en",
@@ -17182,6 +17214,30 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ether with the portraits of the own heroes. Stored in dungeon-bild/ in the state folder: scene pictures go with the round, portraits with the hero, covers with the campaign, \"Delete all game data\" takes everything; once an hour the panel clears pictures nobody owns. Status → Live counts pictures painted, discarded and failed and those on their way; Logs: dungeon: bild | ok | szene | 14000 ms, dungeon: bild | abgelehnt | abstand, dungeon: bild | ohne_pruefung | szene | 900 ms, dungeon: portraet | abgelehnt | stufe. API: GET /api/profile/dungeon/{rid}/bild/{b}, GET …/{rid}/portraet/{pid}, POST …/{rid}/bild (host), POST …/{rid}/portraet, GET /api/profile/dungeon/held/{hid}/bild, GET /api/profile/dungeon/kampagne/{kid}/bild/{n}; for guests POST /api/dungeon/bild|portraet|portraet/malen; rate limit dungeonbild."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: pictures for gear and spells (V01.0.967, plan dungeon-master/plan.md section \"5i\", Dominik 2026-10-23 \"2\" and \"the picture generation, but also startable directly by a button\"): Own admin switch Features → AI Dungeon Master → Pictures for gear and spells (off by default, chat.dungeon_bilder); Features → Painting pictures must be on as well and the picture model installed. Catalog: every catalog entry (weapons, armour, jewellery, potions, spells, scrolls, the admin's own entries too) gets one picture per world in the world's fixed style (welten[].bildstil), and in the picture book style while a round in the tone from 8 is open. The panel builds the text by a fixed rule from the style, the entry's English name and a fixed phrase per kind (for spells also the spell's English sentence), followed by \"no text, no letters, no watermark\"; it is checked like a picture wish (word list, known people), a refused entry never goes to the picture service. It is painted at 512×512 one after the other through the queue \"Heavy jobs\" (the voice comes first, maintenance pause \"bild\") and kept at half size with the picture service's AI marks (dungeon-bild/ding-<hash>.png, the hash of"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": " the text is the name, a changed style or name paints anew). When: at night from 01:00 to 05:00 once a night, and at once with \"Create pictures now\" under Features → AI Dungeon Master → Adjust rules (section \"Pictures for gear and spells\" with the count, the last run and \"Stop\"); at most 300 pictures a day. The run ends on Notaus, \"Stop\", the switch off, in the morning (only the night's run), at the day limit, with a full queue and when the picture model or the image check is missing; a picture the image check holds back twice is not tried again. Finds: when the model names a find from \"rare\" on, the panel paints its own picture within a minute (the round's style, the English name from the catalog, the model's name and sentence, checked like a scene description with tone, \"nie\" and taboos); unknown magic only once it is known. It counts to the day limit of the game's pictures (grenzen.bilder_tag) and needs the host's \"Painting pictures\". At the table: every item in the bag, the equipment, loot, on the ground and at the merchant shows its picture in its rarity's frame (green, blue, purple, orange), until then the kind's sign (⚔️ 🛡️ 💍 🧪 ✨ 📜). Profiles load pictures with GET /api/prof"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "ile/dungeon/ding/{name}, guests with their seat code (POST /api/dungeon/ding); rate limit dungeonding. The state lives in dungeon-dingbilder.json, hourly the panel removes pictures no entry and no hero needs any more. Status → Live counts item pictures, finds, painted, discarded and failed today on the Dungeon Master line; logs: dungeon: dingbild | lauf start | knopf, dungeon: dingbild | ok | katalog | 3100 ms, dungeon: dingbild | ok | fund | 3300 ms, dungeon: dingbild | lauf ende | tag | 300 gemalt, dungeon: dingbild | abgelehnt | fund | tag."
 },
 {
 "lang": "en",
@@ -20518,6 +20574,14 @@
 "head": "My data",
 "title": "My data",
 "text": "- AI Dungeon Master (Features → My data → \"AI Dungeon Master\"; Dungeon Master → Settings): A role-playing game for up to five players: under Dungeon Master (its own menu entry) you start a round, pick world, tone (from 8, 12 or 16) and turn time and invite by seat link or QR code, also people without a profile."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
+"text": "- Pictures for gear and spells (Features → My data → \"Pictures for gear and spells\"; builds on \"AI Dungeon Master\"; Dungeon Master → Settings): Every item and spell of the Dungeon Master gets a painted picture instead of only a sign: weapons, armour, jewellery, potions, spells and scrolls, your own catalog entries too, per world in its style (in a round from 8 in the picture boo …"
 },
 {
 "lang": "en",

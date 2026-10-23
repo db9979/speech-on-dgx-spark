@@ -2837,6 +2837,13 @@
 "titel": "Ohne Internet: Zeitserver und Prüfung",
 "text": "A: Einstellungen → Spark → Betrieb → Zeitserver im Heimnetz die FRITZ!Box eintragen (z. B. 192.168.10.1), speichern; eine Adresse wie 8.8.8.8 wird abgelehnt. Nach dem nächsten Update: Zustand → Überblick → Ohne Internet → „Jetzt prüfen“: Sprachmodell, Hören, Sprechen „ok“, Zeitserver antwortet, Uhr des Modell-Rechners weniger als 2 s Abstand. B: Die Zeile mit dem Namen von außen (z. B. speech.metaluna9.i234.me) zeigt „zeigt ins Internet“, bis im Router ein lokaler DNS-Eintrag auf den Spark zeigt; danach „zeigt ins Heimnetz“. C: Internet am Router für ein paar Minuten trennen: Fragen per Sprache und Text gehen weiter, Websuche antwortet aus dem Kiwix, die Karte nennt, was pausiert. D: Nach einem Neustart von Pi und tars ohne Internet: die Uhren stimmen (Prüfung), Befehle an den Modell-Rechner gehen.",
 "thread": "Offline ohne Internet"
+},
+{
+"id": "P430",
+"v": 967,
+"titel": "Dungeon-Master: Bilder für Ausrüstung und Zauber",
+"text": "Voraussetzung: Funktionen → Bilder malen an und Bildmodell installiert. A: Funktionen → KI-Dungeon-Master → Bilder für Ausrüstung und Zauber an, dann „Regeln anpassen“: unten steht der Abschnitt mit „0/…“. B: „Bilder jetzt erstellen“: die Zahl steigt alle paar Sekunden, „Anhalten“ hält an. C: Am Spieltisch zeigen Tasche, Ausrüstung und Händler die Bilder im Rahmen der Seltenheit (grün, blau, lila, orange), noch nicht gemalte das Zeichen der Art. D: Ein Gast am Handy sieht dieselben Bilder. E: Ein benanntes Fundstück ab rar bekommt innerhalb einer Minute ein eigenes Bild. F: Am nächsten Morgen steht unter „zuletzt“ der nächtliche Lauf. G: Schalter aus: wieder Zeichen, nichts wird gemalt.",
+"thread": "Dungeon-Master: Bilder für Ausrüstung und Zauber"
 }
 ]
 }

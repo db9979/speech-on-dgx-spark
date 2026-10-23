@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.967** KI-Dungeon-Master: Bilder für Ausrüstung und Zauber, ein gemaltes Bild je Gegenstand und Zauber im Stil jeder Welt mit Seltenheitsrahmen, nachts von 01:00 bis 05:00 oder sofort per „Bilder jetzt erstellen“ (höchstens 300 am Tag), eigenes Bild für benannte Fundstücke ab rar; eigener Admin-Schalter, braucht Bilder malen
 - **V01.0.966** Ohne Internet: Zeitserver im Heimnetz für beide Rechner (Einstellungen → Spark → Betrieb), Prüfkarte unter Zustand → Überblick → Ohne Internet (Modelle, Uhren, Namen, was pausiert) und ein Hinweis, wenn der Modell-Rechner wegen der Uhrzeit ablehnt; Sprachdienste und Parakeet laden nur von der eigenen Platte, Wächter-Test gegen Downloads zur Laufzeit
 - **V01.0.965** TestFlight wartet bis zu 100 Minuten auf den „Tests“-Lauf (vorher 30): .960 und .963 kamen trotz grüner Tests nicht hoch, weil Tests auf main nacheinander laufen und zusammen länger brauchen
 - **V01.0.964** KI-Dungeon-Master Stufe 3 mit Bildern: Szenenbild beim Ortswechsel und auf Knopf des Gastgebers (1 je 3 Züge, 12 je Runde, 40 am Tag), Heldenporträt einmal je Stufe, Karte der Orte, Kapitel-Titelbild; nur mit Bilder malen
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.960** Mitteilung antippen öffnet genau diese Meldung: Karte über dem Gespräch mit ganzem Text und passendem Knopf (iPhone, Android 1.4.4, Browser, Begleiter Mac)
 - **V01.0.959** KI-Dungeon-Master: Heldenstimme aus einer Beschreibung („tiefe, raue Zwergenstimme“), wenn VoiceDesign an ist; mit Probe, geprüft wie jede Eingabe
 - **V01.0.958** KI-Dungeon-Master: sechs Werte wie bei D&D (Stärke bis Charisma, Bonus aus dem Wert, Leben aus Konstitution, Standardreihe zum Verteilen per Ziehen, alte Helden umgestellt) und Heldenstimmen (eigene Stimme je Held mit Probe, gesprochen wird die wörtliche Rede)
-- **V01.0.957** KI-Dungeon-Master Spieltisch-Thema: dunkler Tisch mit Pergament-Erzählung, Heldenkarten mit Werten und Ausrüstung, Farben je Welt (vom Admin änderbar), Vollbild-Knopf und „So spielst du“ für Spieler und Gäste
 
 
 

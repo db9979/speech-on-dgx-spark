@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.967** · 2026-10-23 · KI-Dungeon-Master: Bilder für Ausrüstung und Zauber, ein gemaltes Bild je Gegenstand und Zauber im Stil jeder Welt mit Seltenheitsrahmen, nachts von 01:00 bis 05:00 oder sofort per „Bilder jetzt erstellen“ (höchstens 300 am Tag), eigenes Bild für benannte Fundstücke ab rar; eigener Admin-Schalter, braucht Bilder malen
 - **V01.0.966** · 2026-10-23 · Ohne Internet: Zeitserver im Heimnetz für beide Rechner (Einstellungen → Spark → Betrieb), Prüfkarte unter Zustand → Überblick → Ohne Internet (Modelle, Uhren, Namen, was pausiert) und ein Hinweis, wenn der Modell-Rechner wegen der Uhrzeit ablehnt; Sprachdienste und Parakeet laden nur von der eigenen Platte, Wächter-Test gegen Downloads zur Laufzeit
 - **V01.0.965** · 2026-10-23 · TestFlight wartet bis zu 100 Minuten auf den „Tests“-Lauf (vorher 30): .960 und .963 kamen trotz grüner Tests nicht hoch, weil Tests auf main nacheinander laufen und zusammen länger brauchen
 - **V01.0.964** · 2026-10-23 · KI-Dungeon-Master Stufe 3 mit Bildern: Szenenbild beim Ortswechsel und auf Knopf des Gastgebers (1 je 3 Züge, 12 je Runde, 40 am Tag), Heldenporträt einmal je Stufe, Karte der Orte, Kapitel-Titelbild; nur mit Bilder malen

@@ -189,6 +189,7 @@ ACTION_OK = {
     ("halive.py", "wanted"): "liest nur, wer eine Live-Verbindung zu Home Assistant bekommt; look schreibt „homeassistant: live looked …“, der Thread jede Verbindung, jeden Verlust und jedes Ende",
     ("mailidle.py", "wanted"): "liest nur, wer eine IDLE-Verbindung bekommt; look schreibt „mail: idle looked …“, der Thread jede Öffnung und jedes Ende",
     ("musik.py", "_guard"): "prüft nur vor start_edit und tone; jede Absage schreibt _say „musik: nicht gestartet <grund> fuer …“, die Änderung selbst schreiben start_edit und tone",
+    ("dungeon_dingbild.py", "_end_why"): "prüft nur vor jedem Bild, ob der Lauf endet; _run schreibt „dungeon: dingbild | lauf ende | <grund> | n gemalt“ für jeden Grund, auch notaus",
     ("saetze.py", "start"): "liest nur und gibt drei feste Sätze zurück, nichts geschieht; die Notaus-Frage hält nur Vorschläge zurück",
     ("aendern.py", "set_volume"): "volume schreibt „aendern: lautstaerke …“, das Rückgängig answer seine Zeile",
     ("aendern.py", "undo"): "answer schreibt „aendern: rueckgaengig … ok|fehler“",

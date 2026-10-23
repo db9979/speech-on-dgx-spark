@@ -2856,7 +2856,7 @@ def view(rid, pid, now=None):
                             tasche=[] if p_id == pid else [item_view(r, x, lang) for x in p["held"]["tasche"]]))
     left = max(0, int(rd["zug_s"] - (now - rd.get("zug_t", now)))) if rd["offen"] and not rd.get("pause") else rd["zug_s"]
     welt = _by(r, "welten").get(rd["welt"]) or r["welten"][0]
-    return {"rid": rid, "pid": pid, "titel": rd["titel"], "welt": welt["name"][li], "ton": _ton(r, rd)["name"][li],
+    out = {"rid": rid, "pid": pid, "titel": rd["titel"], "welt": welt["name"][li], "ton": _ton(r, rd)["name"][li],
             "welt_id": welt["id"], "farben": {k: v for k, v in (welt.get("farben") or {}).items() if k in FARBEN},
             "kapitel": rd.get("kapitel", 0), "kapitel_zu": bool(rd.get("kapitel_zu")), "vorlesen": bool(rd.get("vorlesen")),
             "ton_zug": (rd.get("ton_n") or [])[-1:], "liest": rid in _speaking, "hoer_max": HOER_BYTES,
@@ -2876,6 +2876,8 @@ def view(rid, pid, now=None):
             "bild_grund": _nein(may_paint(r, d, rid, rd), lang) if host and may_paint(r, d, rid, rd) else "",
             "portraet_malt": bool(me.get("held")) and "h:" + me["held"]["hid"] in _bilder_jobs,
             "portraet_hint": _hint("h:" + me["held"]["hid"], lang) if me.get("held") else ""}
+    import dungeon_dingbild
+    return dungeon_dingbild.add(r, rd, out)
 
 
 BILD_NEIN = {"aus": ("Für diese Runde ist „Bilder malen“ nicht freigegeben.", "Painting pictures is not released for this round."),
@@ -4093,13 +4095,15 @@ def _summary(r):
 @router.get("/api/admin/dungeon", dependencies=[Depends(auth)])
 def admin_show(request: Request = None):
     """The admin's own rules (as written), what is in force (counts), the stories with the limits of the planner and Live."""
+    import dungeon_dingbild
     r = rules()
     lang = "en" if request is not None and request.query_params.get("lang") == "en" else "de"
     return {"eigene": own_rules(), "summe": _summary(r), "standard": _base_rules(), "live": for_live(),
             "geschichten": [plan_view(r, k, g) for k, g in sorted(plans().items(), key=lambda x: -x[1].get("t", 0))],
             "wahl": _choices(lang), "planer": {"max": GESCHICHTEN_MAX, "akte": AKTE, "zuege": AKT_ZUEGE, "akt_min": AKT_MIN,
                                                "idee": IDEE_MAX, "ziel": ZIEL_MAX, "inhalt": INHALT_MAX, "wende": WENDE_MAX,
-                                               "stichworte": STICHWORTE_MAX, "orte": ORTE_MAX, "tabus": TABUS_MAX}}
+                                               "stichworte": STICHWORTE_MAX, "orte": ORTE_MAX, "tabus": TABUS_MAX},
+            "dingbilder": dungeon_dingbild.status(r)}
 
 
 @router.put("/api/admin/dungeon", dependencies=[Depends(auth)])

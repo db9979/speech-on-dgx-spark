@@ -247,6 +247,10 @@ FEATURES = (
     # KI-Dungeon-Master (dungeon.py, plan dungeon-master): a role-playing round for up to five players, also without a
     # profile by seat link; the model narrates, the panel rolls and gives loot, experience, levels and trades by fixed rules
     F("dungeon", "KI-Dungeon-Master", "AI Dungeon Master", "data", ("dungeon",), me="dmbox", guide="dungeon"),
+    # Bilder für Ausrüstung und Zauber (dungeon_dingbild.py, plan „5i“): one picture per catalog entry and world, painted
+    # at night or on the admin's button, and named finds; needs „Bilder malen“ of the Spark too
+    F("dungeonbilder", "Bilder für Ausrüstung und Zauber", "Pictures for gear and spells", "data", ("dungeon_bilder",),
+      parent="dungeon", me="dmbox", guide="dungeonbilder"),
     F("docbrief", "Steckbrief und Tags", "Document card and tags", "data", ("doc_brief",),
       parent="documents", me="docbox", guide="docbrief"),
     # Suchprüfung (suchpruefung.py, plan suche-schaerfen, Stufe 1): test questions measure how often the search

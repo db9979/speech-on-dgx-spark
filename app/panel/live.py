@@ -1329,6 +1329,11 @@ def snapshot(view="admin", now=None):
         dgn = dungeon.for_live()
     except Exception:
         dgn = {"on": False}
+    try:   # Bilder für Ausrüstung und Zauber (dungeon_dingbild.py): numbers on the game's line
+        import dungeon_dingbild
+        dgn["ding"] = dungeon_dingbild.for_live() if dgn.get("on") else {"on": False}
+    except Exception:
+        dgn["ding"] = {"on": False}
     if dgn.get("on"):
         used.add("dungeon")
     try:
@@ -1736,7 +1741,10 @@ def snapshot(view="admin", now=None):
                         + (f" · heute {dgn['auto']} Schritte im Auto" if dgn.get("auto") else "")
                         + (f" · heute {dgn.get('gemalt', 0)} Bilder gemalt, {dgn.get('bild_weg', 0)} verworfen, {dgn.get('bild_aus', 0)} ausgefallen"
                            if dgn.get("gemalt") or dgn.get("bild_weg") or dgn.get("bild_aus") else "")
-                        + (f" · {dgn['bild_wartet']} Bilder unterwegs" if dgn.get("bild_wartet") else ""))
+                        + (f" · {dgn['bild_wartet']} Bilder unterwegs" if dgn.get("bild_wartet") else "")
+                        + (f" · Gegenstandsbilder {dgn['ding']['da']}, Fundstücke {dgn['ding']['funde_da']}, heute {dgn['ding']['gemalt']} gemalt, "
+                           f"{dgn['ding']['funde']} Funde, {dgn['ding']['verworfen']} verworfen, {dgn['ding']['ausgefallen']} ausgefallen"
+                           + (" · malt Gegenstände" if dgn["ding"]["laeuft"] else "") if dgn.get("ding", {}).get("on") else ""))
         if x["id"] == "wkarte":    # Wissenskarte: connections, discarded, documents waiting, profiles, numbers only (never a title)
             x["sub"] = (f"{wkk.get('verbindungen', 0)} Verbindungen · {wkk.get('punkte', 0)} Punkte · {wkk.get('warten', 0)} Dokumente warten"
                         + f" · {wkk.get('profile', 0)} Profile"

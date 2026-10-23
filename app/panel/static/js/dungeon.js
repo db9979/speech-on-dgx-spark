@@ -167,7 +167,15 @@ function dmScene(v,mode){const b=(v.bilder||[]).slice(-1)[0];if(!b&&!v.bild_malt
 function dmMap(v){const o=v.orte||[];if(!o.length)return '';
   return `<h5>${esc(t('Karte','Map'))}</h5><div class="dm-karte">${o.map((x,i)=>`<span class="${i===o.length-1?'on':''}">${esc(x)}</span>`).join('<i aria-hidden="true">→</i>')}</div>`}
 function dmBar(v,max,cls){const pc=Math.max(0,Math.min(100,Math.round(100*v/(max||1))));return `<i class="dm-bar ${cls||''}"><em style="width:${pc}%"></em></i>`}
-function dmItem(it,acts){return `<div class="dm-item ${DMSEL[it.selten]||''}"><div><b>${esc(it.name)}</b>${it.n>1?` <span class="pill">×${it.n}</span>`:''} <small>${esc(it.selten_name)}</small>${it.kg?` <small>· ${String(it.kg).replace('.',L==='en'?'.':',')} kg</small>`:''}</div>${it.satz?`<small class="dm-isatz">„${esc(it.satz)}“</small>`:''}<small>${it.zeilen.map(esc).join(' · ')}</small>${acts||''}</div>`}
+// pictures of items and spells (dungeon_dingbild.py, 5i): the picture in its rarity's frame, the kind's sign until it is painted
+function dmDing(it){return it.bild?`<span class="dm-ding"><img alt="" loading="lazy" data-dmding="${esc(it.bild)}"></span>`:it.zeichen?`<span class="dm-ding dm-dz" aria-hidden="true">${esc(it.zeichen)}</span>`:''}
+async function dmDingFill(w,mode){for(const im of w.querySelectorAll('img[data-dmding]:not([src])')){const n=im.dataset.dmding,key='d'+n;
+    if(mode==='p'){im.src='/api/profile/dungeon/ding/'+encodeURIComponent(n);continue}
+    if(key in DMI){if(DMI[key])im.src=DMI[key];continue}DMI[key]='';
+    try{const r=await /*raw: a guest seat's picture as a blob, api() would open the login on a 401*/fetch('/api/dungeon/ding',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:DG.code,name:n})});
+      if(!r.ok){delete DMI[key];continue}DMI[key]=URL.createObjectURL(await r.blob())}catch(e){delete DMI[key];continue}
+    document.querySelectorAll(`#dgcard img[data-dmding="${n}"]`).forEach(x=>x.src=DMI[key])}}
+function dmItem(it,acts){return `<div class="dm-item ${DMSEL[it.selten]||''}"><div>${dmDing(it)}<b>${esc(it.name)}</b>${it.n>1?` <span class="pill">×${it.n}</span>`:''} <small>${esc(it.selten_name)}</small>${it.kg?` <small>· ${String(it.kg).replace('.',L==='en'?'.':',')} kg</small>`:''}</div>${it.satz?`<small class="dm-isatz">„${esc(it.satz)}“</small>`:''}<small>${it.zeilen.map(esc).join(' · ')}</small>${acts||''}</div>`}
 function dmLog(v,e,col){const W=v.werte||{},sys=Array.isArray(e.text)?e.text[L==='en'?1:0]:e.text;
   if(e.art==='dm')return `<div class="dm-dm"><div class="dm-n">${esc(e.prolog?t('Prolog','Prologue'):t('Zug','Turn')+' '+(e.n||1))}</div><p>${esc(e.text)}</p>${(e.npc||[]).map(n=>`<div class="dm-npc"><em>${esc(n.name)}</em><p>„${esc(n.sagt)}“</p></div>`).join('')}</div>`;
   if(e.art==='aktion')return `<div class="dm-act"><span class="dm-av" data-c="${col?col(e.pid):0}">${esc((e.name||'?').slice(0,1).toUpperCase())}</span><div class="dm-bub"><b>${esc(e.name)}</b><p>${esc(e.text)}</p></div></div>`;
@@ -191,7 +199,7 @@ function dmMe(v,mode){const h=v.ich;if(!h)return '';const others=v.plaetze.filte
   const slot={kopf:t('Kopf','Head'),hals:t('Hals','Neck'),koerper:t('Körper','Body'),haupthand:t('Haupthand','Main hand'),nebenhand:t('Nebenhand','Off hand'),haende:t('Hände','Hands'),fuesse:t('Füße','Feet'),ring1:t('Ring','Ring'),ring2:t('Ring','Ring')};
   const zwei=h.an.haupthand&&h.an.haupthand.zweihand;
   const doll=['hals','kopf','ring1','haupthand','koerper','nebenhand','haende','fuesse','ring2'].map(k=>{const it=h.an[k];
-    return `<div class="dm-pl${it?' voll '+(DMSEL[it.selten]||''):''}" data-dmslot="${k}"${it?` draggable="true" data-dmdrag="${esc(k)}" title="${esc([it.name,...it.zeilen].join(' · '))}"`:''}><small>${esc(slot[k])}</small>${it?`<b>${esc(it.u?it.name.replace(/ \(.*\)$/,'')+' ?':it.name)}</b>${open?`<button type="button" class="ic-ib" data-dmhero="ablegen" data-platz="${k}" title="${esc(t('Ablegen','Unequip'))}" aria-label="${esc(t('Ablegen','Unequip')+': '+it.name)}">×</button>`:''}`:k==='nebenhand'&&zwei?`<i>${esc(t('beide Hände','both hands'))}</i>`:'<i>–</i>'}</div>`}).join('');
+    return `<div class="dm-pl${it?' voll '+(DMSEL[it.selten]||''):''}" data-dmslot="${k}"${it?` draggable="true" data-dmdrag="${esc(k)}" title="${esc([it.name,...it.zeilen].join(' · '))}"`:''}><small>${esc(slot[k])}</small>${it?`${dmDing(it)}<b>${esc(it.u?it.name.replace(/ \(.*\)$/,'')+' ?':it.name)}</b>${open?`<button type="button" class="ic-ib" data-dmhero="ablegen" data-platz="${k}" title="${esc(t('Ablegen','Unequip'))}" aria-label="${esc(t('Ablegen','Unequip')+': '+it.name)}">×</button>`:''}`:k==='nebenhand'&&zwei?`<i>${esc(t('beide Hände','both hands'))}</i>`:'<i>–</i>'}</div>`}).join('');
   const bag=`<h5>${esc(t('Tasche','Bag'))} · ${h.tasche.length}/${h.tasche_max} · ${String(h.kg).replace('.',L==='en'?'.':',')} / ${String(h.trag).replace('.',L==='en'?'.':',')} kg${h.belastet?` <span class="pill warn">${esc(t('belastet: Geschick mit Nachteil','burdened: Dexterity at disadvantage'))}</span>`:''}</h5>${dmBar(h.kg,h.trag,h.belastet?'low':'')}
     <div class="dm-bag" data-dmbag="1">${h.tasche.map(it=>`<div class="dm-drag"${open&&it.platz.length&&it.n===1?` draggable="true" data-dmdrag="${esc(it.i)}"`:''}>${dmItem(it,acts(it))}</div>`).join('')||`<small class="mut">${esc(t('leer','empty'))}</small>`}</div>`;
   const shop=m&&open?`<div class="dm-markt"><h5>⚖ ${esc(m.name)}</h5>${m.satz?`<small class="dm-isatz">„${esc(m.satz)}“</small>`:''}<small class="mut">${esc(t('Preise legt das Panel fest.','The panel sets the prices.'))}${m.rabatt?' '+esc(t('Dein Charisma: '+m.rabatt+' % Rabatt.','Your Charisma: '+m.rabatt+' % off.')):''}</small>
@@ -268,6 +276,7 @@ function dmTable(w,v,mode){const keep=w.querySelector('.dm-in'),kv=keep?keep.val
     <small class="mut dm-left">${esc(v.status==='ende'?t('Die Runde ist zu Ende.','The round has ended.'):v.dm?t('Der Dungeon-Master erzählt …','The Dungeon Master is narrating …'):`${done} ${t('von','of')} ${all} ${t('haben gehandelt','have acted')}`+(done&&!v.pause?t(' · weiter spätestens in ',' · goes on at the latest in ')+Math.max(0,Math.round(v.rest-(Date.now()-S.at)/1000))+' s':''))}</small>
     ${dmMap(v)}${host}${dmMe(v,mode)}</div></div>${dmMsg(S)}`;
   if(mode==='g')dmImgFill(w);
+  dmDingFill(w,mode);
   const f=w.querySelector('.dm-feed');if(f)f.scrollTop=f.scrollHeight;
   const inp=w.querySelector('.dm-in');if(inp){if(kv)inp.value=kv;if(kf)inp.focus({preventScroll:true})}
   const n=(v.ton_zug||[]).length?v.ton_zug[0]:-1,A=DMA[mode];if(A.n===null)A.n=n;else if(n>=0&&n!==A.n){A.n=n;if(mode==='p'&&v.gastgeber&&v.vorlesen)dmPlay(mode,n)}}
@@ -476,7 +485,7 @@ function dmRulesDraw(d,err){const c=$('dmadmcard'),S=d.summe,txt=JSON.stringify(
     <label for="dmadmtxt">${esc(t('Deine Ergänzungen (JSON)','Your additions (JSON)'))}</label><textarea id="dmadmtxt" rows="14" data-fest spellcheck="false" class="mono">${esc(txt)}</textarea>
     ${err?`<div class="err dm-adm-err">${err}</div>`:''}
     <details class="adv"><summary>${esc(t('Mitgelieferte Regeln ansehen (zum Kopieren)','See the shipped rules (to copy)'))}</summary><pre class="dm-pre">${esc(JSON.stringify(d.standard,null,2))}</pre></details>
-    <div class="row"><button type="button" class="b p" data-dmadm="save">${esc(t('Prüfen und speichern','Check and save'))}</button><button type="button" class="b" data-dmadm="reset">${esc(t('Zurück auf Standard','Back to default'))}</button><button type="button" class="b" data-dmadm="close">${esc(t('Schließen','Close'))}</button></div>`}
+    <div class="row"><button type="button" class="b p" data-dmadm="save">${esc(t('Prüfen und speichern','Check and save'))}</button><button type="button" class="b" data-dmadm="reset">${esc(t('Zurück auf Standard','Back to default'))}</button><button type="button" class="b" data-dmadm="close">${esc(t('Schließen','Close'))}</button></div>${dmDingAdmin(d.dingbilder)}`}
 document.body.addEventListener('click',async e=>{if(e.target.closest('#dmrules')){dmRules();return}
   const b=e.target.closest('#dmadmcard [data-dmadm]');if(!b)return;const k=b.dataset.dmadm;
   if(k==='close'){$('dmadm').style.display='none';return}
@@ -489,6 +498,18 @@ document.body.addEventListener('click',async e=>{if(e.target.closest('#dmrules')
   const keep=$('dmadmtxt').value;const {r,d}=await apiTry('/api/admin/dungeon',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({eigene:own})});
   if(r.ok){dmRulesDraw(d,'');sayToast(t('Regeln gespeichert','Rules saved'));return}
   const g=await apiTry('/api/admin/dungeon?lang='+dmLang());if(!g.r.ok)return;dmRulesDraw(g.d,Array.isArray(d.detail)?d.detail.map(x=>esc(x)).join('<br>'):esc(errSay(r.status,d.detail,'')));$('dmadmtxt').value=keep});
+// Bilder für Ausrüstung und Zauber (dungeon_dingbild.py): how many there are, the last run, „Bilder jetzt erstellen“ and „Anhalten“
+function dmDingAdmin(x){if(!x)return '';const L0=x.letzter||{},warum={fertig:t('alle fertig','all done'),morgen:t('Nacht vorbei','night over'),tag:t('Tageslimit erreicht','day limit reached'),angehalten:t('angehalten','stopped'),aus:t('ausgeschaltet','switched off'),notaus:'Notaus',voll:t('Warteschlange voll','queue full'),missing:t('Bildmodell fehlt','picture model missing'),ohne_pruefung:t('Bildprüfung fehlt','image check missing')};
+  return `<div id="dmding"><h3 class="sec">${esc(t('Bilder für Ausrüstung und Zauber','Pictures for gear and spells'))} · ${x.fertig}/${x.von}</h3>
+    <div class="fh">${esc(x.an?(x.bilder?t(`Ein Bild je Gegenstand und Zauber im Stil jeder Welt (${x.stile} Stile). Der Spark malt fehlende Bilder nachts von ${x.nacht[0]} bis ${x.nacht[1]} Uhr, höchstens ${x.tag_max} am Tag; bis dahin zeigt der Tisch das Zeichen der Art.`,`One picture per item and spell in the style of each world (${x.stile} styles). The Spark paints missing pictures at night from ${x.nacht[0]} to ${x.nacht[1]}, at most ${x.tag_max} a day; until then the table shows the kind's sign.`):t('Dafür muss auch „Bilder malen“ freigegeben sein.','“Painting pictures” must be released for this too.')):t('Aus. Einschalten unter Funktionen → KI-Dungeon-Master → Bilder für Ausrüstung und Zauber.','Off. Switch it on under Features → AI Dungeon Master → Pictures for gear and spells.'))}</div>
+    <div class="dm-sum"><span class="pill">${esc(t('heute','today'))} ${x.heute}</span> <span class="pill">${esc(t('Fundstücke','Finds'))} ${x.funde}</span>${x.abgelehnt?` <span class="pill warn">${esc(t('abgelehnt','refused'))} ${x.abgelehnt}</span>`:''}${x.laeuft?` <span class="pill on">${esc(t('malt gerade','painting now'))} · ${x.gemalt}</span>`:L0.ende?` <span class="pill">${esc(t('zuletzt','last'))} ${esc(new Date(L0.ende*1000).toLocaleString(L==='en'?'en-GB':'de-DE',{dateStyle:'short',timeStyle:'short'}))} · ${L0.gemalt} · ${esc(warum[L0.warum]||L0.warum||'')}</span>`:''}</div>
+    <div class="row">${x.laeuft?`<button type="button" class="b" data-dmding="stop">${esc(t('Anhalten','Stop'))}</button>`:`<button type="button" class="b p" data-dmding="start"${!x.an||!x.bilder||x.fertig>=x.von?' disabled':''}>${esc(t('Bilder jetzt erstellen','Create pictures now'))}</button>`}</div></div>`}
+let DMDT=0;
+async function dmDingLook(){clearTimeout(DMDT);const box=$('dmding');if(!box)return;const {r,d}=await apiTry('/api/admin/dungeon/dingbilder');
+  if(!r.ok||!$('dmding'))return;$('dmding').outerHTML=dmDingAdmin(d);if(d.laeuft)DMDT=setTimeout(dmDingLook,5000)}
+document.body.addEventListener('click',async e=>{const b=e.target.closest('#dmding [data-dmding]');if(!b)return;b.disabled=true;
+  const {r,d}=await apiTry('/api/admin/dungeon/dingbilder',{method:b.dataset.dmding==='start'?'POST':'DELETE'});
+  if(!r.ok){b.disabled=false;sayToast(errSay(r.status,d.detail,''));return}$('dmding').outerHTML=dmDingAdmin(d);if(d.laeuft)DMDT=setTimeout(dmDingLook,5000)});
 // ---------------------------------------------------------------- the admin's stories (Geschichten-Planer)
 // a story: idea, goal, foe, places, taboos and 3 to 5 acts with a turning point; „Vorschlag erzeugen“ lets the model
 // write all of it from keywords, „↻“ one act again; the panel checks both like typed text before anything is kept
