@@ -18,6 +18,9 @@ Two kinds of pictures, both painted by the fixed rules of the panel (the model c
   it counts to the game's day limit (dungeon._bild_take, grenzen.bilder_tag) and needs „Bilder malen“ of the host.
   Found by the minute loop (due), so the game's turn is never held up.
 
+The map (dungeon_karte.py) adds its kinds of places and rooms to the catalog (wanted, painted alike) and an own
+picture of every visited place (ort-<hash>, dungeon_karte.queue_orte from due, shown only to seats of its round).
+
 Every picture: FLUX through bilder.paint (NSFW above the limit and a missing check give no picture), the AI marks of
 the service kept (bilder.quick_png „kleiner“: SIZE/2), stored as STATE/dungeon-bild/ding-<hash>.png or
 fund-<iid>.png next to the scene pictures. Seats see it through view() (add: "bild" and "zeichen" on every item, a
@@ -41,6 +44,7 @@ import time
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 import dungeon
+import dungeon_karte
 import features
 import guard
 import profiles
@@ -62,7 +66,7 @@ ART_EN = {"waffe": "a weapon", "ruestung": "a piece of armour", "schmuck": "a pi
           "rolle": "a rolled parchment scroll"}
 ZEICHEN = {"waffe": "⚔️", "ruestung": "🛡️", "schmuck": "💍", "trank": "🧪", "zauber": "✨", "rolle": "📜"}
 ITEM_EN = "game item art, one single object in the centre, plain dark background"
-NAME = re.compile(r"ding-[0-9a-f]{16}|fund-i[0-9a-f]{8}")
+NAME = re.compile(r"ding-[0-9a-f]{16}|fund-i[0-9a-f]{8}|ort-[0-9a-f]{16}")   # ort-: a place of the map (dungeon_karte)
 _lauf = {"task": None, "grund": "", "start": 0.0, "gemalt": 0, "stop": False}
 _funde = set()            # iids of finds being painted right now
 _files = {"m": None, "set": frozenset()}
@@ -141,12 +145,11 @@ def name_of(p):
 
 
 def wanted(r):
-    """[(name, prompt)] of every catalog picture there should be, in painting order (style by style)."""
+    """[(name, prompt)] of every catalog picture there should be, in painting order (style by style): the items,
+    then the map's kinds of places and rooms (dungeon_karte.bilder)."""
     out, seen = [], set()
     for s in styles(r):
-        for c in r["gegenstaende"]:
-            p = prompt(s, c)
-            n = name_of(p)
+        for n, p in [(name_of(prompt(s, c)), prompt(s, c)) for c in r["gegenstaende"]] + dungeon_karte.bilder(r, s):
             if n not in seen:
                 seen.add(n)
                 out.append((n, p))
@@ -345,6 +348,8 @@ async def due():
         return
     for n, p in await asyncio.to_thread(queue_finds):
         spawn(paint_find(n, p), name="dungeon-dingbild")
+    for rid, i, n, p in await asyncio.to_thread(dungeon_karte.queue_orte):
+        spawn(dungeon_karte.paint_ort(rid, i, n, p), name="dungeon-dingbild")
     if _night(now) and await asyncio.to_thread(lambda: _state().get("nacht") != _date()):
         if await asyncio.to_thread(lambda: bool(missing(dungeon.rules()))):
             start("nacht")
@@ -367,6 +372,7 @@ def sweep(now=None, force=False):
             if isinstance(x, dict):
                 iids.add(x.get("i"))
     d = dungeon._read()
+    orte = dungeon_karte.keep(d)
     for v in d["runden"].values():
         for p in v["plaetze"].values():
             held(p.get("held"))
@@ -381,7 +387,7 @@ def sweep(now=None, force=False):
                 held(h)
     gone = 0
     for n in files():
-        if n.startswith("ding-") and n not in keep or n.startswith("fund-") and n[5:] not in iids:
+        if n.startswith("ding-") and n not in keep or n.startswith("fund-") and n[5:] not in iids or n.startswith("ort-") and n not in orte:
             dungeon._bild_rm(n)
             gone += 1
     if gone:
@@ -458,6 +464,8 @@ async def ding(name: str, request: Request, prof=Depends(own_profile)):
     dungeon._need(uid)
     guard.limit(request, "dungeonding", uid)
     try:
+        if not await asyncio.to_thread(dungeon_karte.may_see, name, uid=uid):
+            raise LookupError("bild")
         return dungeon._png_out(await asyncio.to_thread(_png, name))
     except LookupError as e:
         raise dungeon._http(e)
@@ -466,9 +474,11 @@ async def ding(name: str, request: Request, prof=Depends(own_profile)):
 @router.post("/api/dungeon/ding")
 async def gast_ding(request: Request):
     """{"code", "name"}: a picture of an item for a guest's seat."""
-    b, _, _ = await dungeon._guest(request)
+    b, rid, _ = await dungeon._guest(request)
     guard.limit(request, "dungeonding")
     try:
+        if not await asyncio.to_thread(dungeon_karte.may_see, b.get("name"), rid=rid):
+            raise LookupError("bild")
         return dungeon._png_out(await asyncio.to_thread(_png, b.get("name")))
     except LookupError as e:
         raise dungeon._http(e)

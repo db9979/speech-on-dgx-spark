@@ -24,17 +24,28 @@ places per chapter and random vaults as a grid of rooms, rolled and kept by the 
   guardian or the master keeps its ways shut until the narration reports a foe beaten there; a treasure room gives
   the catalog's loot „truhe“ once, a spring heals every hero (QUELLE), an altar blesses one value (ALTAR). The answer never reaches the model, only whether it was found.
 
+Pictures instead of signs (Dominik 2026-10-23 „sollten wir auch bilder generieren und keine emojies verwenden“, option
+2), with „Bilder für Ausrüstung und Zauber“ (dungeon_dingbild.py: its switch, „Bilder malen“, the night, the button,
+the day's limit, the sweep): one picture per kind of place and kind of room in the style of every world it belongs to
+(bilder: fixed prompts from the English names, named ding-<hash> like the catalog's items), and an own picture of
+every visited place of a running round whose host has „Bilder malen“ (queue_orte: the kind, the place's name and the
+round's style, checked by dungeon.picture_text, counted to the game's day limit, named ort-<hash>). Until a picture is
+there the place keeps its sign. A seat gets the picture's name in view ("b"); an ort- picture is served only to a
+profile or a guest's seat of a round whose map names it (may_see).
+
 The round keeps it all in rd["karte"] (dungeon-runden.json, nothing new on disk). Journal: fixed words and numbers.
 
     POST /api/profile/dungeon/{rid}/karte   host: {was: neu|gewoelbe} roll the map again (before the first step)
                                             or a vault at the current place
 """
 import asyncio
+import hashlib
 import json
 import math
 import os
 import random
 import re
+import time
 import unicodedata
 
 from fastapi import APIRouter, Depends, Request
@@ -66,7 +77,9 @@ NAME_MAX = 40
 SATZ_MAX = 160
 FRAGE_MAX = 240
 STUB = 0.42               # how far a way into the unknown is drawn
-BLICK = 460               # the seat's view of the plane is at least this wide (view: box)
+BLICK = 560               # the seat's view of the plane is at least this wide (view: box)
+ORT_EN = "map vignette art, one single place seen from a high angle, a small round scene, plain light background"
+RAUM_EN = "dungeon art, one room of an underground vault seen from a high angle, no people"
 _ID = re.compile(r"(?:o|r)[0-9]{1,2}|aus|ein")
 _WORD = re.compile(r"[a-z0-9_]{1,24}")
 RICHTUNG = (("Osten", "east"), ("Südosten", "south-east"), ("Süden", "south"), ("Südwesten", "south-west"),
@@ -843,23 +856,169 @@ def view(r, rd, host=False):
         if (_kind(r, o[k["hier"]]["art"]) or {}).get("gewoelbe"):
             out["von_hier"].append({"id": "ein", "n": ("ins Gewölbe", "into the vault")[li], "r": "", "b": str(k["hier"]) in k["gw"]})
         out["gw_knopf"] = host and str(k["hier"]) not in k["gw"]
-    return out
+    return _pictures(r, rd, out)
 
 
 def _box(xs, ys):
-    """The part of the plane the seat sees: what it knows with a margin (names below, the pin above), at least
-    BLICK wide and not flatter than the plane; so the map grows as the fog lifts."""
-    x0, x1, y0, y1 = min(xs) - 110, max(xs) + 110, min(ys) - 115, max(ys) + 95
+    """The part of the plane the seat sees: what it knows with a margin for the names, at least BLICK wide and
+    not flatter than the plane; so the map grows as the fog lifts."""
+    x0, x1, y0, y1 = min(xs) - 130, max(xs) + 130, min(ys) - 90, max(ys) + 90
     w, h = max(x1 - x0, BLICK), max(y1 - y0, BLICK * 0.5)
     w = max(w, h * 1.2)
     cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
     return [round(cx - w / 2), round(cy - h / 2), round(w), round(h)]
 
 
+# ---------------------------------------------------------------- pictures instead of signs (dungeon_dingbild)
+_malt = set()             # ort- pictures being painted right now
+
+
+def _worlds(r, style):
+    """The worlds painted in this style (the picture book: every world)."""
+    import dungeon
+    ws = {w["id"] for w in r["welten"]}
+    return ws if style == dungeon.BILD_KIND else {w for w in ws if dungeon.style(r, {"welt": w, "ton": None}) == style}
+
+
+def kind_prompt(style, e, room=False):
+    """The fixed prompt of a kind of place or room: the English name (a room's sentence too), never the model's."""
+    import dungeon
+    extra = f", {e['satz'][1]}" if room and e.get("satz") else ""
+    return f"{style}, {RAUM_EN if room else ORT_EN}: {e['name'][1]}{extra}, {dungeon.BILD_ENDE}"
+
+
+def bilder(r, style):
+    """[(name, prompt)] of the map's catalog pictures in one style (dungeon_dingbild.wanted adds them after the items)."""
+    import dungeon_dingbild as db
+    ws = _worlds(r, style)
+    out = []
+    for k, room in (("ortsarten", False), ("raeume", True)):
+        for e in r.get(k) or []:
+            if not e.get("welten") or set(e["welten"]) & ws:
+                p = kind_prompt(style, e, room)
+                out.append((db.name_of(p), p))
+    return out
+
+
+def _ort_text(r, k, i):
+    o = k["orte"][i]
+    kd = _kind(r, o["art"]) or {"name": ["", "a place"]}
+    return f"{ORT_EN}: {kd['name'][1]}, a place named {o['name']}"
+
+
+def queue_orte():
+    """Inside dungeon._lock: every visited place of a running round without its own picture, of a host with „Bilder
+    malen“, within the game's day limit. Returns [(rid, i, name, prompt)] to paint (dungeon_dingbild.due)."""
+    import dungeon
+    import dungeon_dingbild as db
+    import schwer
+    r = dungeon.rules()
+    out, today = [], db._date()
+    with dungeon._lock:
+        d = dungeon._read()
+        changed = False
+        for rid, rd in d["runden"].items():
+            k = rd.get("karte")
+            if not k or rd.get("status") != "laeuft" or not dungeon.pictures_on(rd["owner"]):
+                continue
+            bl = k.setdefault("bild", {})
+            for i in k["besucht"]:
+                f = bl.get(str(i)) or {}
+                if f.get("st") in ("ok", "weg") or f.get("n") in _malt or f.get("st") in ("tag", "fehler", "malt") and f.get("day") == today:
+                    continue
+                text, why = dungeon.picture_text(r, rd, _ort_text(r, k, i))
+                if not why and dungeon._bild_count(d) >= r["grenzen"].get("bilder_tag", dungeon.BILDER_TAG):
+                    why = "tag"
+                if not why and schwer.full():
+                    continue
+                changed = True
+                if why:
+                    bl[str(i)] = {"st": "tag" if why == "tag" else "weg", "day": today}
+                    print(f"dungeon: karte | ortsbild abgelehnt | {why}", flush=True)
+                    continue
+                prompt = f"{dungeon.style(r, rd)}, {text}, {dungeon.BILD_ENDE}"
+                n = "ort-" + hashlib.sha256(f"{rid}|{prompt}".encode()).hexdigest()[:16]
+                dungeon._bild_take(d)
+                bl[str(i)] = {"n": n, "st": "malt", "day": today}
+                _malt.add(n)
+                out.append((rid, i, n, prompt))
+        if changed:
+            dungeon._write(d)
+    return out
+
+
+async def paint_ort(rid, i, n, p):
+    """One place's own picture through the game's painter; the round notes how it went."""
+    import dungeon
+    import dungeon_dingbild as db
+    t0 = time.perf_counter()
+    try:
+        res = await db.paint_one(n, p)
+    finally:
+        _malt.discard(n)
+
+    def note():
+        with dungeon._lock:
+            d = dungeon._read()
+            k = (d["runden"].get(rid) or {}).get("karte")
+            if k:
+                k.setdefault("bild", {})[str(i)] = {"n": n, "st": "ok" if res == "ok" else "weg" if res in ("pruefung", "ohne_pruefung") else "fehler",
+                                                    "day": db._date()}
+                dungeon._write(d)
+    await asyncio.to_thread(note)
+    print(f"dungeon: karte | ortsbild | {res} | {round((time.perf_counter() - t0) * 1000)} ms", flush=True)
+
+
+def keep(d):
+    """The ort- pictures some round's map still names (dungeon_dingbild.sweep keeps them)."""
+    return {f.get("n") for v in d["runden"].values() for f in ((v.get("karte") or {}).get("bild") or {}).values() if f.get("n")}
+
+
+def may_see(name, uid=None, rid=None):
+    """An ort- picture only for the round whose map names it: a guest's seat of that round (rid), or a profile that
+    hosts or sits in it (uid). Any other name pattern is not this module's (True: dungeon_dingbild decides)."""
+    import dungeon
+    if not str(name).startswith("ort-"):
+        return True
+    for r_id, v in dungeon._read()["runden"].items():
+        if rid is not None and r_id != rid:
+            continue
+        if uid is not None and v.get("owner") != uid and not any(p.get("uid") == uid for p in v["plaetze"].values()):
+            continue
+        if any(f.get("n") == name for f in ((v.get("karte") or {}).get("bild") or {}).values()):
+            return True
+    return False
+
+
+def _pictures(r, rd, out):
+    """view's last step: "b" on every place and room, the name of its picture ("" while there is none): a place's
+    own once painted, else its kind's in the round's style."""
+    import dungeon
+    import dungeon_dingbild as db
+    have = db.files() if db.on() else frozenset()
+    k = rd["karte"]
+    style = dungeon.style(r, rd)
+    bl = k.get("bild") or {}
+    for p in out["orte"]:
+        i = int(p["id"][1:]) - 1
+        own = (bl.get(str(i)) or {}).get("n", "")
+        kd = _kind(r, k["orte"][i]["art"])
+        kind = db.name_of(kind_prompt(style, kd)) if kd else ""
+        p["b"] = own if own in have else kind if kind in have else ""
+    v = vault(rd)
+    if out.get("gewoelbe") and v:
+        for p in out["gewoelbe"]["raeume"]:
+            t = _table(r, "raeume", v["raeume"][int(p["id"][1:]) - 1]["t"]) if p["s"] == 2 else None
+            n = db.name_of(kind_prompt(style, t, True)) if t else ""
+            p["b"] = n if n in have else ""
+    return out
+
+
 def for_live(rounds):
-    """Only counts: rounds with a map, rounds inside a vault."""
+    """Only counts: rounds with a map, rounds inside a vault, own pictures of places."""
     ks = [v.get("karte") for v in rounds if v.get("karte")]
-    return {"karten": len(ks), "gewoelbe_drin": sum(1 for k in ks if k.get("drin") is not None)}
+    return {"karten": len(ks), "gewoelbe_drin": sum(1 for k in ks if k.get("drin") is not None),
+            "ortsbilder": sum(1 for k in ks for f in (k.get("bild") or {}).values() if f.get("st") == "ok")}
 
 
 # ---------------------------------------------------------------- the host's buttons

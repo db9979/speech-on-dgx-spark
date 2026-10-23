@@ -2356,20 +2356,20 @@ textarea{resize:none}textarea[data-fest]{resize:vertical}textarea.feldplatz{padd
 .dmk{position:relative}.dmk-kopf{display:flex;align-items:center;gap:8px}.dmk-kopf h5{margin-right:auto}.dmk-seg{margin:0}
 .dmk-svg{display:block;width:100%;height:auto;margin:6px 0 8px;border-radius:12px}
 .dmk-grund{fill:var(--t-pergament,#efe3c4)}.dmk-fels{fill:#231e29}
-.dmk-wasser{fill:color-mix(in srgb,#4a8fe0 30%,var(--t-pergament,#efe3c4))}.dmk-fluss{fill:none;stroke:color-mix(in srgb,#4a8fe0 45%,var(--t-pergament,#efe3c4));stroke-width:22;stroke-linecap:round;stroke-linejoin:round}
+.dmk-wasser{fill:color-mix(in srgb,#4a8fe0 30%,var(--t-pergament,#efe3c4))}.dmk-fluss{fill:none;stroke:color-mix(in srgb,#4a8fe0 45%,var(--t-pergament,#efe3c4));stroke-width:16;stroke-linecap:round;stroke-linejoin:round}
 .dmk-ufer{fill:none;stroke:color-mix(in srgb,var(--t-tinte,#3a2a1a) 40%,transparent);stroke-width:3}.dmk-grenze{fill:none;stroke:color-mix(in srgb,var(--t-tinte,#3a2a1a) 35%,transparent);stroke-width:6;stroke-dasharray:2 14;stroke-linecap:round}
-.dmk-weg{stroke:color-mix(in srgb,var(--t-tinte,#3a2a1a) 60%,transparent);stroke-width:5;stroke-dasharray:14 12}.dmk-weg.on{stroke:var(--t-tinte,#3a2a1a);stroke-width:7;stroke-dasharray:none;stroke-linecap:round}
-.dmk-stub{stroke:color-mix(in srgb,var(--t-tinte,#3a2a1a) 40%,transparent);stroke-width:4;stroke-dasharray:5 12}
-.dmk-frage{font:600 30px Georgia,serif;fill:color-mix(in srgb,var(--t-tinte,#3a2a1a) 55%,transparent);text-anchor:middle}
-.dmk-ort circle{fill:var(--t-pergament,#efe3c4);stroke:color-mix(in srgb,var(--t-tinte,#3a2a1a) 55%,transparent);stroke-width:4;stroke-dasharray:8 6}
-.dmk-ort.on circle{fill:#fff6dc;stroke:var(--t-tinte,#3a2a1a);stroke-dasharray:none}.dmk-ort.hier circle{stroke:var(--t-gold,#d9b25f);stroke-width:9}
-.dmk-z{font-size:34px;text-anchor:middle}.dmk-ort:not(.on) .dmk-z{opacity:.55}.dmk-gw{font-size:24px;fill:var(--t-tinte,#3a2a1a)}
-.dmk-n{font:30px Georgia,serif;fill:var(--t-tinte,#3a2a1a);text-anchor:middle;paint-order:stroke;stroke:var(--t-pergament,#efe3c4);stroke-width:8px}.dmk-ort:not(.on) .dmk-n{font-style:italic;opacity:.75}
-.dmk-pin rect{fill:var(--t-tinte,#3a2a1a)}.dmk-pin text{font:600 22px system-ui,sans-serif;fill:#ffe7a8;text-anchor:middle}.dmk-tief .dmk-pin rect{fill:var(--t-gold,#d9b25f)}.dmk-tief .dmk-pin text{fill:#2a1d08}
+.dmk-weg{stroke:color-mix(in srgb,var(--t-tinte,#3a2a1a) 50%,transparent);stroke-width:calc(var(--u,1)*1.5);stroke-dasharray:calc(var(--u,1)*5) calc(var(--u,1)*4)}.dmk-weg.on{stroke:color-mix(in srgb,var(--t-tinte,#3a2a1a) 80%,transparent);stroke-width:calc(var(--u,1)*2.2);stroke-dasharray:none;stroke-linecap:round}
+.dmk-stub{stroke:color-mix(in srgb,var(--t-tinte,#3a2a1a) 40%,transparent);stroke-width:calc(var(--u,1)*1.4);stroke-dasharray:calc(var(--u,1)*2) calc(var(--u,1)*4)}
+.dmk-frage{font:600 calc(var(--u,1)*13px) Georgia,serif;fill:color-mix(in srgb,var(--t-tinte,#3a2a1a) 55%,transparent);text-anchor:middle}
+.dmk-ort circle{fill:var(--t-pergament,#efe3c4);stroke:color-mix(in srgb,var(--t-tinte,#3a2a1a) 55%,transparent);stroke-width:calc(var(--u,1)*1.3);stroke-dasharray:calc(var(--u,1)*3) calc(var(--u,1)*2.5)}
+.dmk-ort.on circle{fill:#fff6dc;stroke:var(--t-tinte,#3a2a1a);stroke-dasharray:none}.dmk-ort.hier circle{stroke:var(--t-gold,#d9b25f);stroke-width:calc(var(--u,1)*3)}
+.dmk-land .dmk-z{font-size:calc(var(--u,1)*14px)}.dmk-z{text-anchor:middle}.dmk-ort:not(.on) .dmk-z{opacity:.55}.dmk-gw{font-size:calc(var(--u,1)*10px);fill:var(--t-tinte,#3a2a1a)}
+.dmk-n{font:calc(var(--u,1)*12.5px) Georgia,serif;fill:var(--t-tinte,#3a2a1a);paint-order:stroke;stroke:var(--t-pergament,#efe3c4);stroke-width:calc(var(--u,1)*3px);stroke-linejoin:round}.dmk-ort.hier .dmk-n{font-weight:700}.dmk-ort:not(.on) .dmk-n{font-style:italic;opacity:.75}
+.dmk-pin{font-size:calc(var(--u,1)*12px);text-anchor:middle}.dmk-tief .dmk-pin{font-size:30px}
 .dmk-gang{stroke:color-mix(in srgb,var(--t-gold,#d9b25f) 30%,#5c5040);stroke-width:18}.dmk-gang.on{stroke:color-mix(in srgb,var(--t-gold,#d9b25f) 55%,#5c5040)}
 .dmk-raum rect{fill:#2c2534;stroke:color-mix(in srgb,var(--t-gold,#d9b25f) 40%,transparent);stroke-width:3;stroke-dasharray:8 6}
 .dmk-raum.on rect{fill:#3b3245;stroke:color-mix(in srgb,var(--t-gold,#d9b25f) 70%,transparent);stroke-dasharray:none}.dmk-raum.hier rect{stroke:var(--t-gold,#d9b25f);stroke-width:7}
-.dmk-raum .dmk-z{font-size:36px}.dmk-rn{font:18px system-ui,sans-serif;fill:#ece4d3;text-anchor:middle}.dmk-tief .dmk-frage{fill:#a99f8c}
+.dmk-raum .dmk-z{font-size:36px}.dmk-rn{font:18px system-ui,sans-serif;fill:#ece4d3;text-anchor:middle;paint-order:stroke;stroke:#231e29;stroke-width:5px}.dmk-ort:not(.on) .dmk-bild{opacity:.6}.dmk-tief .dmk-frage{fill:#a99f8c;font-size:30px}
 .dmk-raetsel{border:1px solid var(--t-linie,var(--line));border-radius:10px;padding:8px 10px;margin:4px 0 8px}.dmk-raetsel p{margin:2px 0 4px;font-style:italic}.dmk-hint,.dmk-zu{display:block;margin-top:4px}
 .dmk-wege{margin-bottom:6px}.dmk-wege .b{font-size:12.5px}
 .dmk.gross{position:fixed;inset:12px;z-index:60;background:var(--t-grund,var(--bg));padding:14px;border-radius:14px;overflow:auto;box-shadow:0 10px 40px #0008}.dmk.gross .dmk-svg{max-height:calc(100vh - 220px);width:auto;max-width:100%;margin:6px auto 8px}

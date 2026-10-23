@@ -13,6 +13,10 @@
   spring heals, an altar blesses.
 - Encounters only on a way gone for the first time; a merchant on the way opens at the new place.
 - The host's buttons: only the host, a new map only before the first step; Live only counts.
+- Pictures instead of signs (with dungeon_dingbild): one fixed prompt per kind of place and room and world style in
+  the catalog's run; an own picture only for a visited place of a running round with „Bilder malen“, checked like a
+  scene, counted to the game's day limit, never twice; an ort- picture only for seats of its own round; the sweep
+  keeps what a map names; the view carries the picture's name, the round's file stays as it was.
 - The table in a browser: the map and its ways at 320, 390 and 1280 px without sideways scrolling; tapping a way
   writes it into the own action.
 
@@ -36,6 +40,9 @@ import dungeon  # noqa: E402
 import dungeon_karte as K  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 from tests.test_ui_browser import browser_ok  # noqa: E402
+import dungeon_dingbild as db  # noqa: E402
+from tests.test_dungeon_dingbild import PNG, Base as DingBase  # noqa: E402
+from unittest import mock  # noqa: E402
 
 ADMIN = TestClient(panel.app)
 ADMIN.post("/api/login", json={"password": "secret-admin"})
@@ -353,6 +360,116 @@ def _drop(rid):
         dungeon._write(d)
 
 
+class Pictures(DingBase):
+    def place(self, rid, i=None):
+        k = dungeon._read()["runden"][rid]["karte"]
+        return k, k["hier"] if i is None else i
+
+    def test_kinds_join_the_catalog_run_by_fixed_prompt(self):
+        r = dungeon.rules()
+        w = dict(db.wanted(r))
+        fan = dungeon.style(r, {"welt": "fantasy", "ton": None})
+        kinds = K.bilder(r, fan)
+        self.assertTrue(kinds and all(n in w for n, _ in kinds))
+        self.assertEqual(db.wanted(r)[0][1], db.prompt(db.styles(r)[0], r["gegenstaende"][0]))   # the items first
+        dorf = next(e for e in r["ortsarten"] if e["id"] == "dorf")
+        p = K.kind_prompt(fan, dorf)
+        self.assertEqual(p, f"{fan}, {K.ORT_EN}: {dorf['name'][1]}, {dungeon.BILD_ENDE}")
+        self.assertIn(db.name_of(p), dict(kinds))
+        only = [e for e in r["ortsarten"] if e.get("welten") and "fantasy" not in e["welten"]]
+        self.assertTrue(only)
+        self.assertNotIn(db.name_of(K.kind_prompt(fan, only[0])), dict(kinds))    # a kind of another world only
+        room = r["raeume"][0]
+        self.assertIn(room["satz"][1], K.kind_prompt(fan, room, True))
+
+    def test_the_view_shows_a_kinds_picture_once_painted(self):
+        rid = self.new_round()
+        k, i = self.place(rid)
+        v = self.c.get(f"/api/profile/dungeon/{rid}").json()["karte"]
+        self.assertEqual({o["b"] for o in v["orte"]}, {""})
+        r = dungeon.rules()
+        rd = dungeon._read()["runden"][rid]
+        p = K.kind_prompt(dungeon.style(r, rd), K._kind(r, k["orte"][i]["art"]))
+        asyncio.run(db.paint_one(db.name_of(p), p))
+        before = json.dumps(dungeon._read()["runden"][rid], sort_keys=True)
+        v = self.c.get(f"/api/profile/dungeon/{rid}").json()["karte"]
+        self.assertEqual(next(o for o in v["orte"] if o["id"] == f"o{i + 1}")["b"], db.name_of(p))
+        self.assertEqual(json.dumps(dungeon._read()["runden"][rid], sort_keys=True), before)
+        helpers.set_config(dungeon_bilder=False)                       # off: the sign again
+        v = self.c.get(f"/api/profile/dungeon/{rid}").json()["karte"]
+        self.assertEqual({o["b"] for o in v["orte"]}, {""})
+
+    def test_own_picture_of_a_visited_place_once_and_only_for_its_round(self):
+        rid = self.new_round()
+        k, i = self.place(rid)
+        n0 = dungeon._bild_count(dungeon._read())
+        jobs = K.queue_orte()
+        self.assertEqual([(j[0], j[1]) for j in jobs], [(rid, i)])     # only the visited place
+        _, _, n, p = jobs[0]
+        self.assertTrue(n.startswith("ort-"))
+        self.assertIn(k["orte"][i]["name"], p)
+        self.assertTrue(p.startswith(dungeon.style(dungeon.rules(), dungeon._read()["runden"][rid])))
+        self.assertEqual(dungeon._bild_count(dungeon._read()), n0 + 1)  # counts to the game's day limit
+        self.assertEqual(K.queue_orte(), [])                            # on its way: never twice
+        asyncio.run(K.paint_ort(*jobs[0]))
+        self.assertEqual(K.queue_orte(), [])
+        self.assertEqual(dungeon._read()["runden"][rid]["karte"]["bild"][str(i)]["st"], "ok")
+        v = self.c.get(f"/api/profile/dungeon/{rid}").json()["karte"]
+        self.assertEqual(next(o for o in v["orte"] if o["id"] == f"o{i + 1}")["b"], n)
+        self.assertEqual(self.c.get(f"/api/profile/dungeon/ding/{n}").status_code, 200)
+        code = self.guest(rid)
+        self.assertEqual(self.v.post("/api/dungeon/ding", json={"code": code, "name": n}).status_code, 200)
+        # another round's seat, another profile: not this picture
+        other = self.new_round(titel="Andere Runde")
+        code2 = self.guest(other)
+        self.assertEqual(self.v.post("/api/dungeon/ding", json={"code": code2, "name": n}).status_code, 404)
+        c2, _ = profile("Ort Otto")
+        helpers.set_config(dungeon=True)
+        self.assertEqual(c2.get(f"/api/profile/dungeon/ding/{n}").status_code, 404)
+        self.assertEqual(self.c.get("/api/profile/dungeon/ding/ort-0123456789abcdeg").status_code, 404)
+        self.assertEqual(K.for_live(list(dungeon._read()["runden"].values()))["ortsbilder"], 1)
+
+    def test_limits_refusal_and_sweep(self):
+        rid = self.new_round()
+        k, i = self.place(rid)
+        with mock.patch("dungeon.pictures_on", lambda uid: False):     # the host has no „Bilder malen“
+            self.assertEqual(K.queue_orte(), [])
+        with dungeon._lock:
+            d = dungeon._read()
+            d["bilder"] = {"day": dungeon.DayCounter.date(), "n": dungeon.rules()["grenzen"]["bilder_tag"]}
+            dungeon._write(d)
+        self.assertEqual(K.queue_orte(), [])                            # the game's day limit
+        self.assertEqual(dungeon._read()["runden"][rid]["karte"]["bild"][str(i)]["st"], "tag")
+        with dungeon._lock:
+            d = dungeon._read()
+            d["bilder"] = {}
+            rd = d["runden"][rid]
+            rd["karte"]["bild"] = {}
+            rd["karte"]["orte"][i]["name"] = "Nackter Hain"             # the picture rules refuse the name
+            dungeon._write(d)
+        self.assertEqual(K.queue_orte(), [])
+        self.assertEqual(dungeon._read()["runden"][rid]["karte"]["bild"][str(i)]["st"], "weg")
+        self.assertEqual(self.calls, [])
+        dungeon._bild_save("ort-0123456789abcdef", PNG)                 # a picture no map names any more
+        with dungeon._lock:
+            d = dungeon._read()
+            d["runden"][rid]["karte"]["bild"] = {str(i): {"n": "ort-fedcba9876543210", "st": "ok", "day": ""}}
+            dungeon._write(d)
+        dungeon._bild_save("ort-fedcba9876543210", PNG)
+        self.assertEqual(db.sweep(force=True), 1)
+        self.assertEqual({n for n in db.files() if n.startswith("ort-")}, {"ort-fedcba9876543210"})
+
+
+# every name on the drawn map against every other name and every other place; a name drawn bigger than the page text
+OVERLAP = """(()=>{const s=document.querySelector('#dmview .dmk-land');if(!s)return ['no map'];
+  const R=e=>e.getBoundingClientRect(),cut=(a,b)=>Math.min(a.right,b.right)-Math.max(a.left,b.left)>1&&Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top)>1;
+  const g=[...s.querySelectorAll('.dmk-ort')].map(o=>({n:o.querySelector('.dmk-n'),c:o.querySelector('circle')})),out=[];
+  const fs=parseFloat(getComputedStyle(document.body).fontSize);
+  g.forEach((a,i)=>{const r=R(a.n);if(r.height/a.n.querySelectorAll('tspan').length>fs*1.6)out.push('big '+a.n.textContent);
+    g.forEach((b,j)=>{if(i===j)return;if(j>i&&cut(r,R(b.n)))out.push(a.n.textContent+' / '+b.n.textContent);if(cut(r,R(b.c)))out.push(a.n.textContent+' over a place')})});
+  return out})()"""
+
+
 @unittest.skipUnless(browser_ok(), "no Playwright/Chromium here")
 class Table(unittest.TestCase):
     @classmethod
@@ -363,8 +480,11 @@ class Table(unittest.TestCase):
     def test_the_map_at_the_table(self):
         from tests.test_ui_browser import Browser, async_playwright
         import profiles
-        helpers.keep_chat(self, "dungeon")
-        helpers.set_config(dungeon=True)
+        helpers.keep_chat(self, "dungeon", "dungeon_bilder", "bilder")
+        helpers.set_config(dungeon=True, dungeon_bilder=True, bilder=True)
+        DingBase._image(self, True)                                       # „Bilder malen“ set up
+        self.addCleanup(DingBase._image, self, False)
+        self.assertTrue(db.on())
         uid = next(u for u in profiles.user_ids() if (profiles.by_id(u) or {}).get("name") == "Uitest")
         old_ask = dungeon.ask_model
 
@@ -379,8 +499,12 @@ class Table(unittest.TestCase):
             d = dungeon._read()
             rd = d["runden"][rid]
             rd["dm"] = ""
-            K.make(dungeon.rules(), rd, random.Random(4), form="tal")
+            K.make(dungeon.rules(), rd, random.Random(4), start="Quarantäneviertel, Velmar", form="tal")
             dungeon._write(d)
+        r = dungeon.rules()        # the start's kind is painted: the place shows the picture, the others their sign
+        p = K.kind_prompt(dungeon.style(r, rd), K._kind(r, rd["karte"]["orte"][rd["karte"]["hier"]]["art"]))
+        dungeon._bild_save(db.name_of(p), PNG)
+        self.addCleanup(dungeon._bild_rm, db.name_of(p))
         b = Browser("run")
         b.port = self.port
 
@@ -397,7 +521,22 @@ class Table(unittest.TestCase):
                         self.assertGreaterEqual(await pg.evaluate("document.querySelectorAll('#dmview .dmk-wege [data-dmkid]').length"), 1)
                         await pg.click("#dmview .dmk-wege [data-dmkid]")
                         self.assertIn("Wir gehen", await pg.evaluate("document.querySelector('#dmview .dm-in').value"))
+                        # names stay readable and apart: no name over another name or another place, not bigger than the text
+                        await pg.evaluate("DMK.tab='welt';dmDraw()")      # after the vault of the wider run: the world
+                        await b.until(pg, "!!document.querySelector('#dmview .dmk-land')")
+                        self.assertEqual(await pg.evaluate(OVERLAP), [], w)
+                        await b.until(pg, "!!document.querySelector('#dmview .dmk-land image[data-dmkb][href]')")
+                        await pg.click("#dmview [data-dmfen=karte]")                 # the big map: the same sizes, no overlap
+                        await b.until(pg, "!!document.querySelector('#dmview .dmk.gross .dmk-land')")
+                        await pg.wait_for_timeout(100)
+                        self.assertEqual(await pg.evaluate(OVERLAP), [], w)
                         if os.environ.get("DMK_SHOT"):
+                            await pg.screenshot(path=os.path.join(os.environ["DMK_SHOT"], f"gross-{w}.png"))
+                        await pg.click("#dmview .dmk.gross [data-dmkgross]")
+                        if os.environ.get("DMK_SHOT"):
+                            for m in ("a", "b"):
+                                await (await pg.query_selector("#dmview .dmk")).screenshot(path=os.path.join(os.environ["DMK_SHOT"], f"karte-{w}-{m}.png"))
+                                await pg.click("#dmview [data-dmmodus]")
                             await pg.screenshot(path=os.path.join(os.environ["DMK_SHOT"], f"tisch-{w}.png"), full_page=True)
                         if w == 1280:                    # the host rolls a vault: the grid of rooms, the way out
                             await pg.click("#dmview [data-dmkarte=gewoelbe]")

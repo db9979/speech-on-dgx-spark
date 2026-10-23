@@ -2886,6 +2886,13 @@
 "titel": "Dokumentsuche: Tabellen in PDFs",
 "text": "Voraussetzung: Funktionen → Eigene Dokumente an, am besten mit Originale aufbewahren. A: Das Sanjeevini-PDF neu hochladen (oder warten, bis Ich → Dokumente nicht mehr „Tabellen zeilenweise lesen: n PDFs warten“ zeigt). B: Im Chat fragen „Welche Sanjeevini-Karte kann ich bei Durchfall nehmen?“: die Antwort nennt die Karte aus der Zeile Durchfall, Quelle das PDF. C: Ansehen des PDFs in Ich → Dokumente: die Tabelle steht als Zeilen „| Durchfall | … |“. D: Logs → Bereich Wissen: „wissen: tabellen geprüft | neu gelesen“ für ein altes PDF mit Tabelle. E: Mit „Erst lokal suchen“ an: Zustand → Prüfen → „Erst lokal testen“ mit derselben Frage findet die Unterlage.",
 "thread": "Dokumentsuche trifft falsche Stelle"
+},
+{
+"id": "P437",
+"v": 973,
+"titel": "Dungeon-Master: Karte lesbar und mit Bildern",
+"text": "A: Eine Runde am Rechner und am Handy öffnen: die Namen auf der Karte sind so groß wie der Text daneben, nichts überlagert sich, lange Namen stehen in zwei Zeilen, über der Karte steht „📍 Ihr seid in …“. ⤢ zeigt die Karte groß, die Schrift bleibt gleich groß. B: Mit Bilder für Ausrüstung und Zauber und Bilder malen: im Admin „Bilder jetzt erstellen“, danach zeigen Orte und Gewölberäume Bilder statt Zeichen (die Zahl unter „Bilder für Ausrüstung und Zauber“ ist größer als vorher). C: In einer laufenden Runde zu einem neuen Ort gehen: nach einer Minute zeigt der Ort ein eigenes Bild, auch beim Gast; Zustand → Überblick → Live zählt „Ortsbilder“.",
+"thread": "Dungeon-Master: Karte und Zufalls-Gewölbe"
 }
 ]
 }

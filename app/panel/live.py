@@ -1762,6 +1762,7 @@ def snapshot(view="admin", now=None):
                         + (f" · {dgn['termine']} Spieltermine" if dgn.get("termine") else "")
                         + (f" · heute {dgn['gemeldet']} Mitteilungen" if dgn.get("gemeldet") else "")
                         + f" · {dgn.get('karten', 0)} Karten, {dgn.get('gewoelbe_drin', 0)} im Gewölbe"
+                        + (f", {dgn['ortsbilder']} Ortsbilder" if dgn.get("ortsbilder") else "")
                         + _dungeon_musik(dgn.get("musik") or {})
                         + (f" · heute {dgn.get('wahrheit', 0)} Welt-Wahrheiten, {dgn.get('zusammengefasst', 0)} Zusammenfassungen, {dgn.get('nachgebessert', 0)} nachgebessert"
                            if dgn.get("wahrheit") or dgn.get("zusammengefasst") or dgn.get("nachgebessert") else "")
