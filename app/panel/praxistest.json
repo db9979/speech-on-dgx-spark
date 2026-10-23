@@ -2760,6 +2760,13 @@
 "titel": "Dungeon-Master: Geschichten-Planer",
 "text": "A: Update, Admin: Funktionen → KI-Dungeon-Master, Knopf „Regeln anpassen“, Abschnitt Geschichten: „Neue Geschichte“, Stichworte (zum Beispiel „verfluchtes Bergdorf, Drache, eher düster“), 4 Akte, „Vorschlag erzeugen“: nach einigen Sekunden sind alle Felder gefüllt. B: Bei Akt 2 einen Hinweis eintippen und „↻ Neu schreiben“: nur Akt 2 ändert sich. C: Ein Tabu eintragen und das Wort in den Inhalt eines Akts schreiben: „Prüfen und speichern“ lehnt mit Hinweis ab; Wort weg, speichern geht. D: Dungeon-Master → Runden → Neue Runde: „Geschichte des Admins“ wählen, Welt und Ton springen um, Runde starten: oben steht „Akt 1/4“, unter Gastgeber lässt sich „Geschichte“ aufklappen. E: Einen Gast einladen: er sieht „Akt 1/4“, aber keinen Plan. F: Einige Züge spielen: frühestens nach 3 Zügen erscheint „❖ Akt 2 beginnt.“ G: Zustand → Live → Dungeon-Master zeigt Geschichten, Akte und Vorschläge nur als Zahlen.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P419",
+"v": 956,
+"titel": "Dungeon-Master: Vorteil, OOC, längere Anfänge",
+"text": "A: Update, neue Runde mit einem Gast: die erste Erzählung darf länger sein (bis 1500 Zeichen) und beschreibt Gerüche, Licht und Geräusche. B: Eine Aktion mit klarem Vorteil spielen (zum Beispiel „Ich greife den schlafenden Wächter von hinten an“): bei der Probe steht „Vorteil 14/7“ und der höhere Wurf zählt. C: Als Gast eine Meta-Frage schreiben („wie spät ist es?“): nur der Gast sieht eine Zeile „(OOC: …)“, der Gastgeber nicht.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

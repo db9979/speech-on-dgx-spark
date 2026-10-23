@@ -221,6 +221,28 @@ class Turns(Base):
         ep = {e["name"]: e["zahl"] for e in rd["log"] if e["art"] == "ep"}
         self.assertGreaterEqual(ep["Bela"], dungeon.rules()["ep"]["gegner"][4])
 
+    def test_advantage_ooc_and_length(self):
+        self.act_all("Ich will mal kurz was fragen, wie spät ist es?")
+        rd = self.play([{"proben": [{"wer": "Arvid", "wert": "staerke", "schwer": 10, "vorteil": "vorteil"},
+                                    {"wer": "Bela", "wert": "staerke", "schwer": 10, "vorteil": "gottmodus"}]},
+                        {"erzaehlung": "Arvid stemmt das Tor auf, kalte Luft riecht nach Moos und Eisen.", "frage_an": "",
+                         "ooc": [{"wer": "Bela", "text": "Frag im Spiel einen NPC oder beschreibe, was Bela tut."},
+                                 {"wer": "Niemand", "text": "Diese Zeile gehört niemandem in der Runde."}]}])
+        wurf = {e["name"]: e for e in rd["log"] if e["art"] == "wurf"}
+        self.assertEqual((wurf["Arvid"]["vt"], len(wurf["Arvid"]["ws"]), wurf["Arvid"]["w"]), ("vorteil", 2, max(wurf["Arvid"]["ws"])))
+        self.assertEqual((wurf["Bela"]["vt"], len(wurf["Bela"]["ws"])), ("", 1))      # an unknown kind: one plain d20
+        r = dungeon.rules()
+        low = dungeon.roll(r, rd, [{"pid": self.host, "wert": "staerke", "schwer": 10, "vt": "nachteil"}], random.Random(3))[0]
+        self.assertEqual(low["w"], min(low["ws"]))
+        ooc = [e for e in rd["log"] if e["art"] == "ooc"]
+        self.assertEqual([e["pid"] for e in ooc], [self.gp])                     # only a name of the group
+        host = self.c.get(f"/api/profile/dungeon/{self.rid}").json()
+        guest = self.v.post("/api/dungeon/lage", json={"code": self.code}).json()
+        self.assertFalse([e for e in host["log"] if e["art"] == "ooc"])         # only that player sees it
+        self.assertEqual([e["text"] for e in guest["log"] if e["art"] == "ooc"], [ooc[0]["text"]])
+        self.assertEqual(dungeon.erz_max(dict(rd, zug=1)), dungeon.ERZ_LANG)    # the opening may be longer
+        self.assertEqual(dungeon.erz_max(rd), dungeon.ERZ_MAX)
+
     def test_bad_words_and_broken_answers_fall_back(self):
         self.act_all()
         r = dungeon.rules()

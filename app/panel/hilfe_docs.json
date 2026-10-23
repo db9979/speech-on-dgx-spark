@@ -5125,6 +5125,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Ideen aus einem DM-Prompt (V01.0.956, Dominik 2026-10-23 „haben wir das in diesem stiel umgesetzt oder können wir ideen daraus ziehen?“, „alles ja“, Gitea gestrichen): Vorteil und Nachteil: Das Modell darf je Probe vorteil oder nachteil melden (hilft oder behindert die Lage); das Panel würfelt dann zwei W20 und nimmt den höheren beziehungsweise niedrigeren, die Erzählung zeigt beide Würfe („Vorteil 14/7“); jeder andere Wert gilt als normaler Wurf. OOC-Zeile: Ist eine Aktion unklar oder gar kein Spielzug (Meta-Kommentar), erzählt das Modell sie nicht, sondern schreibt dieser Figur in ooc eine kurze Zeile (höchstens 160 Zeichen, nur Namen der Gruppe, geprüft wie die Erzählung), die nur dieser Spieler als „(OOC: …)“ sieht. Länge: Eine Erzählung hat höchstens 900 Zeichen, der Anfang einer Runde, eines Kapitels oder eines Akts bis zu 1500 (erz_max). Prompt: Der Standard-Prompt verlangt dazu Sinneseindrücke (Gerüche, Licht, Geräusche, Gefühle) und bleibt bei Welt, Ton und dem Bisherigen; die festen Regeln des Panels stehen weiter dahinter."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "Stufe M0: Der Spark macht Musik selbst mit ACE-Step 1.5 (MIT-Lizenz), ohne Internet. Das Modell kommt nur mit der Installation auf dem Modell-Rechner: sudo ./install.sh --musik 2b (2B turbo mit 1,7B-Planer, empfohlen), 2b-klein (0,6B-Planer, weniger Speicher) oder xl (XL turbo, klingt besser, braucht mehr); die erste Installation fragt danach, Standard ist keins. Die Engine ist acestep.cpp (ace-server, fest auf einen Commit, für den GB10 mit CUDA gebaut, ohne torch und ohne Docker), die GGUF-Dateien sind fest mit Revision und SHA-256 (musikmodell.py). Der Dienst speech-spark-musik (musik_server.py, nur 127.0.0.1:31004, beim Teilen über das TLS-Tor, API-Schlüssel) lädt die Engine erst für ein Lied (127.0.0.1:31014, vorher Prüfung des freien Speichers) und beendet sie nach 10 Minuten ohne Lied; Bild- und Musik-Dienst teilen dafür bedarf.py. Ein Lied entsteht in zwei Schritten: der kleine Planer legt Aufbau und Klangcodes fest, dann macht das Klangmodell daraus eine MP3 (192 kbit/s). Alle Felder setzt der Dienst selbst; er nimmt nur eine MP3 zurück und schreibt sein eigenes ID3-Kennzeichen hinein („KI-erzeugt mit ACE-Step 1.5“). Der Admin misst: Zustand → Prüfen → „Musik testen“ macht"
 },
 {
@@ -16862,6 +16870,14 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "gets a copy, and a chapter of a campaign plays on in the same act. Flow: the model gets only goal, foe, places and the current act (data block) and reports with akt_fertig when the turning point is told; the panel takes that only after 3 turns of the act, always moves one act on, never back, and moves on by itself when an act runs one and a half times as long as planned (step_act). After the last act \"The story is told.\" stands there. The taboos count in every narration of the round like the list \"nie\". Spoilers: the players only see \"Act 2/4\" and \"Act 3 begins.\", only the admin and the host see the plan (to unfold at the table). Status → Live shows stories, acts moved on today and proposals (numbers only); Logs only fixed words (dungeon: vorschlag | geschichte | ok | 4100 ms, dungeon: akt | modell | 2, dungeon: geschichte gespeichert | 4 akte). API (admin): PUT|DELETE /api/admin/dungeon/geschichte/{gid} (neu for a new one), POST /api/admin/dungeon/geschichte/vorschlag ({welt, ton, akte, stichworte, tabus}), POST /api/admin/dungeon/geschichte/akt ({plan, n, hinweis}), own rate limit dungeonplan (10 a minute)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: ideas from a DM prompt (V01.0.956, Dominik 2026-10-23 \"haben wir das in diesem stiel umgesetzt oder können wir ideen daraus ziehen?\", \"alles ja\", Gitea dropped): Advantage and disadvantage: the model may report vorteil or nachteil per check (the situation helps or hinders); the panel then rolls two d20 and takes the higher or the lower, the story shows both rolls (\"Advantage 14/7\"); any other value counts as a plain roll. OOC line: when an action is unclear or no move at all (a meta comment), the model does not narrate it but writes that character a short line in ooc (at most 160 characters, only names of the group, checked like the narration) that only this player sees as \"(OOC: …)\". Length: a narration has at most 900 characters, the opening of a round, a chapter or an act up to 1500 (erz_max). Prompt: the default prompt also asks for senses (smells, light, sounds, feelings) and stays with world, tone and what happened so far; the panel's fixed rules still stand behind it."
 },
 {
 "lang": "en",

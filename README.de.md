@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.956** KI-Dungeon-Master: Vorteil und Nachteil (das Panel würfelt zwei W20), OOC-Zeile nur für den betroffenen Spieler, längere Anfänge, Standard-Prompt mit Sinneseindrücken und Welttreue
 - **V01.0.955** KI-Dungeon-Master Geschichten-Planer: der Admin legt Geschichten mit Akten, Wendepunkten und Tabus an, vom Sprachmodell aus Stichworten entworfen und vom Panel geprüft; im Spiel entscheidet das Modell in festen Grenzen, wann der nächste Akt beginnt; Knöpfe des Spiels im Panel-Stil
 - **V01.0.954** ROT-FIX: ffmpeg im Test-Workflow mit --no-install-recommends (Codecs bleiben) plus robuster apt-Config, damit ein langsamer Paket-Mirror den Lauf nicht mehr abwürgt
 - **V01.0.953** KI-Dungeon-Master Stufe 2: Kampagnen mit „Bisher geschah“ und Kapiteln, Erzählung vorlesen mit Erzähler- und NPC-Stimme, Sprechen statt Tippen, iPhone-Seite; viel mehr Gegenstände, Tränke und Zauber
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.949** KI-Dungeon-Master (Schalter, aus): Rollenspiel für bis zu fünf, auch Gäste per Link; Beute, Stufen, Tauschen und Helden zum Mitnehmen, Regeln vom Admin anpassbar
 - **V01.0.948** ROT-FIX: der Angriffs-Selbsttest für das Tagesbriefing hing von der Uhrzeit um Mitternacht ab; sein Termin gilt jetzt unabhängig von Uhrzeit und Zeitzone als „heute“
 - **V01.0.947** IT-Krisenspiel wieder entfernt (auf Wunsch): Spiel, Netzduell und Spielprofile „Nur Krisenspiel“
-- **V01.0.946** Satzende am Tonfall (Schalter, aus): Smart Turn auf dem Modell-Rechner misst an jeder Sprechpause, ob du fertig klingst; nur Zahlen, entscheidet noch nichts, Auswertung nach 200 Pausen oder 7 Tagen unter dem Schalter
 
 
 

@@ -80,10 +80,11 @@ function dmItem(it,acts){return `<div class="dm-item ${DMSEL[it.selten]||''}"><d
 function dmLog(v,e){const W=v.werte||{},sys=Array.isArray(e.text)?e.text[L==='en'?1:0]:e.text;
   if(e.art==='dm')return `<div class="dm-dm"><div class="dm-n">${esc(t('Dungeon-Master','Dungeon Master'))}</div><p>${esc(e.text)}</p>${(e.npc||[]).map(n=>`<div class="dm-npc"><em>${esc(n.name)}</em><p>„${esc(n.sagt)}“</p></div>`).join('')}</div>`;
   if(e.art==='aktion')return `<div class="dm-act"><b>${esc(e.name)}:</b> ${esc(e.text)}</div>`;
-  if(e.art==='wurf')return `<div class="dm-wurf ${e.ok?'ok':'bad'}"><span class="dm-d20">${e.w}</span>${esc(e.name)} · ${esc(W[e.wert]||e.wert)} +${e.bonus} = <b>${e.gesamt}</b> ${esc(t('gegen','vs'))} ${e.schwer} · <b>${esc(e.ok?t('geschafft','success'):t('nicht geschafft','failed'))}</b></div>`;
+  if(e.art==='wurf')return `<div class="dm-wurf ${e.ok?'ok':'bad'}"><span class="dm-d20">${e.w}</span>${e.vt&&(e.ws||[]).length===2?`<small class="pill ${e.vt==='vorteil'?'ok':'warn'}">${esc(e.vt==='vorteil'?t('Vorteil','Advantage'):t('Nachteil','Disadvantage'))} ${e.ws[0]}/${e.ws[1]}</small> `:''}${esc(e.name)} · ${esc(W[e.wert]||e.wert)} +${e.bonus} = <b>${e.gesamt}</b> ${esc(t('gegen','vs'))} ${e.schwer} · <b>${esc(e.ok?t('geschafft','success'):t('nicht geschafft','failed'))}</b></div>`;
   if(e.art==='folge')return `<div class="dm-sys ${e.was==='heilung'?'ok':'bad'}">${esc(e.name)}: ${e.was==='heilung'?'+':'−'}${e.zahl} ${esc(t('Leben','life'))} (${esc(t('jetzt','now'))} ${e.leben})</div>`;
   if(e.art==='beute')return `<div class="dm-beute"><div class="dm-n">${esc(t('Beute für ','Loot for '))}${esc(e.name)}</div>${dmItem(e.item)}${e.gold?`<small class="mut">${esc(t('Gold für jeden: ','Gold for everyone: '))}${e.gold}</small>`:''}</div>`;
   if(e.art==='zauber')return `<div class="dm-zauber">✦ ${esc(e.name)} ${esc(t('wirkt','casts'))} <b>${esc(e.zauber)}</b>${e.gruppe?' '+esc(t('auf die Gruppe','on the group')):''}: ${esc(e.satz)}</div>`;
+  if(e.art==='ooc')return `<div class="dm-ooc">(OOC: ${esc(e.text)})</div>`;
   if(e.art==='akt')return `<div class="dm-akt">❖ ${esc(sys||'')}</div>`;
   if(e.art==='ep')return `<div class="dm-sys mut">${esc(e.name)} +${e.zahl} EP</div>`;
   if(e.art==='stufe')return `<div class="dm-stufe">★ ${esc(e.name)} ${esc(t('erreicht Stufe','reaches level'))} ${e.stufe}!</div>`;

@@ -2267,7 +2267,8 @@ textarea{resize:none}textarea[data-fest]{resize:vertical}textarea.feldplatz{padd
 .dm-werte{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:8px;font-size:13px}.dm-plus{padding:0 6px!important;margin-left:4px;font-size:12px}
 .dm-hint{margin-top:8px;font-size:13px;color:var(--warnt);font-weight:600}
 .dm-segen{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}.dm-zauber{margin:6px 0;padding:6px 10px;border-radius:10px;border:1px solid color-mix(in srgb,var(--acc) 40%,var(--line));font-size:13px}
-/* the admin's story: the act line in the story, the plan only the host sees, the acts in the editor */
+/* an out-of-character line only its player sees; the admin's story: the act line, the plan only the host sees, the acts in the editor */
+.dm-ooc{margin:6px 0;padding:6px 10px;border-radius:10px;border:1px dashed var(--line);color:var(--mut);font-size:13px;font-style:italic}
 .dm-akt{margin:10px 0;padding:6px 10px;border-radius:10px;background:color-mix(in srgb,var(--acc) 12%,transparent);font-weight:600;font-size:13px;text-align:center}
 .dm-plan ol{margin:6px 0;padding-left:20px}.dm-plan li{margin:4px 0}.dm-plan li small{display:block}.dm-plan li.on b{color:var(--acc)}
 .dmp-akt{margin:10px 0;padding:10px;border:1px solid var(--line);border-radius:12px}.dmp-akt .dm-khead span{display:flex;gap:6px;flex-wrap:wrap}
@@ -2285,7 +2286,7 @@ textarea{resize:none}textarea[data-fest]{resize:vertical}textarea.feldplatz{padd
 .dm-form{display:flex;flex-direction:column;gap:6px;max-width:620px}.dmp-form{max-width:none}.dmp-form textarea{width:100%}.dmp-form .row select{width:auto}.dm-two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .dm-seg{flex-wrap:wrap;align-self:flex-start;max-width:100%}.dmmsg{margin-top:8px;font-size:13px}
 .dm-sum{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}.dm-adm-err{margin:8px 0;font-size:13px}
-.dm-pre{max-height:320px;overflow:auto;font-size:12px;padding:10px;border-radius:10px;background:color-mix(in srgb,var(--line) 35%,transparent)}
+.dm-pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;padding:10px;border-radius:10px;background:color-mix(in srgb,var(--line) 35%,transparent)}
 .dm-mic{flex:none}.dm-mic.on{background:var(--bad);color:#fff;border-color:var(--bad)}.dm-hear{flex:none;margin-left:auto}
 .dm-kamp{display:flex;flex-direction:column;gap:10px;max-width:820px}.dm-k{border:1px solid var(--line);border-radius:12px;padding:10px 12px}
 .dm-k small{display:block}.dm-k .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--mut);margin-top:8px}

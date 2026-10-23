@@ -145,6 +145,9 @@ TITEL_MAX = 60
 EINSTIEG_MAX = 400
 PROMPT_MAX = 4000
 ERZ_MAX = 900             # one narration
+ERZ_LANG = 1500           # the narration that opens a round, a chapter or an act
+OOC_MAX = 160             # one out-of-character line to a single player
+VORTEIL = ("vorteil", "nachteil")   # two d20, the higher or the lower counts
 NPC_MAX = 3
 NPC_SAGT = 300
 LOG_MAX = 160             # log entries a round keeps
@@ -1365,18 +1368,24 @@ PANEL_REGELN = {
            "from the group. Tone of the round: {ton}")}
 AUFGABE_PROBEN = {
     "de": "Aufgabe: Entscheide, welche Aktionen eine Probe brauchen (höchstens eine je Figur, nur bei echtem Risiko). "
-          "wert ist einer von {werte}, schwer von {lo} (leicht) bis {hi} (fast unmöglich).",
+          "wert ist einer von {werte}, schwer von {lo} (leicht) bis {hi} (fast unmöglich); vorteil ist vorteil, wenn die "
+          "Lage der Figur hilft, nachteil, wenn sie behindert, sonst leer.",
     "en": "Task: decide which actions need a check (at most one per character, only with real risk). "
-          "wert is one of {werte}, schwer from {lo} (easy) to {hi} (nearly impossible)."}
+          "wert is one of {werte}, schwer from {lo} (easy) to {hi} (nearly impossible); vorteil is vorteil when the "
+          "situation helps the character, nachteil when it hinders, else empty."}
 AUFGABE_ERZAEHLEN = {
     "de": "Aufgabe: Erzähle, was nach den Aktionen und den gewürfelten Proben geschieht (höchstens {n} Zeichen), lass "
           "NPCs sprechen, gib Schaden oder Heilung als folgen (zahl 1 bis 6), melde Beute nur als Anlass ({anlaesse}) "
           "mit Name und einem Satz, Erfolge als gegner (rang 1 bis 5) oder ziel. Ende mit einer Frage an die Gruppe; "
-          "frage_an ist eine Figur, die gerade wenig gesagt hat.",
+          "frage_an ist eine Figur, die gerade wenig gesagt hat. Ist eine Aktion unklar oder gar kein Spielzug "
+          "(Meta-Kommentar), erzähle sie nicht, sondern schreib dieser Figur in ooc eine kurze Zeile (höchstens {ooc} "
+          "Zeichen), was sie stattdessen tun kann.",
     "en": "Task: narrate what happens after the actions and the rolled checks (at most {n} characters), let NPCs "
           "speak, give damage or healing as folgen (zahl 1 to 6), report loot only as an occasion ({anlaesse}) with a "
           "name and one sentence, successes as gegner (rang 1 to 5) or ziel. End with a question to the group; "
-          "frage_an is a character that said little."}
+          "frage_an is a character that said little. When an action is unclear or no move at all (a meta comment), "
+          "do not narrate it but write that character a short line in ooc (at most {ooc} characters) on what it could "
+          "do instead."}
 
 
 def schema_proben(r):
@@ -1384,11 +1393,11 @@ def schema_proben(r):
         "proben": {"type": "array", "maxItems": 5, "items": {"type": "object", "additionalProperties": False,
                    "required": ["wer", "wert", "schwer"], "properties": {
                        "wer": {"type": "string", "maxLength": NAME_MAX}, "wert": {"type": "string", "enum": [w["id"] for w in r["werte"]]},
-                       "schwer": {"type": "integer"}}}}}}
+                       "schwer": {"type": "integer"}, "vorteil": {"type": "string", "enum": ["", *VORTEIL]}}}}}}
 
 
 SCHEMA_ERZAEHLEN = {"type": "object", "additionalProperties": False, "required": ["erzaehlung", "frage_an"], "properties": {
-    "erzaehlung": {"type": "string", "maxLength": ERZ_MAX + 200},
+    "erzaehlung": {"type": "string", "maxLength": ERZ_LANG + 200},
     "npc": {"type": "array", "maxItems": NPC_MAX, "items": {"type": "object", "additionalProperties": False, "required": ["name", "sagt"],
             "properties": {"name": {"type": "string", "maxLength": 40}, "sagt": {"type": "string", "maxLength": NPC_SAGT}}}},
     "folgen": {"type": "array", "maxItems": FOLGEN_MAX, "items": {"type": "object", "additionalProperties": False,
@@ -1401,7 +1410,9 @@ SCHEMA_ERZAEHLEN = {"type": "object", "additionalProperties": False, "required":
                "properties": {"art": {"type": "string", "enum": list(ERFOLG_ARTEN)}, "rang": {"type": "integer"}}}},
     "szene": {"type": "object", "additionalProperties": False, "properties": {"ort": {"type": "string", "maxLength": 60},
                                                                            "stimmung": {"type": "string", "maxLength": 30}}},
-    "frage_an": {"type": "string", "maxLength": NAME_MAX}, "akt_fertig": {"type": "boolean"}}}
+    "frage_an": {"type": "string", "maxLength": NAME_MAX}, "akt_fertig": {"type": "boolean"},
+    "ooc": {"type": "array", "maxItems": 5, "items": {"type": "object", "additionalProperties": False, "required": ["wer", "text"],
+            "properties": {"wer": {"type": "string", "maxLength": NAME_MAX}, "text": {"type": "string", "maxLength": OOC_MAX + 60}}}}}}
 
 
 def _ton(r, rd):
@@ -1441,7 +1452,7 @@ def system_text(r, rd, task):
     werte = ", ".join(w["id"] for w in r["werte"])
     t = PANEL_REGELN[lang].format(ton=ton["regel"][1 if lang == "en" else 0])
     t += "\n\n" + (AUFGABE_PROBEN[lang].format(werte=werte, lo=SCHWER[0], hi=SCHWER[1]) if task == "proben" else
-                   AUFGABE_ERZAEHLEN[lang].format(n=ERZ_MAX, anlaesse=", ".join(ANLAESSE)))
+                   AUFGABE_ERZAEHLEN[lang].format(n=erz_max(rd), anlaesse=", ".join(ANLAESSE), ooc=OOC_MAX))
     if task != "proben" and rd.get("plan") and rd.get("akt", 0) < len(rd["plan"]["akte"]):
         t += " " + AUFGABE_FOLGE[lang]
     return t + "\n\n" + (rd.get("prompt") or r["prompt"])
@@ -1485,22 +1496,31 @@ def check_proben(r, rd, obj):
             drop += 1
             continue
         seen.add(pid)
-        out.append({"pid": pid, "wert": p["wert"], "schwer": max(SCHWER[0], min(SCHWER[1], p["schwer"]))})
+        out.append({"pid": pid, "wert": p["wert"], "schwer": max(SCHWER[0], min(SCHWER[1], p["schwer"])),
+                    "vt": p.get("vorteil") if p.get("vorteil") in VORTEIL else ""})
     return out, drop
 
 
 def roll(r, rd, proben, rng=None):
-    """The panel rolls each check: d20 + the hero's value against the difficulty. Returns the results as log entries."""
+    """The panel rolls each check: d20 + the hero's value against the difficulty; with advantage (disadvantage) two
+    d20 and the higher (lower) counts. Returns the results as log entries."""
     rng = rng or random
     out = []
     for p in proben:
         h = rd["plaetze"][p["pid"]]["held"]
-        w = rng.randint(1, 20)
+        vt = p.get("vt") or ""
+        ws = [rng.randint(1, 20) for _ in range(2 if vt else 1)]
+        w = max(ws) if vt == "vorteil" else min(ws)
         bonus = total(r, h, p["wert"])
         ok = w == 20 or (w != 1 and w + bonus >= p["schwer"])
         out.append({"pid": p["pid"], "name": h["name"], "wert": p["wert"], "w": w, "bonus": bonus, "gesamt": w + bonus,
-                    "schwer": p["schwer"], "ok": ok})
+                    "schwer": p["schwer"], "ok": ok, "vt": vt, "ws": ws})
     return out
+
+
+def erz_max(rd):
+    """How long a narration may be: longer when it opens the round, a chapter or an act (ERZ_LANG), else ERZ_MAX."""
+    return ERZ_LANG if rd["zug"] == 1 or rd.get("plan") and rd.get("akt_zug") == rd["zug"] else ERZ_MAX
 
 
 def check_story(r, rd, obj):
@@ -1508,12 +1528,19 @@ def check_story(r, rd, obj):
     holds a refused word; dropped counts the parts taken out (unknown names, kinds, numbers)."""
     if not isinstance(obj, dict):
         return None, 1
-    text = plain(obj.get("erzaehlung"), ERZ_MAX)
+    text = plain(obj.get("erzaehlung"), erz_max(rd))
     if len(text) < 20 or bad_words(r, rd, text):
         return None, 1
     names, drop = _name_map(rd), 0
     out = {"text": text, "npc": [], "folgen": [], "beute": None, "erfolg": [], "szene": None, "frage": "",
-           "akt_fertig": obj.get("akt_fertig") is True}
+           "akt_fertig": obj.get("akt_fertig") is True, "ooc": []}
+    for o in obj.get("ooc") or []:
+        pid = names.get(str(o.get("wer", "")).strip().lower()) if isinstance(o, dict) else None
+        t = plain(o.get("text") if isinstance(o, dict) else "", OOC_MAX)
+        if not pid or len(t) < 5 or bad_words(r, rd, t) or pid in (x["pid"] for x in out["ooc"]):
+            drop += 1
+            continue
+        out["ooc"].append({"pid": pid, "text": t})
     for n in obj.get("npc") or []:
         name, sagt = plain(n.get("name") if isinstance(n, dict) else "", 40), plain(n.get("sagt") if isinstance(n, dict) else "", NPC_SAGT)
         if not name or not sagt or bad_words(r, rd, sagt) or len(out["npc"]) >= NPC_MAX:
@@ -1564,7 +1591,7 @@ def apply(r, rd, wuerfe, story, rid, rng=None):
                 _log(rd, "aktion", pid=pid, name=rd["plaetze"][pid]["held"]["name"], text=a["text"])
     ep = {pid: 0 for pid, _ in seated(rd)}
     for w in wuerfe:
-        _log(rd, "wurf", **{k: w[k] for k in ("pid", "name", "wert", "w", "bonus", "gesamt", "schwer", "ok")})
+        _log(rd, "wurf", **{k: w[k] for k in ("pid", "name", "wert", "w", "bonus", "gesamt", "schwer", "ok", "vt", "ws") if k in w})
         if w["ok"]:
             ep[w["pid"]] = ep.get(w["pid"], 0) + r["ep"]["probe"] * w["schwer"] // 10
     if story:
@@ -1580,6 +1607,9 @@ def apply(r, rd, wuerfe, story, rid, rng=None):
             k = _by(r, "klassen")[h["klasse"]]["name"][li]
             text += (f" {h['name']}, was macht dein {k} währenddessen?" if not li else f" {h['name']}, what does your {k} do meanwhile?")
         _log(rd, "dm", text=text, npc=story["npc"], frage=names[frage]["held"]["name"] if frage in names else "")
+        for o in story.get("ooc") or []:
+            if o["pid"] in names:
+                _log(rd, "ooc", pid=o["pid"], text=o["text"])     # only that seat sees it (view)
         for f in story["folgen"]:
             h = rd["plaetze"][f["pid"]]["held"]
             n = f["zahl"] if f["art"] == "heilung" else max(1, f["zahl"] - schutz(r, h))
@@ -1655,7 +1685,7 @@ async def run_turn(rid, turn):
             proben, drop = check_proben(r, rd, obj)
             wuerfe = roll(r, rd, proben)
             facts_w = [{"name": w["name"], "wert": w["wert"], "wurf": w["w"], "gesamt": w["gesamt"], "schwer": w["schwer"],
-                        "geschafft": w["ok"]} for w in wuerfe]
+                        "geschafft": w["ok"], **({"vorteil": w["vt"]} if w.get("vt") else {})} for w in wuerfe]
             for _ in range(2):
                 obj = await _ask_json(system_text(r, rd, "erzaehlen"), facts(r, rd, facts_w), SCHEMA_ERZAEHLEN, "erzaehlen", 900)
                 story, d2 = check_story(r, rd, obj)
@@ -1933,7 +1963,7 @@ def view(rid, pid, now=None):
             "rest": left, "zug_s": rd["zug_s"], "szene": rd["szene"], "gastgeber": host, "lang": lang,
             "ich": hero_view(r, me["held"], lang) if me.get("held") else None,
             "meine_aktion": rd["offen"].get(pid, {}).get("text", ""), "plaetze": plaetze,
-            "max": r["grenzen"]["spieler"], "log": rd["log"][-LOG_ZEIGEN:], "until": rd["until"], "poll": POLL_S,
+            "max": r["grenzen"]["spieler"], "log": [e for e in rd["log"] if e["art"] != "ooc" or e.get("pid") == pid][-LOG_ZEIGEN:], "until": rd["until"], "poll": POLL_S,
             "text_max": TEXT_MAX, "werte": {w["id"]: w["name"][li] for w in r["werte"]},
             "angebote": offers_for(r, rd, pid, lang), "tausch_teile": TAUSCH_TEILE,
             "akt": min(rd.get("akt", 0) + 1, len(rd["plan"]["akte"])) if rd.get("plan") else 0,
