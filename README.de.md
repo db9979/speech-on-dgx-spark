@@ -41,6 +41,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.969** KI-Dungeon-Master mit Karte: das Panel würfelt je Kapitel ein Ortsnetz in fünf Formen (verstreut, Tal, See, zwei Reiche, Küste) mit Nebel, die Gruppe zieht nur zu Nachbarorten, unterwegs Begegnungen; Zufalls-Gewölbe als Raster in fünf Grundrissen mit Fallen, Rätseln, Wächtern, Schatz, Quelle, Altar und Boss, alles vom Panel gewürfelt und geprüft
 - **V01.0.968** KI-Dungeon-Master Stufe 5a: „Du bist dran“ als Mitteilung einmal je Zug, Erinnerung wenn der Zug wartet, Spieltermin des Gastgebers mit Kalenderdatei und Mitteilung 15 Minuten vorher, Rückblick nach 12 Stunden Pause; Fehler 500 bei „Handeln“ behoben, kein „KI-Bild“-Zeichen mehr auf den Bildern
 - **V01.0.967** KI-Dungeon-Master: Bilder für Ausrüstung und Zauber, ein gemaltes Bild je Gegenstand und Zauber im Stil jeder Welt mit Seltenheitsrahmen, nachts von 01:00 bis 05:00 oder sofort per „Bilder jetzt erstellen“ (höchstens 300 am Tag), eigenes Bild für benannte Fundstücke ab rar; eigener Admin-Schalter, braucht Bilder malen
 - **V01.0.966** Ohne Internet: Zeitserver im Heimnetz für beide Rechner (Einstellungen → Spark → Betrieb), Prüfkarte unter Zustand → Überblick → Ohne Internet (Modelle, Uhren, Namen, was pausiert) und ein Hinweis, wenn der Modell-Rechner wegen der Uhrzeit ablehnt; Sprachdienste und Parakeet laden nur von der eigenen Platte, Wächter-Test gegen Downloads zur Laufzeit
@@ -50,7 +51,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.962** KI-Dungeon-Master Stufe 4: neun Ausrüstungsplätze wie bei D&D (zweihändige Waffen, Ziehen und Ablegen), Gewicht und Traglast (belastet = Nachteil auf Geschick, Beute ohne Platz bleibt am Boden), Händler mit Preisen vom Panel und Charisma-Rabatt, unerkannte Magie; jede Runde beginnt mit einem Prolog (Ort, Stimmung, Ausgangslage)
 - **V01.0.961** KI-Dungeon-Master im D&D-Look auf der ganzen Seite: Welt, Geschichte, Ton, Volk und Klasse als Karten mit Bildzeichen, je Welt 10 fertige Geschichten, Knopf für hell oder dunkel, Helden als Karten
 - **V01.0.960** Mitteilung antippen öffnet genau diese Meldung: Karte über dem Gespräch mit ganzem Text und passendem Knopf (iPhone, Android 1.4.4, Browser, Begleiter Mac)
-- **V01.0.959** KI-Dungeon-Master: Heldenstimme aus einer Beschreibung („tiefe, raue Zwergenstimme“), wenn VoiceDesign an ist; mit Probe, geprüft wie jede Eingabe
 
 
 

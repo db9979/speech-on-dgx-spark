@@ -42,6 +42,7 @@ helpers.start()
 import panel  # noqa: E402
 import guard  # noqa: E402
 import dungeon  # noqa: E402
+import dungeon_karte  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
 ADMIN = TestClient(panel.app)
@@ -66,6 +67,12 @@ def _login(name):
     c = TestClient(panel.app)
     assert c.post("/api/profile/login", json={"name": name, "pin": "1234"}).status_code == 200
     return c, c.get("/api/whoami").json()["profile"]["id"]
+
+
+def way(rd):
+    """The id of a way from where the group stands to a place not yet visited (the map decides, dungeon_karte)."""
+    ws = [w for w in dungeon_karte.facts(dungeon.rules(), rd)["wege"] if w["id"] != "ein"]
+    return next((w for w in ws if not w.get("besucht")), ws[0])["id"]
 
 
 def code_of(link):
@@ -1074,7 +1081,7 @@ class Equipment(Base):
 
         def move(rd):
             story, _ = dungeon.check_story(self.r, rd, {"erzaehlung": "Ihr zieht weiter durch das nasse Moor bis zur Furt.", "frage_an": "Arvid",
-                                                         "szene": {"ort": "Furt", "stimmung": "kalt"}})
+                                                         "szene": {"ort": "Furt", "stimmung": "kalt", "ort_id": way(rd)}})
             dungeon.apply(self.r, rd, [], story, self.rid, random.Random(3))
             return rd
         self.assertEqual(self.edit(move)["boden"], [])
@@ -1120,7 +1127,7 @@ class Equipment(Base):
         self.assertIsNotNone(self.c.post(f"/api/profile/dungeon/{self.rid}/markt", json={"auf": True}).json()["markt"])
         def move(rd):
             s, _ = dungeon.check_story(self.r, rd, {"erzaehlung": "Ihr verlasst das Dorf und folgt der Straße nach Norden.", "frage_an": "Arvid",
-                                                    "szene": {"ort": "Nordstraße", "stimmung": ""}})
+                                                    "szene": {"ort": "Nordstraße", "stimmung": "", "ort_id": way(rd)}})
             dungeon.apply(self.r, rd, [], s, self.rid, random.Random(4))
             return rd
         self.assertNotIn("markt", self.edit(move))
@@ -1197,7 +1204,7 @@ class Prologue(Base):
         self.assertTrue(e[0]["prolog"])
         self.assertIn("Nebel", e[0]["text"])
         self.assertEqual((len(e[0]["npc"]), e[0]["frage"]), (1, "Arvid"))
-        self.assertEqual(rd["szene"], {"ort": "Dorfplatz", "stimmung": "neblig"})
+        self.assertEqual(rd["szene"], {"ort": dungeon_karte.names(rd)[0], "stimmung": "neblig"})   # the place is the map's
         self.assertFalse(any(x["art"] in ("folge", "beute", "ep") for x in rd["log"]))   # no consequences in the opening
         self.assertEqual((rd["dm"], rd["zug"]), ("", 1))
         self.assertNotIn(v["rid"], dungeon._running)
@@ -1526,7 +1533,7 @@ class Pictures(Base):
         rd = self.state(rid)
         b = rd["bilder"][0]["b"]
         self.assertEqual([x["art"] for x in rd["log"]][-1], "bild")
-        self.assertEqual(rd["orte"], ["Dorfplatz"])
+        self.assertEqual(dungeon_karte.names(rd), [rd["szene"]["ort"]])
         r = self.c.get(f"/api/profile/dungeon/{rid}/bild/{b}")
         self.assertEqual((r.status_code, r.headers["content-type"], r.content), (200, "image/png", PNG))
         code, gp = self.guest(rid)
@@ -1612,17 +1619,20 @@ class Pictures(Base):
         with dungeon._lock:
             d = dungeon._read()
             rd = d["runden"][rid]
-            for ort in ("Dorfplatz", "Krypta", "Krypta", "Turm"):
-                dungeon.visit(rd, ort)
+            for _ in range(2):
+                rd["karte"]["drin"] = None              # out of a vault the way led into
+                dungeon_karte.step(dungeon.rules(), rd, {"ort_id": way(rd), "erfolg": []}, {}, random.Random(5))
+            rd["karte"]["drin"] = None
             rd["zug"] = 9
             job = dungeon.queue_scene(dungeon.rules(), d, rid, rd, "a crypt below a bell tower")
             dungeon._write(d)
         asyncio.run(dungeon.paint_scene(rid, *job))
-        self.assertEqual(self.state(rid)["orte"], ["Dorfplatz", "Krypta", "Turm"])
+        went = dungeon_karte.names(self.state(rid))
+        self.assertEqual(len(went), 3)
         r = self.c.post(f"/api/profile/dungeon/{rid}/kapitel", json={})
         kid = r.json()["kid"]
         c = dungeon.campaigns(self.uid)[kid]
-        self.assertEqual((c["titelbilder"], c["orte"]), ([1], ["Dorfplatz", "Krypta", "Turm"]))
+        self.assertEqual((c["titelbilder"], c["orte"]), ([1], went))
         self.assertEqual(self.c.get(f"/api/profile/dungeon/kampagne/{kid}/bild/1").content, PNG)
         self.assertTrue(any(re.fullmatch(p, f"/api/profile/dungeon/kampagne/{kid}/bild/1") for m, p in (iphone.AREAS | iphone.THINGS)["dungeon"] if "GET" in m))
         self.assertEqual(self.c2.get(f"/api/profile/dungeon/kampagne/{kid}/bild/1").status_code, 404)

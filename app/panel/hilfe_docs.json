@@ -5301,6 +5301,38 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Karte und Zufalls-Gewölbe (V01.0.969, Plan dungeon-master/karte-plan.md, Dominik 2026-10-23 „karte 2“ und „1-5 aber viel mehr varianzen reinbringen“, dungeon_karte.py): Die Karte gehört dem Panel, nicht dem Modell. Zum Start einer Runde oder eines Kapitels würfelt das Panel 8 bis 15 Orte in einer von fünf Landschaften (verstreut, Flusstal, rund um einen See, zwei Reiche mit einem Übergang, Küste), mindestens 150 Punkte auseinander, verbindet sie mit einem Spannbaum und wenigen kurzen Querwegen, die keinen anderen kreuzen (höchstens 4 Wege je Ort), legt den Start in den Westen, das Ziel am weitesten weg und jedem Akt der Geschichte einen Ort auf dem Weg dorthin. Namen kommen zuerst aus den Schauplätzen der Geschichte (der erste ist der Start), sonst aus den Ortsarten der Welt (ortsarten: 33 Arten, je Welt eigene, mit Namenslisten) oder aus einer Silbe der Welt (silben) und einer Endung der Ortsart, etwa „Krähen“ und „wald“. Das nächste Kapitel beginnt am letzten Ort. Das Modell bekommt nur den aktuellen Ort, die Wege von dort mit Himmelsrichtung und die Richtung zum Ort des nächsten Akts (karte in den Fakten) und nennt in szene.ort_id einen dieser Wege, wenn die G"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "ruppe weiterzieht; jede andere Angabe, auch ein erfundener Name oder eine Bitte in einer Aktion, lässt die Gruppe stehen (dungeon: karte | verworfen). Der Ort der Szene ist immer der Name der Karte. Nebel: Die Seite zeigt nur besuchte Orte (fest) und bekannte (Nachbarn besuchter, gestrichelt, Name kursiv); ein Weg ins Unbekannte endet als Stummel mit „?“, und weder die Seite noch das Modell erfahren den Namen dahinter. Der Ausschnitt wächst mit dem Entdeckten, „⤢“ zeigt die Karte groß. Unter „Von hier aus“ schreibt ein Tipp auf einen Weg „Wir gehen weiter zu …“ ins eigene Feld; es bleibt der Text des Spielers. Der Gastgeber kann die Karte vor dem ersten Schritt neu würfeln. Unterwegs: Wer einen Weg zum ersten Mal geht, trifft zu 40 Prozent auf eine Begegnung aus begegnungen (Stille, Wetter, ein Hinweis, ein Fund aus dem Katalog, ein Gegner mit dem Rang der Gruppe, ein Händler am neuen Ort); das Modell erzählt sie im nächsten Zug. Gewölbe: Ein Ort einer Gewölbe-Art (Höhle, Ruine, Krypta, Turm, Wrack, Labor, Herrenhaus, Festung …) oder der Knopf „🎲 Gewölbe würfeln“ des Gastgebers öffnet ein Raster aus 5 bis 12 Räumen (6 bis 9 Spalten, 4 bis 6 Zeilen) in einer von fünf Formen (verzwei"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "gt, langer Gang mit Seitenräumen, Labyrinth mit Schleifen, Kreuz um eine Halle, gewundene Höhle), Eingang am Westrand, der Herr des Gewölbes im fernsten Raum, ein Schatz daneben, dazu etwa die Hälfte der übrigen Räume besonders. Die Räume kommen je Welt aus raeume (42). Falle: Beim Betreten würfelt das Panel für jeden Helden W20 plus Wert gegen die Schwierigkeit der Falle (fallen, 17, plus die halbe Gruppenstufe) und zieht den Schaden ab (höchstens 6, minus Schutz). Rätsel: Die Tür bleibt zu, bis eine Aktion eines der festen Lösungswörter enthält (raetsel, 40, Groß und klein und Umlaute egal); nach 3 Zügen zeigt die Seite den Hinweis, gelöst gibt es die halben Ziel-EP für alle. Das Modell bekommt die Frage, nie die Lösung. Wächter und Herr halten die Wege zu, bis die Erzählung einen besiegten Gegner meldet; Schatz gibt einmal Beute „truhe“ aus dem Katalog, Heilquelle heilt alle um 2 bis 6, Altar gibt allen +1 auf einen Wert für 3 Züge. Hinaus geht es nur vom Eingang. Alles steht in der Runde (dungeon-runden.json, keine neue Datei); die Tabellen ändert der Admin wie den übrigen Katalog (*Funktionen → KI-Dungeon-Master*, Knopf „Regeln anpassen“), das Panel prüft sie. Live zählt Karte"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "n und Runden im Gewölbe; das Journal schreibt nur feste Wörter und Zahlen (dungeon: karte, gewoelbe, falle, raetsel, quelle, altar, unterwegs). Endpunkt POST /api/profile/dungeon/{rid}/karte ({was: neu|gewoelbe}, nur der Gastgeber, Anmeldung, Profilbindung, CSRF, Größen- und Rate-Limit)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "Stufe M0: Der Spark macht Musik selbst mit ACE-Step 1.5 (MIT-Lizenz), ohne Internet. Das Modell kommt nur mit der Installation auf dem Modell-Rechner: sudo ./install.sh --musik 2b (2B turbo mit 1,7B-Planer, empfohlen), 2b-klein (0,6B-Planer, weniger Speicher) oder xl (XL turbo, klingt besser, braucht mehr); die erste Installation fragt danach, Standard ist keins. Die Engine ist acestep.cpp (ace-server, fest auf einen Commit, für den GB10 mit CUDA gebaut, ohne torch und ohne Docker), die GGUF-Dateien sind fest mit Revision und SHA-256 (musikmodell.py). Der Dienst speech-spark-musik (musik_server.py, nur 127.0.0.1:31004, beim Teilen über das TLS-Tor, API-Schlüssel) lädt die Engine erst für ein Lied (127.0.0.1:31014, vorher Prüfung des freien Speichers) und beendet sie nach 10 Minuten ohne Lied; Bild- und Musik-Dienst teilen dafür bedarf.py. Ein Lied entsteht in zwei Schritten: der kleine Planer legt Aufbau und Klangcodes fest, dann macht das Klangmodell daraus eine MP3 (192 kbit/s). Alle Felder setzt der Dienst selbst; er nimmt nur eine MP3 zurück und schreibt sein eigenes ID3-Kennzeichen hinein („KI-erzeugt mit ACE-Step 1.5“). Der Admin misst: Zustand → Prüfen → „Musik testen“ macht"
 },
 {
@@ -17270,6 +17302,38 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ile/dungeon/ding/{name}, guests with their seat code (POST /api/dungeon/ding); rate limit dungeonding. The state lives in dungeon-dingbilder.json, hourly the panel removes pictures no entry and no hero needs any more. Status → Live counts item pictures, finds, painted, discarded and failed today on the Dungeon Master line; logs: dungeon: dingbild | lauf start | knopf, dungeon: dingbild | ok | katalog | 3100 ms, dungeon: dingbild | ok | fund | 3300 ms, dungeon: dingbild | lauf ende | tag | 300 gemalt, dungeon: dingbild | abgelehnt | fund | tag."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: map and random vaults (V01.0.969, plan dungeon-master/karte-plan.md, Dominik 2026-10-23 \"karte 2\" and \"1-5 aber viel mehr varianzen reinbringen\", dungeon_karte.py): the map belongs to the panel, not to the model. At the start of a round or a chapter the panel rolls 8 to 15 places in one of five landscapes (scattered, river valley, around a lake, two realms with one crossing, coast), at least 150 points apart, joins them with a spanning tree and a few short extra ways that cross no other (at most 4 ways a place), puts the start in the west, the goal farthest away and a place on the way there for every act of the story. Names come first from the story's places (the first is the start), else from the world's kinds of places (ortsarten: 33 kinds, each world its own, with name lists) or from a stem of the world (silben) and an ending of the kind, such as \"Crow\" and \"Wood\". The next chapter starts at the last place. The model gets only the current place, the ways from there with their direction and the direction of the next act's place (karte in the facts) and names one of those ways in szene.ort_id when the group moves on; anything else, a made-up name or a request in"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": " an action as well, leaves the group where it is (dungeon: karte | verworfen). The scene's place is always the map's name. Fog: the page shows only visited places (solid) and known ones (neighbours of visited ones, dashed, name in italics); a way into the unknown ends as a stub with \"?\", and neither the page nor the model learns the name behind it. The view grows with what was discovered, \"⤢\" shows the map large. Under \"From here\" a tap on a way writes \"We go on to …\" into the own field; it stays the player's text. The host may roll the map again before the first step. On the way: a way gone for the first time brings an encounter from begegnungen 40 percent of the time (quiet, weather, a hint, a find from the catalog, a foe of the group's rank, a merchant at the new place); the model tells it in the next turn. Vaults: a place of a vault kind (cave, ruin, crypt, tower, wreck, lab, manor, fortress …) or the host's button \"🎲 Roll a vault\" opens a grid of 5 to 12 rooms (6 to 9 columns, 4 to 6 rows) in one of five forms (branching, long corridor with side rooms, maze with loops, cross around a hall, winding cave), the entrance at the west edge, the master of the vault in the farthest ro"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "om, a treasure next to it, and about half of the other rooms special. Rooms come per world from raeume (42). Trap: on entering, the panel rolls d20 plus value for every hero against the trap's difficulty (fallen, 17, plus half the group's level) and takes off the damage (at most 6, minus protection). Riddle: the door stays shut until an action holds one of the fixed answer words (raetsel, 40, case and umlauts do not count); after 3 turns the page shows the hint, solved it gives half the goal's EP to everyone. The model gets the question, never the answer. Guardian and master keep the ways shut until the narration reports a beaten foe; treasure gives the catalog's loot \"truhe\" once, a spring heals everyone by 2 to 6, an altar gives everyone +1 on one value for 3 turns. The way out is only at the entrance. Everything stays in the round (dungeon-runden.json, no new file); the admin changes the tables like the rest of the catalog (*Features → AI Dungeon Master*, button \"Adjust rules\"), the panel checks them. Live counts maps and rounds inside a vault; the journal writes fixed words and numbers only (dungeon: karte, gewoelbe, falle, raetsel, quelle, altar, unterwegs). Endpoint POST /api"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "/profile/dungeon/{rid}/karte ({was: neu|gewoelbe}, host only, login, profile binding, CSRF, size and rate limit)."
 },
 {
 "lang": "en",

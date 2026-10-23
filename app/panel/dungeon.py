@@ -98,6 +98,7 @@ from urllib.parse import urlsplit
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import Response
 
+import dungeon_karte
 import features
 import guard
 import mfa
@@ -200,7 +201,7 @@ BILD_ABSTAND = 3          # turns between two scene pictures at least
 BILDER_TAG = 40           # pictures of the game a day on the whole Spark, without grenzen.bilder_tag
 BILD_MAX = 300            # the model's description of a picture (English)
 KAPITEL_BILDER = 20       # chapter covers a campaign keeps
-ORTE_KARTE = 20           # places the map keeps
+ORTE_KARTE = 20           # places of a chapter a campaign keeps (dungeon_karte.names)
 ERINNERN_S = 6 * 3600     # a turn open this long without the seat's action: one reminder
 TERMIN_VOR = 15 * 60      # the note before the host's game date
 TERMIN_TAGE = 60          # the date at most this far ahead
@@ -265,11 +266,11 @@ def _go(coro, name):
 # ---------------------------------------------------------------- the rules: shipped, the admin's own, merged
 def _base_rules():
     with open(DATA) as f:
-        return json.load(f)
+        return dict(json.load(f), **dungeon_karte.tables())
 
 
 _rules = {"key": None, "r": None}
-LISTS = ("welten", "toene", "voelker", "klassen", "effekte", "gegenstaende", "seltenheit", "werte")
+LISTS = ("welten", "toene", "voelker", "klassen", "effekte", "gegenstaende", "seltenheit", "werte") + dungeon_karte.LISTS
 
 
 def merge(base, own):
@@ -427,7 +428,7 @@ def check_rules(r):
     sv = r.get("stimmen")
     need(isinstance(sv, dict) and set(sv) <= set(STIMMEN) and all(isinstance(x, str) and _VOICE.fullmatch(x) for x in sv.values()),
          "stimmen: erzaehler und npc, je ein Stimmenname (höchstens 40 Zeichen) oder leer")
-    return err
+    return err + dungeon_karte.check_rules(r)
 
 
 def own_rules():
@@ -1065,12 +1066,13 @@ def make_round(owner, b, lang, now=None, kampagne=None):
                             "plaetze": {pid: {"h": "", "uid": owner, "held": h, "made": now, "gast": False}}}
         rd = d["runden"][rid]
         if kampagne:
-            rd.update(kid=kampagne["kid"], kapitel=kampagne["kapitel"], vorher=kampagne["vorher"], orte=list(kampagne.get("orte") or [])[-ORTE_KARTE:])
+            rd.update(kid=kampagne["kid"], kapitel=kampagne["kapitel"], vorher=kampagne["vorher"])
             plan = kampagne.get("plan")
             if plan:
                 rd["akt"] = kampagne.get("akt", 0)
         if plan:
             rd.update(plan=plan, akt=rd.get("akt", 0), akt_zug=1)
+        dungeon_karte.make(r, rd, start=((kampagne or {}).get("orte") or [""])[-1])   # the chapter goes on where the last one ended
         _log(rd, "system", text=["Die Runde beginnt. Schreibt, was eure Figuren tun.", "The round begins. Write what your characters do."])
         rd["dm"] = "prolog"                   # the Dungeon Master opens it first (run_prolog), the turn waits
         _running.add(rid)
@@ -1277,7 +1279,7 @@ def end_chapter(owner, rid, now=None):
         c["vorlesen"] = bool(rd.get("vorlesen"))
         c["plan"], c["akt"] = rd.get("plan"), rd.get("akt", 0)
         kid = kid or "k" + os.urandom(4).hex()
-        c["orte"] = list(rd.get("orte") or [])
+        c["orte"] = dungeon_karte.names(rd)[-ORTE_KARTE:]
         cover(rid, rd, kid, c)
         c.update(kapitel=rd.get("kapitel", 1), vorher=c.get("bisher", ""), t=now, rid="", schreibt=True, entwurf=True,
                  quelle=[x["text"][:400] for x in rd["log"] if x["art"] == "dm"][-QUELLE_MAX:],
@@ -1818,7 +1820,8 @@ SCHEMA_ERZAEHLEN = {"type": "object", "additionalProperties": False, "required":
     "erfolg": {"type": "array", "maxItems": ERFOLG_MAX, "items": {"type": "object", "additionalProperties": False, "required": ["art"],
                "properties": {"art": {"type": "string", "enum": list(ERFOLG_ARTEN)}, "rang": {"type": "integer"}}}},
     "szene": {"type": "object", "additionalProperties": False, "properties": {"ort": {"type": "string", "maxLength": 60},
-                                                                           "stimmung": {"type": "string", "maxLength": 30}}},
+                                                                           "stimmung": {"type": "string", "maxLength": 30},
+                                                                           "ort_id": dungeon_karte.SCHEMA}},
     "haendler": {"type": "object", "additionalProperties": False, "required": ["name"], "properties": {
         "name": {"type": "string", "maxLength": 40}, "satz": {"type": "string", "maxLength": SATZ_MAX}}},
     "frage_an": {"type": "string", "maxLength": NAME_MAX}, "akt_fertig": {"type": "boolean"},
@@ -1854,6 +1857,8 @@ def facts(r, rd, wuerfe=None):
     handel = [{"wer": x["name"], "was": x["was"], "ding": x["ding"]} for x in rd["log"] if x["art"] == "handel" and x["n"] == rd["zug"]]
     if handel:
         fakten["handel"] = handel
+    if rd.get("karte"):
+        fakten["karte"] = dungeon_karte.facts(r, rd)
     if wuerfe is not None:
         fakten["proben"] = wuerfe
     spieltext = "\n".join(f"{names[pid]['held']['name']}: {a['text']}" for pid, a in rd["offen"].items() if pid in names)
@@ -1874,6 +1879,8 @@ def system_text(r, rd, task):
                    AUFGABE_ERZAEHLEN[lang].format(n=erz_max(rd), anlaesse=", ".join(ANLAESSE), ooc=OOC_MAX, bild=bild)).rstrip()
     if task != "proben" and rd.get("plan") and rd.get("akt", 0) < len(rd["plan"]["akte"]):
         t += " " + AUFGABE_FOLGE[lang]
+    if task != "proben":
+        t += dungeon_karte.task(rd)
     return t + "\n\n" + (rd.get("prompt") or r["prompt"])
 
 
@@ -1955,7 +1962,7 @@ def check_story(r, rd, obj):
         return None, 1
     names, drop = _name_map(rd), 0
     out = {"text": text, "npc": [], "folgen": [], "beute": None, "erfolg": [], "szene": None, "frage": "", "haendler": None,
-           "akt_fertig": obj.get("akt_fertig") is True, "ooc": [], "bild": ""}
+           "akt_fertig": obj.get("akt_fertig") is True, "ooc": [], "bild": "", "ort_id": dungeon_karte.ort_id(obj)}
     if obj.get("bild"):
         out["bild"], why = picture_text(r, rd, obj["bild"])
         if why and why != "leer":
@@ -2028,10 +2035,7 @@ def apply(r, rd, wuerfe, story, rid, rng=None):
         if w["ok"]:
             ep[w["pid"]] = ep.get(w["pid"], 0) + r["ep"]["probe"] * w["schwer"] // 10
     if story:
-        if story["szene"] and story["szene"]["ort"] and story["szene"]["ort"] != rd["szene"].get("ort"):
-            close_market(rd)                    # a new place: the merchant and what lies on the ground stay behind
-            rd["boden"] = []
-            visit(rd, story["szene"]["ort"])
+        dungeon_karte.step(r, rd, story, ep, rng)   # the map moves the group (a new place: merchant and ground stay behind)
         if story.get("bild"):
             rd["bild_text"] = story["bild"]     # the host's „Szenenbild jetzt malen“ paints the last one
         if story["szene"] and (story["szene"]["ort"] or story["szene"]["stimmung"]):
@@ -2058,15 +2062,7 @@ def apply(r, rd, wuerfe, story, rid, rng=None):
             _log(rd, "folge", pid=f["pid"], name=h["name"], was=f["art"], zahl=n, leben=h["leben"])
         if story["beute"]:
             b = story["beute"]
-            i, it, gold = loot(r, held, b["anlass"], stufe, rng, b["name"], b["satz"])
-            boden = not room(r, held[i], [it])
-            if boden:                           # no place or too heavy: it lies here for the group (2a)
-                rd["boden"] = ((rd.get("boden") or []) + [it])[-BODEN_MAX:]
-            else:
-                bag_add(r, held[i], it)
-            _log(rd, "beute", name=held[i]["name"], item=item_view(r, it, rd["lang"]), gold=gold, boden=boden)
-            _day.bump("beute")
-            print(f"dungeon: beute | {b['anlass']} | {it['s']}", flush=True)
+            give_loot(r, rd, held, b["anlass"], stufe, rng, b["name"], b["satz"])
         for e in story["erfolg"]:
             if e["art"] == "ziel":
                 for pid in ep:
@@ -2094,6 +2090,20 @@ def apply(r, rd, wuerfe, story, rid, rng=None):
         rd["offen"] = {}
         rd["zug"] += 1
     rd["zug_t"] = time.time()
+
+
+def give_loot(r, rd, held, anlass, stufe, rng=None, eigen="", satz=""):
+    """A find from the catalog (loot) into the bag of its receiver, or on the ground when it has no place or is too
+    heavy (2a); the log and the journal say so."""
+    i, it, gold = loot(r, held, anlass, stufe, rng, eigen, satz)
+    boden = not room(r, held[i], [it])
+    if boden:
+        rd["boden"] = ((rd.get("boden") or []) + [it])[-BODEN_MAX:]
+    else:
+        bag_add(r, held[i], it)
+    _log(rd, "beute", name=held[i]["name"], item=item_view(r, it, rd["lang"]), gold=gold, boden=boden)
+    _day.bump("beute")
+    print(f"dungeon: beute | {anlass} | {it['s']}", flush=True)
 
 
 async def ask_model(system, user, schema, name, tokens):
@@ -2185,9 +2195,9 @@ def prolog(r, rd, story):
     li = 1 if rd["lang"] == "en" else 0
     names = dict(seated(rd))
     if story:
-        if story["szene"] and (story["szene"]["ort"] or story["szene"]["stimmung"]):
-            rd["szene"] = story["szene"]
-            visit(rd, story["szene"]["ort"])
+        st = dict(story, ort_id="")              # the opening stays at the start, the place named by the map
+        dungeon_karte.step(r, rd, st, {})
+        rd["szene"] = st["szene"]
         if story.get("bild"):
             rd["bild_text"] = story["bild"]
         if story.get("haendler") and not rd.get("markt"):
@@ -2820,12 +2830,6 @@ def cover(rid, rd, kid, c):
     c["titelbilder"] = have[-KAPITEL_BILDER:]
 
 
-def visit(rd, ort):
-    """The map: the places the group went through, in order, without the model (a place again only after another)."""
-    if ort and (rd.get("orte") or [""])[-1] != ort:
-        rd["orte"] = ((rd.get("orte") or []) + [ort])[-ORTE_KARTE:]
-
-
 def _bild_sweep(d, now):
     """At most every hour: portraits and covers nobody keeps any more (a hero deleted, a guest's Figur-Code expired,
     a campaign gone)."""
@@ -3008,7 +3012,7 @@ def view(rid, pid, now=None):
             "akt": min(rd.get("akt", 0) + 1, len(rd["plan"]["akte"])) if rd.get("plan") else 0,
             "akte": len(rd["plan"]["akte"]) if rd.get("plan") else 0, "erzaehlt": bool(rd.get("plan")) and rd.get("akt", 0) >= len(rd["plan"]["akte"]),
             "plan": rd.get("plan") if host else None, "akt_min": AKT_MIN,
-            "bilder": [dict(x) for x in rd.get("bilder") or []][-BILDER_RUNDE:], "orte": list(rd.get("orte") or []),
+            "bilder": [dict(x) for x in rd.get("bilder") or []][-BILDER_RUNDE:], "karte": dungeon_karte.view(r, rd, host),
             "bild_malt": rid in _bilder_jobs, "bild_hint": _hint(rid, lang), "bilder_an": pictures_on(rd["owner"]),
             "bild_grund": _nein(may_paint(r, d, rid, rd), lang) if host and may_paint(r, d, rid, rd) else "",
             "portraet_malt": bool(me.get("held")) and "h:" + me["held"]["hid"] in _bilder_jobs,
@@ -3425,7 +3429,7 @@ def for_live():
             "gehoert": t["gehoert"], "geschichten": len(plans()), "akte": t["akte"], "vorschlaege": t["vorschlaege"],
             "maerkte_offen": sum(1 for v in rs if v.get("markt")), "maerkte": t["maerkte"], "kaeufe": t["kaeufe"], "verkaeufe": t["verkaeufe"],
             "auto": t["auto"], "gemalt": t["gemalt"], "bild_weg": t["bild_weg"], "bild_aus": t["bild_aus"], "bild_wartet": len(_bilder_jobs),
-            "termine": sum(1 for v in rs if (v.get("termin") or 0) > now), "gemeldet": t["gemeldet"]}
+            "termine": sum(1 for v in rs if (v.get("termin") or 0) > now), "gemeldet": t["gemeldet"], **dungeon_karte.for_live(rs)}
 
 
 def own_count(uid):

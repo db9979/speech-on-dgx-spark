@@ -1746,7 +1746,8 @@ def snapshot(view="admin", now=None):
                            f"{dgn['ding']['funde']} Funde, {dgn['ding']['verworfen']} verworfen, {dgn['ding']['ausgefallen']} ausgefallen"
                            + (" · malt Gegenstände" if dgn["ding"]["laeuft"] else "") if dgn.get("ding", {}).get("on") else "")
                         + (f" · {dgn['termine']} Spieltermine" if dgn.get("termine") else "")
-                        + (f" · heute {dgn['gemeldet']} Mitteilungen" if dgn.get("gemeldet") else ""))
+                        + (f" · heute {dgn['gemeldet']} Mitteilungen" if dgn.get("gemeldet") else "")
+                        + f" · {dgn.get('karten', 0)} Karten, {dgn.get('gewoelbe_drin', 0)} im Gewölbe")
         if x["id"] == "wkarte":    # Wissenskarte: connections, discarded, documents waiting, profiles, numbers only (never a title)
             x["sub"] = (f"{wkk.get('verbindungen', 0)} Verbindungen · {wkk.get('punkte', 0)} Punkte · {wkk.get('warten', 0)} Dokumente warten"
                         + f" · {wkk.get('profile', 0)} Profile"

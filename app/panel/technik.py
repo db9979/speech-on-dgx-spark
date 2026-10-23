@@ -171,6 +171,7 @@ MODULE = {
     "calendars": ("post", "Kalender und Tagesbriefing, einzelne Kalender mit anderen Profilen geteilt"),
     "dungeon_dingbild": ("dienste", "KI-Dungeon-Master: Bilder für Ausrüstung und Zauber, nachts oder auf Knopf gemalt, eigene Bilder für benannte Fundstücke"),
     "dungeon": ("dienste", "KI-Dungeon-Master: Rollenspiel bis 5 per Link; Panel würfelt, Beute, Kampagnen, Geschichten in Akten, Vorlesen"),
+    "dungeon_karte": ("dienste", "Dungeon-Master-Karte: Panel würfelt Ortsnetz je Kapitel mit Nebel und Gewölbe als Raster, Fallen, Rätsel"),
     "mitschreiblink": ("dienste", "Mitschreib-Link: Leute ohne Profil setzen etwas auf eine Liste (Code nach dem #, nur Hash, mit Ablauf)"),
     "listendav": ("dienste", "Listen in Erinnerungen: die Spark-Listen eines Profils als Aufgabenlisten (VTODO) des Kalender-Servers"),
     "kalenderserver": ("post", "Kalender-Server: die Spark-Kalender eines Profils für Kalender-Apps (CalDAV unter /caldav/, App-Passwort)"),

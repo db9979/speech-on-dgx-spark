@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.969** AI Dungeon Master with a map: each chapter the panel rolls a net of places in five shapes (scattered, valley, lake, two realms, coast) with fog, the group only moves to neighbouring places, with encounters on the way; random vaults as a grid in five layouts with traps, riddles, guardians, treasure, spring, altar and boss, all rolled and checked by the panel
 - **V01.0.968** AI Dungeon Master stage 5a: "It is your turn" as a note once per turn, a reminder when the turn waits, the host's game date with a calendar file and a note 15 minutes before, "Last time" after a 12-hour break; fixed the error 500 on "Act", no "AI image" mark on the pictures any more
 - **V01.0.967** AI Dungeon Master: pictures for gear and spells, one painted picture per item and spell in each world's style with a rarity frame, at night from 01:00 to 05:00 or at once with "Create pictures now" (at most 300 a day), an own picture for named finds from rare on; own admin switch, needs Painting pictures
 - **V01.0.966** Without the internet: a time server in the home network for both computers (Settings → Spark → Operation), a check card under Status → Summary → Without the internet (models, clocks, names, what pauses) and a hint when the model computer refuses because of the time; speech servers and Parakeet load only from their own disk, a guard test against downloads at run time
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.962** AI Dungeon Master stage 4: nine equipment places as in D&D (two-handed weapons, drag and drop), weight and carry limit (burdened = disadvantage on dexterity, loot without room stays on the ground), merchants with prices by the panel and a Charisma discount, unknown magic; every round opens with a prologue (place, mood, starting situation)
 - **V01.0.961** AI Dungeon Master with the D&D look on the whole page: world, story, tone, people and class as cards with pictures, 10 ready-made stories per world, a light or dark button, heroes as cards
 - **V01.0.960** Tapping a notification opens exactly that note: a card above the conversation with the whole text and the button that fits (iPhone, Android 1.4.4, browser, companion on the Mac)
-- **V01.0.959** AI Dungeon Master: a hero's voice from a description ("deep, rough dwarf voice") when VoiceDesign is on; with a sample, checked like every input
 
 
 

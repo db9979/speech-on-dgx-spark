@@ -1,0 +1,3357 @@
+{
+ "ortsarten": [
+  {
+   "id": "dorf",
+   "zeichen": "🏘",
+   "name": [
+    "Dorf",
+    "Village"
+   ],
+   "namen": [
+    [
+     "Erlenbrück",
+     "Moosgrund",
+     "Haselbach",
+     "Krähenfeld"
+    ],
+    [
+     "Alderbridge",
+     "Mossdale",
+     "Hazelbrook",
+     "Crowfield"
+    ]
+   ],
+   "welten": [
+    "fantasy",
+    "horror",
+    "eigene"
+   ],
+   "start": true,
+   "teile": [
+    [
+     "dorf",
+     "heim",
+     "bach",
+     "feld",
+     "hausen",
+     "roda"
+    ],
+    [
+     "dale",
+     "ham",
+     "brook",
+     "field",
+     "ton",
+     "wick"
+    ]
+   ]
+  },
+  {
+   "id": "stadt",
+   "zeichen": "🏰",
+   "name": [
+    "Stadt",
+    "Town"
+   ],
+   "namen": [
+    [
+     "Hohenwacht",
+     "Silberhafen",
+     "Königsfurt"
+    ],
+    [
+     "Highwatch",
+     "Silverhaven",
+     "Kingsford"
+    ]
+   ],
+   "welten": [
+    "fantasy",
+    "eigene"
+   ],
+   "start": true,
+   "teile": [
+    [
+     "burg",
+     "stadt",
+     "feste",
+     "hafen"
+    ],
+    [
+     "burg",
+     "town",
+     "hold",
+     "port"
+    ]
+   ]
+  },
+  {
+   "id": "taverne",
+   "zeichen": "🍺",
+   "name": [
+    "Taverne",
+    "Tavern"
+   ],
+   "namen": [
+    [
+     "Zum Eber",
+     "Drei Kronen",
+     "Zum lahmen Greif",
+     "Zur Laterne"
+    ],
+    [
+     "The Boar",
+     "Three Crowns",
+     "The Lame Griffin",
+     "The Lantern"
+    ]
+   ],
+   "welten": [
+    "fantasy",
+    "piraten",
+    "eigene"
+   ]
+  },
+  {
+   "id": "wald",
+   "zeichen": "🌲",
+   "name": [
+    "Wald",
+    "Forest"
+   ],
+   "namen": [
+    [
+     "Flüsterwald",
+     "Dornenhain",
+     "Nebelforst",
+     "Eichenruh"
+    ],
+    [
+     "Whisperwood",
+     "Thornholt",
+     "Mistwood",
+     "Oakrest"
+    ]
+   ],
+   "welten": [
+    "fantasy",
+    "horror",
+    "eigene"
+   ],
+   "teile": [
+    [
+     "wald",
+     "hain",
+     "forst",
+     "holz",
+     "grund"
+    ],
+    [
+     "wood",
+     "grove",
+     "forest",
+     "holt",
+     "weald"
+    ]
+   ]
+  },
+  {
+   "id": "sumpf",
+   "zeichen": "🌫",
+   "name": [
+    "Sumpf",
+    "Marsh"
+   ],
+   "namen": [
+    [
+     "Schwarzmoor",
+     "Faulsee",
+     "Irrlichtmoor"
+    ],
+    [
+     "Blackmire",
+     "Rotmere",
+     "Wisp Fen"
+    ]
+   ],
+   "welten": [
+    "fantasy",
+    "horror",
+    "eigene"
+   ],
+   "teile": [
+    [
+     "moor",
+     "sumpf",
+     "bruch",
+     "fenn"
+    ],
+    [
+     "mire",
+     "marsh",
+     "fen",
+     "bog"
+    ]
+   ]
+  },
+  {
+   "id": "berg",
+   "zeichen": "⛰",
+   "name": [
+    "Pass",
+    "Pass"
+   ],
+   "namen": [
+    [
+     "Graufels-Pass",
+     "Schädelkamm",
+     "Adlerjoch"
+    ],
+    [
+     "Greyrock Pass",
+     "Skull Ridge",
+     "Eagle Saddle"
+    ]
+   ],
+   "welten": [
+    "fantasy",
+    "eigene"
+   ],
+   "teile": [
+    [
+     "joch",
+     "kamm",
+     "fels",
+     "horn",
+     "spitze"
+    ],
+    [
+     "pass",
+     "ridge",
+     "crag",
+     "horn",
+     "peak"
+    ]
+   ]
+  },
+  {
+   "id": "bruecke",
+   "zeichen": "🌉",
+   "name": [
+    "Brücke",
+    "Bridge"
+   ],
+   "namen": [
+    [
+     "Steinbrücke",
+     "Rabenbrücke",
+     "Alte Furt"
+    ],
+    [
+     "Stone Bridge",
+     "Raven Bridge",
+     "Old Ford"
+    ]
+   ],
+   "welten": [
+    "fantasy",
+    "horror",
+    "eigene"
+   ],
+   "teile": [
+    [
+     "brücke",
+     "furt",
+     "steg"
+    ],
+    [
+     "bridge",
+     "ford",
+     "crossing"
+    ]
+   ]
+  },
+  {
+   "id": "lager",
+   "zeichen": "⛺",
+   "name": [
+    "Lager",
+    "Camp"
+   ],
+   "namen": [
+    [
+     "Räuberlager",
+     "Jägerlager",
+     "Lager am Bach"
+    ],
+    [
+     "Bandit Camp",
+     "Hunters' Camp",
+     "Brookside Camp"
+    ]
+   ],
+   "welten": [
+    "fantasy",
+    "piraten",
+    "eigene"
+   ]
+  },
+  {
+   "id": "ruine",
+   "zeichen": "🏚",
+   "name": [
+    "Ruine",
+    "Ruin"
+   ],
+   "namen": [
+    [
+     "Ruine von Var",
+     "Alter Wachturm",
+     "Verfallene Abtei"
+    ],
+    [
+     "Ruins of Var",
+     "Old Watchtower",
+     "Fallen Abbey"
+    ]
+   ],
+   "welten": [
+    "fantasy",
+    "eigene"
+   ],
+   "gewoelbe": true
+  },
+  {
+   "id": "hoehle",
+   "zeichen": "🕳",
+   "name": [
+    "Höhle",
+    "Cave"
+   ],
+   "namen": [
+    [
+     "Höhle der Echos",
+     "Krähenschlund",
+     "Tropfsteinhöhle"
+    ],
+    [
+     "Cave of Echoes",
+     "Crow's Maw",
+     "Dripstone Cave"
+    ]
+   ],
+   "welten": [
+    "fantasy",
+    "piraten",
+    "eigene"
+   ],
+   "gewoelbe": true
+  },
+  {
+   "id": "krypta",
+   "zeichen": "⚰",
+   "name": [
+    "Krypta",
+    "Crypt"
+   ],
+   "namen": [
+    [
+     "Krypta der Könige",
+     "Stille Gruft",
+     "Gebeinhalle"
+    ],
+    [
+     "Crypt of Kings",
+     "Silent Vault",
+     "Hall of Bones"
+    ]
+   ],
+   "welten": [
+    "fantasy",
+    "eigene"
+   ],
+   "gewoelbe": true
+  },
+  {
+   "id": "turm",
+   "zeichen": "🗼",
+   "name": [
+    "Turm",
+    "Tower"
+   ],
+   "namen": [
+    [
+     "Turm des Magiers",
+     "Sternwarte",
+     "Schwarzer Turm"
+    ],
+    [
+     "Wizard's Tower",
+     "Star Tower",
+     "Black Tower"
+    ]
+   ],
+   "welten": [
+    "fantasy",
+    "eigene"
+   ],
+   "gewoelbe": true
+  },
+  {
+   "id": "friedhof",
+   "zeichen": "🪦",
+   "name": [
+    "Friedhof",
+    "Graveyard"
+   ],
+   "namen": [
+    [
+     "Alter Friedhof",
+     "Rabenacker",
+     "Friedhof am Hang"
+    ],
+    [
+     "Old Graveyard",
+     "Raven Acre",
+     "Hillside Graveyard"
+    ]
+   ],
+   "welten": [
+    "horror"
+   ],
+   "teile": [
+    [
+     "acker",
+     "hügel",
+     "ruh"
+    ],
+    [
+     "acre",
+     "barrow",
+     "rest"
+    ]
+   ]
+  },
+  {
+   "id": "kirche",
+   "zeichen": "⛪",
+   "name": [
+    "Kapelle",
+    "Chapel"
+   ],
+   "namen": [
+    [
+     "Kapelle St. Wendel",
+     "Verlassene Kirche",
+     "Waldkapelle"
+    ],
+    [
+     "St Wendel's Chapel",
+     "Abandoned Church",
+     "Forest Chapel"
+    ]
+   ],
+   "welten": [
+    "horror"
+   ]
+  },
+  {
+   "id": "muehle",
+   "zeichen": "🌾",
+   "name": [
+    "Mühle",
+    "Mill"
+   ],
+   "namen": [
+    [
+     "Alte Mühle",
+     "Wassermühle",
+     "Rote Mühle"
+    ],
+    [
+     "Old Mill",
+     "Water Mill",
+     "Red Mill"
+    ]
+   ],
+   "welten": [
+    "horror",
+    "fantasy"
+   ]
+  },
+  {
+   "id": "leuchtturm",
+   "zeichen": "🗼",
+   "name": [
+    "Leuchtturm",
+    "Lighthouse"
+   ],
+   "namen": [
+    [
+     "Leuchtturm am Kliff",
+     "Toter Leuchtturm"
+    ],
+    [
+     "Cliff Lighthouse",
+     "Dead Lighthouse"
+    ]
+   ],
+   "welten": [
+    "horror",
+    "piraten"
+   ]
+  },
+  {
+   "id": "herrenhaus",
+   "zeichen": "🏚",
+   "name": [
+    "Herrenhaus",
+    "Manor"
+   ],
+   "namen": [
+    [
+     "Haus Ravensberg",
+     "Gut Nebelhof",
+     "Villa Grau"
+    ],
+    [
+     "Ravensberg House",
+     "Mistholm Manor",
+     "Grey Villa"
+    ]
+   ],
+   "welten": [
+    "horror"
+   ],
+   "gewoelbe": true
+  },
+  {
+   "id": "gruft",
+   "zeichen": "⚰",
+   "name": [
+    "Gruft",
+    "Tomb"
+   ],
+   "namen": [
+    [
+     "Familiengruft",
+     "Gruft unter der Kirche",
+     "Stille Gruft"
+    ],
+    [
+     "Family Tomb",
+     "Tomb Below the Church",
+     "Silent Tomb"
+    ]
+   ],
+   "welten": [
+    "horror"
+   ],
+   "gewoelbe": true
+  },
+  {
+   "id": "station",
+   "zeichen": "🛰",
+   "name": [
+    "Station",
+    "Station"
+   ],
+   "namen": [
+    [
+     "Station Orion",
+     "Außenposten Kepler",
+     "Ringstation Vega"
+    ],
+    [
+     "Orion Station",
+     "Kepler Outpost",
+     "Vega Ring Station"
+    ]
+   ],
+   "welten": [
+    "scifi"
+   ],
+   "start": true
+  },
+  {
+   "id": "hangar",
+   "zeichen": "🚀",
+   "name": [
+    "Hangar",
+    "Hangar"
+   ],
+   "namen": [
+    [
+     "Hangar 7",
+     "Dock Beta",
+     "Frachtdock"
+    ],
+    [
+     "Hangar 7",
+     "Dock Beta",
+     "Cargo Dock"
+    ]
+   ],
+   "welten": [
+    "scifi"
+   ]
+  },
+  {
+   "id": "basar",
+   "zeichen": "🛒",
+   "name": [
+    "Basar",
+    "Bazaar"
+   ],
+   "namen": [
+    [
+     "Schwarzmarkt",
+     "Basar der Händler",
+     "Tauschring"
+    ],
+    [
+     "Black Market",
+     "Traders' Bazaar",
+     "Swap Ring"
+    ]
+   ],
+   "welten": [
+    "scifi"
+   ]
+  },
+  {
+   "id": "krater",
+   "zeichen": "🌑",
+   "name": [
+    "Krater",
+    "Crater"
+   ],
+   "namen": [
+    [
+     "Krater Tycho",
+     "Glasebene",
+     "Staubsenke"
+    ],
+    [
+     "Tycho Crater",
+     "Glass Plain",
+     "Dust Basin"
+    ]
+   ],
+   "welten": [
+    "scifi"
+   ],
+   "teile": [
+    [
+     "krater",
+     "senke",
+     "ebene"
+    ],
+    [
+     "crater",
+     "basin",
+     "flats"
+    ]
+   ]
+  },
+  {
+   "id": "kuppel",
+   "zeichen": "🌐",
+   "name": [
+    "Kuppel",
+    "Dome"
+   ],
+   "namen": [
+    [
+     "Gewächskuppel",
+     "Wohnkuppel 3",
+     "Eiskuppel"
+    ],
+    [
+     "Garden Dome",
+     "Habitat Dome 3",
+     "Ice Dome"
+    ]
+   ],
+   "welten": [
+    "scifi"
+   ]
+  },
+  {
+   "id": "labor",
+   "zeichen": "🧪",
+   "name": [
+    "Labor",
+    "Lab"
+   ],
+   "namen": [
+    [
+     "Labor Sigma",
+     "Forschungsdeck",
+     "Quarantänezone"
+    ],
+    [
+     "Lab Sigma",
+     "Research Deck",
+     "Quarantine Zone"
+    ]
+   ],
+   "welten": [
+    "scifi"
+   ],
+   "gewoelbe": true
+  },
+  {
+   "id": "wrack",
+   "zeichen": "🛸",
+   "name": [
+    "Wrack",
+    "Wreck"
+   ],
+   "namen": [
+    [
+     "Wrack der Pallas",
+     "Treibendes Wrack",
+     "Geisterfrachter"
+    ],
+    [
+     "Wreck of the Pallas",
+     "Drifting Wreck",
+     "Ghost Freighter"
+    ]
+   ],
+   "welten": [
+    "scifi"
+   ],
+   "gewoelbe": true
+  },
+  {
+   "id": "mine",
+   "zeichen": "⛏",
+   "name": [
+    "Mine",
+    "Mine"
+   ],
+   "namen": [
+    [
+     "Erzmine 4",
+     "Tiefe Mine",
+     "Kristallschacht"
+    ],
+    [
+     "Ore Mine 4",
+     "Deep Mine",
+     "Crystal Shaft"
+    ]
+   ],
+   "welten": [
+    "scifi"
+   ],
+   "gewoelbe": true
+  },
+  {
+   "id": "hafen",
+   "zeichen": "⚓",
+   "name": [
+    "Hafen",
+    "Harbour"
+   ],
+   "namen": [
+    [
+     "Hafen Kaltwasser",
+     "Schmugglerbucht",
+     "Port Royal"
+    ],
+    [
+     "Coldwater Harbour",
+     "Smugglers' Cove",
+     "Port Royal"
+    ]
+   ],
+   "welten": [
+    "piraten"
+   ],
+   "start": true
+  },
+  {
+   "id": "insel",
+   "zeichen": "🏝",
+   "name": [
+    "Insel",
+    "Island"
+   ],
+   "namen": [
+    [
+     "Totenkopfinsel",
+     "Papageieninsel",
+     "Nebelinsel"
+    ],
+    [
+     "Skull Island",
+     "Parrot Isle",
+     "Mist Isle"
+    ]
+   ],
+   "welten": [
+    "piraten"
+   ],
+   "teile": [
+    [
+     "insel",
+     "eiland",
+     "fels"
+    ],
+    [
+     "isle",
+     "island",
+     "key"
+    ]
+   ]
+  },
+  {
+   "id": "riff",
+   "zeichen": "🪸",
+   "name": [
+    "Riff",
+    "Reef"
+   ],
+   "namen": [
+    [
+     "Haifischriff",
+     "Korallenriff",
+     "Klippenriff"
+    ],
+    [
+     "Shark Reef",
+     "Coral Reef",
+     "Cliff Reef"
+    ]
+   ],
+   "welten": [
+    "piraten"
+   ],
+   "teile": [
+    [
+     "riff",
+     "klippen",
+     "bank"
+    ],
+    [
+     "reef",
+     "rocks",
+     "shoal"
+    ]
+   ]
+  },
+  {
+   "id": "dschungel",
+   "zeichen": "🌴",
+   "name": [
+    "Dschungel",
+    "Jungle"
+   ],
+   "namen": [
+    [
+     "Grüner Dschungel",
+     "Affenwald",
+     "Lianenhain"
+    ],
+    [
+     "Green Jungle",
+     "Monkey Wood",
+     "Vine Grove"
+    ]
+   ],
+   "welten": [
+    "piraten"
+   ],
+   "teile": [
+    [
+     "dschungel",
+     "wald",
+     "dickicht"
+    ],
+    [
+     "jungle",
+     "thicket",
+     "wilds"
+    ]
+   ]
+  },
+  {
+   "id": "lagune",
+   "zeichen": "🌊",
+   "name": [
+    "Lagune",
+    "Lagoon"
+   ],
+   "namen": [
+    [
+     "Blaue Lagune",
+     "Stille Lagune",
+     "Perlenlagune"
+    ],
+    [
+     "Blue Lagoon",
+     "Still Lagoon",
+     "Pearl Lagoon"
+    ]
+   ],
+   "welten": [
+    "piraten"
+   ]
+  },
+  {
+   "id": "schiffswrack",
+   "zeichen": "⛵",
+   "name": [
+    "Schiffswrack",
+    "Shipwreck"
+   ],
+   "namen": [
+    [
+     "Wrack der Seeschwalbe",
+     "Gesunkene Galeone"
+    ],
+    [
+     "Wreck of the Sea Swallow",
+     "Sunken Galleon"
+    ]
+   ],
+   "welten": [
+    "piraten"
+   ],
+   "gewoelbe": true
+  },
+  {
+   "id": "festung",
+   "zeichen": "🏯",
+   "name": [
+    "Festung",
+    "Fortress"
+   ],
+   "namen": [
+    [
+     "Fort Morgan",
+     "Felsenfestung",
+     "Alte Bastion"
+    ],
+    [
+     "Fort Morgan",
+     "Rock Fortress",
+     "Old Bastion"
+    ]
+   ],
+   "welten": [
+    "piraten",
+    "fantasy"
+   ],
+   "gewoelbe": true
+  }
+ ],
+ "silben": [
+  {
+   "id": "fantasy",
+   "name": [
+    "fantasy",
+    "fantasy"
+   ],
+   "vor": [
+    [
+     "Krähen",
+     "Eichen",
+     "Nebel",
+     "Silber",
+     "Dornen",
+     "Wolfs",
+     "Raben",
+     "Gold",
+     "Grau",
+     "Hirsch",
+     "Sturm",
+     "Mond"
+    ],
+    [
+     "Crow",
+     "Oak",
+     "Mist",
+     "Silver",
+     "Thorn",
+     "Wolf",
+     "Raven",
+     "Gold",
+     "Grey",
+     "Hart",
+     "Storm",
+     "Moon"
+    ]
+   ]
+  },
+  {
+   "id": "horror",
+   "name": [
+    "horror",
+    "horror"
+   ],
+   "vor": [
+    [
+     "Toten",
+     "Schatten",
+     "Asche",
+     "Raben",
+     "Nacht",
+     "Kalt",
+     "Blut",
+     "Witwen",
+     "Grab",
+     "Schwarz"
+    ],
+    [
+     "Dead",
+     "Shadow",
+     "Ash",
+     "Raven",
+     "Night",
+     "Cold",
+     "Blood",
+     "Widow",
+     "Grave",
+     "Black"
+    ]
+   ]
+  },
+  {
+   "id": "scifi",
+   "name": [
+    "scifi",
+    "scifi"
+   ],
+   "vor": [
+    [
+     "Neon",
+     "Kobalt",
+     "Titan",
+     "Ion",
+     "Quarz",
+     "Nova",
+     "Helios",
+     "Vektor"
+    ],
+    [
+     "Neon",
+     "Cobalt",
+     "Titan",
+     "Ion",
+     "Quartz",
+     "Nova",
+     "Helios",
+     "Vector"
+    ]
+   ]
+  },
+  {
+   "id": "piraten",
+   "name": [
+    "piraten",
+    "piraten"
+   ],
+   "vor": [
+    [
+     "Haifisch",
+     "Rum",
+     "Säbel",
+     "Papageien",
+     "Muschel",
+     "Sturm",
+     "Totenkopf",
+     "Perlen",
+     "Anker"
+    ],
+    [
+     "Shark",
+     "Rum",
+     "Cutlass",
+     "Parrot",
+     "Shell",
+     "Storm",
+     "Skull",
+     "Pearl",
+     "Anchor"
+    ]
+   ]
+  },
+  {
+   "id": "eigene",
+   "name": [
+    "eigene",
+    "eigene"
+   ],
+   "vor": [
+    [
+     "Alt",
+     "Hoch",
+     "Tief",
+     "Weiß",
+     "Rot",
+     "Grün",
+     "Stein",
+     "Wind"
+    ],
+    [
+     "Old",
+     "High",
+     "Deep",
+     "White",
+     "Red",
+     "Green",
+     "Stone",
+     "Wind"
+    ]
+   ]
+  }
+ ],
+ "raeume": [
+  {
+   "id": "eingang",
+   "art": "eingang",
+   "zeichen": "🚪",
+   "name": [
+    "Eingang",
+    "Entrance"
+   ],
+   "satz": [
+    "Ein schwerer Durchgang, dahinter riecht es nach Staub und kaltem Stein.",
+    "A heavy doorway; beyond it smells of dust and cold stone."
+   ],
+   "gewicht": 1
+  },
+  {
+   "id": "gang",
+   "art": "gang",
+   "zeichen": "·",
+   "name": [
+    "Gang",
+    "Passage"
+   ],
+   "satz": [
+    "Ein enger Gang, die Fackeln werfen lange Schatten.",
+    "A narrow passage; the torches throw long shadows."
+   ],
+   "gewicht": 3
+  },
+  {
+   "id": "treppe",
+   "art": "gang",
+   "zeichen": "🪜",
+   "name": [
+    "Treppe",
+    "Stairs"
+   ],
+   "satz": [
+    "Ausgetretene Stufen führen weiter in die Tiefe.",
+    "Worn steps lead further down."
+   ],
+   "gewicht": 1
+  },
+  {
+   "id": "kammer",
+   "art": "kammer",
+   "zeichen": "🕯",
+   "name": [
+    "Kammer",
+    "Chamber"
+   ],
+   "satz": [
+    "Eine leere Kammer mit alten Spuren am Boden.",
+    "An empty chamber with old tracks on the floor."
+   ],
+   "gewicht": 3
+  },
+  {
+   "id": "halle",
+   "art": "kammer",
+   "zeichen": "🏛",
+   "name": [
+    "Halle",
+    "Hall"
+   ],
+   "satz": [
+    "Eine hohe Halle, Säulen verschwinden im Dunkel.",
+    "A tall hall; pillars vanish into the dark."
+   ],
+   "gewicht": 2
+  },
+  {
+   "id": "brunnen",
+   "art": "kammer",
+   "zeichen": "⛲",
+   "name": [
+    "Brunnenraum",
+    "Well room"
+   ],
+   "satz": [
+    "Ein alter Brunnen, das Wasser darin ist schwarz und still.",
+    "An old well; the water in it is black and still."
+   ],
+   "gewicht": 1
+  },
+  {
+   "id": "falle",
+   "art": "falle",
+   "zeichen": "⚠",
+   "name": [
+    "Falle",
+    "Trap"
+   ],
+   "satz": [
+    "Der Boden wirkt hier seltsam glatt.",
+    "The floor looks oddly smooth here."
+   ],
+   "gewicht": 1
+  },
+  {
+   "id": "raetsel",
+   "art": "raetsel",
+   "zeichen": "❓",
+   "name": [
+    "Rätseltür",
+    "Riddle door"
+   ],
+   "satz": [
+    "Eine Tür ohne Griff, nur eine Inschrift im Stein.",
+    "A door without a handle, only an inscription in the stone."
+   ],
+   "gewicht": 1
+  },
+  {
+   "id": "schatz",
+   "art": "schatz",
+   "zeichen": "💰",
+   "name": [
+    "Schatzkammer",
+    "Treasure room"
+   ],
+   "satz": [
+    "Eine Truhe steht in der Mitte des Raums.",
+    "A chest stands in the middle of the room."
+   ],
+   "gewicht": 1
+  },
+  {
+   "id": "waechter",
+   "art": "waechter",
+   "zeichen": "👹",
+   "name": [
+    "Wächter",
+    "Guardian"
+   ],
+   "satz": [
+    "Etwas bewegt sich zwischen den Schatten und versperrt den Weg.",
+    "Something moves between the shadows and blocks the way."
+   ],
+   "gewicht": 1
+  },
+  {
+   "id": "boss",
+   "art": "boss",
+   "zeichen": "💀",
+   "name": [
+    "Herz des Gewölbes",
+    "Heart of the vault"
+   ],
+   "satz": [
+    "Der tiefste Raum. Hier wartet der Herr dieses Ortes.",
+    "The deepest room. The master of this place waits here."
+   ],
+   "gewicht": 1
+  },
+  {
+   "id": "waffenkammer",
+   "art": "kammer",
+   "zeichen": "🗡",
+   "name": [
+    "Waffenkammer",
+    "Armoury"
+   ],
+   "satz": [
+    "Rostige Halterungen an den Wänden, die meisten leer.",
+    "Rusty racks on the walls, most of them empty."
+   ],
+   "gewicht": 1,
+   "welten": [
+    "fantasy",
+    "piraten",
+    "eigene"
+   ]
+  },
+  {
+   "id": "bibliothek",
+   "art": "kammer",
+   "zeichen": "📚",
+   "name": [
+    "Bibliothek",
+    "Library"
+   ],
+   "satz": [
+    "Verstaubte Regale, ein Buch liegt aufgeschlagen auf dem Pult.",
+    "Dusty shelves; one book lies open on the lectern."
+   ],
+   "gewicht": 1,
+   "welten": [
+    "fantasy",
+    "horror",
+    "eigene"
+   ]
+  },
+  {
+   "id": "gefaengnis",
+   "art": "kammer",
+   "zeichen": "⛓",
+   "name": [
+    "Kerker",
+    "Dungeon cells"
+   ],
+   "satz": [
+    "Zellen mit verbogenen Gittern, in einer liegt ein alter Schuh.",
+    "Cells with bent bars; an old shoe lies in one of them."
+   ],
+   "gewicht": 1,
+   "welten": [
+    "fantasy",
+    "horror",
+    "piraten",
+    "eigene"
+   ]
+  },
+  {
+   "id": "pilze",
+   "art": "kammer",
+   "zeichen": "🍄",
+   "name": [
+    "Pilzgrotte",
+    "Mushroom grotto"
+   ],
+   "satz": [
+    "Leuchtende Pilze tauchen alles in blasses Licht.",
+    "Glowing mushrooms bathe everything in pale light."
+   ],
+   "gewicht": 1,
+   "welten": [
+    "fantasy",
+    "eigene"
+   ]
+  },
+  {
+   "id": "gebeine",
+   "art": "kammer",
+   "zeichen": "🦴",
+   "name": [
+    "Beinhaus",
+    "Ossuary"
+   ],
+   "satz": [
+    "Schädel, sauber in Reihen gestapelt, starren euch an.",
+    "Skulls, neatly stacked in rows, stare at you."
+   ],
+   "gewicht": 1,
+   "welten": [
+    "fantasy",
+    "horror",
+    "eigene"
+   ]
+  },
+  {
+   "id": "kinderzimmer",
+   "art": "kammer",
+   "zeichen": "🧸",
+   "name": [
+    "Kinderzimmer",
+    "Nursery"
+   ],
+   "satz": [
+    "Eine Spieluhr steht offen, obwohl niemand sie aufgezogen hat.",
+    "A music box stands open, though nobody wound it."
+   ],
+   "gewicht": 1,
+   "welten": [
+    "horror"
+   ]
+  },
+  {
+   "id": "speisesaal",
+   "art": "kammer",
+   "zeichen": "🍽",
+   "name": [
+    "Speisesaal",
+    "Dining hall"
+   ],
+   "satz": [
+    "Der Tisch ist gedeckt, das Essen darauf seit Jahren verdorben.",
+    "The table is laid; the food on it rotted years ago."
+   ],
+   "gewicht": 1,
+   "welten": [
+    "horror",
+    "fantasy"
+   ]
+  },
+  {
+   "id": "spiegelsaal",
+   "art": "kammer",
+   "zeichen": "🪞",
+   "name": [
+    "Spiegelsaal",
+    "Hall of mirrors"
+   ],
+   "satz": [
+    "Eure Spiegelbilder bewegen sich einen Lidschlag zu spät.",
+    "Your reflections move a blink too late."
+   ],
+   "gewicht": 1,
+   "welten": [
+    "horror"
+   ]
+  },
+  {
+   "id": "kryo",
+   "art": "kammer",
+   "zeichen": "🧊",
+   "name": [
+    "Kryokammer",
+    "Cryo room"
+   ],
+   "satz": [
+    "Reihen von Kälteschlafkapseln, eine davon ist leer.",
+    "Rows of cryo pods; one of them is empty."
+   ],
+   "gewicht": 1,
+   "welten": [
+    "scifi"
+   ]
+  },
+  {
+   "id": "reaktor",
+   "art": "kammer",
+   "zeichen": "☢",
+   "name": [
+    "Reaktorraum",
+    "Reactor room"
+   ],
+   "satz": [
+    "Ein tiefes Brummen, Warnlampen blinken orange.",
+    "A deep hum; warning lights blink orange."
+   ],
+   "gewicht": 1,
+   "welten": [
+    "scifi"
+   ]
+  },
+  {
+   "id": "bruecke_s",
+   "art": "kammer",
+   "zeichen": "🖥",
+   "name": [
+    "Kommandobrücke",
+    "Command deck"
+   ],
+   "satz": [
+    "Bildschirme flackern mit Daten, die niemand mehr liest.",
+    "Screens flicker with data nobody reads any more."
+   ],
+   "gewicht": 1,
+   "welten": [
+    "scifi"
+   ]
+  },
+  {
+   "id": "schacht",
+   "art": "gang",
+   "zeichen": "⬛",
+   "name": [
+    "Wartungsschacht",
+    "Service shaft"
+   ],
+   "satz": [
+    "Ein enger Schacht voller Kabel und Rohre.",
+    "A tight shaft full of cables and pipes."
+   ],
+   "gewicht": 2,
+   "welten": [
+    "scifi"
+   ]
+  },
+  {
+   "id": "schleuse",
+   "art": "gang",
+   "zeichen": "🚪",
+   "name": [
+    "Luftschleuse",
+    "Airlock"
+   ],
+   "satz": [
+    "Die innere Tür zischt, die äußere bleibt zu.",
+    "The inner door hisses, the outer one stays shut."
+   ],
+   "gewicht": 1,
+   "welten": [
+    "scifi"
+   ]
+  },
+  {
+   "id": "kombuese",
+   "art": "kammer",
+   "zeichen": "🍲",
+   "name": [
+    "Kombüse",
+    "Galley"
+   ],
+   "satz": [
+    "Töpfe schaukeln an Haken, es riecht nach altem Rum.",
+    "Pots swing on hooks; it smells of old rum."
+   ],
+   "gewicht": 1,
+   "welten": [
+    "piraten"
+   ]
+  },
+  {
+   "id": "pulver",
+   "art": "kammer",
+   "zeichen": "🛢",
+   "name": [
+    "Pulverkammer",
+    "Powder room"
+   ],
+   "satz": [
+    "Fässer voller Schwarzpulver. Kein Licht zu nah!",
+    "Barrels of black powder. No flame too close!"
+   ],
+   "gewicht": 1,
+   "welten": [
+    "piraten"
+   ]
+  },
+  {
+   "id": "kapitaen",
+   "art": "kammer",
+   "zeichen": "🗺",
+   "name": [
+    "Kapitänskajüte",
+    "Captain's cabin"
+   ],
+   "satz": [
+    "Seekarten auf dem Tisch, mit roten Kreuzen markiert.",
+    "Sea charts on the table, marked with red crosses."
+   ],
+   "gewicht": 1,
+   "welten": [
+    "piraten"
+   ]
+  },
+  {
+   "id": "unterwasser",
+   "art": "gang",
+   "zeichen": "🌊",
+   "name": [
+    "Überfluteter Gang",
+    "Flooded passage"
+   ],
+   "satz": [
+    "Das Wasser steht euch bis zur Hüfte.",
+    "The water reaches your hips."
+   ],
+   "gewicht": 1,
+   "welten": [
+    "piraten",
+    "fantasy",
+    "eigene"
+   ]
+  },
+  {
+   "id": "eingang_s",
+   "art": "eingang",
+   "zeichen": "🚪",
+   "name": [
+    "Andockschleuse",
+    "Docking hatch"
+   ],
+   "satz": [
+    "Die Schleuse öffnet sich ächzend, dahinter ist es dunkel.",
+    "The hatch groans open; beyond it is dark."
+   ],
+   "gewicht": 3,
+   "welten": [
+    "scifi"
+   ]
+  },
+  {
+   "id": "eingang_p",
+   "art": "eingang",
+   "zeichen": "⚓",
+   "name": [
+    "Fallreep",
+    "Gangway"
+   ],
+   "satz": [
+    "Ein schiefes Brett führt hinab ins Innere.",
+    "A crooked plank leads down inside."
+   ],
+   "gewicht": 3,
+   "welten": [
+    "piraten"
+   ]
+  },
+  {
+   "id": "eingang_h",
+   "art": "eingang",
+   "zeichen": "🕯",
+   "name": [
+    "Knarrende Tür",
+    "Creaking door"
+   ],
+   "satz": [
+    "Die Tür knarrt, als hätte sie auf euch gewartet.",
+    "The door creaks as if it had been waiting for you."
+   ],
+   "gewicht": 3,
+   "welten": [
+    "horror"
+   ]
+  },
+  {
+   "id": "schatz_s",
+   "art": "schatz",
+   "zeichen": "📦",
+   "name": [
+    "Frachtraum",
+    "Cargo hold"
+   ],
+   "satz": [
+    "Versiegelte Kisten mit verblasster Aufschrift.",
+    "Sealed crates with faded labels."
+   ],
+   "gewicht": 2,
+   "welten": [
+    "scifi"
+   ]
+  },
+  {
+   "id": "schatz_p",
+   "art": "schatz",
+   "zeichen": "🏴‍☠️",
+   "name": [
+    "Schatzgrotte",
+    "Treasure grotto"
+   ],
+   "satz": [
+    "Gold glitzert im Wasser einer kleinen Grotte.",
+    "Gold glitters in the water of a small grotto."
+   ],
+   "gewicht": 2,
+   "welten": [
+    "piraten"
+   ]
+  },
+  {
+   "id": "waechter_s",
+   "art": "waechter",
+   "zeichen": "🤖",
+   "name": [
+    "Wachdrohne",
+    "Guard drone"
+   ],
+   "satz": [
+    "Ein rotes Auge schwenkt zu euch herum.",
+    "A red eye swivels towards you."
+   ],
+   "gewicht": 2,
+   "welten": [
+    "scifi"
+   ]
+  },
+  {
+   "id": "waechter_h",
+   "art": "waechter",
+   "zeichen": "👻",
+   "name": [
+    "Spuk",
+    "Haunting"
+   ],
+   "satz": [
+    "Die Luft wird eisig, eine Gestalt löst sich aus der Wand.",
+    "The air turns icy; a figure steps out of the wall."
+   ],
+   "gewicht": 2,
+   "welten": [
+    "horror"
+   ]
+  },
+  {
+   "id": "boss_s",
+   "art": "boss",
+   "zeichen": "👾",
+   "name": [
+    "Kern",
+    "Core"
+   ],
+   "satz": [
+    "Im Zentrum pulsiert etwas, das nicht von hier ist.",
+    "At the centre pulses something not from here."
+   ],
+   "gewicht": 2,
+   "welten": [
+    "scifi"
+   ]
+  },
+  {
+   "id": "boss_p",
+   "art": "boss",
+   "zeichen": "🦑",
+   "name": [
+    "Tiefe Höhle",
+    "Deep cave"
+   ],
+   "satz": [
+    "Tentakel regen sich im schwarzen Wasser.",
+    "Tentacles stir in the black water."
+   ],
+   "gewicht": 2,
+   "welten": [
+    "piraten"
+   ]
+  },
+  {
+   "id": "boss_h",
+   "art": "boss",
+   "zeichen": "🩸",
+   "name": [
+    "Herz des Hauses",
+    "Heart of the house"
+   ],
+   "satz": [
+    "Hier ist das Haus lebendig. Es atmet.",
+    "Here the house is alive. It breathes."
+   ],
+   "gewicht": 2,
+   "welten": [
+    "horror"
+   ]
+  },
+  {
+   "id": "quelle",
+   "art": "quelle",
+   "zeichen": "💧",
+   "name": [
+    "Heilquelle",
+    "Healing spring"
+   ],
+   "satz": [
+    "Klares Wasser sprudelt aus dem Fels und duftet nach Minze.",
+    "Clear water bubbles from the rock and smells of mint."
+   ],
+   "gewicht": 1
+  },
+  {
+   "id": "quelle_s",
+   "art": "quelle",
+   "zeichen": "💉",
+   "name": [
+    "Sanitätsstation",
+    "Med bay"
+   ],
+   "satz": [
+    "Ein Notfallschrank, noch versiegelt.",
+    "An emergency cabinet, still sealed."
+   ],
+   "gewicht": 3,
+   "welten": [
+    "scifi"
+   ]
+  },
+  {
+   "id": "altar",
+   "art": "altar",
+   "zeichen": "🔆",
+   "name": [
+    "Altar",
+    "Altar"
+   ],
+   "satz": [
+    "Ein schlichter Altar, eine Kerze brennt ohne Docht.",
+    "A simple altar; a candle burns without a wick."
+   ],
+   "gewicht": 1
+  },
+  {
+   "id": "altar_s",
+   "art": "altar",
+   "zeichen": "🔋",
+   "name": [
+    "Energiekern",
+    "Power cell"
+   ],
+   "satz": [
+    "Ein Ladefeld summt und lädt alles auf, was man hineinhält.",
+    "A charging field hums and charges whatever you hold in it."
+   ],
+   "gewicht": 3,
+   "welten": [
+    "scifi"
+   ]
+  }
+ ],
+ "fallen": [
+  {
+   "id": "nadeln",
+   "zeichen": "📌",
+   "name": [
+    "Giftnadeln",
+    "Poison needles"
+   ],
+   "satz": [
+    "Winzige Nadeln schnellen aus dem Boden.",
+    "Tiny needles shoot from the floor."
+   ],
+   "wert": "weisheit",
+   "schwer": 12,
+   "schaden": [
+    1,
+    4
+   ]
+  },
+  {
+   "id": "grube",
+   "zeichen": "🕳",
+   "name": [
+    "Fallgrube",
+    "Pit"
+   ],
+   "satz": [
+    "Der Boden gibt nach, darunter gähnt eine Grube.",
+    "The floor gives way over a gaping pit."
+   ],
+   "wert": "geschick",
+   "schwer": 12,
+   "schaden": [
+    2,
+    6
+   ]
+  },
+  {
+   "id": "pfeile",
+   "zeichen": "🏹",
+   "name": [
+    "Pfeilfalle",
+    "Arrow trap"
+   ],
+   "satz": [
+    "Aus den Wänden zischen Pfeile.",
+    "Arrows hiss from the walls."
+   ],
+   "wert": "geschick",
+   "schwer": 13,
+   "schaden": [
+    1,
+    6
+   ]
+  },
+  {
+   "id": "stein",
+   "zeichen": "🪨",
+   "name": [
+    "Rollender Stein",
+    "Rolling stone"
+   ],
+   "satz": [
+    "Ein Felsbrocken poltert heran.",
+    "A boulder rumbles closer."
+   ],
+   "wert": "staerke",
+   "schwer": 13,
+   "schaden": [
+    2,
+    6
+   ]
+  },
+  {
+   "id": "gas",
+   "zeichen": "💨",
+   "name": [
+    "Giftgas",
+    "Poison gas"
+   ],
+   "satz": [
+    "Grünlicher Rauch quillt aus Ritzen.",
+    "Greenish smoke seeps from cracks."
+   ],
+   "wert": "konstitution",
+   "schwer": 12,
+   "schaden": [
+    1,
+    4
+   ]
+  },
+  {
+   "id": "rune",
+   "zeichen": "✴",
+   "name": [
+    "Feuerrune",
+    "Fire rune"
+   ],
+   "satz": [
+    "Eine Rune am Boden glüht auf.",
+    "A rune on the floor flares up."
+   ],
+   "wert": "intelligenz",
+   "schwer": 14,
+   "schaden": [
+    2,
+    6
+   ]
+  },
+  {
+   "id": "netz",
+   "zeichen": "🕸",
+   "name": [
+    "Spinnennetz",
+    "Spider web"
+   ],
+   "satz": [
+    "Klebrige Fäden hängen quer im Raum.",
+    "Sticky threads hang across the room."
+   ],
+   "wert": "staerke",
+   "schwer": 11,
+   "schaden": [
+    1,
+    3
+   ]
+  },
+  {
+   "id": "klingen",
+   "zeichen": "🔪",
+   "name": [
+    "Pendelklingen",
+    "Swinging blades"
+   ],
+   "satz": [
+    "Klingen schwingen aus der Decke.",
+    "Blades swing down from the ceiling."
+   ],
+   "wert": "geschick",
+   "schwer": 14,
+   "schaden": [
+    2,
+    6
+   ],
+   "welten": [
+    "fantasy",
+    "piraten",
+    "eigene"
+   ]
+  },
+  {
+   "id": "decke",
+   "zeichen": "🧱",
+   "name": [
+    "Sinkende Decke",
+    "Sinking ceiling"
+   ],
+   "satz": [
+    "Mit einem Knirschen senkt sich die Decke.",
+    "With a grinding noise the ceiling lowers."
+   ],
+   "wert": "staerke",
+   "schwer": 14,
+   "schaden": [
+    2,
+    5
+   ],
+   "welten": [
+    "fantasy",
+    "eigene"
+   ]
+  },
+  {
+   "id": "spiegel",
+   "zeichen": "🪞",
+   "name": [
+    "Verfluchter Spiegel",
+    "Cursed mirror"
+   ],
+   "satz": [
+    "Euer Spiegelbild greift nach euch.",
+    "Your reflection reaches for you."
+   ],
+   "wert": "charisma",
+   "schwer": 13,
+   "schaden": [
+    1,
+    4
+   ],
+   "welten": [
+    "horror"
+   ]
+  },
+  {
+   "id": "fluester",
+   "zeichen": "👂",
+   "name": [
+    "Flüsterstimmen",
+    "Whispering voices"
+   ],
+   "satz": [
+    "Stimmen flüstern eure Ängste.",
+    "Voices whisper your fears."
+   ],
+   "wert": "weisheit",
+   "schwer": 13,
+   "schaden": [
+    1,
+    4
+   ],
+   "welten": [
+    "horror"
+   ]
+  },
+  {
+   "id": "laser",
+   "zeichen": "🔴",
+   "name": [
+    "Laserschranke",
+    "Laser grid"
+   ],
+   "satz": [
+    "Rote Strahlen zucken quer durch den Gang.",
+    "Red beams flick across the passage."
+   ],
+   "wert": "geschick",
+   "schwer": 14,
+   "schaden": [
+    2,
+    6
+   ],
+   "welten": [
+    "scifi"
+   ]
+  },
+  {
+   "id": "druck",
+   "zeichen": "💨",
+   "name": [
+    "Druckabfall",
+    "Decompression"
+   ],
+   "satz": [
+    "Ein Alarm heult, die Luft entweicht.",
+    "An alarm wails, the air rushes out."
+   ],
+   "wert": "konstitution",
+   "schwer": 13,
+   "schaden": [
+    1,
+    5
+   ],
+   "welten": [
+    "scifi"
+   ]
+  },
+  {
+   "id": "strom",
+   "zeichen": "⚡",
+   "name": [
+    "Stromschlag",
+    "Live wire"
+   ],
+   "satz": [
+    "Funken springen von einem offenen Kabel.",
+    "Sparks jump from a bare cable."
+   ],
+   "wert": "geschick",
+   "schwer": 12,
+   "schaden": [
+    1,
+    5
+   ],
+   "welten": [
+    "scifi"
+   ]
+  },
+  {
+   "id": "pulverfass",
+   "zeichen": "💥",
+   "name": [
+    "Pulverfass",
+    "Powder keg"
+   ],
+   "satz": [
+    "Eine Lunte zischt, irgendwo hinter den Fässern.",
+    "A fuse hisses somewhere behind the barrels."
+   ],
+   "wert": "geschick",
+   "schwer": 13,
+   "schaden": [
+    2,
+    6
+   ],
+   "welten": [
+    "piraten"
+   ]
+  },
+  {
+   "id": "flut",
+   "zeichen": "🌊",
+   "name": [
+    "Flutkammer",
+    "Flood chamber"
+   ],
+   "satz": [
+    "Wasser schießt herein, die Tür fällt zu.",
+    "Water gushes in and the door slams shut."
+   ],
+   "wert": "staerke",
+   "schwer": 13,
+   "schaden": [
+    1,
+    5
+   ],
+   "welten": [
+    "piraten",
+    "fantasy",
+    "eigene"
+   ]
+  },
+  {
+   "id": "illusion",
+   "zeichen": "🌀",
+   "name": [
+    "Trugbild",
+    "Illusion"
+   ],
+   "satz": [
+    "Der Boden vor euch ist nur ein Trugbild.",
+    "The floor ahead is only an illusion."
+   ],
+   "wert": "intelligenz",
+   "schwer": 13,
+   "schaden": [
+    2,
+    5
+   ],
+   "welten": [
+    "fantasy",
+    "eigene"
+   ]
+  }
+ ],
+ "raetsel": [
+  {
+   "id": "loch",
+   "name": [
+    "Das Loch",
+    "The hole"
+   ],
+   "frage": [
+    "Je mehr du davon wegnimmst, desto größer wird es. Was ist es?",
+    "The more you take away from it, the bigger it gets. What is it?"
+   ],
+   "loesung": [
+    [
+     "loch"
+    ],
+    [
+     "hole"
+    ]
+   ],
+   "hinweis": [
+    "Man gräbt es.",
+    "You dig it."
+   ]
+  },
+  {
+   "id": "schatten",
+   "name": [
+    "Der Schatten",
+    "The shadow"
+   ],
+   "frage": [
+    "Ich folge dir am Tag und verschwinde in der Nacht. Was bin ich?",
+    "I follow you by day and vanish at night. What am I?"
+   ],
+   "loesung": [
+    [
+     "schatten"
+    ],
+    [
+     "shadow"
+    ]
+   ],
+   "hinweis": [
+    "Die Sonne macht mich.",
+    "The sun makes me."
+   ]
+  },
+  {
+   "id": "echo",
+   "name": [
+    "Das Echo",
+    "The echo"
+   ],
+   "frage": [
+    "Ich spreche ohne Mund und höre ohne Ohren. Was bin ich?",
+    "I speak without a mouth and hear without ears. What am I?"
+   ],
+   "loesung": [
+    [
+     "echo"
+    ],
+    [
+     "echo"
+    ]
+   ],
+   "hinweis": [
+    "Ruf in eine Schlucht.",
+    "Shout into a canyon."
+   ]
+  },
+  {
+   "id": "feuer",
+   "name": [
+    "Das Feuer",
+    "The fire"
+   ],
+   "frage": [
+    "Ich esse alles, was man mir gibt, doch gib mir Wasser, und ich sterbe. Was bin ich?",
+    "Feed me and I live, give me water and I die. What am I?"
+   ],
+   "loesung": [
+    [
+     "feuer",
+     "flamme"
+    ],
+    [
+     "fire",
+     "flame"
+    ]
+   ],
+   "hinweis": [
+    "Es wärmt und brennt.",
+    "It warms and burns."
+   ]
+  },
+  {
+   "id": "zeit",
+   "name": [
+    "Die Zeit",
+    "Time"
+   ],
+   "frage": [
+    "Ich fliege ohne Flügel und vergehe, ohne zu gehen. Was bin ich?",
+    "I fly without wings and pass without walking. What am I?"
+   ],
+   "loesung": [
+    [
+     "zeit"
+    ],
+    [
+     "time"
+    ]
+   ],
+   "hinweis": [
+    "Die Uhr misst mich.",
+    "A clock measures me."
+   ]
+  },
+  {
+   "id": "stille",
+   "name": [
+    "Die Stille",
+    "Silence"
+   ],
+   "frage": [
+    "Sprichst du meinen Namen aus, bin ich fort. Was bin ich?",
+    "Say my name and I am gone. What am I?"
+   ],
+   "loesung": [
+    [
+     "stille",
+     "schweigen",
+     "ruhe"
+    ],
+    [
+     "silence"
+    ]
+   ],
+   "hinweis": [
+    "Psst.",
+    "Hush."
+   ]
+  },
+  {
+   "id": "schluessel",
+   "name": [
+    "Der Schlüssel",
+    "The key"
+   ],
+   "frage": [
+    "Ich habe einen Bart, aber kein Gesicht, und öffne, was verschlossen ist. Was bin ich?",
+    "I have teeth but never bite, and open what is locked. What am I?"
+   ],
+   "loesung": [
+    [
+     "schluessel"
+    ],
+    [
+     "key"
+    ]
+   ],
+   "hinweis": [
+    "Er passt ins Schloss.",
+    "It fits the lock."
+   ]
+  },
+  {
+   "id": "kerze",
+   "name": [
+    "Die Kerze",
+    "The candle"
+   ],
+   "frage": [
+    "Ich werde kleiner, je länger ich lebe, und weine dabei heiße Tränen. Was bin ich?",
+    "I grow shorter the longer I live and weep hot tears. What am I?"
+   ],
+   "loesung": [
+    [
+     "kerze"
+    ],
+    [
+     "candle"
+    ]
+   ],
+   "hinweis": [
+    "Aus Wachs.",
+    "Made of wax."
+   ]
+  },
+  {
+   "id": "fluss",
+   "name": [
+    "Der Fluss",
+    "The river"
+   ],
+   "frage": [
+    "Ich habe ein Bett, aber schlafe nie, und einen Mund, aber esse nie. Was bin ich?",
+    "I have a bed but never sleep, a mouth but never eat. What am I?"
+   ],
+   "loesung": [
+    [
+     "fluss",
+     "strom",
+     "bach"
+    ],
+    [
+     "river",
+     "stream"
+    ]
+   ],
+   "hinweis": [
+    "Wasser fließt darin.",
+    "Water runs in it."
+   ]
+  },
+  {
+   "id": "ei",
+   "name": [
+    "Das Ei",
+    "The egg"
+   ],
+   "frage": [
+    "Ein Haus ohne Tür und Fenster, und doch wohnt jemand darin. Was ist es?",
+    "A house with no door and no window, yet someone lives inside. What is it?"
+   ],
+   "loesung": [
+    [
+     "ei"
+    ],
+    [
+     "egg"
+    ]
+   ],
+   "hinweis": [
+    "Ein Huhn legt es.",
+    "A hen lays it."
+   ]
+  },
+  {
+   "id": "name",
+   "name": [
+    "Der Name",
+    "The name"
+   ],
+   "frage": [
+    "Es gehört dir, doch andere benutzen es öfter als du. Was ist es?",
+    "It belongs to you, but others use it more than you do. What is it?"
+   ],
+   "loesung": [
+    [
+     "name"
+    ],
+    [
+     "name"
+    ]
+   ],
+   "hinweis": [
+    "Man ruft dich damit.",
+    "They call you by it."
+   ]
+  },
+  {
+   "id": "atem",
+   "name": [
+    "Der Atem",
+    "Breath"
+   ],
+   "frage": [
+    "Leichter als eine Feder, doch niemand hält mich lange. Was bin ich?",
+    "Lighter than a feather, yet no one can hold me for long. What am I?"
+   ],
+   "loesung": [
+    [
+     "atem",
+     "luft"
+    ],
+    [
+     "breath",
+     "air"
+    ]
+   ],
+   "hinweis": [
+    "Halt ihn an.",
+    "Hold it in."
+   ]
+  },
+  {
+   "id": "spiegel",
+   "name": [
+    "Der Spiegel",
+    "The mirror"
+   ],
+   "frage": [
+    "Ich zeige dir dein Gesicht und habe selbst keins. Was bin ich?",
+    "I show you your face but have none myself. What am I?"
+   ],
+   "loesung": [
+    [
+     "spiegel"
+    ],
+    [
+     "mirror"
+    ]
+   ],
+   "hinweis": [
+    "Aus Glas, an der Wand.",
+    "Glass, on the wall."
+   ]
+  },
+  {
+   "id": "nadel",
+   "name": [
+    "Die Nadel",
+    "The needle"
+   ],
+   "frage": [
+    "Ich habe ein Auge, aber sehe nichts. Was bin ich?",
+    "I have an eye but cannot see. What am I?"
+   ],
+   "loesung": [
+    [
+     "nadel"
+    ],
+    [
+     "needle"
+    ]
+   ],
+   "hinweis": [
+    "Zum Nähen.",
+    "For sewing."
+   ]
+  },
+  {
+   "id": "sterne",
+   "name": [
+    "Die Sterne",
+    "The stars"
+   ],
+   "frage": [
+    "Bei Nacht kommen sie ungerufen, bei Tag sind sie fort, ohne gestohlen zu sein. Was ist das?",
+    "They come out at night without being called and are lost by day without being stolen. What are they?"
+   ],
+   "loesung": [
+    [
+     "sterne",
+     "stern"
+    ],
+    [
+     "stars",
+     "star"
+    ]
+   ],
+   "hinweis": [
+    "Am Himmel.",
+    "In the sky."
+   ]
+  },
+  {
+   "id": "wind",
+   "name": [
+    "Der Wind",
+    "The wind"
+   ],
+   "frage": [
+    "Man sieht mich nicht, doch ich biege Bäume. Was bin ich?",
+    "You cannot see me, yet I bend trees. What am I?"
+   ],
+   "loesung": [
+    [
+     "wind",
+     "sturm"
+    ],
+    [
+     "wind",
+     "storm"
+    ]
+   ],
+   "hinweis": [
+    "Er weht.",
+    "It blows."
+   ]
+  },
+  {
+   "id": "buch",
+   "name": [
+    "Das Buch",
+    "The book"
+   ],
+   "frage": [
+    "Ich habe Blätter, aber bin kein Baum, und erzähle, ohne zu sprechen. Was bin ich?",
+    "I have leaves but am no tree, and I tell tales without speaking. What am I?"
+   ],
+   "loesung": [
+    [
+     "buch"
+    ],
+    [
+     "book"
+    ]
+   ],
+   "hinweis": [
+    "Man liest es.",
+    "You read it."
+   ]
+  },
+  {
+   "id": "morgen",
+   "name": [
+    "Das Morgen",
+    "Tomorrow"
+   ],
+   "frage": [
+    "Ich komme immer und bin doch nie da. Was bin ich?",
+    "I am always coming but never arrive. What am I?"
+   ],
+   "loesung": [
+    [
+     "morgen"
+    ],
+    [
+     "tomorrow"
+    ]
+   ],
+   "hinweis": [
+    "Nach heute.",
+    "After today."
+   ]
+  },
+  {
+   "id": "eis",
+   "name": [
+    "Das Eis",
+    "Ice"
+   ],
+   "frage": [
+    "Ich bin Wasser, auf dem man gehen kann. Was bin ich?",
+    "I am water you can walk on. What am I?"
+   ],
+   "loesung": [
+    [
+     "eis"
+    ],
+    [
+     "ice"
+    ]
+   ],
+   "hinweis": [
+    "Im Winter.",
+    "In winter."
+   ]
+  },
+  {
+   "id": "versprechen",
+   "name": [
+    "Das Versprechen",
+    "A promise"
+   ],
+   "frage": [
+    "Ich werde gebrochen, ohne dass mich jemand berührt. Was bin ich?",
+    "I can be broken without being touched. What am I?"
+   ],
+   "loesung": [
+    [
+     "versprechen",
+     "wort",
+     "schwur"
+    ],
+    [
+     "promise",
+     "word",
+     "oath"
+    ]
+   ],
+   "hinweis": [
+    "Man gibt es.",
+    "You give it."
+   ]
+  },
+  {
+   "id": "handschuh",
+   "name": [
+    "Der Handschuh",
+    "The glove"
+   ],
+   "frage": [
+    "Ich habe fünf Finger, aber kein Fleisch und keine Knochen. Was bin ich?",
+    "I have five fingers but no flesh and no bone. What am I?"
+   ],
+   "loesung": [
+    [
+     "handschuh"
+    ],
+    [
+     "glove"
+    ]
+   ],
+   "hinweis": [
+    "Im Winter an der Hand.",
+    "On your hand in winter."
+   ]
+  },
+  {
+   "id": "nebel",
+   "name": [
+    "Der Nebel",
+    "The fog"
+   ],
+   "frage": [
+    "Ich verschlucke Berge und Häuser und gebe sie am Mittag wieder her. Was bin ich?",
+    "I swallow hills and houses and give them back by noon. What am I?"
+   ],
+   "loesung": [
+    [
+     "nebel",
+     "dunst"
+    ],
+    [
+     "fog",
+     "mist"
+    ]
+   ],
+   "hinweis": [
+    "Grau und feucht.",
+    "Grey and damp."
+   ]
+  },
+  {
+   "id": "dunkelheit",
+   "name": [
+    "Die Dunkelheit",
+    "Darkness"
+   ],
+   "frage": [
+    "Je mehr von mir da ist, desto weniger siehst du. Was bin ich?",
+    "The more of me there is, the less you see. What am I?"
+   ],
+   "loesung": [
+    [
+     "dunkelheit",
+     "finsternis",
+     "dunkel"
+    ],
+    [
+     "darkness",
+     "dark"
+    ]
+   ],
+   "hinweis": [
+    "Mach das Licht aus.",
+    "Turn off the light."
+   ]
+  },
+  {
+   "id": "regen",
+   "name": [
+    "Der Regen",
+    "Rain"
+   ],
+   "frage": [
+    "Ich falle, ohne mich zu verletzen, und bringe die Blumen zum Lachen. Was bin ich?",
+    "I fall but never get hurt, and I make the flowers smile. What am I?"
+   ],
+   "loesung": [
+    [
+     "regen"
+    ],
+    [
+     "rain"
+    ]
+   ],
+   "hinweis": [
+    "Aus den Wolken.",
+    "From the clouds."
+   ]
+  },
+  {
+   "id": "weg",
+   "name": [
+    "Der Weg",
+    "The road"
+   ],
+   "frage": [
+    "Ich gehe von Stadt zu Stadt und bewege mich doch nie. Was bin ich?",
+    "I go from town to town yet never move. What am I?"
+   ],
+   "loesung": [
+    [
+     "weg",
+     "strasse",
+     "pfad"
+    ],
+    [
+     "road",
+     "path",
+     "street"
+    ]
+   ],
+   "hinweis": [
+    "Man läuft darauf.",
+    "You walk on it."
+   ]
+  },
+  {
+   "id": "geheimnis",
+   "name": [
+    "Das Geheimnis",
+    "A secret"
+   ],
+   "frage": [
+    "Teilst du mich, habe ich keinen Wert mehr. Was bin ich?",
+    "If you share me, I am gone. What am I?"
+   ],
+   "loesung": [
+    [
+     "geheimnis"
+    ],
+    [
+     "secret"
+    ]
+   ],
+   "hinweis": [
+    "Psst, nicht weitersagen.",
+    "Hush, tell no one."
+   ]
+  },
+  {
+   "id": "uhr",
+   "name": [
+    "Die Uhr",
+    "The clock"
+   ],
+   "frage": [
+    "Ich habe Hände, aber kann nicht klatschen. Was bin ich?",
+    "I have hands but cannot clap. What am I?"
+   ],
+   "loesung": [
+    [
+     "uhr"
+    ],
+    [
+     "clock",
+     "watch"
+    ]
+   ],
+   "hinweis": [
+    "Sie tickt.",
+    "It ticks."
+   ]
+  },
+  {
+   "id": "kamm",
+   "name": [
+    "Der Kamm",
+    "The comb"
+   ],
+   "frage": [
+    "Ich habe Zähne, aber beiße nie. Was bin ich?",
+    "I have teeth but never chew. What am I?"
+   ],
+   "loesung": [
+    [
+     "kamm"
+    ],
+    [
+     "comb"
+    ]
+   ],
+   "hinweis": [
+    "Fürs Haar.",
+    "For your hair."
+   ]
+  },
+  {
+   "id": "schwamm",
+   "name": [
+    "Der Schwamm",
+    "The sponge"
+   ],
+   "frage": [
+    "Ich bin voller Löcher und halte doch Wasser. Was bin ich?",
+    "I am full of holes yet I hold water. What am I?"
+   ],
+   "loesung": [
+    [
+     "schwamm"
+    ],
+    [
+     "sponge"
+    ]
+   ],
+   "hinweis": [
+    "In der Küche.",
+    "In the kitchen."
+   ]
+  },
+  {
+   "id": "handtuch",
+   "name": [
+    "Das Handtuch",
+    "The towel"
+   ],
+   "frage": [
+    "Je mehr ich trockne, desto nasser werde ich. Was bin ich?",
+    "The more I dry, the wetter I get. What am I?"
+   ],
+   "loesung": [
+    [
+     "handtuch",
+     "tuch"
+    ],
+    [
+     "towel"
+    ]
+   ],
+   "hinweis": [
+    "Nach dem Bad.",
+    "After a bath."
+   ]
+  },
+  {
+   "id": "berg",
+   "name": [
+    "Der Berg",
+    "The mountain"
+   ],
+   "frage": [
+    "Ich habe Wurzeln, die niemand sieht, bin höher als Bäume und wachse doch nie. Was bin ich?",
+    "My roots nobody sees, I am taller than trees, yet I never grow. What am I?"
+   ],
+   "loesung": [
+    [
+     "berg",
+     "gebirge"
+    ],
+    [
+     "mountain"
+    ]
+   ],
+   "hinweis": [
+    "Man steigt hinauf.",
+    "You climb it."
+   ]
+  },
+  {
+   "id": "mond",
+   "name": [
+    "Der Mond",
+    "The moon"
+   ],
+   "frage": [
+    "Ich bin mal rund, mal halb, mal fort, und leuchte doch nicht selbst. Was bin ich?",
+    "Sometimes round, sometimes half, sometimes gone, and I give no light of my own. What am I?"
+   ],
+   "loesung": [
+    [
+     "mond"
+    ],
+    [
+     "moon"
+    ]
+   ],
+   "hinweis": [
+    "Nachts am Himmel.",
+    "In the night sky."
+   ]
+  },
+  {
+   "id": "herz",
+   "name": [
+    "Das Herz",
+    "The heart"
+   ],
+   "frage": [
+    "Ich schlage, ohne Hände zu haben. Was bin ich?",
+    "I beat without hands. What am I?"
+   ],
+   "loesung": [
+    [
+     "herz"
+    ],
+    [
+     "heart"
+    ]
+   ],
+   "hinweis": [
+    "In deiner Brust.",
+    "In your chest."
+   ]
+  },
+  {
+   "id": "salz",
+   "name": [
+    "Das Salz",
+    "Salt"
+   ],
+   "frage": [
+    "Ich komme aus dem Wasser, und im Wasser verschwinde ich. Was bin ich?",
+    "I come from water, and in water I vanish. What am I?"
+   ],
+   "loesung": [
+    [
+     "salz"
+    ],
+    [
+     "salt"
+    ]
+   ],
+   "hinweis": [
+    "Würzt die Suppe.",
+    "It seasons the soup."
+   ]
+  },
+  {
+   "id": "karte",
+   "name": [
+    "Die Karte",
+    "The map"
+   ],
+   "frage": [
+    "Ich habe Städte ohne Häuser, Wälder ohne Bäume und Flüsse ohne Wasser. Was bin ich?",
+    "I have cities without houses, forests without trees and rivers without water. What am I?"
+   ],
+   "loesung": [
+    [
+     "karte",
+     "landkarte"
+    ],
+    [
+     "map"
+    ]
+   ],
+   "hinweis": [
+    "Ihr habt eine dabei.",
+    "You carry one."
+   ]
+  },
+  {
+   "id": "glocke",
+   "name": [
+    "Die Glocke",
+    "The bell"
+   ],
+   "frage": [
+    "Ich rufe zur Kirche und gehe selbst nie hinein. Was bin ich?",
+    "I call people to church but never go in myself. What am I?"
+   ],
+   "loesung": [
+    [
+     "glocke"
+    ],
+    [
+     "bell"
+    ]
+   ],
+   "hinweis": [
+    "Sie läutet.",
+    "It rings."
+   ]
+  },
+  {
+   "id": "gedanke",
+   "name": [
+    "Der Gedanke",
+    "A thought"
+   ],
+   "frage": [
+    "Ich bin schneller als jedes Pferd und lasse keine Spur. Was bin ich?",
+    "I am faster than any horse and leave no track. What am I?"
+   ],
+   "loesung": [
+    [
+     "gedanke",
+     "gedanken"
+    ],
+    [
+     "thought"
+    ]
+   ],
+   "hinweis": [
+    "Er ist in deinem Kopf.",
+    "It is in your head."
+   ]
+  },
+  {
+   "id": "anker",
+   "name": [
+    "Der Anker",
+    "The anchor"
+   ],
+   "frage": [
+    "Ich halte das Schiff fest und liebe die Tiefe. Was bin ich?",
+    "I hold the ship fast and love the deep. What am I?"
+   ],
+   "loesung": [
+    [
+     "anker"
+    ],
+    [
+     "anchor"
+    ]
+   ],
+   "hinweis": [
+    "Aus Eisen, an der Kette.",
+    "Iron, on a chain."
+   ]
+  },
+  {
+   "id": "leiter",
+   "name": [
+    "Die Leiter",
+    "The ladder"
+   ],
+   "frage": [
+    "Ich habe Sprossen, aber keine Blätter, und bringe dich hinauf. Was bin ich?",
+    "I have rungs but no leaves and take you up. What am I?"
+   ],
+   "loesung": [
+    [
+     "leiter"
+    ],
+    [
+     "ladder"
+    ]
+   ],
+   "hinweis": [
+    "Lehnt an der Wand.",
+    "It leans on the wall."
+   ]
+  },
+  {
+   "id": "frage",
+   "name": [
+    "Die Frage",
+    "A question"
+   ],
+   "frage": [
+    "Ich brauche eine Antwort, doch ich selbst bin keine. Was bin ich?",
+    "I need an answer but am none myself. What am I?"
+   ],
+   "loesung": [
+    [
+     "frage"
+    ],
+    [
+     "question"
+    ]
+   ],
+   "hinweis": [
+    "Endet mit einem Zeichen.",
+    "It ends with a mark."
+   ]
+  }
+ ],
+ "begegnungen": [
+  {
+   "id": "still",
+   "name": [
+    "Stille",
+    "Quiet"
+   ],
+   "art": "nichts",
+   "satz": [
+    "Der Weg ist ruhig, nur der Wind begleitet euch.",
+    "The way is quiet, only the wind goes with you."
+   ],
+   "gewicht": 4
+  },
+  {
+   "id": "regen",
+   "name": [
+    "Platzregen",
+    "Downpour"
+   ],
+   "art": "wetter",
+   "satz": [
+    "Ein Platzregen zwingt euch unter einen Felsvorsprung.",
+    "A downpour drives you under a rocky overhang."
+   ],
+   "gewicht": 2,
+   "welten": [
+    "fantasy",
+    "horror",
+    "eigene"
+   ]
+  },
+  {
+   "id": "nebel",
+   "name": [
+    "Nebel",
+    "Fog"
+   ],
+   "art": "wetter",
+   "satz": [
+    "Dichter Nebel zieht auf, ihr seht kaum die Hand vor Augen.",
+    "Thick fog rolls in; you can barely see your hand."
+   ],
+   "gewicht": 2,
+   "welten": [
+    "fantasy",
+    "horror",
+    "piraten",
+    "eigene"
+   ]
+  },
+  {
+   "id": "sturm",
+   "name": [
+    "Sturm",
+    "Storm"
+   ],
+   "art": "wetter",
+   "satz": [
+    "Ein Sturm peitscht die Wellen hoch.",
+    "A storm whips the waves high."
+   ],
+   "gewicht": 2,
+   "welten": [
+    "piraten"
+   ]
+  },
+  {
+   "id": "meteor",
+   "name": [
+    "Meteoritenschauer",
+    "Meteor shower"
+   ],
+   "art": "wetter",
+   "satz": [
+    "Ein Mikrometeoritenschauer prasselt auf die Hülle.",
+    "A micrometeorite shower rattles on the hull."
+   ],
+   "gewicht": 2,
+   "welten": [
+    "scifi"
+   ]
+  },
+  {
+   "id": "spuren",
+   "name": [
+    "Spuren",
+    "Tracks"
+   ],
+   "art": "hinweis",
+   "satz": [
+    "Frische Spuren kreuzen euren Weg, sie führen zum Ziel.",
+    "Fresh tracks cross your way; they lead towards the goal."
+   ],
+   "gewicht": 2
+  },
+  {
+   "id": "wanderer",
+   "name": [
+    "Wanderer",
+    "Wanderer"
+   ],
+   "art": "hinweis",
+   "satz": [
+    "Ein Wanderer erzählt von Gefahren am nächsten Ort.",
+    "A wanderer tells of dangers at the next place."
+   ],
+   "gewicht": 2,
+   "welten": [
+    "fantasy",
+    "horror",
+    "eigene"
+   ]
+  },
+  {
+   "id": "funkspruch",
+   "name": [
+    "Funkspruch",
+    "Radio message"
+   ],
+   "art": "hinweis",
+   "satz": [
+    "Ein alter Funkspruch knistert im Empfänger.",
+    "An old radio message crackles in the receiver."
+   ],
+   "gewicht": 2,
+   "welten": [
+    "scifi"
+   ]
+  },
+  {
+   "id": "flaschenpost",
+   "name": [
+    "Flaschenpost",
+    "Message in a bottle"
+   ],
+   "art": "fund",
+   "satz": [
+    "Am Ufer treibt eine Flaschenpost.",
+    "A message in a bottle drifts ashore."
+   ],
+   "gewicht": 1,
+   "welten": [
+    "piraten"
+   ]
+  },
+  {
+   "id": "fund",
+   "name": [
+    "Fund",
+    "Find"
+   ],
+   "art": "fund",
+   "satz": [
+    "Am Wegrand liegt etwas Glänzendes im Gras.",
+    "Something shiny lies in the grass by the wayside."
+   ],
+   "gewicht": 2
+  },
+  {
+   "id": "hinterhalt",
+   "name": [
+    "Hinterhalt",
+    "Ambush"
+   ],
+   "art": "gegner",
+   "satz": [
+    "Aus dem Gebüsch springen Wegelagerer!",
+    "Bandits leap out of the bushes!"
+   ],
+   "gewicht": 2,
+   "welten": [
+    "fantasy",
+    "piraten",
+    "eigene"
+   ]
+  },
+  {
+   "id": "bestie",
+   "name": [
+    "Bestie",
+    "Beast"
+   ],
+   "art": "gegner",
+   "satz": [
+    "Ein hungriges Tier hat eure Witterung aufgenommen.",
+    "A hungry beast has caught your scent."
+   ],
+   "gewicht": 2,
+   "welten": [
+    "fantasy",
+    "horror",
+    "eigene"
+   ]
+  },
+  {
+   "id": "schatten",
+   "name": [
+    "Verfolger",
+    "Stalker"
+   ],
+   "art": "gegner",
+   "satz": [
+    "Etwas folgt euch, lautlos, zwischen den Bäumen.",
+    "Something follows you, silent, between the trees."
+   ],
+   "gewicht": 2,
+   "welten": [
+    "horror"
+   ]
+  },
+  {
+   "id": "piraten",
+   "name": [
+    "Piraten",
+    "Pirates"
+   ],
+   "art": "gegner",
+   "satz": [
+    "Ein fremdes Schiff hisst die schwarze Flagge.",
+    "A strange ship hoists the black flag."
+   ],
+   "gewicht": 2,
+   "welten": [
+    "piraten"
+   ]
+  },
+  {
+   "id": "drohnen",
+   "name": [
+    "Drohnen",
+    "Drones"
+   ],
+   "art": "gegner",
+   "satz": [
+    "Ein Schwarm Wachdrohnen nimmt euch ins Visier.",
+    "A swarm of guard drones locks on to you."
+   ],
+   "gewicht": 2,
+   "welten": [
+    "scifi"
+   ]
+  },
+  {
+   "id": "haendler",
+   "name": [
+    "Händler",
+    "Merchant"
+   ],
+   "art": "haendler",
+   "satz": [
+    "Ein fahrender Händler kommt euch entgegen.",
+    "A travelling merchant comes towards you."
+   ],
+   "gewicht": 1
+  }
+ ]
+}

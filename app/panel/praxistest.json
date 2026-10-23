@@ -2851,6 +2851,13 @@
 "titel": "Dungeon-Master: Du bist dran, Spieltermin, Rückblick",
 "text": "Voraussetzung: Ich → Mitteilungen mit iPhone-App oder Browser. A: Runde mit einem zweiten Profil anlegen, das zweite Profil schließt die Seite. Der Gastgeber handelt: Beim neuen Zug kommt beim zweiten Profil „Du bist dran in „Titel“ (Zug n).“ B: Nach der halben Zugzeit kommt einmal „wartet noch auf deinen Zug“. C: Am Tisch „🔔 Mitteilungen an“ antippen: es wird „🔕 Mitteilungen aus“, danach kommt nichts mehr. D: Als Gastgeber in der Seitenspalte einen Spieltermin in 20 Minuten setzen: 5 Minuten später kommt „geht um hh:mm weiter“; „In den Kalender“ öffnet den Termin im Kalender. E: Nach mehr als 12 Stunden die Runde öffnen: oben steht „Was letztes Mal geschah“, „Weiter spielen“ schließt es.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P432",
+"v": 969,
+"titel": "Dungeon-Master: Karte und Zufalls-Gewölbe",
+"text": "A: Funktionen → Meine Daten → KI-Dungeon-Master an, neue Runde anlegen: rechts am Tisch zeigt die Karte den Startort im Westen, Nachbarorte mit Namen, dahinter Wege mit „?“. Unter „Von hier aus“ einen Ort antippen: im Eingabefeld steht „Wir gehen weiter zu …“; nach dem Zug steht die Gruppe dort, neue Orte tauchen auf. ⤢ öffnet die Karte groß. B: Zwei neue Runden vergleichen: andere Form (Tal, See, Küste …), andere Namen. C: Als Gastgeber an einem Ort mit Gewölbe „Gewölbe betreten“: Reiter Gewölbe zeigt das Raster; Räume nach Norden/Süden/Osten/Westen gehen; eine Falle würfelt das Panel (Zeile in der Erzählung), ein Rätsel zeigt Frage und nach 3 falschen Antworten einen Hinweis, Wächter und Boss lassen erst nach einem Sieg weiter. D: Zustand → Überblick → Live zeigt beim Dungeon „n Karten, n im Gewölbe“.",
+"thread": "Dungeon-Master: Karte und Zufalls-Gewölbe"
 }
 ]
 }

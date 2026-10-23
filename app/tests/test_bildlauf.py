@@ -74,6 +74,7 @@ FENSTER = {
     ".dm-feed": "Dungeon-Master: the story of a round, like a conversation; the newest line stays in view",
     ".dm-voll .dm-group,.dm-voll .dm-side": "Dungeon-Master full screen: the group and the side beside the story",
     ".dm.dm-tisch.dm-voll": "Dungeon-Master full screen on a narrow screen: the table is the one bar",
+    ".dmk.gross": "Dungeon-Master map opened large: a window over the page, its one bar while it is open",
 }
 CSS = ("app.css", "appview.css", "live.css", "technik.css", "weiche.css")
 
