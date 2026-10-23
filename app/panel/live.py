@@ -1771,6 +1771,8 @@ def snapshot(view="admin", now=None):
                         + (f" · heute {dgn['tisch']} Zeilen Tischgespräch" if dgn.get("tisch") else "")
                         + (f" · heute {dgn['werkzeug']} Proben mit Werkzeug, {dgn.get('kaputt', 0)} zerbrochen" if dgn.get("werkzeug") else "")
                         + (f" · heute {dgn['geworfen']} Würfe selbst geworfen" if dgn.get("geworfen") else "")
+                        + (f" · heute {dgn['kraefte']} Zauber aus Ladungen, {dgn.get('kann_nicht', 0)} unbekannte Kräfte abgewiesen"
+                           if dgn.get("kraefte") or dgn.get("kann_nicht") else "")
                         + (f" · {dgn['npc_stimmen']} NSC-Stimmen" if dgn.get("npc_stimmen") else ""))
         if x["id"] == "wkarte":    # Wissenskarte: connections, discarded, documents waiting, profiles, numbers only (never a title)
             x["sub"] = (f"{wkk.get('verbindungen', 0)} Verbindungen · {wkk.get('punkte', 0)} Punkte · {wkk.get('warten', 0)} Dokumente warten"

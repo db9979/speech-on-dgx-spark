@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.979** · 2026-10-23 · KI-Dungeon-Master: Zauber und Kräfte nur, wenn der Held sie kann: Startkräfte je Klasse, Zauber je Grad mit Ladungen je Kapitel, „Das kann ich“ im Bogen, das Panel weist Unbekanntes mit einer Zeile nur für diesen Platz ab
 - **V01.0.978** · 2026-10-23 · KI-Dungeon-Master: Platz für die SRD-Daten: zweite Regeldatei dungeon_srd.json, geprüfte Listen für Gegner, Zustände, Hintergründe, Schwierigkeiten, Zauberladungen und Startkräfte, Schätze zum Verkaufen, feste Seltenheit, Gegenstände nur in ihren Welten, bis zu 500 Einträge je Liste
 - **V01.0.977** · 2026-10-23 · KI-Dungeon-Master: Gegenstände und Werte erklärt (Werkzeuge +2, zerbrechen bei einer 1), Würfel selbst werfen mit Proben-Leiste, Funken bei 20 und Ergebnis-Geräuschen, eigene Stimmen für Erzähler je Geschichte und jeden NSC, jede Ablehnung als klarer Satz
 - **V01.0.976** · 2026-10-23 · KI-Dungeon-Master: Musik ruhig und ambient (weiche Flächen statt Schlagzeug, 60 bis 80 Schläge pro Minute, auch im Kampf), längere Überblendung, alter Musikvorrat wird neu gemacht

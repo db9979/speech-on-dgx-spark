@@ -2207,6 +2207,32 @@ class SrdLayer(Base):
         self.write(dict(self.srd, sg={"leicht": 10}))      # SRD data that does not pass: the rules without it
         self.assertNotIn("laser", {x["id"] for x in dungeon.rules()["gegenstaende"]})
 
+    def test_dazu_adds_to_lists_and_fixed_rarity_waits_for_its_roll(self):
+        base = dungeon._base_rules(srd=False)
+        mag = dungeon._by(base, "klassen")["magier"]
+        spell = next(x for x in base["gegenstaende"] if x["art"] == "zauber")
+        self.write(dict(self.srd, gegenstaende=self.srd["gegenstaende"] + [dict(spell, id="srdzauber", grad=1)],
+                        klassen=[{"id": "magier", "dazu": {"waffen": ["schwert"], "zauber": {"1": ["srdzauber"]}}},
+                                 {"id": "fehlt", "dazu": {"waffen": ["schwert"]}}],
+                        ladungen=[[2, 0, 0, 0, 0]] * 10))
+        r = dungeon._base_rules()
+        self.assertEqual(dungeon.check_rules(r), [])
+        m = dungeon._by(r, "klassen")["magier"]
+        self.assertEqual(m["waffen"], mag["waffen"] + [x for x in ["schwert"] if x not in mag["waffen"]])
+        self.assertEqual(m["zauber"], {"1": ["srdzauber"]})
+        self.assertNotIn("fehlt", dungeon._by(r, "klassen"))     # „dazu“ on a missing id adds nothing
+        self.assertEqual(m["faehigkeiten"], mag["faehigkeiten"])  # the rest of the entry stays
+        heroes = [dungeon.new_hero(r, dict(HERO), rng=random.Random(3))]
+        rng = random.Random(9)
+        for _ in range(200):                                     # „ogerhand“ is fixed „rar“: never on a plain roll
+            i, it, gold = dungeon.loot(r, heroes, "gegner", 1, rng)
+            if it["id"] == "ogerhand":
+                self.assertIn(it["s"], ("rar", "episch", "legendaer"))
+                self.assertGreaterEqual([x["id"] for x in r["seltenheit"]].index(dungeon._by(r, "seltenheit")[it["s"]]["id"]), 2)
+        plain = dungeon._by(r, "seltenheit")["gewoehnlich"]
+        self.assertFalse(dungeon.reaches(r, dungeon._by(r, "gegenstaende")["ogerhand"], plain))
+        self.assertTrue(dungeon.reaches(r, dungeon._by(r, "gegenstaende")["ogerhand"], dungeon._by(r, "seltenheit")["rar"]))
+
     def test_admin_keeps_its_own_limit(self):
         own = {"gegenstaende": [dict(self.srd["gegenstaende"][3], id=f"eigen{i}") for i in range(dungeon.EIGENE_MAX + 1)]}
         r = ADMIN.put("/api/admin/dungeon", json={"eigene": own})
@@ -2229,6 +2255,95 @@ class SrdLayer(Base):
         gem = dungeon.item(r, "rubin", rng=random.Random(1))
         self.assertEqual(dungeon.places(r, dungeon._c(r, gem)), ())
         self.assertIn("schatz", dungeon.STAPEL_ARTEN)
+
+
+class Powers(Base):
+    """Spells and powers only when the hero has them (Dominik 2026-10-23 „1-3“): start abilities, the class's spells by
+    grade with charges per round, an OOC line for what the hero cannot do, the model hears kann and nicht_bekannt."""
+    def setUp(self):
+        super().setUp()
+        base = dungeon._base_rules()
+        mag = dungeon._by(base, "klassen")["magier"]
+        kr = dungeon._by(base, "klassen")["krieger"]
+        own = {"gegenstaende": [dict(dungeon._by(base, "gegenstaende")["lichtzauber"], grad=0),
+                                dict(dungeon._by(base, "gegenstaende")["heilende_haende"], grad=1),
+                                dict(dungeon._by(base, "gegenstaende")["feuerball"], grad=2)],
+               "klassen": [dict(mag, zauber={"0": ["lichtzauber"], "1": ["heilende_haende"], "2": ["feuerball"]}),
+                           dict(kr, start_faehigkeiten=["rundumschlag"])],
+               "ladungen": [[2, 0, 0, 0, 0], [3, 1, 0, 0, 0]] + [[4, 2, 0, 0, 0]] * 8}
+        r = dungeon.merge(base, own)
+        self.assertEqual(dungeon.check_rules(r), [])
+        dungeon._rules.update(key=0, r=r)
+        self.addCleanup(lambda: dungeon._rules.update(r=None))
+        self.r = r
+        v = self.new_round()
+        self.rid, self.host = v["rid"], v["pid"]
+        self.code, self.gp = self.guest(self.rid, klasse="magier")
+
+    def act(self, text, pid=None):
+        pid = pid or self.gp
+        rd = self.state(self.rid)
+        r = self.v.post("/api/dungeon/aktion", json={"code": self.code, "text": text, "zug": rd["zug"]}) if pid == self.gp else \
+            self.c.post(f"/api/profile/dungeon/{self.rid}/aktion", json={"text": text, "zug": rd["zug"]})
+        self.assertEqual(r.status_code, 200, r.text)
+        return self.state(self.rid)
+
+    def direct(self, pid, text):
+        """An action straight in the file (the turn does not close when all have acted)."""
+        with dungeon._lock:
+            d = dungeon._read()
+            rd = d["runden"][self.rid]
+            dungeon.act(rd, pid, text, rd["zug"], 0)
+            dungeon.check_powers(self.r, rd, pid)
+            dungeon._write(d)
+        return self.state(self.rid)
+
+    def test_start_powers_and_charges(self):
+        rd = self.state(self.rid)
+        kr, mag = rd["plaetze"][self.host]["held"], rd["plaetze"][self.gp]["held"]
+        self.assertIn("rundumschlag", kr["faehigkeiten"])
+        pw = dungeon.powers(self.r, mag)
+        self.assertEqual({z["id"]: z["rest"] for z in pw["zauber"]}, {"lichtzauber": None, "heilende_haende": 2})   # grade 2 not yet
+        start = {k["id"]: k["start"] for k in dungeon._choices("de")["klassen"]} if hasattr(dungeon, "_choices") else {}
+        self.assertIn("Licht", start.get("magier", []))
+        self.assertEqual(dungeon.gain(self.r, dict(mag, ep=0), 0, "x"), 0)
+        up = copy.deepcopy(mag)
+        up["ep"] = self.r["stufen_ep"][1]
+        self.assertEqual(dungeon.gain(self.r, up, 0, "x"), 2)
+        self.assertEqual(up["ladungen"][:2], [3, 1])         # a level brings its new charges
+
+    def test_unknown_power_gets_an_ooc_line_and_the_model_hears_it(self):
+        rd = self.act("Ich wirke Feuerball auf die Goblins!")
+        self.assertEqual(rd["offen"][self.gp].get("nicht"), ["Feuerball"])
+        ooc = [e for e in rd["log"] if e["art"] == "ooc"]
+        self.assertEqual([(e["pid"], e["text"]) for e in ooc], [(self.gp, "Das kann Bela noch nicht: Feuerball.")])
+        f = dungeon.facts(self.r, rd)
+        self.assertIn('"nicht_bekannt"', f)
+        self.assertIn("Licht", f)                               # the list kann
+        self.assertNotIn(ooc[0]["text"], json.dumps(self.c.get(f"/api/profile/dungeon/{self.rid}").json()["log"], ensure_ascii=False))
+        rd = self.direct(self.host, "Ich schlage mit dem Schwert zu. Du hast recht, Bela.")   # no spell named, „hast“ is no cast
+        self.assertNotIn("nicht", rd["offen"][self.host])
+        rd = self.direct(self.host, "Ich setze Rundumschlag ein.")
+        self.assertNotIn("nicht", rd["offen"][self.host])       # its own start ability
+
+    def test_known_spell_uses_a_charge_when_told(self):
+        for left in (1, 0):
+            rd = self.act("Ich wirke Heilende Hände auf mich.")
+            self.assertEqual(rd["offen"][self.gp].get("kraft"), "heilende_haende")
+            self.assertIn("Heilende Hände", dungeon.facts(self.r, rd))
+            with dungeon._lock:
+                d = dungeon._read()
+                cur = d["runden"][self.rid]
+                dungeon.cast_powers(self.r, cur)
+                cur["offen"] = {}
+                dungeon._write(d)
+            self.assertEqual(self.state(self.rid)["plaetze"][self.gp]["held"]["ladungen"][0], left)
+        rd = self.act("Ich wirke Heilende Hände.")
+        self.assertNotIn("kraft", rd["offen"][self.gp])
+        self.assertTrue(any("keine Ladung" in e.get("text", "") for e in rd["log"] if e["art"] == "ooc"))
+        rd = self.act("Ich wirke Licht.")                       # a cantrip: any time
+        self.assertEqual(rd["offen"][self.gp].get("kraft"), "lichtzauber")
+        self.assertIn("zauber", {e["art"] for e in self.state(self.rid)["log"]})
 
 
 @unittest.skipUnless(browser_ok(), "no Playwright/Chromium here")

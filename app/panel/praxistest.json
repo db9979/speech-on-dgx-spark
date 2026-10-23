@@ -2928,6 +2928,13 @@
 "titel": "Dungeon-Master: eigene Stimmen und klare Meldungen",
 "text": "Voraussetzung: Einstellungen → Sprachausgabe „VoiceDesign zusätzlich bereitstellen“ an. A: Neue Runde mit „🔊 Vorlesen an“: unter Gastgeber steht „🎙 Stimme des Erzählers“ mit einer Stimme der Welt; „▶ Probe“ spielt sie, „🎲 Neu“ würfelt eine andere. B: Zwei Züge spielen, in denen NSCs sprechen: jede Figur klingt anders und behält ihre Stimme. C: In einer unheimlichen Szene spricht der Erzähler leiser und langsamer. D: Zweite Runde anlegen: sie hat eine andere Erzählerstimme. E: Mit einem Helden, der schon in einer anderen Runde spielt, eine Runde starten: statt „besetzt“ steht ein Hinweis-Kasten „Dieser Held spielt gerade in einer anderen Runde …“.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P443",
+"v": 979,
+"titel": "Dungeon-Master: Zauber nur, wenn der Held sie kann",
+"text": "Nach dem Update der SRD-Daten. A: Neuen Magier anlegen: unter der Klasse steht „kann: …“. B: In der Runde den Bogen öffnen: „Das kann ich“ zeigt Fähigkeiten und Zauber mit Ladungen; Antippen schreibt „Ich wirke …“ ins Feld. C: „Ich wirke Feuerball“ auf Stufe 1 schicken: nur du siehst „(OOC: Das kann … noch nicht: Feuerball.)“, die Erzählung lässt es misslingen. D: Einen Grad-1-Zauber zweimal wirken: danach „keine Ladung mehr in diesem Kapitel“. E: Neues Kapitel: Ladungen wieder voll.",
+"thread": "KI-Dungeon-Master für bis zu 5 Spieler"
 }
 ]
 }

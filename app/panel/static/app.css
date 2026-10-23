@@ -2275,7 +2275,7 @@ textarea{resize:none}textarea[data-fest]{resize:vertical}textarea.feldplatz{padd
 .dm-akt{margin:10px 0;padding:6px 10px;border-radius:10px;background:color-mix(in srgb,var(--acc) 12%,transparent);font-weight:600;font-size:13px;text-align:center}
 .dm-plan ol{margin:6px 0;padding-left:20px}.dm-plan li{margin:4px 0}.dm-plan li small{display:block}.dm-plan li.on b{color:var(--acc)}
 .dmp-akt{margin:10px 0;padding:10px;border:1px solid var(--line);border-radius:12px}.dmp-akt .dm-khead span{display:flex;gap:6px;flex-wrap:wrap}
-.dm-fa{display:flex;flex-direction:column;align-items:flex-start;text-align:left;width:100%;margin-top:6px}.dm-fa-own{font-size:13px;margin-top:4px}
+.dm-fa{display:flex;flex-direction:column;align-items:flex-start;text-align:left;width:100%;margin-top:6px}
 .dm-doll{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:6px}
 .dm-pl{position:relative;border:1px dashed var(--line);border-radius:10px;padding:6px 8px;min-height:54px;display:flex;flex-direction:column;gap:2px;font-size:12px}
 .dm-pl small{color:var(--mut);font-size:11px}.dm-pl i{color:var(--mut)}.dm-pl b{font-size:12px;line-height:1.25;padding-right:18px;overflow-wrap:anywhere}

@@ -5421,7 +5421,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "KI-Dungeon-Master: Platz für die SRD-Daten (V01.0.978, Abstimmung mit dem Datenteil „DnDAppFiles“, Dominik 2026-10-23 „1-6“, „1-3“): Neben dungeon_regeln.json liest das Panel eine zweite mitgelieferte Datei dungeon_srd.json (Daten aus dem D&D-SRD 5.1/5.2, CC-BY-4.0) als Schicht zwischen den Grundregeln und den eigenen Regeln des Admins: gleiche Listen, eine gleiche id ersetzt den Eintrag. Fehlt die Datei, bleibt alles wie vorher; besteht sie check_rules nicht, spielt das Panel ohne sie (Log dungeon: regeln verworfen | srd). Neu im Regelwerk und geprüft: die Listen gegner (Zeichen, Welten, Stufe 0 bis 30, Leben, Rüstung, Angriff, Schaden, Erfahrung, sechs Werte, Größe, Zustände), zustaende (Wirkung nur aus festen Wörtern wie nachteil_angriff oder kein_zug, Dauer in Runden) und hintergruende (Wertboni 0 bis 2, Startausrüstung), die feste Schwierigkeitstabelle sg (sehr leicht 5 bis fast unmöglich 30), ladungen je Stufe und Zaubergrad 1 bis 5, an Klassen start_faehigkeiten und zauber je Grad, an Zaubern grad 0 bis 5. Gegenstände können eine feste seltenheit haben, Schmuck einen festen Wert (sonst gewürfelt), die neue Art Schatz (Edelsteine, Kunst) ist nur zum Verkaufen und stapelt sich"
+"text": "KI-Dungeon-Master: Platz für die SRD-Daten (V01.0.978, Abstimmung mit dem Datenteil „DnDAppFiles“, Dominik 2026-10-23 „1-6“, „1-3“): Neben dungeon_regeln.json liest das Panel eine zweite mitgelieferte Datei dungeon_srd.json (Daten aus dem D&D-SRD 5.1/5.2, CC-BY-4.0) als Schicht zwischen den Grundregeln und den eigenen Regeln des Admins: gleiche Listen, eine gleiche id ersetzt den Eintrag, {\"id\": …, \"dazu\": {…}} hängt an die Listen eines vorhandenen Eintrags an (etwa Waffen einer Klasse, Zauber je Grad, Klassen eines Gegenstands; gilt auch in den eigenen Regeln des Admins). Fehlt die Datei, bleibt alles wie vorher; besteht sie check_rules nicht, spielt das Panel ohne sie (Log dungeon: regeln verworfen | srd). Neu im Regelwerk und geprüft: die Listen gegner (Zeichen, Welten, Stufe 0 bis 30, Leben, Rüstung, Angriff, Schaden, Erfahrung, sechs Werte, Größe, Zustände), zustaende (Wirkung nur aus festen Wörtern wie nachteil_angriff oder kein_zug, Dauer in Runden) und hintergruende (Wertboni 0 bis 2, Startausrüstung), die feste Schwierigkeitstabelle sg (sehr leicht 5 bis fast unmöglich 30), ladungen je Stufe und Zaubergrad 1 bis 5, an Klassen start_faehigkeiten und zauber je Grad, an Zaube"
 },
 {
 "lang": "de",
@@ -5429,7 +5429,23 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": ". Gegenstände mit welten gibt es nur in diesen Welten: Beute und Händler bieten nur an, was zur Welt der Runde passt. Jede Liste fasst zusammengeführt bis zu 500 Einträge; die eigene Datei des Admins (*Funktionen → KI-Dungeon-Master* „Regeln anpassen“) bleibt bei höchstens 200 je Liste."
+"text": "rn grad 0 bis 5. Gegenstände können eine feste seltenheit haben (Beute und Händler bieten sie erst an, wenn der Wurf diese Seltenheit erreicht), Schmuck einen festen Wert (sonst gewürfelt), die neue Art Schatz (Edelsteine, Kunst) ist nur zum Verkaufen und stapelt sich. Gegenstände mit welten gibt es nur in diesen Welten: Beute und Händler bieten nur an, was zur Welt der Runde passt. Jede Liste fasst zusammengeführt bis zu 500 Einträge; die eigene Datei des Admins (*Funktionen → KI-Dungeon-Master* „Regeln anpassen“) bleibt bei höchstens 200 je Liste."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Zauber und Kräfte nur, wenn der Held sie kann (V01.0.979, Dominik 2026-10-23 „1-3“): Bisher konnte eine Figur auf Stufe 1 einen Feuerball erzählen lassen, weil das Modell nur Name, Volk, Klasse, Stufe und Leben kannte. Jetzt gilt wie bei D&D: Jede Klasse bringt ihre Startkräfte mit (start_faehigkeiten, beim Anlegen unter der Klasse „kann: …“), Zauberklassen haben ihre Zauber je Grad (zauber), Zaubertricks (Grad 0) gehen beliebig oft, höhere Grade brauchen eine Ladung (ladungen je Stufe); die Ladungen füllen sich mit jeder neuen Runde und jedem Kapitel, ein Aufstieg bringt die neuen dazu. Der Heldenbogen zeigt „Das kann ich“: Fähigkeiten, Zauber mit „noch 1 von 2 Ladungen“ und Zauber oder Werkzeuge aus der Tasche; Antippen schreibt „Ich wirke …“ in die eigene Aktion. Das Panel prüft jede Aktion mit festen Regeln (check_powers): nennt sie mit einem Wort wie „wirke“, „setze ein“ oder „cast“ einen Zauber oder eine Fähigkeit des Katalogs, die der Held weder kann noch in der Tasche hat, sieht nur dieser Platz die Zeile „(OOC: Das kann Bela noch nicht: Feuerball.)“, und das Modell bekommt nicht_bekannt und erzählt, dass es nicht gelingt; ohne Ladung steht dort „keine La"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "dung mehr in diesem Kapitel“. Ein bekannter Zauber mit Ladung wird beim Erzählen des Zugs gewirkt (Ladung weg, Heilung und Segen nach dem Katalog, Zeile „✦ … wirkt …“). Das Modell bekommt je Held die Liste kann (nur Namen und Ladungen) und die feste Regel, nur daraus zu wirken. Zustand → Live zählt Zauber aus Ladungen und abgewiesene Kräfte; Logs nur dungeon: kann | nicht | 1 namen und dungeon: kraft | grad 1. *Funktionen → KI-Dungeon-Master* „Regeln anpassen“ ändert Startkräfte, Zauber je Klasse und Ladungen wie alles andere (geprüft von check_rules)."
 },
 {
 "lang": "de",
@@ -17621,7 +17637,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "AI Dungeon Master: room for the SRD data (V01.0.978, agreed with the data part \"DnDAppFiles\", Dominik 2026-10-23 \"1-6\", \"1-3\"): Next to dungeon_regeln.json the panel reads a second shipped file dungeon_srd.json (data from the D&D SRD 5.1/5.2, CC-BY-4.0) as a layer between the base rules and the admin's own: the same lists, the same id replaces the entry. Without the file everything stays as before; if it does not pass check_rules, the panel plays without it (log dungeon: regeln verworfen | srd). New in the rules and checked: the lists gegner (sign, worlds, level 0 to 30, life, armour, attack, damage, experience, six values, size, conditions), zustaende (effect only from fixed words like nachteil_angriff or kein_zug, duration in rounds) and hintergruende (value bonuses 0 to 2, starting gear), the fixed difficulty table sg (very easy 5 to nearly impossible 30), ladungen per level and spell grade 1 to 5, on classes start_faehigkeiten and zauber per grade, on spells grad 0 to 5. Items may have a fixed seltenheit, jewellery a fixed value (else drawn), the new kind treasure (gems, art) is only for selling and stacks. Items with welten exist only in those worlds: loot and merchants offer "
+"text": "AI Dungeon Master: room for the SRD data (V01.0.978, agreed with the data part \"DnDAppFiles\", Dominik 2026-10-23 \"1-6\", \"1-3\"): Next to dungeon_regeln.json the panel reads a second shipped file dungeon_srd.json (data from the D&D SRD 5.1/5.2, CC-BY-4.0) as a layer between the base rules and the admin's own: the same lists, the same id replaces the entry, {\"id\": …, \"dazu\": {…}} adds to the lists of an existing entry (such as a class's weapons, spells per grade, an item's classes; also in the admin's own rules). Without the file everything stays as before; if it does not pass check_rules, the panel plays without it (log dungeon: regeln verworfen | srd). New in the rules and checked: the lists gegner (sign, worlds, level 0 to 30, life, armour, attack, damage, experience, six values, size, conditions), zustaende (effect only from fixed words like nachteil_angriff or kein_zug, duration in rounds) and hintergruende (value bonuses 0 to 2, starting gear), the fixed difficulty table sg (very easy 5 to nearly impossible 30), ladungen per level and spell grade 1 to 5, on classes start_faehigkeiten and zauber per grade, on spells grad 0 to 5. Items may have a fixed seltenheit (loot and merchan"
 },
 {
 "lang": "en",
@@ -17629,7 +17645,23 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "only what fits the round's world. Each merged list holds up to 500 entries; the admin's own file (*Features → AI Dungeon Master* \"Adjust rules\") stays at 200 per list at most."
+"text": "ts offer them only when the roll reaches that rarity), jewellery a fixed value (else drawn), the new kind treasure (gems, art) is only for selling and stacks. Items with welten exist only in those worlds: loot and merchants offer only what fits the round's world. Each merged list holds up to 500 entries; the admin's own file (*Features → AI Dungeon Master* \"Adjust rules\") stays at 200 per list at most."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: spells and powers only when the hero has them (V01.0.979, Dominik 2026-10-23 \"1-3\"): Until now a character at level 1 could have a fireball narrated, because the model only knew name, people, class, level and life. Now, as in D&D: every class brings its starting powers (start_faehigkeiten, shown under the class as \"can: …\" when a hero is made), spell classes have their spells per grade (zauber), cantrips (grade 0) work any time, higher grades need a charge (ladungen per level); the charges fill up with every new round and chapter, a level brings the new ones. The hero sheet shows \"What I can do\": abilities, spells with \"1 of 2 charges left\" and spells or tools from the bag; a tap writes \"I cast …\" into the own action. The panel checks every action by fixed rules (check_powers): if, with a word like \"cast\", \"use\" or \"wirke\", it names a spell or ability of the catalogue the hero neither has nor carries, only that seat sees the line \"(OOC: Bela cannot do that yet: Fireball.)\", and the model gets nicht_bekannt and tells that it fails; without a charge it says \"no charge left in this chapter\". A known spell with a charge is cast when the turn is told (charge gone, hea"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "ling and blessing by the catalogue, line \"✦ … casts …\"). The model gets the list kann per hero (names and charges only) and the fixed rule to cast only from it. Status → Live counts spells from charges and refused powers; Logs only dungeon: kann | nicht | 1 namen and dungeon: kraft | grad 1. *Features → AI Dungeon Master* \"Adjust rules\" changes starting powers, spells per class and charges like everything else (checked by check_rules)."
 },
 {
 "lang": "en",
