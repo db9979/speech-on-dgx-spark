@@ -35,6 +35,16 @@ class TestFlightGate(unittest.TestCase):
         self.assertRegex(self.gate, r'\[ "\$\{st%%:\*\}" = "completed" \]; then\s+echo "::error::')
         self.assertIn('|| { echo "::error::Tests did not finish in time"; exit 1; }', self.gate)
 
+    def test_waits_long_enough_for_a_queued_tests_run(self):
+        """Tests run one after another on main: a run may wait for the one before it and then take up to 50
+        minutes. The gate waited 30 minutes and failed .960 and .963 with green Tests (2026-10-23)."""
+        import re
+        n = int(re.search(r"for i in \$\(seq 1 (\d+)\); do", self.gate).group(1))
+        self.assertIn("sleep 30\n", self.gate)
+        self.assertGreaterEqual(n * 30, 90 * 60)
+        job = int(re.search(r"timeout-minutes: (\d+)", self.gate).group(1))
+        self.assertGreater(job * 60, n * 30 + 3600)        # the wait plus at most one hour after the last upload
+
     def test_upload_builds_the_gate_commit(self):
         self.assertIn("ref: ${{ needs.gate.outputs.sha }}", self.wf)
 

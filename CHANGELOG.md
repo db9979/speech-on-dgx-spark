@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.965** · 2026-10-23 · TestFlight wartet bis zu 100 Minuten auf den „Tests“-Lauf (vorher 30): .960 und .963 kamen trotz grüner Tests nicht hoch, weil Tests auf main nacheinander laufen und zusammen länger brauchen
 - **V01.0.964** · 2026-10-23 · KI-Dungeon-Master Stufe 3 mit Bildern: Szenenbild beim Ortswechsel und auf Knopf des Gastgebers (1 je 3 Züge, 12 je Runde, 40 am Tag), Heldenporträt einmal je Stufe, Karte der Orte, Kapitel-Titelbild; nur mit Bilder malen
 - **V01.0.963** · 2026-10-23 · KI-Dungeon-Master im Auto: CarPlay-Zeile „Dungeon-Master spielen“ liest die Erzählung vor und nimmt die gesprochene Aktion an; feste Fragen zum Helden (Leben, Tasche, Heiltrank, wer fehlt) beantwortet das Panel
 - **V01.0.962** · 2026-10-23 · KI-Dungeon-Master Stufe 4: neun Ausrüstungsplätze wie bei D&D (zweihändige Waffen, Ziehen und Ablegen), Gewicht und Traglast (belastet = Nachteil auf Geschick, Beute ohne Platz bleibt am Boden), Händler mit Preisen vom Panel und Charisma-Rabatt, unerkannte Magie; jede Runde beginnt mit einem Prolog (Ort, Stimmung, Ausgangslage)
