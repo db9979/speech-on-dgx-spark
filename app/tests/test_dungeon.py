@@ -71,9 +71,15 @@ def _login(name):
     return c, c.get("/api/whoami").json()["profile"]["id"]
 
 
-def way(rd):
-    """The id of a way from where the group stands to a place not yet visited (the map decides, dungeon_karte)."""
+def way(rd, weiter=False):
+    """The id of a way from where the group stands to a place not yet visited (the map decides, dungeon_karte);
+    weiter: to one that leads on to a further new place (a dead end would send the next step back)."""
     ws = [w for w in dungeon_karte.facts(dungeon.rules(), rd)["wege"] if w["id"] != "ein"]
+    k = rd["karte"]
+    nb = dungeon_karte._nb(k)
+    on = [w for w in ws if not w.get("besucht") and any(x not in k["besucht"] for x in nb[int(w["id"][1:]) - 1])]
+    if weiter and on:
+        return on[0]["id"]
     return next((w for w in ws if not w.get("besucht")), ws[0])["id"]
 
 
@@ -1795,7 +1801,7 @@ class Pictures(Base):
             rd = d["runden"][rid]
             for _ in range(2):
                 rd["karte"]["drin"] = None              # out of a vault the way led into
-                dungeon_karte.step(dungeon.rules(), rd, {"ort_id": way(rd), "erfolg": []}, {}, random.Random(5))
+                dungeon_karte.step(dungeon.rules(), rd, {"ort_id": way(rd, weiter=True), "erfolg": []}, {}, random.Random(5))
             rd["karte"]["drin"] = None
             rd["zug"] = 9
             job = dungeon.queue_scene(dungeon.rules(), d, rid, rd, "a crypt below a bell tower")

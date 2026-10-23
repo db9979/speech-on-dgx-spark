@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.974** AI Dungeon Master self-test steady: the pictures test picks a way on the rolled map that leads on instead of into a dead end (was red in 1 of 3 runs)
 - **V01.0.973** AI Dungeon Master map readable and with pictures: text at screen size, names without overlap, the place as a line instead of a sign; pictures per kind of place and room in the night run and an own picture per visited place (checked, day limit, only for its own round), the sign until then
 - **V01.0.972** Document search finds rows in PDF tables: each row stays one line with its cells (pdfium reads lines, boxes and columns), long tables are cut only between rows with the head row in every piece, older PDFs with a kept original are read again in quiet minutes; "Look locally first" shows the part with the search words instead of the first 500 characters
 - **V01.0.971** AI Dungeon Master: better stories with a hidden world truth (people, groups, secrets), open threads, a running summary every 5 turns, one rewrite by fixed rules (too short, hero missing, repeating), style examples per world, more varied narration and 👍/👎 per narration; big windows for hero sheet, merchant and map, a tap on a thing shows its picture, description and values
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.967** AI Dungeon Master: pictures for gear and spells, one painted picture per item and spell in each world's style with a rarity frame, at night from 01:00 to 05:00 or at once with "Create pictures now" (at most 300 a day), an own picture for named finds from rare on; own admin switch, needs Painting pictures
 - **V01.0.966** Without the internet: a time server in the home network for both computers (Settings → Spark → Operation), a check card under Status → Summary → Without the internet (models, clocks, names, what pauses) and a hint when the model computer refuses because of the time; speech servers and Parakeet load only from their own disk, a guard test against downloads at run time
 - **V01.0.965** TestFlight waits up to 100 minutes for the "Tests" run (before: 30): .960 and .963 did not go up despite green Tests, because Tests on main run one after another and take longer together
-- **V01.0.964** AI Dungeon Master stage 3 with pictures: a scene picture on a new place and on the host's button (1 every 3 turns, 12 per round, 40 a day), hero portrait once per level, map of places, chapter cover; only with Painting pictures
 
 
 

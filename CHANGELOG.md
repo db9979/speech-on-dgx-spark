@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.974** · 2026-10-23 · Selbsttest des KI-Dungeon-Masters fest: der Bilder-Test wählt auf der gewürfelten Karte einen Weg, der weiterführt, statt in eine Sackgasse (war 1 von 3 Läufen rot)
 - **V01.0.973** · 2026-10-23 · KI-Dungeon-Master-Karte lesbar und mit Bildern: Schrift in Bildschirmgröße, Namen ohne Überlagerung, Standort als Zeile statt Schild; Bilder je Ortsart und Raumart im nächtlichen Lauf und ein eigenes Bild je besuchtem Ort (geprüft, Tageslimit, nur für die eigene Runde), das Zeichen bis dahin
 - **V01.0.972** · 2026-10-23 · Dokumentsuche trifft Tabellen in PDFs: jede Zeile bleibt eine Zeile mit ihren Zellen (pdfium liest Linien, Kästen und Spalten), lange Tabellen werden nur zwischen Zeilen geteilt mit Kopfzeile in jedem Stück, alte PDFs mit Original werden in ruhigen Minuten neu gelesen; „Erst lokal suchen“ zeigt das Stück mit den Suchwörtern statt der ersten 500 Zeichen
 - **V01.0.971** · 2026-10-23 · KI-Dungeon-Master: bessere Geschichten mit verborgener Welt-Wahrheit (Personen, Gruppen, Geheimnisse), offenen Fäden, laufender Zusammenfassung alle 5 Züge, einmal Nachbessern nach festen Regeln (zu kurz, Held fehlt, Wiederholung), Stilbeispielen je Welt, abwechslungsreicherer Erzählung und 👍/👎 je Erzählung; große Fenster für Heldenbogen, Händler und Karte, ein Tipp auf ein Ding zeigt Bild, Beschreibung und Werte
