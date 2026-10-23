@@ -2830,6 +2830,13 @@
 "titel": "Dungeon-Master: Szenenbilder, Porträt, Karte, Titelbild",
 "text": "Voraussetzung: Funktionen → Bilder malen an und Bildmodell installiert. A: Neue Runde mit Häkchen „Porträt malen lassen“ anlegen: der Prolog kommt, darüber erscheint „Das Szenenbild wird gemalt …“, danach das Bild groß mit „KI-Bild“, das Porträt auf der Heldenkarte. B: Spielen, bis der Ort wechselt: ein neues Szenenbild, im Verlauf klein beim Zug, die Karte rechts wächst. C: „🖼 Szenenbild jetzt malen“ direkt danach: grau mit „Höchstens ein Szenenbild je 3 Züge“. D: Ein Gast am Handy sieht dieselben Bilder und kann sein Porträt malen lassen; ein zweites Mal geht erst auf der nächsten Stufe. E: Kapitel beenden: die Kampagne zeigt das letzte Szenenbild als Titelbild und die Karte, auch in der iPhone-App unter Meine Sachen, Dungeon-Master. F: Bilder malen aus: das Spiel läuft weiter, ohne Bilder und ohne Knopf.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P429",
+"v": 966,
+"titel": "Ohne Internet: Zeitserver und Prüfung",
+"text": "A: Einstellungen → Spark → Betrieb → Zeitserver im Heimnetz die FRITZ!Box eintragen (z. B. 192.168.10.1), speichern; eine Adresse wie 8.8.8.8 wird abgelehnt. Nach dem nächsten Update: Zustand → Überblick → Ohne Internet → „Jetzt prüfen“: Sprachmodell, Hören, Sprechen „ok“, Zeitserver antwortet, Uhr des Modell-Rechners weniger als 2 s Abstand. B: Die Zeile mit dem Namen von außen (z. B. speech.metaluna9.i234.me) zeigt „zeigt ins Internet“, bis im Router ein lokaler DNS-Eintrag auf den Spark zeigt; danach „zeigt ins Heimnetz“. C: Internet am Router für ein paar Minuten trennen: Fragen per Sprache und Text gehen weiter, Websuche antwortet aus dem Kiwix, die Karte nennt, was pausiert. D: Nach einem Neustart von Pi und tars ohne Internet: die Uhren stimmen (Prüfung), Befehle an den Modell-Rechner gehen.",
+"thread": "Offline ohne Internet"
 }
 ]
 }

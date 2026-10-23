@@ -7,6 +7,7 @@ github.com/winidi/dictate (MIT).
 No GPU, ~1 GiB RAM, very fast; no context words (asr.context is ignored) and no streaming
 of partial text (a stream gets the whole text as one piece).
 """
+import os
 import subprocess
 import threading
 import time
@@ -28,7 +29,15 @@ MAX_GAIN = 30.0
 
 
 def download():
+    """The pinned files: from the own disk when they are there (no question to the Hub, also without the internet),
+    fetched only when one is missing (install.sh, or the first start after choosing Parakeet)."""
     from huggingface_hub import snapshot_download
+    try:
+        d = snapshot_download(REPO, revision=REVISION, allow_patterns=FILES, local_files_only=True)
+        if all(os.path.isfile(os.path.join(d, f)) for f in FILES):
+            return d
+    except Exception:   # noqa: BLE001 - not on the disk yet: fetch it
+        pass
     return snapshot_download(REPO, revision=REVISION, allow_patterns=FILES)
 
 

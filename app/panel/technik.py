@@ -261,6 +261,7 @@ MODULE = {
     "latency": ("betrieb", "Wartezeit bis zum ersten Ton"),
     "verbrauch": ("betrieb", "Verbrauchszähler je Modell, Aufgabe und Profil, Kontingent für Tag, Woche und Monat"),
     "dienstwacht": ("betrieb", "Dienst-Wächter: meldet, wenn ein Dienst fehlt"),
+    "offline": ("betrieb", "Ohne Internet: Modelle, Uhren, Zeitserver und Namen im Heimnetz auf Knopfdruck geprüft"),
     "wartung": ("betrieb", "Wartungspause: Spark hält an, während ein Modell neu eingespielt wird"),
     "faelle": ("betrieb", "Fälle: jedes Problem wird festgehalten"),
     "befund": ("betrieb", "Befund: die Ursache eines Falls"),

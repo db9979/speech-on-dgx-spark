@@ -159,6 +159,7 @@ DIRECT_OK = {
     "wyoming": ("lokal", "eigene Sprachdienste auf localhost"),
     "telefon": ("geprueft", "SIP und Ton (UDP) nur mit der Telefonanlage nach resolve() im Heimnetz und der Ton-Adresse aus ihrem SDP"),
     "zertpin": ("geprueft", "Zertifikat lesen nach resolve()"),
+    "offline": ("geprueft", "Ohne Internet: eine Uhrzeit-Frage (SNTP, UDP 123) nur an den Zeitserver im Heimnetz nach resolve() (HOME)"),
     "halive": ("geprueft", "WebSocket zum eigenen Home Assistant nach resolve() mit Heimnetz-Regeln (HOME), nur lesen"),
     "asr_proxy": ("lokal", "Spracherkennung: Proxy zur Engine auf localhost"),
     "satzende": ("lokal", "die eigene Spracherkennung (POST /v1/turn, Smart Turn auf dem Modell-Rechner über common.model_url)"),

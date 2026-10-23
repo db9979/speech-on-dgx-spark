@@ -467,6 +467,7 @@ ADMIN_ON_OK = {
     "rufen.py:admin_on": "Spark switch: whether the panel looks for „Ruf … an“ at all (Live, answer); per profile rufen.usable (features.allowed)",
     "verbundgruppe.py:admin_on": "Spark switch: whether this Spark takes group requests of other Sparks at all; per profile verbundgruppe.usable (features.allowed)",
     "anrufe.py:turn_on": "Spark-wide: the Vermittler (coturn) runs for the whole Spark, no profile",
+    "offline.py:_paused": "admin check Ohne Internet: which Spark-wide functions need the internet, no profile acts",
     "vorab.py:admin_on": "Spark switch; per profile vorab.on (features.allowed)",
     "weather.py:admin_on": "Spark switch; per profile weather.usable, endpoints add features.blocked",
     "wiki.py:admin_on": "Spark switch; per profile features.allowed wiki",

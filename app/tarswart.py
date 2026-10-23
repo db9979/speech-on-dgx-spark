@@ -10,7 +10,8 @@ a time (at most WINDOW seconds off) and a one-time number (each is taken once).
     status                      version, state and uptime of the model units, GPU, free memory, settings hash,
                                 the model choice (common.MODEL_CHOICE: which model runs is this computer's), its
                                 Wartungspause (speech-spark pause, modelle messen: the panel pauses those parts too),
-                                this computer's values for Zustand → Überblick → Rechner (rechner.messen)
+                                this computer's values for Zustand → Überblick → Rechner (rechner.messen),
+                                its clock (common.uhr: the time and whether a time server set it; Ohne Internet)
     einheit <start|stop|restart> <teil>   only parts of common.UNITS (speech and its engines)
     einstellen {settings}       the panel's speech settings (common.model_settings_take: known keys, same kind,
                                 never addresses, ports or backends, model ids only Qwen's)
@@ -49,7 +50,7 @@ import rechner
 import werkstatt
 from common import (CONFIG_PATH, ON_DEMAND_UNITS, OWN_LLM_UNITS, UNITS, WAERTER_PORT, BodyLimit, gpu_stats, journal, load_config,
                     WARTUNG_FILE, installed_version, mem_available_gib, model_choice, model_settings_hash, model_settings_take, qwen38_lanes, read_json,
-                    UPDATE_PROGRESS, run, shipped, update_anteil, waerter_key, waerter_sign, write_json)
+                    UPDATE_PROGRESS, run, shipped, uhr, update_anteil, waerter_key, waerter_sign, write_json)
 
 WINDOW = 60            # seconds a request's time may be off
 MAX_BODY = 64 * 1024     # the speech settings (pronunciation, context) fit easily
@@ -143,7 +144,8 @@ def status():
     cfg = load_config()
     return {"version": version(), "einheiten": _states(list(WATCHED.values())), "gpu": gpu_stats(),
             "mem_avail_gib": mem, "mem_total_gib": total, "einstellungen": model_settings_hash(cfg), "modellwahl": model_choice(cfg), "pause": pause(),
-            "commit": str(installed_version().get("commit") or "")[:40], "update": _update_laeuft(), "update_pct": _update_pct(), "rechner": _rechner()}
+            "commit": str(installed_version().get("commit") or "")[:40], "update": _update_laeuft(), "update_pct": _update_pct(), "rechner": _rechner(),
+            "uhr": uhr()}
 
 
 def _update_pct():

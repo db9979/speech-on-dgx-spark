@@ -797,6 +797,25 @@ def lokal(repo, hf_home=None, kat=None):
     return os.path.join(hf_ordner(m, hf_home), "snapshots", m["revision"])
 
 
+# the switches the Hugging Face libraries read: set, they never ask the internet
+OHNE_NETZ = {"HF_HUB_OFFLINE": "1", "TRANSFORMERS_OFFLINE": "1", "HF_DATASETS_OFFLINE": "1"}
+
+
+def ohne_netz():
+    """From here on this process loads only from its own disk (Dominik 2026-10-23, offline): asr_server.py and
+    tts_server.py call it after modelle.lokal() fetched and checked every file and before they import the model's
+    library, so its from_pretrained never asks the Hub (no lookup that hangs without the internet, no file beside the
+    checked commit). Set in the environment for libraries imported later and in those already imported (they read it
+    once at import). The engines do the same in engine.sh (HF_HUB_OFFLINE), test_offline checks every loader."""
+    os.environ.update(OHNE_NETZ)
+    hub = sys.modules.get("huggingface_hub.constants")
+    if hub is not None:
+        hub.HF_HUB_OFFLINE = True
+    tf = sys.modules.get("transformers.utils.hub")
+    if tf is not None and hasattr(tf, "_is_offline_mode"):
+        tf._is_offline_mode = True
+
+
 def vorbereiten(m, hf_home=None):
     """Makes sure the weights are in the cache (download only the ERLAUBT kinds) and checks them. Returns the
     commit. A pinned revision is fetched exactly; an empty one takes the newest commit (only to measure). A helper

@@ -208,7 +208,7 @@ OHNE = {
         "voicedesign_model", "voicedesign_port",
     ),
     "watch": (
-        "warn_gib", "watchdog",
+        "warn_gib", "watchdog", "zeitserver",
     ),
 }
 OHNE_PROFIL = (

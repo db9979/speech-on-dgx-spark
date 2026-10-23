@@ -680,6 +680,22 @@ def run(cmd, timeout=10, env=None):
         return 1, str(e)
 
 
+def uhr():
+    """This computer's clock (Ohne Internet, offline.py): {"t": seconds since 1970, "ntp": whether a time server set it}.
+    "ntp" is the kernel's own word (adjtimex: not TIME_ERROR), the same timedatectl shows as "NTP synchronized", for
+    timesyncd and chrony alike, read without a program; None where it cannot be read (no Linux)."""
+    ntp = None
+    try:
+        import ctypes
+        import ctypes.util
+        buf = ctypes.create_string_buffer(512)   # struct timex with modes 0: only read, never set
+        state = ctypes.CDLL(ctypes.util.find_library("c") or "libc.so.6", use_errno=True).adjtimex(buf)
+        ntp = None if state < 0 else state != 5   # 5 = TIME_ERROR: the clock is not synchronised
+    except (OSError, AttributeError, TypeError):
+        pass
+    return {"t": time.time(), "ntp": ntp}
+
+
 def unit_exists(unit):
     code, out = run(["systemctl", "list-unit-files", unit + ".service", "--no-legend"])
     return code == 0 and out.startswith(unit + ".service")

@@ -108,10 +108,11 @@ class Ladewege(unittest.TestCase):
         self.assertEqual(eng.count('serve "$MODEL" --revision "$REV"'), 2)    # ASR and TTS engine
         for f in ("asr_server.py", "tts_server.py"):
             src = read(f)
-            self.assertIn("from_pretrained(modelle.lokal(cfg[\"model\"])" if f == "asr_server.py"
-                          else "modelle.lokal(cfg[\"model\"])", src)
+            self.assertIn('path = modelle.lokal(cfg["model"])', src)
+            self.assertIn("from_pretrained(path", src)            # exactly the checked folder, nothing else
             self.assertNotIn('from_pretrained(cfg["model"]', src)
-        self.assertIn('forced_aligner"] = modelle.lokal(cfg["aligner_model"])', read("asr_server.py"))
+        self.assertIn('aligner = modelle.lokal(cfg["aligner_model"])', read("asr_server.py"))
+        self.assertIn('kwargs["forced_aligner"] = aligner', read("asr_server.py"))
         for f in ("docembed.py", "nachsortieren.py"):
             self.assertIn('m["repo"], m["revision"]', read("panel", f))
 

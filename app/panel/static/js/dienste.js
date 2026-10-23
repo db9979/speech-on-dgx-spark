@@ -27,3 +27,14 @@ if($('zsvclist'))$('zsvclist').addEventListener('change',async e=>{const c=e.tar
   catch(err){$('zsvcmsg').textContent=err.message;c.checked=!c.checked}});
 if($('zsvccheck'))$('zsvccheck').onclick=async()=>{const m=$('zsvcmsg');m.textContent=t('Prüfe …','Checking …');
   try{zWatch(await (await api('/api/admin/svcwatch/check',{method:'POST'})).json());m.textContent=t('Fertig.','Done.')}catch(e){m.textContent=e.message}};
+// Zustand → Überblick → Ohne Internet (offline.py, admin): does the Spark keep running at home without the internet?
+// Only on "Jetzt prüfen": fixed sentences from the panel (through esc), a pill per row; a row opens its place.
+const OFFP={ok:['ok','ok'],warn:['Hinweis','Note'],bad:['Fehler','Error'],info:['Info','Info']};
+const OFFW={zeit:['Einstellungen → Spark → Betrieb → Zeitserver im Heimnetz','Settings → Spark → Operation → Time server in the home network'],modelle:['Zustand → Modelle','Status → Models'],dienste:['Funktionen → Dienst-Wächter','Features → Service watch']};   // rows: data-way=
+function zOffline(){const box=$('zoffline');if(box)box.hidden=false}
+function offRows(d){return (d.rows||[]).map(r=>{const w=OFFW[r.way];return `<div class="zrow"${w?` data-way="${esc(t(...w))}"`:''}><span class="pill ${r.level==='info'?'':esc(r.level)}">${esc(t(...(OFFP[r.level]||OFFP.info)))}</span><span>${esc(t(r.de,r.en))}</span></div>`}).join('')}
+if($('zofflinecheck'))$('zofflinecheck').onclick=async()=>{const m=$('zofflinemsg');m.textContent=t('Prüfe …','Checking …');
+  try{const d=await (await api('/api/admin/offline/check',{method:'POST'})).json();$('zofflinelist').innerHTML=offRows(d);
+    m.textContent=t(`Fertig in ${d.ms} ms: ${d.count.ok} ok, ${d.count.warn} Hinweise, ${d.count.bad} Fehler.`,`Done in ${d.ms} ms: ${d.count.ok} ok, ${d.count.warn} notes, ${d.count.bad} errors.`);
+    if(typeof wayRows==='function')wayRows($('zofflinelist'))}
+  catch(e){m.textContent=e.message}};

@@ -110,6 +110,7 @@ function wayFirst(...ways){return ways.find(x=>x&&wayParse(x,0))||''}
 // stays the control's; a row without controls is a link for the keyboard too. Only counts and names move, never content.
 const WAY_ROWS='.zrow,.znrow,.kn-tn',WAY_CTRL='a,button,input,select,textarea,label,summary';
 const WAY_CARDS={zbg:['Funktionen → Mein Zustand','Features → My status'],zsvc:['Funktionen → Dienst-Wächter','Features → Service watch'],zwart:['Funktionen → Wartungspause','Features → Maintenance pause'],
+  zoffline:['Einstellungen → Spark → Betrieb → Zeitserver im Heimnetz','Settings → Spark → Operation → Time server in the home network'],
   znas:['Ich → Speicher','Me → Storage'],znaszustand:['Funktionen → Zustand der NAS','Features → NAS status'],
   znasquelle:['Ich → Speicher','Me → Storage'],zstore:['Ich → Speicher','Me → Storage'],
   zdev:['Funktionen → Geräte-Updates','Features → Device updates'],zdocs:['Funktionen → Eigene Dokumente','Features → Own documents'],

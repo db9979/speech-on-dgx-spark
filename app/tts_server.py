@@ -41,9 +41,10 @@ _clone_prompts = {}  # voice name -> (mtime, prompt)
 
 def load_model(cfg):
     check_memory(estimate_gib(cfg["model"]))
+    path = modelle.lokal(cfg["model"])   # the pinned commit from the catalog, its files checked
+    modelle.ohne_netz()                  # from here on only this disk (before the library is imported)
     from qwen_tts import Qwen3TTSModel
-    model = Qwen3TTSModel.from_pretrained(
-        modelle.lokal(cfg["model"]),      # the pinned commit from the catalog, its files checked
+    model = Qwen3TTSModel.from_pretrained(path,
         device_map="cuda:0",
         dtype=torch_dtype(cfg["dtype"]),
         attn_implementation="sdpa",  # flash-attn does not build for GB10 (sm_121)

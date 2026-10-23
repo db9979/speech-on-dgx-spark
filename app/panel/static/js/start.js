@@ -87,5 +87,5 @@ async function startPage(){let who=null;try{who=await (await /*raw: the first wh
   if(typeof mymBackStart==='function')mymBackStart();
   if(typeof rpStart==='function')rpStart(who);   // Probleme melden (melden.js): footer, Logs, #melden
   if(ADMIN){ulCheck();if(!elevated())wizCheck();loadLangs();refresh();setInterval(refresh,3000);
-    zPoll([['zRooms',30e3],['zDocs',30e3],['zBg',60e3],['zDev',60e3],['zWatch',60e3],['zWartung',30e3],['zStore',60e3],['zNas',60e3],['zNasquelle',60e3],['zNasZustand',60e3],['zUsage',60e3]]);api('/api/update').then(r=>r.json()).then(u=>updBadge(u.remote)).catch(()=>{})}}
+    zPoll([['zRooms',30e3],['zDocs',30e3],['zBg',60e3],['zDev',60e3],['zWatch',60e3],['zOffline',60e3],['zWartung',30e3],['zStore',60e3],['zNas',60e3],['zNasquelle',60e3],['zNasZustand',60e3],['zUsage',60e3]]);api('/api/update').then(r=>r.json()).then(u=>updBadge(u.remote)).catch(()=>{})}}
 startPage().then(()=>{if(window.sparkBootDone)sparkBootDone()},e=>{if(window.sparkBootFail)sparkBootFail(e)});

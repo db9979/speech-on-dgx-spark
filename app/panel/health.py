@@ -394,6 +394,8 @@ def alerts():
     out += guard.alerts()            # the change log changed afterwards (its chain breaks, guard.chain_daily)
     import loopwacht
     out += loopwacht.alerts()        # the panel's loop stood still (Hänge-Wächter): for an hour after it
+    import offline
+    out += offline.alerts()          # the model computer refuses because the clocks are too far apart (Ohne Internet)
     return out
 
 

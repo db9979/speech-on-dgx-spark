@@ -95,7 +95,7 @@ const ZICO={ear:['M6 8.5a6 6 0 1 1 12 0c0 3-2 4-3 5.5s-1 3.5-3.5 3.5','M9.5 9a2.
   nas:['M6 3h12a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z','M6 14h12a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2z','M8 6.5h.01M8 17.5h.01'],
   folder:['M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'],copy:['M8 8h11v11H8z','M5 16V5h11'],dev:['M12 3v12M7 10l5 5 5-5','M4 19h16'],
   doc:['M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z','M14 3v5h5M9 13h6M9 17h4'],bars:['M4 19V9M10 19V5M16 19v-7M22 19H2']};
-const ZCARD_ICO={zneed:'alert',zroom:'ear',zbg:'user',zsvc:'globe',zwart:'pause',znas:'nas',znaszustand:'nas',znasquelle:'folder',zverbrauch:'bars',zstore:'copy',zdev:'dev',zdocs:'doc'};
+const ZCARD_ICO={zneed:'alert',zroom:'ear',zbg:'user',zsvc:'globe',zoffline:'globe',zwart:'pause',znas:'nas',znaszustand:'nas',znasquelle:'folder',zverbrauch:'bars',zstore:'copy',zdev:'dev',zdocs:'doc'};
 function zIco(name,cls){const N='http://www.w3.org/2000/svg',v=document.createElementNS(N,'svg');v.setAttribute('viewBox','0 0 24 24');v.setAttribute('aria-hidden','true');v.setAttribute('class',cls||'zico');
   for(const d of ZICO[name]||[]){const p=document.createElementNS(N,'path');p.setAttribute('d',d);v.appendChild(p)}return v}
 for(const [id,ic] of Object.entries(ZCARD_ICO)){const h=document.querySelector('#'+id+'>h2');if(h){const b=document.createElement('span');b.className='zbub';b.appendChild(zIco(ic));h.prepend(b)}}

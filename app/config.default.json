@@ -107,7 +107,8 @@
   },
   "watch": {
     "watchdog": true,
-    "warn_gib": 10
+    "warn_gib": 10,
+    "zeitserver": ""
   },
   "chat": {
     "llm_url": "http://127.0.0.1:30001/v1",

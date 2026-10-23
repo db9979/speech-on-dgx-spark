@@ -1651,6 +1651,37 @@ elif [ -e "$WD_CONF" ]; then
   systemctl daemon-reexec || true
 fi
 
+# ---------------------------------------------------------------- clock (Zeitserver im Heimnetz, Ohne Internet)
+# Without the internet the clocks of the panel computer and the model computer drift apart, and the Wärter takes a
+# command only within 60 s (a Raspberry Pi without a battery even starts at its last saved time). watch.zeitserver
+# (Einstellungen → Spark → Betrieb, handed to the model computer with the speech settings) names a time server in
+# the home network, e.g. the FRITZ!Box: first in the list, the usual servers behind it. Only a private IPv4 address is
+# written (the same check as offline.zeitserver in the panel); empty takes the file away again.
+ZS=$(cfg '.watch.zeitserver // ""')
+if [ -n "$ZS" ] && ! { [[ "$ZS" =~ ^[0-9]{1,3}(\.[0-9]{1,3}){3}$ ]] && python3 -I -c 'import ipaddress, sys
+a = ipaddress.IPv4Address(sys.argv[1])
+sys.exit(0 if a.is_private and not (a.is_loopback or a.is_link_local or a.is_unspecified or a.is_multicast) else 1)' "$ZS" 2>/dev/null; }; then
+  warn "watch.zeitserver is no private IPv4 address, left out"; ZS=""
+fi
+ZS_TS=/etc/systemd/timesyncd.conf.d/speech-spark.conf
+ZS_CH=/etc/chrony/sources.d/speech-spark.sources
+if systemctl is-active --quiet chrony 2>/dev/null && [ -d /etc/chrony/sources.d ]; then
+  if [ -n "$ZS" ]; then
+    printf '# written by speech-on-dgx-spark install.sh (config: watch.zeitserver)\nserver %s iburst prefer\n' "$ZS" >"$ZS_CH.new"
+    if ! cmp -s "$ZS_CH.new" "$ZS_CH"; then mv -f "$ZS_CH.new" "$ZS_CH"; chronyc reload sources >/dev/null 2>&1 || true
+    else rm -f "$ZS_CH.new"; fi
+  elif [ -e "$ZS_CH" ]; then rm -f "$ZS_CH"; chronyc reload sources >/dev/null 2>&1 || true; fi
+elif systemctl list-unit-files systemd-timesyncd.service >/dev/null 2>&1; then
+  if [ -n "$ZS" ]; then
+    # NTP= replaces the list (FallbackNTP is then never asked), so the usual servers go behind the home one
+    ZS_REST=$(timedatectl show-timesync -p FallbackNTPServers --value 2>/dev/null | tr -cd 'A-Za-z0-9.: -' | head -c 400 || true)
+    mkdir -p "$(dirname "$ZS_TS")"
+    printf '# written by speech-on-dgx-spark install.sh (config: watch.zeitserver)\n[Time]\nNTP=%s %s\n' "$ZS" "$ZS_REST" >"$ZS_TS.new"
+    if ! cmp -s "$ZS_TS.new" "$ZS_TS"; then mv -f "$ZS_TS.new" "$ZS_TS"; systemctl restart systemd-timesyncd 2>/dev/null || true
+    else rm -f "$ZS_TS.new"; fi
+  elif [ -e "$ZS_TS" ]; then rm -f "$ZS_TS"; systemctl restart systemd-timesyncd 2>/dev/null || true; fi
+fi
+
 # ---------------------------------------------------------------- logs
 # The speech units log into their own journal namespace with a size and age cap, so a chatty
 # engine can never fill the disk (and does not push other logs out of the system journal).

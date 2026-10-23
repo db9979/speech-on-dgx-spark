@@ -27,6 +27,11 @@ auth = [Depends(api_key_dependency())]
 def load_model(cfg):
     need = estimate_gib(cfg["model"]) + (estimate_gib(cfg["aligner_model"]) if cfg.get("timestamps") else 0)
     check_memory(need)
+    # the pinned commits from the catalog, their files checked (modelle.lokal), never whatever the repository holds
+    # now; after that nothing asks the internet any more (modelle.ohne_netz, before the library is imported)
+    path = modelle.lokal(cfg["model"])
+    aligner = modelle.lokal(cfg["aligner_model"]) if cfg.get("timestamps") else None
+    modelle.ohne_netz()
     from qwen_asr import Qwen3ASRModel
     dtype = torch_dtype(cfg["dtype"])
     kwargs = dict(
@@ -36,11 +41,10 @@ def load_model(cfg):
         max_inference_batch_size=cfg["max_batch_size"],
         max_new_tokens=cfg["max_new_tokens"],
     )
-    if cfg.get("timestamps"):
-        kwargs["forced_aligner"] = modelle.lokal(cfg["aligner_model"])
+    if aligner:
+        kwargs["forced_aligner"] = aligner
         kwargs["forced_aligner_kwargs"] = dict(dtype=dtype, device_map="cuda:0", attn_implementation="sdpa")
-    # the pinned commit from the catalog, its files checked (modelle.lokal), never whatever the repository holds now
-    model = Qwen3ASRModel.from_pretrained(modelle.lokal(cfg["model"]), **kwargs)
+    model = Qwen3ASRModel.from_pretrained(path, **kwargs)
     # warm-up: the first transcription after loading is much slower than the rest
     try:
         import numpy as np

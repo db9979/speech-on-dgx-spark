@@ -765,6 +765,10 @@ def validate(new):
     w = new["watch"]
     if not isinstance(w.get("warn_gib"), (int, float)) or not 2 <= w["warn_gib"] <= 64:
         raise HTTPException(400, "watch warn_gib must be 2..64")
+    import offline   # Zeitserver im Heimnetz: empty, or one private IPv4 address (install.sh checks it the same way)
+    if not isinstance(w.get("zeitserver", ""), str) or (w.get("zeitserver", "").strip() and not offline.zeitserver(w["zeitserver"])):
+        raise HTTPException(400, "Zeitserver im Heimnetz: eine IP-Adresse im Heimnetz wie 192.168.178.1, oder leer.")
+    w["zeitserver"] = offline.zeitserver(w.get("zeitserver", ""))
     lg = new["logs"]
     if not isinstance(lg["max_mb"], int) or not 50 <= lg["max_mb"] <= 20000:
         raise HTTPException(400, "logs max_mb must be 50..20000")

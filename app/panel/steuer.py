@@ -18,6 +18,8 @@ update) are never sent there.
     for_live()                  the Live view's box „Modell-Rechner“: reachable, units active, version, pause
     update_modell_rechner()     its own update first, then this computer's (update.sh: python3 steuer.py update)
     rundlauf()                  after the pairing: Wärter, then TTS speaks a sentence and ASR hears it, through the pin
+    uhr_vergleich()             Ohne Internet: the model computer's clock against this one's (offline.py)
+    uhr_abgelehnt()             whether the Wärter just refused because the clocks are too far apart (offline.alerts)
 
 When the model computer reports other speech settings than the panel's (a hash in its status), they are handed over
 again, at most every PUSH seconds: a save while it was away is not lost. Which model runs (common.MODEL_CHOICE) goes
@@ -75,9 +77,45 @@ def call(cmd, args=(), cfg=None, timeout=TIMEOUT, daten=None):
         else:
             with httpx.Client(timeout=timeout, trust_env=False, follow_redirects=False) as c:
                 r = c.post(model_url("waerter", "/v1/wart", cfg), content=body, headers=headers)
+        if r.status_code == 403 and _detail(r) == "zeit":   # the clocks are more than the Wärter's window apart
+            _status["zeit"] = time.time()
         return r.json() if r.status_code == 200 else None
     except (httpx.HTTPError, OSError, ValueError):
         return None
+
+
+def _detail(r):
+    try:
+        d = r.json()
+        return d.get("detail") if isinstance(d, dict) else None
+    except ValueError:
+        return None
+
+
+ZEIT_S = 300           # a refusal because of the time counts this long (offline.alerts)
+
+
+def uhr_abgelehnt(now=None):
+    """Whether the model computer refused a request in the last ZEIT_S seconds because the clocks differ too much
+    (its Wärter takes a request only within tarswart.WINDOW seconds): it then seems gone, though it runs."""
+    t = _status.get("zeit")
+    return bool(t) and 0 <= (time.time() if now is None else now) - t < ZEIT_S
+
+
+def uhr_vergleich(cfg=None):
+    """Ohne Internet (offline.py): the model computer's clock against this one's, asked now (not from the cache).
+    {"ab": seconds it is ahead (negative: behind), "ntp": whether a time server set its clock}; {"abgelehnt": True}
+    when it refused because of the time; None when it does not answer or has no clock in its status (older version)."""
+    t0 = time.time()
+    d = call("status", cfg=cfg)
+    t1 = time.time()
+    u = d.get("uhr") if isinstance(d, dict) else None
+    if isinstance(u, dict) and isinstance(u.get("t"), (int, float)) and not isinstance(u.get("t"), bool):
+        ntp = u.get("ntp")
+        return {"ab": round(u["t"] - (t0 + t1) / 2, 1), "ntp": ntp if isinstance(ntp, bool) else None}
+    if d is None and uhr_abgelehnt(t1) and _status["zeit"] >= t0:
+        return {"abgelehnt": True}
+    return None
 
 
 def status(cfg=None, now=None):
