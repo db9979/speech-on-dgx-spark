@@ -9,6 +9,7 @@ from tests import helpers
 
 helpers.start()
 import apns  # noqa: E402
+import mitteilungen  # noqa: E402
 import panel  # noqa: E402
 import profiles  # noqa: E402
 from cryptography.hazmat.primitives import serialization  # noqa: E402
@@ -44,7 +45,7 @@ class Apns(unittest.TestCase):
     def setUp(self):
         helpers.set_config(iphone=True, iphone_push=True, deny={})
         apns._sent.clear()
-        apns._inbox.clear()
+        mitteilungen._box.clear()
         self.posted = []
         self.answer = Reply(200)
 
@@ -136,10 +137,10 @@ class Apns(unittest.TestCase):
         self.assertEqual(apns.payload("0" * 16, "msg-a1B2c3 <script>Hallo Welt, sehr lang")["k"], "msg-a1b2c3scripthallowel")
         nid = body["n"]
         # the text comes only to the profile's own app key, by its random id, and not too late
-        self.assertEqual(apns.note(uid, nid, now=1001)["body"], "Geheimer Termin beim Arzt")
-        self.assertIsNone(apns.note(uid, nid, now=1000 + apns.INBOX_SECONDS + 1))
-        self.assertIsNone(apns.note("u_000000000000", nid, now=1001))
-        self.assertIsNone(apns.note(uid, "../x", now=1001))
+        self.assertEqual(mitteilungen.get(uid, nid, now=1001)["body"], "Geheimer Termin beim Arzt")
+        self.assertIsNone(mitteilungen.get(uid, nid, now=1000 + mitteilungen.KEEP + 1))
+        self.assertIsNone(mitteilungen.get("u_000000000000", nid, now=1001))
+        self.assertIsNone(mitteilungen.get(uid, "../x", now=1001))
         other, oh = self.phone("Pauline")
         self.assertEqual(TestClient(panel.app).get("/api/iphone/note", params={"id": nid}, headers=oh).status_code, 404)
 

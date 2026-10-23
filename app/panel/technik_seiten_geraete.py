@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "geraet": {
-        "stand": "0ad595e75e",
+        "stand": "cf29c67e33",
         "bezug": {
             "account.CONVO_BODY": ["s10"], "admin.test_asr": ["s4"], "admin._test_asr": ["s4", "s5"],
             "admin.read_audio": ["s4"], "zwischenruf.decide": ["s5"], "chat.chat": ["s6", "s7"], "account.profile_save_convo": ["s10"],
@@ -211,7 +211,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Apps
     "apps": {
-        "stand": "bffa3fb7e9",
+        "stand": "53e86a993e",
         "bezug": {
             "android.TOKEN_SECONDS": ["s3"], "android.TOKEN_USES": ["s3"], "iphone.profile_pair": ["s1", "s2"],
             "kopplung.Codes.new": ["s3"], "kopplung.Codes.take": ["s4"], "iphone.app_pair": ["s4", "s5"],
@@ -220,7 +220,7 @@ SEITEN = {
             "terminal.profile_pair": ["s1", "s2"], "terminal.setup_base": ["s3"], "terminal.program_pair": ["s4", "s5"],
             "terminal.reaches": ["s7"], "terminal.CODE_SECONDS": ["s3"], "terminal.MAX_DEVICES": ["s2"],
             "regel:tui": ["s7"], "android.assist_gate": ["s9"], "android.flags": ["s9"],
-            "zustellung.api_da": ["s9"], "zustellung.follow": ["s9"],
+            "zustellung.api_da": ["s9"], "zustellung.follow": ["s9"], "mitteilungen.opened": ["s9"],
         },
         "kurz": ("Die iPhone-App bekommt beim Koppeln einen eigenen Geräteschlüssel des Profils und spricht damit "
                  "dieselben Endpunkte an wie der Browser. Der Schlüssel öffnet nur eine feste Liste von Pfaden. Die "
@@ -321,7 +321,11 @@ SEITEN = {
                "mit seiner Leerlaufzeit); zustellung.pick schickt eine Mitteilung dann an das Gerät mit der letzten Eingabe "
                "der letzten {zustellung.ACTIVE} Sekunden, sonst gleich an die Handy-App. Hat niemand sie gesehen, schickt "
                "zustellung.follow sie nach {zustellung.FOLLOW|min} Minuten einmal aufs Handy; ein angetippter Hinweis meldet "
-               "„gesehen“, und mit der Antwort „zu“ räumen Seiten und iPhone Erledigtes weg.",
+               "„gesehen“, und mit der Antwort „zu“ räumen Seiten und iPhone Erledigtes weg. Jede Mitteilung bleibt "
+               "{mitteilungen.KEEP|h} Stunden mit einer zufälligen Nummer auf dem Spark (mitteilungen.keep, nur im Speicher); "
+               "nur die Nummer geht mit. Wer sie antippt, sieht sie als Karte über dem Gespräch, mit dem einen Knopf, den "
+               "mitteilungen.ziel nach festen Regeln wählt (Offen, Chat, Mail, Code, Weg); nur das eigene Profil bekommt "
+               "sie zurück.",
                "The app asks through the same endpoints as the page, with the same limits. What it may do on top "
                "(smart home, CarPlay, listening, documents, pictures) the Spark tells it in /api/iphone/hello; the app "
                "only shows it and follows it. Calls between profiles ring through a VoIP push from Apple that carries "
@@ -334,7 +338,10 @@ SEITEN = {
                "zustellung.pick then sends a note to the device with the last input within the last {zustellung.ACTIVE} "
                "seconds, else to the phone app at once. If nobody saw it, zustellung.follow sends it once to the phone after "
                "{zustellung.FOLLOW|min} minutes; a tapped note says „seen“, and with the answer „zu“ pages and the iPhone "
-               "take done ones away."),
+               "take done ones away. Every note stays on the Spark for {mitteilungen.KEEP|h} hours with a random number "
+               "(mitteilungen.keep, in memory only); only the number goes along. Tapped, it shows as a card above the "
+               "conversation, with the one button mitteilungen.ziel picks by fixed rules (Open, chat, mail, code, way); only "
+               "the own profile gets it back."),
               ("info", ("Terminal", "Terminal"),
                ("Terminal-Client: Schlüssel-Bereich „tui“, nur {terminal.TUI_RULES|anzahl} Regeln (Chat, Gespräche, Heute, Kalender mit Schnell eintragen, Mails lesen, Aufträge)",
                 "terminal client: key scope „tui“, only {terminal.TUI_RULES|anzahl} rules (chat, conversations, Today, calendar with quick add, reading mail, jobs)"))),
@@ -433,13 +440,15 @@ SEITEN = {
             ("zustellung.pick", ("Mitteilung ans benutzte Gerät, sonst an die Handy-App", "note to the device in use, else to the phone app")),
             ("zustellung.api_da", ("nur „gerade benutzt“ oder „weg“, nur Seiten und Apps", "only „in use“ or „away“, only pages and the apps")),
             ("zustellung.follow", ("einmal aufs Handy nachfassen, nie ein drittes Mal", "follow up once to the phone, never a third time")),
+            ("mitteilungen.ziel", ("was die Karte einer angetippten Mitteilung anbietet, feste Regeln", "what the card of a tapped note offers, fixed rules")),
+            ("mitteilungen.opened", ("nur die eigene Mitteilung, eine Logzeile ohne Text", "only the own note, one log line without text")),
             ("terminal.profile_pair", ("Kopplungszeile fürs Terminal nur aus dem eigenen Browser", "terminal pairing line only from the own browser")),
             ("terminal.setup_base", ("zu Hause gepinnt, extern nur https", "pinned at home, outside https only")),
             ("terminal.program_pair", ("der erste Kontakt des Terminals", "the terminal's first contact")),
             ("terminal.reaches", ("die feste Regelliste des Terminals", "the terminal's fixed rule list")),
         ],
         "tests": ["test_iphone", "test_iphone_panel", "test_android", "test_app_notaus", "test_kopplung", "test_terminal",
-                  "test_zustellung"],
+                  "test_zustellung", "test_mitteilungen"],
         "heute": [],
     },
 
@@ -1006,7 +1015,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ MCP-Programme
     "mcpc": {
-        "stand": "a06f3ff7dc",
+        "stand": "b68ea4facf",
         "bezug": {
             "mcpserver.MAX_CONNS": ["s3"], "mcpserver.mcp_post": ["s1"], "mcpserver.origin_ok": ["s2"],
             "mcpserver.check_conn": ["s3"], "mcpserver.is_local": ["s4"], "mcpserver.find": ["s3"],

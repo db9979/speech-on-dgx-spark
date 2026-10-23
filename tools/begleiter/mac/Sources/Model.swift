@@ -335,7 +335,7 @@ final class AppModel: ObservableObject {
         }
         if part("notes") {
             let notes = (d["notes"] as? [[String: Any]] ?? []).compactMap {
-                x -> (n: Int, title: String, body: String, tag: String, actions: [String], weg: String?)? in
+                x -> (n: Int, title: String, body: String, tag: String, actions: [String], weg: String?, m: String?)? in
                 guard let n = (x["n"] as? NSNumber)?.intValue, n > prev else { return nil }
                 // the way "Panel öffnen" goes (E-Mail → Für dich): only a way as Wege finds one in a text
                 let weg = Wege.find(x["weg"] as? String ?? "")?.way
@@ -344,7 +344,9 @@ final class AppModel: ObservableObject {
                 let acts = tag == NoteActions.mailTag ? NoteActions.parseMail(x["actions"])
                     : tag == NoteActions.codeTag ? NoteActions.parseCode(x["actions"])
                     : NoteActions.parse(x["actions"])
-                return (n, x["title"] as? String ?? "", x["body"] as? String ?? "", tag, acts, weg)
+                // the note's number on the Spark (mitteilungen.py): a click opens it as a card in the panel
+                let m = (x["m"] as? String).flatMap { $0.range(of: "^[0-9a-f]{16}$", options: .regularExpression) != nil ? $0 : nil }
+                return (n, x["title"] as? String ?? "", x["body"] as? String ?? "", tag, acts, weg, m)
             }
             if notes.contains(where: { $0.tag == NoteActions.mailTag }) {
                 Task { await PostCenter.shared.refresh() }   // the numbers under "Post" at once
@@ -354,7 +356,7 @@ final class AppModel: ObservableObject {
                 if part("agenda") && !buttons.contains("fdremind") && note.tag != NoteActions.mailTag
                     && note.tag != NoteActions.codeTag { buttons.append("remind") }
                 Notifier.show(title: note.title, body: note.body, tag: note.tag, id: "note-\(note.n)",
-                              note: note.n, actions: buttons, weg: note.weg)
+                              note: note.n, actions: buttons, weg: note.weg, meldung: note.m)
                 NotesCenter.shared.add(.init(n: note.n, title: note.title, body: note.body, tag: note.tag,
                                              buttons: buttons, weg: note.weg))
             }
@@ -760,13 +762,14 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
         let req = response.notification.request
         let note = (req.content.userInfo["note"] as? NSNumber)?.intValue
         let weg = req.content.userInfo["weg"] as? String
+        let meldung = req.content.userInfo["m"] as? String
         let title = req.content.title
         let body = req.content.body
         let thread = req.content.threadIdentifier
         let category = req.content.categoryIdentifier
         Task { @MainActor in
             Notifier.handle(action: action, typed: typed, note: note, title: title, body: body, thread: thread,
-                            category: category, weg: weg)
+                            category: category, weg: weg, meldung: meldung)
         }
         completionHandler()
     }
@@ -838,7 +841,7 @@ enum Notifier {
 
     /// The Spark's note as plain text; with buttons when the part "actions" is on and the note has some.
     static func show(title: String, body: String, tag: String, id: String, note: Int? = nil, actions: [String] = [],
-                     weg: String? = nil) {
+                     weg: String? = nil, meldung: String? = nil) {
         let c = UNMutableNotificationContent()
         c.title = DeskConfig.plain(title, max: 200).isEmpty ? "Spark" : DeskConfig.plain(title, max: 200)
         c.body = String(body.prefix(1500))
@@ -847,6 +850,7 @@ enum Notifier {
         var info: [String: Any] = [:]
         if let note { info["note"] = note }
         if let weg { info["weg"] = weg }
+        if let meldung { info["m"] = meldung }
         if !info.isEmpty { c.userInfo = info }
         if tag == NoteActions.codeTag {
             if actions.contains("copy") { c.categoryIdentifier = NoteActions.codeCategory }
@@ -858,7 +862,7 @@ enum Notifier {
     }
 
     static func handle(action: String, typed: String, note: Int?, title: String, body: String, thread: String,
-                       category: String, weg: String? = nil) {
+                       category: String, weg: String? = nil, meldung: String? = nil) {
         let model = AppModel.shared
         switch action {
         case "reply":
@@ -881,6 +885,7 @@ enum Notifier {
             var info: [String: Any] = [:]
             if let note { info["note"] = note }
             if let weg { info["weg"] = weg }
+            if let meldung { info["m"] = meldung }
             if !info.isEmpty { c.userInfo = info }
             if !category.isEmpty { c.categoryIdentifier = category }
             let trigger = UNTimeIntervalNotificationTrigger(timeInterval: laterSeconds, repeats: false)
@@ -923,6 +928,10 @@ enum Notifier {
         default:
             if category == inboxFileCategory && action == UNNotificationDefaultActionIdentifier {
                 InboxCenter.revealFolder()
+            } else if action == UNNotificationDefaultActionIdentifier, let meldung,
+                      meldung.range(of: "^[0-9a-f]{16}$", options: .regularExpression) != nil {
+                // a click on the note itself: the note as a card above the panel's conversation (mitteilung.js)
+                model.openPanel("#meldung=" + meldung)
             }
         }
     }

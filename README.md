@@ -41,6 +41,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.960** Tapping a notification opens exactly that note: a card above the conversation with the whole text and the button that fits (iPhone, Android 1.4.4, browser, companion on the Mac)
 - **V01.0.959** AI Dungeon Master: a hero's voice from a description ("deep, rough dwarf voice") when VoiceDesign is on; with a sample, checked like every input
 - **V01.0.958** AI Dungeon Master: six values as in D&D (strength to charisma, bonus from the score, life from constitution, the standard row laid out by dragging, older heroes carried over) and hero voices (a voice per hero with a sample, it speaks the hero's quoted words)
 - **V01.0.957** AI Dungeon Master table theme: dark table with parchment narration, hero cards with values and equipment, colours per world (the admin can change them), a full-screen button and "How to play" for players and guests
@@ -50,7 +51,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.953** AI Dungeon Master stage 2: campaigns with "The story so far" and chapters, the story read aloud with narrator and NPC voices, speaking instead of typing, iPhone page; many more items, potions and spells
 - **V01.0.952** Red fix: apt now aborts only a stalled connection and retries it so a slow ffmpeg download keeps going; network steps under a generous cap, job limit raised to 60 min
 - **V01.0.951** Red fix: every apt now waits for the dpkg lock via DPkg::Lock::Timeout so Install no longer fails red on unattended-upgrades ("Could not get lock ... code 100")
-- **V01.0.950** Tests workflow more robust: install network steps with a timeout and three tries so stalled runners no longer hit the 45-min cap
 
 
 

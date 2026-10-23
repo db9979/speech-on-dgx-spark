@@ -276,18 +276,23 @@ async def _send_one(uid, kind, targets, title, body, tag, private, why, ref="", 
     import telegram
     t0 = time.time()
     # the iPhone app: Apple only carries "new message", the text waits on the Spark (apns.py)
-    n = await apns.send(uid, title, body, tag=tag, **({"vg": vg} if vg else {})) if kind == "app" else 0
+    n = await apns.send(uid, title, body, tag=tag, **({"vg": vg} if vg else {}), **({"ref": ref} if ref else {})) \
+        if kind == "app" else 0
+    # a tapped note opens as a card in the conversation (mitteilungen.py): the devices get only its number "m"
+    import mitteilungen
+    mid = mitteilungen.keep(uid, title, body, tag, vg, ref) if kind in ("and", "desk", "web") else ""
     if kind == "and":   # the Android app fetches it with its next question (android.py)
         import android
-        android.keep(uid, title, body, tag, **({"vg": vg} if vg else {}))
+        android.keep(uid, title, body, tag, **({"vg": vg} if vg else {}), m=mid)
         n += 1
     if kind == "desk":  # the Spark-Begleiter on PC or Mac fetches it with its next poll (begleiter.py)
         import begleiter
-        begleiter.keep(uid, title, body, tag, ref=ref, **({"vg": vg} if vg else {}))
+        begleiter.keep(uid, title, body, tag, ref=ref, **({"vg": vg} if vg else {}), m=mid)
         n += 1
-    # a note naming a place in the panel opens it there when tapped (sw.js, way.js)
+    # a note naming a place in the panel opens it there when tapped (sw.js, way.js); with "m" as its card
     import wege
-    payload = json.dumps({"title": title, "body": body, "tag": tag, "weg": wege.find(body), "vg": vg}).encode()[:3000]
+    payload = json.dumps({"title": title, "body": body, "tag": tag, "weg": wege.find(body), "vg": vg,
+                          "m": mid}).encode()[:3000]
     n += await telegram.notify(uid, f"{title}\n{body}", private, vg=vg) if kind == "tg" else 0
     async with httpx.AsyncClient(timeout=15) as c:
         for sub in targets:

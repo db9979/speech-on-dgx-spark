@@ -298,16 +298,17 @@ def reachable(uid, now=None):
     return features.allowed("android", uid) and now - _polled.get(uid, -1e12) < POLLED_KEEP
 
 
-def keep(uid, title, body, tag="", now=None, vg=""):
+def keep(uid, title, body, tag="", now=None, vg="", m=""):
     """A note for the profile's Android app; it fetches it with its next question. vg: the Vorgang it is about; once
-    that is no longer open the app no longer fetches it (zustellung.closed)."""
+    that is no longer open the app no longer fetches it (zustellung.closed). m: its number in mitteilungen.py, a tap
+    opens it as a card (#meldung=)."""
     now = time.time() if now is None else now
     with _lock:
         n = _seq.get(uid, 0) + 1
         _seq[uid] = n
         box = [x for x in _notes.get(uid, []) if now - x["t"] < NOTE_SECONDS]
         box.append({"n": n, "t": now, "title": str(title)[:200], "body": str(body)[:1500], "tag": str(tag)[:20],
-                    "vg": str(vg or "")[:12]})
+                    "vg": str(vg or "")[:12], "m": str(m or "")[:16]})
         _notes[uid] = box[-NOTE_MAX:]
         waits = list(_waiters.get(uid, []))
     for loop, ev in waits:   # a waiting app hears it at once (keep may run in any thread)

@@ -49,6 +49,8 @@ class NotePoll : JobService() {
         private const val JOB = 1
         private const val CHANNEL = "notes"
         private const val MAX_ANSWER = 64 * 1024
+        /** the number of a note on the Spark (mitteilungen.ID): only that goes into the link */
+        private val MELDUNG = Regex("[0-9a-f]{16}")
 
         fun schedule(ctx: Context) {
             val js = ctx.getSystemService(JobScheduler::class.java) ?: return
@@ -114,7 +116,10 @@ class NotePoll : JobService() {
                     val n = notes.optJSONObject(i) ?: continue
                     val num = n.optLong("n")
                     val body = n.optString("body").take(1500)
-                    show(ctx, num.toInt(), n.optString("title").take(200), body, Wege.link(base, body))
+                    // a tap opens the note as a card in the conversation (mitteilungen.py), else its way, else the start
+                    val m = n.optString("m")
+                    show(ctx, num.toInt(), n.optString("title").take(200), body,
+                        if (MELDUNG.matches(m)) "$base/#meldung=$m" else Wege.link(base, body))
                     if (num > last) last = num
                 }
             }

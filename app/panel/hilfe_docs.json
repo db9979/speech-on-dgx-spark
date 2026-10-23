@@ -13,7 +13,7 @@
 "file": "Android-App „Spark“ (APK, ohne Store)",
 "head": "Android-App „Spark“ (APK, ohne Store)",
 "title": "Android-App „Spark“ (APK, ohne Store)",
-"text": "- Mitteilungen bei geschlossener App: Die App fragt alle 15 Minuten selbst beim Spark nach (/api/android/notes), ohne Google-Dienst. Erinnerungen, Morgenrunde und Hinweise kommen dorthin, wenn die App das zuletzt benutzte Gerät ist oder kein anderer Weg (iPhone-App) eingerichtet ist. - Mitteilungen sofort (ab 1.2.0, V01.0.473): Admin: Funktionen → Android-App → „Android: Mitteilungen sofort“ (aus). Für jedes Profil gleich an; abschalten lässt es sich unter Ich → Android-App → „Mitteilungen sofort“. Dann die App einmal öffnen. Die App hält dann eine Verbindung zum Spark offen (/api/android/wait: der Spark antwortet sofort, wenn eine Mitteilung da ist, sonst nach 4 Minuten leer, und die App fragt wieder; ab 1.3.3, vorher 50 Sekunden). Damit das über den Reverse Proxy klappt, dort den Timeout auf mindestens 5 Minuten setzen (Synology: Anmeldeportal → Reverse Proxy → Bearbeiten → Erweitert/Benutzerdefinierter Header bzw. Timeout); schneidet der Proxy nach einer Minute ab, fällt die App von selbst für einen Tag auf 50 Sekunden zurück. Chat-Nachrichten, Erinnerungen und Hinweise kommen so ohne Verzögerung, ohne Google-Dienst. Android zeigt dafür eine stille Daueranzeige „Mit dem Spark ve"
+"text": "- Mitteilungen bei geschlossener App: Die App fragt alle 15 Minuten selbst beim Spark nach (/api/android/notes), ohne Google-Dienst. Erinnerungen, Morgenrunde und Hinweise kommen dorthin, wenn die App das zuletzt benutzte Gerät ist oder kein anderer Weg (iPhone-App) eingerichtet ist. Antippen öffnet die Mitteilung als Karte über dem Gespräch, mit dem ganzen Text und dem passenden Knopf (ab 1.4.4, V01.0.960, siehe Assistent). - Mitteilungen sofort (ab 1.2.0, V01.0.473): Admin: Funktionen → Android-App → „Android: Mitteilungen sofort“ (aus). Für jedes Profil gleich an; abschalten lässt es sich unter Ich → Android-App → „Mitteilungen sofort“. Dann die App einmal öffnen. Die App hält dann eine Verbindung zum Spark offen (/api/android/wait: der Spark antwortet sofort, wenn eine Mitteilung da ist, sonst nach 4 Minuten leer, und die App fragt wieder; ab 1.3.3, vorher 50 Sekunden). Damit das über den Reverse Proxy klappt, dort den Timeout auf mindestens 5 Minuten setzen (Synology: Anmeldeportal → Reverse Proxy → Bearbeiten → Erweitert/Benutzerdefinierter Header bzw. Timeout); schneidet der Proxy nach einer Minute ab, fällt die App von selbst für einen Tag auf 50 Sekunden zurück. Chat-Nachr"
 },
 {
 "lang": "de",
@@ -21,7 +21,7 @@
 "file": "Android-App „Spark“ (APK, ohne Store)",
 "head": "Android-App „Spark“ (APK, ohne Store)",
 "title": "Android-App „Spark“ (APK, ohne Store)",
-"text": "rbunden“ (Dienst im Vordergrund). Damit Android die Verbindung nicht schlafen legt: in den Android-Einstellungen bei Apps, Spark, Akku „Nicht eingeschränkt“. Nach einem Neustart des Handys startet die Verbindung beim ersten Öffnen der App; bis dahin fragt die App alle 15 Minuten. Schalter aus oder abgemeldet: Die App beendet die Verbindung von selbst. Live zeigt unter Verbindungen „Android-App (sofort)“ nur mit der Anzahl. - Spark als Assistent (ab 1.4.0, V01.0.732): Admin: Funktionen → Android-App → „Android: Spark als Assistent“ (aus). Freigegeben öffnet die Assistenten-Taste (Einstellungen → Apps → Standard-Apps → Digitaler Assistent „Spark“, dann lange auf Ein/Aus oder Home drücken) ein Blatt über der App, die gerade offen ist: das Gesicht des Spark, was er gehört hat, die Antwort zum Mitlesen, ein Feld zum Tippen (wächst bis fünf Zeilen, ab 1.4.3) und „Ganze App“. Die App nimmt die Frage selbst auf (Echo- und Rauschunterdrückung des Handys, Pause von knapp einer Sekunde beendet die Frage), schickt sie an den Spark (/api/test/asr, dann /api/chat als Gerät „android“) und spielt die Antwort selbst ab, kurz und ohne Listen. Reinsprechen während der Antwort macht sie leiser; erst w"
+"text": "ichten, Erinnerungen und Hinweise kommen so ohne Verzögerung, ohne Google-Dienst. Android zeigt dafür eine stille Daueranzeige „Mit dem Spark verbunden“ (Dienst im Vordergrund). Damit Android die Verbindung nicht schlafen legt: in den Android-Einstellungen bei Apps, Spark, Akku „Nicht eingeschränkt“. Nach einem Neustart des Handys startet die Verbindung beim ersten Öffnen der App; bis dahin fragt die App alle 15 Minuten. Schalter aus oder abgemeldet: Die App beendet die Verbindung von selbst. Live zeigt unter Verbindungen „Android-App (sofort)“ nur mit der Anzahl. - Spark als Assistent (ab 1.4.0, V01.0.732): Admin: Funktionen → Android-App → „Android: Spark als Assistent“ (aus). Freigegeben öffnet die Assistenten-Taste (Einstellungen → Apps → Standard-Apps → Digitaler Assistent „Spark“, dann lange auf Ein/Aus oder Home drücken) ein Blatt über der App, die gerade offen ist: das Gesicht des Spark, was er gehört hat, die Antwort zum Mitlesen, ein Feld zum Tippen (wächst bis fünf Zeilen, ab 1.4.3) und „Ganze App“. Die App nimmt die Frage selbst auf (Echo- und Rauschunterdrückung des Handys, Pause von knapp einer Sekunde beendet die Frage), schickt sie an den Spark (/api/test/asr, dann "
 },
 {
 "lang": "de",
@@ -29,7 +29,7 @@
 "file": "Android-App „Spark“ (APK, ohne Store)",
 "head": "Android-App „Spark“ (APK, ohne Store)",
 "title": "Android-App „Spark“ (APK, ohne Store)",
-"text": "enn der Spark eine echte Frage erkennt, hört sie auf. Mit „Freihändig“ im Chat hört sie danach wieder zu. Auf dem Sperrbildschirm will das Handy zuerst entsperrt werden. Das Gespräch steht danach unter Chats wie jedes andere. Dazu: das Widget „Spark“ für den Startbildschirm (Gesicht, Mikrofon, nur Zahlen: „Heute: 2 Termine · 1 Erinnerung · 3 ungelesen“, und wo ein Gerät im Raum-Modus zuhört), die Kachel „Spark zuhören“ in den Schnelleinstellungen und die Kurzbefehle am App-Symbol (lange drücken: Spark zuhören, Frage schreiben, Heute, Chats). Ist der Spark gerade nicht erreichbar, wartet eine getippte Frage (höchstens 10, einen Tag) und geht von selbst raus, sobald er wieder da ist; die Antwort kommt als Mitteilung „Antwort vom Spark“. Ohne Freigabe öffnet die Taste wie bisher die App, die zuhört. - Teilen an Spark: Text in einer anderen App teilen → Spark: Der Text steht im Tippfeld, abschicken tust du selbst. Ab 1.4.0 auch Fotos, PDFs und Office-Dateien (höchstens 3): Die App fragt „Dazu fragen“ oder „Nur ablegen“. Ein Foto wird auf dem Handy auf 1280 Pixel verkleinert und neu gezeichnet (ohne Ort und Kameradaten) und hängt dann am Gespräch (braucht „Bilder erkennen“) oder liegt u"
+"text": "/api/chat als Gerät „android“) und spielt die Antwort selbst ab, kurz und ohne Listen. Reinsprechen während der Antwort macht sie leiser; erst wenn der Spark eine echte Frage erkennt, hört sie auf. Mit „Freihändig“ im Chat hört sie danach wieder zu. Auf dem Sperrbildschirm will das Handy zuerst entsperrt werden. Das Gespräch steht danach unter Chats wie jedes andere. Dazu: das Widget „Spark“ für den Startbildschirm (Gesicht, Mikrofon, nur Zahlen: „Heute: 2 Termine · 1 Erinnerung · 3 ungelesen“, und wo ein Gerät im Raum-Modus zuhört), die Kachel „Spark zuhören“ in den Schnelleinstellungen und die Kurzbefehle am App-Symbol (lange drücken: Spark zuhören, Frage schreiben, Heute, Chats). Ist der Spark gerade nicht erreichbar, wartet eine getippte Frage (höchstens 10, einen Tag) und geht von selbst raus, sobald er wieder da ist; die Antwort kommt als Mitteilung „Antwort vom Spark“. Ohne Freigabe öffnet die Taste wie bisher die App, die zuhört. - Teilen an Spark: Text in einer anderen App teilen → Spark: Der Text steht im Tippfeld, abschicken tust du selbst. Ab 1.4.0 auch Fotos, PDFs und Office-Dateien (höchstens 3): Die App fragt „Dazu fragen“ oder „Nur ablegen“. Ein Foto wird auf dem Ha"
 },
 {
 "lang": "de",
@@ -37,7 +37,7 @@
 "file": "Android-App „Spark“ (APK, ohne Store)",
 "head": "Android-App „Spark“ (APK, ohne Store)",
 "title": "Android-App „Spark“ (APK, ohne Store)",
-"text": "nter „Meine Dokumente“; andere Dateien gehen nach „Meine Dokumente“ (braucht „Dokumente“), danach steht „Fass das Dokument … kurz zusammen.“ im Tippfeld. Abgeschickt wird nie von selbst. - Fingerabdruck für Admins (ab 1.4.0, V01.0.732): Admin: Funktionen → Android-App → „Android: Fingerabdruck für Admins“ (aus). Ist die App mit einem Profil mit Admin-Rolle angemeldet, fragt sie beim Öffnen und nach 5 Minuten im Hintergrund nach Fingerabdruck, Gesicht oder Displaysperre des Handys (wie Face ID vor „Spark verwalten“ in der iPhone-App). Android prüft das; die App erfährt nur ja oder nein, der Spark gar nichts. - Notaus-Kachel (ab 1.1.0): Schnelleinstellungen bearbeiten → „Notaus“ hinzufügen. Admins wählen „Ganzer Spark“ (Stufe 2) oder „Mein Notaus“, alle anderen „Mein Notaus“, immer mit Rückfrage; aufheben nur im Browser (siehe Sicherheit und Betrieb). - Neue Version: Die App meldet sich mit einer Mitteilung, wenn der Spark eine neuere APK hat. - Ruhig beim Update des Spark (ab 1.3.2, V01.0.570): Startet der Spark neu (ein Update), zeigt die App „Spark startet neu … Die Seite kommt gleich wieder.“ und versucht es von selbst wieder, statt zur Adresseingabe zu springen (erst nach etwa f"
+"text": "ndy auf 1280 Pixel verkleinert und neu gezeichnet (ohne Ort und Kameradaten) und hängt dann am Gespräch (braucht „Bilder erkennen“) oder liegt unter „Meine Dokumente“; andere Dateien gehen nach „Meine Dokumente“ (braucht „Dokumente“), danach steht „Fass das Dokument … kurz zusammen.“ im Tippfeld. Abgeschickt wird nie von selbst. - Fingerabdruck für Admins (ab 1.4.0, V01.0.732): Admin: Funktionen → Android-App → „Android: Fingerabdruck für Admins“ (aus). Ist die App mit einem Profil mit Admin-Rolle angemeldet, fragt sie beim Öffnen und nach 5 Minuten im Hintergrund nach Fingerabdruck, Gesicht oder Displaysperre des Handys (wie Face ID vor „Spark verwalten“ in der iPhone-App). Android prüft das; die App erfährt nur ja oder nein, der Spark gar nichts. - Notaus-Kachel (ab 1.1.0): Schnelleinstellungen bearbeiten → „Notaus“ hinzufügen. Admins wählen „Ganzer Spark“ (Stufe 2) oder „Mein Notaus“, alle anderen „Mein Notaus“, immer mit Rückfrage; aufheben nur im Browser (siehe Sicherheit und Betrieb). - Neue Version: Die App meldet sich mit einer Mitteilung, wenn der Spark eine neuere APK hat. - Ruhig beim Update des Spark (ab 1.3.2, V01.0.570): Startet der Spark neu (ein Update), zeigt die A"
 },
 {
 "lang": "de",
@@ -45,7 +45,7 @@
 "file": "Android-App „Spark“ (APK, ohne Store)",
 "head": "Android-App „Spark“ (APK, ohne Store)",
 "title": "Android-App „Spark“ (APK, ohne Store)",
-"text": "ünf Minuten ohne Spark kommt die Adresseingabe, „Adresse ändern“ geht jederzeit). Eine Mitteilung, Teilen oder die Assistenten-Taste laden die offene Seite nicht neu: die Seite springt nur an die Stelle. - Letzter Stand sofort da (ab 1.4.1, V01.0.748, Funktion „Apps merken sich den letzten Stand“): Beim ersten Laden bleibt nichts leer: nach einer Sekunde „Verbinde mit dem Spark …“, nach 8 Sekunden „Das dauert länger als sonst …“, ist der Spark nicht erreichbar, „Noch einmal“ und „Adresse ändern“. Danach zeigt die Seite in der App sofort die Gespräche (die 20 neuesten mit je 50 Nachrichten), die Chat-Liste und die eigenen Einstellungen vom letzten Mal, über dem Gespräch mit „Stand 16:05 · wird aktualisiert …“, bis der Spark geantwortet hat. Kommt die App nach vorne, holt sie Einstellungen und Chats einmal im Hintergrund (höchstens alle 5 Minuten). Braucht der Start oder eine Liste länger als 2 Sekunden, steht unter Zustand → Logs (Bereich Apps) app: langsam <Seite> <ms> ms android. - Anrufe per Assistent (ab 1.4.2, V01.0.803, Funktion „Anrufe per Assistent“): Sagt man dem Assistenten der App „Ruf Sabine an“ und dann „Ja“, öffnet sich die App mit „Sabine anrufen? · Anrufen“. „Ruf Mam"
+"text": "pp „Spark startet neu … Die Seite kommt gleich wieder.“ und versucht es von selbst wieder, statt zur Adresseingabe zu springen (erst nach etwa fünf Minuten ohne Spark kommt die Adresseingabe, „Adresse ändern“ geht jederzeit). Eine Mitteilung, Teilen oder die Assistenten-Taste laden die offene Seite nicht neu: die Seite springt nur an die Stelle. - Letzter Stand sofort da (ab 1.4.1, V01.0.748, Funktion „Apps merken sich den letzten Stand“): Beim ersten Laden bleibt nichts leer: nach einer Sekunde „Verbinde mit dem Spark …“, nach 8 Sekunden „Das dauert länger als sonst …“, ist der Spark nicht erreichbar, „Noch einmal“ und „Adresse ändern“. Danach zeigt die Seite in der App sofort die Gespräche (die 20 neuesten mit je 50 Nachrichten), die Chat-Liste und die eigenen Einstellungen vom letzten Mal, über dem Gespräch mit „Stand 16:05 · wird aktualisiert …“, bis der Spark geantwortet hat. Kommt die App nach vorne, holt sie Einstellungen und Chats einmal im Hintergrund (höchstens alle 5 Minuten). Braucht der Start oder eine Liste länger als 2 Sekunden, steht unter Zustand → Logs (Bereich Apps) app: langsam <Seite> <ms> ms android. - Anrufe per Assistent (ab 1.4.2, V01.0.803, Funktion „Anruf"
 },
 {
 "lang": "de",
@@ -1037,7 +1037,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "hone/hello; die App zeigt es nur an und hält sich daran. Anrufe zwischen Profilen klingeln über einen VoIP-Push von Apple, der nur die zufällige Nummer des Anrufs trägt; wer anruft, fragt die App beim Spark nach. Für private Chats macht die App ihren eigenen Schlüssel im Secure Enclave; der Spark bekommt nur die öffentliche Hälfte. Das Blatt der Android-App über anderen Apps fragt als Gerät „android“, nur solange „Android: Spark als Assistent“ freigegeben ist (android.assist_gate). Ob die App den letzten Stand der Seiten behalten darf, sagt hello mit „keep“ (appmerken.keep); bei Nein löscht sie ihn. Mit „barge_hold“ hält sie die Antwort fürs Ins-Wort-Fallen nur an (zwischenruf.py). Mit „Mitteilung ans genutzte Gerät“ sagen App und Seiten jede Minute nur, ob sie gerade benutzt werden (POST /api/zustellung/da, der Begleiter mit seiner Leerlaufzeit); zustellung.pick schickt eine Mitteilung dann an das Gerät mit der letzten Eingabe der letzten 120 Sekunden, sonst gleich an die Handy-App. Hat niemand sie gesehen, schickt zustellung.follow sie nach 5 Minuten einmal aufs Handy; ein angetippter Hinweis meldet „gesehen“, und mit der Antwort „zu“ räumen Seiten und iPhone Erledigtes weg. 10. "
+"text": "hone/hello; die App zeigt es nur an und hält sich daran. Anrufe zwischen Profilen klingeln über einen VoIP-Push von Apple, der nur die zufällige Nummer des Anrufs trägt; wer anruft, fragt die App beim Spark nach. Für private Chats macht die App ihren eigenen Schlüssel im Secure Enclave; der Spark bekommt nur die öffentliche Hälfte. Das Blatt der Android-App über anderen Apps fragt als Gerät „android“, nur solange „Android: Spark als Assistent“ freigegeben ist (android.assist_gate). Ob die App den letzten Stand der Seiten behalten darf, sagt hello mit „keep“ (appmerken.keep); bei Nein löscht sie ihn. Mit „barge_hold“ hält sie die Antwort fürs Ins-Wort-Fallen nur an (zwischenruf.py). Mit „Mitteilung ans genutzte Gerät“ sagen App und Seiten jede Minute nur, ob sie gerade benutzt werden (POST /api/zustellung/da, der Begleiter mit seiner Leerlaufzeit); zustellung.pick schickt eine Mitteilung dann an das Gerät mit der letzten Eingabe der letzten 120 Sekunden, sonst gleich an die Handy-App. Hat niemand sie gesehen, schickt zustellung.follow sie nach 5 Minuten einmal aufs Handy; ein angetippter Hinweis meldet „gesehen“, und mit der Antwort „zu“ räumen Seiten und iPhone Erledigtes weg. Jede"
 },
 {
 "lang": "de",
@@ -1045,7 +1045,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "Konto, Geräte oder Sicherheit?: Endpunkte, die Verbindungen, Geräte oder Sicherheit des Profils ändern, nehmen nur die eigene Browser-Anmeldung (core.browser_profile). Einen Geräteschlüssel lehnen sie ab, außer in einem Bereich, den das Profil der App freigegeben hat; Geheimnisse brauchen dort zusätzlich einen frischen Code. 11. Entfernen wirkt sofort: Wird das iPhone im Panel entfernt, verschwindet der Hash aus der Geräteliste. Die nächste Anfrage der App findet kein Profil mehr."
+"text": " Mitteilung bleibt 24 Stunden mit einer zufälligen Nummer auf dem Spark (mitteilungen.keep, nur im Speicher); nur die Nummer geht mit. Wer sie antippt, sieht sie als Karte über dem Gespräch, mit dem einen Knopf, den mitteilungen.ziel nach festen Regeln wählt (Offen, Chat, Mail, Code, Weg); nur das eigene Profil bekommt sie zurück. 10. Konto, Geräte oder Sicherheit?: Endpunkte, die Verbindungen, Geräte oder Sicherheit des Profils ändern, nehmen nur die eigene Browser-Anmeldung (core.browser_profile). Einen Geräteschlüssel lehnen sie ab, außer in einem Bereich, den das Profil der App freigegeben hat; Geheimnisse brauchen dort zusätzlich einen frischen Code. 11. Entfernen wirkt sofort: Wird das iPhone im Panel entfernt, verschwindet der Hash aus der Geräteliste. Die nächste Anfrage der App findet kein Profil mehr."
 },
 {
 "lang": "de",
@@ -1093,7 +1093,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "p/panel/zustellung.py pick: Mitteilung ans benutzte Gerät, sonst an die Handy-App (Schritt 9) - app/panel/zustellung.py api_da: nur „gerade benutzt“ oder „weg“, nur Seiten und Apps (Schritt 9) - app/panel/zustellung.py follow: einmal aufs Handy nachfassen, nie ein drittes Mal (Schritt 9) - app/panel/terminal.py profile_pair: Kopplungszeile fürs Terminal nur aus dem eigenen Browser (Schritt 1, Schritt 2) - app/panel/terminal.py setup_base: zu Hause gepinnt, extern nur https (Schritt 3) - app/panel/terminal.py program_pair: der erste Kontakt des Terminals (Schritt 4, Schritt 5) - app/panel/terminal.py reaches: die feste Regelliste des Terminals (Schritt 7)"
+"text": "p/panel/zustellung.py pick: Mitteilung ans benutzte Gerät, sonst an die Handy-App (Schritt 9) - app/panel/zustellung.py api_da: nur „gerade benutzt“ oder „weg“, nur Seiten und Apps (Schritt 9) - app/panel/zustellung.py follow: einmal aufs Handy nachfassen, nie ein drittes Mal (Schritt 9) - app/panel/mitteilungen.py ziel: was die Karte einer angetippten Mitteilung anbietet, feste Regeln (Schritt 9) - app/panel/mitteilungen.py opened: nur die eigene Mitteilung, eine Logzeile ohne Text (Schritt 9) - app/panel/terminal.py profile_pair: Kopplungszeile fürs Terminal nur aus dem eigenen Browser (Schritt 1, Schritt 2) - app/panel/terminal.py setup_base: zu Hause gepinnt, extern nur https (Schritt 3) - app/panel/terminal.py program_pair: der erste Kontakt des Terminals (Schritt 4, Schritt 5) - app/panel/terminal.py reaches: die feste Regelliste des Terminals (Schritt 7)"
 },
 {
 "lang": "de",
@@ -1101,7 +1101,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "Selbsttests: test_iphone, test_iphone_panel, test_android, test_app_notaus, test_kopplung, test_terminal, test_zustellung"
+"text": "Selbsttests: test_iphone, test_iphone_panel, test_android, test_app_notaus, test_kopplung, test_terminal, test_zustellung, test_mitteilungen"
 },
 {
 "lang": "de",
@@ -5262,6 +5262,22 @@
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
 "text": "sspeicher, nichts wird gespeichert. Logs: push: route aktiv|handy <weg>; Live: Verbindung „Gerade benutzte Geräte“ mit der Anzahl und den heute so verteilten Mitteilungen. Selbsttest test_zustellung. Dringendes, eine Ruhezeit für alles und Ich → Mitteilungen folgen in den Stufen 3 und 4."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Mitteilung antippen öffnet genau diese Meldung (V01.0.960, Dominik 2026-10-23 „nach Empfehlung umsetzen“; mitteilungen.py, kein Schalter, eine Fehlerbehebung): Bisher öffnete ein Tippen auf eine Mitteilung nur den Assistenten mit leerem Gespräch. Jetzt bleibt jede Mitteilung an iPhone-App, Android-App, Begleiter und Browser einen Tag mit einer zufälligen Nummer auf dem Spark (nur im Arbeitsspeicher, höchstens 30 je Profil); nur diese Nummer geht mit (über Apple wie bisher nur „Neue Nachricht vom Spark“). Antippen öffnet das Gespräch und zeigt die Mitteilung als Karte darüber: Titel, ganzer Text, Zeit und ein Knopf, den der Spark mit festen Regeln aus der Art der Mitteilung wählt, nie das Modell: eine Mitteilung zu etwas Offenem zeigt dessen Karte („Ansehen und erledigen“), ein Chat „Chat öffnen“, eine neue Mail „Mail lesen“, ein Bestätigungscode „Code kopieren“, ein Weg im Text („Ich → Musik“) „Öffnen: …“ als Sprung-Link; sonst nur der Text. Das Kreuz schließt die Karte. Nur das eigene Profil bekommt seine Mitteilung zurück (GET /api/profile/mitteilung, App GET /api/iphone/note?tapped=1, mit Anmeldung und Rate-Limit); ist sie älter als ein Tag oder startete der Spark neu, sagt die "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Karte das. Browser: über den Service Worker (#meldung=<Nummer>), Android ab 1.4.4, Begleiter auf dem Mac beim Klick auf die Mitteilung (Windows zeigt sie wie bisher im Reiter Meldungen). Logs: push: mitteilung geoeffnet <art> <weg> bzw. nicht mehr da, nie der Text; Live unter Ereignisse „Mitteilung“. Selbsttest test_mitteilungen."
 },
 {
 "lang": "de",
@@ -10373,7 +10389,7 @@
 "file": "iPhone-App „Spark“",
 "head": "Push-Meldungen bei geschlossener App",
 "title": "Push-Meldungen bei geschlossener App",
-"text": "Was dann kommt: Erinnerungen und Timer (auch die im Panel oder am Lautsprecher gesetzten), Morgenrunde, Hinweise von selbst, Gedächtnis-Aufräumen. Über Apple geht nur „Neue Nachricht vom Spark“; der Text bleibt 24 Stunden auf dem Spark, die App holt ihn mit ihrem Schlüssel und zeigt ihn im Banner. Ist der Spark gerade nicht erreichbar, bleibt es bei „Neue Nachricht“. Mit Push klingeln Erinnerungen nicht mehr doppelt (die App legt dann keine eigenen Wecker mehr an). Höchstens 30 Meldungen pro Stunde und Profil."
+"text": "Was dann kommt: Erinnerungen und Timer (auch die im Panel oder am Lautsprecher gesetzten), Morgenrunde, Hinweise von selbst, Gedächtnis-Aufräumen. Über Apple geht nur „Neue Nachricht vom Spark“; der Text bleibt 24 Stunden auf dem Spark, die App holt ihn mit ihrem Schlüssel und zeigt ihn im Banner. Ist der Spark gerade nicht erreichbar, bleibt es bei „Neue Nachricht“. Antippen öffnet die App mit der Mitteilung als Karte über dem Gespräch: ganzer Text, Zeit und der passende Knopf (Offen-Karte, Chat öffnen, Mail lesen, Code kopieren oder der Weg im Text); ist sie älter als einen Tag, sagt die Karte das (V01.0.960). Mit Push klingeln Erinnerungen nicht mehr doppelt (die App legt dann keine eigenen Wecker mehr an). Höchstens 30 Meldungen pro Stunde und Profil."
 },
 {
 "lang": "de",
@@ -11917,7 +11933,7 @@
 "file": "Android app \"Spark\" (APK, no store)",
 "head": "Android app \"Spark\" (APK, no store)",
 "title": "Android app \"Spark\" (APK, no store)",
-"text": "- Notes while the app is closed: the app asks the Spark itself every 15 minutes (/api/android/notes), no Google service. Reminders, the morning briefing and notes go there when the app is the device used last or no other way (iPhone app) is set up. - Notes at once (1.2.0 and later, V01.0.473): admin: Features → Android app → \"Android: notes at once\" (off). On for every profile at once; it can be switched off under Me → Android app → \"Notes at once\". Then open the app once. The app then keeps a connection to the Spark open (/api/android/wait: the Spark answers at once when a notification is there, otherwise empty after 4 minutes, and the app asks again; from 1.3.3, before 50 seconds). For this to work through the reverse proxy, set its timeout to at least 5 minutes there (Synology: Login Portal → Reverse Proxy → Edit → Advanced / timeout); if the proxy cuts after a minute, the app falls back to 50 seconds by itself for a day. Chat messages, reminders and notes come without delay, without a Google service. Android shows a quiet lasting notice \"Mit dem Spark verbunden\" for it (a foreground service). So Android does not put the connection to sleep: in the Android settings under Apps, S"
+"text": "- Notes while the app is closed: the app asks the Spark itself every 15 minutes (/api/android/notes), no Google service. Reminders, the morning briefing and notes go there when the app is the device used last or no other way (iPhone app) is set up. Tapping opens the note as a card above the conversation, with the whole text and the button that fits (1.4.4 and later, V01.0.960, see Assistant). - Notes at once (1.2.0 and later, V01.0.473): admin: Features → Android app → \"Android: notes at once\" (off). On for every profile at once; it can be switched off under Me → Android app → \"Notes at once\". Then open the app once. The app then keeps a connection to the Spark open (/api/android/wait: the Spark answers at once when a notification is there, otherwise empty after 4 minutes, and the app asks again; from 1.3.3, before 50 seconds). For this to work through the reverse proxy, set its timeout to at least 5 minutes there (Synology: Login Portal → Reverse Proxy → Edit → Advanced / timeout); if the proxy cuts after a minute, the app falls back to 50 seconds by itself for a day. Chat messages, reminders and notes come without delay, without a Google service. Android shows a quiet lasting not"
 },
 {
 "lang": "en",
@@ -11925,7 +11941,7 @@
 "file": "Android app \"Spark\" (APK, no store)",
 "head": "Android app \"Spark\" (APK, no store)",
 "title": "Android app \"Spark\" (APK, no store)",
-"text": "park, Battery pick \"Unrestricted\". After the phone restarts the connection starts when the app is opened first; until then the app asks every 15 minutes. Switch off or signed out: the app ends the connection by itself. Live shows \"Android-App (sofort)\" under connections, with the number only. - Spark as assistant (1.4.0 and later, V01.0.732): admin: Features → Android app → \"Android: Spark as assistant\" (off). Once released the assistant button (Settings → Apps → Default apps → Digital assistant → \"Spark\", then hold power or home) opens a sheet over whatever app is open: the Spark's face, what it heard, the answer to read along, a field to type (grows up to five lines, from 1.4.3) and \"Ganze App\" (whole app). The app records the question itself (the phone's echo and noise suppression, a pause of just under a second ends the question), sends it to the Spark (/api/test/asr, then /api/chat as device \"android\") and plays the answer itself, short and without lists. Speaking during the answer makes it quieter; it only stops once the Spark recognizes a real question. With \"hands-free\" in the chat it listens again afterwards. On the lock screen the phone wants to be unlocked first. The con"
+"text": "ice \"Mit dem Spark verbunden\" for it (a foreground service). So Android does not put the connection to sleep: in the Android settings under Apps, Spark, Battery pick \"Unrestricted\". After the phone restarts the connection starts when the app is opened first; until then the app asks every 15 minutes. Switch off or signed out: the app ends the connection by itself. Live shows \"Android-App (sofort)\" under connections, with the number only. - Spark as assistant (1.4.0 and later, V01.0.732): admin: Features → Android app → \"Android: Spark as assistant\" (off). Once released the assistant button (Settings → Apps → Default apps → Digital assistant → \"Spark\", then hold power or home) opens a sheet over whatever app is open: the Spark's face, what it heard, the answer to read along, a field to type (grows up to five lines, from 1.4.3) and \"Ganze App\" (whole app). The app records the question itself (the phone's echo and noise suppression, a pause of just under a second ends the question), sends it to the Spark (/api/test/asr, then /api/chat as device \"android\") and plays the answer itself, short and without lists. Speaking during the answer makes it quieter; it only stops once the Spark reco"
 },
 {
 "lang": "en",
@@ -11933,7 +11949,7 @@
 "file": "Android app \"Spark\" (APK, no store)",
 "head": "Android app \"Spark\" (APK, no store)",
 "title": "Android app \"Spark\" (APK, no store)",
-"text": "versation is then under Chats like any other. Also: the widget \"Spark\" for the home screen (face, microphone, numbers only: \"Heute: 2 Termine · 1 Erinnerung · 3 ungelesen\", and where a device listens in room mode), the tile \"Spark zuhören\" in quick settings and the shortcuts on the app icon (long press: listen, write a question, Today, Chats). When the Spark cannot be reached, a typed question waits (at most 10, one day) and goes out by itself once it is back; the answer comes as the notification \"Antwort vom Spark\". Without the release the button opens the app listening, as before. - Share to Spark: share text in another app → Spark: the text is put into the text field, you send it yourself. From 1.4.0 also photos, PDFs and Office files (at most 3): the app asks \"Dazu fragen\" (ask about it) or \"Nur ablegen\" (just store). A photo is made smaller on the phone (1280 pixels) and drawn anew (no place or camera data), then attached to the conversation (needs \"Recognize images\") or stored under \"Meine Dokumente\"; other files go to \"Meine Dokumente\" (needs \"Documents\"), then \"Fass das Dokument … kurz zusammen.\" is put into the text field. Nothing is ever sent by itself. - Fingerprint for "
+"text": "gnizes a real question. With \"hands-free\" in the chat it listens again afterwards. On the lock screen the phone wants to be unlocked first. The conversation is then under Chats like any other. Also: the widget \"Spark\" for the home screen (face, microphone, numbers only: \"Heute: 2 Termine · 1 Erinnerung · 3 ungelesen\", and where a device listens in room mode), the tile \"Spark zuhören\" in quick settings and the shortcuts on the app icon (long press: listen, write a question, Today, Chats). When the Spark cannot be reached, a typed question waits (at most 10, one day) and goes out by itself once it is back; the answer comes as the notification \"Antwort vom Spark\". Without the release the button opens the app listening, as before. - Share to Spark: share text in another app → Spark: the text is put into the text field, you send it yourself. From 1.4.0 also photos, PDFs and Office files (at most 3): the app asks \"Dazu fragen\" (ask about it) or \"Nur ablegen\" (just store). A photo is made smaller on the phone (1280 pixels) and drawn anew (no place or camera data), then attached to the conversation (needs \"Recognize images\") or stored under \"Meine Dokumente\"; other files go to \"Meine Dokum"
 },
 {
 "lang": "en",
@@ -11941,7 +11957,7 @@
 "file": "Android app \"Spark\" (APK, no store)",
 "head": "Android app \"Spark\" (APK, no store)",
 "title": "Android app \"Spark\" (APK, no store)",
-"text": "admins (1.4.0 and later, V01.0.732): admin: Features → Android app → \"Android: fingerprint for admins\" (off). When the app is signed in with a profile with an admin role, it asks for the phone's fingerprint, face or screen lock when opened and after 5 minutes in the background (like Face ID before \"Spark verwalten\" in the iPhone app). Android checks it; the app learns only yes or no, the Spark nothing. - Emergency stop tile (1.1.0 and later): edit quick settings → add \"Notaus\". Admins choose \"Ganzer Spark\" (stage 2) or \"Mein Notaus\", everyone else \"Mein Notaus\", always behind a question; lifting only in the browser (see Security and operation). - New version: the app shows a notification when the Spark has a newer APK. - Calm during a Spark update (from 1.3.2, V01.0.570): when the Spark restarts (an update), the app shows \"Spark startet neu … Die Seite kommt gleich wieder.\" (Spark restarting … the page is back in a moment) and tries again by itself instead of jumping to the address screen (only after about five minutes without the Spark the address screen comes back, \"Adresse ändern\" works any time). A notification, sharing or the assistant button no longer reload the open page: th"
+"text": "ente\" (needs \"Documents\"), then \"Fass das Dokument … kurz zusammen.\" is put into the text field. Nothing is ever sent by itself. - Fingerprint for admins (1.4.0 and later, V01.0.732): admin: Features → Android app → \"Android: fingerprint for admins\" (off). When the app is signed in with a profile with an admin role, it asks for the phone's fingerprint, face or screen lock when opened and after 5 minutes in the background (like Face ID before \"Spark verwalten\" in the iPhone app). Android checks it; the app learns only yes or no, the Spark nothing. - Emergency stop tile (1.1.0 and later): edit quick settings → add \"Notaus\". Admins choose \"Ganzer Spark\" (stage 2) or \"Mein Notaus\", everyone else \"Mein Notaus\", always behind a question; lifting only in the browser (see Security and operation). - New version: the app shows a notification when the Spark has a newer APK. - Calm during a Spark update (from 1.3.2, V01.0.570): when the Spark restarts (an update), the app shows \"Spark startet neu … Die Seite kommt gleich wieder.\" (Spark restarting … the page is back in a moment) and tries again by itself instead of jumping to the address screen (only after about five minutes without the Spark "
 },
 {
 "lang": "en",
@@ -11949,7 +11965,7 @@
 "file": "Android app \"Spark\" (APK, no store)",
 "head": "Android app \"Spark\" (APK, no store)",
 "title": "Android app \"Spark\" (APK, no store)",
-"text": "e page only jumps to the place. - Last state at once (from 1.4.1, V01.0.748, function \"Apps keep the last state\"): nothing stays blank on the first load: after a second \"Verbinde mit dem Spark …\" (connecting), after 8 seconds \"Das dauert länger als sonst …\" (takes longer), when the Spark cannot be reached \"Noch einmal\" (try again) and \"Adresse ändern\". Then the page in the app shows the conversations (the 20 newest with 50 messages each), the chat list and the own settings of last time at once, above the conversation with \"As of 16:05 · refreshing …\" until the Spark has answered. When the app comes to the front it fetches settings and chats once in the background (at most every 5 minutes). When the start or a list needs more than 2 seconds, Status → Logs (area Apps) shows app: langsam <page> <ms> ms android. - Calls by the assistant (from 1.4.2, V01.0.803, function \"Calls by the assistant\"): saying \"Call Sabine\" to the app's assistant and then \"Yes\" opens the app with \"Sabine anrufen? · Anrufen\". \"Call Mum by phone\" looks Mum up in the profile's contacts on the Spark (Contacts → Settings) and after the yes opens the phone app with the number; only the tap on the green button dials."
+"text": "the address screen comes back, \"Adresse ändern\" works any time). A notification, sharing or the assistant button no longer reload the open page: the page only jumps to the place. - Last state at once (from 1.4.1, V01.0.748, function \"Apps keep the last state\"): nothing stays blank on the first load: after a second \"Verbinde mit dem Spark …\" (connecting), after 8 seconds \"Das dauert länger als sonst …\" (takes longer), when the Spark cannot be reached \"Noch einmal\" (try again) and \"Adresse ändern\". Then the page in the app shows the conversations (the 20 newest with 50 messages each), the chat list and the own settings of last time at once, above the conversation with \"As of 16:05 · refreshing …\" until the Spark has answered. When the app comes to the front it fetches settings and chats once in the background (at most every 5 minutes). When the start or a list needs more than 2 seconds, Status → Logs (area Apps) shows app: langsam <page> <ms> ms android. - Calls by the assistant (from 1.4.2, V01.0.803, function \"Calls by the assistant\"): saying \"Call Sabine\" to the app's assistant and then \"Yes\" opens the app with \"Sabine anrufen? · Anrufen\". \"Call Mum by phone\" looks Mum up in the p"
 },
 {
 "lang": "en",
@@ -12933,7 +12949,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "'s random number; the app asks the Spark who calls. For private chats the app makes its own key in the Secure Enclave; the Spark only gets the public half. The Android app's sheet over other apps asks as device „android“ only while „Android: Spark as assistant“ is released (android.assist_gate). Whether the app may keep the pages' last state, hello says with „keep“ (appmerken.keep); on no it deletes it. With „barge_hold“ it only pauses the answer for a barge-in (zwischenruf.py). With „Notes to the device in use“ the app and the pages only say every minute whether they are in use right now (POST /api/zustellung/da, the companion with its idle time); zustellung.pick then sends a note to the device with the last input within the last 120 seconds, else to the phone app at once. If nobody saw it, zustellung.follow sends it once to the phone after 5 minutes; a tapped note says „seen“, and with the answer „zu“ pages and the iPhone take done ones away. 10. Account, devices or security?: Endpoints that change the profile's connections, devices or security only take the own browser login (core.browser_profile). They refuse a device key, except in an area the profile opened for the app; secre"
+"text": "'s random number; the app asks the Spark who calls. For private chats the app makes its own key in the Secure Enclave; the Spark only gets the public half. The Android app's sheet over other apps asks as device „android“ only while „Android: Spark as assistant“ is released (android.assist_gate). Whether the app may keep the pages' last state, hello says with „keep“ (appmerken.keep); on no it deletes it. With „barge_hold“ it only pauses the answer for a barge-in (zwischenruf.py). With „Notes to the device in use“ the app and the pages only say every minute whether they are in use right now (POST /api/zustellung/da, the companion with its idle time); zustellung.pick then sends a note to the device with the last input within the last 120 seconds, else to the phone app at once. If nobody saw it, zustellung.follow sends it once to the phone after 5 minutes; a tapped note says „seen“, and with the answer „zu“ pages and the iPhone take done ones away. Every note stays on the Spark for 24 hours with a random number (mitteilungen.keep, in memory only); only the number goes along. Tapped, it shows as a card above the conversation, with the one button mitteilungen.ziel picks by fixed rules (O"
 },
 {
 "lang": "en",
@@ -12941,7 +12957,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "ts need a fresh code there as well. 11. Removing works at once: When the iPhone is removed in the panel, its hash leaves the device list. The app's next request finds no profile any more."
+"text": "pen, chat, mail, code, way); only the own profile gets it back. 10. Account, devices or security?: Endpoints that change the profile's connections, devices or security only take the own browser login (core.browser_profile). They refuse a device key, except in an area the profile opened for the app; secrets need a fresh code there as well. 11. Removing works at once: When the iPhone is removed in the panel, its hash leaves the device list. The app's next request finds no profile any more."
 },
 {
 "lang": "en",
@@ -12989,7 +13005,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "e phone app (step 9) - app/panel/zustellung.py api_da: only „in use“ or „away“, only pages and the apps (step 9) - app/panel/zustellung.py follow: follow up once to the phone, never a third time (step 9) - app/panel/terminal.py profile_pair: terminal pairing line only from the own browser (step 1, step 2) - app/panel/terminal.py setup_base: pinned at home, outside https only (step 3) - app/panel/terminal.py program_pair: the terminal's first contact (step 4, step 5) - app/panel/terminal.py reaches: the terminal's fixed rule list (step 7)"
+"text": "e phone app (step 9) - app/panel/zustellung.py api_da: only „in use“ or „away“, only pages and the apps (step 9) - app/panel/zustellung.py follow: follow up once to the phone, never a third time (step 9) - app/panel/mitteilungen.py ziel: what the card of a tapped note offers, fixed rules (step 9) - app/panel/mitteilungen.py opened: only the own note, one log line without text (step 9) - app/panel/terminal.py profile_pair: terminal pairing line only from the own browser (step 1, step 2) - app/panel/terminal.py setup_base: pinned at home, outside https only (step 3) - app/panel/terminal.py program_pair: the terminal's first contact (step 4, step 5) - app/panel/terminal.py reaches: the terminal's fixed rule list (step 7)"
 },
 {
 "lang": "en",
@@ -12997,7 +13013,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "Self-tests: test_iphone, test_iphone_panel, test_android, test_app_notaus, test_kopplung, test_terminal, test_zustellung"
+"text": "Self-tests: test_iphone, test_iphone_panel, test_android, test_app_notaus, test_kopplung, test_terminal, test_zustellung, test_mitteilungen"
 },
 {
 "lang": "en",
@@ -17046,6 +17062,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ection \"Gerade benutzte Geräte\" with the count and the notes routed so today. Self-test test_zustellung. Urgent notes, one quiet time for everything and Me → Notifications follow in stages 3 and 4."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "Tapping a note opens exactly that note (V01.0.960, Dominik 2026-10-23 \"nach Empfehlung umsetzen\"; mitteilungen.py, no switch, a fix): until now tapping a notification only opened the assistant with an empty conversation. Now every note to the iPhone app, the Android app, the companion and the browser stays on the Spark for a day with a random number (in memory only, at most 30 per profile); only that number goes along (through Apple, as before, only \"New message from the Spark\"). Tapping opens the conversation and shows the note as a card above it: title, the whole text, the time and one button the Spark picks by fixed rules from the kind of note, never the model: a note about something open shows its card (\"View and handle\"), a chat \"Open chat\", a new mail \"Read mail\", a confirmation code \"Copy code\", a way in the text (\"Me → Music\") \"Open: …\" as a jump link; else only the text. The cross closes the card. Only the own profile gets its note back (GET /api/profile/mitteilung, the app GET /api/iphone/note?tapped=1, with a login and a rate limit); older than a day or after a restart of the Spark, the card says so. Browser: through the service worker (#meldung=<number>), Android from 1"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": ".4.4, the companion on the Mac on a click on the note (Windows shows it in the Meldungen tab as before). Logs: push: mitteilung geoeffnet <kind> <way> or nicht mehr da, never the text; Live under events \"Mitteilung\". Self-test test_mitteilungen."
 },
 {
 "lang": "en",
@@ -22013,7 +22045,7 @@
 "file": "iPhone app \"Spark\"",
 "head": "Push notifications with the app closed",
 "title": "Push notifications with the app closed",
-"text": "Then reminders and timers (also those set in the panel or on a speaker), the morning briefing, notes and memory tidying arrive with the app closed. Only \"Neue Nachricht vom Spark\" goes through Apple; the text stays on the Spark for 24 hours and the app fetches it with its key. With push, reminders no longer ring twice. At most 30 notifications per hour and profile."
+"text": "Then reminders and timers (also those set in the panel or on a speaker), the morning briefing, notes and memory tidying arrive with the app closed. Only \"Neue Nachricht vom Spark\" goes through Apple; the text stays on the Spark for 24 hours and the app fetches it with its key. Tapping opens the app with the note as a card above the conversation: the whole text, the time and the button that fits (Open card, open chat, read mail, copy code or the way in the text); older than a day, the card says so (V01.0.960). With push, reminders no longer ring twice. At most 30 notifications per hour and profile."
 },
 {
 "lang": "en",

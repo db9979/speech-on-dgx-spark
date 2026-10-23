@@ -328,7 +328,9 @@ struct ChatView: View {
             ScrollViewReader { scroll in
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 10) {
-                        if talk.messages.isEmpty {
+                        // a tapped notification (mitteilungen.py): the note on top, with the button that fits it
+                        if let n = talk.tapped { MitteilungKarte(x: n).id("mitteilung") }
+                        if talk.messages.isEmpty && talk.tapped == nil {
                             Text("Frag mich etwas, zum Beispiel: „Wie wird das Wetter morgen?“")
                                 .foregroundStyle(.secondary)
                                 .multilineTextAlignment(.center)
@@ -355,6 +357,9 @@ struct ChatView: View {
                 }
                 .onChange(of: talk.messages.last?.text) {
                     if let id = talk.messages.last?.id { withAnimation { scroll.scrollTo(id, anchor: .bottom) } }
+                }
+                .onChange(of: talk.tapped?.id) {
+                    if talk.tapped != nil { withAnimation { scroll.scrollTo("mitteilung", anchor: .top) } }
                 }
             }
             if let e = talk.error {

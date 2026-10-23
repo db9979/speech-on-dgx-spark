@@ -2165,6 +2165,9 @@ textarea{resize:none}textarea[data-fest]{resize:vertical}textarea.feldplatz{padd
 .vk-fuss{font-size:12px;color:var(--mut)}
 .vk-zu{display:inline-flex;flex-wrap:wrap;gap:8px;align-items:center;border:1px dashed var(--line);border-radius:12px;padding:6px 12px;font-size:13px}
 .vk-zu .vk-sym{background:color-mix(in srgb,var(--ok) 16%,var(--card));color:var(--ok)}.vk-zu .b{padding:3px 9px;font-size:12.5px}
+/* Mitteilung antippen (mitteilung.js): the tapped note above the conversation */
+.mtcard{margin:0 0 8px}.mt-wann{margin-left:auto;text-transform:none;letter-spacing:0}
+.mt-zu{border:0;background:none;color:var(--mut);padding:2px;cursor:pointer;display:inline-grid;place-items:center}.mt-text{white-space:pre-wrap;overflow-wrap:anywhere}
 .vgstrip{border:1px solid var(--line);background:var(--card);border-radius:12px;margin:0 0 8px;padding:2px 4px}
 .vgs-h,.vgs-r{display:flex;gap:8px;align-items:center;width:100%;border:0;background:none;color:var(--fg);font:inherit;font-size:13.5px;padding:6px 8px;cursor:pointer;text-align:left;border-radius:8px}
 .vgs-h:hover,.vgs-r:hover{background:color-mix(in srgb,var(--line) 50%,transparent)}.vgs-c{margin-left:auto;color:var(--mut)}

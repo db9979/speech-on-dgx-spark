@@ -153,7 +153,8 @@ def _bereiche(v):
     return ", ".join(f"{a}–{b}" if b > a else str(a) for a, b in out)
 
 
-FORMATE = {"": str, "mb": lambda v: f"{int(v) // 1048576} MB", "min": lambda v: str(int(v) // 60), "bereiche": _bereiche,
+FORMATE = {"": str, "mb": lambda v: f"{int(v) // 1048576} MB", "min": lambda v: str(int(v) // 60),
+           "h": lambda v: str(int(v) // 3600), "bereiche": _bereiche,
            "anzahl": lambda v: str(len(v)), "prozent": lambda v: f"{round(float(v) * 100)} %",
            "ms": lambda v: f"{round(float(v) * 1000)} ms"}
 PLATZ = re.compile(r"\{(@?[\w.]+)(?:\|(\w+))?\}")

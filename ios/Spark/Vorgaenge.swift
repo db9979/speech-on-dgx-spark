@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// Alles Offene im Assistenten (vorgaenge.py, plan assistent-zentrale Stufe 1): the same Vorgänge as the panel's page
 /// Offen. A message of the conversation carries only the number ("vg"); the card is drawn from this store, so a button
@@ -339,5 +340,101 @@ struct OffenView: View {
         }
         .refreshable { await store.load(all: true) }
         .task { await store.load(all: true) }
+    }
+}
+
+/// Mitteilung antippen öffnet genau diese Meldung (mitteilungen.py, Dominik 2026-10-23): a tapped note with what its
+/// card offers. The Spark picks the target by fixed rules (ziel); the app only shows it and checks the forms.
+struct Mitteilung: Identifiable {
+    let id: String
+    let title: String
+    let body: String
+    /// nil: the note is gone (older than a day, or the Spark restarted)
+    let at: Date?
+    let art: String
+    let vg: String
+    let chat: String
+    let ref: String
+    let code: String
+    let weg: String
+
+    static func gone(_ id: String) -> Mitteilung {
+        Mitteilung(id: id, title: "", body: "", at: nil, art: "text", vg: "", chat: "", ref: "", code: "", weg: "")
+    }
+}
+
+extension SparkAPI {
+    /// The tapped note by its number (GET /api/iphone/note with tapped=1); nil when the Spark no longer has it.
+    func mitteilung(_ id: String) async -> Mitteilung? {
+        guard let d = try? await object("GET", "api/iphone/note", query: ["id": id, "tapped": "1"]),
+              let title = d["title"] as? String, let body = d["body"] as? String else { return nil }
+        let z = d["ziel"] as? [String: Any] ?? [:]
+        func pick(_ k: String, _ rx: String) -> String {
+            let v = z[k] as? String ?? ""
+            return v.range(of: rx, options: .regularExpression) != nil ? v : ""
+        }
+        return Mitteilung(id: id, title: String(title.prefix(200)), body: String(body.prefix(1500)),
+                          at: (d["t"] as? NSNumber).map { Date(timeIntervalSince1970: $0.doubleValue) } ?? Date(),
+                          art: pick("art", "^[a-z]{3,8}$"), vg: pick("vg", "^v[0-9a-f]{10}$"), chat: pick("chat", "^c[0-9a-f]{12}$"),
+                          ref: pick("ref", "^m[0-9a-f]{8}:[0-9]{1,10}$"), code: pick("code", "^[A-Z0-9]{4,8}$"),
+                          weg: String((z["weg"] as? String ?? "").prefix(200)))
+    }
+}
+
+/// the tapped note above the conversation: its whole text (a way in it is a Sprung-Link) and the one button that fits
+struct MitteilungKarte: View {
+    let x: Mitteilung
+    @ObservedObject private var store = VorgangStore.shared
+    @State private var chat: ChatStart?
+    @State private var reading: MailItem?
+    @State private var copied = false
+    @Environment(\.openURL) private var openURL
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 6) {
+                Image(systemName: "bell").foregroundStyle(.tint)
+                Text("Mitteilung").textCase(.uppercase).font(.caption).foregroundStyle(.secondary)
+                Spacer()
+                if let at = x.at { Text(verbatim: at.formatted(date: .abbreviated, time: .shortened)).font(.caption).foregroundStyle(.secondary) }
+                Button { Conversation.shared.tapped = nil } label: { Image(systemName: "xmark") }
+                    .buttonStyle(.borderless).accessibilityLabel(Text("Schließen"))
+            }
+            if x.at == nil {
+                Text("Diese Mitteilung ist nicht mehr da (älter als ein Tag oder nach einem Neustart des Spark).")
+                    .font(.subheadline).foregroundStyle(.secondary)
+            } else {
+                Text(verbatim: x.title).font(.headline)
+                Text(SparkAPI.way(x.body)).font(.subheadline).textSelection(.enabled)
+                if x.art == "vorgang", let v = store.items[x.vg] { VorgangKarte(x: v) }
+                HStack {
+                    if x.art == "chat" { Button("Chat öffnen") { chat = ChatStart(id: x.chat) }.buttonStyle(.borderedProminent) }
+                    if x.art == "mail" {
+                        Button("Mail lesen") {
+                            reading = MailItem(id: x.ref, from: "", subject: x.body, date: x.at ?? Date(), unread: false, box: 0)
+                        }
+                        .buttonStyle(.borderedProminent)
+                    }
+                    if x.art == "code" {
+                        Button {
+                            UIPasteboard.general.setItems([[UIPasteboard.typeAutomatic: x.code]],
+                                                          options: [.expirationDate: Date().addingTimeInterval(180), .localOnly: true])
+                            copied = true
+                        } label: { copied ? Text("Kopiert") : Text("Code kopieren") }
+                        .buttonStyle(.borderedProminent)
+                    }
+                    if !x.weg.isEmpty, let u = SparkAPI.wayLink(x.weg) {
+                        Button { openURL(u) } label: { Text("Öffnen: \(x.weg)").lineLimit(1) }.buttonStyle(.bordered)
+                    }
+                }
+                .font(.footnote)
+            }
+        }
+        .padding(12)
+        .background(RoundedRectangle(cornerRadius: 14).fill(Color(.secondarySystemBackground)))
+        .overlay(alignment: .leading) { Rectangle().fill(.tint).frame(width: 3).clipShape(Capsule()) }
+        .onAppear { if x.art == "vorgang" { store.want(x.vg) } }
+        .sheet(item: $chat) { c in ChatsView(start: c.id) }
+        .sheet(item: $reading) { m in NavigationStack { MailView(item: m, box: "", folder: nil, post: PostModel()) } }
     }
 }

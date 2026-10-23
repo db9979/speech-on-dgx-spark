@@ -17280,6 +17280,56 @@
           }
         }
       }
+    },
+    "Mitteilung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notification"
+          }
+        }
+      }
+    },
+    "Chat öffnen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open chat"
+          }
+        }
+      }
+    },
+    "Mail lesen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read mail"
+          }
+        }
+      }
+    },
+    "Öffnen: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open: %@"
+          }
+        }
+      }
+    },
+    "Diese Mitteilung ist nicht mehr da (älter als ein Tag oder nach einem Neustart des Spark).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This notification is gone (older than a day, or the Spark restarted)."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

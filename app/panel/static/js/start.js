@@ -79,6 +79,8 @@ async function startPage(){let who=null;try{who=await (await /*raw: the first wh
     if(PROFILE&&typeof KAL!=='undefined'&&$('cal')){KAL.day=new Date(+k[1],k[2]-1,+k[3]);icTabSet('cal','show');goSec('cal')}}}catch{}
   // #weg=<a way like „Ich → Sicherheit“> from the apps, mails and messages: opens it like a Sprung-Link (way.js)
   try{if(typeof wayHash==='function')wayHash()}catch{}
+  // #meldung=<number> from a tapped notification: the note as a card above the conversation (mitteilung.js)
+  try{if(typeof mtHash==='function')mtHash()}catch{}
   try{const fr=sessionStorage.getItem('flagsreload');if(fr){sessionStorage.removeItem('flagsreload');if(fr==='away')sayToast(t('Deine Funktionen wurden geändert, Seite neu geladen.','Your functions were changed, page reloaded.'),5000)}}catch{}   // back where the new version was loaded
   if(typeof goStart==='function')goStart(who);
   if(typeof mcpAuthStart==='function')mcpAuthStart();

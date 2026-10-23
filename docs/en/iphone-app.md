@@ -173,7 +173,7 @@ Needs the Apple Developer Program. Once:
 3. Profile: nothing to do, "Notifications to the iPhone" is on from the start. It can be switched off under **Me → iPhone app → "Notifications to the iPhone"**.
 4. Open the app once and allow notifications, then **"Send a test message"** in the panel.
 
-Then reminders and timers (also those set in the panel or on a speaker), the morning briefing, notes and memory tidying arrive with the app closed. Only "Neue Nachricht vom Spark" goes through Apple; the text stays on the Spark for 24 hours and the app fetches it with its key. With push, reminders no longer ring twice. At most 30 notifications per hour and profile.
+Then reminders and timers (also those set in the panel or on a speaker), the morning briefing, notes and memory tidying arrive with the app closed. Only "Neue Nachricht vom Spark" goes through Apple; the text stays on the Spark for 24 hours and the app fetches it with its key. Tapping opens the app with the note as a card above the conversation: the whole text, the time and the button that fits (Open card, open chat, read mail, copy code or the way in the text); older than a day, the card says so (V01.0.960). With push, reminders no longer ring twice. At most 30 notifications per hour and profile.
 
 The test says **BadDeviceToken**: "Development" and "Production" are swapped. **InvalidProviderToken**: Key ID or Team ID do not match the key. **TopicDisallowed**: the bundle ID does not match.
 
@@ -251,7 +251,7 @@ Step by step (TestFlight, App Store): [iphone-publishing.md](iphone-publishing.m
 | `GET /api/chats/stream` | App: chat events live, among them the call signals |
 | `GET/POST /api/chats/keys`, `POST /api/chats/keys/remove\|private`, `GET/POST /api/chats/share`, `POST /api/chats/share/done` | App: its own key for private chats, starting a private chat, the history for a new device |
 | `POST /api/anrufe/start\|answer\|signal\|end`, `GET /api/anrufe/ice\|info` | App: start, answer, exchange signals, end a call; access to the relay; who is calling |
-| `GET /api/iphone/note?id=…` | App (notification extension): fetch the text of a push notification |
+| `GET /api/iphone/note?id=…` | App (notification extension): fetch the text of a push notification; with `tapped=1` the tapped note with its card's target |
 | `POST /api/profile/iphone/push-test` | Browser login: test notification to the own iPhones |
 | `GET/PUT /api/profile/convos` | App: read the history and save the current conversation (deleting only in the panel) |
 | `GET/PUT /api/iphone/settings` | App: "My profile", only the fields from `iphone.APP_FIELDS` |

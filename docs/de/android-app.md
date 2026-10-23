@@ -5,7 +5,8 @@ Die App ist eine schlanke Hülle um die Spark-Seite: Sie zeigt den Spark so, wie
 
 - **Mitteilungen bei geschlossener App:** Die App fragt alle 15 Minuten selbst beim Spark nach (`/api/android/notes`),
   ohne Google-Dienst. Erinnerungen, Morgenrunde und Hinweise kommen dorthin, wenn die App das zuletzt benutzte Gerät
-  ist oder kein anderer Weg (iPhone-App) eingerichtet ist.
+  ist oder kein anderer Weg (iPhone-App) eingerichtet ist. Antippen öffnet die Mitteilung als Karte über dem Gespräch,
+  mit dem ganzen Text und dem passenden Knopf (ab 1.4.4, V01.0.960, siehe [Assistent](assistent.md)).
 - **Mitteilungen sofort** (ab 1.2.0, V01.0.473): Admin: Funktionen → Android-App → „Android: Mitteilungen sofort“ (aus).
   Für jedes Profil gleich an; abschalten lässt es sich unter Ich → Android-App → „Mitteilungen sofort“. Dann die App einmal öffnen. Die App hält dann eine Verbindung
   zum Spark offen (`/api/android/wait`: der Spark antwortet sofort, wenn eine Mitteilung da ist, sonst nach 4 Minuten

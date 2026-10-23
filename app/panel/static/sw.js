@@ -22,18 +22,20 @@ self.addEventListener('push', e => {
     if (d.tag !== 'hello' && list.some(c => c.visibilityState === 'visible')) return;
     return self.registration.showNotification(d.title || 'Spark', {body: d.body || '', tag: d.tag || undefined,
       icon: '/static/icon-192.png', badge: '/static/icon-192.png', data: {weg: typeof d.weg === 'string' ? d.weg.slice(0, 200) : '',
-        vg: /^v[0-9a-f]{10}$/.test(d.vg || '') ? d.vg : ''}});
+        vg: /^v[0-9a-f]{10}$/.test(d.vg || '') ? d.vg : '', m: /^[0-9a-f]{16}$/.test(d.m || '') ? d.m : ''}});
   }));
 });
-// a note naming a place in the panel ("Ich → Gedächtnis", push.py) opens it there (way.js); only navigation.
+// a tapped note opens as a card in the conversation (mitteilung.js, mitteilungen.py: only its number "m"); an older
+// note without one opens the place it names ("Ich → Gedächtnis", way.js); only navigation.
 // A note about a Vorgang (vg) tells the page it was opened, the page says "gesehen" (reminders.js, zustellung.py)
 self.addEventListener('notificationclick', e => {
   e.notification.close();
-  const weg = (e.notification.data && e.notification.data.weg) || '', vg = (e.notification.data && e.notification.data.vg) || '';
+  const dt = e.notification.data || {}, weg = dt.weg || '', vg = dt.vg || '', m = dt.m || '';
   e.waitUntil(self.clients.matchAll({type: 'window', includeUncontrolled: true}).then(list => {
-    const to = weg ? '/#weg=' + encodeURIComponent(weg) : '/';
+    const to = m ? '/#meldung=' + m : weg ? '/#weg=' + encodeURIComponent(weg) : '/';
     if (!list.length) return self.clients.openWindow(vg ? '/?vg=' + vg + to.slice(1) : to);
-    if (weg) list[0].postMessage({weg});
+    if (m) list[0].postMessage({meldung: m});
+    else if (weg) list[0].postMessage({weg});
     if (vg) list[0].postMessage({vg});
     return list[0].focus();
   }));

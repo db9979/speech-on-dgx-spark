@@ -5,7 +5,8 @@ since V01.0.296) and adds only what a page cannot do:
 
 - **Notes while the app is closed:** the app asks the Spark itself every 15 minutes (`/api/android/notes`), no
   Google service. Reminders, the morning briefing and notes go there when the app is the device used last or no
-  other way (iPhone app) is set up.
+  other way (iPhone app) is set up. Tapping opens the note as a card above the conversation, with the whole text and
+  the button that fits (1.4.4 and later, V01.0.960, see [Assistant](assistant.md)).
 - **Notes at once** (1.2.0 and later, V01.0.473): admin: Features → Android app → "Android: notes at once" (off).
   On for every profile at once; it can be switched off under Me → Android app → "Notes at once". Then open the app once. The app then keeps a connection to the
   Spark open (`/api/android/wait`: the Spark answers at once when a notification is there, otherwise empty after

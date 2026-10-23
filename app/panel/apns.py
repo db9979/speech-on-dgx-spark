@@ -8,9 +8,10 @@ Each paired iPhone hands over its push address (device token) with its own app k
 (POST /api/iphone/push-token); it is kept per device and dropped with the device. A profile gets
 pushes unless it switched app_push off (a preference, on by default).
 
-What Apple sees: only "Neue Nachricht vom Spark" and a random id. The text stays on the Spark in a
-short inbox (INBOX_SECONDS, INBOX_MAX per profile); the app's notification extension fetches it with
-the app key from GET /api/iphone/note?id=... and shows it in the banner.
+What Apple sees: only "Neue Nachricht vom Spark" and a random id. The text stays on the Spark
+(mitteilungen.py, a day); the app's notification extension fetches it with the app key from
+GET /api/iphone/note?id=... and shows it in the banner. A tapped notification shows the same note as a card in
+the app's conversation, with the button mitteilungen.ziel picks.
 
 Everything that goes out through push.send (reminders, the daily briefing, proactive notes, memory
 tidying) also comes here: see push.send.
@@ -19,7 +20,6 @@ import base64
 import json
 import os
 import re
-import secrets
 import threading
 import time
 
@@ -39,8 +39,6 @@ except ImportError:
 
 HOSTS = {False: "https://api.push.apple.com", True: "https://api.sandbox.push.apple.com"}
 JWT_SECONDS = 40 * 60          # Apple wants a fresh token at least every hour, not more than every 20 minutes
-INBOX_SECONDS = 24 * 3600
-INBOX_MAX = 30
 PER_HOUR = 30                  # pushes per profile and hour
 GENERIC = "Neue Nachricht vom Spark"
 TOKEN = re.compile(r"[0-9a-f]{64,200}")
@@ -48,7 +46,6 @@ CALL = re.compile(r"[0-9a-f]{16}")
 VOIP_SECONDS = 45              # a call's push is worth nothing after the ringing (anrufe.RING_SECS)
 _lock = threading.Lock()
 _jwt = (0.0, "", "")           # (made, key id, token)
-_inbox = {}                    # uid -> [{"id", "t", "title", "body"}]
 _sent = {}                     # uid -> [times]
 
 
@@ -154,23 +151,6 @@ def reachable(uid):
 
 
 # ---------------------------------------------------------------- the short inbox the app reads from
-def _keep(uid, title, body, now):
-    item = {"id": secrets.token_hex(8), "t": now, "title": str(title)[:200], "body": str(body)[:1500]}
-    with _lock:
-        box = [x for x in _inbox.get(uid, []) if now - x["t"] < INBOX_SECONDS]
-        box.append(item)
-        _inbox[uid] = box[-INBOX_MAX:]
-    return item["id"]
-
-
-def note(uid, nid, now=None):
-    now = time.time() if now is None else now
-    if not isinstance(nid, str) or not re.fullmatch(r"[0-9a-f]{16}", nid):
-        return None
-    with _lock:
-        return next((dict(x) for x in _inbox.get(uid, []) if x["id"] == nid and now - x["t"] < INBOX_SECONDS), None)
-
-
 def _allowed_now(uid, now):
     with _lock:
         times = [t for t in _sent.get(uid, []) if now - t < 3600]
@@ -235,9 +215,10 @@ def _reason(r):
         return ""
 
 
-async def send(uid, title, body, tag="", now=None, vg=""):
+async def send(uid, title, body, tag="", now=None, vg="", ref=""):
     """To every iPhone of the profile; returns how many Apple accepted. vg: the Vorgang the note is about (its number
-    only, so the app takes the notification away when it is done elsewhere, zustellung.py)."""
+    only, so the app takes the notification away when it is done elsewhere, zustellung.py). ref: a new mail's
+    reference, kept on the Spark for the card of the tapped note (mitteilungen.ziel), never sent to Apple."""
     now = time.time() if now is None else now
     if not reachable(uid):
         return 0
@@ -245,7 +226,8 @@ async def send(uid, title, body, tag="", now=None, vg=""):
         print("apns: not sent, hourly limit of the profile", flush=True)
         return 0
     s = settings()
-    nid = _keep(uid, title, body, now)
+    import mitteilungen
+    nid = mitteilungen.keep(uid, title, body, tag, vg, ref, now)
     n = 0
     # a call already rang the iPhones that take calls through CallKit (send_voip): no second "📞 … ruft an" there
     rung = {did for did, _ in voip_tokens(uid)} if tag == "call" else set()
@@ -315,7 +297,8 @@ async def test(uid, now=None):
     if not profile_tokens(uid):
         return {"ok": False, "why": "Noch kein iPhone hat sich für Meldungen angemeldet. App einmal öffnen."}
     s = settings()
-    nid = _keep(uid, "Spark", "Test-Meldung: Push auf dieses iPhone klappt.", now)
+    import mitteilungen
+    nid = mitteilungen.keep(uid, "Spark", "Test-Meldung: Push auf dieses iPhone klappt.", "test", now=now)
     out = []
     try:
         async with _client() as c:
@@ -414,8 +397,15 @@ async def app_token(request: Request, prof=Depends(own_profile)):
 
 
 @router.get("/api/iphone/note", dependencies=[Depends(assistant)])
-def app_note(id: str = "", prof=Depends(own_profile)):
-    item = note(prof["id"], id)
+def app_note(request: Request, id: str = "", tapped: int = 0, prof=Depends(own_profile)):
+    """The text of a note for the banner (notification extension), and with tapped=1 the note the person tapped,
+    with its card's target (mitteilungen.ziel)."""
+    import mitteilungen
+    if tapped:
+        import guard
+        guard.limit(request, "mitteilung", prof["id"])
+        return mitteilungen.opened(prof["id"], id, "app")
+    item = mitteilungen.get(prof["id"], id)
     if not item:
         raise HTTPException(404, "gone")
     return {"title": item["title"], "body": item["body"]}

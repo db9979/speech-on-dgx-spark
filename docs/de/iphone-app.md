@@ -173,7 +173,7 @@ Braucht das Apple Developer Program. Einmalig:
 3. Profil: nichts zu tun, „Meldungen aufs iPhone“ ist von Anfang an an. Abschalten lässt es sich unter **Ich → iPhone-App → „Meldungen aufs iPhone“**.
 4. App einmal öffnen und Mitteilungen erlauben. Dann im Panel **„Test-Meldung schicken“**.
 
-Was dann kommt: Erinnerungen und Timer (auch die im Panel oder am Lautsprecher gesetzten), Morgenrunde, Hinweise von selbst, Gedächtnis-Aufräumen. Über Apple geht nur „Neue Nachricht vom Spark“; der Text bleibt 24 Stunden auf dem Spark, die App holt ihn mit ihrem Schlüssel und zeigt ihn im Banner. Ist der Spark gerade nicht erreichbar, bleibt es bei „Neue Nachricht“. Mit Push klingeln Erinnerungen nicht mehr doppelt (die App legt dann keine eigenen Wecker mehr an). Höchstens 30 Meldungen pro Stunde und Profil.
+Was dann kommt: Erinnerungen und Timer (auch die im Panel oder am Lautsprecher gesetzten), Morgenrunde, Hinweise von selbst, Gedächtnis-Aufräumen. Über Apple geht nur „Neue Nachricht vom Spark“; der Text bleibt 24 Stunden auf dem Spark, die App holt ihn mit ihrem Schlüssel und zeigt ihn im Banner. Ist der Spark gerade nicht erreichbar, bleibt es bei „Neue Nachricht“. Antippen öffnet die App mit der Mitteilung als Karte über dem Gespräch: ganzer Text, Zeit und der passende Knopf (Offen-Karte, Chat öffnen, Mail lesen, Code kopieren oder der Weg im Text); ist sie älter als einen Tag, sagt die Karte das (V01.0.960). Mit Push klingeln Erinnerungen nicht mehr doppelt (die App legt dann keine eigenen Wecker mehr an). Höchstens 30 Meldungen pro Stunde und Profil.
 
 Test sagt **BadDeviceToken**: „Entwicklung“ und „Produktion“ vertauscht. **InvalidProviderToken**: Key ID oder Team ID passen nicht zum Schlüssel. **TopicDisallowed**: Bundle-ID passt nicht.
 
@@ -251,7 +251,7 @@ Schritt für Schritt (TestFlight für dich und die Familie, App Store): [iphone-
 | `GET /api/chats/stream` | App: Chat-Ereignisse live, darunter die Anruf-Signale |
 | `GET/POST /api/chats/keys`, `POST /api/chats/keys/remove\|private`, `GET/POST /api/chats/share`, `POST /api/chats/share/done` | App: eigener Schlüssel für private Chats, privaten Chat beginnen, Verlauf an ein neues Gerät |
 | `POST /api/anrufe/start\|answer\|signal\|end`, `GET /api/anrufe/ice\|info` | App: Anruf starten, annehmen, Signale tauschen, beenden; Zugang zum Vermittler; wer anruft |
-| `GET /api/iphone/note?id=…` | App (Mitteilungs-Erweiterung): Text einer Push-Meldung holen |
+| `GET /api/iphone/note?id=…` | App (Mitteilungs-Erweiterung): Text einer Push-Meldung holen; mit `tapped=1` die angetippte Meldung mit dem Ziel ihrer Karte |
 | `POST /api/profile/iphone/push-test` | Browser-Anmeldung: Test-Meldung an die eigenen iPhones |
 | `GET/PUT /api/profile/convos` | App: Verlauf lesen und das laufende Gespräch speichern (Löschen nur im Panel) |
 | `GET/PUT /api/iphone/settings` | App: „Mein Profil“, nur die Felder aus `iphone.APP_FIELDS` |

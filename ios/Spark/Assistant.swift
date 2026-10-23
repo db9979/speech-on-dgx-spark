@@ -126,6 +126,8 @@ final class Conversation: ObservableObject {
     @Published var phase: Phase = .idle
     @Published var error: String? { didSet { if error != nil { errorAt = Date() } } }
     @Published var notice: String?
+    /// Mitteilung antippen (mitteilungen.py): the tapped note as a card above the conversation, until it is closed
+    @Published var tapped: Mitteilung?
     @Published var level: Float = 0
     @Published var offer: PhoneAction.Offer?
     @Published var allowed = Allowed() {
@@ -1149,6 +1151,13 @@ final class Conversation: ObservableObject {
         listen(preroll: 0, fromWake: false)
     }
 
+    /// A tapped notification: its note from the Spark (only its number came through Apple), shown above the
+    /// conversation with the button that fits it. A note older than a day says so instead of an empty screen.
+    func openNote(_ id: String) {
+        guard id.range(of: "^[0-9a-f]{16}$", options: .regularExpression) != nil, let api = SparkAPI.current else { return }
+        Task { tapped = await api.mitteilung(id) ?? Mitteilung.gone(id) }
+    }
+
     /// „Letzte Antwort wiederholen“ (CarPlay, Dominik 2026-10-20 „4a“): the newest answer once more in the Spark's voice.
     /// False when there is none yet.
     func repeatLast() -> Bool {
@@ -1203,10 +1212,15 @@ final class Relay: NSObject, UNUserNotificationCenterDelegate {
             [UNNotificationCategory(identifier: "spark.code", actions: [copy], intentIdentifiers: [], options: [])])
     }
 
+    /// A tapped note opens as a card above the conversation (Mitteilung antippen, mitteilungen.py).
     /// A tapped note about a Vorgang counts as seen on every device (Meldung ans genutzte Gerät, zustellung.py).
     /// A note with a code (Bestätigungscodes): „Code kopieren“ or a tap puts it on the clipboard for 3 minutes.
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse,
                                 withCompletionHandler done: @escaping () -> Void) {
+        if response.actionIdentifier == UNNotificationDefaultActionIdentifier,
+           let n = response.notification.request.content.userInfo["n"] as? String {
+            Task { @MainActor in Conversation.shared.openNote(n) }
+        }
         if let code = response.notification.request.content.userInfo["copy"] as? String,
            code.range(of: "^[A-Z0-9]{4,8}$", options: .regularExpression) != nil,
            [UNNotificationDefaultActionIdentifier, "copy"].contains(response.actionIdentifier) {

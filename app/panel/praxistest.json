@@ -2795,6 +2795,13 @@
 "titel": "Dungeon-Master: Stimme aus einer Beschreibung",
 "text": "A: Einstellungen → Sprachausgabe → „VoiceDesign zusätzlich bereitstellen“ an, warten bis die zweite Engine bereit ist. B: Am Tisch im eigenen Bogen „oder beschreiben“: „tiefe, raue Zwergenstimme“, „▶ Probe“ spricht in dieser Stimme. C: Aktion mit wörtlicher Rede: beim Vorlesen spricht die beschriebene Stimme. D: VoiceDesign wieder aus: die gewählte Stimme oder der Erzähler spricht.",
 "thread": "KI-Dungeon-Master für bis zu 5 Spieler"
+},
+{
+"id": "P424",
+"v": 960,
+"titel": "Mitteilung antippen öffnet die Meldung",
+"text": "A: iPhone: eine Mitteilung des Spark (z. B. Erinnerung in 1 Minute) bei geschlossener App antippen: die App zeigt die Mitteilung als Karte oben im Gespräch, mit Zeit und ganzem Text; ✕ schließt sie. B: Eine Mitteilung mit Weg (z. B. „Lied fertig … Ich → Musik“): Knopf „Öffnen: Ich → Musik“ führt dorthin. C: Chat-Nachricht antippen: „Chat öffnen“ öffnet genau diesen Chat. D: Android-App und Browser: Mitteilung antippen zeigt dieselbe Karte über dem Assistenten. E: Begleiter auf dem Mac: Klick auf die Mitteilung öffnet das Panel mit der Karte.",
+"thread": "Mitteilung öffnet genau die Meldung"
 }
 ]
 }

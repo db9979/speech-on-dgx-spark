@@ -210,6 +210,7 @@ MODULE = {
     "apns": ("geraete", "Mitteilungen an die iPhone-App"),
     "push": ("geraete", "Web-Push für Erinnerungen"),
     "zustellung": ("geraete", "Mitteilung ans genutzte Gerät: Geräte sagen „gerade benutzt“, sonst die Handy-App"),
+    "mitteilungen": ("geraete", "Mitteilung antippen: die Meldung einen Tag mit Nummer, als Karte über dem Gespräch"),
     "appupdate": ("geraete", "Spark-Update aus der iPhone-App"),
     "pruefzugang": ("geraete", "Prüfzugang für die iPhone-App: Code für Apples Prüfung, was er sperrt, Löschen mit den iPhones"),
     "appmerken": ("geraete", "Apps merken sich den letzten Stand: ob eine App ihn behalten darf, langsame Seiten ins Log"),
