@@ -187,6 +187,7 @@
     "musik_bearbeiten": false,
     "dungeon": false,
     "dungeon_bilder": false,
+    "dungeon_gast": false,
     "remarkable": false,
     "remarkable_send": false,
     "remarkable_fresh": false,

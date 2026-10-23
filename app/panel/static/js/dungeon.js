@@ -5,7 +5,7 @@
 // signed-in profile with „Mit meinem Profil“. Every value comes from the panel; names, actions and the narration are
 // only ever text (esc), never markup. Funktionen → KI-Dungeon-Master, button „Regeln anpassen“, is the admin's rules editor.
 const DM={on:false,data:null,rid:'',v:null,seq:0,busy:false,msg:'',err:false,made:null,at:0,ende:false,form:{},edit:'',kap:false};
-const DG={code:'',v:null,info:null,busy:false,msg:'',err:false,at:0,figur:''};
+const DG={code:'',v:null,info:null,busy:false,msg:'',err:false,at:0,figur:'',konto:{tok:'',v:null,step:'',adr:'',msg:'',err:false,gebunden:false}};
 // read aloud (the last turn's WAV, the host's device plays it by itself) and the microphone of a seat
 const DMA={p:{n:null,el:null,url:''},g:{n:null,el:null,url:''},rec:null,parts:[],mode:'',t0:0,voll:false,hilfe:null,modus:''};
 // the short guide for players at the table: opens by itself once on this device, then by its button
@@ -71,6 +71,17 @@ const dmMsg=S=>`<div class="dmmsg ${S.err?'err':'mut'}" role="status">${esc(S.ms
 // a refusal of the panel as a sentence with what to do: the reason word of the rule (dungeon._http, one per raise in
 // dungeon*.py, test_dungeon checks every one has its sentence) or the coarse word
 const DMGRUND={
+  'adresse':['Diese E-Mail-Adresse passt nicht. Prüfe sie, beim Einschalten der Zug-Mails muss es die Adresse deines Gast-Kontos sein.','This e-mail address does not fit. Check it; for turn mails it must be the address of your guest account.'],
+  'code':['Der Code passt nicht oder ist abgelaufen. Fordere einen neuen an.','The code does not fit or has expired. Ask for a new one.'],
+  'konto':['Dein Gast-Konto ist auf diesem Gerät nicht mehr angemeldet. Melde dich mit deiner Adresse neu an.','Your guest account is no longer signed in on this device. Sign in again with your address.'],
+  'codes':['Für diese Adresse kamen in der letzten Stunde schon genug Codes. Nimm den letzten oder warte eine Stunde.','Enough codes went to this address in the last hour. Use the last one or wait an hour.'],
+  'mails':['Der Spark hat heute schon so viele Mails fürs Spiel geschickt, wie gehen. Morgen klappt es wieder.','The Spark has sent as many game mails today as allowed. It works again tomorrow.'],
+  'konten':['Auf diesem Spark gibt es schon so viele Gast-Konten, wie gehen.','This Spark already has as many guest accounts as allowed.'],
+  'postfach':['Für Gast-Mails ist noch kein Postfach gewählt. Bitte den Gastgeber, das beim Admin einzurichten.','No mailbox is chosen for guest mails yet. Ask the host to have the admin set it up.'],
+  'mail':['Die Mail ging gerade nicht raus. Probiere es gleich noch einmal.','The mail did not go out right now. Try again shortly.'],
+  'notaus':['Der Spark hält gerade alle Aktionen an (Notaus).','The Spark holds every action right now (emergency stop).'],
+  'profil':['Du spielst mit deinem Profil, deine Helden bleiben dort.','You play with your profile, your heroes stay there.'],
+  'aus':['Gast-Konten sind auf diesem Spark gerade aus.','Guest accounts are switched off on this Spark right now.'],
   'held spielt':['Dieser Held spielt gerade in einer anderen Runde. Beende sie dort oder wähle einen anderen Helden.','This hero is playing in another round right now. End it there or pick another hero.'],
   'besetzt':['Dieser Platz ist schon besetzt, oder du sitzt schon an diesem Tisch.','This seat is taken already, or you already sit at this table.'],
   'runden':['Du hast schon so viele offene Runden, wie gehen. Beende eine alte Runde, dann klappt es.','You already have as many open rounds as allowed. End an old round, then it works.'],
@@ -546,14 +557,52 @@ function dgForm(){const I=DG.info,box=dgBox(),w=I.wahl;let name='';try{name=loca
     <div class="mut">${I.spieler} ${esc(t('von','of'))} ${I.max} ${esc(t('Plätzen','seats'))} · ${esc(t('gilt bis ','until '))}${esc(dmWhen(I.until))}</div>
     ${DM.on?`<div class="lseg dm-seg dgf-wie"><button type="button" class="on" data-dgwie="p">${esc(t('Mit meinem Profil','With my profile'))}</button><button type="button" data-dgwie="g">${esc(t('Als Gast','As a guest'))}</button></div>`:''}
     ${(I.kampagne_helden||[]).length?`<label>${esc(t('Deine Figur aus dem letzten Kapitel','Your character from the last chapter'))}</label><select class="dgf-kamp"><option value="">${esc(t('Keine, eine neue Figur','None, a new character'))}</option>${I.kampagne_helden.map(h=>`<option value="${esc(h.hid)}">${esc(h.name)} · ${esc(h.klasse)} · ${esc(t('Stufe','level'))} ${h.stufe}</option>`).join('')}</select>`:''}
+    ${I.gastkonto?`<div class="dg-konto" data-wo="form">${dgKontoHtml('form')}</div>`:''}
     <div class="dgf-body">${dmHeroForm(w,DM.on?mine:[],'dgf-')}</div>
     ${`<details class="adv"><summary>${esc(t('Ich habe einen Figur-Code','I have a hero code'))}</summary><input class="dgf-figur" maxlength="32" autocomplete="off" aria-label="${esc(t('Figur-Code','Hero code'))}"></details>`}
     <div class="row joinfoot"><button class="b p" type="button" data-dgjoin="1">${esc(t('Mitspielen','Join'))}</button></div>
     <small class="mut">${esc(DM.on?t('Mit deinem Profil behält dein Held Stufe und Beute. Als Gast speichert der Spark nur Name und Figur in dieser Runde.','With your profile your hero keeps level and loot. As a guest the Spark keeps only name and character in this round.'):t('Kein Konto, keine PIN. Der Spark speichert nur Spielname und Figur in dieser Runde, bis sie endet.','No account, no PIN. The Spark keeps only the name and character in this round until it ends.'))}</small>
     ${dmMsg(DG)}</div>`;
   dmLook(box.querySelector('.dm-invite'),dmWelt(w,I.welt).farben);
-  const n=box.querySelector('.dgf-name');if(n&&!n.value)n.value=name;if(n)n.focus()}
-function dgDraw(){const box=dgBox();if(!DG.v)return;let w=box.querySelector('.dm');if(!w){box.innerHTML=DGHEAD+'<div class="dm"></div>';w=box.querySelector('.dm')}dmTable(w,DG.v,'g')}
+  const n=box.querySelector('.dgf-name');if(n&&!n.value)n.value=name;if(n)n.focus();if(I.gastkonto)dgKontoLoad()}
+function dgDraw(){const box=dgBox();if(!DG.v)return;let w=box.querySelector('.dm');if(!w){box.innerHTML=DGHEAD+'<div class="dm"></div><div class="dg-konto" data-wo="tisch"></div>';w=box.querySelector('.dm')}dmTable(w,DG.v,'g');
+  const k=box.querySelector('.dg-konto[data-wo="tisch"]');if(k){if(DG.v.gastkonto){if(!k.dataset.on){k.dataset.on='1';dgKontoLoad()}else k.innerHTML=dgKontoHtml('tisch')}else k.innerHTML=''}}
+// the guest account (dungeon_gast.py): an address gets a 6-digit code, the code a token for this device (localStorage);
+// with it the guest keeps up to 8 heroes, takes them into new rounds and may get „Du bist dran“ by mail
+function dgTok(v){try{if(v===undefined)return localStorage.getItem('dgkonto')||'';if(v)localStorage.setItem('dgkonto',v);else localStorage.removeItem('dgkonto')}catch{}return v||''}
+async function dgKontoLoad(){const K=DG.konto;K.tok=dgTok();if(K.tok){try{const d=await dgPub('/api/dungeon/gast',{code:DG.code,was:'konto',token:K.tok});K.v=d.konto;K.gebunden=d.gebunden}catch(e){if(e.message==='konto'){dgTok('');K.tok='';K.v=null}}}if(!DG.v)dgKontoForm();dgKontoPaint()}
+function dgKontoPaint(){document.querySelectorAll('#dgcard .dg-konto').forEach(x=>{if(x.dataset.wo==='form'||DG.v&&DG.v.gastkonto)x.innerHTML=dgKontoHtml(x.dataset.wo)});
+  const f=document.querySelector('#dgcard .dgf-kontoheld');if(f)f.closest('.dgf-kontowahl').hidden=!f.options.length}
+function dgKontoHtml(wo){const K=DG.konto,v=K.v,msg=K.msg?`<div class="dmmsg${K.err?' err':''}">${esc(K.msg)}</div>`:'';
+  if(!K.tok||!v){const pin=K.step==='pin';
+    return `<details class="adv dg-kbox"${pin||K.msg?' open':''}><summary>${esc(t('Gast-Konto mit E-Mail: Helden aufbewahren','Guest account with e-mail: keep your heroes'))}</summary>
+      <small class="mut">${esc(t('Du bekommst einen Code per Mail. Damit bewahrt der Spark bis zu 8 Helden für dich auf, auch auf einem anderen Gerät. Gespeichert wird nur ein Hash deiner Adresse.','You get a code by mail. With it the Spark keeps up to 8 heroes for you, also on another device. Only a hash of your address is stored.'))}</small>
+      <div class="dm-inp"><input type="email" class="dgk-adr" maxlength="254" autocomplete="email" value="${esc(K.adr)}" aria-label="${esc(t('E-Mail-Adresse','E-mail address'))}" placeholder="${esc(t('deine@adresse.de','you@example.com'))}"><button type="button" class="b" data-dgk="code">${esc(pin?t('Neuer Code','New code'):t('Code senden','Send code'))}</button></div>
+      ${pin?`<div class="dm-inp"><input class="dgk-pin" inputmode="numeric" maxlength="6" autocomplete="one-time-code" aria-label="${esc(t('Code aus der Mail','Code from the mail'))}" placeholder="123456"><button type="button" class="b p" data-dgk="anmelden">${esc(t('Anmelden','Sign in'))}</button></div>`:''}${msg}</details>`}
+  const hs=v.helden.map(h=>`<div class="ic-row"><div class="ic-rmid"><span class="ic-t">${esc(h.name)}</span><small class="ic-meta">${esc(h.klasse)} · ${esc(t('Stufe','level'))} ${h.stufe}</small></div><button type="button" class="b danger" data-dgk="held_weg" data-hid="${esc(h.hid)}">${esc(K.weg===h.hid?t('Wirklich?','Really?'):t('Löschen','Delete'))}</button></div>`).join('');
+  const seat=wo==='tisch'&&DG.v&&DG.v.ich;
+  return `<details class="adv dg-kbox"${K.msg?' open':''}><summary>${esc(t('Gast-Konto','Guest account'))} · ${v.helden.length}/${v.helden_max} ${esc(t('Helden','heroes'))}</summary>
+    ${seat?(K.gebunden?`<small class="mut">✓ ${esc(t('Dein Held wird in deinem Gast-Konto aufbewahrt.','Your hero is kept in your guest account.'))}</small>`:`<button type="button" class="b p" data-dgk="merken">${esc(t('Diesen Helden aufbewahren','Keep this hero'))}</button>`):''}
+    ${hs?`<div class="ic-list">${hs}</div>`:''}
+    ${v.zugmail?`<div class="row"><small class="mut">${esc(t('„Du bist dran“ kommt per Mail.','"Your turn" comes by mail.'))}</small><button type="button" class="b" data-dgk="zugaus">${esc(t('Ausschalten','Switch off'))}</button></div>`
+      :`<div class="dm-inp"><input type="email" class="dgk-adr" maxlength="254" autocomplete="email" aria-label="${esc(t('E-Mail-Adresse','E-mail address'))}" placeholder="${esc(t('Adresse für „Du bist dran“','Address for "Your turn"'))}"><button type="button" class="b" data-dgk="zugan">${esc(t('Du bist dran per Mail','Your turn by mail'))}</button></div><small class="mut">${esc(t('Dafür bewahrt der Spark deine Adresse versiegelt auf, bis du es ausschaltest.','For this the Spark keeps your address sealed until you switch it off.'))}</small>`}
+    <div class="row"><button type="button" class="b" data-dgk="ab">${esc(t('Auf diesem Gerät abmelden','Sign out on this device'))}</button><button type="button" class="b danger" data-dgk="loeschen">${esc(K.weg==='*'?t('Wirklich alles löschen?','Really delete everything?'):t('Gast-Konto löschen','Delete guest account'))}</button></div>${msg}</details>`}
+document.body.addEventListener('click',async e=>{const b=e.target.closest('#dgcard [data-dgk]');if(!b)return;const K=DG.konto,k=b.dataset.dgk,box=b.closest('.dg-konto');
+  const adr=((box&&box.querySelector('.dgk-adr'))||{}).value||'';K.msg='';K.err=false;
+  const call=async body=>{b.disabled=true;try{return await dgPub('/api/dungeon/gast',Object.assign({code:DG.code,token:K.tok},body))}catch(x){K.msg=dgErr(x);K.err=true;return null}finally{b.disabled=false}};
+  if(k==='ab'){dgTok('');K.tok='';K.v=null;K.step='';dgKontoPaint();return}
+  if(k==='held_weg'&&K.weg!==b.dataset.hid){K.weg=b.dataset.hid;dgKontoPaint();return}
+  if(k==='loeschen'&&K.weg!=='*'){K.weg='*';dgKontoPaint();return}
+  K.weg='';let d=null;
+  if(k==='code'){K.adr=adr.trim();d=await call({was:'code',adresse:K.adr});if(d){K.step='pin';K.msg=t('Der Code ist unterwegs. Schau in dein Postfach.','The code is on its way. Check your mailbox.')}}
+  else if(k==='anmelden'){const pin=((box&&box.querySelector('.dgk-pin'))||{}).value||'';d=await call({was:'anmelden',adresse:K.adr,pin:pin.trim()});if(d){K.tok=dgTok(d.token);K.v=d.konto;K.gebunden=d.gebunden;K.step=''}}
+  else if(k==='loeschen'){d=await call({was:'loeschen'});if(d){dgTok('');K.tok='';K.v=null;K.msg=t('Dein Gast-Konto ist gelöscht.','Your guest account is deleted.')}}
+  else{d=await call(k==='zugan'?{was:'zugmail',an:true,adresse:adr.trim()}:k==='zugaus'?{was:'zugmail',an:false}:k==='merken'?{was:'merken'}:{was:'held_weg',hid:b.dataset.hid});if(d){K.v=d.konto;K.gebunden=d.gebunden}}
+  if(!DG.v&&DG.info)dgKontoForm();dgKontoPaint()});
+// the join form: the account's heroes to pick instead of a new one
+function dgKontoForm(){const box=$('dgcard'),body=box&&box.querySelector('.dgf-body'),K=DG.konto;if(!body)return;let s=box.querySelector('.dgf-kontowahl');
+  const hs=K.v?K.v.helden:[];if(!s){s=document.createElement('div');s.className='dgf-kontowahl';body.parentNode.insertBefore(s,body)}
+  s.hidden=!hs.length;s.innerHTML=hs.length?`<label>${esc(t('Held aus deinem Gast-Konto','Hero from your guest account'))}</label><select class="dgf-kontoheld"><option value="">${esc(t('Keiner, eine neue Figur','None, a new character'))}</option>${hs.map(h=>`<option value="${esc(h.hid)}">${esc(h.name)} · ${esc(h.klasse)} · ${esc(t('Stufe','level'))} ${h.stufe}</option>`).join('')}</select>`:''}
 async function dgAct(path,b){if(DG.busy)return;DG.busy=true;
   try{DG.v=await dgPub(path,Object.assign({code:DG.code},b));DG.at=Date.now();DG.msg='';DG.err=false;dgDraw()}catch(e){dmSay(DG,dgErr(e),true)}DG.busy=false}
 document.body.addEventListener('click',async e=>{const b=e.target.closest('#dgcard [data-dgleave],#dgcard [data-dgjoin],#dgcard [data-dgwie],#dgcard [data-dmsend],#dgcard [data-dmhero],#dgcard [data-dmfigur],#dgcard [data-dmtx],#dgcard [data-dmhear],#dgcard [data-dmvoll],#dgcard [data-dmhilfe],#dgcard [data-dmprobe],#dgcard [data-dmmic],#dgcard [data-dmportraet]');if(!b)return;
@@ -568,6 +617,8 @@ document.body.addEventListener('click',async e=>{const b=e.target.closest('#dgca
     box.querySelector('.dgf-body').innerHTML=dmHeroForm(DG.info.wahl,B.dgwie==='p'&&DM.data?DM.data.helden:[],'dgf-');return}
   if(B.dgjoin){const wie=(box.querySelector('.dgf-wie .on')||{dataset:{dgwie:'g'}}).dataset.dgwie,held=dmHeroBody(box,'dgf-');
     const fig=((box.querySelector('.dgf-figur')||{}).value||'').trim(),kamp=wie==='g'&&((box.querySelector('.dgf-kamp')||{}).value||'');
+    const kh=wie==='g'&&((box.querySelector('.dgf-kontoheld')||{}).value||'');
+    if(kh){b.disabled=true;try{DG.v=await dgPub('/api/dungeon/beitreten',{code:DG.code,konto:DG.konto.tok,konto_held:kh});DG.at=Date.now();dgDraw()}catch(e){dmSay(DG,dgErr(e),true);b.disabled=false}return}
     if(kamp){b.disabled=true;try{DG.v=await dgPub('/api/dungeon/beitreten',{code:DG.code,kampagne:kamp});DG.at=Date.now();dgDraw()}catch(e){dmSay(DG,dgErr(e),true);b.disabled=false}return}
     if(!fig&&typeof held==='object'){if(held.name.length<2){dmSay(DG,t('Bitte gib deiner Figur einen Namen.','Please name your character.'),true);return}try{localStorage.setItem('dgname',held.name)}catch{}}
     b.disabled=true;
@@ -590,6 +641,11 @@ async function dmRules(){let m=$('dmadm');if(!m){m=document.createElement('div')
   m.style.display='grid';const c=$('dmadmcard');c.innerHTML=`<div class="mut">${esc(t('Lade die Regeln …','Loading the rules …'))}</div>`;
   DMP.g=null;const {r,d}=await apiTry('/api/admin/dungeon?lang='+dmLang());if(!r.ok){c.innerHTML=`<div class="err">${esc(dmErr(r.status,d.detail))}</div>`;return}
   try{DMA.voices=((await (await api('/api/tts/voices')).json()).voices||[]).filter(x=>typeof x==='string')}catch{DMA.voices=[]}dmRulesDraw(d,'')}
+// „Gäste mit E-Mail“ (dungeon_gast.py): the mailbox the codes and „Du bist dran“ go from, and the numbers
+function dmGastAdm(g){if(!g||!g.an)return '';
+  return `<h3 class="sec">${esc(t('Gäste mit E-Mail','Guests with e-mail'))}</h3><div class="pintro">${esc(t('Gäste bekommen einen Code und auf Wunsch „Du bist dran“ von diesem Postfach. Der Spark speichert nur einen Hash der Adresse, die Adresse selbst nur versiegelt, wenn ein Gast Zug-Mails will.','Guests get a code and, if they want, "Your turn" from this mailbox. The Spark keeps only a hash of the address, the address itself only sealed when a guest wants turn mails.'))}</div>
+    <div class="row"><select id="dmgastpf" aria-label="${esc(t('Postfach','Mailbox'))}"><option value="">${esc(t('Kein Postfach','No mailbox'))}</option>${g.postfaecher.map(x=>`<option value="${esc(x.k)}"${x.k===g.absender?' selected':''}>${esc(x.name)}</option>`).join('')}</select><button type="button" class="b" data-dmadm="mailpf">${esc(t('Sichern','Save'))}</button></div>
+    <div class="dm-sum"><span class="pill${g.bereit?' ok':' warn'}">${esc(g.bereit?t('bereit','ready'):t('kein Postfach mit Ausgangsserver','no mailbox with outgoing server'))}</span> <span class="pill">${esc(t('Gast-Konten','Guest accounts'))} ${g.konten}</span> <span class="pill">${esc(t('mit Zug-Mail','with turn mail'))} ${g.zugmail}</span> <span class="pill">${esc(t('Helden','heroes'))} ${g.helden}</span> <span class="pill">${esc(t('Mails heute','mails today'))} ${g.mails_heute}</span></div>`}
 function dmRulesDraw(d,err){const c=$('dmadmcard'),S=d.summe,txt=JSON.stringify(d.eigene||{},null,2);DMP.d=d;
   if(DMP.g){c.innerHTML=dmPlanForm(d);return}
   const names={welten:t('Welten','Worlds'),toene:t('Töne','Tones'),voelker:t('Völker','Peoples'),klassen:t('Klassen','Classes'),faehigkeiten:t('Fähigkeiten','Abilities'),gegenstaende:t('Gegenstände','Items'),seltenheit:t('Seltenheiten','Rarities'),effekte:t('Effekte','Effects'),werte:t('Werte','Values')};
@@ -603,10 +659,12 @@ function dmRulesDraw(d,err){const c=$('dmadmcard'),S=d.summe,txt=JSON.stringify(
     <label for="dmadmtxt">${esc(t('Deine Ergänzungen (JSON)','Your additions (JSON)'))}</label><textarea id="dmadmtxt" rows="14" data-fest spellcheck="false" class="mono">${esc(txt)}</textarea>
     ${err?`<div class="err dm-adm-err">${err}</div>`:''}
     <details class="adv"><summary>${esc(t('Mitgelieferte Regeln ansehen (zum Kopieren)','See the shipped rules (to copy)'))}</summary><pre class="dm-pre">${esc(JSON.stringify(d.standard,null,2))}</pre></details>
-    <div class="row"><button type="button" class="b p" data-dmadm="save">${esc(t('Prüfen und speichern','Check and save'))}</button><button type="button" class="b" data-dmadm="reset">${esc(t('Zurück auf Standard','Back to default'))}</button><button type="button" class="b" data-dmadm="close">${esc(t('Schließen','Close'))}</button></div>${dmDingAdmin(d.dingbilder)}<div id="dmmusikadm"></div>`;if(window.dmMusikAdm)dmMusikAdm()}
+    <div class="row"><button type="button" class="b p" data-dmadm="save">${esc(t('Prüfen und speichern','Check and save'))}</button><button type="button" class="b" data-dmadm="reset">${esc(t('Zurück auf Standard','Back to default'))}</button><button type="button" class="b" data-dmadm="close">${esc(t('Schließen','Close'))}</button></div>${dmDingAdmin(d.dingbilder)}${dmGastAdm(d.gastmail)}<div id="dmmusikadm"></div>`;if(window.dmMusikAdm)dmMusikAdm()}
 document.body.addEventListener('click',async e=>{if(e.target.closest('#dmrules')){dmRules();return}
   const b=e.target.closest('#dmadmcard [data-dmadm]');if(!b)return;const k=b.dataset.dmadm;
   if(k==='close'){$('dmadm').style.display='none';return}
+  if(k==='mailpf'){const {r,d}=await apiTry('/api/admin/dungeon/gastmail',xjson('PUT',{absender:$('dmgastpf').value}));
+    if(r.ok)dmRulesDraw(d,'');else dmRulesDraw(DMP.d,esc(dmErr(r.status,d.detail)));return}
   if(k[0]==='g'){await dmPlanClick(b,k);return}
   if(k==='reset'){if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent=t('Wirklich auf Standard?','Really back to default?');return}
     const {r,d}=await apiTry('/api/admin/dungeon',{method:'DELETE'});if(r.ok)dmRulesDraw(d,'');return}

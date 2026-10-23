@@ -303,6 +303,7 @@ ADMIN_ON_OK = {
     "dungeon_dingbild.py:status": "the admin's page: Spark-wide switch and numbers",
     "dungeon_dingbild.py:for_live": "Zustand → Live: Spark-wide flag beside numbers",
     "dungeon.py:due_once": "the minute loop: Spark-wide flag before any round is read; send_notes asks features.allowed dungeon for every profile it notes",
+    "dungeon_gast.py:on": "a guest account has no profile: Spark-wide door; a seat reaches a round only through dungeon.py, which asks features.allowed dungeon for its host",
     "dungeon.py:_door": "a guest seat has no profile: Spark-wide door before the code is known; find() then asks features.allowed dungeon for the host",
     "mitschreiblink.py:for_live": "Zustand → Live: Spark-wide flag beside a number; each link asks features.allowed listlink for its owner",
     "mitschreiblink.py:_door": "the visitor has no profile: Spark-wide door before the code is known; find() then asks features.allowed listlink for the owner",

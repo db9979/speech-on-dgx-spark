@@ -44,6 +44,7 @@ import panel  # noqa: E402
 import guard  # noqa: E402
 import dungeon  # noqa: E402
 import dungeon_karte  # noqa: E402
+import dungeon_gast  # noqa: E402
 REAL_ASK = dungeon.ask_model                    # Base swaps in a fake; the sampling test needs the real one
 from fastapi.testclient import TestClient  # noqa: E402
 
@@ -2155,7 +2156,8 @@ class SrdLayer(Base):
         self.old = dungeon.SRD
         dungeon.SRD = os.path.join(helpers.tmpdir() if hasattr(helpers, "tmpdir") else os.path.dirname(dungeon.FILE), "srd-test.json")
         self.addCleanup(self.undo)
-        base = json.load(open(dungeon.DATA))
+        with open(dungeon.DATA) as f:
+            base = json.load(f)
         sword = next(x for x in base["gegenstaende"] if x["id"] == "schwert")
         ring = next(x for x in base["gegenstaende"] if x["art"] == "schmuck")
         self.srd = {
@@ -2346,6 +2348,118 @@ class Powers(Base):
         rd = self.act("Ich wirke Licht.")                       # a cantrip: any time
         self.assertEqual(rd["offen"][self.gp].get("kraft"), "lichtzauber")
         self.assertIn("zauber", {e["art"] for e in self.state(self.rid)["log"]})
+
+
+class GuestMail(Base):
+    """Gäste mit E-Mail (dungeon_gast): a 6-digit code from the admin's mailbox, a guest account with up to 8 heroes,
+    only a hash of the address, the address sealed only for „Du bist dran“ by mail, every limit by fixed rules."""
+    ADR = "Bela.Gast@Example.ORG"
+
+    def setUp(self):
+        super().setUp()
+        helpers.set_config(dungeon=True, dungeon_gast=True)
+        if os.path.exists(dungeon_gast.FILE):
+            os.remove(dungeon_gast.FILE)
+        self.addCleanup(lambda: os.path.exists(dungeon_gast.FILE) and os.remove(dungeon_gast.FILE))
+        self.addCleanup(helpers.set_config, dungeon_gast=False)
+        self.sent = []
+        old_send, old_sender = dungeon_gast._send, dungeon_gast.sender
+        dungeon_gast._send = lambda to, kind, lang, **kw: self.sent.append((to, kind, kw))
+        dungeon_gast.sender = lambda: ("u", {"user": "spiel@example.org"})
+        self.addCleanup(setattr, dungeon_gast, "_send", old_send)
+        self.addCleanup(setattr, dungeon_gast, "sender", old_sender)
+        for k in [k for k in guard._rate if str(k[0]).startswith("dungeon")]:
+            guard._rate.pop(k, None)
+        v = self.new_round()
+        self.rid, self.host = v["rid"], v["pid"]
+        self.code, self.gp = self.guest(self.rid)
+
+    def gast(self, **b):
+        return self.v.post("/api/dungeon/gast", json=dict(b, code=self.code))
+
+    def raw(self):
+        with open(dungeon_gast.FILE) as f:
+            return f.read().lower()
+
+    def sign_in(self, adr=None):
+        self.assertEqual(self.gast(was="code", adresse=adr or self.ADR).status_code, 200)
+        pin = self.sent[-1][2]["pin"]
+        r = self.gast(was="anmelden", adresse=adr or self.ADR, pin=pin)
+        self.assertEqual(r.status_code, 200, r.text)
+        return r.json()
+
+    def test_code_account_and_only_a_hash(self):
+        self.assertEqual(self.gast(was="code", adresse="keine adresse").json()["detail"], "adresse")
+        self.assertEqual(self.gast(was="code", adresse=self.ADR).status_code, 200)
+        to, kind, kw = self.sent[-1]
+        self.assertEqual((to, kind), ("Bela.Gast@example.org", "code"))
+        self.assertRegex(kw["pin"], r"^[0-9]{6}$")
+        wrong = "000000" if kw["pin"] != "000000" else "111111"
+        self.assertEqual(self.gast(was="anmelden", adresse=self.ADR, pin=wrong).json()["detail"], "code")
+        d = self.gast(was="anmelden", adresse=self.ADR, pin=kw["pin"]).json()
+        self.assertTrue(d["gebunden"])                              # the seat's hero went into the account
+        self.assertEqual([h["name"] for h in d["konto"]["helden"]], ["Bela"])
+        self.assertEqual(self.gast(was="anmelden", adresse=self.ADR, pin=kw["pin"]).json()["detail"], "code")   # once
+        raw = self.raw()
+        self.assertNotIn("bela.gast", raw)                          # never the address itself
+        self.assertNotIn(kw["pin"], raw)
+        self.assertNotIn(d["token"], raw)
+        self.assertEqual(self.gast(was="konto", token="x" * 43).json()["detail"], "konto")
+        self.assertEqual(self.gast(was="konto", token=d["token"]).json()["konto"]["helden_max"], dungeon_gast.HELDEN_MAX)
+        self.assertEqual(self.c.post("/api/dungeon/gast", json={"code": "y" * 32, "was": "konto"}).status_code, 400)
+
+    def test_limits(self):
+        for _ in range(dungeon_gast.PRO_STUNDE):
+            self.assertEqual(self.gast(was="code", adresse=self.ADR).status_code, 200)
+        self.assertEqual(self.gast(was="code", adresse=self.ADR).json()["detail"], "codes")
+        tok = None
+        dungeon_gast.TRIES, old = 2, dungeon_gast.TRIES
+        try:
+            self.gast(was="code", adresse="b@example.org")
+            for _ in range(2):
+                self.gast(was="anmelden", adresse="b@example.org", pin="999999" if self.sent[-1][2]["pin"] != "999999" else "888888")
+            self.assertEqual(self.gast(was="anmelden", adresse="b@example.org", pin=self.sent[-1][2]["pin"]).json()["detail"], "code")
+        finally:
+            dungeon_gast.TRIES = old
+        self.assertIsNone(tok)
+        helpers.set_config(dungeon=True, dungeon_gast=False)
+        self.assertEqual(self.gast(was="konto", token="x" * 43).status_code, 404)
+
+    def test_turn_mail_sealed_once_per_turn_and_new_round_with_the_hero(self):
+        d = self.sign_in()
+        tok = d["token"]
+        self.assertEqual(self.gast(was="zugmail", token=tok, an=True, adresse="andere@example.org").json()["detail"], "adresse")
+        self.assertTrue(self.gast(was="zugmail", token=tok, an=True, adresse=self.ADR).json()["konto"]["zugmail"])
+        self.assertNotIn("bela.gast", self.raw())                     # sealed
+        rd = self.state(self.rid)
+        now = rd["zug_t"] + dungeon_gast.ZUG_NACH + 5
+        todo = dungeon_gast.due(rd, now, {})
+        self.assertEqual(todo, [(rd["plaetze"][self.gp]["konto"], "Bela")])
+        self.assertEqual(dungeon_gast.due(rd, now, {}), [])          # once per turn
+        dungeon_gast.send_turns(rd, todo, now)
+        self.assertEqual(self.sent[-1][:2], ("Bela.Gast@example.org", "dran"))
+        self.assertEqual(dungeon_gast.due(dict(rd, gastmail={}), now, {self.gp: now}), [])   # at the table: no mail
+        self.assertFalse(self.gast(was="zugmail", token=tok, an=False).json()["konto"]["zugmail"])
+        # the round ends, the hero waits in the account and joins a new round with the same hid
+        hid = self.state(self.rid)["plaetze"][self.gp]["held"]["hid"]
+        self.assertEqual(self.c.delete(f"/api/profile/dungeon/{self.rid}").status_code, 200)
+        v = self.new_round(titel="Zweite Runde")
+        code2 = self.invite(v["rid"])
+        r = self.v.post("/api/dungeon/beitreten", json={"code": code2, "konto": tok, "konto_held": hid})
+        self.assertEqual(r.status_code, 200, r.text)
+        p = self.state(v["rid"])["plaetze"][r.json()["pid"]]
+        self.assertEqual((p["held"]["hid"], bool(p.get("konto"))), (hid, True))
+        self.assertEqual(self.v.post("/api/dungeon/gast", json={"code": code2, "was": "held_weg", "token": tok, "hid": hid}).json()["detail"], "held spielt")
+        self.assertTrue(self.v.post("/api/dungeon/gast", json={"code": code2, "was": "loeschen", "token": tok}).json()["geloescht"])
+        self.assertNotIn("konto", self.state(v["rid"])["plaetze"][r.json()["pid"]])
+        self.assertEqual(dungeon_gast.counts()["konten"], 0)
+
+    def test_admin_mailbox(self):
+        r = ADMIN.put("/api/admin/dungeon/gastmail", json={"absender": "nope/x"})
+        self.assertEqual(r.status_code, 400)
+        self.assertEqual(ADMIN.put("/api/admin/dungeon/gastmail", json={"absender": ""}).status_code, 200)
+        self.assertIn("gastmail", ADMIN.get("/api/admin/dungeon").json())
+        self.assertEqual(self.c.put("/api/admin/dungeon/gastmail", json={"absender": ""}).status_code, 401)
 
 
 @unittest.skipUnless(browser_ok(), "no Playwright/Chromium here")

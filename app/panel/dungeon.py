@@ -108,6 +108,7 @@ import dungeon_karte
 import dungeon_erzaehler as erz
 import dungeon_warten as warten
 import dungeon_stimmen as stimmen
+import dungeon_gast as gastkonto
 import features
 import guard
 import mfa
@@ -1192,6 +1193,17 @@ def _save_heroes(uid, hs):
     write_json(_hfile(uid), {"helden": hs[:HELDEN_MAX]}, mode=0o600)
 
 
+def keep_seat(p, h=None):
+    """A seat's hero into its keeper: the profile's heroes, or the guest account (dungeon_gast) it is bound to."""
+    h = h or p.get("held")
+    if not h:
+        return
+    if p.get("uid"):
+        keep_hero(p["uid"], h)
+    elif p.get("konto"):
+        gastkonto.keep(p["konto"], h)
+
+
 def keep_hero(uid, h):
     """A profile's hero after a turn: its copy in the profile's file (by hid), so a level stays when the round ends."""
     with _lock:
@@ -1262,8 +1274,7 @@ def _end(rd, now, why):
     rd["status"] = "ende"
     rd["ende_t"] = now
     for p in rd["plaetze"].values():
-        if p.get("uid") and p.get("held"):
-            keep_hero(p["uid"], p["held"])
+        keep_seat(p)
     _log(rd, "system", text=["Die Runde ist zu Ende.", "The round has ended."])
     print(f"dungeon: runde ende | {why}", flush=True)
 
@@ -1396,8 +1407,7 @@ def drop_seat(owner, rid, pid):
         if rd["owner"] != owner or not p or p.get("uid") == owner:
             print("dungeon: platz weg | nicht da", flush=True)
             return False
-        if p.get("uid") and p.get("held"):
-            keep_hero(p["uid"], p["held"])
+        keep_seat(p)
         rd["plaetze"].pop(pid)
         rd["offen"].pop(pid, None)
         rd["angebote"] = {k: t for k, t in (rd.get("angebote") or {}).items() if pid not in (t["von"], t["an"])}
@@ -1426,13 +1436,19 @@ def join(rid, pid, b, uid="", now=None):
     """A hero takes a free seat: a new one, a kept one of the profile (uid) or a Figur-Code (guest or profile)."""
     r = rules()
     now = time.time() if now is None else now
-    h = None
+    h, konto = None, ""
     if uid and isinstance(b.get("held"), str):
         h = next((x for x in heroes(uid) if x["hid"] == b["held"]), None)
         if not h:
             raise LookupError("held")
     elif not uid and isinstance(b.get("kampagne"), str):
         h = "kampagne"            # taken under the lock below, so two guests never take the same hero
+    elif not uid and isinstance(b.get("konto_held"), str):
+        kid, _ = gastkonto.account(b.get("konto"))      # a hero of the guest's account (dungeon_gast), the same hid
+        h = fix_hero(r, next((x for x in gastkonto.heroes(kid) if x.get("hid") == b["konto_held"]), None))
+        if not h:
+            raise LookupError("held")
+        konto = kid
     elif b.get("figur"):
         # a guest's saved hero; taken by a profile it stays in that profile's heroes from now on
         h = take_figure(b.get("figur"), now)
@@ -1466,6 +1482,8 @@ def join(rid, pid, b, uid="", now=None):
         p["held"] = h
         if uid:
             p.update(uid=uid, h="", gast=False)
+        elif konto:
+            p["konto"] = konto
         rd["still"][pid] = 0
         _log(rd, "system", text=[f"{h['name']} kommt dazu.", f"{h['name']} joins."])
         _write(d)
@@ -2537,8 +2555,7 @@ async def run_turn(rid, turn):
                 warten.end(cur)
                 _write(d)
                 for p in cur["plaetze"].values():
-                    if p.get("uid") and p.get("held"):
-                        keep_hero(p["uid"], p["held"])
+                    keep_seat(p)
         said, bild, kurz = [], [], []
         await asyncio.to_thread(keep)
         if said:
@@ -3166,8 +3183,7 @@ async def paint_portrait(rid, hid, prompt):
                 _bild_save("held-" + hid, png)
                 p["held"]["bild"] = p["held"]["stufe"]
                 _write(d)
-                if p.get("uid"):
-                    keep_hero(p["uid"], p["held"])
+                keep_seat(p)
                 return True
         if not await asyncio.to_thread(keep):
             why = "runde zu"
@@ -3308,7 +3324,7 @@ async def due_once(now=None):
     if not features.admin_on("dungeon"):
         return
     now = time.time() if now is None else now
-    todo = []
+    todo, post = [], []
 
     def go():
         with _lock:
@@ -3321,6 +3337,10 @@ async def due_once(now=None):
                 if notes:
                     todo.append((copy.deepcopy(rd), notes))
                     changed = True
+                mails = gastkonto.due(rd, now, _seen)
+                if mails:
+                    post.append((copy.deepcopy(rd), mails))
+                    changed = True
             if changed:
                 _write(d)
         for rid in rids:
@@ -3328,6 +3348,8 @@ async def due_once(now=None):
     await asyncio.to_thread(go)
     for rd, notes in todo:
         await send_notes(rd, notes)
+    for rd, mails in post:                       # „Du bist dran“ by mail for guests with an account (dungeon_gast)
+        await asyncio.to_thread(gastkonto.send_turns, rd, mails)
 
 
 def set_date(owner, rid, t, now=None):
@@ -3391,7 +3413,7 @@ def view(rid, pid, now=None):
                             tasche=[] if p_id == pid else [item_view(r, x, lang) for x in p["held"]["tasche"]]))
     left = max(0, int(rd["zug_s"] - (now - rd.get("zug_t", now)))) if rd["offen"] and not rd.get("pause") else rd["zug_s"]
     welt = _by(r, "welten").get(rd["welt"]) or r["welten"][0]
-    out = {"rid": rid, "pid": pid, "titel": rd["titel"], "welt": welt["name"][li], "ton": _ton(r, rd)["name"][li],
+    out = {"rid": rid, "pid": pid, "gastkonto": not me.get("uid") and gastkonto.on(), "im_konto": bool(me.get("konto")), "titel": rd["titel"], "welt": welt["name"][li], "ton": _ton(r, rd)["name"][li],
             "welt_id": welt["id"], "farben": {k: v for k, v in (welt.get("farben") or {}).items() if k in FARBEN},
             "kapitel": rd.get("kapitel", 0), "kapitel_zu": bool(rd.get("kapitel_zu")), "vorlesen": bool(rd.get("vorlesen")),
             "ton_zug": (rd.get("ton_n") or [])[-1:], "liest": rid in _speaking, "hoer_max": HOER_BYTES,
@@ -3529,8 +3551,7 @@ def hero_act(rid, pid, b):
             h["tasche"].remove(it)
             bag_add(r, an["held"], it)
             _log(rd, "system", text=[f"{h['name']} gibt {an['held']['name']} etwas.", f"{h['name']} gives {an['held']['name']} something."])
-            if an.get("uid"):
-                keep_hero(an["uid"], an["held"])
+            keep_seat(an)
         elif was in ("kaufen", "verkaufen", "erkennen"):
             shop(r, rd, pid, h, was, b, it)
         elif was == "aufheben":
@@ -3568,11 +3589,10 @@ def hero_act(rid, pid, b):
             h["wahl"] = []
         elif was in ("tauschen", "annehmen", "ablehnen"):
             other = trade(r, rd, pid, was, b)
-            if other and other.get("uid"):
-                keep_hero(other["uid"], other["held"])
+            if other:
+                keep_seat(other)
         _write(d)
-        if p.get("uid"):
-            keep_hero(p["uid"], h)
+        keep_seat(p, h)
     print(f"dungeon: held | {was}", flush=True)
 
 
@@ -3931,7 +3951,7 @@ def _mine(uid, lang):
             "kampagnen": campaign_view(r, uid, lang), "kampagnen_max": KAMPAGNEN_MAX, "bisher_max": BISHER_MAX}
 
 
-KNOWN = (ValueError, LookupError, OverflowError, FileExistsError, NameError, TimeoutError, PermissionError)
+KNOWN = (ValueError, LookupError, OverflowError, FileExistsError, NameError, TimeoutError, PermissionError, ConnectionError)
 
 
 def _http(e):
@@ -3946,7 +3966,8 @@ def _http(e):
 
 
 _NEIN = {ValueError: (400, "eingabe"), LookupError: (404, "nicht da"), OverflowError: (409, "voll"), FileExistsError: (409, "besetzt"),
-         NameError: (409, "name doppelt"), TimeoutError: (409, "alter zug"), PermissionError: (400, "figur-code")}
+         NameError: (409, "name doppelt"), TimeoutError: (409, "alter zug"), PermissionError: (400, "figur-code"),
+         ConnectionError: (503, "mail")}
 _GRUND = re.compile(r"[a-z]{2,12}( [a-z]{2,12})?")
 
 
@@ -4716,6 +4737,7 @@ async def gast_platz(request: Request):
     out = {"titel": rd["titel"], "von": host.get("name", ""), "frei": not p.get("held"), "until": rd["until"], "welt": rd["welt"],
            "spieler": len(seated(rd)), "max": rules()["grenzen"]["spieler"], "wahl": dict(_choices(rd["lang"], False), bilder_an=pictures_on(rd["owner"])),
            "profil_genommen": bool(p.get("uid")), "kapitel": rd.get("kapitel", 0),
+           "gastkonto": gastkonto.on() and bool(await asyncio.to_thread(gastkonto.sender)),
            "kampagne_helden": [] if p.get("held") else [hero_view(rules(), h, rd["lang"], full=False) for h in
                                                          await asyncio.to_thread(campaign_heroes, rd)]}
     return out
@@ -4775,6 +4797,73 @@ async def gast_figur(request: Request):
     except KNOWN as e:
         raise _http(e)
     return {"figur": code, "tage": FIGUR_TAGE}
+
+
+GASTKONTO_WAS = ("code", "anmelden", "konto", "merken", "zugmail", "held_weg", "loeschen")
+
+
+def guest_account(rid, pid, b):
+    """The guest account at a seat (dungeon_gast, switch „Gäste mit E-Mail“): ask a code, sign in with it (the seat's
+    hero goes into the account), see it, keep the seat's hero, „Du bist dran per Mail“, drop a hero, delete it all."""
+    was = b.get("was")
+    if was not in GASTKONTO_WAS:
+        raise ValueError("was")
+    rd = _round(_read(), rid)
+    p = rd["plaetze"][pid]
+    if p.get("uid"):                                   # a profile's seat keeps its heroes in the profile
+        raise LookupError("profil")
+    if was == "code":
+        gastkonto.ask_code(b.get("adresse"), rd["titel"], rd["lang"])
+        return {"gesendet": True}
+    if was == "anmelden":
+        tok = gastkonto.login(b.get("adresse"), b.get("pin"))
+        kid, k = gastkonto.account(tok)
+        out = {"token": tok}
+    else:
+        kid, k = gastkonto.account(b.get("token"))
+        out = {}
+    if was in ("anmelden", "merken"):
+        with _lock:
+            d = _read()
+            cur = _round(d, rid)
+            q = cur["plaetze"][pid]
+            if q.get("held") and q.get("konto") != kid:
+                if not gastkonto.keep(kid, q["held"]):
+                    raise OverflowError("helden")
+                q["konto"] = kid
+                _write(d)
+    elif was == "zugmail":
+        gastkonto.turn_mail(kid, b.get("an") is True, b.get("adresse", ""))
+    elif was == "held_weg":
+        if p.get("konto") == kid and (p.get("held") or {}).get("hid") == b.get("hid"):
+            raise FileExistsError("held spielt")
+        gastkonto.drop_hero(kid, b.get("hid"))
+    elif was == "loeschen":
+        gastkonto.forget(kid)
+        with _lock:
+            d = _read()
+            for x in d["runden"].values():
+                for q in x["plaetze"].values():
+                    if q.get("konto") == kid:
+                        q.pop("konto")
+            _write(d)
+        return {"geloescht": True}
+    kid, k = gastkonto.account(out.get("token") or b.get("token"))
+    rd = _round(_read(), rid)
+    return dict(out, konto=gastkonto.view(kid, k, rules(), hero_view, rd["lang"]), gebunden=rd["plaetze"][pid].get("konto") == kid)
+
+
+@router.post("/api/dungeon/gast")
+async def gast_konto(request: Request):
+    """{"code", "was", …}: the guest account of this seat (guest_account); only with the switch „Gäste mit E-Mail“."""
+    b, rid, pid = await _guest(request)
+    if not gastkonto.on():
+        raise HTTPException(404, "aus")
+    guard.limit(request, "dungeonkonto")
+    try:
+        return await asyncio.to_thread(guest_account, rid, pid, b)
+    except KNOWN as e:
+        raise _http(e)
 
 
 @router.post("/api/dungeon/ton")
@@ -4904,7 +4993,7 @@ def admin_show(request: Request = None):
             "wahl": _choices(lang), "planer": {"max": GESCHICHTEN_MAX, "akte": AKTE, "zuege": AKT_ZUEGE, "akt_min": AKT_MIN,
                                                "idee": IDEE_MAX, "ziel": ZIEL_MAX, "inhalt": INHALT_MAX, "wende": WENDE_MAX,
                                                "stichworte": STICHWORTE_MAX, "orte": ORTE_MAX, "tabus": TABUS_MAX},
-            "dingbilder": dungeon_dingbild.status(r), "daumen": erz.stats(_me, r)}
+            "dingbilder": dungeon_dingbild.status(r), "daumen": erz.stats(_me, r), "gastmail": gastkonto.admin_view()}
 
 
 @router.put("/api/admin/dungeon", dependencies=[Depends(auth)])
@@ -4949,6 +5038,18 @@ async def admin_geschichte(gid: str, request: Request):
     if errs:
         print(f"dungeon: geschichte abgelehnt | {len(errs)} fehler", flush=True)
         raise HTTPException(422, errs[:20])
+    return admin_show(request)
+
+
+@router.put("/api/admin/dungeon/gastmail", dependencies=[Depends(auth)])
+async def admin_gastmail(request: Request):
+    """{"absender": "<profile id>/<mailbox id>" or ""}: the mailbox the codes and „Du bist dran“ of guests go from."""
+    guard.limit(request, "dungeonkonto", admin=True)
+    b = await json_body(request, 1024)
+    try:
+        await asyncio.to_thread(gastkonto.set_sender, str(b.get("absender") or ""))
+    except KNOWN as e:
+        raise _http(e)
     return admin_show(request)
 
 

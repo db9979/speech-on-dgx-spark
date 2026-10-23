@@ -218,6 +218,16 @@ _seen = {}                        # monitor id -> (last time, address)
 _saved = [0.0]                    # last time live-monitors.json was written for "last seen"
 
 
+def _gastkonten():
+    """„Gäste mit E-Mail“ of the Dungeon-Master (dungeon_gast.counts): numbers only, never an address."""
+    import dungeon_gast
+    if not dungeon_gast.on():
+        return ""
+    c = dungeon_gast.counts()
+    return (f" · {c['konten']} Gast-Konten ({c['zugmail']} mit Zug-Mail, {c['helden']} Helden), heute {c['codes_heute']} Codes, "
+            f"{c['mails_heute']} Mails")
+
+
 def target(name):
     """The target of a tool: from TOOLS, MCP tools (named per service) by their beginning."""
     if name.startswith(("mcp_", "mcpu_")):
@@ -1773,6 +1783,7 @@ def snapshot(view="admin", now=None):
                         + (f" · heute {dgn['geworfen']} Würfe selbst geworfen" if dgn.get("geworfen") else "")
                         + (f" · heute {dgn['kraefte']} Zauber aus Ladungen, {dgn.get('kann_nicht', 0)} unbekannte Kräfte abgewiesen"
                            if dgn.get("kraefte") or dgn.get("kann_nicht") else "")
+                        + _gastkonten()
                         + (f" · {dgn['npc_stimmen']} NSC-Stimmen" if dgn.get("npc_stimmen") else ""))
         if x["id"] == "wkarte":    # Wissenskarte: connections, discarded, documents waiting, profiles, numbers only (never a title)
             x["sub"] = (f"{wkk.get('verbindungen', 0)} Verbindungen · {wkk.get('punkte', 0)} Punkte · {wkk.get('warten', 0)} Dokumente warten"

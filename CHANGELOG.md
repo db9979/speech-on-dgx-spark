@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.981** · 2026-10-23 · KI-Dungeon-Master: Gäste mit E-Mail: 6-stelliger Code vom Postfach des Admins, Gast-Konto mit bis zu 8 Helden auf jedem Gerät, „Du bist dran“ per Mail auf Wunsch, nur ein Hash der Adresse (die Adresse nur versiegelt bei Zug-Mails)
 - **V01.0.980** · 2026-10-23 · KI-Dungeon-Master: großer Katalog aus dem SRD 5.1 (CC-BY-4.0): 162 Gegner, 254 Gegenstände mit 85 Zaubern, Werkzeugen und Schätzen, 17 Zustände, Schwierigkeiten, 15 Hintergründe, 4 Völker, 7 neue Klassen; Startkräfte und Zauberlisten je Klasse mit Ladungen je Stufe
 - **V01.0.979** · 2026-10-23 · KI-Dungeon-Master: Zauber und Kräfte nur, wenn der Held sie kann: Startkräfte je Klasse, Zauber je Grad mit Ladungen je Kapitel, „Das kann ich“ im Bogen, das Panel weist Unbekanntes mit einer Zeile nur für diesen Platz ab
 - **V01.0.978** · 2026-10-23 · KI-Dungeon-Master: Platz für die SRD-Daten: zweite Regeldatei dungeon_srd.json, geprüfte Listen für Gegner, Zustände, Hintergründe, Schwierigkeiten, Zauberladungen und Startkräfte, Schätze zum Verkaufen, feste Seltenheit, Gegenstände nur in ihren Welten, bis zu 500 Einträge je Liste

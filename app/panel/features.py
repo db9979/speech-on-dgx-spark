@@ -251,6 +251,10 @@ FEATURES = (
     # at night or on the admin's button, and named finds; needs „Bilder malen“ of the Spark too
     F("dungeonbilder", "Bilder für Ausrüstung und Zauber", "Pictures for gear and spells", "data", ("dungeon_bilder",),
       parent="dungeon", me="dmbox", guide="dungeonbilder"),
+    # Gäste mit E-Mail (dungeon_gast.py, plan Stufe 3): a guest keeps its heroes in an account after a 6-digit code from
+    # the admin's mailbox, and may get „Du bist dran“ by mail; only a hash of the address, the address sealed on wish
+    F("dungeongast", "Gäste mit E-Mail", "Guests with e-mail", "data", ("dungeon_gast",), parent="dungeon", me="dmbox",
+      guide="dungeongast"),
     F("docbrief", "Steckbrief und Tags", "Document card and tags", "data", ("doc_brief",),
       parent="documents", me="docbox", guide="docbrief"),
     # Suchprüfung (suchpruefung.py, plan suche-schaerfen, Stufe 1): test questions measure how often the search

@@ -194,6 +194,7 @@ ACTION_OK = {
     ("aendern.py", "set_volume"): "volume schreibt „aendern: lautstaerke …“, das Rückgängig answer seine Zeile",
     ("aendern.py", "undo"): "answer schreibt „aendern: rueckgaengig … ok|fehler“",
     ("begleiter.py", "asked"): "startet begleiter.check, das seine Zeile schreibt",
+    ("dungeon_gast.py", "_send"): "ein Helfer: ask_code und send_turns schreiben „dungeon: gastmail | code/dran gesendet“ oder „nicht gesendet“",
     ("begleiter.py", "_send_tool"): "ein Werkzeug: chat.run_tool schreibt „chat: tool pc_send …“",
     ("berater.py", "feedback"): "proactive.deliver schreibt die Zeile",
     ("berater.py", "_notify"): "proactive.deliver schreibt die Zeile",
